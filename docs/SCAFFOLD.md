@@ -106,6 +106,6 @@ docker compose up      # 한 줄
 
 1. **README의 조원 소개 표에 자기 행을 추가**: 브랜치 → PR → 리뷰 → merge로. 첫 PR이 협업 흐름 연습입니다.
 2. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인
-3. `docs/TOPIC.md` 주제서 작성 (10/29까지)
+3. 주제서는 10/29까지 공지된 방법으로 제출하고, 킥오프 뒤 `docs/TOPIC.md`로 옮겨 둡니다
 4. D0(10/30)에 빈 FastAPI를 Cloud Run에 올려 배포 주소 확보. 배포가 막히면 팀 전체가 멈춥니다.
 5. 평가셋 v1 30건 만들기 (11/3 동결)
