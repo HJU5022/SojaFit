@@ -1,2 +1,2 @@
-{"id": 1, "input": "코퍼스 안에 답이 있는 질문", "kind": "relevant", "expected": "정답 또는 판정 기준", "gold_chunks": ["청크 id 또는 문서 id와 위치"], "why": "이 답이 맞다고 본 이유"}
-{"id": 2, "input": "주제 안이지만 코퍼스에 답이 없는 질문", "kind": "irrelevant", "expected": "근거가 없다고 거절하거나 되묻는다", "gold_chunks": [], "why": "코퍼스를 확인해 답이 없음을 확인한 근거"}
+{"id": 1, "input": "코퍼스 안에 답이 있는 질문", "kind": "relevant", "expected": "정답 또는 판정 기준", "gold_chunks": ["청크 id 또는 문서 id와 위치"], "why": "이 답이 맞다고 본 이유", "as_of": "정답 기준일", "corpus_version": "코퍼스 버전"}
+{"id": 2, "input": "주제 안이지만 코퍼스에 답이 없는 질문", "kind": "irrelevant", "irrelevant_type": "out_of_domain, unknown_entity, missing_attribute, wrong_period 중 하나", "expected": "근거가 없다고 거절하거나 되묻는다", "gold_chunks": [], "why": "코퍼스를 확인해 답이 없음을 확인한 근거", "as_of": "정답 기준일", "corpus_version": "코퍼스 버전"}

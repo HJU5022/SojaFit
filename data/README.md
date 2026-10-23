@@ -14,10 +14,23 @@ G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(
 ## manifest 형식 (한 줄에 하나)
 
 ```json
-{"doc_id": "doc-0001", "source_url": "https://...", "collected_at": "2026-11-02", "parser": "pdf", "chunks": 214}
+{"doc_id": "doc-0001", "source_url": "https://...", "collected_at": "2026-11-02", "parser": "pdf", "chunks": 214, "chars_original": 53210, "chars_kept": 53210, "truncated": false}
 ```
 
-청크 단위 기록이 필요하면 `chunks.jsonl`을 따로 두고 `doc_id`와 `chunk_id`, 위치, 본문 해시를 적으세요. 청크 수의 합이 1만을 넘고 해시가 서로 다르다는 것이 G3의 증거입니다.
+원문이 길어서 잘라 넣었다면 `chars_original`과 `chars_kept`가 다르고 `truncated`가 true여야 합니다. 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.
+
+청크 단위 기록이 필요하면 `chunks.jsonl`을 따로 두고 `doc_id`와 `chunk_id`, 위치, 본문 해시(`chunk_sha256`)를 적으세요. 청크 수의 합이 1만을 넘고 **서로 다른 `chunk_sha256`이 1만 개 이상**이라는 것이 G3의 증거입니다. 정정공시처럼 본문이 같은 문서는 해시가 같으므로 한 개로 셉니다.
+
+## 임베딩 시간과 비용의 기준 (참고)
+
+DART 공시 11,022청크(평균 762토큰) 기준입니다. 조 코퍼스에서는 반드시 100건으로 먼저 재 보세요.
+
+| 방식 | 시간 또는 비용 |
+|---|---|
+| 로컬 KURE-v1 (Apple MPS, 배치 16) | 361초 (30.5청크/초). CPU 전용은 측정하지 않았습니다 |
+| OpenAI text-embedding-3-small API | 1만 청크 한 번에 약 $0.15 ($0.02/1M 토큰). 매일 전체를 다시 하면 한 달 약 $4.6 |
+
+매번 전체를 다시 임베딩하지 말고 본문 해시가 바뀐 청크만 다시 하세요.
 
 ## 저장소 크기 주의
 
