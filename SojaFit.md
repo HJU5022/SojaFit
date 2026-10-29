@@ -87,3 +87,12 @@ SojaFit (proj3-b)
 2. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
 3. D0(10/30)에 빈 FastAPI를 Cloud Run에 올려 배포 주소를 확보합니다.
 4. 평가셋 v1 30건을 만듭니다(11/3 동결).
+
+## 공통 참고 자료 경로
+
+| 폴더 | 하는 일 | 담당 | 설명 |
+|---|---|---|---|
+| `docs/project-guide/` | 공식 안내의 상세 조건·일정·평가·수업 대응 | 평가·문서 | [project-guide.md](docs/project-guide/project-guide.md) |
+| `docs/reference/` | 공통 문서 이관 기록·과거 CI 제안 이력 | 평가·문서 | [reference.md](docs/reference/reference.md) |
+
+`docs/project-guide/sources/`는 원문·manifest 보관 폴더라 별도 폴더 설명 문서를 만들지 않습니다. 기능·역할·경로 결정과 실제 게이트 상태는 기존 정본을 유지합니다.

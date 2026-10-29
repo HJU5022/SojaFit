@@ -39,3 +39,7 @@
 | 1 | | | | |
 | 2 | | | | |
 | 3 | | | | |
+
+## 세부 요구조건 참고
+
+조건별 체크 항목은 [GATE_REQUIREMENTS.md](project-guide/GATE_REQUIREMENTS.md), 수업 구현 근거는 [COURSE_COVERAGE.md](project-guide/COURSE_COVERAGE.md)를 참고합니다. 실제 진행 상태·증거·변이 기록은 이 문서에 유지합니다.

@@ -13,3 +13,10 @@
 - `adr/` — 조 결정 기록. [adr.md](adr/adr.md)
 - `specs/` — SPEC에 없는 기능이 생길 때 쓰는 작업서. [specs.md](specs/specs.md)
 - `deliverables/` — 제출물. [deliverables.md](deliverables/deliverables.md)
+
+## 공통 참고 자료
+
+- `project-guide/` — 상세 평가조건·일정·수업 대응·출처. [project-guide.md](project-guide/project-guide.md)
+- `reference/` — 이관 판단·과거 CI 제안 이력. [reference.md](reference/reference.md)
+- [OPERATIONS.md](OPERATIONS.md) — 반복 운영 체크리스트. 실제 담당·계약은 기존 조원 계약서 기준
+- [TEAM_POLICY.md](TEAM_POLICY.md) — 기존 팀 규칙과 충돌하지 않게 정리한 개발·리뷰·CI 보완 초안
