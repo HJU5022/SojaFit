@@ -1,4 +1,6 @@
-# AI Human 7기 3차 프로젝트: RAG와 LangGraph 에이전트 서비스
+# SojaFit
+
+AI Human 7기 3차 프로젝트: RAG와 LangGraph 에이전트 서비스
 
 이 저장소는 **3차 프로젝트 조별 공간**입니다. 조원 전원이 write 권한을 갖습니다.
 그 산업의 공개 문서를 코퍼스로 삼아, 근거를 붙여 답하고, 필요하면 되묻고 재검색하며, 사람의 승인이 필요한 행동 앞에서 멈추는 에이전트형 RAG 서비스를 만듭니다.
@@ -7,7 +9,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 프로젝트 | proj3 |
+| 프로젝트 | SojaFit |
 | 조 | (조 이름) |
 | 주제와 산업 | (주제서 요약 한 줄) |
 | 배포 주소 | (Cloud Run 주소, D0에 확보) |
@@ -52,34 +54,16 @@
 ## 협업 규칙 (필독)
 
 1. **`main`에 직접 push 금지**: 모든 변경은 브랜치 → PR로만 합칩니다.
-2. 브랜치명: `feat/{작업내용}` (예: `feat/hybrid-search`, 버그 수정은 `fix/{내용}`)
+2. **조원마다 자기 이름 브랜치 하나에서만 작업합니다** (예: `jeongun`). `main`에서 한 번 따고, 기능이나 버그마다 새 브랜치를 만들지 않습니다.
 3. PR은 **조원 1명 이상의 approve를 받은 뒤** merge합니다. 리뷰 없는 merge는 감사 리포트에 잡힙니다.
 4. **제출물 = 마감 시점의 `main`**: 마감 시각에 강사가 전체 조 저장소에 태그를 일괄 생성합니다. 태그 이후 커밋은 평가 대상이 아닙니다.
 5. **커밋은 본인 계정으로**: 자기가 한 작업은 자기 계정으로 커밋해야 이 저장소가 본인 포트폴리오 증빙이 됩니다. 함께 작업했다면 커밋 메시지에 `Co-authored-by:`를 추가하세요.
 6. 다른 조 저장소도 읽을 수 있습니다. 보고 배우는 것은 권장, 복사 제출은 금지입니다.
-7. **동결한 평가셋은 고치지 않습니다.** v1과 v2를 동결한 뒤에 정답을 바꾸면 측정이 아니라 맞추기가 됩니다(`evals/README.md`).
+7. **동결한 평가셋은 고치지 않습니다.** v1과 v2를 동결한 뒤에 정답을 바꾸면 측정이 아니라 맞추기가 됩니다(`evals/evals.md`).
 
 ## 폴더 구조
 
-```
-backend/            FastAPI 서버
-  main.py             진입점 (/health)
-  graph/              LangGraph: 상태, Supervisor, 서브에이전트        (G4)
-  rag/                문서 파싱, 청킹, 인덱싱, 하이브리드 검색, 리랭킹  (G3)
-  auth.py             로그인과 사용자 식별                              (G4)
-  memory.py           사용자별 장기 기억 (Store namespace)              (G4)
-  services/llm.py     LLM 호출은 여기 한 곳. 데모 모드 재생도 여기      (G2, G6)
-data/               corpus/ 원문 스냅샷, manifest                       (G3)
-evals/              평가셋 v1, v2, 동결 스크립트, 사전 등록              (G5)
-tests/              회귀 테스트 (CI가 PR마다 실행)
-db/init.sql         pgvector 확장 생성
-docs/               주제서, 아키텍처, 게이트 점검, 제출물, Spec
-EVAL_REPORT.md      개선 전후 지표 (제출물)
-extras/mcp_skill/   MCP 서버와 Skill (가산 선택)
-Dockerfile, docker-compose.yml   `docker compose up` 한 줄 실행
-```
-
-각 폴더가 무엇이고 무엇을 채우는지는 **[docs/SCAFFOLD.md](./docs/SCAFFOLD.md)**에 있습니다. 쓰지 않는 것은 지워도 됩니다.
+폴더 구조와 폴더마다 하는 일·담당은 **[SojaFit.md](./SojaFit.md)**에 있습니다. 폴더 안의 파일은 각 폴더의 `<폴더명>.md`에 적습니다.
 
 ## 시크릿 규칙 (위반 시 전원에게 노출됩니다)
 
@@ -93,16 +77,20 @@ Dockerfile, docker-compose.yml   `docker compose up` 한 줄 실행
 ## 작업 흐름
 
 ```bash
-# 1. 최신 main에서 작업 브랜치 생성
+# 1. 처음 한 번: 최신 main에서 자기 이름 브랜치 만들기
 git switch main && git pull
-git switch -c feat/hybrid-search
+git switch -c jeongun                # 자기 이름
 
 # 2. 작업 후 커밋과 push
 git add .
-git commit -m "feat: 하이브리드 검색 추가"
-git push -u origin feat/hybrid-search
+git commit -m "feat(rag): 하이브리드 검색 추가"
+git push -u origin jeongun
 
 # 3. GitHub에서 PR 생성 → 조원 리뷰 → approve 후 merge
+
+# 4. 다음 작업 전: 합쳐진 main을 자기 브랜치에 받기
+git switch main && git pull
+git switch jeongun && git merge main
 ```
 
 ## 충돌(conflict)이 났을 때
@@ -111,7 +99,7 @@ PR 화면에 "This branch has conflicts"가 뜨면:
 
 ```bash
 git switch main && git pull          # 최신 main 받기
-git switch feat/내브랜치
+git switch 내이름브랜치
 git merge main                       # 충돌 발생 지점이 파일에 표시됨
 # 파일 열어 <<<<<<< ======= >>>>>>> 사이에서 남길 내용 선택 후 저장
 git add . && git commit              # 충돌 해결 커밋
