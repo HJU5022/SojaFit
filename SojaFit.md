@@ -16,6 +16,7 @@ SojaFit (proj3-b)
 ├── backend/          서비스 코드
 │   ├── judge/        회로 역할·대체 조건·판정
 │   ├── graph/        LangGraph 그래프
+│   ├── prompts/      LLM 프롬프트와 버전 기록
 │   ├── rag/          수집·파싱·검색
 │   ├── services/     LLM·임베딩 호출, 견적서, 가격·재고
 │   └── web/          화면
@@ -42,6 +43,7 @@ SojaFit (proj3-b)
 | `backend/` | FastAPI 진입점, 로그인, 사용자별 기억, 하위 모듈 | 서비스·운영 | [backend.md](backend/backend.md) |
 | `backend/judge/` | 넷리스트 읽기, 회로 역할, 대체 조건, 판정. 숫자 비교는 여기서만 | 에이전트 | [judge.md](backend/judge/judge.md) |
 | `backend/graph/` | Supervisor, 서브에이전트, 체크포인트, 사람 승인 | 에이전트 | [graph.md](backend/graph/graph.md) |
+| `backend/prompts/` | LLM에 보내는 프롬프트와 버전 기록 | 에이전트 | [prompts.md](backend/prompts/prompts.md) |
 | `backend/rag/` | 데이터시트 수집, PDF 표 파싱, 단위 환산, 하이브리드 검색, 리랭킹 | 검색·데이터 | [rag.md](backend/rag/rag.md) |
 | `backend/services/` | LLM·임베딩 호출 한 곳, 견적서 저장, 가격·재고 조회 | 서비스·운영 | [services.md](backend/services/services.md) |
 | `backend/web/` | 로그인·입력·승인·견적 화면 | 서비스·운영 | [web.md](backend/web/web.md) |

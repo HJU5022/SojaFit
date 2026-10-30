@@ -12,6 +12,7 @@
 - `memory.py` — 사용자별 장기 기억. 승인된 판정·견적 사례를 쌓고, 틀린 기억은 승인 절차를 거쳐 고칩니다
 - `judge/` — 회로 역할·대체 조건·판정. [judge.md](judge/judge.md)
 - `graph/` — LangGraph 그래프. [graph.md](graph/graph.md)
+- `prompts/` — LLM 프롬프트와 버전 기록. [prompts.md](prompts/prompts.md)
 - `rag/` — 수집·파싱·검색. [rag.md](rag/rag.md)
 - `services/` — LLM·임베딩 호출, 견적서, 가격·재고. [services.md](services/services.md)
 - `web/` — 화면. [web.md](web/web.md)
