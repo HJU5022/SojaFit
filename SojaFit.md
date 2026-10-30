@@ -29,7 +29,8 @@ SojaFit (proj3-b)
 ├── docs/             주제서, 계약서, 게이트 증거
 │   ├── adr/          조 결정 기록
 │   ├── specs/        SPEC 밖 기능 작업서
-│   └── deliverables/ 제출물
+│   ├── deliverables/ 제출물
+│   └── worklog/      조원별 작업 기록
 └── extras/           가산 선택
     └── mcp_skill/    MCP 서버와 Skill
 ```
@@ -55,6 +56,7 @@ SojaFit (proj3-b)
 | `docs/adr/` | 조 결정 기록 | 결정을 낸 담당 | [adr.md](docs/adr/adr.md) |
 | `docs/specs/` | SPEC에 없는 기능이 생길 때 쓰는 작업서 | 그 기능의 담당 | [specs.md](docs/specs/specs.md) |
 | `docs/deliverables/` | 제출물 | 평가·문서 | [deliverables.md](docs/deliverables/deliverables.md) |
+| `docs/worklog/` | 조원별 작업 기록 | 각자 자기 파일 | [worklog.md](docs/worklog/worklog.md) |
 | `extras/` | 가산 선택 기능 | 가산을 시작할 때 정함 | [extras.md](extras/extras.md) |
 | `extras/mcp_skill/` | MCP 서버와 Skill | 가산을 시작할 때 정함 | [mcp_skill.md](extras/mcp_skill/mcp_skill.md) |
 
