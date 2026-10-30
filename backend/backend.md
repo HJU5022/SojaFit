@@ -16,3 +16,4 @@
 - `rag/` — 수집·파싱·검색. [rag.md](rag/rag.md)
 - `services/` — LLM·임베딩 호출, 견적서, 가격·재고. [services.md](services/services.md)
 - `web/` — 화면. [web.md](web/web.md)
+- `mcp_skill/` — 가산: MCP 서버와 Skill. [mcp_skill.md](mcp_skill/mcp_skill.md)

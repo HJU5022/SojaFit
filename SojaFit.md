@@ -19,7 +19,8 @@ SojaFit (proj3-b)
 │   ├── prompts/      LLM 프롬프트와 버전 기록
 │   ├── rag/          수집·파싱·검색
 │   ├── services/     LLM·임베딩 호출, 견적서, 가격·재고
-│   └── web/          화면
+│   ├── web/          화면
+│   └── mcp_skill/    MCP 서버와 Skill(가산)
 ├── data/             코퍼스와 목록
 │   ├── corpus/       원본 문서
 │   ├── circuits/     평가·시연용 회로
@@ -32,8 +33,8 @@ SojaFit (proj3-b)
 │   ├── specs/        SPEC 밖 기능 작업서
 │   ├── deliverables/ 제출물
 │   └── worklog/      조원별 작업 기록
-└── extras/           가산 선택
-    └── mcp_skill/    MCP 서버와 Skill
+└── extras/           이미지에 들어가지 않는 가산 작업
+    └── finetune/     파인튜닝(가산)
 ```
 
 ## 폴더마다 하는 일
@@ -47,6 +48,7 @@ SojaFit (proj3-b)
 | `backend/rag/` | 데이터시트 수집, PDF 표 파싱, 단위 환산, 하이브리드 검색, 리랭킹 | 검색·데이터 | [rag.md](backend/rag/rag.md) |
 | `backend/services/` | LLM·임베딩 호출 한 곳, 견적서 저장, 가격·재고 조회 | 서비스·운영 | [services.md](backend/services/services.md) |
 | `backend/web/` | 로그인·입력·승인·견적 화면 | 서비스·운영 | [web.md](backend/web/web.md) |
+| `backend/mcp_skill/` | 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill. 서비스 안에서 돕니다 | 가산을 시작할 때 정함 | [mcp_skill.md](backend/mcp_skill/mcp_skill.md) |
 | `data/` | 코퍼스 스냅샷과 manifest·청크·파라미터 목록 | 검색·데이터 | [data.md](data/data.md) |
 | `data/corpus/` | 데이터시트·공개 문서 원본 | 검색·데이터 | [corpus.md](data/corpus/corpus.md) |
 | `data/circuits/` | 평가·시연용 공개 KiCad 회로와 라이선스 | 평가·문서 | [circuits.md](data/circuits/circuits.md) |
@@ -59,8 +61,8 @@ SojaFit (proj3-b)
 | `docs/specs/` | SPEC에 없는 기능이 생길 때 쓰는 작업서 | 그 기능의 담당 | [specs.md](docs/specs/specs.md) |
 | `docs/deliverables/` | 제출물 | 평가·문서 | [deliverables.md](docs/deliverables/deliverables.md) |
 | `docs/worklog/` | 조원별 작업 기록 | 각자 자기 파일 | [worklog.md](docs/worklog/worklog.md) |
-| `extras/` | 가산 선택 기능 | 가산을 시작할 때 정함 | [extras.md](extras/extras.md) |
-| `extras/mcp_skill/` | MCP 서버와 Skill | 가산을 시작할 때 정함 | [mcp_skill.md](extras/mcp_skill/mcp_skill.md) |
+| `extras/` | 가산 중 이미지에 들어가지 않는 작업(학습) | 가산을 시작할 때 정함 | [extras.md](extras/extras.md) |
+| `extras/finetune/` | 가산: 파인튜닝 학습 코드와 비교 결과 | 가산을 시작할 때 정함 | [finetune.md](extras/finetune/finetune.md) |
 
 담당은 가이드의 역할 4개(검색·데이터, 에이전트, 서비스·운영, 평가·문서)입니다. 사람 배정은 [docs/조원-계약서.md](docs/조원-계약서.md)에 적습니다.
 
