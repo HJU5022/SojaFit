@@ -13,3 +13,5 @@
 - `adr/` — 조 결정 기록. [adr.md](adr/adr.md)
 - `specs/` — SPEC에 없는 기능이 생길 때 쓰는 작업서. [specs.md](specs/specs.md)
 - `deliverables/` — 제출물. [deliverables.md](deliverables/deliverables.md)
+- [EVALUATION.md](EVALUATION.md) — 기존 문서에 없는 평가 축·시장 근거·가산 준비 항목
+- [CI_PROPOSAL.md](CI_PROPOSAL.md) — 현재 workflow에 대한 절감 보완 제안(미적용)

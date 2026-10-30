@@ -111,3 +111,7 @@ git push                             # PR이 자동 갱신됨
 ## 질문
 
 강사 확인이 필요한 질문은 이 저장소의 **Issues**에 남기고 강사를 멘션하세요.
+
+## 평가·운영 보충 자료
+
+기본 게이트·일정 외 준비 항목은 [EVALUATION.md](docs/EVALUATION.md), 합의 전 CI 절감 제안은 [CI_PROPOSAL.md](docs/CI_PROPOSAL.md)를 참고합니다.
