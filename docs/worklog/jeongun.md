@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-10-30 테이블 정의서 마무리
+- 한 일: PR #6으로 들어온 `db/table-definition.md`의 추가 검토 항목 A-01~A-20을 정하고 9절을 결정 기록으로 바꿨다. 조건별 비교 표 `requirement_checks`와 청크 임베딩 표 `chunk_embeddings`를 더했고(벡터 차원 N은 임베딩 모델을 정한 뒤 채움), `analysis_runs.thread_id`, `document_chunks.chunk_sha256`, `source_documents`의 manifest 열을 넣었다. Migration은 업무 표(1)와 임베딩 표(2)로 나눈다고 11절에 적었다. SPEC 3절 판정 표에 코드·채점·뜻과 판정 순서, "문서로 확인 안 됨"일 때 하는 일을 채웠다.
+- 바꾼 파일: `db/table-definition.md`, `SPEC.md`, 이 파일
+- 실행한 명령과 결과: `git diff --check` 통과. 정의서에 적은 저장소 경로를 대조해 없는 경로 0개. `uv run --frozen pytest -q`는 2 passed. pgvector `vector` 타입의 HNSW 인덱스 상한 2,000차원은 pgvector README에서 확인했다.
+- 확인 못 한 것: SQL로 옮겨 보지 않아 CHECK·FK가 그대로 만들어지는지는 Migration 1에서 확인한다. 역할·분류·사양 코드 목록은 규칙 파일과 코퍼스 분류를 만들며 바뀔 수 있다.
+- 다음 할 일: 심태현이 ERD와 Migration 1을 쓴다. 임베딩 모델(오세창)이 정해지면 N을 채우고 Migration 2를 쓴다.
+
 ## 2026-10-30 Cloud Run 배포 주소 확보
 - 한 일: `main`(790d087)의 빈 FastAPI를 GCP 프로젝트 `sojafit`의 Cloud Run 서비스 `sojafit-api`(서울 리전 `asia-northeast3`)에 올리고 공개로 열었다. 배포 주소를 README 팀 정보에 적고 GATES G1을 "진행 중"으로 바꿨다.
 - 바꾼 파일: `README.md`, `docs/GATES.md`, 이 파일
