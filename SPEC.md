@@ -37,6 +37,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 범용 챗봇과 같은 질문 5개로 비교할 지표: 근거 인용 비율, 없는 품번 제시 수, "문서로 확인 안 됨" 처리 수
 - 검색·판정 지표와 목표 수치: (정할 것)
+- 임베딩 예비 후보: `text-embedding-3-small`, `BAAI/bge-m3`, `nlpai-lab/KURE-v1`, `Qwen/Qwen3-Embedding-0.6B`. 30청크·18질의 dense-only 프록시는 후보 점검용이며 최종 선택 근거로 쓰지 않습니다. 최종 선택은 TSC·Infineon 100문서 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연을 함께 비교한 뒤 확정합니다. 세부 조건은 `docs/specs/embedding-model-baseline.md`와 `evals/PREREGISTER.md`를 따릅니다.
 
 ## 2. 흐름과 그래프
 

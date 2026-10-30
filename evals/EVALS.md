@@ -9,9 +9,13 @@
 
 ## 파일
 - `dataset_v1.jsonl` — 평가셋 v1 (11/3 동결)
+- `embedding_sample_v0.jsonl` — 임베딩 후보를 거르는 비동결 프록시 표본(실제 코퍼스 평가와 구분)
+- `benchmark_embeddings.py` — 프록시 표본의 dense Recall@5·MRR·지연 측정
 - `freeze.py` — 동결 파일의 sha256을 `FROZEN.json`에 기록
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `results/` — 평가 원시 결과
+
+`embedding_sample_v0.jsonl`은 후보를 거르는 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 실제 모델 결정은 100문서 실제 청크 평가를 별도 사전 등록한 뒤 수행합니다.
 
 ## 평가셋
 
