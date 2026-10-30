@@ -10,6 +10,12 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 
 `README.md`(처음 보는 사람) → `SojaFit.md`(구조와 폴더 지도) → `SPEC.md`(기능의 정본) → 각 폴더의 `<폴더명>.md`(폴더 안 파일) → `docs/adr/`(바뀐 결정). 내용이 서로 다르면 `SPEC.md`를 따릅니다. 담당별로 고칠 수 있는 경로, 모듈 사이 함수, 코드가 읽는 파일과 환경변수는 `docs/조원-계약서.md`를 따릅니다.
 
+## 저장소 탐색
+
+1. 작업을 시작하면 `SojaFit.md`의 폴더 표에서 손댈 폴더를 고르고, 그 폴더의 `<폴더명>.md`부터 읽습니다.
+2. 폴더 `.md`의 링크와 "넣지 않는 것"이 가리키는 곳을 따라 이동합니다. 저장소 전체를 grep·find로 훑는 것은 지도에서 찾지 못했을 때만 하고, 그때는 지도에 빠진 줄을 같은 PR에서 채웁니다.
+3. 파일을 만들거나 지우거나 옮기면 같은 PR에서 그 폴더 `.md`의 "파일" 목록을 고칩니다. 새 폴더는 `SojaFit.md`의 이름 규칙을 따릅니다.
+
 ## 기술 스택
 
 - 확정: Python, uv, FastAPI, LangGraph, PostgreSQL + pgvector, Docker Compose, Langfuse, GCP Cloud Run. LLM은 조당 OpenRouter 키 하나를 씁니다.
