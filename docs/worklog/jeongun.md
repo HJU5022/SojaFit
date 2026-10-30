@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-10-30 주제서 옮기기와 가산 폴더 정리
+- 한 일: 통과한 주제서를 `docs/TOPIC.md`로 옮겼다(본문은 원본과 같음). 가산 중 서비스 안에서 돌아야 하는 MCP·Skill을 `extras/mcp_skill/`에서 `backend/mcp_skill/`로 옮기고, `extras/`는 이미지 밖 작업인 파인튜닝(`extras/finetune/`)만 맡게 했다. GraphRAG와 증분 수집 자동화는 `backend/rag/`에 둔다고 적었다.
+- 바꾼 파일: `docs/TOPIC.md`, `backend/mcp_skill/`(옮김), `extras/extras.md`, `extras/finetune/finetune.md`, `SojaFit.md`, `backend/backend.md`, `backend/rag/rag.md`, `SPEC.md`
+- 실행한 명령과 결과: 주제서 본문을 원본과 `diff`해 차이 0줄. `uv run --frozen pytest -q`는 2 passed. 바뀐 문서 15개의 상대 링크 34개 중 깨진 링크 0개.
+- 확인 못 한 것: `mcp` 패키지를 아직 넣지 않아 `server.py`는 실행해 보지 않았다. Neo4j와 수집 스케줄러를 어디서 돌릴지는 정하지 않았다.
+- 다음 할 일: 조 회의에서 가산 담당과 Neo4j·스케줄러 위치를 정한다.
+
 ## 2026-10-30 문서 뼈대 추가
 - 한 일: 기능 정본 `SPEC.md` 뼈대(8절), DB 관계도 `db/ERD.md`, 프롬프트 폴더 `backend/prompts/`와 버전 기록 표, 화면 디자인 규칙 `backend/web/DESIGN.md`를 만들었다. 정해진 내용은 주제서·AGENTS·ADR 0001에서 옮기고, 정하지 않은 칸은 `(정할 것)`으로 두었다.
 - 바꾼 파일: `SPEC.md`, `SojaFit.md`, `db/ERD.md`, `db/db.md`, `backend/prompts/prompts.md`, `backend/backend.md`, `backend/web/DESIGN.md`, `backend/web/web.md`, 이 파일
