@@ -112,6 +112,6 @@ git push                             # PR이 자동 갱신됨
 
 강사 확인이 필요한 질문은 이 저장소의 **Issues**에 남기고 강사를 멘션하세요.
 
-## 공통 요구조건·운영 참고
+## 평가·운영 보충 자료
 
-상세 평가조건·날짜별 일정·수업 대응표는 [공통 가이드](docs/project-guide/project-guide.md), 운영 항목은 [OPERATIONS.md](docs/OPERATIONS.md)를 참고합니다. [CI·개발 보완안](docs/TEAM_POLICY.md)은 합의 전 초안이며 기존 AGENTS·문서 위계를 우선합니다.
+기본 게이트·일정 외 준비 항목은 [EVALUATION.md](docs/EVALUATION.md), 합의 전 CI 절감 제안은 [CI_PROPOSAL.md](docs/CI_PROPOSAL.md)를 참고합니다.
