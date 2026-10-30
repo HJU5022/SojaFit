@@ -10,8 +10,10 @@
 - `main.py` — FastAPI 진입점(`/health`)
 - `auth.py` — 로그인과 사용자 식별. 로그인한 사용자 id로 대화(thread)와 장기 기억(Store namespace)을 나눕니다(G4). 평가자는 평가용 계정 2개로 두 사용자의 대화와 기억이 섞이지 않는지 봅니다
 - `memory.py` — 사용자별 장기 기억. 승인된 판정·견적 사례를 쌓고, 틀린 기억은 승인 절차를 거쳐 고칩니다
-- `judge/` — 회로 역할·대체 조건·판정. [judge.md](judge/judge.md)
-- `graph/` — LangGraph 그래프. [graph.md](graph/graph.md)
-- `rag/` — 수집·파싱·검색. [rag.md](rag/rag.md)
-- `services/` — LLM·임베딩 호출, 견적서, 가격·재고. [services.md](services/services.md)
-- `web/` — 화면. [web.md](web/web.md)
+- `judge/` — 회로 역할·대체 조건·판정. [JUDGE.md](judge/JUDGE.md)
+- `graph/` — LangGraph 그래프. [GRAPH.md](graph/GRAPH.md)
+- `prompts/` — LLM 프롬프트와 버전 기록. [PROMPTS.md](prompts/PROMPTS.md)
+- `rag/` — 수집·파싱·검색. [RAG.md](rag/RAG.md)
+- `services/` — LLM·임베딩 호출, 견적서, 가격·재고. [SERVICES.md](services/SERVICES.md)
+- `web/` — 화면. [WEB.md](web/WEB.md)
+- `mcp_skill/` — 가산: MCP 서버와 Skill. [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
