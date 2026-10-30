@@ -10,7 +10,7 @@
 
 ```
 SojaFit (proj3-b)
-├── README.md  SojaFit.md  AGENTS.md  CLAUDE.md  EVAL_REPORT.md
+├── README.md  SojaFit.md  SPEC.md  AGENTS.md  CLAUDE.md  EVAL_REPORT.md
 ├── .env.example  Dockerfile  docker-compose.yml  pyproject.toml  uv.lock  pytest.ini
 ├── .github/          PR 양식, CI(테스트·비밀값 검사)
 ├── backend/          서비스 코드
@@ -68,6 +68,7 @@ SojaFit (proj3-b)
 |---|---|
 | `README.md` | 대표 문서. 한 줄 정의, 지표, 실행 방법, 데모 모드, 배포 주소, 조원표, 작업 흐름 |
 | `SojaFit.md` | 이 문서. 저장소 지도 |
+| `SPEC.md` | 기능의 정본. 범위, 흐름, 대체 판정 5종, 계약, 규칙 파일, 코퍼스 경계, 데모 모드, 기능별 AC |
 | `AGENTS.md` | AI 코딩 에이전트 지침과 조 팀 규칙 |
 | `CLAUDE.md` | Claude Code가 읽는 지침. AGENTS.md를 따름 |
 | `EVAL_REPORT.md` | 개선 전후 지표, 판정 기준, 실패 분석, 재현 명령 |
