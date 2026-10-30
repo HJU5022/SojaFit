@@ -25,14 +25,15 @@
 | 후보 | Recall@5 | MRR | 1,000청크 임베딩 | 질의 1건 p50 / p95 | 차원 | 22,000벡터 원시 / 계획 용량 | 운영 조건 |
 |---|---:|---:|---:|---:|---:|---:|---|
 | `text-embedding-3-small` | **1.000** | **0.907** | 7.02초 / $0.000878¹ | 918.7 / 1,205.1 ms | 1,536 | 135.2 MB / 약 203 MB² | OpenRouter API. 모델 이미지 불필요 |
-| `BAAI/bge-m3` | **1.000** | 0.863 | 5.95초, 증분 API 비용 $0 | **30.9** / 90.1 ms | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
-| `nlpai-lab/KURE-v1` | **1.000** | **0.894** | 5.68초, 증분 API 비용 $0 | 31.9 / **52.4 ms** | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
-| `Qwen/Qwen3-Embedding-0.6B` | **1.000** | 0.875 | **3.83초**, 증분 API 비용 $0 | 61.8 / 82.9 ms | 1,024 | 90.1 MB / 약 135 MB² | 고정 영문 query instruction 사용; 캐시 1.125 GiB; 오프라인 통과⁴ |
+| `BAAI/bge-m3` | **1.000** | 0.863 | 5.95초, 증분 API 비용 $0 | **30.9** / 90.1 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
+| `nlpai-lab/KURE-v1` | **1.000** | **0.894** | 5.68초, 증분 API 비용 $0 | 31.9 / **52.4 ms**⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
+| `Qwen/Qwen3-Embedding-0.6B` | **1.000** | 0.875 | **3.83초**, 증분 API 비용 $0 | 61.8 / 82.9 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 고정 영문 query instruction 사용; 캐시 1.125 GiB; 오프라인 통과⁴ |
 
 1. 표본 1,000청크의 실제 usage는 43,890토큰, $0.000878이었습니다. 실제 데이터시트 청크를 평균 350토큰으로 계획하면 1,000청크 $0.007, 22,000청크 최초 색인 $0.154입니다. 전체 프록시 평가는 45,699토큰, $0.000914였습니다. OpenRouter 공식 문서도 `openai/text-embedding-3-small`을 $0.02/1M tokens로 제공합니다: [OpenRouter embeddings API](https://openrouter.ai/docs/api/api-reference/embeddings/create-embeddings), [model pricing](https://openrouter.ai/openai/text-embedding-3-small/providers). 기본 차원 1,536과 최대 입력 8,192토큰은 [OpenAI embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)와 일치합니다.
 2. 원시는 `차원 × 4 bytes × 22,000`입니다. 계획 용량은 행·메타데이터·HNSW 여유로 원시의 1.5배를 잡은 추정이며 본문 저장량은 제외합니다.
 3. 이 PC의 캐시된 단일 revision(2.1 GB) + 측정용 CUDA/Python 패키지(5.6 GB) + base image(0.07 GB)의 비압축 합계 추정입니다. 실제 배포 Dockerfile 빌드 크기는 별도 측정해야 합니다.
 4. Qwen은 revision `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`을 사용했습니다. TEI 1.7.2 linux/amd64 registry manifest의 압축 layer 합계는 GPU 0.57 GiB, CPU 0.22 GiB이며 모델 캐시는 별도입니다. 이미지를 pull·빌드하지 않았으므로 로컬 비압축 이미지 크기로 표기하지 않습니다. 저장소 표준인 Docker `uv run --offline --isolated` 재실행 결과는 Recall@5 1.000/MRR 0.875, 1,000청크 3.83초, 질의 p50/p95 61.8/82.9 ms였습니다. 최초 Windows 임시 환경 결과(10.37초, 43.7/49.0 ms)는 실행 환경이 달라 비교표에서 제외하고 원시 JSON으로만 보존합니다.
+5. 로컬 세 모델의 지연은 RTX 5060 Laptop GPU 8GB에서 측정한 값이며 2026-10-30 배포 기준 Cloud Run의 CPU 1 vCPU·메모리 512 MiB 값이 아닙니다. BGE·KURE 모델 스냅샷만 약 2.1 GB이고 Qwen 캐시도 1.125 GiB이므로 로컬 모델을 Cloud Run에 올리려면 512 MiB보다 메모리를 늘리고 CPU 환경에서 지연을 별도로 재측정해야 합니다.
 
 세 로컬 모델은 캐시 준비 후 새 프로세스에서 `HF_HUB_OFFLINE=1`로 같은 Recall@5/MRR이 나오는 것을 확인했습니다. BGE·KURE는 `uv run --offline`도 함께 사용했고, Qwen은 캐시 snapshot의 로컬 경로를 직접 로드해 `transformers`의 불필요한 모델 정보 조회를 막았습니다. Hugging Face 문서상 오프라인 모드는 캐시에 없는 파일을 자동으로 받지 않고 실패합니다: [HF_HUB_OFFLINE](https://github.com/huggingface/huggingface_hub/blob/main/docs/source/en/package_reference/environment_variables.md#hf_hub_offline).
 
@@ -40,7 +41,7 @@
 
 **예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 100문서 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
 
-**다음 본평가**: TSC·Infineon 데이터시트 100건의 실제 청크에서 `BM25 + KURE-v1`을 기준으로 두고 API 후보와 Qwen 후보 구성을 각각 비교합니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
+**다음 본평가**: TSC·Infineon 데이터시트 100건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
 
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
 
