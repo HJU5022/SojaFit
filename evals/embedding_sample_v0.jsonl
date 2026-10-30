@@ -1,0 +1,48 @@
+{"type":"chunk","id":"tsc-1n5817-overview","text":"Taiwan Semiconductor 1N5817 Schottky barrier rectifier. Repetitive peak reverse voltage VRRM is 20 V, forward current IF is 1 A, package DO-204AL (DO-41), single die."}
+{"type":"chunk","id":"tsc-1n5818-overview","text":"Taiwan Semiconductor 1N5818 Schottky barrier rectifier. Repetitive peak reverse voltage VRRM is 30 V, forward current IF is 1 A, package DO-204AL (DO-41), single die."}
+{"type":"chunk","id":"tsc-1n5819-overview","text":"Taiwan Semiconductor 1N5819 Schottky barrier rectifier. Repetitive peak reverse voltage VRRM is 40 V, forward current IF is 1 A, package DO-204AL (DO-41), single die."}
+{"type":"chunk","id":"tsc-1n5819-surge","text":"For Taiwan Semiconductor 1N5819, non-repetitive peak forward surge current IFSM is 30 A for an 8.3 ms single half-sine wave. Maximum junction temperature is 125 degrees Celsius."}
+{"type":"chunk","id":"tsc-es1j-overview","text":"Taiwan Semiconductor ES1J ultrafast rectifier. Average forward current is 1 A, repetitive peak reverse voltage is 600 V, reverse recovery time is 35 ns, package DO-214AC (SMA)."}
+{"type":"chunk","id":"tsc-es1jlw-overview","text":"Taiwan Semiconductor ES1JLW ultrafast rectifier. Average forward current is 1 A, repetitive peak reverse voltage is 600 V, reverse recovery time is 35 ns, package SOD-123W, maximum junction temperature 175 degrees Celsius."}
+{"type":"chunk","id":"tsc-es15dlw-overview","text":"Taiwan Semiconductor ES15DLW ultrafast rectifier. Average forward current is 1.5 A, repetitive peak reverse voltage is 200 V, surge current is 40 A, maximum forward voltage is 0.95 V, package SOD-123W."}
+{"type":"chunk","id":"tsc-es15glw-overview","text":"Taiwan Semiconductor ES15GLW ultrafast rectifier. Average forward current is 1.5 A, repetitive peak reverse voltage is 400 V, surge current is 40 A, maximum forward voltage is 1.3 V, package SOD-123W."}
+{"type":"chunk","id":"tsc-sf18g-overview","text":"Taiwan Semiconductor SF18G ultrafast rectifier. Average forward current is 1 A, repetitive peak reverse voltage is 600 V, reverse recovery time is 35 ns, package DO-204AL (DO-41)."}
+{"type":"chunk","id":"tsc-es1jfs-overview","text":"Taiwan Semiconductor ES1JFS ultrafast rectifier. Average forward current is 1 A, repetitive peak reverse voltage is 600 V, maximum forward voltage is 1.7 V, package SOD-128."}
+{"type":"chunk","id":"inf-bat165-overview","text":"Infineon BAT165 medium power AF Schottky diode. Reverse voltage VR is 40 V, forward current IF is 750 mA, package SOD323, configuration single."}
+{"type":"chunk","id":"inf-bat165-surge","text":"Infineon BAT165 has average rectified forward current 500 mA and non-repetitive peak surge forward current 2.5 A for pulse duration at most 10 ms. Maximum junction temperature is 150 degrees Celsius."}
+{"type":"chunk","id":"inf-bas40-overview","text":"Infineon BAS40 silicon Schottky diode. Reverse voltage maximum is 40 V, forward current maximum is 120 mA, total capacitance maximum is 5 pF, package SOT23, one independent diode."}
+{"type":"chunk","id":"inf-bas40-05-config","text":"Infineon BAS40-05 Schottky diode pair uses a common cathode configuration in SOT23. Maximum reverse voltage is 40 V and maximum forward current is 120 mA."}
+{"type":"chunk","id":"inf-bas40-06-config","text":"Infineon BAS40-06 Schottky diode pair uses a common anode configuration in SOT23. Maximum reverse voltage is 40 V and maximum forward current is 120 mA."}
+{"type":"chunk","id":"inf-bas70-05-overview","text":"Infineon BAS70-05 Schottky diode pair. Common cathode configuration, maximum reverse voltage 70 V, maximum forward current 70 mA, maximum capacitance 2 pF, package SOT23."}
+{"type":"chunk","id":"inf-bas70-04w-overview","text":"Infineon BAS70-04W Schottky diode pair. Series connection, maximum reverse voltage 70 V, maximum forward current 70 mA, maximum capacitance 2 pF, package SOT323."}
+{"type":"chunk","id":"inf-bat54-overview","text":"Infineon BAT54 Schottky diode. One independent diode in SOT23, maximum reverse voltage 30 V, maximum forward current 200 mA, maximum capacitance 10 pF."}
+{"type":"chunk","id":"inf-bat54-05-config","text":"Infineon BAT54-05 contains a common cathode Schottky diode pair in SOT23. Maximum reverse voltage is 30 V and maximum forward current is 200 mA."}
+{"type":"chunk","id":"inf-bat54-06-config","text":"Infineon BAT54-06 contains a common anode Schottky diode pair in SOT23. Maximum reverse voltage is 30 V and maximum forward current is 200 mA."}
+{"type":"chunk","id":"inf-bat64-04w-overview","text":"Infineon BAT64-04W low-barrier Schottky diode pair. Series connection in SOT323, maximum reverse voltage 40 V, maximum forward current 250 mA, maximum capacitance 6 pF."}
+{"type":"chunk","id":"inf-bat64-05w-overview","text":"Infineon BAT64-05W low-barrier Schottky diode pair. Common cathode in SOT323, maximum reverse voltage 40 V, maximum forward current 250 mA, maximum capacitance 6 pF."}
+{"type":"chunk","id":"inf-bat64-06-overview","text":"Infineon BAT64-06 low-barrier Schottky diode pair. Common anode in SOT23, maximum reverse voltage 40 V, maximum forward current 250 mA, maximum capacitance 6 pF."}
+{"type":"chunk","id":"inf-bas52-02v-overview","text":"Infineon BAS52-02V Schottky diode. One independent diode in SC79, maximum reverse voltage 45 V, maximum forward current 750 mA, maximum capacitance 10 pF."}
+{"type":"chunk","id":"inf-bat54-03w-overview","text":"Infineon BAT54-03W Schottky diode. One independent diode in SOD323, maximum reverse voltage 30 V, maximum forward current 200 mA, maximum capacitance 10 pF."}
+{"type":"chunk","id":"distractor-zener","text":"A Zener diode is normally operated in reverse breakdown for voltage regulation. Its selection centers on Zener voltage and power dissipation rather than rectifier reverse recovery."}
+{"type":"chunk","id":"distractor-tvs","text":"A transient voltage suppressor diode clamps short overvoltage pulses. Important ratings include standoff voltage, breakdown voltage, clamping voltage, and peak pulse power."}
+{"type":"chunk","id":"distractor-led","text":"A light-emitting diode emits light under forward bias. Selection includes color, luminous intensity, forward voltage, and allowable forward current."}
+{"type":"chunk","id":"distractor-rectifier","text":"A general rectifier diode converts alternating current to direct current. Reverse voltage, average current, surge current, forward drop, and recovery time can constrain replacement."}
+{"type":"chunk","id":"distractor-package","text":"Package compatibility is independent from electrical adequacy. SOT23, SOD323, SOD-123W, SMA, and DO-41 footprints are not interchangeable without checking the PCB layout."}
+{"type":"query","id":"q01","text":"1N5819의 반복 첨두 역전압과 정격 순방향 전류는?","gold":["tsc-1n5819-overview"]}
+{"type":"query","id":"q02","text":"Which Taiwan Semiconductor part in the 1N5817 series is rated 30 V reverse voltage?","gold":["tsc-1n5818-overview"]}
+{"type":"query","id":"q03","text":"1N5819가 8.3 ms에서 견디는 서지 전류는 몇 A인가?","gold":["tsc-1n5819-surge"]}
+{"type":"query","id":"q04","text":"600 V, 1 A, 35 ns이며 SMA 패키지인 TSC 초고속 정류 다이오드는?","gold":["tsc-es1j-overview"]}
+{"type":"query","id":"q05","text":"Which 600 V Taiwan Semiconductor ultrafast rectifier uses SOD-123W and allows 175 C junction temperature?","gold":["tsc-es1jlw-overview"]}
+{"type":"query","id":"q06","text":"TSC 부품 중 200 V, 1.5 A, VF 0.95 V인 SOD-123W 다이오드는?","gold":["tsc-es15dlw-overview"]}
+{"type":"query","id":"q07","text":"BAT165의 패키지와 최대 순방향 전류는?","gold":["inf-bat165-overview"]}
+{"type":"query","id":"q08","text":"What is the BAT165 non-repetitive surge current for a pulse no longer than 10 ms?","gold":["inf-bat165-surge"]}
+{"type":"query","id":"q09","text":"40 V 120 mA 정격이며 공통 캐소드 SOT23 구성인 Infineon 부품은?","gold":["inf-bas40-05-config"]}
+{"type":"query","id":"q10","text":"BAS40-06의 다이오드 쌍 연결 방식은?","gold":["inf-bas40-06-config"]}
+{"type":"query","id":"q11","text":"70 V, 70 mA, 2 pF 공통 캐소드 Schottky pair in SOT23","gold":["inf-bas70-05-overview"]}
+{"type":"query","id":"q12","text":"Which Infineon 70 V diode pair has a series connection in SOT323?","gold":["inf-bas70-04w-overview"]}
+{"type":"query","id":"q13","text":"BAT54-05와 BAT54-06 중 공통 애노드인 것은?","gold":["inf-bat54-06-config"]}
+{"type":"query","id":"q14","text":"40 V 250 mA SOT323 부품 중 series connection인 BAT64 계열은?","gold":["inf-bat64-04w-overview"]}
+{"type":"query","id":"q15","text":"SC79 패키지에서 45 V와 750 mA 정격을 갖는 Infineon Schottky는?","gold":["inf-bas52-02v-overview"]}
+{"type":"query","id":"q16","text":"What package does the 30 V 200 mA BAT54-03W use?","gold":["inf-bat54-03w-overview"]}
+{"type":"query","id":"q17","text":"대체 다이오드가 전기적으로 충분해도 PCB 풋프린트를 따로 확인해야 하는 이유는?","gold":["distractor-package"]}
+{"type":"query","id":"q18","text":"정류 다이오드 대체 시 역전압, 평균전류, 서지전류 외에 스위칭 관련 어떤 시간을 확인하는가?","gold":["distractor-rectifier"]}

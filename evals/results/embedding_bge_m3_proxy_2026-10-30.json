@@ -1,0 +1,224 @@
+{
+  "status": "ok",
+  "evaluation_level": "proxy_smoke_test",
+  "retrieval_mode": "dense_only",
+  "corpus_is_real": false,
+  "latency_corpus_vectors_are_repeated": true,
+  "eligible_for_final_model_decision": false,
+  "model_key": "bge-m3",
+  "model_name": "BAAI/bge-m3",
+  "sample": "evals/embedding_sample_v0.jsonl",
+  "chunks": 30,
+  "queries": 18,
+  "dimension": 1024,
+  "recall_at_5": 1.0,
+  "mrr": 0.8629629629629629,
+  "load_seconds": 6.735404531998938,
+  "sample_embed_seconds": 0.3739034669997636,
+  "embed_1000_seconds": 5.94739349199881,
+  "query_22k_exact_ms_p50": 47.05298699991545,
+  "query_22k_exact_ms_p95": 90.19300500222016,
+  "device": "cuda:0",
+  "cuda_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "hf_hub_offline": false,
+  "query_results": [
+    {
+      "id": "q01",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5819-overview",
+        "tsc-1n5818-overview",
+        "tsc-1n5817-overview",
+        "tsc-1n5819-surge",
+        "tsc-es1jfs-overview"
+      ]
+    },
+    {
+      "id": "q02",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5818-overview",
+        "tsc-1n5817-overview",
+        "tsc-1n5819-surge",
+        "tsc-1n5819-overview",
+        "tsc-sf18g-overview"
+      ]
+    },
+    {
+      "id": "q03",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5819-surge",
+        "tsc-1n5819-overview",
+        "tsc-1n5818-overview",
+        "tsc-1n5817-overview",
+        "tsc-es1jlw-overview"
+      ]
+    },
+    {
+      "id": "q04",
+      "first_gold_rank": 5,
+      "top5": [
+        "tsc-es1jlw-overview",
+        "tsc-es15dlw-overview",
+        "tsc-es15glw-overview",
+        "tsc-es1jfs-overview",
+        "tsc-es1j-overview"
+      ]
+    },
+    {
+      "id": "q05",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-es1jlw-overview",
+        "tsc-es15dlw-overview",
+        "tsc-es15glw-overview",
+        "tsc-es1jfs-overview",
+        "tsc-sf18g-overview"
+      ]
+    },
+    {
+      "id": "q06",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-es15dlw-overview",
+        "tsc-es1jlw-overview",
+        "tsc-es15glw-overview",
+        "tsc-es1jfs-overview",
+        "inf-bat54-03w-overview"
+      ]
+    },
+    {
+      "id": "q07",
+      "first_gold_rank": 2,
+      "top5": [
+        "inf-bat165-surge",
+        "inf-bat165-overview",
+        "inf-bat54-05-config",
+        "inf-bat64-05w-overview",
+        "inf-bat54-06-config"
+      ]
+    },
+    {
+      "id": "q08",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat165-surge",
+        "tsc-1n5819-surge",
+        "inf-bat165-overview",
+        "inf-bat64-05w-overview",
+        "tsc-es15dlw-overview"
+      ]
+    },
+    {
+      "id": "q09",
+      "first_gold_rank": 2,
+      "top5": [
+        "inf-bas40-overview",
+        "inf-bas40-05-config",
+        "inf-bat54-05-config",
+        "inf-bas40-06-config",
+        "inf-bat64-06-overview"
+      ]
+    },
+    {
+      "id": "q10",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas40-06-config",
+        "inf-bas40-05-config",
+        "inf-bat64-06-overview",
+        "inf-bas70-05-overview",
+        "inf-bat64-05w-overview"
+      ]
+    },
+    {
+      "id": "q11",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas70-05-overview",
+        "inf-bas70-04w-overview",
+        "inf-bat64-06-overview",
+        "inf-bas40-06-config",
+        "inf-bas40-05-config"
+      ]
+    },
+    {
+      "id": "q12",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas70-04w-overview",
+        "inf-bas70-05-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-04w-overview",
+        "inf-bat64-06-overview"
+      ]
+    },
+    {
+      "id": "q13",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat54-06-config",
+        "inf-bat54-05-config",
+        "inf-bat64-06-overview",
+        "inf-bat64-05w-overview",
+        "inf-bas40-06-config"
+      ]
+    },
+    {
+      "id": "q14",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat64-04w-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-06-overview",
+        "inf-bat54-06-config",
+        "inf-bat54-05-config"
+      ]
+    },
+    {
+      "id": "q15",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas52-02v-overview",
+        "inf-bas70-05-overview",
+        "inf-bas40-overview",
+        "inf-bas70-04w-overview",
+        "inf-bat165-overview"
+      ]
+    },
+    {
+      "id": "q16",
+      "first_gold_rank": 3,
+      "top5": [
+        "inf-bat54-05-config",
+        "inf-bat54-06-config",
+        "inf-bat54-03w-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-04w-overview"
+      ]
+    },
+    {
+      "id": "q17",
+      "first_gold_rank": 1,
+      "top5": [
+        "distractor-package",
+        "distractor-led",
+        "distractor-rectifier",
+        "distractor-tvs",
+        "inf-bat165-overview"
+      ]
+    },
+    {
+      "id": "q18",
+      "first_gold_rank": 1,
+      "top5": [
+        "distractor-rectifier",
+        "distractor-tvs",
+        "tsc-sf18g-overview",
+        "tsc-es15dlw-overview",
+        "tsc-es1j-overview"
+      ]
+    }
+  ]
+}
