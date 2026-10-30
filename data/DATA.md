@@ -7,9 +7,9 @@
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 
 ## 파일
-- `corpus/` — 원본 문서. 출처별 하위 폴더는 [corpus/corpus.md](corpus/corpus.md)
-- `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/circuits.md](circuits/circuits.md)
-- `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/demo.md](demo/demo.md)
+- `corpus/` — 원본 문서. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
+- `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
+- `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
 
 ## 기준
 

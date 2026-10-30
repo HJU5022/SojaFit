@@ -7,7 +7,7 @@
 - 담당: 검색·데이터
 
 ## 주의
-- 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서와 청크 목록을 남깁니다(형식은 [data.md](../../data/data.md)).
+- 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서와 청크 목록을 남깁니다(형식은 [DATA.md](../../data/DATA.md)).
 - pdftotext가 μ를 m으로 바꿔 단위가 1000배 틀어지는 데이터시트가 있습니다. 표에서 뽑은 값은 단위 보정을 거칩니다.
 
 ## 파일

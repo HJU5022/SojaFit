@@ -80,7 +80,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
-- 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/evals.md`가 정본입니다.
+- 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
 
 ## 5. 규칙 파일
 
