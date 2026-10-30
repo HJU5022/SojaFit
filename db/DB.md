@@ -11,5 +11,6 @@ SQL은 db 볼륨이 비어 있을 때만 실행됩니다. SQL을 바꾼 뒤에�
 
 ## 파일
 - `01_init.sql` — pgvector 확장 생성
+- `001_create_business_tables.sql.draft` — 확정 정의서의 Migration 1 SQL 초안(검토 전 자동 실행 방지)
 - `ERD.md` — 표 관계도와 표마다 하는 일. SQL로 표를 바꾸면 같은 PR에서 고칩니다
 - `table-definition.md` — 업무 테이블의 컬럼, 관계, 제약조건과 미정 항목을 정리한 정의서 초안
