@@ -12,7 +12,7 @@ AI Human 7기 3차 프로젝트: RAG와 LangGraph 에이전트 서비스
 | 프로젝트 | SojaFit |
 | 조 | (조 이름) |
 | 주제와 산업 | (주제서 요약 한 줄) |
-| 배포 주소 | (Cloud Run 주소, D0에 확보) |
+| 배포 주소 | https://sojafit-api-559369539072.asia-northeast3.run.app |
 
 ## 조원 소개: 첫 과제
 
