@@ -26,7 +26,7 @@
 2. `collect download`: 목록의 PDF를 원래 파일 이름으로 받는다.
 3. `parse run`: Docling(OCR 끔, 표 구조 켬)으로 PDF마다 JSON을 저장하고, 표 숫자가 같은 쪽 pdfplumber 글자에 있는지 센다(두 번째 증인). `parse recall`은 반대 방향(표 영역 원문 숫자가 Docling 표에 있는지)을 센다.
 4. `chunk`: Docling JSON을 카드로 자른다. PDF마다 품번 표지 1장, 표 밖 글은 HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표). 문서 목록 `data/manifest.jsonl`도 쓴다.
-5. `index`: 문서와 카드를 `source_documents`·`document_chunks`에, 임베딩을 `chunk_embeddings`에 넣는다. 이미 만든 벡터는 본문 해시로 다시 쓴다.
+5. `ingest`: 문서와 카드를 `source_documents`·`document_chunks`에, 임베딩을 `chunk_embeddings`에 넣는다. 이미 만든 벡터는 본문 해시로 다시 쓴다.
 6. `retrieve(question, k=5)`: dense 상위 50개와 BM25 상위 50개를 RRF로 합쳐 상위 k개를 돌려준다.
 7. `evals/run_retrieval.py`: 평가셋 관련 문항의 지표를 계산해 `evals/results/`에 남긴다.
 
@@ -58,7 +58,7 @@
 - **AC-01** Given 칸 하나가 두 행에 걸친 표, When 표 카드를 만들면, Then 두 행 카드 모두에 그 칸의 글자가 들어간다.
 - **AC-02** Given 머리 행이 두 줄인 표, When 열 이름을 만들면, Then 두 줄의 글자를 ` / `로 잇고 같은 글자는 한 번만 쓴다.
 - **AC-03** Given 11-01 Docling JSON 1,360건, When `chunk`를 돌리면, Then 카드 52,244장, 서로 다른 본문 45,898개가 나온다.
-- **AC-04** Given 카드 파일과 벡터, When `index`를 돌리면, Then 문서 1,360행, 청크 52,244행, 임베딩 52,244행이 생긴다.
+- **AC-04** Given 카드 파일과 벡터, When `ingest`를 돌리면, Then 문서 1,360행, 청크 52,244행, 임베딩 52,244행이 생긴다.
 - **AC-05** Given 순위 목록 두 개, When RRF로 합치면, Then 두 목록에 모두 있는 카드가 한쪽에만 있는 카드보다 위에 온다.
 - **AC-06** Given 질문 "TSC 1N5819는", When BM25 토큰을 만들면, Then `["tsc", "1n5819"]`이다.
 - **AC-07** Given `gold_chunks`의 "X.pdf, 2쪽, …", When 정답 위치를 읽으면, Then 문서 `X.pdf`, 쪽 2다.

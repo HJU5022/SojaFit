@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 코퍼스 표와 임베딩 적재 (PR jeongun-2)
+- 한 일: `db/02_rag_corpus.sql`로 코퍼스 표 3개(`source_documents`, `document_chunks`는 Migration 1 초안과 같은 정의에 `IF NOT EXISTS`, `chunk_embeddings`는 `vector(1536)`과 HNSW 코사인 인덱스)를 만들었다. `backend/rag/ingest.py` 뼈대 자리에 적재 코드를 넣었다. 임베딩은 본문 해시 캐시를 다시 쓰고 없는 본문만 `embed_texts`로 만든다(128개씩, 3회 재시도). 다시 돌리면 들어간 문서·카드·임베딩은 건너뛴다.
+- 바꾼 파일: `db/02_rag_corpus.sql`, `db/DB.md`, `db/ERD.md`, `backend/rag/ingest.py`, `backend/rag/RAG.md`, `backend/rag/chunk.py`(설명 한 줄), `docs/specs/rag-pipeline.md`(단계 이름 index → ingest), `tests/test_rag_ingest.py`, `tests/TESTS.md`, 이 파일
+- 실행한 명령과 결과: 로컬 compose DB(`sojafit-db-1`)에 SQL을 두 번 적용해 두 번째는 모두 건너뜀을 확인했다. api 이미지 컨테이너를 compose 네트워크에 붙여 `python -m backend.rag.ingest`를 돌리니 2분 5초에 문서 1,360, 카드 52,244, 임베딩 52,244행이 들어갔고 새 임베딩 호출은 0회(11-01 벡터 캐시 사용)였다. 다시 돌리면 넣은 행이 0이다. 첫 실행에서 행 이름이 500자를 넘는 카드 5장(면책 문구 표) 때문에 `row_label` VARCHAR(500) 오류가 나 트랜잭션 전체가 되돌려졌고, 이름표 열만 500자로 잘라 다시 넣었다. `uv run --offline pytest -q` 결과 8 passed in 0.49s.
+- 확인 못 한 것: Supabase에는 적용하지 않았다(조장 확인 뒤). 캐시에 없는 본문을 실제로 임베딩하는 경로는 이번 실행에서 돌지 않았다(11-01 실험의 같은 호출 방식으로 45,898개를 만든 적은 있다).
+- 다음 할 일: PR jeongun-3(하이브리드 검색과 평가 실행기).
+
 ## 2026-11-01 수집·파싱·청킹 코드를 backend/rag로 옮기기 (PR jeongun-1)
 - 한 일: 작업서 `docs/specs/rag-pipeline.md`와 SPEC 4절 검색 계약, 6절 청킹·검색 방식을 먼저 커밋했다. 저장소 밖 실험 스크립트(목록 합치기, PDF 받기, GPU 파싱과 두 방향 대조, 전체 청킹)를 `backend/rag/collect.py`·`parse.py`·`chunk.py`로 옮겼다. 표 카드 규칙은 Docling 없이 테스트하도록 순수 함수로 뗐다. Docling·pdfplumber는 uv 그룹 `ingest`로 추가했다. `data/manifest.jsonl`을 1,360건으로 다시 썼다.
 - 바꾼 파일: `docs/specs/rag-pipeline.md`, `docs/specs/SPECS.md`, `SPEC.md`, `backend/rag/`(collect.py, parse.py, chunk.py, RAG.md), `tests/test_rag_chunk.py`, `tests/TESTS.md`, `pyproject.toml`, `uv.lock`, `data/manifest.jsonl`, `data/DATA.md`, `data/corpus/CORPUS.md`, 이 파일
