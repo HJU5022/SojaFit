@@ -1,0 +1,460 @@
+{
+  "components": [
+    {
+      "ref": "X1",
+      "value": "USB-A-H",
+      "footprint": "Franzininho:USB-A-H",
+      "description": ""
+    },
+    {
+      "ref": "IC1",
+      "value": "ATTINY85 - 20PU",
+      "footprint": "Housings_DIP:DIP-8_W7.62mm_Socket_LongPads",
+      "description": ""
+    },
+    {
+      "ref": "D2",
+      "value": "BZT52",
+      "footprint": "Franzininho:DIODE-BZT52",
+      "description": ""
+    },
+    {
+      "ref": "D1",
+      "value": "BZT52",
+      "footprint": "Franzininho:DIODE-BZT52",
+      "description": ""
+    },
+    {
+      "ref": "R1",
+      "value": "68R",
+      "footprint": "Franzininho:AXIAL-0.4",
+      "description": ""
+    },
+    {
+      "ref": "R2",
+      "value": "68R",
+      "footprint": "Franzininho:AXIAL-0.4",
+      "description": ""
+    },
+    {
+      "ref": "R3",
+      "value": "1K5",
+      "footprint": "Franzininho:AXIAL-0.4",
+      "description": ""
+    },
+    {
+      "ref": "LED1",
+      "value": "LED3MM",
+      "footprint": "Franzininho:LED3MM",
+      "description": ""
+    },
+    {
+      "ref": "R5",
+      "value": "1K",
+      "footprint": "Franzininho:AXIAL-0.4",
+      "description": ""
+    },
+    {
+      "ref": "D3",
+      "value": "1N4148",
+      "footprint": "Franzininho:DIODE-1N4148",
+      "description": ""
+    },
+    {
+      "ref": "ON1",
+      "value": "LED3MM",
+      "footprint": "Franzininho:LED3MM",
+      "description": ""
+    },
+    {
+      "ref": "R4",
+      "value": "1K",
+      "footprint": "Franzininho:AXIAL-0.4",
+      "description": ""
+    },
+    {
+      "ref": "JP3",
+      "value": "M08",
+      "footprint": "Franzininho:1X08_ROUND",
+      "description": ""
+    },
+    {
+      "ref": "C2",
+      "value": "10uF",
+      "footprint": "Capacitors_THT:CP_Radial_D5.0mm_P2.50mm",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "LOGO1",
+      "value": "OSHW-LOGOM",
+      "footprint": "Franzininho:OSHW-LOGO-M",
+      "description": ""
+    },
+    {
+      "ref": "RESET1",
+      "value": "TACTILE-SWITCH-PTH",
+      "footprint": "Franzininho:TAC-SWITCH-PTH",
+      "description": ""
+    },
+    {
+      "ref": "J1",
+      "value": "M03PTH",
+      "footprint": "Franzininho:1X03",
+      "description": ""
+    },
+    {
+      "ref": "U1",
+      "value": "L78L05_TO92",
+      "footprint": "library:TO-92_Inline_Wide",
+      "description": "Positive 100mA 30V Linear Regulator, Fixed Output 5V, TO-92"
+    },
+    {
+      "ref": "C1",
+      "value": "0.1uf",
+      "footprint": "Franzininho:C025-025X050",
+      "description": ""
+    }
+  ],
+  "nets": [
+    {
+      "name": "Net-(IC1-Pad6)",
+      "nodes": [
+        {
+          "ref": "JP3",
+          "pin": "2",
+          "function": null
+        },
+        {
+          "ref": "LED1",
+          "pin": "A",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "6",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(LED1-PadK)",
+      "nodes": [
+        {
+          "ref": "LED1",
+          "pin": "K",
+          "function": null
+        },
+        {
+          "ref": "R5",
+          "pin": "P$2",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(ON1-PadK)",
+      "nodes": [
+        {
+          "ref": "ON1",
+          "pin": "K",
+          "function": null
+        },
+        {
+          "ref": "R4",
+          "pin": "P$2",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "5V",
+      "nodes": [
+        {
+          "ref": "U1",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "ON1",
+          "pin": "A",
+          "function": null
+        },
+        {
+          "ref": "C1",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "JP3",
+          "pin": "7",
+          "function": null
+        },
+        {
+          "ref": "J1",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "C2",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "D3",
+          "pin": "C",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "8",
+          "function": null
+        },
+        {
+          "ref": "R3",
+          "pin": "P$1",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "2",
+          "function": null
+        },
+        {
+          "ref": "RESET1",
+          "pin": "4",
+          "function": null
+        },
+        {
+          "ref": "X1",
+          "pin": "GND",
+          "function": null
+        },
+        {
+          "ref": "R5",
+          "pin": "P$1",
+          "function": null
+        },
+        {
+          "ref": "U1",
+          "pin": "2",
+          "function": null
+        },
+        {
+          "ref": "RESET1",
+          "pin": "3",
+          "function": null
+        },
+        {
+          "ref": "R4",
+          "pin": "P$1",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "4",
+          "function": null
+        },
+        {
+          "ref": "D2",
+          "pin": "A",
+          "function": null
+        },
+        {
+          "ref": "D1",
+          "pin": "A",
+          "function": null
+        },
+        {
+          "ref": "C2",
+          "pin": "2",
+          "function": null
+        },
+        {
+          "ref": "JP3",
+          "pin": "8",
+          "function": null
+        },
+        {
+          "ref": "C1",
+          "pin": "2",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(IC1-Pad5)",
+      "nodes": [
+        {
+          "ref": "JP3",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "5",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(IC1-Pad7)",
+      "nodes": [
+        {
+          "ref": "IC1",
+          "pin": "7",
+          "function": null
+        },
+        {
+          "ref": "JP3",
+          "pin": "3",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(IC1-Pad3)",
+      "nodes": [
+        {
+          "ref": "IC1",
+          "pin": "3",
+          "function": null
+        },
+        {
+          "ref": "JP3",
+          "pin": "6",
+          "function": null
+        },
+        {
+          "ref": "R2",
+          "pin": "P$2",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(J1-Pad3)",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "3",
+          "function": null
+        },
+        {
+          "ref": "U1",
+          "pin": "3",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D1-PadC)",
+      "nodes": [
+        {
+          "ref": "R1",
+          "pin": "P$1",
+          "function": null
+        },
+        {
+          "ref": "R3",
+          "pin": "P$2",
+          "function": null
+        },
+        {
+          "ref": "X1",
+          "pin": "D-",
+          "function": null
+        },
+        {
+          "ref": "D1",
+          "pin": "C",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D2-PadC)",
+      "nodes": [
+        {
+          "ref": "R2",
+          "pin": "P$1",
+          "function": null
+        },
+        {
+          "ref": "X1",
+          "pin": "D+",
+          "function": null
+        },
+        {
+          "ref": "D2",
+          "pin": "C",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(IC1-Pad1)",
+      "nodes": [
+        {
+          "ref": "JP3",
+          "pin": "5",
+          "function": null
+        },
+        {
+          "ref": "RESET1",
+          "pin": "1",
+          "function": null
+        },
+        {
+          "ref": "RESET1",
+          "pin": "2",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "1",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D3-PadA)",
+      "nodes": [
+        {
+          "ref": "X1",
+          "pin": "VBUS",
+          "function": null
+        },
+        {
+          "ref": "D3",
+          "pin": "A",
+          "function": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(IC1-Pad2)",
+      "nodes": [
+        {
+          "ref": "R1",
+          "pin": "P$2",
+          "function": null
+        },
+        {
+          "ref": "JP3",
+          "pin": "4",
+          "function": null
+        },
+        {
+          "ref": "IC1",
+          "pin": "2",
+          "function": null
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@
 - `corpus/` — 원본 문서. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
+- `manifest.jsonl` — 수집한 데이터시트 PDF의 출처·개정판·해시·페이지 수·파싱 상태. 현재 chunks=0은 아직 청킹하지 않았다는 뜻이다.
 
 ## 기준
 
