@@ -37,7 +37,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 범용 챗봇과 같은 질문 5개로 비교할 지표: 근거 인용 비율, 없는 품번 제시 수, "문서로 확인 안 됨" 처리 수
 - 검색·판정 지표와 목표 수치: (정할 것)
-- 임베딩 예비 후보: `text-embedding-3-small`, `BAAI/bge-m3`, `nlpai-lab/KURE-v1`, `Qwen/Qwen3-Embedding-0.6B`. 30청크·18질의 dense-only 프록시는 후보 점검용이며 최종 선택 근거로 쓰지 않습니다. 최종 선택은 TSC·Infineon 100문서 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연을 함께 비교한 뒤 확정합니다. 세부 조건은 `docs/specs/embedding-model-baseline.md`와 `evals/PREREGISTER.md`를 따릅니다.
+- 임베딩 예비 후보: `text-embedding-3-small`, `BAAI/bge-m3`, `nlpai-lab/KURE-v1`, `Qwen/Qwen3-Embedding-0.6B`. 30청크·18질의 dense-only 프록시는 후보 점검용이며 최종 선택 근거로 쓰지 않습니다. 최종 선택은 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연을 함께 비교한 뒤 확정합니다. 세부 조건은 `docs/specs/embedding-model-baseline.md`와 `evals/PREREGISTER.md`를 따릅니다.
 
 ## 2. 흐름과 그래프
 
@@ -95,9 +95,11 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 6. 데이터·코퍼스 경계
 
-- 데이터시트: Taiwan Semiconductor, Infineon 다이오드
+- 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 다이오드 판정 기능이 완성된 뒤 넓힙니다.
+- 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
+- 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
-- 평가·시연용 회로: 공개 ATtiny85 KiCad 프로젝트(`data/circuits/`)
+- 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
 - 이용 조건: 비수정·고지 유지·출처 표기. 검색 색인용으로 나누는 것이 "비수정"에 맞는지: (확인할 것)
 - 코퍼스 안의 문장은 지시가 아니라 데이터입니다.
 - 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`가 정본입니다.

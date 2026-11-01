@@ -1,5 +1,33 @@
 # jeongun 작업 기록
 
+## 2026-11-01 평가 문항 50건 초안과 1차 사람 판정
+- 한 일: 기존 30건(관련 17, 비관련 13)에 Codex로 20건(관련 8, 비관련 12)을 더해 50건(관련 25, 비관련 25)을 만들었다. 출제와 정답은 Codex 세션 두 개로 나눴고, 정답 세션에는 출제 의도 필드를 지운 문항만 줬다. 정답의 숫자를 근거 쪽 원문과 기계로 대조하고 숫자형·비관련·판단형으로 나눈 검토표를 만들었다. 하정운이 50건 1차 판정을 마쳤고, 2차 판정은 김재훈이 11-02에 한다. 동결은 두 판정을 맞춘 뒤 50건을 v1로 한다.
+- 바꾼 파일: `evals/draft_50.jsonl`, `evals/DRAFT_50_REVIEW.md`, `evals/EVALS.md`(파일 목록, 동결 계획), `README.md`·`SOJAFIT.md`(v1 50건), 이 파일
+- 실행한 명령과 결과: 출제 Codex 6분·96,561토큰, 정답 Codex 5분·84,039토큰. 정답 세션의 관련/비관련과 비관련 종류가 20건 모두 출제 의도와 같았다. 기계 대조에서 원문에 없는 숫자는 오답 예시 1개(h03의 4.4)와 기준표 여유율 계산값 2개(n07의 214.3, n08의 714.3)뿐이었다. `draft_50.jsonl` 생성 스크립트의 자체 검사(50건, 관련 25, 비관련 4종, 관련 문항 근거 있음, 넷리스트 경로 있음) 통과. `uv run --offline pytest -q`는 3 passed.
+- 확인 못 한 것: 2차 사람 판정 전이다. `gold_chunks`는 데이터시트 쪽·표·행과 넷리스트 위치이고 청크 id는 아직 붙이지 않았다. 출제·정답·대조 스크립트는 저장소 밖(`전자_데이터시트/evidence/eval50_codex/`)에 있다.
+- 다음 할 일: 11-02 김재훈 2차 판정, 다른 문항 맞추기, 50건을 `dataset_v1.jsonl`로 옮겨 동결(11-03), 검색 베이스라인 점수.
+
+## 2026-11-01 하이브리드 검색(BM25 + dense) 비교
+- 한 일: 결과를 보기 전에 `evals/PREREGISTER.md` #4를 커밋하고, 개선 2 카드에서 검색 방식만 dense → 하이브리드(BM25 상위 50 + dense 상위 50, RRF k=60)로 바꿔 같은 11문항을 다시 쟀다. BM25만도 참고로 쟀다. `EVAL_REPORT.md` 1장에 결과를 적었다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/PREREGISTER.md`, `evals/results/hybrid_search_2026-11-01.json`, 이 파일
+- 실행한 명령과 결과: `uv run --offline python ../전자_데이터시트/evidence/embed/hybrid_eval.py ../corpus/tsc/chunks <결과 json>`(BM25 색인 포함 6.4초). dense만 재실행은 0.727 / 0.568 / 0.364로 앞 결과와 같았다. 하이브리드는 문서 Recall@5 1.000, MRR 0.909, 쪽 적중@5 0.727, BM25만은 1.000 / 0.894 / 0.636이었다. 기대 5개 중 1개 맞음, 4개는 범위 위.
+- 확인 못 한 것: 정답 근거는 사람 검토 전이고 문항이 11개뿐이다. 토큰 규칙과 RRF k는 하나만 써 봤다. 스크립트는 저장소 밖에 있어 재현 명령을 EVAL_REPORT 9장에 넣지 못했다.
+- 다음 할 일: v1 동결 뒤 하이브리드를 기준선으로 다시 잰다. `backend/rag/retrieve.py`에 옮길 때 회로 기호(D1~D3)와 표시 코드가 겹치는 문제를 함께 본다.
+
+## 2026-11-01 청킹 A·C 임베딩과 로컬 검색 비교
+- 한 일: 전체 1,360건의 개선 전(A)·개선 2(C) 청크에서 서로 다른 본문을 `backend.services.llm.embed_texts`(`text-embedding-3-small`, 1536차원)로 임베딩하고 로컬 도커 pgvector(`sojafit-db-1`)의 실험 표 `exp_rag_chunks`에 넣었다. 결과를 보기 전에 `evals/PREREGISTER.md` #3에 기대를 적고 커밋했다. 비동결 초안 문항 중 데이터시트 근거가 필요한 11개로 상위 5개 검색을 비교해 `EVAL_REPORT.md` 1장에 적었다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/PREREGISTER.md`, `evals/results/chunking_search_2026-11-01.json`, 이 파일
+- 실행한 명령과 결과: 임베딩 C 45,898개 5,391,648토큰(12.6분), A 10,723개 2,201,510토큰(3.1분), 재시도 0회. DB 행 수는 C 45,898, A 10,723으로 벡터 수와 같다. 문서 Recall@5 A 0.455 → C 0.727, MRR 0.321 → 0.568, C 쪽 적중@5 0.364. 사전 등록 기대 5개 중 4개 맞음, C 쪽 적중은 범위 아래.
+- 확인 못 한 것: 정답 문서·쪽은 사람 검토 전 초안이다. 11문항이라 차이를 통계로 구별할 수 없다(부호 검정 양측 p=0.25). 비용은 대시보드가 아니라 단가로 계산했다. 임베딩·적재·검색 스크립트는 저장소 밖(`전자_데이터시트/evidence/embed/`)에 있고, `backend/rag/`로 옮길 때 넣는다.
+- 다음 할 일: 품번이 정확히 맞는 카드를 찾도록 BM25나 품번 필터를 붙여 m05, h03, h04를 다시 본다. v1 동결 뒤 같은 비교를 다시 잰다.
+
+## 2026-11-01 D1 파서 비교와 TSC 데이터시트 전체 파싱
+- 한 일: TSC 다이오드 분류 13개의 제품 목록에서 데이터시트 PDF 1,360개를 모았다(저장소 밖 로컬 보관). 파서 5종(pypdf, pdfplumber, PyMuPDF, pdftotext, Docling)을 PDF 3건 원문 대조(값 41개)와 표본 100건 속도로 비교해 Docling으로 정했다. 청킹은 고정 길이 → Docling 기본 → 표 행 단위+이름표+표지 3단계를 대리 지표로 비교했다. 전체 1,360개를 원격 GPU 도커에서 Docling으로 파싱하고 표 숫자를 pdfplumber 글자와 두 방향으로 대조했다. `EVAL_REPORT.md` 1장에 원문 대조 3건, 파서 비교, 청킹 대리 지표, 파싱 방식과 검증 숫자를 채웠다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/results/`(parser_accuracy·parser_truth·parser_speed·chunking_proxy·parse_gpu_log·parse_gpu_recall·parse_gpu_witness_unmatched), 이 파일
+- 실행한 명령과 결과: 원문 대조 41개 중 Docling 41, pdfplumber 36, pdftotext 33, PyMuPDF 23, pypdf 22. 표본 100건 쪽당 Docling CPU 4.58초. GPU(RTX 3080 Ti) 전체 7,725쪽 쪽당 0.385초, 오류 0. Docling 표 숫자 중 원문에 있는 비율 99.993%, 표 영역 원문 숫자 중 Docling에 있는 비율 99.89%. EVAL_REPORT의 숫자는 위 원시 결과 파일과 다시 대조했다. `git diff --check` 통과.
+- 확인 못 한 것: 청킹 비교는 대리 지표이고 검색 점수(Recall, MRR)는 아직 재지 않았다. Docling이 아예 찾지 못한 표는 세지 못했다. 비교·파싱 스크립트는 수집 코드와 함께 `backend/rag/`로 옮길 때 넣는다.
+- 다음 할 일: 파싱 결과로 합친 칸 채우기와 청킹, 임베딩 적재, 평가셋 v1 정답 확정과 동결, 검색 기준 점수(D2).
+
 ## 2026-11-01 CI의 setup-uv 버전 고치기
 - 한 일: `ci.yml`이 없는 태그 `astral-sh/setup-uv@v10`을 가리켜 test 작업이 Set up job에서 실패했다. setup-uv의 주 버전 태그는 v1~v7까지만 있어서 있는 태그 `v10.3.3`으로 고정했다.
 - 바꾼 파일: `.github/workflows/ci.yml`, 이 파일
