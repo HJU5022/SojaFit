@@ -9,3 +9,4 @@
 ## 파일
 - `_example.md` — 강사 스캐폴드의 작업서 예시. 첫 실제 작업서를 넣을 때 지웁니다
 - `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선 작업서
+- `evaluation-draft-30.md` — 난이도별 평가 문항 30건 검수 초안의 범위·형식·확인 기준
