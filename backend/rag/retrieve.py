@@ -2,6 +2,7 @@
 
 - 하는 일: 질문을 embed_texts로 숫자로 바꿔 pgvector 코사인 거리 상위 50장을, 같은 질문의 BM25 상위 50장을 구해
   RRF(카드마다 1/(60 + 순위)의 합)로 합치고 상위 k장을 돌려준다. parts를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾는다.
+  DEMO_MODE=1(키 없는 데모)이면 임베딩 API를 부르지 않고 BM25만으로 찾는다(SPEC 7절).
 - 하지 않는 일: 리랭킹, 품번 밖 메타데이터 필터(분류·패키지 등), 질문에서 품번 뽑기(에이전트가 parts로 준다), 답변 생성. 판정(backend/judge/)
 - 출처: docs/specs/rag-pipeline.md What 6·How·AC-05·AC-06·AC-08·AC-09, EVAL_REPORT.md 1장 하이브리드 검색 비교·HNSW 개선 실험 B,
   evals/PREREGISTER.md #6
@@ -80,10 +81,19 @@ def warmup():
     _parts = part_index(rows)
 
 
+def positive_top(scores, ids, n):
+    """BM25 점수가 0보다 큰 카드 id를 높은 순으로 n개까지. 질문 단어가 하나도 안 맞으면 빈 목록."""
+    import numpy as np
+    # [왜] 점수 0인 카드까지 넣으면 질문과 상관없는 카드 50장이 RRF 후보로 들어간다(허용 밖 -inf도 같이 빠진다)
+    return [ids[j] for j in np.argsort(-np.asarray(scores), kind='stable')[:n] if scores[j] > 0]
+
+
 def _dense(conn, question, allowed=None):
     import numpy as np
-    from backend.services.llm import embed_texts
-    vec = np.asarray(embed_texts([question])[0][0], dtype=np.float32)
+    from backend.services import llm
+    if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
+        return []
+    vec = np.asarray(llm.embed_texts([question])[0][0], dtype=np.float32)
     sql, args = 'SELECT chunk_id FROM chunk_embeddings WHERE embedding_model = %s', [EMBED_MODEL]
     if allowed is not None:  # 품번 필터: 허용한 카드 안에서만 거리를 잰다(검색 단계에서 거름)
         sql, args = sql + ' AND chunk_id = ANY(%s)', args + [list(allowed)]
@@ -104,7 +114,7 @@ def _keyword(question, allowed=None):
     scores = index.get_scores(tokens(question))
     if allowed is not None:  # 허용 밖 카드는 점수를 -inf로 바꿔 후보에서 뺀다
         scores = np.where(np.isin(ids, list(allowed)), scores, -np.inf)
-    return [ids[j] for j in np.argsort(-scores, kind='stable')[:N_CAND] if np.isfinite(scores[j])]
+    return positive_top(scores, ids, N_CAND)
 
 
 def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]:

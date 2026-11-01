@@ -27,14 +27,18 @@ def gold_locations(gold_chunks):
 def main(dataset_path, out_path, k=5):
     from backend.rag.retrieve import retrieve, warmup
     items = [json.loads(line) for line in open(dataset_path, encoding='utf-8') if line.strip()]
-    warmup()
-    rows, skipped = [], []
+    targets, skipped = [], []
     for it in items:
         gold = gold_locations(it['gold_chunks']) if it['kind'] == 'relevant' else []
-        if not gold:
-            if it['kind'] == 'relevant':
-                skipped.append(it['id'])  # 회로 근거만 있는 문항
-            continue
+        if gold:
+            targets.append((it, gold))
+        elif it['kind'] == 'relevant':
+            skipped.append(it['id'])  # 회로 근거만 있는 문항
+    if not targets:  # [주의] DB에 붙기 전에, 0으로 나누기 전에 무엇이 비었는지 알려 준다
+        raise SystemExit(f'평가할 문항이 없습니다: {dataset_path}에 데이터시트 근거가 있는 관련 문항이 0건입니다')
+    warmup()
+    rows = []
+    for it, gold in targets:
         t0 = time.perf_counter()
         found = retrieve(it.get('question') or it['input'], k=k)
         sec = time.perf_counter() - t0
