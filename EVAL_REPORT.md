@@ -107,6 +107,30 @@
 - 질문의 회로 기호 D1·D2·D3가 부품 표시 코드와 같은 토큰이 되었습니다. `1N4148W SERIES_K1804.pdf` 1쪽의 표 행 세 개에 표시 코드 D1, D2, D3가 있어서, 관련 없는 질문 다섯 개(e08, m04, m07, h03, h04)의 BM25 상위 5개에 들어왔습니다.
 - 사전 등록 기대 5개 중 맞은 것은 하이브리드 Recall@5 하나이고, 나머지 넷은 범위보다 높게 나왔습니다.
 
+**저장소 코드로 다시 잼** (2026-11-01, `backend/rag/retrieve.py`, `evals/run_retrieval.py`, 비동결 `evals/draft_50.jsonl`)
+
+로컬 DB에 문서 1,360건, 카드 52,244장(같은 본문도 문서마다 저장)을 넣고 같은 하이브리드(dense 정확 검색 상위 50 + BM25 상위 50, RRF k=60)로 쟀습니다. 위 11문항은 문서 Recall@5 1.000, MRR 0.955, 쪽 적중@5 0.818이고, 데이터시트 근거가 있는 관련 19문항(새 20건 포함)은 1.000, 0.921, 0.737, 질문당 중간값 1.2초였습니다.
+
+- dense를 HNSW 인덱스로 찾으면 한국어 질문의 정확 검색 1위를 놓쳤습니다. m03은 `ef_search` 1000에서도 정확 검색 1위(거리 0.4177) 대신 0.4777 카드를 1위로 냈습니다. 그래서 검색 코드는 인덱스를 끄고 정확 검색(질문당 0.3~0.6초)을 씁니다.
+- 이 숫자는 동결 전 초안과 사람 판정 1차 기준이며 베이스라인이 아닙니다. 베이스라인은 v1 동결 뒤 같은 명령으로 잽니다.
+
+**HNSW 개선 실험** (2026-11-01, 사전 등록 #5~#8, 원시 결과 `evals/results/hnsw_exp_*_2026-11-01.json`)
+
+HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 줄이려고, 위와 같은 19문항·하이브리드에서 조건 하나씩만 바꿨습니다. 겹침은 HNSW 상위 50 중 정확 검색 상위 50에도 있는 비율입니다. KURE와 Qwen3는 원격 GPU(RTX 3080 Ti)에서 서로 다른 본문 45,898개를 다시 임베딩해 로컬 DB 실험 표에 넣었습니다.
+
+| 조건 | 정확 검색 하이브리드 Recall@5 / MRR / 쪽 적중@5 | HNSW(ef_search 100) 하이브리드 Recall@5 / MRR / 쪽 적중@5 | 겹침 ef_search 100 / 1000 | 메모 |
+|---|---|---|---|---|
+| 기준(`text-embedding-3-small`, 한국어 질문) | 1.000 / 0.921 / 0.737 | 1.000 / 0.724 / 0.737 | 61% / 92% | dense 정확 검색 0.23초, HNSW 0.004초 |
+| A. 질문을 영어로(dense·BM25 모두) | 0.632 / 0.512 / 0.526 | 0.421 / 0.337 / 0.316 | 73% / 98% | 10문항 나빠짐 |
+| B. 품번 필터 | 1.000 / 1.000 / 0.947 | 해당 없음(필터 안 정확 검색) | 해당 없음 | 19문항 모두 필터 걸림, dense 0.0007초 |
+| C. `KURE-v1` | 1.000 / 0.895 / 0.632 | 1.000 / 0.728 / 0.684 | 38% / 85% | 카드 임베딩 4.7분 |
+| D. `Qwen3-Embedding-0.6B` | 1.000 / 0.895 / 0.842 | 0.947 / 0.816 / 0.789 | 76% / 97% | 카드 임베딩 3.7분 |
+
+- B는 정답 문서 순위가 m05, n03, n08에서 2위 → 1위로 오르고 나빠진 문항이 없습니다. 3문항 차이라 19문항으로는 개선이라 단정하지 않습니다. 검색 범위가 품번이 든 문서로 줄어 카드 수와 상관없이 빠르지만, 질문에 코퍼스 품번이 없으면 걸리지 않습니다.
+- A는 HNSW 겹침은 늘었지만 BM25에 voltage, package 같은 흔한 영어 단어가 들어가 품번 신호가 묻혔습니다. 영어 질문을 dense에만 쓰는 방식은 재지 않았습니다.
+- D는 HNSW 겹침과 HNSW 하이브리드 MRR이 기준보다 높지만 정확 검색 하이브리드 MRR은 0.895로 낮고(n03 좋아짐, e08·n05 나빠짐), 로컬 모델이라 서버 메모리가 더 필요합니다.
+- C는 HNSW 겹침이 기준보다 낮았습니다.
+
 ## 2. 평가셋 (G5)
 
 | 항목 | v1 | v2 |
@@ -213,6 +237,9 @@ docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit
 
 # API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
 docker run --rm --env-file .env -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy python evals/benchmark_embeddings.py --model text-embedding-3-small
+
+# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
+docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/draft_50.jsonl evals/results/retrieval.json
 ```
 
 ## 10. 대체재와의 비교

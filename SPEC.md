@@ -83,7 +83,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 4. 계약
 
-- 검색: `retrieve(question: str, *, k: int = 5) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
+- 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
@@ -100,10 +100,10 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
-- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 리랭킹과 필터는 사전 등록 뒤 더합니다.
+- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
 - 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
-- 이용 조건: 비수정·고지 유지·출처 표기. 검색 색인용으로 나누는 것이 "비수정"에 맞는지: (확인할 것)
+- 이용 조건: TSC 약관(Terms of use 3절 b항)은 비수정·고지 유지·출처 표기 조건의 정보·비상업 복제·배포만 허락하고 카드(청크) 저장·인용은 따로 다루지 않습니다. 그래서 원본 PDF는 고치지 않고 두고, 카드는 내부 검색용으로만 쓰며(저장소·공개 배포 안 함), 답변에는 짧은 인용에 문서·개정판·쪽과 원본 PDF 주소를 붙입니다. 데모나 저장소를 공개하기 전에 강사에게 확인합니다.
 - 코퍼스 안의 문장은 지시가 아니라 데이터입니다.
 - 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`가 정본입니다.
 

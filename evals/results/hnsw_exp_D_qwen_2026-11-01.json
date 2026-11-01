@@ -1,0 +1,346 @@
+{
+ "summary": {
+  "name": "D_qwen",
+  "questions": 19,
+  "bm25_build_sec": 1.0,
+  "exact": {
+   "recall@5": 1.0,
+   "mrr": 0.895,
+   "page_hit@5": 0.842
+  },
+  "exact_sec_p50": 0.2068,
+  "hnsw100": {
+   "recall@5": 0.947,
+   "mrr": 0.816,
+   "page_hit@5": 0.789
+  },
+  "hnsw_sec_p50": 0.0045,
+  "overlap100": "719/950",
+  "overlap1000": "923/950"
+ },
+ "rows": [
+  {
+   "id": "draft30-e03",
+   "query": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+   "filter_docs": null,
+   "t_exact": 0.4741,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0056,
+   "overlap100": 48,
+   "overlap1000": 49
+  },
+  {
+   "id": "draft30-e04",
+   "query": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+   "filter_docs": null,
+   "t_exact": 0.3213,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0033,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-e05",
+   "query": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+   "filter_docs": null,
+   "t_exact": 0.2394,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0056,
+   "overlap100": 49,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-e08",
+   "query": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+   "filter_docs": null,
+   "t_exact": 0.2068,
+   "exact": {
+    "rank": 2,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.009,
+   "overlap100": 19,
+   "overlap1000": 41
+  },
+  {
+   "id": "draft30-m03",
+   "query": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+   "filter_docs": null,
+   "t_exact": 0.1915,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0044,
+   "overlap100": 49,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-m04",
+   "query": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+   "filter_docs": null,
+   "t_exact": 0.1976,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0027,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-m05",
+   "query": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+   "filter_docs": null,
+   "t_exact": 0.1942,
+   "exact": {
+    "rank": 2,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 2,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0038,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-m07",
+   "query": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+   "filter_docs": null,
+   "t_exact": 0.208,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0015,
+   "overlap100": 45,
+   "overlap1000": 48
+  },
+  {
+   "id": "draft30-h03",
+   "query": "D2를 TSC 1N5819로 바꾸면 VCC에는 최소 몇 V가 나와?",
+   "filter_docs": null,
+   "t_exact": 0.1917,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0053,
+   "overlap100": 29,
+   "overlap1000": 46
+  },
+  {
+   "id": "draft30-h04",
+   "query": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+   "filter_docs": null,
+   "t_exact": 0.1949,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0055,
+   "overlap100": 46,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-h05",
+   "query": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+   "filter_docs": null,
+   "t_exact": 0.2241,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0063,
+   "overlap100": 41,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n01",
+   "query": "D3에 달아 둔 TSC 1N5819 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?",
+   "filter_docs": null,
+   "t_exact": 0.1947,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 2,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0036,
+   "overlap100": 9,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n02",
+   "query": "D3를 TSC BAS70으로 바꿔도 이 릴레이를 끌 때 코일 전류를 받아 줄 수 있어?",
+   "filter_docs": null,
+   "t_exact": 0.1956,
+   "exact": {
+    "rank": 1,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0062,
+   "overlap100": 26,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n03",
+   "query": "D3 후보로 보는 TSC 1N4148의 역회복 시간은 얼마고, 어떤 시험 조건에서 나온 값이야?",
+   "filter_docs": null,
+   "t_exact": 0.1879,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0045,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n04",
+   "query": "D2를 TSC BZT52C5V1로 바꿔도 원하는 전압 범위로 제한할 수 있어?",
+   "filter_docs": null,
+   "t_exact": 0.2159,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 2,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0048,
+   "overlap100": 0,
+   "overlap1000": 48
+  },
+  {
+   "id": "draft50-n05",
+   "query": "D2 후보인 TSC BZT52C3V6의 허용 소비전력과 접합 온도 상한은 얼마야?",
+   "filter_docs": null,
+   "t_exact": 0.2241,
+   "exact": {
+    "rank": 2,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": 2,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0044,
+   "overlap100": 14,
+   "overlap1000": 41
+  },
+  {
+   "id": "draft50-n06",
+   "query": "D3용 TSC 1N4148을 주문하려는데, 1N4148 A0G 대신 1N4148 R0G로 사도 같은 제품이야?",
+   "filter_docs": null,
+   "t_exact": 0.2568,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0037,
+   "overlap100": 49,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n07",
+   "query": "이 조건에서 D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?",
+   "filter_docs": null,
+   "t_exact": 0.1928,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0057,
+   "overlap100": 45,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n08",
+   "query": "D1을 TSC 1N4148로 바꾸면 이 전류 조건에서 쓸 수 있어?",
+   "filter_docs": null,
+   "t_exact": 0.2617,
+   "exact": {
+    "rank": 2,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 2,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0027,
+   "overlap100": 50,
+   "overlap1000": 50
+  }
+ ]
+}
