@@ -61,7 +61,6 @@ CREATE TABLE IF NOT EXISTS chunk_embeddings (
     CONSTRAINT fk_chunk_embeddings_chunk FOREIGN KEY (chunk_id) REFERENCES document_chunks (id) ON DELETE RESTRICT
 );
 -- 거리 함수는 코사인 거리(table-definition 5.15). HNSW는 2,000차원까지 걸 수 있다.
--- [왜] 기본값(m 16, ef_construction 64)은 한국어 질문처럼 먼 질의에서 가까운 카드를 놓쳤다. 11-01 실측(관련 19문항, 상위 50, ef_search 1000):
--- 기본값 정확 검색과 겹침 99%(941/950), m 24·ef_construction 200은 100%(950/950). 카드 5만 장 기준 만들기 62초
-CREATE INDEX IF NOT EXISTS ix_chunk_embeddings_hnsw ON chunk_embeddings USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 24, ef_construction = 200);
+-- [주의] 11-01 실측에서 이 인덱스(ef_search 1000, 그래프를 촘촘하게 해도)는 한국어 질문의 정확 검색 1위를 놓쳤다.
+-- 그래서 backend/rag/retrieve.py는 인덱스를 끄고 정확 검색을 한다. 인덱스는 정의서(5.15)대로 두고, 쓸지는 사전 등록 실험으로 정한다
+CREATE INDEX IF NOT EXISTS ix_chunk_embeddings_hnsw ON chunk_embeddings USING hnsw (embedding vector_cosine_ops);
