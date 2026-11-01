@@ -1,16 +1,16 @@
 # data
 
 ## 역할
-- 이 폴더: 코퍼스 원문 스냅샷과 그 목록(manifest·청크·파라미터), 평가·시연용 회로, 데모 모드 응답을 둡니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
-- 넣는 것: 데이터시트·공개 문서 원본, `manifest.jsonl`(문서 단위), `chunks.jsonl`(청크 단위), `params.jsonl`(표에서 뽑은 파라미터와 쪽·표·행), 공개 KiCad 회로, 데모 응답.
+- 이 폴더: 코퍼스 원문 표본 3건과 문서 목록(manifest), 평가·시연용 회로, 데모 모드 응답을 둡니다. 코퍼스 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
+- 넣는 것: 데이터시트 원본 표본(`corpus/tsc/` 3건)·공개 문서 원본, `manifest.jsonl`(문서 단위), `params.jsonl`(표에서 뽑은 파라미터와 쪽·표·행), 공개 KiCad 회로, 데모 응답.
 - 넣지 않는 것: 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/fixtures/`), 실제 API 응답 원본.
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 
 ## 파일
-- `corpus/` — 원본 문서. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
+- `corpus/` — 원본 문서 표본. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
-- `manifest.jsonl` — 수집한 데이터시트 PDF의 출처·개정판·해시·페이지 수·파싱 상태. 현재 chunks=0은 아직 청킹하지 않았다는 뜻이다.
+- `manifest.jsonl` — 수집한 데이터시트 PDF의 출처·개정판·해시·페이지 수·파싱 상태. 지금은 표본 3건의 3행이고 chunks=0이다. 청킹을 확정한 뒤 1,360건으로 다시 만든다.
 
 ## 기준
 
@@ -21,7 +21,7 @@ G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(
 ## manifest 형식 (한 줄에 하나)
 
 ```json
-{"doc_id": "doc-0001", "source_url": "https://...", "collected_at": "2026-11-02", "parser": "pdf", "chunks": 214, "chars_original": 53210, "chars_kept": 53210, "truncated": false}
+{"doc_id": "tsc-1n4148-series_k2301", "path": "data/corpus/tsc/1N4148-SERIES_K2301.pdf", "manufacturer": "Taiwan Semiconductor", "title": "1N4148/1N4448/1N914B", "revision": "K2301", "source_url": "https://services.taiwansemi.com/...", "collected_at": "2026-10-30", "sha256": "cb6f27...", "bytes": 381862, "pages": 5, "parser": null, "chunks": 0, "chars_original": null, "chars_kept": null, "truncated": false, "status": "downloaded_pdf_checked_not_ingested", "purpose": "candidate_datasheet_reference", "exact_original_part_match": false, "usage_conditions": "See data/corpus/CORPUS.md; ..."}
 ```
 
 원문이 길어서 잘라 넣었다면 `chars_original`과 `chars_kept`가 다르고 `truncated`가 true여야 합니다. 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.

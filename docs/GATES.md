@@ -8,7 +8,7 @@
 |---|---|---|---|
 | G1 배포 주소 | README 팀 정보의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 진행 중: 빈 FastAPI를 배포해 공개 주소의 `/health` 응답을 확인했다(10-30). 핵심 시나리오와 평가용 계정은 아직 없다 |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | |
-| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | |
+| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 진행 중: TSC 데이터시트 1,360건을 Docling으로 파싱했다. 서로 다른 청크는 개선 2 45,898개, 개선 전 10,723개다(로컬, 11-01). `data/manifest.jsonl`은 아직 3행이고 1,360행으로 갱신할 예정이다. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 있다 |
 | G4 에이전트 | `backend/graph/`, `backend/auth.py`, `backend/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | |
