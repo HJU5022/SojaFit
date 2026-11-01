@@ -21,7 +21,10 @@ AI Human 7기 3차 프로젝트: RAG와 LangGraph 에이전트 서비스
 
 | 이름 | GitHub | 역할 | 맡는 축 | 한마디 |
 |---|---|---|---|---|
-| 홍길동(예시) | @octocat | 검색 담당 | ② RAG 품질 | 잘 부탁드립니다 |
+| 하정운(조장) | [@HJU5022](https://github.com/HJU5022) | 조장·에이전트 및 정답 판정 | ③ 에이전트 설계와 신뢰성 | 잘 부탁드립니다 |
+| 심태현 | [@SimonTH-0912](https://github.com/SimonTH-0912) | 서비스·운영 | ④ 배포와 운영 | 잘 부탁드립니다 |
+| 오세창 | [@sechang405-maker](https://github.com/sechang405-maker) | 검색·데이터 | ② RAG 품질 | 잘 부탁드립니다 |
+| 김재훈 | [@nanocode00](https://github.com/nanocode00) | 평가·문서 및 정답 판정 | ⑤ 증거 패키지와 발표 | 잘 부탁드립니다 |
 
 ## 일정
 
