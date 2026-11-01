@@ -4,7 +4,8 @@
   - manifest.jsonl의 문서를 source_documents에, chunks.jsonl의 카드를 document_chunks에 넣는다.
   - 카드마다 임베딩을 chunk_embeddings에 넣는다. 벡터는 본문 해시로 캐시(<벡터 폴더>/vectors.f32·vectors.sha.txt)에서
     다시 쓰고, 캐시에 없는 본문만 embed_texts로 만들어 캐시에 덧붙인다.
-  - 다시 돌리면 이미 들어간 문서·카드·임베딩은 건너뛴다(지우지 않는다).
+  - 다시 돌리면 이미 들어간 문서·카드·임베딩은 건너뛴다(지우지 않는다). DB에 임베딩이 있는 카드는 캐시가 없어도 API를 다시 부르지 않는다.
+  - 캐시 파일이 쓰는 도중 끊겨 벡터와 sha 수가 어긋나면, 짝이 맞는 앞부분까지 잘라 복구한다.
 - 하지 않는 일: 표 만들기(db/02_rag_corpus.sql), 검색(retrieve.py), 파싱·청킹(parse.py, chunk.py)
 - 출처: docs/specs/rag-pipeline.md What 5·AC-04·EC-04·EC-05
 - 필요한 것: DATABASE_URL, 캐시에 없는 본문이 있으면 임베딩 키(.env)
@@ -35,9 +36,16 @@ class VectorCache:
         os.makedirs(folder, exist_ok=True)
         self.vec_path, self.sha_path = os.path.join(folder, 'vectors.f32'), os.path.join(folder, 'vectors.sha.txt')
         shas = open(self.sha_path, encoding='utf-8').read().split() if os.path.exists(self.sha_path) else []
-        vecs = np.fromfile(self.vec_path, dtype=np.float32) if shas else np.zeros(0, np.float32)
-        assert len(vecs) == len(shas) * DIM, '[주의] 벡터 수와 sha 수가 맞아야 짝이 맞는다'
-        self.vecs = vecs.reshape(len(shas), DIM)
+        vecs = np.fromfile(self.vec_path, dtype=np.float32) if os.path.exists(self.vec_path) else np.zeros(0, np.float32)
+        n = min(len(shas), len(vecs) // DIM)
+        if n != len(shas) or len(vecs) != n * DIM:
+            # [왜] 벡터와 sha를 쓰는 사이에 끊기면 두 파일의 개수가 어긋난다. 짝이 맞는 앞부분까지 잘라 다시 쓴다
+            # (잘린 본문은 다음 실행에서 다시 임베딩된다)
+            shas, vecs = shas[:n], vecs[:n * DIM]
+            vecs.tofile(self.vec_path)
+            with open(self.sha_path, 'w', encoding='utf-8') as fs:
+                fs.write(''.join(s + '\n' for s in shas))
+        self.vecs = vecs.reshape(n, DIM)
         self.index = {s: i for i, s in enumerate(shas)}
 
     def get(self, sha):
@@ -78,7 +86,7 @@ def main(manifest_path, chunks_path, vec_dir):
     docs = [json.loads(line) for line in open(manifest_path, encoding='utf-8')]
     cards = [json.loads(line) for line in open(chunks_path, encoding='utf-8')]
     cache = VectorCache(vec_dir)
-    made = fill_cache(cache, {c['sha256']: c['text'] for c in cards})
+    texts = {c['sha256']: c['text'] for c in cards}
     with psycopg.connect(os.environ['DATABASE_URL']) as conn:
         register_vector(conn)
         cur = conn.cursor()
@@ -104,7 +112,12 @@ def main(manifest_path, chunks_path, vec_dir):
         # 임베딩: 이 모델의 임베딩이 없는 카드만 넣는다
         cur.execute('SELECT dc.id, dc.chunk_sha256 FROM document_chunks dc WHERE NOT EXISTS (SELECT 1 FROM chunk_embeddings ce'
                     ' WHERE ce.chunk_id = dc.id AND ce.embedding_model = %s)', (EMBED_MODEL,))
-        rows = cur.fetchall()
+        rows = [(cid, s.strip()) for cid, s in cur.fetchall()]
+        # [왜] 임베딩이 없는 카드의 본문만 캐시에 채운다. 캐시를 잃어도 DB에 이미 있는 임베딩은 다시 부르지 않는다
+        unknown = {s for _, s in rows if s not in texts}
+        if unknown:
+            raise SystemExit(f'카드 파일에 없는 본문 해시 {len(unknown)}개: DB와 같은 chunks.jsonl을 주세요')
+        made = fill_cache(cache, {s: texts[s] for _, s in rows})
         with cur.copy('COPY chunk_embeddings (chunk_id, embedding_model, embedding) FROM STDIN WITH (FORMAT BINARY)') as cp:
             cp.set_types(['int8', 'varchar', 'vector'])  # [왜] 이진 COPY는 글자로 바꾸지 않아 5만 행도 빨리 들어간다
             for chunk_id, s in rows:
