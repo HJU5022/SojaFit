@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 하이브리드 검색(BM25 + dense) 비교
+- 한 일: 결과를 보기 전에 `evals/PREREGISTER.md` #4를 커밋하고, 개선 2 카드에서 검색 방식만 dense → 하이브리드(BM25 상위 50 + dense 상위 50, RRF k=60)로 바꿔 같은 11문항을 다시 쟀다. BM25만도 참고로 쟀다. `EVAL_REPORT.md` 1장에 결과를 적었다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/PREREGISTER.md`, `evals/results/hybrid_search_2026-11-01.json`, 이 파일
+- 실행한 명령과 결과: `uv run --offline python ../전자_데이터시트/evidence/embed/hybrid_eval.py ../corpus/tsc/chunks <결과 json>`(BM25 색인 포함 6.4초). dense만 재실행은 0.727 / 0.568 / 0.364로 앞 결과와 같았다. 하이브리드는 문서 Recall@5 1.000, MRR 0.909, 쪽 적중@5 0.727, BM25만은 1.000 / 0.894 / 0.636이었다. 기대 5개 중 1개 맞음, 4개는 범위 위.
+- 확인 못 한 것: 정답 근거는 사람 검토 전이고 문항이 11개뿐이다. 토큰 규칙과 RRF k는 하나만 써 봤다. 스크립트는 저장소 밖에 있어 재현 명령을 EVAL_REPORT 9장에 넣지 못했다.
+- 다음 할 일: v1 동결 뒤 하이브리드를 기준선으로 다시 잰다. `backend/rag/retrieve.py`에 옮길 때 회로 기호(D1~D3)와 표시 코드가 겹치는 문제를 함께 본다.
+
 ## 2026-11-01 청킹 A·C 임베딩과 로컬 검색 비교
 - 한 일: 전체 1,360건의 개선 전(A)·개선 2(C) 청크에서 서로 다른 본문을 `backend.services.llm.embed_texts`(`text-embedding-3-small`, 1536차원)로 임베딩하고 로컬 도커 pgvector(`sojafit-db-1`)의 실험 표 `exp_rag_chunks`에 넣었다. 결과를 보기 전에 `evals/PREREGISTER.md` #3에 기대를 적고 커밋했다. 비동결 초안 문항 중 데이터시트 근거가 필요한 11개로 상위 5개 검색을 비교해 `EVAL_REPORT.md` 1장에 적었다.
 - 바꾼 파일: `EVAL_REPORT.md`, `evals/PREREGISTER.md`, `evals/results/chunking_search_2026-11-01.json`, 이 파일

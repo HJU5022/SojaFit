@@ -1,0 +1,1514 @@
+{
+ "model": "openai/text-embedding-3-small",
+ "query_tokens": 338,
+ "n_cand": 50,
+ "rrf_k": 60,
+ "cards": 45898,
+ "summary": {
+  "dense": {
+   "questions": 11,
+   "doc_recall@5": 0.727,
+   "doc_mrr": 0.568,
+   "page_hit@5": 0.364
+  },
+  "bm25": {
+   "questions": 11,
+   "doc_recall@5": 1.0,
+   "doc_mrr": 0.894,
+   "page_hit@5": 0.636
+  },
+  "hybrid": {
+   "questions": 11,
+   "doc_recall@5": 1.0,
+   "doc_mrr": 0.909,
+   "page_hit@5": 0.727
+  }
+ },
+ "rows": [
+  {
+   "mode": "dense",
+   "id": "draft30-e03",
+   "question": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5820 SERIES_I2105.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5820 SERIES_I2105.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS PARAMETER] ELECTRICAL SPECIFICAT"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-e03",
+   "question": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PAR"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: IF | KEY PARAM"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: IFSM | KEY PAR"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-e03",
+   "question": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PAR"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-e04",
+   "question": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+   "query_tokens": [
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": 2,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N4148WS SERIES_N2212.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148WS SERIES_N2212.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise no"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148WTH_A2501.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Fig.1 Power Dissipation Curve 1N4148WTH Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise not"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise not"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-e04",
+   "question": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+   "query_tokens": [
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-e04",
+   "question": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+   "query_tokens": [
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: IF | KEY PARAM"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148WS SERIES_N2212.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148WS SERIES_N2212.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise no"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-e05",
+   "question": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "TSCDK08065G1_A2507.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDK08065G1 Taiwan Semiconductor"
+    },
+    {
+     "doc": "TSCDM08065G1_A2507.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDM08065G1 Taiwan Semiconductor"
+    },
+    {
+     "doc": "TSCDK08120G2H_A2506.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDK08120G2H Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-e05",
+   "question": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    },
+    {
+     "doc": "RS1DFS SERIES_D2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RS1DFS SERIES_D2304.pdf · 5쪽 · Specifications of the products displayed herein are subjec"
+    },
+    {
+     "doc": "S1DFSH SERIES_B2306.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[S1DFSH SERIES_B2306.pdf · 5쪽 · Specifications of the products displayed herein are subjec"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-e05",
+   "question": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "TSCDK08065G1_A2507.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDK08065G1 Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "TSCDM08065G1_A2507.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDM08065G1 Taiwan Semiconductor"
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-e08",
+   "question": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d3",
+    "ss34"
+   ],
+   "gold_doc": "SS32 SERIES_Q2412.pdf",
+   "rank": 4,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "SS34ALH SERIES_B2103.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[SS34ALH SERIES_B2103.pdf] 이 데이터시트의 품번: SS310ALH, SS315ALH, SS320ALH, SS34ALH, SS36ALH"
+    },
+    {
+     "doc": "SS34FSH SERIES_B2103.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[SS34FSH SERIES_B2103.pdf] 이 데이터시트의 품번: SS310FSH, SS315FSH, SS320FSH, SS34FSH, SS36FSH"
+    },
+    {
+     "doc": "SS34ALH SERIES_B2103.pdf",
+     "page": 1,
+     "kind": "text",
+     "body": "SS34ALH - SS320ALH"
+    },
+    {
+     "doc": "SS32 SERIES_Q2412.pdf",
+     "page": 3,
+     "kind": "table_row",
+     "body": "[SS32 SERIES_Q2412.pdf · 3쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE: "
+    },
+    {
+     "doc": "SS34LW SERIES_D2606.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[SS34LW SERIES_D2606.pdf] 이 데이터시트의 품번: SS310LW, SS315LW, SS320LW, SS34LW, SS36LW"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-e08",
+   "question": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d3",
+    "ss34"
+   ],
+   "gold_doc": "SS32 SERIES_Q2412.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "SS32 SERIES_Q2412.pdf",
+     "page": 3,
+     "kind": "table_row",
+     "body": "[SS32 SERIES_Q2412.pdf · 3쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE: "
+    },
+    {
+     "doc": "SS32 SERIES_Q2412.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[SS32 SERIES_Q2412.pdf] 이 데이터시트의 품번: SS310, SS315, SS32, SS320, SS33, SS34, SS35, SS36, SS"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "ESH1DMH_B2110.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[ESH1DMH_B2110.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABS"
+    },
+    {
+     "doc": "ESH1DM_E2110.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[ESH1DM_E2110.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSO"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-e08",
+   "question": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d3",
+    "ss34"
+   ],
+   "gold_doc": "SS32 SERIES_Q2412.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "SS32 SERIES_Q2412.pdf",
+     "page": 3,
+     "kind": "table_row",
+     "body": "[SS32 SERIES_Q2412.pdf · 3쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE: "
+    },
+    {
+     "doc": "SS32 SERIES_Q2412.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[SS32 SERIES_Q2412.pdf] 이 데이터시트의 품번: SS310, SS315, SS32, SS320, SS33, SS34, SS35, SS36, SS"
+    },
+    {
+     "doc": "SS32H SERIES_C2412.pdf",
+     "page": 3,
+     "kind": "table_row",
+     "body": "[SS32H SERIES_C2412.pdf · 3쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE:"
+    },
+    {
+     "doc": "SS34LW SERIES_D2606.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[SS34LW SERIES_D2606.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "SS34ALH SERIES_B2103.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[SS34ALH SERIES_B2103.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-m03",
+   "question": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+   "query_tokens": [
+    "tsc",
+    "bzt52c3v6",
+    "3",
+    "6v"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 2,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B3V6 | Marking code: 3V6B "
+    },
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf · 2쪽 · ELECTRICAL PART NUMBER] ELECTRICAL PART NUMBER: BZT52C3"
+    },
+    {
+     "doc": "BZT52B2V4SH SERIES_A2503.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Notes: 1. \"xxx\" defines voltage from 2.4V(BZT52B2V4SH) to 75V(BZT52B75SH) BZT52B2V4SH - BZ"
+    },
+    {
+     "doc": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B3V3 | Marking code: 3V3B "
+    },
+    {
+     "doc": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B6V2 | Marking code: 6V2B "
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-m03",
+   "question": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+   "query_tokens": [
+    "tsc",
+    "bzt52c3v6",
+    "3",
+    "6v"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 3,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Notes: 1. \" x\" defines voltage from 3.6V (UDZS3V6B) to 36V (UDZS36B) 2. \"G\" means green co"
+    },
+    {
+     "doc": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 1,
+     "kind": "text",
+     "body": "FEATURES - Wide Zener voltage range selection: 3.6V to 36V - VZ tolerance selection of ± 2"
+    },
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf · 2쪽 · ELECTRICAL PART NUMBER] ELECTRICAL PART NUMBER: BZT52C3"
+    },
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15"
+    },
+    {
+     "doc": "BZT52C2V4-G SERIES_C2007.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52C2V4-G SERIES_C2007.pdf · 2쪽 · PART NUMBER] PART NUMBER / ELECTRICAL BZT52C2V4-G: BZ"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-m03",
+   "question": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+   "query_tokens": [
+    "tsc",
+    "bzt52c3v6",
+    "3",
+    "6v"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf · 2쪽 · ELECTRICAL PART NUMBER] ELECTRICAL PART NUMBER: BZT52C3"
+    },
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15"
+    },
+    {
+     "doc": "BZT52C2V4-G SERIES_C2007.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52C2V4-G SERIES_C2007.pdf · 2쪽 · PART NUMBER] PART NUMBER / ELECTRICAL BZT52C2V4-G: BZ"
+    },
+    {
+     "doc": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B3V6 | Marking code: 3V6B "
+    },
+    {
+     "doc": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Notes: 1. \" x\" defines voltage from 3.6V (UDZS3V6B) to 36V (UDZS36B) 2. \"G\" means green co"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-m04",
+   "question": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+   "query_tokens": [
+    "d1",
+    "tsc",
+    "bzt52c3v6"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15"
+    },
+    {
+     "doc": "BZT52C2V4S SERIES_K2411.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4S SERIES_K2411.pdf] 이 데이터시트의 품번: BZT52C10S, BZT52C11S, BZT52C12S, BZT52C13S, BZT"
+    },
+    {
+     "doc": "BZT52C2V7K SERIES_H2510.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V7K SERIES_H2510.pdf] 이 데이터시트의 품번: BZT52C10K, BZT52C11K, BZT52C12K, BZT52C13K, BZT"
+    },
+    {
+     "doc": "BZT52B2V4S SERIES_I2411.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52B2V4S SERIES_I2411.pdf] 이 데이터시트의 품번: BZT52B10S, BZT52B11S, BZT52B12S, BZT52B13S, BZT"
+    },
+    {
+     "doc": "BZT52C2V4-G SERIES_C2007.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4-G SERIES_C2007.pdf] 이 데이터시트의 품번: BZT52C10-G, BZT52C11-G, BZT52C12-G, BZT52C13-G"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-m04",
+   "question": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+   "query_tokens": [
+    "d1",
+    "tsc",
+    "bzt52c3v6"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 2,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15"
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    },
+    {
+     "doc": "RS1DFS SERIES_D2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RS1DFS SERIES_D2304.pdf · 5쪽 · Specifications of the products displayed herein are subjec"
+    },
+    {
+     "doc": "S1DFSH SERIES_B2306.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[S1DFSH SERIES_B2306.pdf · 5쪽 · Specifications of the products displayed herein are subjec"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-m04",
+   "question": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+   "query_tokens": [
+    "d1",
+    "tsc",
+    "bzt52c3v6"
+   ],
+   "gold_doc": "BZT52C2V4 SERIES_G1804.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "BZT52C2V4S SERIES_K2411.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V4S SERIES_K2411.pdf] 이 데이터시트의 품번: BZT52C10S, BZT52C11S, BZT52C12S, BZT52C13S, BZT"
+    },
+    {
+     "doc": "BZT52C2V7K SERIES_H2510.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZT52C2V7K SERIES_H2510.pdf] 이 데이터시트의 품번: BZT52C10K, BZT52C11K, BZT52C12K, BZT52C13K, BZT"
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-m05",
+   "question": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+   "query_tokens": [
+    "d3",
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": null,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148WTH_A2501.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Fig.1 Power Dissipation Curve 1N4148WTH Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148WSH_A2501.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Fig.1 Power Dissipation Curve 1N4148WSH Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N4148WTH_A2501.pdf",
+     "page": 1,
+     "kind": "text",
+     "body": "1N4148WTH Taiwan Semiconductor"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-m05",
+   "question": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+   "query_tokens": [
+    "d3",
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-m05",
+   "question": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+   "query_tokens": [
+    "d3",
+    "tsc",
+    "1n4148"
+   ],
+   "gold_doc": "1N4148 SERIES_K2301.pdf",
+   "rank": 2,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N4148 SERIES_K2301.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148 SERIES_K2301.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-m07",
+   "question": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d1",
+    "bzx84c3v3"
+   ],
+   "gold_doc": "BZX84C2V4 SERIES_F2001.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZX84C2V4 SERIES_F2001.pdf] 이 데이터시트의 품번: BZX84C10, BZX84C11, BZX84C12, BZX84C13, BZX84C15"
+    },
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "BZX84C2V4 - BZX84C39 Taiwan Semiconductor"
+    },
+    {
+     "doc": "BZX84C2V4H SERIES_A2503.pdf",
+     "page": 1,
+     "kind": "text",
+     "body": "BZX84C2V4H - BZX84C39H Taiwan Semiconductor"
+    },
+    {
+     "doc": "BZX84C2V4H SERIES_A2503.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZX84C2V4H SERIES_A2503.pdf] 이 데이터시트의 품번: BZX84C10H, BZX84C11H, BZX84C12H, BZX84C13H, BZX"
+    },
+    {
+     "doc": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 3,
+     "kind": "text",
+     "body": "Notes: 1. \"xxx\" defines voltage from 2.4V(BZX84JB2V4H) to 75V(BZX84JB75H) BZX84JB2V4H - BZ"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-m07",
+   "question": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d1",
+    "bzx84c3v3"
+   ],
+   "gold_doc": "BZX84C2V4 SERIES_F2001.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZX84C2V4 SERIES_F2001.pdf] 이 데이터시트의 품번: BZX84C10, BZX84C11, BZX84C12, BZX84C13, BZX84C15"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[UDZS3V6B SERIES_I2606.pdf · 2쪽 · PART NUMBER] PART NUMBER: UDZS3V9B | DEVICE MARKING: D1 "
+    },
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZX84C2V4 SERIES_F2001.pdf · 2쪽 · PART NUMBER (Note 1)] PART NUMBER (Note 1): BZX84C3V3 |"
+    },
+    {
+     "doc": "1.5KE SERIES_O2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1.5KE SERIES_O2104.pdf] 이 데이터시트의 품번: 1.5KE10, 1.5KE100, 1.5KE100A, 1.5KE100C, 1.5KE100CA,"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-m07",
+   "question": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+   "query_tokens": [
+    "d1",
+    "bzx84c3v3"
+   ],
+   "gold_doc": "BZX84C2V4 SERIES_F2001.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[BZX84C2V4 SERIES_F2001.pdf] 이 데이터시트의 품번: BZX84C10, BZX84C11, BZX84C12, BZX84C13, BZX84C15"
+    },
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[BZX84C2V4 SERIES_F2001.pdf · 2쪽 · PART NUMBER (Note 1)] PART NUMBER (Note 1): BZX84C3V3 |"
+    },
+    {
+     "doc": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "BZX84C2V4 - BZX84C39 Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "BZX84C2V4H SERIES_A2503.pdf",
+     "page": 1,
+     "kind": "text",
+     "body": "BZX84C2V4H - BZX84C39H Taiwan Semiconductor"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-h03",
+   "question": "D2를 TSC 1N5819로 바꾸면 VCC에는 최소 몇 V가 나와?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819",
+    "vcc",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": null,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "TESD5V0L1UC_E2007.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESD5V0L1UC_E2007.pdf · 2쪽 · PARAMETER] PARAMETER: Clamping voltage (2) | CONDITIONS: IPP"
+    },
+    {
+     "doc": "TESDC5V0_D1812.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESDC5V0_D1812.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] E"
+    },
+    {
+     "doc": "TESDC5V0_D1812.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESDC5V0_D1812.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] E"
+    },
+    {
+     "doc": "TESD5V0L1UC_E2007.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESD5V0L1UC_E2007.pdf · 2쪽 · PARAMETER] PARAMETER: Clamping voltage (2) | CONDITIONS: IPP"
+    },
+    {
+     "doc": "TESDC5V0_D1812.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[TESDC5V0_D1812.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VC at IPP= 5 A | KE"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-h03",
+   "question": "D2를 TSC 1N5819로 바꾸면 VCC에는 최소 몇 V가 나와?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819",
+    "vcc",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[UDZS3V6B SERIES_I2606.pdf · 2쪽 · PART NUMBER] PART NUMBER: UDZS4V3B | DEVICE MARKING: D2 "
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-h03",
+   "question": "D2를 TSC 1N5819로 바꾸면 VCC에는 최소 몇 V가 나와?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819",
+    "vcc",
+    "v"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 2,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "TESD5V0L1UC_E2007.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESD5V0L1UC_E2007.pdf · 2쪽 · PARAMETER] PARAMETER: Clamping voltage (2) | CONDITIONS: IPP"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "TESDC5V0_D1812.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESDC5V0_D1812.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] E"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "TESDC5V0_D1812.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TESDC5V0_D1812.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] E"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-h04",
+   "question": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": null,
+   "page_hit": false,
+   "top5": [
+    {
+     "doc": "TSCDF12065G1_A2404.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TSCDF12065G1_A2404.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION: ORDERING CODE T"
+    },
+    {
+     "doc": "TSCDM08120G2H_A2506.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDM08120G2H Taiwan Semiconductor"
+    },
+    {
+     "doc": "TSCDT12065G1_A2404.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TSCDT12065G1_A2404.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION: ORDERING CODE T"
+    },
+    {
+     "doc": "TSCDK20065G1H_A2509.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TSCDK20065G1H_A2509.pdf · 2쪽 · ORDERING INFORMATION ORDERING CODE] ORDERING INFORMATION O"
+    },
+    {
+     "doc": "TSCDK08120G2H_A2506.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDK08120G2H Taiwan Semiconductor"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-h04",
+   "question": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "RABS20M_C2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RABS20M_C2304.pdf · 5쪽 · Specifications of the products displayed herein are subject to c"
+    },
+    {
+     "doc": "RS1DFS SERIES_D2304.pdf",
+     "page": 5,
+     "kind": "table_row",
+     "body": "[RS1DFS SERIES_D2304.pdf · 5쪽 · Specifications of the products displayed herein are subjec"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-h04",
+   "question": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+   "query_tokens": [
+    "d2",
+    "tsc",
+    "1n5819"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "TSCDF12065G1_A2404.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TSCDF12065G1_A2404.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION: ORDERING CODE T"
+    },
+    {
+     "doc": "TSCDM08120G2H_A2506.pdf",
+     "page": 6,
+     "kind": "text",
+     "body": "TSCDM08120G2H Taiwan Semiconductor"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "TSCDT12065G1_A2404.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[TSCDT12065G1_A2404.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION: ORDERING CODE T"
+    }
+   ]
+  },
+  {
+   "mode": "dense",
+   "id": "draft30-h05",
+   "question": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "1n5819",
+    "d2"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5820 SERIES_I2105.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5820 SERIES_I2105.pdf] 이 데이터시트의 품번: 1N5820, 1N5821, 1N5822"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5391G-T SERIES_B2105.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5391G-T SERIES_B2105.pdf] 이 데이터시트의 품번: 1N5391G-T, 1N5392G-T, 1N5393G-T, 1N5395G-T, 1N53"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    }
+   ]
+  },
+  {
+   "mode": "bm25",
+   "id": "draft30-h05",
+   "question": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "1n5819",
+    "d2"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    }
+   ]
+  },
+  {
+   "mode": "hybrid",
+   "id": "draft30-h05",
+   "question": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+   "query_tokens": [
+    "tsc",
+    "1n5817",
+    "1n5819",
+    "d2"
+   ],
+   "gold_doc": "1N5817 SERIES_H2104.pdf",
+   "rank": 1,
+   "page_hit": true,
+   "top5": [
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "kind": "cover",
+     "body": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise note"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    },
+    {
+     "doc": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "kind": "table_row",
+     "body": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted"
+    }
+   ]
+  }
+ ]
+}
