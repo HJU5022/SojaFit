@@ -77,6 +77,7 @@ SojaFit (proj3-b)
 | `CLAUDE.md` | Claude Code가 읽는 지침. AGENTS.md를 따름 |
 | `EVAL_REPORT.md` | 개선 전후 지표, 판정 기준, 실패 분석, 재현 명령 |
 | `.env.example` | 필요한 환경변수 이름(값 없음) |
+| `.gitattributes` | 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함 |
 | `Dockerfile`, `docker-compose.yml` | `docker compose up` 한 줄 실행, 키 없는 데모 모드 |
 | `pyproject.toml`, `uv.lock`, `pytest.ini` | 의존성과 테스트 설정 |
 

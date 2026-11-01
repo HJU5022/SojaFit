@@ -1,5 +1,19 @@
 # jeongun 작업 기록
 
+## 2026-11-01 CI의 setup-uv 버전 고치기
+- 한 일: `ci.yml`이 없는 태그 `astral-sh/setup-uv@v10`을 가리켜 test 작업이 Set up job에서 실패했다. setup-uv의 주 버전 태그는 v1~v7까지만 있어서 있는 태그 `v10.3.3`으로 고정했다.
+- 바꾼 파일: `.github/workflows/ci.yml`, 이 파일
+- 실행한 명령과 결과: `gh api`로 setup-uv 태그를 조회해 `v10.3.3`(2026-10-28 릴리스)이 있고 `version` 입력을 그대로 받는 것을 확인했다. 고치기 전 PR #13의 CI 오류는 "Unable to resolve action `astral-sh/setup-uv@v10`"이었다.
+- 확인 못 한 것: 고친 CI의 통과 여부는 push 뒤 PR #13에서 확인한다.
+- 다음 할 일: 없음
+
+## 2026-11-01 평가 문항 초안 30건과 회로 5종 옮기기
+- 한 일: 김재훈의 PR #12(파일 245개, 808,365줄)에서 평가 문항 초안 30건과 그 문항이 쓰는 회로 5종만 옮겼다. 회로는 넷리스트, 연결 목록, 원본 LICENSE·README만 두고, 회로도 원본·PCB·재출력본·검증 JSON과 문항에 쓰지 않는 회로 18종은 넣지 않았다. 질문 파일이 경로를 직접 가리키므로 경로는 그대로 두었다. `CIRCUITS.md`에 회로 5종의 원 저장소·커밋·라이선스 표를 넣고, 검수 문서의 "사용자 검수" 같은 작성 도구 보고 문구를 작성자·검수자로 고쳤다. TSC 데이터시트 PDF 3건과 manifest도 함께 옮겼다.
+- 바꾼 파일: `evals/`(draft_30.jsonl, DRAFT_30_REVIEW.md, EVALS.md), `data/circuits/`(CIRCUITS.md, collected/ 20개), `data/corpus/`(CORPUS.md, tsc/ 3개), `data/manifest.jsonl`, `data/DATA.md`, `docs/specs/`(evaluation-draft-30.md, SPECS.md), `SOJAFIT.md`, `.gitattributes`, 이 파일
+- 실행한 명령과 결과: 30문항이 가리키는 넷리스트 경로가 모두 있고 sha256이 문항에 적힌 값과 같다. PDF 3건의 sha256이 manifest와 같다. 옮긴 문서의 상대 링크 중 깨진 것은 0개다(제작자 README 안의 원 저장소 그림·PDF 링크 2개는 원본 그대로 둠). `git diff --cached --check` 통과. `uv run --offline pytest -q`는 3 passed.
+- 확인 못 한 것: 문항의 관련/비관련, 정답, 근거 청크는 비어 있다. 테스트는 이 파일들을 검사하지 않는다.
+- 다음 할 일: 11-03 전에 하정운이 정답과 근거를 채운다. 문항을 늘릴 때 필요한 회로만 더한다.
+
 ## 2026-10-30 테이블 정의서 마무리
 - 한 일: PR #6으로 들어온 `db/table-definition.md`의 추가 검토 항목 A-01~A-20을 정하고 9절을 결정 기록으로 바꿨다. 조건별 비교 표 `requirement_checks`와 청크 임베딩 표 `chunk_embeddings`를 더했고(벡터 차원 N은 임베딩 모델을 정한 뒤 채움), `analysis_runs.thread_id`, `document_chunks.chunk_sha256`, `source_documents`의 manifest 열을 넣었다. Migration은 업무 표(1)와 임베딩 표(2)로 나눈다고 11절에 적었다. SPEC 3절 판정 표에 코드·채점·뜻과 판정 순서, "문서로 확인 안 됨"일 때 하는 일을 채웠다.
 - 바꾼 파일: `db/table-definition.md`, `SPEC.md`, 이 파일

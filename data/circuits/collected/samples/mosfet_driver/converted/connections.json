@@ -1,0 +1,313 @@
+{
+  "sample_id": "mosfet_driver",
+  "status": "verified_connectivity",
+  "components": [
+    {
+      "ref": "C1",
+      "value": "2.2uF+/35V+",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:0805-NO"
+    },
+    {
+      "ref": "D1",
+      "value": "RED",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:CHIPLED_0603_NOOUTLINE"
+    },
+    {
+      "ref": "D2",
+      "value": "GREEN",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:CHIPLED_0603_NOOUTLINE"
+    },
+    {
+      "ref": "D3",
+      "value": "1N400x/SM4002",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:SOD-123"
+    },
+    {
+      "ref": "FID2",
+      "value": "FIDUCIAL_1MM",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:FIDUCIAL_1MM"
+    },
+    {
+      "ref": "FID3",
+      "value": "FIDUCIAL_1MM",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:FIDUCIAL_1MM"
+    },
+    {
+      "ref": "JP1",
+      "value": "0.1\" Header",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:1X03_OVAL"
+    },
+    {
+      "ref": "JP3",
+      "value": "HEADER-1X4ROUND",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:1X04_ROUND"
+    },
+    {
+      "ref": "Q1",
+      "value": "AO3406",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:SOT23-WIDE"
+    },
+    {
+      "ref": "R1",
+      "value": "10K",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:0603-NO"
+    },
+    {
+      "ref": "R2",
+      "value": "10K",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:0603-NO"
+    },
+    {
+      "ref": "R3",
+      "value": "10K",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:0603-NO"
+    },
+    {
+      "ref": "SJ1",
+      "value": "SOLDERJUMPER_CLOSED",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:SOLDERJUMPER_CLOSEDWIRE"
+    },
+    {
+      "ref": "SJ2",
+      "value": "SOLDERJUMPER_CLOSED",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:SOLDERJUMPER_CLOSEDWIRE"
+    },
+    {
+      "ref": "U$1",
+      "value": "MOUNTINGHOLE2.5",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:MOUNTINGHOLE_2.5_PLATED"
+    },
+    {
+      "ref": "U$8",
+      "value": "MOUNTINGHOLE2.5",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:MOUNTINGHOLE_2.5_PLATED"
+    },
+    {
+      "ref": "X1",
+      "value": "2060-402/998-404",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:P-2060-402_998-404"
+    },
+    {
+      "ref": "X4",
+      "value": "JST PH 3",
+      "footprint": "Adafruit MOSFET Driver STEMMA Breakout:JSTPH3"
+    }
+  ],
+  "nets": [
+    {
+      "name": "/OUT",
+      "nodes": [
+        {
+          "ref": "D3",
+          "pin": "A",
+          "pinfunction": "A"
+        },
+        {
+          "ref": "JP3",
+          "pin": "4",
+          "pinfunction": "4"
+        },
+        {
+          "ref": "Q1",
+          "pin": "3",
+          "pinfunction": "D"
+        },
+        {
+          "ref": "X1",
+          "pin": "L1.1",
+          "pinfunction": "P1.1"
+        },
+        {
+          "ref": "X1",
+          "pin": "L1.2",
+          "pinfunction": "P1.2"
+        }
+      ]
+    },
+    {
+      "name": "/SIGNAL",
+      "nodes": [
+        {
+          "ref": "JP1",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "JP3",
+          "pin": "3",
+          "pinfunction": "3"
+        },
+        {
+          "ref": "Q1",
+          "pin": "1",
+          "pinfunction": "G"
+        },
+        {
+          "ref": "R2",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "SJ2",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "X4",
+          "pin": "3",
+          "pinfunction": "3"
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "D1",
+          "pin": "C",
+          "pinfunction": "C"
+        },
+        {
+          "ref": "D2",
+          "pin": "C",
+          "pinfunction": "C"
+        },
+        {
+          "ref": "JP1",
+          "pin": "3",
+          "pinfunction": "3"
+        },
+        {
+          "ref": "JP3",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "Q1",
+          "pin": "2",
+          "pinfunction": "S"
+        },
+        {
+          "ref": "R2",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "X4",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D1-PadA)",
+      "nodes": [
+        {
+          "ref": "D1",
+          "pin": "A",
+          "pinfunction": "A"
+        },
+        {
+          "ref": "R1",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D2-PadA)",
+      "nodes": [
+        {
+          "ref": "D2",
+          "pin": "A",
+          "pinfunction": "A"
+        },
+        {
+          "ref": "R3",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(R1-Pad2)",
+      "nodes": [
+        {
+          "ref": "R1",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "SJ2",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(R3-Pad2)",
+      "nodes": [
+        {
+          "ref": "R3",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "SJ1",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "VIN",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "D3",
+          "pin": "C",
+          "pinfunction": "C"
+        },
+        {
+          "ref": "JP1",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "JP3",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "SJ1",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "X1",
+          "pin": "L2.1",
+          "pinfunction": "P2.1"
+        },
+        {
+          "ref": "X1",
+          "pin": "L2.2",
+          "pinfunction": "P2.2"
+        },
+        {
+          "ref": "X4",
+          "pin": "2",
+          "pinfunction": "2"
+        }
+      ]
+    }
+  ]
+}

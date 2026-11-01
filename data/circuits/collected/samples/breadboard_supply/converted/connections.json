@@ -1,0 +1,363 @@
+{
+  "sample_id": "breadboard_supply",
+  "status": "verified_connectivity",
+  "components": [
+    {
+      "ref": "C1",
+      "value": "100uF",
+      "footprint": "import_input:CPOL-RADIAL-100UF-25V"
+    },
+    {
+      "ref": "C2",
+      "value": "10uF",
+      "footprint": "import_input:CPOL-RADIAL-10UF-25V"
+    },
+    {
+      "ref": "C3",
+      "value": "0.1uF",
+      "footprint": "import_input:CAP-PTH-SMALL2"
+    },
+    {
+      "ref": "D1",
+      "value": "1N4001",
+      "footprint": "import_input:DIODE-0.4"
+    },
+    {
+      "ref": "F1",
+      "value": "500mA",
+      "footprint": "import_input:PTC"
+    },
+    {
+      "ref": "J1",
+      "value": "POWER_JACKPTH",
+      "footprint": "import_input:POWER_JACK_PTH"
+    },
+    {
+      "ref": "JP1",
+      "value": "M01PTH",
+      "footprint": "import_input:1X01"
+    },
+    {
+      "ref": "JP2",
+      "value": "M01PTH",
+      "footprint": "import_input:1X01"
+    },
+    {
+      "ref": "JP3",
+      "value": "M01PTH",
+      "footprint": "import_input:1X01"
+    },
+    {
+      "ref": "JP4",
+      "value": "M01PTH",
+      "footprint": "import_input:1X01"
+    },
+    {
+      "ref": "JP5",
+      "value": "M02PTH",
+      "footprint": "import_input:1X02"
+    },
+    {
+      "ref": "LED2",
+      "value": "Power",
+      "footprint": "import_input:LED5MM"
+    },
+    {
+      "ref": "R1",
+      "value": "240",
+      "footprint": "import_input:AXIAL-0.3"
+    },
+    {
+      "ref": "R2",
+      "value": "390",
+      "footprint": "import_input:AXIAL-0.3"
+    },
+    {
+      "ref": "R3",
+      "value": "330",
+      "footprint": "import_input:AXIAL-0.3"
+    },
+    {
+      "ref": "R4",
+      "value": "330",
+      "footprint": "import_input:AXIAL-0.3"
+    },
+    {
+      "ref": "S1",
+      "value": "On/Off",
+      "footprint": "import_input:SWITCH-SPST"
+    },
+    {
+      "ref": "S2",
+      "value": "Voltage",
+      "footprint": "import_input:SWITCH-SPST"
+    },
+    {
+      "ref": "U$1",
+      "value": "LOGO-SFESK",
+      "footprint": "import_input:SFE-LOGO-FLAME"
+    },
+    {
+      "ref": "U1",
+      "value": "LM317",
+      "footprint": "import_input:TO220-ADJ"
+    }
+  ],
+  "nets": [
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "2",
+          "pinfunction": "-"
+        },
+        {
+          "ref": "C2",
+          "pin": "2",
+          "pinfunction": "-"
+        },
+        {
+          "ref": "C3",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "J1",
+          "pin": "GND",
+          "pinfunction": "GND"
+        },
+        {
+          "ref": "J1",
+          "pin": "GNDBREAK",
+          "pinfunction": "GNDBREAK"
+        },
+        {
+          "ref": "JP4",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "JP5",
+          "pin": "2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "LED2",
+          "pin": "K",
+          "pinfunction": "C"
+        },
+        {
+          "ref": "R3",
+          "pin": "P$1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "S2",
+          "pin": "3",
+          "pinfunction": "S"
+        }
+      ]
+    },
+    {
+      "name": "Net-(F1-1)",
+      "nodes": [
+        {
+          "ref": "D1",
+          "pin": "C",
+          "pinfunction": "C"
+        },
+        {
+          "ref": "F1",
+          "pin": "P$1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(R1-1)",
+      "nodes": [
+        {
+          "ref": "R1",
+          "pin": "P$1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "R2",
+          "pin": "P$2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "U1",
+          "pin": "ADJ",
+          "pinfunction": "ADJ"
+        }
+      ]
+    },
+    {
+      "name": "Net-(R2-1)",
+      "nodes": [
+        {
+          "ref": "R2",
+          "pin": "P$1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "R3",
+          "pin": "P$2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "S2",
+          "pin": "2",
+          "pinfunction": "P"
+        }
+      ]
+    },
+    {
+      "name": "Net-(R4-1)",
+      "nodes": [
+        {
+          "ref": "LED2",
+          "pin": "A",
+          "pinfunction": "A"
+        },
+        {
+          "ref": "R4",
+          "pin": "P$1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(S1-P)",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "PWR",
+          "pinfunction": "PWR"
+        },
+        {
+          "ref": "JP5",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "S1",
+          "pin": "2",
+          "pinfunction": "P"
+        }
+      ]
+    },
+    {
+      "name": "Net-(S1-S)",
+      "nodes": [
+        {
+          "ref": "D1",
+          "pin": "A",
+          "pinfunction": "A"
+        },
+        {
+          "ref": "S1",
+          "pin": "3",
+          "pinfunction": "S"
+        }
+      ]
+    },
+    {
+      "name": "RAW",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "1",
+          "pinfunction": "+"
+        },
+        {
+          "ref": "F1",
+          "pin": "P$2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "U1",
+          "pin": "IN",
+          "pinfunction": "IN"
+        }
+      ]
+    },
+    {
+      "name": "VCC",
+      "nodes": [
+        {
+          "ref": "C2",
+          "pin": "1",
+          "pinfunction": "+"
+        },
+        {
+          "ref": "C3",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "JP3",
+          "pin": "1",
+          "pinfunction": "1"
+        },
+        {
+          "ref": "R1",
+          "pin": "P$2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "R4",
+          "pin": "P$2",
+          "pinfunction": "2"
+        },
+        {
+          "ref": "U1",
+          "pin": "OUT",
+          "pinfunction": "OUT"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(JP1-Pad1)",
+      "nodes": [
+        {
+          "ref": "JP1",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(JP2-Pad1)",
+      "nodes": [
+        {
+          "ref": "JP2",
+          "pin": "1",
+          "pinfunction": "1"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(S1-O-Pad1)",
+      "nodes": [
+        {
+          "ref": "S1",
+          "pin": "1",
+          "pinfunction": "O"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(S2-O-Pad1)",
+      "nodes": [
+        {
+          "ref": "S2",
+          "pin": "1",
+          "pinfunction": "O"
+        }
+      ]
+    }
+  ]
+}
