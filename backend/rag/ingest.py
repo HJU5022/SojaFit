@@ -109,6 +109,11 @@ def main(manifest_path, chunks_path, vec_dir):
             cp.set_types(['int8', 'varchar', 'vector'])  # [왜] 이진 COPY는 글자로 바꾸지 않아 5만 행도 빨리 들어간다
             for chunk_id, s in rows:
                 cp.write_row((chunk_id, EMBED_MODEL, cache.get(s)))
+        if rows:
+            # [왜] 빈 표에 만든 HNSW 인덱스에 5만 행을 한꺼번에 넣으면 그래프가 나빠져 가까운 카드를 놓친다(11-01 실측:
+            # 정확 검색 거리 0.345 카드를 놓치고 0.436 카드를 1위로 냄). 다 넣은 뒤 인덱스를 다시 만든다
+            cur.execute("SET LOCAL maintenance_work_mem = '512MB'")
+            cur.execute('REINDEX INDEX ix_chunk_embeddings_hnsw')
         for t in ('source_documents', 'document_chunks', 'chunk_embeddings'):
             cur.execute(f'SELECT count(*) FROM {t}')
             print(t, cur.fetchone()[0])
