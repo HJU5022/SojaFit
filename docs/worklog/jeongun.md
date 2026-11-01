@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 수집·파싱·청킹 코드를 backend/rag로 옮기기 (PR jeongun-1)
+- 한 일: 작업서 `docs/specs/rag-pipeline.md`와 SPEC 4절 검색 계약, 6절 청킹·검색 방식을 먼저 커밋했다. 저장소 밖 실험 스크립트(목록 합치기, PDF 받기, GPU 파싱과 두 방향 대조, 전체 청킹)를 `backend/rag/collect.py`·`parse.py`·`chunk.py`로 옮겼다. 표 카드 규칙은 Docling 없이 테스트하도록 순수 함수로 뗐다. Docling·pdfplumber는 uv 그룹 `ingest`로 추가했다. `data/manifest.jsonl`을 1,360건으로 다시 썼다.
+- 바꾼 파일: `docs/specs/rag-pipeline.md`, `docs/specs/SPECS.md`, `SPEC.md`, `backend/rag/`(collect.py, parse.py, chunk.py, RAG.md), `tests/test_rag_chunk.py`, `tests/TESTS.md`, `pyproject.toml`, `uv.lock`, `data/manifest.jsonl`, `data/DATA.md`, `data/corpus/CORPUS.md`, 이 파일
+- 실행한 명령과 결과: `collect list`가 11-01 목록 csv를 바이트까지 같게 다시 만들었고(PDF 1,360개), `collect download`는 1,360개 모두 이미 있어 건너뛰었다. `chunk`를 파서 비교용 도커 이미지(docling 2.145.0)에서 1,360건 전체에 돌려 5분에 카드 52,244장·서로 다른 본문 45,898개가 나왔고, 11-01 결과와 문서·순서·본문 해시·종류·쪽·표 제목이 모두 같았다. manifest는 1,360행, 쪽 합계 7,725, 저장소 표본 3건과 해시가 같다. `parse run`을 같은 이미지(CPU)에서 PDF 2건에 돌리니 표 수(5, 6)와 표 숫자 대조(81/81, 49/49)가 11-01 GPU 기록과 같았고, `parse recall`은 표 영역 원문 숫자 130개를 모두 찾았다. `uv export --no-dev`와 기본 설치에는 docling·pdfplumber·torch가 0개, `--group ingest`에는 3개다. `uv run --offline pytest -q` 결과 7 passed in 0.23s.
+- 확인 못 한 것: 로컬 맥 가상환경에 `ingest` 그룹을 설치해 돌려 보지는 않았다(도커 이미지로 확인). PDF 받기는 새 파일 없이 건너뛰기만 확인했다.
+- 다음 할 일: PR jeongun-2(코퍼스 표와 임베딩 적재), jeongun-3(하이브리드 검색과 평가 실행기).
+
 ## 2026-11-01 평가 문항 50건 초안과 1차 사람 판정
 - 한 일: 기존 30건(관련 17, 비관련 13)에 Codex로 20건(관련 8, 비관련 12)을 더해 50건(관련 25, 비관련 25)을 만들었다. 출제와 정답은 Codex 세션 두 개로 나눴고, 정답 세션에는 출제 의도 필드를 지운 문항만 줬다. 정답의 숫자를 근거 쪽 원문과 기계로 대조하고 숫자형·비관련·판단형으로 나눈 검토표를 만들었다. 하정운이 50건 1차 판정을 마쳤고, 2차 판정은 김재훈이 11-02에 한다. 동결은 두 판정을 맞춘 뒤 50건을 v1로 한다.
 - 바꾼 파일: `evals/draft_50.jsonl`, `evals/DRAFT_50_REVIEW.md`, `evals/EVALS.md`(파일 목록, 동결 계획), `README.md`·`SOJAFIT.md`(v1 50건), 이 파일
