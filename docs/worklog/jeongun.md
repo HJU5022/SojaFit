@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 HNSW 개선 실험 4개 (PR jeongun-3)
+- 한 일: HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제로, 결과를 보기 전에 `evals/PREREGISTER.md` #5~#8을 커밋하고 조건 하나씩 바꾼 실험 4개를 같은 측정 스크립트로 쟀다. A 영어 질문(번역은 정답을 모르는 서브에이전트가 미리 만든 고정 번역), B 품번 필터, C `KURE-v1`, D `Qwen3-Embedding-0.6B`(C·D는 원격 GPU 도커에서 카드 45,898개를 다시 임베딩해 로컬 DB 실험 표에 넣음). EVAL_REPORT 1장에 결과 표를 넣었다.
+- 바꾼 파일: `evals/PREREGISTER.md`, `EVAL_REPORT.md`, `evals/results/hnsw_exp_*_2026-11-01.json`(5개), 이 파일
+- 실행한 명령과 결과: 측정 스크립트·원격 임베딩 스크립트는 저장소 밖 `전자_데이터시트/evidence/hnsw_exp/`. 기준을 같은 스크립트로 다시 재니 HNSW 겹침(ef 100)이 사전 등록에 적은 43%가 아니라 61%였다(인덱스를 다시 만든 뒤라서). 결과: B가 정확 하이브리드 1.000/1.000/0.947(19문항 모두 필터 걸림, dense 0.0007초), D가 HNSW 겹침 76%/97%·HNSW 하이브리드 MRR 0.816, C는 겹침 38%/85%, A는 정확 하이브리드 MRR 0.512로 떨어짐. 원격 이미지 빌드 3분, KURE 임베딩 4.7분, Qwen3 3.7분. 로컬 모델이라 API 비용 없음, 질문 임베딩만 과금.
+- 확인 못 한 것: 19문항·동결 전 초안이다. 차이가 1~3문항이라 개선이라 단정하지 않는다. 영어 질문을 dense에만 쓰는 방식과 품번 필터 + HNSW 조합은 재지 않았다. 로컬 모델의 서버(Cloud Run) 메모리·지연은 재지 않았다.
+- 다음 할 일: 품번 필터를 `retrieve()`에 넣을지 정하고(D3 메타데이터 필터), 50건 동결 뒤 다시 잰다.
+
 ## 2026-11-01 하이브리드 검색과 검색 평가 실행기 (PR jeongun-3)
 - 한 일: `backend/rag/retrieve.py` 뼈대에 `retrieve(question, k=5)`를 넣었다. dense는 `embed_texts`로 질문을 임베딩해 pgvector 정확 검색 상위 50, BM25는 `document_chunks` 본문으로 메모리 색인(`warmup()`) 상위 50, 둘을 RRF(k=60)로 합친다. `evals/run_retrieval.py`는 평가셋 관련 문항의 `gold_chunks`에서 PDF 이름과 쪽을 읽어 문서 Recall@k, MRR, 쪽 적중@k를 잰다. EVAL_REPORT 1장에 저장소 코드 결과, 9장에 재현 명령을 넣었다.
 - 바꾼 파일: `backend/rag/retrieve.py`, `backend/rag/RAG.md`, `evals/run_retrieval.py`, `evals/EVALS.md`, `tests/test_rag_retrieve.py`, `tests/TESTS.md`, `EVAL_REPORT.md`, 이 파일
