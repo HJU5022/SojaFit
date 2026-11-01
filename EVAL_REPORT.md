@@ -107,6 +107,13 @@
 - 질문의 회로 기호 D1·D2·D3가 부품 표시 코드와 같은 토큰이 되었습니다. `1N4148W SERIES_K1804.pdf` 1쪽의 표 행 세 개에 표시 코드 D1, D2, D3가 있어서, 관련 없는 질문 다섯 개(e08, m04, m07, h03, h04)의 BM25 상위 5개에 들어왔습니다.
 - 사전 등록 기대 5개 중 맞은 것은 하이브리드 Recall@5 하나이고, 나머지 넷은 범위보다 높게 나왔습니다.
 
+**저장소 코드로 다시 잼** (2026-11-01, `backend/rag/retrieve.py`, `evals/run_retrieval.py`, 비동결 `evals/draft_50.jsonl`)
+
+로컬 DB에 문서 1,360건, 카드 52,244장(같은 본문도 문서마다 저장)을 넣고 같은 하이브리드(dense 정확 검색 상위 50 + BM25 상위 50, RRF k=60)로 쟀습니다. 위 11문항은 문서 Recall@5 1.000, MRR 0.955, 쪽 적중@5 0.818이고, 데이터시트 근거가 있는 관련 19문항(새 20건 포함)은 1.000, 0.921, 0.737, 질문당 중간값 1.2초였습니다.
+
+- dense를 HNSW 인덱스로 찾으면 한국어 질문의 정확 검색 1위를 놓쳤습니다. m03은 `ef_search` 1000에서도 정확 검색 1위(거리 0.4177) 대신 0.4777 카드를 1위로 냈습니다. 그래서 검색 코드는 인덱스를 끄고 정확 검색(질문당 0.3~0.6초)을 씁니다.
+- 이 숫자는 동결 전 초안과 사람 판정 1차 기준이며 베이스라인이 아닙니다. 베이스라인은 v1 동결 뒤 같은 명령으로 잽니다.
+
 ## 2. 평가셋 (G5)
 
 | 항목 | v1 | v2 |
@@ -213,6 +220,9 @@ docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit
 
 # API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
 docker run --rm --env-file .env -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy python evals/benchmark_embeddings.py --model text-embedding-3-small
+
+# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
+docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/draft_50.jsonl evals/results/retrieval.json
 ```
 
 ## 10. 대체재와의 비교

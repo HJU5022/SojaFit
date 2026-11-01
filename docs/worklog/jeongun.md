@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 하이브리드 검색과 검색 평가 실행기 (PR jeongun-3)
+- 한 일: `backend/rag/retrieve.py` 뼈대에 `retrieve(question, k=5)`를 넣었다. dense는 `embed_texts`로 질문을 임베딩해 pgvector 정확 검색 상위 50, BM25는 `document_chunks` 본문으로 메모리 색인(`warmup()`) 상위 50, 둘을 RRF(k=60)로 합친다. `evals/run_retrieval.py`는 평가셋 관련 문항의 `gold_chunks`에서 PDF 이름과 쪽을 읽어 문서 Recall@k, MRR, 쪽 적중@k를 잰다. EVAL_REPORT 1장에 저장소 코드 결과, 9장에 재현 명령을 넣었다.
+- 바꾼 파일: `backend/rag/retrieve.py`, `backend/rag/RAG.md`, `evals/run_retrieval.py`, `evals/EVALS.md`, `tests/test_rag_retrieve.py`, `tests/TESTS.md`, `EVAL_REPORT.md`, 이 파일
+- 실행한 명령과 결과: `docker compose run --rm --no-deps -e DEMO_MODE=0 ... api python -m evals.run_retrieval evals/draft_50.jsonl <결과>`(키는 compose가 .env에서 읽음). 데이터시트 근거가 있는 관련 19문항(회로 근거만 있는 6문항 제외)에서 문서 Recall@5 1.000, MRR 0.921, 쪽 적중@5 0.737, 질문당 중간값 1.2초. 11-01 실험과 같은 11문항은 1.000 / 0.955 / 0.818(11-01 실험 1.000 / 0.909 / 0.727). 처음에는 dense를 HNSW로 찾아 MRR 0.553~0.816이 나왔고, 정확 검색과 비교해 HNSW가 한국어 질문의 가까운 카드를 놓치는 것을 확인해 정확 검색으로 바꿨다(m03: `ef_search` 1000에서도 정확 검색 1위 0.4177을 놓침). 같은 질문을 혼자 보낼 때와 묶어 보낼 때 임베딩은 코사인 1.0으로 같았다. `uv run --offline pytest -q` 11 passed.
+- 확인 못 한 것: 동결 전 초안이라 베이스라인이 아니다. 서버 기동 때 `warmup()`을 부르는 연결과 그래프 노드 연결은 하지 않았다(D4). 리랭킹·필터 없음. 정확 검색이 Cloud Run·Supabase에서 얼마나 걸리는지 재지 않았다.
+- 다음 할 일: 50건 동결 뒤 같은 명령으로 베이스라인, Supabase 적재, D3 리랭킹·필터 사전 등록.
+
 ## 2026-11-01 코퍼스 표와 임베딩 적재 (PR jeongun-2)
 - 한 일: `db/02_rag_corpus.sql`로 코퍼스 표 3개(`source_documents`, `document_chunks`는 Migration 1 초안과 같은 정의에 `IF NOT EXISTS`, `chunk_embeddings`는 `vector(1536)`과 HNSW 코사인 인덱스)를 만들었다. `backend/rag/ingest.py` 뼈대 자리에 적재 코드를 넣었다. 임베딩은 본문 해시 캐시를 다시 쓰고 없는 본문만 `embed_texts`로 만든다(128개씩, 3회 재시도). 다시 돌리면 들어간 문서·카드·임베딩은 건너뛴다.
 - 바꾼 파일: `db/02_rag_corpus.sql`, `db/DB.md`, `db/ERD.md`, `backend/rag/ingest.py`, `backend/rag/RAG.md`, `backend/rag/chunk.py`(설명 한 줄), `docs/specs/rag-pipeline.md`(단계 이름 index → ingest), `tests/test_rag_ingest.py`, `tests/TESTS.md`, 이 파일
