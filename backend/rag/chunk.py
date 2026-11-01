@@ -71,21 +71,37 @@ def table_cards(file, page, n_rows, n_cols, cells):
 
 
 def doc_cards(doc, file, parts, chunker):
-    """Docling 문서 하나의 카드 목록(표지, 표 밖 글, 표 행 순서)."""
-    from docling_core.types.doc import TableItem
+    """Docling 문서 하나의 (카드 목록(표지, 표 밖 글, 표 행 순서), 원문 글자 수, 카드에 들어간 원문 글자 수)."""
+    from docling_core.types.doc import TableItem, TextItem
     cards = [{'kind': 'cover', 'page': None, 'table': None, 'row': None,
               'text': f'[{file}] 이 데이터시트의 품번: {", ".join(parts)}'}]
+    kept_refs, headings = set(), set()  # 글 카드에 들어간 원문 글 조각, 카드 앞에 붙은 제목
     for c in chunker.chunk(doc):
         if any(isinstance(it, TableItem) for it in c.meta.doc_items):  # 표는 아래에서 행 단위로 따로 만든다
             continue
+        kept_refs.update(it.self_ref for it in c.meta.doc_items)
+        headings.update(c.meta.headings or [])  # [왜] 소제목은 doc_items가 아니라 contextualize가 카드 앞에 붙인다
         prov = c.meta.doc_items[0].prov if c.meta.doc_items else []
         cards.append({'kind': 'text', 'page': prov[0].page_no if prov else None, 'table': None, 'row': None,
                       'text': chunker.contextualize(c)})  # contextualize는 조각 앞에 소속 제목을 붙인다
+    kept_tables = []
     for t in doc.tables:
         cells = [(c.start_row_offset_idx, c.end_row_offset_idx, c.start_col_offset_idx, c.end_col_offset_idx,
                   c.text, c.column_header) for c in t.data.table_cells]
-        cards += table_cards(file, t.prov[0].page_no if t.prov else None, t.data.num_rows, t.data.num_cols, cells)
-    return cards
+        rows = table_cards(file, t.prov[0].page_no if t.prov else None, t.data.num_rows, t.data.num_cols, cells)
+        cards += rows
+        if rows:
+            kept_tables.append(t.self_ref)
+    # 원문 글자 수 = 본문(머리글·바닥글 제외) 글 조각 + 표 칸. 카드에 들어간 글자 수 = 글 카드에 든 조각 + 카드를 만든 표의 칸
+    # [왜] 이름표·표지·반복되는 열 이름은 원문이 아니라 세지 않는다. 표가 섞여 건너뛴 글 조각은 빠진 것으로 센다
+    body = [it for it, _ in doc.iterate_items()]
+    texts = [it for it in body if isinstance(it, TextItem)]
+    tables = [it for it in body if isinstance(it, TableItem)]
+    table_chars = {t.self_ref: sum(len(c.text) for c in t.data.table_cells) for t in tables}
+    original = sum(len(it.text) for it in texts) + sum(table_chars.values())
+    kept = sum(len(it.text) for it in texts if it.self_ref in kept_refs or it.text in headings) + \
+        sum(table_chars.get(r, 0) for r in kept_tables)
+    return cards, original, kept
 
 
 def main(json_dir, list_csv, pdf_dir, out_dir, manifest_path):
@@ -102,19 +118,18 @@ def main(json_dir, list_csv, pdf_dir, out_dir, manifest_path):
             doc = DoclingDocument.load_from_json(os.path.join(json_dir, f))
             parts = m['parts'].split(';')
             base = {'doc': file, 'revision': revision(file), 'category': m['categories'], 'parts': parts}
-            cards = doc_cards(doc, file, parts, chunker)
+            cards, chars_original, chars_kept = doc_cards(doc, file, parts, chunker)
             for k, card in enumerate(cards):
                 fc.write(json.dumps({**base, 'idx': k, **card, 'sha256': sha(card['text'])}, ensure_ascii=False) + '\n')
                 seen.add(sha(card['text']))
             n_cards += len(cards)
             pdf = open(os.path.join(pdf_dir, file), 'rb').read()
-            chars = len(doc.export_to_markdown())
             fm.write(json.dumps({
                 'doc_id': doc_key(file), 'path': f'corpus/tsc/pdf/{file}', 'manufacturer': 'Taiwan Semiconductor',
                 'title': re.sub(r'_[A-Z]\d{4}\.pdf$', '', file), 'revision': revision(file), 'source_url': m['url'],
                 'collected_at': '2026-11-01', 'sha256': hashlib.sha256(pdf).hexdigest(), 'bytes': len(pdf),
-                'pages': doc.num_pages(), 'parser': PARSER, 'chunks': len(cards), 'chars_original': chars,
-                'chars_kept': chars, 'truncated': False, 'status': 'parsed_chunked', 'purpose': 'corpus',
+                'pages': doc.num_pages(), 'parser': PARSER, 'chunks': len(cards), 'chars_original': chars_original,
+                'chars_kept': chars_kept, 'truncated': chars_kept < chars_original, 'status': 'parsed_chunked', 'purpose': 'corpus',
                 'exact_original_part_match': None, 'usage_conditions': USAGE}, ensure_ascii=False) + '\n')
     summary = {'cards': n_cards, 'distinct_text': len(seen), 'chunker_version': CHUNKER_VERSION}
     json.dump(summary, open(os.path.join(out_dir, 'summary.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)

@@ -24,7 +24,7 @@ G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(
 {"doc_id": "tsc-1n4148-series_k2301", "path": "data/corpus/tsc/1N4148-SERIES_K2301.pdf", "manufacturer": "Taiwan Semiconductor", "title": "1N4148/1N4448/1N914B", "revision": "K2301", "source_url": "https://services.taiwansemi.com/...", "collected_at": "2026-10-30", "sha256": "cb6f27...", "bytes": 381862, "pages": 5, "parser": null, "chunks": 0, "chars_original": null, "chars_kept": null, "truncated": false, "status": "downloaded_pdf_checked_not_ingested", "purpose": "candidate_datasheet_reference", "exact_original_part_match": false, "usage_conditions": "See data/corpus/CORPUS.md; ..."}
 ```
 
-원문이 길어서 잘라 넣었다면 `chars_original`과 `chars_kept`가 다르고 `truncated`가 true여야 합니다. 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.
+원문이 길어서 잘라 넣었다면 `chars_original`과 `chars_kept`가 다르고 `truncated`가 true여야 합니다. TSC 코퍼스에서 `chars_original`은 Docling 본문(머리글·바닥글 제외) 글 조각과 표 칸의 글자 수, `chars_kept`는 그중 카드에 들어간 글자 수입니다(`backend/rag/chunk.py`). 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.
 
 청크 단위 기록이 필요하면 `chunks.jsonl`을 따로 두고 `doc_id`와 `chunk_id`, 위치, 본문 해시(`chunk_sha256`)를 적으세요. 청크 수의 합이 1만을 넘고 **서로 다른 `chunk_sha256`이 1만 개 이상**이라는 것이 G3의 증거입니다. 정정공시처럼 본문이 같은 문서는 해시가 같으므로 한 개로 셉니다.
 

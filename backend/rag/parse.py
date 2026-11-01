@@ -8,6 +8,7 @@
 - 하지 않는 일: 청킹(chunk.py), PDF 수정. Docling이 아예 찾지 못한 표는 recall로도 셀 수 없다.
 - 출처: docs/specs/rag-pipeline.md What 3, EVAL_REPORT.md 1장(11-01 GPU 전체 파싱의 설정)
 - 의존성: uv 그룹 ingest(docling, pdfplumber). 서버 이미지에는 없다.
+- 지원 범위: 맥·리눅스·도커(리눅스)에서 PDF마다 10분 시간 제한을 건다. Windows에는 SIGALRM이 없어 시간 제한 없이 돈다.
 
 실행:
   uv run --group ingest python -m backend.rag.parse run <pdf 폴더> <출력 폴더>
@@ -22,6 +23,7 @@ import time
 from collections import Counter
 
 TIMEOUT = 600  # [주의] PDF 하나가 10분을 넘으면 끊고 실패로 남긴다
+HAS_ALARM = hasattr(signal, 'SIGALRM')  # [주의] Windows에는 SIGALRM이 없다
 NUM = re.compile(r'(?<![\w.])[-+]?\d+(?:\.\d+)?(?![\w.])')  # 칸 안의 독립된 숫자
 
 
@@ -69,16 +71,20 @@ def run(pdf_dir, out_dir):
 
     def _alarm(*_):
         raise TimeoutError(f'{TIMEOUT}초 초과')
-    signal.signal(signal.SIGALRM, _alarm)
+    if HAS_ALARM:
+        signal.signal(signal.SIGALRM, _alarm)
+    else:
+        print(f'[주의] 이 OS에는 SIGALRM이 없어 PDF별 {TIMEOUT}초 시간 제한 없이 돈다(맥·리눅스·도커 권장)', file=sys.stderr)
+    alarm = signal.alarm if HAS_ALARM else (lambda _sec: None)
     for f in sorted(x for x in os.listdir(pdf_dir) if x.lower().endswith('.pdf')):
         out_json = os.path.join(out_dir, 'docling', f + '.json')
         if os.path.exists(out_json):
             continue
         row, t0 = {'pdf': f}, time.perf_counter()
-        signal.alarm(TIMEOUT)
+        alarm(TIMEOUT)
         try:
             doc = conv.convert(os.path.join(pdf_dir, f)).document
-            signal.alarm(0)
+            alarm(0)
             w = witness(doc, os.path.join(pdf_dir, f))
             row.update(sec=round(time.perf_counter() - t0, 2), pages=doc.num_pages(), tables=len(doc.tables),
                        numbers=w['numbers'], matched=w['matched'])
@@ -86,10 +92,18 @@ def run(pdf_dir, out_dir):
             # [왜] 결과 파일을 마지막에 써야 중간에 끊긴 PDF를 다음 실행에서 다시 한다
             json.dump(doc.export_to_dict(), open(out_json, 'w', encoding='utf-8'), ensure_ascii=False)
         except Exception as e:
-            signal.alarm(0)
+            alarm(0)
             row.update(sec=round(time.perf_counter() - t0, 2), error=f'{type(e).__name__}: {e}'[:200])
         log.write(json.dumps(row, ensure_ascii=False) + '\n')
         log.flush()
+
+
+def table_box(bb, page_h, page_w):
+    """Docling 표 bbox를 pdfplumber 좌표(왼쪽 위 원점)의 (x0, top, x1, bottom)로 바꾼다. 넓이가 없으면 None."""
+    # [주의] Docling bbox는 보통 왼쪽 아래가 원점이고, pdfplumber는 왼쪽 위가 원점이다
+    top, bottom = (page_h - bb['t'], page_h - bb['b']) if bb.get('coord_origin', 'BOTTOMLEFT') == 'BOTTOMLEFT' else (bb['t'], bb['b'])
+    box = (max(0, bb['l']), max(0, top), min(page_w, bb['r']), min(page_h, bottom))
+    return box if box[0] < box[2] and box[1] < box[3] else None
 
 
 def recall_one(pdf_path, doc):
@@ -102,11 +116,8 @@ def recall_one(pdf_path, doc):
                 continue
             page_no, bb = t['prov'][0]['page_no'], t['prov'][0]['bbox']
             page = pdf.pages[page_no - 1]
-            h = doc['pages'][str(page_no)]['size']['height']
-            # [주의] Docling bbox는 보통 왼쪽 아래가 원점이고, pdfplumber는 왼쪽 위가 원점이다
-            top, bottom = (h - bb['t'], h - bb['b']) if bb.get('coord_origin', 'BOTTOMLEFT') == 'BOTTOMLEFT' else (bb['t'], bb['b'])
-            box = (max(0, bb['l']), max(0, top), min(page.width, bb['r']), min(page.height, bottom))
-            if box[0] >= box[2] or box[1] >= box[3]:
+            box = table_box(bb, doc['pages'][str(page_no)]['size']['height'], page.width)
+            if box is None:
                 continue
             src = numbers(' '.join(w['text'] for w in page.within_bbox(box).extract_words()))
             lost = src - numbers(' '.join(c.get('text', '') for c in t['data'].get('table_cells', [])))
