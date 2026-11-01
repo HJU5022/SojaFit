@@ -11,14 +11,14 @@
 | 산업과 문서 종류 | 제조(전자부품). Taiwan Semiconductor 다이오드 데이터시트 PDF(분류 13개, 품번 9,589개) |
 | 서로 다른 문서 수 / 서로 다른 청크 수 | 문서 1,360건(7,725쪽) / 청크는 청킹 확정 뒤 기록 (문서 50건 이상 / 청크 1만 개 이상. 청크는 본문 sha256 기준) |
 | 문서 파싱 방식 (PDF, 표, 스캔 중) | PDF·표. Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고 합친 칸을 채운 뒤, 표 숫자를 pdfplumber 글자와 두 방향으로 대조. Docling 숫자 중 원문에 있는 비율 99.993%(93,940/93,947), 표 영역 원문 숫자 중 Docling에 있는 비율 99.89%(93,493/93,600). 원시 결과 `evals/results/parse_gpu_*_2026-11-01.*` |
-| 청킹 방식과 크기, 겹침 | |
+| 청킹 방식과 크기, 겹침 | 3종 비교 중(개선 2가 후보), D2 검색 점수로 확정 |
 | 임베딩 모델과 선택 근거 | |
 | 벡터DB와 선택 이유, 한계 | |
 | manifest 위치 | `data/manifest.jsonl` |
 
 ### 1-1. 임베딩 모델 예비 기준선 (2026-10-30)
 
-> **선택용 본평가가 아닌 프록시 smoke test입니다.** 실제 100개 PDF와 22,000청크가 아직 없어서 공식 제품표의 대표 사양을 재서술한 30청크·18질의를 사용했습니다. Recall@5가 포화되므로 MRR과 운영 조건으로 후보만 줄이고, 100문서 표본에서 사람이 `gold_chunks`를 붙인 뒤 다시 결정합니다. 표본 원문은 [TSC 1N5817–1N5819](https://services.ts.com.tw/storage/resources/datasheet/1N5817%20SERIES_H2104.pdf), [TSC Selection Guide](https://web.ts.com.tw/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/), [Infineon BAT165](https://www.infineon.com/assets/row/public/documents/24/49/infineon-bat165-datasheet-en.pdf), [Infineon AF Schottky](https://www.infineon.com/assets/row/public/documents/24/76/infineon-pg-sod323-2-1-bas3010a03we6327htsa1-pd-en.pdf)를 대조했습니다.
+> **선택용 본평가가 아닌 프록시 smoke test입니다.** 실제 데이터시트 청크가 아직 없어서(22,000청크는 계획 때 추정한 규모) 공식 제품표의 대표 사양을 재서술한 30청크·18질의를 사용했습니다. Recall@5가 포화되므로 MRR과 운영 조건으로 후보만 줄이고, TSC 1,360건 실제 청크에서 사람이 `gold_chunks`를 붙인 뒤 다시 결정합니다. 표본 원문은 [TSC 1N5817–1N5819](https://services.ts.com.tw/storage/resources/datasheet/1N5817%20SERIES_H2104.pdf), [TSC Selection Guide](https://web.ts.com.tw/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/), [Infineon BAT165](https://www.infineon.com/assets/row/public/documents/24/49/infineon-bat165-datasheet-en.pdf), [Infineon AF Schottky](https://www.infineon.com/assets/row/public/documents/24/76/infineon-pg-sod323-2-1-bas3010a03we6327htsa1-pd-en.pdf)를 대조했습니다.
 
 평가 조건: dense cosine, 리랭커 없음, gold 1개/질의, RTX 5060 Laptop GPU 8GB, warm-up 뒤 측정. 로컬 질의 지연은 질의 임베딩과 22,000개 float32 벡터 exact search를 합친 값입니다. 22,000개 지연용 행렬은 30개 표본 벡터를 반복해 만들었으므로 검색 품질이 아니라 연산 지연만 참고합니다. 실제 서비스의 BM25·메타데이터 필터·리랭커를 넣지 않은 `dense-only` 결과이며 G5 본평가로 세지 않습니다.
 
@@ -39,13 +39,13 @@
 
 **키 없는 데모 규칙**: API 모델을 선택해도 데모 요청에서 임의의 다른 임베딩 모델로 바꾸지 않습니다. 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 API·벡터 검색을 호출하지 않고 BM25-only로 근거를 찾은 뒤 근거 문장을 추출해 반환합니다. 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다. 실제 API 응답 원본은 저장하지 않습니다.
 
-**예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 100문서 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
+**예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크(계획 때 추정 규모) 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 TSC 1,360건 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
 
-**다음 본평가**: TSC·Infineon 데이터시트 100건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
+**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
 
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
 
-대조 방법: 원문 쪽을 화면으로 띄워 정답 값 41개를 만들고(텍스트 레이어로 숫자 재확인), 값과 그 값을 해석하는 데 필요한 기호·품번·조건이 파싱 결과의 같은 행(줄)에 있으면 맞은 것으로 셉니다. 원시 결과는 `evals/results/parser_accuracy_2026-11-01.json`, 정답표는 `evals/results/parser_truth_2026-11-01.json`입니다(2026-11-01, 도커 linux/aarch64 CPU).
+대조 방법: 원문 쪽을 화면으로 띄워 정답 값 41개를 만들고(텍스트 레이어로 숫자 재확인, 하정운이 약 절반을 원문과 다시 대조해 틀린 값 없음), 값과 그 값을 해석하는 데 필요한 기호·품번·조건이 파싱 결과의 같은 행(줄)에 있으면 맞은 것으로 셉니다. 원시 결과는 `evals/results/parser_accuracy_2026-11-01.json`, 정답표는 `evals/results/parser_truth_2026-11-01.json`입니다(2026-11-01, 도커 linux/aarch64 CPU).
 
 | # | 문서 | 원문에서 본 것 | 파싱 결과 | 틀어진 곳 |
 |---|---|---|---|---|

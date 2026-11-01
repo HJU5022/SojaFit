@@ -8,7 +8,7 @@
 ## Goal
 - 초안 30건, 쉬움·중간·어려움 각 10건을 작성한다.
 - 각 난이도에서 관련 의도 5건·비관련 의도 5건을 배치한다. 실제 kind는 검수 전 null이다.
-- 비관련 의도 15건은 out_of_domain 3, unknown_entity 4, missing_attribute 5, wrong_period 3으로 구성한다.
+- 비관련 의도 13건은 out_of_domain 3, unknown_entity 2, missing_attribute 5, wrong_period 3으로 구성한다. unknown_entity는 처음 4건이었으나 e08(SS34)·m07(BZX84C3V3)의 데이터시트가 코퍼스에 있어 11-01에 관련으로 바꿨다.
 - Out of Scope: 서비스 지원 범위·판정 기준 변경, 확정 정답, 색인·모델 호출·평가 측정·동결.
 
 ## What
