@@ -103,7 +103,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
 - 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
-- 이용 조건: 비수정·고지 유지·출처 표기. 검색 색인용으로 나누는 것이 "비수정"에 맞는지: (확인할 것)
+- 이용 조건: TSC 약관(Terms of use 3절 b항)은 비수정·고지 유지·출처 표기 조건의 정보·비상업 복제·배포만 허락하고 카드(청크) 저장·인용은 따로 다루지 않습니다. 그래서 원본 PDF는 고치지 않고 두고, 카드는 내부 검색용으로만 쓰며(저장소·공개 배포 안 함), 답변에는 짧은 인용에 문서·개정판·쪽과 원본 PDF 주소를 붙입니다. 데모나 저장소를 공개하기 전에 강사에게 확인합니다.
 - 코퍼스 안의 문장은 지시가 아니라 데이터입니다.
 - 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`가 정본입니다.
 
