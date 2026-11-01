@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 retrieve()에 품번 필터 인자 parts 넣기 (PR jeongun-3)
+- 한 일: `retrieve(question, *, k=5, parts=None)`에 품번 필터를 넣었다(HNSW 개선 실험 B, 사전 등록 #6의 방식). `warmup()`이 BM25 색인과 함께 표지 카드(`이 데이터시트의 품번: ...`)로 품번(소문자) → 문서 색인을 만든다. `parts`를 주면 그 품번이 적힌 문서의 카드만 dense(`WHERE chunk_id = ANY(...)`, 인덱스를 끈 정확 검색)와 BM25(허용 밖 카드는 -inf) 후보로 쓰고 RRF는 같다. 품번은 대소문자만 무시하고 전체가 같아야 걸린다. 코퍼스에 없는 품번뿐이면 `[]`를 돌려주고 전체 코퍼스로 넘어가지 않는다. 질문에서 품번을 뽑는 일은 하지 않는다(에이전트가 후보 품번을 준다).
+- 바꾼 파일: `backend/rag/retrieve.py`, `backend/rag/RAG.md`, `tests/test_rag_retrieve.py`, `tests/TESTS.md`, `docs/specs/rag-pipeline.md`(What 6, Out of Scope, How, AC-08·09), `SPEC.md`(4절 검색 계약, 6절 검색), 이 파일
+- 실행한 명령과 결과: `uv run --offline pytest -q` 14 passed. 로컬 compose DB에 `docker compose run --rm --no-deps -u ... -e DEMO_MODE=0 ... api python <확인 스크립트>`(스크립트는 저장소 밖 임시 폴더, 키는 compose가 .env에서 읽음). warmup 1.7초, 표지가 읽힌 문서 1,360/1,360, 색인 품번 9,589개. "SS34 정격이 어떻게 돼?" + `parts=["SS34"]` → 5장 모두 `SS32 SERIES_Q2412.pdf`(허용 카드 55장). `parts=["1N4148"]` → 5장 모두 `1N4148 SERIES_K2301.pdf`(허용 문서 1개, 1N4148W 문서는 따로). `parts=["NOPE123"]` → `[]`. parts 없이 → 5장(SS32·SS32H·SS34ALH·SS34FSH 문서가 섞임). 데이터시트 근거가 있는 관련 19문항에 질문 속 코퍼스 품번을 `parts`로 주니 19/19 필터가 걸려 문서 Recall@5 1.000, MRR 1.000, 쪽 적중@5 0.947(실험 B와 같음, 필터 없는 하이브리드는 1.000 / 0.921 / 0.737), 질문당 중간값 1.05초(임베딩 호출 포함). 쪽을 놓친 문항은 n03 하나. parts 없을 때 BM25 후보가 바꾸기 전 식과 50문항 모두 같았다(API 호출 없이). 질문 임베딩 호출 22회.
+- 확인 못 한 것: 19문항·동결 전 초안이다. parts 없는 경로의 dense SQL은 바꾸기 전과 같은 문장이라 다시 재지 않았다. 에이전트가 `parts`를 정하는 노드와 서버 기동 때 `warmup()` 연결은 하지 않았다. 표지 표기와 다른 품번 표기(접미사·하이픈 차이)는 걸리지 않는다.
+- 다음 할 일: 50건 동결 뒤 같은 방식으로 다시 재고, 판정 노드가 후보 품번을 `parts`로 넘기게 연결한다.
+
 ## 2026-11-01 HNSW 개선 실험 4개 (PR jeongun-3)
 - 한 일: HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제로, 결과를 보기 전에 `evals/PREREGISTER.md` #5~#8을 커밋하고 조건 하나씩 바꾼 실험 4개를 같은 측정 스크립트로 쟀다. A 영어 질문(번역은 정답을 모르는 서브에이전트가 미리 만든 고정 번역), B 품번 필터, C `KURE-v1`, D `Qwen3-Embedding-0.6B`(C·D는 원격 GPU 도커에서 카드 45,898개를 다시 임베딩해 로컬 DB 실험 표에 넣음). EVAL_REPORT 1장에 결과 표를 넣었다.
 - 바꾼 파일: `evals/PREREGISTER.md`, `EVAL_REPORT.md`, `evals/results/hnsw_exp_*_2026-11-01.json`(5개), 이 파일

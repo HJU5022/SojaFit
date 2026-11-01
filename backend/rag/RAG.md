@@ -15,7 +15,7 @@
 - `parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
 - `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
 - `ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
-- `retrieve.py` — `retrieve(question, k=5)`: dense 정확 검색 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. 리랭킹·메타데이터 필터는 아직 없음. `DATABASE_URL`과 임베딩 키 필요
+- `retrieve.py` — `retrieve(question, k=5, parts=None)`: dense 정확 검색 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 리랭킹은 아직 없음. `DATABASE_URL`과 임베딩 키 필요
 
 작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·카드는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.
 
