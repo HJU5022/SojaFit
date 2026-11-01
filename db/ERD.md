@@ -14,9 +14,12 @@
 
 | 표 | 하는 일 | 만드는 SQL |
 |---|---|---|
-| (정할 것) | | |
+| `source_documents` | 코퍼스 문서(데이터시트)의 출처·개정판·해시·파서 | `02_rag_corpus.sql` |
+| `document_chunks` | 검색 카드의 본문·쪽·표 이름·행 | `02_rag_corpus.sql` |
+| `chunk_embeddings` | 카드의 임베딩 `vector(1536)`, HNSW 코사인 인덱스 | `02_rag_corpus.sql` |
+| (정할 것) | 로그인 사용자, 승인된 견적서 등 업무 표 | Migration 1 초안 검토 뒤 |
 
-SPEC에서 나오는 후보는 로그인 사용자, 코퍼스 청크와 벡터, 승인된 견적서입니다. 이름과 열은 SPEC 4절에서 계약을 정한 뒤 적습니다.
+코퍼스 표 두 개(`source_documents`, `document_chunks`)는 Migration 1 초안과 같은 정의라, 초안이 확정돼도 `IF NOT EXISTS`로 겹치지 않습니다.
 
 ## 라이브러리가 만드는 표
 

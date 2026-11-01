@@ -4,7 +4,7 @@
   - PDF마다 카드: 품번 표지 1장 + 표 밖 글(Docling HybridChunker, 표가 든 조각은 뺌) + 표 한 행 = 한 장.
     표 카드는 합친 칸을 걸친 모든 자리에 채우고 앞에 [파일 · 쪽 · 표 제목] 이름표를 붙인다.
   - <출력>/chunks.jsonl(카드 한 장 = 한 줄), <출력>/summary.json(카드 수, 서로 다른 본문 수), manifest.jsonl(문서 한 개 = 한 줄)
-- 하지 않는 일: 임베딩·DB 적재(index.py), 파싱(parse.py)
+- 하지 않는 일: 임베딩·DB 적재(ingest.py), 파싱(parse.py)
 - 출처: docs/specs/rag-pipeline.md What 4·AC-01~03, EVAL_REPORT.md 1장 청킹 비교(개선 2)
 - 의존성: 표 카드 함수는 표준 라이브러리만 쓴다. 실행(main)에는 uv 그룹 ingest(docling)가 필요하다.
 

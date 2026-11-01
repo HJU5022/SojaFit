@@ -11,3 +11,4 @@
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_llm.py` — API 호출 없이 mock client로 중앙 임베딩 호출의 벡터·사용량·provider metadata 반환 계약 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키
+- `test_rag_ingest.py` — 벡터 캐시를 다시 열어도 본문 해시별 벡터가 같은지
