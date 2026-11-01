@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 청킹 A·C 임베딩과 로컬 검색 비교
+- 한 일: 전체 1,360건의 개선 전(A)·개선 2(C) 청크에서 서로 다른 본문을 `backend.services.llm.embed_texts`(`text-embedding-3-small`, 1536차원)로 임베딩하고 로컬 도커 pgvector(`sojafit-db-1`)의 실험 표 `exp_rag_chunks`에 넣었다. 결과를 보기 전에 `evals/PREREGISTER.md` #3에 기대를 적고 커밋했다. 비동결 초안 문항 중 데이터시트 근거가 필요한 11개로 상위 5개 검색을 비교해 `EVAL_REPORT.md` 1장에 적었다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/PREREGISTER.md`, `evals/results/chunking_search_2026-11-01.json`, 이 파일
+- 실행한 명령과 결과: 임베딩 C 45,898개 5,391,648토큰(12.6분), A 10,723개 2,201,510토큰(3.1분), 재시도 0회. DB 행 수는 C 45,898, A 10,723으로 벡터 수와 같다. 문서 Recall@5 A 0.455 → C 0.727, MRR 0.321 → 0.568, C 쪽 적중@5 0.364. 사전 등록 기대 5개 중 4개 맞음, C 쪽 적중은 범위 아래.
+- 확인 못 한 것: 정답 문서·쪽은 사람 검토 전 초안이다. 11문항이라 차이를 통계로 구별할 수 없다(부호 검정 양측 p=0.25). 비용은 대시보드가 아니라 단가로 계산했다. 임베딩·적재·검색 스크립트는 저장소 밖(`전자_데이터시트/evidence/embed/`)에 있고, `backend/rag/`로 옮길 때 넣는다.
+- 다음 할 일: 품번이 정확히 맞는 카드를 찾도록 BM25나 품번 필터를 붙여 m05, h03, h04를 다시 본다. v1 동결 뒤 같은 비교를 다시 잰다.
+
 ## 2026-11-01 D1 파서 비교와 TSC 데이터시트 전체 파싱
 - 한 일: TSC 다이오드 분류 13개의 제품 목록에서 데이터시트 PDF 1,360개를 모았다(저장소 밖 로컬 보관). 파서 5종(pypdf, pdfplumber, PyMuPDF, pdftotext, Docling)을 PDF 3건 원문 대조(값 41개)와 표본 100건 속도로 비교해 Docling으로 정했다. 청킹은 고정 길이 → Docling 기본 → 표 행 단위+이름표+표지 3단계를 대리 지표로 비교했다. 전체 1,360개를 원격 GPU 도커에서 Docling으로 파싱하고 표 숫자를 pdfplumber 글자와 두 방향으로 대조했다. `EVAL_REPORT.md` 1장에 원문 대조 3건, 파서 비교, 청킹 대리 지표, 파싱 방식과 검증 숫자를 채웠다.
 - 바꾼 파일: `EVAL_REPORT.md`, `evals/results/`(parser_accuracy·parser_truth·parser_speed·chunking_proxy·parse_gpu_log·parse_gpu_recall·parse_gpu_witness_unmatched), 이 파일
