@@ -10,7 +10,7 @@
 - `corpus/` — 원본 문서 표본. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
-- `manifest.jsonl` — 수집한 데이터시트 PDF의 출처·개정판·해시·페이지 수·파싱 상태. 지금은 표본 3건의 3행이고 chunks=0이다. 청킹을 확정한 뒤 1,360건으로 다시 만든다.
+- `manifest.jsonl` — 코퍼스 데이터시트 PDF 1,360건의 출처·개정판·해시·쪽 수·파서·카드 수. `backend/rag/chunk.py`가 쓴다. `path`는 로컬 `SojaFit/` 기준 저장소 밖 경로다
 
 ## 기준
 

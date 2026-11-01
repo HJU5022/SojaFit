@@ -83,7 +83,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 4. 계약
 
-- 모듈 사이 함수 이름과 시그니처: (정할 것)
+- 검색: `retrieve(question: str, *, k: int = 5) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
+- 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
 
@@ -98,6 +99,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 다이오드 판정 기능이 완성된 뒤 넓힙니다.
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
+- 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
+- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 리랭킹과 필터는 사전 등록 뒤 더합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
 - 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
 - 이용 조건: 비수정·고지 유지·출처 표기. 검색 색인용으로 나누는 것이 "비수정"에 맞는지: (확인할 것)

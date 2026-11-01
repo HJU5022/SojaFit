@@ -11,7 +11,17 @@
 - pdftotext가 μ를 m으로 바꿔 단위가 1000배 틀어지는 데이터시트가 있습니다. 표에서 뽑은 값은 단위 보정을 거칩니다.
 
 ## 파일
-- `ingest.py` — 문서 파싱, 청킹, manifest 기록 (미구현 뼈대)
+- `collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`)
+- `parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
+- `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
+- `ingest.py` — 문서 적재 (미구현 뼈대)
 - `retrieve.py` — 하이브리드 검색, 리랭킹, 메타데이터 필터 (미구현 뼈대)
 
-데이터시트 수집·파싱·청킹 코드는 지금 저장소 밖에 있고, 다음 PR에서 이 폴더로 옮깁니다.
+작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·카드는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.
+
+```bash
+python -m backend.rag.collect list <xlsx 폴더> <목록 csv>
+python -m backend.rag.collect download <목록 csv> <pdf 폴더>
+uv run --group ingest python -m backend.rag.parse run <pdf 폴더> <출력 폴더>
+uv run --group ingest python -m backend.rag.chunk <docling json 폴더> <목록 csv> <pdf 폴더> <출력 폴더> data/manifest.jsonl
+```
