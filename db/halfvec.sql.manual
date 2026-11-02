@@ -25,5 +25,5 @@ BEGIN
         ALTER TABLE chunk_embeddings ALTER COLUMN embedding TYPE halfvec(1536) USING embedding::halfvec(1536);
     END IF;
 END $$;
-CREATE INDEX ix_chunk_embeddings_hnsw ON chunk_embeddings USING hnsw (embedding halfvec_cosine_ops);
+-- PR #23 방향: 정확 검색을 사용하므로 HNSW는 재생성하지 않습니다.
 COMMIT;

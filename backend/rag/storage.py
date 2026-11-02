@@ -67,7 +67,8 @@ def compare(conn, samples=1000, max_seconds=120):
                 prefix = ('SELECT ce.chunk_id FROM chunk_embeddings ce JOIN document_chunks dc ON dc.id=ce.chunk_id '
                           'WHERE ce.embedding_model=%s AND dc.chunk_sha256<>%s ORDER BY ')
                 ranks = []
-                for distance in ['ce.embedding <=> %s', 'ce.embedding::halfvec(1536) <=> %s::halfvec(1536)']:
+                for distance in ['ce.embedding <=> %s::vector(1536)',
+                                 'ce.embedding::halfvec(1536)::vector(1536) <=> %s::vector(1536)']:
                     ranks.append([r[0] for r in _query(conn, prefix + distance + ',ce.chunk_id LIMIT 5',
                                                       (MODEL, sha, query), deadline).fetchall()])
                 rows.append({'query_id': cid, 'vector_top5': ranks[0], 'halfvec_top5': ranks[1],
@@ -82,6 +83,7 @@ def compare(conn, samples=1000, max_seconds=120):
             'complete': complete, 'top5_overlap': sum(r['overlap'] for r in rows) / n if n else None,
             'exact_order_fraction': sum(r['vector_top5'] == r['halfvec_top5'] for r in rows) / n if n else None,
             'max_seconds': max_seconds, 'self_and_same_body_excluded': True, 'approximate_index_used': False,
+            'halfvec_distance': 'float32', 'query_precision': 'float32',
             'official_eval': False, 'adoption_approved': False, 'rows': rows}
 
 

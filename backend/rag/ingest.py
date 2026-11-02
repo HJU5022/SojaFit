@@ -133,7 +133,8 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
             for chunk_id, s in rows:
                 vector = cache.get(s)
                 cp.write_row((chunk_id, EMBED_MODEL, HalfVector(vector) if kind == 'halfvec' else vector))
-        if rows:
+        cur.execute("SELECT to_regclass('ix_chunk_embeddings_hnsw')")
+        if rows and cur.fetchone()[0] is not None:
             # [왜] 빈 표에 만든 HNSW 인덱스에 5만 행을 한꺼번에 넣으면 그래프가 나빠져 가까운 카드를 놓친다(11-01 실측:
             # 정확 검색 거리 0.345 카드를 놓치고 0.436 카드를 1위로 냄). 다 넣은 뒤 인덱스를 다시 만든다
             cur.execute("SET LOCAL maintenance_work_mem = '512MB'")

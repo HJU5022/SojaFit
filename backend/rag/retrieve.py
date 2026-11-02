@@ -104,7 +104,9 @@ def _dense(conn, question, allowed=None):
     # shortcut: 정확 검색은 카드 수에 비례해 느려진다. 카드가 수십만 장이 되면 HNSW 설정을 사전 등록 실험으로 다시 정한다
     conn.execute('SET enable_indexscan = off')
     try:
-        rows = conn.execute(sql + f' ORDER BY embedding <=> %s::{kind}(1536) LIMIT %s', args + [vec, N_CAND]).fetchall()
+        # 저장만 halfvec으로 줄이고, 읽을 때와 질문 벡터는 float32로 거리를 잰다.
+        column = 'embedding::vector(1536)' if kind == 'halfvec' else 'embedding'
+        rows = conn.execute(sql + f' ORDER BY {column} <=> %s::vector(1536) LIMIT %s', args + [vec, N_CAND]).fetchall()
     finally:
         conn.execute('RESET enable_indexscan')
     return [r[0] for r in rows]

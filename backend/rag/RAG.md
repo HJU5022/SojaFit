@@ -16,14 +16,14 @@
 - `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
 - `ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
 - `retrieve.py` — `retrieve(question, k=5, parts=None)`: dense 정확 검색 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 리랭킹은 아직 없음. `DATABASE_URL`과 임베딩 키 필요
-- `subset.py` — 제조사 분류 csv로 5개 다이오드 분류만 별도 manifest·카드 사본으로 선택. 원본 보존, 관련 gold 누락·불완전 카드 오류. DB 용량은 추정과 실측을 구분
+- `subset.py` — 적용 보류 중인 독립 수동 CLI. 제조사 분류 csv로 5개 다이오드 분류의 별도 manifest·카드 사본을 선택. 서비스·초기화·적재에서 호출하지 않음. 원본 보존, 관련 gold 누락·불완전 카드 오류. DB 용량은 추정과 실측을 구분
 - `storage.py` — 읽기 전용 DB/표 용량 점검, 기존 vector에서 API 없이 표본 top-5 정밀도 비교. `RAG_VECTOR_TYPE=vector|halfvec` 계약 검증
 
 작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·카드는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.
 
-250MB 목표의 범위·실험·복제 DB 전환 순서는 [corpus-storage-budget.md](../../docs/specs/corpus-storage-budget.md)를 봅니다. 원본 float32 캐시는 보존하며 `halfvec`은 적재할 때만 변환합니다. 공식 검색 품질 확인 전 기본값은 vector입니다.
+원본 코퍼스 유지·축소 보류·복제 DB 전환 순서는 [corpus-storage-budget.md](../../docs/specs/corpus-storage-budget.md)를 봅니다. 원본 float32 캐시는 보존하며 `halfvec`은 적재할 때만 변환합니다. halfvec 검색은 float32로 읽어 거리를 계산하고 수동 전환 뒤 HNSW는 만들지 않습니다. 공식 검색 품질 확인 전 기본값은 vector입니다.
 
-축소 후보는 빈 별도 DB에 넣습니다. 기존 DB의 ingest는 삭제를 하지 않아 축소 도구가 아닙니다. 원본 캐시의 복사본과 `ingest --cache-only`를 사용하면 필요한 벡터가 없을 때 API를 호출하지 않고 실패합니다.
+기본 경로는 전체 코퍼스를 유지하며 축소 사본은 생성·적재하지 않습니다. 기존 DB의 ingest는 삭제를 하지 않아 축소 도구가 아닙니다. 원본 캐시의 복사본과 `ingest --cache-only`를 사용하면 필요한 벡터가 없을 때 API를 호출하지 않고 실패합니다.
 
 ```bash
 python -m backend.rag.collect list <xlsx 폴더> <목록 csv>

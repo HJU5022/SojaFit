@@ -76,7 +76,7 @@ def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monke
     db.execute(sql)  # repeat must preserve rows and keys
     assert storage.snapshot(db)['embedding_type'] == 'halfvec(1536)'
     assert db.execute('SELECT count(*) FROM chunk_embeddings').fetchone()[0] == 8
-    assert 'halfvec_cosine_ops' in db.execute("SELECT pg_get_indexdef('ix_chunk_embeddings_hnsw'::regclass)").fetchone()[0]
+    assert db.execute("SELECT to_regclass('ix_chunk_embeddings_hnsw')").fetchone()[0] is None
     monkeypatch.setenv('RAG_VECTOR_TYPE', 'halfvec')
     monkeypatch.setattr(llm, 'DEMO_MODE', False)
     monkeypatch.setattr(llm, 'embed_texts', lambda _: ([[1.001, 0.2] + [0.] * 1534], 0, 'test', 'test'))
@@ -99,6 +99,22 @@ def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monke
     ingest.main(str(tmp_path / 'm.jsonl'), str(tmp_path / 'c.jsonl'), str(tmp_path / 'cache'), cache_only=True)
     ingest.main(str(tmp_path / 'm.jsonl'), str(tmp_path / 'c.jsonl'), str(tmp_path / 'empty-cache'), cache_only=True)
     assert db.execute('SELECT count(*) FROM chunk_embeddings').fetchone()[0] == 8
+    assert db.execute("SELECT to_regclass('ix_chunk_embeddings_hnsw')").fetchone()[0] is None
+
+
+def test_halfvec_dense_keeps_query_float32_precision(db, monkeypatch):
+    # Both coordinates round to 1 in half precision. Rounding the query too
+    # would tie the two candidates; float32 query precision selects card 2.
+    db.execute(Path('db/halfvec.sql.manual').read_text())
+    db.execute('DELETE FROM chunk_embeddings WHERE chunk_id > 2')
+    for cid, xy in [(1, [1., 0.]), (2, [0., 1.])]:
+        db.execute('UPDATE chunk_embeddings SET embedding=%s WHERE chunk_id=%s',
+                   (np.array(xy + [0.] * 1534, dtype=np.float32), cid))
+    db.commit()
+    monkeypatch.setenv('RAG_VECTOR_TYPE', 'halfvec')
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    monkeypatch.setattr(llm, 'embed_texts', lambda _: ([[1., 1.0002] + [0.] * 1534], 0, 'test', 'test'))
+    assert retrieve._dense(db, 'precision boundary')[0] == 2
 
 
 def test_compare_requires_original_vector_and_limits(db):
