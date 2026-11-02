@@ -1,5 +1,15 @@
 # jaehun 작업 기록
 
+## 2026-11-02 PR #26 충돌 해결
+
+- 요청: PR #26의 main 병합 충돌을 로컬에서 해결한다. 원격 푸시·PR 수정·머지는 하지 않는다.
+- 원인: PR head c511fbf와 main 30ff9c4가 평가/Mouser ADR 번호를 서로 다르게 정리하여 ADR.md에서 충돌했다. 자동 병합만 하면 ADR 0009가 두 개가 된다.
+- 변경: main의 평가 0008·Mouser 0009 번호를 따르고, 평가 ADR의 현재 50건(25/25) 후속 결정은 보존했다. ADR 목록과 0003의 대체 링크를 맞췄고 main의 SPEC·저장 전환 조건·조원 기록을 반영했다.
+- 명령·실제 결과: `git fetch origin`, `git merge --no-ff --no-commit origin/main`; ADR 수동 정리 후 `git diff --cached --check` 통과. `/tmp/sojafit-review-tools/uv run --no-sync python -m pytest -q tests/test_frozen_evals.py` 1 passed. Python 구조·링크 대조에서 ADR 0001~0009 중복 없음, 목록·로컬 문서 링크 유효, 미해결 index 없음, 초안 50건·25/25·ID 유일, draft_50·dataset_v1·원본 manifest의 병합 전 바이트 보존을 확인했다.
+- 보존: 기존 미커밋 문서 5개는 stash로 임시 보관하여 병합 커밋에서 제외하고 커밋 후 복원한다. 미추적 결과 JSON·ZIP과 .env는 건드리지 않는다.
+- 확인 못 한 것: FROZEN.json 부재로 동결 해시 검증은 아직 적용되지 않는다. 실제 검색/모델 평가·점수 재측정·원격 CI는 실행하지 않았다. 이번 작업은 문서 충돌 해결이며 품질 개선 결과가 아니다.
+- 다음 할 일: 원격 게시 권한이 확인되면 로컬 병합 커밋을 jaehun에 푸시하고 PR #26의 충돌 상태를 다시 확인한다. 기존 PR 본문의 ADR 번호 설명도 현재 번호와 맞출 필요가 있다.
+
 ## 2026-11-02 평가 50건 후속 PR
 
 - PR #24는 구성 조정 커밋 전에 병합되어 main에는 52건이 남아 있었다. 최신 main을 jaehun에 병합하고, 50건(25/25) 조정과 PR 템플릿 변경만 후속 PR 차이로 남겼다.
