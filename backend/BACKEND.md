@@ -7,7 +7,7 @@
 - 담당: 서비스·운영 (하위 폴더는 각 폴더의 `.md`에 적힌 담당)
 
 ## 파일
-- `main.py` — FastAPI 진입점. `/health`, 로그인 화면(`/`), 인증 API(`/api/auth/login`·`me`·`logout`), 관리자 API(`/api/admin/users`)
+- `main.py` — FastAPI 진입점. `/health`, 인증 API(`/api/auth/login`·`me`·`logout`), 관리자 API(`/api/admin/users`)
 - `auth.py` — 이메일·비밀번호 로그인, DB 세션, 관리자 계정 관리, 계정 생성 명령(`python -m backend.auth`). 로그인한 사용자 id로 대화(thread)와 장기 기억(Store namespace)을 나누는 연결은 그래프 구현 뒤에 붙입니다(SPEC 4절, G4)
 - `memory.py` — 사용자별 장기 기억. 지금은 Store namespace `("memories", user_id)`만 정의합니다. 승인 사례 저장과 틀린 기억 정정은 아직 없습니다
 - `judge/` — 회로 역할·대체 조건·판정. [JUDGE.md](judge/JUDGE.md)

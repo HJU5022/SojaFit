@@ -57,4 +57,18 @@ PR 인증 리뷰에서 요청한 두 계정의 세션 분리, 잠금·만료 경
 - 실제 GitHub Actions에서 인증 DB 테스트가 실행됐는지 확인.
 - 여러 번 반복한 부하 측정과 실제 서비스 데이터의 계정 간 접근 차단 검증.
 
-이 기록은 사용 중인 PC의 단일 실행 증거이며 서비스 전체 메모리, Cloud Run 성능 또는 공식 평가 결과가 아니다. 측정 보조 스크립트와 기계 판독용 결과는 해당 로컬 작업 환경에만 보관돼 있어 이 Markdown만으로 자동 재실행되지는 않는다.
+이 기록은 사용 중인 PC의 단일 실행 증거이며 서비스 전체 메모리, Cloud Run 성능 또는 공식 평가 결과가 아니다.
+
+## 재현 자료
+
+- [경계값 측정 스크립트](auth_boundary_after_merge.py)와 [원시 JSON](auth_boundary_after_merge.json)
+- [scrypt·메모리 측정 스크립트](measure_scrypt_concurrent.py)와 [원시 JSON](scrypt_concurrent_final_measurement.json)
+
+저장소 루트에서 프로젝트 의존성을 설치한 뒤 격리된 테스트 전용 PostgreSQL을 준비하고 `TEST_AUTH_DATABASE_URL`을 설정해 다음처럼 실행한다.
+
+```powershell
+uv run python docs/auth_boundary_after_merge.py
+uv run python docs/measure_scrypt_concurrent.py
+```
+
+두 스크립트는 `TEST_AUTH_DATABASE_URL`에 `127.0.0.1:55434/ci_auth`가 포함돼야 실행된다. 메모리 측정 스크립트는 Windows `GetProcessMemoryInfo` API를 사용하므로 Windows에서만 실행된다. 이 검사는 로컬 테스트 DB 전용이다. 경계 스크립트는 트랜잭션을 롤백하고, 메모리 스크립트는 자신이 만든 임시 계정만 정리한다. 재실행하면 같은 디렉터리의 JSON 파일을 새 결과로 덮어쓴다. 결과를 비교하려면 실행 전에 기존 JSON을 별도 이름으로 복사한다.

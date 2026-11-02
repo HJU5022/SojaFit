@@ -274,3 +274,14 @@ def test_admin_account_management_and_session_revocation(monkeypatch):
     assert admin.patch(f"/api/admin/users/{user_id}", headers=headers, json={"is_active": True}).status_code == 200
     assert user.get("/api/auth/me").status_code == 401
     assert user.post("/api/auth/login", headers=headers, json={"email": user_email, "password": password}).status_code == 200
+
+
+def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
+    import sys
+
+    monkeypatch.setattr(sys, "argv", ["backend.auth", "--hash-only"])
+    monkeypatch.setattr(auth.getpass, "getpass", lambda _prompt: "a-strong-demo-password")
+    auth.provision()
+    encoded = capsys.readouterr().out.strip()
+    assert encoded.startswith("scrypt$")
+    assert auth.verify_password("a-strong-demo-password", encoded)

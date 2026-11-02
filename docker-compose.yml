@@ -26,6 +26,10 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: app
+      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-}
+      DEMO_ADMIN_PASSWORD_HASH: ${DEMO_ADMIN_PASSWORD_HASH:-}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-}
+      DEMO_USER_PASSWORD_HASH: ${DEMO_USER_PASSWORD_HASH:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d:ro
