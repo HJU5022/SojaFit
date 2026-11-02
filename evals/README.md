@@ -26,6 +26,7 @@
 - `results/storage_contract_2026-11-02.json` — 합성 벡터를 넣은 전용 로컬 PostgreSQL의 형식·용량·검색 계약 확인. 실제 코퍼스 250MB·품질 달성 결과가 아님
 - `results/auth_boundary_2026-11-02.json` — 로그인 잠금·세션 만료 경계 실측 원시 결과(`scripts/auth_boundary_after_merge.py`)
 - `results/scrypt_concurrent_2026-11-02.json` — 동시 scrypt·프로세스 메모리 실측 원시 결과(`scripts/measure_scrypt_concurrent.py`)
+- `results/retrieval_baseline_2026-11-03.json`·`retrieval_dense_2026-11-03.json`·`retrieval_bm25_2026-11-03.json` — v1 데이터시트 근거 19문항의 검색 지표 원시 결과(`run_retrieval.py`, k=5). 각각 하이브리드·dense만·BM25만. 하이브리드 파일은 `method` 인자가 생기기 전에 만들어 summary에 `method`가 없음
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 

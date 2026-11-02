@@ -278,8 +278,8 @@ docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit
 # API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
 docker run --rm --env-file .env -e PYTHONPATH=/workspace -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy --with python-dotenv python evals/benchmark_embeddings.py --model text-embedding-3-small
 
-# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
-docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/dataset_v1.jsonl evals/results/retrieval.json
+# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. METHOD는 hybrid(기본), dense, bm25 중 하나입니다. hybrid·dense는 질문마다 임베딩 1회가 과금되고, bm25는 임베딩을 부르지 않습니다.
+docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/dataset_v1.jsonl evals/results/retrieval.json 5 METHOD
 ```
 
 ## 10. 대체재와의 비교
