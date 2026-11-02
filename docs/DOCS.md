@@ -16,3 +16,5 @@
 - `worklog/` — 조원별 작업 기록. [WORKLOG.md](worklog/WORKLOG.md)
 - [EVALUATION.md](EVALUATION.md) — 기존 문서에 없는 평가 축·시장 근거·가산 준비 항목
 - [CI_PROPOSAL.md](CI_PROPOSAL.md) — 현재 workflow에 대한 절감 보완 제안(미적용)
+- [model-licenses.md](model-licenses.md) — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부
+- [embedding-candidate-investigation.md](embedding-candidate-investigation.md) — 임베딩 후보 13종을 넣은 이유, 개별 조사·실행 과정, 중단 사유와 다음 평가 조건

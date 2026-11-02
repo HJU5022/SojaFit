@@ -3,6 +3,8 @@
 > 제출물입니다. 최종 제출(11/17 24:00)까지 작성합니다. 숫자가 나빠도 괜찮습니다. **재고, 원인을 알고, 무엇을 시도했는지**가 평가 대상입니다. 버린 시도도 적으세요.
 >
 > 이 문서의 숫자는 `evals/results/`의 원시 결과와 Langfuse 트레이스에서 나온 것만 씁니다.
+>
+> **문서 전용 변경 주의**: 2026-11-02 확장 후보·실제 PDF smoke 절은 로컬에서 수행한 탐색 실험의 이력입니다. 해당 확장 평가기, 입력 표본, 테스트와 2026-11-02 원시 JSON은 이번 변경에 포함하지 않았으므로 현재 `main`만으로는 그 절의 수치를 재현·감사할 수 없습니다. 이 수치는 최종 모델 선정 근거가 아니며, 실행 자산을 별도 검수해 함께 반영하거나 동결 본평가로 다시 측정하기 전까지 참고 기록으로만 봅니다.
 
 ## 1. 코퍼스와 인덱스 (G3)
 
@@ -39,9 +41,69 @@
 
 **키 없는 데모 규칙**: API 모델을 선택해도 데모 요청에서 임의의 다른 임베딩 모델로 바꾸지 않습니다. 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 API·벡터 검색을 호출하지 않고 BM25-only로 근거를 찾은 뒤 근거 문장을 추출해 반환합니다. 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다. 실제 API 응답 원본은 저장하지 않습니다.
 
-**예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크(계획 때 추정 규모) 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 TSC 1,360건 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
+**예비 선택 상태(2026-11-02 후보 확장 반영)**: 현재 서비스 적재·검색은 `text-embedding-3-small`과 `vector(1536)`을 사용하며, 확장 후보 추가는 이 기본값을 바꾸지 않습니다. 로컬 실행과 Voyage API allowlist는 후보 평가용입니다. 최종 모델을 정한 뒤에만 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 결정합니다. 외부 관리형이면 Cloud Run의 CUDA 이미지·가중치 부담과 로컬 GPU 지연을 최종 순위에서 제외하고, 자체 API이면 그 자원이 추론 서버의 운영비·지연으로 다시 포함됩니다. 로컬 Recall@5·MRR은 후보를 거르는 예비 품질 증거일 뿐이며, 최종 선택은 동결된 동일 표본을 실제 운영 방식의 정확한 모델 ID·차원·입력 형식으로 다시 측정한 결과로 결정합니다. `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2도 그 뒤에 확정합니다.
 
-**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
+**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 `BM25 + text-embedding-3-small API`를 기준선으로 두고 임베딩 API 모델만 하나씩 바꿉니다. 외부 관리형 우선 검증 대상은 OpenRouter에서 현재 제공되는 `voyageai/voyage-4`와 `baai/bge-m3`이고, `qwen/qwen3-embedding-0.6b`는 실행 시점에 provider와 가격을 확인한 뒤 포함합니다. 저비용 Voyage 대안인 `voyageai/voyage-4-lite`는 현재 13종 결과에 포함되지 않은 미평가 추가 후보입니다. KURE·Voyage 4 Nano처럼 관리형 endpoint가 확인되지 않은 후보도 팀이 자체 추론 API를 운영하기로 하면 운영 후보로 남습니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다.
+
+**API 재검증 규칙**: 로컬과 API의 표시 이름이 비슷해도 provider가 사용하는 revision, 정밀도·양자화, 최대 입력, 정규화, query/document prefix 또는 instruction이 다를 수 있습니다. 예를 들어 OpenRouter의 `intfloat/multilingual-e5-large`는 이번에 로컬로 실행한 `intfloat/multilingual-e5-large-instruct`와 다른 모델 ID이므로 기존 점수를 이전하지 않습니다. 운영 API별 Recall@5·MRR, 다중 근거 Recall@5, 질의 p50/p95, 실제 입력 토큰과 1,000청크 비용을 새로 기록합니다. OpenRouter의 현재 공개 가격은 `text-embedding-3-small`과 `voyage-4-lite`가 $0.02/M tokens, `bge-m3`가 $0.01/M, `voyage-4`가 $0.06/M이지만, 전체 재색인 전 각 모델 페이지에서 다시 확인합니다: [embedding models](https://openrouter.ai/collections/embedding-models/), [Voyage 4 Lite](https://openrouter.ai/voyageai/voyage-4-lite), [Voyage 4](https://openrouter.ai/voyageai/voyage-4), [BGE-M3](https://openrouter.ai/baai/bge-m3), [Text Embedding 3 Small](https://openrouter.ai/openai/text-embedding-3-small).
+
+**13종 후보 조사·평가 상태(로컬 이력)**: 아래 분류는 모든 후보를 같은 수준으로 평가했다는 뜻이 아닙니다. 후보별 선정 이유, 로컬에서 수행한 조사·실행 과정, 중단하거나 실험 기록으로만 남긴 이유, 다음 평가 조건은 [임베딩 후보 13종 개별 조사·평가 기록](docs/embedding-candidate-investigation.md)을 정본으로 봅니다. 라이선스와 저장소 공개 범위는 [모델 라이선스·공개 범위](docs/model-licenses.md)를 따릅니다. 2026-11-02 확장 원시 결과는 이번 문서 변경에 포함하지 않아 현재 저장소만으로 검증할 수 없습니다.
+
+| 증거 수준 | 모델 수 | 현재 해석 |
+|---|---:|---|
+| 실제 PDF smoke 완료 | 5 | PDF 3건·156청크·질의 9건의 비동결 예비 결과이며 최종 선정 근거가 아님 |
+| 합성 프록시만 완료 | 1 | `text-embedding-3-small` 기준선의 초기 결과이며 실제 PDF 후보와 직접 비교하지 않음 |
+| 호환성 확인에서 차단 | 4 | 환경·고정 의존성 문제로 품질 미측정이며 0점이나 품질 탈락으로 처리하지 않음 |
+| API 정책에서 차단 | 1 | Voyage 4가 ZDR/data-policy 조건으로 차단되어 품질 미측정 |
+| 조사 전용 | 2 | 약관·라이선스·자원 조건 때문에 이번 실행 대상에서 제외 |
+| **합계** | **13** | 모두 `eligible_for_final_model_decision=false`; 2차 판정과 동결 본평가 전 확정하지 않음 |
+
+#### 확장 후보 추가 측정 (2026-11-02)
+
+팀 요청에 따라 같은 30청크·18질의 프록시에서 후보를 늘렸습니다. 기존 API·BGE·KURE 결과는 2026-10-30 원시 JSON을 재사용하고, Qwen은 같은 Docker GPU 환경에서 다시 측정했습니다. 신규 후보는 GTE, multilingual-E5, Jina v3, Nomic v2, Arctic v2입니다. 모든 Hugging Face 모델과 외부 원격 코드는 40자리 SHA로 고정했습니다. API는 다시 호출하지 않아 이번 추가 측정 비용은 $0입니다.
+
+| 후보 | 상태 | Recall@5 | MRR | 1,000청크 | 질의 p50 / p95 | 차원 | 22,000벡터 원시 / 계획 | 오프라인 | 분류 |
+|---|---|---:|---:|---:|---:|---:|---:|---|---|
+| `text-embedding-3-small` | 성공(기존) | **1.000** | **0.907** | 7.02초 | 918.7 / 1,205.1 ms | 1,536 | 135.2 / 202.8 MB | 해당 없음 | 상업 API 기준선 |
+| `nlpai-lab/KURE-v1` | 성공(기존) | **1.000** | 0.894 | 5.68초 | 31.9 / 52.4 ms | 1,024 | 90.1 / 135.2 MB | 통과 | 상업 로컬 후보 |
+| `Qwen/Qwen3-Embedding-0.6B` | 성공(재측정) | **1.000** | 0.875 | 3.63초 | 62.3 / 73.0 ms | 1,024 | 90.1 / 135.2 MB | 통과 | 상업 로컬 후보 |
+| `BAAI/bge-m3` | 성공(기존) | **1.000** | 0.863 | 5.95초 | 30.9 / 90.1 ms | 1,024 | 90.1 / 135.2 MB | 통과 | 상업 로컬 후보 |
+| `intfloat/multilingual-e5-large-instruct` | 성공(신규) | 0.944 | 0.785 | **1.75초** | 90.4 / 94.7 ms | 1,024 | 90.1 / 135.2 MB | 통과 | 상업 로컬 후보 |
+| `Alibaba-NLP/gte-multilingual-base` | 실행 실패 | — | — | — | — | 768 예상 | 67.6 / 101.4 MB | 미확인 | 상업 후보, CUDA 호환성 미확인 |
+| `jinaai/jina-embeddings-v3` | 실행 실패 | — | — | — | — | 1,024 예상 | 90.1 / 135.2 MB | 미확인 | 연구용, 상업 후보 제외 |
+| `nomic-ai/nomic-embed-text-v2-moe` | 실행 실패 | — | — | — | — | 768 예상 | 67.6 / 101.4 MB | 미확인 | 상업 후보, 의존성 미확인 |
+| `Snowflake/snowflake-arctic-embed-m-v2.0` | 실행 실패 | — | — | — | — | 768 예상 | 67.6 / 101.4 MB | 미확인 | 상업 후보, 런타임 호환성 미확인 |
+
+실패는 0점으로 환산하지 않았습니다. GTE는 모델 로드 뒤 GPU warm-up에서 CUDA index 범위 오류(`AcceleratorError`), Jina v3는 Sentence Transformers가 `custom_st`를 import하지 못한 `ModuleNotFoundError`, Nomic은 격리 환경에 `einops`가 없는 `ImportError`, Arctic은 초기 추론의 `AssertionError`였습니다. 사전 중단 조건에 따라 자동 재시도하거나 실행 중 의존성을 바꾸지 않았습니다. 따라서 이 네 모델은 품질 탈락이 아니라 **현재 고정 실행환경에서 비교 불가**입니다.
+
+로컬 측정은 모두 RTX 5060 Laptop GPU 8GB 기준이며 Cloud Run CPU 1 vCPU·512 MiB를 대표하지 않습니다. 전용 모델 Docker 이미지는 만들지 않았습니다. 공통 실행 이미지와 `sojafit-uv` 캐시를 재사용하고 모델은 별도 `sojafit-hf` 볼륨에 저장했습니다. 볼륨은 6.4GB에서 10.3GB로 약 3.9GB 증가해 사전 상한 9GiB 안에 머물렀습니다. 모델별 핵심 가중치·라이선스와 GitHub 포함 여부는 `docs/model-licenses.md`에 기록했습니다.
+
+이 프록시에서 E5는 성공 후보 중 로컬 임베딩 시간이 가장 짧지만 Recall@5와 MRR이 모두 낮았습니다. 나머지 성공 후보는 Recall@5가 포화되어 MRR만으로 확정할 수 없습니다. 이 순위와 시간은 로컬 시험 결과이며 API 운영 순위가 아닙니다. 2차 판정과 50건 동결 평가 이후 실제 운영 API에서 같은 코퍼스로 다시 비교해야 합니다.
+
+#### 실제 PDF 3건 smoke (2026-11-02, 사전 등록 #13)
+
+저장소의 TSC PDF `1N4148`, `1N5817`, `BZT52C2V4` 3건을 기존 Docling 2.145.0·card chunker로 다시 처리했습니다. 모델 결과를 보기 전에 한국어 질의 9건을 고정하고, 생성된 서로 다른 카드 156개 전체에서 PDF·쪽·표 행을 수동 대조해 gold를 붙였습니다. dense cosine top-5만 사용했고 BM25·필터·리랭커는 없습니다. API는 다시 호출하지 않았습니다.
+
+| 후보 | 상태 | Recall@5 | MRR | 1,000청크 | 질의 p50 / p95 | 차원 | 실행 환경·분류 |
+|---|---|---:|---:|---:|---:|---:|---|
+| `nlpai-lab/KURE-v1` | 성공 | **0.889** | **0.808** | 18.05초 | **32.3** / 251.7 ms | 1,024 | RTX 5060 Laptop GPU, 상업 로컬 후보 |
+| `BAAI/bge-m3` | 성공 | **0.889** | 0.753 | 17.60초 | 39.9 / 239.6 ms | 1,024 | RTX 5060 Laptop GPU, 상업 로컬 후보 |
+| `Qwen/Qwen3-Embedding-0.6B` | 성공 | 0.667 | 0.648 | 10.37초 | 104.8 / 123.9 ms | 1,024 | RTX 5060 Laptop GPU, 고정 query instruction |
+| `intfloat/multilingual-e5-large-instruct` | 성공 | 0.778 | 0.575 | **5.23초** | 91.1 / **93.8 ms** | 1,024 | RTX 5060 Laptop GPU, 상업 로컬 후보 |
+| `voyageai/voyage-4-nano` | 성공 | **0.889** | 0.744 | 5.29초 | 53.9 / **80.5 ms** | 1,024 | RTX 5060 Laptop GPU, Apache-2.0, 오프라인 통과 |
+| `voyageai/voyage-4` | API 정책 차단 | — | — | — | — | 1,024 예상 | OpenRouter ZDR/data-policy가 유일 endpoint 제외, retry 0 |
+| `Alibaba-NLP/gte-multilingual-base` | 호환성 차단 | — | — | — | — | 768 예상 | `eager`에서도 CUDA device-side assert |
+| `jinaai/jina-embeddings-v3` | 호환성 차단 | — | — | — | — | 1,024 예상 | ST 3.1.0 오프라인 환경 미해결, 연구용·비상업 |
+| `nomic-ai/nomic-embed-text-v2-moe` | 호환성 차단 | — | — | — | — | 768 예상 | unpinned `megablocks` 외부 코드 설치 거부 |
+| `Snowflake/snowflake-arctic-embed-m-v2.0` | 호환성 차단 | — | — | — | — | 768 예상 | ST 2.7.0 오프라인 환경 미해결 |
+
+호환성 차단 4종은 0점으로 환산하지 않았고 실제 PDF 표본에서 다시 로드하지 않았습니다. 로컬 실험에서는 첫 실패와 단일 변경 뒤 결과를 `evals/results/embedding_*_compat_2026-11-02.json`, 실제 표본의 성공·차단 상태를 `evals/results/embedding_*_real_pdf_smoke_2026-11-02.json`으로 기록했으나, 이 파일들은 이번 문서 변경에 포함하지 않았습니다.
+
+KURE는 1N5817의 VF 조건을 1위로 올려 BGE보다 MRR이 높았습니다. 성공한 다섯 로컬 모델 모두 `BZT52C2V4의 패키지와 전력 손실`처럼 서로 다른 두 gold가 필요한 질문을 top-5에서 놓쳤습니다(첫 gold 순위 KURE/BGE 42위, Qwen 46위, E5 25위, Voyage Nano 9위). Qwen은 1N4148·1N5817의 VF 조건도 각각 6위·7위여서 Recall@5가 낮았습니다. Voyage 4 API는 품질 실패가 아니라 OpenRouter 계정 정책과 endpoint의 ZDR 조건 불일치로 실행 전에 차단됐습니다. 이는 실제 서비스에서 dense만 쓰지 않고 BM25·품번 필터·다중 근거 검색을 유지해야 한다는 근거입니다.
+
+이 표본은 실제 PDF 파싱 경로를 검증했다는 장점이 있지만 문서 3건·질의 9건뿐이고 품번이 질문에 직접 들어 있어 최종 모델 순위를 정할 수 없습니다. 1,000청크 시간도 기존 합성 30청크보다 문장이 길어 절대값이 커졌으므로 두 표의 속도를 직접 합치지 않습니다. 모든 결과는 `proxy_real_pdf_smoke`, `eligible_for_final_model_decision=false`입니다.
+
+위 로컬 p50/p95와 1,000청크 시간은 현재 서비스 API 지연을 대신하지 않습니다. 외부 관리형 API를 쓰면 Docker·캐시 용량은 시험 재현성 정보만 남지만, 자체 추론 API를 운영하면 모델 이미지·GPU/CPU·메모리·오토스케일 비용을 별도로 측정해야 합니다. `voyage-4-nano`는 현재 로컬 연구 기준점이며 자체 API 운영 방식을 ADR로 채택한 경우에만 운영 후보가 됩니다. 반대로 `voyage-4`는 API 품질을 아직 측정하지 못했으므로 Nano의 점수를 대신 사용할 수 없습니다.
 
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
 
@@ -130,6 +192,23 @@ HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 �
 - A는 HNSW 겹침은 늘었지만 BM25에 voltage, package 같은 흔한 영어 단어가 들어가 품번 신호가 묻혔습니다. 영어 질문을 dense에만 쓰는 방식은 재지 않았습니다.
 - D는 HNSW 겹침과 HNSW 하이브리드 MRR이 기준보다 높지만 정확 검색 하이브리드 MRR은 0.895로 낮고(n03 좋아짐, e08·n05 나빠짐), 로컬 모델이라 서버 메모리가 더 필요합니다.
 - C는 HNSW 겹침이 기준보다 낮았습니다.
+
+### 1-2. 임베딩 본평가 준비 상태 (2026-11-02)
+
+아래는 최종 모델 선정 결과가 아니라, 2차 사람 판정과 평가셋 동결 뒤 같은 조건으로 본평가를 시작할 수 있는지 확인한 체크리스트다. `통과`는 실행 자산이 준비됐다는 뜻일 뿐 해당 모델의 품질 합격을 뜻하지 않는다.
+
+| 확인 항목 | 상태 | 확인 근거와 다음 조건 |
+|---|---|---|
+| 2차 사람 판정 | 대기 | `evals/DRAFT_50_REVIEW.md`에 김재훈 판정이 2026-11-02 예정으로 남아 있고 확인 칸이 비어 있다. 이 문서는 이번 작업에서 수정하지 않았다. |
+| 평가셋 동결 | 대기 | `evals/FROZEN.json`이 없다. 두 사람의 판정 차이를 합의한 뒤 동결해야 한다. |
+| 본평가 질문·gold | 대기 | `evals/dataset_v1.jsonl`은 2행짜리 형식 예시이고, 동결된 50건 gold 입력이 아니다. |
+| TSC 1,360건 목록 | 통과(메타데이터만) | `data/manifest.jsonl`에 1,360행과 청크 수 합계 52,244가 기록돼 있다. |
+| 전체 PDF·청크 본문 | 차단 | 저장소의 TSC PDF는 smoke용 3건뿐이고 `chunks.jsonl`, `params.jsonl`, `tsc_datasheet_list.csv`도 없다. 따라서 1,360건 본문을 이 checkout만으로 재생성하거나 후보별 본평가할 수 없다. |
+| 성공 후보 4종 고정 revision 캐시 | 통과 | BGE `5617a9f...`, KURE `8b418a5...`, Qwen `97b0c61...`, E5 `274baa4...` snapshot이 `sojafit-hf`에 있으며, 실제 PDF smoke를 `--network none`, `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`로 통과했다. |
+| 비교 실행기·지표 | 통과(입력 대기) | `evals/benchmark_embeddings.py`가 같은 JSONL 입력에서 dense cosine Recall@5, MRR, 임베딩 시간, 질의 p50/p95를 기록한다. 본평가용 동결 JSONL 경로는 아직 만들 수 없다. |
+| 운영 API 후보 | 대기 | 키 없는 데모는 BM25-only이므로 API 임베딩 품질 비교가 아니다. 동결 뒤 승인된 비용 상한과 중앙 API 경계를 사용해 `text-embedding-3-small`, `voyage-4`, `bge-m3` 등 실제 운영 후보를 각각 실행해야 한다. |
+
+본평가 시작 조건은 (1) 2차 판정 완료, (2) `FROZEN.json`과 동결 gold 생성, (3) 1,360건의 실제 PDF 또는 고정 청크 본문 확보, (4) API 모델 ID·provider 정책·차원·입력 형식 고정, (5) 예상 토큰·비용 상한 재승인이다. 그 전에는 위 3문서·9질의 smoke 수치로 후보를 확정하지 않는다. 실패한 GTE·Jina·Nomic·Arctic도 품질 0점이 아니라 현재 고정 로컬 환경에서 `호환성 차단`으로 유지한다.
 
 ## 2. 평가셋 (G5)
 
@@ -228,6 +307,10 @@ HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 �
 
 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 봅니다.
 
+아래 첫 두 명령은 현재 `main`의 기존 4종 프록시 평가기에 해당합니다. 실제 PDF·Voyage 명령은 이번 변경에서 제외한 확장 평가기와 `evals/embedding_real_pdf_smoke_v0.jsonl`이 필요하므로 현재 저장소만으로 실행할 수 없으며, 실행 자산을 별도 검수해 반영한 뒤 사용하는 역사적 명령입니다.
+
+평가기 결과는 Python과 `numpy`·`sentence-transformers`·`torch`·`transformers`·`openai`의 실제 resolved version을 기록한다. 아래 `--with` 명령이 시점에 따라 다른 버전을 해석하더라도 결과 JSON에서 실행 환경을 확인할 수 있어야 한다. 2026-11-02 Voyage 원시 결과 4건은 이 필드 도입 전에 실행되어 버전을 사후 추정하지 않고 `null`과 `not recorded at run time`으로 표시했다. 해당 결과를 본평가 근거로 승격하려면 같은 고정 입력으로 다시 실행해 버전 메타데이터를 남긴다.
+
 ```bash
 # 최초 1회 캐시 준비(네트워크 사용): MODEL은 bge-m3, kure-v1, qwen3-embedding-0.6b 중 하나입니다.
 docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
@@ -235,8 +318,14 @@ docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/hug
 # 캐시 준비 뒤 오프라인 재현
 docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
 
+# 실제 PDF 3건 비동결 smoke(MODEL은 성공한 로컬 후보, voyage-4-nano 포함)
+docker run --rm --gpus all --network none -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL --sample evals/embedding_real_pdf_smoke_v0.jsonl --sample-kind real_pdf --output evals/results/embedding_MODEL_real_pdf_smoke_2026-11-02.json
+
 # API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
-docker run --rm --env-file .env -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy python evals/benchmark_embeddings.py --model text-embedding-3-small
+docker run --rm --env-file .env -e PYTHONPATH=/workspace -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy --with python-dotenv python evals/benchmark_embeddings.py --model text-embedding-3-small
+
+# Voyage 4 API 실제 PDF smoke: OpenRouter ZDR/data-policy와 endpoint가 호환되고 팀 승인을 받은 경우에만 실행
+docker run --rm --env-file .env -e PYTHONPATH=/workspace -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with openai --with numpy --with python-dotenv python evals/benchmark_embeddings.py --model voyage-4 --sample evals/embedding_real_pdf_smoke_v0.jsonl --sample-kind real_pdf --output evals/results/embedding_voyage-4_real_pdf_smoke_2026-11-02.json
 
 # 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
 docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/draft_50.jsonl evals/results/retrieval.json
