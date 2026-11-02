@@ -8,7 +8,7 @@
 
 ## 파일
 - `test_health.py` — `/health` 응답 확인
-- `test_auth.py` — 인증 단위 및 DB 통합 테스트(두 사용자 세션 격리, 비활성 사용자, 실패 구간·잠금 경계, 30분 유휴·8시간 절대 만료 경계, scrypt 동시 검증 상한, HTTPS 쿠키·출처, DB 오류). CI는 격리 PostgreSQL을 제공하며, 로컬에서는 테스트 전용 `TEST_AUTH_DATABASE_URL`이 없으면 DB 시험을 건너뜀
+- `test_auth.py` — 인증 단위 및 DB 통합 테스트(두 사용자 세션 격리, 관리자와 일반 사용자 권한, 비활성 사용자와 세션 폐기, 실패 구간·잠금 경계, 30분 유휴·8시간 절대 만료 경계, scrypt 동시 검증 상한, HTTPS 쿠키·출처, DB 오류). CI는 격리 PostgreSQL을 제공하며, 로컬에서는 테스트 전용 `TEST_AUTH_DATABASE_URL`이 없으면 DB 시험을 건너뜀
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_llm.py` — API 호출 없이 mock client로 중앙 임베딩 호출의 벡터·사용량·provider metadata 반환 계약 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지

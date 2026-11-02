@@ -238,3 +238,39 @@ def test_auth_database_rejects_login_when_both_scrypt_slots_are_busy(monkeypatch
         lock_b.rollback()
         lock_a.close()
         lock_b.close()
+
+
+def test_admin_account_management_and_session_revocation(monkeypatch):
+    import os
+    import secrets
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    suffix = secrets.token_hex(6)
+    admin_email, user_email = f"admin-{suffix}@example.test", f"user-{suffix}@example.test"
+    password = "test-only-password-123"
+    password_hash = auth.hash_password(password)
+    with psycopg.connect(database_url) as conn:
+        admin_id = conn.execute("INSERT INTO users(login_id,password_hash,role) VALUES (%s,%s,'admin') RETURNING id", (admin_email, password_hash)).fetchone()[0]
+        user_id = conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,%s) RETURNING id", (user_email, password_hash)).fetchone()[0]
+    admin, user, anonymous = TestClient(app), TestClient(app), TestClient(app)
+    headers = {"origin": "http://testserver"}
+    assert anonymous.get("/api/admin/users").status_code == 401
+    for client, email in ((admin, admin_email), (user, user_email)):
+        assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert user.get("/api/admin/users").status_code == 403
+    assert user.patch(f"/api/admin/users/{user_id}", headers=headers, json={"is_active": False}).status_code == 403
+    users = admin.get("/api/admin/users")
+    assert users.status_code == 200
+    assert any(item["id"] == user_id and item["role"] == "user" and item["is_active"] for item in users.json()["users"])
+    assert admin.patch(f"/api/admin/users/{user_id}", headers={"origin": "https://evil.example"}, json={"is_active": False}).status_code == 403
+    assert admin.patch(f"/api/admin/users/{admin_id}", headers=headers, json={"is_active": False}).status_code == 403
+    assert admin.patch(f"/api/admin/users/{user_id}", headers=headers, json={"is_active": False}).status_code == 200
+    assert user.get("/api/auth/me").status_code == 401
+    assert admin.patch(f"/api/admin/users/{user_id}", headers=headers, json={"is_active": True}).status_code == 200
+    assert user.get("/api/auth/me").status_code == 401
+    assert user.post("/api/auth/login", headers=headers, json={"email": user_email, "password": password}).status_code == 200

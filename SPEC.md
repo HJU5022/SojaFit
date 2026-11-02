@@ -98,6 +98,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - 인증 초안: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용한다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현이다. 상세는 `docs/specs/login-auth.md`.
+- 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경한다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제한다. 관리자 계정의 상태는 이 API에서 변경하지 않는다.
 - 그 밖의 API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
 - 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 현재 검수 초안은 52건(26/26)이며 동결 전입니다.
@@ -168,3 +169,4 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - GIVEN 15분 집계 구간에 로그인 5회 실패, WHEN 다시 로그인하면, THEN 마지막 실패 시점부터 15분 동안 거부한다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
 - GIVEN 로그아웃했거나 만료된 세션, WHEN 사용자 정보를 요청하면, THEN 인증을 거부한다.
 - GIVEN 서로 다른 두 계정, WHEN 각각 로그인 상태를 확인하면, THEN 각자의 ID를 반환한다. 실제 회로·대화·기억·견적의 권한 검증은 해당 기능 구현 후 추가한다.
+- GIVEN 관리자와 일반 사용자, WHEN 관리자 API에 접근하면, THEN 관리자만 목록을 조회하고 일반 계정의 활성 상태를 변경한다. 비활성화된 사용자의 기존 세션은 재활성화 후에도 사용할 수 없다.

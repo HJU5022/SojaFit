@@ -26,7 +26,7 @@
       <button class="login" type="submit">로그인</button>
       <p class="message" id="result" role="status" aria-live="polite" hidden></p>
     </form>
-    <div id="signed-in" hidden><p id="signed-in-label"></p><button type="button" id="logout">로그아웃</button></div><div class="hint">평가용 계정은 별도로 안내됩니다.<br>같은 동작이 보장되는 것은 아니며, 최종 판단은 사람이 확인해야 합니다.</div>
+    <div id="signed-in" hidden><p id="signed-in-label"></p><button type="button" id="logout">로그아웃</button><section id="admin-panel" hidden aria-labelledby="admin-title"><h3 id="admin-title">계정 관리</h3><p>일반 사용자 계정을 활성화하거나 비활성화합니다.</p><ul id="admin-users"></ul><p id="admin-message" role="status" aria-live="polite"></p></section></div><div class="hint">평가용 계정은 별도로 안내됩니다.<br>같은 동작이 보장되는 것은 아니며, 최종 판단은 사람이 확인해야 합니다.</div>
   </section>
 </main>
 <footer class="footer">© SojaFit · 회로에 맞는 선택을 위한 근거</footer>
@@ -34,10 +34,52 @@
 const form = document.getElementById('login-form');
 const result = document.getElementById('result');
 const signedIn = document.getElementById('signed-in');
+const adminPanel = document.getElementById('admin-panel');
+const adminUsers = document.getElementById('admin-users');
+const adminMessage = document.getElementById('admin-message');
+let sessionVersion = 0;
 function displayUser(data) {
+  const version = ++sessionVersion;
   form.hidden = true;
   signedIn.hidden = false;
   document.getElementById('signed-in-label').textContent = `로그인됨 · 사용자 ${data.user_id}`;
+  loadAccounts(version);
+}
+async function loadAccounts(version) {
+  try {
+    const response = await fetch('/api/admin/users');
+    if (version !== sessionVersion || signedIn.hidden) return;
+    if (response.status === 403) { adminPanel.hidden = true; return; }
+    if (!response.ok) throw new Error('accounts unavailable');
+    const data = await response.json();
+    if (version !== sessionVersion || signedIn.hidden) return;
+    adminUsers.replaceChildren();
+    for (const account of data.users) {
+      const row = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = `${account.email} · ${account.role === 'admin' ? '관리자' : '사용자'} · ${account.is_active ? '활성' : '비활성'} `;
+      row.append(label);
+      if (account.role === 'user') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = account.is_active ? '비활성화' : '활성화';
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            const changed = await fetch(`/api/admin/users/${account.id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({is_active:!account.is_active})});
+            if (version !== sessionVersion || signedIn.hidden) return;
+            if (!changed.ok) throw new Error('change failed');
+            adminMessage.textContent = '계정 상태를 변경했습니다.';
+            await loadAccounts(version);
+          } catch { if (version === sessionVersion) adminMessage.textContent = '계정 상태를 변경하지 못했습니다.'; }
+          finally { button.disabled = false; }
+        });
+        row.append(button);
+      }
+      adminUsers.append(row);
+    }
+    adminPanel.hidden = false;
+  } catch { if (version === sessionVersion) { adminPanel.hidden = false; adminMessage.textContent = '계정 목록을 불러오지 못했습니다.'; } }
 }
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -62,7 +104,7 @@ form.addEventListener('submit', async (event) => {
 document.getElementById('logout').addEventListener('click', async () => {
   try {
     const response = await fetch('/api/auth/logout', {method:'POST'});
-    if (response.ok) { signedIn.hidden = true; form.hidden = false; result.hidden = true; }
+    if (response.ok) { sessionVersion++; adminPanel.hidden = true; adminUsers.replaceChildren(); adminMessage.textContent = ''; signedIn.hidden = true; form.hidden = false; result.hidden = true; }
     else { document.getElementById('signed-in-label').textContent = '로그아웃하지 못했습니다. 다시 시도해 주세요.'; }
   } catch { document.getElementById('signed-in-label').textContent = '로그아웃하지 못했습니다. 다시 시도해 주세요.'; }
 });

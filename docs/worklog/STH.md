@@ -61,3 +61,16 @@
 - 한 일: 비활성 계정 및 비활성 사용자의 기존 세션 거부, 30분 유휴·8시간 절대 만료 경계 전후, 15분 잠금 중 차단과 잠금 종료 후 허용, 두 PostgreSQL advisory 슬롯 점유 시 503 테스트를 추가했다. HTTPS Secure 쿠키·교차 Origin 로그아웃·DB 오류 상세 미노출 테스트도 포함했다.
 - 검증: 별도 CI 전용 PostgreSQL 16 (`sojafit-ci-auth-check`, 127.0.0.1:55434)에서 `TEST_AUTH_DATABASE_URL` 지정 후 `.venv/Scripts/python.exe -m pytest -q tests/test_auth.py`: 12 passed. 기존 로컬 개발 DB와 계정은 사용하지 않았다.
 - 제한: 만료 경계는 DB 시각을 기준보다 5초 안팎 앞/뒤로 설정해 시험했으며 8시간을 실제 기다린 시험은 아니다. 두 advisory 잠금 점유 테스트는 초과 요청의 503 제한을 검증하지만, Cloud Run 프로세스의 실제 RSS나 scrypt 병렬 메모리는 측정하지 않았다.
+
+## 2026-11-02 관리자·사용자 계정 권한
+- 한 일: `006_user_roles.sql`로 기존 계정 기본 역할 `user`를 추가하고 신뢰된 명령줄에서 `admin` 생성 옵션을 제공했다. 관리자 전용 계정 조회·일반 계정 활성화 API와 로그인 화면을 추가했다. 일반 사용자의 관리자 API 접근과 관리자 계정의 상태 변경은 거부한다. 사용자 비활성화와 세션 삭제를 한 트랜잭션에서 처리하고 로그인과 비활성화가 사용자 행 잠금으로 경합하도록 했다.
+- 변경: `backend/auth.py`, `backend/main.py`, `backend/web/login.html`, `db/006_user_roles.sql`, CI 초기화, 인증 테스트, `SPEC.md`, 인증 작업서·DB 안내·ERD·README·테스트 안내.
+- 검증: 새 역할 컬럼이 없는 상태에서 새 관리자 테스트가 실패하는 것을 확인한 후 구현했다. 격리 PostgreSQL에서 전체 테스트 39 passed, 2 skipped. 새로 만든 임시 테스트 DB에 003→005→006 적용 후 인증 테스트 13 passed, 임시 DB만 삭제했다. 기존 `.venv` Python을 사용했으며 `uv` 명령은 PATH에서 찾지 못했다.
+- 로컬 개발 DB: 사전 상태 사용자 4명·세션 2건을 확인하고 006을 적용했으며 기존 계정은 `user`로 유지했다. 별도 로컬 관리자·사용자 테스트 계정 2개를 생성하고 HTTP로 관리자 조회 200·일반 사용자 거부 403·비활성 세션 거부 401·재활성화 후 이전 세션 거부 401을 확인했다. 기존 세션 두 건은 유지했다. 테스트 비밀번호는 저장소 밖 이 PC의 로컬 `.env`에만 보관했다.
+- 미검증: 관리자 화면의 직접 브라우저 조작, 공유 DB·Cloud Run 마이그레이션과 배포, GitHub Actions, 업무 데이터 소유권과 전체 평가셋. 기존 DB에서는 앱 업데이트 전 006을 한 번만 적용해야 한다.
+
+## 2026-11-02 최신 main 병합과 로그인 작업 복원
+- 한 일: PR #22의 head가 기존 STH 커밋 `d981455`와 같음을 Git 참조로 확인했다. 미커밋 관리자 작업을 untracked 파일 포함 stash로 보관한 뒤 `origin/main`을 STH에 병합했다. `db/DB.md`와 `db/ERD.md`의 코퍼스 halfvec 안내와 인증 SQL 명명·역할 안내를 함께 보존했다.
+- 후속 수정: main에서 들어온 RAG 저장소 테스트가 옛 `db/02_rag_corpus.sql` 경로를 사용하는 부분을 `db/002_rag_corpus.sql`로 맞추고, Windows SQL 파일 UTF-8 읽기 및 비밀번호가 생략되는 `db.info.dsn` 재연결을 수정했다.
+- 검증: 테스트 전용 PostgreSQL 16과 별도 임시 pgvector DB를 사용했다. 첫 실행은 임시 DB의 확장 미설치 및 Windows 기본 인코딩, 두 번째 실행은 잠금 테스트의 비밀번호 없는 DSN으로 실패해 각각 원인을 수정했다. pgvector 확장 및 UTF-8 환경에서 동일 전체 검사 재실행: 73 passed, 1 skipped. 임시 DB는 삭제했다.
+- 제한: GitHub 연결 도구는 PR #22에 404를 반환하고 gh CLI는 사용할 수 없어 PR 메타데이터는 확인하지 못했다. 원격 PR 상태·GitHub Actions·배포는 확인하지 않았으며 push하지 않았다. 기존 stash와 이번 보관 stash는 유지했다.

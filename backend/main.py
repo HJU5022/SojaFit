@@ -5,7 +5,7 @@ from pathlib import Path
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
 
 from backend import auth
 
@@ -52,4 +52,20 @@ def logout(request: Request, response: Response):
     auth.check_origin(request)
     auth.logout(request)
     response.delete_cookie(auth.COOKIE, path="/")
+    return {"ok": True}
+
+
+class AccountState(BaseModel):
+    is_active: StrictBool
+
+
+@app.get("/api/admin/users")
+def admin_users(user_id: int = Depends(auth.current_user_id)):
+    return {"users": auth.admin_users(user_id)}
+
+
+@app.patch("/api/admin/users/{target_id}")
+def admin_set_active(target_id: int, body: AccountState, request: Request, user_id: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    auth.admin_set_active(user_id, target_id, body.is_active)
     return {"ok": True}

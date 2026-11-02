@@ -1,5 +1,6 @@
 """PostgreSQL-backed authentication for provisioned accounts."""
 import getpass
+import argparse
 import hashlib
 import hmac
 import os
@@ -51,7 +52,8 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
         cur.execute("INSERT INTO auth_login_attempts (login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (key,))
         cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP, window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes' FROM auth_login_attempts WHERE login_hash = %s FOR UPDATE", (key,))
         count, locked, window_expired = cur.fetchone()
-        cur.execute("SELECT id, password_hash, is_active FROM users WHERE login_id = %s", (email,))
+        # Serialize login against account deactivation and session revocation.
+        cur.execute("SELECT id, password_hash, is_active FROM users WHERE login_id = %s FOR UPDATE", (email,))
         user = cur.fetchone()
         if locked:
             return None
@@ -88,14 +90,41 @@ def logout(request: Request) -> None:
             cur.execute("DELETE FROM auth_sessions WHERE token_hash = %s", (hashlib.sha256(token.encode()).hexdigest(),))
 
 
+def admin_users(actor_id: int) -> list[dict]:
+    with connection() as conn:
+        actor = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (actor_id,)).fetchone()
+        if not actor or actor != ("admin", True):
+            raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+        rows = conn.execute("SELECT id, login_id, role, is_active FROM users ORDER BY id").fetchall()
+        return [{"id": row[0], "email": row[1], "role": row[2], "is_active": row[3]} for row in rows]
+
+
+def admin_set_active(actor_id: int, target_id: int, active: bool) -> None:
+    with connection() as conn:
+        actor = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (actor_id,)).fetchone()
+        if not actor or actor != ("admin", True):
+            raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+        target = conn.execute("SELECT role FROM users WHERE id=%s FOR UPDATE", (target_id,)).fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail="계정을 찾을 수 없습니다.")
+        if target[0] != "user":
+            raise HTTPException(status_code=403, detail="관리자 계정은 변경할 수 없습니다.")
+        conn.execute("UPDATE users SET is_active=%s, updated_at=CURRENT_TIMESTAMP WHERE id=%s", (active, target_id))
+        if not active:
+            conn.execute("DELETE FROM auth_sessions WHERE user_id=%s", (target_id,))
+
+
 def provision() -> None:
+    parser = argparse.ArgumentParser(description="Create a provisioned account")
+    parser.add_argument("--role", choices=("user", "admin"), default="user")
+    args = parser.parse_args()
     email = input("Email: ").strip().lower()
     password = getpass.getpass("Password: ")
     confirmation = getpass.getpass("Confirm password: ")
     if "@" not in email or len(email) > 100 or len(password) < 12 or len(password.encode()) > 1024 or password != confirmation:
         sys.exit("Invalid email or password; use at least 12 characters and matching confirmation.")
     with connection() as conn, conn.cursor() as cur:
-        cur.execute("INSERT INTO users (login_id, password_hash) VALUES (%s, %s)", (email, hash_password(password)))
+        cur.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, %s)", (email, hash_password(password), args.role))
     print("Account created.")
 
 
