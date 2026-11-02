@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-02 Mouser 응답을 저장하지 않는다는 결정 기록
+- 한 일: Mouser Search API 약관을 읽고, 가격·재고를 저장하지 않고 견적서를 열 때마다 다시 조회한다는 조장 결정을 ADR 0008과 `SPEC.md`에 적었다. 데모 모드는 Mouser 칸을 비운다.
+- 바꾼 파일: `docs/adr/`(0008, ADR.md), `SPEC.md`(1절 하지 않는 것, 6절, 7절, 8.4), 이 파일
+- 실행한 명령과 결과: 약관 원문(https://www.mouser.com/apiterms/, 최종 수정 2013-03-11)의 1·2·4·5절을 읽었다. API 문서 V2 정의(https://api.mouser.com/api/docs/ui/index)에서 검색 엔드포인트 3개와 부품 응답 칸(`LifecycleStatus`, `IsDiscontinued`, `SuggestedReplacement`, `PriceBreaks`, `AvailabilityInStock`, `DataSheetUrl` 등)을 확인했다. 문서 확인은 바뀐 문서의 ADR 상대 링크가 실제 파일을 가리키는지 대조했다.
+- 확인 못 한 것: 키 발급 승인 여부, 호출 한도(API 문서에 없음), 견적서 PDF 내려받기가 저장에 해당하는지. `docs/TOPIC.md` 범위 칸과 `db/table-definition.md` 10절의 Mouser 관련 줄은 고치지 않았다(ADR 0008 결과 절).
+- 다음 할 일: 확장 단계 전에 Search API 키를 신청하고, 신청서에 견적서 용도를 적는다.
+
 ## 2026-11-02 설계 결정 기록(사용자 흐름, 근거가 없을 때, 코퍼스 나누기, Supabase 저장)
 - 한 일: 조장과 정한 설계를 `SPEC.md`와 ADR 0005~0007에 적었다. 사용자 흐름에 후보 정하기 단계를 넣고, 근거가 없을 때의 순서(코퍼스 재검색 → TSC 실시간 조회 → 후보 먼저·단서 요청 → 단서 없이 진행)와 판정 근거로 인정하는 것을 적었다. 코퍼스는 기존(동결)·증분으로 나누고 평가는 기존만, Supabase는 한 프로젝트에 `halfvec`·HNSW 없음으로 둔다.
 - 바꾼 파일: `SPEC.md`(1절 하는 일·하지 않는 것, 2절 사용자 흐름·근거가 없을 때, 6절), `docs/adr/`(0005, 0006, 0007, ADR.md), 이 파일
