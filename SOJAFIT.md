@@ -97,4 +97,4 @@ SojaFit (proj3-b)
 1. README 조원 소개 표에 자기 행을 추가합니다(브랜치 → PR → 리뷰 → merge). 첫 PR이 협업 흐름 연습입니다.
 2. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
 3. D0(10/30)에 빈 FastAPI를 Cloud Run에 올려 배포 주소를 확보합니다.
-4. 평가셋 v1 50건(관련 25, 비관련 25)을 만듭니다(11/3 동결).
+4. 평가셋 v1 50건(관련 25, 비관련 25)을 만듭니다(11-02 동결).

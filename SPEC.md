@@ -101,7 +101,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경한다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제한다. 관리자 계정의 상태는 이 API에서 변경하지 않는다.
 - 그 밖의 API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
-- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 현재 검수 초안은 50건(25/25)이며 동결 전입니다. n22·n13은 예비로 이관했고, 남은 문항의 정답·사람 판정은 바꾸지 않았습니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). n22·n13은 예비로 이관했고, 남은 문항의 정답·사람 판정은 바꾸지 않았습니다.
 
 ## 5. 규칙 파일
 
