@@ -49,10 +49,10 @@ def test_database_sessions_are_isolated_and_revoked(monkeypatch):
         assert response.status_code == 200
         assert response.json() == {"user_id": uid}
         assert "httponly" in response.headers["set-cookie"].lower()
-        assert client.get("/api/auth/me").json() == {"user_id": uid}
+        assert client.get("/api/auth/me").json() == {"user_id": uid, "role": "user"}
     assert a.post("/api/auth/logout", headers=headers).status_code == 200
     assert a.get("/api/auth/me").status_code == 401
-    assert b.get("/api/auth/me").json() == {"user_id": id_b}
+    assert b.get("/api/auth/me").json() == {"user_id": id_b, "role": "user"}
     with psycopg.connect(database_url) as conn, conn.cursor() as cur:
         cur.execute("UPDATE auth_sessions SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 minute' WHERE user_id = %s", (id_b,))
     assert b.get("/api/auth/me").status_code == 401
@@ -164,7 +164,6 @@ def test_login_database_error_does_not_expose_details(monkeypatch):
 
 
 def test_inactive_user_and_existing_session_are_rejected(monkeypatch):
-    import hashlib
     import os
     import secrets
     import psycopg
@@ -178,7 +177,7 @@ def test_inactive_user_and_existing_session_are_rejected(monkeypatch):
     token = secrets.token_urlsafe(32)
     with psycopg.connect(database_url) as conn:
         user_id = conn.execute("INSERT INTO users(login_id,password_hash,is_active) VALUES (%s,%s,FALSE) RETURNING id", (email, auth.hash_password("test-only-password"))).fetchone()[0]
-        conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (hashlib.sha256(token.encode()).hexdigest(), user_id))
+        conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))
     client = TestClient(app, cookies={auth.COOKIE: token})
     headers = {"origin": "http://testserver"}
     assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": "test-only-password"}).status_code == 401
@@ -262,6 +261,13 @@ def test_admin_account_management_and_session_revocation(monkeypatch):
     assert anonymous.get("/api/admin/users").status_code == 401
     for client, email in ((admin, admin_email), (user, user_email)):
         assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert admin.get("/api/auth/me").json() == {"user_id": admin_id, "role": "admin"}
+    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
+    with psycopg.connect(database_url) as conn:
+        conn.execute("UPDATE users SET role='admin' WHERE id=%s", (user_id,))
+    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "admin"}
+    with psycopg.connect(database_url) as conn:
+        conn.execute("UPDATE users SET role='user' WHERE id=%s", (user_id,))
     assert user.get("/api/admin/users").status_code == 403
     assert user.patch(f"/api/admin/users/{user_id}", headers=headers, json={"is_active": False}).status_code == 403
     users = admin.get("/api/admin/users")
@@ -285,3 +291,118 @@ def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
     encoded = capsys.readouterr().out.strip()
     assert encoded.startswith("scrypt$")
     assert auth.verify_password("a-strong-demo-password", encoded)
+
+@pytest.mark.parametrize("mode,config,expected", [
+    ("1", ("", "", "", ""), "default"),
+    ("1", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
+    ("1", ("partial@example.test", "", "", ""), "invalid"),
+    ("0", ("", "", "", ""), "none"),
+    ("0", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
+])
+def test_demo_seed_configuration(mode, config, expected):
+    import os
+    from pathlib import Path
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
+    statement = seed[seed.index("DO $$"):]
+    password_hash = auth.hash_password("custom-test-password") if "valid" in config else ""
+    values = [password_hash if value == "valid" else value for value in config]
+    with psycopg.connect(database_url) as conn:
+        with conn.transaction(force_rollback=True):
+            conn.execute("CREATE TEMP TABLE users (login_id text PRIMARY KEY, password_hash text NOT NULL, role text NOT NULL) ON COMMIT DROP")
+            for key, value in zip(("demo_admin_email", "demo_admin_password_hash", "demo_user_email", "demo_user_password_hash"), values):
+                conn.execute("SELECT set_config(%s, %s, true)", ("sojafit." + key, value))
+            conn.execute("SELECT set_config('sojafit.demo_mode', %s, true)", (mode,))
+            if expected == "invalid":
+                with pytest.raises(psycopg.errors.RaiseException):
+                    conn.execute(statement)
+                return
+            conn.execute(statement)
+            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY role").fetchall()
+            if expected == "none":
+                assert rows == []
+            elif expected == "custom":
+                assert rows == [(config[0], password_hash, "admin"), (config[2], password_hash, "user")]
+            else:
+                assert [(row[0], row[2]) for row in rows] == [("demo-admin@example.test", "admin"), ("demo-user@example.test", "user")]
+                assert auth.verify_password("demo-admin-1234", rows[0][1])
+                assert auth.verify_password("demo-user-1234", rows[1][1])
+            conn.execute(statement)
+            assert conn.execute("SELECT count(*) FROM users").fetchone()[0] == len(rows)
+
+
+def test_session_token_hash_uses_key_when_provided(monkeypatch):
+    import hashlib
+    import hmac
+
+    token = "test-session-token"
+    monkeypatch.setenv("DEMO_MODE", "1")
+    monkeypatch.delenv("AUTH_SECRET", raising=False)
+    assert auth.session_token_hash(token) == hashlib.sha256(token.encode()).hexdigest()
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+    assert auth.session_token_hash(token) == hmac.new(b"x" * 32, token.encode(), hashlib.sha256).hexdigest()
+    assert auth.session_token_hash(token) != hashlib.sha256(token.encode()).hexdigest()
+
+
+def test_production_requires_valid_auth_secret(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "0")
+    monkeypatch.delenv("AUTH_SECRET", raising=False)
+    with pytest.raises(RuntimeError):
+        auth.validate_auth_configuration()
+    monkeypatch.setenv("AUTH_SECRET", "short")
+    with pytest.raises(RuntimeError):
+        auth.validate_auth_configuration()
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+    auth.validate_auth_configuration()
+
+
+def test_keyed_session_login_rotation_and_logout(monkeypatch):
+    import os
+    import secrets
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("DEMO_MODE", "0")
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+    email = f"keyed-{secrets.token_hex(6)}@example.test"
+    password = "test-only-password-123"
+    with psycopg.connect(database_url) as conn:
+        user_id = conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,%s) RETURNING id", (email, auth.hash_password(password))).fetchone()[0]
+    client = TestClient(app)
+    headers = {"origin": "http://testserver"}
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    token = client.cookies.get(auth.COOKIE)
+    with psycopg.connect(database_url) as conn:
+        stored = conn.execute("SELECT token_hash FROM auth_sessions WHERE user_id=%s", (user_id,)).fetchone()[0]
+    assert stored == auth.session_token_hash(token)
+    assert client.get("/api/auth/me").status_code == 200
+    monkeypatch.setenv("AUTH_SECRET", "y" * 32)
+    assert client.get("/api/auth/me").status_code == 401
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+    assert client.post("/api/auth/logout", headers=headers).status_code == 200
+    assert client.get("/api/auth/me").status_code == 401
+    with psycopg.connect(database_url) as conn:
+        assert conn.execute("SELECT count(*) FROM auth_sessions WHERE user_id=%s", (user_id,)).fetchone()[0] == 0
+
+
+def test_app_startup_requires_key_outside_demo(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "0")
+    monkeypatch.delenv("AUTH_SECRET", raising=False)
+    with pytest.raises(RuntimeError, match="AUTH_SECRET"):
+        with TestClient(app):
+            pass
+    monkeypatch.setenv("AUTH_SECRET", "x" * 32)
+    with TestClient(app) as client:
+        assert client.get("/health").status_code == 200
+    monkeypatch.delenv("AUTH_SECRET")
+    monkeypatch.setenv("DEMO_MODE", "1")
+    with TestClient(app) as client:
+        assert client.get("/health").status_code == 200

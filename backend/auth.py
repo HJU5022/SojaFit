@@ -15,6 +15,22 @@ COOKIE = "sojafit_session"
 N, R, P = 2**17, 8, 1
 
 
+def validate_auth_configuration() -> None:
+    secret = os.getenv("AUTH_SECRET", "")
+    if secret and (not secret.strip() or len(secret.encode("utf-8")) < 32):
+        raise RuntimeError("AUTH_SECRET must contain at least 32 bytes")
+    if os.getenv("DEMO_MODE", "1") != "1" and not secret:
+        raise RuntimeError("AUTH_SECRET is required outside demo mode")
+
+
+def session_token_hash(token: str) -> str:
+    validate_auth_configuration()
+    secret = os.getenv("AUTH_SECRET", "")
+    if secret:
+        return hmac.new(secret.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     digest = hashlib.scrypt(password.encode(), salt=salt, n=N, r=R, p=P, dklen=32, maxmem=256 * 1024 * 1024)
@@ -66,28 +82,32 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
             return None
         cur.execute("DELETE FROM auth_login_attempts WHERE login_hash = %s", (key,))
         token = secrets.token_urlsafe(32)
-        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (hashlib.sha256(token.encode()).hexdigest(), user[0]))
+        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]
 
 
-def current_user_id(request: Request) -> int:
+def current_user(request: Request) -> tuple[int, str]:
     token = request.cookies.get(COOKIE)
     if not token or len(token) > 128:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
-    digest = hashlib.sha256(token.encode()).hexdigest()
+    digest = session_token_hash(token)
     with connection() as conn, conn.cursor() as cur:
-        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '30 minutes' RETURNING s.user_id", (digest,))
+        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '30 minutes' RETURNING s.user_id, u.role", (digest,))
         row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
-    return row[0]
+    return row[0], row[1]
+
+
+def current_user_id(request: Request) -> int:
+    return current_user(request)[0]
 
 
 def logout(request: Request) -> None:
     token = request.cookies.get(COOKIE)
     if token and len(token) <= 128:
         with connection() as conn, conn.cursor() as cur:
-            cur.execute("DELETE FROM auth_sessions WHERE token_hash = %s", (hashlib.sha256(token.encode()).hexdigest(),))
+            cur.execute("DELETE FROM auth_sessions WHERE token_hash = %s", (session_token_hash(token),))
 
 
 def admin_users(actor_id: int) -> list[dict]:

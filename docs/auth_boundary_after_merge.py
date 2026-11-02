@@ -67,8 +67,7 @@ try:
             conn.execute(f"INSERT INTO auth_login_attempts(login_hash,failed_count,locked_until,window_started_at) VALUES (%s,5,{expression},CURRENT_TIMESTAMP) ON CONFLICT (login_hash) DO UPDATE SET failed_count=5,locked_until=EXCLUDED.locked_until,window_started_at=CURRENT_TIMESTAMP", (key,))
             request(client, label, "POST", "/api/auth/login", expected, headers=headers, json={"email": email, "password": password})
         token = client.cookies.get(auth.COOKIE)
-        import hashlib
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        token_hash = auth.session_token_hash(token)
         initial_seconds = conn.execute("SELECT EXTRACT(EPOCH FROM (expires_at-CURRENT_TIMESTAMP)) FROM auth_sessions WHERE token_hash=%s", (token_hash,)).fetchone()[0]
         assert initial_seconds == 28800
         for label, interval, expected in (

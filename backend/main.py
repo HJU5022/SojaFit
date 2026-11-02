@@ -1,5 +1,6 @@
 """FastAPI entry point."""
 import os
+from contextlib import asynccontextmanager
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
@@ -7,7 +8,13 @@ from pydantic import BaseModel, Field, StrictBool
 
 from backend import auth
 
-app = FastAPI(title="SojaFit API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    auth.validate_auth_configuration()
+    yield
+
+
+app = FastAPI(title="SojaFit API", lifespan=lifespan)
 
 
 @app.get("/health")
@@ -36,8 +43,8 @@ def login(body: Login, request: Request, response: Response):
 
 
 @app.get("/api/auth/me")
-def me(user_id: int = Depends(auth.current_user_id)):
-    return {"user_id": user_id}
+def me(user: tuple[int, str] = Depends(auth.current_user)):
+    return {"user_id": user[0], "role": user[1]}
 
 
 @app.post("/api/auth/logout")
