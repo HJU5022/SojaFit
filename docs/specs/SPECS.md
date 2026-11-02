@@ -15,3 +15,4 @@
 - `evaluation-draft-52.md` — 정보 부족 분류 기준·52건 확장 이력과 현재 50건(25/25) 구성·예비 이관
 - `corpus-storage-budget.md` — 원본 코퍼스 유지·축소 도구 적용 보류·halfvec 저장/float32 검색·HNSW 제거와 실측 경계
 - `rag-pipeline.md` — 데이터시트 수집·파싱·청킹·적재와 하이브리드 검색의 작업서
+- `login-auth.md` — 이메일·비밀번호 로그인과 서버 세션 작업서

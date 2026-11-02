@@ -14,12 +14,15 @@
 
 | 표 | 하는 일 | 만드는 SQL |
 |---|---|---|
-| `source_documents` | 코퍼스 문서(데이터시트)의 출처·개정판·해시·파서 | `02_rag_corpus.sql` |
-| `document_chunks` | 검색 카드의 본문·쪽·표 이름·행 | `02_rag_corpus.sql` |
-| `chunk_embeddings` | 기본 `vector(1536)`; 선택적으로 `halfvec(1536)` 복제 DB 시험. 기본 초기화는 HNSW, 수동 halfvec 전환 뒤 HNSW 없음 | `02_rag_corpus.sql`, 수동 `halfvec.sql.manual` |
-| (정할 것) | 로그인 사용자, 승인된 견적서 등 업무 표 | Migration 1 초안 검토 뒤 |
+| `source_documents` | 코퍼스 문서(데이터시트)의 출처·개정판·해시·파서 | `002_rag_corpus.sql` |
+| `document_chunks` | 검색 카드의 본문·쪽·표 이름·행 | `002_rag_corpus.sql` |
+| `chunk_embeddings` | 기본 `vector(1536)`과 HNSW; 선택적으로 복제 DB에서 `halfvec(1536)` 전환 시험. 수동 전환 뒤 HNSW 없음 | `002_rag_corpus.sql`, 수동 `halfvec.sql.manual` |
+| `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
+| `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
+| `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
+| (정할 것) | 승인된 견적서 등 업무 표 | Migration 1 초안 검토 뒤 |
 
-코퍼스 표 두 개(`source_documents`, `document_chunks`)는 Migration 1 초안과 같은 정의라, 초안이 확정돼도 `IF NOT EXISTS`로 겹치지 않습니다.
+문서·청크 표는 코퍼스 SQL, 사용자 표는 인증 SQL이 생성합니다. Migration 1 초안은 이 표들을 참조합니다.
 
 ## 라이브러리가 만드는 표
 

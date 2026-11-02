@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SojaFit 로그인</title>
+<style>
+:root{font-family:Pretendard,"Malgun Gothic",system-ui,sans-serif;color:#172b34;background:#f4f7f6;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-height:100vh}button,input{font:inherit}.top{height:76px;display:flex;align-items:center;justify-content:space-between;max-width:1240px;margin:auto;padding:0 32px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px;letter-spacing:-.7px}.mark{display:grid;place-items:center;width:34px;height:34px;background:#14765f;color:white;border-radius:10px;font-size:18px}.top-note{font-size:13px;color:#6b7c7c}.wrap{min-height:calc(100vh - 130px);display:grid;grid-template-columns:1fr 1fr;max-width:1240px;margin:auto;padding:24px 32px 64px;gap:56px;align-items:center}.intro{padding:25px 0 25px 14px}.eyebrow{color:#12745c;font-weight:700;font-size:13px;letter-spacing:.08em}.intro h1{font-size:clamp(34px,4.1vw,52px);line-height:1.25;letter-spacing:-2.1px;margin:20px 0;color:#172b34}.intro p{color:#5b7073;line-height:1.8;font-size:16px;max-width:470px;word-break:keep-all}.steps{margin-top:45px;display:grid;gap:14px}.step{display:flex;align-items:center;gap:13px;color:#435d60;font-size:14px}.step span{width:28px;height:28px;display:grid;place-items:center;border:1px solid #bddbd0;background:#eaf5ef;color:#16765e;border-radius:50%;font-size:12px;font-weight:700}.card{background:#fff;border:1px solid #e1eae6;border-radius:20px;padding:42px;box-shadow:0 18px 55px #1c483d0d;max-width:460px;width:100%;justify-self:end}.card h2{font-size:26px;letter-spacing:-1px;margin:0 0 8px}.sub{font-size:14px;line-height:1.7;color:#6b7c7c;margin:0 0 28px}.notice{background:#f0f7f3;border:1px solid #d3e9dc;color:#366554;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:26px}.field{margin:0 0 19px}label{font-size:14px;font-weight:700;display:block;margin-bottom:8px}input{width:100%;border:1px solid #d5e1dc;border-radius:9px;padding:13px 14px;background:#fff;color:#172b34;outline:none}input:focus{border-color:#17816a;box-shadow:0 0 0 3px #d8f0e7}input::placeholder{color:#a0afaa}.login{width:100%;background:#16785f;color:#fff;border:0;border-radius:9px;font-weight:700;padding:15px;cursor:pointer;margin-top:5px}.login:hover{background:#11664f}.login:focus-visible{outline:3px solid #9dd5c1;outline-offset:3px}.message{font-size:13px;color:#9a5611;background:#fff8ed;border:1px solid #f6dfbc;line-height:1.6;padding:12px;border-radius:8px;margin:16px 0 0}.hint{border-top:1px solid #edf1ef;margin-top:26px;padding-top:20px;font-size:13px;line-height:1.7;color:#748582}.footer{text-align:center;font-size:12px;color:#8b9c96;padding:0 24px 22px}@media(max-width:780px){.top{height:66px;padding:0 20px}.top-note{font-size:12px}.wrap{display:flex;flex-direction:column;gap:26px;align-items:stretch;padding:20px 20px 45px}.intro{padding:5px 0}.intro h1{font-size:32px;margin:14px 0;letter-spacing:-1.2px}.intro p{font-size:14px}.steps{margin-top:20px;gap:9px}.card{max-width:none;padding:28px 24px}.footer{text-align:left}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="mark" aria-hidden="true">S</span> SojaFit</div><div class="top-note">회로 부품 대체 판단 도우미</div></header>
+<main class="wrap">
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="eyebrow">EVIDENCE FOR YOUR CIRCUIT</div>
+    <h1 id="intro-title">회로에 맞는 부품 선택,<br>근거와 함께 시작하세요.</h1>
+    <p>회로에서 부품이 맡은 역할을 살펴보고 데이터시트 근거를 바탕으로 대체 후보를 확인합니다.</p>
+    <div class="steps" aria-label="서비스 이용 순서"><div class="step"><span>01</span>회로와 부품을 입력해요</div><div class="step"><span>02</span>대체 조건과 근거를 확인해요</div><div class="step"><span>03</span>사람이 확인한 뒤 견적을 저장해요</div></div>
+  </section>
+  <section class="card" aria-labelledby="login-title">
+    <h2 id="login-title">로그인</h2><p class="sub">평가용 계정으로 SojaFit을 시작하세요.</p>
+    
+    <form id="login-form">
+      <div class="field"><label for="email">이메일</label><input id="email" type="email" placeholder="예: demo@example.com" autocomplete="username" required></div>
+      <div class="field"><label for="password">비밀번호</label><input id="password" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password" required></div>
+      <button class="login" type="submit">로그인</button>
+      <p class="message" id="result" role="status" aria-live="polite" hidden></p>
+    </form>
+    <div id="signed-in" hidden><p id="signed-in-label"></p><button type="button" id="logout">로그아웃</button><section id="admin-panel" hidden aria-labelledby="admin-title"><h3 id="admin-title">계정 관리</h3><p>일반 사용자 계정을 활성화하거나 비활성화합니다.</p><ul id="admin-users"></ul><p id="admin-message" role="status" aria-live="polite"></p></section></div><div class="hint">평가용 계정은 별도로 안내됩니다.<br>같은 동작이 보장되는 것은 아니며, 최종 판단은 사람이 확인해야 합니다.</div>
+  </section>
+</main>
+<footer class="footer">© SojaFit · 회로에 맞는 선택을 위한 근거</footer>
+<script>
+const form = document.getElementById('login-form');
+const result = document.getElementById('result');
+const signedIn = document.getElementById('signed-in');
+const adminPanel = document.getElementById('admin-panel');
+const adminUsers = document.getElementById('admin-users');
+const adminMessage = document.getElementById('admin-message');
+let sessionVersion = 0;
+function displayUser(data) {
+  const version = ++sessionVersion;
+  form.hidden = true;
+  signedIn.hidden = false;
+  document.getElementById('signed-in-label').textContent = `로그인됨 · 사용자 ${data.user_id}`;
+  loadAccounts(version);
+}
+async function loadAccounts(version) {
+  try {
+    const response = await fetch('/api/admin/users');
+    if (version !== sessionVersion || signedIn.hidden) return;
+    if (response.status === 403) { adminPanel.hidden = true; return; }
+    if (!response.ok) throw new Error('accounts unavailable');
+    const data = await response.json();
+    if (version !== sessionVersion || signedIn.hidden) return;
+    adminUsers.replaceChildren();
+    for (const account of data.users) {
+      const row = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = `${account.email} · ${account.role === 'admin' ? '관리자' : '사용자'} · ${account.is_active ? '활성' : '비활성'} `;
+      row.append(label);
+      if (account.role === 'user') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = account.is_active ? '비활성화' : '활성화';
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            const changed = await fetch(`/api/admin/users/${account.id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({is_active:!account.is_active})});
+            if (version !== sessionVersion || signedIn.hidden) return;
+            if (!changed.ok) throw new Error('change failed');
+            adminMessage.textContent = '계정 상태를 변경했습니다.';
+            await loadAccounts(version);
+          } catch { if (version === sessionVersion) adminMessage.textContent = '계정 상태를 변경하지 못했습니다.'; }
+          finally { button.disabled = false; }
+        });
+        row.append(button);
+      }
+      adminUsers.append(row);
+    }
+    adminPanel.hidden = false;
+  } catch { if (version === sessionVersion) { adminPanel.hidden = false; adminMessage.textContent = '계정 목록을 불러오지 못했습니다.'; } }
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = form.querySelector('button');
+  button.disabled = true;
+  result.hidden = true;
+  try {
+    const response = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:document.getElementById('email').value, password:document.getElementById('password').value})});
+    document.getElementById('password').value = '';
+    if (!response.ok) {
+      result.textContent = response.status === 401 ? '이메일 또는 비밀번호를 확인해 주세요.' : '로그인 서비스를 사용할 수 없습니다.';
+      result.hidden = false;
+      return;
+    }
+    displayUser(await response.json());
+  } catch {
+    document.getElementById('password').value = '';
+    result.textContent = '로그인 서비스를 사용할 수 없습니다.';
+    result.hidden = false;
+  } finally { button.disabled = false; }
+});
+document.getElementById('logout').addEventListener('click', async () => {
+  try {
+    const response = await fetch('/api/auth/logout', {method:'POST'});
+    if (response.ok) { sessionVersion++; adminPanel.hidden = true; adminUsers.replaceChildren(); adminMessage.textContent = ''; signedIn.hidden = true; form.hidden = false; result.hidden = true; }
+    else { document.getElementById('signed-in-label').textContent = '로그아웃하지 못했습니다. 다시 시도해 주세요.'; }
+  } catch { document.getElementById('signed-in-label').textContent = '로그아웃하지 못했습니다. 다시 시도해 주세요.'; }
+});
+fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(data => { if (data) displayUser(data); }).catch(() => {});
+</script>
+</body>
+</html>

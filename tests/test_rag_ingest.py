@@ -69,7 +69,7 @@ def test_rerun_skips_rows_and_api(tmp_path, monkeypatch):
         conn.execute(f'CREATE SCHEMA {schema}')
     try:
         with psycopg.connect(url, autocommit=True) as conn:
-            conn.execute(open('db/02_rag_corpus.sql', encoding='utf-8').read())
+            conn.execute(open('db/002_rag_corpus.sql', encoding='utf-8').read())
         calls = []
         monkeypatch.setattr(llm, 'embed_texts', fake_embed(calls))
         monkeypatch.setenv('DATABASE_URL', url)
