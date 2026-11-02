@@ -1,0 +1,346 @@
+{
+ "summary": {
+  "name": "A_english",
+  "questions": 19,
+  "bm25_build_sec": 1.0,
+  "exact": {
+   "recall@5": 0.632,
+   "mrr": 0.512,
+   "page_hit@5": 0.526
+  },
+  "exact_sec_p50": 0.2348,
+  "hnsw100": {
+   "recall@5": 0.421,
+   "mrr": 0.337,
+   "page_hit@5": 0.316
+  },
+  "hnsw_sec_p50": 0.0039,
+  "overlap100": "694/950",
+  "overlap1000": "935/950"
+ },
+ "rows": [
+  {
+   "id": "draft30-e03",
+   "query": "How many volts of reverse voltage can the TSC 1N5817 withstand?",
+   "filter_docs": null,
+   "t_exact": 0.452,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.005,
+   "overlap100": 8,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-e04",
+   "query": "How much voltage drop will I get if I use the TSC 1N4148?",
+   "filter_docs": null,
+   "t_exact": 0.3421,
+   "exact": {
+    "rank": 5,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 5,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.005,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-e05",
+   "query": "What package is the TSC 1N5819, and how do I tell its orientation?",
+   "filter_docs": null,
+   "t_exact": 0.2949,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0101,
+   "overlap100": 46,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-e08",
+   "query": "I'm looking at the SS34 instead of D3. What are this part's ratings?",
+   "filter_docs": null,
+   "t_exact": 0.2859,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0045,
+   "overlap100": 45,
+   "overlap1000": 49
+  },
+  {
+   "id": "draft30-m03",
+   "query": "Is the voltage of the TSC BZT52C3V6 fixed at exactly 3.6V?",
+   "filter_docs": null,
+   "t_exact": 0.3061,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0042,
+   "overlap100": 44,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-m04",
+   "query": "Can I just solder the TSC BZT52C3V6 into the D1 position as is?",
+   "filter_docs": null,
+   "t_exact": 0.2615,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0057,
+   "overlap100": 38,
+   "overlap1000": 49
+  },
+  {
+   "id": "draft30-m05",
+   "query": "I'm planning to use the TSC 1N4148 instead of D3. How much current can I pass through it?",
+   "filter_docs": null,
+   "t_exact": 0.2336,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0034,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-m07",
+   "query": "I looked at the BZX84C3V3 as a candidate for D1. What are its ratings?",
+   "filter_docs": null,
+   "t_exact": 0.2282,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0019,
+   "overlap100": 27,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-h03",
+   "query": "If I replace D2 with the TSC 1N5819, what is the minimum voltage at VCC?",
+   "filter_docs": null,
+   "t_exact": 0.2348,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0032,
+   "overlap100": 25,
+   "overlap1000": 39
+  },
+  {
+   "id": "draft30-h04",
+   "query": "Can I swap D2 directly for the TSC 1N5819?",
+   "filter_docs": null,
+   "t_exact": 0.2381,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0039,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft30-h05",
+   "query": "The TSC 1N5817 and 1N5819 are in the same series, so can I use either one for D2?",
+   "filter_docs": null,
+   "t_exact": 0.2512,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0046,
+   "overlap100": 42,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n01",
+   "query": "Instead of the TSC 1N5819 fitted at D3, can I use the TSC 1N5817 and still have it serve as the flyback diode for this relay?",
+   "filter_docs": null,
+   "t_exact": 0.2275,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0018,
+   "overlap100": 0,
+   "overlap1000": 48
+  },
+  {
+   "id": "draft50-n02",
+   "query": "If I change D3 to the TSC BAS70, can it still handle the coil current when this relay is turned off?",
+   "filter_docs": null,
+   "t_exact": 0.2246,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.002,
+   "overlap100": 48,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n03",
+   "query": "What is the reverse recovery time of the TSC 1N4148 that I'm considering as a candidate for D3, and under what test conditions is that value specified?",
+   "filter_docs": null,
+   "t_exact": 0.232,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0045,
+   "overlap100": 45,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n04",
+   "query": "If I change D2 to the TSC BZT52C5V1, can it still limit the voltage to the range I want?",
+   "filter_docs": null,
+   "t_exact": 0.2278,
+   "exact": {
+    "rank": 3,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0029,
+   "overlap100": 4,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n05",
+   "query": "What are the allowable power dissipation and the maximum junction temperature of the TSC BZT52C3V6, a candidate for D2?",
+   "filter_docs": null,
+   "t_exact": 0.2273,
+   "exact": {
+    "rank": null,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": null,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0059,
+   "overlap100": 40,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n06",
+   "query": "I'm about to order the TSC 1N4148 for D3. If I buy the 1N4148 R0G instead of the 1N4148 A0G, is it the same product?",
+   "filter_docs": null,
+   "t_exact": 0.2223,
+   "exact": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": true
+   },
+   "t_hnsw100": 0.0028,
+   "overlap100": 50,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n07",
+   "query": "Under these conditions, can I change D1 to the TSC 1N5817 and still use it for reverse polarity protection?",
+   "filter_docs": null,
+   "t_exact": 0.2292,
+   "exact": {
+    "rank": 1,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": 1,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0036,
+   "overlap100": 33,
+   "overlap1000": 50
+  },
+  {
+   "id": "draft50-n08",
+   "query": "If I change D1 to the TSC 1N4148, can it be used under this current condition?",
+   "filter_docs": null,
+   "t_exact": 0.2684,
+   "exact": {
+    "rank": 5,
+    "page_hit": false
+   },
+   "hnsw100": {
+    "rank": 5,
+    "page_hit": false
+   },
+   "t_hnsw100": 0.0028,
+   "overlap100": 49,
+   "overlap1000": 50
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+"""표 카드 규칙(docs/specs/rag-pipeline.md AC-01·AC-02)과 문서 키를 지킨다. Docling 없이 돈다."""
+from backend.rag.chunk import doc_key, revision, table_cards
+
+# 3행 3열 표: 0행이 머리. 1열(VRRM) 칸 하나가 1~2행에 걸쳐 합쳐져 있다.
+CELLS = [
+    (0, 1, 0, 1, 'PARAMETER', True), (0, 1, 1, 2, 'SYMBOL', True), (0, 1, 2, 3, '1N5817', True),
+    (1, 3, 0, 1, 'Reverse voltage', False), (1, 2, 1, 2, 'VRRM', False), (1, 2, 2, 3, '20', False),
+    (2, 3, 1, 2, 'VR(RMS)', False), (2, 3, 2, 3, '14', False),
+]
+
+
+def test_merged_cell_fills_every_row():
+    cards = table_cards('1N5817 SERIES_H2104.pdf', 1, 3, 3, CELLS)
+    assert len(cards) == 2
+    assert all('PARAMETER: Reverse voltage' in c['text'] for c in cards)
+    assert cards[1]['text'] == '[1N5817 SERIES_H2104.pdf · 1쪽 · PARAMETER] PARAMETER: Reverse voltage | SYMBOL: VR(RMS) | 1N5817: 14'
+
+
+def test_two_header_rows_join_once():
+    cells = [(0, 2, 0, 1, 'PARAMETER', True), (0, 1, 1, 2, 'VF', True), (1, 2, 1, 2, 'MAX', True),
+             (2, 3, 0, 1, 'IF = 1A', False), (2, 3, 1, 2, '0.45', False)]
+    (card,) = table_cards('a.pdf', 2, 3, 2, cells)
+    assert card['text'].endswith('PARAMETER: IF = 1A | VF / MAX: 0.45')
+
+
+def test_empty_table_gives_no_card():
+    assert table_cards('a.pdf', 1, 0, 3, []) == []
+
+
+def test_doc_key_and_revision():
+    assert doc_key('1N4148 SERIES_K2301.pdf') == 'tsc-1n4148-series_k2301'
+    assert revision('1N4148 SERIES_K2301.pdf') == 'K2301'

@@ -8,19 +8,128 @@
 
 | 항목 | 내용 |
 |---|---|
-| 산업과 문서 종류 | |
-| 서로 다른 문서 수 / 서로 다른 청크 수 | (문서 50건 이상 / 청크 1만 개 이상. 청크는 본문 sha256 기준) |
-| 문서 파싱 방식 (PDF, 표, 스캔 중) | |
-| 청킹 방식과 크기, 겹침 | |
+| 산업과 문서 종류 | 제조(전자부품). Taiwan Semiconductor 다이오드 데이터시트 PDF(분류 13개, 품번 9,589개) |
+| 서로 다른 문서 수 / 서로 다른 청크 수 | 문서 1,360건(7,725쪽) / 개선 2 청크 45,898개, 개선 전 10,723개 (문서 50건 이상 / 청크 1만 개 이상. 청크는 본문 sha256 기준) |
+| 문서 파싱 방식 (PDF, 표, 스캔 중) | PDF·표. Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고 합친 칸을 채운 뒤, 표 숫자를 pdfplumber 글자와 두 방향으로 대조. Docling 숫자 중 원문에 있는 비율 99.993%(93,940/93,947), 표 영역 원문 숫자 중 Docling에 있는 비율 99.89%(93,493/93,600). 원시 결과 `evals/results/parse_gpu_*_2026-11-01.*` |
+| 청킹 방식과 크기, 겹침 | 개선 2: PDF별 품번 표지 카드 + 표 한 행 = 카드 하나 + [파일·쪽·표 제목] 이름표, 표 밖 글은 Docling HybridChunker. 겹침 없음. 검색 비교에서 개선 전보다 문서 Recall@5 0.455 → 0.727 (아래 "청킹 검색 비교") |
 | 임베딩 모델과 선택 근거 | |
 | 벡터DB와 선택 이유, 한계 | |
 | manifest 위치 | `data/manifest.jsonl` |
 
+### 1-1. 임베딩 모델 예비 기준선 (2026-10-30)
+
+> **선택용 본평가가 아닌 프록시 smoke test입니다.** 실제 데이터시트 청크가 아직 없어서(22,000청크는 계획 때 추정한 규모) 공식 제품표의 대표 사양을 재서술한 30청크·18질의를 사용했습니다. Recall@5가 포화되므로 MRR과 운영 조건으로 후보만 줄이고, TSC 1,360건 실제 청크에서 사람이 `gold_chunks`를 붙인 뒤 다시 결정합니다. 표본 원문은 [TSC 1N5817–1N5819](https://services.ts.com.tw/storage/resources/datasheet/1N5817%20SERIES_H2104.pdf), [TSC Selection Guide](https://web.ts.com.tw/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/), [Infineon BAT165](https://www.infineon.com/assets/row/public/documents/24/49/infineon-bat165-datasheet-en.pdf), [Infineon AF Schottky](https://www.infineon.com/assets/row/public/documents/24/76/infineon-pg-sod323-2-1-bas3010a03we6327htsa1-pd-en.pdf)를 대조했습니다.
+
+평가 조건: dense cosine, 리랭커 없음, gold 1개/질의, RTX 5060 Laptop GPU 8GB, warm-up 뒤 측정. 로컬 질의 지연은 질의 임베딩과 22,000개 float32 벡터 exact search를 합친 값입니다. 22,000개 지연용 행렬은 30개 표본 벡터를 반복해 만들었으므로 검색 품질이 아니라 연산 지연만 참고합니다. 실제 서비스의 BM25·메타데이터 필터·리랭커를 넣지 않은 `dense-only` 결과이며 G5 본평가로 세지 않습니다.
+
+| 후보 | Recall@5 | MRR | 1,000청크 임베딩 | 질의 1건 p50 / p95 | 차원 | 22,000벡터 원시 / 계획 용량 | 운영 조건 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `text-embedding-3-small` | **1.000** | **0.907** | 7.02초 / $0.000878¹ | 918.7 / 1,205.1 ms | 1,536 | 135.2 MB / 약 203 MB² | OpenRouter API. 모델 이미지 불필요 |
+| `BAAI/bge-m3` | **1.000** | 0.863 | 5.95초, 증분 API 비용 $0 | **30.9** / 90.1 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
+| `nlpai-lab/KURE-v1` | **1.000** | **0.894** | 5.68초, 증분 API 비용 $0 | 31.9 / **52.4 ms**⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
+| `Qwen/Qwen3-Embedding-0.6B` | **1.000** | 0.875 | **3.83초**, 증분 API 비용 $0 | 61.8 / 82.9 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 고정 영문 query instruction 사용; 캐시 1.125 GiB; 오프라인 통과⁴ |
+
+1. 표본 1,000청크의 실제 usage는 43,890토큰, $0.000878이었습니다. 실제 데이터시트 청크를 평균 350토큰으로 계획하면 1,000청크 $0.007, 22,000청크 최초 색인 $0.154입니다. 전체 프록시 평가는 45,699토큰, $0.000914였습니다. OpenRouter 공식 문서도 `openai/text-embedding-3-small`을 $0.02/1M tokens로 제공합니다: [OpenRouter embeddings API](https://openrouter.ai/docs/api/api-reference/embeddings/create-embeddings), [model pricing](https://openrouter.ai/openai/text-embedding-3-small/providers). 기본 차원 1,536과 최대 입력 8,192토큰은 [OpenAI embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)와 일치합니다.
+2. 원시는 `차원 × 4 bytes × 22,000`입니다. 계획 용량은 행·메타데이터·HNSW 여유로 원시의 1.5배를 잡은 추정이며 본문 저장량은 제외합니다.
+3. 이 PC의 캐시된 단일 revision(2.1 GB) + 측정용 CUDA/Python 패키지(5.6 GB) + base image(0.07 GB)의 비압축 합계 추정입니다. 실제 배포 Dockerfile 빌드 크기는 별도 측정해야 합니다.
+4. Qwen은 revision `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`을 사용했습니다. TEI 1.7.2 linux/amd64 registry manifest의 압축 layer 합계는 GPU 0.57 GiB, CPU 0.22 GiB이며 모델 캐시는 별도입니다. 이미지를 pull·빌드하지 않았으므로 로컬 비압축 이미지 크기로 표기하지 않습니다. 저장소 표준인 Docker `uv run --offline --isolated` 재실행 결과는 Recall@5 1.000/MRR 0.875, 1,000청크 3.83초, 질의 p50/p95 61.8/82.9 ms였습니다. 최초 Windows 임시 환경 결과(10.37초, 43.7/49.0 ms)는 실행 환경이 달라 비교표에서 제외하고 원시 JSON으로만 보존합니다.
+5. 로컬 세 모델의 지연은 RTX 5060 Laptop GPU 8GB에서 측정한 값이며 2026-10-30 배포 기준 Cloud Run의 CPU 1 vCPU·메모리 512 MiB 값이 아닙니다. BGE·KURE 모델 스냅샷만 약 2.1 GB이고 Qwen 캐시도 1.125 GiB이므로 로컬 모델을 Cloud Run에 올리려면 512 MiB보다 메모리를 늘리고 CPU 환경에서 지연을 별도로 재측정해야 합니다.
+
+세 로컬 모델은 캐시 준비 후 새 프로세스에서 `HF_HUB_OFFLINE=1`로 같은 Recall@5/MRR이 나오는 것을 확인했습니다. BGE·KURE는 `uv run --offline`도 함께 사용했고, Qwen은 캐시 snapshot의 로컬 경로를 직접 로드해 `transformers`의 불필요한 모델 정보 조회를 막았습니다. Hugging Face 문서상 오프라인 모드는 캐시에 없는 파일을 자동으로 받지 않고 실패합니다: [HF_HUB_OFFLINE](https://github.com/huggingface/huggingface_hub/blob/main/docs/source/en/package_reference/environment_variables.md#hf_hub_offline).
+
+**키 없는 데모 규칙**: API 모델을 선택해도 데모 요청에서 임의의 다른 임베딩 모델로 바꾸지 않습니다. 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 API·벡터 검색을 호출하지 않고 BM25-only로 근거를 찾은 뒤 근거 문장을 추출해 반환합니다. 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다. 실제 API 응답 원본은 저장하지 않습니다.
+
+**예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크(계획 때 추정 규모) 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 TSC 1,360건 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
+
+**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
+
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
+
+대조 방법: 원문 쪽을 화면으로 띄워 정답 값 41개를 만들고(텍스트 레이어로 숫자 재확인, 하정운이 41개 모두 원문과 다시 대조해 틀린 값 없음), 값과 그 값을 해석하는 데 필요한 기호·품번·조건이 파싱 결과의 같은 행(줄)에 있으면 맞은 것으로 셉니다. 원시 결과는 `evals/results/parser_accuracy_2026-11-01.json`, 정답표는 `evals/results/parser_truth_2026-11-01.json`입니다(2026-11-01, 도커 linux/aarch64 CPU).
 
 | # | 문서 | 원문에서 본 것 | 파싱 결과 | 틀어진 곳 |
 |---|---|---|---|---|
-| 1 | | | | |
+| 1 | TSC 1N5817 SERIES_H2104, 1~2쪽 | 최대 정격 표의 VRRM 1N5817/18/19 = 20/30/40 V, IF 1 A·IFSM 30 A는 세 품번 공통(합친 칸). 전기 특성 표의 VF 최대 0.45/0.55/0.60 V @ IF = 1A, TJ = 25°C(조건·기호 칸이 세 행에 걸침) | Docling 14/14, pdfplumber 11/14, pdftotext 10/14 | 합친 칸의 기호(VF, IR)가 한 행에만 남아 나머지 행의 값과 떨어짐. pdfplumber 기본값은 아래첨자를 떼어 `I = 1A, T = 25°C F J`로 냄(`text_y_tolerance=6`에서 해결) |
+| 2 | TSC 1N4148 SERIES_K2301, 1~2쪽 | PD 500 mW·VRRM 100 V·IF 150 mA·IFSM 2 A·IFRM 450 mA는 세 품번 공통. VF는 품번·조건별(1N4148은 IF = 10mA에서 최대 1 V), IR은 VR = 20V 25 nA, 75V 5 µA | Docling 13/13, pdfplumber 11/13, pdftotext 9/13 | Docling도 세 품번 공통 값을 가운데 열(1N4448)에만 넣고 나머지 열을 비움. 어느 도구든 합친 칸 채우기가 필요함. µA 단위는 다섯 도구 모두 유지 |
+| 3 | TSC BZT52C2V4 SERIES_G1804, 1~2쪽 | 품번이 행인 43행 표. BZT52C3V6 행은 VZ 3.42/3.60/3.78 V @ IZT 5 mA, ZZT 90 Ω, IR 4.5 µA @ VR 1.0 V | Docling·pdfplumber·pdftotext 14/14 | pypdf는 칸마다 줄을 나눠 품번과 값이 떨어짐(0/14). PyMuPDF는 6/14 |
+
+**파서 5종 비교** (위 3건 18쪽 + 13개 분류 비례 표본 100건 573쪽)
+
+| 도구 | 해석 가능 값 (41개) | 공통 값을 모든 품번 열에 채움 (12개) | 쪽당 시간 (표본 100건) |
+|---|---:|---:|---:|
+| Docling 2.145.0 (OCR 끔) | **41** | 7 | 4.58초 (첫 실행 모델 로딩 41.9초 별도) |
+| pdfplumber 0.11.10 | 36 | 4 | 0.067초 |
+| pdftotext 22.12.0 | 33 | 표 구조 없음 | 0.003초 |
+| PyMuPDF 2.0 | 23 | 4 | 0.337초 |
+| pypdf 6.21.4 | 22 | 표 구조 없음 | 0.022초 |
+
+µ·°C·아래첨자 검사는 다섯 도구 모두 통과했습니다. 다섯 도구 모두 PDF에 들어 있는 글자를 꺼내므로(OCR 아님) 숫자 자체는 같았고, 차이는 표의 행·열 구조에서 났습니다.
+
+**청킹 후보 대리 지표** (위 3건의 Docling 파싱 결과, 원시 결과 `evals/results/chunking_proxy_2026-11-01.json`)
+
+| 단계 | 방법 | 조각 수 | 평균 길이 | 값과 해석 글자가 같은 조각 (41개) | 그 조각에 문서 품번까지 (41개) |
+|---|---|---:|---:|---:|---:|
+| 개선 전 | 고정 길이 1000자, 겹침 100자 | 33 | 724자 | 41 | 31 |
+| 개선 1 | Docling HybridChunker 기본값 | 100 | 538자 | 8 | 2 |
+| 개선 2 | 표 한 행 = 조각 하나 + [파일·쪽·표 제목] 이름표 + PDF별 품번 표지 | 162 | 354자 | 41 | 41 |
+
+개선 1은 표 칸마다 표 제목을 되풀이해 기본 토크나이저 512토큰 한도에서 표가 갈리고 기호와 값이 다른 조각으로 떨어졌습니다. "같은 조각" 판정은 조각이 클수록 유리하므로 개선 전의 41은 아래 검색 비교로 다시 확인했습니다.
+
+**청킹 검색 비교** (2026-11-01, 사전 등록 #3, 원시 결과 `evals/results/chunking_search_2026-11-01.json`)
+
+전체 1,360건을 개선 전과 개선 2로 각각 자르고, 서로 다른 본문만 `text-embedding-3-small`(1536차원)로 임베딩해 로컬 pgvector에 넣었습니다. 비동결 `evals/draft_30.jsonl`에서 데이터시트 근거가 필요한 관련 문항 11개로 코사인 거리 상위 5개를 찾았습니다. 정답 문서와 쪽은 정답 초안(사람 검토 전)에서 옮겼습니다. BM25, 필터, 리랭커는 쓰지 않았습니다.
+
+| 단계 | 서로 다른 청크 | 임베딩 토큰 | 문서 Recall@5 | MRR | 쪽 적중@5 |
+|---|---:|---:|---:|---:|---:|
+| 개선 전 | 10,723 | 2,201,510 | 0.455 (5/11) | 0.321 | 못 잼(쪽 정보 없음) |
+| 개선 2 | 45,898 | 5,391,648 | 0.727 (8/11) | 0.568 | 0.364 (4/11) |
+
+- 개선 2에서만 정답 문서가 5위 안에 든 문항은 e04, e05, h05 세 개이고, 개선 전에서만 든 문항은 없습니다. 11문항이라 부호 검정으로는 둘을 구별할 수 없습니다(양측 p=0.25).
+- 순위가 내려간 문항은 m03 하나입니다(1위 → 2위). 1위는 같은 BZT52 계열의 다른 데이터시트 `BZT52B2V4 SERIES_F15.pdf`였습니다.
+- 둘 다 못 찾은 문항은 m05, h03, h04입니다. m05는 이름이 비슷한 1N4148W, 1N4148WTH, 1N4148WSH 데이터시트가 5개를 다 차지했습니다. h03, h04는 질문에 품번 1N5819와 회로 기호(D2, VCC)가 함께 있습니다. 1N5819는 `1N5817 SERIES_H2104.pdf`의 표지 카드에만 이름이 있어서, 임베딩 거리로는 ESD·SiC 다이오드 카드가 더 가까웠습니다.
+- 쪽 적중은 사전 등록 범위(0.45~0.80)보다 낮았습니다. 표지 카드에는 쪽 번호가 없어서, 표지 카드가 1위로 나온 e05, m04, m07은 문서는 맞아도 쪽은 못 맞힌 것으로 셌습니다.
+- 임베딩은 두 단계 합쳐 7,593,158토큰, 15.7분, 재시도 0회였습니다. 비용은 단가(100만 토큰당 $0.02)로 계산하면 약 $0.15입니다.
+
+**하이브리드 검색 비교** (2026-11-01, 사전 등록 #4, 원시 결과 `evals/results/hybrid_search_2026-11-01.json`)
+
+위와 같은 11문항과 개선 2 카드에서 검색 방식만 바꿨습니다. BM25는 `rank-bm25`의 BM25Okapi 기본값이고, 토큰은 영문·숫자 연속을 소문자로 잘랐습니다("1N5819는" → "1n5819"). 하이브리드는 dense 상위 50개와 BM25 상위 50개를 RRF(카드마다 1/(60 + 순위)의 합)로 합쳤습니다. 필터와 리랭커는 쓰지 않았습니다.
+
+| 검색 방식 | 문서 Recall@5 | MRR | 쪽 적중@5 |
+|---|---:|---:|---:|
+| dense만 (위 결과 재실행) | 0.727 (8/11) | 0.568 | 0.364 (4/11) |
+| BM25만 (참고) | 1.000 (11/11) | 0.894 | 0.636 (7/11) |
+| 하이브리드 | 1.000 (11/11) | 0.909 | 0.727 (8/11) |
+
+- dense만에서 못 찾은 m05, h03, h04를 하이브리드는 모두 5위 안에 찾았습니다. 질문의 품번(1n4148, 1n5819)이 드문 토큰이라 BM25가 그 품번이 적힌 표지 카드와 표 행을 위로 올렸습니다.
+- 순위가 오른 문항은 e04(2 → 1), e08(4 → 1), m03(2 → 1), m05·h03(없음 → 2), h04(없음 → 1) 여섯 개이고 내려간 문항은 없습니다. 정답 근거가 사람 검토 전이고 문항이 11개라 결과는 참고로만 봅니다.
+- BM25만과 하이브리드는 순위가 오른 문항 2개(m03, m04), 내려간 문항 2개(m05, h03)로 갈렸고, 쪽 적중은 하이브리드가 한 문항 많았습니다.
+- 하이브리드에서도 h03의 1위는 ESD 다이오드 카드(`TESD5V0L1UC_E2007.pdf`)였습니다. dense 쪽이 질문의 "VCC" 같은 회로 단어에 끌려온 것입니다.
+- 질문의 회로 기호 D1·D2·D3가 부품 표시 코드와 같은 토큰이 되었습니다. `1N4148W SERIES_K1804.pdf` 1쪽의 표 행 세 개에 표시 코드 D1, D2, D3가 있어서, 관련 없는 질문 다섯 개(e08, m04, m07, h03, h04)의 BM25 상위 5개에 들어왔습니다.
+- 사전 등록 기대 5개 중 맞은 것은 하이브리드 Recall@5 하나이고, 나머지 넷은 범위보다 높게 나왔습니다.
+
+**저장소 코드로 다시 잼** (2026-11-01, `backend/rag/retrieve.py`, `evals/run_retrieval.py`, 비동결 `evals/draft_50.jsonl`)
+
+로컬 DB에 문서 1,360건, 카드 52,244장(같은 본문도 문서마다 저장)을 넣고 같은 하이브리드(dense 정확 검색 상위 50 + BM25 상위 50, RRF k=60)로 쟀습니다. 위 11문항은 문서 Recall@5 1.000, MRR 0.955, 쪽 적중@5 0.818이고, 데이터시트 근거가 있는 관련 19문항(새 20건 포함)은 1.000, 0.921, 0.737, 질문당 중간값 1.2초였습니다.
+
+- dense를 HNSW 인덱스로 찾으면 한국어 질문의 정확 검색 1위를 놓쳤습니다. m03은 `ef_search` 1000에서도 정확 검색 1위(거리 0.4177) 대신 0.4777 카드를 1위로 냈습니다. 그래서 검색 코드는 인덱스를 끄고 정확 검색(질문당 0.3~0.6초)을 씁니다.
+- 이 숫자는 동결 전 초안과 사람 판정 1차 기준이며 베이스라인이 아닙니다. 베이스라인은 v1 동결 뒤 같은 명령으로 잽니다.
+
+**HNSW 개선 실험** (2026-11-01, 사전 등록 #5~#8, 원시 결과 `evals/results/hnsw_exp_*_2026-11-01.json`)
+
+HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 줄이려고, 위와 같은 19문항·하이브리드에서 조건 하나씩만 바꿨습니다. 겹침은 HNSW 상위 50 중 정확 검색 상위 50에도 있는 비율입니다. KURE와 Qwen3는 원격 GPU(RTX 3080 Ti)에서 서로 다른 본문 45,898개를 다시 임베딩해 로컬 DB 실험 표에 넣었습니다.
+
+| 조건 | 정확 검색 하이브리드 Recall@5 / MRR / 쪽 적중@5 | HNSW(ef_search 100) 하이브리드 Recall@5 / MRR / 쪽 적중@5 | 겹침 ef_search 100 / 1000 | 메모 |
+|---|---|---|---|---|
+| 기준(`text-embedding-3-small`, 한국어 질문) | 1.000 / 0.921 / 0.737 | 1.000 / 0.724 / 0.737 | 61% / 92% | dense 정확 검색 0.23초, HNSW 0.004초 |
+| A. 질문을 영어로(dense·BM25 모두) | 0.632 / 0.512 / 0.526 | 0.421 / 0.337 / 0.316 | 73% / 98% | 10문항 나빠짐 |
+| B. 품번 필터 | 1.000 / 1.000 / 0.947 | 해당 없음(필터 안 정확 검색) | 해당 없음 | 19문항 모두 필터 걸림, dense 0.0007초 |
+| C. `KURE-v1` | 1.000 / 0.895 / 0.632 | 1.000 / 0.728 / 0.684 | 38% / 85% | 카드 임베딩 4.7분 |
+| D. `Qwen3-Embedding-0.6B` | 1.000 / 0.895 / 0.842 | 0.947 / 0.816 / 0.789 | 76% / 97% | 카드 임베딩 3.7분 |
+
+- B는 정답 문서 순위가 m05, n03, n08에서 2위 → 1위로 오르고 나빠진 문항이 없습니다. 3문항 차이라 19문항으로는 개선이라 단정하지 않습니다. 검색 범위가 품번이 든 문서로 줄어 카드 수와 상관없이 빠르지만, 질문에 코퍼스 품번이 없으면 걸리지 않습니다.
+- A는 HNSW 겹침은 늘었지만 BM25에 voltage, package 같은 흔한 영어 단어가 들어가 품번 신호가 묻혔습니다. 영어 질문을 dense에만 쓰는 방식은 재지 않았습니다.
+- D는 HNSW 겹침과 HNSW 하이브리드 MRR이 기준보다 높지만 정확 검색 하이브리드 MRR은 0.895로 낮고(n03 좋아짐, e08·n05 나빠짐), 로컬 모델이라 서버 메모리가 더 필요합니다.
+- C는 HNSW 겹침이 기준보다 낮았습니다.
 
 ## 2. 평가셋 (G5)
 
@@ -120,7 +229,17 @@
 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 봅니다.
 
 ```bash
-# 예) 한 줄로 v2 평가를 캐시와 함께 재실행
+# 최초 1회 캐시 준비(네트워크 사용): MODEL은 bge-m3, kure-v1, qwen3-embedding-0.6b 중 하나입니다.
+docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
+
+# 캐시 준비 뒤 오프라인 재현
+docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
+
+# API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
+docker run --rm --env-file .env -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy python evals/benchmark_embeddings.py --model text-embedding-3-small
+
+# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
+docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/draft_50.jsonl evals/results/retrieval.json
 ```
 
 ## 10. 대체재와의 비교

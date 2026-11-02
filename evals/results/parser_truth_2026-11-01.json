@@ -1,0 +1,62 @@
+{
+  "_설명": "원문 대조용 정답표. 값은 원본 PDF 화면(80dpi 렌더링)을 읽고 텍스트 레이어와 맞춰 확인했다(2026-11-01). anchors는 값을 바르게 해석하려면 같은 줄(표의 같은 행)에 함께 있어야 하는 글자다. cols가 있으면 표 도구는 그 품번 열에 값이 들어 있는지도 본다(값이 여러 품번 공통이면 모든 열).",
+  "1N5817-SERIES_H2104.pdf": {
+    "parts": ["1N5817", "1N5818", "1N5819"],
+    "items": [
+      {"id": "VRRM-1N5817", "page": 1, "anchors": ["VRRM"], "value": "20", "cols": ["1N5817"]},
+      {"id": "VRRM-1N5818", "page": 1, "anchors": ["VRRM"], "value": "30", "cols": ["1N5818"]},
+      {"id": "VRRM-1N5819", "page": 1, "anchors": ["VRRM"], "value": "40", "cols": ["1N5819"]},
+      {"id": "VRMS-1N5819", "page": 1, "anchors": ["VR(RMS)"], "value": "28", "cols": ["1N5819"]},
+      {"id": "IF", "page": 1, "anchors": ["Forward current"], "value": "1", "cols": ["1N5817", "1N5818", "1N5819"]},
+      {"id": "IFSM", "page": 1, "anchors": ["IFSM"], "value": "30", "cols": ["1N5817", "1N5818", "1N5819"]},
+      {"id": "TJ", "page": 1, "anchors": ["Junction temperature"], "value": "-55 to +125", "cols": ["1N5817", "1N5818", "1N5819"]},
+      {"id": "RthJA", "page": 2, "anchors": ["RθJA"], "value": "100"},
+      {"id": "VF-1N5817", "page": 2, "anchors": ["1N5817", "VF"], "value": "0.45"},
+      {"id": "VF-1N5818", "page": 2, "anchors": ["1N5818", "VF"], "value": "0.55"},
+      {"id": "VF-1N5819", "page": 2, "anchors": ["1N5819", "VF"], "value": "0.60"},
+      {"id": "IR-25C", "page": 2, "anchors": ["IR", "TJ = 25°C"], "value": "1"},
+      {"id": "IR-100C", "page": 2, "anchors": ["IR", "TJ = 100°C"], "value": "10"},
+      {"id": "CJ", "page": 2, "anchors": ["CJ"], "value": "55"}
+    ],
+    "text_checks": {"subscript IF=1A": "IF = 1A", "subscript TJ=25°C": "TJ = 25°C", "µ V/µs": "V/µs"}
+  },
+  "1N4148-SERIES_K2301.pdf": {
+    "parts": ["1N4148", "1N4448", "1N914B"],
+    "items": [
+      {"id": "PD", "page": 1, "anchors": ["PD"], "value": "500", "cols": ["1N4148", "1N4448", "1N914B"]},
+      {"id": "VRRM", "page": 1, "anchors": ["VRRM"], "value": "100", "cols": ["1N4148", "1N4448", "1N914B"]},
+      {"id": "IF", "page": 1, "anchors": ["Forward current"], "value": "150", "cols": ["1N4148", "1N4448", "1N914B"]},
+      {"id": "IFSM", "page": 1, "anchors": ["IFSM"], "value": "2", "cols": ["1N4148", "1N4448", "1N914B"]},
+      {"id": "IFRM", "page": 1, "anchors": ["IFRM"], "value": "450", "cols": ["1N4148", "1N4448", "1N914B"]},
+      {"id": "RthJA", "page": 1, "anchors": ["RθJA"], "value": "240"},
+      {"id": "VF-1N4148-10mA", "page": 2, "anchors": ["1N4148", "IF = 10mA", "VF"], "value": "1"},
+      {"id": "VF-1N4448-5mA-max", "page": 2, "anchors": ["IF = 5mA", "VF"], "value": "0.72"},
+      {"id": "VR-100uA", "page": 2, "anchors": ["IR = 100µA", "VR"], "value": "100"},
+      {"id": "IR-20V", "page": 2, "anchors": ["VR = 20V", "IR"], "value": "25"},
+      {"id": "IR-75V", "page": 2, "anchors": ["VR = 75V", "IR"], "value": "5"},
+      {"id": "CJ", "page": 2, "anchors": ["CJ"], "value": "4"},
+      {"id": "trr", "page": 2, "anchors": ["trr"], "value": "4"}
+    ],
+    "text_checks": {"µ IR=100µA": "IR = 100µA", "µ unit µA": "5 µA", "subscript IF=10mA": "IF = 10mA"}
+  },
+  "BZT52C2V4-SERIES_G1804.pdf": {
+    "parts": [],
+    "items": [
+      {"id": "VF", "page": 1, "anchors": ["VF"], "value": "1"},
+      {"id": "PD", "page": 1, "anchors": ["PD"], "value": "500"},
+      {"id": "RthJA", "page": 1, "anchors": ["RθJA"], "value": "350"},
+      {"id": "C3V6-VZmin", "page": 2, "anchors": ["BZT52C3V6"], "value": "3.42"},
+      {"id": "C3V6-VZnom", "page": 2, "anchors": ["BZT52C3V6"], "value": "3.60"},
+      {"id": "C3V6-VZmax", "page": 2, "anchors": ["BZT52C3V6"], "value": "3.78"},
+      {"id": "C3V6-ZZT", "page": 2, "anchors": ["BZT52C3V6"], "value": "90"},
+      {"id": "C3V6-IR", "page": 2, "anchors": ["BZT52C3V6"], "value": "4.5"},
+      {"id": "C2V4-IR", "page": 2, "anchors": ["BZT52C2V4"], "value": "45"},
+      {"id": "C27-VZnom", "page": 2, "anchors": ["BZT52C27"], "value": "27.00"},
+      {"id": "C27-IR", "page": 2, "anchors": ["BZT52C27"], "value": "0.045"},
+      {"id": "C27-VR", "page": 2, "anchors": ["BZT52C27"], "value": "18.9"},
+      {"id": "C75-VZmax", "page": 2, "anchors": ["BZT52C75"], "value": "78.75"},
+      {"id": "C75-ZZK", "page": 2, "anchors": ["BZT52C75"], "value": "470"}
+    ],
+    "text_checks": {"µ unit µA": "µA", "subscript VF at IF=10mA": "IF=10mA"}
+  }
+}

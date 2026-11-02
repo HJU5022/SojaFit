@@ -1,0 +1,341 @@
+[
+ {
+  "tool": "pypdf",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "sec": 0.46,
+  "error": null,
+  "pages": 6,
+  "tables": 0,
+  "row_hit": 11,
+  "row_total": 14,
+  "row_miss": [
+   "VF-1N5817",
+   "VF-1N5818",
+   "VF-1N5819"
+  ],
+  "text_checks": {
+   "subscript IF=1A": true,
+   "subscript TJ=25°C": true,
+   "µ V/µs": true
+  }
+ },
+ {
+  "tool": "pypdf",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "sec": 0.12,
+  "error": null,
+  "pages": 5,
+  "tables": 0,
+  "row_hit": 11,
+  "row_total": 13,
+  "row_miss": [
+   "VF-1N4148-10mA",
+   "VF-1N4448-5mA-max"
+  ],
+  "text_checks": {
+   "µ IR=100µA": true,
+   "µ unit µA": true,
+   "subscript IF=10mA": true
+  }
+ },
+ {
+  "tool": "pypdf",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "sec": 0.2,
+  "error": null,
+  "pages": 7,
+  "tables": 0,
+  "row_hit": 0,
+  "row_total": 14,
+  "row_miss": [
+   "VF",
+   "PD",
+   "RthJA",
+   "C3V6-VZmin",
+   "C3V6-VZnom",
+   "C3V6-VZmax",
+   "C3V6-ZZT",
+   "C3V6-IR",
+   "C2V4-IR",
+   "C27-VZnom",
+   "C27-IR",
+   "C27-VR",
+   "C75-VZmax",
+   "C75-ZZK"
+  ],
+  "text_checks": {
+   "µ unit µA": true,
+   "subscript VF at IF=10mA": true
+  }
+ },
+ {
+  "tool": "pdfplumber",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "sec": 0.5,
+  "error": null,
+  "pages": 6,
+  "tables": 12,
+  "row_hit": 11,
+  "row_total": 14,
+  "row_miss": [
+   "VF-1N5818",
+   "VF-1N5819",
+   "IR-100C"
+  ],
+  "text_checks": {
+   "subscript IF=1A": true,
+   "subscript TJ=25°C": true,
+   "µ V/µs": true
+  },
+  "col_hit": 4,
+  "col_total": 7,
+  "col_miss": [
+   "IF",
+   "IFSM",
+   "TJ"
+  ]
+ },
+ {
+  "tool": "pdfplumber",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "sec": 0.39,
+  "error": null,
+  "pages": 5,
+  "tables": 12,
+  "row_hit": 11,
+  "row_total": 13,
+  "row_miss": [
+   "VF-1N4148-10mA",
+   "IR-75V"
+  ],
+  "text_checks": {
+   "µ IR=100µA": true,
+   "µ unit µA": true,
+   "subscript IF=10mA": true
+  },
+  "col_hit": 0,
+  "col_total": 5,
+  "col_miss": [
+   "PD",
+   "VRRM",
+   "IF",
+   "IFSM",
+   "IFRM"
+  ]
+ },
+ {
+  "tool": "pdfplumber",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "sec": 0.63,
+  "error": null,
+  "pages": 7,
+  "tables": 13,
+  "row_hit": 14,
+  "row_total": 14,
+  "row_miss": [],
+  "text_checks": {
+   "µ unit µA": true,
+   "subscript VF at IF=10mA": true
+  }
+ },
+ {
+  "tool": "pymupdf",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "sec": 3.28,
+  "error": null,
+  "pages": 6,
+  "tables": 4,
+  "row_hit": 9,
+  "row_total": 14,
+  "row_miss": [
+   "VF-1N5817",
+   "VF-1N5818",
+   "VF-1N5819",
+   "IR-25C",
+   "IR-100C"
+  ],
+  "text_checks": {
+   "subscript IF=1A": true,
+   "subscript TJ=25°C": true,
+   "µ V/µs": true
+  },
+  "col_hit": 4,
+  "col_total": 7,
+  "col_miss": [
+   "IF",
+   "IFSM",
+   "TJ"
+  ]
+ },
+ {
+  "tool": "pymupdf",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "sec": 1.72,
+  "error": null,
+  "pages": 5,
+  "tables": 5,
+  "row_hit": 8,
+  "row_total": 13,
+  "row_miss": [
+   "VF-1N4148-10mA",
+   "VF-1N4448-5mA-max",
+   "VR-100uA",
+   "IR-20V",
+   "IR-75V"
+  ],
+  "text_checks": {
+   "µ IR=100µA": true,
+   "µ unit µA": true,
+   "subscript IF=10mA": true
+  },
+  "col_hit": 0,
+  "col_total": 5,
+  "col_miss": [
+   "PD",
+   "VRRM",
+   "IF",
+   "IFSM",
+   "IFRM"
+  ]
+ },
+ {
+  "tool": "pymupdf",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "sec": 5.35,
+  "error": null,
+  "pages": 7,
+  "tables": 7,
+  "row_hit": 6,
+  "row_total": 14,
+  "row_miss": [
+   "C3V6-VZmin",
+   "C3V6-VZnom",
+   "C3V6-VZmax",
+   "C3V6-IR",
+   "C27-VZnom",
+   "C27-IR",
+   "C27-VR",
+   "C75-VZmax"
+  ],
+  "text_checks": {
+   "µ unit µA": true,
+   "subscript VF at IF=10mA": true
+  }
+ },
+ {
+  "tool": "pdftotext",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "sec": 0.03,
+  "error": null,
+  "pages": 6,
+  "tables": 0,
+  "row_hit": 10,
+  "row_total": 14,
+  "row_miss": [
+   "VF-1N5817",
+   "VF-1N5819",
+   "IR-25C",
+   "IR-100C"
+  ],
+  "text_checks": {
+   "subscript IF=1A": true,
+   "subscript TJ=25°C": true,
+   "µ V/µs": true
+  }
+ },
+ {
+  "tool": "pdftotext",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "sec": 0.02,
+  "error": null,
+  "pages": 5,
+  "tables": 0,
+  "row_hit": 9,
+  "row_total": 13,
+  "row_miss": [
+   "VF-1N4448-5mA-max",
+   "VR-100uA",
+   "IR-20V",
+   "IR-75V"
+  ],
+  "text_checks": {
+   "µ IR=100µA": true,
+   "µ unit µA": true,
+   "subscript IF=10mA": true
+  }
+ },
+ {
+  "tool": "pdftotext",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "sec": 0.04,
+  "error": null,
+  "pages": 7,
+  "tables": 0,
+  "row_hit": 14,
+  "row_total": 14,
+  "row_miss": [],
+  "text_checks": {
+   "µ unit µA": true,
+   "subscript VF at IF=10mA": true
+  }
+ },
+ {
+  "tool": "docling",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "sec": 109.12,
+  "error": null,
+  "pages": 6,
+  "tables": 6,
+  "row_hit": 14,
+  "row_total": 14,
+  "row_miss": [],
+  "text_checks": {
+   "subscript IF=1A": true,
+   "subscript TJ=25°C": true,
+   "µ V/µs": true
+  },
+  "col_hit": 7,
+  "col_total": 7,
+  "col_miss": []
+ },
+ {
+  "tool": "docling",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "sec": 25.06,
+  "error": null,
+  "pages": 5,
+  "tables": 5,
+  "row_hit": 13,
+  "row_total": 13,
+  "row_miss": [],
+  "text_checks": {
+   "µ IR=100µA": true,
+   "µ unit µA": true,
+   "subscript IF=10mA": true
+  },
+  "col_hit": 0,
+  "col_total": 5,
+  "col_miss": [
+   "PD",
+   "VRRM",
+   "IF",
+   "IFSM",
+   "IFRM"
+  ]
+ },
+ {
+  "tool": "docling",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "sec": 47.99,
+  "error": null,
+  "pages": 7,
+  "tables": 7,
+  "row_hit": 14,
+  "row_total": 14,
+  "row_miss": [],
+  "text_checks": {
+   "µ unit µA": true,
+   "subscript VF at IF=10mA": true
+  }
+ }
+]

@@ -11,6 +11,7 @@
     키는 조당 하나이고 한도가 있습니다(조당 30달러).
 """
 import os
+from functools import lru_cache
 
 from dotenv import load_dotenv
 
@@ -19,6 +20,32 @@ if not os.getenv("LANGFUSE_BASE_URL") and os.getenv("LANGFUSE_HOST"):
     os.environ["LANGFUSE_BASE_URL"] = os.environ["LANGFUSE_HOST"]
 
 DEMO_MODE = os.getenv("DEMO_MODE", "1") == "1"
+
+
+@lru_cache(maxsize=1)
+def _embedding_client():
+    """Return the configured live embedding client and provider metadata."""
+    from openai import OpenAI
+
+    openai_key = os.getenv("OPENAI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if openai_key:
+        return OpenAI(api_key=openai_key, max_retries=0), "openai", "text-embedding-3-small"
+    if openrouter_key:
+        return (
+            OpenAI(api_key=openrouter_key, base_url="https://openrouter.ai/api/v1", max_retries=0),
+            "openrouter",
+            "openai/text-embedding-3-small",
+        )
+    raise RuntimeError("OPENAI_API_KEY or OPENROUTER_API_KEY is required")
+
+
+def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
+    """Embed texts through the single service boundary used by runtime and evaluations."""
+    client, provider, model = _embedding_client()
+    response = client.embeddings.create(model=model, input=texts)
+    vectors = [row.embedding for row in response.data]
+    return vectors, response.usage.total_tokens, provider, model
 
 
 def check_langfuse_connection() -> bool:

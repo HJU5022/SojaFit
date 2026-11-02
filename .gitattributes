@@ -1,0 +1,5 @@
+# 해시를 기록한 회로·PDF는 줄바꿈 변환 없이 그대로 받는다.
+data/circuits/collected/** -text
+data/corpus/tsc/*.pdf -text
+# 제작자 원본은 고치지 않으므로 공백 검사에서 뺀다.
+data/circuits/collected/**/original/** -whitespace

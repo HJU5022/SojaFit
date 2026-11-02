@@ -12,5 +12,8 @@ SQL은 db 볼륨이 비어 있을 때만 실행됩니다. SQL을 바꾼 뒤에�
 ## 파일
 - `000_init.sql` — pgvector 확장 생성
 - `001_create_business_tables.sql.draft` — Migration 1 업무 표 초안. PR #17의 `02_rag_corpus.sql`을 먼저 반영·실행해야 하며, 자동 실행 전 파일 순서와 이력 방식을 확정해야 함
+- `01_init.sql` — pgvector 확장 생성
+- `02_rag_corpus.sql` — RAG 코퍼스 표 3개(`source_documents`, `document_chunks`, `chunk_embeddings` `vector(1536)`)와 HNSW 인덱스. 이미 뜬 DB와 Supabase에는 `psql -f`로 따로 적용
+- `001_create_business_tables.sql.draft` — 확정 정의서의 Migration 1 SQL 초안(검토 전 자동 실행 방지)
 - `ERD.md` — 표 관계도와 표마다 하는 일. SQL로 표를 바꾸면 같은 PR에서 고칩니다
 - `table-definition.md` — 업무 테이블의 컬럼, 관계, 제약조건과 미정 항목을 정리한 정의서 초안

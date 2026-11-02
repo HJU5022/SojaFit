@@ -1,0 +1,79 @@
+[
+ {
+  "pdf": "1K5SMPC12APH SERIES_B2109.pdf",
+  "numbers": 185,
+  "matched": 184,
+  "unmatched": [
+   {
+    "page": 2,
+    "cell": "MAXIMUM REVERSE LEAKAGE AT VWM TJ = 150 °C ID (μA)",
+    "number": "150"
+   }
+  ]
+ },
+ {
+  "pdf": "3KSMC12AH SERIES_B2012.pdf",
+  "numbers": 174,
+  "matched": 173,
+  "unmatched": [
+   {
+    "page": 2,
+    "cell": "αT (2) Max 10 -4 /°C",
+    "number": "-4"
+   }
+  ]
+ },
+ {
+  "pdf": "5KSMC10(C)AH SERIES_B2509.pdf",
+  "numbers": 726,
+  "matched": 724,
+  "unmatched": [
+   {
+    "page": 2,
+    "cell": "Max -4",
+    "number": "-4"
+   },
+   {
+    "page": 3,
+    "cell": "10 -4 /°C 7.8",
+    "number": "-4"
+   }
+  ]
+ },
+ {
+  "pdf": "LTD7S24CAH_A2409.pdf",
+  "numbers": 30,
+  "matched": 29,
+  "unmatched": [
+   {
+    "page": 2,
+    "cell": "Maximum blocking leakage current IR at VWM TJ =175°C (µA) (Note 1)",
+    "number": "175"
+   }
+  ]
+ },
+ {
+  "pdf": "RTBS60M_A2111.pdf",
+  "numbers": 80,
+  "matched": 79,
+  "unmatched": [
+   {
+    "page": 4,
+    "cell": "10.10",
+    "number": "10.10"
+   }
+  ]
+ },
+ {
+  "pdf": "TBS806 SERIES_A2010.pdf",
+  "numbers": 88,
+  "matched": 87,
+  "unmatched": [
+   {
+    "page": 4,
+    "cell": "10.10",
+    "number": "10.10"
+   }
+  ]
+ }
+]

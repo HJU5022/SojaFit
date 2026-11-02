@@ -1,0 +1,8792 @@
+{
+ "summary": {
+  "pdfs": 1360,
+  "numbers_in_tables": 93600,
+  "missing_in_docling": 107,
+  "recall": 0.9989,
+  "pdfs_with_missing": 82
+ },
+ "rows": [
+  {
+   "pdf": "1.5KE SERIES_O2104.pdf",
+   "numbers_in_tables": 819,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1.5SMC SERIES_S2207.pdf",
+   "numbers_in_tables": 615,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1.5SMCH SERIES_B2207.pdf",
+   "numbers_in_tables": 623,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1K5SMPC12APH SERIES_B2109.pdf",
+   "numbers_in_tables": 187,
+   "missing_in_docling": 3,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1,
+      "1": 1,
+      "50": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "1KSMB10A SERIES_I2102.pdf",
+   "numbers_in_tables": 208,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 3,
+     "lost": {
+      "25": 1,
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "1KSMB10AH SERIES_A2102.pdf",
+   "numbers_in_tables": 206,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4001G SERIES_P2104.pdf",
+   "numbers_in_tables": 52,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4001G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148 SERIES_K2301.pdf",
+   "numbers_in_tables": 81,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148W SERIES_K1804.pdf",
+   "numbers_in_tables": 78,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148W-G_D1601.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148WH_A2501.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148WS SERIES_N2212.pdf",
+   "numbers_in_tables": 79,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148WS-G_C2211.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148WSH_A2501.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4148WTH_A2501.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4740A SERIES_O2104.pdf",
+   "numbers_in_tables": 360,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4933G SERIES_I2104.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N4933G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5221B SERIES_H2301.pdf",
+   "numbers_in_tables": 336,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5391G SERIES_G2309.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5391G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5400G SERIES_K2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5400G-K SERIES_C2105.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5817 SERIES_H2104.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1N5820 SERIES_I2105.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMA SERIES_B2102.pdf",
+   "numbers_in_tables": 346,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMAH SERIES_A2102.pdf",
+   "numbers_in_tables": 346,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMB5926 SERIES_C2102.pdf",
+   "numbers_in_tables": 335,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMB5926H SERIES_A2102.pdf",
+   "numbers_in_tables": 335,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMC5348 SERIES_D2102.pdf",
+   "numbers_in_tables": 241,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1PGSMC5348H SERIES_A2102.pdf",
+   "numbers_in_tables": 241,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMA4737 SERIES_P2102.pdf",
+   "numbers_in_tables": 300,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMA4737H SERIES_A2102.pdf",
+   "numbers_in_tables": 300,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMA5926 SERIES_L2102.pdf",
+   "numbers_in_tables": 333,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMA5926H SERIES_A2102.pdf",
+   "numbers_in_tables": 333,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMB5926 SERIES_M2102.pdf",
+   "numbers_in_tables": 339,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMB5926H SERIES_A2102.pdf",
+   "numbers_in_tables": 339,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SMC5352H_A2102.pdf",
+   "numbers_in_tables": 23,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "1SMC5352_G2102.pdf",
+   "numbers_in_tables": 23,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "1SS355_D2212.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1SS400_E2510.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1T1G SERIES_H2104.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "1V5KE SERIES_D2112.pdf",
+   "numbers_in_tables": 328,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "2A01G SERIES_I2105.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "2A01G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "2M6.8Z SERIES_N2105.pdf",
+   "numbers_in_tables": 338,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "31DF4 SERIES_G2105.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "3A60 SERIES_B2105.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "3KSMC12AH SERIES_B2012.pdf",
+   "numbers_in_tables": 174,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "4": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "5.0SMDJ SERIES_D2102.pdf",
+   "numbers_in_tables": 236,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "5.0SMDJH SERIES_A2102.pdf",
+   "numbers_in_tables": 236,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "5KSMC10(C)AH SERIES_B2509.pdf",
+   "numbers_in_tables": 726,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "4": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "4": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "6A05G SERIES_F2104.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS15J SERIES_E2103.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS2 SERIES_M2103.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS20M-T_C2103.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS20M_B2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS4-K SERIES_C2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ABS6-T SERIES_C2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "AZ23C2V7 SERIES_D2001.pdf",
+   "numbers_in_tables": 304,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "B0520LW SERIES_J2112.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "B0520LWF SERIES_C14.pdf",
+   "numbers_in_tables": 80,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "B0530WS_K2212.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BA157G SERIES_I2106.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BA157G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS116_F2001.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS16H_A2412.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS16_F2001.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS19 SERIES_C2001.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS19W SERIES_B14.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS21 SERIES_E2001.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS21H_A2412.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS316WS_F2212.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS316_E1907.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS40 SERIES_I2606.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS40M5_B2606.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAS70 SERIES_G2606.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT201M3_B2609.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT42W SERIES_H2606.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT42WS SERIES_J2606.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT42WSH SERIES_A2502.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT46GW_B2606.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54 SERIES_H2606.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54AH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54CH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54CWH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54GWH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54GW_B2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54H_A2501.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54SH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54SWH_A2501.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54T SERIES_H2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54W SERIES_D2102.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAT54WH_A2501.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV101 SERIES_E2301.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV19W SERIES_E15.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV19W-G SERIES_D1603.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV19WS SERIES_K2212.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV19WS-G SERIES_A15.pdf",
+   "numbers_in_tables": 69,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV21WH_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV23CH_A2501.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV23SH_A2501.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV70H_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV70WH_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV99H_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV99WH_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAV99W_C2102.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAW56 SERIES_I2001.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAW56H_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BAW56WH_A2412.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BY251G SERIES_D2105.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG20D SERIES_F2102.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG20DH SERIES_A2102.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG21MH_A2102.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG21M_B2102.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG23MH_A2102.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BYG23M_C2102.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD17C SERIES_L2103.pdf",
+   "numbers_in_tables": 225,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD17CH SERIES_A2103.pdf",
+   "numbers_in_tables": 225,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD27C SERIES_AB2103.pdf",
+   "numbers_in_tables": 360,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD27C11PW SERIES_D2203.pdf",
+   "numbers_in_tables": 579,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD27C11PWH SERIES_B2203.pdf",
+   "numbers_in_tables": 579,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZD27CH SERIES_A2103.pdf",
+   "numbers_in_tables": 360,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52B2V4 SERIES_F15.pdf",
+   "numbers_in_tables": 375,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52B2V4-G SERIES_H2002.pdf",
+   "numbers_in_tables": 465,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52B2V4S SERIES_I2411.pdf",
+   "numbers_in_tables": 362,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52B2V4SH SERIES_A2503.pdf",
+   "numbers_in_tables": 364,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52C2V4 SERIES_G1804.pdf",
+   "numbers_in_tables": 385,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52C2V4-G SERIES_C2007.pdf",
+   "numbers_in_tables": 462,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52C2V4S SERIES_K2411.pdf",
+   "numbers_in_tables": 362,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZT52C2V7K SERIES_H2510.pdf",
+   "numbers_in_tables": 339,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZV55B2V4 SERIES_G2301.pdf",
+   "numbers_in_tables": 357,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZV55C2V4 SERIES_H2301.pdf",
+   "numbers_in_tables": 361,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZW04 SERIES_J2104.pdf",
+   "numbers_in_tables": 444,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZW06 SERIES_K2105.pdf",
+   "numbers_in_tables": 356,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX584B2V4 SERIES_E2609.pdf",
+   "numbers_in_tables": 457,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX585B2V4 SERIES_C1607.pdf",
+   "numbers_in_tables": 450,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX585B2V4H SERIES_A2503.pdf",
+   "numbers_in_tables": 427,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX84C2V4 SERIES_F2001.pdf",
+   "numbers_in_tables": 354,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX84C2V4H SERIES_A2503.pdf",
+   "numbers_in_tables": 352,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZX84JB2V4H SERIES_A2503.pdf",
+   "numbers_in_tables": 353,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZY55B2V4 SERIES_D2301.pdf",
+   "numbers_in_tables": 298,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "BZY55C2V4 SERIES_E2301.pdf",
+   "numbers_in_tables": 298,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "D2SB05 SERIES_K2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL101G SERIES_R2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL104G-T SERIES_C2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL151G SERIES_L2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL154G-T SERIES_C2103.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL201G SERIES_K2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBL204G-T SERIES_C2103.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS101G SERIES_P2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS104G-T SERIES_C2103.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS151G SERIES_M2103.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS154G-T SERIES_E2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS201G SERIES_J2103.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "DBLS204G-T SERIES_C2103.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "EABS1D SERIES_C2103.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES15DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES15DLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1A SERIES_O2112.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1AH SERIES_B2112.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1AL SERIES_L2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1ALH SERIES_A2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1BAL SERIES_C2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1BALH SERIES_B2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1BFS SERIES_C2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1BFSH SERIES_B2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1D-T SERIES_F2111.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DFL SERIES_D2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DLWH SERIES_B2110.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DVH_A2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES1DV_C2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2A SERIES_L2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2AA SERIES_M2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2AAH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2AH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2BAL SERIES_D2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2BALH SERIES_B2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2BFS SERIES_D2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2BFSH SERIES_B2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2D-T SERIES_D2305.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2DA-T SERIES_D2111.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2DAF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2DFL SERIES_B2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2DVH_A2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2DV_C2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2LD SERIES_C2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES2LDH SERIES_A2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3A SERIES_N2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3AB SERIES_C2102.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3ABH SERIES_A2102.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3AH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3D-A SERIES_C2602.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3DB-A SERIES_C2102.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3DVH_A2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES3DV_D2102.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ES5D-T SERIES_C2602.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESDLW SERIES_D2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESDLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH1B SERIES_F2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH1BH SERIES_A2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH1DFSH_C2103.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH1DMH_B2110.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH1DM_E2110.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH2B SERIES_J2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH2BA SERIES_F2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH2BAH SERIES_A2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH2BH SERIES_A2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH2DFSH_C2103.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH3B SERIES_I2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH3BH SERIES_A2102.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "ESH3DFSH_B2103.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "F1T1G SERIES_H2104.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR101G SERIES_H2104.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR101G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR151G SERIES_I2105.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR151G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR201G SERIES_H2105.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR201G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR301G SERIES_H2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FR301G-K SERIES_C2105.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FRAF10JG_A2206.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "FRAF8JG_A2206.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ15JG SERIES_B2603.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ15KGLV_B2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ20KGLV_B2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ25JG SERIES_B2603.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ25KGLV_B2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ35JG SERIES_B2603.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ35KGALV_B2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ35KGLV_B2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJ50JG SERIES_B2603.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJL15J_C2606.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJL25J_D2606.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBJL45J_D2606.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBL005 SERIES_K2103.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBL201 SERIES_J2103.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBLA005 SERIES_E2103.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBPC15_25_35 SERIES_M2211.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBPC40_50 SERIES_G2211.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU1001 SERIES_M2103.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU1005-K SERIES_B2305.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU10JG SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU10JGA SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU1505 SERIES_B2305.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU15JG SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU15JGA SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU15KGLV_A2507.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU15L05 SERIES_C2103.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU20KGLV_A2507.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU2504 SERIES_E2205.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU25JG SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU25JGA SERIES_A2507.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU25KGLV_A2507.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU401 SERIES_M2103.pdf",
+   "numbers_in_tables": 75,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU404-K SERIES_E2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU601 SERIES_N2103.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU604-K SERIES_E2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU801 SERIES_M2103.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBU804-K SERIES_F2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBUL15J_C2606.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GBUL25J_D2606.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GP1001 SERIES_G2104.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GP1601 SERIES_G2104.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GPA801 SERIES_G2103.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GPAS1001 SERIES_D2211.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS10DC SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS12DC SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS15DC SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS15DFL SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS1D SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS1DB SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS1DFL SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS1Z_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS2D SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS2DA SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS2ZA_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS3D SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS3DB SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS4D SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS5D SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GS8DC SERIES_B2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "GSDFL SERIES_A2509.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HDBL101G SERIES_G2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "HDBLS101G SERIES_G2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER1001G SERIES_I2104.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER101G SERIES_L2104.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER101G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER151G SERIES_I2105.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER151G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER157G-K SERIES_B2105.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER1601G SERIES_J2104.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER1601PT SERIES_H2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER201G SERIES_G2105.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER201G-T SERIES_B2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER207G-K SERIES_D2106.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER3001PT SERIES_I2103.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER301G SERIES_I2105.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER301G-K SERIES_C2105.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HER3L03G SERIES_C2105.pdf",
+   "numbers_in_tables": 74,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "HER601G SERIES_H2104.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 2
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "HERA801G SERIES_J2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERAF1001G SERIES_I2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERAF1601G SERIES_K2105.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERAF801G SERIES_K2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERF1001G SERIES_I2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERF1007GA SERIES_B2105.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HERF1601G SERIES_I2105.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS15DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS15DLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1A SERIES_M2401.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1AFL SERIES_B2103.pdf",
+   "numbers_in_tables": 75,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1AH SERIES_B2401.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1AL SERIES_C2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1ALH SERIES_A2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1D-K SERIES_F2111.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DAL SERIES_D2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DALH SERIES_B2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DFS SERIES_C2103.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DFSH SERIES_B2103.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1DLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QALH_A2505.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QAL_A2505.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QBH_A2408.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QB_A2408.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QFSH_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QFS_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1QH_A2408.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1Q_A2408.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1YBH_A2501.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1YB_A2501.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1YH_A2501.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS1Y_A2501.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2A SERIES_L2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2AA SERIES_J2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2AAH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2AH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2D-T SERIES_C2102.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DA-T SERIES_D2111.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DAF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DAL SERIES_C2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DALH SERIES_B2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DFL SERIES_B2103.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DFS SERIES_C2103.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS2DFSH SERIES_B2103.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3A SERIES_K2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3AB SERIES_L2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3ABH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3AH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3D-K SERIES_C2602.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS3DB-K SERIES_C2102.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS5A SERIES_K2102.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS5AH SERIES_A2102.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HS5D-A SERIES_C2602.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HSDLW SERIES_C2103.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HSDLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "HT11G SERIES_H2104.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBL401G SERIES_J2308.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBL601G SERIES_H2308.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBPF204G SERIES_B2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBPF304G SERIES_B2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBPF404G SERIES_B2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBU1001G SERIES_J2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBU401G SERIES_J2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBU601G SERIES_J2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "KBU801G SERIES_J2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "LL4148 SERIES_K2301.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "LSMB24CAH_A2508.pdf",
+   "numbers_in_tables": 22,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "LSMC24CAH_C2512.pdf",
+   "numbers_in_tables": 22,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "LTD7S24CAH_A2409.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 3,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1,
+      "7": 1,
+      "5": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "M3Z2V0C SERIES_B2008.pdf",
+   "numbers_in_tables": 377,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR1035 SERIES_M2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR1035CT SERIES_O2104.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR1045CT-Y SERIES_B2104.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR10H100CT SERIES_J2104.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR10L100CT_H2104.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR1535CT SERIES_I2104.pdf",
+   "numbers_in_tables": 85,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR1545CT-Y SERIES_D2104.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR1635 SERIES_K2103.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR2035CT SERIES_M2104.pdf",
+   "numbers_in_tables": 93,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR2035CT-Y SERIES_B2104.pdf",
+   "numbers_in_tables": 90,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR2035PT SERIES_H2103.pdf",
+   "numbers_in_tables": 93,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR20H100CT SERIES_I2104.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR20L100CT SERIES_H2104.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR2535CT SERIES_K2104.pdf",
+   "numbers_in_tables": 78,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR2545CT-Y SERIES_B2104.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR3035CT SERIES_K2104.pdf",
+   "numbers_in_tables": 81,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR3035PT SERIES_K2103.pdf",
+   "numbers_in_tables": 93,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 3,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR3045CT-Y SERIES_D2104.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR30H100CT_K2104.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR30L120CT_H2104.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR30L45CT SERIES_L2104.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR4035PT SERIES_I2103.pdf",
+   "numbers_in_tables": 91,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBR6035PT SERIES_H2103.pdf",
+   "numbers_in_tables": 67,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR6040CT_E2112.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBR735 SERIES_K2103.pdf",
+   "numbers_in_tables": 74,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10100DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10100H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10150DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10150H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10200DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD10200H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1045DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1045H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1060DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1060H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD15100DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD15100H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD15150DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD15150H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD15200DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1545DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1545H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1560DH_A2303.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD1560H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD20100H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD20150H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD20200H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD2045H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD2060H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD5100H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD5150H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD5200H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD545H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD560H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD8100H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD8150H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD8200H_A2303.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD845H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRAD860H_A2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF1035 SERIES_M2105.pdf",
+   "numbers_in_tables": 85,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF1035CT SERIES_M2105.pdf",
+   "numbers_in_tables": 94,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF1045CT-Y SERIES_B2105.pdf",
+   "numbers_in_tables": 64,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF10H100CT SERIES_I2105.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF10L100CT_H2105.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF1535CT SERIES_J2105.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF1545CT-Y SERIES_D2105.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF1635 SERIES_K2105.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF16H45_G2106.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF2035 SERIES_K2105.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF2035CT SERIES_O2105.pdf",
+   "numbers_in_tables": 105,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF2045CT-Y SERIES_C2105.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF20H100CT SERIES_I2105.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF20L100CT SERIES_G2105.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF2535CT SERIES_L2105.pdf",
+   "numbers_in_tables": 77,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF2545CT-Y SERIES_B2105.pdf",
+   "numbers_in_tables": 62,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF3035CT SERIES_M2105.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF3045CT-Y SERIES_E2105.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRF3080CT_E2105.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF30L120CT_F2105.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF30L45CT_L2105.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF5100 SERIES_H2105.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF735 SERIES_K2105.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRF835CT SERIES_J2105.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS1035 SERIES_K2103.pdf",
+   "numbers_in_tables": 74,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1035CT SERIES_M2103.pdf",
+   "numbers_in_tables": 80,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1035CTH SERIES_A2103.pdf",
+   "numbers_in_tables": 80,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1035H SERIES_A2103.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1045CT-Y SERIES_C2103.pdf",
+   "numbers_in_tables": 62,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS10H100CT SERIES_K2409.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS10H100CTH SERIES_B2409.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS1535CT SERIES_L2103.pdf",
+   "numbers_in_tables": 74,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1535CTH SERIES_A2103.pdf",
+   "numbers_in_tables": 74,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1545CT-Y SERIES_D2103.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS15H45CTH_A2103.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS15H45CT_H2103.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS1635 SERIES_K2103.pdf",
+   "numbers_in_tables": 69,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS1635H SERIES_A2103.pdf",
+   "numbers_in_tables": 69,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS2035CT SERIES_N2103.pdf",
+   "numbers_in_tables": 81,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS2035CTH SERIES_A2103.pdf",
+   "numbers_in_tables": 81,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS2045CT-Y SERIES_E2201.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS20H100CT SERIES_K2409.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS20H100CTH SERIES_B2409.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS2535CT SERIES_N2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS2535CTH SERIES_A2103.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MBRS25H45CTH_A2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS25H45CT_H2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS3045CTH_A2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS3045CT_H2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS30H45CTH_A2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS30H45CT_K2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS4060CTH_A2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS4060CT_K2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS6040CTH_A2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBRS6040CT_G2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBS2 SERIES_Q2309.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MBS6-K SERIES_G2602.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MMBD3004 SERIES_C2001.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MMBD4148 SERIES_F2112.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MMSZ4678 SERIES_A2311.pdf",
+   "numbers_in_tables": 255,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MMSZ5221B SERIES_I2503.pdf",
+   "numbers_in_tables": 306,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MMSZ5221BH SERIES_A2503.pdf",
+   "numbers_in_tables": 409,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR105S SERIES_L2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "2": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MUR105SH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MUR160 SERIES_L2107.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR160A SERIES_I2302.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR1620CT SERIES_I2104.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MUR260_D2105.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR305S SERIES_J2212.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR305SB SERIES_C2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR305SBH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR305SH SERIES_B2212.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR340SB SERIES_D2211.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR340SBH SERIES_C2605.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR420 SERIES_J2105.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR420S SERIES_F2102.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR420SH SERIES_A2102.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR4L20 SERIES_C2308.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR820 SERIES_K2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MUR8L60_B2103.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MURF1620CT SERIES_K2105.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "MURF880G_C2105.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "MURF8L60_C2105.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P2500M_D2511.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P2500Y_B2607.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P4KE SERIES_N2104.pdf",
+   "numbers_in_tables": 823,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P4SMA SERIES_S2102.pdf",
+   "numbers_in_tables": 626,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P4SMAH SERIES_A2102.pdf",
+   "numbers_in_tables": 626,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P6KE SERIES_P2203.pdf",
+   "numbers_in_tables": 821,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P6SMB SERIES_Q2209.pdf",
+   "numbers_in_tables": 639,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "P6SMBH SERIES_A2102.pdf",
+   "numbers_in_tables": 639,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 2
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "PE1BA SERIES_A2301.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PE1BAH SERIES_A2212.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PE2BB SERIES_A2301.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PE2BBH SERIES_A2212.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PE4BC SERIES_A2301.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PE4BCH SERIES_A2212.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD10JH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD10J_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD12JH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD12J_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD6JH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD6J_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD8JH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PHAD8J_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLAD10JH_B2606.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLAD10J_B2606.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLAD15Q_B2606.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLAH30Q_C2607.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLAH60Q_C2607.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS20JH_E2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS20J_E2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS3060H_C2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS3080H_E2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS30JH_E2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS30J_E2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PLDS30Q_A2509.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PSAD15JH_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PSAD15J_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BA SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BAH SERIES_B2110.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BB SERIES_A2510.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BBH SERIES_A2510.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BFS SERIES_A2210.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BFSH SERIES_A2109.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BLS SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BLSH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BLW SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BLWH SERIES_A2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BM SERIES_B2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1BMH SERIES_C2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JAH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JA_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JFSH_A2409.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JFS_B2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JLSH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JLS_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JLWH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU1JLW_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BA SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BAH SERIES_C2110.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BB SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BBH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BFS SERIES_A2210.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BFSH SERIES_B2109.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BLS SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BLSH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BLW SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BLWH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BM SERIES_B2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2BMH SERIES_C2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JAH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JA_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JBH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JB_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JFSH_A2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JFS_B2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JLSH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JLS_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JLWH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU2JLW_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BA SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BAH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BB SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BBH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BC SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BCH SERIES_C2110.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BFS SERIES_A2210.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3BFSH SERIES_B2109.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JAH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JA_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JBH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JB_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JCH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JC_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JFSH_A2409.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU3JFS_B2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU4BB SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU4BBH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU4BC SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU4BCH SERIES_C2110.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6BB SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6BBH SERIES_B2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6BC SERIES_A2210.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6BCH SERIES_C2110.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6JBH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6JB_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6JCH_A2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU6JC_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU8JCH_A2409.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PU8JC_B2412.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD10BC SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD10BCH SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD4B SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD4BH SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD6BC SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD6BCH SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD6JH_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD6J_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8B SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8BC SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8BCH SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8BH SERIES_A2302.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8JH_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUAD8J_A2411.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP10JH_A2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP10J_B2412.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP12JH_A2409.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP12J_B2412.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP3B SERIES_A2210.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP3BH SERIES_B2109.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP3JH_A2409.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP3J_B2412.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP4B SERIES_A2210.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP4BH SERIES_B2109.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP6B SERIES_A2210.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP6BH SERIES_C2109.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP6JH_A2412.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP6J_B2412.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP8B SERIES_A2210.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP8BH SERIES_A2111.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP8JH_A2409.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "PUUP8J_B2412.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RABS15M_D2103.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RABS20M_C2304.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB495D_G14.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB500V-40H_A2502.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB500V-40_E2304.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB520G-30_E2510.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB520S-30_D2510.pdf",
+   "numbers_in_tables": 28,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB520SM5-40_B2606.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB521S-30_D2510.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB551V-40_A14.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB706F-40_C2102.pdf",
+   "numbers_in_tables": 22,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB751M5-40_A2005.pdf",
+   "numbers_in_tables": 26,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB751V-40WS_E2212.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RB751V-40_E1701.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RDBLS207G_B2103.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RMB2S SERIES_I2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1A SERIES_M2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1AFL SERIES_B2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1AH SERIES_B2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1AL SERIES_N2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1ALH SERIES_A2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1D-T SERIES_F2111.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DAL SERIES_C2304.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DALH SERIES_C2304.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DFS SERIES_D2304.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DFSH SERIES_B2304.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1DLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1JLS SERIES_E2304.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1JLSH SERIES_B2304.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS1JM SERIES_B2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2A SERIES_L2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2AA SERIES_I2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2AAH SERIES_B2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2AH SERIES_B2304.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2D-T SERIES_C2102.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DA-T SERIES_D2111.pdf",
+   "numbers_in_tables": 72,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DAF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DAL SERIES_C2304.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DALH SERIES_C2304.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DFL SERIES_B2103.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DFS SERIES_C2304.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS2DFSH SERIES_C2304.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3A SERIES_M2304.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3A-K SERIES_C2602.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3AH SERIES_B2304.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3DB-T SERIES_C2102.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3MFSH_B2304.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS3MFS_D2304.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RS5D-T SERIES_C2602.pdf",
+   "numbers_in_tables": 72,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RSFAL SERIES_M2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RSFALH SERIES_A2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RTBS40M_B2103.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "RTBS60M_A2111.pdf",
+   "numbers_in_tables": 79,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 4,
+     "lost": {
+      "10.1": 1,
+      "0": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "RYBS30M_B2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S10GC SERIES_D2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S10GCH SERIES_A2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S12GC SERIES_D2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S12GCH SERIES_A2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S15DLW SERIES_C2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S15DLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S15GC SERIES_C2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S15GCH SERIES_A2102.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1A SERIES_S2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1AB SERIES_I2102.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1ABH SERIES_A2102.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1AH SERIES_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1AL SERIES_Q2108.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1ALH SERIES_B2108.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1D-K SERIES_E2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1D-T SERIES_E2102.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DAL SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DALH SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DFS SERIES_C2103.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DFSH SERIES_B2306.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DLS SERIES_H2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DLSH SERIES_A2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DLW SERIES_D2109.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1DLWH SERIES_B2109.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1GFL SERIES_E2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1GM SERIES_I2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1GMH SERIES_A2103.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1Q_B2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1YH_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S1Y_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2A SERIES_N2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2AA SERIES_K2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2AAH SERIES_A2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2AH SERIES_A2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2D-T SERIES_C2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DA-T SERIES_D2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DAF-T SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DAL SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DALH SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DFL SERIES_B2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DFS SERIES_B2103.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2DFSH SERIES_B2103.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2YAH_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2YA_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2YH_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S2Y_A2408.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3A SERIES_O2301.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3A-T SERIES_C2602.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3AB SERIES_M2102.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3ABH SERIES_B2207.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3AH SERIES_B2301.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3DB-K SERIES_D2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3JALH_A2303.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3JAL_A2303.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3JFSH_A2303.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3JFS_A2303.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S3Q_C2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S4A SERIES_K2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S4AH SERIES_A2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5A SERIES_F2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5AC-K SERIES_C2602.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5AH SERIES_A2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5GB SERIES_D2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5GBH SERIES_A2102.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5QB_B2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S5Q_C2102.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S8GC SERIES_G2210.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S8GC-T SERIES_C2602.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "S8GCH SERIES_B2210.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SA SERIES_L2105.pdf",
+   "numbers_in_tables": 783,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SBS24 SERIES_C2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SBS34 SERIES_F2103.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SD101AW SERIES_C1601.pdf",
+   "numbers_in_tables": 91,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SD103AM3 SERIES_B2606.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SD103AW SERIES_E2606.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SD103AWH SERIES_A2502.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SD103AXM5_B2606.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SDLW SERIES_C2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SDLWH SERIES_A2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF1001G SERIES_K2104.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SF11G SERIES_H2104.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF11G-K SERIES_B2104.pdf",
+   "numbers_in_tables": 52,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF1601G SERIES_I2104.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SF1601PT SERIES_G2103.pdf",
+   "numbers_in_tables": 62,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF2001G SERIES_I2104.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF2001PT SERIES_I2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF21G SERIES_H2105.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF21G-T SERIES_C2105.pdf",
+   "numbers_in_tables": 52,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF2L4G SERIES_B2105.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF3001PT SERIES_J2103.pdf",
+   "numbers_in_tables": 58,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF31G SERIES_H2105.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF31G-A SERIES_B2105.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF41G SERIES_G2105.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF61G SERIES_G2105.pdf",
+   "numbers_in_tables": 52,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SF801G SERIES_I2104.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SFA1001G SERIES_K2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFA801G SERIES_K2103.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAF1001G SERIES_H2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAF1601G SERIES_H2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAF2001G SERIES_J2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAF501G SERIES_I2105.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAF801G SERIES_L2106.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAS1008GH_A2103.pdf",
+   "numbers_in_tables": 26,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAS1008G_E2103.pdf",
+   "numbers_in_tables": 26,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAS801G SERIES_N2103.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFAS801GH SERIES_A2103.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF1001G SERIES_M2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SFF1001GA SERIES_E2105.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF10L04G SERIES_E2108.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF10L04GA SERIES_E2108.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF1601G SERIES_I2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SFF2001G SERIES_I2105.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF2004GA SERIES_F2105.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFF501G SERIES_I2105.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SFS1001G SERIES_I2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFS1001GH SERIES_A2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFS1601G SERIES_O2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFS1601GH SERIES_A2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SFT11G SERIES_J2104.pdf",
+   "numbers_in_tables": 58,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK12B SERIES_M2212.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK12BH SERIES_B2212.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK12H45 SERIES_F2105.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK22A SERIES_S2307.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK22AH SERIES_C2307.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK32A SERIES_W2304.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK32AH SERIES_B2304.pdf",
+   "numbers_in_tables": 57,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK32B SERIES_P2212.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK32BH SERIES_B2212.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK52B SERIES_Q2309.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SK52BH SERIES_B2309.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SK52C SERIES_S2311.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK52CH SERIES_C2311.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK82C SERIES_L2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SK82CH SERIES_A2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SKL13BH_A2102.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SKL13B_J2102.pdf",
+   "numbers_in_tables": 26,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA4F12AH SERIES_C2103.pdf",
+   "numbers_in_tables": 162,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA4S12AH SERIES_C2103.pdf",
+   "numbers_in_tables": 165,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA6F12(C)AH SERIES_D2511.pdf",
+   "numbers_in_tables": 301,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA6J SERIES_E2102.pdf",
+   "numbers_in_tables": 112,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA6JH SERIES_A2102.pdf",
+   "numbers_in_tables": 119,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMA6S12(C)AH SERIES_D2511.pdf",
+   "numbers_in_tables": 304,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMAJ SERIES_U2102.pdf",
+   "numbers_in_tables": 689,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMAJH SERIES_A2102.pdf",
+   "numbers_in_tables": 689,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMB10J SERIES_B2102.pdf",
+   "numbers_in_tables": 158,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMB10JH SERIES_A2102.pdf",
+   "numbers_in_tables": 156,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMBJ SERIES_R2104.pdf",
+   "numbers_in_tables": 680,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMBJH SERIES_A2102.pdf",
+   "numbers_in_tables": 673,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMCJ SERIES_S2104.pdf",
+   "numbers_in_tables": 670,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMCJH SERIES_A2102.pdf",
+   "numbers_in_tables": 670,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMDJ SERIES_I2104.pdf",
+   "numbers_in_tables": 250,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMDJH SERIES_B2104.pdf",
+   "numbers_in_tables": 250,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMF4L5.0(C)A SERIES_B2511.pdf",
+   "numbers_in_tables": 521,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SMF4L5.0(C)AH SERIES_B2511.pdf",
+   "numbers_in_tables": 521,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    },
+    {
+     "page": 3,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SMF5.0A SERIES_D2103.pdf",
+   "numbers_in_tables": 310,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SMF5.0AH SERIES_A2103.pdf",
+   "numbers_in_tables": 310,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR002 SERIES_H2104.pdf",
+   "numbers_in_tables": 77,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR102 SERIES_G2104.pdf",
+   "numbers_in_tables": 81,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR1020 SERIES_L2104.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR1202 SERIES_G2105.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR1620 SERIES_J2104.pdf",
+   "numbers_in_tables": 69,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR1620PT SERIES_J2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR202 SERIES_L2105.pdf",
+   "numbers_in_tables": 87,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR2020 SERIES_J2104.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR2020PT SERIES_J2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR302 SERIES_J2105.pdf",
+   "numbers_in_tables": 79,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR3020PT SERIES_H2103.pdf",
+   "numbers_in_tables": 67,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR4020PT SERIES_H2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SR502 SERIES_J2105.pdf",
+   "numbers_in_tables": 80,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SR802 SERIES_J2105.pdf",
+   "numbers_in_tables": 78,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRA1020 SERIES_K2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRA1620 SERIES_K2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRA2020 SERIES_K2103.pdf",
+   "numbers_in_tables": 68,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRA820 SERIES_J2103.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAF1020 SERIES_I2105.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAF1620 SERIES_J2105.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRAF520 SERIES_K2105.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAF820 SERIES_K2105.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAS2020 SERIES_M2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAS2020H SERIES_A2103.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 9,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "0": 4,
+      "2": 2,
+      "25": 1,
+      "5": 1,
+      "6": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRAS820 SERIES_K2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRAS820H SERIES_A2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRF1020 SERIES_L2105.pdf",
+   "numbers_in_tables": 76,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRF1620 SERIES_J2105.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRF2020 SERIES_J2105.pdf",
+   "numbers_in_tables": 70,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRS1020 SERIES_N2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRS1020H SERIES_A2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRS1620 SERIES_L2103.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRS1620H SERIES_A2103.pdf",
+   "numbers_in_tables": 61,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRS2020 SERIES_L2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SRS2020H SERIES_A2103.pdf",
+   "numbers_in_tables": 66,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SRT12 SERIES_I2104.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS12 SERIES_R2305.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS120H_B2305.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS120_C2305.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS12H SERIES_B2305.pdf",
+   "numbers_in_tables": 59,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS12L SERIES_Q2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS12LH SERIES_A2103.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SS12LS SERIES_D2212.pdf",
+   "numbers_in_tables": 58,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS12LSH SERIES_B2212.pdf",
+   "numbers_in_tables": 58,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS13M SERIES_O2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS13MH SERIES_A2103.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS14ALH SERIES_B2103.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS14FSH SERIES_B2103.pdf",
+   "numbers_in_tables": 97,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS14LW SERIES_D2305.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS14LWH SERIES_B2305.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS1H4LS SERIES_C2208.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS1H4LSH SERIES_B2209.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS1H4LW SERIES_D2603.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS1H4LWH SERIES_C2603.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS22 SERIES_N2306.pdf",
+   "numbers_in_tables": 79,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS22H SERIES_B2306.pdf",
+   "numbers_in_tables": 71,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS22L SERIES_O2103.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SS22LH SERIES_A2103.pdf",
+   "numbers_in_tables": 54,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS22M SERIES_M2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS22MH SERIES_A2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS24ALH SERIES_B2103.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS24FSH SERIES_B2103.pdf",
+   "numbers_in_tables": 97,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS24LW SERIES_D2301.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS24LWH SERIES_B2301.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS2H15LWH_A2604.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS32 SERIES_Q2412.pdf",
+   "numbers_in_tables": 88,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS32H SERIES_C2412.pdf",
+   "numbers_in_tables": 79,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS34ALH SERIES_B2103.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS34FSH SERIES_B2103.pdf",
+   "numbers_in_tables": 97,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS34L SERIES_C2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "25": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SS34LH SERIES_A2103.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS34LW SERIES_D2606.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SS34LWH SERIES_B2606.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "1": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SS54ALH SERIES_B2103.pdf",
+   "numbers_in_tables": 95,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SS54FSH SERIES_B2103.pdf",
+   "numbers_in_tables": 97,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA1H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA1H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA1H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA2H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA2H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA2H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA3H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA3H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSA3H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB1H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB1H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB1H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB2H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB2H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB2H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB3H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB3H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB3H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB44H_B2309.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSB44_C2309.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSC3H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSC3H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSC3H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSC5H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSC5H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSH210H_B2310.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSH210_F2310.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSL12 SERIES_I2304.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSL12H SERIES_B2304.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSL22 SERIES_M2309.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSL22H SERIES_B2309.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 1,
+     "lost": {
+      "-55": 2
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "SSL32 SERIES_K2310.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSL32H SERIES_B2310.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSP8H100SH_C2412.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSU1H40H_A2508.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSU1H60H_A2508.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSUP10H100H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSUP5H100H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSUP8H100H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSW2H100H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSW2H40H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "SSW2H60H_A2504.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "T10JA05G-K SERIES_B2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "T15JA05G-K SERIES_B2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "T25JA05G-K SERIES_B2103.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TBS406 SERIES_B2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TBS606 SERIES_B2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TBS806 SERIES_A2010.pdf",
+   "numbers_in_tables": 87,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 4,
+     "lost": {
+      "10.1": 1,
+      "0": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "TESD24VS2BT_B2101.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESD5V0L1UC_E2007.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESD5V0V4UA_B2109.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESD5V0V4UCU6_D2109.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESD5V0V4UCX6_B2003.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA13VU1052Q3_A2602.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA1L2B17P1Q1_A2511.pdf",
+   "numbers_in_tables": 55,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA22VU40P2Q3_A2511.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA22VU60P2Q3_A2511.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA24VB17P1M3_A2502.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA24VB17P1Q1_A2502.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA24VB28P2CX_A2503.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA24VB6P02CX_A2511.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA26VU55P2Q3_A2512.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA27VB17P1M3_A2602.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA27VB17P2CX_A2602.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA28VU18P1Q1_B2507.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA5V0B20P1Q0_A2505.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA5V0U40P1Q0_A2505.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA6V0B20P1Q0_A2505.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDA6V0U40P1Q0_A2504.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDC24V_F1812.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDC5V0_D1812.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDD5V0_E1901.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDF5V0A_C15.pdf",
+   "numbers_in_tables": 65,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDH3V3B02P4Q2_A2203.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDH3V3B03P1Q0_A2305.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDH5V0B03P1Q0_A2305.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDH5V0B05P1Q1_A2203.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDH5V0U04P2Q1_B2609.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL24VB17P1Q1_A2403.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL3V3B23P1Q0_A2305.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL3V3U1051M5_C2609.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL5V0B12P1Q0_A2203.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL5V0B20P1M5_C2609.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDL5V0B45P1M3_B2609.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDS5V0A_D15.pdf",
+   "numbers_in_tables": 67,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TESDU5V0 SERIES_H1601.pdf",
+   "numbers_in_tables": 72,
+   "missing_in_docling": 1,
+   "examples": [
+    {
+     "page": 1,
+     "lost": {
+      "24": 1
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "TLD26AH SERIES_C2408.pdf",
+   "numbers_in_tables": 167,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TLD5S10AH SERIES_D2103.pdf",
+   "numbers_in_tables": 204,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TLD6S10AH SERIES_D2103.pdf",
+   "numbers_in_tables": 204,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TLD8S10AH SERIES_E2310.pdf",
+   "numbers_in_tables": 383,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPMR10D SERIES_D2309.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPMR10DH SERIES_B2309.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPMR6G SERIES_D2309.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPMR6GH SERIES_C2510.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPUH6D SERIES_E2309.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TPUH6DH SERIES_B2309.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS10K40 SERIES_F2101.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS10K40-A SERIES_D2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS10KL60 SERIES_G2104.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS10P01G SERIES_L2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS10P01G-K SERIES_C2104.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS15P01G SERIES_N2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS15P05G-K SERIES_C2104.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS15PL05G SERIES_H2203.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS20K40-T SERIES_A2208.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS20P01G SERIES_O2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS25P01G SERIES_Q2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS25P05G-K SERIES_C2104.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS25PL05G SERIES_H2203.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS35P05G SERIES_F2203.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS40P05G SERIES_G2203.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS4148 SERIES_A2301.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS4448 RG_H1612.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS4K40 SERIES_F2101.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS4K40-A SERIES_D2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS50P05G SERIES_H2203.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS6K40 SERIES_F2101.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS6K40-T SERIES_D2103.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS6KL60 SERIES_E2104.pdf",
+   "numbers_in_tables": 35,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS6P01G SERIES_M2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS6P01G-K SERIES_C2104.pdf",
+   "numbers_in_tables": 41,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TS8P01G SERIES_M2203.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10H100CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10H100H_B2607.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10H120CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10H120H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10M45CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10M45H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10M60CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD10M60H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20H100CH_B2607.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20H100H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20H120CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20H120H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20M45CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20M45H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20M60CH_A2601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD20M60H_A2601.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD35H100H_A2601.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD35H120H_A2601.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD35M45H_A2601.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAD35M60H_A2601.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL3H100H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL3H120H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL3M45H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL3M60H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL5H100H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL5H120H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL5M45H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSAL5M60H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDAH10120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDAH15120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDAH20120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDAH30120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDAH40120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDB01120G2H_B2507.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDB02120G2H_B2507.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF06065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF08065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF10065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF12065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF16065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDF20065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDFS01120G2H_B2507.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDFS02120G2H_B2507.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH10120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH15120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH16065G1_A2404.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH20065G1_A2404.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH20120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH30065G1_A2404.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH30120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH40065G1_A2404.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDH40120G2H_A2506.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK05120G2H_A2506.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK08065G1_A2507.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK08120G2H_A2506.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK10065G1_A2507.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK10120G2H_A2506.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK12065G1_A2507.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK15120G2H_A2506.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK16065G1_A2507.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK20065G1H_A2509.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK20065G1_A2507.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDK20120G2H_A2506.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM05120G2H_A2506.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM06065G1_B2509.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM08065G1_A2507.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM08120G2H_A2506.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM10065G1_A2507.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDM10120G2H_A2506.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT05120G2H_A2506.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT06065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT08065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT08120G2H_A2506.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT10065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT10120G2H_A2506.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT12065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT15120G2H_A2506.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT16065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT20065G1_A2404.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSCDT20120G2H_A2506.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD1GH_A2102.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD1GLW SERIES_A2309.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD1GLWH SERIES_B2312.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD1G_E2102.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2GAL SERIES_A2309.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2GALH SERIES_B2312.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2GFS SERIES_A2309.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2GFSH SERIES_B2312.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2GH_A2102.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD2G_F2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3GAL SERIES_A2309.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3GALH SERIES_B2312.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3GFS SERIES_A2309.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3GFSH SERIES_B2312.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3GH_A2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSD3G_F2102.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSDGLWH_A2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSDGLW_F2103.pdf",
+   "numbers_in_tables": 46,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF10102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF10122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF10H45C_F2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF10H60C_F2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20H45C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20H60C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20U45C SERIES_H2105.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF20U45C_I2603.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30H45C_D2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30H60C_D2102.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30L45C SERIES_F2105.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30L45C_G2603.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30U45C_G2105.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF30U60C_G2105.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF40102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSF40122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS3H100H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS3H120H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS3M45H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS3M60H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS5H100H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS5H120H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS5M45H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSFS5M60H_A2510.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSH60H100CH_A2601.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSH80H100CH_A2601.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSN520M60H_A2103.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS0230LU_D2405.pdf",
+   "numbers_in_tables": 26,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS0230U_G1706.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS0340U_D1604.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS40U_C1601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS42U SERIES_D1601.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS54U_C1601.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS70U_C1601.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSS83L45_D2109.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA3U45H_B2307.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA3U45_P2307.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA3U60H_B2306.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA3U60_H2306.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA5U50 SERIES_F2307.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSA5U50H SERIES_B2307.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSE3H45 SERIES_E2305.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSE3H45H SERIES_B2305.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSE3U45 SERIES_I2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSE3U45H SERIES_A2103.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW1H100H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW1H120H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW1M45H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW1M60H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW2H100H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW2H120H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW2M45H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW2M60H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3H100H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3H120H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3M45H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3M60H_A2510.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3U45 SERIES_B2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSSW3U45H SERIES_A2103.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST10102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST10122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST10H45C_A2010.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST10H60C_A2010.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20102C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20H45C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20H60C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20U45C SERIES_D2104.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST20U45C_E2603.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST30122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST30H45C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST30H60C_C2012.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST30L45C_C2104.pdf",
+   "numbers_in_tables": 31,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST30U45C SERIES_E2104.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TST40122C_A2405.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU1H100H_A2507.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU1H120H_A2507.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU1M45H_B2211.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU1M60H_A2207.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU2H100H_A2507.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU2H120H_A2507.pdf",
+   "numbers_in_tables": 36,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU2M45H_A2207.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSU2M60H_B2208.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10102_B2508.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10200H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10H100H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10H120H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10M45SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10M60SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10S150H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP10S200H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12122_B2508.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12200H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12H100H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12H120H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12S150H_A2604.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP12S200H_A2604.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15102_B2508.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15200H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15H100H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15H120H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15M45SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15M60SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15S150H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP15S200H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP3150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP3S150H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP5102_B2508.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP5150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP5M45SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP5M60SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP5S150H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8150H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8200H_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8H100H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8H100SH_A2505.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8H120H_A2403.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8M45SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8M60SH_B2103.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8S150H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSUP8S200H_A2604.pdf",
+   "numbers_in_tables": 38,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TSZU52C2V0 SERIES_G2009.pdf",
+   "numbers_in_tables": 305,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAR4D SERIES_A2406.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAR4DH SERIES_A2111.pdf",
+   "numbers_in_tables": 50,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS3D SERIES_A2406.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS3DH SERIES_A2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS4D SERIES_A2406.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS4DH SERIES_A2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS6D SERIES_A2406.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS6DH SERIES_A2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS8D SERIES_C2109.pdf",
+   "numbers_in_tables": 58,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAS8DH SERIES_A2111.pdf",
+   "numbers_in_tables": 47,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU10D SERIES_A2406.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU10DH SERIES_A2111.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU4D SERIES_A2406.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU4DH SERIES_A2111.pdf",
+   "numbers_in_tables": 84,
+   "missing_in_docling": 2,
+   "examples": [
+    {
+     "page": 2,
+     "lost": {
+      "4": 2
+     }
+    }
+   ]
+  },
+  {
+   "pdf": "TUAU6D SERIES_A2406.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU6DH SERIES_C2111.pdf",
+   "numbers_in_tables": 73,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU8D SERIES_A2406.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "TUAU8DH SERIES_A2111.pdf",
+   "numbers_in_tables": 82,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UDZS3V6B SERIES_I2606.pdf",
+   "numbers_in_tables": 254,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF1A SERIES_G2104.pdf",
+   "numbers_in_tables": 56,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF1DLW SERIES_D2501.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF1DLWH SERIES_C2601.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF1JLWH_A2501.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF1JLW_A2501.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UF4001 SERIES_P2104.pdf",
+   "numbers_in_tables": 63,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG06A SERIES_G2104.pdf",
+   "numbers_in_tables": 48,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG1004G SERIES_D2601.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG1007G SERIES_A2501.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG10G SERIES_F2603.pdf",
+   "numbers_in_tables": 40,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG12J_E2603.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG2004PT_F2103.pdf",
+   "numbers_in_tables": 25,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG2D_F2105.pdf",
+   "numbers_in_tables": 43,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG2JAH_B2501.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG2JA_D2102.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG4D_B2201.pdf",
+   "numbers_in_tables": 30,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG54G SERIES_H2606.pdf",
+   "numbers_in_tables": 60,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG54GS_C2105.pdf",
+   "numbers_in_tables": 51,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG5J_K2603.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG6005PT_E2103.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UG8J_K2603.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF1004G SERIES_H2601.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF1004GA SERIES_F2605.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF1007G SERIES_A2501.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF1007GA SERIES_A2501.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF10G SERIES_F2603.pdf",
+   "numbers_in_tables": 39,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF12JD_C2105.pdf",
+   "numbers_in_tables": 33,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF12J_E2603.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF1606G_E2601.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF2004G SERIES_E2601.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF2007G SERIES_A2501.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF5J_K2603.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF8JD_D2105.pdf",
+   "numbers_in_tables": 32,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGF8J_H2603.pdf",
+   "numbers_in_tables": 29,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGS20JH_F2510.pdf",
+   "numbers_in_tables": 42,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGS30JH_E2510.pdf",
+   "numbers_in_tables": 37,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGS5JH_D2606.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UGS5J_C2103.pdf",
+   "numbers_in_tables": 27,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UR2KB60 SERIES_L2104.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UR3KB60 SERIES_J2104.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UR4KB60-B SERIES_D2104.pdf",
+   "numbers_in_tables": 34,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "UR8KB60 SERIES_C2104.pdf",
+   "numbers_in_tables": 44,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "US1A SERIES_N2102.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "US1AH SERIES_A2102.pdf",
+   "numbers_in_tables": 45,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "YBS2204G SERIES_D2103.pdf",
+   "numbers_in_tables": 49,
+   "missing_in_docling": 0,
+   "examples": []
+  },
+  {
+   "pdf": "YBS3004G SERIES_D2103.pdf",
+   "numbers_in_tables": 53,
+   "missing_in_docling": 0,
+   "examples": []
+  }
+ ]
+}

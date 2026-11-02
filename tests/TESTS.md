@@ -9,3 +9,9 @@
 ## 파일
 - `test_health.py` — `/health` 응답 확인
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
+- `test_llm.py` — API 호출 없이 mock client로 중앙 임베딩 호출의 벡터·사용량·provider metadata 반환 계약 확인
+- `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키
+- `test_rag_ingest.py` — 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩. DB 재실행(행이 늘지 않고 API를 다시 안 부름) 시험은 `TEST_DATABASE_URL`을 줄 때만
+- `test_rag_retrieve.py` — RRF 순서, BM25 토큰(한국어 조사), `gold_chunks`에서 정답 문서·쪽 읽기, 표지 카드 → 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드에서 임베딩 API 안 부름, 평가 대상 0건 오류. 실제 DB 시험은 `TEST_DATABASE_URL`(로컬 compose DB)을 줄 때만
+- `test_rag_collect.py` — xlsx 목록 합치기, manifest로 받기(sha256 대조, PDF 아님·해시 다름은 failed.csv), 다시 돌리면 건너뛰기
+- `test_rag_parse.py` — 숫자 세기(µ 통일), 표 좌표 바꾸기, SIGALRM 지원 여부

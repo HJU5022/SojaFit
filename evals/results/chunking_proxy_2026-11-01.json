@@ -1,0 +1,128 @@
+[
+ {
+  "variant": "A 개선 전",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "chunks": 10,
+  "avg_chars": 704,
+  "interpretable": 14,
+  "with_doc": 13,
+  "total": 14,
+  "miss": []
+ },
+ {
+  "variant": "B 개선 1",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "chunks": 19,
+  "avg_chars": 627,
+  "interpretable": 2,
+  "with_doc": 1,
+  "total": 14,
+  "miss": [
+   "VRRM-1N5818",
+   "VRRM-1N5819",
+   "VRMS-1N5819",
+   "IF",
+   "IFSM",
+   "RthJA",
+   "VF-1N5817",
+   "VF-1N5818",
+   "VF-1N5819",
+   "IR-25C",
+   "IR-100C",
+   "CJ"
+  ]
+ },
+ {
+  "variant": "C 개선 2",
+  "pdf": "1N5817-SERIES_H2104.pdf",
+  "chunks": 37,
+  "avg_chars": 379,
+  "interpretable": 14,
+  "with_doc": 14,
+  "total": 14,
+  "miss": []
+ },
+ {
+  "variant": "A 개선 전",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "chunks": 11,
+  "avg_chars": 645,
+  "interpretable": 13,
+  "with_doc": 6,
+  "total": 13,
+  "miss": []
+ },
+ {
+  "variant": "B 개선 1",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "chunks": 23,
+  "avg_chars": 610,
+  "interpretable": 5,
+  "with_doc": 1,
+  "total": 13,
+  "miss": [
+   "PD",
+   "IF",
+   "IFSM",
+   "IFRM",
+   "RthJA",
+   "VF-1N4448-5mA-max",
+   "IR-75V",
+   "CJ"
+  ]
+ },
+ {
+  "variant": "C 개선 2",
+  "pdf": "1N4148-SERIES_K2301.pdf",
+  "chunks": 48,
+  "avg_chars": 316,
+  "interpretable": 13,
+  "with_doc": 13,
+  "total": 13,
+  "miss": []
+ },
+ {
+  "variant": "A 개선 전",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "chunks": 12,
+  "avg_chars": 814,
+  "interpretable": 14,
+  "with_doc": 12,
+  "total": 14,
+  "miss": []
+ },
+ {
+  "variant": "B 개선 1",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "chunks": 58,
+  "avg_chars": 480,
+  "interpretable": 1,
+  "with_doc": 0,
+  "total": 14,
+  "miss": [
+   "VF",
+   "RthJA",
+   "C3V6-VZmin",
+   "C3V6-VZnom",
+   "C3V6-VZmax",
+   "C3V6-ZZT",
+   "C3V6-IR",
+   "C2V4-IR",
+   "C27-VZnom",
+   "C27-IR",
+   "C27-VR",
+   "C75-VZmax",
+   "C75-ZZK"
+  ]
+ },
+ {
+  "variant": "C 개선 2",
+  "pdf": "BZT52C2V4-SERIES_G1804.pdf",
+  "chunks": 77,
+  "avg_chars": 366,
+  "interpretable": 14,
+  "with_doc": 14,
+  "total": 14,
+  "miss": []
+ }
+]

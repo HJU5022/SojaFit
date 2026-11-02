@@ -11,7 +11,7 @@
 ```
 SojaFit (proj3-b)
 ├── README.md  SOJAFIT.md  SPEC.md  AGENTS.md  CLAUDE.md  EVAL_REPORT.md
-├── .env.example  Dockerfile  docker-compose.yml  pyproject.toml  uv.lock  pytest.ini
+├── .env.example  .gitignore  .python-version  Dockerfile  docker-compose.yml  pyproject.toml  uv.lock  pytest.ini
 ├── .github/          PR 양식, CI(테스트·비밀값 검사)
 ├── backend/          서비스 코드
 │   ├── judge/        회로 역할·대체 조건·판정
@@ -21,7 +21,7 @@ SojaFit (proj3-b)
 │   ├── services/     LLM·임베딩 호출, 견적서, 가격·재고
 │   ├── web/          화면
 │   └── mcp_skill/    MCP 서버와 Skill(가산)
-├── data/             코퍼스와 목록
+├── data/             코퍼스 목록과 원본 표본(원본 전체는 저장소 밖)
 │   ├── corpus/       원본 문서
 │   ├── circuits/     평가·시연용 회로
 │   └── demo/         데모 모드 응답
@@ -49,7 +49,7 @@ SojaFit (proj3-b)
 | `backend/services/` | LLM·임베딩 호출 한 곳, 견적서 저장, 가격·재고 조회 | 서비스·운영 | [SERVICES.md](backend/services/SERVICES.md) |
 | `backend/web/` | 로그인·입력·승인·견적 화면 | 서비스·운영 | [WEB.md](backend/web/WEB.md) |
 | `backend/mcp_skill/` | 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill. 서비스 안에서 돕니다 | 가산을 시작할 때 정함 | [MCP_SKILL.md](backend/mcp_skill/MCP_SKILL.md) |
-| `data/` | 코퍼스 스냅샷과 manifest·청크·파라미터 목록 | 검색·데이터 | [DATA.md](data/DATA.md) |
+| `data/` | manifest와 코퍼스 원본 표본 3건. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/` | 검색·데이터 | [DATA.md](data/DATA.md) |
 | `data/corpus/` | 데이터시트·공개 문서 원본 | 검색·데이터 | [CORPUS.md](data/corpus/CORPUS.md) |
 | `data/circuits/` | 평가·시연용 공개 KiCad 회로와 라이선스 | 평가·문서 | [CIRCUITS.md](data/circuits/CIRCUITS.md) |
 | `data/demo/` | 키 없는 데모 모드가 재생하는 응답(가공값) | 서비스·운영 | [DEMO.md](data/demo/DEMO.md) |
@@ -77,6 +77,9 @@ SojaFit (proj3-b)
 | `CLAUDE.md` | Claude Code가 읽는 지침. AGENTS.md를 따름 |
 | `EVAL_REPORT.md` | 개선 전후 지표, 판정 기준, 실패 분석, 재현 명령 |
 | `.env.example` | 필요한 환경변수 이름(값 없음) |
+| `.gitignore` | 커밋하지 않을 파일(`.env`, 캐시, 로그 등) |
+| `.python-version` | uv가 쓰는 파이썬 버전(3.12) |
+| `.gitattributes` | 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함 |
 | `Dockerfile`, `docker-compose.yml` | `docker compose up` 한 줄 실행, 키 없는 데모 모드 |
 | `pyproject.toml`, `uv.lock`, `pytest.ini` | 의존성과 테스트 설정 |
 
@@ -94,4 +97,4 @@ SojaFit (proj3-b)
 1. README 조원 소개 표에 자기 행을 추가합니다(브랜치 → PR → 리뷰 → merge). 첫 PR이 협업 흐름 연습입니다.
 2. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
 3. D0(10/30)에 빈 FastAPI를 Cloud Run에 올려 배포 주소를 확보합니다.
-4. 평가셋 v1 30건을 만듭니다(11/3 동결).
+4. 평가셋 v1 50건(관련 25, 비관련 25)을 만듭니다(11/3 동결).

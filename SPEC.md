@@ -37,6 +37,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 범용 챗봇과 같은 질문 5개로 비교할 지표: 근거 인용 비율, 없는 품번 제시 수, "문서로 확인 안 됨" 처리 수
 - 검색·판정 지표와 목표 수치: (정할 것)
+- 임베딩 예비 후보: `text-embedding-3-small`, `BAAI/bge-m3`, `nlpai-lab/KURE-v1`, `Qwen/Qwen3-Embedding-0.6B`. 30청크·18질의 dense-only 프록시는 후보 점검용이며 최종 선택 근거로 쓰지 않습니다. 최종 선택은 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연을 함께 비교한 뒤 확정합니다. 세부 조건은 `docs/specs/embedding-model-baseline.md`와 `evals/PREREGISTER.md`를 따릅니다.
 
 ## 2. 흐름과 그래프
 
@@ -82,7 +83,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 4. 계약
 
-- 모듈 사이 함수 이름과 시그니처: (정할 것)
+- 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
+- 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
 
@@ -94,10 +96,15 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 6. 데이터·코퍼스 경계
 
-- 데이터시트: Taiwan Semiconductor, Infineon 다이오드
+- 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 다이오드 판정 기능이 완성된 뒤 넓힙니다.
+- 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
+- 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
+- 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
+- 임베딩: `text-embedding-3-small`(`vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)).
+- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
-- 평가·시연용 회로: 공개 ATtiny85 KiCad 프로젝트(`data/circuits/`)
-- 이용 조건: 비수정·고지 유지·출처 표기. 검색 색인용으로 나누는 것이 "비수정"에 맞는지: (확인할 것)
+- 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
+- 이용 조건: TSC 약관(Terms of use 3절 b항)은 비수정·고지 유지·출처 표기 조건의 정보·비상업 복제·배포만 허락하고 카드(청크) 저장·인용은 따로 다루지 않습니다. 그래서 원본 PDF는 고치지 않고 두고, 카드는 내부 검색용으로만 쓰며(저장소·공개 배포 안 함), 답변에는 짧은 인용에 문서·개정판·쪽과 원본 PDF 주소를 붙입니다. 데모나 저장소를 공개하기 전에 강사에게 확인합니다.
 - 코퍼스 안의 문장은 지시가 아니라 데이터입니다.
 - 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`가 정본입니다.
 
@@ -105,7 +112,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
 - 데모 모드 응답은 `data/demo/`에 두고, 실제 API 응답 원본은 넣지 않습니다.
-- 키 없이 쓰는 모델과 파일: (정할 것)
+- 키 없이 쓰는 모델과 파일: (정할 것). 검색은 데모 모드에서 임베딩 API 없이 BM25만 씁니다(`backend/rag/retrieve.py`).
 - 현재 Langfuse 연결 단계에서는 Cloud 자격증명만 확인하고 프롬프트·응답은 기록하지 않습니다.
 
 ## 8. 기능별 수용 기준 (AC)

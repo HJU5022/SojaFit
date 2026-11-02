@@ -1,0 +1,1364 @@
+{"event": "start", "cuda": true, "gpu": "NVIDIA GeForce RTX 3080 Ti", "time": "2026-11-01 07:49:31"}
+{"pdf": "1.5KE SERIES_O2104.pdf", "sec": 27.91, "pages": 8, "tables": 7, "numbers": 819, "matched": 819}
+{"pdf": "1.5SMC SERIES_S2207.pdf", "sec": 5.95, "pages": 7, "tables": 8, "numbers": 623, "matched": 623}
+{"pdf": "1.5SMCH SERIES_B2207.pdf", "sec": 5.98, "pages": 7, "tables": 8, "numbers": 623, "matched": 623}
+{"pdf": "1K5SMPC12APH SERIES_B2109.pdf", "sec": 4.35, "pages": 5, "tables": 7, "numbers": 185, "matched": 184}
+{"pdf": "1KSMB10A SERIES_I2102.pdf", "sec": 6.45, "pages": 7, "tables": 8, "numbers": 206, "matched": 206}
+{"pdf": "1KSMB10AH SERIES_A2102.pdf", "sec": 6.21, "pages": 7, "tables": 8, "numbers": 206, "matched": 206}
+{"pdf": "1N4001G SERIES_P2104.pdf", "sec": 2.02, "pages": 5, "tables": 6, "numbers": 52, "matched": 52}
+{"pdf": "1N4001G-K SERIES_B2104.pdf", "sec": 1.87, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "1N4148 SERIES_K2301.pdf", "sec": 2.24, "pages": 5, "tables": 5, "numbers": 81, "matched": 81}
+{"pdf": "1N4148W SERIES_K1804.pdf", "sec": 2.49, "pages": 5, "tables": 7, "numbers": 78, "matched": 78}
+{"pdf": "1N4148W-G_D1601.pdf", "sec": 2.07, "pages": 4, "tables": 6, "numbers": 68, "matched": 68}
+{"pdf": "1N4148WH_A2501.pdf", "sec": 1.72, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "1N4148WS SERIES_N2212.pdf", "sec": 2.27, "pages": 5, "tables": 5, "numbers": 79, "matched": 79}
+{"pdf": "1N4148WS-G_C2211.pdf", "sec": 2.09, "pages": 5, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "1N4148WSH_A2501.pdf", "sec": 1.71, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "1N4148WTH_A2501.pdf", "sec": 1.77, "pages": 5, "tables": 5, "numbers": 35, "matched": 35}
+{"pdf": "1N4740A SERIES_O2104.pdf", "sec": 4.67, "pages": 8, "tables": 5, "numbers": 360, "matched": 360}
+{"pdf": "1N4933G SERIES_I2104.pdf", "sec": 2.08, "pages": 6, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "1N4933G-K SERIES_B2104.pdf", "sec": 1.93, "pages": 6, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "1N5221B SERIES_H2301.pdf", "sec": 4.94, "pages": 6, "tables": 5, "numbers": 336, "matched": 336}
+{"pdf": "1N5391G SERIES_G2309.pdf", "sec": 1.69, "pages": 6, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "1N5391G-T SERIES_B2105.pdf", "sec": 1.45, "pages": 5, "tables": 6, "numbers": 53, "matched": 53}
+{"pdf": "1N5400G SERIES_K2105.pdf", "sec": 1.54, "pages": 5, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "1N5400G-K SERIES_C2105.pdf", "sec": 1.55, "pages": 5, "tables": 6, "numbers": 50, "matched": 50}
+{"pdf": "1N5817 SERIES_H2104.pdf", "sec": 1.47, "pages": 6, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "1N5820 SERIES_I2105.pdf", "sec": 1.39, "pages": 6, "tables": 6, "numbers": 39, "matched": 39}
+{"pdf": "1PGSMA SERIES_B2102.pdf", "sec": 3.88, "pages": 5, "tables": 7, "numbers": 346, "matched": 346}
+{"pdf": "1PGSMAH SERIES_A2102.pdf", "sec": 4.08, "pages": 5, "tables": 7, "numbers": 346, "matched": 346}
+{"pdf": "1PGSMB5926 SERIES_C2102.pdf", "sec": 3.89, "pages": 6, "tables": 7, "numbers": 335, "matched": 335}
+{"pdf": "1PGSMB5926H SERIES_A2102.pdf", "sec": 4.21, "pages": 6, "tables": 7, "numbers": 335, "matched": 335}
+{"pdf": "1PGSMC5348 SERIES_D2102.pdf", "sec": 2.96, "pages": 5, "tables": 7, "numbers": 241, "matched": 241}
+{"pdf": "1PGSMC5348H SERIES_A2102.pdf", "sec": 2.93, "pages": 5, "tables": 7, "numbers": 241, "matched": 241}
+{"pdf": "1SMA4737 SERIES_P2102.pdf", "sec": 8.86, "pages": 8, "tables": 6, "numbers": 300, "matched": 300}
+{"pdf": "1SMA4737H SERIES_A2102.pdf", "sec": 11.04, "pages": 8, "tables": 6, "numbers": 300, "matched": 300}
+{"pdf": "1SMA5926 SERIES_L2102.pdf", "sec": 10.77, "pages": 6, "tables": 6, "numbers": 333, "matched": 333}
+{"pdf": "1SMA5926H SERIES_A2102.pdf", "sec": 6.09, "pages": 6, "tables": 6, "numbers": 333, "matched": 333}
+{"pdf": "1SMB5926 SERIES_M2102.pdf", "sec": 5.38, "pages": 8, "tables": 7, "numbers": 339, "matched": 339}
+{"pdf": "1SMB5926H SERIES_A2102.pdf", "sec": 5.45, "pages": 8, "tables": 7, "numbers": 339, "matched": 339}
+{"pdf": "1SMC5352H_A2102.pdf", "sec": 1.92, "pages": 5, "tables": 7, "numbers": 22, "matched": 22}
+{"pdf": "1SMC5352_G2102.pdf", "sec": 1.86, "pages": 5, "tables": 7, "numbers": 22, "matched": 22}
+{"pdf": "1SS355_D2212.pdf", "sec": 1.55, "pages": 4, "tables": 4, "numbers": 39, "matched": 39}
+{"pdf": "1SS400_E2510.pdf", "sec": 1.57, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "1T1G SERIES_H2104.pdf", "sec": 2.57, "pages": 5, "tables": 6, "numbers": 53, "matched": 53}
+{"pdf": "1V5KE SERIES_D2112.pdf", "sec": 4.8, "pages": 7, "tables": 5, "numbers": 328, "matched": 328}
+{"pdf": "2A01G SERIES_I2105.pdf", "sec": 2.57, "pages": 5, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "2A01G-T SERIES_B2105.pdf", "sec": 2.16, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "2M6.8Z SERIES_N2105.pdf", "sec": 4.49, "pages": 8, "tables": 6, "numbers": 338, "matched": 338}
+{"pdf": "31DF4 SERIES_G2105.pdf", "sec": 1.97, "pages": 6, "tables": 6, "numbers": 31, "matched": 31}
+{"pdf": "3A60 SERIES_B2105.pdf", "sec": 2.45, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "3KSMC12AH SERIES_B2012.pdf", "sec": 4.32, "pages": 5, "tables": 7, "numbers": 174, "matched": 173}
+{"pdf": "5.0SMDJ SERIES_D2102.pdf", "sec": 4.71, "pages": 5, "tables": 7, "numbers": 236, "matched": 236}
+{"pdf": "5.0SMDJH SERIES_A2102.pdf", "sec": 4.82, "pages": 5, "tables": 7, "numbers": 236, "matched": 236}
+{"pdf": "5KSMC10(C)AH SERIES_B2509.pdf", "sec": 9.74, "pages": 8, "tables": 6, "numbers": 726, "matched": 724}
+{"pdf": "6A05G SERIES_F2104.pdf", "sec": 2.86, "pages": 5, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "ABS15J SERIES_E2103.pdf", "sec": 3.25, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "ABS2 SERIES_M2103.pdf", "sec": 3.45, "pages": 5, "tables": 7, "numbers": 43, "matched": 43}
+{"pdf": "ABS20M-T_C2103.pdf", "sec": 3.22, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "ABS20M_B2103.pdf", "sec": 3.55, "pages": 5, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "ABS4-K SERIES_C2103.pdf", "sec": 3.11, "pages": 5, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "ABS6-T SERIES_C2103.pdf", "sec": 3.17, "pages": 5, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "AZ23C2V7 SERIES_D2001.pdf", "sec": 5.78, "pages": 5, "tables": 7, "numbers": 304, "matched": 304}
+{"pdf": "B0520LW SERIES_J2112.pdf", "sec": 4.49, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "B0520LWF SERIES_C14.pdf", "sec": 3.7, "pages": 5, "tables": 7, "numbers": 87, "matched": 87}
+{"pdf": "B0530WS_K2212.pdf", "sec": 2.21, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BA157G SERIES_I2106.pdf", "sec": 2.45, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "BA157G-K SERIES_B2104.pdf", "sec": 2.74, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "BAS116_F2001.pdf", "sec": 2.95, "pages": 5, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "BAS16H_A2412.pdf", "sec": 2.58, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "BAS16_F2001.pdf", "sec": 3.17, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "BAS19 SERIES_C2001.pdf", "sec": 3.8, "pages": 5, "tables": 7, "numbers": 54, "matched": 54}
+{"pdf": "BAS19W SERIES_B14.pdf", "sec": 3.26, "pages": 5, "tables": 6, "numbers": 65, "matched": 65}
+{"pdf": "BAS21 SERIES_E2001.pdf", "sec": 3.87, "pages": 5, "tables": 7, "numbers": 57, "matched": 57}
+{"pdf": "BAS21H_A2412.pdf", "sec": 2.15, "pages": 5, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "BAS316WS_F2212.pdf", "sec": 1.98, "pages": 5, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "BAS316_E1907.pdf", "sec": 2.57, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "BAS40 SERIES_I2606.pdf", "sec": 1.84, "pages": 6, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "BAS40M5_B2606.pdf", "sec": 1.72, "pages": 5, "tables": 4, "numbers": 31, "matched": 31}
+{"pdf": "BAS70 SERIES_G2606.pdf", "sec": 2.18, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "BAT201M3_B2609.pdf", "sec": 2.0, "pages": 5, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "BAT42W SERIES_H2606.pdf", "sec": 3.24, "pages": 5, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "BAT42WS SERIES_J2606.pdf", "sec": 2.17, "pages": 5, "tables": 4, "numbers": 47, "matched": 47}
+{"pdf": "BAT42WSH SERIES_A2502.pdf", "sec": 2.51, "pages": 5, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "BAT46GW_B2606.pdf", "sec": 2.09, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "BAT54 SERIES_H2606.pdf", "sec": 2.18, "pages": 5, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "BAT54AH_A2501.pdf", "sec": 2.12, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54CH_A2501.pdf", "sec": 2.33, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54CWH_A2501.pdf", "sec": 2.06, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54GWH_A2501.pdf", "sec": 2.4, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54GW_B2606.pdf", "sec": 2.36, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "BAT54H_A2501.pdf", "sec": 2.51, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "BAT54SH_A2501.pdf", "sec": 1.98, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54SWH_A2501.pdf", "sec": 2.08, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "BAT54T SERIES_H2111.pdf", "sec": 3.41, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "BAT54W SERIES_D2102.pdf", "sec": 2.94, "pages": 5, "tables": 7, "numbers": 43, "matched": 43}
+{"pdf": "BAT54WH_A2501.pdf", "sec": 2.31, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "BAV101 SERIES_E2301.pdf", "sec": 1.99, "pages": 5, "tables": 5, "numbers": 31, "matched": 31}
+{"pdf": "BAV19W SERIES_E15.pdf", "sec": 2.66, "pages": 4, "tables": 5, "numbers": 61, "matched": 61}
+{"pdf": "BAV19W-G SERIES_D1603.pdf", "sec": 3.3, "pages": 5, "tables": 6, "numbers": 66, "matched": 66}
+{"pdf": "BAV19WS SERIES_K2212.pdf", "sec": 2.24, "pages": 5, "tables": 4, "numbers": 51, "matched": 51}
+{"pdf": "BAV19WS-G SERIES_A15.pdf", "sec": 2.61, "pages": 4, "tables": 7, "numbers": 69, "matched": 69}
+{"pdf": "BAV21WH_A2412.pdf", "sec": 2.0, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "BAV23CH_A2501.pdf", "sec": 2.48, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "BAV23SH_A2501.pdf", "sec": 2.36, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "BAV70H_A2412.pdf", "sec": 2.46, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "BAV70WH_A2412.pdf", "sec": 2.53, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "BAV99H_A2412.pdf", "sec": 2.91, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "BAV99WH_A2412.pdf", "sec": 2.43, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "BAV99W_C2102.pdf", "sec": 3.89, "pages": 5, "tables": 7, "numbers": 50, "matched": 50}
+{"pdf": "BAW56 SERIES_I2001.pdf", "sec": 3.39, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "BAW56H_A2412.pdf", "sec": 2.71, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "BAW56WH_A2412.pdf", "sec": 2.58, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "BY251G SERIES_D2105.pdf", "sec": 2.93, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "BYG20D SERIES_F2102.pdf", "sec": 4.86, "pages": 6, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "BYG20DH SERIES_A2102.pdf", "sec": 3.12, "pages": 6, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "BYG21MH_A2102.pdf", "sec": 2.76, "pages": 5, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "BYG21M_B2102.pdf", "sec": 3.0, "pages": 5, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "BYG23MH_A2102.pdf", "sec": 2.9, "pages": 6, "tables": 7, "numbers": 30, "matched": 30}
+{"pdf": "BYG23M_C2102.pdf", "sec": 2.29, "pages": 6, "tables": 7, "numbers": 30, "matched": 30}
+{"pdf": "BZD17C SERIES_L2103.pdf", "sec": 5.34, "pages": 5, "tables": 7, "numbers": 225, "matched": 225}
+{"pdf": "BZD17CH SERIES_A2103.pdf", "sec": 4.83, "pages": 5, "tables": 7, "numbers": 225, "matched": 225}
+{"pdf": "BZD27C SERIES_AB2103.pdf", "sec": 6.61, "pages": 6, "tables": 7, "numbers": 360, "matched": 360}
+{"pdf": "BZD27C11PW SERIES_D2203.pdf", "sec": 9.49, "pages": 7, "tables": 8, "numbers": 579, "matched": 579}
+{"pdf": "BZD27C11PWH SERIES_B2203.pdf", "sec": 10.58, "pages": 7, "tables": 8, "numbers": 579, "matched": 579}
+{"pdf": "BZD27CH SERIES_A2103.pdf", "sec": 7.34, "pages": 6, "tables": 7, "numbers": 360, "matched": 360}
+{"pdf": "BZT52B2V4 SERIES_F15.pdf", "sec": 6.55, "pages": 5, "tables": 6, "numbers": 375, "matched": 375}
+{"pdf": "BZT52B2V4-G SERIES_H2002.pdf", "sec": 8.22, "pages": 6, "tables": 8, "numbers": 465, "matched": 465}
+{"pdf": "BZT52B2V4S SERIES_I2411.pdf", "sec": 5.62, "pages": 7, "tables": 5, "numbers": 362, "matched": 362}
+{"pdf": "BZT52B2V4SH SERIES_A2503.pdf", "sec": 5.71, "pages": 6, "tables": 7, "numbers": 364, "matched": 364}
+{"pdf": "BZT52C2V4 SERIES_G1804.pdf", "sec": 6.97, "pages": 7, "tables": 7, "numbers": 385, "matched": 385}
+{"pdf": "BZT52C2V4-G SERIES_C2007.pdf", "sec": 8.47, "pages": 7, "tables": 7, "numbers": 462, "matched": 462}
+{"pdf": "BZT52C2V4S SERIES_K2411.pdf", "sec": 5.78, "pages": 7, "tables": 5, "numbers": 362, "matched": 362}
+{"pdf": "BZT52C2V7K SERIES_H2510.pdf", "sec": 5.13, "pages": 6, "tables": 5, "numbers": 339, "matched": 339}
+{"pdf": "BZV55B2V4 SERIES_G2301.pdf", "sec": 5.54, "pages": 6, "tables": 5, "numbers": 357, "matched": 357}
+{"pdf": "BZV55C2V4 SERIES_H2301.pdf", "sec": 6.01, "pages": 6, "tables": 5, "numbers": 361, "matched": 361}
+{"pdf": "BZW04 SERIES_J2104.pdf", "sec": 7.47, "pages": 7, "tables": 7, "numbers": 444, "matched": 444}
+{"pdf": "BZW06 SERIES_K2105.pdf", "sec": 5.37, "pages": 8, "tables": 6, "numbers": 356, "matched": 356}
+{"pdf": "BZX584B2V4 SERIES_E2609.pdf", "sec": 6.85, "pages": 7, "tables": 6, "numbers": 457, "matched": 457}
+{"pdf": "BZX585B2V4 SERIES_C1607.pdf", "sec": 6.59, "pages": 6, "tables": 6, "numbers": 450, "matched": 450}
+{"pdf": "BZX585B2V4H SERIES_A2503.pdf", "sec": 6.65, "pages": 5, "tables": 6, "numbers": 427, "matched": 427}
+{"pdf": "BZX84C2V4 SERIES_F2001.pdf", "sec": 6.84, "pages": 6, "tables": 7, "numbers": 354, "matched": 354}
+{"pdf": "BZX84C2V4H SERIES_A2503.pdf", "sec": 5.64, "pages": 5, "tables": 7, "numbers": 352, "matched": 352}
+{"pdf": "BZX84JB2V4H SERIES_A2503.pdf", "sec": 6.06, "pages": 6, "tables": 7, "numbers": 353, "matched": 353}
+{"pdf": "BZY55B2V4 SERIES_D2301.pdf", "sec": 4.78, "pages": 7, "tables": 5, "numbers": 298, "matched": 298}
+{"pdf": "BZY55C2V4 SERIES_E2301.pdf", "sec": 4.73, "pages": 7, "tables": 5, "numbers": 298, "matched": 298}
+{"pdf": "D2SB05 SERIES_K2103.pdf", "sec": 3.1, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "DBL101G SERIES_R2103.pdf", "sec": 3.02, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "DBL104G-T SERIES_C2103.pdf", "sec": 2.76, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "DBL151G SERIES_L2103.pdf", "sec": 3.49, "pages": 5, "tables": 6, "numbers": 50, "matched": 50}
+{"pdf": "DBL154G-T SERIES_C2103.pdf", "sec": 2.85, "pages": 5, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "DBL201G SERIES_K2103.pdf", "sec": 3.34, "pages": 5, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "DBL204G-T SERIES_C2103.pdf", "sec": 2.45, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "DBLS101G SERIES_P2103.pdf", "sec": 3.08, "pages": 5, "tables": 7, "numbers": 50, "matched": 50}
+{"pdf": "DBLS104G-T SERIES_C2103.pdf", "sec": 2.83, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "DBLS151G SERIES_M2103.pdf", "sec": 3.36, "pages": 5, "tables": 7, "numbers": 51, "matched": 51}
+{"pdf": "DBLS154G-T SERIES_E2103.pdf", "sec": 3.03, "pages": 5, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "DBLS201G SERIES_J2103.pdf", "sec": 3.13, "pages": 5, "tables": 7, "numbers": 51, "matched": 51}
+{"pdf": "DBLS204G-T SERIES_C2103.pdf", "sec": 3.17, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "EABS1D SERIES_C2103.pdf", "sec": 2.91, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "ES15DLW SERIES_C2103.pdf", "sec": 3.33, "pages": 7, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "ES15DLWH SERIES_A2103.pdf", "sec": 3.44, "pages": 7, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "ES1A SERIES_O2112.pdf", "sec": 3.32, "pages": 7, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES1AH SERIES_B2112.pdf", "sec": 3.4, "pages": 7, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES1AL SERIES_L2103.pdf", "sec": 3.67, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES1ALH SERIES_A2103.pdf", "sec": 3.28, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES1BAL SERIES_C2103.pdf", "sec": 4.09, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "ES1BALH SERIES_B2103.pdf", "sec": 4.09, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "ES1BFS SERIES_C2103.pdf", "sec": 4.68, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "ES1BFSH SERIES_B2103.pdf", "sec": 3.38, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "ES1D-T SERIES_F2111.pdf", "sec": 3.22, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "ES1DF-T SERIES_B2103.pdf", "sec": 3.22, "pages": 6, "tables": 7, "numbers": 66, "matched": 66}
+{"pdf": "ES1DFL SERIES_D2103.pdf", "sec": 2.34, "pages": 6, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "ES1DLW SERIES_C2103.pdf", "sec": 2.28, "pages": 5, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "ES1DLWH SERIES_B2110.pdf", "sec": 2.69, "pages": 5, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "ES1DVH_A2102.pdf", "sec": 1.67, "pages": 5, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES1DV_C2102.pdf", "sec": 1.83, "pages": 5, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES2A SERIES_L2102.pdf", "sec": 2.11, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES2AA SERIES_M2102.pdf", "sec": 2.07, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES2AAH SERIES_A2102.pdf", "sec": 2.2, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES2AH SERIES_A2102.pdf", "sec": 2.53, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES2BAL SERIES_D2103.pdf", "sec": 2.44, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "ES2BALH SERIES_B2103.pdf", "sec": 2.35, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "ES2BFS SERIES_D2103.pdf", "sec": 2.45, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "ES2BFSH SERIES_B2103.pdf", "sec": 2.53, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "ES2D-T SERIES_D2305.pdf", "sec": 1.37, "pages": 6, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "ES2DA-T SERIES_D2111.pdf", "sec": 2.77, "pages": 6, "tables": 7, "numbers": 66, "matched": 66}
+{"pdf": "ES2DAF-T SERIES_B2103.pdf", "sec": 2.65, "pages": 6, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "ES2DFL SERIES_B2103.pdf", "sec": 2.28, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "ES2DVH_A2102.pdf", "sec": 1.77, "pages": 6, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES2DV_C2102.pdf", "sec": 1.68, "pages": 6, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES2LD SERIES_C2102.pdf", "sec": 2.15, "pages": 6, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "ES2LDH SERIES_A2102.pdf", "sec": 2.16, "pages": 6, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "ES3A SERIES_N2102.pdf", "sec": 2.19, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES3AB SERIES_C2102.pdf", "sec": 2.78, "pages": 8, "tables": 7, "numbers": 73, "matched": 73}
+{"pdf": "ES3ABH SERIES_A2102.pdf", "sec": 3.11, "pages": 8, "tables": 7, "numbers": 73, "matched": 73}
+{"pdf": "ES3AH SERIES_A2102.pdf", "sec": 2.47, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "ES3D-A SERIES_C2602.pdf", "sec": 2.1, "pages": 6, "tables": 5, "numbers": 66, "matched": 66}
+{"pdf": "ES3DB-A SERIES_C2102.pdf", "sec": 2.65, "pages": 6, "tables": 7, "numbers": 66, "matched": 66}
+{"pdf": "ES3DVH_A2102.pdf", "sec": 1.79, "pages": 5, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES3DV_D2102.pdf", "sec": 1.51, "pages": 5, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "ES5D-T SERIES_C2602.pdf", "sec": 1.81, "pages": 6, "tables": 5, "numbers": 66, "matched": 66}
+{"pdf": "ESDLW SERIES_D2103.pdf", "sec": 2.64, "pages": 7, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "ESDLWH SERIES_A2103.pdf", "sec": 2.71, "pages": 7, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "ESH1B SERIES_F2102.pdf", "sec": 1.89, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH1BH SERIES_A2102.pdf", "sec": 1.94, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH1DFSH_C2103.pdf", "sec": 2.02, "pages": 5, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "ESH1DMH_B2110.pdf", "sec": 1.77, "pages": 5, "tables": 7, "numbers": 30, "matched": 30}
+{"pdf": "ESH1DM_E2110.pdf", "sec": 1.93, "pages": 5, "tables": 7, "numbers": 29, "matched": 29}
+{"pdf": "ESH2B SERIES_J2102.pdf", "sec": 1.92, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH2BA SERIES_F2102.pdf", "sec": 2.0, "pages": 6, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "ESH2BAH SERIES_A2102.pdf", "sec": 2.18, "pages": 6, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "ESH2BH SERIES_A2102.pdf", "sec": 1.86, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH2DFSH_C2103.pdf", "sec": 2.18, "pages": 5, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "ESH3B SERIES_I2102.pdf", "sec": 2.09, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH3BH SERIES_A2102.pdf", "sec": 1.82, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "ESH3DFSH_B2103.pdf", "sec": 2.51, "pages": 5, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "F1T1G SERIES_H2104.pdf", "sec": 2.29, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "FR101G SERIES_H2104.pdf", "sec": 2.0, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "FR101G-K SERIES_B2104.pdf", "sec": 1.92, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "FR151G SERIES_I2105.pdf", "sec": 1.78, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "FR151G-T SERIES_B2105.pdf", "sec": 1.75, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "FR201G SERIES_H2105.pdf", "sec": 1.85, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "FR201G-T SERIES_B2105.pdf", "sec": 2.02, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "FR301G SERIES_H2105.pdf", "sec": 1.85, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "FR301G-K SERIES_C2105.pdf", "sec": 1.83, "pages": 6, "tables": 6, "numbers": 44, "matched": 44}
+{"pdf": "FRAF10JG_A2206.pdf", "sec": 2.21, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "FRAF8JG_A2206.pdf", "sec": 1.98, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "GBJ15JG SERIES_B2603.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBJ15KGLV_B2603.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBJ20KGLV_B2603.pdf", "sec": 1.29, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBJ25JG SERIES_B2603.pdf", "sec": 1.49, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBJ25KGLV_B2603.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBJ35JG SERIES_B2603.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBJ35KGALV_B2603.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBJ35KGLV_B2603.pdf", "sec": 1.29, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBJ50JG SERIES_B2603.pdf", "sec": 1.71, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBJL15J_C2606.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "GBJL25J_D2606.pdf", "sec": 1.45, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "GBJL45J_D2606.pdf", "sec": 1.4, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "GBL005 SERIES_K2103.pdf", "sec": 2.17, "pages": 5, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "GBL201 SERIES_J2103.pdf", "sec": 2.03, "pages": 5, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "GBLA005 SERIES_E2103.pdf", "sec": 2.28, "pages": 5, "tables": 6, "numbers": 63, "matched": 63}
+{"pdf": "GBPC15_25_35 SERIES_M2211.pdf", "sec": 2.03, "pages": 7, "tables": 5, "numbers": 62, "matched": 62}
+{"pdf": "GBPC40_50 SERIES_G2211.pdf", "sec": 1.93, "pages": 6, "tables": 5, "numbers": 52, "matched": 52}
+{"pdf": "GBU1001 SERIES_M2103.pdf", "sec": 2.18, "pages": 5, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "GBU1005-K SERIES_B2305.pdf", "sec": 1.52, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "GBU10JG SERIES_A2507.pdf", "sec": 1.42, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU10JGA SERIES_A2507.pdf", "sec": 1.42, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU1505 SERIES_B2305.pdf", "sec": 1.41, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "GBU15JG SERIES_A2507.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU15JGA SERIES_A2507.pdf", "sec": 4.57, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU15KGLV_A2507.pdf", "sec": 4.49, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBU15L05 SERIES_C2103.pdf", "sec": 7.02, "pages": 5, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "GBU20KGLV_A2507.pdf", "sec": 4.34, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBU2504 SERIES_E2205.pdf", "sec": 6.62, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "GBU25JG SERIES_A2507.pdf", "sec": 5.31, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU25JGA SERIES_A2507.pdf", "sec": 4.76, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "GBU25KGLV_A2507.pdf", "sec": 4.32, "pages": 5, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "GBU401 SERIES_M2103.pdf", "sec": 6.19, "pages": 5, "tables": 7, "numbers": 77, "matched": 77}
+{"pdf": "GBU404-K SERIES_E2103.pdf", "sec": 2.71, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "GBU601 SERIES_N2103.pdf", "sec": 2.77, "pages": 5, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "GBU604-K SERIES_E2103.pdf", "sec": 2.45, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "GBU801 SERIES_M2103.pdf", "sec": 2.8, "pages": 5, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "GBU804-K SERIES_F2103.pdf", "sec": 6.02, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "GBUL15J_C2606.pdf", "sec": 4.41, "pages": 5, "tables": 5, "numbers": 35, "matched": 35}
+{"pdf": "GBUL25J_D2606.pdf", "sec": 4.47, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "GP1001 SERIES_G2104.pdf", "sec": 6.71, "pages": 5, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "GP1601 SERIES_G2104.pdf", "sec": 6.77, "pages": 5, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "GPA801 SERIES_G2103.pdf", "sec": 3.4, "pages": 5, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "GPAS1001 SERIES_D2211.pdf", "sec": 4.61, "pages": 5, "tables": 7, "numbers": 55, "matched": 55}
+{"pdf": "GS10DC SERIES_B2509.pdf", "sec": 5.53, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS12DC SERIES_B2509.pdf", "sec": 6.02, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS15DC SERIES_B2509.pdf", "sec": 5.78, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS15DFL SERIES_A2509.pdf", "sec": 5.74, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS1D SERIES_A2509.pdf", "sec": 6.49, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS1DB SERIES_A2509.pdf", "sec": 4.68, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS1DFL SERIES_A2509.pdf", "sec": 2.05, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS1Z_A2510.pdf", "sec": 1.9, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "GS2D SERIES_A2509.pdf", "sec": 2.02, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS2DA SERIES_A2509.pdf", "sec": 2.02, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS2ZA_A2510.pdf", "sec": 1.64, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "GS3D SERIES_B2509.pdf", "sec": 2.08, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS3DB SERIES_A2509.pdf", "sec": 2.09, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS4D SERIES_B2509.pdf", "sec": 1.98, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS5D SERIES_B2509.pdf", "sec": 2.09, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GS8DC SERIES_B2509.pdf", "sec": 1.94, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "GSDFL SERIES_A2509.pdf", "sec": 2.07, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "HDBL101G SERIES_G2103.pdf", "sec": 2.52, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "HDBLS101G SERIES_G2103.pdf", "sec": 2.71, "pages": 6, "tables": 7, "numbers": 50, "matched": 50}
+{"pdf": "HER1001G SERIES_I2104.pdf", "sec": 2.84, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HER101G SERIES_L2104.pdf", "sec": 2.52, "pages": 6, "tables": 6, "numbers": 60, "matched": 60}
+{"pdf": "HER101G-K SERIES_B2104.pdf", "sec": 2.35, "pages": 6, "tables": 6, "numbers": 61, "matched": 61}
+{"pdf": "HER151G SERIES_I2105.pdf", "sec": 2.73, "pages": 6, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "HER151G-T SERIES_B2105.pdf", "sec": 2.31, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HER157G-K SERIES_B2105.pdf", "sec": 1.88, "pages": 6, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "HER1601G SERIES_J2104.pdf", "sec": 2.99, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HER1601PT SERIES_H2103.pdf", "sec": 2.71, "pages": 6, "tables": 5, "numbers": 63, "matched": 63}
+{"pdf": "HER201G SERIES_G2105.pdf", "sec": 2.48, "pages": 6, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "HER201G-T SERIES_B2105.pdf", "sec": 2.3, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HER207G-K SERIES_D2106.pdf", "sec": 1.86, "pages": 6, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "HER3001PT SERIES_I2103.pdf", "sec": 2.83, "pages": 6, "tables": 6, "numbers": 56, "matched": 56}
+{"pdf": "HER301G SERIES_I2105.pdf", "sec": 2.45, "pages": 6, "tables": 6, "numbers": 53, "matched": 53}
+{"pdf": "HER301G-K SERIES_C2105.pdf", "sec": 2.48, "pages": 6, "tables": 6, "numbers": 57, "matched": 57}
+{"pdf": "HER3L03G SERIES_C2105.pdf", "sec": 2.89, "pages": 6, "tables": 6, "numbers": 73, "matched": 73}
+{"pdf": "HER601G SERIES_H2104.pdf", "sec": 2.4, "pages": 6, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "HERA801G SERIES_J2103.pdf", "sec": 2.8, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HERAF1001G SERIES_I2105.pdf", "sec": 3.05, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HERAF1601G SERIES_K2105.pdf", "sec": 2.67, "pages": 6, "tables": 6, "numbers": 44, "matched": 44}
+{"pdf": "HERAF801G SERIES_K2105.pdf", "sec": 6.96, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HERF1001G SERIES_I2105.pdf", "sec": 8.17, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HERF1007GA SERIES_B2105.pdf", "sec": 6.32, "pages": 6, "tables": 6, "numbers": 32, "matched": 32}
+{"pdf": "HERF1601G SERIES_I2105.pdf", "sec": 8.07, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "HS15DLW SERIES_C2103.pdf", "sec": 8.89, "pages": 6, "tables": 7, "numbers": 76, "matched": 76}
+{"pdf": "HS15DLWH SERIES_A2103.pdf", "sec": 8.77, "pages": 6, "tables": 7, "numbers": 76, "matched": 76}
+{"pdf": "HS1A SERIES_M2401.pdf", "sec": 6.5, "pages": 6, "tables": 5, "numbers": 51, "matched": 51}
+{"pdf": "HS1AFL SERIES_B2103.pdf", "sec": 8.91, "pages": 6, "tables": 7, "numbers": 75, "matched": 75}
+{"pdf": "HS1AH SERIES_B2401.pdf", "sec": 6.18, "pages": 6, "tables": 5, "numbers": 51, "matched": 51}
+{"pdf": "HS1AL SERIES_C2103.pdf", "sec": 4.44, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS1ALH SERIES_A2103.pdf", "sec": 2.66, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS1D-K SERIES_F2111.pdf", "sec": 3.16, "pages": 6, "tables": 7, "numbers": 43, "matched": 43}
+{"pdf": "HS1DAL SERIES_D2103.pdf", "sec": 4.98, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "HS1DALH SERIES_B2103.pdf", "sec": 2.92, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "HS1DF-T SERIES_B2103.pdf", "sec": 2.27, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS1DFS SERIES_C2103.pdf", "sec": 7.52, "pages": 7, "tables": 8, "numbers": 84, "matched": 84}
+{"pdf": "HS1DFSH SERIES_B2103.pdf", "sec": 2.72, "pages": 7, "tables": 7, "numbers": 84, "matched": 84}
+{"pdf": "HS1DLW SERIES_C2103.pdf", "sec": 2.55, "pages": 5, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "HS1DLWH SERIES_A2103.pdf", "sec": 2.03, "pages": 5, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "HS1QALH_A2505.pdf", "sec": 1.46, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1QAL_A2505.pdf", "sec": 1.64, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1QBH_A2408.pdf", "sec": 1.39, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "HS1QB_A2408.pdf", "sec": 1.6, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1QFSH_A2505.pdf", "sec": 1.68, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "HS1QFS_A2505.pdf", "sec": 1.53, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "HS1QH_A2408.pdf", "sec": 1.36, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1Q_A2408.pdf", "sec": 1.48, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1YBH_A2501.pdf", "sec": 1.29, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1YB_A2501.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1YH_A2501.pdf", "sec": 1.43, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS1Y_A2501.pdf", "sec": 1.32, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "HS2A SERIES_L2102.pdf", "sec": 2.17, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS2AA SERIES_J2102.pdf", "sec": 2.18, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS2AAH SERIES_A2102.pdf", "sec": 2.16, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS2AH SERIES_A2102.pdf", "sec": 2.99, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS2D-T SERIES_C2102.pdf", "sec": 2.92, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS2DA-T SERIES_D2111.pdf", "sec": 2.68, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS2DAF-T SERIES_B2103.pdf", "sec": 2.82, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS2DAL SERIES_C2103.pdf", "sec": 3.04, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "HS2DALH SERIES_B2103.pdf", "sec": 3.15, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "HS2DFL SERIES_B2103.pdf", "sec": 2.76, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS2DFS SERIES_C2103.pdf", "sec": 3.14, "pages": 7, "tables": 7, "numbers": 84, "matched": 84}
+{"pdf": "HS2DFSH SERIES_B2103.pdf", "sec": 3.06, "pages": 7, "tables": 7, "numbers": 84, "matched": 84}
+{"pdf": "HS3A SERIES_K2102.pdf", "sec": 2.27, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS3AB SERIES_L2102.pdf", "sec": 2.24, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS3ABH SERIES_A2102.pdf", "sec": 2.85, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS3AH SERIES_A2102.pdf", "sec": 2.4, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "HS3D-K SERIES_C2602.pdf", "sec": 2.12, "pages": 6, "tables": 5, "numbers": 71, "matched": 71}
+{"pdf": "HS3DB-K SERIES_C2102.pdf", "sec": 2.26, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "HS5A SERIES_K2102.pdf", "sec": 1.94, "pages": 6, "tables": 7, "numbers": 49, "matched": 49}
+{"pdf": "HS5AH SERIES_A2102.pdf", "sec": 2.14, "pages": 6, "tables": 7, "numbers": 49, "matched": 49}
+{"pdf": "HS5D-A SERIES_C2602.pdf", "sec": 1.83, "pages": 6, "tables": 5, "numbers": 73, "matched": 73}
+{"pdf": "HSDLW SERIES_C2103.pdf", "sec": 2.13, "pages": 6, "tables": 7, "numbers": 76, "matched": 76}
+{"pdf": "HSDLWH SERIES_A2103.pdf", "sec": 2.11, "pages": 6, "tables": 7, "numbers": 76, "matched": 76}
+{"pdf": "HT11G SERIES_H2104.pdf", "sec": 1.75, "pages": 6, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "KBL401G SERIES_J2308.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "KBL601G SERIES_H2308.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "KBPF204G SERIES_B2103.pdf", "sec": 1.51, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "KBPF304G SERIES_B2103.pdf", "sec": 1.56, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "KBPF404G SERIES_B2103.pdf", "sec": 1.57, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "KBU1001G SERIES_J2103.pdf", "sec": 1.67, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "KBU401G SERIES_J2103.pdf", "sec": 1.77, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "KBU601G SERIES_J2103.pdf", "sec": 1.53, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "KBU801G SERIES_J2103.pdf", "sec": 1.59, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "LL4148 SERIES_K2301.pdf", "sec": 1.3, "pages": 6, "tables": 5, "numbers": 56, "matched": 56}
+{"pdf": "LSMB24CAH_A2508.pdf", "sec": 0.7, "pages": 5, "tables": 4, "numbers": 22, "matched": 22}
+{"pdf": "LSMC24CAH_C2512.pdf", "sec": 0.75, "pages": 5, "tables": 4, "numbers": 22, "matched": 22}
+{"pdf": "LTD7S24CAH_A2409.pdf", "sec": 0.83, "pages": 5, "tables": 4, "numbers": 30, "matched": 29}
+{"pdf": "M3Z2V0C SERIES_B2008.pdf", "sec": 3.51, "pages": 6, "tables": 6, "numbers": 387, "matched": 387}
+{"pdf": "MBR1035 SERIES_M2103.pdf", "sec": 2.16, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "MBR1035CT SERIES_O2104.pdf", "sec": 2.52, "pages": 7, "tables": 8, "numbers": 95, "matched": 95}
+{"pdf": "MBR1045CT-Y SERIES_B2104.pdf", "sec": 2.46, "pages": 6, "tables": 6, "numbers": 65, "matched": 65}
+{"pdf": "MBR10H100CT SERIES_J2104.pdf", "sec": 1.9, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "MBR10L100CT_H2104.pdf", "sec": 1.45, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBR1535CT SERIES_I2104.pdf", "sec": 2.61, "pages": 7, "tables": 8, "numbers": 83, "matched": 83}
+{"pdf": "MBR1545CT-Y SERIES_D2104.pdf", "sec": 2.34, "pages": 6, "tables": 6, "numbers": 60, "matched": 60}
+{"pdf": "MBR1635 SERIES_K2103.pdf", "sec": 2.21, "pages": 6, "tables": 6, "numbers": 72, "matched": 72}
+{"pdf": "MBR2035CT SERIES_M2104.pdf", "sec": 2.84, "pages": 7, "tables": 8, "numbers": 93, "matched": 93}
+{"pdf": "MBR2035CT-Y SERIES_B2104.pdf", "sec": 2.56, "pages": 7, "tables": 8, "numbers": 90, "matched": 90}
+{"pdf": "MBR2035PT SERIES_H2103.pdf", "sec": 2.58, "pages": 7, "tables": 8, "numbers": 92, "matched": 92}
+{"pdf": "MBR20H100CT SERIES_I2104.pdf", "sec": 1.67, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "MBR20L100CT SERIES_H2104.pdf", "sec": 1.82, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "MBR2535CT SERIES_K2104.pdf", "sec": 2.38, "pages": 7, "tables": 6, "numbers": 77, "matched": 77}
+{"pdf": "MBR2545CT-Y SERIES_B2104.pdf", "sec": 2.2, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "MBR3035CT SERIES_K2104.pdf", "sec": 2.55, "pages": 7, "tables": 6, "numbers": 80, "matched": 80}
+{"pdf": "MBR3035PT SERIES_K2103.pdf", "sec": 2.75, "pages": 7, "tables": 8, "numbers": 92, "matched": 92}
+{"pdf": "MBR3045CT-Y SERIES_D2104.pdf", "sec": 2.29, "pages": 6, "tables": 6, "numbers": 65, "matched": 65}
+{"pdf": "MBR30H100CT_K2104.pdf", "sec": 1.46, "pages": 6, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "MBR30L120CT_H2104.pdf", "sec": 1.5, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBR30L45CT SERIES_L2104.pdf", "sec": 2.0, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "MBR4035PT SERIES_I2103.pdf", "sec": 2.6, "pages": 7, "tables": 8, "numbers": 89, "matched": 89}
+{"pdf": "MBR6035PT SERIES_H2103.pdf", "sec": 2.11, "pages": 7, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "MBR6040CT_E2112.pdf", "sec": 1.49, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBR735 SERIES_K2103.pdf", "sec": 2.33, "pages": 7, "tables": 6, "numbers": 74, "matched": 74}
+{"pdf": "MBRAD10100DH_A2303.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD10100H_A2303.pdf", "sec": 1.16, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD10150DH_A2303.pdf", "sec": 1.11, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD10150H_A2303.pdf", "sec": 1.16, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD10200DH_A2303.pdf", "sec": 1.13, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD10200H_A2303.pdf", "sec": 1.18, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD1045DH_A2303.pdf", "sec": 1.19, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD1045H_A2302.pdf", "sec": 1.15, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD1060DH_A2303.pdf", "sec": 1.15, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD1060H_A2302.pdf", "sec": 1.41, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD15100DH_A2303.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD15100H_A2303.pdf", "sec": 1.39, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD15150DH_A2303.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD15150H_A2303.pdf", "sec": 1.3, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD15200DH_A2303.pdf", "sec": 1.19, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD1545DH_A2303.pdf", "sec": 1.2, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD1545H_A2303.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD1560DH_A2303.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "MBRAD1560H_A2303.pdf", "sec": 1.23, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD20100H_A2303.pdf", "sec": 1.34, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD20150H_A2303.pdf", "sec": 1.46, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD20200H_A2303.pdf", "sec": 1.32, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD2045H_A2303.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD2060H_A2303.pdf", "sec": 1.23, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD5100H_A2303.pdf", "sec": 1.28, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD5150H_A2303.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD5200H_A2303.pdf", "sec": 1.33, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD545H_A2302.pdf", "sec": 1.41, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD560H_A2302.pdf", "sec": 1.5, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD8100H_A2303.pdf", "sec": 1.75, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD8150H_A2303.pdf", "sec": 1.38, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD8200H_A2303.pdf", "sec": 1.29, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD845H_A2302.pdf", "sec": 1.34, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRAD860H_A2302.pdf", "sec": 1.33, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MBRF1035 SERIES_M2105.pdf", "sec": 2.67, "pages": 7, "tables": 7, "numbers": 85, "matched": 85}
+{"pdf": "MBRF1035CT SERIES_M2105.pdf", "sec": 3.3, "pages": 7, "tables": 8, "numbers": 94, "matched": 94}
+{"pdf": "MBRF1045CT-Y SERIES_B2105.pdf", "sec": 2.61, "pages": 6, "tables": 6, "numbers": 63, "matched": 63}
+{"pdf": "MBRF10H100CT SERIES_I2105.pdf", "sec": 2.36, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "MBRF10L100CT_H2105.pdf", "sec": 1.98, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBRF1535CT SERIES_J2105.pdf", "sec": 3.37, "pages": 7, "tables": 8, "numbers": 84, "matched": 84}
+{"pdf": "MBRF1545CT-Y SERIES_D2105.pdf", "sec": 2.38, "pages": 7, "tables": 7, "numbers": 64, "matched": 64}
+{"pdf": "MBRF1635 SERIES_K2105.pdf", "sec": 2.34, "pages": 6, "tables": 6, "numbers": 73, "matched": 73}
+{"pdf": "MBRF16H45_G2106.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 28, "matched": 28}
+{"pdf": "MBRF2035 SERIES_K2105.pdf", "sec": 1.99, "pages": 6, "tables": 6, "numbers": 64, "matched": 64}
+{"pdf": "MBRF2035CT SERIES_O2105.pdf", "sec": 3.08, "pages": 8, "tables": 8, "numbers": 104, "matched": 104}
+{"pdf": "MBRF2045CT-Y SERIES_C2105.pdf", "sec": 6.56, "pages": 7, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "MBRF20H100CT SERIES_I2105.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "MBRF20L100CT SERIES_G2105.pdf", "sec": 1.9, "pages": 6, "tables": 6, "numbers": 55, "matched": 55}
+{"pdf": "MBRF2535CT SERIES_L2105.pdf", "sec": 2.47, "pages": 7, "tables": 7, "numbers": 75, "matched": 75}
+{"pdf": "MBRF2545CT-Y SERIES_B2105.pdf", "sec": 2.33, "pages": 6, "tables": 6, "numbers": 61, "matched": 61}
+{"pdf": "MBRF3035CT SERIES_M2105.pdf", "sec": 2.56, "pages": 7, "tables": 8, "numbers": 95, "matched": 95}
+{"pdf": "MBRF3045CT-Y SERIES_E2105.pdf", "sec": 2.4, "pages": 7, "tables": 7, "numbers": 75, "matched": 75}
+{"pdf": "MBRF3080CT_E2105.pdf", "sec": 1.59, "pages": 6, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "MBRF30L120CT_F2105.pdf", "sec": 1.62, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBRF30L45CT_L2105.pdf", "sec": 1.53, "pages": 6, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "MBRF5100 SERIES_H2105.pdf", "sec": 1.74, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "MBRF735 SERIES_K2105.pdf", "sec": 2.41, "pages": 7, "tables": 6, "numbers": 73, "matched": 73}
+{"pdf": "MBRF835CT SERIES_J2105.pdf", "sec": 1.8, "pages": 6, "tables": 6, "numbers": 61, "matched": 61}
+{"pdf": "MBRS1035 SERIES_K2103.pdf", "sec": 2.68, "pages": 7, "tables": 8, "numbers": 75, "matched": 75}
+{"pdf": "MBRS1035CT SERIES_M2103.pdf", "sec": 2.84, "pages": 7, "tables": 9, "numbers": 81, "matched": 81}
+{"pdf": "MBRS1035CTH SERIES_A2103.pdf", "sec": 2.81, "pages": 7, "tables": 9, "numbers": 81, "matched": 81}
+{"pdf": "MBRS1035H SERIES_A2103.pdf", "sec": 2.79, "pages": 7, "tables": 8, "numbers": 74, "matched": 74}
+{"pdf": "MBRS1045CT-Y SERIES_C2103.pdf", "sec": 2.78, "pages": 6, "tables": 7, "numbers": 63, "matched": 63}
+{"pdf": "MBRS10H100CT SERIES_K2409.pdf", "sec": 1.61, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "MBRS10H100CTH SERIES_B2409.pdf", "sec": 1.73, "pages": 6, "tables": 5, "numbers": 51, "matched": 51}
+{"pdf": "MBRS1535CT SERIES_L2103.pdf", "sec": 3.04, "pages": 7, "tables": 9, "numbers": 75, "matched": 75}
+{"pdf": "MBRS1535CTH SERIES_A2103.pdf", "sec": 3.21, "pages": 7, "tables": 9, "numbers": 75, "matched": 75}
+{"pdf": "MBRS1545CT-Y SERIES_D2103.pdf", "sec": 2.62, "pages": 6, "tables": 7, "numbers": 61, "matched": 61}
+{"pdf": "MBRS15H45CTH_A2103.pdf", "sec": 1.9, "pages": 6, "tables": 7, "numbers": 43, "matched": 43}
+{"pdf": "MBRS15H45CT_H2103.pdf", "sec": 1.76, "pages": 6, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "MBRS1635 SERIES_K2103.pdf", "sec": 2.43, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "MBRS1635H SERIES_A2103.pdf", "sec": 2.52, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "MBRS2035CT SERIES_N2103.pdf", "sec": 3.16, "pages": 7, "tables": 9, "numbers": 82, "matched": 82}
+{"pdf": "MBRS2035CTH SERIES_A2103.pdf", "sec": 3.72, "pages": 7, "tables": 9, "numbers": 82, "matched": 82}
+{"pdf": "MBRS2045CT-Y SERIES_E2201.pdf", "sec": 2.95, "pages": 6, "tables": 7, "numbers": 57, "matched": 57}
+{"pdf": "MBRS20H100CT SERIES_K2409.pdf", "sec": 1.84, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "MBRS20H100CTH SERIES_B2409.pdf", "sec": 2.11, "pages": 6, "tables": 5, "numbers": 51, "matched": 51}
+{"pdf": "MBRS2535CT SERIES_N2103.pdf", "sec": 3.79, "pages": 7, "tables": 9, "numbers": 83, "matched": 83}
+{"pdf": "MBRS2535CTH SERIES_A2103.pdf", "sec": 3.8, "pages": 7, "tables": 9, "numbers": 83, "matched": 83}
+{"pdf": "MBRS25H45CTH_A2103.pdf", "sec": 2.19, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS25H45CT_H2103.pdf", "sec": 2.13, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS3045CTH_A2103.pdf", "sec": 2.14, "pages": 6, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS3045CT_H2103.pdf", "sec": 1.98, "pages": 6, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS30H45CTH_A2103.pdf", "sec": 1.53, "pages": 6, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS30H45CT_K2103.pdf", "sec": 1.6, "pages": 6, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "MBRS4060CTH_A2103.pdf", "sec": 1.57, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "MBRS4060CT_K2103.pdf", "sec": 1.56, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "MBRS6040CTH_A2103.pdf", "sec": 1.53, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "MBRS6040CT_G2103.pdf", "sec": 1.51, "pages": 6, "tables": 7, "numbers": 34, "matched": 34}
+{"pdf": "MBS2 SERIES_Q2309.pdf", "sec": 1.34, "pages": 5, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "MBS6-K SERIES_G2602.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "MMBD3004 SERIES_C2001.pdf", "sec": 1.72, "pages": 5, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "MMBD4148 SERIES_F2112.pdf", "sec": 1.64, "pages": 5, "tables": 7, "numbers": 43, "matched": 43}
+{"pdf": "MMSZ4678 SERIES_A2311.pdf", "sec": 2.8, "pages": 6, "tables": 6, "numbers": 255, "matched": 255}
+{"pdf": "MMSZ5221B SERIES_I2503.pdf", "sec": 3.15, "pages": 7, "tables": 8, "numbers": 306, "matched": 306}
+{"pdf": "MMSZ5221BH SERIES_A2503.pdf", "sec": 3.64, "pages": 6, "tables": 8, "numbers": 409, "matched": 409}
+{"pdf": "MUR105S SERIES_L2102.pdf", "sec": 1.84, "pages": 6, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "MUR105SH SERIES_A2102.pdf", "sec": 2.78, "pages": 7, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "MUR160 SERIES_L2107.pdf", "sec": 1.47, "pages": 6, "tables": 6, "numbers": 54, "matched": 54}
+{"pdf": "MUR160A SERIES_I2302.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "MUR1620CT SERIES_I2104.pdf", "sec": 1.97, "pages": 6, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "MUR260_D2105.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "MUR305S SERIES_J2212.pdf", "sec": 1.42, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "MUR305SB SERIES_C2102.pdf", "sec": 1.7, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "MUR305SBH SERIES_A2102.pdf", "sec": 1.87, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "MUR305SH SERIES_B2212.pdf", "sec": 1.64, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "MUR340SB SERIES_D2211.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "MUR340SBH SERIES_C2605.pdf", "sec": 1.49, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "MUR420 SERIES_J2105.pdf", "sec": 1.54, "pages": 6, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "MUR420S SERIES_F2102.pdf", "sec": 1.77, "pages": 6, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "MUR420SH SERIES_A2102.pdf", "sec": 1.77, "pages": 6, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "MUR4L20 SERIES_C2308.pdf", "sec": 1.3, "pages": 6, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "MUR820 SERIES_K2103.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "MUR8L60_B2103.pdf", "sec": 1.65, "pages": 5, "tables": 6, "numbers": 28, "matched": 28}
+{"pdf": "MURF1620CT SERIES_K2105.pdf", "sec": 2.09, "pages": 6, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "MURF880G_C2105.pdf", "sec": 1.72, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "MURF8L60_C2105.pdf", "sec": 1.82, "pages": 5, "tables": 6, "numbers": 28, "matched": 28}
+{"pdf": "P2500M_D2511.pdf", "sec": 1.26, "pages": 5, "tables": 6, "numbers": 31, "matched": 31}
+{"pdf": "P2500Y_B2607.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "P4KE SERIES_N2104.pdf", "sec": 7.7, "pages": 8, "tables": 7, "numbers": 823, "matched": 823}
+{"pdf": "P4SMA SERIES_S2102.pdf", "sec": 6.22, "pages": 7, "tables": 7, "numbers": 626, "matched": 626}
+{"pdf": "P4SMAH SERIES_A2102.pdf", "sec": 7.19, "pages": 7, "tables": 7, "numbers": 626, "matched": 626}
+{"pdf": "P6KE SERIES_P2203.pdf", "sec": 8.12, "pages": 8, "tables": 6, "numbers": 821, "matched": 821}
+{"pdf": "P6SMB SERIES_Q2209.pdf", "sec": 7.78, "pages": 7, "tables": 8, "numbers": 639, "matched": 639}
+{"pdf": "P6SMBH SERIES_A2102.pdf", "sec": 7.36, "pages": 7, "tables": 8, "numbers": 637, "matched": 637}
+{"pdf": "PE1BA SERIES_A2301.pdf", "sec": 1.72, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PE1BAH SERIES_A2212.pdf", "sec": 1.75, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PE2BB SERIES_A2301.pdf", "sec": 1.76, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PE2BBH SERIES_A2212.pdf", "sec": 1.76, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PE4BC SERIES_A2301.pdf", "sec": 1.79, "pages": 5, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "PE4BCH SERIES_A2212.pdf", "sec": 1.81, "pages": 5, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "PHAD10JH_A2412.pdf", "sec": 1.59, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD10J_A2412.pdf", "sec": 1.43, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD12JH_A2412.pdf", "sec": 1.78, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD12J_A2412.pdf", "sec": 1.61, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD6JH_A2412.pdf", "sec": 1.54, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD6J_A2412.pdf", "sec": 1.54, "pages": 5, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "PHAD8JH_A2412.pdf", "sec": 1.38, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PHAD8J_A2412.pdf", "sec": 1.49, "pages": 5, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "PLAD10JH_B2606.pdf", "sec": 1.41, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "PLAD10J_B2606.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "PLAD15Q_B2606.pdf", "sec": 1.47, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "PLAH30Q_C2607.pdf", "sec": 1.28, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "PLAH60Q_C2607.pdf", "sec": 1.38, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "PLDS20JH_E2606.pdf", "sec": 1.31, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "PLDS20J_E2606.pdf", "sec": 1.3, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "PLDS3060H_C2510.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "PLDS3080H_E2510.pdf", "sec": 1.14, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "PLDS30JH_E2606.pdf", "sec": 1.36, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "PLDS30J_E2606.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "PLDS30Q_A2509.pdf", "sec": 1.39, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PSAD15JH_A2411.pdf", "sec": 1.5, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PSAD15J_A2411.pdf", "sec": 1.5, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1BA SERIES_A2210.pdf", "sec": 2.16, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BAH SERIES_B2110.pdf", "sec": 2.18, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BB SERIES_A2510.pdf", "sec": 1.71, "pages": 5, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "PU1BBH SERIES_A2510.pdf", "sec": 1.49, "pages": 5, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "PU1BFS SERIES_A2210.pdf", "sec": 1.8, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU1BFSH SERIES_A2109.pdf", "sec": 2.14, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU1BLS SERIES_A2210.pdf", "sec": 1.86, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BLSH SERIES_B2109.pdf", "sec": 1.95, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BLW SERIES_A2210.pdf", "sec": 1.97, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BLWH SERIES_A2109.pdf", "sec": 1.69, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU1BM SERIES_B2103.pdf", "sec": 1.86, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PU1BMH SERIES_C2103.pdf", "sec": 1.91, "pages": 5, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "PU1JAH_A2409.pdf", "sec": 1.31, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1JA_B2412.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1JFSH_A2409.pdf", "sec": 1.39, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU1JFS_B2412.pdf", "sec": 1.27, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU1JLSH_A2409.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1JLS_B2412.pdf", "sec": 1.32, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1JLWH_A2409.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU1JLW_B2412.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2BA SERIES_A2210.pdf", "sec": 1.77, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BAH SERIES_C2110.pdf", "sec": 1.63, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BB SERIES_A2210.pdf", "sec": 1.79, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BBH SERIES_B2109.pdf", "sec": 1.65, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BFS SERIES_A2210.pdf", "sec": 1.66, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU2BFSH SERIES_B2109.pdf", "sec": 1.69, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU2BLS SERIES_A2210.pdf", "sec": 1.78, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BLSH SERIES_B2109.pdf", "sec": 1.73, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BLW SERIES_A2210.pdf", "sec": 1.63, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BLWH SERIES_B2109.pdf", "sec": 1.69, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU2BM SERIES_B2103.pdf", "sec": 1.87, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PU2BMH SERIES_C2103.pdf", "sec": 2.12, "pages": 5, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "PU2JAH_A2412.pdf", "sec": 1.2, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JA_B2412.pdf", "sec": 1.38, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JBH_A2412.pdf", "sec": 1.37, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JB_B2412.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JFSH_A2412.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU2JFS_B2412.pdf", "sec": 1.23, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU2JLSH_A2412.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JLS_B2412.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JLWH_A2412.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU2JLW_B2412.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3BA SERIES_A2210.pdf", "sec": 1.71, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BAH SERIES_B2109.pdf", "sec": 1.68, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BB SERIES_A2210.pdf", "sec": 1.75, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BBH SERIES_B2109.pdf", "sec": 1.74, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BC SERIES_A2210.pdf", "sec": 1.74, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BCH SERIES_C2110.pdf", "sec": 1.66, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU3BFS SERIES_A2210.pdf", "sec": 1.79, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU3BFSH SERIES_B2109.pdf", "sec": 1.66, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "PU3JAH_A2409.pdf", "sec": 1.19, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JA_B2412.pdf", "sec": 1.17, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JBH_A2409.pdf", "sec": 1.18, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JB_B2412.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JCH_A2409.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JC_B2412.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU3JFSH_A2409.pdf", "sec": 1.17, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU3JFS_B2412.pdf", "sec": 1.18, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PU4BB SERIES_A2210.pdf", "sec": 1.81, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU4BBH SERIES_B2109.pdf", "sec": 1.63, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU4BC SERIES_A2210.pdf", "sec": 1.69, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU4BCH SERIES_C2110.pdf", "sec": 1.73, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU6BB SERIES_A2210.pdf", "sec": 1.71, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU6BBH SERIES_B2109.pdf", "sec": 1.71, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU6BC SERIES_A2210.pdf", "sec": 1.67, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU6BCH SERIES_C2110.pdf", "sec": 1.6, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "PU6JBH_A2412.pdf", "sec": 1.16, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU6JB_B2412.pdf", "sec": 1.19, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU6JCH_A2412.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU6JC_B2412.pdf", "sec": 1.31, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU8JCH_A2409.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PU8JC_B2412.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PUAD10BC SERIES_A2302.pdf", "sec": 1.48, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD10BCH SERIES_A2302.pdf", "sec": 1.47, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD4B SERIES_A2302.pdf", "sec": 1.34, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD4BH SERIES_A2302.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD6BC SERIES_A2302.pdf", "sec": 1.36, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD6BCH SERIES_A2302.pdf", "sec": 1.46, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD6JH_A2411.pdf", "sec": 1.2, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PUAD6J_A2411.pdf", "sec": 1.31, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PUAD8B SERIES_A2302.pdf", "sec": 1.32, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD8BC SERIES_A2302.pdf", "sec": 1.62, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD8BCH SERIES_A2302.pdf", "sec": 1.37, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD8BH SERIES_A2302.pdf", "sec": 1.51, "pages": 5, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "PUAD8JH_A2411.pdf", "sec": 1.24, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "PUAD8J_A2411.pdf", "sec": 1.32, "pages": 5, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "PUUP10JH_A2412.pdf", "sec": 1.42, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PUUP10J_B2412.pdf", "sec": 1.65, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "PUUP12JH_A2409.pdf", "sec": 1.7, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP12J_B2412.pdf", "sec": 1.61, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP3B SERIES_A2210.pdf", "sec": 2.64, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP3BH SERIES_B2109.pdf", "sec": 2.6, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP3JH_A2409.pdf", "sec": 1.5, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP3J_B2412.pdf", "sec": 1.56, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP4B SERIES_A2210.pdf", "sec": 2.43, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP4BH SERIES_B2109.pdf", "sec": 2.82, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP6B SERIES_A2210.pdf", "sec": 2.41, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP6BH SERIES_C2109.pdf", "sec": 2.58, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP6JH_A2412.pdf", "sec": 1.34, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP6J_B2412.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP8B SERIES_A2210.pdf", "sec": 2.05, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP8BH SERIES_A2111.pdf", "sec": 2.05, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "PUUP8JH_A2409.pdf", "sec": 1.31, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "PUUP8J_B2412.pdf", "sec": 1.32, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RABS15M_D2103.pdf", "sec": 1.54, "pages": 5, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "RABS20M_C2304.pdf", "sec": 1.78, "pages": 5, "tables": 8, "numbers": 41, "matched": 41}
+{"pdf": "RB495D_G14.pdf", "sec": 1.45, "pages": 5, "tables": 6, "numbers": 56, "matched": 56}
+{"pdf": "RB500V-40H_A2502.pdf", "sec": 1.17, "pages": 5, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "RB500V-40_E2304.pdf", "sec": 1.09, "pages": 5, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "RB520G-30_E2510.pdf", "sec": 0.89, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "RB520S-30_D2510.pdf", "sec": 0.9, "pages": 5, "tables": 5, "numbers": 28, "matched": 28}
+{"pdf": "RB520SM5-40_B2606.pdf", "sec": 0.88, "pages": 5, "tables": 4, "numbers": 30, "matched": 30}
+{"pdf": "RB521S-30_D2510.pdf", "sec": 0.87, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "RB551V-40_A14.pdf", "sec": 1.05, "pages": 4, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "RB706F-40_C2102.pdf", "sec": 1.48, "pages": 6, "tables": 7, "numbers": 22, "matched": 22}
+{"pdf": "RB751M5-40_A2005.pdf", "sec": 1.23, "pages": 5, "tables": 6, "numbers": 26, "matched": 26}
+{"pdf": "RB751V-40WS_E2212.pdf", "sec": 1.07, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "RB751V-40_E1701.pdf", "sec": 1.4, "pages": 5, "tables": 8, "numbers": 68, "matched": 68}
+{"pdf": "RDBLS207G_B2103.pdf", "sec": 1.45, "pages": 5, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "RMB2S SERIES_I2103.pdf", "sec": 1.78, "pages": 6, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "RS1A SERIES_M2304.pdf", "sec": 1.57, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS1AFL SERIES_B2103.pdf", "sec": 2.17, "pages": 5, "tables": 7, "numbers": 63, "matched": 63}
+{"pdf": "RS1AH SERIES_B2304.pdf", "sec": 1.49, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS1AL SERIES_N2103.pdf", "sec": 1.81, "pages": 6, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "RS1ALH SERIES_A2103.pdf", "sec": 1.7, "pages": 6, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "RS1D-T SERIES_F2111.pdf", "sec": 1.73, "pages": 6, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "RS1DAL SERIES_C2304.pdf", "sec": 1.67, "pages": 6, "tables": 5, "numbers": 60, "matched": 60}
+{"pdf": "RS1DALH SERIES_C2304.pdf", "sec": 1.57, "pages": 6, "tables": 5, "numbers": 60, "matched": 60}
+{"pdf": "RS1DF-T SERIES_B2103.pdf", "sec": 2.38, "pages": 6, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "RS1DFS SERIES_D2304.pdf", "sec": 1.5, "pages": 5, "tables": 6, "numbers": 54, "matched": 54}
+{"pdf": "RS1DFSH SERIES_B2304.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 54, "matched": 54}
+{"pdf": "RS1DLW SERIES_C2103.pdf", "sec": 1.5, "pages": 5, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "RS1DLWH SERIES_A2103.pdf", "sec": 1.54, "pages": 5, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "RS1JLS SERIES_E2304.pdf", "sec": 1.17, "pages": 6, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "RS1JLSH SERIES_B2304.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "RS1JM SERIES_B2103.pdf", "sec": 1.63, "pages": 6, "tables": 7, "numbers": 32, "matched": 32}
+{"pdf": "RS2A SERIES_L2304.pdf", "sec": 1.87, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS2AA SERIES_I2304.pdf", "sec": 1.62, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS2AAH SERIES_B2304.pdf", "sec": 1.56, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS2AH SERIES_B2304.pdf", "sec": 1.62, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "RS2D-T SERIES_C2102.pdf", "sec": 2.25, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "RS2DA-T SERIES_D2111.pdf", "sec": 2.46, "pages": 6, "tables": 7, "numbers": 72, "matched": 72}
+{"pdf": "RS2DAF-T SERIES_B2103.pdf", "sec": 2.1, "pages": 6, "tables": 7, "numbers": 60, "matched": 60}
+{"pdf": "RS2DAL SERIES_C2304.pdf", "sec": 1.97, "pages": 6, "tables": 5, "numbers": 61, "matched": 61}
+{"pdf": "RS2DALH SERIES_C2304.pdf", "sec": 1.82, "pages": 6, "tables": 5, "numbers": 61, "matched": 61}
+{"pdf": "RS2DFL SERIES_B2103.pdf", "sec": 2.2, "pages": 6, "tables": 7, "numbers": 60, "matched": 60}
+{"pdf": "RS2DFS SERIES_C2304.pdf", "sec": 2.08, "pages": 6, "tables": 5, "numbers": 63, "matched": 63}
+{"pdf": "RS2DFSH SERIES_C2304.pdf", "sec": 2.21, "pages": 6, "tables": 5, "numbers": 63, "matched": 63}
+{"pdf": "RS3A SERIES_M2304.pdf", "sec": 1.75, "pages": 6, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "RS3A-K SERIES_C2602.pdf", "sec": 1.89, "pages": 5, "tables": 5, "numbers": 53, "matched": 53}
+{"pdf": "RS3AH SERIES_B2304.pdf", "sec": 1.85, "pages": 6, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "RS3DB-T SERIES_C2102.pdf", "sec": 3.29, "pages": 6, "tables": 7, "numbers": 70, "matched": 70}
+{"pdf": "RS3MFSH_B2304.pdf", "sec": 1.56, "pages": 5, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "RS3MFS_D2304.pdf", "sec": 1.48, "pages": 5, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "RS5D-T SERIES_C2602.pdf", "sec": 2.56, "pages": 6, "tables": 5, "numbers": 72, "matched": 72}
+{"pdf": "RSFAL SERIES_M2103.pdf", "sec": 2.37, "pages": 6, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "RSFALH SERIES_A2103.pdf", "sec": 2.4, "pages": 6, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "RTBS40M_B2103.pdf", "sec": 2.22, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "RTBS60M_A2111.pdf", "sec": 2.01, "pages": 5, "tables": 7, "numbers": 80, "matched": 79}
+{"pdf": "RYBS30M_B2103.pdf", "sec": 1.74, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "S10GC SERIES_D2102.pdf", "sec": 1.63, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S10GCH SERIES_A2102.pdf", "sec": 1.55, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S12GC SERIES_D2102.pdf", "sec": 1.69, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S12GCH SERIES_A2102.pdf", "sec": 1.47, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S15DLW SERIES_C2103.pdf", "sec": 1.73, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "S15DLWH SERIES_A2103.pdf", "sec": 1.65, "pages": 5, "tables": 7, "numbers": 50, "matched": 50}
+{"pdf": "S15GC SERIES_C2102.pdf", "sec": 1.47, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S15GCH SERIES_A2102.pdf", "sec": 1.45, "pages": 5, "tables": 7, "numbers": 35, "matched": 35}
+{"pdf": "S1A SERIES_S2102.pdf", "sec": 1.74, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S1AB SERIES_I2102.pdf", "sec": 1.74, "pages": 6, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "S1ABH SERIES_A2102.pdf", "sec": 1.6, "pages": 6, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "S1AH SERIES_A2102.pdf", "sec": 1.75, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S1AL SERIES_Q2108.pdf", "sec": 1.84, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "S1ALH SERIES_B2108.pdf", "sec": 1.6, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "S1D-K SERIES_E2102.pdf", "sec": 1.61, "pages": 6, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "S1D-T SERIES_E2102.pdf", "sec": 1.67, "pages": 6, "tables": 7, "numbers": 40, "matched": 40}
+{"pdf": "S1DAL SERIES_B2103.pdf", "sec": 1.87, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S1DALH SERIES_B2103.pdf", "sec": 1.75, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S1DF-T SERIES_B2103.pdf", "sec": 1.79, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S1DFS SERIES_C2103.pdf", "sec": 1.64, "pages": 5, "tables": 7, "numbers": 51, "matched": 51}
+{"pdf": "S1DFSH SERIES_B2306.pdf", "sec": 1.47, "pages": 5, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "S1DLS SERIES_H2103.pdf", "sec": 1.76, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S1DLSH SERIES_A2103.pdf", "sec": 1.72, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S1DLW SERIES_D2109.pdf", "sec": 1.67, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S1DLWH SERIES_B2109.pdf", "sec": 1.68, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S1GFL SERIES_E2103.pdf", "sec": 1.63, "pages": 6, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "S1GM SERIES_I2103.pdf", "sec": 1.49, "pages": 6, "tables": 7, "numbers": 32, "matched": 32}
+{"pdf": "S1GMH SERIES_A2103.pdf", "sec": 1.5, "pages": 6, "tables": 7, "numbers": 32, "matched": 32}
+{"pdf": "S1Q_B2102.pdf", "sec": 1.77, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S1YH_A2408.pdf", "sec": 1.14, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S1Y_A2408.pdf", "sec": 1.25, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S2A SERIES_N2102.pdf", "sec": 2.14, "pages": 6, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "S2AA SERIES_K2102.pdf", "sec": 1.75, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S2AAH SERIES_A2102.pdf", "sec": 1.91, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S2AH SERIES_A2102.pdf", "sec": 1.99, "pages": 6, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "S2D-T SERIES_C2102.pdf", "sec": 2.04, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DA-T SERIES_D2111.pdf", "sec": 2.06, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DAF-T SERIES_B2103.pdf", "sec": 2.18, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DAL SERIES_B2103.pdf", "sec": 2.02, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DALH SERIES_B2103.pdf", "sec": 2.02, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DFL SERIES_B2103.pdf", "sec": 1.92, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S2DFS SERIES_B2103.pdf", "sec": 1.95, "pages": 5, "tables": 7, "numbers": 49, "matched": 49}
+{"pdf": "S2DFSH SERIES_B2103.pdf", "sec": 1.87, "pages": 5, "tables": 7, "numbers": 49, "matched": 49}
+{"pdf": "S2YAH_A2408.pdf", "sec": 1.23, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S2YA_A2408.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S2YH_A2408.pdf", "sec": 1.54, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S2Y_A2408.pdf", "sec": 1.46, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S3A SERIES_O2301.pdf", "sec": 1.83, "pages": 6, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "S3A-T SERIES_C2602.pdf", "sec": 1.81, "pages": 5, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "S3AB SERIES_M2102.pdf", "sec": 2.4, "pages": 6, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "S3ABH SERIES_B2207.pdf", "sec": 2.33, "pages": 6, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "S3AH SERIES_B2301.pdf", "sec": 2.0, "pages": 6, "tables": 5, "numbers": 43, "matched": 43}
+{"pdf": "S3DB-K SERIES_D2102.pdf", "sec": 2.57, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "S3JALH_A2303.pdf", "sec": 1.7, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S3JAL_A2303.pdf", "sec": 1.66, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "S3JFSH_A2303.pdf", "sec": 1.9, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "S3JFS_A2303.pdf", "sec": 1.66, "pages": 5, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "S3Q_C2102.pdf", "sec": 2.13, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S4A SERIES_K2102.pdf", "sec": 2.15, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S4AH SERIES_A2102.pdf", "sec": 2.03, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S5A SERIES_F2102.pdf", "sec": 2.05, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S5AC-K SERIES_C2602.pdf", "sec": 1.72, "pages": 5, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "S5AH SERIES_A2102.pdf", "sec": 1.99, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S5GB SERIES_D2102.pdf", "sec": 1.91, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S5GBH SERIES_A2102.pdf", "sec": 1.94, "pages": 6, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "S5QB_B2102.pdf", "sec": 1.9, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S5Q_C2102.pdf", "sec": 1.93, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "S8GC SERIES_G2210.pdf", "sec": 1.71, "pages": 5, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "S8GC-T SERIES_C2602.pdf", "sec": 1.43, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "S8GCH SERIES_B2210.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SA SERIES_L2105.pdf", "sec": 7.49, "pages": 9, "tables": 7, "numbers": 783, "matched": 783}
+{"pdf": "SBS24 SERIES_C2103.pdf", "sec": 2.06, "pages": 5, "tables": 7, "numbers": 38, "matched": 38}
+{"pdf": "SBS34 SERIES_F2103.pdf", "sec": 2.08, "pages": 5, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "SD101AW SERIES_C1601.pdf", "sec": 1.97, "pages": 4, "tables": 7, "numbers": 91, "matched": 91}
+{"pdf": "SD103AM3 SERIES_B2606.pdf", "sec": 1.49, "pages": 5, "tables": 4, "numbers": 36, "matched": 36}
+{"pdf": "SD103AW SERIES_E2606.pdf", "sec": 1.87, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "SD103AWH SERIES_A2502.pdf", "sec": 1.93, "pages": 5, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SD103AXM5_B2606.pdf", "sec": 1.48, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "SDLW SERIES_C2103.pdf", "sec": 2.18, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "SDLWH SERIES_A2103.pdf", "sec": 2.1, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "SF1001G SERIES_K2104.pdf", "sec": 2.52, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SF11G SERIES_H2104.pdf", "sec": 2.06, "pages": 6, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "SF11G-K SERIES_B2104.pdf", "sec": 1.87, "pages": 6, "tables": 6, "numbers": 52, "matched": 52}
+{"pdf": "SF1601G SERIES_I2104.pdf", "sec": 2.24, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SF1601PT SERIES_G2103.pdf", "sec": 1.93, "pages": 6, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "SF2001G SERIES_I2104.pdf", "sec": 1.8, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SF2001PT SERIES_I2103.pdf", "sec": 2.04, "pages": 6, "tables": 6, "numbers": 66, "matched": 66}
+{"pdf": "SF21G SERIES_H2105.pdf", "sec": 1.7, "pages": 6, "tables": 6, "numbers": 59, "matched": 59}
+{"pdf": "SF21G-T SERIES_C2105.pdf", "sec": 1.57, "pages": 6, "tables": 6, "numbers": 52, "matched": 52}
+{"pdf": "SF2L4G SERIES_B2105.pdf", "sec": 1.4, "pages": 6, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "SF3001PT SERIES_J2103.pdf", "sec": 1.93, "pages": 6, "tables": 6, "numbers": 58, "matched": 58}
+{"pdf": "SF31G SERIES_H2105.pdf", "sec": 1.79, "pages": 6, "tables": 6, "numbers": 53, "matched": 53}
+{"pdf": "SF31G-A SERIES_B2105.pdf", "sec": 1.7, "pages": 6, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "SF41G SERIES_G2105.pdf", "sec": 1.83, "pages": 6, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "SF61G SERIES_G2105.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 52, "matched": 52}
+{"pdf": "SF801G SERIES_I2104.pdf", "sec": 2.03, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFA1001G SERIES_K2103.pdf", "sec": 1.96, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFA801G SERIES_K2103.pdf", "sec": 2.2, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFAF1001G SERIES_H2105.pdf", "sec": 2.11, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFAF1601G SERIES_H2105.pdf", "sec": 2.16, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFAF2001G SERIES_J2105.pdf", "sec": 2.3, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFAF501G SERIES_I2105.pdf", "sec": 1.99, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFAF801G SERIES_L2106.pdf", "sec": 2.08, "pages": 6, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "SFAS1008GH_A2103.pdf", "sec": 1.61, "pages": 6, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "SFAS1008G_E2103.pdf", "sec": 1.68, "pages": 6, "tables": 7, "numbers": 28, "matched": 28}
+{"pdf": "SFAS801G SERIES_N2103.pdf", "sec": 2.19, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "SFAS801GH SERIES_A2103.pdf", "sec": 2.33, "pages": 6, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "SFF1001G SERIES_M2105.pdf", "sec": 2.09, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFF1001GA SERIES_E2105.pdf", "sec": 2.11, "pages": 6, "tables": 6, "numbers": 63, "matched": 63}
+{"pdf": "SFF10L04G SERIES_E2108.pdf", "sec": 2.32, "pages": 6, "tables": 6, "numbers": 57, "matched": 57}
+{"pdf": "SFF10L04GA SERIES_E2108.pdf", "sec": 1.91, "pages": 6, "tables": 6, "numbers": 57, "matched": 57}
+{"pdf": "SFF1601G SERIES_I2105.pdf", "sec": 2.15, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFF2001G SERIES_I2105.pdf", "sec": 1.81, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFF2004GA SERIES_F2105.pdf", "sec": 1.67, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "SFF501G SERIES_I2105.pdf", "sec": 1.89, "pages": 6, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "SFS1001G SERIES_I2103.pdf", "sec": 1.86, "pages": 6, "tables": 7, "numbers": 55, "matched": 55}
+{"pdf": "SFS1001GH SERIES_A2103.pdf", "sec": 1.84, "pages": 6, "tables": 7, "numbers": 55, "matched": 55}
+{"pdf": "SFS1601G SERIES_O2103.pdf", "sec": 1.98, "pages": 6, "tables": 7, "numbers": 55, "matched": 55}
+{"pdf": "SFS1601GH SERIES_A2103.pdf", "sec": 1.87, "pages": 6, "tables": 7, "numbers": 55, "matched": 55}
+{"pdf": "SFT11G SERIES_J2104.pdf", "sec": 1.62, "pages": 6, "tables": 6, "numbers": 58, "matched": 58}
+{"pdf": "SK12B SERIES_M2212.pdf", "sec": 1.57, "pages": 7, "tables": 5, "numbers": 55, "matched": 55}
+{"pdf": "SK12BH SERIES_B2212.pdf", "sec": 1.8, "pages": 7, "tables": 5, "numbers": 55, "matched": 55}
+{"pdf": "SK12H45 SERIES_F2105.pdf", "sec": 1.34, "pages": 6, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "SK22A SERIES_S2307.pdf", "sec": 1.98, "pages": 8, "tables": 5, "numbers": 54, "matched": 54}
+{"pdf": "SK22AH SERIES_C2307.pdf", "sec": 1.68, "pages": 8, "tables": 5, "numbers": 54, "matched": 54}
+{"pdf": "SK32A SERIES_W2304.pdf", "sec": 1.72, "pages": 7, "tables": 5, "numbers": 57, "matched": 57}
+{"pdf": "SK32AH SERIES_B2304.pdf", "sec": 1.89, "pages": 7, "tables": 5, "numbers": 57, "matched": 57}
+{"pdf": "SK32B SERIES_P2212.pdf", "sec": 2.52, "pages": 8, "tables": 5, "numbers": 56, "matched": 56}
+{"pdf": "SK32BH SERIES_B2212.pdf", "sec": 2.52, "pages": 8, "tables": 5, "numbers": 56, "matched": 56}
+{"pdf": "SK52B SERIES_Q2309.pdf", "sec": 2.29, "pages": 8, "tables": 5, "numbers": 52, "matched": 52}
+{"pdf": "SK52BH SERIES_B2309.pdf", "sec": 2.33, "pages": 8, "tables": 6, "numbers": 52, "matched": 52}
+{"pdf": "SK52C SERIES_S2311.pdf", "sec": 1.7, "pages": 7, "tables": 5, "numbers": 54, "matched": 54}
+{"pdf": "SK52CH SERIES_C2311.pdf", "sec": 1.73, "pages": 7, "tables": 5, "numbers": 54, "matched": 54}
+{"pdf": "SK82C SERIES_L2102.pdf", "sec": 1.62, "pages": 6, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "SK82CH SERIES_A2102.pdf", "sec": 1.64, "pages": 6, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "SKL13BH_A2102.pdf", "sec": 1.3, "pages": 6, "tables": 7, "numbers": 27, "matched": 27}
+{"pdf": "SKL13B_J2102.pdf", "sec": 1.31, "pages": 6, "tables": 7, "numbers": 26, "matched": 26}
+{"pdf": "SMA4F12AH SERIES_C2103.pdf", "sec": 2.17, "pages": 5, "tables": 7, "numbers": 162, "matched": 162}
+{"pdf": "SMA4S12AH SERIES_C2103.pdf", "sec": 2.32, "pages": 6, "tables": 7, "numbers": 165, "matched": 165}
+{"pdf": "SMA6F12(C)AH SERIES_D2511.pdf", "sec": 2.94, "pages": 7, "tables": 6, "numbers": 301, "matched": 301}
+{"pdf": "SMA6J SERIES_E2102.pdf", "sec": 1.82, "pages": 6, "tables": 6, "numbers": 119, "matched": 119}
+{"pdf": "SMA6JH SERIES_A2102.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 119, "matched": 119}
+{"pdf": "SMA6S12(C)AH SERIES_D2511.pdf", "sec": 2.98, "pages": 7, "tables": 6, "numbers": 304, "matched": 304}
+{"pdf": "SMAJ SERIES_U2102.pdf", "sec": 5.83, "pages": 7, "tables": 7, "numbers": 689, "matched": 689}
+{"pdf": "SMAJH SERIES_A2102.pdf", "sec": 5.78, "pages": 7, "tables": 7, "numbers": 689, "matched": 689}
+{"pdf": "SMB10J SERIES_B2102.pdf", "sec": 3.12, "pages": 5, "tables": 7, "numbers": 158, "matched": 158}
+{"pdf": "SMB10JH SERIES_A2102.pdf", "sec": 3.01, "pages": 5, "tables": 7, "numbers": 156, "matched": 156}
+{"pdf": "SMBJ SERIES_R2104.pdf", "sec": 9.17, "pages": 8, "tables": 9, "numbers": 680, "matched": 680}
+{"pdf": "SMBJH SERIES_A2102.pdf", "sec": 8.39, "pages": 8, "tables": 9, "numbers": 680, "matched": 680}
+{"pdf": "SMCJ SERIES_S2104.pdf", "sec": 6.49, "pages": 8, "tables": 8, "numbers": 677, "matched": 677}
+{"pdf": "SMCJH SERIES_A2102.pdf", "sec": 5.83, "pages": 8, "tables": 8, "numbers": 677, "matched": 677}
+{"pdf": "SMDJ SERIES_I2104.pdf", "sec": 3.08, "pages": 6, "tables": 7, "numbers": 250, "matched": 250}
+{"pdf": "SMDJH SERIES_B2104.pdf", "sec": 3.06, "pages": 6, "tables": 7, "numbers": 250, "matched": 250}
+{"pdf": "SMF4L5.0(C)A SERIES_B2511.pdf", "sec": 4.24, "pages": 9, "tables": 7, "numbers": 519, "matched": 519}
+{"pdf": "SMF4L5.0(C)AH SERIES_B2511.pdf", "sec": 4.26, "pages": 9, "tables": 7, "numbers": 519, "matched": 519}
+{"pdf": "SMF5.0A SERIES_D2103.pdf", "sec": 2.97, "pages": 6, "tables": 7, "numbers": 310, "matched": 310}
+{"pdf": "SMF5.0AH SERIES_A2103.pdf", "sec": 3.16, "pages": 6, "tables": 7, "numbers": 310, "matched": 310}
+{"pdf": "SR002 SERIES_H2104.pdf", "sec": 1.98, "pages": 6, "tables": 6, "numbers": 76, "matched": 76}
+{"pdf": "SR102 SERIES_G2104.pdf", "sec": 1.98, "pages": 6, "tables": 6, "numbers": 81, "matched": 81}
+{"pdf": "SR1020 SERIES_L2104.pdf", "sec": 2.16, "pages": 6, "tables": 6, "numbers": 69, "matched": 69}
+{"pdf": "SR1202 SERIES_G2105.pdf", "sec": 1.41, "pages": 6, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "SR1620 SERIES_J2104.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 68, "matched": 68}
+{"pdf": "SR1620PT SERIES_J2103.pdf", "sec": 1.9, "pages": 6, "tables": 6, "numbers": 68, "matched": 68}
+{"pdf": "SR202 SERIES_L2105.pdf", "sec": 1.82, "pages": 7, "tables": 6, "numbers": 87, "matched": 87}
+{"pdf": "SR2020 SERIES_J2104.pdf", "sec": 1.88, "pages": 6, "tables": 6, "numbers": 69, "matched": 69}
+{"pdf": "SR2020PT SERIES_J2103.pdf", "sec": 1.96, "pages": 6, "tables": 6, "numbers": 68, "matched": 68}
+{"pdf": "SR302 SERIES_J2105.pdf", "sec": 1.89, "pages": 7, "tables": 6, "numbers": 79, "matched": 79}
+{"pdf": "SR3020PT SERIES_H2103.pdf", "sec": 1.93, "pages": 6, "tables": 6, "numbers": 66, "matched": 66}
+{"pdf": "SR4020PT SERIES_H2103.pdf", "sec": 1.94, "pages": 6, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "SR502 SERIES_J2105.pdf", "sec": 2.14, "pages": 7, "tables": 6, "numbers": 80, "matched": 80}
+{"pdf": "SR802 SERIES_J2105.pdf", "sec": 1.95, "pages": 7, "tables": 6, "numbers": 78, "matched": 78}
+{"pdf": "SRA1020 SERIES_K2103.pdf", "sec": 2.19, "pages": 6, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRA1620 SERIES_K2103.pdf", "sec": 2.1, "pages": 6, "tables": 6, "numbers": 62, "matched": 62}
+{"pdf": "SRA2020 SERIES_K2103.pdf", "sec": 2.13, "pages": 6, "tables": 6, "numbers": 68, "matched": 68}
+{"pdf": "SRA820 SERIES_J2103.pdf", "sec": 2.04, "pages": 6, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRAF1020 SERIES_I2105.pdf", "sec": 2.2, "pages": 6, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRAF1620 SERIES_J2105.pdf", "sec": 2.02, "pages": 6, "tables": 6, "numbers": 64, "matched": 64}
+{"pdf": "SRAF520 SERIES_K2105.pdf", "sec": 2.13, "pages": 6, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRAF820 SERIES_K2105.pdf", "sec": 2.22, "pages": 6, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRAS2020 SERIES_M2103.pdf", "sec": 2.15, "pages": 6, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "SRAS2020H SERIES_A2103.pdf", "sec": 2.43, "pages": 6, "tables": 7, "numbers": 64, "matched": 64}
+{"pdf": "SRAS820 SERIES_K2103.pdf", "sec": 2.56, "pages": 6, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "SRAS820H SERIES_A2103.pdf", "sec": 2.44, "pages": 6, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "SRF1020 SERIES_L2105.pdf", "sec": 3.21, "pages": 7, "tables": 7, "numbers": 76, "matched": 76}
+{"pdf": "SRF1620 SERIES_J2105.pdf", "sec": 2.85, "pages": 7, "tables": 6, "numbers": 71, "matched": 71}
+{"pdf": "SRF2020 SERIES_J2105.pdf", "sec": 2.66, "pages": 7, "tables": 6, "numbers": 70, "matched": 70}
+{"pdf": "SRS1020 SERIES_N2103.pdf", "sec": 2.74, "pages": 6, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "SRS1020H SERIES_A2103.pdf", "sec": 2.7, "pages": 6, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "SRS1620 SERIES_L2103.pdf", "sec": 2.87, "pages": 6, "tables": 7, "numbers": 62, "matched": 62}
+{"pdf": "SRS1620H SERIES_A2103.pdf", "sec": 2.64, "pages": 6, "tables": 7, "numbers": 62, "matched": 62}
+{"pdf": "SRS2020 SERIES_L2103.pdf", "sec": 2.54, "pages": 6, "tables": 7, "numbers": 68, "matched": 68}
+{"pdf": "SRS2020H SERIES_A2103.pdf", "sec": 2.14, "pages": 6, "tables": 7, "numbers": 67, "matched": 67}
+{"pdf": "SRT12 SERIES_I2104.pdf", "sec": 1.88, "pages": 7, "tables": 6, "numbers": 82, "matched": 82}
+{"pdf": "SS12 SERIES_R2305.pdf", "sec": 2.04, "pages": 8, "tables": 5, "numbers": 59, "matched": 59}
+{"pdf": "SS120H_B2305.pdf", "sec": 1.05, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "SS120_C2305.pdf", "sec": 1.05, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "SS12H SERIES_B2305.pdf", "sec": 1.83, "pages": 8, "tables": 5, "numbers": 59, "matched": 59}
+{"pdf": "SS12L SERIES_Q2103.pdf", "sec": 2.35, "pages": 7, "tables": 7, "numbers": 63, "matched": 63}
+{"pdf": "SS12LH SERIES_A2103.pdf", "sec": 2.22, "pages": 7, "tables": 7, "numbers": 62, "matched": 62}
+{"pdf": "SS12LS SERIES_D2212.pdf", "sec": 1.96, "pages": 7, "tables": 5, "numbers": 58, "matched": 58}
+{"pdf": "SS12LSH SERIES_B2212.pdf", "sec": 2.02, "pages": 7, "tables": 5, "numbers": 58, "matched": 58}
+{"pdf": "SS13M SERIES_O2103.pdf", "sec": 1.8, "pages": 6, "tables": 7, "numbers": 53, "matched": 53}
+{"pdf": "SS13MH SERIES_A2103.pdf", "sec": 1.86, "pages": 6, "tables": 7, "numbers": 65, "matched": 65}
+{"pdf": "SS14ALH SERIES_B2103.pdf", "sec": 2.85, "pages": 8, "tables": 7, "numbers": 95, "matched": 95}
+{"pdf": "SS14FSH SERIES_B2103.pdf", "sec": 2.69, "pages": 8, "tables": 7, "numbers": 97, "matched": 97}
+{"pdf": "SS14LW SERIES_D2305.pdf", "sec": 1.27, "pages": 6, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "SS14LWH SERIES_B2305.pdf", "sec": 1.28, "pages": 6, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "SS1H4LS SERIES_C2208.pdf", "sec": 1.41, "pages": 6, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "SS1H4LSH SERIES_B2209.pdf", "sec": 1.43, "pages": 6, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "SS1H4LW SERIES_D2603.pdf", "sec": 1.48, "pages": 6, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SS1H4LWH SERIES_C2603.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SS22 SERIES_N2306.pdf", "sec": 2.2, "pages": 7, "tables": 6, "numbers": 79, "matched": 79}
+{"pdf": "SS22H SERIES_B2306.pdf", "sec": 1.94, "pages": 7, "tables": 6, "numbers": 71, "matched": 71}
+{"pdf": "SS22L SERIES_O2103.pdf", "sec": 2.0, "pages": 6, "tables": 7, "numbers": 53, "matched": 53}
+{"pdf": "SS22LH SERIES_A2103.pdf", "sec": 2.05, "pages": 6, "tables": 7, "numbers": 54, "matched": 54}
+{"pdf": "SS22M SERIES_M2103.pdf", "sec": 1.6, "pages": 6, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "SS22MH SERIES_A2103.pdf", "sec": 1.56, "pages": 6, "tables": 7, "numbers": 36, "matched": 36}
+{"pdf": "SS24ALH SERIES_B2103.pdf", "sec": 2.99, "pages": 8, "tables": 7, "numbers": 95, "matched": 95}
+{"pdf": "SS24FSH SERIES_B2103.pdf", "sec": 2.95, "pages": 8, "tables": 7, "numbers": 97, "matched": 97}
+{"pdf": "SS24LW SERIES_D2301.pdf", "sec": 1.66, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "SS24LWH SERIES_B2301.pdf", "sec": 1.53, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "SS2H15LWH_A2604.pdf", "sec": 1.6, "pages": 6, "tables": 5, "numbers": 51, "matched": 51}
+{"pdf": "SS32 SERIES_Q2412.pdf", "sec": 2.51, "pages": 8, "tables": 6, "numbers": 88, "matched": 88}
+{"pdf": "SS32H SERIES_C2412.pdf", "sec": 2.63, "pages": 8, "tables": 7, "numbers": 79, "matched": 79}
+{"pdf": "SS34ALH SERIES_B2103.pdf", "sec": 3.21, "pages": 8, "tables": 7, "numbers": 95, "matched": 95}
+{"pdf": "SS34FSH SERIES_B2103.pdf", "sec": 3.1, "pages": 8, "tables": 7, "numbers": 97, "matched": 97}
+{"pdf": "SS34L SERIES_C2103.pdf", "sec": 2.17, "pages": 5, "tables": 7, "numbers": 41, "matched": 41}
+{"pdf": "SS34LH SERIES_A2103.pdf", "sec": 1.85, "pages": 5, "tables": 7, "numbers": 42, "matched": 42}
+{"pdf": "SS34LW SERIES_D2606.pdf", "sec": 1.71, "pages": 6, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SS34LWH SERIES_B2606.pdf", "sec": 1.73, "pages": 6, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SS54ALH SERIES_B2103.pdf", "sec": 3.84, "pages": 8, "tables": 7, "numbers": 95, "matched": 95}
+{"pdf": "SS54FSH SERIES_B2103.pdf", "sec": 4.12, "pages": 8, "tables": 7, "numbers": 97, "matched": 97}
+{"pdf": "SSA1H100H_A2504.pdf", "sec": 1.62, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA1H40H_A2504.pdf", "sec": 1.66, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA1H60H_A2504.pdf", "sec": 1.67, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA2H100H_A2504.pdf", "sec": 1.46, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA2H40H_A2504.pdf", "sec": 1.59, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA2H60H_A2504.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA3H100H_A2504.pdf", "sec": 1.45, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA3H40H_A2504.pdf", "sec": 1.59, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSA3H60H_A2504.pdf", "sec": 1.56, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB1H100H_A2504.pdf", "sec": 1.39, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB1H40H_A2504.pdf", "sec": 1.49, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB1H60H_A2504.pdf", "sec": 1.36, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB2H100H_A2504.pdf", "sec": 1.36, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB44_C2309.pdf", "sec": 1.54, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSC3H100H_A2504.pdf", "sec": 1.37, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSL12 SERIES_I2304.pdf", "sec": 1.28, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "T25JA05G-K SERIES_B2103.pdf", "sec": 2.28, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TESDA27VB17P1M3_A2602.pdf", "sec": 1.3, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TESDA5V0B20P1Q0_A2505.pdf", "sec": 1.24, "pages": 7, "tables": 3, "numbers": 40, "matched": 40}
+{"pdf": "TESDC24V_F1812.pdf", "sec": 1.73, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "TPMR6GH SERIES_C2510.pdf", "sec": 1.57, "pages": 5, "tables": 5, "numbers": 41, "matched": 41}
+{"pdf": "TS10K40-A SERIES_D2103.pdf", "sec": 2.08, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TS15PL05G SERIES_H2203.pdf", "sec": 2.09, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TSAD10H120H_A2601.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD20M60CH_A2601.pdf", "sec": 1.52, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSCDF12065G1_A2404.pdf", "sec": 1.51, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDH30120G2H_A2506.pdf", "sec": 1.57, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDK16065G1_A2507.pdf", "sec": 1.79, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDT05120G2H_A2506.pdf", "sec": 1.48, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "TSD2GALH SERIES_B2312.pdf", "sec": 1.87, "pages": 5, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "TSD2GFS SERIES_A2309.pdf", "sec": 1.71, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "TSD2GH_A2102.pdf", "sec": 2.43, "pages": 5, "tables": 8, "numbers": 47, "matched": 47}
+{"pdf": "TSH80H100CH_A2601.pdf", "sec": 1.42, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW1M45H_A2510.pdf", "sec": 1.32, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSU1H100H_A2507.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSUP8200H_A2505.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP8H100H_A2403.pdf", "sec": 1.47, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TUAS6D SERIES_A2406.pdf", "sec": 1.74, "pages": 5, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "TUAU4D SERIES_A2406.pdf", "sec": 2.38, "pages": 7, "tables": 5, "numbers": 82, "matched": 82}
+{"pdf": "TUAU4DH SERIES_A2111.pdf", "sec": 3.3, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "UF1DLW SERIES_D2501.pdf", "sec": 1.19, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UGS20JH_F2510.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "UGS5JH_D2606.pdf", "sec": 1.1, "pages": 5, "tables": 5, "numbers": 29, "matched": 29}
+{"event": "end", "time": "2026-11-01 08:35:29"}
+{"event": "start", "cuda": true, "gpu": "NVIDIA GeForce RTX 3080 Ti", "time": "2026-11-01 08:35:34"}
+{"pdf": "SSB2H40H_A2504.pdf", "sec": 7.82, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB2H60H_A2504.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB3H100H_A2504.pdf", "sec": 1.15, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB3H40H_A2504.pdf", "sec": 1.36, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB3H60H_A2504.pdf", "sec": 1.19, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSB44H_B2309.pdf", "sec": 1.13, "pages": 5, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSC3H40H_A2504.pdf", "sec": 1.15, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSC3H60H_A2504.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSC5H40H_A2504.pdf", "sec": 1.21, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSC5H60H_A2504.pdf", "sec": 1.27, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSH210H_B2310.pdf", "sec": 1.22, "pages": 6, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "SSH210_F2310.pdf", "sec": 1.17, "pages": 6, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "SSL12H SERIES_B2304.pdf", "sec": 1.2, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "SSL22 SERIES_M2309.pdf", "sec": 1.34, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "SSL22H SERIES_B2309.pdf", "sec": 1.26, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "SSL32 SERIES_K2310.pdf", "sec": 1.37, "pages": 6, "tables": 5, "numbers": 35, "matched": 35}
+{"pdf": "SSL32H SERIES_B2310.pdf", "sec": 1.3, "pages": 6, "tables": 5, "numbers": 35, "matched": 35}
+{"pdf": "SSP8H100SH_C2412.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 42, "matched": 42}
+{"pdf": "SSU1H40H_A2508.pdf", "sec": 1.22, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSU1H60H_A2508.pdf", "sec": 1.4, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSUP10H100H_A2505.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "SSUP5H100H_A2505.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "SSUP8H100H_A2505.pdf", "sec": 1.26, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "SSW2H100H_A2504.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSW2H40H_A2504.pdf", "sec": 1.17, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "SSW2H60H_A2504.pdf", "sec": 1.05, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "T10JA05G-K SERIES_B2103.pdf", "sec": 1.61, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "T15JA05G-K SERIES_B2103.pdf", "sec": 1.59, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TBS406 SERIES_B2103.pdf", "sec": 1.76, "pages": 5, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "TBS606 SERIES_B2103.pdf", "sec": 1.53, "pages": 5, "tables": 7, "numbers": 46, "matched": 46}
+{"pdf": "TBS806 SERIES_A2010.pdf", "sec": 1.54, "pages": 5, "tables": 7, "numbers": 88, "matched": 87}
+{"pdf": "TESD24VS2BT_B2101.pdf", "sec": 1.4, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "TESD5V0L1UC_E2007.pdf", "sec": 1.15, "pages": 5, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "TESD5V0V4UA_B2109.pdf", "sec": 1.46, "pages": 6, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TESD5V0V4UCU6_D2109.pdf", "sec": 1.47, "pages": 6, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TESD5V0V4UCX6_B2003.pdf", "sec": 1.53, "pages": 6, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TESDA13VU1052Q3_A2602.pdf", "sec": 0.87, "pages": 7, "tables": 3, "numbers": 37, "matched": 37}
+{"pdf": "TESDA1L2B17P1Q1_A2511.pdf", "sec": 1.13, "pages": 7, "tables": 3, "numbers": 55, "matched": 55}
+{"pdf": "TESDA22VU40P2Q3_A2511.pdf", "sec": 0.84, "pages": 7, "tables": 3, "numbers": 45, "matched": 45}
+{"pdf": "TESDA22VU60P2Q3_A2511.pdf", "sec": 0.87, "pages": 7, "tables": 3, "numbers": 41, "matched": 41}
+{"pdf": "TESDA24VB17P1M3_A2502.pdf", "sec": 1.11, "pages": 7, "tables": 4, "numbers": 37, "matched": 37}
+{"pdf": "TESDA24VB17P1Q1_A2502.pdf", "sec": 0.87, "pages": 7, "tables": 3, "numbers": 37, "matched": 37}
+{"pdf": "TESDA24VB28P2CX_A2503.pdf", "sec": 0.99, "pages": 7, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "TESDA24VB6P02CX_A2511.pdf", "sec": 0.92, "pages": 6, "tables": 4, "numbers": 37, "matched": 37}
+{"pdf": "TESDA26VU55P2Q3_A2512.pdf", "sec": 0.87, "pages": 7, "tables": 3, "numbers": 37, "matched": 37}
+{"pdf": "TESDA27VB17P2CX_A2602.pdf", "sec": 0.92, "pages": 6, "tables": 4, "numbers": 43, "matched": 43}
+{"pdf": "TESDA28VU18P1Q1_B2507.pdf", "sec": 0.87, "pages": 6, "tables": 4, "numbers": 38, "matched": 38}
+{"pdf": "TESDA5V0U40P1Q0_A2505.pdf", "sec": 0.92, "pages": 7, "tables": 3, "numbers": 42, "matched": 42}
+{"pdf": "TESDA6V0B20P1Q0_A2505.pdf", "sec": 1.07, "pages": 7, "tables": 3, "numbers": 40, "matched": 40}
+{"pdf": "TESDA6V0U40P1Q0_A2504.pdf", "sec": 0.95, "pages": 7, "tables": 3, "numbers": 42, "matched": 42}
+{"pdf": "TESDC5V0_D1812.pdf", "sec": 1.33, "pages": 6, "tables": 6, "numbers": 41, "matched": 41}
+{"pdf": "TESDD5V0_E1901.pdf", "sec": 1.46, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TESDF5V0A_C15.pdf", "sec": 0.99, "pages": 5, "tables": 4, "numbers": 65, "matched": 65}
+{"pdf": "TESDH3V3B02P4Q2_A2203.pdf", "sec": 1.36, "pages": 7, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "TESDH3V3B03P1Q0_A2305.pdf", "sec": 1.04, "pages": 7, "tables": 3, "numbers": 33, "matched": 33}
+{"pdf": "TESDH5V0B03P1Q0_A2305.pdf", "sec": 0.86, "pages": 7, "tables": 3, "numbers": 33, "matched": 33}
+{"pdf": "TESDH5V0B05P1Q1_A2203.pdf", "sec": 1.42, "pages": 7, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "TESDH5V0U04P2Q1_B2609.pdf", "sec": 0.98, "pages": 7, "tables": 4, "numbers": 45, "matched": 45}
+{"pdf": "TESDL24VB17P1Q1_A2403.pdf", "sec": 0.83, "pages": 6, "tables": 3, "numbers": 33, "matched": 33}
+{"pdf": "TESDL3V3B23P1Q0_A2305.pdf", "sec": 0.92, "pages": 7, "tables": 4, "numbers": 38, "matched": 38}
+{"pdf": "TESDL3V3U1051M5_C2609.pdf", "sec": 0.82, "pages": 7, "tables": 3, "numbers": 34, "matched": 34}
+{"pdf": "TESDL5V0B12P1Q0_A2203.pdf", "sec": 1.24, "pages": 7, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TESDL5V0B20P1M5_C2609.pdf", "sec": 0.92, "pages": 7, "tables": 3, "numbers": 39, "matched": 39}
+{"pdf": "TESDL5V0B45P1M3_B2609.pdf", "sec": 0.86, "pages": 7, "tables": 4, "numbers": 40, "matched": 40}
+{"pdf": "TESDS5V0A_D15.pdf", "sec": 0.95, "pages": 5, "tables": 4, "numbers": 67, "matched": 67}
+{"pdf": "TESDU5V0 SERIES_H1601.pdf", "sec": 1.36, "pages": 5, "tables": 7, "numbers": 71, "matched": 71}
+{"pdf": "TLD26AH SERIES_C2408.pdf", "sec": 1.61, "pages": 6, "tables": 6, "numbers": 167, "matched": 167}
+{"pdf": "TLD5S10AH SERIES_D2103.pdf", "sec": 2.34, "pages": 5, "tables": 7, "numbers": 204, "matched": 204}
+{"pdf": "TLD6S10AH SERIES_D2103.pdf", "sec": 2.49, "pages": 5, "tables": 7, "numbers": 204, "matched": 204}
+{"pdf": "TLD8S10AH SERIES_E2310.pdf", "sec": 3.05, "pages": 6, "tables": 6, "numbers": 383, "matched": 383}
+{"pdf": "TPMR10D SERIES_D2309.pdf", "sec": 1.61, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TPMR10DH SERIES_B2309.pdf", "sec": 1.42, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TPMR6G SERIES_D2309.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TPUH6D SERIES_E2309.pdf", "sec": 1.38, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TPUH6DH SERIES_B2309.pdf", "sec": 1.36, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TS10K40 SERIES_F2101.pdf", "sec": 1.53, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TS10KL60 SERIES_G2104.pdf", "sec": 1.48, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TS10P01G SERIES_L2203.pdf", "sec": 1.74, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TS10P01G-K SERIES_C2104.pdf", "sec": 1.82, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TS15P01G SERIES_N2203.pdf", "sec": 1.76, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TS15P05G-K SERIES_C2104.pdf", "sec": 1.64, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "TS20K40-T SERIES_A2208.pdf", "sec": 1.91, "pages": 5, "tables": 6, "numbers": 42, "matched": 42}
+{"pdf": "TS20P01G SERIES_O2203.pdf", "sec": 2.36, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TS25P01G SERIES_Q2203.pdf", "sec": 2.55, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TS25P05G-K SERIES_C2104.pdf", "sec": 2.4, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "TS25PL05G SERIES_H2203.pdf", "sec": 2.23, "pages": 5, "tables": 6, "numbers": 40, "matched": 40}
+{"pdf": "TS35P05G SERIES_F2203.pdf", "sec": 2.23, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TS40P05G SERIES_G2203.pdf", "sec": 2.05, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TS4148 SERIES_A2301.pdf", "sec": 1.65, "pages": 8, "tables": 5, "numbers": 60, "matched": 60}
+{"pdf": "TS4448 RG_H1612.pdf", "sec": 1.84, "pages": 6, "tables": 7, "numbers": 49, "matched": 49}
+{"pdf": "TS4K40 SERIES_F2101.pdf", "sec": 2.08, "pages": 5, "tables": 6, "numbers": 39, "matched": 39}
+{"pdf": "TS4K40-A SERIES_D2103.pdf", "sec": 2.12, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TS50P05G SERIES_H2203.pdf", "sec": 1.91, "pages": 5, "tables": 6, "numbers": 35, "matched": 35}
+{"pdf": "TS6K40 SERIES_F2101.pdf", "sec": 2.32, "pages": 5, "tables": 6, "numbers": 39, "matched": 39}
+{"pdf": "TS6K40-T SERIES_D2103.pdf", "sec": 1.61, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TS6KL60 SERIES_E2104.pdf", "sec": 1.59, "pages": 5, "tables": 6, "numbers": 37, "matched": 37}
+{"pdf": "TS6P01G SERIES_M2203.pdf", "sec": 1.77, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TS6P01G-K SERIES_C2104.pdf", "sec": 1.71, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TS8P01G SERIES_M2203.pdf", "sec": 1.79, "pages": 5, "tables": 6, "numbers": 45, "matched": 45}
+{"pdf": "TSAD10H100CH_A2601.pdf", "sec": 1.07, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD10H100H_B2607.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSAD10H120CH_A2601.pdf", "sec": 1.11, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD10M45CH_A2601.pdf", "sec": 1.13, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD10M45H_A2601.pdf", "sec": 1.1, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD10M60CH_A2601.pdf", "sec": 1.17, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD10M60H_A2601.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD20H100CH_B2607.pdf", "sec": 1.07, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD20H100H_A2601.pdf", "sec": 1.09, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD20H120CH_A2601.pdf", "sec": 1.04, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD20H120H_A2601.pdf", "sec": 1.04, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD20M45CH_A2601.pdf", "sec": 1.13, "pages": 6, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "TSAD20M45H_A2601.pdf", "sec": 1.09, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD20M60H_A2601.pdf", "sec": 1.11, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSAD35H100H_A2601.pdf", "sec": 1.04, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "TSAD35H120H_A2601.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "TSAD35M45H_A2601.pdf", "sec": 1.07, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "TSAD35M60H_A2601.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 34, "matched": 34}
+{"pdf": "TSAL3H100H_A2510.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL3H120H_A2510.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL3M45H_A2510.pdf", "sec": 1.06, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL3M60H_A2510.pdf", "sec": 1.06, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL5H100H_A2510.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL5H120H_A2510.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL5M45H_A2510.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSAL5M60H_A2510.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSCDAH10120G2H_A2506.pdf", "sec": 1.39, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDAH15120G2H_A2506.pdf", "sec": 1.24, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDAH20120G2H_A2506.pdf", "sec": 1.37, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDAH30120G2H_A2506.pdf", "sec": 1.23, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDAH40120G2H_A2506.pdf", "sec": 1.39, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDB01120G2H_B2507.pdf", "sec": 1.27, "pages": 6, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "TSCDB02120G2H_B2507.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "TSCDF06065G1_A2404.pdf", "sec": 1.32, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDF08065G1_A2404.pdf", "sec": 1.43, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDF10065G1_A2404.pdf", "sec": 1.34, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDF16065G1_A2404.pdf", "sec": 1.57, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDF20065G1_A2404.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDFS01120G2H_B2507.pdf", "sec": 1.34, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDFS02120G2H_B2507.pdf", "sec": 1.55, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDH10120G2H_A2506.pdf", "sec": 1.42, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDH15120G2H_A2506.pdf", "sec": 1.42, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDH16065G1_A2404.pdf", "sec": 1.32, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDH20065G1_A2404.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDH20120G2H_A2506.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDH30065G1_A2404.pdf", "sec": 1.43, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDH40065G1_A2404.pdf", "sec": 1.39, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDH40120G2H_A2506.pdf", "sec": 1.57, "pages": 6, "tables": 5, "numbers": 46, "matched": 46}
+{"pdf": "TSCDK05120G2H_A2506.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDK08065G1_A2507.pdf", "sec": 1.41, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDK08120G2H_A2506.pdf", "sec": 1.47, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDK10065G1_A2507.pdf", "sec": 1.39, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDK10120G2H_A2506.pdf", "sec": 1.77, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDK12065G1_A2507.pdf", "sec": 1.69, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDK15120G2H_A2506.pdf", "sec": 1.73, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDK20065G1H_A2509.pdf", "sec": 1.98, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDK20065G1_A2507.pdf", "sec": 1.81, "pages": 6, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TSCDK20120G2H_A2506.pdf", "sec": 1.62, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDM05120G2H_A2506.pdf", "sec": 1.83, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDM06065G1_B2509.pdf", "sec": 1.58, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDM08065G1_A2507.pdf", "sec": 1.53, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDM08120G2H_A2506.pdf", "sec": 1.73, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDM10065G1_A2507.pdf", "sec": 1.77, "pages": 6, "tables": 5, "numbers": 49, "matched": 49}
+{"pdf": "TSCDM10120G2H_A2506.pdf", "sec": 1.83, "pages": 6, "tables": 5, "numbers": 48, "matched": 48}
+{"pdf": "TSCDT06065G1_A2404.pdf", "sec": 1.77, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT08065G1_A2404.pdf", "sec": 1.78, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT08120G2H_A2506.pdf", "sec": 1.73, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "TSCDT10065G1_A2404.pdf", "sec": 1.28, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT10120G2H_A2506.pdf", "sec": 1.22, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "TSCDT12065G1_A2404.pdf", "sec": 1.4, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT15120G2H_A2506.pdf", "sec": 1.31, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "TSCDT16065G1_A2404.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT20065G1_A2404.pdf", "sec": 1.27, "pages": 6, "tables": 5, "numbers": 45, "matched": 45}
+{"pdf": "TSCDT20120G2H_A2506.pdf", "sec": 1.31, "pages": 6, "tables": 5, "numbers": 44, "matched": 44}
+{"pdf": "TSD1GH_A2102.pdf", "sec": 1.68, "pages": 5, "tables": 8, "numbers": 45, "matched": 45}
+{"pdf": "TSD1GLW SERIES_A2309.pdf", "sec": 1.38, "pages": 5, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "TSD1GLWH SERIES_B2312.pdf", "sec": 1.4, "pages": 5, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "TSD1G_E2102.pdf", "sec": 1.77, "pages": 5, "tables": 8, "numbers": 45, "matched": 45}
+{"pdf": "TSD2GAL SERIES_A2309.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "TSD2GFSH SERIES_B2312.pdf", "sec": 1.4, "pages": 5, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "TSD2G_F2102.pdf", "sec": 1.78, "pages": 5, "tables": 8, "numbers": 46, "matched": 46}
+{"pdf": "TSD3GAL SERIES_A2309.pdf", "sec": 1.41, "pages": 5, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "TSD3GALH SERIES_B2312.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 47, "matched": 47}
+{"pdf": "TSD3GFS SERIES_A2309.pdf", "sec": 1.35, "pages": 5, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "TSD3GFSH SERIES_B2312.pdf", "sec": 1.52, "pages": 5, "tables": 6, "numbers": 49, "matched": 49}
+{"pdf": "TSD3GH_A2102.pdf", "sec": 2.27, "pages": 5, "tables": 8, "numbers": 46, "matched": 46}
+{"pdf": "TSD3G_F2102.pdf", "sec": 1.94, "pages": 5, "tables": 8, "numbers": 46, "matched": 46}
+{"pdf": "TSDGLWH_A2103.pdf", "sec": 2.07, "pages": 5, "tables": 8, "numbers": 46, "matched": 46}
+{"pdf": "TSDGLW_F2103.pdf", "sec": 1.99, "pages": 5, "tables": 8, "numbers": 46, "matched": 46}
+{"pdf": "TSF10102C_A2405.pdf", "sec": 1.32, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF10122C_A2405.pdf", "sec": 1.56, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF10H45C_F2102.pdf", "sec": 1.65, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF10H60C_F2102.pdf", "sec": 1.76, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF20102C_A2405.pdf", "sec": 1.45, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF20122C_A2405.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF20H45C_C2012.pdf", "sec": 2.04, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF20H60C_C2012.pdf", "sec": 1.88, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF20U45C SERIES_H2105.pdf", "sec": 1.72, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TSF20U45C_I2603.pdf", "sec": 1.13, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "TSF30102C_A2405.pdf", "sec": 1.27, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF30122C_A2405.pdf", "sec": 1.32, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF30H45C_D2102.pdf", "sec": 1.89, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF30H60C_D2102.pdf", "sec": 1.85, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF30L45C SERIES_F2105.pdf", "sec": 1.82, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSF30L45C_G2603.pdf", "sec": 1.09, "pages": 5, "tables": 5, "numbers": 30, "matched": 30}
+{"pdf": "TSF30U45C_G2105.pdf", "sec": 1.57, "pages": 5, "tables": 6, "numbers": 32, "matched": 32}
+{"pdf": "TSF30U60C_G2105.pdf", "sec": 1.52, "pages": 5, "tables": 6, "numbers": 30, "matched": 30}
+{"pdf": "TSF40102C_A2405.pdf", "sec": 1.37, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSF40122C_A2405.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS3H100H_A2510.pdf", "sec": 1.18, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS3H120H_A2510.pdf", "sec": 1.16, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS3M45H_A2510.pdf", "sec": 1.28, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS3M60H_A2510.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS5H100H_A2510.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS5H120H_A2510.pdf", "sec": 1.21, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS5M45H_A2510.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSFS5M60H_A2510.pdf", "sec": 1.49, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSH60H100CH_A2601.pdf", "sec": 1.41, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSN520M60H_A2103.pdf", "sec": 2.14, "pages": 5, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "TSS0230LU_D2405.pdf", "sec": 1.03, "pages": 5, "tables": 4, "numbers": 26, "matched": 26}
+{"pdf": "TSS0230U_G1706.pdf", "sec": 1.62, "pages": 6, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TSS0340U_D1604.pdf", "sec": 1.05, "pages": 4, "tables": 4, "numbers": 34, "matched": 34}
+{"pdf": "TSS40U_C1601.pdf", "sec": 1.49, "pages": 4, "tables": 4, "numbers": 40, "matched": 40}
+{"pdf": "TSS42U SERIES_D1601.pdf", "sec": 1.72, "pages": 4, "tables": 4, "numbers": 49, "matched": 49}
+{"pdf": "TSS54U_C1601.pdf", "sec": 1.58, "pages": 4, "tables": 4, "numbers": 47, "matched": 47}
+{"pdf": "TSS70U_C1601.pdf", "sec": 1.44, "pages": 4, "tables": 4, "numbers": 40, "matched": 40}
+{"pdf": "TSS83L45_D2109.pdf", "sec": 2.14, "pages": 5, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "TSSA3U45H_B2307.pdf", "sec": 1.22, "pages": 5, "tables": 5, "numbers": 30, "matched": 30}
+{"pdf": "TSSA3U45_P2307.pdf", "sec": 1.42, "pages": 5, "tables": 5, "numbers": 30, "matched": 30}
+{"pdf": "TSSA3U60H_B2306.pdf", "sec": 1.36, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "TSSA3U60_H2306.pdf", "sec": 1.51, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "TSSA5U50 SERIES_F2307.pdf", "sec": 1.7, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSSA5U50H SERIES_B2307.pdf", "sec": 2.0, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSSE3H45 SERIES_E2305.pdf", "sec": 1.36, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSSE3H45H SERIES_B2305.pdf", "sec": 1.3, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSSE3U45 SERIES_I2103.pdf", "sec": 2.18, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "TSSE3U45H SERIES_A2103.pdf", "sec": 2.23, "pages": 5, "tables": 7, "numbers": 48, "matched": 48}
+{"pdf": "TSSW1H100H_A2510.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW1H120H_A2510.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW1M60H_A2510.pdf", "sec": 1.15, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW2H100H_A2510.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW2H120H_A2510.pdf", "sec": 1.23, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW2M45H_A2510.pdf", "sec": 1.23, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW2M60H_A2510.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW3H100H_A2510.pdf", "sec": 1.17, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW3H120H_A2510.pdf", "sec": 1.25, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW3M45H_A2510.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW3M60H_A2510.pdf", "sec": 1.43, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSSW3U45 SERIES_B2103.pdf", "sec": 2.07, "pages": 5, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "TSSW3U45H SERIES_A2103.pdf", "sec": 2.09, "pages": 5, "tables": 7, "numbers": 44, "matched": 44}
+{"pdf": "TST10102C_A2405.pdf", "sec": 1.51, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TST10122C_A2405.pdf", "sec": 1.45, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TST10H45C_A2010.pdf", "sec": 2.1, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST10H60C_A2010.pdf", "sec": 2.21, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST20102C_A2405.pdf", "sec": 1.45, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TST20122C_A2405.pdf", "sec": 1.45, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TST20H45C_C2012.pdf", "sec": 2.29, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST20H60C_C2012.pdf", "sec": 2.1, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST20U45C SERIES_D2104.pdf", "sec": 2.45, "pages": 5, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "TST20U45C_E2603.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "TST30122C_A2405.pdf", "sec": 1.44, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TST30H45C_C2012.pdf", "sec": 2.15, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST30H60C_C2012.pdf", "sec": 2.29, "pages": 5, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST30L45C_C2104.pdf", "sec": 1.81, "pages": 5, "tables": 6, "numbers": 31, "matched": 31}
+{"pdf": "TST30U45C SERIES_E2104.pdf", "sec": 1.9, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TST40122C_A2405.pdf", "sec": 1.21, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSU1H120H_A2507.pdf", "sec": 1.11, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSU1M45H_B2211.pdf", "sec": 1.68, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSU1M60H_A2207.pdf", "sec": 1.59, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSU2H100H_A2507.pdf", "sec": 1.1, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSU2H120H_A2507.pdf", "sec": 1.03, "pages": 6, "tables": 5, "numbers": 36, "matched": 36}
+{"pdf": "TSU2M45H_A2207.pdf", "sec": 1.62, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSU2M60H_B2208.pdf", "sec": 1.6, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP10102_B2508.pdf", "sec": 1.25, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSUP10150H_A2505.pdf", "sec": 1.29, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP10200H_A2505.pdf", "sec": 1.16, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP10H100H_A2403.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP10H120H_A2403.pdf", "sec": 1.26, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP10M45SH_B2103.pdf", "sec": 2.01, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP10M60SH_B2103.pdf", "sec": 1.86, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP10S150H_A2604.pdf", "sec": 1.06, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSUP10S200H_A2604.pdf", "sec": 1.13, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12122_B2508.pdf", "sec": 1.4, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSUP12150H_A2505.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12200H_A2505.pdf", "sec": 1.04, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12H100H_A2403.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12H120H_A2403.pdf", "sec": 1.1, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12S150H_A2604.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP12S200H_A2604.pdf", "sec": 1.14, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP15102_B2508.pdf", "sec": 1.21, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSUP15150H_A2505.pdf", "sec": 1.3, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP15200H_A2505.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP15H100H_A2403.pdf", "sec": 1.09, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP15H120H_A2403.pdf", "sec": 1.12, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP15M45SH_B2103.pdf", "sec": 1.82, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP15M60SH_B2103.pdf", "sec": 2.15, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP15S150H_A2604.pdf", "sec": 1.03, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSUP15S200H_A2604.pdf", "sec": 1.01, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSUP3150H_A2505.pdf", "sec": 1.35, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP3S150H_A2604.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP5102_B2508.pdf", "sec": 1.25, "pages": 6, "tables": 6, "numbers": 38, "matched": 38}
+{"pdf": "TSUP5150H_A2505.pdf", "sec": 1.01, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP5M45SH_B2103.pdf", "sec": 1.78, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP5M60SH_B2103.pdf", "sec": 1.75, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP5S150H_A2604.pdf", "sec": 1.2, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSUP8150H_A2505.pdf", "sec": 1.06, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP8H100SH_A2505.pdf", "sec": 1.06, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP8H120H_A2403.pdf", "sec": 1.33, "pages": 6, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "TSUP8M45SH_B2103.pdf", "sec": 1.74, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP8M60SH_B2103.pdf", "sec": 1.77, "pages": 5, "tables": 7, "numbers": 37, "matched": 37}
+{"pdf": "TSUP8S150H_A2604.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSUP8S200H_A2604.pdf", "sec": 1.01, "pages": 6, "tables": 5, "numbers": 38, "matched": 38}
+{"pdf": "TSZU52C2V0 SERIES_G2009.pdf", "sec": 3.1, "pages": 6, "tables": 6, "numbers": 305, "matched": 305}
+{"pdf": "TUAR4D SERIES_A2406.pdf", "sec": 1.52, "pages": 5, "tables": 5, "numbers": 50, "matched": 50}
+{"pdf": "TUAR4DH SERIES_A2111.pdf", "sec": 2.38, "pages": 5, "tables": 7, "numbers": 50, "matched": 50}
+{"pdf": "TUAS3D SERIES_A2406.pdf", "sec": 1.4, "pages": 5, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "TUAS3DH SERIES_A2111.pdf", "sec": 2.2, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "TUAS4D SERIES_A2406.pdf", "sec": 1.58, "pages": 5, "tables": 5, "numbers": 47, "matched": 47}
+{"pdf": "TUAS4DH SERIES_A2111.pdf", "sec": 2.01, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "TUAS6DH SERIES_A2111.pdf", "sec": 1.88, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "TUAS8D SERIES_C2109.pdf", "sec": 2.09, "pages": 6, "tables": 7, "numbers": 58, "matched": 58}
+{"pdf": "TUAS8DH SERIES_A2111.pdf", "sec": 2.02, "pages": 5, "tables": 7, "numbers": 47, "matched": 47}
+{"pdf": "TUAU10D SERIES_A2406.pdf", "sec": 2.11, "pages": 7, "tables": 5, "numbers": 82, "matched": 82}
+{"pdf": "TUAU10DH SERIES_A2111.pdf", "sec": 2.6, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "TUAU6D SERIES_A2406.pdf", "sec": 1.95, "pages": 6, "tables": 5, "numbers": 73, "matched": 73}
+{"pdf": "TUAU6DH SERIES_C2111.pdf", "sec": 2.41, "pages": 6, "tables": 7, "numbers": 73, "matched": 73}
+{"pdf": "TUAU8D SERIES_A2406.pdf", "sec": 2.03, "pages": 7, "tables": 5, "numbers": 82, "matched": 82}
+{"pdf": "TUAU8DH SERIES_A2111.pdf", "sec": 2.64, "pages": 7, "tables": 7, "numbers": 82, "matched": 82}
+{"pdf": "UDZS3V6B SERIES_I2606.pdf", "sec": 2.24, "pages": 6, "tables": 6, "numbers": 254, "matched": 254}
+{"pdf": "UF1A SERIES_G2104.pdf", "sec": 1.58, "pages": 6, "tables": 6, "numbers": 56, "matched": 56}
+{"pdf": "UF1DLWH SERIES_C2601.pdf", "sec": 1.3, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UF1JLWH_A2501.pdf", "sec": 1.02, "pages": 5, "tables": 5, "numbers": 30, "matched": 30}
+{"pdf": "UF1JLW_A2501.pdf", "sec": 1.05, "pages": 5, "tables": 5, "numbers": 30, "matched": 30}
+{"pdf": "UF4001 SERIES_P2104.pdf", "sec": 1.84, "pages": 6, "tables": 6, "numbers": 63, "matched": 63}
+{"pdf": "UG06A SERIES_G2104.pdf", "sec": 1.44, "pages": 6, "tables": 6, "numbers": 48, "matched": 48}
+{"pdf": "UG1004G SERIES_D2601.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UG1007G SERIES_A2501.pdf", "sec": 1.23, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "UG10G SERIES_F2603.pdf", "sec": 1.29, "pages": 5, "tables": 5, "numbers": 40, "matched": 40}
+{"pdf": "UG12J_E2603.pdf", "sec": 1.05, "pages": 6, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "UG2004PT_F2103.pdf", "sec": 1.42, "pages": 6, "tables": 6, "numbers": 25, "matched": 25}
+{"pdf": "UG2D_F2105.pdf", "sec": 1.34, "pages": 6, "tables": 6, "numbers": 43, "matched": 43}
+{"pdf": "UG2JAH_B2501.pdf", "sec": 1.08, "pages": 6, "tables": 5, "numbers": 33, "matched": 33}
+{"pdf": "UG2JA_D2102.pdf", "sec": 1.53, "pages": 6, "tables": 7, "numbers": 33, "matched": 33}
+{"pdf": "UG4D_B2201.pdf", "sec": 1.24, "pages": 6, "tables": 6, "numbers": 30, "matched": 30}
+{"pdf": "UG54G SERIES_H2606.pdf", "sec": 1.68, "pages": 6, "tables": 5, "numbers": 60, "matched": 60}
+{"pdf": "UG54GS_C2105.pdf", "sec": 1.39, "pages": 5, "tables": 6, "numbers": 51, "matched": 51}
+{"pdf": "UG5J_K2603.pdf", "sec": 1.03, "pages": 6, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "UG6005PT_E2103.pdf", "sec": 1.46, "pages": 6, "tables": 6, "numbers": 27, "matched": 27}
+{"pdf": "UG8J_K2603.pdf", "sec": 1.09, "pages": 6, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "UGF1004G SERIES_H2601.pdf", "sec": 1.44, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UGF1004GA SERIES_F2605.pdf", "sec": 1.49, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UGF1007G SERIES_A2501.pdf", "sec": 1.45, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "UGF1007GA SERIES_A2501.pdf", "sec": 1.54, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "UGF10G SERIES_F2603.pdf", "sec": 1.42, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "UGF12JD_C2105.pdf", "sec": 2.11, "pages": 5, "tables": 6, "numbers": 33, "matched": 33}
+{"pdf": "UGF12J_E2603.pdf", "sec": 1.54, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "UGF1606G_E2601.pdf", "sec": 1.21, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "UGF2004G SERIES_E2601.pdf", "sec": 1.64, "pages": 5, "tables": 5, "numbers": 37, "matched": 37}
+{"pdf": "UGF2007G SERIES_A2501.pdf", "sec": 1.41, "pages": 5, "tables": 5, "numbers": 32, "matched": 32}
+{"pdf": "UGF5J_K2603.pdf", "sec": 1.26, "pages": 5, "tables": 5, "numbers": 27, "matched": 27}
+{"pdf": "UGF8JD_D2105.pdf", "sec": 2.22, "pages": 5, "tables": 6, "numbers": 32, "matched": 32}
+{"pdf": "UGF8J_H2603.pdf", "sec": 1.3, "pages": 5, "tables": 5, "numbers": 29, "matched": 29}
+{"pdf": "UGS30JH_E2510.pdf", "sec": 1.78, "pages": 5, "tables": 5, "numbers": 39, "matched": 39}
+{"pdf": "UGS5J_C2103.pdf", "sec": 2.14, "pages": 5, "tables": 7, "numbers": 29, "matched": 29}
+{"pdf": "UR2KB60 SERIES_L2104.pdf", "sec": 2.09, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "UR3KB60 SERIES_J2104.pdf", "sec": 1.7, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "UR4KB60-B SERIES_D2104.pdf", "sec": 1.7, "pages": 5, "tables": 6, "numbers": 36, "matched": 36}
+{"pdf": "UR8KB60 SERIES_C2104.pdf", "sec": 1.64, "pages": 5, "tables": 6, "numbers": 46, "matched": 46}
+{"pdf": "US1A SERIES_N2102.pdf", "sec": 1.64, "pages": 6, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "US1AH SERIES_A2102.pdf", "sec": 1.69, "pages": 6, "tables": 7, "numbers": 45, "matched": 45}
+{"pdf": "YBS2204G SERIES_D2103.pdf", "sec": 1.76, "pages": 5, "tables": 7, "numbers": 51, "matched": 51}
+{"pdf": "YBS3004G SERIES_D2103.pdf", "sec": 1.92, "pages": 5, "tables": 7, "numbers": 55, "matched": 55}
+{"event": "end", "time": "2026-11-01 08:46:38"}

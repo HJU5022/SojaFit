@@ -1,0 +1,230 @@
+{
+  "status": "ok",
+  "evaluation_level": "proxy_smoke_test",
+  "retrieval_mode": "dense_only",
+  "corpus_is_real": false,
+  "latency_corpus_vectors_are_repeated": true,
+  "eligible_for_final_model_decision": false,
+  "model_key": "text-embedding-3-small",
+  "model_name": "text-embedding-3-small",
+  "api_provider": "openrouter",
+  "api_model": "openai/text-embedding-3-small",
+  "sample": "evals/embedding_sample_v0.jsonl",
+  "chunks": 30,
+  "queries": 18,
+  "dimension": 1536,
+  "sample_embed_seconds": 1.9008651229996758,
+  "embed_1000_seconds": 7.02287350700135,
+  "sample_tokens": 1315,
+  "embed_1000_tokens": 43890,
+  "embed_1000_cost_usd": 0.0008778,
+  "query_tokens_total": 494,
+  "query_cost_usd_mean": 5.488888888888888e-07,
+  "total_tokens": 45699,
+  "total_cost_usd": 0.00091398,
+  "device": "OpenAI API",
+  "recall_at_5": 1.0,
+  "mrr": 0.9074074074074073,
+  "query_22k_exact_ms_p50": 918.7384619981458,
+  "query_22k_exact_ms_p95": 1205.0760140009515,
+  "query_results": [
+    {
+      "id": "q01",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5819-overview",
+        "tsc-1n5818-overview",
+        "tsc-1n5819-surge",
+        "tsc-1n5817-overview",
+        "tsc-es1jfs-overview"
+      ]
+    },
+    {
+      "id": "q02",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5818-overview",
+        "tsc-1n5817-overview",
+        "tsc-1n5819-overview",
+        "tsc-1n5819-surge",
+        "tsc-es1jfs-overview"
+      ]
+    },
+    {
+      "id": "q03",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-1n5819-surge",
+        "tsc-1n5818-overview",
+        "tsc-1n5819-overview",
+        "tsc-1n5817-overview",
+        "tsc-sf18g-overview"
+      ]
+    },
+    {
+      "id": "q04",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-es1j-overview",
+        "tsc-sf18g-overview",
+        "tsc-es1jfs-overview",
+        "tsc-es1jlw-overview",
+        "tsc-es15dlw-overview"
+      ]
+    },
+    {
+      "id": "q05",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-es1jlw-overview",
+        "tsc-es1jfs-overview",
+        "tsc-es15dlw-overview",
+        "tsc-es15glw-overview",
+        "tsc-es1j-overview"
+      ]
+    },
+    {
+      "id": "q06",
+      "first_gold_rank": 1,
+      "top5": [
+        "tsc-es15dlw-overview",
+        "inf-bat54-03w-overview",
+        "tsc-es1jfs-overview",
+        "tsc-es1jlw-overview",
+        "tsc-es15glw-overview"
+      ]
+    },
+    {
+      "id": "q07",
+      "first_gold_rank": 2,
+      "top5": [
+        "inf-bat165-surge",
+        "inf-bat165-overview",
+        "tsc-sf18g-overview",
+        "tsc-es1jfs-overview",
+        "tsc-es1j-overview"
+      ]
+    },
+    {
+      "id": "q08",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat165-surge",
+        "tsc-es1j-overview",
+        "tsc-es15dlw-overview",
+        "tsc-1n5819-surge",
+        "tsc-es1jlw-overview"
+      ]
+    },
+    {
+      "id": "q09",
+      "first_gold_rank": 2,
+      "top5": [
+        "inf-bas40-overview",
+        "inf-bas40-05-config",
+        "inf-bas40-06-config",
+        "inf-bat54-05-config",
+        "inf-bat165-overview"
+      ]
+    },
+    {
+      "id": "q10",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas40-06-config",
+        "inf-bas40-05-config",
+        "inf-bas40-overview",
+        "inf-bas70-04w-overview",
+        "inf-bat64-04w-overview"
+      ]
+    },
+    {
+      "id": "q11",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas70-05-overview",
+        "inf-bas70-04w-overview",
+        "inf-bat64-06-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-04w-overview"
+      ]
+    },
+    {
+      "id": "q12",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas70-04w-overview",
+        "inf-bat64-04w-overview",
+        "inf-bat64-05w-overview",
+        "inf-bas70-05-overview",
+        "inf-bat64-06-overview"
+      ]
+    },
+    {
+      "id": "q13",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat54-06-config",
+        "inf-bat64-06-overview",
+        "inf-bat54-05-config",
+        "inf-bat54-overview",
+        "inf-bat64-04w-overview"
+      ]
+    },
+    {
+      "id": "q14",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bat64-04w-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-06-overview",
+        "inf-bat165-overview",
+        "inf-bat54-03w-overview"
+      ]
+    },
+    {
+      "id": "q15",
+      "first_gold_rank": 1,
+      "top5": [
+        "inf-bas52-02v-overview",
+        "inf-bat165-overview",
+        "inf-bas40-overview",
+        "inf-bas40-05-config",
+        "inf-bas70-05-overview"
+      ]
+    },
+    {
+      "id": "q16",
+      "first_gold_rank": 3,
+      "top5": [
+        "inf-bat54-05-config",
+        "inf-bat54-06-config",
+        "inf-bat54-03w-overview",
+        "inf-bat54-overview",
+        "inf-bat165-overview"
+      ]
+    },
+    {
+      "id": "q17",
+      "first_gold_rank": 1,
+      "top5": [
+        "distractor-package",
+        "distractor-rectifier",
+        "inf-bat54-03w-overview",
+        "inf-bat64-05w-overview",
+        "inf-bat64-04w-overview"
+      ]
+    },
+    {
+      "id": "q18",
+      "first_gold_rank": 1,
+      "top5": [
+        "distractor-rectifier",
+        "distractor-tvs",
+        "tsc-es1j-overview",
+        "distractor-led",
+        "distractor-zener"
+      ]
+    }
+  ]
+}
