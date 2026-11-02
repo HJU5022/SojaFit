@@ -19,3 +19,5 @@
 - [auth-login-verification.md](auth-login-verification.md) — 인증 세션·시간 경계·scrypt 로컬 실측 기록
 - `auth_boundary_after_merge.py` / `.json` — 로그인 잠금·세션 만료 경계 실측 도구와 원시 결과
 - `measure_scrypt_concurrent.py` / `scrypt_concurrent_final_measurement.json` — 동시 scrypt·프로세스 메모리 실측 도구와 원시 결과
+- [model-licenses.md](model-licenses.md) — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부
+- [embedding-candidate-investigation.md](embedding-candidate-investigation.md) — 임베딩 후보 13종을 넣은 이유, 개별 조사·실행 과정, 중단 사유와 다음 평가 조건

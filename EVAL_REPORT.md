@@ -3,6 +3,8 @@
 > 제출물입니다. 최종 제출(11/17 24:00)까지 작성합니다. 숫자가 나빠도 괜찮습니다. **재고, 원인을 알고, 무엇을 시도했는지**가 평가 대상입니다. 버린 시도도 적으세요.
 >
 > 이 문서의 숫자는 `evals/results/`의 원시 결과와 Langfuse 트레이스에서 나온 것만 씁니다.
+>
+> **문서 전용 변경 주의**: 2026-11-02 확장 후보·실제 PDF smoke의 평가기, 입력 표본, 테스트와 원시 JSON은 이번 변경에 포함하지 않았습니다. 따라서 해당 탐색 수치는 제출용 근거로 사용하거나 이 문서에 반복하지 않고 [임베딩 후보 13종 개별 조사·평가 기록](docs/embedding-candidate-investigation.md)에만 로컬 이력으로 보존합니다. 실행 자산을 별도 검수해 함께 반영하거나 동결 본평가로 다시 측정하기 전에는 최종 모델 선정 근거로 승격하지 않습니다.
 
 ## 1. 코퍼스와 인덱스 (G3)
 
@@ -39,9 +41,24 @@
 
 **키 없는 데모 규칙**: API 모델을 선택해도 데모 요청에서 임의의 다른 임베딩 모델로 바꾸지 않습니다. 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 API·벡터 검색을 호출하지 않고 BM25-only로 근거를 찾은 뒤 근거 문장을 추출해 반환합니다. 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다. 실제 API 응답 원본은 저장하지 않습니다.
 
-**예비 선택**: 프로젝트 기본 후보는 `text-embedding-3-small`로 둡니다. 네 모델 모두 Recall@5가 포화됐고 MRR 차이도 표본 18질의에서 나온 값이므로 품질 우위로 단정하지 않습니다. 대신 22,000청크(계획 때 추정 규모) 최초 색인 계획비용이 $0.154로 작고 CUDA 모델 이미지를 배포하지 않아도 되는 점을 선택 근거로 삼습니다. 약 0.9초의 질의 지연과 키·외부 서비스 의존은 손해입니다. `KURE-v1`은 로컬 1순위, Qwen은 KURE보다 MRR이 0.019 낮지만 캐시가 작고 질의 p95가 양호한 4번째 후보로 유지합니다. `bge-m3`는 같은 로컬 운영비에서 KURE보다 MRR이 낮아 본평가 우선순위가 가장 낮습니다. 이 선택은 TSC 1,360건 실제 청크 본평가 전까지 잠정이며 `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2는 그 뒤에 확정합니다.
+**예비 선택 상태(2026-11-02 후보 확장 반영)**: 현재 서비스 적재·검색은 `text-embedding-3-small`과 `vector(1536)`을 사용하며, 확장 후보 추가는 이 기본값을 바꾸지 않습니다. 로컬 실행과 Voyage API allowlist는 후보 평가용입니다. 최종 모델을 정한 뒤에만 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 결정합니다. 외부 관리형이면 Cloud Run의 CUDA 이미지·가중치 부담과 로컬 GPU 지연을 최종 순위에서 제외하고, 자체 API이면 그 자원이 추론 서버의 운영비·지연으로 다시 포함됩니다. 로컬 Recall@5·MRR은 후보를 거르는 예비 품질 증거일 뿐이며, 최종 선택은 동결된 동일 표본을 실제 운영 방식의 정확한 모델 ID·차원·입력 형식으로 다시 측정한 결과로 결정합니다. `chunk_embeddings.embedding`의 `vector(N)`과 Migration 2도 그 뒤에 확정합니다.
 
-**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꿉니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. Qwen의 영문 query instruction도 프록시에서 사용한 문구로 고정하며 결과를 본 뒤 튜닝하지 않습니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다. 기대 범위와 회귀 위험은 `evals/PREREGISTER.md` #1·#2에 등록했습니다.
+**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 `BM25 + text-embedding-3-small API`를 기준선으로 두고 임베딩 API 모델만 하나씩 바꿉니다. 외부 관리형 우선 검증 대상은 OpenRouter에서 현재 제공되는 `voyageai/voyage-4`와 `baai/bge-m3`이고, `qwen/qwen3-embedding-0.6b`는 실행 시점에 provider와 가격을 확인한 뒤 포함합니다. 저비용 Voyage 대안인 `voyageai/voyage-4-lite`는 현재 13종 결과에 포함되지 않은 미평가 추가 후보입니다. KURE·Voyage 4 Nano처럼 관리형 endpoint가 확인되지 않은 후보도 팀이 자체 추론 API를 운영하기로 하면 운영 후보로 남습니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다.
+
+**API 재검증 규칙**: 로컬과 API의 표시 이름이 비슷해도 provider가 사용하는 revision, 정밀도·양자화, 최대 입력, 정규화, query/document prefix 또는 instruction이 다를 수 있습니다. 예를 들어 OpenRouter의 `intfloat/multilingual-e5-large`는 이번에 로컬로 실행한 `intfloat/multilingual-e5-large-instruct`와 다른 모델 ID이므로 기존 점수를 이전하지 않습니다. 운영 API별 Recall@5·MRR, 다중 근거 Recall@5, 질의 p50/p95, 실제 입력 토큰과 1,000청크 비용을 새로 기록합니다. OpenRouter의 현재 공개 가격은 `text-embedding-3-small`과 `voyage-4-lite`가 $0.02/M tokens, `bge-m3`가 $0.01/M, `voyage-4`가 $0.06/M이지만, 전체 재색인 전 각 모델 페이지에서 다시 확인합니다: [embedding models](https://openrouter.ai/collections/embedding-models/), [Voyage 4 Lite](https://openrouter.ai/voyageai/voyage-4-lite), [Voyage 4](https://openrouter.ai/voyageai/voyage-4), [BGE-M3](https://openrouter.ai/baai/bge-m3), [Text Embedding 3 Small](https://openrouter.ai/openai/text-embedding-3-small).
+
+**13종 후보 조사·평가 상태(로컬 이력)**: 아래 분류는 모든 후보를 같은 수준으로 평가했다는 뜻이 아닙니다. 후보별 선정 이유, 로컬에서 수행한 조사·실행 과정, 중단하거나 실험 기록으로만 남긴 이유, 다음 평가 조건은 [임베딩 후보 13종 개별 조사·평가 기록](docs/embedding-candidate-investigation.md)을 정본으로 봅니다. 라이선스와 저장소 공개 범위는 [모델 라이선스·공개 범위](docs/model-licenses.md)를 따릅니다. 2026-11-02 확장 원시 결과는 이번 문서 변경에 포함하지 않아 현재 저장소만으로 검증할 수 없습니다.
+
+| 증거 수준 | 모델 수 | 현재 해석 |
+|---|---:|---|
+| 실제 PDF smoke 완료 | 5 | PDF 3건·156청크·질의 9건의 비동결 예비 결과이며 최종 선정 근거가 아님 |
+| 합성 프록시만 완료 | 1 | `text-embedding-3-small` 기준선의 초기 결과이며 실제 PDF 후보와 직접 비교하지 않음 |
+| 호환성 확인에서 차단 | 4 | 환경·고정 의존성 문제로 품질 미측정이며 0점이나 품질 탈락으로 처리하지 않음 |
+| API 정책에서 차단 | 1 | Voyage 4가 ZDR/data-policy 조건으로 차단되어 품질 미측정 |
+| 조사 전용 | 2 | 약관·라이선스·자원 조건 때문에 이번 실행 대상에서 제외 |
+| **합계** | **13** | 모두 `eligible_for_final_model_decision=false`; 2차 판정과 동결 본평가 전 확정하지 않음 |
+
+2026-11-02 확장 후보의 모델별 Recall@5·MRR·지연·오류와 실제 PDF 3건 smoke 상세값은 원시 산출물이 저장소에 포함될 때까지 제출용 수치로 사용하지 않습니다. 후보별 로컬 이력과 중단 이유는 [임베딩 후보 13종 개별 조사·평가 기록](docs/embedding-candidate-investigation.md)에서만 확인합니다. 호환성 차단 후보는 0점이나 품질 탈락으로 환산하지 않으며, 동결 평가셋과 실제 운영 endpoint로 다시 측정하기 전에는 후보 순위를 확정하지 않습니다.
 
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
 
@@ -131,11 +148,28 @@ HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 �
 - D는 HNSW 겹침과 HNSW 하이브리드 MRR이 기준보다 높지만 정확 검색 하이브리드 MRR은 0.895로 낮고(n03 좋아짐, e08·n05 나빠짐), 로컬 모델이라 서버 메모리가 더 필요합니다.
 - C는 HNSW 겹침이 기준보다 낮았습니다.
 
+### 1-2. 임베딩 본평가 준비 상태 (2026-11-02)
+
+아래는 최종 모델 선정 결과가 아니라, 2차 사람 판정과 평가셋 동결 뒤 같은 조건으로 본평가를 시작할 수 있는지 확인한 체크리스트다. `통과`는 실행 자산이 준비됐다는 뜻일 뿐 해당 모델의 품질 합격을 뜻하지 않는다.
+
+| 확인 항목 | 상태 | 확인 근거와 다음 조건 |
+|---|---|---|
+| 2차 사람 판정 | 대기 | `evals/DRAFT_50_REVIEW.md`에 김재훈 판정이 2026-11-02 예정으로 남아 있고 확인 칸이 비어 있다. 이 문서는 이번 작업에서 수정하지 않았다. |
+| 평가셋 동결 | 대기 | `evals/FROZEN.json`이 없다. 두 사람의 판정 차이를 합의한 뒤 동결해야 한다. |
+| 본평가 질문·gold | 대기 | `evals/dataset_v1.jsonl`은 2행짜리 형식 예시이고, 동결된 50건 gold 입력이 아니다. |
+| TSC 1,360건 목록 | 통과(메타데이터만) | `data/manifest.jsonl`에 1,360행과 청크 수 합계 52,244가 기록돼 있다. |
+| 전체 PDF·청크 본문 | 차단 | 저장소의 TSC PDF는 smoke용 3건뿐이고 `chunks.jsonl`, `params.jsonl`, `tsc_datasheet_list.csv`도 없다. 따라서 1,360건 본문을 이 checkout만으로 재생성하거나 후보별 본평가할 수 없다. |
+| 성공 후보 5종 고정 revision 캐시 | 로컬 기록(저장소 밖) | BGE `5617a9f...`, KURE `8b418a5...`, Qwen `97b0c61...`, E5 `274baa4...`, Voyage 4 Nano `5fb34e8...`를 로컬 `sojafit-hf`에서 오프라인 실행한 기록이 있다. 모델 캐시와 2026-11-02 원시 결과는 저장소에 없으므로 현재 checkout만으로 이 상태를 검증할 수 없다. |
+| 비교 실행기·지표 | 일부 통과(확장 자산 대기) | 현재 `evals/benchmark_embeddings.py`는 기존 4종 프록시를 실행할 수 있다. 확장 후보·실제 PDF·Voyage 입력 계약과 결과를 재현하는 평가기·표본·테스트는 이번 변경에 포함하지 않았고, 본평가용 동결 JSONL도 아직 없다. |
+| 운영 API 후보 | 대기 | 키 없는 데모는 BM25-only이므로 API 임베딩 품질 비교가 아니다. 동결 뒤 승인된 비용 상한과 중앙 API 경계를 사용해 `text-embedding-3-small`, `voyage-4`, `bge-m3` 등 실제 운영 후보를 각각 실행해야 한다. |
+
+본평가 시작 조건은 (1) 2차 판정 완료, (2) `FROZEN.json`과 동결 gold 생성, (3) 1,360건의 실제 PDF 또는 고정 청크 본문 확보, (4) API 모델 ID·provider 정책·차원·입력 형식 고정, (5) 예상 토큰·비용 상한 재승인이다. 그 전에는 위 3문서·9질의 smoke 수치로 후보를 확정하지 않는다. 실패한 GTE·Jina·Nomic·Arctic도 품질 0점이 아니라 현재 고정 로컬 환경에서 `호환성 차단`으로 유지한다.
+
 ## 2. 평가셋 (G5)
 
-2026-11-02 현재 `evals/draft_50.jsonl`은 52건(관련 26·비관련 26) **비동결 검수 초안**입니다. 1장의 11-01 검색 결과는 변경 전 초안의 측정이며 현재 52건의 점수가 아닙니다. 변경 세 문항의 재검수·합의와 추가 두 문항의 두 사람 검수가 남아 있어 아래 동결 표는 채우지 않았습니다.
+2026-11-02 현재 `evals/draft_50.jsonl`은 50건(관련 25·비관련 25) **비동결 검수 초안**입니다. 1장의 11-01 검색 결과는 변경 전 초안의 측정이며 현재 50건의 점수가 아닙니다. n22·n13은 예비 이관했고 변경 세 문항의 재검수·합의와 n21의 하정운 검수가 남아 있어 아래 동결 표는 채우지 않았습니다.
 
-추가 두 문항은 김재훈 O 기록 후 하정운 검수 대기입니다. 명시적 두 사람 O가 있는 기존 40건은 현재 코퍼스에서 변경 보류로 표시했고, 숫자형 7건의 기계 대조는 사람 검수 기록과 구분했습니다. 코퍼스 축소·halfvec 작업은 PREREGISTER #9·#10의 후속 실측 대상입니다. `storage_contract_2026-11-02.json`의 합성 PostgreSQL 결과를 실제 코퍼스의 용량·Recall·MRR로 사용하지 않습니다.
+본편 추가 문항 n21은 김재훈 O 기록 후 하정운 검수 대기입니다. 명시적 두 사람 O가 있는 본편 39건은 현재 코퍼스에서 변경 보류로 표시했고, 숫자형 7건의 기계 대조는 사람 검수 기록과 구분했습니다. 코퍼스 축소·halfvec 작업은 PREREGISTER #9·#10의 후속 실측 대상입니다. `storage_contract_2026-11-02.json`의 합성 PostgreSQL 결과를 실제 코퍼스의 용량·Recall·MRR로 사용하지 않습니다.
 
 | 항목 | v1 | v2 |
 |---|---|---|
@@ -160,7 +194,7 @@ HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 �
 
 **판정 방식과 한계**: (정확 일치 / 규칙 기반 / LLM-as-judge. judge 모델은 생성 모델과 달라야 합니다. 이 방식이 무엇을 못 보는지, 측정이 제대로 되는지 확인한 과정을 적습니다. 결과가 직관과 크게 어긋날 때는 결론보다 측정 도구를 먼저 의심하세요.)
 
-관련/비관련과 NOT_VERIFIED의 구분은 [EVALS.md](evals/EVALS.md#관련비관련과-not_verified의-구분)를 따릅니다. 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않습니다. 지표별 분모와 답변 채점기는 별도 확인이 필요하며, 현재 `run_retrieval.py`는 검색 지표만 재고 위 답변·거절 지표는 채점하지 않습니다. 이번 52건 변경에서는 점수를 재측정하지 않았습니다.
+관련/비관련과 NOT_VERIFIED의 구분은 [EVALS.md](evals/EVALS.md#관련비관련과-not_verified의-구분)를 따릅니다. 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않습니다. 지표별 분모와 답변 채점기는 별도 확인이 필요하며, 현재 `run_retrieval.py`는 검색 지표만 재고 위 답변·거절 지표는 채점하지 않습니다. 이번 50건 구성 조정에서는 점수를 재측정하지 않았습니다.
 
 ## 3. 검색 개선 전후 (사전 등록, 한 번에 하나만)
 
@@ -234,6 +268,8 @@ HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 �
 
 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 봅니다.
 
+아래 명령은 현재 `main`에 있는 기존 4종 프록시 평가기와 검색 평가 경로만 대상으로 합니다. 이번 변경에서 제외한 실제 PDF·Voyage 확장 명령은 재현 가능한 실행 자산이 저장소에 들어오기 전까지 제출용 재현 명령으로 싣지 않습니다.
+
 ```bash
 # 최초 1회 캐시 준비(네트워크 사용): MODEL은 bge-m3, kure-v1, qwen3-embedding-0.6b 중 하나입니다.
 docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
@@ -242,7 +278,7 @@ docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/hug
 docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
 
 # API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
-docker run --rm --env-file .env -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy python evals/benchmark_embeddings.py --model text-embedding-3-small
+docker run --rm --env-file .env -e PYTHONPATH=/workspace -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy --with python-dotenv python evals/benchmark_embeddings.py --model text-embedding-3-small
 
 # 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
 docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/draft_50.jsonl evals/results/retrieval.json

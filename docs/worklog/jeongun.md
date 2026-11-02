@@ -1,8 +1,15 @@
 # jeongun 작업 기록
 
+## 2026-11-02 PR #23·#24 머지 뒤 리뷰 의견 반영
+- 한 일: PR #21·#23·#24의 리뷰와 코멘트를 다시 읽고, 머지 뒤에도 남은 것을 고쳤다. 두 PR이 같이 쓴 ADR 0008 번호를 나눠 Mouser ADR을 0009로 옮겼다. SPEC 3절에 원래 부품의 근거가 없을 때도 동일품·사양 동등을 내지 않는다고 적어 2절·ADR 0006과 맞췄다. halfvec 전환 조건(모델 확정, 동결 평가셋 Recall@5·MRR 무하락, 그 전까지 기본 `vector`)을 SPEC 6절·ADR 0005에 PR #24 내용과 같게 적었다. SPEC 6절 이용 조건에 Infineon 약관을 넣었다.
+- 바꾼 파일: `SPEC.md`(3절, 6절, Mouser 링크), `docs/adr/`(0005, 0008 → 0009 이름 바꿈, ADR.md 목록 순서), 이 파일
+- 실행한 명령과 결과: `gh api .../pulls/{21,23,24}/reviews|comments`, `issues/{21,23,24}/comments`로 의견을 모았다. 문서 확인은 `SPEC.md`와 `docs/adr/*.md`의 상대 링크가 모두 실제 파일을 가리키는지 대조했다. `uv run --offline pytest -q`는 51 passed, 10 skipped(DB 시험은 `TEST_DATABASE_URL`이 없어 건너뜀)였다.
+- 확인 못 한 것: 코멘트 밖 검토 의견(`retrieve.py` halfvec 경로의 행마다 float32 변환 시간, SQL의 `1536` 상수화, 쓰지 않는 `subset.py` 유지 여부)은 고치지 않았다.
+- 다음 할 일: 위 세 가지는 임베딩 모델 확정 뒤 halfvec 전환 때 함께 정한다.
+
 ## 2026-11-02 Mouser 응답을 저장하지 않는다는 결정 기록
-- 한 일: Mouser Search API 약관을 읽고, 가격·재고를 저장하지 않고 견적서를 열 때마다 다시 조회한다는 조장 결정을 ADR 0008과 `SPEC.md`에 적었다. 데모 모드는 Mouser 칸을 비운다.
-- 바꾼 파일: `docs/adr/`(0008, ADR.md), `SPEC.md`(1절 하지 않는 것, 6절, 7절, 8.4), 이 파일
+- 한 일: Mouser Search API 약관을 읽고, 가격·재고를 저장하지 않고 견적서를 열 때마다 다시 조회한다는 조장 결정을 ADR 0009(처음 0008, 평가 ADR과 번호가 겹쳐 옮김)와 `SPEC.md`에 적었다. 데모 모드는 Mouser 칸을 비운다.
+- 바꾼 파일: `docs/adr/`(0009, ADR.md), `SPEC.md`(1절 하지 않는 것, 6절, 7절, 8.4), 이 파일
 - 실행한 명령과 결과: 약관 원문(https://www.mouser.com/apiterms/, 최종 수정 2013-03-11)의 1·2·4·5절을 읽었다. API 문서 V2 정의(https://api.mouser.com/api/docs/ui/index)에서 검색 엔드포인트 3개와 부품 응답 칸(`LifecycleStatus`, `IsDiscontinued`, `SuggestedReplacement`, `PriceBreaks`, `AvailabilityInStock`, `DataSheetUrl` 등)을 확인했다. 문서 확인은 바뀐 문서의 ADR 상대 링크가 실제 파일을 가리키는지 대조했다.
 - 확인 못 한 것: 키 발급 승인 여부, 호출 한도(API 문서에 없음), 견적서 PDF 내려받기가 저장에 해당하는지. `docs/TOPIC.md` 범위 칸과 `db/table-definition.md` 10절의 Mouser 관련 줄은 고치지 않았다(ADR 0008 결과 절).
 - 다음 할 일: 확장 단계 전에 Search API 키를 신청하고, 신청서에 견적서 용도를 적는다.
