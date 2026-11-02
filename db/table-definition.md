@@ -2,9 +2,9 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 다음 단계에서 이 문서를 기준으로 ERD를 작성하고, ERD 검토가 끝난 뒤 Migration SQL을 작성합니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`이 이미 만들고, 나머지 업무 표 11개는 `db/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. ERD 그림은 아직 없습니다.
 
-Migration SQL이 생기면 열의 정본은 SQL입니다(`db/ERD.md` 기본 규칙). 그때 이 문서의 표 설명은 `db/ERD.md`로 옮기고 이 문서는 지웁니다.
+열의 정본은 SQL입니다(`db/ERD.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/ERD.md`로 옮기고 이 문서는 지웁니다.
 
 현재 프로젝트의 핵심 흐름은 다음과 같습니다.
 
@@ -32,7 +32,7 @@ Migration SQL이 생기면 열의 정본은 SQL입니다(`db/ERD.md` 기본 규�
 - 후보 판정의 대체 조건별 비교 결과
 - 승인 후 저장되는 견적서
 - RAG 원문 문서와 일반 텍스트 청크 메타데이터
-- 청크 임베딩 표와 벡터 인덱스(`pgvector`). 벡터 차원은 임베딩 모델을 정한 뒤 채웁니다
+- 청크 임베딩 표와 벡터 인덱스(`pgvector`). 벡터 차원은 1536(`text-embedding-3-small`, ADR 0004 임시 결정)
 
 ### 제외
 
@@ -82,7 +82,7 @@ Migration SQL이 생기면 열의 정본은 SQL입니다(`db/ERD.md` 기본 규�
 | 분석 | 조건별 비교 | `requirement_checks` | 후보 판정마다 대체 조건 하나씩의 비교 결과 저장 | 확정 |
 | 근거 | 출처 문서 | `source_documents` | 데이터시트와 공개 문서의 출처·버전 저장 | 확정 |
 | 근거 | 문서 청크 | `document_chunks` | 검색 가능한 일반 텍스트 청크와 위치 저장 | 확정 |
-| 근거 | 청크 임베딩 | `chunk_embeddings` | 청크의 임베딩 벡터 저장 | 차원 미정 |
+| 근거 | 청크 임베딩 | `chunk_embeddings` | 청크의 임베딩 벡터 저장 | 확정(1536 임시) |
 | 근거 | 부품 문서 연결 | `part_documents` | 부품과 해당 데이터시트 연결 | 가정 |
 | 근거 | 판정 인용 | `evidence_citations` | 후보 판정에 사용한 페이지·표·행 근거 저장 | 확정 |
 | 견적 | 견적서 | `quotes` | 사람 승인 후 확정된 견적서 저장 | 확정 |
@@ -92,7 +92,7 @@ Migration SQL이 생기면 열의 정본은 SQL입니다(`db/ERD.md` 기본 규�
 
 ### 5.1 `users` — 사용자
 
-로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 평가용 데모 계정 2개는 `db/` SQL로 비밀번호 해시와 함께 적재합니다(A-01). LangGraph `thread_id`와 Store namespace에는 `str(users.id)`를 씁니다(A-02).
+로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 평가용 데모 계정 2개는 `db/` SQL로 비밀번호 해시와 함께 적재합니다(A-01. 바뀜: 계정은 `python -m backend.auth`로 비밀번호를 숨겨 입력해 만들고 저장소에 기록하지 않음, `docs/specs/login-auth.md`). LangGraph `thread_id`와 Store namespace에는 `str(users.id)`를 씁니다(A-02).
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -101,6 +101,7 @@ Migration SQL이 생기면 열의 정본은 SQL입니다(`db/ERD.md` 기본 규�
 | `password_hash` | 비밀번호 해시 | `VARCHAR(255)` | N |  | 비밀번호 해시. 평문 비밀번호는 저장하지 않음 | 확정 |
 | `display_name` | 표시 이름 | `VARCHAR(100)` | Y |  | 화면에 표시할 이름 | 가정 |
 | `is_active` | 활성 여부 | `BOOLEAN` | N | 기본값 `true` 가정 | 비활성 계정의 접근을 막기 위한 값 | 가정 |
+| `role` | 역할 | `TEXT` | N | CHECK: `admin`, `user`. 기본값 `user` | 관리자·일반 사용자 구분(`db/006_user_roles.sql`) | 확정 |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 생성 시각 | 확정 |
 | `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 마지막 수정 시각 | 가정 |
 
@@ -177,7 +178,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ### 5.6 `document_chunks` — 문서 청크
 
-출처 문서에서 추출한 일반 텍스트와 문서 내 위치를 저장합니다. 임베딩과 벡터 컬럼은 현재 범위에서 제외합니다.
+출처 문서에서 추출한 일반 텍스트와 문서 내 위치를 저장합니다. 임베딩은 이 표에 두지 않고 `chunk_embeddings`(5.15)에 둡니다.
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -372,14 +373,14 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 |---|---|---|---|---|---|---|
 | `chunk_id` | 청크 ID | `BIGINT` | N | PK 일부, FK → `document_chunks.id` | 임베딩한 청크 | 확정 |
 | `embedding_model` | 임베딩 모델 | `VARCHAR(200)` | N | PK 일부 | 임베딩에 쓴 모델 이름 | 확정 |
-| `embedding` | 임베딩 벡터 | `vector(N)` | N |  | N은 임베딩 모델의 출력 차원. 모델을 정한 뒤 채움 | 미정 |
+| `embedding` | 임베딩 벡터 | `vector(1536)` | N |  | `text-embedding-3-small`의 출력 차원. 본평가 전 임시 결정(ADR 0004) | 확정(임시) |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
 
-- 거리 함수는 코사인 거리, 인덱스는 HNSW(`vector_cosine_ops`)입니다. `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 N은 2,000 이하여야 합니다.
+- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, `backend/rag/retrieve.py`는 인덱스 스캔을 끄고 정확 검색합니다(11-01 실측에서 HNSW가 가까운 카드를 놓침). `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 차원은 2,000 이하여야 합니다.
 - 현재 RAG 기본 열은 vector(1536)이며, 원본 코퍼스를 유지한 복제 DB에만 `halfvec.sql.manual`로 halfvec(1536) 저장·HNSW 제거 전환을 시험할 수 있습니다. 검색 거리는 float32로 계산합니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
-- 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
+- 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 지금 검색은 정확 검색이라 해당하지 않고, HNSW를 다시 쓰면 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
 - 차원이 다른 모델로 바꾸면 `embedding` 열을 새 Migration으로 바꿉니다.
-- 이 표와 인덱스는 N이 정해진 뒤 별도 Migration으로 만듭니다(11절).
+- 이 표와 HNSW 인덱스는 `db/002_rag_corpus.sql`이 만듭니다.
 
 ## 6. 관계 정의 초안
 
@@ -446,11 +447,11 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ## 9. 결정 기록
 
-초안의 추가 검토 항목 A-01~A-20은 2026-10-30에 조장(하정운)이 아래와 같이 정했습니다. A-19의 벡터 차원만 임베딩 모델을 정한 뒤 채웁니다.
+초안의 추가 검토 항목 A-01~A-20은 2026-10-30에 조장(하정운)이 아래와 같이 정했습니다. A-19의 벡터 차원은 2026-11-01에 1536으로 임시 결정했습니다(ADR 0004).
 
 | ID | 항목 | 결정 | 반영한 곳 |
 |---|---|---|---|
-| A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장하고 데모 계정 2개는 `db/` SQL로 적재 | `users`, `backend/auth.py` |
+| A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장하고 데모 계정 2개는 `db/` SQL로 적재. 바뀜: 계정은 `python -m backend.auth`로 만들고 저장소에 기록하지 않음(`docs/specs/login-auth.md`) | `users`, `backend/auth.py` |
 | A-02 | 사용자 ID 형식 | `users.id`는 `BIGINT`. LangGraph `thread_id`와 Store namespace에는 `str(users.id)` | 사용자 FK, `backend/memory.py` |
 | A-03 | 회로 원문 저장 위치 | DB `TEXT` | `circuits.netlist_content` |
 | A-04 | 파일 크기·보존 | 업로드 최대 1MB(API에서 검증), MVP에는 삭제 기능 없음 | `circuits`, API |
@@ -468,7 +469,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | A-16 | 판정·규칙 버전 | `rule_version`은 규칙 파일 SHA-256. `model_name`, `prompt_version`, `trace_id` 열 추가 | `analysis_runs` |
 | A-17 | 인용 대상 범위 | 조건별 비교 표 `requirement_checks`를 두고 인용을 조건에도 연결. 역할 설명의 인용은 MVP에서 제외 | `requirement_checks`, `evidence_citations` |
 | A-18 | 삭제 정책 | 모든 FK `RESTRICT`. 코퍼스 문서는 `retired_at`으로 논리 삭제 | 전체 테이블 |
-| A-19 | pgvector 구조 | `chunk_embeddings` 표, 코사인 거리, HNSW. 벡터 차원 N은 임베딩 모델을 정한 뒤 채움 | `chunk_embeddings` |
+| A-19 | pgvector 구조 | `chunk_embeddings` 표, 코사인 거리, HNSW. 벡터 차원 N은 임베딩 모델을 정한 뒤 채움. 바뀜: 1536 임시(ADR 0004), 검색은 인덱스 없이 정확 검색(`backend/rag/retrieve.py`) | `chunk_embeddings` |
 | A-20 | 승인 사례 장기 기억 | 원본은 업무 표(`quotes`, `candidate_evaluations`). Store에는 사례 요약과 `quote_id`·`analysis_run_id` 참조만 두고 의미 검색 인덱스는 쓰지 않음 | Store, `quotes` |
 
 검토하며 더한 열: `analysis_runs.thread_id`(승인 재개), `document_chunks.chunk_sha256`(G3 서로 다른 청크 수), `source_documents`의 manifest 열(`parser`, `chars_original`, `chars_kept`, `truncated`).
@@ -479,24 +480,24 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 - 견적 승인·반려 이력 `quote_approvals`
 - 판정 수정 및 기억 정정 이력
-- 실시간 가격과 재고 스냅샷
-- Mouser API 요청·응답 이력
+- 실시간 가격과 재고 스냅샷(ADR 0009로 만들지 않음)
+- Mouser API 요청·응답 이력(ADR 0009로 만들지 않음)
 - 제조사 마스터 테이블
 - 부품 패키지 마스터 테이블
 - 주문과 결제
 
 ## 11. 다음 단계
 
-아래 분할은 기존 계획이다. PR #17 코퍼스 SQL이 문서·청크·임베딩 표를 먼저 생성하므로, Migration 1 초안은 문서·청크·사용자 표를 제외한 11개 업무 표를 대상으로 조정했다. 코퍼스 SQL 반영과 실행 순서·이력 방식은 확정 전이다.
+PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다룬다. 실행 순서·이력 방식은 확정 전이다.
 
 1. 이 정의서로 `db/ERD.md`에 표 관계도(mermaid `erDiagram`)를 그립니다.
 2. Migration은 두 번으로 나눕니다.
 
 | 순서 | 내용 | 시작 조건 |
 |---|---|---|
-| Migration 1 | 5.1~5.14의 업무 표 14개와 CHECK·FK·UNIQUE | ERD 승인 |
-| Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 임베딩 모델과 벡터 차원 N 결정 |
+| Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/004_create_business_tables.sql.draft` | ERD 승인 |
+| Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 완료: `db/002_rag_corpus.sql`(1536 임시, ADR 0004) |
 
-3. 데모 계정 2개 적재는 `db/DB.md`의 순서(스키마 → 데이터 → 인덱스 → 데모 계정)를 따릅니다.
-4. 개발 중 표나 열이 더 필요하면 Migration 3부터 번호를 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
+3. 평가용 계정은 SQL이 아니라 `python -m backend.auth`로 만듭니다(`db/DB.md`).
+4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`007_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/ERD.md`로 옮기고 이 문서를 지웁니다.

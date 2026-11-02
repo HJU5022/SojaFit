@@ -13,5 +13,5 @@
 11/5(D4)에 단일 에이전트 그래프로 기준 점수를 재고, 11/6(D5)에 Supervisor와 서브에이전트로 나눠 같은 평가셋으로 다시 잽니다. 단일을 건너뛰면 멀티가 나았다는 걸 증명할 기준이 없습니다. 개선이 없었다면 없었다고 `EVAL_REPORT.md`에 적습니다.
 
 ## 파일
-- `state.py` — 그래프 상태 정의
-- `build.py` — 그래프 조립(Supervisor, 서브에이전트, 체크포인트, interrupt)
+- `state.py` — 그래프 상태 정의. 지금은 `question`·`user_id`만 있음
+- `build.py` — 그래프 조립(Supervisor, 서브에이전트, 체크포인트, interrupt) 자리. 지금은 `build_graph()`가 `NotImplementedError`를 내는 빈 틀

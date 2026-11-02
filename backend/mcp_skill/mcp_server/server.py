@@ -1,6 +1,6 @@
-"""MCP 서버 — 필수 조건 5.
+"""MCP 서버 — 가산(backend/mcp_skill/MCP_SKILL.md).
 
-서비스 기능을 MCP tool로 노출합니다. 2주차 17강에서 만든 그대로입니다.
+3차 RAG 검색 등 서비스 기능을 MCP tool로 노출합니다. 지금은 예시 tool(example_tool)뿐입니다.
 
 확인 방법은 자유입니다:
   - Claude Desktop / Cursor에 연결해 자연어로 호출

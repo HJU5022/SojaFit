@@ -20,9 +20,9 @@
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
-| (정할 것) | 승인된 견적서 등 업무 표 | Migration 1 초안 검토 뒤 |
+| (정할 것) | 승인된 견적서 등 업무 표 | `004_create_business_tables.sql.draft`(Migration 1 초안) 검토 뒤 |
 
-문서·청크 표는 코퍼스 SQL, 사용자 표는 인증 SQL이 생성합니다. Migration 1 초안은 이 표들을 참조합니다.
+문서·청크 표는 코퍼스 SQL, 사용자 표는 인증 SQL이 생성합니다. Migration 1 초안(`004_create_business_tables.sql.draft`)은 이 표들을 참조합니다.
 
 ## 라이브러리가 만드는 표
 
