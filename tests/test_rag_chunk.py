@@ -1,4 +1,6 @@
-"""표 카드 규칙(docs/specs/rag-pipeline.md AC-01·AC-02)과 문서 키를 지킨다. Docling 없이 돈다."""
+"""표 카드 규칙(docs/specs/rag-pipeline.md AC-01·AC-02)과 문서 키, manifest 크기를 지킨다. Docling 없이 돈다."""
+import os
+
 from backend.rag.chunk import doc_key, revision, table_cards
 
 # 3행 3열 표: 0행이 머리. 1열(VRRM) 칸 하나가 1~2행에 걸쳐 합쳐져 있다.
@@ -30,3 +32,8 @@ def test_empty_table_gives_no_card():
 def test_doc_key_and_revision():
     assert doc_key('1N4148 SERIES_K2301.pdf') == 'tsc-1n4148-series_k2301'
     assert revision('1N4148 SERIES_K2301.pdf') == 'K2301'
+
+
+def test_manifest_fits_checkpoint_dashboard():
+    # [왜] Checkpoint 대시보드가 1,012,774바이트 manifest를 "커서 읽지 못함"으로 표시했다(11-02). GitHub GraphQL은 512,000바이트에서 자른다
+    assert os.path.getsize('data/manifest.jsonl') < 512_000

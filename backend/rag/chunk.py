@@ -4,6 +4,7 @@
   - PDF마다 카드: 품번 표지 1장 + 표 밖 글(Docling HybridChunker, 표가 든 조각은 뺌) + 표 한 행 = 한 장.
     표 카드는 합친 칸을 걸친 모든 자리에 채우고 앞에 [파일 · 쪽 · 표 제목] 이름표를 붙인다.
   - <출력>/chunks.jsonl(카드 한 장 = 한 줄), <출력>/summary.json(카드 수, 서로 다른 본문 수), manifest.jsonl(문서 한 개 = 한 줄)
+  - manifest에는 문서마다 다른 값만 쓴다. 모든 문서에 같은 값은 DOC_DEFAULTS에 두고 ingest.py가 읽을 때 채운다.
 - 하지 않는 일: 임베딩·DB 적재(ingest.py), 파싱(parse.py)
 - 출처: docs/specs/rag-pipeline.md What 4·AC-01~03, EVAL_REPORT.md 1장 청킹 비교(개선 2)
 - 의존성: 표 카드 함수는 표준 라이브러리만 쓴다. 실행(main)에는 uv 그룹 ingest(docling)가 필요하다.
@@ -20,6 +21,10 @@ import sys
 CHUNKER_VERSION = 'tsc-cards-2026-11-01'  # document_chunks.chunker_version에 들어가는 규칙 이름
 PARSER = 'docling 2.145.0 (OCR off)'
 USAGE = 'See data/corpus/CORPUS.md; informational/non-commercial, unmodified PDF, notices retained and source attributed.'
+# [왜] 1,360줄에 같은 값을 되풀이하면 manifest가 1MB를 넘어 Checkpoint 대시보드가 읽지 못한다(512,000바이트 아래로 둔다).
+# [주의] 이 값과 다른 문서(다른 제조사, 인젝션 시험 문서)는 manifest 줄에 그 키를 적으면 줄의 값이 앞선다.
+DOC_DEFAULTS = {'manufacturer': 'Taiwan Semiconductor', 'collected_at': '2026-11-01', 'parser': PARSER,
+                'status': 'parsed_chunked', 'purpose': 'corpus', 'usage_conditions': USAGE}
 
 
 def sha(text):
@@ -124,13 +129,12 @@ def main(json_dir, list_csv, pdf_dir, out_dir, manifest_path):
                 seen.add(sha(card['text']))
             n_cards += len(cards)
             pdf = open(os.path.join(pdf_dir, file), 'rb').read()
+            # [왜] 파일 이름은 source_url 끝에 있어 path를 따로 쓰지 않고, 공백 없는 JSON(separators)으로 크기를 줄인다
             fm.write(json.dumps({
-                'doc_id': doc_key(file), 'path': f'corpus/tsc/pdf/{file}', 'manufacturer': 'Taiwan Semiconductor',
-                'title': re.sub(r'_[A-Z]\d{4}\.pdf$', '', file), 'revision': revision(file), 'source_url': m['url'],
-                'collected_at': '2026-11-01', 'sha256': hashlib.sha256(pdf).hexdigest(), 'bytes': len(pdf),
-                'pages': doc.num_pages(), 'parser': PARSER, 'chunks': len(cards), 'chars_original': chars_original,
-                'chars_kept': chars_kept, 'truncated': chars_kept < chars_original, 'status': 'parsed_chunked', 'purpose': 'corpus',
-                'exact_original_part_match': None, 'usage_conditions': USAGE}, ensure_ascii=False) + '\n')
+                'doc_id': doc_key(file), 'title': re.sub(r'_[A-Z]\d{4}\.pdf$', '', file), 'revision': revision(file),
+                'source_url': m['url'], 'sha256': hashlib.sha256(pdf).hexdigest(), 'bytes': len(pdf), 'pages': doc.num_pages(),
+                'chunks': len(cards), 'chars_original': chars_original, 'chars_kept': chars_kept,
+                'truncated': chars_kept < chars_original}, ensure_ascii=False, separators=(',', ':')) + '\n')
     summary = {'cards': n_cards, 'distinct_text': len(seen), 'chunker_version': CHUNKER_VERSION}
     json.dump(summary, open(os.path.join(out_dir, 'summary.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(json.dumps(summary, ensure_ascii=False))

@@ -10,7 +10,7 @@
 - `corpus/` — 원본 문서 표본. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
-- `manifest.jsonl` — 코퍼스 데이터시트 PDF 1,360건의 출처·개정판·해시·쪽 수·파서·카드 수. `backend/rag/chunk.py`가 쓴다. `path`는 로컬 `SojaFit/` 기준 저장소 밖 경로다
+- `manifest.jsonl` — 코퍼스 데이터시트 PDF 1,360건의 출처·개정판·해시·쪽 수·카드 수. `backend/rag/chunk.py`가 쓴다. 원래 PDF 파일 이름은 `source_url` 끝에 있고, PDF는 저장소 밖 로컬 `SojaFit/corpus/tsc/pdf/`에 있다
 
 ## 기준
 
@@ -21,8 +21,12 @@ G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(
 ## manifest 형식 (한 줄에 하나)
 
 ```json
-{"doc_id": "tsc-1n4148-series_k2301", "path": "data/corpus/tsc/1N4148-SERIES_K2301.pdf", "manufacturer": "Taiwan Semiconductor", "title": "1N4148/1N4448/1N914B", "revision": "K2301", "source_url": "https://services.taiwansemi.com/...", "collected_at": "2026-10-30", "sha256": "cb6f27...", "bytes": 381862, "pages": 5, "parser": null, "chunks": 0, "chars_original": null, "chars_kept": null, "truncated": false, "status": "downloaded_pdf_checked_not_ingested", "purpose": "candidate_datasheet_reference", "exact_original_part_match": false, "usage_conditions": "See data/corpus/CORPUS.md; ..."}
+{"doc_id":"tsc-1n4148-series_k2301","title":"1N4148 SERIES","revision":"K2301","source_url":"https://services.taiwansemi.com/storage/resources/datasheet/1N4148 SERIES_K2301.pdf","sha256":"cb6f27...","bytes":381862,"pages":5,"chunks":45,"chars_original":3752,"chars_kept":3601,"truncated":true}
 ```
+
+모든 문서에 같은 값(`manufacturer`, `collected_at`, `parser`, `status`, `purpose`, `usage_conditions`)은 줄마다 쓰지 않고 `backend/rag/chunk.py`의 `DOC_DEFAULTS`에 두며, `backend/rag/ingest.py`가 읽을 때 채웁니다. 이 값과 다른 문서(다른 제조사, `injection_tests/`)는 줄에 그 키를 적으면 줄의 값이 앞섭니다. 파일 이름이 `source_url` 끝과 다른 문서는 `path`를 적습니다.
+
+manifest는 **512,000바이트 아래**로 둡니다. Checkpoint 대시보드가 1,012,774바이트 manifest를 "커서 읽지 못함"으로 표시했고(11-02), GitHub GraphQL은 파일 내용을 512,000바이트에서 자릅니다. `tests/test_rag_chunk.py`가 크기를 확인합니다.
 
 원문이 길어서 잘라 넣었다면 `chars_original`과 `chars_kept`가 다르고 `truncated`가 true여야 합니다. TSC 코퍼스에서 `chars_original`은 Docling 본문(머리글·바닥글 제외) 글 조각과 표 칸의 글자 수, `chars_kept`는 그중 카드에 들어간 글자 수입니다(`backend/rag/chunk.py`). 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.
 

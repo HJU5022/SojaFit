@@ -88,7 +88,9 @@ def read_targets(list_path):
     """목록 csv 또는 manifest.jsonl에서 {file, url, sha256} 목록을 읽는다. csv에는 sha256이 없다."""
     if list_path.endswith('.jsonl'):
         rows = [json.loads(line) for line in open(list_path, encoding='utf-8') if line.strip()]
-        return [{'file': os.path.basename(r['path']), 'url': r['source_url'], 'sha256': r.get('sha256')} for r in rows]
+        # [왜] manifest는 크기를 줄이려고 path를 빼고 원래 파일 이름을 source_url 끝에서 얻는다. path가 있는 줄은 path를 쓴다
+        return [{'file': os.path.basename(r.get('path') or r['source_url']), 'url': r['source_url'], 'sha256': r.get('sha256')}
+                for r in rows]
     return [{'file': r['file'], 'url': r['url'], 'sha256': None} for r in csv.DictReader(open(list_path, encoding='utf-8'))]
 
 

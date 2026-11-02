@@ -25,7 +25,7 @@
 1. `collect list`: TSC 분류별 Export xlsx 13개를 PDF 하나당 한 줄인 목록 csv로 합친다(PDF 1,360개).
 2. `collect download`: 목록의 PDF를 원래 파일 이름으로 받는다.
 3. `parse run`: Docling(OCR 끔, 표 구조 켬)으로 PDF마다 JSON을 저장하고, 표 숫자가 같은 쪽 pdfplumber 글자에 있는지 센다(두 번째 증인). `parse recall`은 반대 방향(표 영역 원문 숫자가 Docling 표에 있는지)을 센다.
-4. `chunk`: Docling JSON을 카드로 자른다. PDF마다 품번 표지 1장, 표 밖 글은 HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표). 문서 목록 `data/manifest.jsonl`도 쓴다.
+4. `chunk`: Docling JSON을 카드로 자른다. PDF마다 품번 표지 1장, 표 밖 글은 HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표). 문서 목록 `data/manifest.jsonl`도 쓴다. manifest에는 문서마다 다른 값만 쓰고, 모든 문서에 같은 값은 `chunk.py`의 `DOC_DEFAULTS`에 둔다(512,000바이트 아래, Checkpoint 대시보드가 읽는 크기).
 5. `ingest`: 문서와 카드를 `source_documents`·`document_chunks`에, 임베딩을 `chunk_embeddings`에 넣는다. 이미 만든 벡터는 본문 해시로 다시 쓴다.
 6. `retrieve(question, k=5, parts=None)`: dense 상위 50개와 BM25 상위 50개를 RRF로 합쳐 상위 k개를 돌려준다. `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾는다.
 7. `evals/run_retrieval.py`: 평가셋 관련 문항의 지표를 계산해 `evals/results/`에 남긴다.
