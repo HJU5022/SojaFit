@@ -14,4 +14,5 @@
 
 ## 파일
 - `state.py` — 그래프 상태(공용 메모장) 정의. SPEC 2절 노드 표의 칸들과, 쌓이는 칸 `tries`(검색 횟수)·`path`(지나간 노드)
+- `nodes.py` — 줄기 노드 함수. 지금은 입력 읽기(`read_input`: 입력 글 나누기, `connections.json`에서 대상 부품과 핀 3개 이하 이웃 부품 너머까지 2단계 넷 읽기)만 있음
 - `build.py` — 그래프 조립(Supervisor, 서브에이전트, 체크포인트, interrupt) 자리. 지금은 `build_graph()`가 `NotImplementedError`를 내는 빈 틀
