@@ -37,7 +37,6 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 범용 챗봇과 같은 질문 5개로 비교할 지표: 근거 인용 비율, 없는 품번 제시 수, "문서로 확인 안 됨" 처리 수
 - 검색·판정 지표와 목표 수치: (정할 것)
-- 임베딩 예비 핵심 후보는 `text-embedding-3-small`, `BAAI/bge-m3`, `nlpai-lab/KURE-v1`, `Qwen/Qwen3-Embedding-0.6B`입니다. 문서상 확장 평가 대상은 Voyage 2종을 포함한 실행 후보 11종과 조사 전용 후보 2종이며, 전체 후보·입력 계약은 `docs/specs/embedding-candidate-runner.md`와 `docs/specs/embedding-voyage-candidates.md`를 따릅니다. 이 확장 계약의 평가기 구현·테스트·2026-11-02 원시 결과는 현재 `main`과 이번 문서 변경 범위에 포함하지 않습니다. 프록시와 실제 PDF 3건 smoke 기록은 후보 점검용이며 최종 선택 근거로 쓰지 않습니다. 최종 선택은 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연을 함께 비교한 뒤 확정합니다.
 
 ## 2. 흐름과 그래프
 
@@ -97,11 +96,11 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- 인증 초안: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용한다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현이다. 상세는 `docs/specs/login-auth.md`.
-- 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경한다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제한다. 관리자 계정의 상태는 이 API에서 변경하지 않는다.
+- 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현입니다. 상세는 `docs/specs/login-auth.md`.
+- 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
 - 그 밖의 API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
-- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). n22·n13은 예비로 이관했고, 남은 문항의 정답·사람 판정은 바꾸지 않았습니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다.
 
 ## 5. 규칙 파일
 
@@ -115,27 +114,30 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
-- 임베딩: 현재 서비스의 `text-embedding-3-small`(기본 `vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). `RAG_VECTOR_TYPE=halfvec`와 수동 SQL로 복제 DB 전환을 지원하며, PR #23 방향에 맞춰 halfvec 저장·float32 거리 계산·HNSW 없음으로 시험하되 실제 품질 검증 전에는 기본 vector를 유지합니다. 로컬·API 확장 후보는 평가용이며 서비스 기본값을 바꾸지 않습니다. 최종 후보가 정해지면 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 정하고, 필요한 경우 새 Migration으로 차원을 변경합니다.
-- 코퍼스 축소는 보류하고 원본 13분류·1,360문서와 평가 회로 5종을 유지합니다. 분류별 사본 도구 `subset.py`는 수동 실행용으로만 보존하며 서비스·초기화·적재에서 호출하지 않습니다. 250MB는 최초 검토 목표이며 이를 위해 문서를 버리지 않습니다. PR #23의 용량 보고는 이 환경에서 재현하지 않았습니다. 절차는 `docs/specs/corpus-storage-budget.md`를 따릅니다.
-- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
+- 임베딩: 현재 서비스의 `text-embedding-3-small`(기본 `vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). 최종 모델은 v1 동결 뒤 사전 등록 #1(`KURE-v1`)·#2(`Qwen3-Embedding-0.6B`)를 포함한 후보를 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연으로 비교해 정합니다. 후보와 입력 계약은 `docs/specs/embedding-candidate-runner.md`와 `docs/specs/embedding-voyage-candidates.md`를 따르고, 프록시와 실제 PDF 3건 smoke 기록은 후보 점검용으로만 씁니다. 후보 평가는 서비스 기본값을 바꾸지 않습니다. 최종 후보가 정해지면 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 정하고, 차원이 바뀌면 새 Migration으로 벡터 열을 바꿉니다.
+- 코퍼스는 용량 때문에 줄이지 않고 원본 13분류·1,360문서와 평가 회로 5종을 그대로 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 분류별 사본 도구 `subset.py`는 수동 실행용으로만 두며 서비스·초기화·적재에서 호출하지 않습니다. 절차는 `docs/specs/corpus-storage-budget.md`를 따릅니다.
+- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 질문·넷리스트에서 품번을 뽑아 `parts`로 넘기는 일은 에이전트가 하며, 뽑는 규칙은 (정할 것). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 코퍼스는 기존(동결)과 증분 두 덩어리입니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)). 기존은 위 1,360건이고, 증분은 정해진 시각에 받은 새 문서·새 개정판과 실시간으로 받은 TSC 문서입니다. 증분 문서는 검증 관문(sha256 기록, PDF 확인, 파싱 오류 0, pdfplumber 대조)을 통과한 것만 검색에 넣고, 실패한 문서는 격리하고 알립니다. 새 개정판이 들어오면 옛판은 `retired_at`으로 내립니다.
 - 평가(G5)는 기존 코퍼스만, 실시간 조회를 끈 채로 잽니다. 서비스는 두 덩어리를 다 검색하고, 증분이 들어온 뒤에는 서비스 설정으로 같은 평가셋을 한 번 더 재서 달라진 문항 목록을 남깁니다.
-- 회사별 데이터시트: TSC는 코퍼스와 실시간 조회를 씁니다. Infineon은 질문할 때 받아 원본 링크·출처와 함께 보여 주는 것까지 약관상 허용되고, 파싱한 글을 저장해 검색에 쓸지는 (정할 것). 그 밖의 회사는 링크만 보여 줍니다.
-- 저장: 서비스 표와 코퍼스를 Supabase 프로젝트 하나(무료, DB 500MB)에 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 코퍼스 벡터는 `halfvec`으로 저장하고 HNSW 인덱스는 만들지 않습니다. 전환은 임베딩 모델을 확정하고 같은 코퍼스·동결 평가셋에서 Recall@5·MRR이 떨어지지 않는 것을 확인한 뒤에 하며, 그 전까지 기본은 `vector`(`RAG_VECTOR_TYPE=vector`)입니다. DB가 400MB를 넘을 때 벡터 표만 새 무료 프로젝트로 옮기는 것은 미확정 대안입니다. 지금 `retrieve.py`는 `DATABASE_URL` 연결 하나로 dense 검색과 본문 조회를 하므로, 나누기 전에 연결 주소, 두 DB의 chunk id 대응, 검색·본문 조회 경로, 벡터 DB 장애 처리, 전환 검증 조건을 정하고 검증합니다: (정할 것). 평가 실행은 Supabase에 체크포인트를 쓰지 않습니다.
+- 회사별 데이터시트: TSC는 코퍼스와 실시간 조회를 씁니다. Infineon은 3차 범위 밖(확장 후보)이며, 넣게 되면 질문할 때 받아 원본 링크·출처와 함께 보여 주는 것까지 약관상 허용됩니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)). 그 밖의 회사는 링크만 보여 줍니다.
+- 저장: 서비스 표와 코퍼스를 Supabase 프로젝트 하나(무료, DB 500MB)에 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 지금 기본은 `vector(1536)`(`RAG_VECTOR_TYPE=vector`)이고, 검색은 HNSW 인덱스를 끄고 정확 검색합니다(`backend/rag/retrieve.py`). Supabase에는 HNSW 인덱스를 만들지 않습니다. 임베딩 모델을 확정하고 같은 코퍼스·동결 평가셋에서 Recall@5·MRR이 떨어지지 않는 것을 확인한 뒤 코퍼스 벡터를 `halfvec`으로 바꿉니다(`db/halfvec.sql.manual`, 복제 DB에서 시험). DB가 400MB를 넘을 때 벡터 표만 새 무료 프로젝트로 옮기는 것은 미확정 대안입니다. 지금 `retrieve.py`는 `DATABASE_URL` 연결 하나로 dense 검색과 본문 조회를 하므로, 나누기 전에 연결 주소, 두 DB의 chunk id 대응, 검색·본문 조회 경로, 벡터 DB 장애 처리, 전환 검증 조건을 정하고 검증합니다: (정할 것). 평가 실행은 Supabase에 체크포인트를 쓰지 않습니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
 - 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)
 - 이용 조건: TSC 약관(Terms of use 3절 b항)은 비수정·고지 유지·출처 표기 조건의 정보·비상업 복제·배포만 허락하고 카드(청크) 저장·인용은 따로 다루지 않습니다. 그래서 원본 PDF는 고치지 않고 두고, 카드는 내부 검색용으로만 쓰며(저장소·공개 배포 안 함), 답변에는 짧은 인용에 문서·개정판·쪽과 원본 PDF 주소를 붙입니다. 데모나 저장소를 공개하기 전에 강사에게 확인합니다.
-- Infineon 약관(11-02 확인)은 정보·비상업 목적의 내려받기·복제·표시·배포를 비수정·저작권 표시 유지·출처 표기 조건으로 허락하고, 이용 허가가 끝나면 받은 콘텐츠를 지우게 합니다. 그래서 Infineon 데이터시트를 보여 줄 때는 원본 링크와 출처(Infineon Technologies AG)를 붙이고, 받은 파일은 지울 수 있게 둡니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)).
+- Infineon 약관(11-02 확인)은 정보·비상업 목적의 내려받기·복제·표시·배포를 비수정·저작권 표시 유지·출처 표기 조건으로 허락하고, 이용 허가가 끝나면 받은 콘텐츠를 지우게 합니다. 그래서 확장 단계에서 Infineon 데이터시트를 보여 줄 때는 원본 링크와 출처(Infineon Technologies AG)를 붙이고, 받은 파일은 지울 수 있게 둡니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)).
 - Mouser(확장 단계): 약관 4절이 응답 저장을 금지하므로 가격·재고는 DB·데모 응답·대화 기록·체크포인트·Langfuse 트레이스와 답변 문장에 남기지 않고, 견적서 화면에서만 출처(Mouser Electronics)와 조회 시각을 붙여 TSC 근거와 나눠 보여 줍니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 코퍼스 안의 문장은 지시가 아니라 데이터입니다.
-- 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`가 정본입니다.
+- 규모 조건(서로 다른 청크 1만 개, 문서 50건)은 `docs/GATES.md`를 따릅니다(정의는 3차 프로젝트 가이드).
 
 ## 7. 데모 모드·오프라인 규칙
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
 - 데모 모드 응답은 `data/demo/`에 두고, 실제 API 응답 원본은 넣지 않습니다.
 - 데모 모드에서 Mouser 칸은 비우고 `data/demo/` 가공 가격표만 보여 줍니다. Mouser 응답은 데모 응답으로도 기록하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
-- 키 없이 쓰는 모델과 파일: (정할 것). 검색은 데모 모드에서 임베딩 API 없이 BM25만 씁니다(`backend/rag/retrieve.py`).
+- 검색은 데모 모드에서 임베딩 API와 벡터 검색을 부르지 않고 BM25만 씁니다(`backend/rag/retrieve.py`). 데모 요청에서 다른 임베딩 모델로 바꾸지 않습니다.
+- 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 BM25로 근거를 찾아 근거 문장을 그대로 인용하는 추출형 답변을 돌려줍니다.
+- 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다.
+- 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
 - 현재 Langfuse 연결 단계에서는 Cloud 자격증명만 확인하고 프롬프트·응답은 기록하지 않습니다.
 
 ## 8. 기능별 수용 기준 (AC)
@@ -156,7 +158,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ### 8.4 견적서 승인과 저장
 
-- 저장하는 가격은 데모 가격표(`data/demo/`) 값입니다. Mouser 가격·재고는 저장하지 않고 견적서를 열 때마다 다시 조회해 보여 주므로, 연 시점의 값입니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
+- MVP 견적서는 데모 가격표(`data/demo/`) 값만 보여 주고 저장합니다. 확장 단계에서 Mouser를 붙이면 가격·재고는 저장하지 않고 견적서를 열 때마다 다시 조회해 보여 주므로, 연 시점의 값입니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 나머지 수용 기준: (정할 것)
 
 ### 8.5 사용자별 사례 기억

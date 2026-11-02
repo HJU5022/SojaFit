@@ -86,7 +86,7 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
     from pgvector.psycopg import register_vector
     from pgvector import HalfVector
     kind = vector_type()
-    # manifest에 없는 공통 값은 최신 main의 기본값으로 채우고 문서별 값이 앞선다.
+    # manifest에 없는 공통 값은 chunk.py의 DOC_DEFAULTS로 채우고, 줄에 적힌 값이 앞선다.
     docs = [{**DOC_DEFAULTS, **json.loads(line)} for line in open(manifest_path, encoding='utf-8')]
     cards = [json.loads(line) for line in open(chunks_path, encoding='utf-8')]
     cache = VectorCache(vec_dir)

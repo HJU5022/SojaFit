@@ -1,6 +1,6 @@
-"""Small, reproducible dense-embedding baseline for SojaFit.
+"""비동결 프록시 표본(embedding_sample_v0.jsonl, 30청크·18질의)으로 dense 임베딩 후보를 거르는 재현용 예비 측정.
 
-This is a proxy smoke benchmark, not the frozen project evaluation set.
+동결 평가셋(dataset_v1.jsonl) 평가가 아니며, 이 결과만으로 최종 모델을 정하지 않는다.
 """
 
 from __future__ import annotations

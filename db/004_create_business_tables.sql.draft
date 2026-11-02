@@ -6,7 +6,6 @@
 --   * updated_at is initialized on insert; the application must update it on later writes.
 --   * Optional constraints marked as assumptions in the definition are included below and need owner review.
 -- Requires PR #17 db/002_rag_corpus.sql first: source_documents, document_chunks, and their indexes.
--- This draft is not auto-executed; confirm migration history and ordering before activation.
 
 -- users is created by 003_auth.sql before this draft is applied.
 

@@ -11,7 +11,7 @@
 ```
 SojaFit (proj3-b)
 ├── README.md  SOJAFIT.md  SPEC.md  AGENTS.md  CLAUDE.md  EVAL_REPORT.md
-├── .env.example  .gitignore  .python-version  Dockerfile  docker-compose.yml  pyproject.toml  uv.lock  pytest.ini
+├── .env.example  .gitignore  .gitattributes  .python-version  Dockerfile  docker-compose.yml  pyproject.toml  uv.lock  pytest.ini
 ├── .github/          PR 양식, CI(테스트·비밀값 검사)
 ├── backend/          서비스 코드
 │   ├── judge/        회로 역할·대체 조건·판정
@@ -28,7 +28,7 @@ SojaFit (proj3-b)
 ├── db/               DB 초기화 SQL
 ├── evals/            평가셋
 ├── tests/            테스트
-├── docs/             주제서, 계약서, 게이트 증거
+├── docs/             주제서, 계약서, 게이트 증거, 조사 기록
 │   ├── adr/          조 결정 기록
 │   ├── specs/        SPEC 밖 기능 작업서
 │   ├── deliverables/ 제출물
@@ -53,10 +53,10 @@ SojaFit (proj3-b)
 | `data/corpus/` | 데이터시트·공개 문서 원본 | 검색·데이터 | [CORPUS.md](data/corpus/CORPUS.md) |
 | `data/circuits/` | 평가·시연용 공개 KiCad 회로와 라이선스 | 평가·문서 | [CIRCUITS.md](data/circuits/CIRCUITS.md) |
 | `data/demo/` | 키 없는 데모 모드가 재생하는 응답(가공값) | 서비스·운영 | [DEMO.md](data/demo/DEMO.md) |
-| `db/` | 스키마, 스냅샷 적재, 인덱스, 데모 계정 | 서비스·운영 | [DB.md](db/DB.md) |
+| `db/` | 초기화 SQL(pgvector·코퍼스·인증), halfvec 수동 전환 SQL, 업무 표 초안 | 서비스·운영 | [DB.md](db/DB.md) |
 | `evals/` | 평가셋, 동결 해시, 평가 실행, 원시 결과 | 평가·문서 | [EVALS.md](evals/EVALS.md) |
 | `tests/` | 회귀 테스트, 동결 감시 | 각 모듈 담당 | [TESTS.md](tests/TESTS.md) |
-| `docs/` | 주제서, 조원 계약서, 게이트 증거 | 평가·문서 | [DOCS.md](docs/DOCS.md) |
+| `docs/` | 주제서, 조원 계약서, 게이트 증거, 평가·운영 보충 자료, 임베딩·라이선스 조사 기록 | 평가·문서 | [DOCS.md](docs/DOCS.md) |
 | `docs/adr/` | 조 결정 기록 | 결정을 낸 담당 | [ADR.md](docs/adr/ADR.md) |
 | `docs/specs/` | SPEC에 없는 기능이 생길 때 쓰는 작업서 | 그 기능의 담당 | [SPECS.md](docs/specs/SPECS.md) |
 | `docs/deliverables/` | 제출물 | 평가·문서 | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) |
@@ -64,13 +64,13 @@ SojaFit (proj3-b)
 | `extras/` | 가산 중 이미지에 들어가지 않는 작업(학습) | 가산을 시작할 때 정함 | [EXTRAS.md](extras/EXTRAS.md) |
 | `extras/finetune/` | 가산: 파인튜닝 학습 코드와 비교 결과 | 가산을 시작할 때 정함 | [FINETUNE.md](extras/finetune/FINETUNE.md) |
 
-담당은 가이드의 역할 4개(검색·데이터, 에이전트, 서비스·운영, 평가·문서)입니다. 사람 배정은 [docs/조원-계약서.md](docs/조원-계약서.md)에 적습니다.
+담당은 가이드의 역할 4개(검색·데이터, 에이전트, 서비스·운영, 평가·문서)입니다. 사람 배정은 [README.md](README.md) 조원 표에 있습니다.
 
 ## 루트 파일
 
 | 파일 | 하는 일 |
 |---|---|
-| `README.md` | 대표 문서. 한 줄 정의, 지표, 실행 방법, 데모 모드, 배포 주소, 조원표, 작업 흐름 |
+| `README.md` | 대표 문서. 한 줄 정의, 팀 정보와 배포 주소, 조원표, 실행 방법과 데모 모드, 일정, 작업 흐름 |
 | `SOJAFIT.md` | 이 문서. 저장소 지도 |
 | `SPEC.md` | 기능의 정본. 범위, 흐름, 대체 판정 5종, 계약, 규칙 파일, 코퍼스 경계, 데모 모드, 기능별 AC |
 | `AGENTS.md` | AI 코딩 에이전트 지침과 조 팀 규칙 |
@@ -87,14 +87,12 @@ SojaFit (proj3-b)
 
 - 폴더 설명은 폴더마다 `<대문자 폴더명>.md` 하나에 적습니다(예: `backend/BACKEND.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. 두 단계까지만 두고, 더 깊은 폴더는 위 폴더의 `.md`에 한 줄로 적습니다.
 - 루트 대표 문서(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 대문자로 씁니다. 그 밖의 파일 이름은 대소문자를 가리지 않습니다.
-- 원본·결과물만 담는 폴더(`evals/results/`, `tests/fixtures/`, `docs/deliverables/langfuse/`)와 `.github/`에는 폴더 설명을 두지 않습니다.
+- 원본·결과물만 담는 폴더(`evals/results/`, 생기면 `tests/fixtures/`, `docs/deliverables/langfuse/`)와 `.github/`에는 폴더 설명을 두지 않습니다.
 - 새 폴더를 만드는 PR은 그 폴더의 `.md`와 이 문서의 표 한 줄을 같이 넣습니다.
 - 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`입니다.
 - 강사 스캐폴드의 고정 경로(`backend/` 패키지, 루트 `tests/`, `evals/`, `db/`, 루트 빌드 파일)는 옮기지 않습니다.
 
-## 처음 할 일 (강사 스캐폴드 안내)
+## 처음 할 일
 
-1. README 조원 소개 표에 자기 행을 추가합니다(브랜치 → PR → 리뷰 → merge). 첫 PR이 협업 흐름 연습입니다.
-2. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
-3. D0(10/30)에 빈 FastAPI를 Cloud Run에 올려 배포 주소를 확보합니다.
-4. 평가셋 v1 50건(관련 25, 비관련 25)을 만듭니다(11-02 동결).
+1. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
+2. 위 폴더 표에서 손댈 폴더를 고르고 그 폴더의 `<대문자 폴더명>.md`부터 읽습니다.

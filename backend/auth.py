@@ -11,7 +11,7 @@ import psycopg
 from fastapi import HTTPException, Request
 
 COOKIE = "sojafit_session"
-# scrypt uses 128 MiB per verification; cap request concurrency in deployment.
+# [왜] scrypt 검증 한 번에 128MiB를 쓴다. authenticate()가 DB advisory lock 2칸으로 동시 검증을 2개까지만 허용한다.
 N, R, P = 2**17, 8, 1
 
 

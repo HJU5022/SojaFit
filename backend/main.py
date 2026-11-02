@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, StrictBool
 
 from backend import auth
 
-app = FastAPI(title="3차 프로젝트 API")
+app = FastAPI(title="SojaFit API")
 
 
 @app.get("/health")
