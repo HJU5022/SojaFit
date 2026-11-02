@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-01 오세창 검수 의견 13개 반영 (PR #15~#18 후속)
+- 한 일: PR #15~#18의 오세창 검수 의견 13개를 PR 하나로 반영했다. 결정 기록 2건(ADR 0003 v1 50건 동결, ADR 0004 임베딩 1536차원 임시 결정), manifest로 PDF 받기(sha256 대조), `chars_original`·`chars_kept`·`truncated` 실제 계산, `SIGALRM`이 없는 OS 처리, 벡터 캐시 끊김 복구, DB에 있는 임베딩은 다시 부르지 않기, BM25 0점 후보 제외, 데모 모드 BM25만, 평가 대상 0건 오류, 각각의 테스트.
+- 바꾼 파일: `docs/adr/`(0003, 0004, ADR.md), `SPEC.md`(6·7절), `docs/specs/rag-pipeline.md`(EC-07~10, AC-10~12), `backend/rag/`(collect.py, parse.py, chunk.py, ingest.py, retrieve.py, RAG.md), `evals/run_retrieval.py`, `data/manifest.jsonl`, `data/DATA.md`, `tests/`(test_rag_collect.py, test_rag_parse.py, test_rag_ingest.py, test_rag_retrieve.py, TESTS.md), 이 파일
+- 실행한 명령과 결과: `uv run --offline pytest -q` 25 passed, 2 skipped in 0.49s(DB 시험 2개는 건너뜀). DB 시험은 `TEST_DATABASE_URL`(로컬 compose DB)을 줄 때만 돌게 했고, api 이미지 컨테이너에서 `pytest tests/test_rag_ingest.py tests/test_rag_retrieve.py`를 돌려 14 passed, 시험용 임시 스키마는 남지 않았다. 처음에는 DB 시험이 `DATABASE_URL`을 읽어 .env의 Supabase 주소로 접속을 시도했다가 접속 단계에서 실패했다(만든 것 없음). 그래서 시험은 `TEST_DATABASE_URL`만 쓴다. 글자 수를 새로 재려고 `chunk`를 파서 비교용 도커 이미지에서 1,360건에 다시 돌렸고, 카드 파일은 이전과 바이트까지 같았다. 원문(본문 글 조각 + 표 칸) 5,231,811자 중 카드에 들어간 글자는 5,016,468자(95.9%, 문서 중간값 96.1%, 최저 85.6%)이고 1,356건이 `truncated`다. 빠진 글은 주로 표와 같은 조각으로 묶여 버려진 표 옆 주석이다(예: BZT52B2V4 F15의 "Notes: 1. The Zener Voltage (VZ) is tested under pulse condition…"). 처음 잴 때는 카드 앞에 붙는 소제목을 세지 않아 92.2%로 나와 고쳤다.
+- 확인 못 한 것: 로컬 DB의 `source_documents` 글자 수 열은 예전 값 그대로다(`ingest`가 있는 문서를 건너뜀). Supabase 적재 때 새 manifest로 들어간다. Windows에서 직접 돌려 보지는 않았다.
+- 다음 할 일: 표 옆 주석이 카드에서 빠지는 문제를 사전 등록 뒤 청킹 실험으로 본다. 50건 동결 뒤 베이스라인, Supabase 적재, 후보 찾기용 사양 표.
+
 ## 2026-11-01 retrieve()에 품번 필터 인자 parts 넣기 (PR jeongun-3)
 - 한 일: `retrieve(question, *, k=5, parts=None)`에 품번 필터를 넣었다(HNSW 개선 실험 B, 사전 등록 #6의 방식). `warmup()`이 BM25 색인과 함께 표지 카드(`이 데이터시트의 품번: ...`)로 품번(소문자) → 문서 색인을 만든다. `parts`를 주면 그 품번이 적힌 문서의 카드만 dense(`WHERE chunk_id = ANY(...)`, 인덱스를 끈 정확 검색)와 BM25(허용 밖 카드는 -inf) 후보로 쓰고 RRF는 같다. 품번은 대소문자만 무시하고 전체가 같아야 걸린다. 코퍼스에 없는 품번뿐이면 `[]`를 돌려주고 전체 코퍼스로 넘어가지 않는다. 질문에서 품번을 뽑는 일은 하지 않는다(에이전트가 후보 품번을 준다).
 - 바꾼 파일: `backend/rag/retrieve.py`, `backend/rag/RAG.md`, `tests/test_rag_retrieve.py`, `tests/TESTS.md`, `docs/specs/rag-pipeline.md`(What 6, Out of Scope, How, AC-08·09), `SPEC.md`(4절 검색 계약, 6절 검색), 이 파일

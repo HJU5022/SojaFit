@@ -2,15 +2,19 @@
 
 - 하는 일
   - list: TSC 분류 페이지의 Export xlsx 13개를 PDF 하나당 한 줄인 csv로 합친다(품번 여러 개가 계열 PDF 하나를 같이 쓴다).
-  - download: csv의 PDF를 원래 파일 이름으로 받는다. 이미 받은 파일은 건너뛰고, 실패는 failed.csv에 남긴다.
+  - download: 목록 csv 또는 저장소의 data/manifest.jsonl에 적힌 PDF를 원래 파일 이름으로 받는다. 이미 받은 파일은 건너뛰고,
+    manifest로 받을 때는 sha256이 manifest와 같은지 본다. 실패는 pdf 폴더 옆 failed.csv에 남긴다.
+    [왜] xlsx 목록은 저장소 밖에 있어서, 새 clone에서는 manifest만으로 같은 코퍼스를 받는다.
 - 하지 않는 일: PDF를 읽거나 고치지 않는다(TSC 약관의 "비수정" 조건). 사이트 목록 페이지에 직접 접속하지 않는다.
 - 출처: docs/specs/rag-pipeline.md What 1·2, TSC 이용 약관(https://www.taiwansemi.com/en/legal/) 3절 b항
 
 실행:
   python -m backend.rag.collect list <xlsx 폴더> <목록 csv>
-  python -m backend.rag.collect download <목록 csv> <pdf 폴더> [받을 개수]
+  python -m backend.rag.collect download <목록 csv 또는 data/manifest.jsonl> <pdf 폴더> [받을 개수]
 """
 import csv
+import hashlib
+import json
 import os
 import re
 import sys
@@ -80,9 +84,17 @@ def encode(url):
     return urlunsplit((p.scheme, p.netloc, quote(p.path), p.query, p.fragment))
 
 
-def download(list_csv, pdf_dir, limit=None):
+def read_targets(list_path):
+    """목록 csv 또는 manifest.jsonl에서 {file, url, sha256} 목록을 읽는다. csv에는 sha256이 없다."""
+    if list_path.endswith('.jsonl'):
+        rows = [json.loads(line) for line in open(list_path, encoding='utf-8') if line.strip()]
+        return [{'file': os.path.basename(r['path']), 'url': r['source_url'], 'sha256': r.get('sha256')} for r in rows]
+    return [{'file': r['file'], 'url': r['url'], 'sha256': None} for r in csv.DictReader(open(list_path, encoding='utf-8'))]
+
+
+def download(list_path, pdf_dir, limit=None):
     """목록의 PDF를 차례로 받고 (새로 받음, 이미 있음, 실패) 수를 돌려준다."""
-    rows = list(csv.DictReader(open(list_csv, encoding='utf-8')))[:limit]
+    rows = read_targets(list_path)[:limit]
     os.makedirs(pdf_dir, exist_ok=True)
     got, skipped, failed = 0, 0, []
     for r in rows:
@@ -95,6 +107,8 @@ def download(list_csv, pdf_dir, limit=None):
                 data = resp.read()
             if not data.startswith(b'%PDF'):  # [주의] 주소가 틀리면 오류 페이지(HTML)가 온다
                 raise ValueError(f'PDF가 아님 ({len(data)} bytes)')
+            if r['sha256'] and hashlib.sha256(data).hexdigest() != r['sha256']:  # 같은 이름의 새 개정판이면 코퍼스가 달라진다
+                raise ValueError('sha256이 manifest와 다름')
             with open(dest + '.part', 'wb') as f:  # [왜] 다 쓴 뒤 이름을 바꿔 반쯤 받은 파일이 남지 않게 한다
                 f.write(data)
             os.replace(dest + '.part', dest)
@@ -102,7 +116,8 @@ def download(list_csv, pdf_dir, limit=None):
         except Exception as e:
             failed.append({'file': r['file'], 'url': r['url'], 'error': str(e)})
         time.sleep(PAUSE)
-    fail_path = os.path.join(os.path.dirname(list_csv) or '.', 'failed.csv')
+    # [왜] manifest는 저장소 안(data/)에 있으므로 실패 목록은 pdf 폴더 옆(저장소 밖)에 쓴다
+    fail_path = os.path.join(os.path.dirname(os.path.abspath(pdf_dir)), 'failed.csv')
     if failed:
         with open(fail_path, 'w', newline='', encoding='utf-8') as fh:
             w = csv.DictWriter(fh, fieldnames=['file', 'url', 'error'])

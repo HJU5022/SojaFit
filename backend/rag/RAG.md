@@ -11,7 +11,7 @@
 - pdftotext가 μ를 m으로 바꿔 단위가 1000배 틀어지는 데이터시트가 있습니다. 표에서 뽑은 값은 단위 보정을 거칩니다.
 
 ## 파일
-- `collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`)
+- `collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)
 - `parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
 - `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
 - `ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
@@ -21,7 +21,7 @@
 
 ```bash
 python -m backend.rag.collect list <xlsx 폴더> <목록 csv>
-python -m backend.rag.collect download <목록 csv> <pdf 폴더>
+python -m backend.rag.collect download data/manifest.jsonl <pdf 폴더>   # 새 clone (목록 csv도 됨)
 uv run --group ingest python -m backend.rag.parse run <pdf 폴더> <출력 폴더>
 uv run --group ingest python -m backend.rag.chunk <docling json 폴더> <목록 csv> <pdf 폴더> <출력 폴더> data/manifest.jsonl
 python -m backend.rag.ingest data/manifest.jsonl <출력 폴더>/chunks.jsonl <벡터 폴더>
