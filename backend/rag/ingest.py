@@ -1,4 +1,4 @@
-"""카드와 임베딩을 DB 코퍼스 표(db/02_rag_corpus.sql)에 넣는다(오프라인 도구).
+"""카드와 임베딩을 DB 코퍼스 표(db/002_rag_corpus.sql)에 넣는다(오프라인 도구).
 
 - 하는 일
   - manifest.jsonl의 문서를 source_documents에, chunks.jsonl의 카드를 document_chunks에 넣는다.
@@ -6,7 +6,7 @@
     다시 쓰고, 캐시에 없는 본문만 embed_texts로 만들어 캐시에 덧붙인다.
   - 다시 돌리면 이미 들어간 문서·카드·임베딩은 건너뛴다(지우지 않는다). DB에 임베딩이 있는 카드는 캐시가 없어도 API를 다시 부르지 않는다.
   - 캐시 파일이 쓰는 도중 끊겨 벡터와 sha 수가 어긋나면, 짝이 맞는 앞부분까지 잘라 복구한다.
-- 하지 않는 일: 표 만들기(db/02_rag_corpus.sql), 검색(retrieve.py), 파싱·청킹(parse.py, chunk.py)
+- 하지 않는 일: 표 만들기(db/002_rag_corpus.sql), 검색(retrieve.py), 파싱·청킹(parse.py, chunk.py)
 - 출처: docs/specs/rag-pipeline.md What 5·AC-04·EC-04·EC-05
 - 필요한 것: DATABASE_URL, 캐시에 없는 본문이 있으면 임베딩 키(.env)
 

@@ -51,8 +51,8 @@
   - `parts`: 에이전트가 특정 후보 품번(예: `["SS34"]`)을 확인할 때 준다. 사용자가 입력하지 않는다. 표지 카드(`이 데이터시트의 품번: ...`)에 그 품번이 적힌 문서의 카드만 dense(`WHERE chunk_id = ANY(...)`, 정확 검색)와 BM25(허용 밖 카드 제외) 후보로 쓰고 RRF는 같다. 품번은 대소문자만 무시하고 전체가 같아야 한다(SS34는 SS34L에 걸리지 않음). 코퍼스에 없는 품번뿐이면 `[]`를 돌려주고 전체 코퍼스로 넘어가지 않는다(호출 쪽이 "문서로 확인 안 됨"으로 판정). `parts`가 없으면 필터 없이 같다.
   - 돌려주는 키: `chunk_id`, `document_key`, `file`(PDF 이름), `page`, `table`, `content`, `score`(RRF 점수), `dense_rank`, `bm25_rank`
   - RRF: 카드마다 `1 / (60 + 순위)`를 두 목록에서 더한다. 후보는 방식마다 50개
-- **데이터**: `db/02_rag_corpus.sql`
-  - `source_documents`, `document_chunks`: Migration 1 초안(`db/001_create_business_tables.sql.draft`)과 같은 정의에 `IF NOT EXISTS`
+- **데이터**: `db/002_rag_corpus.sql`
+  - `source_documents`, `document_chunks`: 이 SQL이 생성하고 업무 테이블 초안이 참조한다. `IF NOT EXISTS`는 기존 정의의 일치를 검증하지 않는다.
   - `chunk_embeddings`: `vector(1536)`, HNSW(`vector_cosine_ops`)
 - **모델과 도구**: 임베딩 `text-embedding-3-small`(`backend/services/llm.py`의 `embed_texts`). Docling 2.145.0과 pdfplumber는 uv 의존성 그룹 `ingest`로 두어 서버 이미지에 넣지 않는다.
 - **제약**: 임베딩 호출은 `llm.py`로만 한다. 재시도에는 상한을 둔다. 코퍼스 문장은 지시가 아니라 데이터다.
