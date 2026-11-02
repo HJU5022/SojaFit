@@ -1,10 +1,11 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기와 라우팅이 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색이 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -20,6 +21,9 @@ PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 �
 FIELDS = {"회로": "circuit", "넷리스트": "netlist_path", "대상": "target", "사용 조건": "conditions", "질문": "question"}
 MAX_NET_NODES = 8      # [왜] GND·VCC처럼 부품이 많이 붙은 넷은 앞 8개만 보여 준다. 다 넣으면 근거가 길어져 핵심이 묻힌다
 MAX_PASS_THROUGH_PINS = 3  # [왜] 핀이 3개 이하인 부품(저항·퓨즈·스위치·다이오드)만 건너가 다음 넷을 본다. IC·커넥터는 넷이 많아 건너가지 않는다
+WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영문·숫자 낱말. 품번 안의 . - 는 살린다(SMBJ5.0A, AMS1117-3.3)
+QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
+REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
 
 
 def parse_input(text: str) -> dict:
@@ -103,3 +107,31 @@ def route(state: AgentState) -> dict:
     user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
     answer = llm.chat((PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
     return {"question_type": answer.question_type, "path": ["라우팅"]}
+
+
+def find_parts(text: str, refs: set[str]) -> list[str]:
+    """글에서 품번으로 보이는 낱말(영문과 숫자가 섞인 것)을 나온 순서대로 뽑는다. 회로 기호·값·개정 코드는 뺀다."""
+    found = []
+    for word in WORD.findall(text):  # [왜] 영문·숫자만 이어 붙여 "1N5819는"의 조사 "는"이 떨어진다
+        if not (re.search(r"[A-Za-z]", word) and re.search(r"\d", word)):
+            continue  # TSC, USB(숫자 없음)와 2026(영문 없음)은 품번이 아니다
+        if word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word):
+            continue
+        found.append(word)
+    # [주의] 코퍼스에 없는 품번(1N4001, BAT85)도 남긴다. 그래야 retrieve가 []를 돌려 "문서로 확인 안 됨"으로 간다
+    return list(dict.fromkeys(found))  # 같은 품번이 두 번 나와도 한 번만
+
+
+def search(state: AgentState, retriever) -> dict:
+    """검색 노드: 검색어로 카드를 찾되, 질문에 품번이 있으면 그 품번 문서 안에서만, 없으면 대상 값의 품번 문서 안에서만 찾는다(SPEC 2절).
+
+    retriever는 backend.rag.retrieve.retrieve와 같은 모양(question, *, parts)이다. build.py가 넣어 주고, 시험에서는 가짜를 넣는다.
+    """
+    part = state.get("target_part") or {}
+    # shortcut: 회로 기호는 대상과 그 주변 넷의 부품만 안다. 멀리 있는 기호(U3, SJ1)는 품번으로 잘못 뽑힌다. 실측에서 틀리면 넷리스트 전체 기호로 넓힌다
+    refs = {part.get("ref", "")} | {node.split(".")[0] for net in part.get("nets", []) for node in net["nodes"]}
+    # [왜] 질문 품번과 대상 값 품번을 합치면 "D3 후보 1N60P 정격"(코퍼스에 없음)에 D3 값 1N4148 문서가 나와 엉뚱한 수치로 답한다(11-02 결정)
+    parts = find_parts(state["question"], refs) or find_parts(part.get("value", ""), refs)
+    query = state.get("query") or state["question"]  # 재작성 노드가 검색어를 바꿨으면 그것으로, 아니면 질문으로 찾는다
+    docs = retriever(query, parts=parts or None)  # 품번이 하나도 없으면 None: 코퍼스 전체에서 찾는다
+    return {"query": query, "parts": parts, "docs": docs, "tries": 1, "path": ["검색"]}  # tries 1이 더해져 상한 판단에 쓰인다

@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-02 줄기 그래프 노드: 상태, 입력 읽기, 라우팅, 검색
+- 한 일: 강의 2주 20강 구조로 줄기 그래프를 노드 하나씩 만들고 있다. 상태(`AgentState`, `tries`·`path`만 쌓고 나머지는 덮어씀), 입력 읽기(입력 글 나누기, `connections.json`에서 대상 부품과 핀 3개 이하 이웃 너머까지 2단계 넷), 라우팅(질문 종류 5가지, `backend/prompts/route.md` v1), 검색(`search`)을 넣었다. 검색은 질문에 나온 품번을 `parts`로 넘기고, 질문에 품번이 없을 때만 대상 값의 품번을 넘긴다(11-02 조장 결정). 둘을 합치면 n11 "D3 대체 후보 1N60P"처럼 코퍼스에 없는 후보를 물었을 때 D3 값 1N4148 문서가 나와 그 수치로 답하게 된다. 품번은 영문과 숫자가 섞인 낱말로 보고, 회로 기호(대상과 주변 넷 부품), 값(3.6V·100pF), 개정 코드(K2611)는 뺀다. 코퍼스에 없는 품번도 남겨 `retrieve`가 `[]`를 돌려주게 한다.
+- 바꾼 파일: `backend/graph/`(state.py, nodes.py, GRAPH.md), `backend/prompts/`(route.md, PROMPTS.md), `SPEC.md`(2절 검색 줄), `tests/`(test_graph_state.py, test_graph_read_input.py, test_graph_route.py, test_graph_search.py, TESTS.md), 이 파일
+- 실행한 명령과 결과: `uv run --offline pytest -q` 75 passed, 18 skipped. 품번 뽑기 규칙은 코퍼스 목록(`datasheet_list.csv`, 품번 9,589개)에서 값 모양·개정 코드 모양 품번이 0개임을 확인하고 정했다. 평가셋 v1에서 라우팅이 검색으로 보내는 36문항에 가짜 검색기로 검색 노드를 돌려 `parts`를 봤다. 관련 문항은 모두 질문 품번으로 찾고, 비관련 unknown_entity 6건(1N4001·SS1P3L·BAT85·1N5711·1N60P·1N34A)은 코퍼스에 없는 품번만 넘어가며, h08·h09는 품번이 없어 전체 검색이다. 라우팅은 `LLM_PROVIDER=claude_cli`로 50문항을 돌려 out_of_domain 6/6이 out_of_scope로 갔고, e09(보드 실측값)는 out_of_scope, h10(2026 USB-C판)은 role로 갔다(PROMPTS.md).
+- 확인 못 한 것: 실제 DB `retrieve`로 검색 노드를 돌리지 않았다. 대상 주변이 아닌 회로 기호(U3, SJ1)는 품번으로 잘못 뽑힌다(코드에 shortcut 주석). 후보 판정 질문에서 원래 부품 데이터시트는 이 검색으로 나오지 않는다(평가셋에서 해당 문항 없음).
+- 다음 할 일: 채점 노드(품번·개정판 결정적 검사 뒤 LLM 1회), 재작성, 생성, 거절, `build_graph` 조립.
+
 ## 2026-11-02 그래프 줄기 설계와 LLM 호출 입구
 - 한 일: D4 줄기 그래프의 노드 7개와 상한을 SPEC 2절에 적고, 그래프 LLM을 `anthropic/claude-haiku-5.5`로 시작한다는 결정을 ADR 0010으로 남겼다. `llm.py`에 그래프 노드가 쓰는 `chat(system, user, schema)`를 넣었다. OpenRouter 호출은 강의 2주 20강처럼 LangChain `ChatOpenAI(...).with_structured_output(schema)`로 하고(`langchain-openai` 1.7.3 추가), Pydantic 형식으로 검증하고, 형식이 틀리면 2회까지 다시 부른다. 공급자는 `LLM_PROVIDER`로 고르며 `openrouter`(기록용 측정·서비스)와 `claude_cli`(개발 중 같은 모델을 구독으로)를 둔다.
 - 바꾼 파일: `SPEC.md`(2절 그래프), `AGENTS.md`(LLM 모델 줄), `docs/adr/`(0010, ADR.md), `backend/services/llm.py`, `backend/services/SERVICES.md`, `tests/test_llm.py`, `.env.example`(LLM 3줄), `pyproject.toml`·`uv.lock`(`langchain-openai`), 이 파일

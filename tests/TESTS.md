@@ -13,6 +13,7 @@
 - `test_llm.py` — API 호출 없이 가짜 모델로 임베딩 반환 계약과 `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령 확인
 - `test_graph_state.py` — 그래프 상태의 `tries`·`path`는 쌓이고 나머지 칸은 덮어써지는지 확인
 - `test_graph_route.py` — 라우팅 노드: 가짜 LLM으로 `route.md` 프롬프트와 대상·질문이 넘어가고 질문 종류가 메모장에 적히는지 확인
+- `test_graph_search.py` — 검색 노드: 회로 기호·값·개정 코드를 뺀 품번 뽑기, 질문 품번이 대상 값보다 앞서는지(평가셋 n11), 품번이 없으면 전체 검색, 재작성한 검색어로 찾는지 가짜 검색기로 확인
 - `test_graph_read_input.py` — 입력 읽기 노드: 입력 글 나누기, e01에서 J1 → S1 → D1 → F1 → RAW 경로가 보이는지, 큰 넷 자르기, 평가셋 v1 50문항 모두 대상 부품을 읽는지 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지
 - `test_rag_ingest.py` — 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩. DB 재실행(행이 늘지 않고 API를 다시 안 부름, manifest에 없는 공통 값을 `DOC_DEFAULTS`로 채움) 시험은 `TEST_DATABASE_URL`을 줄 때만
