@@ -49,8 +49,8 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
         if not cur.fetchone()[0]:
             raise HTTPException(status_code=503, detail="잠시 후 다시 시도해 주세요.")
         cur.execute("INSERT INTO auth_login_attempts (login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (key,))
-        cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP FROM auth_login_attempts WHERE login_hash = %s FOR UPDATE", (key,))
-        count, locked = cur.fetchone()
+        cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP, window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes' FROM auth_login_attempts WHERE login_hash = %s FOR UPDATE", (key,))
+        count, locked, window_expired = cur.fetchone()
         cur.execute("SELECT id, password_hash, is_active FROM users WHERE login_id = %s", (email,))
         user = cur.fetchone()
         if locked:
@@ -59,7 +59,8 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
         encoded = user[1] if user else "scrypt$" + "00" * 16 + "$" + "00" * 32
         valid = verify_password(password, encoded)
         if not user or not user[2] or not valid:
-            cur.execute("UPDATE auth_login_attempts SET failed_count = CASE WHEN locked_until <= CURRENT_TIMESTAMP THEN 1 ELSE failed_count + 1 END, locked_until = CASE WHEN (CASE WHEN locked_until <= CURRENT_TIMESTAMP THEN 1 ELSE failed_count + 1 END) >= 5 THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE login_hash = %s", (key,))
+            count = 1 if window_expired else count + 1
+            cur.execute("UPDATE auth_login_attempts SET failed_count = %s, window_started_at = CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE window_started_at END, locked_until = CASE WHEN %s >= 5 THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE login_hash = %s", (count, window_expired, count, key))
             return None
         cur.execute("DELETE FROM auth_login_attempts WHERE login_hash = %s", (key,))
         token = secrets.token_urlsafe(32)

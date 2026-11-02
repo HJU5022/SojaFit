@@ -8,7 +8,7 @@
 
 ## 실행과 주의
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`은 비워 둡니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql`입니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql`입니다.
 - `004_create_business_tables.sql.draft`는 자동 실행되지 않습니다. 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
 - `002` 코퍼스 SQL은 삭제하지 않았습니다. 기존 `02_rag_corpus.sql`의 번호를 정리한 것이며, 임베딩 테이블과 인덱스도 이 파일에 남아 있습니다.
 - 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다.
@@ -19,5 +19,35 @@
 - `002_rag_corpus.sql` — 코퍼스 문서·청크·임베딩 테이블과 관련 인덱스
 - `003_auth.sql` — 사용자·인증 세션·로그인 시도 테이블. 기존 DB에는 상태와 적용 이력을 확인한 뒤 별도 적용
 - `004_create_business_tables.sql.draft` — 나머지 업무 테이블 초안. 코퍼스·인증 테이블을 참조하며 검토 전 자동 실행되지 않음
+- `005_auth_attempt_window.sql` — 로그인 실패 집계 시간 컬럼 추가. 기존 DB에는 적용 이력과 스키마 확인 후 별도 적용
 - `ERD.md` — 테이블의 역할과 생성 위치. SQL로 테이블을 바꾸면 같은 PR에서 고칩니다
 - `table-definition.md` — 업무 테이블의 컬럼·관계·제약조건과 검토 항목
+
+## 기존 DB 인증 스키마 적용 전 점검
+
+1. 대상이 공유·운영 DB인지 확인하고, 현재 적용 이력과 백업·복구 경로를 담당자와 확인합니다. 비밀번호·접속 문자열은 기록하지 않습니다.
+2. 읽기 전용으로 현재 스키마와 필요한 컬럼·제약을 확인합니다. 예시:
+
+```sql
+SELECT table_schema, table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('users', 'auth_sessions', 'auth_login_attempts');
+
+SELECT table_name, column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name IN ('users', 'auth_sessions', 'auth_login_attempts')
+ORDER BY table_name, ordinal_position;
+
+SELECT conrelid::regclass AS table_name, conname, pg_get_constraintdef(oid) AS definition
+FROM pg_constraint
+WHERE conrelid IN (SELECT oid FROM pg_class WHERE relnamespace = 'public'::regnamespace
+  AND relname IN ('users', 'auth_sessions', 'auth_login_attempts'))
+ORDER BY conrelid::regclass::text, conname;
+```
+
+3. 테이블이 모두 없는 경우, 별도 빈 테스트 DB에서 `003_auth.sql`과 `005_auth_attempt_window.sql` 순서로 적용하고 로그인 테스트를 먼저 확인합니다. 이미 일부 또는 전체가 있으면 해당 정의·데이터·이력을 비교해 필요한 후속 마이그레이션을 별도로 작성합니다. `CREATE TABLE IF NOT EXISTS`만으로 기존 구조의 일치를 보장하지 않습니다.
+4. 적용 경로와 이력 관리 방식은 팀 검토 후 확정합니다. 운영·공유 DB에 자동 적용하거나 볼륨을 삭제하지 않습니다.
+
+- 이미 `auth_login_attempts`가 있으면 `window_started_at` 존재 여부와 적용 이력을 확인합니다. 컬럼이 없고 다른 구조가 인증 코드와 일치하는 경우에만 검토된 `005_auth_attempt_window.sql` 적용을 계획합니다. 존재한다면 무조건 다시 실행하지 않습니다. 기존 데이터를 지우지 않고 테스트 DB에서 먼저 확인합니다. 애플리케이션 갱신 전 DB 마이그레이션이 선행돼야 합니다.
