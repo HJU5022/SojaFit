@@ -1,6 +1,6 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성이 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 줄기 노드 7개(입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절)가 모두 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
@@ -27,6 +27,7 @@ REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G180
 LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 카드 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
 CITE = re.compile(r"\[([^\]]*)\]")                     # 답 속 인용 괄호: [12] · [12, 15] · [넷리스트]
 NOT_FOUND = "문서로 확인 안 됨"                          # 근거로 답할 수 없을 때의 답(SPEC 3절 판정 이름과 같다)
+CLUES = "부품 윗면 글자, 사진, 데이터시트, 주문 코드"        # 근거가 없을 때 사용자에게 묻는 단서(SPEC 2절 "근거가 없을 때" 3번)
 
 
 def parse_input(text: str) -> dict:
@@ -225,3 +226,19 @@ def generate(state: AgentState) -> dict:
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
     return {"answer": answer, "check": check, "path": ["생성"]}
+
+
+def refuse(state: AgentState) -> dict:
+    """거절 노드: 이유(범위 밖 / 근거 없음)와 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절)."""
+    if state.get("question_type") == "out_of_scope":
+        answer = "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다."
+        return {"answer": answer, "check": {}, "path": ["거절"]}  # 검사할 인용이 없어 check는 비운다(강의 2주 20강)
+    docs, parts = state.get("docs") or [], state.get("parts") or []
+    # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
+    if not docs:
+        found = f"{', '.join(parts)} 데이터시트를 찾지 못했습니다" if parts else "질문에 맞는 데이터시트를 찾지 못했습니다"
+    else:
+        files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
+        found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
+    # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
+    return {"answer": f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다.", "check": {}, "path": ["거절"]}
