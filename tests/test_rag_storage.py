@@ -39,7 +39,7 @@ def db(monkeypatch):
     try:
         with psycopg.connect(scoped) as conn:
             register_vector(conn)
-            conn.execute(Path('db/002_rag_corpus.sql').read_text())
+            conn.execute(Path('db/002_rag_corpus.sql').read_text(encoding='utf-8'))
             conn.execute("INSERT INTO source_documents (document_key,document_type,title,publisher,source_url,"
                          "file_sha256,corpus_version,collected_at,parser,chars_original,chars_kept,truncated)"
                          " VALUES ('tsc-a','DATASHEET','A','test','https://example.invalid/A.pdf',%s,'test',now(),'test',1,1,false)",
@@ -71,7 +71,7 @@ def test_compare_excludes_self_and_equal_body_and_is_read_only(db):
 
 
 def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monkeypatch):
-    sql = Path('db/halfvec.sql.manual').read_text()
+    sql = Path('db/halfvec.sql.manual').read_text(encoding='utf-8')
     db.execute(sql)
     db.execute(sql)  # repeat must preserve rows and keys
     assert storage.snapshot(db)['embedding_type'] == 'halfvec(1536)'
@@ -105,7 +105,7 @@ def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monke
 def test_halfvec_dense_keeps_query_float32_precision(db, monkeypatch):
     # Both coordinates round to 1 in half precision. Rounding the query too
     # would tie the two candidates; float32 query precision selects card 2.
-    db.execute(Path('db/halfvec.sql.manual').read_text())
+    db.execute(Path('db/halfvec.sql.manual').read_text(encoding='utf-8'))
     db.execute('DELETE FROM chunk_embeddings WHERE chunk_id > 2')
     for cid, xy in [(1, [1., 0.]), (2, [0., 1.])]:
         db.execute('UPDATE chunk_embeddings SET embedding=%s WHERE chunk_id=%s',
@@ -120,7 +120,7 @@ def test_halfvec_dense_keeps_query_float32_precision(db, monkeypatch):
 def test_compare_requires_original_vector_and_limits(db):
     with pytest.raises(ValueError):
         storage.compare(db, samples=0)
-    db.execute(Path('db/halfvec.sql.manual').read_text())
+    db.execute(Path('db/halfvec.sql.manual').read_text(encoding='utf-8'))
     with pytest.raises(ValueError, match='vector'):
         storage.compare(db, samples=1)
 
@@ -136,7 +136,7 @@ def test_compare_reports_shortfall_and_time_limit(db):
 def test_compare_time_limit_includes_initial_table_lock(db):
     import psycopg
     import threading
-    with psycopg.connect(db.info.dsn) as locker:
+    with psycopg.connect(os.environ['DATABASE_URL']) as locker:
         locker.execute('LOCK TABLE chunk_embeddings IN ACCESS EXCLUSIVE MODE')
         release = threading.Timer(0.2, locker.rollback)  # a broken time bound must not hang pytest
         release.start()
