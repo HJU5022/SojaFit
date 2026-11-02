@@ -8,7 +8,7 @@
 
 ## 실행과 주의
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`은 비워 둡니다. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql`입니다. 데모 계정은 네 개의 `DEMO_*` 환경변수가 모두 유효할 때만 생성됩니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
 - 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행되며, 기존 DB에는 환경변수를 준비한 뒤 검토된 SQL을 별도로 적용합니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
@@ -19,7 +19,7 @@
 - `003_auth.sql` — 사용자·인증 세션·로그인 시도 테이블
 - `005_auth_attempt_window.sql` — 로그인 실패 집계 시간 컬럼 추가
 - `006_user_roles.sql` — 계정 역할 추가. 기존 계정은 일반 사용자로 유지하며 관리자는 `python -m backend.auth --role admin`으로 따로 만든다
-- `007_demo_accounts.sql` — 로컬 Compose용 관리자·일반 데모 계정 생성. `.env`의 이메일·scrypt 해시가 필요하며 `$`가 포함된 해시는 작은따옴표로 감싼다. 실제 비밀번호는 저장소에 두지 않는다. 새 볼륨 초기화 때 한 번 실행
+- `007_demo_accounts.sql` — 로컬 Compose용 관리자·일반 데모 계정 생성. 데모 모드 기본 계정 또는 네 환경변수로 지정한 이메일·scrypt 해시를 사용한다. `$`가 포함된 해시는 `.env`에서 작은따옴표로 감싼다. 실제 계정 비밀번호는 저장소에 두지 않는다. 새 볼륨 초기화 때 한 번 실행
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [README.md](manual/README.md)
 - `ERD.md` — 테이블의 역할과 생성 위치. SQL로 테이블을 바꾸면 같은 PR에서 고칩니다
 - `table-definition.md` — 업무 테이블의 컬럼·관계·제약조건과 검토 항목

@@ -1,5 +1,34 @@
 # STH 작업 기록
 
+## 2026-11-02 최신 main 반영 및 인증 변경 검증
+- 한 일: 원격 main 404f2e1을 로컬 main과 STH에 fast-forward로 반영하고 보관한 로그인·데모 시드·인증 키 변경을 복원했다. .env.example, README, backend/main.py, db/DB.md, tests/TESTS.md의 충돌에서 양쪽 유효 내용을 보존했다.
+- 확인: 격리 PostgreSQL에서 PYTHONUTF8=1로 전체 pytest를 실행해 75건 통과·10건 건너뜀. 최초 실행은 동결 데이터의 Windows CRLF 체크아웃 때문에 해시 검사 1건이 실패했다. 정규화한 값과 Git 원본이 기록된 해시와 일치함을 확인한 뒤 작업 사본을 동일한 Git 원본 바이트로 복원하고 재실행했다. 동결 데이터는 커밋에 포함하지 않는다.
+- 확인 못 한 것: 클라우드 비밀값과 배포, 운영자 메뉴 UI, RAG DB가 필요한 검사 10건.
+
+## 2026-11-02 로그인 피드백과 인증 키 실측
+- 한 일: 격리된 Compose PostgreSQL에서 데모 시드와 비데모 기본 계정 차단을 확인하고 로컬 AUTH_SECRET으로 역할별 로그인·관리 API·세션 HMAC·키 교체·로그아웃을 각 3회씩 확인했다. 키와 토큰은 기록하지 않았다.
+- 바꾼 파일: docs/auth-feedback-key-verification.md, docs/DOCS.md, docs/worklog/STH.md.
+- 확인: TestClient 실측 6회 성공, 전체 pytest 75건 통과·RAG 관련 10건 건너뜀. 실행 환경과 개별 시간은 실측 문서에 기록했다.
+- 확인 못 한 것: 운영자 메뉴 UI, 실제 API 컨테이너의 .env 전달 및 클라우드 배포, 동시 부하.
+
+## 2026-11-02 인증 키와 세션 저장값 연결
+- 한 일: 세션 토큰은 난수로 유지하고 AUTH_SECRET이 있으면 HMAC-SHA256으로 DB 저장값을 계산하도록 변경했다. 키 없는 데모는 기존 SHA-256을 유지하며 데모 외 환경은 32바이트 이상 키를 요구한다. 로컬 .env에 비어 있던 키를 생성하고 값은 기록하지 않았다.
+- 바꾼 파일: backend/auth.py, backend/main.py, tests/test_auth.py, tests/TESTS.md, docs/auth_boundary_after_merge.py, .env.example, README.md, SPEC.md, docs/specs/login-auth.md.
+- 확인: 키 설정·미설정, 앱 시작, 키 변경과 세션 거부, 로그인·로그아웃을 격리 PostgreSQL에서 검사했다. 전체 pytest 75건 통과, RAG DB 관련 10건 건너뜀. 후속 키 관련 재검사 4건 통과.
+- 확인 못 한 것: 클라우드 비밀값 설정과 배포 반영. 키 전환 전 세션은 재로그인이 필요하다.
+
+## 2026-11-02 데모 시드 검증과 모드 제한
+- 한 일: DB 문서의 시드 설명을 갱신하고 실제 시드 SQL의 기본값·사용자 지정·일부 설정·데모 모드별 동작을 격리 DB 회귀 테스트에 추가했다. 공개 기본 계정은 DEMO_MODE=1에서만 생성하도록 제한하고 명시적으로 지정한 네 값은 계속 허용한다.
+- 바꾼 파일: db/DB.md, db/007_demo_accounts.sql, docker-compose.yml, tests/test_auth.py, tests/TESTS.md, .env.example, README.md, SPEC.md, docs/specs/login-auth.md.
+- 확인: 모드 제한 전 새 테스트 1건이 실패했고 제한 후 5건 모두 통과했다. 격리 Compose 새 볼륨에서 DEMO_MODE=1은 계정 2개, 0은 0개를 확인했다. UTF-8 모드의 전체 pytest는 71개 통과, RAG DB 관련 10개 건너뜀이다.
+- 확인 못 한 것: 기존 DB 볼륨 및 배포 DB 적용. 기본 계정 정보는 공개 데모 전용이다.
+
+## 2026-11-02 로그인 역할 응답과 Compose 데모 계정
+- 한 일: `/api/auth/me`가 DB에서 확인한 역할을 사용자 ID와 함께 반환하도록 변경했다. Compose 새 DB에서 DEMO 변수 네 개가 모두 비면 공개 데모 계정을 생성하고 네 값이 모두 있으면 해당 값을 사용한다. 일부 설정은 오류로 처리한다.
+- 바꾼 파일: 인증 API와 테스트, 데모 시드, `.env.example`, README, SPEC, 로그인 작업서.
+- 확인: 격리 Compose PostgreSQL에서 데모 관리자·사용자 로그인과 역할 응답을 확인하고 인증 통합 테스트를 실행했다.
+- 확인 못 한 것: 기존 볼륨과 배포 DB의 시드 적용. 공개 데모 자격 증명은 실제 서비스나 제출용 계정으로 사용하지 않는다.
+
 ## 2026-10-30 Migration 1 SQL 초안
 - 한 일: 최신 `db/table-definition.md`의 5.1~5.14를 기준으로 업무 테이블 14개, 기본키·CHECK·외래키·UNIQUE 및 정의서의 해시 인덱스를 담은 초안을 작성했다. 벡터 임베딩 Migration 2는 차원과 확장 스키마가 결정되지 않아 제외했다.
 - 바꾼 파일: `db/001_create_business_tables.sql.draft`, `db/DB.md`, `docs/worklog/STH.md`
