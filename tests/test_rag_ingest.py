@@ -58,9 +58,9 @@ def test_rerun_skips_rows_and_api(tmp_path, monkeypatch):
     base, schema = os.environ['TEST_DATABASE_URL'], f'test_ingest_{uuid.uuid4().hex[:8]}'
     url = base + ('&' if '?' in base else '?') + f'options=-csearch_path%3D{schema},public'
     file = 'A SERIES_X1234.pdf'
-    doc = {'doc_id': ingest.doc_key(file), 'title': 'A SERIES', 'manufacturer': 'Taiwan Semiconductor', 'source_url': f'https://a.b/{file}',
-           'revision': 'X1234', 'usage_conditions': 'test', 'sha256': '1' * 64, 'collected_at': '2026-11-01', 'parser': 'test',
-           'chars_original': 10, 'chars_kept': 10, 'truncated': False}
+    # 공통 값(제조사·수집일·파서·이용 조건)은 실제 manifest처럼 빼서 DOC_DEFAULTS로 채워지는지 본다
+    doc = {'doc_id': ingest.doc_key(file), 'title': 'A SERIES', 'source_url': f'https://a.b/{file}', 'revision': 'X1234',
+           'sha256': '1' * 64, 'chars_original': 10, 'chars_kept': 10, 'truncated': False}
     cards = [{'doc': file, 'idx': i, 'text': t, 'sha256': s, 'page': 1, 'table': None, 'row': None}
              for i, (t, s) in enumerate([('cover', 'a' * 64), ('VRRM 40 V', 'b' * 64)])]
     (tmp_path / 'm.jsonl').write_text(json.dumps(doc) + '\n', encoding='utf-8')

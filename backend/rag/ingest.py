@@ -19,7 +19,7 @@ import time
 
 import numpy as np
 
-from backend.rag.chunk import CHUNKER_VERSION, doc_key
+from backend.rag.chunk import CHUNKER_VERSION, DOC_DEFAULTS, doc_key
 
 DIM = 1536
 EMBED_MODEL = 'openai/text-embedding-3-small'
@@ -83,7 +83,8 @@ def fill_cache(cache, texts_by_sha):
 def main(manifest_path, chunks_path, vec_dir):
     import psycopg
     from pgvector.psycopg import register_vector
-    docs = [json.loads(line) for line in open(manifest_path, encoding='utf-8')]
+    # manifest에 없는 공통 값(제조사, 수집일, 파서, 이용 조건)은 DOC_DEFAULTS로 채우고, 줄에 적힌 값이 앞선다
+    docs = [{**DOC_DEFAULTS, **json.loads(line)} for line in open(manifest_path, encoding='utf-8')]
     cards = [json.loads(line) for line in open(chunks_path, encoding='utf-8')]
     cache = VectorCache(vec_dir)
     texts = {c['sha256']: c['text'] for c in cards}

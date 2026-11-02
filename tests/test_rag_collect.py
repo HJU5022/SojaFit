@@ -39,7 +39,7 @@ def test_encode_escapes_spaces():
 def test_download_from_manifest_checks_pdf_and_sha(tmp_path, monkeypatch):
     good, bad_sha, html = 'good.pdf', 'bad.pdf', 'html.pdf'
     manifest = tmp_path / 'manifest.jsonl'
-    manifest.write_text(''.join(json.dumps({'path': f'corpus/tsc/pdf/{f}', 'source_url': f'https://a.b/{f}', 'sha256': s}) + '\n'
+    manifest.write_text(''.join(json.dumps({'source_url': f'https://a.b/{f}', 'sha256': s}) + '\n'
                                 for f, s in [(good, hashlib.sha256(PDF).hexdigest()), (bad_sha, '0' * 64), (html, None)]),
                         encoding='utf-8')
     monkeypatch.setattr(collect, 'PAUSE', 0)
