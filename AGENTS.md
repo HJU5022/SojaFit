@@ -19,7 +19,7 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 ## 기술 스택
 
 - 확정: Python, uv, FastAPI, LangGraph, PostgreSQL + pgvector, Docker Compose, Langfuse, GCP Cloud Run. LLM은 조당 OpenRouter 키 하나를 씁니다.
-- 임베딩: `text-embedding-3-small`(1536차원, 본평가 전 임시, ADR 0004). 리랭킹: 없음. LLM 모델: (정할 것)
+- 임베딩: `text-embedding-3-small`(1536차원, 본평가 전 임시, ADR 0004). 리랭킹: 없음. LLM 모델: `anthropic/claude-haiku-5.5`(OpenRouter, 임시, ADR 0010)
 
 필수 구성은 Python, FastAPI, LangGraph(멀티에이전트 최소형), RAG, Docker, Langfuse입니다. 폴더 역할은 `SOJAFIT.md`와 각 폴더의 `<대문자 폴더명>.md`를 따릅니다.
 
