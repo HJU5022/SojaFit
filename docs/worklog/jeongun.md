@@ -4,7 +4,7 @@
 - 한 일: 평가 초안의 남은 검수 4건에 하정운 O를 기록했다. n01·n02(relevant + NOT_VERIFIED)와 h03(irrelevant / missing_attribute)은 김재훈이 바꾼 답안을 1차 재검수해 합의했고, n21은 1차 O로 두 사람 O가 됐다. 본편 50건은 사람 합의 43건·숫자형 기계 대조 7건이 되었고, 공식 동결은 하지 않았다.
 - 바꾼 파일: `evals/draft_50.jsonl`(n01·n02·h03·n21 네 줄만), `evals/DRAFT_50_REVIEW.md`, `evals/EVALS.md`, `EVAL_REPORT.md`, `docs/adr/0008-평가-정보부족-구분과-52건-초안.md`, `docs/adr/ADR.md`, `docs/specs/evaluation-draft-52.md`, 이 파일
 - 실행한 명령과 결과: 바꾸기 전에 `draft_50.jsonl` 모든 줄이 같은 직렬화로 되돌아오는지 확인하고 네 줄만 바꿨다(4줄 변경). 상태 집계는 `draft_reviewers_agreed_change_hold_not_frozen` 43건, `draft_human1_reviewed_do_not_freeze` 7건이다. `uv run --offline pytest -q`는 56 passed, 18 skipped(DB 시험은 `TEST_DATABASE_URL`이 없어 건너뜀)였다.
-- 확인 못 한 것: n02의 BAS70 3쪽 Fig.2 8.3ms 곡선 값은 텍스트로 읽지 못해 PDF 화면 확인에 따랐다.
+- 확인 못 한 것: n02의 BAS70 3쪽 Fig.2 8.3ms 곡선 값은 텍스트로 읽지 못했다. 네 건의 판정은 하정운 확인(11-02)에 따랐다.
 - 다음 할 일: `dataset_v1.jsonl`로 옮겨 `freeze.py`로 동결하고 검색 베이스라인을 잰다.
 
 ## 2026-11-02 PR #23·#24 머지 뒤 리뷰 의견 반영
