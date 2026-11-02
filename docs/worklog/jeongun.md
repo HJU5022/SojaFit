@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-02 설계 결정 기록(사용자 흐름, 근거가 없을 때, 코퍼스 나누기, Supabase 저장)
+- 한 일: 조장과 정한 설계를 `SPEC.md`와 ADR 0005~0007에 적었다. 사용자 흐름에 후보 정하기 단계를 넣고, 근거가 없을 때의 순서(코퍼스 재검색 → TSC 실시간 조회 → 후보 먼저·단서 요청 → 단서 없이 진행)와 판정 근거로 인정하는 것을 적었다. 코퍼스는 기존(동결)·증분으로 나누고 평가는 기존만, Supabase는 한 프로젝트에 `halfvec`·HNSW 없음으로 둔다.
+- 바꾼 파일: `SPEC.md`(1절 하는 일·하지 않는 것, 2절 사용자 흐름·근거가 없을 때, 6절), `docs/adr/`(0005, 0006, 0007, ADR.md), 이 파일
+- 실행한 명령과 결과: 로컬 compose DB 임시 스키마에서 저장 방식별 크기를 쟀다(코퍼스 829.5 → HNSW 제거 466.7 → `halfvec` 258.0 → 본문 중복 제거 237.8MB). `embedding::halfvec::vector = embedding`이 52,244/52,244였고, 카드 1,000개 질의의 정확 검색 top-5 집합이 100% 같았다. 정확 검색 중앙값은 float32 230.5ms, `halfvec` 140.2ms였다. 임시 스키마는 지웠고 기존 표는 그대로다. 서비스 DB 크기는 그래프가 없어 langgraph 1.2.18·checkpoint-postgres 3.2.0으로 오프라인 추정만 했다. 문서 확인은 ADR·SPEC 상대 링크가 실제 파일을 가리키는지 대조했다.
+- 확인 못 한 것: Supabase 무료 서버의 검색 시간, Supabase가 500MB를 MB와 MiB 중 무엇으로 세는지, 실제 그래프의 체크포인트 크기, 실제 질문 임베딩으로 본 `halfvec` 비교, 평가 때 실시간 조회를 끄는 것에 대한 강사 확인, Infineon 파싱 글 저장 여부.
+- 다음 할 일: 임베딩 모델 확정 뒤 `halfvec` Migration과 Supabase 적재, D4 그래프로 체크포인트 크기 실측, 그래프 입력·질문 종류·노드 정하기.
+
 ## 2026-11-02 manifest를 대시보드가 읽는 크기로 줄이기
 - 한 일: PR #19 머지 뒤 Checkpoint 대시보드 G3 칸에 "manifest가 커서 읽지 못함"이 떴다(`data/manifest.jsonl` 1,012,774바이트). GitHub GraphQL `Blob.text`가 이 파일을 512,000바이트에서 자르는 것(`isTruncated=true`)을 확인했다. 1,360줄 모두 같은 값 6개(`manufacturer`, `collected_at`, `parser`, `status`, `purpose`, `usage_conditions`)를 `chunk.py`의 `DOC_DEFAULTS`로 옮기고 `ingest.py`가 읽을 때 채우게 했다. 늘 null이고 읽는 코드가 없는 `exact_original_part_match`와, 파일 이름이 `source_url` 끝과 같은 `path`를 뺐고, 공백 없는 JSON으로 쓴다. `collect.py`는 `path`가 없으면 `source_url` 끝에서 파일 이름을 얻는다.
 - 바꾼 파일: `backend/rag/`(chunk.py, ingest.py, collect.py), `data/manifest.jsonl`, `data/DATA.md`, `data/corpus/CORPUS.md`, `docs/specs/rag-pipeline.md`(What 4), `SPEC.md`(6절 확장 문장), `tests/`(test_rag_chunk.py, test_rag_ingest.py, test_rag_collect.py, TESTS.md), 이 파일
