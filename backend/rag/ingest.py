@@ -10,7 +10,7 @@
 - 출처: docs/specs/rag-pipeline.md What 5·AC-04·EC-04·EC-05
 - 필요한 것: DATABASE_URL, 캐시에 없는 본문이 있으면 임베딩 키(.env)
 
-실행: python -m backend.rag.ingest <manifest.jsonl> <chunks.jsonl> <벡터 폴더>
+실행: python -m backend.rag.ingest <manifest.jsonl> <chunks.jsonl> <벡터 폴더> [--cache-only]
 """
 import json
 import os
@@ -20,6 +20,7 @@ import time
 import numpy as np
 
 from backend.rag.chunk import CHUNKER_VERSION, DOC_DEFAULTS, doc_key
+from backend.rag.storage import vector_type
 
 DIM = 1536
 EMBED_MODEL = 'openai/text-embedding-3-small'
@@ -80,10 +81,12 @@ def fill_cache(cache, texts_by_sha):
     return len(todo)
 
 
-def main(manifest_path, chunks_path, vec_dir):
+def main(manifest_path, chunks_path, vec_dir, cache_only=False):
     import psycopg
     from pgvector.psycopg import register_vector
-    # manifest에 없는 공통 값(제조사, 수집일, 파서, 이용 조건)은 DOC_DEFAULTS로 채우고, 줄에 적힌 값이 앞선다
+    from pgvector import HalfVector
+    kind = vector_type()
+    # manifest에 없는 공통 값은 최신 main의 기본값으로 채우고 문서별 값이 앞선다.
     docs = [{**DOC_DEFAULTS, **json.loads(line)} for line in open(manifest_path, encoding='utf-8')]
     cards = [json.loads(line) for line in open(chunks_path, encoding='utf-8')]
     cache = VectorCache(vec_dir)
@@ -91,6 +94,10 @@ def main(manifest_path, chunks_path, vec_dir):
     with psycopg.connect(os.environ['DATABASE_URL']) as conn:
         register_vector(conn)
         cur = conn.cursor()
+        actual = cur.execute("SELECT format_type(atttypid,atttypmod) FROM pg_attribute "
+                             "WHERE attrelid='chunk_embeddings'::regclass AND attname='embedding'").fetchone()[0]
+        if actual != f'{kind}({DIM})':
+            raise ValueError('RAG_VECTOR_TYPE and database embedding type do not match')
         for d in docs:  # 문서: 이미 있으면 건너뛴다
             cur.execute(
                 'INSERT INTO source_documents (document_key, document_type, title, publisher, source_url, revision, license_text,'
@@ -118,12 +125,16 @@ def main(manifest_path, chunks_path, vec_dir):
         unknown = {s for _, s in rows if s not in texts}
         if unknown:
             raise SystemExit(f'카드 파일에 없는 본문 해시 {len(unknown)}개: DB와 같은 chunks.jsonl을 주세요')
+        if cache_only and any(s not in cache.index for _, s in rows):
+            raise ValueError('cache-only: required vectors are missing; embedding API was not called')
         made = fill_cache(cache, {s: texts[s] for _, s in rows})
         with cur.copy('COPY chunk_embeddings (chunk_id, embedding_model, embedding) FROM STDIN WITH (FORMAT BINARY)') as cp:
-            cp.set_types(['int8', 'varchar', 'vector'])  # [왜] 이진 COPY는 글자로 바꾸지 않아 5만 행도 빨리 들어간다
+            cp.set_types(['int8', 'varchar', kind])  # DB 열과 이진 COPY의 저장 형식을 함께 맞춘다
             for chunk_id, s in rows:
-                cp.write_row((chunk_id, EMBED_MODEL, cache.get(s)))
-        if rows:
+                vector = cache.get(s)
+                cp.write_row((chunk_id, EMBED_MODEL, HalfVector(vector) if kind == 'halfvec' else vector))
+        cur.execute("SELECT to_regclass('ix_chunk_embeddings_hnsw')")
+        if rows and cur.fetchone()[0] is not None:
             # [왜] 빈 표에 만든 HNSW 인덱스에 5만 행을 한꺼번에 넣으면 그래프가 나빠져 가까운 카드를 놓친다(11-01 실측:
             # 정확 검색 거리 0.345 카드를 놓치고 0.436 카드를 1위로 냄). 다 넣은 뒤 인덱스를 다시 만든다
             cur.execute("SET LOCAL maintenance_work_mem = '512MB'")
@@ -135,6 +146,7 @@ def main(manifest_path, chunks_path, vec_dir):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    cache_only = len(sys.argv) == 5 and sys.argv[4] == '--cache-only'
+    if len(sys.argv) != 4 and not cache_only:
         sys.exit(__doc__)
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:4], cache_only=cache_only)
