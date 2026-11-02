@@ -7,7 +7,7 @@
 - 담당: 평가·문서
 
 ## 파일
-- `CIRCUITS.md` — 이 폴더 설명
+- `README.md` — 이 폴더 설명
 - `collected/` — 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종. 회로마다 넷리스트, 연결 목록(`connections.json`), 원본의 LICENSE·README를 둔다
 
 ## 회로 출처

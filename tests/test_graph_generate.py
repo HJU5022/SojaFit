@@ -1,0 +1,46 @@
+"""생성 노드: 통과 카드와 넷리스트만 근거로 넘기고, 없는 근거 인용과 인용 없는 문장을 세는지 확인한다(SPEC 2절). LLM은 가짜로 바꾼다."""
+from backend.graph import nodes
+
+FILE = "1N5817 SERIES_H2104.pdf"
+DOCS = [{"chunk_id": i, "file": FILE, "page": 2, "content": text} for i, text in
+        [(1, "Forward voltage | 1N5817 | MAX: 0.45 | UNIT: V"), (2, "Forward voltage | 1N5819 | MAX: 0.60 | UNIT: V"),
+         (3, "Package | DO-204AL (DO-41)")]]
+PART = {"ref": "D1", "value": "1N5819", "footprint": "D_DO-41",
+        "nets": [{"name": "VIN", "nodes": ["S1.2(SW)", "D1.A(1N5819)"], "more": 0},
+                 {"name": "GND", "nodes": ["J1.1(JACK)"], "more": 5}]}
+
+
+def test_generate_counts_fake_and_uncited(monkeypatch):
+    seen = {}
+
+    def fake_chat(system, user, schema):
+        seen["system"], seen["user"] = system, user
+        return schema(answer="1N5819의 순방향 전압 최대값은 0.60 V입니다 [2]. D1은 S1 뒤 전원 경로에 있습니다 [넷리스트]. "
+                             "1N5822는 0.525 V입니다. 패키지는 DO-41입니다 [999].")
+
+    monkeypatch.setattr(nodes.llm, "chat", fake_chat)
+    out = nodes.generate({"question": "1N5819 순방향 전압은?", "docs": DOCS, "passed": [2, 3], "target_part": PART})
+
+    assert out["path"] == ["생성"]
+    assert out["check"] == {"fake_citations": ["999"], "uncited_sentences": 1, "used": ["2", "넷리스트"]}
+    assert "[1]" not in seen["user"] and "[2]" in seen["user"]  # 채점을 통과하지 못한 카드는 넘기지 않는다
+    assert "[넷리스트] D1 1N5819" in seen["user"] and "J1.1(JACK) 외 5개" in seen["user"]
+    assert "비교해 대체할 수 있는지 판단하지 않는다" in seen["system"]  # generate.md가 시스템 프롬프트로 간다
+
+
+def test_not_found_answer_is_not_an_uncited_sentence(monkeypatch):
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(answer="문서로 확인 안 됨"))
+    out = nodes.generate({"question": "2026 USB-C판 D1 정격은?", "docs": DOCS, "passed": [2], "target_part": PART})
+    assert out["check"] == {"fake_citations": [], "uncited_sentences": 0, "used": []}
+
+
+def test_no_evidence_skips_llm(monkeypatch):
+    def fake_chat(system, user, schema):
+        raise AssertionError("근거가 없으면 LLM을 부르지 않는다")
+
+    monkeypatch.setattr(nodes.llm, "chat", fake_chat)
+    assert nodes.generate({"question": "D1은 무슨 역할이야?"})["answer"] == "문서로 확인 안 됨"
+
+
+def test_citations_ignore_non_number_brackets():
+    assert nodes.citations("값은 [0.60 V]이다 [2, 3]. 회로는 [넷리스트].") == {"2", "3", "넷리스트"}

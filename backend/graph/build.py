@@ -16,6 +16,21 @@
     (예: 1N4148을 물었는데 1N4148W 카드를 인용하거나, TJ = 25°C 값을 물었는데 100°C 값을 인용하는 실패를 막는다).
   - 품번 목록, 낱말 가중치 같은 코퍼스 의존 값을 코드에 고정하지 않는다. 코퍼스가 커지면 새 대상을 전부 거절하게 된다.
 """
+from backend.graph.state import AgentState
+
+MAX_TRIES = 2  # 검색 상한: 첫 검색 + 재작성 뒤 1번(SPEC 2절)
+
+
+def after_grade(state: AgentState) -> str:
+    """채점 뒤 갈림길: 통과 카드가 있으면 생성, 다시 찾아도 소용없거나 상한에 닿았으면 거절, 아니면 재작성(강의 2주 20강 채점후)."""
+    if state.get("passed"):
+        return "생성"  # 통과 카드가 하나라도 있으면 답한다
+    if not state.get("docs"):
+        # [왜] 재작성은 품번 필터를 바꾸지 않는다. 코퍼스에 없는 품번(1N4001)이라 0장이면 다시 찾아도 0장이고 LLM 호출만 버린다(11-02 조장 결정)
+        return "거절"
+    if state.get("tries", 0) >= MAX_TRIES:
+        return "거절"
+    return "재작성"
 
 
 def build_graph(retriever=None, checkpointer=None):

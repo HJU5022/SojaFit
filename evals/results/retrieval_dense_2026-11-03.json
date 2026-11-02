@@ -1,0 +1,1100 @@
+{
+ "summary": {
+  "dataset": "evals/dataset_v1.jsonl",
+  "method": "dense",
+  "k": 5,
+  "questions": 19,
+  "circuit_only_skipped": [
+   "draft30-e01",
+   "draft30-e02",
+   "draft30-m01",
+   "draft30-m02",
+   "draft30-h01",
+   "draft30-h02"
+  ],
+  "doc_recall@5": 0.684,
+  "doc_mrr": 0.589,
+  "page_hit@5": 0.263,
+  "sec_p50": 1.386
+ },
+ "rows": [
+  {
+   "id": "draft30-e03",
+   "rank": 1,
+   "page_hit": true,
+   "sec": 6.045,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSOLUTE MAXIMUM RATINGS (T"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSOLUTE MAXIMUM RATINGS (T"
+    }
+   ]
+  },
+  {
+   "id": "draft30-e04",
+   "rank": 1,
+   "page_hit": true,
+   "sec": 1.366,
+   "gold": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "file": "1N4148WS-G_C2211.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N4148WS-G_C2211.pdf] 이 데이터시트의 품번: 1N4148WS-G"
+    },
+    {
+     "file": "1N4148WS SERIES_N2212.pdf",
+     "page": 1,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148WS SERIES_N2212.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PARAMETERS / VALUE: 100 | KEY P"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PARAMETERS / VALUE: 75 | KEY PAR"
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PARAMETERS / VALUE: 100 | KEY PAR"
+    }
+   ]
+  },
+  {
+   "id": "draft30-e05",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 1.417,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE (1)(2): 1N581x | ORDERING INF"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE (1)(2): 1N581xH | ORDERING IN"
+    },
+    {
+     "file": "1N5820 SERIES_I2105.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N5820 SERIES_I2105.pdf] 이 데이터시트의 품번: 1N5820, 1N5821, 1N5822"
+    },
+    {
+     "file": "1N4148W-G_D1601.pdf",
+     "page": null,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148W-G_D1601.pdf] 이 데이터시트의 품번: 1N4148W-G"
+    }
+   ]
+  },
+  {
+   "id": "draft30-e08",
+   "rank": null,
+   "page_hit": false,
+   "sec": 2.223,
+   "gold": [
+    [
+     "SS32 SERIES_Q2412.pdf",
+     1
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "RS3MFS_D2304.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[RS3MFS_D2304.pdf] 이 데이터시트의 품번: RS3MFS"
+    },
+    {
+     "file": "RS3A SERIES_M2304.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[RS3A SERIES_M2304.pdf] 이 데이터시트의 품번: RS3A, RS3B, RS3D, RS3G, RS3J, RS3K, RS3M"
+    },
+    {
+     "file": "1N4148WS-G_C2211.pdf",
+     "page": null,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148WS-G_C2211.pdf] 이 데이터시트의 품번: 1N4148WS-G"
+    },
+    {
+     "file": "SS34LH SERIES_A2103.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[SS34LH SERIES_A2103.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS] ELECTRICAL SPECIFICATIONS: Reverse current @ rated | ELECTRIC"
+    },
+    {
+     "file": "1N4148WS SERIES_N2212.pdf",
+     "page": 4,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "SOD-323F\n5. DWG NO. REF: HQ2SD07-SOD323F-018 REV A.\n1N4148WS/1N4448WS/1N914BWS"
+    }
+   ]
+  },
+  {
+   "id": "draft30-m03",
+   "rank": null,
+   "page_hit": false,
+   "sec": 1.261,
+   "gold": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ]
+   ],
+   "top": [
+    {
+     "file": "BZT52C2V7K SERIES_H2510.pdf",
+     "page": 3,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "Notes:\n1. The Zener Voltage (VZ) is tested under pulse condition of 30ms\n2. The device numbers listed have a standard to"
+    },
+    {
+     "file": "BZX585B2V4 SERIES_C1607.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[BZX585B2V4 SERIES_C1607.pdf · 2쪽 · Part Number] Part Number: BZX585B3V3 | Marking: 35 | Zener Voltage / VZ @ (V) / Nom:"
+    },
+    {
+     "file": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B3V6 | Marking code: 3V6B | Zener voltage / Min (V): 3.5"
+    },
+    {
+     "file": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[BZT52B2V4 SERIES_F15.pdf · 2쪽 · Device type] Device type: BZT52B3V3 | Marking code: 3V3B | Zener voltage / Min (V): 3.2"
+    },
+    {
+     "file": "BZX585B2V4 SERIES_C1607.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[BZX585B2V4 SERIES_C1607.pdf · 2쪽 · Part Number] Part Number: BZX585B3V6 | Marking: 45 | Zener Voltage / VZ @ (V) / Nom:"
+    }
+   ]
+  },
+  {
+   "id": "draft30-m04",
+   "rank": 2,
+   "page_hit": false,
+   "sec": 2.153,
+   "gold": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     6
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "TSCDF08065G1_A2404.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[TSCDF08065G1_A2404.pdf] 이 데이터시트의 품번: TSCDF08065G1"
+    },
+    {
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[BZT52C2V4 SERIES_G1804.pdf] 이 데이터시트의 품번: BZT52C10, BZT52C11, BZT52C12, BZT52C13, BZT52C15, BZT52C16, BZT52C18, BZT52C20"
+    },
+    {
+     "file": "TSCDT08065G1_A2404.pdf",
+     "page": null,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[TSCDT08065G1_A2404.pdf] 이 데이터시트의 품번: TSCDT08065G1"
+    },
+    {
+     "file": "BZX585B2V4H SERIES_A2503.pdf",
+     "page": 1,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "Note:\n1. Device mounted on an FR4 Printed-Circuit Board (PCB), single-sided copper, tin-plated and standard footprint\nJu"
+    },
+    {
+     "file": "TSCDT12065G1_A2404.pdf",
+     "page": null,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[TSCDT12065G1_A2404.pdf] 이 데이터시트의 품번: TSCDT12065G1"
+    }
+   ]
+  },
+  {
+   "id": "draft30-m05",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 1.407,
+   "gold": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf] 이 데이터시트의 품번: 1N4148W, 1N4448W, 1N914BW"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS"
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    }
+   ]
+  },
+  {
+   "id": "draft30-m07",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 1.319,
+   "gold": [
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[BZX84C2V4 SERIES_F2001.pdf] 이 데이터시트의 품번: BZX84C10, BZX84C11, BZX84C12, BZX84C13, BZX84C15, BZX84C16, BZX84C18, BZX84C20"
+    },
+    {
+     "file": "BZX585B2V4 SERIES_C1607.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[BZX585B2V4 SERIES_C1607.pdf] 이 데이터시트의 품번: BZX585B10, BZX585B11, BZX585B12, BZX585B13, BZX585B15, BZX585B16, BZX585B18, "
+    },
+    {
+     "file": "BZX84C2V4H SERIES_A2503.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "Notes:\n1. \"xxx\" defines voltage from 2.4V(BZX84C2V4H) to 39V(BZX84C39H)\nBZX84C2V4H - BZX84C39H"
+    },
+    {
+     "file": "BZX84C2V4H SERIES_A2503.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[BZX84C2V4H SERIES_A2503.pdf] 이 데이터시트의 품번: BZX84C10H, BZX84C11H, BZX84C12H, BZX84C13H, BZX84C15H, BZX84C16H, BZX84C18H, "
+    },
+    {
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 3,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "Notes:\n1. \"xxx\" defines voltage from 2.4V(BZX84JB2V4H) to 75V(BZX84JB75H)\nBZX84JB2V4H - BZX84JB75H"
+    }
+   ]
+  },
+  {
+   "id": "draft30-h04",
+   "rank": 1,
+   "page_hit": true,
+   "sec": 1.187,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N5391G-T SERIES_B2105.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5391G-T SERIES_B2105.pdf] 이 데이터시트의 품번: 1N5391G-T, 1N5392G-T, 1N5393G-T, 1N5395G-T, 1N5397G-T, 1N5398G-T, 1N5399G-T"
+    },
+    {
+     "file": "1N4148W-G_D1601.pdf",
+     "page": null,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148W-G_D1601.pdf] 이 데이터시트의 품번: 1N4148W-G"
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PARAMETERS / VALUE: 20 - 40 | KEY"
+    }
+   ]
+  },
+  {
+   "id": "draft30-h05",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 1.258,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N5820 SERIES_I2105.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5820 SERIES_I2105.pdf] 이 데이터시트의 품번: 1N5820, 1N5821, 1N5822"
+    },
+    {
+     "file": "1N5391G-T SERIES_B2105.pdf",
+     "page": null,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N5391G-T SERIES_B2105.pdf] 이 데이터시트의 품번: 1N5391G-T, 1N5392G-T, 1N5393G-T, 1N5395G-T, 1N5397G-T, 1N5398G-T, 1N5399G-T"
+    },
+    {
+     "file": "1N5391G SERIES_G2309.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N5391G SERIES_G2309.pdf] 이 데이터시트의 품번: 1N5391G, 1N5392G, 1N5393G, 1N5395G, 1N5397G, 1N5398G, 1N5399G"
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    }
+   ]
+  },
+  {
+   "id": "draft50-n01",
+   "rank": 5,
+   "page_hit": false,
+   "sec": 1.261,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148WSH_A2501.pdf",
+     "page": 1,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "MECHANICAL DATA\nIF, KEY PARAMETERS.VALUE = 150. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VALUE = 100. VRRM, KE"
+    },
+    {
+     "file": "1N5400G-K SERIES_C2105.pdf",
+     "page": 1,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "MECHANICAL DATA\nIF, KEY PARAMETERS.VALUE = 3. IF, KEY PARAMETERS.UNIT = A. VRRM, KEY PARAMETERS.VALUE = 50 - 1000. VRRM,"
+    },
+    {
+     "file": "BAT54W SERIES_D2102.pdf",
+     "page": 1,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "200mA, 30V Schottky Barrier Diode\nIF, KEY PARAMETERS.VALUE = 200. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VAL"
+    },
+    {
+     "file": "BAW56 SERIES_I2001.pdf",
+     "page": 1,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "200mA, 70V SMD Switching Diode\nIF, KEY PARAMETERS.VALUE = 200. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VALUE "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    }
+   ]
+  },
+  {
+   "id": "draft50-n02",
+   "rank": null,
+   "page_hit": false,
+   "sec": 1.175,
+   "gold": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     3
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148WSH_A2501.pdf",
+     "page": 1,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "MECHANICAL DATA\nIF, KEY PARAMETERS.VALUE = 150. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VALUE = 100. VRRM, KE"
+    },
+    {
+     "file": "BAW56 SERIES_I2001.pdf",
+     "page": 1,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "200mA, 70V SMD Switching Diode\nIF, KEY PARAMETERS.VALUE = 200. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VALUE "
+    },
+    {
+     "file": "BAT54W SERIES_D2102.pdf",
+     "page": 1,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "200mA, 30V Schottky Barrier Diode\nIF, KEY PARAMETERS.VALUE = 200. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VAL"
+    },
+    {
+     "file": "MBRS1045CT-Y SERIES_C2103.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[MBRS1045CT-Y SERIES_C2103.pdf · 2쪽 · PARAMETER] PARAMETER: @ rated (2) TJ = 100°C | 열3: Reverse current VR per diode | "
+    },
+    {
+     "file": "BAS21H_A2412.pdf",
+     "page": 1,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "MECHANICAL DATA\nIF, KEY PARAMETERS.VALUE = 200. IF, KEY PARAMETERS.UNIT = mA. VRRM, KEY PARAMETERS.VALUE = 250. VRRM, KE"
+    }
+   ]
+  },
+  {
+   "id": "draft50-n03",
+   "rank": 2,
+   "page_hit": true,
+   "sec": 1.307,
+   "gold": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148WS-G_C2211.pdf",
+     "page": 2,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N4148WS-G_C2211.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS (TA"
+    },
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS"
+    },
+    {
+     "file": "1N4148WS SERIES_N2212.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N4148WS SERIES_N2212.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATION"
+    },
+    {
+     "file": "1N4148WS-G_C2211.pdf",
+     "page": null,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148WS-G_C2211.pdf] 이 데이터시트의 품번: 1N4148WS-G"
+    }
+   ]
+  },
+  {
+   "id": "draft50-n04",
+   "rank": null,
+   "page_hit": false,
+   "sec": 1.386,
+   "gold": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "TSCDF08065G1_A2404.pdf",
+     "page": 2,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[TSCDF08065G1_A2404.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS ("
+    },
+    {
+     "file": "TSCDF08065G1_A2404.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[TSCDF08065G1_A2404.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS ("
+    },
+    {
+     "file": "RS2D-T SERIES_C2102.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[RS2D-T SERIES_C2102.pdf · 2쪽 · PARAMETER] PARAMETER: Forward voltage (1) | PARAMETER: RS2J-T | CONDITIONS: IF = 1A, TJ "
+    },
+    {
+     "file": "TSCDT12065G1_A2404.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[TSCDT12065G1_A2404.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS ("
+    },
+    {
+     "file": "TSCDT12065G1_A2404.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[TSCDT12065G1_A2404.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS ("
+    }
+   ]
+  },
+  {
+   "id": "draft50-n05",
+   "rank": null,
+   "page_hit": false,
+   "sec": 1.42,
+   "gold": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     4
+    ]
+   ],
+   "top": [
+    {
+     "file": "BZT52B2V4SH SERIES_A2503.pdf",
+     "page": 1,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "Note:\n1. Device mounted on an FR4 Printed-Circuit Board (PCB), single-sided copper, tin-plated and standard footprint\nJu"
+    },
+    {
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 1,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "Note:\n1. Device mounted on an FR4 Printed-Circuit Board (PCB), single-sided copper, tin-plated, 1cm 2 pad\nJunction-to-am"
+    },
+    {
+     "file": "BZX585B2V4H SERIES_A2503.pdf",
+     "page": 1,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "Note:\n1. Device mounted on an FR4 Printed-Circuit Board (PCB), single-sided copper, tin-plated and standard footprint\nJu"
+    },
+    {
+     "file": "BYG23M_C2102.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[BYG23M_C2102.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) PARAMETER] CONDITIONS: TJ = 125°C "
+    },
+    {
+     "file": "TSCDF08065G1_A2404.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[TSCDF08065G1_A2404.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS ("
+    }
+   ]
+  },
+  {
+   "id": "draft50-n06",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 2.209,
+   "gold": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N4148 SERIES_K2301.pdf] 이 데이터시트의 품번: 1N4148, 1N4448, 1N914B"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": null,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf] 이 데이터시트의 품번: 1N4148W, 1N4448W, 1N914BW"
+    },
+    {
+     "file": "1N4148W-G_D1601.pdf",
+     "page": null,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148W-G_D1601.pdf] 이 데이터시트의 품번: 1N4148W-G"
+    },
+    {
+     "file": "1N4148WS-G_C2211.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N4148WS-G_C2211.pdf] 이 데이터시트의 품번: 1N4148WS-G"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "Notes:\n1N4148W RHG, ORDERING INFORMATION.PACKAGE = SOD-123F. 1N4148W RHG, ORDERING INFORMATION.PACKING = 3K / 7\" Reel. 1"
+    }
+   ]
+  },
+  {
+   "id": "draft50-n07",
+   "rank": 1,
+   "page_hit": false,
+   "sec": 1.777,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSOLUTE MAXIMUM RATINGS ("
+    }
+   ]
+  },
+  {
+   "id": "draft50-n08",
+   "rank": null,
+   "page_hit": false,
+   "sec": 1.306,
+   "gold": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 1,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSOLUTE MAXIMUM RATINGS ("
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS"
+    },
+    {
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N4148W SERIES_K1804.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS"
+    },
+    {
+     "file": "SRT12 SERIES_I2104.pdf",
+     "page": 2,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[SRT12 SERIES_I2104.pdf · 2쪽 · PARAMETER] PARAMETER: Reverse current @ rated | PARAMETER: SRT12 SRT13 SRT14 | (TA = 25°C"
+    },
+    {
+     "file": "1N4001G SERIES_P2104.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N4001G SERIES_P2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) PARAMETER] ELECTRICAL SPEC"
+    }
+   ]
+  },
+  {
+   "id": "draft52-n21",
+   "rank": 1,
+   "page_hit": true,
+   "sec": 1.397,
+   "gold": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "top": [
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": null,
+     "score": 0.01639,
+     "dense_rank": 1,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf] 이 데이터시트의 품번: 1N5817, 1N5818, 1N5819"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "score": 0.01613,
+     "dense_rank": 2,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)] ABSOLUTE MAXIMUM RATINGS (T"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01587,
+     "dense_rank": 3,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1,
+     "score": 0.01562,
+     "dense_rank": 4,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 1쪽 · KEY PARAMETERS] KEY PARAMETERS / PARAMETER: VRRM | KEY PARAMETERS / VALUE: 20 - 40 | KEY"
+    },
+    {
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2,
+     "score": 0.01538,
+     "dense_rank": 5,
+     "bm25_rank": null,
+     "content": "[1N5817 SERIES_H2104.pdf · 2쪽 · ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)] ELECTRICAL SPECIFICATIONS "
+    }
+   ]
+  }
+ ]
+}

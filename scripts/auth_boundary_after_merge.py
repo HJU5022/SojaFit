@@ -89,7 +89,8 @@ try:
               "postgres_version": version, "lock_duration_seconds": int(lock_seconds),
               "session_absolute_duration_seconds": int(initial_seconds), "steps": records,
               "method": "one test-only PostgreSQL transaction; CURRENT_TIMESTAMP fixed; rollback"}
-    Path(__file__).with_name("auth_boundary_after_merge.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    out = Path(__file__).resolve().parents[1] / "evals" / "results" / f"auth_boundary_{result['measured_at_kst'][:10]}.json"
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False))
 finally:
     auth.connection = original_connection

@@ -2,7 +2,7 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`이 이미 만들고, 나머지 업무 표 11개는 `db/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. ERD 그림은 아직 없습니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`이 이미 만들고, 나머지 업무 표 11개는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. ERD 그림은 아직 없습니다.
 
 열의 정본은 SQL입니다(`db/ERD.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/ERD.md`로 옮기고 이 문서는 지웁니다.
 
@@ -145,7 +145,7 @@ RAG 코퍼스에 포함된 데이터시트와 공개 문서의 출처, 버전 �
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
 | `id` | 문서 ID | `BIGINT` | N | PK | 출처 문서 식별자 | 확정 |
-| `document_key` | 문서 키 | `VARCHAR(200)` | N | UNIQUE | manifest(`data/DATA.md`의 형식)의 `doc_id`와 같은 값 | 확정 |
+| `document_key` | 문서 키 | `VARCHAR(200)` | N | UNIQUE | manifest(`data/README.md`의 형식)의 `doc_id`와 같은 값 | 확정 |
 | `document_type` | 문서 종류 | `VARCHAR(50)` | N | CHECK: `DATASHEET`, `PUBLIC_DOC` | 제조사 데이터시트 또는 공개 문서 | 확정 |
 | `title` | 문서 제목 | `VARCHAR(500)` | N |  | 문서 제목 | 확정 |
 | `publisher` | 발행처 | `VARCHAR(200)` | N |  | 제조사 또는 공개 문서 발행처 | 확정 |
@@ -377,7 +377,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
 
 - 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, `backend/rag/retrieve.py`는 인덱스 스캔을 끄고 정확 검색합니다(11-01 실측에서 HNSW가 가까운 카드를 놓침). `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 차원은 2,000 이하여야 합니다.
-- 현재 RAG 기본 열은 vector(1536)이며, 원본 코퍼스를 유지한 복제 DB에만 `halfvec.sql.manual`로 halfvec(1536) 저장·HNSW 제거 전환을 시험할 수 있습니다. 검색 거리는 float32로 계산합니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
+- 현재 RAG 기본 열은 vector(1536)이며, 원본 코퍼스를 유지한 복제 DB에만 `manual/halfvec.sql.manual`로 halfvec(1536) 저장·HNSW 제거 전환을 시험할 수 있습니다. 검색 거리는 float32로 계산합니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
 - 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 지금 검색은 정확 검색이라 해당하지 않고, HNSW를 다시 쓰면 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
 - 차원이 다른 모델로 바꾸면 `embedding` 열을 새 Migration으로 바꿉니다.
 - 이 표와 HNSW 인덱스는 `db/002_rag_corpus.sql`이 만듭니다.
@@ -488,16 +488,16 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ## 11. 다음 단계
 
-PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다룬다. 실행 순서·이력 방식은 확정 전이다.
+PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다룬다. 실행 순서·이력 방식은 확정 전이다.
 
 1. 이 정의서로 `db/ERD.md`에 표 관계도(mermaid `erDiagram`)를 그립니다.
 2. Migration은 두 번으로 나눕니다.
 
 | 순서 | 내용 | 시작 조건 |
 |---|---|---|
-| Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/004_create_business_tables.sql.draft` | ERD 승인 |
+| Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/manual/004_create_business_tables.sql.draft` | ERD 승인 |
 | Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 완료: `db/002_rag_corpus.sql`(1536 임시, ADR 0004) |
 
-3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/DB.md`).
-4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`007_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
+3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/README.md`).
+4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`008_`부터, `db/README.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/ERD.md`로 옮기고 이 문서를 지웁니다.

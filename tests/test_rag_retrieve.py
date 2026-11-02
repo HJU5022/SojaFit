@@ -4,9 +4,11 @@
 """
 import json
 import os
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from rank_bm25 import BM25Okapi
 
 from backend.rag import retrieve as R
 from backend.rag.retrieve import allowed_chunks, part_index, positive_top, rrf, tokens
@@ -61,6 +63,36 @@ def test_demo_mode_skips_embedding_api(monkeypatch):
     assert R._dense(None, 'SS34 정격') == []
 
 
+class _CardDB:
+    """retrieve()가 끝에 부르는 카드 조회 한 번만 ROWS로 흉내 낸다."""
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def execute(self, sql, args):
+        rows = [(i, f'doc{d}', f'https://x/doc{d}.pdf', 1, None, c, d) for i, d, c in ROWS if i in args[0]]
+        return SimpleNamespace(fetchall=lambda: rows)
+
+
+def test_bm25_method_skips_embedding_api(monkeypatch):
+    def boom(texts):
+        raise AssertionError("method='bm25'에서 임베딩 API를 불렀다")
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)  # 키가 있어도 부르지 않아야 한다
+    monkeypatch.setattr(llm, 'embed_texts', boom)
+    monkeypatch.setattr(R, '_bm25', (BM25Okapi([tokens(c) for _, _, c in ROWS]), [i for i, _, _ in ROWS]))
+    monkeypatch.setattr(R, '_parts', part_index(ROWS))
+    monkeypatch.setattr(R, '_connect', _CardDB)
+    found = R.retrieve('SS310 정격', method='bm25')  # ss310은 카드 1에만 있다
+    assert [(r['chunk_id'], r['dense_rank'], r['bm25_rank']) for r in found] == [(1, None, 1)]
+
+
+def test_unknown_method_raises():
+    with pytest.raises(ValueError, match='method'):
+        R.retrieve('SS34 정격', method='rerank')
+
+
 def test_eval_with_no_targets_says_why(tmp_path):
     path = tmp_path / 'd.jsonl'
     path.write_text(json.dumps({'id': 'x', 'kind': 'irrelevant', 'gold_chunks': [], 'question': 'q'}) + '\n', encoding='utf-8')
@@ -86,5 +118,6 @@ def test_real_db_demo_mode_bm25_only(monkeypatch):
     found = R.retrieve('SS34 정격이 어떻게 돼?', parts=['SS34'])
     assert found and {r['file'] for r in found} == {'SS32 SERIES_Q2412.pdf'}
     assert all(r['dense_rank'] is None for r in found)
+    assert all('ss34' in r['doc_parts'] for r in found)  # 문서 표지 품번 목록(소문자)
     assert R.retrieve('이 보드에서 이건 왜 필요해?') == []  # 영문·숫자 단어가 없으면 BM25 후보도 없다
     assert R.retrieve('SS34 정격', parts=['NOPE123']) == []

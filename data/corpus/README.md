@@ -11,7 +11,7 @@
 - 공개 문서는 원래 라이선스(CC BY-SA 4.0 등)를 따르고 출처를 적습니다.
 
 ## 파일
-- `CORPUS.md` — 이 폴더 설명
+- `README.md` — 이 폴더 설명
 - `tsc/` — 제조사 PDF 원본 표본 3건: BZT52C2V4-SERIES_G1804.pdf, 1N4148-SERIES_K2301.pdf, 1N5817-SERIES_H2104.pdf. 출처·개정판·해시는 [manifest](../manifest.jsonl)에 기록한다. manifest에는 원래 파일 이름(공백 포함)이 `source_url` 끝에 있고 해시가 같다.
 
 ## 수집과 검색 반영 상태

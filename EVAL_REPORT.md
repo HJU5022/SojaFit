@@ -9,50 +9,16 @@
 | 산업과 문서 종류 | 제조(전자부품). Taiwan Semiconductor 다이오드 데이터시트 PDF(분류 13개, 품번 9,589개) |
 | 서로 다른 문서 수 / 서로 다른 청크 수 | 문서 1,360건(7,725쪽) / 개선 2 청크 45,898개, 개선 전 10,723개 (문서 50건 이상 / 청크 1만 개 이상. 청크는 본문 sha256 기준) |
 | 문서 파싱 방식 (PDF, 표, 스캔 중) | PDF·표. Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고 합친 칸을 채운 뒤, 표 숫자를 pdfplumber 글자와 두 방향으로 대조. Docling 숫자 중 원문에 있는 비율 99.993%(93,940/93,947), 표 영역 원문 숫자 중 Docling에 있는 비율 99.89%(93,493/93,600). 원시 결과 `evals/results/parse_gpu_*_2026-11-01.*` |
-| 청킹 방식과 크기, 겹침 | 개선 2: PDF별 품번 표지 카드 + 표 한 행 = 카드 하나 + [파일·쪽·표 제목] 이름표, 표 밖 글은 Docling HybridChunker. 겹침 없음. 검색 비교에서 개선 전보다 문서 Recall@5 0.455 → 0.727 (아래 "청킹 검색 비교") |
-| 임베딩 모델과 선택 근거 | `text-embedding-3-small`(1536차원), 본평가 전 임시 결정([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). 11-01 예비 19문항의 정확 검색 하이브리드 MRR은 0.921로 `KURE-v1`·`Qwen3-Embedding-0.6B`(각 0.895)보다 낮지 않았지만, 동결 평가셋으로 다시 재기 전이라 확정하지 않음(아래 "HNSW 개선 실험") |
+| 청킹 방식과 크기, 겹침 | 개선 2: PDF별 품번 표지 카드 + 표 한 행 = 카드 하나 + [파일·쪽·표 제목] 이름표, 표 밖 글은 Docling HybridChunker. 겹침 없음. 값 · 이름표 · 품번이 한 카드에 든 정답 값 41/41 (아래 "청킹 후보 대리 지표") |
+| 임베딩 모델과 선택 근거 | `text-embedding-3-small`(1536차원). 동결 평가셋 격자 본평가(1-3절, 사전 등록 #16)에서 Qwen과의 MRR 차이가 0.05 미만(같음)이라 추론 서버가 필요 없는 이 모델을 유지한다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)) |
 | 벡터DB와 선택 이유, 한계 | PostgreSQL + pgvector. 서비스 표와 코퍼스를 Supabase 프로젝트 하나에 둠([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). HNSW가 한국어 질문의 정확 검색 1위를 놓쳐 인덱스를 끄고 정확 검색(질문당 0.3~0.6초)하며, 카드가 늘면 그만큼 느려지는 것이 한계 |
 | manifest 위치 | `data/manifest.jsonl` |
 
-### 1-1. 임베딩 모델 예비 기준선 (2026-10-30)
-
-> **선택용 본평가가 아닌 프록시 smoke test입니다.** 당시(10-30)에는 실제 데이터시트 청크가 없어서(22,000청크는 계획 때 추정한 규모) 공식 제품표의 대표 사양을 재서술한 30청크·18질의를 사용했습니다. Recall@5가 포화되므로 MRR과 운영 조건으로 후보만 줄이고, TSC 1,360건 실제 청크에서 사람이 `gold_chunks`를 붙인 뒤 다시 결정합니다. 표본 원문은 [TSC 1N5817–1N5819](https://services.ts.com.tw/storage/resources/datasheet/1N5817%20SERIES_H2104.pdf), [TSC Selection Guide](https://web.ts.com.tw/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/), [Infineon BAT165](https://www.infineon.com/assets/row/public/documents/24/49/infineon-bat165-datasheet-en.pdf), [Infineon AF Schottky](https://www.infineon.com/assets/row/public/documents/24/76/infineon-pg-sod323-2-1-bas3010a03we6327htsa1-pd-en.pdf)를 대조했습니다.
-
-평가 조건: dense cosine, 리랭커 없음, gold 1개/질의, RTX 5060 Laptop GPU 8GB, warm-up 뒤 측정. 로컬 질의 지연은 질의 임베딩과 22,000개 float32 벡터 exact search를 합친 값입니다. 22,000개 지연용 행렬은 30개 표본 벡터를 반복해 만들었으므로 검색 품질이 아니라 연산 지연만 참고합니다. 실제 서비스의 BM25·메타데이터 필터·리랭커를 넣지 않은 `dense-only` 결과이며 G5 본평가로 세지 않습니다.
-
-| 후보 | Recall@5 | MRR | 1,000청크 임베딩 | 질의 1건 p50 / p95 | 차원 | 22,000벡터 원시 / 계획 용량 | 운영 조건 |
-|---|---:|---:|---:|---:|---:|---:|---|
-| `text-embedding-3-small` | **1.000** | **0.907** | 7.02초 / $0.000878¹ | 918.7 / 1,205.1 ms | 1,536 | 135.2 MB / 약 203 MB² | OpenRouter API. 모델 이미지 불필요 |
-| `BAAI/bge-m3` | **1.000** | 0.863 | 5.95초, 증분 API 비용 $0 | **30.9** / 90.1 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
-| `nlpai-lab/KURE-v1` | **1.000** | **0.894** | 5.68초, 증분 API 비용 $0 | 31.9 / **52.4 ms**⁵ | 1,024 | 90.1 MB / 약 135 MB² | 모델 스냅샷 2.1 GB; CUDA 런타임 포함 이미지 약 7.8 GB³; 오프라인 통과 |
-| `Qwen/Qwen3-Embedding-0.6B` | **1.000** | 0.875 | **3.83초**, 증분 API 비용 $0 | 61.8 / 82.9 ms⁵ | 1,024 | 90.1 MB / 약 135 MB² | 고정 영문 query instruction 사용; 캐시 1.125 GiB; 오프라인 통과⁴ |
-
-1. 표본 1,000청크의 실제 usage는 43,890토큰, $0.000878이었습니다. 실제 데이터시트 청크를 평균 350토큰으로 계획하면 1,000청크 $0.007, 22,000청크 최초 색인 $0.154입니다. 전체 프록시 평가는 45,699토큰, $0.000914였습니다. OpenRouter 공식 문서도 `openai/text-embedding-3-small`을 $0.02/1M tokens로 제공합니다: [OpenRouter embeddings API](https://openrouter.ai/docs/api/api-reference/embeddings/create-embeddings), [model pricing](https://openrouter.ai/openai/text-embedding-3-small/providers). 기본 차원 1,536과 최대 입력 8,192토큰은 [OpenAI embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)와 일치합니다.
-2. 원시는 `차원 × 4 bytes × 22,000`입니다. 계획 용량은 행·메타데이터·HNSW 여유로 원시의 1.5배를 잡은 추정이며 본문 저장량은 제외합니다.
-3. 측정 PC(RTX 5060 Laptop)의 캐시된 단일 revision(2.1 GB) + 측정용 CUDA/Python 패키지(5.6 GB) + base image(0.07 GB)의 비압축 합계 추정입니다. 실제 배포 Dockerfile 빌드 크기는 별도 측정해야 합니다.
-4. Qwen은 revision `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`을 사용했습니다. TEI 1.7.2 linux/amd64 registry manifest의 압축 layer 합계는 GPU 0.57 GiB, CPU 0.22 GiB이며 모델 캐시는 별도입니다. 이미지를 pull·빌드하지 않았으므로 로컬 비압축 이미지 크기로 표기하지 않습니다. 저장소 표준인 Docker `uv run --offline --isolated` 재실행 결과는 Recall@5 1.000/MRR 0.875, 1,000청크 3.83초, 질의 p50/p95 61.8/82.9 ms였습니다. 최초 Windows 임시 환경 결과(10.37초, 43.7/49.0 ms)는 실행 환경이 달라 비교표에서 제외하고 원시 JSON으로만 보존합니다.
-5. 로컬 세 모델의 지연은 RTX 5060 Laptop GPU 8GB에서 측정한 값이며 2026-10-30 배포 기준 Cloud Run의 CPU 1 vCPU·메모리 512 MiB 값이 아닙니다. BGE·KURE 모델 스냅샷만 약 2.1 GB이고 Qwen 캐시도 1.125 GiB이므로 로컬 모델을 Cloud Run에 올리려면 512 MiB보다 메모리를 늘리고 CPU 환경에서 지연을 별도로 재측정해야 합니다.
-
-세 로컬 모델은 캐시 준비 후 새 프로세스에서 `HF_HUB_OFFLINE=1`로 같은 Recall@5/MRR이 나오는 것을 확인했습니다. BGE·KURE는 `uv run --offline`도 함께 사용했고, Qwen은 캐시 snapshot의 로컬 경로를 직접 로드해 `transformers`의 불필요한 모델 정보 조회를 막았습니다. Hugging Face 문서상 오프라인 모드는 캐시에 없는 파일을 자동으로 받지 않고 실패합니다: [HF_HUB_OFFLINE](https://github.com/huggingface/huggingface_hub/blob/main/docs/source/en/package_reference/environment_variables.md#hf_hub_offline).
-
 **키 없는 데모 규칙**: `SPEC.md` 7절을 따릅니다.
-
-**예비 선택 상태(2026-11-02 후보 확장 반영)**: 현재 서비스 적재·검색은 `text-embedding-3-small`과 `vector(1536)`을 사용하며, 확장 후보 추가는 이 기본값을 바꾸지 않습니다. 로컬 실행과 Voyage API 후보는 평가용입니다. 최종 모델을 정한 뒤에만 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 결정합니다. 외부 관리형이면 Cloud Run의 CUDA 이미지·가중치 부담과 로컬 GPU 지연을 최종 순위에서 제외하고, 자체 API이면 그 자원이 추론 서버의 운영비·지연으로 다시 포함됩니다. 로컬 Recall@5·MRR은 후보를 거르는 예비 품질 증거일 뿐이며, 최종 선택은 동결된 동일 표본을 실제 운영 방식의 정확한 모델 ID·차원·입력 형식으로 다시 측정한 결과로 결정합니다. `chunk_embeddings.embedding`의 `vector(N)`과 차원 변경 SQL(새 `db/` 파일)도 그 뒤에 정합니다.
-
-**다음 본평가**: TSC 데이터시트 1,360건의 실제 청크에서 `BM25 + text-embedding-3-small API`를 기준선으로 두고 임베딩 API 모델만 하나씩 바꿉니다. 사전 등록 #1(`KURE-v1`)·#2(`Qwen3-Embedding-0.6B`)는 [ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)대로 이 본평가에 넣습니다. 외부 관리형 우선 검증 대상은 OpenRouter에서 현재 제공되는 `voyageai/voyage-4`(아래 표의 데이터 정책 차단이 풀릴 때만)와 `baai/bge-m3`이고, `qwen/qwen3-embedding-0.6b`는 실행 시점에 provider와 가격을 확인한 뒤 포함합니다. 저비용 Voyage 대안인 `voyageai/voyage-4-lite`는 현재 13종 결과에 포함되지 않은 미평가 추가 후보입니다. KURE·Voyage 4 Nano처럼 관리형 endpoint가 확인되지 않은 후보도 팀이 자체 추론 API를 운영하기로 하면 운영 후보로 남습니다. 청킹, BM25 가중치, 제조사·문서 종류 필터, top-k, 리랭커는 고정합니다. 단일 gold MRR 외에 한 판정에 필요한 모든 근거가 Top 5에 함께 들어오는 다중 근거 Recall@5를 측정합니다.
 
 **API 재검증 규칙**: 로컬과 API의 표시 이름이 비슷해도 provider가 사용하는 revision, 정밀도·양자화, 최대 입력, 정규화, query/document prefix 또는 instruction이 다를 수 있습니다. 예를 들어 OpenRouter의 `intfloat/multilingual-e5-large`는 11-02 로컬 탐색에서 실행한 `intfloat/multilingual-e5-large-instruct`와 다른 모델 ID이므로 기존 점수를 이전하지 않습니다. 운영 API별 Recall@5·MRR, 다중 근거 Recall@5, 질의 p50/p95, 실제 입력 토큰과 1,000청크 비용을 새로 기록합니다. OpenRouter의 현재 공개 가격은 `text-embedding-3-small`과 `voyage-4-lite`가 $0.02/M tokens, `bge-m3`가 $0.01/M, `voyage-4`가 $0.06/M이지만, 전체 재색인 전 각 모델 페이지에서 다시 확인합니다: [embedding models](https://openrouter.ai/collections/embedding-models/), [Voyage 4 Lite](https://openrouter.ai/voyageai/voyage-4-lite), [Voyage 4](https://openrouter.ai/voyageai/voyage-4), [BGE-M3](https://openrouter.ai/baai/bge-m3), [Text Embedding 3 Small](https://openrouter.ai/openai/text-embedding-3-small).
 
-**13종 후보 조사·평가 상태**: 아래 분류는 모든 후보를 같은 수준으로 평가했다는 뜻이 아닙니다. 후보별 선정 이유, 로컬에서 수행한 조사·실행 과정, 중단하거나 실험 기록으로만 남긴 이유, 다음 평가 조건은 [임베딩 후보 13종 개별 조사·평가 기록](docs/embedding-candidate-investigation.md)을 정본으로 봅니다. 라이선스와 저장소 공개 범위는 [모델 라이선스·공개 범위](docs/model-licenses.md)를 따릅니다. 11-02 확장 후보의 평가기·입력 표본·테스트·원시 결과는 저장소에 없어, 모델별 Recall@5·MRR·지연과 실제 PDF 3건 smoke 수치는 이 문서의 근거로 쓰지 않고 최종 모델 선정 근거로도 쓰지 않습니다.
-
-| 증거 수준 | 모델 수 | 현재 해석 |
-|---|---:|---|
-| 실제 PDF smoke 완료 | 5 | PDF 3건·156청크·질의 9건의 비동결 예비 결과이며 최종 선정 근거가 아님 |
-| 합성 프록시만 완료 | 1 | `text-embedding-3-small` 기준선의 초기 결과이며 실제 PDF 후보와 직접 비교하지 않음 |
-| 호환성 확인에서 차단 | 4 | 환경·고정 의존성 문제로 품질 미측정이며 0점이나 품질 탈락으로 처리하지 않음 |
-| API 정책에서 차단 | 1 | Voyage 4가 ZDR/data-policy 조건으로 차단되어 품질 미측정 |
-| 조사 전용 | 2 | 약관·라이선스·자원 조건 때문에 11-02 실행 대상에서 제외 |
-| **합계** | **13** | 모두 최종 모델 결정에 쓰지 않음. 동결 평가셋 본평가 전 확정하지 않음 |
+### 1-1. 파싱과 청킹 근거 (2026-11-01)
 
 **원문 대조 3건 이상**: 파싱 결과를 원문과 나란히 놓고 틀어진 곳을 적습니다.
 
@@ -86,80 +52,28 @@
 
 개선 1은 표 칸마다 표 제목을 되풀이해 기본 토크나이저 512토큰 한도에서 표가 갈리고 기호와 값이 다른 조각으로 떨어졌습니다. "같은 조각" 판정은 조각이 클수록 유리하므로 개선 전의 41은 아래 검색 비교로 다시 확인했습니다.
 
-**청킹 검색 비교** (2026-11-01, 사전 등록 #3, 원시 결과 `evals/results/chunking_search_2026-11-01.json`)
+### 1-2. 검색 방식 근거
 
-전체 1,360건을 개선 전과 개선 2로 각각 자르고, 서로 다른 본문만 `text-embedding-3-small`(1536차원)로 임베딩해 로컬 pgvector에 넣었습니다. 비동결 `evals/draft_30.jsonl`에서 데이터시트 근거가 필요한 관련 문항 11개로 코사인 거리 상위 5개를 찾았습니다. 정답 문서와 쪽은 정답 초안(사람 검토 전)에서 옮겼습니다. BM25, 필터, 리랭커는 쓰지 않았습니다.
+- 벡터 검색은 HNSW 대신 정확 검색을 쓴다. HNSW 기본 인덱스는 `ef_search` 1000에서도 m03 질문의 정확 검색 1위 카드(거리 0.4177)를 놓치고 0.4777 카드를 1위로 냈다(2026-11-01).
+- 검색 방식과 임베딩 모델의 비교는 동결 평가셋으로 잰 1-3절과 3절만 근거로 쓴다. 동결 전 초안 문항(Codex 정답 초안 · 1차 판정)으로 잰 11-01 비교와 10-30 프록시 결과는 근거에서 뺐다. 원시 결과 파일은 기록으로 `evals/results/`에 남아 있다.
 
-| 단계 | 서로 다른 청크 | 임베딩 토큰 | 문서 Recall@5 | MRR | 쪽 적중@5 |
-|---|---:|---:|---:|---:|---:|
-| 개선 전 | 10,723 | 2,201,510 | 0.455 (5/11) | 0.321 | 못 잼(쪽 정보 없음) |
-| 개선 2 | 45,898 | 5,391,648 | 0.727 (8/11) | 0.568 | 0.364 (4/11) |
+### 1-3. 임베딩 × 검색 방식 격자 본평가 (2026-11-02, 사전 등록 #16)
 
-- 개선 2에서만 정답 문서가 5위 안에 든 문항은 e04, e05, h05 세 개이고, 개선 전에서만 든 문항은 없습니다. 11문항이라 부호 검정으로는 둘을 구별할 수 없습니다(양측 p=0.25).
-- 순위가 내려간 문항은 m03 하나입니다(1위 → 2위). 1위는 같은 BZT52 계열의 다른 데이터시트 `BZT52B2V4 SERIES_F15.pdf`였습니다.
-- 둘 다 못 찾은 문항은 m05, h03, h04입니다. m05는 이름이 비슷한 1N4148W, 1N4148WTH, 1N4148WSH 데이터시트가 5개를 다 차지했습니다. h03, h04는 질문에 품번 1N5819와 회로 기호(D2, VCC)가 함께 있습니다. 1N5819는 `1N5817 SERIES_H2104.pdf`의 표지 카드에만 이름이 있어서, 임베딩 거리로는 ESD·SiC 다이오드 카드가 더 가까웠습니다.
-- 쪽 적중은 사전 등록 범위(0.45~0.80)보다 낮았습니다. 표지 카드에는 쪽 번호가 없어서, 표지 카드가 1위로 나온 e05, m04, m07은 문서는 맞아도 쪽은 못 맞힌 것으로 셌습니다.
-- 임베딩은 두 단계 합쳐 7,593,158토큰, 15.7분, 재시도 0회였습니다. 비용은 단가(100만 토큰당 $0.02)로 계산하면 약 $0.15입니다.
+동결 평가셋의 관련 19문항, `input` 전체, 정확 검색, k=5. 리랭커 없는 칸만 적는다. 78칸 원본은 저장소 밖 실험 기록에 있다.
 
-**하이브리드 검색 비교** (2026-11-01, 사전 등록 #4, 원시 결과 `evals/results/hybrid_search_2026-11-01.json`)
-
-위와 같은 11문항과 개선 2 카드에서 검색 방식만 바꿨습니다. BM25는 `rank-bm25`의 BM25Okapi 기본값이고, 토큰은 영문·숫자 연속을 소문자로 잘랐습니다("1N5819는" → "1n5819"). 하이브리드는 dense 상위 50개와 BM25 상위 50개를 RRF(카드마다 1/(60 + 순위)의 합)로 합쳤습니다. 필터와 리랭커는 쓰지 않았습니다.
-
-| 검색 방식 | 문서 Recall@5 | MRR | 쪽 적중@5 |
-|---|---:|---:|---:|
-| dense만 (위 결과 재실행) | 0.727 (8/11) | 0.568 | 0.364 (4/11) |
-| BM25만 (참고) | 1.000 (11/11) | 0.894 | 0.636 (7/11) |
-| 하이브리드 | 1.000 (11/11) | 0.909 | 0.727 (8/11) |
-
-- dense만에서 못 찾은 m05, h03, h04를 하이브리드는 모두 5위 안에 찾았습니다. 질문의 품번(1n4148, 1n5819)이 드문 토큰이라 BM25가 그 품번이 적힌 표지 카드와 표 행을 위로 올렸습니다.
-- 순위가 오른 문항은 e04(2 → 1), e08(4 → 1), m03(2 → 1), m05·h03(없음 → 2), h04(없음 → 1) 여섯 개이고 내려간 문항은 없습니다. 정답 근거가 사람 검토 전이고 문항이 11개라 결과는 참고로만 봅니다.
-- BM25만과 하이브리드는 순위가 오른 문항 2개(m03, m04), 내려간 문항 2개(m05, h03)로 갈렸고, 쪽 적중은 하이브리드가 한 문항 많았습니다.
-- 하이브리드에서도 h03의 1위는 ESD 다이오드 카드(`TESD5V0L1UC_E2007.pdf`)였습니다. dense 쪽이 질문의 "VCC" 같은 회로 단어에 끌려온 것입니다.
-- 질문의 회로 기호 D1·D2·D3가 부품 표시 코드와 같은 토큰이 되었습니다. `1N4148W SERIES_K1804.pdf` 1쪽의 표 행 세 개에 표시 코드 D1, D2, D3가 있어서, D1~D3 표시 코드와 상관없는 질문 다섯 개(e08, m04, m07, h03, h04)의 BM25 상위 5개에 들어왔습니다.
-- 사전 등록 기대 5개 중 맞은 것은 하이브리드 Recall@5 하나이고, 나머지 넷은 범위보다 높게 나왔습니다.
-
-**저장소 코드로 다시 잼** (2026-11-01, `backend/rag/retrieve.py`, `evals/run_retrieval.py`, 비동결 `evals/draft_50.jsonl`)
-
-로컬 DB에 문서 1,360건, 카드 52,244장(같은 본문도 문서마다 저장)을 넣고 같은 하이브리드(dense 정확 검색 상위 50 + BM25 상위 50, RRF k=60)로 쟀습니다. 위 11문항은 문서 Recall@5 1.000, MRR 0.955, 쪽 적중@5 0.818이고, 데이터시트 근거가 있는 관련 19문항(위 11문항 + 새로 더한 n01~n08)은 1.000, 0.921, 0.737, 질문당 중간값 1.2초였습니다.
-
-- dense를 HNSW 인덱스로 찾으면 한국어 질문의 정확 검색 1위를 놓쳤습니다. m03은 `ef_search` 1000에서도 정확 검색 1위(거리 0.4177) 대신 0.4777 카드를 1위로 냈습니다. 그래서 검색 코드는 인덱스를 끄고 정확 검색(질문당 0.3~0.6초)을 씁니다.
-- 이 숫자는 동결 전 초안과 1차 사람 판정 기준이며 베이스라인이 아닙니다. 베이스라인은 동결한 `evals/dataset_v1.jsonl`로 같은 명령을 돌려 잽니다. v1에는 `question` 키가 없어 문항 전체 `input`으로 검색하므로, `question`으로 찾은 11-01 결과(사전 등록 #4~#8)와 직접 비교할 수 없습니다.
-
-**HNSW 개선 실험** (2026-11-01, 사전 등록 #5~#8, 원시 결과 `evals/results/hnsw_exp_*_2026-11-01.json`)
-
-HNSW 인덱스가 한국어 질문의 가까운 카드를 놓치는 문제를 줄이려고, 위와 같은 19문항·하이브리드에서 조건 하나씩만 바꿨습니다. 겹침은 HNSW 상위 50 중 정확 검색 상위 50에도 있는 비율입니다. KURE와 Qwen3는 원격 GPU(RTX 3080 Ti)에서 서로 다른 본문 45,898개를 다시 임베딩해 로컬 DB 실험 표에 넣었습니다.
-
-| 조건 | 정확 검색 하이브리드 Recall@5 / MRR / 쪽 적중@5 | HNSW(ef_search 100) 하이브리드 Recall@5 / MRR / 쪽 적중@5 | 겹침 ef_search 100 / 1000 | 메모 |
+| 모델 | dense만 MRR | 하이브리드 Recall@5 | 하이브리드 MRR | 하이브리드 쪽 적중@5 |
 |---|---|---|---|---|
-| 기준(`text-embedding-3-small`, 한국어 질문) | 1.000 / 0.921 / 0.737 | 1.000 / 0.724 / 0.737 | 61% / 92% | dense 정확 검색 0.23초, HNSW 0.004초 |
-| A. 질문을 영어로(dense·BM25 모두) | 0.632 / 0.512 / 0.526 | 0.421 / 0.337 / 0.316 | 73% / 98% | 10문항 나빠짐 |
-| B. 품번 필터 | 1.000 / 1.000 / 0.947 | 해당 없음(필터 안 정확 검색) | 해당 없음 | 19문항 모두 필터 걸림, dense 0.0007초 |
-| C. `KURE-v1` | 1.000 / 0.895 / 0.632 | 1.000 / 0.728 / 0.684 | 38% / 85% | 카드 임베딩 4.7분 |
-| D. `Qwen3-Embedding-0.6B` | 1.000 / 0.895 / 0.842 | 0.947 / 0.816 / 0.789 | 76% / 97% | 카드 임베딩 3.7분 |
+| text-embedding-3-small | 0.589 | 0.737 | 0.649 | 0.368 |
+| Qwen3-Embedding-0.6B | 0.578 | 0.789 | 0.675 | 0.632 |
+| voyage-4-lite | 0.392 | 0.579 | 0.443 | 0.526 |
+| voyage-4 | 0.300 | 0.579 | 0.382 | 0.421 |
+| voyage-4-large | 0.332 | 0.526 | 0.403 | 0.368 |
+| KURE-v1 | 0.096 | 0.368 | 0.225 | 0.211 |
 
-- B는 정답 문서 순위가 m05, n03, n08에서 2위 → 1위로 오르고 나빠진 문항이 없습니다. 3문항 차이라 19문항으로는 개선이라 단정하지 않습니다. 검색 범위가 품번이 든 문서로 줄어 카드 수와 상관없이 빠르지만, 질문에 코퍼스 품번이 없으면 걸리지 않습니다.
-- A는 HNSW 겹침은 늘었지만 BM25에 voltage, package 같은 흔한 영어 단어가 들어가 품번 신호가 묻혔습니다. 영어 질문을 dense에만 쓰는 방식은 재지 않았습니다.
-- D는 HNSW 겹침과 HNSW 하이브리드 MRR이 기준보다 높지만 정확 검색 하이브리드 MRR은 0.895로 낮고(n03 좋아짐, e08·n05 나빠짐), 로컬 모델이라 서버 메모리가 더 필요합니다.
-- C는 HNSW 겹침이 기준보다 낮았습니다.
-
-### 1-2. 임베딩 본평가 준비 상태 (2026-11-02)
-
-아래는 최종 모델 선정 결과가 아니라, 평가셋 동결 뒤 같은 조건으로 본평가를 시작할 수 있는지 확인한 체크리스트입니다. `통과`는 실행 자산이 준비됐다는 뜻일 뿐 해당 모델의 품질 합격을 뜻하지 않습니다.
-
-| 확인 항목 | 상태 | 확인 근거와 다음 조건 |
-|---|---|---|
-| 2차 사람 판정 | 완료 | 11-02 김재훈 2차 판정과 n01·n02·h03·n21 재검수 합의로 본편 43건에 두 사람 O가 있습니다. 숫자형 7건은 1차 사람 판정과 숫자 기계 대조만 있습니다(`evals/DRAFT_50_REVIEW.md`). |
-| 평가셋 동결 | 완료 | `evals/FROZEN.json`에 `evals/dataset_v1.jsonl`(2026-11-02, sha256 `2fef02c2dcd8…`)을 기록했습니다. |
-| 본평가 질문·gold | 완료 | `evals/dataset_v1.jsonl` 50건(관련 25·비관련 25)입니다. |
-| TSC 1,360건 목록 | 통과(메타데이터만) | `data/manifest.jsonl`에 1,360행과 청크 수 합계 52,244가 기록돼 있습니다. |
-| 전체 PDF·청크 본문 | 차단 | 저장소의 TSC PDF는 smoke용 3건뿐이고 `chunks.jsonl`, `params.jsonl`, `tsc_datasheet_list.csv`도 없습니다. 따라서 1,360건 본문을 저장소만으로 재생성하거나 후보별 본평가할 수 없습니다. |
-| 성공 후보 5종 고정 revision 캐시 | 로컬 기록(저장소 밖) | BGE `5617a9f...`, KURE `8b418a5...`, Qwen `97b0c61...`, E5 `274baa4...`, Voyage 4 Nano `5fb34e8...`를 로컬 `sojafit-hf`에서 오프라인 실행한 기록이 있습니다. 모델 캐시와 2026-11-02 원시 결과는 저장소에 없으므로 저장소만으로 이 상태를 검증할 수 없습니다. |
-| 비교 실행기·지표 | 일부 통과(확장 자산 대기) | 현재 `evals/benchmark_embeddings.py`는 기존 4종 프록시를 실행할 수 있습니다. 확장 후보·실제 PDF·Voyage 입력 계약을 재현하는 평가기·표본·테스트는 저장소에 없습니다. |
-| 운영 API 후보 | 대기 | 키 없는 데모는 BM25-only이므로 API 임베딩 품질 비교가 아닙니다. 승인된 비용 상한 안에서 `backend/services/llm.py`를 거쳐 `text-embedding-3-small`, `voyage-4`, `bge-m3` 등 실제 운영 후보를 각각 실행해야 합니다. |
-
-본평가 시작 조건 중 2차 판정 완료와 동결 gold 생성은 11-02에 채웠습니다. 남은 조건은 (1) 1,360건의 실제 PDF 또는 고정 청크 본문 확보, (2) API 모델 ID·provider 정책·차원·입력 형식 고정, (3) 예상 토큰·비용 상한 재승인입니다. 그 전에는 위 3문서·9질의 smoke 수치로 후보를 확정하지 않습니다. 실패한 GTE·Jina·Nomic·Arctic도 품질 0점이 아니라 현재 고정 로컬 환경에서 `호환성 차단`으로 유지합니다.
-
-halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_contract_2026-11-02.json`은 합성 PostgreSQL 결과라 실제 코퍼스의 용량·Recall·MRR로 쓰지 않습니다.
+- BM25만은 Recall@5 0.263, MRR 0.195, 쪽 적중@5 0.211이다.
+- 판정(사전 등록 규칙): Qwen − 3-small MRR +0.026은 0.05 미만이라 같음이고, 추론 서버가 필요 없는 `text-embedding-3-small`을 유지한다.
+- "질문:" 줄로 검색하면 하이브리드 MRR이 6종 모두 0.83~0.92로 오른다. 질의 글 변경은 따로 사전 등록한다.
+- `rerank-3`은 3-small 하이브리드 MRR을 0.649 → 0.860으로 올렸고 리랭크 p95는 0.6초 이하였다. 리랭커 적용은 따로 사전 등록한다.
 
 ## 2. 평가셋 (G5)
 
@@ -167,7 +81,7 @@ halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_c
 
 정답은 하정운 1차·김재훈 2차 사람 판정으로 정했습니다. 본편 43건은 두 사람이 O를 줬고, 그중 변경 답안 n01·n02·h03과 추가 문항 n21은 11-02 하정운 재검수로 합의했습니다. 숫자형 7건(e03·e05·e08·m03·m07·n03·n05)은 1차 사람 판정과 숫자 기계 대조로 동결했으며 2차 사람 판정은 없습니다.
 
-1장의 11-01 검색 결과는 동결 전 초안에서 `question` 키로 잰 값이라 현재 50건의 점수가 아닙니다. v1에는 `question` 키가 없어 베이스라인은 문항 전체 `input`으로 검색하므로, 두 결과를 직접 비교하지 않습니다.
+v1에는 `question` 키가 없어 베이스라인은 문항 전체 `input`으로 검색합니다.
 
 | 항목 | v1 | v2 |
 |---|---|---|
@@ -176,7 +90,7 @@ halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_c
 | 비관련 4종 건수 (도메인 밖 / 없는 대상 / 없는 항목 / 기간 다름) | 6 / 6 / 7 / 6 | |
 | sha256 | `2fef02c2dcd8…`(`evals/FROZEN.json`) | |
 | 코퍼스 버전과 정답 기준일 | TSC 다이오드 데이터시트 1,360건(2026-11-01 수집), 기준일 2026-11-01(49건). n21만 기준일 2026-11-02이고 `corpus_version`이 sha256으로 적혀 있음 | |
-| 정답을 정한 사람과 기준 | 하정운 1차·김재훈 2차 사람 판정. 두 사람 O 43건, 숫자형 7건은 1차 사람 판정과 숫자 기계 대조(2차 없음). 기준은 `evals/EVALS.md` | |
+| 정답을 정한 사람과 기준 | 하정운 1차·김재훈 2차 사람 판정. 두 사람 O 43건, 숫자형 7건은 1차 사람 판정과 숫자 기계 대조(2차 없음). 기준은 `evals/README.md` | |
 | 질문을 쓴 사람과 정답 청크를 찾은 사람이 다른가 | | |
 | 동결 뒤 지표에서 뺀 문항 수와 사유 (`evals/exclusions.json`) | 0건(`evals/exclusions.json` 없음) | |
 
@@ -192,7 +106,7 @@ halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_c
 
 **판정 방식과 한계**: (정확 일치 / 규칙 기반 / LLM-as-judge. judge 모델은 생성 모델과 달라야 합니다. 이 방식이 무엇을 못 보는지, 측정이 제대로 되는지 확인한 과정을 적습니다. 결과가 직관과 크게 어긋날 때는 결론보다 측정 도구를 먼저 의심하세요.)
 
-관련/비관련과 NOT_VERIFIED의 구분은 [EVALS.md](evals/EVALS.md#관련비관련과-not_verified의-구분)를 따릅니다. 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않습니다. 지표별 분모와 답변 채점기는 별도 확인이 필요하며, 현재 `run_retrieval.py`는 검색 지표만 재고 위 답변·거절 지표는 채점하지 않습니다. v1 50건으로 잰 점수는 아직 없습니다.
+관련/비관련과 NOT_VERIFIED의 구분은 [evals/README.md](evals/README.md#관련비관련과-not_verified의-구분)를 따릅니다. 사용자 동작 조건 부족을 정확히 밝힌 NOT_VERIFIED가 정답인 문항은 그 코드만으로 과잉 거절로 세지 않습니다. 지표별 분모와 답변 채점기는 별도 확인이 필요하며, 현재 `run_retrieval.py`는 검색 지표만 재고 위 답변·거절 지표는 채점하지 않습니다. v1 50건으로 잰 점수는 아직 없습니다.
 
 ## 3. 검색 개선 전후 (사전 등록, 한 번에 하나만)
 
@@ -202,7 +116,7 @@ halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_c
 
 | # | 바꾼 것 (하나) | 사전 등록한 기대 | 지표 (전 → 후) | 달라진 문항 수 (좋아짐 / 나빠짐) | 회귀한 문항 | 판단 |
 |---|---|---|---|---|---|---|
-| 0 | 베이스라인 (v1, 11/3) | | | | | |
+| 0 | 베이스라인 (v1, 11/3): `text-embedding-3-small` · 하이브리드(RRF k=60) · 상위 5장 · `input` 전체 · 리랭커 · 필터 없음 | 사전 등록 #16 기준 칸: Recall@5 0.84~1.00, MRR 0.70~0.92 (둘 다 아래로 틀림) | 관련 19문항 문서 Recall@5 0.737 · MRR 0.649 · 쪽 적중@5 0.368 (`evals/results/retrieval_baseline_2026-11-03.json`). 참고: dense만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211 | - | - | 기준선 |
 | 1 | | | | | | KEEP / DISCARD |
 | 2 | | | | | | KEEP / DISCARD |
 
@@ -266,20 +180,11 @@ halfvec 전환은 사전 등록 #9로 따로 잽니다. `evals/results/storage_c
 
 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 봅니다.
 
-아래 명령은 저장소에 있는 기존 4종 프록시 평가기와 검색 평가만 다룹니다(확장 후보는 1-1절 참고).
+아래 명령은 검색 평가를 다룹니다.
 
 ```bash
-# 최초 1회 캐시 준비(네트워크 사용): MODEL은 bge-m3, kure-v1, qwen3-embedding-0.6b 중 하나입니다.
-docker run --rm --gpus all -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
-
-# 캐시 준비 뒤 오프라인 재현
-docker run --rm --gpus all -e HF_HUB_OFFLINE=1 -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --offline --isolated --with sentence-transformers --with torch python evals/benchmark_embeddings.py --model MODEL
-
-# API 프록시 재실행: .env의 OPENROUTER_API_KEY를 사용하며 소액 과금됩니다.
-docker run --rm --env-file .env -e PYTHONPATH=/workspace -v "${PWD}:/workspace" -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim uv run --isolated --with openai --with numpy --with python-dotenv python evals/benchmark_embeddings.py --model text-embedding-3-small
-
-# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. 질문마다 임베딩 1회가 과금됩니다.
-docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/dataset_v1.jsonl evals/results/retrieval.json
+# 검색 지표(저장소 코드): 코퍼스를 적재한 DB와 .env의 임베딩 키가 필요합니다. METHOD는 hybrid(기본), dense, bm25 중 하나입니다. hybrid·dense는 질문마다 임베딩 1회가 과금되고, bm25는 임베딩을 부르지 않습니다.
+docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v "${PWD}/backend:/app/backend" api python -m evals.run_retrieval evals/dataset_v1.jsonl evals/results/retrieval.json 5 METHOD
 ```
 
 ## 10. 대체재와의 비교

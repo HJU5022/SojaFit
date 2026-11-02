@@ -71,7 +71,7 @@ def test_compare_excludes_self_and_equal_body_and_is_read_only(db):
 
 
 def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monkeypatch):
-    sql = Path('db/halfvec.sql.manual').read_text(encoding='utf-8')
+    sql = Path('db/manual/halfvec.sql.manual').read_text(encoding='utf-8')
     db.execute(sql)
     db.execute(sql)  # repeat must preserve rows and keys
     assert storage.snapshot(db)['embedding_type'] == 'halfvec(1536)'
@@ -105,7 +105,7 @@ def test_halfvec_migration_binary_copy_rerun_and_dense_query(db, tmp_path, monke
 def test_halfvec_dense_keeps_query_float32_precision(db, monkeypatch):
     # Both coordinates round to 1 in half precision. Rounding the query too
     # would tie the two candidates; float32 query precision selects card 2.
-    db.execute(Path('db/halfvec.sql.manual').read_text(encoding='utf-8'))
+    db.execute(Path('db/manual/halfvec.sql.manual').read_text(encoding='utf-8'))
     db.execute('DELETE FROM chunk_embeddings WHERE chunk_id > 2')
     for cid, xy in [(1, [1., 0.]), (2, [0., 1.])]:
         db.execute('UPDATE chunk_embeddings SET embedding=%s WHERE chunk_id=%s',
@@ -120,7 +120,7 @@ def test_halfvec_dense_keeps_query_float32_precision(db, monkeypatch):
 def test_compare_requires_original_vector_and_limits(db):
     with pytest.raises(ValueError):
         storage.compare(db, samples=0)
-    db.execute(Path('db/halfvec.sql.manual').read_text(encoding='utf-8'))
+    db.execute(Path('db/manual/halfvec.sql.manual').read_text(encoding='utf-8'))
     with pytest.raises(ValueError, match='vector'):
         storage.compare(db, samples=1)
 

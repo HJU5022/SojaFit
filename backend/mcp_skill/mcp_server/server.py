@@ -1,4 +1,4 @@
-"""MCP 서버 — 가산(backend/mcp_skill/MCP_SKILL.md).
+"""MCP 서버 — 가산(backend/mcp_skill/README.md).
 
 3차 RAG 검색 등 서비스 기능을 MCP tool로 노출합니다. 지금은 예시 tool(example_tool)뿐입니다.
 

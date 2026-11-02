@@ -7,9 +7,9 @@
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 
 ## 파일
-- `corpus/` — 원본 문서 표본. 출처별 하위 폴더는 [corpus/CORPUS.md](corpus/CORPUS.md)
-- `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/CIRCUITS.md](circuits/CIRCUITS.md)
-- `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/DEMO.md](demo/DEMO.md)
+- `corpus/` — 원본 문서 표본. 출처별 하위 폴더는 [corpus/README.md](corpus/README.md)
+- `circuits/` — 평가·시연용 공개 KiCad 회로. [circuits/README.md](circuits/README.md)
+- `demo/` — 키 없이 도는 데모 모드가 재생하는 응답. [demo/README.md](demo/README.md)
 - `manifest.jsonl` — 코퍼스 데이터시트 PDF 1,360건의 출처·개정판·해시·쪽 수·카드 수. `backend/rag/chunk.py`가 쓴다. 원래 PDF 파일 이름은 `source_url` 끝에 있고, PDF는 저장소 밖 로컬 `SojaFit/corpus/tsc/pdf/`에 있다
 
 ## 기준

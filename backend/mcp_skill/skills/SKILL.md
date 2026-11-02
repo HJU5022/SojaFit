@@ -1,6 +1,6 @@
 # SojaFit 다이오드 대체 판단 Skill
 
-> 가산 항목([MCP_SKILL.md](../MCP_SKILL.md)) — 다이오드 대체 판단의 지식과 기준을 여기에 적어 모델에 넘깁니다.
+> 가산 항목([backend/mcp_skill/README.md](../README.md)) — 다이오드 대체 판단의 지식과 기준을 여기에 적어 모델에 넘깁니다.
 > LLM 판단 지침만 적고 임계값은 `backend/judge/` 규칙 파일에 둡니다(SPEC 5절). 데이터시트 근거는 RAG 검색(`backend/rag/retrieve.py`)으로 넣습니다.
 
 ## 이 도메인은 무엇을 다루나

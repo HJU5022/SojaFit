@@ -36,8 +36,8 @@
 1. 전체 원본의 inspect와 파일·행 수·해시를 기록한다. 축소 출력은 입력으로 쓰지 않는다.
 2. 별도 복제본에서 `DROP INDEX IF EXISTS ix_chunk_embeddings_hnsw`만 실행해 HNSW 제거 용량과 정확 검색 기준선을 기록한다.
 3. 그 기준선에서 `uv run python -m backend.rag.storage compare --samples 1000 --max-seconds 120`을 실행한다. 실제 조건과 제한 시간이 원본 보고와 다르면 별도 비교라고 표시한다.
-4. 별도 복제본에 `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/halfvec.sql.manual`을 직접 적용한다. 열 형식·행 수·키·HNSW 부재를 확인하고 RAG_VECTOR_TYPE=halfvec으로 적재·검색을 검증한다. 원본 float32 캐시/DB 백업은 보관한다.
-5. inspect로 전체 DB·코퍼스 표·인덱스 바이트를 다시 기록한다. 동일 본문 벡터 중복 제거는 `db/halfvec.sql.manual`이 하지 않으므로 237.8MiB 재현을 주장하지 않는다.
+4. 별도 복제본에 `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/manual/halfvec.sql.manual`을 직접 적용한다. 열 형식·행 수·키·HNSW 부재를 확인하고 RAG_VECTOR_TYPE=halfvec으로 적재·검색을 검증한다. 원본 float32 캐시/DB 백업은 보관한다.
+5. inspect로 전체 DB·코퍼스 표·인덱스 바이트를 다시 기록한다. 동일 본문 벡터 중복 제거는 `db/manual/halfvec.sql.manual`이 하지 않으므로 237.8MiB 재현을 주장하지 않는다.
 
 ### 확인 경계
 

@@ -13,7 +13,7 @@
 - `embedding_sample_v0.jsonl` — 임베딩 후보를 거르는 비동결 프록시 표본(실제 코퍼스 평가와 구분)
 - `benchmark_embeddings.py` — 프록시 표본의 dense Recall@5·MRR·지연 측정
 - `freeze.py` — 동결 파일의 sha256을 `FROZEN.json`에 기록
-- `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
+- `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 네 번째 인자로 검색 방식(`hybrid` 기본·`dense`·`bm25`)을 고르고 summary의 `method`에 적음. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `results/` — 평가 원시 결과
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
@@ -24,6 +24,9 @@
 - `results/draft50_second_pass_2026-11-02.json` — 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록
 - `results/draft52_validation_2026-11-02.json` — 추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님
 - `results/storage_contract_2026-11-02.json` — 합성 벡터를 넣은 전용 로컬 PostgreSQL의 형식·용량·검색 계약 확인. 실제 코퍼스 250MB·품질 달성 결과가 아님
+- `results/auth_boundary_2026-11-02.json` — 로그인 잠금·세션 만료 경계 실측 원시 결과(`scripts/auth_boundary_after_merge.py`)
+- `results/scrypt_concurrent_2026-11-02.json` — 동시 scrypt·프로세스 메모리 실측 원시 결과(`scripts/measure_scrypt_concurrent.py`)
+- `results/retrieval_baseline_2026-11-03.json`·`retrieval_dense_2026-11-03.json`·`retrieval_bm25_2026-11-03.json` — v1 데이터시트 근거 19문항의 검색 지표 원시 결과(`run_retrieval.py`, k=5). 각각 하이브리드·dense만·BM25만. 하이브리드 파일은 `method` 인자가 생기기 전에 만들어 summary에 `method`가 없음
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 
