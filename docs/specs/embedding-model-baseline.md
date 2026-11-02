@@ -45,7 +45,9 @@
 - 비용 가정: API는 실제 usage가 없을 때 평균 350토큰/청크와 공식 단가를 사용하며 추정치로 표시한다.
 - 용량: pgvector `vector`의 float32 원시 벡터만 계산한다. 본문·메타데이터·행 오버헤드·인덱스는 별도다.
 - 결과 표기: 모든 원시 결과에 `proxy_smoke_test`, `dense_only`, 실제 코퍼스가 아님, 22,000개 지연 행렬은 반복 벡터라는 메타데이터를 남긴다.
-- 후속 본평가: TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꾼다. 청킹·BM25·필터·top-k·리랭커는 고정하고 Recall@5, MRR, 다중 근거 Recall@5를 측정한다.
+- 당시 후속 본평가 계획(역사 기록): TSC 데이터시트 1,360건의 실제 청크에서 예비 기본 선택인 `BM25 + text-embedding-3-small`을 기준선으로 두고 임베딩 후보 구성만 KURE와 Qwen으로 각각 바꾸는 계획이었다. 이후 후보군과 운영 방식 검토가 확장됐으므로 현재 본평가 대상·순서·고정 조건은 루트 [EVAL_REPORT.md](../../EVAL_REPORT.md)의 「다음 본평가」와 [embedding-candidate-runner.md](embedding-candidate-runner.md), [embedding-voyage-candidates.md](embedding-voyage-candidates.md)를 따른다.
+
+후속 후보 확장 준비는 `embedding-candidate-runner.md`를 따른다. 추가 후보의 동결 전 실행은 프록시 smoke test이며 이 문서의 기존 4종 결과와 함께 최종 선택 근거로 승격하지 않는다.
 
 ## AC (Given-When-Then)
 

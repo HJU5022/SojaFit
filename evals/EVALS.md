@@ -15,6 +15,8 @@
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 회로 근거만 있는 문항은 세지 않음
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `results/` — 평가 원시 결과
+
+임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 이번 문서 변경에 포함하지 않았으므로 현재 `main`에서 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
 - `DRAFT_30_REVIEW.md` — 초안 30건의 질문·가정·예상 답변 방향과 검수 목록
 - `draft_50.jsonl` — 현재 50건(관련 25·비관련 25) 검수 초안. 52건에서 n22(관련)·n13(비관련)을 예비 이관. n01·n02·h03 재검수와 n21의 하정운 검수 대기, 동결 전
