@@ -1,0 +1,52 @@
+{
+  "as_of": "2026-11-02",
+  "dataset": "evals/draft_50.jsonl",
+  "dataset_sha256": "7e37878e64f25ef4764036b39f88965f407fc475af973c1af92ae4288c88ab26",
+  "manifest_sha256": "2d452ab3c7c9e7c0f7dfd072def7fd9149d30ac3f792e2c9451ae7d0296cea0a",
+  "count": 52,
+  "kinds": {
+    "relevant": 26,
+    "irrelevant": 26
+  },
+  "irrelevant_types": {
+    "out_of_domain": 6,
+    "unknown_entity": 7,
+    "missing_attribute": 7,
+    "wrong_period": 6
+  },
+  "original_50_questions_inputs_sources_preserved": true,
+  "unchanged_original_rows": 47,
+  "revised_original_ids": [
+    "draft30-h03",
+    "draft50-n01",
+    "draft50-n02"
+  ],
+  "revised_human1_rereview_pending": true,
+  "new_ids": [
+    "draft52-n21",
+    "draft52-n22"
+  ],
+  "new_human_reviews_pending": true,
+  "checks": [
+    "unique IDs and 26/26",
+    "50 original IDs/questions/inputs/source/target/assumptions preserved",
+    "47 old rows byte-identical",
+    "3 revised rows recoverable with human1 history",
+    "52 netlist hashes and targets",
+    "new PDF hashes match manifest",
+    "new PDF page2 text and visual inspection",
+    "MAX/TYP and test conditions checked",
+    "local links and relevant policy section",
+    "v1 unchanged and no FROZEN.json"
+  ],
+  "model_or_retrieval_evaluation_run": false,
+  "model_calls": 0,
+  "frozen": false,
+  "unverified": [
+    "3 revised answers require first reviewer consensus",
+    "2 new cases require both human reviews",
+    "old other review results still need JSONL synchronization before freeze",
+    "full external parts index and role rubric unavailable as in prior 50-case review"
+  ],
+  "question_authoring": "source-blind AI /root/blind_question_review; answer evidence by /root; not human reviews"
+}

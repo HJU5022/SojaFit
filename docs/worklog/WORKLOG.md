@@ -23,3 +23,4 @@
 - `jeongun.md` — jeongun 브랜치 작업 기록
 - `osc.md` — OSC 브랜치 작업 기록
 - `STH.md` — STH 브랜치 작업 기록
+- `jaehun.md` — jaehun 브랜치 작업 기록
