@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-02 그래프 줄기 설계와 LLM 호출 입구
+- 한 일: D4 줄기 그래프의 노드 7개와 상한을 SPEC 2절에 적고, 그래프 LLM을 `anthropic/claude-haiku-5.5`로 시작한다는 결정을 ADR 0010으로 남겼다. `llm.py`에 그래프 노드가 쓰는 `chat(system, user, schema)`를 넣었다. Pydantic 형식으로 검증하고, 형식이 틀리면 2회까지 다시 부른다. 공급자는 `LLM_PROVIDER`로 고르며 `openrouter`(기록용 측정·서비스)와 `claude_cli`(개발 중 같은 모델을 구독으로)를 둔다.
+- 바꾼 파일: `SPEC.md`(2절 그래프), `AGENTS.md`(LLM 모델 줄), `docs/adr/`(0010, ADR.md), `backend/services/llm.py`, `backend/services/SERVICES.md`, `tests/test_llm.py`, `.env.example`(LLM 3줄), 이 파일
+- 실행한 명령과 결과: `uv run --offline pytest -q` 63 passed, 18 skipped(새 `chat()` 시험 5개 포함: 형식 검증, 코드 블록 안 JSON, 재시도 뒤 성공, 호출 3번에서 멈춤, CLI 명령에 도구 끄기와 스키마 포함). `LLM_PROVIDER=claude_cli`로 라우팅 분류 3문항을 실제로 불러 role·rating은 맞았고, MOSFET 선정 질문은 out_of_scope가 아니라 candidate_find로 분류됐다(라우팅 프롬프트에 다이오드가 아니면 범위 밖임을 분명히 적어야 함). 모델 선택 근거인 10문항 비교(Haiku·Sonnet 모두 JSON 10/10, 없는 근거 인용 0, 비관련 거절 5/5)는 ADR 0010에 적었다.
+- 확인 못 한 것: 팀 OpenRouter 키로 `chat()` 실제 호출(구조화 출력 포함)은 아직 하지 않았다. `claude -p`와 OpenRouter의 같은 모델 출력이 같은지는 재지 않았다.
+- 다음 할 일: 팀 키로 Haiku 5.5 1회 호출 확인, `backend/graph/state.py`·`build.py`에 줄기 노드 7개 구현과 가짜 검색기 시험.
+
 ## 2026-11-02 v1 동결 뒤 문서 정리
 - 한 일: v1 동결(11-02) 뒤 저장소 문서를 처음부터 끝까지 다시 읽고, 지난 상태(동결 전·예정·확인 전), 숫자·이름 불일치(30/50/52건, ADR 0008·0009), 문서 사이 모순, 이전 주제(DART·공시)와 강사 템플릿 잔재, 작업 메모가 새어 나온 문장을 고쳤다. 동결 파일과 코드 동작은 바꾸지 않았다. 숫자형 7건(e03·e05·e08·m03·m07·n03·n05)은 1차 사람 판정과 숫자 기계 대조로 동결했다는 사실을 평가 문서에 적었고, v1에 `question` 키가 없어 `run_retrieval.py`가 `input` 전체로 검색한다는 점(11-01 #4~#8과 바로 비교 불가)을 적었다.
 - 바꾼 파일: 루트 `README.md`·`SOJAFIT.md`·`SPEC.md`·`AGENTS.md`·`EVAL_REPORT.md`·`.env.example`(주석), `evals/`(md 5개, py 3개 docstring), `docs/`(GATES·DOCS·EVALUATION·조원-계약서, ADR 0003~0008·ADR.md, specs 7개, WORKLOG.md, 이 파일), `backend/`·`data/`·`db/`·`tests/`의 폴더 설명 파일과 주석·docstring(코드 문자열은 `FastAPI(title="SojaFit API")` 하나)
