@@ -1,15 +1,15 @@
 # tests
 
 ## 역할
-- 이 폴더: PR마다 CI가 돌리는 회귀 테스트를 둡니다. `pytest.ini`가 이 폴더를 가리키므로 루트 직속에 평면으로 둡니다.
+- 이 폴더: PR마다 CI가 돌리는 회귀 테스트를 둡니다. `pytest.ini`의 `testpaths = tests`가 이 폴더를 가리키므로 하위 폴더 없이 `tests/` 바로 아래에 둡니다.
 - 넣는 것: 모듈별 테스트(`test_<모듈>.py`), 동결 감시, 핵심 질문이 근거를 붙여 답하는지 보는 평가 회귀 테스트, 단위 테스트용 가공 회로(`fixtures/`).
-- 넣지 않는 것: 평가셋 전체 실행(`evals/`). GitHub Actions 무료 한도가 있어 PR마다 평가 전체를 돌리지 않고 샘플만 돌립니다.
+- 넣지 않는 것: 평가셋 전체 실행(`evals/`). GitHub Actions 무료 한도가 있어 PR마다 평가 전체를 돌리지 않고 샘플만 돌립니다. 샘플 평가 회귀 테스트는 답변 생성이 생긴 뒤 더하며, 지금은 없습니다.
 - 담당: 각 모듈의 담당 (`test_frozen_evals.py`는 평가·문서)
 
 ## 파일
 - `test_health.py` — `/health` 응답 확인
 - `test_auth.py` — 인증 단위 및 DB 통합 테스트(두 사용자 세션 격리, 관리자와 일반 사용자 권한, 비활성 사용자와 세션 폐기, 실패 구간·잠금 경계, 30분 유휴·8시간 절대 만료 경계, scrypt 동시 검증 상한, HTTPS 쿠키·출처, DB 오류). CI는 격리 PostgreSQL을 제공하며, 로컬에서는 테스트 전용 `TEST_AUTH_DATABASE_URL`이 없으면 DB 시험을 건너뜀
-- `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
+- `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. 지금은 v1(`dataset_v1.jsonl`, 2026-11-02 동결)을 검사하며, `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_llm.py` — API 호출 없이 mock client로 중앙 임베딩 호출의 벡터·사용량·provider metadata 반환 계약 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지
 - `test_rag_ingest.py` — 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩. DB 재실행(행이 늘지 않고 API를 다시 안 부름, manifest에 없는 공통 값을 `DOC_DEFAULTS`로 채움) 시험은 `TEST_DATABASE_URL`을 줄 때만

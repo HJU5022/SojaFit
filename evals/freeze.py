@@ -1,7 +1,7 @@
 """평가셋을 동결한다: sha256, 건수, 관련/비관련 건수를 evals/FROZEN.json에 기록.
 
-    python evals/freeze.py dataset_v1.jsonl   # 동결
-    python evals/freeze.py --check            # 동결 이후 바뀐 파일이 있으면 실패
+    uv run python evals/freeze.py dataset_v1.jsonl   # 동결
+    uv run python evals/freeze.py --check            # 동결 이후 바뀐 파일이 있으면 실패
 """
 import hashlib
 import json

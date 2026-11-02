@@ -5,8 +5,12 @@
 - 하지 않는 일: 답변 채점, 비관련 문항의 거절 판정. 회로 근거만 있는 관련 문항은 세지 않고 수만 적는다.
 - 출처: docs/specs/rag-pipeline.md What 7·AC-07, evals/EVALS.md(gold_chunks 뜻)
 - 필요한 것: DATABASE_URL(적재한 코퍼스), 임베딩 키(.env)
+- [주의] 질의 글: 문항에 question 키가 있으면 그것을, 없으면 input 전체를 쓴다. dataset_v1.jsonl에는
+  question이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 input 전체로 검색한다. 11-01 실험
+  (PREREGISTER #4~#8, draft_50.jsonl)은 question만 썼으므로 두 점수는 바로 비교할 수 없다.
+  질의 필드를 바꾸려면 먼저 evals/PREREGISTER.md에 등록한다.
 
-실행(저장소 루트에서): python -m evals.run_retrieval <평가셋 jsonl> <결과 json> [k]
+실행(저장소 루트에서): uv run python -m evals.run_retrieval <평가셋 jsonl> <결과 json> [k]
 """
 import json
 import re
