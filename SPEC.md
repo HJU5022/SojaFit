@@ -106,7 +106,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 4. 계약
 
-- 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
+- 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현입니다. 상세는 `docs/specs/login-auth.md`.
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.

@@ -47,8 +47,9 @@
 
 ## How
 
-- **검색 함수**: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]` (`backend/rag/retrieve.py`). 서버 기동 때 `warmup()`을 한 번 불러 BM25 색인과 품번 → 문서 색인을 만든다.
+- **검색 함수**: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]` (`backend/rag/retrieve.py`). 서버 기동 때 `warmup()`을 한 번 불러 BM25 색인과 품번 → 문서 색인을 만든다.
   - `parts`: 에이전트가 특정 후보 품번(예: `["SS34"]`)을 확인할 때 준다. 사용자가 입력하지 않는다. 표지 카드(`이 데이터시트의 품번: ...`)에 그 품번이 적힌 문서의 카드만 dense(`WHERE chunk_id = ANY(...)`, 정확 검색)와 BM25(허용 밖 카드 제외) 후보로 쓰고 RRF는 같다. 품번은 대소문자만 무시하고 전체가 같아야 한다(SS34는 SS34L에 걸리지 않음). 코퍼스에 없는 품번뿐이면 `[]`를 돌려주고 전체 코퍼스로 넘어가지 않는다(호출 쪽이 "문서로 확인 안 됨"으로 판정). `parts`가 없으면 필터 없이 같다.
+  - `method`: `'hybrid'`(기본, dense + BM25를 RRF로), `'dense'`(dense 목록만), `'bm25'`(BM25 목록만, 임베딩 API를 부르지 않음). 다른 값이면 `ValueError`. 방식별 평가 기준선을 재려고 둔다
   - 돌려주는 키: `chunk_id`, `document_key`, `file`(PDF 이름), `page`, `table`, `content`, `score`(RRF 점수), `dense_rank`, `bm25_rank`, `doc_parts`(그 문서 표지에 적힌 품번, 소문자)
   - RRF: 카드마다 `1 / (60 + 순위)`를 두 목록에서 더한다. 후보는 방식마다 50개
 - **데이터**: `db/002_rag_corpus.sql`

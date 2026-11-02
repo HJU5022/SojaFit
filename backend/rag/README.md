@@ -15,7 +15,7 @@
 - `parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
 - `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
 - `ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
-- `retrieve.py` — `retrieve(question, k=5, parts=None)`: dense 정확 검색 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 카드마다 그 문서 표지의 품번 목록(`doc_parts`)을 같이 돌려줌. 리랭킹은 아직 없음. `DATABASE_URL` 필요. dense 검색은 `DEMO_MODE=0`이고 임베딩 키가 있을 때만 하고, 기본값 `DEMO_MODE=1`에서는 BM25만 씀
+- `retrieve.py` — `retrieve(question, k=5, parts=None, method='hybrid')`: dense 정확 검색 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. `method='dense'`·`'bm25'`면 그 목록 하나만 씀(`bm25`는 임베딩 API를 부르지 않음). `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 카드마다 그 문서 표지의 품번 목록(`doc_parts`)을 같이 돌려줌. 리랭킹은 아직 없음. `DATABASE_URL` 필요. dense 검색은 `DEMO_MODE=0`이고 임베딩 키가 있을 때만 하고, 기본값 `DEMO_MODE=1`에서는 BM25만 씀
 - `subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·카드 사본을 새 폴더에 만듦. 원본은 고치지 않고, 평가셋 정답 카드가 빠지거나 카드가 불완전하면 멈춤. 서비스·초기화·적재에서 부르지 않음
 - `storage.py` — 읽기 전용 DB/표 용량 점검, 기존 vector에서 API 없이 표본 top-5 정밀도 비교. `RAG_VECTOR_TYPE=vector|halfvec` 계약 검증
 

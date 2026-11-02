@@ -1,7 +1,8 @@
-"""검색: 하이브리드(BM25 + 벡터)를 RRF로 합친다. 품번 필터(parts)를 검색 인자로 받는다. 리랭킹은 사전 등록 뒤 더한다.
+"""검색: 하이브리드(BM25 + 벡터)를 RRF로 합친다. 품번 필터(parts)와 검색 방식(method)을 검색 인자로 받는다. 리랭킹은 사전 등록 뒤 더한다.
 
 - 하는 일: 질문을 embed_texts로 숫자로 바꿔 pgvector 코사인 거리 상위 50장을, 같은 질문의 BM25 상위 50장을 구해
   RRF(카드마다 1/(60 + 순위)의 합)로 합치고 상위 k장을 돌려준다. parts를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾는다.
+  method='dense'면 dense 목록만, 'bm25'면 BM25 목록만 쓰고 임베딩 API를 부르지 않는다(기본 'hybrid').
   DEMO_MODE=1(키 없는 데모)이면 임베딩 API를 부르지 않고 BM25만으로 찾는다(SPEC 7절).
 - 하지 않는 일: 리랭킹, 품번 밖 메타데이터 필터(분류·패키지 등), 질문에서 품번 뽑기(에이전트가 parts로 준다), 답변 생성. 판정(backend/judge/)
 - 출처: docs/specs/rag-pipeline.md What 6·How·AC-05·AC-06·AC-08·AC-09, EVAL_REPORT.md 1장 하이브리드 검색 비교·HNSW 개선 실험 B,
@@ -122,8 +123,11 @@ def _keyword(question, allowed=None):
     return positive_top(scores, ids, N_CAND)
 
 
-def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> list[dict]:
-    """질문과 가까운 카드 k장을 하이브리드로 찾는다. 키와 parts의 뜻은 docs/specs/rag-pipeline.md How를 따른다."""
+def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]:
+    """질문과 가까운 카드 k장을 method(기본 하이브리드)로 찾는다. 키·parts·method의 뜻은 docs/specs/rag-pipeline.md How를 따른다."""
+    # [왜] 방식별 기준선(dense만·BM25만, evals/PREREGISTER.md #16)을 같은 함수로 재려고 둔다
+    if method not in ('hybrid', 'dense', 'bm25'):
+        raise ValueError(f"method는 'hybrid', 'dense', 'bm25' 중 하나입니다: {method!r}")
     if _bm25 is None:
         warmup()
     allowed = None if parts is None else allowed_chunks(_parts, parts)
@@ -131,8 +135,10 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> li
         # [왜] 전체 코퍼스로 넘어가면 다른 부품의 수치를 인용하게 된다. 빈 결과를 받은 쪽이 "문서로 확인 안 됨"으로 판정한다
         return []
     with _connect() as conn:
-        dense, keyword = _dense(conn, question, allowed), _keyword(question, allowed)
-        top = rrf(dense, keyword)[:k]
+        # [주의] DEMO_MODE=1에서 method='dense'는 dense 목록이 비어 늘 []를 돌려준다
+        dense = _dense(conn, question, allowed) if method != 'bm25' else []
+        keyword = _keyword(question, allowed) if method != 'dense' else []
+        top = rrf(dense, keyword)[:k]  # 목록 하나만 있으면 RRF는 그 목록 순서를 그대로 둔다
         rows = conn.execute(
             'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content, dc.document_id'
             ' FROM document_chunks dc JOIN source_documents sd ON sd.id = dc.document_id WHERE dc.id = ANY(%s)',
