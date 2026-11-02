@@ -1,6 +1,6 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점이 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점, 재작성이 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
@@ -170,3 +170,16 @@ def grade(state: AgentState) -> dict:
     answer = llm.chat((PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
     shown = {d["chunk_id"] for d in kept}
     return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}  # LLM이 없는 번호를 내면 버린다
+
+
+class Rewrite(BaseModel):
+    """재작성 노드가 LLM에게 받는 답안지."""
+    query: str = Field(description="데이터시트 검색어 한 줄")
+
+
+def rewrite(state: AgentState) -> dict:
+    """재작성 노드: 원래 질문을 데이터시트 검색어 한 줄로 바꾼다(SPEC 2절). 품번 필터는 바꾸지 않는다(검색 노드가 원래 질문에서 다시 뽑는다)."""
+    # [왜] 1차 검색어가 아니라 언제나 원래 질문을 고친다(강의 2주 20강). 고친 것을 또 고치면 뜻이 점점 멀어진다
+    # [왜] 키워드 검색(BM25)은 한국어 낱말을 버린다. 영어 용어로 바꿔야 "순방향 전압"이 Forward voltage 줄에 걸린다
+    answer = llm.chat((PROMPTS / "rewrite.md").read_text(encoding="utf-8"), state["question"], Rewrite)
+    return {"query": answer.query.strip(), "path": ["재작성"]}  # query 칸을 새 검색어로 덮어쓴다
