@@ -5,7 +5,8 @@
 - 바꾼 파일: `evals/draft_50.jsonl`(n01·n02·h03·n21 네 줄만), `evals/DRAFT_50_REVIEW.md`, `evals/EVALS.md`, `EVAL_REPORT.md`, `docs/adr/0008-평가-정보부족-구분과-52건-초안.md`, `docs/adr/ADR.md`, `docs/specs/evaluation-draft-52.md`, 이 파일
 - 실행한 명령과 결과: 바꾸기 전에 `draft_50.jsonl` 모든 줄이 같은 직렬화로 되돌아오는지 확인하고 네 줄만 바꿨다(4줄 변경). 상태 집계는 `draft_reviewers_agreed_change_hold_not_frozen` 43건, `draft_human1_reviewed_do_not_freeze` 7건이다. `uv run --offline pytest -q`는 56 passed, 18 skipped(DB 시험은 `TEST_DATABASE_URL`이 없어 건너뜀)였다.
 - 확인 못 한 것: n02의 BAS70 3쪽 Fig.2 8.3ms 곡선 값은 텍스트로 읽지 못했다. 네 건의 판정은 하정운 확인(11-02)에 따랐다.
-- 다음 할 일: `dataset_v1.jsonl`로 옮겨 `freeze.py`로 동결하고 검색 베이스라인을 잰다.
+- 동결: `draft_50.jsonl` 50건의 고정 키 9개만 `evals/dataset_v1.jsonl`로 옮기고(모든 값이 초안과 같은지 확인) `uv run --offline python evals/freeze.py dataset_v1.jsonl`로 동결했다. sha256 2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b, 50건(관련 25·비관련 25), `--check` "바뀐 파일 없음". n21만 `corpus_version`이 manifest sha256(PR #19 판, 같은 1,360건)으로 적혀 있어 다른 49건의 글자 표기와 다르다.
+- 다음 할 일: 같은 저장소 코드로 v1 검색 베이스라인을 잰다.
 
 ## 2026-11-02 PR #23·#24 머지 뒤 리뷰 의견 반영
 - 한 일: PR #21·#23·#24의 리뷰와 코멘트를 다시 읽고, 머지 뒤에도 남은 것을 고쳤다. 두 PR이 같이 쓴 ADR 0008 번호를 나눠 Mouser ADR을 0009로 옮겼다. SPEC 3절에 원래 부품의 근거가 없을 때도 동일품·사양 동등을 내지 않는다고 적어 2절·ADR 0006과 맞췄다. halfvec 전환 조건(모델 확정, 동결 평가셋 Recall@5·MRR 무하락, 그 전까지 기본 `vector`)을 SPEC 6절·ADR 0005에 PR #24 내용과 같게 적었다. SPEC 6절 이용 조건에 Infineon 약관을 넣었다.

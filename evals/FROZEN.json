@@ -1,0 +1,9 @@
+{
+  "dataset_v1.jsonl": {
+    "sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+    "count": 50,
+    "relevant": 25,
+    "irrelevant": 25,
+    "frozen_at": "2026-11-02"
+  }
+}
