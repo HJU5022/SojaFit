@@ -1,0 +1,58 @@
+{
+  "measured_at_kst": "2026-11-02T15:55:15+09:00",
+  "python": "3.12.10",
+  "fastapi": "0.162.0",
+  "os": "Windows-11-10.0.26300-SP0",
+  "postgres": "16.15 (Debian 16.15-1.pgdg13+2)",
+  "method": "FastAPI TestClient in one Windows process; real scrypt; local isolated PostgreSQL; process memory sampled every 2ms",
+  "scrypt": {
+    "n": 131072,
+    "r": 8,
+    "p": 1
+  },
+  "single": {
+    "baseline_working_mib": 54.11,
+    "peak_working_mib": 183.43,
+    "delta_working_mib": 129.32,
+    "baseline_private_mib": 39.93,
+    "peak_private_mib": 169.59,
+    "delta_private_mib": 129.66,
+    "samples": 29,
+    "result": {
+      "login_status": 200,
+      "login_ms": 386.8
+    }
+  },
+  "two_concurrent": {
+    "baseline_working_mib": 55.39,
+    "peak_working_mib": 312.13,
+    "delta_working_mib": 256.74,
+    "baseline_private_mib": 41.13,
+    "peak_private_mib": 298.48,
+    "delta_private_mib": 257.36,
+    "samples": 35,
+    "result": {
+      "login_statuses": [
+        200,
+        200
+      ],
+      "elapsed_including_gate_ms": [
+        375.95,
+        376.55
+      ],
+      "third_status_while_two_slots_held": 503,
+      "third_status_during_both_scrypt_calls": 503,
+      "third_request_ms": 10.52,
+      "actual_scrypt_overlap_ms": 343.11,
+      "session_checks": {
+        "a_me_before": 200,
+        "b_me_before": 200,
+        "a_logout": 200,
+        "a_after_logout": 401,
+        "b_after_a_logout": 200,
+        "b_logout": 200,
+        "b_after_logout": 401
+      }
+    }
+  }
+}

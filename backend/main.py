@@ -1,10 +1,8 @@
 """FastAPI entry point."""
 import os
-from pathlib import Path
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, StrictBool
 
 from backend import auth
@@ -15,11 +13,6 @@ app = FastAPI(title="3차 프로젝트 API")
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
-
-
-@app.get("/", response_class=HTMLResponse)
-def login_page():
-    return (Path(__file__).parent / "web" / "login.html").read_text(encoding="utf-8")
 
 
 class Login(BaseModel):

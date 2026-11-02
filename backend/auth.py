@@ -115,16 +115,21 @@ def admin_set_active(actor_id: int, target_id: int, active: bool) -> None:
 
 
 def provision() -> None:
-    parser = argparse.ArgumentParser(description="Create a provisioned account")
+    parser = argparse.ArgumentParser(description="Create a provisioned account or print a password hash")
     parser.add_argument("--role", choices=("user", "admin"), default="user")
+    parser.add_argument("--hash-only", action="store_true", help="print a scrypt hash without creating an account")
     args = parser.parse_args()
-    email = input("Email: ").strip().lower()
+    email = None if args.hash_only else input("Email: ").strip().lower()
     password = getpass.getpass("Password: ")
     confirmation = getpass.getpass("Confirm password: ")
-    if "@" not in email or len(email) > 100 or len(password) < 12 or len(password.encode()) > 1024 or password != confirmation:
+    if (email is not None and ("@" not in email or len(email) > 100)) or len(password) < 12 or len(password.encode()) > 1024 or password != confirmation:
         sys.exit("Invalid email or password; use at least 12 characters and matching confirmation.")
+    password_hash = hash_password(password)
+    if args.hash_only:
+        print(password_hash)
+        return
     with connection() as conn, conn.cursor() as cur:
-        cur.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, %s)", (email, hash_password(password), args.role))
+        cur.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, %s)", (email, password_hash, args.role))
     print("Account created.")
 
 
