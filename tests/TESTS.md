@@ -16,3 +16,5 @@
 - `test_rag_retrieve.py` — RRF 순서, BM25 토큰(한국어 조사), `gold_chunks`에서 정답 문서·쪽 읽기, 표지 카드 → 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드에서 임베딩 API 안 부름, 평가 대상 0건 오류. 실제 DB 시험은 `TEST_DATABASE_URL`(로컬 compose DB)을 줄 때만
 - `test_rag_collect.py` — xlsx 목록 합치기, manifest로 받기(파일 이름은 `source_url` 끝, sha256 대조, PDF 아님·해시 다름은 failed.csv), 다시 돌리면 건너뛰기
 - `test_rag_parse.py` — 숫자 세기(µ 통일), 표 좌표 바꾸기, SIGALRM 지원 여부
+- `test_rag_subset.py` — 분류별 사본·입력 보존·관련 gold 누락·기존 출력·불완전/중복 카드 오류, 카드 수 기준 벡터 payload 추정
+- `test_rag_storage.py` — 형식 설정 검증, 실제 시험 DB의 halfvec 전환·재실행·이진 재적재·정확 검색, 같은 본문 제외·시간/표본 부족 표시. DB 시험은 전용 TEST_DATABASE_URL 필요

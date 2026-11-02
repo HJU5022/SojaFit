@@ -16,7 +16,7 @@
 |---|---|---|
 | `source_documents` | 코퍼스 문서(데이터시트)의 출처·개정판·해시·파서 | `002_rag_corpus.sql` |
 | `document_chunks` | 검색 카드의 본문·쪽·표 이름·행 | `002_rag_corpus.sql` |
-| `chunk_embeddings` | 카드의 임베딩 `vector(1536)`, HNSW 코사인 인덱스 | `002_rag_corpus.sql` |
+| `chunk_embeddings` | 기본 `vector(1536)`과 HNSW; 선택적으로 복제 DB에서 `halfvec(1536)` 전환 시험. 수동 전환 뒤 HNSW 없음 | `002_rag_corpus.sql`, 수동 `halfvec.sql.manual` |
 | `users` | 로그인 사용자 | `003_auth.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
