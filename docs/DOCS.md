@@ -16,3 +16,4 @@
 - `worklog/` — 조원별 작업 기록. [WORKLOG.md](worklog/WORKLOG.md)
 - [EVALUATION.md](EVALUATION.md) — 기존 문서에 없는 평가 축·시장 근거·가산 준비 항목
 - [CI_PROPOSAL.md](CI_PROPOSAL.md) — 현재 workflow에 대한 절감 보완 제안(미적용)
+- [auth-login-verification.md](auth-login-verification.md) — 인증 세션·시간 경계·scrypt 로컬 실측 기록

@@ -74,3 +74,9 @@
 - 후속 수정: main에서 들어온 RAG 저장소 테스트가 옛 `db/02_rag_corpus.sql` 경로를 사용하는 부분을 `db/002_rag_corpus.sql`로 맞추고, Windows SQL 파일 UTF-8 읽기 및 비밀번호가 생략되는 `db.info.dsn` 재연결을 수정했다.
 - 검증: 테스트 전용 PostgreSQL 16과 별도 임시 pgvector DB를 사용했다. 첫 실행은 임시 DB의 확장 미설치 및 Windows 기본 인코딩, 두 번째 실행은 잠금 테스트의 비밀번호 없는 DSN으로 실패해 각각 원인을 수정했다. pgvector 확장 및 UTF-8 환경에서 동일 전체 검사 재실행: 73 passed, 1 skipped. 임시 DB는 삭제했다.
 - 제한: GitHub 연결 도구는 PR #22에 404를 반환하고 gh CLI는 사용할 수 없어 PR 메타데이터는 확인하지 못했다. 원격 PR 상태·GitHub Actions·배포는 확인하지 않았으며 push하지 않았다. 기존 stash와 이번 보관 stash는 유지했다.
+
+## 2026-11-02 인증 리뷰 실측 기록
+- 한 일: STH `8dc9630` 기준으로 격리 PostgreSQL 16.15에서 두 계정의 로그인·세션 분리·로그아웃, 잠금·세션 만료 경계, 실제 scrypt 동시 실행과 프로세스 메모리를 측정하고 `docs/auth-login-verification.md`에 기록했다. `docs/DOCS.md`에 파일을 등록했다.
+- 환경과 결과: Windows Python 3.12.10, FastAPI TestClient, 로컬 테스트 DB. 고정된 트랜잭션 시각에서 잠금 900초와 절대 만료 28,800초 및 경계 전·동일·후 상태가 기대와 같았다. 2개 scrypt 호출이 343.11ms 겹친 동안 세 번째 요청은 503이었다. Windows 프로세스 working set은 단일 요청 54.11→183.43MiB, 동시 2개 55.39→312.13MiB였다. 각 결과는 단일 실행이다.
+- 실행: 프로젝트 `.venv/Scripts/python.exe`로 로컬 실측 스크립트 `auth_boundary_after_merge.py`, `measure_scrypt_concurrent.py`를 각각 격리 DB에 대해 실행했다. 실측 스크립트와 원시 JSON은 로컬 작업 폴더에만 보관했고 테스트 데이터는 롤백 또는 삭제했다.
+- 제한: 메모리는 Windows Python 프로세스 표본이며 PostgreSQL·OS 메모리는 제외, Cloud Run·실제 경과 시간 대기·분산 인스턴스는 미검증. 반복 부하 및 GitHub Actions 결과도 별도 확인이 필요하다.
