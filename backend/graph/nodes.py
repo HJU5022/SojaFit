@@ -1,6 +1,6 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점, 재작성이 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성이 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
@@ -25,6 +25,8 @@ WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영�
 QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
 REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
 LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 카드 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
+CITE = re.compile(r"\[([^\]]*)\]")                     # 답 속 인용 괄호: [12] · [12, 15] · [넷리스트]
+NOT_FOUND = "문서로 확인 안 됨"                          # 근거로 답할 수 없을 때의 답(SPEC 3절 판정 이름과 같다)
 
 
 def parse_input(text: str) -> dict:
@@ -183,3 +185,43 @@ def rewrite(state: AgentState) -> dict:
     # [왜] 키워드 검색(BM25)은 한국어 낱말을 버린다. 영어 용어로 바꿔야 "순방향 전압"이 Forward voltage 줄에 걸린다
     answer = llm.chat((PROMPTS / "rewrite.md").read_text(encoding="utf-8"), state["question"], Rewrite)
     return {"query": answer.query.strip(), "path": ["재작성"]}  # query 칸을 새 검색어로 덮어쓴다
+
+
+class Answer(BaseModel):
+    """생성 노드가 LLM에게 받는 답안지."""
+    answer: str = Field(description="문장마다 근거 번호를 붙인 답. 근거로 답할 수 없으면 '문서로 확인 안 됨'")
+
+
+def netlist_block(part: dict) -> str:
+    """대상 부품과 주변 넷을 생성 노드의 근거 한 덩어리([넷리스트])로 쓴다."""
+    nets = "\n".join(f"- {n['name']}: {', '.join(n['nodes'])}" + (f" 외 {n['more']}개" if n["more"] else "") for n in part["nets"])
+    return f"[넷리스트] {part['ref']} {part['value']} ({part['footprint']})\n{nets}"
+
+
+def citations(text: str) -> set[str]:
+    """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
+    # [왜] 괄호 안을 먼저 꺼내 쉼표로 나눈다. [12]만 찾으면 [12, 15]처럼 한 괄호에 묶은 인용을 놓친다(강의 2주 20강)
+    return {c.strip() for br in CITE.findall(text) for c in br.split(",") if c.strip().isdigit() or c.strip() == "넷리스트"}
+
+
+def generate(state: AgentState) -> dict:
+    """생성 노드: 통과 카드와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절)."""
+    passed = set(state.get("passed") or [])
+    cards = [d for d in state.get("docs", []) if d["chunk_id"] in passed]  # 채점을 통과한 카드만 근거로 넘긴다
+    blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in cards]  # 파일 이름에 개정 코드가 있어 출처가 된다
+    part = state.get("target_part") or {}
+    if part:
+        blocks.append(netlist_block(part))  # [왜] 역할 질문은 검색 없이 오므로 넷리스트가 유일한 근거다
+    answer = NOT_FOUND  # 근거가 하나도 없으면(넷리스트 없이 온 역할 질문) LLM을 부르지 않는다
+    if blocks:
+        user = "근거:\n" + "\n\n".join(blocks) + f"\n\n질문: {state['question']}"  # 강의 20강처럼 근거 다음에 질문
+        answer = llm.chat((PROMPTS / "generate.md").read_text(encoding="utf-8"), user, Answer).answer.strip()
+    valid = {str(d["chunk_id"]) for d in cards} | ({"넷리스트"} if part else set())  # 실제로 넘긴 근거. 이 밖의 번호를 인용하면 없는 근거 인용이다
+    cited = citations(answer)
+    # 마침표 뒤 공백에서 문장을 자른다. "문서로 확인 안 됨"은 인용할 근거가 없는 답이라 세지 않는다
+    sentences = [] if answer == NOT_FOUND else [s for s in re.split(r"(?<=[.。])\s+", answer) if s.strip()]
+    check = {"fake_citations": sorted(cited - valid),                          # 넘긴 적 없는 근거 번호
+             "uncited_sentences": sum(1 for s in sentences if not citations(s)),  # 근거 번호가 하나도 없는 문장 수
+             "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
+    # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
+    return {"answer": answer, "check": check, "path": ["생성"]}
