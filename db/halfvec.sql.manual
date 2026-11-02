@@ -1,0 +1,29 @@
+-- 원본을 백업한 뒤 별도의 복제 DB에서 직접 실행하는 SQL입니다.
+-- 파일 확장자가 .manual이므로 DB 초기화 시 자동으로 실행되지 않습니다.
+-- 원본 float32 캐시와 백업을 보관하세요. vector로 되돌려도 원래 정밀도는 복구되지 않습니다.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '120s';
+DO $$
+DECLARE current_type text;
+BEGIN
+    IF to_regtype('halfvec') IS NULL THEN
+        RAISE EXCEPTION 'halfvec unsupported: pgvector >= 0.7 is required';
+    END IF;
+    SELECT format_type(atttypid, atttypmod) INTO current_type
+    FROM pg_attribute WHERE attrelid = 'chunk_embeddings'::regclass
+        AND attname = 'embedding' AND NOT attisdropped;
+    IF current_type IS NULL OR current_type NOT IN ('vector(1536)', 'halfvec(1536)') THEN
+        RAISE EXCEPTION 'unexpected embedding type: %', current_type;
+    END IF;
+END $$;
+DROP INDEX IF EXISTS ix_chunk_embeddings_hnsw;
+DO $$
+BEGIN
+    IF (SELECT format_type(atttypid, atttypmod) FROM pg_attribute
+        WHERE attrelid = 'chunk_embeddings'::regclass AND attname = 'embedding') = 'vector(1536)' THEN
+        ALTER TABLE chunk_embeddings ALTER COLUMN embedding TYPE halfvec(1536) USING embedding::halfvec(1536);
+    END IF;
+END $$;
+CREATE INDEX ix_chunk_embeddings_hnsw ON chunk_embeddings USING hnsw (embedding halfvec_cosine_ops);
+COMMIT;

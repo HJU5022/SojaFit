@@ -1,0 +1,382 @@
+{
+  "date": "2026-11-02",
+  "scope": "synthetic_contract_only",
+  "rows": 64,
+  "dimensions": 1536,
+  "seed": 42,
+  "embedding_api_calls": 0,
+  "full_corpus_reduced": false,
+  "actual_corpus_target_met": null,
+  "full_corpus_quality_measured": false,
+  "before": {
+    "pgvector_version": "0.8.6",
+    "embedding_type": "vector(1536)",
+    "database_bytes": 9935895,
+    "target_bytes": 250000000,
+    "within_target": true,
+    "tables": [
+      {
+        "table": "chunk_embeddings",
+        "body_and_toast_bytes": 573440,
+        "index_bytes": 548864,
+        "total_bytes": 1122304
+      },
+      {
+        "table": "document_chunks",
+        "body_and_toast_bytes": 49152,
+        "index_bytes": 49152,
+        "total_bytes": 98304
+      },
+      {
+        "table": "source_documents",
+        "body_and_toast_bytes": 16384,
+        "index_bytes": 49152,
+        "total_bytes": 65536
+      }
+    ]
+  },
+  "after": {
+    "pgvector_version": "0.8.6",
+    "embedding_type": "halfvec(1536)",
+    "database_bytes": 9387031,
+    "target_bytes": 250000000,
+    "within_target": true,
+    "tables": [
+      {
+        "table": "chunk_embeddings",
+        "body_and_toast_bytes": 286720,
+        "index_bytes": 286720,
+        "total_bytes": 573440
+      },
+      {
+        "table": "document_chunks",
+        "body_and_toast_bytes": 49152,
+        "index_bytes": 49152,
+        "total_bytes": 98304
+      },
+      {
+        "table": "source_documents",
+        "body_and_toast_bytes": 16384,
+        "index_bytes": 49152,
+        "total_bytes": 65536
+      }
+    ]
+  },
+  "average_pg_column_size_before": 6148.0,
+  "average_pg_column_size_after": 3076.0,
+  "synthetic_top5_comparison": {
+    "model": "openai/text-embedding-3-small",
+    "seed": 42,
+    "requested_samples": 16,
+    "available_vectors": 64,
+    "initialization_complete": true,
+    "queries": 16,
+    "sample_shortfall": 0,
+    "timed_out": false,
+    "complete": true,
+    "top5_overlap": 1.0,
+    "exact_order_fraction": 1.0,
+    "max_seconds": 20,
+    "self_and_same_body_excluded": true,
+    "approximate_index_used": false,
+    "official_eval": false,
+    "adoption_approved": false,
+    "rows": [
+      {
+        "query_id": 2,
+        "vector_top5": [
+          46,
+          23,
+          4,
+          19,
+          27
+        ],
+        "halfvec_top5": [
+          46,
+          23,
+          4,
+          19,
+          27
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 3,
+        "vector_top5": [
+          57,
+          45,
+          42,
+          62,
+          37
+        ],
+        "halfvec_top5": [
+          57,
+          45,
+          42,
+          62,
+          37
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 6,
+        "vector_top5": [
+          61,
+          43,
+          21,
+          8,
+          4
+        ],
+        "halfvec_top5": [
+          61,
+          43,
+          21,
+          8,
+          4
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 7,
+        "vector_top5": [
+          35,
+          38,
+          20,
+          11,
+          33
+        ],
+        "halfvec_top5": [
+          35,
+          38,
+          20,
+          11,
+          33
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 9,
+        "vector_top5": [
+          61,
+          41,
+          26,
+          36,
+          27
+        ],
+        "halfvec_top5": [
+          61,
+          41,
+          26,
+          36,
+          27
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 15,
+        "vector_top5": [
+          38,
+          36,
+          32,
+          11,
+          44
+        ],
+        "halfvec_top5": [
+          38,
+          36,
+          32,
+          11,
+          44
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 16,
+        "vector_top5": [
+          24,
+          11,
+          30,
+          49,
+          53
+        ],
+        "halfvec_top5": [
+          24,
+          11,
+          30,
+          49,
+          53
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 18,
+        "vector_top5": [
+          29,
+          24,
+          13,
+          26,
+          43
+        ],
+        "halfvec_top5": [
+          29,
+          24,
+          13,
+          26,
+          43
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 28,
+        "vector_top5": [
+          58,
+          35,
+          53,
+          55,
+          33
+        ],
+        "halfvec_top5": [
+          58,
+          35,
+          53,
+          55,
+          33
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 35,
+        "vector_top5": [
+          49,
+          7,
+          43,
+          23,
+          36
+        ],
+        "halfvec_top5": [
+          49,
+          7,
+          43,
+          23,
+          36
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 38,
+        "vector_top5": [
+          54,
+          7,
+          15,
+          45,
+          61
+        ],
+        "halfvec_top5": [
+          54,
+          7,
+          15,
+          45,
+          61
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 44,
+        "vector_top5": [
+          47,
+          14,
+          61,
+          15,
+          56
+        ],
+        "halfvec_top5": [
+          47,
+          14,
+          61,
+          15,
+          56
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 48,
+        "vector_top5": [
+          33,
+          14,
+          17,
+          46,
+          63
+        ],
+        "halfvec_top5": [
+          33,
+          14,
+          17,
+          46,
+          63
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 57,
+        "vector_top5": [
+          12,
+          3,
+          26,
+          22,
+          10
+        ],
+        "halfvec_top5": [
+          12,
+          3,
+          26,
+          22,
+          10
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 62,
+        "vector_top5": [
+          3,
+          50,
+          45,
+          54,
+          52
+        ],
+        "halfvec_top5": [
+          3,
+          50,
+          45,
+          54,
+          52
+        ],
+        "overlap": 1.0
+      },
+      {
+        "query_id": 64,
+        "vector_top5": [
+          13,
+          11,
+          24,
+          60,
+          40
+        ],
+        "halfvec_top5": [
+          13,
+          11,
+          24,
+          60,
+          40
+        ],
+        "overlap": 1.0
+      }
+    ]
+  },
+  "limitations": [
+    "64 synthetic rows are not the original 52244-card corpus",
+    "16 card-as-query samples do not satisfy the preregistered1000-real-vector gate",
+    "temporary local pgvector version does not establish target Supabase extension version",
+    "database_bytes includes PostgreSQL overhead and test activity; not a full-corpus size prediction",
+    "no official dataset retrieval or answer scores measured"
+  ]
+}

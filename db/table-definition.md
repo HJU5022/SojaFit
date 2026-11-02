@@ -376,6 +376,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
 
 - 거리 함수는 코사인 거리, 인덱스는 HNSW(`vector_cosine_ops`)입니다. `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 N은 2,000 이하여야 합니다.
+- 현재 RAG 기본 열은 vector(1536)이며, 250MB 용량 검토를 위해 복제 DB에만 `halfvec.sql.manual`로 halfvec(1536)·halfvec_cosine_ops 전환을 시험할 수 있습니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
 - 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
 - 차원이 다른 모델로 바꾸면 `embedding` 열을 새 Migration으로 바꿉니다.
 - 이 표와 인덱스는 N이 정해진 뒤 별도 Migration으로 만듭니다(11절).

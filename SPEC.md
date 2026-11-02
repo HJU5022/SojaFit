@@ -87,6 +87,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 현재 검수 초안은 52건(26/26)이며 동결 전입니다.
 
 ## 5. 규칙 파일
 
@@ -100,7 +101,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
-- 임베딩: `text-embedding-3-small`(`vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)).
+- 임베딩: `text-embedding-3-small`(기본 `vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). `RAG_VECTOR_TYPE=halfvec`와 수동 SQL로 복제 DB의 halfvec(1536) 저장·재적재·질의 시험을 지원합니다. 모델·차원·검색 방식은 바꾸지 않으며 실제 품질 게이트 전까지 기본 vector를 유지합니다.
+- 용량 검토 목표는 인덱스 포함 전체 DB 250MB(250,000,000바이트) 이하입니다. 회로 5종은 유지하고 제조사 분류 목록으로 5개 다이오드 종류의 코퍼스 사본을 선택합니다. 원본 1,360건과 기존 평가셋을 삭제하지 않습니다. 실제 선택 문서·카드 수, G3 충족과 용량은 전체 코퍼스 확보 후 확인하며 아직 축소 달성으로 보고하지 않습니다. 절차는 `docs/specs/corpus-storage-budget.md`를 따릅니다.
 - 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 공개 문서: Wikipedia 다이오드 분류, SparkFun Learn, KiCad 문서와 심볼 라이브러리
 - 평가·시연용 회로: `data/circuits/collected/`의 공개 회로 5종(Breadboard Supply, MOSFET Driver, ATtiny85 dev, Franzininho DIY, Pro Micro v13)

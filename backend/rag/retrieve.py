@@ -16,6 +16,7 @@
 import os
 import re
 from urllib.parse import unquote, urlparse
+from backend.rag.storage import vector_type
 
 N_CAND = 50  # 방식마다 합치기 전에 가져오는 후보 수
 RRF_K = 60   # [왜] RRF 원 논문(Cormack 외 2009)의 기본값
@@ -93,6 +94,7 @@ def _dense(conn, question, allowed=None):
     from backend.services import llm
     if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
         return []
+    kind = vector_type()
     vec = np.asarray(llm.embed_texts([question])[0][0], dtype=np.float32)
     sql, args = 'SELECT chunk_id FROM chunk_embeddings WHERE embedding_model = %s', [EMBED_MODEL]
     if allowed is not None:  # 품번 필터: 허용한 카드 안에서만 거리를 잰다(검색 단계에서 거름)
@@ -101,8 +103,10 @@ def _dense(conn, question, allowed=None):
     # 정확 검색 1위 거리 0.4177을 놓치고 0.4777을 1위로 냄). 카드 5만 장은 정확 검색이 질문당 0.3~0.6초라 인덱스를 끄고 잰다
     # shortcut: 정확 검색은 카드 수에 비례해 느려진다. 카드가 수십만 장이 되면 HNSW 설정을 사전 등록 실험으로 다시 정한다
     conn.execute('SET enable_indexscan = off')
-    rows = conn.execute(sql + ' ORDER BY embedding <=> %s LIMIT %s', args + [vec, N_CAND]).fetchall()
-    conn.execute('RESET enable_indexscan')
+    try:
+        rows = conn.execute(sql + f' ORDER BY embedding <=> %s::{kind}(1536) LIMIT %s', args + [vec, N_CAND]).fetchall()
+    finally:
+        conn.execute('RESET enable_indexscan')
     return [r[0] for r in rows]
 
 
