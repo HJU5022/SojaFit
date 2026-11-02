@@ -1,15 +1,20 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기만 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기와 라우팅이 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
 import json
 from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 from backend.graph.state import AgentState
+from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
+PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 PROMPTS.md)
 
 # 입력 글의 "키: 값" 줄 → 메모장 칸 이름
 FIELDS = {"회로": "circuit", "넷리스트": "netlist_path", "대상": "target", "사용 조건": "conditions", "질문": "question"}
@@ -83,3 +88,18 @@ def read_input(state: AgentState) -> dict:
         if found:
             target_part = circuit_around(json.loads(found.read_text(encoding="utf-8")), fields["target"])
     return {**fields, "target_part": target_part, "path": ["입력 읽기"]}
+
+
+class Route(BaseModel):
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할)."""
+    question_type: Literal["out_of_scope", "role", "candidate_find", "candidate_judge", "rating"] = Field(
+        description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
+
+
+def route(state: AgentState) -> dict:
+    """라우팅 노드: 질문 종류를 다섯 가지 중 하나로 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
+    # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
+    part = state.get("target_part") or {}
+    user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
+    answer = llm.chat((PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
+    return {"question_type": answer.question_type, "path": ["라우팅"]}
