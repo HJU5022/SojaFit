@@ -99,7 +99,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - API 엔드포인트와 응답 형식: (정할 것)
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/EVALS.md`가 정본입니다.
-- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 현재 검수 초안은 52건(26/26)이며 동결 전입니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/EVALS.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 현재 검수 초안은 50건(25/25)이며 동결 전입니다. n22·n13은 예비로 이관했고, 남은 문항의 정답·사람 판정은 바꾸지 않았습니다.
 
 ## 5. 규칙 파일
 
