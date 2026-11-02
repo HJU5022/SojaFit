@@ -1,9 +1,9 @@
 # jeongun 작업 기록
 
 ## 2026-11-02 그래프 줄기 설계와 LLM 호출 입구
-- 한 일: D4 줄기 그래프의 노드 7개와 상한을 SPEC 2절에 적고, 그래프 LLM을 `anthropic/claude-haiku-5.5`로 시작한다는 결정을 ADR 0010으로 남겼다. `llm.py`에 그래프 노드가 쓰는 `chat(system, user, schema)`를 넣었다. Pydantic 형식으로 검증하고, 형식이 틀리면 2회까지 다시 부른다. 공급자는 `LLM_PROVIDER`로 고르며 `openrouter`(기록용 측정·서비스)와 `claude_cli`(개발 중 같은 모델을 구독으로)를 둔다.
-- 바꾼 파일: `SPEC.md`(2절 그래프), `AGENTS.md`(LLM 모델 줄), `docs/adr/`(0010, ADR.md), `backend/services/llm.py`, `backend/services/SERVICES.md`, `tests/test_llm.py`, `.env.example`(LLM 3줄), 이 파일
-- 실행한 명령과 결과: `uv run --offline pytest -q` 63 passed, 18 skipped(새 `chat()` 시험 5개 포함: 형식 검증, 코드 블록 안 JSON, 재시도 뒤 성공, 호출 3번에서 멈춤, CLI 명령에 도구 끄기와 스키마 포함). `LLM_PROVIDER=claude_cli`로 라우팅 분류 3문항을 실제로 불러 role·rating은 맞았고, MOSFET 선정 질문은 out_of_scope가 아니라 candidate_find로 분류됐다(라우팅 프롬프트에 다이오드가 아니면 범위 밖임을 분명히 적어야 함). 모델 선택 근거인 10문항 비교(Haiku·Sonnet 모두 JSON 10/10, 없는 근거 인용 0, 비관련 거절 5/5)는 ADR 0010에 적었다.
+- 한 일: D4 줄기 그래프의 노드 7개와 상한을 SPEC 2절에 적고, 그래프 LLM을 `anthropic/claude-haiku-5.5`로 시작한다는 결정을 ADR 0010으로 남겼다. `llm.py`에 그래프 노드가 쓰는 `chat(system, user, schema)`를 넣었다. OpenRouter 호출은 강의 2주 20강처럼 LangChain `ChatOpenAI(...).with_structured_output(schema)`로 하고(`langchain-openai` 1.7.3 추가), Pydantic 형식으로 검증하고, 형식이 틀리면 2회까지 다시 부른다. 공급자는 `LLM_PROVIDER`로 고르며 `openrouter`(기록용 측정·서비스)와 `claude_cli`(개발 중 같은 모델을 구독으로)를 둔다.
+- 바꾼 파일: `SPEC.md`(2절 그래프), `AGENTS.md`(LLM 모델 줄), `docs/adr/`(0010, ADR.md), `backend/services/llm.py`, `backend/services/SERVICES.md`, `tests/test_llm.py`, `.env.example`(LLM 3줄), `pyproject.toml`·`uv.lock`(`langchain-openai`), 이 파일
+- 실행한 명령과 결과: `uv run --offline pytest -q` 63 passed, 18 skipped(새 `chat()` 시험 5개 포함: 형식 검증, 코드 블록 안 JSON, 재시도 뒤 성공, 호출 3번에서 멈춤, CLI 명령에 도구 끄기와 스키마 포함). `LLM_PROVIDER=claude_cli`로 라우팅 분류 3문항을 실제로 불러 role·rating은 맞았고, MOSFET 선정 질문은 out_of_scope가 아니라 candidate_find로 분류됐다. 프롬프트에 "다이오드가 아닌 부품 선정은 out_of_scope"를 넣자 out_of_scope로 분류됐다(라우팅 노드 프롬프트에 넣을 것). 모델 선택 근거인 10문항 비교(Haiku·Sonnet 모두 JSON 10/10, 없는 근거 인용 0, 비관련 거절 5/5)는 ADR 0010에 적었다.
 - 확인 못 한 것: 팀 OpenRouter 키로 `chat()` 실제 호출(구조화 출력 포함)은 아직 하지 않았다. `claude -p`와 OpenRouter의 같은 모델 출력이 같은지는 재지 않았다.
 - 다음 할 일: 팀 키로 Haiku 5.5 1회 호출 확인, `backend/graph/state.py`·`build.py`에 줄기 노드 7개 구현과 가짜 검색기 시험.
 

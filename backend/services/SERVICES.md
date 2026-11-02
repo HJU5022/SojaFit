@@ -13,4 +13,4 @@
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
 ## 파일
-- `llm.py` — LLM·임베딩 호출을 모으는 자리. 그래프 노드가 쓰는 `chat(system, user, schema)`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter | claude_cli, 모델 ADR 0010), 임베딩 `embed_texts()`, Langfuse 인증 확인이 있습니다. 평가 스크립트도 `embed_texts()`를 통해 API 임베딩을 호출합니다.
+- `llm.py` — LLM·임베딩 호출을 모으는 자리. 그래프 노드가 쓰는 `chat(system, user, schema)`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`로 강의 2주 20강과 같은 방식, claude_cli는 개발용, 모델 ADR 0010), 임베딩 `embed_texts()`, Langfuse 인증 확인이 있습니다. 평가 스크립트도 `embed_texts()`를 통해 API 임베딩을 호출합니다.

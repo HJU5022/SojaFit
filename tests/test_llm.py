@@ -12,15 +12,18 @@ class Route(BaseModel):
 
 
 def _fake_calls(monkeypatch, answers):
-    """OpenRouter 호출을 정해 둔 답 목록으로 바꾸고 호출 횟수를 센다."""
+    """LangChain 채팅 모델을 가짜로 바꾼다. 정해 둔 답 글자를 schema로 검증해 돌려주고 호출 횟수를 센다."""
     calls = []
 
-    def fake(system, user, schema):
-        calls.append(user)
-        return answers[len(calls) - 1]
+    def invoke(messages, schema):
+        calls.append(messages)
+        # 진짜 with_structured_output처럼 형식이 틀리면 ValidationError를 낸다
+        return schema.model_validate_json(answers[len(calls) - 1])
 
+    fake_model = SimpleNamespace(
+        with_structured_output=lambda schema: SimpleNamespace(invoke=lambda messages: invoke(messages, schema)))
     monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
-    monkeypatch.setattr(llm, "_openrouter_call", fake)
+    monkeypatch.setattr(llm, "_chat_model", lambda: fake_model)
     return calls
 
 
@@ -28,11 +31,7 @@ def test_chat_returns_validated_model(monkeypatch):
     calls = _fake_calls(monkeypatch, ['{"kind": "role"}'])
     assert llm.chat("sys", "q", Route) == Route(kind="role")
     assert len(calls) == 1
-
-
-def test_chat_reads_json_inside_code_fence(monkeypatch):
-    _fake_calls(monkeypatch, ['```json\n{"kind": "rating"}\n```'])
-    assert llm.chat("sys", "q", Route).kind == "rating"
+    assert calls[0] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "q"}]
 
 
 def test_chat_retries_bad_format_then_succeeds(monkeypatch):
@@ -64,6 +63,13 @@ def test_cli_call_disables_tools_and_puts_schema_in_system_prompt(monkeypatch):
     assert cmd[cmd.index("--model") + 1] == llm.LLM_CLI_MODEL
     assert '"kind"' in cmd[cmd.index("--system-prompt") + 1]
     assert cmd[-1] == "질문"
+
+
+def test_cli_call_reads_json_inside_code_fence(monkeypatch):
+    fenced = '```json\n{"kind": "rating"}\n```'
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "claude_cli")
+    monkeypatch.setattr(llm.subprocess, "run", lambda cmd, **kw: SimpleNamespace(stdout=json.dumps({"result": fenced})))
+    assert llm.chat("규칙", "질문", Route).kind == "rating"
 
 
 def test_embed_texts_returns_vectors_usage_and_provider_metadata(monkeypatch):

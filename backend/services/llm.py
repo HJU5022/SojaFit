@@ -61,29 +61,26 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
 
 
 @lru_cache(maxsize=1)
-def _chat_client():
-    """OpenRouter 채팅 클라이언트를 한 번만 만든다."""
-    from openai import OpenAI
+def _chat_model():
+    """OpenRouter에 붙는 LangChain 채팅 모델을 한 번만 만든다(강의 2주 20강과 같은 방식)."""
+    from langchain_openai import ChatOpenAI
 
-    # [왜] SDK 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
-    return OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url="https://openrouter.ai/api/v1", max_retries=0)
-
-
-def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> str:
-    """OpenRouter에 구조화 출력을 요청하고 답의 JSON 글자를 돌려준다."""
-    # parse()는 Pydantic 모델을 strict JSON Schema로 바꿔 response_format으로 보내고,
-    # 받은 글자를 그 모델로 검증한다. 검증이 실패하면 pydantic ValidationError를 낸다.
-    completion = _chat_client().chat.completions.parse(
-        model=LLM_MODEL,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-        response_format=schema,
-        temperature=0,
-    )
-    return completion.choices[0].message.content or ""
+    # [왜] OpenRouter는 OpenAI와 같은 API 모양이라 base_url만 바꾸면 ChatOpenAI로 여러 회사 모델을 부를 수 있다
+    # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
+    return ChatOpenAI(model=LLM_MODEL, base_url="https://openrouter.ai/api/v1",
+                      api_key=os.environ["OPENROUTER_API_KEY"], temperature=0, max_retries=0)
 
 
-def _cli_call(system: str, user: str, schema: type[BaseModel]) -> str:
-    """구독 `claude -p`로 같은 모델을 부르고 답 글자를 돌려준다(개발 중 반복 테스트용)."""
+def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
+    """OpenRouter에 구조화 출력을 요청하고 schema 객체로 돌려준다."""
+    # with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
+    # 받은 JSON을 그 모델로 검증해 객체로 돌려준다. 형식이 틀리면 ValidationError나 OutputParserException을 낸다.
+    structured = _chat_model().with_structured_output(schema)
+    return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}])
+
+
+def _cli_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
+    """구독 `claude -p`로 같은 모델을 부르고 schema 객체로 돌려준다(개발 중 반복 테스트용, 최종 정리 때 지운다)."""
     # [왜] CLI에는 response_format이 없어 JSON Schema를 시스템 프롬프트 끝에 붙여 형식을 요구한다
     schema_text = json.dumps(schema.model_json_schema(), ensure_ascii=False)
     system_full = f"{system}\n\n출력은 아래 JSON Schema를 따르는 JSON 하나만 낸다. 다른 글은 쓰지 않는다.\n{schema_text}"
@@ -93,7 +90,7 @@ def _cli_call(system: str, user: str, schema: type[BaseModel]) -> str:
          "--output-format", "json", user],
         cwd=tempfile.gettempdir(), capture_output=True, text=True, timeout=300, check=True,
     )
-    return json.loads(done.stdout).get("result", "")
+    return schema.model_validate_json(_json_part(json.loads(done.stdout).get("result", "")))
 
 
 def _json_part(raw: str) -> str:
@@ -108,12 +105,14 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     형식이 틀리면 MAX_FORMAT_RETRIES번까지 다시 부르고, 그래도 틀리면 마지막 검증 오류를 담아 ValueError를 낸다.
     공급자는 LLM_PROVIDER(openrouter | claude_cli), 모델은 LLM_MODEL / LLM_CLI_MODEL이다(ADR 0010).
     """
+    from langchain_core.exceptions import OutputParserException
+
     call = _cli_call if LLM_PROVIDER == "claude_cli" else _openrouter_call
     last_error = None
     for _ in range(1 + MAX_FORMAT_RETRIES):
         try:
-            return schema.model_validate_json(_json_part(call(system, user, schema)))
-        except ValidationError as error:
+            return call(system, user, schema)
+        except (ValidationError, OutputParserException) as error:
             last_error = error
     raise ValueError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error
 
