@@ -145,7 +145,7 @@ RAG 코퍼스에 포함된 데이터시트와 공개 문서의 출처, 버전 �
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
 | `id` | 문서 ID | `BIGINT` | N | PK | 출처 문서 식별자 | 확정 |
-| `document_key` | 문서 키 | `VARCHAR(200)` | N | UNIQUE | manifest(`data/DATA.md`의 형식)의 `doc_id`와 같은 값 | 확정 |
+| `document_key` | 문서 키 | `VARCHAR(200)` | N | UNIQUE | manifest(`data/README.md`의 형식)의 `doc_id`와 같은 값 | 확정 |
 | `document_type` | 문서 종류 | `VARCHAR(50)` | N | CHECK: `DATASHEET`, `PUBLIC_DOC` | 제조사 데이터시트 또는 공개 문서 | 확정 |
 | `title` | 문서 제목 | `VARCHAR(500)` | N |  | 문서 제목 | 확정 |
 | `publisher` | 발행처 | `VARCHAR(200)` | N |  | 제조사 또는 공개 문서 발행처 | 확정 |
@@ -498,6 +498,6 @@ PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표�
 | Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/004_create_business_tables.sql.draft` | ERD 승인 |
 | Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 완료: `db/002_rag_corpus.sql`(1536 임시, ADR 0004) |
 
-3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/DB.md`).
-4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`007_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
+3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/README.md`).
+4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`007_`부터, `db/README.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/ERD.md`로 옮기고 이 문서를 지웁니다.

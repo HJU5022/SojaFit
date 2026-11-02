@@ -15,7 +15,7 @@ from backend.graph.state import AgentState
 from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
-PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 PROMPTS.md)
+PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 같은 폴더 README.md)
 
 # 입력 글의 "키: 값" 줄 → 메모장 칸 이름
 FIELDS = {"회로": "circuit", "넷리스트": "netlist_path", "대상": "target", "사용 조건": "conditions", "질문": "question"}

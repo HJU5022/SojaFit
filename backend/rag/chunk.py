@@ -20,7 +20,7 @@ import sys
 
 CHUNKER_VERSION = 'tsc-cards-2026-11-01'  # document_chunks.chunker_version에 들어가는 규칙 이름
 PARSER = 'docling 2.145.0 (OCR off)'
-USAGE = 'See data/corpus/CORPUS.md; informational/non-commercial, unmodified PDF, notices retained and source attributed.'
+USAGE = 'See data/corpus/README.md; informational/non-commercial, unmodified PDF, notices retained and source attributed.'
 # [왜] 1,360줄에 같은 값을 되풀이하면 manifest가 1MB를 넘어 Checkpoint 대시보드가 읽지 못한다(512,000바이트 아래로 둔다).
 # [주의] 이 값과 다른 문서(다른 제조사, 인젝션 시험 문서)는 manifest 줄에 그 키를 적으면 줄의 값이 앞선다.
 DOC_DEFAULTS = {'manufacturer': 'Taiwan Semiconductor', 'collected_at': '2026-11-01', 'parser': PARSER,

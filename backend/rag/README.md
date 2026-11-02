@@ -7,7 +7,7 @@
 - 담당: 검색·데이터
 
 ## 주의
-- 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서와 청크 목록을 남깁니다(형식은 [DATA.md](../../data/DATA.md)).
+- 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서와 청크 목록을 남깁니다(형식은 [data/README.md](../../data/README.md)).
 - 숫자 대조에서 µ와 μ는 같은 글자로 맞춥니다(`parse.py`). 표에서 뽑은 값의 단위 환산(`units.py`)은 아직 없습니다.
 
 ## 파일

@@ -7,4 +7,4 @@
 - 담당: 가산을 시작할 때 정합니다
 
 ## 파일
-- `finetune/` — 파인튜닝. [FINETUNE.md](finetune/FINETUNE.md)
+- `finetune/` — 파인튜닝. [README.md](finetune/README.md)

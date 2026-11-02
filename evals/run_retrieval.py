@@ -3,7 +3,7 @@
 - 하는 일: 데이터시트 근거가 있는 관련 문항마다 backend.rag.retrieve.retrieve(question, k)를 부르고,
   정답 문서(gold_chunks의 PDF 이름)가 몇 위에 나왔는지, 정답 쪽까지 맞혔는지 센다. 결과를 json으로 남긴다.
 - 하지 않는 일: 답변 채점, 비관련 문항의 거절 판정. 회로 근거만 있는 관련 문항은 세지 않고 수만 적는다.
-- 출처: docs/specs/rag-pipeline.md What 7·AC-07, evals/EVALS.md(gold_chunks 뜻)
+- 출처: docs/specs/rag-pipeline.md What 7·AC-07, evals/README.md(gold_chunks 뜻)
 - 필요한 것: DATABASE_URL(적재한 코퍼스), 임베딩 키(.env)
 - [주의] 질의 글: 문항에 question 키가 있으면 그것을, 없으면 input 전체를 쓴다. dataset_v1.jsonl에는
   question이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 input 전체로 검색한다. 11-01 실험
