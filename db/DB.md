@@ -1,19 +1,21 @@
 # db
 
 ## 역할
-- 이 폴더: Compose가 DB 컨테이너를 처음 띄울 때 이름순으로 실행하는 초기화 SQL을 둡니다. 확장과 코퍼스 SQL을 업무 스키마보다 먼저 실행해야 합니다. 실행 파일의 번호는 코퍼스 SQL 반영 후 확정합니다.
-- 넣는 것: 확장과 스키마, 스냅샷 데이터 적재, 인덱스 생성, 데모 계정 2개(비밀번호는 해시). 순서는 스키마 → 데이터 → 인덱스 → 데모 계정입니다.
+- 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL과 검토 중인 업무 스키마 초안을 둡니다.
+- 넣는 것: 확장과 스키마, 스냅샷 데이터 적재, 인덱스 생성, 데모 계정 관련 SQL. 실제 평가용 계정 정보는 저장소에 넣지 않습니다.
 - 넣지 않는 것: 평가용 계정 비밀번호(강사에게 따로 제출), 원본 문서(`data/corpus/`).
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
-## 주의
-SQL은 db 볼륨이 비어 있을 때만 실행됩니다. SQL을 바꾼 뒤에는 `docker compose down -v`로 볼륨을 지우고 다시 띄웁니다.
+## 실행과 주의
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `02_rag_corpus.sql` → `03_auth.sql`입니다.
+- `001_create_business_tables.sql.draft`는 자동 실행되지 않습니다. 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
+- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다.
+- `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
 - `000_init.sql` — pgvector 확장 생성
-- `001_create_business_tables.sql.draft` — Migration 1 업무 표 초안. PR #17의 `02_rag_corpus.sql`을 먼저 반영·실행해야 하며, 자동 실행 전 파일 순서와 이력 방식을 확정해야 함
-- `01_init.sql` — pgvector 확장 생성
-- `02_rag_corpus.sql` — RAG 코퍼스 표 3개(`source_documents`, `document_chunks`, `chunk_embeddings` `vector(1536)`)와 HNSW 인덱스. 이미 뜬 DB와 Supabase에는 `psql -f`로 따로 적용
-- `001_create_business_tables.sql.draft` — 확정 정의서의 Migration 1 SQL 초안(검토 전 자동 실행 방지)
-- `ERD.md` — 표 관계도와 표마다 하는 일. SQL로 표를 바꾸면 같은 PR에서 고칩니다
-- `table-definition.md` — 업무 테이블의 컬럼, 관계, 제약조건과 미정 항목을 정리한 정의서 초안
+- `02_rag_corpus.sql` — 코퍼스 문서·청크·임베딩 테이블과 관련 인덱스
+- `03_auth.sql` — 사용자·인증 세션·로그인 시도 테이블. 기존 DB에는 상태와 적용 이력을 확인한 뒤 별도 적용
+- `001_create_business_tables.sql.draft` — 나머지 업무 테이블 초안. 코퍼스·인증 테이블을 참조하며 검토 전 자동 실행되지 않음
+- `ERD.md` — 테이블의 역할과 생성 위치. SQL로 테이블을 바꾸면 같은 PR에서 고칩니다
+- `table-definition.md` — 업무 테이블의 컬럼·관계·제약조건과 검토 항목

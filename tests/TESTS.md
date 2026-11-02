@@ -8,6 +8,7 @@
 
 ## 파일
 - `test_health.py` — `/health` 응답 확인
+- `test_auth.py` — 인증 단위 테스트. 실제 DB 시험은 격리된 `TEST_AUTH_DATABASE_URL`을 줄 때만 실행
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_llm.py` — API 호출 없이 mock client로 중앙 임베딩 호출의 벡터·사용량·provider metadata 반환 계약 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지
