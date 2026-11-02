@@ -96,7 +96,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ## 6. 데이터·코퍼스 경계
 
-- 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 다이오드 판정 기능이 완성된 뒤 넓힙니다.
+- 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 3차 범위에서 넓히지 않고 지원 가능 품목(확장 후보)으로만 둡니다.
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.

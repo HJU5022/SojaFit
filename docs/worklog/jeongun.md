@@ -2,9 +2,9 @@
 
 ## 2026-11-02 manifest를 대시보드가 읽는 크기로 줄이기
 - 한 일: PR #19 머지 뒤 Checkpoint 대시보드 G3 칸에 "manifest가 커서 읽지 못함"이 떴다(`data/manifest.jsonl` 1,012,774바이트). GitHub GraphQL `Blob.text`가 이 파일을 512,000바이트에서 자르는 것(`isTruncated=true`)을 확인했다. 1,360줄 모두 같은 값 6개(`manufacturer`, `collected_at`, `parser`, `status`, `purpose`, `usage_conditions`)를 `chunk.py`의 `DOC_DEFAULTS`로 옮기고 `ingest.py`가 읽을 때 채우게 했다. 늘 null이고 읽는 코드가 없는 `exact_original_part_match`와, 파일 이름이 `source_url` 끝과 같은 `path`를 뺐고, 공백 없는 JSON으로 쓴다. `collect.py`는 `path`가 없으면 `source_url` 끝에서 파일 이름을 얻는다.
-- 바꾼 파일: `backend/rag/`(chunk.py, ingest.py, collect.py), `data/manifest.jsonl`, `data/DATA.md`, `data/corpus/CORPUS.md`, `docs/specs/rag-pipeline.md`(What 4), `tests/`(test_rag_chunk.py, test_rag_ingest.py, test_rag_collect.py, TESTS.md), 이 파일
+- 바꾼 파일: `backend/rag/`(chunk.py, ingest.py, collect.py), `data/manifest.jsonl`, `data/DATA.md`, `data/corpus/CORPUS.md`, `docs/specs/rag-pipeline.md`(What 4), `SPEC.md`(6절 확장 문장), `tests/`(test_rag_chunk.py, test_rag_ingest.py, test_rag_collect.py, TESTS.md), 이 파일
 - 실행한 명령과 결과: 기존 manifest를 1회용 스크립트(저장소 밖)로 새 형식으로 바꿨다. 바꾸기 전에 1,360줄 모두 뺀 값이 `DOC_DEFAULTS`와 같고 `path`의 파일 이름이 `source_url` 끝과 같은지 assert했다. 1,012,774 → 470,263바이트(1,360줄, 한 줄 평균 346바이트). `ingest.main`과 같은 식으로 채운 값 12개가 1,360줄 모두 바꾸기 전과 같고, `collect.read_targets`의 파일 이름 1,360개도 같다. `uv run --offline pytest -q` 26 passed, 2 skipped. 새 크기 시험은 바꾸기 전 manifest로 돌리면 실패한다.
-- 확인 못 한 것: `chunk.py` main은 docling이 로컬에 없어 돌리지 않았다(새 쓰기 형식의 키 순서·공백은 바꾼 manifest와 같게 코드로 맞춤). DB 재실행 시험(`TEST_DATABASE_URL`)은 돌리지 않았다. 대시보드가 GraphQL로 읽는지와 push 뒤 G3 칸이 읽히는지는 아직 모른다. 한 줄 346바이트면 약 1,480줄에서 512,000바이트를 넘으므로 Infineon(280~430건)을 넣으면 다시 넘을 수 있다.
+- 확인 못 한 것: `chunk.py` main은 docling이 로컬에 없어 돌리지 않았다(새 쓰기 형식의 키 순서·공백은 바꾼 manifest와 같게 코드로 맞춤). DB 재실행 시험(`TEST_DATABASE_URL`)은 돌리지 않았다. 대시보드가 GraphQL로 읽는지와 push 뒤 G3 칸이 읽히는지는 아직 모른다. 한 줄 346바이트면 약 1,480줄에서 512,000바이트를 넘으므로 Infineon(280~430건)을 넣으면 다시 넘을 수 있다. 그래서 Infineon·MOSFET 확장은 3차 범위에서 하지 않기로 하고 SPEC 6절에 지원 가능 품목으로만 적었다(11-02 조장 결정).
 - 다음 할 일: push 뒤 대시보드 G3 칸 확인, `docs/GATES.md` G3 상태 칸(아직 "manifest 3행") 고치기.
 
 ## 2026-11-01 오세창 검수 의견 13개 반영 (PR #15~#18 후속)
