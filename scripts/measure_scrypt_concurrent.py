@@ -185,7 +185,8 @@ try:
               'python': platform.python_version(), 'fastapi': fastapi.__version__, 'os': platform.platform(),
               'postgres': version, 'method': 'FastAPI TestClient in one Windows process; real scrypt; local isolated PostgreSQL; process memory sampled every 2ms',
               'scrypt': {'n': auth.N, 'r': auth.R, 'p': auth.P}, 'single': one, 'two_concurrent': two}
-    Path(__file__).with_name('scrypt_concurrent_final_measurement.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    out = Path(__file__).resolve().parents[1] / 'evals' / 'results' / f"scrypt_concurrent_{result['measured_at_kst'][:10]}.json"
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(result, ensure_ascii=False))
 finally:
     gate.set()

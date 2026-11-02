@@ -24,6 +24,8 @@
 - `results/draft50_second_pass_2026-11-02.json` — 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록
 - `results/draft52_validation_2026-11-02.json` — 추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님
 - `results/storage_contract_2026-11-02.json` — 합성 벡터를 넣은 전용 로컬 PostgreSQL의 형식·용량·검색 계약 확인. 실제 코퍼스 250MB·품질 달성 결과가 아님
+- `results/auth_boundary_2026-11-02.json` — 로그인 잠금·세션 만료 경계 실측 원시 결과(`scripts/auth_boundary_after_merge.py`)
+- `results/scrypt_concurrent_2026-11-02.json` — 동시 scrypt·프로세스 메모리 실측 원시 결과(`scripts/measure_scrypt_concurrent.py`)
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 

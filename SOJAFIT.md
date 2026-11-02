@@ -28,6 +28,7 @@ SojaFit (proj3-b)
 ├── db/               DB 초기화 SQL
 ├── evals/            평가셋
 ├── tests/            테스트
+├── scripts/          측정·점검 스크립트
 ├── docs/             주제서, 계약서, 게이트 증거, 조사 기록
 │   ├── adr/          조 결정 기록
 │   ├── specs/        SPEC 밖 기능 작업서
@@ -56,6 +57,7 @@ SojaFit (proj3-b)
 | `db/` | 초기화 SQL(pgvector·코퍼스·인증), halfvec 수동 전환 SQL, 업무 표 초안 | 서비스·운영 | [README.md](db/README.md) |
 | `evals/` | 평가셋, 동결 해시, 평가 실행, 원시 결과 | 평가·문서 | [README.md](evals/README.md) |
 | `tests/` | 회귀 테스트, 동결 감시 | 각 모듈 담당 | [README.md](tests/README.md) |
+| `scripts/` | 서비스 코드 밖에서 손으로 돌리는 측정·점검 스크립트 | 각 모듈 담당 | [README.md](scripts/README.md) |
 | `docs/` | 주제서, 조원 계약서, 게이트 증거, 평가·운영 보충 자료, 임베딩·라이선스 조사 기록 | 평가·문서 | [README.md](docs/README.md) |
 | `docs/adr/` | 조 결정 기록 | 결정을 낸 담당 | [README.md](docs/adr/README.md) |
 | `docs/specs/` | SPEC에 없는 기능이 생길 때 쓰는 작업서 | 그 기능의 담당 | [README.md](docs/specs/README.md) |
