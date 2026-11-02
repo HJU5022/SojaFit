@@ -37,7 +37,7 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     docs: list[dict]    # 검색해 온 카드
 
     # ── 채점 노드가 채운다 ──
-    passed: list[str]   # 채점을 통과한 카드 id. 비어 있으면 재작성이나 거절로 간다
+    passed: list[int]   # 채점을 통과한 카드 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
 
     # ── 생성·거절 노드가 채운다 ──
     answer: str         # 사용자에게 보여 줄 답

@@ -86,5 +86,6 @@ def test_real_db_demo_mode_bm25_only(monkeypatch):
     found = R.retrieve('SS34 정격이 어떻게 돼?', parts=['SS34'])
     assert found and {r['file'] for r in found} == {'SS32 SERIES_Q2412.pdf'}
     assert all(r['dense_rank'] is None for r in found)
+    assert all('ss34' in r['doc_parts'] for r in found)  # 문서 표지 품번 목록(소문자)
     assert R.retrieve('이 보드에서 이건 왜 필요해?') == []  # 영문·숫자 단어가 없으면 BM25 후보도 없다
     assert R.retrieve('SS34 정격', parts=['NOPE123']) == []

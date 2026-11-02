@@ -13,11 +13,12 @@
 - `test_llm.py` — API 호출 없이 가짜 모델로 임베딩 반환 계약과 `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령 확인
 - `test_graph_state.py` — 그래프 상태의 `tries`·`path`는 쌓이고 나머지 칸은 덮어써지는지 확인
 - `test_graph_route.py` — 라우팅 노드: 가짜 LLM으로 `route.md` 프롬프트와 대상·질문이 넘어가고 질문 종류가 메모장에 적히는지 확인
+- `test_graph_grade.py` — 채점 노드: 같은 문서의 다른 품번 줄(1N5817 줄)은 빼고 패키지 줄·글 카드는 남기는지, 다른 개정판만 남으면 LLM을 부르지 않는지, LLM이 낸 없는 번호는 버리는지 가짜 LLM으로 확인
 - `test_graph_search.py` — 검색 노드: 회로 기호·값·개정 코드를 뺀 품번 뽑기, 질문 품번이 대상 값보다 앞서는지(평가셋 n11), 품번이 없으면 전체 검색, 재작성한 검색어로 찾는지 가짜 검색기로 확인
 - `test_graph_read_input.py` — 입력 읽기 노드: 입력 글 나누기, e01에서 J1 → S1 → D1 → F1 → RAW 경로가 보이는지, 큰 넷 자르기, 평가셋 v1 50문항 모두 대상 부품을 읽는지 확인
 - `test_rag_chunk.py` — 표 카드 규칙(합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지
 - `test_rag_ingest.py` — 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩. DB 재실행(행이 늘지 않고 API를 다시 안 부름, manifest에 없는 공통 값을 `DOC_DEFAULTS`로 채움) 시험은 `TEST_DATABASE_URL`을 줄 때만
-- `test_rag_retrieve.py` — RRF 순서, BM25 토큰(한국어 조사), `gold_chunks`에서 정답 문서·쪽 읽기, 표지 카드 → 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드에서 임베딩 API 안 부름, 평가 대상 0건 오류. 실제 DB 시험은 `TEST_DATABASE_URL`(로컬 compose DB)을 줄 때만
+- `test_rag_retrieve.py` — RRF 순서, BM25 토큰(한국어 조사), `gold_chunks`에서 정답 문서·쪽 읽기, 표지 카드 → 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드에서 임베딩 API 안 부름, 평가 대상 0건 오류, 결과마다 문서 표지 품번(`doc_parts`). 실제 DB 시험은 `TEST_DATABASE_URL`(로컬 compose DB)을 줄 때만
 - `test_rag_collect.py` — xlsx 목록 합치기, manifest로 받기(파일 이름은 `source_url` 끝, sha256 대조, PDF 아님·해시 다름은 failed.csv), 다시 돌리면 건너뛰기
 - `test_rag_parse.py` — 숫자 세기(µ 통일), 표 좌표 바꾸기, SIGALRM 지원 여부
 - `test_rag_subset.py` — 분류별 사본·입력 보존·관련 gold 누락·기존 출력·불완전/중복 카드 오류, 카드 수 기준 벡터 payload 추정

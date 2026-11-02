@@ -1,6 +1,6 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색이 있다.
+- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 지금은 입력 읽기, 라우팅, 검색, 채점이 있다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
@@ -24,6 +24,7 @@ MAX_PASS_THROUGH_PINS = 3  # [왜] 핀이 3개 이하인 부품(저항·퓨즈·
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영문·숫자 낱말. 품번 안의 . - 는 살린다(SMBJ5.0A, AMS1117-3.3)
 QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
 REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
+LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 카드 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
 
 
 def parse_input(text: str) -> dict:
@@ -135,3 +136,37 @@ def search(state: AgentState, retriever) -> dict:
     query = state.get("query") or state["question"]  # 재작성 노드가 검색어를 바꿨으면 그것으로, 아니면 질문으로 찾는다
     docs = retriever(query, parts=parts or None)  # 품번이 하나도 없으면 None: 코퍼스 전체에서 찾는다
     return {"query": query, "parts": parts, "docs": docs, "tries": 1, "path": ["검색"]}  # tries 1이 더해져 상한 판단에 쓰인다
+
+
+class Grade(BaseModel):
+    """채점 노드가 LLM에게 받는 답안지(강의 2주 20강의 채점기와 같은 역할)."""
+    passed_ids: list[int] = Field(description="질문에 답할 근거가 든 카드 번호. 없으면 빈 목록")
+
+
+def other_part_row(doc: dict, parts: list[str]) -> bool:
+    """표 한 줄 카드가 같은 문서의 다른 품번만 적힌 줄이면 True. 예: 1N5819를 물었는데 1N5817 순방향 전압 줄."""
+    if not doc.get("table") or not parts:
+        return False  # 글 카드("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
+    # [왜] 문서 표지 품번 목록과 겹치는 낱말만 품번으로 본다. 그래야 패키지 이름(DO-41, SOD-123F)이 든 줄을 버리지 않는다
+    named = {w.lower() for w in find_parts(LABEL.sub("", doc["content"]), set())} & set(doc.get("doc_parts", []))
+    return bool(named) and not named & {p.lower() for p in parts}
+
+
+def grade(state: AgentState) -> dict:
+    """채점 노드: 결정적 검사(다른 품번 줄, 요청한 개정판)로 먼저 거르고, 남은 카드를 LLM 호출 한 번으로 채점한다(SPEC 2절)."""
+    revisions = {w.upper() for w in WORD.findall(state["question"]) if REVISION.fullmatch(w)}  # 질문이 요청한 개정 코드
+    kept = []
+    for doc in state.get("docs", []):
+        if other_part_row(doc, state.get("parts") or []):
+            continue
+        # 파일 이름 끝이 개정 코드다: "1N4148 SERIES_K2301.pdf" → K2301
+        if revisions and doc["file"].rsplit("_", 1)[-1].removesuffix(".pdf").upper() not in revisions:
+            continue
+        kept.append(doc)
+    if not kept:
+        return {"passed": [], "path": ["채점"]}  # 남은 카드가 없으면 LLM을 부르지 않는다
+    cards = "\n\n".join(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in kept)
+    # [왜] 강의 20강처럼 하위 검색어가 아니라 원래 질문 기준으로 채점한다
+    answer = llm.chat((PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
+    shown = {d["chunk_id"] for d in kept}
+    return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}  # LLM이 없는 번호를 내면 버린다

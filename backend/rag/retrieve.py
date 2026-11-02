@@ -134,15 +134,17 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None) -> li
         dense, keyword = _dense(conn, question, allowed), _keyword(question, allowed)
         top = rrf(dense, keyword)[:k]
         rows = conn.execute(
-            'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content'
+            'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content, dc.document_id'
             ' FROM document_chunks dc JOIN source_documents sd ON sd.id = dc.document_id WHERE dc.id = ANY(%s)',
             ([i for i, _ in top],)).fetchall()
     found = {r[0]: r for r in rows}
     out = []
     for chunk_id, score in top:
-        _, key, url, page, table, content = found[chunk_id]
+        _, key, url, page, table, content, doc_id = found[chunk_id]
         out.append({'chunk_id': chunk_id, 'document_key': key, 'file': unquote(os.path.basename(urlparse(url).path)), 'page': page, 'table': table,
                     'content': content, 'score': score,
+                    # [왜] 한 문서에 형제 품번(1N5817·1N5819) 줄이 섞여 있다. 채점이 다른 품번 줄을 거를 때 이 목록과 대조한다
+                    'doc_parts': sorted(p for p, docs in _parts[0].items() if doc_id in docs),
                     'dense_rank': dense.index(chunk_id) + 1 if chunk_id in dense else None,
                     'bm25_rank': keyword.index(chunk_id) + 1 if chunk_id in keyword else None})
     return out
