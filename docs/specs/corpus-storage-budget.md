@@ -2,8 +2,8 @@
 
 ## Why
 
-- 최초 목표는 전체 DB 250,000,000바이트와 5분류 축소였으나, 2026-11-02 사용자 지시로 PR #23의 전체 코퍼스 유지 방향에 맞춘다. 축소는 보류한다.
-- PR #23은 HNSW 제거 → halfvec → 동일 본문 벡터 중복 제거 후 코퍼스 237.8MiB를 보고한다. 이 환경에서 재현한 전체 DB 크기나 Supabase 측정값이 아니다. 중복 제거 구현은 이번 변경에 포함하지 않는다.
+- 최초 목표는 전체 DB 250,000,000바이트와 5분류 축소였으나, 2026-11-02 조장 결정(ADR 0005: 용량 때문에 코퍼스를 줄이지 않는다)에 따라 PR #23의 전체 코퍼스 유지 방향에 맞춘다. 축소는 보류한다.
+- PR #23은 HNSW 제거 → halfvec → 동일 본문 벡터 중복 제거 후 코퍼스 237.8MiB를 보고한다(조장 로컬 실측, ADR 0005). 이 작업서를 쓸 때는 원본 DB가 없어 재현하지 못했고, Supabase 측정값도 아니다. 동일 본문 벡터 중복 제거는 구현하지 않았다.
 - 현재 저장소에는 1,360문서·52,244카드 목록만 있고 전체 카드·벡터 캐시·적재 DB는 없다. 합성 시험으로 실제 검색 품질과 용량을 입증하지 않는다.
 
 ## Goal
@@ -15,7 +15,7 @@
 
 ## What
 
-- `subset.py`는 수동 CLI로 남긴다. 명시적 별도 요청 전에는 축소 사본 생성·적재를 진행하지 않는다. 원본 보존·관련 gold 누락·불완전 카드 거부 계약은 유지한다.
+- `subset.py`는 수동 CLI로 남긴다. 조 결정 전에는 축소 사본 생성·적재를 진행하지 않는다. 원본 보존·관련 gold 누락·불완전 카드 거부 계약은 유지한다.
 - 수동 halfvec SQL은 HNSW를 제거하고 열만 전환한다. 행·키를 보존하고 인덱스를 재생성하지 않는다. ingest는 HNSW 없는 DB에서도 동작한다.
 - 읽을 때 저장된 halfvec을 vector로 변환하고 질문은 float32를 유지한다. 이미 반올림된 저장값이 원본으로 복구된다는 뜻은 아니다.
 - 전체 원본이 없으면 도구·SQL·실제 PostgreSQL 계약 시험까지만 검증하고 전체 용량·1,000개 순위·공식 품질은 미확인으로 남긴다.
@@ -25,7 +25,7 @@
 - `backend/rag/subset.py`: 독립 수동 CLI. `--manifest PATH --catalog CSV --chunks PATH --dataset PATH --out-dir NEW_DIR`를 명시해야 실행된다. catalog의 정확한 PDF 이름·5분류 집합으로만 선택하며 입력 덮어쓰기를 금지한다. 기본 실행 경로에는 연결하지 않는다.
 - `RAG_VECTOR_TYPE=vector|halfvec`(기본 vector)은 이진 COPY 저장 형식을 고른다. float32 캐시는 보존하며 halfvec COPY에서만 변환한다. halfvec 검색은 `embedding::vector(1536) <=> 질문::vector(1536)`이다.
 - `ingest --cache-only`는 캐시가 없으면 API 호출 전에 실패한다. 기존 DB에 ingest를 반복해도 코퍼스가 삭제·축소되지 않는다. 기존 HNSW가 있을 때만 재색인한다.
-- `storage inspect`는 DB 전체·표 본문/TOAST·인덱스·확장 버전·열 형식을 보고한다. JSON의 250MB 목표는 최초 진단 기준이며 PR #23의 운영 분리 기준과 별개다.
+- `storage inspect`는 DB 전체·표 본문/TOAST·인덱스·확장 버전·열 형식을 보고한다. JSON의 250MB 목표는 최초 진단 기준이며 ADR 0005의 400MB 분리 검토 기준과 별개다.
 - `storage compare --samples 1000 --max-seconds 120`는 원본 vector 표에서 저장값만 halfvec으로 반올림한 뒤 float32로 읽는 거리를 비교한다. 모델·코퍼스·질문은 고정한다. seed 42 표본, 자기 자신·동일 본문 제외, chunk_id 동점 정렬, 정확 검색이다. 표본·후보 부족과 timeout을 숨기지 않는다. API 호출은 없다.
 - 사전 등록 #9의 최초 기대는 보존하고 아래 새 거리 계산 조건을 추가 기록한다. #10 축소 실험은 보류한다. 이미 보고된 조원 결과를 사전 기대처럼 소급해서 적지 않는다.
 
@@ -37,7 +37,7 @@
 2. 별도 복제본에서 `DROP INDEX IF EXISTS ix_chunk_embeddings_hnsw`만 실행해 HNSW 제거 용량과 정확 검색 기준선을 기록한다.
 3. 그 기준선에서 `uv run python -m backend.rag.storage compare --samples 1000 --max-seconds 120`을 실행한다. 실제 조건과 제한 시간이 원본 보고와 다르면 별도 비교라고 표시한다.
 4. 별도 복제본에 `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/halfvec.sql.manual`을 직접 적용한다. 열 형식·행 수·키·HNSW 부재를 확인하고 RAG_VECTOR_TYPE=halfvec으로 적재·검색을 검증한다. 원본 float32 캐시/DB 백업은 보관한다.
-5. inspect로 전체 DB·코퍼스 표·인덱스 바이트를 다시 기록한다. 동일 본문 벡터 중복 제거는 이번 SQL이 하지 않으므로 237.8MiB 재현을 주장하지 않는다.
+5. inspect로 전체 DB·코퍼스 표·인덱스 바이트를 다시 기록한다. 동일 본문 벡터 중복 제거는 `db/halfvec.sql.manual`이 하지 않으므로 237.8MiB 재현을 주장하지 않는다.
 
 ### 확인 경계
 
