@@ -78,7 +78,7 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 ## 시크릿 규칙 (위반 시 전원에게 노출됩니다)
 
-- API 키와 비밀번호는 **`.env` 파일에만** 두세요. `.env`는 `.gitignore`에 이미 등록되어 커밋되지 않습니다.
+- API 키와 실제 계정 비밀번호는 **`.env` 파일에만** 두세요. 아래 공개 데모 전용 계정은 예외입니다. `.env`는 `.gitignore`에 이미 등록되어 커밋되지 않습니다.
 - 코드나 문서에 키를 직접 적으면 안 됩니다. 이 org는 상호 공개라 **커밋된 키는 7기 전원이 볼 수 있습니다.**
 - 평가용 계정의 비밀번호도 이 저장소에 적지 않습니다. 강사에게 별도 DM으로 제출합니다.
 - 모든 push는 **Secret Scan**(GitHub Actions)이 자동 검사합니다. 검사가 실패하면 키가 커밋된 것입니다. 즉시 강사에게 알리고 **해당 키를 재발급**하세요. 히스토리에서 지워도 유출된 것으로 간주합니다.
@@ -131,6 +131,17 @@ git push                             # PR이 자동 갱신됨
 
 새 Compose DB 초기화는 `003_auth.sql`, `005_auth_attempt_window.sql`, `006_user_roles.sql`, `007_demo_accounts.sql` 순서로 실행됩니다.
 
+`.env` 없이 새 DB를 만들면 기본 `DEMO_MODE=1`로 데모 전용 계정이 생성됩니다. `DEMO_MODE=0`에서 네 계정 변수가 비어 있으면 기본 계정은 생성되지 않습니다. 제출용 평가 계정과 실제 계정에는 사용하지 마세요.
+
+| 역할 | 이메일 | 데모 비밀번호 |
+|---|---|---|
+| 관리자 | `demo-admin@example.test` | `demo-admin-1234` |
+| 사용자 | `demo-user@example.test` | `demo-user-1234` |
+
+`DEMO_ADMIN_EMAIL`, `DEMO_ADMIN_PASSWORD_HASH`, `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD_HASH` 네 값을 모두 설정하면 이 값으로 대체합니다. 일부만 설정하면 초기화가 실패합니다. 해시는 `uv run python -m backend.auth --hash-only`로 만들고 `.env`에서 작은따옴표로 감쌉니다.
+
 Compose 초기화 SQL은 새 볼륨에서 한 번만 실행됩니다. 기존 볼륨에는 자동 적용되지 않으므로 볼륨을 삭제하지 말고, DB 구조와 적용 이력을 확인한 뒤 시드 SQL을 별도로 검토·실행하세요. 이 시드는 로컬 Compose 전용이며 Cloud 배포 계정을 만들지 않습니다. 로그인 API는 제공하지만 브라우저 로그인 화면은 포함하지 않습니다. `AUTH_ORIGIN`은 로컬에서 `http://localhost:8000`, 배포에서는 브라우저의 HTTPS 출처와 정확히 일치해야 합니다. 로그인 기능을 Cloud Run에 올리기 전에 `AUTH_ORIGIN`·`DATABASE_URL`과 세션 설정을 확인합니다.
+
+데모 외 환경(`DEMO_MODE=0`)에서는 32바이트 이상의 무작위 `AUTH_SECRET`을 환경변수로 설정해야 서버가 시작됩니다. `uv run python -c "import secrets; print(secrets.token_urlsafe(32))"`로 생성하고 키를 비공개로 보관하세요. 키를 추가·변경·제거하면 기존 세션은 다시 로그인해야 합니다. 키 없는 데모 모드는 기존 방식을 사용합니다.
 
 관리자는 `GET /api/admin/users`로 계정을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정을 활성화·비활성화할 수 있습니다. 관리자 상태 변경은 API에서 허용하지 않습니다. 회로·대화·기억·견적 기능과 사용자별 데이터 접근 권한 검증, 비밀번호 재설정, 공유 DB 적용은 미구현입니다.
