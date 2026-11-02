@@ -119,12 +119,10 @@ git push                             # PR이 자동 갱신됨
 
 기본 게이트·일정 외 준비 항목은 [EVALUATION.md](docs/EVALUATION.md), 합의 전 CI 절감 제안은 [CI_PROPOSAL.md](docs/CI_PROPOSAL.md)를 참고합니다.
 
-## 로그인 계정 준비 (개발용)
+## 로그인 계정 준비 (로컬 Compose)
 
-새 Compose DB는 `003_auth.sql`로 인증 표를 만들고 `005_auth_attempt_window.sql`, `006_user_roles.sql`로 실패 집계 시간과 역할 컬럼을 추가합니다. 기존 볼륨에는 초기화 SQL이 자동 재실행되지 않으므로 DB 구조와 이력을 확인한 후 별도 마이그레이션으로 적용해야 합니다. 볼륨을 삭제하지 마세요.
+새 Compose DB 초기화는 `003_auth.sql`, `005_auth_attempt_window.sql`, `006_user_roles.sql`, `007_demo_accounts.sql` 순서로 실행됩니다.
 
-API 컨테이너가 실행된 뒤 `docker compose exec api python -m backend.auth`를 계정마다 실행하고, 이메일과 비밀번호를 대화형으로 입력합니다. 비밀번호는 최소 12자이며 화면에 표시되지 않습니다. 평가용 실제 계정과 비밀번호는 저장소·작업 기록에 넣지 않습니다. `AUTH_ORIGIN`은 로컬에서 `http://localhost:8000`, 배포에서는 브라우저의 HTTPS 출처와 정확히 일치해야 합니다. 배포 전에 Cloud Run 환경 변수와 세션·DB 보안을 검토해야 합니다.
+Compose 초기화 SQL은 새 볼륨에서 한 번만 실행됩니다. 기존 볼륨에는 자동 적용되지 않으므로 볼륨을 삭제하지 말고, DB 구조와 적용 이력을 확인한 뒤 시드 SQL을 별도로 검토·실행하세요. 이 시드는 로컬 Compose 전용이며 Cloud 배포 계정을 만들지 않습니다. 로그인 API는 제공하지만 브라우저 로그인 화면은 포함하지 않습니다. `AUTH_ORIGIN`은 로컬에서 `http://localhost:8000`, 배포에서는 브라우저의 HTTPS 출처와 정확히 일치해야 합니다.
 
-일반 계정 생성 명령은 기본 역할이 `user`입니다. 신뢰할 수 있는 관리자가 별도 터미널에서 `docker compose exec api python -m backend.auth --role admin`을 사용해 관리자 계정을 생성합니다. 관리자는 로그인 후 계정 목록과 일반 계정의 활성 상태를 관리할 수 있으며, 비활성화 시 기존 세션이 폐기됩니다. 관리자 계정의 상태 변경은 이 화면에서 지원하지 않습니다.
-
-회로·대화·기억·견적 기능과 사용자별 데이터 접근 권한 검증, 비밀번호 재설정, 계정 생성 자동화, 공유 DB 적용은 미구현입니다.
+관리자는 `GET /api/admin/users`로 계정을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정을 활성화·비활성화할 수 있습니다. 관리자 상태 변경은 API에서 허용하지 않습니다. 회로·대화·기억·견적 기능과 사용자별 데이터 접근 권한 검증, 비밀번호 재설정, 공유 DB 적용은 미구현입니다.

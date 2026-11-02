@@ -8,3 +8,8 @@ def test_health():
     r = TestClient(app).get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
+
+
+def test_root_has_no_login_screen():
+    response = TestClient(app).get("/")
+    assert response.status_code == 404
