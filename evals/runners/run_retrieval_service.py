@@ -127,7 +127,7 @@ def time_rewrites(questions, rewrite, start):
 def r1_questions(find_parts):
     rw = json.load(open(R1_REWRITE, encoding='utf-8'))['queries']
     return [{'id': r['id'], 'split': r['split'], 'question': r['question'], 'text': rw[r['id']], 'parts': find_parts(r['question'], set()),
-             'gold': [tuple(g) for g in r['gold']]} for r in map(json.loads, open(R1_DATA, encoding='utf-8')) if r.strip()]
+             'gold': [tuple(g) for g in r['gold']]} for r in (json.loads(l) for l in open(R1_DATA, encoding='utf-8') if l.strip())]
 
 
 def summary_line(label, got, want):
