@@ -7,6 +7,7 @@
 - 담당: 각 모듈 담당
 
 ## 파일
+- `langfuse_skill_check.py` — `DEMO_MODE=0 uv run python -m scripts.langfuse_skill_check <새 결과 JSON>`. 기본은 기존 development 버전을 조회·대조한 뒤 합성 대표 요청의 노드·generation·버전·모델을 확인. 로컬/원격 불일치 시 모델 호출 전에 중단. 원격 등록은 `--publish`를 명시해야 하며 `--resume-from`과 함께 사용할 수 없음. 실제 코퍼스 검색·전체 평가·서비스 그래프 통합 검증은 아님
 - `auth_boundary_after_merge.py` — 로그인 잠금·세션 만료 경계 실측. 격리된 테스트 DB 전용. 해석은 [auth-login-verification.md](../docs/auth-login-verification.md)
 - `measure_scrypt_concurrent.py` — 동시 scrypt·프로세스 메모리 실측. Windows 전용, 격리된 테스트 DB 전용
 

@@ -214,3 +214,10 @@
 - `verify_tsc_pdf(doc_id)`와 `get_circuit_info(circuit_id, target)`를 MCP 도구 목록에 추가했다. 두 도구는 입력 형식만 확인하고 `not_implemented`를 돌려주며 네트워크·파일·DB에 접근하지 않는다.
 - MCP 작업서와 폴더 안내, 구현 계획에 미구현 상태와 선행 결정 사항을 명시했다. 검색 지연 조사는 미해결이라 그 로직은 수정하지 않았다.
 - 이번 요청에서는 테스트 실행을 하지 않았다. 변경 검토는 diff 확인으로 제한한다.
+
+### 2026-11-03 최신 main 통합
+
+- `origin/main`의 17개 커밋을 로컬 `STH`에 병합했다. `docs/specs/README.md`와 `evals/PREREGISTER.md` 충돌은 MCP 검색·웹/PDF 기록과 main의 Skill·도구 프롬프트 기록을 모두 보존해 해결했다.
+- 저장소의 동결 평가셋 blob은 CRLF이고 `FROZEN.json`은 LF 바이트 해시를 기록해 Windows에서 검사가 실패하는 문제를 확인했다. 평가셋 내용이나 기대 해시는 바꾸지 않고 `.gitattributes`에서 `evals/dataset_v*.jsonl`을 항상 LF로 체크아웃하게 했다.
+- UTF-8 임시 JSON을 Windows 기본 cp949로 읽던 테스트 2곳에 인코딩을 명시했다. `uv run --no-sync pytest -q` 재실행 결과 184 passed, 24 skipped.
+- 원격 push, 외부 API 호출, DB 변경은 수행하지 않았다.

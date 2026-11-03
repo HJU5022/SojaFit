@@ -1,0 +1,85 @@
+{
+  "kind": "development_verification_summary",
+  "date": "2026-11-03",
+  "formal_frozen_evaluation": false,
+  "human_review": false,
+  "model": "anthropic/claude-haiku-5.5",
+  "skill": {
+    "registration": {
+      "name": "sojafit/skills/diode-evidence",
+      "version": 2,
+      "sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47"
+    },
+    "representative_flows_verified": 4,
+    "scenario_criteria_met": 12,
+    "scenario_count": 13,
+    "generations_verified": 23,
+    "ui_checked": false,
+    "failure": {
+      "case": "s2_conflicting_connections",
+      "input": "D_TEST.A appears on both VIN and GND nets.",
+      "answer": "D_TEST의 애노드(A)는 GND 넷에 연결되어 있다고 넷리스트에 기재되어 있다 [넷리스트]. 같은 넷리스트에서 D_TEST.A는 DIODE_TEST로 표시되어 있다 [넷리스트].",
+      "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/0dcca4a669f54afcfe7ed216109bf9ec"
+    }
+  },
+  "tool_prompt": {
+    "registration": {
+      "name": "sojafit/tool-use",
+      "version": 1,
+      "sha256": "825b02a60e6708dafb35a246d635e49d3ba030a783e90df51439e5a685d82399"
+    },
+    "cases_checked": 12,
+    "tool_and_arguments_matched": 5,
+    "tool_cases": 5,
+    "exact_actions_matched": 11,
+    "action_difference": "budget_zero: expected ask; got answer describing the limit, without requesting a tool.",
+    "actual_tool_calls": 0,
+    "ui_checked": false,
+    "injection_trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e106bcd6d72879b0839ec974a45c944a",
+    "raw_calls_all_trials": 18,
+    "reserved_usd_all_trials": 0.0620697,
+    "seconds_all_trials": 269.9192355526611,
+    "interrupted_trials": [
+      "Free arguments schema: five empty-argument failures.",
+      "Typed schema: time limit before the final case; only the unexecuted case was completed separately."
+    ]
+  },
+  "historical_ui": {
+    "skill_registration": 1,
+    "screenshot_count": 6,
+    "applies_to_current_skill": false
+  },
+  "raw_evidence_storage": "outside_repository",
+  "raw_evidence": [
+    {
+      "file": "langfuse_skill_check_2026-11-03_current.json",
+      "sha256": "7799257524e2470253fe172a66c9edd780ce516a4e9370ca98d09312f7d9f562",
+      "bytes": 94612
+    },
+    {
+      "file": "langfuse_skill_check_2026-11-03_final.json",
+      "sha256": "98234b9cb67fd734d8b9f80f8e6a9c68f6e15c6d2e5176dfdc9b6cc1f883b025",
+      "bytes": 93251
+    },
+    {
+      "file": "skill_scenarios_2026-11-03_current.json",
+      "sha256": "cd6ebc3868946fa7bcafb8d7dc2d96639da940312f933f42c73776e513e92549",
+      "bytes": 147584
+    },
+    {
+      "file": "tool_prompt_check_2026-11-03.json",
+      "sha256": "06d9d72f1fed0a40510be4ad323099bc1eaebbd17b67f3719b50a24fa6524054",
+      "bytes": 54118
+    },
+    {
+      "file": "tool_prompt_check_2026-11-03_last.json",
+      "sha256": "d5d3e685fa482b15a62cd85c4804e18af8fda159df444da991d16343b22f0313",
+      "bytes": 14460
+    },
+    {
+      "file": "tool_prompt_check_2026-11-03_typed.json",
+      "sha256": "5a260c113810114b8cc277c9cca5510cb70689c67ec6e8ce9e19a6debc766dbc",
+      "bytes": 109932
+    }
+  ]
+}
