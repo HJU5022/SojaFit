@@ -345,7 +345,7 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 예산 · 중단: OpenRouter는 이 측정 합계 1달러(키 사용액 차이로 재고, 넘으면 멈춤). Voyage는 상한 없음. 예상 지출은 재작성 20회 약 0.01달러다. 오류가 난 문항은 건너뛰고 결과 맨 위에 수를 적는다.
 - 알려진 한계: 운영 DB 상태(적재 직후 캐시, 같은 시각 다른 요청)에 시간이 흔들린다. 문항은 #25와 같아 새 일반화 근거는 아니다.
 - 명령: `uv run python scripts/db/voyage_rollout.py check` → `migrate` → `uv run python -m backend.rag.pipeline.ingest --voyage <벡터 폴더>` → `voyage_rollout.py verify` → `uv run python -m evals.runners.run_retrieval_service`
-- 결과: 측정 전
+- 결과: 측정 끝(11-04, 운영 Supabase · voyage-4-large 52,244행 적재 뒤, 실행기 `run_retrieval_service.py`). R1 고르기용 46 쪽 회수율@5 0.8587 · 적중@5 0.8696 · 모든 근거@5 0.8478, 확인용 38 0.9079 · 0.9211 · 0.8947로 R1과 같음(차이 0.0000), v2 19 쪽 회수율@5 0.8246(같음). 문항별 상위 5 쪽이 R1과 같은 문항 82/84(0.976, 다른 문항 r1-090 · r1-098), 오류 0, 파일 이름 대응 0. `retrieve()` p50 1.22 · p95 2.04 · 최대 6.44초(103회), 재작성 노드 p50 1.00 · p95 2.56초(20회). 기대 대조: 상위 5 같음 95% 이상 맞음, 합계 ±0.03 맞음. 결과 파일 `evals/results/retrieval/service_r1_2026-11-04.json`. 적재 뒤 DB 409.6MB(ADR 0005의 400MB 기준을 넘음)
 
 ### 2026-11-04 #27: 비트 후보 + 정확 재정렬(N=3,200)
 
