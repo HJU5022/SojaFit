@@ -26,3 +26,5 @@
 - `test_rag_parse.py` — 숫자 세기(µ 통일), 표 좌표 바꾸기, SIGALRM 지원 여부
 - `test_rag_subset.py` — 분류별 사본·입력 보존·관련 gold 누락·기존 출력·불완전/중복 카드 오류, 카드 수 기준 벡터 payload 추정
 - `test_rag_storage.py` — 형식 설정 검증, 실제 시험 DB의 halfvec 전환·재실행·이진 재적재·정확 검색, 같은 본문 제외·시간/표본 부족 표시. DB 시험은 전용 TEST_DATABASE_URL 필요
+
+- `test_reproduce_halfvec.py` — 캐시 손상 시 원본 보존, 입력 해시 불일치·질문 캐시 누락·외부 DB 차단, 캐시 float32 질의 재사용
