@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-04 dense 비트 후보 + 정확 재정렬 구현(사전 등록 #27, 코드 · 문서만, DB 단계는 실행 안 함)
+- 목적: 운영 DB 실측(3-small, `../전자_데이터시트/evidence/bq_exp`)에서 recall@50 0.980, 상위 5개 19/19 같음, `retrieve()` 중앙값 6.22초 → 0.89초였던 "1비트 후보 + 정확 재정렬"을 voyage-4-large 1024차원 서비스 검색에 옮긴다. 기대 · 비교 조건은 `evals/guides/preregister.md` #27(측정 전 커밋). 예산은 #26과 같다.
+- 바꾼 파일: `db/009_chunk_embedding_bits.sql`(`chunk_embedding_bits` 표, 인덱스 없음, 기존 voyage 행에서 채움) · `db/DB.md` · `db/schema/erd.md`, `backend/rag/retrieve.py`(`N_BIT = 3200`, `_dense` 1단계 Hamming `<~>` → 2단계 정확 코사인, 허용 카드 <= N_BIT면 기존 정확 검색, 품번 필터가 없으면 표지 제외를 JOIN으로 해 아이디 5만 개를 안 보냄), `backend/rag/pipeline/ingest.py`(`load_voyage`가 비트 행도 채움, 009 미적용이면 건너뜀), `evals/runners/run_retrieval_service.py`(`--out` · `--prereg` · `--compare`), 시험 `tests/rag/test_rag_retrieve.py` · `test_rag_ingest.py` · `tests/evals/test_retrieval_service.py`, `SPEC.md` · ADR 0004 · `backend/rag/RAG.md` · `RUNNERS.md` · `tests/rag/RAG.md` · `SOJAFIT.md`, 이 파일.
+- 실행한 명령과 결과: `uv run --offline pytest -q` 245 passed, 24 skipped(가짜 연결, DB · 네트워크 · API 없음, `.env`를 열지 않음).
+- 확인 못 한 것: 009 적용 · 비트 채우기 · 비트 검색 측정 · pgvector 0.8.2에서 `binary_quantize(vector(1024))::bit(1024)`와 `bit <~> bit`가 실제로 도는지(SQL 글만 시험함, 실제 DB 시험 없음). 1024차원 voyage에서 N=3,200의 recall은 미측정이다. 009를 적용하기 전에 이 코드로 `retrieve()`를 부르면 비트 표가 없어 오류가 난다(허용 카드가 3,200장보다 많을 때).
+- 다음 할 일: `db/009_chunk_embedding_bits.sql` 적용 → `run_retrieval_service --out evals/results/retrieval/service_r1_bits_2026-11-04.json --prereg '#27'` → `--compare`로 #26 결과와 대조 → #27 결과 줄과 이 항목에 값을 적는다.
+
 ## 2026-11-04 운영 DB 적용 · 서비스 경로 재측정 준비(사전 등록 #26, DB 단계는 실행 안 함)
 - 목적: 서비스 검색 설정(voyage-4-large · rerank-3 · 재작성)을 운영 Supabase에 올리고, 실제 `retrieve()`로 R1 · v2 질문을 다시 재서 #25 값과 맞는지 본다. 이 기록은 스크립트와 기대를 준비한 단계다.
 - 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #26(측정 전 커밋 `4a86d4c`). OpenRouter 1달러(키 사용액 차이, 넘으면 멈춤), Voyage 상한 없음. `check`가 STOP이면 `migrate`는 하지 않는다(열 형식이 halfvec이 아니거나 적재 뒤 예상 크기 420 MB 초과).
