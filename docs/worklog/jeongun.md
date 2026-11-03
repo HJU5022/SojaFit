@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-04 한 번에 하나씩 단계별 재측정 · 실패 유형 · 리랭커 비용과 시간(사전 등록 #28)
+- 목적: #25 최종 비교는 지금 서비스에서 네 가지(재작성 Q3 · 표지 빼기 · rerank-3 · voyage-4-large)를 한꺼번에 바꾼 것이라, 과제 가이드의 "한 번에 하나만 바꿔 잰다"를 단계별로 따로 보인다. 단계 순서와 기대는 `evals/guides/preregister.md` #28(측정 전 커밋 39229a9).
+- 바꾼 파일: `evals/runners/run_retrieval_r1.py`(`steps`: S0 → S4 단계별 재측정 · 앞 단계와 짝 비교 · 실패 유형), `evals/runners/run_retrieval_service.py`(`--stages N`: 질문 임베딩 · rerank-3 · 나머지 시간과 rerank 토큰), `evals/runners/RUNNERS.md`, 이 파일.
+- 실행한 명령과 결과: `run_retrieval_r1 steps`(#25 캐시, 새 리랭크 호출 0) → `evals/results/retrieval/r1_steps_2026-11-04.json`, `run_retrieval_service --stages 20` → `service_stages_2026-11-04.json`. 확인용 38 쪽 회수율@5 S0 0.5789 → S1 0.7632(9승 2패, 개선) → S2 0.7895 → S3 0.8289 → S4 0.9079, S2~S4는 1~3문항 차이라 문항 id만 적었다. rerank-3 p50 0.35초, 호출당 평균 5,122토큰(질문당 약 0.00026달러). 숫자 전체는 #28 결과 줄.
+- 확인 못 한 것: 단계 순서를 바꾸면 단계별 차이가 달라질 수 있다(순서는 하나만 쟀다). 시간은 R1 앞 20문항 · 맥에서 운영 DB로 잰 값이다.
+- 다음 할 일: 없음.
+
 ## 2026-11-04 운영 DB 정리와 Cloud Run 배포(검색 설정 반영)
 - 목적: PR #46 · #47 머지 뒤 운영 Supabase에서 쓰지 않는 3-small 벡터를 빼 DB를 줄이고, main을 Cloud Run에 실제 모드로 배포한다.
 - 바꾼 것: 운영 DB `chunk_embeddings`를 비우고(TRUNCATE) voyage-4-large 52,244행만 다시 넣었다(`ingest --voyage`). Secret Manager를 켜고 비밀값 7개(DATABASE_URL · OPENROUTER_API_KEY · VOYAGE_API_KEY · AUTH_SECRET · LANGFUSE_PUBLIC_KEY · LANGFUSE_SECRET_KEY · LANGFUSE_BASE_URL)를 정운이 `.env`에서 등록했다. main(`0b01656`)을 `gcloud run deploy sojafit-api --source . --project sojafit --region asia-northeast3 --port 8000 --memory 1Gi --max-instances 1 --set-env-vars DEMO_MODE=0 --set-secrets ...`로 배포하고 트래픽을 최신으로 옮겼다.
