@@ -97,12 +97,11 @@ KiCad 넷리스트 + 질문
 ### 키 없이 데모
 
 ```bash
-cp .env.example .env      # .env가 없어도 뜬다
-docker compose up         # api + pgvector DB
+docker compose up         # .env 없이 띄우면 DEMO_MODE=1(데모 모드). api + pgvector DB
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
-`DEMO_MODE` 기본값은 1이다. 키 없이 뜨고, 검색은 임베딩 API 없이 BM25만 쓴다. 새 DB 볼륨을 데모 모드로 만들면 아래 로컬 전용 계정이 생긴다. 제출용·실제 계정에는 쓰지 않는다.
+`.env`가 없으면 compose가 `DEMO_MODE=1`로 띄운다. 키 없이 뜨고, 검색은 임베딩 API 없이 BM25만 쓴다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 새 DB 볼륨을 데모 모드로 만들면 아래 로컬 전용 계정이 생긴다. 제출용·실제 계정에는 쓰지 않는다.
 
 | 역할 | 이메일 | 데모 비밀번호 |
 |---|---|---|
@@ -111,10 +110,12 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 ### 키를 넣고 실제 모드
 
-`.env`에 키를 넣고 `DEMO_MODE=0`으로 바꾼다. 이때는 32바이트 이상의 무작위 `AUTH_SECRET`이 있어야 서버가 시작한다.
+`.env.example`은 실제 모드(`DEMO_MODE=0`)가 기본이다. 복사한 뒤 키와 32바이트 이상의 무작위 `AUTH_SECRET`을 채워야 서버가 시작한다.
 
 ```bash
+cp .env.example .env                                                  # DEMO_MODE=0
 uv run python -c "import secrets; print(secrets.token_urlsafe(32))"   # AUTH_SECRET 만들기
+docker compose up
 ```
 
 계정을 바꾸는 방법과 기존 DB에 적용하는 절차는 [`db/DB.md`](db/DB.md)에 있다.

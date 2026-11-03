@@ -270,5 +270,5 @@ SojaFit (proj3-b)
 
 ## 처음 할 일
 
-1. `cp .env.example .env` 후 `docker compose up`으로 `/health`가 뜨는지 확인합니다.
+1. 키 없이 `docker compose up`(`.env`가 없으면 데모 모드)으로 `/health`가 뜨는지 확인합니다. 실제 모드는 `cp .env.example .env`(`DEMO_MODE=0`) 뒤 키와 `AUTH_SECRET`을 채웁니다.
 2. 위 트리에서 손댈 폴더를 고르고 그 폴더의 `<대문자 폴더명>.md`부터 읽습니다.
