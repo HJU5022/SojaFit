@@ -18,4 +18,5 @@
 - `login-auth.md` — 이메일·비밀번호 로그인과 서버 세션 작업서
 - `mcp-search-tools.md` — MCP 코퍼스 검색 및 Exa 기반 미검증 문서 후보 검색 1차 범위와 수용 기준
 - `mcp-graph-integration.md` — 기존 LangGraph 검색 주입 계약에 MCP `search_corpus`를 연결하고 빈 결과와 장애를 구분하는 B 담당 작업서
+- `mcp-graph-integration-plan.md` — 승인된 MCP 그래프 통합 작업서를 테스트 우선으로 구현하는 파일별 실행 계획
 - `mcp-tool-prompt.md` — PR #36의 도구5종 계약을 따르는 Langfuse 도구 선택·결과 해석 프롬프트와 모의 검증 범위
