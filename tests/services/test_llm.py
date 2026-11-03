@@ -98,3 +98,39 @@ def test_embed_texts_returns_vectors_usage_and_provider_metadata(monkeypatch):
         "test-provider",
         "test-model",
     )
+
+
+def _voyage_http(monkeypatch, *replies):
+    """httpx.post를 가짜로 바꿔 (주소, 요청 본문)을 기록하고 replies를 차례로 돌려준다. 네트워크는 쓰지 않는다."""
+    import httpx
+    sent, replies = [], list(replies)
+    monkeypatch.setenv("VOYAGE_API_KEY", "fake-key")
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: sent.append((url, kw["json"])) or replies.pop(0))
+    return sent
+
+
+def _reply(status, body=None, text=""):
+    return SimpleNamespace(status_code=status, json=lambda: body, text=text)
+
+
+def test_voyage_embed_builds_query_payload_and_orders_by_index(monkeypatch):
+    sent = _voyage_http(monkeypatch, _reply(200, {"data": [{"index": 1, "embedding": [2.0]}, {"index": 0, "embedding": [1.0]}]}))
+    assert llm.voyage_embed(["a", "b"], "query") == [[1.0], [2.0]]
+    assert sent == [("https://api.voyageai.com/v1/embeddings", {"input": ["a", "b"], "model": "voyage-4-large", "input_type": "query",
+                                                                  "truncation": True, "output_dimension": 1024})]
+
+
+def test_voyage_rerank_returns_ranked_indices(monkeypatch):
+    sent = _voyage_http(monkeypatch, _reply(200, {"data": [{"index": 2}, {"index": 0}, {"index": 1}]}))
+    assert llm.voyage_rerank("q", ["a", "b", "c"]) == [2, 0, 1]
+    assert sent[0] == ("https://api.voyageai.com/v1/rerank", {"query": "q", "documents": ["a", "b", "c"], "model": "rerank-3", "truncation": True})
+
+
+def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
+    sent = _voyage_http(monkeypatch, _reply(429), _reply(200, {"data": [{"index": 0}]}))
+    assert llm.voyage_rerank("q", ["a"]) == [0] and len(sent) == 2
+    sent = _voyage_http(monkeypatch, _reply(402, text="payment required"))
+    with pytest.raises(RuntimeError, match="payment"):
+        llm.voyage_rerank("q", ["a"])
+    assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다

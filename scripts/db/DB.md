@@ -1,0 +1,11 @@
+# db
+
+## 역할
+- 이 폴더: 운영 DB에 손으로 하는 작업 스크립트를 둡니다. 저장소 루트에서 `DATABASE_URL`을 준 채 실행합니다. 출력은 숫자와 상태뿐이고 접속 문자열은 찍지 않습니다.
+- 넣는 것: voyage-4-large 검색 설정을 운영 DB에 올리는 점검 · 마이그레이션 · 검증 스크립트.
+- 넣지 않는 것: 초기화 SQL(`db/`), 코퍼스 적재(`backend/rag/pipeline/ingest.py`), 검색 품질 측정(`evals/runners/`), 테스트(`tests/rag/`).
+- 담당: 서비스·운영
+
+## 파일
+- `DB.md` — 이 문서
+- `voyage_rollout.py` — `check`(읽기 전용: 열 형식 · DB 크기 · 모델별 행 수 · HNSW · filenode, 적재 뒤 예상 크기와 STOP), `migrate`(check → `db/008` 한 트랜잭션 → filenode 전후 · 형식 · 색인 · 행 수 · 옛 질의 모양 확인, 실패하면 롤백), `verify`(적재 뒤 행 수 대조와 무작위 5건 코사인 ≥ 0.999). `uv run python scripts/db/voyage_rollout.py check|migrate|verify [벡터 폴더]`

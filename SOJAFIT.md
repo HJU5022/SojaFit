@@ -119,6 +119,8 @@ SojaFit (proj3-b)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
 │   ├── 006_user_roles.sql  <- 사용자 역할(admin/user) 열
 │   ├── 007_demo_accounts.sql  <- 로컬 Compose 데모 계정(.env의 이메일·scrypt 해시)
+│   ├── 008_multi_dim_embeddings.sql  <- 임베딩 열을 차원 없는 halfvec으로(모델별 차원 공존)
+│   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -134,6 +136,10 @@ SojaFit (proj3-b)
 │   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸, 2026-11-03 (고정)
 │   ├── FROZEN.json         <- 동결 파일별 sha256·건수. 테스트가 이 이름을 읽음 (고정)
 │   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
+│   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
+│   │   ├── INPUTS.md       <- 폴더 설명
+│   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 쪽 36개(회수 불가 2쪽 표시, 사전 등록 #24)
+│   │   └── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── guides/             <- 평가 기준 문서
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
@@ -141,6 +147,9 @@ SojaFit (proj3-b)
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
+│   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 쪽 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
+│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 고르기용에서 고르고 확인용에서 한 번 비교)
+│   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
@@ -148,7 +157,9 @@ SojaFit (proj3-b)
 │   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
-│   │   └── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
+│   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
+│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 쪽을 정한 검색 표본 84문항(고르기용 46·확인용 38, 사전 등록 #25)
+│   │   └── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── drafts/             <- 동결 전 평가셋 초안과 검수 기록(실행·동결 금지, 이력 보존)
 │   │   ├── DRAFTS.md       <- 폴더 설명
 │   │   ├── sets/           <- 초안 문항
@@ -190,6 +201,7 @@ SojaFit (proj3-b)
 │   │   ├── test_rag_parse.py  <- 파싱 도구의 Docling 없는 부분
 │   │   ├── test_rag_chunk.py  <- 표 카드 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
+│   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
 │   │   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
@@ -200,6 +212,8 @@ SojaFit (proj3-b)
 │   ├── evals/              <- 평가셋 동결과 평가 실행기
 │   │   ├── EVALS.md        <- 폴더 설명
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
+│   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
+│   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·쪽 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
@@ -222,6 +236,9 @@ SojaFit (proj3-b)
 │   ├── langfuse/           <- Langfuse 점검
 │   │   ├── LANGFUSE.md     <- 폴더 설명
 │   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
+│   ├── db/                 <- 운영 DB 손 작업
+│   │   ├── DB.md           <- 폴더 설명
+│   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
 │   └── results/            <- 측정 원시 결과(평가 지표가 아님). <무엇>_<날짜>.json을 주제 폴더에
 │       ├── auth/           <- 로그인 경계·동시 scrypt
 │       ├── storage/        <- DB 저장 형식·용량
@@ -315,6 +332,7 @@ SojaFit (proj3-b)
 | `db/schema/` | [SCHEMA.md](db/schema/SCHEMA.md) | 서비스·운영 |
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
+| `evals/inputs/` | [INPUTS.md](evals/inputs/INPUTS.md) | 평가·데이터 |
 | `evals/guides/` | [GUIDES.md](evals/guides/GUIDES.md) | 평가·문서 |
 | `evals/runners/` | [RUNNERS.md](evals/runners/RUNNERS.md) | 평가·문서 |
 | `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
@@ -329,6 +347,7 @@ SojaFit (proj3-b)
 | `tests/repo/` | [REPO.md](tests/repo/REPO.md) | 조장 |
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
 | `scripts/auth/` | [AUTH.md](scripts/auth/AUTH.md) | 서비스·운영 |
+| `scripts/db/` | [DB.md](scripts/db/DB.md) | 서비스·운영 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |

@@ -17,12 +17,12 @@ MAX_TRIES = 2
 
 
 def after_route(state: AgentState) -> str:
-    """라우팅 뒤 갈림길: 범위 밖은 거절, 역할은 바로 생성, 나머지(정격·후보 판정·후보 찾기)는 검색. 돌려주는 값은 갈 노드 이름이다(SPEC 2절)."""
+    """라우팅 뒤 갈림길: 범위 밖은 거절, 역할은 바로 생성, 나머지(정격·후보 판정·후보 찾기)는 "검색"(연결표가 재작성으로 먼저 보낸다). 돌려주는 값은 갈 노드 이름이다(SPEC 2절)."""
     if state.get("question_type") == "out_of_scope":
         return "거절"  # 검색조차 하지 않는다
     if state.get("question_type") == "role":
         return "생성"  # [왜] 역할은 데이터시트가 아니라 넷리스트 연결로 답한다. 생성 노드가 [넷리스트] 근거를 붙인다
-    return "검색"
+    return "검색"  # 갈림길 값은 "검색"이지만 아래 연결에서 재작성으로 먼저 간다
 
 
 def after_grade(state: AgentState) -> str:
@@ -52,7 +52,7 @@ def build_graph(retriever=None, checkpointer=None):
 
     b.add_edge(START, "입력 읽기")  # 항상 입력 읽기에서 시작한다
     b.add_edge("입력 읽기", "라우팅")
-    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "검색"})  # {갈림길이 돌려준 값: 갈 노드}
+    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "재작성"})  # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
     b.add_edge("검색", "채점")
     b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
     b.add_edge("재작성", "검색")  # 되돌아가는 길. 무한히 돌지 않게 after_grade가 tries로 막는다

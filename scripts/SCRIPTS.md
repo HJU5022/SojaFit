@@ -9,6 +9,7 @@
 ## 파일
 - `SCRIPTS.md` — 이 문서
 - `auth/` — 인증 실측 스크립트(잠금·만료 경계, scrypt 동시성). [AUTH.md](auth/AUTH.md)
+- `db/` — 운영 DB 손 작업(voyage-4-large 적용 점검·마이그레이션·검증). [DB.md](db/DB.md)
 - `langfuse/` — Langfuse 프롬프트·Skill 연결 점검 스크립트. [LANGFUSE.md](langfuse/LANGFUSE.md)
 - `results/` — 측정 원시 결과(폴더 설명 파일 없음). 평가 지표는 `evals/results/`
   - `auth/` — 인증 실측 결과
