@@ -221,3 +221,9 @@
 - 저장소의 동결 평가셋 blob은 CRLF이고 `FROZEN.json`은 LF 바이트 해시를 기록해 Windows에서 검사가 실패하는 문제를 확인했다. 평가셋 내용이나 기대 해시는 바꾸지 않고 `.gitattributes`에서 `evals/dataset_v*.jsonl`을 항상 LF로 체크아웃하게 했다.
 - UTF-8 임시 JSON을 Windows 기본 cp949로 읽던 테스트 2곳에 인코딩을 명시했다. `uv run --no-sync pytest -q` 재실행 결과 184 passed, 24 skipped.
 - 원격 push, 외부 API 호출, DB 변경은 수행하지 않았다.
+
+### 2026-11-03 MCP `search_corpus` LangGraph 통합 설계
+
+- 두 사람 분담안의 B 역할에 맞춰 범위를 MCP 서버 구현이 아닌 LangGraph 검색 통합으로 확정했다. 나머지 도구 4개의 사용자 흐름 연결, 서버 계약 변경, 외부 실호출은 제외했다.
+- `docs/specs/mcp-graph-integration.md`에 동기 그래프와 비동기 stdio 세션의 경계, 정상 빈 결과와 MCP 장애 구분, 세션 재사용·종료, 가짜 클라이언트와 격리 DB 검증 AC를 작성했다.
+- 서버 코드·공통 SPEC·테스트·동결 평가셋은 변경하지 않았다. 구현 전 사용자 문서 검토를 기다린다.
