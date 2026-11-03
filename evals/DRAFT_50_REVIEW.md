@@ -1,22 +1,8 @@
 # 평가셋 검토표 — 50건(관련 25·비관련 25)
 
-원본 데이터는 [draft_50.jsonl](draft_50.jsonl)이다. 2026-11-02 Codex 보조 검증은 [SECOND_PASS_50_REVIEW.md](SECOND_PASS_50_REVIEW.md)를 본다. 기존 50건의 2차 리뷰는 진행했으며 n01·n02·h03의 변경 의견을 현재 JSONL 초안에 반영했다. 세 건의 1차 재검수·합의와 n21의 하정운 검수는 2026-11-02에 마쳤고(하정운 O), 같은 날 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했다. n22(관련)·n13(비관련)은 예비로 이관해 본편에서 제외했다. 근거 줄의 `datasheets/…txt`와 `corpus_txt/…txt`는 같은 이름의 TSC 데이터시트 PDF를 쪽별 글자로 뽑은 파일(저장소 밖)이고, `netlists/<회로>.net`은 `data/circuits/collected/`의 회로 넷리스트다. `draft_50.jsonl`의 `gold_chunks`에는 PDF 이름과 저장소 넷리스트 경로로 바꿔 적었다. 메모와 근거에 나오는 `TASK.md`(정답 초안 작업 지시서), `정답판정-기준표.md`, `tsc_datasheet_list.csv`도 저장소 밖 자료다.
+최종 평가셋은 [dataset_v1.jsonl](dataset_v1.jsonl)이며 2026-11-02에 50건(관련 25·비관련 25)을 동결했다([FROZEN.json](FROZEN.json)). [draft_50.jsonl](draft_50.jsonl)은 검수 이력이다. n22·n13은 예비로 이관했다.
 
-> **판정 기록**
-> - 정답 초안: Codex가 썼다(기존 30건은 11-01 정답 초안 작업, 새 20건은 11-01 출제·정답 분리 작업). 아래의 "Codex 판단"·"Codex 정답"이 그 초안이다.
-> - 1차 사람 판정(하정운, 2026-11-01): 50건 판정을 마쳤다. 사람 확인 요청이 붙은 4건은 이렇게 정했다. e04는 2쪽 상세표의 IF = 10mA 조건 값, m08은 비관련(missing_attribute), n01은 역할상 충분, n02는 불충족.
-> - 숫자형 7건은 기계 대조를 통과했다.
-> - 2차 사람 판정(김재훈, 2026-11-02): 기존 확인란 43건에 O/X를 기록했다. 숫자형 7건은 별도 확인란이 없는 기존 기계 대조 기록이며, 숫자형을 제외한 당시 합의 40건의 JSONL 2차 O 기록을 동기화했다(현재 본편 39건). 추가 당시 n21·n22는 김재훈 O(11-02)였고, 본편 n21은 하정운 1차 O(11-02)로 합의했다. 예비 n22는 하정운 검수를 하지 않았다.
-> - 두 사람 판정이 다른 문항만 함께 다시 보고 정한 뒤 2026-11-02에 동결했다.
-
-## 검수 확정 표시 — 이 표와 draft_50은 이력, 동결본은 dataset_v1
-
-- 2026-11-02 이 50건의 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했다(`FROZEN.json`). 이 검토표와 `draft_50.jsonl`은 검수 이력이며 동결 대상이 아니다.
-- `draft_50.jsonl`의 `status`·`review_flags`·`review_hold`·`author_review`는 동결 직전까지의 기록이다. "not_frozen", "do_not_freeze", "하정운 검토 전" 같은 값이 남아 있어도 동결 여부는 `FROZEN.json`이 정한다.
-- 43건: 본편에서 두 사람 판정이 합의된 문항. 두 사람 O 40건(기존 39건, n13 예비 이관 + n21)에, 김재훈 변경 의견을 반영한 답안에 하정운이 11-02에 O를 준 3건(n01·n02·h03)을 더했다. JSONL의 human_2를 동기화하고 `reviewers_agreed_change_hold`로 표시했다. n01·n02·h03의 11-02 하정운 O는 JSONL `review_flags` 문장에만 있고, `human_1`은 변경 전 답안(11-01)의 기록이다.
-- 숫자형 7건: e03·e05·e08·m03·m07·n03·n05는 1차 사람 판정과 숫자 기계 대조로 동결했다(2차 사람 판정 없음). JSONL에는 `mechanical_check_only_human_record_pending`과 `draft_human1_reviewed_do_not_freeze`가 동결 전 표시로 남아 있다.
-- 보류: 없음. n01·n02·h03 변경 답안과 n21은 2026-11-02 하정운 O로 합의했다.
-- 코퍼스를 축소하면 합의 43건도 새 코퍼스의 근거 보존·관련성 영향을 다시 확인해야 한다. `draft_50.jsonl`은 FROZEN.json에 등록하지 않는다(등록 대상은 `dataset_v1.jsonl`).
+하정운 1차 판정과 김재훈 2차 검토를 거쳐 2026-11-02에 합의했다. 최종 답안은 동결된 `dataset_v1.jsonl`을 따른다.
 
 ## 11-02 분류 기준과 변경 답안
 
