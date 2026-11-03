@@ -1,5 +1,30 @@
 # jeongun 작업 기록
 
+## 2026-11-03 그래프 평가 실행을 Langfuse에 남긴다(`evals/run_graph.py`)
+- 한 일: 정운 결정(11-03)으로 SPEC 7절의 "프롬프트·응답은 Langfuse에 기록하지 않는다"를 바꿔, 그래프 평가 실행이 문항마다 트레이스를 남기게 했다. 아래 "줄기 그래프 조립" 항목의 임시 스크립트를 정식 파일로 옮겼다. 노드 코드는 그대로이고, 실행하는 쪽이 `CallbackHandler`를 넘긴다. 트레이스에는 단계별 입력·출력(카드 내용 포함), LLM 토큰·비용, 실행 조건 메타데이터(공급자·모델·검색 방식·데이터셋·코퍼스 판·git 커밋·프롬프트 해시)와 실행 점수 10종(path·question_type·not_found·tries·llm_calls·docs_found·passed_cards·latency_s·fake_citations·uncited_sentences)이 붙는다. 한 실행은 session 하나, 환경 이름은 `eval`이다. 문항별 결과 파일은 카드 내용이 들어가 저장소에 남기지 않는다. `LANGFUSE_BASE_URL` 끝에 `/`가 있으면 트레이스가 버려지므로 실행 전에 멈춘다.
+- 바꾼 파일: `evals/run_graph.py`(새 파일), `tests/test_run_graph.py`(새 파일), `SPEC.md`(7절 Langfuse 줄), `docs/GATES.md`(G6 상태), `backend/services/llm.py`(맨 위 설명 한 줄), `evals/README.md`, `tests/README.md`, 이 파일
+- 실행한 명령과 결과: `uv run pytest tests/test_run_graph.py tests/test_graph_build.py -q` 8 passed. 로컬 `.env` 그대로 실행하면 "LANGFUSE_BASE_URL 끝의 /를 지우세요"로 LLM 호출 전에 멈춘다. `LANGFUSE_BASE_URL=https://cloud.langfuse.com LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03 draft30-e06 draft30-e07`로 4문항 실패 0건, 문항당 1.8~9.8초. e03 트레이스를 API로 다시 읽어 환경 `eval`, session 하나, LLM 호출 3건 비용, 점수 10종이 들어간 것을 확인했다.
+- 확인 못 한 것: Langfuse 가격표 금액과 실제 OpenRouter 청구액이 같은지. 무료 플랜 한도. 정운 로컬 `.env`의 Langfuse 주소 끝 `/`는 아직 그대로다(정운이 고친다).
+- 데모 모드 없이(`.env` `DEMO_MODE=0`, 하이브리드 검색) 같은 4문항: 실패 0건, 경로는 BM25 때와 같고 문항당 1.9~11.7초. e03은 하이브리드에서 1N5817 절대 최대 정격 VRRM 줄(카드 1186, dense 4위·BM25 11위)이 상위 5장에 들어와 "VRRM 20 V"로 답했다(BM25만일 때는 "20 - 40 V 범위"). 트레이스 메타데이터 `retrieval`은 `hybrid`.
+- 정운 결정(11-03): 첫 검색어를 영어 재작성으로 바꿀지는 임베딩 모델 결과가 나와 동결이 확정된 뒤 그래프 파이프라인을 다시 검사할 때 정한다. 지금은 단일 에이전트가 데모 없이 도는지만 가볍게 본다.
+- 속도(e03 11.7초): 라우팅 1.5초, 검색 4.9초, 채점 1.2초, 생성 4.1초(답 133토큰에 추론 토큰 282개). 정운 결정(11-03): DB 적재와 검색 속도 개선(후보 추림 뒤 재정렬, 검색 담당)이 적용된 뒤 다시 잰다. 추론 토큰을 끌지는 그 뒤 사전 등록 실험으로 본다.
+- 다음 할 일: 같은 thread 이월 버그를 고친다. 검색 속도 개선이 들어오면 같은 4문항으로 단계별 시간을 다시 잰다.
+
+## 2026-11-03 줄기 그래프 조립(`build_graph`)과 진짜 연결 4문항
+- 한 일: `build_graph(retriever, checkpointer)`로 줄기 노드 7개를 강의 2주 20강 방식으로 이었다. 라우팅 뒤 갈림길 `after_route`(범위 밖은 거절, 역할은 생성, 나머지는 검색)를 새로 넣고, 채점 뒤는 기존 `after_grade`를 쓴다. 검색기를 넘기지 않으면 함수 안에서 `backend.rag.retrieve.retrieve`를 불러온다. 체크포인터는 `compile`에 그대로 넘긴다. Supervisor·interrupt는 아직 없다.
+- 바꾼 파일: `backend/graph/build.py`, `backend/graph/README.md`, `tests/test_graph_build.py`(새 파일), `tests/README.md`, 이 파일
+- 실행한 명령과 결과:
+  - `uv run pytest tests/test_graph_*.py -q` 32 passed. 새 시험 6개: 통과 → 생성(검색기는 입력 전체가 아니라 질문 줄만 받는다), 재작성 → 재검색 → 생성, 두 번 다 통과 없음 → 검색 2번 뒤 거절, 검색 0장 → 재작성 없이 거절, 범위 밖·역할 → 검색 없이 거절·생성. `MAX_TRIES`를 3으로 바꾸면 검색 2번 시험이 실패한다(변이 확인).
+  - 진짜 연결: `LLM_PROVIDER=claude_cli DEMO_MODE=1`(LLM은 `claude -p --model haiku`, `.env`의 `ANTHROPIC_API_KEY`가 환경으로 넘어감. 검색은 Supabase BM25만)로 v1 4문항을 돌렸다. 실행 스크립트는 저장소 밖에 두었다. 4문항 모두 설계한 경로로 갔다(e01 라우팅 → 생성, e03 검색 → 채점 → 생성, e06 라우팅 → 거절, e07 검색 0장 → 거절). LLM 호출 7번, 문항당 5.5~27.9초.
+  - 답 내용: e01(D1 역할)은 넷리스트 근거(J1 → S1 → D1 → F1 → RAW)를 받고도 "문서로 확인 안 됨"으로 답했다. e03(1N5817 역전압)은 BM25 상위 5장에 1N5817 VRRM 줄이 없어(같은 표의 Marking code 줄만 있음) 시리즈 범위 "20 - 40 V"만 인용하고 단독 값은 특정할 수 없다고 답했다(정답 20 V). 두 문항 모두 없는 근거 인용·인용 없는 문장은 0건.
+  - 같은 thread의 두 번째 메시지(메모리 체크포인터, 가짜 LLM·검색기): 새 질문 대신 앞 질문의 재작성 검색어로 찾았고 `tries`가 2에서 3으로 이어졌다.
+  - Langfuse 트레이스: 실행 때 `config={"callbacks": [CallbackHandler(trace_context={"trace_id": ...})]}`만 넘겨(노드 코드는 그대로) 같은 4문항을 다시 돌렸다. 4문항 모두 Langfuse에 단계 이름(입력 읽기·라우팅·after_route·검색·채점·after_grade·생성/거절)으로 올라간 것을 API로 다시 읽어 확인했다. 첫 시도는 로컬 `.env`의 Langfuse 주소 끝 `/` 때문에 전송 주소가 `//api/public/otel/v1/traces`가 되어 308을 받고 버려졌다. 실행 명령에 `LANGFUSE_BASE_URL=https://cloud.langfuse.com`을 붙이자 200. 핸들러의 `last_trace_id`는 실제 전송된 트레이스 id와 달라서 id를 직접 정해 넘긴다. 실행 스크립트는 저장소 밖이고, SPEC 7절("프롬프트·응답은 기록하지 않는다")은 아직 그대로다.
+  - `claude -p` 시간: 라우팅과 같은 호출 1번이 전체 6.3초, 그중 API 1.8초였고 나머지 약 4.4초는 CLI 기동이다. 입력이 13,999토큰(캐시 생성)으로 지시문보다 훨씬 커서, CLI가 개인 `~/.claude` 설정을 같이 싣는 것으로 본다(추정). 비용 0.0019달러.
+  - 정운 결정(11-03): 진짜 연결 실행은 OpenRouter로 한다. 같은 4문항을 `LLM_PROVIDER=openrouter`(팀 키, `anthropic/claude-haiku-5.5`)로 돌려 팀 키 호출이 된다는 것을 확인했다. 경로와 답은 CLI 때와 같고(e01 "문서로 확인 안 됨", e03 "20 - 40 V 범위"), 문항당 0.9~10.6초(CLI 5.7~26.9초). 호출당 입력 1,015~1,598토큰. Langfuse에 LLM 호출 7건이 토큰 수와 함께 남았다(비용 칸은 비어 있음). e01 생성·e03 채점으로 보이는 호출에 추론 토큰(218·598)이 붙었다(입력 토큰 수로 노드를 짐작함).
+  - Langfuse 정보 보강(정운 요청): 비용 칸이 빈 이유는 OpenRouter 모델 이름 `anthropic/claude-haiku-5.5`(점)가 Langfuse 기본 가격표 `claude-haiku-5-5`(하이픈)와 맞지 않아서였다. 팀 Langfuse 프로젝트에 가격표 `openrouter/anthropic/claude-haiku-5.5`(입력·출력·추론 토큰, ADR 0010 가격, id `cmw04bb4y0f58ad0j6amsjnur`)를 등록했다. 실행 스크립트가 트레이스에 실행 묶음(session `graph-smoke-<월일-시분>-<공급자>`), 환경(`local-dev`), 태그, 메타데이터(문항 id·종류·기대 경로·공급자·모델·검색 방식·k·데이터셋·코퍼스 판·git 커밋·프롬프트 4개 해시), 점수 9종(path_match·not_found·tries·llm_calls·docs_found·passed_cards·latency_s·fake_citations·uncited_sentences)을 남기게 하고 OpenRouter로 다시 돌렸다. API로 다시 읽어 모두 들어간 것과 호출별 비용(4문항 합계 0.00136달러)을 확인했다.
+- 확인 못 한 것: `claude -p`가 구독이 아니라 API 키로 결제됐는지와 4문항 비용. e01·e03 원인은 추정이다(e01은 `generate.md`의 "근거에 적힌 내용만 쓴다"가 연결로 역할을 해석하는 답을 막는다, e03은 BM25가 질문의 한국어 "역전압"을 쓰지 못하고 채점이 범위 카드를 통과시켜 재작성까지 가지 않았다).
+- 다음 할 일: 같은 thread 이월 문제, e01·e03을 고칠지 정한다. SPEC 7절을 고치고 그래프 평가 실행에 Langfuse를 붙인다. OpenRouter로 10문항 확인.
+
 ## 2026-11-03 검색 방식 인자와 v1 방식별 검색 베이스라인
 - 한 일: `retrieve()`에 `method`(`hybrid` 기본·`dense`·`bm25`)를 넣었다. `hybrid`는 지금 동작 그대로이고, `dense`는 dense 목록만, `bm25`는 BM25 목록만 쓰며 임베딩 API를 부르지 않는다. 다른 값은 `ValueError`. `run_retrieval.py`가 네 번째 위치 인자로 방식을 받고 summary에 `method`를 적는다. 같은 코드로 v1의 dense만·BM25만 베이스라인을 재서 하이브리드 베이스라인 옆에 두었다.
 - 바꾼 파일: `backend/rag/retrieve.py`, `evals/run_retrieval.py`, `tests/`(test_rag_retrieve.py, README.md), `SPEC.md`(4절 검색 시그니처), `docs/specs/rag-pipeline.md`(How), `backend/rag/README.md`, `evals/README.md`, `evals/results/retrieval_{baseline,dense,bm25}_2026-11-03.json`, `EVAL_REPORT.md`(9장 재현 명령), 이 파일
