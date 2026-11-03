@@ -72,3 +72,6 @@ S29는 원본 해시는 기존 manifest와 일치하지만, 단순 문자열 방
 - 3개 PDF 확인 결과 (원본 파일은 저장소 외부에 보관)
 - PDF 확인 실행기 (원본 파일은 저장소 외부에 보관)
 - [실험 사전등록](../../evals/guides/preregister.md)
+- 저장소 밖에 둔 실행기·결과 파일 이름(이 저장소에 없음, 다시 돌리기 전 사전등록·무료 한도 확인):
+  - 실행기: `benchmark_tavily_keyless.py`(Tavily 익명 탐색), `benchmark_web_search_30.py`(30문항 비교), `benchmark_tavily_authenticated_30.py`(Tavily 인증 재측정), `benchmark_web_search_filter.py`(도메인 제한 유무 비교), `benchmark_web_search_pdf_smoke.py`(공개 TSC PDF 확인)
+  - 결과: `web-search-exploration-2026-11-03.json`, `web-search-30-2026-11-03.json`, `tavily-authenticated-30-2026-11-03.json`, `web-search-filter-comparison-2026-11-03.json`, `web-search-pdf-smoke-2026-11-03.json`, `mcp-docling-pdf-2026-11-03.json`(키·검색 URL·응답 본문 제외)
