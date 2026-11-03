@@ -1,13 +1,13 @@
 """검색: 하이브리드(BM25 + 벡터)를 RRF로 합치고 rerank-3로 다시 세운다. 품번 필터(parts)와 검색 방식(method)을 검색 인자로 받는다.
 
-- 역할: 서버와 평가 도구가 import하는 검색 함수 `retrieve`. 질문을 voyage-4-large(1024차원)로 숫자로 바꿔 pgvector 코사인 거리 상위 50장을, 같은 질문의 BM25 상위 50장을 구해
+- 역할: 서버와 평가 도구가 import하는 검색 함수 `retrieve`. 질문을 voyage-4-large(1024차원)로 숫자로 바꿔 pgvector 코사인 거리 상위 50장을(허용 카드가 3,200장보다 많으면 1비트 Hamming 거리로 3,200장을 먼저 거른 뒤 그 안에서 정확 코사인, 사전 등록 #27), 같은 질문의 BM25 상위 50장을 구해
   RRF(카드마다 1/(60 + 순위)의 합)로 합친다. 합친 후보 전부를 Voyage rerank-3로 다시 세우고 상위 k장을 돌려준다.
   parts를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 표지 카드(page_number 없음)는 언제나 뺀다.
   method='dense'면 dense 목록만, 'bm25'면 BM25 목록만 쓰고 임베딩·리랭크 API를 부르지 않는다(기본 'hybrid').
   DEMO_MODE=1(키 없는 데모)이면 임베딩·리랭크 API를 부르지 않고 BM25만으로 찾는다(SPEC 7절).
 - 하지 않는 일: 품번 밖 메타데이터 필터(분류·패키지 등), 질문에서 품번 뽑기(에이전트가 parts로 준다, `backend/graph/nodes.py`), 답변 생성, 판정(`backend/judge/`).
 - 출처: docs/specs/rag-pipeline.md What 6·How·AC-05~AC-11·EC-06~EC-08, EVAL_REPORT.md 1장 하이브리드 검색 비교·HNSW 개선 실험 B,
-  evals/guides/preregister.md #6·#16·#25, ADR 0004(갱신 2026-11-03), SPEC.md 7절
+  evals/guides/preregister.md #6·#16·#25·#27, ADR 0004(갱신 2026-11-03), SPEC.md 7절
 
 [주의] 대상 필터(품번 등)는 결과를 받은 뒤 거르지 않고 검색 단계의 인자로 받는다. 후처리로 거르면 결과가 0~2개로 굶어
 "우연한 거절"이 생기고 점수가 실제보다 좋게 나온다. score의 뜻과 범위는 검색 방식마다 달라 거절 임계값도 방식마다 따로 정한다.
@@ -17,6 +17,8 @@ import re
 from urllib.parse import unquote, urlparse
 
 N_CAND = 50  # 방식마다 합치기 전에 가져오는 후보 수
+# dense 1단계가 Hamming 거리로 거르는 후보 수. 허용 카드가 이보다 많을 때만 1단계를 쓴다(사전 등록 #27)
+N_BIT = 3200  # [왜] 3-small 1536차원 운영 DB 실측(전자_데이터시트/evidence/bq_exp): 3,200장이면 recall@50 0.980, 최종 상위 5개 19/19문항 같고 retrieve() 중앙값 6.22초 → 0.89초
 # RRF 점수 1/(RRF_K + 순위)의 상수. 클수록 1위와 10위의 점수 차가 줄어 순위 차이를 덜 따진다
 RRF_K = 60   # [왜] RRF 원 논문(Cormack 외 2009)의 기본값
 EMBED_MODEL = 'voyage-4-large'  # chunk_embeddings.embedding_model과 같아야 한다
@@ -96,25 +98,33 @@ def positive_top(scores, ids, n):
     return [ids[j] for j in np.argsort(-np.asarray(scores), kind='stable')[:n] if scores[j] > 0]
 
 
-def _dense(conn, question, allowed=None):
+def _dense(conn, question, allowed=None, *, nocover_all=False):
     """질문 벡터와 코사인 거리가 가까운 카드 id를 N_CAND개까지 가까운 순으로 돌려준다(벡터 검색, dense)."""
-    # allowed가 있으면 그 카드 안에서만 잰다. DEMO_MODE면 빈 목록(AC-11)
+    # allowed가 있으면 그 카드 안에서만 잰다. nocover_all이면 allowed 대신 표지 아닌 카드 전체(SQL로 거름, 아이디 5만 개를 보내지 않음). DEMO_MODE면 빈 목록(AC-11)
+    # 허용 카드가 N_BIT장보다 많으면 1비트 Hamming 거리로 N_BIT장을 먼저 거르고(chunk_embedding_bits, db/009) 그 후보만 정확 코사인으로 세운다
     import numpy as np
     from backend.services import llm
     if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
         return []
     vec = np.asarray(llm.voyage_embed([question], 'query')[0], dtype=np.float32)  # 질문 하나를 임베딩해 첫 벡터를 꺼낸다
-    sql, args = 'SELECT chunk_id FROM chunk_embeddings WHERE embedding_model = %s', [EMBED_MODEL]
-    if allowed is not None:  # 품번 필터: 허용한 카드 안에서만 거리를 잰다(검색 단계에서 거름)
-        sql, args = sql + ' AND chunk_id = ANY(%s)', args + [list(allowed)]
+    # [주의] nocover_all은 retrieve()가 allowed=_nocover일 때만 켠다. 이 JOIN의 표지 제외 규칙이 _nocover(page_number가 있는 카드)와 같아야 한다
+    join = ' JOIN document_chunks dc ON dc.id = t.chunk_id AND dc.page_number IS NOT NULL' if nocover_all else ''
+    by_id, by_id_args = (' AND t.chunk_id = ANY(%s)', [list(allowed)]) if allowed is not None and not nocover_all else ('', [])
     # [왜] HNSW 인덱스는 한국어 질문처럼 먼 질의에서 가까운 카드를 놓쳤다(11-01 실측: ef_search 1000에서도 m03 질문의
     # 정확 검색 1위 거리 0.4177을 놓치고 0.4777을 1위로 냄). 카드 5만 장은 정확 검색이 질문당 0.3~0.6초라 인덱스를 끄고 잰다
     # shortcut: 정확 검색은 카드 수에 비례해 느려진다. 카드가 수십만 장이 되면 HNSW 설정을 사전 등록 실험으로 다시 정한다
     conn.execute('SET enable_indexscan = off')
     try:
+        if allowed is not None and len(allowed) > N_BIT:
+            # [주의] 질문 쪽도 저장 쪽(db/009)과 같은 binary_quantize(vector(DIM))::bit(DIM)이어야 한다. <~>는 Hamming 거리다
+            cand = conn.execute(f'SELECT t.chunk_id FROM chunk_embedding_bits t{join} WHERE t.embedding_model = %s{by_id}'
+                                f' ORDER BY t.bits <~> binary_quantize(%s::vector({DIM}))::bit({DIM}) LIMIT %s',
+                                [EMBED_MODEL, *by_id_args, vec, N_BIT]).fetchall()
+            join, by_id, by_id_args = '', ' AND t.chunk_id = ANY(%s)', [[r[0] for r in cand]]  # 2단계는 후보 안에서만(후보는 이미 표지 아닌 카드)
         # 저장만 halfvec으로 줄이고, 읽을 때와 질문 벡터는 float32로 거리를 잰다.
         # [주의] 열은 모델마다 차원이 다르도록 차원을 적지 않은 halfvec이다(db/008). 모델 행만 거른 뒤 DIM 차원 vector로 바꿔 잰다
-        rows = conn.execute(sql + f' ORDER BY embedding::vector({DIM}) <=> %s::vector({DIM}) LIMIT %s', args + [vec, N_CAND]).fetchall()
+        rows = conn.execute(f'SELECT t.chunk_id FROM chunk_embeddings t{join} WHERE t.embedding_model = %s{by_id}'
+                            f' ORDER BY t.embedding::vector({DIM}) <=> %s::vector({DIM}) LIMIT %s', [EMBED_MODEL, *by_id_args, vec, N_CAND]).fetchall()
     finally:
         conn.execute('RESET enable_indexscan')
     return [r[0] for r in rows]
@@ -153,7 +163,7 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, metho
         return []
     with _connect() as conn:
         # [주의] DEMO_MODE=1에서 method='dense'는 dense 목록이 비어 늘 []를 돌려준다
-        dense = _dense(conn, question, allowed) if method != 'bm25' else []
+        dense = _dense(conn, question, allowed, nocover_all=parts is None) if method != 'bm25' else []
         keyword = _keyword(question, allowed) if method != 'dense' else []
         fused = rrf(dense, keyword)  # 목록 하나만 있으면 RRF는 그 목록 순서를 그대로 둔다
         rerank = method == 'hybrid' and not llm.DEMO_MODE  # [왜] 방식별 기준선과 키 없는 데모는 리랭크 API를 부르지 않는다

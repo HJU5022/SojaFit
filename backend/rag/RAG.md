@@ -17,7 +17,7 @@
 ## 파일
 - `RAG.md` — 이 문서
 - `__init__.py` — 패키지 표시
-- `retrieve.py` — `retrieve(question, k=5, parts=None, method='hybrid')`: dense(`voyage-4-large` 1024차원) 상위 50 + BM25 상위 50을 RRF로 합치고 후보 전부를 `rerank-3`로 다시 세워 상위 k장을 돌려주는 하이브리드 검색. 표지 카드(`page_number` 없음)는 언제나 뺌. `method='dense'`·`'bm25'`면 그 목록 하나만 쓰고 리랭크하지 않음(`bm25`는 임베딩 API를 부르지 않음). `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 카드마다 그 문서 표지의 품번 목록(`doc_parts`)을 같이 돌려줌. `DATABASE_URL` 필요. `VOYAGE_API_KEY` 필요(`DEMO_MODE=0`). 기본값 `DEMO_MODE=1`에서는 임베딩·리랭크 API를 부르지 않고 BM25만 씀
+- `retrieve.py` — `retrieve(question, k=5, parts=None, method='hybrid')`: dense(`voyage-4-large` 1024차원) 상위 50(허용 카드가 3,200장보다 많으면 `chunk_embedding_bits`의 1비트 Hamming 거리로 3,200장을 먼저 거르고 그 안에서 정확 코사인, `db/009` 필요, 사전 등록 #27) + BM25 상위 50을 RRF로 합치고 후보 전부를 `rerank-3`로 다시 세워 상위 k장을 돌려주는 하이브리드 검색. 표지 카드(`page_number` 없음)는 언제나 뺌. `method='dense'`·`'bm25'`면 그 목록 하나만 쓰고 리랭크하지 않음(`bm25`는 임베딩 API를 부르지 않음). `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 카드마다 그 문서 표지의 품번 목록(`doc_parts`)을 같이 돌려줌. `DATABASE_URL` 필요. `VOYAGE_API_KEY` 필요(`DEMO_MODE=0`). 기본값 `DEMO_MODE=1`에서는 임베딩·리랭크 API를 부르지 않고 BM25만 씀
 - `storage.py` — 벡터 열 형식 `RAG_VECTOR_TYPE=vector|halfvec` 계약(서버와 적재 도구가 함께 씀), 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`)
 - `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 다섯 모듈과 `__init__.py`(패키지 표시)가 있습니다
   - `pipeline/collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)

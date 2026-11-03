@@ -92,8 +92,13 @@ def fill_cache(cache, texts_by_sha):
     return len(todo)
 
 
+FILL_BITS = ('INSERT INTO chunk_embedding_bits (chunk_id, embedding_model, bits)'
+             ' SELECT chunk_id, embedding_model, binary_quantize(embedding::vector(1024))::bit(1024)'
+             ' FROM chunk_embeddings WHERE embedding_model = %s ON CONFLICT (chunk_id, embedding_model) DO NOTHING')
+
+
 def load_voyage(vec_dir):
-    """미리 만든 voyage-4-large 카드 벡터를 이미 들어간 카드에 붙인다(DATABASE_URL 필요, 임베딩 API 호출 없음)."""
+    """미리 만든 voyage-4-large 카드 벡터를 이미 들어간 카드에 붙이고 비트 코드 표도 채운다(DATABASE_URL 필요, 임베딩 API 호출 없음)."""
     # [주의] 벡터가 없는 카드가 하나라도 있으면 ValueError를 올려 아무것도 넣지 않는다
     import psycopg
     from pgvector.psycopg import register_vector
@@ -115,6 +120,13 @@ def load_voyage(vec_dir):
             cp.set_types(['int8', 'varchar', 'halfvec'])
             for chunk_id, s in rows:
                 cp.write_row((chunk_id, VOYAGE_MODEL, HalfVector(cache.get(s))))
+        # [왜] retrieve()의 dense 1단계(Hamming 후보 거르기)가 읽는 비트 표를 임베딩과 같이 채워 둔다(db/009와 같은 INSERT … SELECT)
+        # [주의] 009를 아직 적용하지 않았으면 건너뛴다. 그 뒤 009를 적용하면 같은 문장이 비트를 채운다
+        if cur.execute("SELECT to_regclass('chunk_embedding_bits')").fetchone()[0] is None:
+            print('chunk_embedding_bits 표가 없어 비트 코드는 건너뜀(db/009 적용 필요)')
+        else:
+            cur.execute(FILL_BITS, (VOYAGE_MODEL,))
+            print(f'넣은 비트 코드 {cur.rowcount}개')
     print(f'넣은 voyage-4-large 임베딩 {len(rows)}개')
 
 
