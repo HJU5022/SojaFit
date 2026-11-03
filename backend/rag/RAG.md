@@ -1,8 +1,8 @@
 # rag
 
 ## 역할
-- 이 폴더: 데이터시트 수집·파싱·청킹·적재(오프라인 CLI)와 하이브리드 검색(서버 import)을 둡니다(G3).
-- 넣는 것: 수집·PDF 표 파싱·청킹·manifest 기록·DB 적재·용량 점검 코드(서버가 import하지 않고 `python -m backend.rag.<모듈>`로 돌립니다)와 BM25 + 벡터 RRF 하이브리드 검색(`retrieve.py`, 서버가 import).
+- 이 폴더: 서버가 import하는 하이브리드 검색과 벡터 열 형식, 오프라인 데이터시트 도구 하위 폴더(`pipeline/`)를 둡니다(G3).
+- 넣는 것: BM25 + 벡터 RRF 하이브리드 검색(`retrieve.py`), 서버와 도구가 함께 쓰는 벡터 열 형식·DB 용량 점검(`storage.py`), 수집·파싱·청킹·적재 도구 폴더(`pipeline/`).
 - 넣지 않는 것: 원본 문서(`data/corpus/`), 판정 규칙과 숫자·단위 비교(`backend/judge/`), LLM·임베딩 호출 구현(`backend/services/llm.py`), DB 표 정의(`db/`), 질문에서 품번 뽑기(`backend/graph/nodes.py`의 `find_parts`).
 - 담당: 검색·데이터
 
@@ -12,17 +12,19 @@
 
 ## 주의
 - 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서 목록을 남깁니다(형식은 [data/DATA.md](../../data/DATA.md)).
-- 숫자 대조에서 µ와 μ는 같은 글자로 맞춥니다(`parse.py`).
+- 숫자 대조에서 µ와 μ는 같은 글자로 맞춥니다(`pipeline/parse.py`).
 
 ## 파일
+- `RAG.md` — 이 문서
 - `__init__.py` — 패키지 표시
-- `collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)
-- `parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
-- `chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
-- `ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
 - `retrieve.py` — `retrieve(question, k=5, parts=None, method='hybrid')`: dense 상위 50 + BM25 상위 50을 RRF로 합친 하이브리드 검색. `method='dense'`·`'bm25'`면 그 목록 하나만 씀(`bm25`는 임베딩 API를 부르지 않음). `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾고, 코퍼스에 없는 품번뿐이면 `[]`. 카드마다 그 문서 표지의 품번 목록(`doc_parts`)을 같이 돌려줌. `DATABASE_URL` 필요. 기본값 `DEMO_MODE=1`에서는 임베딩 API를 부르지 않고 BM25만 씀
-- `storage.py` — 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`), `RAG_VECTOR_TYPE=vector|halfvec` 계약 검증
-- `subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·카드 사본을 새 폴더에 만듦. 원본은 고치지 않고, 서비스·초기화·적재에서 부르지 않음
+- `storage.py` — 벡터 열 형식 `RAG_VECTOR_TYPE=vector|halfvec` 계약(서버와 적재 도구가 함께 씀), 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`)
+- `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 다섯 모듈과 `__init__.py`(패키지 표시)가 있습니다
+  - `pipeline/collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)
+  - `pipeline/parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
+  - `pipeline/chunk.py` — Docling 결과를 카드(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
+  - `pipeline/ingest.py` — manifest와 카드를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `DATABASE_URL` 필요
+  - `pipeline/subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·카드 사본을 새 폴더에 만듦. 원본은 고치지 않고, 서비스·초기화·적재에서 부르지 않음
 
 작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·카드는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.
 
@@ -31,9 +33,9 @@
 ## 실행 순서
 
 ```bash
-python -m backend.rag.collect list <xlsx 폴더> <목록 csv>
-python -m backend.rag.collect download data/manifest.jsonl <pdf 폴더>   # 새 clone (목록 csv도 됨)
-uv run --group ingest python -m backend.rag.parse run <pdf 폴더> <출력 폴더>
-uv run --group ingest python -m backend.rag.chunk <docling json 폴더> <목록 csv> <pdf 폴더> <출력 폴더> data/manifest.jsonl
-python -m backend.rag.ingest data/manifest.jsonl <출력 폴더>/chunks.jsonl <벡터 폴더>
+python -m backend.rag.pipeline.collect list <xlsx 폴더> <목록 csv>
+python -m backend.rag.pipeline.collect download data/manifest.jsonl <pdf 폴더>   # 새 clone (목록 csv도 됨)
+uv run --group ingest python -m backend.rag.pipeline.parse run <pdf 폴더> <출력 폴더>
+uv run --group ingest python -m backend.rag.pipeline.chunk <docling json 폴더> <목록 csv> <pdf 폴더> <출력 폴더> data/manifest.jsonl
+python -m backend.rag.pipeline.ingest data/manifest.jsonl <출력 폴더>/chunks.jsonl <벡터 폴더>
 ```

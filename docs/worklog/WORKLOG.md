@@ -3,7 +3,7 @@
 ## 역할
 - 이 폴더: 조원별 작업 기록을 둡니다. 한 사람에 파일 하나입니다.
 - 넣는 것: `<영문 이름이나 이니셜>.md`(AGENTS.md 팀 규칙 10). 항목마다 날짜, 한 일, 바꾼 파일, 실행한 명령과 실제 결과, 확인 못 한 것, 다음 할 일. 무거운 실험의 목적, 비교 조건, 예산, 명령, 중단 조건과 결과.
-- 넣지 않는 것: 조 결정(`docs/adr/`), 실험의 기대 수치(`evals/preregister.md`), 원시 결과(`evals/results/`), 제출용 AI 도구 사용 기록(`docs/deliverables/ai_tools_log.md`), 비밀값.
+- 넣지 않는 것: 조 결정(`docs/adr/`), 실험의 기대 수치(`evals/guides/preregister.md`), 원시 결과(`evals/results/`), 제출용 AI 도구 사용 기록(`docs/deliverables/ai_tools_log.md`), 비밀값.
 - 담당: 각자 자기 파일
 
 ## 형식

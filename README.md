@@ -88,7 +88,7 @@ KiCad 넷리스트 + 질문
 | 벡터만 | 0.684 | 0.589 | 0.263 | 1.39초 |
 | BM25만 | 0.263 | 0.195 | 0.211 | 0.20초 |
 
-원시 결과는 `evals/results/retrieval_{baseline,dense,bm25}_2026-11-03.json`, 개선 전후 비교와 실패 분석은 [`EVAL_REPORT.md`](EVAL_REPORT.md)에 있다.
+원시 결과는 `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`, 개선 전후 비교와 실패 분석은 [`EVAL_REPORT.md`](EVAL_REPORT.md)에 있다.
 
 ---
 
@@ -124,7 +124,7 @@ docker compose up
 
 ```bash
 uv run pytest -q                                                              # 회귀 테스트(키·DB 없이 도는 것만)
-uv run python -m evals.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
+uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json> 5 hybrid  # 검색 지표(코퍼스 DB와 임베딩 키 필요)
 ```
 
 ---
@@ -201,7 +201,7 @@ SojaFit/
 | 기능이 정확히 무엇을 하나 (정본) | [`SPEC.md`](SPEC.md) |
 | 어떤 파일이 어디에 있나 | [`SOJAFIT.md`](SOJAFIT.md) |
 | 점수와 실패 분석, 재현 명령 | [`EVAL_REPORT.md`](EVAL_REPORT.md) |
-| 평가셋을 어떻게 만들고 동결했나 | [`evals/dataset-guide.md`](evals/dataset-guide.md) |
+| 평가셋을 어떻게 만들고 동결했나 | [`evals/guides/dataset-guide.md`](evals/guides/dataset-guide.md) |
 | 왜 그렇게 정했나 | [`docs/adr/ADR.md`](docs/adr/ADR.md) |
 | 에이전트·협업 규칙 | [`AGENTS.md`](AGENTS.md) |
 
