@@ -1,0 +1,73 @@
+{
+  "evaluation_id": "reranker-matrix-2026-11-03",
+  "status": "complete",
+  "combinations": 18,
+  "successful_combinations": 18,
+  "questions_per_combination": 19,
+  "dataset": {
+    "path": "evals/dataset_v1.jsonl",
+    "sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+    "used_rows": "19 relevant rows with PDF location gold"
+  },
+  "corpus": {
+    "logical_name": "reconstructed-tsc-diode-2026-11-03",
+    "source_path_committed": false,
+    "sha256": "aa4b9576dfe9a0ac27b178efb9575526e0be4f3442f6f59de328501ebf8871a9",
+    "cards": 52228,
+    "unique_texts": 45898,
+    "official_reference_cards": 52244,
+    "difference_from_official_reference": -16
+  },
+  "evaluator": {
+    "path": "evals/evaluate_reranker_matrix.py",
+    "sha256_at_run_documentation": "7504ff8d559ece4b4681272cb2c733d73a0983a267cbb827c26012b02c773331"
+  },
+  "public_summary": {
+    "path": "evals/results/reranker_matrix_2026-11-03_summary.json",
+    "sha256": "ad6e1661155a95a6d082930975ad0edb57f2506426ca7f757142442f7c9258dd",
+    "contains_card_text": false,
+    "contains_secrets": false
+  },
+  "raw_source_sets": [
+    {
+      "directory_name": "reranker-matrix-20261103",
+      "role": "initial OpenRouter and Voyage run, including preserved failures",
+      "summary_sha256": "e6f86585bfc2e8d37a6fffd5cd6073508aca848b2dba36acea242e88dad4dbcd",
+      "committed": false
+    },
+    {
+      "directory_name": "reranker-matrix-cohere-direct-20261103",
+      "role": "six direct Cohere rows merged into the matrix",
+      "summary_sha256": "10608264ddad4033e4b1c98a3fa740c0e6490c5dd24e768e01faeefb88069f30",
+      "committed": false
+    },
+    {
+      "directory_name": "reranker-matrix-kure-qwen-resume-20261103",
+      "role": "KURE and Qwen resume plus final 18-row merged summary",
+      "summary_sha256": "42a7dcc74786cfc8d0665707033cf92b78178c6e62cfe24b70c5d4e2e494e47d",
+      "kure_qwen_progress_sha256": "7521d69a4786447c34a04cc22a4a32de73eddb0267bff6a34282b58b1ff34915",
+      "committed": false
+    }
+  ],
+  "providers": {
+    "cohere/rerank-4-pro": "Cohere direct API model rerank-v4.0-pro",
+    "voyageai/rerank-3": "Voyage direct API model rerank-3",
+    "qwen/qwen3-reranker-8b": "OpenRouter Fireworks endpoint"
+  },
+  "totals": {
+    "tokens_or_conservative_token_estimates": 8471173,
+    "nominal_cost_usd": 1.04048365,
+    "automatic_retries": 0
+  },
+  "selection_status": {
+    "highest_mrr_combination": "Qwen3-Embedding-0.6B + voyageai/rerank-3",
+    "runtime_default_changed": false,
+    "team_decision_required": true
+  },
+  "limitations": [
+    "The corpus has 16 fewer cards than the official 52,244-card reference.",
+    "Only 19 relevant retrieval questions were used; irrelevant-question rejection and answer generation were not evaluated.",
+    "Cohere token counts are conservative estimates because the direct response did not provide token usage.",
+    "Nominal API cost is not an invoice or billing-console export."
+  ]
+}

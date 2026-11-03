@@ -1,0 +1,3429 @@
+{
+  "model": "openai/text-embedding-3-small",
+  "reranker": "qwen/qwen3-reranker-8b",
+  "dataset_sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+  "chunks_sha256": "0b4c81ee9bf64120a07ff7f5dd3fc766f1215ffe7076440d56733c95eab8d030",
+  "rows": [
+    {
+      "id": "draft30-e03",
+      "bm25": {
+        "id": "draft30-e03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": 1,
+            "idx": 16
+          }
+        ]
+      },
+      "query_embedding_tokens": 69,
+      "query_embedding_cost_usd": 1.38e-06,
+      "query_embedding_ms": 1902.7109999442473,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 11045,
+      "rerank_cost_usd": 0.002209,
+      "rerank_ms": 1459.4993999926373,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-e04",
+      "bm25": {
+        "id": "draft30-e04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-e04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 12
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-e04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 23
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-e04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 23
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-e04",
+        "rank": 4,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 12
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148WTH_A2501.pdf",
+            "page": 1,
+            "idx": 11
+          }
+        ]
+      },
+      "query_embedding_tokens": 72,
+      "query_embedding_cost_usd": 1.44e-06,
+      "query_embedding_ms": 846.1785000981763,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 10640,
+      "rerank_cost_usd": 0.002128,
+      "rerank_ms": 900.3124999580905,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-e05",
+      "bm25": {
+        "id": "draft30-e05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ]
+      },
+      "query_embedding_tokens": 76,
+      "query_embedding_cost_usd": 1.52e-06,
+      "query_embedding_ms": 895.9410999668762,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 9836,
+      "rerank_cost_usd": 0.0019672,
+      "rerank_ms": 778.9867999963462,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-e08",
+      "bm25": {
+        "id": "draft30-e08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-e08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS34LH SERIES_A2103.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 4,
+            "idx": 5
+          },
+          {
+            "file": "SS34L SERIES_C2103.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS34FSH SERIES_B2103.pdf",
+            "page": 2,
+            "idx": 47
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-e08",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 43
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 38
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 40
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-e08",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 43
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 38
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 40
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-e08",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS34L SERIES_C2103.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS32H SERIES_C2412.pdf",
+            "page": 3,
+            "idx": 48
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 38
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 43
+          }
+        ]
+      },
+      "query_embedding_tokens": 75,
+      "query_embedding_cost_usd": 1.4999999999999998e-06,
+      "query_embedding_ms": 915.4997000005096,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 10924,
+      "rerank_cost_usd": 0.0021848,
+      "rerank_ms": 1086.2390000838786,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-m03",
+      "bm25": {
+        "id": "draft30-m03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-m03",
+        "rank": 5,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52B2V4 SERIES_F15.pdf",
+            "page": 2,
+            "idx": 18
+          },
+          {
+            "file": "BZT52B2V4 SERIES_F15.pdf",
+            "page": 2,
+            "idx": 17
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 3,
+            "idx": 6
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-m03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-m03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-m03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "BZT52B2V4 SERIES_F15.pdf",
+            "page": 2,
+            "idx": 18
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "query_embedding_tokens": 76,
+      "query_embedding_cost_usd": 1.52e-06,
+      "query_embedding_ms": 1032.6417000032961,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 15843,
+      "rerank_cost_usd": 0.0031686,
+      "rerank_ms": 920.5943000270054,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-m04",
+      "bm25": {
+        "id": "draft30-m04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-m04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-m04",
+        "rank": 3,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-m04",
+        "rank": 3,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-m04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V4S SERIES_K2411.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          }
+        ]
+      },
+      "query_embedding_tokens": 73,
+      "query_embedding_cost_usd": 1.46e-06,
+      "query_embedding_ms": 868.3964000083506,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 14564,
+      "rerank_cost_usd": 0.0029128,
+      "rerank_ms": 1276.5472000464797,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-m05",
+      "bm25": {
+        "id": "draft30-m05",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "query_embedding_tokens": 87,
+      "query_embedding_cost_usd": 1.74e-06,
+      "query_embedding_ms": 859.807200031355,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 13685,
+      "rerank_cost_usd": 0.002737,
+      "rerank_ms": 866.3911999901757,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-m07",
+      "bm25": {
+        "id": "draft30-m07",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-m07",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 3,
+            "idx": 6
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-m07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-m07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-m07",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ]
+      },
+      "query_embedding_tokens": 76,
+      "query_embedding_cost_usd": 1.52e-06,
+      "query_embedding_ms": 829.4801000738516,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 14941,
+      "rerank_cost_usd": 0.0029882,
+      "rerank_ms": 1406.8532000528648,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-h04",
+      "bm25": {
+        "id": "draft30-h04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          }
+        ]
+      },
+      "query_embedding_tokens": 66,
+      "query_embedding_cost_usd": 1.32e-06,
+      "query_embedding_ms": 902.1609999472275,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 11291,
+      "rerank_cost_usd": 0.0022582,
+      "rerank_ms": 1215.6220000470057,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft30-h05",
+      "bm25": {
+        "id": "draft30-h05",
+        "rank": 3,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 5
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 16
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      "query_embedding_tokens": 106,
+      "query_embedding_cost_usd": 2.12e-06,
+      "query_embedding_ms": 926.924099912867,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 14067,
+      "rerank_cost_usd": 0.0028134,
+      "rerank_ms": 947.9517000727355,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n01",
+      "bm25": {
+        "id": "draft50-n01",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 17
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 16
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n01",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 27
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n01",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n01",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n01",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 17
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 27
+          }
+        ]
+      },
+      "query_embedding_tokens": 237,
+      "query_embedding_cost_usd": 4.7399999999999995e-06,
+      "query_embedding_ms": 1076.618600054644,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 22578,
+      "rerank_cost_usd": 0.004515600000000001,
+      "rerank_ms": 1201.6533999703825,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n02",
+      "bm25": {
+        "id": "draft50-n02",
+        "rank": 5,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "BAS16H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n02",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n02",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS16H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n02",
+        "rank": 8,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS16H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n02",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": 1,
+            "idx": 22
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ]
+      },
+      "query_embedding_tokens": 152,
+      "query_embedding_cost_usd": 3.04e-06,
+      "query_embedding_ms": 961.0513000516221,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 18272,
+      "rerank_cost_usd": 0.0036544000000000004,
+      "rerank_ms": 983.2181999227032,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n03",
+      "bm25": {
+        "id": "draft50-n03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 38
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n03",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n03",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 38
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N4148WTH_A2501.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      "query_embedding_tokens": 93,
+      "query_embedding_cost_usd": 1.86e-06,
+      "query_embedding_ms": 832.8375000273809,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 12647,
+      "rerank_cost_usd": 0.0025294000000000002,
+      "rerank_ms": 988.162900088355,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n04",
+      "bm25": {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "MUR305SBH SERIES_A2102.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n04",
+        "rank": 38,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 3,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "query_embedding_tokens": 150,
+      "query_embedding_cost_usd": 2.9999999999999997e-06,
+      "query_embedding_ms": 1686.3537000026554,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 18196,
+      "rerank_cost_usd": 0.0036392000000000004,
+      "rerank_ms": 889.0445999568328,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n05",
+      "bm25": {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "RB520S-30_D2510.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": false
+      },
+      "reranked": {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 1,
+            "idx": 17
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4-G SERIES_H2002.pdf",
+            "page": 2,
+            "idx": 58
+          }
+        ]
+      },
+      "query_embedding_tokens": 117,
+      "query_embedding_cost_usd": 2.34e-06,
+      "query_embedding_ms": 900.3379999194294,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 17090,
+      "rerank_cost_usd": 0.0034180000000000005,
+      "rerank_ms": 908.0361999804154,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n06",
+      "bm25": {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 40
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 43
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 6
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 43
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 43
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 40
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 42
+          }
+        ]
+      },
+      "query_embedding_tokens": 100,
+      "query_embedding_cost_usd": 2.0000000000000003e-06,
+      "query_embedding_ms": 832.685999921523,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 13148,
+      "rerank_cost_usd": 0.0026296,
+      "rerank_ms": 812.3294999822974,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n07",
+      "bm25": {
+        "id": "draft50-n07",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n07",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n07",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 27
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      "query_embedding_tokens": 161,
+      "query_embedding_cost_usd": 3.22e-06,
+      "query_embedding_ms": 858.5516000166535,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 15116,
+      "rerank_cost_usd": 0.0030232,
+      "rerank_ms": 921.5295999310911,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft50-n08",
+      "bm25": {
+        "id": "draft50-n08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft50-n08",
+        "rank": 4,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft50-n08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft50-n08",
+        "rank": 6,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft50-n08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ]
+      },
+      "query_embedding_tokens": 156,
+      "query_embedding_cost_usd": 3.12e-06,
+      "query_embedding_ms": 889.9931999621913,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 15215,
+      "rerank_cost_usd": 0.003043,
+      "rerank_ms": 878.542400081642,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    },
+    {
+      "id": "draft52-n21",
+      "bm25": {
+        "id": "draft52-n21",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "dense": {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          }
+        ]
+      },
+      "hybrid": {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      "candidate": {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ],
+        "candidate_count": 50,
+        "hit_at_50": true
+      },
+      "reranked": {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": 2,
+            "idx": 27
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 27
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          }
+        ]
+      },
+      "query_embedding_tokens": 98,
+      "query_embedding_cost_usd": 1.96e-06,
+      "query_embedding_ms": 790.5945000238717,
+      "embedding_provider": "openrouter",
+      "embedding_api_model": "openai/text-embedding-3-small",
+      "rerank_tokens": 11612,
+      "rerank_cost_usd": 0.0023224,
+      "rerank_ms": 846.0015999153256,
+      "rerank_provider": "Fireworks",
+      "rerank_api_model": "accounts/fireworks/models/qwen3-reranker-8b"
+    }
+  ],
+  "manual_resume_count": 0
+}

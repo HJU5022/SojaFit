@@ -106,3 +106,54 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
   - 임베딩: Qwen − 3-small +0.026은 0.05 미만이라 같음이고, 추론 서버가 필요 없는 `text-embedding-3-small`을 유지한다.
   - 리랭커: 기준 칸에서 `rerank-3`이 MRR +0.211(0.649 → 0.860), p95 2초 이하라 채택 후보다. 적용은 따로 사전 등록한다.
 - 결과는 `EVAL_REPORT.md` 1-3절(새로 만듦)에 적는다.
+
+## 2026-11-03 임베딩 6종 × OpenRouter 리랭커 3종 최초 측정 (#17)
+
+#16의 요약 순위만 재사용하지 않고, 현재 로컬에 검증 가능한 전체 청크와 벡터로 문항별 후보를 다시 만든 뒤 세 리랭커를 같은 후보에 적용한다. 결과가 낮거나 API가 실패해도 18개 행을 모두 공개한다.
+
+- 바꿀 것 하나: 같은 임베딩의 하이브리드 후보에서 리랭커만 `없음` → `cohere/rerank-4-pro` / `voyageai/rerank-3` / `qwen/qwen3-reranker-8b`로 바꾼다.
+- 평가셋: 동결 v1 SHA256 `2fef02c2…`, 데이터시트 근거 관련 19문항, `input` 전체, k=5.
+- 현재 재현 코퍼스: `chunked-gpu/chunks.jsonl` SHA256 `aa4b9576…`, 카드 52,228개, 서로 다른 본문 45,898개. #16에 적힌 52,244개·`9e62fb6a…` 원본과 16카드 차이가 있으므로 #16 점수와 직접 같은 실행으로 간주하지 않는다.
+- 검색·후보: float32 정확 cosine Dense 50 + BM25 양수 점수 50 → RRF k=60 합집합 최대 100개. 품번 필터·질문 축약 없음.
+- 임베딩: `text-embedding-3-small`, `Qwen3-Embedding-0.6B`, `voyage-4-lite`, `voyage-4`, `voyage-4-large`, `KURE-v1`. 3-small의 검증된 전체 벡터만 재사용한다. 0벡터로 확인된 Voyage Lite/4 파일은 사용하지 않고 새 경로에 다시 만든다. Qwen/KURE는 기존 고정 snapshot만 오프라인으로 사용한다.
+- API 경계: 임베딩과 리랭커 모두 `backend/services/llm.py`, 인증은 `OPENROUTER_API_KEY`만 사용한다. 신규 모델·tokenizer 다운로드는 0이다.
+- 이미 본 값: 원격 보고서의 #16 요약과 100문서 Qwen 리랭커 결과는 봤다. 이번 18조합의 현재 52,228카드 문항별 결과는 아직 보지 않았다.
+- 기대: 같은 임베딩의 무리랭크 대비 MRR `+0.00~+0.20`, Recall@5 `-0.05~+0.20`, p95 `0.3~2.5초`. 채택 검토는 MRR `+0.05` 이상, Recall@5 무하락, p95 2초 이하를 모두 본다.
+- 비용 사전값: 3-small의 같은 45,898본문 실측 5,392,291토큰을 기준으로 Voyage Lite/4/Large 문서 임베딩은 각각 약 `$0.108`/`$0.324`/`$0.647`, 합계 약 `$1.079`다. 질의 임베딩과 리랭커는 실제 후보 생성 뒤 근사 토큰 예상치로 다시 계산하고 여유 있는 중단 상한을 둔다. 전체 임베딩+리랭커 상한은 `$5.00`이다.
+- 자동 재시도: 0회. 문항별 완료 상태를 저장하고 수동 재개에서 완료 문항을 건너뛴다.
+- 중단: 해시·벡터 크기 불일치, 신규 다운로드 시도, 0/NaN 벡터, 예상 또는 누적 비용 `$5.00` 초과, 429/5xx/timeout, 응답 index 중복·범위 초과 시 해당 단계/조합을 중단하고 실패로 기록한다.
+- 실행 순서: 서비스·평가기 테스트 → 3-small 재사용 검증 → Voyage 3종 새 벡터 → Qwen/KURE `--network none` 벡터 → `--preflight-only` → 18조합 실행 → 원시 JSON 재계산과 Markdown 18행 검증.
+- 실행 명령은 `docs/specs/reranker-api-evaluation-plan.md`의 파일·조건을 따르며, 실제 절대 경로와 모델별 비용은 작업 기록에 남긴다.
+
+## 2026-11-03 Voyage 직접 API 연결 확인 (#18)
+
+#17에서 Voyage 임베딩 3종과 `voyageai/rerank-3`이 OpenRouter ZDR 정책 404로 차단됐다. 모델을 바꾸지 않고 provider 경로만 Voyage 공식 API로 바꾼다. Cohere와 Qwen은 기존 OpenRouter 경로를 유지한다.
+
+- 변경 변수: Voyage 모델의 호출 주소와 인증만 OpenRouter → `api.voyageai.com`·`VOYAGE_API_KEY`로 변경한다.
+- 고정: 모델은 `voyage-4-lite`, `voyage-4`, `voyage-4-large`, `rerank-3`; 입력 역할, 1,024차원, 후보·질문·평가셋·지표는 바꾸지 않는다.
+- 호출 경계: `backend/services/llm.py`의 `voyage_embed_texts()`와 `voyage_rerank_texts()`만 사용한다. 다른 provider나 모델로 fallback하지 않는다.
+- 최초 smoke 입력: 실제 코퍼스가 아닌 `BZT52C3V6 datasheet` 한 문장과 관련/비관련 합성 문서 두 개. 임베딩 1회, 리랭커 1회, timeout 30초, 자동 재시도 0회다.
+- 기대: 임베딩 1행·1,024차원, 리랭커 2행·관련 문서 index 0, 각 응답의 모델·토큰 사용량 기록. 401·403·429·5xx 또는 형식 오류면 실패로 남기고 재시도하지 않는다.
+- smoke 결과: `voyage-4-lite` 1행·1,024차원·10토큰, `rerank-3` 2행·33토큰·상위 index 0으로 둘 다 성공했다. ZDR 404는 발생하지 않았다.
+- 다음 본평가: 기존 실패 결과를 덮어쓰지 않고 새 provider 조건의 별도 결과로 실행한다. 전체 문서 전송·예상 토큰·비용·명령을 다시 확인한 뒤 시작한다.
+
+## 2026-11-03 Cohere 직접 API 후속 실행 (#19)
+
+#17의 Cohere 6조합은 OpenRouter ZDR 정책 404로 비어 있었다. 모델과 후보·평가셋은 유지하고 provider 경로만 Cohere 공식 API로 바꾼다.
+
+- 변경 변수: `cohere/rerank-4-pro`의 호출 주소와 인증만 OpenRouter → `api.cohere.com/v2/rerank`·`COHERE_API_KEY`로 바꾼다. 공식 모델 ID는 `rerank-v4.0-pro`다.
+- 고정: 임베딩 6종, 각 임베딩의 저장된 후보, 관련 19문항, top 5, 지표, 품번 필터 없음, 질문 원문은 바꾸지 않는다.
+- 사전 검사 파일: 외부 결과 디렉터리의 `preflight.json`에 114 search·보수적 2,933,114토큰·명목 `$0.285`·상한 `$1.00` 통과를 API 호출 전에 저장했다.
+- trial 제한: 10 RPM을 넘지 않도록 요청 시작 간격을 6.5초로 고정한다. 자동 재시도와 다른 모델/provider fallback은 0회다. 첫 401·403·404·429·5xx·timeout 또는 응답 index 오류에서 전체 후속 실행을 중단한다.
+- 결과 기록 원칙: 최초 OpenRouter 404 파일을 덮어쓰지 않고 별도 디렉터리에 직접 API 원시 결과를 저장한 뒤 18행 요약에서 해당 6행만 교체한다.
+- 결과: 6조합·114요청 모두 성공했다. trial key의 실제 청구는 `$0`였고, 명목 단가로는 `$0.285`다. 전체 표는 이 시점에 17성공·1실패(KURE × Qwen 503)가 됐다.
+
+## 2026-11-03 KURE × Qwen 수동 재개 기록 (#20, 새 실험 아님)
+
+#17에서 같은 Fireworks Qwen3 Reranker 8B로 19문항 중 10문항을 완료한 뒤 HTTP 503에서 멈춘 조합을 같은 조건으로 이어간다. 모델·provider·후보·질문·지표를 바꾸지 않으므로 새 품질 실험이 아니라 중단된 행의 수동 재개다.
+
+- 재개 대상: `KURE-v1 × qwen/qwen3-reranker-8b` 한 조합, 미완료 9문항만 호출한다.
+- 사전 검사: 전체 19문항 근사 예상 `$0.090980`, 중단 상한 `$0.20`, 자동 재시도 0회. 실제 토큰 계산은 근사치보다 클 수 있다.
+- 중단: 첫 HTTP 오류·timeout·응답 index 오류에서 즉시 멈추고 다른 모델이나 provider로 바꾸지 않는다.
+- 결과: 남은 9문항이 모두 같은 Fireworks endpoint로 성공해 19/19를 완성했다. 명목 비용은 전체 517,503토큰·`$0.103501`, p95 `1996.1ms`, Recall@5 `0.842`, MRR `0.677`이다.
+- 최종 상태: 임베딩 6종 × 리랭커 3종의 18조합이 모두 성공했다. 공개 summary와 원시 실행 해시는 `evals/results/reranker_matrix_2026-11-03_*` 파일에 남긴다.

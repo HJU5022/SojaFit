@@ -16,6 +16,8 @@ import os
 import re
 import subprocess
 import tempfile
+import urllib.error
+import urllib.request
 from functools import lru_cache
 
 from dotenv import load_dotenv
@@ -32,32 +34,282 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER") or "openrouter"
 LLM_MODEL = os.getenv("LLM_MODEL") or "anthropic/claude-haiku-5.5"
 LLM_CLI_MODEL = os.getenv("LLM_CLI_MODEL") or "haiku"
 MAX_FORMAT_RETRIES = 2  # [왜] 형식이 틀린 답을 다시 부르는 횟수의 상한(SPEC 2절). 무한 재시도로 키 한도를 쓰지 않게 한다
+API_EMBEDDING_MODELS = {
+    "openai/text-embedding-3-small",
+    "baai/bge-m3",
+    "voyageai/voyage-4-lite",
+    "voyageai/voyage-4",
+    "voyageai/voyage-4-large",
+}
 
 
-@lru_cache(maxsize=1)
-def _embedding_client():
+@lru_cache(maxsize=8)
+def _embedding_client(model_id: str | None = None):
     """Return the configured live embedding client and provider metadata."""
     from openai import OpenAI
 
     openai_key = os.getenv("OPENAI_API_KEY")
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    if openai_key:
-        return OpenAI(api_key=openai_key, max_retries=0), "openai", "text-embedding-3-small"
+    selected = model_id or "openai/text-embedding-3-small"
+    if selected not in API_EMBEDDING_MODELS:
+        raise ValueError(f"unsupported embedding model: {selected}")
     if openrouter_key:
         return (
             OpenAI(api_key=openrouter_key, base_url="https://openrouter.ai/api/v1", max_retries=0),
             "openrouter",
-            "openai/text-embedding-3-small",
+            selected,
         )
+    if openai_key and selected == "openai/text-embedding-3-small":
+        return OpenAI(api_key=openai_key, max_retries=0), "openai", "text-embedding-3-small"
     raise RuntimeError("OPENAI_API_KEY or OPENROUTER_API_KEY is required")
 
 
-def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
+def embed_texts(
+    texts: list[str],
+    *,
+    model_id: str | None = None,
+    input_type: str | None = None,
+    dimensions: int | None = None,
+) -> tuple[list[list[float]], int, str, str]:
     """Embed texts through the single service boundary used by runtime and evaluations."""
-    client, provider, model = _embedding_client()
-    response = client.embeddings.create(model=model, input=texts)
+    client, provider, default_model = (
+        _embedding_client(model_id) if model_id is not None else _embedding_client()
+    )
+    model = model_id or default_model
+    request = {"model": model, "input": texts}
+    if input_type is not None:
+        # OpenAI SDK의 정식 인자에는 없지만 OpenRouter 임베딩 API가 받는 확장 필드다.
+        request["extra_body"] = {"input_type": input_type}
+    if dimensions is not None:
+        request["dimensions"] = dimensions
+    response = client.embeddings.create(**request)
     vectors = [row.embedding for row in response.data]
-    return vectors, response.usage.total_tokens, provider, model
+    usage = getattr(response, "usage", None)
+    total_tokens = int(getattr(usage, "total_tokens", 0) or 0)
+    return vectors, total_tokens, provider, model
+
+
+def _openrouter_rerank_request(payload: dict, timeout: float) -> dict:
+    """Send one rerank request without retries or secret-bearing logs."""
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY is required")
+    request = urllib.request.Request(
+        "https://openrouter.ai/api/v1/rerank",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"OpenRouter rerank returned HTTP {error.code}") from error
+
+
+def rerank_texts(
+    query: str,
+    documents: list[str],
+    *,
+    model_id: str,
+    top_n: int | None = None,
+    timeout: float = 120,
+) -> tuple[list[dict], int, str, str]:
+    """Rerank documents through OpenRouter and normalize result metadata."""
+    if not documents:
+        raise ValueError("documents must not be empty")
+    limit = len(documents) if top_n is None else top_n
+    if limit < 1 or limit > len(documents):
+        raise ValueError("top_n must be between 1 and the document count")
+    payload = {
+        "model": model_id,
+        "query": query,
+        "documents": documents,
+        "top_n": limit,
+    }
+    response = _openrouter_rerank_request(payload, timeout)
+    raw_rows = response.get("results")
+    if not isinstance(raw_rows, list):
+        raise ValueError("OpenRouter rerank response has no results list")
+    rows = [
+        {
+            "index": int(row["index"]),
+            "relevance_score": float(row["relevance_score"]),
+        }
+        for row in raw_rows
+    ]
+    indices = [row["index"] for row in rows]
+    if len(indices) != len(set(indices)) or any(index < 0 or index >= len(documents) for index in indices):
+        raise ValueError("OpenRouter rerank response contains an invalid index")
+    rows.sort(key=lambda row: row["relevance_score"], reverse=True)
+    usage = response.get("usage") or {}
+    total_tokens = int(usage.get("total_tokens") or usage.get("prompt_tokens") or 0)
+    provider = str(response.get("provider") or "openrouter")
+    actual_model = str(response.get("model") or model_id)
+    return rows, total_tokens, provider, actual_model
+
+
+def _cohere_request(payload: dict, timeout: float) -> dict:
+    """Send one direct Cohere request without retries or secret-bearing logs."""
+    api_key = os.getenv("COHERE_API_KEY")
+    if not api_key:
+        raise RuntimeError("COHERE_API_KEY is required")
+    request = urllib.request.Request(
+        "https://api.cohere.com/v2/rerank",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"Cohere API returned HTTP {error.code}") from error
+
+
+def cohere_rerank_texts(
+    query: str,
+    documents: list[str],
+    *,
+    model_id: str = "rerank-v4.0-pro",
+    top_n: int | None = None,
+    timeout: float = 120,
+) -> tuple[list[dict], int, str, str]:
+    """Rerank documents through Cohere's direct API using COHERE_API_KEY."""
+    if not documents:
+        raise ValueError("documents must not be empty")
+    limit = len(documents) if top_n is None else top_n
+    if limit < 1 or limit > len(documents):
+        raise ValueError("top_n must be between 1 and the document count")
+    response = _cohere_request(
+        {
+            "model": model_id,
+            "query": query,
+            "documents": documents,
+            "top_n": limit,
+        },
+        timeout,
+    )
+    raw_rows = response.get("results")
+    if not isinstance(raw_rows, list):
+        raise ValueError("Cohere rerank response has no results list")
+    rows = [
+        {
+            "index": int(row["index"]),
+            "relevance_score": float(row["relevance_score"]),
+        }
+        for row in raw_rows
+    ]
+    indices = [row["index"] for row in rows]
+    if len(indices) != len(set(indices)) or any(index < 0 or index >= len(documents) for index in indices):
+        raise ValueError("Cohere rerank response contains an invalid index")
+    rows.sort(key=lambda row: row["relevance_score"], reverse=True)
+    meta = response.get("meta") or {}
+    tokens = meta.get("tokens") or {}
+    total_tokens = int(tokens.get("input_tokens") or 0)
+    return rows, total_tokens, "cohere", model_id
+
+
+def _voyage_request(path: str, payload: dict, timeout: float) -> dict:
+    """Send one direct Voyage request without retries or secret-bearing logs."""
+    api_key = os.getenv("VOYAGE_API_KEY")
+    if not api_key:
+        raise RuntimeError("VOYAGE_API_KEY is required")
+    request = urllib.request.Request(
+        f"https://api.voyageai.com{path}",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"Voyage API returned HTTP {error.code}") from error
+
+
+def voyage_embed_texts(
+    texts: list[str],
+    *,
+    model_id: str,
+    input_type: str | None = None,
+    dimensions: int | None = None,
+    timeout: float = 120,
+) -> tuple[list[list[float]], int, str, str]:
+    """Embed texts through Voyage's direct API using VOYAGE_API_KEY."""
+    if not texts:
+        raise ValueError("texts must not be empty")
+    if input_type not in {None, "query", "document"}:
+        raise ValueError("input_type must be query, document, or None")
+    payload = {"input": texts, "model": model_id}
+    if input_type is not None:
+        payload["input_type"] = input_type
+    if dimensions is not None:
+        payload["output_dimension"] = dimensions
+    response = _voyage_request("/v1/embeddings", payload, timeout)
+    data = response.get("data")
+    if not isinstance(data, list) or len(data) != len(texts):
+        raise ValueError("Voyage embedding response count mismatch")
+    ordered = sorted(data, key=lambda row: int(row["index"]))
+    indices = [int(row["index"]) for row in ordered]
+    if indices != list(range(len(texts))):
+        raise ValueError("Voyage embedding response contains an invalid index")
+    vectors = [row["embedding"] for row in ordered]
+    usage = response.get("usage") or {}
+    total_tokens = int(usage.get("total_tokens") or response.get("total_tokens") or 0)
+    actual_model = str(response.get("model") or model_id)
+    return vectors, total_tokens, "voyage", actual_model
+
+
+def voyage_rerank_texts(
+    query: str,
+    documents: list[str],
+    *,
+    model_id: str = "rerank-3",
+    top_n: int | None = None,
+    timeout: float = 120,
+) -> tuple[list[dict], int, str, str]:
+    """Rerank documents through Voyage's direct API using VOYAGE_API_KEY."""
+    if not documents:
+        raise ValueError("documents must not be empty")
+    limit = len(documents) if top_n is None else top_n
+    if limit < 1 or limit > len(documents):
+        raise ValueError("top_n must be between 1 and the document count")
+    payload = {
+        "query": query,
+        "documents": documents,
+        "model": model_id,
+        "top_k": limit,
+        "return_documents": False,
+    }
+    response = _voyage_request("/v1/rerank", payload, timeout)
+    raw_rows = response.get("data") or response.get("results")
+    if not isinstance(raw_rows, list):
+        raise ValueError("Voyage rerank response has no results list")
+    rows = [
+        {
+            "index": int(row["index"]),
+            "relevance_score": float(row["relevance_score"]),
+        }
+        for row in raw_rows
+    ]
+    indices = [row["index"] for row in rows]
+    if len(indices) != len(set(indices)) or any(index < 0 or index >= len(documents) for index in indices):
+        raise ValueError("Voyage rerank response contains an invalid index")
+    rows.sort(key=lambda row: row["relevance_score"], reverse=True)
+    usage = response.get("usage") or {}
+    total_tokens = int(usage.get("total_tokens") or response.get("total_tokens") or 0)
+    actual_model = str(response.get("model") or model_id)
+    return rows, total_tokens, "voyage", actual_model
 
 
 @lru_cache(maxsize=1)

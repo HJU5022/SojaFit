@@ -15,7 +15,14 @@
 - `freeze.py` — 동결 파일의 sha256을 `FROZEN.json`에 기록
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 네 번째 인자로 검색 방식(`hybrid` 기본·`dense`·`bm25`)을 고르고 summary의 `method`에 적음. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
+- `evaluate_frozen_reranker.py` — 동결 질의·TSC 100문서 표본에서 성공 임베딩 5종에 고정 Qwen3 API 리랭커를 붙인 사후 탐색 평가기. 전체 52,228카드 최종 행렬과 구분한다
+- `evaluate_reranker_matrix.py` — 공식 기준보다 16카드 적은 재구성 TSC 코퍼스의 고정 벡터 캐시로 임베딩 6종 × API 리랭커 3종의 최대 100후보를 비교하고, 비용 사전 계산·문항별 재개·18행 표를 만든다. `--embedding`과 `--reranker`로 실패 조합 하나만 선택해 재개할 수 있다
+- `build_reranker_matrix_vectors.py` — 재구성 코퍼스의 비어 있는 임베딩 벡터를 provider별 API 또는 기존 오프라인 로컬 캐시로 원자적 진행 기록과 함께 생성한다
 - `results/` — 평가 원시 결과
+- `results/reranker_matrix_2026-11-03_summary.json` — 카드 본문·키를 제외한 리랭커 18조합 최종 공개 결과
+- `results/reranker_matrix_2026-11-03_provenance.json` — 외부 원시 실행 3개의 역할·SHA256, 입력 해시, 코퍼스 16카드 차이, 비용·평가 한계
+- `results/reranker_matrix_2026-11-03_README.md` — 리랭커 평가 자산 전제, 비용 사전 검사, 한 줄 재현 명령
+- `results/rerank_hybrid_frozen100_*_2026-11-02.json` — 100문서 표본의 고정 Qwen3 리랭커 사후 탐색 결과·진행·503 기록. 최종 18조합 결과가 아님
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
 - `DRAFT_30_REVIEW.md` — 초안 30건의 질문·가정·예상 답변 방향과 검수 목록
 - `draft_50.jsonl` — 현재 50건(관련 25·비관련 25) 검수 초안. 52건에서 n22(관련)·n13(비관련)을 예비 이관. 사람 합의 43건·숫자형 기계 대조 7건. 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했고 이 파일은 검수 이력으로 남김
@@ -30,7 +37,7 @@
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 
-`embedding_sample_v0.jsonl`은 후보를 거르는 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 실제 모델 결정은 TSC 1,360건 실제 청크 평가를 별도 사전 등록한 뒤 수행합니다.
+`embedding_sample_v0.jsonl`은 후보를 거르는 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 리랭커 18조합 검색 평가는 완료했지만 공식 기준보다 16카드 적은 재구성 코퍼스의 관련 19문항 결과다. 평가 1위 후보를 서비스 기본값으로 확정하는 일은 팀 결정·ADR·전체 RAG 평가 뒤에 수행합니다.
 
 ## 평가셋
 
@@ -130,3 +137,5 @@ uv run python evals/freeze.py --check              # 동결 이후 바뀐 파일
 ## 결과 보관
 
 재측정 결과의 원시 파일은 `evals/results/`에 둡니다. 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 보므로, **한 줄 재현 명령**을 `EVAL_REPORT.md` 9장에 적으세요.
+
+리랭커의 전체 카드 본문·벡터·provider 원문 응답은 공개하지 않는다. 대신 최종 18행 summary와 외부 원시 묶음의 SHA256·역할을 저장소에 남겨 표의 숫자와 실행 계보를 검증할 수 있게 한다.

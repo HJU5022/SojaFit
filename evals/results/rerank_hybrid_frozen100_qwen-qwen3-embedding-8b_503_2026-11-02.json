@@ -1,0 +1,16 @@
+{
+  "status": "error",
+  "evaluation_level": "frozen_100_document_sample",
+  "decision_support": false,
+  "formal_full_corpus_evaluation": false,
+  "embedding_model": "qwen/qwen3-embedding-8b",
+  "reranker": "qwen/qwen3-reranker-8b",
+  "completed_questions_before_error": 11,
+  "error_type": "HTTPStatusError",
+  "error_message": "provider returned HTTP 503 Service Unavailable",
+  "tokens_recorded_before_error": 165745,
+  "cost_usd_recorded_before_error": 0.03286096,
+  "retry_count": 0,
+  "manual_resume_count": 0,
+  "public_artifact_note": "request id, raw provider response, card text, vectors, and secrets are excluded"
+}

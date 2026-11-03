@@ -1,6 +1,136 @@
 # 오세창 작업 기록
 
-> **문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 이번 변경에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
+## 2026-11-03 리랭킹 문서·공개 증거 정합성 보완
+
+- 감사 후 보완: 최종 18행 summary와 세 외부 실행의 역할·SHA256을 `evals/results/`에 공개 가능한 형태로 추가하고, 코퍼스·벡터 경로를 환경변수로 받는 한 줄 재현 명령을 기록했다. 카드 본문·벡터·키·request ID·provider 원문 응답은 포함하지 않았다.
+- 보고서 완성: `EVAL_REPORT.md`에 최고 조합의 개선 전후, e04 회귀와 n04 후보 누락, 다중근거 한계, 리랭크 비용·p50/p95, 전체 RAG 미측정 범위, 서비스 미적용 상태를 채웠다. `MRR 순위군`은 실제 값에 맞게 `MRR 순위`로 바로잡았다.
+- 문서 동기화: 후보 작업서는 실행 전 양식의 역사 기록이라고 표시하고 최종 표를 연결했다. 실행 계획 완료 체크, provider별 직접 API, 52,228/52,244 카드 차이, 비용 근사치의 비상한 성격, SPEC의 현재 런타임 기본값 유지 상태를 명시했다.
+- PR 범위: 사용자가 리랭킹 관련 평가기·테스트·사전등록·작업서·공개 결과·보고서를 400줄 권고와 관계없이 한 PR로 만들 계획이라고 명시했다. 실제 PR 본문에는 규모·한 PR인 이유·외부 원시 자산 제외 범위를 기록해야 한다. 이번 작업에서는 commit·push·PR 생성은 하지 않았다.
+- 검증: UTF-8 전체 테스트 `173 passed / 24 skipped`, 동결 해시 변경 0건, 공개 summary와 외부 최종 summary의 논리적 동일성, 보고서 18행·9개 핵심 지표 일치, 공개 JSON의 질문·본문·request id·비밀값 부재, 변경 Markdown 로컬 링크, JSON 파싱, `git diff --check`를 확인했다.
+
+## 2026-11-03 KURE × Qwen 실패 조합 재개 완료
+
+- 원인 확인: 최초 실행은 동일한 Fireworks Qwen3 Reranker 8B로 19문항 중 10문항을 성공한 뒤 HTTP 503에서 멈췄다. OpenRouter 공식 endpoint는 Fireworks 한 곳뿐이며 재개 직전 최근 5분 가동률이 100%로 표시되어, 입력·모델 ID 오류가 아닌 provider의 일시적 가용성 문제로 판단했다.
+- 최소 변경: 평가기에 `--embedding` 선택을 추가하고 비용 사전 계산의 search 수가 실제 선택 임베딩 수를 따르게 고쳤다. 기본 6×3 실행 순서는 그대로 유지한다. 새 동작은 RED 3건을 확인한 뒤 관련 테스트 15건을 통과시켰다.
+- 실행 조건: 기존 성공 10문항과 후보 캐시를 새 결과 디렉터리에 복사하고 `KURE-v1 × qwen/qwen3-reranker-8b`만 선택했다. 전체 조합 예상 비용 `$0.090980`이 `$0.20` 상한 안임을 확인했으며, 남은 9문항에서 자동 재시도·다른 모델·다른 provider 대체는 허용하지 않았다.
+- 결과: 19/19가 모두 같은 Fireworks 모델로 완성됐다. Recall@5 `0.368→0.842`, MRR `0.225→0.677`, 쪽 적중@5 `0.211→0.632`, 다중근거 Recall@5 `0.053→0.316`, p95 `1996.1ms`, 517,503토큰·`$0.103501`, 개선/회귀 11/3이다. 전체 행렬은 18/18 성공이며 1위는 기존 `Qwen3-Embedding-0.6B × Voyage rerank-3`의 MRR `0.882`로 유지됐다.
+- 원시 근거: 최초 503 기록은 `SojaFit/evals/reranker-matrix-20261103/`에 보존하고, 재개 결과와 합친 18행은 `SojaFit/evals/reranker-matrix-kure-qwen-resume-20261103/`에 저장했다.
+
+## 2026-11-03 Cohere 직접 API 6조합 완료
+
+- 변경 범위: 기존 `cohere/rerank-4-pro` 후보와 평가 조건은 유지하고 호출 경로만 OpenRouter에서 Cohere 공식 `/v2/rerank`·`COHERE_API_KEY`로 바꿨다. 공식 모델 ID는 `rerank-v4.0-pro`다.
+- 무료 키 보호: trial 제한 10 RPM에 맞춰 요청 시작 간격을 6.5초로 고정했다. 전체 114요청의 보수적 입력은 2,933,114토큰, 명목 비용은 `$0.285`였고 실제 trial 청구는 `$0`다. 자동 재시도·provider/model fallback은 없다.
+- 결과: Cohere 6조합이 모두 성공해 전체 표는 18행 중 17성공·1실패(KURE × Qwen 503)가 됐다. Cohere 최고 MRR은 `Qwen3-Embedding-0.6B` 조합의 `0.702`, 최고 ΔMRR은 KURE 조합의 `+0.450`이다. 전체 1위는 기존 `Qwen3-Embedding-0.6B × Voyage rerank-3`의 MRR `0.882`로 유지됐다.
+- 지연 한계: 이번 Cohere p50/p95에는 trial 호출 간 6.5초 대기가 포함돼 다른 provider의 순수 API 지연과 비교하지 않는다. 성공 호출을 지연만 재측정하려고 반복하지 않았다.
+- 원시 근거: 저장소 밖 `SojaFit/evals/reranker-matrix-cohere-direct-20261103/`에 6개 progress JSON, 합친 `summary.json`, `results.md`, `preflight.json`을 보존했다. 기존 OpenRouter 404 원시는 별도 이전 디렉터리에 유지한다.
+
+## 2026-11-03 새 Voyage 키·KURE 완료와 리랭커 18조합 측정
+
+- 임베딩 완료: Voyage Lite/4/Large는 각각 45,898본문·5,773,370토큰을 공식 API로 생성했다. 시간은 442.5/503.6/431.7초, 계산 비용은 `$0.115467/$0.346402/$0.692804`다. KURE는 기존 오프라인 캐시만 사용해 45,898본문을 6,259.6초에 완성했다. 네 파일 모두 187,998,208바이트이며 시작·중간·끝 표본은 유한값·norm 1.0이다.
+- 후보 생성: 각 임베딩에서 Dense 50·BM25 50을 RRF k=60으로 결합해 문항당 최대 100후보를 만들었다. KURE 질의 19개는 Docker 네트워크 차단 상태에서 기존 HF·uv 캐시만 사용했다.
+- 비용 사전 검사: 18조합 예상 리랭커 비용 `$1.0182785`가 상한 `$5.00` 안임을 확인한 뒤 실행했다.
+- 결과: 18조합 중 11조합 성공, 7조합 실패다. Cohere 6조합은 OpenRouter HTTP 404, KURE × Qwen은 HTTP 503이며 재시도·대체 호출은 하지 않았다. 성공 조합 합계는 5,020,556토큰·계산 비용 `$0.65198305`다.
+- 1위: Qwen3-Embedding-0.6B × Voyage rerank-3이 Recall@5 `0.789→0.947`, MRR `0.668→0.882`, p95 `572ms`, 회귀 1건으로 가장 높은 MRR을 기록했다. Voyage rerank-3의 성공 6조합은 모두 품질 조건과 p95 2초 조건을 함께 통과했다.
+- 원시 근거: 저장소 밖 `SojaFit/evals/reranker-matrix-20261103/`의 `summary.json`, `results.md`, 조합별 progress/failure JSON, 후보 JSON, 벡터 progress JSON에 보존했다.
+
+## 2026-11-03 Voyage 전체 임베딩 최초 실행
+
+- 기준: 임베딩 대상은 본문 sha256 기준 45,898개로 확정했다. 입력 `chunks.jsonl`의 SHA256은 `aa4b9576…`이고, 최대 본문 길이는 1,980자다.
+- 비용 사전 검사: Voyage 공식 단가 Lite/4/Large `$0.02/$0.06/$0.12 per 1M tokens`, 예상 593만~647만 토큰을 기준으로 모델별 상한을 `$0.20/$0.50/$1.00`으로 고정했다. 최대 예상 합계는 약 `$1.30`이다. 계정 무료 토큰은 비용 상한 계산에서 가정하지 않았다.
+- 실행 결과: `voyage-4-lite`, `voyage-4`, `voyage-4-large`를 사전 지정 순서로 각각 최초 1회 실행했으나, 모두 첫 128본문 배치에서 Voyage 공식 API HTTP 429로 실패했다.
+- 중단 조건 적용: 실패 모델을 재시도하지 않았고 다른 모델·provider로 대체하지 않았다. 성공 응답·usage·벡터가 없으므로 9개 조합의 지표와 비용은 `—`로 유지한다.
+- 출력 검증: 세 파일은 예상 크기 187,998,208바이트지만 0번·22,949번·45,897번 표본이 모두 0벡터이고 진행 JSON도 없다. 유효 캐시로 사용하지 않는다.
+- 근거: [Voyage Pricing](https://docs.voyageai.com/docs/pricing), [Voyage Text Embeddings](https://docs.voyageai.com/docs/embeddings).
+
+## 2026-11-03 Voyage 직접 API 연결
+
+- 목적: OpenRouter ZDR 정책 404로 비어 있던 Voyage 임베딩과 rerank-3을 모델 변경 없이 Voyage 공식 API로 직접 호출한다.
+- 키 확인: 루트 `.env`의 `VOYAGE_API_KEY`가 선언되고 비어 있지 않은지만 확인했으며 값은 출력·기록하지 않았다. `.env.example`에는 빈 변수만 추가했다.
+- 구현: `backend/services/llm.py`에 공식 `/v1/embeddings`·`/v1/rerank` 직접 호출, `output_dimension`·`top_k`, 응답 index·사용량 검증을 추가했다. 자동 재시도와 provider fallback은 없다.
+- 평가기 연결: Voyage 4 계열의 문서·질의 임베딩과 `voyageai/rerank-3`만 직접 API로 라우팅한다. Cohere·Qwen은 기존 OpenRouter 경로를 유지한다.
+- RED/GREEN: 직접 API 함수 부재 2건과 평가기 라우팅 부재 2건의 RED를 확인한 뒤 최소 구현했다. 관련 테스트는 21건 통과했다.
+- 실제 smoke: 합성 입력으로 `voyage-4-lite` 1개·1,024차원·10토큰, `rerank-3` 2개 문서·33토큰·관련 문서 index 0을 최초 1회에 확인했다. 실패 재시도나 다른 모델 호출은 없었다.
+- 최종 검증: `PYTHONUTF8=1 uv run pytest -q`에서 167 passed / 24 skipped, `git diff --check` 통과, `.env`가 Git 추적 대상이 아님과 `.env.example`의 빈 placeholder 1개를 확인했다.
+- 다음: 전체 45,898본문 재임베딩과 18조합 재측정은 #17 실패 결과와 분리하고, 직접 API 조건의 예상 비용·명령을 확인한 뒤 실행한다.
+
+## 2026-11-03 리랭커 18조합 실측 준비
+
+- 목적: 임베딩 6종 × OpenRouter 리랭커 3종을 전체 동결 검색 조건에서 빠짐없이 비교한다.
+- 구현: 중앙 `embed_texts()`에 모델별 옵션을 추가하고 `rerank_texts()`를 만들었다. 전체 코퍼스 벡터 생성기와 최대 100후보·비용 사전 계산·문항별 재개·18행 출력 평가기를 추가했다.
+- TDD: 새 계약이 없어 실패한 서비스 테스트 3건과 평가기 import RED를 먼저 확인했다. 최소 구현 뒤 `tests/test_llm.py`, `tests/test_reranker_matrix.py`, `tests/test_frozen_evals.py` 합계 16건이 통과했다.
+- 자산 검수: 전체 코퍼스는 52,228카드·45,898본문·SHA256 `aa4b9576…`다. 기존 3-small 벡터는 표본 norm 1.0으로 정상이나 Voyage Lite/4 파일은 크기만 맞고 표본이 모두 0벡터라 재사용에서 제외했다.
+- 예산: 3-small의 5,392,291토큰 실측을 기준으로 Voyage 3종 새 문서 벡터 예상 비용은 약 `$1.079`다. 리랭커 비용은 후보 생성 뒤 다시 사전 계산하며 전체 상한은 `$5.00`, 자동 재시도는 0회다.
+- 변경 파일: `backend/services/llm.py`, `backend/services/README.md`, `evals/build_reranker_matrix_vectors.py`, `evals/evaluate_reranker_matrix.py`, `evals/PREREGISTER.md`, `evals/README.md`, `tests/test_llm.py`, `tests/test_reranker_matrix.py`, `tests/README.md`, `docs/specs/reranker-api-candidates.md`, `docs/specs/reranker-api-evaluation-plan.md`, `docs/specs/README.md`, `docs/worklog/osc.md`.
+- 다음: Voyage 3종 벡터를 새 외부 캐시에 생성하고 Qwen/KURE는 기존 캐시를 네트워크 차단 상태에서 생성한 뒤, 실제 후보 기준 비용 사전 검사를 통과할 때만 18조합을 호출한다.
+- 실행 결과: Voyage Lite/4/Large는 각 모델의 최초 문서 임베딩 요청에서 OpenRouter ZDR 정책 404로 중단했고 재시도하지 않았다. Cohere 4 Pro와 Voyage rerank-3도 최초 smoke에서 HTTP 404로 중단했다. 다른 모델·provider로 대체하지 않았다.
+- 로컬 결과: Qwen3-Embedding-0.6B는 네트워크 차단 Docker에서 45,898본문을 1,089.8초에 완성했고 표본 norm 1.0·유한값·파일 크기 187,998,208바이트를 확인했다. KURE는 192본문 뒤 같은 배치에서 4분 이상 정체돼 중단했으며 재시도하지 않았다.
+- 리랭커 결과: 3-small × Qwen은 첫 응답 뒤 JSON 정답 위치의 list/tuple 집계 오류로 실패해 지표를 비우고 재호출하지 않았다. 오류는 회귀 테스트로 수정했다. Qwen 0.6B × Qwen 리랭커는 19문항 최초 실행을 완료해 Recall@5 `0.789→0.947`, MRR `0.668→0.728`, 쪽 적중 `0.632→0.842`, 다중근거 `0.368→0.421`, p95 `2.996초`, 548,668토큰·`$0.1097336`, 개선/회귀 5/3을 기록했다. 품질 조건은 통과했지만 p95 2초 조건은 실패했다.
+- 공개: `EVAL_REPORT.md` 1-4절에 18행을 모두 기록하고 실패·미측정 17행은 0점 대신 `—`로 비웠다. 외부 실행 상태와 원시 결과는 `SojaFit/evals/reranker-matrix-20261103/`에 보존했다.
+- 최종 검증: 외부 상태·성공 결과 JSON 파싱, 결과표 데이터 18행, `git diff --check`를 확인했다. Windows 기본 cp949에서 기존 subset 테스트 1건이 인코딩으로 실패했으나 `PYTHONUTF8=1` 전체 테스트는 163 passed / 24 skipped였다. 관련 평가·서비스 테스트는 기본 환경에서도 22건 통과했다.
+
+## 2026-11-03 API 리랭커 후보 3종 선정
+
+- 목적: 임베딩 6종에 붙일 리랭커를 최신 공식 문서와 원격 저장소 실측 이력으로 좁히고, 이후 실험과 서비스 모두 API만 사용한다는 경계를 고정한다.
+- 선정: OpenRouter 단일 키 조건에서 제공되는 품질 후보 `cohere/rerank-4-pro`, 기존 원격 실측과 이어지는 `voyageai/rerank-3`, 공개 모델 계열 대조군 `qwen/qwen3-reranker-8b`를 선택했다. 공급사 최신 Cohere Rerank 5 Pro는 현재 OpenRouter에 없어 제외했다.
+- 호출·다운로드 경계: 리랭커는 모두 OpenRouter `/api/v1/rerank`와 `OPENROUTER_API_KEY` 하나를 사용한다. 기존 임베딩 캐시는 사용할 수 있지만 신규 가중치·tokenizer·Hugging Face snapshot은 다운로드하지 않는다. 모든 호출은 `backend/services/llm.py` 경계를 사용하며 키는 `.env` 또는 Secret Manager 밖으로 내보내지 않는다.
+- 결과 공개 형식: 6개 임베딩 × 3개 리랭커의 18개 조합을 점수 순으로 선별하지 않고 `EVAL_REPORT.md`의 단일 표에 고정 순서로 모두 싣는다. 실패 행도 삭제하지 않고 상태·사유를 남기며, 미측정값은 0점이 아닌 `—`로 표시한다.
+- 바꾼 파일: `docs/specs/reranker-api-candidates.md`, `docs/specs/README.md`, `docs/worklog/osc.md`.
+- 검증: OpenRouter 공식 rerank API·모델 목록·가격에서 세 모델의 제공 여부와 ID를 대조하고, 작업서의 Why·Goal·What·How·AC 다섯 절 및 단일 키·신규 다운로드 금지·과금 전 승인·실패 분리 조건을 확인했다. 모델 다운로드와 API 호출은 하지 않았다.
+- 다음 할 일: 사용자가 작업서를 검토한 뒤, 평가 실행 전에 `evals/PREREGISTER.md`에 18개 조합의 예상 토큰·비용 상한·timeout·중단 조건을 기록하고 별도 실행 승인을 받는다.
+
+## 2026-11-02 동결 100문서 API 리랭커 실행 준비
+
+- 목적: 성공 임베딩 5종의 기존 BM25·Dense·RRF 결과에 같은 `qwen/qwen3-reranker-8b` API 리랭커만 추가해 후보 회수와 최종 순위 개선을 분리한다. 전체 1,360문서 본평가나 최종 모델 확정으로 세지 않는다.
+- 고정 조건: 동결 19질의, TSC 100문서·4,305카드, 기존 문서 벡터와 모델별 query 입력, Dense/BM25 각 50, RRF k=60을 유지한다. RRF 상위 50만 리랭킹하며 후보 hit@50과 Recall@5·MRR·쪽 적중·다중근거 Recall을 기록한다.
+- 예산·명령: 신규 다운로드 0, 최대 4,750쌍, 예상 `$0.05~0.25`, 질의 임베딩 포함 누적 `$0.50`, retry 0. 명령은 `evals/PREREGISTER.md`의 고정 API 리랭커 사전등록에 기록했다.
+- 중단 조건: 입력 해시·벡터 크기 불일치, 키·정책·HTTP 오류, 응답 index 계약 위반, 120초 timeout, 누적 비용 상한 도달 시 중단한다. 로컬 모델로 자동 전환하거나 계정 정책을 바꾸지 않는다.
+- 준비 변경: `backend/services/llm.py`에 중앙 `rerank_texts()` 경계를 추가하고, `evals/evaluate_frozen_reranker.py`와 네트워크 없는 계약 테스트를 작성한다. 실제 유료 호출 전 관련 테스트와 문서 정합성을 확인한다.
+- 실행 전 미확인 항목: API endpoint 성공 여부, provider·실제 토큰·비용·지연, 후보 hit@50과 리랭킹 품질.
+- 실행 결과: Qwen 임베딩 후보는 11/19 완료 뒤 OpenRouter HTTP 503으로 중단했다. 자동 재시도하지 않고 당시 오류 JSON을 보존했으며, 사용자 승인 뒤 완료 행을 건너뛰고 남은 8건을 수동 1회 재개했다. 나머지 4종은 중단 없이 완료했다.
+- 품질 결과: E5+Qwen 리랭커가 문서 Recall@5/MRR `1.000/.868`, Qwen Embedding 8B+Qwen 리랭커가 쪽 적중/다중근거 `.895/.526`으로 각각 선두였다. Perplexity는 Recall이 1.000으로 올랐지만 MRR은 `.763→.739`, Qwen의 n08은 RRF 5위에서 리랭킹 Top 5 밖으로 밀려 전 지표 개선은 아니었다.
+- 비용·지연: 전체 1,439,981토큰·`$0.28602983`로 승인한 `$0.50` 안이다. 리랭커 p95는 Titan 1.32초~Perplexity 1.99초였다. 모델 다운로드는 없고 API 자동 재시도는 0회다.
+- 공개·한계: 평가기, 테스트, 모델별 순위 JSON, 503 오류 JSON, 요약 JSON과 비교 문서를 저장소에 둔다. 카드 본문·벡터·request id·provider 원문·키는 제외한다. 100문서 사후 표본이므로 Qwen 조합을 서비스 적합 우선 후보, E5 조합을 문서 검색 대조 후보로만 두고 런타임·DB는 바꾸지 않는다.
+- 검증: UTF-8 전체 `uv run pytest -q`는 117 passed / 18 skipped, 리랭커 JSON 13건 파싱·본문/키/request id 필드 부재, 요약-비용 장부 일치, 중앙 서비스 밖 직접 API 호출 0건, 변경 문서 상대 링크 누락 0건, 비밀값 패턴 0건, `git diff --check` 통과를 확인했다. `gitleaks` 실행 파일은 로컬에 없어 동일 범위 정규식 검사를 대신했으며 실제 CI Secret Scan은 아직 실행되지 않았다.
+
+## 2026-11-02 동결 질의·100문서 관리형 API Hybrid 사후 비교 공개
+
+- 목적: 동결 50건 중 데이터시트 gold가 있는 19질의에서 관리형 API 후보의 Dense와 BM25/RRF Hybrid를 같은 TSC 100문서 표본으로 비교하고, 전체 1,360문서 본평가의 우선 후보를 정한다. 코퍼스 표본은 결과 전 사전 등록된 본평가 입력이 아니므로 사후 탐색으로 표시한다.
+- 고정 조건: 100문서·4,305카드·고유 본문 4,056개, Dense/BM25 각 상위 50, RRF k=60, top-5, 품번 필터·리랭커·HNSW 없음, retry 0. 데이터셋 SHA-256 `2fef02c2...`, 청크 SHA-256 `0b4c81ee...`.
+- 실행·비용: OpenRouter 관리형 API 8종을 시도해 5종 성공, BGE는 provider 429, Voyage 4/Lite는 ZDR 정책으로 차단됐다. 총 2,843,356토큰·$0.035611288였고 승인한 $0.10 상한 안이다. 실패 후보를 품질 0점으로 환산하지 않았다.
+- 결과: Qwen3 Embedding 8B Hybrid Recall@5 17/19·MRR .695·쪽 적중 12/19로 표본 품질 우선 후보, Perplexity 0.6B는 MRR .763과 비용·지연 대안이다. Qwen의 다중근거 Recall은 Dense .474에서 Hybrid .263으로 낮아져 전 지표 우승으로 표현하지 않는다. 현재 Text Small 기본값은 유지한다.
+- 공개 파일: 중앙 `embed_texts` 경계를 쓰는 `evals/evaluate_frozen_embedding_sample.py`, 입력 출처·선택·해시, 모델별 문항 순위·지표·비용·구조화 오류 JSON, Dense/Hybrid 차이 문서를 포함한다. 카드 본문, Docling 본문 JSON, 벡터, API 원문 응답, 키, 모델 캐시는 제외한다.
+- 검증 계획: API 재호출 없이 입력 계약·지표·오류 정제 단위 테스트, 동결 해시, JSON 파싱, 문서 수치 대조, 전체 오프라인 pytest와 `git diff --check`를 실행한다. 실제 API 재실행과 전체 1,360문서 본평가는 하지 않는다.
+- 다음 할 일: Qwen 8B·Perplexity·Text Small의 전체 코퍼스 조건과 예상 비용을 결과 확인 전에 별도 사전 등록하고 승인받아 최종 모델을 결정한다.
+
+## 2026-11-02 동일 입력 하이브리드 smoke
+
+- 목적·사전 조건: 156카드·9질의·gold·5종 모델 입력을 고정하고 dense → BM25+dense RRF만 변경했다. `evals/PREREGISTER.md`에 기대 Recall/MRR·각 분기 50·RRF 60·모델당 300초·재시도 0을 결과 확인 전에 기록했다.
+- 실행: `docker run --rm --gpus all --network none -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e PYTHONPATH=/workspace/.tmp/hybrid-deps:/workspace -v "${PWD}:/workspace" -v sojafit-hf:/root/.cache/huggingface -v sojafit-uv:/root/.cache/uv -w /workspace ghcr.io/astral-sh/uv:python3.12-bookworm-slim sh -c 'for model in bge-m3 kure-v1 qwen3-embedding-0.6b multilingual-e5-large-instruct voyage-4-nano; do timeout 300 uv run --offline --isolated --with sentence-transformers --with torch python -m evals.compare_hybrid_embeddings --model "$model" --sample .tmp/recovered-smoke.jsonl --output "evals/results/hybrid_smoke_${model}_2026-11-02.json"; done'`
+- 환경 장애: 첫 uv 의존성 해석에서 Docker 캐시에 rank-bm25가 없어 5개 프로파일 모두 추론 전에 중단됐다. Windows에 설치된 동일 라이브러리의 순수 Python 파일 rank_bm25.py를 .tmp/hybrid-deps에 복사해 네트워크 없이 실행했다.
+- 결과: 5종 모두 성공, API·신규 다운로드 0. 하이브리드 Recall/MRR은 모두 dense보다 하락했다. Qwen MRR 0.256·E5 Recall 0.444는 기대 범위 아래였다. BM25 영문·숫자 토큰은 한국어 조건 설명을 반영하지 못했다. 사후 가중치·질의 튜닝은 하지 않았다.
+- 검증: 다중 gold·누락 gold·질의 건수 테스트 3건 및 전체 101 passed / 18 skipped. 결과에는 카드 본문 없이 ID만 남긴다. 리랭킹·50건 본평가·API 재호출은 수행하지 않았다.
+
+## 2026-11-02 임베딩 실행 자산 복구
+
+- 이전 로컬 커밋 `87e8768` 전체를 저장소 밖 `backups/embedding-recovery-20261102/pre-reset-snapshot-87e8768.zip`에 보존했다. 현재 OSC는 최신 main `bd224e0`으로 fast-forward했다.
+- 확장 프록시·호환성·실제 PDF 원시 JSON 20건과 Voyage 백업 JSON 4건, 평가기·테스트·질의·gold builder를 복구했다. 기존 커밋의 결과 JSON 20건은 Git blob 해시가 모두 일치한다. 동시 API 3종 작업은 별도 패치 백업 후 통합했다.
+- Qwen 11-02 오프라인 30청크는 3.634621796초, 실제 PDF는 10.370309006초다. 10-30 Windows 30청크 10.372056300초와 별개 결과임을 원시로 확인했다.
+- 공개 대상은 질의·gold 청크 ID·PDF 메타데이터·재생성 명령이며, 156카드 본문은 ZIP과 gitignore 대상 `.tmp/`에 보존한다. 백업 카드로 builder를 실행해 156청크·9질의 재생성을 확인했다. 전체 PDF 재파싱과 모델 추론은 재실행하지 않았다.
+- main의 PR #28·#29가 병합된 뒤 복구 변경을 충돌 없이 적용했다. 동결 v1·FROZEN 내용은 변경하지 않았다. Windows CRLF 변환으로 동결 해시가 달라져 Git 원본 LF로 정규화하고 `.gitattributes`에 LF 체크아웃을 명시했다.
+
+> **복구 범위**: 기존 로컬 확장·실제 PDF의 평가기·질의·gold·원시 JSON을 이전 커밋에서 복구했다. 카드 본문은 저장소 밖 백업 ZIP에 보존하고 공개 PDF에서 `.tmp/`에 재생성한다. 아래 과거 시점의 미반영 기록은 당시 상태이며 현재 복구 상태는 이 항목을 따른다.
+
+## 2026-11-02 관리형 API 임베딩 3종 프록시 사전 기록
+
+- 목적: 현재 OpenRouter 임베딩 목록에서 기존 후보와 정확히 대응하는 `openai/text-embedding-3-small`, `voyageai/voyage-4`, `baai/bge-m3`만 같은 30청크·18질의 프록시로 비교한다. 동결 본평가와 최종 모델 확정은 하지 않는다.
+- 고정 조건: `evals/embedding_sample_v0.jsonl`, dense cosine `k=5`, 22,000개 exact 지연용 반복 행렬, BM25·필터·리랭커 없음. Text는 1,536차원, Voyage·BGE는 1,024차원이며 Voyage만 query/document 입력 형식을 구분한다.
+- 예산: 기존 실행 기준 모델당 약 45,699토큰, 세 모델 약 137,097토큰·$0.00412 예상. 모델당 75,000토큰, 전체 225,000토큰, 총 $0.01을 중단 상한으로 둔다. 자동 재시도는 0회다.
+- 중단 조건: 모델 미제공, ZDR·data-policy 차단, 차원·입력 계약 거부, rate limit, 단일 모델 75,000토큰 또는 누적 $0.01 도달 시 해당 실행 또는 전체 실행을 중단한다. 계정 정책은 바꾸지 않고 키 값을 출력하지 않는다.
+- 제외: OpenRouter 목록에 없는 Qwen 0.6B, 관리형 endpoint가 동일 모델로 확인되지 않은 KURE·Voyage Nano·E5, 기존 13종 밖의 Voyage 4 Lite는 실행하지 않는다.
+- 실행 결과: Text는 Recall@5 1.000, MRR 0.907, 1,000청크 6.87초, p50/p95 902.3/1,704.9ms, 45,699토큰, $0.00091398이었다. BGE API는 1.000, 0.863, 5.01초, 745.6/1,352.6ms, 50,930토큰, $0.0005093이었다.
+- 정책 결과: Voyage 4는 계정 ZDR 정책이 유일 endpoint를 제외해 404로 차단됐다. retry 0을 유지하고 계정 정책을 바꾸지 않았으며 Recall@5·MRR·지연·비용을 만들지 않았다.
+- 예산 결과: 성공한 두 모델 합계 96,629토큰, $0.00142328로 전체 상한 225,000토큰·$0.01 안이었다. 첫 Text 명령은 `PYTHONPATH` 누락으로 API 전에 `ModuleNotFoundError`가 발생했고 별도 로컬 오류 JSON으로 보존한 뒤 실행 환경만 바로잡았다.
+- 해석: 동일 소형 프록시에서 Text가 BGE보다 MRR이 높고 BGE가 빠르고 저렴했지만 Recall@5가 둘 다 포화됐다. 실제 코퍼스와 동결 gold가 아니므로 후보를 확정하지 않는다.
 
 ## 2026-11-02 Voyage 후보 변경 독립 감사 후속
 

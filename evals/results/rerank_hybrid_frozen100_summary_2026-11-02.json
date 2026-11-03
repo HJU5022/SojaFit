@@ -1,0 +1,91 @@
+{
+  "status": "ok",
+  "evaluation_level": "frozen_100_document_sample",
+  "formal_full_corpus_evaluation": false,
+  "dataset_sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+  "chunks_sha256": "0b4c81ee9bf64120a07ff7f5dd3fc766f1215ffe7076440d56733c95eab8d030",
+  "documents": 100,
+  "cards": 4305,
+  "questions": 19,
+  "reranker": "qwen/qwen3-reranker-8b",
+  "branch_limit": 50,
+  "rerank_candidate_limit": 50,
+  "results": [
+    {
+      "embedding_model": "qwen/qwen3-embedding-8b",
+      "candidate_hit_at_50": 1.0,
+      "rrf_recall_at_5": 0.8947368421052632,
+      "rrf_mrr": 0.6947368421052631,
+      "reranked_recall_at_5": 0.9473684210526315,
+      "reranked_mrr": 0.7982456140350876,
+      "reranked_page_hit_at_5": 0.8947368421052632,
+      "reranked_multi_evidence_recall_at_5": 0.5263157894736842,
+      "rerank_api_ms_p95": 1848.9438999677077,
+      "incremental_cost_usd": 0.058629930000000004,
+      "manual_resume_count": 1
+    },
+    {
+      "embedding_model": "perplexity/pplx-embed-v1-0.6b",
+      "candidate_hit_at_50": 1.0,
+      "rrf_recall_at_5": 0.8421052631578947,
+      "rrf_mrr": 0.7631578947368421,
+      "reranked_recall_at_5": 1.0,
+      "reranked_mrr": 0.7385964912280701,
+      "reranked_page_hit_at_5": 0.7368421052631579,
+      "reranked_multi_evidence_recall_at_5": 0.3684210526315789,
+      "rerank_api_ms_p95": 1988.9699999475852,
+      "incremental_cost_usd": 0.060424280000000004,
+      "manual_resume_count": 0
+    },
+    {
+      "embedding_model": "openai/text-embedding-3-small",
+      "candidate_hit_at_50": 0.9473684210526315,
+      "rrf_recall_at_5": 0.7894736842105263,
+      "rrf_mrr": 0.6754385964912281,
+      "reranked_recall_at_5": 0.8947368421052632,
+      "reranked_mrr": 0.8289473684210527,
+      "reranked_page_hit_at_5": 0.7368421052631579,
+      "reranked_multi_evidence_recall_at_5": 0.47368421052631576,
+      "rerank_api_ms_p95": 1459.4993999926373,
+      "incremental_cost_usd": 0.0541828,
+      "manual_resume_count": 0
+    },
+    {
+      "embedding_model": "intfloat/multilingual-e5-large",
+      "candidate_hit_at_50": 1.0,
+      "rrf_recall_at_5": 0.7368421052631579,
+      "rrf_mrr": 0.6947368421052631,
+      "reranked_recall_at_5": 1.0,
+      "reranked_mrr": 0.868421052631579,
+      "reranked_page_hit_at_5": 0.7368421052631579,
+      "reranked_multi_evidence_recall_at_5": 0.42105263157894735,
+      "rerank_api_ms_p95": 1567.4820999847725,
+      "incremental_cost_usd": 0.058692470000000004,
+      "manual_resume_count": 0
+    },
+    {
+      "embedding_model": "amazon/titan-embed-text-v2",
+      "candidate_hit_at_50": 1.0,
+      "rrf_recall_at_5": 0.7368421052631579,
+      "rrf_mrr": 0.6140350877192983,
+      "reranked_recall_at_5": 0.8947368421052632,
+      "reranked_mrr": 0.8333333333333334,
+      "reranked_page_hit_at_5": 0.6842105263157895,
+      "reranked_multi_evidence_recall_at_5": 0.3157894736842105,
+      "rerank_api_ms_p95": 1315.738799981773,
+      "incremental_cost_usd": 0.05409858,
+      "manual_resume_count": 0
+    }
+  ],
+  "total_tokens": 1439981,
+  "total_cost_usd": 0.2860298299999999,
+  "approved_cost_ceiling_usd": 0.5,
+  "automatic_retry_count": 0,
+  "manual_resume_count": 1,
+  "interpretation": {
+    "document_retrieval_leader": "intfloat/multilingual-e5-large",
+    "page_and_multi_evidence_leader": "qwen/qwen3-embedding-8b",
+    "final_model_selected": false,
+    "reason": "the frozen questions are valid, but the 100-document corpus is a post-hoc sample rather than the preregistered 1360-document full evaluation"
+  }
+}

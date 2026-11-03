@@ -1,0 +1,1939 @@
+{
+  "status": "ok",
+  "evaluation_level": "frozen_100_document_sample",
+  "decision_support": true,
+  "formal_full_corpus_evaluation": false,
+  "model": "openai/text-embedding-3-small",
+  "dimension": 1536,
+  "dataset_sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+  "chunks_sha256": "0b4c81ee9bf64120a07ff7f5dd3fc766f1215ffe7076440d56733c95eab8d030",
+  "documents": 100,
+  "cards": 4305,
+  "unique_texts": 4056,
+  "questions": 19,
+  "document_tokens": 523033,
+  "query_tokens": 2040,
+  "total_tokens": 525073,
+  "total_cost_usd": 0.01050146,
+  "document_seconds": 123.9755549998954,
+  "normalized_1000_chunk_seconds": 30.5659652366606,
+  "normalized_1000_chunk_cost_usd": 0.0025790581854043394,
+  "query_api_ms_p50": 845.3354999655858,
+  "query_api_ms_p95": 1008.7847000686452,
+  "retrieval_local_ms_p50": 16.636400017887354,
+  "vector_payload_22000_float32_mib": 128.90625,
+  "metrics": {
+    "bm25": {
+      "recall_at_5": 0.2631578947368421,
+      "mrr": 0.13333333333333333,
+      "page_hit_at_5": 0.10526315789473684,
+      "multi_evidence_recall_at_5": 0.05263157894736842
+    },
+    "dense": {
+      "recall_at_5": 0.7894736842105263,
+      "mrr": 0.6552631578947368,
+      "page_hit_at_5": 0.42105263157894735,
+      "multi_evidence_recall_at_5": 0.2631578947368421
+    },
+    "hybrid": {
+      "recall_at_5": 0.7894736842105263,
+      "mrr": 0.6754385964912281,
+      "page_hit_at_5": 0.3684210526315789,
+      "multi_evidence_recall_at_5": 0.2631578947368421
+    }
+  },
+  "rows": {
+    "bm25": [
+      {
+        "id": "draft30-e03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      {
+        "id": "draft30-e04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      {
+        "id": "draft30-e05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      {
+        "id": "draft30-e08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      {
+        "id": "draft30-m03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft30-m04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      {
+        "id": "draft30-m05",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          }
+        ]
+      },
+      {
+        "id": "draft30-m07",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      {
+        "id": "draft30-h04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          }
+        ]
+      },
+      {
+        "id": "draft30-h05",
+        "rank": 3,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 2,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft50-n01",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 17
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 16
+          }
+        ]
+      },
+      {
+        "id": "draft50-n02",
+        "rank": 5,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "BAS16H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS70 SERIES_G2606.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft50-n03",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "TSCDF16065G1_A2404.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 1,
+            "idx": 4
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "MUR305SBH SERIES_A2102.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS15P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          },
+          {
+            "file": "TS25P05G-K SERIES_C2104.pdf",
+            "page": 1,
+            "idx": 1
+          }
+        ]
+      },
+      {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 40
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 43
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft50-n07",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      {
+        "id": "draft50-n08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      {
+        "id": "draft52-n21",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "BAS21 SERIES_E2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "ABS4-K SERIES_C2103.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "KBU801G SERIES_J2103.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      }
+    ],
+    "dense": [
+      {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      {
+        "id": "draft30-e04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 12
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          }
+        ]
+      },
+      {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft30-e08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS34LH SERIES_A2103.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 4,
+            "idx": 5
+          },
+          {
+            "file": "SS34L SERIES_C2103.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "SS34FSH SERIES_B2103.pdf",
+            "page": 2,
+            "idx": 47
+          }
+        ]
+      },
+      {
+        "id": "draft30-m03",
+        "rank": 5,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52B2V4 SERIES_F15.pdf",
+            "page": 2,
+            "idx": 18
+          },
+          {
+            "file": "BZT52B2V4 SERIES_F15.pdf",
+            "page": 2,
+            "idx": 17
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 3,
+            "idx": 6
+          }
+        ]
+      },
+      {
+        "id": "draft30-m04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ]
+      },
+      {
+        "id": "draft30-m07",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 3,
+            "idx": 6
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5820 SERIES_I2105.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          }
+        ]
+      },
+      {
+        "id": "draft50-n01",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 27
+          }
+        ]
+      },
+      {
+        "id": "draft50-n02",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      {
+        "id": "draft50-n03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 32
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 38
+          },
+          {
+            "file": "1N4148WS SERIES_N2212.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "TSCDM08065G1_A2507.pdf",
+            "page": 2,
+            "idx": 34
+          },
+          {
+            "file": "TSCDK20065G1_A2507.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "RB520S-30_D2510.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ]
+      },
+      {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 6
+          }
+        ]
+      },
+      {
+        "id": "draft50-n07",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ]
+      },
+      {
+        "id": "draft50-n08",
+        "rank": 4,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          }
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "id": "draft30-e03",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ]
+      },
+      {
+        "id": "draft30-e04",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 23
+          }
+        ]
+      },
+      {
+        "id": "draft30-e05",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 29
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 31
+          }
+        ]
+      },
+      {
+        "id": "draft30-e08",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 43
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 38
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": 3,
+            "idx": 40
+          },
+          {
+            "file": "SS32 SERIES_Q2412.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft30-m03",
+        "rank": 2,
+        "page_hit": true,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": 2,
+            "idx": 31
+          },
+          {
+            "file": "BZT52C2V4-G SERIES_C2007.pdf",
+            "page": 2,
+            "idx": 23
+          }
+        ]
+      },
+      {
+        "id": "draft30-m04",
+        "rank": 3,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52C2V4 SERIES_G1804.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          }
+        ]
+      },
+      {
+        "id": "draft30-m05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 20
+          }
+        ]
+      },
+      {
+        "id": "draft30-m07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84C2V4 SERIES_F2001.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BZX84C2V4H SERIES_A2503.pdf",
+            "page": 2,
+            "idx": 5
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft30-h04",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N4148W-G_D1601.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "TSU1H100H_A2507.pdf",
+            "page": 1,
+            "idx": 3
+          }
+        ]
+      },
+      {
+        "id": "draft30-h05",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 4
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 14
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 15
+          }
+        ]
+      },
+      {
+        "id": "draft50-n01",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 26
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 13
+          }
+        ]
+      },
+      {
+        "id": "draft50-n02",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 20
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS16H_A2412.pdf",
+            "page": 1,
+            "idx": 4
+          }
+        ]
+      },
+      {
+        "id": "draft50-n03",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 9
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 8
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 1,
+            "idx": 11
+          },
+          {
+            "file": "1N4148WS-G_C2211.pdf",
+            "page": 2,
+            "idx": 29
+          }
+        ]
+      },
+      {
+        "id": "draft50-n04",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 19
+          },
+          {
+            "file": "BZT52C2V7K SERIES_H2510.pdf",
+            "page": 3,
+            "idx": 7
+          },
+          {
+            "file": "BAV70WH_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft50-n05",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "BZT52B2V4SH SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BZX84JB2V4H SERIES_A2503.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "BAS21H_A2412.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          },
+          {
+            "file": "1N4148WSH_A2501.pdf",
+            "page": 1,
+            "idx": 5
+          }
+        ]
+      },
+      {
+        "id": "draft50-n06",
+        "rank": 1,
+        "page_hit": true,
+        "all_gold_locations_hit": true,
+        "top": [
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 39
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 41
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 43
+          },
+          {
+            "file": "1N4148 SERIES_K2301.pdf",
+            "page": 2,
+            "idx": 33
+          }
+        ]
+      },
+      {
+        "id": "draft50-n07",
+        "rank": 2,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 23
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 25
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 2,
+            "idx": 24
+          }
+        ]
+      },
+      {
+        "id": "draft50-n08",
+        "rank": null,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 33
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 2,
+            "idx": 35
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      },
+      {
+        "id": "draft52-n21",
+        "rank": 1,
+        "page_hit": false,
+        "all_gold_locations_hit": false,
+        "top": [
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": null,
+            "idx": 0
+          },
+          {
+            "file": "1N4148W SERIES_K1804.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS16_F2001.pdf",
+            "page": 1,
+            "idx": 2
+          },
+          {
+            "file": "1N5817 SERIES_H2104.pdf",
+            "page": 1,
+            "idx": 18
+          },
+          {
+            "file": "BAS19 SERIES_C2001.pdf",
+            "page": 1,
+            "idx": 2
+          }
+        ]
+      }
+    ]
+  },
+  "retry_count": 0,
+  "elapsed_seconds": 141.62581510003656,
+  "runner": "evals/evaluate_frozen_embedding_sample.py",
+  "input_contract": "plain query/document; dimensions=1536",
+  "public_artifact_note": "Original metrics and ranks; provider error text sanitized for public repository."
+}
