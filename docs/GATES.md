@@ -9,9 +9,9 @@
 | G1 배포 주소 | README 팀 정보의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 진행 중: 빈 FastAPI를 배포해 공개 주소의 `/health` 응답을 확인했다(10-30). 그 뒤 `main`에 들어온 로그인은 아직 배포하지 않았고, 핵심 시나리오와 평가용 계정은 아직 없다 |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요: TSC 데이터시트 1,360건을 Docling으로 파싱했다. `data/manifest.jsonl` 1,360행을 Checkpoint 대시보드가 "문서 1360/50, 청크 52,244/10,000"(청크는 manifest 카드 수 합계)으로 읽는다(11-02). 서로 다른 청크(본문 sha256)는 개선 2 45,898개, 개선 전 10,723개다(로컬, 11-01). 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 있어, 평가자가 서로 다른 청크 수를 확인할 방법은 아직 없다 |
-| G4 에이전트 | `backend/graph/`, `backend/auth.py`, `backend/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 진행 중: 로그인·서버 세션은 `main`에 있다(`backend/auth.py`, 11-02). 그래프(`backend/graph/build.py`)·체크포인트·사용자별 기억(`backend/memory.py`)은 아직 뼈대뿐이다 |
+| G4 에이전트 | `backend/graph/`, `backend/auth.py`, `backend/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 진행 중: 로그인·서버 세션은 `main`에 있다(`backend/auth.py`, 11-02). 줄기 그래프(`backend/graph/build.py`)는 조립했으며 Supervisor·승인 지점·사용자별 기억(`backend/memory.py`)은 아직 미구현이다 |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 진행 중: 평가셋 v1 50건(관련 25·비관련 25)을 11-02에 동결했다(`evals/FROZEN.json`, sha256 `2fef02c2dcd8…`). 동결 평가셋으로 잰 개선 전후 결과는 아직 없다 |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중: #20 현재 Skill의 대표 흐름4건·직접 생성13건, generation23개의 모델·버전·부모·시각은 API 확인. 상황별 기준12/13 충족(충돌1건 실패). 현재 실행 UI·동결 평가 점수 연결은 미확인. 기존 사용자 UI6장은 이전 등록 본문에만 해당 |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중: 그래프 평가 실행(`evals/run_graph.py`)은 단계·토큰·비용과 실행 점수를 기록하며 답 채점 점수는 아직 없음. #20 Skill 대표4건·직접 생성13건의 generation23개를 API 확인했고 상황별 기준12/13 충족(충돌1건 실패). 현재 Skill 실행 UI·동결 답 채점 점수는 미확인. 기존 사용자 UI6장은 이전 등록 본문에만 해당 |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | |
 
 ## 상태 표기
