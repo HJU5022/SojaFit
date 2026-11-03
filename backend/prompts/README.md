@@ -12,6 +12,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-03 | `tool_use.md` | `sojafit/tool-use` 등록 번호 1 | PR #36 도구5종의 선택·인자·결과 해석을 별도 프롬프트로 작성 | manifest ID·웹 후보·PDF 무결성·공개 회로의 계약을 구분 | #21~#23 모의12건 확인. 도구/인자5/5·고정 action11/12 일치, 실제 도구0회. `tool_prompt_check_2026-11-03_last.json` |
 | 2026-11-03 | `../mcp_skill/skills/SKILL.md` | Langfuse 등록 번호 2 | S1 7상황·S2 6상황의 현재 본문 등록, 노드 chat prompt는 버전4 유지 | 상황별 판단까지 작성한 본문과 검증 대상 일치 | #20 대표 흐름4건·직접 생성13건의 추적 연결 확인. 답변 기준12/13 충족, 충돌1건 실패. `skill_scenarios_2026-11-03_current.json` |
 | 2026-11-03 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse development v4 | `sojafit/route`, `grade`, `rewrite`, `generate`로 chat prompt 등록. user는 `{{input}}`, 생성 system에 선택적 `{{domain_skill}}` | 고정 버전과 generation 연결. 모델 Haiku5.5·temperature0·출력4096 | 합성4건·generation10개에서 프롬프트 버전·모델·부모 연결을 API로 확인. `langfuse_skill_check_2026-11-03_final.json` |
 | 2026-11-03 | `generate.md` | v2 | 값 조회와 최종 적합성·없는 보장값 요청의 응답 범위를 구분. S1/S2 Skill은 별도 적용 | 기본 프롬프트와 Skill의 거절/부분 답변 충돌 해소 | 동결 평가셋 품질은 미측정 |
@@ -22,6 +23,7 @@
 | 2026-11-02 | `route.md` | v1 | 처음 작성. 질문 종류 5가지를 위에서부터 차례로 고르고, 다이오드가 아닌 부품 선정·가격·주문·펌웨어는 범위 밖 | 라우팅 노드(SPEC 2절) | 개발 확인(구독 Haiku, v1 50문항): out_of_domain 6/6이 범위 밖. 그 밖에 범위 밖으로 간 문항 1개(e09 실측값 요청). h10(다른 개정판 질문)은 역할로 가 검색을 건너뜀. 기록용 측정 아님 |
 
 ## 파일
+- `tool_use.md` — MCP 도구5종의 선택·인자·미검증 결과 해석 지침. Langfuse `sojafit/tool-use`용이며 실제 그래프 연결은 미구현
 - `README.md` — 이 폴더 설명과 버전 기록
 - `generate.md` — 생성 노드의 시스템 프롬프트(근거만으로 인용을 붙여 답하기)
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 카드 번호 고르기)

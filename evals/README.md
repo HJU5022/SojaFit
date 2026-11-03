@@ -17,6 +17,9 @@
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `run_skill_pair.py` — #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.run_skill_pair <새 결과 폴더>`. 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
 - `results/` — 평가 원시 결과
+- `results/tool_prompt_check_2026-11-03.json` — #21 도구 선택 프롬프트의 자유 인자 스키마 실패·중단 결과. 도구 선택5종의 필수 인자가 빈 객체여서 실패
+- `results/tool_prompt_check_2026-11-03_typed.json` — #22 명시적 인자 스키마로 같은 프롬프트·입력12건을 확인한 개발 결과. 실제 도구 호출은0회
+- `results/tool_prompt_check_2026-11-03_last.json` — #23 미실행 지시문 주입1건 확인과 #22 합산 검토. 서로 다른12건 확인, 도구/인자5/5·고정 행동11/12 일치
 - `results/langfuse_skill_check_2026-11-03_final.json` — 이전 등록 본문에 대한 사전 등록 #19의 합성4건·generation10개 타임라인 API 확인과 응답. 사용자 제공 UI6장으로 등록 목록·정격 조회·보장값 부재 흐름 확인 완료(범위는 JSON의 `ui_confirmation`). 동결셋 평가·전체 사례 UI 확인·실제 청구액 측정은 아님
 - `results/langfuse_skill_check_2026-11-03_current.json` — #20 현재 Skill 본문의 대표 흐름4건 재검증. 모델·프롬프트·Skill 버전·해시와 원격 타임라인을 기록
 - `results/skill_scenarios_2026-11-03_current.json` — #20 S1 7상황·S2 6상황의 생성 노드 직접 검증. 입력 근거·검토 기준·답변·원격 타임라인을 기록. Codex 답변 검토12/13 충족, 충돌1건 실패이며 전체 그래프/검색/동결 평가 결과와 구분

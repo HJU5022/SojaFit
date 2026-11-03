@@ -30,3 +30,7 @@
 - 예: 같은 `state`로 `generate(state)`와 `generate(state, use_skill=True)`를 비교합니다. LLM 호출은 두 경우 모두 `backend/services/llm.py`를 거칩니다. 실제 평가 전에 비용·실행 조건을 사전 등록합니다.
 - 명시적인 Langfuse 세션에서는 `sojafit/generate`의 고정 버전과 `sojafit/skills/diode-evidence`의 본문·버전·해시를 따로 연결합니다. `DEMO_MODE=0 uv run python -m scripts.langfuse_skill_check <새 결과 JSON>`은 기존 등록 버전을 조회·대조하며, 불일치하면 모델 호출 전에 중단합니다. 원격 반영에는 `--publish`가 필요합니다. 세션 밖은 기존 로컬 파일을 사용합니다.
 - 전체 서비스 그래프 조립·MCP 실제 검색 도구와 동결 평가셋 품질 비교는 별도 검증 대상입니다. 합성 자료의 프롬프트/추적 연결 확인을 MCP+Skill 가산 충족이나 품질 개선으로 보고하지 않습니다.
+
+## 도구 선택 프롬프트
+
+[PR #36](https://github.com/aihuman-7th/proj3-b/pull/36)의 도구5종 계약을 기준으로 [tool_use.md](../prompts/tool_use.md)를 작성하고 Langfuse `sojafit/tool-use` 등록 번호1에 두었습니다. 모의 입력12건에서 도구 선택·필수 인자5/5, 고정 다음 행동11/12가 일치했습니다. 상한0에서 확인 질문 대신 한도 설명 답변을 한 차이1건을 남깁니다. 실제 MCP 서버·클라이언트 연결과 웹/DB 도구 실행은 검증하지 않았습니다. 현재 브랜치의 서버 틀과 PR #36의 구현을 구분하며 서버 코드는 복사하지 않습니다. 계약과 수용 기준은 [작업서](../../docs/specs/mcp-tool-prompt.md)를 따릅니다.
