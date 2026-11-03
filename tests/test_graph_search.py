@@ -22,7 +22,7 @@ def test_question_part_wins_over_target_value():
     out = search({"question": "D3 대체 후보 1N60P의 역전압을 알려 줘.", "target_part": D3}, fake_retriever(calls))
     assert calls == [("D3 대체 후보 1N60P의 역전압을 알려 줘.", ["1N60P"])]
     assert out == {"query": "D3 대체 후보 1N60P의 역전압을 알려 줘.", "parts": ["1N60P"], "docs": [{"chunk_id": 1}],
-                   "tries": 1, "path": ["검색"]}
+                   "retrieval_error": None, "tries": 1, "path": ["검색"]}
 
 
 def test_target_value_used_when_question_has_no_part():

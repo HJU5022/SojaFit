@@ -33,6 +33,11 @@ def after_route(state: AgentState) -> str:
     return "검색"
 
 
+def after_search(state: AgentState) -> str:
+    """검색 장애는 빈 결과와 달리 채점·재검색하지 않고 안전하게 끝낸다."""
+    return "거절" if state.get("retrieval_error") else "채점"
+
+
 def after_grade(state: AgentState) -> str:
     """채점 뒤 갈림길: 통과 카드가 있으면 생성, 다시 찾아도 소용없거나 상한에 닿았으면 거절, 아니면 재작성(강의 2주 20강 채점후)."""
     if state.get("passed"):
@@ -59,7 +64,7 @@ def build_graph(retriever=None, checkpointer=None):
     b.add_edge(START, "입력 읽기")
     b.add_edge("입력 읽기", "라우팅")
     b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "검색"})  # {갈림길이 돌려준 값: 갈 노드}
-    b.add_edge("검색", "채점")
+    b.add_conditional_edges("검색", after_search, {"채점": "채점", "거절": "거절"})
     b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
     b.add_edge("재작성", "검색")  # 되돌아가는 길. 무한히 돌지 않게 after_grade가 tries로 막는다
     b.add_edge("생성", END)

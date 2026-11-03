@@ -3,6 +3,7 @@ import pytest
 
 from backend.graph import nodes
 from backend.graph.build import build_graph
+from backend.graph.mcp_retriever import RetrievalUnavailableError
 
 QUESTION = "TSC 1N5817은 역전압을 몇 V까지 견뎌?"
 # 평가셋 v1과 같은 입력 형식(회로·넷리스트·대상·질문). 넷리스트는 저장소의 샘플 회로다
@@ -63,6 +64,27 @@ def test_zero_cards_refuses_without_rewrite(monkeypatch):
     out, calls = run(monkeypatch, "rating", [], [])  # 채점 LLM을 부르면 StopIteration으로 깨진다
     assert len(calls) == 1
     assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점", "거절"]
+
+
+def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
+    def fake_chat(system, user, schema):
+        if schema is nodes.Route:
+            return schema(question_type="rating")
+        raise AssertionError(f"장애 뒤 LLM을 호출하면 안 됨: {schema.__name__}")
+
+    calls = []
+
+    def unavailable(question, *, parts=None):
+        calls.append((question, parts))
+        raise RetrievalUnavailableError("timeout")
+
+    monkeypatch.setattr(nodes.llm, "chat", fake_chat)
+    out = build_graph(retriever=unavailable).invoke({"input": INPUT})
+    assert calls == [(QUESTION, ["1N5817"])]
+    assert out["retrieval_error"] == {"kind": "timeout"}
+    assert out["path"] == ["입력 읽기", "라우팅", "검색", "거절"]
+    assert "검색 도구" in out["answer"]
+    assert "데이터시트를 찾지 못" not in out["answer"]
 
 
 @pytest.mark.parametrize("question_type, last", [("out_of_scope", "거절"), ("role", "생성")])
