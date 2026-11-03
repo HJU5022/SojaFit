@@ -18,9 +18,9 @@
 
 ## 2026-11-03 검색 베이스라인 문항별 대조·실패 유형 분석과 G4/G5 변이 확인
 
-- 한 일: `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json` 3종과 `evals/dataset_v1.jsonl` 관련 19문항을 문항별로 대조해 `docs/research/retrieval-baseline-analysis.md`에 출제·근거 분리 경위, 채점 방식과 한계, 19문항 전체 순위·쪽 적중 대조표, 회귀 문항(`h04, n03, n21` 및 `n02`), 검색 실패 유형 4종을 정리했다. 이어서 `docs/GATES.md`의 G5 상태와 G4/G5 변이 확인 3건(`build.py` `MAX_TRIES`, `nodes.py` `other_part_row`, `nodes.py` `fake_citations`)을 한 줄씩 깨뜨려 pytest 실패를 확인한 뒤 원복하고 표를 채웠다.
+- 한 일: `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json` 3종과 `evals/dataset_v1.jsonl` 관련 19문항을 문항별로 대조해 `docs/research/retrieval-baseline-analysis.md`에 출제·근거 분리 경위, 채점 방식과 한계, 19문항 전체 순위·Page Hit 대조표, 회귀 문항(`h04, n03, n21` 및 `n02`), 검색 실패 유형 4종을 정리했다. 이어서 `docs/GATES.md`의 G5 상태와 G4/G5 변이 확인 3건(`build.py` `MAX_TRIES`, `nodes.py` `other_part_row`, `nodes.py` `fake_citations`)을 한 줄씩 깨뜨려 pytest 실패를 확인한 뒤 원복하고 표를 채웠다.
 - 바꾼 파일: `docs/research/retrieval-baseline-analysis.md`, `docs/research/RESEARCH.md`, `docs/GATES.md`, `SOJAFIT.md`
-- 실행한 명령과 결과: 원시 결과 3개 파일의 19문항별 `rank`·`page_hit`·`top` 카드와 `dataset_v1.jsonl`을 대조해 하이브리드 문서 미적중 5건(`m03, n02, n04, n05, n08`), dense 대비 쪽 적중 상승 5건(`m05, h05, n01, n06, n07`)·회귀 3건(`h04, n03, n21`), BM25 대비 문서 적중 회귀 1건(`n02`)이 원시 JSON과 일치함을 확인했다. 변이 3건은 각각 1줄 수정 후 pytest에서 대상 단언문 실패를 확인하고 원복했다.
+- 실행한 명령과 결과: 원시 결과 3개 파일의 19문항별 `rank`·`page_hit`·`top` 청크와 `dataset_v1.jsonl`을 대조해 하이브리드 문서 미적중 5건(`m03, n02, n04, n05, n08`), dense 대비 Page Hit 상승 5건(`m05, h05, n01, n06, n07`)·회귀 3건(`h04, n03, n21`), BM25 대비 문서 적중 회귀 1건(`n02`)이 원시 JSON과 일치함을 확인했다. 변이 3건은 각각 1줄 수정 후 pytest에서 대상 단언문 실패를 확인하고 원복했다.
 - 확인 못 한 것: `"질문:"` 줄 단독 질의·품번 필터(`parts`)·리랭커(`rerank-3`) 각각의 단일 요인 전후 원시 결과는 아직 별도 사전 등록·실행 전이다.
 - 다음 할 일: 단일 요인 검색 실험이 실행되면 `EVAL_REPORT.md` 3장 표 `#1`·`#2`를 채운다.
 
@@ -72,7 +72,7 @@
 - 검증: 전용 임시 PostgreSQL(pgvector 0.8.6), 새 테스트의 실패 2건(HNSW 존재·질문 반올림으로 잘못된 1위)을 먼저 확인했다. 수정 후 storage 9 passed, `TEST_DATABASE_URL=<전용 로컬 DB> uv run python -m pytest -q`는 60 passed, 1 skipped(실제 코퍼스 BM25). SQL 반복·행 보존·HNSW 없는 API 0회 재적재·float32 경계 순위를 확인했다. `git diff --check` 통과.
 - 독립 AI 검토: 중요한 코드 문제 추가 없음. psql이 DATABASE_URL을 자동으로 읽지 않는 절차 오류를 지적받아 명시적 접속 인자와 ON_ERROR_STOP을 추가했다. 검토자도 storage 9개 통과를 별도로 확인했다. 사람 승인을 대신하지 않는다.
 - 병합 확인: PR #23 head df9f42d와 작업 트리의 `git stash create` 객체를 `git merge-tree --write-tree`로 가상 병합해 exit 0을 확인했다. 실제 브랜치/PR 병합은 하지 않았다.
-- 확인 못 한 것: 전체 원본 DB/카드/벡터 미확보로 실제 전체 용량·237.8MiB·1,000개 순위·공식 Recall/MRR은 미측정이다. 동일 본문 벡터 중복 제거 구현도 이번 범위 밖이다. 평가셋·동결 파일·원격 DB는 변경하지 않았다.
+- 확인 못 한 것: 전체 원본 DB/청크/벡터 미확보로 실제 전체 용량·237.8MiB·1,000개 순위·공식 Recall/MRR은 미측정이다. 동일 본문 벡터 중복 제거 구현도 이번 범위 밖이다. 평가셋·동결 파일·원격 DB는 변경하지 않았다.
 - 외부 전달문은 proj3-b-handoff/review-20261102/discord-message.md에서 갱신한다. 이번 후속 변경은 로컬 검토용이며 푸시·PR 수정·Discord 전송은 하지 않는다. 이전 원격 생성 예외를 확대하지 않는다.
 
 
@@ -80,7 +80,7 @@
 
 - 사용자 방향: 기존 코퍼스를 그대로 재현한 뒤 별도 검수. 분류별 축소를 원본 방식의 재현으로 간주하지 않는다.
 - 확인한 근거: origin/main은 4a74b70으로 유지된다. PR #23 df9f42d의 SPEC·ADR·jeongun 기록은 문서 변경뿐이며 실험 실행 코드·데이터를 포함하지 않는다. 보고 경로는 원본 전체 → HNSW 제거 → halfvec → 같은 본문 벡터 중복 제거, 코퍼스 합계 MiB는 829.5→466.7→258.0→237.8이다. 실제 질문 임베딩 비교·Supabase 서버 시간은 그 기록에서도 미확인이다.
-- 원본 탐색: 동일 저장소 Releases 0개, Actions 산출물 0개, 공유 Notion D0~D1에는 원래 수집·파싱 절차만 있고 카드·벡터 다운로드는 없다. 로컬 예상 corpus/SojaFit 경로와 전달 ZIP에도 원본 벡터가 없으며, 연결 Drive의 프로젝트 검색에서 관련 자료를 찾지 못했다. 비연결·다른 사용자 자료까지 없다는 뜻은 아니다.
+- 원본 탐색: 동일 저장소 Releases 0개, Actions 산출물 0개, 공유 Notion D0~D1에는 원래 수집·파싱 절차만 있고 청크·벡터 다운로드는 없다. 로컬 예상 corpus/SojaFit 경로와 전달 ZIP에도 원본 벡터가 없으며, 연결 Drive의 프로젝트 검색에서 관련 자료를 찾지 못했다. 비연결·다른 사용자 자료까지 없다는 뜻은 아니다.
 - 실제 재검수: 52문항의 NET 해시, 관련 gold PDF 6개의 실제 파일 SHA256이 현재 manifest와 모두 일치했다. 전체 DB·237.8MiB·1,000개 순위 동일성은 재현하지 못했다. API 재호출 0, 원본·평가셋·원격 PR 변경 없음.
 - 결과 위치: 저장소 밖 proj3-b-handoff/reproduction-20261102/preflight.json 및 reproduction-review.md에 확인 범위·원본 확보 후 단계별 검사·필수 자료를 기록했다. 아직 보내지 않은 discord-message.md는 원본 복원용 자료 요청 중심으로 수정하고 이전 버전을 별도 보존했다.
 - 현재 막힌 조건: 변환 전 DB 덤프 또는 chunks.jsonl+원본 vectors.f32·vectors.sha.txt와 실제 실험 SQL/스크립트, 동일 표본·설정이 없다. Supabase 비밀번호 없이도 이 묶음으로 로컬 재현할 수 있다. 기존 합성 데이터 시험을 원본 검수 결과로 대체하지 않는다.
@@ -95,7 +95,7 @@
 ## 2026-11-02 PR 전 재검토·최신 main 통합·전달문 준비
 
 - 한 일: 독립 재검토 후 추가 두 문항의 human_2 O와 작업서의 빈 검수란 설명 불일치를 고쳤다. 최신 origin/main 4a74b70(기존 HEAD보다 7커밋 뒤)을 받았고, 작업 파일 32개만 지정해 stash 보관한 뒤 fast-forward·apply로 복원했다. 미추적 넷리스트.zip은 제외·보존했다. ingest 충돌은 DOC_DEFAULTS와 halfvec/cache-only를 모두 유지해 해결했다.
-- 최신 main 호환: manifest에서 path가 빠진 새 형식에 맞춰 subset이 source_url의 파일명(URL query 제거·%20 복원)도 읽게 고쳤다. TDD 1 failed/23 passed → 24 passed. 기존 path 입력도 보존했다. 1,360문서의 PDF 해시·ID·개정판·쪽·카드 수·글자 수가 이전 manifest와 동일함을 대조했다. 새 DB 초기화 이름 000_init.sql로 안내를 맞추고 DB 지도에 있던 중복 파일 행을 정리했다.
+- 최신 main 호환: manifest에서 path가 빠진 새 형식에 맞춰 subset이 source_url의 파일명(URL query 제거·%20 복원)도 읽게 고쳤다. TDD 1 failed/23 passed → 24 passed. 기존 path 입력도 보존했다. 1,360문서의 PDF 해시·ID·개정판·쪽·청크 수·글자 수가 이전 manifest와 동일함을 대조했다. 새 DB 초기화 이름 000_init.sql로 안내를 맞추고 DB 지도에 있던 중복 파일 행을 정리했다.
 - 실행과 결과: 전용 임시 PostgreSQL에 000_init.sql을 적용한 뒤 `TEST_DATABASE_URL=<전용 localhost DB> uv run python -m pytest -q` → **59 passed, 1 skipped**. skip은 실제 코퍼스 DB가 필요한 BM25 시험이다. 첫 새 컨테이너 실행은 초기 확장 미설치로 ingest 시험 1건이 실패했고 초기화 후 통과했다. 코드 결함으로 포장하지 않는다.
 - 재검토: 새 독립 AI 검토에서 중요한 결함 없음. 최신 main 통합 후 subset·DOC_DEFAULTS·COPY·문서도 재확인했다. 52건·26/26·검수 40/7/5, 기존 질문·입력·NET 보존, v1/FROZEN 미변경, 로컬 링크 및 git diff --check 통과.
 - 비밀값 확인: Gitleaks v8.30.1로 승인 범위 32개 파일(약 552KB)을 별도 사본에서 redacted 검사, no leaks found. `.env`, ZIP, 전체 코퍼스, PR/Discord 전달문은 PR에서 제외한다. 기존 pyproject.toml·uv.lock은 변경하지 않았다.
@@ -105,18 +105,18 @@
 ## 2026-11-02 코퍼스 250MB·halfvec 도구와 로컬 검증
 
 - 승인 범위: 사용자 요청 1~3번. 전체 DB 250,000,000B 이하 우선, 평가의 회로 5종 유지. 질문 재작성·원격 게시·원본 삭제는 수행하지 않는다.
-- 근거: 공유 Notion D0~D1 페이지를 읽었다. 현재 500만은 문서 건수가 아니라 약 500만 글자이고 카드는 52,244장이다. 사용자는 837MB가 다른 사람 환경의 보고치라고 확인했다. 이쪽에는 적재 DB·전체 카드·카탈로그·벡터가 없다. .env·DATABASE_URL 없음, 현재 compose DB 없음, 연결된 Supabase에도 SojaFit 프로젝트 없음.
+- 근거: 공유 Notion D0~D1 페이지를 읽었다. 현재 500만은 문서 건수가 아니라 약 500만 글자이고 청크는 52,244장이다. 사용자는 837MB가 다른 사람 환경의 보고치라고 확인했다. 이쪽에는 적재 DB·전체 청크·카탈로그·벡터가 없다. .env·DATABASE_URL 없음, 현재 compose DB 없음, 연결된 Supabase에도 SojaFit 프로젝트 없음.
 - 사전 기록: 실제 모델 호출·전체 코퍼스 실험 예산 $0, 공식 평가 실행 없음. PREREGISTER #9는 정밀도만, #10은 코퍼스 분류만 바꾸며 실제 결과는 미측정이다. 읽기 전용 비교 최대 1,000개·기본 120초, query당 최대 5초. 표본·후보 부족과 timeout은 미통과.
 - 구현 순서: 사람 합의 40건 변경 보류·숫자형 7건·보류 5건 구분 → 분류별 별도 사본 도구 → halfvec 수동 전환·타입 일치 적재/검색 → 실제 PostgreSQL 계약 시험 → 원시 결과·문서·독립 검토.
 - 계약 시험: 이미 있던 pgvector/pgvector:pg16 이미지로 전용 임시 컨테이너 sojafit-halfvec-check-1102를 만들었다. localhost 임의 포트만 노출하고 tmpfs 저장을 사용한다. 원본·다른 DB는 건드리지 않는다. 합성 데이터의 SQL·정밀도·COPY·질의 시험이며, 실제 52,244개 검색 품질을 입증하지 않는다.
-- 시험 전 기록: TDD에서 test_rag_storage는 storage 모듈 미구현 ImportError로 먼저 실패했다. 분류 도구는 별도 에이전트가 모듈 부재 8실패 뒤 구현했으며 duplicate idx·payload 카드 수 회귀도 실패를 확인한 뒤 수정했다.
+- 시험 전 기록: TDD에서 test_rag_storage는 storage 모듈 미구현 ImportError로 먼저 실패했다. 분류 도구는 별도 에이전트가 모듈 부재 8실패 뒤 구현했으며 duplicate idx·payload 청크 수 회귀도 실패를 확인한 뒤 수정했다.
 - 바꾼 파일: backend/rag/subset.py·storage.py·ingest.py·retrieve.py·RAG.md, db/halfvec.sql.manual·DB.md·ERD.md·table-definition.md, tests/test_rag_subset.py·test_rag_storage.py·TESTS.md, .env.example, SPEC.md, EVAL_REPORT.md, evals/EVALS.md·PREREGISTER.md·DRAFT_50_REVIEW.md·draft_50.jsonl·results/storage_contract_2026-11-02.json, docs/specs/corpus-storage-budget.md·SPECS.md·rag-pipeline.md, 이 파일.
 - 검수 표시 결과: 기존 40건에 실제 사람 O를 동기화하고 현재 코퍼스 기준 변경 보류로 표시했다. 숫자형 7건은 기계 대조만 있는 기록으로, 변경·추가 5건은 재검수/1차 판정 대기로 구분했다. 52건의 질문·정답·분류·근거는 이 표시 작업에서 바꾸지 않았고 v1·FROZEN도 보존했다.
 - 실제 로컬 계약 결과: pgvector 0.8.6, 합성 64행·1536차원에서 vector→halfvec 후 64행 유지, 평균 pg_column_size 6148→3076B. 16개 합성 질의 비교는 실제 벡터 1,000개 게이트가 아니다. 결과는 evals/results/storage_contract_2026-11-02.json이며 250MB/실제 검색 품질 달성은 null·false로 구분했다.
 - 실행과 결과: `TEST_DATABASE_URL=<전용 localhost 시험 DB> uv run python -m pytest -q` → **53 passed, 1 skipped**. 건너뛴 것은 실제 코퍼스 DB의 BM25 시험이다. DB 관련 시험은 임시 스키마를 만들어 제거했다. CLI help와 git diff --check 통과, pyproject.toml·uv.lock 변경 없음. uv sync로 기존 lock 환경만 설치했다.
-- 독립 검토·수정: 분류 도구의 고유 본문 수 기준 payload 추정이 실제 카드당 DB 행을 과소 계산하는 점을 바로잡았다. 누락된 manifest.chunks·중복/불연속 idx는 실패 처리했다. 비교의 초기 메타데이터/ID 조회까지 시간 제한을 확장하고 호출자 SET LOCAL 설정을 rollback으로 복구했다. 잠금 회귀·설정 보존 회귀를 실패 확인 후 통과시켰다. 최종 검토에서 남은 중요한 문제 없음; cache-only 검토도 6 tests passed.
+- 독립 검토·수정: 분류 도구의 고유 본문 수 기준 payload 추정이 실제 청크당 DB 행을 과소 계산하는 점을 바로잡았다. 누락된 manifest.chunks·중복/불연속 idx는 실패 처리했다. 비교의 초기 메타데이터/ID 조회까지 시간 제한을 확장하고 호출자 SET LOCAL 설정을 rollback으로 복구했다. 잠금 회귀·설정 보존 회귀를 실패 확인 후 통과시켰다. 최종 검토에서 남은 중요한 문제 없음; cache-only 검토도 6 tests passed.
 - API 금지 경로: 새 subset은 빈 DB에 적재해야 한다. 전체 DB에 ingest를 반복해도 삭제되지 않으므로 축소라고 하지 않는다. 캐시 복사본과 --cache-only를 사용하면 벡터 누락 시 provider를 부르기 전에 실패하고 DB 트랜잭션은 rollback된다.
-- 확인 못 한 것: 실제 catalog·전체 카드·float32 벡터·DB 덤프가 없어 실제 축소 사본 생성, G3(50문서/1만 고유본문), 전체 DB 250MB, 실제 1,000개 순위 겹침, 동결셋 Recall@5·MRR을 재지 못했다. 대상 Supabase의 pgvector 버전·메모리·속도도 미확인이다. 기본 vector는 유지했다. 전용 임시 컨테이너 sojafit-halfvec-check-1102는 확인 후 제거했다. 원격 변경·게시·커밋은 하지 않았다.
+- 확인 못 한 것: 실제 catalog·전체 청크·float32 벡터·DB 덤프가 없어 실제 축소 사본 생성, G3(50문서/1만 고유본문), 전체 DB 250MB, 실제 1,000개 순위 겹침, 동결셋 Recall@5·MRR을 재지 못했다. 대상 Supabase의 pgvector 버전·메모리·속도도 미확인이다. 기본 vector는 유지했다. 전용 임시 컨테이너 sojafit-halfvec-check-1102는 확인 후 제거했다. 원격 변경·게시·커밋은 하지 않았다.
 - 다음: 실제 자료를 확보하면 작업서의 새 출력 폴더·빈 DB·캐시 사본 명령으로 #10과 #9를 별개 실행한다. 품질 최종 채택은 동결 후 동일 코퍼스 Recall@5·MRR 무하락과 전체 DB 실측으로 정한다.
 
 ## 2026-11-02 추가 두 문항의 재훈 O 반영

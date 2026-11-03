@@ -1,16 +1,16 @@
-"""R1 검색 측정(사전 등록 #25): 문서 구조로 정답을 정한 100문항(고르기용 50 · 확인용 50)으로 임베딩 × 필터 × 리랭커 × 질의를 전부 곱해 잰다.
+"""R1 검색 측정(사전 등록 #25): 문서 구조로 정답을 정한 100문항(dev 세트 50 · test 세트 50)으로 임베딩 × 필터 × 리랭커 × 질의를 전부 곱해 잰다.
 
 하는 일
   - 검색 · 지표 · 짝 비교는 run_retrieval_d3.py(#24)의 search · metrics · run_cell · compare를 그대로 쓴다(k만 1·3·5·10·20).
-  - 고르기용 50문항에서만 264칸을 줄 세워 상위 3칸을 고르고, 확인용 50문항에서 그 3칸과 지금 서비스 설정을 한 번 비교한다.
-하지 않는 일: 정답 고치기, 확인용 문항으로 고르기, 청킹 · BM25 토큰 · RRF 바꾸기(#24에서 같음 · 악화로 끝남).
+  - dev 세트 50문항에서만 264칸을 줄 세워 상위 3칸을 고르고, test 세트 50문항에서 그 3칸과 지금 서비스 설정을 한 번 비교한다.
+하지 않는 일: 정답 고치기, test 세트 문항으로 고르기, 청킹 · BM25 토큰 · RRF 바꾸기(#24에서 같음 · 악화로 끝남).
 명령(저장소 루트에서 python -m evals.runners.run_retrieval_r1 <명령>)
   rewrite     서비스 재작성 노드로 Q3를 한 번 만들어 고정(OpenRouter, 상한 $5)
   qvec-api    API 임베딩 6종의 질문 벡터(OpenRouter · Voyage)
   gpu-qvec    GPU 임베딩 5종의 질문 벡터와 #24 벡터와의 일치 검사(desktop-gpu)
   requests    칸마다 리랭크할 후보 묶음을 모으고 Voyage는 병렬로 미리 부르고, Qwen 요청 파일을 쓴다
   gpu-rerank  Qwen3-Reranker-0.6B 요청을 GPU에서 처리(desktop-gpu)
-  run         264칸 고르기 → 확인용 비교 → 결과 JSON
+  run         264칸 고르기 → test 세트 비교 → 결과 JSON
 """
 import argparse
 import ast
@@ -38,7 +38,7 @@ GPU = {'kure': ('nlpai-lab/KURE-v1', '8b418a58414668e75532ed045c22d9ca018ae2b2')
        'qwen06': ('Qwen/Qwen3-Embedding-0.6B', '97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3'),
        'bgem3': ('BAAI/bge-m3', '5617a9f61b028005a4858fdac845db406aefb181'),
        'qwen4b': ('Qwen/Qwen3-Embedding-4B', '5cf2132abc99cad020ac570b19d031efec650f2b'),
-       'qwen8b': ('Qwen/Qwen3-Embedding-8B', '1d8ad4ca9b3dd8059ad90a75d4983776a23d44af')}  # #24 카드 벡터를 만든 revision
+       'qwen8b': ('Qwen/Qwen3-Embedding-8B', '1d8ad4ca9b3dd8059ad90a75d4983776a23d44af')}  # #24 청크 벡터를 만든 revision
 D3.KS = (1, 3, 5, 10, 20)  # [왜] k는 곱하지 않고 한 번에 곡선으로 본다(#25)
 
 
@@ -138,7 +138,7 @@ def gpu_qvec(args):
 
 # ---------- 2. 리랭크 요청 ----------
 class SortedReranker(D3.Reranker):
-    """같은 후보 묶음은 순서가 달라도 한 번만 리랭크한다. [왜] 점수는 (질문, 카드) 쌍마다 따로 매겨 넣는 순서와 무관하다."""
+    """같은 후보 묶음은 순서가 달라도 한 번만 리랭크한다. [왜] 점수는 (질문, 청크) 쌍마다 따로 매겨 넣는 순서와 무관하다."""
 
     def order(self, model, text, cands, index):
         return super().order(model, text, sorted(cands), index)
@@ -303,7 +303,7 @@ STEPS = [('S0 지금 서비스', {}), ('S1 +재작성 Q3', {'Q': 'Q3'}), ('S2 +�
 
 
 def steps(args):
-    """고르기용 · 확인용 각각 S0 → S4를 재고, 단계마다 바로 앞 단계와 짝 비교 · 달라진 문항 · 실패 유형을 남긴다."""
+    """dev 세트 · test 세트 각각 S0 → S4를 재고, 단계마다 바로 앞 단계와 짝 비교 · 달라진 문항 · 실패 유형을 남긴다."""
     out = {'meta': {'preregister': '#28', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'steps': [s for s, _ in STEPS]}}
     metric_keys = ('page_recall@5', 'page_hit@5', 'all_evidence@5')
     for split in ('dev', 'test'):

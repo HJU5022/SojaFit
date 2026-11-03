@@ -13,7 +13,7 @@
 - `test_graph_build.py` — 그래프 조립: 다섯 길(통과 → 생성, 재작성 → 재검색 → 생성, 두 번 다 통과 없음 → 거절, 검색 0장 → 거절, 범위 밖·역할 → 거절)과 검색기가 질문 줄만 받는지 확인
 - `test_graph_mcp_retriever.py` — PR #44 응답 검증, stdio 세션 재사용, timeout과 1회·2회 MCP 검색 경로 확인
 - `test_graph_mcp_stdio.py` — `TEST_DATABASE_URL`의 격리 코퍼스가 있을 때 실제 LangGraph → stdio MCP → DB 검색과 첫 검색 10초 제한 확인
-- `test_graph_generate.py` — 생성 노드: 통과 카드·넷리스트 전달, 인용 검사, 근거 없을 때 LLM 미호출, Skill 유무에 따른 지침·적용 해시 확인
+- `test_graph_generate.py` — 생성 노드: 통과 청크·넷리스트 전달, 인용 검사, 근거 없을 때 LLM 미호출, Skill 유무에 따른 지침·적용 해시 확인
 - `test_graph_grade.py` — 채점 노드: 같은 문서의 다른 품번 줄 제거, 다른 개정판만 남으면 LLM 미호출, LLM이 낸 없는 번호 버리기 확인
 - `test_graph_read_input.py` — 입력 읽기 노드: 입력 글 나누기, 경로 표시, 큰 넷 자르기, 평가셋 v1 50문항의 대상 부품 읽기 확인
 - `test_graph_refuse.py` — 거절 노드: 범위 밖·품번 문서 없음·답 없음 세 경로의 안내문과 Skill 적용 정보 초기화 확인

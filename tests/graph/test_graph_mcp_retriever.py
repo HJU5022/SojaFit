@@ -39,7 +39,7 @@ def test_decode_search_result_accepts_card_lists(value):
 
 @pytest.mark.parametrize("value", [[CARD], []])
 def test_decode_search_result_accepts_pr44_structured_result(value):
-    """PR #44의 실제 FastMCP 계약인 structuredContent.result를 카드 목록으로 읽는다."""
+    """PR #44의 실제 FastMCP 계약인 structuredContent.result를 청크 목록으로 읽는다."""
     assert decode_search_result(structured_result(value)) == value
 
 

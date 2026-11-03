@@ -1,6 +1,6 @@
 """그래프 평가 실행: 최종 메모장에서 Langfuse에 붙일 실행 점수를 바르게 뽑는지 확인한다.
 
-- 역할: evals/runners/run_graph.py의 run_scores가 경로·검색 횟수·카드 수·인용 검사 점수를 뽑고, 거절로 끝나면 인용 검사 점수를 빼는지 확인한다.
+- 역할: evals/runners/run_graph.py의 run_scores가 경로·검색 횟수·청크 수·인용 검사 점수를 뽑고, 거절로 끝나면 인용 검사 점수를 빼는지 확인한다.
 - 하지 않는 일: Langfuse·LLM 없이 돈다. 답이 맞았는지는 보지 않는다.
 - 출처: SPEC 7절(그래프 평가 실행), docs/GATES.md G6
 """

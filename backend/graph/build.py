@@ -31,9 +31,9 @@ def after_search(state: AgentState) -> str:
 
 
 def after_grade(state: AgentState) -> str:
-    """채점 뒤 갈림길: 통과 카드가 있으면 생성, 다시 찾아도 소용없거나 상한에 닿았으면 거절, 아니면 재작성(SPEC 2절)."""
+    """채점 뒤 갈림길: 통과 청크가 있으면 생성, 다시 찾아도 소용없거나 상한에 닿았으면 거절, 아니면 재작성(SPEC 2절)."""
     if state.get("passed"):
-        return "생성"  # 통과 카드가 하나라도 있으면 답한다
+        return "생성"  # 통과 청크가 하나라도 있으면 답한다
     if not state.get("docs"):
         # [왜] 재작성은 품번 필터를 바꾸지 않는다. 코퍼스에 없는 품번(1N4001)이라 0장이면 다시 찾아도 0장이고 LLM 호출만 버린다(11-02 조장 결정)
         return "거절"

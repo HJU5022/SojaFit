@@ -573,7 +573,7 @@ git commit --no-gpg-sign -m "test(graph): MCP 검색과 재검색 경로를 검�
 
 **Interfaces:**
 - Consumes: `TEST_DATABASE_URL`, 실제 `backend.mcp_skill.mcp_server.server`, `StdioMcpRetriever`.
-- Produces: 그래프→stdio MCP→실제 BM25 카드와 출처 필드 경로의 조건부 테스트.
+- Produces: 그래프→stdio MCP→실제 BM25 청크와 출처 필드 경로의 조건부 테스트.
 
 - [ ] **Step 1: 격리 DB 준비 여부 검사와 조건부 테스트 작성**
 

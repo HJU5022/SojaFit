@@ -1,7 +1,7 @@
-"""표 카드 규칙과 문서 키, manifest 크기를 지킨다.
+"""표 청크 규칙과 문서 키, manifest 크기를 지킨다.
 
 - 역할: 합친 칸 채우기, 머리 행 두 줄 잇기, 빈 표 건너뛰기, 문서 키, data/manifest.jsonl이 512,000바이트 아래인지 확인한다. Docling 없이 돈다.
-- 하지 않는 일: 실제 PDF 파싱·전체 카드 수(AC-03)는 확인하지 않는다.
+- 하지 않는 일: 실제 PDF 파싱·전체 청크 수(AC-03)는 확인하지 않는다.
 - 출처: docs/specs/rag-pipeline.md AC-01·AC-02, EC-03
 """
 import os

@@ -376,7 +376,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `embedding` | 임베딩 벡터 | `vector(1536)` | N |  | `text-embedding-3-small`의 출력 차원. 본평가 전 임시 결정(ADR 0004) | 확정(임시) |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
 
-- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, `backend/rag/retrieve.py`는 인덱스 스캔을 끄고 정확 검색합니다(11-01 실측에서 HNSW가 가까운 카드를 놓침). `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 차원은 2,000 이하여야 합니다.
+- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, `backend/rag/retrieve.py`는 인덱스 스캔을 끄고 정확 검색합니다(11-01 실측에서 HNSW가 가까운 청크를 놓침). `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 차원은 2,000 이하여야 합니다.
 - 현재 RAG 기본 열은 vector(1536)이며, 원본 코퍼스를 유지한 복제 DB에만 `manual/halfvec.sql.manual`로 halfvec(1536) 저장·HNSW 제거 전환을 시험할 수 있습니다. 검색 거리는 float32로 계산합니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
 - 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 지금 검색은 정확 검색이라 해당하지 않고, HNSW를 다시 쓰면 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
 - 차원이 다른 모델로 바꾸면 `embedding` 열을 새 Migration으로 바꿉니다.

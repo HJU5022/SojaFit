@@ -1,7 +1,7 @@
-"""평가셋의 관련 문항으로 검색 지표(문서 Recall@k, MRR, 쪽 적중@k)를 잰다. 검색 담당이 손으로 돌린다.
+"""평가셋의 관련 문항으로 검색 지표(문서 Recall@k, MRR, Page Hit@k)를 잰다. 검색 담당이 손으로 돌린다.
 
 - 역할: 데이터시트 근거가 있는 관련 문항마다 backend.rag.retrieve.retrieve(question, k, method)를 부르고,
-  정답 문서(gold_chunks의 PDF 이름)가 몇 위에 나왔는지, 정답 쪽까지 맞혔는지 센다. 결과를 json으로 남긴다.
+  정답 문서(gold_chunks의 PDF 이름)가 몇 위에 나왔는지, 정답 페이지까지 맞혔는지 센다. 결과를 json으로 남긴다.
   method는 hybrid(기본)·dense·bm25 중 하나이고 summary에 같이 적는다.
 - 하지 않는 일: 답변 채점, 비관련 문항의 거절 판정. 회로 근거만 있는 관련 문항과 후보 찾기 문항(question_type
   candidate_find, 열린 정답이라 gold_chunks가 예시 후보)은 세지 않고 id만 적는다.
@@ -34,7 +34,7 @@ def gold_locations(gold_chunks):
 
 
 def main(dataset_path, out_path, k=5, method='hybrid'):
-    """관련 문항마다 검색해 문서 Recall@k·MRR·쪽 적중@k·지연 p50을 구하고 json으로 저장한다(k는 문항당 결과 수, method는 hybrid·dense·bm25)."""
+    """관련 문항마다 검색해 문서 Recall@k·MRR·Page Hit@k·지연 p50을 구하고 json으로 저장한다(k는 문항당 결과 수, method는 hybrid·dense·bm25)."""
     from backend.rag.retrieve import retrieve, warmup
     items = [json.loads(line) for line in open(dataset_path, encoding='utf-8') if line.strip()]
     targets, skipped, open_skipped = [], [], []
@@ -59,7 +59,7 @@ def main(dataset_path, out_path, k=5, method='hybrid'):
         docs = {d for d, _ in gold}  # 정답 문서(PDF) 집합. 문항 하나에 정답 문서가 여럿일 수 있다
         # rank: 정답 문서가 처음 나온 순위(1부터). 상위 k개에 없으면 None
         rank = next((i + 1 for i, r in enumerate(found) if r['file'] in docs), None)
-        # 쪽 적중: 정답 (문서, 쪽) 쌍이 상위 k개 안에 하나라도 있는가(문서만 맞은 경우는 제외)
+        # Page Hit: 정답 (문서, 쪽) 쌍이 상위 k개 안에 하나라도 있는가(문서만 맞은 경우는 제외)
         page_hit = any((r['file'], r['page']) in set(gold) for r in found)
         rows.append({'id': it['id'], 'rank': rank, 'page_hit': page_hit, 'sec': round(sec, 3), 'gold': gold,
                      'top': [{'file': r['file'], 'page': r['page'], 'score': round(r['score'], 5),

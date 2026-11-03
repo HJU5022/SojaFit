@@ -35,11 +35,11 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     # ── 검색·재작성 노드가 채운다 (다시 검색하면 덮어쓴다. 새 메시지가 오면 입력 읽기 노드가 비운다) ──
     query: str          # 이번 검색어
     parts: list[str]    # 품번 필터. retrieve(..., parts=...)에 그대로 넘긴다
-    docs: list[dict]    # 검색해 온 카드
+    docs: list[dict]    # 검색해 온 청크
     retrieval_error: dict[str, str] | None  # MCP 검색 장애 종류. 정상 빈 결과면 None
 
     # ── 채점 노드가 채운다 ──
-    passed: list[int]   # 채점을 통과한 카드 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
+    passed: list[int]   # 채점을 통과한 청크 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
 
     # ── 생성·거절 노드가 채운다 ──
     answer: str         # 사용자에게 보여 줄 답

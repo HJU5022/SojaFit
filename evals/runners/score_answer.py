@@ -3,7 +3,7 @@
 - 역할: 문항(kind, expected, gold_chunks, question_type)과 그래프 최종 상태(path, answer, docs, passed, check, target_part)를
   대조해 관련 문항은 cited_gold(정답 근거 인용)·wrong_citation(오답 근거)·over_refusal(과잉 거절) 셋 중 하나로,
   비관련 문항은 correct_refusal(올바른 거절)·hallucination_risk(환각 위험) 둘 중 하나로 분류한다.
-  n01·n02처럼 relevant + NOT_VERIFIED가 정답인 문항에서 정답 카드를 인용해 조건 부족을 설명한 응답은 과잉 거절로 세지 않는다.
+  n01·n02처럼 relevant + NOT_VERIFIED가 정답인 문항에서 정답 청크를 인용해 조건 부족을 설명한 응답은 과잉 거절로 세지 않는다.
 - 하지 않는 일: LLM 호출을 통한 서술 의미 채점.
 - 출처: docs/experiments/answer-refusal-scorer.md, evals/guides/dataset-guide.md, EVAL_REPORT.md 2장
 
@@ -32,7 +32,7 @@ def load_excluded_ids(exclusions_path: Path | None = None) -> set[str]:
 
 
 def _used_and_fake(state: dict, answer: str) -> tuple[list[str], list[str], dict[str, dict]]:
-    """답변에서 실제 유효 인용(used), 허위 인용(fake), 통과 카드 사전(id_str -> card)을 구한다."""
+    """답변에서 실제 유효 인용(used), 허위 인용(fake), 통과 청크 사전(id_str -> card)을 구한다."""
     passed = set(state.get("passed") or [])
     docs = state.get("docs") or []
     cards = {str(d["chunk_id"]): d for d in docs if d.get("chunk_id") in passed}

@@ -1,6 +1,6 @@
-"""채점 노드: 다른 품번 줄과 다른 개정판 카드를 LLM 전에 거르고, LLM이 고른 카드만 통과시키는지 확인한다.
+"""채점 노드: 다른 품번 줄과 다른 개정판 청크를 LLM 전에 거르고, LLM이 고른 청크만 통과시키는지 확인한다.
 
-- 역할: 같은 문서의 다른 품번 줄은 빼고 패키지 줄·글 카드는 남기는지, 다른 개정판만 남으면 LLM을 부르지 않는지, LLM이 낸 없는 번호는 버리는지 확인한다.
+- 역할: 같은 문서의 다른 품번 줄은 빼고 패키지 줄·글 청크는 남기는지, 다른 개정판만 남으면 LLM을 부르지 않는지, LLM이 낸 없는 번호는 버리는지 확인한다.
 - 하지 않는 일: 실제 LLM의 채점 품질은 보지 않는다(가짜 LLM).
 - 출처: SPEC 2절(그래프)
 """
@@ -22,7 +22,7 @@ DOCS = [row(1, "PARAMETER: Forward voltage | 1N5817 | SYMBOL: VF | MAX: 0.45 | U
 
 
 def test_other_part_row_dropped_before_llm(monkeypatch):
-    # 1N5819를 물었는데 1N5817 줄(0.45V)이 남으면 틀린 수치로 답한다. 패키지 줄과 글 카드는 남는다
+    # 1N5819를 물었는데 1N5817 줄(0.45V)이 남으면 틀린 수치로 답한다. 패키지 줄과 글 청크는 남는다
     seen = {}
 
     def fake_chat(system, user, schema):
@@ -39,7 +39,7 @@ def test_other_part_row_dropped_before_llm(monkeypatch):
 
 def test_other_revision_dropped_without_calling_llm(monkeypatch):
     def fake_chat(system, user, schema):
-        raise AssertionError("남은 카드가 없으면 LLM을 부르지 않는다")
+        raise AssertionError("남은 청크가 없으면 LLM을 부르지 않는다")
 
     monkeypatch.setattr(nodes.llm, "chat", fake_chat)
     out = nodes.grade({"question": "1N5819의 H2611 개정판 순방향 전압은?", "parts": ["1N5819"], "docs": DOCS})

@@ -1,6 +1,6 @@
 """검색 규칙을 지킨다.
 
-- 역할: RRF 순서, BM25 토큰(한국어 조사), gold_chunks에서 정답 문서·쪽 읽기, 표지 카드 -> 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 표지 카드 제외, 리랭크 순서 뒤 상위 k장(가짜 llm), 데모 모드·method='bm25'에서 임베딩 API 안 부름, 없는 method의 ValueError, dense 1단계(비트 후보)가 허용 카드 > N_BIT일 때만 쓰이고 품번 필터 없을 때 아이디 목록을 보내지 않는지(가짜 연결)를 확인한다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
+- 역할: RRF 순서, BM25 토큰(한국어 조사), gold_chunks에서 정답 문서·쪽 읽기, 표지 청크 -> 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 표지 청크 제외, 리랭크 순서 뒤 상위 k개(가짜 llm), 데모 모드·method='bm25'에서 임베딩 API 안 부름, 없는 method의 ValueError, dense 1단계(비트 후보)가 허용 청크 > N_BIT일 때만 쓰이고 품번 필터 없을 때 아이디 목록을 보내지 않는지(가짜 연결)를 확인한다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
 - 하지 않는 일: 검색 품질(Recall@k 등)은 재지 않는다(evals/runners/run_retrieval.py).
 - 출처: docs/specs/rag-pipeline.md AC-05~11, EC-06~08
 - [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 시험에 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
@@ -34,7 +34,7 @@ def test_gold_locations_skip_netlist():
     assert gold_locations(gold) == [('1N5817 SERIES_H2104.pdf', 2)]
 
 
-# (카드 id, 문서 id, 본문): 문서 1은 SS34, 문서 2는 SS34L만 표지에 적혀 있다
+# (청크 id, 문서 id, 본문): 문서 1은 SS34, 문서 2는 SS34L만 표지에 적혀 있다
 ROWS = [(1, 1, '[SS32 SERIES_Q2412.pdf] 이 데이터시트의 품번: SS310, SS32, SS34'), (2, 1, '[SS32 SERIES_Q2412.pdf · 2쪽 · RATINGS] VRRM: 40'),
         (3, 2, '[SS34L SERIES_A1.pdf] 이 데이터시트의 품번: SS34L'), (4, 2, '[SS34L SERIES_A1.pdf · 1쪽 · RATINGS] SS34 VRRM: 40')]
 
@@ -67,7 +67,7 @@ def test_demo_mode_skips_embedding_api(monkeypatch):
 
 
 class _CardDB:
-    """retrieve()가 끝에 부르는 카드 조회 한 번만 ROWS로 흉내 낸다."""
+    """retrieve()가 끝에 부르는 청크 조회 한 번만 ROWS로 흉내 낸다."""
     def __enter__(self):
         return self
 
@@ -86,10 +86,10 @@ def test_bm25_method_skips_embedding_api(monkeypatch):
     monkeypatch.setattr(llm, 'embed_texts', boom)
     monkeypatch.setattr(R, '_bm25', (BM25Okapi([tokens(c) for _, _, c in ROWS]), [i for i, _, _ in ROWS]))
     monkeypatch.setattr(R, '_parts', part_index(ROWS))
-    monkeypatch.setattr(R, '_nocover', {2, 4})  # 카드 1·3은 표지
+    monkeypatch.setattr(R, '_nocover', {2, 4})  # 청크 1·3은 표지
     monkeypatch.setattr(R, '_connect', _CardDB)
-    found = R.retrieve('SS310 2', method='bm25')  # ss310은 표지 카드 1에만, 2는 카드 2에만 있다(카드가 4장뿐이라 흔한 낱말은 idf가 0이다)
-    assert [(r['chunk_id'], r['dense_rank'], r['bm25_rank']) for r in found] == [(2, None, 1)]  # 표지 카드 1은 빠진다
+    found = R.retrieve('SS310 2', method='bm25')  # ss310은 표지 청크 1에만, 2는 청크 2에만 있다(청크가 4장뿐이라 흔한 낱말은 idf가 0이다)
+    assert [(r['chunk_id'], r['dense_rank'], r['bm25_rank']) for r in found] == [(2, None, 1)]  # 표지 청크 1은 빠진다
 
 
 def test_unknown_method_raises():
@@ -128,7 +128,7 @@ def test_real_db_demo_mode_bm25_only(monkeypatch):
 
 
 def _fake_index(monkeypatch):
-    """카드 1·3은 표지(page_number 없음), 2·4는 본문 카드인 색인을 꽂는다."""
+    """청크 1·3은 표지(page_number 없음), 2·4는 본문 청크인 색인을 꽂는다."""
     monkeypatch.setattr(R, '_bm25', (BM25Okapi([tokens(c) for _, _, c in ROWS]), [i for i, _, _ in ROWS]))
     monkeypatch.setattr(R, '_parts', part_index(ROWS))
     monkeypatch.setattr(R, '_nocover', {2, 4})
@@ -155,7 +155,7 @@ def test_rerank_order_applied_then_top_k(monkeypatch):
 
     monkeypatch.setattr(llm, 'voyage_rerank', fake_rerank)
     found = R.retrieve('SS310 2', k=1)
-    assert calls == [('SS310 2', [ROWS[1][2], ROWS[3][2]])]  # 카드 id 오름차순(2, 4)으로 본문을 보낸다
+    assert calls == [('SS310 2', [ROWS[1][2], ROWS[3][2]])]  # 청크 id 오름차순(2, 4)으로 본문을 보낸다
     assert [r['chunk_id'] for r in found] == [4]  # 리랭크 순서(4, 2)에서 k=1장만 남는다
 
 
