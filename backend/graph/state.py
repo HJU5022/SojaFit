@@ -42,6 +42,7 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     # ── 생성·거절 노드가 채운다 ──
     answer: str         # 사용자에게 보여 줄 답
     check: dict         # 인용 검사 결과 (없는 근거 인용, 인용 없는 문장 수)
+    skill: dict         # 생성 노드의 Skill 적용 여부(enabled/applied)와 사용 파일 sha256
 
     # ── 쌓이는 칸 (Annotated[타입, operator.add]) ──
     # [왜] 덮어쓰지 않고 더하거나 이어 붙여야 검색 횟수와 지나간 길이 남는다(강의 2주 04강)
