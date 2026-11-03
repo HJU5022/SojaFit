@@ -20,7 +20,7 @@
 - `005_auth_attempt_window.sql` — 로그인 실패 집계 시간 컬럼 추가
 - `006_user_roles.sql` — 계정 역할 추가. 기존 계정은 일반 사용자로 유지하며 관리자는 `python -m backend.auth --role admin`으로 따로 만든다
 - `007_demo_accounts.sql` — 로컬 Compose용 관리자·일반 데모 계정 생성. 데모 모드 기본 계정 또는 네 환경변수로 지정한 이메일·scrypt 해시를 사용한다. `$`가 포함된 해시는 `.env`에서 작은따옴표로 감싼다. 실제 계정 비밀번호는 저장소에 두지 않는다. 새 볼륨 초기화 때 한 번 실행
-- `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용
+- `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용. 열이 halfvec(n)이면 `USING` 없이 차원 표시만 떼 표를 다시 쓰지 않는다(`scripts/db/voyage_rollout.py migrate`가 filenode 전후로 확인)
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 
