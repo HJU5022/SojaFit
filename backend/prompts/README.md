@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: LLM에 보내는 프롬프트 파일과 그 버전 기록을 둡니다. Dockerfile이 `backend/`를 복사하므로 키 없는 데모 모드에서도 같은 프롬프트를 씁니다.
-- 넣는 것: 프롬프트 파일(이름과 형식은 첫 프롬프트를 넣을 때 정합니다), 아래 버전 기록 표.
+- 넣는 것: 프롬프트 원본 Markdown과 아래 버전 기록 표. Langfuse 등록·실행 연결은 [services](../services/README.md)를 따릅니다.
 - 넣지 않는 것: LLM 호출 코드(`backend/services/llm.py`), 숫자 비교와 단위 환산(`backend/judge/`), 판정 규칙의 임계값(SPEC 5절 규칙 파일).
 - 담당: 에이전트
 
@@ -29,5 +29,3 @@
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 카드 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)
 - `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 5가지). 프롬프트 파일은 노드 하나에 마크다운 하나이고, 내용이 곧 시스템 프롬프트다
-
-Langfuse 프롬프트는 `backend/services/langfuse_prompts.py`로 등록합니다. 본문/config가 같은 development 버전은 재사용하며 production 라벨은 변경하지 않습니다. S1/S2 본문은 text prompt `sojafit/skills/diode-evidence`로 따로 관리합니다. 실제 호출은 고정 버전을 컴파일해 로컬 입력과 일치하는지 검사합니다.

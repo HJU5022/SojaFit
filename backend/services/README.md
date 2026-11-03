@@ -13,7 +13,5 @@
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
 ## 파일
-- `langfuse_prompts.py` — development 프롬프트/Skill 등록, 세션별 버전 고정·컴파일 대조와 노드 추적. LLM 호출은 llm.py에 유지
-- `llm.py` — LLM·임베딩 호출을 모으는 자리. 그래프 노드가 쓰는 `chat(system, user, schema)`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`로 강의 2주 20강과 같은 방식, claude_cli는 개발용, 모델 ADR 0010), 임베딩 `embed_texts()`, Langfuse 인증 확인이 있습니다. 평가 스크립트도 `embed_texts()`를 통해 API 임베딩을 호출합니다.
-
-평가 실행기의 `evaluation_limits(EvaluationBudget(...))` 컨텍스트 안에서는 원시 OpenRouter 채팅·임베딩 호출마다 횟수·시간·보수적 예약비용을 제한합니다. 출력 토큰·개별 timeout도 제한하며 컨텍스트 종료 뒤 기존 서비스 설정으로 돌아갑니다. 예약비용은 실제 사용량이나 공급자 청구액이 아닙니다.
+- `langfuse_prompts.py` — development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조와 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)
+- `llm.py` — LLM·임베딩 호출을 모으는 자리. 그래프 노드가 쓰는 `chat(system, user, schema)`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`로 강의 2주 20강과 같은 방식, claude_cli는 개발용, 모델 ADR 0010), 임베딩 `embed_texts()`, Langfuse 인증 확인이 있습니다. 평가 스크립트도 `embed_texts()`를 통해 API 임베딩을 호출합니다. 평가용 `evaluation_limits()`의 호출·예약비용 상한 계약은 [SPEC](../../SPEC.md)을 따릅니다.
