@@ -8,6 +8,14 @@
 - 중단 조건: v2 해시가 다르면 모두 멈춘다. 그 밖에는 그 부분만 건너뛰고 이유를 결과에 남긴다. Voyage 결제 신호면 남은 Voyage를 건너뛴다.
 - 바꾼 파일: `evals/runners/run_retrieval_d3.py`, `evals/inputs/`(INPUTS.md · qrels_v2_pages.json · rewrite_q3_v2.json), `tests/evals/test_retrieval_d3.py`, `evals/guides/preregister.md` #24, `SOJAFIT.md` 트리 · 폴더 표, `evals/EVALS.md`, `evals/runners/RUNNERS.md`, `tests/evals/EVALS.md`
 - 확인: `uv run --offline python -m pytest -q tests/repo/test_repo_layout.py tests/evals/test_retrieval_d3.py tests/evals/test_frozen_evals.py` 12개 통과. 측정 결과는 아직 보지 않았다.
+- 실행과 결과(측정 끝)
+  - 커밋: `d8febee`(사전 등록 · qrels · 실행기, 측정 전), `08b3dd6`(첫 실행에서 `search()`의 옛 import 경로 때문에 64칸이 모두 건너뛰어져 고침. 조건 변경 없음), `11adefa`(GPU 단계 조건 덧붙임, 측정 전).
+  - 맥: `official`(E1~E8, E6L만 GPU로 미룸), `noresult`, `explore`(276칸, 탐색). E6 변형 6종은 `chunks` 뒤 `embed`로 3-small 다시 임베딩(semantic은 OpenRouter 시간 초과 1회 뒤 이어서 끝냄).
+  - GPU(desktop-gpu RTX 3080 Ti 도커): `gpu_embed fixed1000_100 --mode bgem3`(120초) · `bgem3late`(112초, CLS 대체 0), `official --exps E2,E6L`(로컬 리랭커 bge-reranker-v2-m3 · Qwen3-Reranker 0.6B/4B). 기준 칸 값이 맥과 같다. 새 로컬 리랭크 114줄은 맥 캐시에 키 기준으로 합쳤다.
+  - 원시 결과: `evals/results/retrieval/d3_official_2026-11-03.json`, `d3_official_gpu_2026-11-03.json`, `d3_noresult_2026-11-03.json`, `d3_explore_2026-11-03.json`. 작업 사본은 `../전자_데이터시트/evidence/d3/`.
+  - 지출: OpenRouter $0.338(시작 뒤 키 사용액 차이, 상한 $1.00). Voyage 탐색 격자 새 호출 3,154회 · 31,879,036토큰과 공식 E2 76회 이하, 결제 신호 없음. HF 없음. Upstage 건너뜀(키 없음).
+  - 확인 못 한 것: 기대 범위 대조(맞음/틀림)는 적지 않았다. no_result 임계값은 같은 54문항 안에서 골랐다. GPU 결과의 커밋 칸은 컨테이너에 git이 없어 실행 뒤 `11adefa`로 적었다.
+  - 다음 할 일: 정운 검토 뒤 #24 맞음/틀림을 채우고 `EVAL_REPORT.md` 반영 여부를 정한다.
 
 ## 2026-11-03 폴더 안에서도 성격별로 묶는다(구조 2차 정리)
 - 한 일
