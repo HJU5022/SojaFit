@@ -66,9 +66,9 @@ S29는 원본 해시는 기존 manifest와 일치하지만, 단순 문자열 방
 
 ## 재현 자료
 
-- [30개 고정 질문과 과거 manifest 참고 URL](../evals/web-search-sample-30-v1.json)
-- [필터 비교의 질문별 집계](../evals/results/web-search-filter-comparison-2026-11-03.json)
-- [필터 비교 실행기](../evals/benchmark_web_search_filter.py)
-- [3개 PDF 확인 결과](../evals/results/web-search-pdf-smoke-2026-11-03.json)
-- [PDF 확인 실행기](../evals/benchmark_web_search_pdf_smoke.py)
-- [실험 사전등록](../evals/PREREGISTER.md)
+- 30개 고정 질문과 과거 manifest 참고 URL (원본 파일은 저장소 외부에 보관)
+- 필터 비교의 질문별 집계 (원본 파일은 저장소 외부에 보관)
+- 필터 비교 실행기 (원본 파일은 저장소 외부에 보관)
+- 3개 PDF 확인 결과 (원본 파일은 저장소 외부에 보관)
+- PDF 확인 실행기 (원본 파일은 저장소 외부에 보관)
+- [실험 사전등록](../../evals/guides/preregister.md)

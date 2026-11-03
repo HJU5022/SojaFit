@@ -236,7 +236,8 @@ SojaFit (proj3-b)
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
-│   │   └── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+│   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+│   │   └── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
@@ -252,7 +253,17 @@ SojaFit (proj3-b)
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
 │   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
 │   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
-│   │   └── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+│   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+│   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+│   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
+│   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
+│   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
+│   │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
+│   │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
+│   │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
+│   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
+│   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
+│   │   └── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
 │   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록

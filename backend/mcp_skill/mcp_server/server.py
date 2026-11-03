@@ -130,7 +130,8 @@ def _is_tsc_url(url: object) -> bool:
 @mcp.tool()
 def search_tsc_web(doc_id: str) -> dict:
     """공개 TSC 목록에 있는 문서의 미검증 웹 후보를 찾습니다."""
-    _validate_query(doc_id)
+    if not isinstance(doc_id, str) or not doc_id.strip() or len(doc_id) > 200:
+        raise ValueError("doc_id must contain 1 to 200 characters")
     empty = {'status': 'disabled', 'candidates': []}
     if os.getenv('DEMO_MODE', '1') != '0' or os.getenv('EXA_WEB_SEARCH_ENABLED') != '1':
         return empty

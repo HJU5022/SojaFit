@@ -54,9 +54,9 @@
 
 ## 재현 안내
 
-프로젝트의 backend/rag/parse.py 사용법과 uv ingest 그룹 조건은 [RAG 안내](../backend/rag/README.md)와 [작업서](specs/rag-pipeline.md)를 따른다. Windows에서 재실행할 때는 파일별 제한 시간이 없으므로 별도 상위 프로세스로 시간 제한을 적용한다. 모델이나 패키지가 캐시에 없으면 내려받기가 필요할 수 있다.
+프로젝트의 backend/rag/parse.py 사용법과 uv ingest 그룹 조건은 [RAG 안내](../../backend/rag/RAG.md)와 [작업서](../specs/rag-pipeline.md)를 따른다. Windows에서 재실행할 때는 파일별 제한 시간이 없으므로 별도 상위 프로세스로 시간 제한을 적용한다. 모델이나 패키지가 캐시에 없으면 내려받기가 필요할 수 있다.
 
-- [결과 요약 JSON](../evals/results/mcp-docling-pdf-2026-11-03.json)
-- [사전등록](../evals/PREREGISTER.md)
+- 결과 요약 JSON (원본 파일은 저장소 외부에 보관)
+- [사전등록](../../evals/guides/preregister.md)
 - [이전 pypdf·회로 오프라인 점검](mcp-offline-verification-2026-11-03.md)
 - [우선순위 1~2 실행 준비 계획](mcp-tool-implementation-plan.md)

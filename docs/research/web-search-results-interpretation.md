@@ -52,9 +52,9 @@ SojaFit은 코퍼스에서 근거를 찾지 못한 TSC 부품에 대해 공식 �
 ## 6. 참고 자료
 
 - [MCP·웹 검색 후보와 상세 실험 기록](mcp-tool-candidates-draft.md) — 11절: 30문항 실험, 12절: Tavily 인증 재측정
-- [30문항과 과거 manifest 참고 주소](../evals/web-search-sample-30-v1.json)
-- [Exa·Brave 등 30문항 질의별 집계](../evals/results/web-search-30-2026-11-03.json)
-- [Tavily 인증 30문항 질의별 집계](../evals/results/tavily-authenticated-30-2026-11-03.json)
-- [실험 사전등록](../evals/PREREGISTER.md)
+- 30문항과 과거 manifest 참고 주소 (원본 파일은 저장소 외부에 보관)
+- Exa·Brave 등 30문항 질의별 집계 (원본 파일은 저장소 외부에 보관)
+- Tavily 인증 30문항 질의별 집계 (원본 파일은 저장소 외부에 보관)
+- [실험 사전등록](../../evals/guides/preregister.md)
 
 > 후속 실험: 같은 30문항의 도구별 TSC 필터 유무 비교는 [필터 비교 결과](web-search-filter-comparison.md)를 본다.

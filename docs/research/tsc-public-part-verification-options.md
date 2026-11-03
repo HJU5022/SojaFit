@@ -8,8 +8,8 @@
 
 ## 현재 프로젝트와의 관계
 
-- [SPEC 2절](../SPEC.md): 코퍼스에 없는 TSC 문서는 공식 사이트에서 실시간으로 받은 후 검증하고 판정한다. 근거가 부족하면 문서로 확인 안 됨으로 표시한다.
-- [SPEC 6절](../SPEC.md): 새 문서에는 PDF 확인, SHA-256 기록, 파싱 오류 0, pdfplumber 대조 등 검증 관문이 필요하다. G5 평가는 기존 코퍼스만 쓰고 실시간 조회를 끈다.
+- [SPEC 2절](../../SPEC.md): 코퍼스에 없는 TSC 문서는 공식 사이트에서 실시간으로 받은 후 검증하고 판정한다. 근거가 부족하면 문서로 확인 안 됨으로 표시한다.
+- [SPEC 6절](../../SPEC.md): 새 문서에는 PDF 확인, SHA-256 기록, 파싱 오류 0, pdfplumber 대조 등 검증 관문이 필요하다. G5 평가는 기존 코퍼스만 쓰고 실시간 조회를 끈다.
 - 현재 STH의 MCP 초안은 기존 manifest의 일치하는 TSC 문서 ID만 외부 검색한다. 따라서 목록 밖 품번을 찾는 SPEC의 흐름은 아직 지원하지 않는다. manifest 문서명은 개별 품번 목록과 같지 않을 수 있다.
 - manifest는 과거 공개 출처 기록이며 현재 공개 상태와 최신성을 보장하지 않는다. 공개 품번이라도 **검색 사실 자체**가 외부에 노출될 수 있다.
 
@@ -43,4 +43,4 @@
 
 - [TSC 공식 제품 선정 가이드](https://www.taiwansemi.com/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/) — 공개 자료 후보. 전체 품번 포함 여부와 자동 수집·보관 조건은 미확인.
 - [TSC 공식 데이터시트 예시](https://services.taiwansemi.com/storage/resources/datasheet/TQM138KCU_A2403.pdf) — 공식 자료 예시. 검색 결과와 요청 품번의 일치 및 문서 검증을 별도로 수행해야 한다.
-- [MCP 검색 도구 작업서](specs/mcp-search-tools.md) · [MCP 도구 구현 계획](mcp-tool-implementation-plan.md) · [ADR 0006](adr/0006-근거가-없어도-대화는-이어-간다.md)
+- [MCP 검색 도구 작업서](../specs/mcp-search-tools.md) · [MCP 도구 구현 계획](mcp-tool-implementation-plan.md) · [ADR 0006](../adr/0006-근거가-없어도-대화는-이어-간다.md)
