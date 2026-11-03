@@ -13,3 +13,4 @@
 - `corpus-storage-budget.md` — 원본 코퍼스 유지와 halfvec 저장·HNSW 제거 검증 작업서
 - `evaluation-draft-30.md` — 난이도별 평가 문항 30건 검수 초안의 범위·형식·확인 기준
 - `evaluation-draft-52.md` — 정보 부족 분류 기준과 현재 50건 초안 작업서(파일명의 52는 당시 이력)
+- `answer-refusal-scorer.md` — 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준. 상태: 구현(`evals/runners/score_answer.py`)과 회귀 테스트(`tests/evals/test_score_answer.py`) 반영
