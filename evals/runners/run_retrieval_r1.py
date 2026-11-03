@@ -150,7 +150,24 @@ def context(args, split=None):
     qs = [{'id': r['id'], 'pdf': r['doc'], 'group': r['group'], 'gold': [tuple(g) for g in r['gold']], 'rec': [tuple(g) for g in r['gold']],
            'parts': find_parts(r['question'], set()),  # 서비스 search()와 같이 질문에서 품번을 읽는다(G4는 빈 목록 → 필터 없음)
            'text': {'Q2': r['question'], 'Q3': rw.get(r['id'], r['question'])}} for r in items(split)]
-    return {'qs': qs, 'index': {'C': D3.Index(args.cards, 'C')}, 'vec': D3.Vectors(args), 'rr': SortedReranker(args.rerank_cache)}
+    index = D3.Index(args.cards, 'C')
+    kw = index.keyword
+
+    def keyword(kind, T):
+        """BM25 점수를 같은 질문 토큰이면 한 번만 계산한다. [왜] 264칸이 같은 질문 168개를 되풀이해 수십 분이 걸린다(값은 같음)."""
+        bm, memo = kw(kind, T), index.__dict__.setdefault('_memo', {})
+        if not hasattr(bm, '_r1_memo'):
+            raw = bm.get_scores
+            def get_scores(toks, raw=raw):
+                key = (kind, T, tuple(toks))
+                if key not in memo:  # [주의] setdefault(key, raw(toks))는 매번 raw를 계산해 버려 쓰지 않는다
+                    memo[key] = raw(toks)
+                return memo[key]
+            bm.get_scores = get_scores
+            bm._r1_memo = True
+        return bm
+    index.keyword = keyword
+    return {'qs': qs, 'index': {'C': index}, 'vec': D3.Vectors(args), 'rr': SortedReranker(args.rerank_cache)}
 
 
 def cells(rerank=True):
