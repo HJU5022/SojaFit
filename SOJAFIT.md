@@ -142,6 +142,7 @@ SojaFit (proj3-b)
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
 │   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
@@ -200,6 +201,7 @@ SojaFit (proj3-b)
 │   │   ├── EVALS.md        <- 폴더 설명
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
+│   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   └── JUDGE.md        <- 폴더 설명
@@ -244,7 +246,8 @@ SojaFit (proj3-b)
 │   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
 │   │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
 │   │   ├── evaluation-draft-30.md  <- 난이도별 평가 문항 30건 초안 작성
-│   │   └── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
+│   │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
+│   │   └── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
