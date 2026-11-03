@@ -1,5 +1,14 @@
 # jeongun 작업 기록
 
+## 2026-11-03 D3 공식 검색 측정 시작 전 기록(사전 등록 #24)
+- 목적: 동결 v2 채점 19문항을 쪽 단위 정답(qrels 36쪽)으로, 서비스 검색 경로를 기준으로 한 조건씩 바꿔 잰다(E1 방식 · E2 리랭커 · E3 필터 · E4 질의 · E5 임베딩 · E6 청킹 · E7 토큰화 · E8 RRF, 칸마다 필터 끔 재측정). 기대 수치는 `evals/guides/preregister.md` #24.
+- 비교 조건: 기준은 3-small · 하이브리드(BM25 50 + dense 50, RRF 60) · "질문:" 줄 · 품번 필터 · 리랭커 없음 · 청킹 C · k=5. 동점은 거리 → 카드 순서.
+- 예산: OpenRouter $1.00(E6 다시 임베딩 · 질문 임베딩), Voyage 무료 한도만, Upstage · HF 없음. GPU 칸(bge-reranker, Qwen3-Reranker, late chunking)은 GPU PC를 켠 뒤.
+- 명령: `uv run --with docling-core python -m evals.runners.run_retrieval_d3 chunks`, `embed <변형>`, `official`, `noresult`, `explore`. 카드 · 벡터는 저장소 밖(`../corpus/tsc/`, `../전자_데이터시트/evidence/full_grid/vectors/`).
+- 중단 조건: v2 해시가 다르면 모두 멈춘다. 그 밖에는 그 부분만 건너뛰고 이유를 결과에 남긴다. Voyage 결제 신호면 남은 Voyage를 건너뛴다.
+- 바꾼 파일: `evals/runners/run_retrieval_d3.py`, `evals/inputs/`(INPUTS.md · qrels_v2_pages.json · rewrite_q3_v2.json), `tests/evals/test_retrieval_d3.py`, `evals/guides/preregister.md` #24, `SOJAFIT.md` 트리 · 폴더 표, `evals/EVALS.md`, `evals/runners/RUNNERS.md`, `tests/evals/EVALS.md`
+- 확인: `uv run --offline python -m pytest -q tests/repo/test_repo_layout.py tests/evals/test_retrieval_d3.py tests/evals/test_frozen_evals.py` 12개 통과. 측정 결과는 아직 보지 않았다.
+
 ## 2026-11-03 폴더 안에서도 성격별로 묶는다(구조 2차 정리)
 - 한 일
   - 한 폴더 바로 아래에 코드·데이터·문서가 섞인 곳을 하위 폴더로 나눴다. `evals/`는 루트에 동결 평가셋만 두고 `runners/`·`guides/`·`samples/`·`drafts/sets/`·`drafts/reviews/`·`results/<주제>/`로, `scripts/`는 `auth/`·`langfuse/`·`results/<주제>/`로, `db/` 문서는 `schema/`로, `backend/rag/`의 오프라인 도구는 `pipeline/`로, `memory.py`는 `graph/`로, `tests/`는 `api/`·`graph/`·`rag/`·`services/`·`evals/`·`judge/`·`repo/`로 옮겼다.

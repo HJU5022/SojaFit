@@ -1,0 +1,279 @@
+{
+ "meta": {
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "cards_sha256": "9e62fb6a80eb703ce0d8d98e69669d222c9fc307da36d9b272ae4e51083d4516",
+  "items": 19,
+  "pages": 36,
+  "unrecoverable": 2
+ },
+ "qrels": {
+  "draft30-e03": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft30-e04": {
+   "pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N4148 SERIES_K2301.pdf"
+  },
+  "draft30-e05": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft30-e08": {
+   "pages": [
+    [
+     "SS32 SERIES_Q2412.pdf",
+     1
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     2
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "SS32 SERIES_Q2412.pdf"
+  },
+  "draft30-m03": {
+   "pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BZT52C2V4 SERIES_G1804.pdf"
+  },
+  "draft30-m04": {
+   "pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     6
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BZT52C2V4 SERIES_G1804.pdf"
+  },
+  "draft30-m05": {
+   "pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N4148 SERIES_K2301.pdf"
+  },
+  "draft30-m07": {
+   "pages": [
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BZX84C2V4 SERIES_F2001.pdf"
+  },
+  "draft30-h04": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft30-h05": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft50-n01": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft50-n02": {
+   "pages": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BAS70 SERIES_G2606.pdf"
+  },
+  "draft50-n03": {
+   "pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N4148 SERIES_K2301.pdf"
+  },
+  "draft50-n04": {
+   "pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BZT52C2V4 SERIES_G1804.pdf"
+  },
+  "draft50-n05": {
+   "pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     4
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "BZT52C2V4 SERIES_G1804.pdf"
+  },
+  "draft50-n06": {
+   "pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N4148 SERIES_K2301.pdf"
+  },
+  "draft50-n07": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  },
+  "draft50-n08": {
+   "pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N4148 SERIES_K2301.pdf"
+  },
+  "draft52-n21": {
+   "pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "pdf": "1N5817 SERIES_H2104.pdf"
+  }
+ }
+}
