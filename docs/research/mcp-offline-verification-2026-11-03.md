@@ -52,5 +52,5 @@
 
 - [MCP 도구 실행 준비 계획](mcp-tool-implementation-plan.md)
 - [MCP 서버](../../backend/mcp_skill/mcp_server/server.py)
-- [오프라인 PDF 점검 스크립트](../../scripts/check_mcp_offline_pdfs.py)
-- [실험 사전등록](../../evals/preregister.md)
+- 오프라인 PDF 점검 스크립트 (원본 파일은 저장소 외부에 보관)
+- [실험 사전등록](../../evals/guides/preregister.md)

@@ -14,6 +14,6 @@
 - `login-auth.md` — 로그인과 사용자 식별 작업서(이메일·비밀번호 로그인, 서버 세션)
 - `rag-pipeline.md` — 데이터시트 수집·파싱·청킹·적재와 하이브리드 검색 작업서
 - `mcp-tool-prompt.md` — MCP 도구 선택·결과 해석 프롬프트(Langfuse `sojafit/tool-use`)와 모의 검증 범위 작업서
-- `mcp-search-tools.md` — MCP 코퍼스 검색과 제한된 TSC 웹 후보 검색의 도구 계약·수용 기준
-- `mcp-graph-integration.md` — LangGraph 검색 주입 계약에 MCP `search_corpus`를 연결하고 빈 결과와 장애를 구분하는 작업서
-- `mcp-graph-integration-plan.md` — 승인된 MCP 그래프 통합 작업서의 테스트 우선 구현 계획
+- mcp-search-tools.md — MCP 검색·문서 조회·외부 후보·로컬 점검 도구의 1차 계약
+- `mcp-graph-integration.md` — PR #44의 `search_corpus`를 LangGraph 검색 주입 계약에 연결하고 빈 결과와 장애를 구분하는 작업서
+- `mcp-graph-integration-plan.md` — MCP 그래프 통합 작업서의 테스트 우선 구현 계획

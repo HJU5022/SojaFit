@@ -8,7 +8,7 @@
 
 ## 디렉토리 구조
 
-`(고정)`은 강사 스캐폴드·과제 가이드·코드가 경로를 정해 옮기지 않는 것, `(비어 있음)`은 설명 파일만 있고 아직 만들지 않은 것입니다.
+`(고정)`은 강사 스캐폴드·과제 가이드·코드가 경로를 정해 옮기지 않는 것, `(예정)`은 문서가 만들기로 정했지만 아직 없는 파일·폴더(`후보 이름`은 SPEC이 이름을 정하면 바꾸는 것), `(지금은 .gitkeep)`은 자리만 만들어 둔 빈 폴더입니다.
 
 ```
 SojaFit (proj3-b)
@@ -37,16 +37,27 @@ SojaFit (proj3-b)
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
-│   ├── main.py             <- FastAPI 진입점: /health, 로그인·me·로그아웃, 관리자 계정 API
+│   ├── main.py             <- FastAPI 진입점: /health, 로그인·me·로그아웃, 관리자 계정 API (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, 관리자 계정 관리, 계정 생성 CLI
-│   ├── memory.py           <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
-│   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립
-│   │   ├── GRAPH.md        <- 폴더 설명
+│   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
+│   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
+│   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
+│   │   ├── GRAPH.md        <- 폴더 설명. Supervisor·체크포인트·승인 단계가 들어올 자리
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── nodes.py        <- 노드 7개: 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절
-│   │   ├── mcp_retriever.py  <- stdio MCP search_corpus를 동기 검색기 계약으로 연결하고 응답·장애를 검증
-│   │   └── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
+│   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기
+│   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
+│   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
+│   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
+│   │   ├── JUDGE.md        <- 폴더 설명
+│   │   ├── netlist.py      <- 넷리스트에서 대상 부품 주변 연결 읽기 (예정, 후보 이름)
+│   │   ├── roles.py        <- 회로에서 부품의 역할 정하기 (예정, 후보 이름)
+│   │   ├── conditions.py   <- 역할에서 대체 조건 도출 (예정, 후보 이름)
+│   │   ├── verdict.py      <- 후보마다 판정 5종 내기 (예정, 후보 이름)
+│   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함(지금은 .gitkeep)
+│   │       ├── roles.yaml  <- 역할 규칙 (예정, 후보 이름)
+│   │       └── conditions.yaml  <- 대체 조건 규칙 (예정, 후보 이름)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
@@ -54,127 +65,166 @@ SojaFit (proj3-b)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
 │   │   ├── generate.md     <- 통과 카드만 근거로 답하기(생성 노드)
 │   │   └── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
-│   ├── rag/                <- 데이터시트 수집·파싱·청킹·적재(오프라인 CLI)와 하이브리드 검색(서버)
+│   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── collect.py      <- TSC 목록 xlsx를 합치고 데이터시트 PDF를 받음 (CLI)
-│   │   ├── parse.py        <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조 (CLI)
-│   │   ├── chunk.py        <- 파싱 결과를 검색 카드(표지·글·표 행)와 manifest로 만듦 (CLI)
-│   │   ├── ingest.py       <- manifest·카드·임베딩을 DB에 적재, 벡터 캐시 지원 (CLI)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
-│   │   └── subset.py       <- 용량 예산에 맞춰 일부 분류 문서만 뽑는 도구 (CLI)
-│   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse
+│   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절) (예정)
+│   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함
+│   │       ├── __init__.py <- 패키지 표시
+│   │       ├── collect.py  <- TSC 목록 xlsx를 합치고 데이터시트 PDF를 받음
+│   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
+│   │       ├── chunk.py    <- 파싱 결과를 검색 카드(표지·글·표 행)와 manifest로 만듦
+│   │       ├── ingest.py   <- manifest·카드·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
+│   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
-│   │   └── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
-│   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자 비교는 여기서만 (비어 있음)
-│   │   └── JUDGE.md        <- 폴더 설명과 만들 파일 목록
+│   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
+│   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
+│   │   └── mouser.py       <- Mouser 가격·재고 조회, 응답은 저장하지 않음(ADR 0009, 확장 단계) (예정)
 │   ├── web/                <- 로그인·입력·승인·견적 화면. 화면 코드는 아직 없고 설계 초안만 있음
 │   │   ├── WEB.md          <- 폴더 설명
-│   │   └── design.md       <- 화면 디자인 규칙 초안
+│   │   ├── design.md       <- 화면 디자인 규칙 초안
+│   │   ├── templates/      <- 화면 템플릿(지금은 .gitkeep)
+│   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
 │       ├── mcp_server/
-│       │   └── server.py   <- 코퍼스 검색·문서·웹 후보·PDF 무결성·회로 정보 FastMCP 도구 5종
+│       │   └── server.py   <- FastMCP 서버 자리표시자(example_tool만 있음)
 │       └── skills/
 │           └── SKILL.md    <- 다이오드 정격 해석·회로 연결 설명 지침. use_skill을 켠 생성 호출만 시스템 프롬프트에 붙임 (고정: 코드가 경로를 읽음)
 │
 ├── data/                   <- 서비스·평가가 읽는 고정 데이터. Dockerfile이 이미지에 복사 (고정)
 │   ├── DATA.md             <- 폴더 설명과 manifest 형식
 │   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
-│   ├── corpus/             <- 코퍼스 원본 문서. 원본은 고치지 않음
+│   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
-│   │   └── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건은 저장소 밖 ../corpus/tsc/pdf/
+│   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건은 저장소 밖 ../corpus/tsc/pdf/
+│   │   ├── public/         <- KiCad 문서·Wikipedia·SparkFun 등 공개 라이선스 문서(지금은 .gitkeep)
+│   │   └── injection_tests/  <- 간접 인젝션 시험 문서 3건 이상(지금은 .gitkeep)
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
-│   └── demo/               <- 키 없는 데모 모드가 재생할 응답 (비어 있음)
+│   └── demo/               <- 키 없는 데모 모드가 재생할 응답(파일 이름은 데모 시나리오를 정할 때 정함)
 │       └── DEMO.md         <- 폴더 설명
 │
-├── db/                     <- Postgres가 첫 기동 때 이름순으로 자동 실행하는 초기화 SQL과 스키마 문서 (고정)
+├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
 │   ├── 000_init.sql        <- pgvector 확장
 │   ├── 002_rag_corpus.sql  <- 코퍼스 문서·카드·벡터 표
 │   ├── 003_auth.sql        <- 사용자·세션·로그인 시도 표
+│   ├── 004_create_business_tables.sql  <- 업무 표(회로·판정·견적). 확정되면 manual/의 초안을 옮김 (예정)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
 │   ├── 006_user_roles.sql  <- 사용자 역할(admin/user) 열
 │   ├── 007_demo_accounts.sql  <- 로컬 Compose 데모 계정(.env의 이메일·scrypt 해시)
-│   ├── erd.md              <- DB ERD
-│   ├── table-definition.md <- 업무 표(회로·판정·견적) 설계 초안
-│   └── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
-│       ├── MANUAL.md       <- 폴더 설명
-│       ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
-│       └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
+│   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
+│   │   ├── MANUAL.md       <- 폴더 설명
+│   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
+│   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
+│   └── schema/             <- 스키마 설명 문서
+│       ├── SCHEMA.md       <- 폴더 설명
+│       ├── erd.md          <- DB ERD
+│       └── table-definition.md  <- 업무 표(회로·판정·견적) 설계 초안
 │
-├── evals/                  <- 평가셋, 동결 해시, 평가 실행기, 평가 결과 (고정)
+├── evals/                  <- 평가셋과 평가 실행. 루트에는 동결 평가셋만 둠 (고정: 루트의 평가셋·FROZEN.json)
 │   ├── EVALS.md            <- 폴더 설명
-│   ├── dataset-guide.md    <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
 │   ├── dataset_v1.jsonl    <- 동결 평가셋 v1: 50건(관련 25·비관련 25), 2026-11-02 (고정)
+│   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸, 2026-11-03 (고정)
 │   ├── FROZEN.json         <- 동결 파일별 sha256·건수. 테스트가 이 이름을 읽음 (고정)
-│   ├── preregister.md      <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
-│   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 비동결 프록시 표본(30청크·18질의)
-│   ├── freeze.py           <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
-│   ├── run_retrieval.py    <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/에 저장
-│   ├── run_graph.py        <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
-│   ├── run_skill_pair.py   <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
-│   ├── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
-│   ├── benchmark_tavily_keyless.py  <- Tavily 익명 웹 검색 탐색 실행기
-│   ├── benchmark_tavily_authenticated_30.py  <- Tavily 인증 30문항 재측정 실행기
-│   ├── benchmark_web_search_30.py  <- 비동결 30문항 웹 검색 비교 실행기
-│   ├── benchmark_web_search_filter.py  <- 웹 검색 도메인 필터 전후 비교 실행기
-│   ├── benchmark_web_search_pdf_smoke.py  <- 검색 후보 PDF 표본 확인 실행기
-│   ├── web-search-sample-30-v1.json  <- manifest에서 뽑은 비동결 웹 검색 질문 30건
+│   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
+│   ├── guides/             <- 평가 기준 문서
+│   │   ├── GUIDES.md       <- 폴더 설명
+│   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
+│   │   └── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
+│   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
+│   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
+│   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
+│   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
+│   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
+│   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
+│   ├── samples/            <- 동결하지 않은 프록시 표본
+│   │   ├── SAMPLES.md      <- 폴더 설명
+│   │   └── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
 │   ├── drafts/             <- 동결 전 평가셋 초안과 검수 기록(실행·동결 금지, 이력 보존)
 │   │   ├── DRAFTS.md       <- 폴더 설명
-│   │   ├── draft_30.jsonl  <- 난이도별 30건 첫 초안
-│   │   ├── draft_30_review.md  <- 30건 초안의 질문·가정·예상 답 검수 목록
-│   │   ├── draft_50.jsonl  <- 50건 검수 초안. 고정 키만 dataset_v1.jsonl로 옮겨 동결
-│   │   ├── draft_50_review.md  <- 50건 검토표와 합의 기록
-│   │   └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
-│   └── results/            <- 평가 원시 결과: 검색 지표(retrieval_*), 임베딩 프록시(embedding_*),
-│                              검색·청킹 비교(hybrid_search, chunking_*), 초안 검수 스냅샷(draft*), Skill 검증(skill_tool_summary)
+│   │   ├── sets/           <- 초안 문항
+│   │   │   ├── draft_30.jsonl  <- 난이도별 30건 첫 초안
+│   │   │   ├── draft_50.jsonl  <- 50건 검수 초안. 고정 키만 dataset_v1.jsonl로 옮겨 동결
+│   │   │   └── draft_v2add_20.jsonl  <- v2 추가 후보 찾기 20건 초안과 사람 판정 기록. 고정 키만 dataset_v2.jsonl로 옮겨 동결
+│   │   └── reviews/        <- 초안 검토표
+│   │       ├── draft_30_review.md  <- 30건 초안의 질문·가정·예상 답 검수 목록
+│   │       ├── draft_50_review.md  <- 50건 검토표와 합의 기록
+│   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
+│   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
+│   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
+│       ├── retrieval/      <- 검색 지표(run_retrieval): 하이브리드·벡터·BM25 베이스라인
+│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)
+│       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
+│       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
+│       └── skill/          <- Skill·도구 개발 검증 요약
 │
-├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. pytest가 이 폴더만 봄, 하위 폴더 없음 (고정)
-│   ├── TESTS.md            <- 폴더 설명, 테스트별 지키는 것
-│   ├── test_repo_layout.py <- 이 문서의 트리·이름 규칙과 폴더 설명 파일을 지킴
-│   ├── test_health.py      <- /health 응답
-│   ├── test_auth.py        <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
-│   ├── test_llm.py         <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
-│   ├── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
-│   ├── test_graph_state.py <- 상태 칸의 덮어쓰기·쌓기
-│   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
-│   ├── test_graph_route.py <- 라우팅 노드
-│   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
-│   ├── test_graph_grade.py <- 채점 노드의 품번·개정판 거르기
-│   ├── test_graph_rewrite.py  <- 재작성 노드와 채점 뒤 갈림길
-│   ├── test_graph_generate.py  <- 생성 노드의 근거 제한과 인용 검사
-│   ├── test_graph_refuse.py  <- 거절 노드의 이유와 단서 요청
-│   ├── test_graph_build.py <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
-│   ├── test_graph_mcp_retriever.py  <- MCP 응답 검증·세션 재사용·그래프 재검색
-│   ├── test_graph_mcp_stdio.py  <- 격리 DB가 있을 때 실제 stdio MCP 검색 경로
-│   ├── test_mcp_manifest.py  <- manifest 조회·공개 TSC 문서 입력 경계
-│   ├── test_mcp_search.py  <- MCP 도구 입력·반환·외부 검색 차단 계약
-│   ├── test_run_graph.py   <- 그래프 평가 실행의 실행 점수 추출
-│   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
-│   ├── test_frozen_evals.py  <- 동결 해시 보호, 평가 문항 id 선택
-│   ├── test_rag_collect.py <- 수집 도구(네트워크 없이)
-│   ├── test_rag_parse.py   <- 파싱 도구의 Docling 없는 부분
-│   ├── test_rag_chunk.py   <- 표 카드 규칙, 문서 키, manifest 크기
-│   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
-│   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
-│   ├── test_rag_storage.py <- halfvec 전환·재적재·정확 검색 계약
-│   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
+├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
+│   ├── TESTS.md            <- 폴더 설명과 실행 명령
+│   ├── api/                <- API와 로그인
+│   │   ├── API.md          <- 폴더 설명
+│   │   ├── test_health.py  <- /health 응답
+│   │   └── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   ├── graph/              <- 그래프 노드·조립
+│   │   ├── GRAPH.md        <- 폴더 설명
+│   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
+│   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
+│   │   ├── test_graph_route.py  <- 라우팅 노드
+│   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
+│   │   ├── test_graph_grade.py  <- 채점 노드의 품번·개정판 거르기
+│   │   ├── test_graph_rewrite.py  <- 재작성 노드와 채점 뒤 갈림길
+│   │   ├── test_graph_generate.py  <- 생성 노드의 근거 제한과 인용 검사
+│   │   ├── test_graph_refuse.py  <- 거절 노드의 이유와 단서 요청
+│   │   ├── test_graph_build.py  <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
+│   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
+│   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
+│   ├── rag/                <- 검색과 오프라인 데이터 도구
+│   │   ├── RAG.md          <- 폴더 설명
+│   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
+│   │   ├── test_rag_parse.py  <- 파싱 도구의 Docling 없는 부분
+│   │   ├── test_rag_chunk.py  <- 표 카드 규칙, 문서 키, manifest 크기
+│   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
+│   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
+│   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
+│   │   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
+│   ├── services/           <- 외부 호출 입구
+│   │   ├── SERVICES.md     <- 폴더 설명
+│   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
+│   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
+│   ├── evals/              <- 평가셋 동결과 평가 실행기
+│   │   ├── EVALS.md        <- 폴더 설명
+│   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
+│   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
+│   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
+│   │   └── JUDGE.md        <- 폴더 설명
+│   ├── repo/               <- 저장소 구조 규칙
+│   │   ├── REPO.md         <- 폴더 설명
+│   │   └── test_repo_layout.py  <- 이 문서의 트리·이름 규칙·폴더 설명 파일·한 폴더 한 종류를 지킴
+│   └── fixtures/           <- 단위 테스트용 가공 회로(지금은 .gitkeep)
 │
-├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트
+├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더
 │   ├── SCRIPTS.md          <- 폴더 설명과 실행 방법
-│   ├── auth_boundary_after_merge.py  <- 로그인 잠금·세션 만료 경계 시각 실측
-│   ├── measure_scrypt_concurrent.py  <- 동시 scrypt 상한과 프로세스 메모리 실측(Windows 전용)
-│   ├── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
-│   ├── check_mcp_offline_pdfs.py  <- 로컬 TSC PDF 표본의 해시·쪽 수·텍스트 오프라인 점검
-│   └── results/            <- 측정 원시 결과: 인증(auth_boundary, scrypt_concurrent), 저장(storage_contract),
-│                              파서(parser_*, parse_gpu_*), 색인(hnsw_exp_*). 평가 지표가 아닌 측정
+│   ├── auth/               <- 로그인 측정
+│   │   ├── AUTH.md         <- 폴더 설명
+│   │   ├── auth_boundary_after_merge.py  <- 로그인 잠금·세션 만료 경계 시각 실측
+│   │   └── measure_scrypt_concurrent.py  <- 동시 scrypt 상한과 프로세스 메모리 실측(Windows 전용)
+│   ├── langfuse/           <- Langfuse 점검
+│   │   ├── LANGFUSE.md     <- 폴더 설명
+│   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
+│   └── results/            <- 측정 원시 결과(평가 지표가 아님). <무엇>_<날짜>.json을 주제 폴더에
+│       ├── auth/           <- 로그인 경계·동시 scrypt
+│       ├── storage/        <- DB 저장 형식·용량
+│       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
+│       └── hnsw/           <- HNSW 대 정확 검색
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
 │   ├── DOCS.md             <- 폴더 설명
@@ -190,7 +240,7 @@ SojaFit (proj3-b)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
-│   │   ├── mcp-search-tools.md  <- MCP 검색 도구 5종의 계약과 수용 기준
+│   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
 │   │   └── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
@@ -209,18 +259,23 @@ SojaFit (proj3-b)
 │   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
 │   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
 │   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
-│   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 후보와 비용 비교 초안
-│   │   ├── web-search-results-interpretation.md  <- 비동결 30문항 웹 검색 결과 해석
-│   │   ├── web-search-filter-comparison.md  <- 웹 검색 도메인 필터 비교와 PDF 표본 확인
-│   │   ├── mcp-tool-implementation-plan.md  <- MCP 도구 구현 현황과 후속 선행 조건
-│   │   ├── mcp-offline-verification-2026-11-03.md  <- 저장소 표본의 DB 없는 MCP·PDF 점검
-│   │   ├── mcp-docling-verification-2026-11-03.md  <- TSC PDF 3건 파서 대조 결과
-│   │   └── tsc-public-part-verification-options.md  <- 공개 품번 확인·외부 전송 방안 초안
+│   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+│   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
+│   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
+│   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
+│   │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
+│   │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
+│   │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
+│   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
+│   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
+│   │   └── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
 │   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
 │   │   ├── failure_analysis.md  <- 실패 사례 분석 글
-│   │   └── portfolio.md    <- 포트폴리오 1장
+│   │   ├── portfolio.md    <- 포트폴리오 1장 양식
+│   │   ├── portfolio-<이름>.md  <- 조원별 포트폴리오, portfolio.md를 복사해 작성 (예정)
+│   │   └── langfuse/       <- Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 1장 포함, 지금은 .gitkeep)
 │   └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
 │       ├── WORKLOG.md      <- 폴더 설명과 기록 형식
 │       ├── jeongun.md      <- 하정운(조장·오케스트레이터)
@@ -230,7 +285,7 @@ SojaFit (proj3-b)
 │
 └── extras/                 <- 가산 중 이미지에 들어가지 않는 작업. Dockerfile이 복사하지 않음
     ├── EXTRAS.md           <- 폴더 설명
-    └── finetune/           <- 가산: 파인튜닝 학습 코드와 비교 결과 (비어 있음)
+    └── finetune/           <- 가산: 파인튜닝 학습 코드와 비교 결과. 아직 설명 파일만 있음
         └── FINETUNE.md     <- 폴더 설명
 ```
 
@@ -254,10 +309,23 @@ SojaFit (proj3-b)
 | `data/demo/` | [DEMO.md](data/demo/DEMO.md) | 서비스·운영 |
 | `db/` | [DB.md](db/DB.md) | 서비스·운영 |
 | `db/manual/` | [MANUAL.md](db/manual/MANUAL.md) | 서비스·운영 |
+| `db/schema/` | [SCHEMA.md](db/schema/SCHEMA.md) | 서비스·운영 |
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
+| `evals/guides/` | [GUIDES.md](evals/guides/GUIDES.md) | 평가·문서 |
+| `evals/runners/` | [RUNNERS.md](evals/runners/RUNNERS.md) | 평가·문서 |
+| `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
 | `tests/` | [TESTS.md](tests/TESTS.md) | 각 모듈 담당 |
+| `tests/api/` | [API.md](tests/api/API.md) | 서비스·운영 |
+| `tests/graph/` | [GRAPH.md](tests/graph/GRAPH.md) | 에이전트 |
+| `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |
+| `tests/services/` | [SERVICES.md](tests/services/SERVICES.md) | 서비스·운영 |
+| `tests/evals/` | [EVALS.md](tests/evals/EVALS.md) | 평가·문서 |
+| `tests/judge/` | [JUDGE.md](tests/judge/JUDGE.md) | 에이전트 |
+| `tests/repo/` | [REPO.md](tests/repo/REPO.md) | 조장 |
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
+| `scripts/auth/` | [AUTH.md](scripts/auth/AUTH.md) | 서비스·운영 |
+| `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
@@ -272,7 +340,7 @@ SojaFit (proj3-b)
 
 ## 이름 규칙
 
-[ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/test_repo_layout.py`가 PR마다 검사합니다.
+[ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
 
 - **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서 하나뿐입니다.
 - **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
@@ -280,7 +348,9 @@ SojaFit (proj3-b)
   - GitHub 파일 목록, 터미널 `ls`, `git ls-files`는 대문자 이름을 소문자보다 먼저 정렬해 폴더 설명 파일이 파일 목록 맨 위에 옵니다(2026-11-03 확인). 같은 폴더에 다른 대문자 문서가 없어야 이 효과가 살아 있어서, 대문자를 아래 예외 밖에서 쓰지 않습니다.
   - VS Code 탐색기와 macOS Finder는 기본 설정에서 대소문자를 섞어 정렬해 이 효과가 없습니다. GitHub은 `README.md`만 폴더 아래에 펼쳐 보여 주고 `<대문자 폴더명>.md`는 눌러야 열립니다. 그래서 설명 파일은 이 문서의 트리와 표에서 링크로 찾습니다.
   - macOS 기본 파일시스템은 대소문자를 구분하지 않고, 이 저장소의 git 설정도 `core.ignorecase=true`입니다. 대소문자만 바꾸는 이름 변경은 `git mv a.md tmp.md && git mv tmp.md A.md` 두 단계로 해야 git에 남습니다. 대소문자만 다른 두 파일(`readme.md`·`README.md`)은 한 폴더에 둘 수 없습니다.
-- 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과만 담는 폴더(`evals/results/`, `scripts/results/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
+- 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과·시험 데이터만 담는 폴더(`evals/results/`, `scripts/results/`, `tests/fixtures/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
+- **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트는 도구가 루트에서 찾는 파일이라 예외입니다.
+- 아직 없는 파일은 트리에 `(예정)`을 붙여 적고, 비어 있는 폴더는 `.gitkeep`으로 자리를 둡니다. 실제로 만들면 같은 PR에서 `(예정)`을 지웁니다.
 - 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
 - 강사 스캐폴드와 과제 가이드의 고정 경로(트리의 `(고정)`)는 옮기지 않습니다.
 
@@ -288,7 +358,8 @@ SojaFit (proj3-b)
 
 1. 위 트리에서 `<-` 설명이 맞는 폴더를 고릅니다. 맞는 폴더가 없으면 가장 가까운 폴더에 억지로 넣지 않고, 새 폴더를 이 트리·표·설명 파일과 함께 만드는 PR을 따로 냅니다.
 2. 같은 PR에서 이 트리에 그 파일 한 줄(`<-` 설명 포함)과 그 폴더 설명 파일의 "파일" 목록 한 줄을 고칩니다. 원시 결과 폴더는 트리의 묶음 설명만 맞으면 됩니다.
-3. 폴더 설명 파일의 "넣는 것"을 새 파일에 맞춰 넓히지 않습니다. 넓혀야 한다면 폴더 역할이 바뀌는 것이므로 이 트리의 `<-` 설명부터 고칩니다.
+3. 넣으려는 폴더에 다른 종류 파일이 이미 있으면 그 폴더에 섞지 않고 성격별 하위 폴더를 만들거나 기존 하위 폴더에 넣습니다. 트리에 `(예정)`으로 적힌 자리가 있으면 그 이름을 쓰고 `(예정)`을 지웁니다.
+4. 폴더 설명 파일의 "넣는 것"을 새 파일에 맞춰 넓히지 않습니다. 넓혀야 한다면 폴더 역할이 바뀌는 것이므로 이 트리의 `<-` 설명부터 고칩니다.
 
 ## 처음 할 일
 

@@ -39,7 +39,7 @@
 - **확인된 결과**: 합성 프록시 Recall@5 `1.000`, MRR `0.907`, 총 45,699토큰, 비용 `$0.00091398`이다.
 - **실제 PDF에서 멈춘 이유**: 실제 PDF smoke는 신규 API 과금을 발생시키지 않는 범위로 승인되어 로컬 후보만 실행했다. 키 없는 데모의 BM25-only 결과는 API 임베딩 품질을 나타내지 않으므로 대체 점수로 쓰지 않았다.
 - **현재 판단·다음 조건**: 합성 표본 수치만 있어 실제 PDF 4종과 직접 비교할 수 없다. 동결 평가셋과 전체 청크가 준비되면 예상 토큰·비용 상한을 먼저 제시하고 별도 승인을 받아 기준선으로 실행한다.
-- **증거**: `evals/results/embedding_text_embedding_3_small_proxy_2026-10-30.json`
+- **증거**: `evals/results/embedding/embedding_text_embedding_3_small_proxy_2026-10-30.json`
 
 ## 2. `BAAI/bge-m3`
 
@@ -66,7 +66,7 @@
 - **확인된 결과**: 저장소에 있는 30청크 원시 결과는 Recall@5 `1.000`, MRR `0.875`, 1,000청크 `3.83초`다. 별도 로컬 기록에는 실제 PDF smoke 값과 `10.37초`가 적혀 있지만 대응 원시 JSON이 없고, 이 시간은 기존 Windows 30청크 원시값 `10.372056...초`와 같아 실제 PDF 재측정값인지 확인할 수 없다. 원시가 없는 `3.63초` 재측정 기록도 제출 근거에서 제외한다.
 - **여기까지만 한 이유**: instruction 유무·문구는 별도 실험 변수이고 결과를 본 뒤 바꾸면 공정하지 않다. 현재 smoke에서 문구를 조정하지 않았다.
 - **현재 판단·다음 조건**: 고정 instruction 그대로 본평가한 뒤, 필요할 때만 별도 사전등록으로 instruction A/B를 수행한다.
-- **증거**: `evals/results/embedding_qwen3_0_6b_proxy_offline_2026-10-30.json`. 실제 PDF smoke 식별자 `evals/results/embedding_qwen3-embedding-0.6b_real_pdf_smoke_2026-11-02.json`은 저장소에 없으므로 증거가 아니라 미반영 로컬 기록이다.
+- **증거**: `evals/results/embedding/embedding_qwen3_0_6b_proxy_offline_2026-10-30.json`. 실제 PDF smoke 식별자 `evals/results/embedding_qwen3-embedding-0.6b_real_pdf_smoke_2026-11-02.json`은 저장소에 없으므로 증거가 아니라 미반영 로컬 기록이다.
 
 ## 5. `Alibaba-NLP/gte-multilingual-base`
 

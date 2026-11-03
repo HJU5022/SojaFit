@@ -1,5 +1,70 @@
 # STH 작업 기록
 
+## 2026-11-03 새 main 구조 병합과 MCP 자료 보관
+- 한 일: `f271553`을 STH에 병합하고 MCP 테스트·측정 스크립트 및 원시 자료 15개는 요청에 따라 저장소 밖에 보관했다. stash의 수정된 MCP 테스트 사본도 별도로 보관했다.
+- 정리: MCP 조사 문서의 외부 보관 자료와 사전등록 경로를 반영했다. 로그인 마스킹 변경은 이 MCP 커밋에서 제외했다.
+- 확인: 충돌 없음, 외부 보관 사본 해시 대조, stage 변경의 `git diff --cached --check`, MCP 조사 문서 상대 링크 0건 누락. 테스트는 `uv` 실행 파일을 찾지 못해 실행하지 못했다.
+- 다음 할 일: 팀과 MCP 테스트·측정 자료 위치를 정하고 복원한 뒤 구조 검사와 MCP 회귀 테스트를 실행한다. 원시 자료가 저장소 밖에 있어 현재 클론만으로 실측을 재현할 수 없다.
+
+## 2026-11-03 최신 main 통합 및 MCP 문서 재분류
+- 한 일: 최신 main `5760105`를 STH에 병합하고 자동 충돌을 수동 해결했다. 이전 `docs/mcp/`의 MCP 조사·실측·미합의 제안 문서 10개를 기존 `docs/research/`로 옮기고 폴더를 제거했다. 검색 도구 작업서는 `docs/specs/mcp-search-tools.md`에 유지했다.
+- 코드 병합: STH 관리자 계정 API의 이메일 사용자명 마스킹과 해당 테스트를 보존했다. 구 `docs/README.md`·`docs/specs/README.md`·`backend/mcp_skill/README.md`·`scripts/README.md`는 main의 새 설명 파일로 대체했다.
+- 문서 정합: `docs/research/RESEARCH.md`, `docs/specs/SPECS.md`와 `SOJAFIT.md` 신규 파일 항목을 맞췄다. 이동 문서의 현재 링크는 새 이름·경로로 바꿨다. `SPEC.md`의 stash 변경은 조장 소유 문서 규칙에 따라 작업 트리에서 제외하고 원본 stash에 남겼다.
+- 확인: 충돌 미해결 파일 0, `git diff --check` 통과, 오래된 현재 경로 참조 0. 앱·회귀 테스트는 실행하지 않았다. 기존 stash는 안전을 위해 유지했다.
+- 상태: STH가 로컬 merge commit을 포함해 `origin/STH`보다 23커밋 앞서며 push하지 않았다.
+- 다음 할 일: 팀 리드가 소유한 `SOJAFIT.md`의 기존 MCP 서버 설명이 main 기준 자리표시자로 남아 있다. STH MCP 변경 PR에서 해당 설명 갱신을 리드에게 요청한다.
+
+## 2026-11-03 나머지 MCP 도구 연결 위치 점검
+- 한 일: 문서 조회·TSC 웹 후보·PDF 무결성·회로 정보 도구의 현재 코드 호출처와 그래프에서의 후보 사용 상황을 대조했다.
+- 결론 제안: 질문 응답 그래프는 우선 `search_corpus`만 연결한다. 문서 메타데이터는 근거가 있을 때 선택 호출, 웹 검색·PDF 검증·회로 정보는 별도 정책과 사용 근거가 정해질 때까지 그래프 기본 경로에 넣지 않는다.
+- 바꾼 파일: `docs/mcp/mcp-tool-contract-review.md`, `docs/worklog/STH.md`.
+- 확인 못 한 것: 팀의 도구 노출 결정, 코퍼스 밖 공개 품번 정책, 사용자 회로 접근 요구. 코드·테스트는 수정하거나 실행하지 않았다.
+
+## 2026-11-03 search_corpus 연결 계약 확인
+- 한 일: 현재 STH MCP 도구와 원격 main `e25558a` 그래프의 입력·카드 필드·빈 결과 분기를 대조했다.
+- 검증: 가짜 검색기를 넣은 별도 MCP stdio 프로세스에서 정상 카드 1건·빈 목록·합성 예외를 각 1회 호출했다. 성공은 `structuredContent.result`, 빈 결과는 빈 텍스트 블록 목록, 오류는 `isError=true`와 예외 문구를 포함하는 텍스트로 관찰됐다. DB·외부 API·실제 키는 사용하지 않았다.
+- 바꾼 파일: `docs/mcp/mcp-tool-contract-review.md`, `docs/worklog/STH.md`.
+- 확인 못 한 것: 실제 DB 오류의 응답·민감정보 노출 여부, 여러 카드·다른 SDK 버전, LangGraph와 MCP의 실제 통합. 다음 할 일: 오류 비노출 및 실패 구분 계약을 담당자와 협의한다.
+
+## 2026-11-03 MCP 도구 계약 점검 문서 분리
+- 한 일: 기존 구현 계획에 적은 도구별 계약·사용처 점검을 별도 문서로 분리하고 문서 목록과 구현 계획에 연결했다.
+- 바꾼 파일: `docs/mcp/mcp-tool-contract-review.md`, `docs/mcp/mcp-tool-implementation-plan.md`, `docs/mcp/README.md`, `docs/worklog/STH.md`.
+- 확인: 관련 문서의 로컬 링크 21개 중 누락 0개, `git diff --check` 통과. 애플리케이션 테스트와 외부 호출은 새로 수행하지 않았다.
+
+## 2026-11-03 MCP 도구 계약 1차 점검
+- 한 일: 다섯 도구의 입력·출력·실행 조건·한계와 사용처 제안을 정리하고 `search_corpus`의 품번 목록 및 빈 결과·장애 처리 협의안을 작성했다.
+- 바꾼 파일: `docs/mcp/mcp-tool-implementation-plan.md`, `docs/worklog/STH.md`. 기존 로그인·MCP 코드 변경은 보존했다.
+- 실행한 명령과 결과: `uv run --no-sync pytest -q -rs tests/test_mcp_search.py tests/test_mcp_manifest.py -p no:cacheprovider` — 36 passed.
+- 확인 못 한 것: 실제 코퍼스 DB·Exa·LangGraph 전체 연동, 팀의 도구 노출·입력 상한 결정. 다음 할 일: 그래프·검색 담당자와 계약 대조 및 팀 디렉터리 정리 후 경로 재확인.
+
+## 2026-11-03 MCP 두 사람 작업 분담 문서 분리
+- 한 일: 두 사람의 작업 순서·의존 관계·완료 기준을 별도 문서로 옮기고 인수인계 문서와 문서 목록에서 연결했다.
+- 바꾼 파일: `docs/mcp/mcp-two-person-work-plan.md`, `docs/mcp/mcp-collaboration-handoff.md`, `docs/mcp/README.md`, `docs/worklog/STH.md`.
+- 확인: 관련 문서의 로컬 링크 17개 중 누락 0개, `git diff --check` 통과. 애플리케이션 테스트·외부 호출은 하지 않았다.
+
+## 2026-11-03 MCP 공동작업 인수인계
+- 한 일: MCP 도구의 구현·사용처·정보 경계·LangGraph 연결 검토·검증 한계와 팀 결정 사항을 인수인계 문서로 정리하고 두 사람의 작업 분담·의존 관계·완료 기준을 제안했다.
+- 바꾼 파일: `docs/mcp/mcp-collaboration-handoff.md`, `docs/mcp/README.md`, `docs/worklog/STH.md`.
+- 확인: 인수인계 문서와 목록의 로컬 링크 14개 중 누락 0개, `git diff --check` 통과. 애플리케이션 실행이나 외부 API 호출은 하지 않았다.
+
+## 2026-11-03 MCP 도구 사용처와 문서 디렉터리 정리
+- 한 일: 다섯 도구의 실제 호출처와 제안 사용처, 미결 사항을 구현 계획에 기록하고 관련 문서 7개를 `docs/mcp/`로 모았다. 기존 그래프 연결과 도구 삭제는 수행하지 않았다.
+- 바꾼 파일: `docs/mcp/`, `docs/README.md`, `SOJAFIT.md`, `evals/PREREGISTER.md`, `docs/worklog/STH.md`.
+- 확인: 이동 문서·목록의 상대 링크 91개를 확인해 누락 0개. `git diff --check` 통과. 이전 작업 기록의 옛 경로는 당시 기록으로 보존하며 현재 문서는 `docs/mcp/`에 있다. 실제 DB·외부 API·LangGraph 연결은 실행하지 않았다.
+
+### 2026-11-03 MCP 입력 경계 및 구현 계획 정합성
+
+- `search_tsc_web`의 문서 ID 길이를 `get_corpus_document`와 동일한 1~200자로 검증해 내부 예외 대신 경계에서 입력 오류를 반환하도록 맞췄다. 빈 값·200자·201자 조건의 회귀 테스트를 추가했다.
+- 구현 계획의 MCP 도구 수를 5개로 고치고, 로컬 PDF 무결성 및 공개 회로 조회는 구현됐으며 PDF 다운로드·내용 검증과 사용자 회로 권한은 미구현임을 구분했다.
+- 검증: 프로젝트 루트에서 `uv run --no-sync pytest -q -rs tests/test_mcp_search.py tests/test_mcp_manifest.py tests/test_graph_read_input.py tests/test_rag_retrieve.py tests/test_graph_search.py` — 57 passed, 1 skipped (`TEST_DATABASE_URL` 미설정). `git diff --check` 통과.
+
+## 2026-11-03 로그인 정보 응답 마스킹
+- 한 일: 로그인 입력 검증 오류에서 입력값을 응답하지 않도록 하고 관리자 계정 목록 이메일을 `a***@domain` 형식으로 마스킹했다. 로그인 작업서와 SPEC에 기준을 추가했다.
+- 바꾼 파일: backend/main.py, tests/test_auth.py, docs/specs/login-auth.md, SPEC.md, docs/worklog/STH.md.
+- 실행한 명령과 결과: `uv run --no-sync python -m pytest tests/test_auth.py -q -p no:cacheprovider` — 11 passed, 14 skipped (격리 인증 DB 미설정). `git diff --check` 통과.
+- 확인 못 한 것: 격리 DB 통합 시험과 배포 환경의 실제 프록시·서버 로그.
+- 다음 할 일: 격리 DB가 준비되면 건너뛴 인증 통합 테스트를 실행한다.
+
 ### 2026-11-03 우선순위 2 MCP 도구 기본 기능
 
 - `verify_tsc_pdf`를 저장소 TSC 표본 3건의 서명·바이트 크기·SHA-256 무결성 대조로 구현했다. 내용 파싱 검증과 신규 PDF 다운로드는 하지 않고 미검증 상태를 반환한다.

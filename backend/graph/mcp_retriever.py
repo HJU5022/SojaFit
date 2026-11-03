@@ -38,17 +38,21 @@ def _valid_card(card: object) -> bool:
 
 
 def decode_search_result(result) -> list[dict]:
-    """MCP 텍스트 응답을 그래프 검색 카드 목록으로 검증해 변환한다."""
+    """MCP 구조화 응답을 그래프 검색 카드 목록으로 검증해 변환한다."""
     if getattr(result, "isError", False) is True:
         raise RetrievalUnavailableError("tool_error")
-    content = getattr(result, "content", None)
-    if (not isinstance(content, list) or len(content) != 1
-            or not isinstance(getattr(content[0], "text", None), str)):
-        raise RetrievalUnavailableError("invalid_response")
-    try:
-        payload = json.loads(content[0].text)
-    except (json.JSONDecodeError, TypeError):
-        raise RetrievalUnavailableError("invalid_response") from None
+    structured = getattr(result, "structuredContent", None)
+    if isinstance(structured, dict) and "result" in structured:
+        payload = structured["result"]
+    else:
+        content = getattr(result, "content", None)
+        if (not isinstance(content, list) or len(content) != 1
+                or not isinstance(getattr(content[0], "text", None), str)):
+            raise RetrievalUnavailableError("invalid_response")
+        try:
+            payload = json.loads(content[0].text)
+        except (json.JSONDecodeError, TypeError):
+            raise RetrievalUnavailableError("invalid_response") from None
     if not isinstance(payload, list) or not all(_valid_card(card) for card in payload):
         raise RetrievalUnavailableError("invalid_response")
     return payload

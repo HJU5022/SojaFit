@@ -1,4 +1,4 @@
--- RAG 코퍼스 표: 출처 문서, 문서 청크, 청크 임베딩(docs/specs/rag-pipeline.md How, db/table-definition.md 5.4·5.6·5.15).
+-- RAG 코퍼스 표: 출처 문서, 문서 청크, 청크 임베딩(docs/specs/rag-pipeline.md How, db/schema/table-definition.md 5.4·5.6·5.15).
 -- 문서·청크와 임베딩 테이블은 이 파일에서 생성하며 업무 테이블 초안이 참조한다.
 -- IF NOT EXISTS는 기존 테이블의 정의가 동일한지 검증하지 않는다.
 -- 000_init.sql 뒤에 실행된다. 기존 DB는 적용 이력과 구조를 확인하고 별도로 마이그레이션한다.

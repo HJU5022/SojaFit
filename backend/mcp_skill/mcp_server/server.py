@@ -1,10 +1,4 @@
-"""SojaFit 검색·문서·회로 기능 5종을 노출하는 stdio FastMCP 서버.
-
-호출자는 MCP 클라이언트와 ``backend.graph.mcp_retriever``다. 코퍼스 검색은 기존
-RAG를 재사용하고, 웹 검색은 명시적으로 활성화된 경우에만 제한된 TSC 문서 후보를
-찾는다. 숫자·단위 판정은 하지 않는다. 계약과 실행 조건은
-``backend/mcp_skill/MCP_SKILL.md``와 ``SPEC.md`` 8.7~8.8을 따른다.
-"""
+"""SojaFit의 코퍼스 검색과 미검증 TSC 문서 후보를 노출하는 stdio MCP 서버."""
 import json
 import hashlib
 import os
@@ -136,7 +130,8 @@ def _is_tsc_url(url: object) -> bool:
 @mcp.tool()
 def search_tsc_web(doc_id: str) -> dict:
     """공개 TSC 목록에 있는 문서의 미검증 웹 후보를 찾습니다."""
-    _validate_query(doc_id)
+    if not isinstance(doc_id, str) or not doc_id.strip() or len(doc_id) > 200:
+        raise ValueError("doc_id must contain 1 to 200 characters")
     empty = {'status': 'disabled', 'candidates': []}
     if os.getenv('DEMO_MODE', '1') != '0' or os.getenv('EXA_WEB_SEARCH_ENABLED') != '1':
         return empty

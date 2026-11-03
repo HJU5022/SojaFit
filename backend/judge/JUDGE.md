@@ -13,4 +13,6 @@
 SPEC은 이 폴더의 파일 이름을 정하지 않았습니다. 규칙 파일 형식도 SPEC 5절에서 "(정할 것)"입니다. 이전 설명에 있던 `netlist.py`, `roles.py`, `conditions.py`, `verdict.py`, `rules/*.yaml`은 계획 후보일 뿐 어디에서도 요구하지 않고 없습니다. 파일을 만들 때 SPEC과 SOJAFIT.md 트리를 먼저 정합니다.
 
 ## 파일
-- `JUDGE.md` — 이 폴더 설명. 이 폴더에 있는 파일은 이것뿐입니다
+- `JUDGE.md` — 이 폴더 설명
+- `rules/` — 판정 규칙 파일 자리. 형식은 SPEC 5절에서 정하며 지금은 `.gitkeep`뿐입니다
+- 예정(후보 이름, SPEC이 정하면 바꿈): `netlist.py`(넷리스트 주변 읽기), `roles.py`(회로 역할), `conditions.py`(대체 조건), `verdict.py`(판정 5종), `rules/roles.yaml`·`rules/conditions.yaml`. 만들면 `SOJAFIT.md` 트리의 `(예정)`을 지웁니다

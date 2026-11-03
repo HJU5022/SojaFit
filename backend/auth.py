@@ -2,7 +2,7 @@
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 실패 5회는 15분 잠금(auth_login_attempts), 세션은 절대 8시간·유휴 30분이다.
-호출자: backend/main.py(API 라우트), tests/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
+호출자: backend/main.py(API 라우트), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
 하지 않는 일: HTTP 라우트·쿠키 설정(backend/main.py), 회원가입(관리자가 만든 계정만 로그인), 테이블 생성(db/*.sql),
 회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
 출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.

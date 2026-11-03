@@ -30,6 +30,6 @@ build/
 *.log
 
 # Skill/Langfuse 상세 실행 결과는 저장소 밖에 보관하고 요약만 추적
-evals/results/langfuse_skill_check_*.json
-evals/results/skill_scenarios_*.json
-evals/results/tool_prompt_check_*.json
+evals/results/**/langfuse_skill_check_*.json
+evals/results/**/skill_scenarios_*.json
+evals/results/**/tool_prompt_check_*.json

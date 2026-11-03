@@ -43,4 +43,4 @@
 
 - [TSC 공식 제품 선정 가이드](https://www.taiwansemi.com/zh_cn/tsc-taiwan-semiconductor-2025-selection-guide-12th/) — 공개 자료 후보. 전체 품번 포함 여부와 자동 수집·보관 조건은 미확인.
 - [TSC 공식 데이터시트 예시](https://services.taiwansemi.com/storage/resources/datasheet/TQM138KCU_A2403.pdf) — 공식 자료 예시. 검색 결과와 요청 품번의 일치 및 문서 검증을 별도로 수행해야 한다.
-- [MCP 검색 도구 작업서](specs/mcp-search-tools.md) · [MCP 도구 구현 계획](mcp-tool-implementation-plan.md) · [ADR 0006](adr/0006-근거가-없어도-대화는-이어-간다.md)
+- [MCP 검색 도구 작업서](../specs/mcp-search-tools.md) · [MCP 도구 구현 계획](mcp-tool-implementation-plan.md) · [ADR 0006](../adr/0006-근거가-없어도-대화는-이어-간다.md)
