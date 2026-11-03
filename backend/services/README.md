@@ -8,9 +8,12 @@
 
 ## llm.py가 한 곳이어야 하는 이유 (강사 안내)
 라우터나 그래프 노드가 `openai`를 직접 import하지 않고 전부 `llm.py`를 거칩니다. 여기서 세 가지를 처리합니다.
-1. 현재 단계: `llm.py`의 `check_langfuse_connection()`으로 Cloud 인증만 확인합니다. 프롬프트·응답 트레이스는 별도 결정 전까지 기록하지 않습니다.
+1. `check_langfuse_connection()`은 Cloud 인증만 확인합니다. `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다.
 2. 데모 모드: `DEMO_MODE=1`이면 키 없이 `data/demo/`의 응답을 재생합니다(G2). 평가자는 키가 없습니다. 재생 코드는 아직 없고, 지금은 `DEMO_MODE`가 검색의 임베딩 호출만 끕니다(`backend/rag/retrieve.py`).
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
 ## 파일
+- `langfuse_prompts.py` — development 프롬프트/Skill 등록, 세션별 버전 고정·컴파일 대조와 노드 추적. LLM 호출은 llm.py에 유지
 - `llm.py` — LLM·임베딩 호출을 모으는 자리. 그래프 노드가 쓰는 `chat(system, user, schema)`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`로 강의 2주 20강과 같은 방식, claude_cli는 개발용, 모델 ADR 0010), 임베딩 `embed_texts()`, Langfuse 인증 확인이 있습니다. 평가 스크립트도 `embed_texts()`를 통해 API 임베딩을 호출합니다.
+
+평가 실행기의 `evaluation_limits(EvaluationBudget(...))` 컨텍스트 안에서는 원시 OpenRouter 채팅·임베딩 호출마다 횟수·시간·보수적 예약비용을 제한합니다. 출력 토큰·개별 timeout도 제한하며 컨텍스트 종료 뒤 기존 서비스 설정으로 돌아갑니다. 예약비용은 실제 사용량이나 공급자 청구액이 아닙니다.
