@@ -201,6 +201,9 @@ SojaFit (proj3-b)
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
+│   │   ├── MCP_SKILL.md    <- 폴더 설명
+│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   └── JUDGE.md        <- 폴더 설명
 │   ├── repo/               <- 저장소 구조 규칙
@@ -316,6 +319,7 @@ SojaFit (proj3-b)
 | `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |
 | `tests/services/` | [SERVICES.md](tests/services/SERVICES.md) | 서비스·운영 |
 | `tests/evals/` | [EVALS.md](tests/evals/EVALS.md) | 평가·문서 |
+| `tests/mcp_skill/` | [MCP_SKILL.md](tests/mcp_skill/MCP_SKILL.md) | 가산을 시작할 때 정함 |
 | `tests/judge/` | [JUDGE.md](tests/judge/JUDGE.md) | 에이전트 |
 | `tests/repo/` | [REPO.md](tests/repo/REPO.md) | 조장 |
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
