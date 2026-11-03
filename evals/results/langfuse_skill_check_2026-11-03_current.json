@@ -1,0 +1,2397 @@
+{
+  "kind": "synthetic_development_check",
+  "time": "2026-11-03T03:20:31.635183+00:00",
+  "ui_checked": false,
+  "prompts": {
+    "route": {
+      "name": "sojafit/route",
+      "version": 4
+    },
+    "grade": {
+      "name": "sojafit/grade",
+      "version": 4
+    },
+    "rewrite": {
+      "name": "sojafit/rewrite",
+      "version": 4
+    },
+    "generate": {
+      "name": "sojafit/generate",
+      "version": 4
+    }
+  },
+  "skill": {
+    "name": "sojafit/skills/diode-evidence",
+    "version": 2,
+    "sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47"
+  },
+  "cases": [
+    {
+      "case": "rating",
+      "trace_id": "b1948da6342f676ca846d16464e2ebbb",
+      "status": "executed",
+      "result": {
+        "answer": "합성 표본의 순방향 전압 전형값은 0.7 V이고, 시험 조건은 IF=10 mA, TA=25 C이다 [1]. 이 값은 TYP 값이며 MAX 값은 문서에 없다 [1].",
+        "check": {
+          "fake_citations": [],
+          "uncited_sentences": 0,
+          "used": [
+            "1"
+          ]
+        },
+        "skill": {
+          "enabled": true,
+          "applied": true,
+          "sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47"
+        },
+        "path": [
+          "생성"
+        ]
+      },
+      "raw_calls": 3,
+      "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b1948da6342f676ca846d16464e2ebbb",
+      "timeline": [
+        {
+          "id": "47e31ee69cf05efa",
+          "name": "sojafit-skill-rating",
+          "type": "SPAN",
+          "parent_observation_id": null,
+          "start_time": "2026-11-03T03:20:31.635000+00:00",
+          "end_time": "2026-11-03T03:20:36.053000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_version": 2,
+            "dataset": "synthetic-development",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "2d941106fe3d0bbb",
+          "name": "read_input",
+          "type": "SPAN",
+          "parent_observation_id": "47e31ee69cf05efa",
+          "start_time": "2026-11-03T03:20:31.639000+00:00",
+          "end_time": "2026-11-03T03:20:31.639000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "059f6170cd25928d",
+          "name": "route",
+          "type": "SPAN",
+          "parent_observation_id": "47e31ee69cf05efa",
+          "start_time": "2026-11-03T03:20:31.811000+00:00",
+          "end_time": "2026-11-03T03:20:33.106000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "e5a05576f53a34c6",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "059f6170cd25928d",
+          "start_time": "2026-11-03T03:20:32.103000+00:00",
+          "end_time": "2026-11-03T03:20:33.106000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "23ec657853db12d2",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "e5a05576f53a34c6",
+          "start_time": "2026-11-03T03:20:32.103000+00:00",
+          "end_time": "2026-11-03T03:20:32.104000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "c3a8f7bc248621f6",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "06e29efffb1a863a",
+          "start_time": "2026-11-03T03:20:32.104000+00:00",
+          "end_time": "2026-11-03T03:20:33.106000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/route",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 1014,
+            "output": 13,
+            "total": 1027,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 0.0001014,
+            "output": 6.5e-06,
+            "output_reasoning": 0.0,
+            "total": 0.0001079
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "06e29efffb1a863a",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "e5a05576f53a34c6",
+          "start_time": "2026-11-03T03:20:32.104000+00:00",
+          "end_time": "2026-11-03T03:20:33.106000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "c34c70459ebe9784",
+          "name": "search",
+          "type": "SPAN",
+          "parent_observation_id": "47e31ee69cf05efa",
+          "start_time": "2026-11-03T03:20:33.106000+00:00",
+          "end_time": "2026-11-03T03:20:33.107000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "retrieval_test": false,
+            "source": "synthetic_fixture",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "45f0e381b2d0e656",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "06e29efffb1a863a",
+          "start_time": "2026-11-03T03:20:33.106000+00:00",
+          "end_time": "2026-11-03T03:20:33.106000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "f55f9b04afa2b786",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "288d82d7ef29aac8",
+          "start_time": "2026-11-03T03:20:33.107000+00:00",
+          "end_time": "2026-11-03T03:20:33.108000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "53e99c26e99f4589",
+          "name": "grade",
+          "type": "SPAN",
+          "parent_observation_id": "47e31ee69cf05efa",
+          "start_time": "2026-11-03T03:20:33.107000+00:00",
+          "end_time": "2026-11-03T03:20:34.613000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "288d82d7ef29aac8",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "53e99c26e99f4589",
+          "start_time": "2026-11-03T03:20:33.107000+00:00",
+          "end_time": "2026-11-03T03:20:34.613000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "19e87de0bdd6341e",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "05de227ef6371b97",
+          "start_time": "2026-11-03T03:20:33.108000+00:00",
+          "end_time": "2026-11-03T03:20:34.612000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/grade",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 920,
+            "output": 14,
+            "total": 934,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 9.2e-05,
+            "output": 7e-06,
+            "output_reasoning": 0.0,
+            "total": 9.9e-05
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "05de227ef6371b97",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "288d82d7ef29aac8",
+          "start_time": "2026-11-03T03:20:33.108000+00:00",
+          "end_time": "2026-11-03T03:20:34.613000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "a3e1060d2371c03c",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "05de227ef6371b97",
+          "start_time": "2026-11-03T03:20:34.612000+00:00",
+          "end_time": "2026-11-03T03:20:34.613000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "775f46cc29fc2927",
+          "name": "generate",
+          "type": "SPAN",
+          "parent_observation_id": "47e31ee69cf05efa",
+          "start_time": "2026-11-03T03:20:34.613000+00:00",
+          "end_time": "2026-11-03T03:20:36.053000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "a4cb87621dc6d5fd",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "775f46cc29fc2927",
+          "start_time": "2026-11-03T03:20:34.614000+00:00",
+          "end_time": "2026-11-03T03:20:36.053000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "924ead686e4714d0",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "a4cb87621dc6d5fd",
+          "start_time": "2026-11-03T03:20:34.614000+00:00",
+          "end_time": "2026-11-03T03:20:36.053000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "5704bfc5c4b437b8",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "a4cb87621dc6d5fd",
+          "start_time": "2026-11-03T03:20:34.614000+00:00",
+          "end_time": "2026-11-03T03:20:34.614000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "5ded396b81c7c94e",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "924ead686e4714d0",
+          "start_time": "2026-11-03T03:20:34.615000+00:00",
+          "end_time": "2026-11-03T03:20:36.052000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/generate",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 3727,
+            "output": 97,
+            "total": 3824,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 0.0003727,
+            "output": 4.85e-05,
+            "output_reasoning": 0.0,
+            "total": 0.0004212
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "92258b3857070402",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "924ead686e4714d0",
+          "start_time": "2026-11-03T03:20:36.052000+00:00",
+          "end_time": "2026-11-03T03:20:36.053000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        }
+      ],
+      "generations": 3,
+      "timeline_verified": true
+    },
+    {
+      "case": "unsupported_guarantee",
+      "trace_id": "5918576e47a2b31a5aca479b61badb26",
+      "status": "executed",
+      "result": {
+        "answer": "문서로 확인 안 됨: 찾아본 문서(synthetic_test.pdf)에서 질문에 답할 근거를 찾지 못했습니다(검색 2번). 단서(부품 윗면 글자, 사진, 데이터시트, 주문 코드)를 알려 주시면 다시 찾겠습니다.",
+        "check": {},
+        "skill": {
+          "enabled": false,
+          "applied": false,
+          "sha256": null
+        },
+        "path": [
+          "거절"
+        ]
+      },
+      "raw_calls": 4,
+      "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/5918576e47a2b31a5aca479b61badb26",
+      "timeline": [
+        {
+          "id": "ddf251335452d4f6",
+          "name": "read_input",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:51.688000+00:00",
+          "end_time": "2026-11-03T03:20:51.688000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "85221035d99bdb5a",
+          "name": "sojafit-skill-unsupported_guarantee",
+          "type": "SPAN",
+          "parent_observation_id": null,
+          "start_time": "2026-11-03T03:20:51.688000+00:00",
+          "end_time": "2026-11-03T03:20:55.762000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_version": 2,
+            "dataset": "synthetic-development",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "58e4c2b515ef7b69",
+          "name": "route",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:51.688000+00:00",
+          "end_time": "2026-11-03T03:20:52.804000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "d537869c0fcc6e27",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "58e4c2b515ef7b69",
+          "start_time": "2026-11-03T03:20:51.689000+00:00",
+          "end_time": "2026-11-03T03:20:52.804000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "c3d28388991ec0d7",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "d537869c0fcc6e27",
+          "start_time": "2026-11-03T03:20:51.689000+00:00",
+          "end_time": "2026-11-03T03:20:51.689000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "b307f46661cefe41",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "d537869c0fcc6e27",
+          "start_time": "2026-11-03T03:20:51.689000+00:00",
+          "end_time": "2026-11-03T03:20:52.804000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "7402d0d2a1cb986b",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "b307f46661cefe41",
+          "start_time": "2026-11-03T03:20:51.690000+00:00",
+          "end_time": "2026-11-03T03:20:52.803000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/route",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 1011,
+            "output": 13,
+            "total": 1024,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 0.0001011,
+            "output": 6.5e-06,
+            "output_reasoning": 0.0,
+            "total": 0.0001076
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "e97978c8af62e944",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "b307f46661cefe41",
+          "start_time": "2026-11-03T03:20:52.804000+00:00",
+          "end_time": "2026-11-03T03:20:52.804000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "7a72bc2aedb89a65",
+          "name": "search",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:52.804000+00:00",
+          "end_time": "2026-11-03T03:20:52.804000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "retrieval_test": false,
+            "source": "synthetic_fixture",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "205ec147bb6c8219",
+          "name": "grade",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:52.804000+00:00",
+          "end_time": "2026-11-03T03:20:53.873000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "e9d93c457f395303",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "0e088caf3f032103",
+          "start_time": "2026-11-03T03:20:52.805000+00:00",
+          "end_time": "2026-11-03T03:20:53.873000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "5ed59bee6d59d424",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "0e088caf3f032103",
+          "start_time": "2026-11-03T03:20:52.805000+00:00",
+          "end_time": "2026-11-03T03:20:52.805000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "0e088caf3f032103",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "205ec147bb6c8219",
+          "start_time": "2026-11-03T03:20:52.805000+00:00",
+          "end_time": "2026-11-03T03:20:53.873000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "28f93ade770d7a1a",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "e9d93c457f395303",
+          "start_time": "2026-11-03T03:20:52.806000+00:00",
+          "end_time": "2026-11-03T03:20:53.872000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/grade",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 917,
+            "output": 13,
+            "total": 930,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 9.17e-05,
+            "output": 6.5e-06,
+            "output_reasoning": 0.0,
+            "total": 9.82e-05
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "fdfe731c06c4bf91",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "e9d93c457f395303",
+          "start_time": "2026-11-03T03:20:53.872000+00:00",
+          "end_time": "2026-11-03T03:20:53.873000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "d6e90ce7c9cfeb48",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "b6a539d97492d575",
+          "start_time": "2026-11-03T03:20:53.873000+00:00",
+          "end_time": "2026-11-03T03:20:55.045000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "b6a539d97492d575",
+          "name": "rewrite",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:53.873000+00:00",
+          "end_time": "2026-11-03T03:20:55.045000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "e24929ad36da4778",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "a10b1fb2cd4ff7b8",
+          "start_time": "2026-11-03T03:20:53.874000+00:00",
+          "end_time": "2026-11-03T03:20:55.044000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/rewrite",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 747,
+            "output": 32,
+            "total": 779,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 7.47e-05,
+            "output": 1.6e-05,
+            "output_reasoning": 0.0,
+            "total": 9.07e-05
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "a10b1fb2cd4ff7b8",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "d6e90ce7c9cfeb48",
+          "start_time": "2026-11-03T03:20:53.874000+00:00",
+          "end_time": "2026-11-03T03:20:55.045000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "212445020dfb841a",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "d6e90ce7c9cfeb48",
+          "start_time": "2026-11-03T03:20:53.874000+00:00",
+          "end_time": "2026-11-03T03:20:53.874000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "c9e9d24421f32020",
+          "name": "search",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:55.045000+00:00",
+          "end_time": "2026-11-03T03:20:55.045000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "attempt": 2,
+            "source": "synthetic_fixture",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "534b099fa14f7a59",
+          "name": "grade",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:55.045000+00:00",
+          "end_time": "2026-11-03T03:20:55.762000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "3cbf3024c5d514e9",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "a10b1fb2cd4ff7b8",
+          "start_time": "2026-11-03T03:20:55.045000+00:00",
+          "end_time": "2026-11-03T03:20:55.045000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/rewrite",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "e8daa88fbe461735",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "534b099fa14f7a59",
+          "start_time": "2026-11-03T03:20:55.046000+00:00",
+          "end_time": "2026-11-03T03:20:55.761000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "bc06be776d28ce3c",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "e8daa88fbe461735",
+          "start_time": "2026-11-03T03:20:55.046000+00:00",
+          "end_time": "2026-11-03T03:20:55.761000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "0aaf94b957fb6c4c",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "e8daa88fbe461735",
+          "start_time": "2026-11-03T03:20:55.046000+00:00",
+          "end_time": "2026-11-03T03:20:55.046000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "47d2cdd667f0edcd",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "bc06be776d28ce3c",
+          "start_time": "2026-11-03T03:20:55.047000+00:00",
+          "end_time": "2026-11-03T03:20:55.761000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/grade",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 917,
+            "output": 13,
+            "total": 930,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 9.17e-05,
+            "output": 6.5e-06,
+            "output_reasoning": 0.0,
+            "total": 9.82e-05
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "a8106f11b3427f2b",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "bc06be776d28ce3c",
+          "start_time": "2026-11-03T03:20:55.761000+00:00",
+          "end_time": "2026-11-03T03:20:55.761000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/grade",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "81cbfbe5b843ef71",
+          "name": "refuse",
+          "type": "SPAN",
+          "parent_observation_id": "85221035d99bdb5a",
+          "start_time": "2026-11-03T03:20:55.762000+00:00",
+          "end_time": "2026-11-03T03:20:55.762000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        }
+      ],
+      "generations": 4,
+      "timeline_verified": true
+    },
+    {
+      "case": "role",
+      "trace_id": "fc010f5a3658d432b6b3a9228c0ca9bf",
+      "status": "executed",
+      "result": {
+        "answer": "D_TEST의 A 핀은 VIN 넷에 연결되어 있고, 이 넷에는 J_TEST.1(INPUT)이 함께 연결되어 있다 [넷리스트]. D_TEST의 K 핀은 VOUT 넷에 연결되어 있고, 이 넷에는 J_OUT.1(OUTPUT)이 함께 연결되어 있다 [넷리스트]. 따라서 이 다이오드는 입력 커넥터 쪽 넷과 출력 커넥터 쪽 넷 사이에 연결된 구성이다 [넷리스트]. 넷리스트는 연결 사실만 보여 주므로 실제 전류 방향이나 보호 역할은 문서로 확인 안 됨 [넷리스트].",
+        "check": {
+          "fake_citations": [],
+          "uncited_sentences": 0,
+          "used": [
+            "넷리스트"
+          ]
+        },
+        "skill": {
+          "enabled": true,
+          "applied": true,
+          "sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47"
+        },
+        "path": [
+          "생성"
+        ]
+      },
+      "raw_calls": 2,
+      "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/fc010f5a3658d432b6b3a9228c0ca9bf",
+      "timeline": [
+        {
+          "id": "9522a088baf9f809",
+          "name": "sojafit-skill-role",
+          "type": "SPAN",
+          "parent_observation_id": null,
+          "start_time": "2026-11-03T03:21:08.906000+00:00",
+          "end_time": "2026-11-03T03:21:16.097000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_version": 2,
+            "dataset": "synthetic-development",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "ec8d601a99befd00",
+          "name": "read_input",
+          "type": "SPAN",
+          "parent_observation_id": "9522a088baf9f809",
+          "start_time": "2026-11-03T03:21:08.907000+00:00",
+          "end_time": "2026-11-03T03:21:08.907000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "bc6ceb660b0369f9",
+          "name": "route",
+          "type": "SPAN",
+          "parent_observation_id": "9522a088baf9f809",
+          "start_time": "2026-11-03T03:21:08.907000+00:00",
+          "end_time": "2026-11-03T03:21:11.956000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "b36d2ac63f8c3614",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "524b2e188a590fbf",
+          "start_time": "2026-11-03T03:21:08.908000+00:00",
+          "end_time": "2026-11-03T03:21:08.908000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "524b2e188a590fbf",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "bc6ceb660b0369f9",
+          "start_time": "2026-11-03T03:21:08.908000+00:00",
+          "end_time": "2026-11-03T03:21:11.956000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "1bddf0682b019aa1",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "524b2e188a590fbf",
+          "start_time": "2026-11-03T03:21:08.908000+00:00",
+          "end_time": "2026-11-03T03:21:11.956000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "4788f08392072721",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "1bddf0682b019aa1",
+          "start_time": "2026-11-03T03:21:08.909000+00:00",
+          "end_time": "2026-11-03T03:21:11.955000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/route",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 1027,
+            "output": 12,
+            "total": 1039,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 0.0001027,
+            "output": 6e-06,
+            "output_reasoning": 0.0,
+            "total": 0.0001087
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "8e9b5643227cca48",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "1bddf0682b019aa1",
+          "start_time": "2026-11-03T03:21:11.956000+00:00",
+          "end_time": "2026-11-03T03:21:11.956000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "89a34760bf486f99",
+          "name": "generate",
+          "type": "SPAN",
+          "parent_observation_id": "9522a088baf9f809",
+          "start_time": "2026-11-03T03:21:11.956000+00:00",
+          "end_time": "2026-11-03T03:21:16.097000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "c8ba15afcc691c14",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "16a6568dab57bf13",
+          "start_time": "2026-11-03T03:21:11.957000+00:00",
+          "end_time": "2026-11-03T03:21:11.957000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "16a6568dab57bf13",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "89a34760bf486f99",
+          "start_time": "2026-11-03T03:21:11.957000+00:00",
+          "end_time": "2026-11-03T03:21:16.096000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "0cadca7931b12b2c",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "16a6568dab57bf13",
+          "start_time": "2026-11-03T03:21:11.957000+00:00",
+          "end_time": "2026-11-03T03:21:16.096000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "2eb04e80220a2beb",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "0cadca7931b12b2c",
+          "start_time": "2026-11-03T03:21:11.958000+00:00",
+          "end_time": "2026-11-03T03:21:16.096000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/generate",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 3757,
+            "output": 279,
+            "total": 4621,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 585
+          },
+          "cost_details": {
+            "input": 0.0003757,
+            "output": 0.0001395,
+            "output_reasoning": 0.0002925,
+            "total": 0.0008077
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "cb40345f7fbf0e6b",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "0cadca7931b12b2c",
+          "start_time": "2026-11-03T03:21:16.096000+00:00",
+          "end_time": "2026-11-03T03:21:16.096000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_sha256": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47",
+            "skill_version": 2,
+            "skill_applied": true,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/generate",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        }
+      ],
+      "generations": 2,
+      "timeline_verified": true
+    },
+    {
+      "case": "out_of_scope",
+      "trace_id": "aeec30c4839bb951de54cd991333f412",
+      "status": "executed",
+      "result": {
+        "answer": "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다.",
+        "check": {},
+        "skill": {
+          "enabled": false,
+          "applied": false,
+          "sha256": null
+        },
+        "path": [
+          "거절"
+        ]
+      },
+      "raw_calls": 1,
+      "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/aeec30c4839bb951de54cd991333f412",
+      "timeline": [
+        {
+          "id": "2f94a968d2f42c4f",
+          "name": "sojafit-skill-out_of_scope",
+          "type": "SPAN",
+          "parent_observation_id": null,
+          "start_time": "2026-11-03T03:21:24+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_version": 2,
+            "dataset": "synthetic-development",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "7e358aae51a112c7",
+          "name": "route",
+          "type": "SPAN",
+          "parent_observation_id": "2f94a968d2f42c4f",
+          "start_time": "2026-11-03T03:21:24.002000+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "3c49858bba80f728",
+          "name": "read_input",
+          "type": "SPAN",
+          "parent_observation_id": "2f94a968d2f42c4f",
+          "start_time": "2026-11-03T03:21:24.002000+00:00",
+          "end_time": "2026-11-03T03:21:24.002000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "58ad9c6ba2e891ca",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "7e358aae51a112c7",
+          "start_time": "2026-11-03T03:21:24.003000+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "is_langchain_root": true,
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "54f80188c1fa3cc3",
+          "name": "managed_prompt",
+          "type": "CHAIN",
+          "parent_observation_id": "58ad9c6ba2e891ca",
+          "start_time": "2026-11-03T03:21:24.003000+00:00",
+          "end_time": "2026-11-03T03:21:24.003000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "26dbd447c96a5c25",
+          "name": "RunnableSequence",
+          "type": "CHAIN",
+          "parent_observation_id": "58ad9c6ba2e891ca",
+          "start_time": "2026-11-03T03:21:24.004000+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "1bdcf7b6aa1af8f4",
+          "name": "ChatOpenAI",
+          "type": "GENERATION",
+          "parent_observation_id": "26dbd447c96a5c25",
+          "start_time": "2026-11-03T03:21:24.004000+00:00",
+          "end_time": "2026-11-03T03:21:25.948000+00:00",
+          "level": "DEFAULT",
+          "model": "anthropic/claude-haiku-5.5",
+          "prompt_name": "sojafit/route",
+          "prompt_version": 4,
+          "usage_details": {
+            "input": 1008,
+            "output": 17,
+            "total": 1025,
+            "input_audio": 0,
+            "input_cache_read": 0,
+            "input_cache_creation": 0,
+            "output_audio": 0,
+            "output_reasoning": 0
+          },
+          "cost_details": {
+            "input": 0.0001008,
+            "output": 8.5e-06,
+            "output_reasoning": 0.0,
+            "total": 0.0001093
+          },
+          "metadata": {
+            "lc_versions.langchain-openai": "1.7.3",
+            "lc_versions.langchain-core": "1.7.0",
+            "ls_integration": "langchain_chat_model",
+            "ls_max_tokens": 4096,
+            "ls_temperature": 0,
+            "ls_model_type": "chat",
+            "ls_model_name": "anthropic/claude-haiku-5.5",
+            "ls_provider": "openai",
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:1"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "f0cd7a537a0f738e",
+          "name": "RunnableLambda",
+          "type": "CHAIN",
+          "parent_observation_id": "26dbd447c96a5c25",
+          "start_time": "2026-11-03T03:21:25.948000+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "skill_applied": false,
+            "prompt_version": 4,
+            "prompt_name": "sojafit/route",
+            "tags": [
+              "seq:step:2"
+            ],
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        },
+        {
+          "id": "818e49dcb57c1553",
+          "name": "refuse",
+          "type": "SPAN",
+          "parent_observation_id": "2f94a968d2f42c4f",
+          "start_time": "2026-11-03T03:21:25.949000+00:00",
+          "end_time": "2026-11-03T03:21:25.949000+00:00",
+          "level": "DEFAULT",
+          "model": "",
+          "prompt_name": "",
+          "prompt_version": null,
+          "usage_details": {},
+          "cost_details": {},
+          "metadata": {
+            "scope.version": "5.0.4",
+            "scope.name": "langfuse-sdk",
+            "resourceAttributes.service.name": "unknown_service:python",
+            "resourceAttributes.service.instance.id": "dec88cb0-a896-42ab-85e6-74fa7a5c4272",
+            "resourceAttributes.telemetry.sdk.version": "1.45.1",
+            "resourceAttributes.telemetry.sdk.name": "opentelemetry",
+            "resourceAttributes.telemetry.sdk.language": "python"
+          }
+        }
+      ],
+      "generations": 1,
+      "timeline_verified": true
+    }
+  ],
+  "budget": {
+    "raw_calls": 10,
+    "reserved_usd": 0.03146859999999999,
+    "seconds": 74.21216787304729
+  },
+  "source_versions": {
+    "head": "aef80d34ddfeef3c7a56fdc7c8af9fa42846cb19",
+    "files": {
+      "backend/graph/nodes.py": "bfbe777e7d2608dbffbb6d42194a4ad30655bd65e7366fff195dc4279a909850",
+      "backend/services/llm.py": "dfbe6be4026bb8929544888944a5657ace31b7acd3e17190f4185ae19b2f2930",
+      "backend/services/langfuse_prompts.py": "54c88d0c402e0ad0182154edaef05a3b02b07f6c113e576bc8ede286699b9959",
+      "scripts/langfuse_skill_check.py": "a21d0a6735a395cf72d9f77aafa6a3792bd6f0eb8c61f1d5d3c07c59e05ef4f9",
+      "backend/mcp_skill/skills/SKILL.md": "763212208c212d4f09a5fe24830854f0a7767930df01425c02601c309e11ab47"
+    },
+    "corpus": "synthetic fixtures only; no production corpus"
+  }
+}

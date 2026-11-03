@@ -17,7 +17,9 @@
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `run_skill_pair.py` — #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.run_skill_pair <새 결과 폴더>`. 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
 - `results/` — 평가 원시 결과
-- `results/langfuse_skill_check_2026-11-03_final.json` — 사전 등록 #19의 합성4건·generation10개 타임라인 API 확인과 응답. 사용자 제공 UI6장으로 등록 목록·정격 조회·보장값 부재 흐름 확인 완료(범위는 JSON의 `ui_confirmation`). 동결셋 평가·전체 사례 UI 확인·실제 청구액 측정은 아님
+- `results/langfuse_skill_check_2026-11-03_final.json` — 이전 등록 본문에 대한 사전 등록 #19의 합성4건·generation10개 타임라인 API 확인과 응답. 사용자 제공 UI6장으로 등록 목록·정격 조회·보장값 부재 흐름 확인 완료(범위는 JSON의 `ui_confirmation`). 동결셋 평가·전체 사례 UI 확인·실제 청구액 측정은 아님
+- `results/langfuse_skill_check_2026-11-03_current.json` — #20 현재 Skill 본문의 대표 흐름4건 재검증. 모델·프롬프트·Skill 버전·해시와 원격 타임라인을 기록
+- `results/skill_scenarios_2026-11-03_current.json` — #20 S1 7상황·S2 6상황의 생성 노드 직접 검증. 입력 근거·검토 기준·답변·원격 타임라인을 기록. Codex 답변 검토12/13 충족, 충돌1건 실패이며 전체 그래프/검색/동결 평가 결과와 구분
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
 - `DRAFT_30_REVIEW.md` — 초안 30건의 질문·가정·예상 답변 방향과 검수 목록
 - `draft_50.jsonl` — 현재 50건(관련 25·비관련 25) 검수 초안. 52건에서 n22(관련)·n13(비관련)을 예비 이관. 사람 합의 43건·숫자형 기계 대조 7건. 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했고 이 파일은 검수 이력으로 남김
