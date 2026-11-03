@@ -1,4 +1,10 @@
-"""SojaFit의 코퍼스 검색과 미검증 TSC 문서 후보를 노출하는 stdio MCP 서버."""
+"""SojaFit 검색·문서·회로 기능 5종을 노출하는 stdio FastMCP 서버.
+
+호출자는 MCP 클라이언트와 ``backend.graph.mcp_retriever``다. 코퍼스 검색은 기존
+RAG를 재사용하고, 웹 검색은 명시적으로 활성화된 경우에만 제한된 TSC 문서 후보를
+찾는다. 숫자·단위 판정은 하지 않는다. 계약과 실행 조건은
+``backend/mcp_skill/MCP_SKILL.md``와 ``SPEC.md`` 8.7~8.8을 따른다.
+"""
 import json
 import hashlib
 import os

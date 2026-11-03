@@ -1,8 +1,10 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 하는 일: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다. 줄기 노드 7개(입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절)가 모두 있다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
-- 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
+- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절 7개).
+  `build.py`가 노드를 그래프에 붙이고, `evals/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/run_graph.py`는 그래프 전체를 돌린다.
+  입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
+- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다).
+- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
 import hashlib
 import json
@@ -17,7 +19,7 @@ from backend.graph.state import AgentState
 from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
-PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 같은 폴더 README.md)
+PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 같은 폴더 PROMPTS.md)
 SKILL = REPO / "backend" / "mcp_skill" / "skills" / "SKILL.md"
 
 # 입력 글의 "키: 값" 줄 → 메모장 칸 이름
@@ -34,7 +36,7 @@ CLUES = "부품 윗면 글자, 사진, 데이터시트, 주문 코드"        # 
 
 
 def parse_input(text: str) -> dict:
-    """입력 글을 회로·넷리스트·대상·사용 조건·질문 칸으로 나눈다. 칸 형식이 아니면 글 전체를 질문으로 본다."""
+    """입력 글을 회로·넷리스트·대상·사용 조건·질문 칸으로 나눈다(question은 항상 있다)."""
     found = {}
     for line in text.splitlines():
         key, sep, value = line.partition(":")  # 첫 ":" 앞이 키, 뒤가 값이다
@@ -46,21 +48,23 @@ def parse_input(text: str) -> dict:
 
 
 def _connections_file(netlist_path: str) -> Path | None:
-    """넷리스트 옆(또는 한 단계 위)의 connections.json을 찾는다."""
-    netlist = REPO / netlist_path
+    """넷리스트 옆(또는 한 단계 위)의 connections.json 경로를 돌려준다. 없거나 경로가 저장소 밖이면 None."""
+    # [주의] 사용자 입력이 파일 읽기로 가는 경계다. 절대 경로나 ../로 저장소 밖을 읽지 못하게 resolve 뒤 REPO 안인지 검사한다
+    root = REPO.resolve()
+    netlist = (REPO / netlist_path).resolve()
+    if not netlist.is_relative_to(root):
+        return None
     # [왜] samples는 넷리스트와 같은 폴더에, 받은 회로(c09)는 한 단계 위 폴더에 connections.json이 있다
     for folder in (netlist.parent, netlist.parent.parent):
-        if (folder / "connections.json").exists():
+        if folder.is_relative_to(root) and (folder / "connections.json").exists():
             return folder / "connections.json"
     return None
 
 
 def circuit_around(connections: dict, target: str) -> dict:
-    """대상 부품과, 그 부품에 붙은 작은 부품 너머의 넷까지(2단계) 모아 돌려준다.
-
-    예: D1 → 이웃 S1·F1 → S1 너머 J1.PWR, F1 너머 RAW. 그래서 J1 → S1 → D1 → F1 → RAW 전원 경로가 보인다.
-    대상이 넷리스트에 없으면 빈 dict를 돌려준다.
-    """
+    """대상 부품과, 그 부품에 붙은 작은 부품 너머의 넷까지(2단계) 모아 {ref, value, footprint, nets} dict로 돌려준다."""
+    # 예: D1 → 이웃 S1·F1 → S1 너머 J1.PWR, F1 너머 RAW. 그래서 J1 → S1 → D1 → F1 → RAW 전원 경로가 보인다
+    # [주의] 대상이 넷리스트에 없으면 빈 dict를 돌려준다. 받는 쪽은 비었는지 먼저 본다
     parts = {c["ref"]: c for c in connections["components"]}
     if target not in parts:
         return {}
@@ -78,6 +82,7 @@ def circuit_around(connections: dict, target: str) -> dict:
             names += [name for name in nets_of[ref] if name not in names]
 
     def show(node):
+        """넷 속 핀 하나를 "기호.핀(값)" 글자로 만든다."""
         value = parts.get(node["ref"], {}).get("value", "")
         return f"{node['ref']}.{node.get('pinfunction') or node['pin']}({value})"
 
@@ -91,18 +96,28 @@ def circuit_around(connections: dict, target: str) -> dict:
 
 
 def read_input(state: AgentState) -> dict:
-    """입력 읽기 노드: 입력 글을 칸으로 나누고 넷리스트에서 대상 부품 주변을 읽는다. LLM을 쓰지 않는다(SPEC 2절)."""
+    """입력 읽기 노드: 입력 글을 칸으로 나누고 넷리스트에서 대상 부품 주변을 읽는다. LLM을 쓰지 않는다(SPEC 2절).
+
+    입력: `input` 칸. 출력: 나눈 칸, `target_part`, 앞 턴 검색 칸을 비우는 값, `path`. 턴마다 비우는 이유는 아래 [왜] 참고.
+    """
     fields = parse_input(state["input"])
     target_part = {}
     if fields.get("netlist_path") and fields.get("target"):
         found = _connections_file(fields["netlist_path"])
         if found:
             target_part = circuit_around(json.loads(found.read_text(encoding="utf-8")), fields["target"])
-    return {**fields, "target_part": target_part, "path": ["입력 읽기"]}
+    # [왜] 같은 thread의 다음 메시지(체크포인터)에서 앞 질문의 검색 결과가 새 질문에 섞이지 않게 턴마다 비운다.
+    # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
+    # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
+    reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
+             "tries": -state.get("tries", 0)}
+    # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
+    return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
 
 class Route(BaseModel):
     """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할)."""
+    # Literal로 다섯 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
     question_type: Literal["out_of_scope", "role", "candidate_find", "candidate_judge", "rating"] = Field(
         description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
 
@@ -113,11 +128,11 @@ def route(state: AgentState) -> dict:
     part = state.get("target_part") or {}
     user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
     answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
-    return {"question_type": answer.question_type, "path": ["라우팅"]}
+    return {"question_type": answer.question_type, "path": ["라우팅"]}  # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다
 
 
 def find_parts(text: str, refs: set[str]) -> list[str]:
-    """글에서 품번으로 보이는 낱말(영문과 숫자가 섞인 것)을 나온 순서대로 뽑는다. 회로 기호·값·개정 코드는 뺀다."""
+    """글에서 품번으로 보이는 낱말(영문+숫자)을 나온 순서대로 중복 없이 뽑는다. refs(회로 기호)·값·개정 코드는 뺀다."""
     found = []
     for word in WORD.findall(text):  # [왜] 영문·숫자만 이어 붙여 "1N5819는"의 조사 "는"이 떨어진다
         if not (re.search(r"[A-Za-z]", word) and re.search(r"\d", word)):
@@ -130,10 +145,8 @@ def find_parts(text: str, refs: set[str]) -> list[str]:
 
 
 def search(state: AgentState, retriever) -> dict:
-    """검색 노드: 검색어로 카드를 찾되, 질문에 품번이 있으면 그 품번 문서 안에서만, 없으면 대상 값의 품번 문서 안에서만 찾는다(SPEC 2절).
-
-    retriever는 backend.rag.retrieve.retrieve와 같은 모양(question, *, parts)이다. build.py가 넣어 주고, 시험에서는 가짜를 넣는다.
-    """
+    """검색 노드: 질문에 품번이 있으면 그 품번 문서 안에서만, 없으면 대상 값의 품번 문서 안에서만 카드를 찾는다(SPEC 2절)."""
+    # retriever는 backend.rag.retrieve.retrieve와 같은 모양(question, *, parts)이다. build.py가 넣어 주고, 시험에서는 가짜를 넣는다
     part = state.get("target_part") or {}
     # shortcut: 회로 기호는 대상과 그 주변 넷의 부품만 안다. 멀리 있는 기호(U3, SJ1)는 품번으로 잘못 뽑힌다. 실측에서 틀리면 넷리스트 전체 기호로 넓힌다
     refs = {part.get("ref", "")} | {node.split(".")[0] for net in part.get("nets", []) for node in net["nodes"]}
@@ -155,7 +168,7 @@ class Grade(BaseModel):
 
 
 def other_part_row(doc: dict, parts: list[str]) -> bool:
-    """표 한 줄 카드가 같은 문서의 다른 품번만 적힌 줄이면 True. 예: 1N5819를 물었는데 1N5817 순방향 전압 줄."""
+    """표 한 줄 카드가 같은 문서의 다른 품번만 적힌 줄이면 True(예: 1N5819를 물었는데 1N5817 순방향 전압 줄)."""
     if not doc.get("table") or not parts:
         return False  # 글 카드("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
     # [왜] 문서 표지 품번 목록과 겹치는 낱말만 품번으로 본다. 그래야 패키지 이름(DO-41, SOD-123F)이 든 줄을 버리지 않는다
@@ -164,7 +177,10 @@ def other_part_row(doc: dict, parts: list[str]) -> bool:
 
 
 def grade(state: AgentState) -> dict:
-    """채점 노드: 결정적 검사(다른 품번 줄, 요청한 개정판)로 먼저 거르고, 남은 카드를 LLM 호출 한 번으로 채점한다(SPEC 2절)."""
+    """채점 노드: 결정적 검사(다른 품번 줄, 요청한 개정판)로 먼저 거르고, 남은 카드를 LLM 호출 한 번으로 채점한다(SPEC 2절).
+
+    입력: question·docs·parts. 출력: 통과한 카드 id(chunk_id) 목록 `passed`. 빈 목록이면 build.py 갈림길이 재작성이나 거절로 보낸다.
+    """
     revisions = {w.upper() for w in WORD.findall(state["question"]) if REVISION.fullmatch(w)}  # 질문이 요청한 개정 코드
     kept = []
     for doc in state.get("docs", []):
@@ -180,7 +196,8 @@ def grade(state: AgentState) -> dict:
     # [왜] 강의 20강처럼 하위 검색어가 아니라 원래 질문 기준으로 채점한다
     answer = llm.node_chat("grade", (PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
     shown = {d["chunk_id"] for d in kept}
-    return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}  # LLM이 없는 번호를 내면 버린다
+    # [주의] LLM이 보여 준 적 없는 번호를 내면 버린다. 안 버리면 없는 카드가 근거로 통과한다
+    return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}
 
 
 class Rewrite(BaseModel):
@@ -189,7 +206,8 @@ class Rewrite(BaseModel):
 
 
 def rewrite(state: AgentState) -> dict:
-    """재작성 노드: 원래 질문을 데이터시트 검색어 한 줄로 바꾼다(SPEC 2절). 품번 필터는 바꾸지 않는다(검색 노드가 원래 질문에서 다시 뽑는다)."""
+    """재작성 노드: 원래 질문을 데이터시트 검색어 한 줄로 바꾼다(SPEC 2절). 품번 필터는 바꾸지 않는다."""
+    # [주의] 품번 필터는 검색 노드가 원래 질문에서 다시 뽑는다. 여기서 바꾸는 것은 query 칸뿐이다
     # [왜] 1차 검색어가 아니라 언제나 원래 질문을 고친다(강의 2주 20강). 고친 것을 또 고치면 뜻이 점점 멀어진다
     # [왜] 키워드 검색(BM25)은 한국어 낱말을 버린다. 영어 용어로 바꿔야 "순방향 전압"이 Forward voltage 줄에 걸린다
     answer = llm.node_chat("rewrite", (PROMPTS / "rewrite.md").read_text(encoding="utf-8"), state["question"], Rewrite)
@@ -203,6 +221,7 @@ class Answer(BaseModel):
 
 def netlist_block(part: dict) -> str:
     """대상 부품과 주변 넷을 생성 노드의 근거 한 덩어리([넷리스트])로 쓴다."""
+    # [주의] part는 read_input이 만든 target_part이고 비어 있으면 안 된다(part["nets"]를 바로 읽는다)
     nets = "\n".join(f"- {n['name']}: {', '.join(n['nodes'])}" + (f" 외 {n['more']}개" if n["more"] else "") for n in part["nets"])
     return f"[넷리스트] {part['ref']} {part['value']} ({part['footprint']})\n{nets}"
 
@@ -214,7 +233,12 @@ def citations(text: str) -> set[str]:
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:
-    """생성 노드: 통과 카드와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절)."""
+    """생성 노드: 통과 카드와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절).
+
+    입력: question·docs·passed·target_part. use_skill이 True면 도메인 Skill을 시스템 프롬프트에 붙인다.
+    출력: answer, check, skill(적용 여부와 sha256), path.
+    주의: use_skill인데 Skill 파일이 없으면 FileNotFoundError, 비었으면 ValueError를 그대로 올린다(실패를 숨기지 않는다).
+    """
     passed = set(state.get("passed") or [])
     cards = [d for d in state.get("docs", []) if d["chunk_id"] in passed]  # 채점을 통과한 카드만 근거로 넘긴다
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in cards]  # 파일 이름에 개정 코드가 있어 출처가 된다

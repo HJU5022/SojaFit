@@ -33,9 +33,9 @@
 | `tests/test_graph_mcp_retriever.py` | 응답 검증, 도구 인자, timeout, 세션 수명 단위 테스트 |
 | `tests/test_graph_build.py` | 빈 결과와 장애의 그래프 경로, 재검색 상한 회귀 테스트 |
 | `tests/test_graph_mcp_stdio.py` | 실제 stdio 서버와 격리 DB를 경유하는 조건부 통합 테스트 |
-| `backend/graph/README.md` | MCP 검색기 주입법과 장애 의미 |
+| `backend/graph/GRAPH.md` | MCP 검색기 주입법과 장애 의미 |
 | `SPEC.md` | 그래프의 검색 장애 분기와 MCP 통합 경계 |
-| `tests/README.md` | 신규 테스트 파일 설명과 조건부 DB 검사 명령 |
+| `tests/TESTS.md` | 신규 테스트 파일 설명과 조건부 DB 검사 명령 |
 | `docs/GATES.md` | 세 가지 변이 확인 결과 |
 | `docs/worklog/STH.md` | 변경 파일, 실행 명령, 실제 결과, 미검증 범위 |
 
@@ -565,7 +565,7 @@ git commit --no-gpg-sign -m "test(graph): MCP 검색과 재검색 경로를 검�
 
 **Files:**
 - Create: `tests/test_graph_mcp_stdio.py`
-- Modify: `tests/README.md`
+- Modify: `tests/TESTS.md`
 
 **Interfaces:**
 - Consumes: `TEST_DATABASE_URL`, 실제 `backend.mcp_skill.mcp_server.server`, `StdioMcpRetriever`.
@@ -643,7 +643,7 @@ Expected: PASS. URL 값은 작업 기록·채팅·테스트 출력에 복사하�
 
 - [ ] **Step 4: 테스트 README 갱신**
 
-`tests/README.md` 파일 표에 두 항목을 추가한다.
+`tests/TESTS.md` 파일 표에 두 항목을 추가한다.
 
 ```markdown
 - `test_graph_mcp_retriever.py` — MCP 검색 응답·stdio 세션 수명과 안전한 오류 경계
@@ -653,7 +653,7 @@ Expected: PASS. URL 값은 작업 기록·채팅·테스트 출력에 복사하�
 - [ ] **Step 5: Task 5 로컬 커밋**
 
 ```powershell
-git add tests/test_graph_mcp_stdio.py tests/README.md
+git add tests/test_graph_mcp_stdio.py tests/TESTS.md
 git commit --no-gpg-sign -m "test(graph): 실제 stdio MCP 검색 경로를 확인한다"
 ```
 
@@ -663,7 +663,7 @@ git commit --no-gpg-sign -m "test(graph): 실제 stdio MCP 검색 경로를 확�
 
 **Files:**
 - Modify: `SPEC.md`
-- Modify: `backend/graph/README.md`
+- Modify: `backend/graph/GRAPH.md`
 - Modify: `docs/GATES.md`
 - Modify: `docs/worklog/STH.md`
 
@@ -679,7 +679,7 @@ git commit --no-gpg-sign -m "test(graph): 실제 stdio MCP 검색 경로를 확�
 MCP 검색기를 주입한 경우 정상 빈 목록은 문서 없음으로 처리하고, 세션·도구·응답 형식 장애는 별도 상태로 기록해 재검색이나 채점 없이 안전한 장애 응답으로 끝낸다. MCP를 주입하지 않은 기본 그래프는 기존 직접 검색을 유지한다.
 ```
 
-`backend/graph/README.md`의 파일 표와 흐름 설명에 `mcp_retriever.py`, context manager 사용법, 직접 검색 기본값, 장애와 빈 결과의 차이를 기록한다. MCP 서버 구현 완료나 G4 완료라고 쓰지 않는다.
+`backend/graph/GRAPH.md`의 파일 표와 흐름 설명에 `mcp_retriever.py`, context manager 사용법, 직접 검색 기본값, 장애와 빈 결과의 차이를 기록한다. MCP 서버 구현 완료나 G4 완료라고 쓰지 않는다.
 
 - [ ] **Step 2: 세 가지 변이 확인**
 
@@ -717,7 +717,7 @@ Expected: lock check exit 0, 테스트 실패 0, 알려진 조건부 검사만 s
 - [ ] **Step 5: Task 6 로컬 커밋**
 
 ```powershell
-git add SPEC.md backend/graph/README.md docs/GATES.md docs/worklog/STH.md
+git add SPEC.md backend/graph/GRAPH.md docs/GATES.md docs/worklog/sth.md
 git commit --no-gpg-sign -m "docs: MCP 그래프 통합 검증을 기록한다"
 ```
 

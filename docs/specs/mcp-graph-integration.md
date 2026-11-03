@@ -60,7 +60,7 @@
 
 - B 담당 코드: `backend/graph/mcp_retriever.py`, `backend/graph/state.py`, `backend/graph/nodes.py`, `backend/graph/build.py`.
 - B 담당 테스트: 신규 `tests/test_graph_mcp_retriever.py`, 기존 `tests/test_graph_build.py`의 그래프 장애 경로.
-- 통합 문서: 이 작업서, `backend/graph/README.md`, `tests/README.md`, `docs/worklog/STH.md`.
+- 통합 문서: 이 작업서, `backend/graph/GRAPH.md`, `tests/TESTS.md`, `docs/worklog/sth.md`.
 - A 담당으로 수정하지 않는 파일: `backend/mcp_skill/mcp_server/server.py`, `tests/test_mcp_search.py`, `tests/test_mcp_manifest.py`, `docs/specs/mcp-search-tools.md`.
 - 공통 `SPEC.md`의 그래프 장애 분기는 구현과 같은 변경에서 최소 갱신하고, 서버 계약 부분은 바꾸지 않는다. 원격 PR 전 A가 계약 인용 부분을 리뷰한다.
 

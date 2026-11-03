@@ -1,4 +1,9 @@
-"""그래프 상태의 칸이 덮어쓰기와 쌓기로 나뉘어 합쳐지는지 확인한다(SPEC 2절, 강의 2주 04강)."""
+"""그래프 상태의 칸이 덮어쓰기와 쌓기로 나뉘어 합쳐지는지 확인한다.
+
+- 역할: tries·path는 쌓이고 나머지 칸은 덮어써지는지 확인한다.
+- 하지 않는 일: 노드의 동작은 보지 않는다.
+- 출처: SPEC 2절(그래프), 강의 2주 04강
+"""
 from langgraph.graph import END, START, StateGraph
 
 from backend.graph.state import AgentState

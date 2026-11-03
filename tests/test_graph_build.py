@@ -1,4 +1,9 @@
-"""그래프 조립: 질문 종류와 채점 결과에 따라 노드가 SPEC 2절 순서로 이어지는지 확인한다. LLM과 검색기는 가짜로 바꾼다."""
+"""그래프 조립: 질문 종류와 채점 결과에 따라 노드가 SPEC 2절 순서로 이어지는지 확인한다.
+
+- 역할: 가짜 LLM·가짜 검색기로 다섯 길(통과, 재작성 뒤 통과, 두 번 다 통과 없음, 검색 0장, 범위 밖·역할)의 경로와, 검색기가 입력 전체가 아니라 질문 줄만 받는지 확인한다.
+- 하지 않는 일: 실제 LLM·검색 품질, 답의 정확도는 보지 않는다.
+- 출처: SPEC 2절(그래프)·"근거가 없을 때", ADR 0006
+"""
 import pytest
 
 from backend.graph import nodes
@@ -92,3 +97,20 @@ def test_out_of_scope_and_role_skip_search(monkeypatch, question_type, last):
     out, calls = run(monkeypatch, question_type, [], [CARD])
     assert calls == []
     assert out["path"] == ["입력 읽기", "라우팅", last]
+
+
+def test_second_message_in_same_thread_starts_fresh(monkeypatch):
+    """체크포인터로 같은 thread에 두 번째 질문이 오면 앞 턴의 query·tries가 남아 재작성 없이 거절되거나 낡은 검색어로 찾으면 안 된다."""
+    from langgraph.checkpoint.memory import MemorySaver
+    grades = iter([[], [], [7]])  # 1턴: 통과 없음 2번(거절), 2턴: 첫 채점에서 통과
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: (
+        schema(question_type="rating") if schema is nodes.Route else
+        schema(passed_ids=next(grades)) if schema is nodes.Grade else
+        schema(query=REWRITTEN) if schema is nodes.Rewrite else schema(answer="20 V다 [7].")))
+    calls = []
+    app = build_graph(retriever=lambda q, *, parts=None: calls.append(q) or [CARD], checkpointer=MemorySaver())
+    cfg = {"configurable": {"thread_id": "t"}}
+    app.invoke({"input": INPUT}, cfg)
+    out = app.invoke({"input": INPUT}, cfg)
+    assert calls[-1] == QUESTION  # 1턴이 남긴 REWRITTEN이 아니라 새 질문으로 찾는다
+    assert out["tries"] == 1 and out["path"][-1] == "생성"

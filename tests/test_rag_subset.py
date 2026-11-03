@@ -1,4 +1,9 @@
-"""Offline subset contracts; no corpus, API or DB required."""
+"""문서 일부 뽑기(backend.rag.subset) 계약: 코퍼스·API·DB 없이 오프라인으로 확인한다.
+
+- 역할: 분류별 사본·입력 보존·관련 gold 누락·기존 출력·불완전/중복 카드 오류, 카드 수 기준 벡터 payload 추정을 확인한다.
+- 하지 않는 일: subset은 적용 보류된 수동 도구라서 서비스 코퍼스를 줄이는 결정은 이 테스트가 정하지 않는다.
+- 출처: evals/preregister.md #10(적용 보류), SPEC 6절
+"""
 import csv
 import hashlib
 import importlib
