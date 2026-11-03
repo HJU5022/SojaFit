@@ -195,13 +195,56 @@ def main(out_path=None, prereg='#26'):
     print(f"retrieve {out['latency']['retrieve']} | rewrite {out['latency']['rewrite']} | OpenRouter {out['openrouter_spent_usd']}달러 | 결과 {path.relative_to(ROOT)}")
 
 
+def stages(n, out_path):
+    """사전 등록 #28: R1 앞 n문항의 retrieve()를 재며 Voyage 질문 임베딩 · rerank-3 호출 시간을 나눠 재고 rerank 토큰을 센다.
+    나머지(전체 − 임베딩 − 리랭크)는 DB 검색(비트 후보 + 정확 재정렬) · BM25 · RRF · 본문 읽기다."""
+    os.environ['DEMO_MODE'] = '0'
+    from backend.graph.nodes import find_parts
+    from backend.rag import retrieve as R
+    from backend.services import llm
+    qs = r1_questions(find_parts)[:n]
+    R.warmup()
+    sec, tokens, post = {'embed': [], 'rerank': [], 'total': []}, [], llm._voyage_post
+
+    def timed_post(path, payload):
+        """[왜] voyage_embed · voyage_rerank가 모두 _voyage_post를 지나므로 여기서 호출 시간과 usage를 잡는다."""
+        t = time.perf_counter()
+        d = post(path, payload)
+        sec['embed' if path == 'embeddings' else 'rerank'].append(time.perf_counter() - t)
+        if path == 'rerank':
+            tokens.append((d.get('usage') or {}).get('total_tokens'))
+        return d
+    llm._voyage_post = timed_post
+    try:
+        for q in qs:
+            t = time.perf_counter()
+            R.retrieve(q['text'], k=20, parts=q['parts'] or None)
+            sec['total'].append(time.perf_counter() - t)
+    finally:
+        llm._voyage_post = post
+    assert len(sec['embed']) == len(sec['rerank']) == len(sec['total']) == n, {k: len(v) for k, v in sec.items()}
+    sec['db_bm25_rrf'] = [a - b - c for a, b, c in zip(sec['total'], sec['embed'], sec['rerank'])]
+    out = {'meta': {'preregister': '#28', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'n': n, 'config': WINNER,
+                    'commit': subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()},
+           'latency': {k: latency(v) for k, v in sec.items()}, 'rerank_tokens': {'per_call': latency(tokens), 'total': sum(tokens)},
+           'raw': {k: [round(x, 4) for x in v] for k, v in sec.items()} | {'rerank_tokens': tokens}}
+    path = ROOT / (out_path or f'evals/results/retrieval/service_stages_{time.strftime("%Y-%m-%d")}.json')
+    D3.jdump(out, path)
+    for k, v in out['latency'].items():
+        print(f'{k:12s} {v}')
+    print('rerank 토큰', out['rerank_tokens'], '| 결과', path.relative_to(ROOT))
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
+    ap.add_argument('--stages', type=int, help='R1 앞 N문항으로 단계별 시간(질문 임베딩 · 리랭크 · 나머지)과 rerank 토큰만 잰다(사전 등록 #28)')
     ap.add_argument('--out', help='결과 JSON 경로(저장소 루트 기준). 기본 evals/results/retrieval/service_r1_<날짜>.json')
     ap.add_argument('--prereg', default='#26', help='meta에 적을 사전 등록 번호')
     ap.add_argument('--compare', nargs=2, metavar=('EXACT', 'BITS'), help='측정하지 않고 결과 파일 둘만 견준다(DB · API 안 씀)')
     args = ap.parse_args()
     if args.compare:
         print(json.dumps(compare(*(json.load(open(f, encoding='utf-8')) for f in args.compare)), ensure_ascii=False, indent=1))
+    elif args.stages:
+        stages(args.stages, args.out)
     else:
         main(args.out, args.prereg)

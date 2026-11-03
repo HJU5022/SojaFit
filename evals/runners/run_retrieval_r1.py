@@ -297,9 +297,46 @@ def run(args):
     print('건너뜀', len(skipped), skipped[:3], '| 결과', args.out)
 
 
+# 사전 등록 #28: 지금 서비스에서 한 번에 하나씩 더해 가는 순서(측정 전에 고정)
+STEPS = [('S0 지금 서비스', {}), ('S1 +재작성 Q3', {'Q': 'Q3'}), ('S2 +표지 빼기', {'F': 'part+kind'}),
+         ('S3 +rerank-3', {'rerank': 'rerank-3'}), ('S4 +voyage-4-large', {'model': 'v4large'})]
+
+
+def steps(args):
+    """고르기용 · 확인용 각각 S0 → S4를 재고, 단계마다 바로 앞 단계와 짝 비교 · 달라진 문항 · 실패 유형을 남긴다."""
+    out = {'meta': {'preregister': '#28', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'steps': [s for s, _ in STEPS]}}
+    metric_keys = ('page_recall@5', 'page_hit@5', 'all_evidence@5')
+    for split in ('dev', 'test'):
+        ctx, cfg, cells = context(args, split), dict(BASE), []
+        for label, change in STEPS:
+            cfg = dict(cfg, **change)  # 앞 단계 설정에 이번 하나만 더한다
+            c = D3.run_cell(cfg, ctx)
+            cells.append({'step': label, 'name': c['name'], 'summary': c['summary'],
+                          'rows': [{k: r[k] for k in ('id', *metric_keys, 'page_mrr') if k in r} | ({'fail': r['fail']} if 'fail' in r else {})
+                                   for r in c['rows']], '_full': c})
+        cmp = []
+        for a, b in zip(cells, cells[1:]):
+            d = {m: D3.compare(a['_full'], b['_full'], m) for m in metric_keys}
+            diff = [(y['id'], round(y['page_recall@5'] - x['page_recall@5'], 4)) for x, y in zip(a['rows'], b['rows']) if y['page_recall@5'] != x['page_recall@5']]
+            cmp.append({'from': a['step'], 'to': b['step'], **d, 'won': [i for i, v in diff if v > 0], 'lost': [i for i, v in diff if v < 0]})
+        for c in cells:
+            c.pop('_full')
+        out[split] = {'cells': cells, 'compare': cmp}
+        print(f'== {split} ({len(ctx["qs"])}문항)')
+        for c in cells:
+            s = c['summary']
+            print(f"  {c['step']:20s} 회수율@5 {s['page_recall@5']:.4f} 적중@5 {s['page_hit@5']:.4f} 근거 전부@5 {s['all_evidence@5']:.4f} 실패 {s['fails']}")
+        for x in cmp:
+            r = x['page_recall@5']
+            print(f"  {x['from']} → {x['to']}: {r['W']}승 {r['L']}패 {r['T']}동 평균 {r['mean_diff']:+.4f} {r['ci95']} p={r['sign_p']} {r['verdict']} | 이긴 {x['won']} 진 {x['lost']}")
+    print('새 리랭크 호출', ctx['rr'].new_calls)
+    D3.jdump(out, args.out)
+    print('결과', args.out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run'])
+    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run', 'steps'])
     p.add_argument('--cards', default=str(OUTSIDE / 'corpus/tsc/chunks/chunks.jsonl'))
     p.add_argument('--vectors', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/vectors'))
     p.add_argument('--qvec-dir', default=str(WORK / 'qvec'))
@@ -311,7 +348,7 @@ def main():
     sys.path.insert(0, str(ROOT))
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
-    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run}[a.cmd](a)
+    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run, 'steps': steps}[a.cmd](a)
 
 
 if __name__ == '__main__':
