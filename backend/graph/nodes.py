@@ -4,6 +4,7 @@
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`만 쓴다).
 - 출처: SPEC.md 2절 "그래프", 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
 """
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -16,6 +17,7 @@ from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
 PROMPTS = REPO / "backend" / "prompts"     # 프롬프트 파일 폴더(버전 기록은 같은 폴더 README.md)
+SKILL = REPO / "backend" / "mcp_skill" / "skills" / "SKILL.md"
 
 # 입력 글의 "키: 값" 줄 → 메모장 칸 이름
 FIELDS = {"회로": "circuit", "넷리스트": "netlist_path", "대상": "target", "사용 조건": "conditions", "질문": "question"}
@@ -109,7 +111,7 @@ def route(state: AgentState) -> dict:
     # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
     part = state.get("target_part") or {}
     user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
-    answer = llm.chat((PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
+    answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
     return {"question_type": answer.question_type, "path": ["라우팅"]}
 
 
@@ -170,7 +172,7 @@ def grade(state: AgentState) -> dict:
         return {"passed": [], "path": ["채점"]}  # 남은 카드가 없으면 LLM을 부르지 않는다
     cards = "\n\n".join(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in kept)
     # [왜] 강의 20강처럼 하위 검색어가 아니라 원래 질문 기준으로 채점한다
-    answer = llm.chat((PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
+    answer = llm.node_chat("grade", (PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
     shown = {d["chunk_id"] for d in kept}
     return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}  # LLM이 없는 번호를 내면 버린다
 
@@ -184,7 +186,7 @@ def rewrite(state: AgentState) -> dict:
     """재작성 노드: 원래 질문을 데이터시트 검색어 한 줄로 바꾼다(SPEC 2절). 품번 필터는 바꾸지 않는다(검색 노드가 원래 질문에서 다시 뽑는다)."""
     # [왜] 1차 검색어가 아니라 언제나 원래 질문을 고친다(강의 2주 20강). 고친 것을 또 고치면 뜻이 점점 멀어진다
     # [왜] 키워드 검색(BM25)은 한국어 낱말을 버린다. 영어 용어로 바꿔야 "순방향 전압"이 Forward voltage 줄에 걸린다
-    answer = llm.chat((PROMPTS / "rewrite.md").read_text(encoding="utf-8"), state["question"], Rewrite)
+    answer = llm.node_chat("rewrite", (PROMPTS / "rewrite.md").read_text(encoding="utf-8"), state["question"], Rewrite)
     return {"query": answer.query.strip(), "path": ["재작성"]}  # query 칸을 새 검색어로 덮어쓴다
 
 
@@ -205,7 +207,7 @@ def citations(text: str) -> set[str]:
     return {c.strip() for br in CITE.findall(text) for c in br.split(",") if c.strip().isdigit() or c.strip() == "넷리스트"}
 
 
-def generate(state: AgentState) -> dict:
+def generate(state: AgentState, *, use_skill: bool = False) -> dict:
     """생성 노드: 통과 카드와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절)."""
     passed = set(state.get("passed") or [])
     cards = [d for d in state.get("docs", []) if d["chunk_id"] in passed]  # 채점을 통과한 카드만 근거로 넘긴다
@@ -213,10 +215,20 @@ def generate(state: AgentState) -> dict:
     part = state.get("target_part") or {}
     if part:
         blocks.append(netlist_block(part))  # [왜] 역할 질문은 검색 없이 오므로 넷리스트가 유일한 근거다
+    skill_info = {"enabled": use_skill, "applied": False, "sha256": None}
     answer = NOT_FOUND  # 근거가 하나도 없으면(넷리스트 없이 온 역할 질문) LLM을 부르지 않는다
     if blocks:
+        system = (PROMPTS / "generate.md").read_text(encoding="utf-8")
+        text = ""
+        if use_skill:
+            raw = SKILL.read_bytes()
+            text = raw.decode("utf-8")
+            if not text.strip():
+                raise ValueError("도메인 Skill이 비어 있습니다")
+            system += f"\n\n<domain_skill>\n{text}\n</domain_skill>"
+            skill_info = {"enabled": True, "applied": True, "sha256": hashlib.sha256(raw).hexdigest()}
         user = "근거:\n" + "\n\n".join(blocks) + f"\n\n질문: {state['question']}"  # 강의 20강처럼 근거 다음에 질문
-        answer = llm.chat((PROMPTS / "generate.md").read_text(encoding="utf-8"), user, Answer).answer.strip()
+        answer = llm.node_chat("generate", system, user, Answer, skill_text=text).answer.strip()
     valid = {str(d["chunk_id"]) for d in cards} | ({"넷리스트"} if part else set())  # 실제로 넘긴 근거. 이 밖의 번호를 인용하면 없는 근거 인용이다
     cited = citations(answer)
     # 마침표 뒤 공백에서 문장을 자른다. "문서로 확인 안 됨"은 인용할 근거가 없는 답이라 세지 않는다
@@ -225,14 +237,15 @@ def generate(state: AgentState) -> dict:
              "uncited_sentences": sum(1 for s in sentences if not citations(s)),  # 근거 번호가 하나도 없는 문장 수
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
-    return {"answer": answer, "check": check, "path": ["생성"]}
+    return {"answer": answer, "check": check, "skill": skill_info, "path": ["생성"]}
 
 
 def refuse(state: AgentState) -> dict:
     """거절 노드: 이유(범위 밖 / 근거 없음)와 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절)."""
+    skill_info = {"enabled": False, "applied": False, "sha256": None}
     if state.get("question_type") == "out_of_scope":
         answer = "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다."
-        return {"answer": answer, "check": {}, "path": ["거절"]}  # 검사할 인용이 없어 check는 비운다(강의 2주 20강)
+        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}  # 이전 턴의 적용 정보도 비운다
     docs, parts = state.get("docs") or [], state.get("parts") or []
     # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
     if not docs:
@@ -241,4 +254,5 @@ def refuse(state: AgentState) -> dict:
         files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
         found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
     # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
-    return {"answer": f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다.", "check": {}, "path": ["거절"]}
+    return {"answer": f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다.",
+            "check": {}, "skill": skill_info, "path": ["거절"]}
