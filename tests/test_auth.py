@@ -1,3 +1,9 @@
+"""인증 단위·DB 통합 테스트: 비밀번호 해시, 세션, 로그인 잠금, 관리자 API.
+
+- 역할: 비밀번호 해시, 세션 HMAC, 로그인 실패 제한·잠금 경계, 유휴·절대 만료, 사용자 격리, 관리자 권한, scrypt 동시 검증 상한을 확인한다.
+- 하지 않는 일: DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만 돈다(없으면 건너뜀). 서비스 DB(Supabase)나 실제 사용자 데이터는 쓰지 않는다.
+- 출처: SPEC 8.6(로그인 AC), docs/specs/login-auth.md, docs/research/auth-login-verification.md
+"""
 import pytest
 from fastapi.testclient import TestClient
 
@@ -406,3 +412,31 @@ def test_app_startup_requires_key_outside_demo(monkeypatch):
     monkeypatch.setenv("DEMO_MODE", "1")
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
+
+
+def test_login_purges_expired_attempts_and_sessions_before_recording(monkeypatch):
+    """로그인 때 만료된 시도·세션 행을 지워 무작위 이메일 공격으로 표가 끝없이 커지지 않게 한다(DB 없이 SQL 순서만 확인)."""
+    statements = []
+
+    class Cursor:
+        def __enter__(self): return self
+        def __exit__(self, *exc): return False
+        def execute(self, sql, params=None): statements.append(sql)
+        def fetchone(self):
+            last = statements[-1]
+            if "pg_try_advisory" in last:
+                return (True,)
+            if "failed_count, locked_until" in last:
+                return (0, False, True)
+            return None  # 없는 계정
+
+    class Conn:
+        def __enter__(self): return self
+        def __exit__(self, *exc): return False
+        def cursor(self): return Cursor()
+
+    monkeypatch.setattr(auth, "connection", lambda: Conn())
+    assert auth.authenticate("nobody@example.test", "x") is None
+    kinds = [s.split()[0] + " " + s.split()[2] for s in statements]
+    assert kinds.index("DELETE auth_login_attempts") < kinds.index("INSERT auth_login_attempts")
+    assert any(s.startswith("DELETE FROM auth_sessions WHERE expires_at") for s in statements)

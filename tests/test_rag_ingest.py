@@ -1,7 +1,9 @@
-"""적재 도구(backend/rag/ingest.py): 벡터 캐시 복구, 없는 본문만 임베딩, DB 재실행(rag-pipeline EC-04·05).
+"""적재 도구(backend/rag/ingest.py): 벡터 캐시 복구, 없는 본문만 임베딩, DB 재실행.
 
-DB 재실행 시험은 TEST_DATABASE_URL을 줄 때만 돈다(CI에는 DB가 없다). 임시 스키마를 만들고 끝나면 지운다.
-[주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
+- 역할: 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩, DB 재실행(행이 늘지 않고 API를 다시 안 부름)을 확인한다.
+- 하지 않는 일: DB 재실행 시험은 TEST_DATABASE_URL을 줄 때만 돈다(CI에는 DB가 없다). 임시 스키마를 만들고 끝나면 지운다. 실제 임베딩 API는 부르지 않는다.
+- 출처: docs/specs/rag-pipeline.md What 5·EC-04·EC-05·AC-12
+- [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
 """
 import json
 import os
@@ -83,3 +85,10 @@ def test_rerun_skips_rows_and_api(tmp_path, monkeypatch):
     finally:
         with psycopg.connect(base, autocommit=True) as conn:
             conn.execute(f'DROP SCHEMA {schema} CASCADE')
+
+
+def test_fill_cache_rejects_count_mismatch(tmp_path, monkeypatch):
+    monkeypatch.setattr(llm, 'embed_texts', lambda texts: ([np.zeros(DIM, np.float32)], 0, 'fake', 'fake'))
+    with pytest.raises(ValueError):
+        ingest.fill_cache(VectorCache(tmp_path), {'a': 'x', 'b': 'y'})  # 본문 2개에 벡터 1개
+    assert VectorCache(tmp_path).index == {}  # 어긋난 채 캐시에 붙지 않는다

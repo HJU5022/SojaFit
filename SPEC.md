@@ -111,8 +111,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현입니다. 상세는 `docs/specs/login-auth.md`.
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
 - 그 밖의 API 엔드포인트와 응답 형식: (정할 것)
-- 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/README.md`가 정본입니다.
-- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/README.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다.
+- 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/dataset-guide.md`가 정본입니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/dataset-guide.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다.
 
 ## 5. 규칙 파일
 
@@ -120,15 +120,49 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 런타임이 읽는 위치: `backend/` 또는 `data/` 아래(Dockerfile이 복사하는 범위). 정확한 경로: (정할 것)
 - 가산 선택의 `SKILL.md`(`backend/mcp_skill/`)에는 LLM 판단 지침만 두고 임계값은 다시 적지 않습니다.
 
+### 도메인 Skill 적용
+
+- `backend/mcp_skill/skills/SKILL.md`의 적용 범위는 S1 정격·시험 조건 해석과 S2 회로 연결 설명입니다. 입력은 질문·통과 카드·대상 주변 넷이며, 출력은 근거가 있는 값·시험 조건·연결과 설명 한계입니다. S3 채점 지침 확장, S4 되묻기, S5 judge 판정 설명은 포함하지 않습니다. 숫자·단위 비교나 대체 판정 코드를 실행하지 않습니다.
+- S1은 값 조회/사용 조건 미제공/보장값 부재/시험 조건 불명/각주 부재/그래프와 보장값 구분/단발·반복·연속의 차이로 분기합니다. S2는 확인된 연결/부분 넷/핀 방향 불명/역할 해석/대상 부재·근거 충돌/실제 동작 보장 요청으로 분기합니다. 핵심 요청에 답할 수 없으면 기본 생성 프롬프트의 처리를 따르며 주변 사실로 질문을 바꾸지 않습니다.
+- 생성 노드는 `generate(state, *, use_skill=False)`로 호출합니다. 기본은 기존 프롬프트만 사용하고, 켜면 고정 경로의 Skill 본문을 시스템 프롬프트 뒤에 덧붙입니다. 질문·검색 카드·통과 카드·모델·재시도는 바꾸지 않습니다. 사용자 입력으로 Skill 경로·본문을 받지 않습니다.
+- 결과의 `skill`은 `enabled`(요청한 적용 여부), `applied`(실제 모델 입력에 포함했는지), `sha256`(포함한 원본 파일 바이트의 해시, 미적용이면 null)를 담습니다. 근거가 없으면 Skill 여부와 관계없이 LLM을 호출하지 않습니다. 켠 상태에서 파일이 없거나 비어 있으면 모델 호출 전에 오류로 중단합니다.
+- 생성 호출 없이 끝나는 거절 노드는 `skill`을 enabled/applied false, sha256 null로 덮어써 이전 턴의 적용 정보가 남지 않게 합니다.
+- 현 생성 단계는 수치 비교·최종 대체 판정을 하지 않습니다. 사용자 조건이 부족하다는 이유로 문서의 정격 조회까지 거절하지 않되, 답할 근거 자체가 없으면 기존 생성 프롬프트의 "문서로 확인 안 됨" 처리를 따릅니다.
+- 조립된 줄기 그래프의 Skill 옵션·MCP 연결은 별도 통합 대상이며 Langfuse의 선택적 추적 범위는 아래 절을 따릅니다. 단위 테스트는 Skill 전달을 확인할 뿐 모델 판단 개선을 증명하지 않습니다. 품질 비교는 같은 동결 평가셋에서 Skill 유무만 바꿔 사전 등록 후 수행합니다.
+
+### Langfuse 프롬프트와 실행 추적
+
+- 로컬 프롬프트 파일은 소스이며 `sojafit/route`, `sojafit/grade`, `sojafit/rewrite`, `sojafit/generate`라는 Langfuse chat prompt로 등록합니다. user 메시지는 `{{input}}`, 생성 system의 선택 Skill 자리는 `{{domain_skill}}`입니다. 기본 설정은 OpenRouter `anthropic/claude-haiku-5.5`, temperature 0, 출력 상한 4096입니다. `development` 라벨만 갱신하며 production은 변경하지 않습니다.
+- 프롬프트 등록 뒤 S1·S2 Skill을 `sojafit/skills/diode-evidence` text prompt로 등록합니다. 같은 본문·config는 재등록하지 않습니다. 실행 시작 때 버전을 고정하고 로컬 본문과 원격 컴파일 결과가 다르면 모델 호출 전에 중단합니다. Skill 버전·sha256은 기본 프롬프트 버전과 별도로 기록합니다.
+- 확인 스크립트의 기본 동작은 등록된 development 버전 조회와 소스 대조입니다. 원격 등록은 `--publish`를 명시한 경우에만 수행합니다. 로컬 작성안과 원격이 다르면 기본 실행은 trace·LLM 호출 전에 중단합니다. 유효하지 않은 예산과 등록/재개 옵션의 동시 사용은 외부 접근 전에 거부합니다.
+- `langfuse_prompts.session()` 안에서만 원격 프롬프트 사용과 추적을 켭니다. 기본 노드 호출은 로컬 파일을 그대로 사용합니다. 추적 모드의 LLM 노드는 `llm.node_chat()`으로만 호출하며 LangChain callback이 노드 span 아래 실제 generation의 프롬프트·버전·모델·usage·오류를 연결합니다. LLM·임베딩 호출 경계는 계속 llm.py 하나입니다.
+- S1은 값 조회에 답할 근거가 있을 때 정격과 조건을 설명하며 실제 회로 적합성을 확정하지 않습니다. 핵심 요청이 문서에 없는 보장값·실측값이거나 최종 대체 적합성 결론이면 "문서로 확인 안 됨"으로 답합니다. 부분 설명을 통한 되묻기 기능은 이번 범위가 아닙니다. S2는 부분 넷리스트의 연결 사실과 해석 한계를 구분합니다.
+- 대표 요청은 합성 개발 자료로 한 건씩 실행하고 원격 observation의 부모·시각·노드·generation·promptName/promptVersion·모델을 확인합니다. UI 타임라인 열람과 API로 확인한 observation은 별도로 보고합니다. 전체 평가셋은 이 연결 검증을 마친 뒤에만 새 사전 등록으로 실행합니다.
+- 타임라인 검증은 root·필수 처리 노드·generation의 오류와 사례별 흐름·시각도 확인합니다. 답변과 trace ID를 추적 전송 전에 저장하고, 전송·조회 실패나 중단 시에도 부분 결과와 예산을 보존합니다.
+- observation 메타데이터를 결과 JSON으로 내보낼 때 공개 키·비밀 키·API 키·접근 토큰·Authorization 필드를 중첩 구조에서도 제외합니다. 프롬프트·Skill 버전과 해시·사용량·실행 시각은 보존합니다.
+
+### MCP 도구 선택 프롬프트
+
+- [도구 선택·결과 해석 작업서](docs/specs/mcp-tool-prompt.md)의 PR #36 계약을 기준으로 `backend/prompts/tool_use.md`를 Langfuse `sojafit/tool-use` chat prompt에 둡니다. 실제 MCP 서버·그래프 클라이언트 연결은 포함하지 않습니다.
+- 모의 입력으로 도구 이름·인자·결과 해석을 개발 확인하며 도구 실행 성공, 웹/PDF 내용 검증, 동결 평가 점수로 보고하지 않습니다.
+
+### Skill 비교용 순차 실행기
+
+- `uv run python -m evals.run_skill_pair <새 결과 폴더>`는 동결 v1 해시를 확인하고 입력 읽기 → 라우팅을 실행합니다. 역할은 바로 생성 준비, 범위 밖은 거절, 나머지 세 종류는 검색 → 채점으로 갑니다. `after_grade()`의 분기에 따라 생성 준비·거절·재작성 후 검색을 선택하며 검색은 2회 이하입니다.
+- 질문별 준비 상태를 생성 전에 저장하고 그 사본 두 개에서 Skill 꺼짐/켜짐을 실행합니다. 홀수·짝수 문항의 실행 순서를 교차합니다. 거절은 양쪽에 같은 답을 기록하고 Skill 비교 적용 분모에서 구분합니다. expected·why·gold_chunks는 노드에 전달하지 않습니다.
+- 저장 내용은 코드·설정·동결 셋·프롬프트·Skill·manifest와 회로 입력의 해시, 준비 상태, 문항별 양쪽 답변·인용 검사·시간, 완료/중단 상태입니다. 기존 결과 폴더를 덮어쓰지 않습니다. 예외의 원문은 저장하지 않고 종류만 기록하며, 부분 결과도 남깁니다. expected 기준 충족률은 자동으로 추정하지 않고 검토 전에는 null로 둡니다.
+- 실제 호출은 llm.py의 평가 전용 예산 컨텍스트를 거칩니다. 원시 요청 수·전체 시간·보수적 예약 비용·출력 토큰 상한을 제한하며 상한 초과 시 다음 호출 전에 중단합니다. 예약 비용은 토큰 사용량이나 실제 청구액이 아닙니다. 모델·임베딩 단가 상한을 실행 전에 기록하고, 단가 확인 실패 시 유료 평가를 시작하지 않습니다.
+- 이 실행기는 평가용 순차 호출이며 서비스 StateGraph·체크포인트·승인·MCP 통합을 대체하지 않습니다. DEMO_MODE=1이나 개발용 CLI 공급자로 공식 비교를 실행하지 않습니다.
+
 ## 6. 데이터·코퍼스 경계
 
 - 데이터시트: Taiwan Semiconductor(TSC) 다이오드 13개 분류의 데이터시트 1,360건(품번 9,589개). Infineon과 다른 부품 종류(MOSFET 등)는 3차 범위에서 넓히지 않고 지원 가능 품목(확장 후보)으로만 둡니다.
 - 원본 PDF와 파싱 결과는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 두고, 저장소에는 표본 3건(`data/corpus/tsc/`)만 둡니다.
 - 파싱: Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고, 합친 칸을 채운 뒤 표 숫자를 pdfplumber 글자와 대조합니다.
 - 청킹: PDF마다 품번 표지 카드 1장, 표 밖 글은 Docling HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표)입니다. 비교 근거는 `EVAL_REPORT.md` 1장입니다.
-- 임베딩: 현재 서비스의 `text-embedding-3-small`(기본 `vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). 최종 모델은 v1 동결 뒤 사전 등록 #1(`KURE-v1`)·#2(`Qwen3-Embedding-0.6B`)를 포함한 후보를 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연으로 비교해 정합니다. 후보와 입력 계약은 `docs/specs/embedding-candidate-runner.md`와 `docs/specs/embedding-voyage-candidates.md`를 따르고, 프록시와 실제 PDF 3건 smoke 기록은 후보 점검용으로만 씁니다. 후보 평가는 서비스 기본값을 바꾸지 않습니다. 최종 후보가 정해지면 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 정하고, 차원이 바뀌면 새 Migration으로 벡터 열을 바꿉니다.
-- 코퍼스는 용량 때문에 줄이지 않고 원본 13분류·1,360문서와 평가 회로 5종을 그대로 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 분류별 사본 도구 `subset.py`는 수동 실행용으로만 두며 서비스·초기화·적재에서 호출하지 않습니다. 절차는 `docs/specs/corpus-storage-budget.md`를 따릅니다.
-- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/PREREGISTER.md` #6). 질문·넷리스트에서 품번을 뽑아 `parts`로 넘기는 일은 에이전트가 하며, 뽑는 규칙은 (정할 것). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
+- 임베딩: 현재 서비스의 `text-embedding-3-small`(기본 `vector(1536)`)은 본평가 전 임시 결정입니다([ADR 0004](docs/adr/0004-임베딩-1536차원은-임시-결정.md)). 최종 모델은 v1 동결 뒤 사전 등록 #1(`KURE-v1`)·#2(`Qwen3-Embedding-0.6B`)를 포함한 후보를 TSC 1,360건 실제 청크에서 Recall@5, MRR, 다중 근거 Recall@5와 운영 비용·지연으로 비교해 정합니다. 후보와 입력 계약은 `docs/experiments/embedding-candidate-runner.md`와 `docs/experiments/embedding-voyage-candidates.md`를 따르고, 프록시와 실제 PDF 3건 smoke 기록은 후보 점검용으로만 씁니다. 후보 평가는 서비스 기본값을 바꾸지 않습니다. 최종 후보가 정해지면 외부 관리형 API 또는 별도 자체 추론 API 중 운영 방식을 ADR로 정하고, 차원이 바뀌면 새 Migration으로 벡터 열을 바꿉니다.
+- 코퍼스는 용량 때문에 줄이지 않고 원본 13분류·1,360문서와 평가 회로 5종을 그대로 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 분류별 사본 도구 `subset.py`는 수동 실행용으로만 두며 서비스·초기화·적재에서 호출하지 않습니다. 절차는 `docs/experiments/corpus-storage-budget.md`를 따릅니다.
+- 검색: BM25와 dense(`text-embedding-3-small`)를 RRF로 합친 하이브리드입니다. 품번 필터(`parts`)는 검색 인자로 받습니다(`evals/preregister.md` #6). 질문·넷리스트에서 품번을 뽑아 `parts`로 넘기는 일은 에이전트가 하며, 뽑는 규칙은 (정할 것). 리랭킹과 다른 필터는 사전 등록 뒤 더합니다.
 - 코퍼스는 기존(동결)과 증분 두 덩어리입니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)). 기존은 위 1,360건이고, 증분은 정해진 시각에 받은 새 문서·새 개정판과 실시간으로 받은 TSC 문서입니다. 증분 문서는 검증 관문(sha256 기록, PDF 확인, 파싱 오류 0, pdfplumber 대조)을 통과한 것만 검색에 넣고, 실패한 문서는 격리하고 알립니다. 새 개정판이 들어오면 옛판은 `retired_at`으로 내립니다.
 - 평가(G5)는 기존 코퍼스만, 실시간 조회를 끈 채로 잽니다. 서비스는 두 덩어리를 다 검색하고, 증분이 들어온 뒤에는 서비스 설정으로 같은 평가셋을 한 번 더 재서 달라진 문항 목록을 남깁니다.
 - 회사별 데이터시트: TSC는 코퍼스와 실시간 조회를 씁니다. Infineon은 3차 범위 밖(확장 후보)이며, 넣게 되면 질문할 때 받아 원본 링크·출처와 함께 보여 주는 것까지 약관상 허용됩니다([ADR 0007](docs/adr/0007-코퍼스를-기존과-증분으로-나눈다.md)). 그 밖의 회사는 링크만 보여 줍니다.
@@ -150,11 +184,23 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 승인한 데모 질의는 입력 해시로 `data/demo/`의 top-k 청크 ID와 응답을 재생합니다. 기록에 없는 질의는 BM25로 근거를 찾아 근거 문장을 그대로 인용하는 추출형 답변을 돌려줍니다.
 - 화면과 응답에는 `demo_mode=true`, `live_vector_search=false`, 검색 모드, 모델·코퍼스 버전을 표시합니다.
 - 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
-- 현재 Langfuse 연결 단계에서는 Cloud 자격증명만 확인하고 프롬프트·응답은 기록하지 않습니다.
+- 기본 호출은 별도 계측 없이 Langfuse 프롬프트·응답을 기록하지 않습니다. 명시적 `langfuse_prompts.session()`의 고정 버전·노드 추적은 5절을 따릅니다.
+- 그래프 평가 실행(`evals/run_graph.py`)은 문항마다 CallbackHandler로 트레이스를 남깁니다. 단계별 입력·출력(데이터시트 카드 내용 포함), LLM 호출의 토큰·비용, 실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시), 실행 점수(경로·질문 종류·검색 횟수·인용 검사 등)를 기록합니다. 팀만 보는 비공개 프로젝트에만 보내고 Mouser 응답은 남기지 않습니다(6절). 서비스 요청의 트레이스는 아직 없습니다.
 
 ## 8. 기능별 수용 기준 (AC)
 
 기능마다 Given-When-Then으로 적습니다. 게이트 조건은 `docs/GATES.md`에 두고 여기에는 기능 AC만 둡니다.
+
+### 도메인 Skill
+
+- GIVEN 같은 질문·통과 카드·넷리스트, WHEN 생성 노드의 Skill만 켜고 끄면, THEN 사용자 메시지·기존 시스템 프롬프트는 같고 켠 쪽에만 Skill이 추가됩니다.
+- GIVEN 유효한 Skill과 근거, WHEN 켜서 생성하면, THEN 결과에 실제 전달 여부와 파일 sha256이 기록됩니다. 끄면 파일을 읽지 않고 해시는 null입니다.
+- GIVEN 근거가 없음, WHEN 어느 모드로 생성해도, THEN LLM 호출은 0회이고 applied는 false입니다.
+- GIVEN Skill이 없거나 빈 파일, WHEN 근거가 있는 요청에서 Skill을 켜면, THEN LLM을 호출하지 않고 오류로 중단합니다.
+- GIVEN 이전 턴에서 Skill 적용, WHEN 다음 턴은 거절 노드로 끝나면, THEN 이전 적용 여부·해시가 현재 결과에 남지 않습니다.
+- GIVEN 가짜 모델·검색기, WHEN 순차 평가 실행, THEN 역할/범위 밖/검색 성공/재검색 성공/재검색 실패/검색 0건 경로가 그림과 같고 검색은 2회 이하입니다.
+- GIVEN 준비된 상태와 서로 다른 실행 순서, WHEN 두 생성 호출, THEN 입력 상태는 같고 한쪽만 Skill이 적용되며 정답 메타데이터는 전달되지 않습니다.
+- GIVEN 비용·횟수·시간 상한 또는 호출 오류, WHEN 평가 실행, THEN 추가 호출을 중단하고 부분 결과를 보존하며 성공 점수를 만들지 않습니다.
 
 ### 8.1 회로 역할 설명
 

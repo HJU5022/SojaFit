@@ -1,4 +1,9 @@
-"""halfvec 전환·재적재·정확 검색 계약. TEST_DATABASE_URL은 전용 시험 DB만 사용한다."""
+"""halfvec 전환·재적재·정확 검색 계약.
+
+- 역할: 형식 설정 검증, 실제 시험 DB의 halfvec 전환·재실행·이진 재적재·정확 검색, 같은 본문 제외, 시간/표본 부족 표시를 확인한다. TEST_DATABASE_URL은 전용 시험 DB만 사용한다.
+- 하지 않는 일: 서비스 DB(Supabase)에는 붙지 않는다. 저장 방식을 바꾸는 결정은 이 테스트가 정하지 않는다.
+- 출처: ADR 0005, evals/preregister.md #9, SPEC 6절
+"""
 import json
 import os
 import uuid

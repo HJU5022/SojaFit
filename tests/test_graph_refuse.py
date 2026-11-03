@@ -1,5 +1,11 @@
-"""거절 노드: 이유(범위 밖 / 품번 문서 없음 / 찾은 문서에 답 없음)와 단서 요청을 답으로 남기는지 확인한다(SPEC 2절). LLM을 쓰지 않는다."""
+"""거절 노드: 이유(범위 밖 / 품번 문서 없음 / 찾은 문서에 답 없음)와 단서 요청을 답으로 남기는지 확인한다.
+
+- 역할: 범위 안내, 그 품번과 단서 요청, 찾아본 문서 이름(중복 없이)·검색 횟수를 남기는지, 세 거절 경로 모두 이전 턴 Skill 적용 정보를 초기화하는지 확인한다.
+- 하지 않는 일: LLM을 쓰지 않는다.
+- 출처: SPEC 2절 "근거가 없을 때", SPEC 5절 "도메인 Skill 적용", ADR 0006
+"""
 from backend.graph import nodes
+import pytest
 
 
 def test_out_of_scope_says_scope_without_clue_request():
@@ -19,3 +25,14 @@ def test_no_answer_in_found_docs_shows_files_and_tries():
     out = nodes.refuse({"question_type": "rating", "parts": ["1N5819"], "docs": docs, "tries": 2})
     assert "찾아본 문서(1N5817 SERIES_H2104.pdf, SS34_K2301.pdf)" in out["answer"]  # 같은 파일은 한 번만
     assert "검색 2번" in out["answer"]
+
+
+@pytest.mark.parametrize("current", [
+    {"question_type": "out_of_scope"},
+    {"question_type": "rating", "docs": []},
+    {"question_type": "rating", "docs": [{"file": "SS34.pdf"}], "tries": 2},
+])
+def test_refusal_clears_previous_turn_skill_provenance(current):
+    state = {"skill": {"enabled": True, "applied": True, "sha256": "previous-turn"}, **current}
+    merged = {**state, **nodes.refuse(state)}
+    assert merged["skill"] == {"enabled": False, "applied": False, "sha256": None}

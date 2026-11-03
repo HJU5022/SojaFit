@@ -1,21 +1,26 @@
-"""LLM 호출은 이 파일 하나로 모읍니다.
+"""LLM·임베딩 호출의 유일한 입구.
 
-그래프 노드나 라우터가 openai를 직접 import하지 않게 하세요.
-여기서 책임지는 것:
-  - 데모 모드: DEMO_MODE=1이면 키 없이 기록해 둔 응답을 재생합니다 (G2). 재생 코드는 아직 없습니다.
-    평가자에게는 API 키가 없습니다. 같은 입력에 같은 응답이 나오도록 입력 해시를 키로 기록하세요.
-    기록에 없는 질문이 와도 키 없이 죽지 않게 2단으로 만드세요: 1) 입력 해시 재생, 2) 기록이 없으면 검색된 근거 문장을 그대로 인용하는 추출형 답변.
-    작은 로컬 모델(1.5B~3B급)은 "[청크 id]" 같은 인용 형식을 지키지 못하므로 데모 모드의 주력으로 권하지 않습니다.
-  - Langfuse 연결: Cloud 자격증명을 확인합니다. 트레이스 데이터 수집은 별도 결정 전까지 하지 않습니다.
-  - 출력 계약 검증(Pydantic), 실패 시 재시도와 폴백. 재시도에는 반드시 상한을 둡니다.
-    키는 조당 하나이고 한도가 있습니다(조당 30달러).
-  - 채팅 호출 `chat()`: 그래프 노드가 쓰는 유일한 LLM 입구입니다. 모델과 공급자는 SPEC 2절·ADR 0010을 따릅니다.
+역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`)을 맡는다.
+호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`), tests/test_llm.py.
+입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
+하지 않는 일: 데모 모드 응답 재생(G2, 코드 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
+프롬프트 원문(backend/prompts/), 프롬프트 등록·고정 버전 검증(langfuse_prompts.py), 수치 비교(backend/judge/).
+출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
+[왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.
+Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노드 추적을 켠다. 그래프 평가 실행(`evals/run_graph.py`)은 별도 CallbackHandler를 쓴다.
+읽는 환경변수: DEMO_MODE, LLM_PROVIDER(openrouter | claude_cli), LLM_MODEL, LLM_CLI_MODEL,
+OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
 """
 import json
+import math
 import os
 import re
 import subprocess
 import tempfile
+import time
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from functools import lru_cache
 
 from dotenv import load_dotenv
@@ -24,6 +29,8 @@ from pydantic import BaseModel, ValidationError
 load_dotenv()
 if not os.getenv("LANGFUSE_BASE_URL") and os.getenv("LANGFUSE_HOST"):
     os.environ["LANGFUSE_BASE_URL"] = os.environ["LANGFUSE_HOST"]
+if os.getenv("LANGFUSE_BASE_URL"):
+    os.environ["LANGFUSE_BASE_URL"] = os.environ["LANGFUSE_BASE_URL"].rstrip("/")
 
 DEMO_MODE = os.getenv("DEMO_MODE", "1") == "1"
 
@@ -34,13 +41,95 @@ LLM_CLI_MODEL = os.getenv("LLM_CLI_MODEL") or "haiku"
 MAX_FORMAT_RETRIES = 2  # [왜] 형식이 틀린 답을 다시 부르는 횟수의 상한(SPEC 2절). 무한 재시도로 키 한도를 쓰지 않게 한다
 
 
+class EvaluationLimitError(RuntimeError):
+    """평가 호출 수·시간·예약 비용 상한을 넘겼을 때 내는 오류."""
+
+
+@dataclass
+class EvaluationBudget:
+    """평가 전용 호출 예산(호출 수·시간·예약 비용·출력 토큰 상한)."""
+    # [주의] 예약 비용은 실제 사용량·청구액이 아니며 실패 요청도 돌려주지 않는다
+    max_calls: int
+    max_usd: float
+    max_seconds: float
+    prompt_rate: float
+    completion_rate: float
+    embedding_rate: float = 0.000001
+    max_tokens: int = 1024
+    pricing_tiers: tuple = ()
+    calls: int = 0
+    reserved_usd: float = 0.0
+    started: float = field(default_factory=time.monotonic)
+
+    def __post_init__(self):
+        """만들 때 상한·단가를 검증한다."""
+        self.validate()
+
+    def validate(self):
+        """상한·단가가 유한한 양수(호출 수·토큰은 양의 정수)이고 가격 구간이 올바른지 확인한다(아니면 ValueError)."""
+        # [왜] NaN·무한대·0이 상한 비교를 무력화하지 않게 값을 먼저 걸러낸다
+        values = (self.max_usd, self.max_seconds, self.prompt_rate, self.completion_rate, self.embedding_rate)
+        if any(not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0 for value in values):
+            raise ValueError("평가 상한과 단가는 유한한 양수여야 합니다")
+        if any(type(value) is not int or value <= 0 for value in (self.max_calls, self.max_tokens)):
+            raise ValueError("호출 수와 토큰 상한은 양의 정수여야 합니다")
+        for tier in self.pricing_tiers:
+            threshold = tier.get("min_prompt_tokens", 0)
+            if type(threshold) is not int or threshold < 0:
+                raise ValueError("가격 구간의 시작 토큰 수가 잘못되었습니다")
+            for key in ("prompt", "completion"):
+                rate = float(tier.get(key, 0))
+                if not math.isfinite(rate) or rate < 0:
+                    raise ValueError("가격 구간의 단가가 잘못되었습니다")
+
+    def reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+        """호출 한 번의 최대 비용을 호출 전에 예약하고, 이 호출에 줄 제한 시간(초, 최대 45 또는 남은 시간)을 돌려준다.
+
+        text의 바이트 수에 여유 8192를 더해 입력 토큰 상한으로 본다. embedding=True면 임베딩 단가를 쓴다.
+        Raises:
+            EvaluationLimitError: 호출 수·시간·예약 비용 상한을 넘길 때(다음 호출 전에 중단).
+            ValueError: output_tokens가 0 이상 max_tokens 이하가 아닐 때.
+        """
+        self.validate()
+        if type(output_tokens) is not int or not 0 <= output_tokens <= self.max_tokens:
+            raise ValueError("예약 출력 토큰 수가 잘못되었습니다")
+        remaining = self.max_seconds - (time.monotonic() - self.started)
+        # [왜] 토큰 수를 정확히 세지 않고 바이트 수+여유로 입력 토큰의 위쪽 경계를 잡아 비용을 보수적으로 예약한다
+        upper = len(text.encode("utf-8")) + 8192
+        tiers = [p for p in self.pricing_tiers if p.get("min_prompt_tokens", 0) <= upper] if not embedding else []
+        # [왜] 가격 구간이 여럿이면 가장 비싼 단가로 예약해 실제보다 적게 잡는 일을 막는다
+        rate = self.embedding_rate if embedding else max([self.prompt_rate, *[float(p.get("prompt", 0)) for p in tiers]])
+        output_rate = max([self.completion_rate, *[float(p.get("completion", 0)) for p in tiers]])
+        cost = upper * rate + output_tokens * output_rate
+        if remaining <= 0 or self.calls >= self.max_calls or self.reserved_usd + cost > self.max_usd:
+            raise EvaluationLimitError("평가 호출/시간/예약비용 상한")
+        self.calls += 1
+        self.reserved_usd += cost
+        return min(45.0, remaining)
+
+
+_evaluation_budget = ContextVar("evaluation_budget", default=None)
+
+
+@contextmanager
+def evaluation_limits(budget: EvaluationBudget):
+    """평가 실행 동안만 원시 호출을 제한하고 종료 시 원래 설정으로 복원한다."""
+    budget.validate()
+    token = _evaluation_budget.set(budget)
+    try:
+        yield budget
+    finally:
+        _evaluation_budget.reset(token)
+
+
 @lru_cache(maxsize=1)
 def _embedding_client():
-    """Return the configured live embedding client and provider metadata."""
+    """임베딩 클라이언트와 (공급자, 모델)을 돌려준다(키가 모두 없으면 RuntimeError)."""
     from openai import OpenAI
 
     openai_key = os.getenv("OPENAI_API_KEY")
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    # [왜] OPENAI_API_KEY가 있으면 직접 호출을 우선하고, 없으면 OpenRouter를 거친다. 재시도는 호출하는 쪽이 상한을 센다(max_retries=0)
     if openai_key:
         return OpenAI(api_key=openai_key, max_retries=0), "openai", "text-embedding-3-small"
     if openrouter_key:
@@ -53,8 +142,13 @@ def _embedding_client():
 
 
 def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
-    """Embed texts through the single service boundary used by runtime and evaluations."""
+    """글 목록을 임베딩해 (벡터 목록, 사용 토큰 수, 공급자, 모델)을 돌려준다."""
     client, provider, model = _embedding_client()
+    budget = _evaluation_budget.get()
+    # [주의] 평가 상한(`evaluation_limits`) 안이면 호출 전에 예산을 예약한다(초과 시 EvaluationLimitError). 키가 없으면 RuntimeError
+    if budget:
+        timeout = budget.reserve("\n".join(texts), output_tokens=0, embedding=True)
+        client = client.with_options(timeout=timeout)
     response = client.embeddings.create(model=model, input=texts)
     vectors = [row.embedding for row in response.data]
     return vectors, response.usage.total_tokens, provider, model
@@ -62,7 +156,7 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
 
 @lru_cache(maxsize=1)
 def _chat_model():
-    """OpenRouter에 붙는 LangChain 채팅 모델을 한 번만 만든다(강의 2주 20강과 같은 방식)."""
+    """OpenRouter용 LangChain 채팅 모델을 한 번만 만든다(강의 2주 20강과 같은 방식)."""
     from langchain_openai import ChatOpenAI
 
     # [왜] OpenRouter는 OpenAI와 같은 API 모양이라 base_url만 바꾸면 ChatOpenAI로 여러 회사 모델을 부를 수 있다
@@ -73,34 +167,75 @@ def _chat_model():
 
 def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """OpenRouter에 구조화 출력을 요청하고 schema 객체로 돌려준다."""
-    # with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
-    # 받은 JSON을 그 모델로 검증해 객체로 돌려준다. 형식이 틀리면 ValidationError나 OutputParserException을 낸다.
-    structured = _chat_model().with_structured_output(schema)
-    return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}])
+    # [왜] with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
+    # 받은 JSON을 그 모델로 검증해 객체로 돌려준다. 형식이 틀리면 ValidationError나 OutputParserException을 낸다(chat()이 잡는다).
+    model = _chat_model()
+    budget = _evaluation_budget.get()
+    from backend.services import langfuse_prompts
+    options = langfuse_prompts.model_options()
+    config = langfuse_prompts.invocation_config()
+    if budget:
+        # [주의] 평가 중이면 출력 토큰·시간 상한을 예산에서 받아 덮어쓴다
+        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens)
+        options.update(max_tokens=budget.max_tokens, timeout=timeout)
+    structured = model.with_structured_output(schema)
+    if config:
+        # Langfuse 노드 추적 중: callback 설정을 넘기고 프롬프트 버전을 generation에 연결한다
+        structured = langfuse_prompts.bind_prompt(structured, options)
+        return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}], config=config)
+    return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}], **options)
+
+
+def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
+    """그래프 노드용 LLM 호출. Langfuse 세션이 켜져 있을 때만 고정 버전 검증·노드 span·generation callback을 쓴다.
+
+    node는 route | grade | rewrite | generate, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
+    Raises:
+        ValueError: Langfuse 설정·프롬프트와 실제 공급자·모델·출력 상한이 다를 때, 또는 `chat()`이 형식을 못 맞출 때.
+        RuntimeError: 노드 호출이 중첩될 때.
+    """
+    from backend.services import langfuse_prompts
+    if langfuse_prompts.is_active():
+        # [주의] 추적 중에 실제 호출 설정이 등록된 프롬프트 설정과 다르면 기록이 거짓이 되므로 호출 전에 멈춘다
+        if LLM_PROVIDER != "openrouter" or LLM_MODEL != langfuse_prompts.CONFIG["model"]:
+            raise ValueError("Langfuse 설정과 실제 공급자/모델 불일치")
+        budget = _evaluation_budget.get()
+        if budget and budget.max_tokens != langfuse_prompts.CONFIG["max_tokens"]:
+            raise ValueError("Langfuse 설정과 출력 토큰 상한 불일치")
+    if langfuse_prompts.invocation_config() is not None:
+        # [왜] 노드 호출이 겹치면 추적 범위(contextvar)가 섞이므로 중첩을 막는다
+        raise RuntimeError("LLM 노드 호출은 중첩하지 않습니다")
+    with langfuse_prompts.prompt_scope(node, system, user, skill_text=skill_text) as span:
+        answer = chat(system, user, schema)
+        if span is not None:
+            span.update(output=answer.model_dump())
+        return answer
 
 
 def _cli_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
-    """구독 `claude -p`로 같은 모델을 부르고 schema 객체로 돌려준다(개발 중 반복 테스트용, 최종 정리 때 지운다)."""
+    """구독 `claude -p`로 같은 모델을 불러 schema 객체로 돌려준다(개발 중 반복 테스트용, 최종 정리 때 지운다)."""
     # [왜] CLI에는 response_format이 없어 JSON Schema를 시스템 프롬프트 끝에 붙여 형식을 요구한다
+    # 시스템 프롬프트에 JSON Schema를 붙이고, 답에서 JSON만 꺼내 schema로 검증한다
     schema_text = json.dumps(schema.model_json_schema(), ensure_ascii=False)
     system_full = f"{system}\n\n출력은 아래 JSON Schema를 따르는 JSON 하나만 낸다. 다른 글은 쓰지 않는다.\n{schema_text}"
     # [주의] --tools ""로 도구를 끄고, 임시 폴더에서 실행해 저장소의 CLAUDE.md가 읽히지 않게 한다
     done = subprocess.run(
         ["claude", "-p", "--model", LLM_CLI_MODEL, "--tools", "", "--system-prompt", system_full,
          "--output-format", "json", user],
-        cwd=tempfile.gettempdir(), capture_output=True, text=True, timeout=300, check=True,
+        cwd=tempfile.gettempdir(), capture_output=True, text=True, timeout=300, check=True,  # [주의] 300초 제한, 실패하면 CalledProcessError
     )
     return schema.model_validate_json(_json_part(json.loads(done.stdout).get("result", "")))
 
 
 def _json_part(raw: str) -> str:
-    """답 글자에서 첫 { 부터 마지막 } 까지를 꺼낸다(코드 블록으로 감싼 답 대비)."""
+    """답 글자에서 첫 { 부터 마지막 } 까지를 꺼낸다."""
+    # [왜] 모델이 JSON을 ``` 코드 블록으로 감싸 답하는 경우에 대비한다
     found = re.search(r"\{.*\}", raw, re.S)
     return found.group(0) if found else raw
 
 
 def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
-    """시스템·사용자 메시지를 보내고 schema 형식으로 검증한 답을 돌려준다.
+    """시스템·사용자 메시지를 보내고 schema 형식으로 검증한 답을 돌려준다(그래프 노드가 쓰는 유일한 LLM 입구).
 
     형식이 틀리면 MAX_FORMAT_RETRIES번까지 다시 부르고, 그래도 틀리면 마지막 검증 오류를 담아 ValueError를 낸다.
     공급자는 LLM_PROVIDER(openrouter | claude_cli), 모델은 LLM_MODEL / LLM_CLI_MODEL이다(ADR 0010).
@@ -109,6 +244,7 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
 
     call = _cli_call if LLM_PROVIDER == "claude_cli" else _openrouter_call
     last_error = None
+    # [주의] 최초 1번 + 재시도 MAX_FORMAT_RETRIES번이 호출 횟수의 절대 상한이다(키 한도 보호)
     for _ in range(1 + MAX_FORMAT_RETRIES):
         try:
             return call(system, user, schema)
@@ -118,7 +254,8 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
 
 
 def check_langfuse_connection() -> bool:
-    """Check configured Langfuse credentials without creating a trace."""
+    """설정된 Langfuse 키로 인증이 되는지만 확인한다(trace는 만들지 않고, 지금 부르는 곳은 없다)."""
+    # [주의] 키가 없거나 틀리면 SDK가 False를 주거나 예외를 낸다
     from langfuse import get_client
 
     return get_client().auth_check()
