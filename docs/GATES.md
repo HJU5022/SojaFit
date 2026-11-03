@@ -11,7 +11,7 @@
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요: TSC 데이터시트 1,360건을 Docling으로 파싱했다. `data/manifest.jsonl` 1,360행을 Checkpoint 대시보드가 "문서 1360/50, 청크 52,244/10,000"(청크는 manifest 카드 수 합계)으로 읽는다(11-02). 서로 다른 청크(본문 sha256)는 개선 2 45,898개, 개선 전 10,723개다(로컬, 11-01). 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 있어, 평가자가 서로 다른 청크 수를 확인할 방법은 아직 없다 |
 | G4 에이전트 | `backend/graph/`, `backend/auth.py`, `backend/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 진행 중: 로그인·서버 세션은 `main`에 있다(`backend/auth.py`, 11-02). 그래프(`backend/graph/build.py`)·체크포인트·사용자별 기억(`backend/memory.py`)은 아직 뼈대뿐이다 |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 진행 중: 평가셋 v1 50건(관련 25·비관련 25)을 11-02에 동결했다(`evals/FROZEN.json`, sha256 `2fef02c2dcd8…`). 동결 평가셋으로 잰 개선 전후 결과는 아직 없다 |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중: Langfuse Cloud 자격증명만 확인했다(10-30). 트레이스와 평가 점수 연결은 아직 없다 |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중: 그래프 평가 실행(`evals/run_graph.py`)이 문항마다 트레이스에 단계별 기록·토큰·비용과 실행 점수를 붙인다(11-03). 답 채점 점수 연결은 아직 없다 |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | |
 
 ## 상태 표기

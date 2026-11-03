@@ -14,6 +14,7 @@
 - `benchmark_embeddings.py` — 프록시 표본의 dense Recall@5·MRR·지연 측정
 - `freeze.py` — 동결 파일의 sha256을 `FROZEN.json`에 기록
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 네 번째 인자로 검색 방식(`hybrid` 기본·`dense`·`bm25`)을 고르고 summary의 `method`에 적음. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
+- `run_graph.py` — 평가셋 문항(전부 또는 고른 id)을 줄기 그래프로 끝까지 돌려 문항마다 Langfuse 트레이스(단계별 입력·출력, LLM 토큰·비용)와 실행 점수(경로·질문 종류·검색 횟수·LLM 호출 수·카드 수·인용 검사·시간)를 남김. 한 번 실행한 문항은 session 하나로 묶고 환경 이름은 `eval`. 문항별 결과 파일은 카드 내용이 들어가 저장소에 남기지 않음. 답이 맞았는지는 채점하지 않음. 비용은 Langfuse 프로젝트에 등록한 OpenRouter 가격표(`anthropic/claude-haiku-5.5`, ADR 0010 가격)로 계산됨
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `evaluate_reranker_matrix.py` — 공식 기준보다 16카드 적은 재구성 TSC 코퍼스의 고정 벡터 캐시로 임베딩 6종 × API 리랭커 3종의 최대 100후보를 비교하고, 비용 사전 계산·문항별 재개·18행 표를 만든다. `--embedding`과 `--reranker`로 실패 조합 하나만 선택해 재개할 수 있다
 - `build_reranker_matrix_vectors.py` — 재구성 코퍼스의 비어 있는 임베딩 벡터를 provider별 API 또는 기존 오프라인 로컬 캐시로 원자적 진행 기록과 함께 생성한다
