@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-03 R1 검색 측정(사전 등록 #25): 문서 구조 정답 84문항으로 임베딩 × 필터 × 질의 × 리랭커 264칸
+- 목적: #24는 채점 19문항이라 어떤 칸도 개선을 입증하지 못했다. 정답을 문서 구조로 정한 문항을 늘리고 고르기용 · 확인용을 나눠 임베딩 · 리랭커를 고른다.
+- 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #25(측정 전 커밋 `309b55f` 21:29). OpenRouter 상한 5달러, Voyage 상한 없음, HF 없음, 칸 오류는 그 칸만 건너뜀(정운 결정 11-03).
+- 바꾼 파일: `evals/samples/retrieval_r1.jsonl` · `retrieval_r1_rewrite_q3.json`, `evals/runners/run_retrieval_r1.py`(`d9c9f9d` BM25 점수 재사용), `evals/results/retrieval/r1_2026-11-03.json`, 사전 등록 #25, `SOJAFIT.md` · `SAMPLES.md` · `RUNNERS.md`, 이 파일
+- 실행한 명령과 결과: `python -m evals.runners.run_retrieval_r1 rewrite|qvec-api|requests|run`(맥), `gpu-qvec` · Qwen 리랭크(desktop-gpu 도커). 확인용 38문항에서 지금 서비스(3-small · 품번 필터 · 질문 줄 · 리랭커 없음) 쪽 회수율@5 0.579 → voyage-4-large · 재작성 Q3 · 품번+카드 종류 · rerank-3 0.908(14승 1패, 95% 구간 +0.184~+0.487, 개선). 요약 = 문항 평균, 고른 3칸 = 고르기용 상위 3, 짝 비교 9개를 따로 다시 계산해 모두 일치. 지출 OpenRouter 0.0091달러, Voyage 57,134,574토큰.
+- 확인 못 한 것: 서비스에 넣었을 때의 응답 시간과 비용(질문마다 재작성 LLM 1회 + Voyage 리랭크 1회), Supabase에 voyage-4-large 벡터를 올렸을 때의 정확 검색 속도. 정답은 사양 표 규칙 추출에 기대고, 질문은 값 찾기뿐이다.
+- 다음 할 일: 정운이 표를 보고 임베딩 · 리랭커 · 재작성 · 필터를 정한다. 정하면 ADR 0004(임베딩) 갱신, 서비스 반영, 그래프 70건 평가.
+
 ## 2026-11-03 D3 공식 검색 측정 시작 전 기록(사전 등록 #24)
 - 목적: 동결 v2 채점 19문항을 쪽 단위 정답(qrels 36쪽)으로, 서비스 검색 경로를 기준으로 한 조건씩 바꿔 잰다(E1 방식 · E2 리랭커 · E3 필터 · E4 질의 · E5 임베딩 · E6 청킹 · E7 토큰화 · E8 RRF, 칸마다 필터 끔 재측정). 기대 수치는 `evals/guides/preregister.md` #24.
 - 비교 조건: 기준은 3-small · 하이브리드(BM25 50 + dense 50, RRF 60) · "질문:" 줄 · 품번 필터 · 리랭커 없음 · 청킹 C · k=5. 동점은 거리 → 카드 순서.
