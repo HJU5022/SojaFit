@@ -1,5 +1,20 @@
 # STH 작업 기록
 
+### 2026-11-03 우선순위 2 MCP 도구 기본 기능
+
+- `verify_tsc_pdf`를 저장소 TSC 표본 3건의 서명·바이트 크기·SHA-256 무결성 대조로 구현했다. 내용 파싱 검증과 신규 PDF 다운로드는 하지 않고 미검증 상태를 반환한다.
+- `get_circuit_info`를 고정 공개 회로 카탈로그와 기존 `circuit_around` 함수에 연결했다. 임의 파일 경로를 받지 않는다.
+- MCP/spec/폴더 안내/구현 계획을 갱신하고 PDF 표본·회로 조회·잘못된 입력 및 stdio 호출 시험을 추가했다. 첫 실행은 manifest 문서 정보에 bytes가 없어 4건 실패했고, bytes 필드를 포함한 뒤 재실행해 `tests/test_mcp_search.py tests/test_mcp_manifest.py tests/test_graph_read_input.py tests/test_rag_collect.py tests/test_rag_parse.py` 44 passed.
+
+## 2026-11-03 MCP·웹 검색 후보 논의 초안
+- 사용자 확인: W02~W08 7질의, 공급자당 최대 7회·재시도/본문 추출 없음·15초 제한·총 지출 $0, 공식 도메인 적중 4~7/7과 중앙값 0.5~5초의 사전 기대를 초안에 기록했다. 최신 원격 main SPEC과 11-03 공식 가격을 읽기 전용으로 대조했다. 비교 API 호출과 실험 사전등록은 하지 않았다.
+- 무료 기능 탐색: Exa 익명 MCP 초기화·도구 목록 HTTP 200, 공개 W01 검색 1회 HTTP 200·1,172.74ms. 응답에 manifest와 경로가 일치하는 공식 도메인 PDF 링크가 있었으나 원본 PDF·개정·해시는 확인하지 않았다. 공급자 비교 및 운영 성능 결과가 아니다. 초기 도구 형식 출력의 Windows cp949 오류는 ASCII 출력으로 재조회해 해결했다.
+- 추가 준비: manifest의 8개 문서 제목·개정·ID를 대조해 웹 검색 질문, 품번·출처·개정 구분, 24회 상한 비용 추정과 무료 Exa 연결 탐색 조건을 초안에 추가했다. 공식 정답·품질 결과는 아니다.
+- 한 일: 2026-11-02 조사 내용을 바탕으로 프로젝트 도구별 외부 MCP 후보와 웹 검색 비용·적합성, 미결 사항 및 다음 논의·검증 절차를 초안으로 정리했다.
+- 바꾼 파일: docs/mcp-tool-candidates-draft.md, docs/DOCS.md, docs/worklog/STH.md.
+- 확인: 프로젝트 MCP 안내·SPEC·문서 목록과 초안의 경로를 대조한다. 외부 가격은 2026-11-02 공식 안내 기준이며 도입 전 재확인한다.
+- 확인 못 한 것: Tavily·Brave 실제 호출, 공급자 간 품질·지연·비용 비교, Exa 링크의 PDF 원문과 키 없는 데모의 실시간 웹 검색 평가 인정 여부.
+
 ## 2026-11-02 최신 main 반영 및 인증 변경 검증
 - 한 일: 원격 main 404f2e1을 로컬 main과 STH에 fast-forward로 반영하고 보관한 로그인·데모 시드·인증 키 변경을 복원했다. .env.example, README, backend/main.py, db/DB.md, tests/TESTS.md의 충돌에서 양쪽 유효 내용을 보존했다.
 - 확인: 격리 PostgreSQL에서 PYTHONUTF8=1로 전체 pytest를 실행해 75건 통과·10건 건너뜀. 최초 실행은 동결 데이터의 Windows CRLF 체크아웃 때문에 해시 검사 1건이 실패했다. 정규화한 값과 Git 원본이 기록된 해시와 일치함을 확인한 뒤 작업 사본을 동일한 Git 원본 바이트로 복원하고 재실행했다. 동결 데이터는 커밋에 포함하지 않는다.
@@ -120,3 +135,82 @@
 - 한 일: 인증 경계값·scrypt 측정 스크립트와 해당 실행의 원시 JSON을 `docs/`에 복사하고 실측 기록 및 문서 색인에 링크했다. 저장소 루트에서 실행할 수 있도록 스크립트에 repo 경로 준비를 추가했다.
 - 안전 범위: 스크립트는 `TEST_AUTH_DATABASE_URL`에 `127.0.0.1:55434/ci_auth`가 있을 때만 실행한다. 실측 산출물에서 계정 비밀번호·세션 토큰·DB 접속 문자열은 확인되지 않았다. 재실행은 원시 JSON을 덮어쓴다.
 - 확인: JSON 값과 문서 수치를 대조하고, 스크립트 문법을 검증한다. DB 실측은 새로 수행하지 않는다.
+
+### 2026-11-03 웹 검색 후보 비교 준비
+- 목적·조건: Tavily keyless, Exa 익명 MCP, Brave를 W02~W08 각 최대 1회 비교. 15초 제한, 재시도·본문 추출 없음, 실제 지출 $0. 불확실한 유료 계정은 호출하지 않음.
+- 기대와 실패 처리: evals/PREREGISTER.md의 웹 검색 후보 탐색 항목 참조. 동결 평가셋은 사용하지 않음.
+- 시작 전 상태: STH에서 git pull --ff-only 결과 최신; origin/main은 22커밋 앞섬. 기존 미커밋 문서는 보존.
+
+- 실측 결과: Tavily 키 없는 SDK 7회 정상, Exa 익명 MCP 7회 중 정상 4·무료 제한 2·원본 기록 오류 1. Brave 결제 통제 미확인으로 미호출. 비용 . 상세와 축약 원자료는 후보 문서 9절 및 evals/results/web-search-exploration-2026-11-03.json. Tavily 실행기 추가. 프로젝트 MCP/서비스 연동과 Brave 측정은 미완료.
+
+- 2026-11-03 Brave 추가 실측: 사용자가 무료 크레딧 $5와 자동 충전 비활성화를 확인. W02~W08 각 1회, 정상 7/7, 공식 도메인 출현 7/7, 응답 p50 669.14ms. URL·본문 미보관, 파생 통계 보관 허용 여부 및 실제 계정 크레딧 차감은 미확인.
+
+- 2026-11-03 웹 검색 재측정 준비: 기존 결과를 알고 같은 W02~W08을 세 후보에 최대 한 번씩 재실행. 무료 경로·지출 , 15초, 재시도 없음. 기대·조건은 사전등록 참조.
+
+- 2026-11-03 웹 검색 재측정: 21회 전부 정상. Tavily 공식 도메인 4/7·p50 790.22ms, Exa 6/7·p50 1,193.75ms, Brave 7/7·p50 240.48ms. Brave 응답 URL·본문 미보관, 파생 통계 보관 허용 범위와 실제 크레딧 차감은 미확인. 코드 경로의 차이와 이전 결과를 본 반복 실험 한계는 후보 문서 10절.
+
+- 웹 검색 30문항 탐색: 기존 W01~W08을 제외한 manifest에서 seed 42로 30개를 무작위 추출해 입력과 사전 기대를 검색 전 고정. 각 도구 최대 30회, 실제 지출 $0, 재시도 없음.
+
+- 30문항 실측: Tavily 정상 25 후 한도 1·미실행 4, Exa·Brave 각 정상 30. 과거 manifest 주소 일치는 각 2/25·22/30·9/30. URL·본문 없이 질의별 집계와 실행기를 evals에 기록, Brave 파생값의 보관 범위와 실제 크레딧 차감 미확인. 상세 후보 문서 11절.
+
+- Tavily 인증 30문항 준비: 무료 크레딧 30 이상·초과 자동 과금 꺼짐을 사용자가 확인. 같은 30문항 Basic 각 1회, , 재시도 없음. 이전 결과를 이미 본 재측정임을 사전등록.
+
+- Tavily 인증 30문항 실측: 정상 30/30, 도메인 28/30, 과거 주소 일치 3/30, 응답 p50 822.73ms. 키·URL·본문 없는 질의별 집계와 실행기 추가. 무료 크레딧 차감 내역은 대시보드에서 미확인.
+
+- 웹 검색 실측 결과를 팀 공유용 web-search-results-interpretation.md로 정리. 30문항 결과표, 지표별 의미, 후보별 해석과 PDF·비용·호출 조건의 미확인 사항을 기록.
+
+
+### 2026-11-03 MCP 검색 도구 1차
+- main을 1cf18a9까지 fast-forward한 뒤 STH에 반영. 기존 웹 검색 문서·사전등록 복원 중 docs/README.md와 evals/PREREGISTER.md 충돌을 양쪽 내용 보존으로 해결했다. 보관 stash는 안전을 위해 남겼다.
+- 작업서 docs/specs/mcp-search-tools.md, SPEC 8.7, FastMCP stdio 서버 두 도구, 환경변수 예시, 의존성·테스트를 추가했다. EXA_WEB_SEARCH_ENABLED 기본 0, 데모에서도 외부 호출을 차단하고 결과를 미검증 후보로 표시한다.
+- uv run --no-sync pytest -q tests/test_mcp_search.py tests/test_rag_retrieve.py tests/test_graph_search.py: 31 passed, 1 skipped. stdio 응답 형식 차이로 첫 실행은 1 failed였고 응답 텍스트를 JSON으로 읽도록 고친 뒤 재실행해 통과했다.
+- 실제 Exa API 호출·과금·PDF 검증·실제 DB 연동·LangGraph 연결·Compose/클라우드 배포 및 가산점은 미검증이다.
+
+### 2026-11-03 웹 검색 도메인 필터 비교 준비
+- 기존 30문항으로 도구별 무필터/필터 1회씩 짝 비교. 총 최대 180회, 결과 5개, 15초, 재시도 없음, 지출 $0.
+- Exa Auto·Tavily Basic·Brave Search 각 인증 경로로 고정. Brave는 site 연산자를 쓰며 세 공급자의 필터 방식은 동일 구현이 아님. 무료 잔액과 자동 과금·충전 확인을 기다린다.
+
+- 2026-11-03 TSC 필터 비교: 사용자 무료 잔액 및 자동 과금 차단 확인 후 Exa·Tavily·Brave 각 필터 없음/적용 30회씩, 총 180/180 정상. 기존 manifest 주소 일치는 Exa 23→24, Tavily 5→5, Brave 9→9. 실제 차감·청구 내역 미확인.
+- 별도 사전등록한 S23·S13·S29 공개 PDF 각 1회 확인: 모두 PDF·기존 manifest 해시 일치, 문서명 문자열은 S29 미확인. PDF 원문 및 검색 응답 URL·본문은 저장하지 않음. 세부 결과 docs/web-search-filter-comparison.md.
+
+- MCP 도구 목록과 후속 선행 조건을 docs/mcp-tool-implementation-plan.md에 정리했다. get_corpus_document를 추가해 기존 manifest의 문서 메타데이터를 읽기만 하고 PDF 미검증 상태를 표시한다. MCP·RAG 테스트 36 passed, 1 skipped; 실제 DB 및 외부 PDF 연동은 미검증.
+
+- MCP 우선순위 1~2 실행 준비: 기존 계획에 5개 도구·기능의 현재 상태, 단계별 준비·검증·완료 기준, 팀 결정 항목 추가. MCP·RAG 테스트 36 passed, 코퍼스 DB 검사 1 skipped. Docker 엔진 접근 불가를 확인. 외부 API·DB 데이터 변경 없음.
+
+### 2026-11-03 저장소 표본의 DB 없는 테스트 준비
+- Git에 있는 PDF 3건·manifest·공개 회로 5종으로 MCP와 입력 읽기, PDF 파일·텍스트를 시험한다. 외부 요청·DB 연결·지출 0. 조건과 기대는 evals/PREREGISTER.md에 먼저 기록했다.
+
+- 저장소 표본 DB 없는 점검: MCP·회로 읽기·수집·파싱 기초 31 passed; PDF 서명·manifest 해시·쪽 수 3/3 일치, 개정 코드·품번 토큰 3/3 발견, 전체 문서명 0/3. pypdf 오프라인 점검 스크립트·결과 문서 추가. Docling·pdfplumber, DB, 실제 Exa는 미실행.
+
+### 2026-11-03 Docling·pdfplumber 표본 대조 준비
+- 사용자 요청: 저장소 PDF 3건에 기존 파서를 DB 없이 실행하고 표 숫자를 양방향 대조한다. 금전 $0, 출력은 저장소 밖 사용자 작업공간. Windows 프로세스 외부에서 파일당 600초 제한.
+- uv sync --locked --group ingest --offline: torch 캐시 부재로 실패. 이어서 uv sync --locked --group ingest 성공해 잠금된 74개 패키지를 프로젝트 가상환경에 설치했다. Docling 2.145.0, pdfplumber 0.11.10, torch 2.15.0.
+- 예상·실행 조건은 evals/PREREGISTER.md에 사전등록. DB·LLM·유료 API를 사용하지 않는다.
+
+- Docling·pdfplumber 실측: uv ingest 의존성을 설치한 후 저장소 TSC PDF 3건을 별도 사용자 작업공간에서 처리. 총 18쪽·표 18개, 표 셀 숫자의 같은 쪽 대조 515/515, 찾은 표 영역 역방향 숫자 누락 0. 대표 정격 3행의 좌표 영역을 별도 대조. 세 원본 해시는 사후에도 manifest와 일치. 파서·MCP 회귀 23 passed. 전체 표 누락·품번/조건 의미·실제 DB 연동은 미검증. 상세 docs/mcp-docling-verification-2026-11-03.md.
+
+### 2026-11-03 MCP 외부 검색 개인정보 경계
+
+- 사용자 결정: 공개 확인된 품번만 외부 검색하고 확인 불가 시 중단한다. 자유 문장 대신 TSC 공개 출처 manifest의 문서 ID를 받아 출처·문서명·개정이 일치할 때만 목록 값으로 검색어를 만든다. 목록 밖은 unverified, 목록 오류는 unavailable로 차단한다.
+- 수정: MCP 서버, 검색 도구 작업서·SPEC·MCP 안내·구현 계획, 모의 테스트. 기존 질의 인자 query는 doc_id로 변경했다.
+- 모의 테스트에서 변경 전 개인 정보가 포함된 문장이 외부 요청에 전달되려는 실패를 확인했다. 수정 후 `uv run --no-sync pytest -q -rs tests/test_mcp_search.py tests/test_mcp_manifest.py tests/test_rag_retrieve.py tests/test_graph_search.py` 결과 44 passed, 1 skipped (테스트 DB 미설정). 실제 Exa 호출 및 비용 발생은 없다.
+- 제한: manifest는 과거 공개 출처 기록이며 실시간 공개 상태를 보증하지 않는다. 목록 밖 신규 품번 검색, 다른 외부 서비스의 정보 전송, 공급자의 로그·보관 정책은 검증하지 않았다.
+
+### 2026-11-03 TSC 공개 품번 확인 방안 정리
+
+- 코퍼스 밖 TSC 품번 조회와 외부 전송의 경계를 논의할 수 있도록 네 가지 방안, 장단점, 결정 항목을 docs/tsc-public-part-verification-options.md에 정리하고 docs/README.md에 연결했다. 팀 결정 전 초안이다.
+- 코드·DB·API 변경이나 외부 API 호출은 없다. 출처 자료의 전체 품번 포함 여부, 자동 수집 조건과 제조사 API는 미확인이다.
+
+### 2026-11-03 MCP 현황과 다음 작업 준비
+
+- 현재 코드·문서·Skill 양식과 브랜치 상태를 대조하고 기존 MCP 구현 계획에 완료 범위, 검증 경계, 후속 순서를 정리했다.
+- `uv run --no-sync pytest -q -rs tests/test_mcp_search.py tests/test_mcp_manifest.py tests/test_rag_retrieve.py tests/test_graph_search.py`: 44 passed, 1 skipped (테스트 DB 미설정). `docker compose ps`: Docker 엔진 소켓 부재로 연결 실패. 외부 API·DB 변경 없음.
+
+### 2026-11-03 격리 DB MCP 검색 점검
+
+- 임시 pgvector PostgreSQL 16.15에 합성 문서 4건·청크 8건을 넣고 데모 BM25 및 stdio MCP 경로를 확인했다. 일반 실행의 첫 검색이 지연됐으며 추적상 NumPy import에 머물렀다. 진단용 사전 import 조건에서만 알려진 품번 2건, 미존재 품번 0건, 다른 품번 필터 0건, manifest found, 웹 disabled를 확인했다. 실제 코퍼스 및 원인 검증은 미완료. 상세와 단발 측정치는 docs/mcp-tool-implementation-plan.md 참조. 기존 DB·외부 API는 사용하지 않았다.
+### 2026-11-03 우선순위 2 MCP 도구 골격
+
+- `verify_tsc_pdf(doc_id)`와 `get_circuit_info(circuit_id, target)`를 MCP 도구 목록에 추가했다. 두 도구는 입력 형식만 확인하고 `not_implemented`를 돌려주며 네트워크·파일·DB에 접근하지 않는다.
+- MCP 작업서와 폴더 안내, 구현 계획에 미구현 상태와 선행 결정 사항을 명시했다. 검색 지연 조사는 미해결이라 그 로직은 수정하지 않았다.
+- 이번 요청에서는 테스트 실행을 하지 않았다. 변경 검토는 diff 확인으로 제한한다.

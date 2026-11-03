@@ -187,3 +187,17 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - GIVEN 서로 다른 두 계정, WHEN 각각 로그인 상태를 확인하면, THEN 각자의 ID와 DB에서 확인한 역할(admin 또는 user)을 반환한다. 실제 회로·대화·기억·견적의 권한 검증은 해당 기능 구현 후 추가한다.
 - GIVEN 관리자와 일반 사용자, WHEN 관리자 API에 접근하면, THEN 관리자만 목록을 조회하고 일반 계정의 활성 상태를 변경한다. 비활성화된 사용자의 기존 세션은 재활성화 후에도 사용할 수 없다.
 - GIVEN 새 Compose DB와 유효한 데모 계정 환경변수, WHEN 초기화 SQL이 실행되면, THEN 관리자와 일반 계정을 각각 한 개 생성하며 기존 계정을 덮어쓰지 않는다. 네 계정 변수가 모두 비어 있으면 `DEMO_MODE=1`에서 데모 전용 기본 계정 2개를 생성하고 그 외에는 기본 계정을 생성하지 않는다. 일부만 설정하면 오류로 중단한다.
+
+
+### 8.7 MCP 검색 도구 1차
+
+- GIVEN MCP 서버, WHEN 도구 목록을 조회하면, THEN 코퍼스 검색과 TSC 공식 웹 문서 후보 검색 도구를 제공한다.
+- GIVEN 데모 모드 또는 외부 검색 미허용, WHEN 웹 후보 검색을 요청하면, THEN 외부 호출 없이 disabled를 반환한다.
+- GIVEN 실시간 검색 명시 허용과 EXA_API_KEY, WHEN Exa 검색이 성공하면, THEN HTTPS TSC 공식 도메인 URL만 미검증 후보로 반환한다.
+- GIVEN 키 누락 또는 외부 검색 실패, WHEN 웹 후보 검색을 요청하면, THEN 키·오류 본문을 노출하지 않고 각각 missing_key 또는 unavailable을 반환하며 재시도하지 않는다.
+- GIVEN 공개 TSC 목록의 출처와 문서명이 확인되지 않는 문서 ID, WHEN 웹 검색하면, THEN 외부 호출 없이 unverified를 반환한다. 사용자 자유 문장은 전송하지 않는다.
+- GIVEN 로컬 TSC 표본 PDF의 문서 ID, WHEN MCP 무결성 도구를 호출하면, THEN PDF 서명·바이트 크기·SHA-256을 manifest와 대조하고 내용 검증은 완료하지 않았다고 표시한다.
+- GIVEN 공개 예제 회로 ID와 부품 기호, WHEN MCP 회로 정보 도구를 호출하면, THEN 고정 카탈로그의 connections.json에서 해당 부품 주변 정보를 반환한다. 임의 파일 경로는 받지 않는다.
+- LangGraph 연동, PDF 다운로드·검증·적재 및 가산 항목 증명은 후속 작업이다. 평가 G5의 실시간 조회 비활성 조건은 유지한다.
+
+- GIVEN 코퍼스 manifest에 기록된 문서 ID, WHEN MCP 문서 조회 도구를 호출하면, THEN 해당 출처·개정 메타데이터와 PDF 미검증 표시를 반환한다. 없는 문서와 manifest 읽기 실패는 구분한다.

@@ -9,3 +9,5 @@
 ## 파일
 - `auth_boundary_after_merge.py` — 로그인 잠금·세션 만료 경계 실측. 격리된 테스트 DB 전용. 해석은 [auth-login-verification.md](../docs/auth-login-verification.md)
 - `measure_scrypt_concurrent.py` — 동시 scrypt·프로세스 메모리 실측. Windows 전용, 격리된 테스트 DB 전용
+
+- check_mcp_offline_pdfs.py — 로컬 TSC PDF 표본 3건을 manifest 해시·쪽 수·텍스트 추출과 대조한다. pypdf 임시 오프라인 환경 사용.

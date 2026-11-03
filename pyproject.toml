@@ -17,6 +17,8 @@ dependencies = [
     "pgvector>=0.3",
     "rank-bm25>=0.2",                      # 하이브리드의 키워드 쪽 (형태소 분석은 조에서 선택)
     "langchain-openai>=1.0",
+    "mcp>=1.28,<2",
+    "httpx>=0.27",
 ]
 
 [dependency-groups]
