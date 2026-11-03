@@ -3,9 +3,8 @@
 - 역할: 문항마다 build_graph()를 invoke하고 Langfuse CallbackHandler로 단계별 입력·출력과 LLM 호출의 토큰·비용을 남긴다.
   실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시)은 메타데이터로, 실행 점수(경로·질문 종류·검색 횟수·LLM 호출 수·
   카드 수·인용 검사·걸린 시간)는 트레이스 점수로 붙인다. 한 번 실행한 문항들은 Langfuse session 하나로 묶는다.
-- 하지 않는 일: 답이 맞았는지 채점(답 채점기는 따로 만든다, evals/guides/dataset-guide.md). 문항별 결과 파일 저장(카드 내용이 들어가
-  저장소에 두지 않는다, SPEC 6절). 문항별 기록은 Langfuse에서 본다.
-- 출처: SPEC 2절(그래프)·7절(그래프 평가 실행의 Langfuse 추적), ADR 0010(결정에 쓰는 측정은 OpenRouter로), docs/GATES.md G6
+- 하지 않는 일: 문항별 결과 파일 저장(카드 내용이 들어가 저장소에 두지 않는다, SPEC 6절). 문항별 기록은 Langfuse에서 본다.
+- 출처: SPEC 2절(그래프)·7절(그래프 평가 실행의 Langfuse 추적), ADR 0010(결정에 쓰는 측정은 OpenRouter로), docs/GATES.md G6, docs/experiments/answer-refusal-scorer.md
 - 원시 결과: 파일로 저장하지 않는다. 문항별 트레이스·점수는 Langfuse(환경 이름 eval, session graph-<평가셋>-<월일-시분>-<공급자>)에,
   문항별 한 줄(경로·검색 횟수·시간·트레이스 주소)은 표준출력에 찍는다.
 - 필요한 것: DATABASE_URL, OPENROUTER_API_KEY(LLM_PROVIDER=openrouter), LANGFUSE_PUBLIC_KEY·SECRET_KEY·BASE_URL.
@@ -23,7 +22,7 @@ import time
 from pathlib import Path
 
 
-def run_scores(state: dict, seconds: float, llm_calls: list[str]) -> dict:
+def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | None = None) -> dict:
     """그래프 최종 메모장(state)에서 실행 점수를 뽑는다. 각 값은 (값, Langfuse data_type, 설명) 튜플이다."""
     from backend.graph.nodes import NOT_FOUND
     check = state.get("check") or {}  # 생성 노드가 남긴 인용 검사 결과(생성을 안 거치면 없음)
@@ -42,6 +41,11 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str]) -> dict:
     if "fake_citations" in check:  # 생성 노드를 지난 문항만 인용 검사 결과가 있다
         scores["fake_citations"] = (float(len(check["fake_citations"])), "NUMERIC", "넘긴 적 없는 근거 번호 수")
         scores["uncited_sentences"] = (float(check["uncited_sentences"]), "NUMERIC", "근거 번호가 없는 문장 수")
+    if item is not None:
+        from evals.runners.score_answer import score_item
+        scored = score_item(item, state)
+        scores["answer_metric"] = (scored["metric"], "CATEGORICAL",
+                                   "5지표(cited_gold/wrong_citation/over_refusal/correct_refusal/hallucination_risk)")
     return scores
 
 
@@ -120,7 +124,7 @@ def main(dataset_path, ids=()):
             continue
         seconds = time.perf_counter() - start
         # 점수 하나하나를 이 문항의 트레이스에 붙인다
-        for name, (value, kind, comment) in run_scores(state, seconds, list(calls)).items():
+        for name, (value, kind, comment) in run_scores(state, seconds, list(calls), item=it).items():
             client.create_score(trace_id=trace_id, name=name, value=value, data_type=kind, comment=comment)
         print(f"{it['id']}\t{'>'.join(state['path'])}\t검색 {state.get('tries', 0)}번\t{seconds:.1f}초\t"
               f"{client.get_trace_url(trace_id=trace_id)}", flush=True)

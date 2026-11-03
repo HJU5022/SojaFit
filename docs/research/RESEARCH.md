@@ -13,13 +13,5 @@
 - `auth-login-verification.md` — 로그인·세션·scrypt 로컬 실측 기록. 스크립트는 `scripts/`, 원시 JSON은 `scripts/results/`(`auth_boundary_*`, `scrypt_concurrent_*`)
 - `auth-feedback-key-verification.md` — 로그인 피드백·`AUTH_SECRET` 실제 키 사용과 역할별 실측 기록
 - `ci-proposal.md` — CI 사용량 절감 제안(합의 전, workflow 미변경)
-- `mcp-collaboration-handoff.md` — MCP 서버·LangGraph 공동작업 인수인계 스냅샷과 미결 항목
-- `mcp-docling-verification-2026-11-03.md` — 저장소 PDF 3건의 Docling·pdfplumber 표본 대조와 한계
-- `mcp-offline-verification-2026-11-03.md` — DB 없이 수행한 MCP·PDF·회로 표본 점검 기록
-- `mcp-tool-candidates-draft.md` — MCP·웹 검색 도구 후보 조사와 비교 실측 해석
-- `mcp-tool-contract-review.md` — 다섯 MCP 도구의 입출력·호출처 검토 및 연결 제안
-- `mcp-tool-implementation-plan.md` — MCP 도구 범위·우선순위와 후속 통합 계획 초안
-- `mcp-two-person-work-plan.md` — MCP·LangGraph 역할 분담 제안(팀 합의 전)
-- `tsc-public-part-verification-options.md` — 코퍼스 밖 공개 품번 확인 정책 선택지
-- `web-search-filter-comparison.md` — 웹 검색 TSC 필터 유무 비교 실측 기록
-- `web-search-results-interpretation.md` — 웹 검색 비교 결과 지표 해석과 한계
+- `retrieval-baseline-analysis.md` — 동결 v1(`dataset_v1.jsonl`) 검색 베이스라인 3방식(`dense`·`bm25`·`hybrid`) 19문항 대조, 회귀 문항 및 실패 유형 4가지 분석, 채점 산식·한계 기록
+- `market-user-journey.md` — 문제·시장 근거(채용 공고 237건 중 LLM/RAG 77건 역량 매핑, 사용자·지불 주체 사실/가설 구분, 페르소나 2종, 6단계 고객 여정 맵, 범용 챗봇 5문항 비교, 현재 서비스 약점, 외부 검토 양식)
