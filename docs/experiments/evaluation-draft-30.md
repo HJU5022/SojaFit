@@ -19,7 +19,7 @@
 - 사용자 질문은 자연스럽게 작성한다. 근거 부재 시 거절·대체 인용 금지·시험 조건 확인 같은 채점 방향을 질문에 미리 지시하지 않는다.
 
 ## How
-- 위치: evals/drafts/draft_30.jsonl, evals/drafts/draft_30_review.md. 기존 v1·연습 10건은 보존한다.
+- 위치: evals/drafts/sets/draft_30.jsonl, evals/drafts/reviews/draft_30_review.md. 기존 v1·연습 10건은 보존한다.
 - 각 행에 input, 회로 NET 경로·SHA256, 연결 JSON 경로, target, assumptions, question을 기록한다.
 - planned_kind·planned_irrelevant_type은 의도, review_expectation은 제안이며 확정 expected가 아니다.
 - 원래 제조사를 모르는 부품과 허용 제조사 후보를 동일품으로 취급하지 않는다.

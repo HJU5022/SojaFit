@@ -1,13 +1,13 @@
 """LLM·임베딩 호출의 유일한 입구.
 
 역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`)을 맡는다.
-호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`), tests/test_llm.py.
+호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
 하지 않는 일: 데모 모드 응답 재생(G2, 코드 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
 프롬프트 원문(backend/prompts/), 프롬프트 등록·고정 버전 검증(langfuse_prompts.py), 수치 비교(backend/judge/).
 출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
 [왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.
-Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노드 추적을 켠다. 그래프 평가 실행(`evals/run_graph.py`)은 별도 CallbackHandler를 쓴다.
+Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노드 추적을 켠다. 그래프 평가 실행(`evals/runners/run_graph.py`)은 별도 CallbackHandler를 쓴다.
 읽는 환경변수: DEMO_MODE, LLM_PROVIDER(openrouter | claude_cli), LLM_MODEL, LLM_CLI_MODEL,
 OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
 """

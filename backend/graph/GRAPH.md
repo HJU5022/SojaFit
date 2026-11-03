@@ -1,9 +1,9 @@
 # graph
 
 ## 역할
-- 이 폴더: LangGraph 그래프의 상태, 노드, 조립을 둡니다. 지금은 D4 단일 에이전트 줄기 그래프만 있습니다.
-- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`).
-- 넣지 않는 것: 숫자·단위 비교 판정(`backend/judge/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 검색 구현(`backend/rag/`), 프롬프트 원문(`backend/prompts/`), 사용자별 장기 기억(`backend/memory.py`).
+- 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. 지금은 D4 단일 에이전트 줄기 그래프만 있습니다.
+- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), 사용자별 장기 기억 Store namespace 규칙(`memory.py`).
+- 넣지 않는 것: 숫자·단위 비교 판정(`backend/judge/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 검색 구현(`backend/rag/`), 프롬프트 원문(`backend/prompts/`), 로그인·세션(`backend/auth.py`).
 - 담당: 에이전트
 
 ## 구현 상태
@@ -22,4 +22,5 @@
 - `__init__.py` — 패키지 표시
 - `state.py` — 그래프 상태(공용 메모장 `AgentState`) 정의. SPEC 2절 노드 표의 칸들과, 쌓이는 칸 `tries`(검색 횟수)·`path`(지나간 노드), 현재 응답의 Skill 적용 정보 `skill`
 - `nodes.py` — 노드 함수 7개. 입력 읽기(`read_input`: 입력 글 나누기, `connections.json`에서 대상 부품 주변 넷 읽기), 라우팅(`route`: 질문 종류 5가지, `prompts/route.md`), 검색(`search`: 질문 품번 또는 대상 값 품번으로 `retrieve`의 `parts`를 정함), 채점(`grade`: 다른 품번 줄·다른 개정판 카드를 규칙으로 뺀 뒤 LLM 1회, `prompts/grade.md`), 재작성(`rewrite`: 영어 검색어 한 줄, `prompts/rewrite.md`), 생성(`generate`: 통과 카드와 `[넷리스트]`만 근거로 답하고 없는 근거 인용·인용 없는 문장을 `check`에 기록, `prompts/generate.md`, 선택적 Skill 적용), 거절(`refuse`: LLM 없이 범위 밖 / 품번 문서 없음 / 찾은 문서에 답 없음을 나눠 적고 단서 요청)
-- `build.py` — 노드를 잇고 갈림길 `after_route`·`after_grade`를 정해 compile합니다. 검색 상한은 `MAX_TRIES`(2). 호출자는 `evals/run_graph.py`와 시험입니다
+- `memory.py` — 사용자별 장기 기억(Store) namespace `("memories", user_id)`만 정의합니다. 부르는 곳이 아직 없고, 승인 사례 저장과 틀린 기억 정정은 없습니다
+- `build.py` — 노드를 잇고 갈림길 `after_route`·`after_grade`를 정해 compile합니다. 검색 상한은 `MAX_TRIES`(2). 호출자는 `evals/runners/run_graph.py`와 시험입니다

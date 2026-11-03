@@ -1,7 +1,7 @@
 """SojaFit FastAPI 진입점.
 
 역할: `/health`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`)를 등록하고 HTTP 입출력만 다룬다.
-호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/test_health.py·tests/test_auth.py.
+호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py.
 하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 회로·대화·기억·견적 API(미구현, SPEC 4절 "정할 것").
 출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000).

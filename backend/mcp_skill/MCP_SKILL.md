@@ -8,7 +8,7 @@
 
 ## 파일
 - `mcp_server/server.py` — FastMCP 서버 자리표시자. 도구는 `example_tool` 하나뿐이고 호출하면 `NotImplementedError`를 냅니다. 도구5종 구현은 [PR #36](https://github.com/aihuman-7th/proj3-b/pull/36)의 통합 대상이라 아직 없습니다. 실행 틀: `python -m backend.mcp_skill.mcp_server.server`(stdio)
-- `skills/SKILL.md` — S1 정격·시험 조건 해석, S2 회로 연결 설명 지침. 기본 적용은 꺼짐이고 수치 비교·최종 판정·되묻기는 제외합니다. 경로가 고정입니다: `backend/graph/nodes.py`(생성 노드), `backend/services/langfuse_prompts.py`, `evals/run_skill_pair.py`가 이 경로를 읽으므로 옮기거나 이름을 바꾸지 않습니다. 적용 계약은 [SPEC](../../SPEC.md), 선정 근거는 [조사](../../docs/research/skill-feasibility.md), 검증 상태는 [EVAL_REPORT](../../EVAL_REPORT.md)를 따름
+- `skills/SKILL.md` — S1 정격·시험 조건 해석, S2 회로 연결 설명 지침. 기본 적용은 꺼짐이고 수치 비교·최종 판정·되묻기는 제외합니다. 경로가 고정입니다: `backend/graph/nodes.py`(생성 노드), `backend/services/langfuse_prompts.py`, `evals/runners/run_skill_pair.py`가 이 경로를 읽으므로 옮기거나 이름을 바꾸지 않습니다. 적용 계약은 [SPEC](../../SPEC.md), 선정 근거는 [조사](../../docs/research/skill-feasibility.md), 검증 상태는 [EVAL_REPORT](../../EVAL_REPORT.md)를 따름
 
 폴더 설명 파일은 이 `MCP_SKILL.md`뿐이고 `mcp_server/`·`skills/` 안에는 두지 않습니다.
 

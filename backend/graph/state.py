@@ -1,7 +1,7 @@
 """그래프 상태 정의 (G4). 질문 하나가 노드들을 지나가는 동안 같이 쓰는 공용 메모장이다.
 
 - 역할: 칸 이름과 타입, 칸마다 값이 바뀌는 방식(덮어쓰기 / 쌓기)을 정한다. `nodes.py`·`build.py`가 import한다.
-- 하지 않는 일: 노드 동작(`nodes.py`), 노드 연결(`build.py`), 사용자별 장기 기억(Store, `backend/memory.py`).
+- 하지 않는 일: 노드 동작(`nodes.py`), 노드 연결(`build.py`), 사용자별 장기 기억(Store, `backend/graph/memory.py`).
 - 출처: SPEC.md 2절 "그래프"의 노드 표, backend/graph/GRAPH.md, 강의 2주 04강(State 리듀서)·20강(`QAState`).
 
 State와 Store는 다르다.
