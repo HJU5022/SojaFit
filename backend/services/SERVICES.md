@@ -8,7 +8,7 @@
 
 ## 구현 상태
 - 없는 파일: 견적서 저장(`quote.py`)과 가격·재고 조회(`mouser.py`, 확장 단계)는 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
-- 데모 모드 응답 재생: 코드가 없습니다(`llm.py` 머리말도 같음). `DEMO_MODE=1`은 지금 검색의 임베딩 호출만 끕니다(`backend/rag/retrieve.py`가 `llm.DEMO_MODE`를 읽어 BM25만 씀).
+- 데모 모드 응답 재생: 코드가 없습니다(`llm.py` 머리말도 같음). `DEMO_MODE=1`은 지금 검색의 임베딩·리랭크 호출만 끕니다(`backend/rag/retrieve.py`가 `llm.DEMO_MODE`를 읽어 BM25만 씀).
 - `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
 
 ## llm.py가 한 곳이어야 하는 이유 (강사 안내)
@@ -19,5 +19,5 @@
 
 ## 파일
 - `__init__.py` — 패키지 표시
-- `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 ADR 0010), 임베딩 `embed_texts()`, 평가용 호출·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
+- `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 ADR 0010), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가용 호출·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
 - `langfuse_prompts.py` — development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)

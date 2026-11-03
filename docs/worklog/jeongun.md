@@ -1,5 +1,52 @@
 # jeongun 작업 기록
 
+## 2026-11-04 dense 비트 후보 + 정확 재정렬 구현(사전 등록 #27, 코드 · 문서만, DB 단계는 실행 안 함)
+- 목적: 운영 DB 실측(3-small, `../전자_데이터시트/evidence/bq_exp`)에서 recall@50 0.980, 상위 5개 19/19 같음, `retrieve()` 중앙값 6.22초 → 0.89초였던 "1비트 후보 + 정확 재정렬"을 voyage-4-large 1024차원 서비스 검색에 옮긴다. 기대 · 비교 조건은 `evals/guides/preregister.md` #27(측정 전 커밋). 예산은 #26과 같다.
+- 바꾼 파일: `db/009_chunk_embedding_bits.sql`(`chunk_embedding_bits` 표, 인덱스 없음, 기존 voyage 행에서 채움) · `db/DB.md` · `db/schema/erd.md`, `backend/rag/retrieve.py`(`N_BIT = 3200`, `_dense` 1단계 Hamming `<~>` → 2단계 정확 코사인, 허용 카드 <= N_BIT면 기존 정확 검색, 품번 필터가 없으면 표지 제외를 JOIN으로 해 아이디 5만 개를 안 보냄), `backend/rag/pipeline/ingest.py`(`load_voyage`가 비트 행도 채움, 009 미적용이면 건너뜀), `evals/runners/run_retrieval_service.py`(`--out` · `--prereg` · `--compare`), 시험 `tests/rag/test_rag_retrieve.py` · `test_rag_ingest.py` · `tests/evals/test_retrieval_service.py`, `SPEC.md` · ADR 0004 · `backend/rag/RAG.md` · `RUNNERS.md` · `tests/rag/RAG.md` · `SOJAFIT.md`, 이 파일.
+- 실행한 명령과 결과: `uv run --offline pytest -q` 245 passed, 24 skipped(가짜 연결, DB · 네트워크 · API 없음, `.env`를 열지 않음).
+- 확인 못 한 것: 009 적용 · 비트 채우기 · 비트 검색 측정 · pgvector 0.8.2에서 `binary_quantize(vector(1024))::bit(1024)`와 `bit <~> bit`가 실제로 도는지(SQL 글만 시험함, 실제 DB 시험 없음). 1024차원 voyage에서 N=3,200의 recall은 미측정이다. 009를 적용하기 전에 이 코드로 `retrieve()`를 부르면 비트 표가 없어 오류가 난다(허용 카드가 3,200장보다 많을 때).
+- 다음 할 일: `db/009_chunk_embedding_bits.sql` 적용 → `run_retrieval_service --out evals/results/retrieval/service_r1_bits_2026-11-04.json --prereg '#27'` → `--compare`로 #26 결과와 대조 → #27 결과 줄과 이 항목에 값을 적는다.
+
+## 2026-11-04 운영 DB 적용 · 서비스 경로 재측정 준비(사전 등록 #26, DB 단계는 실행 안 함)
+- 목적: 서비스 검색 설정(voyage-4-large · rerank-3 · 재작성)을 운영 Supabase에 올리고, 실제 `retrieve()`로 R1 · v2 질문을 다시 재서 #25 값과 맞는지 본다. 이 기록은 스크립트와 기대를 준비한 단계다.
+- 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #26(측정 전 커밋 `4a86d4c`). OpenRouter 1달러(키 사용액 차이, 넘으면 멈춤), Voyage 상한 없음. `check`가 STOP이면 `migrate`는 하지 않는다(열 형식이 halfvec이 아니거나 적재 뒤 예상 크기 420 MB 초과).
+- 바꾼 파일: `db/008_multi_dim_embeddings.sql`(halfvec(n)이면 `USING` 없이 차원 표시만 떼고 vector(n)일 때만 `USING embedding::halfvec`), `scripts/db/voyage_rollout.py`(+ `DB.md`), `evals/runners/run_retrieval_service.py`, `evals/runners/run_retrieval_d3.py`(`context()`의 v2 질문 만들기를 `v2_questions()`로 뺌, 동작 같음), 시험 `tests/rag/test_voyage_rollout.py` · `tests/evals/test_retrieval_service.py`, `SOJAFIT.md` · 폴더 설명 파일.
+- 실행한 명령과 결과: `uv run --offline pytest -q` 240 passed, 24 skipped(오프라인, 가짜 연결 · 가짜 retrieve). DB · 네트워크 · API는 부르지 않았고 `.env`를 열지 않았다.
+- 확인 못 한 것: `ALTER ... TYPE halfvec`(USING 없음)이 실제로 표를 다시 쓰지 않는지는 운영 DB에서 `migrate`의 filenode 전후로만 알 수 있다(SQL 글과 STOP 규칙만 시험함). 예상 크기는 행당 100바이트 어림이다. 재측정 값과 시간은 아직 없다.
+- 다음 할 일: `voyage_rollout.py check` → `migrate` → `ingest --voyage <벡터 폴더>` → `verify` → `run_retrieval_service`. 측정 뒤 #26 결과 줄과 이 항목에 값 · 시간 · 비용을 적는다.
+
+## 2026-11-04 서비스 검색을 R1 1위 설정으로 변경(사전 등록 #25 반영, 코드 · 문서만)
+- 목적: 사전 등록 #25에서 잰 1위 설정(voyage-4-large 1024차원 · 재작성 질의 · 품번+카드 종류 필터 · rerank-3)을 서비스 검색에 그대로 옮긴다. 기준 구현은 `evals/runners/run_retrieval_d3.py`의 `search()` · `Index.allowed()`(`part+kind`) · `Reranker.voyage()`와 `run_retrieval_r1.py`의 `SortedReranker`.
+- 바꾼 파일: `backend/services/llm.py`(`voyage_embed` · `voyage_rerank`), `backend/rag/retrieve.py`(모델 · 차원 · 표지 카드 제외 · 리랭크), `backend/graph/build.py`(라우팅 → 재작성 → 검색), `backend/rag/pipeline/ingest.py`(`--voyage` 적재 · `VectorCache` 파일 이름 · 차원 인자), `db/008_multi_dim_embeddings.sql`, `.env.example`, `tests/rag/test_rag_retrieve.py` · `tests/graph/test_graph_build.py` · `tests/services/test_llm.py`, `SPEC.md` · `AGENTS.md` · ADR 0004(갱신 2026-11-03) · `backend/rag/RAG.md` · `backend/services/SERVICES.md` · `backend/graph/GRAPH.md` · `db/DB.md` · `SOJAFIT.md`, 이 파일
+- 실행한 명령과 결과: 아래 "확인" 줄에 적은 시험만 돌렸다(오프라인, 가짜 llm · 가짜 DB).
+- 확인 못 한 것: DB 마이그레이션(db/008)과 voyage 벡터 적재(`ingest.py --voyage`)는 실행하지 않았다. 서비스로 다시 잰 값(재측정)은 아직 없다. 적용 전에는 `retrieve()`가 voyage 행을 찾지 못한다. 실제 Voyage 호출 · 응답 시간 · 비용, 열 형식 변경 때 Supabase 여유 용량(표를 다시 쓰는 동안 옛 표와 새 표가 같이 차지함)도 보지 않았다.
+- 다음 할 일: 복제 DB에서 db/008 적용 → `ingest.py --voyage` 적재 → 서비스 설정으로 같은 평가셋 재측정, 값이 #25와 맞으면 운영 DB에 적용. `README.md` 74행의 임베딩 표기는 이번에 고치지 않았다.
+
+## 2026-11-03 R1 검색 측정(사전 등록 #25): 문서 구조 정답 84문항으로 임베딩 × 필터 × 질의 × 리랭커 264칸
+- 목적: #24는 채점 19문항이라 어떤 칸도 개선을 입증하지 못했다. 정답을 문서 구조로 정한 문항을 늘리고 고르기용 · 확인용을 나눠 임베딩 · 리랭커를 고른다.
+- 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #25(측정 전 커밋 `309b55f` 21:29). OpenRouter 상한 5달러, Voyage 상한 없음, HF 없음, 칸 오류는 그 칸만 건너뜀(정운 결정 11-03).
+- 바꾼 파일: `evals/samples/retrieval_r1.jsonl` · `retrieval_r1_rewrite_q3.json`, `evals/runners/run_retrieval_r1.py`(`d9c9f9d` BM25 점수 재사용), `evals/results/retrieval/r1_2026-11-03.json`, 사전 등록 #25, `SOJAFIT.md` · `SAMPLES.md` · `RUNNERS.md`, 이 파일
+- 실행한 명령과 결과: `python -m evals.runners.run_retrieval_r1 rewrite|qvec-api|requests|run`(맥), `gpu-qvec` · Qwen 리랭크(desktop-gpu 도커). 확인용 38문항에서 지금 서비스(3-small · 품번 필터 · 질문 줄 · 리랭커 없음) 쪽 회수율@5 0.579 → voyage-4-large · 재작성 Q3 · 품번+카드 종류 · rerank-3 0.908(14승 1패, 95% 구간 +0.184~+0.487, 개선). 요약 = 문항 평균, 고른 3칸 = 고르기용 상위 3, 짝 비교 9개를 따로 다시 계산해 모두 일치. 지출 OpenRouter 0.0091달러, Voyage 57,134,574토큰.
+- 확인 못 한 것: 서비스에 넣었을 때의 응답 시간과 비용(질문마다 재작성 LLM 1회 + Voyage 리랭크 1회), Supabase에 voyage-4-large 벡터를 올렸을 때의 정확 검색 속도. 정답은 사양 표 규칙 추출에 기대고, 질문은 값 찾기뿐이다.
+- 다음 할 일: 정운이 표를 보고 임베딩 · 리랭커 · 재작성 · 필터를 정한다. 정하면 ADR 0004(임베딩) 갱신, 서비스 반영, 그래프 70건 평가.
+
+## 2026-11-03 D3 공식 검색 측정 시작 전 기록(사전 등록 #24)
+- 목적: 동결 v2 채점 19문항을 쪽 단위 정답(qrels 36쪽)으로, 서비스 검색 경로를 기준으로 한 조건씩 바꿔 잰다(E1 방식 · E2 리랭커 · E3 필터 · E4 질의 · E5 임베딩 · E6 청킹 · E7 토큰화 · E8 RRF, 칸마다 필터 끔 재측정). 기대 수치는 `evals/guides/preregister.md` #24.
+- 비교 조건: 기준은 3-small · 하이브리드(BM25 50 + dense 50, RRF 60) · "질문:" 줄 · 품번 필터 · 리랭커 없음 · 청킹 C · k=5. 동점은 거리 → 카드 순서.
+- 예산: OpenRouter $1.00(E6 다시 임베딩 · 질문 임베딩), Voyage 무료 한도만, Upstage · HF 없음. GPU 칸(bge-reranker, Qwen3-Reranker, late chunking)은 GPU PC를 켠 뒤.
+- 명령: `uv run --with docling-core python -m evals.runners.run_retrieval_d3 chunks`, `embed <변형>`, `official`, `noresult`, `explore`. 카드 · 벡터는 저장소 밖(`../corpus/tsc/`, `../전자_데이터시트/evidence/full_grid/vectors/`).
+- 중단 조건: v2 해시가 다르면 모두 멈춘다. 그 밖에는 그 부분만 건너뛰고 이유를 결과에 남긴다. Voyage 결제 신호면 남은 Voyage를 건너뛴다.
+- 바꾼 파일: `evals/runners/run_retrieval_d3.py`, `evals/inputs/`(INPUTS.md · qrels_v2_pages.json · rewrite_q3_v2.json), `tests/evals/test_retrieval_d3.py`, `evals/guides/preregister.md` #24, `SOJAFIT.md` 트리 · 폴더 표, `evals/EVALS.md`, `evals/runners/RUNNERS.md`, `tests/evals/EVALS.md`
+- 확인: `uv run --offline python -m pytest -q tests/repo/test_repo_layout.py tests/evals/test_retrieval_d3.py tests/evals/test_frozen_evals.py` 12개 통과. 측정 결과는 아직 보지 않았다.
+- 실행과 결과(측정 끝)
+  - 커밋: `d8febee`(사전 등록 · qrels · 실행기, 측정 전), `08b3dd6`(첫 실행에서 `search()`의 옛 import 경로 때문에 64칸이 모두 건너뛰어져 고침. 조건 변경 없음), `11adefa`(GPU 단계 조건 덧붙임, 측정 전).
+  - 맥: `official`(E1~E8, E6L만 GPU로 미룸), `noresult`, `explore`(276칸, 탐색). E6 변형 6종은 `chunks` 뒤 `embed`로 3-small 다시 임베딩(semantic은 OpenRouter 시간 초과 1회 뒤 이어서 끝냄).
+  - GPU(desktop-gpu RTX 3080 Ti 도커): `gpu_embed fixed1000_100 --mode bgem3`(120초) · `bgem3late`(112초, CLS 대체 0), `official --exps E2,E6L`(로컬 리랭커 bge-reranker-v2-m3 · Qwen3-Reranker 0.6B/4B). 기준 칸 값이 맥과 같다. 새 로컬 리랭크 114줄은 맥 캐시에 키 기준으로 합쳤다.
+  - 원시 결과: `evals/results/retrieval/d3_official_2026-11-03.json`, `d3_official_gpu_2026-11-03.json`, `d3_noresult_2026-11-03.json`, `d3_explore_2026-11-03.json`. 작업 사본은 `../전자_데이터시트/evidence/d3/`.
+  - 지출: OpenRouter $0.338(시작 뒤 키 사용액 차이, 상한 $1.00). Voyage 탐색 격자 새 호출 3,154회 · 31,879,036토큰과 공식 E2 76회 이하, 결제 신호 없음. HF 없음. Upstage 건너뜀(키 없음).
+  - 확인 못 한 것: 기대 범위 대조(맞음/틀림)는 적지 않았다. no_result 임계값은 같은 54문항 안에서 골랐다. GPU 결과의 커밋 칸은 컨테이너에 git이 없어 실행 뒤 `11adefa`로 적었다.
+  - 다음 할 일: 정운 검토 뒤 #24 맞음/틀림을 채우고 `EVAL_REPORT.md` 반영 여부를 정한다.
+
 ## 2026-11-03 폴더 안에서도 성격별로 묶는다(구조 2차 정리)
 - 한 일
   - 한 폴더 바로 아래에 코드·데이터·문서가 섞인 곳을 하위 폴더로 나눴다. `evals/`는 루트에 동결 평가셋만 두고 `runners/`·`guides/`·`samples/`·`drafts/sets/`·`drafts/reviews/`·`results/<주제>/`로, `scripts/`는 `auth/`·`langfuse/`·`results/<주제>/`로, `db/` 문서는 `schema/`로, `backend/rag/`의 오프라인 도구는 `pipeline/`로, `memory.py`는 `graph/`로, `tests/`는 `api/`·`graph/`·`rag/`·`services/`·`evals/`·`judge/`·`repo/`로 옮겼다.

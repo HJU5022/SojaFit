@@ -131,9 +131,9 @@ def test_graph_uses_mcp_retriever_for_one_search(monkeypatch):
     monkeypatch.setattr(nodes.llm, "chat", graph_chat([[7]]))
     with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
         out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점", "생성"]
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
     assert session.calls == [
-        ("search_corpus", {"query": QUESTION, "k": 5, "parts": ["1N5817"]})]
+        ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]})]
     assert events == ["open", "close"]
 
 
@@ -143,10 +143,10 @@ def test_graph_reuses_mcp_session_for_rewritten_search(monkeypatch):
     monkeypatch.setattr(nodes.llm, "chat", graph_chat([[], [7]]))
     with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
         out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점",
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점",
                            "재작성", "검색", "채점", "생성"]
     assert session.calls == [
-        ("search_corpus", {"query": QUESTION, "k": 5, "parts": ["1N5817"]}),
+        ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]}),
         ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]}),
     ]
     assert events == ["open", "close"]

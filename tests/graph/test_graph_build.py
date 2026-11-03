@@ -1,6 +1,6 @@
 """그래프 조립: 질문 종류와 채점 결과에 따라 노드가 SPEC 2절 순서로 이어지는지 확인한다.
 
-- 역할: 가짜 LLM·가짜 검색기로 다섯 길(통과, 재작성 뒤 통과, 두 번 다 통과 없음, 검색 0장, 범위 밖·역할)의 경로와, 검색기가 입력 전체가 아니라 질문 줄만 받는지 확인한다.
+- 역할: 가짜 LLM·가짜 검색기로 다섯 길(재작성 뒤 첫 검색 통과, 다시 재작성 뒤 통과, 두 번 다 통과 없음, 검색 0장, 범위 밖·역할)의 경로와, 첫 검색이 재작성을 거치는지 확인한다.
 - 하지 않는 일: 실제 LLM·검색 품질, 답의 정확도는 보지 않는다.
 - 출처: SPEC 2절(그래프)·"근거가 없을 때", ADR 0006
 """
@@ -45,16 +45,21 @@ def run(monkeypatch, question_type, grades, docs):
 
 def test_passed_card_answers_after_one_search(monkeypatch):
     out, calls = run(monkeypatch, "rating", [[7]], [CARD])
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점", "생성"]
-    # [왜] 검색어는 입력 전체가 아니라 질문 줄만이다. 회로 이름·D1까지 넣으면 BM25가 품번보다 그 낱말에 끌린다(11-02 격자 실측)
-    assert calls == [(QUESTION, ["1N5817"])]
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
+    # [왜] 재작성 입력은 입력 전체가 아니라 질문 줄만이다. 회로 이름·D1까지 넣으면 BM25가 품번보다 그 낱말에 끌린다(11-02 격자 실측)
+    assert calls == [(REWRITTEN, ["1N5817"])]
     assert out["tries"] == 1 and "[7]" in out["answer"]
+
+
+def test_search_route_goes_through_rewrite(monkeypatch):
+    out, _ = run(monkeypatch, "rating", [[7]], [CARD])
+    assert out["path"].index("재작성") < out["path"].index("검색")  # 첫 검색 전에 재작성한다
 
 
 def test_no_pass_rewrites_then_searches_again(monkeypatch):
     out, calls = run(monkeypatch, "rating", [[], [7]], [CARD])
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점", "재작성", "검색", "채점", "생성"]
-    assert calls == [(QUESTION, ["1N5817"]), (REWRITTEN, ["1N5817"])]  # 품번 필터는 그대로, 검색어만 바뀐다
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "재작성", "검색", "채점", "생성"]
+    assert calls == [(REWRITTEN, ["1N5817"])] * 2  # 품번 필터는 원래 질문에서 뽑는다
     assert out["tries"] == 2
 
 
@@ -68,13 +73,15 @@ def test_still_no_pass_refuses_after_two_searches(monkeypatch):
 def test_zero_cards_refuses_without_rewrite(monkeypatch):
     out, calls = run(monkeypatch, "rating", [], [])  # 채점 LLM을 부르면 StopIteration으로 깨진다
     assert len(calls) == 1
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "채점", "거절"]
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "거절"]
 
 
 def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
     def fake_chat(system, user, schema):
         if schema is nodes.Route:
             return schema(question_type="rating")
+        if schema is nodes.Rewrite:  # [왜] 첫 검색 전에 재작성한다(사전 등록 #25). 장애는 그 뒤 검색에서 난다
+            return schema(query=REWRITTEN)
         raise AssertionError(f"장애 뒤 LLM을 호출하면 안 됨: {schema.__name__}")
 
     calls = []
@@ -85,9 +92,9 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
 
     monkeypatch.setattr(nodes.llm, "chat", fake_chat)
     out = build_graph(retriever=unavailable).invoke({"input": INPUT})
-    assert calls == [(QUESTION, ["1N5817"])]
+    assert calls == [(REWRITTEN, ["1N5817"])]
     assert out["retrieval_error"] == {"kind": "timeout"}
-    assert out["path"] == ["입력 읽기", "라우팅", "검색", "거절"]
+    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "거절"]
     assert "검색 도구" in out["answer"]
     assert "데이터시트를 찾지 못" not in out["answer"]
 
@@ -112,5 +119,5 @@ def test_second_message_in_same_thread_starts_fresh(monkeypatch):
     cfg = {"configurable": {"thread_id": "t"}}
     app.invoke({"input": INPUT}, cfg)
     out = app.invoke({"input": INPUT}, cfg)
-    assert calls[-1] == QUESTION  # 1턴이 남긴 REWRITTEN이 아니라 새 질문으로 찾는다
+    assert calls[-1] == REWRITTEN and len(calls) == 3  # 2턴도 첫 검색부터 재작성한 검색어로 찾고, 1턴의 tries가 남지 않는다
     assert out["tries"] == 1 and out["path"][-1] == "생성"

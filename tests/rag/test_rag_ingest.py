@@ -1,6 +1,6 @@
 """적재 도구(backend/rag/pipeline/ingest.py): 벡터 캐시 복구, 없는 본문만 임베딩, DB 재실행.
 
-- 역할: 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩, DB 재실행(행이 늘지 않고 API를 다시 안 부름)을 확인한다.
+- 역할: 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩, DB 재실행(행이 늘지 않고 API를 다시 안 부름), load_voyage가 비트 코드 표를 채우는지(가짜 연결)를 확인한다.
 - 하지 않는 일: DB 재실행 시험은 TEST_DATABASE_URL을 줄 때만 돈다(CI에는 DB가 없다). 임시 스키마를 만들고 끝나면 지운다. 실제 임베딩 API는 부르지 않는다.
 - 출처: docs/specs/rag-pipeline.md What 5·EC-04·EC-05·AC-12
 - [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
@@ -8,6 +8,7 @@
 import json
 import os
 import uuid
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -92,3 +93,50 @@ def test_fill_cache_rejects_count_mismatch(tmp_path, monkeypatch):
     with pytest.raises(ValueError):
         ingest.fill_cache(VectorCache(tmp_path), {'a': 'x', 'b': 'y'})  # 본문 2개에 벡터 1개
     assert VectorCache(tmp_path).index == {}  # 어긋난 채 캐시에 붙지 않는다
+
+
+class _Cur:
+    """load_voyage가 보내는 SQL을 적는 가짜 커서. 카드 한 장(sha 'a')만 임베딩이 없다."""
+    def __init__(self, bits_table):
+        self.log, self.bits_table, self.rowcount, self.last = [], bits_table, 1, ''
+
+    def execute(self, sql, args=None):
+        self.log.append(sql)
+        self.last = sql
+        return self
+
+    def fetchone(self):
+        return ('halfvec',) if 'format_type' in self.last else (('chunk_embedding_bits',) if self.bits_table else (None,))
+
+    def fetchall(self):
+        return [(1, 'a')]
+
+    def copy(self, sql):
+        from contextlib import nullcontext
+        return nullcontext(SimpleNamespace(set_types=lambda t: None, write_row=lambda r: None))
+
+
+@pytest.mark.parametrize('bits_table', [True, False])
+def test_load_voyage_fills_bits_when_table_exists(tmp_path, monkeypatch, bits_table):
+    import psycopg
+    import pgvector.psycopg
+    VectorCache(tmp_path, 'v4large', 1024).add([('a', np.ones(1024, np.float32))])
+    cur = _Cur(bits_table)
+    conn = SimpleNamespace(cursor=lambda: cur)
+    monkeypatch.setenv('DATABASE_URL', 'postgresql://unused')
+    monkeypatch.setattr(pgvector.psycopg, 'register_vector', lambda c: None)
+    monkeypatch.setattr(psycopg, 'connect', lambda url: _Ctx(conn))
+    ingest.load_voyage(tmp_path)
+    fills = [q for q in cur.log if q.startswith('INSERT INTO chunk_embedding_bits')]
+    assert len(fills) == bits_table and all('binary_quantize' in q and 'ON CONFLICT' in q for q in fills)
+
+
+class _Ctx:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def __enter__(self):
+        return self.conn
+
+    def __exit__(self, *exc):
+        return False

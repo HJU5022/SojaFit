@@ -1,0 +1,86 @@
+{
+ "meta": {
+  "source": "레포 backend/graph/nodes.py rewrite()를 문항마다 한 번 돌린 출력(2026-11-03, 레포 0baa0b9, anthropic/claude-haiku-5.5, OpenRouter). 고친 것 없음",
+  "prompt_file": "backend/prompts/rewrite.md",
+  "prompt_sha256_now": "68349e15389bfbdc4d825f43269988a45574e4a4158bc8faae10a7b4dd4fb0d2",
+  "flags_rule": "생성 직후 자동 확인: 질문 줄의 품번이 빠졌는지, 질문에 없던 숫자가 생겼는지(기록만, 고치지 않음)"
+ },
+ "queries": {
+  "draft30-e03": {
+   "Q3": "TSC 1N5817 Repetitive peak reverse voltage VRRM",
+   "flag": null
+  },
+  "draft30-e04": {
+   "Q3": "TSC 1N4148 Forward voltage VF datasheet",
+   "flag": null
+  },
+  "draft30-e05": {
+   "Q3": "TSC 1N5819 Package outline dimensions polarity cathode band marking",
+   "flag": null
+  },
+  "draft30-e08": {
+   "Q3": "SS34 Schottky diode datasheet absolute maximum ratings Repetitive peak reverse voltage VRRM Average forward current IF(AV) Peak forward surge current IFSM",
+   "flag": null
+  },
+  "draft30-m03": {
+   "Q3": "TSC BZT52C3V6 Zener voltage VZ nominal 3.6V tolerance datasheet",
+   "flag": null
+  },
+  "draft30-m04": {
+   "Q3": "TSC BZT52C3V6 Zener diode datasheet Package SOD-123 Zener voltage VZ Power dissipation PD Soldering reflow temperature",
+   "flag": "없던 숫자: 123"
+  },
+  "draft30-m05": {
+   "Q3": "TSC 1N4148 absolute maximum ratings forward current IF average rectified current IO peak forward surge current IFSM",
+   "flag": null
+  },
+  "draft30-m07": {
+   "Q3": "BZX84C3V3 datasheet absolute maximum ratings Zener voltage VZ Power dissipation Ptot Reverse current IR Package",
+   "flag": null
+  },
+  "draft30-h04": {
+   "Q3": "TSC 1N5819 Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Package compatibility replacement",
+   "flag": null
+  },
+  "draft30-h05": {
+   "Q3": "TSC 1N5817 1N5819 Schottky barrier rectifier datasheet Package D2 Forward voltage VF Repetitive peak reverse voltage VRRM",
+   "flag": null
+  },
+  "draft50-n01": {
+   "Q3": "TSC 1N5817 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Reverse recovery time trr Package",
+   "flag": "품번 빠짐: 1N5819"
+  },
+  "draft50-n02": {
+   "Q3": "TSC BAS70 datasheet Repetitive peak reverse voltage VRRM Forward continuous current IF Peak forward surge current IFSM Forward voltage VF Reverse recovery time trr Package",
+   "flag": null
+  },
+  "draft50-n03": {
+   "Q3": "TSC 1N4148 Reverse recovery time trr test conditions IF IR",
+   "flag": null
+  },
+  "draft50-n04": {
+   "Q3": "TSC BZT52C5V1 Zener diode datasheet Zener voltage VZ range Working voltage Vz test current IZT Reverse leakage current IR",
+   "flag": null
+  },
+  "draft50-n05": {
+   "Q3": "TSC BZT52C3V6 Power dissipation PD Maximum junction temperature TJ datasheet",
+   "flag": null
+  },
+  "draft50-n06": {
+   "Q3": "TSC 1N4148 R0G vs 1N4148 A0G package ordering code equivalence datasheet",
+   "flag": null
+  },
+  "draft50-n07": {
+   "Q3": "TSC 1N5817 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package",
+   "flag": null
+  },
+  "draft50-n08": {
+   "Q3": "TSC 1N4148 diode datasheet Forward voltage VF Repetitive peak reverse voltage VRRM Peak forward surge current IFSM Reverse recovery time trr",
+   "flag": null
+  },
+  "draft52-n21": {
+   "Q3": "1N5819 Schottky barrier rectifier reverse leakage current IR vs junction temperature TJ",
+   "flag": null
+  }
+ }
+}

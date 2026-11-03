@@ -1,6 +1,6 @@
 """검색 규칙을 지킨다.
 
-- 역할: RRF 순서, BM25 토큰(한국어 조사), gold_chunks에서 정답 문서·쪽 읽기, 표지 카드 -> 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드·method='bm25'에서 임베딩 API 안 부름, 없는 method의 ValueError를 확인한다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
+- 역할: RRF 순서, BM25 토큰(한국어 조사), gold_chunks에서 정답 문서·쪽 읽기, 표지 카드 -> 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 표지 카드 제외, 리랭크 순서 뒤 상위 k장(가짜 llm), 데모 모드·method='bm25'에서 임베딩 API 안 부름, 없는 method의 ValueError, dense 1단계(비트 후보)가 허용 카드 > N_BIT일 때만 쓰이고 품번 필터 없을 때 아이디 목록을 보내지 않는지(가짜 연결)를 확인한다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
 - 하지 않는 일: 검색 품질(Recall@k 등)은 재지 않는다(evals/runners/run_retrieval.py).
 - 출처: docs/specs/rag-pipeline.md AC-05~11, EC-06~08
 - [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 시험에 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
@@ -86,9 +86,10 @@ def test_bm25_method_skips_embedding_api(monkeypatch):
     monkeypatch.setattr(llm, 'embed_texts', boom)
     monkeypatch.setattr(R, '_bm25', (BM25Okapi([tokens(c) for _, _, c in ROWS]), [i for i, _, _ in ROWS]))
     monkeypatch.setattr(R, '_parts', part_index(ROWS))
+    monkeypatch.setattr(R, '_nocover', {2, 4})  # 카드 1·3은 표지
     monkeypatch.setattr(R, '_connect', _CardDB)
-    found = R.retrieve('SS310 정격', method='bm25')  # ss310은 카드 1에만 있다
-    assert [(r['chunk_id'], r['dense_rank'], r['bm25_rank']) for r in found] == [(1, None, 1)]
+    found = R.retrieve('SS310 2', method='bm25')  # ss310은 표지 카드 1에만, 2는 카드 2에만 있다(카드가 4장뿐이라 흔한 낱말은 idf가 0이다)
+    assert [(r['chunk_id'], r['dense_rank'], r['bm25_rank']) for r in found] == [(2, None, 1)]  # 표지 카드 1은 빠진다
 
 
 def test_unknown_method_raises():
@@ -124,3 +125,87 @@ def test_real_db_demo_mode_bm25_only(monkeypatch):
     assert all('ss34' in r['doc_parts'] for r in found)  # 문서 표지 품번 목록(소문자)
     assert R.retrieve('이 보드에서 이건 왜 필요해?') == []  # 영문·숫자 단어가 없으면 BM25 후보도 없다
     assert R.retrieve('SS34 정격', parts=['NOPE123']) == []
+
+
+def _fake_index(monkeypatch):
+    """카드 1·3은 표지(page_number 없음), 2·4는 본문 카드인 색인을 꽂는다."""
+    monkeypatch.setattr(R, '_bm25', (BM25Okapi([tokens(c) for _, _, c in ROWS]), [i for i, _, _ in ROWS]))
+    monkeypatch.setattr(R, '_parts', part_index(ROWS))
+    monkeypatch.setattr(R, '_nocover', {2, 4})
+    monkeypatch.setattr(R, '_connect', _CardDB)
+
+
+def test_cover_cards_are_always_excluded(monkeypatch):
+    _fake_index(monkeypatch)
+    monkeypatch.setattr(llm, 'DEMO_MODE', True)
+    assert [r['chunk_id'] for r in R.retrieve('SS310 2 1')] == [2, 4]  # 품번 필터가 없어도 표지 1·3은 안 나온다
+    assert [r['chunk_id'] for r in R.retrieve('SS310 2', parts=['SS32'])] == [2]  # 품번 필터와 함께여도 표지 1은 뺀다
+    assert R.retrieve('A1', parts=['SS34L']) == []  # 표지에만 있는 말이면 빈 결과
+
+
+def test_rerank_order_applied_then_top_k(monkeypatch):
+    _fake_index(monkeypatch)
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    monkeypatch.setattr(R, '_dense', lambda conn, q, allowed=None, **kw: [4, 2])  # DB·API 없이 dense 후보만 정한다
+    calls = []
+
+    def fake_rerank(query, docs, model='rerank-3'):
+        calls.append((query, docs))
+        return [1, 0]  # 정렬한 후보의 두 번째가 1위
+
+    monkeypatch.setattr(llm, 'voyage_rerank', fake_rerank)
+    found = R.retrieve('SS310 2', k=1)
+    assert calls == [('SS310 2', [ROWS[1][2], ROWS[3][2]])]  # 카드 id 오름차순(2, 4)으로 본문을 보낸다
+    assert [r['chunk_id'] for r in found] == [4]  # 리랭크 순서(4, 2)에서 k=1장만 남는다
+
+
+def test_demo_mode_does_not_rerank(monkeypatch):
+    _fake_index(monkeypatch)
+    monkeypatch.setattr(llm, 'DEMO_MODE', True)
+
+    def boom(*args, **kwargs):
+        raise AssertionError('데모 모드에서 리랭크 API를 불렀다')
+
+    monkeypatch.setattr(llm, 'voyage_rerank', boom)
+    assert R.retrieve('SS310 2')
+
+
+class _SqlLog:
+    """_dense가 보내는 SQL과 인자를 적고, 비트 후보 질의에는 [7, 8], 그 밖에는 [8]을 돌려주는 가짜 연결."""
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, sql, args=None):
+        self.calls.append((sql, args))
+        rows = [(7,), (8,)] if 'chunk_embedding_bits' in sql else [(8,)]
+        return SimpleNamespace(fetchall=lambda: rows)
+
+    def queries(self):
+        return [(s, a) for s, a in self.calls if s.startswith('SELECT')]
+
+
+def _dense_with(monkeypatch, allowed, n_bit=3, **kw):
+    monkeypatch.setattr(llm, 'DEMO_MODE', False)
+    monkeypatch.setattr(llm, 'voyage_embed', lambda texts, kind: [[0.1] * 1024])
+    monkeypatch.setattr(R, 'N_BIT', n_bit)
+    conn = _SqlLog()
+    return R._dense(conn, 'q', allowed, **kw), conn.queries()
+
+
+def test_bit_stage_runs_only_above_n_bit(monkeypatch):
+    got, q = _dense_with(monkeypatch, {1, 2, 3, 4})  # 4장 > N_BIT 3: 1단계 + 2단계
+    assert got == [8] and len(q) == 2
+    assert 'binary_quantize' in q[0][0] and '<~>' in q[0][0] and 'chunk_embedding_bits' in q[0][0] and q[0][1][-1] == R.N_BIT
+    assert sorted(q[0][1][1]) == [1, 2, 3, 4]  # 품번 필터의 허용 아이디는 1단계에도 건다
+    assert 'binary_quantize' not in q[1][0] and '<=>' in q[1][0] and q[1][1][1] == [7, 8]  # 2단계는 1단계 후보 안에서만 정확 코사인
+    got, q = _dense_with(monkeypatch, {1, 2, 3})  # 3장 <= N_BIT: 오늘의 정확 검색 한 번
+    assert got == [8] and len(q) == 1 and 'binary_quantize' not in q[0][0] and 'chunk_embedding_bits' not in q[0][0]
+    assert q[0][1][1] == [1, 2, 3]
+
+
+def test_no_part_filter_excludes_cover_in_sql_without_id_list(monkeypatch):
+    got, q = _dense_with(monkeypatch, set(range(1, 51)), nocover_all=True)  # 허용 50장이지만 아이디는 보내지 않는다
+    assert len(q) == 2 and 'page_number IS NOT NULL' in q[0][0] and 'page_number' not in q[1][0]
+    assert not any(isinstance(a, list) for a in q[0][1]) and q[1][1][1] == [7, 8]  # 1단계에 목록 인자 없음, 2단계는 후보 아이디만
+    _, q = _dense_with(monkeypatch, set(range(1, 51)), n_bit=100, nocover_all=True)  # 허용 <= N_BIT: 정확 검색 한 번이지만 표지는 SQL로 뺀다
+    assert len(q) == 1 and 'page_number IS NOT NULL' in q[0][0] and 'chunk_embedding_bits' not in q[0][0]
