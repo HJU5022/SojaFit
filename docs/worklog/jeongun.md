@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-04 운영 DB 적용 · 서비스 경로 재측정 준비(사전 등록 #26, DB 단계는 실행 안 함)
+- 목적: 서비스 검색 설정(voyage-4-large · rerank-3 · 재작성)을 운영 Supabase에 올리고, 실제 `retrieve()`로 R1 · v2 질문을 다시 재서 #25 값과 맞는지 본다. 이 기록은 스크립트와 기대를 준비한 단계다.
+- 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #26(측정 전 커밋 `4a86d4c`). OpenRouter 1달러(키 사용액 차이, 넘으면 멈춤), Voyage 상한 없음. `check`가 STOP이면 `migrate`는 하지 않는다(열 형식이 halfvec이 아니거나 적재 뒤 예상 크기 420 MB 초과).
+- 바꾼 파일: `db/008_multi_dim_embeddings.sql`(halfvec(n)이면 `USING` 없이 차원 표시만 떼고 vector(n)일 때만 `USING embedding::halfvec`), `scripts/db/voyage_rollout.py`(+ `DB.md`), `evals/runners/run_retrieval_service.py`, `evals/runners/run_retrieval_d3.py`(`context()`의 v2 질문 만들기를 `v2_questions()`로 뺌, 동작 같음), 시험 `tests/rag/test_voyage_rollout.py` · `tests/evals/test_retrieval_service.py`, `SOJAFIT.md` · 폴더 설명 파일.
+- 실행한 명령과 결과: `uv run --offline pytest -q` 240 passed, 24 skipped(오프라인, 가짜 연결 · 가짜 retrieve). DB · 네트워크 · API는 부르지 않았고 `.env`를 열지 않았다.
+- 확인 못 한 것: `ALTER ... TYPE halfvec`(USING 없음)이 실제로 표를 다시 쓰지 않는지는 운영 DB에서 `migrate`의 filenode 전후로만 알 수 있다(SQL 글과 STOP 규칙만 시험함). 예상 크기는 행당 100바이트 어림이다. 재측정 값과 시간은 아직 없다.
+- 다음 할 일: `voyage_rollout.py check` → `migrate` → `ingest --voyage <벡터 폴더>` → `verify` → `run_retrieval_service`. 측정 뒤 #26 결과 줄과 이 항목에 값 · 시간 · 비용을 적는다.
+
 ## 2026-11-04 서비스 검색을 R1 1위 설정으로 변경(사전 등록 #25 반영, 코드 · 문서만)
 - 목적: 사전 등록 #25에서 잰 1위 설정(voyage-4-large 1024차원 · 재작성 질의 · 품번+카드 종류 필터 · rerank-3)을 서비스 검색에 그대로 옮긴다. 기준 구현은 `evals/runners/run_retrieval_d3.py`의 `search()` · `Index.allowed()`(`part+kind`) · `Reranker.voyage()`와 `run_retrieval_r1.py`의 `SortedReranker`.
 - 바꾼 파일: `backend/services/llm.py`(`voyage_embed` · `voyage_rerank`), `backend/rag/retrieve.py`(모델 · 차원 · 표지 카드 제외 · 리랭크), `backend/graph/build.py`(라우팅 → 재작성 → 검색), `backend/rag/pipeline/ingest.py`(`--voyage` 적재 · `VectorCache` 파일 이름 · 차원 인자), `db/008_multi_dim_embeddings.sql`, `.env.example`, `tests/rag/test_rag_retrieve.py` · `tests/graph/test_graph_build.py` · `tests/services/test_llm.py`, `SPEC.md` · `AGENTS.md` · ADR 0004(갱신 2026-11-03) · `backend/rag/RAG.md` · `backend/services/SERVICES.md` · `backend/graph/GRAPH.md` · `db/DB.md` · `SOJAFIT.md`, 이 파일
