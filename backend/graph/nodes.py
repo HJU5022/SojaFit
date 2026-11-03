@@ -14,6 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.services import llm
 
@@ -108,7 +109,8 @@ def read_input(state: AgentState) -> dict:
     # [왜] 같은 thread의 다음 메시지(체크포인터)에서 앞 질문의 검색 결과가 새 질문에 섞이지 않게 턴마다 비운다.
     # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
     # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
-    reset = {"query": "", "parts": [], "docs": [], "passed": [], "tries": -state.get("tries", 0)}
+    reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
+             "tries": -state.get("tries", 0)}
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
@@ -151,8 +153,13 @@ def search(state: AgentState, retriever) -> dict:
     # [왜] 질문 품번과 대상 값 품번을 합치면 "D3 후보 1N60P 정격"(코퍼스에 없음)에 D3 값 1N4148 문서가 나와 엉뚱한 수치로 답한다(11-02 결정)
     parts = find_parts(state["question"], refs) or find_parts(part.get("value", ""), refs)
     query = state.get("query") or state["question"]  # 재작성 노드가 검색어를 바꿨으면 그것으로, 아니면 질문으로 찾는다
-    docs = retriever(query, parts=parts or None)  # 품번이 하나도 없으면 None: 코퍼스 전체에서 찾는다
-    return {"query": query, "parts": parts, "docs": docs, "tries": 1, "path": ["검색"]}  # tries 1이 더해져 상한 판단에 쓰인다
+    try:
+        docs = retriever(query, parts=parts or None)  # 품번이 하나도 없으면 None: 코퍼스 전체에서 찾는다
+    except RetrievalUnavailableError as error:
+        return {"query": query, "parts": parts, "docs": [],
+                "retrieval_error": {"kind": error.kind}, "tries": 1, "path": ["검색"]}
+    return {"query": query, "parts": parts, "docs": docs,
+            "retrieval_error": None, "tries": 1, "path": ["검색"]}  # tries 1이 더해져 상한 판단에 쓰인다
 
 
 class Grade(BaseModel):
@@ -269,6 +276,9 @@ def refuse(state: AgentState) -> dict:
     if state.get("question_type") == "out_of_scope":
         answer = "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다."
         return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}  # 이전 턴의 적용 정보도 비운다
+    if state.get("retrieval_error"):
+        answer = "검색 도구를 사용할 수 없어 문서 근거를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."
+        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}
     docs, parts = state.get("docs") or [], state.get("parts") or []
     # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
     if not docs:

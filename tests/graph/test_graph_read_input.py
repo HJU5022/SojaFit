@@ -36,6 +36,14 @@ def test_read_input_shows_power_path_two_steps_away():
     assert out["path"] == ["입력 읽기"]
 
 
+def test_read_input_clears_previous_search_state():
+    out = read_input({"input": E01, "query": "old", "parts": ["OLD"], "docs": [{"chunk_id": 1}],
+                      "passed": [1], "retrieval_error": {"kind": "timeout"}, "tries": 2})
+    assert out["query"] == "" and out["parts"] == [] and out["docs"] == [] and out["passed"] == []
+    assert out["retrieval_error"] is None
+    assert out["tries"] == -2
+
+
 def test_big_nets_are_cut_and_counted():
     nodes = [{"ref": f"C{i}", "pin": "1"} for i in range(12)] + [{"ref": "R1", "pin": "1"}]
     connections = {"components": [{"ref": "R1", "value": "10k"}], "nets": [{"name": "GND", "nodes": nodes}]}

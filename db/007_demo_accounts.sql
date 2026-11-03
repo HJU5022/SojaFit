@@ -41,6 +41,7 @@ BEGIN
     END IF;
 
     IF admin_email = '' OR user_email = ''
+       OR length(admin_email) > 100 OR length(user_email) > 100
        OR admin_email !~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$'
        OR user_email !~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$'
        OR lower(admin_email) = lower(user_email)

@@ -161,7 +161,10 @@ def test_compact_manifest_uses_decoded_source_url_and_preserves_lines(inputs, tm
     cards = inputs['chunks'].read_text().replace('0.pdf', '0 series.pdf')
     inputs['chunks'].write_text(cards)
     inputs['catalog'].write_text(inputs['catalog'].read_text().replace('0.pdf', '0 series.pdf'))
-    inputs['dataset'].write_text(inputs['dataset'].read_text().replace('0.pdf', '0 series.pdf'))
+    inputs['dataset'].write_text(
+        inputs['dataset'].read_text(encoding='utf-8').replace('0.pdf', '0 series.pdf'),
+        encoding='utf-8',
+    )
     before = inputs['manifest'].read_bytes()
     out = tmp_path / 'selected'
     report = run(inputs, out)

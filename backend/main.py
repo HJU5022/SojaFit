@@ -12,7 +12,9 @@ from contextlib import asynccontextmanager
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from pydantic import BaseModel, Field, StrictBool
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, StrictBool, field_validator
 
 from backend import auth
 
@@ -28,6 +30,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="SojaFit API", lifespan=lifespan)
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={"detail": [{key: value for key, value in error.items() if key not in {"input", "ctx"}} for error in exc.errors()]})
+
+
 @app.get("/health")
 def health() -> dict:
     """서비스 생존 확인용. 배포 환경과 평가자가 부르며 항상 {"status": "ok"}를 돌려준다."""
@@ -41,6 +48,14 @@ class Login(BaseModel):
 
     email: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=1, max_length=1024)
+
+    @field_validator("email")
+    @classmethod
+    def check_email(cls, email: str) -> str:
+        email = email.strip().lower()
+        if not auth.valid_email(email):
+            raise ValueError("유효한 이메일 주소를 입력해 주세요.")
+        return email
 
 
 @app.post("/api/auth/login")
@@ -88,9 +103,9 @@ class AccountState(BaseModel):
 
 @app.get("/api/admin/users")
 def admin_users(user_id: int = Depends(auth.current_user_id)):
-    """전체 계정 목록을 돌려준다(관리자 전용, 아니면 403)."""
-    return {"users": auth.admin_users(user_id)}
-
+    """관리자 전용 계정 목록을 반환하고 이메일 사용자명을 마스킹한다."""
+    users = auth.admin_users(user_id)
+    return {"users": [{**user, "email": auth.mask_email(user["email"])} for user in users]}
 
 @app.patch("/api/admin/users/{target_id}")
 def admin_set_active(target_id: int, body: AccountState, request: Request, user_id: int = Depends(auth.current_user_id)):

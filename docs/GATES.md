@@ -39,6 +39,9 @@
 | 1 | `backend/graph/build.py` 24행 `MAX_TRIES = 2` → `MAX_TRIES = 99` (재검색 횟수 상한 무력화) | `tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses`, `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (`AssertionError: assert '재작성' == '거절'`, `StopIteration`, 원복 후 통과) | 2026-11-03 |
 | 2 | `backend/graph/nodes.py` 157행 `other_part_row` 반환식을 `return False`로 변경 (같은 문서 내 다른 품번 행 결정적 필터 제거) | `tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm` | 실패 (`AssertionError: {'passed': [1, 2, 3, 4]} != {'passed': [2, 3, 4]}`, 1N5817 행 `1`번 통과로 실패, 원복 후 통과) | 2026-11-03 |
 | 3 | `backend/graph/nodes.py` 236행 `generate`의 `"fake_citations": sorted(cited - valid)` → `[]` (없는 근거 번호 인용 검출 무력화) | `tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited` | 실패 (`AssertionError: {'fake_citations': []} != {'fake_citations': ['999']}`, 원복 후 통과) | 2026-11-03 |
+| 4 | `backend/graph/build.py`: 검색 상한을 2회에서 3회로 변경 | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패(세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-03 |
+| 5 | `backend/graph/nodes.py`: MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(`None != {"kind": "timeout"}`), 원복 후 통과 | 2026-11-03 |
+| 6 | `backend/graph/build.py`: MCP 장애도 채점으로 분기 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-03 |
 
 ## G4 추가 확인
 

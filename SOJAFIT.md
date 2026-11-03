@@ -46,6 +46,7 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── nodes.py        <- 노드 7개: 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절
+│   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
@@ -194,7 +195,9 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_rewrite.py  <- 재작성 노드와 채점 뒤 갈림길
 │   │   ├── test_graph_generate.py  <- 생성 노드의 근거 제한과 인용 검사
 │   │   ├── test_graph_refuse.py  <- 거절 노드의 이유와 단서 요청
-│   │   └── test_graph_build.py  <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
+│   │   ├── test_graph_build.py  <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
+│   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
+│   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
@@ -259,7 +262,9 @@ SojaFit (proj3-b)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
-│   │   └── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
+│   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
+│   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
+│   │   └── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선

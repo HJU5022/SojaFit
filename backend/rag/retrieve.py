@@ -16,6 +16,10 @@ import os
 import re
 from urllib.parse import unquote, urlparse
 
+# [왜] FastMCP 요청 worker에서 처음 import하면 첫 search_corpus가 멈출 수 있어 서버 시작 스레드에서 미리 읽는다.
+import numpy as np
+
+
 N_CAND = 50  # 방식마다 합치기 전에 가져오는 후보 수
 # dense 1단계가 Hamming 거리로 거르는 후보 수. 허용 카드가 이보다 많을 때만 1단계를 쓴다(사전 등록 #27)
 N_BIT = 3200  # [왜] 3-small 1536차원 운영 DB 실측(전자_데이터시트/evidence/bq_exp): 3,200장이면 recall@50 0.980, 최종 상위 5개 19/19문항 같고 retrieve() 중앙값 6.22초 → 0.89초
@@ -93,7 +97,6 @@ def warmup():
 
 def positive_top(scores, ids, n):
     """BM25 점수가 0보다 큰 카드 id를 높은 순으로 n개까지 돌려준다. 질문 단어가 하나도 안 맞으면 빈 목록이다(AC-10)."""
-    import numpy as np
     # [왜] 점수 0인 카드까지 넣으면 질문과 상관없는 카드 50장이 RRF 후보로 들어간다(허용 밖 -inf도 같이 빠진다)
     return [ids[j] for j in np.argsort(-np.asarray(scores), kind='stable')[:n] if scores[j] > 0]
 
@@ -102,7 +105,6 @@ def _dense(conn, question, allowed=None, *, nocover_all=False):
     """질문 벡터와 코사인 거리가 가까운 카드 id를 N_CAND개까지 가까운 순으로 돌려준다(벡터 검색, dense)."""
     # allowed가 있으면 그 카드 안에서만 잰다. nocover_all이면 allowed 대신 표지 아닌 카드 전체(SQL로 거름, 아이디 5만 개를 보내지 않음). DEMO_MODE면 빈 목록(AC-11)
     # 허용 카드가 N_BIT장보다 많으면 1비트 Hamming 거리로 N_BIT장을 먼저 거르고(chunk_embedding_bits, db/009) 그 후보만 정확 코사인으로 세운다
-    import numpy as np
     from backend.services import llm
     if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
         return []
@@ -133,7 +135,6 @@ def _dense(conn, question, allowed=None, *, nocover_all=False):
 def _keyword(question, allowed=None):
     """질문의 BM25(키워드 검색) 상위 카드 id를 N_CAND개까지 돌려준다. allowed가 있으면 그 카드 안에서만 찾는다."""
     # [주의] _bm25는 warmup()이 만든다. retrieve()가 먼저 부르므로 여기서는 만들지 않는다
-    import numpy as np
     index, ids = _bm25
     if index is None:
         return []

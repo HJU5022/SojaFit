@@ -32,7 +32,7 @@ def repo_files() -> list[str]:
     # [왜] -co --exclude-standard: 아직 git add 안 한 새 파일도 로컬에서 바로 검사한다. -z와 quotepath=off는 한글 파일명을 그대로 받는다
     try:
         out = subprocess.run(["git", "-c", "core.quotepath=off", "ls-files", "-co", "--exclude-standard", "-z"],
-                             cwd=ROOT, capture_output=True, text=True, check=True).stdout
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=True).stdout
     except (OSError, subprocess.CalledProcessError):
         pytest.skip("git 저장소가 아니다")
     return sorted(f for f in out.split("\0") if f and (ROOT / f).is_file())

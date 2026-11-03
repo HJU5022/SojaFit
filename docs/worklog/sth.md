@@ -1,5 +1,70 @@
 # STH 작업 기록
 
+## 2026-11-04 조장 관리 SPEC 변경 분리
+- 한 일: 미커밋 주요 문서 중 `SPEC.md`만 변경된 것을 확인하고, 인증·마스킹 반영 요청 초안을 저장소 밖에 보관한 뒤 `origin/main` 기준으로 되돌렸다. 당시 `origin/main`과 STH의 해당 파일 원본은 동일했다.
+- 바꾼 파일: `SPEC.md`, `docs/worklog/sth.md`. 요청 초안은 저장소 밖 Codex 작업 폴더의 `sojafit-spec-auth-request.md`에 보관했다. 인증 코드와 다른 미커밋 변경은 유지했다.
+- 확인: 저장 전 diff와 조장 관리 문서 규칙을 대조했다. 코드 테스트나 조장에게 요청 전달은 하지 않았다.
+- 다음 할 일: 기존 계정 이메일 형식의 호환성을 확인하고, 정책이 확정되면 저장한 초안을 조장에게 전달해 `SPEC.md` 반영을 요청한다.
+
+## 2026-11-04 원격 STH fast-forward 및 변경 확인
+- 한 일: 기존 미커밋·미추적 변경을 `codex-sth-pull-safety-20261104` stash에 보관하고 `git pull --ff-only origin STH`로 `95ca940`에서 `013e5a1`로 갱신했다. `git stash apply --index`는 `SPEC.md`와 이 작업 기록을 자동 병합했고 미해결 충돌은 없었다. 안전 사본 stash는 유지했다.
+- 받은 내용: MCP `search_corpus` 응답 검증·stdio 세션 재사용 검색기와 그래프 주입 경로, 검색 장애를 빈 결과와 구분하는 분기·턴 초기화, NumPy 선행 import, 관련 테스트·문서 및 main의 변경이다. MCP 검색기는 인자로 주입할 때 사용하며 기본 검색 경로를 자동 전환하지 않는다.
+- 보존 확인: 인증 코드·테스트·시드·작업서와 미추적 측정 JSON을 stash와 줄바꿈 정규화 후 해시 비교해 일치했다. `SPEC.md`와 작업 기록의 양쪽 변경은 자동 병합 상태로 보존했다. 주요 문서 `SPEC.md`의 기존 미커밋 인증 변경은 조장 검토 대상이다.
+- 검사: 샌드박스 집중 테스트는 진행 중 실패 표시 후 완료 전 중단했다. 같은 범위를 로컬 권한에서 `.venv/Scripts/python.exe -m pytest -q tests/graph tests/mcp_skill tests/repo tests/api -p no:cacheprovider --maxfail=1`로 재실행해 130 passed, 16 skipped (10.38초). 첫 실행은 최종 실패 상세를 수집하지 못해 원인을 확정하지 않는다. `git diff --check` 통과, 미해결 충돌 파일 없음.
+- 미검증: 건너뛴 DB 의존 경로, 실제 Cloud Run, 전체 평가셋 재측정. 풀은 푸시·배포·공유 DB 변경을 포함하지 않았다.
+- 다음 할 일: 인증 변경에 대한 조장 문서 반영을 요청하고, 실제 격리 DB 기반 MCP 경로와 배포 검증은 선행 환경이 준비되면 별도 실행한다.
+
+## 2026-11-04 STH 충돌 상태 점검
+- 한 일: 현재 STH와 원격 STH·main의 충돌 가능성 및 미커밋 변경 겹침을 확인했다. Git 병합·브랜치 이동·커밋·푸시는 하지 않았다.
+- 확인 결과: 로컬 STH `95ca940`은 원격 STH `013e5a1`보다 21커밋 뒤이며 fast-forward 가능 상태다. `git ls-remote --heads origin main STH`에서 원격 main `4dc4685`, STH `013e5a1`이 로컬 원격 추적 참조와 일치했다. `git status`, `git diff --name-only --diff-filter=U`상 진행 중인 병합이나 미해결 파일은 없다.
+- 병합 예행 확인: 별도 임시 Git object 디렉터리를 사용해 `git merge-tree --write-tree origin/STH origin/main`을 실행한 결과 충돌 없이 종료 코드 0이었다. 이는 해당 시점 커밋 간 확인이며 이후 원격 변경은 포함하지 않는다.
+- 미커밋 변경: 원격 STH 변경과 겹치는 `SPEC.md`, `docs/worklog/sth.md`를 임시 파일에서 3방향 비교했다. 원본 줄바꿈 그대로는 각 1곳 충돌이었으나 CRLF/LF를 LF로 통일한 비교에서는 두 파일 모두 충돌 0이었다. 실제 Git 병합 결과를 보장하는 검증은 아니며 기존 변경을 보존한 채 통합 시 재확인해야 한다. `SPEC.md`의 인증 문구는 조장 소유 주요 문서에 해당하므로 팀 규칙에 따라 조장에게 반영을 요청한다.
+- 바꾼 파일: `docs/worklog/sth.md`. 기존 미커밋 변경과 미추적 측정 결과는 유지했다. 코드 테스트는 실행하지 않았다.
+- 다음 할 일: 미커밋 변경을 안전하게 보존하고 원격 참조를 다시 확인한 뒤 STH를 통합한다. 작업 기록은 양쪽 내용을 모두 보존하고, 줄바꿈과 주요 문서 수정 권한을 확인한다.
+
+## 2026-11-04 로그인 화면·배포 계정 검토
+- 한 일: 현재 작업 트리의 화면 설계, 인증·관리자 API, 데모 계정 시드와 배포 검증 기록을 대조했다.
+- 화면: `backend/web/`에는 설계 문서만 있고 로그인·관리자 UI는 없다. 과거 수동 화면은 제거됐으며 `tests/api/test_health.py`는 루트 404를 기대한다. 로그인·사용자 확인·로그아웃과 관리자 목록·일반 계정 활성 상태 변경 API는 있으나 실제 브라우저 연결은 미검증이다. FastAPI 직접 제공 여부와 상호작용은 미결이므로 서비스 담당과 정하고 작업 범위·수용 기준을 확정한 뒤 화면과 기존 테스트를 함께 고친다. 사용자 화면 표시만으로 관리자 권한을 보장하지 말고 서버 측 검사를 유지한다.
+- 배포 비밀값·평가 계정: 비데모 서버는 32바이트 이상 `AUTH_SECRET`을 요구하며 `AUTH_ORIGIN`은 출처 검사와 Secure 쿠키에 영향을 준다. CLI 계정 생성과 로컬 Compose 데모 시드는 있으나 실제 Cloud Run 비밀값·DB·평가 계정 설정 여부는 확인되지 않았다. 공개 데모 계정은 실제 평가 계정으로 쓰지 않는다. 배포 담당자와 접근 권한·대상 DB 및 스키마 이력·비밀값 주입 방식·별도 평가 계정 전달 방법을 확인하고 격리 환경부터 검증한다. 키 변경 시 기존 세션은 재로그인이 필요하다.
+- 확인: `backend/web/WEB.md`, `backend/web/design.md`, `SPEC.md`, `docs/specs/login-auth.md`, `backend/main.py`, `backend/auth.py`, `tests/api/test_health.py`, `docker-compose.yml`, `.env.example`, `docs/GATES.md`와 기존 로컬 실측 기록을 대조했다. `git status --short --branch`상 STH는 저장된 `origin/STH`보다 21커밋 뒤에 있어 구현 전 최신 상태를 확인해야 한다. 원격을 새로 조회하지는 않았다.
+- 바꾼 파일: `docs/worklog/sth.md`. 코드 테스트·실제 배포 접근·비밀값 확인 또는 계정 생성은 하지 않았다.
+- 다음 할 일: 화면 담당과 제공 방식·관리자 메뉴 범위 및 수용 기준을 합의하고, 배포 담당과 앞 절의 Cloud Run 재개 조건을 확인한다. 기존 미커밋 변경을 보존한 채 최신 브랜치 차이를 검토한다.
+
+## 2026-11-04 인증 후속 검증
+- 목적·조건: 격리 PostgreSQL과 Windows 단일 프로세스에서 로그인 1건과 실제 scrypt 2건 동시 실행을 비교하고, 두 슬롯이 찬 동안 세 번째 요청의 503과 메모리를 확인한다. 외부 모델 호출과 비용은 없다.
+- 명령: `TEST_AUTH_DATABASE_URL`을 로컬 테스트 전용 DB로 지정하고 `.venv/Scripts/python.exe scripts/auth/measure_scrypt_concurrent.py` 실행. `uv` 실행 파일을 찾지 못해 기존 가상환경을 직접 사용한다.
+- 중단 조건: 테스트 DB 연결 불가, 동일 날짜 결과 파일 존재, 검증 실패 또는 과도한 자원 사용 시 중단한다. 기존 결과는 덮어쓰지 않는다.
+- 결과: 로컬 PostgreSQL 16.15 임시 컨테이너에 인증 SQL 003·005·006을 적용하고 `.venv/Scripts/python.exe -m pytest -q tests/api -p no:cacheprovider` 실행: 36 passed (20.44초). 임시 컨테이너는 종료·자동 제거했다.
+- 실제 scrypt 측정: 두 로그인 200, 겹침 456.91ms, 두 검증 중 세 번째 503, 단일·두 건 최대 working set 184.30·312.73MiB. 결과 `scripts/results/auth/scrypt_concurrent_2026-11-04.json`. Windows 단일 Python 프로세스에서 각 조건 한 번 측정한 값이며 DB·Cloud Run 메모리와 일반 요청 지연을 뜻하지 않는다.
+- 배포 확인: 공개 health 주소는 이 실행 환경의 DNS 조회에 실패했고, 서비스 URL의 프로젝트 번호에 대한 `gcloud projects describe`는 현재 계정 권한 부족으로 실패했다. 배포·공유 DB는 변경하지 않았다.
+- 업무 데이터: 실제 업무 API·DB Store·승인 흐름이 없어 소유권 검사를 연결할 대상이 없음을 `backend/main.py`, `backend/graph/GRAPH.md`, `db/manual/MANUAL.md`에서 확인했다. 팀의 연동 경계 합의와 업무 기능 구현 후 교차 접근을 시험해야 한다.
+- 바꾼 파일: 이 작업 기록과 위 측정 결과 JSON. 평가셋 재측정, Cloud Run 인증·설정 및 실제 업무 데이터 소유권은 확인하지 못했다.
+- 다음 할 일: 배포 담당자에게 해당 프로젝트의 읽기 권한 또는 리비전·메모리·포트·DB 설정 확인을 요청하고, 업무 API 담당과 소유권 연동 경계를 확정한다.
+
+### 접근 문제로 보류 — Cloud Run 검증 재개 방법
+- 중단 지점: 2026-11-04 서비스 주소에 표시된 프로젝트 번호 `559369539072`의 프로젝트 조회가 현재 인증 계정의 권한 부족으로 실패했다. 공개 `/health` 요청은 이 실행 환경의 DNS 조회 실패로 응답을 받지 못했다. DNS 실패만으로 서비스 장애라고 판단하지 않는다.
+- 재개 조건: 배포 담당자에게 실제 프로젝트 ID·서비스명·리전 확인과 Cloud Run 설정 및 필요 로그의 읽기 권한을 요청한다. 권한을 받을 수 없으면 담당자가 리비전, 포트, 메모리, 인스턴스·동시 요청 설정과 DB 스키마 적용 여부를 확인해 전달한다. 별도로 테스트용 계정과 격리 검증 환경을 준비한다. 비밀번호, 토큰, DB 주소 등 비밀값은 작업 기록이나 채팅에 적지 않는다.
+- 재개 순서: ① 접근 가능한 환경에서 `/health`와 실제 배포 리비전을 확인한다. ② 포트 8000과 서비스 설정, 대상 DB 및 인증 스키마 적용 이력을 읽기 전용으로 대조한다. ③ 테스트 계정으로 HTTPS 쿠키·Origin, 로그인·`/api/auth/me`·로그아웃 및 세션 거부를 검증한다. ④ 격리 환경에서 DB 장애 및 두 슬롯 점유 시 503을 확인하고, 여러 인스턴스의 메모리·오류·지연은 시험 조건과 예산을 정한 뒤 측정한다. 실제 관측과 미검증 항목을 이 기록에 추가한다.
+- 안전 경계: 공유·운영 DB 변경, 배포, 부하 시험 및 실제 계정 사용은 대상과 팀 절차를 확인한 후 진행한다. 로컬 36건 통과와 scrypt 측정 결과는 Cloud Run 검증을 대신하지 않는다.
+- 별도 선행 조건: 업무 데이터 소유권 검사는 권한 문제와 별개로 업무 API·DB Store·승인 흐름과 소유권 경계 합의가 필요하다. 구현이 준비되면 위 업무 데이터 항목의 A/B 교차 접근 시험부터 진행한다.
+
+## 2026-11-03 인증 후속 작업 준비
+- 한 일: 업무 데이터 소유권, Cloud Run 인증 검증, scrypt 동시 처리 제한의 현재 구현과 선행 조건을 문서·코드에서 대조했다. 아래는 작업 제안이며 팀 합의나 실행 결과가 아니다.
+- 업무 데이터 소유권: `docs/specs/login-auth.md`의 후속 연동 계약을 기준으로 서비스·에이전트 담당이 thread 소유권 확인 위치, Store namespace와 사용자 ID 변환 경계, 견적 승인 권한을 합의한다. 업무 API·승인 흐름·DB Store와 업무 표 적용이 준비되면 세션의 사용자 ID로 각 리소스 조회·변경을 제한하고 A/B 교차 접근 및 재접속·재시작 후 격리를 시험한다. `backend/graph/memory.py`는 namespace 규칙만 제공한다.
+- Cloud Run: 배포 담당과 서비스·리비전, 대상 DB와 스키마 적용 이력, 접근 권한, 테스트 계정, 비용·시험 시간을 확인한다. 격리 환경에서 먼저 `/health`, HTTPS 쿠키·Origin, 로그인·세션·로그아웃, DB 장애와 2개 슬롯 점유 시 503, 로그의 민감값 노출 여부를 확인한다. 운영 DB 변경이나 배포는 팀 절차에 따라 별도 진행한다. `Dockerfile`은 8000번 포트로 고정되어 있어 실제 서비스의 포트 설정을 대조한다.
+- 동시 처리: 현재 동일 PostgreSQL DB의 트랜잭션 advisory lock 두 칸이 로그인 경로를 제한하며 초과 요청은 503이다. 기존 격리 DB 테스트와 Windows 로컬 실측을 기준으로 재현하고 Cloud Run의 인스턴스·메모리·여러 프로세스 조건에서 별도 확인한다. 연결이 검증 도중 끊어지면 잠금이 먼저 해제될 수 있고 계정 생성 CLI는 제한 범위 밖이다. 2건을 변경할지, 초과 요청 재시도 방식과 목표 처리량은 측정 후 결정한다.
+- 바꾼 파일: `docs/worklog/sth.md`.
+- 확인 방법: `git status --short --branch`, 관련 폴더 설명·`docs/specs/login-auth.md`·인증 코드·테스트·배포 설정·기존 로컬 실측 기록을 대조했다. 새 테스트나 외부 환경 접근은 수행하지 않았다.
+- 확인 못 한 것: 현 Cloud Run 리비전·설정과 인증 동작, 공유 DB 스키마·권한, 실제 업무 리소스의 교차 사용자 접근, 배포 환경 부하·메모리.
+- 다음 할 일: 담당자와 연동 경계 및 격리 검증 환경을 확정하고, 인증 DB 테스트를 실행한 뒤 배포 검증과 업무 기능 연동을 각각 진행한다.
+
+## 2026-11-03 로그인 이메일 입력·응답 보완
+- 한 일: 로그인 API·계정 생성 CLI에 같은 이메일 형식 및 100자 제한을 적용했다. 데모 시드에도 동일 길이 제한을 더하고, 잘못된 기존 주소는 관리자 응답에서 전부 가려 목록 조회가 실패하지 않게 했다.
+- 바꾼 파일: backend/auth.py, backend/main.py, db/007_demo_accounts.sql, tests/api/test_auth.py, docs/specs/login-auth.md, SPEC.md, docs/worklog/sth.md.
+- 실행한 명령과 결과: `uv run --no-sync python -m pytest tests/api/test_auth.py -q -p no:cacheprovider` — 18 passed, 14 skipped (격리 인증 DB 미설정). `git diff --check` 통과.
+- 확인 못 한 것: DB 통합 테스트는 건너뛰었고 Cloud Run·프록시 로그 및 운영 DB 설정은 접근할 수 없어 확인하지 않았다.
+- 다음 할 일: TEST_AUTH_DATABASE_URL이 있는 환경에서 데모 시드 및 인증 DB 테스트를 실행한다.
+
 ## 2026-11-03 새 main 구조 병합과 MCP 자료 보관
 - 한 일: `f271553`을 STH에 병합하고 MCP 테스트·측정 스크립트 및 원시 자료 15개는 요청에 따라 저장소 밖에 보관했다. stash의 수정된 MCP 테스트 사본도 별도로 보관했다.
 - 정리: MCP 조사 문서의 외부 보관 자료와 사전등록 경로를 반영했다. 로그인 마스킹 변경은 이 MCP 커밋에서 제외했다.
@@ -279,3 +344,50 @@
 - `verify_tsc_pdf(doc_id)`와 `get_circuit_info(circuit_id, target)`를 MCP 도구 목록에 추가했다. 두 도구는 입력 형식만 확인하고 `not_implemented`를 돌려주며 네트워크·파일·DB에 접근하지 않는다.
 - MCP 작업서와 폴더 안내, 구현 계획에 미구현 상태와 선행 결정 사항을 명시했다. 검색 지연 조사는 미해결이라 그 로직은 수정하지 않았다.
 - 이번 요청에서는 테스트 실행을 하지 않았다. 변경 검토는 diff 확인으로 제한한다.
+
+### 2026-11-03 최신 main 통합
+
+- `origin/main`의 17개 커밋을 로컬 `STH`에 병합했다. `docs/specs/README.md`와 `evals/PREREGISTER.md` 충돌은 MCP 검색·웹/PDF 기록과 main의 Skill·도구 프롬프트 기록을 모두 보존해 해결했다.
+- 저장소의 동결 평가셋 blob은 CRLF이고 `FROZEN.json`은 LF 바이트 해시를 기록해 Windows에서 검사가 실패하는 문제를 확인했다. 평가셋 내용이나 기대 해시는 바꾸지 않고 `.gitattributes`에서 `evals/dataset_v*.jsonl`을 항상 LF로 체크아웃하게 했다.
+- UTF-8 임시 JSON을 Windows 기본 cp949로 읽던 테스트 2곳에 인코딩을 명시했다. `uv run --no-sync pytest -q` 재실행 결과 184 passed, 24 skipped.
+- 원격 push, 외부 API 호출, DB 변경은 수행하지 않았다.
+
+### 2026-11-03 MCP `search_corpus` LangGraph 통합 설계
+
+- 두 사람 분담안의 B 역할에 맞춰 범위를 MCP 서버 구현이 아닌 LangGraph 검색 통합으로 확정했다. 나머지 도구 4개의 사용자 흐름 연결, 서버 계약 변경, 외부 실호출은 제외했다.
+- `docs/specs/mcp-graph-integration.md`에 동기 그래프와 비동기 stdio 세션의 경계, 정상 빈 결과와 MCP 장애 구분, 세션 재사용·종료, 가짜 클라이언트와 격리 DB 검증 AC를 작성했다.
+- 서버 코드·공통 SPEC·테스트·동결 평가셋은 변경하지 않았다. 구현 전 사용자 문서 검토를 기다린다.
+
+- 작업서 승인 후 `docs/specs/mcp-graph-integration-plan.md`에 6개 구현 작업을 TDD 순서로 작성했다. 그래프 장애 분기, 응답 검증, 지속 stdio 세션, 그래프 재검색, 격리 DB, 문서·변이 검증을 각각 독립 커밋으로 나눈다. 구현 코드는 아직 변경하지 않았다.
+
+### 2026-11-03 MCP `search_corpus` LangGraph 통합 구현
+
+- B 담당 범위에서 `backend/graph/mcp_retriever.py`를 추가하고 기존 `build_graph(retriever=...)`에 주입했다. stdio MCP 세션은 전용 asyncio 루프에서 한 번 열어 재사용하며, 응답 카드 필드·타입을 검사한다. A 담당 `backend/mcp_skill/` 서버 코드는 수정하지 않았다.
+- 정상 빈 목록은 기존 문서 없음으로, MCP timeout·도구 오류·응답 형식 오류는 `retrieval_error`로 구분해 채점·재검색 없이 안전한 장애 응답으로 끝낸다. 직접 RAG 기본 경로와 검색 최대 2회는 유지했다.
+- TDD 커밋: `3eb7d40` 검색 장애 분기, `bba9c4f` 응답 검증, `5d28e6f` 지속 stdio 세션, `a989b57` 그래프 재검색 통합, `e7b8c70` 조건부 실제 stdio 검사.
+- 변이 확인 3건은 검색 상한 2→3, 장애를 빈 결과로 변경, 장애를 채점으로 분기했을 때 각각 지정 테스트가 실패했고 원복 후 통과했다. 상세는 `docs/GATES.md`.
+- `uv lock --check` 통과. `uv run --no-sync pytest -q -rs` 결과 196 passed, 25 skipped. 신규 `tests/test_graph_mcp_stdio.py`는 `TEST_DATABASE_URL` 미설정으로 skip되어 실제 그래프→stdio MCP→격리 DB 경로와 단발 지연은 이번 환경에서 확인하지 못했다.
+- 외부 API·LLM 실호출, 운영 DB, Docker 볼륨 변경, 나머지 MCP 도구 4개의 그래프 연결은 수행하지 않았다. 원격 push·PR 생성도 수행하지 않았다.
+
+### 2026-11-03 최신 main 재통합
+
+- `origin/main` `5760105`를 로컬 `STH`에 병합했다. 기존 MCP·LangGraph 커밋은 유지하고, `backend/mcp_skill/mcp_server/server.py`의 도구 5종 구현과 `search_corpus` 그래프 연결을 보존했다.
+- main의 ADR 0012 폴더 규칙에 맞춰 충돌한 설명 파일을 `GRAPH.md`, `MCP_SKILL.md`, `DOCS.md`, `SPECS.md`, `SCRIPTS.md`에 통합했다. MCP 조사·실측 문서 7개는 `docs/research/`로 옮기고 링크·`SOJAFIT.md` 트리·폴더 파일 목록을 갱신했다.
+- main의 턴 초기화와 합쳐질 때 이전 MCP 장애가 남지 않도록 `read_input`이 `retrieval_error`도 초기화하게 하고 회귀 테스트를 추가했다. Windows에서 저장소 구조 테스트가 Git UTF-8 파일 목록을 cp949로 읽던 문제는 subprocess에 `encoding="utf-8"`을 명시했다.
+- `uv lock --check` 통과. MCP·그래프 집중 테스트는 `64 passed, 1 skipped`, 전체 `uv run --no-sync pytest -q -rs`는 `209 passed, 25 skipped`였다.
+- `TEST_DATABASE_URL`과 인증 전용 테스트 DB가 없어 실제 stdio MCP→격리 DB 및 DB 의존 테스트는 실행하지 못했다. 원격 push·외부 API·운영 DB 변경은 수행하지 않았다.
+
+### 2026-11-03 PR #44 계약 수용과 B 연결 조정
+
+- A 확인에 따라 원격 PR #44 head `0185d55`를 로컬 B 커밋과 병합하고, 이어 최신 `origin/main` `72b7723`의 폴더·평가 변경을 통합했다. PR #44가 저장소 밖 보관으로 정한 MCP 독립 테스트·웹 측정 파일 삭제를 유지했고, B 그래프 테스트는 새 구조인 `tests/graph/`로 옮겼다.
+- PR #44의 stdio 관찰 계약인 `structuredContent={"result": [...]}`를 먼저 실패 테스트로 고정했다. 기존 디코더에서 카드 목록과 빈 목록이 모두 `invalid_response`로 실패하는 것을 확인한 뒤, `structuredContent.result`를 우선 검증하고 이전 단일 JSON 텍스트는 호환 경로로 남겼다. 해당 테스트 파일은 `13 passed`였다.
+- PR #44·B 문서와 최신 main의 검색 베이스라인·시장 조사 문서를 모두 보존하고 `SOJAFIT.md`, 폴더 설명, B 작업서의 새 경로를 맞췄다. 구조 검사는 `5 passed`, 그래프 묶음은 `58 passed, 1 skipped`, 전체 회귀는 `190 passed, 25 skipped`, `uv lock --check`는 통과했다.
+- 일회용 pgvector DB에 합성 문서 4건·청크 5건을 넣어 실제 stdio를 재검증했다. 기본 서버 경로는 10초 제한에서 `timeout`, PR #44에 기록된 `numpy` 선행 import 진단 경로는 4.51초에 카드 2건과 `SS32 SERIES_Q2412.pdf` 출처를 정상 수신했다. 일회용 컨테이너는 제거했다.
+- 결론: B의 실제 FastMCP 응답 해석은 조정됐지만, 기본 MCP 서버의 첫 검색 지연은 A 서버 초기화 범위로 남는다. 원격 push·외부 API·운영 DB 변경은 수행하지 않았다.
+
+### 2026-11-03 MCP 첫 검색 지연 개선
+
+- 사용자 결정에 따라 검색 지연을 B 통합 범위에서 직접 개선했다. 격리 DB의 실제 LangGraph → stdio MCP 테스트에 첫 검색 10초 제한을 먼저 추가했고, 변경 전에는 `1 failed in 13.60s`로 재현됐다.
+- 원인은 FastMCP 요청 worker에서 처음 실행되던 NumPy 지연 import였다. 공용 검색 모듈 시작 시 NumPy를 읽도록 옮겼으며 MCP 서버 계약과 도구 구현은 변경하지 않았다.
+- 같은 합성 DB에서 수정 후 통합 테스트는 `1 passed in 3.58s`, 별도 측정은 프로세스 시작부터 첫 카드 2건까지 2.426초, 같은 세션의 두 번째 검색은 0.045초였다. 이는 합성 문서 4건·청크 5건의 로컬 단발 측정이며 실제 전체 코퍼스의 운영 성능을 뜻하지 않는다.
+- MCP·검색 집중 테스트는 `26 passed in 3.80s`, `uv lock --check`와 전체 회귀는 `201 passed, 14 skipped`였다. 외부 API·LLM·운영 DB·원격 저장소는 사용하거나 변경하지 않았다.

@@ -1,5 +1,7 @@
 # 해시를 기록한 회로·PDF는 줄바꿈 변환 없이 그대로 받는다.
 data/circuits/collected/** -text
 data/corpus/tsc/*.pdf -text
+# 동결 평가셋을 FROZEN.json에 기록한 LF 바이트 해시로 체크아웃한다.
+evals/dataset_v*.jsonl text eol=lf
 # 제작자 원본은 고치지 않으므로 공백 검사에서 뺀다.
 data/circuits/collected/**/original/** -whitespace

@@ -69,7 +69,6 @@
   - tsc_datasheet_list.csv, parts 정확 일치: 1N4148W → 1N4148W SERIES_K1804.pdf (정확 일치 1행); 1N4148WS → 1N4148WS SERIES_N2212.pdf (정확 일치 1행)
 - 정운 확인(O / X와 맞는 결론): O (11-03)
 - 재훈 확인(O / X와 맞는 결론): O (11-03)
-
 ### n02 — 소량 보드의 원가를 줄이려고 D1을 바꾸려 해. 이 조건에 맞는 대체 후보를 찾아 줘.
 
 - 회로·대상: SparkFun Breadboard Supply · D1 · 조건: D1은 현재 TSC 1N5819로 교체해 쓰고 있다. / J1 잭으로만 공급하며 최대 부하 전류는 10mA이다. / 실온 25°C에서 사용하고, 허용 전압 강하는 IF=10mA·TJ=25°C·0.3ms 펄스 시험 기준으로 1.00V 이하이다. / 새 패키지에 맞춰 기판을 수정할 수 있다.
@@ -268,4 +267,3 @@
   - netlists/supply_breadboard.net, D1, 핀 A → Net-(S1-S), 핀 C → Net-(F1-1); S1 핀 3과 D1 A, F1 핀 P$1과 D1 C 연결; F1 핀 P$2 → RAW, U1 핀 IN → RAW; D1 원래 footprint import_input:DIODE-0.4
 - 정운 확인(O / X와 맞는 결론): O (11-03)
 - 재훈 확인(O / X와 맞는 결론): O (11-03)
-

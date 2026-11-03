@@ -80,7 +80,7 @@ def test_error_keeps_previous_rows_and_sanitizes_error(monkeypatch, tmp_path):
     result = pair.run([{"id": "a", "input": "A"}, {"id": "b", "input": "B"}], None, tmp_path / "new", {})
     assert result["status"] == "incomplete"
     assert result["error_type"] == "RuntimeError"
-    raw = (tmp_path / "new" / "result.json").read_text()
+    raw = (tmp_path / "new" / "result.json").read_text(encoding="utf-8")
     assert "secret-password" not in raw
     assert len(json.loads(raw)["rows"]) == 1
     with pytest.raises(FileExistsError):

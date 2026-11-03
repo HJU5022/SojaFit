@@ -30,6 +30,55 @@ def test_login_rejects_cross_origin():
     assert response.status_code == 403
 
 
+def test_login_validation_errors_do_not_echo_credentials(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    client = TestClient(app)
+    password = "synthetic-secret-" * 70
+    response = client.post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": "person@example.test", "password": password})
+    assert response.status_code == 422
+    assert password not in response.text
+
+
+def test_admin_users_masks_email_local_part(monkeypatch):
+    monkeypatch.setattr(auth, "admin_users", lambda _user_id: [{"id": 1, "email": "alice@example.test", "role": "user", "is_active": True}])
+    app.dependency_overrides[auth.current_user_id] = lambda: 99
+    try:
+        response = TestClient(app).get("/api/admin/users")
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json()["users"][0]["email"] == "a***@example.test"
+
+
+def test_admin_users_masks_malformed_email_without_failing(monkeypatch):
+    monkeypatch.setattr(auth, "admin_users", lambda _user_id: [{"id": 1, "email": "person@", "role": "user", "is_active": True}])
+    app.dependency_overrides[auth.current_user_id] = lambda: 99
+    try:
+        response = TestClient(app).get("/api/admin/users")
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json()["users"][0]["email"] == "***"
+
+
+@pytest.mark.parametrize("email", ["person@", "@example.test", "first@@example.test", "person example@test.test", f"{'a' * 90}@example.test"])
+def test_login_rejects_malformed_email_without_echoing(email, monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    response = TestClient(app).post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": email, "password": "synthetic-secret"})
+    assert response.status_code == 422
+    assert email not in response.text
+
+
+def test_account_creation_rejects_malformed_email_before_database(monkeypatch):
+    import sys
+
+    monkeypatch.setattr(sys, "argv", ["backend.auth"])
+    monkeypatch.setattr("builtins.input", lambda _prompt: "person@")
+    monkeypatch.setattr(auth.getpass, "getpass", lambda _prompt: "a-strong-demo-password")
+    with pytest.raises(SystemExit):
+        auth.provision()
+
+
 def test_database_sessions_are_isolated_and_revoked(monkeypatch):
     import os
     import secrets
@@ -301,6 +350,7 @@ def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
 @pytest.mark.parametrize("mode,config,expected", [
     ("1", ("", "", "", ""), "default"),
     ("1", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
+    ("1", ("custom-admin@", "valid", "custom-user@example.test", "valid"), "invalid"),
     ("1", ("partial@example.test", "", "", ""), "invalid"),
     ("0", ("", "", "", ""), "none"),
     ("0", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
