@@ -12,9 +12,9 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
-| 2026-11-03 | `tool_use.md` | `sojafit/tool-use` 등록 번호 1 | PR #36 도구5종의 선택·인자·결과 해석을 별도 프롬프트로 작성 | manifest ID·웹 후보·PDF 무결성·공개 회로의 계약을 구분 | #21~#23 모의12건 확인. 도구/인자5/5·고정 action11/12 일치, 실제 도구0회. `tool_prompt_check_2026-11-03_last.json` |
-| 2026-11-03 | `../mcp_skill/skills/SKILL.md` | Langfuse 등록 번호 2 | S1 7상황·S2 6상황의 현재 본문 등록, 노드 chat prompt는 버전4 유지 | 상황별 판단까지 작성한 본문과 검증 대상 일치 | #20 대표 흐름4건·직접 생성13건의 추적 연결 확인. 답변 기준12/13 충족, 충돌1건 실패. `skill_scenarios_2026-11-03_current.json` |
-| 2026-11-03 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse development v4 | `sojafit/route`, `grade`, `rewrite`, `generate`로 chat prompt 등록. user는 `{{input}}`, 생성 system에 선택적 `{{domain_skill}}` | 고정 버전과 generation 연결. 모델 Haiku5.5·temperature0·출력4096 | 합성4건·generation10개에서 프롬프트 버전·모델·부모 연결을 API로 확인. `langfuse_skill_check_2026-11-03_final.json` |
+| 2026-11-03 | `tool_use.md` | `sojafit/tool-use` 등록 번호 1 | PR #36 도구5종의 선택·인자·결과 해석을 별도 프롬프트로 작성 | manifest ID·웹 후보·PDF 무결성·공개 회로의 계약을 구분 | #21~#23 모의12건 확인. 도구/인자5/5·고정 action11/12 일치, 실제 도구0회. `skill_tool_summary_2026-11-03.json` |
+| 2026-11-03 | `../mcp_skill/skills/SKILL.md` | Langfuse 등록 번호 2 | S1 7상황·S2 6상황의 현재 본문 등록, 노드 chat prompt는 버전4 유지 | 상황별 판단까지 작성한 본문과 검증 대상 일치 | #20 대표 흐름4건·직접 생성13건의 추적 연결 확인. 답변 기준12/13 충족, 충돌1건 실패. `skill_tool_summary_2026-11-03.json` |
+| 2026-11-03 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse development v4 | `sojafit/route`, `grade`, `rewrite`, `generate`로 chat prompt 등록. user는 `{{input}}`, 생성 system에 선택적 `{{domain_skill}}` | 고정 버전과 generation 연결. 모델 Haiku5.5·temperature0·출력4096 | 합성4건·generation10개에서 프롬프트 버전·모델·부모 연결을 API로 확인. `skill_tool_summary_2026-11-03.json` |
 | 2026-11-03 | `generate.md` | v2 | 값 조회와 최종 적합성·없는 보장값 요청의 응답 범위를 구분. S1/S2 Skill은 별도 적용 | 기본 프롬프트와 Skill의 거절/부분 답변 충돌 해소 | 동결 평가셋 품질은 미측정 |
 | 2026-11-03 | `generate.md` + `../mcp_skill/skills/SKILL.md` | Skill 선택 적용 | 기존 프롬프트 본문을 보존하고, 명시적으로 켠 생성 호출에만 상황별 근거 해석 지침을 추가. 기본은 꺼짐 | Skill 유무 비교를 위한 생성 노드 연결(SPEC 5절) | 가짜 LLM으로 전달 계약 확인. 실제 모델 품질은 미측정 |
 | 2026-11-02 | `generate.md` | v1 | 처음 작성. 근거(카드·넷리스트)만 쓰고 문장마다 [번호]·[넷리스트]를 붙이며, 값을 비교해 대체 여부를 판단하지 않고, 답할 수 없거나 묻는 판을 확인할 수 없으면 "문서로 확인 안 됨" | 생성 노드(SPEC 2절) | 아직 돌리지 않음 |

@@ -16,13 +16,8 @@
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 네 번째 인자로 검색 방식(`hybrid` 기본·`dense`·`bm25`)을 고르고 summary의 `method`에 적음. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `run_skill_pair.py` — #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.run_skill_pair <새 결과 폴더>`. 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
-- `results/` — 평가 원시 결과
-- `results/tool_prompt_check_2026-11-03.json` — #21 도구 선택 프롬프트의 자유 인자 스키마 실패·중단 결과. 도구 선택5종의 필수 인자가 빈 객체여서 실패
-- `results/tool_prompt_check_2026-11-03_typed.json` — #22 명시적 인자 스키마로 같은 프롬프트·입력12건을 확인한 개발 결과. 실제 도구 호출은0회
-- `results/tool_prompt_check_2026-11-03_last.json` — #23 미실행 지시문 주입1건 확인과 #22 합산 검토. 서로 다른12건 확인, 도구/인자5/5·고정 행동11/12 일치
-- `results/langfuse_skill_check_2026-11-03_final.json` — 이전 등록 본문에 대한 사전 등록 #19의 합성4건·generation10개 타임라인 API 확인과 응답. 사용자 제공 UI6장으로 등록 목록·정격 조회·보장값 부재 흐름 확인 완료(범위는 JSON의 `ui_confirmation`). 동결셋 평가·전체 사례 UI 확인·실제 청구액 측정은 아님
-- `results/langfuse_skill_check_2026-11-03_current.json` — #20 현재 Skill 본문의 대표 흐름4건 재검증. 모델·프롬프트·Skill 버전·해시와 원격 타임라인을 기록
-- `results/skill_scenarios_2026-11-03_current.json` — #20 S1 7상황·S2 6상황의 생성 노드 직접 검증. 입력 근거·검토 기준·답변·원격 타임라인을 기록. Codex 답변 검토12/13 충족, 충돌1건 실패이며 전체 그래프/검색/동결 평가 결과와 구분
+- `results/` — 평가 결과
+- `results/skill_tool_summary_2026-11-03.json` — Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
 - `DRAFT_30_REVIEW.md` — 초안 30건의 질문·가정·예상 답변 방향과 검수 목록
 - `draft_50.jsonl` — 현재 50건(관련 25·비관련 25) 검수 초안. 52건에서 n22(관련)·n13(비관련)을 예비 이관. 사람 합의 43건·숫자형 기계 대조 7건. 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했고 이 파일은 검수 이력으로 남김

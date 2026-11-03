@@ -278,14 +278,29 @@ def test_case_timeline_requires_expected_nodes_and_order(broken):
 
 
 @pytest.mark.parametrize("broken", ["outside_parent", "uncovered_node"])
-def test_saved_timeline_rejects_generation_time_or_node_coverage(broken):
+def test_timeline_rejects_generation_time_or_node_coverage(broken):
     from scripts.langfuse_skill_check import validate_timeline
-    from pathlib import Path
     from copy import deepcopy
-    import json
-    result = json.loads((Path(__file__).resolve().parents[1] / "evals/results/langfuse_skill_check_2026-11-03_final.json").read_text())
-    case = result["cases"][0]
-    observations = deepcopy(case["timeline"])
+    def stamp(second):
+        return f"2026-01-01T00:00:{second:02d}+00:00"
+    def span(id, name, start, end, parent="root"):
+        return {"id": id, "type": "SPAN", "name": name, "parent_observation_id": parent,
+                "start_time": stamp(start), "end_time": stamp(end)}
+    def generation(id, parent, node, start, end):
+        return {"id": id, "type": "GENERATION", "parent_observation_id": parent,
+                "start_time": stamp(start), "end_time": stamp(end), "model": managed.CONFIG["model"],
+                "prompt_name": f"sojafit/{node}", "prompt_version": 4}
+    observations = [span("root", "sojafit-skill-rating", 0, 12, None),
+                    span("read", "read_input", 0, 1), span("route", "route", 1, 3),
+                    span("search", "search", 3, 4), span("grade", "grade", 4, 6),
+                    span("generate", "generate", 6, 8),
+                    generation("r", "route", "route", 1, 2),
+                    generation("g", "grade", "grade", 4, 5),
+                    generation("a", "generate", "generate", 6, 7)]
+    prompts = {name: SimpleNamespace(name=f"sojafit/{name}", version=4)
+               for name in ("route", "grade", "generate")}
+    validate_timeline(observations, prompts, 3, case_kind="rating")
+    observations = deepcopy(observations)
     generation = next(o for o in observations if o.get("prompt_name") == "sojafit/generate")
     if broken == "outside_parent":
         generation["start_time"] = "2099-01-01T00:00:00+00:00"
@@ -295,8 +310,7 @@ def test_saved_timeline_rejects_generation_time_or_node_coverage(broken):
         generation.update(parent_observation_id=route["id"], prompt_name="sojafit/route",
                           start_time=route["start_time"], end_time=route["end_time"])
     with pytest.raises(ValueError):
-        validate_timeline(observations, {k: SimpleNamespace(**v) for k, v in result["prompts"].items()},
-                          case["generations"], case_kind="rating")
+        validate_timeline(observations, prompts, 3, case_kind="rating")
 
 
 def test_load_existing_versions_rejects_unpublished_local_skill(monkeypatch, tmp_path):
