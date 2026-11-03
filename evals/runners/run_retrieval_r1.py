@@ -280,7 +280,7 @@ def run(args):
             oracle = next(c for c in out if c['cfg']['S'] == 'bm25')  # 답안지 검사: 단어 일치 검색만
             grid = sorted((c for c in out if c['cfg']['S'] == 'hybrid'), key=rank_key)
             res.update({'dev_cells': grid, 'dev_oracle_bm25': oracle, 'picked': grid[:3]})
-            print('고르기용 1~5위')
+            print('dev 세트 1~5위')
             for c in grid[:5]:
                 print(' ', c['name'], c['summary']['page_recall@5'], c['summary']['all_evidence@5'], c['summary']['page_mrr'])
             print('  답안지 검사(BM25만, 필터 없음)', oracle['summary']['page_hit@5'], oracle['summary']['page_recall@5'])
@@ -291,7 +291,7 @@ def run(args):
                                    for c in out[1:]]
             for c, cmp in zip(out[1:], res['test_compare']):
                 r = cmp['page_recall@5']
-                print('확인용', c['name'], base['summary']['page_recall@5'], '→', c['summary']['page_recall@5'], r['W'], r['L'], r['T'], r['ci95'], r['verdict'])
+                print('test 세트', c['name'], base['summary']['page_recall@5'], '→', c['summary']['page_recall@5'], r['W'], r['L'], r['T'], r['ci95'], r['verdict'])
     res['skipped'] = skipped
     D3.jdump(res, args.out)
     print('건너뜀', len(skipped), skipped[:3], '| 결과', args.out)
