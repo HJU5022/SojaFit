@@ -22,7 +22,7 @@
 
 ## How
 
-- `backend/rag/subset.py`: 독립 수동 CLI. `--manifest PATH --catalog CSV --chunks PATH --dataset PATH --out-dir NEW_DIR`를 명시해야 실행된다. catalog의 정확한 PDF 이름·5분류 집합으로만 선택하며 입력 덮어쓰기를 금지한다. 기본 실행 경로에는 연결하지 않는다.
+- `backend/rag/pipeline/subset.py`: 독립 수동 CLI. `--manifest PATH --catalog CSV --chunks PATH --dataset PATH --out-dir NEW_DIR`를 명시해야 실행된다. catalog의 정확한 PDF 이름·5분류 집합으로만 선택하며 입력 덮어쓰기를 금지한다. 기본 실행 경로에는 연결하지 않는다.
 - `RAG_VECTOR_TYPE=vector|halfvec`(기본 vector)은 이진 COPY 저장 형식을 고른다. float32 캐시는 보존하며 halfvec COPY에서만 변환한다. halfvec 검색은 `embedding::vector(1536) <=> 질문::vector(1536)`이다.
 - `ingest --cache-only`는 캐시가 없으면 API 호출 전에 실패한다. 기존 DB에 ingest를 반복해도 코퍼스가 삭제·축소되지 않는다. 기존 HNSW가 있을 때만 재색인한다.
 - `storage inspect`는 DB 전체·표 본문/TOAST·인덱스·확장 버전·열 형식을 보고한다. JSON의 250MB 목표는 최초 진단 기준이며 ADR 0005의 400MB 분리 검토 기준과 별개다.
@@ -41,7 +41,7 @@
 
 ### 확인 경계
 
-- 기존 `scripts/results/storage_contract_2026-11-02.json`은 이전 HNSW 재생성·halfvec 거리 경로의 합성 64행 기록이다. 평균 열 크기 6148→3076바이트이며 현재 경로의 재현 증거로 재사용하지 않는다.
+- 기존 `scripts/results/storage/storage_contract_2026-11-02.json`은 이전 HNSW 재생성·halfvec 거리 경로의 합성 64행 기록이다. 평균 열 크기 6148→3076바이트이며 현재 경로의 재현 증거로 재사용하지 않는다.
 - 현재 경로는 전용 PostgreSQL 계약 시험으로 확인한다. 실제 코퍼스·Supabase 확장 버전·전체 DB 용량·검색 품질은 별도 확인이 필요하다.
 
 ## AC

@@ -1,6 +1,6 @@
 """그래프 조립 (G4). 노드(`nodes.py`)를 이어 compile한 LangGraph 앱을 만들고 갈림길 두 개를 정한다.
 
-- 역할: `build_graph(retriever, checkpointer)`가 앱을 돌려주고, `evals/run_graph.py`(평가)와 시험이 `app.invoke({"input": ...})`로 돌린다.
+- 역할: `build_graph(retriever, checkpointer)`가 앱을 돌려주고, `evals/runners/run_graph.py`(평가)와 시험이 `app.invoke({"input": ...})`로 돌린다.
 - 하지 않는 일: 노드 동작(`nodes.py`), 상태 칸 정의(`state.py`), Supervisor·서브에이전트 분리와 사람 승인(interrupt)은 아직 없다(D5, SPEC 2절).
 - 출처: SPEC.md 2절 "그래프"(노드 표, 재검색 상한), backend/graph/GRAPH.md, ADR 0006(근거가 없어도 대화는 이어 간다), 강의 2주 20강.
 - 근거 충분 여부는 어휘 겹침 같은 점수 하나로 정하지 않고, 품번·개정판 같은 결정적 검사를 따로 둔다(채점 노드).

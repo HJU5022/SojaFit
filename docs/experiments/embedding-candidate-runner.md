@@ -73,7 +73,7 @@
 
 ### 구성
 
-- `evals/benchmark_embeddings.py`
+- `evals/runners/benchmark_embeddings.py`
   - 공통 표본 로딩, 검색, Recall@5·MRR·지연 계산은 유지한다.
   - 후보 명세에는 key, 모델 ID, 불변 revision, 라이선스 ID, 운영 분류, 기대 차원, `trust_remote_code`, 인코딩 방식을 둔다.
   - 모델별 차이는 문서와 질의를 인코딩하는 한 경계에서만 처리한다.
@@ -95,7 +95,7 @@
 | Nomic v2 | 공식 모델 카드의 document prefix | 공식 모델 카드의 query prefix |
 | Arctic v2 | 원문 | 공식 `query` prompt |
 
-입력 형식은 결과를 본 뒤 수정하지 않는다. 문구를 바꾸는 실험은 `evals/preregister.md`에 별도로 등록한다.
+입력 형식은 결과를 본 뒤 수정하지 않는다. 문구를 바꾸는 실험은 `evals/guides/preregister.md`에 별도로 등록한다.
 
 ### 데이터 흐름
 

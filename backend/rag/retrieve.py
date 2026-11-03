@@ -6,7 +6,7 @@
   DEMO_MODE=1(키 없는 데모)이면 임베딩 API를 부르지 않고 BM25만으로 찾는다(SPEC 7절).
 - 하지 않는 일: 리랭킹, 품번 밖 메타데이터 필터(분류·패키지 등), 질문에서 품번 뽑기(에이전트가 parts로 준다, `backend/graph/nodes.py`), 답변 생성, 판정(`backend/judge/`).
 - 출처: docs/specs/rag-pipeline.md What 6·How·AC-05~AC-11·EC-06~EC-08, EVAL_REPORT.md 1장 하이브리드 검색 비교·HNSW 개선 실험 B,
-  evals/preregister.md #6·#16, SPEC.md 7절
+  evals/guides/preregister.md #6·#16, SPEC.md 7절
 
 [주의] 대상 필터(품번 등)는 결과를 받은 뒤 거르지 않고 검색 단계의 인자로 받는다. 후처리로 거르면 결과가 0~2개로 굶어
 "우연한 거절"이 생기고 점수가 실제보다 좋게 나온다. score의 뜻과 범위는 검색 방식마다 달라 거절 임계값도 방식마다 따로 정한다.
@@ -138,7 +138,7 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, metho
     출력: {chunk_id, document_key, file, page, table, content, score, doc_parts, dense_rank, bm25_rank} 목록(RRF 점수 높은 순).
     주의: parts=None은 필터 없음(코퍼스 전체), parts=[]는 필터는 있되 허용 카드가 없으므로 []이다. method가 셋 밖이면 ValueError.
     """
-    # [왜] 방식별 기준선(dense만·BM25만, evals/preregister.md #16)을 같은 함수로 재려고 둔다
+    # [왜] 방식별 기준선(dense만·BM25만, evals/guides/preregister.md #16)을 같은 함수로 재려고 둔다
     if method not in ('hybrid', 'dense', 'bm25'):
         raise ValueError(f"method는 'hybrid', 'dense', 'bm25' 중 하나입니다: {method!r}")
     if _bm25 is None:

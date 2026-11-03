@@ -1,5 +1,28 @@
 # jeongun 작업 기록
 
+## 2026-11-03 폴더 안에서도 성격별로 묶는다(구조 2차 정리)
+- 한 일
+  - 한 폴더 바로 아래에 코드·데이터·문서가 섞인 곳을 하위 폴더로 나눴다. `evals/`는 루트에 동결 평가셋만 두고 `runners/`·`guides/`·`samples/`·`drafts/sets/`·`drafts/reviews/`·`results/<주제>/`로, `scripts/`는 `auth/`·`langfuse/`·`results/<주제>/`로, `db/` 문서는 `schema/`로, `backend/rag/`의 오프라인 도구는 `pipeline/`로, `memory.py`는 `graph/`로, `tests/`는 `api/`·`graph/`·`rag/`·`services/`·`evals/`·`judge/`·`repo/`로 옮겼다.
+  - 모듈 이름이 바뀌었다: `python -m backend.rag.pipeline.<모듈>`, `python -m evals.runners.<이름>`. 코드·시험·문서의 경로와 import를 같이 고쳤다.
+  - 문서가 정한 앞으로의 자리를 만들었다: `.gitkeep` 폴더 7개(`backend/judge/rules/`, `backend/web/templates/`·`static/`, `data/corpus/public/`·`injection_tests/`, `docs/deliverables/langfuse/`, `tests/fixtures/`)와 `tests/judge/`. 아직 없는 파일은 `SOJAFIT.md` 트리에 `(예정)`으로 적었다(judge 파일 이름은 후보).
+  - `tests/repo/test_repo_layout.py`에 한 폴더 한 종류 시험과 `(예정)` 처리를 더했다. 규칙은 `SOJAFIT.md` 이름 규칙과 AGENTS.md 지킬 것 9번에 적었다.
+  - v2 동결 작업(위 항목)의 초안·검토표도 `drafts/sets/`·`drafts/reviews/`로 옮겼다.
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 165 passed, 24 skipped. 상대 링크 검사 깨진 링크 0.
+- 확인 못 한 것: 팀원 브랜치(OSC·STH)는 옛 경로로 작업 중이라 main을 받을 때 충돌한다. 저장소 밖 실험 스크립트가 옛 경로(`evals/results/` 바로 아래 등)에 쓰는지는 보지 않았다.
+- 다음 할 일: PR 뒤 OSC·STH에 새 경로를 알린다.
+
+## 2026-11-03 평가셋 v2 동결: v1 50건 + 후보 찾기 20건, 질문 종류 칸
+- 한 일
+  - `evals/dataset_v2.jsonl` 70건(관련 35·비관련 35)을 만들고 `evals/freeze.py`로 동결했다(sha256 `81582c59…`, `FROZEN.json`). v1 50건 줄에는 `question_type`만 더했고, 추가 20건은 Codex 초안(11-01)을 하정운 1차·김재훈 2차 사람 판정에서 모두 O로 받은 것이다.
+  - `question_type`은 그래프 라우팅 코드(`role`·`rating`·`candidate_judge`·`candidate_find`)를 쓴다. 비관련은 `null`. v1 관련 25건은 역할 6·정격 10·후보 판정 9, 추가 관련 10건은 후보 찾기다. e04·e05·m05·n21은 라우팅 LLM(11-02) 라벨과 달리 값을 묻는 질문이라 정격으로 뒀다.
+  - 후보 찾기는 열린 정답이라 `evals/run_retrieval.py`가 검색 순위로 채점하지 않고 `candidate_find_skipped`에 id만 적게 했다.
+  - 초안과 검토표를 `evals/drafts/draft_v2add_20.jsonl`·`draft_v2add_20_review.md`로 옮기고, `SOJAFIT.md` 트리·`EVALS.md`·`DRAFTS.md`·`dataset-guide.md`·`EVAL_REPORT.md` 2장 v2 칸을 고쳤다.
+  - `tests/test_frozen_evals.py`에 v2 앞 50건이 v1과 같은지(`question_type` 빼고) 보는 시험을 더했다.
+- 만든 방법: 저장소 밖 `전자_데이터시트/evidence/v2_build/make_v2.py`(Codex 근거 `corpus_txt/○○.txt, N쪽`을 `○○.pdf, N쪽`으로, `netlists/○○.net`을 문항의 레포 넷리스트 경로로 바꿈. 비관련은 v1처럼 `gold_chunks` 빈 목록).
+- 확인: v2 앞 50건 == v1(`question_type` 빼면), v1 해시 그대로(`2fef02c2…`), `freeze.py --check` 통과, `uv run --offline pytest -q` 164 passed · 24 skipped.
+- 확인 못 한 것: v2로 다시 잰 검색·그래프 점수(아직 안 잼), 후보 찾기 공식 채점 방법(사양 표 조건 거르기, 저장소 밖 탐색 `전자_데이터시트/evidence/spec_table/`만 있음).
+- 다음 할 일: v2로 단일 에이전트 기준 점수 다시 재기(`dataset-guide.md` 동결 계획), 후보 찾기 경로에서 원래 부품 품번 필터를 끄고 사양 표로 후보 내기.
+
 ## 2026-11-03 저장소 구조 정리: 폴더 설명 파일을 `<대문자 폴더명>.md`로 되돌리고 파일 위치를 SOJAFIT.md 트리로 묶는다(ADR 0012)
 - 한 일
   - origin/main(e25558a)으로 빠르게 맞춘 뒤 문서·코드 전체를 다시 읽었다.

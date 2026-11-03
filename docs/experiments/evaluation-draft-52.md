@@ -19,8 +19,8 @@
 
 ## How
 
-- `evals/drafts/draft_50.jsonl`에서 draft52-n22·draft50-n13 행만 바이트 그대로 분리한다. ID를 다시 매기지 않는다.
-- `evals/drafts/draft_50_review.md`(당시 `DRAFT_50_REVIEW.md`)에서 현재 구성을 50건으로 표시하고 예비 문항의 본편 검토란은 제거한다. 이전 판정 기록은 별도 사본에 보존한다.
+- `evals/drafts/sets/draft_50.jsonl`에서 draft52-n22·draft50-n13 행만 바이트 그대로 분리한다. ID를 다시 매기지 않는다.
+- `evals/drafts/reviews/draft_50_review.md`(당시 `DRAFT_50_REVIEW.md`)에서 현재 구성을 50건으로 표시하고 예비 문항의 본편 검토란은 제거한다. 이전 판정 기록은 별도 사본에 보존한다.
 - EVALS·SPEC·평가 리포트·ADR 0008과 지도를 같은 변경에서 맞춘다. 과거 원시 결과는 덮어쓰지 않는다.
 
 ## AC

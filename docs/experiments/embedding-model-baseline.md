@@ -36,7 +36,7 @@
 
 ## How
 
-- 표본: `evals/embedding_sample_v0.jsonl`; 실제 코퍼스가 아니며 공식 제품표의 대표 사양을 재서술한 프록시다.
+- 표본: `evals/samples/embedding_sample_v0.jsonl`; 실제 코퍼스가 아니며 공식 제품표의 대표 사양을 재서술한 프록시다.
 - 지표: 질의당 gold 1개, `Recall@5 = hit 질의 수 / 전체 질의 수`, `MRR = mean(1 / 첫 gold 순위)`.
 - 검색: L2 정규화한 dense vector의 내적, 리랭커 없음.
 - Qwen 질의 형식: 문서는 원문 그대로 임베딩하고 질의에만 사전 고정한 영문 instruction을 붙인다. 이는 Qwen 후보 구성의 일부이며 결과를 본 뒤 문구를 튜닝하지 않는다.

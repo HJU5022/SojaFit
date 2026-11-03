@@ -17,7 +17,7 @@
   - 청킹 결과가 11-01 실험과 같다: 카드 52,244장, 서로 다른 본문 45,898개
   - 로컬 DB에 문서 1,360건, 청크 52,244개, 임베딩 52,244개(1536차원)가 들어간다
   - 평가셋 관련 문항으로 검색 지표가 오류 없이 나온다. 베이스라인 점수는 v1(11-02 동결)로 잰다
-- **Out of Scope**: 리랭킹과 품번 밖 메타데이터 필터(D3, 사전 등록 뒤), 질문에서 품번 뽑기(에이전트가 `parts`로 준다), 임베딩 모델 비교(`evals/preregister.md` #1·#2), 증분 수집 자동화, Supabase 적용, 공개 문서(KiCad 등) 수집
+- **Out of Scope**: 리랭킹과 품번 밖 메타데이터 필터(D3, 사전 등록 뒤), 질문에서 품번 뽑기(에이전트가 `parts`로 준다), 임베딩 모델 비교(`evals/guides/preregister.md` #1·#2), 증분 수집 자동화, Supabase 적용, 공개 문서(KiCad 등) 수집
 
 ## What
 
@@ -28,7 +28,7 @@
 4. `chunk`: Docling JSON을 카드로 자른다. PDF마다 품번 표지 1장, 표 밖 글은 HybridChunker, 표는 한 행 = 카드 한 장(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표). 문서 목록 `data/manifest.jsonl`도 쓴다. manifest에는 문서마다 다른 값만 쓰고, 모든 문서에 같은 값은 `chunk.py`의 `DOC_DEFAULTS`에 둔다(512,000바이트 아래, Checkpoint 대시보드가 읽는 크기).
 5. `ingest`: 문서와 카드를 `source_documents`·`document_chunks`에, 임베딩을 `chunk_embeddings`에 넣는다. 이미 만든 벡터는 본문 해시로 다시 쓴다.
 6. `retrieve(question, k=5, parts=None)`: dense 상위 50개와 BM25 상위 50개를 RRF로 합쳐 상위 k개를 돌려준다. `parts`를 주면 그 품번이 표지에 적힌 문서의 카드 안에서만 찾는다.
-7. `evals/run_retrieval.py`: 평가셋 관련 문항의 지표를 계산해 `evals/results/`에 남긴다.
+7. `evals/runners/run_retrieval.py`: 평가셋 관련 문항의 지표를 계산해 `evals/results/`에 남긴다.
 
 **Edge Cases**
 

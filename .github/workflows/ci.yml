@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # 인증 통합 테스트(tests/test_auth.py)용 격리 PostgreSQL. 운영·개발 DB와 무관한 일회용 컨테이너다.
+    # 인증 통합 테스트(tests/api/test_auth.py)용 격리 PostgreSQL. 운영·개발 DB와 무관한 일회용 컨테이너다.
     services:
       auth-db:
         image: postgres:16

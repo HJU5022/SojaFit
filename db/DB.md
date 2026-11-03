@@ -1,9 +1,9 @@
 # db
 
 ## 역할
-- 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL과 스키마 문서(`erd.md`, `table-definition.md`)를 둡니다. 자동 실행하지 않는 SQL은 `manual/`에 둡니다.
-- 넣는 것: 확장·스키마·인덱스 생성 SQL, 표 설계를 설명하는 문서. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/ingest.py`가 합니다(적재 SQL은 아직 없음). 로컬 Compose 데모 계정은 `007_demo_accounts.sql`이 `.env`의 이메일·scrypt 해시로 만들고, 그 밖의 계정은 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 넣지 않습니다.
-- 넣지 않는 것: 평가용 계정 비밀번호(강사에게 따로 제출), 원본 문서(`data/corpus/`), 자동 실행하면 안 되는 SQL(`db/manual/`).
+- 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL만 바로 아래에 둡니다. 스키마 문서는 `schema/`, 자동 실행하지 않는 SQL은 `manual/`에 둡니다. Compose가 `./db`를 Postgres 초기화 폴더로 마운트해 최상위 `.sql`만 실행하므로 SQL을 하위 폴더로 옮기지 않습니다.
+- 넣는 것: 확장·스키마·인덱스 생성 SQL. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/pipeline/ingest.py`가 합니다(적재 SQL은 아직 없음). 로컬 Compose 데모 계정은 `007_demo_accounts.sql`이 `.env`의 이메일·scrypt 해시로 만들고, 그 밖의 계정은 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 넣지 않습니다.
+- 넣지 않는 것: 표 설계 문서(`db/schema/`), 평가용 계정 비밀번호(강사에게 따로 제출), 원본 문서(`data/corpus/`), 자동 실행하면 안 되는 SQL(`db/manual/`).
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
 ## 실행과 주의
@@ -21,8 +21,7 @@
 - `006_user_roles.sql` — 계정 역할 추가. 기존 계정은 일반 사용자로 유지하며 관리자는 `python -m backend.auth --role admin`으로 따로 만든다
 - `007_demo_accounts.sql` — 로컬 Compose용 관리자·일반 데모 계정 생성. 데모 모드 기본 계정 또는 네 환경변수로 지정한 이메일·scrypt 해시를 사용한다. `$`가 포함된 해시는 `.env`에서 작은따옴표로 감싼다. 실제 계정 비밀번호는 저장소에 두지 않는다. 새 볼륨 초기화 때 한 번 실행
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
-- `erd.md` — 표마다 하는 일 한 줄과 만든 곳. SQL로 표를 바꾸면 같은 PR에서 고칩니다
-- `table-definition.md` — 업무 표(회로·판정·견적)의 컬럼·관계·제약 설계 초안과 검토 항목. 열의 정본은 SQL입니다
+- `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 
 ## 기존 DB 인증 스키마 적용 전 점검
 

@@ -61,14 +61,14 @@ PR 인증 리뷰에서 요청한 두 계정의 세션 분리, 잠금·만료 경
 
 ## 재현 자료
 
-- [경계값 측정 스크립트](../../scripts/auth_boundary_after_merge.py)와 [원시 JSON](../../scripts/results/auth_boundary_2026-11-02.json)
-- [scrypt·메모리 측정 스크립트](../../scripts/measure_scrypt_concurrent.py)와 [원시 JSON](../../scripts/results/scrypt_concurrent_2026-11-02.json)
+- [경계값 측정 스크립트](../../scripts/auth/auth_boundary_after_merge.py)와 [원시 JSON](../../scripts/results/auth/auth_boundary_2026-11-02.json)
+- [scrypt·메모리 측정 스크립트](../../scripts/auth/measure_scrypt_concurrent.py)와 [원시 JSON](../../scripts/results/auth/scrypt_concurrent_2026-11-02.json)
 
 저장소 루트에서 프로젝트 의존성을 설치한 뒤 격리된 테스트 전용 PostgreSQL을 준비하고 `TEST_AUTH_DATABASE_URL`을 설정해 다음처럼 실행한다.
 
 ```powershell
-uv run python scripts/auth_boundary_after_merge.py
-uv run python scripts/measure_scrypt_concurrent.py
+uv run python scripts/auth/auth_boundary_after_merge.py
+uv run python scripts/auth/measure_scrypt_concurrent.py
 ```
 
 두 스크립트는 `TEST_AUTH_DATABASE_URL`에 `127.0.0.1:55434/ci_auth`가 포함돼야 실행된다. 메모리 측정 스크립트는 Windows `GetProcessMemoryInfo` API를 사용하므로 Windows에서만 실행된다. 이 검사는 로컬 테스트 DB 전용이다. 경계 스크립트는 트랜잭션을 롤백하고, 메모리 스크립트는 자신이 만든 임시 계정만 정리한다. 결과는 `scripts/results/`에 측정 날짜(KST)를 붙인 JSON으로 쓰고, 같은 날 다시 실행하면 그 파일을 덮어쓴다. 같은 날 결과를 비교하려면 실행 전에 기존 JSON을 별도 이름으로 복사한다.
