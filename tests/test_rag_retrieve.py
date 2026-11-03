@@ -1,6 +1,9 @@
-"""검색 규칙(docs/specs/rag-pipeline.md AC-05~11)을 지킨다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
+"""검색 규칙을 지킨다.
 
-[주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 시험에 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
+- 역할: RRF 순서, BM25 토큰(한국어 조사), gold_chunks에서 정답 문서·쪽 읽기, 표지 카드 -> 품번 색인과 품번 전체 일치 필터, BM25 0점 제외, 데모 모드·method='bm25'에서 임베딩 API 안 부름, 없는 method의 ValueError를 확인한다. 맨 아래 실제 DB 시험은 TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다.
+- 하지 않는 일: 검색 품질(Recall@k 등)은 재지 않는다(evals/run_retrieval.py).
+- 출처: docs/specs/rag-pipeline.md AC-05~11, EC-06~08
+- [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 시험에 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
 """
 import json
 import os

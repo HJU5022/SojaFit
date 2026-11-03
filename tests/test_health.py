@@ -1,3 +1,9 @@
+"""/health 응답과 미구현 루트 화면의 404를 확인한다.
+
+- 역할: 서버가 뜨는지 알리는 /health 응답 형식과, 아직 없는 루트 경로가 404인지 확인한다.
+- 하지 않는 일: 화면·인증·DB는 보지 않는다.
+- 출처: docs/GATES.md G1·G2(배포 상태 확인, 아래 테스트 주석)
+"""
 from fastapi.testclient import TestClient
 
 from backend.main import app

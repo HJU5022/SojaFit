@@ -1,4 +1,9 @@
-"""파싱 도구(backend/rag/parse.py)의 Docling 없이 도는 부분: 숫자 세기, 표 좌표 바꾸기, 시간 제한 지원 여부."""
+"""파싱 도구(backend/rag/parse.py)의 Docling 없이 도는 부분: 숫자 세기, 표 좌표 바꾸기, 시간 제한 지원 여부.
+
+- 역할: 숫자 세기(µ 통일), 표 좌표 바꾸기, SIGALRM 지원 여부를 확인한다.
+- 하지 않는 일: Docling 변환과 실제 PDF 파싱은 하지 않는다.
+- 출처: docs/specs/rag-pipeline.md What 3, EC-02·EC-10
+"""
 import signal
 
 from backend.rag import parse
