@@ -35,7 +35,7 @@ def projected_size(db_bytes, n_chunks):
 
 def snapshot(conn):
     """현재 상태 숫자 묶음(읽기 전용)."""
-    q = lambda sql, *a: conn.execute(sql, a).fetchone()[0]
+    q = lambda sql, *a: conn.execute(sql, a or None).fetchone()[0]  # [주의] 인자 없이 빈 튜플을 넘기면 psycopg가 LIKE의 %를 자리표시로 읽는다
     return {
         'coltype': q("SELECT format_type(atttypid, atttypmod) FROM pg_attribute WHERE attrelid = 'chunk_embeddings'::regclass"
                      " AND attname = 'embedding' AND NOT attisdropped"),
@@ -114,6 +114,8 @@ def verify(conn, vec_dir):
 def main(argv):
     if not argv or argv[0] not in ('check', 'migrate', 'verify'):
         sys.exit('사용법: voyage_rollout.py check|migrate|verify [벡터 폴더]')
+    from dotenv import load_dotenv
+    load_dotenv()  # [왜] DATABASE_URL을 .env에서 읽는다(llm.py와 같은 방식). 이 스크립트는 llm을 import하지 않는다
     from backend.rag.retrieve import _connect
     with _connect() as conn:  # 예외 없이 끝나면 커밋, 예외면 롤백
         if argv[0] == 'check':
