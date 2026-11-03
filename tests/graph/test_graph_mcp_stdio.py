@@ -20,7 +20,7 @@ def _has_corpus():
 
 
 @pytest.mark.skipif(not _has_corpus(), reason="TEST_DATABASE_URL에 격리 코퍼스가 있을 때만 돈다")
-def test_graph_reaches_real_search_through_stdio_mcp(monkeypatch):
+def test_graph_reaches_real_search_through_stdio_mcp_within_cold_start_budget(monkeypatch):
     env = {"DATABASE_URL": os.environ["TEST_DATABASE_URL"],
            "DEMO_MODE": "1", "EXA_WEB_SEARCH_ENABLED": "0"}
     chosen = []
@@ -37,7 +37,7 @@ def test_graph_reaches_real_search_through_stdio_mcp(monkeypatch):
         raise AssertionError(f"예상하지 않은 LLM 호출: {schema.__name__}")
 
     monkeypatch.setattr(nodes.llm, "chat", fake_chat)
-    with StdioMcpRetriever(env=env, timeout_seconds=30.0) as retriever:
+    with StdioMcpRetriever(env=env, timeout_seconds=10.0) as retriever:
         app = build_graph(retriever=retriever)
         state = app.invoke({"input": "질문: SS34 정격이 어떻게 돼?"})
     assert state["path"] == ["입력 읽기", "라우팅", "검색", "채점", "생성"]

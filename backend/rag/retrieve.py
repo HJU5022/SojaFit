@@ -14,6 +14,10 @@
 import os
 import re
 from urllib.parse import unquote, urlparse
+
+# [왜] FastMCP 요청 worker에서 처음 import하면 첫 search_corpus가 멈출 수 있어 서버 시작 스레드에서 미리 읽는다.
+import numpy as np
+
 from backend.rag.storage import vector_type
 
 N_CAND = 50  # 방식마다 합치기 전에 가져오는 후보 수
@@ -88,7 +92,6 @@ def warmup():
 
 def positive_top(scores, ids, n):
     """BM25 점수가 0보다 큰 카드 id를 높은 순으로 n개까지 돌려준다. 질문 단어가 하나도 안 맞으면 빈 목록이다(AC-10)."""
-    import numpy as np
     # [왜] 점수 0인 카드까지 넣으면 질문과 상관없는 카드 50장이 RRF 후보로 들어간다(허용 밖 -inf도 같이 빠진다)
     return [ids[j] for j in np.argsort(-np.asarray(scores), kind='stable')[:n] if scores[j] > 0]
 
@@ -96,7 +99,6 @@ def positive_top(scores, ids, n):
 def _dense(conn, question, allowed=None):
     """질문 벡터와 코사인 거리가 가까운 카드 id를 N_CAND개까지 가까운 순으로 돌려준다(벡터 검색, dense)."""
     # allowed가 있으면 그 카드 안에서만 잰다. DEMO_MODE면 빈 목록(AC-11)
-    import numpy as np
     from backend.services import llm
     if llm.DEMO_MODE:  # [왜] 평가자에게는 키가 없다. 데모 모드는 임베딩 API 없이 BM25만 쓴다(SPEC 7절)
         return []
@@ -121,7 +123,6 @@ def _dense(conn, question, allowed=None):
 def _keyword(question, allowed=None):
     """질문의 BM25(키워드 검색) 상위 카드 id를 N_CAND개까지 돌려준다. allowed가 있으면 그 카드 안에서만 찾는다."""
     # [주의] _bm25는 warmup()이 만든다. retrieve()가 먼저 부르므로 여기서는 만들지 않는다
-    import numpy as np
     index, ids = _bm25
     if index is None:
         return []
