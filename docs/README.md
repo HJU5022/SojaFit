@@ -19,5 +19,4 @@
 - [auth-login-verification.md](auth-login-verification.md) — 인증 세션·시간 경계·scrypt 로컬 실측 기록. 측정 스크립트는 `scripts/`, 원시 결과는 `evals/results/`
 - [auth-feedback-key-verification.md](auth-feedback-key-verification.md) — 로그인 피드백·AUTH_SECRET 실제 키 사용과 역할별 실측
 - [model-licenses.md](model-licenses.md) — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부
-- [embedding-hybrid-frozen100-decision.md](embedding-hybrid-frozen100-decision.md) — 동결 19질의·TSC 100문서에서 관리형 API 5종의 Dense/Hybrid와 고정 Qwen3 API 리랭커 차이, 문서 지표·인용 지표별 표본 범위 우선 후보
 - [embedding-candidate-investigation.md](embedding-candidate-investigation.md) — 임베딩 후보 13종을 넣은 이유, 개별 조사·실행 과정, 중단 사유와 다음 평가 조건

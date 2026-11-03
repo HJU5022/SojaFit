@@ -10,9 +10,7 @@
 - `test_health.py` — `/health` 응답과 미구현 루트 화면의 404 확인
 - `test_auth.py` — 인증 단위 및 DB 통합 테스트(세션 HMAC과 키 누락·교체, 데모 시드 기본값·사용자 지정·불완전 설정·모드 제한, 두 사용자 세션 격리, 관리자와 일반 사용자 권한, 비활성 사용자와 세션 폐기, 실패 구간·잠금 경계, 30분 유휴·8시간 절대 만료 경계, scrypt 동시 검증 상한, HTTPS 쿠키·출처, DB 오류, 비밀번호 해시 전용 CLI). CI는 격리 PostgreSQL을 제공하며, 로컬에서는 테스트 전용 `TEST_AUTH_DATABASE_URL`이 없으면 DB 시험을 건너뜀
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. 지금은 v1(`dataset_v1.jsonl`, 2026-11-02 동결)을 검사하며, `FROZEN.json`이 없으면 검사하지 않고 통과합니다
-- `test_llm.py` — API 호출 없이 가짜 모델로 임베딩 옵션·OpenRouter 및 Voyage/Cohere 직접 임베딩·리랭크 응답 정규화와 `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령 확인
-- `test_frozen_reranker.py` — 100문서 표본의 고정 Qwen3 리랭커 후보·비용·진행 재개·오류 공개 계약 확인. 최종 18조합 테스트와 구분
-- `test_reranker_matrix.py` — 임베딩 6종 × 리랭커 3종의 18행, RRF 최대 100후보, 선택한 임베딩 한 종만 재개할 때의 벡터·비용 범위, 실패 행 보존과 순위 회귀 집계
+- `test_llm.py` — API 호출 없이 가짜 모델로 임베딩 반환 계약과 `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령 확인
 - `test_graph_state.py` — 그래프 상태의 `tries`·`path`는 쌓이고 나머지 칸은 덮어써지는지 확인
 - `test_graph_route.py` — 라우팅 노드: 가짜 LLM으로 `route.md` 프롬프트와 대상·질문이 넘어가고 질문 종류가 메모장에 적히는지 확인
 - `test_graph_generate.py` — 생성 노드: 통과 카드와 넷리스트만 넘기는지, 없는 근거 인용(999)·인용 없는 문장을 세는지, "문서로 확인 안 됨"은 인용 없는 문장으로 세지 않는지, 근거가 없으면 LLM을 부르지 않는지 가짜 LLM으로 확인
