@@ -203,6 +203,9 @@ SojaFit (proj3-b)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
+│   │   ├── MCP_SKILL.md    <- 폴더 설명
+│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   └── JUDGE.md        <- 폴더 설명
 │   ├── repo/               <- 저장소 구조 규칙
@@ -238,7 +241,8 @@ SojaFit (proj3-b)
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
-│   │   └── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+│   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+│   │   └── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
@@ -256,6 +260,16 @@ SojaFit (proj3-b)
 │   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
 │   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
 │   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+│   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+│   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
+│   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
+│   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
+│   │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
+│   │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
+│   │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
+│   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
+│   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
+│   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
 │   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
@@ -310,6 +324,7 @@ SojaFit (proj3-b)
 | `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |
 | `tests/services/` | [SERVICES.md](tests/services/SERVICES.md) | 서비스·운영 |
 | `tests/evals/` | [EVALS.md](tests/evals/EVALS.md) | 평가·문서 |
+| `tests/mcp_skill/` | [MCP_SKILL.md](tests/mcp_skill/MCP_SKILL.md) | 가산을 시작할 때 정함 |
 | `tests/judge/` | [JUDGE.md](tests/judge/JUDGE.md) | 에이전트 |
 | `tests/repo/` | [REPO.md](tests/repo/REPO.md) | 조장 |
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |

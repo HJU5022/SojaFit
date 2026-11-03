@@ -13,6 +13,7 @@
 - `api/` — 서버 API·인증 시험. [API.md](api/API.md)
 - `evals/` — 동결 감시·평가 실행기·Skill 쌍 시험. [EVALS.md](evals/EVALS.md)
 - `graph/` — 질문 처리 그래프 노드 시험. [GRAPH.md](graph/GRAPH.md)
+- `mcp_skill/` — MCP 서버 도구 5종 시험(외부 호출 없음). [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
 - `judge/` — 판정 코드 시험 자리. 판정 코드와 같은 PR에서 넣습니다. [JUDGE.md](judge/JUDGE.md)
 - `fixtures/` — 단위 테스트용 가공 회로 자리(설명 파일 없음, 지금은 `.gitkeep`뿐)
 - `rag/` — 수집·파싱·청킹·적재·검색 시험. [RAG.md](rag/RAG.md)
