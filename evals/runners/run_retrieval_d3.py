@@ -319,7 +319,7 @@ def name(cfg):
 def search(cfg, q, ctx):
     """서비스 retrieve()와 같은 순서: 필터 → dense·키워드 후보 → RRF → (리랭크). 동점은 카드 순서로 고정한다."""
     import numpy as np
-    from backend.rag.search import retrieve as R
+    from backend.rag import retrieve as R
     index = ctx['index'][cfg['chunk']]
     text = q['text'][cfg['Q']]
     allowed = index.allowed(cfg['F'], q['parts'])
@@ -462,8 +462,9 @@ def context(args, chunks=('C',)):
     return {'qs': qs, 'index': index, 'vec': Vectors(args), 'rr': Reranker(args.rerank_cache)}
 
 
-def official_cells():
-    """사전 등록 #24의 공식 칸: 기준 하나에서 한 조건만 바꾸고(E1~E8), 칸마다 필터 끔도 잰다."""
+def official_cells(extra_rerankers=()):
+    """사전 등록 #24의 공식 칸: 기준 하나에서 한 조건만 바꾸고(E1~E8), 칸마다 필터 끔도 잰다.
+    extra_rerankers: GPU에서 돌릴 로컬 CrossEncoder 이름(예: BAAI/bge-reranker-v2-m3). 비어 있으면 Voyage 2종만."""
     cells = []
 
     def add(exp, base_cfg, **change):
@@ -472,7 +473,7 @@ def official_cells():
 
     for S, kw in (('dense', 'bm25'), ('bm25', 'bm25'), ('bm25', 'tfidf'), ('hybrid', 'tfidf')):
         add('E1', BASE, S=S, kw=kw)
-    for rr in ('rerank-3', 'rerank-3-lite'):
+    for rr in ('rerank-3', 'rerank-3-lite', *extra_rerankers):
         add('E2', BASE, rerank=rr)
     for F in (None, 'category', 'kind', 'part+kind'):
         cells.append(('E3', BASE, dict(BASE, F=F)))
@@ -495,11 +496,12 @@ PRIMARY = ('page_hit@5', 'page_recall@5', 'page_recall_rec@5', 'all_evidence@5',
 
 
 def official(args):
-    chunks = sorted({c for _, a, b in official_cells() for c in (a['chunk'], b['chunk'])})
+    cells = official_cells(tuple(x for x in (args.extra_rerankers or '').split(',') if x))
+    chunks = sorted({c for _, a, b in cells for c in (a['chunk'], b['chunk'])})
     avail = [c for c in chunks if c == 'C' or (Path(args.chunk_dir) / f'{c}.f32').exists()]
     ctx = context(args, avail)
     done, comps, skipped = {}, [], []
-    for exp, a, b in official_cells():
+    for exp, a, b in cells:
         try:
             for cfg in (a, b):
                 if name(cfg) not in done:
@@ -702,6 +704,7 @@ def main():
     p.add_argument('--docling-dir', default=str(OUTSIDE / 'corpus/tsc/parsed/docling'))
     p.add_argument('--rerank-cache', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/out/rerank_cache.jsonl'))
     p.add_argument('--out', default=None)
+    p.add_argument('--extra-rerankers', default='', help='E2에 더할 로컬 CrossEncoder(쉼표). GPU 단계에서만')
     a = p.parse_args()
     os.environ.setdefault('DEMO_MODE', '0')  # [주의] 기본값 1이면 서비스 retrieve가 dense를 끈다. 이 실행기는 retrieve()를 부르지 않지만 llm 설정을 맞춘다
     sys.path.insert(0, str(ROOT))
