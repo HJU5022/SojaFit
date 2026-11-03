@@ -1,4 +1,9 @@
-"""수집 도구(backend/rag/collect.py)를 네트워크 없이 지킨다: xlsx 목록 합치기, manifest로 받기, 실패 기록."""
+"""수집 도구(backend/rag/collect.py)를 네트워크 없이 지킨다.
+
+- 역할: xlsx 목록 합치기, manifest로 받기(파일 이름은 source_url 끝, sha256 대조, PDF 아님·해시 다름은 failed.csv), 다시 돌리면 건너뛰기를 확인한다.
+- 하지 않는 일: 실제 다운로드는 하지 않는다.
+- 출처: docs/specs/rag-pipeline.md What 1·2, EC-01·EC-09
+"""
 import csv
 import hashlib
 import io
@@ -51,3 +56,27 @@ def test_download_from_manifest_checks_pdf_and_sha(tmp_path, monkeypatch):
     failed = {r['file']: r['error'] for r in csv.DictReader(open(tmp_path / 'failed.csv', encoding='utf-8'))}
     assert 'sha256' in failed[bad_sha] and 'PDF가 아님' in failed[html]
     assert collect.download(str(manifest), str(pdf_dir)) == (0, 1, 2)  # 다시 돌리면 받은 것은 건너뛴다
+
+
+def test_encode_does_not_double_escape():
+    assert collect.encode('https://a.b/x%20y.pdf') == 'https://a.b/x%20y.pdf'
+
+
+def test_read_targets_rejects_non_https_and_path_traversal(tmp_path):
+    bad = tmp_path / 'bad.csv'
+    bad.write_text('file,url\nx.pdf,file:///etc/passwd\n', encoding='utf-8')
+    try:
+        collect.read_targets(str(bad))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('file:// 주소를 받아들였다')
+    trav = tmp_path / 'trav.csv'
+    trav.write_text('file,url\n../../x.pdf,https://a.b/x.pdf\n', encoding='utf-8')
+    assert collect.read_targets(str(trav))[0]['file'] == 'x.pdf'  # 폴더 밖으로 나가지 못한다
+
+
+def test_manifest_file_name_is_unquoted(tmp_path):
+    m = tmp_path / 'm.jsonl'
+    m.write_text(json.dumps({'source_url': 'https://a.b/1N4148%20SERIES_K2301.pdf'}) + '\n', encoding='utf-8')
+    assert collect.read_targets(str(m))[0]['file'] == '1N4148 SERIES_K2301.pdf'
