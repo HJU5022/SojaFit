@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import hmac
 import os
+import re
 import secrets
 import sys
 
@@ -22,6 +23,7 @@ import psycopg
 from fastapi import HTTPException, Request
 
 COOKIE = "sojafit_session"
+EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # [왜] scrypt 검증 한 번에 128MiB를 쓴다. authenticate()가 DB advisory lock 2칸으로 동시 검증을 2개까지만 허용한다.
 # N=2**17(CPU·메모리 비용), R=블록 크기, P=병렬도. [주의] 바꾸면 기존 해시가 검증되지 않는다
 N, R, P = 2**17, 8, 1
@@ -71,6 +73,19 @@ def connection():
     """DATABASE_URL로 새 PostgreSQL 연결을 연다(`with`로 쓰면 종료 때 커밋하고 닫는다)."""
     # [주의] DATABASE_URL이 없으면 KeyError, 연결 실패는 psycopg.Error. 연결 대기는 5초로 제한한다
     return psycopg.connect(os.environ["DATABASE_URL"], connect_timeout=5)
+
+
+def valid_email(email: str) -> bool:
+    """프로젝트 계정 규칙: 공백 없는 이메일, 도메인에 점 포함, DB 길이 100자 이하."""
+    return len(email) <= 100 and EMAIL.fullmatch(email) is not None
+
+
+def mask_email(email: str) -> str:
+    """유효한 주소는 로컬 첫 글자와 도메인만 표시하고, 형식이 깨진 주소는 숨긴다."""
+    if not valid_email(email):
+        return "***"
+    local, domain = email.split("@")
+    return f"{local[0]}***@{domain}"
 
 
 def check_origin(request: Request) -> None:
@@ -209,7 +224,7 @@ def provision() -> None:
     password = getpass.getpass("Password: ")
     confirmation = getpass.getpass("Confirm password: ")
     # 이메일 100자 이하(DB 길이), 비밀번호 12자 이상·1024바이트 이하(scrypt 비용 제한)·확인 입력 일치. 틀리면 sys.exit
-    if (email is not None and ("@" not in email or len(email) > 100)) or len(password) < 12 or len(password.encode()) > 1024 or password != confirmation:
+    if (email is not None and not valid_email(email)) or len(password) < 12 or len(password.encode()) > 1024 or password != confirmation:
         sys.exit("Invalid email or password; use at least 12 characters and matching confirmation.")
     password_hash = hash_password(password)
     if args.hash_only:
