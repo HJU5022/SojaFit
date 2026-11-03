@@ -1,4 +1,16 @@
-"""API 없는 DB 용량 점검과 vector→halfvec 정확 검색 비교. 운영 DB를 변경하지 않는다."""
+"""DB 용량 점검(inspect)과 vector→halfvec 정확 검색 비교(compare)를 하는 오프라인 도구. 운영 DB를 변경하지 않는다.
+
+- 역할: 오프라인 CLI(`python -m backend.rag.storage`)와, `vector_type`만 서버·다른 도구가 import한다.
+  - vector_type: 환경변수 RAG_VECTOR_TYPE(vector|halfvec)을 읽어 돌려준다. ingest.py·retrieve.py가 server와 도구에서 import한다.
+  - snapshot(inspect): DB 전체 크기, pgvector 버전, 임베딩 열 형식, RAG 표 세 개의 크기(250MB 목표 대비).
+  - compare: 원본 vector(1536)와 halfvec으로 줄인 값의 가까운 카드 상위 5장이 얼마나 겹치는지 시료 1000개까지 잰다.
+    읽기 전용 트랜잭션을 롤백하고, 시간 예산(max_seconds)을 넘으면 중간 결과에 timed_out을 달아 돌려준다.
+- 하지 않는 일: 임베딩 API 호출, 표·인덱스 변경, 본문·벡터·DSN(DB 접속 주소) 출력. 검색은 `retrieve.py`, 적재는 `ingest.py`.
+- 출처: docs/experiments/corpus-storage-budget.md, ADR 0005(halfvec 코퍼스), SPEC.md 6절
+- 필요한 것: DATABASE_URL, uv 그룹의 psycopg·pgvector
+
+실행: python -m backend.rag.storage inspect | compare [--samples 1000] [--max-seconds 120]
+"""
 import argparse
 import json
 import os
@@ -10,6 +22,7 @@ DIM = 1536
 
 
 def vector_type():
+    """RAG_VECTOR_TYPE(기본 'vector')을 검사해 'vector' 또는 'halfvec'을 돌려준다. 그 밖의 값이면 ValueError."""
     kind = os.getenv('RAG_VECTOR_TYPE', 'vector')
     if kind not in {'vector', 'halfvec'}:
         raise ValueError('RAG_VECTOR_TYPE must be vector or halfvec')
@@ -17,17 +30,21 @@ def vector_type():
 
 
 def _query(conn, sql, args=None, deadline=None):
+    """SQL 하나를 실행한다. deadline(time.monotonic 기준)이 있으면 남은 시간만큼(최대 5초) statement_timeout을 건다."""
+    # [주의] 이미 deadline이 지났으면 TimeoutError. compare가 이를 잡아 timed_out으로 중간 결과를 돌려준다
     if deadline is not None:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('comparison time budget exhausted')
+        # set_config의 세 번째 인자 true: 이 트랜잭션 안에서만 적용한다
         conn.execute("SELECT set_config('statement_timeout',%s,true)",
                      (str(max(1, min(5000, int(remaining * 1000)))),))
     return conn.execute(sql, args)
 
 
 def snapshot(conn, deadline=None):
-    """DB 전체와 현재 스키마의 RAG 표 크기. DSN·본문·벡터는 출력하지 않는다."""
+    """DB 전체 크기, pgvector 버전, 임베딩 열 형식, RAG 표 세 개의 크기를 사전으로 돌려준다."""
+    # [주의] DSN·본문·벡터는 결과에 넣지 않는다
     version = _query(conn, "SELECT extversion FROM pg_extension WHERE extname='vector'", deadline=deadline).fetchone()
     typ = _query(conn, "SELECT format_type(atttypid,atttypmod) FROM pg_attribute "
                        "WHERE attrelid=to_regclass('chunk_embeddings') AND attname='embedding' AND NOT attisdropped", deadline=deadline).fetchone()
@@ -43,7 +60,8 @@ def snapshot(conn, deadline=None):
 
 
 def compare(conn, samples=1000, max_seconds=120):
-    """같은 원본 vector의 두 정밀도로 거리 검색. 자기 자신·동일 본문은 제외."""
+    """같은 원본 vector와 halfvec으로 줄인 값의 상위 5장 겹침을 시료 질의마다 재서 요약 사전으로 돌려준다."""
+    # [왜] 질의 카드 자기 자신과 같은 본문(chunk_sha256)은 거리 0으로 늘 1위라 비교에서 뺀다
     if not 1 <= samples <= 1000 or not 0 < max_seconds <= 600:
         raise ValueError('samples must be 1..1000 and max_seconds must be >0 and <=600')
     deadline, rows, timed_out = time.monotonic() + max_seconds, [], False
@@ -88,6 +106,7 @@ def compare(conn, samples=1000, max_seconds=120):
 
 
 def main():
+    """명령줄 인자(inspect|compare, --samples, --max-seconds)를 읽어 읽기 전용으로 DB에 연결하고 결과를 JSON으로 출력한다."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=['inspect', 'compare'])
     parser.add_argument('--samples', type=int, default=1000)

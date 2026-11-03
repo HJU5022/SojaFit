@@ -17,7 +17,7 @@
   - 청킹 결과가 11-01 실험과 같다: 카드 52,244장, 서로 다른 본문 45,898개
   - 로컬 DB에 문서 1,360건, 청크 52,244개, 임베딩 52,244개(1536차원)가 들어간다
   - 평가셋 관련 문항으로 검색 지표가 오류 없이 나온다. 베이스라인 점수는 v1(11-02 동결)로 잰다
-- **Out of Scope**: 리랭킹과 품번 밖 메타데이터 필터(D3, 사전 등록 뒤), 질문에서 품번 뽑기(에이전트가 `parts`로 준다), 임베딩 모델 비교(`evals/PREREGISTER.md` #1·#2), 증분 수집 자동화, Supabase 적용, 공개 문서(KiCad 등) 수집
+- **Out of Scope**: 리랭킹과 품번 밖 메타데이터 필터(D3, 사전 등록 뒤), 질문에서 품번 뽑기(에이전트가 `parts`로 준다), 임베딩 모델 비교(`evals/preregister.md` #1·#2), 증분 수집 자동화, Supabase 적용, 공개 문서(KiCad 등) 수집
 
 ## What
 
@@ -55,7 +55,7 @@
 - **데이터**: `db/002_rag_corpus.sql`
   - `source_documents`, `document_chunks`: 이 SQL이 생성하고 업무 테이블 초안이 참조한다. `IF NOT EXISTS`는 기존 정의의 일치를 검증하지 않는다.
   - `chunk_embeddings`: `vector(1536)`, HNSW(`vector_cosine_ops`). `retrieve()`는 인덱스를 끄고 정확 검색하며, Supabase에는 HNSW를 만들지 않는다(ADR 0005)
-  - 저장 용량 작업은 [corpus-storage-budget.md](corpus-storage-budget.md)를 따른다. 기본은 `vector(1536)`이고, halfvec은 복제 DB에서 설정과 수동 SQL을 함께 바꿔 검증하는 선택 경로다
+  - 저장 용량 작업은 [corpus-storage-budget.md](../experiments/corpus-storage-budget.md)를 따른다. 기본은 `vector(1536)`이고, halfvec은 복제 DB에서 설정과 수동 SQL을 함께 바꿔 검증하는 선택 경로다
 - **모델과 도구**: 임베딩 `text-embedding-3-small`(`backend/services/llm.py`의 `embed_texts`). Docling 2.145.0과 pdfplumber는 uv 의존성 그룹 `ingest`로 두어 서버 이미지에 넣지 않는다.
 - **제약**: 임베딩 호출은 `llm.py`로만 한다. 재시도에는 상한을 둔다. 코퍼스 문장은 지시가 아니라 데이터다.
 - **원본 위치**: PDF·파싱 결과·카드·벡터는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둔다.

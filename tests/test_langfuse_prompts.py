@@ -1,4 +1,9 @@
-"""Langfuse 적용 계약. 네트워크와 실제 LLM 없이 컴파일·버전·전달 경계를 확인한다."""
+"""Langfuse 적용 계약. 네트워크와 실제 LLM 없이 컴파일·버전·전달 경계를 확인한다.
+
+- 역할: 프롬프트·Skill 버전/본문 대조, 일반 호출의 로컬 경계, 예산·기본 원격 미등록·계측 실패 시 결과 보존, 타임라인의 부모·시각·오류·노드 누락, 내보내기에서 자격증명 제외를 확인한다.
+- 하지 않는 일: 실제 Langfuse 서버·LLM 호출은 하지 않는다(실제 확인은 scripts/langfuse_skill_check.py).
+- 출처: SPEC 5절 "Langfuse 프롬프트와 실행 추적", evals/preregister.md #19
+"""
 from contextlib import contextmanager
 from types import SimpleNamespace
 

@@ -1,7 +1,12 @@
-"""Offline, non-destructive corpus selection; see corpus-storage-budget.md.
+"""용량 예산에 맞춰 5개 다이오드 분류 문서만 골라 새 폴더에 쓰는 오프라인 도구(서버가 import하지 않는다).
 
-Run with --manifest PATH --catalog CSV --chunks PATH --dataset PATH
---out-dir NEW_DIR. Payload estimates exclude PostgreSQL rows, TOAST and indexes.
+- 역할: 오프라인 CLI(`python -m backend.rag.subset`). 서버가 import하지 않는다. manifest·목록 csv·chunks.jsonl·평가 데이터셋을 모두 검증한 뒤, 분류가 CATEGORIES에 드는 문서의 manifest 줄과 카드 줄을
+  <out-dir>/manifest.jsonl·chunks.jsonl로 쓰고 보고서(report.json)에 문서·카드 수, 임베딩 크기 추정(DB 행·TOAST·인덱스 제외), G3 기준 충족 여부를 담는다.
+  정답(gold) PDF가 부분집합에서 빠지면 실패한다. 하나라도 어긋나면 아무것도 쓰지 않는다.
+- 하지 않는 일: 입력 파일 수정, 이미 있는 폴더 덮어쓰기(out-dir은 새 폴더여야 한다), DB 접근, 임베딩. 적재는 `ingest.py`.
+- 출처: docs/experiments/corpus-storage-budget.md (G3 기준), SPEC.md 6절
+
+실행: python -m backend.rag.subset --manifest PATH --catalog CSV --chunks PATH --dataset PATH --out-dir NEW_DIR
 """
 import argparse
 from collections import Counter
@@ -17,10 +22,12 @@ CATEGORIES = frozenset({
     'Schottky Rectifier', 'Schottky Diode', 'Switching Diode',
     'Zener Diode', 'Standard Rectifier',
 })
-DIMENSIONS = 1536
+DIMENSIONS = 1536  # 임베딩 크기 추정에만 쓴다(vector는 4바이트, halfvec은 2바이트 × 차원)
 
 
 def _rows(path):
+    """jsonl 파일을 [(사전, 원본 바이트 줄)] 목록으로 읽는다. 객체가 아닌 줄이나 빈 파일은 ValueError."""
+    # [왜] 원본 바이트 줄을 같이 들고 가야 부분집합 파일에 입력 줄을 한 글자도 바꾸지 않고 옮긴다
     rows = []
     for number, line in enumerate(Path(path).read_bytes().splitlines(keepends=True), 1):
         if not line.strip():
@@ -35,12 +42,14 @@ def _rows(path):
 
 
 def _filename(value):
+    """값이 .pdf로 끝나는 글자인지 확인해 디렉터리를 뗀 파일 이름을 돌려준다. 아니면 ValueError."""
     if not isinstance(value, str) or not value.endswith('.pdf'):
         raise ValueError(f'Invalid PDF filename: {value!r}')
     return Path(value).name
 
 
 def _manifest_filename(row):
+    """manifest 줄의 PDF 파일 이름. path가 있으면 path, 없으면 source_url 끝에서 얻는다."""
     value = row.get('path')
     if not value:
         source = row.get('source_url')
@@ -49,7 +58,11 @@ def _manifest_filename(row):
 
 
 def select_subset(manifest, catalog, chunks, dataset, out_dir):
-    """Validate all inputs before publishing a new output directory; return report."""
+    """입력을 모두 검증한 뒤 새 출력 폴더에 부분집합을 쓰고 보고서 사전을 돌려준다.
+
+    입력: manifest·catalog·chunks·dataset 파일 경로, out_dir(아직 없는 폴더).
+    주의: 출력 폴더가 있거나 입력을 덮을 때, 카테고리·카드·정답 PDF가 어긋날 때 ValueError. 쓰다 실패하면 폴더를 지우고 다시 올린다.
+    """
     out = Path(out_dir)
     if out.exists() or out.is_symlink():
         raise ValueError('Output directory already exists')
@@ -131,18 +144,19 @@ def select_subset(manifest, catalog, chunks, dataset, out_dir):
         'whole_database_target_met': None, 'retrieval_quality_measured': False,
         'input_sha256': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},
     }
-    out.mkdir()  # Exclusive creation: an existing directory is never replaced.
+    out.mkdir()  # [왜] exist_ok 없이 만들어 이미 있는 폴더를 덮어쓰지 못하게 한다
     try:
         (out / 'manifest.jsonl').write_bytes(b''.join(selected_manifest))
         (out / 'chunks.jsonl').write_bytes(b''.join(retained))
         (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    except BaseException:
+    except BaseException:  # [왜] Ctrl-C까지 잡아야 반쯤 쓴 폴더가 남지 않는다. 지운 뒤 다시 올린다
         shutil.rmtree(out)
         raise
     return report
 
 
 def main():
+    """명령줄 인자를 읽어 select_subset을 돌리고 보고서를 JSON으로 출력한다. 검증 실패는 종료 코드 1."""
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('manifest', 'catalog', 'chunks', 'dataset', 'out-dir'):
         parser.add_argument('--' + name, required=True)

@@ -12,7 +12,9 @@ services:
         required: false
     environment:
       DEMO_MODE: ${DEMO_MODE:-1}
+      # 호스트 이름 db는 아래 db 서비스. .env의 DATABASE_URL보다 이 값이 우선한다.
       DATABASE_URL: postgresql://app:app@db:5432/app
+    # db가 healthcheck를 통과한 뒤에 api를 띄운다(스키마 적재 전에 연결하지 않게).
     depends_on:
       db:
         condition: service_healthy
@@ -26,13 +28,15 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: app
+      # 아래 DEMO_* 값은 db/007_demo_accounts.sql이 빈 DB 첫 기동 때 데모 계정을 만드는 데 쓴다. 비어 있으면 계정을 만들지 않는다.
       DEMO_MODE: ${DEMO_MODE:-1}
       DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-}
       DEMO_ADMIN_PASSWORD_HASH: ${DEMO_ADMIN_PASSWORD_HASH:-}
       DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-}
       DEMO_USER_PASSWORD_HASH: ${DEMO_USER_PASSWORD_HASH:-}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data   # 컨테이너를 지워도 데이터 유지. 초기화하려면 docker compose down -v
+      # initdb 폴더의 .sql은 데이터 폴더가 비어 있을 때 첫 기동에만 파일 이름순으로 실행된다.
       - ./db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app -d app"]

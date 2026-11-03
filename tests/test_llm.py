@@ -1,3 +1,9 @@
+"""LLM 호출 입구(backend.services.llm): 형식 검증, 재시도 상한, 임베딩 반환 계약을 가짜 모델로 확인한다.
+
+- 역할: chat()의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령, 임베딩 반환 계약을 확인한다.
+- 하지 않는 일: API를 부르지 않는다. 모델 응답의 품질은 보지 않는다.
+- 출처: AGENTS.md 지킬 것 2·6, ADR 0010
+"""
 import json
 from types import SimpleNamespace
 

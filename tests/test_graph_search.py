@@ -1,4 +1,9 @@
-"""검색 노드: 질문·대상 값에서 품번을 골라 retrieve의 parts로 넘기는지 확인한다(SPEC 2절). 검색기는 가짜로 바꾼다."""
+"""검색 노드: 질문·대상 값에서 품번을 골라 retrieve의 parts로 넘기는지 확인한다.
+
+- 역할: 회로 기호·값·개정 코드를 뺀 품번 뽑기, 질문 품번이 대상 값보다 앞서는지, 품번이 없으면 전체 검색, 재작성한 검색어로 찾는지 확인한다.
+- 하지 않는 일: 실제 검색(DB·임베딩)과 검색 품질은 보지 않는다(가짜 검색기).
+- 출처: SPEC 2절(그래프), docs/specs/rag-pipeline.md How(`parts`)
+"""
 from backend.graph.nodes import find_parts, search
 
 D3 = {"ref": "D3", "value": "1N4148", "nets": [{"name": "VCC", "nodes": ["D3.K(1N4148)", "K1.1(RELAY)"], "more": 0}]}
