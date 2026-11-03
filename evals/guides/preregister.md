@@ -359,4 +359,4 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령: `db/009_chunk_embedding_bits.sql` 적용(비트 채우기) → `uv run --env-file .env python -m evals.runners.run_retrieval_service --out evals/results/retrieval/service_r1_bits_2026-11-04.json --prereg '#27'` → `uv run python -m evals.runners.run_retrieval_service --compare evals/results/retrieval/service_r1_2026-11-04.json evals/results/retrieval/service_r1_bits_2026-11-04.json`
 - 예산: #26과 같다(OpenRouter 1달러, 재작성 20회).
 - 알려진 한계: 시간은 운영 DB 상태에 흔들린다. 3,200은 3-small에서 잰 값이라 1024차원 voyage에서 recall이 다를 수 있다. 어긋나면 N을 바꾸는 것은 새 사전 등록으로 한다.
-- 결과: 측정 전
+- 결과: 측정 끝(11-04, `db/009` 적용 뒤 비트 52,244행 · 표 12.1MB, DB 441.6MB). R1 고르기용 46 쪽 회수율@5 0.8587(같음), 확인용 38 0.9342(#26 0.9079, +0.026) · 적중@5 0.9474 · 모든 근거@5 0.9211, v2 19 0.8246(같음). #26과 문항별 상위 5 같음 101/103(0.981, 다른 문항 r1-090 · r1-099). `retrieve()` p50 1.18 · p95 1.66 · 최대 2.61초(#26 1.22 · 2.04 · 6.44초). 기대 대조: 상위 5 같음 95% 이상 맞음, 합계 ±0.02 틀림(확인용 +0.026, 1문항 더 맞음), p50 3배 이상 틀림(1.04배). 결과 파일 `evals/results/retrieval/service_r1_bits_2026-11-04.json`
