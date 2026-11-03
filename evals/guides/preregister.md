@@ -346,3 +346,17 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 알려진 한계: 운영 DB 상태(적재 직후 캐시, 같은 시각 다른 요청)에 시간이 흔들린다. 문항은 #25와 같아 새 일반화 근거는 아니다.
 - 명령: `uv run python scripts/db/voyage_rollout.py check` → `migrate` → `uv run python -m backend.rag.pipeline.ingest --voyage <벡터 폴더>` → `voyage_rollout.py verify` → `uv run python -m evals.runners.run_retrieval_service`
 - 결과: 측정 전
+
+### 2026-11-04 #27: 비트 후보 + 정확 재정렬(N=3,200)
+
+- 왜: #26의 서비스 정확 검색은 카드 약 5만 장 전체의 코사인 거리를 재서 `retrieve()`가 느리다. 3-small 1536차원 운영 DB 실측(`../전자_데이터시트/evidence/bq_exp/README.md`)에서 1비트 후보 3,200장을 Hamming 거리로 거른 뒤 그 후보만 정확 코사인으로 다시 세우면 recall@50 0.980, 최종 하이브리드 상위 5개가 19/19문항 같고 `retrieve()` 중앙값 6.22초 → 0.89초였다. 같은 방식을 voyage-4-large 1024차원 서비스 경로에 옮겨 같은 결과가 나오는지 본다.
+- 바꾸는 것(하나): dense 1단계를 `chunk_embedding_bits`(`db/009`)의 Hamming 거리 상위 `N_BIT = 3,200`으로 거르고 2단계는 정확 코사인 상위 50. 허용 카드가 3,200장 이하면 정확 검색 그대로. 그 밖(BM25, RRF 60, rerank-3, 재작성 Q3, 품번+카드 종류 필터, k=20, 질문 103개)은 #26과 같다.
+- 기대(#26 결과 파일 `service_r1_2026-11-04.json`과 대조):
+  - 문항마다 상위 5개 (문서, 쪽)이 #26과 같은 문항이 103개(R1 84 + v2 19) 중 95% 이상.
+  - 합계 쪽 회수율@5(R1 고르기용 · 확인용, v2)가 #26과 ±0.02 안.
+  - `retrieve()` 한 번의 벽시계 p50이 #26보다 3배 이상 빠름.
+  - 어긋난 문항은 목록으로 남기고 고치지 않는다.
+- 명령: `db/009_chunk_embedding_bits.sql` 적용(비트 채우기) → `uv run --env-file .env python -m evals.runners.run_retrieval_service --out evals/results/retrieval/service_r1_bits_2026-11-04.json --prereg '#27'` → `uv run python -m evals.runners.run_retrieval_service --compare evals/results/retrieval/service_r1_2026-11-04.json evals/results/retrieval/service_r1_bits_2026-11-04.json`
+- 예산: #26과 같다(OpenRouter 1달러, 재작성 20회).
+- 알려진 한계: 시간은 운영 DB 상태에 흔들린다. 3,200은 3-small에서 잰 값이라 1024차원 voyage에서 recall이 다를 수 있다. 어긋나면 N을 바꾸는 것은 새 사전 등록으로 한다.
+- 결과: 측정 전
