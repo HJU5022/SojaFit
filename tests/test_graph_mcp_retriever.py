@@ -1,10 +1,16 @@
 """LangGraph용 MCP 검색 어댑터의 응답 검증과 세션 수명을 확인한다."""
+import asyncio
+from contextlib import asynccontextmanager
 import json
 from types import SimpleNamespace
 
 import pytest
 
-from backend.graph.mcp_retriever import RetrievalUnavailableError, decode_search_result
+from backend.graph.mcp_retriever import (
+    RetrievalUnavailableError,
+    StdioMcpRetriever,
+    decode_search_result,
+)
 
 
 CARD = {"chunk_id": 7, "file": "1N5817 SERIES_H2104.pdf", "page": 1,
@@ -39,3 +45,49 @@ def test_decode_search_result_rejects_invalid_payload(bad):
     with pytest.raises(RetrievalUnavailableError) as error:
         decode_search_result(raw)
     assert error.value.kind == "invalid_response"
+
+
+class FakeSession:
+    def __init__(self, outputs):
+        self.outputs = iter(outputs)
+        self.calls = []
+
+    async def call_tool(self, name, arguments):
+        self.calls.append((name, arguments))
+        value = next(self.outputs)
+        if value == "hang":
+            await asyncio.sleep(60)
+        return result(value)
+
+
+def fake_context(session, events):
+    @asynccontextmanager
+    async def open_session(params):
+        events.append("open")
+        try:
+            yield session
+        finally:
+            events.append("close")
+    return open_session
+
+
+def test_stdio_retriever_reuses_one_session_and_sends_contract():
+    events = []
+    session = FakeSession([[CARD], []])
+    with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
+        assert retriever("1N5817 VRRM", parts=["1N5817"]) == [CARD]
+        assert retriever("rewritten", parts=["1N5817"]) == []
+    assert events == ["open", "close"]
+    assert session.calls == [
+        ("search_corpus", {"query": "1N5817 VRRM", "k": 5, "parts": ["1N5817"]}),
+        ("search_corpus", {"query": "rewritten", "k": 5, "parts": ["1N5817"]}),
+    ]
+
+
+def test_stdio_retriever_turns_timeout_into_safe_kind():
+    session = FakeSession(["hang"])
+    with StdioMcpRetriever(timeout_seconds=0.01,
+                           session_context_factory=fake_context(session, [])) as retriever:
+        with pytest.raises(RetrievalUnavailableError) as error:
+            retriever("q", parts=None)
+    assert error.value.kind == "timeout"
