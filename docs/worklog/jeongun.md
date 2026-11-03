@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-04 운영 DB 정리와 Cloud Run 배포(검색 설정 반영)
+- 목적: PR #46 · #47 머지 뒤 운영 Supabase에서 쓰지 않는 3-small 벡터를 빼 DB를 줄이고, main을 Cloud Run에 실제 모드로 배포한다.
+- 바꾼 것: 운영 DB `chunk_embeddings`를 비우고(TRUNCATE) voyage-4-large 52,244행만 다시 넣었다(`ingest --voyage`). Secret Manager를 켜고 비밀값 7개(DATABASE_URL · OPENROUTER_API_KEY · VOYAGE_API_KEY · AUTH_SECRET · LANGFUSE_PUBLIC_KEY · LANGFUSE_SECRET_KEY · LANGFUSE_BASE_URL)를 정운이 `.env`에서 등록했다. main(`0b01656`)을 `gcloud run deploy sojafit-api --source . --project sojafit --region asia-northeast3 --port 8000 --memory 1Gi --max-instances 1 --set-env-vars DEMO_MODE=0 --set-secrets ...`로 배포하고 트래픽을 최신으로 옮겼다.
+- 실행한 명령과 결과: DB 441.7MB → 비운 뒤 64.9MB → 다시 넣은 뒤 206.9MB(voyage 52,244행, 무작위 5건 코사인 1.0). 다시 넣은 뒤 103문항 재측정은 #27과 같은 값(쪽 회수율@5 고르기용 0.8587 · 확인용 0.9342 · v2 0.8246, 오류 0, R1과 상위 5 같음 80/84). 새 리비전 `sojafit-api-00007-7dc`(1Gi), 트래픽 100%, `/health` 200(0.08~0.17초).
+- 확인 못 한 것: 검색 · 그래프는 HTTP 경로가 없어 배포된 서비스로 질문을 보내 재지 못했다. 로그인은 `AUTH_ORIGIN`이 비어 403이고, 운영 DB에 인증 표(003 · 005 · 006 · 007)가 없다. 정확 검색 SQL에 동점 순서 기준이 없어 표를 다시 쓰면 같은 거리 카드의 순서가 바뀔 수 있다(위 80/84).
+- 다음 할 일: 정운이 로그인 설정(AUTH_ORIGIN, 인증 SQL 적용)과 질문 API를 언제 열지 정한다. 3-small 벡터는 로컬 `corpus/tsc/embeddings/`에만 둔다.
+
 ## 2026-11-04 dense 비트 후보 + 정확 재정렬 구현(사전 등록 #27, 코드 · 문서만, DB 단계는 실행 안 함)
 - 목적: 운영 DB 실측(3-small, `../전자_데이터시트/evidence/bq_exp`)에서 recall@50 0.980, 상위 5개 19/19 같음, `retrieve()` 중앙값 6.22초 → 0.89초였던 "1비트 후보 + 정확 재정렬"을 voyage-4-large 1024차원 서비스 검색에 옮긴다. 기대 · 비교 조건은 `evals/guides/preregister.md` #27(측정 전 커밋). 예산은 #26과 같다.
 - 바꾼 파일: `db/009_chunk_embedding_bits.sql`(`chunk_embedding_bits` 표, 인덱스 없음, 기존 voyage 행에서 채움) · `db/DB.md` · `db/schema/erd.md`, `backend/rag/retrieve.py`(`N_BIT = 3200`, `_dense` 1단계 Hamming `<~>` → 2단계 정확 코사인, 허용 카드 <= N_BIT면 기존 정확 검색, 품번 필터가 없으면 표지 제외를 JOIN으로 해 아이디 5만 개를 안 보냄), `backend/rag/pipeline/ingest.py`(`load_voyage`가 비트 행도 채움, 009 미적용이면 건너뜀), `evals/runners/run_retrieval_service.py`(`--out` · `--prereg` · `--compare`), 시험 `tests/rag/test_rag_retrieve.py` · `test_rag_ingest.py` · `tests/evals/test_retrieval_service.py`, `SPEC.md` · ADR 0004 · `backend/rag/RAG.md` · `RUNNERS.md` · `tests/rag/RAG.md` · `SOJAFIT.md`, 이 파일.
