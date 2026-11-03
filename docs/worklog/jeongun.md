@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-04 서비스 검색을 R1 1위 설정으로 변경(사전 등록 #25 반영, 코드 · 문서만)
+- 목적: 사전 등록 #25에서 잰 1위 설정(voyage-4-large 1024차원 · 재작성 질의 · 품번+카드 종류 필터 · rerank-3)을 서비스 검색에 그대로 옮긴다. 기준 구현은 `evals/runners/run_retrieval_d3.py`의 `search()` · `Index.allowed()`(`part+kind`) · `Reranker.voyage()`와 `run_retrieval_r1.py`의 `SortedReranker`.
+- 바꾼 파일: `backend/services/llm.py`(`voyage_embed` · `voyage_rerank`), `backend/rag/retrieve.py`(모델 · 차원 · 표지 카드 제외 · 리랭크), `backend/graph/build.py`(라우팅 → 재작성 → 검색), `backend/rag/pipeline/ingest.py`(`--voyage` 적재 · `VectorCache` 파일 이름 · 차원 인자), `db/008_multi_dim_embeddings.sql`, `.env.example`, `tests/rag/test_rag_retrieve.py` · `tests/graph/test_graph_build.py` · `tests/services/test_llm.py`, `SPEC.md` · `AGENTS.md` · ADR 0004(갱신 2026-11-03) · `backend/rag/RAG.md` · `backend/services/SERVICES.md` · `backend/graph/GRAPH.md` · `db/DB.md` · `SOJAFIT.md`, 이 파일
+- 실행한 명령과 결과: 아래 "확인" 줄에 적은 시험만 돌렸다(오프라인, 가짜 llm · 가짜 DB).
+- 확인 못 한 것: DB 마이그레이션(db/008)과 voyage 벡터 적재(`ingest.py --voyage`)는 실행하지 않았다. 서비스로 다시 잰 값(재측정)은 아직 없다. 적용 전에는 `retrieve()`가 voyage 행을 찾지 못한다. 실제 Voyage 호출 · 응답 시간 · 비용, 열 형식 변경 때 Supabase 여유 용량(표를 다시 쓰는 동안 옛 표와 새 표가 같이 차지함)도 보지 않았다.
+- 다음 할 일: 복제 DB에서 db/008 적용 → `ingest.py --voyage` 적재 → 서비스 설정으로 같은 평가셋 재측정, 값이 #25와 맞으면 운영 DB에 적용. `README.md` 74행의 임베딩 표기는 이번에 고치지 않았다.
+
 ## 2026-11-03 R1 검색 측정(사전 등록 #25): 문서 구조 정답 84문항으로 임베딩 × 필터 × 질의 × 리랭커 264칸
 - 목적: #24는 채점 19문항이라 어떤 칸도 개선을 입증하지 못했다. 정답을 문서 구조로 정한 문항을 늘리고 고르기용 · 확인용을 나눠 임베딩 · 리랭커를 고른다.
 - 비교 조건 · 예산 · 중단 조건: `evals/guides/preregister.md` #25(측정 전 커밋 `309b55f` 21:29). OpenRouter 상한 5달러, Voyage 상한 없음, HF 없음, 칸 오류는 그 칸만 건너뜀(정운 결정 11-03).

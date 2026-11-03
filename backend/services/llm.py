@@ -3,13 +3,14 @@
 역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`)을 맡는다.
 호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
+Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voyage_rerank`(rerank-3). 사전 등록 #25의 측정 설정이다(ADR 0004 갱신 2026-11-03).
 하지 않는 일: 데모 모드 응답 재생(G2, 코드 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
 프롬프트 원문(backend/prompts/), 프롬프트 등록·고정 버전 검증(langfuse_prompts.py), 수치 비교(backend/judge/).
 출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
 [왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.
 Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노드 추적을 켠다. 그래프 평가 실행(`evals/runners/run_graph.py`)은 별도 CallbackHandler를 쓴다.
 읽는 환경변수: DEMO_MODE, LLM_PROVIDER(openrouter | claude_cli), LLM_MODEL, LLM_CLI_MODEL,
-OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
+OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), VOYAGE_API_KEY(검색 임베딩·리랭크), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
 """
 import json
 import math
@@ -152,6 +153,38 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
     response = client.embeddings.create(model=model, input=texts)
     vectors = [row.embedding for row in response.data]
     return vectors, response.usage.total_tokens, provider, model
+
+
+def _voyage_post(path: str, payload: dict) -> dict:
+    """Voyage REST에 POST해 JSON 본문을 돌려준다. 429·5xx는 5번까지 늘려 가며 다시 부르고, 결제 신호(402)는 바로 멈춘다."""
+    import httpx
+
+    key = os.getenv("VOYAGE_API_KEY")
+    if not key:
+        raise RuntimeError("VOYAGE_API_KEY is required")
+    for attempt in range(5):  # [왜] 재시도 상한. 키 한도(조당 30달러)를 무한 루프가 쓰지 않게 한다
+        r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=180, headers={"Authorization": f"Bearer {key}"}, json=payload)
+        if r.status_code == 200:
+            return r.json()
+        if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
+            raise RuntimeError(f"Voyage payment signal {r.status_code}")
+        if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
+            time.sleep(5 * 2**attempt)
+            continue
+        raise RuntimeError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
+
+
+def voyage_embed(texts: list[str], input_type: str) -> list[list[float]]:
+    """글 목록을 voyage-4-large(1024차원)로 임베딩해 벡터 목록을 입력 순서대로 돌려준다. input_type은 'query' 또는 'document'."""
+    d = _voyage_post("embeddings", {"input": texts, "model": "voyage-4-large", "input_type": input_type,
+                                    "truncation": True, "output_dimension": 1024})
+    return [x["embedding"] for x in sorted(d["data"], key=lambda x: x["index"])]
+
+
+def voyage_rerank(query: str, docs: list[str], model: str = "rerank-3") -> list[int]:
+    """docs를 query와 가까운 순으로 다시 세워 docs의 위치 번호 목록을 돌려준다."""
+    d = _voyage_post("rerank", {"query": query, "documents": docs, "model": model, "truncation": True})
+    return [x["index"] for x in d["data"]]
 
 
 @lru_cache(maxsize=1)
