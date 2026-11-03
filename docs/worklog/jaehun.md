@@ -1,5 +1,29 @@
 # jaehun 작업 기록
 
+## 2026-11-03 문제·시장 근거(사실·가설 구분, 페르소나, 고객 여정 맵), 대체재 5문항 비교·약점 정리 및 PR #42 구조 정합
+
+- 한 일: 최신 `origin/main`(`f271553`, PR #42 2차 폴더 구조 개편 및 `dataset_v2.jsonl` 70건 동결)을 반영해 로컬에서 중복 작업이었던 v2 20문항 초안은 제외하고, 새 폴더 구조(`evals/runners/`, `tests/evals/`, `docs/research/`)와 주요 문서 수정 금지 규칙(팀 규칙 3)에 맞춰 3개 작업을 정리했다. `docs/research/market-user-journey.md`에 ① 제조 산업 AI 공고 집계(237건 중 LLM·RAG·에이전트 77건)와 SojaFit 구현 역량 매핑, ② 사용자·지불 주체의 확인 사실 5건(팀원 경험, 공개 KiCad 회로 151개·다이오드 554개 실측, 데이터시트 다중 품번·조건 구조, 대체재 공백, 재배포 약관)과 미검증 가설 4건 분리, ③ 페르소나 2종(하드웨어 개발자·팀 리드)과 6단계 고객 여정 맵, ④ 범용 챗봇 대 우리 서비스 5문항 비교표(`e01, e03, n01/draftv2-n03, n14, e07/n09`)와 현재 서비스의 가장 큰 약점 4가지, ⑤ 외부 검토 1명 양식을 기록하고 `docs/evaluation-prep.md` 진행 상태를 갱신했다.
+- 바꾼 파일: `docs/research/market-user-journey.md`, `docs/research/RESEARCH.md`, `docs/evaluation-prep.md`, `SOJAFIT.md`, 이 파일
+- 실행한 명령과 결과: `.venv/bin/python -m pytest -q` → 175 passed, 24 skipped(`tests/repo/test_repo_layout.py` 포함). `git diff origin/main...HEAD -- README.md SPEC.md AGENTS.md CLAUDE.md EVAL_REPORT.md docs/adr/` 빈 출력 확인, 문서 상대 링크 대조 및 `git diff --check`, `python3 evals/runners/freeze.py --check` 통과.
+- 확인 못 한 것: 조장 로컬 폴더(`evidence/jobs2/집계.md`)에 있는 채용 공고 50건 개별 행 표 반입과 D10 외부 검토자 1명 실제 인터뷰는 아직 수행 전이다.
+- 다음 할 일: PR 코멘트로 남긴 `SPEC.md` 4절 및 `EVAL_REPORT.md` 2·3-1·5·10·11장 반영안을 조장이 검토·반영하고, D4/D5 본평가에서 v1·v2 5지표를 측정한다.
+
+## 2026-11-03 답변·거절 5지표 규칙 기반 채점기 구현 및 그래프 점수 연동
+
+- 한 일: `docs/experiments/answer-refusal-scorer.md` 작업서를 작성한 뒤, 평가셋 문항(`kind`, `expected`, `gold_chunks`, `question_type`)과 그래프 실행 상태(`state` 및 `run_skill_pair.py` 결과 형식)를 대조해 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점하는 `evals/runners/score_answer.py`를 구현하고 `evals/runners/run_graph.py`의 `run_scores()`에 `answer_metric` 점수로 연결했다.
+- 바꾼 파일: `docs/experiments/answer-refusal-scorer.md`, `docs/experiments/EXPERIMENTS.md`, `evals/runners/score_answer.py`, `evals/runners/run_graph.py`, `evals/runners/RUNNERS.md`, `evals/EVALS.md`, `tests/evals/test_score_answer.py`, `tests/evals/EVALS.md`, `SOJAFIT.md`
+- 실행한 명령과 결과: `.venv/bin/python -m pytest -q` → 175 passed, 24 skipped(`tests/repo/test_repo_layout.py`, `tests/evals/test_score_answer.py` 포함). AC-01~AC-06(데이터시트/회로 근거 인용, 다른 쪽·허위 인용 오답 처리, `n01` `relevant + NOT_VERIFIED`의 근거 인용 설명 대 단순 거절 구분, 비관련 4종 거절 대 환각 위험, v1 50건·v2 70건 분모·`exclusions.json` 제외 처리, `run_skill_pair` JSON CLI 입출력) 통과.
+- 확인 못 한 것: 실제 LLM·DB를 연결한 v1 50건·v2 70건 전체 그래프 실행 점수는 D4 본평가 전이라 아직 측정하지 않았다(모델 호출 0회, 비용 $0).
+- 다음 할 일: D4 줄기 그래프 평가 실행 시 `score_answer.py`로 v1/v2 5지표 기준선을 기록한다.
+
+## 2026-11-03 검색 베이스라인 문항별 대조·실패 유형 분석과 G4/G5 변이 확인
+
+- 한 일: `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json` 3종과 `evals/dataset_v1.jsonl` 관련 19문항을 문항별로 대조해 `docs/research/retrieval-baseline-analysis.md`에 출제·근거 분리 경위, 채점 방식과 한계, 19문항 전체 순위·쪽 적중 대조표, 회귀 문항(`h04, n03, n21` 및 `n02`), 검색 실패 유형 4종을 정리했다. 이어서 `docs/GATES.md`의 G5 상태와 G4/G5 변이 확인 3건(`build.py` `MAX_TRIES`, `nodes.py` `other_part_row`, `nodes.py` `fake_citations`)을 한 줄씩 깨뜨려 pytest 실패를 확인한 뒤 원복하고 표를 채웠다.
+- 바꾼 파일: `docs/research/retrieval-baseline-analysis.md`, `docs/research/RESEARCH.md`, `docs/GATES.md`, `SOJAFIT.md`
+- 실행한 명령과 결과: 원시 결과 3개 파일의 19문항별 `rank`·`page_hit`·`top` 카드와 `dataset_v1.jsonl`을 대조해 하이브리드 문서 미적중 5건(`m03, n02, n04, n05, n08`), dense 대비 쪽 적중 상승 5건(`m05, h05, n01, n06, n07`)·회귀 3건(`h04, n03, n21`), BM25 대비 문서 적중 회귀 1건(`n02`)이 원시 JSON과 일치함을 확인했다. 변이 3건은 각각 1줄 수정 후 pytest에서 대상 단언문 실패를 확인하고 원복했다.
+- 확인 못 한 것: `"질문:"` 줄 단독 질의·품번 필터(`parts`)·리랭커(`rerank-3`) 각각의 단일 요인 전후 원시 결과는 아직 별도 사전 등록·실행 전이다.
+- 다음 할 일: 단일 요인 검색 실험이 실행되면 `EVAL_REPORT.md` 3장 표 `#1`·`#2`를 채운다.
+
 ## 2026-11-02 사람 검수 기록 정정
 
 - 변경: 하정운 1차 판정과 김재훈 2차 검토·수정 의견, 합의와 자동 숫자 대조를 구분했다. 초안의 옛 작성 단계 플래그는 이력으로 옮기고 사람 미검수로 단정한 표기를 정정했다.
