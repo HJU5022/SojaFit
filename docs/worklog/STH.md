@@ -229,3 +229,12 @@
 - 서버 코드·공통 SPEC·테스트·동결 평가셋은 변경하지 않았다. 구현 전 사용자 문서 검토를 기다린다.
 
 - 작업서 승인 후 `docs/specs/mcp-graph-integration-plan.md`에 6개 구현 작업을 TDD 순서로 작성했다. 그래프 장애 분기, 응답 검증, 지속 stdio 세션, 그래프 재검색, 격리 DB, 문서·변이 검증을 각각 독립 커밋으로 나눈다. 구현 코드는 아직 변경하지 않았다.
+
+### 2026-11-03 MCP `search_corpus` LangGraph 통합 구현
+
+- B 담당 범위에서 `backend/graph/mcp_retriever.py`를 추가하고 기존 `build_graph(retriever=...)`에 주입했다. stdio MCP 세션은 전용 asyncio 루프에서 한 번 열어 재사용하며, 응답 카드 필드·타입을 검사한다. A 담당 `backend/mcp_skill/` 서버 코드는 수정하지 않았다.
+- 정상 빈 목록은 기존 문서 없음으로, MCP timeout·도구 오류·응답 형식 오류는 `retrieval_error`로 구분해 채점·재검색 없이 안전한 장애 응답으로 끝낸다. 직접 RAG 기본 경로와 검색 최대 2회는 유지했다.
+- TDD 커밋: `3eb7d40` 검색 장애 분기, `bba9c4f` 응답 검증, `5d28e6f` 지속 stdio 세션, `a989b57` 그래프 재검색 통합, `e7b8c70` 조건부 실제 stdio 검사.
+- 변이 확인 3건은 검색 상한 2→3, 장애를 빈 결과로 변경, 장애를 채점으로 분기했을 때 각각 지정 테스트가 실패했고 원복 후 통과했다. 상세는 `docs/GATES.md`.
+- `uv lock --check` 통과. `uv run --no-sync pytest -q -rs` 결과 196 passed, 25 skipped. 신규 `tests/test_graph_mcp_stdio.py`는 `TEST_DATABASE_URL` 미설정으로 skip되어 실제 그래프→stdio MCP→격리 DB 경로와 단발 지연은 이번 환경에서 확인하지 못했다.
+- 외부 API·LLM 실호출, 운영 DB, Docker 볼륨 변경, 나머지 MCP 도구 4개의 그래프 연결은 수행하지 않았다. 원격 push·PR 생성도 수행하지 않았다.

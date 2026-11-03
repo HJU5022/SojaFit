@@ -36,9 +36,9 @@
 
 | # | 깨뜨린 곳 (파일, 한 줄) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
+| 1 | `backend/graph/build.py`: 검색 상한을 2회에서 3회로 변경 | `tests/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패(세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-03 |
+| 2 | `backend/graph/nodes.py`: MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(`None != {"kind": "timeout"}`), 원복 후 통과 | 2026-11-03 |
+| 3 | `backend/graph/build.py`: MCP 장애도 채점으로 분기 | `tests/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-03 |
 
 ## G4 추가 확인
 
