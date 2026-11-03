@@ -16,9 +16,21 @@
     (예: 1N4148을 물었는데 1N4148W 카드를 인용하거나, TJ = 25°C 값을 물었는데 100°C 값을 인용하는 실패를 막는다).
   - 품번 목록, 낱말 가중치 같은 코퍼스 의존 값을 코드에 고정하지 않는다. 코퍼스가 커지면 새 대상을 전부 거절하게 된다.
 """
+from langgraph.graph import END, START, StateGraph
+
+from backend.graph import nodes
 from backend.graph.state import AgentState
 
 MAX_TRIES = 2  # 검색 상한: 첫 검색 + 재작성 뒤 1번(SPEC 2절)
+
+
+def after_route(state: AgentState) -> str:
+    """라우팅 뒤 갈림길: 범위 밖은 거절, 역할은 바로 생성, 나머지(정격·후보 판정·후보 찾기)는 검색(SPEC 2절, 강의 2주 20강 라우팅후)."""
+    if state.get("question_type") == "out_of_scope":
+        return "거절"  # 검색조차 하지 않는다
+    if state.get("question_type") == "role":
+        return "생성"  # [왜] 역할은 데이터시트가 아니라 넷리스트 연결로 답한다. 생성 노드가 [넷리스트] 근거를 붙인다
+    return "검색"
 
 
 def after_grade(state: AgentState) -> str:
@@ -34,4 +46,23 @@ def after_grade(state: AgentState) -> str:
 
 
 def build_graph(retriever=None, checkpointer=None):
-    raise NotImplementedError("TODO: StateGraph를 조립하세요")
+    """줄기 그래프(D4 단일 에이전트)를 조립해 compile한 앱을 돌려준다(SPEC 2절 노드 표, 강의 2주 20강 조립)."""
+    if retriever is None:
+        # [왜] 여기서 불러와야 가짜 검색기를 넣는 시험이 DB·키 없이 돈다
+        from backend.rag.retrieve import retrieve as retriever
+    b = StateGraph(AgentState)
+    for name, fn in [("입력 읽기", nodes.read_input), ("라우팅", nodes.route),
+                     ("검색", lambda state: nodes.search(state, retriever)),  # 검색 노드만 검색기를 받는다
+                     ("채점", nodes.grade), ("재작성", nodes.rewrite), ("생성", nodes.generate), ("거절", nodes.refuse)]:
+        b.add_node(name, fn)  # [주의] 노드 이름은 갈림길이 돌려주는 값, path 칸에 남는 이름과 같아야 한다
+
+    b.add_edge(START, "입력 읽기")
+    b.add_edge("입력 읽기", "라우팅")
+    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "검색"})  # {갈림길이 돌려준 값: 갈 노드}
+    b.add_edge("검색", "채점")
+    b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
+    b.add_edge("재작성", "검색")  # 되돌아가는 길. 무한히 돌지 않게 after_grade가 tries로 막는다
+    b.add_edge("생성", END)
+    b.add_edge("거절", END)
+    # checkpointer를 주면 thread마다 메모장이 저장돼 다음 메시지에서 이어진다(강의 2주 05강). 시험에서는 None
+    return b.compile(checkpointer=checkpointer)
