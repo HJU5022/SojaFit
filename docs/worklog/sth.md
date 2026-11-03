@@ -311,3 +311,11 @@
 - main의 턴 초기화와 합쳐질 때 이전 MCP 장애가 남지 않도록 `read_input`이 `retrieval_error`도 초기화하게 하고 회귀 테스트를 추가했다. Windows에서 저장소 구조 테스트가 Git UTF-8 파일 목록을 cp949로 읽던 문제는 subprocess에 `encoding="utf-8"`을 명시했다.
 - `uv lock --check` 통과. MCP·그래프 집중 테스트는 `64 passed, 1 skipped`, 전체 `uv run --no-sync pytest -q -rs`는 `209 passed, 25 skipped`였다.
 - `TEST_DATABASE_URL`과 인증 전용 테스트 DB가 없어 실제 stdio MCP→격리 DB 및 DB 의존 테스트는 실행하지 못했다. 원격 push·외부 API·운영 DB 변경은 수행하지 않았다.
+
+### 2026-11-03 PR #44 계약 수용과 B 연결 조정
+
+- A 확인에 따라 원격 PR #44 head `0185d55`를 로컬 B 커밋과 병합하고, 이어 최신 `origin/main` `72b7723`의 폴더·평가 변경을 통합했다. PR #44가 저장소 밖 보관으로 정한 MCP 독립 테스트·웹 측정 파일 삭제를 유지했고, B 그래프 테스트는 새 구조인 `tests/graph/`로 옮겼다.
+- PR #44의 stdio 관찰 계약인 `structuredContent={"result": [...]}`를 먼저 실패 테스트로 고정했다. 기존 디코더에서 카드 목록과 빈 목록이 모두 `invalid_response`로 실패하는 것을 확인한 뒤, `structuredContent.result`를 우선 검증하고 이전 단일 JSON 텍스트는 호환 경로로 남겼다. 해당 테스트 파일은 `13 passed`였다.
+- PR #44·B 문서와 최신 main의 검색 베이스라인·시장 조사 문서를 모두 보존하고 `SOJAFIT.md`, 폴더 설명, B 작업서의 새 경로를 맞췄다. 구조 검사는 `5 passed`, 그래프 묶음은 `58 passed, 1 skipped`, 전체 회귀는 `190 passed, 25 skipped`, `uv lock --check`는 통과했다.
+- 일회용 pgvector DB에 합성 문서 4건·청크 5건을 넣어 실제 stdio를 재검증했다. 기본 서버 경로는 10초 제한에서 `timeout`, PR #44에 기록된 `numpy` 선행 import 진단 경로는 4.51초에 카드 2건과 `SS32 SERIES_Q2412.pdf` 출처를 정상 수신했다. 일회용 컨테이너는 제거했다.
+- 결론: B의 실제 FastMCP 응답 해석은 조정됐지만, 기본 MCP 서버의 첫 검색 지연은 A 서버 초기화 범위로 남는다. 원격 push·외부 API·운영 DB 변경은 수행하지 않았다.

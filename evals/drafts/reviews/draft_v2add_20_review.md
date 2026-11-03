@@ -267,4 +267,3 @@
   - netlists/supply_breadboard.net, D1, 핀 A → Net-(S1-S), 핀 C → Net-(F1-1); S1 핀 3과 D1 A, F1 핀 P$1과 D1 C 연결; F1 핀 P$2 → RAW, U1 핀 IN → RAW; D1 원래 footprint import_input:DIODE-0.4
 - 정운 확인(O / X와 맞는 결론): O (11-03)
 - 재훈 확인(O / X와 맞는 결론): O (11-03)
-

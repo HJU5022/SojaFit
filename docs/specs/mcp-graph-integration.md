@@ -59,9 +59,9 @@
 ### 소유권과 변경 파일
 
 - B 담당 코드: `backend/graph/mcp_retriever.py`, `backend/graph/state.py`, `backend/graph/nodes.py`, `backend/graph/build.py`.
-- B 담당 테스트: 신규 `tests/test_graph_mcp_retriever.py`, 기존 `tests/test_graph_build.py`의 그래프 장애 경로.
+- B 담당 테스트: 신규 `tests/graph/test_graph_mcp_retriever.py`, 기존 `tests/graph/test_graph_build.py`의 그래프 장애 경로.
 - 통합 문서: 이 작업서, `backend/graph/GRAPH.md`, `tests/TESTS.md`, `docs/worklog/sth.md`.
-- A 담당으로 수정하지 않는 파일: `backend/mcp_skill/mcp_server/server.py`, `tests/test_mcp_search.py`, `tests/test_mcp_manifest.py`, `docs/specs/mcp-search-tools.md`.
+- A 담당으로 수정하지 않는 파일: `backend/mcp_skill/mcp_server/server.py`, `docs/specs/mcp-search-tools.md`. PR #44에서 MCP 독립 테스트·측정 자료는 저장소 밖에 보관한다.
 - 공통 `SPEC.md`의 그래프 장애 분기는 구현과 같은 변경에서 최소 갱신하고, 서버 계약 부분은 바꾸지 않는다. 원격 PR 전 A가 계약 인용 부분을 리뷰한다.
 
 ### 어댑터 계약
@@ -76,7 +76,7 @@ StdioMcpRetriever(command, args, env, timeout_seconds)
 - 외부 동작은 기존 검색기와 같은 동기 호출이다. 내부 비동기 stdio·`ClientSession`은 전용 실행 루프에서 관리한다.
 - 컨텍스트 진입 때 서버와 세션을 초기화하고, 호출마다 새 서버를 띄우지 않는다.
 - 도구 호출 인자는 `{"query": query, "k": 5, "parts": parts}`이며 `parts=None`도 기존 계약대로 전달한다.
-- `CallToolResult`가 오류가 아니고, 텍스트 콘텐츠 한 건을 JSON으로 읽은 결과가 목록일 때만 성공으로 본다.
+- `CallToolResult`가 오류가 아니고, PR #44에서 확인한 `structuredContent.result`가 목록일 때 성공으로 본다. 이전 단일 JSON 텍스트 응답은 호환 경로로만 허용한다.
 - 각 카드는 최소한 `chunk_id`, `file`, `page`, `content`, `table`, `doc_parts`를 가진다. `chunk_id`는 정수, `file`·`content`는 문자열, `page`는 정수, `table`은 문자열 또는 null, `doc_parts`는 문자열 목록이어야 한다.
 - 오류 본문·환경변수·명령 전체를 예외 메시지나 State에 복사하지 않는다.
 
@@ -95,7 +95,7 @@ retrieval_error = null
 
 ### 검증
 
-1. 가짜 MCP transport로 정확한 도구·인자, 카드 목록, 빈 목록, timeout, `isError`, 비정상 JSON, 필드 누락, 세션 재사용·종료를 검사한다.
+1. 가짜 MCP transport로 정확한 도구·인자, `structuredContent.result` 카드·빈 목록, timeout, `isError`, 비정상 응답, 필드 누락, 세션 재사용·종료를 검사한다.
 2. 가짜 retriever 그래프로 정상·빈 결과·장애·재작성·두 번 상한 경로를 검사한다.
 3. 실제 stdio 서버 테스트는 외부 검색을 비활성화하고 서버 초기화·호출·종료를 검사한다.
 4. 격리 합성 PostgreSQL 검사는 `TEST_DATABASE_URL`이 명시된 경우에만 실행한다. 기존 DB·볼륨 삭제 명령은 사용하지 않는다.

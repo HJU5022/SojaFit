@@ -30,9 +30,9 @@
 | `backend/graph/state.py` | `retrieval_error` 상태 타입 |
 | `backend/graph/nodes.py` | MCP 전용 오류를 State로 변환하고 장애 응답을 생성 |
 | `backend/graph/build.py` | 검색 직후 성공/장애 분기 |
-| `tests/test_graph_mcp_retriever.py` | 응답 검증, 도구 인자, timeout, 세션 수명 단위 테스트 |
-| `tests/test_graph_build.py` | 빈 결과와 장애의 그래프 경로, 재검색 상한 회귀 테스트 |
-| `tests/test_graph_mcp_stdio.py` | 실제 stdio 서버와 격리 DB를 경유하는 조건부 통합 테스트 |
+| `tests/graph/test_graph_mcp_retriever.py` | 응답 검증, 도구 인자, timeout, 세션 수명 단위 테스트 |
+| `tests/graph/test_graph_build.py` | 빈 결과와 장애의 그래프 경로, 재검색 상한 회귀 테스트 |
+| `tests/graph/test_graph_mcp_stdio.py` | 실제 stdio 서버와 격리 DB를 경유하는 조건부 통합 테스트 |
 | `backend/graph/GRAPH.md` | MCP 검색기 주입법과 장애 의미 |
 | `SPEC.md` | 그래프의 검색 장애 분기와 MCP 통합 경계 |
 | `tests/TESTS.md` | 신규 테스트 파일 설명과 조건부 DB 검사 명령 |
@@ -47,7 +47,7 @@
 - Modify: `backend/graph/state.py`
 - Modify: `backend/graph/nodes.py`
 - Modify: `backend/graph/build.py`
-- Modify: `tests/test_graph_build.py`
+- Modify: `tests/graph/test_graph_build.py`
 
 **Interfaces:**
 - Consumes: 기존 `retriever(query: str, *, parts: list[str] | None = None) -> list[dict]`.
@@ -55,7 +55,7 @@
 
 - [ ] **Step 1: MCP 검색 장애가 문서 없음과 다른 경로를 타는 실패 테스트 작성**
 
-`tests/test_graph_build.py`에 아래 테스트를 추가한다. Task 2에서 만들 예외를 먼저 import하므로 현재는 import 실패가 예상된다.
+`tests/graph/test_graph_build.py`에 아래 테스트를 추가한다. Task 2에서 만들 예외를 먼저 import하므로 현재는 import 실패가 예상된다.
 
 ```python
 from backend.graph.mcp_retriever import RetrievalUnavailableError
@@ -84,7 +84,7 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
 
 - [ ] **Step 2: 실패 테스트 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus`
 
 Expected: FAIL during collection because `backend.graph.mcp_retriever` does not exist.
 
@@ -143,14 +143,14 @@ b.add_conditional_edges("검색", after_search, {"채점": "채점", "거절": "
 
 - [ ] **Step 4: 장애 테스트와 기존 그래프 테스트 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_build.py tests/test_graph_search.py tests/test_graph_refuse.py`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_build.py tests/graph/test_graph_search.py tests/graph/test_graph_refuse.py`
 
 Expected: PASS. 기존 빈 목록 테스트의 path는 `입력 읽기→라우팅→검색→채점→거절`, 장애 테스트는 `입력 읽기→라우팅→검색→거절`이어야 한다.
 
 - [ ] **Step 5: Task 1 로컬 커밋**
 
 ```powershell
-git add backend/graph/mcp_retriever.py backend/graph/state.py backend/graph/nodes.py backend/graph/build.py tests/test_graph_build.py
+git add backend/graph/mcp_retriever.py backend/graph/state.py backend/graph/nodes.py backend/graph/build.py tests/graph/test_graph_build.py
 git commit --no-gpg-sign -m "feat(graph): 검색 장애를 빈 결과와 구분한다"
 ```
 
@@ -160,15 +160,15 @@ git commit --no-gpg-sign -m "feat(graph): 검색 장애를 빈 결과와 구분�
 
 **Files:**
 - Modify: `backend/graph/mcp_retriever.py`
-- Create: `tests/test_graph_mcp_retriever.py`
+- Create: `tests/graph/test_graph_mcp_retriever.py`
 
 **Interfaces:**
-- Consumes: MCP `CallToolResult`의 `isError`와 `content`.
+- Consumes: MCP `CallToolResult`의 `isError`와 PR #44에서 확인한 `structuredContent.result`. 단일 JSON `content`는 호환 경로.
 - Produces: `decode_search_result(result) -> list[dict]`; 실패 시 `RetrievalUnavailableError("tool_error" | "invalid_response")`.
 
 - [ ] **Step 1: 정상·빈 목록·오류·형식 위반 테스트 작성**
 
-`tests/test_graph_mcp_retriever.py`를 만들고 아래 fixture와 테스트를 작성한다.
+`tests/graph/test_graph_mcp_retriever.py`를 만들고 아래 fixture와 테스트를 작성한다.
 
 ```python
 import json
@@ -183,8 +183,8 @@ CARD = {"chunk_id": 7, "file": "1N5817 SERIES_H2104.pdf", "page": 1,
 
 
 def result(value, *, is_error=False):
-    return SimpleNamespace(isError=is_error,
-                           content=[SimpleNamespace(text=json.dumps(value))])
+    return SimpleNamespace(isError=is_error, structuredContent={"result": value},
+                           content=[SimpleNamespace(text=json.dumps(card)) for card in value])
 
 
 @pytest.mark.parametrize("value", [[CARD], []])
@@ -210,7 +210,7 @@ def test_decode_search_result_rejects_invalid_payload(bad):
 
 - [ ] **Step 2: 응답 검증 테스트 실패 확인**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_mcp_retriever.py`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_mcp_retriever.py`
 
 Expected: FAIL because `decode_search_result` is not defined.
 
@@ -238,14 +238,18 @@ def _valid_card(card: object) -> bool:
 def decode_search_result(result) -> list[dict]:
     if getattr(result, "isError", False) is True:
         raise RetrievalUnavailableError("tool_error")
-    content = getattr(result, "content", None)
-    if (not isinstance(content, list) or len(content) != 1
-            or not isinstance(getattr(content[0], "text", None), str)):
-        raise RetrievalUnavailableError("invalid_response")
-    try:
-        payload = json.loads(content[0].text)
-    except (json.JSONDecodeError, TypeError):
-        raise RetrievalUnavailableError("invalid_response") from None
+    structured = getattr(result, "structuredContent", None)
+    if isinstance(structured, dict) and "result" in structured:
+        payload = structured["result"]
+    else:
+        content = getattr(result, "content", None)
+        if (not isinstance(content, list) or len(content) != 1
+                or not isinstance(getattr(content[0], "text", None), str)):
+            raise RetrievalUnavailableError("invalid_response")
+        try:
+            payload = json.loads(content[0].text)
+        except (json.JSONDecodeError, TypeError):
+            raise RetrievalUnavailableError("invalid_response") from None
     if not isinstance(payload, list) or not all(_valid_card(card) for card in payload):
         raise RetrievalUnavailableError("invalid_response")
     return payload
@@ -253,14 +257,14 @@ def decode_search_result(result) -> list[dict]:
 
 - [ ] **Step 4: decoder와 MCP 서버 계약 테스트 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_mcp_retriever.py tests/test_mcp_search.py tests/test_mcp_manifest.py`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_mcp_retriever.py`
 
 Expected: PASS. A 소유 테스트 파일은 수정하지 않는다.
 
 - [ ] **Step 5: Task 2 로컬 커밋**
 
 ```powershell
-git add backend/graph/mcp_retriever.py tests/test_graph_mcp_retriever.py
+git add backend/graph/mcp_retriever.py tests/graph/test_graph_mcp_retriever.py
 git commit --no-gpg-sign -m "feat(graph): MCP 검색 응답을 검증한다"
 ```
 
@@ -270,7 +274,7 @@ git commit --no-gpg-sign -m "feat(graph): MCP 검색 응답을 검증한다"
 
 **Files:**
 - Modify: `backend/graph/mcp_retriever.py`
-- Modify: `tests/test_graph_mcp_retriever.py`
+- Modify: `tests/graph/test_graph_mcp_retriever.py`
 
 **Interfaces:**
 - Consumes: `session_context_factory(StdioServerParameters) -> AsyncContextManager[ClientSession]`.
@@ -335,7 +339,7 @@ def test_stdio_retriever_turns_timeout_into_safe_kind():
 
 - [ ] **Step 2: 수명 테스트 실패 확인**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_mcp_retriever.py -k 'stdio_retriever'`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_mcp_retriever.py -k 'stdio_retriever'`
 
 Expected: FAIL because `StdioMcpRetriever` is not defined.
 
@@ -460,14 +464,14 @@ class StdioMcpRetriever:
 
 - [ ] **Step 4: retriever 단위 테스트와 누수 확인 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_mcp_retriever.py`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_mcp_retriever.py`
 
 Expected: PASS, 테스트 종료 뒤 `mcp-server` thread가 남지 않는다.
 
 - [ ] **Step 5: Task 3 로컬 커밋**
 
 ```powershell
-git add backend/graph/mcp_retriever.py tests/test_graph_mcp_retriever.py
+git add backend/graph/mcp_retriever.py tests/graph/test_graph_mcp_retriever.py
 git commit --no-gpg-sign -m "feat(graph): stdio MCP 검색 세션을 연결한다"
 ```
 
@@ -476,8 +480,8 @@ git commit --no-gpg-sign -m "feat(graph): stdio MCP 검색 세션을 연결한�
 ### Task 4: MCP retriever를 통한 그래프 정상·재검색 경로 검증
 
 **Files:**
-- Modify: `tests/test_graph_build.py`
-- Modify: `tests/test_graph_mcp_retriever.py`
+- Modify: `tests/graph/test_graph_build.py`
+- Modify: `tests/graph/test_graph_mcp_retriever.py`
 
 **Interfaces:**
 - Consumes: Task 3의 `StdioMcpRetriever` callable.
@@ -485,7 +489,7 @@ git commit --no-gpg-sign -m "feat(graph): stdio MCP 검색 세션을 연결한�
 
 - [ ] **Step 1: retriever와 그래프를 함께 실행하는 테스트 작성**
 
-`tests/test_graph_mcp_retriever.py`에 graph imports와 고정 입력을 추가하고, 같은 파일의 `FakeSession`·`fake_context`를 사용해 다음 실행 가능한 helper와 테스트를 추가한다.
+`tests/graph/test_graph_mcp_retriever.py`에 graph imports와 고정 입력을 추가하고, 같은 파일의 `FakeSession`·`fake_context`를 사용해 다음 실행 가능한 helper와 테스트를 추가한다.
 
 ```python
 from backend.graph import nodes
@@ -542,20 +546,20 @@ def test_graph_reuses_mcp_session_for_rewritten_search(monkeypatch):
 
 - [ ] **Step 2: 새 그래프 통합 테스트 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_build.py -k 'mcp_retriever'`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_build.py -k 'mcp_retriever'`
 
 Expected: PASS. 실패하면 Task 3의 callable 계약 또는 graph error branch만 수정하고 MCP 서버 코드는 수정하지 않는다.
 
 - [ ] **Step 3: 검색 관련 전체 회귀 테스트 실행**
 
-Run: `uv run --no-sync pytest -q tests/test_graph_build.py tests/test_graph_search.py tests/test_graph_mcp_retriever.py tests/test_mcp_search.py tests/test_rag_retrieve.py`
+Run: `uv run --no-sync pytest -q tests/graph/test_graph_build.py tests/graph/test_graph_search.py tests/graph/test_graph_mcp_retriever.py tests/rag/test_rag_retrieve.py`
 
 Expected: PASS with only the existing `TEST_DATABASE_URL` skip allowed.
 
 - [ ] **Step 4: Task 4 로컬 커밋**
 
 ```powershell
-git add tests/test_graph_build.py tests/test_graph_mcp_retriever.py
+git add tests/graph/test_graph_build.py tests/graph/test_graph_mcp_retriever.py
 git commit --no-gpg-sign -m "test(graph): MCP 검색과 재검색 경로를 검증한다"
 ```
 
@@ -564,7 +568,7 @@ git commit --no-gpg-sign -m "test(graph): MCP 검색과 재검색 경로를 검�
 ### Task 5: 실제 stdio 서버와 격리 DB 통합 검사
 
 **Files:**
-- Create: `tests/test_graph_mcp_stdio.py`
+- Create: `tests/graph/test_graph_mcp_stdio.py`
 - Modify: `tests/TESTS.md`
 
 **Interfaces:**
@@ -573,7 +577,7 @@ git commit --no-gpg-sign -m "test(graph): MCP 검색과 재검색 경로를 검�
 
 - [ ] **Step 1: 격리 DB 준비 여부 검사와 조건부 테스트 작성**
 
-`tests/test_rag_retrieve.py`의 `_has_corpus()`와 같은 읽기 전용 조건을 새 파일 안에 독립적으로 정의한다. `DATABASE_URL`은 직접 읽지 않고 반드시 `TEST_DATABASE_URL`을 stdio 자식 환경의 `DATABASE_URL`로 매핑한다. 파일 전체를 다음 코드로 시작한다.
+`tests/rag/test_rag_retrieve.py`의 `_has_corpus()`와 같은 읽기 전용 조건을 새 파일 안에 독립적으로 정의한다. `DATABASE_URL`은 직접 읽지 않고 반드시 `TEST_DATABASE_URL`을 stdio 자식 환경의 `DATABASE_URL`로 매핑한다. 파일 전체를 다음 코드로 시작한다.
 
 ```python
 """격리 DB가 있을 때만 실제 stdio MCP를 거쳐 LangGraph 검색을 확인한다."""
@@ -629,13 +633,13 @@ def test_graph_reaches_real_search_through_stdio_mcp(monkeypatch):
 
 - [ ] **Step 2: DB 없는 기본 환경에서 skip 확인**
 
-Run: `uv run --no-sync pytest -q -rs tests/test_graph_mcp_stdio.py`
+Run: `uv run --no-sync pytest -q -rs tests/graph/test_graph_mcp_stdio.py`
 
 Expected: `TEST_DATABASE_URL`이 없으면 1 skipped와 위 reason. 다른 오류로 skip하면 안 된다.
 
 - [ ] **Step 3: 격리 DB가 준비된 환경에서 실제 stdio 테스트 실행**
 
-Run: `uv run --no-sync pytest -q -rs tests/test_graph_mcp_stdio.py`
+Run: `uv run --no-sync pytest -q -rs tests/graph/test_graph_mcp_stdio.py`
 
 Precondition: `TEST_DATABASE_URL`은 명령 기록에 값을 남기지 않는 보안 방식으로 현재 PowerShell 환경에 미리 설정한다.
 
@@ -653,7 +657,7 @@ Expected: PASS. URL 값은 작업 기록·채팅·테스트 출력에 복사하�
 - [ ] **Step 5: Task 5 로컬 커밋**
 
 ```powershell
-git add tests/test_graph_mcp_stdio.py tests/TESTS.md
+git add tests/graph/test_graph_mcp_stdio.py tests/graph/GRAPH.md
 git commit --no-gpg-sign -m "test(graph): 실제 stdio MCP 검색 경로를 확인한다"
 ```
 
