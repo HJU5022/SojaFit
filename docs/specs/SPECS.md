@@ -14,3 +14,4 @@
 - `login-auth.md` — 로그인과 사용자 식별 작업서(이메일·비밀번호 로그인, 서버 세션)
 - `rag-pipeline.md` — 데이터시트 수집·파싱·청킹·적재와 하이브리드 검색 작업서
 - `mcp-tool-prompt.md` — MCP 도구 선택·결과 해석 프롬프트(Langfuse `sojafit/tool-use`)와 모의 검증 범위 작업서
+- mcp-search-tools.md — MCP 검색·문서 조회·외부 후보·로컬 점검 도구의 1차 계약

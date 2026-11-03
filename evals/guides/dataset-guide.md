@@ -103,3 +103,21 @@ uv run python evals/runners/freeze.py --check              # 동결 이후 바�
 ## 결과 보관
 
 재측정 결과의 원시 파일은 `evals/results/`에 둡니다. 평가자가 샘플 몇 문항을 다시 돌려 숫자가 맞는지 보므로, **한 줄 재현 명령**을 `EVAL_REPORT.md` 9장에 적으세요.
+- benchmark_tavily_keyless.py — Tavily 익명 SDK 탐색용 실행기. 재실행 전 별도 사전등록과 예산 확인이 필요함.
+- results/web-search-exploration-2026-11-03.json — 검색 URL·시간·오류를 남긴 축약 원자료(본문 제외).
+
+- web-search-sample-30-v1.json — manifest에서 무작위 선정한 비동결 웹 검색 탐색 질의 30건 및 과거 출처 참고 URL.
+
+- benchmark_web_search_30.py — 비동결 30문항 웹 검색 비교 실행기. 재실행 전 사전등록·무료 한도 확인 필요.
+- results/web-search-30-2026-11-03.json — 응답 본문·URL을 제외한 질의별 상태·시간·출현 여부. 파생 통계의 보관 허용 여부는 Brave에 확인 필요.
+
+- benchmark_tavily_authenticated_30.py — 기존 30문항의 Tavily 인증 Basic 재측정기. 재실행 전 사전등록과 무료 한도 확인 필요.
+- results/tavily-authenticated-30-2026-11-03.json — 키·검색 URL·본문을 제외한 질의별 상태·시간·집계.
+
+- benchmark_web_search_filter.py — 같은 30문항에서 Exa·Tavily·Brave의 도메인 제한 유무를 비교하는 실행기. 외부 호출 전 사전등록과 무료 한도 확인이 필요하다.
+
+- results/web-search-filter-comparison-2026-11-03.json — 필터 유무 비교 180건의 URL·본문 없는 질의별 파생 수치. Brave 파생 통계의 보관 범위는 공급자 확인 필요.
+- benchmark_web_search_pdf_smoke.py — 필터 결과가 바뀐 3개 문항의 공개 TSC PDF를 사전등록 후 확인하는 도구.
+- results/web-search-pdf-smoke-2026-11-03.json — 3개 PDF 서명·manifest 해시·문자 출현 확인 결과. 원문은 저장하지 않음.
+
+- results/mcp-docling-pdf-2026-11-03.json — PDF 3건 Docling·pdfplumber 대조 요약. 원문·전체 파싱 결과는 Git 저장소 밖에 둔다.
