@@ -146,6 +146,7 @@ SojaFit (proj3-b)
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 쪽 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
+│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 고르기용에서 고르고 확인용에서 한 번 비교)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
@@ -153,7 +154,9 @@ SojaFit (proj3-b)
 │   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
-│   │   └── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
+│   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
+│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 쪽을 정한 검색 표본 84문항(고르기용 46·확인용 38, 사전 등록 #25)
+│   │   └── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── drafts/             <- 동결 전 평가셋 초안과 검수 기록(실행·동결 금지, 이력 보존)
 │   │   ├── DRAFTS.md       <- 폴더 설명
 │   │   ├── sets/           <- 초안 문항
