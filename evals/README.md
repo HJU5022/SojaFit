@@ -16,8 +16,6 @@
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. 네 번째 인자로 검색 방식(`hybrid` 기본·`dense`·`bm25`)을 고르고 summary의 `method`에 적음. 회로 근거만 있는 문항은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(PREREGISTER #4~#8, `draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 `PREREGISTER.md`에 등록
 - `PREREGISTER.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
 - `results/` — 평가 원시 결과
-- `reproduce_halfvec.py` — 고정 카드·벡터·질문 캐시의 해시 확인, cache-only 적재와 API 없는 저장 정밀도 재현
-- `results/halfvec_inputs_2026-11-02.json` — 별도 전달할 고정 입력 번들의 파일/해시/크기와 전달 상태
 - `draft_30.jsonl` — 난이도별 10건씩 30행의 검수 초안. 관련성은 11-01에 관련 17·비관련 13으로 정함(e08·m07은 코퍼스에 데이터시트가 있어 관련, e07·m08은 비관련). 파일의 `kind`와 정답은 비어 있고 정답은 `draft_50.jsonl`에 채웠음, 실행·동결 금지
 - `DRAFT_30_REVIEW.md` — 초안 30건의 질문·가정·예상 답변 방향과 검수 목록
 - `draft_50.jsonl` — 현재 50건(관련 25·비관련 25) 검수 초안. 52건에서 n22(관련)·n13(비관련)을 예비 이관. 사람 합의 43건·숫자형 기계 대조 7건. 고정 키를 `dataset_v1.jsonl`로 옮겨 동결했고 이 파일은 검수 이력으로 남김
