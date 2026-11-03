@@ -5,10 +5,13 @@
   - 돌려받은 (파일, 쪽)으로 쪽 적중 · 쪽 회수율 · 모든 근거(k = 1 · 3 · 5 · 10 · 20)와 쪽 MRR을 계산한다(정의는 run_retrieval_d3.metrics와 같다).
   - R1 1위 칸(`r1_2026-11-03.json`)의 문항별 상위 5개 (문서, 쪽)과 견줘 같은 문항 수와 다른 문항 목록을 낸다.
   - retrieve() 한 번의 시간(p50 · p95 · 최대)과, R1 질문 20개에 실제 `rewrite()`를 한 번씩 부른 시간. OpenRouter 지출은 키 사용액 차이로 잰다(상한 1달러).
+  - `--out`으로 결과 파일 경로를, `--prereg`로 meta에 적을 사전 등록 번호를 바꾼다(비트 후보 검색 측정 #27). 기본은 그대로.
+  - `--compare A B`: DB · API 없이 결과 파일 둘(정확 검색 A, 비트 후보 B)의 문항별 상위 5개 (문서, 쪽) 같음, 쪽 회수율@5 합계, retrieve() 시간 p50 · p95를 견줘 찍는다.
 - 하지 않는 일: 검색 코드 · 평가셋 수정, 칸 비교(그건 run_retrieval_r1.py).
-- 출처: evals/guides/preregister.md #26, evals/runners/run_retrieval_r1.py(spent), run_retrieval_d3.py(metrics · v2_questions)
+- 출처: evals/guides/preregister.md #26 · #27, evals/runners/run_retrieval_r1.py(spent), run_retrieval_d3.py(metrics · v2_questions)
 - 실행(저장소 루트, DATABASE_URL · VOYAGE_API_KEY · OPENROUTER_API_KEY 필요): uv run python -m evals.runners.run_retrieval_service
 """
+import argparse
 import json
 import math
 import os
@@ -70,6 +73,18 @@ def parity(rows, r1_rows):
             diff.append({'id': r['id'], 'service': r['top'][:5], 'r1': r1[r['id']], 'same_set': set(r['top'][:5]) == set(r1[r['id']])})
     n = same + len(diff)
     return {'n': n, 'same': same, 'different': len(diff), 'same_rate': round(same / n, 4) if n else None, 'differences': diff}
+
+
+def compare(a, b):
+    """결과 파일 둘(dict)을 견준다. 문항마다 상위 5개 (문서, 쪽)이 같은지, 쪽 회수율@5 합계, retrieve() 시간 p50 · p95."""
+    rows = lambda o: {r['id']: [tuple(t) for t in r['top'][:5]] for r in o['r1']['rows'] + o['v2']['rows'] if 'error' not in r}
+    ra, rb = rows(a), rows(b)
+    ids = sorted(ra.keys() & rb.keys())
+    diff = [i for i in ids if ra[i] != rb[i]]
+    agg = lambda o: {'r1_dev': o['r1']['dev']['page_recall@5'], 'r1_test': o['r1']['test']['page_recall@5'], 'v2': o['v2']['summary']['page_recall@5']}
+    lat = lambda o: {k: o['latency']['retrieve'][k] for k in ('p50', 'p95')}
+    return {'n': len(ids), 'same': len(ids) - len(diff), 'same_rate': round(1 - len(diff) / len(ids), 4) if ids else None, 'different_ids': diff,
+            'only_in_one': sorted(ra.keys() ^ rb.keys()), 'page_recall@5': {'a': agg(a), 'b': agg(b)}, 'retrieve_sec': {'a': lat(a), 'b': lat(b)}}
 
 
 def doc_name(res, names, keymap):
@@ -134,7 +149,7 @@ def summary_line(label, got, want):
     return f'{label}: ' + ' | '.join(f'{k} {got[k]:.4f} (R1 {want[k]:.4f}, {got[k] - want[k]:+.4f})' for k in want)
 
 
-def main():
+def main(out_path=None, prereg='#26'):
     os.environ['DEMO_MODE'] = '0'  # [주의] llm이 import 때 읽으므로 backend를 부르기 전에 정한다. 모듈 최상단에서 하면 import만 해도 다른 시험이 바뀐다
     from backend.graph.nodes import find_parts, rewrite
     from backend.rag import retrieve as R
@@ -152,7 +167,7 @@ def main():
     t = time.perf_counter()
     R.warmup()  # [왜] 첫 호출이 BM25 색인을 만드느라 느리다. 시간 측정에서 빼고 따로 적는다
     warm = round(time.perf_counter() - t, 2)
-    out = {'meta': {'preregister': '#26', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'config': WINNER, 'k': 20, 'warmup_sec': warm,
+    out = {'meta': {'preregister': prereg, 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'config': WINNER, 'k': 20, 'warmup_sec': warm,
                     'commit': subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()}}
     r1_rows = run_questions(qs, R.retrieve, names, keymap)
     v2_rows = run_questions(v2, R.retrieve, names, keymap)
@@ -169,7 +184,7 @@ def main():
     out['latency']['rewrite'] = latency(secs) | {'stopped_by_cap': stopped}
     end = usage()
     out['openrouter_spent_usd'] = None if start is None or end is None else round(end - start, 4)
-    path = ROOT / f'evals/results/retrieval/service_r1_{time.strftime("%Y-%m-%d")}.json'
+    path = ROOT / (out_path or f'evals/results/retrieval/service_r1_{time.strftime("%Y-%m-%d")}.json')
     D3.jdump(out, path)
     show = ('page_recall@5', 'page_hit@5', 'all_evidence@5')
     print(summary_line('R1 dev 46', agg['dev'], {k: win['dev']['summary'][k] for k in show}))
@@ -181,4 +196,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--out', help='결과 JSON 경로(저장소 루트 기준). 기본 evals/results/retrieval/service_r1_<날짜>.json')
+    ap.add_argument('--prereg', default='#26', help='meta에 적을 사전 등록 번호')
+    ap.add_argument('--compare', nargs=2, metavar=('EXACT', 'BITS'), help='측정하지 않고 결과 파일 둘만 견준다(DB · API 안 씀)')
+    args = ap.parse_args()
+    if args.compare:
+        print(json.dumps(compare(*(json.load(open(f, encoding='utf-8')) for f in args.compare)), ensure_ascii=False, indent=1))
+    else:
+        main(args.out, args.prereg)

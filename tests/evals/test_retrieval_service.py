@@ -1,6 +1,6 @@
 """서비스 경로 재측정 실행기(evals/runners/run_retrieval_service.py)의 순수 함수 시험.
 
-- 역할: 지표 정의(적중 · 회수율 · 모든 근거 · MRR), R1 1위 칸과의 상위 5개 대조, 백분위, 파일 이름 대응, 오류 문항 건너뛰기를 가짜 retrieve로 확인한다.
+- 역할: 지표 정의(적중 · 회수율 · 모든 근거 · MRR), R1 1위 칸과의 상위 5개 대조, 백분위, 파일 이름 대응, 오류 문항 건너뛰기, 결과 파일 둘 견주기(`compare`)를 가짜 retrieve로 확인한다.
 - 하지 않는 일: DB · Voyage · OpenRouter를 부르지 않는다(실제 측정은 사전 등록 #26).
 - 출처: evals/guides/preregister.md #26
 """
@@ -37,3 +37,15 @@ def test_run_questions_maps_names_and_skips_errors():
     rows = S.run_questions(qs, fake, {'A.pdf', 'B.pdf'}, {'tsc-a': 'A.pdf'})
     assert rows[0]['top'][0] == ('A.pdf', 1) and rows[0]['name_mapped'] == 1 and rows[0]['page_hit@1'] == 1.0
     assert rows[1] == {'id': 'q2', 'error': 'RuntimeError'}  # 오류 메시지(접속 정보 가능)는 남기지 않는다
+
+
+def test_compare_reports_identity_recall_and_latency():
+    def res(tops, sec):
+        rows = [{'id': i, 'top': t} for i, t in tops.items()]
+        return {'r1': {'rows': rows + [{'id': 'bad', 'error': 'X'}], 'dev': {'page_recall@5': 0.8}, 'test': {'page_recall@5': 0.9}},
+                'v2': {'rows': [], 'summary': {'page_recall@5': 0.7}}, 'latency': {'retrieve': {'p50': sec, 'p95': sec * 2}}}
+    a = res({'q1': [['A.pdf', 1]], 'q2': [['A.pdf', 2], ['A.pdf', 3]]}, 6.0)
+    b = res({'q1': [['A.pdf', 1]], 'q2': [['A.pdf', 3], ['A.pdf', 2]]}, 1.0)
+    c = S.compare(a, b)
+    assert (c['n'], c['same'], c['different_ids'], c['same_rate']) == (2, 1, ['q2'], 0.5)
+    assert c['retrieve_sec'] == {'a': {'p50': 6.0, 'p95': 12.0}, 'b': {'p50': 1.0, 'p95': 2.0}} and c['page_recall@5']['b']['v2'] == 0.7
