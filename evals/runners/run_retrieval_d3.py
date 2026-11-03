@@ -477,7 +477,8 @@ def compare(a, b, metric):
 
 
 # ---------- 준비 ----------
-def context(args, chunks=('C',)):
+def v2_questions():
+    """채점 19문항의 질의 · 품번 · 정답 쪽. 서비스 search()와 같은 품번 규칙을 쓴다(context와 서비스 경로 측정이 함께 쓴다)."""
     from backend.graph.nodes import find_parts, read_input
     qrels = json.load(open(QRELS, encoding='utf-8'))
     if qrels['meta']['dataset_sha256'] != V2_SHA:
@@ -493,6 +494,11 @@ def context(args, chunks=('C',)):
         rec = [tuple(p) for p in g['pages'] if p not in g['unrecoverable']]
         qs.append({'id': qid, 'pdf': g['pdf'], 'gold': [tuple(p) for p in g['pages']], 'rec': rec, 'parts': parts,
                    'text': {'Q2': st['question'], 'Q3': rewrites[qid]['Q3']}})
+    return qs
+
+
+def context(args, chunks=('C',)):
+    qs = v2_questions()
     index = {'C': Index(args.cards, 'C')}
     for ch in chunks:
         if ch != 'C':
