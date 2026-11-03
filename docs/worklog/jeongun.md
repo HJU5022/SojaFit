@@ -1,5 +1,36 @@
 # jeongun 작업 기록
 
+## 2026-11-03 저장소 구조 정리: 폴더 설명 파일을 `<대문자 폴더명>.md`로 되돌리고 파일 위치를 SOJAFIT.md 트리로 묶는다(ADR 0012)
+- 한 일
+  - origin/main(e25558a)으로 빠르게 맞춘 뒤 문서·코드 전체를 다시 읽었다.
+  - 폴더 설명 파일 24개를 `README.md`에서 `<대문자 폴더명>.md`로 되돌렸다. ADR 0011은 대체됨, 0012를 새로 썼다.
+  - 역할이 다른 파일을 옮겼다: 실험·평가 작업서는 `docs/experiments/`, 조사·실측은 `docs/research/`, 동결 전 초안은 `evals/drafts/`, 평가가 아닌 측정 결과는 `scripts/results/`, 평가셋 명세는 `evals/dataset-guide.md`로 분리했다.
+  - 대문자 문서는 소문자로 바꿨다(`preregister.md`, `erd.md`, `design.md`, `sth.md`). macOS `core.ignorecase=true`라 대소문자만 바꾸는 이름은 `git mv`를 두 번 거쳤다.
+  - `SOJAFIT.md`에 모든 파일의 `<-` 설명 트리를 넣었다. AGENTS.md 지킬 것 9번에 트리를 따르는 규칙을, 팀 규칙 3번에 주요 문서는 조장만 고치는 규칙을 넣었다. 폴더 설명 27개와 README를 다시 썼다.
+  - `tests/test_repo_layout.py`가 트리·이름 규칙·폴더 설명 파일 목록을 검사한다.
+  - 코드 리뷰(graphify·ponytail-review)로 결함을 고쳤다.
+    - 같은 thread 다음 턴에 앞 턴 검색 칸이 남던 버그(위 항목의 다음 할 일)
+    - 넷리스트 경로의 저장소 밖 탈출
+    - 로그인 시도·만료 세션 표의 무한 증가
+    - 수집 URL 이중 인코딩·파일명 검증
+    - 임베딩 개수 불일치를 조용히 자르던 문제
+    - 파싱 시간 제한 범위와 파일 핸들 누수
+    - 평가 실행의 없는 문항 id 무시
+  - 모든 파이썬 파일의 머리말(역할·하지 않는 일·출처)과 주석을 정리했다. 프롬프트 해시는 `PROMPTS.md`를 빼도록 맞췄다.
+- 바꾼 파일: 151개(이름 변경 60개 포함). 목록은 `git status`.
+- 실행한 명령과 결과
+  - `uv run --frozen pytest -q`: 163 passed, 24 skipped(작업 전 151 passed, 24 skipped).
+  - 상대 링크 검사: 깨진 링크 0.
+  - 구조 검사 테스트: 트리에 없는 파일, 대문자 문서, 폴더별 README, 트리 줄 삭제, 설명 없는 새 폴더의 5종 변이를 모두 잡았다.
+  - graph 수정 2건: 수정을 빼면 각 테스트가 실패하는 것을 확인했다.
+  - 코드 변경 범위: HEAD 대비 docstring을 뺀 AST 비교로, 주석만 바뀐 파일과 코드가 바뀐 파일을 나눠 확인했다.
+- 확인 못 한 것
+  - 로그인 정리 DELETE를 실제 PostgreSQL에서 돌려 보지 않았다.
+  - 유료 API·DB가 필요한 스크립트는 실행하지 않았다.
+  - OSC·STH 브랜치와의 병합 충돌은 아직 보지 않았다. 두 브랜치가 옛 `README.md`·`PREREGISTER.md` 경로와 `docs/` 루트에 파일을 더한다.
+  - VS Code·Finder의 정렬 방식은 문서 기준이다. GitHub 정렬은 화면으로 확인했다.
+- 다음 할 일: 커밋을 목적별로 나눈다. OSC·STH에 새 위치를 알린다. SPEC 검토 결과를 반영한다(조장).
+
 ## 2026-11-03 그래프 평가 실행을 Langfuse에 남긴다(`evals/run_graph.py`)
 - 한 일: 정운 결정(11-03)으로 SPEC 7절의 "프롬프트·응답은 Langfuse에 기록하지 않는다"를 바꿔, 그래프 평가 실행이 문항마다 트레이스를 남기게 했다. 아래 "줄기 그래프 조립" 항목의 임시 스크립트를 정식 파일로 옮겼다. 노드 코드는 그대로이고, 실행하는 쪽이 `CallbackHandler`를 넘긴다. 트레이스에는 단계별 입력·출력(카드 내용 포함), LLM 토큰·비용, 실행 조건 메타데이터(공급자·모델·검색 방식·데이터셋·코퍼스 판·git 커밋·프롬프트 해시)와 실행 점수 10종(path·question_type·not_found·tries·llm_calls·docs_found·passed_cards·latency_s·fake_citations·uncited_sentences)이 붙는다. 한 실행은 session 하나, 환경 이름은 `eval`이다. 문항별 결과 파일은 카드 내용이 들어가 저장소에 남기지 않는다. `LANGFUSE_BASE_URL` 끝에 `/`가 있으면 트레이스가 버려지므로 실행 전에 멈춘다.
 - 바꾼 파일: `evals/run_graph.py`(새 파일), `tests/test_run_graph.py`(새 파일), `SPEC.md`(7절 Langfuse 줄), `docs/GATES.md`(G6 상태), `backend/services/llm.py`(맨 위 설명 한 줄), `evals/README.md`, `tests/README.md`, 이 파일
