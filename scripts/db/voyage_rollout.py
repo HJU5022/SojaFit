@@ -102,7 +102,8 @@ def verify(conn, vec_dir):
                         ' JOIN document_chunks dc ON dc.id = ce.chunk_id WHERE ce.embedding_model = %s ORDER BY random() LIMIT 5', [NEW_MODEL]).fetchall()  # 5건만 받아 전송량을 줄인다
     cos = []
     for _, sha, vec in rows:
-        a, b = np.asarray(vec, dtype=np.float32), np.asarray(cache.get(sha.strip()), dtype=np.float32)
+        # [주의] pgvector는 Vector 객체로 돌려줘 to_numpy()로 바꾼다
+        a, b = np.asarray(vec.to_numpy(), dtype=np.float32), np.asarray(cache.get(sha.strip()), dtype=np.float32)
         cos.append(float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b))))
     ok = n_voy == n_chunks and len(cos) == 5 and min(cos) >= 0.999
     print(f'무작위 5건 코사인 {[round(c, 5) for c in cos]} (최소 {min(cos, default=0):.5f}, 기준 0.999)')
