@@ -252,7 +252,8 @@ SojaFit (proj3-b)
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
 │   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
 │   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
-│   │   └── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+│   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+│   │   └── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
 │   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
