@@ -210,8 +210,9 @@ class Vectors:
         self.a, self.cache, self.q = args, {}, {}
 
     def files(self, model, index):
-        if index.name != 'C':
-            return Path(self.a.chunk_dir) / f'{index.name}.f32', Path(self.a.chunk_dir) / f'{index.name}.sha.txt', 1536
+        if index.name != 'C':  # 변형 카드: 3-small은 <변형>.f32, 다른 모델은 <변형>.<모델>.f32(GPU 단계)
+            tag = '' if model == 'te3s' else f'.{model}'
+            return Path(self.a.chunk_dir) / f'{index.name}{tag}.f32', Path(self.a.chunk_dir) / f'{index.name}{tag}.sha.txt', None
         if model == 'te3s':
             return OUTSIDE / 'corpus/tsc/embeddings/vectors.f32', OUTSIDE / 'corpus/tsc/embeddings/vectors.sha.txt', 1536
         src = 'te3l' if model == 'te3l1536' else model
@@ -229,12 +230,14 @@ class Vectors:
             if model == 'te3l1536':
                 V = V[:, :1536]
             row = {h: i for i, h in enumerate(shas)}
-            self.cache[key] = (V / np.linalg.norm(V, axis=1, keepdims=True), np.array([row[c['sha256']] for c in index.cards]))
+            # [왜] late chunking 벡터는 같은 글이라도 앞뒤 문맥에 따라 달라 본문 sha가 아니라 카드 번호(card:<i>)로 짝짓는다
+            rows = [row[f'card:{k}'] if f'card:{k}' in row else row[c['sha256']] for k, c in enumerate(index.cards)]
+            self.cache[key] = (V / np.linalg.norm(V, axis=1, keepdims=True), np.array(rows))
         return self.cache[key]
 
     def query(self, model, text):
         import numpy as np
-        src = 'te3l' if model == 'te3l1536' else model
+        src = {'te3l1536': 'te3l', 'bgem3late': 'bgem3'}.get(model, model)  # late chunking은 문서 쪽만 바뀌고 질문은 같은 모델
         if src not in self.q:
             p = Path(self.a.qvec_dir) / f'qvec_{src}.npz'
             self.q[src] = dict(np.load(p)) if p.exists() else {}
@@ -271,23 +274,58 @@ class Reranker:
             docs = [index.cards[c]['text'] for c in cands]
             if model.startswith('rerank-'):
                 rec = self.voyage(model, text, docs)
+            elif model.startswith('Qwen/Qwen3-Reranker'):
+                rec = self.qwen3(model, text, docs)
             else:
                 import numpy as np
                 if model not in self.local:
                     from sentence_transformers import CrossEncoder
                     self.local[model] = CrossEncoder(model, max_length=1024)
                 s = self.local[model].predict([(text, d) for d in docs], batch_size=16, show_progress_bar=False)
-                rec = {'order': [int(i) for i in np.argsort(-np.asarray(s), kind='stable')], 'tokens': 0}
+                rec = {'order': [int(i) for i in np.argsort(-np.asarray(s), kind='stable')], 'tokens': 0,
+                       'scores': sorted((float(x) for x in s), reverse=True), 'method': 'sentence-transformers CrossEncoder(max_length=1024)'}
             rec['key'] = key
             with open(self.path, 'a') as f:
                 f.write(json.dumps(rec) + '\n')
             self.cache[key] = rec
         return [cands[i] for i in self.cache[key]['order']]
 
+    QWEN_INSTRUCTION = 'Given a web search query, retrieve relevant passages that answer the query'  # 모델 카드 기본 지시문
+    QWEN_PREFIX = ('<|im_start|>system\nJudge whether the Document meets the requirements based on the Query and the Instruct '
+                   'provided. Note that the answer can only be "yes" or "no".<|im_end|>\n<|im_start|>user\n')
+    QWEN_SUFFIX = '<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
+
+    def qwen3(self, model, text, docs):
+        """Qwen3-Reranker 모델 카드 방식: 정해진 프롬프트로 다음 낱말이 yes일 확률(yes·no 로짓의 softmax)을 점수로 쓴다.
+        [주의] CrossEncoder로 그냥 불러오면 분류 머리가 임의값이라 점수가 틀린다."""
+        import numpy as np
+        import torch
+        if model not in self.local:
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            tok = AutoTokenizer.from_pretrained(model, padding_side='left')
+            lm = AutoModelForCausalLM.from_pretrained(model, torch_dtype=torch.bfloat16).cuda().eval()
+            pre, suf = tok(self.QWEN_PREFIX, add_special_tokens=False)['input_ids'], tok(self.QWEN_SUFFIX, add_special_tokens=False)['input_ids']
+            self.local[model] = (tok, lm, pre, suf, tok.convert_tokens_to_ids('yes'), tok.convert_tokens_to_ids('no'))
+        tok, lm, pre, suf, yes, no = self.local[model]
+        scores = []
+        for i in range(0, len(docs), 8):
+            pairs = [f'<Instruct>: {self.QWEN_INSTRUCTION}\n<Query>: {text}\n<Document>: {d}' for d in docs[i:i + 8]]
+            enc = tok(pairs, padding=False, truncation='longest_first', return_attention_mask=False, max_length=4096 - len(pre) - len(suf))
+            enc['input_ids'] = [pre + ids + suf for ids in enc['input_ids']]
+            enc = tok.pad(enc, padding=True, return_tensors='pt').to('cuda')
+            with torch.no_grad():
+                last = lm(**enc).logits[:, -1, :]
+            scores += torch.softmax(torch.stack([last[:, no], last[:, yes]], 1).float(), 1)[:, 1].tolist()
+        return {'order': [int(i) for i in np.argsort(-np.asarray(scores), kind='stable')], 'tokens': 0,
+                'scores': sorted(scores, reverse=True), 'method': 'Qwen3-Reranker 모델 카드 yes/no 로짓(bf16, max_length 4096)',
+                'instruction': self.QWEN_INSTRUCTION}
+
     def voyage(self, model, text, docs):
         import httpx
         if self.blocked:
             raise RuntimeError('Voyage 결제 신호 뒤라 건너뛴다')
+        if not os.getenv('VOYAGE_API_KEY'):
+            raise RuntimeError('캐시에 없는 Voyage 칸이고 키가 없어 부르지 않는다')
         for attempt in range(5):
             r = httpx.post('https://api.voyageai.com/v1/rerank', timeout=180,
                            headers={'Authorization': f'Bearer {os.environ["VOYAGE_API_KEY"]}'},
@@ -485,6 +523,8 @@ def official_cells(extra_rerankers=()):
     for ch in ('fixed500_100', 'fixed2000_100', 'fixed1000_0', 'fixed1000_400', 'semantic'):
         add('E6', f1000, chunk=ch)
     add('E6', BASE, chunk='semantic')
+    bge = dict(BASE, chunk='fixed1000_100', model='bgem3')
+    add('E6L', bge, model='bgem3late')  # #24 덧붙임: 같은 모델(bge-m3) 같은 청크의 일반 임베딩 대비 late chunking
     for T in ('T1', 'T2', 'T3'):
         add('E7', BASE, T=T)
     for change in ({'rrf_k': 10}, {'rrf_k': 100}, {'n': 100}):
@@ -497,8 +537,10 @@ PRIMARY = ('page_hit@5', 'page_recall@5', 'page_recall_rec@5', 'all_evidence@5',
 
 def official(args):
     cells = official_cells(tuple(x for x in (args.extra_rerankers or '').split(',') if x))
+    if args.exps:
+        cells = [c for c in cells if c[0] in args.exps.split(',')]
     chunks = sorted({c for _, a, b in cells for c in (a['chunk'], b['chunk'])})
-    avail = [c for c in chunks if c == 'C' or (Path(args.chunk_dir) / f'{c}.f32').exists()]
+    avail = [c for c in chunks if c == 'C' or (Path(args.chunk_dir) / f'{c}.jsonl').exists()]
     ctx = context(args, avail)
     done, comps, skipped = {}, [], []
     for exp, a, b in cells:
@@ -669,6 +711,63 @@ def semantic_chunks(args, embed_texts):
                                       'text': t, 'sha256': sha(t)}, ensure_ascii=False) + '\n')
 
 
+BGE_REV = '5617a9f61b028005a4858fdac845db406aefb181'  # 11-03 HF 작업과 같은 bge-m3 revision
+
+
+def gpu_embed(args, variant):
+    """GPU: 고정 길이 변형 카드를 bge-m3로 임베딩한다. --mode bgem3는 일반(카드를 따로 읽고 모델 기본 CLS 풀링),
+    bgem3late는 late chunking(쪽 전체를 한 번 읽어 카드 구간의 토큰 임베딩을 평균). 사전 등록 #24 덧붙임."""
+    import numpy as np
+    import torch
+    d = Path(args.chunk_dir)
+    cards = [json.loads(l) for l in open(d / f'{variant}.jsonl', encoding='utf-8')]
+    size, ov = VARIANTS[variant]
+    t0, fallback = time.time(), 0
+    if args.mode == 'bgem3':
+        from sentence_transformers import SentenceTransformer
+        m = SentenceTransformer('BAAI/bge-m3', revision=BGE_REV, device='cuda', model_kwargs={'torch_dtype': torch.bfloat16})
+        m.max_seq_length = 1024
+        text = {c['sha256']: c['text'] for c in cards}
+        keys = list(text)
+        order = sorted(range(len(keys)), key=lambda i: len(text[keys[i]]))  # 길이순으로 묶어 패딩을 줄인다
+        V = m.encode([text[keys[i]] for i in order], batch_size=64, normalize_embeddings=True, convert_to_numpy=True,
+                     show_progress_bar=False)
+        out = np.empty_like(V)
+        out[order] = V
+    else:
+        from transformers import AutoModel, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained('BAAI/bge-m3', revision=BGE_REV)
+        lm = AutoModel.from_pretrained('BAAI/bge-m3', revision=BGE_REV, torch_dtype=torch.bfloat16).cuda().eval()
+        out, keys = np.zeros((len(cards), 1024), np.float32), [f'card:{k}' for k in range(len(cards))]
+        pages = defaultdict(list)
+        for k, c in enumerate(cards):
+            pages[c['doc'], c['page']].append(k)
+        for ks in pages.values():
+            page = cards[ks[0]]['text'] + ''.join(cards[k]['text'][ov:] for k in ks[1:])  # 겹친 청크를 이어 쪽 원문을 되살린다
+            enc = tok(page, return_offsets_mapping=True, truncation=True, max_length=8192, return_tensors='pt')
+            offs = enc.pop('offset_mapping')[0].tolist()
+            with torch.no_grad():
+                H = lm(**enc.to('cuda')).last_hidden_state[0].float().cpu().numpy()
+            for j, k in enumerate(ks):
+                a, b = j * (size - ov), j * (size - ov) + len(cards[k]['text'])
+                idx = [t for t, (x, y) in enumerate(offs) if y > x and x < b and y > a]
+                if idx:
+                    v = H[idx].mean(0)
+                else:  # [주의] 8192토큰 밖이라 구간 토큰이 없으면 그 카드만 따로 읽은 CLS로 대신하고 수를 센다
+                    fallback += 1
+                    with torch.no_grad():
+                        v = lm(**tok(cards[k]['text'], truncation=True, max_length=1024, return_tensors='pt').to('cuda')
+                               ).last_hidden_state[0, 0].float().cpu().numpy()
+                out[k] = v / np.linalg.norm(v)
+    np.asarray(out, np.float32).tofile(d / f'{variant}.{args.mode}.f32')
+    (d / f'{variant}.{args.mode}.sha.txt').write_text(''.join(k + '\n' for k in keys))
+    log = {'model': 'BAAI/bge-m3', 'revision': BGE_REV, 'mode': args.mode, 'variant': variant, 'rows': len(keys),
+           'cards': len(cards), 'fallback_cls': fallback, 'dtype': 'bfloat16', 'gpu': torch.cuda.get_device_name(0),
+           'sec': round(time.time() - t0, 1)}
+    jdump(log, d / f'{variant}.{args.mode}.log.json')
+    print(json.dumps(log, ensure_ascii=False))
+
+
 # ---------- 탐색 격자 ----------
 def explore(args):
     """공식 측정 뒤의 탐색(사전 등록 #24 '탐색'): 임베딩 11 × 리랭커 3 × 질의 2 × 방식 × 필터 2. 판정에 쓰지 않는다."""
@@ -695,7 +794,7 @@ def explore(args):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    p.add_argument('cmd', choices=['qrels', 'official', 'noresult', 'chunks', 'embed', 'explore'])
+    p.add_argument('cmd', choices=['qrels', 'official', 'noresult', 'chunks', 'embed', 'gpu_embed', 'explore'])
     p.add_argument('variant', nargs='?')
     p.add_argument('--cards', default=str(OUTSIDE / 'corpus/tsc/chunks/chunks.jsonl'))
     p.add_argument('--vectors', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/vectors'))
@@ -704,7 +803,9 @@ def main():
     p.add_argument('--docling-dir', default=str(OUTSIDE / 'corpus/tsc/parsed/docling'))
     p.add_argument('--rerank-cache', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/out/rerank_cache.jsonl'))
     p.add_argument('--out', default=None)
-    p.add_argument('--extra-rerankers', default='', help='E2에 더할 로컬 CrossEncoder(쉼표). GPU 단계에서만')
+    p.add_argument('--extra-rerankers', default='', help='E2에 더할 로컬 리랭커(쉼표). GPU 단계에서만')
+    p.add_argument('--exps', default='', help='이 실험만(쉼표, 예: E2,E6L)')
+    p.add_argument('--mode', default='bgem3', choices=['bgem3', 'bgem3late'], help='gpu_embed: 일반 또는 late chunking')
     a = p.parse_args()
     os.environ.setdefault('DEMO_MODE', '0')  # [주의] 기본값 1이면 서비스 retrieve가 dense를 끈다. 이 실행기는 retrieve()를 부르지 않지만 llm 설정을 맞춘다
     sys.path.insert(0, str(ROOT))
@@ -716,6 +817,8 @@ def main():
         make_chunks(a)
     elif a.cmd == 'embed':
         embed_variant(a, a.variant)
+    elif a.cmd == 'gpu_embed':
+        gpu_embed(a, a.variant)
     else:
         a.out = a.out or str(ROOT / f'evals/results/retrieval/d3_{a.cmd}_{time.strftime("%Y-%m-%d")}.json')
         globals()[a.cmd](a)

@@ -302,3 +302,18 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 실행: 맥 CPU에서 GPU가 필요 없는 칸을 모두 잰다. `uv run --with docling-core python -m evals.runners.run_retrieval_d3 official`(E6 전에 `chunks`·`embed <변형>`), `noresult`, 공식 뒤 `explore`(탐색 격자, 판정에 쓰지 않음). 카드·벡터는 저장소 밖 파일을 인자로 읽는다.
 - 예산·중단: OpenRouter $1.00(E6 다시 임베딩과 질문 임베딩), Voyage 무료 한도만(결제 신호면 나머지 Voyage 건너뜀), Upstage 건너뜀, HF 없음. v2 해시가 다르면 모두 멈춘다. 그 밖의 중단은 그 부분만 건너뛰고 이유를 결과에 남긴다.
 - 결과: 측정 전.
+
+#### #24 덧붙임: GPU 단계 조건(2026-11-03 저녁, GPU 측정 전)
+
+- 장비: desktop-gpu(WSL2, RTX 3080 Ti 12GB) 도커 `sojafit-embed-run`, 저장소는 이 커밋의 `git archive`. `.env`가 없어 유료 호출은 없다. Voyage 칸은 캐시에 있는 것만 쓰고, 없으면 부르지 않고 건너뛴다.
+- E2 로컬 리랭커(기준 후보에 리랭커만 더함, 필터 켬·끔)
+  - `BAAI/bge-reranker-v2-m3`: sentence-transformers CrossEncoder(max_length 1024, fp32)
+  - `Qwen/Qwen3-Reranker-0.6B` · `4B`: 모델 카드 방식. 정해진 시스템 프롬프트 + `<Instruct>/<Query>/<Document>` 입력으로 다음 낱말 yes·no 로짓의 softmax(yes)를 점수로 쓴다. 지시문은 모델 카드 기본값 "Given a web search query, retrieve relevant passages that answer the query", bf16, max_length 4096. CrossEncoder로 그냥 불러오면 분류 머리가 임의값이라 쓰지 않는다
+  - 기대: 필터 켬 쪽 적중@5 −0.05~+0.10, 쪽 회수율@5 −0.05~+0.15. 필터 끔 쪽 적중@5 0.00~+0.25
+- E6L late chunking
+  - 모델 `BAAI/bge-m3`(revision `5617a9f6…`, 11-03 HF 작업과 같음, bf16), 청크는 E6의 쪽별 1000/100(`fixed1000_100`)
+  - 비교: 같은 모델 · 같은 청크의 일반 임베딩(카드를 따로 읽고 모델 기본 CLS 풀링) vs late chunking(쪽 전체를 한 번 읽어 최대 8,192토큰, 카드 구간의 토큰 임베딩 평균, 정규화). 질문 벡터는 둘 다 bge-m3 일반. 방식은 하이브리드(BM25 50 + dense 50, RRF 60), 필터 켬 · 끔
+  - 8,192토큰 밖이라 구간 토큰이 없는 카드는 그 카드만 따로 읽은 CLS로 대신하고 수를 결과에 적는다
+  - 기대: 필터 켬 쪽 적중@5 −0.10~+0.15, 쪽 회수율@5 −0.10~+0.15. 필터 끔 −0.15~+0.20
+- 명령: `gpu_embed fixed1000_100 --mode bgem3`, `--mode bgem3late`, `official --exps E2,E6L --extra-rerankers BAAI/bge-reranker-v2-m3,Qwen/Qwen3-Reranker-0.6B,Qwen/Qwen3-Reranker-4B`
+- 결과: 측정 전.
