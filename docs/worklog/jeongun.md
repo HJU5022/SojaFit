@@ -3,7 +3,7 @@
 ## 2026-11-04 단일 에이전트 기준 점수 측정(사전 등록 #31, D4)
 - 한 일: 사전 등록 #28 결과 기록과 #31를 측정 전에 커밋(`a630454`)하고, 시험 2문항(draft30-m01 · draftv2-n16)과 Langfuse 확인 1~6 뒤 동결 v2 70문항을 줄기 그래프로 돌렸다(`LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl`).
 - 바꾼 파일: `evals/guides/preregister.md`(#31 결과), `evals/results/graph/graph_dataset_v2_2026-11-04.json`(새 파일), 이 파일
-- 실제 결과: 70문항 실패 0. 관련 35는 cited_gold 12 · over_refusal 23, 무관 35는 correct_refusal 35, wrong_citation · hallucination_risk 0. over_refusal 23 중 candidate_find 10 · candidate_judge 9(후보 찾기 · 판정 19문항 전부 거절), role 3, rating 1. 라우팅 일치 31/35. p50 7.4초, 227 호출, 0.0519달러. 사전 등록 기대는 전부 범위 안, 저장소 밖 실행기 기록과 67문항 중 65 같음. Langfuse 확인 6개 통과.
+- 실제 결과: 70문항 실패 0. 관련 35는 cited_gold 12 · over_refusal 23, 무관 35는 correct_refusal 35, wrong_citation · hallucination_risk 0. over_refusal 23 중 candidate_find 10 · candidate_judge 9(후보 찾기 · 판정 19문항 전부 거절), role 3, rating 1. 라우팅 일치 31/35. p50 7.4초, 227 호출, 0.0519달러. 사전 등록 기대 11개 중 10개 범위 안, 1개(관련 hallucination_risk)는 채점기가 부여하지 않아 해당 없음, 저장소 밖 실행기 기록과 67문항 중 65 같음. Langfuse 확인 6개 통과.
 - 확인 못 한 것: 같은 설정을 한 번만 돌렸다(OpenRouter 응답이 흔들리는 폭은 모름, 저장소 밖 기록과 2문항이 갈린 것이 단서). 답 지표는 규칙 채점이라 판정 5종의 정확도가 아니다.
 - 다음 할 일: D5 단일 대 멀티 비교의 기준으로 쓴다. 후보 찾기 · 판정 19문항이 전부 거절이라 사양 표 거르기와 판정 노드가 필요하다. `EVAL_REPORT.md` 4장에 반영한다.
 
