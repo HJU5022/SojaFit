@@ -173,8 +173,8 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
-│       ├── retrieval/      <- 검색 지표(run_retrieval): 하이브리드·벡터·BM25 베이스라인
-│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)
+│       ├── retrieval/      <- 검색 지표: v1 베이스라인(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
+│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       └── skill/          <- Skill·도구 개발 검증 요약
@@ -246,7 +246,8 @@ SojaFit (proj3-b)
 │       ├── auth/           <- 로그인 경계·동시 scrypt
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
-│       └── hnsw/           <- HNSW 대 정확 검색
+│       ├── hnsw/           <- HNSW 대 정확 검색
+│       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
 │   ├── DOCS.md             <- 폴더 설명
@@ -294,6 +295,9 @@ SojaFit (proj3-b)
 │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
 │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
+│   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
+│   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
+│   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
 │   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명

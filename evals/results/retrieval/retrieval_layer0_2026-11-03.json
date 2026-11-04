@@ -1,0 +1,1251 @@
+{
+ "summary": {
+  "1_cards": {
+   "supabase": 52244,
+   "local": 52244,
+   "only_supabase": 0,
+   "only_local": 0,
+   "pass": true
+  },
+  "2_vectors": {
+   "rows": 52244,
+   "models": {
+    "openai/text-embedding-3-small": 52244
+   },
+   "dims_sample": {
+    "1536": 100
+   },
+   "missing": 0,
+   "duplicate": 0,
+   "cos_min": 1.0,
+   "below_0.9999": 0,
+   "pass": true
+  },
+  "3_exact_top50": {
+   "questions": 50,
+   "same": 50,
+   "differ": [],
+   "pass": true
+  },
+  "4_service_top5": {
+   "questions": 19,
+   "filter_hit": 19,
+   "same_by_text": 19,
+   "same_by_file_page": 19,
+   "differ": [],
+   "embed_tokens": 0,
+   "pass": true
+  },
+  "meta": {
+   "dataset_sha256": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+   "chunks_sha256": "9e62fb6a80eb703ce0d8d98e69669d222c9fc307da36d9b272ae4e51083d4516",
+   "compare_questions": [
+    "draft30-h05",
+    "draft50-n01"
+   ]
+  }
+ },
+ "service_rows": [
+  {
+   "id": "draft30-e03",
+   "question": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+   "parts": [
+    "1N5817"
+   ],
+   "allowed_cards": 33,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "aacb63ceb4af"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "0bbe846027ec"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "ca972f8e52d9"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "aacb63ceb4af"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "0bbe846027ec"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "ca972f8e52d9"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-e04",
+   "question": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+   "parts": [
+    "1N4148"
+   ],
+   "allowed_cards": 45,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "c0b04a70a1f8"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "c0b04a70a1f8"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-e05",
+   "question": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+   "parts": [
+    "1N5819"
+   ],
+   "allowed_cards": 33,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "71773f93f281"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "71773f93f281"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-e08",
+   "question": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+   "parts": [
+    "SS34"
+   ],
+   "allowed_cards": 55,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "4598932fb1b4"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     null,
+     "d24ee94a2377"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "8e15c9bf14a7"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     2,
+     "c1c40e2f475e"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "b7eaf60d25c3"
+    ]
+   ],
+   "local_top5": [
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "4598932fb1b4"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     null,
+     "d24ee94a2377"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "8e15c9bf14a7"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     2,
+     "c1c40e2f475e"
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3,
+     "b7eaf60d25c3"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-m03",
+   "question": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+   "parts": [
+    "BZT52C3V6"
+   ],
+   "allowed_cards": 77,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "a7dafd2c789e"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "4687ce558743"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "4d4aeb701759"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "a7dafd2c789e"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "4687ce558743"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "4d4aeb701759"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-m04",
+   "question": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+   "parts": [
+    "BZT52C3V6"
+   ],
+   "allowed_cards": 77,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "f68b154d6c50"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "d7e204cb0fd6"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "f68b154d6c50"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "d7e204cb0fd6"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-m05",
+   "question": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+   "parts": [
+    "1N4148"
+   ],
+   "allowed_cards": 45,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "2dbc268c2388"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "2f6ed34abca8"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "2dbc268c2388"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "2f6ed34abca8"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-m07",
+   "question": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+   "parts": [
+    "BZX84C3V3"
+   ],
+   "allowed_cards": 52,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     null,
+     "41e7a29ac5e4"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "bb3d89448ccd"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     6,
+     "c91b1c67a182"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "188e0d85d02d"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "6fe6e76cff39"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     null,
+     "41e7a29ac5e4"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "bb3d89448ccd"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     6,
+     "c91b1c67a182"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "188e0d85d02d"
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2,
+     "6fe6e76cff39"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-h04",
+   "question": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+   "parts": [
+    "1N5819"
+   ],
+   "allowed_cards": 33,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "a7b080716ef0"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "a7b080716ef0"
+    ]
+   ]
+  },
+  {
+   "id": "draft30-h05",
+   "question": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+   "parts": [
+    "1N5817",
+    "1N5819"
+   ],
+   "allowed_cards": 33,
+   "compare": true,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "576e926720de"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "576e926720de"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n01",
+   "question": "D3에 달아 둔 TSC 1N5819 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?",
+   "parts": [
+    "1N5819",
+    "1N5817"
+   ],
+   "allowed_cards": 33,
+   "compare": true,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "abd00e36f379"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "abd00e36f379"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n02",
+   "question": "D3를 TSC BAS70으로 바꿔도 이 릴레이를 끌 때 코일 전류를 받아 줄 수 있어?",
+   "parts": [
+    "BAS70"
+   ],
+   "allowed_cards": 34,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     null,
+     "e0e2e02adfa2"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "e93a90a15192"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "6292a1c20bf8"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1,
+     "eb928c5f4c01"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "ee02456fd01e"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     null,
+     "e0e2e02adfa2"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "e93a90a15192"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "6292a1c20bf8"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1,
+     "eb928c5f4c01"
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     2,
+     "ee02456fd01e"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n03",
+   "question": "D3 후보로 보는 TSC 1N4148의 역회복 시간은 얼마고, 어떤 시험 조건에서 나온 값이야?",
+   "parts": [
+    "1N4148"
+   ],
+   "allowed_cards": 45,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "428e8a03a3fc"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "428e8a03a3fc"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n04",
+   "question": "D2를 TSC BZT52C5V1로 바꿔도 원하는 전압 범위로 제한할 수 있어?",
+   "parts": [
+    "BZT52C5V1"
+   ],
+   "allowed_cards": 77,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "32bdc935f117"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "e40993e81393"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "4136621626d9"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "32bdc935f117"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "e40993e81393"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3,
+     "4136621626d9"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n05",
+   "question": "D2 후보인 TSC BZT52C3V6의 허용 소비전력과 접합 온도 상한은 얼마야?",
+   "parts": [
+    "BZT52C3V6"
+   ],
+   "allowed_cards": 77,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1,
+     "7319e3b9bffe"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "8ebf1c3d6c1c"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ],
+   "local_top5": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     null,
+     "440cf81e0b53"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "dc535178ecd2"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1,
+     "7319e3b9bffe"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2,
+     "8ebf1c3d6c1c"
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     7,
+     "168ccbe3910d"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n06",
+   "question": "D3용 TSC 1N4148을 주문하려는데, 1N4148 A0G 대신 1N4148 R0G로 사도 같은 제품이야?",
+   "parts": [
+    "1N4148",
+    "A0G",
+    "R0G"
+   ],
+   "allowed_cards": 45,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "4ba796a09211"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "99038ec71cb8"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "8e9be85b8423"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "2dbc268c2388"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "4ba796a09211"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "99038ec71cb8"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "8e9be85b8423"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "2dbc268c2388"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n07",
+   "question": "이 조건에서 D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?",
+   "parts": [
+    "1N5817"
+   ],
+   "allowed_cards": 33,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "e97483375851"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "abd00e36f379"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "7cc969f2c91b"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "e97483375851"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "abd00e36f379"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "7cc969f2c91b"
+    ]
+   ]
+  },
+  {
+   "id": "draft50-n08",
+   "question": "D1을 TSC 1N4148로 바꾸면 이 전류 조건에서 쓸 수 있어?",
+   "parts": [
+    "1N4148"
+   ],
+   "allowed_cards": 45,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "c0b04a70a1f8"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     null,
+     "cff99d912aa5"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "6a93b678c5c2"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "90b2094c1953"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1,
+     "ab120ab3c814"
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2,
+     "c0b04a70a1f8"
+    ]
+   ]
+  },
+  {
+   "id": "draft52-n21",
+   "question": "Breadboard Supply D1을 1N5819로 바꾸려는데, 온도에 따라 역방향 누설전류가 어떻게 달라져?",
+   "parts": [
+    "1N5819"
+   ],
+   "allowed_cards": 33,
+   "compare": false,
+   "supabase_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "576e926720de"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ]
+   ],
+   "local_top5": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     null,
+     "7da1fa9a23d9"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "d49ca53cbeb6"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "576e926720de"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2,
+     "5e928f7e0713"
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1,
+     "af53349b3d08"
+    ]
+   ]
+  }
+ ]
+}

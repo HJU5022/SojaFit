@@ -1,0 +1,18 @@
+{
+ "model": "Qwen/Qwen3-Embedding-0.6B",
+ "dim": 1024,
+ "runs": [
+  {
+   "started": "2026-11-02T12:29:29+0000",
+   "bodies": 45898,
+   "cards": 52244,
+   "tokens": 0,
+   "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+   "load_sec": 9.1,
+   "gpu": "NVIDIA GeForce RTX 3080 Ti",
+   "embed_sec": 244.8,
+   "finished": "2026-11-02T12:33:42+0000",
+   "table_rows": 52244
+  }
+ ]
+}
