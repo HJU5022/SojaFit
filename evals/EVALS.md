@@ -33,6 +33,7 @@
 - `results/search_compare/` — 검색 방식·청킹 비교. `chunking_proxy_2026-11-01.json`·`chunking_search_2026-11-01.json`(청킹 개선 전후: 프록시 청크 수·해석 가능 값 / 11문항 검색 지표), `hybrid_search_2026-11-01.json`(dense·BM25·하이브리드 비교, 11문항, RRF k=60)
 - `results/drafts/` — `draft50_second_pass_2026-11-02.json`(50건 초안의 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록, `drafts/reviews/second_pass_50_review.md`의 원본), `draft52_validation_2026-11-02.json`(추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님)
 - `results/skill/` — `skill_tool_summary_2026-11-03.json`: Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본 6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
+- `results/supervisor/2026-11-04-stage1-v1/` — `stage1_summary.json`(후보 5종 70문항 1회 품질·오류·호출·비용·latency 집계)과 `provider_evidence.json`(provider·actual model·dataset/prompt/code 및 원본 artifact hash). 모델별 parsed output과 전체 manifest는 저장소 밖에 보관
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/research/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 

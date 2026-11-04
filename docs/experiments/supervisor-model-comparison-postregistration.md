@@ -90,6 +90,7 @@ SojaFit 수퍼바이저가 사용자 입력을 읽고 질문 유형과 다음 �
 
 - 전체 실험·결과 문서: `docs/experiments/supervisor-model-comparison.md`
 - 경량 집계: `evals/results/supervisor/2026-11-04-stage1-v1/stage1_summary.json`
+- 경량 provider 근거: `evals/results/supervisor/2026-11-04-stage1-v1/provider_evidence.json`
 - 재현 검증 사전등록: `evals/guides/preregister.md` #29
 
 현재 PR의 집계 JSON은 결과 요약이며 문항별 원시 증거가 아니다. #29에 등록한 경량 evidence를 생성하고 재계산해야 표의 수치 추적 가능성 검증이 완성된다.

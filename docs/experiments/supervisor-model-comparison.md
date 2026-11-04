@@ -415,7 +415,7 @@ Elapsed Time(전체 실행시간) : 해당 모델의 평가 프로세스를 시�
 
 ### 9-1. 최종 실측 결과 — 후보별 70문항 1회
 
-실행 폴더는 `evals/results/supervisor/2026-11-04-stage1-v1/`, 집계 파일은 `stage1_summary.json`이다. `Schema Valid Rate`와 `Question Type Accuracy`는 실패 output을 성공으로 간주하지 않는다. `deepseek/deepseek-v4.1-flash`는 3건 연속 `RateLimitError`로 중단됐으므로 품질 점수 비교 대상이 아니다.
+실행 폴더는 `evals/results/supervisor/2026-11-04-stage1-v1/`, 집계 파일은 `stage1_summary.json`, provider·actual model·원본 artifact hash의 경량 근거는 `provider_evidence.json`이다. `Schema Valid Rate`와 `Question Type Accuracy`는 실패 output을 성공으로 간주하지 않는다. `deepseek/deepseek-v4.1-flash`는 3건 연속 `RateLimitError`로 중단됐으므로 품질 점수 비교 대상이 아니다.
 
 | Model ID | Status | Recorded Outputs | Schema Valid Rate | Question Type Accuracy | Macro-F1 | Raw Calls | Budget-Accounted Cost | Reported Cost Sum | p50 Latency | p95 Latency |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|

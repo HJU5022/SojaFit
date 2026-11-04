@@ -177,7 +177,11 @@ SojaFit (proj3-b)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
-│       └── skill/          <- Skill·도구 개발 검증 요약
+│       ├── skill/          <- Skill·도구 개발 검증 요약
+│       └── supervisor/     <- 수퍼바이저 모델 비교의 경량 집계·provider 근거
+│           └── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
+│               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
+│               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
