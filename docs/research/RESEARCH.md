@@ -23,5 +23,8 @@
 - `tsc-public-part-verification-options.md` — 코퍼스 밖 공개 품번 확인 정책 선택지
 - `web-search-filter-comparison.md` — 웹 검색 TSC 필터 유무 비교 실측 기록
 - `web-search-results-interpretation.md` — 웹 검색 비교 결과 지표 해석과 한계
+- `embedding-grid-eval-2026-11-02.md` — 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표, 카드 임베딩 시간·비용, 단계별 시간, 사전 등록 #16 대조
+- `retrieval-layered-rerun-2026-11-03.md` — 검색 조합 층별 재측정(질의 글·토큰화·임베딩 11종·리랭커)의 사전 등록, 기대 대조, 결과
+- `bit-search-measurement-2026-11-03.md` — 비트 후보 + pgvector 재정렬의 시간·recall@50·최종 점수 확인
 - `retrieval-baseline-analysis.md` — 동결 v1(`dataset_v1.jsonl`) 검색 베이스라인 3방식(`dense`·`bm25`·`hybrid`) 19문항 대조, 회귀 문항 및 실패 유형 4가지 분석, 채점 산식·한계 기록
 - `market-user-journey.md` — 문제·시장 근거(채용 공고 237건 중 LLM/RAG 77건 역량 매핑, 사용자·지불 주체 사실/가설 구분, 페르소나 2종, 6단계 고객 여정 맵, 범용 챗봇 5문항 비교, 현재 서비스 약점, 외부 검토 양식)

@@ -1,0 +1,6 @@
+# 원격 GPU(RTX 3080 Ti)에서 로컬 임베딩 모델을 돌리는 이미지(사전 등록 #7·#8).
+# [왜] PyPI torch는 CUDA 라이브러리를 같이 받아 GPU를 쓴다(11-01 GPU 파싱과 같은 방식)
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+RUN uv pip install --system torch "sentence-transformers>=3.0" "transformers>=4.51" numpy
+ENV HF_HOME=/work/hf
+WORKDIR /work

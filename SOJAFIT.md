@@ -140,7 +140,12 @@ SojaFit (proj3-b)
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
 │   │   ├── INPUTS.md       <- 폴더 설명
 │   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 페이지 36개(회수 불가 2쪽 표시, 사전 등록 #24)
-│   │   └── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
+│   │   ├── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
+│   │   └── layers/         <- 검색 조합 층별 재측정(11-03)의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
+│   │       ├── parts.json  <- 0층에서 고정한 질문 줄·품번·비교 여부
+│   │       ├── queries.jsonl  <- LLM이 한 번 만들어 고정한 질의 Q3~Q5
+│   │       ├── queries_check.json  <- 고정 질의의 자동 확인(품번 남음·없던 숫자) 걸린 건
+│   │       └── query_texts.jsonl  <- 임베딩에 보낸 질의 글 전체(sha·본문)
 │   ├── guides/             <- 평가 기준 문서
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
@@ -155,7 +160,16 @@ SojaFit (proj3-b)
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
-│   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
+│   │   ├── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
+│   │   ├── embed_cards.py  <- 임베딩 격자 본평가(#16)의 카드 적재와 모델별 카드 임베딩(실험 DB, 컨테이너)
+│   │   ├── run_embedding_grid.py  <- 임베딩 6종 × 검색 방식 × 리랭커 78칸 측정(#16, 컨테이너)
+│   │   ├── check_retrieval_db.py  <- 층별 재측정 0층: Supabase 카드·벡터·검색 결과를 로컬과 대조(읽기만)
+│   │   ├── run_retrieval_layers.py  <- 검색 조합 층별 재측정 1~4층(질의 글·토큰화·임베딩·리랭커, 11-03)
+│   │   └── report_retrieval_layers.py  <- 층별 재측정의 사전 등록 비교값을 결과 파일에서 뽑아 정리
+│   ├── docker/             <- 평가 실험용 컨테이너 이미지 정의
+│   │   ├── DOCKER.md       <- 폴더 설명
+│   │   ├── Dockerfile.gpu_embed  <- 원격 GPU에서 로컬 임베딩 모델을 돌리는 이미지(sojafit-emb)
+│   │   └── Dockerfile.embedding_grid  <- 임베딩 격자 본평가 실행 이미지(gpu_embed에 DB·BM25·Voyage 패키지를 더함)
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
 │   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
@@ -173,8 +187,8 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
-│       ├── retrieval/      <- 검색 지표(run_retrieval): 하이브리드·벡터·BM25 베이스라인
-│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)
+│       ├── retrieval/      <- 검색 지표: v1 베이스라인(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
+│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       └── skill/          <- Skill·도구 개발 검증 요약
@@ -219,7 +233,10 @@ SojaFit (proj3-b)
 │   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
-│   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
+│   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
+│   │   └── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
 │   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회의 수용 기준(SPEC 8.7)
@@ -239,6 +256,13 @@ SojaFit (proj3-b)
 │   ├── langfuse/           <- Langfuse 점검
 │   │   ├── LANGFUSE.md     <- 폴더 설명
 │   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
+│   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
+│   │   ├── BIT_SEARCH.md   <- 폴더 설명
+│   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
+│   ├── hf_jobs/            <- Hugging Face Jobs로 GPU 임베딩을 돌리는 스크립트
+│   │   ├── HF_JOBS.md      <- 폴더 설명
+│   │   ├── hf_job.py       <- HF Jobs에서 GPU 모델로 카드·질의를 임베딩해 비공개 데이터셋에 올림
+│   │   └── hf_data.py      <- 카드·질의를 비공개 저장소로 올리고 결과 벡터를 받아 검증·삭제
 │   ├── db/                 <- 운영 DB 손 작업
 │   │   ├── DB.md           <- 폴더 설명
 │   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
@@ -246,7 +270,8 @@ SojaFit (proj3-b)
 │       ├── auth/           <- 로그인 경계·동시 scrypt
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
-│       └── hnsw/           <- HNSW 대 정확 검색
+│       ├── hnsw/           <- HNSW 대 정확 검색
+│       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
 │   ├── DOCS.md             <- 폴더 설명
@@ -294,6 +319,9 @@ SojaFit (proj3-b)
 │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
 │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
+│   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
+│   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
+│   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
 │   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
@@ -339,6 +367,7 @@ SojaFit (proj3-b)
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
 | `evals/inputs/` | [INPUTS.md](evals/inputs/INPUTS.md) | 평가·데이터 |
+| `evals/docker/` | [DOCKER.md](evals/docker/DOCKER.md) | 평가·문서 |
 | `evals/guides/` | [GUIDES.md](evals/guides/GUIDES.md) | 평가·문서 |
 | `evals/runners/` | [RUNNERS.md](evals/runners/RUNNERS.md) | 평가·문서 |
 | `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
@@ -354,6 +383,8 @@ SojaFit (proj3-b)
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
 | `scripts/auth/` | [AUTH.md](scripts/auth/AUTH.md) | 서비스·운영 |
 | `scripts/db/` | [DB.md](scripts/db/DB.md) | 서비스·운영 |
+| `scripts/bit_search/` | [BIT_SEARCH.md](scripts/bit_search/BIT_SEARCH.md) | 서비스·운영 |
+| `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
