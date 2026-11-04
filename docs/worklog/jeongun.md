@@ -2,11 +2,13 @@
 
 ## 2026-11-04 임베딩 선정 실측 원시 결과와 해석 문서를 저장소에 올린다
 - 한 일: 저장소 밖(`전자_데이터시트/evidence/`)에만 있던 임베딩 선정 실측을 트리 규칙에 맞춰 올렸다. 원시 결과: 임베딩 격자 본평가 78칸·카드 임베딩 기록 6개·리랭크 캐시(`evals/results/embedding/grid_*`), 검색 층별 재측정 0~4층·요약·최종 조합(`evals/results/retrieval/retrieval_layer*`, `retrieval_layers_*`), 비트 검색 3개(`scripts/results/bit_search/`). 해석: `docs/research/`에 문서 3개. `EVAL_REPORT.md` 1-3절에 원시 위치를 적고 1-4절(D3 #24, R1 #25, 비트 검색, 서비스 반영 #26·#27)을 더했다.
-- 바꾼 파일: 위 결과 파일 18개와 문서 3개, `SOJAFIT.md`(트리 줄), `evals/EVALS.md`, `scripts/SCRIPTS.md`, `docs/research/RESEARCH.md`, `EVAL_REPORT.md`, 이 파일
-- 실행한 명령과 결과: 올릴 파일에서 키·비밀번호·절대 경로 패턴을 검색해 0건(`embed.py`의 로컬 기본 DB 접속 글은 스크립트라 올리지 않음). `uv run --frozen pytest tests/repo -q`는 5 passed. 원시 결과 합계 약 4.5MB.
-- 확인 못 한 것: 원시 JSON 안의 값과 문서 표를 하나씩 다시 대조하지 않았다(표는 위키 원장과 원본 README에서 옮김). 푸시는 하지 않았다.
-- 올리지 않은 것: 실행 스크립트(`embed.py`, `grid.py`, `bq_exp.py`, `local.py`, `check_db.py`, `hf_*.py`)와 Dockerfile, 질문 벡터·카드 벡터(`.npz`/`.npy`, 약 2.8GB), 78칸 비교 그래프(`compare.html`). `hnsw_exp`(405MB)는 임베딩 선정이 아니라 제외했다.
-- 다음 할 일: 스크립트를 저장소에 둘지 정한다(HNSW 실험 선례는 저장소 밖).
+- 바꾼 파일: 위 결과 파일 18개와 문서 3개, 스크립트·시험·폴더 설명 파일(아래), `SOJAFIT.md`(트리 줄과 담당 표), `evals/EVALS.md`, `evals/runners/RUNNERS.md`, `evals/inputs/INPUTS.md`, `tests/evals/EVALS.md`, `scripts/SCRIPTS.md`, `docs/research/RESEARCH.md`, `EVAL_REPORT.md`, 이 파일
+- 실행한 명령과 결과: 올릴 파일에서 키·비밀번호·절대 경로 패턴을 검색해 0건(`embed.py`의 로컬 기본 DB 접속 글은 스크립트라 올리지 않음). `uv run --frozen pytest -q` 전체 295 passed, 26 skipped(구조 시험 포함). 원시 결과 합계 약 4.5MB.
+- 확인 못 한 것: 문서 표는 위키 원장과 원본 README에서 옮겼다(시험이 대조하는 건 원시 JSON 안의 요약·recall 값이다). 스크립트는 import와 문법, 순수 함수만 시험했고 실제 실행(DB·API·GPU)은 하지 않았다. 푸시는 하지 않았다.
+- 스크립트도 올렸다(재현·시험용): `evals/runners/`에 `embed_cards.py`·`run_embedding_grid.py`(격자 #16), `check_retrieval_db.py`·`run_retrieval_layers.py`·`report_retrieval_layers.py`(층별 재측정), `scripts/bit_search/bit_search_exp.py`, `scripts/hf_jobs/hf_job.py`·`hf_data.py`, `evals/docker/Dockerfile.*` 2개, 고정 질의 `evals/inputs/layers/`. 새 폴더 `evals/docker/`·`scripts/bit_search/`·`scripts/hf_jobs/`는 폴더 설명 파일과 트리 줄을 같이 넣었다. 시험 3개(`tests/evals/test_embedding_grid.py`, `test_retrieval_layers.py`, `test_bit_search.py`)는 순수 계산과 결과 파일 재계산 대조(격자 78칸 요약, 층별 요약, 비트 recall 값이 문서 값과 같은지)를 본다.
+- 스크립트를 고친 범위: import 경로(`evals.run_retrieval` → `evals.runners.run_retrieval` 등), 입출력 폴더(환경변수 `LAYERS_WORK`·`BIT_SEARCH_WORK`), 하드코딩 경로(`/Users/...`, 임시 폴더) 제거, 코드에 있던 실험 DB 접속 문자열을 `EMBED_DB` 환경변수로 바꿈. 측정 로직은 바꾸지 않았다.
+- 올리지 않은 것: 질문·카드 벡터(`.npz`/`.npy`/`.f32`, 약 2.8GB), 실행 로그(`*.log`는 .gitignore), 78칸 비교 그래프(`compare.html`), `hnsw_exp`(405MB)와 11-01 `embed/` 스크립트, `v2_check.py`, 코덱스 검토 메모.
+- 다음 할 일: 스크립트를 실제로 다시 돌려 본다(컨테이너·실험 DB·API 비용이 필요해 이번에는 안 함). `bit_search_exp.py`는 운영 DB가 voyage만 있어 그대로는 돌지 않는다.
 
 ## 2026-11-04 그래프 평가 실행기가 문항별 지표를 레포에 남기게 한다(D4 기준 점수 준비)
 - 목적: D4 단일 기준 점수와 D5 단일 · 멀티 비교를 같은 형식으로 남기고, 평가자가 레포에서 숫자를 맞춰 볼 수 있게 한다(가이드 v5 제출물 "평가셋과 원시 결과, 재현 명령은 레포 내"). 지금까지는 Langfuse에만 남았다.

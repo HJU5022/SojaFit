@@ -2,7 +2,7 @@
 
 확인일: 2026-11-03 실측, 2026-11-04 저장소에 반영. 원시 결과: `bit_search_2026-11-03.json`(전체), `bit_search_final_2026-11-03.json`(최종 점수 확인), `bit_search_warm_2026-11-03.json`(비트 검색만 이어서 잰 시간). 모두 `scripts/results/bit_search/`에 있다.
 
-조사 보고서 "pgvector 유지하며 검색 속도 높이기"의 1순위 방법을 우리 Supabase(Nano)에서 직접 잰다. 실험 스크립트(`bq_exp.py`)와 질문 벡터(`q_vectors.npy`)는 저장소 밖에 두고 결과만 [scripts/results/bit_search/](../../scripts/results/bit_search/)에 올렸다.
+조사 보고서 "pgvector 유지하며 검색 속도 높이기"의 1순위 방법을 우리 Supabase(Nano)에서 직접 잰다. 실험 스크립트는 [scripts/bit_search/bit_search_exp.py](../../scripts/bit_search/bit_search_exp.py)이고, 질문 벡터(`q_vectors.npy`)는 저장소 밖에 두고 결과만 [scripts/results/bit_search/](../../scripts/results/bit_search/)에 올렸다.
 
 ## 무엇을 재나
 

@@ -125,4 +125,5 @@
 
 ## 한계 (저장소에 없는 것)
 
-- 스크립트(`check_db.py`, `local.py`, `hf_job.py`, `hf_data.py`), 질문 벡터(`qvec_*.npz`), 카드 벡터(약 2.8GB), 리랭크 응답 캐시(5MB), 지출 기록은 저장소 밖 실험 폴더에만 있다. 이 문서의 표와 숫자가 그 요약이다.
+- 스크립트는 저장소에 있다: `evals/runners/check_retrieval_db.py`(0층), `run_retrieval_layers.py`(1~4층), `report_retrieval_layers.py`, `scripts/hf_jobs/`(HF Jobs GPU 임베딩). 고정 질의는 `evals/inputs/layers/`. 11-03에 돌린 뒤 저장소 경로에 맞게 import와 입출력 폴더(`LAYERS_WORK`)만 고쳤고 다시 돌려 보지는 않았다.
+- 저장소에 없는 것: 질문 벡터(`qvec_*.npz`), 카드 벡터(약 2.8GB), 리랭크 응답 캐시(5MB), 지출 기록, 코덱스 검토 메모. 이 문서의 표와 숫자가 그 요약이다.

@@ -20,7 +20,9 @@
   - 지표 계산은 `evals/run_retrieval.py`와 같은 기준이다(문서 순위, 쪽 적중). 다중 근거 Recall@5는 문항의 모든 gold 쪽이 상위 5에 함께 들어온 비율이다.
 - 파일
   - 원시 결과: `evals/results/embedding/grid_2026-11-02.json`
-  - 실행 스크립트(`embed.py` 카드 적재와 모델별 임베딩, `grid.py` 78칸 측정, `Dockerfile` 실행 이미지), 리랭크 응답 캐시(`rerank_cache.jsonl`, 133KB), 모델별 임베딩 기록과 실행 로그, 78칸 비교 그래프(`compare.html`)는 저장소 밖 실험 폴더에 있다. 이 문서의 표와 숫자가 그 요약이다.
+  - 모델별 카드 임베딩 기록: `evals/results/embedding/grid_embed_<모델>_2026-11-02.json` 6개, 리랭크 응답 캐시: `grid_rerank_cache_2026-11-02.jsonl`
+  - 실행 코드: `evals/runners/embed_cards.py`(카드 적재·카드 임베딩), `evals/runners/run_embedding_grid.py`(78칸 측정), 실행 이미지 `evals/docker/Dockerfile.embedding_grid`, 실행 순서 [evals/docker/DOCKER.md](../../evals/docker/DOCKER.md). 11-02에 돌린 뒤 저장소 경로(`evals/runners/`)에 맞게 import만 고쳤고 다시 돌려 보지는 않았다
+  - 저장소에 없는 것: 실행 로그, 78칸 비교 그래프(`compare.html`, D3 회의 자료)
 
 ## 카드 임베딩 [실측 11-02]
 
