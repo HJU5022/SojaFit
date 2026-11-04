@@ -1,9 +1,7 @@
 {
   "status": "stage1_complete_with_one_provider_stop",
   "selection_status": "selected",
-  "selection_scope": "supervisor_stage1_experiment",
   "selected_model_id": "openai/gpt-6-luna",
-  "canonical_activation_status": "pending_leader_owned_adr_spec_update",
   "scope": {
     "models": 5,
     "cases_per_model": 70,

@@ -46,14 +46,6 @@ class EvaluationLimitError(RuntimeError):
     """평가 호출 수·시간·예약 비용 상한을 넘겼을 때 내는 오류."""
 
 
-class EvaluationFormatError(RuntimeError):
-    """provider 응답은 받았지만 평가 schema 검증에 실패했을 때 metadata를 보존하는 오류."""
-
-    def __init__(self, metadata: dict):
-        super().__init__("평가 응답 schema 불일치")
-        self.metadata = metadata
-
-
 @dataclass
 class EvaluationBudget:
     """평가 전용 호출 예산(호출 수·시간·예약 비용·출력 토큰 상한)."""
@@ -69,7 +61,6 @@ class EvaluationBudget:
     calls: int = 0
     reserved_usd: float = 0.0
     started: float = field(default_factory=time.monotonic)
-    _pending_reservations: list[float] = field(default_factory=list, repr=False)
 
     def __post_init__(self):
         """만들 때 상한·단가를 검증한다."""
@@ -115,22 +106,7 @@ class EvaluationBudget:
             raise EvaluationLimitError("평가 호출/시간/예약비용 상한")
         self.calls += 1
         self.reserved_usd += cost
-        self._pending_reservations.append(cost)
         return min(45.0, remaining)
-
-    def reconcile(self, reported_cost: float | None) -> None:
-        """가장 최근 호출 예약액을 provider가 보고한 실제 비용으로 정산한다.
-
-        비용이 없으면 보수적 예약액을 유지한다. 호출 오류로 응답이 없었던 예약은 정산하지 않는다.
-        """
-        if not self._pending_reservations:
-            raise RuntimeError("정산할 평가 호출 예약이 없습니다")
-        reserved = self._pending_reservations.pop()
-        if reported_cost is None:
-            return
-        if not isinstance(reported_cost, (int, float)) or not math.isfinite(reported_cost) or reported_cost < 0:
-            raise ValueError("provider 비용은 유한한 0 이상의 수여야 합니다")
-        self.reserved_usd += float(reported_cost) - reserved
 
 
 _evaluation_budget = ContextVar("evaluation_budget", default=None)
@@ -220,55 +196,6 @@ def _chat_model():
     # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
     return ChatOpenAI(model=LLM_MODEL, base_url="https://openrouter.ai/api/v1",
                       api_key=os.environ["OPENROUTER_API_KEY"], temperature=0, max_retries=0)
-
-
-def _evaluation_client(timeout: float):
-    """평가 전용 OpenRouter client를 재시도 없이 만든다."""
-    from openai import OpenAI
-
-    return OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url="https://openrouter.ai/api/v1",
-                  max_retries=0, timeout=timeout)
-
-
-def evaluation_chat(model: str, system: str, user: str, schema: type[BaseModel], *,
-                    provider_policy: dict, max_tokens: int, timeout: float) -> tuple[BaseModel, dict]:
-    """평가 후보 한 건을 명시한 model·provider policy로 호출하고 검증된 출력과 usage metadata를 돌려준다."""
-    budget = _evaluation_budget.get()
-    if budget:
-        schema_text = json.dumps(schema.model_json_schema(), ensure_ascii=False)
-        timeout = min(timeout, budget.reserve(system + user + schema_text, output_tokens=max_tokens))
-    client = _evaluation_client(timeout)
-    generation_parameters = {"max_tokens": max_tokens, "temperature": 0}
-    if model == "anthropic/claude-haiku-5.5":
-        generation_parameters.pop("temperature")
-    elif model == "openai/gpt-6-luna":
-        generation_parameters = {"max_completion_tokens": max_tokens}
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-        **generation_parameters,
-        response_format={"type": "json_schema", "json_schema": {
-            "name": schema.__name__, "schema": schema.model_json_schema(), "strict": True,
-        }},
-        extra_body={"provider": provider_policy, "usage": {"include": True}},
-    )
-    choice = response.choices[0]
-    usage = response.usage.model_dump() if response.usage is not None else None
-    if budget:
-        budget.reconcile(usage.get("cost") if usage else None)
-    extra = getattr(response, "model_extra", None) or {}
-    metadata = {
-        "response_id": response.id,
-        "actual_model": getattr(response, "model", None) or extra.get("model"),
-        "provider": getattr(response, "provider", None) or extra.get("provider"),
-        "finish_reason": choice.finish_reason,
-        "usage": usage,
-    }
-    try:
-        parsed = schema.model_validate_json(choice.message.content)
-    except ValidationError as error:
-        raise EvaluationFormatError(metadata) from error
-    return parsed, metadata
 
 
 def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:

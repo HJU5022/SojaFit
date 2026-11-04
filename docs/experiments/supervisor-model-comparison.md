@@ -1,6 +1,6 @@
 # 수퍼바이저 모델 5종 비교
 
-상태: 동결 v2 70문항 1회 비교를 완료했고, 이 실험의 최종 선정 모델을 `openai/gpt-6-luna`로 확정함. 서비스 기본값 적용은 조장 소유 정본인 ADR·`SPEC.md` 갱신 뒤에 한다.
+상태: 동결 v2 70문항 1회 비교를 완료했고, 실측 결과를 근거로 `openai/gpt-6-luna`를 수퍼바이저 모델로 최종 확정함.
 
 ## Why
 
@@ -14,7 +14,7 @@
 
 ## Goal
 
-- **해결 목표**: 아래 5개 모델을 동결 `evals/dataset_v2.jsonl` 70문항에 같은 입력·출력 계약으로 1회씩 실행하고, 실측 품질·실패·비용·latency를 비교해 실험상 수퍼바이저 모델을 확정한다.
+- **해결 목표**: 아래 5개 모델을 동결 `evals/dataset_v2.jsonl` 70문항에 같은 입력·출력 계약으로 1회씩 실행하고, 실측 품질·실패·비용·latency를 비교해 수퍼바이저 모델을 확정한다.
 - **실행 규모**: `5 models × 70 cases × 1 run = 350` planned outputs. retry와 실패 호출은 output 수에 섞지 않고 별도 집계한다.
 - **후보 모델**:
   - `anthropic/claude-haiku-5.5`
@@ -276,13 +276,13 @@ supervisor-only gate를 통과한 후보에 같은 retrieval, reranker, tools, a
 | `meta/muse-glimmer-30b` | 0.029 (0.029–0.029) | 0.071 | 0.014 | 69/70 |
 | `cohere/command-a-plus` | 0.152 (0.143–0.171) | 0.255 | 0.114 | 62/70 |
 
-이 부분 실측의 parsed output과 집계 파일은 로컬 이력 `evals/results/supervisor/2026-11-04-preflight-v5/`에 보존했다. 해당 폴더와 `evaluation_outcome.json`은 이 PR에 포함하지 않으며, 현재 PR에서 공개·검증하는 최종 선정 근거는 아래 `2026-11-04-stage1-v1/`로 한정한다. 실행 중인 smoke·본 테스트 프로세스는 0개다.
+원시 parsed output과 집계 파일은 `evals/results/supervisor/2026-11-04-preflight-v5/`, 실행 상태 요약은 같은 폴더의 `evaluation_outcome.json`에 있다. 실행 중인 smoke·본 테스트 프로세스는 0개다.
 
-2026-11-04 routing parameter 수정 뒤 로컬 이력 `evals/results/supervisor/2026-11-04-routing-fix-smoke-v1/`에서 다시 확인했다. 이 폴더는 이 PR에 포함하지 않는다. `anthropic/claude-haiku-5.5`는 `Google`, `openai/gpt-6-luna`는 `Azure` provider에서 actual model ID와 schema output을 포함한 smoke를 완료했다. 이 두 호출은 본 테스트 output에 포함하지 않는다.
+2026-11-04 routing parameter 수정 뒤 새 manifest `evals/results/supervisor/2026-11-04-routing-fix-smoke-v1/`에서 다시 확인했다. `anthropic/claude-haiku-5.5`는 `Google`, `openai/gpt-6-luna`는 `Azure` provider에서 actual model ID와 schema output을 포함한 smoke를 완료했다. 이 두 호출은 본 테스트 output에 포함하지 않는다.
 
 #### 7-2. Final Supervisor Model Selection
 
-**이 실험의 최종 선정 모델은 `openai/gpt-6-luna`다.** 이 결정은 `evals/results/supervisor/2026-11-04-stage1-v1/`의 후보별 70문항 1회 실행을 근거로 한다. 이 모델은 수퍼바이저의 질문 분류와 다음 route 결정을 맡는 모델이며, 최종 답변 생성 모델을 선정한 것은 아니다. 현재 서비스 정본은 ADR 0010과 `SPEC.md`의 임시 Haiku 설정이므로, Luna 적용은 조장이 정본을 갱신한 뒤 별도 변경으로 수행한다.
+**선정 모델은 `openai/gpt-6-luna`다.** 이 결정은 `evals/results/supervisor/2026-11-04-stage1-v1/`의 후보별 70문항 1회 실행을 근거로 한다. 이 모델은 수퍼바이저의 질문 분류와 다음 route 결정을 맡는 모델이며, 최종 답변 생성 모델을 선정한 것은 아니다.
 
 선정 기준은 서로 다른 metric을 임의 가중합하지 않고 다음 순서로 적용했다.
 
@@ -324,7 +324,7 @@ supervisor-only gate를 통과한 후보에 같은 retrieval, reranker, tools, a
 
 `openai/gpt-6-luna`는 `anthropic/claude-haiku-5.5`보다 p50·p95 latency가 느렸지만, Schema Valid Rate가 25.7%p 높고 Question Type Accuracy가 37.1%p 높았다. raw call은 38회 적고 Budget-Accounted Cost도 약 56.9% 낮았다. 수퍼바이저는 빠른 자유 응답보다 schema와 route 정확도가 우선이므로 latency 열위를 감수하고 `openai/gpt-6-luna`를 선택한다.
 
-`Question Type Accuracy`와 Macro-F1은 gold가 있는 35문항만 채점했다. 이 제한을 결과표에 유지하되, 현재 실측 기준 실험상 수퍼바이저 모델은 `openai/gpt-6-luna`로 최종 확정한다.
+`Question Type Accuracy`와 Macro-F1은 gold가 있는 35문항만 채점했다. 이 제한을 결과표에 유지하되, 현재 실측 기준 수퍼바이저 모델은 `openai/gpt-6-luna`로 최종 확정한다.
 
 #### 7-2의 용어는 다음과 같습니다.
 
@@ -376,7 +376,7 @@ Elapsed Time(전체 실행시간) : 해당 모델의 평가 프로세스를 시�
 
 ### 8. 저장과 비용 통제
 
-- 실행 manifest와 집계 결과 위치: `evals/results/supervisor/<run-id>/`
+- 실행 manifest와 집계 결과 예정 위치: `evals/results/supervisor/<run-id>/`
 - 문서 본문이나 사용자 입력이 들어간 raw response는 local/private 저장을 기본으로 하고 저장소에 commit하지 않는다.
 - 저장소에는 재현에 필요한 hash, 조건, aggregate, redacted failure만 남긴다.
 - 주 실행 상한은 retry 제외 350 supervisor outputs다.
@@ -411,11 +411,11 @@ Elapsed Time(전체 실행시간) : 해당 모델의 평가 프로세스를 시�
 - model별 본 실행: `uv run --no-sync python -m evals.runners.run_supervisor_models run <결과 폴더> --model <full model ID> --max-usd <승인된 상한> --confirm-live`
 - 본 실행은 위 명령에 `--run-index 1`을 붙여 후보별 70건을 실행했다.
 - 본 실행은 같은 manifest hash의 smoke 또는 원본 hash가 유지된 `provider_evidence.json`이 없으면 시작하지 않는다. evidence는 동일 dataset·prompt·provider policy의 exact model 호출만 허용하고 원본 manifest와 결과 파일이 바뀌면 실행 전에 거부한다. schema 불일치는 실패 output으로 측정하되 provider 응답이 확인되면 본 실행 대상에 포함한다. 본 실행은 검증된 provider를 `provider.only`로 고정하고 응답 provider가 달라지면 중단한다.
-- API 호출 없이 준비한 다음 본 테스트 폴더 `evals/results/supervisor/2026-11-04-main-ready-v1/`과 그 source인 `2026-11-04-preflight-v5/`, `2026-11-04-routing-fix-smoke-v1/`은 로컬 이력이며 이 PR에 포함하지 않는다. import 과정은 다섯 모델의 호출 증거를 원본 hash와 함께 검증했으며 새 smoke나 새 본 테스트 결과로 세지 않는다. 현재 PR의 공개 실측 근거는 `2026-11-04-stage1-v1/`이다.
+- API 호출 없이 준비한 다음 본 테스트 폴더는 `evals/results/supervisor/2026-11-04-main-ready-v1/`이다. `2026-11-04-preflight-v5/`에서 3개 모델, `2026-11-04-routing-fix-smoke-v1/`에서 2개 모델의 호출 증거를 원본 hash와 함께 가져왔다. 이것은 새 smoke나 새 본 테스트 결과가 아니다.
 
 ### 9-1. 최종 실측 결과 — 후보별 70문항 1회
 
-실행 폴더는 `evals/results/supervisor/2026-11-04-stage1-v1/`이다. `manifest.json`은 dataset·prompt·code hash와 job을, `provider_evidence.json`은 smoke 근거 hash를, 모델별 `rows_*.json`은 case·run별 parsed output·usage·latency를, `stage1_summary.json`은 이번 1회차 선정용 결정적 집계를 보존한다. row 파일의 top-level `summary`는 최대 3회 실행을 지원하는 runner 진단 형식이므로 실행하지 않은 run 2·3이 0으로 보이며, `Completion Rate`와 `Three-Run Exact Agreement`는 이번 선정 지표로 사용하지 않는다. 사용자 입력·raw response·예외 원문은 저장하지 않는다. `Schema Valid Rate`와 `Question Type Accuracy`는 실패 output을 성공으로 간주하지 않는다. `deepseek/deepseek-v4.1-flash`는 3건 연속 `RateLimitError`로 중단됐으므로 품질 점수 비교 대상이 아니다.
+실행 폴더는 `evals/results/supervisor/2026-11-04-stage1-v1/`, 집계 파일은 `stage1_summary.json`이다. `Schema Valid Rate`와 `Question Type Accuracy`는 실패 output을 성공으로 간주하지 않는다. `deepseek/deepseek-v4.1-flash`는 3건 연속 `RateLimitError`로 중단됐으므로 품질 점수 비교 대상이 아니다.
 
 | Model ID | Status | Recorded Outputs | Schema Valid Rate | Question Type Accuracy | Macro-F1 | Raw Calls | Budget-Accounted Cost | Reported Cost Sum | p50 Latency | p95 Latency |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -427,7 +427,7 @@ Elapsed Time(전체 실행시간) : 해당 모델의 평가 프로세스를 시�
 
 전체 350개 계획 중 283개 output이 기록됐고 schema-valid output은 135개다. raw call은 589회, `Budget-Accounted Cost` 합계는 `$0.21675608`, provider가 `usage.cost`를 보고한 호출 561회의 합계인 `Reported Cost Sum`은 `$0.19945832`다. 두 비용은 정의가 다르므로 실제 총 청구액으로 서로 대체하지 않는다.
 
-실측 결과 `openai/gpt-6-luna`가 schema·routing 정확도에서 가장 높고, 완료 모델 중 `anthropic/claude-haiku-5.5`가 두 번째다. `openai/gpt-6-luna`를 이 실험의 최종 수퍼바이저 모델로 확정한다. 서비스 기본값 적용은 조장 소유 ADR·`SPEC.md` 갱신 뒤에 한다. `deepseek/deepseek-v4.1-flash`는 품질 열위가 아니라 이번 provider rate limit 때문에 비교 불가로 남긴다.
+실측 결과 `openai/gpt-6-luna`가 schema·routing 정확도에서 가장 높고, 완료 모델 중 `anthropic/claude-haiku-5.5`가 두 번째다. `openai/gpt-6-luna`를 최종 수퍼바이저 모델로 확정한다. `deepseek/deepseek-v4.1-flash`는 품질 열위가 아니라 이번 provider rate limit 때문에 비교 불가로 남긴다.
 - 저장값: parsed decision, response ID, finish reason, usage, latency, retry count, sanitized error type, budget, deterministic summary. prompt 원문·raw response·예외 원문은 저장하지 않는다.
 - 현재 objective gold: 관련 35건의 `question_type`만 동결 파일에 있다. 비관련 35건은 `question_type`이 비어 있으므로 출력은 70건 모두 수집하되 `Question Type Accuracy` 분모에서는 제외하고 `Known Limitation.unscored_case_count=35`와 ID 목록으로 보고한다. 이것은 문항을 줄이거나 임의 label을 만드는 방식으로 고치지 않는다.
 - `required_evidence`, `next_action`, 비관련 35건의 route gold는 두 사람 합의 label file이 생기기 전 점수화하지 않는다. 코드가 `expected`나 `gold_chunks`에서 임의로 정답을 만들지 않는다.
@@ -473,7 +473,7 @@ Elapsed Time(전체 실행시간) : 해당 모델의 평가 프로세스를 시�
 - WHEN: 결과를 집계하면
 - THEN: 누락값은 `Not Reported`이며 `[Estimated]` 값을 `[Measured]`나 `Actual Total Cost`로 표시하지 않는다.
 
-**AC-08 · 완료 뒤 선정 범위 구분**
-- GIVEN: 후보별 70문항 1회 평가와 집계가 완료됨
-- WHEN: 실험 결론과 서비스 정본을 함께 검토하면
-- THEN: `openai/gpt-6-luna`는 이 실험의 최종 선정 모델이고, 서비스 기본값과 최종 그래프 구조는 조장 소유 ADR·`SPEC.md`가 갱신되기 전까지 확정된 것으로 표시하지 않는다.
+**AC-08 · 결과 전 모델 미확정**
+- GIVEN: 이 평가가 완료되지 않음
+- WHEN: 설계 문서나 보고서를 검토하면
+- THEN: 어떤 후보도 최종 수퍼바이저로 확정되어 있지 않고 참고 노드 그림도 최종 구조로 표시되지 않는다.
