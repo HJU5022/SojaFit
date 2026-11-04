@@ -79,6 +79,31 @@ def test_account_creation_rejects_malformed_email_before_database(monkeypatch):
         auth.provision()
 
 
+def test_account_deletion_cli_requires_exact_id_confirmation(monkeypatch):
+    import builtins
+    import sys
+
+    deleted = []
+    monkeypatch.setattr(sys, "argv", ["backend.auth", "--delete-user-id", "42"])
+    monkeypatch.setattr(builtins, "input", lambda _prompt: "41")
+    monkeypatch.setattr(auth, "delete_provisioned_user", lambda user_id: deleted.append(user_id), raising=False)
+    auth.provision()
+    assert deleted == []
+
+
+def test_account_deletion_cli_rejects_admin_role(monkeypatch):
+    import builtins
+    import sys
+
+    deleted = []
+    monkeypatch.setattr(sys, "argv", ["backend.auth", "--role", "admin", "--delete-user-id", "42"])
+    monkeypatch.setattr(builtins, "input", lambda _prompt: "42")
+    monkeypatch.setattr(auth, "delete_provisioned_user", lambda user_id: deleted.append(user_id), raising=False)
+    with pytest.raises(SystemExit):
+        auth.provision()
+    assert deleted == []
+
+
 def test_database_sessions_are_isolated_and_revoked(monkeypatch):
     import os
     import secrets
@@ -447,6 +472,53 @@ def test_keyed_session_login_rotation_and_logout(monkeypatch):
     assert client.get("/api/auth/me").status_code == 401
     with psycopg.connect(database_url) as conn:
         assert conn.execute("SELECT count(*) FROM auth_sessions WHERE user_id=%s", (user_id,)).fetchone()[0] == 0
+
+
+def test_delete_provisioned_user_removes_only_its_auth_rows(monkeypatch):
+    import hashlib
+    import os
+    import secrets
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    suffix = secrets.token_hex(6)
+    emails = [f"remove-{suffix}@example.test", f"keep-{suffix}@example.test", f"admin-{suffix}@example.test"]
+    password_hash = auth.hash_password("test-only-password-123")
+    ids = []
+    hashes = [hashlib.sha256(email.encode()).hexdigest() for email in emails]
+    try:
+        with psycopg.connect(database_url) as conn:
+            ids = [row[0] for row in conn.execute(
+                "INSERT INTO users(login_id,password_hash,is_active,role) VALUES (%s,%s,FALSE,'user'),(%s,%s,TRUE,'user'),(%s,%s,FALSE,'admin') RETURNING id",
+                (emails[0], password_hash, emails[1], password_hash, emails[2], password_hash),
+            ).fetchall()]
+            conn.execute(
+                "INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour'),(%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')",
+                (secrets.token_hex(32), ids[0], secrets.token_hex(32), ids[1]),
+            )
+            conn.execute("INSERT INTO auth_login_attempts(login_hash,failed_count) VALUES (%s,1),(%s,2)", (hashes[0], hashes[1]))
+
+        assert auth.delete_provisioned_user(ids[0]) is True
+        assert auth.delete_provisioned_user(ids[0]) is False
+        with pytest.raises(ValueError, match="administrator"):
+            auth.delete_provisioned_user(ids[2])
+
+        with psycopg.connect(database_url) as conn:
+            assert conn.execute("SELECT count(*) FROM users WHERE id=%s", (ids[0],)).fetchone()[0] == 0
+            assert conn.execute("SELECT count(*) FROM auth_sessions WHERE user_id=%s", (ids[0],)).fetchone()[0] == 0
+            assert conn.execute("SELECT count(*) FROM auth_login_attempts WHERE login_hash=%s", (hashes[0],)).fetchone()[0] == 0
+            assert conn.execute("SELECT count(*) FROM users WHERE id=%s", (ids[1],)).fetchone()[0] == 1
+            assert conn.execute("SELECT count(*) FROM auth_sessions WHERE user_id=%s", (ids[1],)).fetchone()[0] == 1
+            assert conn.execute("SELECT failed_count FROM auth_login_attempts WHERE login_hash=%s", (hashes[1],)).fetchone()[0] == 2
+            assert conn.execute("SELECT count(*) FROM users WHERE id=%s AND role='admin'", (ids[2],)).fetchone()[0] == 1
+    finally:
+        if ids:
+            with psycopg.connect(database_url) as conn:
+                conn.execute("DELETE FROM users WHERE id = ANY(%s)", (ids,))
+                conn.execute("DELETE FROM auth_login_attempts WHERE login_hash = ANY(%s)", (hashes,))
 
 
 def test_app_startup_requires_key_outside_demo(monkeypatch):

@@ -12,6 +12,8 @@
 - `skill-feasibility.md` — 도메인 Skill 후보와 기존 기능과의 경계, 선행 조건, 작업 순서 조사
 - `auth-login-verification.md` — 로그인·세션·scrypt 로컬 실측 기록. 스크립트는 `scripts/`, 원시 JSON은 `scripts/results/`(`auth_boundary_*`, `scrypt_concurrent_*`)
 - `auth-feedback-key-verification.md` — 로그인 피드백·`AUTH_SECRET` 실제 키 사용과 역할별 실측 기록
+- `email-encryption-options.md` — 로그인 이메일 필드 암호화와 최소 수집 정책의 팀 논의 선택지
+- `supabase-auth-test-runbook.md` — Supabase 인증 테스트 프로젝트 생성, 스키마 점검, RLS 차단 사유와 재개 절차
 - `ci-proposal.md` — CI 사용량 절감 제안(합의 전, workflow 미변경)
 - `mcp-collaboration-handoff.md` — MCP 서버·LangGraph 공동작업 인수인계 스냅샷과 미결 항목
 - `mcp-docling-verification-2026-11-03.md` — 저장소 PDF 3건의 Docling·pdfplumber 표본 대조와 한계

@@ -1,5 +1,266 @@
 # STH 작업 기록
 
+## 2026-11-04 테스트 Supabase 인증정보 저장 확인
+- 사용자에게 설명한 뒤 개인 `sojafit-auth-test` 인증 표가 비어 있는지 확인하고, 실제 `auth.provision()` 경로로 합성 사용자 1명을 생성했다. DB에 이메일은 원문, 비밀번호는 scrypt 해시로 저장됨을 확인하고 입력 비밀번호의 해시 검증이 통과했다. 값과 해시는 출력하지 않았다.
+- 실제 FastAPI TestClient 로그인 성공과 DB 세션 토큰 값이 원문이 아닌 HMAC 검증값임을 확인했다. 이 시험에서 만든 계정·세션·실패기록만 정리하고 계정과 실패기록 부재를 확인했다. DB 시퀀스는 증가할 수 있다.
+- 운영 DB·Cloud Run·검색 데이터는 건드리지 않았다. 로그·백업 저장 여부, 이메일 암호화 정책, 배포 환경 전체는 확인하지 않았다.
+
+## 2026-11-04 로컬 격리 DB에서 제한 역할 로그인·검색 시험
+- 사용자 요청에 따라 기존 DB와 분리된 일회성 `pgvector/pgvector:pg16` Docker 컨테이너를 loopback 임의 포트에 만들고, 인증·검색 스키마 및 합성 문서 3건만 적재했다. 외부 API는 호출하지 않았다.
+- 제한 역할로 실제 FastAPI 로그인·me 성공 후, 검색 테이블 권한이 없으면 `warmup()`이 InsufficientPrivilege로 거부되는 것을 확인했다. 검색 표 4개 SELECT 권한을 추가한 뒤 BM25 방식의 실제 `retrieve()`가 합성 문서·페이지를 반환했고, 로그인 유지·로그아웃 및 검색 표 DELETE 거부를 확인했다.
+- 생성한 정확한 임시 컨테이너 ID를 지정해 컨테이너와 익명 볼륨을 제거했고 이름 접두어로 남은 컨테이너가 없음을 확인했다. 기존 Supabase, 로컬 인증 DB, 운영 DB, `.env`, 코퍼스는 변경하지 않았다.
+- 범위: 단일 사용자·합성 데이터·BM25만 검증했다. Voyage dense/리랭크, 실제 검색 DB의 RLS·권한, 동시성·운영 배포 및 검색 품질 평가는 검증하지 않았다. SELECT를 부여한 4개 중 BM25 경로에서 직접 읽은 표는 문서·청크다.
+
+## 2026-11-04 로그인·검색 통합 시험 환경 확인
+- Docker 컨테이너·이미지 목록을 읽기 전용으로 확인했다. 현재 실행 중인 SojaFit 인증 DB는 일반 postgres:16이며, pgvector 이미지와 이전에 멈춘 SojaFit 컨테이너는 존재한다. 멈춘 컨테이너의 데이터나 용도는 이번에 검증하지 않아 재사용하지 않았다.
+- 인증·검색을 함께 검증한 격리 환경은 아직 확인하지 못했다. 기존 Supabase 인증 DB·검색 데이터·pgvector 및 컨테이너 상태를 변경하지 않았다.
+
+## 2026-11-04 로그인 제한 역할의 검색 DB 영향 점검
+- `backend/rag/retrieve.py`와 MCP 검색 호출을 읽어 같은 DATABASE_URL을 사용하고 검색이 `document_chunks`, `source_documents`, `chunk_embeddings`, `chunk_embedding_bits` 조회 및 pgvector 형식 등록을 사용함을 확인했다. 실제 권한은 대상 DB의 역할·RLS·확장 설정에 따라 검증해야 한다.
+- 개인 Supabase 인증 테스트 프로젝트를 읽기 전용 조회한 결과 위 검색 표 4개와 vector 확장이 없었다. 인증 전용 DB를 검색용으로 변경하거나 확장·데이터를 적재하지 않았다.
+- 따라서 앞선 제한 역할의 검색 성공은 검증할 수 없다. 팀 검색 담당과 검색 DB·권한 구조가 정해지면 격리된 검색 DB에서 인증·검색을 함께 시험해야 한다. 기존 연결 설정과 역할은 변경하지 않았다.
+
+## 2026-11-04 제한 DB 역할로 실제 인증 API 시험
+- 사용자 요청으로 개인 `sojafit-auth-test`의 인증 표 3개가 비어 있음을 확인하고, 별도의 임시 LOGIN 역할과 이 역할에만 적용되는 시험 RLS 정책을 만들었다. 역할에는 superuser·BYPASSRLS·CREATEROLE을 주지 않았고, 이메일·비밀번호는 합성값을 사용했다. 기존 `.env`는 변경하지 않았다.
+- 임시 역할로 TLS `verify-full` 연결과 DB 양쪽 구간 암호화를 확인한 뒤 실제 FastAPI TestClient에서 오답 401, 사용자 A/B·관리자 로그인 및 me, 일반 사용자 관리자 접근 거부, 이메일 마스킹, A 로그아웃 후 B 유지, B 비활성화 후 세션 거부가 통과했다.
+- finally에서 이번 합성 사용자·세션·시도 기록, 시험 정책과 DB 역할만 삭제했다. 이후 역할·계정·정책·실패기록이 남지 않았음을 확인했다. 테스트 과정에서 DB 시퀀스 값은 증가할 수 있다. 비밀번호·토큰·접속 문자열은 출력하지 않았다.
+- 시험은 인증 API 범위에 한정하며 검색·별도 계정 생성 CLI·부하·배포 환경은 검증하지 않았다. 시험 RLS는 해당 백엔드 역할의 인증 표 전체 행을 허용하므로 사용자별 데이터 격리를 의미하지 않는다. 운영 DB와 기존 연결 설정은 변경하지 않았다.
+
+## 2026-11-04 인증 DB 임시 제한 권한 시험
+- 개인 `sojafit-auth-test`의 인증 표가 비어 있는지 확인하고 단일 트랜잭션에서 NOLOGIN·NOSUPERUSER·NOBYPASSRLS 시험 역할, 표 권한과 역할 전용 임시 RLS 정책, 합성 계정 한 건을 만들었다. 종료 시 전부 롤백했고 역할 잔존 false·시험 정책 0건을 확인했다.
+- 첫 시험은 역할 전환 단계에서 InsufficientPrivilege(42501)로 실패했다. 원인은 생성한 역할로의 SET 권한 부재였다. 같은 시험에서 postgres에 SET 권한을 트랜잭션 내 임시 부여해 재실행했고, 계정 잠금 조회·변경, 로그인 시도 CRUD, 세션 생성·갱신·삭제, advisory lock의 대표 SQL이 통과했다.
+- 이 시험은 실제 로그인 API 전체·독립 DB 로그인·검색을 검증하지 않는다. 시험 RLS는 신뢰된 백엔드 역할의 해당 표 전체 행을 허용하므로 사용자별 소유권 격리를 뜻하지 않는다. 지속 역할·비밀번호·RLS·기존 DATABASE_URL과 운영 DB는 변경하지 않았다.
+
+## 2026-11-04 인증 DB 최소 권한 사전 점검
+- `backend/auth.py`의 SQL 호출을 읽어 계정 조회·관리, 세션 생성·조회 갱신·삭제, 로그인 실패 기록 CRUD와 계정 생성 CLI·advisory lock 사용을 확인했다. 검색도 같은 DATABASE_URL을 쓰므로 인증용 권한만으로 전환하면 검색에 영향이 있을 수 있다.
+- 테스트 Supabase의 인증 표 3개는 postgres 소유, RLS 활성, 정책 없음이며 advisor는 정책 없음 INFO 3건을 보고했다. 전용 역할에는 GRANT뿐 아니라 자체 세션 방식에 맞는 RLS 접근 경계가 필요하다.
+- 읽기 전용 조사만 했으며 역할·정책·설정·데이터를 변경하지 않았다. 새 역할로 실제 로그인·검색 검증은 미실행이다.
+
+## 2026-11-04 로컬 Supabase DB 연결 인증서 검증 설정
+- 사용자 요청에 따라 로컬 `.env`에서 `sojafit-auth-test` 대상임을 확인한 뒤 DATABASE_URL에 `sslmode=verify-full`과 저장소 밖 테스트용 공개 CA 경로만 추가했다. 다른 설정·비밀값은 출력하거나 변경하지 않았다. Compose가 자체 DATABASE_URL을 우선한다는 경계는 유지한다.
+- 변경 전 실제 `backend.auth.connection()`으로 올바른 CA 연결 성공과 없는 CA 연결 실패를 확인했다. 변경 후 `.env`를 읽은 같은 연결로 인증서·서버명 검증 및 읽기 전용 SELECT 1이 성공했고 클라이언트→풀러 및 풀러→DB TLS는 모두 true였다.
+- 인증 테스트는 샌드박스 안에서 멈춰 중단한 뒤, `TEST_AUTH_DATABASE_URL`을 비우고 같은 명령을 재실행해 19 passed, 15 skipped. DB 통합 시험은 수행하지 않았다.
+- 공개 CA 경로는 현재 PC의 Codex 작업 폴더 전용이다. 다른 PC·배포·팀 DB에서는 해당 DB의 CA를 준비하고 연결 설정을 따로 바꿔야 한다. 실제 실행 프로세스가 새 환경변수를 읽게 재시작해야 하며, 서비스 DB·Cloud Run·Compose·pgvector·인증 데이터는 변경하지 않았다.
+
+## 2026-11-04 테스트 Supabase SSL 강제 적용
+- 사용자에게 재시작·일시 연결 중단과 테스트 프로젝트 범위를 설명한 뒤 `sojafit-auth-test`의 Enforce SSL을 활성화했다. 대시보드에서 활성화 상태와 성공 알림을 확인했다. 운영 DB는 변경하지 않았다.
+- 공식 CA를 지정한 `sslmode=verify-full` 연결로 읽기 전용 `SELECT 1`이 성공했다. 클라이언트→풀러 TLS와 DB가 관측한 풀러→PostgreSQL SSL 모두 true였다. 비밀번호를 비운 비암호화 연결 시도는 SSL 관련 오류로 거부됐다.
+- `.env`와 애플리케이션의 기본 SSL 검증 설정은 변경하지 않았다. 따라서 verify-full 성공은 이번 시험에 한정된다. 배포 환경과 다른 DB 적용은 확인하지 않았다.
+
+## 2026-11-04 테스트 DB 서버 인증서 검증 시험
+- `sojafit-auth-test` Supabase 대시보드의 Database Settings에서 제공하는 공개 CA 인증서를 저장소 밖 Codex 작업 폴더에 받아 형식을 확인했다. 비밀키는 포함되지 않았다.
+- 로컬 `.env`의 테스트 DB 연결에 인증서 경로와 `sslmode=verify-full`을 일회성으로 지정하여 읽기 전용 `SELECT 1`을 수행했다. 연결과 서버 인증서·호스트명 검증이 성공했고 클라이언트→풀러 TLS 사용을 확인했다.
+- 대시보드에서 SSL 강제 설정은 꺼져 있었다. 이번 단계는 일회성 연결 시험이며 `.env`·애플리케이션 설정, SSL 강제 설정, DB 데이터는 바꾸지 않았다. 풀러→DB 연결 암호화와 배포 환경은 별도 검토가 필요하다.
+
+## 2026-11-04 인증 통신·저장 보호 재점검
+- Supabase 테스트 프로젝트가 ACTIVE_HEALTHY임을 재확인했다. 현재 로컬 `.env`는 비데모 모드, HTTPS 형식 AUTH_ORIGIN, 32바이트 이상 AUTH_SECRET이 설정돼 있다. 값은 출력하지 않았다. Compose는 자체 DB 주소를 우선하므로 이 결과를 Compose 설정으로 일반화하지 않는다.
+- 테스트 DB 풀러 접속에서 클라이언트 구간 TLS 사용을 확인했으나 DB `pg_stat_ssl`은 false였다. 명시적 sslmode가 없고 `verify-full` 읽기 전용 연결은 로컬 루트 CA 파일이 없어 실패했다. 서버 인증서 신뢰·호스트명 검증 성공 및 SSL 강제 상태는 미확인이다.
+- Supabase 공식 FAQ는 DB·백업 저장 암호화를 설명하나 프로젝트 백업 보유·복원은 확인하지 않았다. DB 저장 암호화는 이메일 필드 암호화를 뜻하지 않는다.
+- 보안 advisor는 인증 표의 정책 없음 INFO 3건을 보고했다. 운영 Cloud Run의 HTTPS·쿠키·DB 설정, 실제 로그와 백업 복원은 확인하지 않았다. DB·설정·데이터 변경 없이 읽기 전용으로 점검했다.
+
+## 2026-11-04 Supabase 인증 DB 연결 및 교체 전 읽기 전용 점검
+- 현재 `.env`의 DB 접속 대상 식별자가 `sojafit-auth-test`와 일치했고 PostgreSQL 연결과 인증 표 3개 존재를 확인했다. 비밀값과 연결 문자열은 출력하지 않았다.
+- Supabase에서 두 인증 마이그레이션 이력, 인증 표 3개의 RLS 활성화와 `anon`/`authenticated`의 SELECT·INSERT·UPDATE·DELETE 실효 권한이 없음을 확인했다. security advisor는 정책 없음 INFO 3건을 보고했다. 자체 세션과 백엔드 역할에 맞춘 정책 검토가 필요하다.
+- 연결은 풀러를 사용한다. 클라이언트→풀러 구간은 현재 설정과 `sslmode=require` 시험 모두 TLS 사용으로 확인됐다. DB의 `pg_stat_ssl`에서 관측한 풀러→PostgreSQL 구간은 SSL false였다. 전체 전송 구간 보호를 확정하지 않고 공급자 설정·구조 확인이 필요하다. 명시적 sslmode와 서버 인증서 검증은 확인되지 않았다.
+- 현재 접속 역할은 postgres 계열로 최소 권한이 아니다. 실제 Cloud Run 연결 대상, 배포 로그인, HTTP 쓰기 차단, 저장·백업 암호화는 확인하지 않았다. DB·계정·설정·pgvector는 변경하지 않았다.
+
+## 2026-11-04 Supabase 테스트 DB 실제 로그인 흐름 검증
+- 합성 사용자 A/B와 관리자를 임시 생성하고 `FastAPI TestClient`로 실제 `.env` DB를 사용하는 인증 API를 검증했다. 오답 비밀번호 401, 3계정 로그인·내 정보, HttpOnly/SameSite 쿠키, A 로그아웃 후 A 401·B 유지, 교차 Origin 403, 일반 사용자 관리자 목록 403, 관리자 목록 이메일 마스킹, 계정 비활성화 후 기존 세션 401이 통과했다.
+- 첫 실행은 테스트 스크립트의 관리자 이메일 마스킹 기대값 오류로 검증이 중단됐으나, finally 정리가 실행됐다. 기대값을 `auth.mask_email()`과 비교하도록 바로잡아 동일한 검증을 재실행했고 모든 항목이 통과했다.
+- 테스트 후 정확한 합성 계정 ID와 그 사용자 세션, 이메일 SHA-256 로그인 실패 행만 정리했다. 읽기 전용 재조회 결과 users/sessions/login_attempts 각각 0건이다. 비밀번호·세션 토큰은 출력·기록하지 않았다.
+- 범위: Supabase 테스트 프로젝트의 FastAPI API 흐름만 검증했다. Cloud Run, UI 브라우저 흐름, HTTP API의 쓰기, 평가계정, 운영 최소 권한 역할은 미검증. pgvector와 다른 테이블은 변경하지 않았다.
+
+## 2026-11-04 Supabase HTTP Data API 공개 접근 확인
+- `.env`의 프로젝트 URL과 publishable 키 형식만 검증해 값은 출력하지 않고, publishable 키를 사용해 `users`, `auth_sessions`, `auth_login_attempts`에 각각 읽기 전용 HTTP GET을 보냈다.
+- 결과: 세 요청 모두 HTTP 401로 거부됐다. 이 결과는 현재 공개 키로 Data API 인증 테이블을 읽지 못함을 확인한다. DB 권한 단계에서 `anon`/`authenticated` SELECT 거부도 별도 확인했다.
+- 주의: 키 값은 publishable 형식이지만 `.env` 변수 이름이 `SUPABASE_SERVICE_ROLE_KEY`다. 기능 영향은 시험에 없었으나 이름과 값 유형이 달라 혼동될 수 있다. 키 값은 기록하지 않았다.
+- 범위: GET만 수행했으며 계정·DB·Cloud Run·pgvector는 변경하지 않았다. 로그인 API의 합성 계정 E2E는 아직 실행하지 않았다.
+
+## 2026-11-04 테스트 DB 인증 표 접근 제한 적용
+- 사용자 승인으로 Supabase 테스트 프로젝트에 `restrict_auth_tables_public_access` 마이그레이션을 적용했다. 인증 표 3개와 `users_id_seq`의 PUBLIC·anon·authenticated 권한을 회수하고 세 표에 RLS를 활성화했다. 별도 정책은 생성하지 않았다.
+- 확인: 세 표의 RLS 활성, anon/authenticated의 표 실효 권한과 시퀀스 권한 없음. 실제 DB 역할 전환으로 각 역할의 세 표 SELECT가 모두 거부됐다(6건). `.env` 백엔드 역할로 세 표 읽기 및 합성 데이터 INSERT·UPDATE·DELETE가 성공했으며 트랜잭션은 롤백했다.
+- Supabase security advisor에서 기존 RLS 비활성 ERROR는 사라지고 정책 없음 INFO 3건으로 바뀌었다. 테이블 세 개의 행 수는 변경 전 0건이었다. HTTP Data API, 로그인 흐름과 Cloud Run은 이번에 시험하지 않았다.
+- 남은 일: HTTP API 접근 및 로그인 시험, 백엔드 전용 최소 권한 역할과 개인정보 정책을 검토한다. pgvector·다른 테이블은 변경하지 않았다.
+
+## 2026-11-04 인증 테이블 보호안 준비
+- 확인: 테스트 프로젝트의 인증 표 3개는 `postgres` 소유, RLS 비활성 및 정책 없음. `anon`/`authenticated`의 표 SELECT와 `users_id_seq` USAGE 실효 권한이 있다. `.env`의 접속 역할은 `postgres`이고 해당 역할은 RLS 우회 속성이 있다.
+- 한 일: 인증 표 3개와 ID 시퀀스에 국한한 공개 역할 권한 회수·RLS 적용 SQL 및 적용 후 검증·실패 처리 방침을 `docs/specs/login-completion-plan.md`에 준비했다. Supabase 보안 advisor가 RLS 변경을 사용자 검토 대상으로 안내해 아직 DB 변경은 실행하지 않았다.
+- 확인 못 한 것: 공개 API 차단과 백엔드 인증 CRUD의 변경 후 동작, 최소 권한 전용 역할, Cloud Run DB 연결. 인증 계정 적재와 pgvector 변경은 하지 않았다.
+
+## 2026-11-04 Supabase 인증 보안 작업 준비
+- 한 일: `sojafit-auth-test` 보안 advisor, public 인증 표 목록·RLS·행 수 및 `information_schema.role_table_grants`를 읽기 전용으로 확인하고 로그인 완료 계획에 현재 상태와 작업 순서를 추가했다.
+- 결과: 인증 표 3개는 각 0행, RLS 비활성. `anon`/`authenticated`는 세 표 각각 SELECT·INSERT·UPDATE·DELETE 등을 직접 부여받았다. advisor는 세 표 모두 RLS 미적용 ERROR를 보고한다.
+- 다음 할 일: Data API 노출과 상속·시퀀스 권한 및 백엔드 역할을 확인하고 인증 표만의 권한 회수·RLS 적용과 접근 검증을 진행한다. 사용자의 지시에 따라 별도 `TEST_AUTH_DATABASE_URL` 설정은 현재 범위에서 제외한다.
+- 확인 못 한 것: 변경 후 실제 API 차단 및 백엔드 접근, 이메일 정책 팀 합의, Cloud Run 대상과 로그인. DB 설정·계정·pgvector는 변경하지 않았다.
+
+## 2026-11-04 Supabase 테스트 DB 연결 확인
+- 사용자 요청으로 `.env`의 DB 대상이 `sojafit-auth-test` 프로젝트인지 확인한 뒤 읽기 전용 PostgreSQL `SELECT 1`을 실행해 성공했다. 인증 계정이나 테이블 데이터는 조회·변경하지 않았다.
+- 앞선 비밀번호 재설정 화면 확인 과정에서 새 비밀번호가 도구 출력에 표시되어 사용자에게 재설정을 안내했고, 사용자가 다시 변경한 뒤 연결 확인을 진행했다. 비밀번호 및 연결 문자열은 작업기록에 적지 않는다.
+- 확인하지 못한 것: 로그인 API의 DB 연동, Cloud Run의 DB 대상 및 배포 로그인. 이전에 확인된 인증 테이블 RLS·권한 문제는 재검증과 조치가 필요하며, 그 전에는 계정·개인정보를 적재하지 않는다. pgvector는 변경하지 않았다.
+
+## 2026-11-04 로그인 재검증 및 남은 작업 재확인
+- 실행: `TEST_AUTH_DATABASE_URL`을 지정하지 않고 `.venv/Scripts/python.exe -m pytest tests/api/test_auth.py -q -rs -p no:cacheprovider`를 실행했다. 샌드박스 내부에서는 첫 테스트 이후 대기해 중단했고, 샌드박스 밖 재실행은 `19 passed, 15 skipped`였다. 15건은 격리 인증 테스트 DB가 필요한 사례다.
+- 확인: DB 없는 비밀번호 해시·Origin 거부·입력값 노출 방지·관리자 이메일 마스킹 등은 통과했다. 오전의 격리 DB `34 passed` 및 합성 계정 흐름은 과거 실행 기록이며 이번 재검증 결과가 아니다.
+- 차단 및 재개: 현재 `TEST_AUTH_DATABASE_URL`이 없어 DB 통합 테스트를 다시 실행하지 않았다. 격리 테스트 DB의 현재 상태와 접속을 확인하고 전용 주소를 안전하게 지정한 뒤 15건을 재실행한다. Cloud Run의 실제 DB 대상·인증 스키마와 배포 로그인 흐름은 별도 확인이 필요하다.
+- 범위: 개인 Supabase 프로젝트는 이번 작업 대상에서 제외한다. 인증 코드·DB·pgvector·배포 설정은 변경하지 않았다. 사용자 소유권, 개인정보 보관 정책 및 평가 계정은 기존 계획에 따라 후속 검토한다.
+
+## 2026-11-04 Supabase 인증 테스트 프로젝트 준비 — RLS 점검 대기
+- 한 일: 사용자 선택에 따라 `SimonTH-0912's Org` Free 조직에 월 `$0` 생성 견적을 확인하고 서울 리전의 `sojafit-auth-test` 프로젝트를 만들었다. 생성 직후 `ACTIVE_HEALTHY` 상태였다.
+- 스키마: 새 프로젝트의 빈 public 스키마에 `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql`만 migration `sojafit_auth_test_schema`로 적용했다. 실제 설치 확장은 `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, `uuid-ossp`; vector는 설치되지 않았다. 코퍼스/업무 데이터와 pgvector는 변경하지 않았다.
+- 보안 차단: `users`, `auth_sessions`, `auth_login_attempts`에 RLS가 꺼져 있고 `anon`/`authenticated`에 CRUD 등 표 권한이 확인됐다. Supabase advisor도 `rls_disabled_in_public` ERROR를 보고했다. Supabase 지침에 따라 RLS를 임의 적용하지 않았고 계정/개인정보는 적재하지 않았다.
+- 검증 범위: project status·초기 public tables·migrations·extensions·테이블 구조·role grants·security advisors를 MCP로 읽었다. Supabase 프로젝트에서 FastAPI 테스트를 실행하지 않았고 Cloud Run 및 `DATABASE_URL`도 연결하지 않았다.
+- 문서: `docs/research/supabase-auth-test-runbook.md`에 생성 과정, 확인 결과, RLS 점검 SQL, 중단 사유와 재개 절차를 기록했다. `RESEARCH.md`와 `SOJAFIT.md`에는 새 파일 경로를 등록했다.
+- 다음 할 일: anon/authenticated 접근 차단과 trusted backend DB role을 확정한 뒤 RLS/권한을 적용하고, 비밀값을 공유하지 않는 방식으로 `TEST_AUTH_DATABASE_URL`을 연결해 인증 테스트를 수행한다.
+## 2026-11-04 테스트 DB 합성 계정 로그인 흐름
+- 한 일: 연결 유지 중인 `sojafit-auth-test-local`에 합성 사용자 A/B와 관리자 계정 3개를 추가했다. 고정 별칭이 이미 있으면 쓰지 않도록 먼저 검사하고, 기존 계정을 덮어쓰지 않았다. 비밀번호는 테스트 실행 중 무작위 생성해 scrypt 해시만 저장했으며 평문은 출력·보관하지 않았다.
+- 확인: 세 계정 로그인과 `/api/auth/me`의 ID/역할 확인, 일반 사용자 관리자 목록 거부(403), A 로그아웃 후 A 세션 거부(401)와 B 세션 유지, 관리자가 B를 비활성화한 뒤 B 세션 거부(401)를 확인했다. API 응답과 DB 조회에서 비밀번호 해시·세션 토큰은 출력하지 않았다.
+- 범위: 이 검증은 loopback 전용 일반 PostgreSQL 테스트 DB만 사용했다. `.env`의 Supabase 주소, Cloud Run, Compose pgvector DB 및 업무 데이터 테이블은 사용·변경하지 않았다. 테스트 계정은 합성 데이터이며 실제 사용자 로그인용이 아니다.
+- 바꾼 파일: `docs/specs/login-completion-plan.md`, 이 작업기록. 애플리케이션 코드와 서비스 DB는 변경하지 않았다.
+- 다음 할 일: 테스트 DB를 이용해 후속 인증 검증을 진행한다. 실제 서비스 DB 연결 대상은 여전히 특정되지 않았으므로 서비스 DB 적용·Cloud Run 로그인 확인은 해당 대상 식별 후 진행한다.
+
+## 2026-11-04 로컬 인증 테스트 DB 연결 유지
+- 한 일: 사용자의 요청에 따라 앞서 일회성으로 검증한 방식으로 후속 작업용 테스트 DB를 다시 연결했다. 일반 `postgres:16` 컨테이너 `sojafit-auth-test-local`을 `127.0.0.1:55434`에만 바인딩하고 실행 상태로 유지한다. 테스트 전용 계정 설정 외에 비밀값이나 `.env`는 변경하지 않았다.
+- 적재·확인: 빈 DB에 `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql`만 적용했다. 읽기 전용 카탈로그 확인 결과 public 인증 표는 `users`, `auth_sessions`, `auth_login_attempts`뿐이고 설치 확장은 `plpgsql`뿐이다. 테스트가 만든 합성 행은 users 10, sessions 4, login attempts 3건이다. 이메일과 해시 값은 열람·기록하지 않았다.
+- 검증: `.venv/Scripts/uv.exe run --no-sync --offline pytest -q -rs tests/api/test_auth.py -p no:cacheprovider` — `34 passed`, DB 테스트 skip 없음.
+- 안전 경계: `.env`의 Supabase 주소와 Docker Compose의 `pgvector/pgvector` DB는 사용하지 않았다. DB 포트는 loopback에만 열려 있고 실제 서비스 DB·Cloud Run·pgvector는 변경하지 않았다. 테스트 컨테이너는 후속 작업을 위해 유지 중이다.
+- 다음 할 일: 이 격리 DB를 합성 인증 데이터 검증에 사용한다. 실제 서비스 DB 대상은 여전히 미확인(부재를 확인한 것은 아님)이며, 식별된 뒤에만 별도로 읽기 전용 점검과 담당자 검토를 진행한다.
+
+## 2026-11-04 격리 인증 테스트 DB 연결
+- 한 일: 서비스 DB 대상이 확인되지 않아 L04부터 진행했다. `pgvector/pgvector` Compose DB는 사용하지 않고, `postgres:16` 일회용 PostgreSQL을 `127.0.0.1:55434`에만 바인딩했다. 임의 생성한 테스트 비밀번호는 프로세스 메모리에서만 사용했고 출력·파일·저장소에는 남기지 않았다.
+- 적용 범위: 빈 테스트 DB에 `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql`만 적용했다. `TEST_AUTH_DATABASE_URL`만 해당 격리 DB를 가리키게 했으며 인증 테스트 종료 후 컨테이너와 프로세스 환경변수를 정리했다.
+- 검증: `.venv/Scripts/uv.exe run --no-sync --offline pytest -q -rs tests/api/test_auth.py -p no:cacheprovider` — `34 passed`, DB 관련 skip 없음. 인증 API의 DB 연동·세션 분리·잠금/만료·권한·마스킹 테스트를 확인했다.
+- 결과와 경계: 로컬 격리 DB의 인증 흐름은 검증됐지만 Cloud Run 서비스 DB의 존재·제공자·접속 대상은 여전히 미확인이다. 운영 `DATABASE_URL`, Cloud Run, 기존 공유 DB 및 pgvector는 사용하거나 변경하지 않았다. 테스트는 기존 `TEST_AUTH_DATABASE_URL` → 테스트 프로세스의 `DATABASE_URL` override 패턴을 사용한다. 추후 공식 DB로 전환할 때는 대상 인증 스키마를 별도 검토·적용하고 Cloud Run의 `DATABASE_URL` 참조를 전환해야 하며, 현재 코드는 그대로 유지할 수 있다.
+- 다음 할 일: L03의 서비스 DB 프로젝트/환경 식별 및 읽기 전용 스키마 확인. DB 담당자 또는 Cloud Run Secret의 비밀값을 노출하지 않는 대상 식별 정보가 필요하다. 그전까지 L05 서비스 DB 적용은 보류한다.
+
+## 2026-11-04 A안 L03 서비스 DB 대상 재확인 — 접근 차단
+- 한 일: 사용자의 A안 선택 방향에 맞춰 연결된 Supabase 프로젝트 목록을 새로 조회하고, 저장소의 배포/DB 이력에서 대상 단서를 확인했다.
+- 실행 결과: 연결 목록은 `SimonTH-0912's Project`와 `minwon-bot` 두 개이며 모두 `INACTIVE`다. 첫 항목에 PostgreSQL 인스턴스 메타데이터는 있으나 기존 public 테이블 조회는 접근 오류였다. 저장소 기록은 Cloud Run의 `DATABASE_URL`이 Secret 참조라고만 확인하며 실제 Secret 문자열은 읽지 않는다. GCP 명령줄은 이전 확인에서 권한 부족이었고 현재 사용할 수 있는 GCP 읽기 전용 도구도 없다.
+- 판정: SojaFit 서비스 DB 대상은 여전히 특정되지 않았다. A안의 실제 저장/백업 암호화, 연결 TLS, 앱·운영 DB 권한은 해당 대상 설정을 보지 못해 검증할 수 없다. Supabase의 일반 보안 문서는 프로젝트별 확인을 대신하지 않는다.
+- 바꾼 파일: `docs/specs/login-completion-plan.md` L03 재조회 결과, 이 작업기록. DB·Cloud Run·pgvector·비밀값은 변경하지 않았다.
+- 확인 방법: Supabase `list_projects` 읽기 전용 조회, 저장소 배포/DB 기록 검색, 작업계획과 결과 대조. 애플리케이션 테스트는 실행하지 않았다.
+- 재개 조건: 서비스 DB 제공자/프로젝트 ref를 알려 주거나 해당 Supabase 프로젝트를 Codex 연결에서 활성화한다. 접속 비밀번호·`DATABASE_URL` 원문은 보내지 않는다. 대상 확인 후 인증 테이블 및 A안 저장/백업·TLS·권한만 읽기 전용으로 점검한다.
+
+## 2026-11-04 이메일 암호화 A안 선택 방향 기록
+- 한 일: 사용자가 DB 저장 암호화·접근 통제인 A안을 선택 방향으로 제시해 이메일 옵션 문서와 L02 검증 계획에 반영했다.
+- 판정: 앱 계층 이메일 암호화/복호화와 DB 스키마 변경은 선택하지 않은 방향이다. A안에서는 DB 조회 권한을 가진 앱/운영 역할이 이메일 평문을 볼 수 있다. 팀 합의 및 실제 서비스 DB 제공자 상태는 미확인이다.
+- 참고 자료: Supabase 공식 FAQ의 일반 저장·백업 암호화 설명, PostgreSQL SSL 강제 및 모드 안내를 반영했다. Cloud Run이 연결한 특정 DB와 프로젝트 설정을 확인한 것은 아니다.
+- 바꾼 파일: `docs/research/email-encryption-options.md`, `docs/specs/login-completion-plan.md`, 이 작업기록. DB·Cloud Run·pgvector·비밀값은 변경하지 않았다.
+- 확인 방법: 옵션 문서·`login_id` 직접 조회 구조·DB 접근 차단 기록 대조 및 `git diff --check`.
+- 다음 할 일: 서비스 DB 제공자/프로젝트를 식별하고 저장·백업 암호화, 연결 TLS/SSL, 최소 권한을 읽기 전용으로 확인한다. 팀이 DB 조회 권한자에게 이메일 평문이 보이는 점을 수용하는지도 정한 뒤 L03/L04를 잇는다.
+
+## 2026-11-04 로그인 이메일 암호화 정책 팀 논의자료
+- 한 일: 사용자 요청에 따라 현재 `login_id` 평문 조회/UNIQUE, 로그인·관리자 마스킹 코드와 DB 경계를 확인하고 팀 결정자료를 작성했다. DB 저장 계층 보호, 앱 계층 AEAD+분리 HMAC 검색값, 이메일 대신 별칭/IdP, 단순 결정적 암호화의 프로젝트 범위·난이도·위험을 비교했다.
+- 바꾼 파일: `docs/research/email-encryption-options.md`, `docs/research/RESEARCH.md`, `SOJAFIT.md` 트리 한 줄, 이 작업기록. 제안 문서는 합의 전으로 표시했다.
+- 참고 근거: Google Cloud KMS envelope encryption/Tink, NIST key management guidance, Python Cryptographic Authority AEAD 문서. 실제 Cloud KMS 비용·권한과 서비스 DB 설정은 확인하지 않았다.
+- 확인 방법: 현재 API 조회·DB 열·관리자 이메일 마스킹·문서 위계와 옵션별 영향 대조 및 `git diff --check`.
+- 확인 못 한 것: 팀의 보호 목표·채택안·키 운영 담당, 서비스 DB 제공자/저장 암호화·백업·TLS 설정. 정책 선택이나 DB/코드 변경은 하지 않았다.
+- 다음 할 일: 팀이 보호 목표와 A/B/C 중 채택안을 결정한다. B를 택하면 조장 SPEC 반영과 기존 이메일의 안전한 이관·키 회전 작업서를 먼저 확정한다. 서비스 DB와 pgvector는 변경하지 않았다.
+
+## 2026-11-04 첨부 체크리스트의 로그인 항목 대조
+- 한 일: 외부 제공 `E:/teamproject3/자료/작업-체크리스트.md`의 로그인 관련 5-4, 6-1~6-3 항목을 현재 인증 코드·테스트·DB 작업서 및 최근 확인 결과와 대조했다. 체크리스트는 기준 `main cdbe4a2`, 현재 STH `fdbe30a`는 그 main보다 9커밋 뒤다. 인증 코드·SQL·테스트·로그인 작업서 차이는 없고 `SPEC.md`는 다르다. 통합은 하지 않았다.
+- 대조: 6-1 API는 코드상 있음, 로컬 DB 비의존 테스트는 19 passed. 6-2 AUTH_ORIGIN은 같은 출처 로그아웃 200으로 출처 검사만 확인했으며 전체 로그인 미검증. 인증 SQL 적용 및 평가계정 2개는 미확인/미생성. 5-4 사용자별 thread/Store는 namespace 규칙만 있어 미완료. 6-3 Compose DB는 Docker 엔진 접근 거부로 실행 미확인.
+- 주의: 첨부의 서비스 DB 항목에 `007`이 있으나 저장소 `db/DB.md`는 해당 SQL을 새 로컬 Compose DB 시드로 규정한다. 이를 서비스 DB에 적용하지 않도록 실행 계획에 경계를 기록했다. 인증 스키마 후보는 `003`, `005`, `006`이다.
+- 바꾼 파일: `docs/specs/login-completion-plan.md`, `docs/worklog/sth.md`. 제공된 체크리스트 원본, 브랜치, DB, pgvector와 배포는 변경하지 않았다.
+- 확인 방법: 체크리스트 원문 항목, Git 기준 커밋/부모 관계와 인증 관련 파일 비교, `git diff --check`. 코드 테스트는 실행하지 않았다(직전 L01 기록 참조).
+- 다음 할 일: 개인정보/이메일 암호화 정책을 담당자가 결정하고 실제 서비스 DB 접근을 확보한 뒤 L03부터 이어간다. `SPEC.md` 인증 변경은 조장 반영 대상이다.
+
+## 2026-11-04 로그인 작업 L02 암호·개인정보 코드 대조
+- 한 일: L02에 따라 기존 인증 구현, DB 정의, API, 추적 코드와 회귀 사례를 검토했다.
+- 확인: 비밀번호는 salt를 둔 scrypt, 세션은 난수 쿠키와 서버 저장 HMAC-SHA256이며 원문을 DB에 저장하지 않는다. 둘 다 복호화 방식이 아니다. 운영 외 모드는 `AUTH_SECRET` 32바이트 이상을 검사한다. `login_id` 이메일은 DB에 평문 저장·직접 비교하고 `display_name`은 선택 열, 로그인 실패 키는 이메일 SHA-256이다. 실패 행 정리는 만료된 잠금 창을 다음 로그인에서 처리한다. 인증 라우트 코드에는 요청 본문 로깅이 없지만 Cloud Logging/외부 추적 수집은 확인되지 않았다.
+- 판정 및 정책 제안(미승인): 합성 테스트에서는 이메일만 쓰고 표시명은 비워 둔다. 비밀번호·쿠키·토큰 원문을 로그/추적에 포함하지 않는다. 이메일 필드 암호화 필요 여부, 계정·실패 행·백업 보관 종료 기준, 운영자 접근, 실제 개인정보 사용 시작 시점은 조장/서비스 담당 결정이 필요하다. 이메일 암호화는 현재 조회·UNIQUE 구조 변경 설계가 선행돼야 한다.
+- 바꾼 파일: `docs/specs/login-completion-plan.md`, `docs/worklog/sth.md`. 보안 구현·개인정보 정책·DB는 변경하지 않았다.
+- 확인 방법: `tests/api/test_auth.py` 전체 `19 passed, 15 skipped`; skip은 모두 격리 DB 필요 사례. 애플리케이션 테스트는 이번 코드 대조 전에 L01에서 실행한 결과이며, 로그 수집 설정이나 DB 저장 암호화 확인 결과로 해석하지 않는다.
+- 다음 할 일: L02 정책 미결 항목을 결정한 뒤 L03에서 서비스 DB 프로젝트와 읽기 전용 스키마 접근을 확보한다. 현재 Supabase 후보가 비활성·접근 불가이고 로컬 Docker 엔진도 접근이 차단되어 L04 이후 DB 단계는 대기 중이다.
+
+## 2026-11-04 로그인 작업 L01 인증 테스트 실행 환경 복구
+- 한 일: 로그인 마무리 계획 L01을 실행하고 테스트 대기 원인을 확인했다. Windows Proactor가 Starlette TestClient/AnyIO의 로컬 socketpair를 만드는 `accept()`에서 대기했다. 앱 인증 함수에는 진입하지 않아 이전 지연을 인증 코드 오류나 scrypt 원인으로 보지 않는다.
+- 실행한 명령과 결과: 격리 내 단일 테스트는 대기를 재현했다. 동일 `test_login_rejects_cross_origin`을 샌드박스 밖에서 실행해 `1 passed in 0.37s`. 이어 `UV_CACHE_DIR=<저장소 .venv 아래 임시 캐시> uv run --no-sync --offline pytest -q -rs tests/api/test_auth.py -p no:cacheprovider`: `19 passed, 15 skipped in 2.85s`. skip은 모두 `TEST_AUTH_DATABASE_URL` 필요 사례이며 서비스/격리 DB 접속을 하지 않았다.
+- 바꾼 파일: `docs/specs/login-completion-plan.md`의 L01 상태, `docs/worklog/sth.md`. 인증 코드·의존성·DB·pgvector·Cloud Run은 변경하지 않았다.
+- 확인 못 한 것: DB 통합 사례, 현재 서비스 DB 로그인·세션 흐름. `.venv/Scripts/uv.exe`가 기본 캐시 경로에 접근할 수 없어 캐시를 저장소의 `.venv` 아래로 지정했다.
+- 다음 할 일: L02에서 개인정보 최소 수집, 로그/세션/계정 보관·삭제, 평문 이메일 저장 허용, 운영 키·DB TLS·백업 접근에 대한 미결 결정을 정리한다. DB 확인은 L03의 프로젝트 접근 선행 조건 뒤에 한다.
+
+## 2026-11-04 로그인 암호·개인정보·인증 DB 작업 준비
+- 한 일: 사용자 요청 3개 범위를 현재 인증 코드·SQL·SPEC 4/8.6·로그인 작업서·과거 실측·현재 차단 기록과 대조했다. `docs/specs/login-completion-plan.md`에 상태 비교, L01~L07 실행 체크리스트, 파일/API, 완료 기준을 정리했다.
+- 정리한 경계: 비밀번호는 복호화 없이 scrypt로 비교하고 세션 HMAC도 암호화와 구분한다. 이메일 평문 저장·보관/삭제·로그·접근 정책은 결정 대상으로 남긴다. 별도 테스트 DB 검증 후 서비스 DB에 인증 스키마와 합성 계정만 적용하며 pgvector는 변경하지 않는다. 자동 DB 테스트는 서비스 DB에서 실행하지 않는다.
+- 바꾼 파일: 위 계획서, `docs/specs/SPECS.md`, `SOJAFIT.md`의 새 파일 트리 한 줄, 이 작업기록. 코드·DB·배포·비밀값은 변경하지 않았다.
+- 확인 방법: 소스/SQL/테스트 이름과 계획의 경로·링크·요구사항 대조 및 diff 점검. 이번 문서 작업에서 애플리케이션 테스트·평가셋·클라우드 검증은 실행하지 않았다.
+- 확인 못 한 것: 서비스 DB 대상·접근·인증 적용 상태, 현재 테스트 대기 원인, 현 배포 로그인·세션 성공과 개인정보 정책. 기존 접근 차단을 해소한 것으로 표시하지 않았다.
+- 다음 할 일: L01 검증 환경 조사와 L02 개인정보 결정 준비부터 진행하고, DB 접근이 확보되면 L03 읽기 전용 점검 → L04 격리 검증 → L05 인증만 적재 → L06 배포 검증 → L07 정리 순서로 진행한다.
+
+## 2026-11-04 현재 DB 존재 여부 재확인
+- 한 일: 연결된 Supabase 프로젝트 목록, 사용자 명명 후보의 public 테이블 목록, 로컬 Compose DB 상태를 읽기 전용으로 확인했다.
+- 결과: Supabase 프로젝트 2개가 보였고 모두 `INACTIVE`였다. `SimonTH-0912's Project` 항목에는 PostgreSQL 17 인스턴스 메타데이터가 있지만, public 테이블 조회는 `Database is possibly not accessible at the moment`로 실패했다. 다른 프로젝트는 `minwon-bot`이며 SojaFit DB라는 근거가 없다.
+- 로컬 확인: `docker compose ps --format json`은 Docker Desktop 엔진 파이프 접근 거부로 실패했다. 로컬 DB 컨테이너 실행 여부는 확인하지 못했다.
+- 판정: Supabase에 등록된 기존 PostgreSQL 프로젝트/DB 자원은 있으나 비활성이고 접근할 수 없어, 현재 서비스 DB인지 또는 인증 테이블이 있는지는 확인되지 않았다. Cloud Run의 `DATABASE_URL`은 Secret 참조만 확인했고 실제 대상은 열람하지 않았다.
+- 바꾼 파일: `docs/worklog/sth.md`. 데이터베이스·인증 테이블·계정·pgvector는 변경하지 않았다.
+- 다음 할 일: SojaFit 서비스가 실제 사용하는 활성 DB 프로젝트를 담당자에게 확인하고 접근 권한을 연결한다. 이후 pgvector를 제외한 스키마 목록과 인증 마이그레이션 이력을 읽기 전용으로 확인한다.
+
+## 2026-11-04 로그인 마무리 전 확인
+- 사용자 전달 맥락: 개인정보·인증 관련 데이터는 서비스 DB에 둘 수 있으나 pgvector는 건드리지 않는다. 이 작업에서는 DB 쓰기나 스키마 변경을 수행하지 않았다.
+- Cloud Run 읽기 전용 확인: GCP 콘솔의 `sojafit-api` 서비스 URL은 `https://sojafit-api-559369539072.asia-northeast3.run.app`이고 `AUTH_ORIGIN`은 같은 출처(끝 `/` 포함)로 설정돼 있었다. 애플리케이션이 끝 `/`를 제거해 비교하므로 출처 형식은 일치한다. `DATABASE_URL`은 Secret 참조로만 보였고 값은 열지 않았다. Cloud SQL 연결은 콘솔에서 연결되지 않은 상태였다.
+- 판정: 앞서 해당 HTTPS Origin으로 보낸 쿠키 없는 `/api/auth/logout`의 200은 출처 검사를 통과한 증거다. 로그인 API의 DB 인증·세션 생성 성공 증거는 아니다. 실제 DB 대상과 인증 스키마를 확인하지 못했고, 연결된 Supabase 후보 프로젝트는 비활성/접근 불가 상태였다. pgvector에는 접근하거나 변경하지 않았다.
+- 로컬 테스트: `TEST_AUTH_DATABASE_URL` 미설정. 셸에서 `uv`를 찾지 못했다. `.venv/Scripts/uv.exe run --no-sync ...`는 샌드박스가 사용자 uv 캐시 쓰기를 거부해 실패했다. `.venv/Scripts/python.exe -m pytest -q -rs tests/api/test_auth.py` 및 Origin/쿠키 테스트만 분리한 재시도는 첫 Origin 테스트에서 응답 없이 오래 대기해 중단했다. 테스트 통과로 간주하지 않는다.
+- 바꾼 파일: `docs/worklog/sth.md`만 기록 보완. 인증 코드, Cloud Run, 서비스 DB, 평가 데이터와 pgvector는 변경하지 않았다.
+- 다음 할 일: 서비스 DB 소유자와 실제 DB 프로젝트/접근 권한 및 인증 마이그레이션 상태를 확인한다. 쓰기 전 읽기 전용 스키마 검사와 격리 DB 복구 경로를 마련하고, pgvector 영역을 제외해 인증 스키마·평가 계정 흐름을 검증한다. 사용자가 말한 로그인 화면은 현재 체크아웃에 없어 별도 프론트엔드 위치·배포 주소도 연결해야 한다.
+
+## 2026-11-04 인증 DB 스키마 확인 접근 차단
+- 한 일: 연결된 Supabase 프로젝트를 읽기 전용으로 조회하고 인증 테이블 목록을 확인하려 했다.
+- 실행한 명령과 결과: 프로젝트 목록에 SojaFit으로 식별되는 항목은 없었다. `SimonTH-0912's Project` 후보는 `INACTIVE`였고 `public` 테이블 조회는 `Database is possibly not accessible at the moment`로 실패했다. 다른 프로젝트는 이번 작업 대상인지 확인되지 않아 조회하지 않았다.
+- 바꾼 파일: `docs/worklog/sth.md`. DB·Cloud Run에는 변경을 가하지 않았고 SQL을 실행하지 않았다.
+- 확인 못 한 것: SojaFit이 사용하는 Supabase 프로젝트 식별자, 공유 DB의 현재 테이블·마이그레이션·백업 상태.
+- 다음 할 일: DB 담당자가 SojaFit 프로젝트를 활성화하거나 해당 프로젝트 접근을 연결하고, 대상·복구 경로를 확인한 뒤 읽기 전용 스키마 검사 및 격리 DB 적용 검증을 진행한다.
+
+## 2026-11-04 Cloud Run AUTH_ORIGIN 설정 후 출처 검사
+- 한 일: 사용자가 Cloud Run 환경변수 등록을 완료했다고 알려, 공개 API에서 출처 검사만 합성 요청으로 확인했다.
+- 실행한 명령과 결과: `/health` GET은 HTTP 200. `Origin: https://sojafit-api-559369539072.asia-northeast3.run.app`을 넣어 쿠키 없이 `/api/auth/logout`에 빈 POST를 보내 HTTP 200 `{"ok":true}`를 확인했다. 첫 요청은 빈 POST의 Content-Length가 없어 Google 프런트엔드에서 411을 받았고, 길이 0을 명시해 재확인했다. 쿠키가 없어 `auth.logout`의 DB 삭제문은 실행되지 않았다.
+- 결과: 현재 Cloud Run 요청은 해당 HTTPS 출처의 Origin 검사를 통과한다. 공통 `check_origin`을 쓰므로 로그인 403 차단이 해소된 것으로 판단한다.
+- 바꾼 파일: `docs/worklog/sth.md`. Cloud Run 설정·DB·계정은 변경하지 않았다.
+- 확인 못 한 것: 실제 `/api/auth/login` 이후 DB·계정 인증·세션 쿠키 흐름. 인증 테이블과 평가 계정은 확인되지 않아 실제 로그인 성공은 검증하지 않았다.
+- 다음 할 일: DB 대상과 인증 스키마 적용 이력을 확인하고, 격리 검증 및 담당자 검토 후 평가 계정으로 로그인·세션을 확인한다.
+
+## 2026-11-04 Cloud Run AUTH_ORIGIN 설정 접근 차단
+- 한 일: 사용자가 요청한 `AUTH_ORIGIN` 설정 전 `sojafit` 프로젝트의 `sojafit-api` 서비스 URL·리비전·현재 변수만 비밀값을 조회하지 않는 형식으로 확인하려 했다.
+- 실행한 명령과 결과: `gcloud run services describe sojafit-api --project=sojafit --region=asia-northeast3 --format=...`가 현재 인증 계정에 `run.services.get` 권한이 없어 `PERMISSION_DENIED`로 실패했다. 변경 명령과 로그인 시험은 실행하지 않았다.
+- 바꾼 파일: `docs/worklog/sth.md`. Cloud Run 환경변수·리비전·DB는 변경하지 않았다.
+- 확인 못 한 것: 현재 Cloud Run 주소·리비전·`AUTH_ORIGIN` 값. 기록된 API HTTPS 주소는 README의 2026-11-03 확인값이다.
+- 다음 할 일: 배포 담당자가 서비스 조회·수정 권한을 부여하거나 직접 설정한 뒤, `/docs`에서 합성 계정으로 Origin 차단이 해소되는지 확인한다. DB 테이블 미적용 시 이후 인증 단계는 별도 실패할 수 있다.
+
+## 2026-11-04 Cloud Run 로그인 화면 주소 확인
+- 한 일: `backend/web/WEB.md`, `backend/main.py`, `README.md`, 디렉토리 목록을 대조해 로컬 화면과 Cloud Run API 공개 범위를 확인했다. 현재 체크아웃에는 실행 가능한 로그인 화면·정적 파일·화면 라우트가 없고, README는 화면을 아직 없음으로 표시한다. 문서에 기록된 API 주소는 `https://sojafit-api-559369539072.asia-northeast3.run.app`이다.
+- 결과: 이 API의 `/docs`에서만 로그인 API를 시험한다면 `AUTH_ORIGIN` 후보는 위 API 출처다. 실제 로그인 화면이 별도 프론트엔드로 배포되면 그 화면의 출처를 써야 한다. 로컬에서 봤다는 화면이 현재 체크아웃 밖의 앱인지 여부는 찾지 못했다.
+- 바꾼 파일: `docs/worklog/sth.md`. Cloud Run·DB·코드는 변경하지 않았다.
+- 확인 못 한 것: 현재 GCP 리비전의 주소·설정, 사용자가 말한 로컬 화면의 실제 실행 위치. GCP UI 읽기는 브라우저 주소 판별 정책으로 중단됐고 `gcloud`는 로컬 자격 증명 경로 권한 오류로 실행되지 않았다.
+- 다음 할 일: 로컬 로그인 화면의 실행 주소와 배포 방식을 확인하고, 프론트엔드를 배포한 뒤 실제 화면 Origin에 맞춰 `AUTH_ORIGIN`을 설정해 로그인·세션을 검증한다.
+
+## 2026-11-04 Chrome에서 Cloud Run 로그인 403 확인
+- 한 일: 사용자가 연 Chrome의 GCP 콘솔에서 SojaFit `sojafit-api`를 조회하고 Swagger UI에서 합성 계정값으로 로그인 요청 1건을 보냈다. 실제 계정 비밀번호·토큰·비밀값은 열람하거나 기록하지 않았다.
+- 확인: 콘솔은 서비스 정상, 컨테이너 포트 8000, 1GiB, `DEMO_MODE=0`으로 표시했다. 환경 변수와 Secret 참조 목록에 `AUTH_ORIGIN`은 없었다. 동일 서비스의 `/docs`에서 합성 요청은 403과 `요청 출처를 확인할 수 없습니다.`를 반환했다. 이는 현재 코드의 Origin 검사와 일치하지만 실제 제보 요청의 출처는 별도 미확인이다.
+- 바꾼 파일: `docs/worklog/sth.md`. Cloud Run 설정·DB·계정·배포는 변경하지 않았다.
+- 확인 못 한 것: 실제 인증 DB 스키마와 테스트 계정, 올바른 Origin 설정 후 로그인·세션 동작 및 제보 요청 상세. 이전 조장 기록은 인증 테이블 부재를 보고했으나 현재 DB 상태를 직접 조회하지 않았다.
+- 다음 할 일: 서비스 담당자와 실제 브라우저 출처와 DB 마이그레이션 이력·테스트 계정을 확인하고, 변경은 팀 절차에 따라 격리 환경에서 먼저 검증한다.
+
+## 2026-11-04 로그인 403·MCP 후속 확인 진행
+- 로그인·배포: `sojafit` 프로젝트의 Cloud Run 서비스를 읽기 전용으로 조회했으나 현재 계정의 권한 부족으로 리비전·`AUTH_ORIGIN` 설정을 확인하지 못했다. 제보의 요청 URL·Origin·본문도 없어 실제 403 원인을 확정하지 못했다. 공유 DB 인증 스키마는 접근하지 않았다. 403 해결과 평가 계정 검증은 배포 담당자 협조 후 재개한다.
+- MCP 테스트: 임시 pgvector 컨테이너와 합성 문서 4건·청크 8개만 사용했다. 최초 데이터 준비는 합성 SHA 길이 오류로 롤백했고 같은 준비를 바로잡아 재실행했다. 변경 전 `tests/graph/test_graph_mcp_stdio.py`는 새 `Rewrite` 호출에서 1건 실패했다. 가짜 LLM에 재작성 응답을 더하고 기대 경로에 재작성 단계를 추가한 뒤 같은 테스트는 1 passed, `tests/graph`는 60 passed였다. 실제 stdio·격리 DB 검색이며 데모 BM25와 가짜 LLM을 사용했다. 임시 컨테이너는 종료·자동 제거했다.
+- 장애 계약: `docs/specs/mcp-graph-integration.md`는 MCP의 `RetrievalUnavailableError`만 안전 응답으로 바꾸도록 명시한다. 기본 Voyage 검색에서 발생하는 일반 예외의 사용자 응답은 별도 계약이 없어 변경하지 않았다. 담당자와 오류 종류·API 응답·재시도 기준을 정한 뒤 별도 작업한다.
+- 기타 선행 조건: 403 재현 당시 실제 요청·Origin과 현재 DB 상태는 미확인이다. 업무 데이터 소유권 연동은 업무 API·DB Store·승인 흐름과 팀 합의가 필요하고, 로그인·관리자 화면은 현재 없다. `SPEC.md`의 임베딩·저장 설명은 조장 반영 요청 대상이다.
+- 브랜치: 읽기 전용 `git ls-remote --heads origin main STH`에서 STH `fdbe30a`, main `cdbe4a2`를 확인했다. main은 STH 이후 커밋을 포함하며 이 작업에서 pull·merge하지 않았다.
+- 바꾼 파일: `tests/graph/test_graph_mcp_stdio.py`, `docs/worklog/sth.md`. 운영 DB·배포·원격 저장소는 변경하지 않았다.
+- 확인 못 한 것: 실제 Cloud Run 로그인, Voyage 외부 장애 및 운영 DB, 실제 코퍼스 성능·평가셋 재측정. 격리 테스트 통과를 서비스 전체 완료로 보지 않는다.
+
+## 2026-11-04 로그인 403 포함 후속 확인 목록
+- 한 일: 전달받은 로그인 403 제보를 기존 PR #46 통합 후 확인 목록에 추가하고 인증 코드·배포 기록을 대조했다. 제보 이미지에는 403 외에 요청 URL·Origin·응답 본문·시각이 없어 특정 원인으로 확정하지 않았다.
+- 로컬 확인: `auth.check_origin`은 요청 Origin과 `AUTH_ORIGIN`이 다르거나 Origin이 없으면 인증·DB 조회 전에 403을 반환한다. 합성 이메일·가짜 인증 함수로 Origin 누락·불일치는 각각 403 및 인증 미호출, 일치는 200 및 인증 호출을 확인했다. `.venv/Scripts/python.exe -m pytest -q tests/api/test_auth.py -k 'cross_origin or cookie' -p no:cacheprovider`: 2 passed, 32 deselected.
+- 배포 기록: 저장된 `origin/main` `cdbe4a2`의 `docs/worklog/jeongun.md`는 당시 Cloud Run에서 `AUTH_ORIGIN` 미설정으로 로그인 403, 운영 DB 인증 표 003·005·006·007 미적용이라고 보고한다. 실제 배포의 현재 리비전·설정·스키마와 이번 제보가 같은 상황인지는 직접 확인하지 않았다.
+- 후속 확인 목록:
+  1. 배포 담당자와 실패 요청의 URL·시각·HTTP 메서드·응답 상태 및 본문, 브라우저 Origin과 실제 서비스의 `AUTH_ORIGIN` 설정 여부를 대조한다. 계정·비밀번호·쿠키·토큰은 기록하지 않는다. 서로 다른 출처를 허용해야 한다면 우회하지 말고 팀과 인증·CSRF 정책을 먼저 정한다.
+  2. 공유 DB의 인증 스키마 및 마이그레이션 적용 이력을 읽기 전용으로 확인한다. Origin을 맞춘 뒤 DB 테이블 부재 등 별도 오류가 드러날 수 있으므로, 격리 DB에서 먼저 인증·로그아웃·HTTPS 쿠키·세션을 확인한다. 운영 DB 변경·배포는 대상 및 팀 절차 확인 후 별도 진행한다.
+  3. `tests/graph/test_graph_mcp_stdio.py`의 재작성 단계 누락을 점검하고 격리 코퍼스 DB에서 실제 그래프→MCP→검색 경로를 다시 검증한다.
+  4. Voyage 기본 검색의 일반 예외와 MCP 검색 장애 응답 차이를 확인하고 기대 동작을 정한다. `SPEC.md`의 임베딩·저장 설명 불일치는 조장에게 수정 요청한다.
+  5. 최신 main과 STH의 차이·충돌 및 이전에 기록한 소유권 연결, 로그인 화면·관리자 메뉴, 배포 키·평가 계정, 로그인 동시성의 미검증 항목을 대조한다.
+- 바꾼 파일: `docs/worklog/sth.md`. 코드·배포 설정·공유 DB는 변경하지 않았다.
+- 확인 못 한 것: 실제 403 응답 본문·요청 출처·현재 Cloud Run 설정·인증 스키마·평가 계정과 엔드투엔드 로그인. 평가셋은 재측정하지 않았다.
+
 ## 2026-11-04 조장 관리 SPEC 변경 분리
 - 한 일: 미커밋 주요 문서 중 `SPEC.md`만 변경된 것을 확인하고, 인증·마스킹 반영 요청 초안을 저장소 밖에 보관한 뒤 `origin/main` 기준으로 되돌렸다. 당시 `origin/main`과 STH의 해당 파일 원본은 동일했다.
 - 바꾼 파일: `SPEC.md`, `docs/worklog/sth.md`. 요청 초안은 저장소 밖 Codex 작업 폴더의 `sojafit-spec-auth-request.md`에 보관했다. 인증 코드와 다른 미커밋 변경은 유지했다.
@@ -391,3 +652,81 @@
 - 원인은 FastMCP 요청 worker에서 처음 실행되던 NumPy 지연 import였다. 공용 검색 모듈 시작 시 NumPy를 읽도록 옮겼으며 MCP 서버 계약과 도구 구현은 변경하지 않았다.
 - 같은 합성 DB에서 수정 후 통합 테스트는 `1 passed in 3.58s`, 별도 측정은 프로세스 시작부터 첫 카드 2건까지 2.426초, 같은 세션의 두 번째 검색은 0.045초였다. 이는 합성 문서 4건·청크 5건의 로컬 단발 측정이며 실제 전체 코퍼스의 운영 성능을 뜻하지 않는다.
 - MCP·검색 집중 테스트는 `26 passed in 3.80s`, `uv lock --check`와 전체 회귀는 `201 passed, 14 skipped`였다. 외부 API·LLM·운영 DB·원격 저장소는 사용하거나 변경하지 않았다.
+
+### 2026-11-04 로그인 로그 개인정보 점검
+- `backend/auth.py`, `backend/main.py`, Dockerfile과 로그인 관련 출력·로깅 경로를 읽기 전용으로 확인했다. 앱 로그인 경로에는 이메일·비밀번호·쿠키 토큰을 출력하거나 기록하는 코드가 보이지 않았고, 유효성 오류 응답에서도 입력값을 제거한다.
+- 계정 생성 CLI의 `--hash-only`는 scrypt 비밀번호 해시를 표준 출력에 표시한다. 의도된 기능이지만 출력 리다이렉션/CI 로그에 남지 않도록 운영 시 주의가 필요하다.
+- 실제 Uvicorn/Cloud Run 로그 내용·보존기간·접근권한은 확인하지 않았다. 코드 검색은 저장·배포 환경 로그에 개인정보가 없음을 증명하지 않는다. 코드·테스트·외부 설정 변경 없음.
+- Google Cloud Console의 `sojafit` 프로젝트에서 Cloud Run 서비스 정상 상태와 비밀값을 열지 않은 Secret Manager 참조를 확인했다. Cloud Logging은 `_Default` 30일, `_Required` 400일 보존이며 라우터에 기본 버킷 외 별도 내보내기 싱크는 보이지 않았다. 로그 항목/본문과 IAM 권한은 열지 않았다.
+- Supabase 대시보드의 개인 `sojafit-auth-test` 프로젝트는 Free 요금제이며, 백업 화면에 Free는 프로젝트 백업을 포함하지 않는다고 표시된다. Cloud Run의 `DATABASE_URL` 비밀값은 읽지 않았으므로 실제 서비스가 이 개인 테스트 프로젝트를 대상으로 하는지와 그 DB의 백업 상태는 미확인이다. 외부 설정 변경 없음.
+- Supabase 연결에서 프로젝트 메타데이터를 확인한 결과 목록에 활성 상태인 것은 `sojafit-auth-test`뿐이고, 나머지 두 프로젝트는 비활성이다. Cloud Run에는 Secret Manager의 `DATABASE_URL:latest`만 연결돼 있어 이 목록만으로 실제 DB 대상을 대조할 수 없었다. 비밀값 열람·로그 본문 열람·테스트 로그인·DB 쓰기 없이 확인을 마쳤다.
+- 사용자가 공유한 호스트 정보는 Supabase shared pooler의 ap-northeast-2 리전, 5432 세션 모드 형식이다. 호스트는 프로젝트 고유 식별자가 아니므로 대상 프로젝트는 여전히 미확인이다. 다음 확인에는 비밀번호를 제외한 사용자명의 프로젝트 ref만 필요하다.
+- 사용자가 제공한 project ref로 Supabase 프로젝트 조회를 시도했으나, 연결된 Supabase 도구와 현재 Chrome 세션 모두 접근 거부를 반환했다. 프로젝트의 활성 상태·요금제·백업 설정은 확인 불가하며 설정 변경·로그인 정보 입력 없이 종료했다.
+- 로컬 `.env`의 `DATABASE_URL`은 비밀값을 출력하지 않고 파싱해 `tdtiabsgldkusyfyfysf` 테스트 프로젝트의 shared pooler임을 확인했다. 사용자가 Secret Manager 연결에서 전한 ref `owkklccwglcpfmmezcxj`와 다르다. `.env`와 Cloud Run Secret Manager 설정은 별개이며 이번 확인에서 `.env`는 수정하지 않았다.
+- Supabase 초대 URL 오류를 확인했다. URL에는 비밀 토큰이 없어 전체 링크를 저장하지 않았다. 로컬 TCP 3000 listener와 HTTP 응답이 없고, `backend/web/WEB.md` 기준 저장소 웹 화면도 미구현이다. `otp_expired`는 초대 OTP 만료/무효 상태를 가리킨다. 초대가 Supabase 조직 협업 초대인지 Auth 사용자 초대인지, 실제 프로젝트의 Site URL/redirect allowlist 및 이메일 prefetch는 확인하지 않았다.
+- Codex Supabase 도구의 조직/프로젝트 목록을 재조회했다. 현재 연결에는 `trjpvdafthdgpwwkiktw` 조직과 그 소속 프로젝트 3개만 보이고, 사용자가 확인한 `dcssmaguthdhdpbpbvoy` 조직과 `owkklccwglcpfmmezcxj` 프로젝트는 목록에 없으며 직접 조회도 permission denied다. Chrome 자동화 탭은 Supabase 로그인 화면이었다. 연결 OAuth 주체의 이메일은 도구에서 확인할 수 없어 실제로 다른 계정인지, 조직 초대 후 토큰 갱신이 안 된 것인지는 구분하지 못했다. 권한·프로젝트 설정은 변경하지 않았다.
+- 사용자가 연 Codex 인앱 브라우저에서는 로그인된 상태로 `dcssmaguthdhdpbpbvoy` 조직의 `SojaFit` 프로젝트(`owkklccwglcpfmmezcxj`)를 직접 확인했다. 프로젝트 상태 Healthy, 조직/플랜 HJU5022 FREE, Overview의 Last backup은 No backups이며 Database > Backups는 Free 플랜에 프로젝트 백업이 포함되지 않는다고 표시했다. 배너에는 grace period 종료 및 사용량 한도 소진 시 요청 처리가 중단될 수 있다는 경고가 보였다. 로그·DB 데이터·비밀값은 열지 않았고 설정을 변경하지 않았다. Codex Supabase 도구 연결 범위는 별도 확인이 필요하다.
+- Supabase 대상 프로젝트 SQL Editor에서 카탈로그 메타데이터만 조회했다. 실행 역할은 `postgres`였고, `public.users`, `public.auth_sessions`, `public.auth_login_attempts`는 모두 없었다. 따라서 이 세 테이블의 컬럼·제약·인덱스·RLS 정책·테이블 권한은 조회되지 않았다. `anon`, `authenticated`, `service_role`의 `public` 스키마 사용 권한은 true였지만, 이는 개별 테이블 권한을 뜻하지 않는다. 조회 쿼리는 저장하지 않았고 사용자·로그인·세션 행, 비밀값, 설정은 읽거나 변경하지 않았다. 이 결과만으로 Supabase Auth의 `auth.users` 또는 DB 전체에 앱 계정 테이블이 없다고 단정할 수 없다. 다음은 저장소의 실제 로그인 DB 테이블/스키마 이름과 배포 대상을 대조해야 한다.
+- 후속 읽기 전용 메타데이터 조회로 `auth`, `public` 등 시스템 카탈로그 외 스키마의 같은 이름 표를 검색했다. 결과는 Supabase 관리 스키마의 `auth.users` 한 개뿐이었고, `public.users`, `public.auth_sessions`, `public.auth_login_attempts`는 여전히 찾지 못했다. 따라서 Supabase Auth 계정 표가 존재하는 것과 애플리케이션의 자체 로그인 저장소가 준비된 것은 별개다. 처음 실행은 SQL 편집기 기존 문장 중간에 새 쿼리가 삽입되어 문법 오류가 났으며, 편집기 전체를 교체한 뒤 같은 조회가 정상 실행됐다. 행 데이터와 설정은 읽거나 변경하지 않았다.
+- Supabase Data API 설정을 읽기 전용으로 확인했다. Data API 활성, 노출 스키마 2개 중 1개, `public`의 표 4/4 및 함수 1/1 노출, 새 표 자동 노출 옵션 활성 상태였다. `public`의 코퍼스 표 4개(`source_documents`, `document_chunks`, `chunk_embeddings`, `chunk_embedding_bits`)는 `anon`·`authenticated`·`service_role` 모두에 실효 SELECT/INSERT/UPDATE/DELETE/TRUNCATE 권한이 있었다. 이 표들은 RLS가 켜져 있고 강제 옵션은 꺼져 있으며 정책은 각각 0개다. 역할 속성상 `anon`과 `authenticated`는 RLS 우회 불가, `service_role`과 `postgres`는 `BYPASSRLS`다. 따라서 ACL 권한만으로 anon/authenticated가 행을 읽거나 쓸 수 있다고 단정할 수 없고, 현재 정책 0개에서는 일반 역할 접근이 차단된다. 서비스가 어떤 DB 역할로 연결되는지는 비밀값을 읽지 않아 미확인이다.
+- Data API가 노출한 함수는 `public.rls_auto_enable()`로 확인했다. 함수 정의는 읽기만 했고 실행하지 않았다. `SECURITY DEFINER`, 반환형 `event_trigger`, `pg_catalog` 고정 search_path이며, 활성 `ensure_rls` 이벤트 트리거(DDL command end)에 연결돼 있다. 정의상 public 신규 테이블에 RLS를 켜는 동작이고 정책을 추가하지는 않는다. Data API 설정의 새 표 자동 노출은 켜져 있어, 신규 표를 만들면 API 권한 부여와 RLS 활성화가 함께 적용될 수 있으나 접근 정책은 별도 설계가 필요하다. 대시보드 설정 변경은 저장하지 않았다. 조회 중 설정 선택 UI에만 잠시 미저장 0개 상태가 나타났고, 새 페이지에서 저장된 1/2·4/4·1/1 상태를 재확인했다. 실제 DB 행·함수 실행·비밀값은 접근하지 않았다.
+- 로컬 `.env` 값 자체는 출력하지 않고 연결 대상과 키 이름만 확인했다. `DATABASE_URL`은 `tdtiabsgldkusyfyfysf` 프로젝트를 가리키며 새로 확인한 `owkklccwglcpfmmezcxj`와 다르다. `DATABASE_URL`은 인증과 RAG 코드 모두가 사용하므로 바꾸면 두 경로가 함께 새 DB로 이동한다. 현재 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`는 `.env`에 있지만 backend/scripts에서 참조가 없고, `SUPABASE_SERVICE_ROLE_KEY`도 현재 코드에서 사용하지 않는다. `AUTH_SECRET`과 `AUTH_ORIGIN`은 DB 접속값이 아니므로 DB 교체만으로 자동 교체 대상이 되지 않는다. `.env`, Cloud Run Secret Manager, DB 스키마/권한은 변경하지 않았다.
+- 사용자가 Cloud Run Secret Manager의 `DATABASE_URL`에서 사용자 이름이 `postgres.owkklccwglcpfmmezcxj`임을 확인해 알려줬다. 비밀번호·전체 접속 문자열은 받지 않았다. 공유 풀러 형식상 DB 역할 `postgres`를 가리키며, 앞서 대상 DB의 `pg_roles` 메타데이터에서 `postgres.rolbypassrls=true`를 확인했다. 따라서 Cloud Run 요청은 RLS 정책으로 제한되지 않는 연결 역할을 사용한다는 평가를 추가했다. 이 연결을 별도 제한 역할로 바꾸는 작업은 아직 하지 않았다.
+- Cloud Run 콘솔의 현재 서비스 revision을 재확인했다. `sojafit-api-00008-2h5`가 현재 트래픽 100%를 받고 서비스는 정상 상태였다. revision 환경변수에서 `DATABASE_URL`이 Secret Manager의 `DATABASE_URL:latest`를 참조한다. 사용자가 해당 secret에서 사용자 이름 `postgres.owkklccwglcpfmmezcxj`를 확인했다고 알려줬으므로, Cloud Run의 대상 project ref는 `owkklccwglcpfmmezcxj`라는 근거가 충분하다. 비밀값은 열지 않았다. `backend/main.py`의 `/health`는 정적 `{"status":"ok"}`만 반환하므로 서비스 정상 표시가 DB 접속 성공을 증명하지는 않는다.
+- 로컬 `.env` 키/사용처를 비밀값 없이 대조했다. `DATABASE_URL`과 `SUPABASE_URL`은 모두 이전 `tdtiabsgldkusyfyfysf` project ref를 가리킨다. 로컬 설정은 `DEMO_MODE=0`, `RAG_VECTOR_TYPE=vector`, `AUTH_ORIGIN`은 Cloud Run 주소이며 `VOYAGE_API_KEY`는 비어 있다. `LLM_PROVIDER`·`LLM_MODEL`은 비어 있어 코드 기본값(openrouter 및 기본 모델)을 쓴다. `LANGFUSE_HOST`는 코드의 호환 처리로 `LANGFUSE_BASE_URL`로 옮겨진다. `SUPABASE_URL`·`SUPABASE_PUBLISHABLE_KEY`는 현재 backend/scripts에서 사용처가 없고 `.env.example`에는 publishable 대신 `SUPABASE_SERVICE_ROLE_KEY` 항목이 있지만 코드 사용처는 확인되지 않았다. 프로젝트의 DB·`.env`·Cloud Run 설정은 변경하지 않았다.
+- 대상 Supabase 프로젝트의 Data API Overview에서 API URL `https://owkklccwglcpfmmezcxj.supabase.co/rest/v1/`를 읽기 전용으로 확인했다. 따라서 `.env`의 `SUPABASE_URL`에 넣을 프로젝트 기본 URL은 `https://owkklccwglcpfmmezcxj.supabase.co`이다(`/rest/v1/` 제외). 앞서 로컬 `.env`에서 확인한 값은 이전 `tdtiabsgldkusyfyfysf` 프로젝트였으며 파일은 변경하지 않았다.
+- 새 Supabase 프로젝트의 Settings > API Keys를 읽기 전용으로 확인했다. 새 `sb_publishable_...` 기본 키 1개, 새 `sb_secret_...` 키 2개, 기존 JWT 기반 `service_role` 키가 존재했다. publishable 값은 대시보드에서 표시되지만 저장소의 키 관리 규칙에 따라 기록·채팅에 복사하지 않았다. `service_role` 값은 마스킹 상태로 두었고 Reveal/Copy를 누르지 않았다. 현재 backend/scripts 및 Cloud Run revision 설정에서 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` 사용처가 없어 `.env`에 새 값을 입력하거나 Cloud Run Secret을 추가하지 않았다. Supabase는 기존 anon/service_role 키를 publishable/secret 키로 교체하는 중이며, secret 키는 RLS 우회 가능한 서버 전용 비밀값이다. 키 회전·비활성화는 하지 않았다.
+- 사용자가 `.env`를 갱신했다고 요청해 비밀값을 출력하지 않고 형식만 확인했다. `SUPABASE_URL`과 `DATABASE_URL`은 모두 새 `owkklccwglcpfmmezcxj` 프로젝트를 가리키며, `DATABASE_URL`의 사용자명은 `postgres.owkklccwglcpfmmezcxj`다. `SUPABASE_PUBLISHABLE_KEY`는 비어 있지 않고 `sb_publishable_` 접두 형식이다. `SUPABASE_SERVICE_ROLE_KEY`는 비어 있지 않지만 값은 legacy JWT `service_role`(`eyJ...`)이 아니라 새 API secret(`sb_secret_...`) 형식이다. 이 차이는 키 자체를 검증한 것은 아니며 값은 읽거나 기록하지 않았다. 두 변수 모두 현재 backend/scripts에 사용처가 없다. 로컬 `.env`가 이제 운영 Supabase DB와 RLS 우회 가능한 `postgres` 역할을 가리키므로, 합성계정 생성·마이그레이션·적재 스크립트는 실행하지 않았다. 파일 수정은 하지 않았다.
+- 사용자가 새 `.env` 기준 검증을 요청해 접속 문자열은 출력하지 않고 로컬 설정으로 Supabase에 연결했다. 네트워크 허용 실행에서 `SET TRANSACTION READ ONLY` 후 `current_database=postgres`, `current_user=postgres`, read-only=on, `rolbypassrls=true`, `vector` 확장 존재, `public.users/auth_sessions/auth_login_attempts` 없음이 확인됐다. RAG 메타데이터는 `public.chunk_embeddings.embedding`가 `halfvec`인데 `.env`는 `RAG_VECTOR_TYPE=vector`였다. 저장소의 기존 `ingest.py`는 이 불일치를 거부하므로 `.env`의 해당 한 줄만 `halfvec`으로 바꾸고 `backend.rag.storage.vector_type()` 자기검사에서 halfvec 인식 통과를 확인했다. 인증 통합 테스트, RAG 검색/적재, 마이그레이션은 실행하지 않았고 운영 DB에는 쓰지 않았다. 새 `.env`는 운영 DB의 `postgres` 역할을 가리키므로 테스트 전용 DB를 분리할 필요가 남아 있다.
+- 사용자가 새 `.env` 기준 로그인 API·RAG·운영 쓰기 확인을 요청했다. Cloud Run `POST /api/auth/login`에는 가짜 invalid 이메일/빈 비밀번호만 보내 422 유효성 응답을 확인했다. 이 요청은 DB에 접근하지 않았다. 실제 로그인 호출은 자체 인증 표 3개가 없음을 이미 확인했으므로 보내지 않았다.
+- 새 `.env`의 운영 DB로 BM25 `SS34 diode` 검색을 1회 실행했다. Voyage/OpenRouter를 호출하지 않았고 DB에는 SELECT만 했다. 결과 3건, 페이지 번호 [3,3,3], 약 6.969초였다. 내용 본문은 출력하지 않았다. `.env`에 `VOYAGE_API_KEY`가 비어 있어 dense/hybrid 임베딩·리랭크 경로는 확인하지 않았다.
+- `postgres` 역할의 카탈로그 권한을 읽기 전용으로 확인했고 RAG ingest가 사용하는 `source_documents`, `document_chunks`, `chunk_embeddings`, `chunk_embedding_bits` 모두 INSERT/UPDATE/DELETE 권한이 true였다. `ingest.py`는 dry-run 옵션 없이 실제 INSERT를 수행한다. 운영 백업·복구와 적재 범위 확인 전이라 적재나 임시 쓰기/롤백 시험은 하지 않았다. 비밀값·사용자 데이터는 출력하지 않았다.
+- 사용자가 이해 확인 후 로그인 작업을 이어가도록 요청했다. 별도 로컬 인증 DB 상태를 확인했으나 `127.0.0.1:55434`는 닫혀 있고 `TEST_AUTH_DATABASE_URL`은 설정되지 않았다. Docker CLI는 Docker Desktop Linux 엔진 named pipe 접근 거부를 반환했으며, 운영 DB 대신 쓸 로컬 컨테이너를 사용할 수 없었다.
+- DB 비사용 로그인 테스트 subset을 `.venv` Python으로 실행: `5 passed, 6 skipped in 2.74s`; 생략은 격리 인증 DB 요구 조건이다. 전체 `tests/api/test_auth.py`는 TestClient 기반 두 번째 사례에서 멈췄고, faulthandler는 Windows asyncio `_fallback_socketpair`의 `accept` 대기를 보여줬다. 60초 뒤 실행을 중단했으므로 전체 테스트 결과는 미확인이다. 코드 변경은 하지 않았고 운영 DB에는 쓰지 않았다. 계속하려면 Docker/로컬 PostgreSQL을 사용할 수 있게 하거나 별도 격리 `TEST_AUTH_DATABASE_URL`을 준비해야 한다. 생산 Supabase URL을 테스트 URL로 사용하지 않는다.
+- 이어서 확인: Docker Desktop 앱을 열어 보려 했지만 앱이 확인 가능한 창을 제공하지 않아 Docker 엔진을 시작할 수 없었다. 재확인 결과 `127.0.0.1:55434`는 닫혀 있고 Docker named pipe는 계속 `permission denied`였다. DB 미사용 로그인 테스트를 다시 실행해 `5 passed, 6 skipped`를 확인했다. 6건은 격리 인증 DB가 없어 건너뛰었다. 코드/DB 설정은 변경하지 않았다.
+- 다음 단계: Docker Desktop을 직접 실행해 엔진이 준비된 뒤 같은 로그인 DB 테스트를 재개하거나, 별도 격리 테스트 DB 주소를 준비한다. 운영 Supabase URL로는 DB 통합 테스트를 실행하지 않는다.
+- 후속 읽기 전용 확인: `sojafit-auth-test`는 정상 상태이며 인증 표 3개는 모두 0행이고 RLS가 켜져 있다. `anon`·`authenticated`의 각 표 SELECT 실효 권한은 없고 권한 제한 마이그레이션 이력이 있다. security advisor는 세 표에 정책이 없다는 INFO를 보고했다. 로컬 `DATABASE_URL`은 테스트 프로젝트가 아니고 `TEST_AUTH_DATABASE_URL`은 비어 있어 로그인 DB 테스트는 실행하지 않았다. 테스트 안내 및 계획 맨 앞에 확인 시점과 이전 기록을 구분했다. HTTP Data API 접근과 실제 로그인은 미검증이다.
+- Docker Desktop 실행 후 로컬 `sojafit-auth-test-local` 컨테이너에 새 빈 DB `auth_check_83a26b9e75a9`를 만들고 인증 SQL `003`, `005`, `006`만 적용했다. 테스트 프로세스에만 해당 로컬 DB 연결을 설정하여 `.venv/Scripts/uv.exe run --no-sync --offline pytest -q -rs tests/api/test_auth.py -p no:cacheprovider` 실행 결과 `34 passed in 19.50s`. 합성 계정·세션 등 테스트 데이터와 새 DB는 로컬 컨테이너에 남아 있다. 기존 DB, 운영 Supabase, Cloud Run은 변경하지 않았다. Supabase 환경 및 배포 로그인은 별도 미검증이다.
+- 서비스 DB 재확인: Supabase 연결 도구는 팀 프로젝트 조회를 권한 부족으로 거부했다. 로컬 `.env` 연결의 프로젝트 ref를 확인하고 읽기 전용 트랜잭션으로 접속해 `public.users`, `auth_sessions`, `auth_login_attempts`가 없으며 접속 역할은 `BYPASSRLS`임을 확인했다. 클라이언트 연결의 TLS는 켜져 있었으나 URL에 `sslmode`가 없고 현재 libpq 기본값은 `prefer`, 별도 `sslrootcert`는 설정되지 않았다. 서버의 `pg_stat_ssl`은 해당 백엔드 연결에 대해 false를 반환했으며 풀러 경유 구간의 의미는 제공자 설정 확인이 필요하다. 이 결과는 Cloud Run의 실제 연결 설정을 확인한 것이 아니다. DB 쓰기와 설정 변경은 하지 않았다.
+- 서비스 DB `verify-full` 준비: 현재 URL에 SSL 모드·CA 경로가 없고 프로세스의 libpq 기본값은 `prefer`다. 설치된 certifi 공개 CA 묶음으로 서비스 풀러에 `verify-full` 연결을 시도했으나 인증서 검증 실패로 연결되지 않았다. 다른 CA 거부 시험은 실행하지 않았다. 개인 테스트 프로젝트의 CA는 서비스 프로젝트용으로 확인되지 않았다. 서비스 프로젝트 CA를 확인하려 브라우저의 기존 Supabase API 키 페이지에 접근하려 했으나 자동 보안 검토가 민감한 키 노출 위험을 이유로 거부했다. `.env`, DB 및 Cloud Run은 변경하지 않았다. 서비스 프로젝트의 신뢰할 수 있는 공식 공개 CA를 확보한 뒤 읽기 전용 검증을 재개한다.
+- 사용자가 서비스 프로젝트에서 내려받은 공개 CA를 확인했다. CA 인증서 1개, 만료 2031-04-26이며 개인키는 없었다. 원본의 한글 디렉터리 경로는 libpq가 인식하지 못해 최초 연결이 실패했다. 같은 인증서를 `.venv` 아래 영문 임시 경로에 복사하자 `sslmode=verify-full` 읽기 전용 SELECT가 성공했고, certifi의 CA 묶음으로는 인증서 검증이 거부됐다. 시험용 복사본은 자동 정리했다. `.env`와 Cloud Run 설정은 변경하지 않았으므로 일회성 검증이며, 상시 적용 시 영문 경로와 배포별 CA 제공을 별도로 준비해야 한다.
+- 사용자 요청에 따라 공개 CA를 저장소 밖 `E:/teamproject3/certs/sojafit-service-ca.crt`로 이동하고 원본과 복사본의 SHA-256 일치 후 기존 파일을 제거했다. 새 경로의 CA로 `verify-full` 읽기 전용 SELECT 성공을 먼저 확인했다. 로컬 `.env`의 `DATABASE_URL`에 `sslmode=verify-full`과 새 `sslrootcert` 경로만 추가한 뒤 실제 `backend.auth.connection()`으로 TLS·검증 모드·읽기 전용 SELECT를 확인했다. 실패 시 변경 전 `.env`로 복원하도록 처리했으며 검증은 성공했다. Cloud Run, 운영 DB 데이터 및 검색 실행은 변경하거나 검증하지 않았다. 다른 PC와 배포 환경에는 해당 경로가 없으므로 별도로 CA 제공과 설정이 필요하다.
+- 사용자가 GCP Secret Manager에 `sojafit-service-db-ca`를 생성한 뒤 콘솔에서 버전 1이 사용 설정된 것을 확인했다. 보안 비밀 값은 열지 않았으므로 로컬 인증서와 등록 내용의 일치는 별도로 확인하지 않았다. Cloud Run 파일 마운트, 서비스 계정 접근 권한, DB TLS 설정과 새 리비전 배포는 수행하지 않았다.
+- Cloud Run `sojafit-api` 콘솔에서 기본 컴퓨팅 서비스 계정을 사용하고, 이 계정에 새 CA 보안 비밀의 접근자 권한이 프로젝트에서 상속됨을 확인했다. 콘솔의 미배포 변경안에 CA 버전 1을 `/etc/sojafit-certs/service-ca.crt`로 마운트하고 `PGSSLMODE=verify-full`, `PGSSLROOTCERT`를 해당 파일 경로로 추가했다. 변경사항 검토에서 기존 환경변수·보안 비밀 참조가 유지됨을 확인하고 즉시 트래픽 제공 체크를 해제했다. 배포 버튼은 누르지 않았고 새 리비전은 생성하지 않았다. Cloud Run `DATABASE_URL`의 SSL 파라미터가 환경변수를 덮어쓰는지, 등록된 CA 파일이 일치하는지 및 0% 트래픽 검증 경로는 미확인이다.
+- 후속 진행: Cloud Run `DATABASE_URL` 비밀값은 출력하지 않고 대상 프로젝트 일치 및 `sslmode`·`sslrootcert` URL 파라미터 부재만 확인했다. 등록 CA 버전 1과 로컬에서 검증한 CA의 인증서 SHA-256 지문은 일치했다. 변경안을 배포해 `sojafit-api-00009-t6p` 리비전을 만들고 태그 `tls-check-00009`를 연결했다. 콘솔에서 새 리비전 0%, 기존 `sojafit-api-00008-2h5` 100%를 확인했다. 태그 주소의 GET `/health`와 `/openapi.json`은 각각 200이었으나 `/health`는 DB 연결을 검사하지 않는다. 배포 API 목록에 검색 경로가 없고 서비스 DB에 자체 인증 표가 없으므로 새 리비전의 실제 DB TLS·검색·로그인 동작은 미검증이다. 태그 주소는 별도 직접 접근 경로로 남아 있다. 운영 트래픽 전환은 하지 않았다.
+- 후속 연결 검증: Cloud Run에 `sojafit-db-tls-check` 작업을 생성하고 1회 실행했다(서울, 동일 이미지 digest·기본 서비스 계정·`DATABASE_URL:latest`·CA 버전 1 마운트 및 동일 PG SSL 환경변수). 제한 1분, 재시도 0회. 실행 `sojafit-db-tls-check-7vmc8`은 종료 코드 0과 `VERIFY_FULL_AND_CORPUS_READ_OK` 로그를 남겼다. psycopg에서 실효 `verify-full`과 TLS, 읽기 전용 SELECT 1, `public.document_chunks` SELECT를 확인했으며 결과 데이터·접속 문자열은 출력하지 않았다. 선택된 서비스 리비전의 VPC는 없음으로 표시됐다. 이 작업은 별도 Cloud Run 작업이므로 서비스 리비전 내부의 실제 요청·검색 전체 또는 배포 로그인 검증을 뜻하지 않는다. 기존 서비스 트래픽은 종전 리비전 100%, 새 리비전 0%로 유지했다. 작업과 시험용 태그는 후속 검토를 위해 남겼으며 실행 비용은 미확인이다.
+- 서비스 DB 백업·스키마 읽기 전용 점검: 팀 Supabase 콘솔은 Free 플랜에 프로젝트 백업이 포함되지 않는다고 표시했다. 별도 수동 백업·복구 담당자와 복구 시험은 미확인이다. 화면 상단에는 사용량 유예 기간 종료 후 한도 소진 시 프로젝트 요청을 처리할 수 없다는 경고가 표시됐으며 현재 남은 사용량은 확인하지 않았다. DB 설정의 Enforce SSL은 꺼져 있었다. 설정·복원은 실행하지 않았다.
+- 같은 서비스 DB에 `verify-full` 읽기 전용 연결 후 `public`의 `users`, `users_id_seq`, `auth_sessions`, `auth_login_attempts` 이름과 충돌하는 관계 객체가 없음을 확인했다. `ensure_rls` 등 이벤트 트리거가 활성이고, 현재 DB 역할이 `public`에 만드는 새 표·시퀀스에는 `anon`·`authenticated`에 대한 기본 권한이 있다(표에 TRUNCATE 등 포함). 그러므로 인증 표 신설 시 RLS뿐 아니라 공개 역할의 표·시퀀스 권한을 함께 제한하는 설계와 검증이 필요하다. `supabase_migrations.schema_migrations`는 확인되지 않았다. 운영 DB 스키마나 데이터를 변경하지 않았다.
+
+## 2026-11-04 로그인 마무리 계획의 로컬 검증 상태 정리
+- `docs/specs/login-completion-plan.md`에서 초기 DB 미사용 테스트 결과(`19 passed, 15 skipped`)와 후속 분리 로컬 PostgreSQL 테스트 결과(`34 passed`)를 서로 다른 시점으로 구분했다.
+- 로컬 격리 DB 범위는 검증된 것으로 정리하고, 외부 DB 및 배포 로그인은 미검증 상태로 유지했다. Supabase 사용량·백업·대시보드 상태, 코드, DB, Cloud Run은 이번 정리에서 변경하거나 확인하지 않았다.
+- 이후 사용자는 로그인 뒤 질문까지 시연하고, 질문 기록은 저장하지 않는 범위를 선택했다. 같은 출처의 최소 화면, 합성 평가 계정의 평가 종료 후 삭제, 공통 읽기 전용 코퍼스를 포함한 검토용 설계안과 수용 기준 초안을 같은 작업서에 추가했다.
+- 이 안은 사용자별로 저장된 대화·기억을 제공하지 않는다. 질문 API·화면은 아직 없고, 로그/추적 제공자의 보관 여부도 확인되지 않아 실사용 개인정보는 시연에 넣지 않는 제안이다. 루트 `SPEC.md`와 아키텍처 ADR은 STH에서 직접 고치지 않고 조장 승인을 받아 반영해야 한다.
+- 사용자가 검토안에 동의한 뒤, 팀장 승인/SPEC 반영 → 정확한 합성 계정 삭제 절차 → 세션 보호 질문 API → 같은 출처 화면 → 회귀 확인 순서의 구현 계획을 작성했다.
+- 문서 대조만 했으며 테스트·코드·DB·Cloud Run은 변경하거나 확인하지 않았다. 구현은 팀장이 보관 종료일·외부 로그 범위와 주요 SPEC/ADR을 승인할 때까지 보류한다.
+
+## 2026-11-04 로그인 후 질문 시연 로컬 구현
+- 사용자 승인 범위(로그인 → 질문 1회 → 답변 → 로그아웃, 질문 기록 미저장)에 따라 `backend/main.py`에 `/login` 화면과 세션 보호 `/api/ask`를 연결했다. 질문은 1~2000자, 알 수 없는 ID 필드는 거부하며, 서버 세션 사용자 ID만 그래프에 전달한다. 답변만 반환하고 Origin도 검증한다.
+- `backend/web/templates/login.html`을 추가했다. 같은 출처 기존 인증 API를 사용하며 localStorage/sessionStorage는 쓰지 않고, 답은 `textContent`로 표시한다. 로그아웃 성공 시 입력·답을 지운다.
+- `backend/auth.py`에 정확한 사용자 ID 재입력을 요구하는 운영자 삭제 CLI를 추가했다. 비활성 일반 사용자 중 `@example.test` 합성 계정만 허용하며 관리자·활성·실제 도메인 계정은 거부한다. 사용자 삭제에 연결 세션 cascade와 이메일 해시 로그인 실패 행 삭제를 묶었다. 격리 DB 통합 테스트도 추가했지만 이번에는 DB가 준비되지 않아 실행하지 않았다.
+- 화면/API 안내 문서와 신규 파일 트리 줄, 검토 계획 체크 상태를 갱신했다. 루트 `SPEC.md`와 ADR은 주요 문서이므로 STH에서 수정하지 않았다. PR/병합 전에 팀장 승인과 SPEC/ADR 반영이 필요하다.
+- 검증: `.venv/Scripts/python.exe -m pytest -q tests/api/test_question.py tests/api/test_auth.py::test_account_deletion_cli_requires_exact_id_confirmation -p no:cacheprovider` 결과 `8 passed`; 이후 삭제 CLI 관리자 역할 회귀를 추가했다. 마지막 API 전체 `.venv/Scripts/python.exe -m pytest -q tests/api -p no:cacheprovider` 결과 `30 passed, 16 skipped`; `git diff --check`도 통과했다. 전용 `TEST_AUTH_DATABASE_URL`은 비워 두어 DB 통합 시험을 건너뛰었고 서비스 DB에는 접속하지 않았다.
+- 확인하지 못한 범위: 브라우저에서 실제 로그인·질문 흐름, 로컬/서비스 DB에 대한 사용자별 질문 실측, Cloud Run 배포, 프록시·모델·Langfuse 등 외부 로그 보관. Docker named pipe 권한 문제로 격리 컨테이너 상태를 사용할 수 없었다. 실제 개인정보 대신 합성 입력만 사용해야 한다.
+
+## 2026-11-05 팀장 체크리스트 대조 및 공유 준비
+- 사용자가 제공한 `E:/teamproject3/자료/작업-체크리스트.md`(2026-11-04 11:32 수정)를 로그인 작업 기록, 로컬 코드·테스트 및 `db/DB.md`와 다시 대조했다. 체크리스트의 질문 API 부재 설명은 로컬 코드에는 오래된 상태지만, Cloud Run 배포본에서 질문을 실행했다는 뜻은 아니다.
+- 체크리스트 6-1의 질문 API는 로컬 구현됨(`/api/ask`, `/login`)으로 구분한다. 화면 방식 ADR·루트 SPEC, 오류 응답의 전체 계약은 미완료다. 6-2의 Cloud Run 로그인, 별도 평가 계정, 실제 로그인→질문→로그아웃은 미검증이며 G1 완료로 볼 수 없다.
+- 체크리스트의 5-4 로그인 사용자 ID로 thread·Store 분리는 미완료다. 이번 질문 시연은 기록을 저장하지 않으며, 미래의 회로·대화·기억·견적 소유권 검증과 구분한다.
+- 안전상 결정이 필요한 불일치: 체크리스트는 운영 DB에 007 적용을 적었으나 `db/DB.md`는 `007_demo_accounts.sql`을 로컬 Compose 데모 계정 시드로 설명한다. 팀장·DB 담당자가 서비스용 스키마/시드 경계를 확인하기 전에는 적용하지 않는다.
+- 다음 순서: ① 이메일 보호 수준·보관/삭제·로그 보관 정책 결정, ② 운영 DB 마이그레이션 및 공개 권한/RLS/백엔드 역할 설계 승인, ③ 격리 DB 통합 테스트와 합성 계정 삭제 시험, ④ 팀장이 SPEC/ADR·체크리스트 갱신, ⑤ Cloud Run Origin·인증 스키마·평가 계정을 확인하고 합성 입력으로 전체 시나리오 검증.
+- 사용자 내일 설명용 핵심: 인증 API와 로컬 질문 시연은 준비됐지만 배포 로그인은 끝나지 않았다. 이전 API 전체 테스트 기록은 30 passed, 16 skipped이며 격리 DB·브라우저·Cloud Run 흐름은 이 결과에 포함되지 않는다.
+- 확인 방법: 체크리스트 메타데이터와 5-4·6-1·6-2·G1 항목, `backend/main.py`, `backend/auth.py`, 테스트, `db/DB.md`, 작업기록을 읽기 전용 대조했다. 새 테스트·DB 접속·Cloud Run 접근·코드 변경은 하지 않았다.
+
+## 2026-11-05 AGENTS.md 재검토 보완
+- `backend/main.py`의 `/api/ask`에서 Origin 검증을 FastAPI 인증 의존성 앞에 두었다. 이전에는 `auth.current_user`가 세션의 `last_seen_at`을 갱신한 뒤 Origin을 거부할 수 있었다. 이제 다른 출처 또는 Origin 누락은 인증 세션 조회·갱신과 그래프 실행 전에 거부한다.
+- 회귀 테스트에서 외부 Origin 요청 시 인증 의존성 및 그래프가 모두 실행되지 않는지 확인하도록 했고, 비로그인 `401` 검증은 허용 Origin을 포함해 기존 의미를 유지했다. `/api/ask` 데코레이터 앞에 있던 잘못된 문자를 제거해 모듈 import 오류도 바로잡았다.
+- `SOJAFIT.md`의 웹/템플릿 설명과 `docs/specs/login-completion-plan.md`의 현재 로컬 화면/API 상태를 구현에 맞게 갱신했다. 배포·브라우저·격리 DB 검증 항목은 미완료로 남겼다.
+- 검증: `uv run --no-sync pytest -q tests/api -p no:cacheprovider` (`.venv/Scripts/uv.exe` 사용) 결과 `30 passed, 16 skipped`. 격리 인증 DB가 없어 DB 통합 테스트 16건은 skip이다. 샌드박스는 Windows TestClient socketpair 및 uv 잠금/캐시 쓰기를 막아 해당 표준 명령은 로컬 권한으로 실행했다. `git diff --check` 통과(작업기록의 LF→CRLF 경고만 표시).
+- 전체 테스트 추가 확인: `uv run --no-sync pytest -q -p no:cacheprovider`는 `277 passed, 27 skipped, 1 failed`였다. 유일한 실패는 `tests/evals/test_frozen_evals.py::test_frozen_files_unchanged`로, Windows 체크아웃의 CRLF 바이트가 FROZEN의 LF SHA-256과 달랐다. `HEAD:evals/dataset_v2.jsonl`의 해시는 기대값과 일치하고, 작업 파일을 LF 정규화한 해시도 기대값과 일치했다. 평가 파일은 수정하지 않았다. 해당 한 검사를 제외한 나머지는 `277 passed, 27 skipped, 1 deselected`였다.
+- 확인하지 않은 것: 브라우저·Cloud Run 요청에서의 검증, 서비스 DB 세션 만료 실측, 로그/추적 보관 정책, DB 통합 테스트.
