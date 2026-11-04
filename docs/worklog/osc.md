@@ -123,3 +123,4 @@
 - 정본 경계: 서비스 기본값 적용은 조장 소유 ADR·`SPEC.md` 갱신 뒤 별도 변경으로 수행한다.
 - 사전등록: `evals/guides/preregister.md` #29에 추가 API 호출 없이 경량 문항별 증거로 표·집계값을 재계산하는 검증 조건, 입력 hash, 분모, 성공 기준과 0달러 비용 상한을 고정했다.
 - 사후등록: `docs/experiments/supervisor-model-comparison-postregistration.md`에 완료된 5종 비교의 실제 입력·provider 조건·실행 중 변경·채점 범위·선정 순서·한계를 별도로 기록했다.
+- 다음 측정 사전등록: `evals/guides/preregister.md` #30에 1·2위인 `openai/gpt-6-luna`와 `anthropic/claude-haiku-5.5`를 동결 v2 70문항에서 각각 1회 함께 재측정하는 조건을 고정했다. 두 모델의 1차 결과를 이미 본 기준값으로 공개하고, 두 품질 지표의 우위 반복 여부·절대 0.15 안정성·완전 호출 실패 중단·모델별 $0.10 예산을 결과 확인 전에 정했다. API 호출은 시작하지 않았다.
