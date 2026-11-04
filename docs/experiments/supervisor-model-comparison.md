@@ -1,6 +1,6 @@
 # 수퍼바이저 모델 5종 비교
 
-상태: 동결 v2 70문항을 후보별 1회 비교했으며, 이 실험의 최종 선정 모델은 `openai/gpt-6-luna`다. 이 PR은 평가 방법과 선정 결론만 기록하며 실행 코드, JSON 결과, 모델별 실측 수치는 포함하지 않는다.
+상태: 동결 v2 70문항을 후보별 1회 비교했으며, 이 실험의 최종 선정 모델은 `openai/gpt-6-luna`다. 이 PR은 평가 방법, 경량 집계 JSON, 모델별 핵심 실측값과 선정 결론만 기록한다.
 
 ## Why
 
@@ -83,10 +83,24 @@
 
 ### 저장 경계
 
-- 이 PR에는 평가 방법과 선정 결론만 남긴다.
-- 실행 코드, manifest, 모델별 parsed output, aggregate JSON은 포함하지 않는다.
+- 이 PR에는 평가 방법, 모델별 핵심 실측값, 경량 집계 JSON과 선정 결론만 남긴다.
+- 실행 코드, manifest, 모델별 parsed output은 포함하지 않는다.
 - 사용자 입력, raw prompt, raw response, 예외 원문, API key는 문서에 기록하지 않는다.
-- 모델별 점수·비용·latency 같은 실측 수치는 이 문서에 기재하지 않는다.
+- 집계 원본은 `evals/results/supervisor/2026-11-04-stage1-v1/stage1_summary.json` 한 파일로 제한한다.
+
+## Measured Results
+
+`Question Type Accuracy`와 `Macro-F1`은 gold label이 있는 35문항을 분모로 한다. `deepseek/deepseek-v4.1-flash`는 provider 중단으로 품질 비교 대상에서 제외한다.
+
+| Model ID | Schema Valid Rate | Question Type Accuracy | Macro-F1 | Raw Calls | Budget-Accounted Cost | p95 Latency |
+|---|---:|---:|---:|---:|---:|---:|
+| `openai/gpt-6-luna` | **0.943** | **1.000** | **1.000** | **83** | **$0.0135496** | 12.865s |
+| `anthropic/claude-haiku-5.5` | 0.686 | 0.629 | 0.724 | 121 | $0.0314090 | 7.791s |
+| `cohere/command-a-plus` | 0.286 | 0.229 | 0.356 | 177 | $0.0875172 | **6.071s** |
+| `meta/muse-glimmer-30b` | 0.014 | 0.029 | 0.071 | 205 | $0.0824471 | 8.597s |
+| `deepseek/deepseek-v4.1-flash` | `Not Comparable` | `Not Comparable` | `Not Comparable` | 3 | $0.00183318 | `Not Comparable` |
+
+`Budget-Accounted Cost`는 provider가 보고한 비용과 비용이 보고되지 않은 호출의 보수적 예약액을 합친 예산 차감값이며 실제 총 청구액과 같다고 단정하지 않는다.
 
 ## Final Supervisor Model Selection
 
