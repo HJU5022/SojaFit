@@ -129,5 +129,5 @@
 
 - 바꾼 파일: `backend/services/llm.py`, `evals/runners/run_supervisor_models.py`, 두 회귀 테스트, `evals/results/supervisor/`의 1차 manifest·후보별 rows와 provider 출처가 가리키는 초기 호출 증거, 폴더 설명·트리.
 - 범위: 기존 1차 실행의 코드·JSON을 보존한다. 새 모델 API 호출이나 재측정은 하지 않았다. run index 2·3은 manifest에 계획만 있고 이번 결과가 아니다.
-- 확인: 실행 코드 hash가 1차 manifest와 같고, 결과 JSON의 경로·키 패턴을 검사했다. 저장소에 올리는 원본은 문항별 parsed decision·usage·오류 종류를 포함하며 raw prompt·raw response 원문은 포함하지 않는다.
+- 확인: 실행 코드 hash가 1차 manifest와 같고, provider evidence가 가리키는 원본 hash 불일치는 0건이다. 결과 JSON의 경로·키 패턴을 검사했다. 관련 테스트와 저장소 구조 검사 41건이 통과했다. `uv sync --frozen --dev` 뒤 전체 테스트는 321건 통과·26건 skip·1건 실패했다. 실패한 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`은 Windows 기본 인코딩으로 쓴 한글 임시 파일을 UTF-8로 읽을 때의 `UnicodeDecodeError`이며 이번 변경 파일이 아니다. 저장소에 올리는 원본은 문항별 parsed decision·usage·오류 종류를 포함하며 raw prompt·raw response 원문은 포함하지 않는다.
 - 남은 한계: OpenRouter의 외부 서명 로그가 없으므로 저장소 JSON만으로 실제 청구·호출을 독립 증명하지 못한다. 1차 계획 복원 기록은 이 PR에 포함하지 않는다.
