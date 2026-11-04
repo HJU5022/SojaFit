@@ -92,13 +92,13 @@
 
 `Question Type Accuracy`와 `Macro-F1`은 gold label이 있는 35문항을 분모로 한다. `deepseek/deepseek-v4.1-flash`는 provider 중단으로 품질 비교 대상에서 제외한다.
 
-| Model ID | Schema Valid Rate | Question Type Accuracy | Macro-F1 | Raw Calls | Budget-Accounted Cost | p95 Latency |
-|---|---:|---:|---:|---:|---:|---:|
-| `openai/gpt-6-luna` | **0.943** | **1.000** | **1.000** | **83** | **$0.0135496** | 12.865s |
-| `anthropic/claude-haiku-5.5` | 0.686 | 0.629 | 0.724 | 121 | $0.0314090 | 7.791s |
-| `cohere/command-a-plus` | 0.286 | 0.229 | 0.356 | 177 | $0.0875172 | **6.071s** |
-| `meta/muse-glimmer-30b` | 0.014 | 0.029 | 0.071 | 205 | $0.0824471 | 8.597s |
-| `deepseek/deepseek-v4.1-flash` | `Not Comparable` | `Not Comparable` | `Not Comparable` | 3 | $0.00183318 | `Not Comparable` |
+| Model ID | Status | Recorded Outputs | Schema Valid Rate | Question Type Accuracy | Macro-F1 | Raw Calls | Budget-Accounted Cost | p95 Latency |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `openai/gpt-6-luna` | `complete_with_errors` | 70/70 | **0.943** | **1.000** | **1.000** | **83** | **$0.0135496** | 12.865s |
+| `anthropic/claude-haiku-5.5` | `complete_with_errors` | 70/70 | 0.686 | 0.629 | 0.724 | 121 | $0.0314090 | 7.791s |
+| `cohere/command-a-plus` | `complete_with_errors` | 70/70 | 0.286 | 0.229 | 0.356 | 177 | $0.0875172 | **6.071s** |
+| `meta/muse-glimmer-30b` | `complete_with_errors` | 70/70 | 0.014 | 0.029 | 0.071 | 205 | $0.0824471 | 8.597s |
+| `deepseek/deepseek-v4.1-flash` | `provider_stopped` | 3/70 | `Not Comparable` | `Not Comparable` | `Not Comparable` | 3 | $0.00183318 | `Not Comparable` |
 
 `Budget-Accounted Cost`는 provider가 보고한 비용과 비용이 보고되지 않은 호출의 보수적 예약액을 합친 예산 차감값이며 실제 총 청구액과 같다고 단정하지 않는다.
 
