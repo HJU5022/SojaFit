@@ -121,3 +121,4 @@
 - 한 일: 동결 v2 70문항의 후보 5종 1회 비교 방법과 선정 기준을 문서화하고, 실험상 최종 수퍼바이저로 `openai/gpt-6-luna`를 기록했다.
 - 범위: 실행 코드·manifest·모델별 parsed output은 제외하고, Markdown 문서와 약 4KB의 `stage1_summary.json` 집계본만 포함한다. 집계 JSON의 모델별 품질·오류·호출·비용·latency·전체 합계는 비교 문서에 모두 기록했다.
 - 정본 경계: 서비스 기본값 적용은 조장 소유 ADR·`SPEC.md` 갱신 뒤 별도 변경으로 수행한다.
+- 사전등록: `evals/guides/preregister.md` #29에 추가 API 호출 없이 경량 문항별 증거로 표·집계값을 재계산하는 검증 조건, 입력 hash, 분모, 성공 기준과 0달러 비용 상한을 고정했다.

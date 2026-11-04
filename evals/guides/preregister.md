@@ -371,3 +371,32 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 기대(측정 전, 고치지 않음): test 세트 단계별 Page Recall@5 차이 S1 +0.00~+0.20, S2 +0.00~+0.10, S3 +0.00~+0.15, S4 −0.05~+0.10이고 어느 단계도 악화 판정이 없다. S4 test 세트 Page Recall@5는 0.9079(#25와 같음). rerank-3 호출 p50 0.3~1.0초, 호출당 5,000~20,000토큰.
 - 예산: Voyage 상한 없음, OpenRouter 1달러.
 - 결과: 측정 끝(11-04, 새 리랭크 호출 0). test 세트 38 Page Recall@5: S0 0.5789 → S1 0.7632(9승 2패, +0.184 [+0.053, +0.316], 부호 p 0.065, 개선; 이긴 r1-003 · 009 · 016 · 022 · 026 · 029 · 051 · 061 · 067, 진 r1-064 · 074) → S2 0.7895(1승 0패, 유의차 없음, 이긴 r1-031) → S3 0.8289(2승 0패, 유의차 없음, 이긴 r1-074 · 084) → S4 0.9079(3승 0패, 유의차 없음, 이긴 r1-085 · 095 · 098). dev 세트 46: S0 0.6522 → S1 0.7826(8승 1패, +0.130, 부호 p 0.039, 개선) → S2 0.7826(0승 0패) → S3 0.7717(1승 1패, 이긴 r1-071, 진 r1-094) → S4 0.8587(4승 0패, 이긴 r1-086 · 087 · 088 · 093). test 세트 Page Hit@5 실패 유형: S0 상위 k 밖 8 · 후보 밖 7 → S1 2 · 6 → S2 1 · 6 → S3 0 · 6 → S4 후보 밖 2 · 상위 k 밖 1. 리랭커(R1 앞 20문항, 맥 → 운영 DB · Voyage): 질문 임베딩 p50 0.32 · p95 0.68초, rerank-3 p50 0.35 · p95 0.49초, DB 검색 + BM25 + RRF p50 0.45초, `retrieve()` 전체 p50 1.16 · p95 1.48초. rerank-3 호출당 토큰 p50 4,642 · p95 9,289 · 평균 5,122, 가격 100만 토큰당 0.05달러(Voyage 가격표, 무료 2억 토큰)라 질문당 약 0.00026달러. 기대 대조: S1 +0.184 · S2 +0.026 · S3 +0.039 · S4 +0.079 모두 범위 안 맞음, 악화 없음 맞음, S4 0.9079 맞음, rerank-3 p50 0.35초 맞음, 호출당 토큰 p50 4,642 틀림(범위 아래). 사람 판정 v2 19문항(지금 서비스 → #25 1위): 이긴 draft30-m03 · m04 · m07 · draft50-n03, 진 draft30-e08(저장소 밖 `전자_데이터시트/evidence/r1/v2check/v2check_ids_2026-11-04.json`). 결과 파일 `evals/results/retrieval/r1_steps_2026-11-04.json`, `service_stages_2026-11-04.json`.
+
+### 2026-11-04 #29: 수퍼바이저 5종 결과 재현 검증
+
+- 왜: 수퍼바이저 후보 5종의 70문항 1회 비교표와 `stage1_summary.json`은 집계값만 보존한다. 모델 API를 다시 호출하지 않고도 문항별 최소 증거에서 같은 수치를 다시 계산할 수 있는지 검증해, 결과표의 추적 가능성을 확보한다. 이 검증은 모델 품질을 새로 측정하거나 순위를 다시 정하는 실험이 아니다.
+- 고정 입력:
+  - 동결 평가셋 `evals/dataset_v2.jsonl` 70건. SHA-256 `81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9`.
+  - 집계 대상 `evals/results/supervisor/2026-11-04-stage1-v1/stage1_summary.json`. 등록 시 SHA-256 `2014611f8bd70f4fbeff21aec02808e407ea7a9ac3a25a872dd4d00ad32e77c0`.
+  - 비교 문서 `docs/experiments/supervisor-model-comparison.md`. 등록 시 SHA-256 `87e2894881777418629517295d43e2a33a2d2ea3f5644034c585847e2b8243f5`.
+- 검증 대상 후보: `anthropic/claude-haiku-5.5`, `openai/gpt-6-luna`, `deepseek/deepseek-v4.1-flash`, `meta/muse-glimmer-30b`, `cohere/command-a-plus`.
+- 새로 만들 경량 증거:
+  - `stage1_evidence.jsonl`: 문항별 `case_id`, `model_id`, `run_index`, 최종 `status`, `error_type`, `question_type`, `provider`, `actual_model`, `retry_count`, 전체 `latency_seconds`를 저장한다. 각 문항의 `attempts`에는 raw call별 `response_id`, 상태, 정제된 오류 종류, token usage, provider reported cost, 미보고 시 예약 비용, call latency만 둔다.
+  - `stage1_evidence_manifest.json`: dataset·prompt·code·집계 파일·원본 결과 파일의 SHA-256과 필드 설명을 저장한다.
+  - 두 파일 합계는 200KB 이하를 목표로 하며 pretty-print된 전체 parsed output은 넣지 않는다. 용량을 맞추기 위해 검증 필드를 삭제하지 않으며, 초과하면 실제 크기와 이유를 기록한다.
+- 제외 정보: 사용자 입력 원문, raw prompt, raw response, 예외 원문, API key, 이번에 채점하지 않는 `required_evidence`·`next_action` 자유 출력.
+- 재계산 규칙:
+  - `Recorded Outputs`: 모델별 증거 행 수.
+  - `Schema Valid Outputs`: `status=complete`인 행 수.
+  - `Schema Valid Rate`: schema-valid 행 수 / 모델별 planned 70문항. provider 중단 후보도 임의로 0점 모델로 바꾸지 않는다.
+  - `Question Type Accuracy`: 동결 파일에 `question_type` gold가 있는 35문항의 정답 수 / 35.
+  - `Macro-F1`: 같은 35문항에서 질문 유형별 F1을 동일 가중 평균한다.
+  - `Raw Calls`: 각 행의 `attempts` 개수를 합산한다.
+  - `Reported Cost Sum`: `attempts`에서 provider reported cost가 있는 raw call만 합산한다.
+  - `Budget-Accounted Cost`: 각 raw call의 reported cost를 사용하고, 값이 없는 call만 evidence에 고정한 보수 예약 비용으로 대체해 합산한다.
+  - `p50`·`p95 Latency`: 모델별 recorded output의 전체 `latency_seconds`를 선형 보간 percentile로 계산한다. raw call별 latency와 섞지 않는다.
+- 성공 기준: 경량 증거에서 재계산한 각 모델의 분자·분모·오류 수·비용·latency가 `stage1_summary.json`의 원시 정밀도 값과 일치하고, 문서 표의 반올림 값과도 일치한다. 불일치는 실패로 남기며 기존 summary나 문서 숫자를 증거에 맞추려고 자동 수정하지 않는다.
+- 무결성 기준: 등록된 입력 hash가 하나라도 다르면 재현 검증을 시작하지 않는다. 생성한 evidence 파일의 SHA-256과 생성 시각을 manifest와 worklog에 기록한다.
+- 예산·외부 호출: 모델 API, retrieval, reranker, LLM judge 호출은 0회이며 추가 API 비용 상한은 0달러다.
+- 알려진 한계: 저장된 `response_id`와 usage는 저장소 안에서 호출 기록을 추적하게 하지만 provider가 서명한 외부 증명은 아니다. 외부 호출 자체의 독립 증명에는 OpenRouter 사용 내역이나 provider 로그가 별도로 필요하다.
+- 결과: 이 등록 이후 경량 증거를 생성하고 재계산 결과를 기록한다.
