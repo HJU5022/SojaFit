@@ -371,3 +371,30 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 기대(측정 전, 고치지 않음): test 세트 단계별 Page Recall@5 차이 S1 +0.00~+0.20, S2 +0.00~+0.10, S3 +0.00~+0.15, S4 −0.05~+0.10이고 어느 단계도 악화 판정이 없다. S4 test 세트 Page Recall@5는 0.9079(#25와 같음). rerank-3 호출 p50 0.3~1.0초, 호출당 5,000~20,000토큰.
 - 예산: Voyage 상한 없음, OpenRouter 1달러.
 - 결과: 측정 끝(11-04, 새 리랭크 호출 0). test 세트 38 Page Recall@5: S0 0.5789 → S1 0.7632(9승 2패, +0.184 [+0.053, +0.316], 부호 p 0.065, 개선; 이긴 r1-003 · 009 · 016 · 022 · 026 · 029 · 051 · 061 · 067, 진 r1-064 · 074) → S2 0.7895(1승 0패, 유의차 없음, 이긴 r1-031) → S3 0.8289(2승 0패, 유의차 없음, 이긴 r1-074 · 084) → S4 0.9079(3승 0패, 유의차 없음, 이긴 r1-085 · 095 · 098). dev 세트 46: S0 0.6522 → S1 0.7826(8승 1패, +0.130, 부호 p 0.039, 개선) → S2 0.7826(0승 0패) → S3 0.7717(1승 1패, 이긴 r1-071, 진 r1-094) → S4 0.8587(4승 0패, 이긴 r1-086 · 087 · 088 · 093). test 세트 Page Hit@5 실패 유형: S0 상위 k 밖 8 · 후보 밖 7 → S1 2 · 6 → S2 1 · 6 → S3 0 · 6 → S4 후보 밖 2 · 상위 k 밖 1. 리랭커(R1 앞 20문항, 맥 → 운영 DB · Voyage): 질문 임베딩 p50 0.32 · p95 0.68초, rerank-3 p50 0.35 · p95 0.49초, DB 검색 + BM25 + RRF p50 0.45초, `retrieve()` 전체 p50 1.16 · p95 1.48초. rerank-3 호출당 토큰 p50 4,642 · p95 9,289 · 평균 5,122, 가격 100만 토큰당 0.05달러(Voyage 가격표, 무료 2억 토큰)라 질문당 약 0.00026달러. 기대 대조: S1 +0.184 · S2 +0.026 · S3 +0.039 · S4 +0.079 모두 범위 안 맞음, 악화 없음 맞음, S4 0.9079 맞음, rerank-3 p50 0.35초 맞음, 호출당 토큰 p50 4,642 틀림(범위 아래). 사람 판정 v2 19문항(지금 서비스 → #25 1위): 이긴 draft30-m03 · m04 · m07 · draft50-n03, 진 draft30-e08(저장소 밖 `전자_데이터시트/evidence/r1/v2check/v2check_ids_2026-11-04.json`). 결과 파일 `evals/results/retrieval/r1_steps_2026-11-04.json`, `service_stages_2026-11-04.json`.
+
+### 2026-11-04 #29: 단일 에이전트 기준 점수(D4 베이스라인, 동결 v2 70문항)
+
+- 왜: 과제 가이드 D4 "단일 에이전트 기준 점수"다. D5 멀티 에이전트(LLM이 판단하는 슈퍼바이저 + 서브 에이전트)를 같은 평가셋으로 비교할 기준이 된다. 바꾸는 것은 없다(측정만).
+- 측정 대상: 줄기 그래프 `backend/graph/build.py`(main `cdbe4a2`와 같은 그래프 코드, `MAX_TRIES = 2`). 실행 커밋 `0465b87`은 `cdbe4a2` 위에 `evals/runners` · `tests` · `docs`만 바꿨다. LLM `anthropic/claude-haiku-5.5`(OpenRouter, ADR 0010), `DEMO_MODE=0`이라 검색은 서비스 `retrieve()` 그대로(#27 설정). 평가셋 동결 v2 70문항(sha256 `81582c59…`, 관련 35 · 무관 35).
+- 지표: 문항마다 `score_answer.py` 규칙 채점 하나(cited_gold · wrong_citation · over_refusal · correct_refusal · hallucination_risk), 관련 · 무관별과 유형별(관련 4 · 무관 4)로 센다. 함께 적는 것: 관련 문항의 라우팅 일치(라우팅이 고른 유형 = 평가셋 question_type), 문항당 시간 p50, LLM 호출 합계, OpenRouter 비용(Langfuse 생성 비용 합).
+- 사전 등록 전에 이미 본 숫자: 저장소에 없는 실행기로 같은 그래프 커밋 `cdbe4a2` · 같은 모델 · 같은 평가셋을 돌린 Langfuse 기록이 있다(session `graph-v2-voyage-rebuild-20261104T055152Z`, 11-04 14:51 시작, 누가 돌렸는지 확인 못 함). 답 지표가 붙은 67문항 cited_gold 12 · over_refusal 23 · correct_refusal 32, 나머지 3문항은 빠지거나 실패(검색 단계 Voyage 429 결제 신호 · 분당 토큰 10,000 초과), OpenRouter 0.050달러, latency_s p50 10.3초 · 최대 363초. 그 전 기록 `graph-v2-baseline-24-20261103T075206Z`(`72b7723`, 3-small halfvec(1536)): 70문항 cited_gold 9 · over_refusal 26 · correct_refusal 35, 0.041달러. 문항별 값은 저장소 밖에 받아 두고 측정 뒤 대조한다.
+- 기대(측정 전, 고치지 않음): 같은 설정을 우리 실행기로 다시 재는 것이므로 위 `cdbe4a2` 기록과 대조한다.
+  - 두 실행 모두 답 지표가 있는 문항 중 지표가 같은 문항 85% 이상(temperature 0이어도 OpenRouter 응답은 흔들릴 수 있다). 다른 문항은 목록으로 남기고 고치지 않는다.
+  - 관련 35: cited_gold 10~15, over_refusal 18~25, wrong_citation 0~3, hallucination_risk 0~2.
+  - 무관 35: correct_refusal 32~35, hallucination_risk 0~3.
+  - 관련 라우팅 일치 22~32/35. 역할 질문이 다른 유형으로 가는 문제(draft30-e01)는 알고 있고 이 측정 뒤에 고친다(G5 전후 비교).
+  - 실패 문항 0~3, 문항당 시간 p50 5~15초, OpenRouter 합계 0.03~0.08달러.
+- Langfuse 기록 확인(시험 2문항 뒤와 70문항 뒤에 같은 확인, 읽기 전용):
+  1. session의 트레이스 수 = 돌린 문항 수, 이름 `graph <문항 id>`, 환경 `eval`.
+  2. 트레이스마다 노드 단계(입력 읽기 · 라우팅 · 재작성 · 검색 · 채점 · 생성 · 거절)가 점수 `path`의 순서대로 있다.
+  3. LLM 호출(GENERATION)마다 모델 · 입력/출력 토큰 · 비용이 있고, 그 수 = 점수 `llm_calls`.
+  4. 점수: 기본 8개(path · question_type · not_found · tries · llm_calls · docs_found · passed_cards · latency_s)와 answer_metric, 생성까지 간 문항은 fake_citations · uncited_sentences.
+  5. 메타데이터: question_id · kind · git · model · prompts 해시 · dataset · retrieval.
+  6. 결과 파일의 rows + failed = 문항 수, 결과 파일 지표 합계 = Langfuse answer_metric 개수.
+  - 알려진 빈칸(측정 전에 확인): Voyage 질문 임베딩 · rerank-3 호출은 LangChain 호출이 아니어서 생성 기록 · 토큰 · 비용이 없고 검색 단계 시간만 남는다(비용은 #28에서 질문당 약 0.00026달러). 평가셋 sha256은 결과 파일에만 있다. 사용자 id는 없다(평가 실행이라 로그인이 없다). 실패한 문항은 점수가 붙지 않아 Langfuse 집계에서 빠지고 결과 파일의 `failed`에만 남는다.
+- 순서 · 명령:
+  1. 시험 2문항(생성까지 가는 draft30-m01, 재작성 두 번 뒤 거절하는 draftv2-n16): `uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl draft30-m01 draftv2-n16 --out <저장소 밖 임시 파일>` → Langfuse 확인 1~6. 하나라도 빠지면 실행기를 고친 뒤(새 커밋) 다시 시험한다.
+  2. 70문항: `uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` → 결과 `evals/results/graph/graph_dataset_v2_2026-11-04.json` → Langfuse 확인 1~6.
+  3. 실패 문항만 같은 명령에 id를 붙여 한 번 다시 돌리고(결과 파일 따로), 두 파일을 다 남긴다.
+- 예산 · 중단: OpenRouter 이 측정 합계 1달러(키 사용액 차이로 재고, 넘으면 멈춤). Voyage 상한 없음(무료 토큰 안). Voyage 결제 신호 실패가 3문항 연달아 나면 멈추고 보고한다.
+- 알려진 한계: 답 지표는 규칙 채점이라 판정 5종의 정확도가 아니다. 관련 35문항이라 일반화 근거는 작다. 결과는 EVAL_REPORT 4장에 적는다.
