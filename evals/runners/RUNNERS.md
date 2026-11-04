@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: 평가셋을 동결하고 검색·그래프·Skill 평가를 돌리는 실행 코드를 둡니다. 저장소 루트에서 `uv run python -m evals.runners.<이름>`으로 실행합니다.
-- 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`).
+- 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`), 실행기의 준비·점검·보고 도우미(`embed_cards.py`, `check_retrieval_db.py`, `report_retrieval_layers.py`).
 - 넣지 않는 것: 평가셋·동결 기록(`evals/`의 `dataset_v1.jsonl`, `FROZEN.json`), 평가 원시 결과(`evals/results/`), 평가셋 명세·사전 등록(`evals/guides/`), 평가가 아닌 측정 스크립트(`scripts/`).
 - 담당: 평가
 
@@ -16,5 +16,11 @@
 - `run_graph.py` — 평가셋 문항(전부 또는 고른 id)을 줄기 그래프로 끝까지 돌려 문항마다 Langfuse 트레이스와 실행 점수(경로·검색 횟수·LLM 호출 수·인용 검사·5지표 `answer_metric`·시간)를 남기고, 같은 지표와 실행 조건·5지표 요약을 `../results/graph/graph_<평가셋>_<날짜>.json`에 저장(답변 문장·청크 원문은 넣지 않음). `uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]`
 - `score_answer.py` — 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점([작업서](../../docs/experiments/answer-refusal-scorer.md)). `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]`
 - `run_skill_pair.py` — preregister #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.runners.run_skill_pair <새 결과 폴더>`. 동일 상태에서 Skill 유무 답변을 비교하고 요약만 `../results/skill/`에 둠
+
+- `embed_cards.py` — 사전 등록 #16 카드 52,244장을 실험 DB에 넣고 모델 6종으로 카드를 임베딩. 컨테이너에서 실행([DOCKER.md](../docker/DOCKER.md))
+- `run_embedding_grid.py` — 사전 등록 #16 임베딩 6종 × 검색 방식(BM25·dense·하이브리드) × 리랭커 × 질의 글 78칸의 문서 Recall@5·MRR·쪽 적중·다중 근거와 단계별 시간. 결과 [grid_2026-11-02.json](../results/embedding/grid_2026-11-02.json)
+- `check_retrieval_db.py` — 층별 재측정 0층. Supabase의 카드·벡터·정확 검색 상위 50·서비스 경로 상위 5를 로컬과 대조(읽기만, `DATABASE_URL`)
+- `run_retrieval_layers.py` — 검색 조합 층별 재측정 1~4층(`queries`·`layer1`~`layer4`·`price`·`embed <모델>`). 입출력은 `LAYERS_WORK`. 해석 [retrieval-layered-rerun-2026-11-03.md](../../docs/research/retrieval-layered-rerun-2026-11-03.md)
+- `report_retrieval_layers.py` — 층별 결과 파일에서 사전 등록 비교(C1~C11)의 값을 뽑아 `report.json`으로 남김(새 검색·API 없음)
 
 실행기별 세부 동작(질의 필드, 검색 방식 기록, 비용 계산 등)은 [EVALS.md](../EVALS.md)를 봅니다.

@@ -14,6 +14,7 @@
 - `dataset_v2.jsonl` — 동결 평가셋 v2. 70건(관련 35·비관련 35), 2026-11-03 동결. v1 50건 줄에 `question_type`만 더하고 후보 찾기 20건(`drafts/sets/draft_v2add_20.jsonl`의 고정 키)을 더함
 - `FROZEN.json` — 동결한 파일별 sha256·건수·관련/비관련 건수·동결일. 현재 `dataset_v1.jsonl`, `dataset_v2.jsonl` 둘. 동결 여부는 이 파일이 정함
 - `runners/` — 평가 실행기와 동결 스크립트. 실행은 `uv run python -m evals.runners.<이름>`. [RUNNERS.md](runners/RUNNERS.md)
+- `docker/` — 평가 실험용 컨테이너 이미지 정의(원격 GPU·실험 DB). [DOCKER.md](docker/DOCKER.md)
 - `inputs/` — 동결 평가셋에서 만든 측정 입력(페이지 단위 qrels, 고정 재작성 질의). [INPUTS.md](inputs/INPUTS.md)
 - `guides/` — 평가셋 명세(`dataset-guide.md`)와 사전 등록(`preregister.md`). [GUIDES.md](guides/GUIDES.md)
 - `samples/` — 임베딩 후보를 거르는 비동결 프록시 표본. [SAMPLES.md](samples/SAMPLES.md)

@@ -1,0 +1,44 @@
+[
+ {
+  "id": "draft30-e05",
+  "q": "Q5",
+  "lost_parts": [],
+  "new_numbers": [
+   "204",
+   "41"
+  ]
+ },
+ {
+  "id": "draft30-m04",
+  "q": "Q3",
+  "lost_parts": [],
+  "new_numbers": [
+   "123"
+  ]
+ },
+ {
+  "id": "draft50-n01",
+  "q": "Q3",
+  "lost_parts": [
+   "1N5819"
+  ],
+  "new_numbers": []
+ },
+ {
+  "id": "draft50-n01",
+  "q": "Q4",
+  "lost_parts": [],
+  "new_numbers": [
+   "20",
+   "41"
+  ]
+ },
+ {
+  "id": "draft50-n06",
+  "q": "Q4",
+  "lost_parts": [],
+  "new_numbers": [
+   "35"
+  ]
+ }
+]

@@ -1,0 +1,117 @@
+{"sha": "102ac360ed2e1f4326d926b5ccf65dec47dfa2f10ac1ee63dc522da15bc2c025", "text": "회로: SparkFun Breadboard Supply\n넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n대상: D1\n질문: TSC 1N5817은 역전압을 몇 V까지 견뎌?"}
+{"sha": "3248f5cacfc233914db977053a2f1dd1ba6e84be05ff53b90556fa9663a7ad00", "text": "회로: Adafruit MOSFET Driver\n넷리스트: data/circuits/collected/samples/mosfet_driver/converted/circuit.net\n대상: D3\n질문: TSC 1N4148을 쓰면 전압이 얼마나 떨어져?"}
+{"sha": "5cc95fb0fcd4ba9c4ac2f17c8a6e9c58b16e1cf1d812556cbacc511781569aa9", "text": "회로: SparkFun Breadboard Supply\n넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n대상: D1\n질문: TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?"}
+{"sha": "3ccdca607d155e4859025e9cc6a1430091408531d7ab82f080b1fba2386af486", "text": "회로: Adafruit MOSFET Driver\n넷리스트: data/circuits/collected/samples/mosfet_driver/converted/circuit.net\n대상: D3\n질문: D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?"}
+{"sha": "661366929f2211586b626e7d0374dec233958e8d326ee613cf7628f798e159b4", "text": "회로: ATtiny85 dev board\n넷리스트: data/circuits/collected/samples/attiny85_dev/converted/circuit.net\n대상: D1\n질문: TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?"}
+{"sha": "f7470db98ef39eccaa95986850c7ea218b4bd7bad5fd66eb78fc0acee6156897", "text": "회로: ATtiny85 dev board\n넷리스트: data/circuits/collected/samples/attiny85_dev/converted/circuit.net\n대상: D1\n질문: D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?"}
+{"sha": "f89552ca3839c3d1fb9b775909db216ea412b9bc8e57be461dcce0b427b0ca61", "text": "회로: Franzininho DIY\n넷리스트: data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net\n대상: D3\n질문: D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?"}
+{"sha": "2555a58f83c4f66e7700c285c1217aa8b2a56477782cf9e7a46c830a4213f117", "text": "회로: ATtiny85 dev board\n넷리스트: data/circuits/collected/samples/attiny85_dev/converted/circuit.net\n대상: D1\n질문: D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?"}
+{"sha": "4a3808e6fb9c516b381d3325d9c165da27859e2caff24b36ef20743e77165ac7", "text": "회로: SparkFun Pro Micro v13\n넷리스트: data/circuits/collected/samples/pro_micro/converted/circuit.net\n대상: D2\n질문: D2를 TSC 1N5819로 바로 바꿔 달아도 돼?"}
+{"sha": "71dec5560f3a557c8ba0fa582d84efe79cbd15f013edaafbfca34e468e08e726", "text": "회로: SparkFun Pro Micro v13\n넷리스트: data/circuits/collected/samples/pro_micro/converted/circuit.net\n대상: D2\n사용 조건: RAW만 공급하고 SJ1은 열어 둔다.\n질문: TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?"}
+{"sha": "dfb255a129563eaca9aa73e1722cdf5054325ae479f59451c8825fb75340d478", "text": "회로: Adafruit MOSFET Driver\n넷리스트: data/circuits/collected/samples/mosfet_driver/converted/circuit.net\n대상: D3\n사용 조건: D3는 앞서 TSC 1N5819로 교체해 사용 중이다. X1에는 최대 전원 전압 12V, 정상 코일 전류 80mA인 릴레이를 연결한다. PWM 없이 단발로 켜고 끈다. 차단 시 다이오드 전류는 피크 80mA, 폭 8.3ms의 단발 반정현파이며 접합 온도는 25°C이다.\n질문: D3에 달아 둔 TSC 1N5819 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?"}
+{"sha": "53dc3a8c44994ee21ddbcfa5e50f6df9b6c9e866c378ab54e6786234e6b0ae1e", "text": "회로: Adafruit MOSFET Driver\n넷리스트: data/circuits/collected/samples/mosfet_driver/converted/circuit.net\n대상: D3\n사용 조건: X1에는 최대 전원 전압 12V, 정상 코일 전류 150mA인 릴레이를 연결한다. PWM 없이 켜고 끄며 주변 온도는 25°C이다.\n질문: D3를 TSC BAS70으로 바꿔도 이 릴레이를 끌 때 코일 전류를 받아 줄 수 있어?"}
+{"sha": "7eaf8a8c75edc6abf25da7d19c7d94ccdf91f196b16c036a3d5c25347244e3ba", "text": "회로: Adafruit MOSFET Driver\n넷리스트: data/circuits/collected/samples/mosfet_driver/converted/circuit.net\n대상: D3\n질문: D3 후보로 보는 TSC 1N4148의 역회복 시간은 얼마고, 어떤 시험 조건에서 나온 값이야?"}
+{"sha": "164cdcc6c3e105d79c2204a964dc23239df10adef7802cc4b448d32a816d1315", "text": "회로: ATtiny85 dev board\n넷리스트: data/circuits/collected/samples/attiny85_dev/converted/circuit.net\n대상: D2\n사용 조건: D2에 필요한 제너 전압 범위는 3.42~3.78V이다. 비교 조건은 제너 전류 5mA, 주변 온도 25°C, 30ms 펄스이다.\n질문: D2를 TSC BZT52C5V1로 바꿔도 원하는 전압 범위로 제한할 수 있어?"}
+{"sha": "c2de2faf53ee18d3e835f8e2ac5c05f9bd368acc788949d3759a9f84fbdbe509", "text": "회로: ATtiny85 dev board\n넷리스트: data/circuits/collected/samples/attiny85_dev/converted/circuit.net\n대상: D2\n사용 조건: 데이터시트의 주변 온도 25°C 조건을 기준으로 본다.\n질문: D2 후보인 TSC BZT52C3V6의 허용 소비전력과 접합 온도 상한은 얼마야?"}
+{"sha": "c130b0e9708d6065b996bedb5542b0d255ed1fd7b5aad1e53aa433d068d79cf9", "text": "회로: Franzininho DIY\n넷리스트: data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net\n대상: D3\n질문: D3용 TSC 1N4148을 주문하려는데, 1N4148 A0G 대신 1N4148 R0G로 사도 같은 제품이야?"}
+{"sha": "40da914294aa413abad8447644e61d2736e1423e3efb0bedddd8a73f11c886dd", "text": "회로: SparkFun Breadboard Supply\n넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n대상: D1\n사용 조건: 전원은 J1 잭으로만 공급하고 S1은 켜 둔다. 입력 전압의 최댓값은 20V, D1의 최대 순방향 전류는 150mA이다. 주변 온도는 25°C이다.\n질문: 이 조건에서 D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?"}
+{"sha": "c9bc9f2706c33ee183ab72ae7f4132c4f41dd4e4adbfcb711908e64ddbe3930b", "text": "회로: SparkFun Breadboard Supply\n넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n대상: D1\n사용 조건: 전원은 J1 잭으로만 공급하고 S1은 켜 둔다. 입력 전압의 최댓값은 12V, D1에 흐르는 최대 연속 전류는 500mA이다. 주변 온도는 25°C이다.\n질문: D1을 TSC 1N4148로 바꾸면 이 전류 조건에서 쓸 수 있어?"}
+{"sha": "451d06847b3de8ff859861229c2ef7e873efe710fff142fad850b4c86faebe6a", "text": "회로: SparkFun Breadboard Supply\n넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n대상: D1\n질문: Breadboard Supply D1을 1N5819로 바꾸려는데, 온도에 따라 역방향 누설전류가 어떻게 달라져?"}
+{"sha": "7b9d14a57968a4b57fb41633f5dd0cf6ac1079623f4aa3047c75544512a60137", "text": "TSC 1N5817은 역전압을 몇 V까지 견뎌?"}
+{"sha": "52e2be9760804dd43c3bf9c186f2d07052a32dd334d73e5cacd5c5c5fa54c757", "text": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?"}
+{"sha": "679d3ea82f498d2ed6e9f25ebe3f756e176bacd2f2a2b13650078c2f38b00ed3", "text": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?"}
+{"sha": "6ee59b8e390a5046fdbb2c1547e14d9a90a61073019d2437cfa988371dfb0757", "text": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?"}
+{"sha": "2df9576b0a935207d416a64be42d23a65c83d4b7e5e9c7862314f9544a0c5eb5", "text": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?"}
+{"sha": "fab3ea6536a89d40910a737cb7fbf3853973fb18fa72fbb955d8af43b6c22206", "text": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?"}
+{"sha": "04b2b117b099f20421168bb236e134cb55d39ed572459a8ecc1538f1f1e819a2", "text": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?"}
+{"sha": "4dccd5cb9f8c96ea2ae428a2c071288e3ec3ddded2220962f8bcc2fea2fec297", "text": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?"}
+{"sha": "4037f33e36a50063b40d9ec74bbb8bfbc3ca299fc274e4bfd607ceac20426dea", "text": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?"}
+{"sha": "5805b62cfc2b13c45b376a40bc4d3d7bb2a6c546cd117a37256bdcd36d006015", "text": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?"}
+{"sha": "238c6d29896581dd41e809ecb41fcc960cf2521cc9bbf8284e2311c05d4bc346", "text": "D3에 달아 둔 TSC 1N5819 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?"}
+{"sha": "90bc73dd646b0bce3714da05a556f53236cb88c10ba3f0ed3fa3e3347c7bdaf7", "text": "D3를 TSC BAS70으로 바꿔도 이 릴레이를 끌 때 코일 전류를 받아 줄 수 있어?"}
+{"sha": "cf1cc4976a5a522558ae29f72e7da60f67d2be37842beb8c1efce2f51026be5b", "text": "D3 후보로 보는 TSC 1N4148의 역회복 시간은 얼마고, 어떤 시험 조건에서 나온 값이야?"}
+{"sha": "45b63fb3316685f1022f893cd3e7039cd0e44bb1b5cc02ba836f783caf57d265", "text": "D2를 TSC BZT52C5V1로 바꿔도 원하는 전압 범위로 제한할 수 있어?"}
+{"sha": "915a9837388041255a522114227fdd6ceecc8c87d2be9cb237f0c17436d4c431", "text": "D2 후보인 TSC BZT52C3V6의 허용 소비전력과 접합 온도 상한은 얼마야?"}
+{"sha": "5508abc211c8c6bc634df13278ee163a51ecd6d6f5e764612dd9e5c8e20e8d62", "text": "D3용 TSC 1N4148을 주문하려는데, 1N4148 A0G 대신 1N4148 R0G로 사도 같은 제품이야?"}
+{"sha": "9425407845e2fedee878865a03729d72d2b4bb5b6ab7516eeb5f154d720d614b", "text": "이 조건에서 D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?"}
+{"sha": "2a508e4a02a5b8d4a1db2e1a383a65152fcad196e4a765ef5aed494523fcab3f", "text": "D1을 TSC 1N4148로 바꾸면 이 전류 조건에서 쓸 수 있어?"}
+{"sha": "cf074ff4e3f8909376829ead321df32fd3acb7c51a126cffc382e73554d68a29", "text": "Breadboard Supply D1을 1N5819로 바꾸려는데, 온도에 따라 역방향 누설전류가 어떻게 달라져?"}
+{"sha": "41f7091ea473d5a5c3d526648c03dcdf1c5c03a24110e04eb4d21c558c3ecfd3", "text": "TSC 1N5817 Repetitive peak reverse voltage VRRM"}
+{"sha": "ae1aa86bff373755222d7af92789562770531304baa7ae6b3c610b55a3bc1bd2", "text": "TSC 1N4148 Forward voltage VF datasheet"}
+{"sha": "5df033e71fd89d17b667061019e9f1437dd12c9611298f4afd4fd48606462dea", "text": "TSC 1N5819 Package outline dimensions polarity cathode band marking"}
+{"sha": "6cb5ba77ade86925f7c53b1095a2d2315bbadd8498fa5f1bd1124aaa9403c220", "text": "SS34 Schottky diode datasheet absolute maximum ratings Repetitive peak reverse voltage VRRM Average forward current IF(AV) Peak forward surge current IFSM"}
+{"sha": "5c728c9b3653552e55c45d63761592c63bb8179c59f9ddad66a64685bfd36e1a", "text": "TSC BZT52C3V6 Zener voltage VZ nominal 3.6V tolerance datasheet"}
+{"sha": "c3df9459a6eeeff037ba2ebe67bfbf847548e7aa209b6bcbb20297ddce70a673", "text": "TSC BZT52C3V6 Zener diode datasheet Package SOD-123 Zener voltage VZ Power dissipation PD Soldering reflow temperature"}
+{"sha": "e3184dea57b8d6d8b24a082bfb5cc4ceb23595a988b586109d261a5dc8b6abca", "text": "TSC 1N4148 absolute maximum ratings forward current IF average rectified current IO peak forward surge current IFSM"}
+{"sha": "e192ddf882cd9186173e087a44b793d97a72cd8df64d89e4ba6bd695d6fd86f2", "text": "BZX84C3V3 datasheet absolute maximum ratings Zener voltage VZ Power dissipation Ptot Reverse current IR Package"}
+{"sha": "ad06172cebca704af00579a93190d83f70840b9d3ae7ff14ae712a93d62abf5b", "text": "TSC 1N5819 Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Package compatibility replacement"}
+{"sha": "d2658fd478c92ee49aec07a82edbfe4b3e683a1a9e98bd124dbf7e201d278d63", "text": "TSC 1N5817 1N5819 Schottky barrier rectifier datasheet Package D2 Forward voltage VF Repetitive peak reverse voltage VRRM"}
+{"sha": "74eb976688a97baefec2f5b1a2cead395b740d7e6ef0ead828deb415389f6893", "text": "TSC 1N5817 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Reverse recovery time trr Package"}
+{"sha": "a84a1daec84108396ab4774d3fb027008cd0bd4ca3e94dc7b027ce5aeebe5030", "text": "TSC BAS70 datasheet Repetitive peak reverse voltage VRRM Forward continuous current IF Peak forward surge current IFSM Forward voltage VF Reverse recovery time trr Package"}
+{"sha": "59b808713dd1733f44ae39bb9325c301b019ddfd529df7728fb577d0dce371b7", "text": "TSC 1N4148 Reverse recovery time trr test conditions IF IR"}
+{"sha": "a73f1e1b2b7f1dc21ed6573d4f407fe969df825b76611cf2981b584e049646b9", "text": "TSC BZT52C5V1 Zener diode datasheet Zener voltage VZ range Working voltage Vz test current IZT Reverse leakage current IR"}
+{"sha": "fd2a67564974c9525c51ab5388d57f2530bda7b8567be84f61e8ce33cf5d02b9", "text": "TSC BZT52C3V6 Power dissipation PD Maximum junction temperature TJ datasheet"}
+{"sha": "e5ca14acab786b055b464a20fc48f2f00a3776aca8195645b16bbd06213c7598", "text": "TSC 1N4148 R0G vs 1N4148 A0G package ordering code equivalence datasheet"}
+{"sha": "5479d8d86a84399c809fecc018dc95461b9d39164a64c910e01f1dc970a99e3a", "text": "TSC 1N5817 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package"}
+{"sha": "a63fc40289f352794e73f2dde3cb9d752108be41b52cff3272aa0f2b26364583", "text": "TSC 1N4148 diode datasheet Forward voltage VF Repetitive peak reverse voltage VRRM Peak forward surge current IFSM Reverse recovery time trr"}
+{"sha": "326426682a7b81f2ad4c6a60fba696fc58f71dc83a81030d59874c3be41a292d", "text": "1N5819 Schottky barrier rectifier reverse leakage current IR vs junction temperature TJ"}
+{"sha": "7a81fd4460bf2587511c48e48e78b3a12f120ce9c423bcc0cbe64589f58584ac", "text": "TSC 1N5817 Schottky barrier rectifier maximum repetitive peak reverse voltage VRRM"}
+{"sha": "d538262469a88b1fdd061fe485fca5f470398fba0430e1a7b01359f40270f597", "text": "TSC 1N4148 순방향 전압 강하 Forward Voltage VF 데이터시트"}
+{"sha": "18d0f2dddd45027d97d794b5bebe8af9f9b8a8b9cb1b736e5a80145f0c783990", "text": "TSC 1N5819 package outline dimensions polarity cathode band marking datasheet"}
+{"sha": "1c83495718f85e42e8fe67b9d2850a34fc70d614a70efc3438d8d3b4036edbae", "text": "SS34 쇼트키 배리어 다이오드 절대최대정격 반복 피크 역전압 평균 순방향 전류 데이터시트"}
+{"sha": "1503b512dd35894f1d8852e02248301ff0be82b88836ed83f197487ab1f96f26", "text": "TSC BZT52C3V6 zener diode Zener voltage Vz 3.6V tolerance datasheet"}
+{"sha": "bf0dfc21f330b44f0577558badcbeb439b70ad61802dae76829d28edc6616b49", "text": "TSC BZT52C3V6 제너 다이오드 데이터시트 최대 정격 납땜 조건 리플로우 솔더링 온도 프로파일"}
+{"sha": "c4b216836a4cf923134d641583414831d5dd0638de4bdc9c62386ddcf6bedf64", "text": "TSC 1N4148 absolute maximum ratings forward current IF repetitive peak forward current IFRM surge current"}
+{"sha": "766109d1f97de717d966d7edbbd09ae0d8a44e624a1f8ec4815da2b73b5e7abc", "text": "BZX84C3V3 제너 다이오드 절대최대정격 전력소산 제너전압 데이터시트"}
+{"sha": "21a9a46171aad80f1d5b1eeece80f652583b406b04f5ad1dfe4feb730dc1283a", "text": "TSC 1N5819 쇼트키 다이오드 대체 가능 여부 전기적 특성 정격 전압 순방향 전압 역회복 시간 데이터시트"}
+{"sha": "6e1ec19b624c7880d91b0a4ddc3d647eb24d90c030893a1275ddc7fa1059c023", "text": "TSC 1N5817 1N5819 쇼트키 배리어 다이오드 스펙 비교 최대 역방향 전압 순방향 전류 V_F I_R 데이터시트"}
+{"sha": "dfecfc48031eae6205b68b707b42fe057719782cf009cb55fcd674a42621cd2e", "text": "TSC 1N5817 Schottky barrier rectifier datasheet 1A 20V forward voltage reverse current electrical characteristics package DO-41 compared 1N5819"}
+{"sha": "f6c15c5480f2a5580d66b96f1748d95f72aac63c85e6b175c69ae637f1a04805", "text": "TSC BAS70 다이오드 역방향 전압 VR 순방향 전류 IF 전기적 특성 릴레이 코일 플라이백 보호 스위칭 특성"}
+{"sha": "1247e444db33ce40fb55f105bc48deafdc24edbf6ea8cfe7593c9c492c9da442", "text": "TSC 1N4148 다이오드 역회복 시간 trr 시험 조건 IF IR RL 데이터시트"}
+{"sha": "d17a5e719b712d7d27e38fd43910a056132b3986040f59c655eea230f8eb4f6b", "text": "TSC BZT52C5V1 제너 다이오드 대체 호환 전압 범위 규격 데이터시트"}
+{"sha": "a22d40b4454894f5089a160abb5e1a50e9fb17f98d67577f226bfaaf88e83b08", "text": "TSC BZT52C3V6 datasheet power dissipation maximum junction temperature absolute maximum ratings"}
+{"sha": "dde59d5d7e6a903a85c4f7e4b915388b28167218d48e9207817212ffaf0c4a52", "text": "TSC 1N4148 R0G 1N4148 A0G 패키지 포장 방식 차이 DO-35 데이터시트"}
+{"sha": "e7b33fbffc99cb95ed75c764f9d97f9b03f5da59be17045b49442bf52933c5b0", "text": "TSC 1N5817 쇼트키 다이오드 역방향 전압 VRRM 순방향 전압 VF 역극성 보호 데이터시트"}
+{"sha": "2b487f1cb71e9410cac2e31ea6c5db16884819c27b3d18c54f40a182a195b46d", "text": "TSC 1N4148 다이오드 최대 순방향 전류 IF 최대 역방향 전압 VR 데이터시트"}
+{"sha": "cdaf1b3f2a1306c92b6e4ee7c0c5690b50b906561197b59b8ff8fefcc16c1ff4", "text": "1N5819 역방향 누설전류 온도 특성 reverse leakage current vs junction temperature TSC 쇼트키 다이오드 데이터시트"}
+{"sha": "5ba12f468fe15892e792cedb7122e2737254cf7c4d2fea6354518ccb06d81f2e", "text": "1N4148 forward voltage drop VF"}
+{"sha": "d09e6b84b507991da06049761048cf96f670ca9a451394c2bb169e13e7ec75b9", "text": "TSC 1N5819 package outline DO-41 DO-204AL polarity cathode band marking"}
+{"sha": "d97d3ae47a95be1aef9efea5328a7db55a22b546057ed022f18d44c11399a8f6", "text": "SS34 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Average forward current IF(AV) Forward voltage VF Peak forward surge current IFSM"}
+{"sha": "5809da78e6e3aee97f1bc905ef316de51e43a189b625661b4f08885b729a206d", "text": "TSC BZT52C3V6 Zener voltage Vz 3.6V nominal tolerance"}
+{"sha": "ae49559be754db3f0c7134e5e5eb7ba7cdae81b9bfc34831a0d0c0196a3cc804", "text": "TSC BZT52C3V6 datasheet Zener voltage VZ power dissipation PD"}
+{"sha": "633c4f389c83523b8ed95937a8783b129c78273fedf968eba2a5c3a970a805be", "text": "1N4148 Maximum ratings Repetitive peak forward current IFRM Average rectified forward current IF(AV) TSC"}
+{"sha": "f08b4754e6fdf431dbcaf68fec99f05a7ca8f89c6fd34913a0d24d51b295efbf", "text": "BZX84C3V3 Zener voltage VZ Power dissipation Ptot Maximum ratings"}
+{"sha": "54665e141335e8e30560ed2722e36d1c544e8b6ec7d3d5f952ce595e417860c1", "text": "1N5819 Schottky barrier rectifier TSC datasheet Repetitive peak reverse voltage VRRM Average forward current IF(AV) Forward voltage VF Reverse current IR Package"}
+{"sha": "df345b36cb6593e633717df9340a30621109be3b35f0e8c0df3db7e4298e758a", "text": "1N5817 1N5819 Schottky barrier rectifier datasheet Repetitive peak reverse voltage VRRM Average rectified forward current IF(AV) Forward voltage VF"}
+{"sha": "bdef5e1c6c8d9b3a8b33fb1973f706707fe926378ff890f8f437c67f5ff13e69", "text": "TSC 1N5817 1N5819 Schottky barrier rectifier Repetitive peak reverse voltage VRRM Average rectified forward current IF(AV) Forward voltage VF Relay flyback diode"}
+{"sha": "d432d33a6bc56dd8a289eeba244bf74d092d04823d8e07fa4d87f759c68351d8", "text": "BAS70 Repetitive peak reverse voltage VRRM Forward continuous current IF Non-repetitive peak forward surge current IFSM diode relay coil flyback"}
+{"sha": "585ef23bae50a3d45ebafc70aa5c74651454a5c0587f9e61786e7f357fb6f86c", "text": "1N4148 Reverse recovery time trr test condition IF IR"}
+{"sha": "06c35f22ab3c3fd5139a1ff60e4a668218dfe6218e7d86b2bb6ada491ade74c8", "text": "TSC BZT52C5V1 Zener voltage Vz range datasheet"}
+{"sha": "727aead7d0d6893eb77b07ceb7f83f331c840ba98a1f3b684fc3a359380db335", "text": "TSC BZT52C3V6 power dissipation Maximum junction temperature TJ"}
+{"sha": "3ba83644e2902c547302c2e5efb9d3fbda9160c36fbf1ba308cdf248a8f78fb2", "text": "1N4148 R0G A0G ordering code equivalence TSC 1N4148 datasheet"}
+{"sha": "979def700a05cbd9a0c7fce0f4cf7143ee4ae2927e3fe90513bb07aa88601e16", "text": "1N5817 Schottky barrier rectifier Repetitive peak reverse voltage VRRM Average forward current IF(AV) Forward voltage VF TSC"}
+{"sha": "49226165a7e45827a41be01c6042b7c66bc3ef9c2dc59e2dd4a152b8f56b142c", "text": "1N4148 Average rectified forward current IF(AV) Repetitive peak forward current IFRM Forward voltage VF TSC"}
+{"sha": "325e0f143351ac047dfbf8f6014ae82a6ce4646f01084a68390d71fc61e86260", "text": "1N5819 Reverse leakage current IR vs. junction temperature TJ"}
+{"sha": "68b3d774172efe3493f244a823807ee232b901e69f7160101c475198ae58fde8", "text": "How many volts of reverse voltage can the TSC 1N5817 withstand?"}
+{"sha": "7aa9286165ba64ab630d4494d3e21474affd63ac94ef911ee846c805bcbc9615", "text": "How much voltage drop will I get if I use the TSC 1N4148?"}
+{"sha": "6ae7e3fa1de06576bf78b73267bce3ffff90e65531996dd4090f7d17d2fc9c92", "text": "What package is the TSC 1N5819, and how do I tell its orientation?"}
+{"sha": "3e33e992a7f45902ba6f99f57c619459d795d5be0188a9e644e9888c7444a62b", "text": "I'm looking at the SS34 instead of D3. What are this part's ratings?"}
+{"sha": "aa796a2a0ab8f52f54736d556cc0f121950341156f1a5cb51ddca37b56259f99", "text": "Is the voltage of the TSC BZT52C3V6 fixed at exactly 3.6V?"}
+{"sha": "5314287d1e6dbf42f25e1890a02fdd228772fc548c5b1a7f034ac4d10486d2db", "text": "Can I just solder the TSC BZT52C3V6 into the D1 position as is?"}
+{"sha": "935a775e842091a36da750bedd96c6621d887959a62770d454f0a405e8c9cecf", "text": "I'm planning to use the TSC 1N4148 instead of D3. How much current can I pass through it?"}
+{"sha": "dfffb2684e0b787727f7e90f64e296912dedb094b1e54fa70b8abdbe2f4b8de6", "text": "I looked at the BZX84C3V3 as a candidate for D1. What are its ratings?"}
+{"sha": "c10e53a3066e28a05bb82aaed2cdc74dc32e5314e7468b2b7b5ba12c9bd16647", "text": "Can I swap D2 directly for the TSC 1N5819?"}
+{"sha": "b5f016fad17b999a643acf86779a0a06a6c1933bebec0750be4b1687850fafa7", "text": "The TSC 1N5817 and 1N5819 are in the same series, so can I use either one for D2?"}
+{"sha": "88b433a5236c2aa21f515aa4039adbbe1b2d9f7348c267a3ac42c4dbb94ac729", "text": "Instead of the TSC 1N5819 fitted at D3, can I use the TSC 1N5817 and still have it serve as the flyback diode for this relay?"}
+{"sha": "57315c55aa0decdcfbf169ca9a94ade08144922905b5d716a2d04d36d563175d", "text": "If I change D3 to the TSC BAS70, can it still handle the coil current when this relay is turned off?"}
+{"sha": "11cff2fce333822cee2c5390f19358ef70cf4bf6895a2b49bfec1009944dc505", "text": "What is the reverse recovery time of the TSC 1N4148 that I'm considering as a candidate for D3, and under what test conditions is that value specified?"}
+{"sha": "8712de84ae3f48a1f9ddfadfe3bf6b53ffcaef6c17eb264f36558c2e34c80d56", "text": "If I change D2 to the TSC BZT52C5V1, can it still limit the voltage to the range I want?"}
+{"sha": "6330bee4de9a0b8421b82250652f4ea63e2d338914fbd82d41deae9042a1fe24", "text": "What are the allowable power dissipation and the maximum junction temperature of the TSC BZT52C3V6, a candidate for D2?"}
+{"sha": "ccab43fbf26fb96e21bb7403de128676615ac4d831232c7f65db5818570e411b", "text": "I'm about to order the TSC 1N4148 for D3. If I buy the 1N4148 R0G instead of the 1N4148 A0G, is it the same product?"}
+{"sha": "f4ecb6354b53d90cdf0788ca0bc832eef096571f5713349cb52409fca26410f3", "text": "Under these conditions, can I change D1 to the TSC 1N5817 and still use it for reverse polarity protection?"}
+{"sha": "60d0d1bf482812198f90b095f2e5369880e2bc1cf31fac7fb74eabb96dd24695", "text": "If I change D1 to the TSC 1N4148, can it be used under this current condition?"}
+{"sha": "da1492a5d6f424ee97c9f65e7602cb4229e4df8c925c97216751937b30a6e012", "text": "I want to replace D1 on the Breadboard Supply with a 1N5819. How does the reverse leakage current change with temperature?"}
+{"sha": "c8cb8f354c429fbde744fcbc7412474331dec6e30b568923937104a7ff193507", "text": "TSC 1N5817이랑 는 같은 계열인데 D2에는 아무거나 써도 돼?"}
+{"sha": "88d694f89d1b1381366b400531a77e5a4e96d38159a6db93248f6f6ca17e05a7", "text": "TSC 이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?"}
+{"sha": "de2a59b2cfaf42187fdf1751cfe36b702f4929d2e8d82738cfc49c79fcd18d4b", "text": "D3에 달아 둔 TSC 1N5819 대신 TSC 을 써도 이 릴레이의 플라이백 역할을 할 수 있어?"}
+{"sha": "d33515179ed9e55ebc7be56a918ee99114194952ed520b01cfb8dd94245e5e9d", "text": "D3에 달아 둔 TSC 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?"}
