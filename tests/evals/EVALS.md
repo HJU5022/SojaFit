@@ -16,3 +16,4 @@
 - `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지 확인(Langfuse·LLM 없이)
 - `test_score_answer.py` — 답변·거절 5지표 채점기: 데이터시트·회로 근거 인용, 다른 쪽·허위 인용 오답 처리, `n01` `relevant + NOT_VERIFIED` 조건 부족 설명 대 단순 거절 구분, 비관련 4종 거절 대 환각 위험, v1 50건·v2 70건 분모·제외 처리 확인(API·DB 없이)
 - `test_skill_pair.py` — Skill 쌍 순차 실행의 경로·검색 상한, 사본 격리·실행 순서 교차, 예외 시 부분 결과·덮어쓰기 금지, 평가 호출·예약비용 상한을 API 없이 확인
+- `test_supervisor_models.py` — 1,050-job·1,400 pairwise·70 robustness 계획, 동결 hash, ZDR policy, live 확인·smoke gate, 연속 provider 오류 중단, 재개 누적 예산·부분 저장, format retry, run별 objective와 전체 분모 stability/usage 집계를 API 없이 확인

@@ -115,3 +115,88 @@
 - 실행한 명령과 결과: `git branch --show-current`로 `OSC` 브랜치를 확인했다. `git diff --check`와 Markdown 구조·미정 항목 검색으로 문서 형식과 검토 항목을 확인했다.
 - 확인 못 한 것: 로그인 방식, 사용자 ID 형식, 회로 파일 저장 방식, 판정·역할·사양 코드, 삭제 정책은 팀 합의 전이라 확정하지 않았다. ERD, Migration SQL, `pgvector` 구조는 작성하지 않았다.
 - 다음 할 일: 팀이 정의서와 추가 검토 항목을 검토한 뒤 관계와 코드 정책을 확정하고 ERD를 작성한다.
+
+## 2026-11-04 수퍼바이저 모델 5종 비교 계약 초안
+
+- 한 일: 확정 전 참고 노드 구조를 전제로 수퍼바이저 후보 5종을 동결 v2 70문항에서 각 3회 비교하는 실험 계약을 작성했다. 모델 ID는 `anthropic/claude-haiku-5.5`, `openai/gpt-6-luna`, `deepseek/deepseek-v4.1-flash`, `meta/muse-glimmer-30b`, `cohere/command-a-plus`로 축약 없이 고정했다.
+- 비교 방식: 1,050회 주 실행의 deterministic objective scoring, three-run stability, robustness/failure handling, blind pairwise A/B swap, end-to-end, usage·cost·latency를 분리했다. 70문항 전체·10개 후보쌍·두 위치의 pairwise는 별도 1,400 judge decisions로 계산해 별도 예산으로 뒀다.
+- 지표: 결과표의 metric 이름은 영어로 유지하고 각 값의 정의·계산식·방향을 적었다. `[Measured]`, `[Calculated]`, `[Estimated]`, `[Human Judgment]`, `[LLM Judge]`, `[Public Specification]`을 구분하며 `hallucination`과 `health`는 표준 철자를 사용한다.
+- 안전 경계: ZDR/data collection 조건 미충족은 입력을 보내지 않고 `Not Measured`로 남긴다. 동결 평가셋·임베딩·검색 구성을 바꾸지 않으며, 참고 노드 그림과 최종 모델·judge 모델은 아직 확정하지 않았다.
+- 바꾼 파일: `docs/experiments/supervisor-model-comparison.md`, `docs/experiments/EXPERIMENTS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`
+- 검증: `uv run --no-sync pytest -q tests/repo/test_repo_layout.py tests/evals/test_frozen_evals.py`에서 8건이 통과했다. 필수 model ID·실행 수식·metric 철자 검사와 `git diff --check`도 통과했다. API 호출과 실측은 수행하지 않았다.
+
+## 2026-11-04 수퍼바이저 후보 비교 실행기 준비
+
+- 한 일: 동결 v2 70건을 후보 5종에서 각 3회 실행하는 1,050-job manifest와 model별 worker를 구현했다. LLM 호출은 `backend/services/llm.py`의 `evaluation_chat()` 한 곳만 통하며 full model ID, JSON schema, usage, ZDR·data collection deny·fallback 금지를 요청에 넣는다.
+- 안전·재개: frozen hash·prompt hash·provider policy 불일치 시 중단하고, model별 raw-call·시간·예약비용 상한을 둔다. schema 오류만 case당 2회 재시도하고 SDK retry는 0회다. 각 job 뒤 parsed output을 원자 저장하며 예외 원문, expected, gold_chunks, raw prompt/response는 결과에 저장하지 않는다.
+- 집계: label이 있는 관련 35건의 `Question Type Accuracy`, 70건 3회 출력의 `Three-Run Exact Agreement`, token·actual cost·p50/p95 latency를 분리했다. 비관련 35건은 실행 대상이지만 route gold가 없어 `Unscored Case Count=35`로 남긴다.
+- 공개 catalog 확인: 5종 모두 2026-11-04 OpenRouter catalog와 `zdr=true` filter에 있다. 보수적 primary 210-call 예약 비용은 model별 `$0.251597`, `$0.251597`, `$0.128003`, `$0.738663`, `$0.754791`, 합계 `$2.124651`이다. 제안 상한 합계 `$2.50`은 아직 승인 전이다.
+- 바꾼 파일: `backend/services/llm.py`, `evals/runners/run_supervisor_models.py`, 대응 테스트·폴더 문서, `docs/experiments/supervisor-model-comparison.md`, `SOJAFIT.md`, 이 작업 기록
+- 확인: 최종 전체 시험은 284건 통과·26건 skip이다. API 없이 `evals/results/supervisor/2026-11-04-preflight-v3/manifest.json`에 code hash를 포함한 1,050개 고유 job을 만들었다. 이번 작업 중 생성한 code hash 이전 preflight 두 개는 혼동을 막기 위해 제거했다. 승인된 본실행, pairwise judge, robustness, end-to-end, 비관련 35건과 evidence/action의 사람 gold 합의는 아직 수행하지 않았다.
+- 검증 중 외부 요청: stale code manifest가 API client 생성 전에 막히는 회귀 시험을 처음 추가할 때 차단 구현 전 worker가 `openai/gpt-6-luna` 210건을 실행했다. 전부 `NotFoundError`, 성공 0건, usage의 actual cost 보고값 합계 `$0.00`, 로컬 보수 예약값 `$0.2515971`이었다. 예외 원문과 응답 본문은 출력하지 않았다. 즉시 code hash fail-closed 검사와 API client 미생성 assertion을 추가했다.
+- 비용 보강: local 예약 상한 외에 OpenRouter `provider.max_price`를 공개 catalog 단가로 고정하고 `sort=price`를 적용했다. ZDR endpoint가 더 비싸면 요청이 실패하므로 공개 단가보다 비싼 provider로 우회하지 않는다.
+
+## 2026-11-04 수퍼바이저 비교 실행 전 감사 보완
+
+- 유지한 범위: 동결 v2 70문항은 줄이거나 수정하지 않았다. 그중 `question_type` gold가 없는 35문항도 3회 모두 실행 대상에 둔다. 다만 objective score를 임의 생성하지 않고 `Known Limitation`에 35개 ID와 제외 사유를 기록한다.
+- 통계 보완: 세 반복을 독립 210문항으로 세지 않고 run별 accuracy·Macro-F1의 mean/min/max를 낸다. 누락·실패는 stability와 completion 분모에서 제외하지 않으며 전체 70문항·210출력을 분모로 둔다. reason code는 여섯 canonical value로 제한했다.
+- 실행 안전 보완: 유료 명령에 `--confirm-live`를 추가하고, 같은 manifest hash에서 provider metadata가 남은 성공 smoke 없이는 full run을 시작하지 않는다. full run은 smoke provider를 `provider.only`로 고정하고 응답 provider가 달라지면 중단한다. 연속 provider 오류 3회에서도 중단한다.
+- 재개·비용 보완: 각 job 뒤 `cumulative_raw_calls`와 `cumulative_reserved_usd`를 원자 저장하며 재개 시 전체 cap에서 차감한다. 이전 누적값이 cap에 닿았으면 API client 생성 전에 중단한다.
+- 복수 비교 준비: `plan`이 주 실행 1,050 jobs 외에 blind pairwise A/B swap 1,400 decisions와 원문 내부를 보존하고 앞뒤 빈 줄만 추가하는 robustness 70건을 별도 계획으로 만든다. judge model·추가 비용·end-to-end 구조는 아직 확정 또는 승인하지 않았으므로 실행하지 않는다.
+- 바꾼 파일: `backend/services/llm.py`, `evals/runners/run_supervisor_models.py`, 대응 테스트·폴더 문서, `docs/experiments/supervisor-model-comparison.md`, `docs/worklog/osc.md`
+- 외부 실행: 이 보완에서는 API 호출, 실제 모델 평가, commit, push를 하지 않았다.
+- 검증: targeted test 30건과 전체 `pytest` 290건이 통과했고 26건은 기존 조건부 skip이다. `py_compile`과 `git diff --check`도 통과했다. `evals/results/supervisor/2026-11-04-preflight-v5/`의 새 manifest는 5 models·70 cases·3 runs·1,050 unique jobs이고 code hash가 현재 파일과 일치한다. 추가 계획은 pairwise 1,400건, robustness 70건이다.
+
+## 2026-11-04 수퍼바이저 후보 smoke와 본평가 중단
+
+- smoke 결과: `anthropic/claude-haiku-5.5`와 `openai/gpt-6-luna`는 `NotFoundError`, `meta/muse-glimmer-30b`는 세 차례 schema 불일치 뒤 `ValidationError`로 실패했다. 실패 모델은 재시도하거나 다른 endpoint를 찾지 않았다. `deepseek/deepseek-v4.1-flash`는 `Morph`, `cohere/command-a-plus`는 `Cohere` provider에서 smoke를 통과했다.
+- 본평가 결과: 먼저 시작한 `deepseek/deepseek-v4.1-flash`에서 24개 output이 완료된 뒤 3개 `ValidationError`가 기록됐다. 사용자 지시에 따라 실행 프로세스 두 개를 중단했고 추가 호출을 멈췄다. 누적 raw call은 37회, 보수 예약 비용은 `$0.02256473`, 완료 응답 24건이 보고한 실제 비용 합계는 `$0.00156553`이다.
+- 추가 진행: `cohere/command-a-plus` 본평가, pairwise, robustness, end-to-end는 시작하지 않았다. 결과 요약은 `evals/results/supervisor/2026-11-04-preflight-v5/evaluation_outcome.json`에 남겼다. smoke artifact가 usage를 저장하지 않으므로 smoke actual cost는 `Not Reported`다.
+
+## 2026-11-04 수퍼바이저 평가 중단 기준 정정과 재개
+
+- 정정: 사용자의 “실패하면 추가 진행하지 않음”은 호출 자체가 완전히 실패한 모델에만 적용한다. 이전에는 `deepseek/deepseek-v4.1-flash`의 문항별 schema 실패를 모델 실패로 잘못 해석해 일찍 중단했다.
+- 실행기 수정: provider 응답의 schema가 틀려도 actual model·provider·usage를 보존하고 해당 output을 `ValidationError`로 확정한다. 재개 시 이미 세 번 schema 실패한 job은 다시 호출하지 않으며, `RateLimitError`와 `EvaluationLimitError`만 재개 대상으로 남긴다. targeted 31건과 전체 291건이 통과하고 26건은 조건부 skip이었다.
+- 실행 결과: 호출 자체가 불가능한 `anthropic/claude-haiku-5.5`, `openai/gpt-6-luna`만 제외했다. `deepseek/deepseek-v4.1-flash`는 126/210 outputs(106 schema 성공·17 schema 실패·3 rate limit)에서 `RateLimitError`가 지속되어 pause했다. `meta/muse-glimmer-30b`는 83/210(3 성공·79 schema 실패·1 budget limit), `cohere/command-a-plus`는 96/210(28 성공·67 schema 실패·1 budget limit)에서 각각 승인된 `$0.85` 예약 상한으로 중단됐다.
+- 비용 구분: 보수 예약값은 deepseek `$0.112012215`, meta `$0.8493165000000013`, cohere `$0.8474657999999993`이다. cost가 실제 보고된 usage record만 합친 부분값은 각각 `$0.010941501`, `$0.08743718`, `$0.1100652`이며 smoke 비용과 usage 누락 호출은 포함하지 않는다.
+- 후속 실행: 예약 상한을 임의로 올리지 않았고 pairwise·robustness·end-to-end는 실행하지 않았다. 현재 평가 실행 프로세스는 없다.
+
+## 2026-11-04 부분 본 테스트 결과 문서화
+
+- 분류 정정: 모델당 한 건의 호출 가능 여부 확인만 smoke이고, 이후 동결 v2 70문항×3회 manifest로 수행한 요청은 실제 본 테스트다. 210 outputs를 완료하지 못했으므로 상태는 `Partial Measured Main Test`로 기록했다.
+- 문서 반영: `docs/experiments/supervisor-model-comparison.md` 결과 절에 모델별 planned·recorded output, schema 성공·실패, raw calls, token, p50·p95 latency, 부분 보고 cost, 예약 cost, 부분 routing summary를 기재했다. 서로 다른 case prefix와 미완료 분모 때문에 최종 순위에는 사용하지 않는다고 명시했다.
+- 실행 상태: 확인 시 `run_supervisor_models` smoke·run 프로세스는 0개였으므로 종료할 추가 프로세스는 없었다. `evaluation_outcome.json` 상태를 `partial_main_test_at_safety_limits`로 갱신했다.
+
+## 2026-11-04 Haiku·Luna ZDR routing parameter 수정
+
+- 원인 확인: 인증된 OpenRouter ZDR endpoint 목록에서 `anthropic/claude-haiku-5.5` endpoint는 `temperature`를 지원 parameter로 공개하지 않았고, `openai/gpt-6-luna`의 ZDR Azure endpoint는 `temperature`와 `max_tokens` 대신 `max_completion_tokens`를 사용했다. 기존 공통 payload와 `require_parameters=true`의 조합이 모든 endpoint를 routing 대상에서 제거했다.
+- 수정: `evaluation_chat()`이 Haiku에는 `temperature` 없이 `max_tokens`, Luna에는 `temperature` 없이 `max_completion_tokens`, 나머지 후보에는 기존 `temperature=0`·`max_tokens`를 보낸다. ZDR, `data_collection=deny`, `require_parameters=true`, fallback 금지, 가격 상한은 변경하지 않았다.
+- 범위: 외부 model smoke나 본 테스트는 실행하지 않았다. 과거 `preflight-v5`는 당시 code hash와 부분 본 테스트 결과를 보존하며, 다음 실행은 새 manifest에서 시작해야 한다.
+
+## 2026-11-04 Haiku·Luna routing 수정 smoke 확인
+
+- 새 실행: 현재 code hash로 `evals/results/supervisor/2026-11-04-routing-fix-smoke-v1/` manifest를 만들고 수정 대상 두 모델만 모델별 `$0.02`, 180초 상한에서 smoke했다.
+- 결과: `anthropic/claude-haiku-5.5`는 `Google`, `openai/gpt-6-luna`는 `Azure` provider에서 actual model ID와 schema output을 포함해 성공했다. 이전 `NotFoundError`의 원인이 모델 부재가 아니라 공통 generation parameter와 `require_parameters=true`의 충돌이었다는 가설이 실측으로 확인됐다.
+- 범위: 본 테스트는 시작하지 않았고 실행 후 `run_supervisor_models` 프로세스는 0개다. smoke actual cost는 artifact에 usage를 저장하지 않아 `Not Reported`다.
+
+## 2026-11-04 · 수퍼바이저 본 테스트 실행 전 차단 수정(실행 안 함)
+
+- 예산 수정: 호출 전 보수 예약은 유지하되 OpenRouter가 `usage.cost`를 반환하면 해당 호출을 실제 보고 비용으로 정산한다. cost가 없거나 호출 자체가 실패하면 예약값을 유지한다. 과거처럼 실제 보고 비용보다 예약값만으로 먼저 중단되는 편향을 줄였다.
+- 호출 증거 수정: 과거 호출 성공을 현재 smoke로 복사하지 않는다. `import-evidence`가 동일 dataset·prompt·provider policy와 exact model/provider를 확인하고, 원본 manifest·artifact hash를 `provider_evidence.json`에 고정한다. 원본이 바뀌면 본 실행 전에 거부한다.
+- 준비 결과: API 없이 `evals/results/supervisor/2026-11-04-main-ready-v1/`에 1,050-job manifest를 만들고, 기존 결과 두 폴더에서 5개 모델의 provider evidence를 가져왔다. 본 테스트·추가 smoke·pairwise·robustness·end-to-end 호출은 실행하지 않았다.
+- 검증: 새 회귀 테스트는 구현 전 2건 실패를 확인했고 구현 후 통과했다. 관련 로컬 테스트는 38건 통과했다.
+
+## 2026-11-04 · 수퍼바이저 후보 단계 1 실행(70문항 1회)
+
+- 설계 변경: 후보 5종을 각 70문항 1회로 같은 조건에서 비교했다. 실행기에 `--run-index`를 추가했고 지정하지 않은 반복을 호출하지 않는 회귀 테스트를 RED→GREEN으로 확인했다. 관련 로컬 테스트는 39건 통과했다.
+- 실행 범위: `evals/results/supervisor/2026-11-04-stage1-v1/`에서 run index 1만 모델별로 순차 실행했다. pairwise, robustness, end-to-end는 실행하지 않았고, 이번 최종 선정에 추가 반복 실행을 요구하지 않는다.
+- 완료 결과: `anthropic/claude-haiku-5.5` 70/70(schema valid 48), `openai/gpt-6-luna` 70/70(66), `meta/muse-glimmer-30b` 70/70(1), `cohere/command-a-plus` 70/70(20)을 기록했다. `deepseek/deepseek-v4.1-flash`는 `RateLimitError` 3회 연속으로 3/70에서 provider stop했다.
+- 35개 labeled case의 `Question Type Accuracy`: `anthropic/claude-haiku-5.5` 22/35, `openai/gpt-6-luna` 35/35, `meta/muse-glimmer-30b` 1/35, `cohere/command-a-plus` 8/35. DeepSeek은 비교 불가다.
+- 비용: raw call 589회, `Budget-Accounted Cost` 합계 `$0.21675608`, cost가 보고된 561회 호출을 합친 `Reported Cost Sum` `$0.19945832`다. 전자는 미보고 호출의 보수 예약값을 포함하고 후자는 포함하지 않으므로 어느 쪽도 단독으로 실제 총 청구액이라 부르지 않는다.
+- 기록: 동일 폴더의 manifest·provider evidence·모델별 parsed output·`stage1_summary.json`과 `docs/experiments/supervisor-model-comparison.md`에 상태·오류·점수·비용·latency를 기록했다. 이 1회 실측으로 `openai/gpt-6-luna`를 실험상 최종 선정했으며 추가 반복 실행은 요구하지 않는다. 서비스 기본값 적용은 조장 소유 ADR·`SPEC.md` 갱신 뒤 별도 변경으로 수행한다.
+
+## 2026-11-04 · 수퍼바이저 실측 PR 검수 보완
+
+- 재현 근거: 실행기와 회귀 테스트, stage1 manifest·provider evidence·모델별 parsed output·집계 JSON을 같은 PR에 포함했다. 사용자 입력·raw response·예외 원문·API key는 포함하지 않았다.
+- 문서 정합성: 완료 전 상태로 남아 있던 AC-08을 완료 뒤 선정 범위로 고쳤다. Luna는 이 실험의 최종 선정이고, 서비스 정본과 실제 기본 모델 전환은 조장 소유 ADR·`SPEC.md` 갱신 전에는 완료로 표시하지 않는다.
+- PR 규칙: 실행 코드·테스트·sanitized 원시 결과·실험 결론을 한 실험의 재현 단위로 묶었다. 핵심 변경이 400줄을 넘는 이유와 분리하지 않은 이유는 PR 본문에 기록한다.
