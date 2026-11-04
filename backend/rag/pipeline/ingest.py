@@ -1,17 +1,17 @@
-"""카드와 임베딩을 DB 코퍼스 표(db/002_rag_corpus.sql)에 넣는다(오프라인 도구).
+"""청크와 임베딩을 DB 코퍼스 표(db/002_rag_corpus.sql)에 넣는다(오프라인 도구).
 
 - 역할: 오프라인 CLI(`python -m backend.rag.pipeline.ingest`). 서버가 import하지 않는다.
-  - manifest.jsonl의 문서를 source_documents에, chunks.jsonl의 카드를 document_chunks에 넣는다.
-  - 카드마다 임베딩을 chunk_embeddings에 넣는다. 벡터는 본문 해시로 캐시(<벡터 폴더>/vectors.f32·vectors.sha.txt)에서
+  - manifest.jsonl의 문서를 source_documents에, chunks.jsonl의 청크를 document_chunks에 넣는다.
+  - 청크마다 임베딩을 chunk_embeddings에 넣는다. 벡터는 본문 해시로 캐시(<벡터 폴더>/vectors.f32·vectors.sha.txt)에서
     다시 쓰고, 캐시에 없는 본문만 embed_texts로 만들어 캐시에 덧붙인다.
-  - 다시 돌리면 이미 들어간 문서·카드·임베딩은 건너뛴다(지우지 않는다). DB에 임베딩이 있는 카드는 캐시가 없어도 API를 다시 부르지 않는다.
+  - 다시 돌리면 이미 들어간 문서·청크·임베딩은 건너뛴다(지우지 않는다). DB에 임베딩이 있는 청크는 캐시가 없어도 API를 다시 부르지 않는다.
   - 캐시 파일이 쓰는 도중 끊겨 벡터와 sha 수가 어긋나면, 짝이 맞는 앞부분까지 잘라 복구한다.
 - 하지 않는 일: 표 만들기(db/002_rag_corpus.sql), 검색(retrieve.py), 파싱·청킹(parse.py, chunk.py)
 - 출처: docs/specs/rag-pipeline.md What 5·AC-04·AC-12·EC-04·EC-05
 - 필요한 것: DATABASE_URL, 캐시에 없는 본문이 있으면 임베딩 키(.env)
 
-- voyage-4-large 적재(`--voyage`): 미리 만든 카드 벡터(`<벡터 폴더>/v4large.f32`·`v4large.sha.txt`, 1024차원)를 이미 들어간 카드에 붙인다.
-  임베딩 API를 부르지 않는다. 열이 차원 없는 halfvec이어야 한다(db/008). 모델 행이 있는 카드는 건너뛴다.
+- voyage-4-large 적재(`--voyage`): 미리 만든 청크 벡터(`<벡터 폴더>/v4large.f32`·`v4large.sha.txt`, 1024차원)를 이미 들어간 청크에 붙인다.
+  임베딩 API를 부르지 않는다. 열이 차원 없는 halfvec이어야 한다(db/008). 모델 행이 있는 청크는 건너뛴다.
 
 실행: python -m backend.rag.pipeline.ingest <manifest.jsonl> <chunks.jsonl> <벡터 폴더> [--cache-only]
       python -m backend.rag.pipeline.ingest --voyage <벡터 폴더>
@@ -29,7 +29,7 @@ from backend.rag.storage import vector_type
 DIM = 1536  # 임베딩 차원. 캐시 파일을 DIM개씩 끊어 읽으므로 모델을 바꾸면 캐시도 새로 만든다
 EMBED_MODEL = 'openai/text-embedding-3-small'
 CORPUS_VERSION = 'tsc-diode-2026-11-01'
-VOYAGE_MODEL, VOYAGE_DIM = 'voyage-4-large', 1024  # 미리 만든 카드 벡터의 모델과 차원
+VOYAGE_MODEL, VOYAGE_DIM = 'voyage-4-large', 1024  # 미리 만든 청크 벡터의 모델과 차원
 BATCH = 128  # 임베딩 API를 한 번 부를 때 보내는 본문 수
 LABEL_MAX = 500  # document_chunks.table_name·row_label이 VARCHAR(500)이다
 MAX_RETRY = 3  # [왜] 키 한도가 있어 실패한 묶음을 끝없이 다시 부르지 않는다(AGENTS 6)
@@ -52,7 +52,7 @@ class VectorCache:
             vecs.tofile(self.vec_path)
             with open(self.sha_path, 'w', encoding='utf-8') as fs:
                 fs.write(''.join(s + '\n' for s in shas))
-        self.vecs = vecs.reshape(n, dim)  # 이어 붙인 1차원 float32를 (카드 수, dim) 표로 본다
+        self.vecs = vecs.reshape(n, dim)  # 이어 붙인 1차원 float32를 (청크 수, dim) 표로 본다
         self.index = {s: i for i, s in enumerate(shas)}
 
     def get(self, sha):
@@ -98,8 +98,8 @@ FILL_BITS = ('INSERT INTO chunk_embedding_bits (chunk_id, embedding_model, bits)
 
 
 def load_voyage(vec_dir):
-    """미리 만든 voyage-4-large 카드 벡터를 이미 들어간 카드에 붙이고 비트 코드 표도 채운다(DATABASE_URL 필요, 임베딩 API 호출 없음)."""
-    # [주의] 벡터가 없는 카드가 하나라도 있으면 ValueError를 올려 아무것도 넣지 않는다
+    """미리 만든 voyage-4-large 청크 벡터를 이미 들어간 청크에 붙이고 비트 코드 표도 채운다(DATABASE_URL 필요, 임베딩 API 호출 없음)."""
+    # [주의] 벡터가 없는 청크가 하나라도 있으면 ValueError를 올려 아무것도 넣지 않는다
     import psycopg
     from pgvector.psycopg import register_vector
     from pgvector import HalfVector
@@ -131,9 +131,9 @@ def load_voyage(vec_dir):
 
 
 def main(manifest_path, chunks_path, vec_dir, cache_only=False):
-    """manifest·chunks.jsonl의 문서·카드·임베딩을 DB에 넣는다(DATABASE_URL 필요). 이미 있는 것은 건너뛴다."""
+    """manifest·chunks.jsonl의 문서·청크·임베딩을 DB에 넣는다(DATABASE_URL 필요). 이미 있는 것은 건너뛴다."""
     # [주의] cache_only면 임베딩 API를 부르지 않고, 캐시에 없는 벡터가 필요하면 ValueError를 올려 DB를 롤백한다
-    # [주의] RAG_VECTOR_TYPE과 DB 열 형식이 다르면 ValueError, 카드 파일이 DB와 다르면 SystemExit
+    # [주의] RAG_VECTOR_TYPE과 DB 열 형식이 다르면 ValueError, 청크 파일이 DB와 다르면 SystemExit
     import psycopg
     from pgvector.psycopg import register_vector
     from pgvector import HalfVector
@@ -163,7 +163,7 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
         doc_id = dict(cur.fetchall())
         cur.execute('SELECT DISTINCT document_id FROM document_chunks')
         done = {r[0] for r in cur.fetchall()}
-        # 카드: 카드가 하나도 없는 문서만 넣는다(문서 단위로 다 넣거나 안 넣거나)
+        # 청크: 청크가 하나도 없는 문서만 넣는다(문서 단위로 다 넣거나 안 넣거나)
         with cur.copy('COPY document_chunks (document_id, chunk_index, content, chunk_sha256, page_number,'
                       ' table_name, row_label, chunker_version) FROM STDIN') as cp:
             for c in cards:
@@ -171,14 +171,14 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
                     # [주의] 면책 문구 같은 긴 첫 칸이 행 이름이 되는 표가 있다. 이름표 열만 자르고 본문(content)은 그대로 둔다
                     cp.write_row((doc_id[doc_key(c['doc'])], c['idx'], c['text'], c['sha256'], c['page'],
                                   c['table'] and c['table'][:LABEL_MAX], c['row'] and c['row'][:LABEL_MAX], CHUNKER_VERSION))
-        # 임베딩: 이 모델의 임베딩이 없는 카드만 넣는다
+        # 임베딩: 이 모델의 임베딩이 없는 청크만 넣는다
         cur.execute('SELECT dc.id, dc.chunk_sha256 FROM document_chunks dc WHERE NOT EXISTS (SELECT 1 FROM chunk_embeddings ce'
                     ' WHERE ce.chunk_id = dc.id AND ce.embedding_model = %s)', (EMBED_MODEL,))
         rows = [(cid, s.strip()) for cid, s in cur.fetchall()]
-        # [왜] 임베딩이 없는 카드의 본문만 캐시에 채운다. 캐시를 잃어도 DB에 이미 있는 임베딩은 다시 부르지 않는다
+        # [왜] 임베딩이 없는 청크의 본문만 캐시에 채운다. 캐시를 잃어도 DB에 이미 있는 임베딩은 다시 부르지 않는다
         unknown = {s for _, s in rows if s not in texts}
         if unknown:
-            raise SystemExit(f'카드 파일에 없는 본문 해시 {len(unknown)}개: DB와 같은 chunks.jsonl을 주세요')
+            raise SystemExit(f'청크 파일에 없는 본문 해시 {len(unknown)}개: DB와 같은 chunks.jsonl을 주세요')
         if cache_only and any(s not in cache.index for _, s in rows):
             raise ValueError('cache-only: required vectors are missing; embedding API was not called')
         made = fill_cache(cache, {s: texts[s] for _, s in rows})
@@ -189,8 +189,8 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
                 cp.write_row((chunk_id, EMBED_MODEL, HalfVector(vector) if kind == 'halfvec' else vector))
         cur.execute("SELECT to_regclass('ix_chunk_embeddings_hnsw')")
         if rows and cur.fetchone()[0] is not None:
-            # [왜] 빈 표에 만든 HNSW 인덱스에 5만 행을 한꺼번에 넣으면 그래프가 나빠져 가까운 카드를 놓친다(11-01 실측:
-            # 정확 검색 거리 0.345 카드를 놓치고 0.436 카드를 1위로 냄). 다 넣은 뒤 인덱스를 다시 만든다
+            # [왜] 빈 표에 만든 HNSW 인덱스에 5만 행을 한꺼번에 넣으면 그래프가 나빠져 가까운 청크를 놓친다(11-01 실측:
+            # 정확 검색 거리 0.345 청크를 놓치고 0.436 청크를 1위로 냄). 다 넣은 뒤 인덱스를 다시 만든다
             cur.execute("SET LOCAL maintenance_work_mem = '512MB'")
             cur.execute('REINDEX INDEX ix_chunk_embeddings_hnsw')
         for t in ('source_documents', 'document_chunks', 'chunk_embeddings'):

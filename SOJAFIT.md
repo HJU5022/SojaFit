@@ -61,9 +61,9 @@ SojaFit (proj3-b)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
-│   │   ├── grade.md        <- 검색 카드 채점(채점 노드)
+│   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
-│   │   ├── generate.md     <- 통과 카드만 근거로 답하기(생성 노드)
+│   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
 │   │   └── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
@@ -75,8 +75,8 @@ SojaFit (proj3-b)
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── collect.py  <- TSC 목록 xlsx를 합치고 데이터시트 PDF를 받음
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
-│   │       ├── chunk.py    <- 파싱 결과를 검색 카드(표지·글·표 행)와 manifest로 만듦
-│   │       ├── ingest.py   <- manifest·카드·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
+│   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
 │   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
@@ -114,7 +114,7 @@ SojaFit (proj3-b)
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
 │   ├── 000_init.sql        <- pgvector 확장
-│   ├── 002_rag_corpus.sql  <- 코퍼스 문서·카드·벡터 표
+│   ├── 002_rag_corpus.sql  <- 코퍼스 문서·청크·벡터 표
 │   ├── 003_auth.sql        <- 사용자·세션·로그인 시도 표
 │   ├── 004_create_business_tables.sql  <- 업무 표(회로·판정·견적). 확정되면 manual/의 초안을 옮김 (예정)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
@@ -139,7 +139,7 @@ SojaFit (proj3-b)
 │   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
 │   │   ├── INPUTS.md       <- 폴더 설명
-│   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 쪽 36개(회수 불가 2쪽 표시, 사전 등록 #24)
+│   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 페이지 36개(회수 불가 2쪽 표시, 사전 등록 #24)
 │   │   └── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── guides/             <- 평가 기준 문서
 │   │   ├── GUIDES.md       <- 폴더 설명
@@ -147,9 +147,9 @@ SojaFit (proj3-b)
 │   │   └── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
-│   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
-│   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 쪽 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
-│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 고르기용에서 고르고 확인용에서 한 번 비교)
+│   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
+│   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
+│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
@@ -159,7 +159,7 @@ SojaFit (proj3-b)
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
 │   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
-│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 쪽을 정한 검색 표본 84문항(고르기용 46·확인용 38, 사전 등록 #25)
+│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 페이지를 정한 검색 표본 84문항(dev 세트 46·test 세트 38, 사전 등록 #25)
 │   │   └── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── drafts/             <- 동결 전 평가셋 초안과 검수 기록(실행·동결 금지, 이력 보존)
 │   │   ├── DRAFTS.md       <- 폴더 설명
@@ -202,7 +202,7 @@ SojaFit (proj3-b)
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
 │   │   ├── test_rag_parse.py  <- 파싱 도구의 Docling 없는 부분
-│   │   ├── test_rag_chunk.py  <- 표 카드 규칙, 문서 키, manifest 크기
+│   │   ├── test_rag_chunk.py  <- 표 청크 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
@@ -216,7 +216,7 @@ SojaFit (proj3-b)
 │   │   ├── EVALS.md        <- 폴더 설명
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
-│   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·쪽 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
+│   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
@@ -254,6 +254,7 @@ SojaFit (proj3-b)
 │   ├── GATES.md            <- 필수 게이트 G1~G7 자기 점검과 증거 (고정: 과제 가이드 경로)
 │   ├── evaluation-prep.md  <- 배점·가산 항목별 준비 점검
 │   ├── 조원-계약서.md      <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
+│   ├── glossary.md         <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
 │   ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
 │   │   └── ADR.md          <- 폴더 설명과 결정 목록
 │   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀

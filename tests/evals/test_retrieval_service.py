@@ -1,6 +1,6 @@
 """서비스 경로 재측정 실행기(evals/runners/run_retrieval_service.py)의 순수 함수 시험.
 
-- 역할: 지표 정의(적중 · 회수율 · 모든 근거 · MRR), R1 1위 칸과의 상위 5개 대조, 백분위, 파일 이름 대응, 오류 문항 건너뛰기, 결과 파일 둘 견주기(`compare`)를 가짜 retrieve로 확인한다.
+- 역할: 지표 정의(적중 · 회수율 · Full Recall · MRR), R1 1위 칸과의 상위 5개 대조, 백분위, 파일 이름 대응, 오류 문항 건너뛰기, 결과 파일 둘 견주기(`compare`)를 가짜 retrieve로 확인한다.
 - 하지 않는 일: DB · Voyage · OpenRouter를 부르지 않는다(실제 측정은 사전 등록 #26).
 - 출처: evals/guides/preregister.md #26
 """

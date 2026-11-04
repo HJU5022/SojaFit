@@ -29,7 +29,7 @@ MAX_PASS_THROUGH_PINS = 3  # [왜] 핀이 3개 이하인 부품(저항·퓨즈·
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영문·숫자 낱말. 품번 안의 . - 는 살린다(SMBJ5.0A, AMS1117-3.3)
 QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
 REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
-LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 카드 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
+LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 청크 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
 CITE = re.compile(r"\[([^\]]*)\]")                     # 답 속 인용 괄호: [12] · [12, 15] · [넷리스트]
 NOT_FOUND = "문서로 확인 안 됨"                          # 근거로 답할 수 없을 때의 답(SPEC 3절 판정 이름과 같다)
 CLUES = "부품 윗면 글자, 사진, 데이터시트, 주문 코드"        # 근거가 없을 때 사용자에게 묻는 단서(SPEC 2절 "근거가 없을 때" 3번)
@@ -145,7 +145,7 @@ def find_parts(text: str, refs: set[str]) -> list[str]:
 
 
 def search(state: AgentState, retriever) -> dict:
-    """검색 노드: 질문에 품번이 있으면 그 품번 문서 안에서만, 없으면 대상 값의 품번 문서 안에서만 카드를 찾는다(SPEC 2절)."""
+    """검색 노드: 질문에 품번이 있으면 그 품번 문서 안에서만, 없으면 대상 값의 품번 문서 안에서만 청크를 찾는다(SPEC 2절)."""
     # retriever는 backend.rag.retrieve.retrieve와 같은 모양(question, *, parts)이다. build.py가 넣어 주고, 시험에서는 가짜를 넣는다
     part = state.get("target_part") or {}
     # shortcut: 회로 기호는 대상과 그 주변 넷의 부품만 안다. 멀리 있는 기호(U3, SJ1)는 품번으로 잘못 뽑힌다. 실측에서 틀리면 넷리스트 전체 기호로 넓힌다
@@ -168,18 +168,18 @@ class Grade(BaseModel):
 
 
 def other_part_row(doc: dict, parts: list[str]) -> bool:
-    """표 한 줄 카드가 같은 문서의 다른 품번만 적힌 줄이면 True(예: 1N5819를 물었는데 1N5817 순방향 전압 줄)."""
+    """표 한 줄 청크가 같은 문서의 다른 품번만 적힌 줄이면 True(예: 1N5819를 물었는데 1N5817 순방향 전압 줄)."""
     if not doc.get("table") or not parts:
-        return False  # 글 카드("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
+        return False  # 글 청크("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
     # [왜] 문서 표지 품번 목록과 겹치는 낱말만 품번으로 본다. 그래야 패키지 이름(DO-41, SOD-123F)이 든 줄을 버리지 않는다
     named = {w.lower() for w in find_parts(LABEL.sub("", doc["content"]), set())} & set(doc.get("doc_parts", []))
     return bool(named) and not named & {p.lower() for p in parts}
 
 
 def grade(state: AgentState) -> dict:
-    """채점 노드: 결정적 검사(다른 품번 줄, 요청한 개정판)로 먼저 거르고, 남은 카드를 LLM 호출 한 번으로 채점한다(SPEC 2절).
+    """채점 노드: 결정적 검사(다른 품번 줄, 요청한 개정판)로 먼저 거르고, 남은 청크를 LLM 호출 한 번으로 채점한다(SPEC 2절).
 
-    입력: question·docs·parts. 출력: 통과한 카드 id(chunk_id) 목록 `passed`. 빈 목록이면 build.py 갈림길이 재작성이나 거절로 보낸다.
+    입력: question·docs·parts. 출력: 통과한 청크 id(chunk_id) 목록 `passed`. 빈 목록이면 build.py 갈림길이 재작성이나 거절로 보낸다.
     """
     revisions = {w.upper() for w in WORD.findall(state["question"]) if REVISION.fullmatch(w)}  # 질문이 요청한 개정 코드
     kept = []
@@ -191,12 +191,12 @@ def grade(state: AgentState) -> dict:
             continue
         kept.append(doc)
     if not kept:
-        return {"passed": [], "path": ["채점"]}  # 남은 카드가 없으면 LLM을 부르지 않는다
+        return {"passed": [], "path": ["채점"]}  # 남은 청크가 없으면 LLM을 부르지 않는다
     cards = "\n\n".join(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in kept)
     # [왜] 강의 20강처럼 하위 검색어가 아니라 원래 질문 기준으로 채점한다
     answer = llm.node_chat("grade", (PROMPTS / "grade.md").read_text(encoding="utf-8"), f"질문: {state['question']}\n\n카드:\n{cards}", Grade)
     shown = {d["chunk_id"] for d in kept}
-    # [주의] LLM이 보여 준 적 없는 번호를 내면 버린다. 안 버리면 없는 카드가 근거로 통과한다
+    # [주의] LLM이 보여 준 적 없는 번호를 내면 버린다. 안 버리면 없는 청크가 근거로 통과한다
     return {"passed": [i for i in answer.passed_ids if i in shown], "path": ["채점"]}
 
 
@@ -233,14 +233,14 @@ def citations(text: str) -> set[str]:
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:
-    """생성 노드: 통과 카드와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절).
+    """생성 노드: 통과 청크와 넷리스트만으로 답하고, 없는 근거 인용과 인용 없는 문장을 센다(SPEC 2절).
 
     입력: question·docs·passed·target_part. use_skill이 True면 도메인 Skill을 시스템 프롬프트에 붙인다.
     출력: answer, check, skill(적용 여부와 sha256), path.
     주의: use_skill인데 Skill 파일이 없으면 FileNotFoundError, 비었으면 ValueError를 그대로 올린다(실패를 숨기지 않는다).
     """
     passed = set(state.get("passed") or [])
-    cards = [d for d in state.get("docs", []) if d["chunk_id"] in passed]  # 채점을 통과한 카드만 근거로 넘긴다
+    cards = [d for d in state.get("docs", []) if d["chunk_id"] in passed]  # 채점을 통과한 청크만 근거로 넘긴다
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in cards]  # 파일 이름에 개정 코드가 있어 출처가 된다
     part = state.get("target_part") or {}
     if part:

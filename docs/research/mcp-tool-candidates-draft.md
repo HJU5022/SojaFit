@@ -41,7 +41,7 @@
 |---:|---|---|---|
 | 1 | [Tavily MCP](https://github.com/tavily-ai/tavily-mcp) | 검색·추출 제공. 도메인 포함 필터를 이용한 공식 출처 검색 실험 가능 | API 키와 크레딧 필요. 검색 품질·비용 실측 전 |
 | 2 | [Exa MCP](https://github.com/exa-labs/exa-mcp-server) | 검색·본문 읽기. 호스팅 MCP의 제한된 익명 접근 | 익명 호출 한도·가용성, 데이터시트 검색 성능 확인 필요 |
-| 3 | [Brave Search MCP](https://github.com/brave/brave-search-mcp-server) | 독립 검색 인덱스, 언어·지역 등 설정 | API 키 및 카드 등록 조건 확인. 정확한 부품 번호 검색 성능 미측정 |
+| 3 | [Brave Search MCP](https://github.com/brave/brave-search-mcp-server) | 독립 검색 인덱스, 언어·지역 등 설정 | API 키 및 청크 등록 조건 확인. 정확한 부품 번호 검색 성능 미측정 |
 
 ### 3.3 공식 문서 가져오기·파싱 `fetch_official_document`
 
@@ -77,7 +77,7 @@
 |---|---|---|---|
 | 공식 MCP | 있음 | 있음 | 있음 |
 | 검색 키 | 필요 | API는 필요. 호스팅 MCP 익명 접근은 제한 있음 | 필요 |
-| 무료 안내 | 월 1,000크레딧, 카드 불필요 | API 플랜 월 $10 크레딧. 익명 MCP 한도는 별도 | Search 플랜 월 $5 크레딧. 카드 등록 조건 확인 |
+| 무료 안내 | 월 1,000크레딧, 청크 불필요 | API 플랜 월 $10 크레딧. 익명 MCP 한도는 별도 | Search 플랜 월 $5 크레딧. 청크 등록 조건 확인 |
 | 검색 1,000회 예시 | Basic·종량제 $8 | Lite $4부터 / Auto $7부터 | Search $5 |
 | 추가 비용·조건 | Basic 1크레딧/회, Advanced 2크레딧/회. 추출 별도 | 검색 모드·결과 수·본문 추출에 따라 차이 | Search 플랜 조건 및 별도 본문 확보 확인 |
 | 적합성 가설 | 공식 도메인 필터·검색/추출 통합 비교 | 키 없는 MCP 가능성 검토 | 일반 검색 대조군 |

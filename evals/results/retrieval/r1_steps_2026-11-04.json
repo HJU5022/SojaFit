@@ -1,0 +1,5199 @@
+{
+ "meta": {
+  "preregister": "#28",
+  "run_at": "2026-11-04T01:39:13+0900",
+  "steps": [
+   "S0 지금 서비스",
+   "S1 +재작성 Q3",
+   "S2 +표지 빼기",
+   "S3 +rerank-3",
+   "S4 +voyage-4-large"
+  ]
+ },
+ "dev": {
+  "cells": [
+   {
+    "step": "S0 지금 서비스",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q2|part|None",
+    "summary": {
+     "page_mrr": 0.3146,
+     "page_hit@1": 0.0652,
+     "page_recall@1": 0.0543,
+     "page_recall_rec@1": 0.0543,
+     "all_evidence@1": 0.0435,
+     "all_evidence_rec@1": 0.0435,
+     "page_ndcg@1": 0.0652,
+     "legacy_ndcg@1": 0.4239,
+     "doc_hit@1": 0.7826,
+     "doc_mrr@1": 0.7826,
+     "page_hit@3": 0.4783,
+     "page_recall@3": 0.413,
+     "page_recall_rec@3": 0.413,
+     "all_evidence@3": 0.3478,
+     "all_evidence_rec@3": 0.3478,
+     "page_ndcg@3": 0.2776,
+     "legacy_ndcg@3": 0.5027,
+     "doc_hit@3": 0.7826,
+     "doc_mrr@3": 0.7826,
+     "page_hit@5": 0.6957,
+     "page_recall@5": 0.6522,
+     "page_recall_rec@5": 0.6522,
+     "all_evidence@5": 0.6087,
+     "all_evidence_rec@5": 0.6087,
+     "page_ndcg@5": 0.3893,
+     "legacy_ndcg@5": 0.544,
+     "doc_hit@5": 0.8043,
+     "doc_mrr@5": 0.788,
+     "page_hit@10": 0.8043,
+     "page_recall@10": 0.7826,
+     "page_recall_rec@10": 0.7826,
+     "all_evidence@10": 0.7609,
+     "all_evidence_rec@10": 0.7609,
+     "page_ndcg@10": 0.4518,
+     "legacy_ndcg@10": 0.5751,
+     "doc_hit@10": 0.8043,
+     "doc_mrr@10": 0.788,
+     "page_hit@20": 0.8043,
+     "page_recall@20": 0.7935,
+     "page_recall_rec@20": 0.7935,
+     "all_evidence@20": 0.7826,
+     "all_evidence_rec@20": 0.7826,
+     "page_ndcg@20": 0.4585,
+     "legacy_ndcg@20": 0.5972,
+     "doc_hit@20": 0.8261,
+     "doc_mrr@20": 0.7893,
+     "cand_recall@50": 0.8043,
+     "cand_recall@100": 0.8261,
+     "fails": {
+      "below_top_k": 6,
+      "outside_candidates": 8
+     },
+     "ties_at_5": 16,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-001",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-002",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-004",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-005",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.125,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-008",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-011",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-013",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.1111111111111111,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-018",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.125,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-020",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-021",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-024",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-025",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-027",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-030",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.16666666666666666,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-033",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-034",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-038",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-041",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-042",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-046",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-047",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.14285714285714285,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-049",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-050",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-053",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-055",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-056",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-057",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-058",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-062",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-063",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-069",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-071",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-073",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-075",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-077",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-078",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-083",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-086",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-087",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-088",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-089",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-090",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-093",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-094",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-096",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-100",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S1 +재작성 Q3",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part|None",
+    "summary": {
+     "page_mrr": 0.6554,
+     "page_hit@1": 0.5652,
+     "page_recall@1": 0.4783,
+     "page_recall_rec@1": 0.4783,
+     "all_evidence@1": 0.3913,
+     "all_evidence_rec@1": 0.3913,
+     "page_ndcg@1": 0.5652,
+     "legacy_ndcg@1": 0.6739,
+     "doc_hit@1": 0.7826,
+     "doc_mrr@1": 0.7826,
+     "page_hit@3": 0.7391,
+     "page_recall@3": 0.6848,
+     "page_recall_rec@3": 0.6848,
+     "all_evidence@3": 0.6304,
+     "all_evidence_rec@3": 0.6304,
+     "page_ndcg@3": 0.63,
+     "legacy_ndcg@3": 0.6669,
+     "doc_hit@3": 0.7826,
+     "doc_mrr@3": 0.7826,
+     "page_hit@5": 0.8043,
+     "page_recall@5": 0.7826,
+     "page_recall_rec@5": 0.7826,
+     "all_evidence@5": 0.7609,
+     "all_evidence_rec@5": 0.7609,
+     "page_ndcg@5": 0.6807,
+     "legacy_ndcg@5": 0.6587,
+     "doc_hit@5": 0.8043,
+     "doc_mrr@5": 0.787,
+     "page_hit@10": 0.8043,
+     "page_recall@10": 0.7826,
+     "page_recall_rec@10": 0.7826,
+     "all_evidence@10": 0.7609,
+     "all_evidence_rec@10": 0.7609,
+     "page_ndcg@10": 0.6807,
+     "legacy_ndcg@10": 0.6457,
+     "doc_hit@10": 0.8043,
+     "doc_mrr@10": 0.787,
+     "page_hit@20": 0.8043,
+     "page_recall@20": 0.7826,
+     "page_recall_rec@20": 0.7826,
+     "all_evidence@20": 0.7609,
+     "all_evidence_rec@20": 0.7609,
+     "page_ndcg@20": 0.6807,
+     "legacy_ndcg@20": 0.6235,
+     "doc_hit@20": 0.8043,
+     "doc_mrr@20": 0.787,
+     "cand_recall@50": 0.8043,
+     "cand_recall@100": 0.8043,
+     "fails": {
+      "outside_candidates": 9
+     },
+     "ties_at_5": 15,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-001",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-002",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-004",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-005",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-008",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-011",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-013",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-018",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-020",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-021",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-024",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-025",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-027",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-030",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-033",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-034",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-038",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-041",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-042",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-046",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-047",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-049",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-050",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-053",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-055",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-056",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-057",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-058",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-062",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-063",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-069",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-071",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-073",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-075",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-077",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-078",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-083",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-086",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-087",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-088",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-089",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-090",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-093",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-094",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-096",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-100",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S2 +표지 빼기",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part+kind|None",
+    "summary": {
+     "page_mrr": 0.6627,
+     "page_hit@1": 0.5652,
+     "page_recall@1": 0.4783,
+     "page_recall_rec@1": 0.4783,
+     "all_evidence@1": 0.3913,
+     "all_evidence_rec@1": 0.3913,
+     "page_ndcg@1": 0.5652,
+     "legacy_ndcg@1": 0.6739,
+     "doc_hit@1": 0.7826,
+     "doc_mrr@1": 0.7826,
+     "page_hit@3": 0.7391,
+     "page_recall@3": 0.6848,
+     "page_recall_rec@3": 0.6848,
+     "all_evidence@3": 0.6304,
+     "all_evidence_rec@3": 0.6304,
+     "page_ndcg@3": 0.6329,
+     "legacy_ndcg@3": 0.6759,
+     "doc_hit@3": 0.7826,
+     "doc_mrr@3": 0.7826,
+     "page_hit@5": 0.8043,
+     "page_recall@5": 0.7826,
+     "page_recall_rec@5": 0.7826,
+     "all_evidence@5": 0.7609,
+     "all_evidence_rec@5": 0.7609,
+     "page_ndcg@5": 0.6845,
+     "legacy_ndcg@5": 0.6651,
+     "doc_hit@5": 0.8043,
+     "doc_mrr@5": 0.787,
+     "page_hit@10": 0.8043,
+     "page_recall@10": 0.7826,
+     "page_recall_rec@10": 0.7826,
+     "all_evidence@10": 0.7609,
+     "all_evidence_rec@10": 0.7609,
+     "page_ndcg@10": 0.6845,
+     "legacy_ndcg@10": 0.6577,
+     "doc_hit@10": 0.8043,
+     "doc_mrr@10": 0.787,
+     "page_hit@20": 0.8043,
+     "page_recall@20": 0.7826,
+     "page_recall_rec@20": 0.7826,
+     "all_evidence@20": 0.7609,
+     "all_evidence_rec@20": 0.7609,
+     "page_ndcg@20": 0.6845,
+     "legacy_ndcg@20": 0.6341,
+     "doc_hit@20": 0.8043,
+     "doc_mrr@20": 0.787,
+     "cand_recall@50": 0.8043,
+     "cand_recall@100": 0.8043,
+     "fails": {
+      "outside_candidates": 9
+     },
+     "ties_at_5": 14,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-001",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-002",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-004",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-005",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-008",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-011",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-013",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-018",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-020",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-021",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-024",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-025",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-027",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-030",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-033",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-034",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-038",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-041",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-042",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-046",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-047",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-049",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-050",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-053",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-055",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-056",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-057",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-058",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-062",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-063",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-069",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-071",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-073",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-075",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-077",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-078",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-083",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-086",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-087",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-088",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-089",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-090",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-093",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-094",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-096",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-100",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S3 +rerank-3",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+    "summary": {
+     "page_mrr": 0.7072,
+     "page_hit@1": 0.6522,
+     "page_recall@1": 0.5652,
+     "page_recall_rec@1": 0.5652,
+     "all_evidence@1": 0.4783,
+     "all_evidence_rec@1": 0.4783,
+     "page_ndcg@1": 0.6522,
+     "legacy_ndcg@1": 0.7174,
+     "doc_hit@1": 0.7826,
+     "doc_mrr@1": 0.7826,
+     "page_hit@3": 0.7609,
+     "page_recall@3": 0.75,
+     "page_recall_rec@3": 0.75,
+     "all_evidence@3": 0.7391,
+     "all_evidence_rec@3": 0.7391,
+     "page_ndcg@3": 0.7095,
+     "legacy_ndcg@3": 0.7206,
+     "doc_hit@3": 0.7826,
+     "doc_mrr@3": 0.7826,
+     "page_hit@5": 0.7826,
+     "page_recall@5": 0.7717,
+     "page_recall_rec@5": 0.7717,
+     "all_evidence@5": 0.7609,
+     "all_evidence_rec@5": 0.7609,
+     "page_ndcg@5": 0.7232,
+     "legacy_ndcg@5": 0.7032,
+     "doc_hit@5": 0.7826,
+     "doc_mrr@5": 0.7826,
+     "page_hit@10": 0.7826,
+     "page_recall@10": 0.7717,
+     "page_recall_rec@10": 0.7717,
+     "all_evidence@10": 0.7609,
+     "all_evidence_rec@10": 0.7609,
+     "page_ndcg@10": 0.7232,
+     "legacy_ndcg@10": 0.689,
+     "doc_hit@10": 0.7826,
+     "doc_mrr@10": 0.7826,
+     "page_hit@20": 0.8043,
+     "page_recall@20": 0.8043,
+     "page_recall_rec@20": 0.8043,
+     "all_evidence@20": 0.8043,
+     "all_evidence_rec@20": 0.8043,
+     "page_ndcg@20": 0.7373,
+     "legacy_ndcg@20": 0.653,
+     "doc_hit@20": 0.8043,
+     "doc_mrr@20": 0.7843,
+     "cand_recall@50": 0.8043,
+     "cand_recall@100": 0.8043,
+     "fails": {
+      "outside_candidates": 9,
+      "below_top_k": 1
+     },
+     "ties_at_5": 14,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-001",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-002",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-004",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-005",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-008",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-011",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-013",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-018",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-020",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-021",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-024",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-025",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-027",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-030",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-033",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-034",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-038",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-041",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-042",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-046",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-047",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-049",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-050",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-053",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-055",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-056",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-057",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-058",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-062",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-063",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-069",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-071",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-073",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-075",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-077",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-078",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-083",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-086",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-087",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-088",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-089",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-090",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-093",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-094",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-096",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-100",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S4 +voyage-4-large",
+    "name": "C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+    "summary": {
+     "page_mrr": 0.7833,
+     "page_hit@1": 0.7174,
+     "page_recall@1": 0.6304,
+     "page_recall_rec@1": 0.6304,
+     "all_evidence@1": 0.5435,
+     "all_evidence_rec@1": 0.5435,
+     "page_ndcg@1": 0.7174,
+     "legacy_ndcg@1": 0.7935,
+     "doc_hit@1": 0.8696,
+     "doc_mrr@1": 0.8696,
+     "page_hit@3": 0.8478,
+     "page_recall@3": 0.837,
+     "page_recall_rec@3": 0.837,
+     "all_evidence@3": 0.8261,
+     "all_evidence_rec@3": 0.8261,
+     "page_ndcg@3": 0.7884,
+     "legacy_ndcg@3": 0.7628,
+     "doc_hit@3": 0.8913,
+     "doc_mrr@3": 0.8804,
+     "page_hit@5": 0.8696,
+     "page_recall@5": 0.8587,
+     "page_recall_rec@5": 0.8587,
+     "all_evidence@5": 0.8478,
+     "all_evidence_rec@5": 0.8478,
+     "page_ndcg@5": 0.8021,
+     "legacy_ndcg@5": 0.7369,
+     "doc_hit@5": 0.8913,
+     "doc_mrr@5": 0.8804,
+     "page_hit@10": 0.8696,
+     "page_recall@10": 0.8587,
+     "page_recall_rec@10": 0.8587,
+     "all_evidence@10": 0.8478,
+     "all_evidence_rec@10": 0.8478,
+     "page_ndcg@10": 0.8021,
+     "legacy_ndcg@10": 0.7108,
+     "doc_hit@10": 0.8913,
+     "doc_mrr@10": 0.8804,
+     "page_hit@20": 0.8913,
+     "page_recall@20": 0.8913,
+     "page_recall_rec@20": 0.8913,
+     "all_evidence@20": 0.8913,
+     "all_evidence_rec@20": 0.8913,
+     "page_ndcg@20": 0.8157,
+     "legacy_ndcg@20": 0.667,
+     "doc_hit@20": 0.9565,
+     "doc_mrr@20": 0.8852,
+     "cand_recall@50": 0.8913,
+     "cand_recall@100": 0.8913,
+     "fails": {
+      "outside_candidates": 5,
+      "below_top_k": 1
+     },
+     "ties_at_5": 16,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-001",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-002",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-004",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-005",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-008",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-011",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-013",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-018",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-020",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-021",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-024",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-025",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-027",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-030",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-033",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-034",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-038",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-041",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-042",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-046",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-047",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-049",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-050",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-053",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-055",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-056",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-057",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-058",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-062",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-063",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-069",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-071",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-073",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-075",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-077",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-078",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-083",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-086",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-087",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-088",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-089",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-090",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-093",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-094",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-096",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-100",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   }
+  ],
+  "compare": [
+   {
+    "from": "S0 지금 서비스",
+    "to": "S1 +재작성 Q3",
+    "page_recall@5": {
+     "W": 8,
+     "L": 1,
+     "T": 37,
+     "mean_diff": 0.1304,
+     "ci95": [
+      0.0217,
+      0.2391
+     ],
+     "sign_p": 0.0391,
+     "verdict": "개선",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 1.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 1.0,
+      "US1AH SERIES_A2102.pdf": 1.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 1.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 1.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.5,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.5,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": -1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.1111,
+      0.1556
+     ]
+    },
+    "page_hit@5": {
+     "W": 6,
+     "L": 1,
+     "T": 39,
+     "mean_diff": 0.1087,
+     "ci95": [
+      0.0,
+      0.2174
+     ],
+     "sign_p": 0.125,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 1.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 1.0,
+      "US1AH SERIES_A2102.pdf": 1.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 1.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 1.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": -1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0889,
+      0.1333
+     ]
+    },
+    "all_evidence@5": {
+     "W": 8,
+     "L": 1,
+     "T": 37,
+     "mean_diff": 0.1522,
+     "ci95": [
+      0.0435,
+      0.2826
+     ],
+     "sign_p": 0.0391,
+     "verdict": "개선",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 1.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 1.0,
+      "US1AH SERIES_A2102.pdf": 1.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 1.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 1.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 1.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 1.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": -1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.1333,
+      0.1778
+     ]
+    },
+    "won": [
+     "r1-005",
+     "r1-013",
+     "r1-018",
+     "r1-030",
+     "r1-047",
+     "r1-062",
+     "r1-078",
+     "r1-094"
+    ],
+    "lost": [
+     "r1-093"
+    ]
+   },
+   {
+    "from": "S1 +재작성 Q3",
+    "to": "S2 +표지 빼기",
+    "page_recall@5": {
+     "W": 0,
+     "L": 0,
+     "T": 46,
+     "mean_diff": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.0
+     ]
+    },
+    "page_hit@5": {
+     "W": 0,
+     "L": 0,
+     "T": 46,
+     "mean_diff": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.0
+     ]
+    },
+    "all_evidence@5": {
+     "W": 0,
+     "L": 0,
+     "T": 46,
+     "mean_diff": 0.0,
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.0
+     ]
+    },
+    "won": [],
+    "lost": []
+   },
+   {
+    "from": "S2 +표지 빼기",
+    "to": "S3 +rerank-3",
+    "page_recall@5": {
+     "W": 1,
+     "L": 1,
+     "T": 44,
+     "mean_diff": -0.0109,
+     "ci95": [
+      -0.0652,
+      0.0326
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.5,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": -1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      -0.0222,
+      0.0111
+     ]
+    },
+    "page_hit@5": {
+     "W": 0,
+     "L": 1,
+     "T": 45,
+     "mean_diff": -0.0217,
+     "ci95": [
+      -0.0652,
+      0.0
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": -1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      -0.0222,
+      0.0
+     ]
+    },
+    "all_evidence@5": {
+     "W": 1,
+     "L": 1,
+     "T": 44,
+     "mean_diff": 0.0,
+     "ci95": [
+      -0.0652,
+      0.0652
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 1.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 0.0,
+      "BAS70 SERIES_G2606.pdf": 0.0,
+      "GBJL45J_D2606.pdf": 0.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 0.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": -1.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      -0.0222,
+      0.0222
+     ]
+    },
+    "won": [
+     "r1-071"
+    ],
+    "lost": [
+     "r1-094"
+    ]
+   },
+   {
+    "from": "S3 +rerank-3",
+    "to": "S4 +voyage-4-large",
+    "page_recall@5": {
+     "W": 4,
+     "L": 0,
+     "T": 42,
+     "mean_diff": 0.087,
+     "ci95": [
+      0.0217,
+      0.1739
+     ],
+     "sign_p": 0.125,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 1.0,
+      "BAS70 SERIES_G2606.pdf": 1.0,
+      "GBJL45J_D2606.pdf": 1.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0667,
+      0.0889
+     ]
+    },
+    "page_hit@5": {
+     "W": 4,
+     "L": 0,
+     "T": 42,
+     "mean_diff": 0.087,
+     "ci95": [
+      0.0217,
+      0.1739
+     ],
+     "sign_p": 0.125,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 1.0,
+      "BAS70 SERIES_G2606.pdf": 1.0,
+      "GBJL45J_D2606.pdf": 1.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0667,
+      0.0889
+     ]
+    },
+    "all_evidence@5": {
+     "W": 4,
+     "L": 0,
+     "T": 42,
+     "mean_diff": 0.087,
+     "ci95": [
+      0.0217,
+      0.1739
+     ],
+     "sign_p": 0.125,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "TESD5V0V4UA_B2109.pdf": 0.0,
+      "TSCDK12065G1_A2507.pdf": 0.0,
+      "RS1AH SERIES_B2304.pdf": 0.0,
+      "HER101G SERIES_L2104.pdf": 0.0,
+      "TSUP3150H_A2505.pdf": 0.0,
+      "GS1Z_A2510.pdf": 0.0,
+      "SFF501G SERIES_I2105.pdf": 0.0,
+      "US1AH SERIES_A2102.pdf": 0.0,
+      "RB500V-40H_A2502.pdf": 0.0,
+      "TSUP10150H_A2505.pdf": 0.0,
+      "S3JFSH_A2303.pdf": 0.0,
+      "BZD27C11PWH SERIES_B2203.pdf": 0.0,
+      "TESDD5V0_E1901.pdf": 0.0,
+      "RS1DLWH SERIES_A2103.pdf": 0.0,
+      "RB520S-30_D2510.pdf": 0.0,
+      "TSSA3U45_P2307.pdf": 0.0,
+      "BZX84JB2V4H SERIES_A2503.pdf": 0.0,
+      "TSCDF06065G1_A2404.pdf": 0.0,
+      "P4KE SERIES_N2104.pdf": 0.0,
+      "RB706F-40_C2102.pdf": 0.0,
+      "TST10122C_A2405.pdf": 0.0,
+      "UG2D_F2105.pdf": 0.0,
+      "TSD2GFSH SERIES_B2312.pdf": 0.0,
+      "TESD5V0L1UC_E2007.pdf": 0.0,
+      "SMB10JH SERIES_A2102.pdf": 0.0,
+      "RS5D-T SERIES_C2602.pdf": 0.0,
+      "HS1QBH_A2408.pdf": 0.0,
+      "UR2KB60 SERIES_L2104.pdf": 0.0,
+      "S2DAL SERIES_B2103.pdf": 0.0,
+      "MMSZ4678 SERIES_A2311.pdf": 0.0,
+      "PU2BM SERIES_B2103.pdf": 0.0,
+      "TSZU52C2V0 SERIES_G2009.pdf": 0.0,
+      "TSCDK16065G1_A2507.pdf": 0.0,
+      "TBS806 SERIES_A2010.pdf": 0.0,
+      "UG1004G SERIES_D2601.pdf": 0.0,
+      "S2DA-T SERIES_D2111.pdf": 0.0,
+      "1SMA4737 SERIES_P2102.pdf": 0.0,
+      "TS40P05G SERIES_G2203.pdf": 1.0,
+      "BAS70 SERIES_G2606.pdf": 1.0,
+      "GBJL45J_D2606.pdf": 1.0,
+      "PLAD15Q_B2606.pdf": 0.0,
+      "SD103AWH SERIES_A2502.pdf": 0.0,
+      "GS2ZA_A2510.pdf": 1.0,
+      "BZT52B2V4-G SERIES_H2002.pdf": 0.0,
+      "SBS34 SERIES_F2103.pdf": 0.0,
+      "S1Q_B2102.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0667,
+      0.0889
+     ]
+    },
+    "won": [
+     "r1-086",
+     "r1-087",
+     "r1-088",
+     "r1-093"
+    ],
+    "lost": []
+   }
+  ]
+ },
+ "test": {
+  "cells": [
+   {
+    "step": "S0 지금 서비스",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q2|part|None",
+    "summary": {
+     "page_mrr": 0.3801,
+     "page_hit@1": 0.2105,
+     "page_recall@1": 0.1711,
+     "page_recall_rec@1": 0.1711,
+     "all_evidence@1": 0.1316,
+     "all_evidence_rec@1": 0.1316,
+     "page_ndcg@1": 0.2105,
+     "legacy_ndcg@1": 0.5,
+     "doc_hit@1": 0.7895,
+     "doc_mrr@1": 0.7895,
+     "page_hit@3": 0.5263,
+     "page_recall@3": 0.4342,
+     "page_recall_rec@3": 0.4342,
+     "all_evidence@3": 0.3421,
+     "all_evidence_rec@3": 0.3421,
+     "page_ndcg@3": 0.3376,
+     "legacy_ndcg@3": 0.524,
+     "doc_hit@3": 0.8158,
+     "doc_mrr@3": 0.8026,
+     "page_hit@5": 0.6053,
+     "page_recall@5": 0.5789,
+     "page_recall_rec@5": 0.5789,
+     "all_evidence@5": 0.5526,
+     "all_evidence_rec@5": 0.5526,
+     "page_ndcg@5": 0.4116,
+     "legacy_ndcg@5": 0.5504,
+     "doc_hit@5": 0.8421,
+     "doc_mrr@5": 0.8079,
+     "page_hit@10": 0.7105,
+     "page_recall@10": 0.6974,
+     "page_recall_rec@10": 0.6974,
+     "all_evidence@10": 0.6842,
+     "all_evidence_rec@10": 0.6842,
+     "page_ndcg@10": 0.4726,
+     "legacy_ndcg@10": 0.5874,
+     "doc_hit@10": 0.8421,
+     "doc_mrr@10": 0.8079,
+     "page_hit@20": 0.7632,
+     "page_recall@20": 0.7632,
+     "page_recall_rec@20": 0.7632,
+     "all_evidence@20": 0.7632,
+     "all_evidence_rec@20": 0.7632,
+     "page_ndcg@20": 0.5069,
+     "legacy_ndcg@20": 0.6035,
+     "doc_hit@20": 0.8421,
+     "doc_mrr@20": 0.8079,
+     "cand_recall@50": 0.8158,
+     "cand_recall@100": 0.8158,
+     "fails": {
+      "below_top_k": 8,
+      "outside_candidates": 7
+     },
+     "ties_at_5": 19,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-003",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-006",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-007",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-009",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.14285714285714285,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-012",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-014",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-015",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-016",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-019",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-022",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.125,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-026",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.14285714285714285,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-029",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-031",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.16666666666666666,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-035",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-036",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-040",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-043",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-048",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-051",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-052",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-054",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-059",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-060",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-061",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-064",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-066",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-067",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-068",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-074",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-076",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-084",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-085",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-091",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-092",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-095",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-097",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-098",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-099",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S1 +재작성 Q3",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part|None",
+    "summary": {
+     "page_mrr": 0.639,
+     "page_hit@1": 0.5526,
+     "page_recall@1": 0.4605,
+     "page_recall_rec@1": 0.4605,
+     "all_evidence@1": 0.3684,
+     "all_evidence_rec@1": 0.3684,
+     "page_ndcg@1": 0.5526,
+     "legacy_ndcg@1": 0.6711,
+     "doc_hit@1": 0.7895,
+     "doc_mrr@1": 0.7895,
+     "page_hit@3": 0.6842,
+     "page_recall@3": 0.6316,
+     "page_recall_rec@3": 0.6316,
+     "all_evidence@3": 0.5789,
+     "all_evidence_rec@3": 0.5789,
+     "page_ndcg@3": 0.5949,
+     "legacy_ndcg@3": 0.6811,
+     "doc_hit@3": 0.8158,
+     "doc_mrr@3": 0.8026,
+     "page_hit@5": 0.7895,
+     "page_recall@5": 0.7632,
+     "page_recall_rec@5": 0.7632,
+     "all_evidence@5": 0.7368,
+     "all_evidence_rec@5": 0.7368,
+     "page_ndcg@5": 0.6624,
+     "legacy_ndcg@5": 0.6766,
+     "doc_hit@5": 0.8158,
+     "doc_mrr@5": 0.8026,
+     "page_hit@10": 0.8158,
+     "page_recall@10": 0.8158,
+     "page_recall_rec@10": 0.8158,
+     "all_evidence@10": 0.8158,
+     "all_evidence_rec@10": 0.8158,
+     "page_ndcg@10": 0.696,
+     "legacy_ndcg@10": 0.6553,
+     "doc_hit@10": 0.8158,
+     "doc_mrr@10": 0.8026,
+     "page_hit@20": 0.8158,
+     "page_recall@20": 0.8158,
+     "page_recall_rec@20": 0.8158,
+     "all_evidence@20": 0.8158,
+     "all_evidence_rec@20": 0.8158,
+     "page_ndcg@20": 0.696,
+     "legacy_ndcg@20": 0.6356,
+     "doc_hit@20": 0.8158,
+     "doc_mrr@20": 0.8026,
+     "cand_recall@50": 0.8421,
+     "cand_recall@100": 0.8421,
+     "fails": {
+      "below_top_k": 2,
+      "outside_candidates": 6
+     },
+     "ties_at_5": 9,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-003",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-006",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-007",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-009",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-012",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-014",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-015",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-016",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-019",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-022",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-026",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-029",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-031",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.16666666666666666,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-035",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-036",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-040",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-043",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-048",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-051",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-052",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-054",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-059",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-060",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-061",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-064",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-066",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-067",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-068",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-074",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-076",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-084",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-085",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-091",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-092",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-095",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-097",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-098",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-099",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S2 +표지 빼기",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part+kind|None",
+    "summary": {
+     "page_mrr": 0.6456,
+     "page_hit@1": 0.5526,
+     "page_recall@1": 0.4605,
+     "page_recall_rec@1": 0.4605,
+     "all_evidence@1": 0.3684,
+     "all_evidence_rec@1": 0.3684,
+     "page_ndcg@1": 0.5526,
+     "legacy_ndcg@1": 0.6711,
+     "doc_hit@1": 0.7895,
+     "doc_mrr@1": 0.7895,
+     "page_hit@3": 0.7368,
+     "page_recall@3": 0.6842,
+     "page_recall_rec@3": 0.6842,
+     "all_evidence@3": 0.6316,
+     "all_evidence_rec@3": 0.6316,
+     "page_ndcg@3": 0.6247,
+     "legacy_ndcg@3": 0.6842,
+     "doc_hit@3": 0.8158,
+     "doc_mrr@3": 0.8026,
+     "page_hit@5": 0.8158,
+     "page_recall@5": 0.7895,
+     "page_recall_rec@5": 0.7895,
+     "all_evidence@5": 0.7632,
+     "all_evidence_rec@5": 0.7632,
+     "page_ndcg@5": 0.688,
+     "legacy_ndcg@5": 0.6861,
+     "doc_hit@5": 0.8158,
+     "doc_mrr@5": 0.8026,
+     "page_hit@10": 0.8158,
+     "page_recall@10": 0.8158,
+     "page_recall_rec@10": 0.8158,
+     "all_evidence@10": 0.8158,
+     "all_evidence_rec@10": 0.8158,
+     "page_ndcg@10": 0.7083,
+     "legacy_ndcg@10": 0.6657,
+     "doc_hit@10": 0.8158,
+     "doc_mrr@10": 0.8026,
+     "page_hit@20": 0.8158,
+     "page_recall@20": 0.8158,
+     "page_recall_rec@20": 0.8158,
+     "all_evidence@20": 0.8158,
+     "all_evidence_rec@20": 0.8158,
+     "page_ndcg@20": 0.7083,
+     "legacy_ndcg@20": 0.6447,
+     "doc_hit@20": 0.8158,
+     "doc_mrr@20": 0.8026,
+     "cand_recall@50": 0.8421,
+     "cand_recall@100": 0.8421,
+     "fails": {
+      "below_top_k": 1,
+      "outside_candidates": 6
+     },
+     "ties_at_5": 14,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-003",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-006",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-007",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-009",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-012",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-014",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-015",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-016",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-019",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-022",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-026",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-029",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-031",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-035",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-036",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-040",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-043",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-048",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-051",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-052",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-054",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-059",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-060",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-061",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-064",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-066",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-067",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-068",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-074",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-076",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-084",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "below_top_k"
+     },
+     {
+      "id": "r1-085",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-091",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-092",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-095",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-097",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-098",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-099",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S3 +rerank-3",
+    "name": "C|te3s|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+    "summary": {
+     "page_mrr": 0.7224,
+     "page_hit@1": 0.6579,
+     "page_recall@1": 0.5658,
+     "page_recall_rec@1": 0.5658,
+     "all_evidence@1": 0.4737,
+     "all_evidence_rec@1": 0.4737,
+     "page_ndcg@1": 0.6579,
+     "legacy_ndcg@1": 0.75,
+     "doc_hit@1": 0.8421,
+     "doc_mrr@1": 0.8421,
+     "page_hit@3": 0.7895,
+     "page_recall@3": 0.7368,
+     "page_recall_rec@3": 0.7368,
+     "all_evidence@3": 0.6842,
+     "all_evidence_rec@3": 0.6842,
+     "page_ndcg@3": 0.7002,
+     "legacy_ndcg@3": 0.7151,
+     "doc_hit@3": 0.8421,
+     "doc_mrr@3": 0.8421,
+     "page_hit@5": 0.8421,
+     "page_recall@5": 0.8289,
+     "page_recall_rec@5": 0.8289,
+     "all_evidence@5": 0.8158,
+     "all_evidence_rec@5": 0.8158,
+     "page_ndcg@5": 0.7605,
+     "legacy_ndcg@5": 0.7088,
+     "doc_hit@5": 0.8421,
+     "doc_mrr@5": 0.8421,
+     "page_hit@10": 0.8421,
+     "page_recall@10": 0.8421,
+     "page_recall_rec@10": 0.8421,
+     "all_evidence@10": 0.8421,
+     "all_evidence_rec@10": 0.8421,
+     "page_ndcg@10": 0.7707,
+     "legacy_ndcg@10": 0.6982,
+     "doc_hit@10": 0.8421,
+     "doc_mrr@10": 0.8421,
+     "page_hit@20": 0.8421,
+     "page_recall@20": 0.8421,
+     "page_recall_rec@20": 0.8421,
+     "all_evidence@20": 0.8421,
+     "all_evidence_rec@20": 0.8421,
+     "page_ndcg@20": 0.7707,
+     "legacy_ndcg@20": 0.6581,
+     "doc_hit@20": 0.8684,
+     "doc_mrr@20": 0.8439,
+     "cand_recall@50": 0.8421,
+     "cand_recall@100": 0.8421,
+     "fails": {
+      "outside_candidates": 6
+     },
+     "ties_at_5": 14,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-003",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-006",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-007",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-009",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-012",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-014",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-015",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-016",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-019",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-022",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-026",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-029",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-031",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-035",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-036",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-040",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-043",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-048",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-051",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-052",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-054",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-059",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-060",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-061",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-064",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-066",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-067",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-068",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-074",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-076",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-084",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-085",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-091",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-092",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-095",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-097",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-098",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-099",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     }
+    ]
+   },
+   {
+    "step": "S4 +voyage-4-large",
+    "name": "C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3",
+    "summary": {
+     "page_mrr": 0.7649,
+     "page_hit@1": 0.6842,
+     "page_recall@1": 0.5921,
+     "page_recall_rec@1": 0.5921,
+     "all_evidence@1": 0.5,
+     "all_evidence_rec@1": 0.5,
+     "page_ndcg@1": 0.6842,
+     "legacy_ndcg@1": 0.7763,
+     "doc_hit@1": 0.8684,
+     "doc_mrr@1": 0.8684,
+     "page_hit@3": 0.8158,
+     "page_recall@3": 0.7632,
+     "page_recall_rec@3": 0.7632,
+     "all_evidence@3": 0.7105,
+     "all_evidence_rec@3": 0.7105,
+     "page_ndcg@3": 0.7265,
+     "legacy_ndcg@3": 0.743,
+     "doc_hit@3": 0.8684,
+     "doc_mrr@3": 0.8684,
+     "page_hit@5": 0.9211,
+     "page_recall@5": 0.9079,
+     "page_recall_rec@5": 0.9079,
+     "all_evidence@5": 0.8947,
+     "all_evidence_rec@5": 0.8947,
+     "page_ndcg@5": 0.8083,
+     "legacy_ndcg@5": 0.7363,
+     "doc_hit@5": 0.9211,
+     "doc_mrr@5": 0.8803,
+     "page_hit@10": 0.9474,
+     "page_recall@10": 0.9474,
+     "page_recall_rec@10": 0.9474,
+     "all_evidence@10": 0.9474,
+     "all_evidence_rec@10": 0.9474,
+     "page_ndcg@10": 0.8279,
+     "legacy_ndcg@10": 0.7181,
+     "doc_hit@10": 0.9474,
+     "doc_mrr@10": 0.8846,
+     "page_hit@20": 0.9474,
+     "page_recall@20": 0.9474,
+     "page_recall_rec@20": 0.9474,
+     "all_evidence@20": 0.9474,
+     "all_evidence_rec@20": 0.9474,
+     "page_ndcg@20": 0.8279,
+     "legacy_ndcg@20": 0.671,
+     "doc_hit@20": 0.9737,
+     "doc_mrr@20": 0.8868,
+     "cand_recall@50": 0.9474,
+     "cand_recall@100": 0.9474,
+     "fails": {
+      "outside_candidates": 2,
+      "below_top_k": 1
+     },
+     "ties_at_5": 12,
+     "empty_results": 0
+    },
+    "rows": [
+     {
+      "id": "r1-003",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-006",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-007",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-009",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-012",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-014",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-015",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-016",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-019",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-022",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-026",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-029",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-031",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-035",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-036",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-040",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-043",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-048",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-051",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-052",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.5
+     },
+     {
+      "id": "r1-054",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-059",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-060",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.3333333333333333
+     },
+     {
+      "id": "r1-061",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-064",
+      "page_recall@5": 0.5,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-066",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-067",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-068",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-074",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-076",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-084",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-085",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-091",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-092",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 1.0
+     },
+     {
+      "id": "r1-095",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.2
+     },
+     {
+      "id": "r1-097",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.0,
+      "fail": "outside_candidates"
+     },
+     {
+      "id": "r1-098",
+      "page_recall@5": 1.0,
+      "page_hit@5": 1.0,
+      "all_evidence@5": 1.0,
+      "page_mrr": 0.25
+     },
+     {
+      "id": "r1-099",
+      "page_recall@5": 0.0,
+      "page_hit@5": 0.0,
+      "all_evidence@5": 0.0,
+      "page_mrr": 0.16666666666666666,
+      "fail": "below_top_k"
+     }
+    ]
+   }
+  ],
+  "compare": [
+   {
+    "from": "S0 지금 서비스",
+    "to": "S1 +재작성 Q3",
+    "page_recall@5": {
+     "W": 9,
+     "L": 2,
+     "T": 27,
+     "mean_diff": 0.1842,
+     "ci95": [
+      0.0526,
+      0.3158
+     ],
+     "sign_p": 0.0654,
+     "verdict": "개선",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 1.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 1.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 1.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 1.0,
+      "SF41G SERIES_G2105.pdf": 1.0,
+      "1.5SMCH SERIES_B2207.pdf": 1.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 1.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.5,
+      "TSCDH40065G1_A2404.pdf": -0.5,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.5,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": -0.5,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.1622,
+      0.2027
+     ]
+    },
+    "page_hit@5": {
+     "W": 7,
+     "L": 0,
+     "T": 31,
+     "mean_diff": 0.1842,
+     "ci95": [
+      0.0789,
+      0.3158
+     ],
+     "sign_p": 0.0156,
+     "verdict": "개선",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 1.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 1.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 1.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 1.0,
+      "SF41G SERIES_G2105.pdf": 1.0,
+      "1.5SMCH SERIES_B2207.pdf": 1.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 1.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.1622,
+      0.1892
+     ]
+    },
+    "all_evidence@5": {
+     "W": 9,
+     "L": 2,
+     "T": 27,
+     "mean_diff": 0.1842,
+     "ci95": [
+      0.0263,
+      0.3421
+     ],
+     "sign_p": 0.0654,
+     "verdict": "개선",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 1.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 1.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 1.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 1.0,
+      "SF41G SERIES_G2105.pdf": 1.0,
+      "1.5SMCH SERIES_B2207.pdf": 1.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 1.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 1.0,
+      "TSCDH40065G1_A2404.pdf": -1.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 1.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": -1.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.1622,
+      0.2162
+     ]
+    },
+    "won": [
+     "r1-003",
+     "r1-009",
+     "r1-016",
+     "r1-022",
+     "r1-026",
+     "r1-029",
+     "r1-051",
+     "r1-061",
+     "r1-067"
+    ],
+    "lost": [
+     "r1-064",
+     "r1-074"
+    ]
+   },
+   {
+    "from": "S1 +재작성 Q3",
+    "to": "S2 +표지 빼기",
+    "page_recall@5": {
+     "W": 1,
+     "L": 0,
+     "T": 37,
+     "mean_diff": 0.0263,
+     "ci95": [
+      0.0,
+      0.0789
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 1.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.027
+     ]
+    },
+    "page_hit@5": {
+     "W": 1,
+     "L": 0,
+     "T": 37,
+     "mean_diff": 0.0263,
+     "ci95": [
+      0.0,
+      0.0789
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 1.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.027
+     ]
+    },
+    "all_evidence@5": {
+     "W": 1,
+     "L": 0,
+     "T": 37,
+     "mean_diff": 0.0263,
+     "ci95": [
+      0.0,
+      0.0789
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 1.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.027
+     ]
+    },
+    "won": [
+     "r1-031"
+    ],
+    "lost": []
+   },
+   {
+    "from": "S2 +표지 빼기",
+    "to": "S3 +rerank-3",
+    "page_recall@5": {
+     "W": 2,
+     "L": 0,
+     "T": 36,
+     "mean_diff": 0.0395,
+     "ci95": [
+      0.0,
+      0.1053
+     ],
+     "sign_p": 0.5,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.5,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 1.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0135,
+      0.0405
+     ]
+    },
+    "page_hit@5": {
+     "W": 1,
+     "L": 0,
+     "T": 37,
+     "mean_diff": 0.0263,
+     "ci95": [
+      0.0,
+      0.0789
+     ],
+     "sign_p": 1.0,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 1.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0,
+      0.027
+     ]
+    },
+    "all_evidence@5": {
+     "W": 2,
+     "L": 0,
+     "T": 36,
+     "mean_diff": 0.0526,
+     "ci95": [
+      0.0,
+      0.1316
+     ],
+     "sign_p": 0.5,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 1.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 1.0,
+      "1SS355_D2212.pdf": 0.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 0.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 0.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.027,
+      0.0541
+     ]
+    },
+    "won": [
+     "r1-074",
+     "r1-084"
+    ],
+    "lost": []
+   },
+   {
+    "from": "S3 +rerank-3",
+    "to": "S4 +voyage-4-large",
+    "page_recall@5": {
+     "W": 3,
+     "L": 0,
+     "T": 35,
+     "mean_diff": 0.0789,
+     "ci95": [
+      0.0,
+      0.1842
+     ],
+     "sign_p": 0.25,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 1.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 1.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 1.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0541,
+      0.0811
+     ]
+    },
+    "page_hit@5": {
+     "W": 3,
+     "L": 0,
+     "T": 35,
+     "mean_diff": 0.0789,
+     "ci95": [
+      0.0,
+      0.1842
+     ],
+     "sign_p": 0.25,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 1.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 1.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 1.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0541,
+      0.0811
+     ]
+    },
+    "all_evidence@5": {
+     "W": 3,
+     "L": 0,
+     "T": 35,
+     "mean_diff": 0.0789,
+     "ci95": [
+      0.0,
+      0.1842
+     ],
+     "sign_p": 0.25,
+     "verdict": "차이 입증 못 함",
+     "per_pdf_mean_diff": {
+      "SMA4S12AH SERIES_C2103.pdf": 0.0,
+      "TS20K40-T SERIES_A2208.pdf": 0.0,
+      "BAT54WH_A2501.pdf": 0.0,
+      "BAS16_F2001.pdf": 0.0,
+      "BZT52C2V4S SERIES_K2411.pdf": 0.0,
+      "TESDA5V0U40P1Q0_A2505.pdf": 0.0,
+      "TSCDK08065G1_A2507.pdf": 0.0,
+      "SMA6J SERIES_E2102.pdf": 0.0,
+      "GBL005 SERIES_K2103.pdf": 0.0,
+      "BAS21H_A2412.pdf": 0.0,
+      "SF41G SERIES_G2105.pdf": 0.0,
+      "1.5SMCH SERIES_B2207.pdf": 0.0,
+      "HER101G-K SERIES_B2104.pdf": 0.0,
+      "BAV19WS SERIES_K2212.pdf": 0.0,
+      "PU1BB SERIES_A2510.pdf": 0.0,
+      "TESDH3V3B03P1Q0_A2305.pdf": 0.0,
+      "BA157G-K SERIES_B2104.pdf": 0.0,
+      "BAV99WH_A2412.pdf": 0.0,
+      "BZD17C SERIES_L2103.pdf": 0.0,
+      "TPMR10D SERIES_D2309.pdf": 0.0,
+      "TSCDT20065G1_A2404.pdf": 0.0,
+      "TSS42U SERIES_D1601.pdf": 0.0,
+      "TSAD10H120H_A2601.pdf": 0.0,
+      "PU6BBH SERIES_B2109.pdf": 0.0,
+      "TSCDH40065G1_A2404.pdf": 0.0,
+      "BYG20D SERIES_F2102.pdf": 0.0,
+      "TS20P01G SERIES_O2203.pdf": 0.0,
+      "TSUP10M60SH_B2103.pdf": 0.0,
+      "FR201G-T SERIES_B2105.pdf": 0.0,
+      "TSSW3H120H_A2510.pdf": 0.0,
+      "TS4148 SERIES_A2301.pdf": 0.0,
+      "1SS355_D2212.pdf": 1.0,
+      "S3Q_C2102.pdf": 0.0,
+      "MMBD3004 SERIES_C2001.pdf": 0.0,
+      "FRAF10JG_A2206.pdf": 1.0,
+      "TSUP15H120H_A2403.pdf": 0.0,
+      "B0520LW SERIES_J2112.pdf": 1.0,
+      "BAT46GW_B2606.pdf": 0.0
+     },
+     "leave_one_pdf_out": [
+      0.0541,
+      0.0811
+     ]
+    },
+    "won": [
+     "r1-085",
+     "r1-095",
+     "r1-098"
+    ],
+    "lost": []
+   }
+  ]
+ }
+}

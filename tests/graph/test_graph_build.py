@@ -21,7 +21,7 @@ REWRITTEN = "1N5817 repetitive peak reverse voltage VRRM"
 
 
 def run(monkeypatch, question_type, grades, docs):
-    """가짜 LLM과 가짜 검색기를 꽂고 그래프를 끝까지 돌린다. grades는 채점 LLM이 호출 순서대로 낼 통과 카드 목록이다."""
+    """가짜 LLM과 가짜 검색기를 꽂고 그래프를 끝까지 돌린다. grades는 채점 LLM이 호출 순서대로 낼 통과 청크 목록이다."""
     grades = iter(grades)  # [주의] 정해 둔 것보다 채점을 더 부르면 StopIteration으로 시험이 깨진다
 
     def fake_chat(system, user, schema):

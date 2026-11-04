@@ -1,8 +1,8 @@
 """D3 공식 검색 측정 실행기(evals/runners/run_retrieval_d3.py)의 순수 함수 시험.
 
-- 역할: gold 줄의 쪽 풀기(뒤에 이어 적은 쪽·범위), 쪽 단위 지표(적중·회수율·모든 근거·회수 가능만·중복 제거 nDCG·실패 유형),
-  정확 부호 검정, no_result 임계값 고르기를 가짜 카드로 확인한다.
-- 하지 않는 일: 실제 카드·벡터·API로 측정하지 않는다(결과는 사전 등록 #24의 실행으로만 본다).
+- 역할: gold 줄의 쪽 풀기(뒤에 이어 적은 쪽·범위), 페이지 단위 지표(적중·회수율·Full Recall·회수 가능만·중복 제거 nDCG·실패 유형),
+  정확 부호 검정, no_result 임계값 고르기를 가짜 청크로 확인한다.
+- 하지 않는 일: 실제 청크·벡터·API로 측정하지 않는다(결과는 사전 등록 #24의 실행으로만 본다).
 - 출처: evals/guides/preregister.md #24, Codex 검토(11-03) gold 쪽 누락 사례.
 """
 from collections import Counter
@@ -27,14 +27,14 @@ class FakeIndex:
 def test_page_metrics_and_recoverable_only():
     cards = [{'doc': 'A.pdf', 'page': 1}, {'doc': 'A.pdf', 'page': 1}, {'doc': 'A.pdf', 'page': 2}, {'doc': 'B.pdf', 'page': 1}]
     idx = FakeIndex(cards)
-    gold = [('A.pdf', 1), ('A.pdf', 2), ('A.pdf', 5)]  # 5쪽은 카드가 없어 회수 불가
+    gold = [('A.pdf', 1), ('A.pdf', 2), ('A.pdf', 5)]  # 5쪽은 청크가 없어 회수 불가
     m = metrics([3, 0, 1, 2], {0, 1, 2, 3}, None, gold, [], idx)
     assert m['page_hit@1'] == 0.0 and m['page_hit@3'] == 1.0
     assert m['page_mrr'] == 0.5
     assert abs(m['page_recall@5'] - 2 / 3) < 1e-9 and m['page_recall_rec@5'] == 1.0
     assert m['all_evidence@5'] == 0.0 and m['all_evidence_rec@5'] == 1.0
     assert m['doc_hit@1'] == 0.0 and m['doc_mrr@5'] == 0.5
-    assert 0 < m['page_ndcg@5'] < 1  # 같은 쪽 카드 두 장은 한 번만 센다
+    assert 0 < m['page_ndcg@5'] < 1  # 같은 쪽 청크 두 장은 한 번만 센다
 
 
 def test_failure_types():

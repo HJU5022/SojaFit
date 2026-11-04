@@ -80,7 +80,7 @@ def retrieval_metrics(chunk_vectors, chunks: list[dict], queries: list[dict], en
     """
     import numpy as np
 
-    # 22,000은 지연 비교용으로 고정한 가상 코퍼스 크기다(실제 코퍼스 카드 수가 아니다). 청크 수로 나눠 올림한 만큼 타일링한 뒤 22,000개로 자른다
+    # 22,000은 지연 비교용으로 고정한 가상 코퍼스 크기다(실제 코퍼스 청크 수가 아니다). 청크 수로 나눠 올림한 만큼 타일링한 뒤 22,000개로 자른다
     repeats = (22000 + len(chunks) - 1) // len(chunks)
     corpus_22k = np.tile(chunk_vectors, (repeats, 1))[:22000]
     ranks: list[int] = []  # 질의마다 정답이 처음 나온 순위(1부터)

@@ -1,16 +1,16 @@
-"""R1 검색 측정(사전 등록 #25): 문서 구조로 정답을 정한 100문항(고르기용 50 · 확인용 50)으로 임베딩 × 필터 × 리랭커 × 질의를 전부 곱해 잰다.
+"""R1 검색 측정(사전 등록 #25): 문서 구조로 정답을 정한 100문항(dev 세트 50 · test 세트 50)으로 임베딩 × 필터 × 리랭커 × 질의를 전부 곱해 잰다.
 
 하는 일
   - 검색 · 지표 · 짝 비교는 run_retrieval_d3.py(#24)의 search · metrics · run_cell · compare를 그대로 쓴다(k만 1·3·5·10·20).
-  - 고르기용 50문항에서만 264칸을 줄 세워 상위 3칸을 고르고, 확인용 50문항에서 그 3칸과 지금 서비스 설정을 한 번 비교한다.
-하지 않는 일: 정답 고치기, 확인용 문항으로 고르기, 청킹 · BM25 토큰 · RRF 바꾸기(#24에서 같음 · 악화로 끝남).
+  - dev 세트 50문항에서만 264칸을 줄 세워 상위 3칸을 고르고, test 세트 50문항에서 그 3칸과 지금 서비스 설정을 한 번 비교한다.
+하지 않는 일: 정답 고치기, test 세트 문항으로 고르기, 청킹 · BM25 토큰 · RRF 바꾸기(#24에서 같음 · 악화로 끝남).
 명령(저장소 루트에서 python -m evals.runners.run_retrieval_r1 <명령>)
   rewrite     서비스 재작성 노드로 Q3를 한 번 만들어 고정(OpenRouter, 상한 $5)
   qvec-api    API 임베딩 6종의 질문 벡터(OpenRouter · Voyage)
   gpu-qvec    GPU 임베딩 5종의 질문 벡터와 #24 벡터와의 일치 검사(desktop-gpu)
   requests    칸마다 리랭크할 후보 묶음을 모으고 Voyage는 병렬로 미리 부르고, Qwen 요청 파일을 쓴다
   gpu-rerank  Qwen3-Reranker-0.6B 요청을 GPU에서 처리(desktop-gpu)
-  run         264칸 고르기 → 확인용 비교 → 결과 JSON
+  run         264칸 고르기 → test 세트 비교 → 결과 JSON
 """
 import argparse
 import ast
@@ -38,7 +38,7 @@ GPU = {'kure': ('nlpai-lab/KURE-v1', '8b418a58414668e75532ed045c22d9ca018ae2b2')
        'qwen06': ('Qwen/Qwen3-Embedding-0.6B', '97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3'),
        'bgem3': ('BAAI/bge-m3', '5617a9f61b028005a4858fdac845db406aefb181'),
        'qwen4b': ('Qwen/Qwen3-Embedding-4B', '5cf2132abc99cad020ac570b19d031efec650f2b'),
-       'qwen8b': ('Qwen/Qwen3-Embedding-8B', '1d8ad4ca9b3dd8059ad90a75d4983776a23d44af')}  # #24 카드 벡터를 만든 revision
+       'qwen8b': ('Qwen/Qwen3-Embedding-8B', '1d8ad4ca9b3dd8059ad90a75d4983776a23d44af')}  # #24 청크 벡터를 만든 revision
 D3.KS = (1, 3, 5, 10, 20)  # [왜] k는 곱하지 않고 한 번에 곡선으로 본다(#25)
 
 
@@ -138,7 +138,7 @@ def gpu_qvec(args):
 
 # ---------- 2. 리랭크 요청 ----------
 class SortedReranker(D3.Reranker):
-    """같은 후보 묶음은 순서가 달라도 한 번만 리랭크한다. [왜] 점수는 (질문, 카드) 쌍마다 따로 매겨 넣는 순서와 무관하다."""
+    """같은 후보 묶음은 순서가 달라도 한 번만 리랭크한다. [왜] 점수는 (질문, 청크) 쌍마다 따로 매겨 넣는 순서와 무관하다."""
 
     def order(self, model, text, cands, index):
         return super().order(model, text, sorted(cands), index)
@@ -280,7 +280,7 @@ def run(args):
             oracle = next(c for c in out if c['cfg']['S'] == 'bm25')  # 답안지 검사: 단어 일치 검색만
             grid = sorted((c for c in out if c['cfg']['S'] == 'hybrid'), key=rank_key)
             res.update({'dev_cells': grid, 'dev_oracle_bm25': oracle, 'picked': grid[:3]})
-            print('고르기용 1~5위')
+            print('dev 세트 1~5위')
             for c in grid[:5]:
                 print(' ', c['name'], c['summary']['page_recall@5'], c['summary']['all_evidence@5'], c['summary']['page_mrr'])
             print('  답안지 검사(BM25만, 필터 없음)', oracle['summary']['page_hit@5'], oracle['summary']['page_recall@5'])
@@ -291,15 +291,52 @@ def run(args):
                                    for c in out[1:]]
             for c, cmp in zip(out[1:], res['test_compare']):
                 r = cmp['page_recall@5']
-                print('확인용', c['name'], base['summary']['page_recall@5'], '→', c['summary']['page_recall@5'], r['W'], r['L'], r['T'], r['ci95'], r['verdict'])
+                print('test 세트', c['name'], base['summary']['page_recall@5'], '→', c['summary']['page_recall@5'], r['W'], r['L'], r['T'], r['ci95'], r['verdict'])
     res['skipped'] = skipped
     D3.jdump(res, args.out)
     print('건너뜀', len(skipped), skipped[:3], '| 결과', args.out)
 
 
+# 사전 등록 #28: 지금 서비스에서 한 번에 하나씩 더해 가는 순서(측정 전에 고정)
+STEPS = [('S0 지금 서비스', {}), ('S1 +재작성 Q3', {'Q': 'Q3'}), ('S2 +표지 빼기', {'F': 'part+kind'}),
+         ('S3 +rerank-3', {'rerank': 'rerank-3'}), ('S4 +voyage-4-large', {'model': 'v4large'})]
+
+
+def steps(args):
+    """dev 세트 · test 세트 각각 S0 → S4를 재고, 단계마다 바로 앞 단계와 짝 비교 · 달라진 문항 · 실패 유형을 남긴다."""
+    out = {'meta': {'preregister': '#28', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'steps': [s for s, _ in STEPS]}}
+    metric_keys = ('page_recall@5', 'page_hit@5', 'all_evidence@5')
+    for split in ('dev', 'test'):
+        ctx, cfg, cells = context(args, split), dict(BASE), []
+        for label, change in STEPS:
+            cfg = dict(cfg, **change)  # 앞 단계 설정에 이번 하나만 더한다
+            c = D3.run_cell(cfg, ctx)
+            cells.append({'step': label, 'name': c['name'], 'summary': c['summary'],
+                          'rows': [{k: r[k] for k in ('id', *metric_keys, 'page_mrr') if k in r} | ({'fail': r['fail']} if 'fail' in r else {})
+                                   for r in c['rows']], '_full': c})
+        cmp = []
+        for a, b in zip(cells, cells[1:]):
+            d = {m: D3.compare(a['_full'], b['_full'], m) for m in metric_keys}
+            diff = [(y['id'], round(y['page_recall@5'] - x['page_recall@5'], 4)) for x, y in zip(a['rows'], b['rows']) if y['page_recall@5'] != x['page_recall@5']]
+            cmp.append({'from': a['step'], 'to': b['step'], **d, 'won': [i for i, v in diff if v > 0], 'lost': [i for i, v in diff if v < 0]})
+        for c in cells:
+            c.pop('_full')
+        out[split] = {'cells': cells, 'compare': cmp}
+        print(f'== {split} ({len(ctx["qs"])}문항)')
+        for c in cells:
+            s = c['summary']
+            print(f"  {c['step']:20s} 회수율@5 {s['page_recall@5']:.4f} 적중@5 {s['page_hit@5']:.4f} 근거 전부@5 {s['all_evidence@5']:.4f} 실패 {s['fails']}")
+        for x in cmp:
+            r = x['page_recall@5']
+            print(f"  {x['from']} → {x['to']}: {r['W']}승 {r['L']}패 {r['T']}동 평균 {r['mean_diff']:+.4f} {r['ci95']} p={r['sign_p']} {r['verdict']} | 이긴 {x['won']} 진 {x['lost']}")
+    print('새 리랭크 호출', ctx['rr'].new_calls)
+    D3.jdump(out, args.out)
+    print('결과', args.out)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run'])
+    p.add_argument('cmd', choices=['rewrite', 'qvec-api', 'gpu-qvec', 'requests', 'gpu-rerank', 'run', 'steps'])
     p.add_argument('--cards', default=str(OUTSIDE / 'corpus/tsc/chunks/chunks.jsonl'))
     p.add_argument('--vectors', default=str(OUTSIDE / '전자_데이터시트/evidence/full_grid/vectors'))
     p.add_argument('--qvec-dir', default=str(WORK / 'qvec'))
@@ -311,7 +348,7 @@ def main():
     sys.path.insert(0, str(ROOT))
     from dotenv import load_dotenv
     load_dotenv(ROOT / '.env')
-    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run}[a.cmd](a)
+    {'rewrite': rewrite, 'qvec-api': qvec_api, 'gpu-qvec': gpu_qvec, 'requests': requests, 'gpu-rerank': gpu_rerank, 'run': run, 'steps': steps}[a.cmd](a)
 
 
 if __name__ == '__main__':

@@ -2,11 +2,11 @@
 
 - 하는 일
   - R1 84문항(고정 Q3 질의, 품번은 find_parts)과 v2 채점 19문항(run_retrieval_d3의 qrels · 고정 Q3 · 같은 품번 규칙)을 `retrieve(질의, k=20, parts)`로 부른다(DEMO_MODE=0).
-  - 돌려받은 (파일, 쪽)으로 쪽 적중 · 쪽 회수율 · 모든 근거(k = 1 · 3 · 5 · 10 · 20)와 쪽 MRR을 계산한다(정의는 run_retrieval_d3.metrics와 같다).
+  - 돌려받은 (파일, 쪽)으로 Page Hit · Page Recall · Full Recall(k = 1 · 3 · 5 · 10 · 20)와 Page MRR을 계산한다(정의는 run_retrieval_d3.metrics와 같다).
   - R1 1위 칸(`r1_2026-11-03.json`)의 문항별 상위 5개 (문서, 쪽)과 견줘 같은 문항 수와 다른 문항 목록을 낸다.
   - retrieve() 한 번의 시간(p50 · p95 · 최대)과, R1 질문 20개에 실제 `rewrite()`를 한 번씩 부른 시간. OpenRouter 지출은 키 사용액 차이로 잰다(상한 1달러).
   - `--out`으로 결과 파일 경로를, `--prereg`로 meta에 적을 사전 등록 번호를 바꾼다(비트 후보 검색 측정 #27). 기본은 그대로.
-  - `--compare A B`: DB · API 없이 결과 파일 둘(정확 검색 A, 비트 후보 B)의 문항별 상위 5개 (문서, 쪽) 같음, 쪽 회수율@5 합계, retrieve() 시간 p50 · p95를 견줘 찍는다.
+  - `--compare A B`: DB · API 없이 결과 파일 둘(정확 검색 A, 비트 후보 B)의 문항별 상위 5개 (문서, 쪽) 같음, Page Recall@5 합계, retrieve() 시간 p50 · p95를 견줘 찍는다.
 - 하지 않는 일: 검색 코드 · 평가셋 수정, 칸 비교(그건 run_retrieval_r1.py).
 - 출처: evals/guides/preregister.md #26 · #27, evals/runners/run_retrieval_r1.py(spent), run_retrieval_d3.py(metrics · v2_questions)
 - 실행(저장소 루트, DATABASE_URL · VOYAGE_API_KEY · OPENROUTER_API_KEY 필요): uv run python -m evals.runners.run_retrieval_service
@@ -26,7 +26,7 @@ KS = (1, 3, 5, 10, 20)
 WINNER = 'C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3'  # 사전 등록 #25 1위 칸
 R1_DATA, R1_REWRITE = ROOT / 'evals/samples/retrieval_r1.jsonl', ROOT / 'evals/samples/retrieval_r1_rewrite_q3.json'
 R1_RESULT = ROOT / 'evals/results/retrieval/r1_2026-11-03.json'
-V2_REF = 0.8246  # 사람 판정 19문항 쪽 회수율@5(전자_데이터시트/evidence/r1/v2check/v2check_2026-11-03.json)
+V2_REF = 0.8246  # 사람 판정 19문항 Page Recall@5(전자_데이터시트/evidence/r1/v2check/v2check_2026-11-03.json)
 CAP = 1.0  # [주의] 정운 결정: OpenRouter는 이 측정 합계 1달러를 넘기지 않는다
 KEYS = [f'{m}@{k}' for m in ('page_hit', 'page_recall', 'all_evidence') for k in KS] + ['page_mrr']
 
@@ -76,7 +76,7 @@ def parity(rows, r1_rows):
 
 
 def compare(a, b):
-    """결과 파일 둘(dict)을 견준다. 문항마다 상위 5개 (문서, 쪽)이 같은지, 쪽 회수율@5 합계, retrieve() 시간 p50 · p95."""
+    """결과 파일 둘(dict)을 견준다. 문항마다 상위 5개 (문서, 쪽)이 같은지, Page Recall@5 합계, retrieve() 시간 p50 · p95."""
     rows = lambda o: {r['id']: [tuple(t) for t in r['top'][:5]] for r in o['r1']['rows'] + o['v2']['rows'] if 'error' not in r}
     ra, rb = rows(a), rows(b)
     ids = sorted(ra.keys() & rb.keys())
@@ -88,7 +88,7 @@ def compare(a, b):
 
 
 def doc_name(res, names, keymap):
-    """돌려받은 file이 정답 쪽 이름 집합에 없고 document_key가 대응되면 그 이름으로 바꾼다. (이름, 바꿨는지)."""
+    """돌려받은 file이 정답 페이지 이름 집합에 없고 document_key가 대응되면 그 이름으로 바꾼다. (이름, 바꿨는지)."""
     if res['file'] in names or res['document_key'] not in keymap:
         return res['file'], False
     return keymap[res['document_key']], True
@@ -195,13 +195,56 @@ def main(out_path=None, prereg='#26'):
     print(f"retrieve {out['latency']['retrieve']} | rewrite {out['latency']['rewrite']} | OpenRouter {out['openrouter_spent_usd']}달러 | 결과 {path.relative_to(ROOT)}")
 
 
+def stages(n, out_path):
+    """사전 등록 #28: R1 앞 n문항의 retrieve()를 재며 Voyage 질문 임베딩 · rerank-3 호출 시간을 나눠 재고 rerank 토큰을 센다.
+    나머지(전체 − 임베딩 − 리랭크)는 DB 검색(비트 후보 + 정확 재정렬) · BM25 · RRF · 본문 읽기다."""
+    os.environ['DEMO_MODE'] = '0'
+    from backend.graph.nodes import find_parts
+    from backend.rag import retrieve as R
+    from backend.services import llm
+    qs = r1_questions(find_parts)[:n]
+    R.warmup()
+    sec, tokens, post = {'embed': [], 'rerank': [], 'total': []}, [], llm._voyage_post
+
+    def timed_post(path, payload):
+        """[왜] voyage_embed · voyage_rerank가 모두 _voyage_post를 지나므로 여기서 호출 시간과 usage를 잡는다."""
+        t = time.perf_counter()
+        d = post(path, payload)
+        sec['embed' if path == 'embeddings' else 'rerank'].append(time.perf_counter() - t)
+        if path == 'rerank':
+            tokens.append((d.get('usage') or {}).get('total_tokens'))
+        return d
+    llm._voyage_post = timed_post
+    try:
+        for q in qs:
+            t = time.perf_counter()
+            R.retrieve(q['text'], k=20, parts=q['parts'] or None)
+            sec['total'].append(time.perf_counter() - t)
+    finally:
+        llm._voyage_post = post
+    assert len(sec['embed']) == len(sec['rerank']) == len(sec['total']) == n, {k: len(v) for k, v in sec.items()}
+    sec['db_bm25_rrf'] = [a - b - c for a, b, c in zip(sec['total'], sec['embed'], sec['rerank'])]
+    out = {'meta': {'preregister': '#28', 'run_at': time.strftime('%Y-%m-%dT%H:%M:%S'), 'n': n, 'config': WINNER,
+                    'commit': subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()},
+           'latency': {k: latency(v) for k, v in sec.items()}, 'rerank_tokens': {'per_call': latency(tokens), 'total': sum(tokens)},
+           'raw': {k: [round(x, 4) for x in v] for k, v in sec.items()} | {'rerank_tokens': tokens}}
+    path = ROOT / (out_path or f'evals/results/retrieval/service_stages_{time.strftime("%Y-%m-%d")}.json')
+    D3.jdump(out, path)
+    for k, v in out['latency'].items():
+        print(f'{k:12s} {v}')
+    print('rerank 토큰', out['rerank_tokens'], '| 결과', path.relative_to(ROOT))
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
+    ap.add_argument('--stages', type=int, help='R1 앞 N문항으로 단계별 시간(질문 임베딩 · 리랭크 · 나머지)과 rerank 토큰만 잰다(사전 등록 #28)')
     ap.add_argument('--out', help='결과 JSON 경로(저장소 루트 기준). 기본 evals/results/retrieval/service_r1_<날짜>.json')
     ap.add_argument('--prereg', default='#26', help='meta에 적을 사전 등록 번호')
     ap.add_argument('--compare', nargs=2, metavar=('EXACT', 'BITS'), help='측정하지 않고 결과 파일 둘만 견준다(DB · API 안 씀)')
     args = ap.parse_args()
     if args.compare:
         print(json.dumps(compare(*(json.load(open(f, encoding='utf-8')) for f in args.compare)), ensure_ascii=False, indent=1))
+    elif args.stages:
+        stages(args.stages, args.out)
     else:
         main(args.out, args.prereg)

@@ -1,7 +1,7 @@
 """용량 예산에 맞춰 5개 다이오드 분류 문서만 골라 새 폴더에 쓰는 오프라인 도구(서버가 import하지 않는다).
 
-- 역할: 오프라인 CLI(`python -m backend.rag.pipeline.subset`). 서버가 import하지 않는다. manifest·목록 csv·chunks.jsonl·평가 데이터셋을 모두 검증한 뒤, 분류가 CATEGORIES에 드는 문서의 manifest 줄과 카드 줄을
-  <out-dir>/manifest.jsonl·chunks.jsonl로 쓰고 보고서(report.json)에 문서·카드 수, 임베딩 크기 추정(DB 행·TOAST·인덱스 제외), G3 기준 충족 여부를 담는다.
+- 역할: 오프라인 CLI(`python -m backend.rag.pipeline.subset`). 서버가 import하지 않는다. manifest·목록 csv·chunks.jsonl·평가 데이터셋을 모두 검증한 뒤, 분류가 CATEGORIES에 드는 문서의 manifest 줄과 청크 줄을
+  <out-dir>/manifest.jsonl·chunks.jsonl로 쓰고 보고서(report.json)에 문서·청크 수, 임베딩 크기 추정(DB 행·TOAST·인덱스 제외), G3 기준 충족 여부를 담는다.
   정답(gold) PDF가 부분집합에서 빠지면 실패한다. 하나라도 어긋나면 아무것도 쓰지 않는다.
 - 하지 않는 일: 입력 파일 수정, 이미 있는 폴더 덮어쓰기(out-dir은 새 폴더여야 한다), DB 접근, 임베딩. 적재는 `ingest.py`.
 - 출처: docs/experiments/corpus-storage-budget.md (G3 기준), SPEC.md 6절
@@ -61,7 +61,7 @@ def select_subset(manifest, catalog, chunks, dataset, out_dir):
     """입력을 모두 검증한 뒤 새 출력 폴더에 부분집합을 쓰고 보고서 사전을 돌려준다.
 
     입력: manifest·catalog·chunks·dataset 파일 경로, out_dir(아직 없는 폴더).
-    주의: 출력 폴더가 있거나 입력을 덮을 때, 카테고리·카드·정답 PDF가 어긋날 때 ValueError. 쓰다 실패하면 폴더를 지우고 다시 올린다.
+    주의: 출력 폴더가 있거나 입력을 덮을 때, 카테고리·청크·정답 PDF가 어긋날 때 ValueError. 쓰다 실패하면 폴더를 지우고 다시 올린다.
     """
     out = Path(out_dir)
     if out.exists() or out.is_symlink():
