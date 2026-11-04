@@ -85,11 +85,11 @@ SojaFit (proj3-b)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
 │   │   └── mouser.py       <- Mouser 가격·재고 조회, 응답은 저장하지 않음(ADR 0009, 확장 단계) (예정)
-│   ├── web/                <- 같은 출처 로그인·질문 화면과 앞으로의 입력·승인·견적 화면
+│   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
 │   │   ├── WEB.md          <- 폴더 설명
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
 │   │   ├── templates/      <- 화면 HTML 템플릿
-│   │   │   └── login.html  <- 같은 출처 로그인·비저장 질문·로그아웃 화면
+│   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
 │   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
@@ -185,7 +185,6 @@ SojaFit (proj3-b)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_health.py  <- /health 응답
-│   │   ├── test_question.py <- 질문 API 인증 경계와 로그인 화면 확인
 │   │   └── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명

@@ -562,3 +562,27 @@ def test_login_purges_expired_attempts_and_sessions_before_recording(monkeypatch
     kinds = [s.split()[0] + " " + s.split()[2] for s in statements]
     assert kinds.index("DELETE auth_login_attempts") < kinds.index("INSERT auth_login_attempts")
     assert any(s.startswith("DELETE FROM auth_sessions WHERE expires_at") for s in statements)
+
+
+def test_login_page_has_no_question_controls():
+    response = TestClient(app).get("/login")
+    assert response.status_code == 200
+    assert 'id="login-form"' in response.text
+    assert 'id="question-form"' not in response.text
+
+
+def test_question_endpoint_is_not_exposed(monkeypatch):
+    class Graph:
+        def invoke(self, state):
+            return {"answer": "answer"}
+
+    monkeypatch.setattr("backend.main.get_question_graph", lambda: Graph(), raising=False)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    app.dependency_overrides[auth.current_user] = lambda: (17, "user")
+    try:
+        response = TestClient(app).post(
+            "/api/ask", json={"question": "What is SS34?"}, headers={"Origin": "http://testserver"}
+        )
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 404

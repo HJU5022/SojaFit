@@ -730,3 +730,11 @@
 - 검증: `uv run --no-sync pytest -q tests/api -p no:cacheprovider` (`.venv/Scripts/uv.exe` 사용) 결과 `30 passed, 16 skipped`. 격리 인증 DB가 없어 DB 통합 테스트 16건은 skip이다. 샌드박스는 Windows TestClient socketpair 및 uv 잠금/캐시 쓰기를 막아 해당 표준 명령은 로컬 권한으로 실행했다. `git diff --check` 통과(작업기록의 LF→CRLF 경고만 표시).
 - 전체 테스트 추가 확인: `uv run --no-sync pytest -q -p no:cacheprovider`는 `277 passed, 27 skipped, 1 failed`였다. 유일한 실패는 `tests/evals/test_frozen_evals.py::test_frozen_files_unchanged`로, Windows 체크아웃의 CRLF 바이트가 FROZEN의 LF SHA-256과 달랐다. `HEAD:evals/dataset_v2.jsonl`의 해시는 기대값과 일치하고, 작업 파일을 LF 정규화한 해시도 기대값과 일치했다. 평가 파일은 수정하지 않았다. 해당 한 검사를 제외한 나머지는 `277 passed, 27 skipped, 1 deselected`였다.
 - 확인하지 않은 것: 브라우저·Cloud Run 요청에서의 검증, 서비스 DB 세션 만료 실측, 로그/추적 보관 정책, DB 통합 테스트.
+
+## 2026-11-05 로그인 범위에서 질문 API 제거
+- 사용자 결정에 따라 로그인 기능의 범위를 로그인·세션 확인·로그아웃으로 축소했다. 직전 커밋 `58c6bf6`은 유지하고, 후속 커밋에서 `/api/ask`와 그래프 연결을 제거한다.
+- 로그인 화면에서 질문 입력·답 영역과 요청 코드를 제거하고, 로그인된 세션 상태와 로그아웃만 표시한다. `tests/api/test_question.py`를 제거하고, `tests/api/test_auth.py`에 `/api/ask` 미노출(404)과 질문 폼 미표시 회귀 검사를 추가했다.
+- `SOJAFIT.md`, backend/web 문서, API 테스트 안내와 로그인 작업계획을 현재 범위에 맞게 갱신했다. 작업계획에는 이전 질문 시연 결정을 과거 검토 이력으로 표시했다.
+- TDD 회귀 확인: 구현 전 두 새 검사가 기존 동작에서 실패했다(질문 UI 표시, `/api/ask` 200). 제거 후 두 검사 `2 passed`. 전체 API 테스트 `25 passed, 16 skipped`; 격리 DB 통합 테스트 16건은 실행하지 않았다.
+- 저장소 테스트는 동결셋 원시 해시 검사를 제외하고 `272 passed, 27 skipped, 1 deselected`. Windows 체크아웃의 CRLF와 FROZEN LF 해시 불일치는 이전 점검에서 확인했으며 동결 평가 파일은 수정하지 않았다.
+- 미확인: 실제 브라우저 로그인·로그아웃, Cloud Run, 서비스 DB. 검색·LLM은 이번 범위에서 호출하지 않는다.
