@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-04 임베딩 선정 실측 원시 결과와 해석 문서를 저장소에 올린다
+- 한 일: 저장소 밖(`전자_데이터시트/evidence/`)에만 있던 임베딩 선정 실측을 트리 규칙에 맞춰 올렸다. 원시 결과: 임베딩 격자 본평가 78칸·카드 임베딩 기록 6개·리랭크 캐시(`evals/results/embedding/grid_*`), 검색 층별 재측정 0~4층·요약·최종 조합(`evals/results/retrieval/retrieval_layer*`, `retrieval_layers_*`), 비트 검색 3개(`scripts/results/bit_search/`). 해석: `docs/research/`에 문서 3개. `EVAL_REPORT.md` 1-3절에 원시 위치를 적고 1-4절(D3 #24, R1 #25, 비트 검색, 서비스 반영 #26·#27)을 더했다.
+- 바꾼 파일: 위 결과 파일 18개와 문서 3개, `SOJAFIT.md`(트리 줄), `evals/EVALS.md`, `scripts/SCRIPTS.md`, `docs/research/RESEARCH.md`, `EVAL_REPORT.md`, 이 파일
+- 실행한 명령과 결과: 올릴 파일에서 키·비밀번호·절대 경로 패턴을 검색해 0건(`embed.py`의 로컬 기본 DB 접속 글은 스크립트라 올리지 않음). `uv run --frozen pytest tests/repo -q`는 5 passed. 원시 결과 합계 약 4.5MB.
+- 확인 못 한 것: 원시 JSON 안의 값과 문서 표를 하나씩 다시 대조하지 않았다(표는 위키 원장과 원본 README에서 옮김). 푸시는 하지 않았다.
+- 올리지 않은 것: 실행 스크립트(`embed.py`, `grid.py`, `bq_exp.py`, `local.py`, `check_db.py`, `hf_*.py`)와 Dockerfile, 질문 벡터·카드 벡터(`.npz`/`.npy`, 약 2.8GB), 78칸 비교 그래프(`compare.html`). `hnsw_exp`(405MB)는 임베딩 선정이 아니라 제외했다.
+- 다음 할 일: 스크립트를 저장소에 둘지 정한다(HNSW 실험 선례는 저장소 밖).
+
 ## 2026-11-04 그래프 평가 실행기가 문항별 지표를 레포에 남기게 한다(D4 기준 점수 준비)
 - 목적: D4 단일 기준 점수와 D5 단일 · 멀티 비교를 같은 형식으로 남기고, 평가자가 레포에서 숫자를 맞춰 볼 수 있게 한다(가이드 v5 제출물 "평가셋과 원시 결과, 재현 명령은 레포 내"). 지금까지는 Langfuse에만 남았다.
 - 바꾼 파일: `evals/runners/run_graph.py`(`result_row` · `summarize` · `default_out`, 결과 파일 `evals/results/graph/graph_<평가셋>_<날짜>.json`, `--out`, 표준출력에 5지표), `tests/evals/test_run_graph.py`(시험 4개 추가, main을 Langfuse · LLM · DB 없이 가짜로 돌리는 시험 포함), `evals/EVALS.md`(결과 폴더에 `graph/` · D3 결과 파일 9개 설명), `evals/runners/RUNNERS.md`, 이 파일.
