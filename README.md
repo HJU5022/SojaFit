@@ -163,7 +163,8 @@ SojaFit/
 | 하정운(조장) | [@HJU5022](https://github.com/HJU5022) | 오케스트레이터 · 기획·SPEC · 데이터시트 수집·검색 · LangGraph 에이전트 · 평가셋·정답 판정 · 서비스·배포 조율 |
 | 심태현 | [@SimonTH-0912](https://github.com/SimonTH-0912) | 서비스·운영 |
 | 오세창 | [@sechang405-maker](https://github.com/sechang405-maker) | 검색·데이터 |
-| 김재훈 | [@nanocode00](https://github.com/nanocode00) | 평가·문서 · 정답 판정 |
+
+김재훈([@nanocode00](https://github.com/nanocode00))은 2026-11-06 개인 사정으로 팀을 탈퇴했습니다. 탈퇴 전 평가셋 v1 · v2 정답의 2차 판정에 참여했습니다.
 
 ### 일정
 
