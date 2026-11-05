@@ -40,6 +40,8 @@ Value names (each name means the same thing in every role that lists it; voltage
 - `i_max`: maximum forward (load) current through the diode
 - `i_coil`: relay coil steady current
 - `i_z`: Zener current
+- `vz_min`: lowest Zener voltage the user requires (V), e.g. the low end of "3.42–3.78 V"
+- `vz_max`: highest Zener voltage the user requires (V), e.g. the high end of "3.42–3.78 V"
 - `i_short`: short-circuit current of the supply
 - `i_fault`: fault current into the input pin
 - `i_out`: maximum output current of the converter
