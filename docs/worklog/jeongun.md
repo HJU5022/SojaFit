@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 노드별 모델 표와 호출 경로(시험까지)
+- 한 일: 노드마다 쓸 모델을 `NODE_MODELS` 표 하나로 정하게 했다(시작값: `supervisor` · `grade` Luna, 나머지 Haiku, 최종 아님). `_chat_model(model)`이 모델별로 객체를 캐시하고 Luna에는 `temperature`를 보내지 않는다. `node_chat`이 그 노드의 모델로 부르고, Langfuse 등록 설정(`node_config`)과 검사도 노드별로 바꿨다. 환경변수 `LLM_MODEL`은 전 노드 덮어쓰기로 남겼다.
+- 바꾼 파일: `backend/services/llm.py`, `backend/services/langfuse_prompts.py`, `backend/prompts/PROMPTS.md`, 시험 `tests/services/test_llm.py` · `tests/services/test_langfuse_prompts.py` · `tests/evals/test_skill_pair.py`(가짜 모델 함수가 모델 이름 인자를 받게)
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 447 passed, 27 skipped. 새 시험 6개를 먼저 쓰고 실패를 확인한 뒤 구현.
+- 확인 못 한 것: 진짜 Luna 호출은 아직 하지 않았다(`temperature` 생략, 출력 상한 이름이 실제로 통하는지는 가짜 모델 시험만). Langfuse에는 아직 새 설정으로 등록하지 않았다(`grade` · `supervisor`가 새 버전이 된다). 기본값이 바뀌어 단일 그래프의 `grade`도 Luna를 쓰므로, 11-04/#35 기준선을 재현하려면 `LLM_MODEL=anthropic/claude-haiku-5.5`를 정해야 한다. 평가 실행기 결과 파일의 `model`은 아직 노드별로 적지 않는다.
+- 다음 할 일: 진짜 Luna 한두 호출 확인 → Langfuse 새 설정 등록 → 평가 실행기에 노드별 모델 기록과 `--multi`.
+
 ## 2026-11-05 코퍼스 확인 MCP 도구(`check_corpus`)와 사실 확인 연결
 - 한 일: 품번 · 개정 코드가 코퍼스에 있는지 있음/없음만 알려 주는 MCP 도구 `check_corpus`를 서버에 더했다(도구 1개로 합침, 판단하지 않음). 클라이언트 `StdioMcpRetriever.check`(같은 세션)와 응답 검증 `decode_check_result`, 사실 확인 노드용 `make_lookup(check)`를 만들었다. 코퍼스 목록은 `retrieve.corpus_known()`(품번 색인 + 문서 파일 이름의 개정 코드).
 - 바꾼 파일: `backend/mcp_skill/mcp_server/server.py`, `backend/rag/retrieve.py`, `backend/graph/mcp_retriever.py`, `backend/multi_agent/facts.py`, 시험 3개(`tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/multi_agent/test_facts_lookup.py`), `SPEC.md` 8.7, 폴더 설명과 트리
