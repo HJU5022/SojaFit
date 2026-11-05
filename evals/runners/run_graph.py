@@ -72,6 +72,10 @@ def result_row(item: dict, state: dict, scores: dict, trace_url: str) -> dict:
            "routed_type": scores["question_type"][0]}
     row.update({name: value for name, (value, _, _) in scores.items() if name != "question_type"})
     row["passed"] = list(state.get("passed") or [])  # 채점을 통과한 청크 id. 원문은 DB에서 id로 다시 볼 수 있다
+    if state.get("judgement"):
+        from evals.runners.score_answer import judgement_parts
+        # [왜] 판정이 정답 판정과 맞는지 실행 뒤에 세려면 후보별 판정 코드가 남아야 한다(답 글은 남기지 않는다)
+        row["verdicts"] = [[p.get("part"), p.get("verdict")] for p in judgement_parts(state["judgement"])]
     row["trace_url"] = trace_url
     return row
 

@@ -44,6 +44,23 @@ def _used_and_fake(state: dict, answer: str) -> tuple[list[str], list[str], dict
     return sorted(cited & valid), sorted(cited - valid), cards
 
 
+def judgement_parts(judgement: dict) -> list[dict]:
+    """판정 결과에서 판정한 후보 목록(판정은 results, 찾기는 보여 준 후보 + 확인 안 됨 후보)."""
+    return judgement.get("results") or [*(judgement.get("shown") or []), *(judgement.get("unverified") or [])]
+
+
+def judgement_locations(judgement: dict) -> list[list]:
+    """판정 답이 인용한 (문서, 쪽) 목록. [왜] 판정 답은 [n] 청크 번호 대신 사양 표 행의 문서 · 쪽 · 표 · 행을 인용한다."""
+    locs = []
+    for part in judgement_parts(judgement):
+        for c in part.get("checks") or []:
+            cite = c.get("citation") or {}
+            loc = [cite.get("document"), cite.get("page")]
+            if cite and loc not in locs:
+                locs.append(loc)
+    return locs
+
+
 def is_refusal_response(state: dict, used: list[str] | None = None) -> bool:
     """그래프 응답이 거절인지 판별한다.
 
@@ -80,6 +97,10 @@ def score_item(item: dict, state: dict) -> dict:
             if loc not in cited_locs:
                 cited_locs.append(loc)
     cited_netlist = "넷리스트" in used
+    if (state.get("check") or {}).get("judgement"):
+        # 판정 길 답(코드 틀): 사양 표 인용 위치를 [n] 인용 위치와 같은 방식으로 정답 (PDF, 쪽)과 대조한다(사전 등록 #39 · #40)
+        cited_locs = judgement_locations(state.get("judgement") or {})
+        used = ["사양 표"] if cited_locs else []
 
     kind = item["kind"]
     if kind == "relevant":
