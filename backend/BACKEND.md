@@ -10,6 +10,7 @@
 - `__init__.py` — 패키지 표시
 - `main.py` — FastAPI 진입점. `/health`, 같은 출처 화면(`/login`), 로그인 API(`/api/auth/*`), 관리자 API(`/api/admin/users`), 비저장 질문 API(`/api/ask`). 인증 처리는 `auth.py`에 맡깁니다
 - `auth.py` — scrypt 비밀번호, DB 세션, 로그인 잠금, 관리자 계정 관리, 사전 계정 생성·비활성 일반 계정 삭제 명령(`python -m backend.auth`). 대화·장기 기억 저장은 연결하지 않습니다
+- `multi_agent/` — D5 멀티 에이전트(Supervisor + 서브에이전트). D4 단일 그래프(`graph/`)와 분리. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)
 - `graph/` — LangGraph 그래프: 상태, 노드, 조립, 사용자별 장기 기억 규칙(`memory.py`). [GRAPH.md](graph/GRAPH.md)
 - `prompts/` — 노드가 LLM에 보내는 프롬프트 원문과 버전 기록. [PROMPTS.md](prompts/PROMPTS.md)
 - `rag/` — 하이브리드 검색(`retrieve.py`), 벡터 열 형식·DB 용량 점검(`storage.py`), 오프라인 데이터시트 도구(`pipeline/`). [RAG.md](rag/RAG.md)

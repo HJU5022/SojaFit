@@ -49,6 +49,9 @@ SojaFit (proj3-b)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
+│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
+│   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
+│   │   └── __init__.py     <- 패키지 표시
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── netlist.py      <- 넷리스트에서 대상 부품 주변 연결 읽기 (예정, 후보 이름)
@@ -236,6 +239,8 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_build.py  <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
 │   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
+│   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
+│   │   └── MULTI_AGENT.md  <- 폴더 설명
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
@@ -387,6 +392,7 @@ SojaFit (proj3-b)
 |---|---|---|
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/graph/` | [GRAPH.md](backend/graph/GRAPH.md) | 에이전트 |
+| `backend/multi_agent/` | [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) | 에이전트 |
 | `backend/prompts/` | [PROMPTS.md](backend/prompts/PROMPTS.md) | 에이전트 |
 | `backend/rag/` | [RAG.md](backend/rag/RAG.md) | 검색·데이터 |
 | `backend/services/` | [SERVICES.md](backend/services/SERVICES.md) | 서비스·운영 |
@@ -410,6 +416,7 @@ SojaFit (proj3-b)
 | `tests/` | [TESTS.md](tests/TESTS.md) | 각 모듈 담당 |
 | `tests/api/` | [API.md](tests/api/API.md) | 서비스·운영 |
 | `tests/graph/` | [GRAPH.md](tests/graph/GRAPH.md) | 에이전트 |
+| `tests/multi_agent/` | [MULTI_AGENT.md](tests/multi_agent/MULTI_AGENT.md) | 에이전트 |
 | `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |
 | `tests/services/` | [SERVICES.md](tests/services/SERVICES.md) | 서비스·운영 |
 | `tests/evals/` | [EVALS.md](tests/evals/EVALS.md) | 평가·문서 |
