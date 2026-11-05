@@ -180,6 +180,7 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프(`--multi`면 멀티 에이전트)로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── run_judge_dev.py  <- 판정 연습 문제를 멀티 그래프로 돌려 역할 정답률·판정 일치율을 results/judge/에 저장
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
 │   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
@@ -308,7 +309,8 @@ SojaFit (proj3-b)
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
 │   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
-│   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출·멀티 실행 점수·노드별 모델 기록·그래프 조립(가짜)
+│   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출·멀티 실행 점수·노드별 모델 기록·그래프 조립·인터럽트 재개(가짜)
+│   │   ├── test_run_judge_dev.py  <- 판정 연습 문제 채점(역할·판정 일치, 찾기는 보여 준 후보 집합)
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
 │   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
