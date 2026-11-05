@@ -11,6 +11,7 @@
 불충족으로 판정하지 않는다. 시험 조건(test_condition)이 다른 행도 같은 코드면 함께 비교하므로, 조건 차이는 judge가 본다.
 """
 import os
+import re
 from urllib.parse import unquote, urlparse
 
 # 5.7·ADR 0013의 17개 + PACKAGE(패키지 이름, text_value)
@@ -54,7 +55,7 @@ def find_candidates(conn, conditions, category=None, package=None, limit=50):
     - conditions: [{"code": "VRRM", "gte": 40}, {"code": "VZ", "slot": "min", "gte": 3.42}, ...]. 값은 SI 단위(V, A, W, s, F, degC).
       slot은 min|typ|max(기본 max, CJ는 typ). gte(이상)·lte(이하) 중 하나 이상, 둘 다 주면 둘 다 채워야 한다(경계 포함).
     - 한 조건은 그 품번의 행 하나 이상이 채우면 된다. 조건마다 다른 행이어도 된다(제너 VZ 최소 행과 최대 행).
-    - category: 분류 이름과 같아야 한다(예: zener-diode). package: 패키지 이름에 그 글자가 들어 있으면 된다(대소문자 무시, 'SMA'는 SMAF에도 걸림).
+    - category: 분류 이름과 같아야 한다(예: zener-diode). package: 패키지 이름이 같아야 한다(대소문자 · 하이픈 · 공백 무시, 'SMA'는 SMAF에 걸리지 않음).
     - 반환: [{"part", "category", "packages", "matches": 조건을 채운 행(part_specs와 같은 모양)}]. 값 비교는 행 거르기뿐이고 판정이 아니다.
     """
     checks, params = [], []
@@ -70,10 +71,11 @@ def find_candidates(conn, conditions, category=None, package=None, limit=50):
         sql += ' AND s.category = %s'
         params.append(category)
     if package is not None:
-        # strpos: LIKE와 달리 입력의 %·_를 와일드카드로 읽지 않는다
+        # [왜] 이름이 같을 때만 같은 패키지다. 부분 일치면 SMA가 다른 패키지 SMAF까지 잡는다(11-05, 564개 중 36개)
+        # [왜] 영문 · 숫자만 남겨 비교한다. 데이터시트마다 'DO-214AC' · 'DO214AC'처럼 하이픈을 다르게 적는다
         sql += (" AND EXISTS (SELECT 1 FROM part_specifications p WHERE upper(p.part_number) = upper(s.part_number)"
-                " AND p.parameter_code = 'PACKAGE' AND strpos(upper(p.text_value), upper(%s)) > 0)")
-        params.append(package)
+                " AND p.parameter_code = 'PACKAGE' AND regexp_replace(upper(p.text_value), '[^A-Z0-9]', '', 'g') = %s)")
+        params.append(re.sub(r'[^A-Z0-9]', '', package.upper()))
     parts = {}  # 품번 대문자 → 결과 한 개
     met = {}  # 품번 대문자 → 채운 조건 번호 집합
     for r in conn.execute(sql + ' ORDER BY s.parameter_code, s.id', params):

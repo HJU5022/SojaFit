@@ -325,6 +325,13 @@ def test_part_group_found_in_conditions_cell():
     assert [(r['part'], r['maximum_value']) for r in rows] == [('SK52BH', pytest.approx(500e-6))]
 
 
+def test_lowercase_words_are_not_package_names():
+    """'Case: SOD-123 small outline package'의 small은 SMA 패키지가 아니다(11-05 SMALL 59건). 패키지 이름은 대문자로 적힌다."""
+    assert specs.PKG.findall('Bend lead SOD-123 small outline plastic package') == ['SOD-123']
+    assert specs.PKG.findall('SMA (DO-214AC), SMAF, SMB') == ['SMA', 'DO-214AC', 'SMAF', 'SMB']
+    assert specs.PKG.findall('MiniMELF, absolute maximum') == ['MiniMELF']
+
+
 def test_packages_are_doc_level():
     doc = 'S1A SERIES_A01.pdf'
     out = specs.build([

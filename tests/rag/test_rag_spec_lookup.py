@@ -184,11 +184,14 @@ def test_part_specs_case_insensitive_with_citation(conn):
 
 
 def test_find_candidates_ratings_and_package(conn):
-    """VRRM ≥ 40 V, IF_AV ≥ 1 A(자리 없으면 최대). 패키지는 대소문자 무시 부분 일치(SMA는 SMAF에도 걸린다)."""
+    """VRRM ≥ 40 V, IF_AV ≥ 1 A(자리 없으면 최대). 패키지는 이름이 같을 때만(대소문자 · 하이픈 무시). SMA는 SMAF에 걸리지 않는다."""
     cond = [{'code': 'VRRM', 'gte': 40}, {'code': 'IF_AV', 'gte': 1.0}]
     assert [p['part'] for p in spec_lookup.find_candidates(conn, cond)] == ['SS34', 'SS36']
     found = spec_lookup.find_candidates(conn, cond, package='sma')
     assert [p['part'] for p in found] == ['SS34']
+    assert [p['part'] for p in spec_lookup.find_candidates(conn, [{'code': 'VRRM', 'lte': 20}], package='smaf')] == ['SS32']
+    assert spec_lookup.find_candidates(conn, [{'code': 'VRRM', 'lte': 20}], package='sma') == []  # SMAF는 SMA가 아니다
+    assert [p['part'] for p in spec_lookup.find_candidates(conn, cond, package='DO214AC')] == ['SS34']  # 하이픈 무시
     assert found[0]['category'] == 'schottky-rectifier' and found[0]['packages'] == ['SMA', 'DO-214AC']
     assert sorted(m['code'] for m in found[0]['matches']) == ['IF_AV', 'VRRM']
     assert found[0]['matches'][0]['citation']['document'] == RECT

@@ -84,8 +84,9 @@ PARTLIKE = re.compile(r'(?=.*[A-Z])(?=.*\d)(?!IEC|JESD|AEC|MIL|EIA|JEDEC)[A-Z0-9
 # 출처 우선순위: 품번 열·품번 한 줄(part) > 품번 묶음이 적힌 행의 값 칸(group) > 문서 전체에 붙는 값 칸(value) > KEY PARAMETERS(key, 계열 요약)
 # [왜] 파서가 둘째 묶음 행의 품번 칸을 잃으면(HERF1001G SERIES 21·22행) 그 행이 모든 품번에 붙는다. 품번을 적은 행이 이긴다
 LEVELS = ('part', 'group', 'value', 'key')
-PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|SMA\w*|SMB\w*|SMC\w*|SMF\w*|SMP\w*|DO-?\d+\w*|TO-?\d+\w*|MiniMELF|MicroMELF|'
-                 r'MELF|D2PAK|DPAK|DFN\w*|R-?\d\b|GBU\w*|KBP\w*|KBJ\w*|GBJ\w*|ABS\w*|MBS\w*|MBF\w*|TS\w*FL|SC-\d+\w*|'
+# [주의] 글자로만 된 패키지 이름(SMA · ABS 등)은 대소문자를 구분한다((?-i:...)). 'Case: SOD-123 small outline'의 small이 SMA로 잡혔다(11-05, 59건)
+PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:SMA\w*|SMB\w*|SMC\w*|SMF\w*|SMP\w*)|DO-?\d+\w*|TO-?\d+\w*|MiniMELF|MicroMELF|'
+                 r'MELF|D2PAK|DPAK|DFN\w*|R-?\d\b|(?-i:GBU\w*|KBP\w*|KBJ\w*|GBJ\w*|ABS\w*|MBS\w*|MBF\w*)|TS\w*FL|SC-\d+\w*|'
                  r'PDI\w*|SOP-?\d+)', re.I)
 # 대조표에서 분류별로 보여 줄 핵심 코드. 'VRRM|VR'은 VRRM이 없으면 VR을 본다
 KEY_CODES = {'zener-diode': ['VZ', 'PD'], 'tvs': ['VRWM', 'VBR', 'VC', 'IPP', 'PPPM'],
