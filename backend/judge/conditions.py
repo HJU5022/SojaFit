@@ -87,35 +87,67 @@ def check_rule(rid: str, rule: dict) -> None:
     if any(kind not in KINDS for kind in known.values()):
         raise ValueError(f'{rid}: inputs 종류는 {KINDS} 중 하나')
     for cond in rule['conditions']:
-        codes = cond['code'] if isinstance(cond['code'], list) else [cond['code']]
-        if cond.get('tier') not in TIERS or cond.get('op') not in OPS or any(c not in CODES for c in codes):
-            raise ValueError(f'{rid}: 조건 {cond} 의 tier · op · code가 정해진 값 밖')
-        if (cond['op'] == 'within') != (isinstance(cond['basis'], list) and len(cond['basis']) == 2):
-            raise ValueError(f'{rid}: within은 [하한식, 상한식] 두 개를 쓴다')
-        for basis in _bases(cond) + ([cond['default']] if cond.get('default') else []):
-            unknown = names(basis) - set(known)
-            if unknown:
-                raise ValueError(f'{rid}: 기준식 {basis!r} 의 {sorted(unknown)} 가 inputs에 없음')
-        for key in ('when', 'unless', 'at'):
-            if cond.get(key) and cond[key] not in known:
-                raise ValueError(f'{rid}: {key}={cond[key]} 가 inputs에 없음')
+        if 'any' in cond:
+            # [왜] "A 또는 B" 묶음: 멤버마다 보통 조건처럼 검사한다. 층 · 발동 조건(tier · when · unless)은 묶음에만 쓴다
+            members = cond['any'] if isinstance(cond['any'], list) else []
+            if len(members) < 2 or any(k in m for m in members for k in ('tier', 'when', 'unless', 'any')):
+                raise ValueError(f'{rid}: any는 멤버 둘 이상이고, tier · when · unless는 묶음에만 쓴다')
+            for key in ('when', 'unless'):
+                if cond.get(key) and cond[key] not in known:
+                    raise ValueError(f'{rid}: {key}={cond[key]} 가 inputs에 없음')
+            for m in members:
+                _check_cond(rid, {**m, 'tier': cond.get('tier')}, known)
+        else:
+            _check_cond(rid, cond, known)
     for code, way in (rule.get('major') or {}).items():
         if code not in CODES or way not in ('higher', 'lower'):
             raise ValueError(f'{rid}: major {code}={way} 가 정해진 값 밖')
 
 
+def _check_cond(rid: str, cond: dict, known: dict) -> None:
+    """조건 하나(또는 any 묶음의 멤버 하나)의 모양을 검사한다."""
+    codes = cond['code'] if isinstance(cond.get('code'), list) else [cond.get('code')]
+    if cond.get('tier') not in TIERS or cond.get('op') not in OPS or any(c not in CODES for c in codes):
+        raise ValueError(f'{rid}: 조건 {cond} 의 tier · op · code가 정해진 값 밖')
+    if (cond['op'] == 'within') != (isinstance(cond['basis'], list) and len(cond['basis']) == 2):
+        raise ValueError(f'{rid}: within은 [하한식, 상한식] 두 개를 쓴다')
+    for basis in _bases(cond) + ([cond['default']] if cond.get('default') else []):
+        unknown = names(basis) - set(known)
+        if unknown:
+            raise ValueError(f'{rid}: 기준식 {basis!r} 의 {sorted(unknown)} 가 inputs에 없음')
+    for key in ('when', 'unless', 'at'):
+        if cond.get(key) and cond[key] not in known:
+            raise ValueError(f'{rid}: {key}={cond[key]} 가 inputs에 없음')
+
+
+def _asks(cond: dict, present: set[str]) -> list[str]:
+    """조건 하나를 계산하는 데 아직 없는 회로 값(기준식 · 시험 조건). 기본값이 있으면 기준식 값 대신 기본값 식의 값을 묻는다."""
+    want = [n for b in _bases(cond) for n in sorted(names(b)) if n not in present]
+    if want and cond.get('default'):
+        # [왜] 기준식 값을 모르면 기본값으로 판정한다. 기본값 식도 회로 값을 쓰면(R14 v_dss · R15 v_bus) 그 값은 있어야 판정된다
+        want = [n for n in sorted(names(cond['default'])) if n not in present]
+    if cond.get('at') and cond['at'] not in present:
+        want.append(cond['at'])
+    return want
+
+
 def needed(rule: dict, present: set[str]) -> list[str]:
-    """아직 없는 회로 값: 필수 조건의 기준식 · 시험 조건 값, 조건부의 발동 여부(when). 기본값(default)이 있으면 묻지 않는다."""
+    """아직 없는 회로 값: 필수 조건의 기준식 · 시험 조건 값, 조건부의 발동 여부(when).
+
+    기본값(default)이 있는 조건은 기준식 값이 없을 때 기본값 식의 값만 묻는다. "A 또는 B" 묶음(any)은 지금 값으로
+    계산할 수 있는 멤버가 없을 때만 첫 멤버의 값을 묻는다(질문을 짧게).
+    """
     want = []
     for cond in rule['conditions']:
         if cond['tier'] == 'conditional':
             if cond.get('when') and cond['when'] not in present:
                 want.append(cond['when'])
             continue
-        if not cond.get('default'):
-            want += [n for b in _bases(cond) for n in sorted(names(b)) if n not in present]
-        if cond.get('at') and cond['at'] not in present:
-            want.append(cond['at'])
+        if 'any' in cond:
+            asks = [_asks(m, present) for m in cond['any']]
+            want += asks[0] if all(asks) else []
+        else:
+            want += _asks(cond, present)
     return list(dict.fromkeys(want))
 
 

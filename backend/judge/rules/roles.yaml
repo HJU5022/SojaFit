@@ -2,7 +2,9 @@
 # 원본: 저장소 밖 전자_데이터시트/역할-후보-20.md · 역할-판정-2차의견-2026-11-05.md · 보류-5개-규칙안-2026-11-06.md(판정 하정운)
 # - 하지 않는 일: 계산 · 비교(backend/judge/conditions.py · verdict.py). 이 파일은 규칙만 적는다.
 # - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
-#   unless(flag가 참이면 꺼짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식). 쇼트키 계열의 TRR 면제는 판정 노드가 한다.
+#   unless(flag가 참이면 꺼짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
+#   any(원본의 "A 또는 B": [{code, op, basis, at?}, …] 중 하나라도 통과하면 통과, tier · when · unless는 묶음에 쓴다).
+#   쇼트키 계열의 TRR 면제는 판정 노드가 한다.
 # - 회로 값 이름(읽기 출력 칸과 같은 목록, 같은 이름은 모든 역할에서 같은 뜻 · 종류)
 #   전압: v_in_max 입력(전원) 최대 · v_in_min 입력 최소 · v_reverse_max 반대쪽 전원 최대(R02) · v_coil 코일 전압 · v_ac_rms AC 실효값
 #         v_line_max 보호하는 넷의 정상 최대 · v_cc 로직 전원 · v_dd_min 부하 최소 VDD · v_logic_max 양쪽 로직 전압 중 큰 값
@@ -50,9 +52,8 @@ R03:
   inputs: {v_coil: number, i_coil: number, pulse_test: condition, pwm: flag}
   conditions:
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_coil * kV"}
-    # [왜] IFSM은 질문의 차단 펄스와 시험 파형이 같을 때만 쓴다(정운 판정 R03)
-    # [주의] 원본의 "펄스가 다르면 IF_AV ≥ 코일 전류"는 이 형식에 없다. 펄스 조건을 모르거나 다르면 이 조건은 확인 안 됨이다
-    - {tier: required, code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}
+    # [왜] 원본은 "IF_AV 또는 IFSM ≥ 코일 전류"다. IFSM은 질문의 차단 펄스와 시험 파형이 같을 때만 쓰고, 아니면 IF_AV로 본다(정운 판정 R03)
+    - {tier: required, any: [{code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}, {code: IF_AV, op: ">=", basis: "i_coil"}]}
     - {tier: conditional, code: TRR, op: "<=", basis: "orig.TRR", when: pwm}
   major: {VRRM: higher, IF_AV: higher, IFSM: higher}
   cautions: [감쇠 시간 · 반복 횟수(반복 펄스 허용량은 그래프라 표에 없음)]
@@ -101,9 +102,8 @@ R06:
     - {tier: required, code: VRWM, op: ">=", basis: "v_line_max"}
     # [왜] VC · IPP · PPPM은 같은 시험 파형끼리만 비교한다. 파형을 모르면 확인 안 됨(정운 판정 R06)
     - {tier: required, code: VC, op: "<=", basis: "orig.VC", at: surge_test}
-    # [주의] 원본은 "PPPM 또는 IPP ≥ 원래 값"이다. 대체 코드는 기준식 하나를 같이 써서 둘 다 필수로 둔다(더 엄격)
-    - {tier: required, code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test}
-    - {tier: required, code: IPP, op: ">=", basis: "orig.IPP", at: surge_test}
+    # [왜] 원본은 "PPPM 또는 IPP ≥ 원래 값"이다
+    - {tier: required, any: [{code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test}, {code: IPP, op: ">=", basis: "orig.IPP", at: surge_test}]}
     - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
     - {tier: conditional, code: VESD, op: ">=", basis: "orig.VESD", when: external_port}
   major: {PPPM: higher, IPP: higher, VC: lower}
@@ -166,9 +166,8 @@ R10:
     # [왜] VF @ 풀업 전류 ≤ 로직 여유. 못 얻으면 원래 VF
     - {tier: required, code: VF, op: "<=", basis: "v_logic_margin", default: "orig.VF", at: vf_test}
     - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: large_pullup}
-    # [주의] 원본은 "CJ 또는 TRR ≤ 원래 값"이다. 원래 값이 코드마다 달라 둘 다 둔다(더 엄격)
-    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}
-    - {tier: conditional, code: TRR, op: "<=", basis: "orig.TRR", when: fast_signal}
+    # [왜] 원본은 "CJ 또는 TRR ≤ 원래 값"이다(UART · SPI처럼 빠른 신호일 때)
+    - {tier: conditional, when: fast_signal, any: [{code: CJ, op: "<=", basis: "orig.CJ"}, {code: TRR, op: "<=", basis: "orig.TRR"}]}
   major: {VRRM: higher}
   cautions:
     - 누설로 High가 낮아지는 양 = 다이오드 수 × IR × 풀업 저항(풀업 저항 값으로 사람이 계산)
@@ -228,9 +227,8 @@ R14:
   # [왜] v_clamp는 스너버 커패시터 전압(AN-4147의 Vsn)이다. 드레인 최대 전압으로 읽으면 입력을 두 번 더한다(정운 11-06 채택)
   inputs: {v_in_max: number, v_clamp: number, v_dss: number, i_d: number, f_over_100khz: flag}
   conditions:
-    - {tier: conditional, code: VRRM, op: ">=", basis: "(v_in_max + v_clamp) * 1.5", when: v_clamp}
-    # [주의] 원본은 "클램프 전압을 모르면 VDSS × 1.1"이다. 이 형식에 "모르면"이 없어 늘 필수로 둔다(더 엄격)
-    - {tier: required, code: VRRM, op: ">=", basis: "v_dss * 1.1"}
+    # [왜] 클램프 전압을 알면 (입력 최대 + 클램프 전압) × 1.5, 모르면 스위치 내압 VDSS × 1.1(정운 11-06 채택)
+    - {tier: required, code: VRRM, op: ">=", basis: "(v_in_max + v_clamp) * 1.5", default: "v_dss * 1.1"}
     - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
     - {tier: conditional, code: TRR, op: "<=", basis: "35e-9", when: f_over_100khz}
     # [왜] ID를 못 받으면 AN-4147의 "보통 1 A 정격 초고속 다이오드"를 기본값으로 쓴다
@@ -244,9 +242,8 @@ R15:
   recognize: 애노드 = 게이트 드라이버 VDD·VCC, 캐소드 = VB·HB·BOOT 핀, 커패시터가 VB–VS(SW) 사이
   inputs: {v_bus: number, v_sw_transient: number, i_boot_peak: number, long_high_side: flag, hot_test: condition}
   conditions:
-    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_bus * kV"}
-    # [주의] 원본은 "스위칭 노드 과도 전압을 주면 그 값, 없으면 버스 × 1.25"다. 이 형식에 "없으면"이 없어 둘 다 본다(더 엄격)
-    - {tier: conditional, code: [VRRM, VR], op: ">=", basis: "v_sw_transient", when: v_sw_transient}
+    # [왜] 스위칭 노드 과도 전압을 주면 그 값, 없으면 버스 × 1.25(정운 판정 R15)
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_sw_transient", default: "v_bus * kV"}
     - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
     # [왜] 시동 피크 전류 = (VDD − VF) / Rboot. 부트 저항이 없으면 원래 IFSM
     - {tier: conditional, code: IFSM, op: ">=", basis: "i_boot_peak", default: "orig.IFSM"}

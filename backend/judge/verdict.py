@@ -134,6 +134,32 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original_row
                  citation=r.get('citation'), result='pass' if _margin(cond['op'], value, t) >= 0 else 'fail'), [], note
 
 
+def _check_any(cond: dict, values: dict, conds: dict, rows: list[dict], original_rows: list[dict]) -> tuple[Check, list[str], str]:
+    """"A 또는 B" 묶음(any) → (결과, 빠진 회로 값, 불확실 메모). 멤버 하나라도 통과하면 통과, 모두 계산돼 실패하면 실패, 그 밖은 확인 안 됨."""
+    done = [_check({**m, 'tier': cond['tier']}, values, conds, rows, original_rows) for m in cond['any']]
+    checks = [c for c, _, _ in done]
+    if any(c.result == 'pass' for c in checks):
+        result = 'pass'
+        i = next(k for k, c in enumerate(checks) if c.result == 'pass')
+    else:
+        result = 'fail' if all(c.result == 'fail' for c in checks) else 'unverified'
+        # [왜] 통과가 아니면 TRR 멤버로 알린다. 판정 노드의 쇼트키 면제가 TRR 결과만 보고 묶음을 통과로 바꾸기 때문이다
+        i = next((k for k, c in enumerate(checks) if c.code == 'TRR'), next(k for k, c in enumerate(checks) if c.result == result))
+    why = checks[i].why if result != 'unverified' else ' / '.join(f'{c.code}: {c.why}' for c in checks if c.result == 'unverified')
+    # [왜] 빠진 회로 값은 어느 멤버도 계산할 수 없을 때만 알린다(멤버 하나를 지금 값으로 계산할 수 있으면 묻지 않는 needed와 같음)
+    lacks = [lack for _, lack, _ in done]
+    missing = list(dict.fromkeys(n for lack in lacks for n in lack)) if all(lacks) else []
+    label = ' 또는 '.join(f'{c.code} {c.op} {c.basis}' for c in checks)
+    return checks[i].model_copy(update={'basis': label, 'result': result, 'why': why}), missing, done[i][2]
+
+
+def _name(cond: dict) -> str:
+    """조건 이름(메모용): 첫 코드. "A 또는 B" 묶음이면 멤버 이름을 ' 또는 '로 잇는다."""
+    if 'any' in cond:
+        return ' 또는 '.join(_name(m) for m in cond['any'])
+    return cond['code'] if isinstance(cond['code'], str) else cond['code'][0]
+
+
 def first_values(rows: list[dict]) -> dict[str, float]:
     """행들의 코드별 첫 값. 같은 코드가 여럿이면 표의 첫 행이다."""
     out = {}
@@ -181,11 +207,11 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
         if cond['tier'] == 'conditional' and cond.get('when'):
             trigger = values.get(cond['when'], conds.get(cond['when']))
             if trigger is None:
-                uncertain.append(f"{cond['code'] if isinstance(cond['code'], str) else cond['code'][0]}: {cond['when']} 정보가 없어 이 조건을 빼고 판정")
+                uncertain.append(f"{_name(cond)}: {cond['when']} 정보가 없어 이 조건을 빼고 판정")
                 continue
             if trigger is False:
                 continue
-        check, lack, note = _check(cond, values, conds, rows, original_rows or [])
+        check, lack, note = (_check_any if 'any' in cond else _check)(cond, values, conds, rows, original_rows or [])
         checks.append(check)
         missing += lack
         if note:
@@ -212,8 +238,9 @@ def search_conditions(rule: dict, values: dict) -> list[dict]:
     for cond in rule['conditions']:
         if cond['tier'] != 'required' or cond.get('at') or (cond.get('unless') and values.get(cond['unless']) is True):
             continue
-        if any(C.orig_codes(b) for b in C._bases(cond)):
-            continue  # [왜] 원래 부품 값(orig.*)은 시험 조건이 같은 행끼리 판정에서 본다. 거르기에 쓰지 않는다
+        if 'any' in cond or any(C.orig_codes(b) for b in C._bases(cond)):
+            # [왜] "A 또는 B"는 한 코드로 거를 수 없고, 원래 부품 값(orig.*)은 시험 조건이 같은 행끼리 판정에서 본다
+            continue
         # shortcut: 대체 코드 중 첫 코드(VRRM)로만 거른다. VR만 적은 소신호 부품이 빠지는 사례가 보이면 코드마다 따로 찾아 합친다
         code = cond['code'][0] if isinstance(cond['code'], list) else cond['code']
         t = [C.evaluate(b, values) for b in C._bases(cond)]

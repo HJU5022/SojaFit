@@ -165,6 +165,41 @@ def test_worse_prefers_the_worse_verdict():
     assert V.worse('SPEC_EQUIVALENT', 'NOT_VERIFIED') == 'NOT_VERIFIED'
 
 
+OR_RULE = yaml.safe_load('''
+name: x
+recognize: x
+inputs: {v_in_max: number, i_coil: number, pulse_test: condition}
+conditions:
+  - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+  - {tier: required, any: [{code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}, {code: IF_AV, op: ">=", basis: "i_coil"}]}
+source: x
+''')
+HALF_SINE = {'pulse_test': {'pulse': 0.0083, 'wave': 'half_sine'}}
+
+
+def test_any_group_passes_when_one_member_passes_and_reports_that_member():
+    j = V.judge_part(OR_RULE, 'R03', '1N5817', {'v_in_max': 12.0, 'i_coil': 0.08}, {**TEMP, 'pulse_test': {'pulse': 0.001}}, N5817)
+    c = next(c for c in j.checks if c.code != 'VRRM')
+    assert c.result == 'pass' and c.code == 'IF_AV' and c.basis == 'IFSM >= i_coil 또는 IF_AV >= i_coil'
+
+
+def test_any_group_fails_only_when_every_member_is_computed_and_fails():
+    j = V.judge_part(OR_RULE, 'R03', '1N5817', {'v_in_max': 12.0, 'i_coil': 30.0}, {**TEMP, **HALF_SINE}, N5817)
+    assert [c.result for c in j.checks if c.code != 'VRRM'] == ['fail']
+    j = V.judge_part(OR_RULE, 'R03', '1N5817', {'v_in_max': 12.0, 'i_coil': 30.0}, {**TEMP, 'pulse_test': {'pulse': 0.001}}, N5817)
+    c = next(c for c in j.checks if c.code != 'VRRM')
+    assert c.result == 'unverified' and j.missing == []  # IFSM은 펄스가 달라 확인 안 됨, IF_AV는 실패
+
+
+def test_any_group_missing_values_are_the_union_when_no_member_is_computable():
+    j = V.judge_part(OR_RULE, 'R03', '1N5817', {'v_in_max': 12.0}, TEMP, N5817)
+    assert j.verdict == 'NOT_VERIFIED' and j.missing == ['i_coil', 'pulse_test']
+
+
+def test_search_conditions_skip_any_groups():
+    assert V.search_conditions(OR_RULE, {'v_in_max': 12.0, 'i_coil': 0.08}) == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}]
+
+
 def test_default_basis_reports_its_own_missing_values():
     """기본값 기준식(default)에도 쓸 회로 값이 없으면 그 값을 빠진 값으로 알린다(R17 처짐 기본값처럼 회로 값을 쓰는 기본값)."""
     rule = yaml.safe_load('''

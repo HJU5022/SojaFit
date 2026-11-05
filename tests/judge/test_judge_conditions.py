@@ -68,3 +68,30 @@ def test_needed_asks_required_values_and_conditional_triggers():
     """필수 조건의 값과 조건부의 발동 여부만 묻는다. 조건부의 기준 값은 발동한 뒤 판정에서 빠진 값으로 보인다."""
     assert C.needed(RULE, set()) == ['v_in_max', 'i_max', 'v_drop_allowed', 'pwm']
     assert C.needed(RULE, {'v_in_max', 'i_max', 'pwm', 'v_drop_allowed'}) == []
+
+
+OR_RULE = yaml.safe_load('''
+name: x
+recognize: x
+inputs: {i_coil: number, pulse_test: condition, v_bus: number, v_sw_transient: number}
+conditions:
+  - {tier: required, any: [{code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}, {code: IF_AV, op: ">=", basis: "i_coil"}]}
+  - {tier: required, code: VRRM, op: ">=", basis: "v_sw_transient", default: "v_bus * kV"}
+source: x
+''')
+
+
+def test_check_rule_validates_each_any_member():
+    C.check_rule('R03', OR_RULE)
+    group = OR_RULE['conditions'][0]
+    bad = {**group, 'any': [{**group['any'][0], 'basis': 'nope'}, group['any'][1]]}
+    with pytest.raises(ValueError, match='nope'):
+        C.check_rule('R03', {**OR_RULE, 'conditions': [bad]})
+    with pytest.raises(ValueError):
+        C.check_rule('R03', {**OR_RULE, 'conditions': [{**group, 'any': [{**group['any'][0], 'code': 'IFSMX'}, group['any'][1]]}]})
+
+
+def test_needed_asks_first_any_member_and_default_values_only_when_nothing_is_computable():
+    """'A 또는 B'는 계산할 수 있는 멤버가 없을 때만 첫 멤버의 값을, 기본값이 있는 조건은 기준식 값이 없을 때 기본값 식의 값을 묻는다."""
+    assert C.needed(OR_RULE, set()) == ['i_coil', 'pulse_test', 'v_bus']
+    assert C.needed(OR_RULE, {'i_coil', 'v_sw_transient'}) == []
