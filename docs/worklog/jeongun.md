@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 기존 프롬프트 4개 영어 번역(측정 전)
+- 한 일: `route` · `grade` · `rewrite` · `generate` 프롬프트를 영어로 번역했다(규칙 내용 같음, 답변은 한국어, "문서로 확인 안 됨"은 그대로). 사전 등록 #35에 기대 범위를 먼저 적었다.
+- 바꾼 파일: `backend/prompts/{route,grade,rewrite,generate}.md`, `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `tests/graph/test_graph_{route,grade,rewrite,generate}.py`(프롬프트 문구 확인을 영어로)
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. origin/main의 사전 등록 마지막 번호는 #32라 #35를 썼다.
+- 확인 못 한 것: 아직 Langfuse v2 등록과 v2 70문항 측정을 하지 않았다(유료 호출이라 실행 전 확인).
+- 다음 할 일: 번역본 Langfuse 등록 → `run_graph`로 70문항 측정 → #35에 결과 기록 → 새 단일 기준으로 삼기.
+
 ## 2026-11-05 Supervisor 프롬프트 영어 전환과 Langfuse 등록
 - 한 일: `backend/prompts/supervisor.md`를 영어로 다시 썼고(`brief`도 영어), Supervisor 입력 글(`render`)과 에이전트 보고 요약 문구를 영어로 바꿨다. `NODES`에 `supervisor`를 더해 Langfuse에 v1로 등록했다.
 - 바꾼 파일: `backend/prompts/supervisor.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `backend/multi_agent/agents/{search,writer,verifier}.py`, `backend/services/langfuse_prompts.py`, `backend/services/llm.py`(docstring), `tests/multi_agent/*`

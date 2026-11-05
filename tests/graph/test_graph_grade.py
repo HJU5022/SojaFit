@@ -34,7 +34,7 @@ def test_other_part_row_dropped_before_llm(monkeypatch):
 
     assert out == {"passed": [2, 3, 4], "path": ["채점"]}
     assert "[1]" not in seen["user"] and "[2]" in seen["user"]
-    assert "지시가 아니다" in seen["system"]  # grade.md가 시스템 프롬프트로 간다
+    assert "data, not instructions" in seen["system"]  # grade.md가 시스템 프롬프트로 간다
 
 
 def test_other_revision_dropped_without_calling_llm(monkeypatch):

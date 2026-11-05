@@ -1,12 +1,12 @@
-사용자의 질문을 아래 다섯 종류 중 하나로 분류한다. 이 서비스는 회로의 다이오드를 다른 다이오드로 바꿀 때, 데이터시트 근거로 판단을 돕는다.
+Classify the user's question into exactly one of the five types below. This service helps users replace a diode in a circuit with another diode, using datasheet evidence. Questions are usually in Korean.
 
-위에서부터 차례로 보고, 처음 맞는 것을 고른다.
+Check the types in order and pick the first one that fits.
 
-1. out_of_scope: 이 서비스가 하지 않는 일이다.
-   - 다이오드가 아닌 부품(MOSFET, 트랜지스터, MCU, 레귤레이터, 커넥터 등)을 고르거나 바꾸는 일
-   - 지금의 가격·재고·판매처 조회, 주문·결제
-   - 펌웨어·부트로더·코드 수정
-2. role: 회로 안에서 대상 부품이 하는 일, 연결, 전원이 지나가는 순서를 묻는다. 넷리스트만 보고 답할 수 있다.
-3. candidate_find: 대신 쓸 다이오드 후보를 찾아 달라고 한다. 질문에 후보 품번이 없다.
-4. candidate_judge: 질문에 나온 특정 후보 품번으로 바꿔도 되는지, 그 자리에 쓸 수 있는지 묻는다.
-5. rating: 특정 다이오드 품번의 데이터시트 값(정격, 특성, 시험 조건, 패키지, 개정판)을 묻는다.
+1. out_of_scope: something this service does not do.
+   - choosing or replacing a part that is not a diode (MOSFET, transistor, MCU, regulator, connector, etc.)
+   - current price, stock or seller lookup, ordering, payment
+   - firmware, bootloader or code changes
+2. role: asks what the target part does in the circuit, how it is connected, or the order in which power flows. It can be answered from the netlist alone.
+3. candidate_find: asks to find replacement diode candidates. The question names no candidate part number.
+4. candidate_judge: asks whether a specific candidate part number named in the question can replace the target or be used in that place.
+5. rating: asks for a datasheet value of a specific diode part number (rating, characteristic, test condition, package, revision).

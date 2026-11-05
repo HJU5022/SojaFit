@@ -32,7 +32,7 @@ def test_generate_counts_fake_and_uncited(monkeypatch):
     assert out["check"] == {"fake_citations": ["999"], "uncited_sentences": 1, "used": ["2", "넷리스트"]}
     assert "[1]" not in seen["user"] and "[2]" in seen["user"]  # 채점을 통과하지 못한 청크는 넘기지 않는다
     assert "[넷리스트] D1 1N5819" in seen["user"] and "J1.1(JACK) 외 5개" in seen["user"]
-    assert "비교해 대체할 수 있는지 판단하지 않는다" in seen["system"]  # generate.md가 시스템 프롬프트로 간다
+    assert "Do not compare values to decide whether a part can replace another" in seen["system"]  # generate.md가 시스템 프롬프트로 간다
 
 
 def test_not_found_answer_is_not_an_uncited_sentence(monkeypatch):
