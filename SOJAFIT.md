@@ -67,7 +67,7 @@ SojaFit (proj3-b)
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
 │   │   ├── sheet_conditions.py  <- 시험 조건 글 읽기와 같은 조건인지 비교
-│   │   ├── conditions.py   <- 역할에서 대체 조건 도출 (예정, 후보 이름)
+│   │   ├── conditions.py   <- 역할 규칙 읽기와 대체 조건 기준값 계산
 │   │   ├── verdict.py      <- 후보마다 판정 5종 내기 (예정, 후보 이름)
 │   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함(지금은 .gitkeep)
 │   │       └── roles.yaml  <- 역할 규칙 (예정, 후보 이름)
@@ -320,6 +320,7 @@ SojaFit (proj3-b)
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·찾기의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   ├── JUDGE.md        <- 폴더 설명
+│   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
 │   │   └── test_judge_sheet_conditions.py  <- 시험 조건 읽기·비교
 │   ├── repo/               <- 저장소 구조 규칙
 │   │   ├── REPO.md         <- 폴더 설명

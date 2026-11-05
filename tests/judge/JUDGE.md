@@ -7,4 +7,5 @@
 - 담당: 에이전트
 
 ## 파일
+- `test_judge_conditions.py` — 기준식 문법(사칙 연산 · kV · kI · orig.<코드>), 빠진 값, 규칙 모양 검사, 물어볼 값 목록
 - `test_judge_sheet_conditions.py` — 사양 표의 실제 조건 글로 읽기 · 비교

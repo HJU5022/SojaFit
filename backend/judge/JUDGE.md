@@ -15,6 +15,7 @@
 ## 파일
 - `JUDGE.md` — 이 폴더 설명
 - `__init__.py` — 패키지 표시(빈 파일)
+- `conditions.py` — 역할 규칙(`rules/roles.yaml`) 읽기 · 모양 검사, 정해진 문법의 기준식으로 대체 조건 기준값 계산, 물어볼 회로 값 목록
 - `sheet_conditions.py` — 데이터시트 시험 조건 글(기호 = 값, 펄스 폭 · 파형, 표 제목 기본 조건)을 읽고 같은 조건인지 비교
 - `rules/` — 판정 규칙 파일 자리. 형식은 SPEC 5절에서 정하며 지금은 `.gitkeep`뿐입니다
-- 예정: `conditions.py`(대체 조건), `verdict.py`(판정 5종), `rules/roles.yaml`. 만들면 `SOJAFIT.md` 트리의 `(예정)`을 지웁니다
+- 예정: `verdict.py`(판정 5종), `rules/roles.yaml`. 만들면 `SOJAFIT.md` 트리의 `(예정)`을 지웁니다
