@@ -160,6 +160,56 @@ def test_ec10_order_code_variant_with_identical_statement_is_identical(monkeypat
     assert res['verdict'] == 'IDENTICAL' and res['checks']  # 주문 코드 품번은 기본 품번의 사양 표 행으로 본다
 
 
+def ordering_row(code, chunk_id, page=2):
+    """검색이 돌려주는 주문 정보 표 한 줄 청크(실제 1N4148 SERIES_K2301.pdf 2쪽 모양)."""
+    return {'chunk_id': chunk_id, 'file': '1N4148 SERIES_K2301.pdf', 'page': page, 'table': 'ORDERING INFORMATION',
+            'content': f'[1N4148 SERIES_K2301.pdf · {page}쪽 · ORDERING INFORMATION] ORDERING INFORMATION / ORDERING CODE (1): {code}'
+                       ' | ORDERING INFORMATION / PACKAGE: DO-35 | ORDERING INFORMATION / PACKING: 10,000 / 14" Reel'}
+
+
+ORDER_DOCS = [ordering_row('1N4148 R0', 26965), ordering_row('1N4448 R0G', 26973), ordering_row('1N4148 R0G', 26971),
+              ordering_row('1N4148 A0G', 99)]
+
+
+@pytest.mark.parametrize('original,candidate', [('1N4148 A0G', '1N4148 R0G'), ('TSC 1N4148 A0G', '1N4148 r0g'), ('1N4148 A0G', '1N4148')])
+def test_order_code_only_difference_is_identical_with_ordering_table_citation(monkeypatch, original, candidate):
+    """같은 기본 품번에 주문 코드(R · A · L · M + 글자 하나 + 선택 G)만 다르면 동일품이고, 주문 정보 표의 그 주문 코드 행을 인용한다(B2, 정운 11-06)."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    asked = []
+    out = J.judge_agent({**STATE, 'judge_read': dict(READ, original_part=original, candidates=[candidate])}, specs=specs_of(table),
+                        find=None, retriever=lambda q, parts=None: asked.append(parts) or ORDER_DOCS)
+    res = out['judgement']['results'][0]
+    assert res['verdict'] == 'IDENTICAL' and asked[0] == ['1N4148']
+    cite = res['checks'][0]['citation']
+    # 'R0'이 'R0G' 안에 있어도 'R0' 행은 고르지 않는다. 후보가 기본 품번뿐이면 원래 품번의 주문 코드 행이다
+    want = '1N4148 R0G' if candidate != '1N4148' else None
+    assert cite['table'] == 'ORDERING INFORMATION' and cite['page'] == 2 and cite['document'] == '1N4148 SERIES_K2301.pdf'
+    assert (cite['row'], cite['chunk_id']) == ((want, 26971) if want else ('1N4148 A0G', 99))
+
+
+@pytest.mark.parametrize('original,candidate', [('1N4148 A0G', '1N4448 R0G'), ('1N4148', '1N4148 BAT85'), ('1N4148 A0G', '1N4148 R0G')])
+def test_order_code_rule_needs_same_base_order_code_shape_and_a_found_row(monkeypatch, original, candidate):
+    """기본 품번이 다르거나, 꼬리가 주문 코드 모양이 아니거나, 주문 정보 표에서 그 행을 못 찾으면 코드 규칙으로 동일품을 내지 않는다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0)], '1N4448': [r('1N4448', 'VRRM', 100.0)]}
+    docs = [] if candidate == '1N4148 R0G' else ORDER_DOCS  # 마지막 경우: 검색이 주문 정보 행을 못 찾음(지어낸 인용 없음)
+    out = J.judge_agent({**STATE, 'judge_read': dict(READ, original_part=original, candidates=[candidate])}, specs=specs_of(table),
+                        find=None, retriever=lambda q, parts=None: docs)
+    assert out['judgement']['results'][0]['verdict'] != 'IDENTICAL'
+
+
+def test_identical_by_order_code_survives_schottky_exemption(monkeypatch):
+    """쇼트키 후보는 면제 뒤 판정을 다시 정한다. 그때도 주문 코드 동일품은 빠진 값(확인 안 됨)이 있어도 동일품이다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    rows = [dict(x, category='schottky-rectifier') for x in SPECS['1N5817']]
+    docs = [dict(ordering_row('1N5817 R0G', 5), file='1N5817 SERIES_H2104.pdf')]
+    read = dict(READ, original_part='1N5817 A0G', candidates=['1N5817 R0G'], values=READ['values'][2:])  # 입력 전압 · 전류 없음
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of({'1N5817': rows}), find=None, retriever=lambda q, parts=None: docs)
+    res = out['judgement']['results'][0]
+    assert res['verdict'] == 'IDENTICAL' and 'unverified' in [c['result'] for c in res['checks']]
+
+
 def test_original_part_with_order_code_reads_base_part_rows(monkeypatch):
     """원래 품번에 주문 코드가 붙어도(1N4148 A0G) 사양 표의 기본 품번(1N4148) 행을 원래 부품 행으로 쓴다."""
     monkeypatch.setattr(J, 'interrupt', unknown)

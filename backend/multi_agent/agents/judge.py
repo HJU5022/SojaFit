@@ -17,6 +17,7 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason
+from backend.multi_agent.facts import ORDER_CODE
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.units import to_si
 
@@ -157,17 +158,36 @@ def _rows(specs, name: str) -> list[dict]:
     return (specs(name) or specs(name.split()[0])) if name else []
 
 
-def _identical(retriever, original: str, candidate: str) -> bool:
-    """같은 기본 품번의 주문 코드만 다를 때, 제조사가 같은 제품이라고 밝힌 청크가 있는지(EC-10)."""
-    base_o, base_c = original.split()[0].upper() if original else '', candidate.split()[0].upper()
-    if not base_o or base_o != base_c:
-        return False
-    if original.upper() == candidate.upper():
-        return True
+def _ordering_row(retriever, code: str, base: str) -> dict | None:
+    """주문 코드(예: '1N4148 R0G')가 적힌 주문 정보 표 청크를 찾아 인용으로 돌려준다. 없으면 None(인용을 지어내지 않는다)."""
+    # [왜] 'R0'이 'R0G' 앞부분이라 낱말 경계로 맞춘다
+    exact = re.compile(rf'(?<![A-Z0-9]){re.escape(code)}(?![A-Z0-9])')
+    for d in retriever(f'{code} ordering information', parts=[base]):
+        if 'ORDER' in (d.get('table') or '').upper() and exact.search(d.get('content', '').upper()):
+            return {'document': d.get('file'), 'page': d.get('page'), 'table': d.get('table'), 'row': code, 'chunk_id': d.get('chunk_id')}
+    return None
+
+
+def _identical(retriever, original: str, candidate: str) -> tuple[bool, dict | None]:
+    """같은 기본 품번인지 → (동일품인가, 근거 인용). 주문 코드만 다르면 주문 정보 표의 그 행이 근거다(B2, 정운 11-06).
+
+    주문 코드 규칙을 먼저 보고, 그 행을 못 찾으면 제조사가 같은 제품이라고 밝힌 청크를 찾는다(EC-10, 인용 없음).
+    """
+    o, c = _part(original).upper().split(), _part(candidate).upper().split()
+    if not o or not c or o[0] != c[0]:
+        return False, None
+    if o == c:
+        return True, None
     if retriever is None:
-        return False
-    docs = retriever(f'{base_c} ordering information physically identical', parts=[base_c])
-    return any('identical' in d.get('content', '').lower() for d in docs)
+        return False, None
+    tails = [x[1:] for x in (c, o)]
+    if all(not t or (len(t) == 1 and ORDER_CODE.fullmatch(t[0])) for t in tails):
+        # 후보의 주문 코드 행을 먼저, 후보가 기본 품번뿐이면 원래 품번의 행을 인용한다
+        for code in [' '.join(x) for x in (c, o) if len(x) == 2]:
+            if cite := _ordering_row(retriever, code, c[0]):
+                return True, cite
+    docs = retriever(f'{c[0]} ordering information physically identical', parts=[c[0]])
+    return any('identical' in d.get('content', '').lower() for d in docs), None
 
 
 def _schottky_exempt(j: V.Judgement, category: str) -> V.Judgement:
@@ -181,7 +201,9 @@ def _schottky_exempt(j: V.Judgement, category: str) -> V.Judgement:
     free = ('schottky', 'sic') if sic else ('schottky',)
     checks = [c.model_copy(update={'result': 'pass', 'why': '쇼트키 면제'}) if c.code == 'TRR' and c.exempt in free else c
               for c in j.checks]
-    if any(c.result == 'fail' for c in checks):
+    if j.verdict == 'IDENTICAL':
+        verdict = 'IDENTICAL'  # [왜] 동일품은 조건 결과보다 먼저다(judge_part와 같은 순서, SPEC 3절)
+    elif any(c.result == 'fail' for c in checks):
         verdict = 'NOT_SUFFICIENT'
     elif any(c.result == 'unverified' for c in checks):
         verdict = 'NOT_VERIFIED'
@@ -252,9 +274,9 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             rows = _rows(specs, name)
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
-            same = _identical(retriever, read.original_part, name)
+            same, same_cite = _identical(retriever, read.original_part, name)
             judged = [_schottky_exempt(V.judge_part(rules[r], r, name, values, conds, rows,
-                                                    original_rows=original_rows or None, identical=same,
+                                                    original_rows=original_rows or None, identical=same, identical_citation=same_cite,
                                                     footprint=footprint, packages=packages), category) for r in roles]
             results.append(max(judged, key=lambda j: V.ORDER.index(j.verdict)))  # 역할이 둘이면 더 나쁜 판정(EC-02)
     except RetrievalUnavailableError as error:

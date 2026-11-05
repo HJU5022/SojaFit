@@ -198,9 +198,12 @@ def board_change(footprint: str | None, packages: list[str] | None) -> bool | No
 
 
 def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows: list[dict], *,
-               original_rows: list[dict] | None = None, identical: bool = False,
+               original_rows: list[dict] | None = None, identical: bool = False, identical_citation: dict | None = None,
                footprint: str | None = None, packages: list[str] | None = None) -> Judgement:
-    """후보 하나를 판정한다. values는 숫자 · 예/아니오, conds는 시험 조건(dict), rows는 후보의 사양 표 행, original_rows는 원래 부품의 행."""
+    """후보 하나를 판정한다. values는 숫자 · 예/아니오, conds는 시험 조건(dict), rows는 후보의 사양 표 행, original_rows는 원래 부품의 행.
+
+    identical_citation: 주문 코드만 달라 동일품일 때의 근거(주문 정보 표 행). 주면 조건 표 맨 앞에 그 근거 줄을 넣는다.
+    """
     checks, missing, uncertain = [], [], []
     for cond in rule['conditions']:
         if cond.get('unless') and values.get(cond['unless']) is True:
@@ -219,6 +222,9 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
             uncertain.append(note)
     if 'temp' not in conds:
         uncertain.append('사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정')
+    if identical_citation:
+        checks.insert(0, Check(code='ORDER_CODE', tier='required', op='=', basis='같은 기본 품번, 주문 코드만 다름', condition='—',
+                               citation=identical_citation, result='pass', why='동일품'))
     if identical:
         verdict = 'IDENTICAL'
     elif any(c.result == 'fail' for c in checks):
