@@ -550,3 +550,38 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 한계: 1회 측정. 구조와 Supervisor 모델이 함께 들어온다(Supervisor는 멀티에만 있다). 의미 채점이 없어 역할 해석 · 판정의 맞고 틀림은 재지 않는다. #37과 같은 `+dirty` 한계가 있다.
 - 실행 전 변경(11-05 21:05, 측정 전): 정운 결정으로 Supervisor(Sonnet)는 팀 OpenRouter 키 대신 정운 개인 Anthropic 키로 Anthropic API를 직접 부른다(모델 id `claude-sonnet-5-5`, temperature · thinking 미전송, 구조화 출력은 `output_config.format`). 팀 레포는 그대로 두고 로컬 복제본(`lab/repo`, 브랜치 `lab-anthropic`, 커밋 `e86b1e6` = 이 레포 `3cfb58f` + `llm.py` 직통 분기 · `langchain-anthropic` 1.7.7)을 Docker 컨테이너에서 돌린다. Haiku · Luna는 OpenRouter 그대로라 #37과 노드 모델 · 공급자는 Supervisor만 다르다. 명령: `docker exec sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`(`LLM_PROVIDER=openrouter DEMO_MODE=0`). 시험 2문항(21:02, session `multi-dataset_v2-1105-1202-openrouter`): draft30-m01 cited_gold, draftv2-n16 correct_refusal(revision_missing), 실패 0. Sonnet 실제 호출 4번에 입력 2,846~3,084 · 출력 35~74토큰, 호출당 약 0.0064달러. Langfuse가 Sonnet 호출 하나를 `ChatAnthropic`과 `anthropic.messages.create` 두 생성으로 기록해 비용 합이 두 배로 보인다(0.0512 → 실제 약 0.026달러). 그래서 #38 비용은 `ChatAnthropic` 생성만 센다. 비용 기대를 다시 적는다: Sonnet 0.8~2.0달러(문항당 판단 2~4번) + Haiku · Luna 0.02~0.08달러. 예산 · 중단은 Anthropic 3달러 · OpenRouter 0.5달러.
 - 결과(11-05 21:03~21:26, lab 커밋 `e86b1e6`(+dirty는 미커밋 시험 2문항 결과 파일 때문이고 코드 변경 없음), session `multi-dataset_v2-1105-1203-openrouter`(이름의 시각은 컨테이너 UTC), 결과 `evals/results/graph/multi_dataset_v2_2026-11-05-1226.json`(lab에서 복사, 파일 이름 시각도 UTC)): 70문항 중 67 끝남, 실패 3(draft50-n01 · draftv2-n07 · draftv2-n10, 모두 Supervisor 결정서가 형식 검사를 3번 어김. Langfuse에서 확인한 1건은 `brief`가 300자 제한을 넘었다). 끝난 관련 32: cited_gold 10 · over_refusal 22 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 질문 종류 일치 32/32. 유형별 rating cited_gold 8 · over_refusal 2, role 2 · 4, candidate_judge over_refusal 8, candidate_find over_refusal 8. #37과 답 지표가 같은 문항은 끝난 67 중 64, 다른 문항은 draft30-e02 · draft30-h01 · draft50-n05(모두 cited_gold → over_refusal). Supervisor 판단 횟수 중앙값 3(1번 19 · 3번 16 · 4번 19 · 5번 11 · 6번 2), 검색 횟수 0번 21 · 1번 9 · 2번 37, 거절 사유 not_found 43 · part_missing 8 · revision_missing 4 · out_of_scope 2. latency_s p50 18.9 · p95 41.1 · 최대 49.0초. 비용은 Sonnet(`ChatAnthropic` 228호출, 입력 679,341 · 출력 41,319토큰) 1.7719달러 + Haiku 0.0272 + Luna 0.0203 = 약 1.82달러. 기대 대조: cited_gold 8~15 맞음(10), over_refusal 17~27 맞음(22), wrong_citation 0~3 맞음(0), correct_refusal 31~35 맞음(35), hallucination_risk 0~4 맞음(0), 질문 종류 일치 27~34 맞음(32, 끝난 문항 기준), 실패 0~4 맞음(3), p50 8~25초 맞음(18.9), 판단 횟수 중앙값 2~5 맞음(3), #37과 같은 문항 70% 이상 맞음(64/67), Sonnet 비용 0.8~2.0달러 맞음(1.77). 판정: 판정 · 웹 에이전트가 없는 지금의 멀티는 단일 #37보다 근거 인용 정답이 3문항 적고(13 → 10) 과잉 거절은 같으며(22), 응답 시간 중앙값은 약 2.2배(8.6 → 18.9초), 비용은 약 43배(0.0426 → 1.82달러)다. 차이가 3문항이라 나빠졌다고 단정하지 않고 문항 목록으로 남긴다. 후보 찾기 · 판정은 단일과 같이 끝난 16문항 모두 거절이다.
+
+### 2026-11-06 #39: D4 v2 단일 그래프 (동결 v2 70문항, #37과 비교)
+
+- 왜: 강사 지적("범위 판정을 첫 단에서 먼저", "단순 직렬 흐름")으로 D4 단일 그래프를 다시 짰다. 회의(D4 · D5) 전에 고친 구조의 첫 숫자를 남긴다.
+- 바꾸는 것(구조 한 묶음): 입력 읽기 뒤 사실 확인(코드가 품번 · 개정판을 코퍼스 목록과 대조), 라우팅 7가지(일상 대화 · 다른 부품 추가), 판정 길(판정 읽기 Haiku 1번 → 숫자 확인 → 빠진 값 인터럽트 → 사양 표 조회 → 코드 판정 → 답 틀). 정격 · 역할의 검색 고리는 그대로다. 하나만 바꾸는 규칙의 예외다. 강사 지적이 구조 전체에 걸려 있어 묶어서 고쳤고, 노드별 효과는 가르지 않는다.
+- 함께 바뀌는 것: ① lab에서 Haiku를 OpenRouter 대신 정운 개인 Anthropic 키로 직접 부른다(lab 커밋 `54a76c2`, 같은 모델 · 다른 공급자). ② 채점기 EC-07(`d3c1816`): 판정 길 답은 사양 표 인용(문서 · 쪽)을 정답 위치와 대조한다. #37 상태에는 판정 결과가 없어 #37 점수는 이 규칙으로 바뀌지 않는다. ③ 인터럽트는 답 없음(`{"answers": {}}`)으로 한 번 재개한다. 사람이 값을 채우는 경우는 재지 않는다.
+- 측정 코드: 이 레포 `6b47c6f`(판정 에이전트 · D4 v2 끝) + `d3c1816`(채점기) + 이 사전 등록 커밋. 가격 질문 종류(`9c2fe20` 이후)는 넣지 않는다. Langfuse에는 이 코드의 `route` · `judge_read` · `supervisor` 본문을 development로 등록하고 `load_development`로 로컬과 같은지 확인한다.
+- 비교 대상: #37(관련 cited_gold 13 · over_refusal 22 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 31/35, p50 8.6초, LLM 호출 216, 0.0426달러). 후보 판정 9 · 찾기 10은 #37에서 모두 over_refusal이었다.
+- 기대(측정 전, 고치지 않음):
+  - 관련 35: cited_gold 14~28, over_refusal 2~12, wrong_citation 3~14. 판정 · 찾기 19문항은 거절 대신 판정 답이 나와 over_refusal이 크게 줄고, 인용 쪽이 정답과 어긋난 문항은 wrong_citation으로 옮겨 갈 것으로 본다.
+  - 유형별: rating cited_gold 7~10, role 1~4, candidate_judge cited_gold 3~8, candidate_find cited_gold 2~8.
+  - 무관 35: correct_refusal 31~35, hallucination_risk 0~4(일상 대화 갈래가 거절할 문항에 짧은 답을 할 수 있다).
+  - 판정 일치(새 지표): candidate_judge 9문항 중 결과 줄 `verdicts`의 판정 코드가 정답 글에 처음 나오는 판정 코드(괄호 안 대문자)와 같은 문항 3~7. 후보가 둘 이상이면 모두 같아야 일치, 판정이 없으면 불일치로 센다.
+  - 관련 라우팅 일치 29~35/35, 실패 0~3, p50 5~15초.
+  - 비용: Anthropic(Haiku) 0.02~0.10달러, OpenRouter(Luna) 0.005~0.03달러.
+- 명령(lab): `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl`
+- 예산 · 중단: #40과 합쳐 Anthropic 3.5달러 · OpenRouter 0.3달러. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정이라 응답 변동 폭을 모른다. 구조 묶음과 Haiku 공급자가 함께 바뀐다. 판정 일치는 판정 코드만 보고 조건 · 인용 내용은 보지 않는다. 시간은 정운 맥 → 운영 Supabase(왕복 16~25 ms, 11-06 실측) 경로이고 배포(Cloud Run) 경로가 아니다.
+
+### 2026-11-06 #40: D5 멀티 에이전트 + 판정 에이전트 (동결 v2 70문항, #38과 비교)
+
+- 왜: D5 "단일과 멀티를 v2로 재측정". #38에는 판정 에이전트가 없어 후보 판정 · 찾기가 모두 거절이었다. 판정 에이전트를 붙인 멀티의 숫자를 #39와 같은 코드 · 같은 날에 남긴다.
+- 바꾸는 것(하나): 판정 에이전트를 켠다(Supervisor가 `judge`를 고르면 판정 읽기 → 판정이 이어서 돌고 Supervisor로 돌아온다). Supervisor 프롬프트는 판정 갈래가 든 11-06 본문이다.
+- 함께 바뀌는 것: #39의 ① · ② · ③과 같다. Supervisor는 #38처럼 Sonnet(개인 Anthropic 키)이다.
+- 측정 코드: #39와 같다.
+- 비교 대상: #38(끝난 67문항: 관련 cited_gold 10 · over_refusal 22 · wrong_citation 0, 무관 correct_refusal 35, 실패 3, p50 18.9초, Supervisor 판단 중앙값 3, 약 1.82달러). #39(같은 코드의 단일)도 함께 적는다.
+- 기대(측정 전, 고치지 않음):
+  - 관련 35: cited_gold 12~27, over_refusal 3~14, wrong_citation 3~14. 무관 35: correct_refusal 31~35, hallucination_risk 0~4.
+  - 판정 일치: candidate_judge 9문항 중 3~7(#39와 같은 규칙).
+  - 실패 0~4, 질문 종류 일치 28~35/35, Supervisor 판단 횟수 중앙값 2~4.
+  - p50 10~25초. 판정 · 찾기 19문항의 응답 시간 중앙값은 #38의 같은 문항보다 짧다(검색 고리를 돌다 거절하던 길이 판정 길로 바뀐다).
+  - 비용: Anthropic(Sonnet + Haiku) 1.0~2.5달러, OpenRouter(Luna) 0.01~0.05달러.
+- 명령(lab): `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`(#39와 동시에 돌린다)
+- 예산 · 중단: #39와 합쳐서 본다.
+- 한계: #39와 같다. 구조(멀티)와 Supervisor 모델이 함께 들어온다. 노드별 시간은 Langfuse 트레이스에서 따로 뽑는다.
