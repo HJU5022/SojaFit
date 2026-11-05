@@ -20,4 +20,6 @@
 ## 파일
 - `__init__.py` — 패키지 표시
 - `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 ADR 0010), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
+
+Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.
 - `langfuse_prompts.py` — development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)

@@ -460,3 +460,14 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
   5. `uv run --no-sync python -m evals.runners.run_supervisor_models run evals/results/supervisor/2026-11-04-stage2-top2-v1 --model openai/gpt-6-luna --run-index 2 --max-usd 0.095 --max-seconds 900 --max-tokens 256 --confirm-live`
 - 해석 제한: 같은 70문항을 다시 사용하므로 새 평가셋에 대한 일반화 근거는 아니다. provider 상태와 시간대가 1차와 달라질 수 있다. 2차 결과는 Luna 확정을 자동으로 유지하거나 뒤집지 않으며, `Confirmed`, `Inconclusive`, `Reversed`, `Unstable`, `Provider Stopped` 중 해당 상태와 근거 수치를 기록한 뒤 모델 결정 변경은 별도 검토한다.
 - 결과: 이 등록 이후에만 2차 측정을 시작하고, 실행하지 않은 현재 상태는 `Not Started`로 둔다.
+
+### 2026-11-05 #32: 수퍼바이저 6종 2차 공동 평가
+
+- 번호 이력: 실행 전 로컬 기록의 `#29`는 `main`의 2026-11-04 `#29`와 중복되어 PR 준비 중 `#32`로 정정했다. 번호 외의 평가 대상·기대값·지표·중단 기준은 바꾸지 않았다. 로컬 기록은 유료 호출 전에 작성됐으나 원격 Git 커밋 시각만으로 그 순서를 독립 증명할 수는 없다. 기존 `#29`·`#30`은 보존하며, 이 6종 실행을 `#30`의 별도 Luna·Haiku 2종 프로토콜 완료로 간주하지 않는다.
+- 목적·계약: `docs/experiments/supervisor-stage2-six-models.md`. 기존 5종과 `typesafe/jev-1.14`를 같은 동결 v2 70문항에서 `run_index=2`로 각 1회 실행한다. 기존 1차 결과는 이미 확인했으며 새 독립 표본으로 취급하지 않는다.
+- 기대(2차 결과 확인 전): `openai/gpt-6-luna`와 `typesafe/jev-1.14`는 `Question Type Accuracy`가 각각 0.90 이상, Jev `Schema Valid Rate`는 0.90 이상일 것으로 예상한다. `deepseek/deepseek-v4.1-flash`는 이전 Rate Limit 때문에 70건 완료를 보장하지 않는다. 나머지 모델의 개선을 기대값으로 정하지 않는다.
+- 상한·중단: 본 테스트 후보별 US$0.10 · 0.10 · 0.07 · 0.30 · 0.30 · 0.01, 합계 US$0.88. 최초 smoke 상한은 후보별 US$0.001, 합계 US$0.006. 모델별 최대 70 planned outputs · 210 raw calls · 7,200초, per-call 45초, schema retry 최대 2회. ZDR·provider·model·dataset·contract 불일치나 상한 도달 시 중단한다. 문항별 schema 실패는 해당 행에 기록하고 다른 문항은 계속한다.
+- 실행 전 정정(유료 호출 전, 2026-11-05): 기존 smoke 후보별 US$0.001은 현재 공개 단가에서 Haiku/Luna 첫 호출 예약 US$0.001203, Meta US$0.0035322, Cohere US$0.003609보다 작아 무호출 차단된다. 최초 기록을 보존하고 적용 smoke 상한을 모델 순서대로 US$0.004 · 0.004 · 0.002 · 0.011 · 0.011 · 0.001로 정정한다. smoke 합계 US$0.033, 본 테스트와 합친 계획 상한 US$0.913. 정정 근거와 단가·예약액은 실험 계약에 기록했다.
+- 실행 경계: 1차 결과 경로는 새 2차 결과 폴더와 분리한다. Jev Decisions API와 기존 JSON 생성의 출력 계약 차이를 비교표에 표시한다. API 없는 plan·테스트 뒤 별도 지시에 따라 smoke와 본 테스트를 진행한다.
+- 결과(2026-11-05): 여섯 모델 모두 2차 70/70문항을 시도했다. 유효 결정은 모델 순서대로 46·65·62·1·21·70/70, gold Accuracy는 21·34·29·1·9·33/35였다. 본 테스트 Budget-Accounted Cost 합계 US$0.220743282. 원시 2차 행만 다시 집계한 정정 파일은 `evals/results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary_v2.json`, 해석 문서는 `docs/research/supervisor-stage2-results.md`다. 앞서 만든 로컬 `stage2_summary.json`은 실패 문항을 `Completion Rate`에서 제외한 정의 오류가 있어 PR 근거에 포함하지 않는다. 기존 5종 자동 summary의 210건 분모와 미실행 회차 평균값도 2차 표에 사용하지 않았다.
+- 결과 검토 후 추가 해석: Jev의 70/70은 형식상 유효 결정 수다. Jev가 스스로 `out_of_scope`로 분류한 6건 중 4건은 `refuse`가 아닌 다음 동작을 골랐다. 2차 원시 결과는 바꾸지 않고 라우팅 일관성 오류로 별도 표시한다. Jev `--max-usd`의 호출 전 예약은 입력 비용 추정치여서 실제 청구액의 절대 상한이 아니다. 코드의 초과 후 중단·비유한 인자 거부는 2차 결과 검토 뒤 보완한 것이며 2차 실측의 실행 조건으로 소급하지 않는다.

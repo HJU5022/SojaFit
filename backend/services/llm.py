@@ -1,7 +1,7 @@
 """LLM·임베딩 호출의 유일한 입구.
 
-역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`)을 맡는다.
-호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`), tests/services/test_llm.py.
+역할: 채팅 호출(`chat`·`node_chat`, Pydantic 출력 검증, 형식 재시도 상한), 임베딩(`embed_texts`), 평가 전용 호출 예산(`evaluation_limits`), Decisions API 평가 호출(`evaluation_decision`)을 맡는다.
+호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`·Decisions 평가), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
 Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voyage_rerank`(rerank-3). 사전 등록 #25의 측정 설정이다(ADR 0004 갱신 2026-11-03).
 하지 않는 일: 데모 모드 응답 재생(G2, 코드 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
@@ -19,6 +19,7 @@ import re
 import subprocess
 import tempfile
 import time
+from urllib.request import Request, urlopen
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -269,6 +270,44 @@ def evaluation_chat(model: str, system: str, user: str, schema: type[BaseModel],
     except ValidationError as error:
         raise EvaluationFormatError(metadata) from error
     return parsed, metadata
+
+
+def evaluation_decisions_catalog(*, zdr: bool, opener=None) -> list[dict]:
+    """OpenRouter Decisions 출력 모델 목록을 조회한다. 평가 실행기에는 네트워크 호출을 두지 않는다."""
+    url = "https://openrouter.ai/api/v1/models?output_modalities=decisions"
+    if zdr:
+        url += "&zdr=true"
+    with (opener or urlopen)(url, timeout=30) as response:
+        payload = json.load(response)
+    models = payload.get("data")
+    if not isinstance(models, list):
+        raise ValueError("Decisions catalog 형식이 잘못되었습니다")
+    return models
+
+
+def evaluation_decision(request_body: dict, *, timeout: float = 45.0, opener=None) -> dict:
+    """ZDR·fallback 금지 계약의 Decisions 요청을 재시도 없이 한 번 보낸다."""
+    policy = request_body.get("provider") if isinstance(request_body, dict) else None
+    if not isinstance(policy, dict) or policy.get("zdr") is not True or policy.get("data_collection") != "deny" or policy.get("allow_fallbacks") is not False:
+        raise ValueError("Decisions 평가의 provider policy가 잘못되었습니다")
+    if not isinstance(request_body.get("model"), str) or not request_body["model"]:
+        raise ValueError("Decisions 평가 model ID가 없습니다")
+    if not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("Decisions 평가 timeout은 양수여야 합니다")
+    key = os.getenv("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("OPENROUTER_API_KEY가 필요합니다")
+    request = Request(
+        "https://openrouter.ai/api/alpha/decisions",
+        data=json.dumps(request_body, ensure_ascii=False).encode("utf-8"),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    with (opener or urlopen)(request, timeout=timeout) as response:
+        payload = json.load(response)
+    if not isinstance(payload, dict):
+        raise ValueError("Decisions 응답 형식이 잘못되었습니다")
+    return payload
 
 
 def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:

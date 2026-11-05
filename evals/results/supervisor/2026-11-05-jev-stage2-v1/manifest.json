@@ -1,0 +1,366 @@
+{
+  "model": "typesafe/jev-1.14",
+  "dataset": "dataset_v2.jsonl",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "dataset_count": 70,
+  "runs_per_case": 1,
+  "run_index": 2,
+  "provider_policy": {
+    "zdr": true,
+    "data_collection": "deny",
+    "allow_fallbacks": false
+  },
+  "question_contract_sha256": "510bcbf23a4abb4b1450f4d8ab7afda78acf6c0484e272166638e149a29d535a",
+  "jobs": [
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e01",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e02",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e03",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e04",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e05",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e06",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e07",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e08",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e09",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e10",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m01",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m02",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m03",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m04",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m05",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m06",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m07",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m08",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m09",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m10",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h01",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h02",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h03",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h04",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h05",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h06",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h07",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h08",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h09",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h10",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n01",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n02",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n03",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n04",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n05",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n06",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n07",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n08",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n09",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n10",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n11",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n12",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n14",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n15",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n16",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n17",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n18",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n19",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n20",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft52-n21",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n01",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n02",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n03",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n04",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n05",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n06",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n07",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n08",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n09",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n10",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n11",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n12",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n13",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n14",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n15",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n16",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n17",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n18",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n19",
+      "run_index": 2
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n20",
+      "run_index": 2
+    }
+  ]
+}

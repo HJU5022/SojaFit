@@ -16,6 +16,9 @@
 - `supabase-auth-test-runbook.md` — Supabase 인증 테스트 프로젝트 생성, 스키마 점검, RLS 차단 사유와 재개 절차
 - `ci-proposal.md` — CI 사용량 절감 제안(합의 전, workflow 미변경)
 - `mcp-collaboration-handoff.md` — MCP 서버·LangGraph 공동작업 인수인계 스냅샷과 미결 항목
+- `jev-supervisor-evaluation-handoff.md` — Jev 1차 70문항 실측과 2차 평가 인수인계
+- `supervisor-stage2-results.md` — 수퍼바이저 6종 2차 원시 행 대조·비용·집계 한계
+- `supervisor-stage2-brief-report.md` — 수퍼바이저 6종 2차 결과 간단 보고서
 - `mcp-docling-verification-2026-11-03.md` — 저장소 PDF 3건의 Docling·pdfplumber 표본 대조와 한계
 - `mcp-offline-verification-2026-11-03.md` — DB 없이 수행한 MCP·PDF·회로 표본 점검 기록
 - `mcp-tool-candidates-draft.md` — MCP·웹 검색 도구 후보 조사와 비교 실측 해석

@@ -5,12 +5,60 @@
 - 출처: AGENTS.md 지킬 것 2·6, ADR 0010
 """
 import json
+import io
 from types import SimpleNamespace
 
 import pytest
 from pydantic import BaseModel
 
 from backend.services import llm
+
+
+def test_evaluation_decisions_catalog_uses_decisions_and_zdr_filters():
+    urls = []
+
+    def opener(url, timeout):
+        urls.append((url, timeout))
+        return io.BytesIO(b'{"data": [{"id": "typesafe/jev-1.14"}]}')
+
+    assert llm.evaluation_decisions_catalog(zdr=False, opener=opener)[0]["id"] == "typesafe/jev-1.14"
+    assert llm.evaluation_decisions_catalog(zdr=True, opener=opener)[0]["id"] == "typesafe/jev-1.14"
+    assert urls == [
+        ("https://openrouter.ai/api/v1/models?output_modalities=decisions", 30),
+        ("https://openrouter.ai/api/v1/models?output_modalities=decisions&zdr=true", 30),
+    ]
+
+
+def test_evaluation_decision_posts_policy_once_without_network(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    calls = []
+
+    def opener(request, timeout):
+        calls.append((request, timeout))
+        return io.BytesIO(b'{"id": "decision-1", "answers": {}}')
+
+    body = {
+        "model": "typesafe/jev-1.14",
+        "state": {"user_input": "질문"},
+        "questions": {"question_type": {"type": "choice"}},
+        "provider": {"zdr": True, "data_collection": "deny", "allow_fallbacks": False},
+    }
+    assert llm.evaluation_decision(body, timeout=12, opener=opener)["id"] == "decision-1"
+    assert len(calls) == 1
+    request, timeout = calls[0]
+    assert request.get_method() == "POST"
+    assert request.full_url == "https://openrouter.ai/api/alpha/decisions"
+    assert json.loads(request.data)["provider"] == body["provider"]
+    assert timeout == 12
+
+
+def test_evaluation_decision_rejects_unsafe_policy_before_network(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    with pytest.raises(ValueError, match="provider policy"):
+        llm.evaluation_decision(
+            {"model": "typesafe/jev-1.14", "provider": {"zdr": False}},
+            opener=lambda *_args, **_kwargs: pytest.fail("network called"),
+        )
 
 
 class Route(BaseModel):

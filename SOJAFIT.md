@@ -159,6 +159,7 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
+│   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -197,7 +198,7 @@ SojaFit (proj3-b)
 │       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
 │           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
-│           └── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
+│           ├── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
 │               ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
 │               ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
 │               ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
@@ -206,6 +207,10 @@ SojaFit (proj3-b)
 │               ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
 │               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
 │               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
+│           ├── 2026-11-04-jev-stage1-ready-v1/  <- Jev 1차 70문항 원시 행·집계
+│           ├── 2026-11-05-stage2-five-v1/  <- 기존 5종 2차 manifest·smoke·원시 행
+│           ├── 2026-11-05-jev-stage2-v1/  <- Jev 2차 manifest·smoke·원시 행·집계
+│           └── 2026-11-05-stage2-comparison-v1/  <- 6종 2차 원시 행 재집계 정본
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
@@ -249,6 +254,7 @@ SojaFit (proj3-b)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
+│   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
@@ -318,7 +324,8 @@ SojaFit (proj3-b)
 │   │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
 │   │   ├── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
 │   │   ├── supervisor-model-comparison.md  <- 수퍼바이저 후보 5종 70문항 1회 비교와 Luna 최종 선정 근거
-│   │   └── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
+│   │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
+│   │   └── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
@@ -330,6 +337,9 @@ SojaFit (proj3-b)
 │   │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
 │   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
 │   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+│   │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
+│   │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
+│   │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
 │   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
 │   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
 │   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
