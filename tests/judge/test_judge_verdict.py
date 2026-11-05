@@ -98,12 +98,36 @@ def test_voltage_ratings_ignore_temperature_but_current_ratings_do_not(temp):
 def test_spec_equivalent_needs_original_and_no_worse_major_ratings():
     orig = [row('1N5819', 'VRRM', 40.0), row('1N5819', 'IF_AV', 1.0, unit='A')]
     better = [row('SS14', 'VRRM', 40.0), row('SS14', 'IF_AV', 1.0, unit='A')]
-    j = V.judge_part(R01, 'R01', 'SS14', {'v_in_max': 12.0, 'i_max': 0.5}, TEMP, better,
-                     original=V.first_values(orig), original_rows=orig)
+    j = V.judge_part(R01, 'R01', 'SS14', {'v_in_max': 12.0, 'i_max': 0.5}, TEMP, better, original_rows=orig)
     assert j.verdict == 'SPEC_EQUIVALENT'
-    j = V.judge_part(R01, 'R01', '1N5817', {'v_in_max': 12.0, 'i_max': 0.5}, TEMP, N5817,
-                     original=V.first_values(orig), original_rows=orig)
+    j = V.judge_part(R01, 'R01', '1N5817', {'v_in_max': 12.0, 'i_max': 0.5}, TEMP, N5817, original_rows=orig)
     assert j.verdict == 'ROLE_SUFFICIENT'  # VRRM 20 < 원래 40
+
+
+CHAR = 'ELECTRICAL CHARACTERISTICS (TA = 25°C unless otherwise noted)'
+VF_RULE = yaml.safe_load('''
+name: x
+recognize: x
+inputs: {vf_test: condition}
+conditions:
+  - {tier: required, code: VF, op: "<=", basis: "orig.VF", at: vf_test}
+source: x
+''')
+ORIG_VF = [row('1N5819', 'VF', 0.45, 'IF = 1A', table=CHAR), row('1N5819', 'VF', 0.80, 'IF = 3A', table=CHAR)]
+
+
+def test_original_value_comes_from_the_same_test_condition():
+    """orig.VF는 원래 부품의 첫 행(1 A, 0.45 V)이 아니라 후보 행과 시험 조건이 같은 행(3 A, 0.80 V)의 값이다."""
+    cand = [row('SS14', 'VF', 0.50, 'IF = 1A', table=CHAR), row('SS14', 'VF', 0.75, 'IF = 3A', table=CHAR)]
+    j = V.judge_part(VF_RULE, 'R08', 'SS14', {}, {**TEMP, 'vf_test': {'IF': 3.0}}, cand, original_rows=ORIG_VF)
+    vf = j.checks[0]
+    assert vf.result == 'pass' and vf.threshold == pytest.approx(0.80) and vf.value == pytest.approx(0.75)
+
+
+def test_no_original_row_at_the_same_test_condition_is_unverified():
+    cand = [row('SS14', 'VF', 0.75, 'IF = 3A', table=CHAR)]
+    j = V.judge_part(VF_RULE, 'R08', 'SS14', {}, {**TEMP, 'vf_test': {'IF': 3.0}}, cand, original_rows=ORIG_VF[:1])
+    assert j.checks[0].result == 'unverified' and j.checks[0].why == '원래 부품의 같은 시험 조건 값 없음'
 
 
 def test_identical_comes_first():

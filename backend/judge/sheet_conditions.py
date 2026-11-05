@@ -51,15 +51,20 @@ def parse(text: str | None) -> dict:
     return out
 
 
-def compare(required: dict, actual: dict, default: dict | None = None) -> Literal['same', 'different', 'unknown']:
-    """required의 항목이 모두 actual과 같으면 'same', 하나라도 다르면 'different', 값이 없어 못 정하면 'unknown'.
-
-    actual에 없는 항목은 표 제목의 기본 조건(default)으로 채운다. 단 actual이 온도를 적었으면 기본 온도는 쓰지 않는다.
-    """
+def fill(actual: dict, default: dict | None = None) -> dict:
+    """행의 조건(actual)에 없는 항목을 표 제목의 기본 조건(default)으로 채운다. 행이 온도를 적었으면 기본 온도는 쓰지 않는다."""
     default = dict(default or {})
     if any(k in actual for k in TEMPS):
         default = {k: v for k, v in default.items() if k not in TEMPS}  # [왜] TJ로 잰 행에 표 기본 TA를 붙이지 않는다
-    have = {**default, **actual}
+    return {**default, **actual}
+
+
+def compare(required: dict, actual: dict, default: dict | None = None) -> Literal['same', 'different', 'unknown']:
+    """required의 항목이 모두 actual과 같으면 'same', 하나라도 다르면 'different', 값이 없어 못 정하면 'unknown'.
+
+    actual에 없는 항목은 표 제목의 기본 조건(default)으로 채운다(fill).
+    """
+    have = fill(actual, default)
     result = 'same'
     for key, want in required.items():
         if key not in have:

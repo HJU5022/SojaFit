@@ -116,6 +116,22 @@ def test_find_question_filters_judges_and_ranks(monkeypatch):
     assert j['kind'] == 'find' and j['capped'] is False
 
 
+def test_find_does_not_filter_by_original_part_values(monkeypatch):
+    """원래 부품 값(orig.*)을 쓰는 조건(R11 TRR ≤ 원래 TRR)은 거르기에 쓰지 않는다. 판정에서 같은 시험 조건 행끼리 본다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+
+    def find(conditions, category, package, limit):
+        seen.append(conditions)
+        return []
+    table = {**SPECS, '1N5819': [r('1N5819', 'VRRM', 40.0), r('1N5819', 'TRR', 5e-8, 's')]}
+    read = dict(READ, role='R11', original_part='1N5819', candidates=[],
+                values=[READ['values'][0], dict(READ['values'][1], name='i_out')])
+    j = J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of(table), find=find,
+                      retriever=None)['judgement']
+    assert [t['code'] for t in seen[0]] == ['VRRM', 'IF_AV'] and j['terms'] == seen[0]
+
+
 def test_ac09_numbers_are_compared_in_verdict_only(monkeypatch):
     monkeypatch.setattr(J, 'interrupt', unknown)
     called = []

@@ -183,10 +183,9 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             roles = [reply['role']]
     try:
         original_rows = specs(read.original_part) if read.original_part else []
-        original = V.first_values(original_rows)
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
-            terms = V.search_conditions(rules[roles[0]], values, original)
+            terms = V.search_conditions(rules[roles[0]], values)
             found = find(terms, read.category_wanted or None, read.package_wanted or None, 50) if terms else []
             candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found]
         else:
@@ -198,7 +197,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
             same = _identical(retriever, read.original_part, name)
-            judged = [_schottky_exempt(V.judge_part(rules[r], r, name, values, conds, rows, original=original,
+            judged = [_schottky_exempt(V.judge_part(rules[r], r, name, values, conds, rows,
                                                     original_rows=original_rows or None, identical=same,
                                                     footprint=footprint, packages=packages), category) for r in roles]
             results.append(max(judged, key=lambda j: V.ORDER.index(j.verdict)))  # 역할이 둘이면 더 나쁜 판정(EC-02)

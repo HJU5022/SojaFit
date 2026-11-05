@@ -66,7 +66,28 @@ def _pick(rows: list[dict], codes: list[str], required: dict) -> tuple[str, list
     return codes[0], [], why
 
 
-def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original: dict | None) -> tuple[Check, list[str], str]:
+def _same_condition(a: dict, b: dict) -> bool:
+    """두 사양 표 행의 시험 조건(표 제목 기본 조건 포함)이 같은지. 한쪽에만 적힌 항목이 있으면 같지 않다."""
+    x, y = (S.fill(S.parse(r.get('test_condition')), S.parse((r.get('citation') or {}).get('table'))) for r in (a, b))
+    return S.compare(x, y) == 'same' and S.compare(y, x) == 'same'
+
+
+def _original(original_rows: list[dict], code: str, row: dict | None) -> dict[str, float]:
+    """기준식의 orig.<코드> 값. 비교하는 코드(code)는 후보 행(row)과 시험 조건이 같은 원래 행의 값만 쓴다."""
+    # [주의] 다른 코드(R04 · R18 PD 기준식의 orig.VZ)는 후보 행과 시험 조건을 맞출 수 없어 원래 부품의 첫 행 값을 쓴다
+    other = first_values([o for o in original_rows if o['code'] != code])
+    same = first_values([o for o in original_rows if o['code'] == code and row is not None and _same_condition(o, row)])
+    return {**other, **same}
+
+
+def _margin(op: str, value, t: list[float]) -> float:
+    """기준까지 남은 여유. 0 이상이면 통과."""
+    if op == 'within':
+        return min(value[0] - t[0], t[1] - value[1])
+    return value - t[0] if op == '>=' else t[0] - value
+
+
+def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original_rows: list[dict]) -> tuple[Check, list[str], str]:
     """조건 하나 → (결과, 빠진 회로 값, 불확실 메모)."""
     codes = cond['code'] if isinstance(cond['code'], list) else [cond['code']]
     bases = C._bases(cond)
@@ -82,34 +103,39 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original: di
         lack.append(cond['at'])
     if lack:
         return Check(**base, result='unverified', why='빠진 값: ' + ', '.join(lack)), lack, note
-    threshold = [C.evaluate(b, values, original) for b in bases]
-    if any(t is None for t in threshold):
+    if {c for b in bases for c in C.orig_codes(b)} - {o['code'] for o in original_rows}:
         return Check(**base, result='unverified', why='원래 부품 값 없음'), [], note
     temp = {} if set(codes) <= set(VOLTAGE_RATINGS) else conds.get('temp', {})
     required = {**temp, **(conds.get(cond['at'], {}) if cond.get('at') else {})}
     code, picked, why = _pick(rows, codes, required)
-    shown = threshold[0] if len(threshold) == 1 else threshold
+
+    def limits(r: dict | None) -> list[float] | None:
+        t = [C.evaluate(b, values, _original(original_rows, code, r)) for b in bases]
+        return None if None in t else t
+
+    def shown(t):
+        return t if t is None or len(t) > 1 else t[0]
     if not picked:
-        return Check(**{**base, 'code': code}, threshold=shown, result='unverified', why=why), [], note
-    if cond['op'] == 'within':
-        lows, highs = [_value(r, 'min') for r in picked], [_value(r, 'max') for r in picked]
-        if None in lows or None in highs:
-            return Check(**{**base, 'code': code}, threshold=shown, result='unverified', why='최소 · 최대 값 없음'), [], note
-        value = [min(lows), max(highs)]
-        ok = value[0] >= threshold[0] and value[1] <= threshold[1]
-    else:
-        found = [v for v in (_value(r, 'typ' if code == 'CJ' else 'max') for r in picked) if v is not None]
-        if not found:
-            return Check(**{**base, 'code': code}, threshold=shown, result='unverified', why='값 없음'), [], note
-        value = min(found) if cond['op'] == '>=' else max(found)  # [왜] 같은 조건 행이 여럿이면 불리한 쪽으로 본다
-        ok = value >= threshold[0] if cond['op'] == '>=' else value <= threshold[0]
-    r = picked[0]
-    return Check(**{**base, 'code': code}, threshold=shown, value=value, unit=r.get('unit'), condition=r.get('test_condition'),
-                 citation=r.get('citation'), result='pass' if ok else 'fail'), [], note
+        return Check(**{**base, 'code': code}, threshold=shown(limits(None)), result='unverified', why=why), [], note
+    pairs = [(r, t) for r in picked if (t := limits(r))]
+    if not pairs:
+        return Check(**{**base, 'code': code}, result='unverified', why='원래 부품의 같은 시험 조건 값 없음'), [], note
+    found = []
+    for r, t in pairs:
+        value = [_value(r, 'min'), _value(r, 'max')] if cond['op'] == 'within' else _value(r, 'typ' if code == 'CJ' else 'max')
+        if cond['op'] == 'within' and None in value:
+            return Check(**{**base, 'code': code}, threshold=shown(t), result='unverified', why='최소 · 최대 값 없음'), [], note
+        if value is not None:
+            found.append((r, t, value))
+    if not found:
+        return Check(**{**base, 'code': code}, threshold=shown(pairs[0][1]), result='unverified', why='값 없음'), [], note
+    r, t, value = min(found, key=lambda x: _margin(cond['op'], x[2], x[1]))  # [왜] 같은 조건 행이 여럿이면 불리한 쪽으로 본다
+    return Check(**{**base, 'code': code}, threshold=shown(t), value=value, unit=r.get('unit'), condition=r.get('test_condition'),
+                 citation=r.get('citation'), result='pass' if _margin(cond['op'], value, t) >= 0 else 'fail'), [], note
 
 
 def first_values(rows: list[dict]) -> dict[str, float]:
-    """원래 부품의 코드별 첫 값(기준식의 orig.<코드>). 같은 코드가 여럿이면 표의 첫 행이다."""
+    """행들의 코드별 첫 값. 같은 코드가 여럿이면 표의 첫 행이다."""
     out = {}
     for r in rows:
         v = _value(r, 'typ' if r['code'] == 'CJ' else 'max')
@@ -145,9 +171,9 @@ def board_change(footprint: str | None, packages: list[str] | None) -> bool | No
 
 
 def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows: list[dict], *,
-               original: dict | None = None, original_rows: list[dict] | None = None, identical: bool = False,
+               original_rows: list[dict] | None = None, identical: bool = False,
                footprint: str | None = None, packages: list[str] | None = None) -> Judgement:
-    """후보 하나를 판정한다. values는 숫자 · 예/아니오, conds는 시험 조건(dict), rows는 후보의 사양 표 행."""
+    """후보 하나를 판정한다. values는 숫자 · 예/아니오, conds는 시험 조건(dict), rows는 후보의 사양 표 행, original_rows는 원래 부품의 행."""
     checks, missing, uncertain = [], [], []
     for cond in rule['conditions']:
         if cond.get('unless') and values.get(cond['unless']) is True:
@@ -159,7 +185,7 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
                 continue
             if trigger is False:
                 continue
-        check, lack, note = _check(cond, values, conds, rows, original)
+        check, lack, note = _check(cond, values, conds, rows, original_rows or [])
         checks.append(check)
         missing += lack
         if note:
@@ -180,15 +206,17 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
                      uncertain=uncertain, cautions=list(rule.get('cautions') or []), board_change=board_change(footprint, packages))
 
 
-def search_conditions(rule: dict, values: dict, original: dict | None = None) -> list[dict]:
+def search_conditions(rule: dict, values: dict) -> list[dict]:
     """찾기용 사양 표 검색 조건(find_parts_by_specs). 시험 조건이 없는 필수 조건의 하한 · 상한만 쓰고 최대 10개(MCP 한도)."""
     out = []
     for cond in rule['conditions']:
         if cond['tier'] != 'required' or cond.get('at') or (cond.get('unless') and values.get(cond['unless']) is True):
             continue
+        if any(C.orig_codes(b) for b in C._bases(cond)):
+            continue  # [왜] 원래 부품 값(orig.*)은 시험 조건이 같은 행끼리 판정에서 본다. 거르기에 쓰지 않는다
         # shortcut: 대체 코드 중 첫 코드(VRRM)로만 거른다. VR만 적은 소신호 부품이 빠지는 사례가 보이면 코드마다 따로 찾아 합친다
         code = cond['code'][0] if isinstance(cond['code'], list) else cond['code']
-        t = [C.evaluate(b, values, original) for b in C._bases(cond)]
+        t = [C.evaluate(b, values) for b in C._bases(cond)]
         if None in t:
             continue
         if cond['op'] == '>=':

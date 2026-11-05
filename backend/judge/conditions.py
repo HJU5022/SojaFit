@@ -61,6 +61,12 @@ def names(basis: str) -> set[str]:
     return used
 
 
+def orig_codes(basis: str) -> set[str]:
+    """기준식이 쓰는 원래 부품 코드(orig.<코드>의 코드)."""
+    return {n.attr for n in ast.walk(ast.parse(basis, mode='eval'))
+            if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == 'orig'}
+
+
 def inputs(rule: dict) -> dict[str, str]:
     """규칙의 회로 값 이름 → 종류(number · flag · condition). 공통 값(temp)을 더한다."""
     return {**COMMON_INPUTS, **rule.get('inputs', {})}
