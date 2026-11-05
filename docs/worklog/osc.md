@@ -148,3 +148,13 @@
 - Jev 실행기의 `--max-usd`는 입력 비용 추정으로 다음 job을 차단하는 관리값임을 명시했다. 실제 보고 비용이 계획값을 넘은 경우 해당 행을 저장하고 추가 job 없이 `budget_exceeded`로 중단하며, `NaN`·무한대 한도는 API 호출 전 거부한다. 기존 2차 실측이 이 수정 코드로 재실행된 것처럼 기록하지 않는다.
 - 변경 범위: Jev 실행기·회귀 테스트, 2차 결과·간단 보고서, 실험 계약·사전 등록 결과 해석, Jev 인수인계와 실행기 색인. 원시 JSON과 동결 평가셋은 수정하지 않았다.
 - 확인: Jev 원시 `rows.json` SHA-256 `f1995ce2b442d1f7dc72d427a7ffcb2fcf9c1b63dd9a27ee015ee109d4fa0d2d` 유지. 관련 테스트 63건, `PYTHONUTF8=1` 전체 테스트 374건 통과·27건 건너뜀, `git diff --check` 통과. 유료 API 호출과 재측정은 하지 않았다.
+
+## 2026-11-05 수퍼바이저 3차 실행 전 준비
+
+- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #33과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
+- 조건·예산·중단: 기존 프롬프트·typed question 계약, ZDR·fallback 금지, 유형 gold 35문항, 여섯 모델의 `out_of_scope → refuse` 일관성, 1~3차 완전한 행만의 agreement·flip을 고정했다. 본 실행 계획값 US$0.88, smoke US$0.033, 합계 US$0.913, 모델별 70 outputs·210 raw calls·7,200초와 provider·가격·코드 hash 불일치 중단을 등록했다. Jev 비용값은 실제 청구액의 절대 상한이 아니다.
+- API 없는 명령·결과: `uv run --no-sync python -c '...create_manifest(...)...'`로 5종 manifest를 생성해 1,050건 중 3차 350건을 확인했고, `uv run --no-sync python -m evals.runners.run_supervisor_jev plan evals/results/supervisor/2026-11-05-jev-stage3-v1 --run-index 3`으로 Jev 70건을 준비했다. 생성된 파일은 두 manifest뿐이다. 유료 API 호출 0회, smoke·본 실행 0건이다.
+- 바꾼 파일: 3차 계약·사전 등록, 두 manifest, `SOJAFIT.md` 트리, 실험·평가 폴더 색인과 이 작업 기록. 기존 1·2차 원시 결과와 동결 평가셋은 바꾸지 않았다. 다음 단계는 manifest hash·현재 catalog 가격·ZDR·provider를 다시 확인한 뒤 별도 지시에 따라 smoke를 시작하는 것이다.
+- 준비 검증: 5종 3차 350건과 Jev 3차 70건의 고유 job, 동결 dataset hash, 5종 prompt·code hash, Jev typed question 계약 hash를 대조했다. 관련 pytest 69건 통과, `git diff --check` 통과. 원시 결과·API 호출·커밋·푸시·PR 갱신은 하지 않았다. 유료 실행 전에 사전 등록을 별도 커밋으로 확정해야 한다.
+- Jev 코드 재현 경계: Jev manifest에는 실행기 hash가 없어 `run_supervisor_jev.py`의 LF 정규화 SHA-256 `291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f`를 사전 등록에 별도로 적고, live 전 수동 대조를 조건으로 추가했다.
+- 실행 승인: 사용자가 3차 실행과 PR용 근거 보존을 지시했다. 유료 호출 전에 위 사전 등록·manifest를 로컬 커밋으로 고정한다. 현재 catalog·ZDR·가격·첫 문항 예약을 확인하고, 승인된 모델별 smoke·본 실행 계획값을 그대로 적용한다. 원격 공개 시점으로 사전 등록 순서를 독립 증명했다고 주장하지 않는다. 키는 기존 작업 트리 `.env`에서 `OPENROUTER_API_KEY`만 읽고 출력하지 않는다.
