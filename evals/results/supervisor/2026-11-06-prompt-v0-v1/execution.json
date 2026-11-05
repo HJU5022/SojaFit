@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-06",
+  "preregistration": "evals/guides/preregister.md#34",
+  "user_approved_total_command_cap_usd": 0.145,
+  "worst_case_raw_calls": 98,
+  "actual_raw_calls": 42,
+  "models": {
+    "openai/gpt-6-luna": {
+      "api_mode": "chat_completions",
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "planned_cap_usd": 0.065,
+      "reported_cost_usd_including_smoke": 0.00231941
+    },
+    "anthropic/claude-haiku-5.5": {
+      "api_mode": "chat_completions",
+      "provider": "Google",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "planned_cap_usd": 0.065,
+      "reported_cost_usd_including_smoke": 0.004214
+    },
+    "typesafe/jev-1.14": {
+      "api_mode": "decisions",
+      "provider": "TypeSafe",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "approved_cap_usd": 0.015,
+      "usd_cap_technically_enforced": false,
+      "reported_usage_cost_usd_including_smoke": 0.000553014
+    }
+  },
+  "reported_usage_cost_total_usd": 0.007086424,
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "source_sha256": {
+    "chat/manifest.json": "b23df7749ef439cdf6d7bd93aeb0f82b5e2f93a98ea00d308374beb2bc3d232a",
+    "chat/smoke_openai__gpt-6-luna.json": "5e25916691d3f2cff612f1d514b7de78c7a69a8a44acec4719cf07bb74e34d84",
+    "chat/rows_openai__gpt-6-luna.json": "df75bab5837eaad998dcb51f583845f1ac29c9041bdb65a9cc8a7bb5ed8449ee",
+    "chat/smoke_anthropic__claude-haiku-5.5.json": "af336b385711277fe0d807c75cf7a2258279fae90df6e1416cdd1753483d19fb",
+    "chat/rows_anthropic__claude-haiku-5.5.json": "3fc5f53ccac607b855b302a10fa24c33fdf62ec191d75a9bada31fa1b905a4d1",
+    "jev/manifest.json": "663f5e7f3c64ed390a6dce495d5660c7b822a18986f0611230bf243f19d5d3c6",
+    "jev/smoke_typesafe__jev-1.14.json": "97c6e9a3b6649d482bb5bf81d749f96fcd3212e8b19ceffe44bb51796d9a2f83",
+    "jev/rows_typesafe__jev-1.14.json": "c2ef69324daed94209b96665f365cc70f6f93643417314931eb59f45a936f8a2",
+    "summary.json": "a3142005df6421506a9526027ad611770e0de5b7e13042da3e7a1cb7e52d7db4"
+  },
+  "secrets_stored": false,
+  "raw_prompt_or_response_stored": false
+}

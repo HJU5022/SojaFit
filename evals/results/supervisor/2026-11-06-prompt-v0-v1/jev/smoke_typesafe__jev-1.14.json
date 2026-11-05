@@ -1,0 +1,94 @@
+{
+  "status": "complete",
+  "model_id": "typesafe/jev-1.14",
+  "provider": "TypeSafe",
+  "actual_model": "typesafe/jev-1.14-20261014",
+  "api_mode": "decisions",
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "row": {
+    "model_id": "typesafe/jev-1.14",
+    "case_id": "sv0-01",
+    "status": "complete",
+    "decision": {
+      "question_type": "candidate_find",
+      "required_evidence": [
+        "circuit",
+        "datasheet"
+      ],
+      "next_action": "refuse",
+      "reason_code": "CANDIDATE_FIND"
+    },
+    "semantic_errors": [
+      "next_action"
+    ],
+    "typed_answers": {
+      "question_type": {
+        "type": "choice",
+        "choice": "candidate_find",
+        "confidence": 0.76,
+        "probabilities": {
+          "out_of_scope": 0.08,
+          "insufficient_information": 0.12,
+          "candidate_judge": 0,
+          "candidate_find": 0.8,
+          "role": 0,
+          "rating": 0
+        }
+      },
+      "needs_circuit": {
+        "type": "choice",
+        "choice": "yes",
+        "confidence": 0.98,
+        "probabilities": {
+          "yes": 0.99,
+          "no": 0.01
+        }
+      },
+      "needs_datasheet": {
+        "type": "choice",
+        "choice": "yes",
+        "confidence": 0.92,
+        "probabilities": {
+          "yes": 0.96,
+          "no": 0.04
+        }
+      },
+      "needs_approved_case": {
+        "type": "choice",
+        "choice": "no",
+        "confidence": 0.92,
+        "probabilities": {
+          "yes": 0.04,
+          "no": 0.96
+        }
+      },
+      "next_action": {
+        "type": "choice",
+        "choice": "refuse",
+        "confidence": 0.65,
+        "probabilities": {
+          "circuit_agent": 0.1,
+          "search_agent": 0.16,
+          "judge_answer_agent": 0,
+          "refuse": 0.74
+        }
+      }
+    },
+    "latency_seconds": 0.48400000005494803,
+    "actual_model": "typesafe/jev-1.14-20261014",
+    "provider": "TypeSafe",
+    "usage": {
+      "input_tokens": 907,
+      "output_tokens": 213,
+      "cost": 3.8094e-05
+    }
+  },
+  "limits": {
+    "max_calls": 1,
+    "max_seconds": 180.0,
+    "approved_max_usd": 0.005,
+    "reported_cost": "Not Reported",
+    "usd_cap_technically_enforced": false
+  }
+}

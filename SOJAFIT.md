@@ -241,8 +241,13 @@ SojaFit (proj3-b)
 │           │   ├── smoke.json  <- 3차 Jev 호출·provider·usage 확인
 │           │   ├── rows.json  <- 3차 Jev 문항별 결과·오류·usage
 │           │   └── summary.json  <- Jev 실행기의 3차 집계
-│           └── 2026-11-05-stage3-comparison-v1/  <- API 없는 6종 1~3차 비교 정본
-│               └── stage3_summary.json  <- 3차 지표·라우팅·3회 coverage·원시 hash
+│           ├── 2026-11-05-stage3-comparison-v1/  <- API 없는 6종 1~3차 비교 정본
+│           │   └── stage3_summary.json  <- 3차 지표·라우팅·3회 coverage·원시 hash
+│           └── 2026-11-06-prompt-v0-v1/  <- Supervisor Prompt V0 세 후보 exact-provider smoke·13건 결과·통합 집계
+│               ├── execution.json  <- 사용자 승인 상한·actual model/provider·호출·비용·출처 hash
+│               ├── summary.json  <- 같은 dataset·의미 계약의 세 후보 공통 지표 정본
+│               ├── chat/  <- Luna·Haiku manifest·smoke·문항별 결과
+│               └── jev/  <- Jev manifest·smoke·문항별 결과
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령

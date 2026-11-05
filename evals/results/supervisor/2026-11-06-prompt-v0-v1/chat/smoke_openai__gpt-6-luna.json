@@ -1,0 +1,55 @@
+{
+  "status": "complete",
+  "model_id": "openai/gpt-6-luna",
+  "provider": "Azure",
+  "actual_model": "openai/gpt-6-luna",
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "row": {
+    "model_id": "openai/gpt-6-luna",
+    "case_id": "sv0-01",
+    "status": "complete",
+    "decision": {
+      "question_type": "out_of_scope",
+      "required_evidence": [],
+      "next_action": "refuse",
+      "reason_code": "OUT_OF_SCOPE"
+    },
+    "semantic_errors": [],
+    "first_pass_valid": true,
+    "raw_attempts": 1,
+    "latency_seconds": 3.8917480999371037,
+    "response_id": "gen-1793891119-GJINykRoq7Qjene6VFOF",
+    "actual_model": "openai/gpt-6-luna",
+    "provider": "Azure",
+    "finish_reason": "stop",
+    "usage": {
+      "completion_tokens": 63,
+      "prompt_tokens": 1074,
+      "total_tokens": 1137,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 27,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 1071,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0.000165675,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0.000165675,
+        "upstream_inference_prompt_cost": 0.000134175,
+        "upstream_inference_completions_cost": 3.15e-05
+      }
+    }
+  }
+}

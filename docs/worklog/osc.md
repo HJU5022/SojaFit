@@ -7,7 +7,8 @@
 - 현재 catalog: 세 모델 모두 ZDR catalog에 노출됐다. 적용 provider는 기존 성공 근거와 현재 endpoint를 대조해 Luna `Azure`, Haiku `Google`, Jev `TypeSafe`로 정했다. 단가는 Chat 두 모델 input/output `$0.0000001`/`$0.0000005` per token, Jev input `$0.000000042`, output `$0`다.
 - 예산·시간·중단: Chat 모델별 smoke `$0.005`·3 raw calls·180초, 본 실행 `$0.060`·39 raw calls·1,800초. Jev smoke 승인 `$0.005`·1 call·180초, 본 실행 승인 `$0.010`·13 calls·1,800초. 전체 명령 상한 `$0.145`, 최악 98 raw calls다. smoke 실패, hash/model/provider 불일치, 상한 도달, 반복 provider 오류에서 중단하고 자동 증액·재실행하지 않는다. Jev USD는 기술적 cap이 아니라 승인 기록이다.
 - 실행 명령·보존: API 없는 두 plan 뒤 `--confirm-live`·exact provider로 smoke 세 건, 본 실행 세 건, hash가 같은 13건만 통합 집계한다. 결과 예정 경로는 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`이다. 루트 `.env`에서는 `OPENROUTER_API_KEY`만 현재 process에 주입하고 값은 출력·기록하지 않는다.
-- 현재 상태: live 호출 0건, 비용 `$0`. 정확한 총 상한 `$0.145`에 대한 사용자 승인 대기.
+- 실행 결과: 사용자가 총 상한 `$0.145`를 승인한 뒤 exact provider smoke와 본 실행을 수행했다. Luna/Azure와 Haiku/Google은 13/13 schema·semantic·exact match, Jev/TypeSafe는 schema 13/13이나 semantic 8/13·exact 7/13이었다. Jev의 의미 오류 5건은 모두 `next_action` 상태 라우팅이었다. 실제 raw calls는 42회, provider 보고 usage cost 합계는 smoke 포함 `$0.007086424`다. 결과·실행 조건·출처 hash는 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`에 보존했고 `.gitattributes`로 해당 JSON 원시 바이트를 유지한다.
+- 해석: V0 기준에서는 Luna와 Haiku가 사전 기대를 충족했고 Jev는 semantic 12/13·exact 10/13 기대에 미달했다. 이 소형 13건은 prompt 프로토타입 검증이며 운영 모델 확정이나 기존 70문항 결과 대체 근거로 사용하지 않는다. 추가 유료 재실행이나 prompt·gold 수정은 하지 않았다.
 
 ## 2026-11-05 Supervisor Prompt V0 프로토타입
 
