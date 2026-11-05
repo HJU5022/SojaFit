@@ -45,7 +45,7 @@ def run(monkeypatch, question_type, grades, docs):
 
 def test_passed_card_answers_after_one_search(monkeypatch):
     out, calls = run(monkeypatch, "rating", [[7]], [CARD])
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
     # [왜] 재작성 입력은 입력 전체가 아니라 질문 줄만이다. 회로 이름·D1까지 넣으면 BM25가 품번보다 그 낱말에 끌린다(11-02 격자 실측)
     assert calls == [(REWRITTEN, ["1N5817"])]
     assert out["tries"] == 1 and "[7]" in out["answer"]
@@ -58,7 +58,7 @@ def test_search_route_goes_through_rewrite(monkeypatch):
 
 def test_no_pass_rewrites_then_searches_again(monkeypatch):
     out, calls = run(monkeypatch, "rating", [[], [7]], [CARD])
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "재작성", "검색", "채점", "생성"]
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "재작성", "검색", "채점", "생성"]
     assert calls == [(REWRITTEN, ["1N5817"])] * 2  # 품번 필터는 원래 질문에서 뽑는다
     assert out["tries"] == 2
 
@@ -73,7 +73,7 @@ def test_still_no_pass_refuses_after_two_searches(monkeypatch):
 def test_zero_cards_refuses_without_rewrite(monkeypatch):
     out, calls = run(monkeypatch, "rating", [], [])  # 채점 LLM을 부르면 StopIteration으로 깨진다
     assert len(calls) == 1
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "거절"]
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "거절"]
 
 
 def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
@@ -94,7 +94,7 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
     out = build_graph(retriever=unavailable).invoke({"input": INPUT})
     assert calls == [(REWRITTEN, ["1N5817"])]
     assert out["retrieval_error"] == {"kind": "timeout"}
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "거절"]
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "거절"]
     assert "검색 도구" in out["answer"]
     assert "데이터시트를 찾지 못" not in out["answer"]
 
@@ -103,7 +103,24 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
 def test_out_of_scope_and_role_skip_search(monkeypatch, question_type, last):
     out, calls = run(monkeypatch, question_type, [], [CARD])
     assert calls == []
-    assert out["path"] == ["입력 읽기", "라우팅", last]
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", last]
+
+
+def test_facts_are_checked_before_routing_and_shown_to_the_router(monkeypatch):
+    """사실 확인 노드가 라우팅 앞에서 품번을 코퍼스 목록과 대조하고, 그 결과가 라우팅 LLM 입력에 멀티 Supervisor와 같은 글로 들어간다."""
+    from backend.multi_agent.supervisor import Facts
+    seen = []
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: seen.append(user) or (
+        schema(question_type="role") if schema is nodes.Route else schema(answer="D1은 역전압 보호 다이오드다 [넷리스트].")))
+    out = build_graph(retriever=lambda q, *, parts=None: [], lookup=lambda state: Facts(parts={"1N5817": True})).invoke({"input": INPUT})
+    assert out["path"][:3] == ["입력 읽기", "사실 확인", "라우팅"]
+    assert out["facts"] == {"parts": {"1N5817": True}, "revisions": {}}
+    assert "Verified facts:\n- part 1N5817: in corpus" in seen[0]
+
+
+def test_no_lookup_leaves_facts_empty(monkeypatch):
+    out, _ = run(monkeypatch, "role", [], [CARD])
+    assert out["facts"] == {"parts": {}, "revisions": {}}
 
 
 def test_second_message_in_same_thread_starts_fresh(monkeypatch):

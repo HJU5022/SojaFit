@@ -28,6 +28,9 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     question: str       # 질문 문장만
     target_part: dict   # 대상 부품의 값·풋프린트와 전원 경로 (예: J1 → S1 → D1 → F1)
 
+    # ── 사실 확인 노드가 채운다 (멀티 그래프와 같은 코드, backend/multi_agent/facts.py) ──
+    facts: dict         # 질문 속 품번 · 개정판이 코퍼스 목록에 있나 `supervisor.Facts`. 라우팅이 이 사실로 거절을 정한다
+
     # ── 라우팅 노드가 채운다 ──
     # [왜] 평가셋의 kind(관련/비관련)와 헷갈리지 않게 question_type이라 부른다
     question_type: str  # role | rating | candidate_judge | candidate_find | out_of_scope

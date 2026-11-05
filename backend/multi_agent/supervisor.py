@@ -36,16 +36,22 @@ class SupervisorInput(BaseModel):
     judge_enabled: bool = False  # [왜] 판정 에이전트를 붙였을 때만 켠다(build_graph가 도구와 체크포인터를 확인한다)
 
 
+def render_facts(facts: Facts) -> list[str]:
+    """확인된 사실을 LLM 입력 줄로 쓴다. [왜] D4 v2 단일 그래프의 라우팅도 이 글을 받아, 같은 사실로 거절을 정하게 한다(D4 · D5 공정 비교)."""
+    lines = ['Verified facts:']
+    for name, ok in facts.parts.items():
+        lines.append(f'- part {name}: {"in corpus" if ok else "NOT in corpus"}')
+    for name, ok in facts.revisions.items():
+        lines.append(f'- revision {name}: {"in corpus" if ok else "NOT in corpus"}')
+    if not facts.parts and not facts.revisions:
+        lines.append('- (no part number or revision to verify in the question)')
+    return lines
+
+
 def render(i: SupervisorInput) -> str:
     """LLM에 줄 user 글(영어 라벨). 청크 원문은 없고 요약 보고만 담는다(컨텍스트 분리)."""
     lines = [f'Question: {i.question}', f'Target: {i.target} {i.target_value}'.rstrip(), f'Conditions: {i.conditions}',
-             f'Question type: {i.question_type or "not decided yet"}', 'Verified facts:']
-    for name, ok in i.facts.parts.items():
-        lines.append(f'- part {name}: {"in corpus" if ok else "NOT in corpus"}')
-    for name, ok in i.facts.revisions.items():
-        lines.append(f'- revision {name}: {"in corpus" if ok else "NOT in corpus"}')
-    if not i.facts.parts and not i.facts.revisions:
-        lines.append('- (no part number or revision to verify in the question)')
+             f'Question type: {i.question_type or "not decided yet"}', *render_facts(i.facts)]
     lines.append('Reports so far:')
     for n, r in enumerate(i.reports, 1):
         extra = ''.join([f' · reason {r.reason.value}' if r.reason else '', f' · missing {", ".join(r.missing)}' if r.missing else '',

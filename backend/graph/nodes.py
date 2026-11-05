@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
+from backend.multi_agent.supervisor import Facts, render_facts
 from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
@@ -112,7 +113,7 @@ def read_input(state: AgentState) -> dict:
     # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
     # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
     reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
-             "tries": -state.get("tries", 0)}
+             "tries": -state.get("tries", 0), "facts": {}}  # facts: 앞 질문의 사실 확인으로 새 질문을 거절하지 않게(멀티 parse_node와 같은 이유)
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
@@ -128,7 +129,9 @@ def route(state: AgentState) -> dict:
     """라우팅 노드: 질문 종류를 다섯 가지 중 하나로 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
     # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
     part = state.get("target_part") or {}
-    user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
+    # [왜] 사실 확인 결과를 멀티 Supervisor와 같은 글(render_facts)로 붙여, 코퍼스에 없는 품번 · 개정판을 검색 전에 거절하게 한다
+    facts = render_facts(Facts(**(state.get("facts") or {})))
+    user = "\n".join([f"대상: {state.get('target', '')} {part.get('value', '')}", f"질문: {state['question']}", *facts])
     answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
     return {"question_type": answer.question_type, "path": ["라우팅"]}  # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다
 

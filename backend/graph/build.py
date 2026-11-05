@@ -6,10 +6,13 @@
 - 근거 충분 여부는 어휘 겹침 같은 점수 하나로 정하지 않고, 품번·개정판 같은 결정적 검사를 따로 둔다(채점 노드).
   품번 목록·낱말 가중치 같은 코퍼스 의존 값은 코드에 고정하지 않는다(코퍼스가 커지면 새 대상을 전부 거절하게 된다).
 """
+from functools import partial
+
 from langgraph.graph import END, START, StateGraph
 
 from backend.graph import nodes
 from backend.graph.state import AgentState
+from backend.multi_agent.facts import facts_node
 
 # 검색 상한: 첫 검색 + 재작성 뒤 1번(SPEC 2절)
 # [주의] 시험은 이 상수 대신 리터럴 2와 비교하고 retrieve 호출 횟수를 센다. 상수끼리 비교하면 상한을 바꿔도 통과한다(docs/GATES.md 변이 확인)
@@ -42,21 +45,23 @@ def after_grade(state: AgentState) -> str:
     return "재작성"
 
 
-def build_graph(retriever=None, checkpointer=None):
+def build_graph(retriever=None, checkpointer=None, *, lookup=None):
     """줄기 그래프(D4 단일 에이전트)를 조립해 compile한 앱을 돌려준다(SPEC 2절 노드 표)."""
     # [왜] 검색기와 체크포인터를 인자로 받아야 가짜 검색기·메모리 체크포인터로 키 없이 시험하고 요청 수를 셀 수 있다
     # retriever: (question, *, parts) 모양의 검색 함수. checkpointer: None이면 대화를 저장하지 않는다
+    # lookup: 사실 확인 함수(state → Facts, 멀티와 같은 `make_lookup(mcp.check)`). None이면 확인 없이 비워 둔다
     if retriever is None:
         # [왜] 여기서 불러와야 가짜 검색기를 넣는 시험이 DB·키 없이 돈다
         from backend.rag.retrieve import retrieve as retriever
     b = StateGraph(AgentState)  # AgentState가 메모장 칸과 합치는 규칙(리듀서)을 정한다
-    for name, fn in [("입력 읽기", nodes.read_input), ("라우팅", nodes.route),
+    for name, fn in [("입력 읽기", nodes.read_input), ("사실 확인", partial(facts_node, lookup=lookup)), ("라우팅", nodes.route),
                      ("검색", lambda state: nodes.search(state, retriever)),  # 검색 노드만 검색기를 받는다
                      ("채점", nodes.grade), ("재작성", nodes.rewrite), ("생성", nodes.generate), ("거절", nodes.refuse)]:
         b.add_node(name, fn)  # [주의] 노드 이름은 갈림길이 돌려주는 값, path 칸에 남는 이름과 같아야 한다
 
     b.add_edge(START, "입력 읽기")  # 항상 입력 읽기에서 시작한다
-    b.add_edge("입력 읽기", "라우팅")
+    b.add_edge("입력 읽기", "사실 확인")
+    b.add_edge("사실 확인", "라우팅")  # [왜] 범위 판정을 첫 단에서 한다: 라우팅이 확인된 사실로 검색 전에 거절을 정한다(11-06 강사 지적)
     b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "재작성"})  # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
     b.add_conditional_edges("검색", after_search, {"채점": "채점", "거절": "거절"})
     b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
