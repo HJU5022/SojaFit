@@ -605,3 +605,12 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 예산 · 중단: 개인 Anthropic 1.5달러 · 팀 OpenRouter 0.2달러. 한 단계에서 실패가 3건을 넘으면 그 단계 점수를 쓰지 않고 원인부터 본다. 멀티 그래프는 마지막 단계만 2세트 잰다(따로 사전 등록).
 - 한계: 단계마다 2회라 흔들림은 범위만 안다(같은 코드 두 세트 차이가 cited_gold 4). 단계 효과가 흔들림 폭보다 작으면 효과로 단정하지 않는다. 동시 실행이라 응답 시간은 1회 측정보다 늘 수 있다.
 - 순서 바꿈(11-06, S4 측정 전): 구현이 먼저 끝난 순서로 쌓는다. S4 = 판정 읽기 값 이름(e9e12f4), S5 = 판정 길 거절 문(bcbc92a, judge_read · supervisor 프롬프트 바뀜), 그다음 사양 표 쪽 'TSC ' 떼기 → 동일품 → 찾기 정렬 → 제너 규칙을 S6~S9로 쌓는다. 단계별 기대 범위는 위 이름별 기대 그대로다.
+
+### 2026-11-06 #42: 판정 길 개선을 모두 쌓은 멀티 그래프 (동결 v2 70문항, 2세트, #40과 비교)
+
+- 왜: D5 회의에 쓸 멀티 숫자. #41의 마지막 단계(S9, 레포 a420a7a)와 같은 코드로 멀티를 잰다.
+- 적은 때: 시간을 줄이려고 두 세트를 시작한 직후, 결과를 보기 전에 적었다(11-06).
+- 비교 대상: #40 두 세트를 고친 채점기로 다시 채점한 값(관련 cited_gold 13 · 15, over_refusal 5 · 5, wrong_citation 17 · 15, 무관 correct_refusal 27 · 26, hallucination_risk 8 · 9, 판정 일치 5 · 6/9, p50 18.1 · 17.1초, 약 1.8달러).
+- 기대(결과 보기 전, 고치지 않음): cited_gold 20~30, over_refusal 2~8, wrong_citation 2~10, correct_refusal 31~35, hallucination_risk 0~4, 판정 일치 7~9/9, 실패 0~4, p50 12~25초, Anthropic 1.0~2.5달러. 단일(#41 S9)과 지표 차이는 두 세트 흔들림(cited_gold 4) 안으로 본다.
+- 명령(맥, lab 작업 폴더 `.wt/S9`, 가상환경은 lab `.venv`): `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi --out evals/results/graph/step_S9multi_set<n>.json` 두 번 동시.
+- 한계: 맥과 Docker에서 측정이 10개 넘게 동시에 돌아 응답 시간이 #40보다 늘 수 있다. 1회씩 2세트라 흔들림은 범위만 안다.
