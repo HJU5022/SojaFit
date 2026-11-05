@@ -15,6 +15,8 @@ from backend.judge import sheet_conditions as S
 
 Verdict = Literal['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT']
 ORDER = ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT')  # 좋은 것부터
+# [왜] 역전압 정격은 온도로 줄지 않아 사용 온도(temp)를 맞추지 않는다. 전류 · 전력 정격과 특성 값(VF · IR · VBR · VC 등)은 온도를 맞춘다
+VOLTAGE_RATINGS = ('VRRM', 'VR', 'VRWM')
 
 
 class Check(BaseModel):
@@ -83,7 +85,8 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original: di
     threshold = [C.evaluate(b, values, original) for b in bases]
     if any(t is None for t in threshold):
         return Check(**base, result='unverified', why='원래 부품 값 없음'), [], note
-    required = {**conds.get('temp', {}), **(conds.get(cond['at'], {}) if cond.get('at') else {})}
+    temp = {} if set(codes) <= set(VOLTAGE_RATINGS) else conds.get('temp', {})
+    required = {**temp, **(conds.get(cond['at'], {}) if cond.get('at') else {})}
     code, picked, why = _pick(rows, codes, required)
     shown = threshold[0] if len(threshold) == 1 else threshold
     if not picked:

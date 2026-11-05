@@ -87,6 +87,14 @@ def test_junction_temperature_question_cannot_use_ambient_ratings():
     assert j.verdict == 'NOT_VERIFIED'  # 표는 TA=25°C 정격이고 질문은 TJ만 줬다
 
 
+@pytest.mark.parametrize('temp', [{'TA': 85.0}, {'TJ': 25.0}])
+def test_voltage_ratings_ignore_temperature_but_current_ratings_do_not(temp):
+    """역전압 정격(VRRM)은 온도로 줄지 않아 표 기본 온도(TA=25°C) 값을 쓴다. 전류 정격(IF_AV)은 온도가 같아야 한다."""
+    j = V.judge_part(R01, 'R01', '1N5817', {'v_in_max': 12.0, 'i_max': 0.15}, {'temp': temp}, N5817)
+    checks = {c.code: c.result for c in j.checks}
+    assert checks == {'VRRM': 'pass', 'IF_AV': 'unverified'} and j.verdict == 'NOT_VERIFIED'
+
+
 def test_spec_equivalent_needs_original_and_no_worse_major_ratings():
     orig = [row('1N5819', 'VRRM', 40.0), row('1N5819', 'IF_AV', 1.0, unit='A')]
     better = [row('SS14', 'VRRM', 40.0), row('SS14', 'IF_AV', 1.0, unit='A')]
