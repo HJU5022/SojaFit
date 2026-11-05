@@ -17,6 +17,7 @@
 - `test_supervisor_models.py` — 동결 입력·schema 재시도·provider 중단·예산·집계·증거 hash를 API 호출 없이 검증
 - `test_supervisor_jev.py` — Jev typed answer·gold 격리·provider 정책·예산·70-job manifest를 API 없이 검증
 - `test_supervisor_stage3_report.py` — 3차 집계의 gold·형식·라우팅 분모와 완전한 3회 비교·과거 Jev 수치 재계산 검증
+- `test_supervisor_prompt_v0_common.py` — V0 13건의 hash·건수 동결, 정답·id 입력 격리, 오류 행을 포함한 공통 분모와 상태 전이 표본을 API 없이 검증
 - `test_score_answer.py` — 답변·거절 5지표 채점기: 데이터시트·회로 근거 인용, 다른 쪽·허위 인용 오답 처리, `n01` `relevant + NOT_VERIFIED` 조건 부족 설명 대 단순 거절 구분, 비관련 4종 거절 대 환각 위험, v1 50건·v2 70건 분모·제외 처리 확인(API·DB 없이)
 - `test_embedding_grid.py` — 격자 평가 실행기의 문항 읽기(v1에서 19건)·순위·요약·카드 묶기, 격자 결과 파일 78칸의 요약을 문항별 값으로 다시 계산해 대조, 모델 표와 임베딩 기록의 일치
 - `test_retrieval_layers.py` — 층별 재측정의 토큰화·nDCG·판정 규칙(순 차이 +5와 부트스트랩 구간), 층 결과 파일 요약의 재계산 일치, 나머지 측정 스크립트 문법(환경변수는 시험 뒤 되돌림)
