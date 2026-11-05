@@ -9,6 +9,8 @@
   문서마다 표 단서(주문표의 품번별 패키지, 'Package' 행의 열별 패키지, 첫 행에 붙은 Min·Nom·Max)를 먼저 모으고,
   이어지는 행(이름 없이 TYP·MAX만), 세로로 합친 품번·조건 칸은 같은 파라미터 행 묶음 안에서 채운다(11-05 PDF 대조 뒤).
   문서가 'Electrical characteristics apply in both directions'라고 밝힐 때만 양방향(C·CA) 품번에 단방향 행 값을 붙인다.
+  2차 대조 뒤: IF_AV는 평균·연속 전류만(첨두·서지·반복·IFRM·IF,MAX 행은 IFSM이거나 제외), 머리 끝 숫자는 첫 행이 빨려 든 것이라
+  떼고 읽음, 조건 주기로 품번 묶음 구간을 정함, 병합 칸 값은 가운데 열에서 대칭으로 펼침, 붙은 열 이름 칸을 나눔.
   `sample`은 13개 분류에서 품번 50개를 골라 사람이 PDF와 대조할 한국어 대조표(markdown)를 쓴다.
 - 하지 않는 일: LLM·임베딩 호출, DB 적재, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기.
   결과는 데이터시트에서 나온 값이라 저장소 밖(`SojaFit/corpus/tsc/specs/`)에 쓴다.
@@ -103,6 +105,11 @@ TITLE_WORDS = {'AND', 'ELECTRICAL', 'CHARACTERISTICS', 'RATINGS', 'MAXIMUM', 'SP
 SIZE = re.compile(r'\b(0201|0402|0603|0805|1206|1210|2010|2512)\b')  # 칩 크기 패키지(TS4148의 0603·0805·1206)
 RANGE = re.compile(r'([A-Z0-9][A-Z0-9.\-]*?)\s*(?:~|–|\s-\s|\bTO\b)\s*([A-Z0-9][A-Z0-9.\-]*)')  # 품번 범위(대문자로 바꾼 글)
 NAME = re.compile(r'(.*?)(\d+(?:\.\d+)?)([A-Z\-]*)')  # 품번 = 앞 글자 + 번호 + 뒤 글자('SFA' + 1001 + 'G')
+# [주의] 평균·연속 전류(IF_AV)가 아닌 행: 첨두·서지·반복 낱말이나 IFRM·IFM·IF,MAX·IFSM 기호(2차 대조: MBRF1635의 IFRM 32 A,
+# TSCDAH15120G2H의 'IF, MAX' 1158 A가 IF_AV로 들어갔다)
+NOT_AVERAGE = re.compile(r'peak|surge|repetitive|\bIF\s*,\s*MAX\b|\bIFRM\b|\bIFM\b|\bIFSM\b', re.I)
+GLUE_NAMES = {'CONDITIONS', 'CONDITION', 'SYMBOL', 'MIN', 'TYP', 'NOM', 'MAX', 'UNIT', 'VALUE'}  # 한 머리에 붙은 열 이름들
+WAVE = re.compile(r'\d+\s*/\s*\d+\s*[uµμ]s', re.I)  # 펄스 파형 '10/1000us'·'8/20us'
 
 
 def pkg_keys(text):
@@ -170,18 +177,26 @@ def code_of(text, sym='', strict=False):
     ('LEAKAGE CURRENT / VR V'는 VR 정격이 아니라 IR을 잰 전압)."""
     if EXCLUDE.search(f'{text} {sym}') or (re.search(r'storage', text, re.I) and not re.search(r'junction', text, re.I)):
         return None, None
-    # [왜] '@'·'at' 뒤는 시험 조건이다('VF at IF = 100mA'의 IF, 'IR @ VR'의 VR는 잰 값이 아니다)
-    main = re.split(r'@|\bat\b|,', text, maxsplit=1, flags=re.I)[0]
+    # [왜] '@'·'at' 뒤는 시험 조건이다('VF at IF = 100mA'의 IF, 'IR @ VR'의 VR는 잰 값이 아니다).
+    # 머리 경로는 칸(' / ')마다 자른다: 'Clamping Voltage @IPPM (8/20us) / IPPM / A'의 마지막 칸 IPPM은 이 열의 기호다
+    main = ' / '.join(re.split(r'@|\bat\b|,', seg, maxsplit=1, flags=re.I)[0] for seg in text.split(' / '))
     toks = re.findall(r'[A-Za-z][A-Za-z0-9()]*', sym) + re.findall(r'\b[A-Z][A-Za-z0-9()]*', main)
     word = next((c for p, c in KEYWORDS if p.search(main)), None)
+    code, found = word, None
     for tok in toks:
         if tok.upper() in SKIP_SYMS:
             # [왜] 'Zener Voltage / IZT / Min'처럼 시험 전류 기호가 붙은 머리도 낱말이 정하면 그 값이다(낱말이 없으면 뽑지 않음)
-            return word, None
+            break
         if tok.upper() in SYMS:
-            code = SYMS[tok.upper()]
-            return (None, None) if strict and word and word != code else (code, tok)
-    return word, None
+            code, found = SYMS[tok.upper()], tok
+            # [왜] 기호와 낱말이 다르면 다른 값의 하위 칸이다(IR을 잰 VR 칸). 단 IPP·VRWM은 VC·IR의 조건 칸이면서 TVS 정격이다
+            if strict and word and word != code and code not in ('IPP', 'VRWM'):
+                return None, None
+            break
+    if code == 'IF_AV' and NOT_AVERAGE.search(f'{text} {sym}'):
+        # 비반복 서지는 IFSM(펄스 조건과 함께), 반복 첨두(IFRM·IFM)는 뽑지 않는다
+        code = 'IFSM' if re.search(r'surge|non-?\s?repetitive|IF\s*,\s*MAX', f'{text} {sym}', re.I) else None
+    return (code, found) if code else (None, None)
 
 
 def unit_of(*texts):
@@ -228,29 +243,74 @@ def label_condition(label):
     """설명 글 안의 시험 조건('VF at IF = 100mA' → 'at IF = 100mA', 'ESD per IEC ... (Air)' → 'per IEC ... (Air)')."""
     s = re.sub(r'\((?:note\s*)?\d+\)', '', label or '', flags=re.I).strip()  # 각주 번호 (1)·(Note 2)는 조건이 아니다
     # 'IF = 10mA'는 기호부터 조건이다. 'according to IEC61000-4-2 air discharge'는 시험 방법이라 조건이다
-    m = re.search(r'@|\bat\b|[A-Za-z][\w()]*\s*=|,|\(|\bper\b|\bfor\b|\baccording to\b', s, re.I)
+    # 펄스 폭('8.3ms', '10/1000µs')도 조건의 시작이다(TSS54U의 'Peak Forward Surge Current 8.3ms Single Half Sine-Wave')
+    m = re.search(r'@|\bat\b|[A-Za-z][\w()]*\s*=|,|\(|\bper\b|\bfor\b|\baccording to\b|\b\d+(?:\.\d+)?\s*(?:ms|[uµμ]s)\b|'
+                  r'\b\d+\s*/\s*\d+\s*[uµμ]s', s, re.I)
     rest = s[m.start():].strip(' ,') if m else ''
     return '' if rest.lower() in ('per', 'for', 'at', '@') else rest  # [왜] 'Forward voltage per'처럼 잘린 글의 끝 낱말은 조건이 아니다
 
 
-def at_condition(head, F):
+def at_condition(head, F, code=None, own=None):
     """품번 한 줄 표의 'VBR@IT'·'VC at IPPM' 머리에서 같은 행의 IT·IPPM 값 칸을 찾아 'IT = 1 mA'로 만든다.
-    머리 안의 온도 조건('IR at VWM TJ =175°C')도 붙인다. 조건이 없으면 None."""
+    같은 기호 칸이 여럿이면 머리 경로 앞부분이 가장 많이 같은 칸(같은 열 묶음)을 쓴다. 머리 안의 온도·펄스 파형도 붙인다.
+    VZ·VBR 머리에 '@'가 없으면 같은 행의 시험 전류 칸('TEST CURRENT IZT mA: 5')을 조건으로 쓴다. 조건이 없으면 None."""
     # [왜] 온도는 마지막 열 이름에서만 찾는다. 표 이름의 '(TA = 25°C unless otherwise noted)'는 표 전체의 기본 조건이다
-    temps = [re.sub(r'\s+', ' ', t) for t in re.findall(r'\bT[JA]\s*=\s*[-+]?\d+\s*°?C', head.split(' / ')[-1])]
+    extra = [re.sub(r'\s+', ' ', t) for t in re.findall(r'\bT[JA]\s*=\s*[-+]?\d+\s*°?C', head.split(' / ')[-1])]
+    extra += [re.sub(r'\s+', '', w) for w in WAVE.findall(head)]  # [왜] 10/1000us와 8/20us 값은 다른 조건이다(BZW06)
     m = re.search(r'(?:@|\bat\b)\s*([A-Za-z][A-Za-z0-9()]*)', head)
-    if not m:
-        return '; '.join(temps) or None
-    sym, cond = m.group(1), f'@{m.group(1)}'
-    dim = {'V': 'V', 'I': 'A'}.get(sym[0].upper())
+    cond = None
+    if m:
+        sym = m.group(1)
+        cond, dim, best = f'@{sym}', {'V': 'V', 'I': 'A'}.get(sym[0].upper()), -1
+        segs = head.split(' / ')
+        for h, _, v in F:
+            u = unit_of(h)
+            if h not in (head, own) and sym in re.findall(r'[A-Za-z][A-Za-z0-9()]*', h) and u and to_si(1.0, u)[1] == dim:
+                shape, nums, _ = parse_cell(v)
+                same = next((i for i, (a, b) in enumerate(zip(segs, h.split(' / '))) if a != b), min(len(segs), len(h.split(' / '))))
+                if shape == 'one' and same > best:
+                    cond, best = f'{sym} = {nums[0]} {u}', same
+    if code in ('VZ', 'VBR') and (cond is None or cond.startswith('@')):
+        cond = test_current(F) or cond
+    return '; '.join(x for x in [cond] + extra if x) or None
+
+
+def test_current(F):
+    """같은 행의 시험 전류 칸('TEST CURRENT IZT mA: 5', 'Test Current IT (mA): 1') → 'IZT = 5 mA'."""
     for h, _, v in F:
+        sym = re.findall(r'\bI(?:ZT|Z|T)\b', h)
         u = unit_of(h)
-        if h != head and sym in re.findall(r'[A-Za-z][A-Za-z0-9()]*', h) and u and to_si(1.0, u)[1] == dim:
-            shape, nums, _ = parse_cell(v)
-            if shape == 'one':
-                cond = f'{sym} = {nums[0]} {u}'
+        if re.search(r'test current', h, re.I) and sym and u and to_si(1.0, u)[1] == 'A' and parse_cell(v)[0] == 'one':
+            return f'{sym[0]} = {parse_cell(v)[1][0]} {u}'
+    return None
+
+
+def split_glued(F):
+    """열 이름 여럿이 한 머리로 붙은 칸('CONDITIONS SYMBOL TYP MAX UNIT: IF = 3A, TJ = 25°C - 0.50 V')을 열마다 나눈다.
+    뒤에서부터 단위·값(MAX·TYP·MIN)·기호를 떼고 남는 앞부분이 조건이다(SK32BH SERIES)."""
+    out = []
+    for h, col, v in F:
+        names = col.upper().replace('.', '').split()
+        n = len(names)
+        while n and names[n - 1] in GLUE_NAMES:
+            n -= 1
+        names = names[n:]
+        if len(names) < 3:
+            out.append((h, col, v))
+            continue
+        toks, cells = v.split(), {}
+        if 'UNIT' in names and toks and to_si(1.0, toks[-1]):
+            cells['UNIT'] = toks.pop()
+        for name in reversed([x for x in names if x in ('MIN', 'TYP', 'NOM', 'MAX', 'VALUE')]):
+            if not toks or not re.fullmatch(r'-|[-+]?\d+(?:\.\d+)?', toks[-1]):
                 break
-    return '; '.join([cond] + temps)
+            cells[name] = toks.pop()
+        if 'SYMBOL' in names and toks and toks[-1].upper() in SYMS:
+            cells['SYMBOL'] = toks.pop()
+        if toks and any(x.startswith('CONDITION') for x in names):
+            cells['CONDITIONS'] = ' '.join(toks)
+        out += [(name, name, cells[name]) for name in names if name in cells]
+    return out
 
 
 class Doc:
@@ -265,6 +325,7 @@ class Doc:
         self.col_pkg = {}  # (쪽, 표) → {열 머리: [패키지 열쇠, ...]}: 'Package' 행이 열마다 패키지를 적은 표
         self.slot_hint = {}  # ((쪽, 표), 칸 순서, 열 머리) → 'Min'·'Nom'·'Max': 첫 데이터 행에 붙어 들어온 머리 행
         self.split_head = {}  # ((쪽, 표), 잘린 열 머리) → (코드, 기호, 원래 머리): 앞 행에서 'AND / V / Nom'이 이어받은 코드
+        self.part_cols = {}  # (쪽, 표) → 품번 열 머리 목록(순서대로). 품번 열이 가장 많은 행에서 배운다
         self.pkg_universe = set()
 
     def run(self, chunks):
@@ -288,6 +349,9 @@ class Doc:
 
     def emit(self, c, cell, targets, named, slot, code, base, units, level):
         """칸 하나를 후보 행으로 바꾼다. named: 대상 품번이 행·열 머리에 적혀 있는가(계열 범위를 나눌 수 있는 조건)."""
+        m = re.fullmatch(r'([A-Za-z][A-Za-z()]*)\s+([-+]?\d+(?:\.\d+)?)', cell.strip())
+        if m and m.group(1).upper() in SYMS:
+            cell = m.group(2)  # [왜] 'TYP: VF 0.97'처럼 기호 칸 글이 값 칸에 밀려 들어왔다(ES2BFSH·RS2DFL SERIES)
         shape, nums, cell_unit = parse_cell(cell)
         if not shape:
             return
@@ -348,14 +412,17 @@ class Doc:
                 if sum(map(len, heads.values())) > 1:
                     self.col_pkg[key] = dict(heads)
             for pos, (h, _, v) in enumerate(F):
-                m = GLUED_SLOT.fullmatch(v)
-                if m and parse_cell(v)[0] is None:
+                m = GLUED_SLOT.fullmatch(v) or re.fullmatch(r'(min|typ|nom|max)\.?', v.strip(), re.I)
+                if m and parse_cell(v)[0] is None:  # 'SPECIFICATIONS Min 2.35'(첫 행에 붙음) 또는 'Min'(따로 된 머리 행, BZW06)
                     self.slot_hint[(key, pos, h)] = m.group(1)
+            pc = [h for h, _, _ in F if self.col_parts(h)]
+            if len(pc) > len(self.part_cols.get(key, [])):
+                self.part_cols[key] = pc  # 이 표의 품번 열 전체(병합 칸 펼치기에 씀)
         self.pkg_universe = set().union(*self.part_pkg.values()) if self.part_pkg else set()
 
     def describe(self, c):
         """표 행 하나를 읽는다. 품번 한 줄(TVS·제너) 행은 바로 per_part로 내고 None, 파라미터 행은 정보 사전을 돌려준다."""
-        F = fields(c['text'])
+        F = split_glued(fields(c['text']))
         base = {'doc': self.doc, 'family': self.family, 'symbol': None, 'test_condition': None,
                 'page_number': c['page'], 'table_name': c['table'], 'row_label': c['row'], 'text_value': None,
                 'footnote_text': None, 'chunk': {'doc': self.doc, 'idx': c['idx']}}
@@ -378,7 +445,7 @@ class Doc:
         code, tok = code_of(params[0], ' '.join(cols['SYMBOL'])) if params[0] else (None, None)
         if not code and not bare:
             return None
-        group, pkgs, unknown, conds, scan = [], set(), False, [label_condition(params[0]) if code else ''], []
+        group, pkgs, unknown, conds, scan, garbled = [], set(), False, [label_condition(params[0]) if code else ''], [], None
         colpkg = self.col_pkg.get((c['page'], c['table']), {})
         for h, col, v in F:
             C = col.upper().rstrip('.')
@@ -395,6 +462,10 @@ class Doc:
             hits = self.cell_parts(v)
             group += [p for p in hits if p not in group]
             rest = self.residue(v) if hits else v
+            if hits and self.parts_around_condition(v):
+                # [주의] 'SFF1002G SFF1003G IF = 5A,TJ = 25°C SFF1005G ...': 세로로 합친 품번 묶음 여럿과 조건이 한 칸이 됐다.
+                # 어느 행이 어느 묶음인지 알 수 없다(SFF1001G·SFA1001G SERIES)
+                garbled = '품번 묶음 여럿과 조건이 한 칸에 합쳐져 값과 짝을 지을 수 없음'
             scan.append(rest)
             if hits:
                 if ATOM.search(rest):
@@ -409,7 +480,7 @@ class Doc:
                 conds.append(v)  # '열3: IF = 10A, TJ = 25°C'처럼 이름 없는 머리 아래 조건 칸
         return {'c': c, 'F': F, 'base': base, 'label': label, 'params': params, 'code': code, 'tok': tok,
                 'symbol': ' '.join(cols['SYMBOL']) or tok, 'unit': cols['UNIT'][:1], 'group': group, 'pkgs': pkgs,
-                'unknown': unknown, 'conds': conds, 'scan': scan, 'bare': bare, 'garbled': None}
+                'unknown': unknown, 'conds': conds, 'scan': scan, 'bare': bare, 'garbled': garbled}
 
     def continue_rows(self, infos):
         """이름 없는 이어지는 행(TYP·MAX·품번 칸만)은 바로 위 파라미터 행의 이름·코드·조건을 이어받는다.
@@ -451,8 +522,25 @@ class Doc:
 
     @staticmethod
     def spread_groups(run):
-        """세로로 합친 품번 칸: 행 n개에 품번 묶음 k개가 한 번씩, 크기 n/k 구간마다 하나씩 있으면 그 구간 행에 그 묶음을 붙인다.
-        (BAT42W: 'IF = 10mA'·'BAT42W IF = 50mA'·'IF = 200mA'가 BAT42W 행 셋)"""
+        """세로로 합친 품번 칸.
+        1) 행마다 조건이 p행 주기로 되풀이되면 p행이 한 묶음이다. 그 구간에 적힌 품번을 모두 합쳐 구간 모든 행에 붙인다
+           (TUAU6D: 조건 4개 × 묶음 3개인데 가운데 묶음 이름 'TUAU6G'·'TUAU6J'가 두 행에 나뉨).
+        2) 주기가 없으면: 행 n개에 품번 묶음 k개가 한 번씩, 크기 n/k 구간마다 하나씩 있으면 그 구간 행에 그 묶음을 붙인다
+           (BAT42W: 'IF = 10mA'·'BAT42W IF = 50mA'·'IF = 200mA'가 BAT42W 행 셋)"""
+        if all(r['group'] for r in run) or not any(r['group'] for r in run):
+            return
+        n = len(run)
+        keys = [tuple(map(tuple, cond_sets(' '.join(r['conds'])))) for r in run]
+        period = next((p for p in range(2, n // 2 + 1) if n % p == 0 and all(keys) and len(set(keys[:p])) == p
+                       and all(keys[i] == keys[i % p] for i in range(n))), None)
+        if period:
+            segs = [run[i:i + period] for i in range(0, n, period)]
+            unions = [list(dict.fromkeys(x for r in seg for x in r['group'])) for seg in segs]
+            if all(unions) and len({x for u in unions for x in u}) == sum(map(len, unions)):
+                for seg, u in zip(segs, unions):
+                    for r in seg:
+                        r['group'] = list(u)
+            return  # [주의] 주기가 있는데 구간이 맞지 않으면 짐작하지 않는다
         grouped = [i for i, r in enumerate(run) if r['group']]
         keys = [tuple(run[i]['group']) for i in grouped]
         k = len(keys)
@@ -469,30 +557,36 @@ class Doc:
     def spread_conditions(run):
         """세로로 합친 조건 칸: 같은 품번 묶음이 되풀이되면 되풀이마다 조건 묶음 하나다. 묶음 안 어느 행에서든 찾은 조건을
         그 묶음 모든 행에 붙인다. 한 칸에 조건 k개가 있고 그 칸이 이어진 묶음 k개에 똑같이 나오면 순서대로 나눈다(MBRS1035CT)."""
-        blocks, seen = [[]], set()
-        for r in run:
-            g = frozenset(r['group'])
-            if g and g in seen:
-                blocks.append([])
-                seen = set()
-            blocks[-1].append(r)
-            if g:
-                seen.add(g)
-        if len(blocks) < 2:
-            return
+        if any(r['group'] for r in run):
+            blocks, seen = [[]], set()
+            for r in run:
+                g = frozenset(r['group'])
+                if g and g in seen:
+                    blocks.append([])
+                    seen = set()
+                blocks[-1].append(r)
+                if g:
+                    seen.add(g)
+        else:
+            blocks = [[r] for r in run]  # 품번 묶음이 없는 표: 한 행이 한 묶음
         sets = [cond_sets(' '.join(x for r in b for x in r['scan'])) for b in blocks]
+        own = lambda r: cond_sets(' '.join(x for x in r['conds'] if ATOM.search(x)))  # noqa: E731
+        if len(blocks) == 1:
+            # 묶음이 하나: 조건이 한 가지뿐이고 두 행 이상에 적혀 있으면 조건 칸이 빠진 행도 그 조건이다(SK35BH)
+            if len(sets[0]) == 1 and sum(own(r) == sets[0] for r in run) >= 2:
+                for r in run:
+                    if not own(r):
+                        r['conds'] = r['conds'] + [', '.join(sets[0][0])]
+            return
         chosen = [s[0] if len(s) == 1 else None for s in sets]
-        i = 0
-        while i < len(blocks):
-            j = i + 1
-            while j < len(blocks) and sets[j] == sets[i]:
-                j += 1
-            if len(sets[i]) > 1 and j - i == len(sets[i]):
-                chosen[i:j] = sets[i]
-            i = j
+        for i, s in enumerate(sets):
+            # 한 칸에 조건 k개: 뒤 k-1개 묶음이 같은 칸이거나 조건이 비어 있으면 순서대로 나눈다(MBRS1035CT, MBRF1635)
+            k = len(s)
+            if k > 1 and i + k <= len(blocks) and all(sets[j] in (s, []) for j in range(i + 1, i + k)):
+                chosen[i:i + k] = s
         for b, s in zip(blocks, chosen):
-            if s:
-                for r in b:
+            for r in b if s else []:
+                if own(r) != [s]:  # 자기 조건이 이미 이 조건 하나면 원문 글 그대로 둔다
                     r['conds'] = [x for x in r['conds'] if not ATOM.search(x)] + [', '.join(s)]
 
     def emit_row(self, info):
@@ -514,9 +608,10 @@ class Doc:
             return self.flag('scope_unclear', self.parts, base, code, params0)
         level = 'key' if (c['table'] or '').upper().startswith('KEY PARAMETERS') else 'group' if group else 'value'
         colpkg, seen, unclear = self.col_pkg.get((c['page'], c['table']), {}), Counter(), False
+        spans = self.merged_spans(c, F)
         for head, col, v in F:
             units = info['unit'] or [head]  # [주의] UNIT 칸이 있으면 그것만 본다(모르는 단위면 머리 글로 짐작하지 않는다)
-            hits = self.col_parts(head)
+            hits = self.col_parts(head) + spans.get(head, [])
             vcol = VALUE_COL.search(col.upper().rstrip('.'))
             if hits:  # 열 이름이 품번(열 하나에 품번이 여럿 적힌 경우 포함)
                 self.emit(c, v, hits, True, self.slot(None, params0, code), code, base, units, 'part')
@@ -542,10 +637,16 @@ class Doc:
         # (1.5SMC15H: 'VWM (V): 12.1 1' 뒤의 IR 칸에 IPPM 값 71이 들어감). 그 행의 값은 모두 검토로 보낸다
         shifted = any(parse_cell(v)[0] == 'many' for _, _, v in F)
         start, prev, key = len(self.cands), None, (c['page'], c['table'])
-        for pos, (head, col, v) in enumerate(F):
+        for pos, (raw, _, v) in enumerate(F):
+            # [왜] 머리 끝의 숫자는 머리로 빨려 들어간 첫 데이터 행의 값이다('Min 6.12', '/ 5'). 이 행 값은 맞으니 떼고 읽는다
+            # (2차 PDF 대조: 5KSMC10(C)AH·1.5KE·P6KE의 행 값이 모두 PDF와 같았다. 1차에서는 검토로 보냈다)
+            segs = raw.split(' / ')
+            segs[-1] = re.sub(r'(?:^|\s+)[\d.]+$', '', segs[-1]).strip()
+            head = ' / '.join(x for x in segs if x) or raw
+            col = head.split(' / ')[-1]
             code, tok = code_of(head, strict=True)
             word = re.search(r'\b(min|typ|nom|max)', col, re.I)
-            cond = at_condition(head, F) if code else None
+            cond = at_condition(head, F, code, raw) if code else None
             if not code and word and title_only(head):
                 if prev and prev[0] in SLOT_REQUIRED:
                     # [왜] 'AND / V / Nom'처럼 표 제목 조각만 남은 머리는 앞 칸(VZ·VBR)의 대표·최대 칸이다
@@ -554,16 +655,12 @@ class Doc:
                 elif (key, head) in self.split_head:
                     # 같은 표의 앞 행에서 배운 것: 이 행은 앞 칸(Min)이 빠졌어도 그 머리는 같은 코드다(1M130Z)
                     code, tok, first = self.split_head[(key, head)]
-                    cond = at_condition(first, F)
+                    cond = at_condition(first, F, code)
             if not code:
                 prev = prev if word else None
                 continue
             prev = (code, tok, cond, prev[3] if prev and prev[:3] == (code, tok, cond) else head)
             b = {**base, 'symbol': tok, 'test_condition': cond}
-            if re.search(r'(?:^|\s)[\d.]+$', col):
-                # [주의] 머리 끝에 숫자가 붙으면 첫 데이터 행이 머리로 밀려 올라간 표다. 바로잡지 않고 검토로 보낸다
-                self.flag('garbled_table', row_parts, b, code, v, f'열 머리 끝에 숫자: {head}')
-                continue
             if merged or shifted:
                 # [주의] 품번마다 한 줄인 표에서 한 칸에 품번이 둘이면 파서가 행을 합친 것이다.
                 # 값 짝이 어긋난다(SMBJ110 SMBJ110A의 'Min: 111 122'에서 111은 다른 행 값). 수가 맞아도 나누지 않는다
@@ -575,7 +672,7 @@ class Doc:
                 v = glued.group(2)
             # [왜] 자리는 마지막 열 이름만 본다. 'Nominal Zener Voltage / Vz@Iz'의 Nominal은 아래 칸 셋(최소·대표·최대) 모두의 머리다
             hint = (word and word.group(1)) or (glued and glued.group(1)) or \
-                self.slot_hint.get(((c['page'], c['table']), pos, head))
+                self.slot_hint.get(((c['page'], c['table']), pos, raw))
             self.emit(c, v, row_parts, True, self.slot(hint, '', code), code, b, [head], 'part')
         self.check_order(start)
 
@@ -611,6 +708,35 @@ class Doc:
             new += [{**r, 'part': p, 'footnote_text': BOTH_NOTE} for r in self.cands
                     if r['part'] == u and r['source_level'] == 'part' and r['parameter_code'] not in own[p]]
         self.cands += new
+
+    def merged_spans(self, c, F):
+        """품번 열 표에서 이 행에 빠진 품번 열이 있으면, 병합 칸 값은 그 칸 가운데 열에만 적힌다(DBLS101G: 101G~105G 칸의 40이 103G에).
+        있는 열 c마다 양옆이 함께 비어 있는 만큼 대칭으로 넓힌 구간을 그 칸으로 본다. 빈 열이 정확히 한 구간에만 들 때만 펼친다.
+        돌려주는 것: {있는 열 머리: [더 붙일 품번]}"""
+        full = self.part_cols.get((c['page'], c['table']), [])
+        here = [h for h, _, _ in F if self.col_parts(h)]
+        if not here or len(here) >= len(full) or any(h not in full for h in here):
+            return {}
+        have = {full.index(h) for h in here}
+        cover = defaultdict(list)
+        for i in sorted(have):
+            r = 1
+            while i - r >= 0 and i + r < len(full) and i - r not in have and i + r not in have:
+                cover[full[i]] += [full[i - r], full[i + r]]
+                r += 1
+        missing = [full[j] for j in range(len(full)) if j not in have]
+        counted = Counter(h for hs in cover.values() for h in hs)
+        if any(counted[h] != 1 for h in missing):
+            return {}  # [주의] 어느 칸에 드는지 하나로 정해지지 않으면 비워 둔다
+        return {h: [p for x in hs for p in self.col_parts(x)] for h, hs in cover.items()}
+
+    def parts_around_condition(self, v):
+        """칸 글에서 품번이 조건 토막(TA 제외) 앞과 뒤에 모두 있는가."""
+        atoms = [m for m in ATOM.finditer(v) if m.group(1) != 'TA']
+        if not atoms:
+            return False
+        pos = [m.start() for m in re.finditer(r'\S+', v) if norm_part(m.group().strip('(),')) in self.upper]
+        return any(p < atoms[0].start() for p in pos) and any(p > atoms[-1].end() for p in pos)
 
     def col_parts(self, head):
         """열 이름이 이 문서의 품번이면 그 품번 목록.

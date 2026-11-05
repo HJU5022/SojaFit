@@ -256,20 +256,21 @@ def test_peak_pulse_power_is_never_pd_and_rms_is_excluded():
     assert {r['parameter_code'] for r in rows} == {'PPPM'}, '실효값(RMS)은 VR이 아니다'
 
 
-def test_shifted_header_and_unnamed_subset_go_to_review():
+def test_header_with_absorbed_first_row_number_and_unnamed_subset():
+    # [왜] 첫 데이터 행(5KSMC10AH)이 머리로 빨려 들어가 머리 끝에 그 행 숫자가 붙었다('/ 5'). 2차 PDF 대조(11-05)에서
+    # 5KSMC10(C)AH·1.5KE·P6KE 모두 행 자기 값은 PDF와 같았다. 1차에서는 검토로 보냈으나 이제 끝 숫자를 떼고 읽는다
     doc = '5KSMC SERIES_A01.pdf'
     cat = 'tvs-18'
     rows, review = run(
         cover(doc, ['5KSMC10AH', '5KSMC16AH'], cat),
-        # [왜] 첫 데이터 행이 머리로 올라가 머리 끝에 숫자가 붙은 표(5KSMC10(C)AH SERIES_B2509.pdf)
         row(doc, 33, 'ELECTRICAL Part number', '5KSMC16AH',
             [('ELECTRICAL Part number / 5KSMC10AH', '5KSMC16AH'), ('SPECIFICATIONS IR max / µA / 5', '1')], cat, 2),
         row(doc, 14, ABS, 'Forward voltage',
             [(f'{ABS} / PARAMETER', 'Forward Voltage @ IF = 50A for Uni-directional only'),
              (f'{ABS} / SYMBOL', 'VF'), (f'{ABS} / VALUE', '3.5'), (f'{ABS} / UNIT', 'V')], cat),
     )
-    assert rows == []
-    assert reasons(review) == ['garbled_table', 'scope_unclear']
+    assert values(rows, '5KSMC16AH', 'IR') == [(None, None, None, pytest.approx(1e-6))]
+    assert reasons(review) == ['scope_unclear']
 
 
 def test_merged_part_rows_and_unlabelled_breakdown_go_to_review():
@@ -671,3 +672,173 @@ def test_ifsm_keeps_each_pulse_width_as_its_own_row():
     assert specs.code_of('Non-repetitive peak forward surge current', 'IFSM')[0] == 'IFSM'  # 실측: TS4148 SERIES
     assert specs.code_of('Repetitive peak forward surge current', 'IFRM') == (None, None)
     assert specs.code_of('Peak forward current', 'IFM') == (None, None), '반복 첨두 순방향 전류(IFM)는 평균 전류가 아니다'
+
+
+# ---- 11-05 2차 PDF 대조(seed 1, 50개 품번)에서 나온 오류·누락을 고친 규칙 ----
+
+def test_if_av_never_from_peak_surge_or_repetitive_rows():
+    # [왜] 실측: MBRF1635 SERIES의 'Peak repetitive forward current (Rated VR, Square wave, 20KHz) | IFRM 32'와
+    # TSCDAH15120G2H의 'Non-repetitive peak forward surge current | tp = 10µs | IF, MAX 1158'이 IF_AV로 들어갔다
+    assert specs.code_of('Peak repetitive forward current (Rated VR, Square wave, 20KHz)', 'IFRM') == (None, None)
+    assert specs.code_of('Non-repetitive peak forward surge current', 'IF, MAX')[0] == 'IFSM'
+    # [왜] 실측(TSS54U_C1601.pdf): 'Peak Forward Surge Current 8.3ms Single Half Sine-Wave ...'의 펄스 폭도 조건이다
+    assert specs.label_condition('Peak Forward Surge Current 8.3ms Single Half Sine-Wave Superimposed on Rate Load') == \
+        '8.3ms Single Half Sine-Wave Superimposed on Rate Load'
+    assert specs.code_of('Forward current', 'IF')[0] == 'IF_AV'
+    doc = 'TSCDAH15120G2H_A01.pdf'
+    cat = 'sic-schottky-diode-57'
+    rows, _ = run(
+        cover(doc, ['TSCDAH15120G2H'], cat),
+        row(doc, 20, ABS, 'Forward current', [(f'{ABS} / PARAMETER', 'Forward current'), (f'{ABS} / SYMBOL', 'IF'),
+                                              (f'{ABS} / VALUE', '15'), (f'{ABS} / UNIT', 'A')], cat),
+        row(doc, 23, ABS, 'Non-repetitive peak forward surge current', [
+            (f'{ABS} / PARAMETER', 'Non-repetitive peak forward surge current'), (f'{ABS} / PARAMETER', 'tp = 10µs'),
+            (f'{ABS} / SYMBOL', 'IF, MAX'), (f'{ABS} / VALUE', '1158'), (f'{ABS} / UNIT', 'A')], cat),
+        row(doc, 24, ABS, 'Peak repetitive forward current', [
+            (f'{ABS} / PARAMETER', 'Peak repetitive forward current (Rated VR, Square wave, 20KHz)'),
+            (f'{ABS} / SYMBOL', 'IFRM'), (f'{ABS} / VALUE', '32'), (f'{ABS} / UNIT', 'A')], cat),
+    )
+    assert values(rows, 'TSCDAH15120G2H', 'IF_AV') == [(None, None, None, 15)]
+    assert values(rows, 'TSCDAH15120G2H', 'IFSM') == [('tp = 10µs', None, None, 1158)]
+
+
+def test_repeating_condition_cycle_sets_part_group_blocks():
+    # [왜] 실측(TUAU6D SERIES_A2406.pdf): 묶음 3개(6D, 6G·6J, 6K·6M) × 조건 4개인데 가운데 묶음 이름이 두 행에 나뉘어
+    # 묶음이 4개처럼 보였다. 조건이 4행마다 되풀이되므로 4행씩이 한 묶음이다
+    doc = 'TUAU6D SERIES_A01.pdf'
+    cat = 'high-efficiency-trr-50-99ns-14'
+    conds = ['IF = 3A, TJ = 25°C', 'IF = 6A, TJ = 25°C', 'IF = 3A, TJ = 125°C', 'IF = 6A, TJ = 125°C']
+    names = {2: 'TUAU6D', 5: 'TUAU6G', 6: 'TUAU6J', 9: 'TUAU6K TUAU6M'}
+    typ = ['0.82', '0.89', '0.68', '0.76', '1.05', '1.17', '0.84', '0.98', '1.29', '1.48', '0.94', '1.12']
+    rs = [row(doc, 28 + i, ELEC, 'Forward voltage (1)', [(f'{ELEC} / PARAMETER', 'Forward voltage (1)')]
+              + ([(f'{ELEC} / PARAMETER', names[i])] if i in names else [])
+              + [(f'{ELEC} / CONDITIONS', conds[i % 4]), (f'{ELEC} / SYMBOL', 'VF'), (f'{ELEC} / TYP', typ[i]),
+                 (f'{ELEC} / UNIT', 'V')], cat, 2) for i in range(12)]
+    rows, _ = run(cover(doc, ['TUAU6D', 'TUAU6G', 'TUAU6J', 'TUAU6K', 'TUAU6M'], cat), *rs)
+    assert values(rows, 'TUAU6G', 'VF') == [('IF = 3A, TJ = 125°C', None, 0.84, None), ('IF = 3A, TJ = 25°C', None, 1.05, None),
+                                            ('IF = 6A, TJ = 125°C', None, 0.98, None), ('IF = 6A, TJ = 25°C', None, 1.17, None)]
+    assert values(rows, 'TUAU6D', 'VF')[3] == ('IF = 6A, TJ = 25°C', None, 0.89, None)
+
+
+def test_merged_conditions_split_into_following_blocks_without_conditions():
+    # [왜] 실측(MBRF1635 SERIES_K2105.pdf): 첫 묶음 행마다 'IF = 16A, TJ = 25°C IF = 16A, TJ = 125°C'가 붙고 둘째 묶음 행에는 조건이 없다
+    doc = 'MBRF1635 SERIES_A01.pdf'
+    cat = 'schottky-rectifier-3'
+    two = 'IF = 16A, TJ = 25°C IF = 16A, TJ = 125°C'
+    vf = lambda idx, p, cond, v: row(doc, idx, 'PARAMETER', 'Forward voltage (1)', [  # noqa: E731
+        ('PARAMETER', 'Forward voltage (1)'), ('PARAMETER', p)] + ([('CONDITIONS', cond)] if cond else [])
+        + [('MAX', v), ('UNIT', 'V')], cat, 2)
+    rows, review = run(cover(doc, ['MBRF1635', 'MBRF1650'], cat),
+                       vf(26, 'MBRF1635', two, '0.63'), vf(27, 'MBRF1650', two, '0.75'),
+                       vf(30, 'MBRF1635', None, '0.57'), vf(31, 'MBRF1650', None, '0.65'))
+    assert values(rows, 'MBRF1635', 'VF') == [('IF = 16A, TJ = 125°C', None, None, 0.57),
+                                              ('IF = 16A, TJ = 25°C', None, None, 0.63)]
+    # 품번 묶음이 없는 한 품번 표: 조건 둘이 붙은 행 뒤의 조건 없는 행이 둘째 조건이다
+    doc = 'ONE_A01.pdf'
+    rows, _ = run(cover(doc, ['ONE1'], cat),
+                  row(doc, 5, ELEC, 'Forward voltage', [(f'{ELEC} / PARAMETER', 'Forward voltage'),
+                      (f'{ELEC} / CONDITIONS', 'IF = 1A, TJ = 25°C IF = 1A, TJ = 125°C'), (f'{ELEC} / MAX', '0.9'),
+                      (f'{ELEC} / UNIT', 'V')], cat, 2),
+                  row(doc, 6, ELEC, 'Forward voltage', [(f'{ELEC} / PARAMETER', 'Forward voltage'), (f'{ELEC} / MAX', '0.7'),
+                                                        (f'{ELEC} / UNIT', 'V')], cat, 2))
+    assert values(rows, 'ONE1', 'VF') == [('IF = 1A, TJ = 125°C', None, None, 0.7), ('IF = 1A, TJ = 25°C', None, None, 0.9)]
+
+
+def test_merged_cell_in_part_columns_spans_the_missing_columns_around_it():
+    # [왜] 실측(DBLS101G SERIES_P2103.pdf): 101G~105G 병합 칸 값 40이 가운데 103G 열에만, 106G·107G는 30. 101·102·104·105G 열은 비었다
+    doc = 'DBLS101G SERIES_A01.pdf'
+    cat = 'bridge-6'
+    parts = [f'DBLS10{i}G' for i in range(1, 8)]
+    cols = lambda cells: [(f'{ABS} / DBLS 10{i}G', v) for i, v in cells]  # noqa: E731
+    rows, _ = run(
+        cover(doc, parts, cat),
+        row(doc, 14, ABS, 'Marking code on the device', [(f'{ABS} / PARAMETER', 'Marking code on the device')]
+            + cols([(i, f'DBLS 10{i}G') for i in range(1, 8)]), cat),
+        row(doc, 18, ABS, 'Peak forward surge current, 8.3ms single half sine-wave superimposed on rated load', [
+            (f'{ABS} / PARAMETER', 'Peak forward surge current, 8.3ms single half sine-wave superimposed on rated load'),
+            (f'{ABS} / SYMBOL', 'IFSM')] + cols([(3, '40'), (6, '30'), (7, '30')]) + [(f'{ABS} / UNIT', 'A')], cat),
+    )
+    got = {p: [r['maximum_value'] for r in pick(rows, p, 'IFSM')] for p in parts}
+    assert got == {'DBLS101G': [40], 'DBLS102G': [40], 'DBLS103G': [40], 'DBLS104G': [40], 'DBLS105G': [40],
+                   'DBLS106G': [30], 'DBLS107G': [30]}
+    assert '8.3ms' in pick(rows, 'DBLS105G', 'IFSM')[0]['test_condition']
+
+
+def test_glued_column_names_cell_is_split_and_condition_spreads_in_its_run():
+    # [왜] 실측(SK32BH SERIES_B2212.pdf): 열 이름 다섯이 한 머리('CONDITIONS SYMBOL TYP MAX UNIT')로, 값도 한 칸으로 붙었다.
+    # SK35BH 행은 세로로 합친 조건 칸이 빠져 '- 0.75 V'만 있다
+    doc = 'SK32BH SERIES_A01.pdf'
+    cat = 'schottky-rectifier-3'
+    vf = lambda idx, p, v: row(doc, idx, 'PARAMETER', 'Forward voltage (1)', [  # noqa: E731
+        ('PARAMETER', 'Forward voltage (1)'), ('PARAMETER', p), ('= 25°C unless otherwise CONDITIONS SYMBOL TYP MAX UNIT', v)],
+        cat, 2)
+    rows, _ = run(cover(doc, ['SK32BH', 'SK34BH', 'SK35BH'], cat),
+                  vf(24, 'SK32BH', 'IF = 3A, TJ = 25°C - 0.50 V'), vf(25, 'SK34BH', 'IF = 3A, TJ = 25°C - 0.50 V'),
+                  vf(26, 'SK35BH', '- 0.75 V'))
+    assert values(rows, 'SK35BH', 'VF') == [('IF = 3A, TJ = 25°C', None, None, 0.75)]
+    assert values(rows, 'SK32BH', 'VF') == [('IF = 3A, TJ = 25°C', None, None, 0.5)]
+
+
+def test_tvs_subheader_row_slots_and_waveform_conditions():
+    # [왜] 실측(BZW06 SERIES_K2105.pdf): Min·Nom·Max는 따로 된 머리 행('Uni | Bi | Min | Nom | Max')에 있고,
+    # VC·IPPM은 파형(10/1000us, 8/20us)마다 다른 열이다. 파형이 다르면 충돌이 아니다
+    doc = 'BZW06 SERIES_A01.pdf'
+    cat = 'tvs-18'
+    V = 'RATINGS AND ELECTRICAL Breakdown voltage VBR@IT (V) (1)'
+    head = [('Part Number / MAXIMUM', None), ('Part Number', None), (V, None), (f'{V} / V / VBR', None), (V, None),
+            ('Test current IT (mA) IT / mA', None), ('Clamping Voltage @IPPM (10/1000us) / VC / V', None),
+            ('Clamping Voltage @IPPM (10/1000us) / IPPM / unless A', None), ('Clamping Voltage @IPPM (8/20us) / VC / V', None),
+            ('Clamping Voltage @IPPM (8/20us) / IPPM / otherwise A', None)]
+    fill = lambda vals: [(h, v) for (h, _), v in zip(head, vals)]  # noqa: E731
+    rows, review = run(
+        cover(doc, ['BZW06-13', 'BZW06-13B'], cat),
+        row(doc, 27, 'Part Number', 'Uni', fill(['Uni', 'Bi', 'Min', 'Nom', 'Max']), cat, 2),
+        row(doc, 28, 'Part Number', 'BZW06-13',
+            fill(['BZW06-13', 'BZW06-13B', '14.3', '15', '15.8', '1', '21.2', '28.0', '27.2', '147']), cat, 2),
+    )
+    assert values(rows, 'BZW06-13', 'VBR') == [('IT = 1 mA', 14.3, None, None), ('IT = 1 mA', None, 15, None),
+                                               ('IT = 1 mA', None, None, 15.8)]
+    assert values(rows, 'BZW06-13', 'VC') == [('IPPM = 147 A; 8/20us', None, None, 27.2),
+                                              ('IPPM = 28.0 A; 10/1000us', None, None, 21.2)]
+    assert sorted(r['maximum_value'] for r in pick(rows, 'BZW06-13', 'IPP')) == [28.0, 147]
+    assert review == []
+
+
+def test_merged_multi_group_cell_with_condition_in_the_middle_is_garbled_not_conflict():
+    # [왜] 실측(SFF1001G SERIES_M2105.pdf): 세 행 모두 같은 칸 'SFF1002G SFF1003G SFF1004G IF = 5A,TJ = 25°C SFF1005G ...'.
+    # 묶음 경계를 알 수 없어 충돌이 아니라 합쳐진 표로 검토에 보낸다
+    doc = 'SFF1001G SERIES_A01.pdf'
+    cat = 'super-fast-recovery-15'
+    cell = 'SFF1002G SFF1003G IF = 5A,TJ = 25°C SFF1005G SFF1006G'
+    vf = lambda idx, v: row(doc, idx, 'PARAMETER', 'Forward voltage per diode', [  # noqa: E731
+        ('PARAMETER', 'Forward voltage per diode'), ('CONDITIONS', cell), ('SYMBOL', 'VF'), ('MAX', v), ('UNIT', 'V')], cat, 2)
+    rows, review = run(cover(doc, ['SFF1002G', 'SFF1003G', 'SFF1005G', 'SFF1006G'], cat), vf(22, '0.975'), vf(23, '1.300'))
+    assert rows == [] and {r['reason'] for r in review} == {'garbled_table'}
+
+
+def test_symbol_glued_into_value_cell():
+    # [왜] 실측(ES2BFSH SERIES_B2103.pdf, RS2DFL SERIES_B2103.pdf): 'TYP: VF 0.97'처럼 기호가 값 칸에 밀려 들어왔다
+    doc = 'ES2BFSH SERIES_A01.pdf'
+    cat = 'super-fast-recovery-15'
+    rows, _ = run(cover(doc, ['ES2GFSH'], cat),
+                  row(doc, 33, 'PARAMETER', 'Forward voltage (1)', [('PARAMETER', 'Forward voltage (1)'), ('PARAMETER', 'ES2GFSH'),
+                      ('CONDITIONS', 'IF = 2A, TJ = 25°C'), ('TYP', 'VF 0.97'), ('MAX', '1.30'), ('UNIT', 'V')], cat, 2))
+    assert values(rows, 'ES2GFSH', 'VF') == [('IF = 2A, TJ = 25°C', None, 0.97, None), ('IF = 2A, TJ = 25°C', None, None, 1.3)]
+
+
+def test_zener_and_breakdown_condition_from_test_current_column():
+    # [왜] 실측(M3Z2V0C SERIES_B2008.pdf 'VZ @ / Min' + 'TEST CURRENT IZ / mA: 5', P6KE SERIES_P2203.pdf 'Breakdown Voltage VBR (V) Min'
+    # + 'Test Current IT (mA): 1'): 머리에 @IZ가 없어도 같은 행의 시험 전류 칸이 VZ·VBR의 조건이다
+    doc = 'M3Z2V0C SERIES_A01.pdf'
+    cat = 'zener-diode-35'
+    rows, _ = run(cover(doc, ['M3Z12VC'], cat),
+                  row(doc, 36, 'PART NUMBER', 'M3Z12VC', [('PART NUMBER', 'M3Z12VC'), ('ZENER VOLTAGE IZ (1) / VZ @ / Min', '11.4'),
+                      ('ZENER VOLTAGE IZ (1) / VZ @ / V / SPECIFICATIONS Typ', '12'), ('otherwise TEST CURRENT IZ / mA', '5')], cat, 2))
+    assert {r['test_condition'] for r in pick(rows, 'M3Z12VC', 'VZ')} == {'IZ = 5 mA'}
+    doc = 'P6KE SERIES_A01.pdf'
+    rows, _ = run(cover(doc, ['P6KE10'], 'tvs-18'),
+                  row(doc, 35, 'Part Number', 'P6KE10', [('Part Number', 'P6KE10'), ('Breakdown Voltage VBR (V) Min', '9.00'),
+                      ('Breakdown Voltage VBR (V) Min / Max', '11.00'), ('Test Current IT (mA)', '1'),
+                      ('Maximum Clamping Voltage VC@ IPPM (V) 10.8', '15.0')], 'tvs-18', 2))
+    assert values(rows, 'P6KE10', 'VBR') == [('IT = 1 mA', 9.0, None, None), ('IT = 1 mA', None, None, 11.0)]
+    assert [r['maximum_value'] for r in pick(rows, 'P6KE10', 'VC')] == [15.0]
