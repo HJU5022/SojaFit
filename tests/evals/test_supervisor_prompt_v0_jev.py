@@ -111,6 +111,49 @@ def test_jev_live_requires_confirmation_and_positive_caps(tmp_path):
             "run", str(tmp_path), "--max-calls", "13", "--max-seconds", "60",
             "--max-usd", "1",
         ])
+
+
+def test_jev_run_requires_matching_smoke(tmp_path, monkeypatch):
+    run_dir = tmp_path / "jev-v0"
+    assert jev.main(["plan", str(run_dir)]) == 0
+
+    with pytest.raises(ValueError, match="smoke"):
+        jev.execute(run_dir, max_calls=13, max_seconds=60, approved_max_usd=1)
+
+    smoke = {
+        "status": "complete",
+        "model_id": jev.MODEL_ID,
+        "provider": "TypeSafe",
+        "actual_model": jev.MODEL_ID,
+        "dataset_sha256": jev._sha256(jev.DATASET),
+        "contract_sha256": jev._sha256(jev.CONTRACT_PATH),
+    }
+    (run_dir / "smoke_typesafe__jev-1.14.json").write_text(
+        json.dumps(smoke), encoding="utf-8"
+    )
+    policies = []
+
+    def fake_decision(request, **kwargs):
+        policies.append(request["provider"])
+        return {
+            **jev_response(
+                question_type="out_of_scope",
+                needs_circuit="no",
+                needs_datasheet="no",
+                needs_approved_case="no",
+                next_action="refuse",
+            ),
+            "model": jev.MODEL_ID,
+            "provider": "TypeSafe",
+            "usage": {},
+        }
+
+    monkeypatch.setattr(jev.llm, "evaluation_decision", fake_decision)
+    result = jev.execute(run_dir, max_calls=13, max_seconds=60, approved_max_usd=1)
+
+    assert result["status"] == "complete"
+    assert len(policies) == 13
+    assert all(policy["only"] == ["TypeSafe"] for policy in policies)
     with pytest.raises(SystemExit):
         jev.main([
             "run", str(tmp_path), "--max-calls", "0", "--max-seconds", "60",

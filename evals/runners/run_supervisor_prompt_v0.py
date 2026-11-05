@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -47,6 +48,29 @@ def _write_json_atomic(path: Path, value: dict) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
+
+
+def _smoke_path(run_dir: Path, model: str) -> Path:
+    return Path(run_dir) / f"smoke_{model.replace('/', '__')}.json"
+
+
+def _validated_smoke(run_dir: Path, model: str) -> dict:
+    path = _smoke_path(run_dir, model)
+    if not path.exists():
+        raise ValueError("successful smoke is required before run")
+    smoke = json.loads(path.read_text(encoding="utf-8"))
+    actual_model = smoke.get("actual_model")
+    if (
+        smoke.get("status") != "complete"
+        or smoke.get("model_id") != model
+        or not smoke.get("provider")
+        or not isinstance(actual_model, str)
+        or re.fullmatch(rf"{re.escape(model)}(?:-\d{{8}})?", actual_model) is None
+        or smoke.get("dataset_sha256") != _sha256(DATASET)
+        or smoke.get("contract_sha256") != _sha256(CONTRACT_PATH)
+    ):
+        raise ValueError("smoke metadata mismatch")
+    return smoke
 
 
 def build_plan(items: list[dict]) -> list[dict]:
@@ -185,6 +209,9 @@ def execute_model(
         raise ValueError("등록되지 않은 Supervisor Prompt V0 Chat 모델")
     run_dir = Path(run_dir)
     _, items = _validate_manifest(run_dir)
+    smoke = _validated_smoke(run_dir, model)
+    expected_provider = smoke["provider"]
+    expected_actual_model = smoke["actual_model"]
     output = run_dir / f"rows_{model.replace('/', '__')}.json"
     result = json.loads(output.read_text(encoding="utf-8")) if output.exists() else {
         "status": "incomplete",
@@ -206,16 +233,23 @@ def execute_model(
         max_tokens=MAX_TOKENS,
     )
     consecutive_provider_errors = 0
-    locked_provider = next(
-        (row.get("provider") for row in result["rows"] if row.get("provider")),
-        None,
-    )
+    locked_provider = expected_provider
+
+    def pinned_call(model_id, system, user, schema, **kwargs):
+        policy = {**kwargs["provider_policy"], "only": [expected_provider]}
+        return call(
+            model_id,
+            system,
+            user,
+            schema,
+            **{**kwargs, "provider_policy": policy},
+        )
 
     with llm.evaluation_limits(budget):
         for item in items:
             if item["id"] in completed_ids:
                 continue
-            row = run_one(model, item, call=call)
+            row = run_one(model, item, call=pinned_call)
             result["rows"].append(row)
 
             if row.get("status") == "complete":
@@ -223,6 +257,11 @@ def execute_model(
                 if locked_provider and provider and provider != locked_provider:
                     result["status"] = "provider_stopped"
                     result["stop_reason"] = {"error_type": "ProviderChanged"}
+                    _write_json_atomic(output, result)
+                    break
+                if row.get("actual_model") != expected_actual_model:
+                    result["status"] = "provider_stopped"
+                    result["stop_reason"] = {"error_type": "ModelChanged"}
                     _write_json_atomic(output, result)
                     break
                 locked_provider = locked_provider or provider
@@ -315,8 +354,21 @@ def main(argv=None) -> int:
         )
         with llm.evaluation_limits(budget):
             row = run_one(args.model, item)
-        result = {"status": row["status"], "model_id": args.model, "row": row}
-        _write_json_atomic(args.output / f"smoke_{args.model.replace('/', '__')}.json", result)
+        result = {
+            "status": row["status"],
+            "model_id": args.model,
+            "provider": row.get("provider"),
+            "actual_model": row.get("actual_model"),
+            "dataset_sha256": _sha256(DATASET),
+            "contract_sha256": _sha256(CONTRACT_PATH),
+            "row": row,
+        }
+        _write_json_atomic(_smoke_path(args.output, args.model), result)
+        try:
+            _validated_smoke(args.output, args.model)
+        except ValueError:
+            result["status"] = "metadata_error"
+            _write_json_atomic(_smoke_path(args.output, args.model), result)
     else:
         result = execute_model(
             args.output,

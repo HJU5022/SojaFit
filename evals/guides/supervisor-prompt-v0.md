@@ -25,7 +25,7 @@
 2. `uv run --no-sync python -m evals.runners.run_supervisor_prompt_v0_jev plan .tmp/supervisor-v0-jev-plan`
 3. 아래 오프라인 테스트를 실행합니다.
 4. live 실행의 정확한 모델·provider, 최악 호출 수, 모델별·전체 비용 상한과 중단 조건을 제시하고 사용자에게 별도 승인을 받습니다.
-5. 정확한 모델/provider마다 1건 smoke를 실행합니다.
+5. 정확한 모델/provider마다 1건 smoke를 실행합니다. 본 실행은 이 smoke에 기록된 model·provider를 고정하며 smoke가 없거나 metadata가 달라지면 시작하지 않습니다.
 6. 13건 V0 표본을 실행합니다.
 7. 세 결과의 `dataset_sha256`과 `contract_sha256`, case 집합이 모두 같을 때만 집계합니다.
 

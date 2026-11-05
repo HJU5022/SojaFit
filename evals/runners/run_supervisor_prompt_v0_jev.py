@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import time
 from pathlib import Path
 
@@ -60,6 +61,29 @@ def _write_json_atomic(path: Path, value: dict) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
+
+
+def _smoke_path(run_dir: Path) -> Path:
+    return Path(run_dir) / "smoke_typesafe__jev-1.14.json"
+
+
+def _validated_smoke(run_dir: Path) -> dict:
+    path = _smoke_path(run_dir)
+    if not path.exists():
+        raise ValueError("successful smoke is required before run")
+    smoke = json.loads(path.read_text(encoding="utf-8"))
+    actual_model = smoke.get("actual_model")
+    if (
+        smoke.get("status") != "complete"
+        or smoke.get("model_id") != MODEL_ID
+        or not smoke.get("provider")
+        or not isinstance(actual_model, str)
+        or re.fullmatch(rf"{re.escape(MODEL_ID)}(?:-\d{{8}})?", actual_model) is None
+        or smoke.get("dataset_sha256") != _sha256(DATASET)
+        or smoke.get("contract_sha256") != _sha256(CONTRACT_PATH)
+    ):
+        raise ValueError("smoke metadata mismatch")
+    return smoke
 
 
 def _choice(answers: dict, key: str) -> str:
@@ -194,6 +218,9 @@ def execute(
 
     run_dir = Path(run_dir)
     _, items = _validate_manifest(run_dir)
+    smoke = _validated_smoke(run_dir)
+    expected_provider = smoke["provider"]
+    expected_actual_model = smoke["actual_model"]
     output = run_dir / "rows_typesafe__jev-1.14.json"
     result = json.loads(output.read_text(encoding="utf-8")) if output.exists() else {
         "status": "incomplete",
@@ -219,7 +246,7 @@ def execute(
             result["status"] = "time_limit_stopped"
             break
         calls += 1
-        request = build_request_from_item(item)
+        request = build_request_from_item(item, provider=expected_provider)
         before = time.monotonic()
         try:
             payload = llm.evaluation_decision(
@@ -234,6 +261,15 @@ def execute(
                 "provider": payload.get("provider"),
                 "usage": payload.get("usage"),
             })
+            if row["provider"] != expected_provider or row["actual_model"] != expected_actual_model:
+                result["rows"].append({
+                    **row,
+                    "status": "error",
+                    "error_type": "ProviderOrModelChanged",
+                })
+                result["status"] = "provider_stopped"
+                _write_json_atomic(output, result)
+                break
         except JevFormatError:
             row = {
                 "model_id": MODEL_ID,
@@ -315,7 +351,12 @@ def main(argv=None) -> int:
                 timeout=min(45.0, args.max_seconds),
             )
             row = parse_item_response(item, payload)
-            row["latency_seconds"] = time.monotonic() - started
+            row.update({
+                "latency_seconds": time.monotonic() - started,
+                "actual_model": payload.get("model"),
+                "provider": payload.get("provider"),
+                "usage": payload.get("usage"),
+            })
         except JevFormatError:
             row = {
                 "model_id": MODEL_ID,
@@ -326,6 +367,8 @@ def main(argv=None) -> int:
         result = {
             "status": row["status"],
             "model_id": MODEL_ID,
+            "provider": row.get("provider"),
+            "actual_model": row.get("actual_model"),
             "api_mode": "decisions",
             "dataset_sha256": _sha256(DATASET),
             "contract_sha256": _sha256(CONTRACT_PATH),
@@ -338,7 +381,12 @@ def main(argv=None) -> int:
                 "usd_cap_technically_enforced": False,
             },
         }
-        _write_json_atomic(args.output / "smoke_typesafe__jev-1.14.json", result)
+        _write_json_atomic(_smoke_path(args.output), result)
+        try:
+            _validated_smoke(args.output)
+        except ValueError:
+            result["status"] = "metadata_error"
+            _write_json_atomic(_smoke_path(args.output), result)
     else:
         result = execute(
             args.output,

@@ -91,6 +91,57 @@ def test_live_commands_require_confirmation_and_positive_limits(tmp_path):
             "--max-usd", "1", "--max-seconds", "10",
             "--prompt-rate", "0.000001", "--completion-rate", "0.000001",
         ])
+
+
+def test_run_requires_smoke_and_pins_its_provider(tmp_path):
+    run_dir = tmp_path / "chat-v0"
+    assert runner.main(["plan", str(run_dir)]) == 0
+
+    with pytest.raises(ValueError, match="smoke"):
+        runner.execute_model(
+            run_dir,
+            "openai/gpt-6-luna",
+            max_usd=1,
+            max_seconds=10,
+            prompt_rate=0.000001,
+            completion_rate=0.000001,
+            call=lambda *args, **kwargs: pytest.fail("must stop before a call"),
+        )
+
+    smoke = {
+        "status": "complete",
+        "model_id": "openai/gpt-6-luna",
+        "provider": "OpenAI",
+        "actual_model": "openai/gpt-6-luna",
+        "dataset_sha256": runner._sha256(runner.DATASET),
+        "contract_sha256": runner._sha256(runner.CONTRACT_PATH),
+    }
+    (run_dir / "smoke_openai__gpt-6-luna.json").write_text(
+        json.dumps(smoke), encoding="utf-8"
+    )
+    policies = []
+
+    def fake_call(model, system, user, schema, **kwargs):
+        policies.append(kwargs["provider_policy"])
+        return schema(
+            question_type="out_of_scope",
+            required_evidence=[],
+            next_action="refuse",
+            reason_code="OUT_OF_SCOPE",
+        ), {"provider": "OpenAI", "actual_model": model, "usage": {}}
+
+    runner.execute_model(
+        run_dir,
+        "openai/gpt-6-luna",
+        max_usd=1,
+        max_seconds=10,
+        prompt_rate=0.000001,
+        completion_rate=0.000001,
+        call=fake_call,
+    )
+
+    assert policies
+    assert all(policy["only"] == ["OpenAI"] for policy in policies)
     with pytest.raises(SystemExit):
         runner.main([
             "run", str(tmp_path), "--model", "openai/gpt-6-luna",
