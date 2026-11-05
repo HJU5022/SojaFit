@@ -4,6 +4,7 @@
 - 하지 않는 일: Langfuse·LLM 없이 돈다. 답이 맞았는지는 보지 않는다.
 - 출처: SPEC 7절(그래프 평가 실행), docs/GATES.md G6
 """
+from evals.runners import run_graph as R
 from evals.runners.run_graph import run_scores
 
 
@@ -171,10 +172,16 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
         def check(self, parts, revisions):
             return {"parts": {}, "revisions": {}}
 
+        def part_specs(self, part, codes=None):
+            return []
+
+        def find_parts(self, conditions, category=None, package=None, limit=50):
+            return []
+
     monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
     with ExitStack() as stack:
         app = make_app(True, stack)
-        assert events == ["open"] and "supervisor" in app.get_graph().nodes
+        assert events == ["open"] and "supervisor" in app.get_graph().nodes and "judge" in app.get_graph().nodes
     assert events == ["open", "close"]
 
 
@@ -185,3 +192,31 @@ def test_make_app_single_is_the_trunk_graph_and_opens_no_mcp(monkeypatch):
     monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", lambda: (_ for _ in ()).throw(AssertionError("MCP 불필요")))
     with ExitStack() as stack:
         assert "라우팅" in make_app(False, stack).get_graph().nodes
+
+
+
+class FakeApp:
+    def __init__(self):
+        self.calls = []
+
+    def invoke(self, value, config):
+        self.calls.append(value)
+        return {'__interrupt__': ['ask']} if len(self.calls) == 1 else {'answer': 'done'}
+
+
+def test_interrupt_is_resumed_once_with_empty_reply():
+    """평가 문항에는 사람이 답할 수 없어 인터럽트에 빈 답({'answers': {}}, = 모름)으로 한 번만 재개한다(작업서 How "인터럽트")."""
+    app = FakeApp()
+    state = R.invoke_with_resume(app, {'input': 'q'}, {'configurable': {'thread_id': 'x'}})
+    assert state == {'answer': 'done'} and len(app.calls) == 2
+    assert getattr(app.calls[1], 'resume', None) == {'answers': {}}
+
+
+def test_second_interrupt_is_not_resumed_again():
+    class Always(FakeApp):
+        def invoke(self, value, config):
+            self.calls.append(value)
+            return {'__interrupt__': ['ask']}
+    app = Always()
+    state = R.invoke_with_resume(app, {'input': 'q'}, {'configurable': {'thread_id': 'x'}})
+    assert '__interrupt__' in state and len(app.calls) == 2  # 상한 1번(AGENTS 6번)

@@ -13,6 +13,7 @@
 
 실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]
   --multi: 줄기 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점으로 잰다. 결과는 multi_<평가셋>_<날짜>.json
+           판정 에이전트를 켜고, 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
   예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03
 """
 import hashlib
@@ -112,8 +113,20 @@ def node_models() -> dict:
     return {node: llm.node_model(node) for node in langfuse_prompts.NODES}
 
 
+def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) -> dict:
+    """그래프를 돌리고, 인터럽트로 멈추면 빈 답(= 모름)으로 최대 max_resumes번 재개한다."""
+    from langgraph.types import Command
+    state = app.invoke(inputs, config)
+    for _ in range(max_resumes):
+        if '__interrupt__' not in state:
+            break
+        # [주의] 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다. 답 없음은 {'answers': {}}로 보낸다(11-06 실측)
+        state = app.invoke(Command(resume={'answers': {}}), config)
+    return state
+
+
 def make_app(multi: bool, stack: ExitStack):
-    """평가할 그래프를 조립한다. 멀티면 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인 도구로 쓴다."""
+    """평가할 그래프를 조립한다. 멀티면 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인 · 사양 표 도구로 쓰고 판정 에이전트를 켠다."""
     if not multi:
         from backend.graph.build import build_graph
         return build_graph()  # 서비스와 같은 줄기 그래프(SPEC 2절)
@@ -122,8 +135,11 @@ def make_app(multi: bool, stack: ExitStack):
     from backend.multi_agent.facts import make_lookup
     from backend.rag.retrieve import retrieve
     from backend.services import llm
+    from langgraph.checkpoint.memory import InMemorySaver
     mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
-    return build_multi(chat=llm.node_chat, retriever=retrieve, lookup=make_lookup(mcp.check))
+    # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
+    return build_multi(chat=llm.node_chat, retriever=retrieve, lookup=make_lookup(mcp.check), judge_enabled=True,
+                       specs=mcp.part_specs, find=mcp.find_parts, checkpointer=InMemorySaver())
 
 
 def _git(*args):
@@ -191,11 +207,12 @@ def main(dataset_path, ids=(), out=None, multi=False):
             if it.get("irrelevant_type"):
                 meta["irrelevant_type"] = it["irrelevant_type"]
             # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
+            # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 그래프는 체크포인터가 없어 무시된다)
             config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
-                      "metadata": meta}
+                      "metadata": meta, "configurable": {"thread_id": it["id"]}}
             start = time.perf_counter()
             try:
-                state = app.invoke({"input": it["input"]}, config)
+                state = invoke_with_resume(app, {"input": it["input"]}, config)
             except Exception as error:  # [왜] 한 문항이 죽어도 나머지는 잰다. 실패는 끝에 세고 결과 파일에도 남긴다
                 failed.append({"id": it["id"], "error": f"{type(error).__name__}: {str(error)[:200]}"})
                 print(f"{it['id']}\t실패\t{type(error).__name__}: {error}", flush=True)
