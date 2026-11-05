@@ -49,6 +49,10 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | N
         scores["tries"] = (float(counters["searches"]), "NUMERIC", "검색 횟수")
         scores["hops"] = (float(counters["hops"]), "NUMERIC", "Supervisor 판단 횟수")
         scores["refusal_code"] = ((state.get("refusal") or {}).get("code", ""), "CATEGORICAL", None)
+        # [왜] 멀티 거절은 사용자용 일상어 문구라 NOT_FOUND로 시작하지 않는다. 단일과 같은 뜻(범위 밖이 아닌 '못 찾음')으로 맞춰 나란히 비교한다
+        code = scores["refusal_code"][0]
+        if code and code != "out_of_scope":
+            scores["not_found"] = (1.0, "BOOLEAN", scores["not_found"][2])
     if item is not None:
         from evals.runners.score_answer import score_item
         scored = score_item(item, state)

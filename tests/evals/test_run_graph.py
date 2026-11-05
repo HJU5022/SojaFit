@@ -120,6 +120,17 @@ def test_multi_state_adds_hops_refusal_code_and_tries_from_counters():
     assert done["tries"][0] == 2.0 and done["refusal_code"][0] == ""
 
 
+def test_multi_not_found_matches_single_meaning():
+    """멀티 거절 문구는 일상어라 '문서로 확인 안 됨'으로 시작하지 않는다. 범위 밖이 아닌 거절은 단일처럼 not_found로 센다."""
+    def nf(code, answer="문서에서 찾지 못했어요."):
+        state = {"path": ["거절"], "answer": answer, "refusal": {"code": code} if code else {}, "counters": {"hops": 1, "searches": 0, "writes": 0}}
+        return run_scores(state, 1.0, [])["not_found"][0]
+    assert nf("revision_missing") == 1.0 and nf("part_missing") == 1.0 and nf("not_found") == 1.0
+    assert nf("out_of_scope") == 0.0  # 단일도 범위 밖 거절은 not_found가 아니다
+    assert nf("", "안녕하세요!") == 0.0  # 일상 대화 답
+    assert nf("", "문서로 확인 안 됨") == 1.0  # 작성 에이전트가 낸 '문서로 확인 안 됨' 답
+
+
 def test_single_state_has_no_multi_scores():
     scores = run_scores({"path": ["생성"], "tries": 1, "answer": "x"}, 1.0, [])
     assert "hops" not in scores and "refusal_code" not in scores
