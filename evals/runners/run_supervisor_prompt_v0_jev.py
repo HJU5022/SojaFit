@@ -313,6 +313,8 @@ def _validate_live(parser: argparse.ArgumentParser, args) -> None:
         parser.error("--max-calls, --max-seconds, --max-usd는 양수여야 합니다")
     if not args.confirm_live:
         parser.error("live API 호출에는 --confirm-live가 필요합니다")
+    if args.command == "smoke" and not args.provider:
+        parser.error("smoke에는 --provider가 필요합니다")
     if not os.getenv("OPENROUTER_API_KEY"):
         parser.error("OPENROUTER_API_KEY가 필요합니다")
 
@@ -330,6 +332,7 @@ def main(argv=None) -> int:
         live.add_argument("--max-calls", type=int, required=True)
         live.add_argument("--max-seconds", type=float, required=True)
         live.add_argument("--max-usd", type=float, required=True)
+        live.add_argument("--provider")
         live.add_argument("--confirm-live", action="store_true")
     args = parser.parse_args(argv)
 
@@ -347,7 +350,7 @@ def main(argv=None) -> int:
         started = time.monotonic()
         try:
             payload = llm.evaluation_decision(
-                build_request_from_item(item),
+                build_request_from_item(item, provider=args.provider),
                 timeout=min(45.0, args.max_seconds),
             )
             row = parse_item_response(item, payload)

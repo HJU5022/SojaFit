@@ -311,6 +311,8 @@ def _positive(parser: argparse.ArgumentParser, args) -> None:
         parser.error("live 상한과 단가는 모두 양수여야 합니다")
     if not args.confirm_live:
         parser.error("live API 호출에는 --confirm-live가 필요합니다")
+    if args.command == "smoke" and not args.provider:
+        parser.error("smoke에는 --provider가 필요합니다")
     if not os.getenv("OPENROUTER_API_KEY"):
         parser.error("OPENROUTER_API_KEY가 필요합니다")
 
@@ -330,6 +332,7 @@ def main(argv=None) -> int:
         live.add_argument("--max-seconds", type=float, required=True)
         live.add_argument("--prompt-rate", type=float, required=True)
         live.add_argument("--completion-rate", type=float, required=True)
+        live.add_argument("--provider")
         live.add_argument("--confirm-live", action="store_true")
     args = parser.parse_args(argv)
 
@@ -352,8 +355,18 @@ def main(argv=None) -> int:
             args.completion_rate,
             max_tokens=MAX_TOKENS,
         )
+        def smoke_call(model_id, system, user, schema, **kwargs):
+            policy = {**kwargs["provider_policy"], "only": [args.provider]}
+            return llm.evaluation_chat(
+                model_id,
+                system,
+                user,
+                schema,
+                **{**kwargs, "provider_policy": policy},
+            )
+
         with llm.evaluation_limits(budget):
-            row = run_one(args.model, item)
+            row = run_one(args.model, item, call=smoke_call)
         result = {
             "status": row["status"],
             "model_id": args.model,
