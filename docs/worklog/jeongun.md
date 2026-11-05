@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 코퍼스 확인 MCP 도구(`check_corpus`)와 사실 확인 연결
+- 한 일: 품번 · 개정 코드가 코퍼스에 있는지 있음/없음만 알려 주는 MCP 도구 `check_corpus`를 서버에 더했다(도구 1개로 합침, 판단하지 않음). 클라이언트 `StdioMcpRetriever.check`(같은 세션)와 응답 검증 `decode_check_result`, 사실 확인 노드용 `make_lookup(check)`를 만들었다. 코퍼스 목록은 `retrieve.corpus_known()`(품번 색인 + 문서 파일 이름의 개정 코드).
+- 바꾼 파일: `backend/mcp_skill/mcp_server/server.py`, `backend/rag/retrieve.py`, `backend/graph/mcp_retriever.py`, `backend/multi_agent/facts.py`, 시험 3개(`tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/multi_agent/test_facts_lookup.py`), `SPEC.md` 8.7, 폴더 설명과 트리
+- 실행한 명령과 결과: `uv run --frozen pytest -q`(문서 갱신 뒤 결과는 아래 확인).
+- 확인 못 한 것: 실제 DB로 `corpus_known()`을 돌려 보지 않았다(시험은 가짜 목록). 회로 이름(예: TEST001)을 품번으로 뽑아 "없음"으로 잘못 알리는지는 확인하지 않았다. 도구 장애 시 사실 확인은 예외를 그대로 올린다.
+- 다음 할 일: 실제 DB에서 `corpus_known()` 한 번 확인 → Supervisor를 실제 LLM에 연결하고 평가 실행기에 `--multi` 추가.
+
 ## 2026-11-05 기존 프롬프트 4개 영어 번역(측정 전)
 - 한 일: `route` · `grade` · `rewrite` · `generate` 프롬프트를 영어로 번역했다(규칙 내용 같음, 답변은 한국어, "문서로 확인 안 됨"은 그대로). 사전 등록 #35에 기대 범위를 먼저 적었다.
 - 바꾼 파일: `backend/prompts/{route,grade,rewrite,generate}.md`, `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `tests/graph/test_graph_{route,grade,rewrite,generate}.py`(프롬프트 문구 확인을 영어로)
