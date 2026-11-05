@@ -4,8 +4,9 @@
 - 한 일: `route` · `grade` · `rewrite` · `generate` 프롬프트를 영어로 번역했다(규칙 내용 같음, 답변은 한국어, "문서로 확인 안 됨"은 그대로). 사전 등록 #35에 기대 범위를 먼저 적었다.
 - 바꾼 파일: `backend/prompts/{route,grade,rewrite,generate}.md`, `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `tests/graph/test_graph_{route,grade,rewrite,generate}.py`(프롬프트 문구 확인을 영어로)
 - 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. origin/main의 사전 등록 마지막 번호는 #32라 #35를 썼다.
-- 확인 못 한 것: 아직 Langfuse v2 등록과 v2 70문항 측정을 하지 않았다(유료 호출이라 실행 전 확인).
-- 다음 할 일: 번역본 Langfuse 등록 → `run_graph`로 70문항 측정 → #35에 결과 기록 → 새 단일 기준으로 삼기.
+- 이어서 한 일: 번역본을 Langfuse에 v2로 등록(`load_development` 대조 통과)하고 시험 2문항 뒤 v2 70문항을 측정했다. 결과 `evals/results/graph/graph_dataset_v2_2026-11-05.json`: cited_gold 12 · over_refusal 23 · correct_refusal 35(#31과 같음), 라우팅 32/35, p50 6.25초, 호출 215, 0.0463달러(#31 0.0519). #31과 지표가 다른 문항 2개(e02 · h02).
+- 확인 못 한 것: 답변이 한국어인지 확인하지 않았다. 응답 변동 폭은 재지 않았다.
+- 다음 할 일: 영어 프롬프트 기준으로 멀티 에이전트 구현을 이어 간다.
 
 ## 2026-11-05 Supervisor 프롬프트 영어 전환과 Langfuse 등록
 - 한 일: `backend/prompts/supervisor.md`를 영어로 다시 썼고(`brief`도 영어), Supervisor 입력 글(`render`)과 에이전트 보고 요약 문구를 영어로 바꿨다. `NODES`에 `supervisor`를 더해 Langfuse에 v1로 등록했다.
