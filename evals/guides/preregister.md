@@ -535,6 +535,7 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령: `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` (같은 날 결과 파일이 있으면 새 이름으로 저장된다).
 - 예산 · 중단: OpenRouter 0.30달러. 실행기에 연속 실패 중단이 없어 끝까지 돈다. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
 - 한계: 1회 측정이라 응답 변동 폭을 모른다. 측정하는 동안 작업 폴더에 이 실험과 무관한 미커밋 파일(부품 사양 표 변환기, ADR 0013)이 있어 결과 meta의 git에 `+dirty`가 붙을 수 있다. 그래프 · 채점 · 실행기 코드는 이 사전 등록 커밋과 같다.
+- 결과(11-05 20:45~20:54, 커밋 `3cfb58f`, session `graph-dataset_v2-1105-2045-openrouter`, 결과 `evals/results/graph/graph_dataset_v2_2026-11-05-2054.json`): 70문항 모두 끝남, 실패 0, meta의 git에 `+dirty` 없음. 관련 35: cited_gold 13 · over_refusal 22 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 관련 라우팅 일치 31/35(#35 32). 검색 횟수 0번 16 · 1번 40 · 2번 14(#35 16 · 41 · 13). latency_s p50 8.6 · p95 16.2 · 최대 23.7초(#35 6.25 · 14.4 · 19.6). LLM 호출 216(Haiku 171 · Luna 45, #35 215), Langfuse 생성 비용 합 0.0426달러(Haiku 0.0295 · Luna 0.0131, #35 0.0463). 채점 통과 청크 합 49(#35 77). #35와 답 지표가 같은 문항 69/70(99%), 다른 문항은 draft30-h01(over_refusal → cited_gold) 하나다. 기대 대조: cited_gold 9~15 맞음(13), over_refusal 18~26 맞음(22), wrong_citation 0~3 맞음(0), correct_refusal 32~35 맞음(35), hallucination_risk 0~3 맞음(0), 라우팅 29~34 맞음(31), 실패 0~3 맞음(0), p50 5~15초 맞음(8.6), 비용 0.02~0.08달러 맞음(0.0426), 지표 같은 문항 75% 이상 맞음(99%). 판정: 채점을 Luna로 바꿔도 답 지표는 1문항만 달라 효과로 단정하지 않는다. 채점이 통과시킨 청크는 77 → 49로 줄었다(Luna가 더 적게 통과시킴). 이 결과를 #38(멀티)의 비교 기준으로 쓴다.
 
 ### 2026-11-05 #38: 멀티 에이전트 첫 측정 (동결 v2 70문항, #37과 비교)
 
