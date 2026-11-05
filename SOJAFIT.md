@@ -51,7 +51,8 @@ SojaFit (proj3-b)
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
-│   │   └── __init__.py     <- 패키지 표시
+│   │   ├── __init__.py     <- 패키지 표시
+│   │   └── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── netlist.py      <- 넷리스트에서 대상 부품 주변 연결 읽기 (예정, 후보 이름)
@@ -240,7 +241,8 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
-│   │   └── MULTI_AGENT.md  <- 폴더 설명
+│   │   ├── MULTI_AGENT.md  <- 폴더 설명
+│   │   └── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)

@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 멀티 에이전트 폴더 뼈대와 약속(contracts.py)
+- 한 일: 정운과의 설계 대화 결과로 새 구조의 첫 조각을 만들었다. D4 단일 그래프를 비교 기준선으로 지키려고 `backend/multi_agent/`를 `graph/`와 분리했고(이유는 폴더 설명 `MULTI_AGENT.md`), 시험 먼저 `contracts.py`를 썼다: Supervisor의 결정서 `Decision`, 서브에이전트의 보고서 `AgentReport`, 이유 코드 `Reason`(거절 7종 · 재시도 3종), 한도 `MAX_HOPS` 8 · `MAX_SEARCHES` 2 · `MAX_WRITES` 2와 한도 검사 `check_limit`.
+- 바꾼 파일: `backend/multi_agent/`(`MULTI_AGENT.md` · `__init__.py` · `contracts.py`), `tests/multi_agent/`(`MULTI_AGENT.md` · `test_contracts.py`), `SOJAFIT.md` 트리와 담당 표, `backend/BACKEND.md` · `tests/TESTS.md` · `backend/graph/GRAPH.md`의 목록, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest tests/multi_agent -q` 10 passed. 폴더 구조 시험 통과.
+- 확인 못 한 것: 이 조각은 데이터 모양과 한도 규칙뿐이라 LLM · 검색 · 측정은 아직 없다. 사용자에게 보일 거절 문구(일상어)와 Langfuse에 남길 항목은 다음 조각에서 정한다.
+- 다음 할 일: Supervisor 노드(가짜 LLM으로 시험) → 서브에이전트(단일의 검색 · 채점 · 재작성을 감싸기) → 조립 → D4 점수와 비교.
+
 ## 2026-11-05 채점기 기준선(사전 등록 #33)
 - 한 일: 로컬 `jeongun`을 `origin/main`(PR #54)에 맞추고 임시 브랜치 3개와 오래된 작업 폴더를 지웠다. 채점을 3갈래로 바꾸기 전 기준선으로, 지금 2갈래 채점이 정답 쪽을 얼마나 유지하는지 측정했다. 사전 등록 #33(번호는 `main`의 #32가 오세창 것이라 #33), 시험 먼저, 계산기와 스냅샷 만들기(`evals/runners/eval_grader.py`), 입력 스냅샷(`evals/inputs/grader_cases_v2.json`, 청크 번호 · 파일 · 쪽만), 결과(`evals/results/grader/grader_baseline_2026-11-05.json`).
 - 바꾼 파일: `evals/guides/preregister.md`(#33), `evals/runners/eval_grader.py`, `evals/inputs/grader_cases_v2.json`, `evals/results/grader/`, `tests/evals/test_eval_grader.py`, `SOJAFIT.md` · `INPUTS.md` · `RUNNERS.md` · `EVALS.md` · `tests/evals/EVALS.md`의 파일 줄, 이 파일
