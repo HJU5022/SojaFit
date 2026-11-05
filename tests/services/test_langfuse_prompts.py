@@ -341,9 +341,11 @@ def test_load_existing_versions_rejects_unpublished_local_skill(monkeypatch, tmp
 
 def test_node_config_gives_each_node_its_model():
     assert managed.node_config("route") == managed.CONFIG
-    luna = managed.node_config("supervisor")
-    assert luna == managed.node_config("grade") and luna["model"] == "openai/gpt-6-luna"
+    luna = managed.node_config("grade")
+    assert luna["model"] == "openai/gpt-6-luna"
     assert "temperature" not in luna and luna["max_tokens"] == managed.CONFIG["max_tokens"]
+    sonnet = managed.node_config("supervisor")  # [왜] Sonnet은 Haiku와 같은 Anthropic 모델이라 temperature 0을 그대로 보낸다(11-05)
+    assert sonnet == {**managed.CONFIG, "model": "anthropic/claude-sonnet-5.5"}
     assert set(managed.NODES) == set(managed.NODE_MODELS)
 
 
@@ -355,7 +357,7 @@ def test_publish_nodes_registers_each_prompt_with_its_node_config(monkeypatch):
 
 
 def test_prompt_scope_rejects_config_of_another_nodes_model():
-    prompt = SimpleNamespace(name="supervisor", version=1, config=managed.CONFIG)  # Luna 노드에 Haiku 설정이 등록됨
+    prompt = SimpleNamespace(name="supervisor", version=1, config=managed.CONFIG)  # Sonnet 노드에 Haiku 설정이 등록됨
     with managed.session(SimpleNamespace(), {"supervisor": prompt}, None):
         with pytest.raises(ValueError, match="모델 설정"):
             with managed.prompt_scope("supervisor", "s", "u"):
