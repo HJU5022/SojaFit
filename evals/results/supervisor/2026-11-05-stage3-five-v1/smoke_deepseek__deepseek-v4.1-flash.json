@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "model_id": "deepseek/deepseek-v4.1-flash",
+  "provider": "Relace",
+  "actual_model": "deepseek/deepseek-v4.1-flash",
+  "error_type": null,
+  "manifest_prompt_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+  "manifest_code_sha256": {
+    "backend/services/llm.py": "299477e3bd3b3d0cb8b09c93259fa46b75cbc524952821af3e4b42e97d882f37",
+    "evals/runners/run_supervisor_models.py": "2898871995600bd9f575d900ac8f133513f233b9c9d8c62e96d50217f1b242ea"
+  }
+}

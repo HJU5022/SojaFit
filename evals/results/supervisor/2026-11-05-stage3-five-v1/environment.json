@@ -1,0 +1,18 @@
+{
+  "recorded_at_utc": "2026-11-05T02:49:55.781832+00:00",
+  "recorded_during_execution": true,
+  "python": "3.12.16 (main, Oct 26 2026, 14:10:56) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "git_head": "d10a30bc5ef8068c9b98d58a63324e5e3abe01fa",
+  "packages": {
+    "openai": "3.40.0",
+    "pydantic": "2.14.1",
+    "langchain-openai": "1.7.3",
+    "python-dotenv": "1.2.4"
+  },
+  "dependency_file_sha256": {
+    "pyproject.toml": "3e6ac69788199f173c28b2e838d768e5b4ace5940d626c7a0a5b69ac12f0bb79",
+    "uv.lock": "48ae696ac20d9de6d8cd4f23bc8e6c04fe2edc2dec9b1bc0a6dcd333de1b72e3"
+  }
+}

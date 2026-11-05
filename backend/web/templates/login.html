@@ -29,6 +29,7 @@
         <input id="password" type="password" autocomplete="current-password" required maxlength="1024">
         <button type="submit">로그인</button>
       </form>
+      <p id="google-login" hidden><a href="/api/auth/google/start">Google 관리자 로그인</a></p>
     </section>
     <section id="session-view" aria-labelledby="session-title" hidden>
       <h2 id="session-title">로그인 상태</h2>
@@ -41,6 +42,13 @@
     const loginView = document.querySelector("#login-view");
     const sessionView = document.querySelector("#session-view");
     const status = document.querySelector("#status");
+    if (new URLSearchParams(location.search).get("google") === "error") {
+      status.textContent = "Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.";
+      history.replaceState(null, "", "/login");
+    }
+    fetch("/api/auth/google/status").then(response => response.json()).then(data => {
+      document.querySelector("#google-login").hidden = !data.enabled;
+    }).catch(() => {});
 
     function showSessionView() {
       loginView.hidden = true;

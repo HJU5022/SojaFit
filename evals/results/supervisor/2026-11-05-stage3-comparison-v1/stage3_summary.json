@@ -1,0 +1,3393 @@
+{
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "run_index": 3,
+  "sources": {
+    "evals/results/supervisor/2026-11-04-stage1-v1/manifest.json": "147e721f89abe69ec900f04c6bb205ad8faee231d964739c45f7e0038525bf13",
+    "evals/results/supervisor/2026-11-04-stage1-v1/rows_anthropic__claude-haiku-5.5.json": "6d4ef1625ff88fd04775448262ab02dc6a908d1dd89e62b2357fc3c93feaf500",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/manifest.json": "40b2187dd6424be6528d1a810e6a2d02dbfc93273e5c8eaaae2f51093cc7ea4d",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_anthropic__claude-haiku-5.5.json": "ec4d915fc551855969383bf376a6bb5e9a479d70b86b6be787094e653bb28d1d",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/manifest.json": "71501a4334aa111b1835d887952c5f3b43813c3b02b51d80dcfa28cb3bf7e4de",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/rows_anthropic__claude-haiku-5.5.json": "a59a05cf868e80f6c4b55c654f3a934de90b6bbd46d15782d8b0edade2d67bf1",
+    "evals/results/supervisor/2026-11-04-stage1-v1/rows_openai__gpt-6-luna.json": "77665401eede2d7d472040d011de13d696c5f885b15e6993f782cc24bc76a6af",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_openai__gpt-6-luna.json": "884de14781464940fa07d35fc9ef15b126d7a921fc45b92bc0769d1bbca51ff9",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/rows_openai__gpt-6-luna.json": "d06fa53bcefde71a6ed953585582093d36efb95ab6edf10d3c635b06ad3a7a77",
+    "evals/results/supervisor/2026-11-04-stage1-v1/rows_deepseek__deepseek-v4.1-flash.json": "a01c69cda5028d3a37c242a376cd129c74823802cc8bb341e90e5e39e9a80750",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_deepseek__deepseek-v4.1-flash.json": "ba2ecab6f073f1d3deef3ad3806313d07a55a42ed1c845ab1aef924587a591ee",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/rows_deepseek__deepseek-v4.1-flash.json": "0cfa2069c245466bbabd7bbb30fd8d8c65df1c465c884b437b1a87bece0b71df",
+    "evals/results/supervisor/2026-11-04-stage1-v1/rows_meta__muse-glimmer-30b.json": "c3dca38a73e62a2656fdb1ca94c96e2bb492be79677e4c463d2fe44606f1f73c",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_meta__muse-glimmer-30b.json": "41f81a9bc340cf06446c35ff81b6e15eafc40317efb65c902ca2ebc5f02d05e3",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/rows_meta__muse-glimmer-30b.json": "7bf2a7c5bfba3ec33ee3157ad54a83a6e2426886ce73e2c2202503dcf652effc",
+    "evals/results/supervisor/2026-11-04-stage1-v1/rows_cohere__command-a-plus.json": "11820e7d542817ec264c5a0aa40a62bd34b6a285c65d002c5b72265decb3e232",
+    "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_cohere__command-a-plus.json": "da31f0e3e6573490222873839aa5115bf0470c2a3fc9171545fef932b7a3a83e",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/rows_cohere__command-a-plus.json": "f42f91056ba8521a268d0440eb2be0c78ee26901883e726e40443ca6f411bf78",
+    "evals/results/supervisor/2026-11-04-jev-stage1-ready-v1/manifest.json": "f884264f28ee0c4ed4d207215b9b8c69d24813c370771a076398b54623224297",
+    "evals/results/supervisor/2026-11-04-jev-stage1-ready-v1/rows.json": "f0d3a1f53513c3ae2767b119a75c3c7b4856253a7053af61f8deca52c0c96cc0",
+    "evals/results/supervisor/2026-11-05-jev-stage2-v1/manifest.json": "75ae2e3530266656da86d5e5d885eba30a351e74025b9c23aedb7d7293d6c7d1",
+    "evals/results/supervisor/2026-11-05-jev-stage2-v1/rows.json": "7f92cbfda415308c90a588e19959d5ba4a303a6c039cea450649637aeb12e8aa",
+    "evals/results/supervisor/2026-11-05-jev-stage3-v1/manifest.json": "79f0b487fda7e5e57d7de2229e559dc6c4c40ed3ee3e2425355a0d89116ef4b8",
+    "evals/results/supervisor/2026-11-05-jev-stage3-v1/rows.json": "5b514dc28fd17a8290c1dcfd849173cc718ffbfb43057f1330243464d606e1a1",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/execution.json": "a122430b962299e1f524fb69c20c46353d7c1779fd7f6b5460871ba7cfcf7ed2",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/environment.json": "f34eb835c70958111ea25bb7b2560848116aa420887cc55e05df3275af524972",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/preflight.json": "9781412f31d8f4b5bf6b1b4416f99f6afa13aa93e15febf9111bf27381f77543",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/smoke_anthropic__claude-haiku-5.5.json": "e9865a240bb2fe5959a2374e3ce4fa5539c79efc39f3a98adcc53496e577e508",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/smoke_cohere__command-a-plus.json": "4d7e3f07255da11c2ad601bc88ee834d8a6429ad8d3ca2f20dd31f4e01a104ac",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/smoke_deepseek__deepseek-v4.1-flash.json": "d8de46a68b3a470ec76847792a0d4753d53bad13dee0956532a63bce56d9be6a",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/smoke_meta__muse-glimmer-30b.json": "7313507322b17e7c579ec1fa3188677cdc87c25017bf6f5c5dad02b1128a7e17",
+    "evals/results/supervisor/2026-11-05-stage3-five-v1/smoke_openai__gpt-6-luna.json": "c844240320a98bb6ebca45f173e73d3bef0e3312a01e0561d390c9395d2dd791",
+    "evals/results/supervisor/2026-11-05-jev-stage3-v1/smoke.json": "83aa330b9dbdb6cf44306e8e8b0d32d0d22a3b28a5bd8ec1c564bd1875bcc785",
+    "evals/results/supervisor/2026-11-05-jev-stage3-v1/summary.json": "a0595802ad40321a6b1020a49daddd7fe77a9be2b50a8c5c8358fafeb2eccea4"
+  },
+  "models": {
+    "anthropic/claude-haiku-5.5": {
+      "contract_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+      "runs": {
+        "1": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 48,
+            "denominator": 70,
+            "value": 0.6857142857142857
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 41,
+            "denominator": 70,
+            "value": 0.5857142857142857
+          },
+          "Retry Rate": {
+            "numerator": 29,
+            "denominator": 70,
+            "value": 0.4142857142857143
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 22,
+            "denominator": 35,
+            "value": 0.6285714285714286
+          },
+          "Question Type Macro-F1": 0.7243421052631579,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 9,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9473684210526316
+            },
+            "candidate_judge": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 8,
+              "f1": 0.19999999999999998
+            },
+            "rating": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 4,
+              "f1": 0.7499999999999999
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 6,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 121,
+          "Errors": {
+            "ValidationError": 22
+          },
+          "Reported Cost Sum": 0.0294164,
+          "Budget-Accounted Cost": 0.031409000000000006,
+          "Input Tokens (recorded)": 172994,
+          "Output Tokens (recorded)": 24234,
+          "Reported Cost Calls": 114,
+          "p50 Latency": 2.344000000040978,
+          "p95 Latency": 7.811999999918044,
+          "Providers": [
+            "Google"
+          ],
+          "Actual Models": [
+            "anthropic/claude-haiku-5.5"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 22,
+              "denominator": 22,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 13,
+            "validation_attempt_usage_records": 66,
+            "validation_attempts_at_256_tokens": 66
+          }
+        },
+        "2": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 46,
+            "denominator": 70,
+            "value": 0.6571428571428571
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 36,
+            "denominator": 70,
+            "value": 0.5142857142857142
+          },
+          "Retry Rate": {
+            "numerator": 34,
+            "denominator": 70,
+            "value": 0.4857142857142857
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 21,
+            "denominator": 35,
+            "value": 0.6
+          },
+          "Question Type Macro-F1": 0.6781045751633987,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 2,
+              "f1": 0.888888888888889
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 1,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 3,
+              "f1": 0.8235294117647058
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 7,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 132,
+          "Errors": {
+            "ValidationError": 24
+          },
+          "Reported Cost Sum": 0.0306794,
+          "Budget-Accounted Cost": 0.03469609999999998,
+          "Input Tokens (recorded)": 179394,
+          "Output Tokens (recorded)": 25480,
+          "Reported Cost Calls": 118,
+          "p50 Latency": 2.812000000034459,
+          "p95 Latency": 7.5,
+          "Providers": [
+            "Google"
+          ],
+          "Actual Models": [
+            "anthropic/claude-haiku-5.5"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 24,
+              "denominator": 24,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 13,
+            "validation_attempt_usage_records": 72,
+            "validation_attempts_at_256_tokens": 72
+          }
+        },
+        "3": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 50,
+            "denominator": 70,
+            "value": 0.7142857142857143
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 41,
+            "denominator": 70,
+            "value": 0.5857142857142857
+          },
+          "Retry Rate": {
+            "numerator": 29,
+            "denominator": 70,
+            "value": 0.4142857142857143
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 23,
+            "denominator": 35,
+            "value": 0.6571428571428571
+          },
+          "Question Type Macro-F1": 0.7576754385964912,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 9,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9473684210526316
+            },
+            "candidate_judge": {
+              "tp": 2,
+              "fp": 1,
+              "fn": 7,
+              "f1": 0.3333333333333333
+            },
+            "rating": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 4,
+              "f1": 0.7499999999999999
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 7,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 120,
+          "Errors": {
+            "ValidationError": 20
+          },
+          "Reported Cost Sum": 0.0280769,
+          "Budget-Accounted Cost": 0.030994100000000014,
+          "Input Tokens (recorded)": 166224,
+          "Output Tokens (recorded)": 22909,
+          "Reported Cost Calls": 110,
+          "p50 Latency": 2.187000000034459,
+          "p95 Latency": 7.891000000061467,
+          "Providers": [
+            "Google"
+          ],
+          "Actual Models": [
+            "anthropic/claude-haiku-5.5"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 11,
+            "validation_attempt_usage_records": 60,
+            "validation_attempts_at_256_tokens": 60
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 42,
+          "denominator": 70,
+          "value": 0.6
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 34,
+          "denominator": 42,
+          "value": 0.8095238095238095
+        },
+        "Question Type Flip Rate": {
+          "numerator": 1,
+          "denominator": 42,
+          "value": 0.023809523809523808
+        },
+        "Next Action Flip Rate": {
+          "numerator": 1,
+          "denominator": 42,
+          "value": 0.023809523809523808
+        },
+        "incomplete_case_ids": [
+          "draft30-e04",
+          "draft30-e05",
+          "draft30-e09",
+          "draft30-m04",
+          "draft30-m05",
+          "draft30-m08",
+          "draft30-m09",
+          "draft30-m10",
+          "draft30-h03",
+          "draft30-h04",
+          "draft30-h05",
+          "draft30-h07",
+          "draft30-h08",
+          "draft30-h09",
+          "draft30-h10",
+          "draft50-n01",
+          "draft50-n02",
+          "draft50-n04",
+          "draft50-n06",
+          "draft50-n07",
+          "draft50-n08",
+          "draft50-n15",
+          "draft52-n21",
+          "draftv2-n02",
+          "draftv2-n04",
+          "draftv2-n06",
+          "draftv2-n10",
+          "draftv2-n16"
+        ],
+        "question_type_flip_case_ids": [
+          "draft30-e06"
+        ],
+        "next_action_flip_case_ids": [
+          "draft30-e06"
+        ],
+        "stage2_to_stage3_labeled_changes": [
+          {
+            "case_id": "draft30-e05",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n02",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n07",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n04",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n06",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n10",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "openai/gpt-6-luna": {
+      "contract_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+      "runs": {
+        "1": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 66,
+            "denominator": 70,
+            "value": 0.9428571428571428
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 61,
+            "denominator": 70,
+            "value": 0.8714285714285714
+          },
+          "Retry Rate": {
+            "numerator": 8,
+            "denominator": 70,
+            "value": 0.11428571428571428
+          },
+          "API Error Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "Question Type Accuracy": {
+            "numerator": 35,
+            "denominator": 35,
+            "value": 1.0
+          },
+          "Question Type Macro-F1": 1.0,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 9,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "rating": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 7,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 83,
+          "Errors": {
+            "ValidationError": 3,
+            "APITimeoutError": 1
+          },
+          "Reported Cost Sum": 0.0109729,
+          "Budget-Accounted Cost": 0.013549600000000005,
+          "Input Tokens (recorded)": 53069,
+          "Output Tokens (recorded)": 11332,
+          "Reported Cost Calls": 75,
+          "p50 Latency": 2.797000000020489,
+          "p95 Latency": 12.984000000054948,
+          "Providers": [
+            "Azure"
+          ],
+          "Actual Models": [
+            "openai/gpt-6-luna"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 3,
+              "denominator": 3,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 0,
+            "validation_attempt_usage_records": 9,
+            "validation_attempts_at_256_tokens": 9
+          }
+        },
+        "2": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 65,
+            "denominator": 70,
+            "value": 0.9285714285714286
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 61,
+            "denominator": 70,
+            "value": 0.8714285714285714
+          },
+          "Retry Rate": {
+            "numerator": 9,
+            "denominator": 70,
+            "value": 0.12857142857142856
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 34,
+            "denominator": 35,
+            "value": 0.9714285714285714
+          },
+          "Question Type Macro-F1": 0.986842105263158,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 9,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "rating": {
+              "tp": 9,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9473684210526316
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 7,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 84,
+          "Errors": {
+            "ValidationError": 5
+          },
+          "Reported Cost Sum": 0.011756,
+          "Budget-Accounted Cost": 0.012544100000000008,
+          "Input Tokens (recorded)": 56385,
+          "Output Tokens (recorded)": 12235,
+          "Reported Cost Calls": 80,
+          "p50 Latency": 3.140999999945052,
+          "p95 Latency": 13.155999999959022,
+          "Providers": [
+            "Azure"
+          ],
+          "Actual Models": [
+            "openai/gpt-6-luna"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 1,
+            "validation_attempt_usage_records": 15,
+            "validation_attempts_at_256_tokens": 15
+          }
+        },
+        "3": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 65,
+            "denominator": 70,
+            "value": 0.9285714285714286
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 60,
+            "denominator": 70,
+            "value": 0.8571428571428571
+          },
+          "Retry Rate": {
+            "numerator": 10,
+            "denominator": 70,
+            "value": 0.14285714285714285
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 33,
+            "denominator": 35,
+            "value": 0.9428571428571428
+          },
+          "Question Type Macro-F1": 0.9602941176470589,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9411764705882353
+            },
+            "rating": {
+              "tp": 9,
+              "fp": 1,
+              "fn": 1,
+              "f1": 0.9
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 7,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 86,
+          "Errors": {
+            "ValidationError": 5
+          },
+          "Reported Cost Sum": 0.0121155,
+          "Budget-Accounted Cost": 0.013300099999999997,
+          "Input Tokens (recorded)": 56385,
+          "Output Tokens (recorded)": 12954,
+          "Reported Cost Calls": 80,
+          "p50 Latency": 3.280999999959022,
+          "p95 Latency": 15.077999999979511,
+          "Providers": [
+            "Azure"
+          ],
+          "Actual Models": [
+            "openai/gpt-6-luna"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 1,
+            "validation_attempt_usage_records": 15,
+            "validation_attempts_at_256_tokens": 15
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 64,
+          "denominator": 70,
+          "value": 0.9142857142857143
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 58,
+          "denominator": 64,
+          "value": 0.90625
+        },
+        "Question Type Flip Rate": {
+          "numerator": 1,
+          "denominator": 64,
+          "value": 0.015625
+        },
+        "Next Action Flip Rate": {
+          "numerator": 0,
+          "denominator": 64,
+          "value": 0.0
+        },
+        "incomplete_case_ids": [
+          "draft30-e05",
+          "draft30-m09",
+          "draft30-m10",
+          "draft30-h08",
+          "draft30-h09",
+          "draft30-h10"
+        ],
+        "question_type_flip_case_ids": [
+          "draft50-n06"
+        ],
+        "next_action_flip_case_ids": [],
+        "stage2_to_stage3_labeled_changes": [
+          {
+            "case_id": "draft50-n06",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deepseek/deepseek-v4.1-flash": {
+      "contract_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+      "runs": {
+        "1": {
+          "status": "provider_stopped",
+          "score_status": "partial_not_comparable",
+          "Attempted Outputs": {
+            "numerator": 3,
+            "denominator": 70,
+            "value": 0.04285714285714286
+          },
+          "Completion Rate": {
+            "numerator": 3,
+            "denominator": 70,
+            "value": 0.04285714285714286
+          },
+          "Schema Valid Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Retry Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "API Error Rate": {
+            "numerator": 3,
+            "denominator": 70,
+            "value": 0.04285714285714286
+          },
+          "Question Type Accuracy": {
+            "numerator": 0,
+            "denominator": 35,
+            "value": 0.0
+          },
+          "Question Type Macro-F1": 0.0,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "role": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 6,
+              "f1": 0.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 0,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 3,
+          "Errors": {
+            "RateLimitError": 3
+          },
+          "Reported Cost Sum": 0.0,
+          "Budget-Accounted Cost": 0.00183318,
+          "Input Tokens (recorded)": 0,
+          "Output Tokens (recorded)": 0,
+          "Reported Cost Calls": 0,
+          "p50 Latency": 0.2970000000204891,
+          "p95 Latency": 1.297000000020489,
+          "Providers": [],
+          "Actual Models": [],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "labeled_validation_failure_count": 0,
+            "validation_attempt_usage_records": 0,
+            "validation_attempts_at_256_tokens": 0
+          }
+        },
+        "2": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 62,
+            "denominator": 70,
+            "value": 0.8857142857142857
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 57,
+            "denominator": 70,
+            "value": 0.8142857142857143
+          },
+          "Retry Rate": {
+            "numerator": 13,
+            "denominator": 70,
+            "value": 0.18571428571428572
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 29,
+            "denominator": 35,
+            "value": 0.8285714285714286
+          },
+          "Question Type Macro-F1": 0.8823529411764706,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 6,
+              "fp": 2,
+              "fn": 3,
+              "f1": 0.7058823529411765
+            },
+            "rating": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 3,
+              "f1": 0.8235294117647058
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 9,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 9,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 94,
+          "Errors": {
+            "ValidationError": 8
+          },
+          "Reported Cost Sum": 0.007154758,
+          "Budget-Accounted Cost": 0.008050049999999994,
+          "Input Tokens (recorded)": 73697,
+          "Output Tokens (recorded)": 15815,
+          "Reported Cost Calls": 86,
+          "p50 Latency": 7.312999999965541,
+          "p95 Latency": 33.26599999994505,
+          "Providers": [
+            "Morph"
+          ],
+          "Actual Models": [
+            "deepseek/deepseek-v4.1-flash"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 3,
+            "validation_attempt_usage_records": 24,
+            "validation_attempts_at_256_tokens": 24
+          }
+        },
+        "3": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 7,
+            "denominator": 70,
+            "value": 0.1
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 5,
+            "denominator": 70,
+            "value": 0.07142857142857142
+          },
+          "Retry Rate": {
+            "numerator": 65,
+            "denominator": 70,
+            "value": 0.9285714285714286
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 2,
+            "denominator": 35,
+            "value": 0.05714285714285714
+          },
+          "Question Type Macro-F1": 0.125,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "role": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 4,
+              "f1": 0.5
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 5,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 200,
+          "Errors": {
+            "ValidationError": 63
+          },
+          "Reported Cost Sum": 0.025543294,
+          "Budget-Accounted Cost": 0.026067445999999998,
+          "Input Tokens (recorded)": 108951,
+          "Output Tokens (recorded)": 49793,
+          "Reported Cost Calls": 196,
+          "p50 Latency": 5.405999999959022,
+          "p95 Latency": 8.219000000040978,
+          "Providers": [
+            "Relace"
+          ],
+          "Actual Models": [
+            "deepseek/deepseek-v4.1-flash"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 63,
+              "denominator": 63,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 33,
+            "validation_attempt_usage_records": 189,
+            "validation_attempts_at_256_tokens": 189
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 0,
+          "denominator": 70,
+          "value": 0.0
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 0,
+          "denominator": 0,
+          "value": null
+        },
+        "Question Type Flip Rate": {
+          "numerator": 0,
+          "denominator": 0,
+          "value": null
+        },
+        "Next Action Flip Rate": {
+          "numerator": 0,
+          "denominator": 0,
+          "value": null
+        },
+        "incomplete_case_ids": [
+          "draft30-e01",
+          "draft30-e02",
+          "draft30-e03",
+          "draft30-e04",
+          "draft30-e05",
+          "draft30-e06",
+          "draft30-e07",
+          "draft30-e08",
+          "draft30-e09",
+          "draft30-e10",
+          "draft30-m01",
+          "draft30-m02",
+          "draft30-m03",
+          "draft30-m04",
+          "draft30-m05",
+          "draft30-m06",
+          "draft30-m07",
+          "draft30-m08",
+          "draft30-m09",
+          "draft30-m10",
+          "draft30-h01",
+          "draft30-h02",
+          "draft30-h03",
+          "draft30-h04",
+          "draft30-h05",
+          "draft30-h06",
+          "draft30-h07",
+          "draft30-h08",
+          "draft30-h09",
+          "draft30-h10",
+          "draft50-n01",
+          "draft50-n02",
+          "draft50-n03",
+          "draft50-n04",
+          "draft50-n05",
+          "draft50-n06",
+          "draft50-n07",
+          "draft50-n08",
+          "draft50-n09",
+          "draft50-n10",
+          "draft50-n11",
+          "draft50-n12",
+          "draft50-n14",
+          "draft50-n15",
+          "draft50-n16",
+          "draft50-n17",
+          "draft50-n18",
+          "draft50-n19",
+          "draft50-n20",
+          "draft52-n21",
+          "draftv2-n01",
+          "draftv2-n02",
+          "draftv2-n03",
+          "draftv2-n04",
+          "draftv2-n05",
+          "draftv2-n06",
+          "draftv2-n07",
+          "draftv2-n08",
+          "draftv2-n09",
+          "draftv2-n10",
+          "draftv2-n11",
+          "draftv2-n12",
+          "draftv2-n13",
+          "draftv2-n14",
+          "draftv2-n15",
+          "draftv2-n16",
+          "draftv2-n17",
+          "draftv2-n18",
+          "draftv2-n19",
+          "draftv2-n20"
+        ],
+        "question_type_flip_case_ids": [],
+        "next_action_flip_case_ids": [],
+        "stage2_to_stage3_labeled_changes": [
+          {
+            "case_id": "draft30-e02",
+            "gold": "role",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "role"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-e03",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-e05",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-e08",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-m02",
+            "gold": "role",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "role"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-m03",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-m04",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-m05",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-m07",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-h01",
+            "gold": "role",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "role"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-h02",
+            "gold": "role",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "role"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-h04",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft30-h05",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n02",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n03",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n04",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n05",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n06",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "out_of_scope"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n08",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft52-n21",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n01",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n02",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n03",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n04",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n05",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n06",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n07",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n08",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n09",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draftv2-n10",
+            "gold": "candidate_find",
+            "runs": [
+              {
+                "status": "missing",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_find"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "meta/muse-glimmer-30b": {
+      "contract_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+      "runs": {
+        "1": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "Retry Rate": {
+            "numerator": 68,
+            "denominator": 70,
+            "value": 0.9714285714285714
+          },
+          "API Error Rate": {
+            "numerator": 2,
+            "denominator": 70,
+            "value": 0.02857142857142857
+          },
+          "Question Type Accuracy": {
+            "numerator": 1,
+            "denominator": 35,
+            "value": 0.02857142857142857
+          },
+          "Question Type Macro-F1": 0.07142857142857142,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "role": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 5,
+              "f1": 0.2857142857142857
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 0,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 205,
+          "Errors": {
+            "ValidationError": 67,
+            "APITimeoutError": 2
+          },
+          "Reported Cost Sum": 0.07502582,
+          "Budget-Accounted Cost": 0.08244709999999993,
+          "Input Tokens (recorded)": 89981,
+          "Output Tokens (recorded)": 51702,
+          "Reported Cost Calls": 202,
+          "p50 Latency": 5.047000000020489,
+          "p95 Latency": 9.046999999904074,
+          "Providers": [
+            "DeepInfra"
+          ],
+          "Actual Models": [
+            "meta/muse-glimmer-30b"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 67,
+              "denominator": 67,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 33,
+            "validation_attempt_usage_records": 201,
+            "validation_attempts_at_256_tokens": 201
+          }
+        },
+        "2": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "Retry Rate": {
+            "numerator": 69,
+            "denominator": 70,
+            "value": 0.9857142857142858
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 1,
+            "denominator": 35,
+            "value": 0.02857142857142857
+          },
+          "Question Type Macro-F1": 0.07142857142857142,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "role": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 5,
+              "f1": 0.2857142857142857
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 0,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 208,
+          "Errors": {
+            "ValidationError": 69
+          },
+          "Reported Cost Sum": 0.07715504,
+          "Budget-Accounted Cost": 0.07715503999999991,
+          "Input Tokens (recorded)": 92432,
+          "Output Tokens (recorded)": 53238,
+          "Reported Cost Calls": 208,
+          "p50 Latency": 5.10999999998603,
+          "p95 Latency": 5.937999999965541,
+          "Providers": [
+            "DeepInfra"
+          ],
+          "Actual Models": [
+            "meta/muse-glimmer-30b"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 69,
+              "denominator": 69,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 34,
+            "validation_attempt_usage_records": 207,
+            "validation_attempts_at_256_tokens": 207
+          }
+        },
+        "3": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "Retry Rate": {
+            "numerator": 68,
+            "denominator": 70,
+            "value": 0.9714285714285714
+          },
+          "API Error Rate": {
+            "numerator": 1,
+            "denominator": 70,
+            "value": 0.014285714285714285
+          },
+          "Question Type Accuracy": {
+            "numerator": 1,
+            "denominator": 35,
+            "value": 0.02857142857142857
+          },
+          "Question Type Macro-F1": 0.07142857142857142,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "role": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 5,
+              "f1": 0.2857142857142857
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 0,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 206,
+          "Errors": {
+            "ValidationError": 68,
+            "RateLimitError": 1
+          },
+          "Reported Cost Sum": 0.07721678,
+          "Budget-Accounted Cost": 0.08073337999999988,
+          "Input Tokens (recorded)": 91217,
+          "Output Tokens (recorded)": 52470,
+          "Reported Cost Calls": 205,
+          "p50 Latency": 8.827999999979511,
+          "p95 Latency": 11.73499999998603,
+          "Providers": [
+            "DeepInfra"
+          ],
+          "Actual Models": [
+            "meta/muse-glimmer-30b"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 68,
+              "denominator": 68,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 33,
+            "validation_attempt_usage_records": 204,
+            "validation_attempts_at_256_tokens": 204
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 1,
+          "denominator": 70,
+          "value": 0.014285714285714285
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "Question Type Flip Rate": {
+          "numerator": 0,
+          "denominator": 1,
+          "value": 0.0
+        },
+        "Next Action Flip Rate": {
+          "numerator": 0,
+          "denominator": 1,
+          "value": 0.0
+        },
+        "incomplete_case_ids": [
+          "draft30-e01",
+          "draft30-e02",
+          "draft30-e03",
+          "draft30-e04",
+          "draft30-e05",
+          "draft30-e06",
+          "draft30-e07",
+          "draft30-e08",
+          "draft30-e09",
+          "draft30-e10",
+          "draft30-m02",
+          "draft30-m03",
+          "draft30-m04",
+          "draft30-m05",
+          "draft30-m06",
+          "draft30-m07",
+          "draft30-m08",
+          "draft30-m09",
+          "draft30-m10",
+          "draft30-h01",
+          "draft30-h02",
+          "draft30-h03",
+          "draft30-h04",
+          "draft30-h05",
+          "draft30-h06",
+          "draft30-h07",
+          "draft30-h08",
+          "draft30-h09",
+          "draft30-h10",
+          "draft50-n01",
+          "draft50-n02",
+          "draft50-n03",
+          "draft50-n04",
+          "draft50-n05",
+          "draft50-n06",
+          "draft50-n07",
+          "draft50-n08",
+          "draft50-n09",
+          "draft50-n10",
+          "draft50-n11",
+          "draft50-n12",
+          "draft50-n14",
+          "draft50-n15",
+          "draft50-n16",
+          "draft50-n17",
+          "draft50-n18",
+          "draft50-n19",
+          "draft50-n20",
+          "draft52-n21",
+          "draftv2-n01",
+          "draftv2-n02",
+          "draftv2-n03",
+          "draftv2-n04",
+          "draftv2-n05",
+          "draftv2-n06",
+          "draftv2-n07",
+          "draftv2-n08",
+          "draftv2-n09",
+          "draftv2-n10",
+          "draftv2-n11",
+          "draftv2-n12",
+          "draftv2-n13",
+          "draftv2-n14",
+          "draftv2-n15",
+          "draftv2-n16",
+          "draftv2-n17",
+          "draftv2-n18",
+          "draftv2-n19",
+          "draftv2-n20"
+        ],
+        "question_type_flip_case_ids": [],
+        "next_action_flip_case_ids": [],
+        "stage2_to_stage3_labeled_changes": []
+      }
+    },
+    "cohere/command-a-plus": {
+      "contract_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+      "runs": {
+        "1": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 20,
+            "denominator": 70,
+            "value": 0.2857142857142857
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 15,
+            "denominator": 70,
+            "value": 0.21428571428571427
+          },
+          "Retry Rate": {
+            "numerator": 55,
+            "denominator": 70,
+            "value": 0.7857142857142857
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 8,
+            "denominator": 35,
+            "value": 0.22857142857142856
+          },
+          "Question Type Macro-F1": 0.3560606060606061,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.18181818181818182
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 8,
+              "f1": 0.33333333333333337
+            },
+            "role": {
+              "tp": 5,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9090909090909091
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 2,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 2,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 177,
+          "Errors": {
+            "ValidationError": 50
+          },
+          "Reported Cost Sum": 0.0840432,
+          "Budget-Accounted Cost": 0.0875172000000001,
+          "Input Tokens (recorded)": 69019,
+          "Output Tokens (recorded)": 42225,
+          "Reported Cost Calls": 170,
+          "p50 Latency": 4.405999999959022,
+          "p95 Latency": 6.077999999979511,
+          "Providers": [
+            "Cohere"
+          ],
+          "Actual Models": [
+            "cohere/command-a-plus"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 50,
+              "denominator": 50,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 27,
+            "validation_attempt_usage_records": 150,
+            "validation_attempts_at_256_tokens": 137
+          }
+        },
+        "2": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 21,
+            "denominator": 70,
+            "value": 0.3
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 16,
+            "denominator": 70,
+            "value": 0.22857142857142856
+          },
+          "Retry Rate": {
+            "numerator": 54,
+            "denominator": 70,
+            "value": 0.7714285714285715
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 9,
+            "denominator": 35,
+            "value": 0.2571428571428571
+          },
+          "Question Type Macro-F1": 0.39265734265734265,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 8,
+              "f1": 0.19999999999999998
+            },
+            "rating": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 7,
+              "f1": 0.4615384615384615
+            },
+            "role": {
+              "tp": 5,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9090909090909091
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 2,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 2,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 173,
+          "Errors": {
+            "ValidationError": 49
+          },
+          "Reported Cost Sum": 0.083046,
+          "Budget-Accounted Cost": 0.08560890000000006,
+          "Input Tokens (recorded)": 68285,
+          "Output Tokens (recorded)": 41707,
+          "Reported Cost Calls": 168,
+          "p50 Latency": 4.436999999918044,
+          "p95 Latency": 6.157000000006519,
+          "Providers": [
+            "Cohere"
+          ],
+          "Actual Models": [
+            "cohere/command-a-plus"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 49,
+              "denominator": 49,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 26,
+            "validation_attempt_usage_records": 147,
+            "validation_attempts_at_256_tokens": 138
+          }
+        },
+        "3": {
+          "status": "complete_with_errors",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 21,
+            "denominator": 70,
+            "value": 0.3
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 17,
+            "denominator": 70,
+            "value": 0.24285714285714285
+          },
+          "Retry Rate": {
+            "numerator": 53,
+            "denominator": 70,
+            "value": 0.7571428571428571
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 8,
+            "denominator": 35,
+            "value": 0.22857142857142856
+          },
+          "Question Type Macro-F1": 0.34265734265734266,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 10,
+              "f1": 0.0
+            },
+            "candidate_judge": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 9,
+              "f1": 0.0
+            },
+            "rating": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 7,
+              "f1": 0.4615384615384615
+            },
+            "role": {
+              "tp": 5,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9090909090909091
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 2,
+            "Inconsistent Action": {
+              "numerator": 0,
+              "denominator": 2,
+              "value": 0.0
+            },
+            "inconsistent_case_actions": {}
+          },
+          "Raw Calls": 173,
+          "Errors": {
+            "ValidationError": 49
+          },
+          "Reported Cost Sum": 0.0830256,
+          "Budget-Accounted Cost": 0.0855105000000001,
+          "Input Tokens (recorded)": 68337,
+          "Output Tokens (recorded)": 41683,
+          "Reported Cost Calls": 168,
+          "p50 Latency": 4.188000000081956,
+          "p95 Latency": 5.76500000001397,
+          "Providers": [
+            "Cohere"
+          ],
+          "Actual Models": [
+            "cohere/command-a-plus"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 49,
+              "denominator": 49,
+              "value": 1.0
+            },
+            "labeled_validation_failure_count": 27,
+            "validation_attempt_usage_records": 147,
+            "validation_attempts_at_256_tokens": 137
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 17,
+          "denominator": 70,
+          "value": 0.24285714285714285
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 17,
+          "denominator": 17,
+          "value": 1.0
+        },
+        "Question Type Flip Rate": {
+          "numerator": 0,
+          "denominator": 17,
+          "value": 0.0
+        },
+        "Next Action Flip Rate": {
+          "numerator": 0,
+          "denominator": 17,
+          "value": 0.0
+        },
+        "incomplete_case_ids": [
+          "draft30-e04",
+          "draft30-e05",
+          "draft30-e06",
+          "draft30-e08",
+          "draft30-e09",
+          "draft30-m03",
+          "draft30-m04",
+          "draft30-m05",
+          "draft30-m06",
+          "draft30-m07",
+          "draft30-m09",
+          "draft30-m10",
+          "draft30-h01",
+          "draft30-h03",
+          "draft30-h04",
+          "draft30-h05",
+          "draft30-h07",
+          "draft30-h08",
+          "draft30-h09",
+          "draft30-h10",
+          "draft50-n01",
+          "draft50-n02",
+          "draft50-n03",
+          "draft50-n04",
+          "draft50-n05",
+          "draft50-n06",
+          "draft50-n07",
+          "draft50-n08",
+          "draft50-n09",
+          "draft50-n14",
+          "draft50-n15",
+          "draft50-n17",
+          "draft50-n18",
+          "draft50-n19",
+          "draft52-n21",
+          "draftv2-n01",
+          "draftv2-n02",
+          "draftv2-n03",
+          "draftv2-n04",
+          "draftv2-n05",
+          "draftv2-n06",
+          "draftv2-n07",
+          "draftv2-n08",
+          "draftv2-n09",
+          "draftv2-n10",
+          "draftv2-n11",
+          "draftv2-n13",
+          "draftv2-n14",
+          "draftv2-n15",
+          "draftv2-n16",
+          "draftv2-n17",
+          "draftv2-n18",
+          "draftv2-n20"
+        ],
+        "question_type_flip_case_ids": [],
+        "next_action_flip_case_ids": [],
+        "stage2_to_stage3_labeled_changes": [
+          {
+            "case_id": "draft30-m07",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              }
+            ]
+          },
+          {
+            "case_id": "draft50-n06",
+            "gold": "candidate_judge",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "candidate_judge"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          },
+          {
+            "case_id": "draft52-n21",
+            "gold": "rating",
+            "runs": [
+              {
+                "status": "error",
+                "question_type": null
+              },
+              {
+                "status": "complete",
+                "question_type": "rating"
+              },
+              {
+                "status": "error",
+                "question_type": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "typesafe/jev-1.14": {
+      "contract_sha256": "510bcbf23a4abb4b1450f4d8ab7afda78acf6c0484e272166638e149a29d535a",
+      "runs": {
+        "1": {
+          "status": "complete",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Retry Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 33,
+            "denominator": 35,
+            "value": 0.9428571428571428
+          },
+          "Question Type Macro-F1": 0.9472222222222222,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 9,
+              "fp": 2,
+              "fn": 0,
+              "f1": 0.9
+            },
+            "rating": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 2,
+              "f1": 0.888888888888889
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 6,
+            "Inconsistent Action": {
+              "numerator": 4,
+              "denominator": 6,
+              "value": 0.6666666666666666
+            },
+            "inconsistent_case_actions": {
+              "draft30-m06": "circuit_agent",
+              "draft30-h09": "search_agent",
+              "draft30-h10": "search_agent",
+              "draft50-n18": "search_agent"
+            }
+          },
+          "Raw Calls": 70,
+          "Errors": {},
+          "Reported Cost Sum": 0.002689092,
+          "Budget-Accounted Cost": null,
+          "Input Tokens (recorded)": 64026,
+          "Output Tokens (recorded)": 14926,
+          "Reported Cost Calls": 70,
+          "p50 Latency": 0.4220000000204891,
+          "p95 Latency": 0.5929999999934807,
+          "Providers": [
+            "TypeSafe"
+          ],
+          "Actual Models": [
+            "typesafe/jev-1.14-20261014"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "labeled_validation_failure_count": 0,
+            "validation_attempt_usage_records": 0,
+            "validation_attempts_at_256_tokens": 0
+          }
+        },
+        "2": {
+          "status": "complete",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Retry Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 33,
+            "denominator": 35,
+            "value": 0.9428571428571428
+          },
+          "Question Type Macro-F1": 0.9472222222222222,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 9,
+              "fp": 2,
+              "fn": 0,
+              "f1": 0.9
+            },
+            "rating": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 2,
+              "f1": 0.888888888888889
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 6,
+            "Inconsistent Action": {
+              "numerator": 4,
+              "denominator": 6,
+              "value": 0.6666666666666666
+            },
+            "inconsistent_case_actions": {
+              "draft30-m06": "circuit_agent",
+              "draft30-h09": "search_agent",
+              "draft30-h10": "search_agent",
+              "draft50-n18": "search_agent"
+            }
+          },
+          "Raw Calls": 70,
+          "Errors": {},
+          "Reported Cost Sum": 0.002689092,
+          "Budget-Accounted Cost": 0.0026890920000000006,
+          "Input Tokens (recorded)": 64026,
+          "Output Tokens (recorded)": 14930,
+          "Reported Cost Calls": 70,
+          "p50 Latency": 0.40700000000651926,
+          "p95 Latency": 0.4380000000819564,
+          "Providers": [
+            "TypeSafe"
+          ],
+          "Actual Models": [
+            "typesafe/jev-1.14-20261014"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "labeled_validation_failure_count": 0,
+            "validation_attempt_usage_records": 0,
+            "validation_attempts_at_256_tokens": 0
+          }
+        },
+        "3": {
+          "status": "complete",
+          "score_status": "complete",
+          "Attempted Outputs": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Completion Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Schema Valid Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "First-Pass Schema Success Rate": {
+            "numerator": 70,
+            "denominator": 70,
+            "value": 1.0
+          },
+          "Retry Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "API Error Rate": {
+            "numerator": 0,
+            "denominator": 70,
+            "value": 0.0
+          },
+          "Question Type Accuracy": {
+            "numerator": 33,
+            "denominator": 35,
+            "value": 0.9428571428571428
+          },
+          "Question Type Macro-F1": 0.9472222222222222,
+          "Question Type Per-Class": {
+            "candidate_find": {
+              "tp": 10,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "candidate_judge": {
+              "tp": 9,
+              "fp": 2,
+              "fn": 0,
+              "f1": 0.9
+            },
+            "rating": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 2,
+              "f1": 0.888888888888889
+            },
+            "role": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          },
+          "Routing Consistency": {
+            "Predicted out_of_scope": 6,
+            "Inconsistent Action": {
+              "numerator": 4,
+              "denominator": 6,
+              "value": 0.6666666666666666
+            },
+            "inconsistent_case_actions": {
+              "draft30-m06": "circuit_agent",
+              "draft30-h09": "search_agent",
+              "draft30-h10": "search_agent",
+              "draft50-n18": "search_agent"
+            }
+          },
+          "Raw Calls": 70,
+          "Errors": {},
+          "Reported Cost Sum": 0.002689092,
+          "Budget-Accounted Cost": 0.0026890920000000006,
+          "Input Tokens (recorded)": 64026,
+          "Output Tokens (recorded)": 14927,
+          "Reported Cost Calls": 70,
+          "p50 Latency": 0.4220000000204891,
+          "p95 Latency": 0.45400000002700835,
+          "Providers": [
+            "TypeSafe"
+          ],
+          "Actual Models": [
+            "typesafe/jev-1.14-20261014"
+          ],
+          "Output Limit Diagnostics": {
+            "Length-Limited Validation Failures": {
+              "numerator": 0,
+              "denominator": 0,
+              "value": null
+            },
+            "labeled_validation_failure_count": 0,
+            "validation_attempt_usage_records": 0,
+            "validation_attempts_at_256_tokens": 0
+          }
+        }
+      },
+      "three_run_comparison": {
+        "Comparable Three-Run Cases": {
+          "numerator": 70,
+          "denominator": 70,
+          "value": 1.0
+        },
+        "Three-Run Exact Agreement": {
+          "numerator": 60,
+          "denominator": 70,
+          "value": 0.8571428571428571
+        },
+        "Question Type Flip Rate": {
+          "numerator": 0,
+          "denominator": 70,
+          "value": 0.0
+        },
+        "Next Action Flip Rate": {
+          "numerator": 4,
+          "denominator": 70,
+          "value": 0.05714285714285714
+        },
+        "incomplete_case_ids": [],
+        "question_type_flip_case_ids": [],
+        "next_action_flip_case_ids": [
+          "draft30-m08",
+          "draft30-m10",
+          "draft30-h08",
+          "draft50-n19"
+        ],
+        "stage2_to_stage3_labeled_changes": []
+      }
+    }
+  },
+  "source_hash_policy": {
+    "stage1_stage2": "SHA-256 after CRLF-to-LF normalization",
+    "stage3": "SHA-256 of original bytes, preserved by .gitattributes -text"
+  },
+  "analysis_code_sha256_lf": "f04633b2cf002afd913e6f678bd45503cbd42190e16d989906d14b648a2ce5fd",
+  "execution_code_sha256_lf": {
+    "backend/services/llm.py": "4c25eaa1387c2f2f7b7dc7381221b7e025f793d89232e3d01366dedb85a746b5",
+    "evals/runners/run_supervisor_models.py": "a8f5f1c9af6bd72377fa96334603de9e175d98eb2536c38f0ab6d7e6b50c3534",
+    "evals/runners/run_supervisor_jev.py": "291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f"
+  },
+  "metric_notes": {
+    "gold": "Accuracy/Macro-F1 use 35 labeled cases; 35 unlabeled cases are not correctness-scored",
+    "routing": "Inconsistent Action is non-refuse among predicted out_of_scope valid rows",
+    "agreement": "Agreement/flip denominator includes only cases with 3 valid decisions; coverage is separate",
+    "cost": "Recorded usage and budget-accounted values are not independently verified invoices",
+    "scope": "Third measurement of the same frozen 70 cases, not an independent evaluation set"
+  },
+  "unscored_case_ids": [
+    "draft30-e06",
+    "draft30-e07",
+    "draft30-e09",
+    "draft30-e10",
+    "draft30-m06",
+    "draft30-m08",
+    "draft30-m09",
+    "draft30-m10",
+    "draft30-h03",
+    "draft30-h06",
+    "draft30-h07",
+    "draft30-h08",
+    "draft30-h09",
+    "draft30-h10",
+    "draft50-n09",
+    "draft50-n10",
+    "draft50-n11",
+    "draft50-n12",
+    "draft50-n14",
+    "draft50-n15",
+    "draft50-n16",
+    "draft50-n17",
+    "draft50-n18",
+    "draft50-n19",
+    "draft50-n20",
+    "draftv2-n11",
+    "draftv2-n12",
+    "draftv2-n13",
+    "draftv2-n14",
+    "draftv2-n15",
+    "draftv2-n16",
+    "draftv2-n17",
+    "draftv2-n18",
+    "draftv2-n19",
+    "draftv2-n20"
+  ],
+  "execution": {
+    "preregistration_commit": "d10a30b",
+    "started_at_utc": "2026-11-05T02:27:27.748739+00:00",
+    "status": "finished",
+    "run_index": 3,
+    "events": [
+      {
+        "model_id": "anthropic/claude-haiku-5.5",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "anthropic/claude-haiku-5.5",
+          "--max-usd",
+          "0.004",
+          "--max-seconds",
+          "60",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:27.750739+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 2.702999999979511,
+        "finished_at_utc": "2026-11-05T02:27:30.448079+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": null,
+        "artifact_sha256": "e9865a240bb2fe5959a2374e3ce4fa5539c79efc39f3a98adcc53496e577e508"
+      },
+      {
+        "model_id": "openai/gpt-6-luna",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "openai/gpt-6-luna",
+          "--max-usd",
+          "0.004",
+          "--max-seconds",
+          "60",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:30.456100+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 2.75,
+        "finished_at_utc": "2026-11-05T02:27:33.212919+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": null,
+        "artifact_sha256": "c844240320a98bb6ebca45f173e73d3bef0e3312a01e0561d390c9395d2dd791"
+      },
+      {
+        "model_id": "deepseek/deepseek-v4.1-flash",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "deepseek/deepseek-v4.1-flash",
+          "--max-usd",
+          "0.002",
+          "--max-seconds",
+          "60",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:33.221916+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 4.0,
+        "finished_at_utc": "2026-11-05T02:27:37.226205+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": null,
+        "artifact_sha256": "d8de46a68b3a470ec76847792a0d4753d53bad13dee0956532a63bce56d9be6a"
+      },
+      {
+        "model_id": "meta/muse-glimmer-30b",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "meta/muse-glimmer-30b",
+          "--max-usd",
+          "0.011",
+          "--max-seconds",
+          "60",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:37.233577+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 9.765999999945052,
+        "finished_at_utc": "2026-11-05T02:27:46.995323+00:00",
+        "artifact_status": "schema_error",
+        "recorded_rows": null,
+        "artifact_sha256": "7313507322b17e7c579ec1fa3188677cdc87c25017bf6f5c5dad02b1128a7e17"
+      },
+      {
+        "model_id": "cohere/command-a-plus",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "cohere/command-a-plus",
+          "--max-usd",
+          "0.011",
+          "--max-seconds",
+          "60",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:47.004740+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 1.797000000020489,
+        "finished_at_utc": "2026-11-05T02:27:48.814041+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": null,
+        "artifact_sha256": "4d7e3f07255da11c2ad601bc88ee834d8a6429ad8d3ca2f20dd31f4e01a104ac"
+      },
+      {
+        "model_id": "typesafe/jev-1.14",
+        "phase": "smoke",
+        "arguments": [
+          "smoke",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-jev-stage3-v1",
+          "--max-usd",
+          "0.001",
+          "--timeout",
+          "45",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:48.822415+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 0.5470000000204891,
+        "finished_at_utc": "2026-11-05T02:27:49.374773+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": null,
+        "artifact_sha256": "83aa330b9dbdb6cf44306e8e8b0d32d0d22a3b28a5bd8ec1c564bd1875bcc785"
+      },
+      {
+        "model_id": "anthropic/claude-haiku-5.5",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "anthropic/claude-haiku-5.5",
+          "--run-index",
+          "3",
+          "--max-usd",
+          "0.1",
+          "--max-seconds",
+          "7200",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:27:49.384349+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 251.875,
+        "finished_at_utc": "2026-11-05T02:32:01.266126+00:00",
+        "artifact_status": "complete_with_errors",
+        "recorded_rows": 70,
+        "artifact_sha256": "a59a05cf868e80f6c4b55c654f3a934de90b6bbd46d15782d8b0edade2d67bf1"
+      },
+      {
+        "model_id": "openai/gpt-6-luna",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "openai/gpt-6-luna",
+          "--run-index",
+          "3",
+          "--max-usd",
+          "0.1",
+          "--max-seconds",
+          "7200",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:32:01.285799+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 325.875,
+        "finished_at_utc": "2026-11-05T02:37:27.159142+00:00",
+        "artifact_status": "complete_with_errors",
+        "recorded_rows": 70,
+        "artifact_sha256": "d06fa53bcefde71a6ed953585582093d36efb95ab6edf10d3c635b06ad3a7a77"
+      },
+      {
+        "model_id": "deepseek/deepseek-v4.1-flash",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "deepseek/deepseek-v4.1-flash",
+          "--run-index",
+          "3",
+          "--max-usd",
+          "0.07",
+          "--max-seconds",
+          "7200",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:37:27.173434+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 398.375,
+        "finished_at_utc": "2026-11-05T02:44:05.553602+00:00",
+        "artifact_status": "complete_with_errors",
+        "recorded_rows": 70,
+        "artifact_sha256": "0cfa2069c245466bbabd7bbb30fd8d8c65df1c465c884b437b1a87bece0b71df"
+      },
+      {
+        "model_id": "meta/muse-glimmer-30b",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "meta/muse-glimmer-30b",
+          "--run-index",
+          "3",
+          "--max-usd",
+          "0.3",
+          "--max-seconds",
+          "7200",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:44:05.575385+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 622.234000000055,
+        "finished_at_utc": "2026-11-05T02:54:27.813812+00:00",
+        "artifact_status": "complete_with_errors",
+        "recorded_rows": 70,
+        "artifact_sha256": "7bf2a7c5bfba3ec33ee3157ad54a83a6e2426886ce73e2c2202503dcf652effc"
+      },
+      {
+        "model_id": "cohere/command-a-plus",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-stage3-five-v1",
+          "--model",
+          "cohere/command-a-plus",
+          "--run-index",
+          "3",
+          "--max-usd",
+          "0.3",
+          "--max-seconds",
+          "7200",
+          "--max-tokens",
+          "256",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:54:27.832818+00:00",
+        "exit_code": 1,
+        "elapsed_seconds": 261.48499999998603,
+        "finished_at_utc": "2026-11-05T02:58:49.324715+00:00",
+        "artifact_status": "complete_with_errors",
+        "recorded_rows": 70,
+        "artifact_sha256": "f42f91056ba8521a268d0440eb2be0c78ee26901883e726e40443ca6f411bf78"
+      },
+      {
+        "model_id": "typesafe/jev-1.14",
+        "phase": "run",
+        "arguments": [
+          "run",
+          "C:\\Users\\user\\Documents\\ChatGPT\\3차 프로젝트 2\\supervisor-evidence-pr-worktree\\evals\\results\\supervisor\\2026-11-05-jev-stage3-v1",
+          "--max-usd",
+          "0.01",
+          "--timeout",
+          "45",
+          "--max-seconds",
+          "7200",
+          "--confirm-live"
+        ],
+        "started_at_utc": "2026-11-05T02:58:49.341726+00:00",
+        "exit_code": 0,
+        "elapsed_seconds": 30.625,
+        "finished_at_utc": "2026-11-05T02:59:19.961016+00:00",
+        "artifact_status": "complete",
+        "recorded_rows": 70,
+        "artifact_sha256": "5b514dc28fd17a8290c1dcfd849173cc718ffbfb43057f1330243464d606e1a1"
+      }
+    ],
+    "finished_at_utc": "2026-11-05T02:59:19.972502+00:00"
+  }
+}
