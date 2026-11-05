@@ -45,6 +45,7 @@ SojaFit (proj3-b)
 │   │   ├── GRAPH.md        <- 폴더 설명. Supervisor·체크포인트·승인 단계가 들어올 자리
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
+│   │   ├── supervisor.py   <- Supervisor V0 공통 입출력·상태 라우팅 의미 계약(그래프 미연결)
 │   │   ├── nodes.py        <- 노드 7개: 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
@@ -60,6 +61,7 @@ SojaFit (proj3-b)
 │   │       └── conditions.yaml  <- 대체 조건 규칙 (예정, 후보 이름)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
+│   │   ├── supervisor_v0.md  <- Supervisor V0 질문 분류·근거·다음 경로 시스템 프롬프트
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
 │   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
@@ -244,6 +246,7 @@ SojaFit (proj3-b)
 │   │   └── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
+│   │   ├── test_graph_supervisor.py  <- Supervisor V0 공통 계약과 상태 라우팅 검증
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
 │   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
 │   │   ├── test_graph_route.py  <- 라우팅 노드

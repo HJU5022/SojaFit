@@ -21,3 +21,4 @@
 - `test_graph_route.py` — 라우팅 노드: `route.md` 프롬프트 전달과 질문 종류 기록 확인
 - `test_graph_search.py` — 검색 노드: 품번 뽑기, 질문 품번 우선, 품번 없으면 전체 검색, 재작성 검색어 사용 확인
 - `test_graph_state.py` — 그래프 상태의 `tries`·`path`는 쌓이고 나머지 칸은 덮어써지는지 확인
+- `test_graph_supervisor.py` — Supervisor V0의 네 필드 스키마, 입력 경계, 의미 일관성과 Jev 공통 계약 확인
