@@ -4,7 +4,11 @@
 - 한 일: 정운 승인으로 운영 DB에 `db/011_part_specifications.sql`을 적용하고 사양 표를 적재했다. 적용 전 읽기 전용으로 보니 다른 public 표 10개는 모두 RLS가 켜져 있고 정책이 0개인데, Supabase 기본 권한(`pg_default_acl`)이 새 표를 anon·authenticated에 모든 권한으로 열어 둔다. 그래서 011 끝에 `ENABLE ROW LEVEL SECURITY`를 더해 적용했다(서버는 표 주인 `postgres`로 접속해 영향 없음). 로컬 볼륨에도 같은 RLS를 켰다.
 - 바꾼 파일: `db/011_part_specifications.sql`(RLS 한 줄), `db/DB.md`(적용 기록), `tests/rag/test_rag_spec_lookup.py`(RLS 확인 한 줄), 이 파일
 - 실행한 명령과 결과: 접속 주소는 `.env`에서 읽어 화면에 찍지 않고 넘겼다. 011 적용 → 표 RLS 켜짐 · 인덱스 4개 · 0행. `specs.load('../corpus/tsc/specs', <운영 주소>)` → 문서 1,360(빠진 문서 0) · 90,961행(숫자 77,340 + PACKAGE 13,621) · 품번 9,589개 · 6.44초 → `ANALYZE`. 표 22.7 MB, DB 전체 207.2 → 230.0 MB. 맥에서 운영 DB로 조회: `part_specs('1N5817')` 10행 22 ms, VRRM ≥ 40 · IF_AV ≥ 1 50건(상한) 387 ms, VRRM ≤ 20 · 패키지 SMA 14건 103 ms(네트워크 왕복 포함). 시험: 로컬 DB `TEST_DATABASE_URL`로 `test_rag_spec_lookup.py` 11 passed, 맥 전체 567 passed · 43 skipped.
-- 확인 못 한 것: Supabase 공개 API(anon 키)로 실제로 막히는지는 요청을 보내 보지 않았다(RLS 켜짐 · 정책 0개만 확인). 배포된 서비스 코드는 아직 이 표를 읽지 않는다.
+- 이어서 확인한 것:
+  - 공개 API 차단: 운영 DB에서 공개 API가 쓰는 역할로 바꿔(`SET LOCAL ROLE anon` · `authenticated`, 끝나면 되돌림) 시험했다. 두 역할 모두 읽기 0행(비교: `source_documents`도 0행), 고치기 · 지우기 영향 0행, 넣기는 `new row violates row-level security policy`로 거부됐다. 시험 뒤 행 수 90,961 그대로, 시험 행 0.
+  - MCP 도구: 실제 stdio MCP 서버(`backend.mcp_skill.mcp_server.server`)를 띄워 운영 DB로 불렀다. 도구 목록에 두 도구가 있고, `get_part_specs('1n5817')`(소문자) 4행 · VRRM 20 V · IF_AV 1 A, 제너 VZ 3.42~3.78 V 15건(로컬과 같음), VRRM ≥ 40 · IF_AV ≥ 1 · 패키지 SMA 50건(상한), SMAF 36건(로컬과 같음), 없는 품번 0행, `PACKAGE` 숫자 조건은 오류로 거절. 한 번에 0.4~0.6초.
+  - 고친 것: `find_parts_by_specs` 도구 설명이 75bf517 뒤에도 "패키지 이름 일부"로 남아 있어 "이름과 같아야 함"으로 고쳤다(`tests/rag/RAG.md` 시험 설명도 함께).
+- 확인 못 한 것: anon 키로 HTTP 요청을 보내 보지는 않았다(`.env`에 anon 키가 없고, 있는 서비스 키는 RLS를 우회해 시험에 맞지 않음). 공개 API가 DB에서 쓰는 역할로 같은 동작을 확인했다. 배포된 서비스 코드는 아직 이 표를 읽지 않는다(코드가 로컬 브랜치에만 있음).
 - 다음 할 일: 판정 에이전트(`backend/judge/` + 조회 도구 연결).
 
 ## 2026-11-05 부품 사양 표 DB 적재와 조회 도구(로컬 DB)
