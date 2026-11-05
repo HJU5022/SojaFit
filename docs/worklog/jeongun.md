@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-04 단일 에이전트 기준 점수 측정(사전 등록 #31, D4)
+- 한 일: 사전 등록 #28 결과 기록과 #31를 측정 전에 커밋(`a630454`)하고, 시험 2문항(draft30-m01 · draftv2-n16)과 Langfuse 확인 1~6 뒤 동결 v2 70문항을 줄기 그래프로 돌렸다(`LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl`).
+- 바꾼 파일: `evals/guides/preregister.md`(#31 결과), `evals/results/graph/graph_dataset_v2_2026-11-04.json`(새 파일), 이 파일
+- 실제 결과: 70문항 실패 0. 관련 35는 cited_gold 12 · over_refusal 23, 무관 35는 correct_refusal 35, wrong_citation · hallucination_risk 0. over_refusal 23 중 candidate_find 10 · candidate_judge 9(후보 찾기 · 판정 19문항 전부 거절), role 3, rating 1. 라우팅 일치 31/35. p50 7.4초, 227 호출, 0.0519달러. 사전 등록 기대 11개 중 10개 범위 안, 1개(관련 hallucination_risk)는 채점기가 부여하지 않아 해당 없음, 저장소 밖 실행기 기록과 67문항 중 65 같음. Langfuse 확인 6개 통과.
+- 확인 못 한 것: 같은 설정을 한 번만 돌렸다(OpenRouter 응답이 흔들리는 폭은 모름, 저장소 밖 기록과 2문항이 갈린 것이 단서). 답 지표는 규칙 채점이라 판정 5종의 정확도가 아니다.
+- 다음 할 일: D5 단일 대 멀티 비교의 기준으로 쓴다. 후보 찾기 · 판정 19문항이 전부 거절이라 사양 표 거르기와 판정 노드가 필요하다. `EVAL_REPORT.md` 4장에 반영한다.
+
 ## 2026-11-04 임베딩 선정 실측 원시 결과와 해석 문서를 저장소에 올린다
 - 한 일: 저장소 밖(`전자_데이터시트/evidence/`)에만 있던 임베딩 선정 실측을 트리 규칙에 맞춰 올렸다. 원시 결과: 임베딩 격자 본평가 78칸·카드 임베딩 기록 6개·리랭크 캐시(`evals/results/embedding/grid_*`), 검색 층별 재측정 0~4층·요약·최종 조합(`evals/results/retrieval/retrieval_layer*`, `retrieval_layers_*`), 비트 검색 3개(`scripts/results/bit_search/`). 해석: `docs/research/`에 문서 3개. `EVAL_REPORT.md` 1-3절에 원시 위치를 적고 1-4절(D3 #24, R1 #25, 비트 검색, 서비스 반영 #26·#27)을 더했다.
 - 바꾼 파일: 위 결과 파일 18개와 문서 3개, 스크립트·시험·폴더 설명 파일(아래), `SOJAFIT.md`(트리 줄과 담당 표), `evals/EVALS.md`, `evals/runners/RUNNERS.md`, `evals/inputs/INPUTS.md`, `tests/evals/EVALS.md`, `scripts/SCRIPTS.md`, `docs/research/RESEARCH.md`, `EVAL_REPORT.md`, 이 파일
@@ -15,7 +22,7 @@
 - 바꾼 파일: `evals/runners/run_graph.py`(`result_row` · `summarize` · `default_out`, 결과 파일 `evals/results/graph/graph_<평가셋>_<날짜>.json`, `--out`, 표준출력에 5지표), `tests/evals/test_run_graph.py`(시험 4개 추가, main을 Langfuse · LLM · DB 없이 가짜로 돌리는 시험 포함), `evals/EVALS.md`(결과 폴더에 `graph/` · D3 결과 파일 9개 설명), `evals/runners/RUNNERS.md`, 이 파일.
 - 결과 파일에 넣는 것: 문항 id · 관련/비관련 · 정답 질문 종류 · 라우팅이 고른 종류 · 경로 · 검색 횟수 · LLM 호출 수 · 통과 청크 id · 인용 검사 · 5지표 · 시간 · 트레이스 주소, 실행 조건(커밋 · 모델 · 프롬프트 해시 · 평가셋 sha256 · Langfuse 세션), 요약(5지표 건수 전체 · 종류별, 라우팅이 맞은 관련 문항 수, 시간 중앙값, LLM 호출 합). 답변 문장과 청크 원문은 넣지 않는다(SPEC 6절).
 - 확인한 것: `uv run --offline pytest -q` 273 passed, 26 skipped. 실제 OpenRouter · Langfuse로는 아직 돌리지 않았다(유료, 사전 등록 #29 뒤).
-- 다음 할 일: 사전 등록 #29(v2 70건 단일 기준 점수) → 10문항 시험 실행 → 70건.
+- 다음 할 일: 사전 등록 #31(v2 70건 단일 기준 점수) → 10문항 시험 실행 → 70건.
 
 ## 2026-11-04 용어를 개발자 표준 용어로 바꾸고 용어집을 둔다
 - 목적: 강사 · 다른 조가 문서를 바로 읽게, 우리끼리 쓰던 말(카드, 고르기용 · 확인용, 쪽 적중 등)을 흔히 쓰는 말로 맞춘다.
