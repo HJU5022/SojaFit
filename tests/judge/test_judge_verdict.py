@@ -196,6 +196,20 @@ def test_any_group_missing_values_are_the_union_when_no_member_is_computable():
     assert j.verdict == 'NOT_VERIFIED' and j.missing == ['i_coil', 'pulse_test']
 
 
+def test_failed_any_group_reports_its_trr_member_for_the_schottky_exemption():
+    """R10 "CJ 또는 TRR"이 통과가 아니면 TRR 멤버로 알린다. 판정 노드가 쇼트키 후보의 TRR을 면제하면 묶음이 통과가 된다."""
+    rule = yaml.safe_load('''
+name: x
+recognize: x
+conditions:
+  - {tier: required, any: [{code: CJ, op: "<=", basis: "1e-12"}, {code: TRR, op: "<=", basis: "1e-9"}]}
+source: x
+''')
+    rows = [row('BAT54', 'CJ', 1e-11, unit='F') | {'typ': 1e-11}, row('BAT54', 'TRR', 5e-9, unit='s')]
+    c = V.judge_part(rule, 'R10', 'BAT54', {}, TEMP, rows).checks[0]
+    assert c.result == 'fail' and c.code == 'TRR' and c.basis == 'CJ <= 1e-12 또는 TRR <= 1e-9'
+
+
 def test_search_conditions_skip_any_groups():
     assert V.search_conditions(OR_RULE, {'v_in_max': 12.0, 'i_coil': 0.08}) == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}]
 
