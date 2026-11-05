@@ -585,3 +585,4 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령(lab): `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`(#39와 동시에 돌린다)
 - 예산 · 중단: #39와 합쳐서 본다.
 - 한계: #39와 같다. 구조(멀티)와 Supervisor 모델이 함께 들어온다. 노드별 시간은 Langfuse 트레이스에서 따로 뽑는다.
+- 반복 측정(11-06, 2세트째 시작 전 추가): #39 · #40을 같은 lab 커밋 `d765e7b` · 같은 Langfuse 버전으로 한 번 더 돌린다(재현성 확인, 코드 · 프롬프트 변경 없음). 2세트째 단일 · 멀티는 1세트 멀티가 도는 중에 함께 시작한다(정운 결정). 지표마다 두 값을 함께 적고, 두 실행에서 답 지표가 같은 문항 비율을 센다. 기대 범위는 위와 같다. 추가 비용 약 2.1달러. 결과 파일은 `--out`으로 `*_run2.json`에 남긴다. 동시에 4개까지 돌아 응답 시간이 1회 측정보다 늘 수 있다.
