@@ -73,7 +73,9 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original: di
     lack = sorted({n for b in bases for n in C.names(b) if values.get(n) is None})
     note = ''
     if lack and cond.get('default'):
-        bases, lack, note = [cond['default']], [], f"{codes[0]}: {label}에 쓸 값이 없어 기본값({cond['default']})으로 판정"
+        bases, note = [cond['default']], f"{codes[0]}: {label}에 쓸 값이 없어 기본값({cond['default']})으로 판정"
+        # [왜] 기본값 식도 회로 값을 쓸 수 있다(R17 처짐 기본값의 v_peak · c_hold). 그 값이 없으면 빠진 값으로 알린다
+        lack = sorted(n for n in C.names(cond['default']) if values.get(n) is None)
     if cond.get('at') and cond['at'] not in conds:
         lack.append(cond['at'])
     if lack:

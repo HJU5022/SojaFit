@@ -131,3 +131,17 @@ def test_rank_limits_per_verdict_and_total():
 def test_worse_prefers_the_worse_verdict():
     assert V.worse('ROLE_SUFFICIENT', 'NOT_SUFFICIENT') == 'NOT_SUFFICIENT'
     assert V.worse('SPEC_EQUIVALENT', 'NOT_VERIFIED') == 'NOT_VERIFIED'
+
+
+def test_default_basis_reports_its_own_missing_values():
+    """기본값 기준식(default)에도 쓸 회로 값이 없으면 그 값을 빠진 값으로 알린다(R17 처짐 기본값처럼 회로 값을 쓰는 기본값)."""
+    rule = yaml.safe_load('''
+name: x
+recognize: x
+inputs: {droop_allowed: number, v_peak: number, c_hold: number}
+conditions:
+  - {tier: required, code: IR, op: "<=", basis: "droop_allowed * c_hold", default: "0.01 * v_peak * c_hold"}
+source: x
+''')
+    j = V.judge_part(rule, 'R17', '1N5817', {'v_peak': 1.0}, TEMP, N5817)
+    assert j.verdict == 'NOT_VERIFIED' and j.missing == ['c_hold']
