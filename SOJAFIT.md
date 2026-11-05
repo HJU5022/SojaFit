@@ -160,6 +160,7 @@ SojaFit (proj3-b)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
 │   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
+│   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -210,7 +211,29 @@ SojaFit (proj3-b)
 │           ├── 2026-11-04-jev-stage1-ready-v1/  <- Jev 1차 70문항 원시 행·집계
 │           ├── 2026-11-05-stage2-five-v1/  <- 기존 5종 2차 manifest·smoke·원시 행
 │           ├── 2026-11-05-jev-stage2-v1/  <- Jev 2차 manifest·smoke·원시 행·집계
-│           └── 2026-11-05-stage2-comparison-v1/  <- 6종 2차 원시 행 재집계 정본
+│           ├── 2026-11-05-stage2-comparison-v1/  <- 6종 2차 원시 행 재집계 정본
+│           ├── 2026-11-05-stage3-five-v1/  <- 5종 3차 실행과 6종 공통 실행 metadata
+│           │   ├── manifest.json  <- 동결 입력·prompt·code hash, 1~3차 계획 중 3차 350건
+│           │   ├── preflight.json  <- 6종 공개 catalog·ZDR·가격·첫 job 예약액
+│           │   ├── environment.json  <- Python·패키지·의존성 파일 hash
+│           │   ├── execution.json  <- 6종 smoke·본 실행 인자·시각·종료·원시 hash
+│           │   ├── rows_anthropic__claude-haiku-5.5.json  <- 3차 Haiku 문항별 결과
+│           │   ├── rows_openai__gpt-6-luna.json  <- 3차 Luna 문항별 결과
+│           │   ├── rows_deepseek__deepseek-v4.1-flash.json  <- 3차 DeepSeek 문항별 결과
+│           │   ├── rows_meta__muse-glimmer-30b.json  <- 3차 Muse 문항별 결과
+│           │   ├── rows_cohere__command-a-plus.json  <- 3차 Cohere 문항별 결과
+│           │   ├── smoke_anthropic__claude-haiku-5.5.json  <- 3차 Haiku 호출 확인
+│           │   ├── smoke_openai__gpt-6-luna.json  <- 3차 Luna 호출 확인
+│           │   ├── smoke_deepseek__deepseek-v4.1-flash.json  <- 3차 DeepSeek 호출 확인
+│           │   ├── smoke_meta__muse-glimmer-30b.json  <- 3차 Muse 호출·형식 오류 확인
+│           │   └── smoke_cohere__command-a-plus.json  <- 3차 Cohere 호출 확인
+│           ├── 2026-11-05-jev-stage3-v1/  <- Jev 3차 실행 결과
+│           │   ├── manifest.json  <- 동결 입력·typed question 계약, 3차 70건
+│           │   ├── smoke.json  <- 3차 Jev 호출·provider·usage 확인
+│           │   ├── rows.json  <- 3차 Jev 문항별 결과·오류·usage
+│           │   └── summary.json  <- Jev 실행기의 3차 집계
+│           └── 2026-11-05-stage3-comparison-v1/  <- API 없는 6종 1~3차 비교 정본
+│               └── stage3_summary.json  <- 3차 지표·라우팅·3회 coverage·원시 hash
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
@@ -255,6 +278,7 @@ SojaFit (proj3-b)
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
 │   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
 │   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
+│   │   ├── test_supervisor_stage3_report.py  <- 3차 집계 분모·라우팅·3회 비교 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
@@ -325,7 +349,8 @@ SojaFit (proj3-b)
 │   │   ├── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
 │   │   ├── supervisor-model-comparison.md  <- 수퍼바이저 후보 5종 70문항 1회 비교와 Luna 최종 선정 근거
 │   │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
-│   │   └── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
+│   │   ├── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
+│   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
@@ -340,6 +365,8 @@ SojaFit (proj3-b)
 │   │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
 │   │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
 │   │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
+│   │   ├── supervisor-stage3-results.md  <- 6종 3차 전체 수치·1~3차 안정성·PR 근거
+│   │   ├── supervisor-stage3-brief-report.md  <- 6종 3차 핵심 수치·2차 대비 변화
 │   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
 │   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
 │   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측

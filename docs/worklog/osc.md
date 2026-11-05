@@ -148,3 +148,47 @@
 - Jev 실행기의 `--max-usd`는 입력 비용 추정으로 다음 job을 차단하는 관리값임을 명시했다. 실제 보고 비용이 계획값을 넘은 경우 해당 행을 저장하고 추가 job 없이 `budget_exceeded`로 중단하며, `NaN`·무한대 한도는 API 호출 전 거부한다. 기존 2차 실측이 이 수정 코드로 재실행된 것처럼 기록하지 않는다.
 - 변경 범위: Jev 실행기·회귀 테스트, 2차 결과·간단 보고서, 실험 계약·사전 등록 결과 해석, Jev 인수인계와 실행기 색인. 원시 JSON과 동결 평가셋은 수정하지 않았다.
 - 확인: Jev 원시 `rows.json` SHA-256 `f1995ce2b442d1f7dc72d427a7ffcb2fcf9c1b63dd9a27ee015ee109d4fa0d2d` 유지. 관련 테스트 63건, `PYTHONUTF8=1` 전체 테스트 374건 통과·27건 건너뜀, `git diff --check` 통과. 유료 API 호출과 재측정은 하지 않았다.
+
+## 2026-11-05 수퍼바이저 3차 실행 전 준비
+
+- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #33과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
+- 조건·예산·중단: 기존 프롬프트·typed question 계약, ZDR·fallback 금지, 유형 gold 35문항, 여섯 모델의 `out_of_scope → refuse` 일관성, 1~3차 완전한 행만의 agreement·flip을 고정했다. 본 실행 계획값 US$0.88, smoke US$0.033, 합계 US$0.913, 모델별 70 outputs·210 raw calls·7,200초와 provider·가격·코드 hash 불일치 중단을 등록했다. Jev 비용값은 실제 청구액의 절대 상한이 아니다.
+- API 없는 명령·결과: `uv run --no-sync python -c '...create_manifest(...)...'`로 5종 manifest를 생성해 1,050건 중 3차 350건을 확인했고, `uv run --no-sync python -m evals.runners.run_supervisor_jev plan evals/results/supervisor/2026-11-05-jev-stage3-v1 --run-index 3`으로 Jev 70건을 준비했다. 생성된 파일은 두 manifest뿐이다. 유료 API 호출 0회, smoke·본 실행 0건이다.
+- 바꾼 파일: 3차 계약·사전 등록, 두 manifest, `SOJAFIT.md` 트리, 실험·평가 폴더 색인과 이 작업 기록. 기존 1·2차 원시 결과와 동결 평가셋은 바꾸지 않았다. 다음 단계는 manifest hash·현재 catalog 가격·ZDR·provider를 다시 확인한 뒤 별도 지시에 따라 smoke를 시작하는 것이다.
+- 준비 검증: 5종 3차 350건과 Jev 3차 70건의 고유 job, 동결 dataset hash, 5종 prompt·code hash, Jev typed question 계약 hash를 대조했다. 관련 pytest 69건 통과, `git diff --check` 통과. 원시 결과·API 호출·커밋·푸시·PR 갱신은 하지 않았다. 유료 실행 전에 사전 등록을 별도 커밋으로 확정해야 한다.
+- Jev 코드 재현 경계: Jev manifest에는 실행기 hash가 없어 `run_supervisor_jev.py`의 LF 정규화 SHA-256 `291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f`를 사전 등록에 별도로 적고, live 전 수동 대조를 조건으로 추가했다.
+- 실행 승인: 사용자가 3차 실행과 PR용 근거 보존을 지시했다. 유료 호출 전에 위 사전 등록·manifest를 로컬 커밋으로 고정한다. 현재 catalog·ZDR·가격·첫 문항 예약을 확인하고, 승인된 모델별 smoke·본 실행 계획값을 그대로 적용한다. 원격 공개 시점으로 사전 등록 순서를 독립 증명했다고 주장하지 않는다. 키는 기존 작업 트리 `.env`에서 `OPENROUTER_API_KEY`만 읽고 출력하지 않는다.
+
+## 2026-11-05 수퍼바이저 6종 3차 실측 완료
+
+- 실행 시점: 사전 등록 로컬 커밋 `d10a30b`는 11:25:50 KST, smoke·본 실행은 11:27:27~11:59:19 KST다. 현재 catalog에서 6종의 모델·ZDR 노출과 첫 문항 3회 시도 예약을 확인한 뒤 순차 실행했다. 모델별 정확한 인자·UTC 시각·종료 코드·provider·원시 hash는 `2026-11-05-stage3-five-v1/execution.json`과 smoke 파일에 있다.
+- 결과: 6종 모두 동결 70문항을 시도해 고유 420개 3차 행을 남겼다. 본 실행은 재시도 포함 855호출, Budget-Accounted Cost 합계 US$0.239294618로 모델별 등록 계획값 이내다. smoke 비용 전체와 외부 실제 청구액은 확인하지 않았다. 형식 오류는 해당 행에 기록하고 계속했으며, `meta/muse-glimmer-30b`의 단발 `RateLimitError` 1건도 보존했다. 추가 유료 재실행은 하지 않았다.
+- 해석: `openai/gpt-6-luna`와 `typesafe/jev-1.14`의 유형 정답은 각각 33/35다. Jev는 자체 `out_of_scope` 6건 중 `refuse` 외 동작 4건을 다시 냈다. `deepseek/deepseek-v4.1-flash`의 provider는 2차 Morph에서 3차 Relace로 달라졌고 형식 통과가 62/70→7/70이어서 모델 자체 성능 변화로만 귀속하지 않는다. 35개 비관련 문항의 올바른 거절 정답률이나 독립 평가셋 성능은 측정하지 않았다.
+- 근거 파일: 3차 두 결과 폴더의 manifest·preflight·환경·smoke·문항별 행·실행 metadata, `2026-11-05-stage3-comparison-v1/stage3_summary.json`, `docs/research/supervisor-stage3-results.md`·간단 보고서, API 없는 `report_supervisor_stage3.py`와 회귀 테스트를 준비했다. 최초 결과 JSON 19개 합계 1,307,905 bytes, 출처 파일 hash 34개를 검증했다. 최초 집계 SHA-256은 `890122c802eb2f7bd5efedd6cdeab74a21703ae36ce8ebae34fd67acf3d2638c`이며 이후 출력 제한 진단을 추가한 집계는 아래 기록을 따른다.
+- 검증: 원시 6개 파일 모두 고유 ID 70개·run_index 3·동결 ID 일치. 저장 원시 행에서 정확도·형식 통과·호출 수를 별도 대조했고, 1~3차 manifest의 dataset·prompt/typed question 계약도 일치했다. 집계기 재실행으로 JSON과 두 보고서의 바이트 동일성을 확인했다. `PYTHONUTF8=1 uv run --no-sync pytest -q`는 381 passed·27 skipped, `git diff --check` 통과. 결과 JSON의 비밀값·원문 입력·gold 본문 필드 검사도 통과했다.
+- PR 준비 범위: 새 집계 코드·테스트·계약·보고서와 원시 근거는 한 목적이다. 향후 PR 본문에 400줄 초과 이유와 실행 코드/결과를 함께 검토해야 하는 이유를 적는다. 현재 유료 실행 전 사전 등록만 로컬 커밋했고, 결과 푸시·새 PR 생성은 하지 않았다. 기존 1·2차 원시 결과와 실제 호출 실행 코드는 변경하지 않았다.
+
+## 2026-11-05 3차 해석·후속 후보 축소안
+
+- 추가 확인: `deepseek/deepseek-v4.1-flash`의 3차 최종 형식 실패 63건은 모두 `finish_reason=length`, 해당 189개 시도 usage는 모두 출력 256토큰이었다. gold 35건 중 형식 실패 33건·유효 유형 정답 2건으로 확인했다. 2차 대비 프롬프트·실행 로직은 같고 실행기 hash 차이는 LF/CRLF 차이다. provider 변경과 출력 제한 실패가 함께 관찰됐으며 공급자의 내부 동작 차이를 원인으로 확정하지 않는다.
+- 초기 후보 축소 제안(아래 사용자 결정으로 대체): 결과 확인 후 다음 유료 평가에 `openai/gpt-6-luna`와 `typesafe/jev-1.14`를 유지하는 2종 안을 적었으나, 최종 후보 결정은 다음 항목의 3종을 따른다. 과거 실행기 후보 목록·원시 결과·서비스 모델 설정은 바꾸지 않았다.
+- PR 준비 확인: 최신 `origin/main`에 추가 변경이 없고 새 번호 충돌도 없다. 추가 진단 테스트 포함 전체 `PYTHONUTF8=1 uv run --no-sync pytest -q`는 382 passed·27 skipped, `git diff --check` 통과. 기존 출처 hash 34개는 유지됐다. 결과 JSON 19개는 1,314,675 bytes, 갱신 집계 SHA-256은 `6e0455bcf9748e658467163fb2f5ddf34a1e9e60d35a342ee992c1db8dfbaf5d`다. 이번 보강에서 유료 재호출·푸시·PR 생성은 하지 않았다.
+
+## 2026-11-05 최종 후보 3종 사용자 결정
+
+- 사용자 지시: PR에 순위는 포함하지 않는다. 최종 후보는 `openai/gpt-6-luna`, `typesafe/jev-1.14`, `anthropic/claude-haiku-5.5`의 3종으로 명시한다. `deepseek/deepseek-v4.1-flash`는 실행 안정성 부족으로 탈락하며 `cohere/command-a-plus`·`meta/muse-glimmer-30b`도 최종 후보에서 제외한다.
+- 반영: 상세·간단 보고서와 보고서 생성 코드의 기존 2종 축소안을 3종 최종 후보 결정으로 바꿨다. 세 후보 사이의 순위나 주/보조 구분은 부여하지 않았다. 후보 결정은 3차 결과 확인 후 사용자 결정이며 사전 등록 선정 규칙으로 소급하지 않는다.
+- 확인: API 없이 보고서를 재생성했고 모델별 실측 수치와 기존 출처 hash가 모두 같음을 대조했다. 관련 테스트 13건과 `git diff --check`가 통과했다. 생성 코드 hash가 바뀌어 파생 집계의 새 SHA-256은 `83690c83250effb4c5395c8c4045136207c08f3c531e608638c9ae74352d0d0c`다. 원시 결과와 기존 실험 후보 목록은 보존했다. 새 유료 호출·푸시·PR 생성은 하지 않았다.
+
+## 2026-11-05 3차 결과 PR 게시 준비
+
+- 사용자 승인으로 `OSC`에서 사전 등록, API 없는 집계기·테스트, 실측·최종 후보 3종 보고서를 논리 단위로 커밋한다. 순위 표는 포함하지 않는다.
+- Git 저장 바이트 확인 중 `core.autocrlf=true`가 일부 3차 JSON의 CRLF를 LF로 변환함을 발견했다. 3차 결과 폴더의 JSON에만 `.gitattributes -text`를 적용해 로컬 원본 바이트·보고서의 원시 hash를 보존한다. 사전 등록 당시 로컬 manifest의 CRLF 바이트와 선언 hash도 그대로 보존하며 이미 만든 커밋은 다시 쓰지 않는다. 기존 1·2차 출처는 LF 정규화 SHA-256으로 Git 저장 파일과 대조하고 hash 정책을 집계·보고서에 명시했다. 과거 회차 원시 파일과 모델 실측 수치는 변경하지 않았다.
+- 파생 집계와 Markdown은 LF로 생성해 환경에 따른 출력 차이를 줄였다. 현재 집계 SHA-256은 `e0491c99d59405a982f4b96107ff617cc72dac2ac6e10e0ffea95c931719ae98`다. 원시 3차 hash와 기존 회차 Git blob의 LF hash 일치, 관련 테스트 14건, 전체 `PYTHONUTF8=1 uv run --no-sync pytest -q` 383 passed·27 skipped, `git diff --check`를 확인했다. 이번 게시 준비에서는 유료 API를 호출하지 않았다.
+- 게시 바이트 검증: 스테이징된 JSON 19개가 로컬 파일의 원시 바이트와 동일하고 집계의 출처 34개 hash가 Git index의 저장 내용과 일치했다. Git index의 파일만 임시 경로에 풀어 집계해도 현재 집계 JSON 전체와 같았다. CRLF 보존 파일은 `whitespace=cr-at-eol`로 줄바꿈 CR만 공백 오류에서 구별하며 staged diff 검사도 통과했다.
+
+## 2026-11-05 PR #55 부분 실행 표기 피드백 반영
+
+- 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
+- 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
+- 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.

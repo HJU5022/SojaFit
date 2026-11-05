@@ -1,0 +1,6039 @@
+{
+  "status": "complete_with_errors",
+  "rows": [
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e01",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.1709999999729916,
+      "response_id": "gen-1793847268-BeRvhqKzZGkJ9vU9rmTM",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 245,
+        "prompt_tokens": 368,
+        "total_tokens": 613,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 246,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004779,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004779,
+          "upstream_inference_prompt_cost": 0.0001104,
+          "upstream_inference_completions_cost": 0.0003675
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e02",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.172000000020489,
+      "response_id": "gen-1793847269-6v9cyCbF7OsGjhCPnglp",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 207,
+        "prompt_tokens": 370,
+        "total_tokens": 577,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 198,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004215,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004215,
+          "upstream_inference_prompt_cost": 0.000111,
+          "upstream_inference_completions_cost": 0.0003105
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e03",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.312999999965541,
+      "response_id": "gen-1793847270-OwTmX3pmmxCe45OnhjnZ",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 121,
+        "prompt_tokens": 363,
+        "total_tokens": 484,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 107,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002904,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002904,
+          "upstream_inference_prompt_cost": 0.0001089,
+          "upstream_inference_completions_cost": 0.0001815
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e04",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.76500000001397,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 357,
+          "total_tokens": 613,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 255,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004911,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004911,
+            "upstream_inference_prompt_cost": 0.0001071,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 357,
+          "total_tokens": 613,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 272,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004911,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004911,
+            "upstream_inference_prompt_cost": 0.0001071,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 357,
+          "total_tokens": 613,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 264,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004911,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004911,
+            "upstream_inference_prompt_cost": 0.0001071,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e05",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.093999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 361,
+          "total_tokens": 617,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 285,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004923,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004923,
+            "upstream_inference_prompt_cost": 0.0001083,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 361,
+          "total_tokens": 617,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 287,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004923,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004923,
+            "upstream_inference_prompt_cost": 0.0001083,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 361,
+          "total_tokens": 617,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 285,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004923,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004923,
+            "upstream_inference_prompt_cost": 0.0001083,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e06",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.391000000061467,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 356,
+          "total_tokens": 612,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 288,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004908,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004908,
+            "upstream_inference_prompt_cost": 0.0001068,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 356,
+          "total_tokens": 612,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 292,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004908,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004908,
+            "upstream_inference_prompt_cost": 0.0001068,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 356,
+          "total_tokens": 612,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 305,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004908,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004908,
+            "upstream_inference_prompt_cost": 0.0001068,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e07",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.1089999999385327,
+      "response_id": "gen-1793847286-cmBTUPrCapoEnw0jTLm4",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 123,
+        "prompt_tokens": 358,
+        "total_tokens": 481,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 103,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002919,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002919,
+          "upstream_inference_prompt_cost": 0.0001074,
+          "upstream_inference_completions_cost": 0.0001845
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e08",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.188000000081956,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 285,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 283,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 287,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e09",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.342999999993481,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 300,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 303,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 305,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-e10",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 0.9219999999040738,
+      "response_id": "gen-1793847296-7udVw3Y8YaSA7vmkVADH",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 122,
+        "prompt_tokens": 369,
+        "total_tokens": 491,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 105,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002937,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002937,
+          "upstream_inference_prompt_cost": 0.0001107,
+          "upstream_inference_completions_cost": 0.000183
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m01",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 0.8120000000344589,
+      "response_id": "gen-1793847297-T3DkP3KNSNTDCQSJ0wtL",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 148,
+        "prompt_tokens": 352,
+        "total_tokens": 500,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 135,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003276,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003276,
+          "upstream_inference_prompt_cost": 0.0001056,
+          "upstream_inference_completions_cost": 0.000222
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m02",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.8440000000409782,
+      "response_id": "gen-1793847297-eruQlS62K2qQmrHmGJ26",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 228,
+        "prompt_tokens": 389,
+        "total_tokens": 617,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 228,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004587,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004587,
+          "upstream_inference_prompt_cost": 0.0001167,
+          "upstream_inference_completions_cost": 0.000342
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m03",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.140999999945052,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 265,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 261,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 265,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m04",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.031000000075437,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 363,
+          "total_tokens": 619,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 265,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004929,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004929,
+            "upstream_inference_prompt_cost": 0.0001089,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 363,
+          "total_tokens": 619,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 260,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004929,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004929,
+            "upstream_inference_prompt_cost": 0.0001089,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 363,
+          "total_tokens": 619,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 260,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004929,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004929,
+            "upstream_inference_prompt_cost": 0.0001089,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m05",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.296999999904074,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 268,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 283,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 285,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m06",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 6.282000000006519,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 281,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 370,
+          "total_tokens": 624,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 266,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m07",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 1,
+      "latency_seconds": 2.702999999979511,
+      "response_id": "gen-1793847320-2exis95BnQX6Uen1xkJz",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 235,
+        "prompt_tokens": 364,
+        "total_tokens": 599,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 219,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004617,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004617,
+          "upstream_inference_prompt_cost": 0.0001092,
+          "upstream_inference_completions_cost": 0.0003525
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m08",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.812000000034459,
+      "response_id": "gen-1793847322-HvV3xNw4XFfwSxZJ3ocq",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 201,
+        "prompt_tokens": 368,
+        "total_tokens": 569,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 207,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004119,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004119,
+          "upstream_inference_prompt_cost": 0.0001104,
+          "upstream_inference_completions_cost": 0.0003015
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m09",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.5,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 365,
+          "total_tokens": 621,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 273,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004935,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004935,
+            "upstream_inference_prompt_cost": 0.0001095,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 365,
+          "total_tokens": 621,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 272,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004935,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004935,
+            "upstream_inference_prompt_cost": 0.0001095,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 365,
+          "total_tokens": 621,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 279,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004935,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004935,
+            "upstream_inference_prompt_cost": 0.0001095,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-m10",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.187000000034459,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 267,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 272,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 274,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h01",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.718999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 377,
+          "total_tokens": 633,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 275,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004971,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004971,
+            "upstream_inference_prompt_cost": 0.0001131,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 377,
+          "total_tokens": 633,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 277,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004971,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004971,
+            "upstream_inference_prompt_cost": 0.0001131,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 377,
+          "total_tokens": 633,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 275,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004971,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004971,
+            "upstream_inference_prompt_cost": 0.0001131,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h02",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.25,
+      "response_id": "gen-1793847336-pUOXoJeJll6rVaBrrrCu",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 250,
+        "prompt_tokens": 379,
+        "total_tokens": 629,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 247,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004887,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004887,
+          "upstream_inference_prompt_cost": 0.0001137,
+          "upstream_inference_completions_cost": 0.000375
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h03",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.438000000081956,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 378,
+          "total_tokens": 634,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 281,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004974,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004974,
+            "upstream_inference_prompt_cost": 0.0001134,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 378,
+          "total_tokens": 634,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 275,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004974,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004974,
+            "upstream_inference_prompt_cost": 0.0001134,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 378,
+          "total_tokens": 634,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 281,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004974,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004974,
+            "upstream_inference_prompt_cost": 0.0001134,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h04",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.217999999993481,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 288,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 291,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 360,
+          "total_tokens": 616,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 290,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000492,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000492,
+            "upstream_inference_prompt_cost": 0.000108,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h05",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.719000000040978,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 383,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 254,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004989,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004989,
+            "upstream_inference_prompt_cost": 0.0001149,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 383,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 275,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004989,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004989,
+            "upstream_inference_prompt_cost": 0.0001149,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 383,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 254,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004989,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004989,
+            "upstream_inference_prompt_cost": 0.0001149,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h06",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.015999999945052,
+      "response_id": "gen-1793847351-vj9B0HsPZIG8XpQsD8kE",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 130,
+        "prompt_tokens": 356,
+        "total_tokens": 486,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 125,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003018,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003018,
+          "upstream_inference_prompt_cost": 0.0001068,
+          "upstream_inference_completions_cost": 0.000195
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h07",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.952999999979511,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 287,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 289,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 367,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 282,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004941,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004941,
+            "upstream_inference_prompt_cost": 0.0001101,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h08",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 9.703000000095926,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 312,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 311,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 311,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h09",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.9369999999180436,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 310,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 359,
+          "total_tokens": 615,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 308,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001077,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft30-h10",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.313000000081956,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 366,
+          "total_tokens": 622,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 306,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004938,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004938,
+            "upstream_inference_prompt_cost": 0.0001098,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 366,
+          "total_tokens": 622,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 308,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004938,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004938,
+            "upstream_inference_prompt_cost": 0.0001098,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 366,
+          "total_tokens": 622,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 308,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004938,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004938,
+            "upstream_inference_prompt_cost": 0.0001098,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n01",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.827999999979511,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 470,
+          "total_tokens": 726,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 251,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000525,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000525,
+            "upstream_inference_prompt_cost": 0.000141,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 470,
+          "total_tokens": 726,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 240,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000525,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000525,
+            "upstream_inference_prompt_cost": 0.000141,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 470,
+          "total_tokens": 726,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 240,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000525,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000525,
+            "upstream_inference_prompt_cost": 0.000141,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n02",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.062999999965541,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 410,
+          "total_tokens": 666,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 271,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000507,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000507,
+            "upstream_inference_prompt_cost": 0.000123,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 410,
+          "total_tokens": 666,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 287,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000507,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000507,
+            "upstream_inference_prompt_cost": 0.000123,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 410,
+          "total_tokens": 666,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 287,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000507,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000507,
+            "upstream_inference_prompt_cost": 0.000123,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n03",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.75,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 369,
+          "total_tokens": 625,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 305,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004947,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004947,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 369,
+          "total_tokens": 625,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004947,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004947,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 369,
+          "total_tokens": 625,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004947,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004947,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n04",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.405999999959022,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 418,
+          "total_tokens": 674,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 294,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005094,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005094,
+            "upstream_inference_prompt_cost": 0.0001254,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 418,
+          "total_tokens": 674,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 294,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005094,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005094,
+            "upstream_inference_prompt_cost": 0.0001254,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 418,
+          "total_tokens": 674,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 295,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005094,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005094,
+            "upstream_inference_prompt_cost": 0.0001254,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n05",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 1,
+      "latency_seconds": 2.875,
+      "response_id": "gen-1793847391-S3aUpUuHpK844AOLHcEF",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "length",
+      "usage": {
+        "completion_tokens": 252,
+        "prompt_tokens": 385,
+        "total_tokens": 637,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 265,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004935,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004935,
+          "upstream_inference_prompt_cost": 0.0001155,
+          "upstream_inference_completions_cost": 0.000378
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n06",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.532000000006519,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 390,
+          "total_tokens": 646,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 248,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000501,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000501,
+            "upstream_inference_prompt_cost": 0.000117,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 390,
+          "total_tokens": 646,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 233,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000501,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000501,
+            "upstream_inference_prompt_cost": 0.000117,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 390,
+          "total_tokens": 646,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 244,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000501,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000501,
+            "upstream_inference_prompt_cost": 0.000117,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n07",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.234000000054948,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 423,
+          "total_tokens": 679,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 281,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005109,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005109,
+            "upstream_inference_prompt_cost": 0.0001269,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 423,
+          "total_tokens": 679,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 286,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005109,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005109,
+            "upstream_inference_prompt_cost": 0.0001269,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 423,
+          "total_tokens": 679,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 301,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005109,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005109,
+            "upstream_inference_prompt_cost": 0.0001269,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n08",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.140999999945052,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 421,
+          "total_tokens": 677,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 265,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005103,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005103,
+            "upstream_inference_prompt_cost": 0.0001263,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 421,
+          "total_tokens": 677,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 294,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005103,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005103,
+            "upstream_inference_prompt_cost": 0.0001263,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 421,
+          "total_tokens": 677,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 271,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005103,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005103,
+            "upstream_inference_prompt_cost": 0.0001263,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n09",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.26500000001397,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 369,
+          "total_tokens": 623,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 275,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004917,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004917,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        },
+        {
+          "completion_tokens": 255,
+          "prompt_tokens": 369,
+          "total_tokens": 624,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 297,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004932,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004932,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.0003825
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 369,
+          "total_tokens": 625,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 290,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004947,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004947,
+            "upstream_inference_prompt_cost": 0.0001107,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n10",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 0.9529999999795109,
+      "response_id": "gen-1793847412-k2BRZJ9hYxjemaw9aTfL",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 169,
+        "prompt_tokens": 370,
+        "total_tokens": 539,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 164,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003645,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003645,
+          "upstream_inference_prompt_cost": 0.000111,
+          "upstream_inference_completions_cost": 0.0002535
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n11",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.6570000000065193,
+      "response_id": "gen-1793847413-KyWx1tjwq4JZijV4cXxm",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 193,
+        "prompt_tokens": 376,
+        "total_tokens": 569,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 200,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004023,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004023,
+          "upstream_inference_prompt_cost": 0.0001128,
+          "upstream_inference_completions_cost": 0.0002895
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n12",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 2,
+      "latency_seconds": 4.531000000075437,
+      "response_id": "gen-1793847417-vdo9CoFV8wAcd7FgDWcY",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 214,
+        "prompt_tokens": 375,
+        "total_tokens": 589,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 221,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004335,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004335,
+          "upstream_inference_prompt_cost": 0.0001125,
+          "upstream_inference_completions_cost": 0.000321
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n14",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.843999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 386,
+          "total_tokens": 642,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 276,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004998,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004998,
+            "upstream_inference_prompt_cost": 0.0001158,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 386,
+          "total_tokens": 642,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 276,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004998,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004998,
+            "upstream_inference_prompt_cost": 0.0001158,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 255,
+          "prompt_tokens": 386,
+          "total_tokens": 641,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 279,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004983,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004983,
+            "upstream_inference_prompt_cost": 0.0001158,
+            "upstream_inference_completions_cost": 0.0003825
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n15",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.515999999945052,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 306,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 305,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 370,
+          "total_tokens": 626,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 295,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000495,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000495,
+            "upstream_inference_prompt_cost": 0.000111,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n16",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 1,
+      "latency_seconds": 2.687000000034459,
+      "response_id": "gen-1793847429-T3H6XTA1jJa48C7DkhXO",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 218,
+        "prompt_tokens": 384,
+        "total_tokens": 602,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 214,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004422,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004422,
+          "upstream_inference_prompt_cost": 0.0001152,
+          "upstream_inference_completions_cost": 0.000327
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n17",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.3440000000409782,
+      "response_id": "gen-1793847430-fZuyQ0R0mJIkbfgOxCHk",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 209,
+        "prompt_tokens": 374,
+        "total_tokens": 583,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 198,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004257,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004257,
+          "upstream_inference_prompt_cost": 0.0001122,
+          "upstream_inference_completions_cost": 0.0003135
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n18",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.327999999979511,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 371,
+          "total_tokens": 627,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 286,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004953,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004953,
+            "upstream_inference_prompt_cost": 0.0001113,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 371,
+          "total_tokens": 627,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 286,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004953,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004953,
+            "upstream_inference_prompt_cost": 0.0001113,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 371,
+          "total_tokens": 627,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 286,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004953,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004953,
+            "upstream_inference_prompt_cost": 0.0001113,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n19",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.937000000034459,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 380,
+          "total_tokens": 636,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 299,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000498,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000498,
+            "upstream_inference_prompt_cost": 0.000114,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 380,
+          "total_tokens": 636,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 299,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000498,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000498,
+            "upstream_inference_prompt_cost": 0.000114,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 380,
+          "total_tokens": 636,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 299,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000498,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000498,
+            "upstream_inference_prompt_cost": 0.000114,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft50-n20",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 0.6720000000204891,
+      "response_id": "gen-1793847440-TEwo6sC9PgpNruU3cGEJ",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 88,
+        "prompt_tokens": 374,
+        "total_tokens": 462,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 62,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002442,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002442,
+          "upstream_inference_prompt_cost": 0.0001122,
+          "upstream_inference_completions_cost": 0.000132
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draft52-n21",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 3.9679999999934807,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 374,
+          "total_tokens": 630,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 300,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004962,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004962,
+            "upstream_inference_prompt_cost": 0.0001122,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 374,
+          "total_tokens": 630,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 300,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004962,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004962,
+            "upstream_inference_prompt_cost": 0.0001122,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 374,
+          "total_tokens": 630,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 305,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004962,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004962,
+            "upstream_inference_prompt_cost": 0.0001122,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n01",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.73499999998603,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 471,
+          "total_tokens": 727,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 330,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005253,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005253,
+            "upstream_inference_prompt_cost": 0.0001413,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 471,
+          "total_tokens": 727,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 316,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005253,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005253,
+            "upstream_inference_prompt_cost": 0.0001413,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 471,
+          "total_tokens": 727,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 283,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005253,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005253,
+            "upstream_inference_prompt_cost": 0.0001413,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n02",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.26500000001397,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 461,
+          "total_tokens": 717,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 304,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005223,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005223,
+            "upstream_inference_prompt_cost": 0.0001383,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 461,
+          "total_tokens": 717,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 291,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005223,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005223,
+            "upstream_inference_prompt_cost": 0.0001383,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 461,
+          "total_tokens": 717,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 276,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005223,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005223,
+            "upstream_inference_prompt_cost": 0.0001383,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n03",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.844000000040978,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 468,
+          "total_tokens": 724,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 291,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005244,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005244,
+            "upstream_inference_prompt_cost": 0.0001404,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 468,
+          "total_tokens": 724,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 292,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005244,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005244,
+            "upstream_inference_prompt_cost": 0.0001404,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 468,
+          "total_tokens": 724,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 304,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005244,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005244,
+            "upstream_inference_prompt_cost": 0.0001404,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n04",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.327999999979511,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 445,
+          "total_tokens": 701,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 294,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005175,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005175,
+            "upstream_inference_prompt_cost": 0.0001335,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 445,
+          "total_tokens": 701,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 289,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005175,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005175,
+            "upstream_inference_prompt_cost": 0.0001335,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 445,
+          "total_tokens": 701,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 295,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005175,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005175,
+            "upstream_inference_prompt_cost": 0.0001335,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n05",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.25,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 478,
+          "total_tokens": 734,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 301,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005274,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005274,
+            "upstream_inference_prompt_cost": 0.0001434,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 478,
+          "total_tokens": 734,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 299,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005274,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005274,
+            "upstream_inference_prompt_cost": 0.0001434,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 478,
+          "total_tokens": 734,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 301,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005274,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005274,
+            "upstream_inference_prompt_cost": 0.0001434,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n06",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.968999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 486,
+          "total_tokens": 742,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 292,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005298,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005298,
+            "upstream_inference_prompt_cost": 0.0001458,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 486,
+          "total_tokens": 742,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 298,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005298,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005298,
+            "upstream_inference_prompt_cost": 0.0001458,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 486,
+          "total_tokens": 742,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 298,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005298,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005298,
+            "upstream_inference_prompt_cost": 0.0001458,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n07",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.0,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 311,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n08",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.657000000006519,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 503,
+          "total_tokens": 759,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 309,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005349,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005349,
+            "upstream_inference_prompt_cost": 0.0001509,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 503,
+          "total_tokens": 759,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 304,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005349,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005349,
+            "upstream_inference_prompt_cost": 0.0001509,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 503,
+          "total_tokens": 759,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 293,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005349,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005349,
+            "upstream_inference_prompt_cost": 0.0001509,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n09",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.10999999998603,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 516,
+          "total_tokens": 772,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 318,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005388,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005388,
+            "upstream_inference_prompt_cost": 0.0001548,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 516,
+          "total_tokens": 772,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 329,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005388,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005388,
+            "upstream_inference_prompt_cost": 0.0001548,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 516,
+          "total_tokens": 772,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 334,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005388,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005388,
+            "upstream_inference_prompt_cost": 0.0001548,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n10",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.342999999993481,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 514,
+          "total_tokens": 770,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005382,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005382,
+            "upstream_inference_prompt_cost": 0.0001542,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 255,
+          "prompt_tokens": 514,
+          "total_tokens": 769,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 298,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005367,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005367,
+            "upstream_inference_prompt_cost": 0.0001542,
+            "upstream_inference_completions_cost": 0.0003825
+          }
+        },
+        {
+          "completion_tokens": 255,
+          "prompt_tokens": 514,
+          "total_tokens": 769,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 308,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005367,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005367,
+            "upstream_inference_prompt_cost": 0.0001542,
+            "upstream_inference_completions_cost": 0.0003825
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n11",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.265999999945052,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 318,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 373,
+          "total_tokens": 629,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 310,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004959,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004959,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 373,
+          "total_tokens": 627,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 297,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004929,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004929,
+            "upstream_inference_prompt_cost": 0.0001119,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n12",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.609000000054948,
+      "response_id": "gen-1793847496-qGQsuq2a5kGUuQ1RdBc4",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 233,
+        "prompt_tokens": 386,
+        "total_tokens": 619,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 256,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004653,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004653,
+          "upstream_inference_prompt_cost": 0.0001158,
+          "upstream_inference_completions_cost": 0.0003495
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n13",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.483999999938533,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 467,
+          "total_tokens": 723,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 283,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005241,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005241,
+            "upstream_inference_prompt_cost": 0.0001401,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 467,
+          "total_tokens": 723,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005241,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005241,
+            "upstream_inference_prompt_cost": 0.0001401,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 467,
+          "total_tokens": 723,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 289,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005241,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005241,
+            "upstream_inference_prompt_cost": 0.0001401,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n14",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.093999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 385,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004965,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004965,
+            "upstream_inference_prompt_cost": 0.0001155,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        },
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 385,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004965,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004965,
+            "upstream_inference_prompt_cost": 0.0001155,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        },
+        {
+          "completion_tokens": 254,
+          "prompt_tokens": 385,
+          "total_tokens": 639,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 296,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004965,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004965,
+            "upstream_inference_prompt_cost": 0.0001155,
+            "upstream_inference_completions_cost": 0.000381
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n15",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.187999999965541,
+      "response_id": "gen-1793847506-lEDj7pVXx0YeVUxovzXc",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 235,
+        "prompt_tokens": 478,
+        "total_tokens": 713,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 260,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0004959,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0004959,
+          "upstream_inference_prompt_cost": 0.0001434,
+          "upstream_inference_completions_cost": 0.0003525
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n16",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.89000000001397,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 484,
+          "total_tokens": 740,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 304,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005292,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005292,
+            "upstream_inference_prompt_cost": 0.0001452,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 484,
+          "total_tokens": 740,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 297,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005292,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005292,
+            "upstream_inference_prompt_cost": 0.0001452,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 484,
+          "total_tokens": 740,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 299,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005292,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005292,
+            "upstream_inference_prompt_cost": 0.0001452,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n17",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.218999999924563,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 351,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 348,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 512,
+          "total_tokens": 768,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 341,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005376,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005376,
+            "upstream_inference_prompt_cost": 0.0001536,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n18",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 5.922000000020489,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 382,
+          "total_tokens": 638,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 306,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004986,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004986,
+            "upstream_inference_prompt_cost": 0.0001146,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 382,
+          "total_tokens": 638,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 313,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004986,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004986,
+            "upstream_inference_prompt_cost": 0.0001146,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 382,
+          "total_tokens": 638,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 295,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0004986,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0004986,
+            "upstream_inference_prompt_cost": 0.0001146,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n19",
+      "run_index": 3,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.937999999965541,
+      "response_id": "gen-1793847523-M5nim1UqnMhX3BfkHlku",
+      "actual_model": "cohere/command-a-plus",
+      "provider": "Cohere",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 246,
+        "prompt_tokens": 517,
+        "total_tokens": 763,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 275,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0005241,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0005241,
+          "upstream_inference_prompt_cost": 0.0001551,
+          "upstream_inference_completions_cost": 0.000369
+        }
+      }
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "case_id": "draftv2-n20",
+      "run_index": 3,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 4.734000000054948,
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 522,
+          "total_tokens": 778,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 302,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005406,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005406,
+            "upstream_inference_prompt_cost": 0.0001566,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 522,
+          "total_tokens": 778,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 297,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005406,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005406,
+            "upstream_inference_prompt_cost": 0.0001566,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 522,
+          "total_tokens": 778,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 317,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0005406,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0005406,
+            "upstream_inference_prompt_cost": 0.0001566,
+            "upstream_inference_completions_cost": 0.000384
+          }
+        }
+      ]
+    }
+  ],
+  "budget_progress": {
+    "cumulative_raw_calls": 173,
+    "cumulative_reserved_usd": 0.0855105000000001
+  },
+  "budget": {
+    "configured_max_calls": 630,
+    "selected_run_indices": [
+      3
+    ],
+    "configured_max_usd": 0.3,
+    "remaining_max_calls_at_start": 630,
+    "remaining_max_usd_at_start": 0.3,
+    "max_seconds": 7200.0,
+    "max_tokens": 256,
+    "raw_calls_this_process": 173,
+    "reserved_usd_this_process": 0.0855105000000001,
+    "cumulative_raw_calls": 173,
+    "cumulative_reserved_usd": 0.0855105000000001,
+    "elapsed_seconds": 261.155999999959
+  },
+  "summary": {
+    "Question Type Accuracy": {
+      "per_run": {
+        "1": {
+          "numerator": 0,
+          "denominator": 35,
+          "value": 0.0
+        },
+        "2": {
+          "numerator": 0,
+          "denominator": 35,
+          "value": 0.0
+        },
+        "3": {
+          "numerator": 8,
+          "denominator": 35,
+          "value": 0.22857142857142856
+        }
+      },
+      "mean": 0.07619047619047618,
+      "min": 0.0,
+      "max": 0.22857142857142856,
+      "scored_unique_cases": 35
+    },
+    "Question Type Macro-F1": {
+      "per_run": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.34265734265734266
+      },
+      "mean": 0.11421911421911422,
+      "min": 0.0,
+      "max": 0.34265734265734266
+    },
+    "Question Type Per-Class": {
+      "per_run": {
+        "1": {
+          "candidate_find": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "candidate_judge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 9
+          },
+          "rating": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "role": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 6
+          }
+        },
+        "2": {
+          "candidate_find": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "candidate_judge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 9
+          },
+          "rating": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "role": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 6
+          }
+        },
+        "3": {
+          "candidate_find": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "candidate_judge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 9
+          },
+          "rating": {
+            "precision": 1.0,
+            "recall": 0.3,
+            "f1": 0.4615384615384615,
+            "tp": 3,
+            "fp": 0,
+            "fn": 7
+          },
+          "role": {
+            "precision": 1.0,
+            "recall": 0.8333333333333334,
+            "f1": 0.9090909090909091,
+            "tp": 5,
+            "fp": 0,
+            "fn": 1
+          }
+        }
+      }
+    },
+    "Known Limitation": {
+      "unscored_case_count": 35,
+      "unscored_case_ids": [
+        "draft30-e06",
+        "draft30-e07",
+        "draft30-e09",
+        "draft30-e10",
+        "draft30-h03",
+        "draft30-h06",
+        "draft30-h07",
+        "draft30-h08",
+        "draft30-h09",
+        "draft30-h10",
+        "draft30-m06",
+        "draft30-m08",
+        "draft30-m09",
+        "draft30-m10",
+        "draft50-n09",
+        "draft50-n10",
+        "draft50-n11",
+        "draft50-n12",
+        "draft50-n14",
+        "draft50-n15",
+        "draft50-n16",
+        "draft50-n17",
+        "draft50-n18",
+        "draft50-n19",
+        "draft50-n20",
+        "draftv2-n11",
+        "draftv2-n12",
+        "draftv2-n13",
+        "draftv2-n14",
+        "draftv2-n15",
+        "draftv2-n16",
+        "draftv2-n17",
+        "draftv2-n18",
+        "draftv2-n19",
+        "draftv2-n20"
+      ],
+      "reason": "question_type gold 없음; 70문항 실행은 유지하되 objective score에서 제외"
+    },
+    "Completion Rate": {
+      "numerator": 21,
+      "denominator": 210,
+      "value": 0.1
+    },
+    "Three-Run Exact Agreement": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Incomplete Three-Run Case Count": 70,
+    "Question Type Flip Rate": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Next Action Flip Rate": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Input Tokens": 68337,
+    "Output Tokens": 41683,
+    "Actual Total Cost": 0.0830256,
+    "p50 Latency": 4.188000000081956,
+    "p95 Latency": 5.76500000001397
+  }
+}
