@@ -127,7 +127,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ## 5. 규칙 파일
 
 - 회로 역할별 대체 조건을 적는 규칙 파일 형식: `backend/judge/rules/roles.yaml`, 역할 23개 · 조건 세 층(필수 · 조건부 필수 · 주의). 형식은 [작업서](docs/specs/judge-agent.md) How 절(11-06)
-- 런타임이 읽는 위치: `backend/` 또는 `data/` 아래(Dockerfile이 복사하는 범위). 정확한 경로: (정할 것)
+- 런타임이 읽는 위치: `backend/judge/rules/roles.yaml`
 - 가산 선택의 `SKILL.md`(`backend/mcp_skill/`)에는 LLM 판단 지침만 두고 임계값은 다시 적지 않습니다.
 
 ### 도메인 Skill 적용

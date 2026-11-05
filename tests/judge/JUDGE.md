@@ -8,5 +8,6 @@
 
 ## 파일
 - `test_judge_conditions.py` — 기준식 문법(사칙 연산 · kV · kI · orig.<코드>), 빠진 값, 규칙 모양 검사, 물어볼 값 목록
+- `test_judge_rules_file.py` — 실제 규칙 파일(`backend/judge/rules/roles.yaml`)의 23개가 모두 읽히고 문법에 맞는지
 - `test_judge_sheet_conditions.py` — 사양 표의 실제 조건 글로 읽기 · 비교
 - `test_judge_verdict.py` — 작은 규칙 · 가짜 사양 표 행으로 판정 5종 순서, 찾기 검색 조건, 후보 정렬(AC-01 · 03~06)

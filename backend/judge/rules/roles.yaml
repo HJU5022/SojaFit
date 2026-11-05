@@ -1,0 +1,369 @@
+# 역할 23개 규칙. 숫자는 SI 단위(V · A · W · s · F, 온도 °C). kV = 1.25(전압 정격의 80%), kI = 1/0.7(전류 정격의 70%).
+# 원본: 저장소 밖 전자_데이터시트/역할-후보-20.md · 역할-판정-2차의견-2026-11-05.md · 보류-5개-규칙안-2026-11-06.md(판정 하정운)
+# - 하지 않는 일: 계산 · 비교(backend/judge/conditions.py · verdict.py). 이 파일은 규칙만 적는다.
+# - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
+#   unless(flag가 참이면 꺼짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식). 쇼트키 계열의 TRR 면제는 판정 노드가 한다.
+# - 회로 값 이름(읽기 출력 칸과 같은 목록, 같은 이름은 모든 역할에서 같은 뜻 · 종류)
+#   전압: v_in_max 입력(전원) 최대 · v_in_min 입력 최소 · v_reverse_max 반대쪽 전원 최대(R02) · v_coil 코일 전압 · v_ac_rms AC 실효값
+#         v_line_max 보호하는 넷의 정상 최대 · v_cc 로직 전원 · v_dd_min 부하 최소 VDD · v_logic_max 양쪽 로직 전압 중 큰 값
+#         v_logic_margin 로직 여유(받는 쪽 입력 Low 문턱 − 보내는 쪽 출력 Low 최대) · v_out 출력 · v_ovp 과전압 보호 문턱
+#         v_clamp 스너버 커패시터 전압 · v_dss 스위치 내압 · v_bus 하프브리지 버스 · v_sw_transient 스위칭 노드 과도 전압
+#         v_out_abs 음전압 출력의 크기 · v_signal_pp 신호 피크-피크 · v_peak 신호 피크 · v_gs_on 게이트를 충분히 켤 전압
+#         v_gs_max VGS 최대 정격 · v_gate_drive 게이트 구동 전압 · v_drop_allowed 허용 전압 강하
+#   전류: i_max 최대 순방향(부하) 전류 · i_coil 코일 정상 전류 · i_z 제너 전류 · i_short 전원 단락 전류 · i_fault 입력 핀 고장 전류
+#         i_out 최대 출력 전류 · i_limit IC 전류 제한값 · i_d 스위치 정격 전류 · i_boot_peak 부트스트랩 시동 피크 전류 · ir_allowed 허용 역누설
+#   그 밖: ns_np 권선비 Ns/Np · n_diodes 직렬 다이오드 개수 · c_hold 피크 홀드 커패시터 · droop_allowed 허용 처짐(V/s) · err_allowed 허용 오차
+#   시험 조건: vf_test VF를 볼 전류 · 온도 · pulse_test 차단 펄스 · hot_test 고온 사용 온도 · surge_test 서지 파형 · temp(공통) 사용 온도
+# [주의] 저항 값(직렬 저항 · 풀업 · 부트 저항)은 회로 값으로 두지 않는다. 읽기 · 재개 값의 단위 환산이 kΩ을 모르기 때문이다.
+#   원본이 저항으로 계산하는 값은 그 결과 전류(i_z · i_fault · i_boot_peak)로 받는다.
+
+R01:
+  name: 역극성 보호(직렬)
+  recognize: 커넥터·배터리 → 다이오드 → 전원 넷, 캐소드가 부하 쪽
+  inputs: {v_in_max: number, i_max: number, v_drop_allowed: number, vf_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
+    - {tier: conditional, code: VF, op: "<=", basis: "v_drop_allowed", when: v_drop_allowed, at: vf_test}
+  major: {VRRM: higher, IF_AV: higher, IFSM: higher}
+  cautions: ["발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)"]
+  source: "TI SLVA139 [문서]"
+
+R02:
+  name: 역류 방지
+  recognize: 캐소드 둘 이상이 같은 전원 넷, 또는 USB·충전 입력 → 배터리·다른 전원 넷, 또는 백업 셀 → RTC 전원 핀
+  inputs: {v_reverse_max: number, i_max: number, ir_allowed: number, vf_selects_source: flag, vf_test: condition, hot_test: condition}
+  conditions:
+    # [왜] 역전압은 전원 켜짐 · 꺼짐 조합 중 최댓값이다(정운 판정 R02)
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_reverse_max * kV"}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
+    # [왜] 회로 허용 역류량을 주면 그 값, 없으면 원래 IR(같은 시험 조건일 때만, 정운 판정 R02)
+    - {tier: required, code: IR, op: "<=", basis: "ir_allowed", default: "orig.IR"}
+    - {tier: conditional, code: VF, op: "<=", basis: "orig.VF", when: vf_selects_source, at: vf_test}
+    - {tier: conditional, code: IR, op: "<=", basis: "ir_allowed", default: "orig.IR", when: hot_test, at: hot_test}
+  major: {VRRM: higher, IF_AV: higher, IR: lower}
+  source: "TI SLVAE57 [문서·요약]"
+
+R03:
+  name: 릴레이 플라이백(켜고 끄기만)
+  recognize: 코일과 병렬, 캐소드가 코일 전원 쪽, 스위치는 일반 GPIO
+  inputs: {v_coil: number, i_coil: number, pulse_test: condition, pwm: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_coil * kV"}
+    # [왜] IFSM은 질문의 차단 펄스와 시험 파형이 같을 때만 쓴다(정운 판정 R03)
+    # [주의] 원본의 "펄스가 다르면 IF_AV ≥ 코일 전류"는 이 형식에 없다. 펄스 조건을 모르거나 다르면 이 조건은 확인 안 됨이다
+    - {tier: required, code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}
+    - {tier: conditional, code: TRR, op: "<=", basis: "orig.TRR", when: pwm}
+  major: {VRRM: higher, IF_AV: higher, IFSM: higher}
+  cautions: [감쇠 시간 · 반복 횟수(반복 펄스 허용량은 그래프라 표에 없음)]
+  source: "TE Connectivity relay coil suppression [문서·요약]"
+
+R04:
+  name: 제너 클램프 · 전압 기준
+  recognize: 제너 계열(BZX84C·BZT52C·1N47xx), 캐소드가 신호·전원 넷, 애노드 GND, 앞에 직렬 저항
+  inputs: {i_z: number, data_line: flag}
+  conditions:
+    # [주의] 원래 VZ와 같음(허용 오차 안)을 최대 VZ가 원래와 같은지로 본다. orig.VZ는 원래 부품의 최대 VZ 하나뿐이라 범위를 비교할 수 없다
+    - {tier: required, code: VZ, op: ">=", basis: "orig.VZ"}
+    - {tier: required, code: VZ, op: "<=", basis: "orig.VZ"}
+    # [왜] 실제 소비(Iz × VZ) × kI. Iz를 모르면 원래 PD(정운 판정 R04)
+    - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD"}
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
+  major: {PD: higher}
+  cautions:
+    - 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인)
+    - 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지
+    - 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음
+    - 온도 계수
+  source: "onsemi HBD854/D [문서], Microchip DS41285A Tip #2 · #17 [문서]"
+
+R05:
+  name: AC · 브리지 정류
+  recognize: 브리지 심볼·다이오드 4개 고리, 변압기·AC 넷·DC 잭 뒤, 큰 평활 커패시터(무극성 DC 입력 포함)
+  inputs: {v_in_max: number, v_ac_rms: number, i_max: number, ac_input: flag, discrete_bridge: flag, bulk_cap: flag}
+  conditions:
+    # [왜] 입력 최대 피크 × kV. 무극성 DC 입력이면 DC 최대, AC면 실효값 × √2
+    - {tier: required, code: VRRM, op: ">=", basis: "v_in_max * kV", unless: ac_input}
+    - {tier: conditional, code: VRRM, op: ">=", basis: "v_ac_rms * 1.41421356 * kV", when: ac_input}
+    # [왜] 브리지 부품 하나면 부하 전류 전체, 다이오드 4개 따로면 하나가 절반(정운 판정 R05)
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI", unless: discrete_bridge}
+    - {tier: conditional, code: IF_AV, op: ">=", basis: "i_max * 0.5 * kI", when: discrete_bridge}
+    - {tier: conditional, code: IFSM, op: ">=", basis: "orig.IFSM", when: bulk_cap}
+  major: {VRRM: higher, IF_AV: higher, IFSM: higher}
+  cautions: [충전 펄스 RMS, 발열]
+  source: "Sound-AU Linear Power Supply Design [문서]"
+
+R06:
+  name: ESD · TVS
+  recognize: TVS·ESD 계열(SMAJ·SMBJ·PESD·USBLC6), 신호·전원 넷과 GND 사이, 커넥터 바로 뒤
+  inputs: {v_line_max: number, surge_test: condition, data_line: flag, external_port: flag}
+  conditions:
+    - {tier: required, code: VRWM, op: ">=", basis: "v_line_max"}
+    # [왜] VC · IPP · PPPM은 같은 시험 파형끼리만 비교한다. 파형을 모르면 확인 안 됨(정운 판정 R06)
+    - {tier: required, code: VC, op: "<=", basis: "orig.VC", at: surge_test}
+    # [주의] 원본은 "PPPM 또는 IPP ≥ 원래 값"이다. 대체 코드는 기준식 하나를 같이 써서 둘 다 필수로 둔다(더 엄격)
+    - {tier: required, code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test}
+    - {tier: required, code: IPP, op: ">=", basis: "orig.IPP", at: surge_test}
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
+    - {tier: conditional, code: VESD, op: ">=", basis: "orig.VESD", when: external_port}
+  major: {PPPM: higher, IPP: higher, VC: lower}
+  cautions:
+    - "단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인"
+    - 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)
+  source: "ROHM Differences between TVS and Zener Diodes [문서], Nexperia AN10753 [문서·요약]"
+
+R07:
+  name: 병렬 역극성 보호
+  recognize: 정류 계열(TVS·제너 아님)이 전원 넷(캐소드)과 GND(애노드) 사이, 앞에 퓨즈·PTC
+  inputs: {v_in_max: number, i_short: number, battery: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+    # [왜] 퓨즈가 끊길 때까지 전원이 내는 단락 전류. 모르면 원래 IFSM
+    - {tier: required, code: IFSM, op: ">=", basis: "i_short", default: "orig.IFSM"}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: battery}
+  major: {VRRM: higher, IFSM: higher}
+  cautions:
+    - 퓨즈 협조(I²t, 데이터시트 118개에만 있음). IFSM 통과만으로 퓨즈가 끊길 때까지 견딘다는 보장은 없음
+  source: "Sound-AU AN-013 Reverse polarity protection [문서]"
+
+R08:
+  name: 입력 핀 보호
+  recognize: 입력 넷 → VCC(캐소드 VCC), GND → 입력 넷(애노드 GND), 앞에 직렬 저항, BAV99·BAT54S. RESET→VCC 다이오드 하나면 R21과 겹침
+  inputs: {v_cc: number, i_fault: number, orig_schottky: flag, high_impedance: flag, fast_signal: flag, vf_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_cc * kV"}
+    # [왜] 고장 전류 = (입력 최대 − VCC − VF) / 직렬 저항. 계산한 전류를 i_fault로 받는다
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_fault * kI"}
+    - {tier: conditional, code: VF, op: "<=", basis: "orig.VF", when: orig_schottky, at: vf_test}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: high_impedance}
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}
+  major: {VRRM: higher, IF_AV: higher}
+  cautions:
+    - 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖)
+    - VCC로 들어가는 클램프 전류가 전원을 띄우는지
+    - 전원 꺼짐 상태
+  source: "Microchip DS41285A Tip #10 · #17 [문서], Microchip AN2519 [문서·요약]"
+
+R09:
+  name: 전압 낮추기
+  recognize: 보드 안 전원 넷과 MCU·모듈 VDD 사이에 다이오드 1~3개 같은 방향 직렬, 레귤레이터 없음
+  inputs: {i_max: number, v_in_min: number, v_dd_min: number, n_diodes: number, vf_test: condition}
+  conditions:
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
+    # [왜] VF 최댓값 @ 최대 전류 ≤ (입력 최소 − 부하 최소 VDD) ÷ 개수(정운 11-06 채택)
+    - {tier: required, code: VF, op: "<=", basis: "(v_in_min - v_dd_min) / n_diodes", at: vf_test}
+  major: {IF_AV: higher}
+  cautions:
+    - VF 최솟값 @ 최소 전류 ≥ (입력 최대 − 부하 최대 VDD) ÷ 개수. 데이터시트에 최솟값이 거의 없어 부하 전압 위쪽 한계는 보장할 수 없음(불확실)
+  source: "Microchip DS41285A Tip #3 [문서], 보류 5개 규칙안 R09(정운 11-06)"
+
+R10:
+  name: 신호선 다이오드 OR
+  recognize: 소신호 다이오드 여러 개의 같은 극이 INT·RX 넷 하나에 모이고 풀업(Low 활성으로 모음), 또는 5V 출력과 3.3V 입력 사이 레벨 변환
+  inputs: {v_logic_max: number, v_logic_margin: number, large_pullup: flag, fast_signal: flag, vf_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_logic_max * kV"}
+    # [왜] VF @ 풀업 전류 ≤ 로직 여유. 못 얻으면 원래 VF
+    - {tier: required, code: VF, op: "<=", basis: "v_logic_margin", default: "orig.VF", at: vf_test}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: large_pullup}
+    # [주의] 원본은 "CJ 또는 TRR ≤ 원래 값"이다. 원래 값이 코드마다 달라 둘 다 둔다(더 엄격)
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}
+    - {tier: conditional, code: TRR, op: "<=", basis: "orig.TRR", when: fast_signal}
+  major: {VRRM: higher}
+  cautions:
+    - 누설로 High가 낮아지는 양 = 다이오드 수 × IR × 풀업 저항(풀업 저항 값으로 사람이 계산)
+    - 응답 시간
+  source: "Microchip DS41285A Tip #7 [문서], Gammon Forum 11091 [문서·요약]"
+
+R11:
+  name: 벅 프리휠링
+  recognize: 캐소드 = 스위치 노드(SW·LX 핀 + 인덕터), 애노드 = GND
+  inputs: {v_in_max: number, i_out: number, i_limit: number, hot_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_out * kI"}
+    - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
+    - {tier: conditional, code: IF_AV, op: ">=", basis: "i_limit", when: i_limit}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: hot_test, at: hot_test}
+  major: {VRRM: higher, IF_AV: higher}
+  cautions:
+    - 스위치 듀티 D를 알면 평균 전류 기준을 Iout_max × (1 − D_min) × kI까지 낮출 수 있음(지금은 Iout_max × kI로 판정)
+    - standard-rectifier 계열(1N5400 등)은 스위칭 회로에 쓰지 않음
+    - 피크 전류(IFRM 거의 없음)
+    - VF 손실 · 역회복 손실 · 발열
+  source: "TI LM2596 SNVS124G §9.1.4 · §9.2.1.2.4 [문서], TI SLVA477 §4 [문서]"
+
+R12:
+  name: 부스트 출력
+  recognize: 애노드 = SW 핀 + 인덕터, 캐소드 = 출력 커패시터·출력 넷
+  inputs: {v_out: number, v_ovp: number, i_out: number, hot_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_out * kV"}
+    # [왜] IC에 과전압 보호 문턱이 있으면 그 값을 기준으로 본다
+    - {tier: conditional, code: [VRRM, VR], op: ">=", basis: "v_ovp * kV", when: v_ovp}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_out * kI"}
+    - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: hot_test, at: hot_test}
+  major: {VRRM: higher, IF_AV: higher}
+  cautions:
+    - 인덕터 피크 전류(IFRM 거의 없음)
+    - 역회복 · 발열
+  source: "TI SLVA372 [문서·요약], TI TPS61087 Rectifier Diode Selection [문서·요약]"
+
+R13:
+  name: 플라이백 전원 출력 정류
+  recognize: 변압기 2차 단자 → 애노드, 캐소드 → 출력 커패시터, 1차와 2차 GND가 다름
+  inputs: {v_out: number, v_in_max: number, ns_np: number, i_out: number, snubber: flag}
+  conditions:
+    - {tier: conditional, code: VRRM, op: ">=", basis: "(v_out + v_in_max * ns_np) * kV", when: snubber}
+    - {tier: required, code: VRRM, op: ">=", basis: "(v_out + v_in_max * ns_np) * 2", unless: snubber}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_out * kI"}
+    - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
+  cautions: [2차 피크 전류(변압기 값 필요), 발열, 접합 용량]
+  source: "smps.us 핸드북 33~34쪽 [문서], Analog Devices 피크 전류 모드 플라이백 [문서·요약], Maxim APP 849 [문서·요약]"
+
+R14:
+  name: RCD 스너버
+  recognize: 애노드 = 1차 스위치 드레인(스위처 DRAIN 핀), 캐소드 = R‖C 노드, R‖C 다른 쪽이 1차 입력 고압
+  # [왜] v_clamp는 스너버 커패시터 전압(AN-4147의 Vsn)이다. 드레인 최대 전압으로 읽으면 입력을 두 번 더한다(정운 11-06 채택)
+  inputs: {v_in_max: number, v_clamp: number, v_dss: number, i_d: number, f_over_100khz: flag}
+  conditions:
+    - {tier: conditional, code: VRRM, op: ">=", basis: "(v_in_max + v_clamp) * 1.5", when: v_clamp}
+    # [주의] 원본은 "클램프 전압을 모르면 VDSS × 1.1"이다. 이 형식에 "모르면"이 없어 늘 필수로 둔다(더 엄격)
+    - {tier: required, code: VRRM, op: ">=", basis: "v_dss * 1.1"}
+    - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
+    - {tier: conditional, code: TRR, op: "<=", basis: "35e-9", when: f_over_100khz}
+    # [왜] ID를 못 받으면 AN-4147의 "보통 1 A 정격 초고속 다이오드"를 기본값으로 쓴다
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_d * 0.3", default: "1"}
+  cautions:
+    - 동작 주파수가 100 kHz를 넘으면 TRR 35 ns 이하 또는 SiC 쇼트키만
+  source: "보류 5개 규칙안 R14(정운 11-06), Fairchild AN-4147 [문서], Maxim AN848 [문서]"
+
+R15:
+  name: 부트스트랩
+  recognize: 애노드 = 게이트 드라이버 VDD·VCC, 캐소드 = VB·HB·BOOT 핀, 커패시터가 VB–VS(SW) 사이
+  inputs: {v_bus: number, v_sw_transient: number, i_boot_peak: number, long_high_side: flag, hot_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_bus * kV"}
+    # [주의] 원본은 "스위칭 노드 과도 전압을 주면 그 값, 없으면 버스 × 1.25"다. 이 형식에 "없으면"이 없어 둘 다 본다(더 엄격)
+    - {tier: conditional, code: [VRRM, VR], op: ">=", basis: "v_sw_transient", when: v_sw_transient}
+    - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
+    # [왜] 시동 피크 전류 = (VDD − VF) / Rboot. 부트 저항이 없으면 원래 IFSM
+    - {tier: conditional, code: IFSM, op: ">=", basis: "i_boot_peak", default: "orig.IFSM"}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: long_high_side}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: hot_test, at: hot_test}
+  major: {VRRM: higher}
+  cautions:
+    - 평균 전류 = 게이트 전하 × 스위칭 주파수(MOSFET 값 필요)
+    - 충전 피크 전류
+  source: "TI SLUA887A §3.3 [문서]"
+
+R16:
+  name: 차지펌프(양전압 2배 · 음전압)
+  recognize: 다이오드 2개 같은 방향 직렬, 가운데 노드의 커패시터가 PWM·555 출력으로. 음전압이면 출력 넷이 V-·VNEG이고 다이오드 방향이 반대
+  # [왜] 여유 1.3 · 2.0 · 1.5는 정운이 정한 역할별 값이다(공통 kV · kI와 다름, 정운 11-06 채택)
+  inputs: {v_in_max: number, v_out_abs: number, i_out: number, negative_out: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "2 * v_in_max * 1.3", unless: negative_out}
+    - {tier: conditional, code: [VRRM, VR], op: ">=", basis: "(v_in_max + v_out_abs) * 1.3", when: negative_out}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_out * 2", unless: negative_out}
+    - {tier: conditional, code: IF_AV, op: ">=", basis: "i_out * 1.5", when: negative_out}
+  major: {VRRM: higher, IF_AV: higher}
+  source: "보류 5개 규칙안 R16 정운안(11-06), TI SLFA002 [문서·요약]"
+
+R17:
+  name: 피크 검파(피크 홀드 · 포락선)
+  recognize: 신호 → 다이오드 애노드, 캐소드 → GND로 가는 커패시터(방전 저항이 있으면 포락선) → ADC 핀
+  inputs: {v_signal_pp: number, v_peak: number, c_hold: number, droop_allowed: number, err_allowed: number,
+           peak_hold: flag, op_amp: flag, fast_signal: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_signal_pp * kV"}
+    # [왜] 처짐 속도 = IR ÷ C. 허용 처짐을 안 주면 기본값(초당 1% × V피크)으로 계산하고 기본값이라고 밝힌다
+    - {tier: conditional, code: IR, op: "<=", basis: "droop_allowed * c_hold", default: "0.01 * v_peak * c_hold", when: peak_hold}
+    # [왜] OP앰프 없이 다이오드만 있을 때 VF가 측정 오프셋이다. 기본 허용 오차 1%
+    - {tier: conditional, code: VF, op: "<=", basis: "err_allowed * v_peak", default: "0.01 * v_peak", unless: op_amp}
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}
+  cautions:
+    - 다이오드만으로 VF 조건을 못 맞추면 OP앰프 정밀 정류가 필요
+    - 응답 시간(신호 주기의 10% 안)은 신호 주파수가 있어야 계산 가능
+  source: "보류 5개 규칙안 R17(정운 11-06), TI E2E OPA615 포럼 [문서·요약], ADI 피크 검파 설계 노트 [문서·요약]"
+
+R18:
+  name: 게이트 보호 제너
+  recognize: 제너 계열이 MOSFET 게이트 넷과 소스 넷 사이(한쪽이 GND가 아니라 소스), 게이트에 풀다운·분압 저항
+  inputs: {v_gs_on: number, v_gs_max: number, i_z: number}
+  conditions:
+    # [왜] 게이트를 충분히 켤 전압 ≤ VZ 최소, VZ 최대 ≤ VGS 최대 정격(MOSFET 값은 되물음, 정운 판정 R18)
+    - {tier: required, code: VZ, op: within, basis: [v_gs_on, v_gs_max]}
+    - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD"}
+  major: {PD: higher}
+  source: "TI SLUAAT7 [문서]"
+
+R19:
+  name: 게이트 빨리 끄기
+  recognize: 소신호 다이오드가 게이트 저항과 병렬, 캐소드가 드라이버·MCU 핀 쪽(N-MOSFET). 극성이 반대면 빨리 켜기라 이 역할이 아님
+  inputs: {v_gate_drive: number, strong_driver: flag, vf_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_gate_drive * kV"}
+    - {tier: required, code: VF, op: "<=", basis: "orig.VF", at: vf_test}
+    - {tier: conditional, code: IFSM, op: ">=", basis: "orig.IFSM", when: strong_driver}
+  major: {VRRM: higher}
+  cautions: [반복 펄스 전류(IFRM 거의 없음)]
+  source: "TI SLUA618A §3.4.1 [문서]"
+
+R20:
+  name: 레귤레이터 보호
+  recognize: 리니어 레귤레이터 OUT(애노드)–IN(캐소드), 또는 ADJ(애노드)–OUT(캐소드)
+  inputs: {v_in_max: number}
+  conditions:
+    # [왜] 평상시 역전압은 Vin − Vout이지만 출력 단락까지 보고 입력 최대로 본다
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+    - {tier: required, code: IFSM, op: ">=", basis: "orig.IFSM"}
+  major: {VRRM: higher, IFSM: higher}
+  cautions:
+    - 출력 커패시터 방전 전류는 넷리스트 값으로 구할 수 있지만 IFSM(8.3 ms)과 파형이 달라 직접 비교는 애매함
+    - 레귤레이터 제조사 권고(레귤레이터 데이터시트가 코퍼스에 없음)
+    - 외부 출력 전원
+  source: "TI LM317 SLVS044Z §8.2 [문서]"
+
+R21:
+  name: 리셋 방전
+  recognize: 리셋 풀업 저항과 병렬, 캐소드 VCC, 애노드 RESET·MCLR, 그 넷에서 GND로 커패시터. RESET→VCC 다이오드 하나뿐이면 R08과 겹침
+  inputs: {v_cc: number, large_timing_r: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_cc * kV"}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: large_timing_r}
+  major: {VRRM: higher}
+  cautions: [방전 시간]
+  source: "Microchip AN522 [문서·요약], Microchip AN2519 [문서·요약]"
+
+R22:
+  name: PWM 모터 프리휠링
+  recognize: R03과 같은 자리(부하와 병렬, 캐소드가 부하 전원 쪽)인데 스위치가 PWM 구동, 모터 심볼·모터 드라이버 시트
+  inputs: {v_in_max: number, i_max: number, high_stall: flag}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+    - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
+    - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
+    - {tier: conditional, code: IFSM, op: ">=", basis: "orig.IFSM", when: high_stall}
+  major: {VRRM: higher, IF_AV: higher}
+  cautions:
+    - PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정)
+    - standard-rectifier 계열은 PWM 회로에 쓰지 않음
+    - 피크 전류 · 역회복 · 발열
+  source: "Microchip AN905 [문서], TI SLVA477 [문서], TI LM2596 [문서]"
+
+R23:
+  name: 키 매트릭스 격리
+  recognize: 같은 소신호 다이오드 수십 개가 스위치마다 직렬, ROW·COL 넷. 방향은 스캔 방식(캐소드가 ROW 쪽 또는 반대로 통일)
+  inputs: {v_cc: number, v_logic_margin: number, large_pullup: flag, fast_signal: flag, vf_test: condition}
+  conditions:
+    - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_cc * kV"}
+    # [왜] VF 로직 여유를 필수로(정운 판정 R23). 못 얻으면 원래 VF
+    - {tier: required, code: VF, op: "<=", basis: "v_logic_margin", default: "orig.VF", at: vf_test}
+    - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: large_pullup}
+    - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}
+  major: {VRRM: higher}
+  cautions:
+    - 누설로 High가 낮아지는 양 = 다이오드 수 × IR × 풀업 저항(R10과 같은 식, 풀업 저항 값으로 사람이 계산)
+  source: "QMK How a Keyboard Matrix Works [문서]"

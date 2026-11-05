@@ -18,5 +18,4 @@
 - `conditions.py` — 역할 규칙(`rules/roles.yaml`) 읽기 · 모양 검사, 정해진 문법의 기준식으로 대체 조건 기준값 계산, 물어볼 회로 값 목록
 - `sheet_conditions.py` — 데이터시트 시험 조건 글(기호 = 값, 펄스 폭 · 파형, 표 제목 기본 조건)을 읽고 같은 조건인지 비교
 - `verdict.py` — 조건별 비교(통과 · 실패 · 확인 안 됨), SPEC 3절 순서의 판정 5종, 찾기 검색 조건, 후보 정렬, 기판 수정 필요. LLM · DB를 부르지 않는다
-- `rules/` — 판정 규칙 파일 자리. 형식은 SPEC 5절에서 정하며 지금은 `.gitkeep`뿐입니다
-- 예정: `rules/roles.yaml`. 만들면 `SOJAFIT.md` 트리의 `(예정)`을 지웁니다
+- `rules/` — 판정 규칙 파일. `roles.yaml`(역할 23개 규칙: 알아보는 법, 회로 값, 조건 세 층과 기준식, 주의, 출처). 형식은 SPEC 5절 · `docs/specs/judge-agent.md`

@@ -69,8 +69,8 @@ SojaFit (proj3-b)
 │   │   ├── sheet_conditions.py  <- 시험 조건 글 읽기와 같은 조건인지 비교
 │   │   ├── conditions.py   <- 역할 규칙 읽기와 대체 조건 기준값 계산
 │   │   ├── verdict.py      <- 조건별 비교·판정 5종·찾기 조건·후보 정렬
-│   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함(지금은 .gitkeep)
-│   │       └── roles.yaml  <- 역할 규칙 (예정, 후보 이름)
+│   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함
+│   │       └── roles.yaml  <- 역할 23개 규칙(조건 세 층, 기준식, 출처)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
@@ -321,6 +321,7 @@ SojaFit (proj3-b)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
+│   │   ├── test_judge_rules_file.py  <- 실제 규칙 파일 23개 검사
 │   │   ├── test_judge_sheet_conditions.py  <- 시험 조건 읽기·비교
 │   │   └── test_judge_verdict.py  <- 판정 5종 순서·찾기·정렬
 │   ├── repo/               <- 저장소 구조 규칙
