@@ -39,6 +39,7 @@ def test_facts_node_stores_dict_and_path():
     ('D4를 1N4148 R0G로 바꿀 수 있어?', ['1N4148', 'R0G'], {'1N4148': True, '1N4148 R0G': True}),
     ('D4를 1N9999 R0G로 바꿀 수 있어?', ['1N9999', 'R0G'], {'1N9999': False, 'R0G': False}),  # 기본 품번도 없으면 그대로 없다
     ('D4를 1N4148, BAT85 중 뭘로 바꿔?', ['1N4148', 'BAT85'], {'1N4148': True, 'BAT85': False}),  # 띄어쓰기로만 붙은 낱말이 아니면 따로 본다
+    ('D4를 1N4148 BAT85 중 뭘로 바꿔?', ['1N4148', 'BAT85'], {'1N4148': True, 'BAT85': False}),  # 주문 코드 모양이 아니면 띄어 써도 따로 본다
 ])
 def test_lookup_treats_ordering_code_as_base_part(question, sent, parts):
     calls = []

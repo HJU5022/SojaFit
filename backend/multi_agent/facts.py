@@ -4,6 +4,8 @@
 - 하지 않는 일: 목록 읽기(목록은 호출하는 쪽이 넘기거나 MCP 도구 `check_corpus`가 알려 준다), 거절 결정(판단은 Supervisor).
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05), backend/graph/nodes.py(`find_parts` · `REVISION` 재사용)
 """
+import re
+
 from backend.graph.nodes import REVISION, WORD, find_parts
 from backend.multi_agent.supervisor import Facts
 
@@ -19,6 +21,11 @@ def make_facts(question: str, refs: set[str], known_parts: set[str], known_revis
     revisions = [w.upper() for w in WORD.findall(question) if REVISION.fullmatch(w)]
     return Facts(parts={p: p.lower() in known_parts for p in find_parts(question, refs)},
                  revisions={r: r in known_revisions for r in dict.fromkeys(revisions)})
+
+
+# [왜] 주문 코드 모양만 기본 품번에 붙인다. 코퍼스 주문 정보 표의 꼬리표 31종(RFG · RRG · A0G · R0 · L0G · M6G 등)은 모두
+# R · A · L · M 한 글자 + 글자나 숫자 하나 + 선택 G다(11-06 실측). 그래야 '1N4148 BAT85'의 없는 BAT85를 가리지 않는다
+ORDER_CODE = re.compile(r'[RALM][A-Z0-9]G?')
 
 
 def make_lookup(check):
@@ -39,7 +46,7 @@ def make_lookup(check):
         # 낱말 → 바로 앞 낱말. 사이가 띄어쓰기뿐일 때만 잇는다("1N4148, BAT85"처럼 쉼표 · 조사가 끼면 따로 본다)
         before = {b.group(): a.group() for a, b in zip(words, words[1:]) if question[a.end():b.start()].isspace()}
         for name, ok in answer['parts'].items():
-            if not ok and found.get(before.get(name)):  # 없다는 낱말의 앞 낱말이 있는 품번이면 주문 코드로 본다
+            if not ok and ORDER_CODE.fullmatch(name) and found.get(before.get(name)):  # 주문 코드 모양이고 앞 낱말이 있는 품번이면 주문 코드로 본다
                 # 이름은 질문에 쓴 대로 남긴다: "1N4148 R0G: in corpus"
                 del found[name]
                 found[f'{before[name]} {name}'] = True
