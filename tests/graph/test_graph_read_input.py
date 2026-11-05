@@ -6,7 +6,7 @@
 """
 import json
 
-from backend.graph.nodes import circuit_around, parse_input, read_input
+from backend.graph.nodes import MAX_NET_NODES, circuit_around, parse_input, read_input
 
 E01 = ("회로: SparkFun Breadboard Supply\n"
        "넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n"
@@ -68,3 +68,13 @@ def test_netlist_path_outside_repo_gives_no_circuit_context(tmp_path):
     for bad in (str(tmp_path / "circuit.net"), "../" * 12 + str(tmp_path).lstrip("/") + "/circuit.net"):
         out = read_input({"input": f"넷리스트: {bad}\n대상: D1\n질문: D1 역할?"})
         assert out["target_part"] == {}, bad
+
+
+def test_target_pin_is_always_shown_in_a_big_net():
+    """AC-10: 노드가 많은 GND 넷에서도 대상 자신의 핀이 보인다(앞 MAX_NET_NODES개에 들지 않아도)."""
+    others = [{'ref': f'C{i}', 'pin': '2'} for i in range(MAX_NET_NODES + 3)]
+    connections = {'components': [{'ref': 'D1', 'value': 'BZT52C3V6', 'footprint': 'SOD-123'}] +
+                                 [{'ref': n['ref'], 'value': '100n', 'footprint': '0603'} for n in others],
+                   'nets': [{'name': 'GND', 'nodes': others + [{'ref': 'D1', 'pin': '1', 'pinfunction': 'A'}]}]}
+    gnd = circuit_around(connections, 'D1')['nets'][0]
+    assert any(n.startswith('D1.') for n in gnd['nodes']) and len(gnd['nodes']) == MAX_NET_NODES

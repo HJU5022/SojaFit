@@ -179,6 +179,7 @@ def test_part_specs_case_insensitive_with_citation(conn):
                                                       ('VRRM', 40.0)]
     vrrm = rows[-1]
     assert vrrm['part'] == 'SS34' and vrrm['unit'] == 'V' and vrrm['source_value_text'] == '40.0 V'
+    assert vrrm['category'] == 'schottky-rectifier'  # 판정 노드의 쇼트키 TRR 면제가 쓴다
     assert vrrm['citation'] == {'document': RECT, 'page': 2, 'table': 'ELEC', 'row': 'SS34', 'chunk_index': 3}
     assert [r['text'] for r in rows if r['code'] == 'PACKAGE'] == ['SMA', 'DO-214AC']
     assert [r['code'] for r in spec_lookup.part_specs(conn, 'SS34', ['VRRM'])] == ['VRRM']

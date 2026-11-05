@@ -89,8 +89,10 @@ def circuit_around(connections: dict, target: str) -> dict:
     nets = []
     for name in names:
         nodes = net_by_name[name]["nodes"]
-        nets.append({"name": name, "nodes": [show(n) for n in nodes[:MAX_NET_NODES]],
-                     "more": max(0, len(nodes) - MAX_NET_NODES)})
+        # [왜] 큰 넷(GND · VCC)은 앞 MAX_NET_NODES개만 보이는데, 대상 자신의 핀이 잘리면 역할을 못 읽는다(AC-10). 대상 핀을 앞에 둔다
+        mine = [n for n in nodes if n["ref"] == target]
+        shown = (mine + [n for n in nodes if n["ref"] != target])[:MAX_NET_NODES]
+        nets.append({"name": name, "nodes": [show(n) for n in shown], "more": max(0, len(nodes) - MAX_NET_NODES)})
     target_part = parts[target]
     return {"ref": target, "value": target_part.get("value", ""), "footprint": target_part.get("footprint", ""), "nets": nets}
 

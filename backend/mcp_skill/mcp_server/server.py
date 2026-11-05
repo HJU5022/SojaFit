@@ -67,7 +67,7 @@ def _validate_codes(codes: object) -> None:
 def get_part_specs(part: str, codes: list[str] | None = None) -> list[dict]:
     """품번 하나의 데이터시트 사양 표 행을 돌려줍니다(값을 비교하거나 판정하지 않습니다).
 
-    값은 SI 단위(V, A, W, s, F, degC)이고, 행마다 시험 조건과 인용(문서 파일 이름·쪽·표·행·청크 순번)이 있습니다.
+    값은 SI 단위(V, A, W, s, F, degC)이고, 행마다 분류(category), 시험 조건과 인용(문서 파일 이름·쪽·표·행·청크 순번)이 있습니다.
     codes로 코드를 고를 수 있습니다(VRRM, IF_AV, IFSM, VF, IR, TRR, VZ, PD, CJ, TJ_MAX, VR, VRWM, VBR, VC, IPP, PPPM, VESD,
     PACKAGE=패키지 이름). 빈 목록이면 표에 그 품번이 없거나 값을 뺀 것이라 "문서로 확인 안 됨"으로 다룹니다.
     """

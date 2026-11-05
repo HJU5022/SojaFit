@@ -1,7 +1,7 @@
 """부품 사양 표(part_specifications, db/011) 조회: 품번 하나의 사양 행, 숫자 조건에 맞는 부품 찾기.
 
 - 역할: MCP 서버(`get_part_specs`, `find_parts_by_specs`)가 import하는 조회 함수 두 개. 연결은 부르는 쪽이 넘긴다.
-  - `part_specs`: 품번(대소문자 무시)의 모든 행을 값·단위·시험 조건·인용(문서 파일 이름, 쪽, 표, 행, 청크 순번)과 함께 돌려준다.
+  - `part_specs`: 품번(대소문자 무시)의 모든 행을 분류·값·단위·시험 조건·인용(문서 파일 이름, 쪽, 표, 행, 청크 순번)과 함께 돌려준다.
   - `find_candidates`: 조건마다 "그 품번의 행 하나 이상이 채우는가"만 보고, 모든 조건을 채운 품번을 품번 순으로 돌려준다.
 - 하지 않는 일: 판정 5종과 대체 가능 여부(`backend/judge/`, AGENTS 지킬 것 7), 단위 환산(값은 이미 SI), 시험 조건 맞추기,
   LLM 호출, 표 적재(`pipeline/specs.py load`). 비교는 행을 거르는 `>=`·`<=` 두 가지뿐이다.
@@ -33,7 +33,7 @@ def _num(v):
 
 def _row(r):
     """조회 열(_COLUMNS 순서) → 사양 한 줄 dict."""
-    return {'part': r[0], 'code': r[2], 'min': _num(r[3]), 'typ': _num(r[4]), 'max': _num(r[5]), 'text': r[6], 'unit': r[7],
+    return {'part': r[0], 'category': r[1], 'code': r[2], 'min': _num(r[3]), 'typ': _num(r[4]), 'max': _num(r[5]), 'text': r[6], 'unit': r[7],
             'source_value_text': r[8], 'test_condition': r[9],
             # 인용: 문서 파일 이름은 출처 URL 끝(retrieve.corpus_known과 같은 방식). 사용자에게 보이는 근거는 이 위치의 원본 청크다
             'citation': {'document': unquote(os.path.basename(urlparse(r[10]).path)), 'page': r[11], 'table': r[12],

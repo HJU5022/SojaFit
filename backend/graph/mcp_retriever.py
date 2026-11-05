@@ -79,6 +79,17 @@ def decode_check_result(result) -> dict:
     return {"parts": payload["parts"], "revisions": payload["revisions"]}
 
 
+def decode_list_result(result) -> list[dict]:
+    """목록을 돌려주는 MCP 도구(`get_part_specs` · `find_parts_by_specs`) 응답을 검증해 dict 목록으로 바꾼다."""
+    if getattr(result, "isError", False) is True:
+        raise RetrievalUnavailableError("tool_error")
+    structured = getattr(result, "structuredContent", None)
+    payload = structured.get("result") if isinstance(structured, dict) else None
+    if not isinstance(payload, list) or not all(isinstance(x, dict) for x in payload):
+        raise RetrievalUnavailableError("invalid_response")
+    return payload
+
+
 @asynccontextmanager
 async def open_stdio_session(params):
     """stdio 서버를 시작하고 초기화된 MCP 세션 하나를 제공한다."""
@@ -146,6 +157,16 @@ class StdioMcpRetriever:
         """코퍼스에 품번 · 개정 코드가 있는지 `check_corpus` 도구로 묻는다(같은 세션을 쓴다)."""
         return self._run(self._check(parts, revisions))
 
+    def part_specs(self, part: str, codes: list[str] | None = None) -> list[dict]:
+        """품번 하나의 사양 표 행을 `get_part_specs` 도구로 읽는다(같은 세션을 쓴다)."""
+        return self._run(self._list("get_part_specs", {"part": part, "codes": codes}))
+
+    def find_parts(self, conditions: list[dict], category: str | None = None, package: str | None = None,
+                   limit: int = 50) -> list[dict]:
+        """숫자 조건을 채운 품번을 `find_parts_by_specs` 도구로 찾는다."""
+        return self._run(self._list("find_parts_by_specs",
+                                    {"conditions": conditions, "category": category, "package": package, "limit": limit}))
+
     def __exit__(self, exc_type, exc, traceback):
         if self._loop is not None and self._stop is not None:
             self._loop.call_soon_threadsafe(self._stop.set)
@@ -177,6 +198,10 @@ class StdioMcpRetriever:
     async def _check(self, parts: list[str], revisions: list[str]) -> dict:
         result = await self._session.call_tool("check_corpus", {"parts": parts, "revisions": revisions})
         return decode_check_result(result)
+
+    async def _list(self, tool: str, arguments: dict) -> list[dict]:
+        result = await self._session.call_tool(tool, arguments)
+        return decode_list_result(result)
 
     async def _call(self, query: str, parts: list[str] | None) -> list[dict]:
         result = await self._session.call_tool(
