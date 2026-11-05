@@ -22,7 +22,10 @@ def make_facts(question: str, refs: set[str], known_parts: set[str], known_revis
 
 
 def make_lookup(check):
-    """질문에서 품번 · 개정 코드를 뽑아 `check(parts, revisions)`(MCP 도구 `check_corpus` 호출)로 확인하는 lookup을 만든다."""
+    """질문에서 품번 · 개정 코드를 뽑아 `check(parts, revisions)`(MCP 도구 `check_corpus` 호출)로 확인하는 lookup을 만든다.
+
+    [주의] 없다는 낱말이 띄어 쓴 앞 품번이 있는 경우(1N4148 R0G의 R0G)는 주문 코드로 보고 `'1N4148 R0G': True`로 바꾼다.
+    """
     def lookup(state: dict) -> Facts:
         question = state['question']
         parts = find_parts(question, refs_of(state.get('target_part') or {}))
@@ -30,7 +33,17 @@ def make_lookup(check):
         if not parts and not revisions:
             return Facts()  # [왜] 확인할 것이 없으면 도구를 부르지 않는다
         answer = check(parts, revisions)
-        return Facts(parts=answer['parts'], revisions=answer['revisions'])
+        found = dict(answer['parts'])
+        # [왜] 주문 코드가 붙은 품번(1N4148 R0G)은 낱말 둘로 뽑힌다. 띄어 쓴 앞 기본 품번이 있으면 있다(판정 코드와 같은 규칙)
+        words = list(WORD.finditer(question))
+        # 낱말 → 바로 앞 낱말. 사이가 띄어쓰기뿐일 때만 잇는다("1N4148, BAT85"처럼 쉼표 · 조사가 끼면 따로 본다)
+        before = {b.group(): a.group() for a, b in zip(words, words[1:]) if question[a.end():b.start()].isspace()}
+        for name, ok in answer['parts'].items():
+            if not ok and found.get(before.get(name)):  # 없다는 낱말의 앞 낱말이 있는 품번이면 주문 코드로 본다
+                # 이름은 질문에 쓴 대로 남긴다: "1N4148 R0G: in corpus"
+                del found[name]
+                found[f'{before[name]} {name}'] = True
+        return Facts(parts=found, revisions=answer['revisions'])
     return lookup
 
 
