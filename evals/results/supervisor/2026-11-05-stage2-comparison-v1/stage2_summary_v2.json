@@ -1,0 +1,575 @@
+{
+  "status": "stage2_complete",
+  "dataset": "evals/dataset_v2.jsonl",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "run_index": 2,
+  "scope": {
+    "models": 6,
+    "cases_per_model": 70,
+    "attempted_outputs": 420,
+    "gold_cases": 35
+  },
+  "metric_notes": {
+    "stage2_only": "The five-model runner raw summary uses a 210-output denominator; this comparison recomputes 70-output metrics from run_index=2 rows only.",
+    "reported_cost_sum_from_saved_rows": "Lower bound for generative models: successful rows with schema retries do not preserve earlier attempt usage; excludes smoke and missing-cost calls.",
+    "budget_accounted_cost": "Runner accounting: reported cost when available, conservative reservation otherwise; excludes smoke.",
+    "schema_valid_rate": "Schema-valid final decisions / 70. Jev typed-answer and generative JSON contracts differ.",
+    "gold": "Question Type Accuracy and Macro-F1 use the 35 frozen labeled cases; failures count as incorrect.",
+    "completion_rate": "Recorded final outputs including confirmed failures / 70; all six models recorded 70/70.",
+    "first_pass_schema_success_rate": "Schema-valid decisions without schema retry / 70.",
+    "retry_rate": "Cases with retry_count > 0 / 70; API errors were not retried.",
+    "reported_cost_records": "Count of response usage records saved in rows with cost. Successful generative retries may omit earlier attempt usage.",
+    "input_output_tokens": "Saved usage records only. Generative successful retries may omit earlier attempt usage.",
+    "elapsed_seconds": "Runner process elapsed time for generative models; Jev did not persist process elapsed time.",
+    "safety_failure_case_count": "Not Measured: output rows alone do not provide an adjudicated safety failure label."
+  },
+  "models": [
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "status": "complete_with_errors",
+      "provider": "Google",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "rows_file": "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_anthropic__claude-haiku-5.5.json",
+      "rows_sha256": "1b77f40058dff3531eef6da4f18b383fb3fba9582b8b578fbe7ab3a3b87a1a00",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 46,
+        "denominator": 70,
+        "value": 0.6571428571428571
+      },
+      "question_type_accuracy": {
+        "numerator": 21,
+        "denominator": 35,
+        "value": 0.6
+      },
+      "question_type_macro_f1": 0.6781045751633987,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 8,
+          "fp": 0,
+          "fn": 2,
+          "f1": 0.888888888888889
+        },
+        "candidate_judge": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 9,
+          "f1": 0
+        },
+        "rating": {
+          "tp": 7,
+          "fp": 0,
+          "fn": 3,
+          "f1": 0.8235294117647058
+        },
+        "role": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        }
+      },
+      "raw_calls": 132,
+      "errors": {
+        "ValidationError": 24
+      },
+      "reported_cost_sum_from_saved_rows": 0.0306794,
+      "budget_accounted_cost": 0.03469609999999998,
+      "p50_latency_seconds": 2.812000000034459,
+      "p95_latency_seconds": 7.5,
+      "stage1_paired_gold_cases": 35,
+      "stage1_to_stage2_correctness_changed_ids": [
+        "draft30-e05",
+        "draft30-h04",
+        "draftv2-n02",
+        "draftv2-n06",
+        "draftv2-n10"
+      ],
+      "first_pass_schema_success_rate": {
+        "numerator": 36,
+        "denominator": 70,
+        "value": 0.5142857142857142
+      },
+      "retry_rate": {
+        "numerator": 34,
+        "denominator": 70,
+        "value": 0.4857142857142857
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {
+        "ValidationError": 24
+      },
+      "elapsed_seconds": 267.60900000005495,
+      "input_tokens_recorded": 179394,
+      "output_tokens_recorded": 25480,
+      "reported_cost_records": 118,
+      "smoke_reported_cost": null
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "status": "complete_with_errors",
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "rows_file": "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_openai__gpt-6-luna.json",
+      "rows_sha256": "f2cb9e85c979f73f52e7e0c9625b464e3e4d433c940aed03322654d65a4eb7fa",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 65,
+        "denominator": 70,
+        "value": 0.9285714285714286
+      },
+      "question_type_accuracy": {
+        "numerator": 34,
+        "denominator": 35,
+        "value": 0.9714285714285714
+      },
+      "question_type_macro_f1": 0.986842105263158,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 10,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        },
+        "candidate_judge": {
+          "tp": 9,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        },
+        "rating": {
+          "tp": 9,
+          "fp": 0,
+          "fn": 1,
+          "f1": 0.9473684210526316
+        },
+        "role": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        }
+      },
+      "raw_calls": 84,
+      "errors": {
+        "ValidationError": 5
+      },
+      "reported_cost_sum_from_saved_rows": 0.011756,
+      "budget_accounted_cost": 0.012544100000000008,
+      "p50_latency_seconds": 3.140999999945052,
+      "p95_latency_seconds": 13.155999999959022,
+      "stage1_paired_gold_cases": 35,
+      "stage1_to_stage2_correctness_changed_ids": [
+        "draft30-e05"
+      ],
+      "first_pass_schema_success_rate": {
+        "numerator": 61,
+        "denominator": 70,
+        "value": 0.8714285714285714
+      },
+      "retry_rate": {
+        "numerator": 9,
+        "denominator": 70,
+        "value": 0.12857142857142856
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {
+        "ValidationError": 5
+      },
+      "elapsed_seconds": 309.625,
+      "input_tokens_recorded": 56385,
+      "output_tokens_recorded": 12235,
+      "reported_cost_records": 80,
+      "smoke_reported_cost": null
+    },
+    {
+      "model_id": "deepseek/deepseek-v4.1-flash",
+      "status": "complete_with_errors",
+      "provider": "Morph",
+      "actual_model": "deepseek/deepseek-v4.1-flash",
+      "rows_file": "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_deepseek__deepseek-v4.1-flash.json",
+      "rows_sha256": "d618dfd94b80b4fafe43bc5c85c47b0d62fe5e91eb13b24c9a70f58262e1fd6a",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 62,
+        "denominator": 70,
+        "value": 0.8857142857142857
+      },
+      "question_type_accuracy": {
+        "numerator": 29,
+        "denominator": 35,
+        "value": 0.8285714285714286
+      },
+      "question_type_macro_f1": 0.8823529411764706,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 10,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        },
+        "candidate_judge": {
+          "tp": 6,
+          "fp": 2,
+          "fn": 3,
+          "f1": 0.7058823529411765
+        },
+        "rating": {
+          "tp": 7,
+          "fp": 0,
+          "fn": 3,
+          "f1": 0.8235294117647058
+        },
+        "role": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        }
+      },
+      "raw_calls": 94,
+      "errors": {
+        "ValidationError": 8
+      },
+      "reported_cost_sum_from_saved_rows": 0.007154758,
+      "budget_accounted_cost": 0.008050049999999994,
+      "p50_latency_seconds": 7.312999999965541,
+      "p95_latency_seconds": 33.26599999994505,
+      "stage1_paired_gold_cases": 3,
+      "stage1_to_stage2_correctness_changed_ids": [
+        "draft30-e01",
+        "draft30-e02",
+        "draft30-e03"
+      ],
+      "first_pass_schema_success_rate": {
+        "numerator": 57,
+        "denominator": 70,
+        "value": 0.8142857142857143
+      },
+      "retry_rate": {
+        "numerator": 13,
+        "denominator": 70,
+        "value": 0.18571428571428572
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {
+        "ValidationError": 8
+      },
+      "elapsed_seconds": 771.2189999999246,
+      "input_tokens_recorded": 73697,
+      "output_tokens_recorded": 15815,
+      "reported_cost_records": 86,
+      "smoke_reported_cost": null
+    },
+    {
+      "model_id": "meta/muse-glimmer-30b",
+      "status": "complete_with_errors",
+      "provider": "DeepInfra",
+      "actual_model": "meta/muse-glimmer-30b",
+      "rows_file": "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_meta__muse-glimmer-30b.json",
+      "rows_sha256": "fa582cebd5392304a170944ad570fce55dff79b3cf2d6a32135d1ccdc2e484d7",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 1,
+        "denominator": 70,
+        "value": 0.014285714285714285
+      },
+      "question_type_accuracy": {
+        "numerator": 1,
+        "denominator": 35,
+        "value": 0.02857142857142857
+      },
+      "question_type_macro_f1": 0.07142857142857142,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 10,
+          "f1": 0
+        },
+        "candidate_judge": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 9,
+          "f1": 0
+        },
+        "rating": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 10,
+          "f1": 0
+        },
+        "role": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 5,
+          "f1": 0.2857142857142857
+        }
+      },
+      "raw_calls": 208,
+      "errors": {
+        "ValidationError": 69
+      },
+      "reported_cost_sum_from_saved_rows": 0.07715504,
+      "budget_accounted_cost": 0.07715503999999991,
+      "p50_latency_seconds": 5.10999999998603,
+      "p95_latency_seconds": 5.937999999965541,
+      "stage1_paired_gold_cases": 35,
+      "stage1_to_stage2_correctness_changed_ids": [],
+      "first_pass_schema_success_rate": {
+        "numerator": 1,
+        "denominator": 70,
+        "value": 0.014285714285714285
+      },
+      "retry_rate": {
+        "numerator": 69,
+        "denominator": 70,
+        "value": 0.9857142857142858
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {
+        "ValidationError": 69
+      },
+      "elapsed_seconds": 353.60900000005495,
+      "input_tokens_recorded": 92432,
+      "output_tokens_recorded": 53238,
+      "reported_cost_records": 208,
+      "smoke_reported_cost": null
+    },
+    {
+      "model_id": "cohere/command-a-plus",
+      "status": "complete_with_errors",
+      "provider": "Cohere",
+      "actual_model": "cohere/command-a-plus",
+      "rows_file": "evals/results/supervisor/2026-11-05-stage2-five-v1/rows_cohere__command-a-plus.json",
+      "rows_sha256": "396bffb19627acf52d3c2021fd86029781c57b96fe1cd04db5b6aeb4b268bdac",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 21,
+        "denominator": 70,
+        "value": 0.3
+      },
+      "question_type_accuracy": {
+        "numerator": 9,
+        "denominator": 35,
+        "value": 0.2571428571428571
+      },
+      "question_type_macro_f1": 0.39265734265734265,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 10,
+          "f1": 0
+        },
+        "candidate_judge": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 8,
+          "f1": 0.19999999999999998
+        },
+        "rating": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 7,
+          "f1": 0.4615384615384615
+        },
+        "role": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 1,
+          "f1": 0.9090909090909091
+        }
+      },
+      "raw_calls": 173,
+      "errors": {
+        "ValidationError": 49
+      },
+      "reported_cost_sum_from_saved_rows": 0.083046,
+      "budget_accounted_cost": 0.08560890000000006,
+      "p50_latency_seconds": 4.436999999918044,
+      "p95_latency_seconds": 6.157000000006519,
+      "stage1_paired_gold_cases": 35,
+      "stage1_to_stage2_correctness_changed_ids": [
+        "draft30-e08",
+        "draft50-n05",
+        "draft50-n06",
+        "draft52-n21",
+        "draftv2-n09"
+      ],
+      "first_pass_schema_success_rate": {
+        "numerator": 16,
+        "denominator": 70,
+        "value": 0.22857142857142856
+      },
+      "retry_rate": {
+        "numerator": 54,
+        "denominator": 70,
+        "value": 0.7714285714285715
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {
+        "ValidationError": 49
+      },
+      "elapsed_seconds": 281.594000000041,
+      "input_tokens_recorded": 68285,
+      "output_tokens_recorded": 41707,
+      "reported_cost_records": 168,
+      "smoke_reported_cost": null
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "status": "complete",
+      "provider": "TypeSafe",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "rows_file": "evals/results/supervisor/2026-11-05-jev-stage2-v1/rows.json",
+      "rows_sha256": "f1995ce2b442d1f7dc72d427a7ffcb2fcf9c1b63dd9a27ee015ee109d4fa0d2d",
+      "run_index": 2,
+      "attempted_outputs": {
+        "numerator": 70,
+        "denominator": 70
+      },
+      "completion_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "schema_valid_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "question_type_accuracy": {
+        "numerator": 33,
+        "denominator": 35,
+        "value": 0.9428571428571428
+      },
+      "question_type_macro_f1": 0.9472222222222222,
+      "question_type_per_class": {
+        "candidate_find": {
+          "tp": 10,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        },
+        "candidate_judge": {
+          "tp": 9,
+          "fp": 2,
+          "fn": 0,
+          "f1": 0.9
+        },
+        "rating": {
+          "tp": 8,
+          "fp": 0,
+          "fn": 2,
+          "f1": 0.888888888888889
+        },
+        "role": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0,
+          "f1": 1.0
+        }
+      },
+      "raw_calls": 70,
+      "errors": {},
+      "reported_cost_sum_from_saved_rows": 0.002689092,
+      "budget_accounted_cost": 0.002689092,
+      "p50_latency_seconds": 0.40700000000651926,
+      "p95_latency_seconds": 0.4380000000819564,
+      "stage1_paired_gold_cases": 35,
+      "stage1_to_stage2_correctness_changed_ids": [],
+      "first_pass_schema_success_rate": {
+        "numerator": 70,
+        "denominator": 70,
+        "value": 1.0
+      },
+      "retry_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "api_error_rate": {
+        "numerator": 0,
+        "denominator": 70,
+        "value": 0.0
+      },
+      "error_breakdown": {},
+      "elapsed_seconds": null,
+      "input_tokens_recorded": 64026,
+      "output_tokens_recorded": 14930,
+      "reported_cost_records": 70,
+      "smoke_reported_cost": 3.6498e-05
+    }
+  ],
+  "supersedes_derived_summary": {
+    "file": "evals/results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary.json",
+    "sha256": "37959135b14068a43c5866dae650f5d172dcaea6a3567cc186c5e0fb89de0312",
+    "reason": "Completion Rate previously used schema-valid rows / 70, while preregistration defines recorded final outputs or confirmed failures / 70."
+  }
+}

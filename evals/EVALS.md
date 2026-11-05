@@ -42,6 +42,9 @@
 - `results/skill/` — `skill_tool_summary_2026-11-03.json`: Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본 6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
 - `results/supervisor/2026-11-04-stage1-v1/` — 후보 5종의 `manifest.json`, 문항별 `rows_*.json`, `stage1_summary.json`, `provider_evidence.json`. 1차 선정은 run index 1만 사용하며 manifest의 2·3회차 계획은 실행 결과가 아님
 - `results/supervisor/2026-11-04-preflight-v5/`, `2026-11-04-routing-fix-smoke-v1/` — provider evidence가 참조하는 manifest와 호출 증거만 보존. smoke를 1차 품질 점수에 합산하지 않음
+- `results/supervisor/2026-11-04-jev-stage1-ready-v1/` — Jev 1차 manifest·70문항 행·smoke·summary. 2차와 짝 비교하는 원본
+- `results/supervisor/2026-11-05-stage2-five-v1/`, `2026-11-05-jev-stage2-v1/` — 2차 6종의 manifest·smoke·원시 행. 5종 raw summary는 3회 계획 분모를 쓰므로 2차 집계에는 원시 `run_index=2` 행만 사용
+- `results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary_v2.json` — 2차 6종 정정 집계 정본. 앞서 만든 정의 오류 파일은 PR에 포함하지 않음
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/research/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 

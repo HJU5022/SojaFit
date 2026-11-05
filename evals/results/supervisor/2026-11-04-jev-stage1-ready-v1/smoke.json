@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "model_id": "typesafe/jev-1.14",
+  "actual_model": "typesafe/jev-1.14-20261014",
+  "provider": "TypeSafe",
+  "error_type": null,
+  "usage": {
+    "input_tokens": 869,
+    "output_tokens": 213,
+    "cost": 3.6498e-05
+  }
+}

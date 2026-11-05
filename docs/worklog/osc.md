@@ -131,3 +131,13 @@
 - 범위: 기존 1차 실행의 코드·JSON을 보존한다. 새 모델 API 호출이나 재측정은 하지 않았다. run index 2·3은 manifest에 계획만 있고 이번 결과가 아니다.
 - 확인: 실행 코드 hash가 1차 manifest와 같고, provider evidence가 가리키는 원본 hash 불일치는 0건이다. 결과 JSON의 경로·키 패턴을 검사했다. 관련 테스트와 저장소 구조 검사 41건이 통과했다. `uv sync --frozen --dev` 뒤 전체 테스트는 321건 통과·26건 skip·1건 실패했다. 실패한 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`은 Windows 기본 인코딩으로 쓴 한글 임시 파일을 UTF-8로 읽을 때의 `UnicodeDecodeError`이며 이번 변경 파일이 아니다. 저장소에 올리는 원본은 문항별 parsed decision·usage·오류 종류를 포함하며 raw prompt·raw response 원문은 포함하지 않는다.
 - 남은 한계: OpenRouter의 외부 서명 로그가 없으므로 저장소 JSON만으로 실제 청구·호출을 독립 증명하지 못한다. 1차 계획 복원 기록은 이 PR에 포함하지 않는다.
+
+## 2026-11-05 수퍼바이저 6종 2차 평가 PR 준비
+
+- 바꾼 파일: `docs/experiments/supervisor-stage2-six-models.md`, `evals/guides/preregister.md`, `docs/research/supervisor-stage2-results.md`와 간단 보고서, Jev 평가 실행기·서비스 호출 경계·회귀 테스트, 1차 Jev와 2차 6종의 manifest·smoke·문항별 원시 행·정정 집계, 폴더 설명·`SOJAFIT.md` 트리.
+- 브랜치·범위: 깨끗한 기존 보조 작업 트리에서 `OSC`를 최신 `origin/main`까지 fast-forward한 뒤 2차에 필요한 파일만 옮겼다. 원래 작업 트리의 다른 미커밋 변경은 보존했다. 기존 `#29`·`#30`은 유지하고 로컬 6종 기록의 중복 번호만 `#32`로 정정했으며 이력과 원격 커밋 시각의 한계를 문서에 명시했다.
+- 결과 근거: 동결 데이터셋 SHA-256 `81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9`, 정정 집계 SHA-256 `2c4ef11f52a8467c390af8e34ec3ae9e77fc958876b79ccc974973b6d6f8570b`, 원시 행 6개 해시 일치. 실패 문항을 `Completion Rate`에서 제외한 초기 `stage2_summary.json`은 PR 범위에서 뺐다. 생성형 5종의 원시 summary는 3회 계획 분모를 쓰므로 정정 집계는 `run_index=2` 행만 사용한다.
+- 표 설명 보강: 2차 계약·상세 결과·간단 보고서·Jev 1차 인수인계의 영어 지표 이름과 유형 코드는 유지하고 각 표 바로 아래에 뜻, 분모, 비용·오류·미측정 값의 해석을 한국어로 적었다.
+- 검증: 관련 pytest 77건 통과, `git diff --check` 통과, JSON의 비밀값·원문 입력·gold 필드 패턴 0건. 전체 pytest는 Windows 기본 인코딩에서 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`의 `UnicodeDecodeError` 1건으로 실패했고, `PYTHONUTF8=1`에서는 364 passed·27 skipped였다. 실행 코드와 평가셋은 이 준비 작업에서 유료 API를 다시 호출하지 않았다.
+- 확인 못 한 것·다음 할 일: 외부 청구서로 실제 총 비용을 대조하지 못했다. 5종 manifest의 실행기 원시 바이트 해시는 현재 Windows CRLF checkout과 다르지만 LF로 정규화하면 `ff4ace1` 코드 blob과 맞는다. Jev manifest에는 실행기 파일 해시가 없어 두 코드 재현 한계를 결과 문서에 적었다. commit·push·PR 생성은 하지 않았다.
+- PR 준비 정리: 두 2차 결과 보고서에서 PR 공개 후 사실과 달라질 `미커밋` 상태 문구를 제거했다. `SPEC.md`는 조장 소유 주요 문서이므로 이 브랜치에서 수정하지 않고, 조장에게 평가 전용 Jev Decisions API 호출·ZDR 및 fallback 금지·typed answer 변환 계약을 SPEC의 평가 실행 절에 반영해 달라고 PR에서 요청한다. 새 `run_supervisor_jev.py` 592줄과 `test_supervisor_jev.py` 443줄은 권장 핵심 변경 400줄 안팎을 넘는다. 6종 2차 결과를 재현·검토하려면 Jev의 호출 경계·실행 조건·변환·오류/예산 처리와 그 회귀 검증, 동일 회차 원시 행·집계를 함께 봐야 하므로 하나의 평가 근거 PR에 묶는다. PR 본문에 이 규모와 이유를 적고 커밋은 코드·계약·결과 근거의 논리 단위로 나눈다.
