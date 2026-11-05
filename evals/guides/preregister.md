@@ -525,3 +525,25 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 예산 · 중단: OpenRouter 합계 1달러. 실패가 3문항 연달아 나면 멈추고 보고한다.
 - 알려진 한계: 응답 변동 폭을 재지 않았다(1회 측정). 관련 35문항이라 일반화 근거는 작다. 번역 한 번만 시험하므로 어느 프롬프트가 영향을 줬는지는 가르지 못한다.
 - 결과(11-05 14:18~14:25, 커밋 `961c759`, session `graph-dataset_v2-1105-1417-openrouter`, 시험 2문항이 같은 session에 있어 70문항 집계는 14:18 이후 생성만 뽑음): 70문항 모두 끝남, 실패 0. 관련 35: cited_gold 12 · over_refusal 23 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 관련 유형별은 #31과 같음(rating 9 · 1, role 3 · 3, candidate_judge over_refusal 9, candidate_find over_refusal 10). 관련 라우팅 일치 32/35(#31 31). 검색 횟수 0번 16 · 1번 41 · 2번 13(#31은 15 · 34 · 21). latency_s p50 6.25 · p95 14.4 · 최대 19.6초(#31 7.4 · 15.8 · 20.0). LLM 호출 합계 215(#31 227), 입력 토큰 287,526 · 출력 8,400(#31 319,044 · 9,295, 시험 포함 session 전체가 아닌 #31 같은 session 기준), OpenRouter 0.0463달러(#31 0.0519, -11%). fake_citations 0, uncited_sentences 4(#31 2). #31과 답 지표가 같은 문항 68/70(97%): draft30-e02(over_refusal → cited_gold), draft30-h02(cited_gold → over_refusal)만 다름. 기대 대조: cited_gold 9~15 맞음(12), over_refusal 18~26 맞음(23), wrong_citation 0~3 맞음(0), correct_refusal 32~35 맞음(35), hallucination_risk 0~3 맞음(0), 라우팅 28~33 맞음(32), 실패 0~3 맞음(0), p50 5~12초 맞음(6.25), 비용 0.03~0.07달러 맞음(0.0463), 지표 같은 문항 80% 이상 맞음(97%). 답변 언어 확인(거절이 아닌 답이 한국어인지)은 이번에 하지 않았다. 판정: 번역으로 점수는 같고(12 · 23 · 35), 토큰과 비용은 줄었다. 재검색 문항이 21에서 13으로 줄었으나 근거 인용 정답은 늘지 않았다. 응답 변동 폭을 재지 않아 h02 · e02 같은 소폭 변동은 번역 효과로 단정하지 않는다. 이 결과(`evals/results/graph/graph_dataset_v2_2026-11-05.json`)를 D5 비교의 영어 프롬프트 기준으로 쓴다.
+
+### 2026-11-05 #37: 단일 그래프 채점 모델 Luna (동결 v2 70문항, #35와 비교)
+
+- 왜: 11-05에 노드별 모델 표(`NODE_MODELS`)를 만들면서 단일 그래프의 채점(`grade`)이 Haiku에서 Luna로 바뀌었다. 멀티(#38)와 비교하기 전에 이 변화 하나의 효과를 따로 잰다.
+- 바꾸는 것(하나): `grade` 모델 `anthropic/claude-haiku-5.5` → `openai/gpt-6-luna`(temperature 없음, Langfuse `grade` v3). `route` · `rewrite` · `generate`는 Haiku 그대로이고 프롬프트 본문(영어) · 코드 경로 · 평가셋 · 검색 설정은 #35와 같다.
+- 비교 대상: #35(관련 cited_gold 12 · over_refusal 23 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 32/35, p50 6.25초, LLM 호출 215, 0.0463달러).
+- 기대(측정 전, 고치지 않음): cited_gold 9~15, over_refusal 18~26, wrong_citation 0~3, correct_refusal 32~35, hallucination_risk 0~3, 관련 라우팅 일치 29~34/35(라우팅은 Haiku 그대로), 실패 0~3, p50 5~15초, OpenRouter 0.02~0.08달러, #35와 답 지표가 같은 문항 75% 이상. 채점 통과 청크 수가 늘지 줄지는 예상하지 않는다.
+- 명령: `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` (같은 날 결과 파일이 있으면 새 이름으로 저장된다).
+- 예산 · 중단: OpenRouter 0.30달러. 실행기에 연속 실패 중단이 없어 끝까지 돈다. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정이라 응답 변동 폭을 모른다. 측정하는 동안 작업 폴더에 이 실험과 무관한 미커밋 파일(부품 사양 표 변환기, ADR 0013)이 있어 결과 meta의 git에 `+dirty`가 붙을 수 있다. 그래프 · 채점 · 실행기 코드는 이 사전 등록 커밋과 같다.
+
+### 2026-11-05 #38: 멀티 에이전트 첫 측정 (동결 v2 70문항, #37과 비교)
+
+- 왜: D5 "단일과 멀티를 v2로 재측정". 판정 · 웹 조회 에이전트가 없는 지금의 멀티(Supervisor + 검색 · 작성 · 검증)가 단일과 어떻게 다른지 첫 숫자를 남긴다.
+- 바꾸는 것(하나): 구조. 단일 그래프 → `backend/multi_agent`. Supervisor는 `anthropic/claude-sonnet-5.5`(temperature 0, Langfuse `supervisor` v4), 사실 확인은 MCP `check_corpus`, 검색 에이전트는 단일의 `rewrite` · `search` · `grade`를 감싸고, 작성은 `generate`, 검증은 인용을 다시 계산한다(`enforce=True`). 그 밖의 노드 모델은 #37과 같다(`grade` Luna, 나머지 Haiku). 판정 · 웹은 꺼져 있다.
+- 비교 대상: #37(같은 날 측정). #35 · #31도 함께 적는다.
+- 측정 전에 이미 본 것: 시험 2문항(Supervisor가 Luna였던 11-05 20:14 실행)에서 draft30-m01 cited_gold, draftv2-n16 correct_refusal(revision_missing)이었다. 오프라인 점검에서 draft50-n06 질문의 포장 코드 `A0G` · `R0G`가 코퍼스에 없는 품번으로 사실 확인에 넘어가 `part_missing` 거절로 갈 수 있다. v2를 보고 고치면 맞추기가 되므로 고치지 않았다. 질문의 회로 이름이 품번으로 뽑히는 문항은 v2에 0건이다.
+- 기대(측정 전, 고치지 않음): cited_gold 8~15, over_refusal 17~27, wrong_citation 0~3, correct_refusal 31~35, hallucination_risk 0~4, 관련 문항 질문 종류 일치 27~34/35, 실패 0~4, p50 8~25초, Supervisor 판단 횟수 중앙값 2~5, #37과 답 지표가 같은 문항 70% 이상. 후보 찾기 · 판정 19문항은 판정 에이전트가 없어 대부분 거절로 본다. OpenRouter 0.5~2.0달러(Sonnet 단가 입력 2 · 출력 10달러/백만 토큰으로 Haiku의 20배, Supervisor 호출이 문항당 2~4번).
+- 비용 집계: Langfuse 관리 가격표의 Sonnet 이름은 `claude-sonnet-5-5`(하이픈)라 OpenRouter 이름 `anthropic/claude-sonnet-5.5`와 맞지 않아 생성 비용이 비어 있을 수 있다. 그때는 Sonnet 토큰 수 × 관리 가격표 단가로 계산하고 그렇게 계산했다고 적는다.
+- 명령: `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`
+- 예산 · 중단: OpenRouter 2.50달러. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정. 구조와 Supervisor 모델이 함께 들어온다(Supervisor는 멀티에만 있다). 의미 채점이 없어 역할 해석 · 판정의 맞고 틀림은 재지 않는다. #37과 같은 `+dirty` 한계가 있다.
