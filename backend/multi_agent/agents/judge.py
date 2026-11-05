@@ -264,7 +264,10 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
-            found = find(terms, read.category_wanted or None, read.package_wanted or None, 50) if terms else []
+            # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(B3, 정운 11-06)
+            near = {'original_packages': [x['text'] for x in original_rows if x['code'] == 'PACKAGE' and x.get('text')] or None,
+                    'original_category': next((x['category'] for x in original_rows if x.get('category')), None)}
+            found = find(terms, read.category_wanted or None, read.package_wanted or None, 50, **near) if terms else []
             candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found]
         else:
             terms, found = [], []

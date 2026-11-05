@@ -306,8 +306,10 @@ def lookup(monkeypatch):
     seen = {}
     monkeypatch.setattr(server, "_connect", lambda: nullcontext("conn"))
     monkeypatch.setattr(server, "part_specs", lambda conn, part, codes=None: seen.update(conn=conn, part=part, codes=codes) or ["row"])
-    monkeypatch.setattr(server, "find_candidates", lambda conn, conditions, category=None, package=None, limit=50: seen.update(
-        conn=conn, conditions=conditions, category=category, package=package, limit=limit) or ["part"])
+    monkeypatch.setattr(server, "find_candidates", lambda conn, conditions, category=None, package=None, limit=50,
+                        original_packages=None, original_category=None: seen.update(
+        conn=conn, conditions=conditions, category=category, package=package, limit=limit,
+        original_packages=original_packages, original_category=original_category) or ["part"])
     return seen
 
 
@@ -332,9 +334,13 @@ def test_get_part_specs_rejects_bad_input(monkeypatch, part, codes):
 def test_find_parts_by_specs_passes_args(lookup):
     cond = [{"code": "VZ", "slot": "min", "gte": 3.42}, {"code": "VZ", "slot": "max", "lte": 3.78}]
     assert server.find_parts_by_specs(cond, category="zener-diode", package="SOD-123") == ["part"]
-    assert lookup == {"conn": "conn", "conditions": cond, "category": "zener-diode", "package": "SOD-123", "limit": 20}
+    assert lookup == {"conn": "conn", "conditions": cond, "category": "zener-diode", "package": "SOD-123", "limit": 20,
+                      "original_packages": None, "original_category": None}
     server.find_parts_by_specs([{"code": "VRRM", "gte": 40}], limit=50)
     assert lookup["limit"] == 50 and lookup["category"] is None and lookup["package"] is None
+    # 원래 부품의 패키지 · 분류는 순서에만 쓴다(B3)
+    server.find_parts_by_specs([{"code": "VRRM", "gte": 15}], original_packages=["DO-41", "DO-204AL"], original_category="standard-rectifier")
+    assert lookup["original_packages"] == ["DO-41", "DO-204AL"] and lookup["original_category"] == "standard-rectifier"
 
 
 @pytest.mark.parametrize("conditions,kw", [
@@ -348,6 +354,8 @@ def test_find_parts_by_specs_passes_args(lookup):
     ([{"code": "VRRM", "gte": 40}], {"limit": True}),
     ([{"code": "VRRM", "gte": 40}], {"category": ""}), ([{"code": "VRRM", "gte": 40}], {"category": "x" * 101}),
     ([{"code": "VRRM", "gte": 40}], {"package": "SMA%"}), ([{"code": "VRRM", "gte": 40}], {"package": ""}),
+    ([{"code": "VRRM", "gte": 40}], {"original_packages": "SMA"}), ([{"code": "VRRM", "gte": 40}], {"original_packages": ["SMA%"]}),
+    ([{"code": "VRRM", "gte": 40}], {"original_packages": ["SMA"] * 11}), ([{"code": "VRRM", "gte": 40}], {"original_category": ""}),
 ])
 def test_find_parts_by_specs_rejects_bad_input(monkeypatch, conditions, kw):
     """조건 목록 모양, 코드·자리·숫자(유한한 수만), 개수 상한, 분류·패키지 글자를 DB에 가기 전에 검사한다."""

@@ -3,7 +3,8 @@
 - 역할: SQL을 두 번 적용해도 행·인덱스가 그대로인지, 나쁜 행(없는 코드·단위, 값 없음, 원문 없음, 없는 문서)을 막는지,
   적재가 문서 단위로 바꿔 넣어 다시 돌려도 같은지·모르는 문서는 건너뛰는지·`--docs`로 한 문서만 바꾸는지,
   `part_specs`(대소문자 무시, 코드 거르기, 인용)와 `find_candidates`(이상·이하, 자리, 제너 VZ 창, 패키지·분류 거르기, 개수 제한)를 본다.
-- 하지 않는 일: 실제 코퍼스 적재와 응답 시간은 보지 않는다(작업 기록에 실측을 남긴다). TEST_DATABASE_URL을 줄 때만 돈다(CI에는 DB가 없다).
+- 하지 않는 일: 실제 코퍼스 적재와 응답 시간은 보지 않는다(작업 기록에 실측을 남긴다). DB 시험은 TEST_DATABASE_URL을 줄 때만 돈다(CI에는 DB가 없다).
+  찾기 결과 순위는 가짜 연결로 DB 없이 본다.
   임시 스키마를 만들고 끝나면 지운다.
 - 출처: db/schema/table-definition.md 5.7, ADR 0013, ADR 0007(문서 단위 증분)
 - [주의] DATABASE_URL은 .env의 서비스 DB(Supabase)를 가리킬 수 있어 쓰지 않는다. 로컬 compose DB 주소만 TEST_DATABASE_URL로 준다.
@@ -18,7 +19,6 @@ from backend.rag import spec_lookup
 from backend.rag.pipeline import specs
 from backend.rag.pipeline.chunk import doc_key
 
-pytestmark = pytest.mark.skipif(not os.getenv('TEST_DATABASE_URL'), reason='TEST_DATABASE_URL을 줄 때만 돈다')
 
 RECT, ZEN, NOPE = 'SS32 SERIES_Q2412.pdf', 'BZT52 SERIES_G1804.pdf', 'NOPE SERIES_Z0000.pdf'
 
@@ -64,6 +64,8 @@ def write_specs(folder, rows=ROWS, packages=PACKAGES):
 @pytest.fixture
 def url():
     """임시 스키마에 002·011을 적용하고 문서 두 건(RECT, ZEN)을 넣은 접속 주소. 끝나면 스키마를 지운다."""
+    if not os.getenv('TEST_DATABASE_URL'):
+        pytest.skip('TEST_DATABASE_URL을 줄 때만 돈다')  # [왜] 가짜 연결 시험(순위)은 DB 없이 돌게 모듈이 아니라 이 fixture에서 건너뛴다
     import psycopg
     base, schema = os.environ['TEST_DATABASE_URL'], f'test_specs_{uuid.uuid4().hex[:8]}'
     url = base + ('&' if '?' in base else '?') + f'options=-csearch_path%3D{schema},public'
@@ -209,3 +211,51 @@ def test_find_candidates_zener_window(conn):
     found = spec_lookup.find_candidates(conn, cond, category='zener-diode')
     assert [p['part'] for p in found] == ['BZT52C3V6']
     assert [(m['min'], m['max']) for m in found[0]['matches']] == [(3.42, None), (None, 3.78)]  # 넣은 순서(코드·id 순)
+
+
+# --- 찾기 순위(가짜 연결, DB 없음) ---
+
+class FakeConn:
+    """find_candidates의 두 질의(조건 행, 패키지 행)에 정해진 행을 돌려준다. 행은 _COLUMNS 15칸 + 조건별 참·거짓이다."""
+
+    def __init__(self, parts, conditions):
+        self.parts, self.conditions = parts, conditions  # parts: {품번: (분류, [패키지], {코드: 최대값})}
+
+    def execute(self, sql, params):
+        if "parameter_code = 'PACKAGE'" in sql and sql.lstrip().startswith('SELECT part_number'):
+            return [(p, pkg) for p, (_, pkgs, _) in self.parts.items() if p.upper() in params[0] for pkg in pkgs]
+        rows = []
+        for p, (cat, _, values) in sorted(self.parts.items()):
+            for code, v in values.items():
+                hits = [c['code'] == code and v >= c.get('gte', v) and v <= c.get('lte', v) for c in self.conditions]
+                rows.append((p, cat, code, None, None, v, None, 'V', str(v), None, f'https://x.test/{p}.pdf', 1, 'T', p, 1, *hits))
+        return rows
+
+
+PARTS = {'1N4001': ('standard-rectifier', ['DO-41'], {'VRRM': 50.0}),
+         '1N5817': ('schottky-rectifier', ['DO-204AL', 'DO-41'], {'VRRM': 20.0}),
+         '1N5819': ('schottky-rectifier', ['DO-41'], {'VRRM': 40.0}),
+         'AAA1': ('standard-rectifier', ['SMA'], {'VRRM': 1000.0}),
+         'SS14': ('schottky-rectifier', ['SMA', 'DO-214AC'], {'VRRM': 40.0}),
+         'ZZ1': ('schottky-rectifier', ['SMA'], {'VRRM': 10.0})}  # 조건 밖
+
+
+def test_find_ranks_all_matches_before_the_limit():
+    """품번 순으로 자르면 앞의 1N4001만 남지만, 원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 순으로 모두 줄 세운 뒤 자른다(B3, 정운 11-06)."""
+    cond = [{'code': 'VRRM', 'gte': 15}]
+    conn = FakeConn(PARTS, cond)
+    top = spec_lookup.find_candidates(conn, cond, limit=1, original_packages=['DO-214AC'], original_category='schottky-rectifier')
+    assert [p['part'] for p in top] == ['SS14'] and top[0]['packages'] == ['SMA', 'DO-214AC']
+    # 패키지가 분류보다 먼저: 같은 패키지 · 다른 분류(AAA1) → 다른 패키지 · 같은 분류(기준 15 V에 가까운 순) → 둘 다 다름
+    ranked = spec_lookup.find_candidates(conn, cond, original_packages=['sma'], original_category='schottky-rectifier')
+    assert [p['part'] for p in ranked] == ['SS14', 'AAA1', '1N5817', '1N5819', '1N4001']
+    # 원래 부품을 모르면 기준에 가까운 순(20/15 < 40/15 = 40/15 < 50/15 < 1000/15), 같으면 품번 순
+    assert [p['part'] for p in spec_lookup.find_candidates(conn, cond)] == ['1N5817', '1N5819', 'SS14', '1N4001', 'AAA1']
+
+
+def test_find_rank_uses_the_farthest_condition():
+    """조건이 여럿이면 조건마다 '값/기준'(이하면 '기준/값') 중 가장 큰 비율로 줄 세운다. 한 값만 크게 넘는 부품이 뒤로 간다."""
+    cond = [{'code': 'VRRM', 'gte': 20}, {'code': 'IF_AV', 'lte': 2.0}]
+    parts = {'A1': ('x', [], {'VRRM': 21.0, 'IF_AV': 0.1}),   # 최대 비율 2/0.1 = 20
+             'B1': ('x', [], {'VRRM': 60.0, 'IF_AV': 1.0})}   # 최대 비율 60/20 = 3
+    assert [p['part'] for p in spec_lookup.find_candidates(FakeConn(parts, cond), cond)] == ['B1', 'A1']

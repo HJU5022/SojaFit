@@ -103,7 +103,7 @@ def test_find_question_filters_judges_and_ranks(monkeypatch):
     monkeypatch.setattr(J, 'interrupt', unknown)
     seen = []
 
-    def find(conditions, category, package, limit):
+    def find(conditions, category, package, limit, **near):
         seen.append(conditions)
         return [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA'], 'matches': []},
                 {'part': '1N5817', 'category': 'schottky-rectifier', 'packages': ['DO-41'], 'matches': []}]
@@ -121,7 +121,7 @@ def test_find_does_not_filter_by_original_part_values(monkeypatch):
     monkeypatch.setattr(J, 'interrupt', unknown)
     seen = []
 
-    def find(conditions, category, package, limit):
+    def find(conditions, category, package, limit, **near):
         seen.append(conditions)
         return []
     table = {**SPECS, '1N5819': [r('1N5819', 'VRRM', 40.0), r('1N5819', 'TRR', 5e-8, 's')]}
@@ -130,6 +130,24 @@ def test_find_does_not_filter_by_original_part_values(monkeypatch):
     j = J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of(table), find=find,
                       retriever=None)['judgement']
     assert [t['code'] for t in seen[0]] == ['VRRM', 'IF_AV'] and j['terms'] == seen[0]
+
+
+def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
+    """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(B3). 모르면 None."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+
+    def find(conditions, category, package, limit, **near):
+        seen.append(near)
+        return []
+    rows = [dict(x, category='standard-rectifier') for x in [r('1N4001', 'VRRM', 50.0), r('1N4001', 'PACKAGE', None, None, text='DO-41'),
+                                                              r('1N4001', 'PACKAGE', None, None, text='DO-204AL')]]
+    for original in ('TSC 1N4001', ''):
+        read = dict(READ, original_part=original, candidates=[])
+        J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of({'1N4001': rows}), find=find,
+                      retriever=None)
+    assert seen == [{'original_packages': ['DO-41', 'DO-204AL'], 'original_category': 'standard-rectifier'},
+                    {'original_packages': None, 'original_category': None}]
 
 
 def test_ac09_numbers_are_compared_in_verdict_only(monkeypatch):

@@ -162,10 +162,11 @@ class StdioMcpRetriever:
         return self._run(self._list("get_part_specs", {"part": part, "codes": codes}))
 
     def find_parts(self, conditions: list[dict], category: str | None = None, package: str | None = None,
-                   limit: int = 50) -> list[dict]:
-        """숫자 조건을 채운 품번을 `find_parts_by_specs` 도구로 찾는다."""
+                   limit: int = 50, original_packages: list[str] | None = None, original_category: str | None = None) -> list[dict]:
+        """숫자 조건을 채운 품번을 `find_parts_by_specs` 도구로 찾는다. original_*는 원래 부품의 패키지 · 분류로, 순서에만 쓴다."""
         return self._run(self._list("find_parts_by_specs",
-                                    {"conditions": conditions, "category": category, "package": package, "limit": limit}))
+                                    {"conditions": conditions, "category": category, "package": package, "limit": limit,
+                                     "original_packages": original_packages, "original_category": original_category}))
 
     def __exit__(self, exc_type, exc, traceback):
         if self._loop is not None and self._stop is not None:

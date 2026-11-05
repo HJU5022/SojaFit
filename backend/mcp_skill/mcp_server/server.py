@@ -93,7 +93,8 @@ def _validate_conditions(conditions: object) -> None:
 
 @mcp.tool()
 def find_parts_by_specs(conditions: list[dict], category: str | None = None, package: str | None = None,
-                        limit: int = 20) -> list[dict]:
+                        limit: int = 20, original_packages: list[str] | None = None,
+                        original_category: str | None = None) -> list[dict]:
     """숫자 사양 조건을 모두 채운 품번을 사양 표에서 찾습니다(행을 거를 뿐 대체 가능 판정은 하지 않습니다).
 
     conditions 예: [{"code": "VRRM", "gte": 40}, {"code": "IF_AV", "gte": 1}] 또는 제너 창
@@ -102,7 +103,9 @@ def find_parts_by_specs(conditions: list[dict], category: str | None = None, pac
     category는 분류 이름과 같아야 합니다: standard-rectifier, schottky-rectifier, schottky-diode, sic-schottky-diode,
     fast-recovery-trr-100-500ns, high-efficiency-trr-50-99ns, super-fast-recovery, ultra-fast-recovery, switching-diode,
     zener-diode, tvs, esd-protection, bridge. package는 패키지 이름과 같아야 합니다(대소문자·하이픈·공백 무시, 예: SMA, SOD-123. SMA는 SMAF를 잡지 않음).
-    결과는 품번 순으로 limit개(1~50)까지이고, 각 품번에 조건을 채운 행과 인용, 분류, 패키지가 붙습니다.
+    결과는 조건을 채운 품번 전부를 줄 세운 뒤 limit개(1~50)까지입니다. 순서는 원래 부품의 패키지(original_packages 중 하나와
+    이름이 같음) → 원래 부품의 분류(original_category) → 기준에 가까운 것(조건마다 값/기준, 이하는 기준/값 중 가장 큰 비율이 작은 것)
+    → 품번 순이고, 두 값은 순서에만 쓰며 거르지 않습니다. 각 품번에 조건을 채운 행과 인용, 분류, 패키지가 붙습니다.
     표에 값이 없는 품번은 결과에서 빠지며, 이는 불충족이 아니라 "문서로 확인 안 됨"입니다.
     """
     _validate_conditions(conditions)
@@ -112,8 +115,13 @@ def find_parts_by_specs(conditions: list[dict], category: str | None = None, pac
         raise ValueError("package must be 1 to 30 letters, digits, dots or hyphens")
     if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 50:
         raise ValueError("limit must be between 1 and 50")
+    if original_packages is not None and (not isinstance(original_packages, list) or len(original_packages) > 10 or not all(
+            isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9.\-]{1,30}', p) for p in original_packages)):
+        raise ValueError("original_packages must be up to 10 package names of 1 to 30 letters, digits, dots or hyphens")
+    if original_category is not None and (not isinstance(original_category, str) or not 1 <= len(original_category) <= 100):
+        raise ValueError("original_category must contain 1 to 100 characters")
     with _connect() as conn:
-        return find_candidates(conn, conditions, category, package, limit)
+        return find_candidates(conn, conditions, category, package, limit, original_packages, original_category)
 
 
 @mcp.tool()
