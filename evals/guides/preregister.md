@@ -604,3 +604,4 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령: 단계마다 lab에 그 커밋의 작업 폴더를 만들고 `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --out <단계 결과>`를 두 번 동시에 돌린다. Langfuse development 프롬프트가 같은 단계끼리 묶어 동시에 돌린다(S2~S4, S5, S6~S9).
 - 예산 · 중단: 개인 Anthropic 1.5달러 · 팀 OpenRouter 0.2달러. 한 단계에서 실패가 3건을 넘으면 그 단계 점수를 쓰지 않고 원인부터 본다. 멀티 그래프는 마지막 단계만 2세트 잰다(따로 사전 등록).
 - 한계: 단계마다 2회라 흔들림은 범위만 안다(같은 코드 두 세트 차이가 cited_gold 4). 단계 효과가 흔들림 폭보다 작으면 효과로 단정하지 않는다. 동시 실행이라 응답 시간은 1회 측정보다 늘 수 있다.
+- 순서 바꿈(11-06, S4 측정 전): 구현이 먼저 끝난 순서로 쌓는다. S4 = 판정 읽기 값 이름(e9e12f4), S5 = 판정 길 거절 문(bcbc92a, judge_read · supervisor 프롬프트 바뀜), 그다음 사양 표 쪽 'TSC ' 떼기 → 동일품 → 찾기 정렬 → 제너 규칙을 S6~S9로 쌓는다. 단계별 기대 범위는 위 이름별 기대 그대로다.
