@@ -91,6 +91,14 @@ def test_check_rule_validates_each_any_member():
         C.check_rule('R03', {**OR_RULE, 'conditions': [{**group, 'any': [{**group['any'][0], 'code': 'IFSMX'}, group['any'][1]]}]})
 
 
+def test_check_rule_validates_slot():
+    """slot(후보 행에서 볼 칸: min · typ · max)은 그 셋만 받는다(R04 제너 VZ, 11-06)."""
+    vz = {'tier': 'required', 'code': 'VZ', 'op': '>=', 'basis': '3.4'}
+    C.check_rule('R04', {**RULE, 'conditions': [{**vz, 'slot': 'min'}, {**vz, 'slot': 'max'}]})
+    with pytest.raises(ValueError, match='slot'):
+        C.check_rule('R04', {**RULE, 'conditions': [{**vz, 'slot': 'avg'}]})
+
+
 def test_check_rule_validates_exempt():
     trr = {'tier': 'required', 'code': 'TRR', 'op': '<=', 'basis': '35e-9'}
     C.check_rule('R14', {**RULE, 'conditions': [{**trr, 'exempt': 'sic'}, {**trr, 'exempt': 'none'}]})

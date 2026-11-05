@@ -7,7 +7,7 @@
 - 담당: 에이전트
 
 ## 파일
-- `test_judge_conditions.py` — 기준식 문법(사칙 연산 · kV · kI · orig.<코드>), 빠진 값, 규칙 모양 검사, 물어볼 값 목록
-- `test_judge_rules_file.py` — 실제 규칙 파일(`backend/judge/rules/roles.yaml`)의 23개가 모두 읽히고 문법에 맞는지
+- `test_judge_conditions.py` — 기준식 문법(사칙 연산 · kV · kI · orig.<코드>), 빠진 값, 규칙 모양 검사(slot 포함), 물어볼 값 목록
+- `test_judge_rules_file.py` — 실제 규칙 파일(`backend/judge/rules/roles.yaml`)의 23개가 모두 읽히고 문법에 맞는지, R04 제너의 VZ 범위(`vz_min` · `vz_max`) 판정과 범위가 없을 때 최대 VZ 비교
 - `test_judge_sheet_conditions.py` — 사양 표의 실제 조건 글로 읽기 · 비교
-- `test_judge_verdict.py` — 작은 규칙 · 가짜 사양 표 행으로 판정 5종 순서, 찾기 검색 조건, 후보 정렬(AC-01 · 03~06)
+- `test_judge_verdict.py` — 작은 규칙 · 가짜 사양 표 행으로 판정 5종 순서, 찾기 검색 조건, 후보 정렬(AC-01 · 03~06), slot 칸만 읽기 · orig.VZ 최대 · 표 제목에 조건 없는 VZ 행의 TA=25°C(다른 코드는 그대로) · 숫자 unless

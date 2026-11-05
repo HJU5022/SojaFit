@@ -2,7 +2,8 @@
 # 원본: 저장소 밖 전자_데이터시트/역할-후보-20.md · 역할-판정-2차의견-2026-11-05.md · 보류-5개-규칙안-2026-11-06.md(판정 하정운)
 # - 하지 않는 일: 계산 · 비교(backend/judge/conditions.py · verdict.py). 이 파일은 규칙만 적는다.
 # - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
-#   unless(flag가 참이면 꺼짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
+#   unless(값이 있고 거짓이 아니면 꺼짐: flag는 참, 숫자는 주어짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
+#   slot(후보 행에서 볼 칸 min · typ · max. 적으면 그 칸 값만 보고 다른 칸으로 물러나지 않는다. within에는 쓰지 않는다).
 #   any(원본의 "A 또는 B": [{code, op, basis, at?}, …] 중 하나라도 통과하면 통과, tier · when · unless는 묶음에 쓴다).
 #   exempt(TRR 면제 범위: schottky 쇼트키 계열 모두(기본) · sic SiC 쇼트키만 · none 면제 없음). 면제는 판정 노드가 한다.
 # - 회로 값 이름(읽기 출력 칸과 같은 목록, 같은 이름은 모든 역할에서 같은 뜻 · 종류)
@@ -12,6 +13,7 @@
 #         v_clamp 스너버 커패시터 전압 · v_dss 스위치 내압 · v_bus 하프브리지 버스 · v_sw_transient 스위칭 노드 과도 전압
 #         v_out_abs 음전압 출력의 크기 · v_signal_pp 신호 피크-피크 · v_peak 신호 피크 · v_gs_on 게이트를 충분히 켤 전압
 #         v_gs_max VGS 최대 정격 · v_gate_drive 게이트 구동 전압 · v_drop_allowed 허용 전압 강하
+#         vz_min · vz_max 질문이 정한 제너 전압 범위의 최소 · 최대(R04, 예: "3.42~3.78V")
 #   전류: i_max 최대 순방향(부하) 전류 · i_coil 코일 정상 전류 · i_z 제너 전류 · i_short 전원 단락 전류 · i_fault 입력 핀 고장 전류
 #         i_out 최대 출력 전류 · i_limit IC 전류 제한값 · i_d 스위치 정격 전류 · i_boot_peak 부트스트랩 시동 피크 전류 · ir_allowed 허용 역누설
 #   그 밖: ns_np 권선비 Ns/Np · n_diodes 직렬 다이오드 개수 · c_hold 피크 홀드 커패시터 · droop_allowed 허용 처짐(V/s) · err_allowed 허용 오차
@@ -62,13 +64,17 @@ R03:
 R04:
   name: 제너 클램프 · 전압 기준
   recognize: 제너 계열(BZX84C·BZT52C·1N47xx), 캐소드가 신호·전원 넷, 애노드 GND, 앞에 직렬 저항
-  inputs: {i_z: number, data_line: flag}
+  inputs: {i_z: number, data_line: flag, vz_min: number, vz_max: number}
   conditions:
-    # [주의] 원래 VZ와 같음(허용 오차 안)을 최대 VZ가 원래와 같은지로 본다. orig.VZ는 원래 부품의 최대 VZ 하나뿐이라 범위를 비교할 수 없다
-    - {tier: required, code: VZ, op: ">=", basis: "orig.VZ"}
-    - {tier: required, code: VZ, op: "<=", basis: "orig.VZ"}
-    # [왜] 실제 소비(Iz × VZ) × kI. Iz를 모르면 원래 PD(정운 판정 R04)
-    - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD"}
+    # [왜] 질문이 원하는 VZ 범위를 주면 그 범위로 본다: 후보 최소 VZ ≥ vz_min, 최대 VZ ≤ vz_max(원래 부품을 몰라도 판정된다, 11-06 평가 n04)
+    - {tier: conditional, code: VZ, op: ">=", basis: "vz_min", slot: min, when: vz_min}
+    - {tier: conditional, code: VZ, op: "<=", basis: "vz_max", slot: max, when: vz_max}
+    # [주의] 범위가 없으면 원래 VZ와 같음(허용 오차 안)을 최대 VZ가 원래와 같은지로 본다. orig.VZ는 원래 부품의 최대 VZ 하나뿐이라 범위를 비교할 수 없다
+    - {tier: required, code: VZ, op: ">=", basis: "orig.VZ", slot: max, unless: vz_min}
+    - {tier: required, code: VZ, op: "<=", basis: "orig.VZ", slot: max, unless: vz_max}
+    # [왜] 실제 소비(Iz × VZ) × kI. Iz를 모르면 원래 PD(정운 판정 R04). 범위를 주면 VZ는 그 최대로 계산한다
+    - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD", unless: vz_max}
+    - {tier: conditional, code: PD, op: ">=", basis: "i_z * vz_max * kI", default: "orig.PD", when: vz_max}
     - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
   major: {PD: higher}
   cautions:

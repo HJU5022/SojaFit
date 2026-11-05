@@ -238,3 +238,66 @@ source: x
 ''')
     j = V.judge_part(rule, 'R17', '1N5817', {'v_peak': 1.0}, TEMP, N5817)
     assert j.verdict == 'NOT_VERIFIED' and j.missing == ['c_hold']
+
+
+ZTABLE = 'ELECTRICAL PART NUMBER'  # [왜] 실제 제너 VZ 행의 표 이름. 청크를 나눌 때 "(TA = 25°C unless otherwise noted)"가 떨어졌다
+
+
+def zener(part, vz_min, vz_typ, vz_max, cond='IZT = 5 mA'):
+    """실제 사양 표처럼 VZ 최소 · 대표 · 최대가 한 행씩 따로인 제너 행(최소 행이 먼저)."""
+    rows = [row(part, 'VZ', None, cond, table=ZTABLE, mn=vz_min), row(part, 'VZ', None, cond, table=ZTABLE) | {'typ': vz_typ},
+            row(part, 'VZ', vz_max, cond, table=ZTABLE)]
+    return rows + [row(part, 'PD', 0.5, unit='W')]
+
+
+SLOTTED = yaml.safe_load('''
+name: x
+recognize: x
+inputs: {lo: number, hi: number}
+conditions:
+  - {tier: required, code: VZ, op: ">=", basis: "lo", slot: min}
+  - {tier: required, code: VZ, op: "<=", basis: "hi", slot: max}
+source: x
+''')
+
+
+def test_slot_condition_reads_only_that_cell():
+    """slot을 적은 조건은 그 칸 값만 본다(최소 4.85 ≥ 3.42 통과, 최대 5.36 ≤ 3.78 실패). 최소 행이 최대로 물러나 읽히지 않는다."""
+    rows = zener('BZT52C5V1', 4.85, 5.1, 5.36)
+    j = V.judge_part(SLOTTED, 'R04', 'BZT52C5V1', {'lo': 3.42, 'hi': 3.78}, {}, rows)
+    assert [(c.result, c.value) for c in j.checks] == [('pass', 4.85), ('fail', 5.36)] and j.verdict == 'NOT_SUFFICIENT'
+    top = {**SLOTTED, 'conditions': [{**SLOTTED['conditions'][0], 'slot': 'max'}]}  # 최대 VZ ≥ 5 V
+    assert [(c.result, c.value) for c in V.judge_part(top, 'R04', 'BZT52C5V1', {'lo': 5.0}, {}, rows).checks] == [('pass', 5.36)]
+
+
+def test_original_vz_is_the_maximum_vz():
+    """orig.VZ는 원래 부품의 최대 VZ다(R04 규칙 주석). 최소 행이 표의 첫 행이어도 최대 칸 값을 쓴다."""
+    assert V.first_values(zener('BZT52C3V6', 3.42, 3.6, 3.78))['VZ'] == 3.78
+    assert V.first_values(N5817)['VRRM'] == 20.0  # 다른 코드는 그대로 첫 행
+
+
+@pytest.mark.parametrize('temp,result', [({'TA': 25.0}, 'pass'), ({'TA': 85.0}, 'unverified'), ({'TJ': 25.0}, 'unverified')])
+def test_vz_rows_without_table_condition_are_read_at_ta_25(temp, result):
+    """표 제목에 조건이 없는 VZ 행은 TA = 25°C로 본다(온도를 적은 VZ 행은 모두 25°C, 11-06 실측). TJ로 물으면 여전히 모른다."""
+    j = V.judge_part(SLOTTED, 'R04', 'BZT52C3V6', {'lo': 3.4, 'hi': 3.8}, {'temp': temp}, zener('BZT52C3V6', 3.42, 3.6, 3.78))
+    assert {c.result for c in j.checks} == {result}
+
+
+def test_other_codes_in_a_table_without_condition_stay_unstated():
+    """VZ 밖의 코드는 바뀌지 않는다: 표 제목에 조건이 없는 IF_AV 행은 TA = 25°C 질문에 '적혀 있지 않음'이다(다른 역할 그대로)."""
+    rows = [row('X', 'VRRM', 40.0, table=ZTABLE), row('X', 'IF_AV', 1.0, unit='A', table=ZTABLE)]
+    j = V.judge_part(R01, 'R01', 'X', {'v_in_max': 12.0, 'i_max': 0.15}, TEMP, rows)
+    assert [(c.code, c.result) for c in j.checks] == [('VRRM', 'pass'), ('IF_AV', 'unverified')]
+
+
+def test_unless_turns_off_on_any_given_value_like_when_turns_on():
+    """unless는 when과 같이 '값이 있고 거짓이 아니면' 꺼진다. 숫자를 주면 꺼지고, 없거나 False면 남는다(플래그는 전과 같음)."""
+    rule = {**SLOTTED, 'inputs': {'lo': 'number', 'hi': 'number', 'off': 'flag'},
+            'conditions': [{'tier': 'required', 'code': 'PD', 'op': '>=', 'basis': '0.1', 'unless': 'lo'},
+                           {'tier': 'required', 'code': 'PD', 'op': '>=', 'basis': '0.2', 'unless': 'off'}]}
+    rows = zener('X', 1.0, 1.1, 1.2)
+
+    def bases(values):
+        return [c.basis for c in V.judge_part(rule, 'R04', 'X', values, {}, rows).checks]
+    assert bases({'lo': 3.42, 'off': True}) == [] and bases({'off': False}) == ['0.1', '0.2'] and bases({}) == ['0.1', '0.2']
+    assert V.search_conditions(rule, {'lo': 3.42}) == [{'code': 'PD', 'gte': 0.2}]

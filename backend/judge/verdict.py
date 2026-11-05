@@ -17,6 +17,10 @@ Verdict = Literal['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFI
 ORDER = ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT', 'NOT_VERIFIED', 'NOT_SUFFICIENT')  # 좋은 것부터
 # [왜] 역전압 정격은 온도로 줄지 않아 사용 온도(temp)를 맞추지 않는다. 전류 · 전력 정격과 특성 값(VF · IR · VBR · VC 등)은 온도를 맞춘다
 VOLTAGE_RATINGS = ('VRRM', 'VR', 'VRWM')
+# [왜] 제너 VZ 행은 청크를 나눌 때 표 제목의 "(TA = 25°C unless otherwise noted)"가 떨어졌다(제목 'ELECTRICAL PART NUMBER' 등,
+#      VZ 3,683행 중 3,668행이 제목에 조건 없음). 온도를 적은 VZ 행 78개는 모두 TA = 25°C다(11-06 실측).
+#      그래서 제목이 조건을 적지 않은 VZ 행만 TA = 25°C로 본다. 다른 코드는 그대로 "적혀 있지 않음"(넓히면 다른 역할 판정이 바뀐다)
+UNSTATED = {'VZ': {'TA': 25.0}}
 
 
 class Check(BaseModel):
@@ -53,13 +57,17 @@ def _value(r: dict, slot: str) -> float | None:
     return next((r[k] for k in order if r.get(k) is not None), None)
 
 
+def _table(r: dict) -> dict:
+    """행의 표 제목 기본 조건. 제목이 조건을 적지 않았으면 그 코드의 관례 조건(UNSTATED, 없으면 빈 조건)."""
+    return S.parse((r.get('citation') or {}).get('table')) or dict(UNSTATED.get(r['code'], {}))
+
+
 def _pick(rows: list[dict], codes: list[str], required: dict) -> tuple[str, list[dict], str]:
     """codes 순서대로 그 코드의 행 중 시험 조건이 required와 같은 행을 고른다 → (쓴 코드, 고른 행, 못 고른 이유)."""
     why = '사양 표에 값 없음'
     for code in codes:
         found = [r for r in rows if r['code'] == code]
-        same = [r for r in found
-                if S.compare(required, S.parse(r.get('test_condition')), S.parse((r.get('citation') or {}).get('table'))) == 'same']
+        same = [r for r in found if S.compare(required, S.parse(r.get('test_condition')), _table(r)) == 'same']
         if same:
             return code, same, ''
         if found:
@@ -69,7 +77,7 @@ def _pick(rows: list[dict], codes: list[str], required: dict) -> tuple[str, list
 
 def _same_condition(a: dict, b: dict) -> bool:
     """두 사양 표 행의 시험 조건(표 제목 기본 조건 포함)이 같은지. 한쪽에만 적힌 항목이 있으면 같지 않다."""
-    x, y = (S.fill(S.parse(r.get('test_condition')), S.parse((r.get('citation') or {}).get('table'))) for r in (a, b))
+    x, y = (S.fill(S.parse(r.get('test_condition')), _table(r)) for r in (a, b))
     return S.compare(x, y) == 'same' and S.compare(y, x) == 'same'
 
 
@@ -123,7 +131,13 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original_row
         return Check(**{**base, 'code': code}, result='unverified', why='원래 부품의 같은 시험 조건 값 없음'), [], note
     found = []
     for r, t in pairs:
-        value = [_value(r, 'min'), _value(r, 'max')] if cond['op'] == 'within' else _value(r, 'typ' if code == 'CJ' else 'max')
+        if cond['op'] == 'within':
+            value = [_value(r, 'min'), _value(r, 'max')]
+        elif cond.get('slot'):
+            # [왜] slot을 적은 조건은 그 칸 값만 본다. 제너 VZ는 최소 · 대표 · 최대가 한 행씩이라, 물러나면 최소 행이 최대로 읽힌다
+            value = r.get(cond['slot'])
+        else:
+            value = _value(r, 'typ' if code == 'CJ' else 'max')
         if cond['op'] == 'within' and None in value:
             return Check(**{**base, 'code': code}, threshold=shown(t), result='unverified', why='최소 · 최대 값 없음'), [], note
         if value is not None:
@@ -162,12 +176,15 @@ def _name(cond: dict) -> str:
 
 
 def first_values(rows: list[dict]) -> dict[str, float]:
-    """행들의 코드별 첫 값. 같은 코드가 여럿이면 표의 첫 행이다."""
+    """행들의 코드별 첫 값. 같은 코드가 여럿이면 표의 첫 행이다. VZ만 최대 VZ(최대 칸 값 중 가장 큰 것)다."""
     out = {}
     for r in rows:
         v = _value(r, 'typ' if r['code'] == 'CJ' else 'max')
         if v is not None:
             out.setdefault(r['code'], v)
+    # [왜] 제너 VZ는 최소 · 대표 · 최대가 한 행씩이고 첫 행이 최소다(VZ 품번 1,322개 중 1,202개, 11-06 실측). orig.VZ는 최대 VZ다(R04 규칙)
+    if vz := [r['max'] for r in rows if r['code'] == 'VZ' and r.get('max') is not None]:
+        out['VZ'] = max(vz)
     return out
 
 
@@ -177,8 +194,7 @@ def _not_worse(major: dict, rows: list[dict], original_rows: list[dict]) -> bool
         return False
     for code, way in major.items():
         pairs = [(c, o) for o in original_rows if o['code'] == code for c in rows if c['code'] == code
-                 and S.compare(S.parse(o.get('test_condition')), S.parse(c.get('test_condition')),
-                               S.parse((c.get('citation') or {}).get('table'))) == 'same']
+                 and S.compare(S.parse(o.get('test_condition')), S.parse(c.get('test_condition')), _table(c)) == 'same']
         if not pairs:
             return False
         for c, o in pairs:
@@ -197,6 +213,12 @@ def board_change(footprint: str | None, packages: list[str] | None) -> bool | No
     return not any(re.sub(r'[^A-Z0-9]', '', p.upper()) in fp for p in packages if p)
 
 
+def _off(cond: dict, values: dict) -> bool:
+    """unless 값이 있고 거짓이 아니면 그 조건은 꺼진다(when의 반대). 플래그는 참일 때, 숫자(R04 vz_min)는 주어졌을 때다."""
+    v = values.get(cond['unless']) if cond.get('unless') else None
+    return v is not None and v is not False
+
+
 def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows: list[dict], *,
                original_rows: list[dict] | None = None, identical: bool = False, identical_citation: dict | None = None,
                footprint: str | None = None, packages: list[str] | None = None) -> Judgement:
@@ -206,7 +228,7 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
     """
     checks, missing, uncertain = [], [], []
     for cond in rule['conditions']:
-        if cond.get('unless') and values.get(cond['unless']) is True:
+        if _off(cond, values):
             continue
         if cond['tier'] == 'conditional' and cond.get('when'):
             trigger = values.get(cond['when'], conds.get(cond['when']))
@@ -243,7 +265,7 @@ def search_conditions(rule: dict, values: dict) -> list[dict]:
     """찾기용 사양 표 검색 조건(find_parts_by_specs). 시험 조건이 없는 필수 조건의 하한 · 상한만 쓰고 최대 10개(MCP 한도)."""
     out = []
     for cond in rule['conditions']:
-        if cond['tier'] != 'required' or cond.get('at') or (cond.get('unless') and values.get(cond['unless']) is True):
+        if cond['tier'] != 'required' or cond.get('at') or _off(cond, values):
             continue
         if 'any' in cond or any(C.orig_codes(b) for b in C._bases(cond)):
             # [왜] "A 또는 B"는 한 코드로 거를 수 없고, 원래 부품 값(orig.*)은 시험 조건이 같은 행끼리 판정에서 본다
