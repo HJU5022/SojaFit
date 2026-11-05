@@ -325,13 +325,17 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
 def judge(state: AgentState, *, specs, find, retriever) -> dict:
     """판정 노드: 멀티의 판정 에이전트(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
 
-    입력: judge_read · question_type · conditions · target_part. 출력: judgement, path(사양 표 도구 장애면 retrieval_error도).
-    주의: 단일 메모장에는 보고서 칸이 없어 `reports`는 버린다. 사양 표 도구 장애는 보고서에만 남으므로 retrieval_error로 옮겨 거절로 보낸다.
+    입력: judge_read · question_type · conditions · target_part · facts. 출력: judgement, path(사양 표 도구 장애면 retrieval_error,
+    코퍼스 밖 요구면 refusal 코드도).
+    주의: 단일 메모장에는 보고서 칸이 없어 `reports`는 버린다. 보고서의 거절 사유는 칸으로 옮겨 거절로 보낸다.
     """
     from backend.multi_agent.agents.judge import judge_agent  # [왜] 판정 길을 이을 때만 판정 규칙 · 프롬프트를 읽는다
     out = judge_agent(state, specs=specs, find=find, retriever=retriever)
-    if out.pop("reports")[-1].get("reason") == Reason.SEARCH_ERROR.value:
+    reason = out.pop("reports")[-1].get("reason")
+    if reason == Reason.SEARCH_ERROR.value:
         out["retrieval_error"] = {"kind": "spec_table"}
+    elif reason:
+        out["refusal"] = {"code": reason}  # 코퍼스 밖 요구(SPEC 8.3). 거절 노드가 이 코드로 멀티와 같은 문구를 만든다
     return out
 
 
@@ -345,12 +349,14 @@ def refuse(state: AgentState) -> dict:
     """거절 노드: 이유 코드(`refusal`)와 안내문, 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절).
 
     이유 코드는 멀티 그래프와 같은 `contracts.Reason` 값이다: 라우팅이 정한 사유(out_of_scope · part_missing · revision_missing ·
-    not_found), 검색 장애(search_error), 검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
+    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · revision_missing · not_found), 검색 장애(search_error),
+    검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
     """
     skill_info = {"enabled": False, "applied": False, "sha256": None}  # 이전 턴의 Skill 적용 정보도 비운다
-    reason = (state.get("route") or {}).get("reason")
+    # 라우팅이 첫 단에서 정한 사유, 없으면 판정이 코퍼스 밖 요구로 정한 사유(SPEC 8.3)
+    reason = (state.get("route") or {}).get("reason") or (state.get("refusal") or {}).get("code")
     if reason:
-        # 라우팅이 첫 단에서 거절했다(검색 없음). [왜] 문구는 멀티 거절과 같은 함수로 만든다(D4 · D5를 같은 문구로 비교)
+        # 검색 없이 거절한다. [왜] 문구는 멀티 거절과 같은 함수로 만든다(D4 · D5를 같은 문구로 비교)
         answer = refusal_for(Reason(reason), state.get("facts") or {})
     elif state.get("retrieval_error"):
         reason = Reason.SEARCH_ERROR.value

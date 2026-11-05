@@ -62,8 +62,8 @@ def after_grade(state: AgentState) -> str:
 
 
 def after_judge(state: AgentState) -> str:
-    """판정 뒤 갈림길: 사양 표 도구 장애면 거절(검색 장애), 아니면 답 틀."""
-    return "거절" if state.get("retrieval_error") else "답 틀"
+    """판정 뒤 갈림길: 사양 표 도구 장애(검색 장애)나 코퍼스 밖 요구(판정이 남긴 거절 코드, SPEC 8.3)면 거절, 아니면 답 틀."""
+    return "거절" if state.get("retrieval_error") or state.get("refusal") else "답 틀"
 
 
 def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, find=None, chat=None):

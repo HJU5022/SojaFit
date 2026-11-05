@@ -28,10 +28,13 @@ def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] 
 
 
 def refusal_for(reason: Reason, facts: dict) -> str:
-    """사실 확인 결과(`Facts` dict)로 거절 문구를 만든다. 없다고 확인된 품번 · 개정판을 문구에 넣는다(단일 · 멀티 거절 노드가 같이 쓴다)."""
+    """사실 확인 결과(`Facts` dict)로 거절 문구를 만든다. 없다고 확인된 품번 · 개정판만 문구에 넣는다(단일 · 멀티 거절 노드가 같이 쓴다).
+
+    [왜] 있는 품번은 넣지 않는다. 판정의 제조사 거절(part_missing)에서 코퍼스에 있는 품번을 "찾을 수 없어요"라고 말하게 된다(SPEC 8.3).
+    """
     missing_parts = [p for p, ok in (facts.get('parts') or {}).items() if not ok]
     missing_revs = [r for r, ok in (facts.get('revisions') or {}).items() if not ok]
-    return refusal_message(reason, missing_parts or list((facts.get('parts') or {})), missing_revs)
+    return refusal_message(reason, missing_parts, missing_revs)
 
 
 def price_message(parts: list[str]) -> str:

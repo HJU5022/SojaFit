@@ -30,7 +30,7 @@ Decision rules:
    - A role question goes to `writer`. A candidate_judge or candidate_find question goes to `judge` when it is listed under "Next nodes you may choose", otherwise to `search`. Any other diode question goes to `search`.
    - A general electronics concept question that names no specific part (for example "what is a diode?") is a `chat`: give a short general explanation in `reply` and end it with "This is a general explanation, not based on a datasheet." in Korean.
 2. After a search report: if ok, go to `writer`. If partial, search again differently when the missing values are the core of the question, otherwise go to `writer`. If fail, search again differently according to the reason; for search_error do not retry, `refuse`.
-3. After a judge report: if ok or partial, go to `writer` (the writer shows what was found and what is missing). If fail with search_error, `refuse` with search_error.
+3. After a judge report: if ok or partial, go to `writer` (the writer shows what was found and what is missing). If fail, `refuse` with the reason in the report: search_error (spec table tool failure), or part_missing, revision_missing or not_found when the judge found that the question requires something outside the corpus (a maker other than TSC, a revision not in the corpus, a property the spec table does not hold).
 4. After a writer report: always go to `verifier`.
 5. After a verifier report: if ok, `finish`. If fail, send the writer back once with the problem in `brief`; if it has already been rewritten, `refuse` with verify_failed.
 6. Trust the verified facts: the code checked them against the corpus lists. Never invent anything that is not in the reports. Do not repeat the same attempt for the same reason.

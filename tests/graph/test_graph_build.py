@@ -202,15 +202,16 @@ SPEC_ROWS = [{"part": "1N5817", "code": "VRRM", "min": None, "typ": None, "max":
                            "row": "VRRM", "chunk_index": 1}}]
 
 
-def judge_app(monkeypatch, specs, calls):
+def judge_app(monkeypatch, specs, calls, read=None, revisions=None):
     """판정 길을 이은 앱. 라우팅은 nodes.llm 가짜로, 판정 읽기는 chat 인자로 정해 둔 읽기 결과를 낸다."""
     from langgraph.checkpoint.memory import InMemorySaver
     from backend.multi_agent.agents import judge as J
     from backend.multi_agent.supervisor import Facts
     monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(question_type="candidate_judge"))
-    read = J.JudgeRead(role="R01", candidates=["1N5817"],
-                       values=[J.Value(name="v_in_max", number=20, unit="V", quote="입력 전압의 최댓값은 20V")])
-    return build_graph(retriever=lambda q, *, parts=None: calls.append(q) or [], lookup=lambda state: Facts(parts={"1N5817": True}),
+    read = read or J.JudgeRead(role="R01", candidates=["1N5817"],
+                               values=[J.Value(name="v_in_max", number=20, unit="V", quote="입력 전압의 최댓값은 20V")])
+    facts = Facts(parts={"1N5817": True}, revisions=revisions or {})
+    return build_graph(retriever=lambda q, *, parts=None: calls.append(q) or [], lookup=lambda state: facts,
                        specs=specs, find=lambda *a: [], chat=lambda node, system, user, schema: read, checkpointer=InMemorySaver())
 
 
@@ -238,6 +239,25 @@ def test_spec_table_failure_ends_as_a_search_error_refusal(monkeypatch):
     app.invoke({"input": JUDGE_INPUT}, config)
     state = app.invoke(Command(resume={"answers": {}}), config)
     assert state["path"][-2:] == ["판정", "거절"] and state["refusal"]["code"] == "search_error"
+
+
+@pytest.mark.parametrize("extra, revisions, code", [
+    ({"required_specs": [{"words": "1kHz 순방향 전류 잡음 밀도", "code": "none"}]}, {}, "not_found"),
+    ({"maker_wanted": "Toshiba"}, {}, "part_missing"),
+    ({"revision_wanted": "2027년판"}, {}, "revision_missing"),
+    ({"revision_wanted": "G2710"}, {"G2710": False}, "revision_missing"),  # 라우팅이 사실을 놓쳐 판정 길로 와도 거절
+])
+def test_requirement_outside_the_corpus_ends_as_a_refusal_without_asking(monkeypatch, extra, revisions, code):
+    """코퍼스 밖 요구(SPEC 8.3)는 인터럽트 · 사양 표 조회 없이 판정 → 거절로 끝나고, 멀티와 같은 문구 · 사유 코드를 남긴다."""
+    from backend.multi_agent.agents import judge as J
+    from backend.multi_agent.contracts import Reason
+    from backend.multi_agent.messages import refusal_for
+    app = judge_app(monkeypatch, lambda part, codes=None: pytest.fail("사양 표를 읽었다"), [],
+                    read=J.JudgeRead(role="R01", candidates=["1N5817"], **extra), revisions=revisions)
+    state = app.invoke({"input": JUDGE_INPUT}, {"configurable": {"thread_id": f"gate-{code}-{extra}"}})
+    assert "__interrupt__" not in state
+    assert state["path"][-3:] == ["판정 읽기", "판정", "거절"] and state["refusal"]["code"] == code
+    assert state["answer"] == refusal_for(Reason(code), state["facts"]) and "1N5817" not in state["answer"]  # 있는 품번은 없다고 하지 않는다
 
 
 @pytest.mark.parametrize("kw", ["both_without_checkpointer", "specs_only", "find_only"])

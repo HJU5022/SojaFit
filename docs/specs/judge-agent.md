@@ -124,6 +124,7 @@ R01:
 - `role`(R01~R23 · `other`), `role_alt`(갈릴 때 두 번째 후보, EC-02), `role_evidence`(근거 핀 목록, 예: `D1.K → +5V`)
 - `values`: 회로 값 이름 → {`value`, `unit`, `quote`(질문에서 그대로 옮긴 글)}
 - `original_part`, `candidates`(판정만), `package_wanted`, `category_wanted`
+- `required_specs`(꼭 요구한 성질: `words` 사용자 말 · `code` 사양 표 항목 또는 `none`), `maker_wanted`, `revision_wanted`: 코퍼스 밖 요구 거절에 쓴다(SPEC 8.3, 11-06)
 
 ### 인터럽트
 

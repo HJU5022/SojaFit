@@ -7,6 +7,7 @@
 """
 import re
 from pathlib import Path
+from typing import Literal
 
 from langgraph.types import interrupt
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason
+from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'judge_read.md').read_text(encoding='utf-8')
@@ -31,6 +33,12 @@ class Value(BaseModel):
     quote: str = Field(max_length=200)
 
 
+class RequiredSpec(BaseModel):
+    """사용자가 꼭 요구한 부품 성질 하나: 사용자 말 그대로와, 그 성질을 재는 사양 표 항목(없으면 none)."""
+    words: str = Field(max_length=80)
+    code: Literal[SPEC_CODES + ('none',)]  # [왜] 목록 밖 글자는 형식 검사에서 걸린다. none이면 판정 노드가 거절한다(SPEC 8.3)
+
+
 class JudgeRead(BaseModel):
     """읽기 노드의 구조화 출력."""
     role: str = Field(pattern='^(R0[1-9]|R1[0-9]|R2[0-3]|other)$')
@@ -41,6 +49,10 @@ class JudgeRead(BaseModel):
     candidates: list[str] = Field(default_factory=list, max_length=5)
     package_wanted: str = Field(default='', max_length=30)
     category_wanted: str = Field(default='', max_length=100)
+    # 사용자가 꼭 요구했지만 코퍼스 밖일 수 있는 것(코퍼스 밖 요구 거절, SPEC 8.3)
+    required_specs: list[RequiredSpec] = Field(default_factory=list, max_length=6)
+    maker_wanted: str = Field(default='', max_length=60)     # 요구한 제조사(영어, Taiwan Semiconductor는 TSC)
+    revision_wanted: str = Field(default='', max_length=40)  # 요구한 개정 코드 · 판(쓴 그대로)
 
 
 def render_read(state: dict, rules: dict) -> str:
@@ -163,14 +175,34 @@ def _schottky_exempt(j: V.Judgement, category: str) -> V.Judgement:
     return j.model_copy(update={'checks': checks, 'verdict': verdict})
 
 
+def outside_corpus(read: JudgeRead, facts: dict) -> tuple[Reason, str] | None:
+    """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
+    maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
+    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI'):
+        return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not TSC'
+    wanted = read.revision_wanted.strip().upper()
+    # [왜] 판정 길에는 코퍼스 개정판 전체 목록이 없다. 사실 확인이 코퍼스에 있다고 확인한 개정 코드(K2611)를 담을 때만 통과한다
+    if wanted and not any(ok and code in wanted for code, ok in (facts.get('revisions') or {}).items()):
+        return Reason.REVISION_MISSING, f'required revision {read.revision_wanted} is not confirmed in the corpus'
+    unheld = [r.words for r in read.required_specs if r.code == 'none']
+    if unheld:
+        return Reason.NOT_FOUND, 'required property not in the spec table: ' + ', '.join(unheld)
+    return None
+
+
 def _report(status: str, summary: str, missing=(), reason=None) -> dict:
     return AgentReport(agent='judge', status=status, summary=summary[:200], missing=list(missing), reason=reason).model_dump(mode='json')
 
 
 def judge_agent(state: dict, *, specs, find, retriever) -> dict:
-    """그래프 노드: 빠진 값을 한 번 묻고, 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
+    """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
     read = JudgeRead.model_validate(state['judge_read'])
+    # [왜] 코퍼스 밖 요구(사양 표에 없는 성질 · TSC 아닌 제조사 · 확인 안 된 개정판)는 규칙 · 조건을 만들기 전에 거절한다.
+    #      묻거나 판정하면 그 요구와 상관없는 판정 답이 나간다(11-06 동결 평가: 비관련 35건 중 8~10건)
+    if refused := outside_corpus(read, state.get('facts') or {}):
+        reason, why = refused
+        return {'path': ['판정'], 'reports': (state.get('reports') or []) + [_report('fail', f'cannot judge from the corpus: {why}', reason=reason)]}
     part = state.get('target_part') or {}
     # [왜] 숫자 확인은 질문 · 사용 조건 · 대상 주변 회로 글로만 한다. 역할 목록(rules)의 알아보는 법 글에 있는 숫자는 사용자가 준 값이 아니다(AC-02)
     text = '\n'.join([state.get('conditions', ''), state.get('question', ''), render_read(state, {})])

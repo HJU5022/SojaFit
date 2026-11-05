@@ -10,8 +10,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, RETRY_REASONS, AgentReport, Counters,
-                                           Decision, Reason, check_limit)
+from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, REFUSAL_REASONS, RETRY_REASONS, AgentReport,
+                                           Counters, Decision, Reason, check_limit)
 
 PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'supervisor.md').read_text(encoding='utf-8')
 ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse', 'price')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
@@ -67,7 +67,7 @@ def render(i: SupervisorInput) -> str:
 
 
 def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
-    """LLM에게 다음 노드를 묻고 결정서를 돌려준다. 한도를 넘거나 꺼진 웹이면 거절로 바꾼다.
+    """LLM에게 다음 노드를 묻고 결정서를 돌려준다. 한도를 넘거나 꺼진 웹이면, 판정이 거절 사유로 실패했으면 거절로 바꾼다.
 
     chat은 `(node, system, user, schema) -> schema 객체` 모양이다(실제로는 `llm.node_chat`).
     """
@@ -75,6 +75,10 @@ def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
     forced = check_limit(i.counters, d.next)
     if forced:
         return Decision(next='refuse', reason=forced, brief='한도')
+    last = i.reports[-1] if i.reports else None
+    if last and last.agent == 'judge' and last.status == 'fail' and last.reason in REFUSAL_REASONS:
+        # [왜] 판정이 코드로 정한 거절(코퍼스 밖 요구 · 사양 표 장애)이다. 작성으로 보내면 근거 없는 답이 된다(SPEC 8.3, 프롬프트 규칙 3)
+        return Decision(next='refuse', reason=last.reason, brief='판정 거절')
     if d.next == 'web' and not i.web_enabled:
         # [왜] 웹이 꺼져 있는데 LLM이 골랐다. 품번이 목록에 없었으면 확정 사유로, 아니면 못 찾음(추정)으로 거절한다
         reason = Reason.PART_MISSING if any(not ok for ok in i.facts.parts.values()) else Reason.NOT_FOUND

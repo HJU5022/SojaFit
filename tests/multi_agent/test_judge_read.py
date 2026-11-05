@@ -58,3 +58,79 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
     vrrm = next(c for c in j['results'][0]['checks'] if c['code'] in ('VRRM', 'VR'))
     assert vrrm['threshold'] == pytest.approx(6.25) and vrrm['result'] == 'pass'  # 5V × 1.25
     assert j['dropped'] == ['i_out'] and 'i_max' in j['asked']  # 다른 역할 이름은 버리고, 그 역할의 이름으로 묻는다
+
+
+# ── 코퍼스 밖 요구 거절(SPEC 8.3): 규칙 · 조건을 만들기 전에 코드가 대조해 거절한다 ──
+GATE = [  # (읽기 칸, 사실 확인, 거절 사유)
+    ({'required_specs': [{'words': '55°C에서 고장률 10FIT 이하', 'code': 'none'}]}, {}, 'not_found'),
+    ({'maker_wanted': 'ROHM'}, {}, 'part_missing'),
+    ({'revision_wanted': '2027년판'}, {}, 'revision_missing'),
+    ({'revision_wanted': 'G2710'}, {'revisions': {'G2710': False}}, 'revision_missing'),
+]
+INSIDE = [  # 사양 표 항목인 성질 · TSC · 코퍼스에 있다고 확인된 개정 코드는 통과
+    ({'required_specs': [{'words': '역누설이 작은', 'code': 'IR'}, {'words': '표면실장', 'code': 'PACKAGE'}]}, {}),
+    ({'maker_wanted': 'TSC'}, {}),
+    ({'maker_wanted': 'Taiwan Semiconductor'}, {}),
+    ({'revision_wanted': 'K2611판'}, {'revisions': {'K2611': True}}),
+]
+
+
+def test_prompt_and_schema_name_every_spec_table_item():
+    from pydantic import ValidationError
+
+    from backend.rag.spec_lookup import CODES
+    assert set(CODES) <= set(re.findall(r'^- `([A-Z_]+)`:', J.PROMPT, re.M))
+    with pytest.raises(ValidationError):
+        J.RequiredSpec(words='고장률', code='FIT')  # 사양 표 항목 · none 밖의 글자는 형식 검사에서 걸린다
+
+
+@pytest.mark.parametrize('extra, facts, code', GATE)
+def test_requirement_outside_the_corpus_refuses_before_rules(monkeypatch, extra, facts, code):
+    monkeypatch.setattr(J, 'interrupt', lambda payload: pytest.fail('거절할 질문인데 빠진 값을 물었다'))
+    read = J.JudgeRead(role='R02', candidates=['1N5819'], **extra).model_dump(mode='json')
+    out = J.judge_agent({**STATE, 'facts': facts, 'judge_read': read}, specs=lambda *a, **k: pytest.fail('사양 표를 읽었다'),
+                        find=None, retriever=None)
+    report = out['reports'][-1]
+    assert report['agent'] == 'judge' and report['status'] == 'fail' and report['reason'] == code
+    assert out['path'] == ['판정'] and 'judgement' not in out
+
+
+@pytest.mark.parametrize('extra, facts', INSIDE)
+def test_requirement_inside_the_corpus_is_judged(monkeypatch, extra, facts):
+    monkeypatch.setattr(J, 'interrupt', lambda payload: {'answers': {}})
+    read = J.JudgeRead(role='R02', candidates=['1N5819'], **extra).model_dump(mode='json')
+    out = J.judge_agent({**STATE, 'facts': facts, 'judge_read': read}, specs=lambda part, codes=None: [], find=None, retriever=None)
+    assert out['judgement']['kind'] == 'judge' and out['reports'][-1]['status'] == 'ok'
+
+
+@pytest.mark.parametrize('extra, facts, code', GATE)
+def test_multi_graph_ends_the_gate_report_as_a_refusal(extra, facts, code):
+    """[왜] Supervisor LLM이 판정 거절 보고 뒤에 작성으로 보내도 코드가 그 사유로 거절한다(한도 거절과 같은 방식)."""
+    from langgraph.checkpoint.memory import InMemorySaver
+
+    from backend.multi_agent import build as B
+    from backend.multi_agent.contracts import Decision
+    from backend.multi_agent.supervisor import Facts
+    queue = [Decision(next='judge', question_type='candidate_find'), J.JudgeRead(role='R02', **extra), Decision(next='writer')]
+    seen = []
+
+    def chat(node, system, user, schema):
+        seen.append(user)
+        return queue.pop(0)
+    app = B.build_graph(chat=chat, retriever=lambda q, parts=None: [], lookup=lambda state: Facts(**facts),
+                        parse=lambda s: {'question': s['input'], 'target': 'D2', 'conditions': STATE['conditions'],
+                                         'target_part': STATE['target_part']},
+                        rewrite=lambda s: {'query': 'q'}, grade=lambda s: {'passed': []},
+                        generate=lambda s: pytest.fail('거절할 질문인데 답을 썼다'), judge_enabled=True,
+                        specs=lambda *a, **k: [], find=lambda *a: [], checkpointer=InMemorySaver())
+    out = app.invoke({'input': 'D2 대체 후보를 찾아 줘'}, {'configurable': {'thread_id': code + str(extra)}})
+    assert out['path'][-3:] == ['판정', '판단', '거절'] and out['refusal']['code'] == code
+    assert 'judge → fail' in seen[-1] and f'reason {code}' in seen[-1]  # Supervisor가 판정 보고의 사유를 읽었다
+
+
+def test_refusal_names_only_parts_confirmed_missing():
+    """[왜] 제조사 거절(part_missing)에서 코퍼스에 있는 품번을 '찾을 수 없어요'라고 말하지 않는다."""
+    from backend.multi_agent.contracts import Reason
+    from backend.multi_agent.messages import refusal_for
+    assert '1N4148' not in refusal_for(Reason.PART_MISSING, {'parts': {'1N4148': True}, 'revisions': {}})
+    assert '1N4001' in refusal_for(Reason.PART_MISSING, {'parts': {'1N4001': False, '1N4148': True}, 'revisions': {}})
