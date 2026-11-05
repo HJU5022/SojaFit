@@ -9,5 +9,5 @@
 ## 파일
 - `WEB.md` — 이 폴더 설명
 - `design.md` — 화면 목록과 로그인·로그아웃 흐름 및 디자인 원칙
-- `templates/login.html` — 같은 출처 로그인·세션 확인·로그아웃 화면
+- `templates/login.html` — 같은 출처 비밀번호 로그인·세션 확인·로그아웃 화면. Google 관리자 로그인은 서버 설정이 켜진 경우 표시
 - `static/` — 화면 정적 파일(CSS·JS·이미지) 자리. 지금은 `.gitkeep`뿐입니다

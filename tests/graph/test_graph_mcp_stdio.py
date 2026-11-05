@@ -28,6 +28,8 @@ def test_graph_reaches_real_search_through_stdio_mcp_within_cold_start_budget(mo
     def fake_chat(system, user, schema):
         if schema is nodes.Route:
             return schema(question_type="rating")
+        if schema is nodes.Rewrite:
+            return schema(query="SS34 voltage")
         if schema is nodes.Grade:
             ids = [int(value) for value in re.findall(r"\[(\d+)\]", user)]
             chosen[:] = ids[:1]
@@ -40,7 +42,7 @@ def test_graph_reaches_real_search_through_stdio_mcp_within_cold_start_budget(mo
     with StdioMcpRetriever(env=env, timeout_seconds=10.0) as retriever:
         app = build_graph(retriever=retriever)
         state = app.invoke({"input": "질문: SS34 정격이 어떻게 돼?"})
-    assert state["path"] == ["입력 읽기", "라우팅", "검색", "채점", "생성"]
+    assert state["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]
     assert state["docs"]
     assert all(card["file"] == "SS32 SERIES_Q2412.pdf" for card in state["docs"])
     assert all(card["document_key"] and card["page"] for card in state["docs"])
