@@ -206,7 +206,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `id` | 부품 사양 ID | `BIGINT` | N | PK | 사양 식별자 | 확정 |
 | `part_id` | 부품 ID | `BIGINT` | N | FK → `parts.id` | 사양 대상 부품 | 확정 |
 | `document_id` | 출처 문서 ID | `BIGINT` | N | FK → `source_documents.id` | 값을 추출한 데이터시트 | 확정 |
-| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | CHECK: `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX` | 표준화된 사양 항목(A-07) | 확정 |
+| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | CHECK: `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD` | 표준화된 사양 항목(A-07, 뒤 7개는 ADR 0013) | 확정 |
 | `symbol` | 데이터시트 기호 | `VARCHAR(50)` | Y |  | 데이터시트에 표시된 `VRRM`, `IF` 등의 기호 | 확정 |
 | `minimum_value` | 최소값 | `NUMERIC` | Y |  | 데이터시트 최소값. 정규화 단위로 환산한 값 | 확정 |
 | `typical_value` | 대표값 | `NUMERIC` | Y |  | 데이터시트 대표값. 정규화 단위로 환산한 값 | 확정 |
@@ -457,7 +457,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | A-04 | 파일 크기·보존 | 업로드 최대 1MB(API에서 검증), MVP에는 삭제 기능 없음 | `circuits`, API |
 | A-05 | 부품 분류 코드 | `RECTIFIER`, `SCHOTTKY`, `ZENER`, `TVS`, `ESD`, `SWITCHING`, `SIC_SCHOTTKY` | `parts.category_code` |
 | A-06 | 역할 코드 | `REVERSE_POLARITY`, `RECTIFICATION`, `FLYBACK`, `CLAMP_ESD`, `ZENER_REFERENCE`, `REVERSE_BLOCKING`. 역할별 필수 조건은 규칙 파일(`SPEC.md` 5절) | `analysis_runs.role_code` |
-| A-07 | 사양 파라미터 코드 | `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX` | `part_specifications`, `replacement_requirements` |
+| A-07 | 사양 파라미터 코드 | `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD`(`VR`부터 7개는 11-05 추가, [ADR 0013](../../docs/adr/0013-부품-사양-표는-13종을-규칙으로-만들고-애매한-값은-뺀다.md)) | `part_specifications`, `replacement_requirements` |
 | A-08 | 단위 표준 | SI 기본 단위(`V`, `A`, `s`, `W`, `F`, `degC`)로 환산해 저장하고 원문 표기는 `source_value_text`에 보존. 환산은 `backend/rag/`, 비교는 `backend/judge/` | 부품 사양, 대체 조건 |
 | A-09 | 대체 조건 연산자 | `>=`, `<=`, `=`, `BETWEEN`, `IN`과 5.9의 값 조합 | `replacement_requirements` |
 | A-10 | 대체 판정 코드 | `IDENTICAL`, `SPEC_EQUIVALENT`, `ROLE_SUFFICIENT`, `NOT_SUFFICIENT`, `NOT_VERIFIED`. CHECK로 제한하고 코드 표는 두지 않음 | `candidate_evaluations`, `SPEC.md` 3절 |
