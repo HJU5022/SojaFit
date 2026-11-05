@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 부품 사양 표 변환기(ADR 0013)와 단위 환산
+- 한 일: 데이터시트 표 행 청크를 규칙으로 부품 사양 표(`part_specifications` 모양 + 청크 번호)로 바꾸는 `backend/rag/pipeline/specs.py`(`build` · `sample`)와 단위 환산 `backend/rag/units.py`(`to_si`)를 넣었다. 13종 전부, 항목 코드 17종(A-07 10종 + VR + VRWM · VBR · VC · IPP · PPPM · VESD). 애매한 값은 표에 넣지 않고 사유와 함께 검토 목록에 남긴다(계열 범위 · 여러 값, 같은 조건의 다른 값, 모르는 단위, 원문에 없는 숫자, 음수, 파서가 밀어 놓은 표, 대상 품번을 모르는 행, 최소 · 대표 · 최대 표시가 없는 항복 · 제너 전압). 11-03 원형(저장소 밖 `build.py`)의 규칙과 대조 오류 수정을 옮겼고, 평가셋 정답을 쓰던 후보 거르기는 옮기지 않았다(시험 세트 누수).
+- 바꾼 파일: `backend/rag/units.py` · `backend/rag/pipeline/specs.py`(새 파일), `tests/rag/test_rag_units.py` · `tests/rag/test_rag_specs.py`(새 파일), `SOJAFIT.md` 트리, `backend/rag/RAG.md`, `tests/rag/RAG.md`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 514 passed, 32 skipped(새 시험 41개, 구현 전 실패 확인). 로컬 청크 전체에 `build`: 문서 1,360 · 품번 9,589 · 사양 행 67,728. 검토 목록은 파서가 밀어 놓은 표 3,950 · 계열 범위 851 · 같은 조건 다른 값 800 · 자리 불명 795 · 모르는 단위 283 · 대상 품번 불명 56 · 음수 4건, 원문에 없는 숫자 0건. 분류별로 핵심 값을 모두 가진 품번 비율은 SiC 쇼트키 100% · 고속 회복 98% · 표준 정류 94% · 쇼트키 정류 79% · 초고속 78% · 제너 74% · 브리지 72% · 고효율 69% · 쇼트키 67% · 스위칭 66% · ESD 65% · 수퍼 고속 60% · TVS 27%. 결과는 저장소 밖 `corpus/tsc/specs/`, 사람 대조표(품번 50개, 값 269줄, 핵심 값 모두 있는 품번 39개)는 저장소 밖 `전자_데이터시트/사양표-대조표-2026-11-05.md`.
+- 확인 못 한 것: 사람 대조 전이라 값이 맞는지는 모른다(작업한 서브에이전트가 무작위 약 65행을 원문과 비교해 찾은 오류만 고쳤다). TVS 양방향(C · CA) 품번 1,590개는 자기 행이 없어 비어 있고, 제너는 최소 · 대표 · 최대 표시가 없는 표 때문에 195개 품번의 VZ가 비어 있다. DB 적재(`part_specifications` 표)와 판정 코드는 아직 없다. 코드와 시험이 약 1,010줄이라 PR로 올릴 때 400줄 안팎 규칙을 넘는다.
+- 다음 할 일: 정운이 대조표 50개를 PDF와 대조 → 거르는 값(역전압 · 전류 · 제너 전압 · 동작 전압) 틀린 값 0개까지 규칙 수정 → DB 적재 마이그레이션 → 판정 에이전트.
+
 ## 2026-11-05 origin/main(PR #55 · #56) 병합과 사전 등록 번호 겹침 정리
 - 한 일: `origin/main`(PR #55 수퍼바이저 3차 · #56 Google 관리자 로그인)을 `jeongun`에 병합했다. 충돌 3파일은 `backend/BACKEND.md`(main.py · auth.py 설명은 main, `multi_agent/` 줄은 jeongun), `evals/runners/RUNNERS.md`(두 줄 모두), `evals/guides/preregister.md`(main의 #33 다음에 jeongun의 #33~#35)로 풀었다. jeongun의 사전 등록 #33(채점기 기준선)이 main의 #33(수퍼바이저 3차, 오세창)과 겹쳐 #36으로 바꿨다(사전 등록 본문에 번호 변경 줄, 결과 · 입력 JSON의 note 문구, 코드 주석, 폴더 설명, 트리).
 - 바꾼 파일: 병합 커밋의 충돌 3파일, 번호 변경 11파일(`preregister.md` · `SOJAFIT.md` · `evals/EVALS.md` · `INPUTS.md` · `RUNNERS.md` · `eval_grader.py` · `grader_cases_v2.json` · `grader_baseline_2026-11-05.json` · `test_eval_grader.py` · `tests/evals/EVALS.md` · 이 파일)

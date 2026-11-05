@@ -85,13 +85,14 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
-│   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절) (예정)
+│   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
 │   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── collect.py  <- TSC 목록 xlsx를 합치고 데이터시트 PDF를 받음
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       ├── specs.py    <- 표 행 청크를 부품 사양 표(part_specifications)로 바꾸고 모호한 값은 검토 목록으로, 사람 대조표 표본
 │   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
@@ -287,6 +288,8 @@ SojaFit (proj3-b)
 │   │   ├── test_rag_parse.py  <- 파싱 도구의 Docling 없는 부분
 │   │   ├── test_rag_chunk.py  <- 표 청크 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
+│   │   ├── test_rag_specs.py  <- 부품 사양 표 변환: 표 모양별 값, 모호한 값의 검토 사유, 대조표 표본 수(가짜 청크)
+│   │   ├── test_rag_units.py  <- 단위 환산(mA·µA·ns·pF·kV·mW·°C, 모르는 단위는 None)
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
