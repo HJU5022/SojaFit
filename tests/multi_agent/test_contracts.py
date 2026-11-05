@@ -38,6 +38,13 @@ def test_retry_decision_may_carry_the_failure_reason():
     assert d.reason == Reason.NO_RESULT
 
 
+def test_brief_allows_up_to_800_chars():
+    """Sonnet Supervisor가 300자를 넘는 지시를 써서 #38에서 3문항이 형식 검사로 실패했다(11-05). 서브에이전트만 읽어 800자까지 받는다."""
+    assert len(Decision(next='search', question_type='candidate_find', brief='x' * 800).brief) == 800
+    with pytest.raises(ValidationError):
+        Decision(next='search', question_type='candidate_find', brief='x' * 801)
+
+
 def test_report_status_and_summary_limits():
     r = AgentReport(agent='search', status='partial', summary='부분: VRRM만 있음', evidence_ids=['10'], missing=['IF'])
     assert r.missing == ['IF'] and r.reason is None

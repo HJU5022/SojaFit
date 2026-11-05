@@ -48,7 +48,8 @@ class Decision(BaseModel):
     next: NextNode  # [왜] Literal이라 LLM이 목록 밖 이름을 내면 pydantic 검사에서 걸러진다
     question_type: QuestionType | None = None  # 처음 판단에서 정한 질문 종류. 판정 에이전트가 필요한지가 이걸로 갈린다
     reason: Reason | None = None  # 거절이면 필수. 재시도면 지난 실패 사유를 담아 다음 시도가 다르게 하게 한다
-    brief: str = Field(default='', max_length=300, description='다음 에이전트에게 줄 짧은 지시')
+    # [왜] 800자: Sonnet Supervisor가 300자를 넘는 지시를 써서 #38에서 3문항이 형식 검사로 실패했다(11-05 정운 결정). 사용자에게 보이지 않고 서브에이전트만 읽는다
+    brief: str = Field(default='', max_length=800, description='다음 에이전트에게 줄 짧은 지시')
     reply: str = Field(default='', max_length=300, description='일상 대화(chat)로 끝낼 때 사용자에게 보여 줄 한국어 답')
 
     @model_validator(mode='after')
