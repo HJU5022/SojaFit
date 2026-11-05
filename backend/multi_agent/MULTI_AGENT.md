@@ -31,7 +31,7 @@
 - `MULTI_AGENT.md` — 이 문서
 - `__init__.py` — 패키지 표시
 - `state.py` — 멀티용 공용 메모장 `MultiState`. 보고서 · 결정서 · 횟수는 dict로 저장하고, 지나간 노드 이름(`path`)은 단일 그래프와 같은 말(거절 등)을 써서 평가 채점기가 읽을 수 있게 한다
-- `facts.py` — 질문의 품번 · 개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만든다(`make_facts`). 목록은 호출하는 쪽이 넘기고, 그래프 노드 `facts_node`는 `lookup` 없이 쓰면 비워 둔다
+- `facts.py` — 질문의 품번 · 개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만든다(`make_facts`). 목록은 호출하는 쪽이 넘기거나(`make_facts`), MCP 도구 `check_corpus`로 묻는다(`make_lookup`). 그래프 노드 `facts_node`는 `lookup` 없이 쓰면 비워 둔다
 - `messages.py` — 거절 사유를 사용자 일상어 문구로 바꾼다(`refusal_message`). 우리끼리 쓰는 말과 내부 코드는 문구에 넣지 않는다
 - `build.py` — 조립. 입력 읽기 → 사실 확인 → Supervisor, Supervisor의 결정에 따라 검색 · 작성 · 검증 · 끝 · 거절로 가고 서브에이전트는 끝나면 Supervisor로 돌아온다. 거절은 이유 코드를 `refusal`에 남긴다. 판정 · 웹을 켜려 하면 거부
 - `agents/` — 서브에이전트(폴더 설명은 이 문서에 적는다): `search.py` 한 번 찾고 채점해 보고서(통과 청크 번호, 실패면 결과 없음 · 전부 탈락 · 검색 장애 사유)를 올리며 "결과 없음" 뒤에는 품번 필터를 풀어 다르게 시도, `writer.py` 단일 그래프의 생성으로 답을 쓰고 거절 답이면 실패로 보고, `verifier.py` 인용을 작성의 자체 검사와 별개로 다시 계산해 확인(걸리면 실패, `enforce=False`면 기록만), `__init__.py` 패키지 표시
