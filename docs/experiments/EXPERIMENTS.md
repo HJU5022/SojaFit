@@ -17,4 +17,4 @@
 - `supervisor-model-comparison.md` — 수퍼바이저 후보 5종의 70문항 1회 비교 방법·경량 집계·선정 결론. 실험상 최종 선정은 `openai/gpt-6-luna`, 서비스 적용은 조장 소유 정본 갱신 뒤 수행
 - `supervisor-model-comparison-postregistration.md` — 완료된 수퍼바이저 후보 5종 비교의 실제 조건·실행 중 변경·채점 범위·선정 기준·한계를 기록한 사후등록
 - `supervisor-stage2-six-models.md` — 기존 5종과 Jev의 2차 70문항 공동 평가 계약(#32). 실측은 `../research/supervisor-stage2-results.md`
-- `supervisor-stage3-six-models.md` — 같은 6종·동결 70문항의 3차 `run_index=3` 공동 평가 계약(#33). 현재 API 없는 실행 준비만 완료
+- `supervisor-stage3-six-models.md` — 같은 6종·동결 70문항의 3차 `run_index=3` 공동 평가 계약(#33). 실측은 `../research/supervisor-stage3-results.md`
