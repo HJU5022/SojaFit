@@ -53,7 +53,16 @@ SojaFit (proj3-b)
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
-│   │   └── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
+│   │   ├── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
+│   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·결정서·횟수는 dict, path는 단일 그래프와 같은 말
+│   │   ├── facts.py        <- 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 Facts를 만듦
+│   │   ├── messages.py     <- 거절 사유를 사용자 일상어 문구로 바꿈(내부 코드는 로그에만)
+│   │   ├── build.py        <- 조립: Supervisor를 가운데 두고 서브에이전트가 끝나면 돌아오게 연결. 판정·웹은 아직 거부
+│   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
+│   │       ├── __init__.py <- 패키지 표시
+│   │       ├── search.py   <- 검색 에이전트: 재작성·검색·채점 한 번, 통과 청크와 실패 사유를 보고. 결과 없음 뒤엔 필터를 풂
+│   │       ├── writer.py   <- 작성 에이전트: 단일 그래프의 생성으로 답을 쓰고 거절 답이면 실패 보고
+│   │       └── verifier.py <- 검증 에이전트: 인용을 다시 계산해 확인(걸리면 실패, enforce=False면 기록만)
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── netlist.py      <- 넷리스트에서 대상 부품 주변 연결 읽기 (예정, 후보 이름)
@@ -245,7 +254,9 @@ SojaFit (proj3-b)
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명
 │   │   ├── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
-│   │   └── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
+│   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
+│   │   ├── test_agents.py  <- 검색·작성·검증 에이전트, 사실 확인, 거절 문구
+│   │   └── test_build.py   <- 조립 길 시험: 직행·검색 경로·못 찾음 거절·범위 밖·검증 실패 뒤 다시 쓰기
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)

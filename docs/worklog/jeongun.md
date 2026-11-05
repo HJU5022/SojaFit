@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 서브에이전트 3개와 조립(가짜 LLM 시험)
+- 한 일: 시험 먼저 멀티 에이전트의 나머지 뼈대를 만들었다. 검색 에이전트(`agents/search.py`: 재작성 · 검색 · 채점 한 번, 통과 청크 번호와 실패 사유 3종(결과 없음 · 전부 탈락 · 검색 장애)을 보고, "결과 없음" 뒤 재시도에는 품번 필터를 풀어 다르게 시도), 작성 에이전트(`writer.py`: 단일 그래프의 `generate`를 감싸고 "문서로 확인 안 됨"이면 실패 보고), 검증 에이전트(`verifier.py`: 작성의 자체 검사를 믿지 않고 인용을 다시 계산, `enforce=False`면 기록만), 사실 확인(`facts.py`), 거절 문구(`messages.py`: 일상어, 내부 코드와 분리), 공용 메모장(`state.py`), 조립(`build.py`: 서브에이전트가 끝나면 반드시 Supervisor로 돌아오는 허브). Supervisor에 판정 스위치(`judge_enabled`)를 더했고 켜지지 않은 판정 · 웹은 선택지에서 빼며 `build_graph`가 켜려 하면 거부한다.
+- 바꾼 파일: `backend/multi_agent/`(`state.py` · `facts.py` · `messages.py` · `build.py` · `supervisor.py` · `agents/` 3개), `backend/prompts/supervisor.md`(판정 줄 한 곳), `tests/multi_agent/`(`test_agents.py` · `test_build.py` · `test_supervisor.py`), `MULTI_AGENT.md` 두 개, `SOJAFIT.md`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 422 passed, 27 skipped(멀티 에이전트 시험 39개). 조립 시험은 다섯 길(역할 직행, 검색 → 작성 → 검증 → 끝, 검색 두 번 실패 → 못 찾음 거절, 범위 밖 거절, 검증 실패 뒤 다시 쓰기 한 번 → 검증 실패 거절)을 가짜 LLM · 검색기로 끝까지 돌렸다.
+- 확인 못 한 것: 실제 LLM · 검색 · DB로는 한 번도 안 돌렸다. `llm.node_chat`은 노드 이름이 정해져 있고 Langfuse 추적 때 프롬프트 등록이 필요해 `supervisor`를 더하는 작업이 남았다. 사실 확인의 코퍼스 목록을 가져오는 도구(MCP)가 없다. 채점이 아직 2갈래라 검색 보고의 `partial`은 안 나온다. 판정 · 웹 에이전트, 평가 실행기(`run_multi`), 사람 승인(interrupt)과 체크포인트는 없다.
+- 다음 할 일: 정운이 프롬프트와 전체 구조를 한 번 점검한 뒤(측정 전), 사실 확인 도구 · Langfuse 연결 · 평가 실행기를 붙여 실제 70문항으로 Supervisor 결정과 5지표를 D4 기준선과 비교한다.
+
 ## 2026-11-05 Supervisor 노드(가짜 LLM 시험)
 - 한 일: 시험 먼저 Supervisor를 만들었다. `backend/multi_agent/supervisor.py`는 질문 · 확인된 사실(`Facts`: 품번 · 개정판이 코퍼스에 있나) · 지금까지의 보고 · 한도 현황 · 고를 수 있는 노드를 글로 만들어 LLM에 주고 결정서(`Decision`)를 받는다(`decide`). 한도를 넘거나 꺼져 있는 웹으로 가려 하면 거절로 바꾸고(품번이 목록에 없었으면 `part_missing`, 아니면 `not_found`), 끝내는 길(`finish` · `refuse`)은 한도로 막지 않는다. 판단 횟수 세기(`count_decision` · `count_report`). 프롬프트 `backend/prompts/supervisor.md` v1. 결정서에 질문 종류(`question_type`)를 더했다.
 - 바꾼 파일: `backend/multi_agent/supervisor.py` · `contracts.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, `tests/multi_agent/test_supervisor.py` · `test_contracts.py`, `MULTI_AGENT.md` 두 개, `SOJAFIT.md` 트리, 이 파일

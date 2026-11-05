@@ -1,0 +1,31 @@
+"""검증 에이전트: 쓴 답의 인용을 다시 계산해 확인한다.
+
+- 역할: 답의 문장마다 근거 번호가 있는지, 인용한 번호가 실제로 넘긴 근거(통과 청크 · 넷리스트)인지 확인하고 보고서를 올린다.
+  작성의 자체 검사(`check`)를 믿지 않고 상태의 답과 근거로 다시 계산한다.
+- 하지 않는 일: 답 고치기(다시 쓸지는 Supervisor가 정한다), 값이 맞는지 판단(의미 정확도는 보지 않는다), 검색.
+- 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05), backend/graph/nodes.py(`citations` 재사용)
+"""
+import re
+
+from backend.graph.nodes import NOT_FOUND, citations
+from backend.multi_agent.contracts import AgentReport, Reason
+
+
+def verifier_agent(state: dict, *, enforce: bool = True) -> dict:
+    """enforce가 False면 걸려도 막지 않고 기록만 한다(기준선과 같은 조건으로 재볼 때)."""
+    answer = state.get('answer') or ''
+    passed = {str(i) for i in state.get('passed') or []}
+    valid = {str(d['chunk_id']) for d in state.get('docs') or [] if str(d['chunk_id']) in passed} | ({'넷리스트'} if state.get('target_part') else set())
+    if answer == NOT_FOUND or not answer:
+        report = AgentReport(agent='verifier', status='ok', summary='거절 답이라 확인할 인용이 없음')
+    else:
+        fake = sorted(citations(answer) - valid)
+        uncited = sum(1 for s in re.split(r'(?<=[.。])\s+', answer) if s.strip() and not citations(s))
+        problem = f'없는 근거 인용 {fake}, 근거 번호 없는 문장 {uncited}개' if fake or uncited else ''
+        if not problem:
+            report = AgentReport(agent='verifier', status='ok', summary='모든 문장에 근거 번호가 있고 넘긴 근거만 인용함')
+        elif enforce:
+            report = AgentReport(agent='verifier', status='fail', summary=problem, reason=Reason.VERIFY_FAILED)
+        else:
+            report = AgentReport(agent='verifier', status='ok', summary=f'기록만 함(막지 않음): {problem}')
+    return {'reports': (state.get('reports') or []) + [report.model_dump(mode='json')], 'path': ['검증']}

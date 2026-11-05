@@ -40,8 +40,11 @@ def test_render_contains_question_facts_reports_status_and_options():
     assert 'web' not in text.split('고를 수 있는 다음 노드')[1]  # 웹이 꺼져 있으면 선택지에 없다
 
 
-def test_render_lists_web_only_when_enabled():
+def test_render_lists_web_and_judge_only_when_enabled():
+    opts = S.render(inp()).split('고를 수 있는 다음 노드')[1]
+    assert 'judge' not in opts and 'web' not in opts
     assert 'web' in S.render(inp(web_enabled=True)).split('고를 수 있는 다음 노드')[1]
+    assert 'judge' in S.render(inp(judge_enabled=True)).split('고를 수 있는 다음 노드')[1]
 
 
 def test_decide_passes_decision_schema_and_returns_llm_choice():
@@ -75,6 +78,12 @@ def test_decide_turns_disabled_web_into_refusal_with_matching_reason():
     d2 = S.decide(inp(), fake_chat(Decision(next='web', brief='')))
     assert d2.reason == Reason.NOT_FOUND
     assert S.decide(inp(web_enabled=True), fake_chat(Decision(next='web', brief=''))).next == 'web'
+
+
+def test_decide_sends_disabled_judge_to_writer():
+    d = S.decide(inp(), fake_chat(Decision(next='judge', brief='')))
+    assert d.next == 'writer'  # 판정 에이전트가 아직 없으니 근거로 쓰는 길로
+    assert S.decide(inp(judge_enabled=True), fake_chat(Decision(next='judge', brief=''))).next == 'judge'
 
 
 def test_count_decision_and_report():

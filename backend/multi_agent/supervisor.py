@@ -14,7 +14,7 @@ from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, R
                                            Decision, Reason, check_limit)
 
 PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'supervisor.md').read_text(encoding='utf-8')
-ALWAYS = ('search', 'judge', 'writer', 'verifier', 'finish', 'refuse')  # 웹은 켜져 있을 때만 선택지에 넣는다
+ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
 
 
 class Facts(BaseModel):
@@ -31,7 +31,8 @@ class SupervisorInput(BaseModel):
     facts: Facts = Field(default_factory=Facts)
     reports: list[AgentReport] = Field(default_factory=list)
     counters: Counters = Field(default_factory=Counters)
-    web_enabled: bool = False  # [왜] 평가 모드에서는 끈다(동결한 코퍼스만 쓴다)
+    web_enabled: bool = False    # [왜] 평가 모드에서는 끈다(동결한 코퍼스만 쓴다)
+    judge_enabled: bool = False  # [왜] 판정 에이전트가 아직 없다. 기능 스위치로 숨겨 두면 미완성이 전체 동작을 깨지 않는다
 
 
 def render(i: SupervisorInput) -> str:
@@ -53,7 +54,7 @@ def render(i: SupervisorInput) -> str:
         lines.append('(아직 없음)')
     c = i.counters
     lines.append(f'현황: 판단 {c.hops}/{MAX_HOPS} · 검색 {c.searches}/{MAX_SEARCHES} · 작성 {c.writes}/{MAX_WRITES}')
-    options = ALWAYS + (('web',) if i.web_enabled else ())
+    options = ALWAYS + (('judge',) if i.judge_enabled else ()) + (('web',) if i.web_enabled else ())
     lines.append('고를 수 있는 다음 노드: ' + ', '.join(options))
     return '\n'.join(lines)
 
@@ -71,6 +72,8 @@ def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
         # [왜] 웹이 꺼져 있는데 LLM이 골랐다. 품번이 목록에 없었으면 확정 사유로, 아니면 못 찾음(추정)으로 거절한다
         reason = Reason.PART_MISSING if any(not ok for ok in i.facts.parts.values()) else Reason.NOT_FOUND
         return Decision(next='refuse', reason=reason, brief='웹 조회 꺼짐')
+    if d.next == 'judge' and not i.judge_enabled:
+        return d.model_copy(update={'next': 'writer', 'brief': '판정 꺼짐: 찾은 근거로 답을 쓴다'})  # 거절이 아니라 근거로 쓰는 길로 돌린다
     return d
 
 
@@ -89,3 +92,17 @@ def count_report(c: Counters, r: AgentReport) -> Counters:
     if r.agent == 'search' and r.reason in RETRY_REASONS:
         new.recent.append(r.reason)
     return new
+
+
+def supervisor_node(state: dict, *, chat, web_enabled: bool = False, judge_enabled: bool = False) -> dict:
+    """그래프 노드: 메모장에서 Supervisor 입력을 만들어 결정서를 받고 판단 횟수를 센다."""
+    part = state.get('target_part') or {}
+    i = SupervisorInput(question=state['question'], target=state.get('target', ''), conditions=state.get('conditions', ''),
+                        target_value=part.get('value', ''), facts=Facts(**(state.get('facts') or {})),
+                        reports=[AgentReport(**r) for r in state.get('reports') or []], counters=Counters(**state['counters']),
+                        web_enabled=web_enabled, judge_enabled=judge_enabled)
+    d = decide(i, chat)
+    out = {'decision': d.model_dump(mode='json'), 'counters': count_decision(i.counters, d).model_dump(mode='json'), 'path': ['판단']}
+    if d.question_type:  # 처음 판단에서 정한 질문 종류를 이어 쓴다. 한도 거절처럼 없으면 그대로 둔다
+        out['question_type'] = d.question_type
+    return out
