@@ -152,7 +152,8 @@ SojaFit (proj3-b)
 │   ├── guides/             <- 평가 기준 문서
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
-│   │   └── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
+│   │   ├── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
+│   │   └── supervisor-prompt-v0.md  <- 수퍼바이저 V0 세 후보의 오프라인 준비·live 승인 gate·실행·집계 순서
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
@@ -166,6 +167,7 @@ SojaFit (proj3-b)
 │   │   ├── supervisor_prompt_v0_common.py  <- 수퍼바이저 V0 표본 무결성·입력 격리·공통 채점
 │   │   ├── run_supervisor_prompt_v0.py  <- Luna·Haiku 수퍼바이저 V0 오프라인 plan·명시적 live 실행
 │   │   ├── run_supervisor_prompt_v0_jev.py  <- Jev Decisions 수퍼바이저 V0 오프라인 plan·typed answer 정규화·상한 실행
+│   │   ├── compare_supervisor_prompt_v0.py  <- 수퍼바이저 V0 세 후보의 hash·case 일치 확인과 공통 지표 집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -290,6 +292,7 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor_prompt_v0_common.py  <- V0 표본 무결성·입력 격리·공통 분모 검증
 │   │   ├── test_supervisor_prompt_v0.py  <- Luna·Haiku V0 입력·재시도·오프라인 plan·live gate 검증
 │   │   ├── test_supervisor_prompt_v0_jev.py  <- Jev V0 공통 계약·입력 경계·typed answer·live gate 검증
+│   │   ├── test_compare_supervisor_prompt_v0.py  <- V0 세 후보 hash·case·API별 지표 통합 집계 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치

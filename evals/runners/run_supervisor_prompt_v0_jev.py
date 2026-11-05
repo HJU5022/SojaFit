@@ -26,6 +26,7 @@ from evals.runners.supervisor_prompt_v0_common import (
 
 ROOT = Path(__file__).resolve().parents[2]
 COMMON_PATH = ROOT / "evals" / "runners" / "supervisor_prompt_v0_common.py"
+CONTRACT_PATH = ROOT / "backend" / "graph" / "supervisor.py"
 MODEL_ID = "typesafe/jev-1.14"
 PROVIDER_POLICY = {
     "zdr": True,
@@ -156,6 +157,7 @@ def create_manifest(dataset=DATASET, frozen=FROZEN) -> dict:
         "provider_policy": PROVIDER_POLICY,
         "question_contract_sha256": _contract_hash(),
         "common_module_sha256": _sha256(COMMON_PATH),
+        "contract_sha256": _sha256(CONTRACT_PATH),
         "jobs": [
             {"model_id": MODEL_ID, "case_id": item["id"], "run_index": 1}
             for item in items
@@ -173,6 +175,7 @@ def _validate_manifest(run_dir: Path) -> tuple[dict, list[dict]]:
         "provider_policy",
         "question_contract_sha256",
         "common_module_sha256",
+        "contract_sha256",
         "jobs",
     ):
         if manifest.get(key) != expected[key]:
@@ -197,6 +200,11 @@ def execute(
         "model_id": MODEL_ID,
         "rows": [],
     }
+    result.update({
+        "api_mode": "decisions",
+        "dataset_sha256": _sha256(DATASET),
+        "contract_sha256": _sha256(CONTRACT_PATH),
+    })
     completed_ids = {row["case_id"] for row in result["rows"]}
     started = time.monotonic()
     calls = 0
@@ -297,13 +305,47 @@ def main(argv=None) -> int:
         return 0
 
     _validate_live(parser, args)
-    max_calls = 1 if args.command == "smoke" else args.max_calls
-    result = execute(
-        args.output,
-        max_calls=max_calls,
-        max_seconds=args.max_seconds,
-        approved_max_usd=args.max_usd,
-    )
+    if args.command == "smoke":
+        _validate_manifest(args.output)
+        item = load_v0_dataset(DATASET, FROZEN)[0]
+        started = time.monotonic()
+        try:
+            payload = llm.evaluation_decision(
+                build_request_from_item(item),
+                timeout=min(45.0, args.max_seconds),
+            )
+            row = parse_item_response(item, payload)
+            row["latency_seconds"] = time.monotonic() - started
+        except JevFormatError:
+            row = {
+                "model_id": MODEL_ID,
+                "case_id": item["id"],
+                "status": "error",
+                "error_type": "ValidationError",
+            }
+        result = {
+            "status": row["status"],
+            "model_id": MODEL_ID,
+            "api_mode": "decisions",
+            "dataset_sha256": _sha256(DATASET),
+            "contract_sha256": _sha256(CONTRACT_PATH),
+            "row": row,
+            "limits": {
+                "max_calls": 1,
+                "max_seconds": args.max_seconds,
+                "approved_max_usd": args.max_usd,
+                "reported_cost": "Not Reported",
+                "usd_cap_technically_enforced": False,
+            },
+        }
+        _write_json_atomic(args.output / "smoke_typesafe__jev-1.14.json", result)
+    else:
+        result = execute(
+            args.output,
+            max_calls=args.max_calls,
+            max_seconds=args.max_seconds,
+            approved_max_usd=args.max_usd,
+        )
     print(json.dumps({"status": result["status"], "model": MODEL_ID}, ensure_ascii=False))
     return 0 if result["status"] == "complete" else 1
 

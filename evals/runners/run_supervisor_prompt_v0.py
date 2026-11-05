@@ -23,6 +23,7 @@ from evals.runners.supervisor_prompt_v0_common import (
 ROOT = Path(__file__).resolve().parents[2]
 PROMPT_PATH = ROOT / "backend" / "prompts" / "supervisor_v0.md"
 COMMON_PATH = ROOT / "evals" / "runners" / "supervisor_prompt_v0_common.py"
+CONTRACT_PATH = ROOT / "backend" / "graph" / "supervisor.py"
 PROMPT = PROMPT_PATH.read_text(encoding="utf-8")
 
 MODELS = ("openai/gpt-6-luna", "anthropic/claude-haiku-5.5")
@@ -73,6 +74,7 @@ def create_manifest(dataset=DATASET, frozen=FROZEN) -> dict:
         "provider_policy": PROVIDER_POLICY,
         "prompt_sha256": _sha256(PROMPT_PATH),
         "common_module_sha256": _sha256(COMMON_PATH),
+        "contract_sha256": _sha256(CONTRACT_PATH),
         "jobs": build_plan(items),
     }
 
@@ -159,6 +161,7 @@ def _validate_manifest(run_dir: Path) -> tuple[dict, list[dict]]:
         "provider_policy",
         "prompt_sha256",
         "common_module_sha256",
+        "contract_sha256",
         "jobs",
     ):
         if manifest.get(key) != expected[key]:
@@ -188,6 +191,11 @@ def execute_model(
         "model_id": model,
         "rows": [],
     }
+    result.update({
+        "api_mode": "chat_completions",
+        "dataset_sha256": _sha256(DATASET),
+        "contract_sha256": _sha256(CONTRACT_PATH),
+    })
     completed_ids = {row["case_id"] for row in result["rows"]}
     budget = llm.EvaluationBudget(
         max_calls=len(items) * MAX_RAW_ATTEMPTS,

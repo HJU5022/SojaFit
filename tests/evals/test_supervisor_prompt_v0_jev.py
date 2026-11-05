@@ -102,6 +102,7 @@ def test_jev_plan_is_network_free(tmp_path, monkeypatch):
     assert manifest["model"] == "typesafe/jev-1.14"
     assert len(manifest["question_contract_sha256"]) == 64
     assert len(manifest["common_module_sha256"]) == 64
+    assert len(manifest["contract_sha256"]) == 64
 
 
 def test_jev_live_requires_confirmation_and_positive_caps(tmp_path):

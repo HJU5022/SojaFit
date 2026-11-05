@@ -81,6 +81,7 @@ def test_plan_is_network_free_and_contains_26_jobs(tmp_path, monkeypatch):
     assert len(manifest["dataset_sha256"]) == 64
     assert len(manifest["prompt_sha256"]) == 64
     assert len(manifest["common_module_sha256"]) == 64
+    assert len(manifest["contract_sha256"]) == 64
 
 
 def test_live_commands_require_confirmation_and_positive_limits(tmp_path):

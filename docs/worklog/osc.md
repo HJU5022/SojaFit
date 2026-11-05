@@ -1,5 +1,14 @@
 # 오세창 작업 기록
 
+## 2026-11-05 Supervisor Prompt V0 프로토타입
+
+- 한 일: 확정본이 아닌 Supervisor 전용 V0 prompt와 입력·출력·상태 라우팅 계약을 만들었다. 별도 13건 상태 표본에서 `openai/gpt-6-luna`, `anthropic/claude-haiku-5.5`, `typesafe/jev-1.14`를 같은 네 필드로 비교할 수 있도록 Chat·Decisions 독립 실행기와 API 없는 통합 집계기를 추가했다. 현재 `build_graph()`에는 연결하지 않았다.
+- 계약: 입력은 `user_request`, `current_state`, `external_material`로 분리하고 정답·case id를 모델에 보내지 않는다. 출력은 `question_type`, `required_evidence`, `next_action`, `reason_code` 네 필드다. 외부 자료는 지시가 아닌 데이터로 취급하며 상세 프롬프트 인젝션 방어는 다음 작업으로 남겼다.
+- 실행 안전: `plan`은 네트워크를 사용하지 않는다. Chat live 경로는 호출·시간·예약 비용 상한과 최대 3회 형식 시도를 사용한다. Jev는 호출·시간 상한을 집행하지만 비용 미보고 API라 USD는 승인 기록과 `Not Reported`를 구분한다. 구현 중 live 모델 호출과 유료 평가를 하지 않았다.
+- 바꾼 파일: `backend/graph/supervisor.py`, `backend/prompts/supervisor_v0.md`, `evals/samples/supervisor_prompt_v0*`, V0 공통·Chat·Jev·통합 집계 실행기와 테스트, 설계·구현 계획·평가 절차 및 폴더 색인.
+- 검증: 각 단계에서 모듈 부재 RED를 확인한 뒤 구현했다. V0 선택 테스트, 인접 LLM 서비스 테스트, 저장소 구조 검사를 API 없이 실행했다. `ruff`는 개발 의존성에 없어 실행하지 못했다. 전체 테스트의 기존 Windows 기본 인코딩 실패 `tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file`은 이 작업 범위에서 수정하지 않았다.
+- 다음 할 일: 별도 승인 뒤 exact model/provider 1건 smoke와 13건을 실행하고, dataset·의미 계약 hash와 case 집합이 같은 결과만 비교한다. 그 뒤 프롬프트 인젝션 방어를 별도 설계한다.
+
 > **문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 이번 변경에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
 
 ## 2026-11-02 Voyage 후보 변경 독립 감사 후속
