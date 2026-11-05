@@ -15,6 +15,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-05 | `supervisor.md` | v1 | 처음 작성. 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-03 | `tool_use.md` | `sojafit/tool-use` 등록 번호 1 | PR #36 도구5종의 선택·인자·결과 해석을 별도 프롬프트로 작성 | manifest ID·웹 후보·PDF 무결성·공개 회로의 계약을 구분 | #21~#23 모의12건 확인. 도구/인자5/5·고정 action11/12 일치, 실제 도구0회. `skill_tool_summary_2026-11-03.json` |
 | 2026-11-03 | `../mcp_skill/skills/SKILL.md` | Langfuse 등록 번호 2 | S1 7상황·S2 6상황의 현재 본문 등록, 노드 chat prompt는 버전4 유지 | 상황별 판단까지 작성한 본문과 검증 대상 일치 | #20 대표 흐름4건·직접 생성13건의 추적 연결 확인. 답변 기준12/13 충족, 충돌1건 실패. `skill_tool_summary_2026-11-03.json` |
 | 2026-11-03 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse development v4 | `sojafit/route`, `grade`, `rewrite`, `generate`로 chat prompt 등록. user는 `{{input}}`, 생성 system에 선택적 `{{domain_skill}}` | 고정 버전과 generation 연결. 모델 Haiku5.5·temperature0·출력4096 | 합성4건·generation10개에서 프롬프트 버전·모델·부모 연결을 API로 확인. `skill_tool_summary_2026-11-03.json` |
@@ -27,6 +28,7 @@
 
 ## 파일
 - `PROMPTS.md` — 이 폴더 설명과 버전 기록 표(프롬프트 해시에서 제외)
+- `supervisor.md` — 멀티 에이전트 Supervisor의 시스템 프롬프트(다음 노드 선택, 거절 사유, 판단 규칙). Langfuse 등록은 아직
 - `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 5가지)
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)

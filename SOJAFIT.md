@@ -52,7 +52,8 @@ SojaFit (proj3-b)
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   └── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
+│   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
+│   │   └── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── netlist.py      <- 넷리스트에서 대상 부품 주변 연결 읽기 (예정, 후보 이름)
@@ -68,7 +69,8 @@ SojaFit (proj3-b)
 │   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
 │   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
-│   │   └── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
+│   │   ├── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 다음 노드 선택·거절 사유·판단 규칙. 아직 Langfuse에 등록하지 않음
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
@@ -242,7 +244,8 @@ SojaFit (proj3-b)
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명
-│   │   └── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
+│   │   ├── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
+│   │   └── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)

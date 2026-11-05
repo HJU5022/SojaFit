@@ -70,3 +70,15 @@ def test_write_limit_means_verification_failed():
 
 def test_limits_match_agreed_numbers():
     assert (C.MAX_SEARCHES, C.MAX_WRITES, C.MAX_HOPS) == (2, 2, 8)  # 검색 처음+재시도 1 · 작성 처음+다시 1 · 판단 8
+
+
+def test_decision_may_carry_question_type_for_downstream_agents():
+    d = Decision(next='search', question_type='candidate_judge', brief='')
+    assert d.question_type == 'candidate_judge'
+    with pytest.raises(ValidationError):
+        Decision(next='search', question_type='weather', brief='')  # [왜] 판정 에이전트가 필요한지는 질문 종류로 갈린다
+
+
+def test_terminal_nodes_are_never_blocked_by_limits():
+    over = Counters(hops=C.MAX_HOPS, searches=C.MAX_SEARCHES, writes=C.MAX_WRITES)
+    assert C.check_limit(over, 'finish') is None and C.check_limit(over, 'refuse') is None  # 끝내는 길은 막지 않는다

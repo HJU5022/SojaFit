@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 Supervisor 노드(가짜 LLM 시험)
+- 한 일: 시험 먼저 Supervisor를 만들었다. `backend/multi_agent/supervisor.py`는 질문 · 확인된 사실(`Facts`: 품번 · 개정판이 코퍼스에 있나) · 지금까지의 보고 · 한도 현황 · 고를 수 있는 노드를 글로 만들어 LLM에 주고 결정서(`Decision`)를 받는다(`decide`). 한도를 넘거나 꺼져 있는 웹으로 가려 하면 거절로 바꾸고(품번이 목록에 없었으면 `part_missing`, 아니면 `not_found`), 끝내는 길(`finish` · `refuse`)은 한도로 막지 않는다. 판단 횟수 세기(`count_decision` · `count_report`). 프롬프트 `backend/prompts/supervisor.md` v1. 결정서에 질문 종류(`question_type`)를 더했다.
+- 바꾼 파일: `backend/multi_agent/supervisor.py` · `contracts.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, `tests/multi_agent/test_supervisor.py` · `test_contracts.py`, `MULTI_AGENT.md` 두 개, `SOJAFIT.md` 트리, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 404 passed, 27 skipped(멀티 에이전트 시험 21개 포함).
+- 확인 못 한 것: LLM이 실제로 좋은 결정을 내리는지는 안 쟀다(가짜 LLM 시험은 글 만들기와 한도 처리만 본다). `llm.node_chat`은 노드 이름이 route · grade · rewrite · generate로 정해져 있고 Langfuse 추적이 켜져 있으면 프롬프트 등록이 필요해서, 실제 연결 때 `supervisor`를 더하는 작업이 남았다. 사실 조회(`Facts`를 만드는 도구)는 아직 없다.
+- 다음 할 일: 서브에이전트(처음에는 단일의 검색 · 채점 · 재작성을 감싸기) → 조립 → 같은 70문항으로 Supervisor의 질문 종류 · 거절 결정을 D4 기준선과 비교.
+
 ## 2026-11-05 멀티 에이전트 폴더 뼈대와 약속(contracts.py)
 - 한 일: 정운과의 설계 대화 결과로 새 구조의 첫 조각을 만들었다. D4 단일 그래프를 비교 기준선으로 지키려고 `backend/multi_agent/`를 `graph/`와 분리했고(이유는 폴더 설명 `MULTI_AGENT.md`), 시험 먼저 `contracts.py`를 썼다: Supervisor의 결정서 `Decision`, 서브에이전트의 보고서 `AgentReport`, 이유 코드 `Reason`(거절 7종 · 재시도 3종), 한도 `MAX_HOPS` 8 · `MAX_SEARCHES` 2 · `MAX_WRITES` 2와 한도 검사 `check_limit`.
 - 바꾼 파일: `backend/multi_agent/`(`MULTI_AGENT.md` · `__init__.py` · `contracts.py`), `tests/multi_agent/`(`MULTI_AGENT.md` · `test_contracts.py`), `SOJAFIT.md` 트리와 담당 표, `backend/BACKEND.md` · `tests/TESTS.md` · `backend/graph/GRAPH.md`의 목록, 이 파일

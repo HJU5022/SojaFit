@@ -18,6 +18,7 @@ MAX_SUMMARY = 200   # 보고서 요약 글자 수 상한. Supervisor는 원문�
 
 NextNode = Literal['search', 'judge', 'writer', 'verifier', 'web', 'finish', 'refuse']  # 'web'은 나중 조각(평가 모드에서는 끔)
 AgentName = Literal['search', 'judge', 'writer', 'verifier']
+QuestionType = Literal['out_of_scope', 'role', 'candidate_find', 'candidate_judge', 'rating']  # 단일 그래프 Route와 같은 다섯 가지
 
 
 class Reason(str, Enum):
@@ -44,6 +45,7 @@ RETRY_REASONS = frozenset({Reason.NO_RESULT, Reason.ALL_REJECTED, Reason.PARTIAL
 class Decision(BaseModel):
     """Supervisor의 결정서: 다음에 누구에게 맡길지(또는 끝낼지)."""
     next: NextNode  # [왜] Literal이라 LLM이 목록 밖 이름을 내면 pydantic 검사에서 걸러진다
+    question_type: QuestionType | None = None  # 처음 판단에서 정한 질문 종류. 판정 에이전트가 필요한지가 이걸로 갈린다
     reason: Reason | None = None  # 거절이면 필수. 재시도면 지난 실패 사유를 담아 다음 시도가 다르게 하게 한다
     brief: str = Field(default='', max_length=300, description='다음 에이전트에게 줄 짧은 지시')
 
@@ -74,6 +76,8 @@ class Counters(BaseModel):
 
 def check_limit(c: Counters, next_node: str) -> Reason | None:
     """다음 노드로 가면 한도를 넘는지 본다. 넘으면 그 대신 거절할 이유를, 아니면 None을 돌려준다."""
+    if next_node in ('finish', 'refuse'):
+        return None  # [왜] 끝내는 길까지 막으면 한도에 닿은 뒤 정상 종료도 못 한다
     if c.hops >= MAX_HOPS:
         return Reason.LIMIT_REACHED
     if next_node == 'search' and c.searches >= MAX_SEARCHES:
