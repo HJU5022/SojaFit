@@ -7,7 +7,7 @@
 - 담당: 가산을 시작할 때 정합니다.
 
 ## 파일
-- `mcp_server/server.py` — FastMCP stdio 도구 6종(`search_corpus`, `get_corpus_document`, `search_tsc_web`, `verify_tsc_pdf`, `get_circuit_info`, `check_corpus`). 계약과 한계는 [작업서](../../docs/specs/mcp-search-tools.md)와 [검토 기록](../../docs/research/mcp-tool-contract-review.md)을 따릅니다. 실행: `uv run --env-file .env python -m backend.mcp_skill.mcp_server.server`
+- `mcp_server/server.py` — FastMCP stdio 도구 8종(`search_corpus`, `get_corpus_document`, `search_tsc_web`, `verify_tsc_pdf`, `get_circuit_info`, `check_corpus`, `get_part_specs`, `find_parts_by_specs`). 사양 도구 둘은 `backend/rag/spec_lookup.py`로 `part_specifications`(`db/011`)를 읽고 값을 거를 뿐 판정하지 않습니다. 계약과 한계는 [작업서](../../docs/specs/mcp-search-tools.md)와 [검토 기록](../../docs/research/mcp-tool-contract-review.md)을 따릅니다. 실행: `uv run --env-file .env python -m backend.mcp_skill.mcp_server.server`
 - `skills/SKILL.md` — S1 정격·시험 조건 해석, S2 회로 연결 설명 지침. 기본 적용은 꺼짐이고 수치 비교·최종 판정·되묻기는 제외합니다. 경로가 고정입니다: `backend/graph/nodes.py`(생성 노드), `backend/services/langfuse_prompts.py`, `evals/runners/run_skill_pair.py`가 이 경로를 읽으므로 옮기거나 이름을 바꾸지 않습니다. 적용 계약은 [SPEC](../../SPEC.md), 선정 근거는 [조사](../../docs/research/skill-feasibility.md), 검증 상태는 [EVAL_REPORT](../../EVAL_REPORT.md)를 따름
 
 폴더 설명 파일은 이 `MCP_SKILL.md`뿐이고 `mcp_server/`·`skills/` 안에는 두지 않습니다.

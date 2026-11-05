@@ -12,14 +12,18 @@
   2차 대조 뒤: IF_AV는 평균·연속 전류만(첨두·서지·반복·IFRM·IF,MAX 행은 IFSM이거나 제외), 머리 끝 숫자는 첫 행이 빨려 든 것이라
   떼고 읽음, 조건 주기로 품번 묶음 구간을 정함, 병합 칸 값은 가운데 열에서 대칭으로 펼침, 붙은 열 이름 칸을 나눔.
   `sample`은 13개 분류에서 품번 50개를 골라 사람이 PDF와 대조할 한국어 대조표(markdown)를 쓴다.
-- 하지 않는 일: LLM·임베딩 호출, DB 적재, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기.
-  결과는 데이터시트에서 나온 값이라 저장소 밖(`SojaFit/corpus/tsc/specs/`)에 쓴다.
+  `load`는 build 결과(part_specifications.jsonl·packages.jsonl)를 DB `part_specifications`(db/011)에 문서 단위로 바꿔 넣는다:
+  한 트랜잭션 안에서 대상 문서의 행을 지우고 새 행을 넣어, 다시 돌려도 같고 새·고친 데이터시트 하나만(`--docs`) 다시 넣을 수 있다(ADR 0007).
+- 하지 않는 일: LLM·임베딩 호출, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기.
+  결과는 데이터시트에서 나온 값이라 저장소 밖(`SojaFit/corpus/tsc/specs/`)에 쓴다. review.jsonl(뺀 값)은 DB에 넣지 않는다.
+  [주의] `load`는 DATABASE_URL을 읽지 않는다. 운영 DB에 실수로 쓰지 않도록 접속 주소를 `--dsn`으로만 받는다.
 - 출처: db/schema/table-definition.md 5.7 `part_specifications`, SPEC.md 3절(단위 환산은 `backend/rag/units.py`),
   원형 `전자_데이터시트/evidence/spec_table/build.py`와 README의 대조 오류 수정(11-03), 50개 품번 PDF 대조(11-05, ADR 0013)
 
 실행(저장소 루트):
   uv run python -m backend.rag.pipeline.specs build <chunks.jsonl> <out_dir>
   uv run python -m backend.rag.pipeline.specs sample <out_dir> <sheet.md> --n 50 --seed 0
+  uv run python -m backend.rag.pipeline.specs load <out_dir> --dsn <postgres 주소> [--docs <PDF 파일 이름> ...]
 """
 import argparse
 from collections import Counter, defaultdict
@@ -28,6 +32,7 @@ import math
 from pathlib import Path
 import random
 import re
+import time
 
 from backend.rag.retrieve import COVER
 from backend.rag.units import to_si
@@ -1011,6 +1016,56 @@ def cmd_sample(out_dir, sheet, n=50, seed=0):
     print(f'대조표 {sheet}: 품번 {len(picked)}개, 핵심 값 모두 있음 {complete}개')
 
 
+# DB part_specifications에 넣는 열 순서(db/011). id·created_at은 DB가 채운다
+LOAD_COLS = ('document_id', 'part_number', 'chunk_index', 'category', 'parameter_code', 'symbol', 'minimum_value',
+             'typical_value', 'maximum_value', 'text_value', 'source_value_text', 'source_unit', 'normalized_unit',
+             'test_condition', 'page_number', 'table_name', 'row_label', 'footnote_text')
+
+
+def num(v):
+    """SI 값(float)을 NUMERIC 글자로. 유효숫자 15자리로 적는다."""
+    # [왜] 환산한 float에는 이진 꼬리가 붙는다(200 µA → 0.00019999999999999998). 그대로 넣으면 '0.0002 이상' 조건에서 빠진다.
+    # 15자리는 float가 정확히 담는 자릿수이고 Postgres가 float8을 NUMERIC으로 바꿀 때도 15자리다. 데이터시트 값은 4자리 안팎이라 잃는 값이 없다
+    return None if v is None else format(v, '.15g')
+
+
+def load(specs_dir, dsn, docs=None):
+    """사양 표 폴더를 DB part_specifications에 문서 단위로 바꿔 넣는다. 반환: 바꾼 문서 수, DB에 없는 문서, 코드별 넣은 행 수."""
+    import psycopg
+    from backend.rag.pipeline.chunk import doc_key  # 'SS32 SERIES_Q2412.pdf' → source_documents.document_key
+    specs_dir = Path(specs_dir)
+    by_doc = defaultdict(list)  # PDF 파일 이름 → document_id를 뺀 행(LOAD_COLS[1:] 순서) 목록
+    for r in read_jsonl(specs_dir / 'part_specifications.jsonl'):
+        by_doc[r['doc']].append((r['part'], r['chunk']['idx'], r['family'], r['parameter_code'], r['symbol'],
+                                 num(r['minimum_value']), num(r['typical_value']), num(r['maximum_value']), r['text_value'],
+                                 r['source_value_text'], r['source_unit'], r['normalized_unit'], r['test_condition'],
+                                 r['page_number'], r['table_name'], r['row_label'], r['footnote_text']))
+    for p in read_jsonl(specs_dir / 'packages.jsonl'):
+        # [왜] 패키지는 숫자가 아니라 PACKAGE 코드 행의 text_value에 둔다. 문서 단위 목록이라 쪽·표·청크가 없다
+        by_doc[p['doc']] += [(p['part'], None, p['family'], 'PACKAGE', None, None, None, None, name, name)
+                             + (None,) * 7 for name in p['packages']]
+    targets = list(docs) if docs else sorted(by_doc)
+    start = time.monotonic()
+    with psycopg.connect(dsn) as conn:  # with: 오류 없이 끝나면 커밋, 예외면 롤백한다(지우기와 넣기가 한 트랜잭션)
+        doc_id = dict(conn.execute('SELECT document_key, id FROM source_documents').fetchall())
+        found = {d: doc_id[doc_key(d)] for d in targets if doc_key(d) in doc_id}
+        missing = [d for d in targets if d not in found]  # [주의] DB에 문서가 없으면 FK를 못 걸어 건너뛴다(먼저 ingest로 문서를 넣는다)
+        conn.execute('DELETE FROM part_specifications WHERE document_id = ANY(%s)', (list(found.values()),))
+        counts = Counter()
+        with conn.cursor().copy(f'COPY part_specifications ({", ".join(LOAD_COLS)}) FROM STDIN') as cp:
+            for d, i in found.items():
+                for row in by_doc.get(d, []):  # 파일에 행이 없는 문서는 지우기만 한다(새 판에서 값이 다 빠진 경우)
+                    cp.write_row((i,) + row)
+                    counts[row[3]] += 1
+        total = conn.execute('SELECT count(*) FROM part_specifications').fetchone()[0]
+    out = {'docs': len(found), 'missing_docs': missing, 'rows_by_code': dict(counts.most_common())}
+    print(json.dumps({**out, 'missing_docs': len(missing), 'rows': sum(counts.values()), 'table_rows': total,
+                      'seconds': round(time.monotonic() - start, 2)}, ensure_ascii=False))
+    if missing:
+        print('DB에 없는 문서(건너뜀):', ', '.join(missing[:20]) + (f' 외 {len(missing) - 20}건' if len(missing) > 20 else ''))
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description='부품 사양 표 만들기·대조표 표본')
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -1022,11 +1077,17 @@ def main(argv=None):
     s.add_argument('sheet')
     s.add_argument('--n', type=int, default=50)
     s.add_argument('--seed', type=int, default=0)
+    d = sub.add_parser('load', help='사양 표 폴더 → DB part_specifications(문서 단위로 바꿔 넣기)')
+    d.add_argument('out_dir')
+    d.add_argument('--dsn', required=True, help='Postgres 접속 주소. DATABASE_URL은 읽지 않는다')
+    d.add_argument('--docs', nargs='+', help='이 PDF 파일 이름의 문서만 다시 넣는다(기본: 폴더의 모든 문서)')
     a = ap.parse_args(argv)
     if a.cmd == 'build':
         cmd_build(a.chunks, a.out_dir)
-    else:
+    elif a.cmd == 'sample':
         cmd_sample(a.out_dir, a.sheet, a.n, a.seed)
+    else:
+        load(a.out_dir, a.dsn, a.docs)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 부품 사양 표 DB 적재와 조회 도구(로컬 DB)
+- 한 일: 사양 표를 DB 표로 만들고(`db/011_part_specifications.sql`, 정의서 5.7 + `part_number` 글자 칸 · `chunk_index` · `category` · 코드 `PACKAGE`, 문서 FK는 CASCADE), 적재 명령 `specs.py load`(접속 주소는 `--dsn`으로만 받고 `DATABASE_URL`은 읽지 않음, 한 번 실행을 한 트랜잭션으로 문서 단위 지우고 COPY), 조회 모듈 `backend/rag/spec_lookup.py`(`part_specs` · `find_candidates`)와 MCP 도구 `get_part_specs` · `find_parts_by_specs`를 넣었다. 운영 DB에는 넣지 않았다.
+- 바꾼 파일: `db/011_part_specifications.sql`, `db/DB.md`, `db/schema/table-definition.md`, `backend/rag/pipeline/specs.py`, `backend/rag/spec_lookup.py`, `backend/mcp_skill/mcp_server/server.py`, 시험 `tests/rag/test_rag_spec_lookup.py` · `tests/mcp_skill/test_mcp_server.py`, `SPEC.md` 8.7, `SOJAFIT.md` 트리, `RAG.md` · `MCP_SKILL.md` 폴더 설명, 이 파일
+- 실행한 명령과 결과: 맥 `uv run --frozen pytest -q` 566 passed, 43 skipped. 로컬 DB 컨테이너에서 `TEST_DATABASE_URL` DB 시험 143개 통과. 로컬 compose DB에 SQL 두 번 적용(두 번째 변경 없음), 적재 두 번(문서 1,360 모두 연결, 91,020행 = 숫자 77,340 + PACKAGE 13,680, 1.1 · 1.2초, 코드별 행 수 같음). 조회: `part_specs('1N5819')` 10행 0.5~6.9 ms, VRRM ≥ 40 · IF_AV ≥ 1 · 패키지 SMA 포함 564개 20~48 ms, 제너 VZ 3.42~3.78 V 15개(BZT52C3V6 포함) 14~18 ms. 표 크기 22 MB(데이터 18 + 인덱스 4.2). 운영 DB는 읽기 전용 조회로 207.2 MB라 넣으면 약 229 MB(무료 500 MB, ADR 0005 경보선 400 MB).
+- 확인 못 한 것: MCP 도구를 실제 stdio 클라이언트로 부르지 않았다. 패키지 이름에 일반 낱말 "SMALL"이 59건 잘못 들어갔고, 패키지 거르기가 부분 일치라 "SMA"가 SMAF까지 잡는다(564개 중 36개). `db/manual/004` 초안에도 `part_specifications`가 있어 겹치고, 초안 `requirement_checks`의 RESTRICT 참조와 다시 적재가 부딪힐 수 있다(정의서 1절 주의). 다시 적재하면 지운 행 때문에 정리 전까지 크기가 약 22 MB 더 는다.
+- 다음 할 일: 패키지 이름 · 거르기 고치기 → 운영 DB 적용(정운 승인) → 판정 에이전트.
+
 ## 2026-11-05 부품 사양 표 2차 규칙 수정(새 표본 seed 1 대조 결과)
 - 한 일: 처음 보는 50개 품번(seed 1) PDF 대조에서 310줄 중 O 303 · X 7이 나왔고, X 중 IF_AV 4줄(반복 첨두 IFRM, 비반복 서지 IF,MAX를 평균 전류로 분류)이 ADR 0013 기준(거르는 값 틀린 값 0)을 넘지 못해 규칙을 고쳤다. IF_AV는 평균 · 연속 · 정격 순방향 전류만 받고 peak · surge · repetitive · IFRM · IFM · IF,MAX · IFSM 행은 IF_AV가 아님(비반복 서지는 펄스 조건과 함께 IFSM). 그 밖에 반복 조건으로 품번 묶음 구간 찾기, 합쳐진 조건 칸 나누기, 품번 열 병합 칸 펼치기, 붙은 열 이름 칸 나누기, 머리로 빨려 든 첫 행 값 떼기, TVS 하위 머리 행의 자리와 파형 조건, 값 칸에 붙은 기호 떼기, 시험 전류 칸을 VZ · VBR 조건으로.
 - 바꾼 파일: `backend/rag/pipeline/specs.py`, `tests/rag/test_rag_specs.py`(새 시험 10개), `tests/rag/RAG.md`, 이 파일

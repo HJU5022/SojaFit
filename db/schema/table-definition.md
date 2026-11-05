@@ -2,9 +2,9 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`이 이미 만들고, 나머지 업무 표 11개는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. ERD 그림은 아직 없습니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 부품 사양 표(5.7)는 `db/011_part_specifications.sql`이 이미 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안에도 `part_specifications`(`part_id` 열)가 있어 011과 겹치므로, Migration 1을 적용하기 전에 초안에서 이 표를 빼거나 011에 맞춰 고칩니다. ERD 그림은 아직 없습니다.
 
-열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
+열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.7·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
 현재 프로젝트의 핵심 흐름은 다음과 같습니다.
 
@@ -201,20 +201,24 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 데이터시트에서 추출한 숫자 사양과 시험 조건을 구조화해 저장합니다. `backend/judge/`가 LLM 대신 숫자와 단위를 비교할 때 사용하는 데이터입니다. 최소·대표·최대값은 `backend/rag/`의 단위 환산 함수로 SI 기본 단위로 바꿔 저장하고, 원문 표기는 `source_value_text`에 그대로 남깁니다(A-08).
 
+`db/011_part_specifications.sql`이 만들고 `python -m backend.rag.pipeline.specs load`가 문서 단위로 지우고 다시 넣습니다(ADR 0007·0013). 읽는 곳은 `backend/rag/spec_lookup.py`(MCP `get_part_specs`·`find_parts_by_specs`)입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣습니다. 문서 FK는 `CASCADE`입니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
+
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
 | `id` | 부품 사양 ID | `BIGINT` | N | PK | 사양 식별자 | 확정 |
-| `part_id` | 부품 ID | `BIGINT` | N | FK → `parts.id` | 사양 대상 부품 | 확정 |
-| `document_id` | 출처 문서 ID | `BIGINT` | N | FK → `source_documents.id` | 값을 추출한 데이터시트 | 확정 |
-| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | CHECK: `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD` | 표준화된 사양 항목(A-07, 뒤 7개는 ADR 0013) | 확정 |
+| `part_number` | 품번 | `VARCHAR(100)` | N | 인덱스 `upper(part_number)` | 데이터시트 표지의 품번. `parts` 표가 생기면 `part_id`로 바꿀지 정함. 조회는 대소문자 무시 | 확정 |
+| `document_id` | 출처 문서 ID | `BIGINT` | N | FK → `source_documents.id` `ON DELETE CASCADE`, 인덱스 | 값을 추출한 데이터시트 | 확정 |
+| `chunk_index` | 청크 순번 | `INTEGER` | Y |  | 값이 나온 `document_chunks`의 같은 문서 청크 순번. `PACKAGE` 행은 문서 단위라 NULL | 확정 |
+| `category` | 분류 | `VARCHAR(100)` | Y |  | 청크의 다이오드 분류(예: `schottky-rectifier`, `zener-diode`). 후보 찾기 거르기용 | 확정 |
+| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | CHECK: `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD`, `PACKAGE`, 인덱스 | 표준화된 사양 항목(A-07, `VR`부터 7개는 ADR 0013). `PACKAGE`는 패키지 이름(`text_value`)으로 표면 실장·스루홀 거르기용 | 확정 |
 | `symbol` | 데이터시트 기호 | `VARCHAR(50)` | Y |  | 데이터시트에 표시된 `VRRM`, `IF` 등의 기호 | 확정 |
 | `minimum_value` | 최소값 | `NUMERIC` | Y |  | 데이터시트 최소값. 정규화 단위로 환산한 값 | 확정 |
 | `typical_value` | 대표값 | `NUMERIC` | Y |  | 데이터시트 대표값. 정규화 단위로 환산한 값 | 확정 |
 | `maximum_value` | 최대값 | `NUMERIC` | Y |  | 데이터시트 최대값. 정규화 단위로 환산한 값 | 확정 |
-| `text_value` | 비수치 값 | `TEXT` | Y |  | 숫자로 표현할 수 없는 사양값 | 가정 |
+| `text_value` | 비수치 값 | `TEXT` | Y |  | 숫자로 표현할 수 없는 사양값. 지금은 `PACKAGE` 행의 패키지 이름만 | 확정 |
 | `source_value_text` | 원문 표기 | `TEXT` | N |  | 데이터시트에 적힌 그대로의 값과 단위(예: `1.1 V`, `500 μA`). 인용 화면과 단위 깨짐 확인에 사용 | 확정 |
 | `source_unit` | 원본 단위 | `VARCHAR(30)` | Y |  | 데이터시트에 표기된 단위 | 확정 |
-| `normalized_unit` | 정규화 단위 | `VARCHAR(30)` | Y | CHECK: `V`, `A`, `s`, `W`, `F`, `degC` | SI 기본 단위(A-08) | 확정 |
+| `normalized_unit` | 정규화 단위 | `VARCHAR(30)` | Y | CHECK: `V`, `A`, `s`, `W`, `F`, `degC` | SI 기본 단위(A-08). `PACKAGE` 행은 NULL | 확정 |
 | `test_condition` | 시험 조건 | `TEXT` | Y |  | 온도, 전류 등 값이 성립하는 조건 | 확정 |
 | `page_number` | 페이지 번호 | `INTEGER` | Y |  | 데이터시트 페이지 | 확정 |
 | `table_name` | 표 이름 | `VARCHAR(500)` | Y |  | 값이 나온 표 이름 | 확정 |
@@ -222,7 +226,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `footnote_text` | 각주 | `TEXT` | Y |  | 값에 적용되는 데이터시트 각주 | 확정 |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 사양 적재 시각 | 가정 |
 
-최소값, 대표값, 최대값, 비수치 값이 모두 비어 있는 행은 받지 않습니다(CHECK, 가정). 파서 결과에서 이런 행이 꼭 필요하면 이 규칙을 고칩니다.
+최소값, 대표값, 최대값, 비수치 값이 모두 비어 있는 행은 받지 않습니다(CHECK). 사양 표 파일의 한 줄은 원문 칸 하나라 한 행에는 보통 최소·대표·최대 중 하나만 있습니다(제너 VZ의 최소와 최대는 다른 행). 애매해서 뺀 값(`review.jsonl`)은 넣지 않습니다(ADR 0013).
 
 ### 5.8 `analysis_runs` — 분석 실행
 
@@ -392,7 +396,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `parts` | 1:N | `analysis_runs` | 하나의 부품이 여러 분석에서 원본 부품으로 사용될 수 있음 |
 | `parts` | N:M | `source_documents` | `part_documents`가 연결함 |
 | `source_documents` | 1:N | `document_chunks` | 한 문서를 여러 청크로 나눔 |
-| `parts` | 1:N | `part_specifications` | 한 부품에 여러 사양과 시험 조건이 존재함 |
+| `parts` | 1:N | `part_specifications` | 한 부품에 여러 사양과 시험 조건이 존재함. 지금은 FK 없이 `part_number` 글자로 잇는다(5.7) |
 | `source_documents` | 1:N | `part_specifications` | 한 문서에서 여러 구조화 사양을 추출함 |
 | `analysis_runs` | 1:N | `replacement_requirements` | 한 분석에서 여러 대체 조건을 도출함 |
 | `analysis_runs` | 1:N | `candidate_evaluations` | 한 분석에서 여러 후보를 판정함 |
@@ -426,7 +430,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | `quotes`, `quote_items` | 금액은 0 이상 | 확정 |
 | `quote_items` | 판정이 동일품·사양 동등·역할상 충분인 후보만(애플리케이션 검증) | 확정 |
 | `replacement_requirements` | 연산자에 맞는 요구값 조합만 허용 | 확정 |
-| `part_specifications` | 최소·대표·최대·텍스트 값 중 하나 이상 있어야 함 | 가정 |
+| `part_specifications` | 최소·대표·최대·텍스트 값 중 하나 이상 있어야 함 | 확정 |
 | 코드 열 전체 | 3.2의 코드 목록만 허용(CHECK) | 확정 |
 | 전체 FK | 삭제는 `RESTRICT`, 코퍼스 문서는 논리 삭제 | 확정 |
 

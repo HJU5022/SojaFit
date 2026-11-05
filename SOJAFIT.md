@@ -84,6 +84,7 @@ SojaFit (proj3-b)
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
+│   │   ├── spec_lookup.py  <- 부품 사양 표 조회: 품번 하나의 사양 행, 숫자 조건을 모두 채운 품번 찾기(행 거르기만, 판정 아님) (서버 import)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
 │   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
 │   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함
@@ -92,7 +93,7 @@ SojaFit (proj3-b)
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
-│   │       ├── specs.py    <- 표 행 청크를 부품 사양 표(part_specifications)로 바꾸고 모호한 값은 검토 목록으로, 사람 대조표 표본
+│   │       ├── specs.py    <- 표 행 청크를 부품 사양 표(part_specifications)로 바꾸고 모호한 값은 검토 목록으로, 사람 대조표 표본, DB 적재(load, 문서 단위)
 │   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
@@ -110,7 +111,7 @@ SojaFit (proj3-b)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
 │       ├── mcp_server/
-│       │   └── server.py   <- FastMCP 서버 자리표시자(example_tool만 있음)
+│       │   └── server.py   <- FastMCP stdio 도구 8종: 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·사양으로 품번 찾기
 │       └── skills/
 │           └── SKILL.md    <- 다이오드 정격 해석·회로 연결 설명 지침. use_skill을 켠 생성 호출만 시스템 프롬프트에 붙임 (고정: 코드가 경로를 읽음)
 │
@@ -140,6 +141,7 @@ SojaFit (proj3-b)
 │   ├── 008_multi_dim_embeddings.sql  <- 임베딩 열을 차원 없는 halfvec으로(모델별 차원 공존)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
+│   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -289,6 +291,7 @@ SojaFit (proj3-b)
 │   │   ├── test_rag_chunk.py  <- 표 청크 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
 │   │   ├── test_rag_specs.py  <- 부품 사양 표 변환: 표 모양별 값, 모호한 값의 검토 사유, 대조표 표본 수(가짜 청크)
+│   │   ├── test_rag_spec_lookup.py  <- 사양 표 SQL(두 번 적용·나쁜 행)·문서 단위 적재·조회(TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_units.py  <- 단위 환산(mA·µA·ns·pF·kV·mW·°C, 모르는 단위는 None)
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
@@ -315,7 +318,7 @@ SojaFit (proj3-b)
 │   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
 │   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
-│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
+│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·찾기의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   └── JUDGE.md        <- 폴더 설명
 │   ├── repo/               <- 저장소 구조 규칙
