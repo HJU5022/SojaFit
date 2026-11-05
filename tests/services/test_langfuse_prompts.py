@@ -346,6 +346,7 @@ def test_node_config_gives_each_node_its_model():
     assert "temperature" not in luna and luna["max_tokens"] == managed.CONFIG["max_tokens"]
     sonnet = managed.node_config("supervisor")  # [왜] Sonnet은 Haiku와 같은 Anthropic 모델이라 temperature 0을 그대로 보낸다(11-05)
     assert sonnet == {**managed.CONFIG, "model": "anthropic/claude-sonnet-5.5"}
+    assert "judge_read" in managed.NODES and managed.node_config("judge_read") == managed.CONFIG  # 판정 읽기는 서브에이전트라 Haiku(ADR 0014)
     assert set(managed.NODES) == set(managed.NODE_MODELS)
 
 

@@ -10,7 +10,7 @@
 `evals/runners/run_graph.py`와 `evals/runners/run_skill_pair.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`(이 설명 파일)만 뺍니다. 그래서 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라집니다. 프롬프트가 아닌 문서는 이 폴더에 두지 않습니다.
 
 ## 노드별 모델(시작값)
-`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor`가 `anthropic/claude-sonnet-5.5`, `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor`가 `anthropic/claude-sonnet-5.5`, `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
 
 ## 버전 기록
 
@@ -18,6 +18,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | 판정 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(정운 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
 | 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-05 | `supervisor.md` | v3 | 질문 종류에 `chat`(일상 대화, Supervisor가 한국어 `reply`로 직접 답하고 끝냄)와 `other_part`(다이오드가 아닌 전자 부품, 웹 조회 또는 못 찾음 거절)를 더하고, `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하게 바꿈. 전자 일반 개념 질문은 짧은 설명 + "데이터시트 근거 아님" 표시. 영어로 작성해 등록 | 근거 3등급과 일상 대화 허용 결정(11-05, SPEC 2절) | 실제 Luna 4문장 확인(인사 · 날씨 거절 · MOSFET 못 찾음 거절 · 일반 개념). 70문항 측정 전 |
@@ -43,4 +44,5 @@
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)
 - `generate.md` — 생성 노드의 시스템 프롬프트(근거만으로 인용을 붙여 답하기)
+- `judge_read.md` — 판정 에이전트 읽기 노드의 시스템 프롬프트(역할 · 회로 값 읽기, 숫자 비교 없음). 영어. Langfuse `judge_read`용이며 아직 등록하지 않음
 - `tool_use.md` — MCP 도구5종의 선택·인자·미검증 결과 해석 지침. Langfuse `sojafit/tool-use`용입니다. 이 파일을 읽는 코드는 아직 없고, 그래프 연결은 미구현입니다

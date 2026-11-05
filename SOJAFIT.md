@@ -60,6 +60,7 @@ SojaFit (proj3-b)
 │   │   ├── build.py        <- 조립: Supervisor를 가운데 두고 서브에이전트가 끝나면 돌아오게 연결. 판정·웹은 아직 거부
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
+│   │       ├── judge.py    <- 판정 에이전트(읽기 · 판정 노드)
 │   │       ├── search.py   <- 검색 에이전트: 재작성·검색·채점 한 번, 통과 청크와 실패 사유를 보고. 결과 없음 뒤엔 필터를 풂
 │   │       ├── writer.py   <- 작성 에이전트: 단일 그래프의 생성으로 답을 쓰고 거절 답이면 실패 보고
 │   │       └── verifier.py <- 검증 에이전트: 인용을 다시 계산해 확인(걸리면 실패, enforce=False면 기록만)
@@ -78,6 +79,7 @@ SojaFit (proj3-b)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
 │   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
 │   │   ├── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
+│   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
 │   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 다음 노드 선택·거절 사유·판단 규칙. 아직 Langfuse에 등록하지 않음
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
@@ -282,6 +284,7 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
 │   │   ├── test_agents.py  <- 검색·작성·검증 에이전트, 사실 확인, 거절 문구
+│   │   ├── test_judge.py   <- 판정 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   └── test_build.py   <- 조립 길 시험: 직행·검색 경로·못 찾음 거절·범위 밖·검증 실패 뒤 다시 쓰기
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
