@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 평가 실행기에 멀티 에이전트 실행(`--multi`)과 노드별 모델 기록
+- 한 일: `evals/runners/run_graph.py`에 `--multi`를 더했다. 같은 평가셋 · 같은 5지표 채점으로 멀티 에이전트(`backend/multi_agent`)를 재며, MCP 서버(`check_corpus`)를 전 문항 동안 한 번 열어 사실 확인에 쓴다(`make_app`). 멀티 점수로 검색 횟수 `tries`(counters.searches) · Supervisor 판단 횟수 `hops` · 거절 사유 `refusal_code`를 더했다. session · run_name · 태그 · 결과 파일 이름 앞에 `multi`를 붙인다(`multi_<평가셋>_<날짜>.json`). 단일 · 멀티 모두 결과 파일 meta와 Langfuse 메타데이터에 노드별 모델 `node_models`를 남긴다. 플래그 없이 돌리면 이전과 같게 줄기 그래프를 잰다.
+- 바꾼 파일: `evals/runners/run_graph.py`, `tests/evals/test_run_graph.py`, `evals/runners/RUNNERS.md`, `evals/EVALS.md`, `SOJAFIT.md`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 453 passed, 27 skipped. 시험 6개를 먼저 써서 실패를 확인한 뒤 구현(멀티 점수, 결과 파일 이름, 노드별 모델 기록, 멀티 · 단일 그래프 조립과 MCP 열고 닫기, 모두 가짜).
+- 확인 못 한 것: 실제 LLM · DB · MCP 서버로 `--multi`를 돌려 보지 않았다(유료 호출이라 하지 않음). 멀티 그래프가 실제 문항에서 상태 칸(`passed` · `docs` · `answer`)을 채점기(`score_answer`)가 읽는 모양으로 채우는지는 실행해 봐야 안다. 멀티 실행의 Langfuse 트레이스에는 노드(입력 읽기 · 사실 확인 · 판단 …) 단계가 CallbackHandler로 남지만 실제 모양은 확인하지 않았다.
+- 다음 할 일: 시험 2문항으로 `--multi`를 실제로 돌려 트레이스와 점수를 확인 → 사전 등록(다음 빈 번호는 origin/main 확인 후) → 70문항 측정.
+
 ## 2026-11-05 노드별 모델 표와 호출 경로(시험까지)
 - 한 일: 노드마다 쓸 모델을 `NODE_MODELS` 표 하나로 정하게 했다(시작값: `supervisor` · `grade` Luna, 나머지 Haiku, 최종 아님). `_chat_model(model)`이 모델별로 객체를 캐시하고 Luna에는 `temperature`를 보내지 않는다. `node_chat`이 그 노드의 모델로 부르고, Langfuse 등록 설정(`node_config`)과 검사도 노드별로 바꿨다. 환경변수 `LLM_MODEL`은 전 노드 덮어쓰기로 남겼다.
 - 바꾼 파일: `backend/services/llm.py`, `backend/services/langfuse_prompts.py`, `backend/prompts/PROMPTS.md`, 시험 `tests/services/test_llm.py` · `tests/services/test_langfuse_prompts.py` · `tests/evals/test_skill_pair.py`(가짜 모델 함수가 모델 이름 인자를 받게)
