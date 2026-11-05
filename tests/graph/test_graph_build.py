@@ -170,3 +170,62 @@ def test_second_message_in_same_thread_starts_fresh(monkeypatch):
     out = app.invoke({"input": INPUT}, cfg)
     assert calls[-1] == REWRITTEN and len(calls) == 3  # 2턴도 첫 검색부터 재작성한 검색어로 찾고, 1턴의 tries가 남지 않는다
     assert out["tries"] == 1 and out["path"][-1] == "생성"
+
+
+# ── 판정 길: 판정 읽기 → 판정(빠진 값 인터럽트 1번) → 답 틀. 멀티의 판정 에이전트 코드를 그대로 쓴다 ──
+JUDGE_INPUT = ("회로: SparkFun Breadboard Supply\n"
+               "넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n"
+               "대상: D1\n사용 조건: 입력 전압의 최댓값은 20V\n질문: D1을 TSC 1N5817로 바꿔도 돼?")
+SPEC_ROWS = [{"part": "1N5817", "code": "VRRM", "min": None, "typ": None, "max": 20.0, "text": None, "unit": "V",
+              "source_value_text": "20", "test_condition": None,
+              "citation": {"document": "a.pdf", "page": 1, "table": "ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)",
+                           "row": "VRRM", "chunk_index": 1}}]
+
+
+def judge_app(monkeypatch, specs, calls):
+    """판정 길을 이은 앱. 라우팅은 nodes.llm 가짜로, 판정 읽기는 chat 인자로 정해 둔 읽기 결과를 낸다."""
+    from langgraph.checkpoint.memory import InMemorySaver
+    from backend.multi_agent.agents import judge as J
+    from backend.multi_agent.supervisor import Facts
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(question_type="candidate_judge"))
+    read = J.JudgeRead(role="R01", candidates=["1N5817"],
+                       values=[J.Value(name="v_in_max", number=20, unit="V", quote="입력 전압의 최댓값은 20V")])
+    return build_graph(retriever=lambda q, *, parts=None: calls.append(q) or [], lookup=lambda state: Facts(parts={"1N5817": True}),
+                       specs=specs, find=lambda *a: [], chat=lambda node, system, user, schema: read, checkpointer=InMemorySaver())
+
+
+def test_judge_path_asks_once_then_answers_with_the_code_template(monkeypatch):
+    from langgraph.types import Command
+    calls = []
+    app = judge_app(monkeypatch, lambda part, codes=None: SPEC_ROWS, calls)
+    config = {"configurable": {"thread_id": "j1"}}
+    state = app.invoke({"input": JUDGE_INPUT}, config)
+    assert "__interrupt__" in state  # 빠진 회로 값을 한 번 묻는다
+    state = app.invoke(Command(resume={"answers": {}}), config)  # 평가 실행기처럼 빈 답(= 모름)으로 재개
+    assert state["path"] == ["입력 읽기", "사실 확인", "라우팅", "판정 읽기", "판정", "답 틀"]  # 재개해도 읽기는 다시 돌지 않는다
+    assert calls == []  # 판정 길은 검색 고리를 거치지 않는다
+    assert "불충족" in state["answer"] and "a.pdf" in state["answer"] and "같은 동작은 보장하지 않" in state["answer"]
+    assert "reports" not in state and state["check"] == {"used": [], "judgement": True}
+
+
+def test_spec_table_failure_ends_as_a_search_error_refusal(monkeypatch):
+    from langgraph.types import Command
+
+    def broken(part, codes=None):
+        raise RetrievalUnavailableError("timeout")
+    app = judge_app(monkeypatch, broken, [])
+    config = {"configurable": {"thread_id": "j2"}}
+    app.invoke({"input": JUDGE_INPUT}, config)
+    state = app.invoke(Command(resume={"answers": {}}), config)
+    assert state["path"][-2:] == ["판정", "거절"] and state["refusal"]["code"] == "search_error"
+
+
+@pytest.mark.parametrize("kw", ["both_without_checkpointer", "specs_only", "find_only"])
+def test_judge_path_needs_both_spec_tools_and_a_checkpointer(kw):
+    """[왜] 판정은 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 있어야 한다. 도구 하나만 주면 켜진 척하지 않고 멈춘다."""
+    from langgraph.checkpoint.memory import InMemorySaver
+    specs, find = (lambda part, codes=None: []), (lambda *a: [])
+    args = {"both_without_checkpointer": {"specs": specs, "find": find}, "specs_only": {"specs": specs, "checkpointer": InMemorySaver()},
+            "find_only": {"find": find, "checkpointer": InMemorySaver()}}[kw]
+    with pytest.raises(ValueError):
+        build_graph(retriever=lambda q, *, parts=None: [], **args)

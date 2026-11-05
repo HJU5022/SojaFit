@@ -1,10 +1,13 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절 7개).
+- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 10개).
+  사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다).
-- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
+- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 판정 에이전트를 부르기만 한다),
+  LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다).
+- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
+  backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
 """
 import hashlib
 import json
@@ -17,7 +20,7 @@ from pydantic import BaseModel, Field, model_validator
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import refusal_for
+from backend.multi_agent.messages import refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.services import llm
 
@@ -115,7 +118,9 @@ def read_input(state: AgentState) -> dict:
     # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
     # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
     reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
-             "tries": -state.get("tries", 0), "facts": {}, "refusal": {}}  # facts · refusal: 앞 질문의 사실 · 거절 코드가 새 질문에 남지 않게(멀티 parse_node와 같은 이유)
+             "tries": -state.get("tries", 0),
+             # 사실 · 거절 코드 · 판정 칸: 앞 질문의 것으로 새 질문을 거절하거나 답하지 않게 한다(멀티 parse_node와 같은 이유)
+             "facts": {}, "refusal": {}, "judge_read": {}, "judgement": {}}
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
@@ -298,6 +303,25 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
     return {"answer": answer, "check": check, "skill": skill_info, "path": ["생성"]}
+
+
+def judge(state: AgentState, *, specs, find, retriever) -> dict:
+    """판정 노드: 멀티의 판정 에이전트(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
+
+    입력: judge_read · question_type · conditions · target_part. 출력: judgement, path(사양 표 도구 장애면 retrieval_error도).
+    주의: 단일 메모장에는 보고서 칸이 없어 `reports`는 버린다. 사양 표 도구 장애는 보고서에만 남으므로 retrieval_error로 옮겨 거절로 보낸다.
+    """
+    from backend.multi_agent.agents.judge import judge_agent  # [왜] 판정 길을 이을 때만 판정 규칙 · 프롬프트를 읽는다
+    out = judge_agent(state, specs=specs, find=find, retriever=retriever)
+    if out.pop("reports")[-1].get("reason") == Reason.SEARCH_ERROR.value:
+        out["retrieval_error"] = {"kind": "spec_table"}
+    return out
+
+
+def judgement_answer(state: AgentState) -> dict:
+    """답 틀 노드: 판정 결과를 코드 틀(`render_judgement`)로 답 글로 만든다. LLM이 숫자 · 인용을 다시 쓰지 않는다(AGENTS 7번, 멀티 작성과 같음)."""
+    return {"answer": render_judgement(state["judgement"]), "check": {"used": [], "judgement": True},
+            "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["답 틀"]}
 
 
 def refuse(state: AgentState) -> dict:

@@ -39,12 +39,13 @@ def test_read_input_shows_power_path_two_steps_away():
 def test_read_input_clears_previous_search_state():
     out = read_input({"input": E01, "query": "old", "parts": ["OLD"], "docs": [{"chunk_id": 1}],
                       "passed": [1], "retrieval_error": {"kind": "timeout"}, "tries": 2, "facts": {"parts": {"OLD": False}},
-                      "refusal": {"code": "part_missing"}})
+                      "refusal": {"code": "part_missing"}, "judge_read": {"role": "R01"}, "judgement": {"kind": "judge"}})
     assert out["query"] == "" and out["parts"] == [] and out["docs"] == [] and out["passed"] == []
     assert out["retrieval_error"] is None
     assert out["tries"] == -2
     assert out["facts"] == {}  # [왜] 앞 질문의 사실 확인 결과로 새 질문을 거절하지 않게 한다
     assert out["refusal"] == {}  # 앞 질문의 거절 사유 코드가 새 질문의 채점에 남지 않게 한다
+    assert out["judge_read"] == {} and out["judgement"] == {}  # 앞 질문의 판정으로 새 질문에 답하지 않게 한다
 
 
 def test_big_nets_are_cut_and_counted():
