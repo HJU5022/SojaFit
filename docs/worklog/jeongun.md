@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 노드별 모델 변경, 단일 #37, lab(Anthropic 직통), 멀티 첫 측정 #38
+- 한 일: 정운 결정으로 노드별 모델을 Supervisor Sonnet · 서브에이전트 노드 Haiku · 채점 Luna로 바꾸고(f385ff7) Langfuse `supervisor` v4를 등록했다. 멀티 측정 전에 `not_found`를 단일과 같은 뜻으로 맞췄다(14b724a). 사전 등록 #37 · #38을 측정 전에 적었다. 팀 레포는 그대로 두고 로컬 복제본(`../lab/repo`, 브랜치 `lab-anthropic`, 푸시 막음)과 Docker 컨테이너 `sojafit-lab`을 만들어, 정운 개인 Anthropic 키로 Supervisor(Sonnet)만 Anthropic API에 직접 부르게 했다(lab 커밋 e86b1e6, `langchain-anthropic` 1.7.7, 구조화 출력은 `output_config.format`).
+- 바꾼 파일: `backend/services/langfuse_prompts.py` · `llm.py`, `backend/prompts/PROMPTS.md`, `evals/runners/run_graph.py`, 시험 4개, `evals/guides/preregister.md`(#37 · #38), 결과 `evals/results/graph/graph_dataset_v2_2026-11-05-2054.json` · `multi_dataset_v2_2026-11-05-1226.json`, 이 파일
+- 실행한 명령과 결과: #37 단일(채점 Luna) 70문항 실패 0, cited_gold 13 · over_refusal 22 · correct_refusal 35, p50 8.6초, 0.0426달러, #35와 같은 문항 69/70. #38 멀티(lab 컨테이너) 70문항 중 67 끝남 · 실패 3(Supervisor `brief` 300자 초과로 형식 검사 3번 실패), cited_gold 10 · over_refusal 22 · correct_refusal 35, 질문 종류 32/32, 판단 중앙값 3, p50 18.9초, 약 1.82달러(Sonnet 1.77). 두 측정 모두 사전 등록 기대 범위 안. Langfuse는 Sonnet 직통 호출 하나를 `ChatAnthropic` · `anthropic.messages.create` 두 생성으로 기록해 비용이 두 배로 보여 `ChatAnthropic`만 셌다. 서브에이전트가 시험을 먼저 돌리다 lab `.env`의 OpenRouter 키로 Sonnet을 1번 실제 호출했다(1센트 미만 추정).
+- 확인 못 한 것: 실패 3건 중 원인을 Langfuse에서 본 것은 1건이다(나머지 2건은 같은 입력으로 3번 부른 것까지만 확인). 답이 한국어인지 보지 않았다. 각 측정은 1회다.
+- 다음 할 일: Supervisor `brief` 길이 처리(제한을 늘리거나 프롬프트) 결정, 판정 에이전트(사양 표 DB 적재 뒤), 사람 승인 · 체크포인트, 중간 점검 자료.
+
 ## 2026-11-05 부품 사양 표 변환기(ADR 0013)와 단위 환산
 - 한 일: 데이터시트 표 행 청크를 규칙으로 부품 사양 표(`part_specifications` 모양 + 청크 번호)로 바꾸는 `backend/rag/pipeline/specs.py`(`build` · `sample`)와 단위 환산 `backend/rag/units.py`(`to_si`)를 넣었다. 13종 전부, 항목 코드 17종(A-07 10종 + VR + VRWM · VBR · VC · IPP · PPPM · VESD). 애매한 값은 표에 넣지 않고 사유와 함께 검토 목록에 남긴다(계열 범위 · 여러 값, 같은 조건의 다른 값, 모르는 단위, 원문에 없는 숫자, 음수, 파서가 밀어 놓은 표, 대상 품번을 모르는 행, 최소 · 대표 · 최대 표시가 없는 항복 · 제너 전압). 11-03 원형(저장소 밖 `build.py`)의 규칙과 대조 오류 수정을 옮겼고, 평가셋 정답을 쓰던 후보 거르기는 옮기지 않았다(시험 세트 누수).
 - 바꾼 파일: `backend/rag/units.py` · `backend/rag/pipeline/specs.py`(새 파일), `tests/rag/test_rag_units.py` · `tests/rag/test_rag_specs.py`(새 파일), `SOJAFIT.md` 트리, `backend/rag/RAG.md`, `tests/rag/RAG.md`, 이 파일
