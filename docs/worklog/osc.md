@@ -1,5 +1,14 @@
 # 오세창 작업 기록
 
+## 2026-11-06 Supervisor Prompt V0 live 평가 사전 준비
+
+- 목적·비교 조건: V0 상태 표본 13건에서 Luna/Azure, Haiku/Google, Jev/TypeSafe가 같은 네 필드 의미 계약을 지키는지 비교한다. 기존 v2 70문항 결과는 V0 점수로 재사용하지 않는다. 기대와 판정은 `evals/guides/preregister.md` #34에 결과 확인 전에 기록했다.
+- 코드 보완: 본 실행이 성공한 smoke의 exact model/provider만 사용하도록 회귀 테스트를 RED로 확인한 뒤 고쳤고, smoke 요청에도 `--provider`를 필수로 두었다. 관련 API 없는 테스트 40건과 후속 선택 테스트 35건이 통과했다. 커밋은 `2834f96`, `ac82964`다.
+- 현재 catalog: 세 모델 모두 ZDR catalog에 노출됐다. 적용 provider는 기존 성공 근거와 현재 endpoint를 대조해 Luna `Azure`, Haiku `Google`, Jev `TypeSafe`로 정했다. 단가는 Chat 두 모델 input/output `$0.0000001`/`$0.0000005` per token, Jev input `$0.000000042`, output `$0`다.
+- 예산·시간·중단: Chat 모델별 smoke `$0.005`·3 raw calls·180초, 본 실행 `$0.060`·39 raw calls·1,800초. Jev smoke 승인 `$0.005`·1 call·180초, 본 실행 승인 `$0.010`·13 calls·1,800초. 전체 명령 상한 `$0.145`, 최악 98 raw calls다. smoke 실패, hash/model/provider 불일치, 상한 도달, 반복 provider 오류에서 중단하고 자동 증액·재실행하지 않는다. Jev USD는 기술적 cap이 아니라 승인 기록이다.
+- 실행 명령·보존: API 없는 두 plan 뒤 `--confirm-live`·exact provider로 smoke 세 건, 본 실행 세 건, hash가 같은 13건만 통합 집계한다. 결과 예정 경로는 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`이다. 루트 `.env`에서는 `OPENROUTER_API_KEY`만 현재 process에 주입하고 값은 출력·기록하지 않는다.
+- 현재 상태: live 호출 0건, 비용 `$0`. 정확한 총 상한 `$0.145`에 대한 사용자 승인 대기.
+
 ## 2026-11-05 Supervisor Prompt V0 프로토타입
 
 - 한 일: 확정본이 아닌 Supervisor 전용 V0 prompt와 입력·출력·상태 라우팅 계약을 만들었다. 별도 13건 상태 표본에서 `openai/gpt-6-luna`, `anthropic/claude-haiku-5.5`, `typesafe/jev-1.14`를 같은 네 필드로 비교할 수 있도록 Chat·Decisions 독립 실행기와 API 없는 통합 집계기를 추가했다. 현재 `build_graph()`에는 연결하지 않았다.
