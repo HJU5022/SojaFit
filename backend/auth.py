@@ -20,7 +20,12 @@ import secrets
 import sys
 
 import psycopg
+import httpx
+from authlib.oidc.core import CodeIDToken
 from fastapi import HTTPException, Request
+from joserfc import jwt
+from joserfc.errors import JoseError
+from joserfc.jwk import KeySet
 
 COOKIE = "sojafit_session"
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
@@ -73,6 +78,143 @@ def connection():
     """DATABASE_URL로 새 PostgreSQL 연결을 연다(`with`로 쓰면 종료 때 커밋하고 닫는다)."""
     # [주의] DATABASE_URL이 없으면 KeyError, 연결 실패는 psycopg.Error. 연결 대기는 5초로 제한한다
     return psycopg.connect(os.environ["DATABASE_URL"], connect_timeout=5)
+
+
+def create_google_state() -> tuple[str, str, str, str]:
+    """브라우저에 묶인 10분짜리 일회용 Google 인증 상태를 만든다."""
+    state, browser, verifier, nonce = (secrets.token_urlsafe(32) for _ in range(4))
+    with connection() as conn:
+        conn.execute("DELETE FROM auth_google_states WHERE expires_at <= CURRENT_TIMESTAMP")
+        conn.execute(
+            "INSERT INTO auth_google_states (state_hash, browser_hash, verifier, nonce, expires_at) "
+            "VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP + INTERVAL '10 minutes')",
+            (session_token_hash(state), session_token_hash(browser), verifier, nonce),
+        )
+    return state, browser, verifier, nonce
+
+
+def consume_google_state(state: str, browser: str) -> tuple[str, str] | None:
+    """같은 브라우저에서 돌아온 유효한 상태를 원자적으로 한 번만 소비한다."""
+    if not state or not browser or len(state) > 128 or len(browser) > 128:
+        return None
+    with connection() as conn:
+        return conn.execute(
+            "DELETE FROM auth_google_states WHERE state_hash = %s AND browser_hash = %s "
+            "AND expires_at > CURRENT_TIMESTAMP RETURNING verifier, nonce",
+            (session_token_hash(state), session_token_hash(browser)),
+        ).fetchone()
+
+
+def verify_google_id_token(token: str, jwks: dict, client_id: str, nonce: str) -> tuple[str, str, str] | None:
+    """Google의 서명과 OIDC 필수 항목을 확인하고 안정적인 식별자만 돌려준다."""
+    if not client_id or not nonce or not isinstance(token, str) or not token or len(token) > 16384:
+        return None
+    try:
+        decoded = jwt.decode(token, KeySet.import_key_set(jwks), algorithms=["RS256"])
+        claims = CodeIDToken(
+            decoded.claims, decoded.header,
+            options={"iss": {"essential": True, "values": ["accounts.google.com", "https://accounts.google.com"]}, "aud": {"essential": True, "value": client_id}},
+            params={"nonce": nonce, "client_id": client_id},
+        )
+        claims.validate()
+        subject, email = claims.get("sub"), claims.get("email")
+        if not isinstance(subject, str) or not subject or len(subject) > 255 or not isinstance(email, str) or not valid_email(email) or claims.get("email_verified") is not True:
+            return None
+        return "https://accounts.google.com", subject, email
+    except (JoseError, ValueError, TypeError, KeyError):
+        return None
+
+
+def fetch_google_identity(code: str, verifier: str, nonce: str) -> tuple[str, str, str] | None:
+    """Google에 인증 코드를 교환하고 ID 토큰을 검증한다. 토큰은 저장하지 않는다."""
+    client_id = os.environ["GOOGLE_CLIENT_ID"]
+    client_secret = os.environ["GOOGLE_CLIENT_SECRET"]
+    redirect_uri = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").rstrip("/") + "/api/auth/google/callback"
+    response = httpx.post("https://oauth2.googleapis.com/token", data={"grant_type": "authorization_code", "client_id": client_id, "client_secret": client_secret, "redirect_uri": redirect_uri, "code": code, "code_verifier": verifier}, timeout=10, follow_redirects=False)
+    response.raise_for_status()
+    token = response.json()
+    if not isinstance(token, dict):
+        return None
+    response = httpx.get("https://www.googleapis.com/oauth2/v3/certs", timeout=10, follow_redirects=False)
+    response.raise_for_status()
+    jwks = response.json()
+    if not isinstance(jwks, dict):
+        return None
+    return verify_google_id_token(token.get("id_token", ""), jwks, client_id, nonce)
+
+
+def request_google_link(issuer: str, subject: str, email: str) -> str:
+    request_id = secrets.token_urlsafe(24)
+    with connection() as conn:
+        conn.execute("DELETE FROM auth_google_pending WHERE expires_at <= CURRENT_TIMESTAMP")
+        conn.execute(
+            "INSERT INTO auth_google_pending (request_id, issuer, subject, email, expires_at) "
+            "VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP + INTERVAL '15 minutes')",
+            (request_id, issuer, subject, email),
+        )
+    return request_id
+
+
+def google_pending_email(request_id: str) -> str | None:
+    if not request_id or len(request_id) > 128:
+        return None
+    with connection() as conn:
+        row = conn.execute("SELECT email FROM auth_google_pending WHERE request_id=%s AND expires_at > CURRENT_TIMESTAMP", (request_id,)).fetchone()
+    return row[0] if row else None
+
+
+def approve_google_link(request_id: str, user_id: int, email: str) -> bool:
+    with connection() as conn:
+        pending = conn.execute("SELECT issuer, subject, email FROM auth_google_pending WHERE request_id=%s AND expires_at > CURRENT_TIMESTAMP FOR UPDATE", (request_id,)).fetchone()
+        if not pending or not hmac.compare_digest(pending[2].encode("utf-8"), email.encode("utf-8")):
+            return False
+        user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
+        if user != ("admin", True):
+            return False
+        result = conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING RETURNING user_id", (pending[0], pending[1], user_id)).fetchone()
+        if not result:
+            return False
+        conn.execute("DELETE FROM auth_google_pending WHERE request_id=%s", (request_id,))
+        return True
+
+
+def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
+    with connection() as conn:
+        identity = conn.execute("SELECT user_id FROM auth_google_identities WHERE issuer=%s AND subject=%s", (issuer, subject)).fetchone()
+        if not identity:
+            return None
+        user_id = identity[0]
+        user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
+        if user != ("admin", True) or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
+            return None
+        token = secrets.token_urlsafe(32)
+        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
+        return token, user_id
+
+
+def revoke_google_link(user_id: int) -> bool:
+    with connection() as conn:
+        if not conn.execute("SELECT id FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone():
+            return False
+        removed = conn.execute("DELETE FROM auth_google_identities WHERE user_id=%s RETURNING user_id", (user_id,)).fetchone()
+        if removed:
+            conn.execute("DELETE FROM auth_sessions WHERE user_id=%s", (user_id,))
+        return bool(removed)
+
+
+def deactivate_admin(user_id: int) -> bool:
+    """운영자가 관리자를 비활성화하고 모든 세션을 같은 트랜잭션에서 폐기한다."""
+    with connection() as conn:
+        conn.execute("SELECT pg_advisory_xact_lock(736126)")
+        user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
+        if user != ("admin", True):
+            return False
+        other = conn.execute("SELECT 1 FROM users WHERE role='admin' AND is_active AND id<>%s LIMIT 1", (user_id,)).fetchone()
+        if not other:
+            return False
+        conn.execute("UPDATE users SET is_active=FALSE, updated_at=CURRENT_TIMESTAMP WHERE id=%s", (user_id,))
+        conn.execute("DELETE FROM auth_sessions WHERE user_id=%s", (user_id,))
+        return True
 
 
 def valid_email(email: str) -> bool:
@@ -250,7 +392,35 @@ def provision() -> None:
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--hash-only", action="store_true", help="print a scrypt hash without creating an account")
     action.add_argument("--delete-user-id", type=int, help="delete a disabled user account by ID")
+    action.add_argument("--approve-google", action="store_true", help="approve a verified Google link request")
+    action.add_argument("--revoke-google-user-id", type=int, help="revoke a Google link and its existing sessions")
+    action.add_argument("--disable-admin-id", type=int, help="disable an administrator and revoke all sessions")
     args = parser.parse_args()
+    if args.approve_google:
+        request_id = input("Google request ID: ").strip()
+        try:
+            user_id = int(input("Existing administrator ID: ").strip())
+        except ValueError:
+            sys.exit("A positive administrator ID is required.")
+        email = input("Verified Google email: ").strip()
+        if not request_id or len(request_id) > 128 or user_id <= 0 or not valid_email(email):
+            sys.exit("Invalid request ID, administrator ID or email.")
+        print("Google link approved." if approve_google_link(request_id, user_id, email) else "Google link was not approved.")
+        return
+    if args.revoke_google_user_id is not None:
+        user_id = args.revoke_google_user_id
+        if user_id <= 0 or input(f"Revoke Google link and sessions for user ID {user_id}? Type the ID: ").strip() != str(user_id):
+            print("Revocation cancelled.")
+            return
+        print("Google link revoked." if revoke_google_link(user_id) else "Google link not found.")
+        return
+    if args.disable_admin_id is not None:
+        user_id = args.disable_admin_id
+        if user_id <= 0 or input(f"Disable administrator ID {user_id} and revoke all sessions? Type the ID: ").strip() != str(user_id):
+            print("Deactivation cancelled.")
+            return
+        print("Administrator disabled." if deactivate_admin(user_id) else "Administrator not disabled; another active administrator is required.")
+        return
     if args.delete_user_id is not None:
         if args.role != "user":
             sys.exit("Account deletion only supports the user role.")

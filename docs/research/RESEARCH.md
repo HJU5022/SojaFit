@@ -19,6 +19,8 @@
 - `jev-supervisor-evaluation-handoff.md` — Jev 1차 70문항 실측과 2차 평가 인수인계
 - `supervisor-stage2-results.md` — 수퍼바이저 6종 2차 원시 행 대조·비용·집계 한계
 - `supervisor-stage2-brief-report.md` — 수퍼바이저 6종 2차 결과 간단 보고서
+- `supervisor-stage3-results.md` — 6종 3차 전체 실측·1~3차 비교·라우팅 모순·PR 검토용 근거
+- `supervisor-stage3-brief-report.md` — 6종 3차 핵심 수치·2차 대비 변화 간단 보고서
 - `mcp-docling-verification-2026-11-03.md` — 저장소 PDF 3건의 Docling·pdfplumber 표본 대조와 한계
 - `mcp-offline-verification-2026-11-03.md` — DB 없이 수행한 MCP·PDF·회로 표본 점검 기록
 - `mcp-tool-candidates-draft.md` — MCP·웹 검색 도구 후보 조사와 비교 실측 해석
