@@ -40,6 +40,11 @@ def test_render_contains_question_facts_reports_status_and_options():
     assert 'web' not in text.split('고를 수 있는 다음 노드')[1]  # 웹이 꺼져 있으면 선택지에 없다
 
 
+def test_render_shows_question_type_once_decided():
+    assert '질문 종류: 아직 정하지 않음' in S.render(inp())
+    assert '질문 종류: candidate_judge' in S.render(inp(question_type='candidate_judge'))
+
+
 def test_render_lists_web_and_judge_only_when_enabled():
     opts = S.render(inp()).split('고를 수 있는 다음 노드')[1]
     assert 'judge' not in opts and 'web' not in opts

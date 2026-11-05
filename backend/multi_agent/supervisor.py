@@ -28,6 +28,7 @@ class SupervisorInput(BaseModel):
     target: str = ''
     conditions: str = ''
     target_value: str = ''
+    question_type: str = ''  # 처음 판단에서 정한 질문 종류. 이후 판단(판정이 필요한가 등)이 이걸 읽는다
     facts: Facts = Field(default_factory=Facts)
     reports: list[AgentReport] = Field(default_factory=list)
     counters: Counters = Field(default_factory=Counters)
@@ -37,7 +38,8 @@ class SupervisorInput(BaseModel):
 
 def render(i: SupervisorInput) -> str:
     """LLM에 줄 user 글. 청크 원문은 없고 요약 보고만 담는다(컨텍스트 분리)."""
-    lines = [f'질문: {i.question}', f'대상: {i.target} {i.target_value}'.rstrip(), f'사용 조건: {i.conditions}']
+    lines = [f'질문: {i.question}', f'대상: {i.target} {i.target_value}'.rstrip(), f'사용 조건: {i.conditions}',
+             f'질문 종류: {i.question_type or "아직 정하지 않음"}']
     lines.append('확인된 사실:')
     for name, ok in i.facts.parts.items():
         lines.append(f'- 품번 {name}: {"코퍼스에 있음" if ok else "코퍼스에 없음"}')
@@ -98,7 +100,7 @@ def supervisor_node(state: dict, *, chat, web_enabled: bool = False, judge_enabl
     """그래프 노드: 메모장에서 Supervisor 입력을 만들어 결정서를 받고 판단 횟수를 센다."""
     part = state.get('target_part') or {}
     i = SupervisorInput(question=state['question'], target=state.get('target', ''), conditions=state.get('conditions', ''),
-                        target_value=part.get('value', ''), facts=Facts(**(state.get('facts') or {})),
+                        target_value=part.get('value', ''), question_type=state.get('question_type', ''), facts=Facts(**(state.get('facts') or {})),
                         reports=[AgentReport(**r) for r in state.get('reports') or []], counters=Counters(**state['counters']),
                         web_enabled=web_enabled, judge_enabled=judge_enabled)
     d = decide(i, chat)
