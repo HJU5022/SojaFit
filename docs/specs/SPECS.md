@@ -18,3 +18,4 @@
 - mcp-search-tools.md — MCP 검색·문서 조회·외부 후보·로컬 점검 도구의 1차 계약
 - `mcp-graph-integration.md` — PR #44의 `search_corpus`를 LangGraph 검색 주입 계약에 연결하고 빈 결과와 장애를 구분하는 작업서
 - `mcp-graph-integration-plan.md` — MCP 그래프 통합 작업서의 테스트 우선 구현 계획
+- `supervisor-v0-langfuse-import.md` — 완료된 Supervisor V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오는 작업서

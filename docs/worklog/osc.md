@@ -1,5 +1,14 @@
 # 오세창 작업 기록
 
+## 2026-11-06 Supervisor Prompt V0 Langfuse 가져오기
+
+- 한 일: 완료된 V0 13문항과 세 후보 결과를 모델 재호출 없이 Langfuse Dataset `sojafit-supervisor-v0`과 Experiment 3개로 가져왔다. 입력에는 정답과 case id를 넣지 않고 정답은 Dataset expected output으로 분리했다. 형식·네 필드·의미·전체 일치의 결정적 점수 7개를 문항마다 기록했다.
+- 바꾼 파일: `docs/specs/supervisor-v0-langfuse-import.md`, `evals/runners/import_supervisor_prompt_v0_langfuse.py`, `tests/evals/test_import_supervisor_prompt_v0_langfuse.py`, `evals/results/supervisor/2026-11-06-prompt-v0-v1/langfuse_import.json`과 폴더 색인·트리.
+- 실행한 명령과 결과: API 없는 `plan`에서 Dataset 13개·Experiment 3개·점수 273개를 확인했고 전용 테스트 7건과 저장소 구조 테스트를 통과했다. 첫 외부 시도에서 `.env`의 trailing slash와 Langfuse 5.0.4의 OTEL endpoint 문자열 결합 때문에 Dataset만 저장되고 Experiment는 0건이었다. `.env`는 바꾸지 않고 실행기에서 base URL을 정규화한 뒤 서버의 Experiment 0건을 확인하고 다시 실행했다.
+- 외부 재조회: Dataset 13개, Experiment 3개, 각 Experiment 13개 항목을 확인했다. 점수 이름별 39개씩 총 273개이며 합계는 schema 39, question type 38, required evidence 37, next action 35, reason code 38, semantic 34, exact 33으로 로컬 결과 합계와 일치했다. `imported_existing_result=true`를 기록했으며 원래 live trace로 가장하지 않는다. 모델 호출은 0회다.
+- 확인 못 한 것: in-app browser에는 Langfuse 로그인 세션이 없어 UI 표를 직접 보지는 못했다. 인증된 API로 Dataset·Experiment·trace별 score를 재조회했다.
+- 다음 할 일: Langfuse에 로그인한 팀원이 세 Experiment 비교 화면을 확인하고 필요하면 제출용 화면을 캡처한다. 프롬프트 인젝션 방어 설계는 별도 작업으로 진행한다.
+
 ## 2026-11-06 Supervisor Prompt V0 live 평가 사전 준비
 
 - 목적·비교 조건: V0 상태 표본 13건에서 Luna/Azure, Haiku/Google, Jev/TypeSafe가 같은 네 필드 의미 계약을 지키는지 비교한다. 기존 v2 70문항 결과는 V0 점수로 재사용하지 않는다. 기대와 판정은 `evals/guides/preregister.md` #34에 결과 확인 전에 기록했다.

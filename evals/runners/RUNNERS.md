@@ -21,6 +21,7 @@
 - `run_supervisor_prompt_v0.py` — Luna·Haiku에 같은 V0 prompt·13건을 주는 독립 Chat 실행기. `plan`은 API 없이 26-job manifest를 만들고 `smoke|run`은 명시적 live 확인과 비용·시간·단가 상한이 필요함. 본 실행은 성공한 smoke의 exact model·provider만 허용
 - `run_supervisor_prompt_v0_jev.py` — Jev Decisions의 5개 typed answer를 같은 V0 네 필드로 변환하는 독립 실행기. `plan`은 API 없이 13-job manifest를 만들며 live 실행은 호출·시간 상한을 집행하고 승인 USD와 비용 미보고를 구분함. 본 실행은 성공한 smoke의 exact model·provider만 허용
 - `compare_supervisor_prompt_v0.py` — 정확한 세 후보의 dataset·의미 계약 hash와 case 집합이 같을 때만 네 필드 정확도·형식·의미·지연·usage를 집계. Jev typed answer confidence는 별도 보존
+- `import_supervisor_prompt_v0_langfuse.py` — 완료된 V0 13문항·세 후보 결과를 모델 재호출 없이 Langfuse Dataset 1개와 Experiment 3개로 가져오고 결정적 점수 7개를 기록. `plan`은 외부 쓰기 없이 확인하고 `import --confirm-langfuse-write`만 실제로 기록
 - `score_answer.py` — 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점([작업서](../../docs/experiments/answer-refusal-scorer.md)). `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]`
 - `run_skill_pair.py` — preregister #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.runners.run_skill_pair <새 결과 폴더>`. 동일 상태에서 Skill 유무 답변을 비교하고 요약만 `../results/skill/`에 둠
 

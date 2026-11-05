@@ -168,6 +168,7 @@ SojaFit (proj3-b)
 │   │   ├── run_supervisor_prompt_v0.py  <- Luna·Haiku 수퍼바이저 V0 오프라인 plan·명시적 live 실행
 │   │   ├── run_supervisor_prompt_v0_jev.py  <- Jev Decisions 수퍼바이저 V0 오프라인 plan·typed answer 정규화·상한 실행
 │   │   ├── compare_supervisor_prompt_v0.py  <- 수퍼바이저 V0 세 후보의 hash·case 일치 확인과 공통 지표 집계
+│   │   ├── import_supervisor_prompt_v0_langfuse.py  <- 완료된 V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오기
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -246,6 +247,7 @@ SojaFit (proj3-b)
 │           └── 2026-11-06-prompt-v0-v1/  <- Supervisor Prompt V0 세 후보 exact-provider smoke·13건 결과·통합 집계
 │               ├── execution.json  <- 사용자 승인 상한·actual model/provider·호출·비용·출처 hash
 │               ├── summary.json  <- 같은 dataset·의미 계약의 세 후보 공통 지표 정본
+│               ├── langfuse_import.json  <- 기존 결과를 가져온 Dataset·Experiment 식별자와 외부 재조회 검증
 │               ├── chat/  <- Luna·Haiku manifest·smoke·문항별 결과
 │               └── jev/  <- Jev manifest·smoke·문항별 결과
 │
@@ -298,6 +300,7 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor_prompt_v0.py  <- Luna·Haiku V0 입력·재시도·오프라인 plan·live gate 검증
 │   │   ├── test_supervisor_prompt_v0_jev.py  <- Jev V0 공통 계약·입력 경계·typed answer·live gate 검증
 │   │   ├── test_compare_supervisor_prompt_v0.py  <- V0 세 후보 hash·case·API별 지표 통합 집계 검증
+│   │   ├── test_import_supervisor_prompt_v0_langfuse.py  <- V0 Langfuse 가져오기 payload·점수·중복 방지 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
@@ -356,7 +359,8 @@ SojaFit (proj3-b)
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
-│   │   └── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
+│   │   ├── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
+│   │   └── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 계약
 │   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
 │   │   ├── SUPERPOWERS.md  <- 폴더 설명
 │   │   ├── specs/
