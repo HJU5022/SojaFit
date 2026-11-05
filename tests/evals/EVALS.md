@@ -13,7 +13,7 @@
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_retrieval_d3.py` — D3 검색 측정 실행기: gold 줄의 모든 쪽 풀기(이어 적은 쪽·범위), Page Hit·회수율·Full Recall·회수 가능만·중복 제거 nDCG, 실패 유형 4종, 정확 부호 검정, no_result 임계값을 가짜 청크로 확인(데이터·API 없이)
 - `test_retrieval_service.py` — 서비스 경로 재측정 실행기: 지표 정의, R1 1위 칸과 상위 5개 대조, 백분위·상한, 파일 이름 대응, 오류 문항 건너뛰기를 가짜 retrieve로 확인(DB·API 없이)
-- `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지, 판정 인터럽트를 빈 답으로 한 번만 재개하는지 확인(Langfuse·LLM 없이)
+- `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지, 단일 · 멀티 거절 사유 코드를 같은 이름으로 세는지, 단일 · 멀티 모두 MCP 서버를 열어 사실 확인 · 판정 도구로 잇는지(가짜 MCP), 판정 인터럽트를 빈 답으로 한 번만 재개하는지 확인(Langfuse·LLM 없이)
 - `test_run_judge_dev.py` — 판정 연습 문제 채점: 판정 문항의 역할 · 판정 일치, 찾기 문항의 보여 준 후보 · 판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기. 실제 그래프는 돌리지 않음
 - `test_supervisor_models.py` — 동결 입력·schema 재시도·provider 중단·예산·집계·증거 hash를 API 호출 없이 검증
 - `test_supervisor_jev.py` — Jev typed answer·gold 격리·provider 정책·예산·70-job manifest를 API 없이 검증

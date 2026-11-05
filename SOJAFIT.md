@@ -42,10 +42,10 @@ SojaFit (proj3-b)
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
-│   │   ├── GRAPH.md        <- 폴더 설명. Supervisor·체크포인트·승인 단계가 들어올 자리
+│   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트·견적 승인 단계는 아직 없음)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
-│   │   ├── nodes.py        <- 노드 7개: 입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절
+│   │   ├── nodes.py        <- 노드 10개: 입력 읽기, 라우팅, 짧은 답, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
