@@ -124,8 +124,8 @@ R01:
 
 ### 인터럽트
 
-- LangGraph `interrupt({"missing": [...], "question": "<한국어 질문 하나>"})`로 묻고, 재개 값은 {회로 값 이름: 값}이다. 체크포인터가 필요하다(`build_graph(checkpointer=...)`).
-- 평가 실행기(`evals/runners/run_graph.py --multi`)는 인터럽트를 만나면 빈 값({})으로 재개한다(= 모름, EC-04).
+- LangGraph `interrupt({"missing": [...], "role_choices": [...], "question": "<한국어 질문 하나>"})`로 묻고, 재개 값은 `{"answers": {회로 값 이름: 값}, "role": <고른 역할, 있으면>}`이다. 체크포인터가 필요하다(`build_graph(checkpointer=...)`).
+- 평가 실행기(`evals/runners/run_graph.py --multi`)는 인터럽트를 만나면 `{"answers": {}}`(= 모름, EC-04)로 한 번 재개한다. [주의] 빈 dict(`{}`)로 재개하면 LangGraph 1.2.18이 재개로 보지 않고 다시 멈춘다(11-06 실측).
 
 ### 한도 · 비용
 

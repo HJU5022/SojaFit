@@ -5,7 +5,8 @@
 - 바꾼 파일: `docs/specs/judge-agent.md`(새 파일), `docs/specs/SPECS.md`, `SPEC.md`(5절 · 8.3), 이 파일
 - 확인: 작업서에 적은 저장소 경로(`backend/multi_agent/build.py` · `supervisor.py` · `agents/writer.py`, `backend/graph/nodes.py` `MAX_NET_NODES = 8`, `backend/prompts/supervisor.md`)를 코드와 대조했다. #38 과잉 거절 판정 8 · 찾기 8은 `evals/guides/preregister.md` #38 결과 줄과 대조했다.
 - 확인 못 한 것: 성공 기준 숫자(역할 정답률 80%, 판정 일치율 70%, v2 과잉 거절 8건 이하)는 측정 전 목표값이다. 규칙 원본은 저장소 밖 `전자_데이터시트/`에 있고 아직 `roles.yaml`로 옮기지 않았다.
-- 다음 할 일: 정운 작업서 검토 → 구현 계획 → 연습 문제 정답을 새 규칙으로 고치기와 O/X 검사.
+- 이어서 한 일: 정운 검토 뒤 구현 계획 `docs/specs/judge-agent-plan.md`(Task 11개, 테스트 우선, 커밋 단위)를 썼다. 쓰기 전에 LangGraph 1.2.18 인터럽트를 작은 그래프로 돌려 봤다: 멈추면 `__interrupt__`가 돌아오고, 재개하면 멈춘 노드만 다시 돌고 앞 노드(읽기)는 다시 돌지 않는다. 다만 빈 dict(`{}`)로 재개하면 재개로 보지 않고 다시 멈춰서, 재개 값을 `{"answers": {...}}`로 정하고 작업서 How도 고쳤다. `to_si(10, '')`가 `None`인 것, `spec_lookup._COLUMNS`가 이미 분류를 읽지만 결과에 빠진 것도 확인해 계획에 넣었다.
+- 다음 할 일: 정운 계획 확인 → Task 1부터 실행.
 
 ## 2026-11-05 노드별 모델 결정 기록(ADR 0014)
 - 한 일: Supervisor를 Sonnet으로 바꾼 이유를 ADR 0014로 남겼다. 근거는 #33(오세창, Supervisor 후보 6종 3회)에서 Haiku의 질문 종류 정답 21~23/35 · 형식 유효 46~50/70, Luna는 채점 모델과 같아져 제외(조장 판단), #38 Sonnet 결과(질문 종류 일치 32/32, 비용 #37의 약 43배)다. ADR 0010에 "일부 바뀜", ADR 목록, SPEC 2절 LLM 줄, AGENTS 기술 스택, README 기술 표의 "Haiku 하나"를 노드별 모델로 고쳤다.
