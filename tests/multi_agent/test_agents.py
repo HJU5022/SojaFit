@@ -5,13 +5,18 @@
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
 - 출처: backend/multi_agent/agents/, facts.py, messages.py
 """
+import pytest
+
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.nodes import NOT_FOUND
 from backend.multi_agent import facts as F
 from backend.multi_agent import messages as M
+from backend.multi_agent import messages as Msg
 from backend.multi_agent.agents import search as SA
 from backend.multi_agent.agents import verifier as VA
 from backend.multi_agent.agents import writer as WA
+from backend.multi_agent.agents.verifier import verifier_agent
+from backend.multi_agent.agents.writer import writer_agent
 from backend.multi_agent.contracts import Counters, Reason
 
 
@@ -116,3 +121,32 @@ def test_refusal_messages_are_plain_korean_and_cover_every_refusal_reason():
         assert text and '코퍼스' not in text and reason.value not in text  # 우리끼리 쓰는 말과 내부 코드는 보이지 않는다
     assert '1N4001' in M.refusal_message(Reason.PART_MISSING, ['1N4001'])
     assert 'Q2611' in M.refusal_message(Reason.REVISION_MISSING, [], ['Q2611'])
+
+
+
+JUDGEMENT = {'kind': 'judge', 'roles': ['R01'], 'role_evidence': ['D1.K → RAW'], 'shown': [], 'unverified': [], 'terms': [],
+             'capped': False, 'dropped': [], 'asked': [], 'results': [{
+                 'part': '1N5817', 'role': 'R01', 'verdict': 'NOT_VERIFIED', 'missing': ['i_max'], 'uncertain': [], 'cautions': ['발열'],
+                 'board_change': True, 'checks': [{'code': 'VRRM', 'tier': 'required', 'op': '>=', 'basis': 'v_in_max * kV',
+                                                   'threshold': 15.0, 'value': 20.0, 'unit': 'V', 'condition': None,
+                                                   'citation': {'document': 'a.pdf', 'page': 1, 'table': 'T', 'row': 'VRRM', 'chunk_index': 1},
+                                                   'result': 'pass', 'why': ''}]}]}
+
+
+def test_render_judgement_shows_values_missing_and_cautions_even_when_not_verified():
+    text = Msg.render_judgement(JUDGEMENT)
+    for want in ('문서로 확인 안 됨', 'VRRM', '15', '20', 'a.pdf', '1쪽', 'i_max', '발열', '기판 수정', '같은 동작은 보장하지 않'):
+        assert want in text, want
+
+
+def test_render_find_with_no_candidates_says_so_and_shows_terms():
+    j = {**JUDGEMENT, 'kind': 'find', 'results': [], 'shown': [], 'terms': [{'code': 'VRRM', 'gte': 15.0}], 'capped': True}
+    text = Msg.render_judgement(j)
+    assert 'VRRM ≥ 15' in text and '찾지 못했어요' in text and '50개 상한' in text
+
+
+def test_writer_uses_code_template_and_verifier_accepts_it():
+    out = writer_agent({'judgement': JUDGEMENT}, generate=lambda s: pytest.fail('판정 답은 LLM으로 쓰지 않는다'))
+    assert out['answer'] == Msg.render_judgement(JUDGEMENT)
+    ok = verifier_agent({'judgement': JUDGEMENT, 'answer': out['answer']})
+    assert ok['reports'][-1]['status'] == 'ok'

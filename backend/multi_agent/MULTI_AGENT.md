@@ -23,8 +23,8 @@
 - 검색은 실패 사유를 붙여 다르게 다시 시도하고, 한도를 둡니다. 거절 이유는 내부 코드로 Langfuse에 남기고 사용자에게는 일상어로 보여 줍니다.
 
 ## 구현 상태
-- 있음: 약속(`contracts.py`), Supervisor(`supervisor.py`), 서브에이전트 3개(검색 · 작성 · 검증, 단일 그래프 함수를 그대로 감쌈), 사실 확인, 거절 문구, 조립(`build.py`). 모두 가짜 LLM · 검색기로만 시험했다.
-- 아직 없음: 판정 · 웹 조회 에이전트(켜려 하면 거부), 실제 LLM 연결과 Langfuse 프롬프트 등록, 사실 확인에 쓸 코퍼스 목록 조회 도구, 3갈래 채점, 평가 실행기.
+- 있음: 약속(`contracts.py`), Supervisor(`supervisor.py`), 서브에이전트 4개(검색 · 작성 · 검증은 단일 그래프 함수를 그대로 감쌈, 판정은 `agents/judge.py`), 사실 확인, 거절 문구, 판정 답 틀, 조립(`build.py`). 모두 가짜 LLM · 검색기 · 사양 표로만 시험했다.
+- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 실제 LLM 연결과 Langfuse 프롬프트 등록, 사실 확인에 쓸 코퍼스 목록 조회 도구, 3갈래 채점, 평가 실행기.
 - 다음 순서: 프롬프트와 전체를 한 번 점검한 뒤 실제 질문으로 Supervisor 결정을 측정. 조각마다 사전 등록 · 시험 · 측정을 거칩니다.
 
 ## 파일
@@ -32,8 +32,8 @@
 - `__init__.py` — 패키지 표시
 - `state.py` — 멀티용 공용 메모장 `MultiState`. 보고서 · 결정서 · 횟수는 dict로 저장하고, 지나간 노드 이름(`path`)은 단일 그래프와 같은 말(거절 등)을 써서 평가 채점기가 읽을 수 있게 한다
 - `facts.py` — 질문의 품번 · 개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만든다(`make_facts`). 목록은 호출하는 쪽이 넘기거나(`make_facts`), MCP 도구 `check_corpus`로 묻는다(`make_lookup`). 그래프 노드 `facts_node`는 `lookup` 없이 쓰면 비워 둔다
-- `messages.py` — 거절 사유를 사용자 일상어 문구로 바꾼다(`refusal_message`). 우리끼리 쓰는 말과 내부 코드는 문구에 넣지 않는다
-- `build.py` — 조립. 입력 읽기 → 사실 확인 → Supervisor, Supervisor의 결정에 따라 검색 · 작성 · 검증 · 끝 · 거절로 가고 서브에이전트는 끝나면 Supervisor로 돌아온다. 거절은 이유 코드를 `refusal`에 남긴다. 판정 · 웹을 켜려 하면 거부
+- `messages.py` — 거절 사유를 사용자 일상어 문구로 바꾼다(`refusal_message`). 우리끼리 쓰는 말과 내부 코드는 문구에 넣지 않는다. 판정 결과를 코드 틀 답(판정 · 조건 표 · 빠진 값 · 불확실 · 사람 확인 · 기판 수정 · 같은 동작 보장 없음)으로 만든다(`render_judgement`)
+- `build.py` — 조립. 입력 읽기 → 사실 확인 → Supervisor, Supervisor의 결정에 따라 검색 · 판정 · 작성 · 검증 · 끝 · 거절로 가고 서브에이전트는 끝나면 Supervisor로 돌아온다. 판정 길은 판정 읽기 → 판정(인터럽트 1번) → Supervisor이고, 사양 표 도구(`specs` · `find`)와 체크포인터가 있어야 켠다. 거절은 이유 코드를 `refusal`에 남긴다. 웹을 켜려 하면 거부
 - `agents/` — 서브에이전트(폴더 설명은 이 문서에 적는다): `search.py` 한 번 찾고 채점해 보고서(통과 청크 번호, 실패면 결과 없음 · 전부 탈락 · 검색 장애 사유)를 올리며 "결과 없음" 뒤에는 품번 필터를 풀어 다르게 시도, `writer.py` 단일 그래프의 생성으로 답을 쓰고 거절 답이면 실패로 보고, `verifier.py` 인용을 작성의 자체 검사와 별개로 다시 계산해 확인(걸리면 실패, `enforce=False`면 기록만), `judge.py` 판정 에이전트(읽기 노드 `judge_read_agent`: 역할 · 회로 값을 LLM 1번으로 읽음, 판정 노드 `judge_agent`: 빠진 값을 인터럽트로 한 번 묻고 사양 표 값으로 `backend/judge/verdict.py`가 판정), `__init__.py` 패키지 표시
 - `supervisor.py` — Supervisor. 질문 · 사실(`Facts`: 품번 · 개정판이 코퍼스에 있나) · 보고 · 한도 현황 · 고를 수 있는 노드를 글(`render`)로 만들어 LLM에 주고 결정서를 받는다(`decide`). 한도를 넘거나 꺼진 웹이면 거절로 바꾸고, 끝내는 길은 막지 않는다. 판단 횟수 세기(`count_decision` · `count_report`). LLM은 `chat` 함수로 받아 시험에서 가짜로 바꾼다
 - `contracts.py` — Supervisor의 결정서 `Decision`(다음 노드 7종, 거절이면 거절 사유 필수)과 서브에이전트의 보고서 `AgentReport`(상태 ok · partial · fail, 200자 요약, 근거 번호 · 부족한 값 · 사유), 이유 코드 `Reason`(거절 7종 · 재시도 3종), 한도(`MAX_HOPS` 8 · `MAX_SEARCHES` 2 · `MAX_WRITES` 2)와 한도 검사 `check_limit`. 같은 사유로 검색이 두 번 실패하면 `NOT_FOUND`(추정), 작성 한도는 `VERIFY_FAILED`

@@ -33,7 +33,7 @@ class SupervisorInput(BaseModel):
     reports: list[AgentReport] = Field(default_factory=list)
     counters: Counters = Field(default_factory=Counters)
     web_enabled: bool = False    # [왜] 평가 모드에서는 끈다(동결한 코퍼스만 쓴다)
-    judge_enabled: bool = False  # [왜] 판정 에이전트가 아직 없다. 기능 스위치로 숨겨 두면 미완성이 전체 동작을 깨지 않는다
+    judge_enabled: bool = False  # [왜] 판정 에이전트를 붙였을 때만 켠다(build_graph가 도구와 체크포인터를 확인한다)
 
 
 def render(i: SupervisorInput) -> str:

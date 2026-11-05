@@ -6,9 +6,12 @@
 - 출처: backend/multi_agent/build.py, MULTI_AGENT.md 구조 결정(11-05)
 """
 import pytest
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
 
 from backend.multi_agent import build as B
 from backend.multi_agent import supervisor as S
+from backend.multi_agent.agents import judge as J
 from backend.multi_agent.contracts import Decision, Reason
 
 PART = {'ref': 'D1', 'value': '1N4148', 'footprint': 'DO-35', 'nets': []}
@@ -111,3 +114,41 @@ def test_unrelated_question_gets_a_gentle_refusal():
     chat = scripted(Decision(next='refuse', reason=Reason.OUT_OF_SCOPE, question_type='out_of_scope'))
     out = app(chat).invoke({'input': '오늘 날씨 어때?'})
     assert '회로나 부품' in out['answer'] and out['refusal']['code'] == 'out_of_scope'
+
+
+
+def judge_app(chat, specs, **kw):
+    return B.build_graph(
+        chat=chat, retriever=lambda q, parts=None: [],
+        parse=lambda s: {'question': s['input'], 'target': 'D1', 'conditions': '입력 전압의 최댓값은 20V', 'target_part': PART},
+        rewrite=lambda s: {'query': 'q'}, grade=lambda s: {'passed': []},
+        generate=lambda s: {'answer': 'x', 'check': {'used': []}}, judge_enabled=True,
+        specs=specs, find=lambda *a: [], checkpointer=InMemorySaver(), **kw)
+
+
+def test_judge_path_goes_read_judge_writer_verifier_finish_with_one_interrupt():
+    rows = [{'part': '1N5817', 'code': 'VRRM', 'min': None, 'typ': None, 'max': 20.0, 'text': None, 'unit': 'V',
+             'source_value_text': '20', 'test_condition': None,
+             'citation': {'document': 'a.pdf', 'page': 1, 'table': 'ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)', 'row': 'VRRM', 'chunk_index': 1}}]
+    read = J.JudgeRead(role='R01', candidates=['1N5817'],
+                       values=[J.Value(name='v_in_max', number=20, unit='V', quote='입력 전압의 최댓값은 20V')])
+    chat = scripted(Decision(next='judge', question_type='candidate_judge', brief='judge'), read,
+                    Decision(next='writer', brief='write'), Decision(next='verifier', brief='verify'), Decision(next='finish', brief='done'))
+    app = judge_app(chat, specs=lambda part, codes=None: rows)
+    config = {'configurable': {'thread_id': 't1'}}
+    state = app.invoke({'input': 'D1을 TSC 1N5817로 바꿔도 돼?'}, config)
+    assert '__interrupt__' in state  # i_max가 빠져 한 번 묻는다
+    state = app.invoke(Command(resume={'answers': {}}), config)
+    assert state['path'].count('판정 읽기') == 1 and '판정' in state['path'] and state['path'][-1] == '끝'
+    assert '불충족' in state['answer'] and 'a.pdf' in state['answer'] and '같은 동작은 보장하지 않' in state['answer']
+
+
+def test_judge_needs_tools_and_checkpointer():
+    with pytest.raises(ValueError):
+        B.build_graph(chat=scripted(), retriever=lambda q, parts=None: [], judge_enabled=True)
+
+
+def test_new_turn_clears_previous_judgement():
+    """[왜] 같은 thread의 다음 질문에서 앞 질문의 판정 결과로 답을 쓰지 않게 입력 읽기가 판정 칸도 비운다."""
+    out = B.parse_node({'input': 'q'}, parse=lambda s: {'question': 'q'})
+    assert out['judgement'] == {} and out['judge_read'] == {}

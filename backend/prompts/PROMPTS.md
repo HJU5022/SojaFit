@@ -18,6 +18,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 판정 · 찾기 질문을 `judge`가 보일 때 바로 `judge`로 보냄(검색을 먼저 거치지 않음). 검색 보고 뒤에는 `writer`로. 판정 보고가 ok · partial이면 `writer`, search_error 실패면 거절. `judge` 설명에 candidate_find를 더함 | 판정 에이전트 연결(docs/specs/judge-agent.md What 1번) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | 판정 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(정운 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
 | 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
