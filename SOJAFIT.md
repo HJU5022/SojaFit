@@ -61,9 +61,9 @@ SojaFit (proj3-b)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
 │   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
-│   │   ├── grade.md        <- 검색 카드 채점(채점 노드)
+│   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
-│   │   ├── generate.md     <- 통과 카드만 근거로 답하기(생성 노드)
+│   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
 │   │   └── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
@@ -75,8 +75,8 @@ SojaFit (proj3-b)
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── collect.py  <- TSC 목록 xlsx를 합치고 데이터시트 PDF를 받음
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
-│   │       ├── chunk.py    <- 파싱 결과를 검색 카드(표지·글·표 행)와 manifest로 만듦
-│   │       ├── ingest.py   <- manifest·카드·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
+│   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
 │   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
@@ -115,7 +115,7 @@ SojaFit (proj3-b)
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
 │   ├── 000_init.sql        <- pgvector 확장
-│   ├── 002_rag_corpus.sql  <- 코퍼스 문서·카드·벡터 표
+│   ├── 002_rag_corpus.sql  <- 코퍼스 문서·청크·벡터 표
 │   ├── 003_auth.sql        <- 사용자·세션·로그인 시도 표
 │   ├── 004_create_business_tables.sql  <- 업무 표(회로·판정·견적). 확정되면 manual/의 초안을 옮김 (예정)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
@@ -140,27 +140,43 @@ SojaFit (proj3-b)
 │   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
 │   │   ├── INPUTS.md       <- 폴더 설명
-│   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 쪽 36개(회수 불가 2쪽 표시, 사전 등록 #24)
-│   │   └── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
+│   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 페이지 36개(회수 불가 2쪽 표시, 사전 등록 #24)
+│   │   ├── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
+│   │   └── layers/         <- 검색 조합 층별 재측정(11-03)의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
+│   │       ├── parts.json  <- 0층에서 고정한 질문 줄·품번·비교 여부
+│   │       ├── queries.jsonl  <- LLM이 한 번 만들어 고정한 질의 Q3~Q5
+│   │       ├── queries_check.json  <- 고정 질의의 자동 확인(품번 남음·없던 숫자) 걸린 건
+│   │       └── query_texts.jsonl  <- 임베딩에 보낸 질의 글 전체(sha·본문)
 │   ├── guides/             <- 평가 기준 문서
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
 │   │   └── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
-│   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·쪽 적중@k)를 재서 results/retrieval/에 저장
-│   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 쪽 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
-│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 고르기용에서 고르고 확인용에서 한 번 비교)
+│   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
+│   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
+│   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
+│   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
-│   │   └── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
+│   │   ├── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
+│   │   ├── embed_cards.py  <- 임베딩 격자 본평가(#16)의 카드 적재와 모델별 카드 임베딩(실험 DB, 컨테이너)
+│   │   ├── run_embedding_grid.py  <- 임베딩 6종 × 검색 방식 × 리랭커 78칸 측정(#16, 컨테이너)
+│   │   ├── check_retrieval_db.py  <- 층별 재측정 0층: Supabase 카드·벡터·검색 결과를 로컬과 대조(읽기만)
+│   │   ├── run_retrieval_layers.py  <- 검색 조합 층별 재측정 1~4층(질의 글·토큰화·임베딩·리랭커, 11-03)
+│   │   └── report_retrieval_layers.py  <- 층별 재측정의 사전 등록 비교값을 결과 파일에서 뽑아 정리
+│   ├── docker/             <- 평가 실험용 컨테이너 이미지 정의
+│   │   ├── DOCKER.md       <- 폴더 설명
+│   │   ├── Dockerfile.gpu_embed  <- 원격 GPU에서 로컬 임베딩 모델을 돌리는 이미지(sojafit-emb)
+│   │   └── Dockerfile.embedding_grid  <- 임베딩 격자 본평가 실행 이미지(gpu_embed에 DB·BM25·Voyage 패키지를 더함)
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
 │   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
-│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 쪽을 정한 검색 표본 84문항(고르기용 46·확인용 38, 사전 등록 #25)
+│   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 페이지를 정한 검색 표본 84문항(dev 세트 46·test 세트 38, 사전 등록 #25)
 │   │   └── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   ├── drafts/             <- 동결 전 평가셋 초안과 검수 기록(실행·동결 금지, 이력 보존)
 │   │   ├── DRAFTS.md       <- 폴더 설명
@@ -174,11 +190,27 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
-│       ├── retrieval/      <- 검색 지표(run_retrieval): 하이브리드·벡터·BM25 베이스라인
-│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)
+│       ├── retrieval/      <- 검색 지표: v1 베이스라인(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
+│       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
-│       └── skill/          <- Skill·도구 개발 검증 요약
+│       ├── skill/          <- Skill·도구 개발 검증 요약
+│       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
+│           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
+│           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
+│           ├── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
+│               ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
+│               ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
+│               ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
+│               ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
+│               ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
+│               ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
+│               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
+│               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
+│           ├── 2026-11-04-jev-stage1-ready-v1/  <- Jev 1차 70문항 원시 행·집계
+│           ├── 2026-11-05-stage2-five-v1/  <- 기존 5종 2차 manifest·smoke·원시 행
+│           ├── 2026-11-05-jev-stage2-v1/  <- Jev 2차 manifest·smoke·원시 행·집계
+│           └── 2026-11-05-stage2-comparison-v1/  <- 6종 2차 원시 행 재집계 정본
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
@@ -203,7 +235,7 @@ SojaFit (proj3-b)
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
 │   │   ├── test_rag_parse.py  <- 파싱 도구의 Docling 없는 부분
-│   │   ├── test_rag_chunk.py  <- 표 카드 규칙, 문서 키, manifest 크기
+│   │   ├── test_rag_chunk.py  <- 표 청크 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
@@ -217,10 +249,15 @@ SojaFit (proj3-b)
 │   │   ├── EVALS.md        <- 폴더 설명
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
-│   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·쪽 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
+│   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
-│   │   └── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
+│   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
+│   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
+│   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
+│   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
+│   │   └── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
 │   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회의 수용 기준(SPEC 8.7)
@@ -240,6 +277,13 @@ SojaFit (proj3-b)
 │   ├── langfuse/           <- Langfuse 점검
 │   │   ├── LANGFUSE.md     <- 폴더 설명
 │   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
+│   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
+│   │   ├── BIT_SEARCH.md   <- 폴더 설명
+│   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
+│   ├── hf_jobs/            <- Hugging Face Jobs로 GPU 임베딩을 돌리는 스크립트
+│   │   ├── HF_JOBS.md      <- 폴더 설명
+│   │   ├── hf_job.py       <- HF Jobs에서 GPU 모델로 카드·질의를 임베딩해 비공개 데이터셋에 올림
+│   │   └── hf_data.py      <- 카드·질의를 비공개 저장소로 올리고 결과 벡터를 받아 검증·삭제
 │   ├── db/                 <- 운영 DB 손 작업
 │   │   ├── DB.md           <- 폴더 설명
 │   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
@@ -247,7 +291,8 @@ SojaFit (proj3-b)
 │       ├── auth/           <- 로그인 경계·동시 scrypt
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
-│       └── hnsw/           <- HNSW 대 정확 검색
+│       ├── hnsw/           <- HNSW 대 정확 검색
+│       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
 │   ├── DOCS.md             <- 폴더 설명
@@ -255,6 +300,7 @@ SojaFit (proj3-b)
 │   ├── GATES.md            <- 필수 게이트 G1~G7 자기 점검과 증거 (고정: 과제 가이드 경로)
 │   ├── evaluation-prep.md  <- 배점·가산 항목별 준비 점검
 │   ├── 조원-계약서.md      <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
+│   ├── glossary.md         <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
 │   ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
 │   │   └── ADR.md          <- 폴더 설명과 결정 목록
 │   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
@@ -275,7 +321,10 @@ SojaFit (proj3-b)
 │   │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
 │   │   ├── evaluation-draft-30.md  <- 난이도별 평가 문항 30건 초안 작성
 │   │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
-│   │   └── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
+│   │   ├── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
+│   │   ├── supervisor-model-comparison.md  <- 수퍼바이저 후보 5종 70문항 1회 비교와 Luna 최종 선정 근거
+│   │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
+│   │   └── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
@@ -287,6 +336,9 @@ SojaFit (proj3-b)
 │   │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
 │   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
 │   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+│   │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
+│   │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
+│   │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
 │   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
 │   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
 │   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
@@ -297,6 +349,9 @@ SojaFit (proj3-b)
 │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
 │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
 │   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
+│   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
+│   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
+│   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
 │   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
@@ -342,6 +397,7 @@ SojaFit (proj3-b)
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
 | `evals/inputs/` | [INPUTS.md](evals/inputs/INPUTS.md) | 평가·데이터 |
+| `evals/docker/` | [DOCKER.md](evals/docker/DOCKER.md) | 평가·문서 |
 | `evals/guides/` | [GUIDES.md](evals/guides/GUIDES.md) | 평가·문서 |
 | `evals/runners/` | [RUNNERS.md](evals/runners/RUNNERS.md) | 평가·문서 |
 | `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
@@ -357,6 +413,8 @@ SojaFit (proj3-b)
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
 | `scripts/auth/` | [AUTH.md](scripts/auth/AUTH.md) | 서비스·운영 |
 | `scripts/db/` | [DB.md](scripts/db/DB.md) | 서비스·운영 |
+| `scripts/bit_search/` | [BIT_SEARCH.md](scripts/bit_search/BIT_SEARCH.md) | 서비스·운영 |
+| `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |

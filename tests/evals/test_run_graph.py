@@ -1,6 +1,6 @@
 """그래프 평가 실행: 최종 메모장에서 Langfuse에 붙일 실행 점수를 바르게 뽑는지 확인한다.
 
-- 역할: evals/runners/run_graph.py의 run_scores가 경로·검색 횟수·카드 수·인용 검사 점수를 뽑고, 거절로 끝나면 인용 검사 점수를 빼는지 확인한다.
+- 역할: evals/runners/run_graph.py의 run_scores가 경로·검색 횟수·청크 수·인용 검사 점수를 뽑고, 거절로 끝나면 인용 검사 점수를 빼는지 확인한다.
 - 하지 않는 일: Langfuse·LLM 없이 돈다. 답이 맞았는지는 보지 않는다.
 - 출처: SPEC 7절(그래프 평가 실행), docs/GATES.md G6
 """
@@ -24,3 +24,88 @@ def test_refuse_path_has_no_citation_scores():
     scores = run_scores(state, 0.8, ["Route"])
     assert scores["not_found"][0] == 1.0
     assert "fake_citations" not in scores and "uncited_sentences" not in scores
+
+
+def _scores(metric, qtype="rating", latency=1.0, calls=3):
+    """run_scores가 돌려주는 모양의 점수 묶음(시험용)."""
+    return {"path": ("입력 읽기>라우팅>재작성>검색>채점>생성", "CATEGORICAL", None), "question_type": (qtype, "CATEGORICAL", None),
+            "not_found": (0.0, "BOOLEAN", None), "tries": (1.0, "NUMERIC", None), "llm_calls": (float(calls), "NUMERIC", None),
+            "docs_found": (5.0, "NUMERIC", None), "passed_cards": (1.0, "NUMERIC", None), "latency_s": (latency, "NUMERIC", None),
+            "answer_metric": (metric, "CATEGORICAL", None)}
+
+
+def test_result_row_keeps_ids_and_metrics_but_no_answer_text():
+    from evals.runners.run_graph import result_row
+    item = {"id": "draft30-e03", "kind": "relevant", "question_type": "rating", "expected": "정답 문장"}
+    state = {"passed": [7], "answer": "VRRM은 20 V다 [7].", "docs": [{"chunk_id": 7, "content": "청크 원문"}]}
+    row = result_row(item, state, _scores("cited_gold"), "https://trace/1")
+    assert row["gold_type"] == "rating" and row["routed_type"] == "rating" and row["answer_metric"] == "cited_gold"
+    assert row["passed"] == [7] and row["trace_url"] == "https://trace/1"
+    # [왜] 답변 문장과 청크 원문은 저장소에 두지 않는다(SPEC 6절)
+    assert "answer" not in row and "docs" not in row and "청크 원문" not in str(row) and "VRRM" not in str(row)
+
+
+def test_summarize_counts_metrics_by_kind_type_and_routing():
+    from evals.runners.run_graph import result_row, summarize
+    rel = {"id": "a", "kind": "relevant", "question_type": "rating"}
+    rel2 = {"id": "b", "kind": "relevant", "question_type": "role"}
+    irr = {"id": "c", "kind": "irrelevant", "irrelevant_type": "unknown_entity"}
+    rows = [result_row(rel, {}, _scores("cited_gold", latency=2.0), ""),
+            result_row(rel2, {}, _scores("over_refusal", qtype="rating", latency=4.0), ""),  # 역할을 정격으로 잘못 보냄
+            result_row(irr, {}, _scores("correct_refusal", latency=1.0, calls=1), "")]
+    s = summarize(rows, [{"id": "d", "error": "TimeoutError"}])
+    assert s["items"] == 4 and s["finished"] == 3 and s["failed"] == 1
+    assert s["metrics"] == {"cited_gold": 1, "correct_refusal": 1, "over_refusal": 1}
+    assert s["by_kind"]["relevant"] == {"cited_gold": 1, "over_refusal": 1}
+    assert s["by_type"]["irrelevant/unknown_entity"] == {"correct_refusal": 1}
+    assert s["routing_match_relevant"] == 1 and s["relevant"] == 2
+    assert s["latency_p50_s"] == 2.0 and s["llm_calls_total"] == 7
+
+
+def test_default_out_does_not_overwrite_same_day_file(tmp_path, monkeypatch):
+    from evals.runners.run_graph import default_out
+    monkeypatch.chdir(tmp_path)
+    first = default_out("evals/dataset_v2.jsonl", "2026-11-04")
+    assert first.as_posix() == "evals/results/graph/graph_dataset_v2_2026-11-04.json"
+    first.parent.mkdir(parents=True)
+    first.write_text("{}")
+    second = default_out("evals/dataset_v2.jsonl", "2026-11-04")
+    assert second != first and second.name.startswith("graph_dataset_v2_2026-11-04-")
+
+
+def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
+    """main을 Langfuse·LLM·DB 없이 가짜로 돌려 결과 파일 모양과 실패 문항 기록을 확인한다."""
+    import json
+    import langfuse
+    import langfuse.langchain
+    import backend.graph.build as build
+    from evals.runners import run_graph
+
+    class FakeClient:
+        def create_trace_id(self): return "t1"
+        def create_score(self, **kw): pass
+        def get_trace_url(self, trace_id): return f"https://lf/{trace_id}"
+        def flush(self): pass
+
+    class FakeApp:
+        def invoke(self, inp, config):
+            if "boom" in inp["input"]:
+                raise TimeoutError("느림")
+            return {"path": ["입력 읽기", "라우팅", "거절"], "question_type": "out_of_scope", "tries": 0, "docs": [],
+                    "passed": [], "answer": "이 질문은 SojaFit 범위 밖입니다.", "check": {}}
+
+    monkeypatch.setattr(langfuse, "get_client", lambda: FakeClient())
+    monkeypatch.setattr(langfuse.langchain, "CallbackHandler", lambda **kw: None)
+    monkeypatch.setattr(build, "build_graph", lambda: FakeApp())
+    data = tmp_path / "set.jsonl"
+    data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
+        {"id": "i1", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: 주식 추천", "expected": "", "gold_chunks": []},
+        {"id": "i2", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: boom", "expected": "", "gold_chunks": []}]))
+    out = tmp_path / "out.json"
+    run_graph.main(str(data), (), str(out))
+    result = json.loads(out.read_text(encoding="utf-8"))
+    assert result["summary"]["finished"] == 1 and result["summary"]["failed"] == 1
+    assert result["failed"] == [{"id": "i2", "error": "TimeoutError: 느림"}]
+    assert result["rows"][0]["id"] == "i1" and result["rows"][0]["trace_url"] == "https://lf/t1"
+    assert len(result["meta"]["dataset_sha256"]) == 64 and result["meta"]["ids"] == "all"
+    assert "범위 밖입니다" not in out.read_text(encoding="utf-8")  # 답변 문장은 파일에 넣지 않는다

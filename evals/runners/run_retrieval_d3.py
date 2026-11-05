@@ -1,12 +1,12 @@
-"""D3 공식 검색 측정(사전 등록 #24): 동결 v2의 채점 19문항을 쪽 단위 정답(qrels)으로, 한 번에 한 조건만 바꿔 잰다.
+"""D3 공식 검색 측정(사전 등록 #24): 동결 v2의 채점 19문항을 페이지 단위 정답(qrels)으로, 한 번에 한 조건만 바꿔 잰다.
 
 - 하는 일
-  - qrels: v2 gold 줄에 적힌 모든 쪽을 (PDF, 쪽)으로 풀어 evals/inputs/qrels_v2_pages.json을 만든다(카드 없는 쪽은 회수 불가로 표시).
+  - qrels: v2 gold 줄에 적힌 모든 쪽을 (PDF, 쪽)으로 풀어 evals/inputs/qrels_v2_pages.json을 만든다(청크 없는 쪽은 회수 불가로 표시).
   - official: 기준(서비스 경로) 하나와 E1~E8 칸을 재고, 칸마다 필터 끔으로도 다시 잰다. 결과·문항별 원시 순위를 json으로 남긴다.
   - noresult: 관련 19 · 비관련 35문항의 1위 점수 분포(no_result 임계값, 1주 16강).
   - chunks / embed: E6 청킹 변형(쪽마다 고정 길이 · 겹침, 의미 단위)을 만들고 3-small로 임베딩한다.
   - explore: 공식 측정 뒤 탐색 격자(임베딩 × 리랭커 × 질의 × 방식 × 필터). 결과에 "탐색"으로 표시한다.
-- 하지 않는 일: 평가셋 수정, 서비스 코드 수정, 답변 채점. 카드·벡터는 저장소 밖 파일을 인자로 읽는다(용량).
+- 하지 않는 일: 평가셋 수정, 서비스 코드 수정, 답변 채점. 청크·벡터는 저장소 밖 파일을 인자로 읽는다(용량).
 - 출처: evals/guides/preregister.md #24, backend/rag/retrieve.py(tokens·rrf·positive_top·part_index·allowed_chunks),
   backend/graph/nodes.py(find_parts·read_input·search의 필터 규칙), 1주 03·05·06·09·12·13·14·16·18·19강, 특강 08강
 - 실행(저장소 루트): uv run --with docling-core python -m evals.runners.run_retrieval_d3 <명령> [옵션]
@@ -29,7 +29,7 @@ V2 = ROOT / 'evals/dataset_v2.jsonl'
 V2_SHA = '81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9'
 QRELS = ROOT / 'evals/inputs/qrels_v2_pages.json'
 REWRITE = ROOT / 'evals/inputs/rewrite_q3_v2.json'
-OUTSIDE = ROOT.parent  # 저장소 밖 프로젝트 폴더(카드·벡터)
+OUTSIDE = ROOT.parent  # 저장소 밖 프로젝트 폴더(청크·벡터)
 KS = (1, 3, 5, 10)
 PAGE_TOKEN = re.compile(r'([^;,]*?\.pdf)|(\d+(?:\s*[~∼·-]\s*\d+)*)\s*쪽')
 
@@ -88,15 +88,15 @@ def make_qrels(cards_path):
 
 # ---------- 색인 ----------
 class Index:
-    """카드 묶음 하나(서비스 C 카드 또는 E6 변형)의 품번·분류·종류 필터와 키워드 색인."""
+    """청크 묶음 하나(서비스 C 청크 또는 E6 변형)의 품번·분류·종류 필터와 키워드 색인."""
 
     def __init__(self, path, name):
         from backend.rag.retrieve import part_index
         self.name, self.cards = name, [json.loads(l) for l in open(path, encoding='utf-8')]
         self.ids = list(range(len(self.cards)))
-        if any(c.get('kind') == 'cover' for c in self.cards):  # 서비스 카드: 표지 글에서 품번 → 문서
+        if any(c.get('kind') == 'cover' for c in self.cards):  # 서비스 청크: 표지 글에서 품번 → 문서
             self.part = part_index([(i, c['doc'], c['text']) for i, c in enumerate(self.cards)])
-        else:  # [주의] 표지 카드가 없는 변형은 카드 메타데이터 parts로 같은 모양을 만든다
+        else:  # [주의] 표지 청크가 없는 변형은 청크 메타데이터 parts로 같은 모양을 만든다
             pd, dc = {}, {}
             for i, c in enumerate(self.cards):
                 dc.setdefault(c['doc'], []).append(i)
@@ -147,7 +147,7 @@ class Index:
 
 
 class TfIdf:
-    """TF-IDF 코사인 검색. 낱말 → (카드, 정규화 가중치) 역색인으로 질문 낱말이 든 카드만 센다."""
+    """TF-IDF 코사인 검색. 낱말 → (청크, 정규화 가중치) 역색인으로 질문 낱말이 든 청크만 센다."""
 
     def __init__(self, docs):
         n = len(docs)
@@ -204,13 +204,13 @@ TOK = {'T0': t0, 'T1': t1, 'T2': t2, 'T3': t3}
 
 # ---------- 벡터 ----------
 class Vectors:
-    """모델별 카드 벡터(본문 sha 목록과 짝)와 질문 벡터 캐시(npz, 키는 질의 sha 앞 20자)."""
+    """모델별 청크 벡터(본문 sha 목록과 짝)와 질문 벡터 캐시(npz, 키는 질의 sha 앞 20자)."""
 
     def __init__(self, args):
         self.a, self.cache, self.q = args, {}, {}
 
     def files(self, model, index):
-        if index.name != 'C':  # 변형 카드: 3-small은 <변형>.f32, 다른 모델은 <변형>.<모델>.f32(GPU 단계)
+        if index.name != 'C':  # 변형 청크: 3-small은 <변형>.f32, 다른 모델은 <변형>.<모델>.f32(GPU 단계)
             tag = '' if model == 'te3s' else f'.{model}'
             return Path(self.a.chunk_dir) / f'{index.name}{tag}.f32', Path(self.a.chunk_dir) / f'{index.name}{tag}.sha.txt', None
         if model == 'te3s':
@@ -230,7 +230,7 @@ class Vectors:
             if model == 'te3l1536':
                 V = V[:, :1536]
             row = {h: i for i, h in enumerate(shas)}
-            # [왜] late chunking 벡터는 같은 글이라도 앞뒤 문맥에 따라 달라 본문 sha가 아니라 카드 번호(card:<i>)로 짝짓는다
+            # [왜] late chunking 벡터는 같은 글이라도 앞뒤 문맥에 따라 달라 본문 sha가 아니라 청크 번호(card:<i>)로 짝짓는다
             rows = [row[f'card:{k}'] if f'card:{k}' in row else row[c['sha256']] for k, c in enumerate(index.cards)]
             self.cache[key] = (V / np.linalg.norm(V, axis=1, keepdims=True), np.array(rows))
         return self.cache[key]
@@ -355,7 +355,7 @@ def name(cfg):
 
 
 def search(cfg, q, ctx):
-    """서비스 retrieve()와 같은 순서: 필터 → dense·키워드 후보 → RRF → (리랭크). 동점은 카드 순서로 고정한다."""
+    """서비스 retrieve()와 같은 순서: 필터 → dense·키워드 후보 → RRF → (리랭크). 동점은 청크 순서로 고정한다."""
     import numpy as np
     from backend.rag import retrieve as R
     index = ctx['index'][cfg['chunk']]
@@ -371,7 +371,7 @@ def search(cfg, q, ctx):
         sim = (Vn @ (qv / np.linalg.norm(qv)))[row]
         if allowed is not None:
             sim = np.where(index.mask(allowed), sim, -np.inf)
-        order = np.lexsort((np.arange(len(sim)), -sim))[:cfg['n']]  # [왜] 거리 → 카드 순서로 동점을 고정
+        order = np.lexsort((np.arange(len(sim)), -sim))[:cfg['n']]  # [왜] 거리 → 청크 순서로 동점을 고정
         dense = [int(j) for j in order if np.isfinite(sim[j])]
         dscore = {j: float(sim[j]) for j in dense}
         rec['dense_tie_at_5'] = len(dense) > 5 and dscore[dense[4]] == dscore[dense[5]]
@@ -402,16 +402,16 @@ def dcg(rel):
 
 
 def metrics(top, cands, allowed, gold, recoverable, index):
-    """한 문항의 쪽 단위 지표(k = 1·3·5·10)와 실패 유형. gold는 (PDF, 쪽) 목록. 회수 가능은 이 카드 묶음에 카드가 있는 쪽."""
+    """한 문항의 페이지 단위 지표(k = 1·3·5·10)와 실패 유형. gold는 (PDF, 쪽) 목록. 회수 가능은 이 청크 묶음에 청크가 있는 쪽."""
     G, docs = set(gold), {d for d, _ in gold}
-    RG = {p for p in G if index.have[p]}  # [왜] 청킹마다 카드가 있는 쪽이 달라 회수 가능 쪽을 색인 기준으로 센다
+    RG = {p for p in G if index.have[p]}  # [왜] 청킹마다 청크가 있는 쪽이 달라 회수 가능 쪽을 색인 기준으로 센다
     found = [(index.cards[c]['doc'], index.cards[c]['page']) for c in top]
     first_page = next((i + 1 for i, f in enumerate(found) if f in G), None)
     first_doc = next((i + 1 for i, f in enumerate(found) if f[0] in docs), None)
     m = {'page_mrr': 1 / first_page if first_page and first_page <= 10 else 0.0}
     for k in KS:
         hit = {f for f in found[:k] if f in G}
-        dedup = list(dict.fromkeys(found[:k]))  # 같은 쪽 카드는 한 번만 센다
+        dedup = list(dict.fromkeys(found[:k]))  # 같은 쪽 청크는 한 번만 센다
         m[f'page_hit@{k}'] = float(bool(hit))
         m[f'page_recall@{k}'] = len(hit) / len(G)
         m[f'page_recall_rec@{k}'] = len(hit & RG) / len(RG) if RG else None
@@ -478,7 +478,7 @@ def compare(a, b, metric):
 
 # ---------- 준비 ----------
 def v2_questions():
-    """채점 19문항의 질의 · 품번 · 정답 쪽. 서비스 search()와 같은 품번 규칙을 쓴다(context와 서비스 경로 측정이 함께 쓴다)."""
+    """채점 19문항의 질의 · 품번 · 정답 페이지. 서비스 search()와 같은 품번 규칙을 쓴다(context와 서비스 경로 측정이 함께 쓴다)."""
     from backend.graph.nodes import find_parts, read_input
     qrels = json.load(open(QRELS, encoding='utf-8'))
     if qrels['meta']['dataset_sha256'] != V2_SHA:
@@ -659,7 +659,7 @@ def make_chunks(args):
 
 
 def embed_variant(args, variant):
-    """변형 카드의 서로 다른 본문을 3-small로 임베딩해 <변형>.f32·.sha.txt에 이어 쓴다. semantic이면 먼저 문장을 임베딩해 자른다."""
+    """변형 청크의 서로 다른 본문을 3-small로 임베딩해 <변형>.f32·.sha.txt에 이어 쓴다. semantic이면 먼저 문장을 임베딩해 자른다."""
     import numpy as np
     from backend.services.llm import embed_texts
     d = Path(args.chunk_dir)
@@ -721,8 +721,8 @@ BGE_REV = '5617a9f61b028005a4858fdac845db406aefb181'  # 11-03 HF 작업과 같�
 
 
 def gpu_embed(args, variant):
-    """GPU: 고정 길이 변형 카드를 bge-m3로 임베딩한다. --mode bgem3는 일반(카드를 따로 읽고 모델 기본 CLS 풀링),
-    bgem3late는 late chunking(쪽 전체를 한 번 읽어 카드 구간의 토큰 임베딩을 평균). 사전 등록 #24 덧붙임."""
+    """GPU: 고정 길이 변형 청크를 bge-m3로 임베딩한다. --mode bgem3는 일반(청크를 따로 읽고 모델 기본 CLS 풀링),
+    bgem3late는 late chunking(쪽 전체를 한 번 읽어 청크 구간의 토큰 임베딩을 평균). 사전 등록 #24 덧붙임."""
     import numpy as np
     import torch
     d = Path(args.chunk_dir)
@@ -759,7 +759,7 @@ def gpu_embed(args, variant):
                 idx = [t for t, (x, y) in enumerate(offs) if y > x and x < b and y > a]
                 if idx:
                     v = H[idx].mean(0)
-                else:  # [주의] 8192토큰 밖이라 구간 토큰이 없으면 그 카드만 따로 읽은 CLS로 대신하고 수를 센다
+                else:  # [주의] 8192토큰 밖이라 구간 토큰이 없으면 그 청크만 따로 읽은 CLS로 대신하고 수를 센다
                     fallback += 1
                     with torch.no_grad():
                         v = lm(**tok(cards[k]['text'], truncation=True, max_length=1024, return_tensors='pt').to('cuda')

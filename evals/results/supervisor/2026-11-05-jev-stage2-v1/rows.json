@@ -1,0 +1,5584 @@
+{
+  "status": "complete",
+  "budget_accounted_cost": 0.0026890920000000006,
+  "rows": [
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e01",
+      "run_index": 2,
+      "latency_seconds": 0.42099999997299165,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 1,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.18,
+          "probabilities": {
+            "yes": 0.59,
+            "no": 0.41
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.81,
+          "probabilities": {
+            "circuit_agent": 0.86,
+            "search_agent": 0.04,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813575-9pRA50QrsDCxg86QJMb2",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 869,
+        "output_tokens": 213,
+        "cost": 3.6498e-05
+      },
+      "reported_cost_sum": 3.6498e-05,
+      "budget_accounted_cost": 3.6498e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e02",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 1,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.88,
+            "no": 0.12
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.22,
+          "probabilities": {
+            "yes": 0.39,
+            "no": 0.61
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.05,
+            "no": 0.95
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.63,
+          "probabilities": {
+            "circuit_agent": 0.72,
+            "search_agent": 0.05,
+            "judge_answer_agent": 0.17,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813575-QfmdCXqT3EpAI5iXdOKc",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 872,
+        "output_tokens": 213,
+        "cost": 3.6624e-05
+      },
+      "reported_cost_sum": 3.6624e-05,
+      "budget_accounted_cost": 3.6624e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e03",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.96,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.01,
+            "rating": 0.97,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.12,
+            "no": 0.88
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.86,
+            "no": 0.14
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.05,
+            "no": 0.95
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.65,
+          "probabilities": {
+            "circuit_agent": 0.12,
+            "search_agent": 0.74,
+            "judge_answer_agent": 0.08,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813576-5HOWeek7nvnXrjW53RuG",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 861,
+        "output_tokens": 212,
+        "cost": 3.6162e-05
+      },
+      "reported_cost_sum": 3.6162e-05,
+      "budget_accounted_cost": 3.6162e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e04",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 0.47,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0.01,
+            "candidate_find": 0.01,
+            "candidate_judge": 0.56,
+            "rating": 0.4,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.93,
+            "no": 0.07
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.84,
+          "probabilities": {
+            "yes": 0.92,
+            "no": 0.08
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.4,
+          "probabilities": {
+            "circuit_agent": 0.2,
+            "search_agent": 0.55,
+            "judge_answer_agent": 0.09,
+            "refuse": 0.16
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813576-4GKr9E1oMIIIYcBUK1UL",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 858,
+        "output_tokens": 215,
+        "cost": 3.6036e-05
+      },
+      "reported_cost_sum": 3.6036e-05,
+      "budget_accounted_cost": 3.6036e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e05",
+      "run_index": 2,
+      "latency_seconds": 0.4690000000409782,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.89,
+          "probabilities": {
+            "out_of_scope": 0.05,
+            "role": 0.01,
+            "candidate_find": 0,
+            "candidate_judge": 0.02,
+            "rating": 0.91,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.26,
+          "probabilities": {
+            "yes": 0.37,
+            "no": 0.63
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.7,
+          "probabilities": {
+            "yes": 0.85,
+            "no": 0.15
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.04,
+            "no": 0.96
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.61,
+          "probabilities": {
+            "circuit_agent": 0.16,
+            "search_agent": 0.71,
+            "judge_answer_agent": 0.09,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813576-JTzeCMktnJ6TP29IwBTq",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 863,
+        "output_tokens": 212,
+        "cost": 3.6246e-05
+      },
+      "reported_cost_sum": 3.6246e-05,
+      "budget_accounted_cost": 3.6246e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e06",
+      "run_index": 2,
+      "latency_seconds": 0.39000000001396984,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.84,
+          "probabilities": {
+            "out_of_scope": 0.1,
+            "role": 0,
+            "candidate_find": 0.87,
+            "candidate_judge": 0.03,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.9,
+            "no": 0.1
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.45,
+          "probabilities": {
+            "circuit_agent": 0.32,
+            "search_agent": 0.59,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813577-xcVN1u6ZHsU2JNGlXPCz",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 856,
+        "output_tokens": 213,
+        "cost": 3.5952e-05
+      },
+      "reported_cost_sum": 3.5952e-05,
+      "budget_accounted_cost": 3.5952e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e07",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.99,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.66,
+          "probabilities": {
+            "yes": 0.17,
+            "no": 0.83
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.6,
+          "probabilities": {
+            "yes": 0.8,
+            "no": 0.2
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.03,
+            "no": 0.97
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.68,
+          "probabilities": {
+            "circuit_agent": 0.13,
+            "search_agent": 0.76,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813577-ZkhK8VU9ykbJRVnigWEP",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 855,
+        "output_tokens": 212,
+        "cost": 3.591e-05
+      },
+      "reported_cost_sum": 3.591e-05,
+      "budget_accounted_cost": 3.591e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e08",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.98,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.02,
+            "rating": 0.98,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.14,
+          "probabilities": {
+            "yes": 0.43,
+            "no": 0.57
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.95,
+            "no": 0.05
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.73,
+          "probabilities": {
+            "circuit_agent": 0.1,
+            "search_agent": 0.8,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813578-PISX4wosWRqlBnZms17C",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 858,
+        "output_tokens": 212,
+        "cost": 3.6036e-05
+      },
+      "reported_cost_sum": 3.6036e-05,
+      "budget_accounted_cost": 3.6036e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e09",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "refuse",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.72,
+          "probabilities": {
+            "out_of_scope": 0.14,
+            "role": 0.02,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.77,
+            "insufficient_information": 0.07
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.88,
+            "no": 0.12
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.42,
+          "probabilities": {
+            "yes": 0.71,
+            "no": 0.29
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "refuse",
+          "confidence": 0.47,
+          "probabilities": {
+            "circuit_agent": 0.23,
+            "search_agent": 0.11,
+            "judge_answer_agent": 0.06,
+            "refuse": 0.6
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813578-DE6XwTs1RDuPVWWnE6yc",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 856,
+        "output_tokens": 212,
+        "cost": 3.5952e-05
+      },
+      "reported_cost_sum": 3.5952e-05,
+      "budget_accounted_cost": 3.5952e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-e10",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.99,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.84,
+          "probabilities": {
+            "yes": 0.92,
+            "no": 0.08
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.79,
+          "probabilities": {
+            "circuit_agent": 0.07,
+            "search_agent": 0.84,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813579-QJwsDjKKOFpsutK54Am2",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 872,
+        "output_tokens": 212,
+        "cost": 3.6624e-05
+      },
+      "reported_cost_sum": 3.6624e-05,
+      "budget_accounted_cost": 3.6624e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m01",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 1,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.08,
+          "probabilities": {
+            "yes": 0.46,
+            "no": 0.54
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.05,
+            "no": 0.95
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.85,
+          "probabilities": {
+            "circuit_agent": 0.89,
+            "search_agent": 0.03,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813579-vs73a7Acy3X5ZTDTwDFC",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 850,
+        "output_tokens": 213,
+        "cost": 3.57e-05
+      },
+      "reported_cost_sum": 3.57e-05,
+      "budget_accounted_cost": 3.57e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m02",
+      "run_index": 2,
+      "latency_seconds": 0.4219999999040738,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 0.96,
+          "probabilities": {
+            "out_of_scope": 0.03,
+            "role": 0.97,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.4,
+          "probabilities": {
+            "yes": 0.7,
+            "no": 0.3
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.71,
+          "probabilities": {
+            "circuit_agent": 0.78,
+            "search_agent": 0.02,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.15
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813579-9fMnJkJyvS4bktYv3bcF",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 896,
+        "output_tokens": 213,
+        "cost": 3.7632e-05
+      },
+      "reported_cost_sum": 3.7632e-05,
+      "budget_accounted_cost": 3.7632e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m03",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.95,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0.02,
+            "candidate_find": 0,
+            "candidate_judge": 0.01,
+            "rating": 0.96,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.36,
+          "probabilities": {
+            "yes": 0.68,
+            "no": 0.32
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.95,
+            "no": 0.05
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.04,
+            "no": 0.96
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.49,
+          "probabilities": {
+            "circuit_agent": 0.17,
+            "search_agent": 0.62,
+            "judge_answer_agent": 0.18,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813580-FFzbJ9hOCtvq8YeAYxIv",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 866,
+        "output_tokens": 212,
+        "cost": 3.6372e-05
+      },
+      "reported_cost_sum": 3.6372e-05,
+      "budget_accounted_cost": 3.6372e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m04",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.5,
+          "probabilities": {
+            "yes": 0.25,
+            "no": 0.75
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.28,
+          "probabilities": {
+            "circuit_agent": 0.46,
+            "search_agent": 0.29,
+            "judge_answer_agent": 0.09,
+            "refuse": 0.16
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813580-cpLNMuSIkTx5tGSzLMGH",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 864,
+        "output_tokens": 216,
+        "cost": 3.6288e-05
+      },
+      "reported_cost_sum": 3.6288e-05,
+      "budget_accounted_cost": 3.6288e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m05",
+      "run_index": 2,
+      "latency_seconds": 0.4369999999180436,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 0.44,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.53,
+            "rating": 0.45,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.86,
+            "no": 0.14
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.12,
+            "no": 0.88
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.35,
+          "probabilities": {
+            "circuit_agent": 0.34,
+            "search_agent": 0.51,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.11
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813581-QgmqtRmF7KM8WidSie6R",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 875,
+        "output_tokens": 215,
+        "cost": 3.675e-05
+      },
+      "reported_cost_sum": 3.675e-05,
+      "budget_accounted_cost": 3.675e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m06",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.38,
+          "probabilities": {
+            "out_of_scope": 0.48,
+            "role": 0.04,
+            "candidate_find": 0.17,
+            "candidate_judge": 0.23,
+            "rating": 0.01,
+            "insufficient_information": 0.07
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.95,
+            "no": 0.05
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.64,
+          "probabilities": {
+            "yes": 0.18,
+            "no": 0.82
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.48,
+          "probabilities": {
+            "circuit_agent": 0.61,
+            "search_agent": 0.17,
+            "judge_answer_agent": 0.06,
+            "refuse": 0.16
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813581-d6Vtp9TJbe1UUbZU5M1D",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 867,
+        "output_tokens": 215,
+        "cost": 3.6414e-05
+      },
+      "reported_cost_sum": 3.6414e-05,
+      "budget_accounted_cost": 3.6414e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m07",
+      "run_index": 2,
+      "latency_seconds": 0.3910000000614673,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.96,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.03,
+            "rating": 0.97,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0,
+          "probabilities": {
+            "yes": 0.5,
+            "no": 0.5
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.04,
+            "no": 0.96
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.76,
+          "probabilities": {
+            "circuit_agent": 0.1,
+            "search_agent": 0.82,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813581-NdVHOf8eYsYkPpI5tTwj",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 862,
+        "output_tokens": 212,
+        "cost": 3.6204e-05
+      },
+      "reported_cost_sum": 3.6204e-05,
+      "budget_accounted_cost": 3.6204e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m08",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.98,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.98,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.46,
+          "probabilities": {
+            "yes": 0.73,
+            "no": 0.27
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.12,
+            "no": 0.88
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.32,
+          "probabilities": {
+            "circuit_agent": 0.49,
+            "search_agent": 0.36,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.11
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813582-NaTeP2ZQOhbb5ECQdHXo",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 865,
+        "output_tokens": 213,
+        "cost": 3.633e-05
+      },
+      "reported_cost_sum": 3.633e-05,
+      "budget_accounted_cost": 3.633e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m09",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "refuse",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 0.88,
+          "probabilities": {
+            "out_of_scope": 0.07,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.9,
+            "rating": 0,
+            "insufficient_information": 0.03
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.5,
+          "probabilities": {
+            "yes": 0.75,
+            "no": 0.25
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.04,
+          "probabilities": {
+            "yes": 0.48,
+            "no": 0.52
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.06,
+          "probabilities": {
+            "yes": 0.47,
+            "no": 0.53
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "refuse",
+          "confidence": 0.44,
+          "probabilities": {
+            "circuit_agent": 0.16,
+            "search_agent": 0.19,
+            "judge_answer_agent": 0.07,
+            "refuse": 0.58
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813582-VCquq2jLASHqPMbyXNO6",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 865,
+        "output_tokens": 215,
+        "cost": 3.633e-05
+      },
+      "reported_cost_sum": 3.633e-05,
+      "budget_accounted_cost": 3.633e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-m10",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.45,
+          "probabilities": {
+            "out_of_scope": 0.17,
+            "role": 0.08,
+            "candidate_find": 0.54,
+            "candidate_judge": 0.05,
+            "rating": 0.05,
+            "insufficient_information": 0.11
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.1,
+          "probabilities": {
+            "yes": 0.55,
+            "no": 0.45
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.48,
+          "probabilities": {
+            "yes": 0.74,
+            "no": 0.26
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.7,
+          "probabilities": {
+            "yes": 0.15,
+            "no": 0.85
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.17,
+          "probabilities": {
+            "circuit_agent": 0.38,
+            "search_agent": 0.34,
+            "judge_answer_agent": 0.07,
+            "refuse": 0.21
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813583-jl4cSpdei5oHAlOHY2WP",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 873,
+        "output_tokens": 214,
+        "cost": 3.6666e-05
+      },
+      "reported_cost_sum": 3.6666e-05,
+      "budget_accounted_cost": 3.6666e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h01",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 0.92,
+          "probabilities": {
+            "out_of_scope": 0.07,
+            "role": 0.93,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.88,
+            "no": 0.12
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.04,
+            "no": 0.96
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.67,
+          "probabilities": {
+            "circuit_agent": 0.75,
+            "search_agent": 0.09,
+            "judge_answer_agent": 0.11,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813583-yPXxaNHEPmnGZAm12H6L",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 881,
+        "output_tokens": 213,
+        "cost": 3.7002e-05
+      },
+      "reported_cost_sum": 3.7002e-05,
+      "budget_accounted_cost": 3.7002e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h02",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 0.98,
+          "probabilities": {
+            "out_of_scope": 0.02,
+            "role": 0.98,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.58,
+          "probabilities": {
+            "yes": 0.79,
+            "no": 0.21
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.03,
+            "no": 0.97
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.69,
+          "probabilities": {
+            "circuit_agent": 0.77,
+            "search_agent": 0.08,
+            "judge_answer_agent": 0.1,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813584-uPyjfcGYbX55yuVW8Tpq",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 883,
+        "output_tokens": 213,
+        "cost": 3.7086e-05
+      },
+      "reported_cost_sum": 3.7086e-05,
+      "budget_accounted_cost": 3.7086e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h03",
+      "run_index": 2,
+      "latency_seconds": 0.4369999999180436,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 0.86,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0.05,
+            "candidate_find": 0,
+            "candidate_judge": 0.88,
+            "rating": 0.05,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.93,
+            "no": 0.07
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.17,
+          "probabilities": {
+            "circuit_agent": 0.38,
+            "search_agent": 0.29,
+            "judge_answer_agent": 0.12,
+            "refuse": 0.21
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813584-bdhID5vbD2Kvo4EFSFZJ",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 879,
+        "output_tokens": 216,
+        "cost": 3.6918e-05
+      },
+      "reported_cost_sum": 3.6918e-05,
+      "budget_accounted_cost": 3.6918e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h04",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.95,
+            "no": 0.05
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.14,
+          "probabilities": {
+            "yes": 0.43,
+            "no": 0.57
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.27,
+          "probabilities": {
+            "circuit_agent": 0.45,
+            "search_agent": 0.3,
+            "judge_answer_agent": 0.1,
+            "refuse": 0.15
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813584-GTmrhEQzAuGIi4xDvmJT",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 859,
+        "output_tokens": 216,
+        "cost": 3.6078e-05
+      },
+      "reported_cost_sum": 3.6078e-05,
+      "budget_accounted_cost": 3.6078e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h05",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.9,
+            "no": 0.1
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.12,
+            "no": 0.88
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.23,
+          "probabilities": {
+            "circuit_agent": 0.42,
+            "search_agent": 0.41,
+            "judge_answer_agent": 0.12,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813585-vFDZPEhfnf4X05er8iv6",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 890,
+        "output_tokens": 216,
+        "cost": 3.738e-05
+      },
+      "reported_cost_sum": 3.738e-05,
+      "budget_accounted_cost": 3.738e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h06",
+      "run_index": 2,
+      "latency_seconds": 0.4690000000409782,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.93,
+          "probabilities": {
+            "out_of_scope": 0.94,
+            "role": 0.01,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0.05
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.66,
+          "probabilities": {
+            "yes": 0.83,
+            "no": 0.17
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.9,
+            "no": 0.1
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.32,
+          "probabilities": {
+            "yes": 0.34,
+            "no": 0.66
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "refuse",
+          "confidence": 0.36,
+          "probabilities": {
+            "circuit_agent": 0.27,
+            "search_agent": 0.18,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.52
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813585-5BuEu6wUy4J6Wx7ykJVg",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 851,
+        "output_tokens": 214,
+        "cost": 3.5742e-05
+      },
+      "reported_cost_sum": 3.5742e-05,
+      "budget_accounted_cost": 3.5742e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h07",
+      "run_index": 2,
+      "latency_seconds": 0.4219999999040738,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.94,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.05,
+            "rating": 0.95,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.4,
+          "probabilities": {
+            "yes": 0.7,
+            "no": 0.3
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.52,
+          "probabilities": {
+            "circuit_agent": 0.26,
+            "search_agent": 0.64,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813586-Z4hnrJrpgDC1A6uIPhbU",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 861,
+        "output_tokens": 212,
+        "cost": 3.6162e-05
+      },
+      "reported_cost_sum": 3.6162e-05,
+      "budget_accounted_cost": 3.6162e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h08",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "role",
+          "confidence": 0.4,
+          "probabilities": {
+            "out_of_scope": 0.25,
+            "role": 0.5,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.19,
+            "insufficient_information": 0.06
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.58,
+          "probabilities": {
+            "yes": 0.79,
+            "no": 0.21
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.68,
+          "probabilities": {
+            "yes": 0.16,
+            "no": 0.84
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.17,
+          "probabilities": {
+            "circuit_agent": 0.38,
+            "search_agent": 0.13,
+            "judge_answer_agent": 0.13,
+            "refuse": 0.36
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813586-RDAOfKklz6XKF9gujJNA",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 872,
+        "output_tokens": 213,
+        "cost": 3.6624e-05
+      },
+      "reported_cost_sum": 3.6624e-05,
+      "budget_accounted_cost": 3.6624e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h09",
+      "run_index": 2,
+      "latency_seconds": 0.39000000001396984,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.33,
+          "probabilities": {
+            "out_of_scope": 0.44,
+            "role": 0.06,
+            "candidate_find": 0.18,
+            "candidate_judge": 0.02,
+            "rating": 0.24,
+            "insufficient_information": 0.06
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.02,
+          "probabilities": {
+            "yes": 0.49,
+            "no": 0.51
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.9,
+            "no": 0.1
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.11,
+            "no": 0.89
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.25,
+          "probabilities": {
+            "circuit_agent": 0.39,
+            "search_agent": 0.44,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.13
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813587-bDISpNm2QQDgBoOXiG3Z",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 857,
+        "output_tokens": 214,
+        "cost": 3.5994e-05
+      },
+      "reported_cost_sum": 3.5994e-05,
+      "budget_accounted_cost": 3.5994e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft30-h10",
+      "run_index": 2,
+      "latency_seconds": 0.3910000000614673,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.47,
+          "probabilities": {
+            "out_of_scope": 0.56,
+            "role": 0.4,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.01,
+            "insufficient_information": 0.03
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.89,
+            "no": 0.11
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.14,
+            "no": 0.86
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.4,
+          "probabilities": {
+            "circuit_agent": 0.2,
+            "search_agent": 0.55,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.21
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813587-JAcdwGPNX1rhjoiy2xn8",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 867,
+        "output_tokens": 214,
+        "cost": 3.6414e-05
+      },
+      "reported_cost_sum": 3.6414e-05,
+      "budget_accounted_cost": 3.6414e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n01",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.4,
+          "probabilities": {
+            "yes": 0.7,
+            "no": 0.3
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.31,
+          "probabilities": {
+            "circuit_agent": 0.17,
+            "search_agent": 0.48,
+            "judge_answer_agent": 0.32,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813587-1yWos6spKS7wTHQUHXIJ",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1001,
+        "output_tokens": 215,
+        "cost": 4.2042e-05
+      },
+      "reported_cost_sum": 4.2042e-05,
+      "budget_accounted_cost": 4.2042e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n02",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.93,
+            "no": 0.07
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.13,
+            "no": 0.87
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.33,
+          "probabilities": {
+            "circuit_agent": 0.24,
+            "search_agent": 0.5,
+            "judge_answer_agent": 0.2,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813588-cB0MxQKu4aCwpb4f61iz",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 927,
+        "output_tokens": 215,
+        "cost": 3.8934e-05
+      },
+      "reported_cost_sum": 3.8934e-05,
+      "budget_accounted_cost": 3.8934e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n03",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.95,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.03,
+            "rating": 0.96,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.14,
+          "probabilities": {
+            "yes": 0.43,
+            "no": 0.57
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.76,
+          "probabilities": {
+            "yes": 0.12,
+            "no": 0.88
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.73,
+          "probabilities": {
+            "circuit_agent": 0.05,
+            "search_agent": 0.8,
+            "judge_answer_agent": 0.06,
+            "refuse": 0.09
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813588-25oMLOAZY64NehgWAR4Q",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 874,
+        "output_tokens": 212,
+        "cost": 3.6708e-05
+      },
+      "reported_cost_sum": 3.6708e-05,
+      "budget_accounted_cost": 3.6708e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n04",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.7,
+          "probabilities": {
+            "yes": 0.85,
+            "no": 0.15
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.23,
+          "probabilities": {
+            "circuit_agent": 0.08,
+            "search_agent": 0.42,
+            "judge_answer_agent": 0.22,
+            "refuse": 0.28
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813589-uMGDzYPw34YwFeMH4GxK",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 927,
+        "output_tokens": 215,
+        "cost": 3.8934e-05
+      },
+      "reported_cost_sum": 3.8934e-05,
+      "budget_accounted_cost": 3.8934e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n05",
+      "run_index": 2,
+      "latency_seconds": 0.4690000000409782,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.01,
+            "rating": 0.99,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.58,
+          "probabilities": {
+            "yes": 0.21,
+            "no": 0.79
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.05,
+            "no": 0.95
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.79,
+          "probabilities": {
+            "circuit_agent": 0.02,
+            "search_agent": 0.84,
+            "judge_answer_agent": 0.08,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813589-dqLaCadM3jrUTW4OZTrQ",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 897,
+        "output_tokens": 212,
+        "cost": 3.7674e-05
+      },
+      "reported_cost_sum": 3.7674e-05,
+      "budget_accounted_cost": 3.7674e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n06",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.99,
+            "rating": 0.01,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.48,
+          "probabilities": {
+            "yes": 0.26,
+            "no": 0.74
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.68,
+          "probabilities": {
+            "yes": 0.84,
+            "no": 0.16
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.63,
+          "probabilities": {
+            "circuit_agent": 0.11,
+            "search_agent": 0.72,
+            "judge_answer_agent": 0.13,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813590-xH7veTSGBa3FUqwzIONL",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 897,
+        "output_tokens": 215,
+        "cost": 3.7674e-05
+      },
+      "reported_cost_sum": 3.7674e-05,
+      "budget_accounted_cost": 3.7674e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n07",
+      "run_index": 2,
+      "latency_seconds": 0.40600000007543713,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.93,
+            "no": 0.07
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.25,
+          "probabilities": {
+            "circuit_agent": 0.26,
+            "search_agent": 0.44,
+            "judge_answer_agent": 0.24,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813590-H3MHxzlLwmeq0jt84fWm",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 944,
+        "output_tokens": 215,
+        "cost": 3.9648e-05
+      },
+      "reported_cost_sum": 3.9648e-05,
+      "budget_accounted_cost": 3.9648e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n08",
+      "run_index": 2,
+      "latency_seconds": 0.39000000001396984,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_judge",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 1,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.46,
+          "probabilities": {
+            "yes": 0.73,
+            "no": 0.27
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.84,
+          "probabilities": {
+            "yes": 0.08,
+            "no": 0.92
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.51,
+          "probabilities": {
+            "circuit_agent": 0.09,
+            "search_agent": 0.63,
+            "judge_answer_agent": 0.23,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813590-oAsVRhzwvsqMzXa1i2Tc",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 938,
+        "output_tokens": 215,
+        "cost": 3.9396e-05
+      },
+      "reported_cost_sum": 3.9396e-05,
+      "budget_accounted_cost": 3.9396e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n09",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.98,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.02,
+            "rating": 0.98,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.3,
+          "probabilities": {
+            "yes": 0.35,
+            "no": 0.65
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.81,
+          "probabilities": {
+            "circuit_agent": 0.04,
+            "search_agent": 0.86,
+            "judge_answer_agent": 0.06,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813591-k7DRRjZcAPq73ikKIcs7",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 868,
+        "output_tokens": 212,
+        "cost": 3.6456e-05
+      },
+      "reported_cost_sum": 3.6456e-05,
+      "budget_accounted_cost": 3.6456e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n10",
+      "run_index": 2,
+      "latency_seconds": 0.43799999996554106,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.95,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.04,
+            "rating": 0.96,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.56,
+          "probabilities": {
+            "yes": 0.22,
+            "no": 0.78
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.02,
+            "no": 0.98
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.91,
+          "probabilities": {
+            "circuit_agent": 0.03,
+            "search_agent": 0.93,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.02
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813591-VXG8AhYCNk6fEsUl78iN",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 873,
+        "output_tokens": 212,
+        "cost": 3.6666e-05
+      },
+      "reported_cost_sum": 3.6666e-05,
+      "budget_accounted_cost": 3.6666e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n11",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.01,
+            "rating": 0.99,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.52,
+          "probabilities": {
+            "yes": 0.24,
+            "no": 0.76
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.91,
+            "no": 0.09
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.04,
+            "no": 0.96
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.79,
+          "probabilities": {
+            "circuit_agent": 0.07,
+            "search_agent": 0.84,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813592-9mzp4K5G22JiMdqhwHzY",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 876,
+        "output_tokens": 212,
+        "cost": 3.6792e-05
+      },
+      "reported_cost_sum": 3.6792e-05,
+      "budget_accounted_cost": 3.6792e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n12",
+      "run_index": 2,
+      "latency_seconds": 0.39000000001396984,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.72,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0.03,
+            "candidate_judge": 0.19,
+            "rating": 0.77,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.02,
+          "probabilities": {
+            "yes": 0.51,
+            "no": 0.49
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.52,
+          "probabilities": {
+            "circuit_agent": 0.25,
+            "search_agent": 0.64,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813592-iYyUwKmnKBRssEkTP5tP",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 876,
+        "output_tokens": 212,
+        "cost": 3.6792e-05
+      },
+      "reported_cost_sum": 3.6792e-05,
+      "budget_accounted_cost": 3.6792e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n14",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0,
+            "rating": 0.99,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.72,
+          "probabilities": {
+            "circuit_agent": 0.06,
+            "search_agent": 0.79,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.1
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813592-hYGAIfpf0YRjo5ixXqUY",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 889,
+        "output_tokens": 212,
+        "cost": 3.7338e-05
+      },
+      "reported_cost_sum": 3.7338e-05,
+      "budget_accounted_cost": 3.7338e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n15",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.89,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0.03,
+            "candidate_judge": 0.03,
+            "rating": 0.91,
+            "insufficient_information": 0.02
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.02,
+          "probabilities": {
+            "yes": 0.49,
+            "no": 0.51
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.94,
+          "probabilities": {
+            "yes": 0.97,
+            "no": 0.03
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.45,
+          "probabilities": {
+            "circuit_agent": 0.24,
+            "search_agent": 0.59,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.13
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813593-bBLbiWgrIjUg5xvuI0NA",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 876,
+        "output_tokens": 212,
+        "cost": 3.6792e-05
+      },
+      "reported_cost_sum": 3.6792e-05,
+      "budget_accounted_cost": 3.6792e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n16",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.81,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0.01,
+            "candidate_judge": 0.13,
+            "rating": 0.84,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.44,
+          "probabilities": {
+            "yes": 0.28,
+            "no": 0.72
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.06,
+            "no": 0.94
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.68,
+          "probabilities": {
+            "circuit_agent": 0.08,
+            "search_agent": 0.76,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.12
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813593-0HCh6nm4RtLjlxwCH05J",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 892,
+        "output_tokens": 212,
+        "cost": 3.7464e-05
+      },
+      "reported_cost_sum": 3.7464e-05,
+      "budget_accounted_cost": 3.7464e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n17",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.9,
+          "probabilities": {
+            "out_of_scope": 0.02,
+            "role": 0,
+            "candidate_find": 0.01,
+            "candidate_judge": 0.04,
+            "rating": 0.92,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.54,
+          "probabilities": {
+            "yes": 0.23,
+            "no": 0.77
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.11,
+            "no": 0.89
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.71,
+          "probabilities": {
+            "circuit_agent": 0.06,
+            "search_agent": 0.78,
+            "judge_answer_agent": 0.05,
+            "refuse": 0.11
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813594-V7s0iLRPwUSLdajErmWZ",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 880,
+        "output_tokens": 212,
+        "cost": 3.696e-05
+      },
+      "reported_cost_sum": 3.696e-05,
+      "budget_accounted_cost": 3.696e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n18",
+      "run_index": 2,
+      "latency_seconds": 0.4219999999040738,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "search_agent",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.51,
+          "probabilities": {
+            "out_of_scope": 0.59,
+            "role": 0,
+            "candidate_find": 0.1,
+            "candidate_judge": 0.26,
+            "rating": 0.03,
+            "insufficient_information": 0.02
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.16,
+          "probabilities": {
+            "yes": 0.42,
+            "no": 0.58
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.08,
+          "probabilities": {
+            "yes": 0.46,
+            "no": 0.54
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.4,
+          "probabilities": {
+            "circuit_agent": 0.03,
+            "search_agent": 0.55,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.38
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813594-yauFIj7eDQCoTbkCx1Yv",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 874,
+        "output_tokens": 214,
+        "cost": 3.6708e-05
+      },
+      "reported_cost_sum": 3.6708e-05,
+      "budget_accounted_cost": 3.6708e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n19",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.87,
+          "probabilities": {
+            "out_of_scope": 0.08,
+            "role": 0,
+            "candidate_find": 0.89,
+            "candidate_judge": 0.02,
+            "rating": 0,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.68,
+          "probabilities": {
+            "yes": 0.84,
+            "no": 0.16
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.92,
+          "probabilities": {
+            "yes": 0.96,
+            "no": 0.04
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.27,
+          "probabilities": {
+            "circuit_agent": 0.45,
+            "search_agent": 0.43,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.09
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813595-dqX8C8AuDw1kkJO0t6hp",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 883,
+        "output_tokens": 214,
+        "cost": 3.7086e-05
+      },
+      "reported_cost_sum": 3.7086e-05,
+      "budget_accounted_cost": 3.7086e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft50-n20",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "out_of_scope",
+          "confidence": 0.9,
+          "probabilities": {
+            "out_of_scope": 0.92,
+            "role": 0,
+            "candidate_find": 0.03,
+            "candidate_judge": 0.04,
+            "rating": 0,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.38,
+          "probabilities": {
+            "yes": 0.69,
+            "no": 0.31
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.24,
+          "probabilities": {
+            "yes": 0.62,
+            "no": 0.38
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.08,
+          "probabilities": {
+            "yes": 0.54,
+            "no": 0.46
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "refuse",
+          "confidence": 0.72,
+          "probabilities": {
+            "circuit_agent": 0.07,
+            "search_agent": 0.1,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.79
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813595-aX4jQLz8VaRBxpsPYqTY",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 879,
+        "output_tokens": 214,
+        "cost": 3.6918e-05
+      },
+      "reported_cost_sum": 3.6918e-05,
+      "budget_accounted_cost": 3.6918e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draft52-n21",
+      "run_index": 2,
+      "latency_seconds": 0.39099999994505197,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "rating",
+          "confidence": 0.92,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0,
+            "candidate_judge": 0.05,
+            "rating": 0.93,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.4,
+          "probabilities": {
+            "yes": 0.3,
+            "no": 0.7
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.95,
+            "no": 0.05
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.9,
+          "probabilities": {
+            "yes": 0.05,
+            "no": 0.95
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.61,
+          "probabilities": {
+            "circuit_agent": 0.11,
+            "search_agent": 0.71,
+            "judge_answer_agent": 0.11,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813595-RAq4MwMjaSJZRrsoOUA4",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 877,
+        "output_tokens": 212,
+        "cost": 3.6834e-05
+      },
+      "reported_cost_sum": 3.6834e-05,
+      "budget_accounted_cost": 3.6834e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n01",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.87,
+            "no": 0.13
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.14,
+            "no": 0.86
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.61,
+          "probabilities": {
+            "circuit_agent": 0.24,
+            "search_agent": 0.71,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.02
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813596-iGvF5dElZsWdLr9f6CSb",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1016,
+        "output_tokens": 213,
+        "cost": 4.2672e-05
+      },
+      "reported_cost_sum": 4.2672e-05,
+      "budget_accounted_cost": 4.2672e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n02",
+      "run_index": 2,
+      "latency_seconds": 0.3910000000614673,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.38,
+          "probabilities": {
+            "yes": 0.69,
+            "no": 0.31
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.11,
+            "no": 0.89
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.76,
+          "probabilities": {
+            "circuit_agent": 0.13,
+            "search_agent": 0.82,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813596-v1O6HV9fm4G3HQ7D4iik",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 995,
+        "output_tokens": 213,
+        "cost": 4.179e-05
+      },
+      "reported_cost_sum": 4.179e-05,
+      "budget_accounted_cost": 4.179e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n03",
+      "run_index": 2,
+      "latency_seconds": 0.4219999999040738,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.87,
+            "no": 0.13
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "circuit_agent",
+          "confidence": 0.27,
+          "probabilities": {
+            "circuit_agent": 0.45,
+            "search_agent": 0.45,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.08
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813597-376NyXSrWmQ4FD5JMw3q",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 997,
+        "output_tokens": 214,
+        "cost": 4.1874e-05
+      },
+      "reported_cost_sum": 4.1874e-05,
+      "budget_accounted_cost": 4.1874e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n04",
+      "run_index": 2,
+      "latency_seconds": 0.4380000000819564,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.66,
+          "probabilities": {
+            "yes": 0.83,
+            "no": 0.17
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.84,
+          "probabilities": {
+            "yes": 0.08,
+            "no": 0.92
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.55,
+          "probabilities": {
+            "circuit_agent": 0.28,
+            "search_agent": 0.66,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813597-VCRg2w4TLPCzjW1dVd1e",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 972,
+        "output_tokens": 213,
+        "cost": 4.0824e-05
+      },
+      "reported_cost_sum": 4.0824e-05,
+      "budget_accounted_cost": 4.0824e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n05",
+      "run_index": 2,
+      "latency_seconds": 0.39099999994505197,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.88,
+          "probabilities": {
+            "yes": 0.94,
+            "no": 0.06
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.7,
+          "probabilities": {
+            "yes": 0.15,
+            "no": 0.85
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.55,
+          "probabilities": {
+            "circuit_agent": 0.2,
+            "search_agent": 0.66,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.12
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813597-APrpj0XGTpwGWihrclrI",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1022,
+        "output_tokens": 213,
+        "cost": 4.2924e-05
+      },
+      "reported_cost_sum": 4.2924e-05,
+      "budget_accounted_cost": 4.2924e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n06",
+      "run_index": 2,
+      "latency_seconds": 0.39099999994505197,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.64,
+          "probabilities": {
+            "yes": 0.82,
+            "no": 0.18
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.13,
+            "no": 0.87
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.56,
+          "probabilities": {
+            "circuit_agent": 0.23,
+            "search_agent": 0.67,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813598-RTtCKvZxi5LssxYL2d4l",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1029,
+        "output_tokens": 213,
+        "cost": 4.3218e-05
+      },
+      "reported_cost_sum": 4.3218e-05,
+      "budget_accounted_cost": 4.3218e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n07",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.87,
+            "no": 0.13
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.57,
+          "probabilities": {
+            "circuit_agent": 0.26,
+            "search_agent": 0.68,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813598-Iq1blPx2f9z5915JXeqQ",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1060,
+        "output_tokens": 213,
+        "cost": 4.452e-05
+      },
+      "reported_cost_sum": 4.452e-05,
+      "budget_accounted_cost": 4.452e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n08",
+      "run_index": 2,
+      "latency_seconds": 0.39099999994505197,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.9,
+            "no": 0.1
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.11,
+            "no": 0.89
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.61,
+          "probabilities": {
+            "circuit_agent": 0.2,
+            "search_agent": 0.71,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813599-GGYsrvZMgRPoMnFC5MFB",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1046,
+        "output_tokens": 213,
+        "cost": 4.3932e-05
+      },
+      "reported_cost_sum": 4.3932e-05,
+      "budget_accounted_cost": 4.3932e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n09",
+      "run_index": 2,
+      "latency_seconds": 0.39099999994505197,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0.99,
+            "candidate_judge": 0.01,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.87,
+            "no": 0.13
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.74,
+          "probabilities": {
+            "yes": 0.13,
+            "no": 0.87
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.55,
+          "probabilities": {
+            "circuit_agent": 0.27,
+            "search_agent": 0.66,
+            "judge_answer_agent": 0.03,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813599-ME9iudyIj5daC2BG20Tz",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1066,
+        "output_tokens": 213,
+        "cost": 4.4772e-05
+      },
+      "reported_cost_sum": 4.4772e-05,
+      "budget_accounted_cost": 4.4772e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n10",
+      "run_index": 2,
+      "latency_seconds": 0.3910000000614673,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.58,
+          "probabilities": {
+            "yes": 0.79,
+            "no": 0.21
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.31,
+          "probabilities": {
+            "circuit_agent": 0.47,
+            "search_agent": 0.48,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813600-7ob5TM33MCMPP1qWh9Tg",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1067,
+        "output_tokens": 213,
+        "cost": 4.4814e-05
+      },
+      "reported_cost_sum": 4.4814e-05,
+      "budget_accounted_cost": 4.4814e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n11",
+      "run_index": 2,
+      "latency_seconds": 0.39000000001396984,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.77,
+          "probabilities": {
+            "out_of_scope": 0.16,
+            "role": 0.01,
+            "candidate_find": 0.81,
+            "candidate_judge": 0.01,
+            "rating": 0,
+            "insufficient_information": 0.01
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.7,
+          "probabilities": {
+            "yes": 0.85,
+            "no": 0.15
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.54,
+          "probabilities": {
+            "yes": 0.77,
+            "no": 0.23
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.52,
+          "probabilities": {
+            "circuit_agent": 0.28,
+            "search_agent": 0.64,
+            "judge_answer_agent": 0.01,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813600-bRoeLVHPG6y25OXRB3uX",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 878,
+        "output_tokens": 213,
+        "cost": 3.6876e-05
+      },
+      "reported_cost_sum": 3.6876e-05,
+      "budget_accounted_cost": 3.6876e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n12",
+      "run_index": 2,
+      "latency_seconds": 0.4369999999180436,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.12,
+          "probabilities": {
+            "yes": 0.56,
+            "no": 0.44
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.44,
+          "probabilities": {
+            "circuit_agent": 0.27,
+            "search_agent": 0.58,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.13
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813600-FF0rKsmVRcFyKTCsBGJL",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 895,
+        "output_tokens": 213,
+        "cost": 3.759e-05
+      },
+      "reported_cost_sum": 3.759e-05,
+      "budget_accounted_cost": 3.759e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n13",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.58,
+          "probabilities": {
+            "yes": 0.79,
+            "no": 0.21
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.96,
+          "probabilities": {
+            "yes": 0.98,
+            "no": 0.02
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.82,
+          "probabilities": {
+            "yes": 0.09,
+            "no": 0.91
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.52,
+          "probabilities": {
+            "circuit_agent": 0.29,
+            "search_agent": 0.64,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813601-g2H4nxY3N4XqYYMLYBt0",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 997,
+        "output_tokens": 213,
+        "cost": 4.1874e-05
+      },
+      "reported_cost_sum": 4.1874e-05,
+      "budget_accounted_cost": 4.1874e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n14",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.24,
+          "probabilities": {
+            "yes": 0.62,
+            "no": 0.38
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.84,
+          "probabilities": {
+            "yes": 0.08,
+            "no": 0.92
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.37,
+          "probabilities": {
+            "circuit_agent": 0.39,
+            "search_agent": 0.53,
+            "judge_answer_agent": 0.01,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813601-kYN5Aakuuid7fDiAUpMP",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 892,
+        "output_tokens": 213,
+        "cost": 3.7464e-05
+      },
+      "reported_cost_sum": 3.7464e-05,
+      "budget_accounted_cost": 3.7464e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n15",
+      "run_index": 2,
+      "latency_seconds": 0.43700000003445894,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0.99,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.86,
+            "no": 0.14
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.78,
+          "probabilities": {
+            "yes": 0.11,
+            "no": 0.89
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.56,
+          "probabilities": {
+            "circuit_agent": 0.25,
+            "search_agent": 0.67,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.06
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813602-qVPs3OgHOGmucLYecPAa",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1021,
+        "output_tokens": 213,
+        "cost": 4.2882e-05
+      },
+      "reported_cost_sum": 4.2882e-05,
+      "budget_accounted_cost": 4.2882e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n16",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.96,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 0.97,
+            "candidate_judge": 0.03,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.56,
+          "probabilities": {
+            "yes": 0.78,
+            "no": 0.22
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.66,
+          "probabilities": {
+            "yes": 0.17,
+            "no": 0.83
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.76,
+          "probabilities": {
+            "circuit_agent": 0.07,
+            "search_agent": 0.82,
+            "judge_answer_agent": 0.04,
+            "refuse": 0.07
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813602-VggRELelPZJhXri7jC2B",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1035,
+        "output_tokens": 213,
+        "cost": 4.347e-05
+      },
+      "reported_cost_sum": 4.347e-05,
+      "budget_accounted_cost": 4.347e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n17",
+      "run_index": 2,
+      "latency_seconds": 0.42099999997299165,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.64,
+          "probabilities": {
+            "yes": 0.82,
+            "no": 0.18
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.8,
+          "probabilities": {
+            "yes": 0.1,
+            "no": 0.9
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.83,
+          "probabilities": {
+            "circuit_agent": 0.08,
+            "search_agent": 0.87,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.03
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813603-b0iN26q18HBEsncmXEbV",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1060,
+        "output_tokens": 213,
+        "cost": 4.452e-05
+      },
+      "reported_cost_sum": 4.452e-05,
+      "budget_accounted_cost": 4.452e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n18",
+      "run_index": 2,
+      "latency_seconds": 0.40700000000651926,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 0.99,
+          "probabilities": {
+            "out_of_scope": 0.01,
+            "role": 0,
+            "candidate_find": 0.99,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.34,
+          "probabilities": {
+            "yes": 0.67,
+            "no": 0.33
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.72,
+          "probabilities": {
+            "yes": 0.14,
+            "no": 0.86
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.45,
+          "probabilities": {
+            "circuit_agent": 0.25,
+            "search_agent": 0.59,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.14
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813603-YXyHvc3zTpHQUwi6ZYHr",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 888,
+        "output_tokens": 213,
+        "cost": 3.7296e-05
+      },
+      "reported_cost_sum": 3.7296e-05,
+      "budget_accounted_cost": 3.7296e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n19",
+      "run_index": 2,
+      "latency_seconds": 0.4220000000204891,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.68,
+          "probabilities": {
+            "yes": 0.84,
+            "no": 0.16
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 1,
+          "probabilities": {
+            "yes": 1,
+            "no": 0
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.81,
+          "probabilities": {
+            "circuit_agent": 0.08,
+            "search_agent": 0.86,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.04
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813603-CtHjfRjEjVp0GHAOTOu7",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1065,
+        "output_tokens": 213,
+        "cost": 4.473e-05
+      },
+      "reported_cost_sum": 4.473e-05,
+      "budget_accounted_cost": 4.473e-05
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "draftv2-n20",
+      "run_index": 2,
+      "latency_seconds": 0.4059999999590218,
+      "status": "complete",
+      "retry_count": 0,
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "typed_answers": {
+        "question_type": {
+          "type": "choice",
+          "choice": "candidate_find",
+          "confidence": 1,
+          "probabilities": {
+            "out_of_scope": 0,
+            "role": 0,
+            "candidate_find": 1,
+            "candidate_judge": 0,
+            "rating": 0,
+            "insufficient_information": 0
+          }
+        },
+        "needs_circuit": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.52,
+          "probabilities": {
+            "yes": 0.76,
+            "no": 0.24
+          }
+        },
+        "needs_datasheet": {
+          "type": "choice",
+          "choice": "yes",
+          "confidence": 0.98,
+          "probabilities": {
+            "yes": 0.99,
+            "no": 0.01
+          }
+        },
+        "needs_approved_case": {
+          "type": "choice",
+          "choice": "no",
+          "confidence": 0.86,
+          "probabilities": {
+            "yes": 0.07,
+            "no": 0.93
+          }
+        },
+        "next_action": {
+          "type": "choice",
+          "choice": "search_agent",
+          "confidence": 0.41,
+          "probabilities": {
+            "circuit_agent": 0.37,
+            "search_agent": 0.56,
+            "judge_answer_agent": 0.02,
+            "refuse": 0.05
+          }
+        }
+      },
+      "response_id": "gen-dec-1793813604-wD05HNLL1FSI5VnYn8LU",
+      "actual_model": "typesafe/jev-1.14-20261014",
+      "provider": "TypeSafe",
+      "usage": {
+        "input_tokens": 1074,
+        "output_tokens": 213,
+        "cost": 4.5108e-05
+      },
+      "reported_cost_sum": 4.5108e-05,
+      "budget_accounted_cost": 4.5108e-05
+    }
+  ]
+}

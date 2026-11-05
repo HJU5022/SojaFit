@@ -2,19 +2,27 @@
 
 ## 역할
 - 이 폴더: 평가셋을 동결하고 검색·그래프·Skill 평가를 돌리는 실행 코드를 둡니다. 저장소 루트에서 `uv run python -m evals.runners.<이름>`으로 실행합니다.
-- 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`).
+- 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`), 실행기의 준비·점검·보고 도우미(`embed_cards.py`, `check_retrieval_db.py`, `report_retrieval_layers.py`).
 - 넣지 않는 것: 평가셋·동결 기록(`evals/`의 `dataset_v1.jsonl`, `FROZEN.json`), 평가 원시 결과(`evals/results/`), 평가셋 명세·사전 등록(`evals/guides/`), 평가가 아닌 측정 스크립트(`scripts/`).
 - 담당: 평가
 
 ## 파일
 - `freeze.py` — 평가셋 sha256·건수를 `../FROZEN.json`에 기록. `uv run python evals/runners/freeze.py dataset_v1.jsonl`(동결), `--check`(동결 뒤 바뀐 파일 검사)
 - `benchmark_embeddings.py` — 프록시 표본([embedding_sample_v0.jsonl](../samples/embedding_sample_v0.jsonl))의 dense Recall@5·MRR·지연 측정. `uv run python -m evals.runners.benchmark_embeddings --model bge-m3 --output evals/results/embedding/embedding_bge_m3_proxy_<날짜>.json`
-- `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·쪽 적중@k를 재고 결과 json을 남김. `uv run python -m evals.runners.run_retrieval <평가셋 jsonl> <결과 json> [k] [method]`. 검색 방식은 `hybrid`(기본)·`dense`·`bm25`. 결과는 `../results/retrieval/`에 둠
-- `run_retrieval_d3.py` — 사전 등록 #24 D3 공식 검색 측정. 동결 v2 채점 19문항을 [qrels](../inputs/qrels_v2_pages.json)로 재고, 기준(서비스 경로)에서 한 조건씩 바꾼 E1~E8 칸과 필터 끔 재측정·no_result 임계값·탐색 격자를 `../results/retrieval/`에 남김. 카드·벡터는 저장소 밖 파일을 인자로 읽음. `uv run --with docling-core python -m evals.runners.run_retrieval_d3 qrels|official|noresult|chunks|embed <변형>|explore`
-- `run_retrieval_r1.py` — 사전 등록 #25 R1 검색 측정. [검색 표본](../samples/retrieval_r1.jsonl) 84문항으로 임베딩 11 × 필터 3 × 질의 2 × 리랭커 4 = 264칸을 고르기용 46문항에서 줄 세워 상위 3칸을 고르고, 확인용 38문항에서 지금 서비스와 한 번 비교. 검색 · 지표 · 비교는 `run_retrieval_d3.py`를 그대로 씀. `uv run python -m evals.runners.run_retrieval_r1 rewrite|qvec-api|requests|run`(GPU: `gpu-qvec|gpu-rerank`)
-- `run_retrieval_service.py` — 사전 등록 #26 서비스 경로 재측정. 실제 `retrieve()`(DEMO_MODE=0)로 R1 84문항 · v2 19문항의 쪽 지표, R1 1위 칸과의 상위 5개 대조, `retrieve()` · `rewrite()` 시간을 재서 `../results/retrieval/service_r1_<날짜>.json`에 남김. db/008 적용과 voyage 적재 뒤 `uv run python -m evals.runners.run_retrieval_service`. `--out <경로>` · `--prereg '#27'`로 비트 후보 검색(사전 등록 #27) 결과를 다른 파일에 남기고, `--compare <정확 json> <비트 json>`은 DB 없이 두 결과 파일의 상위 5개 같음 · 쪽 회수율 · 시간을 견줌
-- `run_graph.py` — 평가셋 문항(전부 또는 고른 id)을 줄기 그래프로 끝까지 돌려 문항마다 Langfuse 트레이스와 실행 점수(경로·검색 횟수·LLM 호출 수·인용 검사·5지표 `answer_metric`·시간)를 남김. `uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...]`
+- `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·Page Hit@k를 재고 결과 json을 남김. `uv run python -m evals.runners.run_retrieval <평가셋 jsonl> <결과 json> [k] [method]`. 검색 방식은 `hybrid`(기본)·`dense`·`bm25`. 결과는 `../results/retrieval/`에 둠
+- `run_retrieval_d3.py` — 사전 등록 #24 D3 공식 검색 측정. 동결 v2 채점 19문항을 [qrels](../inputs/qrels_v2_pages.json)로 재고, 기준(서비스 경로)에서 한 조건씩 바꾼 E1~E8 칸과 필터 끔 재측정·no_result 임계값·탐색 격자를 `../results/retrieval/`에 남김. 청크·벡터는 저장소 밖 파일을 인자로 읽음. `uv run --with docling-core python -m evals.runners.run_retrieval_d3 qrels|official|noresult|chunks|embed <변형>|explore`
+- `run_retrieval_r1.py` — 사전 등록 #25 R1 검색 측정. [검색 표본](../samples/retrieval_r1.jsonl) 84문항으로 임베딩 11 × 필터 3 × 질의 2 × 리랭커 4 = 264칸을 dev 세트 46문항에서 줄 세워 상위 3칸을 고르고, test 세트 38문항에서 지금 서비스와 한 번 비교. 검색 · 지표 · 비교는 `run_retrieval_d3.py`를 그대로 씀. `uv run python -m evals.runners.run_retrieval_r1 rewrite|qvec-api|requests|run|steps`(GPU: `gpu-qvec|gpu-rerank`). `steps`는 사전 등록 #28의 한 번에 하나씩 단계별 재측정(S0 지금 서비스 → S4 1위)
+- `run_retrieval_service.py` — 사전 등록 #26 서비스 경로 재측정. 실제 `retrieve()`(DEMO_MODE=0)로 R1 84문항 · v2 19문항의 쪽 지표, R1 1위 칸과의 상위 5개 대조, `retrieve()` · `rewrite()` 시간을 재서 `../results/retrieval/service_r1_<날짜>.json`에 남김. db/008 적용과 voyage 적재 뒤 `uv run python -m evals.runners.run_retrieval_service`. `--out <경로>` · `--prereg '#27'`로 비트 후보 검색(사전 등록 #27) 결과를 다른 파일에 남기고, `--compare <정확 json> <비트 json>`은 DB 없이 두 결과 파일의 상위 5개 같음 · Page Recall · 시간을 견줌. `--stages N`은 사전 등록 #28의 단계별 시간(질문 임베딩 · rerank-3 · 나머지)과 rerank 토큰만 잰다.
+- `run_graph.py` — 평가셋 문항(전부 또는 고른 id)을 줄기 그래프로 끝까지 돌려 문항마다 Langfuse 트레이스와 실행 점수(경로·검색 횟수·LLM 호출 수·인용 검사·5지표 `answer_metric`·시간)를 남기고, 같은 지표와 실행 조건·5지표 요약을 `../results/graph/graph_<평가셋>_<날짜>.json`에 저장(답변 문장·청크 원문은 넣지 않음). `uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]`
+- `run_supervisor_models.py` — 동결 v2 70문항의 후보 5종 평가 계획, ZDR provider 확인, 문항별 실행·중단·집계. `plan|import-evidence|smoke|run` 명령을 지원하며 live 명령은 `--confirm-live`와 비용 상한이 필요함. 1차 결과는 `../results/supervisor/2026-11-04-stage1-v1/`
+- `run_supervisor_jev.py` — Jev Decisions API typed answer를 평가 계약으로 변환하고 70문항 plan·smoke·run·집계를 수행. OpenRouter 호출은 `backend/services/llm.py`를 경유하며 live 명령에는 `--confirm-live`와 `--max-usd` 비용 관리값이 필요함. 입력 비용 추정으로 다음 job을 차단하므로 실제 지출의 절대 상한은 아님
 - `score_answer.py` — 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점([작업서](../../docs/experiments/answer-refusal-scorer.md)). `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]`
 - `run_skill_pair.py` — preregister #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.runners.run_skill_pair <새 결과 폴더>`. 동일 상태에서 Skill 유무 답변을 비교하고 요약만 `../results/skill/`에 둠
+
+- `embed_cards.py` — 사전 등록 #16 카드 52,244장을 실험 DB에 넣고 모델 6종으로 카드를 임베딩. 컨테이너에서 실행([DOCKER.md](../docker/DOCKER.md))
+- `run_embedding_grid.py` — 사전 등록 #16 임베딩 6종 × 검색 방식(BM25·dense·하이브리드) × 리랭커 × 질의 글 78칸의 문서 Recall@5·MRR·쪽 적중·다중 근거와 단계별 시간. 결과 [grid_2026-11-02.json](../results/embedding/grid_2026-11-02.json)
+- `check_retrieval_db.py` — 층별 재측정 0층. Supabase의 카드·벡터·정확 검색 상위 50·서비스 경로 상위 5를 로컬과 대조(읽기만, `DATABASE_URL`)
+- `run_retrieval_layers.py` — 검색 조합 층별 재측정 1~4층(`queries`·`layer1`~`layer4`·`price`·`embed <모델>`). 입출력은 `LAYERS_WORK`. 해석 [retrieval-layered-rerun-2026-11-03.md](../../docs/research/retrieval-layered-rerun-2026-11-03.md)
+- `report_retrieval_layers.py` — 층별 결과 파일에서 사전 등록 비교(C1~C11)의 값을 뽑아 `report.json`으로 남김(새 검색·API 없음)
 
 실행기별 세부 동작(질의 필드, 검색 방식 기록, 비용 계산 등)은 [EVALS.md](../EVALS.md)를 봅니다.

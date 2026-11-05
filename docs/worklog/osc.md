@@ -65,8 +65,8 @@
 - 비용·용량 결과: API 호출과 비용은 0이다. Hugging Face 볼륨은 실행 전후 모두 10.3GB였고 신규 모델 가중치 다운로드는 없었다. 호환성 패키지도 네트워크로 자동 다운로드하지 않았다.
 - 실제 PDF smoke 사전 고정: PDF 본문이나 정답 청크를 보기 전에 `1N4148`, `1N5817`, `BZT52C2V4`에 품번·전기 정격·시험 조건 질문을 3건씩 작성했다. 총 9건이며 gold와 정답 숫자는 아직 넣지 않았다. 실제 3문서 청크 전체에서 dense cosine `k=5`로 Recall@5·MRR을 재는 조건을 임베딩 탐색 표 #13에 기록했다.
 - PDF 파싱 추가 승인: Linux Torch/CUDA 패키지의 병렬 다운로드가 중단 중에도 진행돼 uv 캐시가 11.6GB까지 증가했고 사용자가 이 상태를 승인했다. 이후 네트워크 차단 상태에서 압축 해제 archive의 Docling·Torch·pdfplumber import는 성공했으나 Docling 분석 모델이 없어 PDF 3건 모두 파싱 전에 실패했다. 공식 API로 layout `8f39ad3c0b4c58e9c2d2c84a38465abf757272d8` 171,764,371바이트와 table `fc0f2d45e2218ea24bce5045f58a389aed16dc23` 358,236,323바이트를 확인했고 사용자가 두 고정 snapshot에 한해 추가 1GB 상한을 승인했다.
-- 실제 PDF 파싱·청킹 결과: 고정 layout/table snapshot과 고정 MiniLM tokenizer `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`를 로컬 경로로 전달했다. 모델 파일 사용량은 505.5MiB, tokenizer는 698,829바이트였다. PDF 3건은 각각 5/6/7쪽, 표 5/6/7개로 파싱됐고 표 숫자 witness는 81/81, 49/49, 385/385가 일치했다. 기존 card chunker는 서로 다른 카드 156개를 만들었다.
-- 수동 gold: 모델 결과를 보기 전에 1N4148의 VRRM·VF 조건·trr 조건, 1N5817의 VRRM·VF 조건·IFSM 조건, BZT52C2V4의 VZ/IZT·동적 저항·패키지/전력 청크를 PDF·쪽·표 행으로 대조했다. 전체 156카드와 9질의를 `embedding_real_pdf_smoke_v0.jsonl`에 결합했으며 마지막 질문만 두 gold 청크를 가진다.
+- 실제 PDF 파싱·청킹 결과: 고정 layout/table snapshot과 고정 MiniLM tokenizer `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`를 로컬 경로로 전달했다. 모델 파일 사용량은 505.5MiB, tokenizer는 698,829바이트였다. PDF 3건은 각각 5/6/7쪽, 표 5/6/7개로 파싱됐고 표 숫자 witness는 81/81, 49/49, 385/385가 일치했다. 기존 card chunker는 서로 다른 청크 156개를 만들었다.
+- 수동 gold: 모델 결과를 보기 전에 1N4148의 VRRM·VF 조건·trr 조건, 1N5817의 VRRM·VF 조건·IFSM 조건, BZT52C2V4의 VZ/IZT·동적 저항·패키지/전력 청크를 PDF·쪽·표 행으로 대조했다. 전체 156청크와 9질의를 `embedding_real_pdf_smoke_v0.jsonl`에 결합했으며 마지막 질문만 두 gold 청크를 가진다.
 - 실제 PDF 로컬 탐색 기록: KURE·BGE·Qwen·E5의 Recall@5·MRR·지연을 기록했지만 평가기와 원시 JSON은 저장소에 반영하지 않았다. 특히 Qwen의 `10.37초`는 기존 Windows 30청크 원시값 `10.372056...초`와 같고 실제 PDF 원시 JSON이 없어 재측정값인지 확인할 수 없다. 따라서 이 상세값은 제출용 `EVAL_REPORT.md`와 모델 선정 근거에서 제외했다. 호환성 차단 4종도 저장소에서 재현할 수 있는 결과로 취급하지 않는다.
 - 해석: 3문서·9질의 dense-only smoke에서는 KURE가 가장 높은 MRR이었다. 그러나 네 성공 모델 모두 패키지와 전력 두 근거가 필요한 BZT52C2V4 질문을 top-5에서 놓쳤고, 표본이 작고 품번이 직접 포함돼 최종 선택에는 사용할 수 없다. 2차 판정·동결·전체 코퍼스 본평가 전까지 모든 결과는 최종 결정 부적격이다.
 
@@ -115,3 +115,36 @@
 - 실행한 명령과 결과: `git branch --show-current`로 `OSC` 브랜치를 확인했다. `git diff --check`와 Markdown 구조·미정 항목 검색으로 문서 형식과 검토 항목을 확인했다.
 - 확인 못 한 것: 로그인 방식, 사용자 ID 형식, 회로 파일 저장 방식, 판정·역할·사양 코드, 삭제 정책은 팀 합의 전이라 확정하지 않았다. ERD, Migration SQL, `pgvector` 구조는 작성하지 않았다.
 - 다음 할 일: 팀이 정의서와 추가 검토 항목을 검토한 뒤 관계와 코드 정책을 확정하고 ERD를 작성한다.
+
+## 2026-11-04 수퍼바이저 모델 비교 문서화
+
+- 한 일: 동결 v2 70문항의 후보 5종 1회 비교 방법과 선정 기준을 문서화하고, 실험상 최종 수퍼바이저로 `openai/gpt-6-luna`를 기록했다.
+- 범위: 실행 코드·manifest·모델별 parsed output은 제외하고, Markdown 문서와 약 4KB의 `stage1_summary.json`, 약 4KB의 `provider_evidence.json`만 포함한다. 집계 JSON의 모델별 품질·오류·호출·비용·latency·전체 합계와 evidence의 provider·actual model·원본 artifact hash를 보존했다. evidence 공개본은 원본 SHA-256 `f0d8c80d09566561ae663a11d2d80e4a9b10481973314cf5ca3bdd913f180494`를 기록하고 개인 PC 절대경로만 저장소 상대경로로 정규화했다.
+- 정본 경계: 서비스 기본값 적용은 조장 소유 ADR·`SPEC.md` 갱신 뒤 별도 변경으로 수행한다.
+- 사전등록: `evals/guides/preregister.md` #29에 추가 API 호출 없이 경량 문항별 증거로 표·집계값을 재계산하는 검증 조건, 입력 hash, 분모, 성공 기준과 0달러 비용 상한을 고정했다.
+- 사후등록: `docs/experiments/supervisor-model-comparison-postregistration.md`에 완료된 5종 비교의 실제 입력·provider 조건·실행 중 변경·채점 범위·선정 순서·한계를 별도로 기록했다.
+- 다음 측정 사전등록: `evals/guides/preregister.md` #30에 1·2위인 `openai/gpt-6-luna`와 `anthropic/claude-haiku-5.5`를 동결 v2 70문항에서 각각 1회 함께 재측정하는 조건을 고정했다. 두 모델의 1차 결과를 이미 본 기준값으로 공개하고, 두 품질 지표의 우위 반복 여부·절대 0.15 안정성·완전 호출 실패 중단·모델별 $0.10 예산을 결과 확인 전에 정했다. API 호출은 시작하지 않았다.
+
+## 2026-11-04 수퍼바이저 1차 실측 근거 공개
+
+- 바꾼 파일: `backend/services/llm.py`, `evals/runners/run_supervisor_models.py`, 두 회귀 테스트, `evals/results/supervisor/`의 1차 manifest·후보별 rows와 provider 출처가 가리키는 초기 호출 증거, 폴더 설명·트리.
+- 범위: 기존 1차 실행의 코드·JSON을 보존한다. 새 모델 API 호출이나 재측정은 하지 않았다. run index 2·3은 manifest에 계획만 있고 이번 결과가 아니다.
+- 확인: 실행 코드 hash가 1차 manifest와 같고, provider evidence가 가리키는 원본 hash 불일치는 0건이다. 결과 JSON의 경로·키 패턴을 검사했다. 관련 테스트와 저장소 구조 검사 41건이 통과했다. `uv sync --frozen --dev` 뒤 전체 테스트는 321건 통과·26건 skip·1건 실패했다. 실패한 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`은 Windows 기본 인코딩으로 쓴 한글 임시 파일을 UTF-8로 읽을 때의 `UnicodeDecodeError`이며 이번 변경 파일이 아니다. 저장소에 올리는 원본은 문항별 parsed decision·usage·오류 종류를 포함하며 raw prompt·raw response 원문은 포함하지 않는다.
+- 남은 한계: OpenRouter의 외부 서명 로그가 없으므로 저장소 JSON만으로 실제 청구·호출을 독립 증명하지 못한다. 1차 계획 복원 기록은 이 PR에 포함하지 않는다.
+
+## 2026-11-05 수퍼바이저 6종 2차 평가 PR 준비
+
+- 바꾼 파일: `docs/experiments/supervisor-stage2-six-models.md`, `evals/guides/preregister.md`, `docs/research/supervisor-stage2-results.md`와 간단 보고서, Jev 평가 실행기·서비스 호출 경계·회귀 테스트, 1차 Jev와 2차 6종의 manifest·smoke·문항별 원시 행·정정 집계, 폴더 설명·`SOJAFIT.md` 트리.
+- 브랜치·범위: 깨끗한 기존 보조 작업 트리에서 `OSC`를 최신 `origin/main`까지 fast-forward한 뒤 2차에 필요한 파일만 옮겼다. 원래 작업 트리의 다른 미커밋 변경은 보존했다. 기존 `#29`·`#30`은 유지하고 로컬 6종 기록의 중복 번호만 `#32`로 정정했으며 이력과 원격 커밋 시각의 한계를 문서에 명시했다.
+- 결과 근거: 동결 데이터셋 SHA-256 `81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9`, 정정 집계 SHA-256 `2c4ef11f52a8467c390af8e34ec3ae9e77fc958876b79ccc974973b6d6f8570b`, 원시 행 6개 해시 일치. 실패 문항을 `Completion Rate`에서 제외한 초기 `stage2_summary.json`은 PR 범위에서 뺐다. 생성형 5종의 원시 summary는 3회 계획 분모를 쓰므로 정정 집계는 `run_index=2` 행만 사용한다.
+- 표 설명 보강: 2차 계약·상세 결과·간단 보고서·Jev 1차 인수인계의 영어 지표 이름과 유형 코드는 유지하고 각 표 바로 아래에 뜻, 분모, 비용·오류·미측정 값의 해석을 한국어로 적었다.
+- 검증: 관련 pytest 77건 통과, `git diff --check` 통과, JSON의 비밀값·원문 입력·gold 필드 패턴 0건. 전체 pytest는 Windows 기본 인코딩에서 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`의 `UnicodeDecodeError` 1건으로 실패했고, `PYTHONUTF8=1`에서는 364 passed·27 skipped였다. 실행 코드와 평가셋은 이 준비 작업에서 유료 API를 다시 호출하지 않았다.
+- 확인 못 한 것·다음 할 일: 외부 청구서로 실제 총 비용을 대조하지 못했다. 5종 manifest의 실행기 원시 바이트 해시는 현재 Windows CRLF checkout과 다르지만 LF로 정규화하면 `ff4ace1` 코드 blob과 맞는다. Jev manifest에는 실행기 파일 해시가 없어 두 코드 재현 한계를 결과 문서에 적었다. commit·push·PR 생성은 하지 않았다.
+- PR 준비 정리: 두 2차 결과 보고서에서 PR 공개 후 사실과 달라질 `미커밋` 상태 문구를 제거했다. `SPEC.md`는 조장 소유 주요 문서이므로 이 브랜치에서 수정하지 않고, 조장에게 평가 전용 Jev Decisions API 호출·ZDR 및 fallback 금지·typed answer 변환 계약을 SPEC의 평가 실행 절에 반영해 달라고 PR에서 요청한다. 새 `run_supervisor_jev.py` 592줄과 `test_supervisor_jev.py` 443줄은 권장 핵심 변경 400줄 안팎을 넘는다. 6종 2차 결과를 재현·검토하려면 Jev의 호출 경계·실행 조건·변환·오류/예산 처리와 그 회귀 검증, 동일 회차 원시 행·집계를 함께 봐야 하므로 하나의 평가 근거 PR에 묶는다. PR 본문에 이 규모와 이유를 적고 커밋은 코드·계약·결과 근거의 논리 단위로 나눈다.
+
+## 2026-11-05 PR #54 검토 피드백 반영
+
+- 원시 결과는 보존하고 Jev 2차 `out_of_scope` 자체 분류 6건 중 `next_action != refuse` 4건을 `Routing Consistency` 오류로 보고서에 별도 표시했다. 이는 형식상 유효 결정 70/70이나 gold 35문항 Accuracy를 바꾸지 않는다.
+- Jev 실행기의 `--max-usd`는 입력 비용 추정으로 다음 job을 차단하는 관리값임을 명시했다. 실제 보고 비용이 계획값을 넘은 경우 해당 행을 저장하고 추가 job 없이 `budget_exceeded`로 중단하며, `NaN`·무한대 한도는 API 호출 전 거부한다. 기존 2차 실측이 이 수정 코드로 재실행된 것처럼 기록하지 않는다.
+- 변경 범위: Jev 실행기·회귀 테스트, 2차 결과·간단 보고서, 실험 계약·사전 등록 결과 해석, Jev 인수인계와 실행기 색인. 원시 JSON과 동결 평가셋은 수정하지 않았다.
+- 확인: Jev 원시 `rows.json` SHA-256 `f1995ce2b442d1f7dc72d427a7ffcb2fcf9c1b63dd9a27ee015ee109d4fa0d2d` 유지. 관련 테스트 63건, `PYTHONUTF8=1` 전체 테스트 374건 통과·27건 건너뜀, `git diff --check` 통과. 유료 API 호출과 재측정은 하지 않았다.

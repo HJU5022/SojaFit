@@ -1,0 +1,7 @@
+# 임베딩 격자 본평가(사전 등록 #16)의 실행 이미지. 11-01 GPU 임베딩 이미지(`Dockerfile.gpu_embed`로 만든 `sojafit-emb`, torch CUDA·sentence-transformers)에
+# 저장소 uv.lock과 같은 버전의 DB·BM25·OpenAI 패키지와 Voyage SDK를 더한다.
+FROM sojafit-emb:latest
+RUN uv pip install --system "psycopg[binary]==3.3.6" "pgvector==0.5.1" "rank-bm25==0.2.2" "openai==3.40.0" \
+    "python-dotenv==1.2.4" voyageai
+ENV HF_HOME=/hf PYTHONUNBUFFERED=1
+WORKDIR /work

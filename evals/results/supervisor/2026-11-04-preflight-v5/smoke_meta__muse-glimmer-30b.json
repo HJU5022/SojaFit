@@ -1,0 +1,12 @@
+{
+  "status": "schema_error",
+  "model_id": "meta/muse-glimmer-30b",
+  "provider": "DeepInfra",
+  "actual_model": "meta/muse-glimmer-30b",
+  "error_type": "ValidationError",
+  "manifest_prompt_sha256": "a1eae4a6f6543b317d4b8d1918b48a22d4a5c27be6c5c8656049bb64ee050edd",
+  "manifest_code_sha256": {
+    "backend/services/llm.py": "bebff75839c7ffab6370e80475fe9126f9665be9d210108d18fd1e0318726618",
+    "evals/runners/run_supervisor_models.py": "f31514e7e6e60f287b8fea078e7b0bc1a67519797a5ffeda9c1a30e9139cb890"
+  }
+}

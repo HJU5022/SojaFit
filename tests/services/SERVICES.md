@@ -11,4 +11,6 @@
 ## 파일
 - `SERVICES.md` — 이 문서
 - `test_langfuse_prompts.py` — 프롬프트·Skill 버전/본문 대조, 일반 호출의 로컬 경계, 예산·계측 실패 시 결과 보존, 타임라인 확인, 내보내기 자격증명 제외를 API 없이 확인
-- `test_llm.py` — 가짜 모델로 임베딩 반환 계약, Voyage 임베딩·리랭크 요청 본문과 재시도·결제 신호 멈춤(가짜 httpx), `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령 확인
+- `test_llm.py` — 가짜 모델로 임베딩 반환 계약, Voyage 임베딩·리랭크 요청 본문과 재시도·결제 신호 멈춤(가짜 httpx), `chat()`의 형식 검증·재시도 상한(호출 3번)·구독 CLI 명령, 평가 전용 provider 정책·비용 정산 확인
+
+`test_llm.py`는 Jev Decisions catalog의 ZDR filter와 Decisions POST의 정책·단일 호출도 네트워크 없이 검사한다.

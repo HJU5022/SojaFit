@@ -9,6 +9,8 @@
 ## 파일
 - `SCRIPTS.md` — 이 문서
 - `auth/` — 인증 실측 스크립트(잠금·만료 경계, scrypt 동시성). [AUTH.md](auth/AUTH.md)
+- `bit_search/` — 비트 후보 + 정확 재정렬 검색 속도·recall 실험 스크립트. [BIT_SEARCH.md](bit_search/BIT_SEARCH.md)
+- `hf_jobs/` — Hugging Face Jobs로 GPU 임베딩을 돌리는 스크립트. [HF_JOBS.md](hf_jobs/HF_JOBS.md)
 - `db/` — 운영 DB 손 작업(voyage-4-large 적용 점검·마이그레이션·검증). [DB.md](db/DB.md)
 - `langfuse/` — Langfuse 프롬프트·Skill 연결 점검 스크립트. [LANGFUSE.md](langfuse/LANGFUSE.md)
 - `results/` — 측정 원시 결과(폴더 설명 파일 없음). 평가 지표는 `evals/results/`
@@ -22,3 +24,5 @@
   - `parser/` — PDF 파서 비교와 GPU 파싱
     - `parser_accuracy_2026-11-01.json`·`parser_truth_2026-11-01.json`·`parser_speed_2026-11-01.jsonl` — 도구별 행 적중, 정답표, 속도. 스크립트는 저장소 밖
     - `parse_gpu_log_2026-11-01.jsonl`·`parse_gpu_recall_2026-11-01.json`·`parse_gpu_witness_unmatched_2026-11-01.json` — 1,360건 GPU 파싱 로그, 표 숫자 재현율(0.9989), 대조 못 한 값 목록. 스크립트는 저장소 밖
+  - `bit_search/` — 비트 후보 + 정확 재정렬 검색(운영 Supabase, 3-small 1536 시절)
+    - `bit_search_2026-11-03.json`·`bit_search_final_2026-11-03.json`·`bit_search_warm_2026-11-03.json` — 50문항 후보 수 N별 시간·recall@50, v1 관련 19문항 최종 점수 확인, 비트 검색만 이어서 잰 시간. 스크립트는 `scripts/bit_search/`. 해석은 [bit-search-measurement-2026-11-03.md](../docs/research/bit-search-measurement-2026-11-03.md)

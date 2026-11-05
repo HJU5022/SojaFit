@@ -1,13 +1,13 @@
-"""Docling 파싱 결과를 검색 카드로 자르고 문서 목록(manifest)을 쓴다(오프라인 도구).
+"""Docling 파싱 결과를 검색 청크로 자르고 문서 목록(manifest)을 쓴다(오프라인 도구).
 
 - 역할: 오프라인 CLI(`python -m backend.rag.pipeline.chunk`). 서버가 import하지 않는다.
-  - PDF마다 카드: 품번 표지 1장 + 표 밖 글(Docling HybridChunker, 표가 든 조각은 뺌) + 표 한 행 = 한 장.
-    표 카드는 합친 칸을 걸친 모든 자리에 채우고 앞에 [파일 · 쪽 · 표 제목] 이름표를 붙인다.
-  - <출력>/chunks.jsonl(카드 한 장 = 한 줄), <출력>/summary.json(카드 수, 서로 다른 본문 수), manifest.jsonl(문서 한 개 = 한 줄)
+  - PDF마다 청크: 품번 표지 1개 + 표 밖 글(Docling HybridChunker, 표가 든 조각은 뺌) + 표 한 행 = 한 장.
+    표 청크는 합친 칸을 걸친 모든 자리에 채우고 앞에 [파일 · 쪽 · 표 제목] 이름표를 붙인다.
+  - <출력>/chunks.jsonl(청크 하나 = 한 줄), <출력>/summary.json(청크 수, 서로 다른 본문 수), manifest.jsonl(문서 한 개 = 한 줄)
   - manifest에는 문서마다 다른 값만 쓴다. 모든 문서에 같은 값은 DOC_DEFAULTS에 두고 ingest.py가 읽을 때 채운다.
 - 하지 않는 일: 임베딩·DB 적재(`ingest.py`), 파싱(`parse.py`). 단 `doc_key`·`DOC_DEFAULTS`·`CHUNKER_VERSION`은 `ingest.py`가 import해 쓴다.
 - 출처: docs/specs/rag-pipeline.md What 4·AC-01~03·EC-03, EVAL_REPORT.md 1장 청킹 비교(개선 2)
-- 의존성: 표 카드 함수는 표준 라이브러리만 쓴다. 실행(main)에는 uv 그룹 ingest(docling)가 필요하다.
+- 의존성: 표 청크 함수는 표준 라이브러리만 쓴다. 실행(main)에는 uv 그룹 ingest(docling)가 필요하다.
 
 실행: uv run --group ingest python -m backend.rag.pipeline.chunk <docling json 폴더> <목록 csv> <pdf 폴더> <출력 폴더> <manifest.jsonl>
 """
@@ -28,7 +28,7 @@ DOC_DEFAULTS = {'manufacturer': 'Taiwan Semiconductor', 'collected_at': '2026-11
 
 
 def sha(text):
-    """글자의 sha256 16진 문자열(카드 본문 해시, chunk_sha256)."""
+    """글자의 sha256 16진 문자열(청크 본문 해시, chunk_sha256)."""
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 
@@ -44,7 +44,7 @@ def revision(file):
 
 
 def table_cards(file, page, n_rows, n_cols, cells):
-    """표 하나를 데이터 행마다 카드 한 장으로 만든다(AC-01·AC-02)."""
+    """표 하나를 데이터 행마다 청크 하나으로 만든다(AC-01·AC-02)."""
     # cells: (시작 행, 끝 행, 시작 열, 끝 열, 글자, 머리 칸 여부) 목록. 끝은 포함하지 않는다(Docling offset과 같음)
     if not n_rows or not n_cols:  # [주의] Docling이 칸 없는 빈 표를 낼 때가 있다(EC-03). 건너뛴다
         return []
@@ -75,16 +75,16 @@ def table_cards(file, page, n_rows, n_cols, cells):
 
 
 def doc_cards(doc, file, parts, chunker):
-    """Docling 문서 하나를 (카드 목록: 표지·표 밖 글·표 행 순서, 원문 글자 수, 카드에 들어간 원문 글자 수)로 바꾼다."""
+    """Docling 문서 하나를 (청크 목록: 표지·표 밖 글·표 행 순서, 원문 글자 수, 청크에 들어간 원문 글자 수)로 바꾼다."""
     from docling_core.types.doc import TableItem, TextItem
     cards = [{'kind': 'cover', 'page': None, 'table': None, 'row': None,
               'text': f'[{file}] 이 데이터시트의 품번: {", ".join(parts)}'}]
-    kept_refs, headings = set(), set()  # 글 카드에 들어간 원문 글 조각, 카드 앞에 붙은 제목
+    kept_refs, headings = set(), set()  # 글 청크에 들어간 원문 글 조각, 청크 앞에 붙은 제목
     for c in chunker.chunk(doc):
         if any(isinstance(it, TableItem) for it in c.meta.doc_items):  # 표는 아래에서 행 단위로 따로 만든다
             continue
         kept_refs.update(it.self_ref for it in c.meta.doc_items)
-        headings.update(c.meta.headings or [])  # [왜] 소제목은 doc_items가 아니라 contextualize가 카드 앞에 붙인다
+        headings.update(c.meta.headings or [])  # [왜] 소제목은 doc_items가 아니라 contextualize가 청크 앞에 붙인다
         prov = c.meta.doc_items[0].prov if c.meta.doc_items else []
         cards.append({'kind': 'text', 'page': prov[0].page_no if prov else None, 'table': None, 'row': None,
                       'text': chunker.contextualize(c)})  # contextualize는 조각 앞에 소속 제목을 붙인다
@@ -96,7 +96,7 @@ def doc_cards(doc, file, parts, chunker):
         cards += rows
         if rows:
             kept_tables.append(t.self_ref)
-    # 원문 글자 수 = 본문(머리글·바닥글 제외) 글 조각 + 표 칸. 카드에 들어간 글자 수 = 글 카드에 든 조각 + 카드를 만든 표의 칸
+    # 원문 글자 수 = 본문(머리글·바닥글 제외) 글 조각 + 표 칸. 청크에 들어간 글자 수 = 글 청크에 든 조각 + 청크를 만든 표의 칸
     # [왜] 이름표·표지·반복되는 열 이름은 원문이 아니라 세지 않는다. 표가 섞여 건너뛴 글 조각은 빠진 것으로 센다
     body = [it for it, _ in doc.iterate_items()]
     texts = [it for it in body if isinstance(it, TextItem)]
@@ -109,7 +109,7 @@ def doc_cards(doc, file, parts, chunker):
 
 
 def main(json_dir, list_csv, pdf_dir, out_dir, manifest_path):
-    """Docling json 폴더를 카드(chunks.jsonl)와 문서 목록(manifest.jsonl)으로 바꾸고 summary.json을 쓴다."""
+    """Docling json 폴더를 청크(chunks.jsonl)와 문서 목록(manifest.jsonl)으로 바꾸고 summary.json을 쓴다."""
     # json_dir: parse.py 결과, list_csv: collect.py list 결과, pdf_dir: 원본 PDF(sha256 계산용)
     # [주의] 목록 csv에 없는 PDF가 json 폴더에 있으면 meta[...]에서 KeyError로 멈춘다(조용히 건너뛰지 않는다)
     from docling.chunking import HybridChunker

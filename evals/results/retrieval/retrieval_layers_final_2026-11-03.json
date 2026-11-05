@@ -1,0 +1,45 @@
+{
+ "winner": "Q3|part|hybrid|T0|k60n50|C|te3s|-",
+ "cfg": {
+  "Q": "Q3",
+  "F": "part",
+  "S": "hybrid",
+  "T": "T0",
+  "rrf_k": 60,
+  "ncand": 50,
+  "chunk": "C",
+  "model": "te3s",
+  "rerank": null
+ },
+ "k_curve": {
+  "1": {
+   "recall": 1.0,
+   "mrr": 1.0,
+   "page": 0.947,
+   "ndcg": 0.974
+  },
+  "3": {
+   "recall": 1.0,
+   "mrr": 1.0,
+   "page": 1.0,
+   "ndcg": 0.916
+  },
+  "5": {
+   "recall": 1.0,
+   "mrr": 1.0,
+   "page": 1.0,
+   "ndcg": 0.918
+  },
+  "10": {
+   "recall": 1.0,
+   "mrr": 1.0,
+   "page": 1.0,
+   "ndcg": 0.887
+  }
+ },
+ "typed_k": {
+  "avg_cards": 2.21,
+  "page_hit": 0.947,
+  "doc_recall": 1.0
+ }
+}

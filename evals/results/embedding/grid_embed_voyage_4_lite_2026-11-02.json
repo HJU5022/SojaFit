@@ -1,0 +1,15 @@
+{
+ "model": "voyage-4-lite",
+ "dim": 1024,
+ "runs": [
+  {
+   "started": "2026-11-02T12:30:19+0000",
+   "bodies": 45898,
+   "cards": 52244,
+   "tokens": 5772525,
+   "embed_sec": 190.6,
+   "finished": "2026-11-02T12:33:30+0000",
+   "table_rows": 52244
+  }
+ ]
+}

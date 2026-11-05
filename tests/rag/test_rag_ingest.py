@@ -96,7 +96,7 @@ def test_fill_cache_rejects_count_mismatch(tmp_path, monkeypatch):
 
 
 class _Cur:
-    """load_voyage가 보내는 SQL을 적는 가짜 커서. 카드 한 장(sha 'a')만 임베딩이 없다."""
+    """load_voyage가 보내는 SQL을 적는 가짜 커서. 청크 하나(sha 'a')만 임베딩이 없다."""
     def __init__(self, bits_table):
         self.log, self.bits_table, self.rowcount, self.last = [], bits_table, 1, ''
 

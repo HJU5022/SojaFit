@@ -1,0 +1,3863 @@
+{
+  "status": "complete_with_errors",
+  "rows": [
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e01",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.359000000054948,
+      "response_id": "gen-1793811806-wdeRdZxMK8spgSRxmSvb",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 62,
+        "prompt_tokens": 670,
+        "total_tokens": 732,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 26,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.8e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.8e-05,
+          "upstream_inference_prompt_cost": 6.7e-05,
+          "upstream_inference_completions_cost": 3.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e02",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.9219999999040738,
+      "response_id": "gen-1793811809-OMIq5PgZrQkKNDB1ZUeV",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 62,
+        "prompt_tokens": 677,
+        "total_tokens": 739,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 26,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.87e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.87e-05,
+          "upstream_inference_prompt_cost": 6.77e-05,
+          "upstream_inference_completions_cost": 3.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e03",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.172000000020489,
+      "response_id": "gen-1793811812-jPUP0CLWk1phI2rSrJvr",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 83,
+        "prompt_tokens": 663,
+        "total_tokens": 746,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 47,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001078,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001078,
+          "upstream_inference_prompt_cost": 6.63e-05,
+          "upstream_inference_completions_cost": 4.15e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e04",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.781000000075437,
+      "response_id": "gen-1793811814-gczKWXrzRPQF45y4eihw",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 174,
+        "prompt_tokens": 661,
+        "total_tokens": 835,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 135,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001531,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001531,
+          "upstream_inference_prompt_cost": 6.61e-05,
+          "upstream_inference_completions_cost": 8.7e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e05",
+      "run_index": 2,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 16.436999999918044,
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 663,
+          "total_tokens": 919,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001943,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001943,
+            "upstream_inference_prompt_cost": 6.63e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 663,
+          "total_tokens": 919,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001943,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001943,
+            "upstream_inference_prompt_cost": 6.63e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 663,
+          "total_tokens": 919,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001943,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001943,
+            "upstream_inference_prompt_cost": 6.63e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e06",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.2660000000614673,
+      "response_id": "gen-1793811834-uSUtrPjbCkrm2IQMNJos",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 83,
+        "prompt_tokens": 661,
+        "total_tokens": 744,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 47,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001076,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001076,
+          "upstream_inference_prompt_cost": 6.61e-05,
+          "upstream_inference_completions_cost": 4.15e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e07",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.687999999965541,
+      "response_id": "gen-1793811837-3APKw0Bul20QTY8ih69F",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 97,
+        "prompt_tokens": 658,
+        "total_tokens": 755,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 61,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001143,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001143,
+          "upstream_inference_prompt_cost": 6.58e-05,
+          "upstream_inference_completions_cost": 4.85e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e08",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.640999999945052,
+      "response_id": "gen-1793811840-VMJz0KjJS5SafCj4Yj2L",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 85,
+        "prompt_tokens": 663,
+        "total_tokens": 748,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 49,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001088,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001088,
+          "upstream_inference_prompt_cost": 6.63e-05,
+          "upstream_inference_completions_cost": 4.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e09",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "approved_case"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 1,
+      "latency_seconds": 8.094000000040978,
+      "response_id": "gen-1793811848-KENdtX9dibDGlLhOQiR0",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 223,
+        "prompt_tokens": 660,
+        "total_tokens": 883,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 187,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001775,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001775,
+          "upstream_inference_prompt_cost": 6.6e-05,
+          "upstream_inference_completions_cost": 0.0001115
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-e10",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 1.890999999945052,
+      "response_id": "gen-1793811851-z08DGHYe0KbEfCBbm2QV",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 65,
+        "prompt_tokens": 669,
+        "total_tokens": 734,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 29,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.94e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.94e-05,
+          "upstream_inference_prompt_cost": 6.69e-05,
+          "upstream_inference_completions_cost": 3.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m01",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.484000000054948,
+      "response_id": "gen-1793811853-qcot6f73Upf9G8hslGga",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 54,
+        "prompt_tokens": 655,
+        "total_tokens": 709,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 18,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.25e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.25e-05,
+          "upstream_inference_prompt_cost": 6.55e-05,
+          "upstream_inference_completions_cost": 2.7e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m02",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.140999999945052,
+      "response_id": "gen-1793811856-IDFjF50b0r3nTylqvz35",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 60,
+        "prompt_tokens": 690,
+        "total_tokens": 750,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 24,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.9e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.9e-05,
+          "upstream_inference_prompt_cost": 6.9e-05,
+          "upstream_inference_completions_cost": 3e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m03",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.687000000034459,
+      "response_id": "gen-1793811858-buRaN1ia15JS544TeDfb",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 92,
+        "prompt_tokens": 671,
+        "total_tokens": 763,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 56,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001131,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001131,
+          "upstream_inference_prompt_cost": 6.71e-05,
+          "upstream_inference_completions_cost": 4.6e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m04",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.422000000020489,
+      "response_id": "gen-1793811861-eCy6YjFP2WV3PwQS4Euk",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 138,
+        "prompt_tokens": 669,
+        "total_tokens": 807,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 90,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001359,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001359,
+          "upstream_inference_prompt_cost": 6.69e-05,
+          "upstream_inference_completions_cost": 6.9e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m05",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.922000000020489,
+      "response_id": "gen-1793811863-u8bai3jUIXPszA7ciWrL",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 195,
+        "prompt_tokens": 675,
+        "total_tokens": 870,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 159,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000165,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000165,
+          "upstream_inference_prompt_cost": 6.75e-05,
+          "upstream_inference_completions_cost": 9.75e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m06",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.562000000034459,
+      "response_id": "gen-1793811866-CPQMmccJsZmHXReVgJDH",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 77,
+        "prompt_tokens": 669,
+        "total_tokens": 746,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 41,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001054,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001054,
+          "upstream_inference_prompt_cost": 6.69e-05,
+          "upstream_inference_completions_cost": 3.85e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m07",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.922000000020489,
+      "response_id": "gen-1793811869-mdWPRGE3GsqPqnwNWbGD",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 96,
+        "prompt_tokens": 666,
+        "total_tokens": 762,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 60,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001146,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001146,
+          "upstream_inference_prompt_cost": 6.66e-05,
+          "upstream_inference_completions_cost": 4.8e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m08",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.656000000075437,
+      "response_id": "gen-1793811873-UMQj0bPkiV76KlnAHyc1",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 120,
+        "prompt_tokens": 666,
+        "total_tokens": 786,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 81,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001266,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001266,
+          "upstream_inference_prompt_cost": 6.66e-05,
+          "upstream_inference_completions_cost": 6e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m09",
+      "run_index": 2,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 12.343999999924563,
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 670,
+          "total_tokens": 926,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000195,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000195,
+            "upstream_inference_prompt_cost": 6.7e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 670,
+          "total_tokens": 926,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 255,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000195,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000195,
+            "upstream_inference_prompt_cost": 6.7e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 670,
+          "total_tokens": 926,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.000195,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.000195,
+            "upstream_inference_prompt_cost": 6.7e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-m10",
+      "run_index": 2,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 16.42200000002049,
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 672,
+          "total_tokens": 928,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001952,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001952,
+            "upstream_inference_prompt_cost": 6.72e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 672,
+          "total_tokens": 928,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001952,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001952,
+            "upstream_inference_prompt_cost": 6.72e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 672,
+          "total_tokens": 928,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001952,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001952,
+            "upstream_inference_prompt_cost": 6.72e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h01",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.5929999999934807,
+      "response_id": "gen-1793811907-xWGoIvTbEZmVSITENSr5",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 62,
+        "prompt_tokens": 681,
+        "total_tokens": 743,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 26,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.91e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.91e-05,
+          "upstream_inference_prompt_cost": 6.81e-05,
+          "upstream_inference_completions_cost": 3.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h02",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.297000000020489,
+      "response_id": "gen-1793811909-33H5VFmOeAgz7A1zyWTZ",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 69,
+        "prompt_tokens": 682,
+        "total_tokens": 751,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 33,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001027,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001027,
+          "upstream_inference_prompt_cost": 6.82e-05,
+          "upstream_inference_completions_cost": 3.45e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h03",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.140999999945052,
+      "response_id": "gen-1793811914-zvtzs45A2eL70XO67Foy",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 164,
+        "prompt_tokens": 682,
+        "total_tokens": 846,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 119,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001502,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001502,
+          "upstream_inference_prompt_cost": 6.82e-05,
+          "upstream_inference_completions_cost": 8.2e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h04",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.281000000075437,
+      "response_id": "gen-1793811917-VsFPF7YTKbyJo4yS58QP",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 139,
+        "prompt_tokens": 664,
+        "total_tokens": 803,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 91,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001359,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001359,
+          "upstream_inference_prompt_cost": 6.64e-05,
+          "upstream_inference_completions_cost": 6.95e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h05",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 1,
+      "latency_seconds": 5.218999999924563,
+      "response_id": "gen-1793811922-UBKy1cBs86MOKyW9Y4nc",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 142,
+        "prompt_tokens": 687,
+        "total_tokens": 829,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 97,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001397,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001397,
+          "upstream_inference_prompt_cost": 6.87e-05,
+          "upstream_inference_completions_cost": 7.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h06",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.734000000054948,
+      "response_id": "gen-1793811924-XbI0phXGtkQzcLkRPHoo",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 68,
+        "prompt_tokens": 657,
+        "total_tokens": 725,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 32,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 9.97e-05,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 9.97e-05,
+          "upstream_inference_prompt_cost": 6.57e-05,
+          "upstream_inference_completions_cost": 3.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h07",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.60999999998603,
+      "response_id": "gen-1793811929-STlzHDf6JV4oRLXN2NAX",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 152,
+        "prompt_tokens": 667,
+        "total_tokens": 819,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 116,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001427,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001427,
+          "upstream_inference_prompt_cost": 6.67e-05,
+          "upstream_inference_completions_cost": 7.6e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h08",
+      "run_index": 2,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 13.155999999959022,
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 678,
+          "total_tokens": 934,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 219,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001958,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001958,
+            "upstream_inference_prompt_cost": 6.78e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 678,
+          "total_tokens": 934,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001958,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001958,
+            "upstream_inference_prompt_cost": 6.78e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 678,
+          "total_tokens": 934,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001958,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001958,
+            "upstream_inference_prompt_cost": 6.78e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h09",
+      "run_index": 2,
+      "status": "error",
+      "error_type": "ValidationError",
+      "retry_count": 2,
+      "latency_seconds": 15.781000000075437,
+      "provider": "Azure",
+      "actual_model": "openai/gpt-6-luna",
+      "finish_reason": "length",
+      "attempt_usages": [
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 662,
+          "total_tokens": 918,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001942,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001942,
+            "upstream_inference_prompt_cost": 6.62e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 662,
+          "total_tokens": 918,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001942,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001942,
+            "upstream_inference_prompt_cost": 6.62e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        },
+        {
+          "completion_tokens": 256,
+          "prompt_tokens": 662,
+          "total_tokens": 918,
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": 0,
+            "reasoning_tokens": 256,
+            "rejected_prediction_tokens": null,
+            "text_tokens": null,
+            "image_tokens": 0
+          },
+          "prompt_tokens_details": {
+            "audio_tokens": 0,
+            "cache_write_tokens": 0,
+            "cached_tokens": 0,
+            "image_tokens": null,
+            "text_tokens": null,
+            "video_tokens": 0
+          },
+          "cost": 0.0001942,
+          "is_byok": false,
+          "cost_details": {
+            "upstream_inference_cost": 0.0001942,
+            "upstream_inference_prompt_cost": 6.62e-05,
+            "upstream_inference_completions_cost": 0.000128
+          }
+        }
+      ]
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft30-h10",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.7339999999385327,
+      "response_id": "gen-1793811961-LOJbILq0i47MHrgjdXNw",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 173,
+        "prompt_tokens": 668,
+        "total_tokens": 841,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 137,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001533,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001533,
+          "upstream_inference_prompt_cost": 6.68e-05,
+          "upstream_inference_completions_cost": 8.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n01",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.547000000020489,
+      "response_id": "gen-1793811963-8wVlMaKplFu1ooiXPcpP",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 146,
+        "prompt_tokens": 789,
+        "total_tokens": 935,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 101,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001519,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001519,
+          "upstream_inference_prompt_cost": 7.89e-05,
+          "upstream_inference_completions_cost": 7.3e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n02",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 1,
+      "latency_seconds": 5.812999999965541,
+      "response_id": "gen-1793811971-rILYdUrsaqvHlT3gMvYP",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 724,
+        "total_tokens": 869,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 100,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001449,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001449,
+          "upstream_inference_prompt_cost": 7.24e-05,
+          "upstream_inference_completions_cost": 7.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n03",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.797000000020489,
+      "response_id": "gen-1793811974-pJBdtwZ5zdLTlLizbBmV",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 175,
+        "prompt_tokens": 674,
+        "total_tokens": 849,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 139,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001549,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001549,
+          "upstream_inference_prompt_cost": 6.74e-05,
+          "upstream_inference_completions_cost": 8.75e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n04",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.98499999998603,
+      "response_id": "gen-1793811978-qBH2afqDrNWxr4Kb4oHo",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 189,
+        "prompt_tokens": 725,
+        "total_tokens": 914,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 144,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000167,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000167,
+          "upstream_inference_prompt_cost": 7.25e-05,
+          "upstream_inference_completions_cost": 9.45e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n05",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 9.437000000034459,
+      "response_id": "gen-1793811981-oFFAeGx91lK4S0iKIq6X",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 93,
+        "prompt_tokens": 694,
+        "total_tokens": 787,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 57,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001159,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001159,
+          "upstream_inference_prompt_cost": 6.94e-05,
+          "upstream_inference_completions_cost": 4.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n06",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 1,
+      "latency_seconds": 11.25,
+      "response_id": "gen-1793811994-D80kKpuyd8kBoQfVGTl8",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 248,
+        "prompt_tokens": 690,
+        "total_tokens": 938,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 203,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000193,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000193,
+          "upstream_inference_prompt_cost": 6.9e-05,
+          "upstream_inference_completions_cost": 0.000124
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n07",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.672000000020489,
+      "response_id": "gen-1793812001-OaY5xi2jXNkUMElINfTS",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 188,
+        "prompt_tokens": 732,
+        "total_tokens": 920,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 143,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001672,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001672,
+          "upstream_inference_prompt_cost": 7.32e-05,
+          "upstream_inference_completions_cost": 9.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n08",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.452999999979511,
+      "response_id": "gen-1793812004-YnJGKjy28ox1Fp3kPzco",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 185,
+        "prompt_tokens": 727,
+        "total_tokens": 912,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 140,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001652,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001652,
+          "upstream_inference_prompt_cost": 7.27e-05,
+          "upstream_inference_completions_cost": 9.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n09",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.687000000034459,
+      "response_id": "gen-1793812008-TRpw8UJqmn9OGsyXhODV",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 94,
+        "prompt_tokens": 672,
+        "total_tokens": 766,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 58,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001142,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001142,
+          "upstream_inference_prompt_cost": 6.72e-05,
+          "upstream_inference_completions_cost": 4.7e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n10",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.7339999999385327,
+      "response_id": "gen-1793812010-HU5piQfZgyLlCyv6yTim",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 88,
+        "prompt_tokens": 673,
+        "total_tokens": 761,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 52,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001113,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001113,
+          "upstream_inference_prompt_cost": 6.73e-05,
+          "upstream_inference_completions_cost": 4.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n11",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.343999999924563,
+      "response_id": "gen-1793812014-Aq2QR5SxQ6dFckvyPPDv",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 113,
+        "prompt_tokens": 677,
+        "total_tokens": 790,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 77,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001242,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001242,
+          "upstream_inference_prompt_cost": 6.77e-05,
+          "upstream_inference_completions_cost": 5.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n12",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.359000000054948,
+      "response_id": "gen-1793812016-9sMt2pwQwEeiAVVNk5mK",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 114,
+        "prompt_tokens": 676,
+        "total_tokens": 790,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 78,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001246,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001246,
+          "upstream_inference_prompt_cost": 6.76e-05,
+          "upstream_inference_completions_cost": 5.7e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n14",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.14000000001397,
+      "response_id": "gen-1793812019-VsKDuyoem2nRn40Vq4Qp",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 64,
+        "prompt_tokens": 687,
+        "total_tokens": 751,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 28,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001007,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001007,
+          "upstream_inference_prompt_cost": 6.87e-05,
+          "upstream_inference_completions_cost": 3.2e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n15",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.172000000020489,
+      "response_id": "gen-1793812021-c7MXhjZsTyNXV8TdlET6",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 73,
+        "prompt_tokens": 677,
+        "total_tokens": 750,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 37,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001042,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001042,
+          "upstream_inference_prompt_cost": 6.77e-05,
+          "upstream_inference_completions_cost": 3.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n16",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.140999999945052,
+      "response_id": "gen-1793812023-C66f7ThihThiGfdTjoKn",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 188,
+        "prompt_tokens": 688,
+        "total_tokens": 876,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 152,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001628,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001628,
+          "upstream_inference_prompt_cost": 6.88e-05,
+          "upstream_inference_completions_cost": 9.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n17",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.9540000000270084,
+      "response_id": "gen-1793812026-hj3p5aiRqph1g6fBcMot",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 676,
+        "total_tokens": 821,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 109,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001401,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001401,
+          "upstream_inference_prompt_cost": 6.76e-05,
+          "upstream_inference_completions_cost": 7.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n18",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.187999999965541,
+      "response_id": "gen-1793812029-hKDgNIubyL56vriMosUm",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 65,
+        "prompt_tokens": 675,
+        "total_tokens": 740,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 29,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001,
+          "upstream_inference_prompt_cost": 6.75e-05,
+          "upstream_inference_completions_cost": 3.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n19",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.297000000020489,
+      "response_id": "gen-1793812031-HCFwNNJuY1EqjuRIcikA",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 81,
+        "prompt_tokens": 684,
+        "total_tokens": 765,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 45,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001089,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001089,
+          "upstream_inference_prompt_cost": 6.84e-05,
+          "upstream_inference_completions_cost": 4.05e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft50-n20",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.312000000034459,
+      "response_id": "gen-1793812033-jmgRkTLsD1rOAihItCGO",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 73,
+        "prompt_tokens": 674,
+        "total_tokens": 747,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 37,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001039,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001039,
+          "upstream_inference_prompt_cost": 6.74e-05,
+          "upstream_inference_completions_cost": 3.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draft52-n21",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.390999999945052,
+      "response_id": "gen-1793812036-MJ9P2E4XNw5mPHKBokOF",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 186,
+        "prompt_tokens": 677,
+        "total_tokens": 863,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 150,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001607,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001607,
+          "upstream_inference_prompt_cost": 6.77e-05,
+          "upstream_inference_completions_cost": 9.3e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n01",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.577999999979511,
+      "response_id": "gen-1793812039-XPCFbw2mmZzmPDNvHdcd",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 177,
+        "prompt_tokens": 792,
+        "total_tokens": 969,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 134,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001677,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001677,
+          "upstream_inference_prompt_cost": 7.92e-05,
+          "upstream_inference_completions_cost": 8.85e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n02",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.062000000034459,
+      "response_id": "gen-1793812043-vqlO2N8YQf6wKmSks3ZZ",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 187,
+        "prompt_tokens": 776,
+        "total_tokens": 963,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 144,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001711,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001711,
+          "upstream_inference_prompt_cost": 7.76e-05,
+          "upstream_inference_completions_cost": 9.35e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n03",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.375,
+      "response_id": "gen-1793812046-2Wg1ExPMEwmOQJEbP6OH",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 108,
+        "prompt_tokens": 787,
+        "total_tokens": 895,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 65,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001327,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001327,
+          "upstream_inference_prompt_cost": 7.87e-05,
+          "upstream_inference_completions_cost": 5.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n04",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.48499999998603,
+      "response_id": "gen-1793812049-If0dSLrSgqjZzmrjVync",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 115,
+        "prompt_tokens": 763,
+        "total_tokens": 878,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 72,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001338,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001338,
+          "upstream_inference_prompt_cost": 7.63e-05,
+          "upstream_inference_completions_cost": 5.75e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n05",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.484000000054948,
+      "response_id": "gen-1793812052-IUD81cb7S6mMq5ECTvYA",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 183,
+        "prompt_tokens": 801,
+        "total_tokens": 984,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 140,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001716,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001716,
+          "upstream_inference_prompt_cost": 8.01e-05,
+          "upstream_inference_completions_cost": 9.15e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n06",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 9.452999999979511,
+      "response_id": "gen-1793812056-Vpsyy8voCVxtZiHsWIa3",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 210,
+        "prompt_tokens": 810,
+        "total_tokens": 1020,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 167,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000186,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000186,
+          "upstream_inference_prompt_cost": 8.1e-05,
+          "upstream_inference_completions_cost": 0.000105
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n07",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.437000000034459,
+      "response_id": "gen-1793812066-NSbPcLk5Jvtjb68z4MxO",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 180,
+        "prompt_tokens": 836,
+        "total_tokens": 1016,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 137,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001736,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001736,
+          "upstream_inference_prompt_cost": 8.36e-05,
+          "upstream_inference_completions_cost": 9e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n08",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.25,
+      "response_id": "gen-1793812068-y7PwpqhkaFRFleFruV1d",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 119,
+        "prompt_tokens": 827,
+        "total_tokens": 946,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 76,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001422,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001422,
+          "upstream_inference_prompt_cost": 8.27e-05,
+          "upstream_inference_completions_cost": 5.95e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n09",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.7969999999040738,
+      "response_id": "gen-1793812071-vhpdAS2SXEYC59NrhIDW",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 133,
+        "prompt_tokens": 838,
+        "total_tokens": 971,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 90,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001503,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001503,
+          "upstream_inference_prompt_cost": 8.38e-05,
+          "upstream_inference_completions_cost": 6.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n10",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.078000000095926,
+      "response_id": "gen-1793812074-5xhcfx9Y0WQj7iznOfUm",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 113,
+        "prompt_tokens": 836,
+        "total_tokens": 949,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 70,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001401,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001401,
+          "upstream_inference_prompt_cost": 8.36e-05,
+          "upstream_inference_completions_cost": 5.65e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n11",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.327999999979511,
+      "response_id": "gen-1793812078-lBF4Rg37guS4Lvv4vlSw",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 96,
+        "prompt_tokens": 680,
+        "total_tokens": 776,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 60,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000116,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000116,
+          "upstream_inference_prompt_cost": 6.8e-05,
+          "upstream_inference_completions_cost": 4.8e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n12",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.906000000075437,
+      "response_id": "gen-1793812083-OOUnVtKTKS7pGdiUgb67",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 123,
+        "prompt_tokens": 692,
+        "total_tokens": 815,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 80,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001307,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001307,
+          "upstream_inference_prompt_cost": 6.92e-05,
+          "upstream_inference_completions_cost": 6.15e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n13",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.6709999999729916,
+      "response_id": "gen-1793812086-pioJBON7FlauxANxIOnv",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 125,
+        "prompt_tokens": 787,
+        "total_tokens": 912,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 82,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001412,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001412,
+          "upstream_inference_prompt_cost": 7.87e-05,
+          "upstream_inference_completions_cost": 6.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n14",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 3.5790000000270084,
+      "response_id": "gen-1793812090-nHSrN0zVOtmMqq418BST",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 106,
+        "prompt_tokens": 693,
+        "total_tokens": 799,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 63,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001223,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001223,
+          "upstream_inference_prompt_cost": 6.93e-05,
+          "upstream_inference_completions_cost": 5.3e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n15",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.484000000054948,
+      "response_id": "gen-1793812094-7d0RMmc6zfhWVsItqftk",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 168,
+        "prompt_tokens": 801,
+        "total_tokens": 969,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 125,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001641,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001641,
+          "upstream_inference_prompt_cost": 8.01e-05,
+          "upstream_inference_completions_cost": 8.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n16",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.359000000054948,
+      "response_id": "gen-1793812096-y12UV5PfkONFbfb524RV",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 162,
+        "prompt_tokens": 811,
+        "total_tokens": 973,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 119,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001621,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001621,
+          "upstream_inference_prompt_cost": 8.11e-05,
+          "upstream_inference_completions_cost": 8.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n17",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.327999999979511,
+      "response_id": "gen-1793812099-ZvVNCBlFfWyfS0kT8yWj",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 186,
+        "prompt_tokens": 835,
+        "total_tokens": 1021,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 143,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001765,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001765,
+          "upstream_inference_prompt_cost": 8.35e-05,
+          "upstream_inference_completions_cost": 9.3e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n18",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 5.797000000020489,
+      "response_id": "gen-1793812103-6LX0ntIqh7F68HuAdvfm",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 216,
+        "prompt_tokens": 687,
+        "total_tokens": 903,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 170,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001767,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001767,
+          "upstream_inference_prompt_cost": 6.87e-05,
+          "upstream_inference_completions_cost": 0.000108
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n19",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 4.905999999959022,
+      "response_id": "gen-1793812107-B4KDLkV4hOWd5MOlv6U4",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 112,
+        "prompt_tokens": 836,
+        "total_tokens": 948,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 69,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0001396,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0001396,
+          "upstream_inference_prompt_cost": 8.36e-05,
+          "upstream_inference_completions_cost": 5.6e-05
+        }
+      }
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "draftv2-n20",
+      "run_index": 2,
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "retry_count": 0,
+      "latency_seconds": 2.9540000000270084,
+      "response_id": "gen-1793812112-VVo8ZhsH6Wlj4IOHpJyI",
+      "actual_model": "openai/gpt-6-luna",
+      "provider": "Azure",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 188,
+        "prompt_tokens": 840,
+        "total_tokens": 1028,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 145,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.000178,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.000178,
+          "upstream_inference_prompt_cost": 8.4e-05,
+          "upstream_inference_completions_cost": 9.4e-05
+        }
+      }
+    }
+  ],
+  "budget_progress": {
+    "cumulative_raw_calls": 84,
+    "cumulative_reserved_usd": 0.012544100000000008
+  },
+  "budget": {
+    "configured_max_calls": 630,
+    "selected_run_indices": [
+      2
+    ],
+    "configured_max_usd": 0.1,
+    "remaining_max_calls_at_start": 630,
+    "remaining_max_usd_at_start": 0.1,
+    "max_seconds": 7200.0,
+    "max_tokens": 256,
+    "raw_calls_this_process": 84,
+    "reserved_usd_this_process": 0.012544100000000008,
+    "cumulative_raw_calls": 84,
+    "cumulative_reserved_usd": 0.012544100000000008,
+    "elapsed_seconds": 309.625
+  },
+  "summary": {
+    "Question Type Accuracy": {
+      "per_run": {
+        "1": {
+          "numerator": 0,
+          "denominator": 35,
+          "value": 0.0
+        },
+        "2": {
+          "numerator": 34,
+          "denominator": 35,
+          "value": 0.9714285714285714
+        },
+        "3": {
+          "numerator": 0,
+          "denominator": 35,
+          "value": 0.0
+        }
+      },
+      "mean": 0.3238095238095238,
+      "min": 0.0,
+      "max": 0.9714285714285714,
+      "scored_unique_cases": 35
+    },
+    "Question Type Macro-F1": {
+      "per_run": {
+        "1": 0.0,
+        "2": 0.986842105263158,
+        "3": 0.0
+      },
+      "mean": 0.32894736842105265,
+      "min": 0.0,
+      "max": 0.986842105263158
+    },
+    "Question Type Per-Class": {
+      "per_run": {
+        "1": {
+          "candidate_find": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "candidate_judge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 9
+          },
+          "rating": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "role": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 6
+          }
+        },
+        "2": {
+          "candidate_find": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 10,
+            "fp": 0,
+            "fn": 0
+          },
+          "candidate_judge": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 9,
+            "fp": 0,
+            "fn": 0
+          },
+          "rating": {
+            "precision": 1.0,
+            "recall": 0.9,
+            "f1": 0.9473684210526316,
+            "tp": 9,
+            "fp": 0,
+            "fn": 1
+          },
+          "role": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "3": {
+          "candidate_find": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "candidate_judge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 9
+          },
+          "rating": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 10
+          },
+          "role": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 6
+          }
+        }
+      }
+    },
+    "Known Limitation": {
+      "unscored_case_count": 35,
+      "unscored_case_ids": [
+        "draft30-e06",
+        "draft30-e07",
+        "draft30-e09",
+        "draft30-e10",
+        "draft30-h03",
+        "draft30-h06",
+        "draft30-h07",
+        "draft30-h08",
+        "draft30-h09",
+        "draft30-h10",
+        "draft30-m06",
+        "draft30-m08",
+        "draft30-m09",
+        "draft30-m10",
+        "draft50-n09",
+        "draft50-n10",
+        "draft50-n11",
+        "draft50-n12",
+        "draft50-n14",
+        "draft50-n15",
+        "draft50-n16",
+        "draft50-n17",
+        "draft50-n18",
+        "draft50-n19",
+        "draft50-n20",
+        "draftv2-n11",
+        "draftv2-n12",
+        "draftv2-n13",
+        "draftv2-n14",
+        "draftv2-n15",
+        "draftv2-n16",
+        "draftv2-n17",
+        "draftv2-n18",
+        "draftv2-n19",
+        "draftv2-n20"
+      ],
+      "reason": "question_type gold 없음; 70문항 실행은 유지하되 objective score에서 제외"
+    },
+    "Completion Rate": {
+      "numerator": 65,
+      "denominator": 210,
+      "value": 0.30952380952380953
+    },
+    "Three-Run Exact Agreement": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Incomplete Three-Run Case Count": 70,
+    "Question Type Flip Rate": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Next Action Flip Rate": {
+      "numerator": 0,
+      "denominator": 70,
+      "value": 0.0
+    },
+    "Input Tokens": 56385,
+    "Output Tokens": 12235,
+    "Actual Total Cost": 0.011756,
+    "p50 Latency": 3.140999999945052,
+    "p95 Latency": 13.155999999959022
+  }
+}

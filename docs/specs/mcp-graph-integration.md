@@ -34,9 +34,9 @@
 1. 호출자는 `StdioMcpRetriever` 컨텍스트를 열고 이를 `build_graph(retriever=...)`에 주입한다.
 2. 어댑터는 FastMCP 서버 프로세스와 `ClientSession`을 한 번 초기화하고 그래프 실행 동안 재사용한다.
 3. 기존 검색 노드는 질문·품번 필터를 어댑터에 전달한다.
-4. 어댑터는 `search_corpus`를 `query`, `k=5`, `parts`로 호출하고 MCP 텍스트 응답의 JSON 카드 목록을 검증한다.
-5. 정상 카드는 기존 `docs`로 들어가 채점·생성으로 진행한다.
-6. 첫 카드가 채점을 통과하지 못하면 기존 재작성 노드를 거쳐 같은 세션에서 한 번 더 검색한다.
+4. 어댑터는 `search_corpus`를 `query`, `k=5`, `parts`로 호출하고 MCP 텍스트 응답의 JSON 청크 목록을 검증한다.
+5. 정상 청크는 기존 `docs`로 들어가 채점·생성으로 진행한다.
+6. 첫 청크가 채점을 통과하지 못하면 기존 재작성 노드를 거쳐 같은 세션에서 한 번 더 검색한다.
 7. 컨텍스트 종료 시 MCP 세션·stdio 스트림·서버 프로세스를 종료한다.
 
 ### Edge Cases
@@ -47,8 +47,8 @@
 | EC-02 | 서버 시작·세션 초기화·도구 호출 timeout | `RetrievalUnavailableError`로 경계를 넘기고 오류 종류만 상태에 기록, 재호출 없이 장애 응답 |
 | EC-03 | MCP `CallToolResult.isError=true` | 공급자 본문을 노출하지 않고 `tool_error` 종류로 처리 |
 | EC-04 | 응답이 JSON이 아니거나 목록이 아님 | `invalid_response`로 처리하고 빈 결과로 바꾸지 않음 |
-| EC-05 | 카드에 필수 필드가 없거나 타입이 잘못됨 | 전체 응답을 `invalid_response`로 거부하고 일부 카드만 사용하지 않음 |
-| EC-06 | 첫 검색 카드가 채점을 통과하지 못함 | 기존 재작성 뒤 같은 MCP 세션에서 한 번만 재검색 |
+| EC-05 | 청크에 필수 필드가 없거나 타입이 잘못됨 | 전체 응답을 `invalid_response`로 거부하고 일부 청크만 사용하지 않음 |
+| EC-06 | 첫 검색 청크가 채점을 통과하지 못함 | 기존 재작성 뒤 같은 MCP 세션에서 한 번만 재검색 |
 | EC-07 | 두 번째 검색도 통과하지 못함 | 세 번째 호출 없이 기존 근거 없음 응답 |
 | EC-08 | 컨텍스트 안에서 여러 문항 실행 | 한 세션을 재사용하되 문항별 그래프 State와 검색 횟수는 공유하지 않음 |
 | EC-09 | `TEST_DATABASE_URL`이 없음 | 실제 DB 통합 검사는 명시적 사유로 skip, 가짜 클라이언트 검사는 계속 실행 |
@@ -77,7 +77,7 @@ StdioMcpRetriever(command, args, env, timeout_seconds)
 - 컨텍스트 진입 때 서버와 세션을 초기화하고, 호출마다 새 서버를 띄우지 않는다.
 - 도구 호출 인자는 `{"query": query, "k": 5, "parts": parts}`이며 `parts=None`도 기존 계약대로 전달한다.
 - `CallToolResult`가 오류가 아니고, PR #44에서 확인한 `structuredContent.result`가 목록일 때 성공으로 본다. 이전 단일 JSON 텍스트 응답은 호환 경로로만 허용한다.
-- 각 카드는 최소한 `chunk_id`, `file`, `page`, `content`, `table`, `doc_parts`를 가진다. `chunk_id`는 정수, `file`·`content`는 문자열, `page`는 정수, `table`은 문자열 또는 null, `doc_parts`는 문자열 목록이어야 한다.
+- 각 청크는 최소한 `chunk_id`, `file`, `page`, `content`, `table`, `doc_parts`를 가진다. `chunk_id`는 정수, `file`·`content`는 문자열, `page`는 정수, `table`은 문자열 또는 null, `doc_parts`는 문자열 목록이어야 한다.
 - 오류 본문·환경변수·명령 전체를 예외 메시지나 State에 복사하지 않는다.
 
 ### 그래프 상태와 분기
@@ -95,7 +95,7 @@ retrieval_error = null
 
 ### 검증
 
-1. 가짜 MCP transport로 정확한 도구·인자, `structuredContent.result` 카드·빈 목록, timeout, `isError`, 비정상 응답, 필드 누락, 세션 재사용·종료를 검사한다.
+1. 가짜 MCP transport로 정확한 도구·인자, `structuredContent.result` 청크·빈 목록, timeout, `isError`, 비정상 응답, 필드 누락, 세션 재사용·종료를 검사한다.
 2. 가짜 retriever 그래프로 정상·빈 결과·장애·재작성·두 번 상한 경로를 검사한다.
 3. 실제 stdio 서버 테스트는 외부 검색을 비활성화하고 서버 초기화·호출·종료를 검사한다.
 4. 격리 합성 PostgreSQL 검사는 `TEST_DATABASE_URL`이 명시된 경우에만 실행한다. 기존 DB·볼륨 삭제 명령은 사용하지 않는다.
@@ -104,7 +104,7 @@ retrieval_error = null
 ## AC (Given-When-Then)
 
 ### AC-01 · 정상 MCP 검색
-- GIVEN: 가짜 MCP가 필수 필드를 갖춘 카드 목록을 반환한다.
+- GIVEN: 가짜 MCP가 필수 필드를 갖춘 청크 목록을 반환한다.
 - WHEN: MCP retriever를 주입한 그래프가 정격 질문을 처리한다.
 - THEN: 정확한 `query`, `k=5`, `parts`로 `search_corpus`를 호출하고 기존 채점·생성 경로로 진행한다.
 
@@ -119,7 +119,7 @@ retrieval_error = null
 - THEN: 오류 종류만 `retrieval_error`에 기록하고, 문서 없음과 다른 안전한 장애 응답으로 끝나며 같은 요청에서 다시 호출하지 않는다.
 
 ### AC-04 · 재작성과 호출 상한
-- GIVEN: 첫 MCP 검색 카드는 채점을 통과하지 못하고 두 번째 검색 카드도 통과하지 못한다.
+- GIVEN: 첫 MCP 검색 청크는 채점을 통과하지 못하고 두 번째 검색 청크도 통과하지 못한다.
 - WHEN: 그래프를 끝까지 실행한다.
 - THEN: 원래 질문과 재작성 질문으로 각각 한 번씩만 MCP를 호출하고 세 번째 호출 없이 거절한다.
 
@@ -131,7 +131,7 @@ retrieval_error = null
 ### AC-06 · 실제 stdio와 격리 DB
 - GIVEN: 외부 검색이 비활성화된 실제 MCP 서버와 합성 문서가 있는 격리 `TEST_DATABASE_URL`.
 - WHEN: 그래프가 MCP `search_corpus`를 경유한다.
-- THEN: 알려진 품번의 카드와 출처 필드를 받고, 없는 품번은 빈 결과이며, 환경·단발 지연·미검증 범위를 작업 기록에 남긴다.
+- THEN: 알려진 품번의 청크와 출처 필드를 받고, 없는 품번은 빈 결과이며, 환경·단발 지연·미검증 범위를 작업 기록에 남긴다.
 
 ### AC-07 · 기존 그래프 회귀 방지
 - GIVEN: MCP retriever를 주입하지 않은 기존 그래프 테스트와 평가 실행.

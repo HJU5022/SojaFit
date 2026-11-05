@@ -1,4 +1,4 @@
-"""생성 노드: 통과 카드와 넷리스트만 근거로 넘기고, 없는 근거 인용과 인용 없는 문장을 세는지 확인한다.
+"""생성 노드: 통과 청크와 넷리스트만 근거로 넘기고, 없는 근거 인용과 인용 없는 문장을 세는지 확인한다.
 
 - 역할: 근거 없을 때 LLM을 부르지 않는지, Skill 유무에 따라 사용자 메시지는 같고 시스템 지침만 달라지는지(적용 해시 포함), Skill 파일이 없거나 비면 호출을 멈추는지 가짜 LLM으로 확인한다.
 - 하지 않는 일: 모델 판단의 품질 평가는 아니다. 수치 비교·최종 대체 판정은 하지 않는다.
@@ -30,7 +30,7 @@ def test_generate_counts_fake_and_uncited(monkeypatch):
 
     assert out["path"] == ["생성"]
     assert out["check"] == {"fake_citations": ["999"], "uncited_sentences": 1, "used": ["2", "넷리스트"]}
-    assert "[1]" not in seen["user"] and "[2]" in seen["user"]  # 채점을 통과하지 못한 카드는 넘기지 않는다
+    assert "[1]" not in seen["user"] and "[2]" in seen["user"]  # 채점을 통과하지 못한 청크는 넘기지 않는다
     assert "[넷리스트] D1 1N5819" in seen["user"] and "J1.1(JACK) 외 5개" in seen["user"]
     assert "비교해 대체할 수 있는지 판단하지 않는다" in seen["system"]  # generate.md가 시스템 프롬프트로 간다
 

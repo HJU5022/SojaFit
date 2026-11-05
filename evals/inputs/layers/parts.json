@@ -1,0 +1,177 @@
+[
+ {
+  "id": "draft30-e03",
+  "question": "TSC 1N5817은 역전압을 몇 V까지 견뎌?",
+  "parts": [
+   "1N5817"
+  ],
+  "compare": false,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft30-e04",
+  "question": "TSC 1N4148을 쓰면 전압이 얼마나 떨어져?",
+  "parts": [
+   "1N4148"
+  ],
+  "compare": false,
+  "allowed_cards": 45
+ },
+ {
+  "id": "draft30-e05",
+  "question": "TSC 1N5819는 패키지가 뭐고 방향은 어떻게 보면 돼?",
+  "parts": [
+   "1N5819"
+  ],
+  "compare": false,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft30-e08",
+  "question": "D3 대신 SS34를 보는데, 이 부품 정격이 어떻게 돼?",
+  "parts": [
+   "SS34"
+  ],
+  "compare": false,
+  "allowed_cards": 55
+ },
+ {
+  "id": "draft30-m03",
+  "question": "TSC BZT52C3V6은 전압이 딱 3.6V로 고정되는 거야?",
+  "parts": [
+   "BZT52C3V6"
+  ],
+  "compare": false,
+  "allowed_cards": 77
+ },
+ {
+  "id": "draft30-m04",
+  "question": "D1 자리에 TSC BZT52C3V6을 그대로 납땜해도 돼?",
+  "parts": [
+   "BZT52C3V6"
+  ],
+  "compare": false,
+  "allowed_cards": 77
+ },
+ {
+  "id": "draft30-m05",
+  "question": "D3 대신 TSC 1N4148을 쓰려는데 전류를 얼마나 흘려도 돼?",
+  "parts": [
+   "1N4148"
+  ],
+  "compare": false,
+  "allowed_cards": 45
+ },
+ {
+  "id": "draft30-m07",
+  "question": "D1 후보로 BZX84C3V3을 봤는데 정격이 어떻게 돼?",
+  "parts": [
+   "BZX84C3V3"
+  ],
+  "compare": false,
+  "allowed_cards": 52
+ },
+ {
+  "id": "draft30-h04",
+  "question": "D2를 TSC 1N5819로 바로 바꿔 달아도 돼?",
+  "parts": [
+   "1N5819"
+  ],
+  "compare": false,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft30-h05",
+  "question": "TSC 1N5817이랑 1N5819는 같은 계열인데 D2에는 아무거나 써도 돼?",
+  "parts": [
+   "1N5817",
+   "1N5819"
+  ],
+  "compare": true,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft50-n01",
+  "question": "D3에 달아 둔 TSC 1N5819 대신 TSC 1N5817을 써도 이 릴레이의 플라이백 역할을 할 수 있어?",
+  "parts": [
+   "1N5819",
+   "1N5817"
+  ],
+  "compare": true,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft50-n02",
+  "question": "D3를 TSC BAS70으로 바꿔도 이 릴레이를 끌 때 코일 전류를 받아 줄 수 있어?",
+  "parts": [
+   "BAS70"
+  ],
+  "compare": false,
+  "allowed_cards": 34
+ },
+ {
+  "id": "draft50-n03",
+  "question": "D3 후보로 보는 TSC 1N4148의 역회복 시간은 얼마고, 어떤 시험 조건에서 나온 값이야?",
+  "parts": [
+   "1N4148"
+  ],
+  "compare": false,
+  "allowed_cards": 45
+ },
+ {
+  "id": "draft50-n04",
+  "question": "D2를 TSC BZT52C5V1로 바꿔도 원하는 전압 범위로 제한할 수 있어?",
+  "parts": [
+   "BZT52C5V1"
+  ],
+  "compare": false,
+  "allowed_cards": 77
+ },
+ {
+  "id": "draft50-n05",
+  "question": "D2 후보인 TSC BZT52C3V6의 허용 소비전력과 접합 온도 상한은 얼마야?",
+  "parts": [
+   "BZT52C3V6"
+  ],
+  "compare": false,
+  "allowed_cards": 77
+ },
+ {
+  "id": "draft50-n06",
+  "question": "D3용 TSC 1N4148을 주문하려는데, 1N4148 A0G 대신 1N4148 R0G로 사도 같은 제품이야?",
+  "parts": [
+   "1N4148",
+   "A0G",
+   "R0G"
+  ],
+  "compare": false,
+  "allowed_cards": 45
+ },
+ {
+  "id": "draft50-n07",
+  "question": "이 조건에서 D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?",
+  "parts": [
+   "1N5817"
+  ],
+  "compare": false,
+  "allowed_cards": 33
+ },
+ {
+  "id": "draft50-n08",
+  "question": "D1을 TSC 1N4148로 바꾸면 이 전류 조건에서 쓸 수 있어?",
+  "parts": [
+   "1N4148"
+  ],
+  "compare": false,
+  "allowed_cards": 45
+ },
+ {
+  "id": "draft52-n21",
+  "question": "Breadboard Supply D1을 1N5819로 바꾸려는데, 온도에 따라 역방향 누설전류가 어떻게 달라져?",
+  "parts": [
+   "1N5819"
+  ],
+  "compare": false,
+  "allowed_cards": 33
+ }
+]

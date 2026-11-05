@@ -3,7 +3,7 @@
 - 역할: 오프라인 CLI(`python -m backend.rag.storage`)와, `vector_type`만 서버·다른 도구가 import한다.
   - vector_type: 환경변수 RAG_VECTOR_TYPE(vector|halfvec)을 읽어 돌려준다. ingest.py·retrieve.py가 server와 도구에서 import한다.
   - snapshot(inspect): DB 전체 크기, pgvector 버전, 임베딩 열 형식, RAG 표 세 개의 크기(250MB 목표 대비).
-  - compare: 원본 vector(1536)와 halfvec으로 줄인 값의 가까운 카드 상위 5장이 얼마나 겹치는지 시료 1000개까지 잰다.
+  - compare: 원본 vector(1536)와 halfvec으로 줄인 값의 가까운 청크 상위 5개이 얼마나 겹치는지 시료 1000개까지 잰다.
     읽기 전용 트랜잭션을 롤백하고, 시간 예산(max_seconds)을 넘으면 중간 결과에 timed_out을 달아 돌려준다.
 - 하지 않는 일: 임베딩 API 호출, 표·인덱스 변경, 본문·벡터·DSN(DB 접속 주소) 출력. 검색은 `retrieve.py`, 적재는 `ingest.py`.
 - 출처: docs/experiments/corpus-storage-budget.md, ADR 0005(halfvec 코퍼스), SPEC.md 6절
@@ -60,8 +60,8 @@ def snapshot(conn, deadline=None):
 
 
 def compare(conn, samples=1000, max_seconds=120):
-    """같은 원본 vector와 halfvec으로 줄인 값의 상위 5장 겹침을 시료 질의마다 재서 요약 사전으로 돌려준다."""
-    # [왜] 질의 카드 자기 자신과 같은 본문(chunk_sha256)은 거리 0으로 늘 1위라 비교에서 뺀다
+    """같은 원본 vector와 halfvec으로 줄인 값의 상위 5개 겹침을 시료 질의마다 재서 요약 사전으로 돌려준다."""
+    # [왜] 질의 청크 자기 자신과 같은 본문(chunk_sha256)은 거리 0으로 늘 1위라 비교에서 뺀다
     if not 1 <= samples <= 1000 or not 0 < max_seconds <= 600:
         raise ValueError('samples must be 1..1000 and max_seconds must be >0 and <=600')
     deadline, rows, timed_out = time.monotonic() + max_seconds, [], False

@@ -38,7 +38,7 @@ def _valid_card(card: object) -> bool:
 
 
 def decode_search_result(result) -> list[dict]:
-    """MCP 구조화 응답을 그래프 검색 카드 목록으로 검증해 변환한다."""
+    """MCP 구조화 응답을 그래프 검색 청크 목록으로 검증해 변환한다."""
     if getattr(result, "isError", False) is True:
         raise RetrievalUnavailableError("tool_error")
     structured = getattr(result, "structuredContent", None)

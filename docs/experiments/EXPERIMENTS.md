@@ -14,3 +14,6 @@
 - `evaluation-draft-30.md` — 난이도별 평가 문항 30건 검수 초안의 범위·형식·확인 기준
 - `evaluation-draft-52.md` — 정보 부족 분류 기준과 현재 50건 초안 작업서(파일명의 52는 당시 이력)
 - `answer-refusal-scorer.md` — 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준. 상태: 구현(`evals/runners/score_answer.py`)과 회귀 테스트(`tests/evals/test_score_answer.py`) 반영
+- `supervisor-model-comparison.md` — 수퍼바이저 후보 5종의 70문항 1회 비교 방법·경량 집계·선정 결론. 실험상 최종 선정은 `openai/gpt-6-luna`, 서비스 적용은 조장 소유 정본 갱신 뒤 수행
+- `supervisor-model-comparison-postregistration.md` — 완료된 수퍼바이저 후보 5종 비교의 실제 조건·실행 중 변경·채점 범위·선정 기준·한계를 기록한 사후등록
+- `supervisor-stage2-six-models.md` — 기존 5종과 Jev의 2차 70문항 공동 평가 계약(#32). 실측은 `../research/supervisor-stage2-results.md`

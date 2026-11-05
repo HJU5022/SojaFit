@@ -2,15 +2,16 @@
 
 - 역할: 문항마다 build_graph()를 invoke하고 Langfuse CallbackHandler로 단계별 입력·출력과 LLM 호출의 토큰·비용을 남긴다.
   실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시)은 메타데이터로, 실행 점수(경로·질문 종류·검색 횟수·LLM 호출 수·
-  카드 수·인용 검사·걸린 시간)는 트레이스 점수로 붙인다. 한 번 실행한 문항들은 Langfuse session 하나로 묶는다.
-- 하지 않는 일: 문항별 결과 파일 저장(카드 내용이 들어가 저장소에 두지 않는다, SPEC 6절). 문항별 기록은 Langfuse에서 본다.
+  청크 수·인용 검사·걸린 시간)는 트레이스 점수로 붙인다. 한 번 실행한 문항들은 Langfuse session 하나로 묶는다.
+- 하지 않는 일: 답변 문장·청크 원문을 결과 파일에 넣기(SPEC 6절: 청크 내용은 저장소에 두지 않는다). 그것은 Langfuse 트레이스에서 본다.
 - 출처: SPEC 2절(그래프)·7절(그래프 평가 실행의 Langfuse 추적), ADR 0010(결정에 쓰는 측정은 OpenRouter로), docs/GATES.md G6, docs/experiments/answer-refusal-scorer.md
-- 원시 결과: 파일로 저장하지 않는다. 문항별 트레이스·점수는 Langfuse(환경 이름 eval, session graph-<평가셋>-<월일-시분>-<공급자>)에,
-  문항별 한 줄(경로·검색 횟수·시간·트레이스 주소)은 표준출력에 찍는다.
+- 원시 결과: 문항별 지표(경로·검색 횟수·LLM 호출·통과 청크 id·인용 검사·5지표·시간·트레이스 주소)와 실행 조건, 5지표 요약을
+  `evals/results/graph/graph_<평가셋>_<YYYY-MM-DD>.json`에 남긴다(가이드 v5 "평가셋과 원시 결과, 재현 명령은 레포 내").
+  문항별 트레이스·점수는 Langfuse(환경 이름 eval, session graph-<평가셋>-<월일-시분>-<공급자>)에, 문항별 한 줄은 표준출력에 찍는다.
 - 필요한 것: DATABASE_URL, OPENROUTER_API_KEY(LLM_PROVIDER=openrouter), LANGFUSE_PUBLIC_KEY·SECRET_KEY·BASE_URL.
   DEMO_MODE=1이면 검색은 임베딩 없이 BM25만 쓴다(backend/rag/retrieve.py).
 
-실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...]
+실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]
   예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03
 """
 import hashlib
@@ -34,8 +35,8 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | N
         "not_found": (float((state.get("answer") or "").startswith(NOT_FOUND)), "BOOLEAN", "답이 '문서로 확인 안 됨'으로 시작"),
         "tries": (float(state.get("tries", 0)), "NUMERIC", "검색 횟수"),
         "llm_calls": (float(len(llm_calls)), "NUMERIC", ", ".join(llm_calls)),
-        "docs_found": (float(len(state.get("docs") or [])), "NUMERIC", "마지막 검색 카드 수"),
-        "passed_cards": (float(len(state.get("passed") or [])), "NUMERIC", "채점 통과 카드 수"),
+        "docs_found": (float(len(state.get("docs") or [])), "NUMERIC", "마지막 검색 청크 수"),
+        "passed_cards": (float(len(state.get("passed") or [])), "NUMERIC", "채점 통과 청크 수"),
         "latency_s": (round(seconds, 1), "NUMERIC", None),
     }
     if "fake_citations" in check:  # 생성 노드를 지난 문항만 인용 검사 결과가 있다
@@ -47,6 +48,51 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | N
         scores["answer_metric"] = (scored["metric"], "CATEGORICAL",
                                    "5지표(cited_gold/wrong_citation/over_refusal/correct_refusal/hallucination_risk)")
     return scores
+
+
+def result_row(item: dict, state: dict, scores: dict, trace_url: str) -> dict:
+    """결과 파일에 남길 문항 한 줄. 답변 문장·청크 원문은 넣지 않고 지표와 id만 남긴다(SPEC 6절)."""
+    row = {"id": item["id"], "kind": item["kind"],
+           # [왜] 정답 쪽 질문 종류(평가셋)와 라우팅이 고른 종류를 나란히 둬야 라우팅이 틀린 문항을 바로 센다
+           "gold_type": item.get("question_type") or item.get("irrelevant_type"),
+           "routed_type": scores["question_type"][0]}
+    row.update({name: value for name, (value, _, _) in scores.items() if name != "question_type"})
+    row["passed"] = list(state.get("passed") or [])  # 채점을 통과한 청크 id. 원문은 DB에서 id로 다시 볼 수 있다
+    row["trace_url"] = trace_url
+    return row
+
+
+def summarize(rows: list[dict], failed: list[dict]) -> dict:
+    """문항별 결과에서 5지표 건수를 전체·관련/비관련·정답 질문 종류별로 세고, 라우팅이 맞은 관련 문항 수를 센다."""
+    def count(group):
+        out = {}
+        for r in group:
+            key = r.get("answer_metric") or "unscored"
+            out[key] = out.get(key, 0) + 1
+        return dict(sorted(out.items()))
+
+    by_type = {}
+    for r in rows:
+        by_type.setdefault(f"{r['kind']}/{r['gold_type']}", []).append(r)
+    relevant = [r for r in rows if r["kind"] == "relevant"]
+    latencies = sorted(r["latency_s"] for r in rows)
+    return {
+        "items": len(rows) + len(failed), "finished": len(rows), "failed": len(failed),
+        "metrics": count(rows),
+        "by_kind": {k: count([r for r in rows if r["kind"] == k]) for k in ("relevant", "irrelevant")},
+        "by_type": {k: count(v) for k, v in sorted(by_type.items())},
+        # [왜] 관련 문항만 평가셋에 질문 종류가 있다. 비관련 문항은 범위 밖으로 가야 하는지 문항마다 달라 여기서 세지 않는다
+        "routing_match_relevant": sum(r["routed_type"] == r["gold_type"] for r in relevant),
+        "relevant": len(relevant),
+        "latency_p50_s": latencies[len(latencies) // 2] if latencies else None,
+        "llm_calls_total": sum(r["llm_calls"] for r in rows),
+    }
+
+
+def default_out(dataset_path: str, today: str) -> Path:
+    """결과 파일 기본 경로. 같은 날 같은 평가셋을 또 돌리면 시각을 붙여 덮어쓰지 않는다."""
+    out = Path("evals/results/graph") / f"graph_{Path(dataset_path).stem}_{today}.json"
+    return out.with_name(f"{out.stem}-{time.strftime('%H%M')}.json") if out.exists() else out
 
 
 def _git(*args):
@@ -65,8 +111,8 @@ def select_items(items, ids):
     return [it for it in items if it["id"] in set(ids)]
 
 
-def main(dataset_path, ids=()):
-    """문항을 하나씩 그래프로 돌리고 Langfuse에 트레이스·실행 점수를 남긴다(ids가 비면 전부)."""
+def main(dataset_path, ids=(), out=None):
+    """문항을 하나씩 그래프로 돌리고 Langfuse에 트레이스·실행 점수를, 결과 파일에 문항별 지표를 남긴다(ids가 비면 전부)."""
     # [주의] 문항마다 LLM을 부르는 유료 실행이다. 전체(50건)를 돌리기 전에 문항 id 한두 개로 먼저 확인한다
     # [왜] 다른 코드의 트레이스와 나눠 보려고 환경 이름을 둔다. Langfuse 클라이언트가 만들어지기 전에 정해야 한다
     os.environ.setdefault("LANGFUSE_TRACING_ENVIRONMENT", "eval")
@@ -103,7 +149,7 @@ def main(dataset_path, ids=()):
     llm.chat = lambda system, user, schema: calls.append(schema.__name__) or chat(system, user, schema)
 
     app = build_graph()  # 서비스와 같은 줄기 그래프(SPEC 2절)를 한 번 조립해 문항마다 재사용한다
-    failed = 0
+    rows, failed = [], []  # 결과 파일에 남길 문항별 지표, 오류로 멈춘 문항
     for it in items:
         calls.clear()  # 이전 문항의 호출 기록을 비운다
         # [왜] 트레이스 id를 직접 정해 넘긴다. 핸들러의 last_trace_id는 실제로 보낸 트레이스 id와 달랐다(11-03 실측)
@@ -118,21 +164,37 @@ def main(dataset_path, ids=()):
         start = time.perf_counter()
         try:
             state = app.invoke({"input": it["input"]}, config)
-        except Exception as error:  # [왜] 한 문항이 죽어도 나머지는 잰다. 실패는 끝에 센다
-            failed += 1
+        except Exception as error:  # [왜] 한 문항이 죽어도 나머지는 잰다. 실패는 끝에 세고 결과 파일에도 남긴다
+            failed.append({"id": it["id"], "error": f"{type(error).__name__}: {str(error)[:200]}"})
             print(f"{it['id']}\t실패\t{type(error).__name__}: {error}", flush=True)
             continue
         seconds = time.perf_counter() - start
+        scores = run_scores(state, seconds, list(calls), item=it)
         # 점수 하나하나를 이 문항의 트레이스에 붙인다
-        for name, (value, kind, comment) in run_scores(state, seconds, list(calls), item=it).items():
+        for name, (value, kind, comment) in scores.items():
             client.create_score(trace_id=trace_id, name=name, value=value, data_type=kind, comment=comment)
-        print(f"{it['id']}\t{'>'.join(state['path'])}\t검색 {state.get('tries', 0)}번\t{seconds:.1f}초\t"
-              f"{client.get_trace_url(trace_id=trace_id)}", flush=True)
+        url = client.get_trace_url(trace_id=trace_id)
+        rows.append(result_row(it, state, scores, url))
+        print(f"{it['id']}\t{'>'.join(state['path'])}\t{scores['answer_metric'][0]}\t검색 {state.get('tries', 0)}번\t"
+              f"{seconds:.1f}초\t{url}", flush=True)
     client.flush()  # [주의] 보내기는 백그라운드라 끝나기 전에 비워야 트레이스와 점수가 다 올라간다
-    print(f"session {session}\t문항 {len(items)}건\t실패 {failed}건", flush=True)
+
+    # [왜] 평가자는 Langfuse에 들어올 수 없으니, 같은 지표를 레포에 남겨 숫자를 맞춰 볼 수 있게 한다(가이드 v5 제출물)
+    out_path = Path(out) if out else default_out(dataset_path, time.strftime("%Y-%m-%d"))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    meta = {**common, "session": session, "ran_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "dataset_sha256": hashlib.sha256(Path(dataset_path).read_bytes()).hexdigest(), "ids": list(ids) or "all"}
+    result = {"meta": meta, "summary": summarize(rows, failed), "rows": rows, "failed": failed}
+    out_path.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(f"session {session}\t문항 {len(items)}건\t실패 {len(failed)}건\t결과 {out_path}", flush=True)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        raise SystemExit("사용법: python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...]")
-    main(sys.argv[1], sys.argv[2:])
+    args = sys.argv[1:]
+    out = None
+    if "--out" in args:  # [왜] 시험 실행(10문항)과 본 실행을 같은 날 따로 남기려고 결과 파일 이름을 고를 수 있게 한다
+        i = args.index("--out")
+        out, args = args[i + 1], args[:i] + args[i + 2:]
+    if not args:
+        raise SystemExit("사용법: python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]")
+    main(args[0], args[1:], out)
