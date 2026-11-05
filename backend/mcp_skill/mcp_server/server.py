@@ -101,7 +101,7 @@ def find_parts_by_specs(conditions: list[dict], category: str | None = None, pac
     gte=이상·lte=이하(경계 포함), slot은 min|typ|max(기본 max, CJ는 typ). 조건마다 그 품번의 행 하나 이상이 채우면 됩니다.
     category는 분류 이름과 같아야 합니다: standard-rectifier, schottky-rectifier, schottky-diode, sic-schottky-diode,
     fast-recovery-trr-100-500ns, high-efficiency-trr-50-99ns, super-fast-recovery, ultra-fast-recovery, switching-diode,
-    zener-diode, tvs, esd-protection, bridge. package는 패키지 이름 일부(대소문자 무시, 예: SMA, SOD-123).
+    zener-diode, tvs, esd-protection, bridge. package는 패키지 이름과 같아야 합니다(대소문자·하이픈·공백 무시, 예: SMA, SOD-123. SMA는 SMAF를 잡지 않음).
     결과는 품번 순으로 limit개(1~50)까지이고, 각 품번에 조건을 채운 행과 인용, 분류, 패키지가 붙습니다.
     표에 값이 없는 품번은 결과에서 빠지며, 이는 불충족이 아니라 "문서로 확인 안 됨"입니다.
     """
