@@ -182,7 +182,8 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         if reply.get('role') in roles:
             roles = [reply['role']]
     try:
-        original_rows = specs(read.original_part) if read.original_part else []
+        # [왜] 주문 코드가 붙은 품번(1N4148 A0G)은 사양 표에 기본 품번으로 있다(후보 조회와 같음)
+        original_rows = (specs(read.original_part) or specs(read.original_part.split()[0])) if read.original_part.strip() else []
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)

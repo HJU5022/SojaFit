@@ -160,6 +160,18 @@ def test_ec10_order_code_variant_with_identical_statement_is_identical(monkeypat
     assert res['verdict'] == 'IDENTICAL' and res['checks']  # 주문 코드 품번은 기본 품번의 사양 표 행으로 본다
 
 
+def test_original_part_with_order_code_reads_base_part_rows(monkeypatch):
+    """원래 품번에 주문 코드가 붙어도(1N4148 A0G) 사양 표의 기본 품번(1N4148) 행을 원래 부품 행으로 쓴다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+    real = V.judge_part
+    monkeypatch.setattr(J.V, 'judge_part', lambda *a, **k: seen.append(k['original_rows']) or real(*a, **k))
+    table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    read = dict(READ, original_part='1N4148 A0G', candidates=['SS14'])
+    J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=None)
+    assert seen == [table['1N4148']]
+
+
 def test_grounded_requires_quote_in_text_and_same_number():
     text = '입력 전압의 최댓값은 20V'
     assert J.grounded(text, J.Value(name='v_in_max', number=20, unit='V', quote='최댓값은 20V'))
