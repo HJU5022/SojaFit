@@ -172,6 +172,21 @@ def test_original_part_with_order_code_reads_base_part_rows(monkeypatch):
     assert seen == [table['1N4148']]
 
 
+def test_manufacturer_name_before_part_number_is_dropped_for_spec_lookup(monkeypatch):
+    """'TSC 1N5817' · 'Taiwan Semiconductor 1N5817'은 사양 표의 1N5817 행으로 판정한다. 제조사 이름은 품번이 아니다(B1, 11-06)."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+    real = V.judge_part
+    monkeypatch.setattr(J.V, 'judge_part', lambda *a, **k: seen.append(k['original_rows']) or real(*a, **k))
+    table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0)]}
+    for name in ('TSC 1N5817', 'tsc 1N5817', 'Taiwan Semiconductor 1N5817'):
+        read = dict(READ, original_part='TSC 1N4148 A0G', candidates=[name])
+        res = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=None)['judgement']['results'][0]
+        assert res['part'] == name  # 이름은 질문에 쓴 대로 보인다
+        assert res['checks'][0]['citation']['document'] == '1N5817.pdf'
+    assert seen == [table['1N4148']] * 3
+
+
 def test_schottky_exemption_follows_the_condition_exempt_key():
     """보통 TRR 조건은 쇼트키 계열 모두 면제, exempt: sic 조건(R14 100 kHz 초과)은 SiC 쇼트키만 면제한다."""
     def trr(exempt):

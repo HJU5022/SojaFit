@@ -142,6 +142,21 @@ def _ask_text(missing: list[str], roles: list[str], rules: dict) -> str:
     return head + ', '.join(missing) + (f" / 역할이 {' 또는 '.join(rules[r]['name'] for r in roles)} 중 어느 쪽인지도 알려 주세요." if len(roles) > 1 else '')
 
 
+# [왜] 읽기가 품번을 'TSC 1N5817'처럼 제조사 이름과 함께 낸다. 사양 표 품번에는 제조사 이름이 없어 0행이 된다(11-06 평가 7건)
+MAKER = re.compile(r'^\s*(?:TSC|Taiwan\s+Semiconductor)\s+', re.I)
+
+
+def _part(name: str) -> str:
+    """품번 앞의 제조사 이름(TSC · Taiwan Semiconductor)을 뗀다."""
+    return MAKER.sub('', name or '').strip()
+
+
+def _rows(specs, name: str) -> list[dict]:
+    """품번의 사양 표 행. 제조사 이름을 떼고 찾고, 없으면 첫 낱말(주문 코드를 뗀 기본 품번, 1N4148 R0G → 1N4148)로 다시 찾는다."""
+    name = _part(name)
+    return (specs(name) or specs(name.split()[0])) if name else []
+
+
 def _identical(retriever, original: str, candidate: str) -> bool:
     """같은 기본 품번의 주문 코드만 다를 때, 제조사가 같은 제품이라고 밝힌 청크가 있는지(EC-10)."""
     base_o, base_c = original.split()[0].upper() if original else '', candidate.split()[0].upper()
@@ -223,8 +238,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         if reply.get('role') in roles:
             roles = [reply['role']]
     try:
-        # [왜] 주문 코드가 붙은 품번(1N4148 A0G)은 사양 표에 기본 품번으로 있다(후보 조회와 같음)
-        original_rows = (specs(read.original_part) or specs(read.original_part.split()[0])) if read.original_part.strip() else []
+        original_rows = _rows(specs, read.original_part)  # 후보 조회와 같은 규칙(제조사 이름 · 주문 코드)
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
@@ -235,7 +249,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             candidates = [(p, '', None) for p in read.candidates]
         results = []
         for name, category, packages in candidates:
-            rows = specs(name) or specs(name.split()[0])  # [왜] 주문 코드가 붙은 품번(1N4148 R0G)은 사양 표에 기본 품번으로 있다
+            rows = _rows(specs, name)
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
             same = _identical(retriever, read.original_part, name)
