@@ -2,7 +2,7 @@
 
 - 역할: 거절 사유(`Reason`)를 사용자가 알아들을 말로 바꾸고, 가능하면 다음에 할 행동을 같이 알려 준다.
   판정 결과(`judgement`)를 코드 틀의 답 글로 바꾼다(`render_judgement`, 숫자 · 인용은 판정 결과를 그대로 옮긴다).
-- 하지 않는 일: 거절 결정(Supervisor), 코드 이름 노출, 숫자 비교(`backend/judge/`). "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
+- 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`). "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리)
 """
 from backend.multi_agent.contracts import Reason
@@ -23,6 +23,13 @@ def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] 
         Reason.SEARCH_ERROR: '검색 도구를 사용할 수 없어 근거를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',
     }
     return texts[reason]  # 거절 사유가 아닌 이유(재시도 사유)를 넘기면 KeyError: 거절 결정서는 이미 거절 사유만 받는다
+
+
+def refusal_for(reason: Reason, facts: dict) -> str:
+    """사실 확인 결과(`Facts` dict)로 거절 문구를 만든다. 없다고 확인된 품번 · 개정판을 문구에 넣는다(단일 · 멀티 거절 노드가 같이 쓴다)."""
+    missing_parts = [p for p, ok in (facts.get('parts') or {}).items() if not ok]
+    missing_revs = [r for r, ok in (facts.get('revisions') or {}).items() if not ok]
+    return refusal_message(reason, missing_parts or list((facts.get('parts') or {})), missing_revs)
 
 
 VERDICT_KO = {'IDENTICAL': '동일품', 'SPEC_EQUIVALENT': '사양 동등', 'ROLE_SUFFICIENT': '역할상 충분',

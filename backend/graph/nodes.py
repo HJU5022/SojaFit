@@ -12,10 +12,12 @@ import re
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
+from backend.multi_agent.contracts import QuestionType, Reason
+from backend.multi_agent.messages import refusal_for
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.services import llm
 
@@ -113,27 +115,50 @@ def read_input(state: AgentState) -> dict:
     # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
     # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
     reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
-             "tries": -state.get("tries", 0), "facts": {}}  # facts: 앞 질문의 사실 확인으로 새 질문을 거절하지 않게(멀티 parse_node와 같은 이유)
+             "tries": -state.get("tries", 0), "facts": {}, "refusal": {}}  # facts · refusal: 앞 질문의 사실 · 거절 코드가 새 질문에 남지 않게(멀티 parse_node와 같은 이유)
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
 
+# 라우팅이 검색 전에 정할 수 있는 거절 사유. 한도 · 검증 · 검색 장애는 그 뒤 단계에서만 생긴다
+FirstStageReason = Literal[Reason.OUT_OF_SCOPE, Reason.PART_MISSING, Reason.REVISION_MISSING, Reason.NOT_FOUND]
+REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_FOUND}  # 종류만으로 거절이 정해지는 질문(멀티 Supervisor 규칙과 같음)
+
+
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할)."""
-    # Literal로 다섯 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
-    question_type: Literal["out_of_scope", "role", "candidate_find", "candidate_judge", "rating"] = Field(
-        description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 7가지다."""
+    # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
+    question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
+    reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
+    reply: str = Field(default="", max_length=300, description="일상 대화(chat)일 때 사용자에게 보여 줄 한국어 답")
+
+    @model_validator(mode="after")
+    def refusal_reason_and_reply(self):
+        if self.reason is None and self.question_type in REFUSED_TYPES:
+            # [왜] 범위 밖 · 다른 부품은 종류만으로 사유가 정해진다. 비워 왔다고 형식 재시도(유료)로 다시 부르지 않고 채운다
+            self.reason = REFUSED_TYPES[self.question_type]
+        if self.question_type == "chat" and not self.reply.strip():
+            raise ValueError("일상 대화에는 reply가 필요하다")  # [왜] 짧은 답 노드는 LLM을 다시 부르지 않고 이 reply를 답으로 쓴다
+        return self
 
 
 def route(state: AgentState) -> dict:
-    """라우팅 노드: 질문 종류를 다섯 가지 중 하나로 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
+    """라우팅 노드: 질문 종류(7가지)와 검색 전 거절 사유 · 일상 대화 답을 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
     # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
     part = state.get("target_part") or {}
     # [왜] 사실 확인 결과를 멀티 Supervisor와 같은 글(render_facts)로 붙여, 코퍼스에 없는 품번 · 개정판을 검색 전에 거절하게 한다
     facts = render_facts(Facts(**(state.get("facts") or {})))
     user = "\n".join([f"대상: {state.get('target', '')} {part.get('value', '')}", f"질문: {state['question']}", *facts])
     answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
-    return {"question_type": answer.question_type, "path": ["라우팅"]}  # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다
+    # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다. route 칸은 갈림길 · 거절 · 짧은 답 노드가 읽는다
+    return {"question_type": answer.question_type, "route": answer.model_dump(mode="json"), "path": ["라우팅"]}
+
+
+def short_reply(state: AgentState) -> dict:
+    """짧은 답 노드: 일상 대화는 라우팅이 낸 reply를 그대로 답으로 쓴다. LLM을 더 부르지 않는다(멀티 Supervisor의 끝내기와 같음)."""
+    # [왜] check · skill도 덮어쓴다. 같은 thread 앞 턴의 인용 검사 · Skill 적용 정보가 이 답의 것으로 보이면 안 된다
+    return {"answer": state["route"]["reply"], "check": {}, "skill": {"enabled": False, "applied": False, "sha256": None},
+            "path": ["짧은 답"]}
 
 
 def find_parts(text: str, refs: set[str]) -> list[str]:
@@ -276,21 +301,28 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
 
 
 def refuse(state: AgentState) -> dict:
-    """거절 노드: 이유(범위 밖 / 근거 없음)와 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절)."""
-    skill_info = {"enabled": False, "applied": False, "sha256": None}
-    if state.get("question_type") == "out_of_scope":
-        answer = "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다."
-        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}  # 이전 턴의 적용 정보도 비운다
-    if state.get("retrieval_error"):
+    """거절 노드: 이유 코드(`refusal`)와 안내문, 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절).
+
+    이유 코드는 멀티 그래프와 같은 `contracts.Reason` 값이다: 라우팅이 정한 사유(out_of_scope · part_missing · revision_missing ·
+    not_found), 검색 장애(search_error), 검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
+    """
+    skill_info = {"enabled": False, "applied": False, "sha256": None}  # 이전 턴의 Skill 적용 정보도 비운다
+    reason = (state.get("route") or {}).get("reason")
+    if reason:
+        # 라우팅이 첫 단에서 거절했다(검색 없음). [왜] 문구는 멀티 거절과 같은 함수로 만든다(D4 · D5를 같은 문구로 비교)
+        answer = refusal_for(Reason(reason), state.get("facts") or {})
+    elif state.get("retrieval_error"):
+        reason = Reason.SEARCH_ERROR.value
         answer = "검색 도구를 사용할 수 없어 문서 근거를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."
-        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}
-    docs, parts = state.get("docs") or [], state.get("parts") or []
-    # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
-    if not docs:
-        found = f"{', '.join(parts)} 데이터시트를 찾지 못했습니다" if parts else "질문에 맞는 데이터시트를 찾지 못했습니다"
     else:
-        files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
-        found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
-    # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
-    return {"answer": f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다.",
-            "check": {}, "skill": skill_info, "path": ["거절"]}
+        reason = Reason.NOT_FOUND.value  # [왜] 없는 품번은 사실 확인에서 걸러지므로, 검색 고리의 거절은 '찾지 못함'(추정)이다
+        docs, parts = state.get("docs") or [], state.get("parts") or []
+        # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
+        if not docs:
+            found = f"{', '.join(parts)} 데이터시트를 찾지 못했습니다" if parts else "질문에 맞는 데이터시트를 찾지 못했습니다"
+        else:
+            files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
+            found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
+        # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
+        answer = f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다."
+    return {"answer": answer, "check": {}, "skill": skill_info, "refusal": {"code": reason, "message": answer}, "path": ["거절"]}

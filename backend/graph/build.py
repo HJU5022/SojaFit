@@ -20,11 +20,20 @@ MAX_TRIES = 2
 
 
 def after_route(state: AgentState) -> str:
-    """라우팅 뒤 갈림길: 범위 밖은 거절, 역할은 바로 생성, 나머지(정격·후보 판정·후보 찾기)는 "검색"(연결표가 재작성으로 먼저 보낸다). 돌려주는 값은 갈 노드 이름이다(SPEC 2절)."""
-    if state.get("question_type") == "out_of_scope":
-        return "거절"  # 검색조차 하지 않는다
-    if state.get("question_type") == "role":
+    """라우팅 뒤 갈림길: 거절 사유가 있으면 거절, 일상 대화는 짧은 답, 역할은 바로 생성, 판정 · 찾기는 "판정", 정격은 "검색"(SPEC 2절).
+
+    돌려주는 값은 갈림길 값이고, 갈 노드는 build_graph의 연결표가 정한다("검색"은 재작성으로 먼저, "판정"은 판정 길이 없으면 재작성으로).
+    """
+    if (state.get("route") or {}).get("reason"):
+        # [왜] 범위 판정을 첫 단에서 한다: 범위 밖 · 다른 부품 · 코퍼스에 없는 품번 · 개정판은 검색조차 하지 않는다(11-06 강사 지적)
+        return "거절"
+    question_type = state.get("question_type")
+    if question_type == "chat":
+        return "짧은 답"  # 라우팅이 낸 reply로 끝낸다
+    if question_type == "role":
         return "생성"  # [왜] 역할은 데이터시트가 아니라 넷리스트 연결로 답한다. 생성 노드가 [넷리스트] 근거를 붙인다
+    if question_type in ("candidate_judge", "candidate_find"):
+        return "판정"
     return "검색"  # 갈림길 값은 "검색"이지만 아래 연결에서 재작성으로 먼저 간다
 
 
@@ -56,17 +65,20 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None):
     b = StateGraph(AgentState)  # AgentState가 메모장 칸과 합치는 규칙(리듀서)을 정한다
     for name, fn in [("입력 읽기", nodes.read_input), ("사실 확인", partial(facts_node, lookup=lookup)), ("라우팅", nodes.route),
                      ("검색", lambda state: nodes.search(state, retriever)),  # 검색 노드만 검색기를 받는다
-                     ("채점", nodes.grade), ("재작성", nodes.rewrite), ("생성", nodes.generate), ("거절", nodes.refuse)]:
+                     ("채점", nodes.grade), ("재작성", nodes.rewrite), ("생성", nodes.generate), ("거절", nodes.refuse),
+                     ("짧은 답", nodes.short_reply)]:
         b.add_node(name, fn)  # [주의] 노드 이름은 갈림길이 돌려주는 값, path 칸에 남는 이름과 같아야 한다
 
     b.add_edge(START, "입력 읽기")  # 항상 입력 읽기에서 시작한다
     b.add_edge("입력 읽기", "사실 확인")
     b.add_edge("사실 확인", "라우팅")  # [왜] 범위 판정을 첫 단에서 한다: 라우팅이 확인된 사실로 검색 전에 거절을 정한다(11-06 강사 지적)
-    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "생성": "생성", "검색": "재작성"})  # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
+    # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
+    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "짧은 답": "짧은 답", "생성": "생성", "검색": "재작성", "판정": "재작성"})
     b.add_conditional_edges("검색", after_search, {"채점": "채점", "거절": "거절"})
     b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
     b.add_edge("재작성", "검색")  # 되돌아가는 길. 무한히 돌지 않게 after_grade가 tries로 막는다
     b.add_edge("생성", END)
     b.add_edge("거절", END)
+    b.add_edge("짧은 답", END)
     # checkpointer를 주면 thread마다 메모장이 저장돼 다음 메시지에서 이어진다(강의 2주 05강). 시험에서는 None
     return b.compile(checkpointer=checkpointer)

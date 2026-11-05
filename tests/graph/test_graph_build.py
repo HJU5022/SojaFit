@@ -1,6 +1,7 @@
 """그래프 조립: 질문 종류와 채점 결과에 따라 노드가 SPEC 2절 순서로 이어지는지 확인한다.
 
-- 역할: 가짜 LLM·가짜 검색기로 다섯 길(재작성 뒤 첫 검색 통과, 다시 재작성 뒤 통과, 두 번 다 통과 없음, 검색 0장, 범위 밖·역할)의 경로와, 첫 검색이 재작성을 거치는지 확인한다.
+- 역할: 가짜 LLM·가짜 검색기로 정격 검색 고리(재작성 뒤 첫 검색 통과, 다시 재작성 뒤 통과, 두 번 다 통과 없음, 검색 0장, 검색 장애)와
+  첫 단 거절(범위 밖 · 다른 부품 · 없는 품번 · 없는 개정판, 검색 0번), 짧은 답, 역할, 판정 · 찾기의 경로를 확인한다.
 - 하지 않는 일: 실제 LLM·검색 품질, 답의 정확도는 보지 않는다.
 - 출처: SPEC 2절(그래프)·"근거가 없을 때", ADR 0006
 """
@@ -20,13 +21,16 @@ CARD = {"chunk_id": 7, "file": "1N5817 SERIES_H2104.pdf", "page": 1, "table": No
 REWRITTEN = "1N5817 repetitive peak reverse voltage VRRM"
 
 
-def run(monkeypatch, question_type, grades, docs):
-    """가짜 LLM과 가짜 검색기를 꽂고 그래프를 끝까지 돌린다. grades는 채점 LLM이 호출 순서대로 낼 통과 청크 목록이다."""
+def run(monkeypatch, question_type, grades, docs, *, lookup=None, **route):
+    """가짜 LLM과 가짜 검색기를 꽂고 그래프를 끝까지 돌린다. grades는 채점 LLM이 호출 순서대로 낼 통과 청크 목록이다.
+
+    route는 라우팅 답안지에 더할 칸(reason · reply), lookup은 사실 확인 함수다.
+    """
     grades = iter(grades)  # [주의] 정해 둔 것보다 채점을 더 부르면 StopIteration으로 시험이 깨진다
 
     def fake_chat(system, user, schema):
         if schema is nodes.Route:
-            return schema(question_type=question_type)
+            return schema(question_type=question_type, **route)
         if schema is nodes.Grade:
             return schema(passed_ids=next(grades))
         if schema is nodes.Rewrite:
@@ -40,7 +44,7 @@ def run(monkeypatch, question_type, grades, docs):
         return docs
 
     monkeypatch.setattr(nodes.llm, "chat", fake_chat)
-    return build_graph(retriever=fake_retriever).invoke({"input": INPUT}), calls
+    return build_graph(retriever=fake_retriever, lookup=lookup).invoke({"input": INPUT}), calls
 
 
 def test_passed_card_answers_after_one_search(monkeypatch):
@@ -99,11 +103,39 @@ def test_retrieval_failure_is_not_reported_as_empty_corpus(monkeypatch):
     assert "데이터시트를 찾지 못" not in out["answer"]
 
 
-@pytest.mark.parametrize("question_type, last", [("out_of_scope", "거절"), ("role", "생성")])
-def test_out_of_scope_and_role_skip_search(monkeypatch, question_type, last):
-    out, calls = run(monkeypatch, question_type, [], [CARD])
+def test_role_skips_search(monkeypatch):
+    out, calls = run(monkeypatch, "role", [], [CARD])
     assert calls == []
-    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", last]
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "생성"]
+
+
+@pytest.mark.parametrize("question_type, route, facts, code", [
+    ("out_of_scope", {}, {}, "out_of_scope"),
+    ("other_part", {}, {}, "not_found"),
+    ("rating", {"reason": "part_missing"}, {"parts": {"1N4001": False}}, "part_missing"),
+    ("candidate_judge", {"reason": "part_missing"}, {"parts": {"BAT85": False}}, "part_missing"),
+    ("rating", {"reason": "revision_missing"}, {"parts": {"1N5817": True}, "revisions": {"K9999": False}}, "revision_missing"),
+])
+def test_scope_is_refused_at_the_first_stage_without_searching(monkeypatch, question_type, route, facts, code):
+    """범위 밖 · 다른 부품 · 코퍼스에 없는 품번 · 개정판은 라우팅 바로 뒤에서 거절한다. 검색기는 한 번도 부르지 않는다."""
+    from backend.multi_agent.supervisor import Facts
+    out, calls = run(monkeypatch, question_type, [], [CARD], lookup=lambda state: Facts(**facts), **route)
+    assert len(calls) == 0
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "거절"]
+    assert out["refusal"]["code"] == code and out["answer"] == out["refusal"]["message"]
+
+
+def test_chat_is_answered_with_the_router_reply_without_searching(monkeypatch):
+    out, calls = run(monkeypatch, "chat", [], [CARD], reply="안녕하세요! 회로 속 다이오드의 역할과 대체 후보를 도와 드려요.")
+    assert calls == [] and out["path"] == ["입력 읽기", "사실 확인", "라우팅", "짧은 답"]
+    assert out["answer"].startswith("안녕하세요") and out["check"] == {}
+
+
+@pytest.mark.parametrize("question_type", ["candidate_judge", "candidate_find"])
+def test_candidate_questions_use_the_search_loop_when_no_judge_is_wired(monkeypatch, question_type):
+    """사양 표 도구(specs · find)를 넘기지 않으면 판정 · 찾기 질문은 예전처럼 검색 고리로 간다(기존 호출을 깨지 않는다)."""
+    out, calls = run(monkeypatch, question_type, [[7]], [CARD])
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "생성"] and len(calls) == 1
 
 
 def test_facts_are_checked_before_routing_and_shown_to_the_router(monkeypatch):

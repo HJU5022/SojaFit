@@ -16,7 +16,7 @@ from backend.multi_agent.agents.search import search_agent
 from backend.multi_agent.agents.verifier import verifier_agent
 from backend.multi_agent.agents.writer import writer_agent
 from backend.multi_agent.contracts import Counters, Reason
-from backend.multi_agent.messages import refusal_message
+from backend.multi_agent.messages import refusal_for
 from backend.multi_agent.state import MultiState
 
 KEYS = set(MultiState.__annotations__) - {'path'}
@@ -39,10 +39,7 @@ def finish_node(state: dict) -> dict:
 def refuse_node(state: dict) -> dict:
     """거절: 이유 코드는 `refusal`에 남기고(Langfuse로), 사용자에게는 일상어 문구를 답으로 준다."""
     reason = Reason(state['decision']['reason'])
-    facts = state.get('facts') or {}
-    missing_parts = [p for p, ok in (facts.get('parts') or {}).items() if not ok]
-    missing_revs = [r for r, ok in (facts.get('revisions') or {}).items() if not ok]
-    message = refusal_message(reason, missing_parts or list((facts.get('parts') or {})), missing_revs)
+    message = refusal_for(reason, state.get('facts') or {})
     return {'answer': message, 'check': {}, 'refusal': {'code': reason.value, 'message': message}, 'path': ['거절']}
 
 

@@ -33,7 +33,8 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
 
     # ── 라우팅 노드가 채운다 ──
     # [왜] 평가셋의 kind(관련/비관련)와 헷갈리지 않게 question_type이라 부른다
-    question_type: str  # role | rating | candidate_judge | candidate_find | out_of_scope
+    question_type: str  # out_of_scope | chat | other_part | role | rating | candidate_judge | candidate_find (멀티와 같은 7가지)
+    route: dict         # 라우팅 답안지 `nodes.Route`(질문 종류 · 검색 전 거절 사유 reason · 일상 대화 답 reply)
 
     # ── 검색·재작성 노드가 채운다 (다시 검색하면 덮어쓴다. 새 메시지가 오면 입력 읽기 노드가 비운다) ──
     query: str          # 이번 검색어
@@ -44,10 +45,11 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     # ── 채점 노드가 채운다 ──
     passed: list[int]   # 채점을 통과한 청크 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
 
-    # ── 생성·거절 노드가 채운다 ──
+    # ── 생성·거절·짧은 답 노드가 채운다 ──
     answer: str         # 사용자에게 보여 줄 답
     check: dict         # 인용 검사 결과 (없는 근거 인용, 인용 없는 문장 수)
     skill: dict         # 생성 노드의 Skill 적용 여부(enabled/applied)와 사용 파일 sha256
+    refusal: dict       # 거절하면 {code, message}. code는 `multi_agent.contracts.Reason` 값(멀티와 같은 칸, 평가 실행기가 센다)
 
     # ── 쌓이는 칸 (Annotated[타입, operator.add]) ──
     # 리듀서(reducer): 노드가 칸 값을 돌려줄 때 LangGraph가 옛 값과 새 값을 합치는 규칙이다.
