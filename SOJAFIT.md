@@ -80,7 +80,7 @@ SojaFit (proj3-b)
 │   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
 │   │   ├── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
 │   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
-│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 다음 노드 선택·거절 사유·판단 규칙. 아직 Langfuse에 등록하지 않음
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 다음 노드 선택·거절 사유·판단 규칙. Langfuse `supervisor` v4까지 등록(11-06 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
@@ -276,7 +276,7 @@ SojaFit (proj3-b)
 │   │   ├── test_graph_rewrite.py  <- 재작성 노드와 채점 뒤 갈림길
 │   │   ├── test_graph_generate.py  <- 생성 노드의 근거 제한과 인용 검사
 │   │   ├── test_graph_refuse.py  <- 거절 노드의 이유와 단서 요청
-│   │   ├── test_graph_build.py  <- 그래프 조립 순서, 같은 대화 다음 턴 초기화
+│   │   ├── test_graph_build.py  <- D4 v2 그래프 조립 순서(첫 단 거절 · 짧은 답 · 검색 고리 · 판정 길), 같은 대화 다음 턴 초기화
 │   │   ├── test_graph_mcp_retriever.py  <- MCP 응답·세션·장애와 재검색 경로
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
@@ -320,7 +320,7 @@ SojaFit (proj3-b)
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
 │   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
-│   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
+│   ├── mcp_skill/          <- MCP 서버 도구 8종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·찾기의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음

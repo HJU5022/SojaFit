@@ -23,12 +23,12 @@
 
 ## 실행기 동작 메모
 - `run_retrieval.py` — 검색 방식(`hybrid` 기본·`dense`·`bm25`)은 summary의 `method`에 적음. 회로 근거만 있는 문항과 후보 찾기 문항(`question_type` `candidate_find`, 열린 정답)은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(preregister #4~#8, `drafts/sets/draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 [preregister.md](guides/preregister.md)에 등록
-- `run_graph.py` — 한 번 실행한 문항은 session 하나로 묶고 환경 이름은 `eval`. 문항별 결과 파일은 청크 내용이 들어가 저장소에 남기지 않음. 비용은 Langfuse 프로젝트에 등록한 OpenRouter 가격표(`anthropic/claude-haiku-5.5`, ADR 0010 가격)로 계산됨
+- `run_graph.py` — 한 번 실행한 문항은 session 하나로 묶고 환경 이름은 `eval`. 문항별 결과 파일(`results/graph/`)에는 지표와 id만 남기고 답변 문장·청크 원문은 넣지 않음. 비용은 Langfuse 프로젝트에 등록한 OpenRouter 가격표(노드별 모델, ADR 0014)로 계산됨
 - `score_answer.py` — 평가셋 문항(`kind`, `expected`, `gold_chunks`, `question_type`)과 그래프 실행 상태(`state` 또는 `run_skill_pair.py` 출력)를 대조해 답변·거절 5지표를 결정적으로 채점함([작업서](../docs/experiments/answer-refusal-scorer.md)). `n01, n02`처럼 `relevant + NOT_VERIFIED`가 정답인 문항에서 정답 근거 청크를 인용해 조건 부족을 설명한 답은 과잉 거절로 세지 않음
 - `run_skill_pair.py` — 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
 
 ## 결과 폴더
-`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더 여섯 개로 묶습니다.
+`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더 여덟 개로 묶습니다.
 - `results/retrieval/` — `retrieval_baseline_2026-11-03.json`·`retrieval_dense_2026-11-03.json`·`retrieval_bm25_2026-11-03.json`: v1 데이터시트 근거 19문항의 검색 지표(`run_retrieval.py`, k=5). 각각 하이브리드·dense만·BM25만. 하이브리드 파일은 `method` 인자가 생기기 전에 만들어 summary에 `method`가 없음
   - `d3_official_2026-11-03.json`·`d3_official_gpu_2026-11-03.json`: 사전 등록 #24 D3 공식 측정(동결 v2 채점 19문항, 조건 E1~E8을 하나씩 바꾼 칸과 칸별 비교, GPU 칸은 로컬 리랭커·late chunking). `d3_noresult_2026-11-03.json`: 관련 19·비관련 35문항의 1위 점수 분포와 no_result 임계값. `d3_explore_2026-11-03.json`: 탐색 격자 276칸(판정에 쓰지 않음)
   - `r1_2026-11-03.json`: 사전 등록 #25 R1 검색 평가셋 84문항, dev 세트 264개 조합·답안지 검사·test 세트 확인 4칸(줄인 판). `r1_steps_2026-11-04.json`: 사전 등록 #28 단계별 재측정(S0 → S4, 앞 단계와 짝 비교·실패 유형)
