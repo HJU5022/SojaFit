@@ -77,7 +77,7 @@ def test_budget_preserves_langfuse_invocation_config(monkeypatch):
     monkeypatch.setattr(managed, "invocation_config", lambda: sentinel)
     monkeypatch.setattr(managed, "bind_prompt", lambda runnable, options: SimpleNamespace(
         invoke=lambda messages, **kwargs: runnable.invoke(messages, **options, **kwargs)))
-    monkeypatch.setattr(llm, "_chat_model", lambda: SimpleNamespace(
+    monkeypatch.setattr(llm, "_chat_model", lambda *_: SimpleNamespace(
         with_structured_output=lambda schema: SimpleNamespace(invoke=invoke)))
     from pydantic import BaseModel
 
@@ -144,7 +144,7 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
     with httpx.Client(transport=httpx.MockTransport(transport)) as http:
         model = ChatOpenAI(model=managed.CONFIG["model"], api_key="test", base_url="https://example.invalid",
                            http_client=http, max_retries=0)
-        monkeypatch.setattr(llm, "_chat_model", lambda: model)
+        monkeypatch.setattr(llm, "_chat_model", lambda *_: model)
         budget = llm.EvaluationBudget(1, 1, 60, 0.000001, 0.000001, max_tokens=4096)
         with managed.session(client, {"generate": prompt}, None), llm.evaluation_limits(budget):
             assert llm.node_chat("generate", "base", "question", Answer).answer == "ok"
@@ -329,10 +329,34 @@ def test_load_existing_versions_rejects_unpublished_local_skill(monkeypatch, tmp
     (folder / "SKILL.md").write_text("local draft")
     monkeypatch.setattr(managed, "ROOT", tmp_path)
     class ExistingPrompt:
-        config = managed.CONFIG
+        def __init__(self, name):
+            self.config = managed.node_config(name)  # 노드마다 등록된 모델 설정이 다르다
         def compile(self, **values):
             return [{"role": "system", "content": "base"}, {"role": "user", "content": values["input"]}]
     old_skill = SimpleNamespace(prompt="published version", config={"sha256": hashlib.sha256(b"published version").hexdigest()})
-    client = SimpleNamespace(get_prompt=lambda name, **kwargs: old_skill if name == managed.SKILL_NAME else ExistingPrompt())
+    client = SimpleNamespace(get_prompt=lambda name, **kwargs: old_skill if name == managed.SKILL_NAME else ExistingPrompt(name))
     with pytest.raises(ValueError, match="Skill 불일치"):
         managed.load_development(client)
+
+
+def test_node_config_gives_each_node_its_model():
+    assert managed.node_config("route") == managed.CONFIG
+    luna = managed.node_config("supervisor")
+    assert luna == managed.node_config("grade") and luna["model"] == "openai/gpt-6-luna"
+    assert "temperature" not in luna and luna["max_tokens"] == managed.CONFIG["max_tokens"]
+    assert set(managed.NODES) == set(managed.NODE_MODELS)
+
+
+def test_publish_nodes_registers_each_prompt_with_its_node_config(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(managed, "publish", lambda client, node, body, *, kind, config: seen.setdefault(node, config))
+    managed.publish_nodes(object())
+    assert seen == {node: managed.node_config(node) for node in managed.NODES}
+
+
+def test_prompt_scope_rejects_config_of_another_nodes_model():
+    prompt = SimpleNamespace(name="supervisor", version=1, config=managed.CONFIG)  # Luna 노드에 Haiku 설정이 등록됨
+    with managed.session(SimpleNamespace(), {"supervisor": prompt}, None):
+        with pytest.raises(ValueError, match="모델 설정"):
+            with managed.prompt_scope("supervisor", "s", "u"):
+                pass

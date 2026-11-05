@@ -14,8 +14,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
-CONFIG = {"model": "anthropic/claude-haiku-5.5", "temperature": 0, "max_tokens": 4096}
+HAIKU, LUNA = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"
+CONFIG = {"model": HAIKU, "temperature": 0, "max_tokens": 4096}
 NODES = ("route", "grade", "rewrite", "generate", "supervisor")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
+# [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
+NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": LUNA}
 SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
@@ -26,6 +29,12 @@ def callback():
     """노드 호출 하나를 추적하는 Langfuse LangChain CallbackHandler를 새로 만든다."""
     from langfuse.langchain import CallbackHandler
     return CallbackHandler()
+
+
+def node_config(node):
+    """노드가 쓰는 모델의 등록 설정. Haiku는 CONFIG 그대로, 다른 모델에는 temperature를 보내지 않는다(Luna 3차 실측 계약)."""
+    model = NODE_MODELS[node]
+    return CONFIG if model == CONFIG["model"] else {"model": model, "max_tokens": CONFIG["max_tokens"]}
 
 
 def publish(client, name, body, *, kind, config):
@@ -56,7 +65,7 @@ def publish_nodes(client):
             # [왜] generate만 선택 Skill이 붙을 자리({{domain_skill}})를 시스템 프롬프트 끝에 둔다
             system += "{{domain_skill}}"
         body = [{"role": "system", "content": system}, {"role": "user", "content": "{{input}}"}]
-        prompts[node] = publish(client, node, body, kind="chat", config=CONFIG)
+        prompts[node] = publish(client, node, body, kind="chat", config=node_config(node))
     return prompts
 
 
@@ -75,7 +84,7 @@ def load_development(client):
     for node, prompt in prompts.items():
         system = (ROOT / "backend/prompts" / f"{node}.md").read_text(encoding="utf-8")
         expected = [{"role": "system", "content": system}, {"role": "user", "content": "preflight"}]
-        if prompt.config != CONFIG or prompt.compile(input="preflight", domain_skill="") != expected:
+        if prompt.config != node_config(node) or prompt.compile(input="preflight", domain_skill="") != expected:
             raise ValueError("로컬/원격 프롬프트 불일치")
     skill = client.get_prompt(SKILL_NAME, label="development", type="text", cache_ttl_seconds=0)
     raw = (ROOT / "backend/mcp_skill/skills/SKILL.md").read_bytes()
@@ -142,7 +151,7 @@ def prompt_scope(node, system, user, *, skill_text=""):
         return
     client, prompts, skill = active
     prompt = prompts[node]
-    if prompt.config != CONFIG:
+    if prompt.config != node_config(node):
         raise ValueError("Langfuse 모델 설정 불일치")
     if skill_text and (skill is None or skill.prompt != skill_text):
         raise ValueError("Langfuse Skill 본문 불일치")
