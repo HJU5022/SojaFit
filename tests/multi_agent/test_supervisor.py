@@ -109,3 +109,15 @@ def test_prompt_mentions_every_next_node_and_refusal_reason():
         assert f'`{node}`' in text, node
     for reason in C.REFUSAL_REASONS:
         assert reason.value in text, reason
+
+
+def test_prompt_describes_chat_other_part_and_reply():
+    text = (ROOT / 'backend/prompts/supervisor.md').read_text(encoding='utf-8')
+    for word in ('`chat`', '`other_part`', '`reply`'):
+        assert word in text, word
+
+
+def test_decide_keeps_the_reply_of_a_chat_decision():
+    chat = lambda node, system, user, schema: C.Decision(next='finish', question_type='chat', reply='안녕하세요!')
+    d = S.decide(S.SupervisorInput(question='안녕'), chat)
+    assert d.next == 'finish' and d.reply == '안녕하세요!'

@@ -13,7 +13,7 @@ def refusal_message(reason: Reason, parts: list[str] = (), revisions: list[str] 
     """거절 사유에 맞는 안내 문구. parts · revisions는 질문에서 확인한 값이고 있으면 문구에 넣는다."""
     named = ', '.join(parts) if parts else '질문하신 부품'
     texts = {
-        Reason.OUT_OF_SCOPE: '이 서비스는 회로 속 다이오드의 역할과 대체 후보를 데이터시트로 확인해 드려요. 질문하신 내용은 지원하지 않아요.',
+        Reason.OUT_OF_SCOPE: '이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.',
         Reason.PART_MISSING: f'{named}의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.',
         Reason.REVISION_MISSING: f'요청하신 판({", ".join(revisions) if revisions else "개정판"})의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.',
         Reason.NOT_FOUND: f'요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 {CLUES}을 알려 주시면 다시 찾아볼게요.',

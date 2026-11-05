@@ -18,7 +18,8 @@ MAX_SUMMARY = 200   # 보고서 요약 글자 수 상한. Supervisor는 원문�
 
 NextNode = Literal['search', 'judge', 'writer', 'verifier', 'web', 'finish', 'refuse']  # 'web'은 나중 조각(평가 모드에서는 끔)
 AgentName = Literal['search', 'judge', 'writer', 'verifier']
-QuestionType = Literal['out_of_scope', 'role', 'candidate_find', 'candidate_judge', 'rating']  # 단일 그래프 Route와 같은 다섯 가지
+# 단일 그래프 Route의 다섯 가지에 일상 대화(chat)와 다이오드가 아닌 전자 부품(other_part)을 더했다(11-05 결정). out_of_scope는 서비스와 전혀 무관한 질문만 뜻한다
+QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'role', 'candidate_find', 'candidate_judge', 'rating']
 
 
 class Reason(str, Enum):
@@ -48,11 +49,14 @@ class Decision(BaseModel):
     question_type: QuestionType | None = None  # 처음 판단에서 정한 질문 종류. 판정 에이전트가 필요한지가 이걸로 갈린다
     reason: Reason | None = None  # 거절이면 필수. 재시도면 지난 실패 사유를 담아 다음 시도가 다르게 하게 한다
     brief: str = Field(default='', max_length=300, description='다음 에이전트에게 줄 짧은 지시')
+    reply: str = Field(default='', max_length=300, description='일상 대화(chat)로 끝낼 때 사용자에게 보여 줄 한국어 답')
 
     @model_validator(mode='after')
     def refuse_needs_refusal_reason(self):
         if self.next == 'refuse' and self.reason not in REFUSAL_REASONS:
             raise ValueError('거절에는 거절 사유(REFUSAL_REASONS)가 필요하다')
+        if self.next == 'finish' and self.question_type == 'chat' and not self.reply.strip():
+            raise ValueError('일상 대화로 끝내려면 reply가 필요하다')  # [왜] 이 길은 작성 에이전트를 거치지 않아 Supervisor의 reply가 곧 답이다
         return self
 
 

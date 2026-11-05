@@ -91,3 +91,23 @@ def test_unbuilt_features_are_rejected_instead_of_silently_ignored():
         app(scripted(), web_enabled=True)
     with pytest.raises(ValueError):
         app(scripted(), judge_enabled=True)
+
+
+def test_chat_is_answered_by_the_supervisor_without_searching():
+    chat = scripted(Decision(next='finish', question_type='chat', reply='안녕하세요! 회로 속 다이오드의 역할과 대체 후보를 도와 드려요.'))
+    out = app(chat, docs=[doc(1)], passed=[1]).invoke({'input': '안녕'})
+    assert out['path'] == ['입력 읽기', '사실 확인', '판단', '끝']  # 검색 · 작성 없이 끝난다
+    assert out['answer'].startswith('안녕하세요') and out['question_type'] == 'chat'
+    assert out['counters']['searches'] == 0 and out['counters']['writes'] == 0
+
+
+def test_other_part_asks_for_web_but_web_is_off_so_it_is_refused_as_not_found():
+    chat = scripted(Decision(next='web', question_type='other_part'))
+    out = app(chat).invoke({'input': 'MOSFET 정격이 뭐야?'})
+    assert out['path'][-1] == '거절' and out['refusal']['code'] == 'not_found'
+
+
+def test_unrelated_question_gets_a_gentle_refusal():
+    chat = scripted(Decision(next='refuse', reason=Reason.OUT_OF_SCOPE, question_type='out_of_scope'))
+    out = app(chat).invoke({'input': '오늘 날씨 어때?'})
+    assert '회로나 부품' in out['answer'] and out['refusal']['code'] == 'out_of_scope'

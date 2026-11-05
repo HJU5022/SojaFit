@@ -29,7 +29,9 @@ def parse_node(state: dict, *, parse) -> dict:
 
 
 def finish_node(state: dict) -> dict:
-    return {'path': ['끝']}
+    """끝내기: 일상 대화는 Supervisor의 reply가 답이다. 작성 · 검증을 거친 답은 이미 answer에 있다."""
+    reply = (state.get('decision') or {}).get('reply', '')
+    return {'answer': reply, 'path': ['끝']} if reply else {'path': ['끝']}
 
 
 def refuse_node(state: dict) -> dict:

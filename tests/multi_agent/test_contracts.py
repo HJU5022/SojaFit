@@ -82,3 +82,17 @@ def test_decision_may_carry_question_type_for_downstream_agents():
 def test_terminal_nodes_are_never_blocked_by_limits():
     over = Counters(hops=C.MAX_HOPS, searches=C.MAX_SEARCHES, writes=C.MAX_WRITES)
     assert C.check_limit(over, 'finish') is None and C.check_limit(over, 'refuse') is None  # 끝내는 길은 막지 않는다
+
+
+def test_chat_and_other_part_are_question_types():
+    import typing
+    assert {'chat', 'other_part'} <= set(typing.get_args(C.QuestionType))
+
+
+def test_chat_finish_needs_a_reply_and_reply_is_short():
+    with pytest.raises(ValueError):
+        C.Decision(next='finish', question_type='chat')  # 일상 대화로 끝내는데 답이 없다
+    ok = C.Decision(next='finish', question_type='chat', reply='안녕하세요! 회로 속 다이오드를 도와 드려요.')
+    assert ok.reply.startswith('안녕')
+    with pytest.raises(ValueError):
+        C.Decision(next='finish', question_type='chat', reply='가' * 301)
