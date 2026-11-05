@@ -20,6 +20,7 @@
 |---|---|---|---|---|---|
 | 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(정운 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
 | 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
+| 2026-11-05 | `supervisor.md` | v3 | 질문 종류에 `chat`(일상 대화, Supervisor가 한국어 `reply`로 직접 답하고 끝냄)와 `other_part`(다이오드가 아닌 전자 부품, 웹 조회 또는 못 찾음 거절)를 더하고, `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하게 바꿈. 전자 일반 개념 질문은 짧은 설명 + "데이터시트 근거 아님" 표시. 영어로 작성해 등록 | 근거 3등급과 일상 대화 허용 결정(11-05, SPEC 2절) | 실제 Luna 4문장 확인(인사 · 날씨 거절 · MOSFET 못 찾음 거절 · 일반 개념). 70문항 측정 전 |
 | 2026-11-05 | `route.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
 | 2026-11-05 | `grade.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
 | 2026-11-05 | `rewrite.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |

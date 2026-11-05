@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 Supervisor에 일상 대화(chat) · 다이오드 외 부품(other_part) 추가
+- 한 일: 질문 종류에 `chat` · `other_part`를 더하고 결정서에 `reply`(한국어 300자 이하)를 넣었다. 일상 대화는 Supervisor가 `reply`로 직접 답하고 `finish`로 끝낸다(작성 · 검색 없음, `finish_node`가 `reply`를 답으로 쓴다). `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하며 거절 문구를 "회로나 부품에 관한 질문을 해 주세요"로 부드럽게 바꿨다. 다이오드가 아닌 전자 부품은 `web`(켜져 있을 때) 아니면 `not_found` 거절. 프롬프트는 영어로 다시 써 Langfuse `supervisor` v3로 등록했다. 단일 그래프(D4)는 건드리지 않았다.
+- 바꾼 파일: `backend/multi_agent/contracts.py` · `build.py` · `messages.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, 시험 `tests/multi_agent/test_contracts.py` · `test_supervisor.py` · `test_build.py`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 460 passed, 27 skipped(새 시험 7개를 먼저 쓰고 실패를 확인). 실제 Luna 4문장: 인사 → chat 답, 날씨 → out_of_scope 거절, MOSFET → other_part 못 찾음 거절(웹 꺼짐), "다이오드가 뭐야?" → chat 일반 설명 + 데이터시트 근거 아님 표시. `load_development` 대조 통과.
+- 확인 못 한 것: 4문장은 연결 확인일 뿐 정확도 근거가 아니다. 70문항에서 일상 대화 · 무관 질문 경계는 재지 않았다(평가셋에 일상 대화 문항이 없다). `web` 노드(TSC · Infineon 웹 조회)는 아직 연결하지 않았다.
+- 다음 할 일: `web` 노드를 TSC · Infineon 웹 조회 도구와 연결, 일상 대화 · 경계 질문 소규모 개발용 문항 만들기.
+
 ## 2026-11-05 평가 실행기에 멀티 에이전트 실행(`--multi`)과 노드별 모델 기록
 - 한 일: `evals/runners/run_graph.py`에 `--multi`를 더했다. 같은 평가셋 · 같은 5지표 채점으로 멀티 에이전트(`backend/multi_agent`)를 재며, MCP 서버(`check_corpus`)를 전 문항 동안 한 번 열어 사실 확인에 쓴다(`make_app`). 멀티 점수로 검색 횟수 `tries`(counters.searches) · Supervisor 판단 횟수 `hops` · 거절 사유 `refusal_code`를 더했다. session · run_name · 태그 · 결과 파일 이름 앞에 `multi`를 붙인다(`multi_<평가셋>_<날짜>.json`). 단일 · 멀티 모두 결과 파일 meta와 Langfuse 메타데이터에 노드별 모델 `node_models`를 남긴다. 플래그 없이 돌리면 이전과 같게 줄기 그래프를 잰다.
 - 바꾼 파일: `evals/runners/run_graph.py`, `tests/evals/test_run_graph.py`, `evals/runners/RUNNERS.md`, `evals/EVALS.md`, `SOJAFIT.md`
