@@ -157,6 +157,7 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -192,8 +193,16 @@ SojaFit (proj3-b)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       ├── skill/          <- Skill·도구 개발 검증 요약
-│       └── supervisor/     <- 수퍼바이저 모델 비교의 경량 집계·provider 근거
+│       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
+│           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
+│           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
 │           └── 2026-11-04-stage1-v1/  <- 후보 5종 70문항 1회 비교
+│               ├── manifest.json  <- 동결 입력·prompt·code hash와 작업 계획
+│               ├── rows_anthropic__claude-haiku-5.5.json  <- Haiku 문항별 판정·오류·usage·latency
+│               ├── rows_openai__gpt-6-luna.json  <- Luna 문항별 판정·오류·usage·latency
+│               ├── rows_deepseek__deepseek-v4.1-flash.json  <- DeepSeek 중단 전 문항별 기록
+│               ├── rows_meta__muse-glimmer-30b.json  <- Muse 문항별 판정·오류·usage·latency
+│               ├── rows_cohere__command-a-plus.json  <- Cohere 문항별 판정·오류·usage·latency
 │               ├── stage1_summary.json  <- 후보별 품질·오류·비용·latency 집계
 │               └── provider_evidence.json  <- 후보별 provider·actual model·원본 artifact hash
 │
@@ -237,6 +246,7 @@ SojaFit (proj3-b)
 │   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
+│   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치

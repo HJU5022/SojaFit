@@ -100,6 +100,141 @@ def test_embed_texts_returns_vectors_usage_and_provider_metadata(monkeypatch):
     )
 
 
+def test_evaluation_chat_enforces_privacy_and_returns_usage(monkeypatch):
+    """평가 전용 호출이 full model ID·ZDR 정책·schema를 보내고 usage만 구조화해 돌려줘야 한다."""
+    seen = {}
+
+    class Usage:
+        def model_dump(self):
+            return {"prompt_tokens": 12, "completion_tokens": 3, "total_tokens": 15, "cost": 0.00001}
+
+    response = SimpleNamespace(
+        id="gen-1",
+        model="openai/gpt-6-luna",
+        provider="test-provider",
+        choices=[SimpleNamespace(message=SimpleNamespace(content='{"kind":"role"}'), finish_reason="stop")],
+        usage=Usage(),
+    )
+
+    class Completions:
+        def create(self, **kwargs):
+            seen.update(kwargs)
+            return response
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=Completions()))
+    monkeypatch.setattr(llm, "_evaluation_client", lambda timeout: client)
+    policy = {"zdr": True, "data_collection": "deny", "allow_fallbacks": False, "require_parameters": True}
+
+    parsed, metadata = llm.evaluation_chat(
+        "openai/gpt-6-luna", "system", "question", Route, provider_policy=policy, max_tokens=256, timeout=12,
+    )
+
+    assert parsed == Route(kind="role")
+    assert seen["model"] == "openai/gpt-6-luna"
+    assert seen["max_completion_tokens"] == 256
+    assert "temperature" not in seen and "max_tokens" not in seen
+    assert seen["extra_body"] == {"provider": policy, "usage": {"include": True}}
+    assert seen["response_format"]["type"] == "json_schema"
+    assert metadata == {
+        "response_id": "gen-1",
+        "actual_model": "openai/gpt-6-luna",
+        "provider": "test-provider",
+        "finish_reason": "stop",
+        "usage": {"prompt_tokens": 12, "completion_tokens": 3, "total_tokens": 15, "cost": 0.00001},
+    }
+
+
+@pytest.mark.parametrize(
+    ("model", "expected", "absent"),
+    [
+        ("anthropic/claude-haiku-5.5", {"max_tokens": 256}, {"temperature", "max_completion_tokens"}),
+        ("deepseek/deepseek-v4.1-flash", {"temperature": 0, "max_tokens": 256}, {"max_completion_tokens"}),
+    ],
+)
+def test_evaluation_chat_uses_model_supported_generation_parameters(monkeypatch, model, expected, absent):
+    """ZDR endpoint가 지원하지 않는 parameter를 보내 require_parameters routing을 막아서는 안 된다."""
+    seen = {}
+    response = SimpleNamespace(
+        id="gen-parameters", model=model, provider="test-provider",
+        choices=[SimpleNamespace(message=SimpleNamespace(content='{"kind":"role"}'), finish_reason="stop")],
+        usage=None,
+    )
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+        create=lambda **kwargs: seen.update(kwargs) or response,
+    )))
+    monkeypatch.setattr(llm, "_evaluation_client", lambda timeout: client)
+
+    llm.evaluation_chat(model, "sys", "q", Route, provider_policy={"zdr": True, "require_parameters": True},
+                        max_tokens=256, timeout=30)
+
+    assert all(seen[key] == value for key, value in expected.items())
+    assert absent.isdisjoint(seen)
+
+
+def test_evaluation_chat_reserves_budget_before_sdk_call(monkeypatch):
+    """평가 호출은 SDK 전송 전에 호출 수·예약 비용을 차감하고 상한 뒤 요청은 보내지 않아야 한다."""
+    calls = []
+    response = SimpleNamespace(
+        id="gen-1",
+        choices=[SimpleNamespace(message=SimpleNamespace(content='{"kind":"role"}'), finish_reason="stop")],
+        usage=None,
+    )
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+        create=lambda **kwargs: calls.append(kwargs) or response,
+    )))
+    monkeypatch.setattr(llm, "_evaluation_client", lambda timeout: client)
+    budget = llm.EvaluationBudget(1, 1, 60, 0.000001, 0.000001, max_tokens=256)
+
+    with llm.evaluation_limits(budget):
+        llm.evaluation_chat("openai/gpt-6-luna", "sys", "q", Route,
+                            provider_policy={"zdr": True}, max_tokens=256, timeout=30)
+        with pytest.raises(llm.EvaluationLimitError):
+            llm.evaluation_chat("openai/gpt-6-luna", "sys", "q", Route,
+                                provider_policy={"zdr": True}, max_tokens=256, timeout=30)
+
+    assert len(calls) == 1 and budget.calls == 1
+
+
+def test_evaluation_chat_reconciles_reservation_to_reported_cost(monkeypatch):
+    """provider cost가 있으면 보수적 예약액 대신 실제 비용만 다음 호출 예산에서 차감해야 한다."""
+    class Usage:
+        def model_dump(self):
+            return {"prompt_tokens": 2, "completion_tokens": 1, "total_tokens": 3, "cost": 0.00001}
+
+    response = SimpleNamespace(
+        id="gen-cost", model="openai/gpt-6-luna", provider="test-provider",
+        choices=[SimpleNamespace(message=SimpleNamespace(content='{"kind":"role"}'), finish_reason="stop")],
+        usage=Usage(),
+    )
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **_: response)))
+    monkeypatch.setattr(llm, "_evaluation_client", lambda timeout: client)
+    budget = llm.EvaluationBudget(2, 1, 60, 0.000001, 0.000001, max_tokens=256)
+
+    with llm.evaluation_limits(budget):
+        llm.evaluation_chat("openai/gpt-6-luna", "sys", "q", Route,
+                            provider_policy={"zdr": True}, max_tokens=256, timeout=30)
+
+    assert budget.reserved_usd == pytest.approx(0.00001)
+
+
+def test_evaluation_chat_keeps_provider_metadata_when_schema_is_invalid(monkeypatch):
+    """응답 schema가 틀려도 호출 성공 여부와 provider를 잃으면 endpoint 실패로 오판한다."""
+    response = SimpleNamespace(
+        id="gen-invalid", model="meta/muse-glimmer-30b", provider="TestProvider",
+        choices=[SimpleNamespace(message=SimpleNamespace(content='{}'), finish_reason="stop")],
+        usage=None,
+    )
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **_: response)))
+    monkeypatch.setattr(llm, "_evaluation_client", lambda timeout: client)
+
+    with pytest.raises(llm.EvaluationFormatError) as caught:
+        llm.evaluation_chat("meta/muse-glimmer-30b", "sys", "q", Route,
+                            provider_policy={"zdr": True}, max_tokens=256, timeout=30)
+
+    assert caught.value.metadata["provider"] == "TestProvider"
+    assert caught.value.metadata["actual_model"] == "meta/muse-glimmer-30b"
+
+
 def _voyage_http(monkeypatch, *replies):
     """httpx.post를 가짜로 바꿔 (주소, 요청 본문)을 기록하고 replies를 차례로 돌려준다. 네트워크는 쓰지 않는다."""
     import httpx

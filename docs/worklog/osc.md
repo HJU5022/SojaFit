@@ -124,3 +124,10 @@
 - 사전등록: `evals/guides/preregister.md` #29에 추가 API 호출 없이 경량 문항별 증거로 표·집계값을 재계산하는 검증 조건, 입력 hash, 분모, 성공 기준과 0달러 비용 상한을 고정했다.
 - 사후등록: `docs/experiments/supervisor-model-comparison-postregistration.md`에 완료된 5종 비교의 실제 입력·provider 조건·실행 중 변경·채점 범위·선정 순서·한계를 별도로 기록했다.
 - 다음 측정 사전등록: `evals/guides/preregister.md` #30에 1·2위인 `openai/gpt-6-luna`와 `anthropic/claude-haiku-5.5`를 동결 v2 70문항에서 각각 1회 함께 재측정하는 조건을 고정했다. 두 모델의 1차 결과를 이미 본 기준값으로 공개하고, 두 품질 지표의 우위 반복 여부·절대 0.15 안정성·완전 호출 실패 중단·모델별 $0.10 예산을 결과 확인 전에 정했다. API 호출은 시작하지 않았다.
+
+## 2026-11-04 수퍼바이저 1차 실측 근거 공개
+
+- 바꾼 파일: `backend/services/llm.py`, `evals/runners/run_supervisor_models.py`, 두 회귀 테스트, `evals/results/supervisor/`의 1차 manifest·후보별 rows와 provider 출처가 가리키는 초기 호출 증거, 폴더 설명·트리.
+- 범위: 기존 1차 실행의 코드·JSON을 보존한다. 새 모델 API 호출이나 재측정은 하지 않았다. run index 2·3은 manifest에 계획만 있고 이번 결과가 아니다.
+- 확인: 실행 코드 hash가 1차 manifest와 같고, provider evidence가 가리키는 원본 hash 불일치는 0건이다. 결과 JSON의 경로·키 패턴을 검사했다. 관련 테스트와 저장소 구조 검사 41건이 통과했다. `uv sync --frozen --dev` 뒤 전체 테스트는 321건 통과·26건 skip·1건 실패했다. 실패한 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`은 Windows 기본 인코딩으로 쓴 한글 임시 파일을 UTF-8로 읽을 때의 `UnicodeDecodeError`이며 이번 변경 파일이 아니다. 저장소에 올리는 원본은 문항별 parsed decision·usage·오류 종류를 포함하며 raw prompt·raw response 원문은 포함하지 않는다.
+- 남은 한계: OpenRouter의 외부 서명 로그가 없으므로 저장소 JSON만으로 실제 청구·호출을 독립 증명하지 못한다. 1차 계획 복원 기록은 이 PR에 포함하지 않는다.
