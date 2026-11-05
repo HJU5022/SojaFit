@@ -101,7 +101,7 @@ def test_verifier_accepts_netlist_citation_only_when_netlist_was_given():
 def test_verifier_skips_refusal_answer_and_can_run_record_only():
     assert verify(NOT_FOUND)['status'] == 'ok'  # 거절 답은 검증할 인용이 없다
     soft = verify('근거 없는 문장이다.', enforce=False)
-    assert soft['status'] == 'ok' and '기록' in soft['summary']  # [왜] 기준선과 같은 조건으로 재볼 때는 막지 않고 기록만 한다
+    assert soft['status'] == 'ok' and 'record-only' in soft['summary']  # [왜] 기준선과 같은 조건으로 재볼 때는 막지 않고 기록만 한다
 
 
 def test_make_facts_checks_parts_and_revisions_against_lists():

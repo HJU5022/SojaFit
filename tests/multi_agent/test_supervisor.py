@@ -34,22 +34,22 @@ def test_render_contains_question_facts_reports_status_and_options():
     text = S.render(inp(facts=S.Facts(parts={'1N4001': False}, revisions={'Q2611': False}), reports=[rep],
                         counters=Counters(hops=2, searches=1, writes=0)))
     assert '1N5817' in text and '입력 최대 20V' in text
-    assert '1N4001' in text and '코퍼스에 없음' in text and 'Q2611' in text
+    assert 'part 1N4001: NOT in corpus' in text and 'revision Q2611: NOT in corpus' in text
     assert '역전압만 찾음' in text and 'IF' in text and 'partial' in text
-    assert '판단 2/8' in text and '검색 1/2' in text and '작성 0/2' in text
-    assert 'web' not in text.split('고를 수 있는 다음 노드')[1]  # 웹이 꺼져 있으면 선택지에 없다
+    assert 'hops 2/8' in text and 'searches 1/2' in text and 'writes 0/2' in text
+    assert 'web' not in text.split('Next nodes you may choose')[1]  # 웹이 꺼져 있으면 선택지에 없다
 
 
 def test_render_shows_question_type_once_decided():
-    assert '질문 종류: 아직 정하지 않음' in S.render(inp())
-    assert '질문 종류: candidate_judge' in S.render(inp(question_type='candidate_judge'))
+    assert 'Question type: not decided yet' in S.render(inp())
+    assert 'Question type: candidate_judge' in S.render(inp(question_type='candidate_judge'))
 
 
 def test_render_lists_web_and_judge_only_when_enabled():
-    opts = S.render(inp()).split('고를 수 있는 다음 노드')[1]
+    opts = S.render(inp()).split('Next nodes you may choose')[1]
     assert 'judge' not in opts and 'web' not in opts
-    assert 'web' in S.render(inp(web_enabled=True)).split('고를 수 있는 다음 노드')[1]
-    assert 'judge' in S.render(inp(judge_enabled=True)).split('고를 수 있는 다음 노드')[1]
+    assert 'web' in S.render(inp(web_enabled=True)).split('Next nodes you may choose')[1]
+    assert 'judge' in S.render(inp(judge_enabled=True)).split('Next nodes you may choose')[1]
 
 
 def test_decide_passes_decision_schema_and_returns_llm_choice():

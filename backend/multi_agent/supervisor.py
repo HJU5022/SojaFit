@@ -37,27 +37,26 @@ class SupervisorInput(BaseModel):
 
 
 def render(i: SupervisorInput) -> str:
-    """LLM에 줄 user 글. 청크 원문은 없고 요약 보고만 담는다(컨텍스트 분리)."""
-    lines = [f'질문: {i.question}', f'대상: {i.target} {i.target_value}'.rstrip(), f'사용 조건: {i.conditions}',
-             f'질문 종류: {i.question_type or "아직 정하지 않음"}']
-    lines.append('확인된 사실:')
+    """LLM에 줄 user 글(영어 라벨). 청크 원문은 없고 요약 보고만 담는다(컨텍스트 분리)."""
+    lines = [f'Question: {i.question}', f'Target: {i.target} {i.target_value}'.rstrip(), f'Conditions: {i.conditions}',
+             f'Question type: {i.question_type or "not decided yet"}', 'Verified facts:']
     for name, ok in i.facts.parts.items():
-        lines.append(f'- 품번 {name}: {"코퍼스에 있음" if ok else "코퍼스에 없음"}')
+        lines.append(f'- part {name}: {"in corpus" if ok else "NOT in corpus"}')
     for name, ok in i.facts.revisions.items():
-        lines.append(f'- 개정판 {name}: {"코퍼스에 있음" if ok else "코퍼스에 없음"}')
+        lines.append(f'- revision {name}: {"in corpus" if ok else "NOT in corpus"}')
     if not i.facts.parts and not i.facts.revisions:
-        lines.append('- (질문에서 확인할 품번 · 개정판 없음)')
-    lines.append('지금까지의 보고:')
+        lines.append('- (no part number or revision to verify in the question)')
+    lines.append('Reports so far:')
     for n, r in enumerate(i.reports, 1):
-        extra = ''.join([f' · 사유 {r.reason.value}' if r.reason else '', f' · 부족한 값 {", ".join(r.missing)}' if r.missing else '',
-                         f' · 근거 {len(r.evidence_ids)}개' if r.evidence_ids else ''])
+        extra = ''.join([f' · reason {r.reason.value}' if r.reason else '', f' · missing {", ".join(r.missing)}' if r.missing else '',
+                         f' · {len(r.evidence_ids)} evidence' if r.evidence_ids else ''])
         lines.append(f'{n}. {r.agent} → {r.status}: {r.summary}{extra}')
     if not i.reports:
-        lines.append('(아직 없음)')
+        lines.append('(none yet)')
     c = i.counters
-    lines.append(f'현황: 판단 {c.hops}/{MAX_HOPS} · 검색 {c.searches}/{MAX_SEARCHES} · 작성 {c.writes}/{MAX_WRITES}')
+    lines.append(f'Status: hops {c.hops}/{MAX_HOPS} · searches {c.searches}/{MAX_SEARCHES} · writes {c.writes}/{MAX_WRITES}')
     options = ALWAYS + (('judge',) if i.judge_enabled else ()) + (('web',) if i.web_enabled else ())
-    lines.append('고를 수 있는 다음 노드: ' + ', '.join(options))
+    lines.append('Next nodes you may choose: ' + ', '.join(options))
     return '\n'.join(lines)
 
 

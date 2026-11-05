@@ -334,7 +334,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
 def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
     """그래프 노드용 LLM 호출. Langfuse 세션이 켜져 있을 때만 고정 버전 검증·노드 span·generation callback을 쓴다.
 
-    node는 route | grade | rewrite | generate, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
+    node는 route | grade | rewrite | generate | supervisor, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
     Raises:
         ValueError: Langfuse 설정·프롬프트와 실제 공급자·모델·출력 상한이 다를 때, 또는 `chat()`이 형식을 못 맞출 때.
         RuntimeError: 노드 호출이 중첩될 때.

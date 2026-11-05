@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 Supervisor 프롬프트 영어 전환과 Langfuse 등록
+- 한 일: `backend/prompts/supervisor.md`를 영어로 다시 썼고(`brief`도 영어), Supervisor 입력 글(`render`)과 에이전트 보고 요약 문구를 영어로 바꿨다. `NODES`에 `supervisor`를 더해 Langfuse에 v1로 등록했다.
+- 바꾼 파일: `backend/prompts/supervisor.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `backend/multi_agent/agents/{search,writer,verifier}.py`, `backend/services/langfuse_prompts.py`, `backend/services/llm.py`(docstring), `tests/multi_agent/*`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. 등록 후 `load_development`로 5개 프롬프트가 로컬과 같고 라벨이 development · latest임을 확인.
+- 확인 못 한 것: 실제 LLM으로 Supervisor를 돌려 보지 않았다(가짜 LLM 시험만).
+- 다음 할 일: 기존 프롬프트 4개 영어 번역을 사전 등록(다음 빈 번호는 origin/main 확인 후)하고 v2 70문항으로 단일 그래프 재측정.
+
 ## 2026-11-05 Langfuse 프롬프트 이름에서 폴더 빼기, Supervisor 입력에 질문 종류
 - 한 일: Langfuse 프롬프트 등록 이름에서 `sojafit/` 폴더를 뺐다(`route` · `grade` · `rewrite` · `generate`, Skill은 `skill-diode-evidence`). 코드(`backend/services/langfuse_prompts.py`)와 시험(`tests/services/test_langfuse_prompts.py`), `SPEC.md` 5절 이름을 고치고 새 이름으로 등록했다(development · latest 라벨, 버전 1). 본문은 그대로라 동작은 안 바뀐다. 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜서 지우지 않았고 정운이 화면에서 확인해 지우면 된다. 별개로 Supervisor 입력에 "질문 종류"가 빠져 두 번째 판단부터 판정 필요 여부를 못 읽던 것을 고쳤다.
 - 바꾼 파일: `backend/services/langfuse_prompts.py`, `tests/services/test_langfuse_prompts.py`, `SPEC.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `tests/multi_agent/test_supervisor.py` · `test_build.py`, 이 파일

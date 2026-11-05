@@ -12,8 +12,8 @@ def writer_agent(state: dict, *, generate) -> dict:
     out = generate(dict(state))
     answer = out['answer']
     if answer == NOT_FOUND:
-        report = AgentReport(agent='writer', status='fail', summary='근거로 답할 수 없어 "문서로 확인 안 됨"', reason=Reason.NOT_FOUND)
+        report = AgentReport(agent='writer', status='fail', summary='cannot answer from the evidence ("not verified in the documents")', reason=Reason.NOT_FOUND)
     else:
-        report = AgentReport(agent='writer', status='ok', summary=f'답 {len(answer)}자 작성', evidence_ids=out.get('check', {}).get('used', []))
+        report = AgentReport(agent='writer', status='ok', summary=f'answer written ({len(answer)} chars)', evidence_ids=out.get('check', {}).get('used', []))
     return {'answer': answer, 'check': out.get('check') or {}, 'reports': (state.get('reports') or []) + [report.model_dump(mode='json')],
             'path': ['작성']}

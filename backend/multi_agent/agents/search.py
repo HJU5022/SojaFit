@@ -13,13 +13,13 @@ from backend.multi_agent.contracts import AgentReport, Counters, Reason
 def search_report(ws: dict) -> AgentReport:
     docs, passed = ws.get('docs') or [], ws.get('passed') or []
     if ws.get('retrieval_error'):
-        return AgentReport(agent='search', status='fail', summary='검색 도구 장애', reason=Reason.SEARCH_ERROR)
+        return AgentReport(agent='search', status='fail', summary='search tool failure', reason=Reason.SEARCH_ERROR)
     if not docs:
-        return AgentReport(agent='search', status='fail', summary='검색 결과가 없음', reason=Reason.NO_RESULT)
+        return AgentReport(agent='search', status='fail', summary='no search results', reason=Reason.NO_RESULT)
     if not passed:
-        return AgentReport(agent='search', status='fail', summary=f'청크 {len(docs)}장을 찾았지만 채점에서 모두 탈락', reason=Reason.ALL_REJECTED)
+        return AgentReport(agent='search', status='fail', summary=f'{len(docs)} chunks found but all rejected by grading', reason=Reason.ALL_REJECTED)
     # shortcut: 지금 채점은 통과 있음/없음 두 갈래라 ok와 fail뿐이다. 충분 · 부분 · 부족 3갈래는 채점기를 바꿀 때(partial) 넣는다
-    return AgentReport(agent='search', status='ok', summary=f'청크 {len(docs)}장 중 {len(passed)}장 통과',
+    return AgentReport(agent='search', status='ok', summary=f'{len(passed)} of {len(docs)} chunks passed grading',
                        evidence_ids=[str(i) for i in passed])
 
 

@@ -17,15 +17,15 @@ def verifier_agent(state: dict, *, enforce: bool = True) -> dict:
     passed = {str(i) for i in state.get('passed') or []}
     valid = {str(d['chunk_id']) for d in state.get('docs') or [] if str(d['chunk_id']) in passed} | ({'넷리스트'} if state.get('target_part') else set())
     if answer == NOT_FOUND or not answer:
-        report = AgentReport(agent='verifier', status='ok', summary='거절 답이라 확인할 인용이 없음')
+        report = AgentReport(agent='verifier', status='ok', summary='refusal answer, no citations to verify')
     else:
         fake = sorted(citations(answer) - valid)
         uncited = sum(1 for s in re.split(r'(?<=[.。])\s+', answer) if s.strip() and not citations(s))
-        problem = f'없는 근거 인용 {fake}, 근거 번호 없는 문장 {uncited}개' if fake or uncited else ''
+        problem = f'citations of evidence not provided {fake}, sentences without a citation {uncited}' if fake or uncited else ''
         if not problem:
-            report = AgentReport(agent='verifier', status='ok', summary='모든 문장에 근거 번호가 있고 넘긴 근거만 인용함')
+            report = AgentReport(agent='verifier', status='ok', summary='every sentence cites provided evidence only')
         elif enforce:
             report = AgentReport(agent='verifier', status='fail', summary=problem, reason=Reason.VERIFY_FAILED)
         else:
-            report = AgentReport(agent='verifier', status='ok', summary=f'기록만 함(막지 않음): {problem}')
+            report = AgentReport(agent='verifier', status='ok', summary=f'record-only (not blocking): {problem}')
     return {'reports': (state.get('reports') or []) + [report.model_dump(mode='json')], 'path': ['검증']}

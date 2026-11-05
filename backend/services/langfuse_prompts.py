@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
 CONFIG = {"model": "anthropic/claude-haiku-5.5", "temperature": 0, "max_tokens": 4096}
-NODES = ("route", "grade", "rewrite", "generate")
+NODES = ("route", "grade", "rewrite", "generate", "supervisor")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
 SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
@@ -48,7 +48,7 @@ def publish(client, name, body, *, kind, config):
 
 
 def publish_nodes(client):
-    """노드 4개(NODES)를 backend/prompts/<node>.md에서 읽어 등록하고 {노드: 프롬프트}를 돌려준다."""
+    """노드(NODES)를 backend/prompts/<node>.md에서 읽어 등록하고 {노드: 프롬프트}를 돌려준다."""
     prompts = {}
     for node in NODES:
         system = (ROOT / "backend/prompts" / f"{node}.md").read_text(encoding="utf-8")

@@ -42,7 +42,7 @@ def test_role_question_goes_straight_to_writer_and_returns_to_supervisor_each_ti
     out = app(chat, answer='D1은 보호 다이오드이다 [넷리스트].').invoke({'input': 'D1은 왜 필요해?'})
     assert out['path'] == ['입력 읽기', '사실 확인', '판단', '작성', '판단', '검증', '판단', '끝']  # 서브에이전트가 끝날 때마다 판단으로 돌아온다
     assert out['answer'].startswith('D1은') and out['question_type'] == 'role'
-    assert '질문 종류: role' in chat.calls[1]  # 처음 판단에서 정한 질문 종류가 다음 판단 입력에도 보인다
+    assert 'Question type: role' in chat.calls[1]  # 처음 판단에서 정한 질문 종류가 다음 판단 입력에도 보인다
     assert out['counters']['hops'] == 3 and out['counters']['writes'] == 1
 
 
@@ -73,7 +73,7 @@ def test_missing_part_fact_reaches_supervisor_and_refusal_names_the_part():
     chat = scripted(Decision(next='refuse', reason=Reason.PART_MISSING))
     lookup = lambda state: S.Facts(parts={'1N4001': False}, revisions={})
     out = app(chat, lookup=lookup).invoke({'input': '1N4001로 바꿔도 돼?'})
-    assert '품번 1N4001: 코퍼스에 없음' in chat.calls[0]  # 사실 확인 결과가 Supervisor 입력에 들어간다
+    assert 'part 1N4001: NOT in corpus' in chat.calls[0]  # 사실 확인 결과가 Supervisor 입력에 들어간다
     assert '1N4001' in out['answer'] and out['refusal']['code'] == 'part_missing'
 
 
