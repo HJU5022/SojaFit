@@ -12,8 +12,9 @@
   DEMO_MODE=1이면 검색은 임베딩 없이 BM25만 쓴다(backend/rag/retrieve.py).
 
 실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]
-  --multi: 줄기 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점으로 잰다. 결과는 multi_<평가셋>_<날짜>.json
-           판정 에이전트를 켜고, 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
+  기본은 D4 v2 단일 그래프다(사실 확인 · 판정 길을 켜려고 MCP 서버를 연다). 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
+  --multi: 단일 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점 · 같은 MCP 도구로 잰다.
+           결과는 multi_<평가셋>_<날짜>.json
   예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03
 """
 import hashlib
@@ -46,11 +47,12 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | N
         scores["fake_citations"] = (float(len(check["fake_citations"])), "NUMERIC", "넘긴 적 없는 근거 번호 수")
         scores["uncited_sentences"] = (float(check["uncited_sentences"]), "NUMERIC", "근거 번호가 없는 문장 수")
     counters = state.get("counters")
-    if counters:  # 멀티 에이전트만: 검색 횟수는 단일 그래프의 tries와 같은 뜻으로 맞추고, Supervisor 판단 횟수와 거절 사유 코드를 더한다
+    if counters:  # 멀티 에이전트만: 검색 횟수는 단일 그래프의 tries와 같은 뜻으로 맞추고, Supervisor 판단 횟수를 더한다
         scores["tries"] = (float(counters["searches"]), "NUMERIC", "검색 횟수")
         scores["hops"] = (float(counters["hops"]), "NUMERIC", "Supervisor 판단 횟수")
+    if counters or "refusal" in state:  # 멀티와 D4 v2 단일 그래프는 거절 사유 코드를 refusal 칸에 남긴다
         scores["refusal_code"] = ((state.get("refusal") or {}).get("code", ""), "CATEGORICAL", None)
-        # [왜] 멀티 거절은 사용자용 일상어 문구라 NOT_FOUND로 시작하지 않는다. 단일과 같은 뜻(범위 밖이 아닌 '못 찾음')으로 맞춰 나란히 비교한다
+        # [왜] 첫 단 거절은 사용자용 일상어 문구라 NOT_FOUND로 시작하지 않는다. 예전 단일과 같은 뜻(범위 밖이 아닌 '못 찾음')으로 맞춰 나란히 비교한다
         code = scores["refusal_code"][0]
         if code and code != "out_of_scope":
             scores["not_found"] = (1.0, "BOOLEAN", scores["not_found"][2])
@@ -126,20 +128,21 @@ def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) ->
 
 
 def make_app(multi: bool, stack: ExitStack):
-    """평가할 그래프를 조립한다. 멀티면 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인 · 사양 표 도구로 쓰고 판정 에이전트를 켠다."""
-    if not multi:
-        from backend.graph.build import build_graph
-        return build_graph()  # 서비스와 같은 줄기 그래프(SPEC 2절)
+    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인 · 사양 표 도구로 쓰고 판정 길을 켠다."""
     from backend.graph import mcp_retriever
-    from backend.multi_agent.build import build_graph as build_multi
     from backend.multi_agent.facts import make_lookup
-    from backend.rag.retrieve import retrieve
-    from backend.services import llm
     from langgraph.checkpoint.memory import InMemorySaver
     mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
-    return build_multi(chat=llm.node_chat, retriever=retrieve, lookup=make_lookup(mcp.check), judge_enabled=True,
-                       specs=mcp.part_specs, find=mcp.find_parts, checkpointer=InMemorySaver())
+    # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
+    tools = {"lookup": make_lookup(mcp.check), "specs": mcp.part_specs, "find": mcp.find_parts, "checkpointer": InMemorySaver()}
+    if not multi:
+        from backend.graph.build import build_graph
+        return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
+    from backend.multi_agent.build import build_graph as build_multi
+    from backend.rag.retrieve import retrieve
+    from backend.services import llm
+    return build_multi(chat=llm.node_chat, retriever=retrieve, judge_enabled=True, **tools)
 
 
 def _git(*args):
@@ -207,7 +210,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
             if it.get("irrelevant_type"):
                 meta["irrelevant_type"] = it["irrelevant_type"]
             # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
-            # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 그래프는 체크포인터가 없어 무시된다)
+            # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 · 멀티 모두 메모리 체크포인터를 쓴다)
             config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
                       "metadata": meta, "configurable": {"thread_id": it["id"]}}
             start = time.perf_counter()

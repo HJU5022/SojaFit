@@ -79,7 +79,6 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
     import json
     import langfuse
     import langfuse.langchain
-    import backend.graph.build as build
     from evals.runners import run_graph
 
     class FakeClient:
@@ -97,7 +96,7 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
 
     monkeypatch.setattr(langfuse, "get_client", lambda: FakeClient())
     monkeypatch.setattr(langfuse.langchain, "CallbackHandler", lambda **kw: None)
-    monkeypatch.setattr(build, "build_graph", lambda: FakeApp())
+    monkeypatch.setattr(run_graph, "make_app", lambda multi, stack: FakeApp())
     data = tmp_path / "set.jsonl"
     data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
         {"id": "i1", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: 주식 추천", "expected": "", "gold_chunks": []},
@@ -137,6 +136,17 @@ def test_single_state_has_no_multi_scores():
     assert "hops" not in scores and "refusal_code" not in scores
 
 
+def test_single_refusal_code_is_scored_like_multi():
+    """D4 v2 단일 그래프도 거절 사유 코드를 `refusal`에 남긴다. 멀티와 같은 이름으로 세고, 범위 밖이 아닌 거절은 not_found로 맞춘다."""
+    state = {"path": ["입력 읽기", "사실 확인", "라우팅", "거절"], "tries": 0, "answer": "1N4001의 데이터시트를 찾을 수 없어요.",
+             "refusal": {"code": "part_missing", "message": "x"}}
+    scores = run_scores(state, 1.0, ["Route"])
+    assert scores["refusal_code"][0] == "part_missing" and scores["not_found"][0] == 1.0
+    assert scores["tries"][0] == 0.0 and "hops" not in scores  # 검색 횟수는 단일의 tries 그대로, 판단 횟수는 멀티만
+    chat = run_scores({"path": ["짧은 답"], "tries": 0, "answer": "안녕하세요!", "refusal": {}}, 1.0, ["Route"])
+    assert chat["refusal_code"][0] == "" and chat["not_found"][0] == 0.0
+
+
 def test_default_out_names_multi_runs_separately(tmp_path, monkeypatch):
     from evals.runners.run_graph import default_out
     monkeypatch.chdir(tmp_path)
@@ -155,43 +165,61 @@ def test_node_models_records_model_of_every_node(monkeypatch):
     assert set(node_models().values()) == {"x/y"}
 
 
+class FakeMcp:
+    """MCP 서버 가짜: 열고 닫힌 때와 사실 확인 호출을 기록한다."""
+    events, checked = [], []
+
+    def __enter__(self):
+        self.events.append("open")
+        return self
+
+    def __exit__(self, *exc):
+        self.events.append("close")
+
+    def check(self, parts, revisions):
+        self.checked.append((parts, revisions))
+        return {"parts": {p: False for p in parts}, "revisions": {r: False for r in revisions}}
+
+    def part_specs(self, part, codes=None):
+        return []
+
+    def find_parts(self, conditions, category=None, package=None, limit=50):
+        return []
+
+
+def fake_mcp(monkeypatch):
+    from backend.graph import mcp_retriever
+    monkeypatch.setattr(FakeMcp, "events", [])
+    monkeypatch.setattr(FakeMcp, "checked", [])
+    monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
+    return FakeMcp
+
+
 def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypatch):
     from contextlib import ExitStack
-    from backend.graph import mcp_retriever
     from evals.runners.run_graph import make_app
-    events = []
-
-    class FakeMcp:
-        def __enter__(self):
-            events.append("open")
-            return self
-
-        def __exit__(self, *exc):
-            events.append("close")
-
-        def check(self, parts, revisions):
-            return {"parts": {}, "revisions": {}}
-
-        def part_specs(self, part, codes=None):
-            return []
-
-        def find_parts(self, conditions, category=None, package=None, limit=50):
-            return []
-
-    monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
+    mcp = fake_mcp(monkeypatch)
     with ExitStack() as stack:
         app = make_app(True, stack)
-        assert events == ["open"] and "supervisor" in app.get_graph().nodes and "judge" in app.get_graph().nodes
-    assert events == ["open", "close"]
+        assert mcp.events == ["open"] and "supervisor" in app.get_graph().nodes and "judge" in app.get_graph().nodes
+    assert mcp.events == ["open", "close"]
 
 
-def test_make_app_single_is_the_trunk_graph_and_opens_no_mcp(monkeypatch):
+def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
+    """단일도 멀티처럼 MCP 서버를 열어 사실 확인(check_corpus) · 사양 표 도구로 쓰고 판정 길을 잇는다(D4 v2, 11-06)."""
     from contextlib import ExitStack
-    from backend.graph import mcp_retriever
+    from backend.graph import nodes
     from evals.runners.run_graph import make_app
-    monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", lambda: (_ for _ in ()).throw(AssertionError("MCP 불필요")))
+    mcp = fake_mcp(monkeypatch)
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(question_type="rating", reason="part_missing"))
     with ExitStack() as stack:
-        assert "라우팅" in make_app(False, stack).get_graph().nodes
+        app = make_app(False, stack)
+        assert {"사실 확인", "라우팅", "판정 읽기", "판정", "답 틀"} <= set(app.get_graph().nodes)
+        state = app.invoke({"input": "질문: 1N4001 정격이 뭐야?"}, {"configurable": {"thread_id": "s1"}})  # 체크포인터가 있어 thread가 필요하다
+        assert mcp.events == ["open"]
+    assert mcp.checked == [(["1N4001"], [])]  # 사실 확인이 MCP check_corpus로 간다
+    assert state["path"][-1] == "거절" and state["refusal"]["code"] == "part_missing"
+    assert mcp.events == ["open", "close"]
 
 
 
