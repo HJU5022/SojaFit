@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-05 채점기 기준선(사전 등록 #33)
+- 한 일: 로컬 `jeongun`을 `origin/main`(PR #54)에 맞추고 임시 브랜치 3개와 오래된 작업 폴더를 지웠다. 채점을 3갈래로 바꾸기 전 기준선으로, 지금 2갈래 채점이 정답 쪽을 얼마나 유지하는지 측정했다. 사전 등록 #33(번호는 `main`의 #32가 오세창 것이라 #33), 시험 먼저, 계산기와 스냅샷 만들기(`evals/runners/eval_grader.py`), 입력 스냅샷(`evals/inputs/grader_cases_v2.json`, 청크 번호 · 파일 · 쪽만), 결과(`evals/results/grader/grader_baseline_2026-11-05.json`).
+- 바꾼 파일: `evals/guides/preregister.md`(#33), `evals/runners/eval_grader.py`, `evals/inputs/grader_cases_v2.json`, `evals/results/grader/`, `tests/evals/test_eval_grader.py`, `SOJAFIT.md` · `INPUTS.md` · `RUNNERS.md` · `EVALS.md` · `tests/evals/EVALS.md`의 파일 줄, 이 파일
+- 실제 결과: v2 관련 19문항에서 검색 청크가 정답 쪽을 다 가진 문항 15 · 일부 4. 채점이 통과시킨 청크 기준으로 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(정답 쪽 유지율 12/15, 쪽 재현율 평균 0.776). 비관련 35문항 중 34문항이 통과 0개. 사전 등록한 숫자와 같게 재현됐다(예측이 아니라 재현이며, 같은 스냅샷을 11-05에 임시로 먼저 계산해 본 것은 #33에 적었다). LLM · API 호출 0, 비용 0.
+- 같이 알게 된 것: 정답 쪽이 검색에 다 있는 15문항 중 과잉 거절은 8건이고, 원인이 채점이 3(h04 · n01 · n04), 채점은 통과시켰는데 생성이 거절이 5(h05 · n06 · n07 · n08 · n21)다. 3갈래 채점으로 바뀌는 것은 앞쪽뿐이라 판정 노드 · 거절 형식 · 라우팅을 따로 다뤄야 한다.
+- 확인 못 한 것: 스냅샷은 11-04 실행 한 번의 검색 결과라 재검색한 문항은 마지막 검색만 본다. R1 dev 46문항은 아직 안 만들었다(새로 검색해야 해서 호출이 든다).
+- 다음 할 일: 새 구조(Supervisor + 서브에이전트)의 설계를 끝내고 골격을 만든 뒤, 3갈래 채점기를 R1 dev로 개발해 v2로 한 번 측정한다.
+
 ## 2026-11-04 단일 에이전트 기준 점수 측정(사전 등록 #31, D4)
 - 한 일: 사전 등록 #28 결과 기록과 #31를 측정 전에 커밋(`a630454`)하고, 시험 2문항(draft30-m01 · draftv2-n16)과 Langfuse 확인 1~6 뒤 동결 v2 70문항을 줄기 그래프로 돌렸다(`LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl`).
 - 바꾼 파일: `evals/guides/preregister.md`(#31 결과), `evals/results/graph/graph_dataset_v2_2026-11-04.json`(새 파일), 이 파일

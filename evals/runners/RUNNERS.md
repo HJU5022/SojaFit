@@ -16,6 +16,7 @@
 - `run_graph.py` — 평가셋 문항(전부 또는 고른 id)을 줄기 그래프로 끝까지 돌려 문항마다 Langfuse 트레이스와 실행 점수(경로·검색 횟수·LLM 호출 수·인용 검사·5지표 `answer_metric`·시간)를 남기고, 같은 지표와 실행 조건·5지표 요약을 `../results/graph/graph_<평가셋>_<날짜>.json`에 저장(답변 문장·청크 원문은 넣지 않음). `uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]`
 - `run_supervisor_models.py` — 동결 v2 70문항의 후보 5종 평가 계획, ZDR provider 확인, 문항별 실행·중단·집계. `plan|import-evidence|smoke|run` 명령을 지원하며 live 명령은 `--confirm-live`와 비용 상한이 필요함. 1차 결과는 `../results/supervisor/2026-11-04-stage1-v1/`
 - `run_supervisor_jev.py` — Jev Decisions API typed answer를 평가 계약으로 변환하고 70문항 plan·smoke·run·집계를 수행. OpenRouter 호출은 `backend/services/llm.py`를 경유하며 live 명령에는 `--confirm-live`와 `--max-usd` 비용 관리값이 필요함. 입력 비용 추정으로 다음 job을 차단하므로 실제 지출의 절대 상한은 아님
+- `eval_grader.py` — 사전 등록 #33 채점기 기준선. [grader_cases_v2.json](../inputs/grader_cases_v2.json)으로 정답 쪽 유지율 · 검색 판정 × 통과 판정 표 · 비관련 통과 0개 비율 · 쪽 재현율을 계산(LLM · API 호출 없음). `uv run python -m evals.runners.eval_grader run` → [grader_baseline](../results/grader/)
 - `score_answer.py` — 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점([작업서](../../docs/experiments/answer-refusal-scorer.md)). `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]`
 - `run_skill_pair.py` — preregister #17 순차 평가 실행기. `DEMO_MODE=0 uv run python -m evals.runners.run_skill_pair <새 결과 폴더>`. 동일 상태에서 Skill 유무 답변을 비교하고 요약만 `../results/skill/`에 둠
 
