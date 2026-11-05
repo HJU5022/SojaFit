@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 부품 사양 표 운영 DB(Supabase) 적용
+- 한 일: 정운 승인으로 운영 DB에 `db/011_part_specifications.sql`을 적용하고 사양 표를 적재했다. 적용 전 읽기 전용으로 보니 다른 public 표 10개는 모두 RLS가 켜져 있고 정책이 0개인데, Supabase 기본 권한(`pg_default_acl`)이 새 표를 anon·authenticated에 모든 권한으로 열어 둔다. 그래서 011 끝에 `ENABLE ROW LEVEL SECURITY`를 더해 적용했다(서버는 표 주인 `postgres`로 접속해 영향 없음). 로컬 볼륨에도 같은 RLS를 켰다.
+- 바꾼 파일: `db/011_part_specifications.sql`(RLS 한 줄), `db/DB.md`(적용 기록), `tests/rag/test_rag_spec_lookup.py`(RLS 확인 한 줄), 이 파일
+- 실행한 명령과 결과: 접속 주소는 `.env`에서 읽어 화면에 찍지 않고 넘겼다. 011 적용 → 표 RLS 켜짐 · 인덱스 4개 · 0행. `specs.load('../corpus/tsc/specs', <운영 주소>)` → 문서 1,360(빠진 문서 0) · 90,961행(숫자 77,340 + PACKAGE 13,621) · 품번 9,589개 · 6.44초 → `ANALYZE`. 표 22.7 MB, DB 전체 207.2 → 230.0 MB. 맥에서 운영 DB로 조회: `part_specs('1N5817')` 10행 22 ms, VRRM ≥ 40 · IF_AV ≥ 1 50건(상한) 387 ms, VRRM ≤ 20 · 패키지 SMA 14건 103 ms(네트워크 왕복 포함). 시험: 로컬 DB `TEST_DATABASE_URL`로 `test_rag_spec_lookup.py` 11 passed, 맥 전체 567 passed · 43 skipped.
+- 확인 못 한 것: Supabase 공개 API(anon 키)로 실제로 막히는지는 요청을 보내 보지 않았다(RLS 켜짐 · 정책 0개만 확인). 배포된 서비스 코드는 아직 이 표를 읽지 않는다.
+- 다음 할 일: 판정 에이전트(`backend/judge/` + 조회 도구 연결).
+
 ## 2026-11-05 부품 사양 표 DB 적재와 조회 도구(로컬 DB)
 - 한 일: 사양 표를 DB 표로 만들고(`db/011_part_specifications.sql`, 정의서 5.7 + `part_number` 글자 칸 · `chunk_index` · `category` · 코드 `PACKAGE`, 문서 FK는 CASCADE), 적재 명령 `specs.py load`(접속 주소는 `--dsn`으로만 받고 `DATABASE_URL`은 읽지 않음, 한 번 실행을 한 트랜잭션으로 문서 단위 지우고 COPY), 조회 모듈 `backend/rag/spec_lookup.py`(`part_specs` · `find_candidates`)와 MCP 도구 `get_part_specs` · `find_parts_by_specs`를 넣었다. 운영 DB에는 넣지 않았다.
 - 바꾼 파일: `db/011_part_specifications.sql`, `db/DB.md`, `db/schema/table-definition.md`, `backend/rag/pipeline/specs.py`, `backend/rag/spec_lookup.py`, `backend/mcp_skill/mcp_server/server.py`, 시험 `tests/rag/test_rag_spec_lookup.py` · `tests/mcp_skill/test_mcp_server.py`, `SPEC.md` 8.7, `SOJAFIT.md` 트리, `RAG.md` · `MCP_SKILL.md` 폴더 설명, 이 파일

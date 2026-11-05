@@ -45,3 +45,5 @@ CREATE INDEX IF NOT EXISTS ix_part_specifications_part_upper ON part_specificati
 CREATE INDEX IF NOT EXISTS ix_part_specifications_parameter_code ON part_specifications (parameter_code);
 -- [왜] 적재가 문서 단위로 지우고 다시 넣는다(ADR 0007 증분)
 CREATE INDEX IF NOT EXISTS ix_part_specifications_document ON part_specifications (document_id);
+-- [왜] Supabase 기본 권한이 새 표를 anon·authenticated에 열어 둔다. 다른 public 표처럼 RLS를 켜고 정책을 두지 않아 공개 API로는 못 읽게 한다(표 주인인 서버 접속은 영향 없음, 11-05 운영 DB 확인)
+ALTER TABLE part_specifications ENABLE ROW LEVEL SECURITY;

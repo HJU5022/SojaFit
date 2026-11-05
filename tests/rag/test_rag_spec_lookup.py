@@ -109,6 +109,8 @@ def test_sql_applies_twice_without_change(url):
         conn.execute(open('db/011_part_specifications.sql', encoding='utf-8').read())
         after = conn.execute(catalog).fetchone()[0], conn.execute(index).fetchone()[0]
         assert conn.execute('SELECT count(*) FROM part_specifications').fetchone()[0] == 1
+        # [왜] Supabase 기본 권한이 새 표를 anon에 열어 두므로 RLS가 켜져 있어야 공개 API로 못 읽는다
+        assert conn.execute("SELECT relrowsecurity FROM pg_class WHERE oid = 'part_specifications'::regclass").fetchone()[0]
     assert before == after and len(after[1]) == 4  # pk + upper(part_number) + parameter_code + document_id
 
 

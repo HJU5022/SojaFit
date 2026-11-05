@@ -23,7 +23,8 @@
 - `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용. 열이 halfvec(n)이면 `USING` 없이 차원 표시만 떼 표를 다시 쓰지 않는다(`scripts/db/voyage_rollout.py migrate`가 filenode 전후로 확인)
 - `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용하며, 다시 실행해도 있는 행은 그대로
 - `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
-- `011_part_specifications.sql` — 부품 사양 표(`part_specifications`, `schema/table-definition.md` 5.7)와 품번(대소문자 무시)·코드·문서 인덱스. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 로컬 볼륨과 Supabase에는 따로 적용한다. 행은 SQL이 아니라 `python -m backend.rag.pipeline.specs load <사양 표 폴더> --dsn <주소>`가 넣는다(문서 단위로 지우고 다시 넣음). 11-05 로컬 실측: 91,020행(숫자 77,340 + 패키지 13,680), 22 MB(다시 적재한 직후에는 지운 행이 VACUUM 전까지 남아 약 두 배)
+- `011_part_specifications.sql` — 부품 사양 표(`part_specifications`, `schema/table-definition.md` 5.7)와 품번(대소문자 무시)·코드·문서 인덱스. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 로컬 볼륨과 Supabase에는 따로 적용한다. 행은 SQL이 아니라 `python -m backend.rag.pipeline.specs load <사양 표 폴더> --dsn <주소>`가 넣는다(문서 단위로 지우고 다시 넣음). RLS를 켜고 정책은 두지 않는다(다른 public 표와 같음, Supabase 공개 API로는 못 읽음). 다시 적재한 직후에는 지운 행이 VACUUM 전까지 남아 크기가 약 두 배가 된다.
+  - 11-05 Supabase 적용(조장 승인): 011 SQL 적용 → 적재 90,961행(숫자 77,340 + 패키지 13,621) · 문서 1,360개(빠진 문서 0) · 품번 9,589개, 6.4초 → `ANALYZE`. 표 22.7 MB(인덱스 포함), DB 전체 207.2 → 230.0 MB(무료 500 MB · 알람 400 MB 안). 같은 날 로컬 볼륨에도 같은 행 수와 RLS를 적용했다
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 
