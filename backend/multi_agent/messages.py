@@ -1,9 +1,11 @@
-"""사용자에게 보이는 거절 문구(일상어)와 판정 답 틀. 내부 이유 코드는 따로 로그에 남긴다.
+"""사용자에게 보이는 거절 문구(일상어), 가격 안내 문구, 판정 답 틀. 내부 이유 코드는 따로 로그에 남긴다.
 
 - 역할: 거절 사유(`Reason`)를 사용자가 알아들을 말로 바꾸고, 가능하면 다음에 할 행동을 같이 알려 준다.
+  가격 · 재고 질문에는 값 없이 화면이 따로 보여 준다는 안내를 만든다(`price_message`, 단일 · 멀티 가격 안내 노드가 같이 쓴다).
   판정 결과(`judgement`)를 코드 틀의 답 글로 바꾼다(`render_judgement`, 숫자 · 인용은 판정 결과를 그대로 옮긴다).
-- 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`). "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
-- 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리)
+- 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`), 가격 · 재고 조회(`backend/services/mouser.py`).
+  "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
+- 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리), SPEC 2절 가격 안내 · 6절 Mouser(ADR 0009)
 """
 from backend.multi_agent.contracts import Reason
 
@@ -30,6 +32,14 @@ def refusal_for(reason: Reason, facts: dict) -> str:
     missing_parts = [p for p, ok in (facts.get('parts') or {}).items() if not ok]
     missing_revs = [r for r, ok in (facts.get('revisions') or {}).items() if not ok]
     return refusal_message(reason, missing_parts or list((facts.get('parts') or {})), missing_revs)
+
+
+def price_message(parts: list[str]) -> str:
+    """가격 · 재고 질문의 답. [왜] Mouser 값은 답 문장에 넣지 않는다(ADR 0009). 값은 화면이 볼 때마다 따로 조회해 보여 준다."""
+    if not parts:
+        return '가격·재고를 볼 품번을 알려 주세요. 화면의 가격·재고 칸에 출처와 조회 시각을 붙여 보여 드려요.'
+    return (f"{', '.join(parts)}의 가격·재고는 이 답과 따로 화면의 가격·재고 칸에 출처와 조회 시각을 붙여 보여 드려요. "
+            '데이터시트 근거와 섞지 않고, 값은 저장하지 않아 볼 때마다 다시 조회해요.')
 
 
 VERDICT_KO = {'IDENTICAL': '동일품', 'SPEC_EQUIVALENT': '사양 동등', 'ROLE_SUFFICIENT': '역할상 충분',

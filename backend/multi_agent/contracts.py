@@ -16,10 +16,12 @@ MAX_SEARCHES = 2    # 검색: 처음 1번 + 실패 사유를 붙여 다르게 �
 MAX_WRITES = 2      # 작성: 처음 1번 + 검증에 걸린 뒤 다시 쓰기 1번
 MAX_SUMMARY = 200   # 보고서 요약 글자 수 상한. Supervisor는 원문이 아니라 짧은 요약만 읽는다(컨텍스트 분리)
 
-NextNode = Literal['search', 'judge', 'writer', 'verifier', 'web', 'finish', 'refuse']  # 'web'은 나중 조각(평가 모드에서는 끔)
+# 'web'은 나중 조각(평가 모드에서는 끔). 'price'는 가격 안내로 끝내는 길(Mouser는 부르지 않는다, ADR 0009)
+NextNode = Literal['search', 'judge', 'writer', 'verifier', 'web', 'finish', 'refuse', 'price']
 AgentName = Literal['search', 'judge', 'writer', 'verifier']
 # 단일 그래프 Route의 다섯 가지에 일상 대화(chat)와 다이오드가 아닌 전자 부품(other_part)을 더했다(11-05 결정). out_of_scope는 서비스와 전혀 무관한 질문만 뜻한다
-QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'role', 'candidate_find', 'candidate_judge', 'rating']
+# price: 다이오드 품번의 가격 · 재고 질문(11-06 결정, SPEC 1절). 그래프는 품번만 정하고 값은 화면이 그래프 밖에서 조회한다
+QuestionType = Literal['out_of_scope', 'chat', 'other_part', 'price', 'role', 'candidate_find', 'candidate_judge', 'rating']
 
 
 class Reason(str, Enum):

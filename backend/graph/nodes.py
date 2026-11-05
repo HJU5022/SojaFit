@@ -1,11 +1,12 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 10개).
+- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다.
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
 - 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 판정 에이전트를 부르기만 한다),
-  LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다).
+  LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다), Mouser 가격 · 재고 조회(그래프 밖 `/api/prices`, ADR 0009).
 - 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
   backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
 """
@@ -20,7 +21,7 @@ from pydantic import BaseModel, Field, model_validator
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
 from backend.multi_agent.contracts import QuestionType, Reason
-from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.messages import price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
 from backend.services import llm
 
@@ -120,7 +121,8 @@ def read_input(state: AgentState) -> dict:
     reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
              "tries": -state.get("tries", 0),
              # 사실 · 거절 코드 · 판정 칸: 앞 질문의 것으로 새 질문을 거절하거나 답하지 않게 한다(멀티 parse_node와 같은 이유)
-             "facts": {}, "refusal": {}, "judge_read": {}, "judgement": {}}
+             "facts": {}, "refusal": {}, "judge_read": {}, "judgement": {},
+             "price_parts": []}  # 앞 질문의 가격 안내 품번이 새 답에 붙지 않게 한다
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
@@ -131,7 +133,7 @@ REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_F
 
 
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 7가지다."""
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 8가지다."""
     # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
     question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
     reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
@@ -148,7 +150,7 @@ class Route(BaseModel):
 
 
 def route(state: AgentState) -> dict:
-    """라우팅 노드: 질문 종류(7가지)와 검색 전 거절 사유 · 일상 대화 답을 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
+    """라우팅 노드: 질문 종류(8가지)와 검색 전 거절 사유 · 일상 대화 답을 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
     # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
     part = state.get("target_part") or {}
     # [왜] 사실 확인 결과를 멀티 Supervisor와 같은 글(render_facts)로 붙여, 코퍼스에 없는 품번 · 개정판을 검색 전에 거절하게 한다
@@ -177,6 +179,21 @@ def find_parts(text: str, refs: set[str]) -> list[str]:
         found.append(word)
     # [주의] 코퍼스에 없는 품번(1N4001, BAT85)도 남긴다. 그래야 retrieve가 []를 돌려 "문서로 확인 안 됨"으로 간다
     return list(dict.fromkeys(found))  # 같은 품번이 두 번 나와도 한 번만
+
+
+def price_answer(state: AgentState) -> dict:
+    """가격 안내 노드: 가격 · 재고를 물은 품번만 `price_parts`에 남기고 정해진 안내로 끝낸다. LLM · Mouser를 부르지 않는다(SPEC 2절).
+
+    [왜] Mouser 값은 그래프 상태 · 체크포인트 · Langfuse 트레이스에 남으면 안 된다(ADR 0009). 값은 화면이 그래프 밖 `/api/prices`로
+    볼 때마다 조회한다. 멀티 그래프도 이 노드를 그대로 붙인다(D4 · D5가 같은 답을 내게).
+    """
+    part = state.get("target_part") or {}
+    refs = {part.get("ref", "")} | {node.split(".")[0] for net in part.get("nets", []) for node in net["nodes"]}  # 검색 노드와 같은 회로 기호
+    # 검색 노드와 같은 규칙: 질문 속 품번, 없으면 대상 값의 품번("D1 가격 얼마야" → D1 값의 품번)
+    parts = find_parts(state["question"], refs) or find_parts(part.get("value", ""), refs)
+    # [왜] check · skill도 비운다(짧은 답과 같은 이유). 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
+    return {"price_parts": parts, "answer": price_message(parts), "check": {},
+            "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["가격 안내"]}
 
 
 def search(state: AgentState, retriever) -> dict:

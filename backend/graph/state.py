@@ -33,8 +33,12 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
 
     # ── 라우팅 노드가 채운다 ──
     # [왜] 평가셋의 kind(관련/비관련)와 헷갈리지 않게 question_type이라 부른다
-    question_type: str  # out_of_scope | chat | other_part | role | rating | candidate_judge | candidate_find (멀티와 같은 7가지)
+    question_type: str  # out_of_scope | chat | other_part | price | role | rating | candidate_judge | candidate_find (멀티와 같은 8가지)
     route: dict         # 라우팅 답안지 `nodes.Route`(질문 종류 · 검색 전 거절 사유 reason · 일상 대화 답 reply)
+
+    # ── 가격 안내 노드가 채운다 ──
+    # [주의] 품번만 둔다. 가격 · 재고 값은 이 메모장(체크포인트 · 트레이스에 남는다)에 넣지 않는다(ADR 0009). 화면이 /api/prices로 조회한다
+    price_parts: list[str]  # 가격 · 재고를 물은 품번
 
     # ── 검색·재작성 노드가 채운다 (다시 검색하면 덮어쓴다. 새 메시지가 오면 입력 읽기 노드가 비운다) ──
     query: str          # 이번 검색어

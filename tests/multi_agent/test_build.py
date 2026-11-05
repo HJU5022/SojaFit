@@ -104,6 +104,23 @@ def test_chat_is_answered_by_the_supervisor_without_searching():
     assert out['counters']['searches'] == 0 and out['counters']['writes'] == 0
 
 
+def test_price_question_ends_with_the_same_notice_as_the_single_graph_and_no_mouser_call(monkeypatch):
+    """가격 질문: Supervisor가 price를 고르면 단일 그래프와 같은 가격 안내 노드로 끝난다. 검색 · HTTP(Mouser) 호출이 없고 값이 상태에 없다(ADR 0009)."""
+    import httpx
+    from backend.multi_agent.messages import price_message
+
+    def no_http(*args, **kwargs):
+        raise AssertionError('그래프가 HTTP를 부르면 안 된다(Mouser는 그래프 밖 /api/prices만)')
+    monkeypatch.setattr(httpx.Client, 'send', no_http)
+    searched = []
+    graph = B.build_graph(chat=scripted(Decision(next='price', question_type='price')), retriever=lambda q, parts=None: searched.append(q) or [],
+                          parse=lambda s: {'question': s['input'], 'target': 'D1', 'conditions': '', 'target_part': PART})
+    out = graph.invoke({'input': '1N5817 지금 가격이랑 재고 알려 줘'})
+    assert searched == [] and out['path'] == ['입력 읽기', '사실 확인', '판단', '가격 안내']
+    assert out['price_parts'] == ['1N5817'] and out['answer'] == price_message(['1N5817']) and out['question_type'] == 'price'
+    assert {k for k in out if 'price' in k or 'stock' in k} == {'price_parts'} and 'skill' not in out
+
+
 def test_other_part_asks_for_web_but_web_is_off_so_it_is_refused_as_not_found():
     chat = scripted(Decision(next='web', question_type='other_part'))
     out = app(chat).invoke({'input': 'MOSFET 정격이 뭐야?'})

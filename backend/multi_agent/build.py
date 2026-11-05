@@ -1,8 +1,8 @@
 """멀티 에이전트 조립: Supervisor를 가운데 두고 서브에이전트가 끝날 때마다 Supervisor로 돌아오는 그래프를 만든다.
 
-- 역할: 입력 읽기 → 사실 확인 → Supervisor, 그리고 Supervisor의 결정(search · judge · writer · verifier · finish · refuse)에 따라
+- 역할: 입력 읽기 → 사실 확인 → Supervisor, 그리고 Supervisor의 결정(search · judge · writer · verifier · finish · refuse · price)에 따라
   서브에이전트나 끝내기 노드로 가는 연결을 정하고 compile한다. LLM · 검색기 · 단일 그래프 함수는 인자로 받아 시험에서 가짜로 바꾼다.
-  판정 길: Supervisor → 판정 읽기 → 판정(인터럽트 1번) → Supervisor.
+  판정 길: Supervisor → 판정 읽기 → 판정(인터럽트 1번) → Supervisor. 가격 길: Supervisor → 가격 안내(단일 그래프와 같은 노드) → 끝.
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 웹 조회 에이전트(아직 없어서 켜려 하면 거부한다), 체크포인터 만들기(부르는 쪽이 넘긴다).
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05), backend/graph/build.py(조립 방식을 따름)
 """
@@ -27,7 +27,7 @@ def parse_node(state: dict, *, parse) -> dict:
     fields = {k: v for k, v in parse(state).items() if k in KEYS}  # 단일 그래프의 tries 같은 칸은 이 메모장에 없다
     # [왜] 판정 칸도 비운다. 같은 thread의 다음 질문에서 앞 질문의 판정으로 답을 쓰지 않게 한다(작성은 judgement가 있으면 판정 틀로 쓴다)
     return {**fields, 'facts': {}, 'decision': {}, 'reports': [], 'counters': Counters().model_dump(mode='json'),
-            'answer': '', 'refusal': {}, 'judge_read': {}, 'judgement': {}, 'path': ['입력 읽기']}
+            'answer': '', 'refusal': {}, 'judge_read': {}, 'judgement': {}, 'price_parts': [], 'path': ['입력 읽기']}
 
 
 def finish_node(state: dict) -> dict:
@@ -68,10 +68,12 @@ def build_graph(*, chat, retriever, rewrite=None, grade=None, generate=None, par
     g.add_node('verifier', partial(verifier_agent, enforce=enforce_verify))
     g.add_node('finish', finish_node)
     g.add_node('refuse', refuse_node)
+    # [왜] 가격 안내는 단일 그래프 노드를 그대로 쓴다. Mouser는 그래프 밖 /api/prices만 부른다(ADR 0009)
+    g.add_node('price', nodes.price_answer)
     g.add_edge(START, 'parse')
     g.add_edge('parse', 'facts')
     g.add_edge('facts', 'supervisor')
-    targets = {'search': 'search', 'writer': 'writer', 'verifier': 'verifier', 'finish': 'finish', 'refuse': 'refuse'}
+    targets = {'search': 'search', 'writer': 'writer', 'verifier': 'verifier', 'finish': 'finish', 'refuse': 'refuse', 'price': 'price'}
     if judge_enabled:
         from backend.multi_agent.agents.judge import judge_agent, judge_read_agent
         g.add_node('judge_read', partial(judge_read_agent, chat=chat))
@@ -84,4 +86,5 @@ def build_graph(*, chat, retriever, rewrite=None, grade=None, generate=None, par
         g.add_edge(agent, 'supervisor')  # [왜] 서브에이전트는 끝나면 반드시 Supervisor로 돌아온다(허브 구조, 결정 11-05)
     g.add_edge('finish', END)
     g.add_edge('refuse', END)
+    g.add_edge('price', END)
     return g.compile(checkpointer=checkpointer)

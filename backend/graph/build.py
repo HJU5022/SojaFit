@@ -1,7 +1,7 @@
 """그래프 조립 (G4). D4 v2 단일 에이전트 그래프: 노드(`nodes.py`)를 이어 compile하고 갈림길(라우팅 · 검색 · 채점 · 판정 뒤)을 정한다.
 
 - 역할: `build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`가 앱을 돌려주고, `evals/runners/run_graph.py`(평가)와 시험이
-  `app.invoke({"input": ...})`로 돌린다. 흐름: 입력 읽기 → 사실 확인 → 라우팅 → 거절 / 짧은 답 / 생성(역할) /
+  `app.invoke({"input": ...})`로 돌린다. 흐름: 입력 읽기 → 사실 확인 → 라우팅 → 거절 / 짧은 답 / 가격 안내 / 생성(역할) /
   재작성 → 검색 → 채점 고리(정격) / 판정 읽기 → 판정 → 답 틀(판정 · 찾기, specs · find를 줬을 때). 판정은 빠진 값을 인터럽트로 한 번 묻는다.
 - 하지 않는 일: 노드 동작(`nodes.py`), 상태 칸 정의(`state.py`), Supervisor와 서브에이전트(멀티 그래프 `backend/multi_agent/`),
   체크포인터 만들기(부르는 쪽이 넘긴다), 견적서 저장 승인(interrupt)과 장기 기억 Store 연결(아직 없음, SPEC 2절).
@@ -25,7 +25,7 @@ MAX_TRIES = 2
 
 
 def after_route(state: AgentState) -> str:
-    """라우팅 뒤 갈림길: 거절 사유가 있으면 거절, 일상 대화는 짧은 답, 역할은 바로 생성, 판정 · 찾기는 "판정", 정격은 "검색"(SPEC 2절).
+    """라우팅 뒤 갈림길: 거절 사유가 있으면 거절, 일상 대화는 짧은 답, 가격은 가격 안내, 역할은 바로 생성, 판정 · 찾기는 "판정", 정격은 "검색"(SPEC 2절).
 
     돌려주는 값은 갈림길 값이고, 갈 노드는 build_graph의 연결표가 정한다("검색"은 재작성으로 먼저, "판정"은 판정 길이 없으면 재작성으로).
     """
@@ -35,6 +35,8 @@ def after_route(state: AgentState) -> str:
     question_type = state.get("question_type")
     if question_type == "chat":
         return "짧은 답"  # 라우팅이 낸 reply로 끝낸다
+    if question_type == "price":
+        return "가격 안내"  # [왜] 가격 · 재고 값은 그래프 밖 화면이 조회한다. 그래프는 품번만 정하고 끝낸다(ADR 0009)
     if question_type == "role":
         return "생성"  # [왜] 역할은 데이터시트가 아니라 넷리스트 연결로 답한다. 생성 노드가 [넷리스트] 근거를 붙인다
     if question_type in ("candidate_judge", "candidate_find"):
@@ -85,7 +87,7 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
     for name, fn in [("입력 읽기", nodes.read_input), ("사실 확인", partial(facts_node, lookup=lookup)), ("라우팅", nodes.route),
                      ("검색", lambda state: nodes.search(state, retriever)),  # 검색 노드만 검색기를 받는다
                      ("채점", nodes.grade), ("재작성", nodes.rewrite), ("생성", nodes.generate), ("거절", nodes.refuse),
-                     ("짧은 답", nodes.short_reply)]:
+                     ("짧은 답", nodes.short_reply), ("가격 안내", nodes.price_answer)]:
         b.add_node(name, fn)  # [주의] 노드 이름은 갈림길이 돌려주는 값, path 칸에 남는 이름과 같아야 한다
     if judging:
         from backend.multi_agent.agents.judge import judge_read_agent  # [왜] 판정 길을 이을 때만 판정 규칙 · 프롬프트를 읽는다
@@ -100,7 +102,7 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
     b.add_edge("입력 읽기", "사실 확인")
     b.add_edge("사실 확인", "라우팅")  # [왜] 범위 판정을 첫 단에서 한다: 라우팅이 확인된 사실로 검색 전에 거절을 정한다(11-06 강사 지적)
     # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
-    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "짧은 답": "짧은 답", "생성": "생성", "검색": "재작성",
+    b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "짧은 답": "짧은 답", "가격 안내": "가격 안내", "생성": "생성", "검색": "재작성",
                                                      "판정": "판정 읽기" if judging else "재작성"})
     b.add_conditional_edges("검색", after_search, {"채점": "채점", "거절": "거절"})
     b.add_conditional_edges("채점", after_grade, {"생성": "생성", "재작성": "재작성", "거절": "거절"})
@@ -108,5 +110,6 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
     b.add_edge("생성", END)
     b.add_edge("거절", END)
     b.add_edge("짧은 답", END)
+    b.add_edge("가격 안내", END)
     # checkpointer를 주면 thread마다 메모장이 저장돼 다음 메시지에서 이어진다(강의 2주 05강). 시험에서는 None
     return b.compile(checkpointer=checkpointer)

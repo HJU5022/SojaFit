@@ -18,6 +18,8 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-06 | `route.md` | 다음 버전(Langfuse 등록 전) | 질문 종류에 `price`(다이오드 품번의 현재 가격 · 재고)를 4번째로 더해 8가지로 하고, 범위 밖에서 가격 · 재고를 빼고 주문 · 결제 · 판매처 찾기 · 비교만 남김 | 실시간 가격 · 재고 표시(SPEC 1절, 11-06 결정). 값은 그래프 밖 화면이 Mouser로 조회한다(ADR 0009) | 아직 없음(가짜 LLM 시험만). 동결 n18(SS34 판매처 · 재고 · 가격)은 정답이 범위 밖 거절이라 가격 길로 가면 채점이 달라진다 |
+| 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 다음 노드 `price`와 질문 종류 `price`를 더하고, 첫 판단에서 가격 질문은 검색 없이 `price`로. 범위 밖에 주문 · 결제 · 판매처 찾기 · 비교를 적어 `route.md`와 맞춤 | 위와 같음. D4 · D5가 같은 질문을 같은 길로 보내게 한다 | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `route.md` | 다음 버전(Langfuse 등록 전) | 질문 종류를 멀티 Supervisor와 같은 7가지(chat · out_of_scope · other_part · role · candidate_find · candidate_judge · rating)로 넓히고, 입력의 확인된 사실(Verified facts)로 검색 전 거절 사유 `reason`(out_of_scope · not_found · part_missing · revision_missing)과 일상 대화 답 `reply`(300자)를 낸다 | D4 v2: 범위 판정을 첫 단에서 하고 질문 종류마다 다른 길로 보낸다(11-06 강사 검토) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 판정 · 찾기 질문을 `judge`가 보일 때 바로 `judge`로 보냄(검색을 먼저 거치지 않음). 검색 보고 뒤에는 `writer`로. 판정 보고가 ok · partial이면 `writer`, search_error 실패면 거절. `judge` 설명에 candidate_find를 더함 | 판정 에이전트 연결(docs/specs/judge-agent.md What 1번) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | 판정 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
@@ -41,8 +43,8 @@
 
 ## 파일
 - `PROMPTS.md` — 이 폴더 설명과 버전 기록 표(프롬프트 해시에서 제외)
-- `supervisor.md` — 멀티 에이전트 Supervisor의 시스템 프롬프트(다음 노드 선택, 거절 사유, 판단 규칙). 영어. Langfuse `supervisor` v4까지 등록됨(11-06 판정 연결 본문은 등록 전)
-- `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 7가지, 확인된 사실로 정하는 검색 전 거절 사유, 일상 대화 답). 영어
+- `supervisor.md` — 멀티 에이전트 Supervisor의 시스템 프롬프트(다음 노드 선택, 거절 사유, 판단 규칙). 영어. Langfuse `supervisor` v4까지 등록됨(11-06 판정 연결 · 가격 길 본문은 등록 전)
+- `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 8가지(가격 포함), 확인된 사실로 정하는 검색 전 거절 사유, 일상 대화 답). 영어
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)
 - `generate.md` — 생성 노드의 시스템 프롬프트(근거만으로 인용을 붙여 답하기)

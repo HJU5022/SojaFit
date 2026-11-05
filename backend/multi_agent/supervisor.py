@@ -14,7 +14,7 @@ from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, R
                                            Decision, Reason, check_limit)
 
 PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'supervisor.md').read_text(encoding='utf-8')
-ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
+ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse', 'price')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
 
 
 class Facts(BaseModel):

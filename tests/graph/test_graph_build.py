@@ -131,6 +131,26 @@ def test_chat_is_answered_with_the_router_reply_without_searching(monkeypatch):
     assert out["answer"].startswith("안녕하세요") and out["check"] == {}
 
 
+@pytest.mark.parametrize("question, parts", [("1N5817 지금 가격이랑 재고 알려 줘", ["1N5817"]), ("D1 가격 얼마야?", ["1N4001"])])
+def test_price_question_ends_with_the_notice_and_no_mouser_call(monkeypatch, question, parts):
+    """가격 질문은 가격 안내로 끝난다: 검색 · HTTP(Mouser) 호출 없이 물은 품번만 남고, 상태와 답에 가격 · 재고 값이 없다(ADR 0009).
+
+    질문에 품번이 없으면 대상(D1) 값의 품번을 쓴다(검색 노드와 같은 규칙).
+    """
+    import httpx
+    from backend.multi_agent.messages import price_message
+
+    def no_http(*args, **kwargs):
+        raise AssertionError("그래프가 HTTP를 부르면 안 된다(Mouser는 그래프 밖 /api/prices만)")
+    monkeypatch.setattr(httpx.Client, "send", no_http)
+    monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(question_type="price"))
+    calls = []
+    out = build_graph(retriever=lambda q, *, parts=None: calls.append(q) or []).invoke({"input": INPUT.replace(QUESTION, question)})
+    assert calls == [] and out["path"] == ["입력 읽기", "사실 확인", "라우팅", "가격 안내"]
+    assert out["price_parts"] == parts and out["answer"] == price_message(parts)  # 정해진 안내뿐이라 값이 끼어들 자리가 없다
+    assert {k for k in out if "price" in k or "stock" in k} == {"price_parts"} and out["check"] == {}
+
+
 @pytest.mark.parametrize("question_type", ["candidate_judge", "candidate_find"])
 def test_candidate_questions_use_the_search_loop_when_no_judge_is_wired(monkeypatch, question_type):
     """사양 표 도구(specs · find)를 넘기지 않으면 판정 · 찾기 질문은 예전처럼 검색 고리로 간다(기존 호출을 깨지 않는다)."""
