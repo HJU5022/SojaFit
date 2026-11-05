@@ -132,8 +132,8 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ### Langfuse 프롬프트와 실행 추적
 
-- 로컬 프롬프트 파일은 소스이며 `sojafit/route`, `sojafit/grade`, `sojafit/rewrite`, `sojafit/generate`라는 Langfuse chat prompt로 등록합니다. user 메시지는 `{{input}}`, 생성 system의 선택 Skill 자리는 `{{domain_skill}}`입니다. 기본 설정은 OpenRouter `anthropic/claude-haiku-5.5`, temperature 0, 출력 상한 4096입니다. `development` 라벨만 갱신하며 production은 변경하지 않습니다.
-- 프롬프트 등록 뒤 S1·S2 Skill을 `sojafit/skills/diode-evidence` text prompt로 등록합니다. 같은 본문·config는 재등록하지 않습니다. 실행 시작 때 버전을 고정하고 로컬 본문과 원격 컴파일 결과가 다르면 모델 호출 전에 중단합니다. Skill 버전·sha256은 기본 프롬프트 버전과 별도로 기록합니다.
+- 로컬 프롬프트 파일은 소스이며 `route`, `grade`, `rewrite`, `generate`라는 Langfuse chat prompt로 등록합니다(폴더 없이 이름 한 줄, 11-05). user 메시지는 `{{input}}`, 생성 system의 선택 Skill 자리는 `{{domain_skill}}`입니다. 기본 설정은 OpenRouter `anthropic/claude-haiku-5.5`, temperature 0, 출력 상한 4096입니다. `development` 라벨만 갱신하며 production은 변경하지 않습니다.
+- 프롬프트 등록 뒤 S1·S2 Skill을 `skill-diode-evidence` text prompt로 등록합니다. 같은 본문·config는 재등록하지 않습니다. 실행 시작 때 버전을 고정하고 로컬 본문과 원격 컴파일 결과가 다르면 모델 호출 전에 중단합니다. Skill 버전·sha256은 기본 프롬프트 버전과 별도로 기록합니다.
 - 확인 스크립트의 기본 동작은 등록된 development 버전 조회와 소스 대조입니다. 원격 등록은 `--publish`를 명시한 경우에만 수행합니다. 로컬 작성안과 원격이 다르면 기본 실행은 trace·LLM 호출 전에 중단합니다. 유효하지 않은 예산과 등록/재개 옵션의 동시 사용은 외부 접근 전에 거부합니다.
 - `langfuse_prompts.session()` 안에서만 원격 프롬프트 사용과 추적을 켭니다. 기본 노드 호출은 로컬 파일을 그대로 사용합니다. 추적 모드의 LLM 노드는 `llm.node_chat()`으로만 호출하며 LangChain callback이 노드 span 아래 실제 generation의 프롬프트·버전·모델·usage·오류를 연결합니다. LLM·임베딩 호출 경계는 계속 llm.py 하나입니다.
 - S1은 값 조회에 답할 근거가 있을 때 정격과 조건을 설명하며 실제 회로 적합성을 확정하지 않습니다. 핵심 요청이 문서에 없는 보장값·실측값이거나 최종 대체 적합성 결론이면 "문서로 확인 안 됨"으로 답합니다. 부분 설명을 통한 되묻기 기능은 이번 범위가 아닙니다. S2는 부분 넷리스트의 연결 사실과 해석 한계를 구분합니다.

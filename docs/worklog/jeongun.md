@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 Langfuse 프롬프트 이름에서 폴더 빼기, Supervisor 입력에 질문 종류
+- 한 일: Langfuse 프롬프트 등록 이름에서 `sojafit/` 폴더를 뺐다(`route` · `grade` · `rewrite` · `generate`, Skill은 `skill-diode-evidence`). 코드(`backend/services/langfuse_prompts.py`)와 시험(`tests/services/test_langfuse_prompts.py`), `SPEC.md` 5절 이름을 고치고 새 이름으로 등록했다(development · latest 라벨, 버전 1). 본문은 그대로라 동작은 안 바뀐다. 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜서 지우지 않았고 정운이 화면에서 확인해 지우면 된다. 별개로 Supervisor 입력에 "질문 종류"가 빠져 두 번째 판단부터 판정 필요 여부를 못 읽던 것을 고쳤다.
+- 바꾼 파일: `backend/services/langfuse_prompts.py`, `tests/services/test_langfuse_prompts.py`, `SPEC.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `tests/multi_agent/test_supervisor.py` · `test_build.py`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. 새 이름으로 Langfuse에 등록한 뒤 `load_development`로 등록본과 로컬 소스를 대조해 일치를 확인했다.
+- 확인 못 한 것: `sojafit/tool-use`는 이 코드가 등록하지 않아 이름을 바꾸지 않았다(문서에는 옛 이름이 기록으로 남아 있다). 이전 폴더 프롬프트를 가리키는 과거 트레이스는 그대로다.
+- 다음 할 일: Supervisor 프롬프트를 영어로 다시 쓰고 등록 대상(`NODES`)에 더한다 → 기존 프롬프트 4개 영어 번역을 사전 등록한 개선 실험으로 측정한다.
+
 ## 2026-11-05 서브에이전트 3개와 조립(가짜 LLM 시험)
 - 한 일: 시험 먼저 멀티 에이전트의 나머지 뼈대를 만들었다. 검색 에이전트(`agents/search.py`: 재작성 · 검색 · 채점 한 번, 통과 청크 번호와 실패 사유 3종(결과 없음 · 전부 탈락 · 검색 장애)을 보고, "결과 없음" 뒤 재시도에는 품번 필터를 풀어 다르게 시도), 작성 에이전트(`writer.py`: 단일 그래프의 `generate`를 감싸고 "문서로 확인 안 됨"이면 실패 보고), 검증 에이전트(`verifier.py`: 작성의 자체 검사를 믿지 않고 인용을 다시 계산, `enforce=False`면 기록만), 사실 확인(`facts.py`), 거절 문구(`messages.py`: 일상어, 내부 코드와 분리), 공용 메모장(`state.py`), 조립(`build.py`: 서브에이전트가 끝나면 반드시 Supervisor로 돌아오는 허브). Supervisor에 판정 스위치(`judge_enabled`)를 더했고 켜지지 않은 판정 · 웹은 선택지에서 빼며 `build_graph`가 켜려 하면 거부한다.
 - 바꾼 파일: `backend/multi_agent/`(`state.py` · `facts.py` · `messages.py` · `build.py` · `supervisor.py` · `agents/` 3개), `backend/prompts/supervisor.md`(판정 줄 한 곳), `tests/multi_agent/`(`test_agents.py` · `test_build.py` · `test_supervisor.py`), `MULTI_AGENT.md` 두 개, `SOJAFIT.md`, 이 파일

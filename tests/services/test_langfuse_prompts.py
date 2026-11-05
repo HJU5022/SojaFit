@@ -14,7 +14,7 @@ from backend.services import llm
 
 
 class Prompt:
-    name = "sojafit/generate"
+    name = "generate"
     version = 7
     config = {"model": "anthropic/claude-haiku-5.5", "temperature": 0, "max_tokens": 4096}
 
@@ -36,7 +36,7 @@ class Client:
 def test_managed_generation_links_prompt_and_skill_without_changing_user(monkeypatch):
     client = Client()
     seen = []
-    skill = SimpleNamespace(name="sojafit/skills/diode-evidence", version=3, prompt="skill")
+    skill = SimpleNamespace(name="skill-diode-evidence", version=3, prompt="skill")
     monkeypatch.setattr(managed, "callback", lambda: "callback")
 
     def chat(system, user, schema):
@@ -125,7 +125,7 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
     key = "pk-lf-local-test"
     client = Langfuse(public_key=key, secret_key="sk-lf-local-test", base_url="https://example.invalid",
                       span_exporter=exported)
-    prompt = ChatPromptClient(Prompt_Chat(type="chat", name="sojafit/generate", version=7,
+    prompt = ChatPromptClient(Prompt_Chat(type="chat", name="generate", version=7,
         config=managed.CONFIG, labels=["development"], tags=[], prompt=[
             {"type": "chatmessage", "role": "system", "content": "base{{domain_skill}}"},
             {"type": "chatmessage", "role": "user", "content": "{{input}}"}]))
@@ -151,7 +151,7 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
     client.flush()
     generations = [s for s in exported.get_finished_spans() if s.attributes.get("langfuse.observation.type") == "generation"]
     assert len(generations) == 1
-    assert generations[0].attributes["langfuse.observation.prompt.name"] == "sojafit/generate"
+    assert generations[0].attributes["langfuse.observation.prompt.name"] == "generate"
     assert generations[0].attributes["langfuse.observation.prompt.version"] == 7
     client.shutdown()
 
@@ -159,10 +159,10 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
 def test_publish_reuses_sdk_message_representation(monkeypatch):
     existing = SimpleNamespace(prompt=[{"type": "message", "role": "system", "content": "base"}], config=managed.CONFIG)
     client = SimpleNamespace(api=SimpleNamespace(prompts=SimpleNamespace(list=lambda **kwargs: SimpleNamespace(
-        data=[SimpleNamespace(name="sojafit/route", labels=["development"])]))),
+        data=[SimpleNamespace(name="route", labels=["development"])]))),
         get_prompt=lambda *args, **kwargs: existing,
         create_prompt=lambda **kwargs: pytest.fail("본문이 같으면 새 버전을 만들지 않는다"))
-    assert managed.publish(client, "sojafit/route", [{"role": "system", "content": "base"}],
+    assert managed.publish(client, "route", [{"role": "system", "content": "base"}],
                            kind="chat", config=managed.CONFIG) is existing
 
 
@@ -294,7 +294,7 @@ def test_timeline_rejects_generation_time_or_node_coverage(broken):
     def generation(id, parent, node, start, end):
         return {"id": id, "type": "GENERATION", "parent_observation_id": parent,
                 "start_time": stamp(start), "end_time": stamp(end), "model": managed.CONFIG["model"],
-                "prompt_name": f"sojafit/{node}", "prompt_version": 4}
+                "prompt_name": node, "prompt_version": 4}
     observations = [span("root", "sojafit-skill-rating", 0, 12, None),
                     span("read", "read_input", 0, 1), span("route", "route", 1, 3),
                     span("search", "search", 3, 4), span("grade", "grade", 4, 6),
@@ -302,17 +302,17 @@ def test_timeline_rejects_generation_time_or_node_coverage(broken):
                     generation("r", "route", "route", 1, 2),
                     generation("g", "grade", "grade", 4, 5),
                     generation("a", "generate", "generate", 6, 7)]
-    prompts = {name: SimpleNamespace(name=f"sojafit/{name}", version=4)
+    prompts = {name: SimpleNamespace(name=name, version=4)
                for name in ("route", "grade", "generate")}
     validate_timeline(observations, prompts, 3, case_kind="rating")
     observations = deepcopy(observations)
-    generation = next(o for o in observations if o.get("prompt_name") == "sojafit/generate")
+    generation = next(o for o in observations if o.get("prompt_name") == "generate")
     if broken == "outside_parent":
         generation["start_time"] = "2099-01-01T00:00:00+00:00"
         generation["end_time"] = "2099-01-01T00:00:01+00:00"
     else:
         route = next(o for o in observations if o["name"] == "route" and o["type"] == "SPAN")
-        generation.update(parent_observation_id=route["id"], prompt_name="sojafit/route",
+        generation.update(parent_observation_id=route["id"], prompt_name="route",
                           start_time=route["start_time"], end_time=route["end_time"])
     with pytest.raises(ValueError):
         validate_timeline(observations, prompts, 3, case_kind="rating")

@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
 CONFIG = {"model": "anthropic/claude-haiku-5.5", "temperature": 0, "max_tokens": 4096}
 NODES = ("route", "grade", "rewrite", "generate")
-SKILL_NAME = "sojafit/skills/diode-evidence"
+SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
 _invocation = ContextVar("langfuse_invocation", default=None)
@@ -56,7 +56,7 @@ def publish_nodes(client):
             # [왜] generate만 선택 Skill이 붙을 자리({{domain_skill}})를 시스템 프롬프트 끝에 둔다
             system += "{{domain_skill}}"
         body = [{"role": "system", "content": system}, {"role": "user", "content": "{{input}}"}]
-        prompts[node] = publish(client, f"sojafit/{node}", body, kind="chat", config=CONFIG)
+        prompts[node] = publish(client, node, body, kind="chat", config=CONFIG)
     return prompts
 
 
@@ -70,7 +70,7 @@ def publish_skill(client):
 def load_development(client):
     """등록된 development 버전을 읽어 (프롬프트 딕셔너리, Skill)을 돌려준다(로컬과 다르면 ValueError)."""
     # [주의] cache_ttl_seconds=0으로 캐시 없이 원격의 현재 버전을 읽는다. 다르면 LLM·trace 생성 전에 중단한다
-    prompts = {node: client.get_prompt(f"sojafit/{node}", label="development", type="chat", cache_ttl_seconds=0)
+    prompts = {node: client.get_prompt(node, label="development", type="chat", cache_ttl_seconds=0)
                for node in NODES}
     for node, prompt in prompts.items():
         system = (ROOT / "backend/prompts" / f"{node}.md").read_text(encoding="utf-8")
