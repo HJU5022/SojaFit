@@ -44,11 +44,14 @@ class JudgeRead(BaseModel):
 
 
 def render_read(state: dict, rules: dict) -> str:
-    """읽기 LLM에 줄 user 글: 역할 목록(이름 · 알아보는 법), 값 이름, 대상 주변 회로, 사용 조건, 질문."""
-    names = sorted({n for rule in rules.values() for n in C.inputs(rule)})
+    """읽기 LLM에 줄 user 글: 역할 목록(이름 · 알아보는 법 · 그 역할이 받는 값 이름과 종류), 대상 주변 회로, 사용 조건, 질문."""
     part = state.get('target_part') or {}
-    lines = ['Roles:'] + [f'- {rid}: {r["name"]} — {r["recognize"]}' for rid, r in rules.items()]
-    lines += ['Value names: ' + ', '.join(names), f'Question type: {state.get("question_type", "")}',
+    # [왜] 값 이름을 역할마다 roles.yaml에서 만든다. 모든 역할의 이름을 한 줄로 주면 다른 역할의 이름(i_out · v_bus)으로 읽어
+    #      to_inputs가 버리고 기준값이 비었다(11-06 동결 평가 4회 실측, 인용 없는 답 40건 중 20건)
+    lines = ['Roles (each lists the value names it accepts):']
+    lines += [f'- {rid}: {r["name"]} — {r["recognize"]} | inputs: ' + ', '.join(f'{n} ({k})' for n, k in C.inputs(r).items())
+              for rid, r in rules.items()]
+    lines += [f'Question type: {state.get("question_type", "")}',
               f'Target: {part.get("ref", state.get("target", ""))} value={part.get("value", "")} footprint={part.get("footprint", "")}',
               'Nets around the target:']
     lines += [f'- {n["name"]}: ' + ', '.join(n['nodes']) + (f' (+{n["more"]} more)' if n.get('more') else '') for n in part.get('nets', [])]
