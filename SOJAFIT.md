@@ -338,6 +338,12 @@ SojaFit (proj3-b)
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
 │   │   └── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
+│   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
+│   │   ├── SUPERPOWERS.md  <- 폴더 설명
+│   │   ├── specs/
+│   │   │   └── 2026-11-05-supervisor-prompt-v0-design.md  <- Supervisor Prompt V0 설계
+│   │   └── plans/
+│   │       └── 2026-11-05-supervisor-prompt-v0.md  <- Supervisor Prompt V0 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
@@ -447,6 +453,7 @@ SojaFit (proj3-b)
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
+| `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 기능의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |
