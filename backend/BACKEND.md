@@ -15,6 +15,6 @@
 - `prompts/` — 노드가 LLM에 보내는 프롬프트 원문과 버전 기록. [PROMPTS.md](prompts/PROMPTS.md)
 - `rag/` — 하이브리드 검색(`retrieve.py`), 벡터 열 형식·DB 용량 점검(`storage.py`), 오프라인 데이터시트 도구(`pipeline/`). [RAG.md](rag/RAG.md)
 - `services/` — LLM·임베딩 호출과 Langfuse 프롬프트 관리. [SERVICES.md](services/SERVICES.md)
-- `judge/` — 회로 역할·대체 조건·판정의 결정적 코드. 아직 비어 있습니다. [JUDGE.md](judge/JUDGE.md)
+- `judge/` — 회로 역할·대체 조건·판정의 결정적 코드: 역할 규칙 파일(`rules/roles.yaml`), 기준식 계산, 시험 조건 비교, 판정 5종 · 찾기 조건 · 후보 정렬. [JUDGE.md](judge/JUDGE.md)
 - `web/` — 같은 출처 로그인 화면과 향후 입력·승인·견적 화면. [WEB.md](web/WEB.md)
 - `mcp_skill/` — 가산: MCP 서버와 도메인 Skill. [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)

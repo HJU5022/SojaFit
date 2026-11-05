@@ -1,7 +1,7 @@
 # mcp_skill
 
 ## 역할
-- 이 폴더: 가산점용 MCP 서버와 도메인 Skill을 둡니다. 에이전트가 서비스 안에서 호출해야 하므로 Dockerfile이 복사하는 `backend/` 아래에 둡니다. STH에는 MCP 서버 도구 5종이 구현되어 있지만 LangGraph MCP 클라이언트 연결은 별도 작업입니다. Skill 문서는 있고 코드가 읽습니다.
+- 이 폴더: 가산점용 MCP 서버와 도메인 Skill을 둡니다. 에이전트가 서비스 안에서 호출해야 하므로 Dockerfile이 복사하는 `backend/` 아래에 둡니다. MCP 서버 도구는 8종이고, LangGraph 쪽 stdio MCP 클라이언트(`backend/graph/mcp_retriever.py`)가 `search_corpus` · `check_corpus` · `get_part_specs` · `find_parts_by_specs`를 부릅니다. 평가 실행기(`evals/runners/run_graph.py`)는 사실 확인 · 사양 표 조회를 MCP로 하고 검색은 `retrieve()`를 직접 부릅니다. Skill 문서는 있고 코드가 읽습니다.
 - 넣는 것: RAG 검색을 FastMCP 서버로 노출하는 코드(`mcp_server/`), 도메인 판단 지침 Skill(`skills/SKILL.md`).
 - 넣지 않는 것: 판정 임계값과 규칙(`backend/judge/` 규칙 파일), [노드 프롬프트](../prompts/PROMPTS.md)(`backend/prompts/`). SKILL.md에는 LLM 판단 지침만 적고 임계값은 다시 적지 않습니다.
 - 담당: 가산을 시작할 때 정합니다.
@@ -15,7 +15,7 @@
 ## 안내
 둘 다 해야 인정되고, 3차에서 새로 한 통합만 인정됩니다. 2차에서 만든 MCP 서버나 Skill을 그대로 가져온 것은 인정되지 않습니다.
 
-1. 3차 RAG 검색 등을 MCP 서버(FastMCP)로 노출하고, LangGraph 에이전트가 MCP 클라이언트로 호출합니다. (`mcp_server/`) 아직 연결되지 않았습니다.
+1. 3차 RAG 검색 등을 MCP 서버(FastMCP)로 노출하고, LangGraph 에이전트가 MCP 클라이언트로 호출합니다. (`mcp_server/`) 사실 확인 · 사양 표 조회는 그래프에 연결했고(위 역할), 검색을 MCP로 부르는 경로는 시험(`tests/graph/test_graph_mcp_retriever.py`)에서만 씁니다.
 2. 도메인 판단 규칙을 Skill 문서(`skills/SKILL.md`)로 분리해 에이전트가 쓰고, **같은 평가셋으로 Skill이 있을 때와 없을 때의 점수 차이**를 보입니다.
 
 이 STH 브랜치에는 MCP Python SDK 의존성이 잠금 파일에 포함되어 있습니다. main 통합 전에는 해당 브랜치의 실행·import 상태를 별도로 확인합니다.

@@ -7,8 +7,8 @@
 - 담당: 검색·데이터
 
 ## 구현 상태
-- 있음: 수집, 파싱, 청킹, 적재, 하이브리드 검색(BM25 + dense, RRF), 품번 필터(`parts`), vector/halfvec 용량 비교, 단위 환산(`units.py`, SPEC 3절: judge가 읽기만 함), 부품 사양 표 변환(`pipeline/specs.py`, 결과는 저장소 밖 파일)과 DB 적재(`specs load`, `db/011`), 사양 조회(`spec_lookup.py`, MCP 도구 2종).
-- 아직 없음: 판정 코드(`backend/judge/`)가 사양 표를 읽는 연결, Supabase 적재. GraphRAG·증분 수집 자동화는 SPEC에 없어 계획에 적지 않습니다.
+- 있음: 수집, 파싱, 청킹, 적재, 하이브리드 검색(BM25 + dense, RRF), 품번 필터(`parts`), vector/halfvec 용량 비교, 단위 환산(`units.py`, SPEC 3절: judge가 읽기만 함), 부품 사양 표 변환(`pipeline/specs.py`, 결과는 저장소 밖 파일)과 DB 적재(`specs load`, `db/011`), 사양 조회(`spec_lookup.py`, MCP 도구 2종). 판정 에이전트(`backend/multi_agent/agents/judge.py`)가 이 MCP 도구로 사양 표를 읽고, 사양 표는 11-05 Supabase에도 적재했습니다([db/DB.md](../../db/DB.md)).
+- 아직 없음: GraphRAG·증분 수집 자동화는 SPEC에 없어 계획에 적지 않습니다.
 
 ## 주의
 - 인덱스를 만들 때마다 `data/manifest.jsonl`에 문서 목록을 남깁니다(형식은 [data/DATA.md](../../data/DATA.md)).

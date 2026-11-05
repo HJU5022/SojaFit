@@ -9,7 +9,7 @@
 ## 판정 5종
 동일품 / 사양 동등 / 역할상 충분 / 불충족 / 문서로 확인 안 됨. 판정마다 근거로 쓴 데이터시트의 쪽·표·행을 붙입니다. 상세는 SPEC 3절입니다.
 
-## 아직 정하지 않은 것
+## 정한 것(11-06)
 규칙 파일 형식은 SPEC 5절 · `docs/specs/judge-agent.md`를 따릅니다. 넷리스트 주변은 `backend/graph/nodes.py` `circuit_around`, 역할은 판정 읽기 LLM이 정하므로 `netlist.py` · `roles.py` · `rules/conditions.yaml`은 두지 않습니다.
 
 ## 파일
