@@ -3,8 +3,8 @@
 ## 2026-11-05 코퍼스 확인 MCP 도구(`check_corpus`)와 사실 확인 연결
 - 한 일: 품번 · 개정 코드가 코퍼스에 있는지 있음/없음만 알려 주는 MCP 도구 `check_corpus`를 서버에 더했다(도구 1개로 합침, 판단하지 않음). 클라이언트 `StdioMcpRetriever.check`(같은 세션)와 응답 검증 `decode_check_result`, 사실 확인 노드용 `make_lookup(check)`를 만들었다. 코퍼스 목록은 `retrieve.corpus_known()`(품번 색인 + 문서 파일 이름의 개정 코드).
 - 바꾼 파일: `backend/mcp_skill/mcp_server/server.py`, `backend/rag/retrieve.py`, `backend/graph/mcp_retriever.py`, `backend/multi_agent/facts.py`, 시험 3개(`tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/multi_agent/test_facts_lookup.py`), `SPEC.md` 8.7, 폴더 설명과 트리
-- 실행한 명령과 결과: `uv run --frozen pytest -q`(문서 갱신 뒤 결과는 아래 확인).
-- 확인 못 한 것: 실제 DB로 `corpus_known()`을 돌려 보지 않았다(시험은 가짜 목록). 회로 이름(예: TEST001)을 품번으로 뽑아 "없음"으로 잘못 알리는지는 확인하지 않았다. 도구 장애 시 사실 확인은 예외를 그대로 올린다.
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 441 passed, 27 skipped. 실제 DB 읽기 전용 확인: 품번 9,589개 · 개정 코드 295개, `check_corpus`가 1N5819 · 1N4148 · H2104 · K2301은 있음, 1N4001 · TEST001 · Q2611은 없음으로 답했다(5.1초, 첫 호출은 색인 적재 포함). 실제 MCP(stdio) 서버를 띄워 질문 → 도구 호출 → Facts까지 확인했다.
+- 확인 못 한 것: 질문의 TEST001처럼 회로 이름이 품번으로 뽑혀 "없음"으로 알려지는지(실제로 TEST001은 코퍼스에 없다고 답함)는 입력 읽기가 회로 이름을 빼는지 확인하지 않았다. 도구 장애 시 사실 확인은 예외를 그대로 올린다.
 - 다음 할 일: 실제 DB에서 `corpus_known()` 한 번 확인 → Supervisor를 실제 LLM에 연결하고 평가 실행기에 `--multi` 추가.
 
 ## 2026-11-05 기존 프롬프트 4개 영어 번역(측정 전)
