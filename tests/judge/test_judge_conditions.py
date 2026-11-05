@@ -91,6 +91,13 @@ def test_check_rule_validates_each_any_member():
         C.check_rule('R03', {**OR_RULE, 'conditions': [{**group, 'any': [{**group['any'][0], 'code': 'IFSMX'}, group['any'][1]]}]})
 
 
+def test_check_rule_validates_exempt():
+    trr = {'tier': 'required', 'code': 'TRR', 'op': '<=', 'basis': '35e-9'}
+    C.check_rule('R14', {**RULE, 'conditions': [{**trr, 'exempt': 'sic'}, {**trr, 'exempt': 'none'}]})
+    with pytest.raises(ValueError, match='exempt'):
+        C.check_rule('R14', {**RULE, 'conditions': [{**trr, 'exempt': 'all'}]})
+
+
 def test_needed_asks_first_any_member_and_default_values_only_when_nothing_is_computable():
     """'A 또는 B'는 계산할 수 있는 멤버가 없을 때만 첫 멤버의 값을, 기본값이 있는 조건은 기준식 값이 없을 때 기본값 식의 값을 묻는다."""
     assert C.needed(OR_RULE, set()) == ['i_coil', 'pulse_test', 'v_bus']

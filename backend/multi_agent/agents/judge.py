@@ -141,10 +141,16 @@ def _identical(retriever, original: str, candidate: str) -> bool:
 
 
 def _schottky_exempt(j: V.Judgement, category: str) -> V.Judgement:
-    """쇼트키 계열 후보의 TRR 조건은 면제(정답 판정 기준표 3.5). 면제한 뒤 판정을 다시 정한다."""
-    if not category.startswith('schottky') and not category.startswith('sic-schottky'):
+    """쇼트키 계열 후보의 TRR 조건은 면제(정답 판정 기준표 3.5). 면제한 뒤 판정을 다시 정한다.
+
+    조건의 exempt가 면제 범위다: schottky(쇼트키 계열 모두, 기본) · sic(SiC 쇼트키만, R14 100 kHz 초과) · none(면제 없음).
+    """
+    sic = category.startswith('sic-schottky')
+    if not sic and not category.startswith('schottky'):
         return j
-    checks = [c.model_copy(update={'result': 'pass', 'why': '쇼트키 면제'}) if c.code == 'TRR' else c for c in j.checks]
+    free = ('schottky', 'sic') if sic else ('schottky',)
+    checks = [c.model_copy(update={'result': 'pass', 'why': '쇼트키 면제'}) if c.code == 'TRR' and c.exempt in free else c
+              for c in j.checks]
     if any(c.result == 'fail' for c in checks):
         verdict = 'NOT_SUFFICIENT'
     elif any(c.result == 'unverified' for c in checks):

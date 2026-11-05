@@ -32,6 +32,7 @@ class Check(BaseModel):
     citation: dict | None = None
     result: Literal['pass', 'fail', 'unverified']
     why: str = ''
+    exempt: Literal['schottky', 'sic', 'none'] = 'schottky'  # TRR 면제 범위(규칙의 exempt, 면제는 판정 노드가 한다)
 
 
 class Judgement(BaseModel):
@@ -92,7 +93,7 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original_row
     codes = cond['code'] if isinstance(cond['code'], list) else [cond['code']]
     bases = C._bases(cond)
     label = ' ~ '.join(bases)
-    base = dict(code=codes[0], tier=cond['tier'], op=cond['op'], basis=label)
+    base = dict(code=codes[0], tier=cond['tier'], op=cond['op'], basis=label, exempt=cond.get('exempt', 'schottky'))
     lack = sorted({n for b in bases for n in C.names(b) if values.get(n) is None})
     note = ''
     if lack and cond.get('default'):

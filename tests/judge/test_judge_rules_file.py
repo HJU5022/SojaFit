@@ -32,6 +32,12 @@ def test_or_rules_are_any_groups_and_fallbacks_are_defaults():
     assert vrrm('R15') == [('v_sw_transient', 'v_bus * kV')]
 
 
+def test_r14_high_frequency_trr_exempts_only_sic_schottky():
+    """R14: 100 kHz 초과면 trr ≤ 35 ns 또는 SiC 쇼트키만(보류 5개 규칙안, 정운 11-06). 75 ns 조건은 쇼트키 계열 모두 면제."""
+    trr = {c['basis']: c.get('exempt', 'schottky') for c in C.load()['R14']['conditions'] if c.get('code') == 'TRR'}
+    assert trr == {'75e-9': 'schottky', '35e-9': 'sic'}
+
+
 def test_r13_uses_spike_margin_by_snubber_flag():
     """R13: 스너버가 있으면 ×1.25, 없거나 모르면 ×2(보류 5개 규칙안, 정운 11-06)."""
     r13 = C.load()['R13']

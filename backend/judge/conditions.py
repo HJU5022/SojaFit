@@ -18,6 +18,7 @@ CODES = ('VRRM', 'IF_AV', 'IFSM', 'VF', 'IR', 'TRR', 'VZ', 'PD', 'CJ', 'TJ_MAX',
 KINDS = ('number', 'flag', 'condition')
 TIERS = ('required', 'conditional')
 OPS = ('>=', '<=', 'within')
+EXEMPTS = ('schottky', 'sic', 'none')  # TRR 면제 범위: 쇼트키 계열 모두(기본) · SiC 쇼트키만 · 면제 없음
 COMMON_INPUTS = {'temp': 'condition'}  # [왜] 사용 온도(TA 또는 TJ)는 모든 역할의 정격 비교에 걸린다
 _BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
 
@@ -111,6 +112,8 @@ def _check_cond(rid: str, cond: dict, known: dict) -> None:
         raise ValueError(f'{rid}: 조건 {cond} 의 tier · op · code가 정해진 값 밖')
     if (cond['op'] == 'within') != (isinstance(cond['basis'], list) and len(cond['basis']) == 2):
         raise ValueError(f'{rid}: within은 [하한식, 상한식] 두 개를 쓴다')
+    if cond.get('exempt', 'schottky') not in EXEMPTS:
+        raise ValueError(f'{rid}: exempt={cond["exempt"]} 는 {EXEMPTS} 중 하나')
     for basis in _bases(cond) + ([cond['default']] if cond.get('default') else []):
         unknown = names(basis) - set(known)
         if unknown:

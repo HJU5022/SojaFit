@@ -200,6 +200,18 @@ def test_search_conditions_skip_any_groups():
     assert V.search_conditions(OR_RULE, {'v_in_max': 12.0, 'i_coil': 0.08}) == [{'code': 'VRRM', 'gte': pytest.approx(15.0)}]
 
 
+def test_check_carries_the_condition_exempt_key():
+    rule = yaml.safe_load('''
+name: x
+recognize: x
+conditions:
+  - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
+  - {tier: required, code: TRR, op: "<=", basis: "35e-9", exempt: sic}
+source: x
+''')
+    assert [c.exempt for c in V.judge_part(rule, 'R14', '1N5817', {}, TEMP, N5817).checks] == ['schottky', 'sic']
+
+
 def test_default_basis_reports_its_own_missing_values():
     """기본값 기준식(default)에도 쓸 회로 값이 없으면 그 값을 빠진 값으로 알린다(R17 처짐 기본값처럼 회로 값을 쓰는 기본값)."""
     rule = yaml.safe_load('''

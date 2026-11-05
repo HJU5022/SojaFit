@@ -4,7 +4,7 @@
 # - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
 #   unless(flag가 참이면 꺼짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
 #   any(원본의 "A 또는 B": [{code, op, basis, at?}, …] 중 하나라도 통과하면 통과, tier · when · unless는 묶음에 쓴다).
-#   쇼트키 계열의 TRR 면제는 판정 노드가 한다.
+#   exempt(TRR 면제 범위: schottky 쇼트키 계열 모두(기본) · sic SiC 쇼트키만 · none 면제 없음). 면제는 판정 노드가 한다.
 # - 회로 값 이름(읽기 출력 칸과 같은 목록, 같은 이름은 모든 역할에서 같은 뜻 · 종류)
 #   전압: v_in_max 입력(전원) 최대 · v_in_min 입력 최소 · v_reverse_max 반대쪽 전원 최대(R02) · v_coil 코일 전압 · v_ac_rms AC 실효값
 #         v_line_max 보호하는 넷의 정상 최대 · v_cc 로직 전원 · v_dd_min 부하 최소 VDD · v_logic_max 양쪽 로직 전압 중 큰 값
@@ -230,7 +230,8 @@ R14:
     # [왜] 클램프 전압을 알면 (입력 최대 + 클램프 전압) × 1.5, 모르면 스위치 내압 VDSS × 1.1(정운 11-06 채택)
     - {tier: required, code: VRRM, op: ">=", basis: "(v_in_max + v_clamp) * 1.5", default: "v_dss * 1.1"}
     - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
-    - {tier: conditional, code: TRR, op: "<=", basis: "35e-9", when: f_over_100khz}
+    # [왜] 100 kHz를 넘으면 trr ≤ 35 ns 또는 SiC 쇼트키만이다. 일반 쇼트키는 이 조건에서 면제하지 않는다(정운 11-06 채택)
+    - {tier: conditional, code: TRR, op: "<=", basis: "35e-9", when: f_over_100khz, exempt: sic}
     # [왜] ID를 못 받으면 AN-4147의 "보통 1 A 정격 초고속 다이오드"를 기본값으로 쓴다
     - {tier: required, code: IF_AV, op: ">=", basis: "i_d * 0.3", default: "1"}
   cautions:

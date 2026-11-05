@@ -172,6 +172,17 @@ def test_original_part_with_order_code_reads_base_part_rows(monkeypatch):
     assert seen == [table['1N4148']]
 
 
+def test_schottky_exemption_follows_the_condition_exempt_key():
+    """보통 TRR 조건은 쇼트키 계열 모두 면제, exempt: sic 조건(R14 100 kHz 초과)은 SiC 쇼트키만 면제한다."""
+    def trr(exempt):
+        return V.Check(code='TRR', tier='required', op='<=', basis='35e-9', threshold=35e-9, value=5e-8, result='fail', exempt=exempt)
+    j = V.Judgement(part='X', role='R14', verdict='NOT_SUFFICIENT', checks=[trr('schottky'), trr('sic')])
+    general = J._schottky_exempt(j, 'schottky-rectifier')
+    assert [c.result for c in general.checks] == ['pass', 'fail'] and general.verdict == 'NOT_SUFFICIENT'
+    sic = J._schottky_exempt(j, 'sic-schottky-diode')
+    assert [c.result for c in sic.checks] == ['pass', 'pass'] and sic.verdict == 'ROLE_SUFFICIENT'
+
+
 def test_grounded_requires_quote_in_text_and_same_number():
     text = '입력 전압의 최댓값은 20V'
     assert J.grounded(text, J.Value(name='v_in_max', number=20, unit='V', quote='최댓값은 20V'))
