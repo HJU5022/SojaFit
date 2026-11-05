@@ -1,20 +1,22 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`)를 등록하고 HTTP 입출력만 다룬다.
+역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 로그인 사용자의 질문 API(`/api/ask`)를 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 회로·대화·기억·견적 API(미구현, SPEC 4절 "정할 것").
+하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 질문·답변 기록 저장, 회로·대화·기억·견적 API.
 출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사한다.
 """
 import os
 from contextlib import asynccontextmanager
+from functools import lru_cache
+from pathlib import Path
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from backend import auth
 
@@ -28,6 +30,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="SojaFit API", lifespan=lifespan)
+LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
+
+
+@lru_cache(maxsize=1)
+def get_question_graph():
+    """서버 안에서 한 번만 그래프를 만들며 요청 간 상태는 저장하지 않는다."""
+    from backend.graph.build import build_graph
+
+    return build_graph()
 
 
 @app.exception_handler(RequestValidationError)
@@ -39,6 +50,12 @@ async def validation_error(request: Request, exc: RequestValidationError):
 def health() -> dict:
     """서비스 생존 확인용. 배포 환경과 평가자가 부르며 항상 {"status": "ok"}를 돌려준다."""
     return {"status": "ok"}
+
+
+@app.get("/login", include_in_schema=False)
+def login_page():
+    """같은 출처의 로그인·질문 화면을 제공한다."""
+    return FileResponse(LOGIN_PAGE, media_type="text/html; charset=utf-8")
 
 
 class Login(BaseModel):
@@ -91,6 +108,39 @@ def logout(request: Request, response: Response):
     auth.logout(request)
     response.delete_cookie(auth.COOKIE, path="/")
     return {"ok": True}
+
+
+class Ask(BaseModel):
+    """비저장 단일 질문 요청. 신뢰 경계인 사용자 ID는 본문에 허용하지 않는다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("question")
+    @classmethod
+    def check_question(cls, question: str) -> str:
+        question = question.strip()
+        if not question:
+            raise ValueError("질문을 입력해 주세요.")
+        return question
+
+
+@app.post("/api/ask")
+def ask(
+    body: Ask,
+    _: None = Depends(auth.check_origin),
+    user: tuple[int, str] = Depends(auth.current_user),
+):
+    """로그인 사용자의 질문을 한 번 처리하고 답만 반환한다(기록은 저장하지 않음)."""
+    try:
+        state = get_question_graph().invoke({"input": body.question, "user_id": str(user[0])})
+        answer = state.get("answer")
+        if not isinstance(answer, str):
+            raise RuntimeError("graph did not return an answer")
+    except Exception:
+        raise HTTPException(status_code=503, detail="질문 서비스를 사용할 수 없습니다.") from None
+    return {"answer": answer}
 
 
 class AccountState(BaseModel):

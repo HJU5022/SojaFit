@@ -213,12 +213,57 @@ def admin_set_active(actor_id: int, target_id: int, active: bool) -> None:
             conn.execute("DELETE FROM auth_sessions WHERE user_id=%s", (target_id,))
 
 
+def delete_provisioned_user(user_id: int) -> bool:
+    """비활성 일반 계정과 해당 세션·로그인 실패 행을 함께 삭제한다(운영자 CLI 전용)."""
+    if type(user_id) is not int or user_id <= 0:
+        raise ValueError("A positive user ID is required")
+    with connection() as conn:
+        account = conn.execute("SELECT login_id FROM users WHERE id=%s", (user_id,)).fetchone()
+        if not account:
+            return False
+        login_id = account[0]
+        if not login_id.strip().lower().endswith("@example.test"):
+            raise ValueError("Only synthetic @example.test accounts can be deleted by this command")
+        login_hash = hashlib.sha256(login_id.strip().lower().encode()).hexdigest()
+        # [왜] authenticate()와 같은 순서(실패 행 → 사용자 행)로 잠가 로그인과 삭제의 교착을 피한다
+        conn.execute("INSERT INTO auth_login_attempts(login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (login_hash,))
+        conn.execute("SELECT login_hash FROM auth_login_attempts WHERE login_hash=%s FOR UPDATE", (login_hash,))
+        current = conn.execute("SELECT login_id, role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
+        if not current:
+            conn.execute("DELETE FROM auth_login_attempts WHERE login_hash=%s", (login_hash,))
+            return False
+        if current[0].strip().lower() != login_id.strip().lower():
+            raise ValueError("Account changed during deletion; retry after review")
+        if current[1] != "user":
+            raise ValueError("Administrator accounts cannot be deleted by this command")
+        if current[2]:
+            raise ValueError("Deactivate the account before deletion")
+        conn.execute("DELETE FROM users WHERE id=%s", (user_id,))  # auth_sessions uses ON DELETE CASCADE
+        conn.execute("DELETE FROM auth_login_attempts WHERE login_hash=%s", (login_hash,))
+    return True
+
+
 def provision() -> None:
     """계정 생성 CLI. users에 계정을 넣거나 `--hash-only`로 해시만 출력한다."""
     parser = argparse.ArgumentParser(description="Create a provisioned account or print a password hash")
     parser.add_argument("--role", choices=("user", "admin"), default="user")
-    parser.add_argument("--hash-only", action="store_true", help="print a scrypt hash without creating an account")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--hash-only", action="store_true", help="print a scrypt hash without creating an account")
+    action.add_argument("--delete-user-id", type=int, help="delete a disabled user account by ID")
     args = parser.parse_args()
+    if args.delete_user_id is not None:
+        if args.role != "user":
+            sys.exit("Account deletion only supports the user role.")
+        expected = str(args.delete_user_id)
+        if input(f"Delete disabled user ID {expected}? Type the ID to confirm: ").strip() != expected:
+            print("Deletion cancelled.")
+            return
+        try:
+            deleted = delete_provisioned_user(args.delete_user_id)
+        except ValueError as error:
+            sys.exit(str(error))
+        print("Account deleted." if deleted else "Account not found.")
+        return
     email = None if args.hash_only else input("Email: ").strip().lower()
     # [주의] 비밀번호는 getpass로만 받아 화면·셸 기록·인자에 남기지 않는다
     password = getpass.getpass("Password: ")

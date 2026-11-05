@@ -85,10 +85,11 @@ SojaFit (proj3-b)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
 │   │   └── mouser.py       <- Mouser 가격·재고 조회, 응답은 저장하지 않음(ADR 0009, 확장 단계) (예정)
-│   ├── web/                <- 로그인·입력·승인·견적 화면. 화면 코드는 아직 없고 설계 초안만 있음
+│   ├── web/                <- 같은 출처 로그인·질문 화면과 앞으로의 입력·승인·견적 화면
 │   │   ├── WEB.md          <- 폴더 설명
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
-│   │   ├── templates/      <- 화면 템플릿(지금은 .gitkeep)
+│   │   ├── templates/      <- 화면 HTML 템플릿
+│   │   │   └── login.html  <- 같은 출처 로그인·비저장 질문·로그아웃 화면
 │   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
@@ -211,6 +212,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_health.py  <- /health 응답
+│   │   ├── test_question.py <- 질문 API 인증 경계와 로그인 화면 확인
 │   │   └── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
@@ -300,6 +302,7 @@ SojaFit (proj3-b)
 │   │   ├── SPECS.md        <- 폴더 설명
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
+│   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
@@ -323,6 +326,8 @@ SojaFit (proj3-b)
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
 │   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
 │   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
+│   │   ├── email-encryption-options.md  <- 로그인 이메일 암호화 정책 선택지(팀 결정 전)
+│   │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
 │   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
 │   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
 │   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
