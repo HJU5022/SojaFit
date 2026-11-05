@@ -1,5 +1,11 @@
 # jeongun 작업 기록
 
+## 2026-11-05 노드별 모델 결정 기록(ADR 0014)
+- 한 일: Supervisor를 Sonnet으로 바꾼 이유를 ADR 0014로 남겼다. 근거는 #33(오세창, Supervisor 후보 6종 3회)에서 Haiku의 질문 종류 정답 21~23/35 · 형식 유효 46~50/70, Luna는 채점 모델과 같아져 제외(조장 판단), #38 Sonnet 결과(질문 종류 일치 32/32, 비용 #37의 약 43배)다. ADR 0010에 "일부 바뀜", ADR 목록, SPEC 2절 LLM 줄, AGENTS 기술 스택, README 기술 표의 "Haiku 하나"를 노드별 모델로 고쳤다.
+- 바꾼 파일: `docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md`(새 파일), `docs/adr/0010-*.md`, `docs/adr/ADR.md`, `SPEC.md`, `AGENTS.md`, `README.md`, 이 파일
+- 확인: #33 숫자는 `evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json`에서 직접 읽었다. `tests/repo` 5 passed.
+- 확인 못 한 것: Sonnet과 Luna를 Supervisor 자리에서 같은 조건으로 비교하지 않았다.
+
 ## 2026-11-05 부품 사양 표 운영 DB(Supabase) 적용
 - 한 일: 정운 승인으로 운영 DB에 `db/011_part_specifications.sql`을 적용하고 사양 표를 적재했다. 적용 전 읽기 전용으로 보니 다른 public 표 10개는 모두 RLS가 켜져 있고 정책이 0개인데, Supabase 기본 권한(`pg_default_acl`)이 새 표를 anon·authenticated에 모든 권한으로 열어 둔다. 그래서 011 끝에 `ENABLE ROW LEVEL SECURITY`를 더해 적용했다(서버는 표 주인 `postgres`로 접속해 영향 없음). 로컬 볼륨에도 같은 RLS를 켰다.
 - 바꾼 파일: `db/011_part_specifications.sql`(RLS 한 줄), `db/DB.md`(적용 기록), `tests/rag/test_rag_spec_lookup.py`(RLS 확인 한 줄), 이 파일
