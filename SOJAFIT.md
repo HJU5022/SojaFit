@@ -102,7 +102,7 @@ SojaFit (proj3-b)
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
-│   │   └── mouser.py       <- Mouser 가격·재고 조회, 응답은 저장하지 않음(ADR 0009, 확장 단계) (예정)
+│   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
 │   │   ├── WEB.md          <- 폴더 설명
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
@@ -303,6 +303,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
+│   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
 │   ├── evals/              <- 평가셋 동결과 평가 실행기
 │   │   ├── EVALS.md        <- 폴더 설명
