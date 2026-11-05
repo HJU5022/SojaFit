@@ -157,7 +157,7 @@ SojaFit (proj3-b)
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
 │   │   ├── INPUTS.md       <- 폴더 설명
 │   │   ├── qrels_v2_pages.json  <- v2 채점 19문항의 필수 근거 페이지 36개(회수 불가 2쪽 표시, 사전 등록 #24)
-│   │   ├── grader_cases_v2.json  <- 채점기 기준선(#33)의 입력: v2 관련 19·비관련 35문항의 마지막 검색 청크와 통과 청크(번호·파일·쪽만, 본문 없음)
+│   │   ├── grader_cases_v2.json  <- 채점기 기준선(#36)의 입력: v2 관련 19·비관련 35문항의 마지막 검색 청크와 통과 청크(번호·파일·쪽만, 본문 없음)
 │   │   ├── grader_cases_r1_dev.json  <- 채점기 기준선(#34)의 입력: R1 dev 46문항에 서비스 검색 + 지금 채점을 1번씩 돌린 검색·통과 청크(번호·파일·쪽만)
 │   │   ├── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
 │   │   └── layers/         <- 검색 조합 층별 재측정(11-03)의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
@@ -180,7 +180,7 @@ SojaFit (proj3-b)
 │   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
-│   │   ├── eval_grader.py  <- 채점기 기준선(#33): 검색·통과 청크가 정답 쪽을 충분·부분·부족으로 가졌는지 계산해 results/grader/에 저장
+│   │   ├── eval_grader.py  <- 채점기 기준선(#36): 검색·통과 청크가 정답 쪽을 충분·부분·부족으로 가졌는지 계산해 results/grader/에 저장
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
 │   │   ├── benchmark_embeddings.py  <- 프록시 표본으로 임베딩 후보의 Recall@5·MRR·지연 예비 측정
@@ -309,7 +309,7 @@ SojaFit (proj3-b)
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
-│   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #33 숫자를 재현하는지
+│   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
 │   ├── mcp_skill/          <- MCP 서버 도구 5종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)

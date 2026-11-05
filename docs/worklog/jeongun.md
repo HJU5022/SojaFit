@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 origin/main(PR #55 · #56) 병합과 사전 등록 번호 겹침 정리
+- 한 일: `origin/main`(PR #55 수퍼바이저 3차 · #56 Google 관리자 로그인)을 `jeongun`에 병합했다. 충돌 3파일은 `backend/BACKEND.md`(main.py · auth.py 설명은 main, `multi_agent/` 줄은 jeongun), `evals/runners/RUNNERS.md`(두 줄 모두), `evals/guides/preregister.md`(main의 #33 다음에 jeongun의 #33~#35)로 풀었다. jeongun의 사전 등록 #33(채점기 기준선)이 main의 #33(수퍼바이저 3차, 오세창)과 겹쳐 #36으로 바꿨다(사전 등록 본문에 번호 변경 줄, 결과 · 입력 JSON의 note 문구, 코드 주석, 폴더 설명, 트리).
+- 바꾼 파일: 병합 커밋의 충돌 3파일, 번호 변경 11파일(`preregister.md` · `SOJAFIT.md` · `evals/EVALS.md` · `INPUTS.md` · `RUNNERS.md` · `eval_grader.py` · `grader_cases_v2.json` · `grader_baseline_2026-11-05.json` · `test_eval_grader.py` · `tests/evals/EVALS.md` · 이 파일)
+- 실행한 명령과 결과: 병합 뒤 `uv sync --frozen`(authlib · joserfc 추가), `uv run --frozen pytest -q` 472 passed, 32 skipped. 번호 변경 뒤에도 같다. `git diff --check` 통과.
+- 확인 못 한 것: main에서 `/api/ask`가 빠져(커밋 2b2769f) 질문 API가 없다. CI는 푸시 전이라 돌지 않았다.
+- 다음 할 일: 푸시와 PR 나누기, `--multi` 시험 2문항 실제 실행.
+
 ## 2026-11-05 Supervisor에 일상 대화(chat) · 다이오드 외 부품(other_part) 추가
 - 한 일: 질문 종류에 `chat` · `other_part`를 더하고 결정서에 `reply`(한국어 300자 이하)를 넣었다. 일상 대화는 Supervisor가 `reply`로 직접 답하고 `finish`로 끝낸다(작성 · 검색 없음, `finish_node`가 `reply`를 답으로 쓴다). `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하며 거절 문구를 "회로나 부품에 관한 질문을 해 주세요"로 부드럽게 바꿨다. 다이오드가 아닌 전자 부품은 `web`(켜져 있을 때) 아니면 `not_found` 거절. 프롬프트는 영어로 다시 써 Langfuse `supervisor` v3로 등록했다. 단일 그래프(D4)는 건드리지 않았다.
 - 바꾼 파일: `backend/multi_agent/contracts.py` · `build.py` · `messages.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, 시험 `tests/multi_agent/test_contracts.py` · `test_supervisor.py` · `test_build.py`
@@ -71,10 +78,10 @@
 - 확인 못 한 것: 이 조각은 데이터 모양과 한도 규칙뿐이라 LLM · 검색 · 측정은 아직 없다. 사용자에게 보일 거절 문구(일상어)와 Langfuse에 남길 항목은 다음 조각에서 정한다.
 - 다음 할 일: Supervisor 노드(가짜 LLM으로 시험) → 서브에이전트(단일의 검색 · 채점 · 재작성을 감싸기) → 조립 → D4 점수와 비교.
 
-## 2026-11-05 채점기 기준선(사전 등록 #33)
-- 한 일: 로컬 `jeongun`을 `origin/main`(PR #54)에 맞추고 임시 브랜치 3개와 오래된 작업 폴더를 지웠다. 채점을 3갈래로 바꾸기 전 기준선으로, 지금 2갈래 채점이 정답 쪽을 얼마나 유지하는지 측정했다. 사전 등록 #33(번호는 `main`의 #32가 오세창 것이라 #33), 시험 먼저, 계산기와 스냅샷 만들기(`evals/runners/eval_grader.py`), 입력 스냅샷(`evals/inputs/grader_cases_v2.json`, 청크 번호 · 파일 · 쪽만), 결과(`evals/results/grader/grader_baseline_2026-11-05.json`).
-- 바꾼 파일: `evals/guides/preregister.md`(#33), `evals/runners/eval_grader.py`, `evals/inputs/grader_cases_v2.json`, `evals/results/grader/`, `tests/evals/test_eval_grader.py`, `SOJAFIT.md` · `INPUTS.md` · `RUNNERS.md` · `EVALS.md` · `tests/evals/EVALS.md`의 파일 줄, 이 파일
-- 실제 결과: v2 관련 19문항에서 검색 청크가 정답 쪽을 다 가진 문항 15 · 일부 4. 채점이 통과시킨 청크 기준으로 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(정답 쪽 유지율 12/15, 쪽 재현율 평균 0.776). 비관련 35문항 중 34문항이 통과 0개. 사전 등록한 숫자와 같게 재현됐다(예측이 아니라 재현이며, 같은 스냅샷을 11-05에 임시로 먼저 계산해 본 것은 #33에 적었다). LLM · API 호출 0, 비용 0.
+## 2026-11-05 채점기 기준선(사전 등록 #36)
+- 한 일: 로컬 `jeongun`을 `origin/main`(PR #54)에 맞추고 임시 브랜치 3개와 오래된 작업 폴더를 지웠다. 채점을 3갈래로 바꾸기 전 기준선으로, 지금 2갈래 채점이 정답 쪽을 얼마나 유지하는지 측정했다. 사전 등록 #36(처음 #33으로 적었으나 `main`의 오세창 #33과 겹쳐 11-05에 #36으로 바꿈), 시험 먼저, 계산기와 스냅샷 만들기(`evals/runners/eval_grader.py`), 입력 스냅샷(`evals/inputs/grader_cases_v2.json`, 청크 번호 · 파일 · 쪽만), 결과(`evals/results/grader/grader_baseline_2026-11-05.json`).
+- 바꾼 파일: `evals/guides/preregister.md`(#36), `evals/runners/eval_grader.py`, `evals/inputs/grader_cases_v2.json`, `evals/results/grader/`, `tests/evals/test_eval_grader.py`, `SOJAFIT.md` · `INPUTS.md` · `RUNNERS.md` · `EVALS.md` · `tests/evals/EVALS.md`의 파일 줄, 이 파일
+- 실제 결과: v2 관련 19문항에서 검색 청크가 정답 쪽을 다 가진 문항 15 · 일부 4. 채점이 통과시킨 청크 기준으로 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(정답 쪽 유지율 12/15, 쪽 재현율 평균 0.776). 비관련 35문항 중 34문항이 통과 0개. 사전 등록한 숫자와 같게 재현됐다(예측이 아니라 재현이며, 같은 스냅샷을 11-05에 임시로 먼저 계산해 본 것은 #36에 적었다). LLM · API 호출 0, 비용 0.
 - 같이 알게 된 것: 정답 쪽이 검색에 다 있는 15문항 중 과잉 거절은 8건이고, 원인이 채점이 3(h04 · n01 · n04), 채점은 통과시켰는데 생성이 거절이 5(h05 · n06 · n07 · n08 · n21)다. 3갈래 채점으로 바뀌는 것은 앞쪽뿐이라 판정 노드 · 거절 형식 · 라우팅을 따로 다뤄야 한다.
 - 확인 못 한 것: 스냅샷은 11-04 실행 한 번의 검색 결과라 재검색한 문항은 마지막 검색만 본다. R1 dev 46문항은 아직 안 만들었다(새로 검색해야 해서 호출이 든다).
 - R1 dev 기준선(사전 등록 #34): R1 dev 46문항에 서비스 검색 + 지금 채점을 1번씩 돌려 측정했다(`eval_grader.py collect-r1`, 오류 0, OpenRouter 0.0133달러). 검색이 정답 쪽을 다 가져온 문항 39 · 일부 1 · 못 가져옴 6, 채점이 정답 쪽을 다 남긴 것 36/39(0.923, r1-050 · r1-078은 전부, r1-071은 일부 버림), 필요 쪽 통과 재현율 평균 0.804. 사전 등록 기대 세 가지 모두 범위 안. v2의 유지율은 0.80(12/15)이라 두 평가셋을 합치지 않고 따로 적는다.

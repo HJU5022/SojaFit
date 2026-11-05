@@ -1,8 +1,8 @@
 """채점기 기준선 계산(evals/runners/eval_grader.py)과 입력 스냅샷 시험.
 
-- 역할: 충분 · 부분 · 부족 판정 규칙, 지표 계산, 스냅샷 만들기, 스냅샷이 사전 등록 #33의 숫자를 재현하는지 확인한다.
+- 역할: 충분 · 부분 · 부족 판정 규칙, 지표 계산, 스냅샷 만들기, 스냅샷이 사전 등록 #36의 숫자를 재현하는지 확인한다.
 - 하지 않는 일: LLM · API · DB를 부르지 않는다.
-- 출처: evals/guides/preregister.md #33, evals/inputs/grader_cases_v2.json
+- 출처: evals/guides/preregister.md #36, evals/inputs/grader_cases_v2.json
 """
 import json
 from pathlib import Path
