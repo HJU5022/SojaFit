@@ -6,7 +6,7 @@
 
 - 동결 v2 70문항, SHA-256 `81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9`. 모델별 `run_index=3` 한 번만 실행했다. 유형 gold 35문항만 Accuracy·Macro-F1로 채점한다.
 - 사전 등록 #33: [3차 계약](../experiments/supervisor-stage3-six-models.md), 유료 호출 전 로컬 커밋 `d10a30b`. 원격 공개 시점으로 실행 전 등록을 독립 증명했다고 주장하지 않는다.
-- [3차 집계 JSON](../../evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json) SHA-256 `e0491c99d59405a982f4b96107ff617cc72dac2ac6e10e0ffea95c931719ae98`. 1~3차 원시 파일과 3차 metadata의 hash, 모델별 수치·문항 ID를 담는다.
+- [3차 집계 JSON](../../evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json) SHA-256 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`. 1~3차 원시 파일과 3차 metadata의 hash, 모델별 수치·문항 ID를 담는다.
 - 출처 hash 정책: 기존 1·2차 파일은 Git checkout의 줄바꿈 차이를 제외한 LF 정규화 SHA-256을 사용한다. 3차 JSON은 .gitattributes의 -text로 원시 바이트를 보존하고 그 SHA-256을 기록한다. 기존 회차 원시 파일과 3차 호출 결과의 내용은 수정하지 않았다.
 - `execution.json`에 모델별 명령 인자·시작/종료 시각·process 경과 시간·종료 코드·원시 파일 hash를 보존했다. `preflight.json`에는 공개 catalog 가격·ZDR 노출·첫 문항 예약액을 기록했다.
 - 재계산: `uv run --no-sync python -m evals.runners.report_supervisor_stage3 evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json`. 집계기는 API를 호출하지 않으며 두 보고서도 같은 JSON에서 생성한다.
@@ -86,12 +86,12 @@
 |---|---|---|---|---|---|---|
 | `anthropic/claude-haiku-5.5` | 22/35 | 21/35 | 23/35 | 48/70 | 46/70 | 50/70 |
 | `openai/gpt-6-luna` | 35/35 | 34/35 | 33/35 | 66/70 | 65/70 | 65/70 |
-| `deepseek/deepseek-v4.1-flash` | Not Comparable (partial run) | 29/35 | 2/35 | 0/70 | 62/70 | 7/70 |
+| `deepseek/deepseek-v4.1-flash` | Not Comparable (3/70 attempted, 0 valid) | 29/35 | 2/35 | Not Comparable (3/70 attempted, 0 valid) | 62/70 | 7/70 |
 | `meta/muse-glimmer-30b` | 1/35 | 1/35 | 1/35 | 1/70 | 1/70 | 1/70 |
 | `cohere/command-a-plus` | 8/35 | 9/35 | 8/35 | 20/70 | 21/70 | 21/70 |
 | `typesafe/jev-1.14` | 33/35 | 33/35 | 33/35 | 70/70 | 70/70 | 70/70 |
 
-표 읽는 법: 각 Stage의 Accuracy는 같은 gold 35문항에서 유형을 맞힌 수, Schema Valid Rate는 전체 70문항의 형식 통과 수다. Stage 1의 일부 provider 중단 모델은 완료된 전체 실험과 직접 비교할 수 없어 Not Comparable로 표시한다.
+표 읽는 법: 각 Stage의 Accuracy는 같은 gold 35문항에서 유형을 맞힌 수, Schema Valid Rate는 전체 70문항의 형식 통과 수다. provider 중단 등으로 일부만 실행한 회차는 두 지표 모두 Not Comparable로 표시한다. 괄호의 attempted는 계획 대비 실제 시도 문항 수, valid는 형식상 유효 결정 수이며 완주 결과와 직접 비교하지 않는다.
 
 | Model ID | Stage 1 Provider | Stage 2 Provider | Stage 3 Provider |
 |---|---|---|---|

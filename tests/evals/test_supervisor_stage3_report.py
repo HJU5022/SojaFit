@@ -108,3 +108,21 @@ def test_source_hash_policy_handles_checkout_line_endings(tmp_path):
     new.write_bytes(b"{}\n")
     assert report.source_digest(old) == old_digest
     assert report.source_digest(new) != new_digest
+
+
+def test_report_marks_partial_run_accuracy_and_schema_as_not_comparable(tmp_path):
+    root = Path(__file__).resolve().parents[2]
+    source = root / "evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json"
+    summary = json.loads(source.read_text(encoding="utf-8"))
+    output = tmp_path / "summary.json"
+    output.write_bytes(source.read_bytes())
+    (tmp_path / "docs/research").mkdir(parents=True)
+
+    report.render_reports(summary, output, tmp_path)
+
+    text = (tmp_path / "docs/research/supervisor-stage3-results.md").read_text(encoding="utf-8")
+    section = text.split("## 1·2·3차 점수 대조")[1]
+    line = next(line for line in section.splitlines() if line.startswith("| `deepseek/deepseek-v4.1-flash`"))
+    assert line.count("Not Comparable (3/70 attempted, 0 valid)") == 2
+    assert "| 0/70 |" not in line
+    assert "| 62/70 | 7/70 |" in line

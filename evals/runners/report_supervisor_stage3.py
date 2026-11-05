@@ -225,8 +225,15 @@ def render_reports(summary, output, root=ROOT):
         return "\n".join(["| " + " | ".join(headers) + " |", "|" + "---|" * len(headers),
                           *["| " + " | ".join(map(str, row)) + " |" for row in rows], "", "표 읽는 법: " + meaning, ""])
 
+    def run_rate(value, metric):
+        if value["score_status"] == "complete":
+            return ratio(value[metric])
+        attempted = ratio(value["Attempted Outputs"])
+        valid = value["Schema Valid Rate"]["numerator"]
+        return f"Not Comparable ({attempted} attempted, {valid} valid)"
+
     def accuracy(value):
-        return ratio(value["Question Type Accuracy"]) if value["score_status"] == "complete" else "Not Comparable (partial run)"
+        return run_rate(value, "Question Type Accuracy")
 
     total = sum(value["Budget-Accounted Cost"] or 0 for value in metrics.values())
     raw_calls = sum(value["Raw Calls"] for value in metrics.values())
@@ -278,8 +285,8 @@ def render_reports(summary, output, root=ROOT):
                  "Comparable Three-Run Cases는 세 회차 모두 형식상 유효한 문항 수 / 70이다. 나머지 세 지표의 분모는 그 비교 가능한 문항 수다. Exact Agreement는 decision 전체가 같은 문항 비율, 두 Flip Rate는 질문 유형·다음 동작이 한 번이라도 달라진 비율이다. 같은 오류를 반복해도 일치율이 높을 수 있다. 비교 가능한 문항이 적을 때 높은 일치율을 전체 성능으로 해석하지 않는다. 객체 키 순서만 정규화하고 required_evidence 배열의 순서는 보존한다.")]
     heading += ["## 1·2·3차 점수 대조", "", table(["Model ID", "Stage 1 Accuracy", "Stage 2 Accuracy", "Stage 3 Accuracy", "Stage 1 Schema Valid Rate", "Stage 2 Schema Valid Rate", "Stage 3 Schema Valid Rate"],
                  [[f"`{model}`", *[accuracy(value["runs"][str(index)]) for index in (1, 2, 3)],
-                   *[ratio(value["runs"][str(index)]["Schema Valid Rate"]) for index in (1, 2, 3)]] for model, value in models.items()],
-                 "각 Stage의 Accuracy는 같은 gold 35문항에서 유형을 맞힌 수, Schema Valid Rate는 전체 70문항의 형식 통과 수다. Stage 1의 일부 provider 중단 모델은 완료된 전체 실험과 직접 비교할 수 없어 Not Comparable로 표시한다.")]
+                   *[run_rate(value["runs"][str(index)], "Schema Valid Rate") for index in (1, 2, 3)]] for model, value in models.items()],
+                 "각 Stage의 Accuracy는 같은 gold 35문항에서 유형을 맞힌 수, Schema Valid Rate는 전체 70문항의 형식 통과 수다. provider 중단 등으로 일부만 실행한 회차는 두 지표 모두 Not Comparable로 표시한다. 괄호의 attempted는 계획 대비 실제 시도 문항 수, valid는 형식상 유효 결정 수이며 완주 결과와 직접 비교하지 않는다.")]
     heading.append(table(["Model ID", "Stage 1 Provider", "Stage 2 Provider", "Stage 3 Provider"],
                          [[f"`{model}`", *[", ".join(value["runs"][str(index)]["Providers"]) or "Not Recorded" for index in (1, 2, 3)]]
                           for model, value in models.items()],

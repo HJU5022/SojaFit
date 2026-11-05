@@ -186,3 +186,9 @@
 - Git 저장 바이트 확인 중 `core.autocrlf=true`가 일부 3차 JSON의 CRLF를 LF로 변환함을 발견했다. 3차 결과 폴더의 JSON에만 `.gitattributes -text`를 적용해 로컬 원본 바이트·보고서의 원시 hash를 보존한다. 사전 등록 당시 로컬 manifest의 CRLF 바이트와 선언 hash도 그대로 보존하며 이미 만든 커밋은 다시 쓰지 않는다. 기존 1·2차 출처는 LF 정규화 SHA-256으로 Git 저장 파일과 대조하고 hash 정책을 집계·보고서에 명시했다. 과거 회차 원시 파일과 모델 실측 수치는 변경하지 않았다.
 - 파생 집계와 Markdown은 LF로 생성해 환경에 따른 출력 차이를 줄였다. 현재 집계 SHA-256은 `e0491c99d59405a982f4b96107ff617cc72dac2ac6e10e0ffea95c931719ae98`다. 원시 3차 hash와 기존 회차 Git blob의 LF hash 일치, 관련 테스트 14건, 전체 `PYTHONUTF8=1 uv run --no-sync pytest -q` 383 passed·27 skipped, `git diff --check`를 확인했다. 이번 게시 준비에서는 유료 API를 호출하지 않았다.
 - 게시 바이트 검증: 스테이징된 JSON 19개가 로컬 파일의 원시 바이트와 동일하고 집계의 출처 34개 hash가 Git index의 저장 내용과 일치했다. Git index의 파일만 임시 경로에 풀어 집계해도 현재 집계 JSON 전체와 같았다. CRLF 보존 파일은 `whitespace=cr-at-eol`로 줄바꿈 CR만 공백 오류에서 구별하며 staged diff 검사도 통과했다.
+
+## 2026-11-05 PR #55 부분 실행 표기 피드백 반영
+
+- 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
+- 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
+- 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.

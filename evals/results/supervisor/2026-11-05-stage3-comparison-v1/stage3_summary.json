@@ -3039,7 +3039,7 @@
     "stage1_stage2": "SHA-256 after CRLF-to-LF normalization",
     "stage3": "SHA-256 of original bytes, preserved by .gitattributes -text"
   },
-  "analysis_code_sha256_lf": "928c9cd88af1fa0827dfddd71d8abbe9332c3b475928e092e809a0eea4655df7",
+  "analysis_code_sha256_lf": "f04633b2cf002afd913e6f678bd45503cbd42190e16d989906d14b648a2ce5fd",
   "execution_code_sha256_lf": {
     "backend/services/llm.py": "4c25eaa1387c2f2f7b7dc7381221b7e025f793d89232e3d01366dedb85a746b5",
     "evals/runners/run_supervisor_models.py": "a8f5f1c9af6bd72377fa96334603de9e175d98eb2536c38f0ab6d7e6b50c3534",
