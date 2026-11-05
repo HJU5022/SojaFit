@@ -71,3 +71,49 @@ def test_snapshot_reproduces_preregistered_baseline():
 def test_snapshot_has_no_datasheet_text():
     text = (ROOT / 'evals/inputs/grader_cases_v2.json').read_text(encoding='utf-8')
     assert '"content"' not in text
+
+
+def test_case_from_state_normalizes_pages_and_drops_text():
+    docs = [{'chunk_id': 7, 'file': 'a.pdf', 'page': '3', 'content': '데이터시트 글'},
+            {'chunk_id': '8', 'file': 'a.pdf', 'page': None, 'content': '표지'}]
+    c = G.case_from_state('q', 'relevant', [['a.pdf', 3]], [], docs, [7])
+    assert c['retrieved'] == [{'chunk_id': '7', 'file': 'a.pdf', 'page': 3}, {'chunk_id': '8', 'file': 'a.pdf', 'page': None}]
+    assert c['passed'] == ['7'] and 'content' not in json.dumps(c)
+
+
+def test_collect_runs_retrieve_then_grade_per_question_and_skips_errors():
+    rows = [{'id': 'r1', 'question': 'Q 1N4148', 'gold': [['a.pdf', 1]]}, {'id': 'r2', 'question': 'Q2', 'gold': [['b.pdf', 2]]}]
+    queries = {'r1': 'query one', 'r2': 'query two'}
+    seen = []
+
+    def retrieve(query, parts=None):
+        seen.append((query, parts))
+        if query == 'query two':
+            raise RuntimeError('검색 실패')
+        return [{'chunk_id': 1, 'file': 'a.pdf', 'page': '1', 'content': 'x'}]
+
+    cases, errors = G.collect(rows, queries, lambda q, refs: ['1N4148'] if '1N4148' in q else [], retrieve,
+                              lambda state: {'passed': [1]})
+    assert seen == [('query one', ['1N4148']), ('query two', None)]  # 품번이 없으면 None으로 코퍼스 전체
+    assert [c['id'] for c in cases] == ['r1'] and cases[0]['passed'] == ['1'] and errors == ['r2']
+
+
+def test_collect_stops_after_three_errors_in_a_row():
+    rows = [{'id': f'r{i}', 'question': 'q', 'gold': [['a.pdf', 1]]} for i in range(5)]
+
+    def boom(query, parts=None):
+        raise RuntimeError('x')
+
+    import pytest
+    with pytest.raises(RuntimeError, match='연속'):
+        G.collect(rows, {r['id']: 'q' for r in rows}, lambda q, refs: [], boom, lambda state: {'passed': []})
+
+
+def test_r1_dev_snapshot_reproduces_registered_result():
+    snap = json.load(open(ROOT / 'evals/inputs/grader_cases_r1_dev.json', encoding='utf-8'))
+    r = G.evaluate(snap['cases'])
+    assert (r['relevant'], r['irrelevant']) == (46, 0)
+    assert r['retrieved_sufficient'] == 39 and r['retention'] == {'kept': 36, 'of': 39}
+    assert r['table'] == {'부분>부분': 1, '부족>부족': 6, '충분>부분': 1, '충분>부족': 2, '충분>충분': 36}
+    assert r['page_recall_mean'] == 0.804
+    assert '"content"' not in (ROOT / 'evals/inputs/grader_cases_r1_dev.json').read_text(encoding='utf-8')
