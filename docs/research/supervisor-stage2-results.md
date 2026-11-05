@@ -39,6 +39,14 @@
 
 표 읽는 법: `Attempted Outputs`는 계획한 70문항 중 실제 시도한 수, `Completion Rate`는 성공 또는 확정 실패가 최종 행으로 기록된 수 / 70이다. `Schema Valid Rate`는 다음 노드가 읽을 수 있는 유효 결정 수 / 70, `Question Type Accuracy`는 유형 정답이 있는 35문항 중 맞힌 수 / 35, `Question Type Macro-F1`은 네 유형의 F1 동일 가중 평균이다. `Raw Calls`는 재시도까지 합친 호출 수, `Errors`는 최종 실패 문항의 오류 종류와 수다. `Reported Cost Sum`은 저장된 usage에 비용이 있는 응답의 합계, `Budget-Accounted Cost`는 미보고 호출의 보수적 예약액까지 합친 예산 관리값이다. `p50 Latency`는 문항별 전체 처리 시간의 중앙값, `p95 Latency`는 95백분위수다. `ValidationError`는 모델 호출은 됐지만 최종 출력 형식이 계약에 맞지 않은 문항을 뜻한다.
 
+### Jev Routing Consistency
+
+| Predicted `out_of_scope` | `next_action=refuse` | Inconsistent Action | Case IDs |
+|---:|---:|---:|---|
+| 6/70 | 2/6 | 4/6 | `draft30-m06` (`circuit_agent`), `draft30-h09`·`draft30-h10`·`draft50-n18` (`search_agent`) |
+
+표 읽는 법: `Predicted out_of_scope`는 Jev가 스스로 서비스 범위 밖이라고 분류한 문항 수, `next_action=refuse`는 그중 거절 동작을 고른 수다. `Inconsistent Action`은 범위 밖으로 분류하면서 거절 외 동작을 고른 수다. 이 값은 저장된 2차 원시 행의 `decision` 두 필드를 대조한 `[Calculated]` 지표이며, 사람 정답이 없는 35문항의 정답률을 뜻하지 않는다. 기존 `Schema Valid Rate` 70/70은 형식 통과 수치로 유지한다. 다른 5종과 같은 기준의 라우팅 일관성 비교는 이번 표에서 측정하지 않았다.
+
 ### 호출·실패 상세
 
 `[Measured]`는 저장된 응답 metadata·행·실행 시간이며, rate와 class별 점수는 해당 행에서 다시 계산한 `[Calculated]` 값이다. 여섯 후보 모두 smoke에서 실제 모델·provider가 확인됐다. Meta의 smoke만 `schema_error`였지만 모델 호출과 provider 확인은 성공했고, 본 테스트의 문항별 실패로 따로 측정했다. 본 테스트에서 호출 자체가 불가능해 중단된 모델은 없다.
@@ -78,7 +86,7 @@
 
 표 읽는 법: `candidate_find`는 조건에 맞는 대체 후보 찾기, `candidate_judge`는 제시한 후보의 대체 가능성 판단, `rating`은 부품 정격·특성 질문, `role`은 회로 내 역할·연결 질문이다. 각 값은 해당 유형의 F1 점수로, 그 유형을 정답으로 맞힌 정도와 다른 유형을 잘못 그 유형으로 고른 정도를 함께 반영한다. 1.000이 가장 높고 0.000이 가장 낮다.
 
-\* `Reported Cost Sum`은 저장된 행에서 확인되는 usage.cost 합계다. 생성형 5종은 schema 재시도 뒤 성공한 행의 **이전 실패 시도 usage가 행에 모두 남지 않아** 실제 전체 청구액보다 작을 수 있다. 비용 상한 판정에는 호출 시 provider가 보고한 비용과 미보고 호출의 보수 예약액을 합친 `Budget-Accounted Cost`를 썼다. 본 테스트 6종의 이 합계는 US$0.220743282로 등록 상한 US$0.88 이내다. 5종 smoke artifact는 실제 usage를 저장하지 않으므로 smoke 실제 총 비용은 `Not Reported`; Jev smoke는 US$0.000036498을 보고했다. 위 합계에는 smoke가 없다.
+\* `Reported Cost Sum`은 저장된 행에서 확인되는 usage.cost 합계다. 생성형 5종은 schema 재시도 뒤 성공한 행의 **이전 실패 시도 usage가 행에 모두 남지 않아** 실제 전체 청구액보다 작을 수 있다. 비용 관리에는 호출 시 provider가 보고한 비용과 미보고 호출의 예약액을 합친 `Budget-Accounted Cost`를 썼다. 본 테스트 6종의 이 합계는 US$0.220743282로 등록한 계획값 US$0.88 이내다. Jev의 호출 전 예약은 입력 토큰 비용 추정치만 사용했으므로 `--max-usd`가 실제 지출의 절대 상한을 보장하지 않는다. 호출 실제 비용이 추정보다 크면 마지막 job에서 초과할 수 있다. 5종 smoke artifact는 실제 usage를 저장하지 않으므로 smoke 실제 총 비용은 `Not Reported`; Jev smoke는 US$0.000036498을 보고했다. 위 합계에는 smoke가 없다.
 
 위 표의 `Input Tokens`와 `Output Tokens`도 저장된 usage record의 합계다. 생성형 5종은 저장되지 않은 이전 schema 재시도 usage가 이 값에도 빠질 수 있다.
 
@@ -106,6 +114,6 @@
 
 5종 manifest의 `code_sha256`은 실행 시점 파일의 원시 바이트 해시다. 현재 Windows checkout의 `run_supervisor_models.py`는 CRLF로 변환되어 그 해시와 다르지만, LF로 정규화한 바이트는 `main`의 `ff4ace1` 코드 blob 및 manifest 해시와 일치한다. 따라서 현재 checkout에서 기존 manifest를 그대로 재실행할 수 있다고 주장하지 않는다. Jev manifest는 동결 데이터셋과 typed question 계약 해시를 고정했지만 실행기 파일 해시는 기록하지 않았다. 이 차이는 원시 행·provider 근거와 별개로 코드 재현의 한계다.
 
-2차에서는 Luna가 gold Accuracy 34/35로 가장 높고, Jev가 33/35와 유효 결정 70/70, 가장 낮은 비용·지연시간을 기록했다. 이번 결과는 기존 Luna 확정 결정을 자동으로 바꾸지 않는다. 모델 변경 또는 cascade는 별도 결정과 검증 대상이다.
+2차에서는 Luna가 gold Accuracy 34/35로 가장 높고, Jev가 33/35와 형식상 유효 결정 70/70, 가장 낮은 기록 비용·지연시간을 남겼다. Jev의 범위 밖 자체 분류 6건 중 4건은 거절하지 않아, 이 수치만으로 운영 라우팅 적합성을 인정할 수 없다. 이번 결과는 기존 Luna 확정 결정을 자동으로 바꾸지 않는다. 모델 변경 또는 cascade는 별도 결정과 검증 대상이다.
 
-유료 평가 본 실행은 6종 모두 70문항을 시도했고, 등록한 모델별 비용 상한을 넘지 않았다. commit, push, PR, 병합은 수행하지 않았다.
+유료 평가 본 실행은 6종 모두 70문항을 시도했고, 저장된 `Budget-Accounted Cost`는 등록한 모델별 계획값 이내였다. 실제 전체 청구액은 외부 청구서로 확인하지 않았다.

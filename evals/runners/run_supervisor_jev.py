@@ -377,7 +377,13 @@ def execute_jobs(
     max_seconds: float = 7200.0,
     clock=time.monotonic,
 ) -> dict:
-    """부분 저장·재개와 비용 상한을 적용해 job을 순차 실행한다."""
+    """추정 비용으로 다음 job을 차단하고 보고 비용이 초과하면 즉시 멈춘다."""
+    if not math.isfinite(max_usd) or max_usd <= 0:
+        raise ValueError("max_usd는 유한한 양수여야 합니다")
+    if not math.isfinite(input_price_per_token) or input_price_per_token < 0:
+        raise ValueError("input_price_per_token은 유한한 0 이상의 수여야 합니다")
+    if not math.isfinite(max_seconds) or max_seconds <= 0:
+        raise ValueError("max_seconds는 유한한 양수여야 합니다")
     output = Path(output)
     existing = json.loads(output.read_text(encoding="utf-8")) if output.exists() else {"rows": []}
     rows = list(existing.get("rows", []))
@@ -385,6 +391,8 @@ def execute_jobs(
         row.get("budget_accounted_cost", (row.get("usage") or {}).get("cost") or 0.0)
         for row in rows
     )
+    if not math.isfinite(spent) or spent < 0:
+        raise ValueError("기존 비용 기록이 유효하지 않습니다")
     provider_failures = 0
     for previous in reversed(rows):
         if previous.get("status") != "error" or previous.get("error_type") == "ValidationError":
@@ -413,6 +421,9 @@ def execute_jobs(
         spent += row["budget_accounted_cost"]
         result = {"status": "incomplete", "budget_accounted_cost": spent, "rows": rows}
         _write_json_atomic(output, result)
+        if spent > max_usd:
+            status = "budget_exceeded"
+            break
         if row.get("error_type") == "JevProviderMismatch":
             status = "provider_stopped"
             break
@@ -476,6 +487,10 @@ def smoke(
     timeout: float,
 ) -> dict:
     """첫 문항으로 endpoint·model·provider·typed-answer 계약을 확인한다."""
+    if not math.isfinite(max_usd) or max_usd <= 0:
+        raise ValueError("max_usd는 유한한 양수여야 합니다")
+    if not math.isfinite(input_price_per_token) or input_price_per_token < 0:
+        raise ValueError("input_price_per_token은 유한한 0 이상의 수여야 합니다")
     manifest, _, items_by_id = _load_live_context(output)
     job = manifest["jobs"][0]
     request_bytes = json.dumps(
@@ -490,6 +505,9 @@ def smoke(
     status = "complete" if row.get("status") == "complete" and called else (
         "schema_error" if row.get("error_type") == "ValidationError" and called else "error"
     )
+    reported_cost = row.get("reported_cost_sum")
+    if reported_cost is not None and reported_cost > max_usd:
+        status = "budget_exceeded"
     result = {
         "status": status,
         "model_id": MODEL_ID,
@@ -497,6 +515,7 @@ def smoke(
         "provider": row.get("provider"),
         "error_type": row.get("error_type"),
         "usage": row.get("usage"),
+        "reported_cost_sum": reported_cost,
     }
     _write_json_atomic(Path(output) / "smoke.json", result)
     return result
@@ -562,11 +581,11 @@ def main(argv=None) -> int:
         parser.error("live API 호출에는 --confirm-live가 필요합니다")
     if not os.getenv("OPENROUTER_API_KEY"):
         parser.error("OPENROUTER_API_KEY가 필요합니다")
-    if args.max_usd <= 0 or args.timeout <= 0 or args.max_seconds <= 0:
-        parser.error("--max-usd, --timeout, --max-seconds는 양수여야 합니다")
+    if any(not math.isfinite(value) or value <= 0 for value in (args.max_usd, args.timeout, args.max_seconds)):
+        parser.error("--max-usd, --timeout, --max-seconds는 유한한 양수여야 합니다")
     catalog = live_preflight()
     prompt_price = float(catalog["catalog"].get("pricing", {}).get("prompt", 0.0))
-    if prompt_price <= 0:
+    if not math.isfinite(prompt_price) or prompt_price <= 0:
         parser.error("현재 input token 가격을 확인할 수 없습니다")
     if args.command == "smoke":
         result = smoke(

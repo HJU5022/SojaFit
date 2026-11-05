@@ -74,6 +74,23 @@ def test_stage2_manifest_and_summary_use_only_run_index_two():
     assert summary["Raw Calls"] == 2
 
 
+def test_stage2_out_of_scope_action_consistency_from_frozen_rows():
+    artifact = ROOT / "evals/results/supervisor/2026-11-05-jev-stage2-v1/rows.json"
+    rows = json.loads(artifact.read_text(encoding="utf-8"))["rows"]
+    predicted_out_of_scope = [
+        row for row in rows
+        if row.get("status") == "complete"
+        and row["decision"]["question_type"] == "out_of_scope"
+    ]
+    inconsistent_ids = {
+        row["case_id"] for row in predicted_out_of_scope
+        if row["decision"]["next_action"] != "refuse"
+    }
+
+    assert len(predicted_out_of_scope) == 6
+    assert inconsistent_ids == {"draft30-m06", "draft30-h09", "draft30-h10", "draft50-n18"}
+
+
 def test_stage2_plan_creates_only_second_run_without_network(tmp_path, monkeypatch):
     monkeypatch.setattr(jev, "live_preflight", lambda: pytest.fail("network called"))
     output = tmp_path / "jev-stage2"
@@ -301,18 +318,79 @@ def test_execute_jobs_saves_each_result_and_stops_before_budget(tmp_path):
         return payload
 
     output = tmp_path / "rows.json"
+    request_bytes = json.dumps(jev.build_request("short"), ensure_ascii=False).encode("utf-8")
+    estimated_tokens = max(1, len(request_bytes) // 2)
     result = jev.execute_jobs(
         jobs,
         items,
         output,
         call=call,
         max_usd=0.01,
-        input_price_per_token=0.0,
+        input_price_per_token=0.005 / (estimated_tokens * 3),
     )
 
     assert result["status"] == "budget_stopped"
-    assert calls == 2
+    assert calls == 1
     assert json.loads(output.read_text(encoding="utf-8")) == result
+
+
+def test_execute_jobs_records_actual_budget_overshoot_and_stops(tmp_path):
+    jobs = [
+        {"model_id": jev.MODEL_ID, "case_id": f"q{i}", "run_index": 2}
+        for i in range(2)
+    ]
+    items = {f"q{i}": {"id": f"q{i}", "input": "short"} for i in range(2)}
+    calls = 0
+
+    def call(_user_input):
+        nonlocal calls
+        calls += 1
+        payload = valid_response_payload()
+        payload["usage"]["cost"] = 0.011
+        return payload
+
+    result = jev.execute_jobs(
+        jobs, items, tmp_path / "rows.json", call=call,
+        max_usd=0.01, input_price_per_token=0.0,
+    )
+    assert result["status"] == "budget_exceeded"
+    assert result["budget_accounted_cost"] == pytest.approx(0.011)
+    assert calls == 1
+    assert len(result["rows"]) == 1
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), 0.0, -1.0])
+def test_execute_jobs_rejects_invalid_budget_before_call(tmp_path, invalid):
+    with pytest.raises(ValueError, match="max_usd"):
+        jev.execute_jobs(
+            [{"model_id": jev.MODEL_ID, "case_id": "q1", "run_index": 2}],
+            {"q1": {"id": "q1", "input": "short"}},
+            tmp_path / "rows.json", call=lambda _: pytest.fail("network called"),
+            max_usd=invalid, input_price_per_token=0.0,
+        )
+
+
+def test_smoke_records_reported_budget_overshoot(tmp_path, monkeypatch):
+    job = {"model_id": jev.MODEL_ID, "case_id": "q1", "run_index": 2}
+    monkeypatch.setattr(jev, "_load_live_context", lambda _: ({"jobs": [job]}, [], {"q1": {"input": "short"}}))
+
+    def call(_user_input):
+        payload = valid_response_payload()
+        payload["usage"]["cost"] = 0.011
+        return payload
+
+    monkeypatch.setattr(jev, "_decision_call", lambda _provider, _timeout: call)
+    result = jev.smoke(tmp_path, max_usd=0.01, input_price_per_token=0.0, timeout=45)
+    assert result["status"] == "budget_exceeded"
+    assert result["reported_cost_sum"] == pytest.approx(0.011)
+
+
+@pytest.mark.parametrize("invalid", ["nan", "inf", "-inf"])
+def test_main_rejects_nonfinite_live_limits_before_preflight(monkeypatch, tmp_path, invalid):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr(jev, "live_preflight", lambda: pytest.fail("network called"))
+    with pytest.raises(SystemExit):
+        jev.main(["run", str(tmp_path), "--max-usd", invalid, "--confirm-live"])
 
 
 def test_execute_jobs_reserves_three_format_attempts_before_call(tmp_path):

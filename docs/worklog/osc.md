@@ -141,3 +141,10 @@
 - 검증: 관련 pytest 77건 통과, `git diff --check` 통과, JSON의 비밀값·원문 입력·gold 필드 패턴 0건. 전체 pytest는 Windows 기본 인코딩에서 기존 `test_run_graph.py::test_main_writes_metrics_only_result_file`의 `UnicodeDecodeError` 1건으로 실패했고, `PYTHONUTF8=1`에서는 364 passed·27 skipped였다. 실행 코드와 평가셋은 이 준비 작업에서 유료 API를 다시 호출하지 않았다.
 - 확인 못 한 것·다음 할 일: 외부 청구서로 실제 총 비용을 대조하지 못했다. 5종 manifest의 실행기 원시 바이트 해시는 현재 Windows CRLF checkout과 다르지만 LF로 정규화하면 `ff4ace1` 코드 blob과 맞는다. Jev manifest에는 실행기 파일 해시가 없어 두 코드 재현 한계를 결과 문서에 적었다. commit·push·PR 생성은 하지 않았다.
 - PR 준비 정리: 두 2차 결과 보고서에서 PR 공개 후 사실과 달라질 `미커밋` 상태 문구를 제거했다. `SPEC.md`는 조장 소유 주요 문서이므로 이 브랜치에서 수정하지 않고, 조장에게 평가 전용 Jev Decisions API 호출·ZDR 및 fallback 금지·typed answer 변환 계약을 SPEC의 평가 실행 절에 반영해 달라고 PR에서 요청한다. 새 `run_supervisor_jev.py` 592줄과 `test_supervisor_jev.py` 443줄은 권장 핵심 변경 400줄 안팎을 넘는다. 6종 2차 결과를 재현·검토하려면 Jev의 호출 경계·실행 조건·변환·오류/예산 처리와 그 회귀 검증, 동일 회차 원시 행·집계를 함께 봐야 하므로 하나의 평가 근거 PR에 묶는다. PR 본문에 이 규모와 이유를 적고 커밋은 코드·계약·결과 근거의 논리 단위로 나눈다.
+
+## 2026-11-05 PR #54 검토 피드백 반영
+
+- 원시 결과는 보존하고 Jev 2차 `out_of_scope` 자체 분류 6건 중 `next_action != refuse` 4건을 `Routing Consistency` 오류로 보고서에 별도 표시했다. 이는 형식상 유효 결정 70/70이나 gold 35문항 Accuracy를 바꾸지 않는다.
+- Jev 실행기의 `--max-usd`는 입력 비용 추정으로 다음 job을 차단하는 관리값임을 명시했다. 실제 보고 비용이 계획값을 넘은 경우 해당 행을 저장하고 추가 job 없이 `budget_exceeded`로 중단하며, `NaN`·무한대 한도는 API 호출 전 거부한다. 기존 2차 실측이 이 수정 코드로 재실행된 것처럼 기록하지 않는다.
+- 변경 범위: Jev 실행기·회귀 테스트, 2차 결과·간단 보고서, 실험 계약·사전 등록 결과 해석, Jev 인수인계와 실행기 색인. 원시 JSON과 동결 평가셋은 수정하지 않았다.
+- 확인: Jev 원시 `rows.json` SHA-256 `f1995ce2b442d1f7dc72d427a7ffcb2fcf9c1b63dd9a27ee015ee109d4fa0d2d` 유지. 관련 테스트 63건, `PYTHONUTF8=1` 전체 테스트 374건 통과·27건 건너뜀, `git diff --check` 통과. 유료 API 호출과 재측정은 하지 않았다.

@@ -32,7 +32,10 @@ Jev는 Decisions API의 typed answer를 사용하고 나머지 5종은 Chat Comp
 
 2차에서는 `openai/gpt-6-luna`가 채점된 질문 유형을 가장 많이 맞혔다(34/35). `typesafe/jev-1.14`는 유효 결정 70/70과 가장 낮은 `Budget-Accounted Cost`·p95 Latency를 기록했다. 이 결과만으로 기존 Luna 선정 결정을 변경하지 않는다.
 
+Jev의 유효 결정 70/70은 출력 형식 기준이다. Jev가 `out_of_scope`로 분류한 6건 중 4건은 `next_action=refuse`가 아닌 검색·회로 노드를 골랐다. 이 `Routing Consistency` 오류는 [상세 결과](supervisor-stage2-results.md)에 문항 ID와 함께 기록했으며, 프롬프트를 바꾼 결과로 재해석하지 않는다.
+
 두 회차는 **같은 문항**을 사용하므로 독립 평가셋 성능을 증명하지 않는다. 정확도는 gold가 있는 35문항에 한정된다. `Safety-Failure Case Count`는 별도 사람 판정이 없어 `Not Measured`다. 생성형 5종의 저장된 usage에는 일부 이전 schema 재시도 비용이 빠질 수 있어 실제 전체 청구액을 확정할 수 없다.
+Jev의 `--max-usd`도 호출 전 입력 비용 추정으로 다음 job을 차단하는 관리값이며, 마지막 job의 실제 비용이 추정보다 크면 계획값을 넘을 수 있다. 이번 저장 결과가 계획값을 넘었다는 뜻은 아니다.
 
 ## 근거
 
