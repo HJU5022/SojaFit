@@ -45,8 +45,12 @@ def _used_and_fake(state: dict, answer: str) -> tuple[list[str], list[str], dict
 
 
 def judgement_parts(judgement: dict) -> list[dict]:
-    """판정 결과에서 판정한 후보 목록(판정은 results, 찾기는 보여 준 후보 + 확인 안 됨 후보)."""
-    return judgement.get("results") or [*(judgement.get("shown") or []), *(judgement.get("unverified") or [])]
+    """답 글에 조건 표와 인용이 실제로 나간 후보 목록(판정은 results, 찾기는 보여 준 후보 shown만)."""
+    # [왜] 찾기의 results에는 판정한 후보 전체(최대 50개)가 들어 있지만 답 글에는 shown만 조건 표와 인용이 나간다.
+    # results로 세면 답에 안 보인 후보의 인용으로 정답이 맞을 수 있다(11-06 진단, cited_gold 3건)
+    if judgement.get("kind") == "find":
+        return list(judgement.get("shown") or [])
+    return list(judgement.get("results") or [])
 
 
 def judgement_locations(judgement: dict) -> list[list]:

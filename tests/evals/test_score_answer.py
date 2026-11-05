@@ -280,3 +280,14 @@ def test_result_row_keeps_verdict_codes_only():
     row = result_row(DATASHEET_ITEM, _judge_state("1N5817 SERIES_H2104.pdf", 1), scores, "")
     assert row["verdicts"] == [["1N5817", "NOT_SUFFICIENT"]]
     assert "answer" not in row
+
+
+def test_find_answer_counts_only_shown_candidates():
+    """찾기 답은 답 글에 나간 후보(shown)의 인용만 센다. 판정만 하고 안 보여 준 후보의 인용으로 정답이 되지 않는다."""
+    gold = {"document": "1N5817 SERIES_H2104.pdf", "page": 1}
+    other = {"document": "SS12 SERIES_R2305.pdf", "page": 1}
+    hidden = {"part": "1N5817", "verdict": "ROLE_SUFFICIENT", "checks": [{"code": "VRRM", "citation": gold}]}
+    shown = {"part": "SS14", "verdict": "ROLE_SUFFICIENT", "checks": [{"code": "VRRM", "citation": other}]}
+    state = {"path": ["판정", "답 틀"], "answer": "역할: 역극성 보호", "check": {"used": [], "judgement": True},
+             "judgement": {"kind": "find", "results": [hidden, shown], "shown": [shown], "unverified": []}}
+    assert score_item(DATASHEET_ITEM, state)["metric"] == "wrong_citation"
