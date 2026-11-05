@@ -165,6 +165,7 @@ SojaFit (proj3-b)
 │   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
 │   │   ├── supervisor_prompt_v0_common.py  <- 수퍼바이저 V0 표본 무결성·입력 격리·공통 채점
 │   │   ├── run_supervisor_prompt_v0.py  <- Luna·Haiku 수퍼바이저 V0 오프라인 plan·명시적 live 실행
+│   │   ├── run_supervisor_prompt_v0_jev.py  <- Jev Decisions 수퍼바이저 V0 오프라인 plan·typed answer 정규화·상한 실행
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -288,6 +289,7 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor_stage3_report.py  <- 3차 집계 분모·라우팅·3회 비교 검증
 │   │   ├── test_supervisor_prompt_v0_common.py  <- V0 표본 무결성·입력 격리·공통 분모 검증
 │   │   ├── test_supervisor_prompt_v0.py  <- Luna·Haiku V0 입력·재시도·오프라인 plan·live gate 검증
+│   │   ├── test_supervisor_prompt_v0_jev.py  <- Jev V0 공통 계약·입력 경계·typed answer·live gate 검증
 │   │   ├── test_skill_pair.py  <- Skill 비교 실행기의 경로·격리·예산
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
