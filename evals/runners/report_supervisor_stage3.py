@@ -28,6 +28,15 @@ def percentile(values, fraction):
     return values[max(0, math.ceil(len(values) * fraction) - 1)] if values else None
 
 
+def source_digest(path):
+    """기존 회차는 LF 정규화, 바이트 보존한 3차 파일은 원시 hash로 식별한다."""
+    path = Path(path)
+    data = path.read_bytes()
+    if path.parent.name in (*FIVE_DIRS[:2], *JEV_DIRS[:2]):
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def latest_rows(result, items, model, run_index):
     latest = {}
     for row in result["rows"]:
@@ -153,6 +162,7 @@ def build_summary(root=ROOT):
     if len(items) != frozen["count"]:
         raise ValueError("동결 평가셋 건수 불일치")
     summary = {"dataset_sha256": digest, "run_index": 3, "sources": {}, "models": {},
+               "source_hash_policy": {"stage1_stage2": "SHA-256 after CRLF-to-LF normalization", "stage3": "SHA-256 of original bytes, preserved by .gitattributes -text"},
                "analysis_code_sha256_lf": hashlib.sha256(Path(__file__).read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
                "execution_code_sha256_lf": {
                    name: hashlib.sha256((root / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
@@ -178,9 +188,9 @@ def build_summary(root=ROOT):
             if manifest.get("dataset_sha256") != digest:
                 raise ValueError("회차별 manifest dataset hash 불일치")
             contracts.add(manifest.get("prompt_sha256", manifest.get("question_contract_sha256")))
-            summary["sources"][manifest_path.relative_to(root).as_posix()] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+            summary["sources"][manifest_path.relative_to(root).as_posix()] = source_digest(manifest_path)
             relative = path.relative_to(root).as_posix()
-            summary["sources"][relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+            summary["sources"][relative] = source_digest(path)
             results.append(json.loads(path.read_text(encoding="utf-8")))
         if len(contracts) != 1 or None in contracts:
             raise ValueError("회차별 prompt/typed question 계약 불일치")
@@ -192,10 +202,10 @@ def build_summary(root=ROOT):
     execution = root / "evals/results/supervisor/2026-11-05-stage3-five-v1/execution.json"
     if execution.exists():
         summary["execution"] = json.loads(execution.read_text(encoding="utf-8"))
-        summary["sources"][execution.relative_to(root).as_posix()] = hashlib.sha256(execution.read_bytes()).hexdigest()
+        summary["sources"][execution.relative_to(root).as_posix()] = source_digest(execution)
     for directory in (FIVE_DIRS[2], JEV_DIRS[2]):
         for path in sorted((root / "evals/results/supervisor" / directory).glob("*.json")):
-            summary["sources"][path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+            summary["sources"][path.relative_to(root).as_posix()] = source_digest(path)
     return summary
 
 
@@ -229,6 +239,7 @@ def render_reports(summary, output, root=ROOT):
                "- 동결 v2 70문항, SHA-256 `" + summary["dataset_sha256"] + "`. 모델별 `run_index=3` 한 번만 실행했다. 유형 gold 35문항만 Accuracy·Macro-F1로 채점한다.",
                "- 사전 등록 #33: [3차 계약](../experiments/supervisor-stage3-six-models.md), 유료 호출 전 로컬 커밋 `d10a30b`. 원격 공개 시점으로 실행 전 등록을 독립 증명했다고 주장하지 않는다.",
                "- [3차 집계 JSON](" + summary_link + ") SHA-256 `" + summary_hash + "`. 1~3차 원시 파일과 3차 metadata의 hash, 모델별 수치·문항 ID를 담는다.",
+               "- 출처 hash 정책: 기존 1·2차 파일은 Git checkout의 줄바꿈 차이를 제외한 LF 정규화 SHA-256을 사용한다. 3차 JSON은 .gitattributes의 -text로 원시 바이트를 보존하고 그 SHA-256을 기록한다. 기존 회차 원시 파일과 3차 호출 결과의 내용은 수정하지 않았다.",
                "- `execution.json`에 모델별 명령 인자·시작/종료 시각·process 경과 시간·종료 코드·원시 파일 hash를 보존했다. `preflight.json`에는 공개 catalog 가격·ZDR 노출·첫 문항 예약액을 기록했다.",
                "- 재계산: `uv run --no-sync python -m evals.runners.report_supervisor_stage3 evals/results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json`. 집계기는 API를 호출하지 않으며 두 보고서도 같은 JSON에서 생성한다.", "",
                "## PR 검토용 근거 구성", "",
@@ -318,7 +329,7 @@ def render_reports(summary, output, root=ROOT):
                 "- 5종 smoke 파일은 usage 비용을 보존하지 않아 실제 smoke 총 비용을 확정할 수 없다. Jev smoke의 보고 비용은 해당 smoke.json에서 확인한다.",
                 "- 5종 manifest의 code_sha256은 실행 전 파일 원시 바이트 hash다. 집계 JSON의 execution_code_sha256_lf·analysis_code_sha256_lf는 줄바꿈을 LF로 정규화한 hash이므로 CRLF checkout의 원시 hash와 직접 비교하지 않는다.",
                 "- 사전 등록의 ‘2차와 크게 다르지 않다’에 수치 허용 범위가 없으므로 가설 통과 여부나 운영 모델 변경을 자동 판정하지 않는다. 실측 차이와 실패 문항을 그대로 기록한다.", ""]
-    (root / "docs/research/supervisor-stage3-results.md").write_text("\n".join(heading), encoding="utf-8")
+    (root / "docs/research/supervisor-stage3-results.md").write_text("\n".join(heading), encoding="utf-8", newline="\n")
     brief = ["# 수퍼바이저 6종 3차 평가 간단 보고서", "", "측정일: 2026-11-05 · 상태: 3차 실행 종료", "",
              "동결 v2 70문항을 여섯 모델에서 run_index=3으로 한 번씩 실행했다. 유형 정답률은 관련 gold 35문항만 채점한다. 같은 문항의 반복이므로 독립 평가셋 성능으로 해석하지 않는다.", "",
              table(["Model ID", "Schema Valid Rate", "Question Type Accuracy", "Question Type Macro-F1", "Inconsistent Action", "Raw Calls", "Budget-Accounted Cost (USD)", "p95 Latency (s)"],
@@ -334,7 +345,7 @@ def render_reports(summary, output, root=ROOT):
     brief += ["", "## 해석", "", "3회 일치율은 세 회차가 모두 유효한 문항만 비교하며 비교 가능한 문항 수를 함께 보고한다. 형식 성공·유형 정답·라우팅 모순·provider 변화·비용·지연을 함께 확인해야 한다. 이번 결과로 기존 운영 모델 결정을 자동 변경하지 않는다.", "",
               "사용자 결정에 따른 최종 후보는 `openai/gpt-6-luna`, `typesafe/jev-1.14`, `anthropic/claude-haiku-5.5`의 3종이다. `deepseek/deepseek-v4.1-flash`는 실행 안정성 부족으로 탈락했고, `cohere/command-a-plus`와 `meta/muse-glimmer-30b`도 최종 후보에서 제외했다. 후보의 순위는 제시하지 않는다. Jev의 동작 불일치 4/6과 Haiku의 형식 실패를 포함한 기존 실측 근거는 전부 보존한다.", "",
               "[상세 결과·문항 변화·원시 파일 hash](supervisor-stage3-results.md), [3차 사전 등록](../experiments/supervisor-stage3-six-models.md)", ""]
-    (root / "docs/research/supervisor-stage3-brief-report.md").write_text("\n".join(brief), encoding="utf-8")
+    (root / "docs/research/supervisor-stage3-brief-report.md").write_text("\n".join(brief), encoding="utf-8", newline="\n")
 
 
 def main(argv=None):
@@ -345,7 +356,7 @@ def main(argv=None):
     if summary.get("execution", {}).get("status") != "finished":
         raise ValueError("3차 순차 실행이 종료된 뒤 집계해야 합니다")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     render_reports(summary, args.output)
     print(json.dumps({model: value["runs"]["3"]["Question Type Accuracy"] for model, value in summary["models"].items()}))
     return 0

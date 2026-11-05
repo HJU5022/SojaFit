@@ -94,3 +94,17 @@ def test_stage3_deepseek_diagnostic_matches_length_limited_failures():
     assert diagnosis["labeled_validation_failure_count"] == 33
     assert diagnosis["validation_attempt_usage_records"] == 189
     assert diagnosis["validation_attempts_at_256_tokens"] == 189
+
+
+def test_source_hash_policy_handles_checkout_line_endings(tmp_path):
+    old = tmp_path / report.FIVE_DIRS[1] / "rows.json"
+    new = tmp_path / report.FIVE_DIRS[2] / "rows.json"
+    for path in (old, new):
+        path.parent.mkdir(parents=True)
+        path.write_bytes(b"{}\r\n")
+    old_digest = report.source_digest(old)
+    new_digest = report.source_digest(new)
+    old.write_bytes(b"{}\n")
+    new.write_bytes(b"{}\n")
+    assert report.source_digest(old) == old_digest
+    assert report.source_digest(new) != new_digest
