@@ -25,7 +25,7 @@
   - `pipeline/parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
   - `pipeline/chunk.py` — Docling 결과를 청크(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
   - `pipeline/ingest.py` — manifest와 청크를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `--voyage <벡터 폴더>`는 미리 만든 `v4large.f32`·`v4large.sha.txt`를 API 없이 붙임. `DATABASE_URL` 필요
-  - `pipeline/specs.py` — 표 행 청크를 부품 사양 표(table-definition 5.7 모양 + 청크 번호)로 바꿈(`build`): 코드 17종(5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD), SI 값, 원문 표기, 시험 조건, 쪽·표·행. 계열 범위·충돌·모르는 단위·밀린 표 등 모호한 값은 표에 넣지 않고 `review.jsonl`에 사유와 함께 둠. `sample`은 13개 분류에서 50개 품번을 골라 사람 대조표(markdown)를 씀. 결과는 저장소 밖 `corpus/tsc/specs/`
+  - `pipeline/specs.py` — 표 행 청크를 부품 사양 표(table-definition 5.7 모양 + 청크 번호)로 바꿈(`build`): 코드 17종(5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD), SI 값, 원문 표기, 시험 조건, 쪽·표·행. 계열 범위·충돌·모르는 단위·밀린 표 등 모호한 값은 표에 넣지 않고 `review.jsonl`에 사유와 함께 둠. 문서 단위로 이어지는 행·세로로 합친 품번·조건 칸·패키지별 열을 채우고, 문서가 양방향 적용을 밝힐 때만 C·CA 품번에 단방향 행 값을 붙임. `sample`은 13개 분류에서 50개 품번을 골라 사람 대조표(markdown)를 씀. 결과는 저장소 밖 `corpus/tsc/specs/`
   - `pipeline/subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·청크 사본을 새 폴더에 만듦. 원본은 고치지 않고, 서비스·초기화·적재에서 부르지 않음
 
 작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.

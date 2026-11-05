@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-05 부품 사양 표 규칙 수정(PDF 대조 50개에서 나온 8가지)
+- 한 일: 표본 50개 PDF 대조에서 나온 놓친 값 · 오류를 일반 규칙으로 고쳤다. ① 문서가 "characteristics apply in both directions"를 밝힐 때만 양방향(C · CA · CH · CAH) 품번에 단방향 행 값을 붙이고, `Bi` 칸 품번을 그 행 품번으로 읽음 ② 합쳐진 조건 칸을 되살려 조건이 다른 값을 충돌로 보지 않음(공기 · 접촉 방전 포함) ③ 열 이름 끝의 품번 · `GBPC15, 25, 35 / 005` 같은 계열 열을 품번 열로 읽음 ④ 제너 VZ 최소 · 대표 · 최대 자리를 표 머리에서 되찾고 순서가 어긋나면 검토로 ⑤ 패키지별 칸은 그 패키지 품번에만 ⑥ 이름 없는 이어지는 행이 위 행 파라미터를 이어받고 `SFA1001G - SFA1004G` 범위를 안쪽 품번으로만 펼침 ⑦ 칸 안의 `IF = 50mA` 같은 조건을 살림 ⑧ IFSM을 펄스 폭(8.3ms · 1.0ms)마다 조건과 함께 따로 넣음(제외어가 IFSM 행까지 지우던 버그 수정).
+- 바꾼 파일: `backend/rag/pipeline/specs.py`(907줄), `tests/rag/test_rag_specs.py`(새 시험 11개), `backend/rag/RAG.md`, `tests/rag/RAG.md`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 526 passed, 32 skipped(세 번 돌려 모두 통과, 작업 중 한 번 나온 1 failed는 다시 나오지 않음). 다시 `build`: 사양 행 67,728 → 75,840, 핵심 값 모두 가진 비율 TVS 27 → 46% · 제너 74 → 84% · 표준 정류 94 → 100% · 초고속 78 → 100% 등. 회귀 확인(PDF 판정 jsonl과 대조): 이전 O 265개 그대로, X 4줄 모두 해결, 빠진 값 · IFSM 46개 기대값 중 42개가 PDF 값과 같고 4개(SFA1005G VF, 1M130Z VZ 3자리)는 파서가 표를 망가뜨려 틀린 값 대신 검토 목록으로 감.
+- 확인 못 한 것: 새로 들어간 값 약 8,000행 중 PDF로 본 것은 표본 50개분뿐이다(같은 표본으로 고쳤으므로 낙관적이다). 새 표본 대조표(seed 1, 50개)를 만들었고 아직 대조하지 않았다. TVS는 C형 품번 848개가 여전히 비어 있다(옮길 단방향 행이 파서에 깨짐).
+- 다음 할 일: seed 1 대조표를 PDF와 대조 → DB 적재 마이그레이션 → 판정 에이전트.
+
 ## 2026-11-05 노드별 모델 변경, 단일 #37, lab(Anthropic 직통), 멀티 첫 측정 #38
 - 한 일: 정운 결정으로 노드별 모델을 Supervisor Sonnet · 서브에이전트 노드 Haiku · 채점 Luna로 바꾸고(f385ff7) Langfuse `supervisor` v4를 등록했다. 멀티 측정 전에 `not_found`를 단일과 같은 뜻으로 맞췄다(14b724a). 사전 등록 #37 · #38을 측정 전에 적었다. 팀 레포는 그대로 두고 로컬 복제본(`../lab/repo`, 브랜치 `lab-anthropic`, 푸시 막음)과 Docker 컨테이너 `sojafit-lab`을 만들어, 정운 개인 Anthropic 키로 Supervisor(Sonnet)만 Anthropic API에 직접 부르게 했다(lab 커밋 e86b1e6, `langchain-anthropic` 1.7.7, 구조화 출력은 `output_config.format`).
 - 바꾼 파일: `backend/services/langfuse_prompts.py` · `llm.py`, `backend/prompts/PROMPTS.md`, `evals/runners/run_graph.py`, 시험 4개, `evals/guides/preregister.md`(#37 · #38), 결과 `evals/results/graph/graph_dataset_v2_2026-11-05-2054.json` · `multi_dataset_v2_2026-11-05-1226.json`, 이 파일
