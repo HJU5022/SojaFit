@@ -13,6 +13,18 @@ from backend.services import llm
 from evals.runners import run_skill_pair as pair
 
 
+def test_load_frozen_items_reads_utf8_on_windows(tmp_path):
+    """동결 평가셋의 한글을 Windows 기본 CP949와 무관하게 UTF-8로 읽는다."""
+    item = {"id": "한글-1", "input": "질문: 역전압", "expected": "40 V"}
+    dataset = tmp_path / "dataset_v1.jsonl"
+    dataset.write_text(json.dumps(item, ensure_ascii=False) + "\n", encoding="utf-8")
+    frozen = tmp_path / "FROZEN.json"
+    frozen.write_text(json.dumps({dataset.name: {
+        "sha256": pair.digest(dataset), "count": 1}}, ensure_ascii=False), encoding="utf-8")
+
+    assert pair.load_frozen_items(dataset, frozen) == [item]
+
+
 @pytest.mark.parametrize("kind,passes,empty,want", [
     ("role", [], False, ["입력 읽기", "라우팅"]),
     ("out_of_scope", [], False, ["입력 읽기", "라우팅", "거절"]),

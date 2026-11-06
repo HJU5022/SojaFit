@@ -28,6 +28,44 @@
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 
+## 팀 Supabase 적재 현황 스냅샷
+
+> 조회 시각: 2026-11-05 20:37:12 KST. 로컬 `.env`가 가리키는 팀 Supabase PostgreSQL에 읽기 전용 트랜잭션으로 접속해 `public` 스키마의 테이블별 `count(*)`와 비민감 집계만 확인했습니다. 문서 본문·이메일·비밀번호 해시·세션 토큰 해시·Google 식별자 원문은 읽거나 기록하지 않았습니다. 아래 수치는 적재·로그인·만료 정리에 따라 바뀌는 시점 스냅샷이며 운영 감사 로그가 아닙니다.
+
+### RAG 코퍼스
+
+| 테이블 | 행 수 | 확인한 비민감 분류 |
+|---|---:|---|
+| `source_documents` | 1,360 | `DATASHEET` 1,360건 |
+| `document_chunks` | 52,244 | 문서 청크 |
+| `chunk_embeddings` | 52,244 | `voyage-4-large` 52,244건 |
+| `chunk_embedding_bits` | 52,244 | 같은 청크의 1비트 검색 코드 |
+
+문서 1,360건에서 청크 52,244건이 적재돼 있고, 각 청크에 `voyage-4-large` 임베딩과 1비트 코드가 한 건씩 있습니다.
+
+### 사용자·인증
+
+| 테이블 | 행 수 | 조회 당시 상태 |
+|---|---:|---|
+| `users` | 5 | 활성 관리자 3명, 활성 일반 사용자 2명 |
+| `auth_sessions` | 5 | 활성 1건, 만료 4건 |
+| `auth_login_attempts` | 0 | 실패 집계·잠금 행 없음 |
+| `auth_google_identities` | 1 | 기존 관리자와 승인된 Google 계정 연결 1건 |
+| `auth_google_pending` | 0 | 활성·만료 승인 대기 행 없음 |
+| `auth_google_states` | 2 | 활성 0건, 만료 2건 |
+
+활성 세션 1건은 시험 Cloud Run에서 Google 관리자 로그인 후 발급된 세션입니다. `auth_google_identities`는 연결을 철회할 때까지 유지하지만, `auth_sessions`·`auth_google_states`·`auth_google_pending`은 로그인 처리와 만료 정리에 따라 바뀌는 임시 상태입니다. 전용 로그인 성공·실패 감사 이력 테이블은 없습니다.
+
+후속 인증 검증(2026-11-05 21:48:13 KST)에서는 자동화 탭과 일반 탭을 섞은 최초 로그아웃 시험에서 남은 관리자 ID 5의 세션 1건을 사용자 승인 후 정리하고, 일반 Chrome 탭 하나에서 다시 시험했습니다. Google 로그인 후 `/api/auth/me`가 `user_id=5`, `role=admin`을 반환했고, 같은 탭에서 로그아웃한 뒤 브라우저는 `401`, DB의 해당 사용자 세션은 0건이 됐으며 Google 연결 1건은 유지됐습니다. 이어 같은 관리자 계정의 기존 ID·PW 로그인도 `/api/auth/me`에서 같은 ID·역할을 반환했고, DB에 활성 세션 1건·로그인 실패 행 0건·Google 연결 1건이 확인됐습니다. 비밀번호·쿠키·토큰·Google 식별자 원문은 조회하거나 기록하지 않았습니다.
+
+연결 철회 검증(2026-11-05 21:54:04 KST)에서는 사용자 승인 후 관리자 ID 5의 `auth_google_identities` 1건을 삭제했고 사용자 계정·관리자 역할·비밀번호 해시는 유지됐습니다. 철회 뒤 같은 Google 계정으로 로그인했을 때 관리자 세션 없이 `auth_google_pending` 1건만 생성됐습니다. 검증 이메일과 기존 관리자 로그인 ID가 일치하고 활성 요청이 정확히 1건인 것을 확인한 뒤 관리자 ID 5에 다시 승인했으며, 최종 상태는 Google 연결 1건·활성 승인 대기 0건·세션 0건입니다. 따라서 연결 철회는 Google 로그인 경로와 기존 세션만 제거하고 ID·PW 계정은 유지하며, 재승인 자체는 세션을 자동 발급하지 않습니다.
+
+### 현재 `public` 스키마에서 확인되지 않은 영역
+
+- `manual/004_create_business_tables.sql.draft`의 업무 테이블 11개(`circuits`, `parts`, `analysis_runs`, `candidate_evaluations`, `quotes` 등)는 아직 생성·적재되지 않았습니다.
+- LangGraph가 만드는 `checkpoints`·`checkpoint_blobs`·`checkpoint_writes`·`checkpoint_migrations`와 Store의 `store`·`store_vectors`·마이그레이션 표는 아직 생성·적재되지 않았습니다.
+- 위 미생성 판정은 조회 당시 팀 DB의 `public` 스키마 기준입니다. 다른 스키마나 외부 저장소의 데이터 존재 여부를 뜻하지 않습니다.
+
 ## 기존 DB 인증 스키마 적용 전 점검
 
 1. 대상이 공유·운영 DB인지 확인하고, 현재 적용 이력과 백업·복구 경로를 담당자와 확인합니다. 비밀번호·접속 문자열은 기록하지 않습니다.
