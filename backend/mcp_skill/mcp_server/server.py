@@ -10,7 +10,7 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 from backend.graph.nodes import circuit_around
-from backend.rag.retrieve import retrieve
+from backend.rag.retrieve import corpus_known, retrieve
 
 
 mcp = FastMCP("sojafit-search")
@@ -37,6 +37,22 @@ def search_corpus(query: str, k: int = 5, parts: list[str] | None = None) -> lis
     if isinstance(k, bool) or not isinstance(k, int) or not 1 <= k <= 10:
         raise ValueError("k must be between 1 and 10")
     return retrieve(query, k=k, parts=parts, method='hybrid')
+
+
+def _validate_names(name: str, values: object) -> None:
+    if (not isinstance(values, list) or len(values) > 20
+            or not all(isinstance(v, str) and 1 <= len(v) <= 100 for v in values)):
+        raise ValueError(f"{name} must be a list of up to 20 strings of 1 to 100 characters")
+
+
+@mcp.tool()
+def check_corpus(parts: list[str], revisions: list[str]) -> dict:
+    """품번과 데이터시트 개정 코드가 코퍼스에 있는지 확인합니다(있음/없음만 돌려주고 판단하지 않습니다)."""
+    _validate_names("parts", parts)
+    _validate_names("revisions", revisions)
+    known_parts, known_revisions = corpus_known()
+    return {"parts": {p: p.strip().lower() in known_parts for p in parts},
+            "revisions": {r: r.strip().upper() in known_revisions for r in revisions}}
 
 
 @mcp.tool()

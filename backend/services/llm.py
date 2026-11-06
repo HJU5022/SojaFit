@@ -9,6 +9,7 @@ Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voy
 출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
 [왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.
 Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노드 추적을 켠다. 그래프 평가 실행(`evals/runners/run_graph.py`)은 별도 CallbackHandler를 쓴다.
+모델: 노드마다 `langfuse_prompts.NODE_MODELS` 표의 모델을 쓴다(시작값, 최종 아님). 환경변수 LLM_MODEL을 정하면 모든 노드가 그 모델 하나를 쓴다(예: 11-04 기준선 재현).
 읽는 환경변수: DEMO_MODE, LLM_PROVIDER(openrouter | claude_cli), LLM_MODEL, LLM_CLI_MODEL,
 OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), VOYAGE_API_KEY(검색 임베딩·리랭크), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
 """
@@ -38,7 +39,8 @@ DEMO_MODE = os.getenv("DEMO_MODE", "1") == "1"
 
 # 그래프 LLM(ADR 0010). openrouter는 기록용 측정과 서비스, claude_cli는 개발 중 반복 테스트(같은 모델을 구독으로)
 LLM_PROVIDER = os.getenv("LLM_PROVIDER") or "openrouter"
-LLM_MODEL = os.getenv("LLM_MODEL") or "anthropic/claude-haiku-5.5"
+LLM_MODEL_OVERRIDE = os.getenv("LLM_MODEL") or None  # [왜] 설정하면 모든 노드가 이 모델 하나를 쓴다(노드별 표보다 우선)
+LLM_MODEL = LLM_MODEL_OVERRIDE or "anthropic/claude-haiku-5.5"  # 노드 밖 호출과 기록용 기본 모델
 LLM_CLI_MODEL = os.getenv("LLM_CLI_MODEL") or "haiku"
 MAX_FORMAT_RETRIES = 2  # [왜] 형식이 틀린 답을 다시 부르는 횟수의 상한(SPEC 2절). 무한 재시도로 키 한도를 쓰지 않게 한다
 
@@ -212,15 +214,27 @@ def voyage_rerank(query: str, docs: list[str], model: str = "rerank-3") -> list[
     return [x["index"] for x in d["data"]]
 
 
-@lru_cache(maxsize=1)
-def _chat_model():
-    """OpenRouter용 LangChain 채팅 모델을 한 번만 만든다(강의 2주 20강과 같은 방식)."""
+_node_model = ContextVar("llm_node_model", default=None)  # node_chat이 부르는 동안 그 노드의 모델
+
+
+def node_model(node: str) -> str:
+    """노드가 쓸 모델. LLM_MODEL을 환경변수로 정했으면 그 모델, 아니면 노드별 표(`langfuse_prompts.NODE_MODELS`)."""
+    from backend.services import langfuse_prompts
+    return LLM_MODEL_OVERRIDE or langfuse_prompts.node_config(node)["model"]
+
+
+@lru_cache(maxsize=8)
+def _chat_model(model: str):
+    """모델마다 OpenRouter용 LangChain 채팅 모델을 한 번씩 만든다(강의 2주 20강과 같은 방식)."""
     from langchain_openai import ChatOpenAI
+    from backend.services import langfuse_prompts
 
     # [왜] OpenRouter는 OpenAI와 같은 API 모양이라 base_url만 바꾸면 ChatOpenAI로 여러 회사 모델을 부를 수 있다
     # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
-    return ChatOpenAI(model=LLM_MODEL, base_url="https://openrouter.ai/api/v1",
-                      api_key=os.environ["OPENROUTER_API_KEY"], temperature=0, max_retries=0)
+    # [왜] Haiku 외 모델(Luna)에는 temperature를 보내지 않는다. 출력 상한은 LangChain이 max_completion_tokens로 바꿔 보낸다
+    temperature = 0 if model == langfuse_prompts.HAIKU else None
+    return ChatOpenAI(model=model, base_url="https://openrouter.ai/api/v1",
+                      api_key=os.environ["OPENROUTER_API_KEY"], temperature=temperature, max_retries=0)
 
 
 def _evaluation_client(timeout: float):
@@ -314,7 +328,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
     """OpenRouter에 구조화 출력을 요청하고 schema 객체로 돌려준다."""
     # [왜] with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
     # 받은 JSON을 그 모델로 검증해 객체로 돌려준다. 형식이 틀리면 ValidationError나 OutputParserException을 낸다(chat()이 잡는다).
-    model = _chat_model()
+    model = _chat_model(_node_model.get() or LLM_MODEL)
     budget = _evaluation_budget.get()
     from backend.services import langfuse_prompts
     options = langfuse_prompts.model_options()
@@ -334,7 +348,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
 def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
     """그래프 노드용 LLM 호출. Langfuse 세션이 켜져 있을 때만 고정 버전 검증·노드 span·generation callback을 쓴다.
 
-    node는 route | grade | rewrite | generate, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
+    node는 route | grade | rewrite | generate | supervisor, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
     Raises:
         ValueError: Langfuse 설정·프롬프트와 실제 공급자·모델·출력 상한이 다를 때, 또는 `chat()`이 형식을 못 맞출 때.
         RuntimeError: 노드 호출이 중첩될 때.
@@ -342,7 +356,7 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
     from backend.services import langfuse_prompts
     if langfuse_prompts.is_active():
         # [주의] 추적 중에 실제 호출 설정이 등록된 프롬프트 설정과 다르면 기록이 거짓이 되므로 호출 전에 멈춘다
-        if LLM_PROVIDER != "openrouter" or LLM_MODEL != langfuse_prompts.CONFIG["model"]:
+        if LLM_PROVIDER != "openrouter" or node_model(node) != langfuse_prompts.node_config(node)["model"]:
             raise ValueError("Langfuse 설정과 실제 공급자/모델 불일치")
         budget = _evaluation_budget.get()
         if budget and budget.max_tokens != langfuse_prompts.CONFIG["max_tokens"]:
@@ -350,11 +364,15 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
     if langfuse_prompts.invocation_config() is not None:
         # [왜] 노드 호출이 겹치면 추적 범위(contextvar)가 섞이므로 중첩을 막는다
         raise RuntimeError("LLM 노드 호출은 중첩하지 않습니다")
-    with langfuse_prompts.prompt_scope(node, system, user, skill_text=skill_text) as span:
-        answer = chat(system, user, schema)
-        if span is not None:
-            span.update(output=answer.model_dump())
-        return answer
+    token = _node_model.set(node_model(node))
+    try:
+        with langfuse_prompts.prompt_scope(node, system, user, skill_text=skill_text) as span:
+            answer = chat(system, user, schema)
+            if span is not None:
+                span.update(output=answer.model_dump())
+            return answer
+    finally:
+        _node_model.reset(token)
 
 
 def _cli_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:

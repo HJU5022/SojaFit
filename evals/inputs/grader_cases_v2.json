@@ -1,0 +1,1566 @@
+{
+ "meta": {
+  "session": "graph-dataset_v2-1104-2122-openrouter",
+  "git": "a630454",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "note": "채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #33"
+ },
+ "cases": [
+  {
+   "id": "draft30-e03",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1175",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1190",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "1186",
+    "1180"
+   ]
+  },
+  {
+   "id": "draft30-e04",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "555",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "554",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "556",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "541",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "557",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "555",
+    "541"
+   ]
+  },
+  {
+   "id": "draft30-e05",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "retrieved": [
+    {
+     "chunk_id": "1175",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1185",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1176",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1197",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "1175",
+    "1176"
+   ]
+  },
+  {
+   "id": "draft30-e06",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-e07",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-e08",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "SS32 SERIES_Q2412.pdf",
+     1
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     2
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "37114",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37117",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37115",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37098",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37116",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "37114",
+    "37117",
+    "37115",
+    "37116"
+   ]
+  },
+  {
+   "id": "draft30-e09",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-e10",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1175",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1190",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft30-m03",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5510",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5485",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "5534",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5511",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5509",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "5510",
+    "5485"
+   ]
+  },
+  {
+   "id": "draft30-m04",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     6
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5510",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5481",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5485",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "5508",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5509",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "5510"
+   ]
+  },
+  {
+   "id": "draft30-m05",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "549",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "548",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "550",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "540",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "545",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "548",
+    "549",
+    "550",
+    "540"
+   ]
+  },
+  {
+   "id": "draft30-m06",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-m07",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     2
+    ],
+    [
+     "BZX84C2V4 SERIES_F2001.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "6196",
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "6195",
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "6188",
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "6175",
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "6198",
+     "file": "BZX84C2V4 SERIES_F2001.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "6196",
+    "6188"
+   ]
+  },
+  {
+   "id": "draft30-m08",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-m09",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5510",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5485",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "5508",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5509",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5511",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft30-m10",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "533",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "554",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "535",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "537",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 5
+    },
+    {
+     "chunk_id": "555",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft30-h03",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1197",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1190",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft30-h04",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "unrecoverable": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     5
+    ]
+   ],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1189",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1175",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1197",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft30-h05",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1197",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1195",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "1186",
+    "1187",
+    "1195",
+    "1197"
+   ]
+  },
+  {
+   "id": "draft30-h06",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-h07",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-h08",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft30-h09",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "50726",
+     "file": "UDZS3V6B SERIES_I2606.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "594",
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "785",
+     "file": "1N4148WSH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "676",
+     "file": "1N4148WH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "821",
+     "file": "1N4148WTH_A2501.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "594"
+   ]
+  },
+  {
+   "id": "draft30-h10",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n01",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ],
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1189",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1181",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1195",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "1186"
+   ]
+  },
+  {
+   "id": "draft50-n02",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1
+    ],
+    [
+     "BAS70 SERIES_G2606.pdf",
+     3
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "3360",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "3354",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "3369",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "3365",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "3370",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "3354",
+    "3360",
+    "3365"
+   ]
+  },
+  {
+   "id": "draft50-n03",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "562",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "560",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "559",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "557",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "558",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "562"
+   ]
+  },
+  {
+   "id": "draft50-n04",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     2
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     3
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5514",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5485",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "5515",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5481",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5538",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "5514",
+    "5485"
+   ]
+  },
+  {
+   "id": "draft50-n05",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     1
+    ],
+    [
+     "BZT52C2V4 SERIES_G1804.pdf",
+     4
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5503",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5502",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5481",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5498",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5510",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "5502",
+    "5503",
+    "5481",
+    "5498",
+    "5510"
+   ]
+  },
+  {
+   "id": "draft50-n06",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "569",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "570",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "571",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "563",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "572",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "569",
+    "570"
+   ]
+  },
+  {
+   "id": "draft50-n07",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1180",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1189",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1195",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1175",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "1186",
+    "1180",
+    "1189",
+    "1195",
+    "1175"
+   ]
+  },
+  {
+   "id": "draft50-n08",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N4148 SERIES_K2301.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "547",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "549",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "539",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "533",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "555",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "533",
+    "539",
+    "555"
+   ]
+  },
+  {
+   "id": "draft50-n09",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n10",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n11",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n12",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n14",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5510",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5501",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5508",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5497",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5509",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft50-n15",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "37114",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37098",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37109",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37115",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37104",
+     "file": "SS32 SERIES_Q2412.pdf",
+     "page": 5
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft50-n16",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "548",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "550",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "549",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "538",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "555",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft50-n17",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1197",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1196",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1195",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draft50-n18",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n19",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft50-n20",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draft52-n21",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1N5817 SERIES_H2104.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "1199",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1187",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1191",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1198",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "1186",
+     "file": "1N5817 SERIES_H2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "1198",
+    "1199"
+   ]
+  },
+  {
+   "id": "draftv2-n11",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n12",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n13",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n14",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n15",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "43282",
+     "file": "TSCDH10120G2H_A2506.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43357",
+     "file": "TSCDH16065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "44533",
+     "file": "TSCDT12065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43472",
+     "file": "TSCDH30065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "44378",
+     "file": "TSCDT08065G1_A2404.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n16",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "51895",
+     "file": "UGS30JH_E2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51858",
+     "file": "UGS20JH_F2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "22130",
+     "file": "PLDS30Q_A2509.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "21935",
+     "file": "PLDS20JH_E2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "21967",
+     "file": "PLDS20J_E2606.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n17",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "685",
+     "file": "1N4148WH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "796",
+     "file": "1N4148WSH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "837",
+     "file": "1N4148WTH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "4108",
+     "file": "BAV19WS SERIES_K2212.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "44341",
+     "file": "TSCDT06065G1_A2404.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n18",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "594",
+     "file": "1N4148W SERIES_K1804.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51895",
+     "file": "UGS30JH_E2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "9142",
+     "file": "FR201G SERIES_H2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "9177",
+     "file": "FR201G-T SERIES_B2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51858",
+     "file": "UGS20JH_F2510.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n19",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "533",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "547",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "539",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "562",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "540",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "draftv2-n20",
+   "kind": "irrelevant",
+   "required_pages": [],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "550",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "548",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "546",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "554",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "549",
+     "file": "1N4148 SERIES_K2301.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  }
+ ]
+}

@@ -38,7 +38,8 @@
   - `embedding_<모델>_proxy_2026-10-30.json`·`embedding_<모델>_proxy_offline_2026-10-30.json`: 임베딩 프록시 측정(`benchmark_embeddings.py`). 모델은 `bge_m3`·`kure_v1`·`qwen3_0_6b`, `text_embedding_3_small`은 온라인 한 파일만 있음(7개)
 - `results/search_compare/` — 검색 방식·청킹 비교. `chunking_proxy_2026-11-01.json`·`chunking_search_2026-11-01.json`(청킹 개선 전후: 프록시 청크 수·해석 가능 값 / 11문항 검색 지표), `hybrid_search_2026-11-01.json`(dense·BM25·하이브리드 비교, 11문항, RRF k=60)
 - `results/drafts/` — `draft50_second_pass_2026-11-02.json`(50건 초안의 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록, `drafts/reviews/second_pass_50_review.md`의 원본), `draft52_validation_2026-11-02.json`(추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님)
-- `results/graph/` — `graph_<평가셋>_<YYYY-MM-DD>.json`: 평가셋 문항을 줄기 그래프로 끝까지 돌린 문항별 지표(경로·검색 횟수·LLM 호출 수·통과 청크 id·인용 검사·5지표·시간·트레이스 주소), 실행 조건(커밋·모델·프롬프트 해시·평가셋 sha256·Langfuse 세션), 5지표 요약(`run_graph.py`). 답변 문장과 청크 원문은 넣지 않고 Langfuse 트레이스에서 본다
+- `results/graph/` — `graph_<평가셋>_<YYYY-MM-DD>.json`(멀티 에이전트는 `multi_…`): 평가셋 문항을 줄기 그래프로 끝까지 돌린 문항별 지표(경로·검색 횟수·LLM 호출 수·통과 청크 id·인용 검사·5지표·시간·트레이스 주소), 실행 조건(커밋·모델·노드별 모델·프롬프트 해시·평가셋 sha256·Langfuse 세션), 5지표 요약(`run_graph.py`). 답변 문장과 청크 원문은 넣지 않고 Langfuse 트레이스에서 본다
+- `results/grader/` — `grader_baseline_<YYYY-MM-DD>.json`(v2, #33) · `grader_baseline_r1_dev_<YYYY-MM-DD>.json`(R1 dev, #34): 채점기 기준선. 지금 2갈래 채점이 v2 관련 19문항에서 정답 쪽을 얼마나 통과시키는지(정답 쪽 유지율 12/15), 비관련 35문항 중 통과 0개 34건(`eval_grader.py run`)
 - `results/skill/` — `skill_tool_summary_2026-11-03.json`: Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본 6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
 - `results/supervisor/2026-11-04-stage1-v1/` — 후보 5종의 `manifest.json`, 문항별 `rows_*.json`, `stage1_summary.json`, `provider_evidence.json`. 1차 선정은 run index 1만 사용하며 manifest의 2·3회차 계획은 실행 결과가 아님
 - `results/supervisor/2026-11-04-preflight-v5/`, `2026-11-04-routing-fix-smoke-v1/` — provider evidence가 참조하는 manifest와 호출 증거만 보존. smoke를 1차 품질 점수에 합산하지 않음

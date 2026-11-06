@@ -109,3 +109,68 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
     assert result["rows"][0]["id"] == "i1" and result["rows"][0]["trace_url"] == "https://lf/t1"
     assert len(result["meta"]["dataset_sha256"]) == 64 and result["meta"]["ids"] == "all"
     assert "범위 밖입니다" not in out.read_text(encoding="utf-8")  # 답변 문장은 파일에 넣지 않는다
+
+
+def test_multi_state_adds_hops_refusal_code_and_tries_from_counters():
+    state = {"path": ["입력 읽기", "사실 확인", "거절"], "answer": "문서에 없는 부품입니다.", "check": {},
+             "refusal": {"code": "part_missing", "message": "x"}, "counters": {"hops": 1, "searches": 0, "writes": 0}}
+    scores = run_scores(state, 1.0, ["Decision"])
+    assert scores["tries"][0] == 0.0 and scores["hops"][0] == 1.0 and scores["refusal_code"][0] == "part_missing"
+    done = run_scores({"path": ["끝"], "answer": "ok [1].", "counters": {"hops": 4, "searches": 2, "writes": 1}}, 1.0, [])
+    assert done["tries"][0] == 2.0 and done["refusal_code"][0] == ""
+
+
+def test_single_state_has_no_multi_scores():
+    scores = run_scores({"path": ["생성"], "tries": 1, "answer": "x"}, 1.0, [])
+    assert "hops" not in scores and "refusal_code" not in scores
+
+
+def test_default_out_names_multi_runs_separately(tmp_path, monkeypatch):
+    from evals.runners.run_graph import default_out
+    monkeypatch.chdir(tmp_path)
+    assert default_out("evals/dataset_v2.jsonl", "2026-11-05").name == "graph_dataset_v2_2026-11-05.json"
+    assert default_out("evals/dataset_v2.jsonl", "2026-11-05", "multi").name == "multi_dataset_v2_2026-11-05.json"
+
+
+def test_node_models_records_model_of_every_node(monkeypatch):
+    from backend.services import langfuse_prompts, llm
+    from evals.runners.run_graph import node_models
+    monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
+    models = node_models()
+    assert set(models) == set(langfuse_prompts.NODES)
+    assert models["supervisor"] == langfuse_prompts.LUNA and models["generate"] == langfuse_prompts.HAIKU
+    monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
+    assert set(node_models().values()) == {"x/y"}
+
+
+def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypatch):
+    from contextlib import ExitStack
+    from backend.graph import mcp_retriever
+    from evals.runners.run_graph import make_app
+    events = []
+
+    class FakeMcp:
+        def __enter__(self):
+            events.append("open")
+            return self
+
+        def __exit__(self, *exc):
+            events.append("close")
+
+        def check(self, parts, revisions):
+            return {"parts": {}, "revisions": {}}
+
+    monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
+    with ExitStack() as stack:
+        app = make_app(True, stack)
+        assert events == ["open"] and "supervisor" in app.get_graph().nodes
+    assert events == ["open", "close"]
+
+
+def test_make_app_single_is_the_trunk_graph_and_opens_no_mcp(monkeypatch):
+    from contextlib import ExitStack
+    from backend.graph import mcp_retriever
+    from evals.runners.run_graph import make_app
+    monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", lambda: (_ for _ in ()).throw(AssertionError("MCP 불필요")))
+    with ExitStack() as stack:
+        assert "라우팅" in make_app(False, stack).get_graph().nodes

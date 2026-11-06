@@ -9,12 +9,22 @@
 ## 주의: 이 폴더의 .md는 프롬프트 해시에 들어갑니다
 `evals/runners/run_graph.py`와 `evals/runners/run_skill_pair.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`(이 설명 파일)만 뺍니다. 그래서 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라집니다. 프롬프트가 아닌 문서는 이 폴더에 두지 않습니다.
 
+## 노드별 모델(시작값)
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor` · `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05, 3차 수퍼바이저 실측을 근거로 한 시작값이고 측정 뒤 ADR로 정합니다). Luna에는 `temperature`를 보내지 않습니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
+
 ## 버전 기록
 
 프롬프트를 바꾸면 같은 PR에서 한 줄을 더합니다. 평가를 다시 쟀으면 결과 위치도 적습니다. 최근 줄을 위에 둡니다.
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(정운 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
+| 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
+| 2026-11-05 | `supervisor.md` | v3 | 질문 종류에 `chat`(일상 대화, Supervisor가 한국어 `reply`로 직접 답하고 끝냄)와 `other_part`(다이오드가 아닌 전자 부품, 웹 조회 또는 못 찾음 거절)를 더하고, `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하게 바꿈. 전자 일반 개념 질문은 짧은 설명 + "데이터시트 근거 아님" 표시. 영어로 작성해 등록 | 근거 3등급과 일상 대화 허용 결정(11-05, SPEC 2절) | 실제 Luna 4문장 확인(인사 · 날씨 거절 · MOSFET 못 찾음 거절 · 일반 개념). 70문항 측정 전 |
+| 2026-11-05 | `route.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
+| 2026-11-05 | `grade.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
+| 2026-11-05 | `rewrite.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
+| 2026-11-05 | `generate.md` | v2 | 한국어에서 영어로 번역(규칙 내용 같음, 답변은 한국어) | 모델이 영어를 더 잘 읽고 토큰이 적음, 멀티 에이전트가 영어 위에 쌓임 | v2 70문항 #35: cited_gold 12 · over_refusal 23 · correct_refusal 35(한국어와 같음), 비용 -11% |
 | 2026-11-03 | `tool_use.md` | `sojafit/tool-use` 등록 번호 1 | PR #36 도구5종의 선택·인자·결과 해석을 별도 프롬프트로 작성 | manifest ID·웹 후보·PDF 무결성·공개 회로의 계약을 구분 | #21~#23 모의12건 확인. 도구/인자5/5·고정 action11/12 일치, 실제 도구0회. `skill_tool_summary_2026-11-03.json` |
 | 2026-11-03 | `../mcp_skill/skills/SKILL.md` | Langfuse 등록 번호 2 | S1 7상황·S2 6상황의 현재 본문 등록, 노드 chat prompt는 버전4 유지 | 상황별 판단까지 작성한 본문과 검증 대상 일치 | #20 대표 흐름4건·직접 생성13건의 추적 연결 확인. 답변 기준12/13 충족, 충돌1건 실패. `skill_tool_summary_2026-11-03.json` |
 | 2026-11-03 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse development v4 | `sojafit/route`, `grade`, `rewrite`, `generate`로 chat prompt 등록. user는 `{{input}}`, 생성 system에 선택적 `{{domain_skill}}` | 고정 버전과 generation 연결. 모델 Haiku5.5·temperature0·출력4096 | 합성4건·generation10개에서 프롬프트 버전·모델·부모 연결을 API로 확인. `skill_tool_summary_2026-11-03.json` |
@@ -27,6 +37,7 @@
 
 ## 파일
 - `PROMPTS.md` — 이 폴더 설명과 버전 기록 표(프롬프트 해시에서 제외)
+- `supervisor.md` — 멀티 에이전트 Supervisor의 시스템 프롬프트(다음 노드 선택, 거절 사유, 판단 규칙). 영어. Langfuse `supervisor`로 등록됨
 - `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 5가지)
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)

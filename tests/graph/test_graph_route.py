@@ -20,5 +20,5 @@ def test_route_sends_prompt_and_target_and_writes_question_type(monkeypatch):
     out = nodes.route(state)
 
     assert out == {"question_type": "out_of_scope", "path": ["라우팅"]}
-    assert "다이오드가 아닌 부품" in seen["system"]     # route.md의 범위 밖 규칙이 시스템 프롬프트로 간다
+    assert "that is not a diode" in seen["system"]     # route.md의 범위 밖 규칙이 시스템 프롬프트로 간다
     assert "Q1 AO3406" in seen["user"] and "MOSFET" in seen["user"]

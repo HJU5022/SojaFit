@@ -261,7 +261,35 @@ def test_get_circuit_info_rejects_path_like_input(circuit_id, target):
 
 # --- 도구 목록 ---
 
-def test_stdio_tool_list_has_all_five_tools():
-    """MCP 도구 목록에 다섯 도구가 모두 있다."""
+def test_stdio_tool_list_has_all_tools():
+    """MCP 도구 목록에 여섯 도구가 모두 있다."""
     names = {tool.name for tool in asyncio.run(server.mcp.list_tools())}
-    assert names >= {"search_corpus", "get_corpus_document", "search_tsc_web", "verify_tsc_pdf", "get_circuit_info"}
+    assert names >= {"search_corpus", "get_corpus_document", "search_tsc_web", "verify_tsc_pdf", "get_circuit_info", "check_corpus"}
+
+
+# --- check_corpus ---
+
+@pytest.fixture
+def known(monkeypatch):
+    """코퍼스 목록을 가짜로 바꾼다(DB 없이)."""
+    monkeypatch.setattr(server, "corpus_known", lambda: ({"1n5819", "1n4148"}, {"H2104", "K2301"}))
+
+
+def test_check_corpus_marks_each_part_and_revision(known):
+    """품번은 대소문자를 가리지 않고, 개정 코드는 대문자로 맞춰 확인하되 키는 받은 글 그대로 돌려준다."""
+    out = server.check_corpus(["1N5819", "1n4001"], ["H2104", "q2611"])
+    assert out == {"parts": {"1N5819": True, "1n4001": False}, "revisions": {"H2104": True, "q2611": False}}
+
+
+def test_check_corpus_accepts_empty_lists(known):
+    assert server.check_corpus([], []) == {"parts": {}, "revisions": {}}
+
+
+@pytest.mark.parametrize("parts,revisions", [
+    ("1N5819", []), ([1], []), ([""], []), (["x" * 101], []), (["A1"] * 21, []),
+    ([], "H2104"), ([], [2104]), ([], ["H2104"] * 21),
+])
+def test_check_corpus_rejects_bad_input(known, parts, revisions):
+    """목록이 아니거나 글자가 아닌 값, 빈 글, 너무 길거나 너무 많은 입력은 거절한다."""
+    with pytest.raises(ValueError):
+        server.check_corpus(parts, revisions)

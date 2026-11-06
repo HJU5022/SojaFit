@@ -151,3 +151,20 @@ def test_graph_reuses_mcp_session_for_rewritten_search(monkeypatch):
     ]
     assert events == ["open", "close"]
     assert out["tries"] == 2
+
+
+def test_stdio_retriever_check_sends_contract_on_same_session():
+    answer = {"parts": {"1N5819": True}, "revisions": {}}
+    session = FakeSession([answer])
+    with StdioMcpRetriever(session_context_factory=fake_context(session, [])) as retriever:
+        assert retriever.check(["1N5819"], []) == answer
+    assert session.calls == [("check_corpus", {"parts": ["1N5819"], "revisions": []})]
+
+
+@pytest.mark.parametrize("bad", [[], {"parts": {"A": "yes"}, "revisions": {}}, {"parts": {}}, {"parts": [], "revisions": {}}])
+def test_stdio_retriever_check_rejects_invalid_payload(bad):
+    session = FakeSession([bad])
+    with StdioMcpRetriever(session_context_factory=fake_context(session, [])) as retriever:
+        with pytest.raises(RetrievalUnavailableError) as info:
+            retriever.check(["A"], [])
+    assert info.value.kind == "invalid_response"

@@ -1,0 +1,33 @@
+{
+ "meta": {
+  "preregister": "#34",
+  "set": "R1 dev",
+  "run_at": "2026-11-05T12:15:02",
+  "commit": "6e097fa",
+  "config": "고정 Q3 질의 + find_parts 품번 필터, retrieve(k=5), 지금 채점 노드 1번(재작성 · 재검색 없음)",
+  "errors": [],
+  "openrouter_spent_usd": 0.0133,
+  "note": "채점 노드가 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음)"
+ },
+ "result": {
+  "relevant": 46,
+  "irrelevant": 0,
+  "retrieved_sufficient": 39,
+  "retention": {
+   "kept": 36,
+   "of": 39
+  },
+  "table": {
+   "부분>부분": 1,
+   "부족>부족": 6,
+   "충분>부분": 1,
+   "충분>부족": 2,
+   "충분>충분": 36
+  },
+  "irrelevant_zero_pass": {
+   "zero": 0,
+   "of": 0
+  },
+  "page_recall_mean": 0.804
+ }
+}
