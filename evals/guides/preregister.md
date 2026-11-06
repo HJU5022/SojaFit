@@ -472,7 +472,7 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 결과(2026-11-05): 여섯 모델 모두 2차 70/70문항을 시도했다. 유효 결정은 모델 순서대로 46·65·62·1·21·70/70, gold Accuracy는 21·34·29·1·9·33/35였다. 본 테스트 Budget-Accounted Cost 합계 US$0.220743282. 원시 2차 행만 다시 집계한 정정 파일은 `evals/results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary_v2.json`, 해석 문서는 `docs/research/supervisor-stage2-results.md`다. 앞서 만든 로컬 `stage2_summary.json`은 실패 문항을 `Completion Rate`에서 제외한 정의 오류가 있어 PR 근거에 포함하지 않는다. 기존 5종 자동 summary의 210건 분모와 미실행 회차 평균값도 2차 표에 사용하지 않았다.
 - 결과 검토 후 추가 해석: Jev의 70/70은 형식상 유효 결정 수다. Jev가 스스로 `out_of_scope`로 분류한 6건 중 4건은 `refuse`가 아닌 다음 동작을 골랐다. 2차 원시 결과는 바꾸지 않고 라우팅 일관성 오류로 별도 표시한다. Jev `--max-usd`의 호출 전 예약은 입력 비용 추정치여서 실제 청구액의 절대 상한이 아니다. 코드의 초과 후 중단·비유한 인자 거부는 2차 결과 검토 뒤 보완한 것이며 2차 실측의 실행 조건으로 소급하지 않는다.
 
-### 2026-11-05 #33: 수퍼바이저 6종 3차 공동 평가
+### 2026-11-05 #36: 수퍼바이저 6종 3차 공동 평가
 
 - 상태: 3차 유료 호출 전 사전 등록. 실행 계약은 `docs/experiments/supervisor-stage3-six-models.md`; 이 등록 시점에 3차 모델 응답·점수는 없다. 1·2차 결과는 이미 알려진 참고값이며 같은 70문항 반복이므로 독립 표본으로 주장하지 않는다.
 - 고정 입력·대상: 동결 v2 70문항 SHA-256 `81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9`, `anthropic/claude-haiku-5.5`·`openai/gpt-6-luna`·`deepseek/deepseek-v4.1-flash`·`meta/muse-glimmer-30b`·`cohere/command-a-plus`·`typesafe/jev-1.14` 각 `run_index=3` 한 번. 프롬프트·typed question 계약·출력 변환은 2차와 동일하게 유지한다.
@@ -481,7 +481,7 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 계획 비용·중단: 본 실행 모델별 US$0.10 · 0.10 · 0.07 · 0.30 · 0.30 · 0.01(합계 US$0.88), smoke US$0.004 · 0.004 · 0.002 · 0.011 · 0.011 · 0.001(합계 US$0.033), 전체 계획값 US$0.913. 모델별 최대 70 outputs·210 raw calls·7,200초, 호출당 45초, 형식 재시도 최대 2회. 호출 전 가격·첫 문항 예약·ZDR·model/provider를 재확인하고 불일치 또는 반복 provider 실패 시 해당 모델만 멈춘다. Jev의 `--max-usd`는 입력 비용 추정에 따른 다음 job 차단값이며 실제 청구액의 절대 상한이 아니다. 자동 증액·재실행은 하지 않는다.
 - 실행 전 manifest: `2026-11-05-stage3-five-v1/manifest.json` SHA-256 `71501a4334aa111b1835d887952c5f3b43813c3b02b51d80dcfa28cb3bf7e4de`(전체 계획 1,050건 중 3차 대상 350건), `2026-11-05-jev-stage3-v1/manifest.json` SHA-256 `79f0b487fda7e5e57d7de2229e559dc6c4c40ed3ee3e2425355a0d89116ef4b8`(3차 대상 70건). Jev 실행기 `run_supervisor_jev.py`의 LF 정규화 SHA-256은 `291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f`다. Jev manifest에는 이 코드 hash가 없으므로 실행 전 수동 대조한다. manifest 생성은 API 없는 로컬 준비다. 유료 smoke·본 실행 전에 사전 등록을 커밋해 시점을 고정하고 5종 manifest의 실행 코드 hash도 대조한다.
 
-### 2026-11-06 #34: Supervisor Prompt V0 세 후보 상태 라우팅 평가
+### 2026-11-06 #37: Supervisor Prompt V0 세 후보 상태 라우팅 평가
 
 - 상태: 결과 확인 전 사전 등록. 이 절을 로컬 커밋한 뒤에도 아래 정확한 총비용 상한에 대한 사용자 승인이 없으면 live 호출을 시작하지 않는다.
 - 목적: 확정본이 아닌 Supervisor Prompt V0가 같은 사용자 요청에서도 현재 근거 상태에 따라 `circuit_agent` → `search_agent` → `judge_answer_agent` 또는 `refuse`를 구분하는지 세 후보에서 확인한다. 기존 v2 70문항 1~3차 결과는 다른 prompt·상태 입력·채점 계약이므로 V0 점수로 재사용하지 않는다.
@@ -496,3 +496,45 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 실행 순서: API 없는 plan 두 개 → 세 provider의 1건 smoke → 세 후보의 13건 본 실행 → dataset·contract hash와 13개 case 집합이 모두 같은 경우에만 집계. 결과를 본 뒤 prompt·gold·재시도·상한을 바꾸지 않는다.
 - 명령: `OPENROUTER_API_KEY` 값은 기존 루트 `.env`에서 현재 process에만 주입하고 출력하지 않는다. Chat에는 `--prompt-rate 0.0000001 --completion-rate 0.0000005`, smoke에는 각각 `--provider Azure`, `--provider Google`; Jev smoke에는 `--provider TypeSafe`를 사용한다. 모든 live 명령은 `--confirm-live`를 포함한다.
 - 결과(2026-11-06, 사전 등록 커밋 `50444fc` 이후): 사용자가 총 명령 상한 `$0.145`를 승인했고 exact provider smoke 뒤 세 후보를 각 13건 실행했다. Luna/Azure와 Haiku/Google은 모두 13/13 schema valid·semantic valid·exact decision match였다. Jev/TypeSafe는 schema valid 13/13, question type 12/13, required evidence 11/13, next action 9/13, reason code 12/13, semantic valid 8/13, exact decision match 7/13이었다. Jev 의미 오류 5건은 모두 `next_action`이며, `sv0-01`은 범위 밖 MOSFET 요청을 `candidate_find`로 분류했고 `sv0-02`는 정보 부족 요청에 불필요한 datasheet 근거를 요구해 exact mismatch가 추가됐다. 실제 raw calls는 smoke 포함 42회, provider 보고 usage cost 합계는 `$0.007086424`다. Jev 사용량에 cost 값은 있었지만 실행기가 사전에 강제 가능한 USD cap은 아니므로 기존 한계를 유지한다. 통합 정본은 `evals/results/supervisor/2026-11-06-prompt-v0-v1/summary.json` SHA-256 `a3142005df6421506a9526027ad611770e0de5b7e13042da3e7a1cb7e52d7db4`다. 이 13건만으로 운영 모델을 확정하지 않으며 V0 기준으로 Luna·Haiku는 기대를 충족했고 Jev는 기대에 미달했다.
+### 2026-11-05 #33: 채점기 기준선(지금 2갈래 채점이 정답 쪽을 얼마나 유지하나)
+
+- 왜: 채점을 충분 · 부분 · 부족 3갈래로 바꾸기 전에, 지금 채점이 정답 쪽을 얼마나 통과시키는지 재현 가능한 기록으로 남긴다. 바꾸는 것은 없다(측정만).
+- 대상: 동결 v2 중 쪽 단위 정답지가 있는 관련 19문항(`evals/inputs/qrels_v2_pages.json`)과 비관련 35문항. 후보 찾기 10 · 역할 6은 정답 쪽이 열려 있어 제외한다.
+- 입력: #31의 70문항 실행(session `graph-dataset_v2-1104-2122-openrouter`, commit `a630454`)에서 채점 노드가 마지막으로 본 검색 청크(번호 · 파일 · 쪽)와 통과시킨 청크 번호. 청크 본문은 쓰지 않는다. 스냅샷은 `evals/inputs/grader_cases_v2.json`.
+- 정의: 필요 쪽 = 정답 쪽 − 회수 불가 쪽. 검색 판정 = 검색 청크의 쪽이 필요 쪽을 전부 · 일부 · 하나도 못 가짐(충분 · 부분 · 부족). 통과 판정 = 통과 청크의 쪽으로 같은 방식으로 계산한다.
+- 지표: ① 정답 쪽 유지율 = 검색 판정이 충분인 문항 중 통과 판정도 충분인 비율. ② 검색 판정 × 통과 판정 표(관련 19문항). ③ 비관련 중 통과 청크가 0개인 문항 비율. ④ 필요 쪽 통과 재현율 평균(참고).
+- 사전 등록 전에 이미 본 숫자: 11-05에 같은 스냅샷을 임시로 계산해 봤다. 검색 판정 충분 15 · 부분 4, 통과 판정은 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(유지율 12/15), 비관련은 35문항 중 34문항이 통과 0개였다.
+- 기대(측정 전, 고치지 않음): 위 숫자와 똑같이 재현된다. 스냅샷에서 계산이 결정적이라 범위가 아니라 일치로 둔다. ④는 처음 계산하므로 기대를 두지 않는다.
+- 예산: LLM · API 호출 0, 비용 0.
+- 한계: 쪽 단위 정답이라 정답이 아닌 쪽에 같은 값이 있어도 버린 것으로 센다. 19문항이다. 재검색한 문항은 마지막 검색만 본다. 개발에는 R1 dev를 쓰고 v2는 측정에만 쓴다는 결정(11-05)은 이 측정이 아니라 3갈래 채점기를 만드는 다음 조각에 적용한다.
+
+### 2026-11-05 #34: 채점기 기준선 R1 dev(지금 2갈래 채점의 R1 dev 46문항 기준선)
+
+- 왜: 3갈래 채점기는 R1 dev에서 개발하고 v2로 한 번만 공식 측정한다(결정 11-05). #33은 v2 기준선이라 R1 dev 기준선이 따로 있어야 개발 중 좋아졌는지 비교할 수 있다. 바꾸는 것은 없다(측정만).
+- 대상: `evals/samples/retrieval_r1.jsonl` 중 `split = dev` 46문항(정답 쪽 = `gold`, 회수 불가 없음). R1 test 38문항은 쓰지 않는다.
+- 방법: 고정 재작성 질의 Q3(`evals/samples/retrieval_r1_rewrite_q3.json`)와 `find_parts(질문, set())`의 품번 필터로 서비스 `retrieve()`(k=5, `DEMO_MODE=0`)를 1번 부르고, 그 결과에 지금 채점 노드 `grade()`를 1번 돌린다. 재작성 · 재검색은 하지 않는다. 입력 스냅샷은 `evals/inputs/grader_cases_r1_dev.json`(청크 번호 · 파일 · 쪽만, 본문 없음).
+- 지표: #33과 같은 ①~④(R1은 전부 관련 문항이라 ③은 없음). 계산은 `evals/runners/eval_grader.py`.
+- 사전 등록 전에 이미 본 숫자: R1 dev의 검색 쪽 회수율은 #25에서 봤다(고른 조합 쪽 회수율@5 0.859, 리랭커 · 품번+카드 종류 필터 포함이라 이번 조건과 같지 않다). 채점 통과분은 이번이 처음이다.
+- 기대(측정 전, 고치지 않음): 검색 판정이 충분인 문항 비율 0.75~0.95, 정답 쪽 유지율 0.80~1.00(v2 12/15 = 0.80을 참고, R1은 정답 쪽이 1~2개인 값 찾기 문제라 더 쉬울 것으로 봄), 필요 쪽 통과 재현율 평균 0.70~0.95. 정답 쪽이 2개인 8문항에서만 부분 판정이 나올 수 있다.
+- 예산 · 중단: OpenRouter 합계 US$0.05 이하(채점 호출 최대 46회), Voyage는 무료 토큰 안(임베딩 · 리랭크 46회씩), 운영 DB는 읽기만. 3문항 연속 오류면 멈추고 보고한다.
+- 한계: 첫 검색 1번만 본다. 필터는 품번만이고 R1 1위 조합의 품번+카드 종류 필터가 아니다. 46문항이라 1문항이 2%p를 움직인다. 같은 질문에 LLM 채점이 흔들릴 수 있는데 1번만 잰다.
+- 결과(11-05, commit `6e097fa`): R1 dev 46문항 모두 끝남, 오류 0, OpenRouter 0.0133달러. 검색 판정은 충분 39 · 부분 1 · 부족 6(검색이 정답 쪽을 못 가져온 r1-083 · 089 · 090 · 094 · 096 · 100). 채점 통과 기준으로 충분 → 충분 36 · 충분 → 부분 1(r1-071) · 충분 → 부족 2(r1-050 · r1-078) · 부분 → 부분 1(r1-063) · 부족 → 부족 6. 정답 쪽 유지율 36/39 = 0.923, 필요 쪽 통과 재현율 평균 0.804, 통과 청크가 0개인 문항 7(그중 정답 쪽을 가진 채 버린 것이 2). 기대 대조: 검색 판정 충분 비율 0.75~0.95 맞음(39/46 = 0.848), 정답 쪽 유지율 0.80~1.00 맞음(0.923), 쪽 재현율 평균 0.70~0.95 맞음(0.804). v2(#33)의 유지율 12/15 = 0.80과 R1 dev의 0.923은 평가셋이 달라 합치지 않고 따로 적는다. 입력 스냅샷 `evals/inputs/grader_cases_r1_dev.json`, 결과 `evals/results/grader/grader_baseline_r1_dev_2026-11-05.json`.
+
+### 2026-11-05 #35: 단일 그래프 프롬프트 4개 영어 번역 (동결 v2 70문항, #31과 비교)
+
+- 왜: 모델이 영어 지시를 더 안정적으로 읽고, 같은 내용이면 영어가 토큰이 적다는 판단(11-05 정운 결정). D5 멀티 에이전트를 영어 프롬프트 위에 쌓으므로, 단일 그래프를 영어 프롬프트로 다시 재어 새 비교 기준을 만든다.
+- 바꾸는 것(하나): `backend/prompts/{route,grade,rewrite,generate}.md` 4개를 한국어에서 영어로 번역한다. 규칙 내용은 바꾸지 않는다. 답변은 계속 한국어이고 거절 문구 "문서로 확인 안 됨"과 근거 번호 `[넷리스트]`는 그대로다. 코드·평가셋·모델·검색 설정은 #31과 같다. Langfuse에는 각 프롬프트 v2로 등록한다.
+- 비교 대상: #31 결과(관련 cited_gold 12 · over_refusal 23 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 31/35, p50 7.4초, LLM 호출 227, 비용 0.0519달러).
+- 기대(측정 전, 고치지 않음): 번역은 개선이 아니라 "나빠지지 않음"을 확인하는 실험이다.
+  - 관련 cited_gold 9~15, over_refusal 18~26, wrong_citation 0~3.
+  - 무관 correct_refusal 32~35, hallucination_risk 0~3.
+  - 관련 라우팅 일치 28~33/35.
+  - 실패 문항 0~3, p50 5~12초.
+  - OpenRouter 합계 0.03~0.07달러(입력 토큰이 줄어 #31 이하가 될 것으로 보지만 확실하지 않다).
+  - 답변 언어: 거절이 아닌 답변이 한국어가 아닌 문항 0건.
+  - #31과 지표가 같은 문항 80% 이상. 다른 문항은 목록으로 남기고 고치지 않는다.
+- 판정: 위 범위를 벗어난 지표가 하나라도 있으면 번역의 효과로 단정하지 않고 문항 목록을 본다. 나빠졌으면 나빠졌다고 기록하고, 멀티 에이전트의 기준은 #31 한국어 결과와 이 결과를 둘 다 적는다.
+- 명령: `uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` (결과 `evals/results/graph/graph_dataset_v2_<날짜>.json`). 실행 전에 Langfuse에 번역본을 등록하고 `load_development`로 로컬과 같은지 확인한다.
+- 예산 · 중단: OpenRouter 합계 1달러. 실패가 3문항 연달아 나면 멈추고 보고한다.
+- 알려진 한계: 응답 변동 폭을 재지 않았다(1회 측정). 관련 35문항이라 일반화 근거는 작다. 번역 한 번만 시험하므로 어느 프롬프트가 영향을 줬는지는 가르지 못한다.
+- 결과(11-05 14:18~14:25, 커밋 `961c759`, session `graph-dataset_v2-1105-1417-openrouter`, 시험 2문항이 같은 session에 있어 70문항 집계는 14:18 이후 생성만 뽑음): 70문항 모두 끝남, 실패 0. 관련 35: cited_gold 12 · over_refusal 23 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 관련 유형별은 #31과 같음(rating 9 · 1, role 3 · 3, candidate_judge over_refusal 9, candidate_find over_refusal 10). 관련 라우팅 일치 32/35(#31 31). 검색 횟수 0번 16 · 1번 41 · 2번 13(#31은 15 · 34 · 21). latency_s p50 6.25 · p95 14.4 · 최대 19.6초(#31 7.4 · 15.8 · 20.0). LLM 호출 합계 215(#31 227), 입력 토큰 287,526 · 출력 8,400(#31 319,044 · 9,295, 시험 포함 session 전체가 아닌 #31 같은 session 기준), OpenRouter 0.0463달러(#31 0.0519, -11%). fake_citations 0, uncited_sentences 4(#31 2). #31과 답 지표가 같은 문항 68/70(97%): draft30-e02(over_refusal → cited_gold), draft30-h02(cited_gold → over_refusal)만 다름. 기대 대조: cited_gold 9~15 맞음(12), over_refusal 18~26 맞음(23), wrong_citation 0~3 맞음(0), correct_refusal 32~35 맞음(35), hallucination_risk 0~3 맞음(0), 라우팅 28~33 맞음(32), 실패 0~3 맞음(0), p50 5~12초 맞음(6.25), 비용 0.03~0.07달러 맞음(0.0463), 지표 같은 문항 80% 이상 맞음(97%). 답변 언어 확인(거절이 아닌 답이 한국어인지)은 이번에 하지 않았다. 판정: 번역으로 점수는 같고(12 · 23 · 35), 토큰과 비용은 줄었다. 재검색 문항이 21에서 13으로 줄었으나 근거 인용 정답은 늘지 않았다. 응답 변동 폭을 재지 않아 h02 · e02 같은 소폭 변동은 번역 효과로 단정하지 않는다. 이 결과(`evals/results/graph/graph_dataset_v2_2026-11-05.json`)를 D5 비교의 영어 프롬프트 기준으로 쓴다.

@@ -38,16 +38,17 @@
   - `embedding_<모델>_proxy_2026-10-30.json`·`embedding_<모델>_proxy_offline_2026-10-30.json`: 임베딩 프록시 측정(`benchmark_embeddings.py`). 모델은 `bge_m3`·`kure_v1`·`qwen3_0_6b`, `text_embedding_3_small`은 온라인 한 파일만 있음(7개)
 - `results/search_compare/` — 검색 방식·청킹 비교. `chunking_proxy_2026-11-01.json`·`chunking_search_2026-11-01.json`(청킹 개선 전후: 프록시 청크 수·해석 가능 값 / 11문항 검색 지표), `hybrid_search_2026-11-01.json`(dense·BM25·하이브리드 비교, 11문항, RRF k=60)
 - `results/drafts/` — `draft50_second_pass_2026-11-02.json`(50건 초안의 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록, `drafts/reviews/second_pass_50_review.md`의 원본), `draft52_validation_2026-11-02.json`(추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님)
-- `results/graph/` — `graph_<평가셋>_<YYYY-MM-DD>.json`: 평가셋 문항을 줄기 그래프로 끝까지 돌린 문항별 지표(경로·검색 횟수·LLM 호출 수·통과 청크 id·인용 검사·5지표·시간·트레이스 주소), 실행 조건(커밋·모델·프롬프트 해시·평가셋 sha256·Langfuse 세션), 5지표 요약(`run_graph.py`). 답변 문장과 청크 원문은 넣지 않고 Langfuse 트레이스에서 본다
+- `results/graph/` — `graph_<평가셋>_<YYYY-MM-DD>.json`(멀티 에이전트는 `multi_…`): 평가셋 문항을 줄기 그래프로 끝까지 돌린 문항별 지표(경로·검색 횟수·LLM 호출 수·통과 청크 id·인용 검사·5지표·시간·트레이스 주소), 실행 조건(커밋·모델·노드별 모델·프롬프트 해시·평가셋 sha256·Langfuse 세션), 5지표 요약(`run_graph.py`). 답변 문장과 청크 원문은 넣지 않고 Langfuse 트레이스에서 본다
+- `results/grader/` — `grader_baseline_<YYYY-MM-DD>.json`(v2, #33) · `grader_baseline_r1_dev_<YYYY-MM-DD>.json`(R1 dev, #34): 채점기 기준선. 지금 2갈래 채점이 v2 관련 19문항에서 정답 쪽을 얼마나 통과시키는지(정답 쪽 유지율 12/15), 비관련 35문항 중 통과 0개 34건(`eval_grader.py run`)
 - `results/skill/` — `skill_tool_summary_2026-11-03.json`: Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본 6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
 - `results/supervisor/2026-11-04-stage1-v1/` — 후보 5종의 `manifest.json`, 문항별 `rows_*.json`, `stage1_summary.json`, `provider_evidence.json`. 1차 선정은 run index 1만 사용하며 manifest의 2·3회차 계획은 실행 결과가 아님
 - `results/supervisor/2026-11-04-preflight-v5/`, `2026-11-04-routing-fix-smoke-v1/` — provider evidence가 참조하는 manifest와 호출 증거만 보존. smoke를 1차 품질 점수에 합산하지 않음
 - `results/supervisor/2026-11-04-jev-stage1-ready-v1/` — Jev 1차 manifest·70문항 행·smoke·summary. 2차와 짝 비교하는 원본
 - `results/supervisor/2026-11-05-stage2-five-v1/`, `2026-11-05-jev-stage2-v1/` — 2차 6종의 manifest·smoke·원시 행. 5종 raw summary는 3회 계획 분모를 쓰므로 2차 집계에는 원시 `run_index=2` 행만 사용
 - `results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary_v2.json` — 2차 6종 정정 집계 정본. 앞서 만든 정의 오류 파일은 PR에 포함하지 않음
-- `results/supervisor/2026-11-05-stage3-five-v1/`, `2026-11-05-jev-stage3-v1/` — 3차 사전 등록 #33의 manifest·smoke·문항별 행. 5종 폴더에 6종 공통 공개 catalog preflight·실행 metadata·환경 버전을 함께 보존한다. 5종 manifest의 전체 계획 1,050건 중 `run_index=3`의 350건만 실행하고 Jev는 3차 70건을 실행한다
+- `results/supervisor/2026-11-05-stage3-five-v1/`, `2026-11-05-jev-stage3-v1/` — 3차 사전 등록 #36의 manifest·smoke·문항별 행. 5종 폴더에 6종 공통 공개 catalog preflight·실행 metadata·환경 버전을 함께 보존한다. 5종 manifest의 전체 계획 1,050건 중 `run_index=3`의 350건만 실행하고 Jev는 3차 70건을 실행한다
 - `results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json` — 원시 1~3차 행에서 API 없이 재계산한 3차 정본. gold 35문항 점수·전체 70문항 형식 통과·자체 범위 밖 예측의 라우팅 모순·비교 가능한 3회 coverage·agreement/flip과 모든 출처 hash를 담음
-- `results/supervisor/2026-11-06-prompt-v0-v1/` — 사전 등록 #34의 Supervisor Prompt V0 세 후보 exact-provider smoke·13건 원시 행·통합 summary·실행 상한과 출처 hash. `langfuse_import.json`은 기존 결과를 가져온 Dataset·Experiment 식별자와 외부 재조회 검증을 기록한다. 기존 v2 70문항 결과와 별도이며 운영 모델을 자동 확정하지 않음
+- `results/supervisor/2026-11-06-prompt-v0-v1/` — 사전 등록 #37의 Supervisor Prompt V0 세 후보 exact-provider smoke·13건 원시 행·통합 summary·실행 상한과 출처 hash. `langfuse_import.json`은 기존 결과를 가져온 Dataset·Experiment 식별자와 외부 재조회 검증을 기록한다. 기존 v2 70문항 결과와 별도이며 운영 모델을 자동 확정하지 않음
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/research/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 

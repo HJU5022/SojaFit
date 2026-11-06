@@ -22,7 +22,7 @@ def test_rewrite_fixes_original_question_not_last_query(monkeypatch):
 
     assert out == {"query": "1N5819 Forward voltage VF", "path": ["재작성"]}
     assert seen["user"] == "1N5819 순방향 전압 몇이야?"  # 1차 검색어가 아니라 원래 질문을 고친다
-    assert "지어내지 않는다" in seen["system"]  # rewrite.md가 시스템 프롬프트로 간다
+    assert "Do not invent part numbers" in seen["system"]  # rewrite.md가 시스템 프롬프트로 간다
 
 
 def test_after_grade_goes_to_answer_when_cards_pass():

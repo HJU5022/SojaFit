@@ -1,0 +1,1969 @@
+{
+ "meta": {
+  "preregister": "#34",
+  "set": "R1 dev",
+  "run_at": "2026-11-05T12:15:02",
+  "commit": "6e097fa",
+  "config": "고정 Q3 질의 + find_parts 품번 필터, retrieve(k=5), 지금 채점 노드 1번(재작성 · 재검색 없음)",
+  "errors": [],
+  "openrouter_spent_usd": 0.0133,
+  "note": "채점 노드가 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음)"
+ },
+ "cases": [
+  {
+   "id": "r1-001",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TESD5V0V4UA_B2109.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "39396",
+     "file": "TESD5V0V4UA_B2109.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39385",
+     "file": "TESD5V0V4UA_B2109.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39386",
+     "file": "TESD5V0V4UA_B2109.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "39382",
+     "file": "TESD5V0V4UA_B2109.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39412",
+     "file": "TESD5V0V4UA_B2109.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "39396",
+    "39385",
+    "39386",
+    "39412"
+   ]
+  },
+  {
+   "id": "r1-002",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSCDK12065G1_A2507.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "43827",
+     "file": "TSCDK12065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43822",
+     "file": "TSCDK12065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43828",
+     "file": "TSCDK12065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43809",
+     "file": "TSCDK12065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43830",
+     "file": "TSCDK12065G1_A2507.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "43827",
+    "43822"
+   ]
+  },
+  {
+   "id": "r1-004",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RS1AH SERIES_B2304.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "26945",
+     "file": "RS1AH SERIES_B2304.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26944",
+     "file": "RS1AH SERIES_B2304.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26937",
+     "file": "RS1AH SERIES_B2304.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26930",
+     "file": "RS1AH SERIES_B2304.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "26927",
+     "file": "RS1AH SERIES_B2304.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "26945",
+    "26937"
+   ]
+  },
+  {
+   "id": "r1-005",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "HER101G SERIES_L2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "11546",
+     "file": "HER101G SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11545",
+     "file": "HER101G SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11542",
+     "file": "HER101G SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11533",
+     "file": "HER101G SERIES_L2104.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "11543",
+     "file": "HER101G SERIES_L2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "11546"
+   ]
+  },
+  {
+   "id": "r1-008",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSUP3150H_A2505.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "49276",
+     "file": "TSUP3150H_A2505.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "49282",
+     "file": "TSUP3150H_A2505.pdf",
+     "page": 5
+    },
+    {
+     "chunk_id": "49288",
+     "file": "TSUP3150H_A2505.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "49306",
+     "file": "TSUP3150H_A2505.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "49278",
+     "file": "TSUP3150H_A2505.pdf",
+     "page": 3
+    }
+   ],
+   "passed": [
+    "49288",
+    "49306",
+    "49276"
+   ]
+  },
+  {
+   "id": "r1-011",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "GS1Z_A2510.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "11066",
+     "file": "GS1Z_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11061",
+     "file": "GS1Z_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11067",
+     "file": "GS1Z_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11055",
+     "file": "GS1Z_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11080",
+     "file": "GS1Z_A2510.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "11066",
+    "11061"
+   ]
+  },
+  {
+   "id": "r1-013",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "SFF501G SERIES_I2105.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "32154",
+     "file": "SFF501G SERIES_I2105.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "32137",
+     "file": "SFF501G SERIES_I2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "32155",
+     "file": "SFF501G SERIES_I2105.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "32129",
+     "file": "SFF501G SERIES_I2105.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "32152",
+     "file": "SFF501G SERIES_I2105.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "32154",
+    "32137",
+    "32155"
+   ]
+  },
+  {
+   "id": "r1-018",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "US1AH SERIES_A2102.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "52156",
+     "file": "US1AH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "52150",
+     "file": "US1AH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "52157",
+     "file": "US1AH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "52143",
+     "file": "US1AH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "52170",
+     "file": "US1AH SERIES_A2102.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "52156"
+   ]
+  },
+  {
+   "id": "r1-020",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RB500V-40H_A2502.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "26471",
+     "file": "RB500V-40H_A2502.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26463",
+     "file": "RB500V-40H_A2502.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26466",
+     "file": "RB500V-40H_A2502.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26472",
+     "file": "RB500V-40H_A2502.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26469",
+     "file": "RB500V-40H_A2502.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "26471",
+    "26463"
+   ]
+  },
+  {
+   "id": "r1-021",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSUP10150H_A2505.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "48387",
+     "file": "TSUP10150H_A2505.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "48400",
+     "file": "TSUP10150H_A2505.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "48418",
+     "file": "TSUP10150H_A2505.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "48394",
+     "file": "TSUP10150H_A2505.pdf",
+     "page": 5
+    },
+    {
+     "chunk_id": "48389",
+     "file": "TSUP10150H_A2505.pdf",
+     "page": 3
+    }
+   ],
+   "passed": [
+    "48400",
+    "48418",
+    "48387"
+   ]
+  },
+  {
+   "id": "r1-024",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "S3JFSH_A2303.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "30097",
+     "file": "S3JFSH_A2303.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "30096",
+     "file": "S3JFSH_A2303.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "30088",
+     "file": "S3JFSH_A2303.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "30095",
+     "file": "S3JFSH_A2303.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "30081",
+     "file": "S3JFSH_A2303.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "30097",
+    "30096",
+    "30088"
+   ]
+  },
+  {
+   "id": "r1-025",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZD27C11PWH SERIES_B2203.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5091",
+     "file": "BZD27C11PWH SERIES_B2203.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5082",
+     "file": "BZD27C11PWH SERIES_B2203.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5072",
+     "file": "BZD27C11PWH SERIES_B2203.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "5138",
+     "file": "BZD27C11PWH SERIES_B2203.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "5106",
+     "file": "BZD27C11PWH SERIES_B2203.pdf",
+     "page": 3
+    }
+   ],
+   "passed": [
+    "5091",
+    "5082"
+   ]
+  },
+  {
+   "id": "r1-027",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TESDD5V0_E1901.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "40036",
+     "file": "TESDD5V0_E1901.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "40039",
+     "file": "TESDD5V0_E1901.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "40035",
+     "file": "TESDD5V0_E1901.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "40032",
+     "file": "TESDD5V0_E1901.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "40037",
+     "file": "TESDD5V0_E1901.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "40032"
+   ]
+  },
+  {
+   "id": "r1-030",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RS1DLWH SERIES_A2103.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "27312",
+     "file": "RS1DLWH SERIES_A2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "27299",
+     "file": "RS1DLWH SERIES_A2103.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "27311",
+     "file": "RS1DLWH SERIES_A2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "27304",
+     "file": "RS1DLWH SERIES_A2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "27296",
+     "file": "RS1DLWH SERIES_A2103.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "27312",
+    "27304"
+   ]
+  },
+  {
+   "id": "r1-033",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RB520S-30_D2510.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "26557",
+     "file": "RB520S-30_D2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26556",
+     "file": "RB520S-30_D2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26553",
+     "file": "RB520S-30_D2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26550",
+     "file": "RB520S-30_D2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26549",
+     "file": "RB520S-30_D2510.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "26557",
+    "26556"
+   ]
+  },
+  {
+   "id": "r1-034",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSSA3U45_P2307.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "46748",
+     "file": "TSSA3U45_P2307.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46740",
+     "file": "TSSA3U45_P2307.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46749",
+     "file": "TSSA3U45_P2307.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46743",
+     "file": "TSSA3U45_P2307.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46755",
+     "file": "TSSA3U45_P2307.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "46748",
+    "46740"
+   ]
+  },
+  {
+   "id": "r1-038",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZX84JB2V4H SERIES_A2503.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "6292",
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "6284",
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "6297",
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "6333",
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "6293",
+     "file": "BZX84JB2V4H SERIES_A2503.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "6292",
+    "6297"
+   ]
+  },
+  {
+   "id": "r1-041",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSCDF06065G1_A2404.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "42977",
+     "file": "TSCDF06065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "42969",
+     "file": "TSCDF06065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "42956",
+     "file": "TSCDF06065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "42974",
+     "file": "TSCDF06065G1_A2404.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "42976",
+     "file": "TSCDF06065G1_A2404.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "42977",
+    "42969",
+    "42956"
+   ]
+  },
+  {
+   "id": "r1-042",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "P4KE SERIES_N2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "20670",
+     "file": "P4KE SERIES_N2104.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "20671",
+     "file": "P4KE SERIES_N2104.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "20679",
+     "file": "P4KE SERIES_N2104.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "20681",
+     "file": "P4KE SERIES_N2104.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "20590",
+     "file": "P4KE SERIES_N2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "20679",
+    "20681",
+    "20590"
+   ]
+  },
+  {
+   "id": "r1-046",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RB706F-40_C2102.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "26668",
+     "file": "RB706F-40_C2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26655",
+     "file": "RB706F-40_C2102.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "26662",
+     "file": "RB706F-40_C2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26658",
+     "file": "RB706F-40_C2102.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "26667",
+     "file": "RB706F-40_C2102.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "26668",
+    "26662"
+   ]
+  },
+  {
+   "id": "r1-047",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TST10122C_A2405.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "47581",
+     "file": "TST10122C_A2405.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "47573",
+     "file": "TST10122C_A2405.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "47579",
+     "file": "TST10122C_A2405.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "47556",
+     "file": "TST10122C_A2405.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "47580",
+     "file": "TST10122C_A2405.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "47581",
+    "47573"
+   ]
+  },
+  {
+   "id": "r1-049",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "UG2D_F2105.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "51158",
+     "file": "UG2D_F2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51150",
+     "file": "UG2D_F2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51157",
+     "file": "UG2D_F2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51142",
+     "file": "UG2D_F2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51144",
+     "file": "UG2D_F2105.pdf",
+     "page": 3
+    }
+   ],
+   "passed": [
+    "51158",
+    "51150"
+   ]
+  },
+  {
+   "id": "r1-050",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSD2GFSH SERIES_B2312.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "44984",
+     "file": "TSD2GFSH SERIES_B2312.pdf",
+     "page": 4
+    },
+    {
+     "chunk_id": "44976",
+     "file": "TSD2GFSH SERIES_B2312.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "44981",
+     "file": "TSD2GFSH SERIES_B2312.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "44983",
+     "file": "TSD2GFSH SERIES_B2312.pdf",
+     "page": 3
+    },
+    {
+     "chunk_id": "44998",
+     "file": "TSD2GFSH SERIES_B2312.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-053",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TESD5V0L1UC_E2007.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "39353",
+     "file": "TESD5V0L1UC_E2007.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "39349",
+     "file": "TESD5V0L1UC_E2007.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39380",
+     "file": "TESD5V0L1UC_E2007.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "39365",
+     "file": "TESD5V0L1UC_E2007.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39358",
+     "file": "TESD5V0L1UC_E2007.pdf",
+     "page": 4
+    }
+   ],
+   "passed": [
+    "39353",
+    "39349",
+    "39380",
+    "39365"
+   ]
+  },
+  {
+   "id": "r1-055",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "SMB10JH SERIES_A2102.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "33621",
+     "file": "SMB10JH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "33626",
+     "file": "SMB10JH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "33610",
+     "file": "SMB10JH SERIES_A2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "33635",
+     "file": "SMB10JH SERIES_A2102.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "33617",
+     "file": "SMB10JH SERIES_A2102.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "33621",
+    "33626"
+   ]
+  },
+  {
+   "id": "r1-056",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "RS5D-T SERIES_C2602.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "28161",
+     "file": "RS5D-T SERIES_C2602.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "28155",
+     "file": "RS5D-T SERIES_C2602.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "28162",
+     "file": "RS5D-T SERIES_C2602.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "28144",
+     "file": "RS5D-T SERIES_C2602.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "28146",
+     "file": "RS5D-T SERIES_C2602.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "28161"
+   ]
+  },
+  {
+   "id": "r1-057",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "HS1QBH_A2408.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "13020",
+     "file": "HS1QBH_A2408.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "13019",
+     "file": "HS1QBH_A2408.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "13022",
+     "file": "HS1QBH_A2408.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "13021",
+     "file": "HS1QBH_A2408.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "13011",
+     "file": "HS1QBH_A2408.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "13019",
+    "13020",
+    "13021",
+    "13022"
+   ]
+  },
+  {
+   "id": "r1-058",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "UR2KB60 SERIES_L2104.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "51998",
+     "file": "UR2KB60 SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51999",
+     "file": "UR2KB60 SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51992",
+     "file": "UR2KB60 SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51985",
+     "file": "UR2KB60 SERIES_L2104.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "52002",
+     "file": "UR2KB60 SERIES_L2104.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "51998"
+   ]
+  },
+  {
+   "id": "r1-062",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "S2DAL SERIES_B2103.pdf",
+     1
+    ],
+    [
+     "S2DAL SERIES_B2103.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "29542",
+     "file": "S2DAL SERIES_B2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "29550",
+     "file": "S2DAL SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29549",
+     "file": "S2DAL SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29548",
+     "file": "S2DAL SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29547",
+     "file": "S2DAL SERIES_B2103.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "29542",
+    "29550",
+    "29549",
+    "29548",
+    "29547"
+   ]
+  },
+  {
+   "id": "r1-063",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "MMSZ4678 SERIES_A2311.pdf",
+     1
+    ],
+    [
+     "MMSZ4678 SERIES_A2311.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "19600",
+     "file": "MMSZ4678 SERIES_A2311.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "19599",
+     "file": "MMSZ4678 SERIES_A2311.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "19601",
+     "file": "MMSZ4678 SERIES_A2311.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "19608",
+     "file": "MMSZ4678 SERIES_A2311.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "19602",
+     "file": "MMSZ4678 SERIES_A2311.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "19600"
+   ]
+  },
+  {
+   "id": "r1-069",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "PU2BM SERIES_B2103.pdf",
+     1
+    ],
+    [
+     "PU2BM SERIES_B2103.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "23428",
+     "file": "PU2BM SERIES_B2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "23436",
+     "file": "PU2BM SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "23435",
+     "file": "PU2BM SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "23434",
+     "file": "PU2BM SERIES_B2103.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "23433",
+     "file": "PU2BM SERIES_B2103.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "23428",
+    "23436",
+    "23435",
+    "23434",
+    "23433"
+   ]
+  },
+  {
+   "id": "r1-071",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSZU52C2V0 SERIES_G2009.pdf",
+     1
+    ],
+    [
+     "TSZU52C2V0 SERIES_G2009.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "49902",
+     "file": "TSZU52C2V0 SERIES_G2009.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "49866",
+     "file": "TSZU52C2V0 SERIES_G2009.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "49878",
+     "file": "TSZU52C2V0 SERIES_G2009.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "49889",
+     "file": "TSZU52C2V0 SERIES_G2009.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "49882",
+     "file": "TSZU52C2V0 SERIES_G2009.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "49902"
+   ]
+  },
+  {
+   "id": "r1-073",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TSCDK16065G1_A2507.pdf",
+     2
+    ],
+    [
+     "TSCDK16065G1_A2507.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "43907",
+     "file": "TSCDK16065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43902",
+     "file": "TSCDK16065G1_A2507.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43916",
+     "file": "TSCDK16065G1_A2507.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "43920",
+     "file": "TSCDK16065G1_A2507.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "43918",
+     "file": "TSCDK16065G1_A2507.pdf",
+     "page": 2
+    }
+   ],
+   "passed": [
+    "43907",
+    "43902",
+    "43916",
+    "43918",
+    "43920"
+   ]
+  },
+  {
+   "id": "r1-075",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TBS806 SERIES_A2010.pdf",
+     1
+    ],
+    [
+     "TBS806 SERIES_A2010.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "39296",
+     "file": "TBS806 SERIES_A2010.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39303",
+     "file": "TBS806 SERIES_A2010.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "39304",
+     "file": "TBS806 SERIES_A2010.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "39277",
+     "file": "TBS806 SERIES_A2010.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "39292",
+     "file": "TBS806 SERIES_A2010.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "39296",
+    "39303",
+    "39304"
+   ]
+  },
+  {
+   "id": "r1-077",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "UG1004G SERIES_D2601.pdf",
+     1
+    ],
+    [
+     "UG1004G SERIES_D2601.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "51004",
+     "file": "UG1004G SERIES_D2601.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51009",
+     "file": "UG1004G SERIES_D2601.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "51003",
+     "file": "UG1004G SERIES_D2601.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51001",
+     "file": "UG1004G SERIES_D2601.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51002",
+     "file": "UG1004G SERIES_D2601.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "51004",
+    "51009"
+   ]
+  },
+  {
+   "id": "r1-078",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "S2DA-T SERIES_D2111.pdf",
+     1
+    ],
+    [
+     "S2DA-T SERIES_D2111.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "29476",
+     "file": "S2DA-T SERIES_D2111.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "29484",
+     "file": "S2DA-T SERIES_D2111.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29483",
+     "file": "S2DA-T SERIES_D2111.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29482",
+     "file": "S2DA-T SERIES_D2111.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "29481",
+     "file": "S2DA-T SERIES_D2111.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-083",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "1SMA4737 SERIES_P2102.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "690",
+     "file": "1N4148WH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "1070",
+     "file": "1N5391G SERIES_G2309.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "842",
+     "file": "1N4148WTH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "801",
+     "file": "1N4148WSH_A2501.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "9127",
+     "file": "FR151G-T SERIES_B2105.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-086",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "TS40P05G SERIES_G2203.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "28266",
+     "file": "RTBS40M_B2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "41347",
+     "file": "TS40P05G SERIES_G2203.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "28260",
+     "file": "RTBS40M_B2103.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "9898",
+     "file": "GBPC40_50 SERIES_G2211.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "9910",
+     "file": "GBPC40_50 SERIES_G2211.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "41347",
+    "9898"
+   ]
+  },
+  {
+   "id": "r1-087",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BAS70 SERIES_G2606.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "3360",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46641",
+     "file": "TSS70U_C1601.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "4507",
+     "file": "BAW56 SERIES_I2001.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "3354",
+     "file": "BAS70 SERIES_G2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26741",
+     "file": "RB751V-40_E1701.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "3354",
+    "3360"
+   ]
+  },
+  {
+   "id": "r1-088",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "GBJL45J_D2606.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "9731",
+     "file": "GBJL45J_D2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51941",
+     "file": "UGS5JH_D2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "51870",
+     "file": "UGS20JH_F2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "8336",
+     "file": "ES3DB-A SERIES_C2102.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "22379",
+     "file": "PU1BBH SERIES_A2510.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "9731"
+   ]
+  },
+  {
+   "id": "r1-089",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "PLAD15Q_B2606.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "21849",
+     "file": "PLAD15Q_B2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "43321",
+     "file": "TSCDH15120G2H_A2506.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "42739",
+     "file": "TSCDAH15120G2H_A2506.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "13043",
+     "file": "HS1QB_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "13180",
+     "file": "HS1Q_A2408.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-090",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "SD103AWH SERIES_A2502.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "34730",
+     "file": "SR1202 SERIES_G2105.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "38690",
+     "file": "SSL22H SERIES_B2309.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "30818",
+     "file": "SD103AW SERIES_E2606.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "26741",
+     "file": "RB751V-40_E1701.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "2772",
+     "file": "B0520LW SERIES_J2112.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "2772"
+   ]
+  },
+  {
+   "id": "r1-093",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "GS2ZA_A2510.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "11163",
+     "file": "GS2ZA_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "11055",
+     "file": "GS1Z_A2510.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "29763",
+     "file": "S2YH_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "29691",
+     "file": "S2YAH_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "2119",
+     "file": "2A01G-T SERIES_B2105.pdf",
+     "page": 1
+    }
+   ],
+   "passed": [
+    "11163"
+   ]
+  },
+  {
+   "id": "r1-094",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "BZT52B2V4-G SERIES_H2002.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "5541",
+     "file": "BZT52C2V4 SERIES_G1804.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "38664",
+     "file": "SSL22 SERIES_M2309.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "48703",
+     "file": "TSUP12122_B2508.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "38698",
+     "file": "SSL22H SERIES_B2309.pdf",
+     "page": 2
+    },
+    {
+     "chunk_id": "5272",
+     "file": "BZT52B2V4 SERIES_F15.pdf",
+     "page": 2
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-096",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "SBS34 SERIES_F2103.pdf",
+     1
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "38393",
+     "file": "SSC3H60H_A2504.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "37874",
+     "file": "SSA3H60H_A2504.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46796",
+     "file": "TSSA3U60_H2306.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "46761",
+     "file": "TSSA3U60H_B2306.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "2252",
+     "file": "3A60 SERIES_B2105.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  },
+  {
+   "id": "r1-100",
+   "kind": "relevant",
+   "required_pages": [
+    [
+     "S1Q_B2102.pdf",
+     2
+    ]
+   ],
+   "unrecoverable": [],
+   "retrieved": [
+    {
+     "chunk_id": "13043",
+     "file": "HS1QB_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "13180",
+     "file": "HS1Q_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "13145",
+     "file": "HS1QH_A2408.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "13077",
+     "file": "HS1QFSH_A2505.pdf",
+     "page": 1
+    },
+    {
+     "chunk_id": "12939",
+     "file": "HS1QALH_A2505.pdf",
+     "page": 1
+    }
+   ],
+   "passed": []
+  }
+ ]
+}

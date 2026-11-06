@@ -244,7 +244,7 @@ def render_reports(summary, output, root=ROOT):
     heading = ["# 수퍼바이저 6종 3차 공동 평가 결과", "", "측정일: 2026-11-05 · 상태: 3차 실행 종료", "",
                "## 범위와 재계산 근거", "",
                "- 동결 v2 70문항, SHA-256 `" + summary["dataset_sha256"] + "`. 모델별 `run_index=3` 한 번만 실행했다. 유형 gold 35문항만 Accuracy·Macro-F1로 채점한다.",
-               "- 사전 등록 #33: [3차 계약](../experiments/supervisor-stage3-six-models.md), 유료 호출 전 로컬 커밋 `d10a30b`. 원격 공개 시점으로 실행 전 등록을 독립 증명했다고 주장하지 않는다.",
+               "- 사전 등록 #36: [3차 계약](../experiments/supervisor-stage3-six-models.md), 유료 호출 전 로컬 커밋 `d10a30b`. 원격 공개 시점으로 실행 전 등록을 독립 증명했다고 주장하지 않는다.",
                "- [3차 집계 JSON](" + summary_link + ") SHA-256 `" + summary_hash + "`. 1~3차 원시 파일과 3차 metadata의 hash, 모델별 수치·문항 ID를 담는다.",
                "- 출처 hash 정책: 기존 1·2차 파일은 Git checkout의 줄바꿈 차이를 제외한 LF 정규화 SHA-256을 사용한다. 3차 JSON은 .gitattributes의 -text로 원시 바이트를 보존하고 그 SHA-256을 기록한다. 기존 회차 원시 파일과 3차 호출 결과의 내용은 수정하지 않았다.",
                "- `execution.json`에 모델별 명령 인자·시작/종료 시각·process 경과 시간·종료 코드·원시 파일 hash를 보존했다. `preflight.json`에는 공개 catalog 가격·ZDR 노출·첫 문항 예약액을 기록했다.",

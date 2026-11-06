@@ -8,7 +8,7 @@
 
 ## 구현 상태
 - 있음: D4 줄기 그래프(입력 읽기 → 라우팅 → 재작성 → 검색 → 채점 → 생성 / 거절, 채점에서 통과가 없으면 재작성 → 검색으로 돌아감). 검색기와 체크포인터를 인자로 받아(`build_graph(retriever, checkpointer)`) 가짜 검색기로 키 없이 시험할 수 있습니다.
-- 아직 없음: Supervisor와 서브에이전트(D5), DB 체크포인트 설정, 사람 승인(interrupt) 지점, 판정 노드(`backend/judge/` 연결), 견적서 승인 단계, 장기 기억 Store 연결. 필수 요건은 SPEC과 `docs/GATES.md`를 따릅니다.
+- 아직 없음: Supervisor와 서브에이전트(D5, 비교 기준선을 지키려고 `backend/multi_agent/`에 따로 만듦), DB 체크포인트 설정, 사람 승인(interrupt) 지점, 판정 노드(`backend/judge/` 연결), 견적서 승인 단계, 장기 기억 Store 연결. 필수 요건은 SPEC과 `docs/GATES.md`를 따릅니다.
 
 ### Supervisor Prompt V0
 

@@ -12,6 +12,7 @@
 - `TESTS.md` — 이 문서
 - `api/` — 서버 API·인증 시험. [API.md](api/API.md)
 - `evals/` — 동결 감시·평가 실행기·Skill 쌍 시험. [EVALS.md](evals/EVALS.md)
+- `multi_agent/` — 멀티 에이전트 시험. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)
 - `graph/` — 질문 처리 그래프 노드 시험. [GRAPH.md](graph/GRAPH.md)
 - `mcp_skill/` — MCP 서버 도구 5종 시험(외부 호출 없음). [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
 - `judge/` — 판정 코드 시험 자리. 판정 코드와 같은 PR에서 넣습니다. [JUDGE.md](judge/JUDGE.md)

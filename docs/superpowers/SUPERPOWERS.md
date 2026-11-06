@@ -9,4 +9,3 @@
 ## 파일
 - `SUPERPOWERS.md` — 이 폴더 설명.
 - `specs/` — 사용자와 합의한 설계 문서. 현재 `2026-11-05-supervisor-prompt-v0-design.md`가 있습니다.
-- `plans/` — 승인된 설계를 구현하는 단계별 계획. 현재 `2026-11-05-supervisor-prompt-v0.md`가 있습니다.

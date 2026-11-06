@@ -1,5 +1,86 @@
 # jeongun 작업 기록
 
+## 2026-11-05 Supervisor에 일상 대화(chat) · 다이오드 외 부품(other_part) 추가
+- 한 일: 질문 종류에 `chat` · `other_part`를 더하고 결정서에 `reply`(한국어 300자 이하)를 넣었다. 일상 대화는 Supervisor가 `reply`로 직접 답하고 `finish`로 끝낸다(작성 · 검색 없음, `finish_node`가 `reply`를 답으로 쓴다). `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하며 거절 문구를 "회로나 부품에 관한 질문을 해 주세요"로 부드럽게 바꿨다. 다이오드가 아닌 전자 부품은 `web`(켜져 있을 때) 아니면 `not_found` 거절. 프롬프트는 영어로 다시 써 Langfuse `supervisor` v3로 등록했다. 단일 그래프(D4)는 건드리지 않았다.
+- 바꾼 파일: `backend/multi_agent/contracts.py` · `build.py` · `messages.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, 시험 `tests/multi_agent/test_contracts.py` · `test_supervisor.py` · `test_build.py`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 460 passed, 27 skipped(새 시험 7개를 먼저 쓰고 실패를 확인). 실제 Luna 4문장: 인사 → chat 답, 날씨 → out_of_scope 거절, MOSFET → other_part 못 찾음 거절(웹 꺼짐), "다이오드가 뭐야?" → chat 일반 설명 + 데이터시트 근거 아님 표시. `load_development` 대조 통과.
+- 확인 못 한 것: 4문장은 연결 확인일 뿐 정확도 근거가 아니다. 70문항에서 일상 대화 · 무관 질문 경계는 재지 않았다(평가셋에 일상 대화 문항이 없다). `web` 노드(TSC · Infineon 웹 조회)는 아직 연결하지 않았다.
+- 다음 할 일: `web` 노드를 TSC · Infineon 웹 조회 도구와 연결, 일상 대화 · 경계 질문 소규모 개발용 문항 만들기.
+
+## 2026-11-05 평가 실행기에 멀티 에이전트 실행(`--multi`)과 노드별 모델 기록
+- 한 일: `evals/runners/run_graph.py`에 `--multi`를 더했다. 같은 평가셋 · 같은 5지표 채점으로 멀티 에이전트(`backend/multi_agent`)를 재며, MCP 서버(`check_corpus`)를 전 문항 동안 한 번 열어 사실 확인에 쓴다(`make_app`). 멀티 점수로 검색 횟수 `tries`(counters.searches) · Supervisor 판단 횟수 `hops` · 거절 사유 `refusal_code`를 더했다. session · run_name · 태그 · 결과 파일 이름 앞에 `multi`를 붙인다(`multi_<평가셋>_<날짜>.json`). 단일 · 멀티 모두 결과 파일 meta와 Langfuse 메타데이터에 노드별 모델 `node_models`를 남긴다. 플래그 없이 돌리면 이전과 같게 줄기 그래프를 잰다.
+- 바꾼 파일: `evals/runners/run_graph.py`, `tests/evals/test_run_graph.py`, `evals/runners/RUNNERS.md`, `evals/EVALS.md`, `SOJAFIT.md`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 453 passed, 27 skipped. 시험 6개를 먼저 써서 실패를 확인한 뒤 구현(멀티 점수, 결과 파일 이름, 노드별 모델 기록, 멀티 · 단일 그래프 조립과 MCP 열고 닫기, 모두 가짜).
+- 확인 못 한 것: 실제 LLM · DB · MCP 서버로 `--multi`를 돌려 보지 않았다(유료 호출이라 하지 않음). 멀티 그래프가 실제 문항에서 상태 칸(`passed` · `docs` · `answer`)을 채점기(`score_answer`)가 읽는 모양으로 채우는지는 실행해 봐야 안다. 멀티 실행의 Langfuse 트레이스에는 노드(입력 읽기 · 사실 확인 · 판단 …) 단계가 CallbackHandler로 남지만 실제 모양은 확인하지 않았다.
+- 다음 할 일: 시험 2문항으로 `--multi`를 실제로 돌려 트레이스와 점수를 확인 → 사전 등록(다음 빈 번호는 origin/main 확인 후) → 70문항 측정.
+
+## 2026-11-05 노드별 모델 표와 호출 경로(시험까지)
+- 한 일: 노드마다 쓸 모델을 `NODE_MODELS` 표 하나로 정하게 했다(시작값: `supervisor` · `grade` Luna, 나머지 Haiku, 최종 아님). `_chat_model(model)`이 모델별로 객체를 캐시하고 Luna에는 `temperature`를 보내지 않는다. `node_chat`이 그 노드의 모델로 부르고, Langfuse 등록 설정(`node_config`)과 검사도 노드별로 바꿨다. 환경변수 `LLM_MODEL`은 전 노드 덮어쓰기로 남겼다.
+- 바꾼 파일: `backend/services/llm.py`, `backend/services/langfuse_prompts.py`, `backend/prompts/PROMPTS.md`, 시험 `tests/services/test_llm.py` · `tests/services/test_langfuse_prompts.py` · `tests/evals/test_skill_pair.py`(가짜 모델 함수가 모델 이름 인자를 받게)
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 447 passed, 27 skipped. 새 시험 6개를 먼저 쓰고 실패를 확인한 뒤 구현.
+- 확인 못 한 것: 진짜 Luna 호출은 아직 하지 않았다(`temperature` 생략, 출력 상한 이름이 실제로 통하는지는 가짜 모델 시험만). Langfuse에는 아직 새 설정으로 등록하지 않았다(`grade` · `supervisor`가 새 버전이 된다). 기본값이 바뀌어 단일 그래프의 `grade`도 Luna를 쓰므로, 11-04/#35 기준선을 재현하려면 `LLM_MODEL=anthropic/claude-haiku-5.5`를 정해야 한다. 평가 실행기 결과 파일의 `model`은 아직 노드별로 적지 않는다.
+- 다음 할 일: 진짜 Luna 한두 호출 확인 → Langfuse 새 설정 등록 → 평가 실행기에 노드별 모델 기록과 `--multi`.
+
+## 2026-11-05 코퍼스 확인 MCP 도구(`check_corpus`)와 사실 확인 연결
+- 한 일: 품번 · 개정 코드가 코퍼스에 있는지 있음/없음만 알려 주는 MCP 도구 `check_corpus`를 서버에 더했다(도구 1개로 합침, 판단하지 않음). 클라이언트 `StdioMcpRetriever.check`(같은 세션)와 응답 검증 `decode_check_result`, 사실 확인 노드용 `make_lookup(check)`를 만들었다. 코퍼스 목록은 `retrieve.corpus_known()`(품번 색인 + 문서 파일 이름의 개정 코드).
+- 바꾼 파일: `backend/mcp_skill/mcp_server/server.py`, `backend/rag/retrieve.py`, `backend/graph/mcp_retriever.py`, `backend/multi_agent/facts.py`, 시험 3개(`tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/multi_agent/test_facts_lookup.py`), `SPEC.md` 8.7, 폴더 설명과 트리
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 441 passed, 27 skipped. 실제 DB 읽기 전용 확인: 품번 9,589개 · 개정 코드 295개, `check_corpus`가 1N5819 · 1N4148 · H2104 · K2301은 있음, 1N4001 · TEST001 · Q2611은 없음으로 답했다(5.1초, 첫 호출은 색인 적재 포함). 실제 MCP(stdio) 서버를 띄워 질문 → 도구 호출 → Facts까지 확인했다.
+- 확인 못 한 것: 질문의 TEST001처럼 회로 이름이 품번으로 뽑혀 "없음"으로 알려지는지(실제로 TEST001은 코퍼스에 없다고 답함)는 입력 읽기가 회로 이름을 빼는지 확인하지 않았다. 도구 장애 시 사실 확인은 예외를 그대로 올린다.
+- 다음 할 일: 실제 DB에서 `corpus_known()` 한 번 확인 → Supervisor를 실제 LLM에 연결하고 평가 실행기에 `--multi` 추가.
+
+## 2026-11-05 기존 프롬프트 4개 영어 번역(측정 전)
+- 한 일: `route` · `grade` · `rewrite` · `generate` 프롬프트를 영어로 번역했다(규칙 내용 같음, 답변은 한국어, "문서로 확인 안 됨"은 그대로). 사전 등록 #35에 기대 범위를 먼저 적었다.
+- 바꾼 파일: `backend/prompts/{route,grade,rewrite,generate}.md`, `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `tests/graph/test_graph_{route,grade,rewrite,generate}.py`(프롬프트 문구 확인을 영어로)
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. origin/main의 사전 등록 마지막 번호는 #32라 #35를 썼다.
+- 이어서 한 일: 번역본을 Langfuse에 v2로 등록(`load_development` 대조 통과)하고 시험 2문항 뒤 v2 70문항을 측정했다. 결과 `evals/results/graph/graph_dataset_v2_2026-11-05.json`: cited_gold 12 · over_refusal 23 · correct_refusal 35(#31과 같음), 라우팅 32/35, p50 6.25초, 호출 215, 0.0463달러(#31 0.0519). #31과 지표가 다른 문항 2개(e02 · h02).
+- 확인 못 한 것: 답변이 한국어인지 확인하지 않았다. 응답 변동 폭은 재지 않았다.
+- 다음 할 일: 영어 프롬프트 기준으로 멀티 에이전트 구현을 이어 간다.
+
+## 2026-11-05 Supervisor 프롬프트 영어 전환과 Langfuse 등록
+- 한 일: `backend/prompts/supervisor.md`를 영어로 다시 썼고(`brief`도 영어), Supervisor 입력 글(`render`)과 에이전트 보고 요약 문구를 영어로 바꿨다. `NODES`에 `supervisor`를 더해 Langfuse에 v1로 등록했다.
+- 바꾼 파일: `backend/prompts/supervisor.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `backend/multi_agent/agents/{search,writer,verifier}.py`, `backend/services/langfuse_prompts.py`, `backend/services/llm.py`(docstring), `tests/multi_agent/*`
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. 등록 후 `load_development`로 5개 프롬프트가 로컬과 같고 라벨이 development · latest임을 확인.
+- 확인 못 한 것: 실제 LLM으로 Supervisor를 돌려 보지 않았다(가짜 LLM 시험만).
+- 다음 할 일: 기존 프롬프트 4개 영어 번역을 사전 등록(다음 빈 번호는 origin/main 확인 후)하고 v2 70문항으로 단일 그래프 재측정.
+
+## 2026-11-05 Langfuse 프롬프트 이름에서 폴더 빼기, Supervisor 입력에 질문 종류
+- 한 일: Langfuse 프롬프트 등록 이름에서 `sojafit/` 폴더를 뺐다(`route` · `grade` · `rewrite` · `generate`, Skill은 `skill-diode-evidence`). 코드(`backend/services/langfuse_prompts.py`)와 시험(`tests/services/test_langfuse_prompts.py`), `SPEC.md` 5절 이름을 고치고 새 이름으로 등록했다(development · latest 라벨, 버전 1). 본문은 그대로라 동작은 안 바뀐다. 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜서 지우지 않았고 정운이 화면에서 확인해 지우면 된다. 별개로 Supervisor 입력에 "질문 종류"가 빠져 두 번째 판단부터 판정 필요 여부를 못 읽던 것을 고쳤다.
+- 바꾼 파일: `backend/services/langfuse_prompts.py`, `tests/services/test_langfuse_prompts.py`, `SPEC.md`, `backend/prompts/PROMPTS.md`, `backend/multi_agent/supervisor.py`, `tests/multi_agent/test_supervisor.py` · `test_build.py`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 423 passed, 27 skipped. 새 이름으로 Langfuse에 등록한 뒤 `load_development`로 등록본과 로컬 소스를 대조해 일치를 확인했다.
+- 확인 못 한 것: `sojafit/tool-use`는 이 코드가 등록하지 않아 이름을 바꾸지 않았다(문서에는 옛 이름이 기록으로 남아 있다). 이전 폴더 프롬프트를 가리키는 과거 트레이스는 그대로다.
+- 다음 할 일: Supervisor 프롬프트를 영어로 다시 쓰고 등록 대상(`NODES`)에 더한다 → 기존 프롬프트 4개 영어 번역을 사전 등록한 개선 실험으로 측정한다.
+
+## 2026-11-05 서브에이전트 3개와 조립(가짜 LLM 시험)
+- 한 일: 시험 먼저 멀티 에이전트의 나머지 뼈대를 만들었다. 검색 에이전트(`agents/search.py`: 재작성 · 검색 · 채점 한 번, 통과 청크 번호와 실패 사유 3종(결과 없음 · 전부 탈락 · 검색 장애)을 보고, "결과 없음" 뒤 재시도에는 품번 필터를 풀어 다르게 시도), 작성 에이전트(`writer.py`: 단일 그래프의 `generate`를 감싸고 "문서로 확인 안 됨"이면 실패 보고), 검증 에이전트(`verifier.py`: 작성의 자체 검사를 믿지 않고 인용을 다시 계산, `enforce=False`면 기록만), 사실 확인(`facts.py`), 거절 문구(`messages.py`: 일상어, 내부 코드와 분리), 공용 메모장(`state.py`), 조립(`build.py`: 서브에이전트가 끝나면 반드시 Supervisor로 돌아오는 허브). Supervisor에 판정 스위치(`judge_enabled`)를 더했고 켜지지 않은 판정 · 웹은 선택지에서 빼며 `build_graph`가 켜려 하면 거부한다.
+- 바꾼 파일: `backend/multi_agent/`(`state.py` · `facts.py` · `messages.py` · `build.py` · `supervisor.py` · `agents/` 3개), `backend/prompts/supervisor.md`(판정 줄 한 곳), `tests/multi_agent/`(`test_agents.py` · `test_build.py` · `test_supervisor.py`), `MULTI_AGENT.md` 두 개, `SOJAFIT.md`, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 422 passed, 27 skipped(멀티 에이전트 시험 39개). 조립 시험은 다섯 길(역할 직행, 검색 → 작성 → 검증 → 끝, 검색 두 번 실패 → 못 찾음 거절, 범위 밖 거절, 검증 실패 뒤 다시 쓰기 한 번 → 검증 실패 거절)을 가짜 LLM · 검색기로 끝까지 돌렸다.
+- 확인 못 한 것: 실제 LLM · 검색 · DB로는 한 번도 안 돌렸다. `llm.node_chat`은 노드 이름이 정해져 있고 Langfuse 추적 때 프롬프트 등록이 필요해 `supervisor`를 더하는 작업이 남았다. 사실 확인의 코퍼스 목록을 가져오는 도구(MCP)가 없다. 채점이 아직 2갈래라 검색 보고의 `partial`은 안 나온다. 판정 · 웹 에이전트, 평가 실행기(`run_multi`), 사람 승인(interrupt)과 체크포인트는 없다.
+- 다음 할 일: 정운이 프롬프트와 전체 구조를 한 번 점검한 뒤(측정 전), 사실 확인 도구 · Langfuse 연결 · 평가 실행기를 붙여 실제 70문항으로 Supervisor 결정과 5지표를 D4 기준선과 비교한다.
+
+## 2026-11-05 Supervisor 노드(가짜 LLM 시험)
+- 한 일: 시험 먼저 Supervisor를 만들었다. `backend/multi_agent/supervisor.py`는 질문 · 확인된 사실(`Facts`: 품번 · 개정판이 코퍼스에 있나) · 지금까지의 보고 · 한도 현황 · 고를 수 있는 노드를 글로 만들어 LLM에 주고 결정서(`Decision`)를 받는다(`decide`). 한도를 넘거나 꺼져 있는 웹으로 가려 하면 거절로 바꾸고(품번이 목록에 없었으면 `part_missing`, 아니면 `not_found`), 끝내는 길(`finish` · `refuse`)은 한도로 막지 않는다. 판단 횟수 세기(`count_decision` · `count_report`). 프롬프트 `backend/prompts/supervisor.md` v1. 결정서에 질문 종류(`question_type`)를 더했다.
+- 바꾼 파일: `backend/multi_agent/supervisor.py` · `contracts.py`, `backend/prompts/supervisor.md` · `PROMPTS.md`, `tests/multi_agent/test_supervisor.py` · `test_contracts.py`, `MULTI_AGENT.md` 두 개, `SOJAFIT.md` 트리, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest -q` 404 passed, 27 skipped(멀티 에이전트 시험 21개 포함).
+- 확인 못 한 것: LLM이 실제로 좋은 결정을 내리는지는 안 쟀다(가짜 LLM 시험은 글 만들기와 한도 처리만 본다). `llm.node_chat`은 노드 이름이 route · grade · rewrite · generate로 정해져 있고 Langfuse 추적이 켜져 있으면 프롬프트 등록이 필요해서, 실제 연결 때 `supervisor`를 더하는 작업이 남았다. 사실 조회(`Facts`를 만드는 도구)는 아직 없다.
+- 다음 할 일: 서브에이전트(처음에는 단일의 검색 · 채점 · 재작성을 감싸기) → 조립 → 같은 70문항으로 Supervisor의 질문 종류 · 거절 결정을 D4 기준선과 비교.
+
+## 2026-11-05 멀티 에이전트 폴더 뼈대와 약속(contracts.py)
+- 한 일: 정운과의 설계 대화 결과로 새 구조의 첫 조각을 만들었다. D4 단일 그래프를 비교 기준선으로 지키려고 `backend/multi_agent/`를 `graph/`와 분리했고(이유는 폴더 설명 `MULTI_AGENT.md`), 시험 먼저 `contracts.py`를 썼다: Supervisor의 결정서 `Decision`, 서브에이전트의 보고서 `AgentReport`, 이유 코드 `Reason`(거절 7종 · 재시도 3종), 한도 `MAX_HOPS` 8 · `MAX_SEARCHES` 2 · `MAX_WRITES` 2와 한도 검사 `check_limit`.
+- 바꾼 파일: `backend/multi_agent/`(`MULTI_AGENT.md` · `__init__.py` · `contracts.py`), `tests/multi_agent/`(`MULTI_AGENT.md` · `test_contracts.py`), `SOJAFIT.md` 트리와 담당 표, `backend/BACKEND.md` · `tests/TESTS.md` · `backend/graph/GRAPH.md`의 목록, 이 파일
+- 실행한 명령과 결과: `uv run --frozen pytest tests/multi_agent -q` 10 passed. 폴더 구조 시험 통과.
+- 확인 못 한 것: 이 조각은 데이터 모양과 한도 규칙뿐이라 LLM · 검색 · 측정은 아직 없다. 사용자에게 보일 거절 문구(일상어)와 Langfuse에 남길 항목은 다음 조각에서 정한다.
+- 다음 할 일: Supervisor 노드(가짜 LLM으로 시험) → 서브에이전트(단일의 검색 · 채점 · 재작성을 감싸기) → 조립 → D4 점수와 비교.
+
+## 2026-11-05 채점기 기준선(사전 등록 #33)
+- 한 일: 로컬 `jeongun`을 `origin/main`(PR #54)에 맞추고 임시 브랜치 3개와 오래된 작업 폴더를 지웠다. 채점을 3갈래로 바꾸기 전 기준선으로, 지금 2갈래 채점이 정답 쪽을 얼마나 유지하는지 측정했다. 사전 등록 #33(번호는 `main`의 #32가 오세창 것이라 #33), 시험 먼저, 계산기와 스냅샷 만들기(`evals/runners/eval_grader.py`), 입력 스냅샷(`evals/inputs/grader_cases_v2.json`, 청크 번호 · 파일 · 쪽만), 결과(`evals/results/grader/grader_baseline_2026-11-05.json`).
+- 바꾼 파일: `evals/guides/preregister.md`(#33), `evals/runners/eval_grader.py`, `evals/inputs/grader_cases_v2.json`, `evals/results/grader/`, `tests/evals/test_eval_grader.py`, `SOJAFIT.md` · `INPUTS.md` · `RUNNERS.md` · `EVALS.md` · `tests/evals/EVALS.md`의 파일 줄, 이 파일
+- 실제 결과: v2 관련 19문항에서 검색 청크가 정답 쪽을 다 가진 문항 15 · 일부 4. 채점이 통과시킨 청크 기준으로 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(정답 쪽 유지율 12/15, 쪽 재현율 평균 0.776). 비관련 35문항 중 34문항이 통과 0개. 사전 등록한 숫자와 같게 재현됐다(예측이 아니라 재현이며, 같은 스냅샷을 11-05에 임시로 먼저 계산해 본 것은 #33에 적었다). LLM · API 호출 0, 비용 0.
+- 같이 알게 된 것: 정답 쪽이 검색에 다 있는 15문항 중 과잉 거절은 8건이고, 원인이 채점이 3(h04 · n01 · n04), 채점은 통과시켰는데 생성이 거절이 5(h05 · n06 · n07 · n08 · n21)다. 3갈래 채점으로 바뀌는 것은 앞쪽뿐이라 판정 노드 · 거절 형식 · 라우팅을 따로 다뤄야 한다.
+- 확인 못 한 것: 스냅샷은 11-04 실행 한 번의 검색 결과라 재검색한 문항은 마지막 검색만 본다. R1 dev 46문항은 아직 안 만들었다(새로 검색해야 해서 호출이 든다).
+- R1 dev 기준선(사전 등록 #34): R1 dev 46문항에 서비스 검색 + 지금 채점을 1번씩 돌려 측정했다(`eval_grader.py collect-r1`, 오류 0, OpenRouter 0.0133달러). 검색이 정답 쪽을 다 가져온 문항 39 · 일부 1 · 못 가져옴 6, 채점이 정답 쪽을 다 남긴 것 36/39(0.923, r1-050 · r1-078은 전부, r1-071은 일부 버림), 필요 쪽 통과 재현율 평균 0.804. 사전 등록 기대 세 가지 모두 범위 안. v2의 유지율은 0.80(12/15)이라 두 평가셋을 합치지 않고 따로 적는다.
+- 확인 못 한 것(추가): R1 dev는 첫 검색 1번만 본다. 필터가 품번만이라 R1 1위 조합과 같지 않다. 같은 질문에 LLM 채점이 흔들리는 폭은 1번만 재서 모른다.
+- 다음 할 일: 새 구조(Supervisor + 서브에이전트) 설계를 끝내고 골격을 만든 뒤, 3갈래 채점기를 R1 dev로 개발해 v2로 한 번 측정한다. 비교 기준은 이 두 기준선이다.
+
 ## 2026-11-04 단일 에이전트 기준 점수 측정(사전 등록 #31, D4)
 - 한 일: 사전 등록 #28 결과 기록과 #31를 측정 전에 커밋(`a630454`)하고, 시험 2문항(draft30-m01 · draftv2-n16)과 Langfuse 확인 1~6 뒤 동결 v2 70문항을 줄기 그래프로 돌렸다(`LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl`).
 - 바꾼 파일: `evals/guides/preregister.md`(#31 결과), `evals/results/graph/graph_dataset_v2_2026-11-04.json`(새 파일), 이 파일

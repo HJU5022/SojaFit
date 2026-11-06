@@ -147,7 +147,7 @@ def test_raw_chat_and_embedding_share_budget_and_restore_defaults(monkeypatch):
             calls.append("embed")
             return SimpleNamespace(data=[SimpleNamespace(embedding=[0.1])], usage=SimpleNamespace(total_tokens=1))
 
-    monkeypatch.setattr(llm, "_chat_model", Model)
+    monkeypatch.setattr(llm, "_chat_model", lambda *_: Model())
     monkeypatch.setattr(llm, "_embedding_client", lambda: (Embedding(), "openrouter", "small"))
     budget = llm.EvaluationBudget(2, 1, 60, 0.000001, 0.000001)
     with llm.evaluation_limits(budget):
@@ -199,7 +199,7 @@ def test_actual_sdk_request_receives_evaluation_timeout(monkeypatch):
     with httpx.Client(transport=httpx.MockTransport(transport)) as client:
         model = ChatOpenAI(model="gpt-4o", api_key="test-key", base_url="https://example.invalid/v1",
                            http_client=client, max_retries=0)
-        monkeypatch.setattr(llm, "_chat_model", lambda: model)
+        monkeypatch.setattr(llm, "_chat_model", lambda *_: model)
         with llm.evaluation_limits(llm.EvaluationBudget(1, 1, 60, 0.000001, 0.000001)):
             assert llm._openrouter_call("sys", "q", nodes.Answer).answer == "ok"
     timeout, body = seen[0]

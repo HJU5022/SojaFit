@@ -179,7 +179,7 @@
 
 ## 2026-11-05 수퍼바이저 3차 실행 전 준비
 
-- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #33과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
+- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #36과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
 - 조건·예산·중단: 기존 프롬프트·typed question 계약, ZDR·fallback 금지, 유형 gold 35문항, 여섯 모델의 `out_of_scope → refuse` 일관성, 1~3차 완전한 행만의 agreement·flip을 고정했다. 본 실행 계획값 US$0.88, smoke US$0.033, 합계 US$0.913, 모델별 70 outputs·210 raw calls·7,200초와 provider·가격·코드 hash 불일치 중단을 등록했다. Jev 비용값은 실제 청구액의 절대 상한이 아니다.
 - API 없는 명령·결과: `uv run --no-sync python -c '...create_manifest(...)...'`로 5종 manifest를 생성해 1,050건 중 3차 350건을 확인했고, `uv run --no-sync python -m evals.runners.run_supervisor_jev plan evals/results/supervisor/2026-11-05-jev-stage3-v1 --run-index 3`으로 Jev 70건을 준비했다. 생성된 파일은 두 manifest뿐이다. 유료 API 호출 0회, smoke·본 실행 0건이다.
 - 바꾼 파일: 3차 계약·사전 등록, 두 manifest, `SOJAFIT.md` 트리, 실험·평가 폴더 색인과 이 작업 기록. 기존 1·2차 원시 결과와 동결 평가셋은 바꾸지 않았다. 다음 단계는 manifest hash·현재 catalog 가격·ZDR·provider를 다시 확인한 뒤 별도 지시에 따라 smoke를 시작하는 것이다.
@@ -220,3 +220,11 @@
 - 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
 - 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
 - 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.
+
+## 2026-11-06 Supervisor Prompt V0 PR 병합 준비
+
+- 목적·범위: `OSC`의 Supervisor Prompt V0 계약·세 후보 동일 입력 평가·Langfuse 결과 가져오기를 하나의 프로토타입 검증 PR로 준비한다. 최신 `origin/main`을 merge하고 프로덕션 `backend/prompts/supervisor.md`와 비교용 `supervisor_v0.md`를 별도 파일로 보존했다. 최종 운영 프롬프트 확정과 모델 선정은 범위 밖이다.
+- 병합 정리: 충돌한 `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `evals/runners/RUNNERS.md`에서 양쪽 기록을 보존했다. 독립 브랜치에서 겹친 사전 등록 번호를 수퍼바이저 3차 `#36`, V0 `#37`로 재배정했다. V0 원시 `execution.json`의 당시 포인터 `#34`는 원시 결과 보존을 위해 바꾸지 않았다.
+- 범위 축소: 구현이 끝난 뒤 리뷰에 중복되는 `docs/superpowers/plans/2026-11-05-supervisor-prompt-v0.md`를 제외하고 `SOJAFIT.md` 트리와 `docs/superpowers/SUPERPOWERS.md` 파일 목록을 함께 정리했다. 설계 문서, 실행 코드·테스트, 원시 결과와 Langfuse import receipt는 유지했다.
+- 병합 전 검증: Windows 기본 인코딩의 전체 pytest는 기존 `tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file`가 임시 JSONL을 cp949로 쓰고 UTF-8로 읽어 1건 실패했다(416 passed, 27 skipped). 이 테스트는 양쪽 브랜치에 같은 형태로 있었고 V0 범위 밖이라 수정하지 않았다. 병합 후 `PYTHONUTF8=1` 전체 테스트와 저장소 정합성 검사를 다시 실행한다.
+- 병합 후 검증: `PYTHONUTF8=1 uv run pytest`는 505 passed·32 skipped, `tests/repo/test_repo_layout.py` 포함 전체 통과했다. `git diff --check`, 금지 경로 검사, 고신뢰 API key·private key 패턴 검사도 통과했다. `origin/main` 기준 PR diff는 48개 파일, 5,813줄 추가·17줄 삭제이며 원시 평가 결과와 재현 코드 때문에 400줄 권장 규모를 넘는다. 모델 재호출·Langfuse 추가 쓰기·push는 하지 않았다.

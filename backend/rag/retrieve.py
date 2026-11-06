@@ -95,6 +95,16 @@ def warmup():
     _nocover = {r[0] for r in rows if r[3] is not None}  # [왜] 표지 청크는 품번 목록뿐이라 품번 질문에 BM25로 1위가 되고 근거 페이지가 없다(page_number가 없는 청크)
 
 
+def corpus_known():
+    """코퍼스에 있는 (품번 소문자 집합, 개정 코드 집합)을 돌려준다. 개정 코드는 문서 파일 이름 끝(`..._H2104.pdf`)에서 읽는다."""
+    if _parts is None:
+        warmup()
+    with _connect() as conn:
+        urls = [r[0] for r in conn.execute('SELECT source_url FROM source_documents').fetchall()]
+    names = (unquote(os.path.basename(urlparse(u).path)) for u in urls)
+    return set(_parts[0]), {m.group(1) for m in map(re.compile(r'_([A-Z]\d{4})\.pdf$').search, names) if m}
+
+
 def positive_top(scores, ids, n):
     """BM25 점수가 0보다 큰 청크 id를 높은 순으로 n개까지 돌려준다. 질문 단어가 하나도 안 맞으면 빈 목록이다(AC-10)."""
     # [왜] 점수 0인 청크까지 넣으면 질문과 상관없는 청크 50개이 RRF 후보로 들어간다(허용 밖 -inf도 같이 빠진다)

@@ -1,24 +1,43 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 로그인 사용자의 질문 API(`/api/ask`)를 등록한다.
+역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`)와 Google 콜백 접속 로그 보호를 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 질문·답변 기록 저장, 회로·대화·기억·견적 API.
+하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 질문·답변 API, 회로·대화·기억·견적 API.
 출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000).
-시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사한다.
+시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
 """
 import os
+import base64
+import hashlib
+import logging
+from html import escape
 from contextlib import asynccontextmanager
-from functools import lru_cache
 from pathlib import Path
+from urllib.parse import unquote, urlencode
 
+import httpx
 import psycopg
+from authlib.common.errors import AuthlibBaseError
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from pydantic import BaseModel, Field, StrictBool, field_validator
 
 from backend import auth
+
+
+class GoogleCallbackLogFilter(logging.Filter):
+    """Uvicorn 접속 로그에서 Google 콜백의 쿼리만 제거한다."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple) and len(record.args) == 5:
+            target = record.args[2]
+            if isinstance(target, str):
+                path, separator, _ = target.partition("?")
+                if separator and unquote(path).rstrip("/") == "/api/auth/google/callback":
+                    record.args = (*record.args[:2], path, *record.args[3:])
+        return True
 
 
 @asynccontextmanager
@@ -26,19 +45,103 @@ async def lifespan(app: FastAPI):
     """서버 시작 시 인증 설정을 검사한다."""
     # [왜] 잘못된 AUTH_SECRET으로 뜬 서버가 약한 세션 해시를 쓰지 않도록 RuntimeError로 기동 자체를 막는다
     auth.validate_auth_configuration()
-    yield
+    logger = logging.getLogger("uvicorn.access")
+    log_filter = GoogleCallbackLogFilter()
+    logger.addFilter(log_filter)
+    try:
+        yield
+    finally:
+        logger.removeFilter(log_filter)
 
 
 app = FastAPI(title="SojaFit API", lifespan=lifespan)
 LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
+GOOGLE_COOKIE = "sojafit_google_browser"
+GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
 
 
-@lru_cache(maxsize=1)
-def get_question_graph():
-    """서버 안에서 한 번만 그래프를 만들며 요청 간 상태는 저장하지 않는다."""
-    from backend.graph.build import build_graph
+def google_enabled() -> bool:
+    return os.getenv("GOOGLE_AUTH_ENABLED") == "1" and bool(os.getenv("GOOGLE_CLIENT_ID")) and bool(os.getenv("GOOGLE_CLIENT_SECRET"))
 
-    return build_graph()
+
+@app.get("/api/auth/google/status", include_in_schema=False)
+def google_status():
+    return {"enabled": google_enabled()}
+
+
+@app.get("/api/auth/google/start", include_in_schema=False)
+def google_start():
+    if not google_enabled():
+        raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
+    try:
+        state, browser, verifier, nonce = auth.create_google_state()
+    except (psycopg.Error, KeyError):
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    origin = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").rstrip("/")
+    query = urlencode({"client_id": os.environ["GOOGLE_CLIENT_ID"], "redirect_uri": origin + "/api/auth/google/callback", "response_type": "code", "scope": "openid email", "state": state, "nonce": nonce, "code_challenge": challenge, "code_challenge_method": "S256"})
+    response = RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth?" + query, status_code=303)
+    response.set_cookie(GOOGLE_COOKIE, browser, max_age=600, httponly=True, secure=origin.startswith("https://"), samesite="lax", path="/api/auth/google/callback")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.get("/api/auth/google/callback", include_in_schema=False)
+def google_callback(request: Request):
+    if not google_enabled():
+        raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
+    state, code = request.query_params.get("state", ""), request.query_params.get("code", "")
+    if not code or len(code) > 2048:
+        return google_failure()
+    try:
+        stored = auth.consume_google_state(state, request.cookies.get(GOOGLE_COOKIE, ""))
+        if not stored:
+            return google_failure()
+        identity = auth.fetch_google_identity(code, *stored)
+        if not identity:
+            return google_failure()
+        session = auth.google_admin_session(identity[0], identity[1])
+        if session:
+            response = RedirectResponse("/login", status_code=303)
+            secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
+            response.set_cookie(auth.COOKIE, session[0], httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
+        else:
+            request_id = auth.request_google_link(*identity)
+            response = RedirectResponse("/api/auth/google/pending", status_code=303)
+            secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
+            response.set_cookie(GOOGLE_PENDING_COOKIE, request_id, max_age=900, httponly=True, secure=secure, samesite="lax", path="/api/auth/google/pending")
+    except (psycopg.Error, KeyError, httpx.HTTPError, AuthlibBaseError, ValueError, TypeError):
+        return google_failure()
+    response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+def google_failure():
+    response = RedirectResponse("/login?google=error", status_code=303)
+    response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.get("/api/auth/google/pending", include_in_schema=False)
+def google_pending(request: Request):
+    if not google_enabled():
+        raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
+    request_id = request.cookies.get(GOOGLE_PENDING_COOKIE, "")
+    try:
+        email = auth.google_pending_email(request_id)
+    except (psycopg.Error, KeyError):
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    if not email:
+        raise HTTPException(status_code=400, detail="연결 요청이 만료되었거나 처리되었습니다.")
+    response = HTMLResponse(f"<h1>관리자 연결 승인 대기</h1><p>확인된 이메일: {escape(email)}</p><p>요청 번호: {escape(request_id)}</p><p>이 정보를 신뢰할 수 있는 경로로 운영자에게 전달하세요.</p>")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
 
 
 @app.exception_handler(RequestValidationError)
@@ -54,7 +157,7 @@ def health() -> dict:
 
 @app.get("/login", include_in_schema=False)
 def login_page():
-    """같은 출처의 로그인·질문 화면을 제공한다."""
+    """같은 출처의 로그인 화면을 제공한다."""
     return FileResponse(LOGIN_PAGE, media_type="text/html; charset=utf-8")
 
 
@@ -108,39 +211,6 @@ def logout(request: Request, response: Response):
     auth.logout(request)
     response.delete_cookie(auth.COOKIE, path="/")
     return {"ok": True}
-
-
-class Ask(BaseModel):
-    """비저장 단일 질문 요청. 신뢰 경계인 사용자 ID는 본문에 허용하지 않는다."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    question: str = Field(min_length=1, max_length=2000)
-
-    @field_validator("question")
-    @classmethod
-    def check_question(cls, question: str) -> str:
-        question = question.strip()
-        if not question:
-            raise ValueError("질문을 입력해 주세요.")
-        return question
-
-
-@app.post("/api/ask")
-def ask(
-    body: Ask,
-    _: None = Depends(auth.check_origin),
-    user: tuple[int, str] = Depends(auth.current_user),
-):
-    """로그인 사용자의 질문을 한 번 처리하고 답만 반환한다(기록은 저장하지 않음)."""
-    try:
-        state = get_question_graph().invoke({"input": body.question, "user_id": str(user[0])})
-        answer = state.get("answer")
-        if not isinstance(answer, str):
-            raise RuntimeError("graph did not return an answer")
-    except Exception:
-        raise HTTPException(status_code=503, detail="질문 서비스를 사용할 수 없습니다.") from None
-    return {"answer": answer}
 
 
 class AccountState(BaseModel):
