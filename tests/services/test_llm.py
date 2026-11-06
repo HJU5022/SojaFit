@@ -319,7 +319,7 @@ def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다
 
 
-HAIKU, LUNA = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"
+HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 
 
 def test_chat_model_is_cached_per_model_and_luna_gets_no_temperature(monkeypatch):
@@ -329,11 +329,12 @@ def test_chat_model_is_cached_per_model_and_luna_gets_no_temperature(monkeypatch
     assert haiku.model_name == HAIKU and haiku.temperature == 0
     assert luna.model_name == LUNA and luna.temperature is None  # [왜] Luna에는 temperature를 보내지 않는다(3차 실측 계약)
     assert llm._chat_model(LUNA) is luna
+    assert llm._chat_model(SONNET).temperature == 0  # Luna가 아닌 모델은 temperature 0
 
 
 def test_node_model_follows_table_and_env_override_wins(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
-    assert llm.node_model("supervisor") == LUNA and llm.node_model("grade") == LUNA
+    assert llm.node_model("supervisor") == SONNET and llm.node_model("grade") == LUNA
     assert [llm.node_model(n) for n in ("route", "rewrite", "generate")] == [HAIKU] * 3
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert {llm.node_model(n) for n in ("route", "grade", "generate", "supervisor")} == {"x/y"}
@@ -352,6 +353,6 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
     monkeypatch.setattr(llm, "_chat_model", chat_model)
     llm.node_chat("supervisor", "sys", "q", Route)
     llm.node_chat("route", "sys", "q", Route)
-    assert used == [LUNA, HAIKU]
+    assert used == [SONNET, HAIKU]
     llm.chat("sys", "q", Route)  # node_chat 밖의 호출은 기본 모델
     assert used[-1] == llm.LLM_MODEL

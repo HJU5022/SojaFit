@@ -14,11 +14,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
-HAIKU, LUNA = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"
+HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 CONFIG = {"model": HAIKU, "temperature": 0, "max_tokens": 4096}
-NODES = ("route", "grade", "rewrite", "generate", "supervisor")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
+NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
+# [왜] judge_read는 판정 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
-NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": LUNA}
+# [왜] Supervisor는 Sonnet, 그 아래 서브에이전트가 쓰는 노드는 Haiku, 채점은 Luna(11-05 정운 결정)
+NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": SONNET, "judge_read": HAIKU}
 SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
@@ -32,9 +34,9 @@ def callback():
 
 
 def node_config(node):
-    """노드가 쓰는 모델의 등록 설정. Haiku는 CONFIG 그대로, 다른 모델에는 temperature를 보내지 않는다(Luna 3차 실측 계약)."""
+    """노드가 쓰는 모델의 등록 설정. Luna에만 temperature를 보내지 않고(3차 실측 계약), 나머지는 CONFIG에 모델만 바꾼다."""
     model = NODE_MODELS[node]
-    return CONFIG if model == CONFIG["model"] else {"model": model, "max_tokens": CONFIG["max_tokens"]}
+    return {"model": model, "max_tokens": CONFIG["max_tokens"]} if model == LUNA else {**CONFIG, "model": model}
 
 
 def publish(client, name, body, *, kind, config):

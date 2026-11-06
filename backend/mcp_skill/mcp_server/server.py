@@ -1,6 +1,7 @@
 """SojaFit의 코퍼스 검색과 미검증 TSC 문서 후보를 노출하는 stdio MCP 서버."""
 import json
 import hashlib
+import math
 import os
 import re
 from pathlib import Path
@@ -10,7 +11,8 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 from backend.graph.nodes import circuit_around
-from backend.rag.retrieve import corpus_known, retrieve
+from backend.rag.retrieve import _connect, corpus_known, retrieve
+from backend.rag.spec_lookup import CODES, SLOTS, find_candidates, part_specs
 
 
 mcp = FastMCP("sojafit-search")
@@ -53,6 +55,73 @@ def check_corpus(parts: list[str], revisions: list[str]) -> dict:
     known_parts, known_revisions = corpus_known()
     return {"parts": {p: p.strip().lower() in known_parts for p in parts},
             "revisions": {r: r.strip().upper() in known_revisions for r in revisions}}
+
+
+def _validate_codes(codes: object) -> None:
+    if codes is not None and (not isinstance(codes, list) or len(codes) > len(CODES)
+                              or not all(isinstance(c, str) and c in CODES for c in codes)):
+        raise ValueError(f"codes must be a list of up to {len(CODES)} codes from {', '.join(CODES)}")
+
+
+@mcp.tool()
+def get_part_specs(part: str, codes: list[str] | None = None) -> list[dict]:
+    """품번 하나의 데이터시트 사양 표 행을 돌려줍니다(값을 비교하거나 판정하지 않습니다).
+
+    값은 SI 단위(V, A, W, s, F, degC)이고, 행마다 분류(category), 시험 조건과 인용(문서 파일 이름·쪽·표·행·청크 순번)이 있습니다.
+    codes로 코드를 고를 수 있습니다(VRRM, IF_AV, IFSM, VF, IR, TRR, VZ, PD, CJ, TJ_MAX, VR, VRWM, VBR, VC, IPP, PPPM, VESD,
+    PACKAGE=패키지 이름). 빈 목록이면 표에 그 품번이 없거나 값을 뺀 것이라 "문서로 확인 안 됨"으로 다룹니다.
+    """
+    if not isinstance(part, str) or not part.strip() or len(part) > 100:
+        raise ValueError("part must contain 1 to 100 characters")
+    _validate_codes(codes)
+    with _connect() as conn:
+        return part_specs(conn, part.strip(), codes)
+
+
+def _validate_conditions(conditions: object) -> None:
+    if not isinstance(conditions, list) or not 1 <= len(conditions) <= 10:
+        raise ValueError("conditions must be a list of 1 to 10 conditions")
+    for c in conditions:
+        # [왜] 숫자는 SQL 인자로만 넘기지만 NaN·무한·True(=1)는 조건 뜻이 없어 막는다
+        if (not isinstance(c, dict) or not set(c) <= {'code', 'slot', 'gte', 'lte'}
+                or c.get('code') not in CODES or c['code'] == 'PACKAGE'  # 패키지는 숫자가 아니라 package 인자로 거른다
+                or c.get('slot') not in (None, *SLOTS) or not ({'gte', 'lte'} & set(c))
+                or not all(isinstance(c[k], (int, float)) and not isinstance(c[k], bool) and math.isfinite(c[k])
+                           for k in ('gte', 'lte') if k in c)):
+            raise ValueError("each condition needs a numeric code, optional slot min|typ|max, and finite gte and/or lte")
+
+
+@mcp.tool()
+def find_parts_by_specs(conditions: list[dict], category: str | None = None, package: str | None = None,
+                        limit: int = 20, original_packages: list[str] | None = None,
+                        original_category: str | None = None) -> list[dict]:
+    """숫자 사양 조건을 모두 채운 품번을 사양 표에서 찾습니다(행을 거를 뿐 대체 가능 판정은 하지 않습니다).
+
+    conditions 예: [{"code": "VRRM", "gte": 40}, {"code": "IF_AV", "gte": 1}] 또는 제너 창
+    [{"code": "VZ", "slot": "min", "gte": 3.42}, {"code": "VZ", "slot": "max", "lte": 3.78}]. 값은 SI 단위(V, A, W, s, F, degC),
+    gte=이상·lte=이하(경계 포함), slot은 min|typ|max(기본 max, CJ는 typ). 조건마다 그 품번의 행 하나 이상이 채우면 됩니다.
+    category는 분류 이름과 같아야 합니다: standard-rectifier, schottky-rectifier, schottky-diode, sic-schottky-diode,
+    fast-recovery-trr-100-500ns, high-efficiency-trr-50-99ns, super-fast-recovery, ultra-fast-recovery, switching-diode,
+    zener-diode, tvs, esd-protection, bridge. package는 패키지 이름과 같아야 합니다(대소문자·하이픈·공백 무시, 예: SMA, SOD-123. SMA는 SMAF를 잡지 않음).
+    결과는 조건을 채운 품번 전부를 줄 세운 뒤 limit개(1~50)까지입니다. 순서는 원래 부품의 패키지(original_packages 중 하나와
+    이름이 같음) → 원래 부품의 분류(original_category) → 기준에 가까운 것(조건마다 값/기준, 이하는 기준/값 중 가장 큰 비율이 작은 것)
+    → 품번 순이고, 두 값은 순서에만 쓰며 거르지 않습니다. 각 품번에 조건을 채운 행과 인용, 분류, 패키지가 붙습니다.
+    표에 값이 없는 품번은 결과에서 빠지며, 이는 불충족이 아니라 "문서로 확인 안 됨"입니다.
+    """
+    _validate_conditions(conditions)
+    if category is not None and (not isinstance(category, str) or not 1 <= len(category) <= 100):
+        raise ValueError("category must contain 1 to 100 characters")
+    if package is not None and (not isinstance(package, str) or not re.fullmatch(r'[A-Za-z0-9.\-]{1,30}', package)):
+        raise ValueError("package must be 1 to 30 letters, digits, dots or hyphens")
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 50:
+        raise ValueError("limit must be between 1 and 50")
+    if original_packages is not None and (not isinstance(original_packages, list) or len(original_packages) > 10 or not all(
+            isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9.\-]{1,30}', p) for p in original_packages)):
+        raise ValueError("original_packages must be up to 10 package names of 1 to 30 letters, digits, dots or hyphens")
+    if original_category is not None and (not isinstance(original_category, str) or not 1 <= len(original_category) <= 100):
+        raise ValueError("original_category must contain 1 to 100 characters")
+    with _connect() as conn:
+        return find_candidates(conn, conditions, category, package, limit, original_packages, original_category)
 
 
 @mcp.tool()

@@ -1,13 +1,14 @@
 # services
 
 ## 역할
-- 이 폴더: 외부 호출을 모으는 한 곳입니다. LLM·임베딩 호출(`llm.py`)과 Langfuse 프롬프트 관리·추적(`langfuse_prompts.py`)이 있습니다.
-- 넣는 것: LLM·임베딩 호출의 유일한 입구, 평가 예산·재시도 상한, Langfuse 프롬프트 등록·고정 버전 검증·노드 추적.
+- 이 폴더: 외부 호출을 모으는 한 곳입니다. LLM·임베딩 호출(`llm.py`), Langfuse 프롬프트 관리·추적(`langfuse_prompts.py`), Mouser 가격·재고 조회(`mouser.py`)가 있습니다.
+- 넣는 것: LLM·임베딩 호출의 유일한 입구, 평가 예산·재시도 상한, Langfuse 프롬프트 등록·고정 버전 검증·노드 추적, Mouser Search API 호출(응답은 저장·로그하지 않음, ADR 0009).
 - 넣지 않는 것: 데모 응답 파일(`data/demo/`), 그래프 노드(`backend/graph/`), 프롬프트 원문(`backend/prompts/`), 검색(`backend/rag/`).
 - 담당: 서비스·운영
 
 ## 구현 상태
-- 없는 파일: 견적서 저장(`quote.py`)과 가격·재고 조회(`mouser.py`, 확장 단계)는 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
+- 없는 파일: 견적서 저장(`quote.py`)은 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
+- Mouser: `mouser.py`는 `/api/prices`(backend/main.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
 - 데모 모드 응답 재생: 코드가 없습니다(`llm.py` 머리말도 같음). `DEMO_MODE=1`은 지금 검색의 임베딩·리랭크 호출만 끕니다(`backend/rag/retrieve.py`가 `llm.DEMO_MODE`를 읽어 BM25만 씀).
 - `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
 
@@ -19,7 +20,8 @@
 
 ## 파일
 - `__init__.py` — 패키지 표시
-- `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 ADR 0010), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
+- `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 노드별 `langfuse_prompts.NODE_MODELS`를 `node_model(node)`로 고르고 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나, ADR 0014), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
 
 Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.
-- `langfuse_prompts.py` — development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)
+- `mouser.py` — Mouser Search API 품번 검색(`POST /api/v1/search/partnumber`, 키는 `apiKey` 쿼리) 클라이언트. `check_parts`(1~10개, 3~40자, `|` 금지), `search_parts(parts, transport=None)`가 한 번만 보내고(재시도 없음, 제한 시간 10초, 프로세스당 누적 `MAX_CALLS` 300회) 품번 · 제조사 · 수량별 가격과 통화 · 재고 표시 · 상품 주소와 조회 시각만 돌려줌. 실패는 `MouserError(kind)`로만 알리고 요청 주소 · 키 · Mouser 문구를 담지 않음. httpx 요청 로그에서 Mouser 주소 줄을 버리는 필터. 읽는 환경변수 `MOUSER_API_KEY`
+- `langfuse_prompts.py` — 노드별 모델 표(`NODE_MODELS`, 노드 `route` · `grade` · `rewrite` · `generate` · `supervisor` · `judge_read`), development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)

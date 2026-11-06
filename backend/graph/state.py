@@ -28,9 +28,17 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     question: str       # 질문 문장만
     target_part: dict   # 대상 부품의 값·풋프린트와 전원 경로 (예: J1 → S1 → D1 → F1)
 
+    # ── 사실 확인 노드가 채운다 (멀티 그래프와 같은 코드, backend/multi_agent/facts.py) ──
+    facts: dict         # 질문 속 품번 · 개정판이 코퍼스 목록에 있나 `supervisor.Facts`. 라우팅이 이 사실로 거절을 정한다
+
     # ── 라우팅 노드가 채운다 ──
     # [왜] 평가셋의 kind(관련/비관련)와 헷갈리지 않게 question_type이라 부른다
-    question_type: str  # role | rating | candidate_judge | candidate_find | out_of_scope
+    question_type: str  # out_of_scope | chat | other_part | price | role | rating | candidate_judge | candidate_find (멀티와 같은 8가지)
+    route: dict         # 라우팅 답안지 `nodes.Route`(질문 종류 · 검색 전 거절 사유 reason · 일상 대화 답 reply)
+
+    # ── 가격 안내 노드가 채운다 ──
+    # [주의] 품번만 둔다. 가격 · 재고 값은 이 메모장(체크포인트 · 트레이스에 남는다)에 넣지 않는다(ADR 0009). 화면이 /api/prices로 조회한다
+    price_parts: list[str]  # 가격 · 재고를 물은 품번
 
     # ── 검색·재작성 노드가 채운다 (다시 검색하면 덮어쓴다. 새 메시지가 오면 입력 읽기 노드가 비운다) ──
     query: str          # 이번 검색어
@@ -41,10 +49,15 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     # ── 채점 노드가 채운다 ──
     passed: list[int]   # 채점을 통과한 청크 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
 
-    # ── 생성·거절 노드가 채운다 ──
+    # ── 판정 길이 채운다 (멀티 판정 에이전트 코드, backend/multi_agent/agents/judge.py) ──
+    judge_read: dict    # 판정 읽기 결과 `JudgeRead`(역할 · 회로 값). 인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다
+    judgement: dict     # 판정 · 찾기 결과. 답 틀 노드가 답 글로 바꾼다
+
+    # ── 생성·거절·짧은 답·답 틀 노드가 채운다 ──
     answer: str         # 사용자에게 보여 줄 답
     check: dict         # 인용 검사 결과 (없는 근거 인용, 인용 없는 문장 수)
     skill: dict         # 생성 노드의 Skill 적용 여부(enabled/applied)와 사용 파일 sha256
+    refusal: dict       # 거절하면 {code, message}. code는 `multi_agent.contracts.Reason` 값(멀티와 같은 칸, 평가 실행기가 센다)
 
     # ── 쌓이는 칸 (Annotated[타입, operator.add]) ──
     # 리듀서(reducer): 노드가 칸 값을 돌려줄 때 LangGraph가 옛 값과 새 값을 합치는 규칙이다.

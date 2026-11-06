@@ -231,8 +231,8 @@ def _chat_model(model: str):
 
     # [왜] OpenRouter는 OpenAI와 같은 API 모양이라 base_url만 바꾸면 ChatOpenAI로 여러 회사 모델을 부를 수 있다
     # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
-    # [왜] Haiku 외 모델(Luna)에는 temperature를 보내지 않는다. 출력 상한은 LangChain이 max_completion_tokens로 바꿔 보낸다
-    temperature = 0 if model == langfuse_prompts.HAIKU else None
+    # [왜] Luna에는 temperature를 보내지 않는다(3차 실측 계약). Haiku·Sonnet은 0. 출력 상한은 LangChain이 max_completion_tokens로 바꿔 보낸다
+    temperature = None if model == langfuse_prompts.LUNA else 0
     return ChatOpenAI(model=model, base_url="https://openrouter.ai/api/v1",
                       api_key=os.environ["OPENROUTER_API_KEY"], temperature=temperature, max_retries=0)
 
@@ -348,7 +348,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
 def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
     """그래프 노드용 LLM 호출. Langfuse 세션이 켜져 있을 때만 고정 버전 검증·노드 span·generation callback을 쓴다.
 
-    node는 route | grade | rewrite | generate | supervisor, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
+    node는 route | grade | rewrite | generate | supervisor | judge_read, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
     Raises:
         ValueError: Langfuse 설정·프롬프트와 실제 공급자·모델·출력 상한이 다를 때, 또는 `chat()`이 형식을 못 맞출 때.
         RuntimeError: 노드 호출이 중첩될 때.

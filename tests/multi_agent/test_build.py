@@ -6,9 +6,12 @@
 - 출처: backend/multi_agent/build.py, MULTI_AGENT.md 구조 결정(11-05)
 """
 import pytest
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
 
 from backend.multi_agent import build as B
 from backend.multi_agent import supervisor as S
+from backend.multi_agent.agents import judge as J
 from backend.multi_agent.contracts import Decision, Reason
 
 PART = {'ref': 'D1', 'value': '1N4148', 'footprint': 'DO-35', 'nets': []}
@@ -101,6 +104,23 @@ def test_chat_is_answered_by_the_supervisor_without_searching():
     assert out['counters']['searches'] == 0 and out['counters']['writes'] == 0
 
 
+def test_price_question_ends_with_the_same_notice_as_the_single_graph_and_no_mouser_call(monkeypatch):
+    """가격 질문: Supervisor가 price를 고르면 단일 그래프와 같은 가격 안내 노드로 끝난다. 검색 · HTTP(Mouser) 호출이 없고 값이 상태에 없다(ADR 0009)."""
+    import httpx
+    from backend.multi_agent.messages import price_message
+
+    def no_http(*args, **kwargs):
+        raise AssertionError('그래프가 HTTP를 부르면 안 된다(Mouser는 그래프 밖 /api/prices만)')
+    monkeypatch.setattr(httpx.Client, 'send', no_http)
+    searched = []
+    graph = B.build_graph(chat=scripted(Decision(next='price', question_type='price')), retriever=lambda q, parts=None: searched.append(q) or [],
+                          parse=lambda s: {'question': s['input'], 'target': 'D1', 'conditions': '', 'target_part': PART})
+    out = graph.invoke({'input': '1N5817 지금 가격이랑 재고 알려 줘'})
+    assert searched == [] and out['path'] == ['입력 읽기', '사실 확인', '판단', '가격 안내']
+    assert out['price_parts'] == ['1N5817'] and out['answer'] == price_message(['1N5817']) and out['question_type'] == 'price'
+    assert {k for k in out if 'price' in k or 'stock' in k} == {'price_parts'} and 'skill' not in out
+
+
 def test_other_part_asks_for_web_but_web_is_off_so_it_is_refused_as_not_found():
     chat = scripted(Decision(next='web', question_type='other_part'))
     out = app(chat).invoke({'input': 'MOSFET 정격이 뭐야?'})
@@ -111,3 +131,41 @@ def test_unrelated_question_gets_a_gentle_refusal():
     chat = scripted(Decision(next='refuse', reason=Reason.OUT_OF_SCOPE, question_type='out_of_scope'))
     out = app(chat).invoke({'input': '오늘 날씨 어때?'})
     assert '회로나 부품' in out['answer'] and out['refusal']['code'] == 'out_of_scope'
+
+
+
+def judge_app(chat, specs, **kw):
+    return B.build_graph(
+        chat=chat, retriever=lambda q, parts=None: [],
+        parse=lambda s: {'question': s['input'], 'target': 'D1', 'conditions': '입력 전압의 최댓값은 20V', 'target_part': PART},
+        rewrite=lambda s: {'query': 'q'}, grade=lambda s: {'passed': []},
+        generate=lambda s: {'answer': 'x', 'check': {'used': []}}, judge_enabled=True,
+        specs=specs, find=lambda *a: [], checkpointer=InMemorySaver(), **kw)
+
+
+def test_judge_path_goes_read_judge_writer_verifier_finish_with_one_interrupt():
+    rows = [{'part': '1N5817', 'code': 'VRRM', 'min': None, 'typ': None, 'max': 20.0, 'text': None, 'unit': 'V',
+             'source_value_text': '20', 'test_condition': None,
+             'citation': {'document': 'a.pdf', 'page': 1, 'table': 'ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)', 'row': 'VRRM', 'chunk_index': 1}}]
+    read = J.JudgeRead(role='R01', candidates=['1N5817'],
+                       values=[J.Value(name='v_in_max', number=20, unit='V', quote='입력 전압의 최댓값은 20V')])
+    chat = scripted(Decision(next='judge', question_type='candidate_judge', brief='judge'), read,
+                    Decision(next='writer', brief='write'), Decision(next='verifier', brief='verify'), Decision(next='finish', brief='done'))
+    app = judge_app(chat, specs=lambda part, codes=None: rows)
+    config = {'configurable': {'thread_id': 't1'}}
+    state = app.invoke({'input': 'D1을 TSC 1N5817로 바꿔도 돼?'}, config)
+    assert '__interrupt__' in state  # i_max가 빠져 한 번 묻는다
+    state = app.invoke(Command(resume={'answers': {}}), config)
+    assert state['path'].count('판정 읽기') == 1 and '판정' in state['path'] and state['path'][-1] == '끝'
+    assert '불충족' in state['answer'] and 'a.pdf' in state['answer'] and '같은 동작은 보장하지 않' in state['answer']
+
+
+def test_judge_needs_tools_and_checkpointer():
+    with pytest.raises(ValueError):
+        B.build_graph(chat=scripted(), retriever=lambda q, parts=None: [], judge_enabled=True)
+
+
+def test_new_turn_clears_previous_judgement():
+    """[왜] 같은 thread의 다음 질문에서 앞 질문의 판정 결과로 답을 쓰지 않게 입력 읽기가 판정 칸도 비운다."""
+    out = B.parse_node({'input': 'q'}, parse=lambda s: {'question': 'q'})
+    assert out['judgement'] == {} and out['judge_read'] == {}

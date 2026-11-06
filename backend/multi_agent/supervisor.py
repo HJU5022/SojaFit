@@ -10,11 +10,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, RETRY_REASONS, AgentReport, Counters,
-                                           Decision, Reason, check_limit)
+from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, REFUSAL_REASONS, RETRY_REASONS, AgentReport,
+                                           Counters, Decision, Reason, check_limit)
 
 PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'supervisor.md').read_text(encoding='utf-8')
-ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
+ALWAYS = ('search', 'writer', 'verifier', 'finish', 'refuse', 'price')  # 판정 · 웹은 켜져 있을 때만 선택지에 넣는다
 
 
 class Facts(BaseModel):
@@ -33,19 +33,25 @@ class SupervisorInput(BaseModel):
     reports: list[AgentReport] = Field(default_factory=list)
     counters: Counters = Field(default_factory=Counters)
     web_enabled: bool = False    # [왜] 평가 모드에서는 끈다(동결한 코퍼스만 쓴다)
-    judge_enabled: bool = False  # [왜] 판정 에이전트가 아직 없다. 기능 스위치로 숨겨 두면 미완성이 전체 동작을 깨지 않는다
+    judge_enabled: bool = False  # [왜] 판정 에이전트를 붙였을 때만 켠다(build_graph가 도구와 체크포인터를 확인한다)
+
+
+def render_facts(facts: Facts) -> list[str]:
+    """확인된 사실을 LLM 입력 줄로 쓴다. [왜] D4 v2 단일 그래프의 라우팅도 이 글을 받아, 같은 사실로 거절을 정하게 한다(D4 · D5 공정 비교)."""
+    lines = ['Verified facts:']
+    for name, ok in facts.parts.items():
+        lines.append(f'- part {name}: {"in corpus" if ok else "NOT in corpus"}')
+    for name, ok in facts.revisions.items():
+        lines.append(f'- revision {name}: {"in corpus" if ok else "NOT in corpus"}')
+    if not facts.parts and not facts.revisions:
+        lines.append('- (no part number or revision to verify in the question)')
+    return lines
 
 
 def render(i: SupervisorInput) -> str:
     """LLM에 줄 user 글(영어 라벨). 청크 원문은 없고 요약 보고만 담는다(컨텍스트 분리)."""
     lines = [f'Question: {i.question}', f'Target: {i.target} {i.target_value}'.rstrip(), f'Conditions: {i.conditions}',
-             f'Question type: {i.question_type or "not decided yet"}', 'Verified facts:']
-    for name, ok in i.facts.parts.items():
-        lines.append(f'- part {name}: {"in corpus" if ok else "NOT in corpus"}')
-    for name, ok in i.facts.revisions.items():
-        lines.append(f'- revision {name}: {"in corpus" if ok else "NOT in corpus"}')
-    if not i.facts.parts and not i.facts.revisions:
-        lines.append('- (no part number or revision to verify in the question)')
+             f'Question type: {i.question_type or "not decided yet"}', *render_facts(i.facts)]
     lines.append('Reports so far:')
     for n, r in enumerate(i.reports, 1):
         extra = ''.join([f' · reason {r.reason.value}' if r.reason else '', f' · missing {", ".join(r.missing)}' if r.missing else '',
@@ -61,7 +67,7 @@ def render(i: SupervisorInput) -> str:
 
 
 def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
-    """LLM에게 다음 노드를 묻고 결정서를 돌려준다. 한도를 넘거나 꺼진 웹이면 거절로 바꾼다.
+    """LLM에게 다음 노드를 묻고 결정서를 돌려준다. 한도를 넘거나 꺼진 웹이면, 판정이 거절 사유로 실패했으면 거절로 바꾼다.
 
     chat은 `(node, system, user, schema) -> schema 객체` 모양이다(실제로는 `llm.node_chat`).
     """
@@ -69,6 +75,10 @@ def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
     forced = check_limit(i.counters, d.next)
     if forced:
         return Decision(next='refuse', reason=forced, brief='한도')
+    last = i.reports[-1] if i.reports else None
+    if last and last.agent == 'judge' and last.status == 'fail' and last.reason in REFUSAL_REASONS:
+        # [왜] 판정이 코드로 정한 거절(코퍼스 밖 요구 · 사양 표 장애)이다. 작성으로 보내면 근거 없는 답이 된다(SPEC 8.3, 프롬프트 규칙 3)
+        return Decision(next='refuse', reason=last.reason, brief='판정 거절')
     if d.next == 'web' and not i.web_enabled:
         # [왜] 웹이 꺼져 있는데 LLM이 골랐다. 품번이 목록에 없었으면 확정 사유로, 아니면 못 찾음(추정)으로 거절한다
         reason = Reason.PART_MISSING if any(not ok for ok in i.facts.parts.values()) else Reason.NOT_FOUND

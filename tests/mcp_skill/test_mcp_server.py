@@ -1,6 +1,7 @@
-"""MCP 서버 도구 5종: 오프라인에서 입력 검사, 차단 조건, 반환 형식이 계약대로인지 확인한다.
+"""MCP 서버 도구 8종: 오프라인에서 입력 검사, 차단 조건, 반환 형식이 계약대로인지 확인한다.
 
-- 역할: 가짜 검색기·가짜 HTTP로 search_corpus, get_corpus_document, search_tsc_web, verify_tsc_pdf, get_circuit_info와 도구 목록을 확인한다.
+- 역할: 가짜 검색기·가짜 HTTP·가짜 사양 조회로 search_corpus, get_corpus_document, search_tsc_web, verify_tsc_pdf, get_circuit_info,
+  check_corpus, get_part_specs, find_parts_by_specs와 도구 목록을 확인한다.
 - 하지 않는 일: 실제 Exa 호출, DB, API 키, 검색 품질은 보지 않는다. .env는 읽지 않는다.
 - 출처: SPEC 8.7, docs/specs/mcp-search-tools.md AC
 """
@@ -262,9 +263,10 @@ def test_get_circuit_info_rejects_path_like_input(circuit_id, target):
 # --- 도구 목록 ---
 
 def test_stdio_tool_list_has_all_tools():
-    """MCP 도구 목록에 여섯 도구가 모두 있다."""
+    """MCP 도구 목록에 여덟 도구가 모두 있다."""
     names = {tool.name for tool in asyncio.run(server.mcp.list_tools())}
-    assert names >= {"search_corpus", "get_corpus_document", "search_tsc_web", "verify_tsc_pdf", "get_circuit_info", "check_corpus"}
+    assert names >= {"search_corpus", "get_corpus_document", "search_tsc_web", "verify_tsc_pdf", "get_circuit_info", "check_corpus",
+                     "get_part_specs", "find_parts_by_specs"}
 
 
 # --- check_corpus ---
@@ -293,3 +295,70 @@ def test_check_corpus_rejects_bad_input(known, parts, revisions):
     """목록이 아니거나 글자가 아닌 값, 빈 글, 너무 길거나 너무 많은 입력은 거절한다."""
     with pytest.raises(ValueError):
         server.check_corpus(parts, revisions)
+
+
+# --- get_part_specs · find_parts_by_specs ---
+
+@pytest.fixture
+def lookup(monkeypatch):
+    """DB 연결과 사양 조회 함수를 가짜로 바꾸고 받은 인자를 기록한다."""
+    from contextlib import nullcontext
+    seen = {}
+    monkeypatch.setattr(server, "_connect", lambda: nullcontext("conn"))
+    monkeypatch.setattr(server, "part_specs", lambda conn, part, codes=None: seen.update(conn=conn, part=part, codes=codes) or ["row"])
+    monkeypatch.setattr(server, "find_candidates", lambda conn, conditions, category=None, package=None, limit=50,
+                        original_packages=None, original_category=None: seen.update(
+        conn=conn, conditions=conditions, category=category, package=package, limit=limit,
+        original_packages=original_packages, original_category=original_category) or ["part"])
+    return seen
+
+
+def test_get_part_specs_passes_args(lookup):
+    assert server.get_part_specs(" SS34 ", ["VRRM", "PACKAGE"]) == ["row"]
+    assert lookup == {"conn": "conn", "part": "SS34", "codes": ["VRRM", "PACKAGE"]}
+    server.get_part_specs("SS34")
+    assert lookup["codes"] is None
+
+
+@pytest.mark.parametrize("part,codes", [
+    ("", None), ("   ", None), ("x" * 101, None), (1, None),
+    ("SS34", "VRRM"), ("SS34", ["NOPE"]), ("SS34", [1]), ("SS34", ["VRRM"] * 19),
+])
+def test_get_part_specs_rejects_bad_input(monkeypatch, part, codes):
+    """빈·긴 품번, 목록이 아닌 코드, 허용 코드 밖 값은 DB에 가기 전에 거절한다."""
+    monkeypatch.setattr(server, "_connect", lambda: pytest.fail("DB에 연결하면 안 된다"))
+    with pytest.raises(ValueError):
+        server.get_part_specs(part, codes)
+
+
+def test_find_parts_by_specs_passes_args(lookup):
+    cond = [{"code": "VZ", "slot": "min", "gte": 3.42}, {"code": "VZ", "slot": "max", "lte": 3.78}]
+    assert server.find_parts_by_specs(cond, category="zener-diode", package="SOD-123") == ["part"]
+    assert lookup == {"conn": "conn", "conditions": cond, "category": "zener-diode", "package": "SOD-123", "limit": 20,
+                      "original_packages": None, "original_category": None}
+    server.find_parts_by_specs([{"code": "VRRM", "gte": 40}], limit=50)
+    assert lookup["limit"] == 50 and lookup["category"] is None and lookup["package"] is None
+    # 원래 부품의 패키지 · 분류는 순서에만 쓴다(B3)
+    server.find_parts_by_specs([{"code": "VRRM", "gte": 15}], original_packages=["DO-41", "DO-204AL"], original_category="standard-rectifier")
+    assert lookup["original_packages"] == ["DO-41", "DO-204AL"] and lookup["original_category"] == "standard-rectifier"
+
+
+@pytest.mark.parametrize("conditions,kw", [
+    ([], {}), ({"code": "VRRM", "gte": 40}, {}), ([{"code": "VRRM", "gte": 40}] * 11, {}),
+    (["VRRM"], {}), ([{"gte": 40}], {}), ([{"code": "NOPE", "gte": 40}], {}), ([{"code": "PACKAGE", "gte": 1}], {}),
+    ([{"code": "VRRM"}], {}),                                     # 이상·이하가 하나도 없다
+    ([{"code": "VRRM", "gte": float("nan")}], {}), ([{"code": "VRRM", "lte": float("inf")}], {}),
+    ([{"code": "VRRM", "gte": True}], {}), ([{"code": "VRRM", "gte": "40"}], {}),
+    ([{"code": "VRRM", "slot": "avg", "gte": 40}], {}), ([{"code": "VRRM", "gte": 40, "op": ">="}], {}),
+    ([{"code": "VRRM", "gte": 40}], {"limit": 0}), ([{"code": "VRRM", "gte": 40}], {"limit": 51}),
+    ([{"code": "VRRM", "gte": 40}], {"limit": True}),
+    ([{"code": "VRRM", "gte": 40}], {"category": ""}), ([{"code": "VRRM", "gte": 40}], {"category": "x" * 101}),
+    ([{"code": "VRRM", "gte": 40}], {"package": "SMA%"}), ([{"code": "VRRM", "gte": 40}], {"package": ""}),
+    ([{"code": "VRRM", "gte": 40}], {"original_packages": "SMA"}), ([{"code": "VRRM", "gte": 40}], {"original_packages": ["SMA%"]}),
+    ([{"code": "VRRM", "gte": 40}], {"original_packages": ["SMA"] * 11}), ([{"code": "VRRM", "gte": 40}], {"original_category": ""}),
+])
+def test_find_parts_by_specs_rejects_bad_input(monkeypatch, conditions, kw):
+    """조건 목록 모양, 코드·자리·숫자(유한한 수만), 개수 상한, 분류·패키지 글자를 DB에 가기 전에 검사한다."""
+    monkeypatch.setattr(server, "_connect", lambda: pytest.fail("DB에 연결하면 안 된다"))
+    with pytest.raises(ValueError):
+        server.find_parts_by_specs(conditions, **kw)

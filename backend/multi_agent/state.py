@@ -36,6 +36,13 @@ class MultiState(TypedDict, total=False):
     passed: list         # 채점을 통과한 청크 id
     retrieval_error: dict | None
 
+    # ── 판정 에이전트가 채운다 ──
+    judge_read: dict     # 읽기 노드 결과 `agents.judge.JudgeRead`(인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다)
+    judgement: dict      # 판정 · 찾기 결과(답 틀의 입력)
+
+    # ── 가격 안내가 채운다 (단일 그래프와 같은 노드) ──
+    price_parts: list[str]  # 가격 · 재고를 물은 품번. 값은 넣지 않는다(ADR 0009, 화면이 /api/prices로 조회)
+
     # ── 작성 · 끝내기 ──
     answer: str
     check: dict          # 작성이 남긴 인용 검사. 검증 에이전트는 이걸 믿지 않고 다시 계산한다
