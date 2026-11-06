@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-06 평가셋 v3 · 청킹부터 다시 재기 결정(ADR 0015)과 main 바로잡기 준비
+- 한 일: 정운 결정(11-06)과 중간 점검 강사 최소 기준을 ADR 0015로 적고, 관련 문서를 맞췄다. 기준 평가셋은 판정 분야를 늘린 v3로 새로 만들고(v1 · v2 파일과 해시는 기록으로 둠), 청킹 결함을 고친 코퍼스부터 다시 잰다. 목표는 질문 1건 p95 10초 이내, 문서 · 페이지 단위 Recall@5 · MRR 0.95 이상이다.
+- 같이 찾은 것: 11-06 쌓아 올린 PR #58 ~ #63이 main이 아니라 바로 아래 브랜치(`jeongun-1` ~ `jeongun-6`)로 merge되어, main에는 #57만 들어갔다. main과 로컬 `jeongun`의 차이는 111개 파일 +11,883줄이고, 전부 모인 곳은 `origin/jeongun-6`이다(로컬 `jeongun`과 내용 같음). `origin/main`을 `jeongun`에 합쳤다(62d427a, 충돌 없음, 합친 뒤에도 `jeongun-6`과 내용 같음).
+- 바꾼 파일: `docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md`(새), `docs/adr/ADR.md`, `SPEC.md`(1절 숫자 성공 기준), `evals/guides/dataset-guide.md`(동결 계획 v3 줄, 기준 평가셋 문단), `evals/EVALS.md`, `EVAL_REPORT.md`(2장 머리), `docs/GATES.md`(G5 상태), `SOJAFIT.md`(트리 `dataset_v3.jsonl` 예정), 이 파일
+- 실행한 명령과 결과: `git fetch` 뒤 `git rev-list` · `git diff --shortstat`로 브랜치별 내용 차이를 대조했다. `gh pr list`로 #57 ~ #63의 base를 확인했다. p95는 #41 S9 · #42 결과 파일 `rows`의 `latency_s`에서 실행기와 같은 정의(`int(0.95n)`번째)로 다시 계산했다. `uv run --frozen pytest -q tests/repo tests/evals` 170 passed.
+- 확인 못 한 것: v3 문항 수 · 구성 · 2차 판정자, 판정 정확도 목표. 문서 단위 Recall@5 · MRR 1.000은 v1 관련 19문항 값이라 v3로 다시 재야 한다.
+- 다음 할 일: 정운 승인 뒤 `jeongun` push와 `jeongun → main` PR(#58 ~ #63 내용과 이 기록) → 지금 청크로 dev 세트 검색 실패 진단 → 청킹 고침.
+
 ## 2026-11-06 후보 품번의 실시간 가격·재고(Mouser Search API, 저장 안 함)
 - 한 일: 정운 요청으로 실시간 가격·재고를 서비스가 하는 일로 옮겼다(SPEC 1절, 실제 주문·결제와 판매처 찾기·비교는 그대로 범위 밖). ADR 0009(Mouser 응답은 저장·기록하지 않음) 때문에 Mouser 호출은 그래프 밖에 둔다. 두 그래프는 질문 종류 `price`를 받아 가격 안내 노드(같은 코드 `nodes.price_answer`)에서 물은 품번만 `price_parts`에 남기고 정해진 안내(`messages.price_message`)로 끝낸다. 값은 새 API `GET /api/prices`(로그인 필요)가 요청 때 `backend/services/mouser.py`로 한 번 조회해 응답으로만 내보낸다.
 - 정한 세부: ① 품번 고르기는 검색 노드와 같은 규칙(질문 속 품번, 없으면 대상 값의 품번), LLM 없음 ② Mouser 요청은 문서(https://api.mouser.com/api/docs/V1)대로 `POST /api/v1/search/partnumber`, 키는 `apiKey` 쿼리, 품번은 `|`로 이어 한 번에 최대 10개, 품번마다 3~40자. 재시도 없음, 제한 시간 10초(연결 5초), 프로세스당 누적 300회 상한(값은 추정, 날이 바뀌어도 줄지 않음) ③ 돌려주는 칸은 품번(`ManufacturerPartNumber`) · 제조사 · 수량별 가격과 통화 · 재고 표시(`Availability`) · 상품 주소와 조회 시각(UTC)뿐이다 ④ 키가 요청 주소에 들어가므로 httpx 예외는 `from None`으로 끊고 종류(`MouserError.kind`)만 올린다. httpx가 INFO로 남기는 "HTTP Request: POST <주소>" 줄은 필터로 버린다(필터를 빼면 가짜 키가 로그에 찍히는 것을 확인했다) ⑤ API는 데모 모드에서도 품번 규칙(422)을 먼저 보고, `DEMO_MODE=1` · 키 없음 · 상한 · Mouser 실패면 `available: false`와 `reason`만 돌려준다. 모든 응답에 `Cache-Control: no-store`, 아무것도 로그에 쓰지 않는다 ⑥ `supervisor.md`의 범위 밖에 주문 · 결제 · 판매처 찾기 · 비교를 적어 `route.md`와 맞췄다(D4 · D5 같은 기준).
