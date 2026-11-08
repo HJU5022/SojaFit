@@ -6,6 +6,7 @@
 """
 import pytest
 
+from backend.judge import conditions as C
 from backend.judge import verdict as V
 from backend.multi_agent.agents import judge as J
 
@@ -146,7 +147,8 @@ def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
         read = dict(READ, original_part=original, candidates=[])
         J.judge_agent({**STATE, 'question_type': 'candidate_find', 'judge_read': read}, specs=specs_of({'1N4001': rows}), find=find,
                       retriever=None)
-    assert seen == [{'original_packages': ['DO-41', 'DO-204AL'], 'original_category': 'standard-rectifier'},
+    # [왜] 원래 부품을 알면 그 순서로 한 번, 기준에 가까운 순으로 한 번 더 찾는다(같은 패키지 계열로 50개가 다 차는 것을 막음, 11-07 v2 찾기)
+    assert seen == [{'original_packages': ['DO-41', 'DO-204AL'], 'original_category': 'standard-rectifier'}, {},
                     {'original_packages': None, 'original_category': None}]
 
 
@@ -280,3 +282,68 @@ def test_numbers_in_role_rules_do_not_ground_values(monkeypatch):
                                                  'condition': '', 'quote': '3.3V 입력'}])
     out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
     assert 'v_drop_allowed' in out['judgement']['dropped']
+
+
+def test_identical_statement_chunk_is_cited_when_order_table_uses_x(monkeypatch):
+    # [왜] 주문 표가 'BZV55Cx L0G'처럼 x로 적으면 주문 코드 행을 못 찾는다. 같은 부품이라고 밝힌 청크를 근거로 인용해야 답이 정답 쪽을 가리킨다(11-06 dev)
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
+    read = dict(READ, original_part='1N4148 A0G', candidates=['1N4148 R0G'])
+    docs = [{'chunk_id': 7, 'file': '1N4148 SERIES_K2301.pdf', 'page': 2, 'table': 'ORDERING INFORMATION',
+             'content': '[1N4148 SERIES_K2301.pdf · 2쪽 · ORDERING INFORMATION] ORDERING CODE (1): 1N41xx R0G\n주: 1. physically identical parts'}]
+    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(table), find=None, retriever=lambda q, parts=None: docs)
+    res = out['judgement']['results'][0]
+    assert res['verdict'] == 'IDENTICAL'
+    assert res['checks'][0]['citation'] == {'document': '1N4148 SERIES_K2301.pdf', 'page': 2, 'table': 'ORDERING INFORMATION',
+                                            'row': '1N4148', 'chunk_id': 7}
+
+
+def test_tvs_direction_and_aec_requirement_become_checks():
+    # [왜] 방향(C · CA)과 AEC-Q101은 품번 · 문서로 정해진다. 사양 표 밖 요구로 보고 거절하던 것을 조건 줄로 판정한다(11-06 v3-10 · 14 · 15)
+    from backend.judge.verdict import Judgement
+    read = J.JudgeRead(role='R06', original_part='SMAJ5.0A', candidates=['SMAJ6.0CA'],
+                       required_specs=[{'words': 'AEC-Q101 적합', 'code': 'AEC_Q101'}])
+    base = Judgement(part='SMAJ6.0CA', role='R06', verdict='ROLE_SUFFICIENT')
+    out = J._extra_checks(base, read, 'tvs-18', [], ['R06'])
+    assert out.verdict == 'NOT_SUFFICIENT' and [(c.code, c.result) for c in out.checks] == [('AEC_Q101', 'fail'), ('DIRECTION', 'fail')]
+    aec = [{'code': 'AEC_Q101', 'text': 'AEC-Q101 qualified', 'citation': {'document': 'a.pdf', 'page': 1}}]
+    ok = J._extra_checks(base.model_copy(update={'part': 'SMAJ5.0AH'}), read, 'tvs-18', aec, ['R06'])
+    assert ok.verdict == 'ROLE_SUFFICIENT' and all(c.result == 'pass' for c in ok.checks)
+
+
+def test_mount_words_filter_candidates_by_package_kind_not_by_package_name():
+    read = J.JudgeRead(role='R01', required_specs=[{'words': '표면실장', 'code': 'none'}])
+    assert J.mount_wanted(read) == 'smd' and J.mount_wanted(J.JudgeRead(role='R01', package_wanted='SMA')) == ''
+    assert J.mount_wanted(J.JudgeRead(role='R01', required_specs=[{'words': 'through-hole part', 'code': 'none'}])) == 'tht'
+    # [왜] 스루홀 17종 밖은 표면실장(SMA · SOD-123F · Thin SMA), DO-41 · DO-204AL은 스루홀(11-07 v2 n01)
+    assert J.mount_of(['DO-41', 'DO-204AL']) == {'tht'} and J.mount_of(['SOD-123F']) == {'smd'} and J.mount_of(['THIN SMA']) == {'smd'}
+
+
+def test_operator_words_come_from_the_users_own_clause():
+    text = '서지는 피크 10A의 단발 10/1000µs 파형이며 보호 노드에서 허용하는 전압은 최대 23.2V이다. 기판 수정은 가능하다.'
+    # [왜] 읽기가 'below 23.2 V'로 옮겨도 원문 '최대 23.2V'(이하)를 믿는다(11-07 m2 v3-09)
+    grounded = J._ground_ops('clamping voltage below 23.2 V', text)
+    assert '최대 23.2V' in grounded and C.user_conditions([(grounded, 'VC')])[0]['op'] == '<='
+    assert J._ground_ops('VZ 3.42~3.78V', text) == 'VZ 3.42~3.78V'  # 범위는 그대로
+    assert J._ground_ops('surge current 0.25 A', '전류는 250mA 이하') == 'surge current 0.25 A'  # 단위를 바꿔 쓴 말은 그대로
+
+
+def test_an_original_of_unknown_or_other_maker_is_not_read_from_the_tsc_document():
+    # [왜] '제조사 미상 1N5819'의 원래 값을 TSC 1N5819 문서로 대신하지 않는다(v3-01 근거, 11-07 c20-04)
+    assert J.original_not_tsc('1N5819', '현재 D1~D4는 제조사 미상의 1N5819이다.')
+    assert J.original_not_tsc('onsemi 1N4007RLG', '현재 부품은 onsemi 1N4007RLG')
+    assert not J.original_not_tsc('TSC 1N5819', '현재 부품은 TSC 1N5819이다.')
+
+
+def test_find_widens_to_sibling_categories_and_keeps_a_family_the_user_named(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    seen = []
+
+    def find(conditions, category, package, limit, **near):
+        seen.append(category)
+        return [{'part': 'SS210H', 'category': 'schottky-rectifier', 'packages': ['SMB']}] if category == 'schottky-diode' else []
+    read = dict(READ, candidates=[], original_part='', category_wanted='schottky-rectifier')
+    asked = {**STATE, 'question_type': 'candidate_find', 'judge_read': read, 'question': 'D1용 쇼트키 후보를 찾아 줘'}
+    J.judge_agent(asked, specs=specs_of({}), find=find, retriever=None)
+    # [왜] 같은 계열(쇼트키 소신호)로 먼저 넓히고, 사용자가 '쇼트키'를 말했으면 분류를 통째로 빼지 않는다(11-07 h4-14)
+    assert seen[0] == 'schottky-rectifier' and 'schottky-diode' in seen and None not in seen
