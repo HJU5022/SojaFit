@@ -85,7 +85,8 @@ PARTLIKE = re.compile(r'(?=.*[A-Z])(?=.*\d)(?!IEC|JESD|AEC|MIL|EIA|JEDEC)[A-Z0-9
 # [왜] 파서가 둘째 묶음 행의 품번 칸을 잃으면(HERF1001G SERIES 21·22행) 그 행이 모든 품번에 붙는다. 품번을 적은 행이 이긴다
 LEVELS = ('part', 'group', 'value', 'key')
 # [주의] 글자로만 된 패키지 이름(SMA · ABS 등)은 대소문자를 구분한다((?-i:...)). 'Case: SOD-123 small outline'의 small이 SMA로 잡혔다(11-05, 59건)
-PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:SMA\w*|SMB\w*|SMC\w*|SMF\w*|SMP\w*)|DO-?\d+\w*|TO-?\d+\w*|MiniMELF|MicroMELF|'
+# [주의] 'Thin SMA'(38문서) · 'Micro SMA'(23) · 'Sub SMA'(20)는 SMA와 다른 패키지다. 앞말을 같이 잡아야 SMA 조건 · 기판 비교에 걸리지 않는다(11-06 v3-14)
+PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:(?:Thin|Micro|Sub) SM[ABCFP]\w*|SMA\w*|SMB\w*|SMC\w*|SMF\w*|SMP\w*)|DO-?\d+\w*|TO-?\d+\w*|MiniMELF|MicroMELF|(?-i:MMELF)|'
                  r'MELF|D2PAK|DPAK|DFN\w*|R-?\d\b|(?-i:GBU\w*|KBP\w*|KBJ\w*|GBJ\w*|ABS\w*|MBS\w*|MBF\w*)|TS\w*FL|SC-\d+\w*|'
                  r'PDI\w*|SOP-?\d+)', re.I)
 # 대조표에서 분류별로 보여 줄 핵심 코드. 'VRRM|VR'은 VRRM이 없으면 VR을 본다
@@ -169,6 +170,7 @@ def norm_part(s):
 def fields(text):
     """청크 본문 → [(머리 경로, 마지막 열 이름, 값)]. chunk.py가 '경로: 값'을 ' | '로 이어 붙인 모양(원형 build.py와 같음)."""
     body = text.split('] ', 1)[1] if '] ' in text else text
+    body = body.split('\n주: ', 1)[0]  # [왜] chunk.py v3가 행 끝에 붙인 표 주석은 값 칸이 아니다
     out = []
     for f in body.split(' | '):
         head, sep, val = f.rpartition(': ')
@@ -239,7 +241,7 @@ def to_float(num_text):
 def auto_checks(num_texts, values, code, chunk_text):
     """표에 넣기 전 자동 검사: 숫자 글이 원문 청크 본문에 그대로 있는가, 값이 유한하고 (온도 말고는) 음수가 아닌가."""
     squash = lambda s: re.sub(r'[\s,]', '', s)  # noqa: E731  [왜] '1,500'과 '1500', '- 55'와 '-55'를 같게 본다
-    body = squash(chunk_text.split('] ', 1)[-1])
+    body = squash(chunk_text.split('] ', 1)[-1].split('\n주: ', 1)[0])  # 행 끝 주석의 숫자로 값을 확인하지 않는다
     in_src = all(squash(n).lstrip('+') in body for n in num_texts)
     plausible = all(math.isfinite(v) and (v >= 0 or code == 'TJ_MAX') for v in values.values())
     return {'value_in_source': in_src, 'plausible': plausible}
@@ -344,7 +346,7 @@ class Doc:
             self.spread_conditions(run)
         for info in infos:
             self.emit_row(info)
-        if any(c['kind'] == 'text' and BOTH_DIRECTIONS.search(c['text']) for c in chunks):
+        if any(c['kind'] in ('text', 'note') and BOTH_DIRECTIONS.search(c['text']) for c in chunks):  # v3는 표 주석을 note로 둔다
             self.copy_bidirectional()
 
     def flag(self, reason, parts, base, code, text, detail=''):
@@ -855,6 +857,47 @@ def resolve(cands):
     return rows, review, dropped
 
 
+AEC_H = re.compile(r'"H"\s*means\s*AEC[- ]?Q101\s+qualified', re.I)  # 주문 정보 주석: H로 끝나는 품번만 인증품
+AEC_ALL = re.compile(r'AEC[- ]?Q101\s+qualified(?!\s+available)', re.I)    # FEATURES: 그 문서 품번 전체가 인증품
+
+
+def aec_of(chunks, part):
+    """품번의 AEC-Q101 근거 청크 {'idx', 'page', 'text'} 또는 None. 문서가 밝힌 문장만 본다(값 추정 없음).
+
+    '"H" means AEC-Q101 qualified' 주석이 있으면 H로 끝나는 품번만, 없으면 FEATURES의 'AEC-Q101 qualified'(뒤에 available 없음)로 문서 전체를 본다.
+    [주의] 'AEC-Q101 qualified available' · 'AEC-Q101 available' · 'Qualification reference AEC-Q101'은 인증품이라는 문장이 아니라 쓰지 않는다
+    """
+    note = next((c for c in chunks if c['kind'] in ('note', 'text', 'table_row') and AEC_H.search(c['text'])), None)
+    if note is not None:
+        return {'idx': note['idx'], 'page': note['page'], 'text': 'AEC-Q101 qualified ("H")'} if part.upper().endswith('H') else None
+    feat = next((c for c in chunks if c['kind'] == 'text' and '· FEATURES]' in c['text'] and AEC_ALL.search(c['text'])), None)
+    return {'idx': feat['idx'], 'page': feat['page'], 'text': 'AEC-Q101 qualified'} if feat is not None else None
+
+
+def h_copies(rows, docs, by_doc):
+    """주문 정보 틀로만 적힌 H 품번(표지 품번 목록의 'XH', 표에는 X만)에 기본 품번 X의 행을 그대로 붙인다(인용도 X의 행 그대로).
+
+    [왜] 문서가 '"H" means AEC-Q101 qualified'라고만 밝히고 값 표는 기본 품번으로 적는다. H 품번 행이 없으면 1N5819H가 '사양 표에 값 없음'이었다
+         (11-06 판정 dev 14). AEC-Q101 행은 aec_of가 H로 끝나는 품번에 따로 단다
+    """
+    out = []
+    for name, d in docs.items():
+        if not any(AEC_H.search(c['text']) for c in by_doc[name]):
+            continue
+        mine = defaultdict(list)
+        for r in rows:
+            if r['doc'] == name:
+                mine[r['part'].upper()].append(r)
+        for p in d.parts:
+            P = p.upper()
+            if P.endswith('H') and P[:-1] in mine:
+                # [주의] 문서 전체에 붙는 값(KEY PARAMETERS의 IF_AV 등)은 H 품번에도 이미 붙는다. 품번별 행(key 밖)이 있는 코드만 두고 나머지는 붙인다.
+                #        key 행만 있는 코드를 두면 시험 조건이 없어 원래 품번 행과 짝이 안 맞아 사양 동등을 못 냈다(11-06 판정 dev 14 IFSM)
+                have = {r['parameter_code'] for r in mine.get(P, []) if r.get('source_level') != 'key'}
+                out += [{**r, 'part': p} for r in mine[P[:-1]] if r['parameter_code'] not in have]
+    return out
+
+
 def build(chunks):
     """청크 목록 → {'rows', 'review', 'packages', 'stats'}. 표지 청크가 없는 문서는 품번을 몰라 건너뛴다."""
     docs, by_doc = {}, defaultdict(list)
@@ -865,14 +908,20 @@ def build(chunks):
         by_doc[c['doc']].append(c)
     pkgs = defaultdict(list)
     for name, d in docs.items():
-        pkgs[name] = [x for c in by_doc[name] if c['kind'] in ('text', 'table_row') for x in packages_of(c)]
+        pkgs[name] = [(x, c) for c in by_doc[name] if c['kind'] in ('text', 'table_row') for x in packages_of(c)]
         d.run(by_doc[name])
     cands = [r for d in docs.values() for r in d.cands]
     rows, conflicts, dropped = resolve(cands)
+    rows += h_copies(rows, docs, by_doc)
     review = [r for d in docs.values() for r in d.review] + conflicts
     checked = sum((d.checked for d in docs.values()), Counter())
     # [주의] 패키지는 문서 단위다(원형과 같음). 한 문서에 패키지가 여럿이면 품번별로 나누지 못해 모든 품번에 같은 목록이 붙는다
-    packages = [{'part': p, 'doc': d.doc, 'family': d.family, 'packages': list(dict.fromkeys(pkgs[d.doc]))}
+    where = {}  # (문서, 패키지 이름) → 그 이름이 처음 나온 청크의 {idx, page}. [왜] 판정 답이 패키지 근거의 쪽을 인용해야 한다(11-06 손실)
+    for doc_name, found in pkgs.items():
+        for x, c in found:
+            where.setdefault((doc_name, x), {'idx': c['idx'], 'page': c['page']})
+    packages = [{'part': p, 'doc': d.doc, 'family': d.family, 'packages': list(dict.fromkeys(x for x, _ in pkgs[d.doc])),
+                 'where': {x: where[(d.doc, x)] for x, _ in pkgs[d.doc]}, 'aec': aec_of(by_doc[d.doc], p)}
                 for d in docs.values() for p in d.parts]
     return {'rows': rows, 'review': review, 'packages': packages,
             'stats': {'candidates_checked': checked['candidates'], 'value_not_in_source': checked['value_in_source'],
@@ -1042,9 +1091,16 @@ def load(specs_dir, dsn, docs=None):
                                  r['source_value_text'], r['source_unit'], r['normalized_unit'], r['test_condition'],
                                  r['page_number'], r['table_name'], r['row_label'], r['footnote_text']))
     for p in read_jsonl(specs_dir / 'packages.jsonl'):
-        # [왜] 패키지는 숫자가 아니라 PACKAGE 코드 행의 text_value에 둔다. 문서 단위 목록이라 쪽·표·청크가 없다
-        by_doc[p['doc']] += [(p['part'], None, p['family'], 'PACKAGE', None, None, None, None, name, name)
-                             + (None,) * 7 for name in p['packages']]
+        # [왜] 패키지는 숫자가 아니라 PACKAGE 코드 행의 text_value에 둔다. 문서 단위 목록이라 표는 없고, 이름이 처음 나온 청크 · 쪽을 단다
+        # [주의] 'where'가 없는 옛 packages.jsonl이면 청크 · 쪽 없이 넣는다
+        for name in p['packages']:
+            at = (p.get('where') or {}).get(name) or {}
+            by_doc[p['doc']].append((p['part'], at.get('idx'), p['family'], 'PACKAGE', None, None, None, None, name, name,
+                                     None, None, None, at.get('page'), None, None, None))
+        if p.get('aec'):  # [왜] 찾기 · 판정이 'AEC-Q101 적합' 요구를 근거 쪽과 함께 확인하게 문서가 밝힌 문장을 행으로 둔다(11-06 v3-14)
+            a = p['aec']
+            by_doc[p['doc']].append((p['part'], a['idx'], p['family'], 'AEC_Q101', None, None, None, None, a['text'], a['text'],
+                                     None, None, None, a['page'], None, None, None))
     targets = list(docs) if docs else sorted(by_doc)
     start = time.monotonic()
     with psycopg.connect(dsn) as conn:  # with: 오류 없이 끝나면 커밋, 예외면 롤백한다(지우기와 넣기가 한 트랜잭션)
