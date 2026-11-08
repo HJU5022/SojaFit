@@ -82,10 +82,15 @@ def _fake_calls(monkeypatch, answers):
 
 
 def test_chat_returns_validated_model(monkeypatch):
-    calls = _fake_calls(monkeypatch, ['{"kind": "role"}'])
+    calls = _fake_calls(monkeypatch, ['{"kind": "role"}', '{"kind": "role"}'])
     assert llm.chat("sys", "q", Route) == Route(kind="role")
     assert len(calls) == 1
-    assert calls[0] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "q"}]
+    # [왜] OpenRouter의 Claude 모델은 고정 지시문(system)에만 캐시 표시를 붙인다(11-09 프롬프트 캐싱). 질문(user)은 그대로
+    assert calls[0] == [{"role": "system", "content": [{"type": "text", "text": "sys", "cache_control": {"type": "ephemeral"}}]},
+                        {"role": "user", "content": "q"}]
+    monkeypatch.setattr(llm, "LLM_MODEL", LUNA)  # Claude가 아닌 모델에는 붙이지 않는다
+    llm.chat("sys", "q", Route)
+    assert calls[1] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "q"}]
 
 
 def test_chat_retries_bad_format_then_succeeds(monkeypatch):

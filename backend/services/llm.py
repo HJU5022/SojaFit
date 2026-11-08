@@ -333,7 +333,8 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
     """OpenRouter에 구조화 출력을 요청하고 schema 객체로 돌려준다."""
     # [왜] with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
     # 받은 JSON을 그 모델로 검증해 객체로 돌려준다. 형식이 틀리면 ValidationError나 OutputParserException을 낸다(chat()이 잡는다).
-    model = _chat_model(_node_model.get() or LLM_MODEL)
+    name = _node_model.get() or LLM_MODEL
+    model = _chat_model(name)
     budget = _evaluation_budget.get()
     from backend.services import langfuse_prompts
     options = langfuse_prompts.model_options()
@@ -343,11 +344,18 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
         timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens)
         options.update(max_tokens=budget.max_tokens, timeout=timeout)
     structured = model.with_structured_output(schema)
+    system_content = system
+    if name in (langfuse_prompts.HAIKU, langfuse_prompts.SONNET):
+        # [왜] 노드마다 고정 지시문(system)이 길어 매번 새로 읽히면 입력 비용이 든다. OpenRouter의 Anthropic 프롬프트 캐싱(cache_control)으로
+        #      고정 지시문만 캐시에 둔다. 두 번째 호출부터 지시문 입력 비용이 약 1/10(계획 Sonnet 0.0086 → 0.0006달러), 시간은 그대로(11-09 실측 · 조장 결정)
+        # [주의] 질문 · 카드가 든 user는 매번 달라 걸지 않는다. 지시문 글자는 그대로라 Langfuse 프롬프트 대조(prompt_scope)와 무관하다. Luna 등 다른 모델은 그대로
+        system_content = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+    messages = [{"role": "system", "content": system_content}, {"role": "user", "content": user}]
     if config:
         # Langfuse 노드 추적 중: callback 설정을 넘기고 프롬프트 버전을 generation에 연결한다
         structured = langfuse_prompts.bind_prompt(structured, options)
-        return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}], config=config)
-    return structured.invoke([{"role": "system", "content": system}, {"role": "user", "content": user}], **options)
+        return structured.invoke(messages, config=config)
+    return structured.invoke(messages, **options)
 
 
 def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
