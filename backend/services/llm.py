@@ -401,18 +401,27 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """시스템·사용자 메시지를 보내고 schema 형식으로 검증한 답을 돌려준다(그래프 노드가 쓰는 유일한 LLM 입구).
 
     형식이 틀리면 MAX_FORMAT_RETRIES번까지 다시 부르고, 그래도 틀리면 마지막 검증 오류를 담아 ValueError를 낸다.
+    연결 오류(시간 초과 포함)도 같은 상한 안에서 잠깐 쉬고 다시 부르고, 끝내 안 되면 그 연결 오류를 그대로 낸다.
     공급자는 LLM_PROVIDER(openrouter | claude_cli), 모델은 LLM_MODEL / LLM_CLI_MODEL이다(ADR 0010).
     """
     from langchain_core.exceptions import OutputParserException
+    from openai import APIConnectionError
 
     call = _cli_call if LLM_PROVIDER == "claude_cli" else _openrouter_call
     last_error = None
-    # [주의] 최초 1번 + 재시도 MAX_FORMAT_RETRIES번이 호출 횟수의 절대 상한이다(키 한도 보호)
-    for _ in range(1 + MAX_FORMAT_RETRIES):
+    # [주의] 최초 1번 + 재시도 MAX_FORMAT_RETRIES번이 호출 횟수의 절대 상한이다(키 한도 보호). 형식 오류와 연결 오류가 같은 상한을 나눠 쓴다
+    for attempt in range(1 + MAX_FORMAT_RETRIES):
         try:
             return call(system, user, schema)
         except (ValidationError, OutputParserException) as error:
             last_error = error
+        except APIConnectionError as error:
+            # [왜] 연결이 끊기거나 시간이 넘으면(APITimeoutError 포함) 한 번에 문항 전체가 실패했다(v3-15, 11-09 OpenRouter). 잠깐 쉬고 다시 부른다
+            last_error = error
+            if attempt < MAX_FORMAT_RETRIES:
+                time.sleep(2 * (attempt + 1))  # 마지막 시도 뒤에는 쉬지 않고 바로 올린다
+    if isinstance(last_error, APIConnectionError):
+        raise last_error  # 연결 오류는 형식 오류로 바꾸지 않고 그대로 올린다
     raise ValueError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error
 
 

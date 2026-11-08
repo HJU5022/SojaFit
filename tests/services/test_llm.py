@@ -102,6 +102,29 @@ def test_chat_stops_after_retry_limit(monkeypatch):
     assert len(calls) == 3
 
 
+def test_chat_retries_connection_error_within_the_same_limit(monkeypatch):
+    """연결 오류는 같은 상한(첫 호출 + 재시도 2) 안에서 다시 부르고, 끝내 안 되면 연결 오류 그대로 올린다."""
+    import httpx
+    from openai import APIConnectionError
+    monkeypatch.setattr(llm.time, "sleep", lambda *_: None)
+    calls = []
+
+    def fake_call(system, user, schema):
+        calls.append(1)
+        if len(calls) < 3:
+            raise APIConnectionError(request=httpx.Request("POST", "https://example.test"))
+        return Route(kind="role")
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    monkeypatch.setattr(llm, "_openrouter_call", fake_call)
+    assert llm.chat("sys", "q", Route) == Route(kind="role") and len(calls) == 3
+    calls.clear()
+    monkeypatch.setattr(llm, "_openrouter_call", lambda *a: calls.append(1) or (_ for _ in ()).throw(
+        APIConnectionError(request=httpx.Request("POST", "https://example.test"))))
+    with pytest.raises(APIConnectionError):
+        llm.chat("sys", "q", Route)
+    assert len(calls) == 3
+
+
 def test_cli_call_disables_tools_and_puts_schema_in_system_prompt(monkeypatch):
     seen = {}
 
