@@ -3,10 +3,10 @@
 ## 역할
 - 이 폴더: 서비스·평가가 읽는 고정 데이터를 둡니다. 코퍼스 문서 목록(`manifest.jsonl`), 코퍼스 원본 표본, 평가·시연용 공개 회로가 있고, 데모 모드 응답 폴더는 아직 비어 있습니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
 - 넣는 것: `manifest.jsonl`(문서 단위 목록), 데이터시트 원본 표본(`corpus/tsc/` 3건), 공개 KiCad 회로(`circuits/`), 데모 모드가 재생할 응답(`demo/`, 아직 없음).
-- 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·청크(`chunks.jsonl`)·임베딩 캐시(저장소 밖 `../corpus/tsc/`), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
+- 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·청크(`chunks.jsonl`)·임베딩 캐시(저장소 밖 작업 자료), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 
-저장소 밖 같은 상위 폴더의 `../corpus/tsc/`에 `pdf/`(원본 PDF 1,360건), `parsed/`, `chunks/`, `embeddings/`, `product_lists/`와 수집 스크립트(`build_list.py`, `download_pdfs.py`)가 있습니다. 저장소 파일이 아닙니다.
+전체 PDF·파싱·청크·임베딩 산출물은 저장소에 포함하지 않습니다. 작업자가 지정한 저장소 밖 경로에 둘 수 있지만 이 문서는 특정 로컬 경로의 존재나 전체 처리 완료를 보장하지 않습니다. 저장소에서 확인 가능한 정본은 `manifest.jsonl`과 PDF 표본 3건입니다.
 
 ## 파일
 - `manifest.jsonl` — 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256, 쪽 수, 청크 수). `backend/rag/pipeline/chunk.py`가 만들고 `backend/rag/pipeline/ingest.py`·`collect.py`가 읽습니다. 원래 PDF 파일 이름은 `source_url` 끝에 있습니다
@@ -40,4 +40,4 @@ manifest는 **512,000바이트 아래**로 둡니다. Checkpoint 대시보드가
 
 ## 저장소 크기 주의
 
-벡터는 1536차원(`text-embedding-3-small`, ADR 0004 임시 결정)이라 청크 52,244개이면 float32로 약 321MB, halfvec으로 약 160MB입니다(계산). 청크 본문과 벡터는 저장소에 넣지 않고 DB에만 둡니다(SPEC 6절, ADR 0005).
+현재 서비스 임베딩은 `voyage-4-large` 1024차원입니다. `text-embedding-3-small` 1536차원 행은 복구·과거 비교용으로 같은 표에 남길 수 있고, `db/008_multi_dim_embeddings.sql`은 두 차원을 함께 담는 차원 없는 `halfvec` 열로 전환합니다. 청크 본문과 벡터는 저장소에 넣지 않고 DB에만 둡니다(SPEC 6절, ADR 0005).
