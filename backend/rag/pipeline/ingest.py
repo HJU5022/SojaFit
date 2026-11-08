@@ -2,6 +2,7 @@
 
 - 역할: 오프라인 CLI(`python -m backend.rag.pipeline.ingest`). 서버가 import하지 않는다.
   - manifest.jsonl의 문서를 source_documents에, chunks.jsonl의 청크를 document_chunks에 넣는다.
+    문서 분류(source_documents.category, db/012)는 청크의 category를 specs.py와 같은 family()로 바꿔 넣는다.
   - 청크마다 임베딩을 chunk_embeddings에 넣는다. 벡터는 본문 해시로 캐시(<벡터 폴더>/vectors.f32·vectors.sha.txt)에서
     다시 쓰고, 캐시에 없는 본문만 embed_texts로 만들어 캐시에 덧붙인다.
   - 다시 돌리면 이미 들어간 문서·청크·임베딩은 건너뛴다(지우지 않는다). DB에 임베딩이 있는 청크는 캐시가 없어도 API를 다시 부르지 않는다.
@@ -13,7 +14,11 @@
 - voyage-4-large 적재(`--voyage`): 미리 만든 청크 벡터(`<벡터 폴더>/v4large.f32`·`v4large.sha.txt`, 1024차원)를 이미 들어간 청크에 붙인다.
   임베딩 API를 부르지 않는다. 열이 차원 없는 halfvec이어야 한다(db/008). 모델 행이 있는 청크는 건너뛴다.
 
-실행: python -m backend.rag.pipeline.ingest <manifest.jsonl> <chunks.jsonl> <벡터 폴더> [--cache-only]
+- voyage-4-large 캐시 채우기(`--voyage-fill`): chunks.jsonl 본문 중 `v4large` 캐시에 없는 것만 voyage_embed로 임베딩해 붙인다.
+  DB에 쓰지 않는다. 청크를 다시 자른 뒤 `--voyage` 앞에 돌린다.
+
+실행: python -m backend.rag.pipeline.ingest <manifest.jsonl> <chunks.jsonl> <벡터 폴더> [--cache-only | --chunks-only]
+      python -m backend.rag.pipeline.ingest --voyage-fill <chunks.jsonl> <벡터 폴더>
       python -m backend.rag.pipeline.ingest --voyage <벡터 폴더>
 """
 import json
@@ -24,6 +29,7 @@ import time
 import numpy as np
 
 from backend.rag.pipeline.chunk import CHUNKER_VERSION, DOC_DEFAULTS, doc_key
+from backend.rag.pipeline.specs import family
 from backend.rag.storage import vector_type
 
 DIM = 1536  # 임베딩 차원. 캐시 파일을 DIM개씩 끊어 읽으므로 모델을 바꾸면 캐시도 새로 만든다
@@ -71,16 +77,21 @@ class VectorCache:
         self.index.update({s: start + i for i, (s, _) in enumerate(pairs)})
 
 
-def fill_cache(cache, texts_by_sha):
+def fill_cache(cache, texts_by_sha, embed=None):
     """캐시에 없는 본문(texts_by_sha: sha → 본문)을 BATCH개씩 임베딩해 캐시에 붙이고 새로 만든 본문 수를 돌려준다."""
+    # embed: 본문 목록 → 벡터 목록. 비우면 embed_texts(text-embedding-3-small)를 쓴다
     # [주의] 한 묶음은 MAX_RETRY번까지 다시 부르고(EC-05), 그래도 실패하면 예외를 그대로 올린다
-    from backend.services.llm import embed_texts
+    if embed is None:
+        from backend.services.llm import embed_texts
+
+        def embed(texts):
+            return embed_texts(texts)[0]
     todo = [s for s in texts_by_sha if s not in cache.index]
     for i in range(0, len(todo), BATCH):
         part = todo[i:i + BATCH]
         for attempt in range(1, MAX_RETRY + 1):
             try:
-                vectors, _, _, _ = embed_texts([texts_by_sha[s] for s in part])
+                vectors = embed([texts_by_sha[s] for s in part])
                 break
             except Exception:
                 if attempt == MAX_RETRY:
@@ -95,6 +106,16 @@ def fill_cache(cache, texts_by_sha):
 FILL_BITS = ('INSERT INTO chunk_embedding_bits (chunk_id, embedding_model, bits)'
              ' SELECT chunk_id, embedding_model, binary_quantize(embedding::vector(1024))::bit(1024)'
              ' FROM chunk_embeddings WHERE embedding_model = %s ON CONFLICT (chunk_id, embedding_model) DO NOTHING')
+
+
+def fill_voyage(chunks_path, vec_dir):
+    """chunks.jsonl 본문 중 voyage-4-large 캐시(<벡터 폴더>/v4large.*)에 없는 것만 임베딩해 붙인다(Voyage 유료 호출, DB 안 씀)."""
+    # [왜] 청크를 다시 자르면 바뀐 본문만 새 벡터가 필요하다. 그대로인 본문은 sha가 같아 캐시를 다시 쓴다
+    from backend.services.llm import voyage_embed
+    with open(chunks_path, encoding='utf-8') as fh:
+        texts = {c['sha256']: c['text'] for c in (json.loads(line) for line in fh if line.strip())}
+    made = fill_cache(VectorCache(vec_dir, 'v4large', VOYAGE_DIM), texts, lambda t: voyage_embed(t, 'document'))
+    print(f'새로 임베딩한 voyage-4-large 본문 {made}개 / 서로 다른 본문 {len(texts)}개')
 
 
 def load_voyage(vec_dir):
@@ -130,8 +151,9 @@ def load_voyage(vec_dir):
     print(f'넣은 voyage-4-large 임베딩 {len(rows)}개')
 
 
-def main(manifest_path, chunks_path, vec_dir, cache_only=False):
+def main(manifest_path, chunks_path, vec_dir, cache_only=False, chunks_only=False):
     """manifest·chunks.jsonl의 문서·청크·임베딩을 DB에 넣는다(DATABASE_URL 필요). 이미 있는 것은 건너뛴다."""
+    # [주의] chunks_only면 문서·청크만 넣고 3-small 임베딩은 만들지도 넣지도 않는다(voyage는 --voyage로 따로 넣는다)
     # [주의] cache_only면 임베딩 API를 부르지 않고, 캐시에 없는 벡터가 필요하면 ValueError를 올려 DB를 롤백한다
     # [주의] RAG_VECTOR_TYPE과 DB 열 형식이 다르면 ValueError, 청크 파일이 DB와 다르면 SystemExit
     import psycopg
@@ -145,6 +167,10 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
         cards = [json.loads(line) for line in fh if line.strip()]
     cache = VectorCache(vec_dir)
     texts = {c['sha256']: c['text'] for c in cards}
+    # 문서 키 → 분류. 한 문서의 카드는 모두 같은 category를 갖는다(chunks-v4h 1,360문서 확인)
+    # [왜] 사양 표 없이 찾는 코드가 part_specifications.category와 같은 값으로 거르게 specs.py의 family()를 그대로 쓴다('tvs-18' → 'tvs')
+    # [주의] 분류가 없는 카드면 빈 글자 대신 NULL을 넣는다
+    category = {doc_key(c['doc']): family(c.get('category')) or None for c in cards}
     with psycopg.connect(os.environ['DATABASE_URL']) as conn:  # with: 오류 없이 끝나면 커밋, 예외면 롤백한다
         register_vector(conn)
         cur = conn.cursor()
@@ -155,10 +181,11 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
         for d in docs:  # 문서: 이미 있으면 건너뛴다
             cur.execute(
                 'INSERT INTO source_documents (document_key, document_type, title, publisher, source_url, revision, license_text,'
-                ' file_sha256, corpus_version, collected_at, parser, chars_original, chars_kept, truncated)'
-                ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (document_key) DO NOTHING',
+                ' file_sha256, corpus_version, collected_at, parser, chars_original, chars_kept, truncated, category)'
+                ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (document_key) DO NOTHING',
                 (d['doc_id'], 'DATASHEET', d['title'], d['manufacturer'], d['source_url'], d['revision'], d['usage_conditions'],
-                 d['sha256'], CORPUS_VERSION, d['collected_at'], d['parser'], d['chars_original'], d['chars_kept'], d['truncated']))
+                 d['sha256'], CORPUS_VERSION, d['collected_at'], d['parser'], d['chars_original'], d['chars_kept'], d['truncated'],
+                 category.get(d['doc_id'])))
         cur.execute('SELECT document_key, id FROM source_documents')
         doc_id = dict(cur.fetchall())
         cur.execute('SELECT DISTINCT document_id FROM document_chunks')
@@ -171,6 +198,10 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
                     # [주의] 면책 문구 같은 긴 첫 칸이 행 이름이 되는 표가 있다. 이름표 열만 자르고 본문(content)은 그대로 둔다
                     cp.write_row((doc_id[doc_key(c['doc'])], c['idx'], c['text'], c['sha256'], c['page'],
                                   c['table'] and c['table'][:LABEL_MAX], c['row'] and c['row'][:LABEL_MAX], CHUNKER_VERSION))
+        if chunks_only:  # [왜] 서비스 검색은 voyage-4-large만 쓴다(ADR 0004 갱신). 3-small 벡터는 돈만 들고 쓰지 않는다
+            for t in ('source_documents', 'document_chunks'):
+                print(t, cur.execute(f'SELECT count(*) FROM {t}').fetchone()[0])
+            return
         # 임베딩: 이 모델의 임베딩이 없는 청크만 넣는다
         cur.execute('SELECT dc.id, dc.chunk_sha256 FROM document_chunks dc WHERE NOT EXISTS (SELECT 1 FROM chunk_embeddings ce'
                     ' WHERE ce.chunk_id = dc.id AND ce.embedding_model = %s)', (EMBED_MODEL,))
@@ -202,7 +233,9 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False):
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--voyage':
         sys.exit(load_voyage(sys.argv[2]))
-    cache_only = len(sys.argv) == 5 and sys.argv[4] == '--cache-only'
-    if len(sys.argv) != 4 and not cache_only:
+    if len(sys.argv) == 4 and sys.argv[1] == '--voyage-fill':
+        sys.exit(fill_voyage(sys.argv[2], sys.argv[3]))
+    flag = sys.argv[4] if len(sys.argv) == 5 else None
+    if len(sys.argv) != 4 and flag not in ('--cache-only', '--chunks-only'):
         sys.exit(__doc__)
-    main(*sys.argv[1:4], cache_only=cache_only)
+    main(*sys.argv[1:4], cache_only=flag == '--cache-only', chunks_only=flag == '--chunks-only')
