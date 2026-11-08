@@ -9,6 +9,14 @@
 - 확인 방법: 테스트를 먼저 추가해 기존 코드에서 실패를 확인한 뒤 구현했다. 최종 `uv run pytest -q -p no:cacheprovider`는 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check`는 통과했다.
 - 미확인: `TEST_AUTH_DATABASE_URL`·`TEST_DATABASE_URL`이 없어 건너뛴 통합 시험 43건, 실제 배포 응답과 외부 로그 저장소의 요청 ID 연결. DB·외부 API·배포는 변경하지 않았다.
 
+## 2026-11-08 현재 구현 기준 문서 정합성 점검
+
+- 팀장 요청에 따라 현재 상태를 설명하는 문서를 실제 저장소 코드와 대조했다. 과거 ADR·평가 결과·제출 주제서·작업 기록은 당시 증거로 보존하고, 현재 상태 문서에서만 구현·목표·외부 운영 이력을 구분했다.
+- `README.md`, `SPEC.md`, `SOJAFIT.md`, `docs/GATES.md`에 현재 서비스 API 범위(로그인·Google 관리자·관리자 계정·가격 조회·공통 오류)와 미구현 범위(질문·회로·대화·견적 승인/저장·Store·영속 체크포인트·업무 화면)를 반영했다.
+- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 1,360문서·52,244청크 등 v1 수치는 날짜가 있는 외부 산출물·DB 이력으로 두고 현재 진행 중인 v2 전체 청킹 완료 증거로 사용하지 않도록 했다.
+- Google 관리자 로그인 문서의 코드·SQL·CLI·합성 테스트 구현 항목은 완료로, 현재 Cloud Run·Secret Manager·운영 DB·실계정 상태는 재검증이 필요한 항목으로 분리했다. MCP 그래프 통합 문서는 구현 전 계획과 현재 `StdioMcpRetriever` 구현을 구분했다.
+- 검증: 저장소 구조 검사 `5 passed`, 전체 테스트 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check` 통과. 운영 배포·DB 상태는 이번 작업에서 조회하지 않았다.
+
 ## 2026-11-05 GCP Google OAuth 로그 보호 실측
 
 - 한 일: GCP `sojafit` 프로젝트에 조회 전용 `Logs Viewer` 권한을 받은 뒤, Cloud Run 시험 태그에서 실제 Google 관리자 로그인·승인 대기·로그아웃을 수행했던 2026-11-05 20:20~22:05 KST 구간의 `sojafit-api` 로그를 읽기 전용으로 확인했다.

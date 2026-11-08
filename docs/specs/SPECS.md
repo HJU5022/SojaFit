@@ -12,7 +12,7 @@
 ## 파일
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
 - `login-auth.md` — 로그인과 사용자 식별 작업서(이메일·비밀번호 로그인, 서버 세션)
-- `google-admin-login.md` — 기존 인증을 유지하는 Google 관리자 로그인 작업서와 구현 계획
+- `google-admin-login.md` — 기존 인증을 유지하는 Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
 - `login-completion-plan.md` — 암호 처리·개인정보·인증 DB 적재의 상태 비교와 실행 순서
 - `rag-pipeline.md` — 데이터시트 수집·파싱·청킹·적재와 하이브리드 검색 작업서
 - `api-error-contract.md` — FastAPI 공통 JSON 오류 응답과 서버 생성 요청 식별자 작업서
