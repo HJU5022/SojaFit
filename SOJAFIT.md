@@ -144,6 +144,7 @@ SojaFit (proj3-b)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
+│   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안

@@ -8,7 +8,7 @@
 
 ## 실행과 주의
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`과 `004`는 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 업무 표 초안으로 `manual/004_create_business_tables.sql.draft`에 있습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `011_part_specifications.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `011_part_specifications.sql` → `012_document_category.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
 - 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행되며, 기존 DB에는 환경변수를 준비한 뒤 검토된 SQL을 별도로 적용합니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
@@ -25,6 +25,7 @@
 - `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
 - `011_part_specifications.sql` — 부품 사양 표(`part_specifications`, `schema/table-definition.md` 5.7)와 품번(대소문자 무시)·코드·문서 인덱스. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 로컬 볼륨과 Supabase에는 따로 적용한다. 행은 SQL이 아니라 `python -m backend.rag.pipeline.specs load <사양 표 폴더> --dsn <주소>`가 넣는다(문서 단위로 지우고 다시 넣음). RLS를 켜고 정책은 두지 않는다(다른 public 표와 같음, Supabase 공개 API로는 못 읽음). 다시 적재한 직후에는 지운 행이 VACUUM 전까지 남아 크기가 약 두 배가 된다.
   - 11-05 Supabase 적용(조장 승인): 011 SQL 적용 → 적재 90,961행(숫자 77,340 + 패키지 13,621) · 문서 1,360개(빠진 문서 0) · 품번 9,589개, 6.4초 → `ANALYZE`. 표 22.7 MB(인덱스 포함), DB 전체 207.2 → 230.0 MB(무료 500 MB · 알람 400 MB 안). 같은 날 로컬 볼륨에도 같은 행 수와 RLS를 적용했다. 공개 API 역할(`anon` · `authenticated`)로 바꿔 시험하면 읽기 0행 · 고치기/지우기 0행 · 넣기 거부였다(시험은 되돌림)
+- `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 사양 표의 `category`와 같은 분류 이름(예: `schottky-rectifier`)이고 `ingest.py`가 문서를 넣을 때 채운다. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 DB에는 따로 적용하고 기존 행은 청크 파일에서 채운다.
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 
