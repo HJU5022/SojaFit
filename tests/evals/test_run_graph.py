@@ -100,7 +100,7 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
     data = tmp_path / "set.jsonl"
     data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
         {"id": "i1", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: 주식 추천", "expected": "", "gold_chunks": []},
-        {"id": "i2", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: boom", "expected": "", "gold_chunks": []}]))
+        {"id": "i2", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: boom", "expected": "", "gold_chunks": []}]), encoding="utf-8")
     out = tmp_path / "out.json"
     run_graph.main(str(data), (), str(out))
     result = json.loads(out.read_text(encoding="utf-8"))
