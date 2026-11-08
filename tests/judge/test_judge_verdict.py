@@ -283,11 +283,15 @@ def test_vz_rows_without_table_condition_are_read_at_ta_25(temp, result):
     assert {c.result for c in j.checks} == {result}
 
 
-def test_other_codes_in_a_table_without_condition_stay_unstated():
-    """VZ 밖의 코드는 바뀌지 않는다: 표 제목에 조건이 없는 IF_AV 행은 TA = 25°C 질문에 '적혀 있지 않음'이다(다른 역할 그대로)."""
+def test_room_temperature_is_read_like_unknown_temperature():
+    """[왜] 주변 25°C를 준 질문이 온도를 안 준 질문보다 엄격하면 안 된다. 읽기가 'TA=25°C'를 적은 회차만 표 제목에 조건이 없는 행이
+    '적혀 있지 않음'이 되어 판정이 회차마다 바뀌었다(11-06 일관성 측정). 다른 온도(85°C)는 그대로 엄격하다."""
     rows = [row('X', 'VRRM', 40.0, table=ZTABLE), row('X', 'IF_AV', 1.0, unit='A', table=ZTABLE)]
-    j = V.judge_part(R01, 'R01', 'X', {'v_in_max': 12.0, 'i_max': 0.15}, TEMP, rows)
-    assert [(c.code, c.result) for c in j.checks] == [('VRRM', 'pass'), ('IF_AV', 'unverified')]
+    for temp in (TEMP, {}):
+        j = V.judge_part(R01, 'R01', 'X', {'v_in_max': 12.0, 'i_max': 0.15}, temp, rows)
+        assert [(c.code, c.result) for c in j.checks] == [('VRRM', 'pass'), ('IF_AV', 'pass')]
+    hot = V.judge_part(R01, 'R01', 'X', {'v_in_max': 12.0, 'i_max': 0.15}, {'temp': {'TA': 85.0}}, rows)
+    assert [(c.code, c.result) for c in hot.checks] == [('VRRM', 'pass'), ('IF_AV', 'unverified')]
 
 
 def test_unless_turns_off_on_any_given_value_like_when_turns_on():
@@ -301,3 +305,162 @@ def test_unless_turns_off_on_any_given_value_like_when_turns_on():
         return [c.basis for c in V.judge_part(rule, 'R04', 'X', values, {}, rows).checks]
     assert bases({'lo': 3.42, 'off': True}) == [] and bases({'off': False}) == ['0.1', '0.2'] and bases({}) == ['0.1', '0.2']
     assert V.search_conditions(rule, {'lo': 3.42}) == [{'code': 'PD', 'gte': 0.2}]
+
+
+def test_tvs_compares_rated_values_when_both_sheets_use_same_waveform():
+    # [왜] 사용자가 서지 파형을 말하지 않아도 두 문서가 같은 정격 파형(10/1000µs · tp = 1ms)이면 정격 VC끼리 비교한다(정운 결정 11-06, R06)
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+
+    def row(part, code, mx, cond=None):
+        return {'part': part, 'code': code, 'min': None, 'typ': None, 'max': mx, 'unit': 'V', 'test_condition': cond,
+                'citation': {'document': 'a.pdf', 'page': 2, 'table': 'ELECTRICAL', 'row': part}}
+    orig = [row('SMBJ14A', 'VRWM', 14.0), row('SMBJ14A', 'VC', 23.2, 'IPP = 27.0 A'), row('SMBJ14A', 'PPPM', 600.0, '10/1000µs waveform'),
+            row('SMBJ14A', 'IPP', 27.0)]
+    cand = [row('SMCJ14A', 'VRWM', 14.0), row('SMCJ14A', 'VC', 23.2, 'IPPM = 67 A'), row('SMCJ14A', 'PPPM', 1500.0, 'at TA = 25°C, tp = 1ms'),
+            row('SMCJ14A', 'IPP', 67.0)]
+    j = V.judge_part(C.load()['R06'], 'R06', 'SMCJ14A', {'v_line_max': 13.8}, {}, cand, original_rows=orig)
+    assert [(c.code, c.result) for c in j.checks] == [('VRWM', 'pass'), ('VC', 'pass'), ('PPPM', 'pass')]
+    assert j.verdict == 'SPEC_EQUIVALENT'  # 주요 정격(PPPM 1500 ≥ 600, VC 23.2 ≤ 23.2)도 같은 정격 파형 값끼리 비교한다(판정 dev 19)
+    other = [r if r['code'] != 'PPPM' else {**r, 'test_condition': '8/20µs'} for r in cand]  # 파형이 다르면 확인 안 됨
+    assert V.judge_part(C.load()['R06'], 'R06', 'X', {'v_line_max': 13.8}, {}, other, original_rows=orig).verdict == 'NOT_VERIFIED'
+
+
+def test_user_surge_on_the_rated_waveform_is_compared_at_rated_values():
+    # [왜] 사용자가 정격과 같은 파형의 서지(10A, 10/1000µs)를 말해도 데이터시트에는 정격 IPP 행만 있다. 서지 전류가 정격 IPP 이하면
+    #      정격 VC끼리 비교한다(정운 결정 11-06, v3-09 SMBJ14AH). 다른 파형이나 정격을 넘는 서지는 그대로 확인 안 됨
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+
+    def row(part, code, mx, cond=None):
+        return {'part': part, 'code': code, 'min': None, 'typ': None, 'max': mx, 'unit': 'V', 'test_condition': cond,
+                'citation': {'document': 'a.pdf', 'page': 2, 'table': 'ELECTRICAL', 'row': part}}
+    orig = [row('SMBJ14A', 'VRWM', 14.0), row('SMBJ14A', 'VC', 23.2, 'IPP = 27.0 A'), row('SMBJ14A', 'IPP', 27.0, '10/1000µs waveform'),
+            row('SMBJ14A', 'PPPM', 600.0, '10/1000µs waveform')]
+    cand = [{**r, 'part': 'SMBJ14AH'} for r in orig]
+
+    def checks(surge):
+        j = V.judge_part(C.load()['R06'], 'R06', 'SMBJ14AH', {'v_line_max': 13.0}, {'surge_test': surge}, cand, original_rows=orig)
+        return {c.code: c.result for c in j.checks}
+    assert checks({'IPP': 10.0, 'wave': '10/1000'}) == {'VRWM': 'pass', 'VC': 'pass', 'PPPM': 'pass'}
+    assert checks({'IPP': 10.0, 'wave': '8/20'})['VC'] == 'unverified'   # 다른 파형
+    assert checks({'IPP': 50.0, 'wave': '10/1000'})['VC'] == 'unverified'  # 정격 IPP(27A)를 넘는 서지
+
+
+def test_ir_fail_at_higher_test_voltage_is_not_verified_and_room_temperature_row_is_used():
+    # [왜] 사용 온도를 모르면 25°C 행을 쓰고, 실제 역전압보다 높은 시험 전압(정격 VR)의 누설 초과는 불충족을 단정하지 않는다(11-06 v3-07)
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+
+    def row(code, mx, cond=None):
+        return {'part': 'SS16', 'code': code, 'min': None, 'typ': None, 'max': mx, 'unit': None, 'test_condition': cond,
+                'citation': {'document': 'a.pdf', 'page': 2, 'table': 'ELECTRICAL', 'row': code}}
+    rows = [row('VRRM', 60.0), row('IF_AV', 1.0), row('IR', 0.0002, '@ rated; TJ = 25°C'), row('IR', 0.005, '@ rated; TJ = 100°C')]
+    rule = C.load()['R02']
+    low = V.judge_part(rule, 'R02', 'SS16', {'i_max': 0.25, 'ir_allowed': 1e-4, 'v_reverse_max': 5.25}, {}, rows, original_rows=[])
+    ir = [c for c in low.checks if c.code == 'IR'][0]
+    assert ir.value == 0.0002 and ir.result == 'unverified'  # 25°C 행, 60 V > 5.25 V라 단정 못 함
+    high = V.judge_part(rule, 'R02', 'SS16', {'i_max': 0.25, 'ir_allowed': 1e-4, 'v_reverse_max': 60.0}, {}, rows, original_rows=[])
+    assert [c for c in high.checks if c.code == 'IR'][0].result == 'fail'
+
+
+def test_conditional_check_without_an_original_value_is_left_out_not_unverified():
+    """[왜] 외부 단자의 VESD를 원래 SMBJ14A 문서가 적지 않아 SMBJ14AH가 확인 안 됨이 됐다(11-06 v3-09). 빼고 사람이 확인할 것으로 남긴다."""
+    from backend.judge import verdict as V
+    rule = {'conditions': [{'tier': 'required', 'code': 'VRWM', 'op': '>=', 'basis': 'v_line_max'},
+                           {'tier': 'conditional', 'code': 'VESD', 'op': '>=', 'basis': 'orig.VESD', 'when': 'external_port'}]}
+    rows = [{'part': 'X', 'code': 'VRWM', 'min': None, 'typ': None, 'max': 14.0, 'unit': 'V', 'test_condition': None, 'citation': {}}]
+    j = V.judge_part(rule, 'R06', 'X', {'v_line_max': 13.0, 'external_port': True}, {}, rows, original_rows=[{**rows[0], 'part': 'O'}])
+    assert [c.code for c in j.checks] == ['VRWM'] and j.verdict != 'NOT_VERIFIED' and any('VESD' in u for u in j.uncertain)
+
+
+def test_spec_equivalent_also_needs_same_condition_extra_ratings_not_worse():
+    """[왜] 사람 판정(judge_dev README 해석 6)은 역할 major 밖의 같은 조건 정격(VWM · VBR · IR · PD …)도 본다. SMBJ14A → SMBJ13A는 VWM이 낮아
+    역할상 충분이다(판정 dev 20). 같은 조건 짝이 없는 추가 항목은 건너뛴다."""
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+
+    def row(part, code, mx, cond=None, mn=None):
+        return {'part': part, 'code': code, 'min': mn, 'typ': None, 'max': mx, 'unit': 'V', 'test_condition': cond,
+                'citation': {'document': 'a.pdf', 'page': 2, 'table': 'ELECTRICAL', 'row': part}}
+    orig = [row('SMBJ14A', 'VRWM', 14.0), row('SMBJ14A', 'VC', 23.2, 'IPP = 27.0 A'), row('SMBJ14A', 'PPPM', 600.0, '10/1000µs waveform'),
+            row('SMBJ14A', 'IPP', 27.0), row('SMBJ14A', 'VBR', 17.2, 'IT = 1 mA', 15.6)]
+    lower = [row('SMBJ13A', 'VRWM', 13.0), row('SMBJ13A', 'VC', 21.5, 'IPP = 29.0 A'), row('SMBJ13A', 'PPPM', 600.0, '10/1000µs waveform'),
+             row('SMBJ13A', 'IPP', 29.0), row('SMBJ13A', 'VBR', 15.9, 'IT = 1 mA', 14.4)]
+    rule = C.load()['R06']
+    assert V.judge_part(rule, 'R06', 'SMBJ13A', {'v_line_max': 12.6}, {}, lower, original_rows=orig).verdict == 'ROLE_SUFFICIENT'
+    same = [{**r, 'part': 'SMBJ14AH'} for r in orig]
+    assert V.judge_part(rule, 'R06', 'SMBJ14AH', {'v_line_max': 12.6}, {}, same, original_rows=orig).verdict == 'SPEC_EQUIVALENT'
+    split = orig[:-1] + [row('SMBJ14A', 'VBR', None, 'IT = 1 mA', 15.6), row('SMBJ14A', 'VBR', 17.2, 'IT = 1 mA')]  # 최소 · 최대가 다른 행
+    split_same = [{**r, 'part': 'SMBJ14AH'} for r in split]
+    assert V.judge_part(rule, 'R06', 'SMBJ14AH', {'v_line_max': 12.6}, {}, split_same, original_rows=split).verdict == 'SPEC_EQUIVALENT'
+
+
+def test_user_vf_limit_is_checked_at_the_circuit_current():
+    """[왜] '전압강하 1.8V까지'는 동작 전류(250mA)에서의 한계다. 표의 1A VF로 통과시키지 않고, 그 전류 행이 없으면 확인 안 됨(v3-04 정답)."""
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+    rule = {'conditions': C.user_conditions([('다이오드 전압강하는 1.8V까지 허용', 'VF')])}
+    rows = [{'part': 'UF4007', 'code': 'VF', 'min': None, 'typ': None, 'max': 1.7, 'unit': 'V', 'test_condition': 'IF = 1A, TJ = 25°C', 'citation': {}}]
+    assert V.judge_part(rule, 'R22', 'UF4007', {'i_max': 0.25}, {}, rows).checks[0].result == 'unverified'
+    at_op = [{**rows[0], 'test_condition': 'IF = 0.25A, TJ = 25°C'}]
+    assert V.judge_part(rule, 'R22', 'UF4007', {'i_max': 0.25}, {}, at_op).checks[0].result == 'pass'
+
+
+def test_rated_vr_test_condition_compares_the_actual_rated_voltages():
+    """[왜] '@ rated VR'은 품번마다 실제 전압이 다르다(SS34 40 V · SS36 60 V). 같은 조건으로 보고 IR을 비교했다(판정 dev 02: 확인 안 됨)."""
+    from backend.judge import verdict as V
+
+    def row(part, code, mx, cond=None):
+        return {'part': part, 'code': code, 'min': None, 'typ': None, 'max': mx, 'unit': None, 'test_condition': cond,
+                'citation': {'document': 'a.pdf', 'page': 2, 'table': 'ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted)', 'row': part}}
+    ss34 = [row('SS34', 'VRRM', 40.0), row('SS34', 'IR', 0.0005, '@ rated VR, TJ = 25°C')]
+    ss36 = [row('SS36', 'VRRM', 60.0), row('SS36', 'IR', 0.0005, '@ rated VR, TJ = 25°C')]
+    assert not V._same_condition(ss34[1], ss36[1], ss34, ss36)
+    assert V._same_condition(ss34[1], {**ss34[1], 'part': 'X'}, ss34, ss34) and V._same_condition(ss34[1], ss36[1])
+
+
+def test_missing_circuit_values_still_show_the_candidate_value_and_its_citation():
+    j = V.judge_part(R01, 'R01', '1N5817', {}, {}, N5817, footprint='SOD-323', packages=['DO-41'])
+    vrrm = next(c for c in j.checks if c.code == 'VRRM')
+    # [왜] 기준(v_in_max)을 몰라도 후보 정격과 그 쪽을 보인다. 판정은 그대로 '확인 안 됨'이다(11-07 v2 draft30-h04)
+    assert j.verdict == 'NOT_VERIFIED' and vrrm.result == 'unverified' and vrrm.value == 20.0 and vrrm.citation['document'] == '1N5817.pdf'
+    assert j.board_change is True and j.package_citation['document'] == '1N5817.pdf'
+
+
+def test_unverified_find_candidates_keep_found_order_with_fewest_unknown_checks_first():
+    a = V.Judgement(part='B', role='R01', verdict='NOT_VERIFIED', checks=[V.Check(code='VRRM', tier='required', op='>=', basis='x', result='unverified')] * 2)
+    b = V.Judgement(part='A', role='R01', verdict='NOT_VERIFIED', checks=[V.Check(code='VRRM', tier='required', op='>=', basis='x', result='unverified')])
+    c = V.Judgement(part='C', role='R01', verdict='NOT_VERIFIED', checks=[V.Check(code='VRRM', tier='required', op='>=', basis='x', result='unverified')])
+    shown, unverified = V.rank([a, c, b])
+    assert shown == [] and [j.part for j in unverified] == ['C', 'A', 'B']  # 확인 안 된 조건 수 → 찾은 순서(이름순 아님)
+
+
+R07 = yaml.safe_load('''
+name: 병렬 역극성 보호
+recognize: x
+inputs: {v_in_max: number, i_short: number}
+conditions:
+  - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_in_max * kV"}
+  - {tier: required, code: IFSM, op: ">=", basis: "i_short", default: "orig.IFSM"}
+source: x
+''')
+
+
+def test_defaulted_condition_without_an_original_document_is_dropped_not_unverified():
+    j = V.judge_part(R07, 'R07', '1N5817', {'v_in_max': 12.0}, {}, N5817, original_rows=[])
+    # [왜] i_short가 없어 원래 IFSM으로 대신하려는데 원래 부품 문서도 없으면 비교 기준이 없다: 빼고 역할상 충분(11-07 c20-01)
+    assert j.verdict == 'ROLE_SUFFICIENT' and [c.code for c in j.checks] == ['VRRM'] and any('원래 부품 문서에 값이 없어' in u for u in j.uncertain)
+
+
+def test_orig_nominal_only_compares_nominal_to_nominal():
+    # [왜] 원래 1N5231B 문서는 VZ 공칭 5.1 V만 적는다. 후보 MMSZ5231B의 최대 5.36 V와 비교해 같은 5.1 V 제너가 불충족이 났다(판정 dev 16, 11-09)
+    from backend.judge import verdict as V
+    cond = {'tier': 'required', 'code': 'VZ', 'op': '<=', 'basis': 'orig.VZ', 'slot': 'max'}
+    cite = {'document': 'x.pdf', 'page': 2, 'table': 'ELECTRICAL SPECIFICATIONS'}
+    orig = [{'code': 'VZ', 'min': None, 'typ': 5.1, 'max': None, 'test_condition': 'IZT = 20 mA', 'citation': cite}]
+    cand = [{'code': 'VZ', 'min': 4.85, 'typ': None, 'max': None, 'test_condition': 'IZT = 20 mA', 'citation': cite},
+            {'code': 'VZ', 'min': None, 'typ': 5.1, 'max': None, 'test_condition': 'IZT = 20 mA', 'citation': cite},
+            {'code': 'VZ', 'min': None, 'typ': None, 'max': 5.36, 'test_condition': 'IZT = 20 mA', 'citation': cite}]
+    check, _, _ = V._check(cond, {}, {}, cand, orig)
+    assert check.result == 'pass' and check.value == 5.1
