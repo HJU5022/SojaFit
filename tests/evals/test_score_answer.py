@@ -291,3 +291,16 @@ def test_find_answer_counts_only_shown_candidates():
     state = {"path": ["판정", "답 틀"], "answer": "역할: 역극성 보호", "check": {"used": [], "judgement": True},
              "judgement": {"kind": "find", "results": [hidden, shown], "shown": [shown], "unverified": []}}
     assert score_item(DATASHEET_ITEM, state)["metric"] == "wrong_citation"
+
+
+def test_combined_answer_counts_both_chunk_and_spec_table_citations():
+    """[왜] 멀티의 종합 답은 문서 할 일의 [n] 인용과 판정 표 인용이 한 답에 같이 있다. 둘 다 센다(11-06 계획형 멀티 v3-07)."""
+    state = _judge_state("1N5817 SERIES_H2104.pdf", 1)
+    docs = [{"chunk_id": 7, "file": "SS12 SERIES_R2305.pdf", "page": 2, "content": "x"}]
+    state.update(answer="D1은 전원 경로에 있다 [넷리스트]. VF는 0.75 V이다 [7].", docs=docs, passed=[7],
+                 target_part={"ref": "D1"}, check={"used": ["7", "넷리스트"], "fake_citations": [], "judgement": True})
+    row = score_item(DATASHEET_ITEM, state)
+    assert row["metric"] == "cited_gold"
+    assert row["cited_locations"] == [["SS12 SERIES_R2305.pdf", 2], ["1N5817 SERIES_H2104.pdf", 1]]
+    fake = {**state, "check": {**state["check"], "fake_citations": ["9"]}}
+    assert score_item(DATASHEET_ITEM, fake)["metric"] == "wrong_citation"  # 없는 근거 인용은 판정 표가 있어도 걸린다
