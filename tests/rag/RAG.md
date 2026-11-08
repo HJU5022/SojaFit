@@ -10,6 +10,9 @@
 
 ## 파일
 - `RAG.md` — 이 문서
+- `test_card_find.py` — 카드 찾기(가짜 검색 · 카드 적재 · 카드 읽기 · 문서 분류, DB · LLM 없음): 검색 문장, 분류 · 개수로 문서 고르기, 카드 거르기, 같은 사양 행에서 `find_candidates`(가짜 연결)와 같은 거르기 · 순서, 양방향 품번 값 붙이기
+- `test_card_read.py` — 카드 읽기(가짜 chat): 사양 행 모양 · SI 값(mA → A), 인용이 카드에 없음 · 숫자가 인용에 없음 · 단위 차원 다름 · 다른 문서 품번이면 사유와 함께 버림, chat 한 번 호출, 많은 카드는 나눠 읽고 합침
+- `test_card_specs.py` — 카드에서 판정 값 읽기(가짜 의존, 실제 LLM · DB 없음): 미리 읽은 품번은 다시 읽지 않고, 글 카드의 행(패키지 등)을 붙임
 - `test_rag_chunk.py` — 표 청크 규칙(합친 칸 채우기, 머리 행 잇기, 빈 표)과 문서 키, `data/manifest.jsonl`이 512,000바이트 아래인지
 - `test_rag_collect.py` — xlsx 목록 합치기, manifest로 받기(sha256 대조, 실패는 failed.csv), 다시 돌리면 건너뛰기
 - `test_rag_ingest.py` — 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩, DB 재실행(전용 DB 필요), `load_voyage`가 비트 코드 표를 채움(가짜 연결)

@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS part_specifications (
     -- 5.7·ADR 0013의 17개 + PACKAGE(표면 실장·스루홀 거르기용 패키지 이름)
     CONSTRAINT ck_part_specifications_parameter_code CHECK (parameter_code IN (
         'VRRM', 'IF_AV', 'IFSM', 'VF', 'IR', 'TRR', 'VZ', 'PD', 'CJ', 'TJ_MAX',
-        'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD', 'PACKAGE'
+        'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD', 'PACKAGE', 'AEC_Q101'
     )),
     CONSTRAINT ck_part_specifications_normalized_unit CHECK (
         normalized_unit IS NULL OR normalized_unit IN ('V', 'A', 's', 'W', 'F', 'degC')

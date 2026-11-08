@@ -79,7 +79,7 @@ def test_prompt_and_schema_name_every_spec_table_item():
     from pydantic import ValidationError
 
     from backend.rag.spec_lookup import CODES
-    assert set(CODES) <= set(re.findall(r'^- `([A-Z_]+)`:', J.PROMPT, re.M))
+    assert set(CODES) <= set(re.findall(r"^- `([A-Z0-9_]+)`:", J.PROMPT, re.M))
     with pytest.raises(ValidationError):
         J.RequiredSpec(words='고장률', code='FIT')  # 사양 표 항목 · none 밖의 글자는 형식 검사에서 걸린다
 

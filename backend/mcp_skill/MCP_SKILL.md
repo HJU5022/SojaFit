@@ -19,3 +19,7 @@
 2. 도메인 판단 규칙을 Skill 문서(`skills/SKILL.md`)로 분리해 에이전트가 쓰고, **같은 평가셋으로 Skill이 있을 때와 없을 때의 점수 차이**를 보입니다.
 
 이 STH 브랜치에는 MCP Python SDK 의존성이 잠금 파일에 포함되어 있습니다. main 통합 전에는 해당 브랜치의 실행·import 상태를 별도로 확인합니다.
+
+## #99 로컬 코퍼스 조회 확인
+
+`get_part_specs`와 `find_parts_by_specs`의 사양 행은 기존 값·시험 조건·인용에 더해 `source_unit`과 `footnote_text`를 전달한다. #99 전용 로컬 DB에서9,589품번/96,740행을 실제stdio MCP로 대조했다. 이는 운영DB 적용이나 search_corpus 하이브리드·최종답변 품질 검증이 아니다. 상세는 docs/worklog/sth.md #99와 외부 local-mcp-compat/report.md를 참조한다.

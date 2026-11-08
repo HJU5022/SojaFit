@@ -111,7 +111,8 @@ def load_voyage(vec_dir):
                              "WHERE attrelid='chunk_embeddings'::regclass AND attname='embedding'").fetchone()[0]
         if actual != 'halfvec':
             raise ValueError('embedding column must be dimensionless halfvec: apply db/008 first')
-        cur.execute('SELECT dc.id, dc.chunk_sha256 FROM document_chunks dc WHERE NOT EXISTS (SELECT 1 FROM chunk_embeddings ce'
+        # Cover chunks carry part metadata but are excluded by retrieve(); no vector is required.
+        cur.execute('SELECT dc.id, dc.chunk_sha256 FROM document_chunks dc WHERE dc.page_number IS NOT NULL AND NOT EXISTS (SELECT 1 FROM chunk_embeddings ce'
                     ' WHERE ce.chunk_id = dc.id AND ce.embedding_model = %s)', (VOYAGE_MODEL,))
         rows = [(cid, s.strip()) for cid, s in cur.fetchall()]
         if any(s not in cache.index for _, s in rows):

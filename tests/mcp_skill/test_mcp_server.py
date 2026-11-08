@@ -12,6 +12,8 @@ import json
 import httpx
 import pytest
 
+from backend.rag.spec_lookup import CODES
+
 from backend.mcp_skill.mcp_server import server
 
 BASE = "https://services.taiwansemi.com/storage/resources/datasheet"
@@ -322,7 +324,7 @@ def test_get_part_specs_passes_args(lookup):
 
 @pytest.mark.parametrize("part,codes", [
     ("", None), ("   ", None), ("x" * 101, None), (1, None),
-    ("SS34", "VRRM"), ("SS34", ["NOPE"]), ("SS34", [1]), ("SS34", ["VRRM"] * 19),
+    ("SS34", "VRRM"), ("SS34", ["NOPE"]), ("SS34", [1]), ("SS34", ["VRRM"] * (len(CODES) + 1)),  # 항목 수보다 많으면 거절
 ])
 def test_get_part_specs_rejects_bad_input(monkeypatch, part, codes):
     """빈·긴 품번, 목록이 아닌 코드, 허용 코드 밖 값은 DB에 가기 전에 거절한다."""
