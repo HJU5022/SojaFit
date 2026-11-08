@@ -52,4 +52,5 @@
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)
 - `generate.md` — 생성 노드의 시스템 프롬프트(근거만으로 인용을 붙여 답하기)
 - `judge_read.md` — 판정 에이전트 읽기 노드의 시스템 프롬프트(역할 · 회로 값 읽기, 숫자 비교 없음). 영어. Langfuse `judge_read`용이며 아직 등록하지 않음
+- `card_read.md` — 카드 읽기 노드(`backend/rag/card_read.py`)의 시스템 프롬프트(카드에서 값 · 원문 인용 읽기). 영어. Langfuse `card_read`용이며 아직 등록하지 않음
 - `tool_use.md` — MCP 도구5종의 선택·인자·미검증 결과 해석 지침. Langfuse `sojafit/tool-use`용입니다. 이 파일을 읽는 코드는 아직 없고, 그래프 연결은 미구현입니다
