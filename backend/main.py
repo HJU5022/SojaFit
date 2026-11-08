@@ -1,9 +1,9 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`)와 Google 콜백 접속 로그 보호를 등록한다.
+역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`), 공통 JSON 오류·요청 ID와 Google 콜백 접속 로그 보호를 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py·tests/api/test_prices.py.
 하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 질문·답변 API, 회로·대화·기억·견적 API.
-출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, ADR 0009, backend/BACKEND.md.
+출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
 """
@@ -11,10 +11,12 @@ import os
 import base64
 import hashlib
 import logging
+from http import HTTPStatus
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import unquote, urlencode
+from uuid import uuid4
 
 import httpx
 import psycopg
@@ -23,6 +25,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field, StrictBool, field_validator
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
 from backend.services import mouser
@@ -55,10 +58,89 @@ async def lifespan(app: FastAPI):
         logger.removeFilter(log_filter)
 
 
-app = FastAPI(title="SojaFit API", lifespan=lifespan)
+ERROR_CODES = {
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+    422: "VALIDATION_ERROR",
+    429: "TOO_MANY_REQUESTS",
+    503: "SERVICE_UNAVAILABLE",
+}
+
+
+class ErrorPayload(BaseModel):
+    """클라이언트가 분기하고 사용자에게 표시할 공개 오류 정보."""
+
+    code: str
+    message: str
+    request_id: str
+
+
+class ErrorEnvelope(BaseModel):
+    """모든 JSON 오류 응답의 최상위 구조."""
+
+    error: ErrorPayload
+
+
+COMMON_ERROR_RESPONSES = {
+    status_code: {"model": ErrorEnvelope, "description": code}
+    for status_code, code in ERROR_CODES.items()
+}
+COMMON_ERROR_RESPONSES[500] = {"model": ErrorEnvelope, "description": "INTERNAL_ERROR"}
+
+app = FastAPI(
+    title="SojaFit API",
+    lifespan=lifespan,
+    responses=COMMON_ERROR_RESPONSES,
+)
 LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
 GOOGLE_COOKIE = "sojafit_google_browser"
 GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
+
+
+def request_id_for(request: Request) -> str:
+    """현재 요청 ID를 반환하되 예외가 미들웨어보다 먼저 나도 안전하게 만든다."""
+    request_id = getattr(request.state, "request_id", None)
+    if request_id is None:
+        request_id = str(uuid4())
+        request.state.request_id = request_id
+    return request_id
+
+
+def error_response(
+    request: Request,
+    *,
+    status_code: int,
+    code: str,
+    message: str,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
+    """공개 가능한 오류 정보만 공통 계약으로 반환한다."""
+    request_id = request_id_for(request)
+    response_headers = dict(headers or {})
+    response_headers["X-Request-ID"] = request_id
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {
+                "code": code,
+                "message": message,
+                "request_id": request_id,
+            }
+        },
+        headers=response_headers,
+    )
+
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    """클라이언트 값 대신 서버 UUID를 모든 응답에 넣는다."""
+    request.state.request_id = str(uuid4())
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request.state.request_id
+    return response
 
 
 def google_enabled() -> bool:
@@ -145,9 +227,40 @@ def google_pending(request: Request):
     return response
 
 
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request: Request, exc: StarletteHTTPException):
+    try:
+        default_message = HTTPStatus(exc.status_code).phrase
+    except ValueError:
+        default_message = "HTTP error"
+    message = exc.detail if isinstance(exc.detail, str) else default_message
+    return error_response(
+        request,
+        status_code=exc.status_code,
+        code=ERROR_CODES.get(exc.status_code, "HTTP_ERROR"),
+        message=message,
+        headers=exc.headers,
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=422, content={"detail": [{key: value for key, value in error.items() if key not in {"input", "ctx"}} for error in exc.errors()]})
+    return error_response(
+        request,
+        status_code=422,
+        code="VALIDATION_ERROR",
+        message="요청 형식이 올바르지 않습니다.",
+    )
+
+
+@app.exception_handler(Exception)
+async def internal_error(request: Request, exc: Exception):
+    return error_response(
+        request,
+        status_code=500,
+        code="INTERNAL_ERROR",
+        message="요청을 처리하지 못했습니다.",
+    )
 
 
 @app.get("/health")

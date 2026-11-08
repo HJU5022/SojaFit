@@ -83,6 +83,13 @@ def test_demo_mode_and_missing_key_return_the_empty_shape_without_calling_mouser
 def test_bad_or_too_many_parts_are_422_without_calling_mouser(mouser_calls, parts):
     response = get(parts)
     assert response.status_code == 422 and response.headers["cache-control"] == "no-store"
+    assert response.json() == {
+        "error": {
+            "code": "VALIDATION_ERROR",
+            "message": response.json()["error"]["message"],
+            "request_id": response.headers["X-Request-ID"],
+        }
+    }
     assert mouser_calls.requests == []
 
 
