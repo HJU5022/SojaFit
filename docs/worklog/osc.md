@@ -2,6 +2,13 @@
 
 > **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
 
+## 2026-11-08 FastAPI 공통 오류 응답 규약
+
+- 한 일: 최신 `main` 기준 `backend/main.py`에 서버 생성 UUID 요청 식별자와 `X-Request-ID` 헤더를 추가하고, HTTP·검증·처리되지 않은 예외를 `error.code/message/request_id` JSON 구조로 통일했다. 기존 `/api/prices`와 Mouser 호출 경로는 유지했다.
+- 바꾼 파일: `backend/main.py`, `backend/BACKEND.md`, `tests/api/test_health.py`, `tests/api/test_prices.py`, `tests/api/API.md`, `docs/specs/api-error-contract.md`, `docs/specs/SPECS.md`, `SOJAFIT.md`, 이 작업 기록.
+- 확인 방법: 테스트를 먼저 추가해 기존 코드에서 실패를 확인한 뒤 구현했다. 최종 `uv run pytest -q -p no:cacheprovider`는 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check`는 통과했다.
+- 미확인: `TEST_AUTH_DATABASE_URL`·`TEST_DATABASE_URL`이 없어 건너뛴 통합 시험 43건, 실제 배포 응답과 외부 로그 저장소의 요청 ID 연결. DB·외부 API·배포는 변경하지 않았다.
+
 ## 2026-11-05 GCP Google OAuth 로그 보호 실측
 
 - 한 일: GCP `sojafit` 프로젝트에 조회 전용 `Logs Viewer` 권한을 받은 뒤, Cloud Run 시험 태그에서 실제 Google 관리자 로그인·승인 대기·로그아웃을 수행했던 2026-11-05 20:20~22:05 KST 구간의 `sojafit-api` 로그를 읽기 전용으로 확인했다.
