@@ -355,6 +355,15 @@ def test_chat_model_is_cached_per_model_and_luna_gets_no_temperature(monkeypatch
     assert llm._chat_model(SONNET).temperature == 0  # Luna가 아닌 모델은 temperature 0
 
 
+def test_openrouter_thinking_off_disables_haiku_and_shortens_sonnet(monkeypatch):
+    """생각은 기본으로 끈다: Haiku는 reasoning 끔, Sonnet은 끌 수 없어(400) effort low, Luna에는 보내지 않는다."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    llm._chat_model.cache_clear()
+    assert llm._chat_model(HAIKU).extra_body == {"reasoning": {"enabled": False}}
+    assert llm._chat_model(SONNET).extra_body == {"reasoning": {"effort": "low"}}
+    assert llm._chat_model(LUNA).extra_body is None
+
+
 def test_node_model_follows_table_and_env_override_wins(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
     assert llm.node_model("supervisor") == SONNET and llm.node_model("grade") == LUNA

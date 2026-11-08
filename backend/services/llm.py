@@ -233,8 +233,13 @@ def _chat_model(model: str):
     # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
     # [왜] Luna에는 temperature를 보내지 않는다(3차 실측 계약). Haiku·Sonnet은 0. 출력 상한은 LangChain이 max_completion_tokens로 바꿔 보낸다
     temperature = None if model == langfuse_prompts.LUNA else 0
+    # [왜] 생각(추론)은 기본으로 끈다(11-09 정운 결정). OpenRouter · Supabase · Langfuse로 v3 50문항을 재니 정확도는 그대로이고
+    #      응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었다
+    # [주의] Sonnet 5.5는 생각을 끄면 OpenRouter가 400("Reasoning is mandatory")을 내서 끄지 않고 짧게(effort low) 한다. Luna 등 다른 모델에는 보내지 않는다
+    reasoning = {langfuse_prompts.HAIKU: {"enabled": False}, langfuse_prompts.SONNET: {"effort": "low"}}.get(model)
     return ChatOpenAI(model=model, base_url="https://openrouter.ai/api/v1",
-                      api_key=os.environ["OPENROUTER_API_KEY"], temperature=temperature, max_retries=0)
+                      api_key=os.environ["OPENROUTER_API_KEY"], temperature=temperature, max_retries=0,
+                      extra_body={"reasoning": reasoning} if reasoning else None)
 
 
 def _evaluation_client(timeout: float):
