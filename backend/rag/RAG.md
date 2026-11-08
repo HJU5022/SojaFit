@@ -21,6 +21,7 @@
 - `spec_lookup.py` — 부품 사양 표(`db/011`) 조회. 연결은 부르는 쪽이 넘긴다. `part_specs(conn, part, codes=None)`: 품번(대소문자 무시)의 모든 행을 값(SI)·단위·시험 조건·인용(문서 파일 이름·쪽·표·행·청크 순번)과 함께. `find_candidates(conn, conditions, category=None, package=None, limit=50, original_packages=None, original_category=None)`: 조건(`code`, `slot` min|typ|max(기본 max, CJ는 typ), `gte`·`lte`)마다 그 품번의 행 하나 이상이 채우면 통과, 모두 통과한 품번을 전부 줄 세운 뒤 `limit`개(원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 것(조건별 값/기준 · 기준/값 중 가장 큰 비율) → 품번 순). `package`는 패키지 이름이 같은 품번만(대소문자 · 하이픈 무시, SMA는 SMAF에 걸리지 않음). 행 거르기만 하고 판정은 `backend/judge/`
 - `card_read.py` — 카드(표 행 청크) → 값 · 원문 인용(LLM `card_read`) + 코드 확인(카드 번호 · 인용 · 숫자 · 단위 차원 · 품번). 사양 표 대신 그때그때 읽는다. 카드는 4장씩 나눠 동시에 읽고 합친다
 - `card_find.py` — 사양 표 없이 후보 찾기: `source_documents.category`로 모은 분류 문서의 개요 줄을 보고 문서를 고르고(LLM `card_pick`) 문서별 `card_read`를 동시에 불러 `spec_lookup.find_candidates`와 같은 인자 · 같은 반환 모양 · 같은 규칙으로 거르고 줄 세움. 양방향 · H 품번 값 붙이기. `DATABASE_URL`로 DB를 직접 읽음(MCP 서버를 거치지 않음)
+- `card_specs.py` — 판정 값도 카드에서 읽음: `specs(part, codes)`가 `spec_lookup.part_specs`(MCP `get_part_specs`)와 같은 모양으로 돌려줌(PACKAGE · AEC_Q101 행 포함), 사실 확인용 `doc_rows`(LLM 없음). `DATABASE_URL`로 DB를 직접 읽음
 - `units.py` — `to_si(값, 단위)`: 표 단위(mA·µA·nA·ns·pF·kV·mW·°C 등)를 SI 기본 단위(V, A, W, s, F, degC) 값으로. 모르는 단위·비율 단위(°C/W)는 None
 - `storage.py` — 벡터 열 형식 `RAG_VECTOR_TYPE=vector|halfvec` 계약(서버와 적재 도구가 함께 씀), 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`)
 - `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 여섯 모듈과 `__init__.py`(패키지 표시)가 있습니다
