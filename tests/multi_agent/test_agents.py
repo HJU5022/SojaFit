@@ -1,6 +1,6 @@
-"""서브에이전트(문서 에이전트)와 사실 · 거절 문구 · 판정 답 틀 시험.
+"""서브에이전트(RAG 에이전트)와 사실 · 거절 문구 · 판정 답 틀 시험.
 
-- 역할: 문서 에이전트가 지시서의 검색어로 찾고(역할 할 일은 검색 없이 넷리스트로), 근거 채점 + 답 쓰기를 LLM 한 번으로 하고,
+- 역할: RAG 에이전트가 지시서의 검색어로 찾고(역할 할 일은 검색 없이 넷리스트로), 근거 채점 + 답 쓰기를 LLM 한 번으로 하고,
   근거가 없으면 LLM이 준 다른 검색어로 한 번만 다시 찾고, 보여 준 적 없는 근거 인용을 코드로 막는지,
   다른 품번 줄을 LLM에 보이기 전에 거르는지, 검색 장애 · 0건을 보고하는지 본다. 사실 확인과 거절 문구 · 판정 답 틀도 확인한다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
@@ -68,7 +68,7 @@ def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason
     chat = llm(D.DocsAnswer(grade='none', next_query='SS14 Peak reverse voltage'), D.DocsAnswer(grade='none', next_query='again'))
     r = run(task(), chat, docs=[doc(3)], seen=seen)
     assert [q for q, _ in seen] == ['SS14 Repetitive peak reverse voltage VRRM', 'SS14 Peak reverse voltage']  # 검색은 2번까지
-    # [왜] 설계 v2: 문서 에이전트는 거절을 정하지 않고 다시 찾을 사유를 올린다(청크는 봤지만 근거가 아님 → all_rejected)
+    # [왜] 설계 v2: RAG 에이전트는 거절을 정하지 않고 다시 찾을 사유를 올린다(청크는 봤지만 근거가 아님 → all_rejected)
     assert r['status'] == 'fail' and r['reason'] == Reason.ALL_REJECTED.value and r['llm_calls'] == 2
 
 

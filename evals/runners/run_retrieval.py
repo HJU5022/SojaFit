@@ -9,7 +9,7 @@
 - 원시 결과: 두 번째 인자로 준 json 경로(관례: evals/results/retrieval/retrieval_<방식>_<날짜>.json). summary와 문항별 rows가 들어간다.
 - 필요한 것: DATABASE_URL(적재한 코퍼스), 임베딩 키(.env, method가 bm25면 쓰지 않음)
 - [주의] 질의 글: 문항에 question 키가 있으면 그것을, 없으면 input 전체를 쓴다. dataset_v1.jsonl에는
-  question이 없어 v1 베이스라인은 회로명·넷리스트 경로·조건이 붙은 input 전체로 검색한다. 11-01 실험
+  question이 없어 v1 기준선은 회로명·넷리스트 경로·조건이 붙은 input 전체로 검색한다. 11-01 실험
   (preregister.md #4~#8, evals/drafts/sets/draft_50.jsonl)은 question만 썼으므로 두 점수는 바로 비교할 수 없다.
   질의 필드를 바꾸려면 먼저 evals/guides/preregister.md에 등록한다.
 

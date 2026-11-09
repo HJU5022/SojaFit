@@ -1,17 +1,17 @@
-"""카드 찾기(`backend.rag.card_find`): 검색 문장, 문서 고르기(분류 · 개수 · 개요 줄로 코드가 먼저), 카드 거르기, find_candidates와 같은 거르기 · 순서.
+"""카드 찾기(`backend.rag.card_find`): 검색 문장, 문서 고르기(분류 · 개수 · 개요 줄로 코드가 먼저), 카드 거르기, 거르기 · 순서.
 
 - 역할: 검색 · 카드 적재 · 카드 읽기 · 문서 분류를 가짜로 넘겨 DB · LLM 없이 make_find의 find를 본다.
-  같은 사양 행에서 이상 · 이하 · 자리(slot) 결과가 spec_lookup.find_candidates(가짜 연결)와 같은지도 본다.
+  같은 사양 행에서 이상 · 이하 · 자리(slot) 거르기와 찾기 순위(패키지 → 분류 → 기준에 가까운 순, 가장 먼 조건의 비율)를 정한 값으로 본다.
 - 하지 않는 일: 실제 검색 · DB 적재 SQL(load_cards · doc_meta)과 카드 읽기 LLM. 그것은 실제 실행에서 본다.
-- 출처: spec_lookup.find_candidates 계약(SPEC.md 8.7, ADR 0013)
+- 출처: 찾기 계약(SPEC.md 8.7, ADR 0013 → 0016)
 """
 import pytest
 
-from backend.rag import card_find, spec_lookup
+from backend.rag import card_find
 
 
 def row(part, code, slot, value, category=None, unit='V'):
-    """card_read가 돌려주는 사양 한 줄(spec_lookup._row 모양)."""
+    """card_read가 돌려주는 사양 한 줄(분류 · 코드 · 최소/대표/최대 · 단위 · 원문 · 시험 조건 · 인용)."""
     r = {'part': part, 'category': category, 'code': code, 'min': None, 'typ': None, 'max': None, 'text': None, 'unit': unit,
          'source_value_text': f'{value} {unit}', 'test_condition': None,
          'citation': {'document': 'x.pdf', 'page': 2, 'table': 'T', 'row': part, 'chunk_index': None}}
@@ -115,48 +115,37 @@ ZENER = [row('BZT52C3V6', 'VZ', 'min', 3.42, 'zener-diode'), row('BZT52C3V6', 'V
          row('D3', 'CJ', 'typ', 3e-11, 'zener-diode', 'F'), row('D4', 'VZ', 'max', 3.42, 'zener-diode')]
 
 
-class SqlConn:
-    """find_candidates의 조건 질의를 SQL 뜻으로 흉내 낸다: 조건마다 (코드 같음 AND 그 칸 >= gte AND 그 칸 <= lte), NULL 비교는 거짓."""
-
-    def __init__(self, rows, conditions):
-        self.rows, self.conditions = rows, conditions
-
-    def execute(self, sql, params):
-        if sql.lstrip().startswith('SELECT part_number'):  # 패키지 질의: 이 시험은 패키지 없음
-            return []
-        out = []
-        for r in self.rows:
-            hits = []
-            for c in self.conditions:
-                v = r[c.get('slot') or spec_lookup.DEFAULT_SLOT.get(c['code'], 'max')]
-                hits.append(r['code'] == c['code'] and v is not None and ('gte' not in c or v >= c['gte']) and ('lte' not in c or v <= c['lte']))
-            out.append((r['part'], r['category'], r['code'], r['min'], r['typ'], r['max'], None, r['unit'], r['source_value_text'],
-                        None, 'https://x.test/a.pdf', 2, 'T', r['part'], 1, *hits))
-        return out
-
-
-@pytest.mark.parametrize('conds, expected', [
-    # 제너 VZ 창: 최소 ≥ 3.42 그리고 최대 ≤ 3.8(경계 포함). 최대 행이 없는 C3V6X는 빠진다
-    ([{'code': 'VZ', 'slot': 'min', 'gte': 3.42}, {'code': 'VZ', 'slot': 'max', 'lte': 3.8}], ['BZT52C3V6']),
+@pytest.mark.parametrize('conds, expected, matches', [
+    # 제너 VZ 창: 최소 ≥ 3.42 그리고 최대 ≤ 3.8(경계 포함). 최대 행이 없는 C3V6X는 빠진다. 조건마다 다른 행(최소 행 · 최대 행)이 채운다
+    ([{'code': 'VZ', 'slot': 'min', 'gte': 3.42}, {'code': 'VZ', 'slot': 'max', 'lte': 3.8}], ['BZT52C3V6'],
+     [[('VZ', 3.42, None, None), ('VZ', None, None, 3.78)]]),
     # slot을 안 주면 최대 칸(D4 3.42 경계 포함, 최소 칸만 있는 C3V6X는 안 봄), 기준에 가까운 순
-    ([{'code': 'VZ', 'gte': 3.42}], ['D4', 'BZT52C3V3', 'BZT52C3V6', 'BZT52C3V9']),
+    ([{'code': 'VZ', 'gte': 3.42}], ['D4', 'BZT52C3V3', 'BZT52C3V6', 'BZT52C3V9'],
+     [[('VZ', None, None, 3.42)], [('VZ', None, None, 3.5)], [('VZ', None, None, 3.78)], [('VZ', None, None, 4.1)]]),
     # CJ의 기본 칸은 대표. 최대 칸만 있는 D2는 빠진다
-    ([{'code': 'CJ', 'lte': 2e-11}], ['D1']),
-    ([{'code': 'CJ', 'slot': 'max', 'lte': 2e-11}], ['D2']),
+    ([{'code': 'CJ', 'lte': 2e-11}], ['D1'], [[('CJ', None, 1.5e-11, None)]]),
+    ([{'code': 'CJ', 'slot': 'max', 'lte': 2e-11}], ['D2'], [[('CJ', None, None, 1e-11)]]),
     # 이상 · 이하를 둘 다 주면 둘 다 채워야 하고, 순서는 둘 중 먼 비율(3.6/3.42 > 3.6/3.5)
-    ([{'code': 'VZ', 'slot': 'min', 'gte': 3.4, 'lte': 3.6}], ['BZT52C3V6X', 'BZT52C3V6']),
+    ([{'code': 'VZ', 'slot': 'min', 'gte': 3.4, 'lte': 3.6}], ['BZT52C3V6X', 'BZT52C3V6'],
+     [[('VZ', 3.5, None, None)], [('VZ', 3.42, None, None)]]),
 ])
-def test_filter_and_order_same_as_find_candidates(conds, expected):
-    """같은 사양 행이면 카드 찾기와 find_candidates가 같은 품번 · 같은 순서 · 같은 채운 행을 낸다."""
+def test_filter_and_order_by_slot_and_bounds(conds, expected, matches):
+    """이상 · 이하 · 자리(slot)로 행을 거르고(그 칸이 비면 거짓, 경계 포함), 채운 행과 분류를 붙여 기준에 가까운 순으로 낸다."""
     parts = sorted({r['part'] for r in ZENER})
     cards = [card(1, 'z.pdf', 'PARAMETER: Zener voltage | SYMBOL: VZ'), card(2, 'z.pdf', 'PARAMETER: Junction capacitance | SYMBOL: CJ')]
     w = World({'z': doc('z', parts, cards=cards)}, ZENER, meta={'z': {'category': 'zener-diode'}})
-    mine = w.find()(conds)
-    theirs = spec_lookup.find_candidates(SqlConn(ZENER, conds), conds)
-    assert [p['part'] for p in mine] == [p['part'] for p in theirs] == expected
-    values = lambda found: [[(m['code'], m['min'], m['typ'], m['max']) for m in p['matches']] for p in found]  # noqa: E731
-    assert values(mine) == values(theirs)
-    assert [p['category'] for p in mine] == [p['category'] for p in theirs]
+    found = w.find()(conds)
+    assert [p['part'] for p in found] == expected
+    assert [[(m['code'], m['min'], m['typ'], m['max']) for m in p['matches']] for p in found] == matches
+    assert {p['category'] for p in found} == {'zener-diode'}
+
+
+def test_rank_uses_the_farthest_condition():
+    """조건이 여럿이면 조건마다 '값/기준'(이하면 '기준/값') 중 가장 큰 비율로 줄 세운다. 한 값만 크게 넘는 부품이 뒤로 간다."""
+    rows = [row('A1', 'VRRM', 'max', 21.0), row('A1', 'IF_AV', 'max', 0.1, unit='A'),   # 최대 비율 2/0.1 = 20
+            row('B1', 'VRRM', 'max', 60.0), row('B1', 'IF_AV', 'max', 1.0, unit='A')]   # 최대 비율 60/20 = 3
+    found = World({'a': doc('a', ['A1', 'B1'])}, rows).find()([{'code': 'VRRM', 'gte': 20}, {'code': 'IF_AV', 'lte': 2.0}])
+    assert [p['part'] for p in found] == ['B1', 'A1']
 
 
 def test_package_filter_needs_the_same_package_name():
@@ -173,7 +162,7 @@ def test_package_filter_needs_the_same_package_name():
 
 
 def test_orders_by_original_package_then_category_then_ratio():
-    """find_candidates 순위 시험(test_find_ranks_all_matches_before_the_limit)과 같은 부품 · 같은 순서."""
+    """조건을 채운 품번 전부를 원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 순 → 품번 순으로 줄 세운 뒤 limit에서 자른다(SPEC 8.3 찾기 순위)."""
     docs = {'a': doc('a', ['SS14'], texts=['Case: SMA']), 'b': doc('b', ['AAA1'], texts=['Case: SMA']),
             'c': doc('c', ['1N5817', '1N5819'], texts=['Case: DO-41']), 'd': doc('d', ['1N4001'], texts=['Case: DO-41']),
             'e': doc('e', ['ZZ1'], texts=['Case: SMA'])}

@@ -88,7 +88,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                                     for r in state.get('reports') or []]
                     if it.get('parts'):
                         from evals.runners.score_compound import score_parts
-                        row['parts_result'] = score_parts(it, state)  # [왜] 여러 개를 묻는 질문은 부분마다 채점한다(B-지시서 4-5.3)
+                        row['parts_result'] = score_parts(it, state)  # [왜] 여러 개를 묻는 질문은 부분마다 채점한다(RUNNERS.md `score_compound.py`)
                 except Exception as error:  # [왜] 실행 오류도 "이상한 데이터"다. 멈추고 오류를 남긴다
                     import traceback  # [왜] 멈춘 오류의 자리를 다시 재현하지 않고 보려고 마지막 몇 줄을 남긴다
                     row = {'id': it['id'], 'kind': it['kind'], 'error': f'{type(error).__name__}: {str(error)[:300]}',

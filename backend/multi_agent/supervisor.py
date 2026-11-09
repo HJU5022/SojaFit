@@ -1,11 +1,11 @@
-"""Supervisor: ① 계획(LLM 1번) · 배분(Send)과 ② 모으기(코드) · 종합(할 일 2개 이상일 때만 LLM 1번), 그리고 마무리 답 검사(코드).
+"""Supervisor(계획, LLM 1번) · 배분(Send)과 답 모으기(코드) · 종합(할 일 2개 이상일 때만 LLM 1번), 그리고 마무리 답 검사(코드).
 
 - 역할:
-  - ① `plan_node`: 질문 · 대상 회로 · 확인된 사실을 글로 만들어 LLM에 주고 계획서(`Plan`: 범위 판정 · 질문 종류 · 할 일 최대 3개와
+  - 계획 `plan_node`: 질문 · 대상 회로 · 확인된 사실을 글로 만들어 LLM에 주고 계획서(`Plan`: 범위 판정 · 질문 종류 · 할 일 최대 3개와
     할 일마다 지시서)를 받는다. 형식이 틀리면 `llm.chat`이 다시 부르고, 끝내 틀리면 거절한다. `after_plan`이 할 일을 서브에이전트에 Send로 동시에 보낸다.
-  - ② `collect_node`: 돌아온 보고의 상태 · 사유만 보고 상한을 검사해 다음 길(답 정리 · 종합 · 거절 · 재계획)을 정한다.
+  - 답 모으기 `collect_node`: 돌아온 보고의 상태 · 사유만 보고 상한을 검사해 다음 길(답 정리 · 종합 · 거절 · 재계획)을 정한다.
     재계획(설계 v2, 11-07): 이번 회차에 다시 해 볼 만한 실패(사유가 no_result · all_rejected · partial이거나 없음)가 있거나
-    계획이 '앞 결과가 필요하다(replan)'고 표시했으면, 아직 재계획 전일 때만 Supervisor ①로 되돌린다. 무엇을 할지는 ①(LLM)이 정한다.
+    계획이 '앞 결과가 필요하다(replan)'고 표시했으면, 아직 재계획 전일 때만 Supervisor(계획)로 되돌린다. 무엇을 할지는 계획(LLM)이 정한다.
     `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 할 일 2개 이상일 때만 부분 답을 한 답으로 합친다.
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
@@ -72,7 +72,7 @@ def render_plan(state: dict, judge_enabled: bool) -> str:
 
 
 def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
-    """그래프 노드 Supervisor ①: 계획서를 받는다(재계획이면 앞 회차 보고도 읽는다). 형식이 끝내 틀리면 거절로 끝낸다."""
+    """그래프 노드 `Supervisor`(계획): 계획서를 받는다(재계획이면 앞 회차 보고도 읽는다). 형식이 끝내 틀리면 거절로 끝낸다."""
     replan = bool(state.get('reports'))
     old = state.get('counters') or {}
     c = {'hops': old.get('hops', 0) + 1, 'agents': old.get('agents', 0), 'searches': old.get('searches', 0),
@@ -80,7 +80,7 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
     try:
         plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled), Plan)
     except ValueError:
-        # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(B-지시서 4-4)
+        # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(MULTI_AGENT.md "구조 결정")
         if replan:  # 재계획만 틀렸으면 이미 받은 보고로 답한다
             return {'plan': {**(state.get('plan') or {}), 'next': 'answer'}, 'counters': c, 'path': ['계획']}
         return {'plan': {}, 'question_type': '', 'refusal_reason': Reason.LIMIT_REACHED.value, 'counters': c, 'path': ['계획']}
@@ -95,7 +95,7 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
         find = Task(id=1, agent='judge', kind='candidate_find', goal='Find candidates that meet the conditions in the question.')
         plan = plan.model_copy(update={'tasks': [find, *(t.model_copy(update={'id': i}) for i, t in enumerate(roles, 2))], 'replan': False})
     if not judge_enabled:
-        # [왜] 판정 에이전트가 없으면 판정 할 일은 문서 할 일로 돌린다(거절이 아니라 근거로 답하는 길, 예전 Supervisor와 같음)
+        # [왜] 대체 부품 에이전트가 없으면 판정 할 일은 문서 할 일로 돌린다(거절이 아니라 근거로 답하는 길, 예전 Supervisor와 같음)
         plan.tasks = [t.model_copy(update={'agent': 'docs', 'query': t.query or t.goal}) if t.agent == 'judge' else t for t in plan.tasks]
     out = {'plan': plan.model_dump(mode='json'), 'counters': c, 'path': ['계획'],
            'round': (state.get('round') or 0) + (1 if plan.next == 'tasks' else 0)}
@@ -136,7 +136,7 @@ def final_reports(state: dict) -> list[TaskReport]:
 
 
 def collect_node(state: dict) -> dict:
-    """그래프 노드 Supervisor ②의 모으기(코드): 상한을 보고, 보고 상태 · 사유로 재계획 · 답 정리 · 종합 · 거절을 정한다."""
+    """그래프 노드 `답 모으기`(코드): 상한을 보고, 보고 상태 · 사유로 재계획 · 답 정리 · 종합 · 거절을 정한다."""
     reports = [TaskReport.model_validate(r) for r in state.get('reports') or []]
     plan, rnd = state.get('plan') or {}, state.get('round') or 1
     c = {**(state.get('counters') or {}), 'agents': len(reports), 'searches': sum(len(r.searches) for r in reports)}
@@ -150,10 +150,10 @@ def collect_node(state: dict) -> dict:
         final = [r for r in reports if r.round < rnd and r.status == 'ok' and plan.get('keep_earlier')] + current
     else:
         final = reports
-    # [왜] 설계 v2(11-07, MULTI_AGENT.md 실패 고리): 다시 해 볼 만한 실패 · 앞 결과가 필요한 계획이면 Supervisor ①로 한 번 되돌린다.
-    #      확정 거절 사유(코퍼스 밖 · 목록 대조 · 도구 장애 · 상한)는 다시 해도 같아 되돌리지 않는다. 무엇을 할지는 ①이 정한다
-    # [주의] 문서 에이전트의 '일부만 답함'(partial, 사유 없음)은 되돌리지 않는다. 답은 있고, 매번 Sonnet을 한 번 더 부르면 시간이 는다
-    # [주의] 문서 에이전트가 검색어를 바꿔 두 번 찾고도 근거가 아니라고 본 것(all_rejected)은 되돌리지 않는다. 그 데이터시트에 없는 성질을
+    # [왜] 설계 v2(11-07, MULTI_AGENT.md 실패 고리): 다시 해 볼 만한 실패 · 앞 결과가 필요한 계획이면 Supervisor(계획)로 한 번 되돌린다.
+    #      확정 거절 사유(코퍼스 밖 · 목록 대조 · 도구 장애 · 상한)는 다시 해도 같아 되돌리지 않는다. 무엇을 할지는 계획(LLM)이 정한다
+    # [주의] RAG 에이전트의 '일부만 답함'(partial, 사유 없음)은 되돌리지 않는다. 답은 있고, 매번 Supervisor를 한 번 더 부르면 시간이 는다
+    # [주의] RAG 에이전트가 검색어를 바꿔 두 번 찾고도 근거가 아니라고 본 것(all_rejected)은 되돌리지 않는다. 그 데이터시트에 없는 성질을
     #      다시 찾느라 Supervisor · 문서를 한 번 더 불러 13초가 걸렸다(11-07 판정 dev irr-11 장기 안정성)
     tried = lambda r: r.reason == Reason.ALL_REJECTED and len(r.searches) >= MAX_SEARCHES
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
@@ -229,7 +229,7 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
 
 
 def synth_node(state: dict, *, chat) -> dict:
-    """그래프 노드 Supervisor ②의 종합(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다."""
+    """그래프 노드 `종합`(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다."""
     reports = final_reports(state)
     c = {**state['counters'], 'hops': state['counters']['hops'] + 1}
     if c['hops'] > MAX_SUPERVISOR_CALLS:

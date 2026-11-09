@@ -1,15 +1,15 @@
-"""문서 에이전트: 지시서의 검색어로 찾고, 근거 채점과 답 쓰기를 LLM 한 번으로 하고, 인용을 코드로 검사해 보고한다.
+"""RAG 에이전트: 지시서의 검색어로 찾고, 근거 채점과 답 쓰기를 LLM 한 번으로 하고, 인용을 코드로 검사해 보고한다.
 
 - 역할: 검색(지시서의 첫 검색어 · 질문의 품번 필터, BM25 + voyage-4-large → rerank-3 상위 5) → 다른 품번 줄 · 다른 판 거르기(코드) →
   근거 채점 + 답 쓰기(Haiku 1번: 질문 · 지시서 · 대상 회로 · 청크를 함께 받는다) → 근거가 없거나 일부만 답했으면 LLM이 준 다른 검색어로 1번만 다시(일부 답은 앞 근거와 함께, #49) →
   인용 검사(코드: 보여 준 청크 번호와 넷리스트만) → 보고(ok · partial · fail + 200자 요약 + 부분 답 + 근거).
   지시서에 품번(parts)이 있으면 그 품번 문서 안에서만 찾는다(재계획이 넣는다, 설계 v2). 품번 없이 정격(specs)만 있으면
-  사양 표 도구(find_parts_by_specs)로 그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4).
+  찾기 도구(find, 카드 찾기)로 그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4).
   근거를 끝내 못 찾으면 거절을 정하지 않고 다시 찾을 사유(no_result · all_rejected)로 보고한다.
   역할 할 일처럼 검색어가 없으면 검색 없이 넷리스트만으로 답한다.
-- 하지 않는 일: 할 일 정하기(Supervisor ①), 숫자 비교 · 대체 판정(판정 에이전트와 `backend/judge/`), 여러 할 일 합치기(Supervisor ②),
+- 하지 않는 일: 할 일 정하기(Supervisor), 숫자 비교 · 대체 판정(대체 부품 에이전트와 `backend/judge/`), 여러 할 일 합치기(종합),
   LLM 직접 호출(`chat`을 받아 쓴다. 실제 연결은 `llm.node_chat`).
-- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"의 문서 에이전트(예전 채점 Luna · 생성 Haiku를 한 호출로 합침, 채점은 질문 맥락을
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"의 RAG 에이전트(예전 채점 Luna · 생성 Haiku를 한 호출로 합침, 채점은 질문 맥락을
   가진 쪽이 한다), backend/graph/nodes.py(검색 · 다른 품번 줄 거르기 · 인용 함수를 그대로 쓴다)
 """
 import re
@@ -143,7 +143,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             # [왜] 그 정격의 품번이 표에 없다. 거절을 정하지 않고 다시 찾을 사유로 올린다(재계획이 조건을 고쳐 볼 수 있다)
             return report('fail', 'no part in the spec table has the described ratings', reason=Reason.NO_RESULT)
         looked_up = f"; parts with the described ratings: {', '.join(filter_parts)}"
-    for _ in range(MAX_SEARCHES):  # [왜] 검색은 할 일마다 2번까지(AGENTS 6, B-지시서 4-4)
+    for _ in range(MAX_SEARCHES):  # [왜] 검색은 할 일마다 2번까지(AGENTS 6, MULTI_AGENT.md "구조 결정"의 상한)
         docs = []
         if query:
             find = (lambda q, parts=None: retriever(q, parts=None)) if relax else retriever

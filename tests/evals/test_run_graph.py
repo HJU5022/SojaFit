@@ -184,7 +184,7 @@ def test_multi_not_found_matches_single_meaning():
     assert nf("revision_missing") == 1.0 and nf("part_missing") == 1.0 and nf("not_found") == 1.0
     assert nf("out_of_scope") == 0.0  # 단일도 범위 밖 거절은 not_found가 아니다
     assert nf("", "안녕하세요!") == 0.0  # 일상 대화 답
-    assert nf("", "문서로 확인 안 됨") == 1.0  # 작성 에이전트가 낸 '문서로 확인 안 됨' 답
+    assert nf("", "문서로 확인 안 됨") == 1.0  # 답 쓰기가 낸 '문서로 확인 안 됨' 답
 
 
 def test_single_state_has_no_multi_scores():
@@ -236,18 +236,30 @@ class FakeMcp:
         self.checked.append((parts, revisions))
         return {"parts": {p: False for p in parts}, "revisions": {r: False for r in revisions}}
 
-    def part_specs(self, part, codes=None):
-        return []
 
-    def find_parts(self, conditions, category=None, package=None, limit=50):
-        return []
+
+def fake_specs(part, codes=None):
+    """카드 판정 값 가짜(DB · LLM 없음)."""
+    return []
+
+
+fake_specs.doc_rows = lambda part, codes=None: []  # 사실 확인용 문서 행(카드 도구의 속성)
+
+
+def fake_find(conditions, category=None, package=None, limit=50, original_packages=None, original_category=None):
+    """카드 찾기 가짜(DB · LLM 없음)."""
+    return []
 
 
 def fake_mcp(monkeypatch):
+    """MCP 서버(사실 확인)와 카드 도구(찾기 · 판정 값)를 가짜로 바꾼다."""
     from backend.graph import mcp_retriever
+    from backend.rag import card_find, card_specs
     monkeypatch.setattr(FakeMcp, "events", [])
     monkeypatch.setattr(FakeMcp, "checked", [])
     monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
+    monkeypatch.setattr(card_specs, "default_specs", lambda: fake_specs)
+    monkeypatch.setattr(card_find, "default_find", lambda: fake_find)
     return FakeMcp
 
 
@@ -262,7 +274,7 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
 
 
 def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
-    """단일도 멀티처럼 MCP 서버를 열어 사실 확인(check_corpus) · 사양 표 도구로 쓰고 판정 길을 잇는다(D4 v2, 11-06)."""
+    """단일도 멀티처럼 MCP 서버를 열어 사실 확인(check_corpus)에 쓰고, 카드 도구로 판정 길을 잇는다(D4 v2, 11-06)."""
     from contextlib import ExitStack
     from backend.graph import nodes
     from evals.runners.run_graph import make_app
@@ -276,6 +288,19 @@ def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
     assert mcp.checked == [(["1N4001"], [])]  # 사실 확인이 MCP check_corpus로 간다
     assert state["path"][-1] == "거절" and state["refusal"]["code"] == "part_missing"
     assert mcp.events == ["open", "close"]
+
+
+def test_make_app_uses_card_tools_for_find_and_specs(monkeypatch):
+    """찾기 · 판정 값은 서비스와 같은 카드 도구다(사양 표는 11-09에 버림, ADR 0016). MCP는 사실 확인에만 쓴다."""
+    from contextlib import ExitStack
+    from backend.graph import build
+    from evals.runners.run_graph import make_app
+    fake_mcp(monkeypatch)
+    seen = {}
+    monkeypatch.setattr(build, "build_graph", lambda **tools: seen.update(tools))
+    with ExitStack() as stack:
+        make_app(False, stack)
+    assert seen["specs"] is fake_specs and seen["find"] is fake_find
 
 
 

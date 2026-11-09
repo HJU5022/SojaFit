@@ -1,6 +1,6 @@
-"""멀티 에이전트의 공용 메모장(MultiState)과, 판정 에이전트 하위 그래프의 메모장(JudgeState).
+"""멀티 에이전트의 공용 메모장(MultiState)과, 대체 부품 에이전트 하위 그래프의 메모장(JudgeState).
 
-- 역할: 질문 하나가 Supervisor ① 계획 → 서브에이전트(동시 실행) → Supervisor ② 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
+- 역할: 질문 하나가 Supervisor(계획) → 서브에이전트(동시 실행) → 답 모으기 · 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
   단일 그래프 `AgentState`와 칸이 달라서(계획서, 보고서 목록, 횟수, 사실, 거절 기록) 따로 둔다.
 - 하지 않는 일: 노드 동작, 노드 연결(`build.py`), 사용자별 장기 기억.
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/state.py(칸 이름을 맞춘 부분)
@@ -32,7 +32,7 @@ class MultiState(TypedDict, total=False):
     question: str
     target_part: dict
 
-    # ── 사실 · Supervisor ① 계획 ──
+    # ── 사실 · Supervisor(계획) ──
     facts: dict          # 코드가 목록에서 확인한 사실(품번 · 개정판이 코퍼스에 있나). `supervisor.Facts`
     plan: dict           # 계획서 `contracts.Plan`(할 일마다 지시서)
     question_type: str   # 계획이 정한 질문 종류
@@ -40,7 +40,7 @@ class MultiState(TypedDict, total=False):
     round: int           # 지금 계획 회차(첫 계획 1, 재계획 뒤 2). 보고서의 round와 맞춰 이번 회차 보고를 가린다
     reports: Annotated[list, add_or_reset]  # 서브에이전트 보고서 `contracts.TaskReport` 목록
 
-    # ── Supervisor ② 모으기 · 마무리 ──
+    # ── 답 모으기 · 마무리 ──
     outcome: str         # 모으기가 정한 다음 길: single · synth · refuse · replan
     final_reports: list  # 답에 쓰는 보고(재계획 뒤에는 이번 회차 + 계획이 남기라 한 앞 회차 보고). 비면 reports 전체
     synth_text: str      # 종합 LLM이 쓴 글(판정 답 틀을 붙이기 전). 답 검사가 이 글의 숫자만 본다
@@ -59,7 +59,7 @@ class MultiState(TypedDict, total=False):
 
 
 class JudgeState(TypedDict, total=False):
-    """판정 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
+    """대체 부품 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
     task: dict
     approved_memories: list[dict]  # 부모가 소유권을 확인한 사례만 Send로 전달한다
     question: str

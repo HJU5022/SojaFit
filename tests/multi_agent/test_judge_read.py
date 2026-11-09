@@ -126,7 +126,7 @@ def test_requirement_inside_the_corpus_is_judged(monkeypatch, extra, facts):
 
 @pytest.mark.parametrize('extra, facts, code', GATE)
 def test_multi_graph_ends_the_gate_report_as_a_refusal(extra, facts, code):
-    """[왜] 판정 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
+    """[왜] 대체 부품 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     from backend.multi_agent import build as B
