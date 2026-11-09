@@ -6,12 +6,14 @@ import type { ApprovalDto } from '../api/quotes'
 import { approveMessage } from '../api/quotes'
 import { errorMessage } from '../api/client'
 import QuotePanel from './QuotePanel'
+import { candidatesOf } from './circuitContext'
 
 const LABELS: Partial<Record<CandidateDto['verdict'], string>> = { IDENTICAL: '동일품', SPEC_EQUIVALENT: '사양 동등', ROLE_SUFFICIENT: '역할상 충분' }
 
 export default function ApprovalPanel({ runId, judgement }: { runId?: string; judgement?: JudgementDto | Record<string, never> }) {
   const client = useQueryClient()
-  const candidates = judgement && 'kind' in judgement ? [...judgement.results, ...judgement.shown].filter(item => item.verdict in LABELS) : []
+  // 판정 표에 보인 후보 중 승인할 수 있는 판정(동일품 · 사양 동등 · 역할상 충분)만
+  const candidates = candidatesOf(judgement).filter(item => item.verdict in LABELS)
   const [candidate, setCandidate] = useState('')
   const [confirm, setConfirm] = useState(false)
   const [approval, setApproval] = useState<ApprovalDto | null>(null)

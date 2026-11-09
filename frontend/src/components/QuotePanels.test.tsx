@@ -40,6 +40,21 @@ it('names the candidate and verdict before approval and sends no price fields to
   expect(calls.some(call => call.path.startsWith('/api/prices?parts=SS34'))).toBe(true)
 })
 
+it('offers each candidate once and only the candidates the judgement table shows', () => {
+  const ss34 = { part: 'SS34', verdict: 'ROLE_SUFFICIENT' as const }
+  const sk34 = { part: 'SK34', verdict: 'SPEC_EQUIVALENT' as const }
+  const hidden = { part: 'SS36', verdict: 'IDENTICAL' as const }
+  const client = new QueryClient()
+  // 판정 질문은 백엔드가 shown = results로 보낸다(합치면 두 번 나왔다)
+  const { rerender } = render(<QueryClientProvider client={client}><ApprovalPanel runId="run-1"
+    judgement={{ ...judgement, results: [ss34], shown: [ss34] }} /></QueryClientProvider>)
+  expect(screen.getAllByRole('option', { name: 'SS34 · 역할상 충분' })).toHaveLength(1)
+  // 찾기의 results는 줄 세우기 전 전체 후보다. 표에 없는 후보(SS36)는 승인 목록에도 없다
+  rerender(<QueryClientProvider client={client}><ApprovalPanel runId="run-1"
+    judgement={{ ...judgement, kind: 'find', results: [ss34, sk34, hidden], shown: [ss34, sk34], unverified: [] }} /></QueryClientProvider>)
+  expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['후보를 선택하세요', 'SS34 · 역할상 충분', 'SK34 · 사양 동등'])
+})
+
 it('requires confirmation before deleting an approved case', async () => {
   const fetcher = vi.fn((path: string, init: RequestInit = {}) => {
     if (path === '/api/approved-cases' && init.method === 'DELETE') throw new Error('wrong path')

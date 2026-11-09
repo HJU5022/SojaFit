@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -154,6 +155,9 @@ def test_failed_frame_carries_public_error_code_and_logs_unexpected_exception(we
     with caplog.at_level('ERROR', logger='backend.api.conversations'), web(analysis, repo) as client:
         response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
     assert 'event: failed' in response.text and '"code": "INTERNAL_ERROR"' in response.text
+    # [왜] 시스템 오류를 '거절'(답할 수 없는 질문)과 같은 단계 이름으로 보이지 않는다
+    failed = json.loads(response.text.split('event: failed\ndata: ', 1)[1].split('\n', 1)[0])
+    assert failed['status'] == 'failed' and failed['stage'] == '오류'
     assert 'private exception marker' not in response.text
     request_id = response.text.split('"request_id": "', 1)[1].split('"', 1)[0]
     logged = [r for r in caplog.records if request_id in r.getMessage()]

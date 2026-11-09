@@ -97,7 +97,8 @@ def get_run(run_id: UUID, request: Request, user_id: int = Depends(auth.current_
             'result': result_dto(run['safe_result'], request_id=request.state.request_id, status=run['status']).model_dump()}
 
 
-STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '거절'}
+# [왜] failed는 시스템 오류다. 거절(refused, 답할 수 없는 질문)은 답이라 finished(완료)로 끝난다. 둘을 같은 말로 쓰지 않는다
+STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '오류'}
 
 
 def frame(kind, payload):

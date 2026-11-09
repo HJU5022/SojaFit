@@ -91,7 +91,7 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   await screen.findByText('D1 / 1N4001')
   fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1을 SS34로 바꿔도 되나요?' } })
   fireEvent.change(screen.getByLabelText('사용 조건 (선택)'), { target: { value: '입력 최대 12 V' } })
-  fireEvent.click(screen.getByRole('button', { name: 'D5에 질문하기' }))
+  fireEvent.click(screen.getByRole('button', { name: '질문하기' }))
   expect(await screen.findByText('역극성 보호(직렬)')).toBeInTheDocument()
   expect(within(screen.getByRole('complementary', { name: '참고(내 설정)' })).getByText('이 사용자는 SMD 실장을 선호한다.')).toBeInTheDocument()
   expect(within(screen.getByLabelText('개념도 사용 조건')).getByText('입력 최대 12 V')).toBeInTheDocument()

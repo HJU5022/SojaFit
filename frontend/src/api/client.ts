@@ -1,5 +1,3 @@
-import { dummyApiFetch } from './dummy'
-
 export type ApiError = { code: string; message: string; requestId: string }
 
 export function dummyFlowEnabled(env: { DEV: boolean; MODE: string }) {
@@ -7,7 +5,10 @@ export function dummyFlowEnabled(env: { DEV: boolean; MODE: string }) {
 }
 
 export function apiRequest(path: string, init: RequestInit = {}) {
-  return dummyFlowEnabled(import.meta.env) ? dummyApiFetch(path, init) : fetch(path, init)
+  // [왜] dummyFlowEnabled와 같은 조건을 import.meta.env 칸으로 바로 쓴다. 빌드가 이 칸을 상수(false)로 바꿔야
+  //      운영 번들에서 dummy.ts를 통째로 뺀다. 함수에 env 객체를 넘기면 빌드가 조건을 못 접어 목업이 번들에 남았다
+  if (import.meta.env.DEV && import.meta.env.MODE === 'dummy') return import('./dummy').then(dummy => dummy.dummyApiFetch(path, init))
+  return fetch(path, init)
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {

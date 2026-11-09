@@ -1,12 +1,19 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { apiFetch, dummyFlowEnabled } from './client'
+import { apiFetch, apiRequest, dummyFlowEnabled } from './client'
 import { fetchPrices } from './prices'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 it('enables the full dummy flow only for the explicit Vite development mode', () => {
   expect(dummyFlowEnabled({ DEV: true, MODE: 'dummy' })).toBe(true)
   expect(dummyFlowEnabled({ DEV: false, MODE: 'dummy' })).toBe(false)
   expect(dummyFlowEnabled({ DEV: true, MODE: 'development' })).toBe(false)
+})
+it('loads the dummy API on demand only in the dummy development mode', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json('real')))
+  expect(await (await apiRequest('/api/judge/roles')).json()).toBe('real')
+  vi.stubEnv('MODE', 'dummy')
+  expect(await (await apiRequest('/api/judge/roles')).json()).toEqual([{ code: 'R01', name: '역극성 보호(직렬)' }])
+  expect(fetch).toHaveBeenCalledTimes(1)
 })
 it('preserves common error code, message and request id', async () => {
   vi.stubGlobal('fetch', async () => Response.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', request_id: 'req-1' } }, { status: 401 }))

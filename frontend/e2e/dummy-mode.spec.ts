@@ -9,7 +9,7 @@ test('completes the interactive development dummy flow without route interceptio
   await expect(page.getByText('D1 / 1N4001')).toBeVisible()
 
   await page.getByLabel('질문').fill('D1을 SS34로 바꿔도 되나요?')
-  await page.getByRole('button', { name: 'D5에 질문하기' }).click()
+  await page.getByRole('button', { name: '질문하기' }).click()
   await expect(page.getByRole('cell', { name: '역할상 충분' })).toBeVisible()
   await expect(page.getByText('SS34.pdf')).toBeVisible()
 
