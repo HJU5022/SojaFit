@@ -1,10 +1,10 @@
-"""채점기 기준선 계산(사전 등록 #33): 지금 채점이 정답 쪽을 얼마나 유지하는지 잰다.
+"""채점기 기준선 계산(사전 등록 #36): 지금 채점이 정답 쪽을 얼마나 유지하는지 잰다.
 
 - 하는 일: 문항마다 "검색 청크가 정답 쪽을 다 가졌나(검색 판정)"와 "채점이 통과시킨 청크가 다 가졌나(통과 판정)"를
   충분 · 부분 · 부족으로 계산하고, 정답 쪽 유지율 · 판정 표 · 비관련 통과 0개 비율 · 쪽 재현율을 낸다.
   `collect-r1`은 R1 dev 46문항을 서비스 검색 + 지금 채점 노드로 1번씩 돌려 스냅샷을 만든다(사전 등록 #34).
 - 하지 않는 일: `run`은 LLM · API · DB를 부르지 않는다(`collect-r1`만 부른다). 스냅샷에는 청크 번호 · 파일 · 쪽만 있고 본문은 저장하지 않는다.
-- 출처: evals/guides/preregister.md #33 · #34, evals/inputs/qrels_v2_pages.json, evals/inputs/grader_cases_v2.json
+- 출처: evals/guides/preregister.md #36 · #34, evals/inputs/qrels_v2_pages.json, evals/inputs/grader_cases_v2.json
 
 실행(저장소 루트)
   재측정:  uv run python -m evals.runners.eval_grader run [--snapshot <스냅샷 json>] [--out <결과 json>]
@@ -42,7 +42,7 @@ def _pages(chunks):
 
 
 def evaluate(cases):
-    """스냅샷 문항 목록으로 #33의 지표 ①~④를 계산한다."""
+    """스냅샷 문항 목록으로 #36의 지표 ①~④를 계산한다."""
     table, kept, sufficient, recalls = collections.Counter(), 0, 0, []
     irrelevant = zero = 0
     for c in cases:
@@ -80,7 +80,7 @@ def build_cases(roots, qrels, rows):
     for row in rows:
         q = qrels.get(row['id'])
         if row['kind'] == 'relevant' and q is None:
-            continue  # 후보 찾기 · 역할은 정답 쪽이 열려 있어 뺀다(#33)
+            continue  # 후보 찾기 · 역할은 정답 쪽이 열려 있어 뺀다(#36)
         s = state[row['id']]
         cases.append(case_from_state(row['id'], row['kind'], q['pages'] if q else [], q['unrecoverable'] if q else [],
                                      s.get('docs') or [], s.get('passed') or []))
@@ -134,7 +134,7 @@ def main():
         res = json.load(open(GRAPH_RESULT, encoding='utf-8'))
         cases = build_cases(json.load(open(a.roots, encoding='utf-8')), json.load(open(QRELS, encoding='utf-8'))['qrels'], res['rows'])
         meta = {'session': res['meta']['session'], 'git': res['meta']['git'], 'dataset_sha256': res['meta']['dataset_sha256'],
-                'note': '채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #33'}
+                'note': '채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #36'}
         Path(a.out).write_text(json.dumps({'meta': meta, 'cases': cases}, ensure_ascii=False, indent=1), encoding='utf-8')
         print(f'스냅샷 {len(cases)}문항 → {a.out}')
     elif a.cmd == 'collect-r1':

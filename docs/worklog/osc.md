@@ -1,5 +1,13 @@
 # 오세창 작업 기록
 
+## 2026-11-09 main → OSC 병합
+
+- 한 일: 최신 `origin/main`을 로컬 `OSC`에 merge하고, 충돌 7개 문서는 main 내용을 기준으로 두면서 기존 Supervisor Prompt V0 계약·평가·결과·트리 항목을 함께 보존했다.
+- 충돌 파일: `SOJAFIT.md`, `backend/graph/GRAPH.md`, `backend/prompts/PROMPTS.md`, `docs/specs/SPECS.md`, `docs/worklog/osc.md`, `evals/guides/preregister.md`, `evals/runners/RUNNERS.md`.
+- 실행한 명령과 결과: `uv lock --check` 통과, V0·저장소 구조 대상 테스트 `38 passed`, 전체 테스트 `911 passed, 58 skipped`, 충돌 해소분 기준 `git diff origin/main --check` 통과. merge 전체의 `git diff --cached --check`는 main에서 들어온 `backend/rag/spec_lookup.py`의 EOF 빈 줄 1건을 알렸고 해당 main 내용은 바꾸지 않았다.
+- 확인 못 한 것: 원격 `OSC` 갱신과 PR 상태는 이번 범위에서 확인하지 않았다. 팀 규칙에 따라 push하지 않았다.
+- 다음 할 일: 필요하면 조장 승인 후 로컬 merge commit을 `origin/OSC`에 push하고 다음 PR의 기준으로 사용한다.
+
 ## 2026-11-06 Supervisor Prompt V0 Langfuse 가져오기
 
 - 한 일: 완료된 V0 13문항과 세 후보 결과를 모델 재호출 없이 Langfuse Dataset `sojafit-supervisor-v0`과 Experiment 3개로 가져왔다. 입력에는 정답과 case id를 넣지 않고 정답은 Dataset expected output으로 분리했다. 형식·네 필드·의미·전체 일치의 결정적 점수 7개를 문항마다 기록했다.
@@ -11,7 +19,7 @@
 
 ## 2026-11-06 Supervisor Prompt V0 live 평가 사전 준비
 
-- 목적·비교 조건: V0 상태 표본 13건에서 Luna/Azure, Haiku/Google, Jev/TypeSafe가 같은 네 필드 의미 계약을 지키는지 비교한다. 기존 v2 70문항 결과는 V0 점수로 재사용하지 않는다. 기대와 판정은 `evals/guides/preregister.md` #34에 결과 확인 전에 기록했다.
+- 목적·비교 조건: V0 상태 표본 13건에서 Luna/Azure, Haiku/Google, Jev/TypeSafe가 같은 네 필드 의미 계약을 지키는지 비교한다. 기존 v2 70문항 결과는 V0 점수로 재사용하지 않는다. 기대와 판정은 `evals/guides/preregister.md` #37에 결과 확인 전에 기록했다.
 - 코드 보완: 본 실행이 성공한 smoke의 exact model/provider만 사용하도록 회귀 테스트를 RED로 확인한 뒤 고쳤고, smoke 요청에도 `--provider`를 필수로 두었다. 관련 API 없는 테스트 40건과 후속 선택 테스트 35건이 통과했다. 커밋은 `2834f96`, `ac82964`다.
 - 현재 catalog: 세 모델 모두 ZDR catalog에 노출됐다. 적용 provider는 기존 성공 근거와 현재 endpoint를 대조해 Luna `Azure`, Haiku `Google`, Jev `TypeSafe`로 정했다. 단가는 Chat 두 모델 input/output `$0.0000001`/`$0.0000005` per token, Jev input `$0.000000042`, output `$0`다.
 - 예산·시간·중단: Chat 모델별 smoke `$0.005`·3 raw calls·180초, 본 실행 `$0.060`·39 raw calls·1,800초. Jev smoke 승인 `$0.005`·1 call·180초, 본 실행 승인 `$0.010`·13 calls·1,800초. 전체 명령 상한 `$0.145`, 최악 98 raw calls다. smoke 실패, hash/model/provider 불일치, 상한 도달, 반복 provider 오류에서 중단하고 자동 증액·재실행하지 않는다. Jev USD는 기술적 cap이 아니라 승인 기록이다.
@@ -28,7 +36,34 @@
 - 검증: 각 단계에서 모듈 부재 RED를 확인한 뒤 구현했다. V0 선택 테스트, 인접 LLM 서비스 테스트, 저장소 구조 검사를 API 없이 실행했다. `ruff`는 개발 의존성에 없어 실행하지 못했다. 전체 테스트의 기존 Windows 기본 인코딩 실패 `tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file`은 이 작업 범위에서 수정하지 않았다.
 - 다음 할 일: 별도 승인 뒤 exact model/provider 1건 smoke와 13건을 실행하고, dataset·의미 계약 hash와 case 집합이 같은 결과만 비교한다. 그 뒤 프롬프트 인젝션 방어를 별도 설계한다.
 
-> **문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 이번 변경에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
+> **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
+
+## 2026-11-05 GCP Google OAuth 로그 보호 실측
+
+- 한 일: GCP `sojafit` 프로젝트에 조회 전용 `Logs Viewer` 권한을 받은 뒤, Cloud Run 시험 태그에서 실제 Google 관리자 로그인·승인 대기·로그아웃을 수행했던 2026-11-05 20:20~22:05 KST 구간의 `sojafit-api` 로그를 읽기 전용으로 확인했다.
+- 바꾼 파일: 개인 작업 기록 `docs/worklog/osc.md`만 갱신했다. GCP 설정, 애플리케이션 코드, DB, 주요 문서와 원격 브랜치는 변경하지 않았다.
+- 실행한 조회와 실제 결과: 대상 구간의 일반 로그 158건이 조회됐다. Uvicorn의 Google callback 로그는 7건이며 모두 쿼리 문자열 없이 `GET /api/auth/google/callback` 경로와 `303` 상태만 남았다. Cloud Run 요청 로그에서 callback URL을 찾은 결과는 0건으로, callback 요청 로그 제외 설정이 실제 로그인에서도 작동했다. 같은 범위의 `code=`, access·refresh·ID token, client secret, 이메일 형식, 비밀번호·세션·Authorization·Cookie 관련 문자열 검색은 각각 0건이었다. 로그인·로그아웃·세션 확인과 서버 기동 같은 일반 로그는 유지됐다.
+- 확인 못 한 것: 이번 결과는 지정한 시간대와 `sojafit-api`의 `textPayload`, `jsonPayload.message`, `httpRequest.requestUrl`에서 확인한 실측이다. 다른 프로젝트·로그 버킷·기간과 향후 코드 변경까지 민감정보가 절대 남지 않는다는 보장은 아니다. 시험 리비전은 0% 트래픽이며 운영 트래픽 전환은 검증하거나 수행하지 않았다.
+- 다음 할 일: 실제 로그인이 새 OAuth 비밀로 성공했으므로, 운영 전환과 별개로 이전 OAuth 클라이언트 비밀 및 Secret Manager의 이전 버전을 폐기할지 정확한 대상을 다시 확인하고 별도 승인을 받아 처리한다. 운영 트래픽 전환은 최신 main 차이·환경변수·DB 연결·롤백 경로 검토 후 별도로 승인받는다.
+
+## 2026-11-05 Google 로그인 작업과 최신 main 통합
+
+- 통합 전 로컬 작업: 기존 ID·PW 계정의 로그인, `/api/auth/me`의 일반 사용자 역할, 로그아웃 뒤 `401`을 직접 확인했다. 별도 Google 관리자 로그인 구현과 `010_google_admin_login.sql`도 로컬·격리 DB에서 검증했지만 커밋하지 않은 상태였다.
+- 최신 기준 반영: `origin/main`의 Google 관리자 로그인 커밋 `b71837e`를 포함한 `2e2db38`을 `STH`에 병합했다. main 구현은 `010_google_auth.sql`, `Authlib`·`joserfc`, 승인 대기·연결·회수 흐름과 더 넓은 테스트를 사용하므로 충돌한 실행 코드와 DB 계약은 main을 정본으로 삼았다.
+- 보존 경계: 통합 전 추적·미추적 변경 전체는 `pre-main-sync-google-auth-20261105-195159` stash에 남겼다. 중복된 로컬 SQL과 현재 상황보다 오래된 GCP 미착수 기록은 활성 트리에 합치지 않았고, ERD만 main의 실제 표 이름에 맞춰 갱신했다.
+- 외부 상태: main의 `docs/worklog/sth.md`에는 팀 Supabase 적용, 실제 Google 계정 로컬 시험, Cloud Run 0% 시험 리비전의 승인 대기 화면 확인이 기록돼 있다. 이번 병합 작업에서는 그 외부 상태를 다시 실행하거나 독립 검증하지 않았다.
+- 미수행: 원격 `STH` push와 운영 트래픽 변경은 하지 않았다.
+
+## 2026-11-05 팀 DB 적재 현황과 Google 관리자 로그인 확인
+
+- 실제 로그인: Cloud Run의 0% 시험 태그에서 Google 계정 검증 후 승인 대기 요청이 생성됐다. 확인된 요청을 기존 활성 관리자 `user_id=5`에 연결하고 같은 Google 계정으로 다시 로그인해 `/api/auth/me`가 `{"user_id":5,"role":"admin"}`을 반환하는 것을 확인했다. 이메일·요청 번호·Google 식별자·쿠키·토큰 원문은 기록하지 않는다.
+- DB 적재 스냅샷: 2026-11-05 20:37:12 KST에 팀 Supabase의 `public` 스키마를 읽기 전용으로 집계했다. `source_documents` 1,360건(`DATASHEET`), `document_chunks` 52,244건, `chunk_embeddings` 52,244건(`voyage-4-large`), `chunk_embedding_bits` 52,244건을 확인했다.
+- 인증 스냅샷: `users` 5건(활성 관리자 3명·활성 일반 사용자 2명), `auth_sessions` 5건(활성 1·만료 4), `auth_login_attempts` 0건, `auth_google_identities` 1건, `auth_google_pending` 0건, `auth_google_states` 2건(활성 0·만료 2)이었다. 임시 상태와 세션 수는 이후 로그인·로그아웃·만료 정리에 따라 바뀐다.
+- 동일 브라우저 재검증: 자동화 탭과 일반 탭을 섞은 최초 시험에서 남은 관리자 ID 5의 세션 1건을 사용자 승인 후 삭제하고, 일반 Chrome 탭 하나에서 Google 로그인→`/api/auth/me`의 `user_id=5`, `role=admin` 확인→로그아웃→브라우저 `401`과 DB 세션 0건을 확인했다. Google 연결은 1건 유지됐다. 따라서 최초 잔존 세션은 혼합 브라우저 환경의 시험 한계이며 동일 탭에서는 재현되지 않았다.
+- 기존 인증 회귀: Google 계정이 연결된 관리자 ID 5가 기존 ID·PW로 다시 로그인했고 `/api/auth/me`가 같은 ID와 `role=admin`을 반환했다. DB에는 활성 세션 1건, 로그인 실패 행 0건, Google 연결 1건이 확인됐다. 비밀번호 원문은 사용자가 직접 입력했고 작업 기록이나 도구 출력에 남기지 않았다.
+- 연결 철회·복구: ID·PW 로그인 세션의 정상 로그아웃과 DB 세션 0건을 확인한 뒤 사용자 승인으로 관리자 ID 5의 Google 연결 1건을 철회했다. 사용자 계정·관리자 역할·비밀번호 해시는 유지됐다. 같은 Google 계정의 다음 로그인은 세션을 만들지 않고 승인 대기 1건만 생성했으며, 이메일 일치와 대상 상태를 다시 확인해 관리자 ID 5에 재승인했다. 최종 DB 상태는 Google 연결 1건·활성 승인 대기 0건·세션 0건이며 재승인만으로 세션을 자동 생성하지 않았다.
+- 미적재: 업무 테이블 11개와 LangGraph Checkpoint·Store 표는 조회 당시 `public` 스키마에 없었다. 업무 SQL은 `db/manual/004_create_business_tables.sql.draft` 초안 상태다.
+- 기록 위치: 테이블별 전체 수치·조회 범위·변동 주의사항은 `db/DB.md`의 "팀 Supabase 적재 현황 스냅샷"에 기록했다. 실제 행 값과 비밀정보는 조회·기록하지 않았다.
 
 ## 2026-11-02 Voyage 후보 변경 독립 감사 후속
 
@@ -179,7 +214,7 @@
 
 ## 2026-11-05 수퍼바이저 3차 실행 전 준비
 
-- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #36과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
+- 목적·범위: PR #54의 2차 실측은 보존하고 여섯 모델을 같은 동결 v2 70문항에서 `run_index=3`으로 각 한 번 더 측정할 계약을 사전 등록 #33과 `docs/experiments/supervisor-stage3-six-models.md`에 고정했다. 3차 점수·모델 호출은 아직 없다.
 - 조건·예산·중단: 기존 프롬프트·typed question 계약, ZDR·fallback 금지, 유형 gold 35문항, 여섯 모델의 `out_of_scope → refuse` 일관성, 1~3차 완전한 행만의 agreement·flip을 고정했다. 본 실행 계획값 US$0.88, smoke US$0.033, 합계 US$0.913, 모델별 70 outputs·210 raw calls·7,200초와 provider·가격·코드 hash 불일치 중단을 등록했다. Jev 비용값은 실제 청구액의 절대 상한이 아니다.
 - API 없는 명령·결과: `uv run --no-sync python -c '...create_manifest(...)...'`로 5종 manifest를 생성해 1,050건 중 3차 350건을 확인했고, `uv run --no-sync python -m evals.runners.run_supervisor_jev plan evals/results/supervisor/2026-11-05-jev-stage3-v1 --run-index 3`으로 Jev 70건을 준비했다. 생성된 파일은 두 manifest뿐이다. 유료 API 호출 0회, smoke·본 실행 0건이다.
 - 바꾼 파일: 3차 계약·사전 등록, 두 manifest, `SOJAFIT.md` 트리, 실험·평가 폴더 색인과 이 작업 기록. 기존 1·2차 원시 결과와 동결 평가셋은 바꾸지 않았다. 다음 단계는 manifest hash·현재 catalog 가격·ZDR·provider를 다시 확인한 뒤 별도 지시에 따라 smoke를 시작하는 것이다.
@@ -220,11 +255,3 @@
 - 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
 - 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
 - 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.
-
-## 2026-11-06 Supervisor Prompt V0 PR 병합 준비
-
-- 목적·범위: `OSC`의 Supervisor Prompt V0 계약·세 후보 동일 입력 평가·Langfuse 결과 가져오기를 하나의 프로토타입 검증 PR로 준비한다. 최신 `origin/main`을 merge하고 프로덕션 `backend/prompts/supervisor.md`와 비교용 `supervisor_v0.md`를 별도 파일로 보존했다. 최종 운영 프롬프트 확정과 모델 선정은 범위 밖이다.
-- 병합 정리: 충돌한 `backend/prompts/PROMPTS.md`, `evals/guides/preregister.md`, `evals/runners/RUNNERS.md`에서 양쪽 기록을 보존했다. 독립 브랜치에서 겹친 사전 등록 번호를 수퍼바이저 3차 `#36`, V0 `#37`로 재배정했다. V0 원시 `execution.json`의 당시 포인터 `#34`는 원시 결과 보존을 위해 바꾸지 않았다.
-- 범위 축소: 구현이 끝난 뒤 리뷰에 중복되는 `docs/superpowers/plans/2026-11-05-supervisor-prompt-v0.md`를 제외하고 `SOJAFIT.md` 트리와 `docs/superpowers/SUPERPOWERS.md` 파일 목록을 함께 정리했다. 설계 문서, 실행 코드·테스트, 원시 결과와 Langfuse import receipt는 유지했다.
-- 병합 전 검증: Windows 기본 인코딩의 전체 pytest는 기존 `tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file`가 임시 JSONL을 cp949로 쓰고 UTF-8로 읽어 1건 실패했다(416 passed, 27 skipped). 이 테스트는 양쪽 브랜치에 같은 형태로 있었고 V0 범위 밖이라 수정하지 않았다. 병합 후 `PYTHONUTF8=1` 전체 테스트와 저장소 정합성 검사를 다시 실행한다.
-- 병합 후 검증: `PYTHONUTF8=1 uv run pytest`는 505 passed·32 skipped, `tests/repo/test_repo_layout.py` 포함 전체 통과했다. `git diff --check`, 금지 경로 검사, 고신뢰 API key·private key 패턴 검사도 통과했다. `origin/main` 기준 PR diff는 48개 파일, 5,813줄 추가·17줄 삭제이며 원시 평가 결과와 재현 코드 때문에 400줄 권장 규모를 넘는다. 모델 재호출·Langfuse 추가 쓰기·push는 하지 않았다.

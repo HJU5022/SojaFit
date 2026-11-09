@@ -19,7 +19,7 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 ## 기술 스택
 
 - 확정: Python, uv, FastAPI, LangGraph, PostgreSQL + pgvector, Docker Compose, Langfuse, GCP Cloud Run. LLM은 조당 OpenRouter 키 하나를 씁니다.
-- 임베딩: `voyage-4-large`(1024차원, 사전 등록 #25, ADR 0004 갱신 2026-11-03). 리랭킹: Voyage `rerank-3`. LLM 모델: `anthropic/claude-haiku-5.5`(OpenRouter, 임시, ADR 0010)
+- 임베딩: `voyage-4-large`(1024차원, 사전 등록 #25, ADR 0004 갱신 2026-11-03). 리랭킹: Voyage `rerank-3`. LLM 모델: 노드별(Supervisor `anthropic/claude-sonnet-5.5`, 그 밖 `anthropic/claude-haiku-5.5`, 채점 `openai/gpt-6-luna`, OpenRouter, ADR 0014)
 
 필수 구성은 Python, FastAPI, LangGraph(멀티에이전트 최소형), RAG, Docker, Langfuse입니다. 폴더 역할은 `SOJAFIT.md` 트리와 각 폴더의 `<대문자 폴더명>.md`를 따릅니다.
 
@@ -55,7 +55,7 @@ Git 작업에서는 이 절이 다른 지침보다 우선합니다.
    - **주요 문서는 조장(하정운, 브랜치 `jeongun`)만 고칩니다.** 주요 문서는 루트 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 `docs/adr/` 전체입니다. 작업 브랜치가 `jeongun`이 아니면 이 파일들을 수정·이동·삭제하지 않고, 바꿀 점은 PR 코멘트(줄을 집어 무엇을 왜 바꿀지)로 남깁니다. 조장이 pull할 때 커밋 단위로 검토해 직접 반영합니다.
    - 예외는 하나입니다. 새 파일을 만들거나 옮긴 PR은 지킬 것 9번대로 `SOJAFIT.md` 트리에 그 파일 한 줄만 넣거나 고칩니다(그 밖의 줄은 고치지 않습니다).
    - 조장이 커밋 단위로 검토하므로 커밋 하나에는 목적 하나만 담습니다.
-   - 조장 PR은 조원 3명(`nanocode00` 김재훈, `SimonTH-0912` 심태현, `sechang405-maker` 오세창)을 리뷰어로 지정합니다. 강사는 지정하지 않습니다.
+   - 조장 PR은 조원 2명(`SimonTH-0912` 심태현, `sechang405-maker` 오세창)을 리뷰어로 지정합니다. 강사는 지정하지 않습니다.
 4. **강제 푸시를 하지 않고, 이미 원격에 있는 커밋을 다시 쓰지 않습니다.**
 5. **커밋 메시지는 종류를 앞에 붙입니다.** `feat(범위): ...`, `fix(범위): ...`, `test(범위): ...`, `docs: ...`
 6. **비밀값은 커밋 메시지와 채팅 출력에도 적지 않습니다**(위 4번에 더해). `.env.example`에는 변수 이름과 가짜 값만 두고, 커밋 전에 diff에서 비밀값이 없는지 확인합니다.

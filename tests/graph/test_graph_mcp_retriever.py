@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from backend.graph import mcp_retriever as M
 from backend.graph import nodes
 from backend.graph.build import build_graph
 from backend.graph.mcp_retriever import (
@@ -131,7 +132,7 @@ def test_graph_uses_mcp_retriever_for_one_search(monkeypatch):
     monkeypatch.setattr(nodes.llm, "chat", graph_chat([[7]]))
     with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
         out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "생성"]  # 첫 검색도 재작성한 검색어로 한다
     assert session.calls == [
         ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]})]
     assert events == ["open", "close"]
@@ -143,7 +144,7 @@ def test_graph_reuses_mcp_session_for_rewritten_search(monkeypatch):
     monkeypatch.setattr(nodes.llm, "chat", graph_chat([[], [7]]))
     with StdioMcpRetriever(session_context_factory=fake_context(session, events)) as retriever:
         out = build_graph(retriever=retriever).invoke({"input": INPUT})
-    assert out["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점",
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점",
                            "재작성", "검색", "채점", "생성"]
     assert session.calls == [
         ("search_corpus", {"query": REWRITTEN, "k": 5, "parts": ["1N5817"]}),
@@ -168,3 +169,16 @@ def test_stdio_retriever_check_rejects_invalid_payload(bad):
         with pytest.raises(RetrievalUnavailableError) as info:
             retriever.check(["A"], [])
     assert info.value.kind == "invalid_response"
+
+
+def test_decode_list_result_reads_structured_list():
+    rows = [{'part': 'SS14', 'code': 'VRRM', 'max': 40.0}]
+    assert M.decode_list_result(SimpleNamespace(isError=False, structuredContent={'result': rows}, content=[])) == rows
+
+
+def test_decode_list_result_rejects_tool_error_and_non_list():
+    with pytest.raises(M.RetrievalUnavailableError) as e:
+        M.decode_list_result(SimpleNamespace(isError=True, structuredContent=None, content=[]))
+    assert e.value.kind == 'tool_error'
+    with pytest.raises(M.RetrievalUnavailableError):
+        M.decode_list_result(SimpleNamespace(isError=False, structuredContent={'result': {'x': 1}}, content=[]))

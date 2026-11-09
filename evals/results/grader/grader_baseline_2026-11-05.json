@@ -3,7 +3,7 @@
   "session": "graph-dataset_v2-1104-2122-openrouter",
   "git": "a630454",
   "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
-  "note": "채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #33"
+  "note": "채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #36"
  },
  "result": {
   "relevant": 19,

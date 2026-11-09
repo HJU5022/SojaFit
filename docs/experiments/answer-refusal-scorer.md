@@ -58,6 +58,7 @@
 | EC-04 | 관련 문항에서 같은 PDF(`1N5817 SERIES_H2104.pdf`)를 인용했으나 정답 페이지(1쪽)이 아닌 다른 쪽(2쪽이나 표지 `page=None`)만 인용함 | `(file, page)`가 `gold_locations`와 일치하지 않으므로 `wrong_citation`으로 채점한다 |
 | EC-05 | `evals/exclusions.json`에 제외 문항 ID가 등록되어 있음 | 해당 ID는 5지표 분자·분모에서 모두 제외하고 `excluded_ids`에 기록한다 |
 | EC-06 | `run_skill_pair.py` 결과처럼 한 문항에 `without` / `with` 두 답변이 들어 있음 | 각 모드별로 `(state + answer/check)`를 합쳐 같은 `score_item()` 함수로 동일하게 채점할 수 있게 지원한다 |
+| EC-07 | 판정 길 답(`check["judgement"]`가 참, 코드 틀 답)은 `[n]` 대신 사양 표 행의 문서 · 쪽 · 표 · 행을 인용함 | 판정 결과(`judgement`)의 인용 `(document, page)`를 `[n]` 인용 위치와 같은 방식으로 `gold_locations`와 대조한다. 판정은 `results`, 찾기는 답 글에 나간 후보 `shown`의 인용만 센다(판정만 하고 안 보여 준 후보는 세지 않음, 11-06 진단 뒤 고침). 인용이 없으면 `wrong_citation`(11-06, 사전 등록 #39 · #40) |
 
 ## How
 

@@ -6,7 +6,7 @@
 """
 import json
 
-from backend.graph.nodes import circuit_around, parse_input, read_input
+from backend.graph.nodes import MAX_NET_NODES, circuit_around, parse_input, read_input
 
 E01 = ("회로: SparkFun Breadboard Supply\n"
        "넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n"
@@ -38,10 +38,14 @@ def test_read_input_shows_power_path_two_steps_away():
 
 def test_read_input_clears_previous_search_state():
     out = read_input({"input": E01, "query": "old", "parts": ["OLD"], "docs": [{"chunk_id": 1}],
-                      "passed": [1], "retrieval_error": {"kind": "timeout"}, "tries": 2})
+                      "passed": [1], "retrieval_error": {"kind": "timeout"}, "tries": 2, "facts": {"parts": {"OLD": False}},
+                      "refusal": {"code": "part_missing"}, "judge_read": {"role": "R01"}, "judgement": {"kind": "judge"}})
     assert out["query"] == "" and out["parts"] == [] and out["docs"] == [] and out["passed"] == []
     assert out["retrieval_error"] is None
     assert out["tries"] == -2
+    assert out["facts"] == {}  # [왜] 앞 질문의 사실 확인 결과로 새 질문을 거절하지 않게 한다
+    assert out["refusal"] == {}  # 앞 질문의 거절 사유 코드가 새 질문의 채점에 남지 않게 한다
+    assert out["judge_read"] == {} and out["judgement"] == {}  # 앞 질문의 판정으로 새 질문에 답하지 않게 한다
 
 
 def test_big_nets_are_cut_and_counted():
@@ -68,3 +72,13 @@ def test_netlist_path_outside_repo_gives_no_circuit_context(tmp_path):
     for bad in (str(tmp_path / "circuit.net"), "../" * 12 + str(tmp_path).lstrip("/") + "/circuit.net"):
         out = read_input({"input": f"넷리스트: {bad}\n대상: D1\n질문: D1 역할?"})
         assert out["target_part"] == {}, bad
+
+
+def test_target_pin_is_always_shown_in_a_big_net():
+    """AC-10: 노드가 많은 GND 넷에서도 대상 자신의 핀이 보인다(앞 MAX_NET_NODES개에 들지 않아도)."""
+    others = [{'ref': f'C{i}', 'pin': '2'} for i in range(MAX_NET_NODES + 3)]
+    connections = {'components': [{'ref': 'D1', 'value': 'BZT52C3V6', 'footprint': 'SOD-123'}] +
+                                 [{'ref': n['ref'], 'value': '100n', 'footprint': '0603'} for n in others],
+                   'nets': [{'name': 'GND', 'nodes': others + [{'ref': 'D1', 'pin': '1', 'pinfunction': 'A'}]}]}
+    gnd = circuit_around(connections, 'D1')['nets'][0]
+    assert any(n.startswith('D1.') for n in gnd['nodes']) and len(gnd['nodes']) == MAX_NET_NODES

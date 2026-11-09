@@ -44,6 +44,28 @@ def _used_and_fake(state: dict, answer: str) -> tuple[list[str], list[str], dict
     return sorted(cited & valid), sorted(cited - valid), cards
 
 
+def judgement_parts(judgement: dict) -> list[dict]:
+    """답 글에 조건 표와 인용이 실제로 나간 후보 목록(판정은 results, 찾기는 보여 준 후보 shown만)."""
+    # [왜] 찾기의 results에는 판정한 후보 전체(최대 50개)가 들어 있지만 답 글에는 shown만 조건 표와 인용이 나간다.
+    # results로 세면 답에 안 보인 후보의 인용으로 정답이 맞을 수 있다(11-06 진단, cited_gold 3건)
+    if judgement.get("kind") == "find":
+        # [왜] 확인된 후보가 없으면 답 틀이 확인 안 됨 후보 상위 3개를 근거 표와 함께 보인다(messages.render_judgement, 11-07)
+        return list(judgement.get("shown") or (judgement.get("unverified") or [])[:3])
+    return list(judgement.get("results") or [])
+
+
+def judgement_locations(judgement: dict) -> list[list]:
+    """판정 답이 인용한 (문서, 쪽) 목록. [왜] 판정 답은 [n] 청크 번호 대신 사양 표 행의 문서 · 쪽 · 표 · 행을 인용한다."""
+    locs = []
+    for part in judgement_parts(judgement):
+        # [왜] 기판 수정 줄도 후보 패키지 행을 인용한다(답 틀이 '후보 패키지 근거: 문서 쪽'으로 보인다, 11-07)
+        for cite in [c.get("citation") or {} for c in part.get("checks") or []] + [part.get("package_citation") or {}]:
+            loc = [cite.get("document"), cite.get("page")]
+            if cite and loc not in locs:
+                locs.append(loc)
+    return locs
+
+
 def is_refusal_response(state: dict, used: list[str] | None = None) -> bool:
     """그래프 응답이 거절인지 판별한다.
 
@@ -80,6 +102,13 @@ def score_item(item: dict, state: dict) -> dict:
             if loc not in cited_locs:
                 cited_locs.append(loc)
     cited_netlist = "넷리스트" in used
+    if (state.get("check") or {}).get("judgement"):
+        # 판정 길 답(코드 틀): 사양 표 인용 위치를 [n] 인용 위치와 같은 방식으로 정답 (PDF, 쪽)과 대조한다(사전 등록 #39 · #40)
+        # [왜] 멀티의 종합 답은 문서 할 일의 [n] 인용과 판정 표 인용이 한 답에 같이 있다. 둘 다 센다(11-06 계획형 멀티 v3-07).
+        #      판정만 있는 답은 [n] 인용이 없어 예전과 같다
+        table_locs = judgement_locations(state.get("judgement") or {})
+        cited_locs = cited_locs + [loc for loc in table_locs if loc not in cited_locs]
+        used = used + (["사양 표"] if table_locs else [])
 
     kind = item["kind"]
     if kind == "relevant":

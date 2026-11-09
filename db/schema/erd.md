@@ -8,7 +8,49 @@
 
 ## 그림
 
-표가 정해지면 mermaid `erDiagram`으로 그립니다.
+```mermaid
+erDiagram
+    USERS ||--o{ AUTH_SESSIONS : "로그인 세션"
+    USERS ||--o| AUTH_GOOGLE_IDENTITIES : "승인된 Google 관리자 연결"
+
+    USERS {
+        bigint id PK
+        varchar login_id UK
+        varchar password_hash
+        text role
+        boolean is_active
+    }
+    AUTH_SESSIONS {
+        char token_hash PK
+        bigint user_id FK
+        timestamptz expires_at
+        timestamptz last_seen_at
+    }
+    AUTH_GOOGLE_STATES {
+        text state_hash PK
+        text browser_hash
+        text verifier
+        text nonce
+        timestamptz expires_at
+    }
+    AUTH_GOOGLE_PENDING {
+        text request_id PK
+        text issuer
+        text subject
+        text email
+        timestamptz expires_at
+    }
+    AUTH_GOOGLE_IDENTITIES {
+        text issuer PK
+        text subject PK
+        bigint user_id FK, UK
+    }
+```
+
+- `auth_google_states`는 브라우저에 묶인 10분짜리 일회성 로그인 상태이며 사용자 표와 직접 연결하지 않습니다.
+- `auth_google_pending`은 Google이 확인한 계정을 운영자가 검토하기 전의 임시 요청입니다. 승인 전에는 `users`와 FK를 만들거나 세션을 발급하지 않습니다.
+- 승인하면 `auth_google_identities.user_id`가 기존 관리자 `users.id`를 1:1로 참조합니다. `(issuer, subject)`가 복합 기본키입니다.
+- ID·PW 로그인과 승인된 Google 로그인은 모두 같은 `users`와 `auth_sessions`를 사용합니다. Google access token·refresh token·ID token은 저장하지 않습니다.
 
 ## 우리가 만드는 표
 
@@ -21,9 +63,12 @@
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
+| `auth_google_states` | state·브라우저 비밀·PKCE verifier·nonce를 보관하는 10분짜리 일회성 Google 로그인 상태 | `010_google_auth.sql` |
+| `auth_google_pending` | 검증된 Google 이메일·issuer·subject의 관리자 연결 승인 대기 요청 | `010_google_auth.sql` |
+| `auth_google_identities` | 승인된 Google 계정과 기존 관리자 사용자 계정의 1:1 연결 | `010_google_auth.sql` |
 | (정할 것) | 승인된 견적서 등 업무 표 | `manual/004_create_business_tables.sql.draft`(Migration 1 초안) 검토 뒤 |
 
-문서·청크 표는 코퍼스 SQL, 사용자 표는 인증 SQL이 생성합니다. Migration 1 초안(`manual/004_create_business_tables.sql.draft`)은 이 표들을 참조합니다.
+문서·청크 표는 코퍼스 SQL, 사용자·세션 표는 기존 인증 SQL, Google 관리자 연결 표는 `010_google_auth.sql`이 생성합니다. `docs/worklog/sth.md`에는 격리 DB 검증과 팀 Supabase 적용이 기록돼 있으며, 이 ERD 병합 작업에서는 공유 DB를 다시 조회하지 않았습니다. Migration 1 초안(`manual/004_create_business_tables.sql.draft`)은 이 표들을 참조합니다.
 
 ## 라이브러리가 만드는 표
 

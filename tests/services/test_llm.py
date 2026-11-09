@@ -82,10 +82,15 @@ def _fake_calls(monkeypatch, answers):
 
 
 def test_chat_returns_validated_model(monkeypatch):
-    calls = _fake_calls(monkeypatch, ['{"kind": "role"}'])
+    calls = _fake_calls(monkeypatch, ['{"kind": "role"}', '{"kind": "role"}'])
     assert llm.chat("sys", "q", Route) == Route(kind="role")
     assert len(calls) == 1
-    assert calls[0] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "q"}]
+    # [왜] OpenRouter의 Claude 모델은 고정 지시문(system)에만 캐시 표시를 붙인다(11-09 프롬프트 캐싱). 질문(user)은 그대로
+    assert calls[0] == [{"role": "system", "content": [{"type": "text", "text": "sys", "cache_control": {"type": "ephemeral"}}]},
+                        {"role": "user", "content": "q"}]
+    monkeypatch.setattr(llm, "LLM_MODEL", LUNA)  # Claude가 아닌 모델에는 붙이지 않는다
+    llm.chat("sys", "q", Route)
+    assert calls[1] == [{"role": "system", "content": "sys"}, {"role": "user", "content": "q"}]
 
 
 def test_chat_retries_bad_format_then_succeeds(monkeypatch):
@@ -98,6 +103,29 @@ def test_chat_stops_after_retry_limit(monkeypatch):
     # [왜] 상수끼리 비교하면 상한을 바꿔도 통과하므로 호출 수를 리터럴 3(첫 호출 + 재시도 2)과 비교한다
     calls = _fake_calls(monkeypatch, ["bad"] * 10)
     with pytest.raises(ValueError):
+        llm.chat("sys", "q", Route)
+    assert len(calls) == 3
+
+
+def test_chat_retries_connection_error_within_the_same_limit(monkeypatch):
+    """연결 오류는 같은 상한(첫 호출 + 재시도 2) 안에서 다시 부르고, 끝내 안 되면 연결 오류 그대로 올린다."""
+    import httpx
+    from openai import APIConnectionError
+    monkeypatch.setattr(llm.time, "sleep", lambda *_: None)
+    calls = []
+
+    def fake_call(system, user, schema):
+        calls.append(1)
+        if len(calls) < 3:
+            raise APIConnectionError(request=httpx.Request("POST", "https://example.test"))
+        return Route(kind="role")
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    monkeypatch.setattr(llm, "_openrouter_call", fake_call)
+    assert llm.chat("sys", "q", Route) == Route(kind="role") and len(calls) == 3
+    calls.clear()
+    monkeypatch.setattr(llm, "_openrouter_call", lambda *a: calls.append(1) or (_ for _ in ()).throw(
+        APIConnectionError(request=httpx.Request("POST", "https://example.test"))))
+    with pytest.raises(APIConnectionError):
         llm.chat("sys", "q", Route)
     assert len(calls) == 3
 
@@ -319,7 +347,7 @@ def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다
 
 
-HAIKU, LUNA = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"
+HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 
 
 def test_chat_model_is_cached_per_model_and_luna_gets_no_temperature(monkeypatch):
@@ -329,11 +357,21 @@ def test_chat_model_is_cached_per_model_and_luna_gets_no_temperature(monkeypatch
     assert haiku.model_name == HAIKU and haiku.temperature == 0
     assert luna.model_name == LUNA and luna.temperature is None  # [왜] Luna에는 temperature를 보내지 않는다(3차 실측 계약)
     assert llm._chat_model(LUNA) is luna
+    assert llm._chat_model(SONNET).temperature == 0  # Luna가 아닌 모델은 temperature 0
+
+
+def test_openrouter_thinking_off_disables_haiku_and_shortens_sonnet(monkeypatch):
+    """생각은 기본으로 끈다: Haiku는 reasoning 끔, Sonnet은 끌 수 없어(400) effort low, Luna에는 보내지 않는다."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test")
+    llm._chat_model.cache_clear()
+    assert llm._chat_model(HAIKU).extra_body == {"reasoning": {"enabled": False}}
+    assert llm._chat_model(SONNET).extra_body == {"reasoning": {"effort": "low"}}
+    assert llm._chat_model(LUNA).extra_body is None
 
 
 def test_node_model_follows_table_and_env_override_wins(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
-    assert llm.node_model("supervisor") == LUNA and llm.node_model("grade") == LUNA
+    assert llm.node_model("supervisor") == SONNET and llm.node_model("grade") == LUNA
     assert [llm.node_model(n) for n in ("route", "rewrite", "generate")] == [HAIKU] * 3
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert {llm.node_model(n) for n in ("route", "grade", "generate", "supervisor")} == {"x/y"}
@@ -352,6 +390,6 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
     monkeypatch.setattr(llm, "_chat_model", chat_model)
     llm.node_chat("supervisor", "sys", "q", Route)
     llm.node_chat("route", "sys", "q", Route)
-    assert used == [LUNA, HAIKU]
+    assert used == [SONNET, HAIKU]
     llm.chat("sys", "q", Route)  # node_chat 밖의 호출은 기본 모델
     assert used[-1] == llm.LLM_MODEL
