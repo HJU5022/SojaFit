@@ -1,6 +1,6 @@
 """SojaFit FastAPI 진입점.
 
-역할: 인증·가입·관리자·가격 API, #73의 회로·thread·기억 API, OSC의 프로젝트·D5 run·승인·견적 API와 React SPA를 같은 출처로 등록한다.
+역할: 인증·가입·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
@@ -419,7 +419,7 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
 
 @app.middleware('http')
 async def conversation_boundary(request: Request, call_next):
-    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories', '/api/analysis/'))
+    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories', '/api/analysis/', '/api/me/memory'))
     if private and request.method == 'POST':
         limit = 7 * 1024 * 1024 if request.url.path == '/api/circuits' else 128 * 1024
         data = bytearray()
@@ -574,19 +574,22 @@ def thread_retry(thread_id: UUID, body: ThreadApproval, request: Request, user: 
 
 @app.get('/api/memories')
 def list_memories(request: Request, user: int = Depends(auth.current_user_id)):
+    """자기 승인 기록(철회·삭제 안 한 것). 장기 기억(사용자 사실)은 `/api/me/memory`다."""
     return conversation_service(request).memories(user)
 
 
 @app.post('/api/memories/{thread_id}/{version}/control')
 def control_memory(thread_id: UUID, version: int, body: MemoryControl, request: Request, user: int = Depends(auth.current_user_id)):
-    """사례 기억의 정정 메모·철회·복구·삭제. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
+    """승인 기록의 정정 메모·철회·복구·삭제 표식. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
     auth.check_origin(request)
     return conversation_service(request).control_memory(user, str(thread_id), version, body.action, body.correction)
 
 
 # 직접 등록한 #73 API와 health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 연결한다.
 from backend.api.conversations import router as conversations_router
+from backend.api.profile import router as profile_router
 app.include_router(projects_router)
 app.include_router(quotes_router)
 app.include_router(conversations_router)
+app.include_router(profile_router)
 mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)

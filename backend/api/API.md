@@ -10,6 +10,7 @@
 - `__init__.py` — 패키지 표시
 - `conversations.py` — 대화·실행·SSE API
 - `quotes.py` — 완료 판정의 사람 승인, 가격 없는 견적, 사용자 승인 사례 API
+- `profile.py` — 내 설정(사용자 사실 기억) `GET/PATCH/DELETE /api/me/memory`
 - `projects.py` — `GET/POST /api/projects`, `POST /api/projects/upload`, `GET/PATCH/DELETE /api/projects/{project_id}`, `GET /api/demo-circuits`
 
 모든 경로에 로그인 세션이 필요하다. 데모 POST는 `{demo_id, name}`, PATCH는 `{name}`만 받고, 다른 필드·공백 이름·200자 초과 이름·알 수 없는 데모는 공통 422로 거절한다. POST/PATCH/DELETE는 `auth.check_origin`을 적용한다. POST는 201 상세, GET 목록은 메타데이터 배열, GET/PATCH 상세는 `connections` 포함, DELETE는 204를 반환한다. 없는 프로젝트·다른 사용자 프로젝트는 같은 메시지의 공통 404다. DB 오류·DB 설정 누락은 안전한 503이다.
@@ -18,16 +19,18 @@
 
 UploadFile의 filename은 비어 있지 않아야 하며 양끝 공백을 제외해 대소문자 구분 없이 `.net`으로 끝나야 한다. 잘못된 확장자/빈 filename은 읽기 전에 공통 400으로 거절하고 파일을 닫는다. filename 자체가 없으면 multipart text field로 처리되어 허용된 text field 수를 초과하므로 공통 400으로 거절한다.
 
+`/api/me/memory`는 로그인 사용자의 사실 3칸(SPEC 8.5)이다. 사용자 id는 세션에서만 온다. GET은 사실 목록(최대 3개, 각 `{kind, value, text, version, updated_at, source}`)이고 선택 `q`(1~500자)를 주면 의미가 가까운 순이다(색인이 꺼져 있으면 순위 없이). PATCH는 `affiliation`·`job_role`·`mounting_preference` 중 바꿀 칸만 받아 바뀐 뒤 목록을 돌려준다. 다른 이름(사용자 id 포함)·틀린 값은 공통 422다. DELETE는 전부, `?kind=`면 한 칸을 지우고 204다. PATCH·DELETE는 Origin을 확인한다(403). 응답은 `Cache-Control: no-store`다. 분석 저장소(`THREADS_ENABLED=1`)가 없으면 503, 색인이 켜진 채 임베딩이 실패하면 PATCH는 503이고 아무 칸도 바뀌지 않는다.
+
 `GET /judge/roles`는 인증된 사용자에게 `backend/judge/rules/roles.yaml` 정본의 역할 `code`·`name`만 코드 순서로 돌려준다. 규칙의 판정식·내부 상태는 노출하지 않는다.
 
 `GET/POST /projects/{project_id}/threads`, `GET /threads/{thread_id}`, `POST /threads/{thread_id}/runs`, `GET /runs/{run_id}`, `POST /runs/{run_id}/resume`는 소유권을 확인한다. 변경 요청은 Origin을 확인한다. 복수 역할 인터럽트는 응답의 `role_choices` 중 하나를 `role`로 다시 보내며, 그 밖의 역할은 422다. run과 resume은 SSE로 `run_started`, `status`, 마지막 상태를 보내며 마지막 상태는 짧은 DB 장애를 제한적으로 재시도해 저장한 뒤 전송한다. 연결이 끊어져도 실행은 계속되고 GET은 재실행하지 않는다. 실행 중 또는 추가 정보 대기 중인 thread가 있는 프로젝트 삭제는 409다. 프로젝트 삭제는 public의 프로젝트·회로·대화·run·메시지·승인·견적만 지운다.
 
-run과 resume은 사용자 분석 서비스(`app.state.conversations`, `THREADS_ENABLED=1`)를 거친다. 서비스가 없으면 스트림을 열기 전에 공통 503이다. 첫 run이 React 대화와 같은 UUID의 분석 회로·thread를 프로젝트의 `connections`와 `target_ref`로 만들고, 같은 대화에서 다른 `target_ref`를 보내면 run을 만들기 전에 409(`대상 부품을 바꾸려면 새 대화를 시작하세요.`), 회로에 없는 부품이면 422다. run은 `Conversations.message`, resume은 그 thread의 현재 버전으로 `Conversations.resume`을 스레드 풀에서 부르므로 사용자 기억 조회, 실행·하루 예산과 호출 간격, 영속 체크포인트, Langfuse 사건 기록이 같이 적용된다. 결과는 그래프 상태에서 `public_state`로 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 보낸다. 진행 frame은 시작 때 `status` 하나다. `failed` frame에는 `error: {code, message}`가 붙는다. 코드는 공통 오류 코드(429 `TOO_MANY_REQUESTS`, 504 `GATEWAY_TIMEOUT`, 422 `VALIDATION_ERROR`, 409 `CONFLICT`, 503 `SERVICE_UNAVAILABLE`, 그 밖 `INTERNAL_ERROR`)이고 문구는 분석 서비스의 공개 문구다. 4xx가 아닌 예외는 `request_id`와 함께 traceback을 로그에 남기고 문구는 고정 문장으로 바꾼다.
+run과 resume은 사용자 분석 서비스(`app.state.conversations`, `THREADS_ENABLED=1`)를 거친다. 서비스가 없으면 스트림을 열기 전에 공통 503이다. 첫 run이 React 대화와 같은 UUID의 분석 회로·thread를 프로젝트의 `connections`와 `target_ref`로 만들고, 같은 대화에서 다른 `target_ref`를 보내면 run을 만들기 전에 409(`대상 부품을 바꾸려면 새 대화를 시작하세요.`), 회로에 없는 부품이면 422다. run은 `Conversations.message`, resume은 그 thread의 현재 버전으로 `Conversations.resume`을 스레드 풀에서 부르므로 사용자 사실 찾기, 실행·하루 예산과 호출 간격, 영속 체크포인트, Langfuse 사건 기록이 같이 적용된다. 완료·거절 frame에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 칸·값·문장 최대 3개)이 붙고, `public.runs`에는 저장하지 않아 `GET /api/runs/{id}`의 결과에서는 빈 목록이다. 결과는 그래프 상태에서 `public_state`로 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 보낸다. 진행 frame은 시작 때 `status` 하나다. `failed` frame에는 `error: {code, message}`가 붙는다. 코드는 공통 오류 코드(429 `TOO_MANY_REQUESTS`, 504 `GATEWAY_TIMEOUT`, 422 `VALIDATION_ERROR`, 409 `CONFLICT`, 503 `SERVICE_UNAVAILABLE`, 그 밖 `INTERNAL_ERROR`)이고 문구는 분석 서비스의 공개 문구다. 4xx가 아닌 예외는 `request_id`와 함께 traceback을 로그에 남기고 문구는 고정 문장으로 바꾼다.
 
 알려진 한계:
 - 합성 데모(`DEMO_SCENARIOS=1`)의 분석 서비스는 합성 회로와 지원 질문 3개만 받는다. React 프로젝트 회로(데모 보드 포함)로 run하면 422다.
-- 프로젝트를 지워도 같은 UUID의 분석 thread·checkpoint·승인·Store 기억은 남는다. 기억은 `/api/memories`로 철회·삭제한다.
-- React 승인(`POST /messages/{message_id}/approvals`)은 public 승인·견적·승인 사례만 저장하고 분석 서비스의 승인·Store 기억에는 전달하지 않는다. 사용자 기억에 남는 것은 분석 서비스 API(`/api/threads/{id}/approve`)로 승인한 사례뿐이다.
+- 프로젝트를 지워도 같은 UUID의 분석 thread·checkpoint·승인 기록은 남는다. 승인 기록은 `/api/memories`로 철회·삭제 표식을 단다.
+- React 승인(`POST /messages/{message_id}/approvals`)은 public 승인·견적·승인 사례만 저장하고 분석 서비스의 승인 기록에는 전달하지 않는다. 승인 사례는 장기 기억이 아니며(11-09) 새 분석에 넘기지 않는다.
 - 재개가 4xx·429로 실패하면 React run은 `failed`가 되고 분석 thread는 조건 질문을 기다린 채 남아, 같은 대화의 새 질문은 409다. 새 대화를 시작해야 한다. 그래프 도중 실패한 thread도 같다(분석 서비스의 재시도는 React에 없다).
 
 `POST /messages/{message_id}/approvals`는 소유자의 완료된 성공 판정 후보를 품번과 사용자가 확인한 verdict의 쌍으로 한 번만 승인한다. `POST /approvals/{approval_id}/quotes`는 수량만 받아 승인 snapshot을 복사하고 가격·재고는 저장하지 않는다. 프로젝트 견적 목록과 사용자 승인 사례 목록·확인 삭제를 제공하며 모든 변경 요청은 Origin을 확인한다.

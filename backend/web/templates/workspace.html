@@ -136,7 +136,7 @@
     $('#approvals').replaceChildren();
     for (const approval of data.approvals || []) {
       const row = document.createElement('details'), title = document.createElement('summary'), text = document.createElement('pre');
-      const labels = {stored:'기억 저장됨', pending:'기억 저장 대기', unknown:'저장 상태 확인 불가', revoked:'기억 참조 철회됨', deleted:'기억에서 삭제됨 · 원본 유지'};
+      const labels = {active:'승인 기록', stored:'기억 저장됨', pending:'기억 저장 대기', unknown:'저장 상태 확인 불가', revoked:'기억 참조 철회됨', deleted:'기억에서 삭제됨 · 원본 유지'};
       title.textContent = `결과 ${approval.version} · ${labels[approval.memory_state]} · ${approval.approved_at}`;
       text.textContent = `${approval.summary}\n승인 당시 입력: ${approval.input_record ? JSON.stringify(approval.input_record,null,2) : '이전 기록에는 상세 입력이 없습니다.'}`;
       row.append(title,text);

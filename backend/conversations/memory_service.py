@@ -1,6 +1,9 @@
-"""세션 사용자별 업로드·분석 thread·승인 사례. 공유 DB setup은 명시적 CLI만 수행한다.
+"""세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
 React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로만 돌려주고,
+모델 프롬프트 · 판정 입력에는 넣지 않는다(`backend/multi_agent/` 병합 뒤). 승인한 판정 사례는 기억이 아니라 승인 기록이다:
+새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
 """
 import argparse
 import os
@@ -18,15 +21,23 @@ from fastapi import HTTPException
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.store.postgres import PostgresStore
 from langgraph.types import Command
+from psycopg import sql
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
+from backend.conversations import profile
 from backend.graph.memory import namespace, memory_policy
 from backend.graph.netlist import parse_netlist
 
 LOGGER = logging.getLogger('backend.conversations')
+
+
+def _vector_schema(conn):
+    """설치된 pgvector 확장의 스키마 이름(로컬 Compose는 public, Supabase는 extensions). 없으면 None."""
+    row = conn.execute("SELECT n.nspname AS name FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace WHERE e.extname='vector'").fetchone()
+    return row['name'] if row else None
 
 
 def initialize(dsn):
@@ -34,9 +45,13 @@ def initialize(dsn):
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
         for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql'):
             conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
-        conn.execute('SET search_path TO sojafit_agent')
+        vector = _vector_schema(conn)
+        # [왜] 의미 색인 표(store_vectors)의 vector 형은 확장이 설치된 스키마에 있다. sojafit_agent만 보면 형을 못 찾는다.
+        #      표는 search_path 첫 스키마(sojafit_agent)에 만들어진다
+        conn.execute(sql.SQL('SET search_path TO sojafit_agent{}').format(sql.SQL(', {}').format(sql.Identifier(vector)) if vector else sql.SQL('')))
         PostgresSaver(conn).setup()
-        PostgresStore(conn).setup()
+        # [주의] vector 확장이 없으면(CI의 postgres:16) 색인 표 없이 준비한다. 확장 설치는 여기서 하지 않는다(db/000_init.sql · Supabase 몫)
+        PostgresStore(conn, index=profile.INDEX if vector else None).setup()
 
 
 class Conversations:
@@ -52,11 +67,20 @@ class Conversations:
                     raise RuntimeError('분석 DB 준비 명령을 먼저 실행하세요.')
                 if not conn.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='input_record'").fetchone():
                     raise RuntimeError('분석 DB 준비 명령으로 입력 기록 마이그레이션을 적용하세요.')
+                vector = _vector_schema(conn) if conn.execute("SELECT to_regclass('store_vectors') AS name").fetchone()['name'] else None
+            indexed = bool(vector) and profile.embedding_enabled()
+            if indexed:
+                # [왜] 의미 검색 SQL이 vector 형 · 거리 연산자를 이름만으로 찾는다. 확장 스키마를 뒤에 붙인다(같은 이름 표는 sojafit_agent가 먼저)
+                self.dsn = make_conninfo(dsn, options=f'-c search_path=sojafit_agent,"{vector}"')
+            elif profile.embedding_enabled():
+                LOGGER.warning('profile_index_unavailable: 분석 DB 준비 명령으로 의미 색인 표를 만드세요. 지금은 순위 없이 사실을 돌려줍니다.')
             self._budget_settings()
             self.readiness()
             self.pool = self.stack.enter_context(ConnectionPool(self.dsn, min_size=1, max_size=4, timeout=5,
                 kwargs={'autocommit': True, 'row_factory': dict_row, 'prepare_threshold': 0}))
             self.saver, self.store = PostgresSaver(self.pool), PostgresStore(self.pool)
+            # [왜] 그래프에 넘기는 Store에는 색인을 켜지 않는다(다른 put이 임베딩 호출을 부르지 않게). 사실 기억만 색인 Store를 쓴다
+            self.profile = profile.ProfileMemory(PostgresStore(self.pool, index=profile.INDEX) if indexed else self.store, indexed)
             self.graph = factory(self.saver, self.store) if factory else self._graph()
         except Exception:
             self.stack.close()
@@ -216,7 +240,8 @@ class Conversations:
                                 'WHERE t.user_id=%s ORDER BY t.created_at DESC LIMIT 100', (user,)).fetchall()
         return [{**r, 'id': str(r['id'])} for r in rows]
 
-    def detail(self, user, thread):
+    def detail(self, user, thread, hints=()):
+        """thread 상태 · 결과 · 승인 기록. hints는 이번 질문으로 찾은 사용자 사실(message · resume만 넘기고 GET은 빈 목록)."""
         with self.connection() as conn:
             row = self._owned(conn, user, thread)
             # 실행 중인 연결이 잠금을 가진 동안에는 중간 체크포인트를 완료로 바꾸지 않는다.
@@ -231,14 +256,9 @@ class Conversations:
             events = conn.execute('SELECT version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery FROM analysis_events WHERE thread_id=%s ORDER BY created_at DESC LIMIT 20', (thread,)).fetchall()
         approval_rows = []
         for approval in approvals:
-            memory_state = approval['memory_status']
-            if memory_state == 'active':
-                try:
-                    memory_state = 'stored' if self.store.get(namespace(str(user)), f"{thread}:{approval['version']}") else 'pending'
-                except Exception:
-                    memory_state = 'unknown'
+            # [왜] 승인 사례는 이제 Store 기억이 아니라 승인 기록이다. 상태는 승인 원본 옆 표식(active · revoked · deleted) 그대로다
             approval_rows.append({'version': approval['version'], 'approved_at': approval['approved_at'].isoformat(),
-                                  'memory_state': memory_state, 'summary': approval['snapshot']['answer'][:2000],
+                                  'memory_state': approval['memory_status'], 'summary': approval['snapshot']['answer'][:2000],
                                   'correction': approval['correction'],
                                   'input_record': (approval['snapshot'].get('context') or {}).get('input_record')})
         snapshot = self.graph.get_state(self.config(thread))
@@ -254,7 +274,7 @@ class Conversations:
                 'interrupt': pending[0] if pending else None, 'can_approve': bool(can_approve),
                 'can_retry': bool(snapshot.next and not pending and row['retries'] < 2 and state.get('run_version') == row['version']),
                 'related_memories': related[:5], 'approvals': approval_rows, 'events': events,
-                'consulted_memories': visible_memories,
+                'profile_hints': list(hints), 'consulted_memories': visible_memories,
                 'referenced_memories': [m for m in visible_memories
                                         if f"승인사례:{m['thread_id']}:{m['version']}" in (state.get('memory_refs') or [])
                                         and not pending and not state.get('refusal')]}
@@ -272,9 +292,8 @@ class Conversations:
                 raise HTTPException(409, '분석당 질문 한도(50건)에 도달했습니다.')
             version = row['version'] + 1
             content = (f'사용 조건: {conditions}\n' if conditions else '') + text
-            part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-            memories = self.memories(user, part=part)[:5] if part else []
             budget = self._budget(user)
+            hints = self._profile_hints(user, text)
             with conn.transaction():
                 conn.execute("UPDATE threads SET version=%s,status='RUNNING',retries=0,input_record=%s WHERE id=%s",
                              (version, Jsonb({'version': version, 'question': text, 'conditions': conditions, 'resumes': []}), thread))
@@ -284,9 +303,18 @@ class Conversations:
             inputs = {'input': f'이전 사용자 입력:\n{context}\n현재 질문:\n{content}' if context else content,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
-                      'approved_memories': memories}
+                      # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
+                      'approved_memories': []}
             self._invoke(conn, thread, inputs, budget, request_id)
-        return self.detail(user, thread)
+        return self.detail(user, thread, hints)
+
+    def _profile_hints(self, user, question):
+        """질문 글로 사용자 사실을 찾아 화면 참고용 칸(kind · value · text)만 돌려준다. 실패해도 분석은 계속한다."""
+        try:
+            return [{key: fact[key] for key in ('kind', 'value', 'text')} for fact in self.profile.facts(user, question)] if question else []
+        except Exception:
+            LOGGER.warning('profile_hints_unavailable')
+            return []
 
     def resume(self, user, thread, answers, role, version, request_id=''):
         with self.locked(user, thread) as (conn, row):
@@ -310,8 +338,9 @@ class Conversations:
             with conn.transaction():
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
+            hints = self._profile_hints(user, record.get('question'))
             self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
-        return self.detail(user, thread)
+        return self.detail(user, thread, hints)
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError
@@ -407,7 +436,7 @@ class Conversations:
             approved = conn.execute('SELECT snapshot,approved_at,memory_status FROM approvals WHERE thread_id=%s AND version=%s', (thread, version)).fetchone()
             if approved and approved['memory_status'] != 'active':
                 raise HTTPException(409, '철회·삭제한 기억은 재승인으로 복구할 수 없습니다. 철회 복구 기능을 사용하세요.')
-            # 기존 승인은 현재 그래프 상태와 무관하게 불변 원본으로 Store만 복구한다.
+            # 이미 승인한 버전은 현재 그래프 상태와 무관하게 원본을 그대로 두고 성공으로 답한다(멱등).
             if not approved:
                 self._reconcile(conn, row)
                 detail = self.detail(user, thread)
@@ -428,47 +457,32 @@ class Conversations:
                                                                   'conditions': state.get('conditions', ''),
                                                                   'target_part': state.get('target_part') or {},
                                                                   'judge_read': state.get('judge_read') or {}}})))
-                approved = conn.execute('SELECT snapshot,approved_at FROM approvals WHERE thread_id=%s AND version=%s', (thread, version)).fetchone()
-            judgement = approved['snapshot']['judgement']
-            # 이전 스냅샷에는 part가 없다. 변경 불가인 업로드 회로의 고정 대상에서 읽는다.
-            part = approved['snapshot'].get('part')
-            if part is None:
-                part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-            value = {'thread_id': str(thread), 'version': version, 'approved_at': approved['approved_at'].isoformat(),
-                     'roles': judgement.get('roles') or [], 'part': part,
-                     'summary': approved['snapshot']['answer'][:2000]}
-            try:
-                self.store.put(namespace(str(user)), f'{thread}:{version}', value)
-            except Exception:
-                raise HTTPException(503, '승인 원본은 보관했습니다. 기억 저장을 위해 같은 결과를 다시 승인하세요.') from None
+            # [왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09 결정). Store에 쓰지 않는다
         return {'ok': True, 'version': version}
 
     def memories(self, user, roles=None, part=None):
-        items = self.store.search(namespace(str(user)), filter={'part': part} if part and not roles else None, limit=100)
-        matches = [i.value for i in items if (not roles and not part) or
-                   set(roles or []) & set(i.value.get('roles') or []) or
-                   (part and part.casefold() == i.value.get('part', '').casefold())]
-        results = []
+        """자기 승인 기록(철회 · 삭제 안 한 것, 최근 승인 순 최대 100건). roles · part를 주면 역할이나 품번이 같은 것만."""
         with self.connection() as conn:
-            for value in matches:
-                row = conn.execute('SELECT a.snapshot,a.approved_at,a.correction,c.connections,t.target FROM approvals a JOIN threads t ON t.id=a.thread_id '
-                                   'JOIN circuits c ON c.id=t.circuit_id '
-                                   "WHERE t.user_id=%s AND a.thread_id=%s AND a.version=%s AND a.memory_status='active'",
-                                   (user, value['thread_id'], value['version'])).fetchone()
-                if row:
-                    snapshot = row['snapshot']
-                    original_part = snapshot.get('part')
-                    if original_part is None:
-                        original_part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-                    original_roles = snapshot['judgement'].get('roles') or []
-                    if (roles or part) and not (set(roles or []) & set(original_roles) or
-                                               (part and part.casefold() == original_part.casefold())):
-                        continue
-                    results.append({'thread_id': value['thread_id'], 'version': value['version'],
-                                    'approved_at': row['approved_at'].isoformat(), 'part': original_part,
-                                    'roles': original_roles, 'summary': snapshot['answer'][:2000],
-                                    'correction': row['correction'],
-                                    'context': snapshot.get('context'), 'judgement': snapshot['judgement']})
+            rows = conn.execute('SELECT a.thread_id,a.version,a.snapshot,a.approved_at,a.correction,c.connections,t.target FROM approvals a '
+                                'JOIN threads t ON t.id=a.thread_id JOIN circuits c ON c.id=t.circuit_id '
+                                "WHERE t.user_id=%s AND c.user_id=%s AND a.memory_status='active' ORDER BY a.approved_at DESC LIMIT 100",
+                                (user, user)).fetchall()
+        results = []
+        for row in rows:
+            snapshot = row['snapshot']
+            # 이전 스냅샷에는 part가 없다. 변경 불가인 업로드 회로의 고정 대상에서 읽는다.
+            original_part = snapshot.get('part')
+            if original_part is None:
+                original_part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
+            original_roles = snapshot['judgement'].get('roles') or []
+            if (roles or part) and not (set(roles or []) & set(original_roles) or
+                                       (part and part.casefold() == original_part.casefold())):
+                continue
+            results.append({'thread_id': str(row['thread_id']), 'version': row['version'],
+                            'approved_at': row['approved_at'].isoformat(), 'part': original_part,
+                            'roles': original_roles, 'summary': snapshot['answer'][:2000],
+                            'correction': row['correction'],
+                            'context': snapshot.get('context'), 'judgement': snapshot['judgement']})
         return results
 
     def _current_memories(self, user, items):
@@ -494,7 +508,7 @@ class Conversations:
                 status = {'revoke':'revoked','restore':'active','delete':'deleted'}[action]
                 conn.execute('UPDATE approvals SET memory_status=%s,memory_updated_at=CURRENT_TIMESTAMP WHERE thread_id=%s AND version=%s', (status,thread,version))
                 if action == 'delete':
-                    # 먼저 삭제 표식을 확정한다. Store 장애가 있어도 이후 모델 입력은 차단된다.
+                    # 먼저 삭제 표식을 확정한다. 이전 코드가 Store에 써 둔 사본이 있으면 지운다(새 승인은 Store에 쓰지 않음).
                     try:
                         self.store.delete(namespace(str(user)), f'{thread}:{version}')
                     except Exception:

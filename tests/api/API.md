@@ -9,12 +9,12 @@
 실행: `uv run pytest -q tests/api`(저장소 루트).
 
 ## 파일
-- `test_threads.py` — 격리 PostgreSQL의 업로드·소유권·체크포인트 복구·재개·승인 멱등성과 기억 격리 시험. React 대화의 같은 UUID thread 연결(대상 고정·소유권·원문 미저장)과 React run·재개 HTTP가 실제 분석 서비스로 이어지는지도 본다
+- `test_threads.py` — 격리 PostgreSQL의 업로드·소유권·체크포인트 복구·재개·승인 멱등성 시험. 승인 사례는 새 분석에 넘기지 않고 Store에 쓰지 않음(승인 기록), 질문·재개 결과의 사용자 사실 참고(`profile_hints`)의 A/B 격리·고침·지움, `vector` 확장이 있는 DB에서 의미 순위·다시 임베딩도 본다. React 대화의 같은 UUID thread 연결(대상 고정·소유권·원문 미저장)과 React run·재개 HTTP가 실제 분석 서비스로 이어지는지도 본다
 - 같은 파일에서 실제 로그인 쿠키의 키 없는 합성 HTTP 흐름, 기억 정정/철회/삭제/재승인 차단, 중단 checkpoint의 철회 기억 배제, 내용 없는 단계 기록/trace 실패 격리와 시간 초과 결과의 승인 차단을 확인한다.
 - 같은 파일에서 DB 없이 실제 분석 그래프 조립이 카드 도구(`card_find` · `card_specs`)를 넘기고, `timed_tool`로 감싼 뒤에도 `prefetch` · `also_read`가 남는지 본다(ADR 0016).
 - 같은 파일의 운영 준비 시험: 8개 병렬 thread의 일일 예약과 질문 격리, 명시적 TEST_THREAD_BACKUP_CONTAINER에서 pg_dump→일회용 DB 복원→Store/소유권/interrupt 재개. 공유 DB 복원은 실행하지 않는다.
 - `API.md` — 이 문서
-- `test_conversations.py` — 대화 인증·스트림·삭제 경계. 가짜 분석 서비스로 첫 run의 thread 연결, 대상 변경 409, 재개 버전, 실패 frame의 `error.code`와 예외 로그, 서비스 없음 503, 대화 있는 프로젝트 삭제 204
+- `test_conversations.py` — 대화 인증·스트림·삭제 경계. 가짜 분석 서비스로 첫 run의 thread 연결, 대상 변경 409, 재개 버전, 완료 frame의 참고(내 설정)와 run 기록 미저장, 실패 frame의 `error.code`와 예외 로그, 서비스 없음 503, 대화 있는 프로젝트 삭제 204
 - `test_quotes.py` — 승인·견적·사례 API의 Origin·입력 allow-list·안전 오류
 - `test_full_service_flow.py` — 격리 PostgreSQL의 업로드·interrupt 재개·승인·가격 없는 견적·타 사용자 차단·cascade 전체 흐름
 - `test_auth.py` — 인증 단위 및 DB 통합 테스트(세션 HMAC과 키 누락·교체, 데모 시드, 두 사용자 세션 격리, 관리자와 일반 사용자 권한, 비활성 사용자와 세션 폐기, 실패 구간·잠금 경계, 30분 유휴·8시간 절대 만료 경계, scrypt 동시 검증 상한, HTTPS 쿠키·출처, DB 오류, 로그인 화면, 질문 API 미노출, 비밀번호 해시 전용 CLI, 자기 가입의 중복·입력·출처·IP 하루 3회 한도와 Cloud Run 클라이언트 IP 판단, IP당 15분 로그인 실패 30회 잠금·구간 만료). 로컬에서는 테스트 전용 `TEST_AUTH_DATABASE_URL`이 없으면 DB 시험을 건너뜀

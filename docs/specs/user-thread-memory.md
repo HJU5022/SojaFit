@@ -1,4 +1,6 @@
-# 사용자별 분석 thread와 승인 사례 기억
+# 사용자별 분석 thread · 승인 기록 · 사용자 사실 기억
+
+**11-09 변경:** 장기 기억을 승인한 판정 사례에서 사용자 사실 3칸으로 바꿨다(아래 "사용자 사실 기억", SPEC 8.5). 승인 사례는 이제 승인 기록이다. 승인 원본과 승인·`/api/memories` 관리 API는 그대로 두지만 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않는다. 그 아래 절의 "승인 사례 기억" 설계·AC 중 "(11-09 대체)"를 붙인 줄은 그 전 설계다.
 
 상태: 로컬·공유 DB·운영0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
 
@@ -14,10 +16,10 @@
 - 기존 비밀번호·Google 로그인과 세션을 그대로 사용한다.
 - 17:30까지 구현·검증을 목표로 하되 로컬 검증, 공유 DB 적용, 배포 검증을 구분해 보고한다.
 - 로그인 후 넷리스트 업로드, 대상 선택, 내 분석 목록·질문·재개·승인·관련 사례를 같은 출처 화면에서 제공한다.
-- Out of Scope: 한 thread 안의 여러 분석, 회원가입, 기존 업무 표 초안 전체 적용, 견적서 발행·가격 저장, 기억 임베딩·자동 학습.
+- Out of Scope: 한 thread 안의 여러 분석, 회원가입, 기존 업무 표 초안 전체 적용, 견적서 발행·가격 저장, 대화에서 기억 자동 학습(사용자 사실은 설정 API로만 쓴다).
 
 ## What
-- 승인 기억 활용: 새 질문 실행 전에 인증 사용자의 같은 품번 승인 사례를 최대 5건 조회해 별도 그래프 상태로 전달한다. Supervisor·판정 읽기·답변 생성 모델이 참고하되 과거 조건을 현재 조건으로 자동 채우거나 승인을 사양 근거로 쓰지 않는다. 숫자 판정과 현재 근거 검증은 유지한다.
+- (11-09 대체) 승인 기억 활용: 새 질문 실행 전에 인증 사용자의 같은 품번 승인 사례를 최대 5건 조회해 별도 그래프 상태로 전달한다. Supervisor·판정 읽기·답변 생성 모델이 참고하되 과거 조건을 현재 조건으로 자동 채우거나 승인을 사양 근거로 쓰지 않는다. 숫자 판정과 현재 근거 검증은 유지한다.
 - 사용자가 회로·대상 부품을 정해 분석 thread를 만들고 질문한다. 조건 보충·후보 비교는 같은 thread를 쓴다.
 - 조건 질문 interrupt는 같은 thread에서 재개한다. 다른 회로·대상 분석은 새 thread를 만든다.
 - 서버가 생성한 현재 판정 결과를 사용자가 명시적으로 승인하면 그 결과와 승인 시점을 남기고 자기 namespace에 사례를 저장한다.
@@ -103,20 +105,20 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 ## AC
 - GIVEN 새 계획형 판정 하위 그래프의 interrupt WHEN PostgreSQL 연결을 닫고 다시 열어 소유자가 재개 THEN 같은 조건 질문·기억을 유지하고 판정 읽기 모델을 다시 호출하지 않으며 완료 결과를 승인할 수 있다.
 - GIVEN thread API의 DB 장애 또는 본문 크기 초과 WHEN 오류 응답 THEN 공통 error 본문과 X-Request-ID가 일치하고 no-store이며 DB 예외 원문은 노출하지 않는다.
-- GIVEN A/B가 같은 품번의 서로 다른 사례를 승인 WHEN 각각 새 thread 질문 THEN 실제 그래프의 모델 입력에는 자기 사례만 포함되고 다른 사용자의 사례는 포함되지 않는다. 기억을 읽는 가짜 모델의 응답으로 연결을 검증한다.
-- GIVEN 과거 승인 조건에만 숫자가 존재 WHEN 새 분석에서 모델이 그 숫자를 현재 조건으로 제안 THEN 기존 grounded 검증이 거부하고 필요한 조건을 묻는다.
+- (11-09 대체: 이제 어느 사례도 모델 입력에 넣지 않는다) GIVEN A/B가 같은 품번의 서로 다른 사례를 승인 WHEN 각각 새 thread 질문 THEN 실제 그래프의 모델 입력에는 자기 사례만 포함되고 다른 사용자의 사례는 포함되지 않는다. 기억을 읽는 가짜 모델의 응답으로 연결을 검증한다.
+- (11-09 대체) GIVEN 과거 승인 조건에만 숫자가 존재 WHEN 새 분석에서 모델이 그 숫자를 현재 조건으로 제안 THEN 기존 grounded 검증이 거부하고 필요한 조건을 묻는다.
 - GIVEN 관련 기억 없음 또는 다음 질문에서 관련 기억이 사라짐 WHEN 그래프 실행 THEN 빈 목록을 전달해 이전 턴 기억이 재사용되지 않는다.
-- GIVEN 승인 기억의 지시문 WHEN 모델 입력 구성 THEN 데이터 경계와 현재 근거 우선 규칙을 전달하며 기억만으로 사양 근거가 생기지 않는다.
+- (11-09 대체) GIVEN 승인 기억의 지시문 WHEN 모델 입력 구성 THEN 데이터 경계와 현재 근거 우선 규칙을 전달하며 기억만으로 사양 근거가 생기지 않는다.
 - GIVEN 미인증 요청 WHEN thread/기억 API 호출 THEN 401이며 그래프·Store를 호출하지 않는다.
 - GIVEN 사용자 A와 B WHEN B가 A의 thread를 조회·질문·재개·승인 THEN 모두 404이며 A의 상태·기억은 바뀌지 않는다.
 - GIVEN 같은 사용자 WHEN 분석 두 건 생성 THEN 서로 다른 thread와 독립된 체크포인트를 사용한다.
 - GIVEN 저장된 thread WHEN 런타임 연결을 닫고 다시 열어 조회·재개 THEN 기존 상태를 유지한다.
 - GIVEN 중단된 분석 WHEN 소유자가 답변 THEN 같은 thread에서 재개하고 판정 결과를 반환한다.
 - GIVEN 질문·거절·중단 상태 WHEN 승인 THEN 거부하고 기억을 만들지 않는다.
-- GIVEN 완료된 판정 WHEN 소유자가 현재 결과 버전을 승인 THEN 승인 스냅샷과 자기 namespace의 사례 한 건이 남는다.
-- GIVEN 같은 결과 WHEN 승인 재요청 또는 Store 장애 후 재시도 THEN 기억을 중복 생성하지 않고 성공 여부를 정확히 반환한다.
+- GIVEN 완료된 판정 WHEN 소유자가 현재 결과 버전을 승인 THEN 승인 스냅샷이 남는다(11-09부터 Store에는 쓰지 않는다).
+- GIVEN 같은 결과 WHEN 승인 재요청 THEN 승인 원본을 중복 생성하지 않고 성공을 반환한다.
 - GIVEN 다음 질문으로 결과 변경 WHEN 승인 원본이 없는 과거 결과 버전 승인 THEN 409로 거부한다.
-- GIVEN 승인 원본 저장 후 Store 실패 WHEN 같은 thread에 새 질문 후 이전 승인 버전 재요청 THEN 원본·승인 시각·품번을 유지한 기억 한 건을 복구한다. 현재 결과가 거절이어도 복구하며 다른 사용자는 404로 거부한다. 품번 필드가 없는 기존 승인 원본도 복구한다.
+- (11-09 대체: Store에 쓰지 않으므로 이전 승인 버전 재요청은 원본을 그대로 두고 성공) GIVEN 승인 원본 저장 후 Store 실패 WHEN 같은 thread에 새 질문 후 이전 승인 버전 재요청 THEN 원본·승인 시각·품번을 유지한 기억 한 건을 복구한다. 현재 결과가 거절이어도 복구하며 다른 사용자는 404로 거부한다. 품번 필드가 없는 기존 승인 원본도 복구한다.
 - GIVEN 사용자 A의 승인 사례 WHEN A와 B가 기억 조회 THEN A에게만 표시된다.
 - GIVEN 역할·품번이 같은 자기 승인 사례 WHEN 새 분석 결과 조회 THEN 최대 5건의 관련 사례를 함께 표시하고 다른 사용자 사례와 일치하지 않는 사례는 제외한다.
 - GIVEN 한 thread의 서로 다른 결과를 각각 승인 WHEN 과거 사례 조회 THEN 각 버전의 승인 원본을 유지한다.
@@ -161,3 +163,24 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 ## 관련 문서
 - [검증 결과와 이전 스냅샷](../research/thread-memory-operations-review.md)
 - [운영 검증 절차](../experiments/thread-memory-operations.md)
+
+## 사용자 사실 기억 (11-09)
+
+칸 · 저장 · 검색 · 활용 · 고치기 · 지우기 · 한계 · 수용 기준의 정본은 [SPEC 8.5](../../SPEC.md)다. 여기에는 구현 위치와 세부를 둔다.
+
+- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 runtime으로 Store를 받는다(병합 뒤). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
+- 코드: `backend/conversations/profile.py`(칸 검사 `clean`, 틀 문장 `sentence`, `VoyageEmbeddings`, `ProfileMemory.facts · update · delete`), `backend/api/profile.py`(`/api/me/memory`), `memory_service.Conversations.profile`과 `_profile_hints`, `dto.result_dto(profile_hints=...)`.
+- 저장 모양: Store `(str(user_id), "profile")` / key = 칸 이름 / 값 `{kind, value, text, version, updated_at, source: "user_settings"}`. 여러 칸을 한 번에 고치면 `PutOp`을 한 `batch`로 보내 임베딩도 한 번 부른다.
+- 색인: `PostgresStore(index={'dims': 1024, 'embed': VoyageEmbeddings(), 'fields': ['text'], 'ann_index_config': {'kind': 'flat'}})`. LangGraph 동기 `PostgresStore`는 검색 질문도 `embed_documents`로 임베딩하므로, 검색하는 동안만 입력 종류를 `query`로 바꾼다(`contextvars`). 근사 색인(HNSW)은 namespace 조건과 함께 쓰면 다른 사용자 벡터에 밀려 결과가 빌 수 있어 만들지 않는다.
+- 켜는 조건: `VOYAGE_API_KEY`가 있고 `DEMO_MODE`가 1이 아니며 `sojafit_agent.store_vectors`가 있을 때. 셋 중 하나라도 아니면 색인 없는 Store로 쓰고 읽는다. 키가 있는데 표가 없으면 시작 때 경고 로그(`profile_index_unavailable`)를 남긴다.
+- 스키마 경로: 준비 명령과 색인을 켠 서비스 연결은 `search_path`를 `sojafit_agent, <vector 확장 스키마>`로 둔다. 색인 표의 `vector(1024)` 형과 검색의 `::vector` · `<=>`가 이름으로 찾히기 때문이다. 표는 첫 스키마인 `sojafit_agent`에 생긴다. 확장 스키마는 `pg_extension`에서 읽는다(로컬 Compose `public`, Supabase `extensions`). 준비 명령은 확장을 설치하지 않는다.
+- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 모델 프롬프트 · 판정 입력 연결과 승인 사례 프롬프트 문단("Historical approved cases") 제거는 `backend/multi_agent/` · `backend/prompts/` 병합 뒤에 한다.
+- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장).
+
+### 보관 기간 (결정 11-09, 아직 구현 안 함)
+- 사용자 사실은 자동 만료가 없다. 사용자가 지우거나 계정을 지울 때 지운다.
+- 프로젝트와 거기에 딸린 것(대화, checkpoint, 승인, 견적)은 마지막 활동 뒤 60일에 자동으로 지운다.
+- 기록 종류(분석 사건, 로그인 · 가입 시도, 하루 사용량)는 30일 뒤에 지운다.
+- 사용자가 직접 지우면 바로 지운다.
+- 정리는 스케줄러 없이 새 분석을 시작할 때 작은 묶음으로 한다.
+- 구현은 다음 작업이다. 지금 코드는 위 규칙대로 지우지 않는다.

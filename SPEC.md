@@ -261,9 +261,38 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   - GIVEN Mouser 응답, WHEN `GET /api/prices`가 조회하면, THEN 4절의 칸과 조회 시각만 돌려주고 헤더는 `Cache-Control: no-store`이며, 로그에 요청 주소·키·응답 값이 남지 않는다.
 - 견적 승인·저장 수용 기준: 구현 작업서에서 정할 것.
 
-### 8.5 사용자별 사례 기억
+### 8.5 사용자 사실 기억(장기 기억)
 
-현재 `backend/graph/memory.py`에는 namespace 규칙만 있고 Store 호출자·DB 연결·승인 사례 저장·수정 API는 없습니다. 사용자별 사례 기억의 데이터·권한·수정 수용 기준은 구현 작업서에서 정합니다.
+상세 설계·보관 기간은 [작업서](docs/specs/user-thread-memory.md) "사용자 사실 기억"을 따릅니다.
+
+- 정의(11-09 결정): 장기 기억은 사람에 대한 사실 중 다음 대화에서도 유효한 것입니다. 이번 대화의 상태는 체크포인터(`sojafit_agent`의 DB checkpoint)에, 다음 대화에서도 유효한 사실은 LangGraph Store에 둡니다.
+- 칸(11-09 결정, 3개):
+
+  | 칸 | 이름 | 값 |
+  |---|---|---|
+  | `affiliation` | 소속 | 자유 글 1~100자, 제어 문자 없음(앞뒤 공백은 뗌) |
+  | `job_role` | 직무 | `design`(설계) · `purchasing`(구매) · `student`(학생) · `other`(기타) |
+  | `mounting_preference` | 선호 실장 방식 | `smd`(SMD) · `through_hole`(스루홀) · `any`(상관없음) |
+
+- 기억이 아닌 것: 승인한 판정 사례(승인 기록으로만 둠), 전압·전류 같은 회로 값(회로마다 다름, AC-02), 주문 수량.
+- 저장: 칸 하나가 Store 항목 하나입니다. namespace는 `(str(user_id), "profile")`(첫 칸이 격리 단위, namespace는 접근 권한 검사가 아님), key는 칸 이름, 값은 `{kind, value, text, version, updated_at, source: "user_settings"}`입니다. `text`는 코드가 정한 틀로 만든 한국어 문장(예: "이 사용자는 SMD 실장을 선호한다.")이고 LLM이 쓴 글이 아닙니다. 고치면 같은 key를 덮어쓰고 `version`을 1 올리며 다시 임베딩합니다.
+- 의미 검색: `PostgresStore` 색인을 `text` 칸에 켭니다. 임베딩은 `llm.voyage_embed`(voyage-4-large, 1024차원)를 감싸 저장 문장은 `document`, 질문은 `query` 입력 종류로 보냅니다. 근사 색인 없이 정확 검색(flat)입니다. 색인 표(`store_vectors`·`vector_migrations`)는 준비 명령(`python -m backend.conversations.memory_service --setup`)이 `vector` 확장이 설치된 DB에서만 `sojafit_agent`에 만듭니다.
+- 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
+- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(분석 thread 질문·재개 응답, React run 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다. 모델 프롬프트·판정 입력에는 넣지 않습니다(`backend/multi_agent/` 병합 뒤 연결).
+- 승인 기록: 승인 원본(`sojafit_agent.approvals`)과 `POST /api/threads/{id}/approve`·`GET /api/memories`·`POST /api/memories/{thread}/{version}/control`은 승인 기록으로 남습니다. 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
+- 한계:
+  - Voyage 키가 없거나 `DEMO_MODE=1`이거나 색인 표가 없으면 색인 없이 쓰고, 검색은 순위 없이 사실(최근에 고친 순)을 돌려줍니다. 검색 중 임베딩 장애도 같습니다. 색인이 켜진 채 임베딩이 실패하면 고치기는 503이고 아무 칸도 바뀌지 않습니다.
+  - 색인 없이 쓴 칸은 벡터가 없어 순위 뒤에 붙습니다. 색인 없이 고친 칸의 예전 벡터는 남아 다시 색인을 켜면 옛 문장으로 순위를 매깁니다.
+  - `profile_hints`는 run 기록에 저장하지 않습니다(지운 사실이 남지 않게). 연결이 끊겨 run을 다시 읽거나 분석 thread를 GET하면 빈 목록입니다.
+  - 같은 칸을 동시에 고치면 `version`이 한 번만 오를 수 있습니다. `q` 검색에는 사용자별 호출 한도가 없습니다. 소속 글은 임베딩을 위해 Voyage로 보냅니다.
+- 수용 기준:
+  - GIVEN 세 칸 밖의 이름이나 사용자 id가 든 본문, WHEN `PATCH /api/me/memory`, THEN 공통 422이고 아무 칸도 바뀌지 않습니다. 소속이 비었거나 100자를 넘거나 제어 문자를 담아도 422입니다.
+  - GIVEN Origin이 없거나 다름, WHEN PATCH·DELETE, THEN 403입니다. 로그인하지 않으면 401, 분석 저장소가 없으면 503입니다.
+  - GIVEN 저장한 칸, WHEN 같은 칸을 다시 고치면, THEN 같은 key에 `version`이 1 오르고 `text`는 새 값의 틀 문장이며 새 문장으로 다시 임베딩합니다.
+  - GIVEN 사용자 A·B의 사실, WHEN A가 조회·`q` 검색·질문 분석을 하면, THEN A의 사실만 나옵니다.
+  - GIVEN 칸 하나 또는 전부를 지움, WHEN 조회·검색·다음 질문, THEN 지운 칸은 나오지 않고 그 색인 벡터도 없습니다.
+  - GIVEN 색인과 사실 3칸, WHEN 다른 말로 물으면(예: "표면실장" ↔ SMD), THEN 맞는 칸이 첫째입니다.
+  - GIVEN 승인한 판정 사례, WHEN 새 분석, THEN 모델 입력에 승인 사례가 없고 `approved_memories`는 빈 목록입니다.
 
 ### 8.6 로그인
 

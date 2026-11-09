@@ -121,6 +121,7 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API. run·재개는 사용자 분석 서비스(memory_service)를 거침
+│   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
@@ -132,7 +133,8 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 사례 Store와 준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고와 준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── profile.py      <- 사용자 사실 3칸 장기 기억(Store): 칸 검사·틀 문장·덮어쓰기·지우기·Voyage 의미 검색
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
 │   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
@@ -416,6 +418,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
+│   │   ├── test_profile.py <- 사용자 사실 기억: 칸 검사·틀 문장·version·지우기·의미 순위(가짜 임베딩)·설정 API, 격리 DB 색인 표
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
@@ -545,7 +548,7 @@ SojaFit (proj3-b)
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
-│   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 사례 Store 연결 설계와 수용 기준
+│   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
 │   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자

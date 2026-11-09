@@ -1,4 +1,4 @@
-"""격리 PostgreSQL에서 사용자별 업로드·thread·체크포인트·승인 기억을 검증한다."""
+"""격리 PostgreSQL에서 사용자별 업로드·thread·체크포인트·승인 기록·사용자 사실 참고(profile_hints)를 검증한다."""
 import os
 from uuid import UUID, uuid4
 
@@ -55,6 +55,7 @@ def runtime(monkeypatch):
         app.close()
         with psycopg.connect(dsn) as conn:
             for user in users:
+                conn.execute('DELETE FROM sojafit_agent.store WHERE prefix LIKE %s', (f'{user}.%',))  # 사용자 사실(namespace 첫 칸 = 사용자)
                 conn.execute('DELETE FROM sojafit_agent.threads WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM sojafit_agent.circuits WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM public.users WHERE id=%s', (user,))
@@ -87,7 +88,7 @@ def test_demo_scenarios_use_real_graph_and_storage_without_external_calls(runtim
     assert error.value.status_code == 404 and app.memories(b) == []
     second = app.create(a, circuit['id'], 'D1')['id']
     role = app.message(a, second, fixture['questions']['role'])
-    assert role['referenced_memories'] and role['mode'] == 'demo'
+    assert role['referenced_memories'] == role['consulted_memories'] == [] and role['mode'] == 'demo'
     with pytest.raises(HTTPException) as error:
         app.message(a, second, '지원하지 않는 질문')
     assert error.value.status_code == 422 and app.detail(a, second)['version'] == 1
@@ -165,9 +166,10 @@ def test_keyless_demo_http_login_to_approval_and_new_thread(runtime, monkeypatch
     post(f'/api/threads/{thread}/approve',{'version':1})
     assert other.get(f'/api/threads/{thread}').status_code==404 and other.get('/api/memories').json()==[]
     new=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
-    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['referenced_memories']
+    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['consulted_memories'] == []
+    assert len(client.get('/api/memories').json()) == 1  # 승인 기록으로만 남는다
     post(f'/api/memories/{thread}/1/control',{'action':'revoke'})
-    assert not post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['consulted_memories']
+    assert client.get('/api/memories').json() == []
     assert post(f'/api/threads/{new}/messages',{'text':config['questions']['refuse']})['can_approve'] is False
 
 
@@ -216,7 +218,7 @@ def test_memory_controls_preserve_approval_and_block_restore_after_delete(runtim
         assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()[0]['judgement'] == original
 
 
-def test_revoked_memory_in_interrupted_checkpoint_is_not_sent_on_resume(runtime):
+def test_approved_cases_are_not_sent_to_new_analysis_or_resume(runtime):
     from backend.graph.memory import memory_context, memory_sources
     app, (a, _), _ = runtime
     original = make_thread(app, a); app.message(a, original, '판정'); app.approve(a, original, 1)
@@ -229,10 +231,9 @@ def test_revoked_memory_in_interrupted_checkpoint_is_not_sent_on_resume(runtime)
     graph.add_edge(START,'read'); graph.add_edge('read','work'); graph.add_edge('work',END)
     app.graph = graph.compile(checkpointer=app.saver, store=app.store)
     thread = make_thread(app, a); app.message(a, thread, '조건 질문')
-    assert app.graph.get_state(app.config(thread)).values['approved_memories']
-    app.control_memory(a, original, 1, 'revoke', '')
+    assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
     app.resume(a, thread, {'VIN_MAX':'12'}, '', 1)
-    assert seen == [('',set())]
+    assert seen == [('',set())] and len(app.memories(a)) == 1
 
 
 def test_store_delete_failure_still_blocks_memory_and_repeated_delete_cleans_up(runtime, monkeypatch):
@@ -391,17 +392,13 @@ def test_approval_is_owned_versioned_and_idempotent(runtime):
     assert app.memories(a)[0]['judgement']['shown'][0]['part'] == 'SS34'
 
 
-def test_store_failure_can_be_retried_without_losing_approval(runtime, monkeypatch):
+def test_approval_keeps_original_without_store_copy(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
     version = app.message(a, thread, '판정')['version']
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.approve(a, thread, version)
-    assert error.value.status_code == 503
-    monkeypatch.setattr(app.store, 'put', put)
-    app.approve(a, thread, version)
+    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: pytest.fail('approved case written to Store'))
+    monkeypatch.setattr(app.store, 'batch', lambda *args, **kwargs: pytest.fail('approved case written to Store'))
+    assert app.approve(a, thread, version)['ok']
     assert len(app.memories(a)) == 1
 
 
@@ -422,43 +419,31 @@ def test_approval_snapshot_preserves_final_conditions_and_is_immutable(runtime):
         assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s AND version=1', (thread,)).fetchone()[0] == snapshot
 
 
-def test_old_approval_exposes_pending_state_and_can_recover_from_detail(runtime, monkeypatch):
+def test_approval_history_shows_status_and_input_record(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
     app.message(a, thread, '판정')
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException):
-        app.approve(a, thread, 1)
-    monkeypatch.setattr(app.store, 'put', put)
+    app.approve(a, thread, 1)
     app.message(a, thread, '다른 질문')
+    monkeypatch.setattr(app.store, 'get', lambda *args: pytest.fail('approval state read from Store'))
     row = app.detail(a, thread)['approvals'][0]
-    assert row['version'] == 1 and row['memory_state'] == 'pending'
+    assert row['version'] == 1 and row['memory_state'] == 'active'
     assert row['input_record']['question'] == '판정'
     assert app.approve(a, thread, row['version'])['ok']
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'stored'
-    monkeypatch.setattr(app.store, 'get', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'unknown'
 
 
 @pytest.mark.parametrize('legacy_snapshot', [False, True])
-def test_old_approval_store_recovers_after_new_question(runtime, monkeypatch, legacy_snapshot):
+def test_old_approval_is_idempotent_after_new_question(runtime, legacy_snapshot):
     app, (a, b), dsn = runtime
     thread = make_thread(app, a)
     version = app.message(a, thread, '판정')['version']
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.approve(a, thread, version)
-    assert error.value.status_code == 503
+    app.approve(a, thread, version)
     with psycopg.connect(dsn) as conn:
         if legacy_snapshot:
             conn.execute("UPDATE sojafit_agent.approvals SET snapshot=snapshot-'part' WHERE thread_id=%s", (thread,))
         original = conn.execute('SELECT snapshot,approved_at FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()
         if not legacy_snapshot:
             assert original[0]['part'] == 'SS34'
-    monkeypatch.setattr(app.store, 'put', put)
-    assert app.memories(a) == []
     assert app.message(a, thread, '거절')['version'] == version + 1
     # 현재 상태의 품번을 복구 원본으로 잘못 쓰지 않는지 확인한다.
     app.graph.update_state(app.config(thread), {'target_part': {'value': 'DIFFERENT'}})
@@ -487,7 +472,7 @@ def test_unapproved_old_version_still_cannot_be_approved(runtime):
     assert app.memories(a) == []
 
 
-def test_http_recovers_old_approval_after_new_question(runtime, monkeypatch):
+def test_http_old_approval_is_idempotent_after_new_question(runtime, monkeypatch):
     from fastapi.testclient import TestClient
     from backend import auth
     from backend.main import app as api
@@ -500,10 +485,7 @@ def test_http_recovers_old_approval_after_new_question(runtime, monkeypatch):
     origin = {'Origin': 'http://localhost:8000'}
     try:
         version = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '판정'}).json()['version']
-        put = app.store.put
-        monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-        assert client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version}).status_code == 503
-        monkeypatch.setattr(app.store, 'put', put)
+        assert client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version}).status_code == 200
         newer = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '거절'})
         assert newer.status_code == 200 and newer.json()['version'] == version + 1
         recovered = client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version})
@@ -515,60 +497,31 @@ def test_http_recovers_old_approval_after_new_question(runtime, monkeypatch):
         del api.state.conversations
 
 
-def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkeypatch):
+def test_new_threads_send_no_approved_cases_to_models(runtime, monkeypatch):
+    """[왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09). 새 분석의 모델 입력에 어느 사용자 사례도 들어가지 않는다."""
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
     from backend.services import llm
-    app, (a, b), dsn = runtime
-    sources = {}
+    app, (a, b), _ = runtime
     for user, marker in ((a, 'PRIVATE_A_CASE'), (b, 'PRIVATE_B_CASE')):
         thread = make_thread(app, user)
         app.message(user, thread, '판정', conditions='과거 조건 12V')
         app.graph.update_state(app.config(thread), {'answer': marker})
         app.approve(user, thread, 1)
-        sources[user] = thread
-    # 같은 사용자의 무관 품번과, 자기 namespace에 잘못 들어간 타인 포인터도 제외한다.
-    unrelated = app.upload(a, 'other.net', NET.replace('SS34', '1N4148'))
-    unrelated_thread = app.create(a, unrelated['id'], 'D1')['id']
-    app.message(a, unrelated_thread, '판정')
-    app.graph.update_state(app.config(unrelated_thread), {'answer': 'UNRELATED_CASE'})
-    app.approve(a, unrelated_thread, 1)
-    from backend.graph.memory import namespace
-    app.store.put(namespace(str(a)), 'foreign-pointer', {'thread_id': sources[b], 'version': 1,
-                  'part': 'SS34', 'roles': [], 'summary': 'FORGED_CASE'})
-    calls = []
+    prompts = []
     def chat(node, system, user, schema, **kwargs):
-        calls.append((node, system, user))
+        prompts.append(user)
         if node == 'supervisor':
-            return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain prior case')])
-        assert node == 'docs_answer'
-        marker = 'PRIVATE_A_CASE' if 'PRIVATE_A_CASE' in user else 'PRIVATE_B_CASE' if 'PRIVATE_B_CASE' in user else 'NO_MEMORY'
-        refs = [f'승인사례:{sources[owner]}:1'] if marker != 'NO_MEMORY' else []
-        return schema(grade='enough', answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].', memory_refs=refs)
+            return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain role')])
+        return schema(grade='enough', answer='현재 회로에서 다시 확인합니다 [넷리스트].', memory_refs=[])
     monkeypatch.setattr(llm, 'node_chat', chat)
     app.graph = build_graph(chat=chat, retriever=lambda *args, **kwargs: [], checkpointer=app.saver, store=app.store)
-    for owner, own, foreign in ((a, 'PRIVATE_A_CASE', 'PRIVATE_B_CASE'), (b, 'PRIVATE_B_CASE', 'PRIVATE_A_CASE')):
-        calls.clear()
-        thread = make_thread(app, owner)
-        result = app.message(owner, thread, 'D1 역할과 과거 사례를 설명해줘')
-        assert own in result['answer'] and foreign not in result['answer']
-        assert result['referenced_memories'][0]['thread_id'] == sources[owner]
-        assert result['consulted_memories'] == result['referenced_memories']
-        assert {c[0] for c in calls} == {'supervisor', 'docs_answer'}
-        for _, system, prompt in calls:
-            assert own in prompt and foreign not in prompt and '과거 조건 12V' in prompt
-            assert 'UNRELATED_CASE' not in prompt and 'FORGED_CASE' not in prompt
-            assert sources[owner] in prompt and 'historical' in system.lower()
-        state = app.graph.get_state(app.config(thread)).values
-        assert len(state['approved_memories']) == 1
-        assert state['approved_memories'][0]['thread_id'] == sources[owner]
-        # 사용자 소유권을 확인할 수 없는 Store 항목과 무관 품번은 모델에 전달하지 않는다.
-        with psycopg.connect(dsn) as conn:
-            conn.execute('DELETE FROM sojafit_agent.approvals WHERE thread_id=%s', (sources[owner],))
-        calls.clear()
-        assert 'NO_MEMORY' in app.message(owner, thread, '다시 설명해줘')['answer']
-        assert all(own not in prompt and foreign not in prompt for _, _, prompt in calls)
-        assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
+    thread = make_thread(app, a)
+    result = app.message(a, thread, 'D1 역할과 과거 사례를 설명해줘')
+    assert prompts and all('PRIVATE_' not in prompt and '과거 조건 12V' not in prompt for prompt in prompts)
+    assert result['consulted_memories'] == result['referenced_memories'] == []
+    assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
+    assert len(app.memories(a)) == 1 and len(app.memories(b)) == 1
 
 
 def test_thread_lock_rejects_concurrent_write_and_refusal_cannot_be_approved(runtime):
@@ -688,7 +641,7 @@ def test_dump_restore_preserves_owned_memory_and_pending_resume(runtime):
                 with pytest.raises(HTTPException) as error:
                     copy.detail(b, approved)
                 assert error.value.status_code == 404
-                assert copy.detail(a, approved)['approvals'][0]['memory_state'] == 'stored'
+                assert copy.detail(a, approved)['approvals'][0]['memory_state'] == 'active'
                 assert copy.detail(a, waiting)['status'] == 'WAITING'
                 assert copy.resume(a, waiting, {'VIN_MAX':'12'}, '', 1)['status'] == 'DONE'
                 copy.approve(a, waiting, 1)
@@ -731,7 +684,7 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
     assert 'PRIVATE_CONDITION' not in record.message
 
 
-def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runtime):
+def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime):
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
     app, (a, _), dsn = runtime
@@ -742,7 +695,7 @@ def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runti
     calls = []
     def chat(node, system, user, schema):
         calls.append(node)
-        assert 'MEMORY_FOR_JUDGE' in user
+        assert 'MEMORY_FOR_JUDGE' not in user
         if node == 'supervisor':
             return Plan(next='tasks', question_type='candidate_judge', tasks=[
                 Task(id=1, agent='judge', kind='candidate_judge', goal='judge SS34')])
@@ -946,3 +899,108 @@ def test_enabled_app_lifespan_opens_and_closes_real_persistence(runtime, monkeyp
         assert client.get('/health').status_code == 200
         assert app.state.conversations.graph.store is app.state.conversations.store
     assert not hasattr(app.state, 'conversations')
+
+
+def test_message_sends_no_approved_cases_and_returns_profile_hints():
+    """DB 없이 분석 서비스의 질문 한 번: 승인 사례를 찾지 않고 빈 목록을 넘기며, 그 질문으로 찾은 사용자 사실을 결과에 붙인다."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from langgraph.store.memory import InMemoryStore
+    from backend.conversations.profile import ProfileMemory
+    app = Conversations.__new__(Conversations)  # [왜] DB 없이 message의 입력 조립만 본다
+    app.mode, seen = 'live', {}
+    app.profile = ProfileMemory(InMemoryStore(), indexed=False)
+    app.profile.update(7, {'mounting_preference': 'smd'})
+    app.profile.update(8, {'affiliation': '다른 사용자 회사'})
+
+    class Conn:
+        def execute(self, *args): return SimpleNamespace(fetchall=lambda: [], fetchone=lambda: None)
+        @contextmanager
+        def transaction(self): yield
+    @contextmanager
+    def locked(user, thread):
+        yield Conn(), {'version': 0, 'target': 'D1', 'filename': 'my.net', 'connections': {'components': [{'ref': 'D1', 'value': 'SS34'}]}}
+    app.locked, app._reconcile, app._budget = locked, lambda conn, row: None, lambda user: 'budget'
+    app.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(next=()))
+    app.memories = lambda *args, **kwargs: pytest.fail('approved cases looked up for a new analysis')
+    app._invoke = lambda conn, thread, inputs, budget, request_id='': seen.update(inputs)
+    app.detail = lambda user, thread, hints=(): {'profile_hints': list(hints)}
+    result = app.message(7, 'thread-1', 'SMD로 바꿀 수 있나요?')
+    assert seen['approved_memories'] == []
+    assert result['profile_hints'] == [{'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.'}]
+
+
+def test_profile_hints_are_owned_and_follow_update_and_delete(runtime):
+    """색인 없이(키 없음) 실제 Store: 질문 결과의 참고(내 설정)는 자기 사실만, 고친 값 · 지운 칸을 바로 따른다."""
+    app, (a, b), _ = runtime
+    app.profile.update(a, {'mounting_preference': 'smd', 'affiliation': 'A회사'})
+    app.profile.update(b, {'affiliation': 'B회사'})
+    thread, other = make_thread(app, a), make_thread(app, b)
+    assert {h['value'] for h in app.message(a, thread, '판정')['profile_hints']} == {'smd', 'A회사'}
+    assert [h['value'] for h in app.message(b, other, '판정')['profile_hints']] == ['B회사']
+    app.profile.update(a, {'mounting_preference': 'through_hole'})
+    app.profile.delete(a, 'affiliation')
+    pending = app.message(a, thread, '조건 질문')
+    expected = [{'kind': 'mounting_preference', 'value': 'through_hole', 'text': '이 사용자는 스루홀 실장을 선호한다.'}]
+    assert pending['profile_hints'] == expected
+    assert app.resume(a, thread, {'VIN_MAX': '12'}, '', pending['version'])['profile_hints'] == expected
+    assert app.detail(a, thread)['profile_hints'] == []  # GET 상세는 다시 찾지 않는다
+    assert app.profile.facts(a)[0]['version'] == 2 and [f['value'] for f in app.profile.facts(b)] == ['B회사']
+    app.profile.delete(a)
+    assert app.message(a, thread, '판정')['profile_hints'] == [] and app.profile.facts(b)
+
+
+def test_indexed_profile_ranks_paraphrase_reembeds_and_isolates_users(runtime, monkeypatch):
+    """pgvector 색인 + 가짜 Voyage: 다른 말로 물어도 맞는 사실이 먼저, 고치면 새 벡터, 지우면 벡터도 사라지고, 사용자끼리 섞이지 않는다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.main import app as api
+    from backend.services import llm
+    _, (a, b), dsn = runtime
+    with psycopg.connect(dsn) as conn:
+        if not conn.execute("SELECT to_regclass('sojafit_agent.store_vectors')").fetchone()[0]:
+            pytest.skip('requires the vector extension in the test DB before setup')
+    concepts, kinds = [('smd', '표면실장'), ('스루홀', '리드 부품'), ('구매', '발주'), ('소속', '회사')], []
+    def fake(texts, input_type):
+        kinds.append(input_type)
+        return [[0.01 + sum(t.lower().count(w) for w in concepts[i]) if i < len(concepts) else 0.01 for i in range(1024)] for t in texts]
+    monkeypatch.setattr(llm, 'voyage_embed', fake)
+    monkeypatch.setenv('VOYAGE_API_KEY', 'test-not-used'); monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    app = Conversations(dsn, factory=fake_graph)
+    try:
+        assert app.profile.indexed
+        app.profile.update(a, {'affiliation': '한빛전자', 'job_role': 'purchasing', 'mounting_preference': 'smd'})
+        app.profile.update(b, {'affiliation': '다른회사', 'mounting_preference': 'through_hole'})
+        assert set(kinds) == {'document'}
+        kinds.clear()
+        assert app.profile.facts(a, '표면실장 부품으로 바꿀 수 있나요?')[0]['kind'] == 'mounting_preference'
+        assert app.profile.facts(a, '발주 담당자 기준으로')[0]['kind'] == 'job_role'
+        assert app.profile.facts(a, '어느 회사인가요')[0]['kind'] == 'affiliation'
+        assert set(kinds) == {'query'}
+        thread = make_thread(app, a)
+        hints = app.message(a, thread, '표면실장으로 바꿔도 되나요')['profile_hints']
+        assert hints[0]['value'] == 'smd' and all(h['value'] not in ('다른회사', 'through_hole') for h in hints)
+        api.state.conversations = app
+        api.dependency_overrides[auth.current_user_id] = lambda: b
+        client = TestClient(api)
+        found = client.get('/api/me/memory', params={'q': '한빛전자 구매 표면실장'}).json()
+        assert {f['value'] for f in found} == {'다른회사', 'through_hole'}
+        api.dependency_overrides[auth.current_user_id] = lambda: a
+        updated = client.patch('/api/me/memory', json={'mounting_preference': 'through_hole'}, headers={'Origin': 'http://localhost:8000'})
+        assert updated.status_code == 200
+        top = client.get('/api/me/memory', params={'q': '리드 부품도 괜찮나요'}).json()[0]
+        assert top['kind'] == 'mounting_preference' and top['version'] == 2 and top['text'] == '이 사용자는 스루홀 실장을 선호한다.'
+        assert client.delete('/api/me/memory', params={'kind': 'mounting_preference'}, headers={'Origin': 'http://localhost:8000'}).status_code == 204
+        assert 'mounting_preference' not in {f['kind'] for f in client.get('/api/me/memory', params={'q': '리드 부품'}).json()}
+        assert all(h['kind'] != 'mounting_preference' for h in app.message(a, thread, '리드 부품으로')['profile_hints'])
+        with psycopg.connect(dsn) as conn:
+            rows = conn.execute("SELECT prefix, key FROM sojafit_agent.store_vectors WHERE prefix IN (%s,%s) ORDER BY prefix, key",
+                                (f'{a}.profile', f'{b}.profile')).fetchall()
+        assert rows == sorted([(f'{a}.profile', 'affiliation'), (f'{a}.profile', 'job_role'),
+                               (f'{b}.profile', 'affiliation'), (f'{b}.profile', 'mounting_preference')])
+    finally:
+        api.dependency_overrides.clear()
+        if hasattr(api.state, 'conversations'):
+            del api.state.conversations
+        app.close()

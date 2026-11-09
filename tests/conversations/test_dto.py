@@ -5,8 +5,16 @@ def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints'}
     assert 'secret' not in str(body)
+
+
+def test_profile_hints_keep_only_kind_value_text():
+    """참고(내 설정)는 사실의 칸 · 값 · 문장만 내보내고 버전 · 출처 같은 다른 칸은 버린다(최대 3개)."""
+    from backend.conversations.dto import result_dto
+    hint = {'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.', 'version': 2, 'source': 'user_settings'}
+    body = result_dto({'answer': 'ok'}, request_id='req-1', status='completed', profile_hints=[hint] * 4).model_dump()
+    assert body['profile_hints'] == [{'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.'}] * 3
 
 
 def test_interrupt_result_round_trip_has_no_private_fields():

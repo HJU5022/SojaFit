@@ -13,7 +13,7 @@ ORIGIN = {'origin': 'http://testserver'}
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None):
-        self.calls, self.targets, self.version = [], {}, 1
+        self.calls, self.targets, self.version, self.hints = [], {}, 1, []
         self.state, self.interrupt, self.error = state or {'answer': 'ok'}, interrupt, error
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
@@ -25,7 +25,7 @@ class FakeAnalysis:
         self.calls.append(call)
         if self.error:
             raise self.error
-        return {'interrupt': self.interrupt, 'version': self.version}
+        return {'interrupt': self.interrupt, 'version': self.version, 'profile_hints': self.hints}
     def message(self, user, thread, text, conditions='', request_id=''): return self._run('message', thread, text, conditions)
     def resume(self, user, thread, answers, role, version, request_id=''): return self._run('resume', thread, answers, role, version)
     def detail(self, user, thread): return {'version': self.version}
@@ -103,6 +103,20 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
     assert recovered.json()['result']['status'] == 'completed'
     assert analysis.calls == [('ensure', thread, '프로젝트', 'D1'), ('message', thread, 'hello', '')]
     assert repo.calls == ['start', ('commit', 'completed')]
+
+
+def test_completed_frame_carries_profile_hints_but_run_record_does_not(web):
+    """참고(내 설정)는 이번 결과 frame에만 붙고 run 기록에는 저장하지 않는다(지운 사실이 지난 run 조회에 남지 않게)."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, run)
+    analysis.hints = [{'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.', 'version': 3}]
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/threads/{thread}/runs', json={'question': 'SMD로?', 'target_ref': 'D1'}, headers=ORIGIN)
+        recovered = client.get(f'/api/runs/{run}').json()['result']
+    completed = response.text.split('event: completed\ndata: ')[1]
+    assert '"profile_hints": [{"kind": "mounting_preference", "value": "smd", "text": "이 사용자는 SMD 실장을 선호한다."}]' in completed
+    assert '"version": 3' not in completed
+    assert 'profile_hints' not in repo.result and recovered['profile_hints'] == []
 
 
 def test_changed_target_is_409_before_a_run_is_created(web):

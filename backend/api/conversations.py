@@ -2,6 +2,7 @@
 
 - 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409).
 - 결과는 그래프 상태에서 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 SSE로 보낸다.
+- 완료 · 거절 결과에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 참고(내 설정))을 붙여 보낸다. run 기록에는 저장하지 않는다.
 - 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503이다.
 하지 않는 일: 그래프 조립·예산·Store 기억·Langfuse(분석 서비스가 맡는다), 저장 SQL(`backend/conversations/repository.py`).
 """
@@ -126,7 +127,8 @@ def outcome(analysis, thread_id, detail, request_id):
         return 'requires_input', result_dto({}, request_id=request_id, status='requires_input', stage=STAGES['judge'], interrupt=detail['interrupt'])
     state = analysis.graph.get_state(analysis.config(thread_id)).values or {}
     kind = 'refused' if state.get('refusal') else 'completed'
-    return kind, result_dto(public_state(state), request_id=request_id, status=kind, stage=STAGES['finished'])
+    return kind, result_dto(public_state(state), request_id=request_id, status=kind, stage=STAGES['finished'],
+                            profile_hints=detail.get('profile_hints') or [])
 
 
 def public_error(exc, request_id, run_id):
@@ -149,6 +151,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
         await queue.put(frame('status', result_dto({}, request_id=request_id, status='running', stage=STAGES['running']).model_dump()))
         try:
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
+            # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
             saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
