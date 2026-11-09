@@ -50,6 +50,11 @@ button { min-height: 40px; padding: 9px 15px; color: #071311; background: var(--
 button:hover:not(:disabled) { background: var(--trace-strong); border-color: var(--trace-strong); }
 form button, .panel > button { margin: 20px 0 12px; }
 button:disabled { opacity: .55; cursor: default; }
+.privacy-notice { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; background: var(--canvas); }
+.privacy-notice h2 { font-size: 16px; }
+.privacy-notice ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.7; }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; }
+.consent input { width: auto; min-height: 0; margin-top: 7px; }
 button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 [role="alert"] { margin: 16px 0; padding: 12px; color: #ffb3b3; background: var(--danger-soft); border: 1px solid #71353d; border-left: 3px solid var(--danger); border-radius: 4px; overflow-wrap: anywhere; }
 .table-scroll { overflow-x: auto; }

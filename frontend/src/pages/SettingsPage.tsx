@@ -3,13 +3,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteProfile, getProfile, JOB_ROLES, MOUNTING, updateProfile } from '../api/profile'
 import type { ProfileChanges, ProfileKind } from '../api/profile'
 import { errorMessage } from '../api/client'
+import { useAuth } from '../auth/AuthProvider'
 
 const LABELS: Record<ProfileKind, string> = { affiliation: '소속', job_role: '직무', mounting_preference: '선호 실장 방식' }
 const EMPTY: Record<ProfileKind, string> = { affiliation: '', job_role: '', mounting_preference: '' }
 
-// 내 설정: 다음 대화에서도 참고로 보일 사실 3칸을 저장 · 수정 · 삭제한다(SPEC 8.5).
+// 내 설정: 다음 대화에서도 참고로 보일 사실 3칸을 저장 · 수정 · 삭제한다(SPEC 8.5). 일반 계정은 여기서 탈퇴한다(DELETE /api/me).
 export default function SettingsPage() {
   const client = useQueryClient()
+  const auth = useAuth()
+  const [confirmLeave, setConfirmLeave] = useState(false)
+  const [leaveError, setLeaveError] = useState<unknown>(null)
   const facts = useQuery({ queryKey: ['profile-memory'], queryFn: ({ signal }) => getProfile(signal), retry: false, gcTime: 0 })
   const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
@@ -35,6 +39,12 @@ export default function SettingsPage() {
     }
     if (Object.keys(changes).length === 0) { setNotice('바뀐 칸이 없습니다.'); return }
     void act(() => updateProfile(changes), '저장했습니다.')
+  }
+  async function leave() {
+    if (busy) return
+    setBusy(true); setLeaveError(null)
+    // 성공하면 AuthProvider가 화면 메모리 · 탭 저장소를 비우고, 보호 화면이 /login으로 바꾼다
+    try { await auth.deleteAccount() } catch (error) { setLeaveError(error); setBusy(false) }
   }
   const select = (kind: ProfileKind, options: Record<string, string>) => <select id={`profile-${kind}`} value={form[kind]} disabled={busy}
     onChange={event => setForm(current => ({ ...current, [kind]: event.target.value }))}>
@@ -64,5 +74,13 @@ export default function SettingsPage() {
       {notice && <p role="status">{notice}</p>}
       {error ? <p role="alert">{errorMessage(error)}</p> : null}
     </section>
+    {auth.user?.role === 'user' && <section className="panel" aria-labelledby="leave-heading"><h2 id="leave-heading">계정 삭제</h2>
+      <p>프로젝트 · 대화 · 분석 기록 · 내 설정과 계정을 숨기지 않고 바로 지웁니다. 되돌릴 수 없습니다. 분석이 진행 중이면 끝난 뒤 다시 시도하세요.</p>
+      {!confirmLeave && <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmLeave(true)}>계정 삭제</button>}
+      {confirmLeave && <div role="group" aria-label="계정 삭제 확인"><p>계정과 모든 기록을 지울까요?</p>
+        <button type="button" disabled={busy} onClick={() => void leave()}>계정 삭제 확인</button>
+        <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmLeave(false)}>취소</button></div>}
+      {leaveError ? <p role="alert">{errorMessage(leaveError)}</p> : null}
+    </section>}
   </>
 }

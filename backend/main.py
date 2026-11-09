@@ -330,15 +330,24 @@ def login(body: Login, request: Request, response: Response):
 
 
 class Signup(Login):
-    """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상이다(11-09 결정)."""
+    """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상, 처리방침 고지 동의(consent)는 true여야 한다(11-09 결정)."""
 
     password: str = Field(min_length=8, max_length=1024)
+    # [왜] 가입 화면의 처리방침 고지(개인정보 보호법 15조 2항)를 읽고 동의했다는 표시. 없거나 true가 아니면 공통 422다
+    consent: StrictBool
+
+    @field_validator("consent")
+    @classmethod
+    def agreed(cls, consent: bool) -> bool:
+        if consent is not True:
+            raise ValueError("개인정보 수집 · 이용 동의가 필요합니다.")
+        return consent
 
 
 @app.post("/api/auth/signup")
 def signup(body: Signup, request: Request, response: Response):
     """승인 없이 user 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
-    # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패(입력값 미노출, validation_error가 냄),
+    # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패·동의(consent) 없음(입력값 미노출, validation_error가 냄),
     # 429 IP 하루 한도, 503 DB 사용 불가 또는 동시 scrypt 슬롯 부족(auth.signup이 냄)
     auth.check_origin(request)
     try:

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { getGoogleStatus } from '../api/auth'
 import { errorMessage } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
@@ -38,6 +38,7 @@ export default function LoginPage() {
     </form>
     {(error || auth.error) ? <p role="alert">{errorMessage(error || auth.error)}</p>
       : params.get('google') === 'error' && <p role="alert">Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.</p>}
+    <p>처음이면 <Link to="/signup">가입</Link></p>
     {google && <p><a href="/api/auth/google/start">Google 관리자 로그인</a></p>}
   </section>
 }

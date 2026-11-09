@@ -191,9 +191,19 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 두 함수 모두 트랜잭션 advisory lock(`736128` · `736129`)으로 동시에 한 곳만 청소하고 나머지는 기다리지 않고 0을 돌려준다. Supabase pg_cron으로 하루 한 번 같은 함수를 부를 수 있다(지금은 켜지 않음, SQL 머리 주석에 예).
 - 60일 · 30일의 이유: 회로는 몇 주 뒤에 다시 여는 일이 많아 한 달보다 넉넉히 둔다. 기록은 최근 디버깅과 남용 한도 확인에만 쓴다.
 
+#### 규칙과 개인정보 보호법 조항
+
+| 규칙 | 구현 | 조항 |
+|---|---|---|
+| 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/023_retention.sql` 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
+| 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
+| 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
+| 가입 때 처리방침을 알리고 동의를 받는다 | React `/signup`의 고지(`PrivacyNotice`: 목적 · 저장 항목 · 보관 기간 · 삭제 · Langfuse · 외부 서비스 · 거부 권리)와 동의 체크, 서버 `consent` 필수(없으면 422) | 15조 2항(동의를 받을 때 알릴 사항) |
+
 #### 사용자가 지울 때(구현)
 - 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.
 - 탈퇴 `DELETE /api/me`(`backend/main.py`): Origin 확인, 관리자는 409(운영자 CLI `--delete-user-id`도 관리자는 지우지 않음). 순서는 기록 먼저, 계정 마지막이다. ① 계정 배타 잠금 ② 그 사용자의 분석 thread · 회로 · checkpoint 전부(한 트랜잭션) ③ Store를 namespace 접두사로 찾아 지우는 반복(`(user_id,)` 아래 전부와 옛 `("memories", user_id)`, 한 번에 100개 · 최대 1만 개) ④ 계정 행(세션 · 프로젝트 · 견적 · 승인 사례 · 하루 사용량은 FK cascade, 그 이메일의 로그인 실패 행도 지움). 응답은 `{"deleted": {analysis_threads, analysis_circuits, checkpoints, memory_items, projects, quotes, account}}`이고 세션 쿠키를 지운다.
 - 멱등: 계정을 먼저 지우면 기록 삭제가 실패했을 때 다시 요청할 방법이 없다. 그래서 계정을 마지막에 지우고, 중간 실패는 503(`계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.`)이며 다시 요청하면 남은 것만 지운다(이미 지운 것은 0건).
 - 잠금(선택: advisory lock, 표 없음): 키 `hashtextextended('account:<user_id>', 0)`. 분석 실행(`locked`) · 대화 연결(`ensure_thread`) · 업로드 · thread 만들기 · 설정 저장(`account_writer`)은 공유로, 탈퇴는 배타로 잡는다. 공유끼리는 서로 막지 않고 탈퇴와만 막으므로 그 사용자의 분석이 도는 동안 탈퇴는 409(`진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.`), 탈퇴가 도는 동안 그 사용자의 새 분석 · 재개 · 설정 저장은 409(`계정 삭제를 처리하는 중입니다.`)다. React run · 재개는 스트림을 열기 전(`admission`)에도 확인한다. 표식 표 대신 잠금을 고른 이유: DB 세션 잠금이라 프로세스가 죽어도 연결과 함께 풀려 남는 표식이 없고, 탈퇴가 실패해도 계정이 남아 있어 다시 요청하면 된다. 공유 public 업무 표의 쓰기(프로젝트 · 대화 · 견적)는 계정 행 삭제의 FK cascade가 지우므로 잠그지 않는다.
+- 화면: 내 설정(`/settings`)의 "계정 삭제"(일반 계정만 보임)는 확인 뒤에만 `DELETE /api/me`를 보낸다. 로그아웃 · 탈퇴 · 세션 만료로 로그인 상태를 잃으면 React가 화면 메모리(React Query 캐시)와 sessionStorage를 비우고, 보호 화면은 `/login`으로 바꿔(replace) 주소의 `projectId` · `targetRef`를 남기지 않는다(공용 PC의 다음 사람이 보지 않게).
 - 한계: 분석 서비스(`THREADS_ENABLED=1`)가 없으면 탈퇴는 503이다(분석 기록 · Store를 지울 수 없으므로). React run 행이 `running`으로 남은 상태(서버가 실행 도중 죽음)는 잠금이 없어 탈퇴를 막지 않는다.

@@ -1,8 +1,13 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import SettingsPage from './SettingsPage'
-import { renderWithQueries as render } from '../test/projects'
-import { failure, network } from '../test/network'
+import type { ReactNode } from 'react'
+import { renderWithQueries } from '../test/projects'
+import { failure, network, user } from '../test/network'
+import { AuthProvider } from '../auth/AuthProvider'
+
+// 내 설정은 로그인한 사용자의 탈퇴 버튼을 같이 보인다. 세션 확인(/api/auth/me)에 답하지 않는 시험에서는 버튼이 없다
+const render = (element: ReactNode) => renderWithQueries(<AuthProvider>{element}</AuthProvider>)
 
 afterEach(() => vi.unstubAllGlobals())
 const fact = (kind: string, value: string, text: string, version = 1) => ({ kind, value, text, version, updated_at: '2026-11-09T00:00:00Z', source: 'user_settings' })
@@ -66,4 +71,42 @@ it('shows the server validation message with its request id', async () => {
   fireEvent.change(screen.getByLabelText('소속'), { target: { value: '한빛전자' } })
   fireEvent.click(screen.getByRole('button', { name: '저장' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('요청 형식이 올바르지 않습니다. (요청 ID: req-test)')
+})
+
+it('deletes the account only after confirmation, then clears cached data and tab storage', async () => {
+  const calls: string[] = []
+  network((path, init) => {
+    const method = init.method ?? 'GET'
+    calls.push(`${method} ${path}`)
+    if (path === '/api/auth/me') return calls.includes('DELETE /api/me') ? failure() : Response.json(user)
+    if (path === '/api/me/memory') return Response.json([])
+    if (path === '/api/me' && method === 'DELETE') return Response.json({ deleted: { projects: 1, account: 1 } })
+    throw new Error(`unexpected ${method} ${path}`)
+  })
+  sessionStorage.setItem('previous', 'left behind')
+  const { client } = render(<SettingsPage />)
+  client.setQueryData(['projects'], [{ id: 1, name: '내 회로' }])
+  fireEvent.click(await screen.findByRole('button', { name: '계정 삭제' }))
+  expect(calls).not.toContain('DELETE /api/me')
+  fireEvent.click(screen.getByRole('button', { name: '취소' }))
+  fireEvent.click(screen.getByRole('button', { name: '계정 삭제' }))
+  fireEvent.click(screen.getByRole('button', { name: '계정 삭제 확인' }))
+  await waitFor(() => expect(screen.queryByRole('heading', { name: '계정 삭제' })).not.toBeInTheDocument())
+  expect(calls.filter(call => call === 'DELETE /api/me')).toHaveLength(1)
+  expect(client.getQueryData(['projects'])).toBeUndefined()
+  expect(sessionStorage.length).toBe(0)
+})
+
+it('keeps the session and shows the reason when account deletion is refused', async () => {
+  network((path, init) => {
+    if (path === '/api/auth/me') return Response.json(user)
+    if (path === '/api/me/memory') return Response.json([])
+    if (path === '/api/me' && init.method === 'DELETE') return failure('CONFLICT', '진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.', 409)
+    throw new Error(`unexpected ${path}`)
+  })
+  render(<SettingsPage />)
+  fireEvent.click(await screen.findByRole('button', { name: '계정 삭제' }))
+  fireEvent.click(screen.getByRole('button', { name: '계정 삭제 확인' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.')
+  expect(screen.getByRole('heading', { name: '계정 삭제' })).toBeInTheDocument()
 })

@@ -54,12 +54,12 @@ SojaFit (proj3-b)
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
-│       ├── App.tsx         <- 로그인·작업대·관리자 화면 셸
+│       ├── App.tsx         <- 로그인·가입·작업대·관리자 화면 셸
 │       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
 │       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
 │       ├── api/            <- 기존 서버 API의 typed fetch 경계
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
-│       │   ├── auth.ts     <- 로그인·세션 복원·로그아웃·Google 상태 API
+│       │   ├── auth.ts     <- 로그인·가입(동의)·세션 복원·로그아웃·탈퇴·Google 상태 API
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
@@ -70,7 +70,7 @@ SojaFit (proj3-b)
 │       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
 │       │   └── dummy.test.ts <- 더미 API 상태·비저장·404 테스트
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
-│       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·로그아웃·401 처리
+│       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·가입·로그아웃·탈퇴·401 처리, 세션을 잃으면 화면 캐시·탭 저장소 비움
 │       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
 │       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
@@ -79,10 +79,12 @@ SojaFit (proj3-b)
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 비밀번호 로그인·설정된 Google 링크
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장 테스트
+│       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
+│       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
 │       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
 │       │   ├── AdminUsersPage.test.tsx <- 권한 차단·목록 변경·세션 만료 테스트
-│       │   ├── SettingsPage.tsx <- 내 설정: 소속·직무·선호 실장 방식 저장·칸별 지우기·확인 후 모두 지우기
-│       │   ├── SettingsPage.test.tsx <- 바뀐 칸만 전송·칸별 삭제·모두 지우기 확인·오류 표시 테스트
+│       │   ├── SettingsPage.tsx <- 내 설정: 소속·직무·선호 실장 방식 저장·칸별 지우기·확인 후 모두 지우기, 확인 후 계정 삭제
+│       │   ├── SettingsPage.test.tsx <- 바뀐 칸만 전송·칸별 삭제·모두 지우기 확인·오류 표시·계정 삭제 확인과 화면 정리 테스트
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트

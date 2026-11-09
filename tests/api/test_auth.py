@@ -426,7 +426,7 @@ def test_database_sessions_are_isolated_and_revoked(monkeypatch):
     headers = {"origin": "http://testserver"}
     for client, email, uid in ((a, email_a, id_a), (b, email_b, id_b)):
         assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": "incorrect"}).status_code == 401
-        response = client.post("/api/auth/login", headers=headers, json={"email": email, "password": password})
+        response = client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True})
         assert response.status_code == 200
         assert response.json() == {"user_id": uid}
         assert "httponly" in response.headers["set-cookie"].lower()
@@ -456,7 +456,7 @@ def test_database_login_throttling(monkeypatch):
     client = TestClient(app)
     for _ in range(5):
         assert client.post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": email, "password": "wrong"}).status_code == 401
-    assert client.post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": email, "password": password}).status_code == 401
+    assert client.post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": email, "password": password, "consent": True}).status_code == 401
 
 
 def test_failed_attempt_window_expires(monkeypatch):
@@ -489,13 +489,13 @@ def test_failed_attempt_window_expires(monkeypatch):
         assert count == 1 and until is not None
     for _ in range(4):
         assert client.post("/api/auth/login", headers=headers, json=body).status_code == 401
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 401
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 401
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE auth_login_attempts SET locked_until=CURRENT_TIMESTAMP + INTERVAL '5 seconds' WHERE login_hash=%s", (key,))
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 401
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 401
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE auth_login_attempts SET window_started_at=CURRENT_TIMESTAMP - INTERVAL '16 minutes', locked_until=CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE login_hash=%s", (key,))
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 200
 
 
 def test_existing_active_lock_remains_after_schema_update(monkeypatch):
@@ -581,14 +581,14 @@ def test_idle_and_absolute_session_expiry_boundaries(monkeypatch):
         user_id = conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,%s) RETURNING id", (email, auth.hash_password(password))).fetchone()[0]
     client = TestClient(app)
     headers = {"origin": "http://testserver"}
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 200
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '29 minutes 50 seconds' WHERE user_id=%s", (user_id,))
     assert client.get("/api/auth/me").status_code == 200
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '30 minutes 5 seconds' WHERE user_id=%s", (user_id,))
     assert client.get("/api/auth/me").status_code == 401
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 200
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE auth_sessions SET expires_at=CURRENT_TIMESTAMP + INTERVAL '5 seconds', last_seen_at=CURRENT_TIMESTAMP WHERE user_id=%s", (user_id,))
     assert client.get("/api/auth/me").status_code == 200
@@ -641,7 +641,7 @@ def test_admin_account_management_and_session_revocation(monkeypatch):
     headers = {"origin": "http://testserver"}
     assert anonymous.get("/api/admin/users").status_code == 401
     for client, email in ((admin, admin_email), (user, user_email)):
-        assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+        assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 200
     assert admin.get("/api/auth/me").json() == {"user_id": admin_id, "role": "admin"}
     assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
     with psycopg.connect(database_url) as conn:
@@ -760,7 +760,7 @@ def test_keyed_session_login_rotation_and_logout(monkeypatch):
         user_id = conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,%s) RETURNING id", (email, auth.hash_password(password))).fetchone()[0]
     client = TestClient(app)
     headers = {"origin": "http://testserver"}
-    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
+    assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).status_code == 200
     token = client.cookies.get(auth.COOKIE)
     with psycopg.connect(database_url) as conn:
         stored = conn.execute("SELECT token_hash FROM auth_sessions WHERE user_id=%s", (user_id,)).fetchone()[0]
@@ -900,7 +900,7 @@ def test_question_endpoint_is_not_exposed(monkeypatch):
 def test_signup_rejects_missing_or_cross_origin(monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     client = TestClient(app)
-    body = {"email": "new-person@example.test", "password": "synthetic-pass-123"}
+    body = {"email": "new-person@example.test", "password": "synthetic-pass-123", "consent": True}
     assert client.post("/api/auth/signup", json=body).status_code == 403
     assert client.post("/api/auth/signup", json=body, headers={"origin": "https://evil.example"}).status_code == 403
 
@@ -908,10 +908,23 @@ def test_signup_rejects_missing_or_cross_origin(monkeypatch):
 @pytest.mark.parametrize("email, password", [("new-person@example.test", "short-7"), ("person@", "synthetic-pass-123"), ("@example.test", "synthetic-pass-123")])
 def test_signup_validation_errors_do_not_echo_input(email, password, monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
-    response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json={"email": email, "password": password})
+    response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json={"email": email, "password": password, "consent": True})
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
     assert email not in response.text and password not in response.text
+
+
+@pytest.mark.parametrize("consent", ["missing", False, None, "true", 1])
+def test_signup_requires_explicit_consent_before_touching_the_database(consent, monkeypatch):
+    """처리방침 고지 동의(consent)가 정확히 true가 아니면 공통 422이고 가입 처리(DB)를 부르지 않는다."""
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "signup", lambda *args: pytest.fail("signup must not run without consent"))
+    body = {"email": "new-person@example.test", "password": "synthetic-pass-123"}
+    if consent != "missing":
+        body["consent"] = consent
+    response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json=body)
+    assert response.status_code == 422 and response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert "synthetic-pass-123" not in response.text
 
 
 def test_client_ip_trusts_only_the_last_forwarded_entry_on_cloud_run(monkeypatch):
@@ -966,13 +979,13 @@ def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch)
     email, password = f"signup-{secrets.token_hex(6)}@example.test", "synthetic-pass-123"
     client = TestClient(app)
     try:
-        response = client.post("/api/auth/signup", headers=headers, json={"email": email, "password": password})
+        response = client.post("/api/auth/signup", headers=headers, json={"email": email, "password": password, "consent": True})
         assert response.status_code == 200
         user_id = response.json()["user_id"]
         assert "httponly" in response.headers["set-cookie"].lower()
         assert client.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
-        assert TestClient(app).post("/api/auth/login", headers=headers, json={"email": email, "password": password}).json() == {"user_id": user_id}
-        duplicate = TestClient(app).post("/api/auth/signup", headers=headers, json={"email": f"  {email.upper()} ", "password": "another-pass-456"})
+        assert TestClient(app).post("/api/auth/login", headers=headers, json={"email": email, "password": password, "consent": True}).json() == {"user_id": user_id}
+        duplicate = TestClient(app).post("/api/auth/signup", headers=headers, json={"email": f"  {email.upper()} ", "password": "another-pass-456", "consent": True})
         assert duplicate.status_code == 409
         assert duplicate.json()["error"]["code"] == "CONFLICT"
         with psycopg.connect(database_url) as conn:
@@ -1001,7 +1014,7 @@ def test_database_signup_limits_each_client_ip_to_three_per_day(monkeypatch):
     def signup(email: str, ip: str, spoofed: str):
         # [왜] 클라이언트가 앞에 넣은 값(spoofed)이 매번 달라도 마지막 값(Google 프런트엔드가 덧붙인 IP)으로 센다
         headers = {"origin": "http://testserver", "x-forwarded-for": f"{spoofed}, {ip}"}
-        return TestClient(app).post("/api/auth/signup", headers=headers, json={"email": email, "password": "synthetic-pass-123"}).status_code
+        return TestClient(app).post("/api/auth/signup", headers=headers, json={"email": email, "password": "synthetic-pass-123", "consent": True}).status_code
 
     try:
         assert signup(emails[0], ip_a, "192.0.2.1") == 200
