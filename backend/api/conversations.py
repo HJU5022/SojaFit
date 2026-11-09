@@ -3,7 +3,8 @@
 - 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409).
 - 결과는 그래프 상태에서 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 SSE로 보낸다.
 - 완료 · 거절 결과에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 참고(내 설정))을 붙여 보낸다. run 기록에는 저장하지 않는다.
-- 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503, 하루 토큰 상한이 찼으면 스트림을 열기 전에 429다(`admission`).
+- 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503, 하루 토큰 상한이 찼으면 스트림을 열기 전에 429 `LIMIT_EXCEEDED`다(`admission`).
+- 스트림을 연 뒤의 실패는 `failed` frame의 `error.code`로 보낸다. 코드는 공통 오류와 같은 표(`backend/errors.py`, ADR 0019)다.
 하지 않는 일: 그래프 조립·예산·Store 기억·Langfuse(분석 서비스가 맡는다), 저장 SQL(`backend/conversations/repository.py`).
 """
 import asyncio
@@ -13,12 +14,14 @@ import re
 from uuid import UUID
 
 import psycopg
+from psycopg_pool import PoolTimeout
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from backend import auth
+from backend.errors import code_for, log_error
 from backend.conversations.dto import public_state, result_dto
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
 from backend.judge import conditions as judge_conditions
@@ -133,15 +136,18 @@ def outcome(analysis, thread_id, detail, request_id):
 
 
 def public_error(exc, request_id, run_id):
-    """실패 frame에 넣을 공통 오류 코드·문구. 4xx가 아닌 예외는 request_id와 함께 traceback을 남긴다."""
-    # [왜] backend.main이 이 라우터를 import하므로 모듈 첫머리에서 읽으면 순환 import가 된다
-    from backend.main import ERROR_CODES
-    if not isinstance(exc, HTTPException) or exc.status_code >= 500:
-        LOGGER.exception(json.dumps({'event': 'react_run_failed', 'request_id': request_id, 'run_id': run_id}))
+    """실패 frame에 넣을 공통 오류 코드·문구를 고르고 로그 한 줄을 남긴다(4xx는 INFO, 5xx · 예상 못 한 예외는 traceback까지)."""
     if isinstance(exc, HTTPException):
-        # 예산·간격 429, 시간 초과 504, 데모 질문 422, 조건 대기 409처럼 분석 서비스가 정한 공개 문구를 그대로 쓴다
-        return {'code': ERROR_CODES.get(exc.status_code, 'INTERNAL_ERROR'), 'message': str(exc.detail)}
-    return {'code': 'INTERNAL_ERROR', 'message': '분석을 완료하지 못했습니다.'}
+        # 예산 429(LIMIT_EXCEEDED) · 간격 429(RATE_LIMITED), 시간 초과 504, 바깥 장애 502, 데모 질문 422, 조건 대기 409(CONDITION_PENDING)처럼
+        # 분석 서비스가 정한 상태 · 코드 · 공개 문구를 그대로 쓴다
+        status, error = exc.status_code, {'code': code_for(exc.status_code, exc), 'message': str(exc.detail)}
+    elif isinstance(exc, (psycopg.Error, PoolTimeout)):
+        # [왜] 분석 전 잠금 · 예산 확인의 DB 장애는 보통 요청이면 공통 503(main.py의 database_unavailable)이다. 스트림에서도 같은 코드로 보낸다
+        status, error = 503, {'code': 'UNAVAILABLE', 'message': '저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.'}
+    else:
+        status, error = 500, {'code': 'INTERNAL_ERROR', 'message': '분석을 완료하지 못했습니다.'}
+    log_error(status, error['code'], exc, request_id=request_id, run_id=run_id)
+    return error
 
 
 def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
@@ -165,7 +171,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
                 await queue.put(frame('failed', {**payload, 'error': error}))
             except Exception:
                 # [주의] 실패 상태도 저장하지 못하면 terminal frame 없이 끝난다. GET /api/runs는 running으로 남는다
-                LOGGER.exception(json.dumps({'event': 'react_run_failure_unsaved', 'request_id': request_id, 'run_id': run_id}))
+                LOGGER.exception('react_run_failure_unsaved', extra={'request_id': request_id, 'run_id': run_id})
         await queue.put(None)
     task = asyncio.create_task(execute())
     _tasks.add(task)

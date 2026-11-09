@@ -64,7 +64,7 @@ def test_database_errors_use_safe_common_response(client, monkeypatch):
     monkeypatch.setattr(auth, "connection", unavailable)
     response = client.get("/api/projects")
     assert response.status_code == 503
-    assert response.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+    assert response.json()["error"]["code"] == "UNAVAILABLE"
     assert "private" not in response.text
     assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
 
@@ -194,7 +194,7 @@ def test_upload_requires_nonempty_net_filename_and_closes(upload_boundary, filen
                            headers={"origin": "http://testserver", "content-type": "multipart/form-data; boundary=boundary"})
     assert response.status_code == 400
     assert response.headers["X-Request-ID"]
-    assert response.json() == {"error": {"code": "BAD_REQUEST", "message": ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.",
+    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.",
                                           "request_id": response.headers["X-Request-ID"]}}
     assert payloads == [] and reads == []
     assert uploads and all(upload.file.closed for upload in uploads)
@@ -208,7 +208,7 @@ def test_upload_rejects_missing_filename_before_reading_or_persisting(upload_bou
     assert response.status_code == 400
     # filename이 없는 file은 두 번째 text field다. max_fields=1에서 거절되어 route의 422 검사까지 가지 않는다.
     assert response.headers["X-Request-ID"]
-    assert response.json() == {"error": {"code": "BAD_REQUEST", "message": "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.",
+    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.",
                                           "request_id": response.headers["X-Request-ID"]}}
     assert payloads == [] and uploads == [] and reads == []
 
@@ -225,7 +225,7 @@ def test_invalid_net_identity_and_nul_never_reach_storage(upload_boundary, raw):
     response = client.post("/api/projects/upload", data={"name": "회로"}, files={"file": ("synthetic.net", raw)},
                            headers={"origin": "http://testserver"})
     assert response.status_code == 400
-    assert response.json()["error"]["code"] == "BAD_REQUEST"
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
     assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
     assert payloads == []
     assert uploads and all(upload.file.closed for upload in uploads)

@@ -51,6 +51,19 @@ class EvaluationLimitError(RuntimeError):
     """평가 호출 수·시간·예약 비용 상한을 넘겼을 때 내는 오류."""
 
 
+class UpstreamError(RuntimeError):
+    """바깥 공급자(Voyage)가 오류 상태로 답했을 때 내는 오류. 키 없음처럼 우리 설정 문제는 RuntimeError 그대로다."""
+
+
+def is_upstream_error(error: BaseException) -> bool:
+    """LLM · 임베딩 공급자(OpenRouter · OpenAI · Voyage)가 실패했거나 연결이 끊겼으면 True(분석 실패 502 · 503 가르기, ADR 0019)."""
+    # [왜] openai SDK 예외는 이 모듈만 import한다(AGENTS.md 지킬 것 2). LangChain ChatOpenAI는 openai 예외를 감싸지 않고 올린다
+    import httpx
+    from openai import APIError  # 연결 끊김 · 시간 초과(APIConnectionError)와 공급자 오류 상태(APIStatusError)의 공통 부모
+
+    return isinstance(error, (UpstreamError, APIError, httpx.HTTPError))  # httpx: Voyage 호출의 연결 · 시간 초과
+
+
 class EvaluationFormatError(RuntimeError):
     """provider 응답은 받았지만 평가 schema 검증에 실패했을 때 metadata를 보존하는 오류."""
 
@@ -214,12 +227,12 @@ def _voyage_post(path: str, payload: dict) -> dict:
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
-            raise RuntimeError(f"Voyage payment signal {r.status_code}")
+            raise UpstreamError(f"Voyage payment signal {r.status_code}")
         if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
             delay = 5 * 2**attempt
             time.sleep(min(delay, budget.remaining()) if runtime else delay)
             continue
-        raise RuntimeError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
+        raise UpstreamError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
 
 
 def voyage_embed(texts: list[str], input_type: str) -> list[list[float]]:

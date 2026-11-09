@@ -27,7 +27,7 @@ PostgreSQL users와 서버 세션을 사용한다. 비밀번호는 scrypt와 임
 
 가입은 `POST /api/auth/signup`에 `{"email", "password", "consent": true}`를 보낸다. `consent`는 가입 화면(React `/signup`)의 처리방침 고지(개인정보 보호법 15조 2항: 목적 · 저장 항목 · 보관 기간 · 삭제 · 외부 서비스 · 거부 권리)를 읽고 동의했다는 표시이고, 없거나 엄격한 true가 아니면(문자열 · 숫자 포함) 공통 422로 가입 처리 전에 거절한다. 고지 문구의 정본은 `frontend/src/pages/SignupPage.tsx`의 `PrivacyNotice`이고 `docs/specs/user-thread-memory.md` "보관 · 삭제"와 맞춘다. 이메일 검증·정규화(공백 제거·소문자)는 로그인과 같고 비밀번호는 8자 이상 1,024자 이하다. Origin이 `AUTH_ORIGIN`과 다르거나 없으면 403이다. 성공하면 `users`에 `role='user'`로 넣고 로그인과 같은 세션 쿠키를 심은 뒤 `{"user_id": 정수}`를 돌려준다. 오류는 공통 오류 구조(`docs/specs/api-error-contract.md`)를 쓴다. scrypt 동시 계산은 로그인과 같은 DB advisory lock 2칸을 나눠 쓰고, 칸이 모두 차면 503이다.
 
-LLM 토큰 한도는 분석 서비스(`backend/conversations/memory_service.py`)가 센다. 기존 USD 예약(`llm.EvaluationBudget`)을 이어받은 예산이 호출마다 같은 위쪽 경계 토큰(입력 바이트 + 여유 8192 + 출력 상한, 임베딩 호출 포함)을 계산하고, 외부 호출 전에 사용자 행(`sojafit_agent.analysis_usage.reserved_tokens`)과 서비스 행(`sojafit_agent.analysis_service_usage`, UTC 날짜별 한 행)에 USD 예약과 한 트랜잭션으로 더한다. 어느 쪽이든 넘으면 모두 되돌리고 429 공통 오류(`TOO_MANY_REQUESTS`, 한국어 문구에 상한과 다시 시도할 시각)다. 공급자가 청구한 토큰이 아니라 예약이며 실패한 호출도 돌려주지 않는다. 분석을 시작할 때(질문 · 재개 · 재시도 입장, React run · 재개는 스트림을 열기 전)도 호출 한 번(여유 8192) 자리가 없으면 429로 먼저 거절한다. 표는 `db/022_token_limits.sql`이다.
+LLM 토큰 한도는 분석 서비스(`backend/conversations/memory_service.py`)가 센다. 기존 USD 예약(`llm.EvaluationBudget`)을 이어받은 예산이 호출마다 같은 위쪽 경계 토큰(입력 바이트 + 여유 8192 + 출력 상한, 임베딩 호출 포함)을 계산하고, 외부 호출 전에 사용자 행(`sojafit_agent.analysis_usage.reserved_tokens`)과 서비스 행(`sojafit_agent.analysis_service_usage`, UTC 날짜별 한 행)에 USD 예약과 한 트랜잭션으로 더한다. 어느 쪽이든 넘으면 모두 되돌리고 429 공통 오류(`LIMIT_EXCEEDED`, 한국어 문구에 상한과 다시 시도할 시각)다. 공급자가 청구한 토큰이 아니라 예약이며 실패한 호출도 돌려주지 않는다. 분석을 시작할 때(질문 · 재개 · 재시도 입장, React run · 재개는 스트림을 열기 전)도 호출 한 번(여유 8192) 자리가 없으면 429로 먼저 거절한다. 표는 `db/022_token_limits.sql`이다.
 
 IP 한도 표는 `db/021_auth_ip_limits.sql`에 있다. 가입 IP 한도는 `auth_signup_attempts`(IP 해시·UTC 날짜·횟수)에 센다. IP 원문은 저장하지 않고 세션 토큰과 같은 키 해시(`AUTH_SECRET`이 있으면 HMAC-SHA256)만 둔다. 중복 이메일(409)도 1회로 센다. 409가 계정 존재를 알려 주므로 이메일 존재 확인 남용도 하루 3회로 묶기 위해서다. 한도를 넘은 요청(429)과 503은 세지 않는다. 지난 날짜 행은 가입 요청 때 지운다. 클라이언트 IP는 Cloud Run(`K_SERVICE` 환경변수가 있음)에서는 `X-Forwarded-For`의 마지막 값, 그 밖에서는 소켓 주소다. 마지막 값은 Google 프런트엔드가 덧붙인 값이고 그 앞은 클라이언트가 보낸 값이라 위조할 수 있다. Cloud Run 앞에 외부 부하분산기를 두면 이 규칙을 다시 정한다.
 
@@ -42,7 +42,7 @@ IP 한도 표는 `db/021_auth_ip_limits.sql`에 있다. 가입 IP 한도는 `aut
 - Given Cloud Run에서 클라이언트가 `X-Forwarded-For`에 임의 값을 넣음, When 가입, Then 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 센다.
 - Given 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), When 31번째 로그인, Then 비밀번호가 맞아도 일반 실패와 같은 401을 반환한다. 다른 IP의 로그인은 막지 않고, 다른 IP의 성공은 이 IP의 횟수·잠금을 되돌리지 않는다.
 - Given IP 잠금과 15분 집계 구간이 끝남, When 같은 IP에서 다시 실패, Then 횟수를 1부터 다시 센다. 올바른 비밀번호면 로그인한다.
-- Given 오늘(UTC) 예약 토큰이 사용자 200,000 또는 서비스 전체 2,000,000에 닿음, When 분석 질문 · React run · 재개, Then 외부 호출 없이 429 공통 오류(`TOO_MANY_REQUESTS`)를 반환하고 질문 버전 · run 상태를 바꾸지 않는다. 다른 사용자는 사용자 상한에 막히지 않는다.
+- Given 오늘(UTC) 예약 토큰이 사용자 200,000 또는 서비스 전체 2,000,000에 닿음, When 분석 질문 · React run · 재개, Then 외부 호출 없이 429 공통 오류(`LIMIT_EXCEEDED`)를 반환하고 질문 버전 · run 상태를 바꾸지 않는다. 다른 사용자는 사용자 상한에 막히지 않는다.
 - Given 분석 도중 다음 호출의 예약 토큰이 상한을 넘음, When 그 호출을 예약, Then 호출 전에 429로 끝나고 그 호출의 USD · 토큰 예약은 사용자 · 서비스 행 어디에도 남지 않는다.
 - Given 두 계정, When 각각 올바른 비밀번호로 로그인, Then 각자의 사용자 ID를 반환한다.
 - Given 잘못된 비밀번호나 없는 계정, When 로그인, Then 같은 오류가 반환된다.

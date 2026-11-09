@@ -137,7 +137,27 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
 - 가격·재고: `GET /api/prices?parts=품번,품번`(로그인 필요, 품번 1~10개, 품번마다 3~40자, `|` 금지). 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
 - Google 관리자 로그인: 설정이 켜진 경우 `GET /api/auth/google/status`, `/start`, `/callback`, `/pending`을 제공하고 승인된 활성 관리자만 기존 서버 세션을 발급받습니다. 연결 승인·철회는 `python -m backend.auth`의 운영자 CLI를 사용합니다. 상세는 `docs/specs/google-admin-login.md`입니다.
-- 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. 상세는 `docs/specs/api-error-contract.md`입니다.
+- 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. `error.code`는 화면이 다르게 반응해야 할 때만 나눈 아래 15개 중 하나이고(ADR 0019, `backend/errors.py`), 분석 SSE의 마지막 이벤트 `failed`의 `error.code`도 같은 표입니다. `message`는 사람이 읽는 한국어 문장입니다. 상세는 `docs/specs/api-error-contract.md`입니다.
+
+  | code | HTTP | 뜻 |
+  |---|---|---|
+  | `UNAUTHORIZED` | 401 | 로그인 안 함 · 세션 만료 · 로그인 실패 |
+  | `FORBIDDEN` | 403 | 관리자 전용 |
+  | `ORIGIN_MISMATCH` | 403 | 요청 출처(Origin) 불일치 |
+  | `NOT_FOUND` | 404 | 없는 자원, 남의 대화 · 프로젝트도 404 |
+  | `VALIDATION_ERROR` | 400 · 422 | 요청 · 파일 형식 오류. 표에 없는 4xx(예: 메서드가 틀린 405)도 이 코드 |
+  | `CONDITION_PENDING` | 409 | 조건 질문에 먼저 답해야 함 |
+  | `ALREADY_APPROVED` | 409 | 이미 승인했거나 승인할 수 없는 판정 |
+  | `CONFLICT` | 409 | 그 밖의 상태 충돌(분석 처리 중, 가입된 이메일, 질문 · 회로 한도) |
+  | `PAYLOAD_TOO_LARGE` | 413 | 넷리스트 5 MiB · 요청 본문 128 KiB 초과 |
+  | `RATE_LIMITED` | 429 | 가입 횟수 · 분석 호출 간격 제한(`Retry-After`) |
+  | `LIMIT_EXCEEDED` | 429 | 하루 토큰 · USD 상한, 분석 한 번의 호출 수 · 예약 USD 상한 |
+  | `UPSTREAM_ERROR` | 502 | LLM · 임베딩 바깥 서비스 장애(분석 실패 중 공급자 오류 · 연결 끊김) |
+  | `UNAVAILABLE` | 503 | DB · 저장소 · 서버 설정을 쓸 수 없음 |
+  | `TIMEOUT` | 504 | 분석 시간 상한 초과 |
+  | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
+
+  분석 거절(SSE `refused`)은 요청 실패가 아니라 분석 결과라 이 표 밖입니다. 서버 로그는 stdout에 JSON 한 줄씩(`severity` · `time` · `logger` · `message`, 요청 안의 줄은 `request_id`)이고, 오류 응답 · `failed` 이벤트마다 `code` · `status`를 담은 줄 하나를 남깁니다. 4xx는 INFO(문구 · 본문 없이), 5xx와 예상 못 한 예외는 ERROR에 traceback(프레임과 예외 이름만, 예외 메시지는 빼고)입니다. 질문 글 · 조건 · 넷리스트 · 이메일 · 비밀번호 · 토큰 · 키는 로그에 적지 않습니다(`backend/logs.py`).
 - 질문·회로·대화·기억·견적 API: 모두 로그인이 필요하고(없으면 401), 바꾸는 요청은 같은 출처만 받습니다(Origin이 없거나 다르면 403). 오류 본문은 위 공통 오류입니다. React 작업대가 쓰는 경로(`backend/api/`):
 
   | 경로 | 본문 | 성공 | 주요 오류 |
@@ -147,11 +167,11 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `POST /api/projects/upload` | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 상세 | 400 형식 · 413 크기 · 422 |
   | `GET` · `PATCH` · `DELETE /api/projects/{id}` | PATCH `{name}` | 200 상세(`connections` 포함) · 204 | 404 · 422 · DELETE 409(실행 중 run) |
   | `GET` · `POST /api/projects/{id}/threads` | - | 200 목록 · 201 `{id, project_id}` | 404 |
-  | `POST /api/threads/{id}/runs` | `{question(1~4000자), target_ref, conditions}` | 200 SSE | 스트림 전 503(분석 서비스 없음) · 429(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 404 |
+  | `POST /api/threads/{id}/runs` | `{question(1~4000자), target_ref, conditions}` | 200 SSE | 스트림 전 503(분석 서비스 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 404. 스트림 뒤는 `failed`의 `error.code` |
   | `GET /api/runs/{id}` | - | 200 `{id, thread_id, message_id, result}` | 404 |
   | `POST /api/runs/{id}/resume` | `{answers: {값 이름: 답}(30개 이하), role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404 |
   | `GET /api/judge/roles` | - | 200 `[{code, name}]` | |
-  | `POST /api/messages/{id}/approvals` | `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 | 404 · 409(완료 판정이 아니거나 이미 승인) · 422 |
+  | `POST /api/messages/{id}/approvals` | `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 |
   | `POST /api/approvals/{id}/quotes` | `{quantity: 1~100000}` | 201 | 404 · 409 |
   | `GET /api/projects/{id}/quotes` · `GET /api/approved-cases` · `DELETE /api/approved-cases/{id}` | - | 200 · 204 | 404 |
   | `GET` · `PATCH` · `DELETE /api/me/memory` | 8.5 | 200 · 204 | 422 · 503 |
@@ -334,7 +354,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 로그아웃·탈퇴·세션 만료, WHEN React 화면이 로그인 상태를 잃으면, THEN 화면 메모리(React Query 캐시)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꿔(replace) 주소의 프로젝트 id를 남기지 않는다.
 - GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 요청 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
 - GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
-- GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 UTC 하루 200,000·서비스 전체 하루 2,000,000에서 외부 호출 전에 429(`TOO_MANY_REQUESTS`)로 거부한다. 토큰은 공급자 청구량이 아니라 USD 예약과 같은 위쪽 경계(입력 바이트 + 여유 8192 + 출력 상한)의 예약 합이고(임베딩 호출 포함), 기존 USD 한도는 유지한다(11-09 결정, `db/022_token_limits.sql`).
+- GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 UTC 하루 200,000·서비스 전체 하루 2,000,000에서 외부 호출 전에 429(`LIMIT_EXCEEDED`)로 거부한다. 토큰은 공급자 청구량이 아니라 USD 예약과 같은 위쪽 경계(입력 바이트 + 여유 8192 + 출력 상한)의 예약 합이고(임베딩 호출 포함), 기존 USD 한도는 유지한다(11-09 결정, `db/022_token_limits.sql`).
 - GIVEN 로그인한 일반 사용자, WHEN 같은 출처에서 `DELETE /api/me`, THEN 그 사용자의 프로젝트·대화·분석 기록·checkpoint·Store·세션·계정을 지우고 지운 건수를 돌려준다. 다른 사용자 행은 남고, 관리자 계정과 그 사용자의 분석이 도는 중이면 409다.
 - GIVEN 데모 외 환경에서 AUTH_SECRET이 없거나 32바이트 미만이면, WHEN 서버를 시작하면, THEN 시작을 거부한다. 키가 없는 데모 모드는 기존 세션 방식으로 실행한다.
 - GIVEN 잘못된 정보, WHEN 로그인하면, THEN `error.code/message/request_id` 공통 오류와 같은 값의 `X-Request-ID`를 반환하고 입력값을 노출하지 않는다.

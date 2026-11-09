@@ -29,6 +29,8 @@ from joserfc import jwt
 from joserfc.errors import JoseError
 from joserfc.jwk import KeySet
 
+from backend.errors import ApiError
+
 COOKIE = "sojafit_session"
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # [왜] scrypt 검증 한 번에 128MiB를 쓴다. authenticate()가 DB advisory lock 2칸으로 동시 검증을 2개까지만 허용한다.
@@ -239,11 +241,12 @@ def mask_email(email: str) -> str:
 
 
 def check_origin(request: Request) -> None:
-    """상태를 바꾸는 요청의 Origin 헤더가 AUTH_ORIGIN과 같은지 확인한다(다르면 403)."""
+    """상태를 바꾸는 요청의 Origin 헤더가 AUTH_ORIGIN과 같은지 확인한다(다르면 403 `ORIGIN_MISMATCH`)."""
     # [왜] 쿠키 세션은 다른 사이트의 요청에도 따라붙으므로 Origin을 대조해 CSRF를 막는다
     origin = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").rstrip("/")
     if request.headers.get("origin") != origin:
-        raise HTTPException(status_code=403, detail="요청 출처를 확인할 수 없습니다.")
+        # [왜] 권한 없음(FORBIDDEN)과 화면 안내가 다르다: 접속 주소 · 배포 설정(AUTH_ORIGIN)을 확인하게 한다(ADR 0019)
+        raise ApiError(403, "요청 출처를 확인할 수 없습니다.", code="ORIGIN_MISMATCH")
 
 
 def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:

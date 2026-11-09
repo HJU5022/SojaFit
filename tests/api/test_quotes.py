@@ -51,7 +51,9 @@ def test_mutations_require_origin_and_case_delete_is_explicit(monkeypatch):
 def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
     # [왜] 같은 메시지를 두 번 승인하면 DB의 UNIQUE(message_id)가 UniqueViolation을 내고, 승인은 한 건으로 남은 채 409다(db/020)
-    for error, status in [(QuoteNotFound(), 404), (InvalidApproval('no'), 409), (psycopg.errors.UniqueViolation(), 409)]:
+    # [왜] 409 둘 다 ALREADY_APPROVED라 화면은 승인을 다시 보내지 않는다(ADR 0019)
+    for error, status, code in [(QuoteNotFound(), 404, 'NOT_FOUND'), (InvalidApproval('no'), 409, 'ALREADY_APPROVED'),
+                                (psycopg.errors.UniqueViolation(), 409, 'ALREADY_APPROVED')]:
         class Broken(FakeQuotes):
             def approve(self, *args): raise error
         app.dependency_overrides.clear()
@@ -59,5 +61,5 @@ def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
         monkeypatch.setattr('backend.api.quotes.QuoteService', Broken)
         with TestClient(app, raise_server_exceptions=False) as web:
             response = web.post('/api/messages/9/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}, headers={'origin': 'http://testserver'})
-        assert response.status_code == status
+        assert response.status_code == status and response.json()['error']['code'] == code
         assert response.json()['error']['request_id'] == response.headers['X-Request-ID']

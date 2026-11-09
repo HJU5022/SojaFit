@@ -122,6 +122,8 @@ SojaFit (proj3-b)
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: /health, 로그인·데모 버튼 로그인·Google 관리자 로그인, me·로그아웃·탈퇴, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
+│   ├── errors.py           <- 오류 응답 error.code 15개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
+│   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
 │   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -412,6 +414,8 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
+│   │   ├── test_errors.py  <- 오류 코드 15개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
+│   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험

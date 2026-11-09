@@ -519,7 +519,7 @@ def test_daily_token_caps_per_user_and_service_reject_before_external_call(runti
     finally:
         api.dependency_overrides.clear()
         del api.state.conversations
-    assert response.status_code == 429 and response.json()['error']['code'] == 'TOO_MANY_REQUESTS'
+    assert response.status_code == 429 and response.json()['error']['code'] == 'LIMIT_EXCEEDED'
     assert '2,000,000 토큰' in response.json()['error']['message']
 
 
@@ -617,7 +617,6 @@ def test_dump_restore_preserves_owned_memory_and_pending_resume(runtime):
 
 
 def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
-    import json
     from backend.services import llm
     app, (a, _), _ = runtime
     def expire(state):
@@ -640,10 +639,9 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
         app.approve(a,thread,1)
     assert denied.value.status_code==409
     assert error.value.status_code == 504
-    record = next(r for r in caplog.records if r.name == 'backend.conversations')
-    metadata = json.loads(record.message)
-    assert metadata['request_id'] == 'synthetic-request-id' and metadata['error_type'] == 'EvaluationLimitError'
-    assert 'PRIVATE_CONDITION' not in record.message
+    record = next(r for r in caplog.records if r.name == 'backend.conversations' and r.getMessage() == 'analysis_failed')
+    assert record.request_id == 'synthetic-request-id' and record.error_type == 'EvaluationLimitError'
+    assert 'PRIVATE_CONDITION' not in str(vars(record))
 
 
 def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime):
