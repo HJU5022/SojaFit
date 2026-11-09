@@ -1,9 +1,8 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`), 공통 JSON 오류·요청 ID와 Google 콜백 접속 로그 보호를 등록한다.
-호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py·tests/api/test_prices.py.
-분석: /workspace와 /api/circuits·threads·memories를 제공한다. 인증·Origin 검증 뒤 conversations.py에 맡긴다.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 견적서 발행.
+역할: 인증·관리자·가격 API, #73의 회로·thread·기억 API, OSC의 프로젝트·D5 run·승인·견적 API와 React SPA를 같은 출처로 등록한다.
+호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
+하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
@@ -33,7 +32,10 @@ from psycopg_pool import PoolTimeout
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
+from backend.api.projects import router as projects_router
+from backend.api.quotes import router as quotes_router
 from backend.services import mouser
+from backend.web.app import mount_frontend
 
 
 class GoogleCallbackLogFilter(logging.Filter):
@@ -60,7 +62,7 @@ async def lifespan(app: FastAPI):
     conversations = None
     try:
         if os.getenv('THREADS_ENABLED') == '1':
-            from backend.conversations import Conversations
+            from backend.conversations.memory_service import Conversations
             conversations = Conversations(os.environ['DATABASE_URL'])
             app.state.conversations = conversations
         yield
@@ -111,6 +113,7 @@ app = FastAPI(
     responses=COMMON_ERROR_RESPONSES,
 )
 LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 GOOGLE_COOKIE = "sojafit_google_browser"
 GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
 
@@ -282,12 +285,6 @@ async def internal_error(request: Request, exc: Exception):
 def health() -> dict:
     """서비스 생존 확인용. 배포 환경과 평가자가 부르며 항상 {"status": "ok"}를 돌려준다."""
     return {"status": "ok"}
-
-
-@app.get("/login", include_in_schema=False)
-def login_page():
-    """같은 출처의 로그인 화면을 제공한다."""
-    return FileResponse(LOGIN_PAGE, media_type="text/html; charset=utf-8")
 
 
 class Login(BaseModel):
@@ -557,3 +554,11 @@ def control_memory(thread_id: UUID, version: int, body: MemoryControl, request: 
     """사례 기억의 정정 메모·철회·복구·삭제. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
     auth.check_origin(request)
     return conversation_service(request).control_memory(user, str(thread_id), version, body.action, body.correction)
+
+
+# 직접 등록한 #73 API와 health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 연결한다.
+from backend.api.conversations import router as conversations_router
+app.include_router(projects_router)
+app.include_router(quotes_router)
+app.include_router(conversations_router)
+mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)

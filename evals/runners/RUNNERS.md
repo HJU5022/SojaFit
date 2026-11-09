@@ -22,6 +22,11 @@
 - `run_supervisor_models.py` — 동결 v2 70문항의 후보 5종 평가 계획, ZDR provider 확인, 문항별 실행·중단·집계. `plan|import-evidence|smoke|run` 명령을 지원하며 live 명령은 `--confirm-live`와 비용 상한이 필요함. 1차 결과는 `../results/supervisor/2026-11-04-stage1-v1/`
 - `run_supervisor_jev.py` — Jev Decisions API typed answer를 평가 계약으로 변환하고 70문항 plan·smoke·run·집계를 수행. OpenRouter 호출은 `backend/services/llm.py`를 경유하며 live 명령에는 `--confirm-live`와 `--max-usd` 비용 관리값이 필요함. 입력 비용 추정으로 다음 job을 차단하므로 실제 지출의 절대 상한은 아님
 - `report_supervisor_stage3.py` — API 없이 1~3차 원시 행의 hash·분모·라우팅 일관성·3회 일치/flip을 재계산하고 3차 집계 JSON·상세/간단 보고서를 생성
+- `supervisor_prompt_v0_common.py` — V0 13건의 전용 hash·건수를 확인하고 정답·id를 제외한 입력을 만들며, 실패 행도 전체 분모에 남겨 네 필드·의미 일치를 결정적으로 채점
+- `run_supervisor_prompt_v0.py` — Luna·Haiku에 같은 V0 prompt·13건을 주는 독립 Chat 실행기. `plan`은 API 없이 26-job manifest를 만들고 `smoke|run`은 명시적 live 확인과 비용·시간·단가 상한이 필요함. 본 실행은 성공한 smoke의 exact model·provider만 허용
+- `run_supervisor_prompt_v0_jev.py` — Jev Decisions의 5개 typed answer를 같은 V0 네 필드로 변환하는 독립 실행기. `plan`은 API 없이 13-job manifest를 만들며 live 실행은 호출·시간 상한을 집행하고 승인 USD와 비용 미보고를 구분함. 본 실행은 성공한 smoke의 exact model·provider만 허용
+- `compare_supervisor_prompt_v0.py` — 정확한 세 후보의 dataset·의미 계약 hash와 case 집합이 같을 때만 네 필드 정확도·형식·의미·지연·usage를 집계. Jev typed answer confidence는 별도 보존
+- `import_supervisor_prompt_v0_langfuse.py` — 완료된 V0 13문항·세 후보 결과를 모델 재호출 없이 Langfuse Dataset 1개와 Experiment 3개로 가져오고 결정적 점수 7개를 기록. `plan`은 외부 쓰기 없이 확인하고 `import --confirm-langfuse-write`만 실제로 기록
 - `eval_grader.py` — 사전 등록 #36 채점기 기준선. [grader_cases_v2.json](../inputs/grader_cases_v2.json)으로 정답 쪽 유지율 · 검색 판정 × 통과 판정 표 · 비관련 통과 0개 비율 · 쪽 재현율을 계산(LLM · API 호출 없음). `uv run python -m evals.runners.eval_grader run [--snapshot ...]` → [grader_baseline](../results/grader/). `collect-r1`은 R1 dev 46문항에 서비스 검색과 지금 채점 노드를 1번씩 돌려 스냅샷을 새로 만든다(운영 DB 읽기 · Voyage · OpenRouter 호출, 사전 등록 #34)
 - `score_answer.py` — 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표(`cited_gold`, `wrong_citation`, `over_refusal`, `correct_refusal`, `hallucination_risk`)를 규칙 기반으로 채점([작업서](../../docs/experiments/answer-refusal-scorer.md)). `uv run python -m evals.runners.score_answer <평가셋 jsonl> <실행 결과 json> [채점 결과 json]`
 - `score_compound.py` — 여러 개를 묻는 질문의 부분별 채점: 문항의 `parts`마다 답할 수 있는 부분은 정답 (PDF, 쪽) 인용 · 판정 코드 · 찾기 후보로, 답하면 안 되는 부분은 그 부분을 거절했는지(열쇠 낱말이 든 문장의 '확인 못 함' 말)로 통과를 냄. `run_gate`가 부름

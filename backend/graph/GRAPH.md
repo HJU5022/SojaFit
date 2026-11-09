@@ -2,15 +2,19 @@
 
 ## 역할
 - 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. D4 단일 에이전트 그래프(11-06에 D4 v2로 고침)가 있고, 멀티 그래프는 `backend/multi_agent/`에 있습니다.
-- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), 사용자별 장기 기억 Store namespace 규칙(`memory.py`).
+- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), Supervisor 공통 입출력 계약(`supervisor.py`), 사용자별 장기 기억 Store namespace 규칙(`memory.py`).
 - 넣지 않는 것: 숫자·단위 비교 판정(`backend/judge/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 검색 구현(`backend/rag/`), 프롬프트 원문(`backend/prompts/`), 로그인·세션(`backend/auth.py`).
 - 담당: 에이전트
 
 ## 구현 상태
 - 있음: D4 v2 단일 그래프(아래 흐름). 사실 확인(`lookup`), 판정 길(`specs` · `find` · `chat`), 체크포인터를 인자로 받아(`build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`) 가짜 검색기 · 가짜 도구로 키 없이 시험할 수 있습니다. 판정 길의 빠진 값 묻기(interrupt, 문항당 1번)는 체크포인터가 있어야 켜지고, 평가 실행기는 메모리 체크포인터(`InMemorySaver`)를 넘깁니다.
-- 서비스 연결: `backend/conversations.py`가 업로드 연결과 인증 사용자·thread를 검증하고 DB Checkpointer/Store를 앱 수명 동안 연결합니다. 이 폴더의 build는 저장소를 인자로 받습니다. 견적서 승인 단계(interrupt)는 아직 없습니다. 판정 사례 승인은 별도 인증 API입니다.
+- 서비스 연결: `backend/conversations/memory_service.py`가 업로드 연결과 인증 사용자·thread를 검증하고 DB Checkpointer/Store를 앱 수명 동안 연결합니다. 이 폴더의 build는 저장소를 인자로 받습니다. 견적서 승인 단계(interrupt)는 아직 없습니다. 판정 사례 승인은 별도 인증 API입니다.
 - 과거 기억은 현재 답변의 인용 근거로 쓰지 않고 `memory_refs`로만 선택합니다. generate는 본문 기억 인용과 제공되지 않은 ID를 거부합니다. 모델용 과거 문맥은 재개 답변·최종 판정 입력을 질문보다 앞에 제한해서 담습니다.
 - 다른 폴더 코드를 그대로 씁니다: 사실 확인 노드(`multi_agent/facts.py`), 판정 읽기 · 판정 에이전트(`multi_agent/agents/judge.py`), 거절 문구와 판정 답 틀(`multi_agent/messages.py`), 질문 종류 · 거절 사유 코드(`multi_agent/contracts.py`). D4 v2와 D5가 같은 사실 · 같은 판정 코드로 비교되게 하려는 것입니다.
+
+### Supervisor Prompt V0
+
+V0는 `supervisor.py`의 입력 envelope와 네 필드 라우팅 계약, `backend/prompts/supervisor_v0.md`, 별도 13건 평가 실행기를 구현했습니다. 이는 세 후보 모델이 원하는 라우팅 결정을 낼 수 있는지 준비·검증한 프로토타입입니다. 아직 `build_graph()`의 노드나 갈림길에는 연결하지 않았으므로 현재 서비스 런타임 동작은 바뀌지 않습니다. 실행 순서는 [Supervisor Prompt V0 평가 절차](../../evals/guides/supervisor-prompt-v0.md)를 따릅니다.
 
 ## 흐름 (지금 코드, D4 v2 11-06)
 입력 읽기 → 사실 확인(질문 속 품번 · 개정판이 코퍼스 목록에 있나, 코드) → 라우팅(질문 종류 8가지와 검색 전 거절 사유, LLM). 라우팅 뒤 갈림길:
@@ -31,6 +35,7 @@
 - `netlist.py` — 업로드한 KiCad S-expression/XML 넷리스트를 검증하고 연결 목록으로 변환
 - `__init__.py` — 패키지 표시
 - `state.py` — 그래프 상태(공용 메모장 `AgentState`) 정의. SPEC 2절 노드 표의 칸들(사실 `facts`, 라우팅 답안지 `route`, 가격 안내 품번 `price_parts`(값은 넣지 않음), 판정 `judge_read` · `judgement`, 거절 코드 `refusal` 포함)과, 쌓이는 칸 `tries`(검색 횟수)·`path`(지나간 노드), 현재 응답의 Skill 적용 정보 `skill`
+- `supervisor.py` — Supervisor V0의 네 필드 출력, 입력 envelope, 상태별 의미 검증과 Jev typed-question 공통 계약. `build_graph()`에는 아직 연결하지 않음
 - `nodes.py` — 노드 함수 11개. 입력 읽기(`read_input`: 입력 글 나누기, `connections.json`에서 대상 부품 주변 넷 읽기, 앞 턴의 검색 · 사실 · 판정 · 거절 · 가격 안내 칸 비우기), 라우팅(`route`: 질문 종류 8가지 · 검색 전 거절 사유 · 일상 대화 답, 확인된 사실을 멀티 Supervisor와 같은 글로 받음, `prompts/route.md`), 짧은 답(`short_reply`: 라우팅의 `reply`를 답으로), 가격 안내(`price_answer`: 질문 또는 대상 값의 품번을 `price_parts`에 남기고 `messages.price_message` 안내로 끝냄, LLM · Mouser 호출 없음, 멀티도 같은 노드), 검색(`search`: 질문 품번 또는 대상 값 품번으로 `retrieve`의 `parts`를 정함), 채점(`grade`: 다른 품번 줄·다른 개정판 청크를 규칙으로 뺀 뒤 LLM 1회, `prompts/grade.md`), 재작성(`rewrite`: 영어 검색어 한 줄, `prompts/rewrite.md`), 생성(`generate`: 통과 청크와 `[넷리스트]`만 근거로 답하고 없는 근거 인용·인용 없는 문장을 `check`에 기록, `prompts/generate.md`, 선택적 Skill 적용), 판정(`judge`: 멀티 판정 에이전트를 부르고 보고서는 버리며 사양 표 장애는 `retrieval_error`로), 답 틀(`judgement_answer`: `render_judgement`로 판정 답), 거절(`refuse`: LLM 없이 이유 코드 `refusal`과 안내문. 라우팅 거절은 멀티와 같은 문구, 검색 고리는 품번 문서 없음 / 찾은 문서에 답 없음 / 검색 장애를 나눠 적고 단서 요청)
 - `mcp_retriever.py` — PR #44의 `structuredContent.result` 청크 목록을 검증하고 stdio MCP 세션을 재사용하는 동기 검색기. 빈 결과와 timeout·도구·응답 장애를 구분
 - `memory.py` — 사용자별 Store namespace, 모델용 승인 사례 JSON(최대 5건·요약 1000자·당시 문맥 2000자), 별도 사례 출처 ID를 정의합니다. conversations.py가 인증 사용자 ID로 승인 사례를 저장·조회하며 새 질문 전에 선별합니다. 기억 정정은 아직 없습니다

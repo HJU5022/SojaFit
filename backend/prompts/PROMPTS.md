@@ -32,6 +32,7 @@
 | 2026-11-06 | `route.md` | 다음 버전(Langfuse 등록 전) | 질문 종류를 멀티 Supervisor와 같은 7가지(chat · out_of_scope · other_part · role · candidate_find · candidate_judge · rating)로 넓히고, 입력의 확인된 사실(Verified facts)로 검색 전 거절 사유 `reason`(out_of_scope · not_found · part_missing · revision_missing)과 일상 대화 답 `reply`(300자)를 낸다 | D4 v2: 범위 판정을 첫 단에서 하고 질문 종류마다 다른 길로 보낸다(11-06 강사 검토) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 판정 · 찾기 질문을 `judge`가 보일 때 바로 `judge`로 보냄(검색을 먼저 거치지 않음). 검색 보고 뒤에는 `writer`로. 판정 보고가 ok · partial이면 `writer`, search_error 실패면 거절. `judge` 설명에 candidate_find를 더함 | 판정 에이전트 연결(docs/specs/judge-agent.md What 1번) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | 판정 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
+| 2026-11-05 | `supervisor_v0.md` | v0 | 여섯 질문 유형·전체 필요 근거·현재 상태별 다음 경로를 네 필드로 반환 | Luna·Haiku·Jev의 상태 기반 라우팅 비교 기준선 | V0 13건: Luna·Haiku 13/13 exact, Jev 7/13 exact |
 | 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(정운 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
 | 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 강사 기준 | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-05 | `supervisor.md` | v3 | 질문 종류에 `chat`(일상 대화, Supervisor가 한국어 `reply`로 직접 답하고 끝냄)와 `other_part`(다이오드가 아닌 전자 부품, 웹 조회 또는 못 찾음 거절)를 더하고, `out_of_scope`는 서비스와 전혀 무관한 질문만 뜻하게 바꿈. 전자 일반 개념 질문은 짧은 설명 + "데이터시트 근거 아님" 표시. 영어로 작성해 등록 | 근거 3등급과 일상 대화 허용 결정(11-05, SPEC 2절) | 실제 Luna 4문장 확인(인사 · 날씨 거절 · MOSFET 못 찾음 거절 · 일반 개념). 70문항 측정 전 |
@@ -52,6 +53,7 @@
 
 ## 파일
 - `PROMPTS.md` — 이 폴더 설명과 버전 기록 표(프롬프트 해시에서 제외)
+- `supervisor_v0.md` — Supervisor V0의 질문 분류·근거 선택·상태 기반 다음 경로 계약
 - `supervisor.md` — 멀티 에이전트 Supervisor ① 계획의 시스템 프롬프트(질문 종류, 할 일 목록과 지시서, 거절 사유, 검색어 쓰는 법). 영어. Langfuse `supervisor` v4까지 등록됨(11-06 계획형 본문은 등록 전)
 - `docs_answer.md` — 멀티 문서 에이전트의 근거 채점 + 답 쓰기 시스템 프롬프트. 영어, 답은 한국어. 등록 전
 - `synth.md` — 멀티 Supervisor ② 종합의 시스템 프롬프트(할 일 2개 이상일 때만). 영어, 답은 한국어. 등록 전

@@ -23,12 +23,14 @@ from psycopg_pool import ConnectionPool
 from backend.graph.memory import namespace, memory_policy
 from backend.graph.netlist import parse_netlist
 
+LOGGER = logging.getLogger('backend.conversations')
+
 
 def initialize(dsn):
     """인증 DB에 전용 스키마를 준비한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
         for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql'):
-            conn.execute((Path(__file__).parents[1] / 'db' / script).read_text(encoding='utf-8'))
+            conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
         conn.execute('SET search_path TO sojafit_agent')
         PostgresSaver(conn).setup()
         PostgresStore(conn).setup()
@@ -297,7 +299,7 @@ class Conversations:
             conn.execute("UPDATE threads SET status='FAILED' WHERE id=%s", (thread,))
             if isinstance(error, EvaluationLimitError) or (isinstance(error,HTTPException) and error.status_code==429):
                 conn.execute("UPDATE threads SET input_record=jsonb_set(COALESCE(input_record,'{}'::jsonb),'{execution_limit_reached}','true') WHERE id=%s", (thread,))
-            logging.getLogger(__name__).warning(json.dumps({'event': 'analysis_failed', 'request_id': request_id,
+            LOGGER.warning(json.dumps({'event': 'analysis_failed', 'request_id': request_id,
                 'thread_id': str(thread), 'error_type': type(error).__name__,
                 'elapsed_ms': int((time.monotonic()-budget.started)*1000)}))
             if isinstance(error, HTTPException):
@@ -324,10 +326,10 @@ class Conversations:
             conn.execute('INSERT INTO analysis_events(id,thread_id,version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery) '
                          'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                          (uuid4(),thread,event['version'],request_id,self.mode,event['status'],event['elapsed_ms'],Jsonb(stages),event['trace_id'],delivery))
-            logging.getLogger(__name__).info(json.dumps({'event':'analysis_finished','user_id':row['user_id'],
+            LOGGER.info(json.dumps({'event':'analysis_finished','user_id':row['user_id'],
                 'thread_id':str(thread),**event,'trace_delivery':delivery}))
         except Exception:
-            logging.getLogger(__name__).warning('analysis_metadata_unavailable')
+            LOGGER.warning('analysis_metadata_unavailable')
 
     def _finish(self, conn, thread, snapshot):
         pending = [i.value for task in snapshot.tasks for i in task.interrupts]

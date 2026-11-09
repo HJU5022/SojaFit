@@ -1,0 +1,80 @@
+{
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "case_count": 13,
+  "models": {
+    "openai/gpt-6-luna": {
+      "api_mode": "chat_completions",
+      "question_type_accuracy": 1.0,
+      "required_evidence_exact_match": 1.0,
+      "next_action_accuracy": 1.0,
+      "reason_code_accuracy": 1.0,
+      "first_pass_schema_valid_rate": 1.0,
+      "final_schema_valid_rate": 1.0,
+      "semantic_valid_rate": 1.0,
+      "exact_decision_match": 1.0,
+      "latency_p50_seconds": 3.013547100010328,
+      "latency_p95_seconds": 6.441041000070982,
+      "usage": {
+        "input_tokens": 14307,
+        "output_tokens": 979,
+        "reported_rows": 13
+      },
+      "cost": {
+        "status": "reported",
+        "reported_total_usd": 0.002153735
+      }
+    },
+    "anthropic/claude-haiku-5.5": {
+      "api_mode": "chat_completions",
+      "question_type_accuracy": 1.0,
+      "required_evidence_exact_match": 1.0,
+      "next_action_accuracy": 1.0,
+      "reason_code_accuracy": 1.0,
+      "first_pass_schema_valid_rate": 1.0,
+      "final_schema_valid_rate": 1.0,
+      "semantic_valid_rate": 1.0,
+      "exact_decision_match": 1.0,
+      "latency_p50_seconds": 1.3956142000388354,
+      "latency_p95_seconds": 2.9862124000210315,
+      "usage": {
+        "input_tokens": 28604,
+        "output_tokens": 2081,
+        "reported_rows": 13
+      },
+      "cost": {
+        "status": "reported",
+        "reported_total_usd": 0.0039009
+      }
+    },
+    "typesafe/jev-1.14": {
+      "api_mode": "decisions",
+      "question_type_accuracy": 0.9230769230769231,
+      "required_evidence_exact_match": 0.8461538461538461,
+      "next_action_accuracy": 0.6923076923076923,
+      "reason_code_accuracy": 0.9230769230769231,
+      "first_pass_schema_valid_rate": null,
+      "final_schema_valid_rate": 1.0,
+      "semantic_valid_rate": 0.6153846153846154,
+      "exact_decision_match": 0.5384615384615384,
+      "latency_p50_seconds": 0.43799999996554106,
+      "latency_p95_seconds": 0.48400000005494803,
+      "usage": {
+        "input_tokens": 12260,
+        "output_tokens": 2786,
+        "reported_rows": 13
+      },
+      "cost": {
+        "status": "reported",
+        "reported_total_usd": 0.00051492
+      }
+    }
+  },
+  "decisions_metadata": {
+    "typesafe/jev-1.14": {
+      "typed_answer_count": 65,
+      "mean_confidence": 0.8058461538461539,
+      "probability_answer_count": 65
+    }
+  }
+}

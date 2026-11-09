@@ -126,7 +126,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - GIVEN 완료 checkpoint 뒤 메타데이터 실패 WHEN 다시 조회 THEN 상태·답변 기록을 복구하고 같은 checkpoint의 답변은 중복되지 않는다.
 
 ## 실행·팀 검토
-- 준비: 대상 DB와 복구 경로를 확인한 뒤 `uv run --env-file .env python -m backend.conversations --setup`. 기존 SQL 003·005·006 인증 스키마가 선행되어야 한다. 새 Compose DB는 013 메타데이터 SQL을 실행하지만 라이브러리 표 준비 명령은 별도로 필요하다. 기존 볼륨 삭제로 초기화하지 않는다.
+- 준비: 대상 DB와 복구 경로를 확인한 뒤 `uv run --env-file .env python -m backend.conversations.memory_service --setup`. 기존 SQL 003·005·006 인증 스키마가 선행되어야 한다. 새 Compose DB는 013 메타데이터 SQL을 실행하지만 라이브러리 표 준비 명령은 별도로 필요하다. 기존 볼륨 삭제로 초기화하지 않는다.
 - 시작: `.env`의 `THREADS_ENABLED=1`과 적절한 DATABASE_URL/AUTH_ORIGIN/AUTH_SECRET을 설정한 뒤 `uv run --env-file .env uvicorn backend.main:app --host 127.0.0.1 --port 8000`. 기존 코퍼스와 모델 키가 있어야 실제 RAG 판정이 가능하다. `/login`의 분석 링크로 `/workspace`에 들어간다.
 - 조장 반영 요청: SPEC 4절에 circuits/threads/messages/resume/retry/approve/memories API와 1 MiB 업로드 계약을 반영하고, 8.5절에 이 문서 AC를 반영한다. 8.6절의 업무 데이터 미구현 문구는 소유권 검증 범위를 반영해 갱신한다. 주요 문서는 STH에서 직접 수정하지 않았다.
 - 기존 트리 불일치: SOJAFIT의 db/012_document_category.sql은 HEAD에도 있으나 실제 파일이 없다. 이번 기능과 관계없는 해당 줄 변경은 조장 검토 대상이다.
@@ -143,8 +143,8 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 
 실행 방식: 현재 STH에서 직접 실행하며 TDD와 마지막 독립 리뷰를 수행한다. 새 브랜치/워크트리는 팀 규칙상 만들지 않는다.
 
-1. `backend/graph/netlist.py`와 `tests/graph/test_netlist.py`: 가공 회로와 기존 공개 샘플로 KiCad 두 형식 파싱·1 MiB 제한·비정상 입력 RED→GREEN. 기존 `circuit_around` 연결 형식을 재사용한다.
-2. `db/013_agent_memory.sql`, `backend/conversations.py`, `tests/api/test_threads.py`: 전용 스키마의 circuits/threads/messages/approvals와 연결 풀·setup CLI를 작성한다. 012 번호는 기존 트리에 예약되어 사용하지 않는다. app.state 런타임은 THREADS_ENABLED=1일 때만 초기화하며 공개 인증 DB를 유지한다.
+1. `backend/graph/netlist.py`와 `tests/graph/test_agent_netlist.py`: 가공 회로와 기존 공개 샘플로 KiCad 두 형식 파싱·1 MiB 제한·비정상 입력 RED→GREEN. 기존 `circuit_around` 연결 형식을 재사용한다.
+2. `db/013_agent_memory.sql`, `backend/conversations/memory_service.py`, `tests/api/test_threads.py`: 전용 스키마의 circuits/threads/messages/approvals와 연결 풀·setup CLI를 작성한다. 012 번호는 기존 트리에 예약되어 사용하지 않는다. app.state 런타임은 THREADS_ENABLED=1일 때만 초기화하며 공개 인증 DB를 유지한다.
 3. 같은 테스트 파일에서 실제 PostgresSaver/PostgresStore와 가짜 그래프를 이용해 소유권·재연결·interrupt·동시 실행·승인 멱등성 RED→GREEN. 승인 key는 thread:version, 원본은 별도 승인 표에 보존한다.
 4. `backend/main.py`, 그래프 두 build/state 및 `nodes.read_input`: 엄격한 API 스키마, Origin/no-store, 고정된 업로드 연결 주입, Store 전달을 연결한다. 요청에 내부 state/사용자/파일 경로를 받지 않는다. 현재 모델 그래프는 기존 평가 실행기와 같은 MCP 도구·D5 조립을 재사용한다.
 5. `backend/web/templates/workspace.html`와 기존 로그인 화면: 업로드·대상·대화 목록·이력·조건 질문·승인·관련 사례를 DOM textContent로 표시한다. 비로그인·401 때 민감한 화면을 비우고 /login으로 이동한다. 파일/질문/응답은 브라우저 영구 저장소에 보관하지 않는다.

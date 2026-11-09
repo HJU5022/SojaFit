@@ -19,6 +19,11 @@
 - `test_supervisor_models.py` — 동결 입력·schema 재시도·provider 중단·예산·집계·증거 hash를 API 호출 없이 검증
 - `test_supervisor_jev.py` — Jev typed answer·gold 격리·provider 정책·예산·70-job manifest를 API 없이 검증
 - `test_supervisor_stage3_report.py` — 3차 집계의 gold·형식·라우팅 분모와 완전한 3회 비교·과거 Jev 수치 재계산 검증
+- `test_supervisor_prompt_v0_common.py` — V0 13건의 hash·건수 동결, 정답·id 입력 격리, 오류 행을 포함한 공통 분모와 상태 전이 표본을 API 없이 검증
+- `test_supervisor_prompt_v0.py` — Luna·Haiku V0 실행기의 모델 고정, 입력 격리, 형식 재시도 상한, 오프라인 26-job plan과 live gate를 API 없이 검증
+- `test_supervisor_prompt_v0_jev.py` — Jev V0의 공통 질문 계약·입력 경계·typed answer 확률 검증·의미 오류 분리·오프라인 13-job plan·live gate를 API 없이 검증
+- `test_compare_supervisor_prompt_v0.py` — 세 후보 고정, dataset·의미 계약 hash, case 집합·실행 수 일치, API별 형식 지표와 Jev metadata 분리를 API 없이 검증
+- `test_import_supervisor_prompt_v0_langfuse.py` — V0 Dataset payload·고정 ID·7개 결정적 점수·hash 차단·중복 영수증 차단·세 Experiment 쓰기 계약을 네트워크 없이 검증
 - `test_score_answer.py` — 답변·거절 5지표 채점기: 데이터시트·회로 근거 인용, 다른 쪽·허위 인용 오답 처리, `n01` `relevant + NOT_VERIFIED` 조건 부족 설명 대 단순 거절 구분, 비관련 4종 거절 대 환각 위험, v1 50건·v2 70건 분모·제외 처리 확인(API·DB 없이)
 - `test_score_compound.py` — 여러 개를 묻는 질문 부분별 채점: 부분마다 자기 규칙(답할 부분의 근거 · 판정, 답하면 안 되는 부분의 거절 말)으로 채점하는지, 열쇠 낱말로 품번 · 영문 낱말을 고르는지
 - `test_gate_report.py` — 기준표 집계: verdict 칸 없는 옛 평가셋(v2)은 expected의 첫 판정 코드를 쓰는지, 문서 할 일 검색이 있으면 그것을 · 없으면 판정 표 근거 칸을 근거 위치로 쓰는지, 비율 · 오탐 · p95 기준 미달을 빠짐없이 고르는지(그래프 · LLM 없음)

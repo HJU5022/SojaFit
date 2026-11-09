@@ -11,6 +11,12 @@
 ```mermaid
 erDiagram
     USERS ||--o{ AUTH_SESSIONS : "로그인 세션"
+    USERS ||--o{ PROJECTS : "소유 프로젝트"
+    PROJECTS ||--o{ THREADS : "대화"
+    THREADS ||--o{ RUNS : "실행"
+    THREADS ||--o{ MESSAGES : "메시지"
+    RUNS ||--o{ MESSAGES : "메시지"
+    PROJECTS ||--|| CIRCUITS : "정규화 회로"
     USERS ||--o| AUTH_GOOGLE_IDENTITIES : "승인된 Google 관리자 연결"
 
     USERS {
@@ -61,6 +67,8 @@ erDiagram
 | `chunk_embeddings` | `002`가 만든 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 Voyage 1024차원 행을 함께 저장. HNSW 없음, 정확 검색 | `002_rag_corpus.sql`, `008_multi_dim_embeddings.sql` |
 | `chunk_embedding_bits` | voyage-4-large 임베딩의 1비트 코드 `BIT(1024)`, 인덱스 없음(dense 1단계 Hamming 후보) | `009_chunk_embedding_bits.sql` |
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
+| `projects` | 사용자 소유 회로 프로젝트·출처·이름·시각. 소유자별 목록 인덱스 | `013_projects.sql` |
+| `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전. 프로젝트 삭제 cascade, PK가 FK 인덱스를 겸함 | `013_projects.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
 | `auth_google_states` | state·브라우저 비밀·PKCE verifier·nonce를 보관하는 10분짜리 일회성 Google 로그인 상태 | `010_google_auth.sql` |
@@ -72,7 +80,7 @@ erDiagram
 
 ## 라이브러리가 만드는 표
 
-사용자 분석 런타임은 `sojafit_agent` 비공개 스키마를 사용합니다. `013_agent_memory.sql`은 `circuits`(소유자·넷리스트 원문·연결), `threads`(소유자·회로·대상·결과 버전·재시도 횟수), `messages`(대화 이력·checkpoint별 답변 중복 방지), `approvals`(thread·버전별 승인 원본)를 만듭니다. `public.users`를 참조하며, 기존 업무 초안의 public.analysis_runs 등을 생성하지 않습니다. `python -m backend.conversations --setup`이 이어서 아래 라이브러리 표를 같은 비공개 스키마에 만듭니다. 웹 런타임은 DDL을 실행하지 않습니다. 기존 공유 DB 적용은 별도 검토 대상입니다.
+사용자 분석 런타임은 `sojafit_agent` 비공개 스키마를 사용합니다. `013_agent_memory.sql`은 `circuits`(소유자·넷리스트 원문·연결), `threads`(소유자·회로·대상·결과 버전·재시도 횟수), `messages`(대화 이력·checkpoint별 답변 중복 방지), `approvals`(thread·버전별 승인 원본)를 만듭니다. `public.users`를 참조하며, 기존 업무 초안의 public.analysis_runs 등을 생성하지 않습니다. `python -m backend.conversations.memory_service --setup`이 이어서 아래 라이브러리 표를 같은 비공개 스키마에 만듭니다. 웹 런타임은 DDL을 실행하지 않습니다. 기존 공유 DB 적용은 별도 검토 대상입니다.
 
 `langgraph-checkpoint-postgres` 3.2.0의 `setup()`이 만듭니다. 우리 SQL에서 만들지 않습니다.
 
@@ -85,3 +93,7 @@ erDiagram
 | `store` | `PostgresStore` | 사용자별 장기 기억. namespace는 `("memories", user_id)`(`backend/graph/memory.py`) |
 | `store_vectors` | `PostgresStore` | 기억의 임베딩(인덱스를 설정할 때) |
 | `store_migrations`, `vector_migrations` | `PostgresStore` | Store 스키마 버전 |
+
+`db/014_conversations.sql`은 프로젝트 소유 대화·실행·메시지를 만든다. 체크포인트 표는 LangGraph 설치 경로로 별도 생성한다.
+
+`db/015_approvals_quotes.sql`은 `messages → approvals → quotes/approved_cases`를 연결한다. 승인은 메시지당 하나이며 프로젝트·메시지 삭제가 승인·견적·사례까지 cascade한다. snapshot은 가격·재고 관련 키를 어떤 깊이에서도 허용하지 않는다.

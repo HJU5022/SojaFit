@@ -30,7 +30,7 @@ services:
     build: .
     environment:
       DATABASE_URL: postgresql://app:app@db:5432/app
-    command: ["python", "-m", "backend.conversations", "--setup"]
+    command: ["python", "-m", "backend.conversations.memory_service", "--setup"]
     depends_on:
       db:
         condition: service_healthy

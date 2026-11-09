@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
-from backend.conversations import Conversations, initialize
+from backend.conversations.memory_service import Conversations, initialize
 from backend.graph.nodes import read_input
 from backend.graph.state import AgentState
 
@@ -717,12 +717,16 @@ def test_http_flow_uses_session_owner_and_rejects_state_injection(runtime, monke
         del api.state.conversations
 
 
-def test_workspace_and_login_have_upload_and_analysis_navigation():
+def test_react_login_and_legacy_workspace_are_both_available():
     from fastapi.testclient import TestClient
     from backend.main import app
     client = TestClient(app)
-    assert 'href="/workspace"' in client.get('/login').text
-    html = client.get('/workspace').text
+    login = client.get('/login')
+    assert login.status_code == 200
+    assert '<div id="root"></div>' in login.text or 'href="/workspace"' in login.text
+    workspace = client.get('/workspace')
+    assert workspace.status_code == 200
+    html = workspace.text
     for expected in ('id="netlist"', 'id="target"', 'id="messages"', 'id="approve"', 'id="memories"'):
         assert expected in html
     assert 'localStorage' not in html and 'innerHTML' not in html

@@ -1,0 +1,81 @@
+{
+  "model": "typesafe/jev-1.14",
+  "dataset": "evals\\samples\\supervisor_prompt_v0.jsonl",
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "dataset_count": 13,
+  "provider_policy": {
+    "zdr": true,
+    "data_collection": "deny",
+    "allow_fallbacks": false
+  },
+  "question_contract_sha256": "c03097161acbc2fa510c69303d062cd51c488b33bec35001ea62d9c3975e489f",
+  "common_module_sha256": "ab81a133926f42b55eed9cddc5d93f999ce67efd175341bbe05b1ed03cb52618",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "jobs": [
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-01",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-02",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-03",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-04",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-05",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-06",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-07",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-08",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-09",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-10",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-11",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-12",
+      "run_index": 1
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "case_id": "sv0-13",
+      "run_index": 1
+    }
+  ]
+}

@@ -57,13 +57,8 @@ def test_health_has_server_generated_request_id():
     assert response.json() == {"status": "ok"}
 
 
-def test_root_has_no_login_screen():
-    response = TestClient(app).get("/")
-    assert response.status_code == 404
-
-
 def test_not_found_uses_error_contract():
-    response = TestClient(app).get("/")
+    response = TestClient(app).get("/api/not-a-route")
     assert response.status_code == 404
     assert response.json() == {
         "error": {

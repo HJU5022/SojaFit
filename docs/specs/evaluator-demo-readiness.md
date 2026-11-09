@@ -55,9 +55,9 @@ Edge cases: 미인증401, B의 A접근404, 처리 중 중복409, 준비 안 된 
 - artifact에는 모드·버전·환경·표본 수·p50/p95 정의·단계 지연·시나리오 결과·trace 링크를 남긴다. 스크린샷은 실제 시연 결과만 보관하고 비밀값을 제외한다. G2/G4/G5/G6 증거를 각각 연결한다.
 
 ### 수정 경로·커밋 단위
-1. backend/main.py·conversations.py·tests/api/test_threads.py: readiness/평가자 HTTP 경로.
+1. `backend/main.py`·`backend/conversations/memory_service.py`·`tests/api/test_threads.py`: readiness/평가자 HTTP 경로.
 2. Dockerfile·docker-compose.yml·services/llm.py·명시적 bootstrap·data/demo와 합성 fixture: 키 없는 데모. 파일 추가 전 트리/폴더 설명을 갱신한다.
-3. conversations.py·multi_agent/build.py·services/langfuse_prompts.py 및 테스트: trace·단계 지연. 인증/예산/판정은 유지한다.
+3. `backend/conversations/memory_service.py`·`multi_agent/build.py`·`services/langfuse_prompts.py` 및 테스트: trace·단계 지연. 인증/예산/판정은 유지한다.
 4. .github/workflows/ci.yml·기존 evals/runners·tests 및 문서: CI/유료 품질 보고/artifact 연결.
 5. 조장에게 SPEC 구현 경계/7절·GATES의 최신 상태와 증거 반영을 요청한다. STH에서는 주요 문서를 직접 수정하지 않는다. 공개 데모 자료 범위는 SPEC6절의 기존 검토 절차를 따른다. 이번 준비에서 원격 push/PR/배포·운영 계정 활성화는 하지 않는다.
 
