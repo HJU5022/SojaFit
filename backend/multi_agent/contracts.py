@@ -137,6 +137,7 @@ class TaskReport(BaseModel):
     reason: Reason | None = None                            # 실패면 사유
     missing: list[str] = Field(default_factory=list)        # 부족한 값 이름(예: VRRM)
     answer: str = ''                                        # 문서 할 일의 부분 답(문장마다 [번호] 인용, 한국어)
+    memory_refs: list[str] = Field(default_factory=list, max_length=5)  # 본문 근거와 분리한 과거 사례 ID
     evidence_ids: list[str] = Field(default_factory=list)   # 인용한 근거 번호
     docs: list[dict] = Field(default_factory=list)          # 문서 할 일이 LLM에 보여 준 청크(인용 검사 · 채점이 쓴다)
     judgement: dict = Field(default_factory=dict)           # 판정 할 일의 판정 · 찾기 결과(답 틀의 입력)

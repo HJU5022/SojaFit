@@ -21,6 +21,7 @@ class MultiState(TypedDict, total=False):
     # ── 입력 읽기 노드가 채운다 (단일 그래프와 같은 칸) ──
     input: str
     approved_memories: list[dict]  # 새 질문마다 서버가 갱신, 현재 조건·사양 근거와 분리
+    memory_refs: list[str]  # 모델이 선택하고 현재 요청의 제공 사례와 대조한 ID
     user_id: str
     connections: dict
     run_version: int

@@ -22,6 +22,7 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     connections: dict  # API가 소유권·업로드 검증을 마친 회로 연결. 클라이언트 state는 받지 않는다
     run_version: int   # 서버가 발급한 승인 대상 결과 버전
     approved_memories: list[dict]  # 서버가 소유권·관련성을 확인한 과거 승인 사례
+    memory_refs: list[str]
 
     # ── 입력 읽기 노드가 채운다 (LLM 없이 글자를 나누고 넷리스트를 읽는다) ──
     circuit: str        # 회로 이름 (예: SparkFun Breadboard Supply)

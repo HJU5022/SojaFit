@@ -575,6 +575,8 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         values, conds = merge_reply(reply.get('answers') or {}, values, conds, kinds)
         if reply.get('role') in roles:
             roles = [reply['role']]
+    base['analysis_inputs'] = {'roles': roles, 'values_si': dict(values), 'test_conditions': dict(conds),
+                               'read_values': [v.model_dump(mode='json') for v in read.values]}
     # [왜] 사용자가 숫자로 적은 규격('VRRM 400~600V', 'trr 최댓값 100ns 이하')을 역할 규칙 조건 뒤에 필수 조건으로 붙인다.
     #      판정과 찾기가 같은 규칙을 쓴다. 붙이지 않으면 규격 밖 후보를 보여 주거나 원래 부품 값과만 비교했다(11-06 v3-05 · 11 · 12)
     # [왜] 한계 값('전압강하 1.8V까지')을 읽기가 회차마다 요구 성질(VF)로도, 이 역할에 없는 회로 값 이름(v_drop_allowed)으로도 적었다.

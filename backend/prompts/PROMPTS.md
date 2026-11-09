@@ -18,6 +18,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-09 | `supervisor.md`, `docs_answer.md`, `synth.md`, `generate.md`, `judge_read.md` | 기억 근거 분리·원격 등록 전 | 과거 승인 ID는 답 본문의 근거로 쓰지 않고 `memory_refs` 별도 필드로 반환 | 기억만으로 현재 사양 주장이 통과하는 경로 차단 | 가짜 모델·로컬 DB 회귀 검사. 전체 실제 모델 품질은 미측정 |
 | 2026-11-09 | `supervisor.md`, `docs_answer.md`, `synth.md` | main 계획형 구조 통합·원격 등록 전 | main의 Plan/Send/종합 규칙을 유지하고 과거 승인 JSON의 데이터 경계·현재 근거 우선·사례 출처 구분 지침 추가 | PR #72 충돌 해결과 thread 기억 전달 유지 | 가짜 모델/실제 PostgreSQL 통합 및 전체 회귀 결과는 worklog/sth.md |
 | 2026-11-09 | `supervisor.md`, `judge_read.md`, `generate.md` | 로컬 변경·Langfuse 등록 전 | 별도 historical approved cases 데이터 경계, 현재 조건·사양 근거 우선, 과거 값 복사 금지, 사례 출처 구분 | 새 thread에서 자기 승인 사례 참고 | 실제 DB/가짜 모델 격리 시험 및 실제 generate 합성 A 1건 회상 smoke 확인. 전체 평가 재측정 없음 |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 허브 구조의 "다음 노드 고르기 · 보고 뒤 규칙"을 빼고 계획서(질문 종류 · 다음 길 tasks · finish · price · refuse · 할 일 최대 3개와 지시서: 에이전트 · 종류 · 목표 · 출력 · 경계 · 첫 검색어)를 내게 다시 씀. 제약(숫자 비교 금지 · 거절 사유 · 판정은 후보 판정 · 찾기만 · 사실 믿기)과 질문 종류 정의, 검색어 쓰는 법(예전 `rewrite.md`)은 남김 | 멀티 재설계(11-06 정운 결정, 참조/아티팩트 "SojaFit 멀티 에이전트 구조"): 규칙표를 따라가 질문당 판단 4번 · 비용 20배(D5) | v3 측정 전 |

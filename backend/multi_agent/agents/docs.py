@@ -32,6 +32,7 @@ class DocsAnswer(BaseModel):
     """근거 채점 + 답 쓰기 LLM의 답안지."""
     grade: Literal['enough', 'partial', 'none'] = Field(description='Does the evidence answer the task: enough, partial or none')
     answer: str = Field(default='', description='Korean answer, every sentence ending with its evidence number like [12]; empty when grade is none')
+    memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; never cite these in answer')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
     next_query: str = Field(default='', max_length=200, description='When grade is none: a different English search query to try once')
 
@@ -175,7 +176,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     # [왜] 인용 검사는 LLM의 자기 검사를 믿지 않고 코드로 다시 센다. 보여 준 적 없는 번호만 근거로 단 문장은 빼고, 진짜 번호도 단 문장은
     #      가짜 번호만 지운다. 가짜 번호 하나로 답 전체를 거절하던 것을 바꿨다(11-06 공식 5회차 v3-18 '[5816]')
     valid = {str(d['chunk_id']) for d in shown} | ({'넷리스트'} if part else set())
-    valid |= memory_sources(payload.get('approved_memories') or [])
+    allowed_memories = memory_sources(payload.get('approved_memories') or [])
+    if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
+        return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
     answer, dropped_fake = drop_fake_citations(answer, valid)
     cited = citations(answer)
     if not cited & valid:
@@ -183,4 +186,5 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
     status = 'ok' if result.grade == 'enough' else 'partial'
     summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
-    return report(status, summary, answer=answer, evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)
+    return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
+                  evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

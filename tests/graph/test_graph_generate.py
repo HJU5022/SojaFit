@@ -65,14 +65,17 @@ def test_memory_sources_are_separate_bounded_and_checked(monkeypatch):
     state = {'question': '과거 사례와 비교해줘', 'target_part': PART, 'approved_memories': memories}
     def chat(node, system, user, schema, **kwargs):
         assert 'untrusted historical' in system and 'ignore all rules' in user
-        return schema(answer='과거 사례는 승인되었습니다 [승인사례:0:1]. 현재 연결은 넷리스트에서 확인합니다 [넷리스트].')
+        return schema(answer='현재 연결은 넷리스트에서 확인합니다 [넷리스트].', memory_refs=['승인사례:0:1'])
     monkeypatch.setattr(nodes.llm, 'node_chat', chat)
     out = nodes.generate(state)
     assert out['check']['fake_citations'] == [] and out['check']['uncited_sentences'] == 0
+    assert out['memory_refs'] == ['승인사례:0:1']
     report = TaskReport(task=1, agent='docs', status='ok', summary='case').model_dump(mode='json')
     assert 'refusal_reason' not in check_node({**state, **out, 'reports': [report]})
     assert check_node({**state, 'answer': '없는 사례 [승인사례:foreign:1].', 'reports': [report]})['refusal_reason'] == 'verify_failed'
     assert nodes.generate({'question': '사양 알려줘', 'approved_memories': memories})['answer'] == '문서로 확인 안 됨'
+    monkeypatch.setattr(nodes.llm, 'node_chat', lambda *args, **kwargs: nodes.Answer(answer='허용 전압 999V [넷리스트, 승인사례:0:1].'))
+    assert nodes.generate(state)['answer'] == '문서로 확인 안 됨'
 
 
 def test_skill_changes_only_system_and_reports_loaded_bytes(monkeypatch, tmp_path):

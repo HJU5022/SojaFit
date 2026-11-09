@@ -168,7 +168,8 @@ def _merged(reports: list[TaskReport]) -> dict:
     """채점기 · 답 검사가 읽는 칸: 문서 할 일이 보여 준 청크와 그 id, 첫 판정 결과."""
     docs = list({d['chunk_id']: d for r in reports for d in r.docs}.values())
     judgement = next((r.judgement for r in reports if r.agent == 'judge' and r.status != 'fail' and r.judgement), {})
-    return {'docs': docs, 'passed': [d['chunk_id'] for d in docs], 'judgement': judgement}
+    return {'docs': docs, 'passed': [d['chunk_id'] for d in docs], 'judgement': judgement,
+            'memory_refs': sorted({ref for r in reports if r.status != 'fail' for ref in r.memory_refs})}
 
 
 def part_text(r: TaskReport) -> str:
@@ -197,6 +198,7 @@ def single_node(state: dict) -> dict:
 class Synth(BaseModel):
     """종합 LLM의 답안지."""
     answer: str = Field(description='Korean answer that joins the parts; keeps every [n] citation; judge verdict tables are added by code after it')
+    memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; not answer evidence')
 
 
 def render_synth(state: dict, reports: list[TaskReport]) -> str:
@@ -217,10 +219,13 @@ def synth_node(state: dict, *, chat) -> dict:
     c = {**state['counters'], 'hops': state['counters']['hops'] + 1}
     if c['hops'] > MAX_SUPERVISOR_CALLS:
         return {'counters': c, 'refusal_reason': Reason.LIMIT_REACHED.value, 'answer': '', 'path': ['종합']}
-    text = chat('synth', SYNTH_PROMPT, render_synth(state, reports), Synth).answer.strip()
+    response = chat('synth', SYNTH_PROMPT, render_synth(state, reports), Synth)
+    text = response.answer.strip()
     # [왜] 판정 숫자는 LLM이 다시 쓰지 않는다(AGENTS 7). 종합 글 뒤에 코드 답 틀을 그대로 붙인다
     tables = [render_judgement(r.judgement) for r in sorted(reports, key=lambda r: r.task) if r.agent == 'judge' and r.status != 'fail' and r.judgement]
-    return {**_merged(reports), 'counters': c, 'answer': _with_declined(state, '\n\n'.join([text, *tables])), 'synth_text': text, 'path': ['종합']}
+    merged = _merged(reports)
+    return {**merged, 'memory_refs': sorted(set(merged['memory_refs']) | set(response.memory_refs)),
+            'counters': c, 'answer': _with_declined(state, '\n\n'.join([text, *tables])), 'synth_text': text, 'path': ['종합']}
 
 
 def check_node(state: dict) -> dict:
@@ -231,13 +236,13 @@ def check_node(state: dict) -> dict:
     answer = state.get('answer') or ''
     reports = final_reports(state)
     valid = {str(i) for i in state.get('passed') or []} | ({'넷리스트'} if state.get('target_part') else set())
-    valid |= memory_sources(state.get('approved_memories') or [])
+    invalid_memories = set(state.get('memory_refs') or []) - memory_sources(state.get('approved_memories') or [])
     judge_only = all(r.agent == 'judge' for r in reports if r.status != 'fail')
     cited = citations(answer)
     sentences = [s for s in re.split(r'(?<=[.。])\s+', answer) if s.strip()]
     check = {'used': sorted(cited & valid), 'fake_citations': sorted(cited - valid),
              'uncited_sentences': sum(1 for s in sentences if not citations(s)), 'judgement': bool(state.get('judgement'))}
-    problem = bool(check['fake_citations']) or (not judge_only and not check['used'])
+    problem = bool(check['fake_citations'] or invalid_memories) or (not judge_only and not check['used'])
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}

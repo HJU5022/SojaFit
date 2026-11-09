@@ -20,6 +20,8 @@ import re
 import subprocess
 import tempfile
 import time
+import threading
+from typing import Callable
 from urllib.request import Request, urlopen
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -73,6 +75,8 @@ class EvaluationBudget:
     reserved_usd: float = 0.0
     started: float = field(default_factory=time.monotonic)
     _pending_reservations: list[float] = field(default_factory=list, repr=False)
+    on_reserve: Callable[[float], None] | None = field(default=None, repr=False)
+    _lock: object = field(default_factory=threading.Lock, repr=False)
 
     def __post_init__(self):
         """만들 때 상한·단가를 검증한다."""
@@ -96,6 +100,17 @@ class EvaluationBudget:
                     raise ValueError("가격 구간의 단가가 잘못되었습니다")
 
     def reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+        # LangGraph/판정 읽기가 병렬로 호출해도 같은 요청의 한도를 공유한다.
+        with self._lock:
+            return self._reserve(text, output_tokens=output_tokens, embedding=embedding)
+
+    def remaining(self) -> float:
+        remaining = self.max_seconds - (time.monotonic() - self.started)
+        if remaining <= 0:
+            raise EvaluationLimitError('분석 시간 상한')
+        return min(45.0, remaining)
+
+    def _reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
         """호출 한 번의 최대 비용을 호출 전에 예약하고, 이 호출에 줄 제한 시간(초, 최대 45 또는 남은 시간)을 돌려준다.
 
         text의 바이트 수에 여유 8192를 더해 입력 토큰 상한으로 본다. embedding=True면 임베딩 단가를 쓴다.
@@ -116,10 +131,12 @@ class EvaluationBudget:
         cost = upper * rate + output_tokens * output_rate
         if remaining <= 0 or self.calls >= self.max_calls or self.reserved_usd + cost > self.max_usd:
             raise EvaluationLimitError("평가 호출/시간/예약비용 상한")
+        if self.on_reserve:
+            self.on_reserve(cost)  # DB 사용자 예산도 통과한 뒤에만 외부 호출을 허용한다.
         self.calls += 1
         self.reserved_usd += cost
         self._pending_reservations.append(cost)
-        return min(45.0, remaining)
+        return self.remaining()
 
     def reconcile(self, reported_cost: float | None) -> None:
         """가장 최근 호출 예약액을 provider가 보고한 실제 비용으로 정산한다.
@@ -190,13 +207,17 @@ def _voyage_post(path: str, payload: dict) -> dict:
     if not key:
         raise RuntimeError("VOYAGE_API_KEY is required")
     for attempt in range(5):  # [왜] 재시도 상한. 키 한도(조당 30달러)를 무한 루프가 쓰지 않게 한다
-        r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=180, headers={"Authorization": f"Bearer {key}"}, json=payload)
+        budget = _evaluation_budget.get()
+        runtime = budget is not None and budget.on_reserve is not None
+        timeout = budget.reserve(json.dumps(payload), output_tokens=0, embedding=True) if runtime else 180
+        r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=timeout, headers={"Authorization": f"Bearer {key}"}, json=payload)
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
             raise RuntimeError(f"Voyage payment signal {r.status_code}")
         if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
-            time.sleep(5 * 2**attempt)
+            delay = 5 * 2**attempt
+            time.sleep(min(delay, budget.remaining()) if runtime else delay)
             continue
         raise RuntimeError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
 
@@ -392,6 +413,9 @@ def _cli_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """구독 `claude -p`로 같은 모델을 불러 schema 객체로 돌려준다(개발 중 반복 테스트용, 최종 정리 때 지운다)."""
     # [왜] CLI에는 response_format이 없어 JSON Schema를 시스템 프롬프트 끝에 붙여 형식을 요구한다
     # 시스템 프롬프트에 JSON Schema를 붙이고, 답에서 JSON만 꺼내 schema로 검증한다
+    budget = _evaluation_budget.get()
+    if budget is not None and budget.on_reserve is not None:
+        raise EvaluationLimitError('운영 예산은 OpenRouter 경로에서만 지원합니다.')
     schema_text = json.dumps(schema.model_json_schema(), ensure_ascii=False)
     system_full = f"{system}\n\n출력은 아래 JSON Schema를 따르는 JSON 하나만 낸다. 다른 글은 쓰지 않는다.\n{schema_text}"
     # [주의] --tools ""로 도구를 끄고, 임시 폴더에서 실행해 저장소의 CLAUDE.md가 읽히지 않게 한다
@@ -432,7 +456,9 @@ def chat(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
             # [왜] 연결이 끊기거나 시간이 넘으면(APITimeoutError 포함) 한 번에 문항 전체가 실패했다(v3-15, 11-09 OpenRouter). 잠깐 쉬고 다시 부른다
             last_error = error
             if attempt < MAX_FORMAT_RETRIES:
-                time.sleep(2 * (attempt + 1))  # 마지막 시도 뒤에는 쉬지 않고 바로 올린다
+                budget = _evaluation_budget.get()
+                delay = 2 * (attempt + 1)
+                time.sleep(min(delay, budget.remaining()) if budget else delay)
     if isinstance(last_error, APIConnectionError):
         raise last_error  # 연결 오류는 형식 오류로 바꾸지 않고 그대로 올린다
     raise ValueError(f"LLM 출력이 {schema.__name__} 형식을 {1 + MAX_FORMAT_RETRIES}번 모두 어겼다") from last_error

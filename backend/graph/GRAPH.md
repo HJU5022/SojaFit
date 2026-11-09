@@ -9,6 +9,7 @@
 ## 구현 상태
 - 있음: D4 v2 단일 그래프(아래 흐름). 사실 확인(`lookup`), 판정 길(`specs` · `find` · `chat`), 체크포인터를 인자로 받아(`build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`) 가짜 검색기 · 가짜 도구로 키 없이 시험할 수 있습니다. 판정 길의 빠진 값 묻기(interrupt, 문항당 1번)는 체크포인터가 있어야 켜지고, 평가 실행기는 메모리 체크포인터(`InMemorySaver`)를 넘깁니다.
 - 서비스 연결: `backend/conversations.py`가 업로드 연결과 인증 사용자·thread를 검증하고 DB Checkpointer/Store를 앱 수명 동안 연결합니다. 이 폴더의 build는 저장소를 인자로 받습니다. 견적서 승인 단계(interrupt)는 아직 없습니다. 판정 사례 승인은 별도 인증 API입니다.
+- 과거 기억은 현재 답변의 인용 근거로 쓰지 않고 `memory_refs`로만 선택합니다. generate는 본문 기억 인용과 제공되지 않은 ID를 거부합니다. 모델용 과거 문맥은 재개 답변·최종 판정 입력을 질문보다 앞에 제한해서 담습니다.
 - 다른 폴더 코드를 그대로 씁니다: 사실 확인 노드(`multi_agent/facts.py`), 판정 읽기 · 판정 에이전트(`multi_agent/agents/judge.py`), 거절 문구와 판정 답 틀(`multi_agent/messages.py`), 질문 종류 · 거절 사유 코드(`multi_agent/contracts.py`). D4 v2와 D5가 같은 사실 · 같은 판정 코드로 비교되게 하려는 것입니다.
 
 ## 흐름 (지금 코드, D4 v2 11-06)

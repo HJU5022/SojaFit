@@ -288,6 +288,7 @@ def rewrite(state: AgentState) -> dict:
 class Answer(BaseModel):
     """생성 노드가 LLM에게 받는 답안지."""
     answer: str = Field(description="문장마다 근거 번호를 붙인 답. 근거로 답할 수 없으면 '문서로 확인 안 됨'")
+    memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted, separate from answer evidence')
 
 
 def netlist_block(part: dict) -> str:
@@ -319,6 +320,7 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
         blocks.append(netlist_block(part))  # [왜] 역할 질문은 검색 없이 오므로 넷리스트가 유일한 근거다
     skill_info = {"enabled": use_skill, "applied": False, "sha256": None}
     answer = NOT_FOUND  # 근거가 하나도 없으면(넷리스트 없이 온 역할 질문) LLM을 부르지 않는다
+    memory_refs = []
     if blocks:
         system = (PROMPTS / "generate.md").read_text(encoding="utf-8")
         text = ""
@@ -331,9 +333,12 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
             skill_info = {"enabled": True, "applied": True, "sha256": hashlib.sha256(raw).hexdigest()}
         user = "근거:\n" + "\n\n".join(blocks) + f"\n\n질문: {state['question']}"  # 강의 20강처럼 근거 다음에 질문
         user += memory_context(state.get('approved_memories') or [])
-        answer = llm.node_chat("generate", system, user, Answer, skill_text=text).answer.strip()
+        response = llm.node_chat("generate", system, user, Answer, skill_text=text)
+        answer, memory_refs = response.answer.strip(), response.memory_refs
     valid = {str(d["chunk_id"]) for d in cards} | ({"넷리스트"} if part else set())  # 실제로 넘긴 근거. 이 밖의 번호를 인용하면 없는 근거 인용이다
-    valid |= memory_sources(state.get('approved_memories') or []) if blocks else set()
+    if (any(c.startswith('승인사례:') for c in citations(answer)) or
+            set(memory_refs) - memory_sources(state.get('approved_memories') or [])):
+        answer, memory_refs = NOT_FOUND, []
     cited = citations(answer)
     # 마침표 뒤 공백에서 문장을 자른다. "문서로 확인 안 됨"은 인용할 근거가 없는 답이라 세지 않는다
     sentences = [] if answer == NOT_FOUND else [s for s in re.split(r"(?<=[.。])\s+", answer) if s.strip()]
@@ -341,7 +346,7 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
              "uncited_sentences": sum(1 for s in sentences if not citations(s)),  # 근거 번호가 하나도 없는 문장 수
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
-    return {"answer": answer, "check": check, "skill": skill_info, "path": ["생성"]}
+    return {"answer": answer, "memory_refs": list(dict.fromkeys(memory_refs)), "check": check, "skill": skill_info, "path": ["생성"]}
 
 
 def judge(state: AgentState, *, specs, find, retriever) -> dict:

@@ -84,6 +84,16 @@ def test_memory_does_not_relax_synthesis_current_number_check():
     assert S.check_node(state)['refusal_reason'] == 'verify_failed'
 
 
+def test_historical_case_cannot_support_current_spec_even_with_mixed_citation():
+    memory = {'thread_id': 'owned', 'version': 1, 'part': 'SS34', 'approved_at': '2026-11-09',
+              'summary': '승인됨', 'context': None}
+    reports = [TaskReport(task=1, agent='docs', status='ok', summary='s').model_dump(mode='json')]
+    for cite in ('승인사례:owned:1', '넷리스트, 승인사례:owned:1'):
+        state = {**STATE, 'approved_memories': [memory], 'reports': reports,
+                 'answer': f'SS34의 허용 전압은 999V입니다 [{cite}].'}
+        assert S.check_node(state)['refusal_reason'] == 'verify_failed'
+
+
 def test_collect_picks_single_synth_or_refuse_from_report_status():
     base = {'counters': {'hops': 1}}
     assert S.collect_node({**base, 'reports': [report(1)]})['outcome'] == 'single'

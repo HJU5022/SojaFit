@@ -142,9 +142,18 @@ class StdioMcpRetriever:
                 or self._loop is None or self._session is None):
             coroutine.close()  # [왜] 돌리지 못한 코루틴은 닫아야 "never awaited" 경고가 안 난다
             raise RetrievalUnavailableError("mcp_unavailable")
+        from backend.services import llm
+        budget = llm._evaluation_budget.get()
+        timeout = self.timeout_seconds
+        if budget is not None and budget.on_reserve is not None:
+            try:
+                timeout = min(timeout, budget.remaining())
+            except Exception:
+                coroutine.close()
+                raise
         future = asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         try:
-            return future.result(self.timeout_seconds)
+            return future.result(timeout)
         except FutureTimeoutError:
             future.cancel()
             raise RetrievalUnavailableError("timeout") from None

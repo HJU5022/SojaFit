@@ -74,6 +74,8 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
     j = J.judge_agent({**STATE, 'judge_read': read}, specs=lambda part, codes=None: rows, find=None, retriever=None)['judgement']
     vrrm = next(c for c in j['results'][0]['checks'] if c['code'] in ('VRRM', 'VR'))
     assert vrrm['threshold'] == pytest.approx(6.25) and vrrm['result'] == 'pass'  # 5V × 1.25
+    assert j['analysis_inputs']['values_si']['v_reverse_max'] == 5.0
+    assert j['analysis_inputs']['roles'] == ['R02']
     assert j['dropped'] == ['i_out'] and 'i_max' in j['asked']  # 다른 역할 이름은 버리고, 그 역할의 이름으로 묻는다
 
 

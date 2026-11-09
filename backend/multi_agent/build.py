@@ -27,13 +27,18 @@ def parse_node(state: dict, *, parse) -> dict:
     # [왜] 같은 thread의 다음 질문에서 앞 질문의 보고 · 판정으로 답을 쓰지 않게 비운다(reports는 None을 받으면 비우는 합치기 규칙)
     return {**fields, 'facts': {}, 'plan': {}, 'question_type': '', 'counters': {'hops': 0, 'agents': 0, 'searches': 0, 'replans': 0},
             'reports': None, 'round': 0, 'final_reports': [], 'outcome': '', 'refusal_reason': '', 'synth_text': '', 'docs': [], 'passed': [], 'judgement': {}, 'price_parts': [],
-            'answer': '', 'check': {}, 'refusal': {}, 'path': ['입력 읽기']}
+            'answer': '', 'check': {}, 'refusal': {}, 'memory_refs': [], 'path': ['입력 읽기']}
 
 
 def finish_node(state: dict) -> dict:
     """끝내기: 일상 대화는 계획의 reply가 답이다. 서브에이전트를 거친 답은 이미 answer에 있다."""
     if not state.get('reports'):
-        return {'answer': (state.get('plan') or {}).get('reply', ''), 'path': ['끝']}
+        reply = (state.get('plan') or {}).get('reply', '')
+        if '승인사례:' in reply:
+            reason = Reason.VERIFY_FAILED
+            return {'answer': refusal_for(reason, state.get('facts') or {}),
+                    'refusal': {'code': reason.value}, 'memory_refs': [], 'path': ['끝']}
+        return {'answer': reply, 'path': ['끝']}
     return {'path': ['끝']}
 
 
