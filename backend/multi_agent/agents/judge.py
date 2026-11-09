@@ -2,8 +2,7 @@
 
 - 역할: `judge_read_agent`(읽기 노드)와 `judge_agent`(판정 노드). 읽기를 따로 두는 이유는 인터럽트에서 재개하면
   노드가 처음부터 다시 돌기 때문이다(읽기 결과를 먼저 상태에 남겨 LLM을 다시 부르지 않는다).
-  멀티는 두 노드를 대체 부품 에이전트 하위 그래프(`build.py`: 회로 역할 읽기 → 대체 부품 판정)로 묶고, `judge_task_node`가 판정 보고를
-  답(코드 답 틀)이나 거절 사유로 바꾼다. 단일 그래프는 두 노드를 그대로 쓴다.
+  멀티는 두 노드를 하위 그래프(`build.py`)로 묶고 `judge_task_node`가 보고를 할 일 보고서로 바꾼다. 단일 그래프는 두 노드를 그대로 쓴다.
 - 하지 않는 일: 숫자 비교(backend/judge/verdict.py), 답 문구(backend/multi_agent/messages.py), LLM 직접 호출(chat을 받아 쓴다).
 - 출처: docs/specs/judge-agent.md What · How
 """
@@ -22,9 +21,8 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
-from backend.multi_agent.contracts import AgentReport, Reason
+from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
 from backend.multi_agent.facts import ORDER_CODE
-from backend.multi_agent.messages import render_judgement, with_declined
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.units import to_si
 
@@ -705,13 +703,17 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
 
 
 def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
-    """멀티 노드 '대체 부품 판정': 판정 노드(`judge_agent`)를 그대로 돌리고, 판정 결과를 코드 답 틀의 답으로, 실패 보고를 거절 사유로 바꾼다."""
-    # [왜] 판정 코드는 단일 그래프(D4 v2)와 같이 쓴다. 멀티만의 답 만들기(답 틀 · 거절한 부분 붙이기)는 여기서 한다
+    """멀티 하위 그래프 노드: 판정 노드(`judge_agent`)를 그대로 돌리고, 그 보고를 할 일 보고서(`TaskReport`)로 바꾼다."""
+    # [왜] 판정 코드는 단일 그래프(D4 v2)와 같이 쓴다. 멀티만의 칸(할 일 번호 · 판정 결과)은 여기서 붙인다
     out = judge_agent(state, specs=specs, find=find, retriever=retriever)
-    r = out['reports'][-1]
-    if r['status'] == 'fail':
-        # 코퍼스 밖 요구(part_missing · revision_missing · not_found)나 사양 표 도구 장애(search_error): 답 없이 그 사유로 거절한다
-        return {'answer': '', 'refusal_reason': r.get('reason') or Reason.NOT_FOUND.value, 'path': out['path']}
-    # [왜] 후보 0개 · 규칙 없는 역할(partial)도 답 틀이 '찾지 못했어요' · 조건과 함께 말한다(판정 숫자는 LLM이 다시 쓰지 않는다, AGENTS 7)
-    judgement = out.get('judgement') or {}
-    return {'judgement': judgement, 'answer': with_declined(state, render_judgement(judgement)), 'refusal_reason': '', 'path': out['path']}
+    r, judgement = out['reports'][-1], out.get('judgement') or {}
+    summary, reason = r['summary'], r.get('reason')
+    if judgement.get('kind') == 'find':
+        # [왜] 재계획이 요약만 읽고 찾은 품번을 다음 할 일(그 품번 문서 검색)에 쓸 수 있게 상위 후보 품번을 요약에 넣는다(설계 v2)
+        names = [p.get('part') for p in judgement.get('shown') or [] if p.get('part')][:8]
+        summary = f"{summary}: {', '.join(names)}" if names else summary
+    if r['status'] == 'partial' and not judgement.get('results') and not reason:
+        reason = Reason.NO_RESULT.value  # 후보를 하나도 못 찾았다: 조건을 바꿔 다시 찾을 수 있는 실패다
+    report = TaskReport(task=state['task']['id'], agent='judge', status=r['status'], summary=summary[:200], reason=reason,
+                        missing=r.get('missing') or [], judgement=judgement, llm_calls=1, round=state.get('round') or 1)
+    return {'reports': [report.model_dump(mode='json')], 'path': out['path']}

@@ -8,13 +8,6 @@
 - 확인 못 한 것: v3 50문항 실제 측정(`card_read` 호출 수 · 시간 · 정확도, 비용이 들어 정운 확인 뒤). 조사에서 LLM과 대조하지 않은 코드 VBR · CJ · TJ_MAX · VR · VESD의 값 일치. 원래 부품은 코드, 후보는 LLM으로 읽힌 드문 경우 제너 `_same_condition`이 IZ가 한쪽에만 있어 짝을 못 짓는 것. CJ 자리 표시 없는 칸은 코드가 대표, 프롬프트는 최대로 적는 차이. 두 길 모두 판정이 못 읽는 글 `VR = 0`(단위 없음, 10행) · `TJ = -40°C`(음수, 2행). lab `v3`에는 옮기지 않았다.
 - 다음 할 일: 정운 확인 → lab `v3`에 옮겨 #43대로 v3 50문항 2세트(이 변경 전 · 뒤) 측정.
 
-## 2026-11-09 멀티 그래프를 강의 구조로(Supervisor가 에이전트 하나를 고름)
-- 한 일: 강사 피드백(Supervisor가 에이전트 앞뒤에 있어 헷갈림, LLM 단계가 많아 p95 19초 · 50문항 1.10달러)에 따라 멀티 그래프를 강의 IV-3 15강 구조로 바꿨다. `입력 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 | 대체 부품 에이전트 | 가격 안내 | 거절 | 끝내기`, 두 에이전트 → `답 검사` → `끝내기 | 거절`. RAG 에이전트는 `검색 → 근거 채점·답 쓰기 → (근거 없음) 검색` 고리를 조건부 간선으로 둔 하위 그래프(2바퀴 상한), 대체 부품 에이전트는 `회로 역할 읽기 → 대체 부품 판정` 하위 그래프(인터럽트는 판정 노드 안 그대로). Send 동시 실행 · 모으기 · 답 정리 · 종합(synth) · 재계획 · `TaskReport`를 뺐고, 답 만들기(판정 답 틀 · 거절한 부분 붙이기)는 에이전트가 나갈 때 한다. `supervisor.md`는 다음 길 하나 + 지시 하나를 내게 고쳤다.
-- 바꾼 파일: `backend/multi_agent/`(build · contracts · state · supervisor · messages · agents/docs · agents/judge · MULTI_AGENT.md), `backend/prompts/supervisor.md` · `PROMPTS.md`, `backend/prompts/synth.md`(지움), `backend/services/langfuse_prompts.py`(synth 등록 이름 뺌), `evals/runners/run_gate.py`(검색 기록을 `searches` 칸에서), 시험 `tests/multi_agent/`(build · supervisor · agents · contracts · judge_read · MULTI_AGENT.md) · `tests/evals/test_run_graph.py`, `SPEC.md`(2절 구성 · 8.3 판정 길), `SOJAFIT.md`(트리 설명 줄), 이 파일. 커밋 0279930.
-- 실행한 명령과 결과: 키를 비운 오프라인 전체 시험 `.venv/bin/python -m pytest -q -p no:cacheprovider` 시작 879 passed, 57 skipped → 끝 870 passed, 57 skipped(모으기 · 종합 · 재계획 시험을 빼고 그래프 모양 · RAG 고리 · 상한 시험을 넣음). 가짜 도구로 그래프를 compile해 `get_graph(xray=True).draw_mermaid()`를 뽑았다. 실제 LLM · 검색 · DB · Langfuse 호출 없음. 동결 평가셋 변경 없음.
-- 확인 못 한 것: 실제 모델로 50문항 재측정(정확도 · p95 · 비용). 새 `supervisor.md`는 Langfuse에 등록하지 않았다. 여러 개를 묻는 질문(후보 판정 + 정격 조회처럼 두 에이전트가 필요한 것)은 이제 한 에이전트만 답한다. 품번 없이 사양만 준 질문의 찾기 → 재계획 → 문서 검색 길이 없어졌다. 답 검사의 숫자 검사는 종합 글 전용이라 함께 뺐다. `README.md` 기술 스택 표의 멀티 그래프 설명(검색 · 판정 · 작성 · 검증 서브에이전트)은 예전 그대로다.
-- 다음 할 일: 정운 확인 → 사전 등록 뒤 50문항 재측정(멀티 v4) → 숫자 검사를 RAG 답으로 넓힐지 결정.
-
 ## 2026-11-08 밤 청킹 v4d ~ v4h 커밋, v4h 임베딩 · 검색만 재기, 청킹 멈춤 기준(결정 23)
 - 한 일: lab 청킹 v4d ~ v4h(`tsc-v4h-2026-11-08`)를 커밋했다(lab `v3` 브랜치 8003f82, 원격에 푸시하지 않음). v4h 카드 51,967개를 다시 임베딩해 로컬 DB `sojafit_v4`에 넣고, 검색만(LLM 없음) 잰 결과와 청킹을 멈추는 기준을 문서에 적었다.
 - 바꾼 파일: `backend/rag/pipeline/chunk.py` · `tests/rag/test_rag_chunk.py`(커밋), `docs/experiments/b-redesign/3차-청킹-진단.md` 13절, `decisions.md` 23, `raw/r3/`에 원본 7개(`ret_v4h.json` · `regress.py` · `chunk_diff.py` · `gather.py` · `sample_new.py` · `partial.py` · `spec_cmp_v4h.json`), 이 파일. 문서는 정운 확인 전이라 커밋하지 않았다.
