@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
+from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
 from backend.multi_agent.messages import price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
@@ -109,9 +110,13 @@ def read_input(state: AgentState) -> dict:
 
     입력: `input` 칸. 출력: 나눈 칸, `target_part`, 앞 턴 검색 칸을 비우는 값, `path`. 턴마다 비우는 이유는 아래 [왜] 참고.
     """
-    fields = parse_input(state["input"])
+    uploaded = state.get('connections')
+    fields = ({'circuit': state['circuit'], 'target': state['target'], 'conditions': state.get('conditions', ''),
+               'question': state['input']} if uploaded else parse_input(state["input"]))
     target_part = {}
-    if fields.get("netlist_path") and fields.get("target"):
+    if uploaded:
+        target_part = circuit_around(uploaded, fields['target'])
+    elif fields.get("netlist_path") and fields.get("target"):
         found = _connections_file(fields["netlist_path"])
         if found:
             target_part = circuit_around(json.loads(found.read_text(encoding="utf-8")), fields["target"])
@@ -281,7 +286,8 @@ def netlist_block(part: dict) -> str:
 def citations(text: str) -> set[str]:
     """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
     # [왜] 괄호 안을 먼저 꺼내 쉼표로 나눈다. [12]만 찾으면 [12, 15]처럼 한 괄호에 묶은 인용을 놓친다(강의 2주 20강)
-    return {c.strip() for br in CITE.findall(text) for c in br.split(",") if c.strip().isdigit() or c.strip() == "넷리스트"}
+    return {c.strip() for br in CITE.findall(text) for c in br.split(",")
+            if c.strip().isdigit() or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:
@@ -310,8 +316,10 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
             system += f"\n\n<domain_skill>\n{text}\n</domain_skill>"
             skill_info = {"enabled": True, "applied": True, "sha256": hashlib.sha256(raw).hexdigest()}
         user = "근거:\n" + "\n\n".join(blocks) + f"\n\n질문: {state['question']}"  # 강의 20강처럼 근거 다음에 질문
+        user += memory_context(state.get('approved_memories') or [])
         answer = llm.node_chat("generate", system, user, Answer, skill_text=text).answer.strip()
     valid = {str(d["chunk_id"]) for d in cards} | ({"넷리스트"} if part else set())  # 실제로 넘긴 근거. 이 밖의 번호를 인용하면 없는 근거 인용이다
+    valid |= memory_sources(state.get('approved_memories') or []) if blocks else set()
     cited = citations(answer)
     # 마침표 뒤 공백에서 문장을 자른다. "문서로 확인 안 됨"은 인용할 근거가 없는 답이라 세지 않는다
     sentences = [] if answer == NOT_FOUND else [s for s in re.split(r"(?<=[.。])\s+", answer) if s.strip()]

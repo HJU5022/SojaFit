@@ -18,7 +18,10 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     """줄기 그래프의 공용 메모장. 칸 묶음별 주석이 어느 노드가 채우는지 알려 준다."""
     # ── 입력 (사용자가 넣는 것) ──
     input: str      # 사용자 원문: 회로·넷리스트 경로·대상·사용 조건·질문. 끝까지 바뀌지 않는다
-    user_id: str    # 로그인한 사용자 id. D6에서 thread와 Store namespace를 여기서 가른다
+    user_id: str    # API가 로그인 세션에서 검증해 넘긴 사용자 id. thread 소유권 검사는 API 경계에서 한다
+    connections: dict  # API가 소유권·업로드 검증을 마친 회로 연결. 클라이언트 state는 받지 않는다
+    run_version: int   # 서버가 발급한 승인 대상 결과 버전
+    approved_memories: list[dict]  # 서버가 소유권·관련성을 확인한 과거 승인 사례
 
     # ── 입력 읽기 노드가 채운다 (LLM 없이 글자를 나누고 넷리스트를 읽는다) ──
     circuit: str        # 회로 이름 (예: SparkFun Breadboard Supply)

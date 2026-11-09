@@ -14,7 +14,10 @@ from typing import Annotated, TypedDict
 class MultiState(TypedDict, total=False):
     # ── 입력 읽기 노드가 채운다 (단일 그래프와 같은 칸) ──
     input: str
+    approved_memories: list[dict]  # 새 질문마다 서버가 갱신, 현재 조건·사양 근거와 분리
     user_id: str
+    connections: dict
+    run_version: int
     circuit: str
     netlist_path: str
     target: str

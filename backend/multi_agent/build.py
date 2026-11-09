@@ -48,7 +48,7 @@ def next_node(state: dict) -> str:
 
 
 def build_graph(*, chat, retriever, rewrite=None, grade=None, generate=None, parse=None, lookup=None, enforce_verify: bool = True,
-                web_enabled: bool = False, judge_enabled: bool = False, specs=None, find=None, checkpointer=None):
+                web_enabled: bool = False, judge_enabled: bool = False, specs=None, find=None, checkpointer=None, store=None):
     """멀티 에이전트 그래프를 만들어 compile한다. chat은 `(node, system, user, schema)` 모양의 LLM 호출이다.
 
     판정을 켜려면 specs(`get_part_specs`) · find(`find_parts_by_specs`) 도구와 checkpointer가 필요하다(인터럽트 재개).
@@ -87,4 +87,4 @@ def build_graph(*, chat, retriever, rewrite=None, grade=None, generate=None, par
     g.add_edge('finish', END)
     g.add_edge('refuse', END)
     g.add_edge('price', END)
-    return g.compile(checkpointer=checkpointer)
+    return g.compile(checkpointer=checkpointer, store=store)

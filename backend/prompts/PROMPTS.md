@@ -18,6 +18,7 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-09 | `supervisor.md`, `judge_read.md`, `generate.md` | 로컬 변경·Langfuse 등록 전 | 별도 historical approved cases 데이터 경계, 현재 조건·사양 근거 우선, 과거 값 복사 금지, 사례 출처 구분 | 새 thread에서 자기 승인 사례 참고 | 실제 DB/가짜 모델 격리 시험 및 실제 generate 합성 A 1건 회상 smoke 확인. 전체 평가 재측정 없음 |
 | 2026-11-06 | `judge_read.md` | 다음 버전(Langfuse 등록 전) | 출력 칸 `required_specs`(꼭 요구한 성질: 사용자 말 + 사양 표 항목 18개 중 하나 또는 `none`) · `maker_wanted`(요구한 제조사, TSC는 `TSC`) · `revision_wanted`(요구한 개정 코드 · 판)와 사양 표 항목 뜻 목록 "Spec-table items"를 더함. 바꾸는 이유(원가 · 재고 · 단종)와 회로 값은 요구 성질로 쓰지 않게 함 | 코퍼스 밖 요구 거절(SPEC 8.3). 고장률 · 잡음 · 다른 제조사 · 없는 판을 요구한 비관련 질문이 판정 답을 받았다(동결 평가 비관련 35건 중 8~10건) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 규칙 3: 판정 보고가 fail이면 보고의 사유로 거절(search_error 외에 코퍼스 밖 요구의 part_missing · revision_missing · not_found) | 위와 같음. 코드도 같은 경우를 거절로 바꾼다(`supervisor.decide`) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `judge_read.md` | 다음 버전(Langfuse 등록 전) | `values`의 `name`을 고른 역할(`role_alt` 포함)이 받는 이름으로만 쓰게 하고(입력 글의 역할 줄에 `inputs: 이름 (종류)`를 코드가 붙임), 사용자가 다른 말로 준 값은 그 역할에서 같은 양을 뜻하는 이름으로 옮기게 함. 모든 값 이름의 뜻 · 단위 목록 "Value names"를 더함 | 모든 역할의 이름을 한 줄로 주던 때 다른 역할의 이름(`i_out` · `v_in_max` · `v_bus` · `v_clamp`)으로 읽어 코드가 버리고 기준값이 비었다(동결 평가 4회 실측, 인용 없는 답 40건 중 20건) | 아직 없음(가짜 LLM 시험만) |

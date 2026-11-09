@@ -9,6 +9,7 @@
 from pathlib import Path
 
 from pydantic import BaseModel, Field
+from backend.graph.memory import memory_context
 
 from backend.multi_agent.contracts import (MAX_HOPS, MAX_SEARCHES, MAX_WRITES, REFUSAL_REASONS, RETRY_REASONS, AgentReport,
                                            Counters, Decision, Reason, check_limit)
@@ -24,6 +25,7 @@ class Facts(BaseModel):
 
 
 class SupervisorInput(BaseModel):
+    approved_memories: list[dict] = Field(default_factory=list)
     question: str
     target: str = ''
     conditions: str = ''
@@ -63,7 +65,7 @@ def render(i: SupervisorInput) -> str:
     lines.append(f'Status: hops {c.hops}/{MAX_HOPS} · searches {c.searches}/{MAX_SEARCHES} · writes {c.writes}/{MAX_WRITES}')
     options = ALWAYS + (('judge',) if i.judge_enabled else ()) + (('web',) if i.web_enabled else ())
     lines.append('Next nodes you may choose: ' + ', '.join(options))
-    return '\n'.join(lines)
+    return '\n'.join(lines) + memory_context(i.approved_memories)
 
 
 def decide(i: SupervisorInput, chat, system: str = PROMPT) -> Decision:
@@ -109,6 +111,7 @@ def supervisor_node(state: dict, *, chat, web_enabled: bool = False, judge_enabl
     """그래프 노드: 메모장에서 Supervisor 입력을 만들어 결정서를 받고 판단 횟수를 센다."""
     part = state.get('target_part') or {}
     i = SupervisorInput(question=state['question'], target=state.get('target', ''), conditions=state.get('conditions', ''),
+                        approved_memories=state.get('approved_memories') or [],
                         target_value=part.get('value', ''), question_type=state.get('question_type', ''), facts=Facts(**(state.get('facts') or {})),
                         reports=[AgentReport(**r) for r in state.get('reports') or []], counters=Counters(**state['counters']),
                         web_enabled=web_enabled, judge_enabled=judge_enabled)

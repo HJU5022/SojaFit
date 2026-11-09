@@ -39,6 +39,7 @@ SojaFit (proj3-b)
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: /health, 로그인·me·로그아웃, 관리자 계정 API, 가격·재고 API(/api/prices) (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, 관리자 계정 관리, 계정 생성 CLI
+│   ├── conversations.py    <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 사례 Store와 준비 명령
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
@@ -48,6 +49,7 @@ SojaFit (proj3-b)
 │   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
+│   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
@@ -112,6 +114,7 @@ SojaFit (proj3-b)
 │   │   ├── WEB.md          <- 폴더 설명
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
 │   │   ├── templates/      <- 화면 HTML 템플릿
+│   │   │   ├── workspace.html <- 사용자 넷리스트 업로드·내 분석 대화·재개·승인 사례 화면
 │   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
 │   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
@@ -148,6 +151,7 @@ SojaFit (proj3-b)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
+│   ├── 013_agent_memory.sql <- 사용자 업로드·thread·대화·승인 원본 전용 스키마
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -273,10 +277,12 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
+│   │   ├── test_netlist.py  <- 사용자 KiCad 업로드의 형식·참조·자원 제한 시험
 │   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
 │   │   ├── test_graph_route.py  <- 라우팅 노드
 │   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
@@ -386,6 +392,7 @@ SojaFit (proj3-b)
 │   │   ├── SPECS.md        <- 폴더 설명
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
+│   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 사례 Store 연결 설계와 수용 기준
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계와 구현 계획
 │   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지

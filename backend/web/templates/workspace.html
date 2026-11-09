@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SojaFit · 내 분석</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#182230;background:#f5f7fa;color-scheme:light}
+    body{margin:0;padding:1rem}main{max-width:72rem;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .layout{display:grid;grid-template-columns:19rem 1fr;gap:1rem}section,aside{background:white;border:1px solid #d8dee8;border-radius:.75rem;padding:1.2rem;margin-bottom:1rem}
+    h1{font-size:1.6rem}h2{font-size:1.15rem;margin-top:0}label{display:block;margin:.8rem 0 .35rem;font-weight:600}
+    input,select,textarea{box-sizing:border-box;width:100%;padding:.65rem;font:inherit;border:1px solid #98a2b3;border-radius:.35rem}
+    textarea{min-height:5rem;resize:vertical}button,a{font:inherit}button{padding:.6rem .85rem;margin-top:.7rem;border:0;border-radius:.35rem;background:#1459a6;color:white;cursor:pointer}
+    button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #84caff;outline-offset:2px}
+    #threads button{display:block;width:100%;text-align:left;background:#edf3fa;color:#182230}.message{white-space:pre-wrap;overflow-wrap:anywhere;padding:.8rem;margin:.6rem 0;border-left:3px solid #c8d7e9;background:#f8fafc}
+    .message.user{border-color:#1459a6}.muted{color:#475467;font-size:.9rem}.notice{padding:.7rem;background:#fff7e6;border-radius:.4rem}
+    #status{min-height:1.5rem}[hidden]{display:none!important}details{padding:.5rem 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}
+    @media(max-width:760px){.layout{grid-template-columns:1fr}body{padding:.6rem}}
+  </style>
+</head>
+<body><main>
+  <header><h1>SojaFit · 내 회로 분석</h1><button id="logout" type="button">로그아웃</button></header>
+  <p class="notice">같은 동작은 보장하지 않습니다. 실제 회로 조건과 데이터시트 근거를 확인한 뒤 판정 사례를 승인하세요. 이 화면은 견적서를 발행하지 않습니다.</p>
+  <p id="status" role="status" aria-live="polite">로그인 확인 중입니다.</p>
+  <div class="layout">
+    <div>
+      <section aria-labelledby="upload-title"><h2 id="upload-title">넷리스트 올리기</h2>
+        <form id="upload-form"><label for="netlist">KiCad .net 파일 · UTF-8, 최대 1 MiB</label><input id="netlist" type="file" accept=".net" required><button type="submit">업로드</button></form>
+        <form id="create-form"><label for="circuit">내 회로</label><select id="circuit" required></select><label for="target">분석할 부품</label><select id="target" required></select><button type="submit">새 분석 시작</button></form>
+      </section>
+      <aside aria-labelledby="threads-title"><h2 id="threads-title">내 분석</h2><div id="threads"></div><button id="refresh" type="button">목록 새로고침</button></aside>
+    </div>
+    <div>
+      <section aria-labelledby="analysis-title"><h2 id="analysis-title">분석을 선택하세요</h2>
+        <p class="muted">분석 하나에서 같은 부품의 조건 보충과 후보 비교를 이어갑니다. 다른 부품은 새 분석을 만드세요.</p>
+        <div id="messages" aria-label="대화 기록"></div>
+        <form id="message-form" hidden><label for="conditions">사용 조건 (선택)</label><input id="conditions" maxlength="4000" placeholder="예: 최대 입력 12V">
+          <label for="question">질문</label><textarea id="question" maxlength="10000" required placeholder="이 부품 대신 사용할 후보를 찾아줘"></textarea><button type="submit">질문 보내기</button></form>
+        <form id="resume-form" hidden><h3>분석에 필요한 조건</h3><p id="interrupt-question"></p><div id="answers"></div><button type="submit">조건으로 분석 이어가기</button></form>
+        <button id="approve" type="button" hidden>현재 판정 사례 승인·기억 저장</button>
+        <button id="retry" type="button" hidden>실패한 분석 이어서 재시도</button>
+      </section>
+      <section aria-labelledby="related-title"><h2 id="related-title">관련된 내 승인 사례</h2><p class="muted">같은 역할 또는 원래 품번의 과거 승인입니다. 현재 판정의 데이터시트 근거를 대신하지 않습니다.</p><div id="related"></div></section>
+      <section aria-labelledby="memory-title"><h2 id="memory-title">내 승인 사례</h2><div id="memories"></div></section>
+    </div>
+  </div>
+</main>
+<script>
+  const $ = selector => document.querySelector(selector);
+  let circuits = [], current = null, busy = false, sessionUser = null;
+  async function api(path, body) {
+    const response = await fetch(path, {credentials:'same-origin', cache:'no-store',
+      ...(body === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
+    if (response.status === 401) { $('main').replaceChildren(); location.replace('/login'); throw new Error('로그인이 필요합니다.'); }
+    const data = await response.json();
+    if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '입력값을 확인해 주세요.');
+    return data;
+  }
+  async function action(work) {
+    if (busy) return;
+    busy = true; document.querySelectorAll('button').forEach(b => b.disabled = true);
+    $('#status').textContent = '처리 중입니다. 분석에는 시간이 걸릴 수 있습니다.';
+    try { const message = await work(); $('#status').textContent = message || '처리했습니다.'; }
+    catch (error) {
+      if (current && $('#status')) { try { render(await api(`/api/threads/${current.id}`)); } catch {} }
+      if ($('#status')) $('#status').textContent = error.message || '연결을 확인해 주세요.';
+    }
+    finally { busy = false; document.querySelectorAll('button').forEach(b => b.disabled = false); }
+  }
+  function option(value, text) { const node = document.createElement('option'); node.value = value; node.textContent = text; return node; }
+  function showTargets() {
+    const circuit = circuits.find(c => c.id === $('#circuit').value);
+    $('#target').replaceChildren(...(circuit?.components || []).map(p => option(p.ref, `${p.ref} · ${p.value}`)));
+  }
+  async function loadCircuits(selected) {
+    circuits = await api('/api/circuits');
+    $('#circuit').replaceChildren(...circuits.map(c => option(c.id, c.filename)));
+    if (selected) $('#circuit').value = selected;
+    showTargets();
+  }
+  function showMemories(selector, items) {
+    const root = $(selector); root.replaceChildren();
+    if (!items.length) { root.textContent = '아직 표시할 승인 사례가 없습니다.'; return; }
+    for (const item of items) {
+      const detail = document.createElement('details'), title = document.createElement('summary'), text = document.createElement('pre');
+      title.textContent = `${item.part || '품번 미확인'} · 승인 사례 · 결과 ${item.version}`;
+      text.textContent = `${item.summary}\n승인: ${item.approved_at}`;
+      detail.append(title, text); root.append(detail);
+    }
+  }
+  async function loadList() {
+    const items = await api('/api/threads'); $('#threads').replaceChildren();
+    if (!items.length) $('#threads').textContent = '아직 분석이 없습니다.';
+    for (const item of items) {
+      const button = document.createElement('button'); button.type = 'button';
+      button.textContent = `${item.filename} · ${item.target}`;
+      button.onclick = () => action(async () => render(await api(`/api/threads/${item.id}`)));
+      $('#threads').append(button);
+    }
+    showMemories('#memories', await api('/api/memories'));
+  }
+  function render(data) {
+    current = data;
+    $('#analysis-title').textContent = `${data.filename} · ${data.target} · 결과 ${data.version}`;
+    $('#messages').replaceChildren();
+    for (const message of data.messages) {
+      const node = document.createElement('div'); node.className = `message ${message.role}`;
+      node.textContent = `${message.role === 'user' ? '나' : 'SojaFit'}\n${message.content}`; $('#messages').append(node);
+    }
+    $('#message-form').hidden = !!data.interrupt;
+    $('#resume-form').hidden = !data.interrupt;
+    $('#approve').hidden = !data.can_approve;
+    $('#retry').hidden = !data.can_retry;
+    $('#answers').replaceChildren();
+    if (data.interrupt) {
+      $('#interrupt-question').textContent = data.interrupt.question || '필요한 조건을 입력하세요.';
+      for (const name of data.interrupt.missing || []) {
+        const label = document.createElement('label'), input = document.createElement('input');
+        input.id = `answer-${name}`; input.dataset.answer = name; input.maxLength = 200;
+        label.htmlFor = input.id; label.textContent = `${name} (모르면 비워 두세요)`; $('#answers').append(label,input);
+      }
+      if (data.interrupt.role_choices?.length) {
+        const label = document.createElement('label'), select = document.createElement('select');
+        select.id = 'role-choice'; label.htmlFor = select.id; label.textContent = '회로 역할';
+        select.append(option('', '역할 미확인'), ...data.interrupt.role_choices.map(r => option(r,r))); $('#answers').append(label,select);
+      }
+    }
+    showMemories('#related', data.related_memories);
+  }
+  $('#circuit').onchange = showTargets;
+  $('#upload-form').onsubmit = event => { event.preventDefault(); action(async () => {
+    const file = $('#netlist').files[0];
+    if (!file || file.size > 1024*1024 || !file.name.toLowerCase().endsWith('.net')) throw new Error('1 MiB 이하 KiCad .net 파일을 선택하세요.');
+    const netlist = new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());
+    const result = await api('/api/circuits',{filename:file.name,netlist}); await loadCircuits(result.id); $('#upload-form').reset();
+  }); };
+  $('#create-form').onsubmit = event => { event.preventDefault(); action(async () => {
+    const result = await api('/api/threads',{circuit_id:$('#circuit').value,target:$('#target').value});
+    render(await api(`/api/threads/${result.id}`)); await loadList();
+  }); };
+  $('#message-form').onsubmit = event => { event.preventDefault(); action(async () => {
+    const result = await api(`/api/threads/${current.id}/messages`,{text:$('#question').value,conditions:$('#conditions').value});
+    render(result); $('#question').value = ''; await loadList();
+  }); };
+  $('#resume-form').onsubmit = event => { event.preventDefault(); action(async () => {
+    const answers = {}; document.querySelectorAll('[data-answer]').forEach(input => { if(input.value.trim()) answers[input.dataset.answer] = input.value.trim(); });
+    render(await api(`/api/threads/${current.id}/resume`,{version:current.version,answers,role:$('#role-choice')?.value || ''})); await loadList();
+  }); };
+  $('#approve').onclick = () => action(async () => {
+    await api(`/api/threads/${current.id}/approve`,{version:current.version});
+    render(await api(`/api/threads/${current.id}`)); await loadList();
+    return '현재 판정 사례를 승인하고 기억에 저장했습니다.';
+  });
+  $('#retry').onclick = () => action(async () => {
+    render(await api(`/api/threads/${current.id}/retry`,{version:current.version})); await loadList();
+  });
+  $('#refresh').onclick = () => action(async () => { await loadList(); if(current) render(await api(`/api/threads/${current.id}`)); });
+  $('#logout').onclick = () => action(async () => { await api('/api/auth/logout',{}); $('main').replaceChildren(); location.replace('/login'); });
+  async function boot() {
+    const session = await api('/api/auth/me');
+    if (sessionUser !== session.user_id) { current = null; $('#messages').replaceChildren(); $('#related').replaceChildren(); $('#memories').replaceChildren(); $('#threads').replaceChildren(); }
+    sessionUser = session.user_id; await loadCircuits(); await loadList();
+  }
+  window.addEventListener('pageshow', () => action(boot));
+</script></body></html>

@@ -1,0 +1,609 @@
+{
+  "hashes": {
+    "dataset_v1.jsonl": true,
+    "dataset_v2.jsonl": true
+  },
+  "rows": [
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-e10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-m10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft30-h10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n11",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n12",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n14",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n15",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n16",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n17",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n18",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n19",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft50-n20",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v1.jsonl",
+      "id": "draft52-n21",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-e10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-m10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft30-h10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n11",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n12",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n14",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n15",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n16",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n17",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n18",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n19",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft50-n20",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draft52-n21",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n01",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n02",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n03",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n04",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n05",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n06",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n07",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n08",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n09",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n10",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n11",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n12",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n13",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n14",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n15",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n16",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n17",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n18",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n19",
+      "same": true
+    },
+    {
+      "dataset": "dataset_v2.jsonl",
+      "id": "draftv2-n20",
+      "same": true
+    }
+  ],
+  "errors": []
+}

@@ -1,5 +1,27 @@
 # STH 작업 기록
 
+## 2026-11-09 사용자별 업로드·분석 thread·Store 구현과 로컬 검증
+- 사용자 직접 시연: Swagger `/docs`에서 합성 A(234) 로그인→넷리스트 JSON 업로드→thread 두 개 생성→첫 thread 조건 interrupt·서버 재시작 뒤 재개→승인→둘째 thread의 독립 대화와 관련 기억→B(235)의 빈 목록·A thread 404→A 재로그인을 확인했다. 실제 로컬 PG 행은 A 기준 회로 1/thread 2/메시지 6/checkpoint 8/승인 1/Store 1, Store prefix `memories.234`, key `첫 thread UUID:1`이었다. 제품에 포함하지 않는 임시 실행기의 `/demo/db-snapshot`은 인증 사용자 행만 읽고 비밀 해시는 제외한다. 시연용 조회의 이전 GET 응답 재사용은 no-store와 조회 번호로 방지했다. 팀 DB를 변경하지 않았으며 판정 모델은 가짜였다. Swagger 탭과 localhost:8769 시연 서버는 사용자가 직접 살펴볼 수 있게 열어두었다.
+- 실제 모델 smoke 실행 전: 목적은 업로드→영속 thread→기존 D5 모델 연결 검증이다. 동결 v2 4문항(`draft30-e01/e03/m04/e06`), BM25, 노드별 기존 모델, 출력 1024, 최대 40회·480초·예약 $1.00로 사전 등록했다. 공유 코퍼스 읽기만 사용하고 합성 사용자의 저장은 로컬 격리 DB에 한정한다. 전체 70문항 평가나 개선 주장으로 해석하지 않는다. 실행기와 결과 위치는 preregister의 해당 절을 따른다.
+- 목표: 금일 17:30 KST까지 로그인 사용자 기반 thread 소유권, DB 체크포인트, 승인 사례 Store 저장·조회를 구현·검증한다. 사용자 선택은 분석 한 건당 thread 하나다.
+- 현재 상태: 사용자의 넷리스트 업로드·화면 연결 범위 승인을 반영해 구현했다. 세션 사용자 소유권, PostgreSQL Checkpointer/Store, 버전별 승인 원본, 관련 사례, 실패 실행 재시도와 메타데이터 복구를 포함한다. 공유 DB 적용·배포는 하지 않았다.
+- 바꾼 파일: `backend/conversations.py`, `backend/graph/netlist.py`, main·단일/멀티 build/state·입력 읽기, 로그인 및 신규 workspace 화면, `db/013_agent_memory.sql`, API/graph 테스트, .env.example, 해당 폴더 설명·DB 설계·작업서·preregister·원시 측정. SOJAFIT은 신규 파일 7줄만 추가했다. SPEC 등 주요 문서는 직접 수정하지 않았다.
+- 실행한 명령과 실제 결과: `.venv/Scripts/uv.exe run --no-sync pytest -q tests/api/test_auth.py::test_login_page_has_no_question_controls tests/api/test_auth.py::test_question_endpoint_is_not_exposed tests/api/test_auth.py::test_https_login_cookie_and_cross_origin_logout tests/graph/test_graph_build.py::test_second_message_in_same_thread_starts_fresh` → `4 passed in 1.21s`(샌드박스 uv 캐시/인터프리터 권한 문제 뒤 승인된 재실행). `docker ps` → Docker daemon 연결 불가.
+- 착수 시 미확인: Docker·격리 PostgreSQL·신규 기능·실제 모델 연결은 아래 후속 검증으로 확인했다. 현재도 공유 DB의 신규 스키마 적용·실제 배포·전체 답변 품질 평가는 미검증이다. 원격 Git은 변경하지 않았다.
+- 설계 검토: 독립 검토에서 첫 버전의 샘플 회로 한정 범위, 다음 분석의 관련 사례 표시, 과거 승인 원본 보존을 확인했다. 관련 사례는 역할·품번 기준 최대 5건 표시, 원본은 버전별 불변 승인 표로 보존하도록 보완했다. 샘플/API 한정 범위는 사용자 검토 대상이다.
+- 문서 검사: 구조 테스트 `1 failed, 4 passed` — 기존 HEAD 트리의 `db/012_document_category.sql`가 실제 Git에 없어 실패했다(`git show HEAD:SOJAFIT.md`, `git ls-tree HEAD db/012_document_category.sql`로 대조). 새 작업서의 트리·목록은 반영했다. `git diff --check` 통과. 기존 주요 문서 불일치는 권한 범위 밖이므로 수정하지 않았다.
+- 실행 환경 준비: Docker Desktop을 숨김 실행했다. 기존 restart 정책에 따라 Langfuse 실습 컨테이너들이 기동된 것을 확인했다. 기존 서비스·볼륨을 수정/삭제하지 않았다. 별도 `sojafit-thread-test-1109` PostgreSQL 16 컨테이너를 loopback 포트 55439에 생성하고 기존 인증 SQL 003·005·006만 적용했다. 외부 공유 DB가 아닌 일회용 로컬 시험 DB다.
+- 추가 검증: `uv run --no-sync --offline pytest -q tests/api tests/graph tests/multi_agent -p no:cacheprovider` → `239 passed, 22 skipped in 11.32s`(DB 미설정). 이어 로컬 격리 DB만 `TEST_AUTH_DATABASE_URL`로 지정해 `uv run --no-sync --offline pytest -q tests/api/test_auth.py -p no:cacheprovider` → `51 passed in 24.30s`. 신규 thread·Store 격리를 검증한 결과는 아니다.
+- 런타임 대조: 설치 버전 langgraph 1.2.18, langgraph-checkpoint-postgres 3.2.0, psycopg 3.3.6, psycopg-pool 3.3.3의 실제 생성자 signature를 확인했다. 추가 의존성 설치는 하지 않았다.
+- 구현 검증: 새 파서 테스트는 미구현 import 실패→12건 통과(이후 NUL 입력을 더해 13건), 새 저장/API 테스트는 미구현 실패→기능별 통과로 확인했다. 공개 회로의 U$1 참조명을 발견해 허용한 뒤 같은 실패 검사를 재실행했다. HTTP Origin 테스트는 .env의 기존 값에 의존해 한 번 실패했고 테스트에서 Origin을 명시한 뒤 통과했다.
+- 독립 코드 리뷰: 일시 노드 실패 뒤 thread가 막히는 문제와 checkpoint 완료 뒤 상태/이력 기록 실패 문제를 실제 PG에서 재현했다. 저장 실행 최대 2회 재시도, checkpoint_id별 답변 멱등 저장, 잠금 하의 상태 복구로 수정했다. 리뷰 재확인에서 두 finding 해소 및 추가 중요 오류 없음. 과거 결과 버전의 조건 재개가 허용되는 실패도 확인한 뒤 버전 검사를 넣고 재실행했다.
+- 최종 전체 검사: 두 TEST_*_DATABASE_URL을 로컬 일회용 DB로 지정하고 `.venv/Scripts/uv.exe run --no-sync --offline pytest -q -p no:cacheprovider` → `1 failed, 851 passed, 22 skipped in 32.99s`. 실패는 위에 기록한 기존 `test_tree_matches_files`의 012 파일 누락 한 건뿐이다. 신규 입력/저장/API 검증은 25건(파서 13, API/저장 12)을 포함한다. 실제 기본 D5·MCP·Postgres 저장소의 앱 lifespan 시작/종료도 모델 호출 없이 통과했다.
+- 브라우저 검사: 합성 계정·가짜 판정 그래프·실제 로컬 PG 서버에서 파일 선택 업로드→D1 선택→새 분석→조건 interrupt→12 입력 재개→사례 승인→새로고침/서버 재기동 후 이력·기억 확인, B 계정의 빈 목록을 확인했다. 최종 버전 재개와 승인 성공 안내도 재확인했다. 화면 캡처는 visualizations의 `thread-ui-approved-final.png`; 임시 UI 서버는 검증 뒤 종료했다. 이것을 실제 모델 답변 정확도 검증으로 해석하지 않는다.
+- 동결 입력 재측정: `thread_input_eval.py` → v1/v2 120문항의 기존 connections 경로와 업로드 파서 결과 모두 일치, 오류 0, 두 동결 SHA-256 일치. `evals/results/threads/input_regression_2026-11-09.json`에 비민감 결과를 기록했다.
+- 실제 모델 재측정: 사전 등록한 4문항 전부 완료, 사용자 ID 일치 4/4, LLM 23회, 82.7초, 보수적 예약액 $0.89312, 실제 청구액 미확인. `live_smoke_2026-11-09.json`에 기록했다. 채점은 정답 근거 인용 1·올바른 거절 1·과잉 거절 1·오답 근거 1이다. 성능 향상이나 70문항 전체 점수로 주장하지 않는다. 코드는 4e0963b+미커밋 변경이며 이 실행은 이후 추가한 재개 버전 guard 전이다(모델/프롬프트/판정 경로는 동일). 공유 코퍼스는 실행 시점 읽기이며 DB 스냅샷을 동결하지 않았다.
+- 남은 팀 작업: 조장이 SPEC 4·8.5·8.6과 SOJAFIT의 기존 상태 설명/012 불일치를 검토·반영해야 한다. DB 정의서 A-02는 이번 기능에 맞게 사용자 ID와 thread UUID를 구분했다. 실제 서비스 DB 적용은 대상·백업·권한 검토 후 명시적인 setup 명령으로, 배포·운영 UI 확인은 별도로 진행한다. 새 의존성·원격 push·PR 생성은 없다.
+- 준비 명령 검증: 로컬 DATABASE_URL만 프로세스 환경에 지정해 `uv run --no-sync --offline python -m backend.conversations --setup` 재실행 exit 0. 이후 sojafit_agent의 circuits/threads/messages/approvals 및 checkpoints/checkpoint_blobs/checkpoint_writes/checkpoint_migrations/store/store_migrations 10개 표를 조회했다. 실제 서비스 DB에서 setup을 실행한 증거는 아니다. 최종 `git diff --check` 통과.
+
 ## 2026-11-05 Google 로그인 작업서 파일 배치 정리
 - 한 일: 사용자 요청에 따라 별도 구현 계획의 내용을 `docs/specs/google-admin-login.md`의 구현 계획 절에 합쳤다. 기존 `google-admin-login-plan.md`는 내용 대조 후 제거하고 `SOJAFIT.md` 트리와 `docs/specs/SPECS.md`의 파일 목록을 한 파일 기준으로 정리했다. 아래 과거 기록의 계획 파일 이름은 당시 작업 이력이다.
 - 확인 방법: 계획 본문을 통합 파일에 기록한 뒤 내용이 일치함을 확인하고 기존 파일을 제거했다. `.\.venv\Scripts\uv.exe run --no-sync --offline pytest -q tests/repo/test_repo_layout.py -p no:cacheprovider` 결과 `5 passed`. 필수 다섯 절과 구현 계획 여섯 단계를 확인했고 `git diff --check`도 통과했다. 코드·DB·클라우드는 변경하지 않았다.
@@ -857,3 +879,36 @@
 - 시험 태그에서 `/api/auth/google/status`가 `enabled: true`를 반환하는 것, `/api/auth/google/start`가 Google 계정 선택 화면으로 이동하는 것, 실제 시험 Google 계정 인증 후 콜백이 관리자 연결 승인 대기 화면으로 돌아오는 것을 확인했다. 이는 Google 인증 코드 교환·ID 토큰 검증·팀 DB의 대기 요청 저장까지 통과했다는 뜻이다.
 - 대기 상태에서는 관리자 세션이 만들어지지 않는다. 기존 활성 `admin` 계정에 Google 연결 요청을 승인한 뒤 같은 계정으로 다시 로그인하면 세션 발급을 검증할 수 있다. 이번에는 권한을 부여하는 승인 작업과 운영 트래픽 전환을 수행하지 않았다.
 - 주의: 콘솔에서 환경 변수를 직접 수정해 기본 트래픽 100% 배포가 될 수 있는 화면을 확인했으나, 변경을 취소하고 0% 시험 리비전만 배포했다. 실제 Google 인증 URL의 상태·nonce·인증 코드는 기록이나 채팅에 남기지 않는다.
+
+## 2026-11-09 새 질문 이후 승인 기억 복구 수정
+- 범위: backend/conversations.py, tests/api/test_threads.py, docs/specs/user-thread-memory.md. 기존 승인 API와 DB 구조를 유지한다. 기존 승인 원본이 있으면 현재 version/can_approve 검사보다 먼저 읽고 Store만 재저장한다. 최초 승인에는 현재 완료 결과 검사와 소유권 검사를 유지한다.
+- 신규 승인 snapshot에 part를 보관한다. 기존 snapshot은 불변 업로드 회로의 고정 대상 품번으로 복구하며 현재 그래프 상태는 사용하지 않는다. 원본/승인 시각을 수정하지 않는다. SPEC 주요 문서 변경은 조장에게 이 작업서의 API 계약/AC 반영을 요청한다.
+- RED: TEST_THREAD_DATABASE_URL을 로컬 격리 PostgreSQL 127.0.0.1:55439/thread_test로 지정하고 uv run --no-sync --offline pytest -q tests/api/test_threads.py -k old_approval_store 실행. 두 경우 모두 이전 version 검사 409로 실패했다.
+- GREEN: 같은 전용 DB에서 uv run --no-sync --offline pytest -q tests/api/test_threads.py 실행, 15 passed. HTTP 회귀 추가 후 uv run --no-sync --offline pytest -q tests/api 실행, 57 passed, 21 skipped (15.35초). TEST_AUTH_DATABASE_URL 미설정 인증 DB 테스트는 건너뛰었다. git diff --check 통과.
+- 검증: Store.put 합성 장애 503 → 새 질문(version 증가/현재 결과 거절) → 이전 승인 재요청 200 → 실제 PostgresStore 기억 한 건. 신규/기존 snapshot, 현재 state 품번 변경, 중복 재시도, 원본/승인 시각 유지, 다른 사용자 404, 미승인 과거 version 409를 확인했다. HTTP는 TestClient와 실제 로컬 DB를 사용했고 인증 사용자 의존성은 테스트용으로 대체했다.
+- 환경 문제: 기본 uv PATH 누락과 샌드박스 캐시 접근 실패 후 기존 portable uv와 별도 캐시 경로/권한 확장으로 실행했다. 패키지 추가나 lock 변경은 하지 않았다.
+- 미확인/범위 밖: 실제 모델 호출/평가셋 재측정, 공유 DB/배포, 실행 중 Swagger 서버 재시작, 과거 승인 복구 전용 화면·자동 재처리. 기존 approve API에 해당 version을 재전송하는 수동 복구다. 테스트가 만든 업무 행은 fixture가 정리하며 이전 시연 사용자 데이터는 수정하지 않았다.
+
+## 2026-11-09 승인 기억 모델 입력 연결 — 실제 모델 시험 사전 기록
+- 목적: 새 thread의 답변 생성에 승인 기억이 반영되는지와 A/B의 같은 품번 사례가 섞이지 않는지 합성 데이터로 확인한다. 전체 평가/성능 개선 검증은 아니다.
+- 조건/예산/명령/중단: evals/guides/preregister.md의 2026-11-09 항목과 동일. 실제 호출은 기존 backend/services/llm.py를 통해 generate 최대 2회, 예약액 0.25달러/100초/512 출력 토큰 상한. 그래프 Supervisor 선택만 고정하고 DB/입력/생성 경로는 실제 구현을 사용한다. 공유 DB/원격 배포 없음. 합성 테스트 사용자 행은 종료 시 정리한다.
+- 오류 후 진단: 최초 smoke는 generate 1회에서 서비스 HTTPException으로 중단(예약액 0.07312달러, 응답 0건). 공식 models 읽기 전용 조회에서 설정 모델은 목록에 있었다. 오류를 가리는 서비스의 예외 체인에서 타입/HTTP 상태만 수집하는 진단을 남은 1회/0.17688달러 이내로 수행한다. 최초 계획의 총 2회/0.25달러 상한은 유지하며 진단은 A 한 건만 실행한다. 어떤 오류라도 이후 추가 호출하지 않는다.
+- 진단 결과/추가 단계: LengthFinishReasonError(512 출력 상한) 확인. 별도 사전 등록대로 출력 상한만 2048로 바꾼 A 한 건을 최대 1회/예약 0.12달러/60초로 추가 검증한다. 최초 2회 상한은 종료했고 추가 단계의 별도 예산을 적용한다. 전체 실제 청구액은 확인 불가, 예약액만 기록한다.
+
+## 2026-11-09 승인 기억 모델 입력 연결 — 최종 결과
+- 변경: conversations.py가 새 질문 실행 전 인증 사용자 namespace의 같은 품번 사례를 조회하고 승인 원본/소유권을 재확인해 최대 5건을 approved_memories로 전달한다. Store에 잘못 들어간 타 사용자 포인터, 무관 품번, 승인 원본 없는 항목은 제외한다. 신규 snapshot은 당시 질문/조건/target_part/judge_read를 보관한다. 기존 원본의 없는 문맥은 unknown이다.
+- 그래프/프롬프트: AgentState/MultiState와 supervisor, generate, judge_read에 별도 과거 JSON을 전달한다. 요약 1000자/문맥 2000자/최대 5건 상한. 과거 내용은 지시/현재 조건/사양 근거가 아니라는 지침을 supervisor/generate/judge_read 프롬프트에 추가했다. judge_read 모델만 기억을 읽고 숫자 grounding용 render_read에는 포함하지 않는다. 판정은 기존 judge 코드/답 틀을 유지한다. 생성·검증은 승인사례:thread:version 출처와 실제 제공한 사례 목록을 대조한다.
+- RED/GREEN: 새 A/B 통합 테스트는 변경 전 NO_MEMORY 응답으로 실패했다. 실제 PostgresSaver/PostgresStore와 실제 멀티 그래프/가짜 모델로 A/B 양방향 모델 입력·응답 격리, 자기 namespace의 타인 포인터 차단, 무관 품번 제외, 승인 원본 삭제 후 이전 턴 기억 비우기를 확인했다. 과거 987V를 제안하는 가짜 판정 읽기 출력은 grounded 검사에서 탈락하고 조건 질문으로 이어졌다. 기억 건수/길이, 존재하지 않는 사례 인용, 현재 근거가 전혀 없으면 생성하지 않음도 검증했다.
+- 최종 명령: TEST_THREAD_DATABASE_URL=로컬격리DB 설정 후 uv run --no-sync --offline pytest -q tests/api tests/graph tests/multi_agent tests/services/test_langfuse_prompts.py → 297 passed, 22 skipped, 19.58초. 전용 인증 DB 등 환경 의존 항목은 skip. git diff --check 통과. 새 의존성/SQL migration은 없다.
+- 실제 모델 결과: 기존 generate 모델 anthropic/claude-haiku-5.5. 처음 512토큰 시도/오류 진단 각 1회는 LengthFinishReasonError. 출력만 2048로 바꾼 추가 A 1건은 6.56초에 성공: 자기 설계명 APRICOT_729와 당시 12V를 사례 출처로 회상하고 B의 COBALT_481은 미포함. fake_citations=[], uncited_sentences=0. 실제 smoke에서 Supervisor 선택은 writer→finish로 고정했고 생성은 실제 모델이었다. A/B 양방향은 가짜 모델 통합 테스트 결과다. 전체 3회 예약 합계 0.25776달러이며 실제 청구액은 이 호출 경로에서 수집하지 못했다.
+- 산출물: 세션 visualizations의 approved_memory_smoke.py/.json, approved_memory_smoke_attempt1.json, approved_memory_smoke_attempt2.json. 합성 데이터만 사용했고 실제 smoke의 사용자/업무/Store 행을 종료 시 정리했다. 체크포인트 내부 합성 이력은 남을 수 있다.
+- 문서: docs/specs/user-thread-memory.md 계약/AC, GRAPH.md, MULTI_AGENT.md, PROMPTS.md 갱신. SPEC 8.5에 별도 화면 표시뿐 아니라 서버 선별 후 모델 입력 전달과 과거 조건 보호 계약 반영을 조장에게 요청한다. STH에서 주요 문서는 수정하지 않았다.
+- 미검증/다음: 전체 동결 평가 재측정/실제 Supervisor 포함 유료 전체 그래프, 사용자 실자료, Langfuse 원격 프롬프트 재등록, 배포/공유 DB는 수행하지 않았다. 기억 정정/삭제 UI/벡터 검색은 범위 밖. 이전 실행 중 Swagger 서버는 재시작하지 않아 새 코드 적용에는 재시작이 필요하다.
+
+## 2026-11-09 STH 로컬 커밋 정리
+- 사용자 요청: 지금까지 구현한 사용자별 thread/장기기억 기능을 STH에 로컬 커밋하고 변경 내용을 정리한다. 원격 push는 하지 않는다.
+- 요약 문서: docs/specs/user-thread-memory.md의 '로컬 커밋용 변경 요약과 운영 보완사항'에 구현/시험/미해결 문제/적용 경계를 정리했다.
+- 커밋 전 전체 검사: TEST_THREAD_DATABASE_URL=기존 로컬 격리 DB로 uv run --no-sync --offline pytest -q → 837 passed, 43 skipped, 1 failed (22.34초). 실패는 tests/repo/test_repo_layout.py::test_tree_matches_files의 기존 db/012_document_category.sql 부재다. git ls-tree HEAD에도 해당 파일이 없으며 주요 문서 수정 권한 범위 밖이므로 임의 변경하지 않았다. 기능 테스트 통과와 저장소 전체 통과는 구분한다.
+- 규모: 사용자 업로드→분석 상태 보존→승인/기억→모델 전달의 하나의 기능이며 핵심 코드/테스트/계약이 400줄을 넘는다. 분리하면 API/DB/그래프 계약이 실행 불가능한 중간 상태가 되므로 현재 동작 가능한 기능 스냅샷으로 보관한다. 후속 PR에서는 이 사유와 로컬 검사 결과/남은 운영 과제를 기재해야 한다.
+- 기존 사용자 변경 보존: 같은 worklog의 별도 Supabase 구조 비교/적용 2개 항목은 이번 대화에서 검증한 변경이 아니므로 작업 파일에 유지하되 이 로컬 커밋에서는 제외한다.
+- 스테이징 확인: 이번 기능의 41개 파일을 대상으로 .env의 비밀 필드 9개 실제 값 일치와 private key/OpenAI·OpenRouter/Google/GitHub 토큰 패턴을 값 출력 없이 검사했고 findings=0이었다. gitleaks 실행 결과는 아니며 원격 CI secret scan은 미실행이다. git diff --cached --check 통과. 별도 Supabase 두 절 16줄은 작업 폴더에 남겼다.

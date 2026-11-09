@@ -8,6 +8,7 @@
 import re
 
 from backend.graph.nodes import NOT_FOUND, citations
+from backend.graph.memory import memory_sources
 from backend.multi_agent.contracts import AgentReport, Reason
 
 
@@ -16,6 +17,7 @@ def verifier_agent(state: dict, *, enforce: bool = True) -> dict:
     answer = state.get('answer') or ''
     passed = {str(i) for i in state.get('passed') or []}
     valid = {str(d['chunk_id']) for d in state.get('docs') or [] if str(d['chunk_id']) in passed} | ({'넷리스트'} if state.get('target_part') else set())
+    valid |= memory_sources(state.get('approved_memories') or [])
     if state.get('judgement'):
         from backend.multi_agent.messages import render_judgement
         same = answer == render_judgement(state['judgement'])  # [왜] 판정 답은 코드 틀이다. 틀과 같으면 인용은 사양 표 행 그대로다

@@ -13,6 +13,7 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
+from backend.graph.memory import memory_context
 from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
@@ -74,7 +75,8 @@ def render_read(state: dict, rules: dict) -> str:
 
 def judge_read_agent(state: dict, *, chat) -> dict:
     """그래프 노드: 읽기 LLM을 한 번 불러 결과를 상태에 남긴다."""
-    read = chat('judge_read', PROMPT, render_read(state, C.load()), JudgeRead)
+    # render_read는 숫자 grounding에도 쓰므로 과거 사례는 모델 호출에만 따로 붙인다.
+    read = chat('judge_read', PROMPT, render_read(state, C.load()) + memory_context(state.get('approved_memories') or []), JudgeRead)
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
 
 

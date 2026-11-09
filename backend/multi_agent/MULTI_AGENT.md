@@ -27,7 +27,9 @@
 ## 구현 상태
 - 있음: 약속(`contracts.py`), Supervisor(`supervisor.py`), 서브에이전트 4개(검색 · 작성 · 검증은 단일 그래프 함수를 그대로 감쌈, 판정은 `agents/judge.py`), 사실 확인(MCP `check_corpus`, `make_lookup`), 거절 문구, 판정 답 틀, 조립(`build.py`), 평가 실행(`evals/runners/run_graph.py --multi`, MCP 서버를 열어 사실 확인 · 사양 표 도구로 씀). Supervisor 프롬프트는 Langfuse `supervisor` v4까지 등록했다(PROMPTS.md).
 - 실제 LLM 측정: 판정 · 웹 없이 #38(11-05, 동결 v2 70문항, `evals/guides/preregister.md`)에서 쟀다. 판정 에이전트는 가짜 LLM · 사양 표로만 시험했다.
-- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 3갈래 채점, 판정 에이전트를 켠 실제 측정, `judge_read` 프롬프트와 판정 연결 뒤 `supervisor` 새 본문의 Langfuse 등록, 영속 체크포인트(평가 실행은 메모리 체크포인터).
+- 서비스 연결: `backend/conversations.py`는 이 그래프에 PostgreSQL Checkpointer와 Store를 넘겨 업로드 분석을 실행합니다. 기존 평가 실행기는 메모리 체크포인터를 유지합니다.
+- 승인 기억: 서비스가 같은 사용자의 같은 품번 승인 사례를 새 질문 전에 최대 5건 선별해 `approved_memories`로 전달합니다. Supervisor·판정 읽기·생성이 별도 과거 데이터로 읽습니다. 판정 읽기의 숫자 grounding에는 기억을 넣지 않으며 현재 값 누락은 여전히 묻습니다. 판정 답은 기존 코드 틀을 유지하고 일반 생성 답은 `승인사례:thread:version` 출처를 구분합니다. 기억 없는 평가 입력의 경로는 유지합니다.
+- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 3갈래 채점, `judge_read` 프롬프트와 판정 연결 뒤 `supervisor` 새 본문의 Langfuse 등록. 실제 측정 범위는 worklog와 원시 결과를 확인합니다.
 - 조각마다 사전 등록 · 시험 · 측정을 거칩니다.
 
 ## 파일

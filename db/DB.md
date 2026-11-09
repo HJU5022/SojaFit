@@ -14,6 +14,7 @@
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
+- `013_agent_memory.sql` — 비공개 sojafit_agent 스키마의 업로드·thread·대화 이력·승인 원본. 라이브러리 내부 표는 별도 setup CLI가 생성
 - `000_init.sql` — pgvector 확장 생성
 - `002_rag_corpus.sql` — 코퍼스 문서·청크·임베딩 테이블과 관련 인덱스
 - `003_auth.sql` — 사용자·인증 세션·로그인 시도 테이블
