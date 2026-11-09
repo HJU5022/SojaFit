@@ -1,5 +1,17 @@
 # 오세창 작업 기록
 
+## 2026-11-09 회로 프로젝트와 대상 선택 (Task 6)
+
+- 범위: 승인된 `docs/specs/d5-frontend-service.md` AC-02/03/09의 프로젝트 화면만 기존 owner API에 연결했다. 프로젝트/대상 참조 선택에서 끝내며 D5 실행·대화·승인·견적·후보 가격 공급·React KiCad 파싱은 추가하지 않는다. 원격 쓰기·실제 서비스 호출은 없다.
+- TDD RED: 신규 API 경계·실제 Workbench 상호작용 시험을 먼저 작성한 후 집중 5개 파일 실행에서 `16 failed, 3 passed in 5.76s`. 새 프로젝트 UI가 없어 label/선택/오류를 찾지 못했고, 기존 공통 fetch는 DELETE의 204 빈 본문을 JSON 파싱해 실패했다. 최소 구현 후 집중 `19 passed in 2.06s`.
+- 중간 확인: 데모 option이 로드되기 전에 disabled select를 바꾸던 시험을 실제 option 대기로 보정했다. jsdom의 합성 FileList를 native validity가 보지 못해 업로드 시험은 실제 form submit 이벤트를 명시한다. required/파일 guard는 production에 유지한다. 오래된 삭제 callback의 Router query updater가 이전 params를 참조하는 문제는 현재 query signature를 사용해 해결했다.
+- 추가 RED/GREEN: logout 직후 소유 Query 캐시가 다음 세션에 남지 않아야 한다는 StrictMode 시험이 `1 failed, 5 passed in 1.78s`. gcTime=0의 다음 timer를 기다리지 않고 Workbench 이탈 시 프로젝트·데모 쿼리를 즉시 remove/cancel한다. 보완 후 App/Workbench 집중 `11 passed in 1.76s`.
+- API/상태: `['projects']`, `['project', id]`, `['demo-circuits']`를 사용하고 생성·이름 변경·삭제 후 해당 목록/상세를 invalidate한다. 삭제는 확인/취소 후 owner DELETE 204이며 해당 상세 쿼리를 취소·제거한다. `projectId`와 `targetRef`만 URL query에 두고, 서버 connections의 데모 components 또는 업로드 parts와 nets에서 요약/참조를 표시한다. 파일은 React state/Query mutation cache에 보관하지 않으며 업로드 성공/실패 finally에서 input을 비운다.
+- 경합/경계: 이전 상세·생성·삭제 응답이 새 프로젝트 선택을 덮지 않는 시험, 대상 선택·전환 시 초기화, 없는/타 사용자 404·400/413 request ID 표시, rename/list/detail 갱신, 명시적 delete 취소·확인, 브라우저 비저장, 기존 auth/admin/price 회귀를 포함한다.
+- 바꾼 파일: frontend/src/api/projects.ts·client.ts(+시험), ProjectSidebar/CircuitSetup/CircuitSummary(+각 시험), WorkbenchPage(+시험), styles.css, test/projects.tsx, 기존 App/Login/Admin 시험의 QueryClient wrapper·현재 DTO 대역, frontend 폴더 문서, SOJAFIT 신규 파일 8줄, 이 기록. backend·의존성·동결 평가셋은 수정하지 않았다.
+- 최종 확인: `npm run test:run` → `10 files, 40 passed in 2.64s`; `npm run build` → TypeScript/Vite 성공(82 modules, 142ms). `PYTHONUTF8=1 uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.35s`; diff whitespace 통과. 신규 코드의 localStorage/sessionStorage/IndexedDB/persist/FileReader/readAs/파일 text 호출이 없음을 대조했다. 빌드 dist/node_modules/tsbuildinfo와 작업 report는 무시 경로이며 커밋하지 않는다.
+- 미검증/검토: live API·실제 DB·브라우저 E2E/시각 확인·배포·RAG 평가셋 재측정은 범위 밖이다. backend DTO/라우터/기존 API 시험 소스의 계약이 명확해 backend API 시험은 다시 실행하지 않았다. SPEC 정본은 OSC 소유 규칙대로 직접 바꾸지 않았으며 승인 spec AC-02/03/09의 화면 반영을 조장에게 요청한다. 권장 400줄을 넘는 UI/회귀 변경은 단일 프로젝트 선택 기능과 비동기/소유권 경계를 함께 검토하도록 요청된 한 커밋으로 유지한다. 최종 staged 20개 파일은 이 범위뿐이며 Docker gitleaks stdin(`--redact --no-banner --log-level warn`) 스캔에서 비밀값 0건, staged whitespace 통과를 확인했다. 요청된 `feat(web): 회로 프로젝트와 대상 선택`으로 로컬 커밋한다.
+
 ## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
 
 - Fix Round 1: StrictMode의 이전 복원 401이 새 로그인을 해제하는 순서와, 관리자 PATCH 대기 중 로그아웃/경로 이동 후 후속 목록 GET이 실행되는 순서를 deferred-response 테스트로 먼저 재현했다. focused RED는 `3 failed, 5 passed`; effect별 AbortController·API signal 전달·응답/JSON 파싱 뒤 abort 검사·관리자 후속 GET/상태 변경 guard로 수정 후 `8 passed`. 전체 프런트 `24 passed in 2.01s`, build(TypeScript+Vite 78 modules), `git diff --check` 통과. non-JSON 오류 본문 Minor는 요청대로 최종 검토에 보류했다. backend·화면 범위·저장 경계는 변경하지 않았다.

@@ -3,6 +3,7 @@ export type ApiError = { code: string; message: string; requestId: string }
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(path, { ...init, credentials: 'same-origin', cache: 'no-store' })
   init.signal?.throwIfAborted()
+  if (response.status === 204 && response.ok) return undefined as T
   const body = await response.json()
   init.signal?.throwIfAborted()
   if (!response.ok) {

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { renderWithQueries as render } from '../test/projects'
+import { fireEvent, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -16,6 +17,7 @@ it('logs in and out through real pages without browser storage', async () => {
   network((path) => {
     if (path.endsWith('/login')) { signedIn = true; return Response.json({ user_id: 7 }) }
     if (path.endsWith('/logout')) { signedIn = false; return Response.json({ ok: true }) }
+    if (path === '/api/projects' || path === '/api/demo-circuits') return Response.json([])
     if (path.endsWith('/status')) return Response.json({ enabled: false })
     return signedIn ? Response.json(user) : failure()
   })

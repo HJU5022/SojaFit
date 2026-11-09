@@ -23,3 +23,8 @@ it('encodes part names and disables browser price caching', async () => {
   expect(path).toBe('/api/prices?parts=SS34%2C1N4148')
   expect(request).toMatchObject({ cache: 'no-store', credentials: 'same-origin' })
 })
+
+it('accepts empty successful 204 responses for owner deletion', async () => {
+  vi.stubGlobal('fetch', async () => new Response(null, { status: 204 }))
+  await expect(apiFetch('/api/projects/11', { method: 'DELETE' })).resolves.toBeUndefined()
+})

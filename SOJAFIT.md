@@ -54,6 +54,7 @@ SojaFit (proj3-b)
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
 │       │   ├── auth.ts     <- 로그인·세션 복원·로그아웃·Google 상태 API
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
+│       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
 │       │   └── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
@@ -68,9 +69,16 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
+│       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
+│       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
+│       │   ├── CircuitSetup.test.tsx <- 데모·업로드·오류·입력 폐기·비저장 테스트
+│       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택
+│       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
 │       │   └── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       └── test/           <- 화면 테스트 설정
+│           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리
 │           └── network.ts  <- 손작성 완전한 API 응답·fetch 경계 테스트 대역
 │

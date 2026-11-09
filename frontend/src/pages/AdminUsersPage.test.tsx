@@ -1,5 +1,6 @@
+import { renderWithQueries as render } from '../test/projects'
 import { StrictMode } from 'react'
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -49,6 +50,7 @@ it.each(['logout', 'navigation'])('cancels an outstanding update and skips its f
   let lists = 0
   network((path, init) => {
     if (path === '/api/auth/me') return Response.json(administrator)
+    if (path === '/api/projects' || path === '/api/demo-circuits') return Response.json([])
     if (path === '/api/auth/logout') return Response.json({ ok: true })
     if (path === '/api/auth/google/status') return Response.json({ enabled: false })
     if (path === '/api/admin/users/7' && init.method === 'PATCH') {
