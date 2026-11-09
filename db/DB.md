@@ -19,6 +19,7 @@
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
 - `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
 - `021_auth_ip_limits.sql` — 클라이언트 IP 한도 표 2개(IP 원문 없이 키 해시만). `auth_signup_attempts`는 IP별 UTC 하루 가입 요청 수, `auth_login_ip_attempts`는 IP별 15분 로그인 실패 수·잠금(열은 `auth_login_attempts`와 같음). RLS를 켜고 공개 역할 권한을 회수한다. 다시 실행해도 아무것도 바꾸지 않는다. 018~020은 다른 파일 번호 정리용으로 비워 둔다. 기존 DB에는 자동 적용되지 않는다. [주의] 이 표가 없으면 비밀번호 로그인과 가입이 모두 503이 되므로, 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다
+  - 11-09 팀 Supabase 적용: 이 파일을 한 트랜잭션으로 직접 실행했다(Supabase 마이그레이션 기록 `supabase_migrations`에는 남지 않음). 적용 뒤 두 표 0행 · RLS 켜짐 · `anon` · `authenticated`의 SELECT · INSERT 권한 없음, `users` 5행 그대로를 확인했다
 - `015_analysis_limits.sql` — 비공개 사용자별 UTC 일일 예약액·빈도 제한 표. 실패도 예약액은 보존하며 실제 청구액과 구분
 - `014_thread_inputs.sql` — threads.input_record nullable JSONB 추가. 기존 원본·행을 수정하지 않고 setup 명령에서 013 뒤 적용
 - `013_agent_memory.sql` — 비공개 sojafit_agent 스키마의 업로드·thread·대화 이력·승인 원본. 라이브러리 내부 표는 별도 setup CLI가 생성
