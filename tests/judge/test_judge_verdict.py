@@ -154,6 +154,18 @@ def test_rank_drops_not_sufficient_and_puts_no_board_change_first():
     assert [x.part for x in shown] == ['D', 'A', 'B'] and [x.part for x in unverified] == ['E']
 
 
+def test_rank_puts_preferred_parts_first_only_within_the_same_verdict_and_board_change():
+    def j(part, verdict, board):
+        return V.Judgement(part=part, role='R01', verdict=verdict, board_change=board)
+    found = [j('A', 'ROLE_SUFFICIENT', False), j('B', 'ROLE_SUFFICIENT', False), j('C', 'ROLE_SUFFICIENT', True),
+             j('D', 'SPEC_EQUIVALENT', True), j('E', 'NOT_VERIFIED', False), j('F', 'NOT_VERIFIED', False)]
+    before = V.rank(found)
+    assert [x.part for x in before[0]] == ['D', 'A', 'B', 'C'] and V.rank(found, preferred=set()) == before  # 비면 예전 순서 그대로
+    shown, unverified = V.rank(found, preferred={'B', 'C', 'F'})
+    # [왜] 선호는 판정(D가 먼저) · 기판 수정 불필요(A · B가 C보다 먼저)를 넘지 않고, 같은 칸 안에서만 앞으로 온다. 확인 안 됨 순서는 그대로
+    assert [x.part for x in shown] == ['D', 'B', 'A', 'C'] and [x.part for x in unverified] == [x.part for x in before[1]] == ['E', 'F']
+
+
 def test_rank_limits_per_verdict_and_total():
     many = [V.Judgement(part=f'P{i}', role='R01', verdict='ROLE_SUFFICIENT') for i in range(6)]
     shown, _ = V.rank(many)

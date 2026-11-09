@@ -913,20 +913,6 @@ def test_login_purges_expired_attempts_and_sessions_before_recording(monkeypatch
     assert any(s.startswith("DELETE FROM auth_sessions WHERE expires_at") for s in statements)
 
 
-def test_unbuilt_login_page_has_no_question_controls(tmp_path):
-    from fastapi import FastAPI
-    from backend.main import LOGIN_PAGE
-    from backend.web.app import mount_frontend
-
-    # 빌드 뒤에는 React index를 제공하므로 기존 폼 검사는 미빌드 fallback에 한정한다.
-    unbuilt_app = FastAPI()
-    mount_frontend(unbuilt_app, tmp_path / "missing-dist", LOGIN_PAGE)
-    response = TestClient(unbuilt_app).get("/login")
-    assert response.status_code == 200
-    assert 'id="login-form"' in response.text
-    assert 'id="question-form"' not in response.text
-
-
 def test_question_endpoint_is_not_exposed(monkeypatch):
     class Graph:
         def invoke(self, state):

@@ -209,19 +209,14 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
+│   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 기록 · 재생은 demo.py)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
-│   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구, 외부 호출 없음
+│   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구와 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
-│   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
+│   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
-│   │   ├── app.py          <- API 우선 SPA·정적 파일 제공과 미빌드 로그인 fallback
-│   │   ├── design.md       <- 화면 디자인 규칙 초안
-│   │   ├── templates/      <- 화면 HTML 템플릿
-│   │   │   ├── workspace.html <- 사용자 넷리스트 업로드·내 분석 대화·재개·승인 사례 화면
-│   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
-│   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
+│   │   └── app.py          <- API 우선 SPA·assets 제공. 빌드가 없으면 화면 주소도 공통 404
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
 │       ├── mcp_server/
@@ -240,9 +235,10 @@ SojaFit (proj3-b)
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
-│   └── demo/               <- 키 없는 데모 자료: 합성 시나리오와 코퍼스 스냅샷. 기록 응답 재생 코드는 없음
+│   └── demo/               <- 키 없는 데모 자료: 합성 시나리오, 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
 │       ├── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
+│       ├── recordings/     <- (예정) 멀티 그래프의 LLM 응답 기록(calls.jsonl)과 질문별 결과 · DB 지문(outcomes.json). scripts/demo/record_demo.py가 만듦
 │       └── snapshot/       <- 키 없는 compose의 corpus-load가 로컬 DB에 넣는 코퍼스 스냅샷(TSC 42문서, 청크 1,556개, 임베딩 없음)
 │           ├── SNAPSHOT.md <- 폴더 설명: 출처·이용 조건·고른 규칙·문서 목록·크기·sha256·청커 버전
 │           ├── manifest.jsonl  <- 스냅샷 문서 42줄(전체 v4h manifest 줄 그대로)
@@ -477,6 +473,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
+│   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과, 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
@@ -529,6 +526,9 @@ SojaFit (proj3-b)
 │   ├── langfuse/           <- Langfuse 점검
 │   │   ├── LANGFUSE.md     <- 폴더 설명
 │   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
+│   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
+│   │   ├── DEMO.md         <- 폴더 설명
+│   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 5개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
 │   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
 │   │   ├── BIT_SEARCH.md   <- 폴더 설명
 │   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
@@ -691,6 +691,7 @@ SojaFit (proj3-b)
 | `scripts/bit_search/` | [BIT_SEARCH.md](scripts/bit_search/BIT_SEARCH.md) | 서비스·운영 |
 | `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
+| `scripts/demo/` | [DEMO.md](scripts/demo/DEMO.md) | 서비스·운영 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |

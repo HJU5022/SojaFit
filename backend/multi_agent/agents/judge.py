@@ -704,8 +704,12 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found if not orig_base or f['part'].upper() != orig_base]
             if mount:
                 candidates = [c for c in candidates if mount in mount_of(c[2])]  # 요구한 실장 방식의 패키지가 있는 후보만
+            # [왜] 내 설정의 선호 실장 방식(기억 읽기, SPEC 8.5)은 질문이 실장 방식을 말하지 않았을 때만 쓴다. 질문의 요구가 이긴다.
+            #      거르지 않고 같은 판정 · 같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둔다(V.rank)
+            prefer = '' if mount else state.get('mount_preference') or ''
+            preferred = {c[0] for c in candidates if prefer and prefer in mount_of(c[2])}
         else:
-            terms, found = [], []
+            terms, found, prefer, preferred = [], [], '', set()
             candidates = [(p, '', None) for p in read.candidates]
         results = []
         if prefetch and candidates:
@@ -724,11 +728,11 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     except RetrievalUnavailableError as error:
         return {'judgement': {**base, 'kind': 'judge'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('fail', f'spec table tool failed: {error.kind}', reason=Reason.SEARCH_ERROR)]}
-    shown, unverified = V.rank(results) if state.get('question_type') == 'candidate_find' else (results, [])
+    shown, unverified = V.rank(results, preferred=preferred) if state.get('question_type') == 'candidate_find' else (results, [])
     judgement = {**base, 'kind': 'find' if state.get('question_type') == 'candidate_find' else 'judge', 'roles': roles,
                  'results': [j.model_dump(mode='json') for j in results], 'shown': [j.model_dump(mode='json') for j in shown],
                  'unverified': [j.model_dump(mode='json') for j in unverified], 'terms': terms, 'capped': len(found) >= 50,
-                 'dropped': dropped, 'asked': asked}
+                 'dropped': dropped, 'asked': asked, 'preferred_mount': prefer}  # 순서에 쓴 선호 실장 방식(트레이스 · API에서 보이게)
     missing = sorted({m for j in results for m in j.missing})
     status = 'ok' if results else 'partial'
     summary = f'{len(results)} candidates judged' + (f', {len(shown)} shown' if judgement['kind'] == 'find' else '')

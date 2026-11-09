@@ -20,7 +20,7 @@
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/pipeline/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
 ## 파일
-- `demo.py` — 명시적 `DEMO_SCENARIOS=1`·`DEMO_MODE=1` 앱 데모의 합성 응답/도구. 유료 모델·MCP 호출을 하지 않는다. 기존 BM25 평가 모드는 유지한다.
+- `demo.py` — 명시적 `DEMO_SCENARIOS=1`·`DEMO_MODE=1` 앱 데모의 합성 응답/도구. 유료 모델·MCP 호출을 하지 않는다. 기존 BM25 평가 모드는 유지한다. 키 없는 데모용 LLM 응답 기록(`recorder`) · 재생(`replayer`, 기록에 없으면 노드 이름을 담은 `ReplayMiss`)도 둔다. 서비스 연결은 아직 없다.
 - `__init__.py` — 패키지 표시
 - `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 저장하고 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
 - `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 노드별 `langfuse_prompts.NODE_MODELS`를 `node_model(node)`로 고르고 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나, ADR 0014), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`

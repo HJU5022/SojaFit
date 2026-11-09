@@ -4,7 +4,7 @@
 
 아직 정하지 않은 칸은 `(정할 것)`으로 둡니다.
 
-**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · 자기 가입 · 데모 모드 버튼 로그인 · Google 관리자 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모의 녹화 재생, Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모 모드에서 React 분석은 합성 데모 질문만 받아 실제 데모 회로로는 422입니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
+**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · 자기 가입 · 데모 모드 버튼 로그인 · Google 관리자 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모의 녹화 재생, Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모 모드에서 React 분석은 합성 데모 질문만 받아 실제 데모 회로로는 422입니다. 합성 데모 회로는 React로 만들 수 없어(데모 카탈로그에 없고 업로드 형식이 다름) React 이전 화면 `/workspace`를 지운 11-10부터 키 없는 모드에서 분석을 끝까지 보는 길이 없습니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
 
 ## 1. Why·Goal
 
@@ -98,7 +98,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 | 답 틀 | 판정 결과를 코드 틀(판정 · 조건 표 · 인용 · 빠진 값)로 답 글로 만듭니다. LLM이 숫자를 다시 쓰지 않습니다 |
 | 거절 | 이유 코드(`refusal.code`, 멀티와 같은 `Reason` 값)와 안내문, 다음 할 일(근거 없음이면 단서 요청)을 남기고 끝냅니다. LLM을 쓰지 않습니다. 라우팅이 정한 거절은 멀티와 같은 일상어 문구입니다. 검색 고리의 거절은 `not_found`이며, 품번 문서가 없을 때(검색 0장, 그 품번을 적음)와 찾은 문서에 답이 없을 때(찾아본 문서 이름과 검색 횟수를 적음)로 나눕니다. 검색 · MCP 도구 장애는 `search_error`입니다. 판정이 코퍼스 밖 요구로 정한 사유(`part_missing` · `revision_missing` · `not_found`)는 멀티와 같은 문구입니다. 대화는 같은 thread의 다음 메시지로 이어 갑니다 |
 
-- 사람 확인(interrupt): 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다. 견적 저장 전 사람 승인은 그래프 인터럽트가 아니라 API 단계입니다(승인 `POST /api/messages/{id}/approvals` 뒤에만 견적 저장, 4절 · 8.4). 승인 기록의 정정 · 철회는 `POST /api/memories/{thread}/{version}/control`로 합니다(4절)
+- 사람 확인(interrupt): 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다. 견적 저장 전 사람 승인은 그래프 인터럽트가 아니라 API 단계입니다(승인 `POST /api/messages/{id}/approvals` 뒤에만 견적 저장, 4절 · 8.4).
 - 재검색·재시도 상한: 검색은 2회(재작성한 첫 검색 + 재작성 뒤 1회)입니다. LLM 출력 형식이 틀리면 2회까지 다시 부릅니다.
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py`의 `_chat_model`). 11-09 조장 결정에 사용한 저장소 밖 lab v3 50문항 실행에서는 정확도가 유지되고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었습니다. 그 측정은 동결 전 lab v3 초안으로 했고 원시 결과는 저장소 밖에 있어, 이 수치는 구현 결정 근거이며 G5 공식 점수로 세지 않습니다(v3는 11-10에 `evals/dataset_v3.jsonl`로 동결).
@@ -158,9 +158,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
   run · 재개의 SSE 이벤트는 `run_started`(`{run_id, request_id}`) → `status`(단계 `입력 확인`) → 마지막 하나입니다: `requires_input`(단계 `판정`, `interrupt`) · `completed` · `refused`(둘 다 단계 `완료`, 결과와 `profile_hints`) · `failed`(단계 `오류`, `error: {code, message}`). 결과 본문은 공개 값 허용 목록(`backend/conversations/dto.py`)만 담고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`).
 
-  React 이전 화면 `/workspace`가 쓰는 경로(`backend/main.py`, `THREADS_ENABLED=1`이 아니면 503): `POST` · `GET /api/circuits`(`{filename, netlist}`), `POST` · `GET /api/threads`(`{circuit_id, target}`), `GET /api/threads/{id}`, `POST /api/threads/{id}/messages`(`{text, conditions}`) · `/resume`(`{version, answers, role}`) · `/approve` · `/retry`(`{version}`), `GET /api/memories`, `POST /api/memories/{thread}/{version}/control`(`{action: correct | revoke | restore | delete, correction}`), `GET /api/analysis/readiness` · `/api/analysis/demo`.
-
-  `/api/circuits` · `/api/threads` · `/api/memories` · `/api/analysis/`로 시작하는 POST(React의 `POST /api/threads/{id}/runs` 포함)는 본문이 128 KiB(`/api/circuits`는 7 MiB)를 넘으면 413 `PAYLOAD_TOO_LARGE`입니다(`backend/main.py`의 `conversation_boundary`).
+  `/api/threads`로 시작하는 POST(`POST /api/threads/{id}/runs`)는 본문이 128 KiB를 넘으면 413 `PAYLOAD_TOO_LARGE`이고, `/api/threads` · `/api/me/memory` 응답은 `Cache-Control: no-store`입니다(`backend/main.py`의 `conversation_boundary`). React 이전 화면 `/workspace`와 그 경로(`/api/circuits` · `/api/threads` 목록 · 상세 · 메시지 · 재개 · 승인 · 재시도 · `/api/memories` · `/api/analysis/*`)는 11-10에 지웠습니다.
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/guides/dataset-guide.md`가 정본입니다.
 - 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/guides/dataset-guide.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다. 평가셋 v2는 70건(관련 35 · 비관련 35, v1 50건 + 후보 찾기 20건)으로 2026-11-03에 동결했습니다(`evals/dataset_v2.jsonl`). 기준 평가셋 v3는 50건(관련 25: 후보 판정 10 · 정격 6 · 후보 찾기 5 · 역할 4, 비관련 25)으로 2026-11-10에 동결했습니다(`evals/dataset_v3.jsonl`, [ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). 세 파일의 해시는 `evals/FROZEN.json`에 있습니다.
 
@@ -309,12 +307,13 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
 - 삭제(11-09 결정, 상세와 개인정보 보호법 조항 대응은 [작업서](docs/specs/user-thread-memory.md) "보관 · 삭제"): 사용자가 지우면 숨김이 아니라 바로 지웁니다. 프로젝트 삭제(`DELETE /api/projects/{id}`)는 React 업무 행과 같은 UUID의 분석 thread·checkpoint·메시지·승인 기록·분석 사건을 한 트랜잭션에서 지웁니다. 탈퇴(`DELETE /api/me`, 같은 출처, 일반 계정만, 관리자 409)는 분석 기록 → Store namespace `(user_id, ...)` 전부(옛 `("memories", user_id)` 포함) → 계정(세션·프로젝트·견적은 FK cascade) 순서로 지우고 지운 건수를 돌려줍니다. 중간에 실패하면 계정이 남아 다시 요청하면 이어서 지웁니다. 계정 단위 잠금으로 그 사용자의 분석이 도는 동안 탈퇴는 409, 탈퇴가 도는 동안 그 사용자의 새 분석·재개·설정 저장은 409입니다.
 - 보관 기간(11-09 결정): 프로젝트와 딸린 것(대화·checkpoint·승인·견적, 같은 UUID 분석 기록)과 프로젝트 없는 분석 대화는 마지막 활동 뒤 60일, 기록(분석 사건·하루 사용량·로그인·가입 시도)은 30일 뒤에 지웁니다. 사용자 사실은 자동 만료가 없습니다. 스케줄러 없이 새 분석(질문)을 시작할 때 규칙마다 SQL 함수 하나(`sojafit_agent.purge_inactive_projects`·`purge_log_records`, `db/023_retention.sql`)를 작은 묶음으로 부르고, 청소가 실패해도 분석은 계속합니다. 아직 걸린 로그인 잠금은 지우지 않습니다.
-- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(분석 thread 질문·재개 응답, React run 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다. 모델 프롬프트·판정 입력에는 넣지 않습니다(`backend/multi_agent/` 병합 뒤 연결).
-- 승인 기록: 승인 원본(`sojafit_agent.approvals`)과 `POST /api/threads/{id}/approve`·`GET /api/memories`·`POST /api/memories/{thread}/{version}/control`은 승인 기록으로 남습니다. 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
+- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(React run · 재개 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다.
+- 에이전트 활용(선호 실장 방식만): 멀티 그래프의 `기억 읽기` 노드(`입력 읽기` 다음, `backend/graph/memory.py`)가 compile에 넘긴 Store에서 세션 사용자(`user_id`)의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→빈 값으로 상태 `mount_preference`에 둡니다. 대체 부품 에이전트는 후보 찾기에서 질문이 실장 방식을 말하지 않았을 때만 이 값으로 같은 판정·같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둡니다(`verdict.rank`). 판정·거르기·답 글·프롬프트는 바꾸지 않고, 질문이 실장 방식을 말하면 질문이 이깁니다. 판정마다 3개·전체 5개로 자르므로 같은 판정 후보가 많으면 보여 줄 후보가 바뀔 수 있습니다. 쓴 값은 판정 결과의 `preferred_mount`(트레이스·API)에 남습니다. 소속·직무는 모델 프롬프트·판정 입력에 넣지 않습니다. 저장되는 것은 선호 코드뿐입니다: 체크포인트의 `mount_preference`와, 판정 결과의 `preferred_mount`가 실린 저장 결과(run·메시지 결과, 승인 기록 snapshot)입니다. 이들은 분석 thread·프로젝트와 같은 보관 기간(60일)·삭제를 따릅니다(내 설정을 지우면 다음 질문부터 빈 값이고, 이미 저장된 코드는 그 thread·프로젝트·계정을 지울 때 함께 지워집니다). 평가 실행기는 Store 없이 compile해 순서가 예전과 같습니다.
+- 승인 기록: 옛 승인 원본(`sojafit_agent.approvals`)은 승인 기록으로 남아 삭제 · 보관 기간 규칙만 따릅니다. 새로 쓰는 HTTP 경로는 없습니다(11-10, 승인은 React의 `POST /api/messages/{id}/approvals`, 4절). 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
 - 한계:
   - Voyage 키가 없거나 `DEMO_MODE=1`이거나 색인 표가 없으면 색인 없이 쓰고, 검색은 순위 없이 사실(최근에 고친 순)을 돌려줍니다. 검색 중 임베딩 장애도 같습니다. 색인이 켜진 채 임베딩이 실패하면 고치기는 503이고 아무 칸도 바뀌지 않습니다.
   - 색인 없이 쓴 칸은 벡터가 없어 순위 뒤에 붙습니다. 색인 없이 고친 칸의 예전 벡터는 남아 다시 색인을 켜면 옛 문장으로 순위를 매깁니다.
-  - `profile_hints`는 run 기록에 저장하지 않습니다(지운 사실이 남지 않게). 연결이 끊겨 run을 다시 읽거나 분석 thread를 GET하면 빈 목록입니다.
+  - `profile_hints`는 run 기록에 저장하지 않습니다(지운 사실이 남지 않게). 연결이 끊겨 run을 다시 읽으면 빈 목록입니다.
   - 같은 칸을 동시에 고치면 `version`이 한 번만 오를 수 있습니다. `q` 검색에는 사용자별 호출 한도가 없습니다. 소속 글은 임베딩을 위해 Voyage로 보냅니다.
 - 수용 기준:
   - GIVEN 세 칸 밖의 이름이나 사용자 id가 든 본문, WHEN `PATCH /api/me/memory`, THEN 공통 422이고 아무 칸도 바뀌지 않습니다. 소속이 비었거나 100자를 넘거나 제어 문자를 담아도 422입니다.
@@ -324,6 +323,9 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   - GIVEN 칸 하나 또는 전부를 지움, WHEN 조회·검색·다음 질문, THEN 지운 칸은 나오지 않고 그 색인 벡터도 없습니다.
   - GIVEN 색인과 사실 3칸, WHEN 다른 말로 물으면(예: "표면실장" ↔ SMD), THEN 맞는 칸이 첫째입니다.
   - GIVEN 승인한 판정 사례, WHEN 새 분석, THEN 모델 입력에 승인 사례가 없고 `approved_memories`는 빈 목록입니다.
+  - GIVEN 사용자 A의 선호 실장 방식 SMD와 판정·기판 수정 여부가 같은 후보 SS14(SMA)·1N5817(DO-41), WHEN A가 실장 방식을 말하지 않고 후보 찾기를 물으면, THEN 보여 줄 후보 순서는 SS14 → 1N5817이고 판정은 Store 없을 때와 같으며 `preferred_mount`는 `smd`입니다.
+  - GIVEN 같은 선호(SMD), WHEN 질문이 스루홀을 요구하면, THEN 질문의 요구로 거르고 `preferred_mount`는 빈 값입니다.
+  - GIVEN Store 없이 compile한 그래프(평가 실행기) 또는 선호가 없는 사용자 B, WHEN 같은 찾기 질문, THEN `mount_preference`는 빈 값이고 순서는 예전과 같습니다(B는 A의 선호를 보지 않음).
 
 ### 8.6 로그인
 

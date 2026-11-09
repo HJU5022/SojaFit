@@ -2,7 +2,7 @@
 
 - 역할: 질문 하나가 Supervisor(계획) → 서브에이전트(동시 실행) → 답 모으기 · 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
   단일 그래프 `AgentState`와 칸이 달라서(계획서, 보고서 목록, 횟수, 사실, 거절 기록) 따로 둔다.
-- 하지 않는 일: 노드 동작, 노드 연결(`build.py`), 사용자별 장기 기억.
+- 하지 않는 일: 노드 동작, 노드 연결(`build.py`), 사용자별 장기 기억 저장(Store). 기억 중 선호 실장 방식 코드 한 칸(`mount_preference`)만 칸으로 둔다.
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/state.py(칸 이름을 맞춘 부분)
 
 [왜] 계획서 · 보고서 · 횟수는 pydantic 객체가 아니라 dict로 저장한다. 체크포인터가 저장하고 Langfuse 트레이스에 그대로 보여야 해서다.
@@ -31,6 +31,8 @@ class MultiState(TypedDict, total=False):
     conditions: str
     question: str
     target_part: dict
+    # ── 기억 읽기 노드가 채운다 ──
+    mount_preference: str  # 내 설정의 선호 실장 방식 'smd' · 'tht' · ''(없음). 찾기 후보 순서에만 쓴다(SPEC 8.5)
 
     # ── 사실 · Supervisor(계획) ──
     facts: dict          # 코드가 목록에서 확인한 사실(품번 · 개정판이 코퍼스에 있나). `supervisor.Facts`
@@ -68,6 +70,7 @@ class JudgeState(TypedDict, total=False):
     target_part: dict
     facts: dict
     question_type: str   # 할 일의 종류(candidate_judge · candidate_find). 판정 코드가 찾기인지 이걸로 가른다
+    mount_preference: str  # 선호 실장 방식('smd' · 'tht' · ''). 찾기에서 같은 판정 안의 순서만 바꾼다
     round: int           # 이 할 일의 계획 회차(보고서에 그대로 적는다)
     judge_read: dict     # 읽기 노드 결과(인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다)
     reports: Annotated[list, add_or_reset]

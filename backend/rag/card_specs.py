@@ -174,10 +174,11 @@ def part_docs_index():
     return lookup
 
 
-def default_specs():
-    """실제 DB · 카드 읽기 · node_chat을 묶은 specs. 카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만 부른다."""
+def default_specs(chat=None):
+    """실제 DB · 카드 읽기 · node_chat을 묶은 specs. 카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만 부른다.
+    chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`)."""
     from backend.rag.card_find import SHARED_READS, doc_meta, load_cards
     from backend.rag.card_read import read_values
     from backend.services.llm import node_chat
-    return make_specs(load_cards=load_cards, read=read_values, chat=node_chat, doc_meta=doc_meta, part_docs=part_docs_index(),
+    return make_specs(load_cards=load_cards, read=read_values, chat=chat or node_chat, doc_meta=doc_meta, part_docs=part_docs_index(),
                       shared=SHARED_READS)

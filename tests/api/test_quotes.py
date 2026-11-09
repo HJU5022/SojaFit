@@ -1,3 +1,4 @@
+import psycopg
 from fastapi.testclient import TestClient
 
 from backend import auth
@@ -49,7 +50,8 @@ def test_mutations_require_origin_and_case_delete_is_explicit(monkeypatch):
 
 def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
-    for error, status in [(QuoteNotFound(), 404), (InvalidApproval('no'), 409)]:
+    # [왜] 같은 메시지를 두 번 승인하면 DB의 UNIQUE(message_id)가 UniqueViolation을 내고, 승인은 한 건으로 남은 채 409다(db/020)
+    for error, status in [(QuoteNotFound(), 404), (InvalidApproval('no'), 409), (psycopg.errors.UniqueViolation(), 409)]:
         class Broken(FakeQuotes):
             def approve(self, *args): raise error
         app.dependency_overrides.clear()

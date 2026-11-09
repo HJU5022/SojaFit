@@ -31,7 +31,7 @@ def _pick(value, keys):
 def _safe_judgement(value):
     if not isinstance(value, dict) or not value:
         return None
-    result = _pick(value, ('kind', 'roles', 'role_evidence', 'capped'))
+    result = _pick(value, ('kind', 'roles', 'role_evidence', 'capped', 'preferred_mount'))
     for key in ('results', 'shown', 'unverified'):
         candidates = []
         for item in value.get(key, []):

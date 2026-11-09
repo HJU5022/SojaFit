@@ -2,6 +2,8 @@
 
 **11-09 변경:** 장기 기억을 승인한 판정 사례에서 사용자 사실 3칸으로 바꿨다(아래 "사용자 사실 기억", SPEC 8.5). 승인 사례는 이제 승인 기록이다. 승인 원본과 승인·`/api/memories` 관리 API는 그대로 두지만 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않는다. 그 아래 절의 "승인 사례 기억" 설계·AC 중 "(11-09 대체)"를 붙인 줄은 그 전 설계다.
 
+**11-10 변경:** React만 남기기로 하고(조장 결정) React 이전 화면 `/workspace`(`backend/web/templates/workspace.html`)와 그 경로(`/api/circuits` · `/api/threads` 목록 · 상세 · `messages` · `resume` · `approve` · `retry` · `/api/memories` · `/api/memories/{thread}/{version}/control` · `/api/analysis/readiness` · `/api/analysis/demo`)를 지웠다. 지금 분석 입구는 React 대화 API(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, SPEC 4절)이고, 승인은 React의 `POST /api/messages/{id}/approvals`다. 옛 승인 기록(`sojafit_agent.approvals`)은 새로 쓰는 경로 없이 삭제 · 보관 기간 규칙만 따르며, 정정 · 철회 · 재시도 기능은 없다. 아래 절의 화면 · 경로 설명은 11-09까지의 기록이다.
+
 상태: 로컬·공유 DB·운영 0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
 
 ## Why
@@ -72,6 +74,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 쿠키 기반 상태 변경 API는 기존 auth.check_origin을 사용한다. 응답에는 Cache-Control: no-store를 붙인다.
 
 ### API 계약 제안
+(11-10에 아래 경로를 React 이전 화면과 함께 지웠다. 지금 계약은 SPEC 4절.)
 - 모든 thread/업로드/기억 API 오류는 main의 error.code/message/request_id 계약을 사용한다. DB 연결 실패(503)와 본문 초과(413)도 동일하며 입력·DB 예외 원문은 숨긴다. workspace는 error.message를 읽는다.
 - POST /api/circuits: 파일명과 UTF-8 넷리스트 본문을 받아 검증·저장하고 대상 선택용 부품 목록을 반환한다.
 - GET /api/circuits: 내 회로와 부품 목록만 반환한다.
@@ -168,14 +171,14 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 
 칸 · 저장 · 검색 · 활용 · 고치기 · 지우기 · 한계 · 수용 기준의 정본은 [SPEC 8.5](../../SPEC.md)다. 여기에는 구현 위치와 세부를 둔다.
 
-- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 runtime으로 Store를 받는다(병합 뒤). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
+- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 LangGraph가 넣어 주는 Store를 받는다(멀티 그래프 `기억 읽기`, 11-10). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
 - 코드: `backend/conversations/profile.py`(칸 검사 `clean`, 틀 문장 `sentence`, `VoyageEmbeddings`, `ProfileMemory.facts · update · delete`), `backend/api/profile.py`(`/api/me/memory`), `memory_service.Conversations.profile`과 `_profile_hints`, `dto.result_dto(profile_hints=...)`.
 - 저장 모양: Store `(str(user_id), "profile")` / key = 칸 이름 / 값 `{kind, value, text, version, updated_at, source: "user_settings"}`. 여러 칸을 한 번에 고치면 `PutOp`을 한 `batch`로 보내 임베딩도 한 번 부른다.
 - 색인: `PostgresStore(index={'dims': 1024, 'embed': VoyageEmbeddings(), 'fields': ['text'], 'ann_index_config': {'kind': 'flat'}})`. LangGraph 동기 `PostgresStore`는 검색 질문도 `embed_documents`로 임베딩하므로, 검색하는 동안만 입력 종류를 `query`로 바꾼다(`contextvars`). 근사 색인(HNSW)은 namespace 조건과 함께 쓰면 다른 사용자 벡터에 밀려 결과가 빌 수 있어 만들지 않는다.
 - 켜는 조건: `VOYAGE_API_KEY`가 있고 `DEMO_MODE`가 1이 아니며 `sojafit_agent.store_vectors`가 있을 때. 셋 중 하나라도 아니면 색인 없는 Store로 쓰고 읽는다. 키가 있는데 표가 없으면 시작 때 경고 로그(`profile_index_unavailable`)를 남긴다.
 - 스키마 경로: 준비 명령과 색인을 켠 서비스 연결은 `search_path`를 `sojafit_agent, <vector 확장 스키마>`로 둔다. 색인 표의 `vector(1024)` 형과 검색의 `::vector` · `<=>`가 이름으로 찾히기 때문이다. 표는 첫 스키마인 `sojafit_agent`에 생긴다. 확장 스키마는 `pg_extension`에서 읽는다(로컬 Compose `public`, Supabase `extensions`). 준비 명령은 확장을 설치하지 않는다.
-- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 모델 프롬프트 · 판정 입력 연결과 승인 사례 프롬프트 문단("Historical approved cases") 제거는 `backend/multi_agent/` · `backend/prompts/` 병합 뒤에 한다.
-- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장).
+- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 에이전트 연결(11-10): 멀티 그래프의 `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 선호 실장 방식 한 칸만 읽어 `mount_preference`로 두고, 대체 부품 에이전트가 찾기 후보 순서에만 쓴다(질문이 실장 방식을 말하면 질문이 이김, 판정 · 거르기 · 프롬프트는 그대로, 결과 `preferred_mount`). 소속 · 직무는 그래프 상태 · 프롬프트에 넣지 않는다. 승인 사례 프롬프트 문단("Historical approved cases")과 늘 빈 `approved_memories` · `memory_refs` 길의 제거는 아직 하지 않았다.
+- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장), `tests/multi_agent/test_build.py` · `test_judge.py` · `tests/judge/test_judge_verdict.py`(기억 읽기 격리, 찾기 순서, 질문 우선, Store 없으면 예전 순서).
 
 ### 보관 · 삭제 (결정 11-09)
 - 사용자 사실은 자동 만료가 없다. 사용자가 지우거나 계정을 지울 때 지운다.

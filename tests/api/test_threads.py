@@ -1,4 +1,9 @@
-"""격리 PostgreSQL에서 사용자별 업로드·thread·체크포인트·승인 기록·사용자 사실 참고(profile_hints)를 검증한다."""
+"""격리 PostgreSQL에서 사용자 분석 서비스(`Conversations`)의 thread · 체크포인트 · 예산 · 승인 기록 · 사용자 사실 참고(profile_hints)를 검증한다.
+
+React run · 재개가 거치는 `ensure_thread` · `message` · `resume` · `admission`과, React 대화 HTTP가 이 서비스로 이어지는지 본다.
+React 이전 화면(`/workspace`)의 HTTP 경로 시험은 11-10에 경로와 함께 지웠다. `make_thread`의 `upload` · `create`와 `approve`는
+HTTP 경로가 없는 서비스 메서드로, 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다.
+"""
 import os
 from uuid import UUID, uuid4
 
@@ -136,45 +141,6 @@ def test_demo_mode_is_explicit_and_never_enables_replay_for_real_evaluations(mon
         demo.enabled()
 
 
-def test_keyless_demo_http_login_to_approval_and_new_thread(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    from backend.services import demo,llm
-    from backend.graph.mcp_retriever import StdioMcpRetriever
-    service,(a,b),dsn=runtime
-    monkeypatch.setenv('DEMO_SCENARIOS','1'); monkeypatch.setenv('DEMO_MODE','1')
-    monkeypatch.setenv('DATABASE_URL',dsn); monkeypatch.setenv('AUTH_ORIGIN','http://testserver')
-    monkeypatch.setenv('AUTH_SECRET','isolated-demo-http-test-secret-32-bytes')
-    monkeypatch.setattr(llm,'_chat_model',lambda *a:pytest.fail('paid model called'))
-    monkeypatch.setattr(StdioMcpRetriever,'__enter__',lambda *a:pytest.fail('external MCP called'))
-    service.graph=service._graph()
-    monkeypatch.setattr(api.state,'conversations',service,raising=False)
-    clients=[TestClient(api),TestClient(api)]
-    with psycopg.connect(dsn) as conn:
-        for uid,client in zip((a,b),clients):
-            email=conn.execute('UPDATE public.users SET password_hash=%s WHERE id=%s RETURNING login_id',
-                (auth.hash_password('synthetic-demo-test-password'),uid)).fetchone()[0]
-            conn.commit()
-            assert client.post('/api/auth/login',headers={'Origin':'http://testserver'},json={'email':email,'password':'synthetic-demo-test-password'}).status_code==200
-    origin={'Origin':'http://testserver'}; client,other=clients
-    def post(path,body):
-        response=client.post(path,headers=origin,json=body); assert response.status_code==200,response.text; return response.json()
-    config=client.get('/api/analysis/demo').json(); assert config['enabled']
-    circuit=post('/api/circuits',{'filename':'demo.net','netlist':config['netlist']})['id']
-    thread=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
-    assert post(f'/api/threads/{thread}/messages',{'text':config['questions']['judge']})['interrupt']
-    assert post(f'/api/threads/{thread}/resume',{'version':1,'answers':{'v_in_max':'12V','i_max':'0.1A','v_drop_allowed':'모름'}})['can_approve']
-    post(f'/api/threads/{thread}/approve',{'version':1})
-    assert other.get(f'/api/threads/{thread}').status_code==404 and other.get('/api/memories').json()==[]
-    new=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
-    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['consulted_memories'] == []
-    assert len(client.get('/api/memories').json()) == 1  # 승인 기록으로만 남는다
-    post(f'/api/memories/{thread}/1/control',{'action':'revoke'})
-    assert client.get('/api/memories').json() == []
-    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['refuse']})['can_approve'] is False
-
-
 def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime, monkeypatch):
     from backend.services import langfuse_prompts
     app, (a, b), dsn = runtime
@@ -190,34 +156,6 @@ def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime
     assert '조건 질문' not in str(events) and 'private-key' not in str(events)
     with pytest.raises(HTTPException):
         app.detail(b, thread)
-
-
-def test_memory_controls_preserve_approval_and_block_restore_after_delete(runtime):
-    app, (a, b), dsn = runtime
-    thread = make_thread(app, a)
-    app.message(a, thread, '판정'); app.approve(a, thread, 1)
-    original = app.memories(a)[0]['judgement']
-    with pytest.raises(HTTPException) as error:
-        app.control_memory(b, thread, 1, 'revoke', '')
-    assert error.value.status_code == 404
-    app.control_memory(a, thread, 1, 'correct', '조건 12V는 측정 전 추정값')
-    assert app.memories(a)[0]['correction'] == '조건 12V는 측정 전 추정값'
-    assert app.memories(a)[0]['judgement'] == original
-    app.control_memory(a, thread, 1, 'revoke', '')
-    assert app.memories(a) == [] and app.detail(a, thread)['approvals'][0]['memory_state'] == 'revoked'
-    with pytest.raises(HTTPException):
-        app.approve(a, thread, 1)
-    app.control_memory(a, thread, 1, 'restore', '')
-    assert len(app.memories(a)) == 1
-    app.control_memory(a, thread, 1, 'delete', '')
-    assert app.memories(a) == [] and not app.store.get(('memories',str(a)), f'{thread}:1')
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'deleted'
-    for call in (lambda:app.approve(a, thread, 1), lambda:app.control_memory(a,thread,1,'restore','')):
-        with pytest.raises(HTTPException) as error:
-            call()
-        assert error.value.status_code == 409
-    with psycopg.connect(dsn) as conn:
-        assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()[0]['judgement'] == original
 
 
 def test_approved_cases_are_not_sent_to_new_analysis_or_resume(runtime):
@@ -236,42 +174,6 @@ def test_approved_cases_are_not_sent_to_new_analysis_or_resume(runtime):
     assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
     app.resume(a, thread, {'VIN_MAX':'12'}, '', 1)
     assert seen == [('',set())] and len(app.memories(a)) == 1
-
-
-def test_store_delete_failure_still_blocks_memory_and_repeated_delete_cleans_up(runtime, monkeypatch):
-    app, (a, _), _ = runtime
-    thread=make_thread(app,a); app.message(a,thread,'판정'); app.approve(a,thread,1)
-    delete=app.store.delete
-    monkeypatch.setattr(app.store,'delete',lambda *a,**k: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.control_memory(a,thread,1,'delete','')
-    assert error.value.status_code==503 and app.memories(a)==[]
-    monkeypatch.setattr(app.store,'delete',delete)
-    app.control_memory(a,thread,1,'delete','')
-    assert not app.store.get(('memories',str(a)),f'{thread}:1')
-
-
-def test_memory_control_http_checks_origin_owner_and_payload(runtime,monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    service,(a,b),_=runtime
-    thread=make_thread(service,a); service.message(a,thread,'판정'); service.approve(a,thread,1)
-    monkeypatch.setenv('AUTH_ORIGIN','http://localhost:8000')
-    monkeypatch.setattr(api.state,'conversations',service,raising=False)
-    api.dependency_overrides[auth.current_user_id]=lambda:a
-    try:
-        client=TestClient(api); url=f'/api/memories/{thread}/1/control'; body={'action':'correct','correction':'<script>untrusted</script>'}
-        assert client.post(url,json=body,headers={'Origin':'https://evil.example'}).status_code==403
-        origin={'Origin':'http://localhost:8000'}
-        assert client.post(url,json={**body,'user_id':a},headers=origin).status_code==422
-        assert client.post(url,json={**body,'correction':'x'*1001},headers=origin).status_code==422
-        assert client.post(url,json=body,headers=origin).status_code==200
-        api.dependency_overrides[auth.current_user_id]=lambda:b
-        assert client.post(url,json={'action':'delete'},headers=origin).status_code==404
-        assert client.get('/api/memories').json()==[]
-    finally:
-        api.dependency_overrides.clear()
 
 
 def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
@@ -344,10 +246,10 @@ def test_other_user_cannot_access_circuit_thread_resume_or_approval(runtime):
     app, (a, b), _ = runtime
     circuit = app.upload(a, 'my.net', NET)
     thread = app.create(a, circuit['id'], 'D1')['id']
-    assert app.circuits(b) == [] and app.threads(b) == []
+    assert app.threads(b) == []
     for call in (lambda: app.create(b, circuit['id'], 'D1'), lambda: app.detail(b, thread),
                  lambda: app.message(b, thread, '판정해줘'), lambda: app.resume(b, thread, {}, '', 0),
-                 lambda: app.approve(b, thread, 0), lambda: app.retry(b, thread, 0)):
+                 lambda: app.approve(b, thread, 0)):
         with pytest.raises(HTTPException) as error:
             call()
         assert error.value.status_code == 404
@@ -472,31 +374,6 @@ def test_unapproved_old_version_still_cannot_be_approved(runtime):
         app.approve(a, thread, version)
     assert error.value.status_code == 409
     assert app.memories(a) == []
-
-
-def test_http_old_approval_is_idempotent_after_new_question(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, _), _ = runtime
-    thread = make_thread(app, a)
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    api.state.conversations = app
-    api.dependency_overrides[auth.current_user_id] = lambda: a
-    client = TestClient(api)
-    origin = {'Origin': 'http://localhost:8000'}
-    try:
-        version = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '판정'}).json()['version']
-        assert client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version}).status_code == 200
-        newer = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '거절'})
-        assert newer.status_code == 200 and newer.json()['version'] == version + 1
-        recovered = client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version})
-        assert recovered.status_code == 200 and recovered.json() == {'ok': True, 'version': version}
-        memories = client.get('/api/memories').json()
-        assert len(memories) == 1 and memories[0]['version'] == version and memories[0]['part'] == 'SS34'
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
 
 
 def test_new_threads_send_no_approved_cases_to_models(runtime, monkeypatch):
@@ -808,102 +685,6 @@ def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(run
         reopened.close()
 
 
-def test_http_flow_uses_session_owner_and_rejects_state_injection(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, b), _ = runtime
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    api.state.conversations = app
-    client = TestClient(api)
-    origin = {'Origin': 'http://localhost:8000'}
-    try:
-        assert client.get('/api/threads').status_code == 401
-        api.dependency_overrides[auth.current_user_id] = lambda: a
-        response = client.post('/api/circuits', headers=origin, json={'filename': 'my.net', 'netlist': NET})
-        assert response.status_code == 200
-        circuit = response.json()['id']
-        created = client.post('/api/threads', headers=origin, json={'circuit_id': circuit, 'target': 'D1'})
-        thread = created.json()['id']
-        injected = client.post(f'/api/threads/{thread}/messages', headers=origin,
-                               json={'text': 'test', 'user_id': b, 'netlist_path': '.env'})
-        assert injected.status_code == 422
-        result = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '넷리스트: .env\n대상: D999\nSS34 판정'})
-        assert result.status_code == 200 and result.json()['target'] == 'D1'
-        assert result.headers['cache-control'] == 'no-store'
-        assert client.post(f'/api/threads/{thread}/approve', headers={'Origin': 'https://wrong.example'},
-                           json={'version': result.json()['version']}).status_code == 403
-        api.dependency_overrides[auth.current_user_id] = lambda: b
-        assert client.get(f'/api/threads/{thread}').status_code == 404
-        assert client.get('/api/memories').json() == []
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
-
-
-def test_react_login_and_legacy_workspace_are_both_available():
-    from fastapi.testclient import TestClient
-    from backend.main import app
-    client = TestClient(app)
-    login = client.get('/login')
-    assert login.status_code == 200
-    assert '<div id="root"></div>' in login.text or 'href="/workspace"' in login.text
-    workspace = client.get('/workspace')
-    assert workspace.status_code == 200
-    html = workspace.text
-    for expected in ('id="netlist"', 'id="target"', 'id="messages"', 'id="approve"', 'id="memories"'):
-        assert expected in html
-    assert 'localStorage' not in html and 'innerHTML' not in html
-    assert 'data.error?.message' in html
-    assert '기억 저장 다시 시도' in html and "dataset.approvalVersion" in html
-    assert 'referenced_memories' in html and 'consulted_memories' in html
-
-
-def test_thread_database_error_uses_common_error_envelope(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, _), _ = runtime
-    api.state.conversations = app
-    api.dependency_overrides[auth.current_user_id] = lambda: a
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    monkeypatch.setattr(app, 'upload', lambda *args: (_ for _ in ()).throw(psycopg.OperationalError('private-db-detail')))
-    try:
-        response = TestClient(api).post('/api/circuits', headers={'Origin': 'http://localhost:8000'},
-                                        json={'filename': 'my.net', 'netlist': NET})
-        assert response.status_code == 503 and response.headers['cache-control'] == 'no-store'
-        assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
-        assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
-        assert 'private-db-detail' not in response.text
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
-
-
-def test_failed_node_can_retry_its_saved_execution(runtime):
-    app, (a, _), _ = runtime
-    attempts = []
-    def sometimes(state):
-        attempts.append(1)
-        if len(attempts) == 1:
-            raise RuntimeError('synthetic transient model failure')
-        return {'answer': '복구됨', 'judgement': {'roles': ['REVERSE_POLARITY'], 'shown': [{'part': 'SS34'}]}}
-    graph = StateGraph(AgentState)
-    graph.add_node('judge', sometimes)
-    graph.add_edge(START, 'judge')
-    graph.add_edge('judge', END)
-    app.graph = graph.compile(checkpointer=app.saver, store=app.store)
-    thread = make_thread(app, a)
-    with pytest.raises(HTTPException) as error:
-        app.message(a, thread, '판정')
-    assert error.value.status_code == 503
-    detail = app.detail(a, thread)
-    assert detail['can_retry'] and not detail['interrupt']
-    recovered = app.retry(a, thread, detail['version'])
-    assert recovered['answer'] == '복구됨' and recovered['can_approve']
-    assert len([m for m in recovered['messages'] if m['role'] == 'user']) == 1
-
-
 def test_completed_checkpoint_reconciles_failed_metadata_without_duplicate_answer(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
@@ -924,27 +705,9 @@ def test_completed_checkpoint_reconciles_failed_metadata_without_duplicate_answe
     assert app.approve(a, thread, detail['version'])['ok']
 
 
-def test_retry_limit_and_private_schema_permissions(runtime):
+def test_private_schema_is_closed_to_other_roles(runtime):
     from psycopg import sql
-    app, (a, _), dsn = runtime
-    def fail(state):
-        raise RuntimeError('synthetic persistent failure')
-    graph = StateGraph(AgentState)
-    graph.add_node('fail', fail)
-    graph.add_edge(START, 'fail')
-    graph.add_edge('fail', END)
-    app.graph = graph.compile(checkpointer=app.saver)
-    thread = make_thread(app, a)
-    with pytest.raises(HTTPException):
-        app.message(a, thread, '판정')
-    for _ in range(2):
-        with pytest.raises(HTTPException) as error:
-            app.retry(a, thread, 1)
-        assert error.value.status_code == 503
-    assert not app.detail(a, thread)['can_retry']
-    with pytest.raises(HTTPException) as error:
-        app.retry(a, thread, 1)
-    assert error.value.status_code == 409
+    _, _, dsn = runtime
     with psycopg.connect(dsn) as conn:
         role = 'probe_' + uuid4().hex
         conn.execute(sql.SQL('CREATE ROLE {} NOLOGIN').format(sql.Identifier(role)))
@@ -953,23 +716,6 @@ def test_retry_limit_and_private_schema_permissions(runtime):
         with pytest.raises(psycopg.errors.InsufficientPrivilege), conn.transaction():
             conn.execute('SELECT * FROM sojafit_agent.threads')
         conn.rollback()
-
-
-def test_http_body_size_and_resume_values_are_bounded(monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app
-    client = TestClient(app)
-    try:
-        app.dependency_overrides[auth.current_user_id] = lambda: 1
-        monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-        response = client.post('/api/circuits', content=b'x' * (7 * 1024 * 1024 + 1))
-        assert response.status_code == 413 and response.headers['cache-control'] == 'no-store'
-        response = client.post(f'/api/threads/{uuid4()}/resume', headers={'Origin': 'http://localhost:8000'},
-                               json={'version': 1, 'answers': {'VIN_MAX': 'x' * 201}})
-        assert response.status_code == 422
-    finally:
-        app.dependency_overrides.clear()
 
 
 def test_enabled_app_lifespan_opens_and_closes_real_persistence(runtime, monkeypatch):

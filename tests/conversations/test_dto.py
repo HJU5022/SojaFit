@@ -40,6 +40,14 @@ def test_safe_public_judgement_removes_internal_data():
     assert 'private' not in str(body)
 
 
+def test_judgement_keeps_the_applied_mount_preference_code():
+    """찾기 순서에 쓴 선호 실장 방식 코드(SPEC 8.5)만 내보낸다. 소속 · 직무 같은 다른 사실은 판정 칸에 없다."""
+    from backend.conversations.dto import result_dto
+    body = result_dto({'answer': 'ok', 'judgement': {'kind': 'find', 'preferred_mount': 'smd'}}, request_id='req').model_dump()
+    assert body['judgement']['preferred_mount'] == 'smd'
+    assert result_dto({'answer': 'ok', 'judgement': {'kind': 'judge'}}, request_id='req').model_dump()['judgement']['preferred_mount'] == ''
+
+
 def test_refusal_and_judgement_citation_are_public_metadata_only():
     from backend.conversations.dto import result_dto
     state = {'answer': 'no', 'judgement': {'kind': 'judge', 'results': [{'part': '1N5817', 'verdict': 'NOT_VERIFIED', 'checks': [{'code': 'VRRM', 'citation': {'document': '/private/a.pdf', 'page': 1, 'text': 'private'}}]}]}}

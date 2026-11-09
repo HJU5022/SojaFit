@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. 단일 그래프(`build.py`)는 평가 비교용입니다(서비스는 멀티 그래프만 씀, EVAL_REPORT 4장). D4 단일 에이전트 그래프(11-06에 D4 v2로 고침)가 있고, 멀티 그래프는 `backend/multi_agent/`에 있습니다.
-- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), Supervisor 공통 입출력 계약(`supervisor.py`), 사용자별 장기 기억 Store namespace 규칙(`memory.py`).
+- 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), Supervisor 공통 입출력 계약(`supervisor.py`), 사용자별 장기 기억 Store namespace 규칙과 멀티 그래프의 기억 읽기 노드(`memory.py`).
 - 넣지 않는 것: 숫자·단위 비교 판정(`backend/judge/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 검색 구현(`backend/rag/`), 프롬프트 원문(`backend/prompts/`), 로그인·세션(`backend/auth.py`).
 - 담당: 에이전트
 
@@ -38,5 +38,5 @@ D4 v2(위 흐름, 11-06)는 범위 판정을 첫 단에서 먼저 하고, 질문
 - `supervisor.py` — Supervisor V0의 네 필드 출력, 입력 envelope, 상태별 의미 검증과 Jev typed-question 공통 계약. `build_graph()`에는 아직 연결하지 않음
 - `nodes.py` — 노드 함수 11개. 입력 읽기(`read_input`: 입력 글 나누기, `connections.json`에서 대상 부품 주변 넷 읽기, 앞 턴의 검색 · 사실 · 판정 · 거절 · 가격 안내 칸 비우기), 라우팅(`route`: 질문 종류 8가지 · 검색 전 거절 사유 · 일상 대화 답, 확인된 사실을 멀티 Supervisor와 같은 글로 받음, `prompts/route.md`), 짧은 답(`short_reply`: 라우팅의 `reply`를 답으로), 가격 안내(`price_answer`: 질문 또는 대상 값의 품번을 `price_parts`에 남기고 `messages.price_message` 안내로 끝냄, LLM · Mouser 호출 없음, 멀티도 같은 노드), 검색(`search`: 질문 품번 또는 대상 값 품번으로 `retrieve`의 `parts`를 정함), 채점(`grade`: 다른 품번 줄·다른 개정판 청크를 규칙으로 뺀 뒤 LLM 1회, `prompts/grade.md`), 재작성(`rewrite`: 영어 검색어 한 줄, `prompts/rewrite.md`), 생성(`generate`: 통과 청크와 `[넷리스트]`만 근거로 답하고 없는 근거 인용·인용 없는 문장을 `check`에 기록, `prompts/generate.md`, 선택적 Skill 적용), 판정(`judge`: 멀티 대체 부품 에이전트를 부르고 보고서는 버리며 사양 표 장애는 `retrieval_error`로), 답 틀(`judgement_answer`: `render_judgement`로 판정 답), 거절(`refuse`: LLM 없이 이유 코드 `refusal`과 안내문. 라우팅 거절은 멀티와 같은 문구, 검색 고리는 품번 문서 없음 / 찾은 문서에 답 없음 / 검색 장애를 나눠 적고 단서 요청)
 - `mcp_retriever.py` — PR #44의 `structuredContent.result` 청크 목록을 검증하고 stdio MCP 세션을 재사용하는 동기 검색기. 빈 결과와 timeout·도구·응답 장애를 구분
-- `memory.py` — 사용자별 Store namespace, 모델용 승인 사례 JSON(최대 5건·요약 1000자·당시 문맥 2000자), 별도 사례 출처 ID를 정의합니다. conversations.py가 인증 사용자 ID로 승인 사례를 저장·조회하며 새 질문 전에 선별합니다. 기억 정정은 아직 없습니다
+- `memory.py` — 사용자별 Store namespace, 모델용 승인 사례 JSON(최대 5건·요약 1000자·당시 문맥 2000자), 별도 사례 출처 ID를 정의합니다. conversations.py가 인증 사용자 ID로 승인 사례를 저장·조회하며 새 질문 전에 선별합니다. 기억 정정은 아직 없습니다. 멀티 그래프의 기억 읽기 노드(`read_profile`)도 여기 있습니다: LangGraph가 넣어 준 Store에서 사용자 사실 중 선호 실장 방식만 읽어 `mount_preference`('smd' · 'tht' · '')로 남기고, 대체 부품 에이전트가 찾기 후보 순서에만 씁니다(SPEC 8.5). Store가 없거나 읽기가 실패하면 빈 값입니다
 - `build.py` — 갈림길 `after_route`·`after_search`·`after_grade`·`after_judge`를 정해 compile합니다. 사실 확인 노드와 판정 읽기 노드는 멀티 코드를 그대로 붙이고, 판정 길은 `specs` · `find`를 둘 다 줄 때만 잇습니다(하나만 주거나 체크포인터가 없으면 `ValueError`). MCP 장애는 채점·재검색하지 않으며 검색 상한은 `MAX_TRIES`(2)입니다
