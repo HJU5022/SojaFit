@@ -14,7 +14,7 @@
 - `dataset_v2.jsonl` — 동결 평가셋 v2. 70건(관련 35·비관련 35), 2026-11-03 동결. v1 50건 줄에 `question_type`만 더하고 후보 찾기 20건(`drafts/sets/draft_v2add_20.jsonl`의 고정 키)을 더함
 - `dataset_v3.jsonl` — 동결 평가셋 v3(기준 평가셋, ADR 0015). 50건(관련 25 · 비관련 25), 2026-11-10 동결. lab `evals/drafts/v3/v3_draft.jsonl`을 그대로 옮김(#43 ~ #50 측정에 쓴 파일). 쓰는 회로 넷리스트는 `data/circuits/collected/`에 모두 있음
 - `FROZEN.json` — 동결한 파일별 sha256·건수·관련/비관련 건수·동결일. 현재 `dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl` 셋. 동결 여부는 이 파일이 정함
-- 기준 평가셋은 2026-11-06부터 새로 만드는 v3입니다([ADR 0015](../docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). v1 · v2는 지금까지의 측정 기록으로 둡니다
+- 기준 평가셋은 v3입니다(2026-11-06 결정, 2026-11-10 동결, [ADR 0015](../docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). v1 · v2는 지금까지의 측정 기록으로 둡니다
 - `runners/` — 평가 실행기와 동결 스크립트. 실행은 `uv run python -m evals.runners.<이름>`. [RUNNERS.md](runners/RUNNERS.md)
 - `docker/` — 평가 실험용 컨테이너 이미지 정의(원격 GPU·실험 DB). [DOCKER.md](docker/DOCKER.md)
 - `inputs/` — 동결 평가셋에서 만든 측정 입력(페이지 단위 qrels, 고정 재작성 질의). [INPUTS.md](inputs/INPUTS.md)
@@ -30,7 +30,7 @@
 - `run_skill_pair.py` — 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
 
 ## 결과 폴더
-`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더 여덟 개로 묶습니다.
+`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더 아홉 개로 묶습니다.
 - `results/retrieval/` — `retrieval_baseline_2026-11-03.json`·`retrieval_dense_2026-11-03.json`·`retrieval_bm25_2026-11-03.json`: v1 데이터시트 근거 19문항의 검색 지표(`run_retrieval.py`, k=5). 각각 하이브리드·dense만·BM25만. 하이브리드 파일은 `method` 인자가 생기기 전에 만들어 summary에 `method`가 없음
   - `d3_official_2026-11-03.json`·`d3_official_gpu_2026-11-03.json`: 사전 등록 #24 D3 공식 측정(동결 v2 채점 19문항, 조건 E1~E8을 하나씩 바꾼 칸과 칸별 비교, GPU 칸은 로컬 리랭커·late chunking). `d3_noresult_2026-11-03.json`: 관련 19·비관련 35문항의 1위 점수 분포와 no_result 임계값. `d3_explore_2026-11-03.json`: 탐색 격자 276칸(판정에 쓰지 않음)
   - `r1_2026-11-03.json`: 사전 등록 #25 R1 검색 평가셋 84문항, dev 세트 264개 조합·답안지 검사·test 세트 확인 4칸(줄인 판). `r1_steps_2026-11-04.json`: 사전 등록 #28 단계별 재측정(S0 → S4, 앞 단계와 짝 비교·실패 유형)
@@ -42,6 +42,7 @@
 - `results/search_compare/` — 검색 방식·청킹 비교. `chunking_proxy_2026-11-01.json`·`chunking_search_2026-11-01.json`(청킹 개선 전후: 프록시 청크 수·해석 가능 값 / 11문항 검색 지표), `hybrid_search_2026-11-01.json`(dense·BM25·하이브리드 비교, 11문항, RRF k=60)
 - `results/drafts/` — `draft50_second_pass_2026-11-02.json`(50건 초안의 문항 구조·NET 해시·PDF 해시 및 문항별 보조 검증 원시 기록, `drafts/reviews/second_pass_50_review.md`의 원본), `draft52_validation_2026-11-02.json`(추가 두 건의 2차 O 기록 전 스냅샷. 당시 52건 구성·기존 질문 보존·변경 이력·NET/PDF 해시 확인. 사람 검수·평가 실행·동결 결과가 아님)
 - `results/graph/` — `graph_<평가셋>_<YYYY-MM-DD>.json`(멀티 에이전트는 `multi_…`): 평가셋 문항을 줄기 그래프로 끝까지 돌린 문항별 지표(경로·검색 횟수·LLM 호출 수·통과 청크 id·인용 검사·5지표·시간·트레이스 주소), 실행 조건(커밋·모델·노드별 모델·프롬프트 해시·평가셋 sha256·Langfuse 세션), 5지표 요약(`run_graph.py`). 답변 문장과 청크 원문은 넣지 않고 Langfuse 트레이스에서 본다
+- `results/threads/` — 사용자 분석 thread 확인(11-09). `local_g4_isolation_2026-11-09.json`: 키 없는 compose(합성 데모)에서 체크포인트 재개 · 서버 재시작 · 사용자 A · B 격리 · 같은 승인 두 번을 확인한 14개 항목(모두 통과). `input_regression_2026-11-09.json`: 동결 v1 · v2 120문항의 회로 입력을 기존 connections 경로와 업로드 파서로 읽은 결과가 같은지 대조(모두 같음). `live_smoke_2026-11-09.json`: 동결 v2 4문항을 실제 모델로 돌린 smoke(BM25, 지표 · 예산, 본문 없음)
 - `results/grader/` — `grader_baseline_<YYYY-MM-DD>.json`(v2, #36) · `grader_baseline_r1_dev_<YYYY-MM-DD>.json`(R1 dev, #34): 채점기 기준선. 지금 2갈래 채점이 v2 관련 19문항에서 정답 쪽을 얼마나 통과시키는지(정답 쪽 유지율 12/15), 비관련 35문항 중 통과 0개 34건(`eval_grader.py run`)
 - `results/skill/` — `skill_tool_summary_2026-11-03.json`: Skill·도구 판단 개발 검증 요약, 미충족 사례·트레이스와 원본 6개 해시. 상세 실행 JSON은 저장소 밖에 보관하며 동결 평가 점수와 구분
 - `results/supervisor/2026-11-04-stage1-v1/` — 후보 5종의 `manifest.json`, 문항별 `rows_*.json`, `stage1_summary.json`, `provider_evidence.json`. 1차 선정은 run index 1만 사용하며 manifest의 2·3회차 계획은 실행 결과가 아님

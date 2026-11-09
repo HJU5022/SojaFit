@@ -26,7 +26,7 @@ NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read", "d
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
 # [왜] Supervisor는 Haiku(ADR 0017, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
 # [왜] docs_answer는 멀티 문서 에이전트의 근거 채점 + 답 쓰기(예전 grade Luna · generate Haiku를 한 호출로, 서브에이전트라 Haiku),
-#      synth는 Supervisor ②의 종합(할 일 2개 이상일 때만 불림, Haiku로 검증되지 않아 Sonnet 유지 #47). 11-06 멀티 재설계(참조/아티팩트 "SojaFit 멀티 에이전트 구조")
+#      synth는 Supervisor ②의 종합(할 일 2개 이상일 때만 불림, Haiku로 검증되지 않아 Sonnet 유지 #47). 11-06 멀티 재설계(backend/multi_agent/MULTI_AGENT.md)
 NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": HAIKU, "judge_read": HAIKU,
                "docs_answer": HAIKU, "synth": SONNET, "card_read": HAIKU, "card_pick": HAIKU}
 SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)

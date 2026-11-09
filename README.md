@@ -2,10 +2,10 @@
 
 **소형 MCU 회로의 다이오드를 바꿔야 할 때, KiCad 넷리스트에서 그 부품의 역할과 대체 조건을 정하고 후보마다 데이터시트의 쪽·표·행을 근거로 판정하는 RAG 에이전트.**
 
-| | 주소 | 지금 살아있는지 |
+| | 주소 | 지금 상태 |
 |---|---|---|
-| API | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상(2026-11-03 확인). Cloud Run이라 첫 요청은 몇 초 걸린다 |
-| 화면 | `/login` | 비밀번호 로그인·세션 확인·로그아웃과, 설정된 경우 Google 관리자 로그인 진입을 제공한다. 입력·판정·승인·견적 화면은 아직 없다 |
+| API(배포) | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상(2026-11-03 확인). Cloud Run이라 첫 요청은 몇 초 걸린다. 배포본은 이전 버전이다(`SPEC.md` 첫머리 "현재 구현 경계") |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`), 회로 작업대(`/app`: 프로젝트 · 데모 회로나 KiCad 넷리스트 업로드 · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
 | 시연 영상 | 아직 없음 | 정상 경로 1개 + 실패 경로 1개, 3분 이내 |
 
 ```bash
@@ -39,7 +39,7 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 - **회로에서 부품의 역할을 읽는다**: KiCad 넷리스트에서 대상 부품과 연결된 넷·부품을 뽑아 근거로 넘긴다.
 - **데이터시트 근거로만 답한다**: Taiwan Semiconductor 다이오드 데이터시트 1,360건(7,725쪽)을 표 한 행이 청크 하나가 되게 자른다. 저장소 manifest와 11-05 운영 DB 스냅샷은 v1 청크 52,244개(서로 다른 본문 45,898개)를 가리키고, 최신 v4h 외부 전체 실행은 카드 51,967개를 기록했다. BM25와 벡터 검색을 RRF로 합치고 품번으로 거른다.
 - **근거가 없으면 지어내지 않는다**: 채점을 통과한 청크만 근거로 쓰고, 근거가 없으면 이유와 필요한 단서를 묻는다. 답의 인용이 실제 청크인지 검사한다.
-- **후보마다 판정 5종 중 하나를 낸다**(구현 중): 기준의 정본은 [`SPEC.md`](SPEC.md) 3절이다.
+- **후보마다 판정 5종 중 하나를 낸다**: 기준의 정본은 [`SPEC.md`](SPEC.md) 3절이다.
 
 | 판정 | 뜻 |
 |---|---|
@@ -49,7 +49,7 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 | 불충족 | 필수 조건이 하나라도 만족하지 않음 |
 | 문서로 확인 안 됨 | 필요한 값이 문서에 없거나 시험 조건이 다름 |
 
-- **사람이 승인한 판정만 견적서로 남긴다**(구현 중). 같은 동작은 보장하지 않으며, 답마다 그 사실을 밝힌다.
+- **사람이 승인한 판정만 견적서로 남긴다**: 동일품 · 사양 동등 · 역할상 충분인 후보를 사람이 승인한 뒤에만 견적을 저장하고, 가격·재고는 저장하지 않는다. 같은 동작은 보장하지 않으며, 답마다 그 사실을 밝힌다.
 
 ---
 
@@ -67,19 +67,21 @@ KiCad 넷리스트 + 질문
   ├─ 가격 안내   가격·재고 질문은 물은 품번만 남기고 끝낸다. 값은 화면이 그래프 밖에서 Mouser로 조회 (저장 안 함)
   ├─ 생성(역할)  넷리스트 근거로 역할을 설명한다
   ├─ 정격        재작성 → 검색 → 채점 → 생성 (검색은 최대 2회)  ◀── v1 운영 스냅샷 52,244청크 / v4h 외부 실행 51,967카드
-  └─ 판정·찾기   판정 읽기(LLM) → 판정(빠진 값 한 번 묻기, 사양 표 값을 코드로 비교) → 답 틀
+  └─ 판정·찾기   판정 읽기(LLM) → 판정(빠진 값 한 번 묻기, 카드에서 읽은 값을 코드로 비교, ADR 0016) → 답 틀
 ```
 
 | 구성 | 지금 |
 |---|---|
-| 그래프 | LangGraph D4 v2 단일 그래프(위 흐름, 11-06)와 D5 멀티 그래프(Supervisor + 검색 · 판정 · 작성 · 검증 서브에이전트). 판정 길은 가짜 LLM 시험만 했다 |
+| 그래프 | LangGraph D4 v2 단일 그래프(위 흐름, 11-06)와 D5 멀티 그래프(Supervisor + RAG 에이전트 · 대체 부품 에이전트). 서비스 분석(`backend/conversations/memory_service.py`)은 멀티 그래프를 쓴다. 기준 평가셋 v3는 멀티 그래프로 쟀다(4절) |
 | LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 채점 `openai/gpt-6-luna` (OpenRouter, ADR 0017) |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3`, 첫 검색 전 쿼리 재작성, 표지 청크 제외(사전 등록 #25, ADR 0004 갱신 2026-11-03) |
-| 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수 |
-| 로그인 | 이메일·비밀번호(scrypt), 승인된 Google 관리자 로그인, DB 세션, 5회 실패 시 15분 잠금, 관리자 계정 관리 API |
-| 가격·재고 | `GET /api/prices`: 로그인한 사용자에게 Mouser 조회 시점 값만 돌려준다(저장·로그 안 함, ADR 0009). 데모 모드·키 없음이면 값 없음. 보여 줄 업무 화면은 아직 없다 |
+| 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수. 서비스 분석은 질문 · 답 글 없이 단계별 시간만 보낸다(SPEC 7절) |
+| 로그인 | 이메일·비밀번호(scrypt), 자기 가입(IP당 하루 3회), 승인된 Google 관리자 로그인, DB 세션, 계정당 5회 · IP당 30회 실패 시 15분 잠금, 데모 모드 버튼 로그인, 관리자 계정 관리 API |
+| 업무 API | 프로젝트(데모 회로 · 넷리스트 업로드), 대화와 실행(SSE), 빠진 조건 묻기(interrupt)와 재개, 후보 승인, 가격 없는 견적, 내 설정(사실 3칸). 경로 · 본문 · 상태 코드는 `SPEC.md` 4절 |
+| 기억 | 대화 상태는 PostgreSQL 체크포인트, 다음 대화에도 쓰는 사용자 사실 3칸은 LangGraph Store(SPEC 8.5) |
+| 가격·재고 | `GET /api/prices`: 로그인한 사용자에게 Mouser 조회 시점 값만 돌려준다(저장·로그 안 함, ADR 0009). 작업대의 가격·재고 패널과 견적 패널이 조회 버튼을 누를 때 부른다. 데모 모드·키 없음이면 값 없음 |
 | API 오류 | 모든 응답에 서버 생성 `X-Request-ID`를 넣고 JSON 오류는 `error.code/message/request_id`로 통일한다 |
-| 다음 단계 | 판정 길 실제 측정, 사람 승인(interrupt) 뒤 견적 저장, 영속 체크포인트, 사용자별 기억, 입력·판정·승인·견적 화면 |
+| 아직 없는 것 | 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기, 키 없는 데모의 녹화 재생, 배포 주소에 지금 버전 반영(SPEC 첫머리 "현재 구현 경계") |
 
 ---
 
@@ -95,6 +97,8 @@ KiCad 넷리스트 + 질문
 
 원시 결과는 `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`, 개선 전후 비교와 실패 분석은 [`EVAL_REPORT.md`](EVAL_REPORT.md)에 있다.
 
+기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값(사전 등록 #50, 커밋 `93a497c`, 4세트): 통과 50/50 · 무관 거절 25/25 · 지어낸 답 0, 응답 시간 p95 8.6~8.9초, 50문항 LLM 비용 $0.044~0.052. 동결 파일로 병합 뒤 다시 잰 2세트(커밋 `f2b914e`)는 50/50, p95 10.4 · 7.8초였다. 원시 결과는 저장소 밖(Langfuse 세션, `evals/guides/preregister.md` #50)에 있다.
+
 ---
 
 ## 5. 실행 방법
@@ -102,21 +106,23 @@ KiCad 넷리스트 + 질문
 ### 키 없이 데모
 
 ```bash
-docker compose up         # .env 없이 띄우면 DEMO_MODE=1(데모 모드). api + pgvector DB
+docker compose up --build   # .env 없이 띄우면 DEMO_MODE=1(데모 모드). 서비스 4개: db · thread-setup · corpus-load · api
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
 `.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_SCENARIOS=1`로 띄운다. db(pgvector) → thread-setup(분석 저장소 준비) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 지금 React 작업대의 키 없는 분석은 합성 시나리오로 답해 이 스냅샷을 읽지 않는다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
 
-키 없는 시연 순서:
+키 없는 모드에는 화면이 둘 있다. 로그인 뒤 열리는 React 작업대(`/app`)는 프로젝트 만들기 · 대상 부품 고르기까지 되지만, 분석 실행은 합성 데모 회로가 아니면 422("합성 데모 회로만 분석할 수 있습니다.")로 끝난다. 합성 시나리오를 조건 질문 · 재개 · 승인까지 보는 화면은 React 이전 화면 `/workspace`이고, 로그인 뒤 주소창에 직접 연다.
 
-1. `http://localhost:8000`을 열고 **"데모 사용자 A로 들어가기"**를 누른다.
+키 없는 시연 순서(`/workspace`):
+
+1. `http://localhost:8000`을 열고 **"데모 사용자 A로 들어가기"**를 누른다(작업대 `/app`이 열린다).
 2. 주소창에 `http://localhost:8000/workspace`를 연다. 데모 회로로 새 분석을 시작하고 대상 `D1`을 고른다.
 3. 질문 "데모 후보 판정"을 보낸다. 판정에 필요한 조건을 묻는 화면에서 멈춘다(사람 확인 지점).
 4. `12V`, `0.1A`를 넣고 재개한다. 판정 표가 나오면 판정 사례를 승인한다. 같은 승인을 다시 눌러도 승인 원본은 한 건이다.
 5. 다른 창(시크릿 창)에서 **"데모 사용자 B로 들어가기"**를 누르면 A의 대화와 내 설정이 보이지 않는다.
 
-키 없는 데모의 질문 · 회로 · 사양은 합성 데이터(`data/demo/scenarios.json`)이며 실제 데이터시트나 모델 품질을 보여 주지 않는다. React 작업대(`/`)의 분석은 이 합성 질문만 받아, 실제 데모 회로로 질문하면 422가 난다. 위 순서를 키 없이 확인한 기록은 [`evals/results/threads/local_g4_isolation_2026-11-09.json`](evals/results/threads/local_g4_isolation_2026-11-09.json)이다.
+키 없는 데모의 질문 · 회로 · 사양은 합성 데이터(`data/demo/scenarios.json`)이며 실제 데이터시트나 모델 품질을 보여 주지 않는다. 위 순서를 키 없이 확인한 기록(확인 14개 모두 통과)은 [`evals/results/threads/local_g4_isolation_2026-11-09.json`](evals/results/threads/local_g4_isolation_2026-11-09.json)이다.
 
 데모 모드(`DEMO_MODE=1`)로 새 DB 볼륨을 만들면 로그인 화면에 **"데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼**이 생긴다. 비밀번호 없이 버튼으로 들어가고, 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다.
 
@@ -127,10 +133,19 @@ curl http://localhost:8000/health   # {"status":"ok"}
 ```bash
 cp .env.example .env                                                  # DEMO_MODE=0
 uv run python -c "import secrets; print(secrets.token_urlsafe(32))"   # AUTH_SECRET 만들기
-docker compose up
+docker compose up --build
 ```
 
 계정을 바꾸는 방법과 기존 DB에 적용하는 절차는 [`db/DB.md`](db/DB.md)에 있다.
+
+### 화면 개발 서버
+
+compose 이미지는 React 화면을 빌드해 api에 넣으므로 위 명령만으로 화면이 뜬다. 화면을 고치며 볼 때는 API를 `localhost:8000`에 띄워 둔 채 Vite 개발 서버를 쓴다(`/api` 요청을 `localhost:8000`으로 넘김). 명령과 시험은 [`frontend/FRONTEND.md`](frontend/FRONTEND.md)에 있다.
+
+```bash
+cd frontend && npm ci && npm run dev   # 화면 개발 서버
+npm run test:run                       # 화면 단위 시험
+```
 
 ### 테스트와 평가
 
@@ -147,13 +162,18 @@ uv run python -m evals.runners.run_retrieval evals/dataset_v1.jsonl <결과.json
 
 ```
 SojaFit/
+├── frontend/       React · Vite 화면(로그인 · 가입 · 작업대 · 내 설정 · 사용자 관리) → frontend/FRONTEND.md
 ├── backend/        서비스 코드 → backend/BACKEND.md
-│   ├── graph/        LangGraph 그래프: 상태 · 노드 · 조립
+│   ├── api/          프로젝트 · 대화와 실행(SSE) · 승인 · 견적 · 내 설정 HTTP 라우터
+│   ├── projects/     사용자 프로젝트와 정규화 회로 저장, 넷리스트 정규화
+│   ├── conversations/  대화 · 실행 저장, 사용자 분석 서비스(체크포인트 · Store 기억 · 하루 상한)
+│   ├── graph/        D4 단일 그래프: 상태 · 노드 · 조립
+│   ├── multi_agent/  D5 멀티 그래프: Supervisor · RAG 에이전트 · 대체 부품 에이전트
 │   ├── prompts/      노드가 LLM에 보내는 프롬프트와 버전 기록
-│   ├── rag/          데이터시트 수집 · 파싱 · 청킹 · 적재 · 하이브리드 검색
-│   ├── services/     LLM·임베딩 호출의 유일한 입구, Langfuse
+│   ├── rag/          데이터시트 수집 · 파싱 · 청킹 · 적재 · 하이브리드 검색 · 카드 도구
+│   ├── services/     LLM·임베딩 호출의 유일한 입구, Langfuse, Mouser, 견적
 │   ├── judge/        판정 5종과 숫자·단위 비교
-│   ├── web/          로그인 화면. 입력·판정·승인·견적 화면은 미구현
+│   ├── web/          빌드한 React 화면 연결, React 이전 화면(/workspace), 미빌드 때 로그인 화면
 │   └── mcp_skill/    도메인 Skill과 MCP 서버
 ├── data/           manifest, 데이터시트 표본, 평가·시연용 공개 회로
 ├── db/             DB 초기화 SQL과 스키마 문서
@@ -180,7 +200,9 @@ SojaFit/
 
 | 날짜 | 할 일 |
 |---|---|
-| 11/6(금) | 평가셋 v2 동결, Supervisor와 서브에이전트 분리, 중간 점검 |
+| 11/3(화) | 평가셋 v2 동결(`evals/FROZEN.json`) |
+| 11/6(금) | Supervisor와 서브에이전트 분리, 중간 점검 |
+| 11/10(화) | 기준 평가셋 v3 동결(ADR 0015) |
 | 11/16(월) 24:00 | 코드와 설정 동결 |
 | 11/17(화) 24:00 | 최종 제출(마감 시점의 `main`) |
 | 11/18(수) | 발표 |
@@ -194,6 +216,7 @@ SojaFit/
 ### 데이터
 
 - **데이터시트**: Taiwan Semiconductor 사이트 약관은 정보·비상업 목적에 한해, 고치지 않고 저작권 고지를 유지하고 출처를 밝히는 조건으로 복제·배포를 허용한다. PDF는 고치지 않고 고지·출처와 함께 쓴다([`data/corpus/CORPUS.md`](data/corpus/CORPUS.md)).
+- **데모 코퍼스 스냅샷**: 키 없는 compose가 로컬 DB에 넣는 TSC 42문서 · 청크 1,556개의 출처 · 이용 조건 · 고른 규칙은 [`data/demo/snapshot/SNAPSHOT.md`](data/demo/snapshot/SNAPSHOT.md)에 있다.
 - **넣지 않는 데이터시트**: 재배포나 자동 수집을 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트는 받지 않는다. 이 회사 부품은 링크만 보여 준다.
 - **회로**: 평가·시연용 회로 5종은 라이선스를 확인한 공개 KiCad 프로젝트(MIT, CC BY-SA 3.0·4.0)다. 원 저장소와 커밋은 [`data/circuits/CIRCUITS.md`](data/circuits/CIRCUITS.md)에 있다.
 

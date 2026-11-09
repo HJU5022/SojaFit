@@ -4,8 +4,8 @@
   이유 코드(`Reason`), 질문당 상한을 한 곳에 둔다. 모든 에이전트가 같은 규격을 쓰게 하려는 것이다.
   판정 에이전트 코드가 쓰는 짧은 보고(`AgentReport`)는 단일 그래프(D4 v2)도 같이 쓰므로 그대로 둔다.
 - 하지 않는 일: LLM · 검색 · DB 호출, 사용자에게 보일 문구 만들기(내부 코드와 사용자 문구는 따로 둔다), 상태 저장.
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(MULTI_AGENT.md 11-06 재설계: Supervisor 계획 1번 + 문서 · 판정 서브에이전트, 각자 LLM 1번),
-  회의록 D4-D5 B-지시서 4-4(계획 형식 검사 · 상한), AGENTS.md 규칙 6(재시도와 루프에는 상한)
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계: Supervisor 계획 1번 + 문서 · 판정 서브에이전트, 각자 LLM 1번, 계획 형식 검사 · 상한),
+  AGENTS.md 규칙 6(재시도와 루프에는 상한)
 """
 from enum import Enum
 from typing import Literal

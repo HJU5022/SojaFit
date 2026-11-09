@@ -6,12 +6,13 @@
 
 | 쓰는 말 | 영어 | 뜻 | 예전에 쓴 말 |
 |---|---|---|---|
-| 청크 | chunk | 검색 단위. 데이터시트 표 한 행 = 청크 하나이고, 문서마다 표지 청크 1개와 표 밖 글 청크가 더 있다(`backend/rag/pipeline/chunk.py`) | 카드 |
+| 청크 | chunk | DB(`document_chunks`)에 저장하는 검색 단위. 데이터시트 표 한 행 = 청크 하나이고, 문서마다 표지 청크 1개와 표 밖 글 청크가 더 있다(`backend/rag/pipeline/chunk.py`) | |
+| 카드 | card | 표 한 행으로 된 청크. 판정 값과 후보 찾기는 카드 도구(`backend/rag/card_specs.py` · `card_find.py`)가 카드를 그때그때 읽는다(ADR 0016). 예전에는 청크 전체를 카드라고도 불렀다 | |
 | 표지 청크 | cover chunk | 문서의 품번 목록만 적은 청크(`page_number` 없음). 서비스 검색은 늘 뺀다 | 표지 카드 |
 | top-k | top-k | 검색이 돌려주는 상위 청크 k개(서비스 기본 5) | 상위 k장 |
 | 정답 페이지 | gold page | 질문의 답이 적힌 데이터시트 페이지 | 정답 쪽 |
 | 베이스라인 | baseline | 비교의 기준이 되는 설정 | 기준 |
-| 평가셋 v1 · v2 | eval set | 동결한 공식 평가셋(`evals/dataset_v*.jsonl`, sha256은 `evals/FROZEN.json`) | |
+| 평가셋 v1 · v2 · v3 | eval set | 동결한 공식 평가셋(`evals/dataset_v*.jsonl`, sha256은 `evals/FROZEN.json`). 기준은 v3(2026-11-10 동결) | |
 | R1 검색 평가셋 | retrieval set | 검색만 재려고 사양 표로 정답 페이지를 정한 84문항(`evals/samples/retrieval_r1.jsonl`, 사전 등록 #25). 사람 판정은 없다 | R1 표본 |
 | dev 세트 · test 세트 | dev / test (hold-out) | R1을 PDF 단위로 나눈 두 묶음. dev 46문항으로 조합을 고르고, 고를 때 쓰지 않은 test 38문항으로 확인한다 | 고르기용 · 확인용 |
 | 사전 등록 | pre-registration | 측정 전에 조건 · 지표 · 기대 범위를 `evals/guides/preregister.md`에 커밋하고 측정 뒤 고치지 않는 것 | |

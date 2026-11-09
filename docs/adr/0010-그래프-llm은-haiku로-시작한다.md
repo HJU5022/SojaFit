@@ -4,6 +4,7 @@
 - 상태: 채택(임시)
 - 근거: 조장 결정(11-02), 조장 로컬 10문항 비교 시험(11-02), OpenRouter 모델 목록 가격 조회(11-02), 강의 2주 `config.json`
 - 일부 바뀜(11-05): "LLM 노드는 Haiku 하나"는 노드별 모델(Supervisor Sonnet · 그 밖 Haiku · 채점 Luna)로 바뀌었다 → [ADR 0014](0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md).
+- 일부 바뀜(11-10): Supervisor도 Haiku로 돌아오고 종합(`synth`)만 Sonnet이다 → [ADR 0017](0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md).
 
 ## 결정
 - 그래프의 LLM 노드는 OpenRouter `anthropic/claude-haiku-5.5` 하나로 시작한다. 모델 이름은 환경변수 `LLM_MODEL` 한 곳에서 바꾼다.

@@ -27,7 +27,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 - 후보는 대체 조건으로 코퍼스에서 찾은 품번과 사용자가 넣은 품번입니다. 판정은 문서 근거(쪽·표·행)가 있을 때만 냅니다(2절 "근거가 없을 때").
 - 같은 동작은 보장하지 않으며, 답마다 이 사실을 밝힙니다.
 - 견적서는 사람이 승인한 뒤에만 저장합니다.
-- 후보 품번의 실시간 가격·재고는 목표 답·견적 화면에서 데이터시트 근거와 따로 보여 줍니다. 현재는 로그인한 사용자가 `/api/prices`를 직접 호출할 수 있고, Mouser 키가 있으면 조회 시각과 출처를 붙여 반환하지만 업무 화면에는 연결되지 않았습니다. 데모 모드와 키 없음에서는 `available: false`, `parts: []`를 반환하며 `data/demo/` 가격표는 아직 없습니다. 조회한 Mouser 값은 어디에도 저장하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md), 4절 · 6절).
+- 후보 품번의 실시간 가격·재고는 답·견적 화면에서 데이터시트 근거와 따로 보여 줍니다. React 작업대의 "가격·재고" 패널(결과의 `price_parts`)과 견적 패널(승인한 후보 품번)이 사용자가 조회를 누를 때 `/api/prices`를 부르고, Mouser 키가 있으면 출처와 조회 시각을 붙여 보여 줍니다(`frontend/src/components/PricePanel.tsx`). 데모 모드와 키 없음에서는 `available: false`, `parts: []`를 반환하며 `data/demo/`에 가격표는 없습니다. 조회한 Mouser 값은 어디에도 저장하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md), 4절 · 6절).
 
 ### 하지 않는 것
 
@@ -39,7 +39,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 ### 숫자 성공 기준
 
 - 범용 챗봇과 같은 질문 5개로 비교할 지표: 근거 인용 비율, 없는 품번 제시 수, "문서로 확인 안 됨" 처리 수
-- 검색·판정 지표와 목표 수치([ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md), 11-06 중간 점검 최소 기준). 기준 평가셋은 새로 만드는 v3입니다.
+- 검색·판정 지표와 목표 수치([ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md), 11-06 중간 점검 최소 기준). 기준 평가셋은 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결, `evals/dataset_v3.jsonl`)입니다.
   - 응답 시간: 질문 1건 p95 10초 이내. 그래프에 들어가서 끝날 때까지 재고, 사람 확인(interrupt) 대기 시간은 뺍니다.
   - 검색: 문서 단위와 페이지 단위 모두 Recall@5 0.95 이상, MRR 0.95 이상.
   - 판정: 후보 판정 문항에서 판정 5종이 정답과 같은 비율을 보고합니다. 목표 수치는 (정할 것)
@@ -48,7 +48,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 
 ### 목표 사용자 흐름
 
-현재 서비스에서 직접 사용할 수 있는 단계는 로그인과 별도 가격 조회 API입니다. 2~8단계의 질문·회로·판정·승인·기억 연결은 그래프·판정 코드 일부와 목표 계약이며 사용자 API·업무 화면으로는 아직 제공하지 않습니다.
+1~7단계는 React 작업대(`/app`)에서 씁니다: 회로 업로드 · 대상 선택(2), 역할 질문과 판정 답의 조건 표(3 · 4), 찾기 · 판정 질문(5 · 6), 가격·재고 패널(6), 후보 승인 뒤 견적 저장(7). 8단계는 아직 없습니다. 승인 사례는 승인 기록으로만 남고 새 분석에 넘기지 않습니다(8.5 "승인 기록").
 
 1. 로그인합니다.
 2. KiCad 넷리스트를 올리고 바꿀 부품을 고릅니다(예: D1).
@@ -66,7 +66,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 1. 넷리스트 칸(값·풋프린트·설명), 사용 조건, 비슷한 품번 표기로 코퍼스를 다시 찾습니다.
 2. 목표 흐름에서는 코퍼스에 없는 TSC·Infineon 문서를 공식 사이트에서 받아 검증 관문(6절)을 거친 뒤 근거로 씁니다. 현재 구현은 TSC 공식 URL의 미검증 후보 탐색까지만 제공하며 다운로드·검증·검색 편입과 Infineon 조회는 아직 없습니다.
 3. 그래도 원래 부품의 근거가 없으면 원래 부품에는 "문서로 확인 안 됨"을 표시하고 동일품·사양 동등은 내지 않습니다(3절). 대체 조건으로 찾은 후보는 각자의 데이터시트 근거로 판정해 먼저 보여 주고, 단서(부품 윗면 글자, 사진, 데이터시트, 주문 코드)를 묻습니다.
-4. 목표 흐름에서는 단서가 없어도 판정이 동일품·사양 동등·역할상 충분인 후보로 견적까지 진행합니다. 현재 견적 승인·저장은 미구현이며, 판정 답은 같은 동작을 보장하지 않는다고 밝힙니다.
+4. 단서가 없어도 판정이 동일품·사양 동등·역할상 충분인 후보는 사람이 승인하면 견적까지 진행합니다(8.4). 판정 답은 같은 동작을 보장하지 않는다고 밝힙니다.
 
 근거는 세 등급으로 나눕니다(11-05 결정). 근거를 최대한 찾아보되, 인정한 근거와 참고용을 섞지 않고, 정말 못 찾으면 못 찾았다고 말합니다.
 
@@ -98,11 +98,11 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 | 답 틀 | 판정 결과를 코드 틀(판정 · 조건 표 · 인용 · 빠진 값)로 답 글로 만듭니다. LLM이 숫자를 다시 쓰지 않습니다 |
 | 거절 | 이유 코드(`refusal.code`, 멀티와 같은 `Reason` 값)와 안내문, 다음 할 일(근거 없음이면 단서 요청)을 남기고 끝냅니다. LLM을 쓰지 않습니다. 라우팅이 정한 거절은 멀티와 같은 일상어 문구입니다. 검색 고리의 거절은 `not_found`이며, 품번 문서가 없을 때(검색 0장, 그 품번을 적음)와 찾은 문서에 답이 없을 때(찾아본 문서 이름과 검색 횟수를 적음)로 나눕니다. 검색 · MCP 도구 장애는 `search_error`입니다. 판정이 코퍼스 밖 요구로 정한 사유(`part_missing` · `revision_missing` · `not_found`)는 멀티와 같은 문구입니다. 대화는 같은 thread의 다음 메시지로 이어 갑니다 |
 
-- 사람 승인(interrupt): 견적서 저장 직전, 그리고 틀린 사례 기억을 고칠 때(둘 다 아직 없음). 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다
+- 사람 확인(interrupt): 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다. 견적 저장 전 사람 승인은 그래프 인터럽트가 아니라 API 단계입니다(승인 `POST /api/messages/{id}/approvals` 뒤에만 견적 저장, 4절 · 8.4). 승인 기록의 정정 · 철회는 `POST /api/memories/{thread}/{version}/control`로 합니다(4절)
 - 재검색·재시도 상한: 검색은 2회(재작성한 첫 검색 + 재작성 뒤 1회)입니다. LLM 출력 형식이 틀리면 2회까지 다시 부릅니다.
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py`의 `_chat_model`). 11-09 조장 결정에 사용한 저장소 밖 lab v3 50문항 실행에서는 정확도가 유지되고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었습니다. 그 측정은 동결 전 lab v3 초안으로 했고 원시 결과는 저장소 밖에 있어, 이 수치는 구현 결정 근거이며 G5 공식 점수로 세지 않습니다(v3는 11-10에 `evals/dataset_v3.jsonl`로 동결).
-- 출발점 그림은 `docs/조원-계약서.md`의 "요청 흐름"입니다. 확정되면 이 절로 옮깁니다.
+- `docs/조원-계약서.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
 
 ### 설계 질문
 
@@ -132,15 +132,37 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현입니다. 상세는 `docs/specs/login-auth.md`.
+- 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 아래 회로·대화·기억·견적 API는 모두 이 세션의 사용자 id로 소유권을 확인하고, 다른 사용자의 자료는 404입니다. 상세는 `docs/specs/login-auth.md`.
 - 가입: `POST /api/auth/signup` `{"email", "password", "consent": true}`(같은 출처, 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422). 관리자 승인·이메일 인증 없이 `user` 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 `{"user_id"}`를 돌려줍니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정). 상세는 `docs/specs/login-auth.md`.
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
 - 가격·재고: `GET /api/prices?parts=품번,품번`(로그인 필요, 품번 1~10개, 품번마다 3~40자, `|` 금지). 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
 - Google 관리자 로그인: 설정이 켜진 경우 `GET /api/auth/google/status`, `/start`, `/callback`, `/pending`을 제공하고 승인된 활성 관리자만 기존 서버 세션을 발급받습니다. 연결 승인·철회는 `python -m backend.auth`의 운영자 CLI를 사용합니다. 상세는 `docs/specs/google-admin-login.md`입니다.
 - 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. 상세는 `docs/specs/api-error-contract.md`입니다.
-- 질문·회로·대화·기억·견적 API: 아직 없습니다.
+- 질문·회로·대화·기억·견적 API: 모두 로그인이 필요하고(없으면 401), 바꾸는 요청은 같은 출처만 받습니다(Origin이 없거나 다르면 403). 오류 본문은 위 공통 오류입니다. React 작업대가 쓰는 경로(`backend/api/`):
+
+  | 경로 | 본문 | 성공 | 주요 오류 |
+  |---|---|---|---|
+  | `GET /api/demo-circuits` | - | 200 `[{id, name}]` | |
+  | `GET /api/projects` · `POST /api/projects` | POST `{demo_id, name}` | 200 목록 · 201 상세 | 422 |
+  | `POST /api/projects/upload` | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 상세 | 400 형식 · 413 크기 · 422 |
+  | `GET` · `PATCH` · `DELETE /api/projects/{id}` | PATCH `{name}` | 200 상세(`connections` 포함) · 204 | 404 · 422 · DELETE 409(실행 중 run) |
+  | `GET` · `POST /api/projects/{id}/threads` | - | 200 목록 · 201 `{id, project_id}` | 404 |
+  | `POST /api/threads/{id}/runs` | `{question(1~4000자), target_ref, conditions}` | 200 SSE | 스트림 전 503(분석 서비스 없음) · 429(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 404 |
+  | `GET /api/runs/{id}` | - | 200 `{id, thread_id, message_id, result}` | 404 |
+  | `POST /api/runs/{id}/resume` | `{answers: {값 이름: 답}(30개 이하), role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404 |
+  | `GET /api/judge/roles` | - | 200 `[{code, name}]` | |
+  | `POST /api/messages/{id}/approvals` | `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 | 404 · 409(완료 판정이 아니거나 이미 승인) · 422 |
+  | `POST /api/approvals/{id}/quotes` | `{quantity: 1~100000}` | 201 | 404 · 409 |
+  | `GET /api/projects/{id}/quotes` · `GET /api/approved-cases` · `DELETE /api/approved-cases/{id}` | - | 200 · 204 | 404 |
+  | `GET` · `PATCH` · `DELETE /api/me/memory` | 8.5 | 200 · 204 | 422 · 503 |
+
+  run · 재개의 SSE 이벤트는 `run_started`(`{run_id, request_id}`) → `status`(단계 `입력 확인`) → 마지막 하나입니다: `requires_input`(단계 `판정`, `interrupt`) · `completed` · `refused`(둘 다 단계 `완료`, 결과와 `profile_hints`) · `failed`(단계 `오류`, `error: {code, message}`). 결과 본문은 공개 값 허용 목록(`backend/conversations/dto.py`)만 담고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`).
+
+  React 이전 화면 `/workspace`가 쓰는 경로(`backend/main.py`, `THREADS_ENABLED=1`이 아니면 503): `POST` · `GET /api/circuits`(`{filename, netlist}`), `POST` · `GET /api/threads`(`{circuit_id, target}`), `GET /api/threads/{id}`, `POST /api/threads/{id}/messages`(`{text, conditions}`) · `/resume`(`{version, answers, role}`) · `/approve` · `/retry`(`{version}`), `GET /api/memories`, `POST /api/memories/{thread}/{version}/control`(`{action: correct | revoke | restore | delete, correction}`), `GET /api/analysis/readiness` · `/api/analysis/demo`.
+
+  `/api/circuits` · `/api/threads` · `/api/memories` · `/api/analysis/`로 시작하는 POST(React의 `POST /api/threads/{id}/runs` 포함)는 본문이 128 KiB(`/api/circuits`는 7 MiB)를 넘으면 413 `PAYLOAD_TOO_LARGE`입니다(`backend/main.py`의 `conversation_boundary`).
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/guides/dataset-guide.md`가 정본입니다.
-- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/guides/dataset-guide.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다.
+- 평가의 관련/비관련 분류는 대체 판정 5종과 별도입니다. 사용자 동작 조건 부족은 relevant + NOT_VERIFIED, 핵심 답변의 문서 속성 부재는 irrelevant / missing_attribute로 구분합니다. 적용 조건·예외·채점 기준은 `evals/guides/dataset-guide.md`의 "관련·비관련과 NOT_VERIFIED의 구분"을 따릅니다. 평가셋 v1은 50건(관련 25·비관련 25)으로 2026-11-02에 동결했습니다(`evals/dataset_v1.jsonl`, `evals/FROZEN.json`). 52건 초안을 50건으로 줄일 때 n22·n13만 예비로 옮기고 나머지 문항은 고치지 않았습니다. n01·n02·h03의 답안 변경과 합의는 [ADR 0008](docs/adr/0008-평가-정보부족-구분과-52건-초안.md)에 있습니다. 평가셋 v2는 70건(관련 35 · 비관련 35, v1 50건 + 후보 찾기 20건)으로 2026-11-03에 동결했습니다(`evals/dataset_v2.jsonl`). 기준 평가셋 v3는 50건(관련 25: 후보 판정 10 · 정격 6 · 후보 찾기 5 · 역할 4, 비관련 25)으로 2026-11-10에 동결했습니다(`evals/dataset_v3.jsonl`, [ADR 0015](docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). 세 파일의 해시는 `evals/FROZEN.json`에 있습니다.
 
 ## 5. 규칙 파일
 
@@ -190,7 +212,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 청킹: 현재 `tsc-v4h-2026-11-08` 규칙은 PDF마다 품번 표지와 1쪽 제품 개요를 만들고, 표 밖 글은 소제목·쪽·1,200자 경계로 자르며, 표는 한 행 = 카드 하나로 만듭니다. 표는 Docling과 pdfplumber 테두리선 결과를 대조해 합친 칸·머리·행을 복구하고, 표 주석은 별도 카드와 해당 행에 연결합니다. 두 표 읽기의 숫자가 2개 이상 다르면 자동으로 한쪽을 택하지 않고 `table_suspects.jsonl`에 남깁니다. 저장소 manifest·운영 DB 스냅샷의 v1 52,244청크와 최신 외부 v4h 실행의 51,967카드는 서로 다른 버전의 결과입니다.
 - 임베딩: 현재 서비스 코드는 `voyage-4-large` 1024차원을 사용합니다(사전 등록 #25, ADR 0004 갱신 2026-11-03). 이전 `text-embedding-3-small` 1536차원 행은 복구·과거 비교용으로 같은 표에 둘 수 있고, `db/008_multi_dim_embeddings.sql`은 모델별 차원을 함께 담는 차원 없는 `halfvec` 열을 만듭니다. 과거 후보 비교 계획과 결과는 `docs/experiments/`·`docs/research/`의 이력으로 보존합니다.
 - 코퍼스는 용량 때문에 줄이지 않고 원본 13분류·1,360문서와 평가 회로 5종을 그대로 둡니다([ADR 0005](docs/adr/0005-supabase-한-프로젝트와-halfvec-코퍼스.md)). 분류별 사본 도구 `subset.py`는 수동 실행용으로만 두며 서비스·초기화·적재에서 호출하지 않습니다. 절차는 `docs/experiments/corpus-storage-budget.md`를 따릅니다.
-- 검색: BM25(상위 50)와 dense(`voyage-4-large` 1024차원 코사인 정확 검색, 상위 50. 허용 청크가 3,200장보다 많으면 1비트 Hamming 거리로 3,200장을 먼저 거른 뒤 그 안에서 정확 코사인, 사전 등록 #27 측정 전)를 RRF(k=60)로 합치고, 합친 후보 전부를 Voyage `rerank-3`로 다시 세워 상위 k개을 돌려줍니다. 표지 청크(`page_number` 없음)는 언제나 뺍니다. 품번 필터(`parts`)는 검색 인자로 받으며(`evals/guides/preregister.md` #6), 질문·넷리스트에서 품번을 뽑아 `parts`로 넘기는 일은 에이전트가 하고 뽑는 규칙은 (정할 것)입니다. 첫 검색부터 재작성 노드가 만든 검색어로 찾습니다. 근거는 사전 등록 #25(시험 분할 38문항 쪽 Recall@5 0.579 → 0.908)이고 ADR 0004 갱신 2026-11-03에 적었습니다.
+- 검색: BM25(상위 50)와 dense(`voyage-4-large` 1024차원 코사인 정확 검색, 상위 50. 허용 청크가 3,200장보다 많으면 1비트 Hamming 거리로 3,200장을 먼저 거른 뒤 그 안에서 정확 코사인, 사전 등록 #27 측정 전)를 RRF(k=60)로 합치고, 합친 후보 전부를 Voyage `rerank-3`로 다시 세워 상위 k개를 돌려줍니다. 표지 청크(`page_number` 없음)는 언제나 뺍니다. 품번 필터(`parts`)는 검색 인자로 받으며(`evals/guides/preregister.md` #6), 질문·넷리스트에서 품번을 뽑아 `parts`로 넘기는 일은 에이전트가 하고 뽑는 규칙은 (정할 것)입니다. 첫 검색부터 재작성 노드가 만든 검색어로 찾습니다. 근거는 사전 등록 #25(시험 분할 38문항 쪽 Recall@5 0.579 → 0.908)이고 ADR 0004 갱신 2026-11-03에 적었습니다.
 - 증분 코퍼스는 ADR 0007의 목표 구조이지만 현재 서비스에는 새 문서 다운로드·검증·격리·`retired_at` 처리와 검색 편입 자동화가 없습니다. 현재 MCP 웹 도구는 TSC 공식 도메인의 미검증 URL 후보만 반환합니다.
 - 평가(G5)는 저장소에 고정된 코퍼스 계약과 실시간 조회를 끈 조건으로 실행합니다. 증분 코퍼스 재평가는 아직 구현되지 않았습니다.
 - 회사별 데이터시트: 현재 검색 코퍼스와 웹 후보 도구는 TSC 범위입니다. Infineon 실시간 조회·다운로드·검증·검색 편입은 구현되지 않았으며 ADR 0007의 확장 결정으로만 남아 있습니다. 재배포·자동 수집을 금지하는 회사는 링크 정책을 정한 뒤 다룹니다.
@@ -214,7 +236,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - `demo_mode`, `live_vector_search`, 검색 모드, 모델·코퍼스 버전을 업무 화면과 응답에 표시하는 기능은 아직 구현되지 않았습니다.
 - 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
 - 기본 호출은 별도 계측 없이 Langfuse 프롬프트·응답을 기록하지 않습니다. 명시적 `langfuse_prompts.session()`의 고정 버전·노드 추적은 5절을 따릅니다.
-- 그래프 평가 실행(`evals/runners/run_graph.py`)은 문항마다 CallbackHandler로 트레이스를 남깁니다. 단계별 입력·출력(데이터시트 청크 내용 포함), LLM 호출의 토큰·비용, 실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시), 실행 점수(경로·질문 종류·검색 횟수·인용 검사 등)를 기록합니다. 팀만 보는 비공개 프로젝트에만 보내고 Mouser 응답은 남기지 않습니다(6절). 같은 실행의 문항별 지표와 요약은 `evals/results/graph/`에 결과 파일로 남기고, 답변 문장과 청크 원문은 넣지 않습니다(6절). 서비스 요청의 트레이스는 아직 없습니다.
+- 그래프 평가 실행(`evals/runners/run_graph.py`)은 문항마다 CallbackHandler로 트레이스를 남깁니다. 단계별 입력·출력(데이터시트 청크 내용 포함), LLM 호출의 토큰·비용, 실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시), 실행 점수(경로·질문 종류·검색 횟수·인용 검사 등)를 기록합니다. 팀만 보는 비공개 프로젝트에만 보내고 Mouser 응답은 남기지 않습니다(6절). 같은 실행의 문항별 지표와 요약은 `evals/results/graph/`에 결과 파일로 남기고, 답변 문장과 청크 원문은 넣지 않습니다(6절). 서비스 분석은 Langfuse 키가 있으면 질문 · 답 글 없이 상태 · 단계별 시간만 담은 `analysis-metadata` 기록을 사용자 id · thread id와 함께 보냅니다(`langfuse_prompts.publish_analysis_trace`, 보낸 결과는 `sojafit_agent.analysis_events.trace_delivery`).
 
 ## 8. 기능별 수용 기준 (AC)
 
@@ -244,6 +266,12 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 판정 질문과 대체품 찾기 질문의 흐름 · 예외 · 수용 기준은 [작업서](docs/specs/judge-agent.md)를 따릅니다(11-06). 구현하며 확정한 기준을 이 절로 옮깁니다.
 - 판정 길(D5 멀티): `Supervisor` → `대체 부품 에이전트`(`회로 역할 읽기` → `대체 부품 판정`, 인터럽트 1번) → `답 모으기` → `답 정리`(코드 틀) → `답 검사` → `끝내기`.
 - 판정 길(D4 v2 단일, 11-06): 사실 확인 → 라우팅 → 판정 읽기 → 판정(인터럽트 1번) → 답 틀(코드 틀). MCP 도구 장애면 거절(`search_error`). 카드 도구의 DB · LLM 오류는 이 거절로 바뀌지 않고 실행 실패로 끝납니다(판정 코드는 MCP 장애만 받습니다). 판정 읽기 · 판정 · 답 틀 코드는 멀티와 같습니다.
+- 같은 판정 에이전트의 노드 이름:
+
+  | 그래프 | 읽기(LLM) | 판정(코드) |
+  |---|---|---|
+  | D4 단일 | `판정 읽기` | `판정` |
+  | D5 멀티(`대체 부품 에이전트` 안) | `회로 역할 읽기` | `대체 부품 판정` |
 - 회로 값 이름(11-06): 읽기 입력 글에는 역할마다 그 역할이 받는 값 이름 · 종류(`roles.yaml` `inputs`에서 코드가 만든다)를, 읽기 프롬프트(`judge_read.md` "Value names")에는 모든 값 이름의 뜻 · 단위를 둡니다. 읽기는 고른 역할(과 `role_alt`)의 이름만 쓰고, 사용자가 다른 말(부하 전류 · 출력 전류 · 반대쪽 전원)로 준 값은 그 역할에서 같은 양을 뜻하는 이름으로 옮깁니다. 그 역할에 없는 이름 · 질문에 없는 숫자는 코드가 버리고 판정 결과의 `dropped`에 남깁니다. `roles.yaml`에 값 이름이 늘면 프롬프트에 뜻이 있는지 시험이 확인합니다. `vz_min` · `vz_max`는 인용 글에 숫자 범위가 있을 때만 받습니다(공칭 ± 공차는 요구 성질 `VZ`, 사전 등록 #48).
 - 코퍼스 밖 요구(11-06): 읽기는 사용자가 꼭 요구한 것을 세 칸으로 따로 냅니다. `required_specs`는 요구한 부품 성질을 사용자 말 그대로 적고, 사양 코드 19개(숫자 17종 + `PACKAGE` + `AEC_Q101`), 판정 전용 `DIRECTION`, 또는 해당 없음인 `none` 중 하나로 연결합니다. `maker_wanted`에는 요구 제조사, `revision_wanted`에는 요구 개정 코드·판을 둡니다. 판정 노드는 규칙·조건을 만들기 전에 코드로 대조합니다(숫자 판단 없음): 제조사가 TSC가 아니면 `part_missing`, 개정판이 사실 확인(`facts.revisions`)에서 코퍼스에 있다고 확인된 개정 코드를 담지 않으면 `revision_missing`, 성질 하나라도 `none`이면 `not_found`입니다. 판정 길에는 코퍼스 개정판 전체 목록이 없어 질문 속 개정 코드의 사실 확인만 씁니다(연도판·버전처럼 개정 코드가 아닌 판은 확인할 수 없으니 거절). 거절이면 인터럽트·사양 값 읽기 없이 판정 보고서(`fail` + 사유)를 냅니다. 단일 그래프는 그 사유로 거절 노드로 가고(`refusal.code`), 멀티는 Supervisor가 그 사유로 거절합니다(프롬프트 규칙 3. LLM이 다른 길을 고르면 한도 거절처럼 코드가 거절로 바꿉니다). 사양 코드가 있는 성질(역누설 → IR, 표면실장 → PACKAGE, 자동차 등급 → AEC_Q101), 방향 요구와 TSC·확인된 개정 코드는 통과합니다. 거절 문구는 사실 확인에서 없다고 확인된 품번만 이름으로 넣습니다. `revision_wanted`가 40자를 넘으면(읽기가 개정 코드 대신 '개정 요구 없음' 같은 설명 글을 적은 것) 형식 재시도 없이 그 글 안의 개정 코드 모양(K2611)만 남기고, 없으면 요구 없음으로 받습니다(사전 등록 #45, 11-09). 사실 확인이 코퍼스에 없다고 한 품번을 후보로 판정하라고 하면 `part_missing`으로 거절합니다(11-10, ADR 0017).
 - 사양 값 조회 품번(11-06): 품번 앞의 제조사 이름(`TSC` · `Taiwan Semiconductor`, 대소문자 무시)은 떼고 찾습니다. 그래도 없으면 첫 낱말(주문 코드를 뗀 기본 품번, `1N4148 R0G` → `1N4148`)로 다시 찾습니다. 답에 보이는 품번은 질문에 쓴 대로 둡니다.
@@ -253,14 +281,14 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 ### 8.4 견적서 승인과 저장
 
-- **현재 상태:** 견적 승인·저장 API와 `backend/services/quote.py`는 아직 없습니다. 아래 가격·재고 API 수용 기준만 구현되어 있습니다. 목표 견적 기능을 만들 때도 Mouser 가격·재고는 저장하지 않고 화면을 열 때 `/api/prices`로 다시 조회해야 합니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
+- **현재 상태:** 사람이 완료된 판정 메시지의 후보 하나(동일품 · 사양 동등 · 역할상 충분)를 승인하면(`POST /api/messages/{id}/approvals`) 승인 snapshot과 승인 사례를 저장하고, 그 승인으로만 견적을 저장합니다(`POST /api/approvals/{id}/quotes`, 수량만 받음). 저장은 `backend/services/quote.py`, 표는 `db/020_approvals_quotes.sql`입니다. 견적에는 Mouser 가격·재고를 저장하지 않고, 견적 패널이 조회할 때 `/api/prices`로 다시 부릅니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 가격·재고 수용 기준:
   - GIVEN 다이오드 품번의 가격·재고 질문, WHEN 단일 · 멀티 그래프가 답하면, THEN 질문 종류는 `price`, 마지막 노드는 가격 안내이고, `price_parts`에 물은 품번이 남으며, 그래프는 Mouser를 부르지 않고 상태와 답에 가격·재고 값을 넣지 않는다.
   - GIVEN 로그인하지 않은 요청, WHEN `GET /api/prices`를 부르면, THEN 401이고 Mouser를 부르지 않는다.
   - GIVEN `DEMO_MODE=1`이거나 `MOUSER_API_KEY`가 비었음, WHEN `GET /api/prices`를 부르면, THEN Mouser를 부르지 않고 `available: false`를 돌려준다.
   - GIVEN 품번 11개 이상이거나 형식에 맞지 않는 품번, WHEN `GET /api/prices`를 부르면, THEN 422이고 Mouser를 부르지 않는다.
   - GIVEN Mouser 응답, WHEN `GET /api/prices`가 조회하면, THEN 4절의 칸과 조회 시각만 돌려주고 헤더는 `Cache-Control: no-store`이며, 로그에 요청 주소·키·응답 값이 남지 않는다.
-- 견적 승인·저장 수용 기준: 구현 작업서에서 정할 것.
+- 견적 승인·저장 수용 기준: [D5 화면 작업서](docs/specs/d5-frontend-service.md) AC(승인 전 견적 409, 가격·재고 비저장, 프로젝트 삭제 때 함께 지움)를 따르고, `tests/api/test_quotes.py` · `tests/services/test_quote_service.py`가 확인합니다.
 
 ### 8.5 사용자 사실 기억(장기 기억)
 
@@ -310,7 +338,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 잘못된 정보, WHEN 로그인하면, THEN `error.code/message/request_id` 공통 오류와 같은 값의 `X-Request-ID`를 반환하고 입력값을 노출하지 않는다.
 - GIVEN 15분 집계 구간에 로그인 5회 실패, WHEN 다시 로그인하면, THEN 마지막 실패 시점부터 15분 동안 거부한다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
 - GIVEN 로그아웃했거나 만료된 세션, WHEN 사용자 정보를 요청하면, THEN 인증을 거부한다.
-- GIVEN 서로 다른 두 계정, WHEN 각각 로그인 상태를 확인하면, THEN 각자의 ID와 DB에서 확인한 역할(admin 또는 user)을 반환한다. 실제 회로·대화·기억·견적의 권한 검증은 해당 기능 구현 후 추가한다.
+- GIVEN 서로 다른 두 계정, WHEN 각각 로그인 상태를 확인하면, THEN 각자의 ID와 DB에서 확인한 역할(admin 또는 user)을 반환한다. 회로·대화·기억·견적 API는 세션 사용자 id로 소유권을 확인하고 다른 사용자의 자료에는 404를 낸다(4절).
 - GIVEN 관리자와 일반 사용자, WHEN 관리자 API에 접근하면, THEN 관리자만 목록을 조회하고 일반 계정의 활성 상태를 변경한다. 비활성화된 사용자의 기존 세션은 재활성화 후에도 사용할 수 없다.
 - GIVEN 새 Compose DB와 `DEMO_MODE=1`, WHEN 초기화 SQL이 실행되면, THEN 로컬 데모 전용 일반 사용자 2개(데모 사용자 A · B, 평가 계정 아님)를 비밀번호 없이(scrypt가 아닌 표식) 만들고 기존 계정을 덮어쓰지 않는다. `DEMO_MODE`가 1이 아니면 계정을 만들지 않는다. 저장소에는 비밀번호 · 해시가 없다(11-09).
 - GIVEN 데모 모드, WHEN 로그인 화면의 "데모 사용자 A · B로 들어가기"를 누르면(`POST /api/auth/demo-login` `{"account": "a"|"b"}`, 같은 출처), THEN 그 시드 계정에 로그인과 같은 세션을 발급하고 A · B는 서로 다른 사용자다. 두 계정의 비밀번호 로그인은 늘 실패하고, 표식이 없는 계정(같은 이메일로 가입한 계정) · 관리자 · 비활성 계정에는 세션을 주지 않는다(404). 데모 모드가 아니면 `GET /api/auth/demo`와 `POST /api/auth/demo-login`은 공통 404다.

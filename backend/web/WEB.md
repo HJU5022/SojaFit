@@ -1,7 +1,7 @@
 # web
 
 ## 역할
-- 이 폴더: FastAPI가 같은 출처로 제공하는 React 작업대와 #73의 `/workspace` 분석·기억 화면, 기존 로그인 템플릿을 둡니다. React 소스는 `frontend/`에 있습니다.
+- 이 폴더: FastAPI가 같은 출처로 빌드한 React 화면(`frontend/dist`)을 연결하는 어댑터(`app.py`), React 이전 화면인 `/workspace` 분석·기억 템플릿, React를 빌드하지 않았을 때 쓰는 로그인 템플릿을 둡니다. React 소스는 `frontend/`에 있습니다.
 - 넣는 것: API 등록 뒤 SPA를 연결하는 `app.py`, 화면 설계 문서(`design.md`), 템플릿(`templates/`), 정적 파일(`static/`). 기존 앱 범위 확장과 프론트 분리 결정은 조장 승인 후 `docs/adr/`에 기록합니다.
 - 넣지 않는 것: API 로직과 라우트(`backend/main.py`, `backend/auth.py`), 판정 로직(`backend/judge/`), 그래프(`backend/graph/`).
 - 담당: 서비스·운영

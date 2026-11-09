@@ -7,7 +7,7 @@
     (PDF, 쪽)을 나온 순서대로 상위 5개로 보고 문서 · 쪽 Recall@5 · MRR(5위 밖 0)을 낸다. 둘 다 없으면 0으로 센다.
   - 응답 시간 p50 · p95(run_gate 정의)
 - 하지 않는 일: 그래프 실행(run_gate), 평가셋 고치기.
-- 출처: ADR 0015 목표 지표와 11-07 조장 결정(모든 세트 0.95, 오탐도 그에 맞게, p95 10초), docs/experiments/b-redesign/사전등록-2차.md
+- 출처: ADR 0015 목표 지표와 11-07 조장 결정(모든 세트 0.95, 오탐도 그에 맞게, p95 10초)
 
 실행: python -m evals.runners.gate_report <평가셋 jsonl> <결과 폴더> [--min 0.95] [--max-error 0.05] [--p95 10]
 """

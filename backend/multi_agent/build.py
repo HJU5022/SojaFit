@@ -6,7 +6,7 @@
   일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
   LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다.
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 웹 조회 에이전트(아직 없어서 켜려 하면 거부한다), 체크포인터 만들기(부르는 쪽이 넘긴다).
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(MULTI_AGENT.md 11-06 재설계), backend/graph/build.py(조립 방식을 따름)
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/build.py(조립 방식을 따름)
 """
 from functools import partial
 

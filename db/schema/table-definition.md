@@ -2,7 +2,7 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/018_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `circuits`는 현재 018과 호환되지 않으므로 그대로 적용하면 안 됩니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/018_projects.sql`, 대화 · 실행 · 메시지는 `db/019_conversations.sql`, 승인 · 견적 · 승인 사례는 `db/020_approvals_quotes.sql`이 만듭니다(이 문서 끝 "대화 저장 (019)" · "승인·견적·사례 저장 (020)"). 5.3 · 5.5 · 5.8~5.14는 그 전에 쓴 옛 설계 초안(`db/manual/004_create_business_tables.sql.draft`)이고 018~020으로 대체돼 적용하지 않습니다. [주의] 초안의 `circuits`는 018과 충돌합니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
 
 열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
@@ -108,20 +108,20 @@
 
 ### 5.2 사용자 프로젝트와 정규화 회로 — 018 현재 스키마
 
-정본은 `db/018_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 현재 서비스에 적용하지 않습니다. 이하 분석·견적 표는 여전히 미적용 초안이며 후속 구현에서 프로젝트 관계에 맞춰 검토합니다.
+정본은 `db/018_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 서비스에 적용하지 않습니다. 이하 5.3 · 5.5 · 5.8~5.14의 분석·견적 표는 019 · 020으로 대체된 옛 초안입니다.
 
 | 표 | 컬럼 | 자료형·제약 | 의미 |
 |---|---|---|---|
 | `projects` | `id` | BIGSERIAL PK | 프로젝트 ID |
 | `projects` | `user_id` | BIGINT NOT NULL FK → users.id, ON DELETE CASCADE | 소유 사용자. 관리자 우회 없음 |
 | `projects` | `name` | TEXT NOT NULL CHECK(trim 일치, 1~200자) | 서버가 공백을 제거한 이름 |
-| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 현재 생성 API는 demo만 허용 |
+| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 데모 생성(`POST /api/projects`)은 demo, 넷리스트 업로드(`POST /api/projects/upload`)는 upload |
 | `projects` | `demo_id` | TEXT NULL, demo는 허용 5종 필수, upload는 NULL | 데모 카탈로그 ID |
 | `projects` | `created_at`, `updated_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 이름 변경 때 updated_at 갱신 |
 | `circuits` | `project_id` | BIGINT PK FK → projects.id, ON DELETE CASCADE | 프로젝트당 회로 1개 |
 | `circuits` | `connections` | JSONB NOT NULL CHECK(object) | 정규화 연결 정보 |
-| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모 connections.json 바이트 SHA-256 |
-| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1 |
+| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모는 connections.json 바이트, 업로드는 올린 `.net` 원본 바이트의 SHA-256(원본은 저장하지 않음, `backend/projects/netlist.py`) |
+| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1, 업로드는 kicad-export-v1 |
 | `circuits` | `created_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 회로 저장 시각 |
 
 `ix_projects_user_updated(user_id, updated_at DESC, id DESC)`는 소유자별 목록과 users FK 조회를 지원합니다. `circuits.project_id` PK 인덱스가 cascade의 FK 조회를 지원해 중복 인덱스는 만들지 않습니다. 두 표의 RLS를 켜고 정책은 두지 않으며 PUBLIC·존재하는 anon/authenticated 역할의 표 및 projects_id_seq 권한을 회수합니다. 서버 DB 역할에서 SQL의 user_id 필터를 적용합니다. 원본 업로드·넷리스트·가격 필드는 없습니다.
@@ -323,7 +323,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ### 5.12 `quotes` — 견적서
 
-사람이 승인한 뒤에만 견적서를 저장합니다. 승인 전 초안은 LangGraph 체크포인트 상태에 두는 것을 기본안으로 합니다.
+[옛 초안] 지금 견적은 `db/020_approvals_quotes.sql`의 `quotes`(승인 · 품번 · 수량 · 승인 snapshot, 가격·재고 없음)입니다. 아래 표는 적용하지 않은 이력입니다. 사람이 승인한 뒤에만 견적서를 저장합니다. 승인 전 초안은 LangGraph 체크포인트 상태에 두는 것을 기본안으로 합니다.
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -340,7 +340,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ### 5.13 `quote_items` — 견적 항목
 
-승인된 견적서에 포함된 후보 부품, 수량 및 승인 당시의 가격을 저장합니다.
+[옛 초안] 지금 견적에는 항목 표와 가격이 없습니다(ADR 0009, `db/020_approvals_quotes.sql`). 아래 표는 적용하지 않은 이력입니다. 승인된 견적서에 포함된 후보 부품, 수량 및 승인 당시의 가격을 저장합니다.
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -498,7 +498,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ## 11. 다음 단계
 
-PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다룬다. 실행 순서·이력 방식은 확정 전이다.
+[이력] 아래 계획은 018~020 전의 것이다. 업무 표는 Migration 1 초안 대신 `db/018_projects.sql` · `019_conversations.sql` · `020_approvals_quotes.sql`로 만들었고, 초안은 적용하지 않는다. PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다뤘다.
 
 1. 이 정의서로 `db/schema/erd.md`에 표 관계도(mermaid `erDiagram`)를 그립니다.
 2. Migration은 두 번으로 나눕니다.

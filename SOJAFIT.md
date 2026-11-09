@@ -25,8 +25,8 @@ SojaFit (proj3-b)
 ├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
-├── Dockerfile              <- API 이미지. backend/와 data/만 복사 (고정)
-├── docker-compose.yml      <- api + pgvector DB 한 줄 실행, 키 없는 데모 모드 (고정)
+├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
+├── docker-compose.yml      <- 서비스 4개(api · thread-setup · corpus-load · db) 한 줄 실행, 키 없는 데모 모드 (고정)
 ├── pyproject.toml          <- uv 의존성 (고정)
 ├── uv.lock                 <- 의존성 고정 버전. pyproject.toml과 같은 커밋에 넣음
 ├── pytest.ini              <- 테스트 경로(tests/)와 설정
@@ -34,7 +34,7 @@ SojaFit (proj3-b)
 ├── .github/                <- GitHub 설정(설명 파일 없음)
 │   ├── PULL_REQUEST_TEMPLATE.md  <- PR 본문 양식
 │   └── workflows/
-│       ├── ci.yml          <- PR마다 테스트(격리한 인증 시험 DB 포함)
+│       ├── ci.yml          <- PR마다 파이썬 테스트(격리한 인증 시험 DB 포함)와 화면 작업(npm 시험 · 빌드)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
 ├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
@@ -122,8 +122,6 @@ SojaFit (proj3-b)
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: /health, 로그인·데모 버튼 로그인·Google 관리자 로그인, me·로그아웃·탈퇴, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
-│   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
-│   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
 │   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -154,8 +152,8 @@ SojaFit (proj3-b)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
 │   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
-│   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
-│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
+│   │   └── memory.py       <- 사용자별 Store namespace 규칙, 승인 사례를 크기 제한된 모델 입력으로 만들기. graph/nodes.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
+│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · 대체 부품 에이전트). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
@@ -256,7 +254,6 @@ SojaFit (proj3-b)
 │   ├── 000_init.sql        <- pgvector 확장
 │   ├── 002_rag_corpus.sql  <- 코퍼스 문서·청크·벡터 표
 │   ├── 003_auth.sql        <- 사용자·세션·로그인 시도 표
-│   ├── 004_create_business_tables.sql  <- 업무 표(회로·판정·견적). 확정되면 manual/의 초안을 옮김 (예정)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
 │   ├── 006_user_roles.sql  <- 사용자 역할(admin/user) 열
 │   ├── 007_demo_accounts.sql  <- 데모 모드 새 볼륨의 데모 사용자 A · B(비밀번호 없음, 버튼 로그인 전용)
@@ -277,7 +274,7 @@ SojaFit (proj3-b)
 │   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
-│   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
+│   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
 │   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
 │   └── schema/             <- 스키마 설명 문서
 │       ├── SCHEMA.md       <- 폴더 설명
@@ -288,7 +285,7 @@ SojaFit (proj3-b)
 │   ├── EVALS.md            <- 폴더 설명
 │   ├── dataset_v1.jsonl    <- 동결 평가셋 v1: 50건(관련 25·비관련 25), 2026-11-02 (고정)
 │   ├── dataset_v2.jsonl    <- 동결 평가셋 v2: 70건(v1 50 + 후보 찾기 20, 관련 35·비관련 35), question_type 칸, 2026-11-03 (고정)
-│   ├── dataset_v3.jsonl    <- 동결 평가셋 v3: 판정 분야를 늘려 새로 만듦, 청킹을 고친 코퍼스로 다시 잼(ADR 0015)
+│   ├── dataset_v3.jsonl    <- 동결 기준 평가셋 v3: 50건(관련 25·비관련 25, 판정 분야를 늘림), 2026-11-10(ADR 0015)
 │   ├── FROZEN.json         <- 동결 파일별 sha256·건수. 테스트가 이 이름을 읽음 (고정)
 │   ├── exclusions.json     <- 동결 뒤 코퍼스가 바뀌어 지표에서만 뺄 문항 id와 사유(과제 가이드) (예정)
 │   ├── inputs/             <- 동결 평가셋에서 만든 측정 입력(qrels·고정 질의). 측정 전에 커밋
@@ -367,6 +364,8 @@ SojaFit (proj3-b)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       ├── skill/          <- Skill·도구 개발 검증 요약
 │       ├── grader/         <- 채점기 기준선(eval_grader)
+│       ├── graph/          <- 그래프 전체 실행의 문항별 지표(run_graph, 단일 · 멀티)와 분석 thread · 기억 운영 확인
+│       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
 │       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
 │           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
@@ -518,7 +517,7 @@ SojaFit (proj3-b)
 │   ├── repo/               <- 저장소 구조 규칙
 │   │   ├── REPO.md         <- 폴더 설명
 │   │   └── test_repo_layout.py  <- 이 문서의 트리·이름 규칙·폴더 설명 파일·한 폴더 한 종류를 지킴
-│   └── fixtures/           <- 단위 테스트용 가공 회로(지금은 .gitkeep)
+│   └── fixtures/           <- 단위 테스트용 가공 데이터
 │       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
 │           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
 │           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본

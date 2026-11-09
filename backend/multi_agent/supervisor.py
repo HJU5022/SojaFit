@@ -11,7 +11,7 @@
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
   질문 종류 · 거절 · 할 일 나누기 판단(LLM이 계획으로 정한다). 코드가 바꾸는 것은 상한 초과 · 판정 꺼짐 · 형식 실패와
   찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, ADR 0017).
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(MULTI_AGENT.md 11-06 재설계), 회의록 D4-D5 B-지시서 4-4, backend/prompts/supervisor.md · synth.md
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계, 11-07 실패 고리), ADR 0017, backend/prompts/supervisor.md · synth.md
 """
 import re
 from pathlib import Path

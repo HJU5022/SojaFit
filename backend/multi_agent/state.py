@@ -3,7 +3,7 @@
 - 역할: 질문 하나가 Supervisor ① 계획 → 서브에이전트(동시 실행) → Supervisor ② 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
   단일 그래프 `AgentState`와 칸이 달라서(계획서, 보고서 목록, 횟수, 사실, 거절 기록) 따로 둔다.
 - 하지 않는 일: 노드 동작, 노드 연결(`build.py`), 사용자별 장기 기억.
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"의 공용 메모장 칸, backend/graph/state.py(칸 이름을 맞춘 부분)
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/state.py(칸 이름을 맞춘 부분)
 
 [왜] 계획서 · 보고서 · 횟수는 pydantic 객체가 아니라 dict로 저장한다. 체크포인터가 저장하고 Langfuse 트레이스에 그대로 보여야 해서다.
 """
