@@ -371,7 +371,7 @@ def test_openrouter_thinking_off_disables_haiku_and_shortens_sonnet(monkeypatch)
 
 def test_node_model_follows_table_and_env_override_wins(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
-    assert llm.node_model("supervisor") == HAIKU and llm.node_model("synth") == SONNET and llm.node_model("grade") == LUNA
+    assert llm.node_model("supervisor") == SONNET and llm.node_model("grade") == LUNA
     assert [llm.node_model(n) for n in ("route", "rewrite", "generate")] == [HAIKU] * 3
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert {llm.node_model(n) for n in ("route", "grade", "generate", "supervisor")} == {"x/y"}
@@ -388,7 +388,7 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
             invoke=lambda messages: schema.model_validate_json('{"kind": "role"}')))
 
     monkeypatch.setattr(llm, "_chat_model", chat_model)
-    llm.node_chat("synth", "sys", "q", Route)
+    llm.node_chat("supervisor", "sys", "q", Route)
     llm.node_chat("route", "sys", "q", Route)
     assert used == [SONNET, HAIKU]
     llm.chat("sys", "q", Route)  # node_chat 밖의 호출은 기본 모델

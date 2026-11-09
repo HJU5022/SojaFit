@@ -160,7 +160,7 @@ def test_node_models_records_model_of_every_node(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
     models = node_models()
     assert set(models) == set(langfuse_prompts.NODES)
-    assert models["supervisor"] == langfuse_prompts.HAIKU and models["synth"] == langfuse_prompts.SONNET and models["grade"] == langfuse_prompts.LUNA and models["generate"] == langfuse_prompts.HAIKU
+    assert models["supervisor"] == langfuse_prompts.SONNET and models["grade"] == langfuse_prompts.LUNA and models["generate"] == langfuse_prompts.HAIKU
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert set(node_models().values()) == {"x/y"}
 
