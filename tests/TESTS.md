@@ -16,7 +16,7 @@
 - `evals/` — 동결 감시·평가 실행기·Skill 쌍 시험. [EVALS.md](evals/EVALS.md)
 - `multi_agent/` — 멀티 에이전트 시험. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)
 - `graph/` — 질문 처리 그래프 노드 시험. [GRAPH.md](graph/GRAPH.md)
-- `mcp_skill/` — MCP 서버 도구 8종 시험(외부 호출 없음). [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
+- `mcp_skill/` — MCP 서버 도구 6종 시험(외부 호출 없음). [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
 - `judge/` — 판정 코드(시험 조건 · 기준식 · 판정 5종 · 규칙 파일) 시험. [JUDGE.md](judge/JUDGE.md)
 - `fixtures/` — 단위 테스트용 가공 회로(설명 파일 없음). `netlists/minimal.net`, `netlists/invalid.net`은 공개 합성 KiCad export 정상/미완성 표본이며 외부 회로 원본·실사용 파일/경로·비밀값을 포함하지 않는다
 - `rag/` — 수집·파싱·청킹·적재·검색 시험. [RAG.md](rag/RAG.md)

@@ -144,7 +144,7 @@ SojaFit (proj3-b)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
 │   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
-│   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트·견적 승인 단계는 아직 없음)
+│   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트는 서비스가 연결해 그래프 폴더 안에는 없음, 견적 승인 interrupt는 아직 없음)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── state.py        <- 질문 하나가 노드를 지나는 동안 쓰는 공용 메모장(AgentState)
 │   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
@@ -164,8 +164,8 @@ SojaFit (proj3-b)
 │   │   ├── build.py        <- 조립(노드 이름은 한국어): 입력 읽기 → 품번·판 확인 → Supervisor → RAG · 대체 부품 에이전트(Send) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절. 판정은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
-│   │       ├── judge.py    <- 판정 에이전트(읽기 · 판정 노드)
-│   │       └── docs.py     <- 문서 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
+│   │       ├── judge.py    <- 대체 부품 에이전트(회로 역할 읽기 · 대체 부품 판정 노드)
+│   │       └── docs.py     <- RAG 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
@@ -181,21 +181,20 @@ SojaFit (proj3-b)
 │   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
 │   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
 │   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
-│   │   ├── tool_use.md     <- MCP 도구 선택·결과 해석. 아직 코드가 읽지 않음
 │   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)
-│   │   ├── docs_answer.md  <- 멀티 문서 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
-│   │   ├── synth.md        <- 멀티 Supervisor ② 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
-│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor ① 계획(질문 종류 · 할 일 최대 3개 · 지시서)·거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
+│   │   ├── docs_answer.md  <- 멀티 RAG 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
+│   │   ├── synth.md        <- 멀티 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor(계획): 질문 종류 · 할 일 최대 3개 · 지시서 · 거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
-│   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표 SQL 조회 2개는 run_graph.py 기본값 때문에 남김(사양 표는 11-09에 지움)
+│   │   ├── spec_lookup.py  <- 사양 코드 목록 · 찾기 순서 규칙(카드 도구 · 판정 import). 사양 표와 SQL 조회는 11-10에 지움(ADR 0016)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
-│   │   ├── card_find.py    <- 서비스 기본 후보 찾기(ADR 0016): 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → find_candidates 규칙
-│   │   ├── card_specs.py   <- 서비스 기본 판정 값(get_part_specs 모양)을 카드에서 읽기, 사실 확인용 문서 행(ADR 0016)
+│   │   ├── card_find.py    <- 서비스 기본 후보 찾기(ADR 0016): 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → 조건 거르기 · 찾기 순위
+│   │   ├── card_specs.py   <- 서비스 기본 판정 값을 카드에서 읽기, 사실 확인용 문서 행(ADR 0016)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
 │   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
 │   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함(specs.py 공용 규칙만 카드 도구가 import)
@@ -204,7 +203,7 @@ SojaFit (proj3-b)
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
-│   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재는 서비스에서 안 씀(ADR 0016)
+│   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 11-10에 지움(ADR 0016)
 │   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
@@ -226,7 +225,7 @@ SojaFit (proj3-b)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
 │       ├── mcp_server/
-│       │   └── server.py   <- FastMCP stdio 도구 8종: 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·사양으로 품번 찾기
+│       │   └── server.py   <- FastMCP stdio 도구 6종: 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인
 │       └── skills/
 │           └── SKILL.md    <- 다이오드 정격 해석·회로 연결 설명 지침. use_skill을 켠 생성 호출만 시스템 프롬프트에 붙임 (고정: 코드가 경로를 읽음)
 │
@@ -358,7 +357,7 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
-│       ├── retrieval/      <- 검색 지표: v1 베이스라인(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
+│       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
@@ -451,14 +450,14 @@ SojaFit (proj3-b)
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명
-│   │   ├── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
+│   │   ├── test_contracts.py  <- 계획서·보고서 형식 검사, 이유 코드, 상한
 │   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
-│   │   ├── test_agents.py  <- 검색·작성·검증 에이전트, 사실 확인, 거절 문구
-│   │   ├── test_docs_agent.py  <- 문서 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
-│   │   ├── test_judge.py   <- 판정 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
+│   │   ├── test_agents.py  <- RAG 에이전트(검색 · 근거 채점+답 쓰기 · 다시 찾기 · 인용 검사), 사실 확인, 거절 문구, 판정 답 틀
+│   │   ├── test_docs_agent.py  <- RAG 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
+│   │   ├── test_judge.py   <- 대체 부품 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
-│   │   └── test_build.py   <- 조립 길 시험: 직행·검색 경로·못 찾음 거절·범위 밖·검증 실패 뒤 다시 쓰기·판정 길(인터럽트 1번), 그림의 한국어 노드 이름과 재계획 라벨
+│   │   └── test_build.py   <- 조립 길 시험: 바로 끝내는 길·할 일 1개와 2개(동시 실행 → 종합)·답 검사 거절·재계획·판정 길(인터럽트 1번), 그림의 한국어 노드 이름과 재계획 라벨
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)
@@ -466,8 +465,7 @@ SojaFit (proj3-b)
 │   │   ├── test_rag_chunk.py  <- 표 청크 규칙, 문서 키, manifest 크기
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
 │   │   ├── test_rag_specs.py  <- 표 행 청크 공용 규칙: 패키지 이름 정규식 · packages_of(가짜 청크)
-│   │   ├── test_rag_spec_lookup.py  <- find_candidates 줄 세우기(가짜 연결, DB 없음)
-│   │   ├── test_card_find.py  <- 카드 찾기: 검색 문장 · 분류로 문서 고르기 · 개요 줄 코드 고르기 · 카드 거르기, find_candidates와 같은 거르기 · 순서, 양방향 값 붙이기(가짜 검색 · DB · LLM)
+│   │   ├── test_card_find.py  <- 카드 찾기: 검색 문장 · 분류로 문서 고르기 · 개요 줄 코드 고르기 · 카드 거르기, 조건 거르기 · 찾기 순위, 양방향 값 붙이기(가짜 검색 · DB · LLM)
 │   │   ├── test_card_read.py  <- 카드 읽기: 코드 먼저 · 못 읽는 모양만 LLM(실제 카드 글), 인용 · 숫자 · 단위 차원 · 품번으로 버리기, SI 값, 4장씩 나눠 읽기(가짜 chat)
 │   │   ├── test_card_specs.py  <- 카드에서 판정 값 읽기: 미리 읽은 품번은 다시 읽지 않기, 글 행 붙이기(가짜 의존)
 │   │   ├── test_rag_units.py  <- 단위 환산(mA·µA·ns·pF·kV·mW·°C, 모르는 단위는 None)
@@ -505,9 +503,9 @@ SojaFit (proj3-b)
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
 │   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
-│   ├── mcp_skill/          <- MCP 서버 도구 8종(오프라인, 외부 호출 0회)
+│   ├── mcp_skill/          <- MCP 서버 도구 6종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
-│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인·부품 사양 조회·찾기의 수용 기준(SPEC 8.7)
+│   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
 │   ├── judge/              <- 판정 코드 시험. 판정 코드와 같은 PR에서 넣음
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── test_judge_conditions.py  <- 규칙 읽기·기준식 계산
@@ -570,7 +568,7 @@ SojaFit (proj3-b)
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
-│   │   ├── judge-agent.md  <- 판정 에이전트와 대체품 찾기
+│   │   ├── judge-agent.md  <- 대체 부품 에이전트와 대체품 찾기
 │   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
@@ -615,7 +613,7 @@ SojaFit (proj3-b)
 │   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
 │   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
 │   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
-│   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 베이스라인 3방식 문항별 대조·실패 유형 분석
+│   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 기준선 3방식 문항별 대조·실패 유형 분석
 │   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
 │   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
 │   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
