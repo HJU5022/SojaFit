@@ -66,6 +66,27 @@ def test_other_users_run_is_not_found(web, monkeypatch):
     assert response.status_code == 404 and response.json()['error']['code'] == 'NOT_FOUND'
 
 
+def test_missing_database_url_is_unavailable_not_internal_error(monkeypatch):
+    """DATABASE_URL이 없으면 로그인 확인(auth.connection)이 공통 503 `UNAVAILABLE`이다(예전에는 KeyError로 500)."""
+    monkeypatch.delenv('DATABASE_URL', raising=False)  # [주의] .env를 읽은 값이 있어도 지운다
+    monkeypatch.setenv('DEMO_MODE', '1')
+    response = TestClient(app, cookies={auth.COOKIE: 'x' * 43}).get('/api/auth/me')  # 쿠키가 있어야 DB까지 간다
+    error = response.json()['error']
+    assert response.status_code == 503 and error['code'] == 'UNAVAILABLE'
+    assert error['message'] == '저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.'
+    assert error['request_id'] == response.headers['X-Request-ID']
+
+
+def test_google_callback_without_database_url_still_redirects_to_login(monkeypatch):
+    """Google 콜백은 브라우저 이동이라 DB 설정 누락(503)도 JSON이 아니라 로그인 화면 오류로 돌려보낸다."""
+    monkeypatch.delenv('DATABASE_URL', raising=False)
+    for name, value in {'DEMO_MODE': '1', 'GOOGLE_AUTH_ENABLED': '1', 'GOOGLE_CLIENT_ID': 'test-client', 'GOOGLE_CLIENT_SECRET': 'test-secret'}.items():
+        monkeypatch.setenv(name, value)
+    client = TestClient(app, follow_redirects=False, cookies={'sojafit_google_browser': 'browser'})
+    response = client.get('/api/auth/google/callback', params={'state': 'state', 'code': 'code'})
+    assert response.status_code == 303 and response.headers['location'] == '/login?google=error'
+
+
 def test_signup_daily_ip_limit_is_rate_limited(web, monkeypatch):
     def limited(*args):  # auth.signup이 IP 하루 3회를 넘기면 내는 오류와 같다
         raise HTTPException(status_code=429, detail='오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.')

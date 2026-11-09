@@ -54,6 +54,7 @@
 | 표에 없는 4xx · 5xx(예: 405) | `VALIDATION_ERROR` · `INTERNAL_ERROR` | |
 | 처리되지 않은 예외 | `INTERNAL_ERROR` | |
 
+- DB를 쓸 수 없는 경우는 모두 503 `UNAVAILABLE`이다: 연결 실패 · 연결 풀 대기(`backend/main.py`의 `database_unavailable`)와 DB 설정 누락(`DATABASE_URL`이 비면 `backend/auth.py`의 `connection`이 같은 문구 `저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.`로 낸다). 설정 누락이 500이 되지 않게 `KeyError` 전체 처리기는 두지 않는다.
 - 분석 SSE의 `failed` 이벤트도 같은 표로 `error.code`를 고른다(`backend/api/conversations.py`의 `public_error`). 분석 전 DB 장애는 `UNAVAILABLE`이다.
 - 화면이 스스로 만드는 코드(`HTTP_ERROR`: 본문 없는 오류 응답, `STREAM_ERROR` · `STREAM_CLOSED` · `RUN_FAILED` · `APPROVAL_NOT_READY`)는 서버 표 밖이다.
 - 로그: 오류 응답 · `failed` 이벤트마다 `backend/errors.py`의 `log_error`가 한 줄(`message: request_failed`, `code`, `status`, `request_id`)을 남긴다. 4xx는 INFO(문구 · 본문 없이), 5xx는 ERROR에 traceback(프레임과 예외 이름만)이다. 줄 모양은 `backend/logs.py`의 JSON 한 줄(`severity` · `time` · `logger` · `message`)이다.
@@ -75,3 +76,4 @@
 - **AC-05** Given 임의의 `X-Request-ID`, When 성공 또는 오류 응답, Then 서버가 생성한 다른 값을 반환한다.
 - **AC-06** Given 기존 인증·관리자·가격 API 테스트, When 공통 오류 처리기를 적용, Then 성공 본문과 상태 코드가 유지된다.
 - **AC-07** Given `/openapi.json`, When validation 오류 응답 문서를 확인, Then FastAPI 기본 `HTTPValidationError.detail`이 아니라 `ErrorEnvelope`를 가리킨다.
+- **AC-08** Given `DATABASE_URL`이 없는 서버와 세션 쿠키, When 로그인이 필요한 경로(`GET /api/auth/me`), Then 500이 아니라 503 `UNAVAILABLE` 공통 오류다(`tests/api/test_errors.py`).

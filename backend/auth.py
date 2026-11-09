@@ -86,8 +86,12 @@ def verify_password(password: str, encoded: str) -> bool:
 
 def connection():
     """DATABASE_URL로 새 PostgreSQL 연결을 연다(`with`로 쓰면 종료 때 커밋하고 닫는다)."""
-    # [주의] DATABASE_URL이 없으면 KeyError, 연결 실패는 psycopg.Error. 연결 대기는 5초로 제한한다
-    return psycopg.connect(os.environ["DATABASE_URL"], connect_timeout=5)
+    # [주의] 연결 실패는 psycopg.Error(공통 처리기가 503). 연결 대기는 5초로 제한한다
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        # [왜] 설정 누락도 DB를 쓸 수 없는 상태다. KeyError로 두면 공통 500이 되므로 DB 장애 처리기와 같은 문구의 503으로 낸다
+        raise HTTPException(503, "저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.")
+    return psycopg.connect(url, connect_timeout=5)
 
 
 def create_google_state() -> tuple[str, str, str, str]:

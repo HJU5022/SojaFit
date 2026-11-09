@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api", tags=["projects"])
 
 
 class RenameProject(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"name": "전원부 다이오드 교체 검토"}]})
     name: str
 
     @field_validator("name")
@@ -25,6 +25,8 @@ class RenameProject(BaseModel):
 
 
 class CreateProject(RenameProject):
+    # [주의] 이름 바꾸기의 예시를 물려받으면 demo_id가 빠져 422가 된다
+    model_config = ConfigDict(json_schema_extra={"examples": [{"demo_id": "attiny85_dev", "name": "ATtiny85 보드 다이오드 검토"}]})
     demo_id: str
 
     @field_validator("demo_id")
@@ -46,7 +48,12 @@ def repository():
         raise HTTPException(503, "프로젝트 서비스를 사용할 수 없습니다.") from None
 
 
-@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)])
+class DemoCircuit(BaseModel):
+    id: str
+    name: str
+
+
+@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)], response_model=list[DemoCircuit])
 def demo_circuits():
     return [{"id": demo_id, "name": name} for demo_id, name in DEMOS.items()]
 
@@ -92,7 +99,16 @@ class MemoryUploadParser(MultiPartParser):
         super().on_end()
 
 
-@router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
+# [왜] 본문을 직접 읽어(아래 MemoryUploadParser) FastAPI가 multipart 칸을 모른다. /docs에 파일 · 이름 칸이 보이게 OpenAPI에만 적는다.
+#      모양은 FastAPI가 UploadFile · Form에 만드는 스키마와 같고, 수신 상한 · 오류 코드는 아래 처리기가 정한다
+UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-data": {"schema": {
+    "type": "object", "required": ["file", "name"], "additionalProperties": False,
+    "properties": {"file": {"type": "string", "contentMediaType": "application/octet-stream",
+                            "description": "KiCad 넷리스트(.net, UTF-8, 5 MiB 이하)"},
+                   "name": {"type": "string", "description": "프로젝트 이름(앞뒤 공백 제외 1~200자)"}}}}}}}
+
+
+@router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
 async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     # File/Form 의존성은 인증 전에 원본을 디스크에 spool할 수 있으므로 직접 제한한다.
     async def bounded_stream():

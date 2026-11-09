@@ -89,6 +89,82 @@ class ErrorEnvelope(BaseModel):
     error: ErrorPayload
 
 
+# 성공 응답 본문(`response_model`). [주의] response_model은 선언하지 않은 칸을 응답에서 지우고, 선언한 칸이 없으면 500이다.
+# 칸은 각 경로가 지금 돌려주는 dict와 frontend/src/api/*.ts의 타입에서 옮겼다(tests/api/test_health.py가 대조한다)
+class Health(BaseModel):
+    status: Literal["ok"]
+
+
+class UserId(BaseModel):
+    """로그인 · 가입 · 데모 버튼 로그인 성공. 세션은 쿠키로 간다."""
+
+    user_id: int
+
+
+class Enabled(BaseModel):
+    """데모 버튼 로그인 · Google 관리자 로그인이 켜져 있는지."""
+
+    enabled: bool
+
+
+class Me(BaseModel):
+    user_id: int
+    role: Literal["admin", "user"]
+
+
+class Ok(BaseModel):
+    ok: bool
+
+
+class Deleted(BaseModel):
+    """탈퇴로 지운 건수. 키: analysis_threads · analysis_circuits · checkpoints · memory_items · projects · quotes · account."""
+
+    deleted: dict[str, int]
+
+
+class Account(BaseModel):
+    id: int
+    email: str  # 사용자명을 가린 이메일(auth.mask_email)
+    role: Literal["admin", "user"]
+    is_active: bool
+
+
+class Accounts(BaseModel):
+    users: list[Account]
+
+
+# [왜] 가격 칸은 Mouser 응답에서 그대로 옮긴 값이라 모두 null을 허용한다(형식이 다르면 mouser.py가 bad_response로 거른다)
+class PriceBreak(BaseModel):
+    quantity: int | None
+    price: str | None
+    currency: str | None
+
+
+class PricePart(BaseModel):
+    part_number: str | None
+    manufacturer: str | None
+    price_breaks: list[PriceBreak]
+    availability: str | None
+    product_url: str | None
+
+
+class PricesAvailable(BaseModel):
+    available: Literal[True]
+    source: str
+    fetched_at: str  # 조회 시각(UTC ISO 8601)
+    parts: list[PricePart]
+
+
+class PricesUnavailable(BaseModel):
+    """키 없음 · 데모 모드 · 호출 상한 · Mouser 실패. parts는 늘 빈 목록이다."""
+
+    available: Literal[False]
+    source: str
+    reason: str
+    message: str
+    parts: list[PricePart]
+
+
 # OpenAPI 설명에는 상태마다 나올 수 있는 code를 적는다(예: 409 → CONFLICT · CONDITION_PENDING · ALREADY_APPROVED)
 COMMON_ERROR_RESPONSES = {
     status_code: {"model": ErrorEnvelope, "description": " · ".join([code, *(c for c, s in SPECIAL_CODES.items() if s == status_code)])}
@@ -158,7 +234,7 @@ def google_enabled() -> bool:
     return os.getenv("GOOGLE_AUTH_ENABLED") == "1" and bool(os.getenv("GOOGLE_CLIENT_ID")) and bool(os.getenv("GOOGLE_CLIENT_SECRET"))
 
 
-@app.get("/api/auth/google/status", include_in_schema=False)
+@app.get("/api/auth/google/status", include_in_schema=False, response_model=Enabled)
 def google_status():
     return {"enabled": google_enabled()}
 
@@ -169,7 +245,7 @@ def google_start():
         raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
     try:
         state, browser, verifier, nonce = auth.create_google_state()
-    except (psycopg.Error, KeyError):
+    except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
     origin = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").rstrip("/")
@@ -205,7 +281,8 @@ def google_callback(request: Request):
             response = RedirectResponse("/api/auth/google/pending", status_code=303)
             secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
             response.set_cookie(GOOGLE_PENDING_COOKIE, request_id, max_age=900, httponly=True, secure=secure, samesite="lax", path="/api/auth/google/pending")
-    except (psycopg.Error, KeyError, httpx.HTTPError, AuthlibBaseError, ValueError, TypeError):
+    # [왜] 콜백은 브라우저 이동이라 DB 설정 누락(auth.connection의 503)도 JSON 대신 로그인 화면 오류로 돌려보낸다
+    except (psycopg.Error, HTTPException, KeyError, httpx.HTTPError, AuthlibBaseError, ValueError, TypeError):
         return google_failure()
     response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
     response.headers["Cache-Control"] = "no-store"
@@ -228,7 +305,7 @@ def google_pending(request: Request):
     request_id = request.cookies.get(GOOGLE_PENDING_COOKIE, "")
     try:
         email = auth.google_pending_email(request_id)
-    except (psycopg.Error, KeyError):
+    except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     if not email:
         raise HTTPException(status_code=400, detail="연결 요청이 만료되었거나 처리되었습니다.")
@@ -276,17 +353,18 @@ async def internal_error(request: Request, exc: Exception):
     )
 
 
-@app.get("/health")
-def health() -> dict:
+@app.get("/health", response_model=Health)
+def health():
     """서비스 생존 확인용. 배포 환경과 평가자가 부르며 항상 {"status": "ok"}를 돌려준다."""
     return {"status": "ok"}
 
 
 class Login(BaseModel):
-    """로그인 요청 본문."""
+    """로그인 요청 본문. 모르는 칸은 공통 422다."""
 
+    # [왜] 화면은 email · password만 보낸다(frontend/src/api/auth.ts). 예시는 /docs에 보이는 가짜 값이다
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"email": "user@example.com", "password": "example-password"}]})
     # [왜] 길이 상한은 입력 크기를 제한해 scrypt 비용 증폭과 DB 값 길이 초과를 막는다
-
     email: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=1, max_length=1024)
 
@@ -307,14 +385,14 @@ def set_session_cookie(response: Response, token: str) -> None:
     response.set_cookie(auth.COOKIE, token, httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
 
 
-@app.post("/api/auth/login")
+@app.post("/api/auth/login", response_model=UserId)
 def login(body: Login, request: Request, response: Response):
     """이메일·비밀번호를 검증하고 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
     # [주의] 403 Origin 불일치, 401 인증 실패·계정 잠금·IP 잠금, 503 DB 사용 불가 또는 동시 검증 슬롯 부족(authenticate가 냄)
     auth.check_origin(request)
     try:
         result = auth.authenticate(body.email, body.password, auth.client_ip(request))
-    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+    except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     if result is None:
         # [왜] 계정 없음·비밀번호 틀림·계정 잠금·IP 잠금·비활성을 같은 메시지로 돌려 계정 존재와 잠금을 알 수 없게 한다
@@ -327,6 +405,8 @@ def login(body: Login, request: Request, response: Response):
 class Signup(Login):
     """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상, 처리방침 고지 동의(consent)는 true여야 한다(11-09 결정)."""
 
+    # [주의] 로그인의 예시를 물려받으면 consent가 빠져 422가 된다. 모르는 칸 금지(extra)는 Login에서 물려받는다
+    model_config = ConfigDict(json_schema_extra={"examples": [{"email": "new-user@example.com", "password": "example-password-123", "consent": True}]})
     password: str = Field(min_length=8, max_length=1024)
     # [왜] 가입 화면의 처리방침 고지(개인정보 보호법 15조 2항)를 읽고 동의했다는 표시. 없거나 true가 아니면 공통 422다
     consent: StrictBool
@@ -339,7 +419,7 @@ class Signup(Login):
         return consent
 
 
-@app.post("/api/auth/signup")
+@app.post("/api/auth/signup", response_model=UserId)
 def signup(body: Signup, request: Request, response: Response):
     """승인 없이 user 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
     # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패·동의(consent) 없음(입력값 미노출, validation_error가 냄),
@@ -347,7 +427,7 @@ def signup(body: Signup, request: Request, response: Response):
     auth.check_origin(request)
     try:
         result = auth.signup(body.email, body.password, auth.client_ip(request))
-    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+    except psycopg.Error:
         raise HTTPException(status_code=503, detail="가입 서비스를 사용할 수 없습니다.") from None
     if result is None:
         raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
@@ -362,7 +442,7 @@ def demo_mode() -> None:
         raise HTTPException(status_code=404, detail="Not Found")
 
 
-@app.get("/api/auth/demo", dependencies=[Depends(demo_mode)])
+@app.get("/api/auth/demo", dependencies=[Depends(demo_mode)], response_model=Enabled)
 def demo_status():
     """데모 모드면 로그인 화면이 데모 사용자 A · B 버튼을 보인다(로그인 필요 없음)."""
     return {"enabled": True}
@@ -371,18 +451,18 @@ def demo_status():
 class DemoLogin(BaseModel):
     """데모 버튼 로그인 본문. 계정은 a · b 둘 중 하나만(이메일 · 사용자 id는 받지 않음)."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"account": "a"}]})
     account: Literal["a", "b"]
 
 
-@app.post("/api/auth/demo-login", dependencies=[Depends(demo_mode)])
+@app.post("/api/auth/demo-login", dependencies=[Depends(demo_mode)], response_model=UserId)
 def demo_login(body: DemoLogin, request: Request, response: Response):
     """데모 모드에서 시드한 데모 사용자 A · B로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
     # [주의] 404 데모 모드 아님 · 데모 계정 없음(새 볼륨에서만 시드), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
     auth.check_origin(request)
     try:
         result = auth.demo_session(body.account)
-    except (psycopg.Error, KeyError):
+    except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     if result is None:
         raise HTTPException(status_code=404, detail="데모 계정이 없습니다. 데모 모드로 새 DB 볼륨을 만들어 다시 시작하세요.")
@@ -391,13 +471,13 @@ def demo_login(body: DemoLogin, request: Request, response: Response):
     return {"user_id": user_id}
 
 
-@app.get("/api/auth/me")
+@app.get("/api/auth/me", response_model=Me)
 def me(user: tuple[int, str] = Depends(auth.current_user)):
     """현재 세션의 사용자 id와 역할(admin | user)을 돌려준다(세션이 없으면 401)."""
     return {"user_id": user[0], "role": user[1]}
 
 
-@app.post("/api/auth/logout")
+@app.post("/api/auth/logout", response_model=Ok)
 def logout(request: Request, response: Response):
     """DB 세션을 지우고 쿠키를 삭제한다(Origin이 다르면 403)."""
     auth.check_origin(request)
@@ -406,7 +486,7 @@ def logout(request: Request, response: Response):
     return {"ok": True}
 
 
-@app.delete("/api/me")
+@app.delete("/api/me", response_model=Deleted)
 def delete_me(request: Request, response: Response, user: tuple[int, str] = Depends(auth.current_user)):
     """탈퇴: 로그인 사용자의 기록을 먼저, 계정을 마지막에 지우고 지운 건수를 돌려준다(SPEC 8.5, 개인정보 보호법 37조 동의 철회)."""
     # [주의] 403 Origin 불일치, 409 관리자 · 진행 중 분석, 503 분석 저장소 없음 · 일부만 지움(다시 요청하면 남은 것부터 이어서 지움)
@@ -423,20 +503,20 @@ def delete_me(request: Request, response: Response, user: tuple[int, str] = Depe
 
 
 class AccountState(BaseModel):
-    """계정 활성 상태 변경 요청 본문."""
+    """계정 활성 상태 변경 요청 본문. 모르는 칸은 공통 422다."""
 
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"is_active": False}]})
     # [왜] StrictBool이라 "false" 같은 문자열이 True로 해석되는 일을 막는다
-
     is_active: StrictBool
 
 
-@app.get("/api/admin/users")
+@app.get("/api/admin/users", response_model=Accounts)
 def admin_users(user_id: int = Depends(auth.current_user_id)):
     """관리자 전용 계정 목록을 반환하고 이메일 사용자명을 마스킹한다."""
     users = auth.admin_users(user_id)
     return {"users": [{**user, "email": auth.mask_email(user["email"])} for user in users]}
 
-@app.patch("/api/admin/users/{target_id}")
+@app.patch("/api/admin/users/{target_id}", response_model=Ok)
 def admin_set_active(target_id: int, body: AccountState, request: Request, user_id: int = Depends(auth.current_user_id)):
     """일반 계정(user)을 활성화·비활성화한다(관리자 전용)."""
     # [주의] 403 Origin 불일치·관리자 아님·대상이 관리자, 404 대상 없음. 비활성화하면 auth가 그 계정의 세션도 지운다
@@ -451,7 +531,7 @@ def price_unavailable(reason: str) -> dict:
     return {"available": False, "source": mouser.SOURCE, "reason": reason, "message": message, "parts": []}
 
 
-@app.get("/api/prices", dependencies=[Depends(auth.current_user_id)])
+@app.get("/api/prices", dependencies=[Depends(auth.current_user_id)], response_model=PricesAvailable | PricesUnavailable)
 def prices(response: Response, parts: str = Query(min_length=1, max_length=450, description="쉼표로 나눈 품번 1~10개")):
     """로그인한 사용자에게 후보 품번의 Mouser 가격·재고를 요청 때 한 번 조회해 돌려준다(SPEC 4절).
 

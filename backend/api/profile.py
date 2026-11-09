@@ -19,7 +19,8 @@ router = APIRouter(prefix='/api/me', tags=['profile'])
 
 class ProfileUpdate(BaseModel):
     """바꿀 칸만 보낸다. 세 칸 밖의 이름(사용자 id 포함)은 422다."""
-    model_config = ConfigDict(extra='forbid', strict=True)
+    model_config = ConfigDict(extra='forbid', strict=True,
+                              json_schema_extra={'examples': [{'affiliation': '예시전자 회로설계팀', 'job_role': 'design', 'mounting_preference': 'smd'}]})
     affiliation: str | None = None
     job_role: str | None = None
     mounting_preference: str | None = None
@@ -30,6 +31,19 @@ class ProfileUpdate(BaseModel):
         return value if value is None else profile.clean(info.field_name, value)
 
 
+Kind = Literal['affiliation', 'job_role', 'mounting_preference']
+
+
+class ProfileFact(BaseModel):
+    """사실 한 칸(`backend/conversations/profile.py`의 update가 Store에 쓰는 값 그대로)."""
+    kind: Kind
+    value: str
+    text: str  # 코드가 정한 틀로 만든 한국어 문장
+    version: int
+    updated_at: str  # [왜] Store에 ISO 문자열로 저장한다. datetime으로 두면 다시 써서 모양이 바뀐다
+    source: str
+
+
 def profile_memory(request: Request):
     """분석 저장소의 사용자 사실 기억. 서비스가 없으면 공통 503."""
     service = getattr(request.app.state, 'conversations', None)
@@ -38,7 +52,7 @@ def profile_memory(request: Request):
     return service.profile
 
 
-@router.get('/memory')
+@router.get('/memory', response_model=list[ProfileFact])
 def read_memory(q: str | None = Query(default=None, min_length=1, max_length=500),
                 user_id: int = Depends(auth.current_user_id), memory=Depends(profile_memory)):
     """내 사실(최대 3개). q를 주면 의미가 가까운 순(색인이 꺼져 있으면 순위 없이)."""
@@ -46,7 +60,7 @@ def read_memory(q: str | None = Query(default=None, min_length=1, max_length=500
     return memory.facts(user_id, q)
 
 
-@router.patch('/memory', dependencies=[Depends(auth.check_origin)])
+@router.patch('/memory', response_model=list[ProfileFact], dependencies=[Depends(auth.check_origin)])
 def update_memory(body: ProfileUpdate, request: Request, user_id: int = Depends(auth.current_user_id), memory=Depends(profile_memory)):
     """보낸 칸만 덮어쓰고(version 올림) 바뀐 뒤 내 사실 목록을 돌려준다. 탈퇴 중이면 409."""
     # [왜] 탈퇴가 Store를 지운 뒤 이 쓰기가 끼어들면 지운 계정의 사실이 남는다. 계정 공유 잠금 안에서 쓴다
@@ -55,7 +69,7 @@ def update_memory(body: ProfileUpdate, request: Request, user_id: int = Depends(
 
 
 @router.delete('/memory', status_code=204, dependencies=[Depends(auth.check_origin)])
-def delete_memory(kind: Literal['affiliation', 'job_role', 'mounting_preference'] | None = None,
+def delete_memory(kind: Kind | None = None,
                   user_id: int = Depends(auth.current_user_id), memory=Depends(profile_memory)):
     """kind 한 칸 또는(없으면) 내 사실 전부를 지운다."""
     memory.delete(user_id, kind)

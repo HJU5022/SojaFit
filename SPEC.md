@@ -132,11 +132,63 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 아래 회로·대화·기억·견적 API는 모두 이 세션의 사용자 id로 소유권을 확인하고, 다른 사용자의 자료는 404입니다. 상세는 `docs/specs/login-auth.md`.
-- 가입: `POST /api/auth/signup` `{"email", "password", "consent": true}`(같은 출처, 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422). 관리자 승인·이메일 인증 없이 `user` 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 `{"user_id"}`를 돌려줍니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정). 상세는 `docs/specs/login-auth.md`.
-- 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
-- 가격·재고: `GET /api/prices?parts=품번,품번`(로그인 필요, 품번 1~10개, 품번마다 3~40자, `|` 금지). 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
-- Google 관리자 로그인: 설정이 켜진 경우 `GET /api/auth/google/status`, `/start`, `/callback`, `/pending`을 제공하고 승인된 활성 관리자만 기존 서버 세션을 발급받습니다. 연결 승인·철회는 `python -m backend.auth`의 운영자 CLI를 사용합니다. 상세는 `docs/specs/google-admin-login.md`입니다.
+- HTTP API: 경로 36개입니다. `/openapi.json`(`/docs`)에 32개가 보이고, Google 관리자 로그인 4개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 28개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 18개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
+  - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
+
+    | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
+    |---|---|---|---|---|---|
+    | `GET /health` | 없음 | - | 200 `Health` `{status: "ok"}` | | 배포 주소 · 새 clone 기동의 생존 확인(G1 · G2, G2 실측이 이 응답 시각을 잼) |
+    | `POST /api/auth/login` | 없음 | `Login` `{email, password}` | 200 `UserId` `{user_id}` + 세션 쿠키 | 401 · 422 | 평가 계정으로 접속(G1), 계정마다 대화 · 기억을 가르는 세션(G4, 8.6) |
+    | `GET /api/auth/me` | 로그인 | - | 200 `Me` `{user_id, role}` | 401 | 화면이 로그인 상태와 관리자 메뉴를 고름(8.6) |
+    | `POST /api/auth/logout` | 없음(쿠키의 세션을 지움) | - | 200 `Ok` `{ok}` | | 세션을 끝내고 다른 계정으로 바꿈(8.6 로그아웃, G4 두 계정 확인) |
+    | `GET /api/auth/demo` | 데모 모드 | - | 200 `Enabled` `{enabled}` | 404 | 키 없는 데모에서 로그인 화면이 데모 버튼을 보일지 정함(G2, 7절 · 8.6) |
+    | `POST /api/auth/demo-login` | 데모 모드 | `DemoLogin` `{account: a \| b}` | 200 `UserId` + 세션 쿠키 | 404(계정 없음) · 422 | 평가자가 비밀번호 없이 데모 사용자 A · B로 들어가 격리를 봄(G2 · G4, 8.6) |
+    | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[Thread]` `[{id, project_id}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
+    | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
+    | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
+    | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
+    | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인) |
+    | `POST /api/messages/{id}/approvals` | 로그인 | `ApproveBody` `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 `Approval` `{id, message_id, candidate_part, verdict, case_id, created_at}` | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 | 견적서는 사람이 승인한 뒤에만 저장(1절 하는 일, 8.4, G4 견적서 승인 지점) |
+    | `GET /api/me/memory` | 로그인 | 선택 쿼리 `q` 1~500자 | 200 `list[ProfileFact]` `[{kind, value, text, version, updated_at, source}]` | 422 · 503 | 사용자 사실 장기 기억 조회 · 의미 검색(G4 기억 격리, 8.5) |
+    | `PATCH /api/me/memory` | 로그인 | `ProfileUpdate` `{affiliation?, job_role?, mounting_preference?}` | 200 `list[ProfileFact]` | 409(탈퇴 중) · 422 · 503 | 사용자가 자기 사실을 고침(8.5, 대화에서 사실을 뽑지 않음) |
+    | `DELETE /api/me/memory` | 로그인 | 선택 쿼리 `kind` | 204 | 422 · 503 | 사실 한 칸 · 전부를 바로 지움(8.5 삭제) |
+
+  - 핵심 흐름(2절 목표 사용자 흐름 2 · 4 · 7단계):
+
+    | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
+    |---|---|---|---|---|---|
+    | `GET /api/demo-circuits` | 로그인 | - | 200 `list[DemoCircuit]` `[{id, name}]` | | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계) |
+    | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
+    | `POST /api/projects` | 로그인 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
+    | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
+    | `GET /api/projects/{id}` | 로그인 | - | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
+    | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
+    | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
+    | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
+    | `POST /api/approvals/{id}/quotes` | 로그인 | `QuoteBody` `{quantity 1~100000}` | 201 `Quote` `{id, approval_id, part_number, quantity, created_at}` | 404 · 409 | 승인한 후보로 가격 없는 견적을 저장(7단계, 8.4, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
+    | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[Quote]` | 404 | 프로젝트의 견적 목록(7단계, 8.4) |
+
+  - 운영 · 보안 · 부가:
+
+    | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
+    |---|---|---|---|---|---|
+    | `GET /api/auth/google/status` | 없음(문서에서 숨김) | - | 200 `Enabled` | | 로그인 화면이 Google 진입을 보일지 정함(8.6, `docs/specs/google-admin-login.md`) |
+    | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | 승인된 관리자의 Google 로그인 시작(8.6) |
+    | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(세션) · `/api/auth/google/pending` · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급 또는 연결 요청(8.6) |
+    | `GET /api/auth/google/pending` | 없음(대기 쿠키, 숨김) | - | 200 HTML(이메일 · 요청 번호) | 400 · 404 · 503 | 운영자 승인을 기다리는 연결 요청 번호를 보여 줌(운영자 CLI로 승인) |
+    | `GET /api/admin/users` | 관리자 | - | 200 `Accounts` `{users: [{id, email(가림), role, is_active}]}` | 403 | 계정 상태 확인(8.6 관리자) |
+    | `PATCH /api/admin/users/{id}` | 관리자 | `AccountState` `{is_active}` | 200 `Ok` | 403 · 404 · 422 | 일반 계정 비활성화와 세션 폐기(8.6) |
+    | `POST /api/auth/signup` | 없음 | `Signup` `{email, password ≥8자, consent: true}` | 200 `UserId` + 세션 쿠키 | 409 · 422 · 429 `RATE_LIMITED` | 사전 계정 없이 쓰는 자기 가입(11-09 결정, 8.6) |
+    | `DELETE /api/me` | 로그인(일반 계정) | - | 200 `Deleted` `{deleted: {이름: 건수}}` | 409(관리자 · 진행 중 분석) · 503 | 동의 철회 · 탈퇴(8.5 삭제, 개인정보 보호법 37조) |
+    | `GET /api/approved-cases` | 로그인 | - | 200 `list[ApprovedCase]` `[{id, approval_id, candidate_part, verdict, created_at}]` | | 내가 승인한 사례 확인(`docs/specs/d5-frontend-service.md` How, 장기 기억이 아님 8.5) |
+    | `DELETE /api/approved-cases/{id}` | 로그인 | - | 204 | 404 | 승인 사례를 확인 뒤 지움(같은 작업서) |
+    | `GET /api/prices` | 로그인 | 쿼리 `parts` 품번 1~10개 | 200 `PricesAvailable \| PricesUnavailable` | 422 | 후보의 가격 · 재고를 근거와 따로 보임, 저장하지 않음(1절 하는 일, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
+
+  - 인증 · 가입: 사전 생성된 이메일 계정 · 자기 가입 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). 가입은 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422이고, 관리자 승인 · 이메일 인증 없이 `user` 계정을 만들어 로그인과 같은 세션 쿠키를 심습니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정).
+  - 관리자: 일반 사용자는 관리자 API를 부를 수 없고, 비활성화하면 그 계정의 기존 세션을 지웁니다. 관리자 계정의 상태는 이 API로 바꾸지 않습니다.
+  - Google 관리자 로그인: `GOOGLE_AUTH_ENABLED=1`과 클라이언트 설정이 있을 때만 켜지고, 승인된 활성 관리자만 기존 서버 세션을 받습니다. 연결 승인 · 철회는 `python -m backend.auth`의 운영자 CLI를 씁니다(상세 `docs/specs/google-admin-login.md`).
+  - 가격 · 재고: 품번마다 3~40자, `|` 금지입니다. 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
 - 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. `error.code`는 화면이 다르게 반응해야 할 때만 나눈 아래 15개 중 하나이고(ADR 0019, `backend/errors.py`), 분석 SSE의 마지막 이벤트 `failed`의 `error.code`도 같은 표입니다. `message`는 사람이 읽는 한국어 문장입니다. 상세는 `docs/specs/api-error-contract.md`입니다.
 
   | code | HTTP | 뜻 |
@@ -158,25 +210,18 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
 
   분석 거절(SSE `refused`)은 요청 실패가 아니라 분석 결과라 이 표 밖입니다. 서버 로그는 stdout에 JSON 한 줄씩(`severity` · `time` · `logger` · `message`, 요청 안의 줄은 `request_id`)이고, 오류 응답 · `failed` 이벤트마다 `code` · `status`를 담은 줄 하나를 남깁니다. 4xx는 INFO(문구 · 본문 없이), 5xx와 예상 못 한 예외는 ERROR에 traceback(프레임과 예외 이름만, 예외 메시지는 빼고)입니다. 질문 글 · 조건 · 넷리스트 · 이메일 · 비밀번호 · 토큰 · 키는 로그에 적지 않습니다(`backend/logs.py`).
-- 질문·회로·대화·기억·견적 API: 모두 로그인이 필요하고(없으면 401), 바꾸는 요청은 같은 출처만 받습니다(Origin이 없거나 다르면 403). 오류 본문은 위 공통 오류입니다. React 작업대가 쓰는 경로(`backend/api/`):
+- run · 재개의 SSE 이벤트(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, `text/event-stream`, `/docs`에도 같은 설명): frame마다 `event: 이름`과 `data: JSON` 한 줄입니다. 순서는 `run_started` → `status` → 마지막 하나이고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`). 공개 결과는 허용 목록 `BrowserResult`(`backend/conversations/dto.py`)의 칸 `answer · status · stage · question_type · evidence · judgement · price_parts · refusal · interrupt · request_id · profile_hints`만 담고, `GET /api/runs/{id}`의 `result`와 같은 모양입니다(저장하지 않는 `profile_hints`는 거기서 빈 목록).
 
-  | 경로 | 본문 | 성공 | 주요 오류 |
-  |---|---|---|---|
-  | `GET /api/demo-circuits` | - | 200 `[{id, name}]` | |
-  | `GET /api/projects` · `POST /api/projects` | POST `{demo_id, name}` | 200 목록 · 201 상세 | 422 |
-  | `POST /api/projects/upload` | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 상세 | 400 형식 · 413 크기 · 422 |
-  | `GET` · `PATCH` · `DELETE /api/projects/{id}` | PATCH `{name}` | 200 상세(`connections` 포함) · 204 | 404 · 422 · DELETE 409(실행 중 run) |
-  | `GET` · `POST /api/projects/{id}/threads` | - | 200 목록 · 201 `{id, project_id}` | 404 |
-  | `POST /api/threads/{id}/runs` | `{question(1~4000자), target_ref, conditions}` | 200 SSE | 스트림 전 503(분석 서비스 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 404. 스트림 뒤는 `failed`의 `error.code` |
-  | `GET /api/runs/{id}` | - | 200 `{id, thread_id, message_id, result}` | 404 |
-  | `POST /api/runs/{id}/resume` | `{answers: {값 이름: 답}(30개 이하), role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404 |
-  | `GET /api/judge/roles` | - | 200 `[{code, name}]` | |
-  | `POST /api/messages/{id}/approvals` | `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 |
-  | `POST /api/approvals/{id}/quotes` | `{quantity: 1~100000}` | 201 | 404 · 409 |
-  | `GET /api/projects/{id}/quotes` · `GET /api/approved-cases` · `DELETE /api/approved-cases/{id}` | - | 200 · 204 | 404 |
-  | `GET` · `PATCH` · `DELETE /api/me/memory` | 8.5 | 200 · 204 | 422 · 503 |
+  | 이벤트 | 언제 | data 칸 |
+  |---|---|---|
+  | `run_started` | 스트림을 열자마자, 분석 전 | `{run_id, request_id}` |
+  | `status` | 분석을 시작할 때 한 번 | 공개 결과, `status: running` · `stage: 입력 확인` |
+  | `requires_input` | 판정에 회로 값 · 역할이 더 필요할 때(마지막) | 공개 결과, `status: requires_input` · `stage: 판정` · `interrupt: {missing, role_choices, question}` |
+  | `completed` | 분석이 답을 냈을 때(마지막) | 공개 결과, `status: completed` · `stage: 완료` · `answer` · `question_type` · `evidence` · `judgement` · `price_parts` · `profile_hints` |
+  | `refused` | 범위 밖 · 근거 없음으로 답하지 않을 때(마지막, 오류가 아님) | `completed`와 같은 칸, `status: refused` · `refusal`(= `answer`) |
+  | `failed` | 분석이 실패했을 때(마지막) | 공개 결과, `status: failed` · `stage: 오류` + `error: {code, message}`(code는 위 공통 오류 표) |
 
-  run · 재개의 SSE 이벤트는 `run_started`(`{run_id, request_id}`) → `status`(단계 `입력 확인`) → 마지막 하나입니다: `requires_input`(단계 `판정`, `interrupt`) · `completed` · `refused`(둘 다 단계 `완료`, 결과와 `profile_hints`) · `failed`(단계 `오류`, `error: {code, message}`). 결과 본문은 공개 값 허용 목록(`backend/conversations/dto.py`)만 담고, 마지막 상태는 `public.runs`에 저장한 뒤 보냅니다(`backend/api/conversations.py`).
+  실패 상태도 저장하지 못하면 마지막 이벤트 없이 끝나고 `GET /api/runs/{id}`는 `running`으로 남습니다. 연결이 끊겨도 실행은 계속되고, 화면은 질문을 다시 보내지 않고 `GET /api/runs/{id}`로 저장한 상태를 읽습니다.
 
   `/api/threads`로 시작하는 POST(`POST /api/threads/{id}/runs`)는 본문이 128 KiB를 넘으면 413 `PAYLOAD_TOO_LARGE`이고, `/api/threads` · `/api/me/memory` 응답은 `Cache-Control: no-store`입니다(`backend/main.py`의 `conversation_boundary`). React 이전 화면 `/workspace`와 그 경로(`/api/circuits` · `/api/threads` 목록 · 상세 · 메시지 · 재개 · 승인 · 재시도 · `/api/memories` · `/api/analysis/*`)는 11-10에 지웠습니다.
 - 평가셋 고정 키: `id`, `input`, `kind`, `irrelevant_type`, `expected`, `gold_chunks`, `why`, `as_of`, `corpus_version`. 뜻은 `evals/guides/dataset-guide.md`가 정본입니다.

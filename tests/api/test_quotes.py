@@ -6,13 +6,15 @@ from backend.api.quotes import service
 from backend.main import app
 from backend.services.quote import InvalidApproval, QuoteNotFound
 
+CREATED = '2026-11-10T09:00:00+00:00'  # 실제 서비스(backend/services/quote.py)처럼 DB의 created_at을 함께 돌려준다
+
 
 class FakeQuotes:
     def __init__(self): self.calls = []
-    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4}
-    def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity}
+    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
+    def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
     def list_quotes(self, user, project): return []
-    def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]
+    def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
 
 

@@ -22,7 +22,7 @@ from starlette.concurrency import run_in_threadpool
 
 from backend import auth
 from backend.errors import code_for, log_error
-from backend.conversations.dto import public_state, result_dto
+from backend.conversations.dto import BrowserResult, public_state, result_dto
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
 from backend.judge import conditions as judge_conditions
 
@@ -37,14 +37,16 @@ class RoleLabel(BaseModel):
 
 
 class StartRun(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
+        {'question': 'D1을 1N5819로 바꿔도 되나요?', 'target_ref': 'D1', 'conditions': '입력 최대 12 V, 부하 전류 0.5 A'}]})
     question: str = Field(min_length=1, max_length=4000)
     target_ref: str = Field(max_length=100)
     conditions: str = Field(default='', max_length=2000)
 
 
 class ResumeRun(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    # [왜] role은 interrupt가 역할을 물었을 때(role_choices)만 보낸다. 예시는 회로 값만 답하는 흔한 경우다
+    model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [{'answers': {'v_in_max': '12', 'i_max': '0.5'}}]})
     answers: dict[str, str] = Field(max_length=30)
     role: str | None = Field(default=None, pattern=r'R(?:0[1-9]|1[0-9]|2[0-3])')
 
@@ -56,6 +58,30 @@ class ResumeRun(BaseModel):
                or len(answer) > 200 or '://' in answer for key, answer in value.items()):
             raise ValueError('invalid answer')
         return value
+
+
+class Thread(BaseModel):
+    id: str  # UUID 문자열(분석 thread와 같은 UUID)
+    project_id: int
+
+
+class Run(BaseModel):
+    id: str
+    thread_id: str
+    message_id: int | None  # 완료 · 거절 결과의 assistant 메시지. 승인(POST /api/messages/{id}/approvals)에 쓴다
+    result: BrowserResult  # SSE 마지막 이벤트와 같은 공개 결과(profile_hints는 저장하지 않아 빈 목록)
+
+
+# [왜] run · 재개는 SSE라 response_model로 적을 수 없다. /docs에는 이벤트 이름과 data 모양을 설명으로 적는다(SPEC 4절과 같은 내용)
+SSE_RESPONSE = {200: {'description': (
+    'text/event-stream. 각 frame은 `event: 이름`과 `data: JSON` 한 줄이다. 순서: '
+    '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → 마지막 하나: '
+    '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`) · '
+    '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
+    '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
+    '공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
+    '실패 상태를 저장하지 못하면 마지막 frame 없이 끝난다.'),
+    'content': {'text/event-stream': {'schema': {'type': 'string'}}}}}
 
 
 def repository():
@@ -83,17 +109,17 @@ def list_judge_roles(user_id: int = Depends(auth.current_user_id)):
     return [RoleLabel(code=code, name=rule['name']) for code, rule in sorted(judge_conditions.load().items())]
 
 
-@router.get('/projects/{project_id}/threads')
+@router.get('/projects/{project_id}/threads', response_model=list[Thread])
 def list_threads(project_id: int, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     return repo.list_threads(user_id, project_id)
 
 
-@router.post('/projects/{project_id}/threads', status_code=201, dependencies=[Depends(auth.check_origin)])
+@router.post('/projects/{project_id}/threads', status_code=201, response_model=Thread, dependencies=[Depends(auth.check_origin)])
 def create_thread(project_id: int, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     return {'id': repo.create_thread(user_id, project_id), 'project_id': project_id}
 
 
-@router.get('/runs/{run_id}')
+@router.get('/runs/{run_id}', response_model=Run)
 def get_run(run_id: UUID, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     run = repo.get_run(user_id, str(run_id))
     return {'id': run['id'], 'thread_id': run['thread_id'], 'message_id': run.get('message_id'),
@@ -186,7 +212,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
     return StreamingResponse(output(), media_type='text/event-stream', headers={'Cache-Control': 'no-store'})
 
 
-@router.post('/threads/{thread_id}/runs', dependencies=[Depends(auth.check_origin)])
+@router.post('/threads/{thread_id}/runs', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
     thread, request_id = str(thread_id), request.state.request_id
     # [왜] 하루 토큰 상한(429) · 대상 부품 확인(422·409)을 run 행보다 먼저 끝내야 거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
@@ -198,7 +224,7 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
     return stream(repo, user_id, thread, run_id, request_id, analysis, call)
 
 
-@router.post('/runs/{run_id}/resume', dependencies=[Depends(auth.check_origin)])
+@router.post('/runs/{run_id}/resume', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
     run = await run_in_threadpool(repo.get_run, user_id, str(run_id))
     choices = (run.get('safe_result') or {}).get('interrupt', {}).get('role_choices', [])
