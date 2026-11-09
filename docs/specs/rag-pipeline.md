@@ -1,6 +1,6 @@
 # RAG 파이프라인 — 데이터시트 수집부터 하이브리드 검색까지
 
-> 현재 상태(2026-11-08 코드 기준): 이 작업서는 11-01의 `text-embedding-3-small` 1536차원 기준에서 시작했지만 서비스 구현은 `voyage-4-large` 1024차원, 차원 없는 `halfvec`, Voyage `rerank-3`로 바뀌었습니다. 아래 52,244개·45,898개 수치는 과거 v1 산출물의 재현 기준이며 현재 저장소 밖 전체 코퍼스의 준비 완료를 뜻하지 않습니다.
+> 현재 상태(2026-11-09 코드 기준): 이 작업서는 11-01의 v1·`text-embedding-3-small` 1536차원 기준에서 시작했지만, 현재 청킹 코드는 `tsc-v4h-2026-11-08`, 서비스 검색은 `voyage-4-large` 1024차원·차원 없는 `halfvec`·Voyage `rerank-3`입니다. 저장소 manifest의 52,244개·서로 다른 본문 45,898개는 v1 이력이고, 11-08 저장소 밖 v4h 전체 실행은 카드 51,967개를 기록했습니다. 전체 입력과 v4h 산출물은 저장소에 없어 새 clone 재현과 에이전트 길 재측정은 별도 증거가 필요합니다.
 
 ## Why
 
@@ -16,8 +16,8 @@
 
 - **해결 목표**: `python -m backend.rag.<모듈>`로 수집 → 파싱 → 청킹 → 적재를 다시 하고, `retrieve()`로 하이브리드 검색을 부른다.
 - **성공 기준**:
-  - 청킹 결과가 11-01 실험과 같다: 청크 52,244개, 서로 다른 본문 45,898개
-  - 전체 v1 입력을 사용할 때 로컬 DB에 문서 1,360건, 청크 52,244개와 모델별 임베딩이 들어간다. 현재 서비스 임베딩은 `voyage-4-large` 1024차원이다
+  - 고정한 전체 입력으로 v4h 청킹을 두 번 실행했을 때 `summary.json`의 `chunker_version`, 카드 수, 종류별 수, 서로 다른 본문 수와 산출물 해시가 같다
+  - 11-08 전체 입력 기준 v4h 카드 51,967개가 생성되고 로컬 DB에 문서 1,360건과 해당 카드·Voyage 임베딩이 들어간다. v1의 52,244청크는 과거 비교 기준으로만 보존한다
   - 평가셋 관련 문항으로 검색 지표가 오류 없이 나온다. 베이스라인 점수는 v1(11-02 동결)로 잰다
 - **Out of Scope**: 질문에서 품번 뽑기(에이전트가 `parts`로 준다), 증분 수집 자동화, 운영 Supabase 적용, 공개 문서(KiCad 등) 수집. 임베딩 후보 비교는 과거 실험 문서에서 다루며 현재 서비스 모델은 Voyage로 고정한다
 
@@ -27,7 +27,7 @@
 1. `collect list`: TSC 분류별 Export xlsx 13개를 PDF 하나당 한 줄인 목록 csv로 합친다(PDF 1,360개).
 2. `collect download`: 목록의 PDF를 원래 파일 이름으로 받는다.
 3. `parse run`: Docling(OCR 끔, 표 구조 켬)으로 PDF마다 JSON을 저장하고, 표 숫자가 같은 쪽 pdfplumber 글자에 있는지 센다(두 번째 증인). `parse recall`은 반대 방향(표 영역 원문 숫자가 Docling 표에 있는지)을 센다.
-4. `chunk`: Docling JSON을 청크로 자른다. PDF마다 품번 표지 1개, 표 밖 글은 HybridChunker, 표는 한 행 = 청크 하나(합친 칸 채움, `[파일 · 쪽 · 표 제목]` 이름표). 문서 목록 `data/manifest.jsonl`도 쓴다. manifest에는 문서마다 다른 값만 쓰고, 모든 문서에 같은 값은 `chunk.py`의 `DOC_DEFAULTS`에 둔다(512,000바이트 아래, Checkpoint 대시보드가 읽는 크기).
+4. `chunk`: Docling JSON과 원본 PDF를 v4h 카드로 자른다. PDF마다 품번 표지와 1쪽 제품 개요를 만들고, 표 밖 글은 소제목·쪽·1,200자 경계로 자른다. 표는 Docling과 pdfplumber 테두리선 결과를 대조해 합친 칸·머리·행을 복구하고 한 행 = 카드 하나로 만들며, 표 주석은 별도 카드와 해당 행에 연결한다. 숫자가 2개 이상 어긋난 표는 한쪽을 임의 채택하지 않고 `table_suspects.jsonl`에 기록한다. `chunks.jsonl`, `summary.json`, 문서 목록 `manifest.jsonl`을 쓰며 공통 값은 `chunk.py`의 `DOC_DEFAULTS`에 둔다.
 5. `ingest`: 문서와 청크를 `source_documents`·`document_chunks`에, Voyage 1024차원 임베딩을 차원 없는 `halfvec` 열의 `chunk_embeddings`에 넣는다. 이미 만든 벡터는 본문 해시 캐시와 모델 행으로 다시 쓴다.
 6. `retrieve(question, k=5, parts=None)`: dense 상위 50개와 BM25 상위 50개를 RRF로 합치고, 실제 모드의 hybrid 검색은 합친 후보를 Voyage `rerank-3`로 재정렬해 상위 k개를 돌려준다. `parts`를 주면 그 품번이 표지에 적힌 문서의 청크 안에서만 찾는다.
 7. `evals/runners/run_retrieval.py`: 평가셋 관련 문항의 지표를 계산해 `evals/results/`에 남긴다.
@@ -74,8 +74,8 @@
 
 - **AC-01** Given 칸 하나가 두 행에 걸친 표, When 표 청크를 만들면, Then 두 행 청크 모두에 그 칸의 글자가 들어간다.
 - **AC-02** Given 머리 행이 두 줄인 표, When 열 이름을 만들면, Then 두 줄의 글자를 ` / `로 잇고 같은 글자는 한 번만 쓴다.
-- **AC-03** Given 11-01 Docling JSON 1,360건, When `chunk`를 돌리면, Then 청크 52,244개, 서로 다른 본문 45,898개가 나온다.
-- **AC-04** Given 전체 v1 청크 파일과 Voyage 벡터, When `ingest`를 차원 없는 `halfvec` DB에 돌리면, Then 문서 1,360행, 청크 52,244행과 해당 모델의 임베딩 행이 생긴다.
+- **AC-03** Given 11-08에 고정한 전체 Docling JSON·PDF·목록 1,360건, When v4h `chunk`를 두 번 돌리면, Then 두 실행 모두 카드 51,967개이며 `summary.json`과 산출물 해시가 같다.
+- **AC-04** Given 전체 v4h 카드 파일과 Voyage 벡터, When `ingest`를 차원 없는 `halfvec` DB에 돌리면, Then 문서 1,360행, 카드 51,967행과 해당 모델의 임베딩 행이 생긴다.
 - **AC-05** Given 순위 목록 두 개, When RRF로 합치면, Then 두 목록에 모두 있는 청크가 한쪽에만 있는 청크보다 위에 온다.
 - **AC-06** Given 질문 "TSC 1N5819는", When BM25 토큰을 만들면, Then `["tsc", "1n5819"]`이다.
 - **AC-07** Given `gold_chunks`의 "X.pdf, 2쪽, …", When 정답 위치를 읽으면, Then 문서 `X.pdf`, 쪽 2다.

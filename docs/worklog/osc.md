@@ -5,8 +5,11 @@
 ## 2026-11-09 닫힌 PR #67 최신 main 재적용
 
 - 한 일: 머지된 청킹 PR #70과 이후 변경이 포함된 최신 `origin/main` 위에 닫힌 PR #67의 두 커밋을 순서대로 다시 적용했다. Git 충돌은 발생하지 않았고, `SOJAFIT.md`의 문서 분류 SQL·공통 오류 계약 항목과 `db/schema/table-definition.md`의 `category`·`halfvec` 설명이 함께 유지되는지 대조했다.
+- 추가 정합성 보완: 최신 main의 `tsc-v4h-2026-11-08` 코드와 11-08 외부 전체 실행 기록을 다시 읽어, v1 manifest·운영 스냅샷 52,244청크와 v4h 외부 실행 51,967카드를 구분했다. 현재 v4h 청킹 규칙, `AEC_Q101`·판정 전용 `DIRECTION`, 평가 실행기의 카드 읽기 경로를 `README.md`, `SPEC.md`, `data/corpus/CORPUS.md`, `docs/GATES.md`, `docs/specs/rag-pipeline.md`에 반영했다.
 - 검증: `git diff --check`와 충돌 표식 검색을 통과했다. `uv run pytest -q tests/api tests/repo/test_repo_layout.py`는 `53 passed, 21 skipped`, `uv lock --check`와 전체 `uv run pytest -q`는 `885 passed, 58 skipped`였다.
+- 추가 보완 뒤 검증: `uv run pytest -q tests/repo/test_repo_layout.py -p no:cacheprovider`는 `5 passed`, 전체 `uv run pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다. `uv lock --check`, `docker compose config --quiet`, `git diff --check`도 통과했고 검증 중 HEAD는 바뀌지 않았다.
 - 확인 못 한 것: 건너뛴 DB 통합 시험 58건과 실제 배포 응답은 확인하지 않았다. 원격 push와 새 PR 생성은 수행하지 않았다.
+- 추가 확인 못 한 것: 저장소 밖 전체 입력으로 v4h 청킹을 두 번 재실행한 산출물 해시와 에이전트 길 재측정은 이번 문서 정합성 작업에서 실행하지 않았다.
 - 다음 할 일: 최신 원격 `main`과 차이를 다시 확인한 뒤 조장 승인 범위에 맞춰 다음 PR을 생성한다.
 
 ## 2026-11-08 FastAPI 공통 오류 응답 규약
@@ -20,7 +23,7 @@
 
 - 팀장 요청에 따라 현재 상태를 설명하는 문서를 실제 저장소 코드와 대조했다. 과거 ADR·평가 결과·제출 주제서·작업 기록은 당시 증거로 보존하고, 현재 상태 문서에서만 구현·목표·외부 운영 이력을 구분했다.
 - `README.md`, `SPEC.md`, `SOJAFIT.md`, `docs/GATES.md`에 현재 서비스 API 범위(로그인·Google 관리자·관리자 계정·가격 조회·공통 오류)와 미구현 범위(질문·회로·대화·견적 승인/저장·Store·영속 체크포인트·업무 화면)를 반영했다.
-- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 1,360문서·52,244청크 등 v1 수치는 날짜가 있는 외부 산출물·DB 이력으로 두고 현재 진행 중인 v2 전체 청킹 완료 증거로 사용하지 않도록 했다.
+- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 최신 main 재대조에서 v1 manifest·운영 스냅샷 52,244청크와 11-08 저장소 밖 v4h 전체 실행 51,967카드를 구분하고, v4h 전체 입력·산출물의 새 clone 재현과 에이전트 길 재측정은 아직 별도 증거가 필요하다고 바로잡았다.
 - Google 관리자 로그인 문서의 코드·SQL·CLI·합성 테스트 구현 항목은 완료로, 현재 Cloud Run·Secret Manager·운영 DB·실계정 상태는 재검증이 필요한 항목으로 분리했다. MCP 그래프 통합 문서는 구현 전 계획과 현재 `StdioMcpRetriever` 구현을 구분했다.
 - 검증: 저장소 구조 검사 `5 passed`, 전체 테스트 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check` 통과. 운영 배포·DB 상태는 이번 작업에서 조회하지 않았다.
 
