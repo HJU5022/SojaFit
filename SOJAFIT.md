@@ -426,7 +426,8 @@ SojaFit (proj3-b)
 │   │   ├── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
 │   │   ├── judge-agent.md  <- 판정 에이전트와 대체품 찾기
 │   │   ├── judge-agent-plan.md  <- 판정 에이전트의 테스트 우선 구현 계획
-│   │   └── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
+│   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
+│   │   └── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
 │   │   ├── SUPERPOWERS.md  <- 폴더 설명
 │   │   ├── specs/

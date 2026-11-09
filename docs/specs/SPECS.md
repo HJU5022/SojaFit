@@ -23,3 +23,4 @@
 - `judge-agent.md` — 판정 에이전트와 대체품 찾기 작업서(역할 23개, 조건 세 층, 인터럽트로 빠진 값 묻기, 후보 정렬)
 - `judge-agent-plan.md` — 판정 에이전트 작업서의 테스트 우선 구현 계획(Task 11개, 커밋 단위)
 - `supervisor-v0-langfuse-import.md` — 완료된 Supervisor V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오는 작업서
+- `d5-frontend-service.md` — React·Vite 화면과 D5 서비스 연결 기능 계약

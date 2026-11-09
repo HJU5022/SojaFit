@@ -287,3 +287,11 @@
 - 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
 - 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
 - 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.
+
+## 2026-11-09 D5 프론트엔드 기능 계약
+
+- 한 일: 승인된 D5 프론트엔드 설계를 10개 AC가 있는 Why/Goal/What/How/AC 기능 계약으로 구체화했다. 조장 소유 `SPEC.md` §2·§4·§8.4·§8.5 반영 문단과 ADR 제목을 요청 섹션에 제시했다.
+- 바꾼 파일: `docs/specs/d5-frontend-service.md`, `docs/specs/SPECS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`.
+- 확인: `uv run pytest -q tests/repo/test_repo_layout.py` 실행 결과: `5 passed in 0.28s`. 문서 구조·링크·요청 제안은 승인 설계와 대조한다.
+- 확인 못 한 것: 구현 및 프론트/백엔드 런타임 테스트는 이 계약 작성 범위가 아니다. `SPEC.md` 및 ADR 반영은 조장 검토 후 별도로 진행해야 한다.
+- 다음 할 일: 조장이 요청 문단과 ADR 제목을 검토하고 정본에 반영한 뒤 후속 구현 작업을 시작한다.
