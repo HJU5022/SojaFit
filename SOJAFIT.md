@@ -61,7 +61,8 @@ SojaFit (proj3-b)
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
-│       │   └── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
+│       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
+│       │   └── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
 │       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·로그아웃·401 처리
 │       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
@@ -90,8 +91,11 @@ SojaFit (proj3-b)
 │       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
 │       │   ├── EvidencePanel.tsx <- 문서 위치 근거 목록
 │       │   ├── JudgementTable.tsx <- 5종 후보 판정 표
-│       │   ├── ApprovalPanel.tsx <- 후속 승인 API 전 비활성 패널
-│       │   └── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
+│       │   ├── ApprovalPanel.tsx <- 후보 판정 사람 승인 확인
+│       │   ├── QuotePanel.tsx <- 승인 뒤 가격 없는 견적 저장·실시간 가격 조회
+│       │   ├── ApprovedCasesPanel.tsx <- 사용자 승인 사례 목록·확인 삭제
+│       │   ├── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
+│       │   └── QuotePanels.test.tsx <- 승인·견적 비저장·사례 삭제 화면 테스트
 │       └── test/           <- 화면 테스트 설정
 │           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리
@@ -108,6 +112,7 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API
+│   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
@@ -189,7 +194,7 @@ SojaFit (proj3-b)
 │   │   ├── d5.py           <- D5 실행·체크포인트·의존성 조립
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
-│   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
+│   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
 │   │   ├── WEB.md          <- 폴더 설명
@@ -235,6 +240,7 @@ SojaFit (proj3-b)
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 013_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
 │   ├── 014_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
+│   ├── 015_approvals_quotes.sql <- 승인·가격 없는 견적·사례 및 재귀 금지 키 제약
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -379,6 +385,7 @@ SojaFit (proj3-b)
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
+│   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
@@ -432,6 +439,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_d5.py      <- D5 실행·인터럽트 재개·안전 이벤트 시험
+│   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계

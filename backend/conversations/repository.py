@@ -83,7 +83,10 @@ class ConversationRepository:
 
     def get_run(self, user_id, run_id):
         with auth.connection() as conn:
-            row = conn.execute('SELECT r.id,r.thread_id,r.status,r.safe_result FROM runs r JOIN threads t ON t.id=r.thread_id JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND p.user_id=%s', (run_id,user_id)).fetchone()
+            row = conn.execute("""SELECT r.id,r.thread_id,r.status,r.safe_result,
+                (SELECT m.id FROM messages m WHERE m.run_id=r.id AND m.role='assistant' ORDER BY m.id DESC LIMIT 1)
+                FROM runs r JOIN threads t ON t.id=r.thread_id JOIN projects p ON p.id=t.project_id
+                WHERE r.id=%s AND p.user_id=%s""", (run_id,user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
-            return {'id': str(row[0]), 'thread_id': str(row[1]), 'status': row[2], 'safe_result': row[3] or {}}
+            return {'id': str(row[0]), 'thread_id': str(row[1]), 'status': row[2], 'safe_result': row[3] or {}, 'message_id': row[4]}

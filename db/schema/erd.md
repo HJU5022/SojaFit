@@ -93,3 +93,5 @@ erDiagram
 | `store_migrations`, `vector_migrations` | `PostgresStore` | Store 스키마 버전 |
 
 `db/014_conversations.sql`은 프로젝트 소유 대화·실행·메시지를 만든다. 체크포인트 표는 LangGraph 설치 경로로 별도 생성한다.
+
+`db/015_approvals_quotes.sql`은 `messages → approvals → quotes/approved_cases`를 연결한다. 승인은 메시지당 하나이며 프로젝트·메시지 삭제가 승인·견적·사례까지 cascade한다. snapshot은 가격·재고 관련 키를 어떤 깊이에서도 허용하지 않는다.

@@ -8,7 +8,7 @@ export type JudgementDto = { kind: 'judge' | 'find' | 'no_rule'; roles: string[]
 export type InterruptDto = { missing?: string[]; role_choices?: string[]; question?: string }
 export type ResultDto = { answer: string; status: string; stage: string; question_type: string; evidence: EvidenceDto[]; judgement: JudgementDto | Record<string, never>; price_parts: string[]; refusal: string; interrupt: InterruptDto; request_id: string }
 export type ThreadDto = { id: string; project_id: number }
-export type RunDto = { id: string; thread_id: string; result: ResultDto }
+export type RunDto = { id: string; thread_id: string; message_id: number | null; result: ResultDto }
 export type StreamEvent = { event: 'run_started' | 'status' | 'requires_input' | 'completed' | 'refused' | 'failed'; data: Record<string, unknown> }
 
 export const listThreads = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto[]>(`/api/projects/${projectId}/threads`, { signal })

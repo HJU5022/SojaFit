@@ -515,3 +515,7 @@ PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표�
 ## 대화 저장 (014)
 
 `threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/014_conversations.sql`이다.
+
+## 승인·견적·사례 저장 (015)
+
+`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/015_approvals_quotes.sql`이다.

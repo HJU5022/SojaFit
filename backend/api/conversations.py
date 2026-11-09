@@ -76,7 +76,8 @@ def get_thread(thread_id: UUID, user_id: int = Depends(auth.current_user_id), re
 @router.get('/runs/{run_id}')
 def get_run(run_id: UUID, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     run = repo.get_run(user_id, str(run_id))
-    return {'id': run['id'], 'thread_id': run['thread_id'], 'result': result_dto(run['safe_result'], request_id=request.state.request_id, status=run['status']).model_dump()}
+    return {'id': run['id'], 'thread_id': run['thread_id'], 'message_id': run.get('message_id'),
+            'result': result_dto(run['safe_result'], request_id=request.state.request_id, status=run['status']).model_dump()}
 
 
 STAGES = {'running': '입력 확인', 'judge': '판정', 'finished': '완료', 'failed': '거절'}

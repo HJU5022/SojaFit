@@ -12,6 +12,7 @@ import ConversationPanel from '../components/ConversationPanel'
 import EvidencePanel from '../components/EvidencePanel'
 import JudgementTable from '../components/JudgementTable'
 import ApprovalPanel from '../components/ApprovalPanel'
+import ApprovedCasesPanel from '../components/ApprovedCasesPanel'
 import type { RunState } from '../hooks/useRunStream'
 
 export default function WorkbenchPage() {
@@ -82,7 +83,9 @@ export default function WorkbenchPage() {
         </div>
         <div className={`right-tab-panel ${resultTab === 'evidence' ? 'active' : ''}`} role="tabpanel"><EvidencePanel evidence={result?.evidence ?? []} /></div>
         <div className={`right-tab-panel ${resultTab === 'judgement' ? 'active' : ''}`} role="tabpanel"><JudgementTable judgement={result?.judgement} /></div>
-        <div className={`right-tab-panel ${resultTab === 'actions' ? 'active' : ''}`} role="tabpanel"><PricePanel parts={result?.price_parts ?? []} /><ApprovalPanel /></div>
+        <div className={`right-tab-panel ${resultTab === 'actions' ? 'active' : ''}`} role="tabpanel"><PricePanel parts={result?.price_parts ?? []} />
+          <ApprovalPanel runId={runState.status === 'completed' ? runState.runId : undefined} judgement={runState.status === 'completed' ? runState.result.judgement : undefined} />
+          <ApprovedCasesPanel /></div>
       </aside>
       </div>
   </>
