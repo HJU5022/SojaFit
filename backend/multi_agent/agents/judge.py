@@ -536,6 +536,11 @@ def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
     if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI'):
         return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not TSC'
+    # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
+    #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
+    missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
+    if gone := [c for c in read.candidates if _part(c).upper() in missing]:
+        return Reason.PART_MISSING, 'candidate not in the corpus: ' + ', '.join(gone)
     wanted = read.revision_wanted.strip().upper()
     # [왜] 판정 길에는 코퍼스 개정판 전체 목록이 없다. 사실 확인이 코퍼스에 있다고 확인한 개정 코드(K2611)를 담을 때만 통과한다
     # [주의] 판으로 보이는 글(개정 코드 · 연도 · '판' · edition · rev)만 요구로 본다. 읽기가 포장 코드 'L0'을 넣어 개정판 거절로 끝났다(11-06 v3-03)
@@ -725,8 +730,13 @@ def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
         # [왜] 재계획이 요약만 읽고 찾은 품번을 다음 할 일(그 품번 문서 검색)에 쓸 수 있게 상위 후보 품번을 요약에 넣는다(설계 v2)
         names = [p.get('part') for p in judgement.get('shown') or [] if p.get('part')][:8]
         summary = f"{summary}: {', '.join(names)}" if names else summary
-    if r['status'] == 'partial' and not judgement.get('results') and not reason:
-        reason = Reason.NO_RESULT.value  # 후보를 하나도 못 찾았다: 조건을 바꿔 다시 찾을 수 있는 실패다
-    report = TaskReport(task=state['task']['id'], agent='judge', status=r['status'], summary=summary[:200], reason=reason,
+    status = r['status']
+    if status == 'partial' and not judgement.get('results'):
+        # [왜] 판정한 후보가 없는 보고는 답이 아니라 실패다. 일부 답(partial)으로 두면 재계획이 '있는 답으로'를 고를 때 빈 판정이 답으로 나갔다
+        #      (#46 Haiku Supervisor v3-31 USB-C 커넥터 · HL-2 h3-31 인덕터: 판정 읽기 셋이 모두 23역할 밖으로 읽음).
+        #      23역할 밖이면 이 서비스에 판정 규칙이 없어 다시 해도 같다(not_found). 후보를 못 찾은 것은 조건을 바꿔 다시 찾을 수 있다(no_result)
+        status = 'fail'
+        reason = reason or (Reason.NOT_FOUND.value if judgement.get('kind') == 'no_rule' else Reason.NO_RESULT.value)
+    report = TaskReport(task=state['task']['id'], agent='judge', status=status, summary=summary[:200], reason=reason,
                         missing=r.get('missing') or [], judgement=judgement, llm_calls=1, round=state.get('round') or 1)
     return {'reports': [report.model_dump(mode='json')], 'path': out['path']}

@@ -358,3 +358,23 @@ def test_limit_sentence_in_the_conditions_is_read_when_every_read_missed_it(monk
     state = {**STATE, 'conditions': '전류는 최대 250mA이다. 다이오드 전압강하는 1.8V까지 허용한다.', 'facts': {}, 'judge_read': read.model_dump(mode='json')}
     out = J.judge_agent(state, specs=lambda part, codes=None: rows, find=None, retriever=lambda q, parts=None: [])
     assert any(c['code'] == 'VF' and c['result'] == 'unverified' for c in out['judgement']['results'][0]['checks'])
+
+
+def test_candidate_that_facts_say_is_not_in_the_corpus_is_refused():
+    """[왜] 코퍼스에 없는 1N5408X · UF4007X를 비슷한 품번 문서로 판정해 답했다(#46 v3-32 · 34, 사전 등록 #47). 원래 부품은 거절 이유가 아니다."""
+    facts = {'parts': {'1N5408X': False, '1N4007': True}}
+    assert J.outside_corpus(J.JudgeRead(role='R01', candidates=['TSC 1N5408X']), facts)[0] == J.Reason.PART_MISSING
+    assert J.outside_corpus(J.JudgeRead(role='R01', candidates=['1N4007']), facts) is None
+    assert J.outside_corpus(J.JudgeRead(role='R01', original_part='1N5408X', candidates=['1N4007']), facts) is None
+
+
+def test_judge_report_without_any_judged_candidate_is_a_failure(monkeypatch):
+    """[왜] 판정한 후보가 없는 보고를 일부 답(partial)으로 두면 빈 판정이 답으로 나갔다(#46 v3-31, 사전 등록 #47)."""
+    def agent(kind):
+        return lambda state, **kw: {'judgement': {'kind': kind, 'results': [], 'shown': []}, 'path': ['판정'],
+                                    'reports': [{'status': 'partial', 'summary': '0 candidates judged', 'missing': []}]}
+    state = {'task': {'id': 1}, 'question_type': 'candidate_judge'}
+    for kind, reason in (('no_rule', J.Reason.NOT_FOUND.value), ('judge', J.Reason.NO_RESULT.value)):
+        monkeypatch.setattr(J, 'judge_agent', agent(kind))
+        r = J.judge_task_node(state, specs=None, find=None, retriever=None)['reports'][0]
+        assert (r['status'], r['reason']) == ('fail', reason)

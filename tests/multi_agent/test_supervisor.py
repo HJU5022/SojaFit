@@ -163,3 +163,13 @@ def test_declined_parts_are_appended_with_their_refusal_reason():
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         plan(task(1), declined=[{'ask': 'x', 'reason': 'no_result'}])  # 재시도 사유는 거절 사유가 아니다
+
+
+def test_find_question_without_a_judge_find_task_is_matched_to_the_judge_agent_by_code():
+    """[왜] Haiku Supervisor가 찾기 질문을 문서 정격 조회로 보내 후보를 못 냈다(h4-12 · 13, 사전 등록 #47). 역할 할 일은 남긴다."""
+    p = plan(task(1, kind='rating'), task(2, kind='role'), question_type='candidate_find')
+    tasks = S.plan_node(STATE, chat=lambda *a: p, judge_enabled=True)['plan']['tasks']
+    assert [(t['id'], t['agent'], t['kind']) for t in tasks] == [(1, 'judge', 'candidate_find'), (2, 'docs', 'role')]
+    kept = plan(task(1, agent='judge', kind='candidate_find'), question_type='candidate_find')
+    assert S.plan_node(STATE, chat=lambda *a: kept, judge_enabled=True)['plan']['tasks'][0]['goal'] == 'goal 1'  # 맞게 냈으면 그대로
+    assert S.plan_node(STATE, chat=lambda *a: p, judge_enabled=False)['plan']['tasks'][0]['agent'] == 'docs'  # 판정이 꺼지면 바꾸지 않는다

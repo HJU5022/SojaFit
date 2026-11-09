@@ -9,7 +9,8 @@
     `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 할 일 2개 이상일 때만 부분 답을 한 답으로 합친다.
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
-  질문 종류별 "어디로" 규칙(LLM이 계획으로 정하고 코드로 if 문을 쓰지 않는다. 코드가 바꾸는 것은 상한 초과 · 판정 꺼짐 · 형식 실패뿐이다).
+  질문 종류 · 거절 · 할 일 나누기 판단(LLM이 계획으로 정한다). 코드가 바꾸는 것은 상한 초과 · 판정 꺼짐 · 형식 실패와
+  찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, 11-09 정운 결정).
 - 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(11-06 정운 결정), 회의록 D4-D5 B-지시서 4-4, backend/prompts/supervisor.md · synth.md
 """
 import re
@@ -18,7 +19,7 @@ from pathlib import Path
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 
-from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, TaskReport
+from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
@@ -84,6 +85,14 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
         return {'plan': {}, 'question_type': '', 'refusal_reason': Reason.LIMIT_REACHED.value, 'counters': c, 'path': ['계획']}
     if plan.next == 'answer' and not replan:
         plan = plan.model_copy(update={'next': 'refuse', 'reason': Reason.LIMIT_REACHED})  # 받은 보고가 없는데 '있는 답으로'는 형식 오류다
+    if (not replan and judge_enabled and plan.next == 'tasks' and plan.question_type == 'candidate_find'
+            and not any(t.agent == 'judge' and t.kind == 'candidate_find' for t in plan.tasks)):
+        # [주의] 코드 라우팅(조장 결정 필요): 계획 스스로 찾기 질문이라 해 놓고 판정 찾기 할 일을 내지 않으면 코드가 그 할 일로 바꾼다.
+        #      Haiku Supervisor가 찾기를 문서 할 일(rating · candidate_find)이나 문서 + 이름 없는 판정으로 나눠 후보를 못 냈다
+        #      (#46 v3-12 · 14 · 15, HL-5 · 6 h4-12: 문제를 적어 다시 물어도 같은 계획). 역할 할 일만 남긴다(다른 물음)
+        roles = [t for t in plan.tasks if t.kind == 'role']
+        find = Task(id=1, agent='judge', kind='candidate_find', goal='Find candidates that meet the conditions in the question.')
+        plan = plan.model_copy(update={'tasks': [find, *(t.model_copy(update={'id': i}) for i, t in enumerate(roles, 2))], 'replan': False})
     if not judge_enabled:
         # [왜] 판정 에이전트가 없으면 판정 할 일은 문서 할 일로 돌린다(거절이 아니라 근거로 답하는 길, 예전 Supervisor와 같음)
         plan.tasks = [t.model_copy(update={'agent': 'docs', 'query': t.query or t.goal}) if t.agent == 'judge' else t for t in plan.tasks]
