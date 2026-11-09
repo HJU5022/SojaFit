@@ -233,7 +233,13 @@ SojaFit (proj3-b)
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
 │   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건 외부 작업 자료의 위치·준비 상태는 별도 확인
 │   │   ├── public/         <- KiCad 문서·Wikipedia·SparkFun 등 공개 라이선스 문서(지금은 .gitkeep)
-│   │   └── injection_tests/  <- 간접 인젝션 시험 문서 3건 이상(지금은 .gitkeep)
+│   │   └── injection_tests/  <- 공유 코퍼스에 적재하지 않는 합성 신뢰 경계 시험 데이터(평가·문서 담당)
+│   │       ├── instruction_override.json  <- 상위 지시 사칭 공격 문서
+│   │       ├── source_exfiltration.json  <- 원문·링크 유출 공격 문서
+│   │       ├── foreign_memory.json  <- 타 사용자 사례 권한 사칭 공격 문서
+│   │       ├── judgement_bundle_v1.json  <- 검색 청크→판정 정상 1·공격 3건과 고정 회로·조건·기대 판정
+│   │       ├── claim_consistency_cases_v1.json  <- 실제 번호의 거짓 주장(C1)·설명/판정표 충돌(C2) 2건과 수동 판정표
+│   │       └── input_surfaces_v1.json  <- 다섯 입력 위치 정상·공격 10건
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
@@ -303,6 +309,10 @@ SojaFit (proj3-b)
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
 │   │   ├── run_thread_validation.py <- 호출 없는 준비 확인과 상한 있는 품질·보고 비용 평가
+│   │   ├── run_trust_boundary.py <- 합성 코퍼스 공격 3건의 호출 없는 계획과 명시적 유료 문서 에이전트 검사
+│   │   ├── run_judgement_bundle.py <- 로컬 합성 적재·BM25/MCP·가짜모델 판정과 묶음 예산 검사(DB 단계는 ADR 0016 뒤 현재 코드와 안 맞음)
+│   │   ├── run_claim_consistency.py <- 실제 모델의 거짓 인용·설명 충돌 기준선, 합산 예산·원시 결과 보관
+│   │   ├── run_input_surfaces.py <- 입력 위치별 무료 호환성·합산 예산 내 컴포넌트 실측
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
@@ -413,6 +423,7 @@ SojaFit (proj3-b)
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
+│   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_errors.py  <- 오류 코드 15개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
@@ -424,7 +435,6 @@ SojaFit (proj3-b)
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
 │   │   ├── test_http_smoke.py  <- HTTP 점검 스크립트(scripts/smoke/)를 가짜 서버로: 전체 통과 · 두 번째 승인 409 통과, requires_input 없으면 실패 · 뒤 단계 건너뜀, 결과 파일에 비밀번호 · 쿠키 · 이메일 없음
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
-│   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
@@ -504,7 +514,12 @@ SojaFit (proj3-b)
 │   │   ├── test_embedding_grid.py  <- 격자 평가 실행기의 순위·요약·카드 묶기와 격자 결과 파일 78칸 재계산 일치
 │   │   ├── test_retrieval_layers.py  <- 층별 재측정의 판정 규칙·토큰화와 층 결과 파일 요약 재계산 일치
 │   │   ├── test_bit_search.py  <- 비트 검색의 recall 계산과 결과 파일에서 다시 계산한 값이 문서와 일치
-│   │   └── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
+│   │   ├── test_eval_grader.py  <- 채점기 기준선 계산 규칙과, 스냅샷이 사전 등록 #36 숫자를 재현하는지
+│   │   ├── test_trust_boundary.py <- 신뢰 경계 실행기의 호출 차단·유출 탐지·정상 대조군·오류 보존
+│   │   ├── test_judgement_bundle.py <- 로컬DB 경계·합산 예산·가짜모델 판정 경로·판정 출력 경계 검사
+│   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
+│   │   ├── test_input_surfaces.py <- 입력 위치별 파서·모델 노출·위험 출력 기록 무료 검사
+│   │   └── test_saved_defense_replay.py <- 저장된 C2·정상군 응답의 무료 재생·수정 후 차단 회귀 기준
 │   ├── mcp_skill/          <- MCP 서버 도구 6종(오프라인, 외부 호출 0회)
 │   │   ├── MCP_SKILL.md    <- 폴더 설명
 │   │   └── test_mcp_server.py  <- 코퍼스 검색·문서 조회·웹 후보·PDF 무결성·회로 조회·코퍼스 확인의 수용 기준(SPEC 8.7)
@@ -534,6 +549,9 @@ SojaFit (proj3-b)
 │   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
 │   │   ├── DEMO.md         <- 폴더 설명
 │   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 5개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
+│   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
+│   │   ├── SMOKE.md        <- 폴더 설명
+│   │   └── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
 │   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
 │   │   ├── BIT_SEARCH.md   <- 폴더 설명
 │   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
@@ -549,9 +567,7 @@ SojaFit (proj3-b)
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
 │       ├── hnsw/           <- HNSW 대 정확 검색
-│   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
-│   │   ├── SMOKE.md        <- 폴더 설명
-│   │   └── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
+│       ├── smoke/          <- (예정) HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py)
 │       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
@@ -567,7 +583,6 @@ SojaFit (proj3-b)
 │   │   ├── SPECS.md        <- 폴더 설명
 │   │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
-│       ├── smoke/          <- (예정) HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
 │   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
@@ -585,6 +600,7 @@ SojaFit (proj3-b)
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
+│   │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
 │   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
@@ -599,6 +615,7 @@ SojaFit (proj3-b)
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
+│   │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
 │   │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
@@ -701,6 +718,7 @@ SojaFit (proj3-b)
 | `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `scripts/demo/` | [DEMO.md](scripts/demo/DEMO.md) | 서비스·운영 |
+| `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
@@ -718,7 +736,6 @@ SojaFit (proj3-b)
 [ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
 
 - **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서 하나뿐입니다.
-| `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
 - **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
 - **대문자의 효과와 한계**
   - GitHub 파일 목록, 터미널 `ls`, `git ls-files`는 대문자 이름을 소문자보다 먼저 정렬해 폴더 설명 파일이 파일 목록 맨 위에 옵니다(2026-11-03 확인). 같은 폴더에 다른 대문자 문서가 없어야 이 효과가 살아 있어서, 대문자를 아래 예외 밖에서 쓰지 않습니다.

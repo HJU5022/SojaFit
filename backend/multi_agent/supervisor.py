@@ -7,6 +7,7 @@
     재계획(설계 v2, 11-07): 이번 회차에 다시 해 볼 만한 실패(사유가 no_result · all_rejected · partial이거나 없음)가 있거나
     계획이 '앞 결과가 필요하다(replan)'고 표시했으면, 아직 재계획 전일 때만 Supervisor(계획)로 되돌린다. 무엇을 할지는 계획(LLM)이 정한다.
     `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 할 일 2개 이상일 때만 부분 답을 한 답으로 합친다.
+    판정(kind=judge)이 끝난 답은 둘 다 코드 판정 답 틀만 쓴다(출력 경계 `_judgement_reply`, 문서 · 종합 자유 글을 붙이지 않음).
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
   질문 종류 · 거절 · 할 일 나누기 판단(LLM이 계획으로 정한다). 코드가 바꾸는 것은 상한 초과 · 판정 꺼짐 · 형식 실패와
@@ -170,7 +171,8 @@ def collect_node(state: dict) -> dict:
                 'refusal_reason': (Reason.NOT_FOUND if first in RETRY_REASONS else first).value}
     # [왜] 할 일이 여럿이고 모두 근거 있는 답(ok)이면 부분 답이 이미 인용을 단 완성된 글이다. LLM 종합 없이 코드로 잇는다(답 정리).
     #      실패 · 일부 답 · 판정이 섞이면 종합(LLM)이 못 한 부분과 이유를 함께 쓴다. 한 부품의 값 둘을 물어 종합을 불러 12~14초였다(11-07 R1 dev r1-075)
-    # [왜] 판정 할 일도 답이 코드 답 틀이라, 모두 ok면 문서 답과 판정 표를 코드로 이어도 된다(복합 질문 p95 18초, 11-07 c20)
+    # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
+    #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
     joinable = len(final) == 1 or all(r.status == 'ok' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
@@ -205,9 +207,34 @@ def _with_declined(state: dict, answer: str) -> str:
     return f'{answer}\n\n{extra}' if extra else answer
 
 
+def _judgement_reply(state: dict, reports: list[TaskReport]) -> dict | None:
+    """판정(kind=judge)이 끝난 답의 출력 경계: 코드 판정 답 틀만 쓰고 문서 · 종합의 자유 글은 붙이지 않는다. 판정이 없으면 None."""
+    # [왜] 판정표가 '불충족'인데 문서 에이전트 글이 옆에 사용 권고(C2 공격)나 '부하 0.1 A 미제공' 같은 오서술(P4 정상군)을 붙여
+    #      최종 답까지 나갔다(docs/research/thread-memory-work-summary.md). 문서 글을 검증할 계약이 없어 판정 답에는 넣지 않는다
+    # [왜] 판정한 후보가 없으면 판정 보고는 fail이 된다(judge_task_node). 성공한 판정만 보면 '실패한 판정 + 문서 답'에서
+    #      문서 글("사용해도 됩니다")이 그대로 나가므로, 판정(kind=judge) 보고가 하나라도 있으면 성공 · 실패와 관계없이 이 경계를 쓴다(11-10 조장 결정)
+    asked = [r for r in reports if r.agent == 'judge' and r.judgement.get('kind') == 'judge']
+    if not asked:
+        return None
+    judged = [r for r in reports if r.agent == 'judge' and r.status != 'fail' and r.judgement]
+    parts = [render_judgement(r.judgement) for r in judged] or ['판정을 완료하지 못했습니다.']
+    if any(r.agent == 'docs' for r in reports):
+        # [주의] 기능 절충: 판정과 함께 물은 별도 문서 설명은 답하지 않고 그렇다고 알린다. 문서만 묻는 질문 · 찾기(find) · no_rule 길은 그대로다
+        parts.append('별도로 요청한 문서 설명은 이 답변에 포함하지 않았습니다.')
+    if judged and any(r.agent == 'judge' and (r.status != 'ok' or not r.judgement.get('results')) for r in reports):
+        parts.append('일부 부품의 판정은 완료하지 못했습니다.')  # 실패 · 미완료 판정에서 예전 자유 글로 돌아가지 않는다
+    # [왜] 원래 보고(state['reports'])는 그대로 두고, 답 검사(check_node)에는 실제로 답에 쓴 판정 보고만 넘긴다(final_reports는 덮어쓰는 칸).
+    #      모두 실패면 그 판정 보고를 넘긴다. 비우면 final_reports()가 문서 보고까지 되살려 답 검사가 인용 없음으로 거절한다
+    return {**_merged(judged), 'final_reports': [r.model_dump(mode='json') for r in (judged or asked)],
+            'answer': _with_declined(state, '\n\n'.join(parts)), 'synth_text': '', 'path': ['답 정리']}
+
+
 def single_node(state: dict) -> dict:
-    """그래프 노드: 할 일 1개(또는 모두 근거 있는 문서 할 일)면 LLM 없이 그 답을 그대로 · 이어서 쓴다."""
+    """그래프 노드: 할 일 1개(또는 모두 근거 있는 문서 할 일)면 LLM 없이 그 답을 그대로 · 이어서 쓴다. 판정이 끝났으면 판정 답 틀만 쓴다."""
     reports = sorted(final_reports(state), key=lambda r: (r.round, r.task))
+    judged = _judgement_reply(state, reports)
+    if judged is not None:
+        return judged
     return {**_merged(reports), 'answer': _with_declined(state, '\n\n'.join(part_text(r) for r in reports)), 'path': ['답 정리']}
 
 
@@ -230,8 +257,12 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
 
 
 def synth_node(state: dict, *, chat) -> dict:
-    """그래프 노드 `종합`(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다."""
+    """그래프 노드 `종합`(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다.
+    판정(kind=judge)이 끝났으면 LLM을 부르지 않고 판정 답 틀만 쓴다(`_judgement_reply`)."""
     reports = final_reports(state)
+    judged = _judgement_reply(state, sorted(reports, key=lambda r: (r.round, r.task)))
+    if judged is not None:
+        return judged
     c = {**state['counters'], 'hops': state['counters']['hops'] + 1}
     if c['hops'] > MAX_SUPERVISOR_CALLS:
         return {'counters': c, 'refusal_reason': Reason.LIMIT_REACHED.value, 'answer': '', 'path': ['종합']}

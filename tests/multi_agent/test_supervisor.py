@@ -11,6 +11,7 @@ from langgraph.types import Send
 from backend.multi_agent import contracts as C
 from backend.multi_agent import supervisor as S
 from backend.multi_agent.contracts import Plan, Reason, TaskReport
+import pytest
 
 STATE = {'question': 'D1을 1N5817로 바꿔도 돼?', 'target': 'D1', 'conditions': '입력 최대 20V',
          'target_part': {'ref': 'D1', 'value': '1N4148', 'footprint': 'DO-35', 'nets': []},
@@ -206,3 +207,75 @@ def test_find_question_without_a_judge_find_task_is_matched_to_the_judge_agent_b
     kept = plan(task(1, agent='judge', kind='candidate_find'), question_type='candidate_find')
     assert S.plan_node(STATE, chat=lambda *a: kept, judge_enabled=True)['plan']['tasks'][0]['goal'] == 'goal 1'  # 맞게 냈으면 그대로
     assert S.plan_node(STATE, chat=lambda *a: p, judge_enabled=False)['plan']['tasks'][0]['agent'] == 'docs'  # 판정이 꺼지면 바꾸지 않는다
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+@pytest.mark.parametrize('second_status', ['ok', 'fail'])
+def test_judgement_output_contains_all_code_reports_without_free_prose(node, second_status):
+    from evals.runners.run_claim_consistency import inputs, measure_case
+    from backend.multi_agent.agents.docs import DocsAnswer
+    b, cases = inputs()
+    result = measure_case(b, cases[0], lambda *_: DocsAnswer(grade='enough', answer='사용해도 됩니다 [73].'))
+    first = result['judgement']
+    import copy
+    second = copy.deepcopy(first)
+    second['results'][0]['part'] = 'OTHER'
+    reports = [report(1, answer='부하 전류는 미제공입니다 [73].', docs=result['document_report']['docs']),
+               report(2, agent='judge', judgement=first), report(3, agent='judge', status=second_status, judgement=second)]
+    state = {**STATE, 'final_reports': reports, 'reports': reports, 'counters': {'hops': 0},
+             'synth_text': '이전 턴의 잘못된 설명'}
+    kw = {'chat': lambda *_: pytest.fail('No synth call for code judgement')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer'] and '미제공입니다' not in out['answer']
+    assert '**DEMO2: 불충족**' in out['answer']
+    assert ('**OTHER: 불충족**' in out['answer']) == (second_status == 'ok')
+    if second_status == 'fail':
+        assert '일부 부품의 판정은 완료하지 못했습니다' in out['answer']
+    assert '문서' in out['answer'] and '포함하지 않았습니다' in out['answer']
+    assert out['synth_text'] == ''
+    assert len(out['final_reports']) == (2 if second_status == 'ok' else 1)
+    assert all(r['agent'] == 'judge' for r in out['final_reports'])
+    assert state['reports'] == reports  # Preserve the complete raw report history.
+    assert not S.check_node({**state, **out}).get('refusal_reason')
+
+
+def test_docs_only_synthesis_still_runs_and_find_is_not_rerouted():
+    state = {**STATE, 'reports': [report(1, status='partial', answer='40 V입니다 [7].')], 'counters': {'hops': 0}}
+    calls = []
+    def fake(*_):
+        calls.append(True)
+        return S.Synth(answer='40 V입니다 [7].')
+    assert S.synth_node(state, chat=fake)['answer'] == '40 V입니다 [7].'
+    assert calls == [True]
+    finding = {'kind': 'find', 'roles': ['R01'], 'role_evidence': [], 'terms': [],
+               'capped': False, 'shown': [], 'unverified': []}
+    out = S.single_node({**STATE, 'reports': [report(1, answer='독립 문서 설명 [7].'),
+                                            report(2, agent='judge', judgement=finding)]})
+    assert '독립 문서 설명 [7].' in out['answer']
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+def test_partial_judgement_does_not_fall_back_to_unsafe_prose(node):
+    partial = {'kind': 'judge', 'roles': ['R01'], 'role_evidence': [], 'results': []}
+    state = {**STATE, 'counters': {'hops': 0}, 'reports': [
+        report(1, answer='사용해도 됩니다 [7].'), report(2, agent='judge', status='partial', judgement=partial)]}
+    kw = {'chat': lambda *_: pytest.fail('No fallback model call')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer']
+    assert '판정은 완료하지 못했습니다' in out['answer']
+    assert not S.check_node({**state, **out}).get('refusal_reason')
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+def test_failed_judgement_with_docs_answer_still_uses_code_boundary(node):
+    # 판정한 후보가 없으면 판정 보고는 fail이 된다(judge_task_node). 그때도 문서 자유 글이 최종 답에 나가면 안 된다(11-10)
+    failed = {'kind': 'judge', 'roles': ['R01'], 'role_evidence': [], 'results': []}
+    state = {**STATE, 'counters': {'hops': 0}, 'reports': [
+        report(1, answer='사용해도 됩니다 [7].'), report(2, agent='judge', status='fail', judgement=failed)]}
+    kw = {'chat': lambda *_: pytest.fail('No synth call when a judgement was asked')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer']
+    assert out['answer'].startswith('판정을 완료하지 못했습니다.')
+    assert '포함하지 않았습니다' in out['answer']
+    assert [r['agent'] for r in out['final_reports']] == ['judge']
+    assert not S.check_node({**state, **out}).get('refusal_reason')  # 거절이 아니라 안내 답으로 끝난다

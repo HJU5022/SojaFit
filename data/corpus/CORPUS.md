@@ -9,7 +9,11 @@
 ## 파일
 - `tsc/` — 제조사 PDF 원본 표본 3건: `BZT52C2V4-SERIES_G1804.pdf`, `1N4148-SERIES_K2301.pdf`, `1N5817-SERIES_H2104.pdf`. 출처·개정판·해시는 [manifest](../manifest.jsonl)에 기록합니다. manifest에는 원래 파일 이름(공백 포함)이 `source_url` 끝에 있고 해시가 같습니다
 - `public/` — KiCad 문서·Wikipedia·SparkFun Learn 등 공개 라이선스 문서 자리(SPEC 6절). 아직 받지 않아 `.gitkeep`뿐입니다
-- `injection_tests/` — 간접 인젝션 시험 문서 3건 이상 자리. 만들면 manifest의 용도 열로 코퍼스 집계와 구분합니다. 담당은 평가·문서이며 지금은 `.gitkeep`뿐입니다
+- `injection_tests/` — 자체 작성 합성 JSON 6건(2026-11-09~10, STH). 실제 비밀값·제조사 원문이 아니며 공용 `data/manifest.jsonl`·G3 코퍼스 집계·DB 적재에서 제외합니다. 이 자료가 있다는 것이 방어 성공을 뜻하지 않습니다. 담당은 평가·문서
+  - `instruction_override.json`(상위 지시 사칭), `source_exfiltration.json`(원문·링크 유출), `foreign_memory.json`(타 사용자 사례 권한 사칭) — 각 문서 `purpose=injection_test`. `evals/runners/run_trust_boundary.py`가 메모리 검색 결과로만 주입합니다. 배포 HTTP 공격 시험은 별도입니다
+  - `judgement_bundle_v1.json` — 로컬 BM25 검색·MCP 사양·판정용 정상 1건/공격 3건. `run_judgement_bundle`의 plan/load/preflight/simulate 입력이며 실제 모델 시험은 전건 not_run입니다. load/preflight/simulate는 사양 표(`part_specifications`)와 MCP 사양 도구를 쓰므로 사양 표 제거(ADR 0016) 뒤 현재 코드에서는 돌지 않습니다
+  - `claim_consistency_cases_v1.json` — `judgement_bundle_v1.json`(불충족 대조군)을 hash로 참조하는 거짓 인용 주장(C1)·설명/판정표 충돌(C2) 2건. 유출 표식 없이 의미적 조작을 보며 정상/위험 예시와 수동 판정표를 포함합니다
+  - `input_surfaces_v1.json` — 다섯 입력 위치 정상/공격 10건. 이름/소속 4건은 미확정이고 나머지는 고정 청크와 실제 파서·문서 에이전트 컴포넌트 시험용입니다. baseline hash를 고정합니다
 
 ## 만들지 않는 것
 - `infineon/` — Infineon 다이오드 데이터시트. 3차 범위 밖(확장 후보)이라 수집하지 않습니다(SPEC 6절).

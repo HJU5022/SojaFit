@@ -8,6 +8,10 @@
 
 ## 파일
 - `run_thread_validation.py` — v2 1~4건 dry-run과 명시적 유료 실행. 합계 예약 $0.50/16회/90초. 공급자 ID·보고 비용을 기록. [운영 검증](../../docs/experiments/thread-memory-operations.md)
+- `run_trust_boundary.py` — D7 합성 공격 3건+정상 대조군의 호출 없는 계획. `uv run python -m evals.runners.run_trust_boundary --out <새 json>`. 별도 승인·사전 등록 뒤 `--execute`만 문서 에이전트를 실제 모델로 실행(예약 $0.50/16회/90초/출력 1024토큰). DB·임베딩·배포 HTTP·전체 Supervisor는 검사하지 않는다. 모델 원문과 최종 반환의 알려진 canary/외부 도메인 유출을 구분한다. 남은 절차는 [요약](../../docs/research/thread-memory-work-summary.md)
+- `run_judgement_bundle.py` — `judgement_bundle_v1`의 plan/load/preflight/simulate. 숫자 loopback+`injection_test_*` DB만 허용하고 기존 서비스 DB를 거부한다. 실제 모델 실행 옵션 없음. 가짜 모델에 실제 BM25/MCP/판정 그래프를 연결하며 전체 4건에 단일 예산을 적용한다. HTTP/화면/모델 보안성 시험이 아니다. [주의] load/preflight/simulate는 `db/011_part_specifications.sql`·MCP `part_specs`·`find_parts`를 쓰는데 사양 표 제거(ADR 0016)로 지금 코드에 없어 돌지 않는다. 지금 확인되는 것은 plan과 예산 단위 시험뿐이다. 절차는 preregister의 'D7 검색 청크→판정 첫 묶음 v1' 후속 절
+- `run_claim_consistency.py` — 고정 대조군+C1+C2 실제 모델 기준선. 기본 계획은 외부 호출 0, `--execute`는 합산 예약 $0.50/16회/90초/출력 1024. 기존 문서 에이전트/코드 판정/답 정리·종합/최종 검사를 연결하며 DB/Supervisor 계획/HTTP는 실행하지 않는다. 의미 평가는 원문 대조 후 별도 기록한다. 결과 파일의 코드 해시는 실행 시점 스냅샷이며 방어 개선율을 뜻하지 않는다
+- `run_input_surfaces.py` — 다섯 입력 위치 호환성, 청크/값/질문 컴포넌트 실측. `--out <새 JSON>`은 무료, `--execute`만 합산 $0.50/16회/90초/1024토큰. `--question-only`는 사전 등록한 별도 예산으로 P4-N/P4-A만 고른다. 이름/소속은 보류하며 DB/검색/HTTP/전체 Supervisor/계정 격리는 검사하지 않는다
 - `freeze.py` — 평가셋 sha256·건수를 `../FROZEN.json`에 기록. `uv run python evals/runners/freeze.py dataset_v1.jsonl`(동결), `--check`(동결 뒤 바뀐 파일 검사)
 - `benchmark_embeddings.py` — 프록시 표본([embedding_sample_v0.jsonl](../samples/embedding_sample_v0.jsonl))의 dense Recall@5·MRR·지연 측정. `uv run python -m evals.runners.benchmark_embeddings --model bge-m3 --output evals/results/embedding/embedding_bge_m3_proxy_<날짜>.json`
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·Page Hit@k를 재고 결과 json을 남김. `uv run python -m evals.runners.run_retrieval <평가셋 jsonl> <결과 json> [k] [method]`. 검색 방식은 `hybrid`(기본)·`dense`·`bm25`. 결과는 `../results/retrieval/`에 둠
