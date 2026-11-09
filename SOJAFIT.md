@@ -120,7 +120,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── conversations.py <- 소유 대화·실행·SSE API
+│   │   ├── conversations.py <- 소유 대화·실행·SSE API. run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
@@ -132,8 +132,8 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 사례 Store와 준비 명령
-│   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 사례 Store와 준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
 │   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
@@ -202,7 +202,6 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── d5.py           <- D5 실행·체크포인트·의존성 조립
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구, 외부 호출 없음
@@ -408,7 +407,7 @@ SojaFit (proj3-b)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
-│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억 통합 시험
+│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
@@ -417,7 +416,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
-│   │   └── test_repository.py  <- 소유권·원자성·접근 권한·체크포인트 시험
+│   │   └── test_repository.py  <- 소유권·원자성·접근 권한·삭제 잠금 시험
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
@@ -461,7 +460,6 @@ SojaFit (proj3-b)
 │   │   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
-│   │   ├── test_d5.py      <- D5 실행·인터럽트 재개·안전 이벤트 시험
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음

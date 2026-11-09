@@ -47,3 +47,18 @@ def test_interrupt_never_exposes_unrecognized_graph_payload():
     assert dto['interrupt']['missing'] == ['v_in']
     assert dto['interrupt']['role_choices'] == ['R01']
     assert 'private' not in str(dto)
+
+
+def test_terminal_public_result_preserves_safe_graph_fields_only():
+    from backend.conversations.dto import public_state
+    result = public_state({'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819', 'https://private'], 'facts': {'x': 'secret'}, 'reports': [{'secret': 1}]})
+    assert result == {'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819']}
+
+
+def test_docs_evidence_selects_only_cited_metadata():
+    from backend.conversations.dto import public_state
+    result = public_state({'answer': 'ok [3]', 'final_reports': [{'evidence_ids': ['3'], 'summary': 'secret summary'}],
+                           'docs': [{'chunk_id': 3, 'file': '/private/sheet.pdf', 'page': 2, 'table': 'T', 'content': 'private chunk', 'doc_parts': ['private']},
+                                    {'chunk_id': 4, 'file': 'unused.pdf', 'page': 3, 'content': 'other private'}]})
+    assert result['evidence'] == [{'document': 'sheet.pdf', 'page': 2, 'table': 'T', 'row': '', 'section': '', 'citation_number': '3'}]
+    assert 'private' not in str(result) and 'unused' not in str(result)

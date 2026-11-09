@@ -1,6 +1,6 @@
 """격리 PostgreSQL에서 사용자별 업로드·thread·체크포인트·승인 기억을 검증한다."""
 import os
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import psycopg
 import pytest
@@ -278,6 +278,63 @@ def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
     monkeypatch.setattr(app, 'dsn', make_conninfo(app.dsn, options='-c search_path=pg_catalog'))
     with pytest.raises(psycopg.errors.UndefinedTable):
         app.readiness()
+
+
+def test_react_thread_maps_to_one_owned_analysis_thread_with_fixed_target(runtime):
+    """React 정규화 회로(parts)로 같은 UUID의 분석 thread를 만들고, 대상 고정 · 소유권 · 원본 미저장을 지킨다."""
+    app, (a, b), dsn = runtime
+    thread = str(uuid4())
+    react = {'parts': [{'ref': 'D1', 'value': 'SS34', 'footprint': ''}, {'ref': 'D2', 'value': 'SS14', 'footprint': ''}],
+             'nets': [{'code': '1', 'name': 'VCC', 'nodes': [{'ref': 'D1', 'pin': '1'}, {'ref': 'D2', 'pin': '1'}]}]}
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', react, 'U9')
+    assert error.value.status_code == 422
+    for _ in range(2):  # 같은 대상의 다음 run은 행을 더 만들지 않는다
+        app.ensure_thread(a, thread, '프로젝트', react, 'D1')
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', react, 'D2')
+    assert error.value.status_code == 409 and error.value.detail == '대상 부품을 바꾸려면 새 대화를 시작하세요.'
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(b, thread, '프로젝트', react, 'D1')
+    assert error.value.status_code == 404
+    result = app.message(a, thread, '판정')
+    assert result['status'] == 'DONE' and result['can_approve']
+    with psycopg.connect(dsn) as conn:
+        rows = conn.execute('SELECT c.id, c.netlist, c.connections FROM sojafit_agent.circuits c WHERE c.user_id=%s', (a,)).fetchall()
+    assert rows == [(UUID(thread), '', {'components': react['parts'], 'nets': react['nets']})]
+
+
+def test_react_run_and_resume_go_through_analysis_service(runtime, monkeypatch):
+    """React run · 재개 HTTP가 실제 분석 서비스(가짜 그래프)의 checkpoint · 버전으로 이어진다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.api.conversations import repository
+    from backend.main import app as api
+    app, (a, _), _ = runtime
+    thread, run, saved = str(uuid4()), str(uuid4()), {}
+    class Repo:
+        def get_thread(self, user, thread_id):
+            return thread_id, 1, {'parts': [{'ref': 'D1', 'value': 'SS34'}], 'nets': [{'code': '1', 'name': 'VCC', 'nodes': [{'ref': 'D1', 'pin': '1'}]}]}, 'react'
+        def start(self, user, thread_id, data): return run, {}
+        def get_run(self, user, run_id): return {'id': run, 'thread_id': thread, 'status': saved['status'], 'safe_result': saved['result']}
+        def resume(self, *args): pass
+        def finish(self, user, thread_id, run_id, status, result): saved.update(status=status, result=result)
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    api.state.conversations = app
+    api.dependency_overrides[auth.current_user_id] = lambda: a
+    api.dependency_overrides[repository] = lambda: Repo()
+    origin = {'Origin': 'http://localhost:8000'}
+    try:
+        with TestClient(api) as client:
+            first = client.post(f'/api/threads/{thread}/runs', headers=origin, json={'question': '조건 질문', 'target_ref': 'D1'})
+            assert 'event: requires_input' in first.text and saved['result']['interrupt']['missing'] == ['VIN_MAX']
+            done = client.post(f'/api/runs/{run}/resume', headers=origin, json={'answers': {'VIN_MAX': '12'}})
+            assert 'event: completed' in done.text and saved['result']['answer'] == '역할상 충분 [1]'
+    finally:
+        api.dependency_overrides.clear()
+        del api.state.conversations
+    detail = app.detail(a, thread)
+    assert detail['version'] == 1 and detail['can_approve']
 
 
 def test_other_user_cannot_access_circuit_thread_resume_or_approval(runtime):

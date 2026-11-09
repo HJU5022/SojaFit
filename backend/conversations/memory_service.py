@@ -1,4 +1,7 @@
-"""세션 사용자별 업로드·분석 thread·승인 사례. 공유 DB setup은 명시적 CLI만 수행한다."""
+"""세션 사용자별 업로드·분석 thread·승인 사례. 공유 DB setup은 명시적 CLI만 수행한다.
+
+React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+"""
 import argparse
 import os
 import math
@@ -184,6 +187,28 @@ class Conversations:
             thread = str(uuid4())
             conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s)', (thread, user, circuit, target))
         return {'id': thread}
+
+    def ensure_thread(self, user, thread, filename, connections, target):
+        """React 대화 하나를 같은 UUID의 분석 회로·thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409."""
+        # React 정규화 회로는 부품 목록이 parts, 데모 회로는 components다. 넷리스트 원문은 다시 읽지 않는다
+        connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
+        if target not in {p['ref'] for p in connections['components']}:
+            raise HTTPException(422, '회로에 없는 대상 부품입니다.')
+        if self.mode == 'demo':
+            from backend.services.demo import configuration
+            if connections != parse_netlist(configuration()['netlist']):
+                raise HTTPException(422, '합성 데모 회로만 분석할 수 있습니다.')
+        with self.connection() as conn:
+            # [왜] React 대화 하나 = 분석 회로 하나 + thread 하나라 회로 id도 thread UUID를 쓴다. 동시 첫 실행에도 행이 하나만 생긴다
+            # [주의] React 업로드는 원본을 저장하지 않으므로 netlist 칸은 빈 글자로 둔다
+            with conn.transaction():
+                conn.execute('INSERT INTO circuits(id,user_id,filename,netlist,connections) VALUES (%s,%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
+                             (thread, user, filename, '', Jsonb(connections)))
+                conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
+                             (thread, user, thread, target))
+            row = self._owned(conn, user, thread)
+        if row['target'] != target:
+            raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
 
     def threads(self, user):
         with self.connection() as conn:

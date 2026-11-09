@@ -33,7 +33,7 @@
 - `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용하며, 다시 실행해도 있는 행은 그대로
 - `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
 - `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 분류 이름(예: `schottky-rectifier`, `pipeline/specs.py`의 `family`)이고 `ingest.py`가 문서를 넣을 때 채운다. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 DB에는 따로 적용하고 기존 행은 청크 파일에서 채운다.
-- `014_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트 표는 `backend.services.d5.setup_checkpoints`가 라이브러리 설치 경로로 별도 생성한다. 기존·공유 DB에는 자동 적용하지 않는다.
+- `014_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트는 같은 UUID의 사용자 분석 thread로 `sojafit_agent` 스키마에 둔다(`013_agent_memory.sql`과 setup CLI). 기존·공유 DB에는 자동 적용하지 않는다.
 - `015_approvals_quotes.sql` — 사람 승인·가격 없는 견적·승인 사례, 소유자 인덱스·삭제 cascade·공개 권한 제한과 중첩 가격·재고 키 거절. 기존·공유 DB에는 자동 적용하지 않는다.
 - `013_projects.sql` — 사용자 소유 프로젝트와 정규화 회로 1:1 저장. 사용자·프로젝트 삭제 cascade, 소유자별 목록 인덱스, 명시적 CHECK, 공개 역할 및 sequence 권한 회수, RLS(공개 정책 없음). 새 빈 볼륨에서 012 다음 실행하며 기존 볼륨·공유 DB에는 자동 적용하지 않는다. `manual/004_create_business_tables.sql.draft`의 옛 `circuits`와 충돌하므로 초안을 그대로 적용하지 않는다. 현재 서버는 데모 생성만 제공한다.
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)

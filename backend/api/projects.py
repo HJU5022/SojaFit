@@ -1,6 +1,5 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API."""
 import psycopg
-from psycopg import sql
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.datastructures import UploadFile
@@ -143,22 +142,18 @@ def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(
     return repo.rename_owned(user_id, project_id, body.name)
 
 
-def delete_checkpoints(conn, thread_ids):
-    """같은 DATABASE_URL의 LangGraph 표를 프로젝트 삭제 트랜잭션 안에서 정리한다."""
-    for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
-        conn.execute(sql.SQL('DELETE FROM {} WHERE thread_id = ANY(%s)').format(sql.Identifier(table)), (thread_ids,))
-
-
 def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
-    # run 생성·재개와 같은 project 행을 잠그고 checkpoint/업무 행을 한 트랜잭션에서 지운다.
+    # run 생성·재개와 같은 project 행을 잠그고 업무 행을 한 트랜잭션에서 지운다.
+    # [주의] 대화의 체크포인트·승인·Store 기억은 같은 UUID의 사용자 분석 thread(sojafit_agent)에 있고 지우지 않는다.
+    # checkpoint_delete는 같은 트랜잭션에서 thread id로 더 지울 일이 있을 때 넘기는 자리다(잠금·rollback 시험이 쓴다)
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound
         if conn.execute("SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND r.status IN ('running','requires_input') LIMIT 1", (project_id,)).fetchone():
             raise InvalidRunState
         ids = [str(row[0]) for row in conn.execute('SELECT id FROM threads WHERE project_id=%s', (project_id,)).fetchall()]
-        if ids:
-            (checkpoint_delete or delete_checkpoints)(conn, ids)
+        if ids and checkpoint_delete:
+            checkpoint_delete(conn, ids)
         conn.execute('DELETE FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id))
 
 

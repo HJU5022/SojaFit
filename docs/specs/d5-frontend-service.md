@@ -37,7 +37,7 @@
 | EC-04 | SSE 연결이 끊김 | `GET /api/runs/{run_id}`로 저장 상태를 조회하며 질문을 자동 재전송하지 않는다. |
 | EC-05 | 다른 사용자의 프로젝트·thread·승인 자료 접근 | 403 또는 리소스 비공개 404로 거절하고 내용을 반환하지 않는다. |
 | EC-06 | 승인 전 견적 저장 요청 | 409로 거절하며 견적·승인 사례를 저장하지 않는다. |
-| EC-07 | 프로젝트 삭제 | 한 트랜잭션으로 회로, thread, 메시지, run/checkpoint, 견적 및 연결된 승인 사례를 삭제한다. |
+| EC-07 | 프로젝트 삭제 | 한 트랜잭션으로 회로, thread, 메시지, run, 견적 및 연결된 승인 사례를 삭제한다. 같은 UUID 사용자 분석 thread의 checkpoint·승인·Store 기억은 남는다(기억은 `/api/memories`로 철회·삭제). |
 | EC-08 | 가격 API 미가용 또는 응답 | 가격 없이 판정은 유지하고, 가격 응답은 DB·메시지·checkpoint·견적·승인 사례에 기록하지 않는다. |
 
 ## How
@@ -46,7 +46,7 @@
 - **배포**: 개발 Vite 서버는 `/api`를 FastAPI로 프록시한다. 운영 Docker 다단계 빌드는 프론트를 빌드해 정적 산출물만 FastAPI 이미지에 복사한다. FastAPI는 `/api/*`, `/health`, Google callback을 먼저 처리하고 나머지 화면 경로는 React 진입 파일로 보낸다.
 - **인증**: 기존 HttpOnly 서버 세션 쿠키와 같은 출처 정책을 사용한다. 로그인·Google 관리자 로그인(설정된 경우)·로그아웃·관리자 계정 관리 경로를 제공한다.
 - **프로젝트 API**: `GET/POST /api/projects`, `POST /api/projects/upload`, `GET/PATCH/DELETE /api/projects/{project_id}`, `GET /api/demo-circuits`. 업로드는 multipart `.net`, UTF-8, 최대 5 MiB이며 사용자 파일명/경로를 서버 경로로 사용하지 않는다.
-- **대화 API**: 프로젝트별 thread 생성·목록, thread 조회, `POST /api/threads/{thread_id}/runs`, `GET /api/runs/{run_id}`, `POST /api/runs/{run_id}/resume`. 한 thread에 동시 run 하나만 허용한다. SSE 이벤트는 `run_started`, `status`, `requires_input`, `completed`, `refused`, `failed`이며 토큰 단위 출력은 보내지 않는다. 연결 복구는 상태 조회만 하며 자동 재전송하지 않는다.
+- **대화 API**: 프로젝트별 thread 생성·목록, thread 조회, `POST /api/threads/{thread_id}/runs`, `GET /api/runs/{run_id}`, `POST /api/runs/{run_id}/resume`. 한 thread에 동시 run 하나만 허용한다. run·재개는 `THREADS_ENABLED=1`의 사용자 분석 서비스(`backend/conversations/memory_service.py`)를 같은 UUID thread로 거치며(대상 부품 고정, 없으면 503). SSE 이벤트는 `run_started`, `status`, `requires_input`, `completed`, `refused`, `failed`이며 토큰 단위 출력은 보내지 않는다. 연결 복구는 상태 조회만 하며 자동 재전송하지 않는다.
 - **승인·견적·사례 API**: `POST /api/messages/{message_id}/approvals`, 프로젝트 견적 목록 및 승인 메시지 견적 저장, 사용자 승인 사례 목록·삭제. 승인/견적은 판정 메시지 immutable snapshot을 참조한다.
 - **가격 경계**: 화면을 열 때 `/api/prices`로 조회한다. Mouser 응답 전체를 화면 메모리에만 둔다. 가격·재고, `product_url`, `fetched_at`을 포함한 응답 필드는 브라우저 영속 캐시·DB·대화·checkpoint·견적·승인 사례·로그 등 어떤 영속 저장소에도 기록하지 않는다.
 - **권한·저장**: 모든 사용자 소유 행은 `user_id` 또는 프로젝트 관계로 검증한다. 관리자 계정 관리 권한은 프로젝트·대화 열람 권한을 부여하지 않는다. 프로젝트 삭제는 소유 자료 전체를 원자적으로 삭제한다.
@@ -84,7 +84,7 @@
 - GIVEN 사용자 A가 소유한 프로젝트·thread·메시지·승인 자료가 존재하고 사용자 B 또는 관리자 계정이 이를 요청, WHEN 각 리소스 API를 호출하면, THEN 소유자만 접근하고 타 사용자 및 관리자 계정 관리 권한만 가진 사용자는 자료 본문을 조회할 수 없다.
 
 **AC-10 project cascade deletion**
-- GIVEN 프로젝트 소유자가 프로젝트를 삭제, WHEN 삭제가 완료되면, THEN 정규화 회로·thread·메시지·run/checkpoint·견적 및 프로젝트에 연결된 승인 사례가 한 트랜잭션에서 삭제되고 이후 목록·상세 API에서 조회되지 않는다.
+- GIVEN 프로젝트 소유자가 프로젝트를 삭제, WHEN 삭제가 완료되면, THEN 정규화 회로·thread·메시지·run·견적 및 프로젝트에 연결된 승인 사례가 한 트랜잭션에서 삭제되고(같은 UUID 분석 thread의 checkpoint·기억은 남는다) 이후 목록·상세 API에서 조회되지 않는다.
 
 ## 조장 반영 요청
 

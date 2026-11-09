@@ -66,16 +66,6 @@ def test_schema_restrictions_and_indexes(storage):
         assert any('UNIQUE INDEX' in i and 'requires_input' in i for i in indexes)
 
 
-def test_library_postgres_checkpoint_setup(storage):
-    from langgraph.checkpoint.postgres import PostgresSaver
-    _, _, _, connect = storage
-    with connect() as conn:
-        conn.autocommit = True
-        saver = PostgresSaver(conn)
-        saver.setup()
-        assert conn.execute("SELECT to_regclass('checkpoints')").fetchone()[0] is not None
-
-
 def test_safe_result_rejects_extra_fields_and_cross_owner_operations(storage):
     from pydantic import ValidationError
     from backend.conversations.repository import ConversationNotFound
@@ -100,39 +90,6 @@ def test_message_run_thread_integrity(storage):
     run, _ = repo.start(owner, one, {'question': 'hello'})
     with pytest.raises(psycopg.errors.ForeignKeyViolation), connect() as conn:
         conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'user','x')", (two,run))
-
-
-def test_checkpoint_setup_and_d5_execution_on_isolated_postgres(storage):
-    import asyncio
-    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-    from backend.multi_agent.contracts import Plan
-    from backend.multi_agent.supervisor import Facts
-    from backend.services.d5 import D5Service, RunInput, setup_checkpoints
-    _, _, _, connect = storage
-    with connect() as conn:
-        from psycopg.conninfo import make_conninfo
-        dsn = make_conninfo(os.environ['TEST_AUTH_DATABASE_URL'], options=conn.info.options)
-    async def run():
-        await setup_checkpoints(dsn)
-        async with AsyncPostgresSaver.from_conn_string(dsn) as saver:
-            service = D5Service(chat=lambda *a: Plan(question_type='chat', next='finish', reply='안녕하세요'),
-                                retriever=lambda *a, **k: [], lookup=lambda _: Facts(),
-                                specs=lambda *a, **k: [], find=lambda *a, **k: [], checkpointer=saver)
-            data = RunInput(question='안녕', target_ref='', connections={'parts': [], 'nets': []})
-            events = [e async for e in service.start('stable-postgres-thread', data)]
-            assert events[-1].type == 'completed' and events[-1].state['answer'] == '안녕하세요'
-        with connect() as conn:
-            assert conn.execute('SELECT count(*) FROM checkpoints').fetchone()[0] > 0
-            names = ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes', 'checkpoint_migrations')
-            for name in names:
-                assert conn.execute("SELECT relrowsecurity FROM pg_class WHERE oid=%s::regclass", (name,)).fetchone() == (True,)
-                assert not conn.execute("SELECT EXISTS (SELECT 1 FROM pg_class c, LATERAL aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) a WHERE c.oid=%s::regclass AND a.grantee=0)", (name,)).fetchone()[0]
-    import sys
-    if sys.platform == 'win32':
-        asyncio.run(run(), loop_factory=asyncio.SelectorEventLoop)
-    else:
-        asyncio.run(run())
-
 
 
 def test_resume_is_owner_scoped_and_single_claim(storage):
@@ -170,33 +127,18 @@ def test_terminal_run_cannot_be_finished_twice(storage):
         assert conn.execute('SELECT count(*) FROM messages').fetchone()[0] == 2
 
 
-def test_project_delete_atomically_removes_checkpoint_data(storage):
-    import asyncio
-    import sys
-    from psycopg.conninfo import make_conninfo
-    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-    from backend.multi_agent.contracts import Plan
-    from backend.multi_agent.supervisor import Facts
-    from backend.services.d5 import D5Service, RunInput, setup_checkpoints
+def test_project_delete_needs_no_public_checkpoint_tables(storage):
+    from backend.api.projects import delete_owned_with_checkpoints
     repo, (owner, _), project, connect = storage
     thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
     with connect() as conn:
-        dsn = make_conninfo(os.environ['TEST_AUTH_DATABASE_URL'], options=conn.info.options)
-    async def run():
-        await setup_checkpoints(dsn)
-        async with AsyncPostgresSaver.from_conn_string(dsn) as saver:
-            service = D5Service(chat=lambda *a: Plan(question_type='chat', next='finish', reply='hi'), retriever=lambda *a, **k: [], lookup=lambda _: Facts(), specs=lambda *a, **k: [], find=lambda *a, **k: [], checkpointer=saver)
-            data = RunInput(question='hi', target_ref='', connections={'parts': [], 'nets': []})
-            assert [e async for e in service.start(thread, data)][-1].type == 'completed'
-            with connect() as conn:
-                assert conn.execute('SELECT count(*) FROM checkpoints WHERE thread_id=%s', (thread,)).fetchone()[0] > 0
-            from backend.api.projects import delete_owned_with_checkpoints
-            delete_owned_with_checkpoints(owner, project)
-        with connect() as conn:
-            for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
-                assert conn.execute(sql.SQL('SELECT count(*) FROM {} WHERE thread_id=%s').format(sql.Identifier(table)), (thread,)).fetchone()[0] == 0
-            assert conn.execute('SELECT count(*) FROM projects WHERE id=%s', (project,)).fetchone()[0] == 0
-    asyncio.run(run(), loop_factory=asyncio.SelectorEventLoop) if sys.platform == 'win32' else asyncio.run(run())
+        assert conn.execute("SELECT to_regclass('checkpoints')").fetchone()[0] is None
+    delete_owned_with_checkpoints(owner, project)
+    with connect() as conn:
+        for table in ('projects', 'threads', 'runs', 'messages'):
+            assert conn.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 0
 
 
 def test_delete_rejects_active_then_removes_owned_checkpoints(storage):
@@ -291,7 +233,7 @@ def test_database_rejects_nested_private_fields_and_bad_types(storage):
 
 
 def test_docs_evidence_is_persisted_without_raw_chunk(storage):
-    from backend.services.d5 import public_state
+    from backend.conversations.dto import public_state
     from backend.conversations.dto import result_dto
     repo, (owner, _), project, _ = storage
     thread = repo.create_thread(owner, project)

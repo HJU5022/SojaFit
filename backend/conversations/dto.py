@@ -1,4 +1,4 @@
-"""브라우저에 내보낼 결과의 고정 허용 목록."""
+"""브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
 from pydantic import BaseModel, ValidationError
 from backend.conversations.models import SafeEvidence, SafeJudgement
@@ -58,6 +58,35 @@ def safe_judgement(value):
         return _safe_judgement(value)
     except (TypeError, AttributeError, ValueError):
         return None
+
+
+def public_state(state: dict) -> dict:
+    """그래프 상태에서 공개 계약에 구조화된 값만 선택한다. 원문 문서와 보고서는 복사하지 않는다."""
+    answer = state.get('answer', '')
+    question_type = state.get('question_type', '')
+    parts = state.get('price_parts', [])
+    result = {'answer': answer if isinstance(answer, str) else '',
+              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
+              'price_parts': [p for p in parts if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(parts, list) else []}
+    reports = state.get('final_reports') or state.get('reports') or []
+    cited = {str(item) for report in reports if isinstance(report, dict)
+             for item in report.get('evidence_ids', [])}
+    evidence = []
+    for doc in state.get('docs') or []:
+        if not isinstance(doc, dict) or str(doc.get('chunk_id')) not in cited:
+            continue
+        document, page, table = doc.get('file'), doc.get('page'), doc.get('table')
+        if not isinstance(document, str) or not isinstance(page, (int, str)) or not isinstance(table, (str, type(None))):
+            continue
+        entry = {'document': document.replace('\\', '/').rsplit('/', 1)[-1], 'page': page,
+                 'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
+        if entry not in evidence:
+            evidence.append(entry)
+    if evidence:
+        result['evidence'] = evidence
+    if judgement := safe_judgement(state.get('judgement')):
+        result['judgement'] = judgement
+    return result
 
 
 def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '', interrupt: dict | None = None) -> BrowserResult:

@@ -9,9 +9,9 @@
 ## 파일
 - `CONVERSATIONS.md` — 이 문서
 - `__init__.py` — 패키지 표시
-- `memory_service.py` — 인증 사용자별 업로드·thread 소유권·DB 체크포인트·조건 재개·버전별 승인과 Store. `THREADS_ENABLED=1`에서 사용하며 `--setup` CLI를 제공
-- `dto.py` — 브라우저 결과 허용 목록
+- `memory_service.py` — 인증 사용자별 업로드·thread 소유권·DB 체크포인트·조건 재개·버전별 승인과 Store. `THREADS_ENABLED=1`에서 사용하며 `--setup` CLI를 제공. `ensure_thread`가 React 대화와 같은 UUID의 분석 회로·thread를 처음 한 번 만들고 대상 부품을 고정한다(바꾸면 409, 넷리스트 원문 칸은 빈 글자)
+- `dto.py` — 브라우저 결과 허용 목록, 그래프 상태에서 공개 값만 고르는 `public_state`
 - `models.py` — 실행 상태와 저장 허용 결과 형식
 - `repository.py` — 소유자 조건, 실행 생성·재개 및 결과 저장
 
-`str(threads.id)`가 불변 LangGraph `thread_id` 정본이다. 프로젝트 삭제는 project 행 잠금으로 새 실행·재개와 직렬화하고 활성 실행이 있으면 거절한다. checkpoint 세 표와 project cascade는 같은 `DATABASE_URL`의 한 트랜잭션에서 정리되어 어느 단계가 실패해도 함께 rollback된다. 저장 결과는 answer, question_type, 품번, interrupt, 공개 판정·인용 메타데이터만 허용하며 request_id는 저장하지 않는다. 문서 질문의 raw chunk는 반환하지 않는다.
+`str(threads.id)`가 불변 LangGraph `thread_id` 정본이고, 같은 UUID가 사용자 분석 서비스(`sojafit_agent`)의 thread id다. 체크포인트·Store 기억은 분석 서비스에만 있다. 프로젝트 삭제는 project 행 잠금으로 새 실행·재개와 직렬화하고 활성 실행이 있으면 거절하며, public 행만 지운다. 같은 UUID의 분석 thread·checkpoint·승인·Store 기억은 남는다(기억은 `/api/memories`로 철회·삭제). 저장 결과는 answer, question_type, 품번, interrupt, 공개 판정·인용 메타데이터만 허용하며 request_id는 저장하지 않는다. 문서 질문의 raw chunk는 반환하지 않는다.

@@ -27,7 +27,7 @@ class ConversationRepository:
 
     def get_thread(self, user_id, thread_id):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id, t.project_id, c.connections FROM threads t JOIN projects p ON p.id=t.project_id JOIN circuits c ON c.project_id=p.id WHERE t.id=%s AND p.user_id=%s',
+            row = conn.execute('SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN circuits c ON c.project_id=p.id WHERE t.id=%s AND p.user_id=%s',
                                (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
