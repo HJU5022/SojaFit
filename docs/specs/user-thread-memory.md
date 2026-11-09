@@ -2,6 +2,8 @@
 
 **11-09 변경:** 장기 기억을 승인한 판정 사례에서 사용자 사실 3칸으로 바꿨다(아래 "사용자 사실 기억", SPEC 8.5). 승인 사례는 이제 승인 기록이다. 승인 원본과 승인·`/api/memories` 관리 API는 그대로 두지만 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않는다. 그 아래 절의 "승인 사례 기억" 설계·AC 중 "(11-09 대체)"를 붙인 줄은 그 전 설계다.
 
+**11-10 변경:** React만 남기기로 하고(조장 결정) React 이전 화면 `/workspace`(`backend/web/templates/workspace.html`)와 그 경로(`/api/circuits` · `/api/threads` 목록 · 상세 · `messages` · `resume` · `approve` · `retry` · `/api/memories` · `/api/memories/{thread}/{version}/control` · `/api/analysis/readiness` · `/api/analysis/demo`)를 지웠다. 지금 분석 입구는 React 대화 API(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, SPEC 4절)이고, 승인은 React의 `POST /api/messages/{id}/approvals`다. 옛 승인 기록(`sojafit_agent.approvals`)은 새로 쓰는 경로 없이 삭제 · 보관 기간 규칙만 따르며, 정정 · 철회 · 재시도 기능은 없다. 아래 절의 화면 · 경로 설명은 11-09까지의 기록이다.
+
 상태: 로컬·공유 DB·운영 0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
 
 ## Why
@@ -72,6 +74,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 쿠키 기반 상태 변경 API는 기존 auth.check_origin을 사용한다. 응답에는 Cache-Control: no-store를 붙인다.
 
 ### API 계약 제안
+(11-10에 아래 경로를 React 이전 화면과 함께 지웠다. 지금 계약은 SPEC 4절.)
 - 모든 thread/업로드/기억 API 오류는 main의 error.code/message/request_id 계약을 사용한다. DB 연결 실패(503)와 본문 초과(413)도 동일하며 입력·DB 예외 원문은 숨긴다. workspace는 error.message를 읽는다.
 - POST /api/circuits: 파일명과 UTF-8 넷리스트 본문을 받아 검증·저장하고 대상 선택용 부품 목록을 반환한다.
 - GET /api/circuits: 내 회로와 부품 목록만 반환한다.

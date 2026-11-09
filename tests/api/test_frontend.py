@@ -14,23 +14,13 @@ def test_api_404_stays_json(path):
     assert response.json()["error"]["code"] == "NOT_FOUND"
 
 
-@pytest.mark.parametrize("path", ["/login", "/app", "/admin/users"])
-def test_main_app_serves_frontend_routes(path):
-    response = TestClient(app).get(path)
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/html")
-    assert response.headers["X-Request-ID"]
-
-
 @pytest.fixture
 def built_frontend(tmp_path):
     dist = tmp_path / "dist"
     (dist / "assets").mkdir(parents=True)
     (dist / "index.html").write_text('<div id="root"></div>', encoding="utf-8")
     (dist / "assets" / "app.js").write_text("console.log('shell')", encoding="utf-8")
-    fallback = tmp_path / "login.html"
-    fallback.write_text("legacy login", encoding="utf-8")
-    return dist, fallback
+    return dist
 
 
 @pytest.fixture
@@ -44,7 +34,7 @@ def frontend_client(built_frontend):
     def health():
         return {"status": "ok"}
 
-    mount_frontend(mounted, *built_frontend)
+    mount_frontend(mounted, built_frontend)
     return TestClient(mounted)
 
 
@@ -93,11 +83,15 @@ def test_health_redirect_is_not_replaced(frontend_client):
     assert frontend_client.post("/health").status_code == 405
 
 
-def test_unbuilt_frontend_returns_legacy_login(tmp_path):
+@pytest.mark.parametrize("path", ["/login", "/app", "/admin/users"])
+def test_unbuilt_frontend_keeps_common_404(tmp_path, path):
+    """빌드가 없으면 대신 보일 화면 없이 공통 404 JSON이다(예전 로그인 템플릿은 11-10에 지움)."""
     from backend.web.app import mount_frontend
 
-    fallback = tmp_path / "login.html"
-    fallback.write_text("legacy login", encoding="utf-8")
     mounted = FastAPI()
-    mount_frontend(mounted, tmp_path / "missing-dist", fallback)
-    assert TestClient(mounted).get("/app").text == "legacy login"
+    mounted.add_exception_handler(StarletteHTTPException, http_error)
+    mount_frontend(mounted, tmp_path / "missing-dist")
+    response = TestClient(mounted).get(path)
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "NOT_FOUND"
+    assert response.headers["X-Request-ID"] == response.json()["error"]["request_id"]

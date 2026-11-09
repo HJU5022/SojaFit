@@ -214,14 +214,9 @@ SojaFit (proj3-b)
 │   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
-│   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
+│   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
-│   │   ├── app.py          <- API 우선 SPA·정적 파일 제공과 미빌드 로그인 fallback
-│   │   ├── design.md       <- 화면 디자인 규칙 초안
-│   │   ├── templates/      <- 화면 HTML 템플릿
-│   │   │   ├── workspace.html <- 사용자 넷리스트 업로드·내 분석 대화·재개·승인 사례 화면
-│   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
-│   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
+│   │   └── app.py          <- API 우선 SPA·assets 제공. 빌드가 없으면 화면 주소도 공통 404
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
 │       ├── MCP_SKILL.md    <- 폴더 설명
 │       ├── mcp_server/

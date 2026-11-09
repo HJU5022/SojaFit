@@ -1,6 +1,9 @@
 """세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
 React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+HTTP 입구는 React 작업대의 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 남은 `upload` · `create` · `threads` · `approve`는 HTTP 경로가 없고,
+DB 시험이 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다(tests/api/test_threads.py · test_deletion.py).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
@@ -341,11 +344,6 @@ class Conversations:
                          (circuit, user, filename, netlist, Jsonb(connections)))
         return {'id': circuit, 'filename': filename, 'components': connections['components']}
 
-    def circuits(self, user):
-        with self.connection() as conn:
-            rows = conn.execute('SELECT id,filename,connections FROM circuits WHERE user_id=%s ORDER BY created_at DESC LIMIT 100', (user,)).fetchall()
-        return [{'id': str(r['id']), 'filename': r['filename'], 'components': r['connections']['components']} for r in rows]
-
     def create(self, user, circuit, target):
         with self.connection() as conn:
             self._hold_account(conn, user)
@@ -566,18 +564,6 @@ class Conversations:
         if (snapshot.values or {}).get('run_version') == row['version'] and (not snapshot.next or pending):
             self._finish(conn, row['id'], snapshot)
 
-    def retry(self, user, thread, version, request_id=''):
-        with self.locked(user, thread) as (conn, row):
-            snapshot = self.graph.get_state(self.config(thread))
-            pending = [i for task in snapshot.tasks for i in task.interrupts]
-            if (version != row['version'] or row['retries'] >= 2 or not snapshot.next or pending
-                    or (snapshot.values or {}).get('run_version') != version):
-                raise HTTPException(409, '현재 실패한 실행만 최대 두 번 재시도할 수 있습니다.')
-            budget = self._budget(user)
-            conn.execute("UPDATE threads SET retries=retries+1,status='RUNNING',input_record=input_record-'execution_limit_reached' WHERE id=%s", (thread,))
-            self._invoke(conn, thread, None, budget, request_id)
-        return self.detail(user, thread)
-
     def approve(self, user, thread, version, request_id=''):
         with self.connection() as conn:
             self._owned(conn,user,thread)
@@ -649,28 +635,6 @@ class Conversations:
         active = {(m['thread_id'],m['version']):m for m in self.memories(user)}
         return [active[(m['thread_id'],m['version'])] for m in items
                 if (m['thread_id'],m['version']) in active]
-
-    def control_memory(self, user, thread, version, action, correction):
-        if action not in ('correct','revoke','restore','delete') or len(correction) > 1000:
-            raise HTTPException(422, '기억 관리 요청을 확인하세요.')
-        with self.locked(user, thread) as (conn, _):
-            row = conn.execute('SELECT memory_status FROM approvals WHERE thread_id=%s AND version=%s', (thread,version)).fetchone()
-            if not row:
-                raise HTTPException(404, '승인 사례를 찾을 수 없습니다.')
-            if row['memory_status'] == 'deleted' and action != 'delete':
-                raise HTTPException(409, '기억에서 삭제한 사례는 복구할 수 없습니다. 대화·승인 원본은 유지됩니다.')
-            if action == 'correct':
-                conn.execute('UPDATE approvals SET correction=%s,memory_updated_at=CURRENT_TIMESTAMP WHERE thread_id=%s AND version=%s', (correction,thread,version))
-            else:
-                status = {'revoke':'revoked','restore':'active','delete':'deleted'}[action]
-                conn.execute('UPDATE approvals SET memory_status=%s,memory_updated_at=CURRENT_TIMESTAMP WHERE thread_id=%s AND version=%s', (status,thread,version))
-                if action == 'delete':
-                    # 먼저 삭제 표식을 확정한다. 이전 코드가 Store에 써 둔 사본이 있으면 지운다(새 승인은 Store에 쓰지 않음).
-                    try:
-                        self.store.delete(namespace(str(user)), f'{thread}:{version}')
-                    except Exception:
-                        raise HTTPException(503, '기억 참조는 차단했습니다. Store 사본 제거를 위해 기억 삭제를 다시 요청하세요.') from None
-        return {'ok':True, 'version':version}
 
 
 if __name__ == '__main__':

@@ -207,9 +207,11 @@ def test_project_delete_rejects_active_run_before_checkpoint_deletion(monkeypatc
 
 
 def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
+    import psycopg
     from backend.conversations.repository import ConversationNotFound, InvalidRunState
     thread = str(uuid4())
-    for failing, exc, expected in [('get_thread', ConversationNotFound(), 404), ('start', InvalidRunState(), 409)]:
+    for failing, exc, expected in [('get_thread', ConversationNotFound(), 404), ('start', InvalidRunState(), 409),
+                                   ('get_thread', psycopg.OperationalError('private-db-detail'), 503)]:
         repo = FakeRepo(thread, str(uuid4()))
         setattr(repo, failing, lambda *args, exc=exc: (_ for _ in ()).throw(exc))
         # 저장소 의존성의 예외 → 공통 404·409 변환까지 보려고 의존성은 바꾸지 않고 클래스만 바꾼다
@@ -218,6 +220,7 @@ def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
             response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         assert response.status_code == expected
         assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
+        assert response.headers['cache-control'] == 'no-store' and 'private-db-detail' not in response.text
 
 
 def test_project_delete_with_threads_deletes_analysis_records_before_project(monkeypatch):
@@ -272,13 +275,35 @@ def test_disconnected_stream_keeps_running_and_saves_terminal():
     asyncio.run(run())
 
 
-def test_resume_rejects_price_fields_before_service(web):
+def test_resume_rejects_price_fields_and_long_answers_before_service(web):
     analysis = FakeAnalysis()
     with web(analysis, FakeRepo(str(uuid4()), str(uuid4()))) as client:
-        for key in ['price', 'stock', 'product_url', 'fetched_at']:
-            response = client.post(f'/api/runs/{uuid4()}/resume', json={'answers': {key: 'private'}}, headers=ORIGIN)
+        for answers in [{'price': 'private'}, {'stock': 'private'}, {'product_url': 'private'}, {'fetched_at': 'private'},
+                        {'VIN_MAX': 'x' * 201}]:  # 답 하나는 200자까지
+            response = client.post(f'/api/runs/{uuid4()}/resume', json={'answers': answers}, headers=ORIGIN)
             assert response.status_code == 422
     assert analysis.calls == []
+
+
+def test_run_rejects_injected_fields_and_foreign_origin_before_service(web):
+    """본문에 사용자 id · 경로 같은 칸을 끼우면 422, 다른 Origin이면 403이고 분석 · 저장소를 부르지 않는다."""
+    thread = str(uuid4())
+    analysis, repo = FakeAnalysis(), FakeRepo(thread, str(uuid4()))
+    with web(analysis, repo) as client:
+        injected = client.post(f'/api/threads/{thread}/runs', headers=ORIGIN,
+                               json={'question': 'hi', 'target_ref': 'D1', 'user_id': 2, 'netlist_path': '.env'})
+        foreign = client.post(f'/api/threads/{thread}/runs', headers={'origin': 'https://evil.example'},
+                              json={'question': 'hi', 'target_ref': 'D1'})
+    assert injected.status_code == 422 and foreign.status_code == 403
+    assert injected.headers['cache-control'] == 'no-store'
+    assert analysis.calls == [] and repo.calls == []
+
+
+def test_run_body_over_128_kib_is_413_before_login():
+    """`/api/threads`로 시작하는 POST 본문은 128 KiB까지다(`backend/main.py`의 `conversation_boundary`)."""
+    response = TestClient(app).post(f'/api/threads/{uuid4()}/runs', content=b'x' * (128 * 1024 + 1))
+    assert response.status_code == 413 and response.headers['cache-control'] == 'no-store'
+    assert response.json()['error']['code'] == 'PAYLOAD_TOO_LARGE'
 
 
 def test_resume_uses_same_thread_and_current_analysis_version(web):

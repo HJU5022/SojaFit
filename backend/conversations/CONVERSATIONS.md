@@ -9,7 +9,7 @@
 ## 파일
 - `CONVERSATIONS.md` — 이 문서
 - `__init__.py` — 패키지 표시
-- `memory_service.py` — 인증 사용자별 업로드·thread 소유권·DB 체크포인트·조건 재개·버전별 승인 기록, 질문·재개 때 사용자 사실 찾기(`profile_hints`). `THREADS_ENABLED=1`에서 사용하며 `--setup` CLI를 제공. `ensure_thread`가 React 대화와 같은 UUID의 분석 회로·thread를 처음 한 번 만들고 대상 부품을 고정한다(바꾸면 409, 넷리스트 원문 칸은 빈 글자). 새 질문마다 보관 기간 청소 함수(db/023)를 작은 묶음으로 부른다(실패해도 분석 계속). 탈퇴는 계정 단위 advisory lock(분석 · 기록 쓰기는 공유, 탈퇴는 배타)으로 진행 중인 분석과 서로 409. 분석 예산은 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체 UTC 하루 상한(200,000 · 2,000,000)에 원자적으로 더하고 넘으면 호출 전 429(`_budget`, `admission`, db/022)
+- `memory_service.py` — React run·재개가 거치는 사용자 분석 서비스: thread 소유권·DB 체크포인트·조건 재개, 질문·재개 때 사용자 사실 찾기(`profile_hints`). `THREADS_ENABLED=1`에서 사용하며 `--setup` CLI를 제공. HTTP 입구는 React 대화 API · 내 설정 · 탈퇴뿐이다(React 이전 화면 `/workspace` 경로는 11-10에 지움). `upload` · `create` · `threads` · `approve`는 HTTP 경로 없이 DB 시험이 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다. `ensure_thread`가 React 대화와 같은 UUID의 분석 회로·thread를 처음 한 번 만들고 대상 부품을 고정한다(바꾸면 409, 넷리스트 원문 칸은 빈 글자). 새 질문마다 보관 기간 청소 함수(db/023)를 작은 묶음으로 부른다(실패해도 분석 계속). 탈퇴는 계정 단위 advisory lock(분석 · 기록 쓰기는 공유, 탈퇴는 배타)으로 진행 중인 분석과 서로 409. 분석 예산은 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체 UTC 하루 상한(200,000 · 2,000,000)에 원자적으로 더하고 넘으면 호출 전 429(`_budget`, `admission`, db/022)
 - `profile.py` — 사용자 사실 3칸 장기 기억(SPEC 8.5): 칸 검사, 틀 문장, Store 덮어쓰기(version)·지우기, Voyage 의미 검색(키 없으면 순위 없이)
 - `dto.py` — 브라우저 결과 허용 목록(참고(내 설정) `profile_hints` 포함), 그래프 상태에서 공개 값만 고르는 `public_state`
 - `models.py` — 실행 상태와 저장 허용 결과 형식

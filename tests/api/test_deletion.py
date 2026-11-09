@@ -72,7 +72,7 @@ def world(monkeypatch):
 
 
 def seed(app, dsn, user, projects=1):
-    """사용자 하나의 프로젝트(React 업무 행 전부 + 같은 UUID 분석 기록), /api/threads 직접 thread, 사실 3칸, 옛 승인 사본을 만든다."""
+    """사용자 하나의 프로젝트(React 업무 행 전부 + 같은 UUID 분석 기록), 옛 직접 thread(`upload` · `create`, HTTP 경로는 11-10에 지움), 사실 3칸, 옛 승인 사본을 만든다."""
     made = {'projects': [], 'threads': []}
     with psycopg.connect(dsn) as conn:
         for index in range(projects):

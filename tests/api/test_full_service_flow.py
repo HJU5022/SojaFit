@@ -55,6 +55,9 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     })
     saved = conversations.get_run(owner, run)
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    # [왜] 같은 메시지를 다시 승인하면 UNIQUE(message_id)가 막아 승인 · 사례가 한 건으로 남는다(API는 409, db/020)
+    with pytest.raises(psycopg.errors.UniqueViolation): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    assert len(quotes.list_cases(owner)) == 1
     quote = quotes.create_quote(owner, approval['id'], 25)
     assert quote['part_number'] == 'SS34' and quote['quantity'] == 25
     assert quotes.list_quotes(owner, project.id)[0]['id'] == quote['id']
