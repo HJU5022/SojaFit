@@ -90,7 +90,7 @@ SojaFit (proj3-b)
 │   │   ├── retrieve.py     <- BM25 + 벡터를 RRF로 합친 하이브리드 검색, 품번 필터 (서버 import)
 │   │   ├── spec_lookup.py  <- 부품 사양 표 조회: 품번 하나의 사양 행, 숫자 조건을 모두 채운 품번 찾기(행 거르기만, 판정 아님) (서버 import)
 │   │   ├── card_read.py    <- 카드(표 행 청크)에서 값 · 원문 인용 읽기(코드 먼저, 못 읽은 카드만 LLM)와 코드 확인
-│   │   ├── card_find.py    <- 사양 표 없이 후보 찾기: 개요 줄로 문서 고르기(LLM) → 카드 읽기 → find_candidates 규칙
+│   │   ├── card_find.py    <- 사양 표 없이 후보 찾기: 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → find_candidates 규칙
 │   │   ├── card_specs.py   <- 판정 값(get_part_specs 모양)을 카드에서 읽기, 사실 확인용 문서 행
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
 │   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
@@ -310,7 +310,7 @@ SojaFit (proj3-b)
 │   │   ├── test_rag_ingest.py  <- 적재 도구, 벡터 캐시
 │   │   ├── test_rag_specs.py  <- 부품 사양 표 변환: 표 모양별 값, 모호한 값의 검토 사유, 대조표 표본 수(가짜 청크)
 │   │   ├── test_rag_spec_lookup.py  <- 사양 표 SQL(두 번 적용·나쁜 행)·문서 단위 적재·조회(TEST_DATABASE_URL이 있을 때만)
-│   │   ├── test_card_find.py  <- 카드 찾기: 검색 문장 · 분류로 문서 고르기 · 카드 거르기, find_candidates와 같은 거르기 · 순서, 양방향 값 붙이기(가짜 검색 · DB · LLM)
+│   │   ├── test_card_find.py  <- 카드 찾기: 검색 문장 · 분류로 문서 고르기 · 개요 줄 코드 고르기 · 카드 거르기, find_candidates와 같은 거르기 · 순서, 양방향 값 붙이기(가짜 검색 · DB · LLM)
 │   │   ├── test_card_read.py  <- 카드 읽기: 코드 먼저 · 못 읽는 모양만 LLM(실제 카드 글), 인용 · 숫자 · 단위 차원 · 품번으로 버리기, SI 값, 4장씩 나눠 읽기(가짜 chat)
 │   │   ├── test_card_specs.py  <- 카드에서 판정 값 읽기: 미리 읽은 품번은 다시 읽지 않기, 글 행 붙이기(가짜 의존)
 │   │   ├── test_rag_units.py  <- 단위 환산(mA·µA·ns·pF·kV·mW·°C, 모르는 단위는 None)
