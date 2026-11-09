@@ -11,6 +11,7 @@
 ## 파일
 - `TESTS.md` — 이 문서
 - `api/` — 서버 API·인증 시험. [API.md](api/API.md)
+- `conversations/` — 격리 DB 대화·체크포인트 시험. [CONVERSATIONS.md](conversations/CONVERSATIONS.md)
 - `projects/` — 실제 격리 DB에서 소유권·cascade·원자성·권한 시험. [PROJECTS.md](projects/PROJECTS.md)
 - `evals/` — 동결 감시·평가 실행기·Skill 쌍 시험. [EVALS.md](evals/EVALS.md)
 - `multi_agent/` — 멀티 에이전트 시험. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)

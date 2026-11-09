@@ -384,3 +384,12 @@
 - filename 누락 시험만 먼저 `PYTHONUTF8=1 uv run pytest -vv tests/api/test_projects.py::test_upload_rejects_missing_filename_before_reading_or_persisting`로 재현해 `1 passed in 0.57s`를 확인했다. 실제 400이며 422와의 결과 불일치는 없다. filename 없는 file은 두 번째 text field이므로 Starlette의 headers 처리에서 max_fields=1을 초과해 MultiPartException을 낸다. route의 공통 400 번역이 적용되어 type/shape의 422 검사는 실행되지 않는다.
 - 변경: filename 누락과 빈/공백/잘못된 확장자 거절 시험에서 공통 error code·정확한 message·서버 request ID 전체 DTO를 확인한다. 기존 read 0·저장소 미호출·생성된 UploadFile close 검증을 유지했다. production 코드는 바꾸지 않았다.
 - 확인: 두 요청 시험 파일 `70 passed, 1 skipped in 1.60s`; repo layout `5 passed in 0.29s`, diff whitespace 통과. 이번에는 DB를 새로 만들거나 연결하지 않아 기존 실제 DB CRUD 시험 1개만 skip했다. 부모 요청대로 production 변경이 없으므로 전체 suite는 다시 실행하지 않았으며 직전 Fix Round 1의 전체 결과는 `1033 passed, 37 skipped`이다. raw/text 수명 Minor는 최종 검토까지 보류한다.
+
+### Task 7 — D5 실행 및 영속 대화
+
+- 변경: `backend/services/d5.py`, `backend/conversations/`, `db/014_conversations.sql`, 관련 테스트와 폴더·DB 설명. D5 그래프 하나만 사용하고 API는 추가하지 않았다. 업로드·데모 연결을 기존 대상 부품 형식으로 바꾼다.
+- RED: 서비스·SQL 부재를 확인했고, DB의 잘못된 결과 형식·다른 대화의 실행 연결·중복 종료 시험도 각각 먼저 실패했다. 격리 PostgreSQL만 사용, 실제 모델·검색 호출 없음.
+- 검증: 전용 볼륨 없는 postgres 컨테이너에서 `uv run pytest -q tests/services/test_d5.py tests/conversations tests/multi_agent` 151 passed; `uv run pytest -q tests/repo/test_repo_layout.py` 5 passed; `uv lock --check` 통과. 전체 `uv run pytest -q` 첫 실행은 인증 기본 표 미준비로 14 failed, 1030 passed, 37 skipped; 격리 DB에 003/005/006을 준비한 재실행은 1044 passed, 37 skipped. 이후 안전 결과 SQL과 중복 종료 보호를 추가하여 집중 테스트로 재검증했다.
+- 한계: 모델·MCP 실호출, 공유 DB·배포, 동결 평가셋 재측정은 하지 않았다. D5Service는 인증·DB 결과 저장을 직접 처리하지 않으며 후속 API가 소유권 검증과 저장을 연결해야 한다. Windows psycopg async는 SelectorEventLoop가 필요하다.
+
+- 추가 검증: 실제 checkpoint가 프로젝트 cascade만으로 지워지지 않는 RED를 확인했다. `D5Service.delete_thread`는 라이브러리 `adelete_thread`로 checkpoint를 정리하며 격리 DB에서 검증했다. 프로젝트 삭제와 원자적 결합·실행 중 삭제 경계는 미구현으로 Task 8 연동 및 Task 13 E2E가 필요하다. `str(threads.id)`가 LangGraph thread_id 정본이다.

@@ -12,6 +12,10 @@
 erDiagram
     USERS ||--o{ AUTH_SESSIONS : "로그인 세션"
     USERS ||--o{ PROJECTS : "소유 프로젝트"
+    PROJECTS ||--o{ THREADS : "대화"
+    THREADS ||--o{ RUNS : "실행"
+    THREADS ||--o{ MESSAGES : "메시지"
+    RUNS ||--o{ MESSAGES : "메시지"
     PROJECTS ||--|| CIRCUITS : "정규화 회로"
     USERS ||--o| AUTH_GOOGLE_IDENTITIES : "승인된 Google 관리자 연결"
 
@@ -87,3 +91,5 @@ erDiagram
 | `store` | `PostgresStore` | 사용자별 장기 기억. namespace는 `("memories", user_id)`(`backend/graph/memory.py`) |
 | `store_vectors` | `PostgresStore` | 기억의 임베딩(인덱스를 설정할 때) |
 | `store_migrations`, `vector_migrations` | `PostgresStore` | Store 스키마 버전 |
+
+`db/014_conversations.sql`은 프로젝트 소유 대화·실행·메시지를 만든다. 체크포인트 표는 LangGraph 설치 경로로 별도 생성한다.

@@ -511,3 +511,7 @@ PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표�
 3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/DB.md`).
 4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`008_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/schema/erd.md`로 옮기고 이 문서를 지웁니다.
+
+## 대화 저장 (014)
+
+`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/014_conversations.sql`이다.

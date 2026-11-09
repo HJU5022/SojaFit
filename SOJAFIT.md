@@ -99,6 +99,11 @@ SojaFit (proj3-b)
 │   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
 │   │   ├── netlist.py      <- 원본을 남기지 않는 제한된 KiCad export 정규화
 │   │   └── repository.py   <- 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   ├── conversations/      <- 소유 대화·메시지·실행 저장
+│   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── models.py       <- 실행 상태·안전 결과 형식
+│   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
 │   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트·견적 승인 단계는 아직 없음)
 │   │   ├── __init__.py     <- 패키지 표시
@@ -164,6 +169,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── d5.py           <- D5 실행·체크포인트·의존성 조립
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
@@ -211,6 +217,7 @@ SojaFit (proj3-b)
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 013_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
+│   ├── 014_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -360,6 +367,9 @@ SojaFit (proj3-b)
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
 │   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증
+│   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
+│   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   └── test_repository.py  <- 소유권·원자성·접근 권한·체크포인트 시험
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
@@ -402,6 +412,7 @@ SojaFit (proj3-b)
 │   │   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
+│   │   ├── test_d5.py      <- D5 실행·인터럽트 재개·안전 이벤트 시험
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
@@ -576,6 +587,7 @@ SojaFit (proj3-b)
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |
+| `backend/conversations/` | [CONVERSATIONS.md](backend/conversations/CONVERSATIONS.md) | 서비스·운영 |
 | `backend/projects/` | [PROJECTS.md](backend/projects/PROJECTS.md) | 서비스·운영 |
 | `backend/graph/` | [GRAPH.md](backend/graph/GRAPH.md) | 에이전트 |
 | `backend/multi_agent/` | [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) | 에이전트 |
@@ -601,6 +613,7 @@ SojaFit (proj3-b)
 | `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
 | `tests/` | [TESTS.md](tests/TESTS.md) | 각 모듈 담당 |
 | `tests/api/` | [API.md](tests/api/API.md) | 서비스·운영 |
+| `tests/conversations/` | [CONVERSATIONS.md](tests/conversations/CONVERSATIONS.md) | 서비스·운영 |
 | `tests/projects/` | [PROJECTS.md](tests/projects/PROJECTS.md) | 서비스·운영 |
 | `tests/graph/` | [GRAPH.md](tests/graph/GRAPH.md) | 에이전트 |
 | `tests/multi_agent/` | [MULTI_AGENT.md](tests/multi_agent/MULTI_AGENT.md) | 에이전트 |
