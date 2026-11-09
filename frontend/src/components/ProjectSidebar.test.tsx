@@ -68,3 +68,30 @@ it('shows owner mutation errors and their request IDs', async () => {
   fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('프로젝트를 찾을 수 없습니다. (요청 ID: req-test)')
 })
+
+it.each(['rename', 'delete'] as const)('cancels an owning %s editor when switching projects and skips stale refreshes', async (kind) => {
+  let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined; let reads = 0
+  network((path, init) => {
+    if (init.method === 'PATCH' || init.method === 'DELETE') {
+      signal = init.signal; return new Promise(resolve => { finish = resolve })
+    }
+    reads++
+    return Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
+  })
+  openWorkbench('/app?projectId=11')
+  await screen.findByLabelText('프로젝트 이름 변경')
+  if (kind === 'rename') fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
+  else {
+    fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
+    fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
+  }
+  await waitFor(() => expect(finish).toBeTypeOf('function'))
+  fireEvent.click(screen.getByRole('button', { name: second.name }))
+  await screen.findByRole('heading', { name: second.name })
+  const before = reads
+  await act(async () => finish(kind === 'delete' ? new Response(null, { status: 204 }) : Response.json(first)))
+  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
+  expect(reads).toBe(before)
+  expect(signal?.aborted).toBe(true)
+})

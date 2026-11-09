@@ -12,6 +12,15 @@
 - 최종 확인: `npm run test:run` → `10 files, 40 passed in 2.64s`; `npm run build` → TypeScript/Vite 성공(82 modules, 142ms). `PYTHONUTF8=1 uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.35s`; diff whitespace 통과. 신규 코드의 localStorage/sessionStorage/IndexedDB/persist/FileReader/readAs/파일 text 호출이 없음을 대조했다. 빌드 dist/node_modules/tsbuildinfo와 작업 report는 무시 경로이며 커밋하지 않는다.
 - 미검증/검토: live API·실제 DB·브라우저 E2E/시각 확인·배포·RAG 평가셋 재측정은 범위 밖이다. backend DTO/라우터/기존 API 시험 소스의 계약이 명확해 backend API 시험은 다시 실행하지 않았다. SPEC 정본은 OSC 소유 규칙대로 직접 바꾸지 않았으며 승인 spec AC-02/03/09의 화면 반영을 조장에게 요청한다. 권장 400줄을 넘는 UI/회귀 변경은 단일 프로젝트 선택 기능과 비동기/소유권 경계를 함께 검토하도록 요청된 한 커밋으로 유지한다. 최종 staged 20개 파일은 이 범위뿐이며 Docker gitleaks stdin(`--redact --no-banner --log-level warn`) 스캔에서 비밀값 0건, staged whitespace 통과를 확인했다. 요청된 `feat(web): 회로 프로젝트와 대상 선택`으로 로컬 커밋한다.
 
+### Task 6 Fix Round 1
+
+- 범위: 프로젝트 create/upload/rename/delete의 늦은 401이 재로그인한 세션을 종료하는 Important만 수정한다. backend·auth 정책·영속 저장은 바꾸지 않는다.
+- RED: production 수정 전 `npm run test:run -- src/App.test.tsx src/components/ProjectSidebar.test.tsx --reporter=dot` → `2 files failed; 10 failed, 10 passed in 2.36s`. 실제 StrictMode App/AuthProvider/Workbench의 logout→relogin→old 401 네 종류 모두 새 세션이 로그인 화면으로 바뀌었고, unmount/switch 후 성공 응답 여섯 종류는 불필요한 GET이 1회 추가됐다.
+- 변경: projects API mutation 4종에 signal 전달, CircuitSetup/ProjectActions effect별 AbortController·unmount abort·각 await 뒤 guard. 종료한 컴포넌트의 invalidate/selection/error/busy 업데이트를 막고 업로드 input finally reset은 유지한다. 정상 delete는 상세 cancel/remove·목록 invalidate 이후 선택을 지워 자체 unmount 전에 필요한 처리를 마친다.
+- 회귀: create/upload/rename/delete 모두 새 세션·새 프로젝트·D2 선택 유지와 읽기 요청 수 불변/abort를 확인한다. 같은 QueryClient에 다시 연 작업대의 이전 성공 응답과 rename/delete editor 전환도 검증한다. test/projects 렌더러는 QueryClient 재사용을 허용하도록 보정했다.
+- GREEN: focused project/workbench/AuthProvider 6개 파일 `33 passed in 2.76s`; 전체 `npm run test:run` → `10 files, 50 passed in 3.07s`; `npm run build` → TypeScript/Vite 성공(82 modules, 144ms). whitespace 검사를 통과했다. 실제 서비스/DB/browser E2E는 실행하지 않았다. 브라우저 abort가 이미 전달된 서버 mutation의 rollback을 보장하지는 않는다.
+- 변경 파일: frontend/src/api/projects.ts, CircuitSetup.tsx, ProjectSidebar.tsx, App.test.tsx, ProjectSidebar.test.tsx, test/projects.tsx 및 이 기록. report의 Fix Round 1에 정확한 RED/GREEN 명령·출력을 남긴다. 신규 파일·의존성·backend·정본 문서 변경은 없다. staged 7개 파일의 whitespace 통과, Docker gitleaks stdin redacted 스캔 exit 0(비밀값 0건), 생성물 미포함을 확인했다. 별도의 fix(web) 로컬 커밋으로 남긴다.
+
 ## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
 
 - Fix Round 1: StrictMode의 이전 복원 401이 새 로그인을 해제하는 순서와, 관리자 PATCH 대기 중 로그아웃/경로 이동 후 후속 목록 GET이 실행되는 순서를 deferred-response 테스트로 먼저 재현했다. focused RED는 `3 failed, 5 passed`; effect별 AbortController·API signal 전달·응답/JSON 파싱 뒤 abort 검사·관리자 후속 GET/상태 변경 guard로 수정 후 `8 passed`. 전체 프런트 `24 passed in 2.01s`, build(TypeScript+Vite 78 modules), `git diff --check` 통과. non-JSON 오류 본문 Minor는 요청대로 최종 검토에 보류했다. backend·화면 범위·저장 경계는 변경하지 않았다.

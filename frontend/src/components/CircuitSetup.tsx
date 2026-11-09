@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createDemo, listDemos, uploadProject } from '../api/projects'
 import type { Project } from '../api/projects'
@@ -12,19 +12,27 @@ export default function CircuitSetup({ onCreated }: { onCreated: (project: Proje
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const requests = useRef<AbortController | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    requests.current = controller
+    return () => { controller.abort() }
+  }, [])
   async function create(kind: 'demo' | 'upload') {
-    if (busy) return
+    const controller = requests.current
+    if (busy || !controller || controller.signal.aborted) return
     const input = fileInput.current
     const file = kind === 'upload' ? input?.files?.[0] : undefined
     if (!name.trim() || (kind === 'demo' ? !demoId : !file)) return
     setBusy(true); setError(null)
     try {
-      const project = kind === 'demo' ? await createDemo(demoId, name) : await uploadProject(name, file!)
+      const project = kind === 'demo' ? await createDemo(demoId, name, controller.signal) : await uploadProject(name, file!, controller.signal)
+      if (controller.signal.aborted) return
       void client.invalidateQueries({ queryKey: ['projects'], exact: true })
       void client.invalidateQueries({ queryKey: ['project', project.id], exact: true })
       onCreated(project)
-    } catch (error) { setError(error) }
-    finally { if (kind === 'upload' && input) input.value = ''; setBusy(false) }
+    } catch (error) { if (!controller.signal.aborted) setError(error) }
+    finally { if (kind === 'upload' && input) input.value = ''; if (!controller.signal.aborted) setBusy(false) }
   }
   return <section className="panel" aria-label="새 회로 프로젝트">
     <h2>회로로 시작하기</h2><p>공개 데모 또는 UTF-8 KiCad 넷리스트(.net, 최대 5 MiB)를 선택하세요.</p>

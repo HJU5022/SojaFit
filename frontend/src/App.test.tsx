@@ -1,10 +1,11 @@
-import { renderWithQueries as render, demo, first, summary } from './test/projects'
+import { renderWithQueries as render, demo, first, second, summary } from './test/projects'
 import { StrictMode } from 'react'
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from './App'
-import { administrator, failure, network } from './test/network'
+import WorkbenchPage from './pages/WorkbenchPage'
+import { administrator, failure, network, user } from './test/network'
 
 afterEach(() => vi.unstubAllGlobals())
 it.each(['/', '/app', '/admin/users'])('anonymous %s entry redirects to login without requesting admin data', async (path) => {
@@ -50,4 +51,98 @@ it('removes owned project cache immediately on logout before another session can
     expect(client.getQueryData(['projects'])).toBeUndefined()
     expect(client.getQueryData(['project', 11])).toBeUndefined()
   } finally { vi.useRealTimers() }
+})
+
+it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in session when an old %s response settles', async (kind) => {
+  let session = 0; let finish!: (response: Response) => void
+  let signal: AbortSignal | null | undefined; let reads = 0
+  network((path, init) => {
+    if (path === '/api/auth/me') return Response.json(session ? user : administrator)
+    if (path === '/api/auth/logout') return Response.json({ ok: true })
+    if (path === '/api/auth/login') { session++; return Response.json({ user_id: 7 }) }
+    if (path === '/api/auth/google/status') return Response.json({ enabled: false })
+    if (['POST', 'PATCH', 'DELETE'].includes(init.method ?? '')) {
+      signal = init.signal; return new Promise(resolve => { finish = resolve })
+    }
+    reads++
+    if (path === '/api/projects') return Response.json([summary(session ? second : first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/12') return Response.json(second)
+    if (path === '/api/demo-circuits') return Response.json([demo])
+    throw new Error(`Unexpected request: ${path}`)
+  })
+  render(<StrictMode><MemoryRouter initialEntries={['/app?projectId=11']}><App /></MemoryRouter></StrictMode>)
+  await screen.findByRole('heading', { name: first.name })
+  if (kind === 'demo' || kind === 'upload') {
+    fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
+    if (kind === 'demo') {
+      await screen.findByRole('option', { name: demo.name })
+      fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
+      fireEvent.click(screen.getByRole('button', { name: '데모로 만들기' }))
+    } else {
+      fireEvent.change(screen.getByLabelText('KiCad 넷리스트'), { target: { files: [new File(['server input'], 'board.net')] } })
+      fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
+    }
+  } else if (kind === 'rename') {
+    fireEvent.change(screen.getByLabelText('프로젝트 이름 변경'), { target: { value: '진행 중 이름' } })
+    fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
+  } else {
+    fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
+    fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
+  }
+  await waitFor(() => expect(finish).toBeTypeOf('function'))
+  fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+  await screen.findByRole('heading', { name: '로그인' })
+  fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'next@example.test' } })
+  fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'test-only' } })
+  fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+  fireEvent.click(await screen.findByRole('button', { name: second.name }))
+  await screen.findByRole('heading', { name: second.name })
+  fireEvent.change(screen.getByLabelText('대상 부품'), { target: { value: 'D2' } })
+  const before = reads
+  await act(async () => { finish(failure()) })
+  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByText('선택한 대상: D2')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: '로그인' })).not.toBeInTheDocument()
+  expect(reads).toBe(before)
+  expect(signal?.aborted).toBe(true)
+})
+
+it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount invalidation and selection for an old successful %s request', async (kind) => {
+  let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined; let reads = 0
+  network((path, init) => {
+    if (['POST', 'PATCH', 'DELETE'].includes(init.method ?? '')) {
+      signal = init.signal; return new Promise(resolve => { finish = resolve })
+    }
+    reads++
+    return Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
+  })
+  const { unmount, client } = render(<MemoryRouter initialEntries={['/app?projectId=11']}><WorkbenchPage /></MemoryRouter>)
+  await screen.findByRole('heading', { name: first.name })
+  if (kind === 'demo' || kind === 'upload') {
+    fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
+    if (kind === 'demo') {
+      await screen.findByRole('option', { name: demo.name })
+      fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
+      fireEvent.click(screen.getByRole('button', { name: '데모로 만들기' }))
+    } else {
+      fireEvent.change(screen.getByLabelText('KiCad 넷리스트'), { target: { files: [new File(['server input'], 'board.net')] } })
+      fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
+    }
+  } else if (kind === 'rename') fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
+  else {
+    fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
+    fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
+  }
+  await waitFor(() => expect(finish).toBeTypeOf('function'))
+  unmount()
+  // Keep another Workbench active on the same QueryClient so stale invalidation is observable as GETs.
+  render(<MemoryRouter initialEntries={['/app?projectId=12']}><WorkbenchPage /></MemoryRouter>, client)
+  await screen.findByRole('heading', { name: second.name })
+  const before = reads
+  await act(async () => finish(kind === 'delete' ? new Response(null, { status: 204 }) : Response.json(first)))
+  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(reads).toBe(before)
+  expect(signal?.aborted).toBe(true)
 })

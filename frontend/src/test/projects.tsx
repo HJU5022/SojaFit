@@ -20,8 +20,7 @@ export const second = {
     nets: [{ code: '1', name: 'GND', nodes: [{ ref: 'D2', pin: '2' }] }] },
 }
 export const summary = ({ connections: _connections, ...project }: typeof first | typeof second) => project
-export function renderWithQueries(element: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+export function renderWithQueries(element: ReactNode, client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })) {
   return { ...render(<QueryClientProvider client={client}>{element}</QueryClientProvider>), client }
 }
 export function openWorkbench(path = '/app') {

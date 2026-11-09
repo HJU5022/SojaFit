@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteProject, listProjects, renameProject } from '../api/projects'
 import type { Project } from '../api/projects'
@@ -24,20 +24,30 @@ function ProjectActions({ project, onDeleted }: { project: Project; onDeleted: (
   const [confirm, setConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const requests = useRef<AbortController | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    requests.current = controller
+    return () => { controller.abort() }
+  }, [])
   async function change(remove = false) {
-    if (busy || (!remove && !name.trim())) return
+    const controller = requests.current
+    if (busy || !controller || controller.signal.aborted || (!remove && !name.trim())) return
     setBusy(true); setError(null)
     try {
       if (remove) {
-        await deleteProject(project.id)
-        onDeleted(project.id)
+        await deleteProject(project.id, controller.signal)
+        if (controller.signal.aborted) return
         await client.cancelQueries({ queryKey: ['project', project.id], exact: true })
+        if (controller.signal.aborted) return
         client.removeQueries({ queryKey: ['project', project.id], exact: true })
-      } else await renameProject(project.id, name)
+      } else await renameProject(project.id, name, controller.signal)
+      if (controller.signal.aborted) return
       void client.invalidateQueries({ queryKey: ['projects'], exact: true })
       void client.invalidateQueries({ queryKey: ['project', project.id], exact: true, refetchType: remove ? 'none' : 'active' })
-    } catch (error) { setError(error) }
-    finally { setBusy(false) }
+      if (remove) onDeleted(project.id)
+    } catch (error) { if (!controller.signal.aborted) setError(error) }
+    finally { if (!controller.signal.aborted) setBusy(false) }
   }
   return <div className="project-actions">
     <form onSubmit={event => { event.preventDefault(); void change() }}>
