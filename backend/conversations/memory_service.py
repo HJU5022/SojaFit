@@ -66,10 +66,10 @@ def _token_budget_class():
     from backend.services.llm import EvaluationBudget
 
     class TokenBudget(EvaluationBudget):
-        def _reserve(self, text, *, output_tokens, embedding=False):
+        def _reserve(self, text, *, output_tokens, embedding=False, model=None):
             # [왜] reserve()가 잠금을 잡은 채 부르므로 이 값은 같은 호출의 on_reserve(DB 차감)만 읽는다
             self.reserving_tokens = len(text.encode('utf-8')) + TOKEN_MARGIN + output_tokens
-            return super()._reserve(text, output_tokens=output_tokens, embedding=embedding)
+            return super()._reserve(text, output_tokens=output_tokens, embedding=embedding, model=model)
 
     return TokenBudget
 
@@ -181,7 +181,9 @@ class Conversations:
             max_usd=float(os.getenv('ANALYSIS_MAX_USD', '0.50')), max_seconds=float(os.getenv('ANALYSIS_MAX_SECONDS', '90')),
             max_tokens=int(os.getenv('ANALYSIS_MAX_TOKENS', '4096')),
             prompt_rate=float(os.getenv('ANALYSIS_PROMPT_RATE', '0.000003')),
-            completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')))
+            completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')),
+            # [왜] 판정 읽기 3번(다수결)이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
+            per_model_rates=True)
         daily = float(os.getenv('ANALYSIS_DAILY_USD', '3'))
         interval = float(os.getenv('ANALYSIS_MIN_INTERVAL_SECONDS', '2'))
         if not math.isfinite(daily) or daily <= 0 or not math.isfinite(interval) or interval < 0:

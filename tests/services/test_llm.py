@@ -436,3 +436,35 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
     assert used == [SONNET, HAIKU]
     llm.chat("sys", "q", Route)  # node_chat 밖의 호출은 기본 모델
     assert used[-1] == llm.LLM_MODEL
+
+
+def test_model_rates_keys_match_node_models():
+    from backend.services import langfuse_prompts, llm
+    # [왜] 서비스 노드 모델(Haiku · Sonnet)이 단가표에 없으면 예약이 Sonnet 이상 기본 단가로 돌아가 판정 질문이 상한에 걸린다
+    assert set(llm.MODEL_RATES) == {langfuse_prompts.HAIKU, langfuse_prompts.SONNET}
+    assert {m for n, m in langfuse_prompts.NODE_MODELS.items() if n in ('supervisor', 'judge_read', 'docs_answer', 'card_read', 'card_pick', 'synth')} <= set(llm.MODEL_RATES)
+
+
+def test_service_budget_fits_supervisor_and_three_judge_reads():
+    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 3번(다수결), 지시문 약 15KB씩
+    from backend.conversations.memory_service import Conversations
+    from backend.services import langfuse_prompts, llm
+    prompt = 'x' * 15000
+    budget, _, _ = Conversations._budget_settings()
+    assert budget.per_model_rates
+    for _ in range(4):
+        budget.reserve(prompt, output_tokens=budget.max_tokens, model=langfuse_prompts.HAIKU)
+    assert budget.reserved_usd < 0.05  # 실제 Haiku 단가라 넉넉하다
+    old = llm.EvaluationBudget(max_calls=16, max_usd=0.50, max_seconds=90, prompt_rate=0.000003,
+                               completion_rate=0.000015, max_tokens=4096)  # 예전 서비스 예약(모든 호출 같은 단가)
+    with pytest.raises(llm.EvaluationLimitError):
+        for _ in range(4):
+            old.reserve(prompt, output_tokens=4096, model=langfuse_prompts.HAIKU)  # 네 번째 예약에서 $0.50을 넘는다
+
+
+def test_unknown_model_falls_back_to_budget_rates():
+    from backend.services import llm
+    budget = llm.EvaluationBudget(max_calls=2, max_usd=1, max_seconds=30, prompt_rate=0.000003,
+                                  completion_rate=0.000015, max_tokens=100, per_model_rates=True)
+    budget.reserve('a' * 1000, output_tokens=100, model='openai/gpt-6-luna')
+    assert budget.reserved_usd == pytest.approx((1000 + 8192) * 0.000003 + 100 * 0.000015)

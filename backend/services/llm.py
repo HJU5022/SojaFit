@@ -72,6 +72,15 @@ class EvaluationFormatError(RuntimeError):
         self.metadata = metadata
 
 
+# 서비스 예약에 쓰는 모델별 OpenRouter 단가(토큰당 USD): (입력, 출력, 가격 구간). 출처는 11-10 실행 전 확인한 OpenRouter 가격
+# (evals/results/threads/claim_consistency_live_2026-11-10.json의 preflight.pricing). 키는 langfuse_prompts.HAIKU · SONNET과 같다.
+# shortcut: 단가를 코드에 고정했다. OpenRouter 가격이 오르면 예약이 실제보다 적어질 수 있으니 모델이나 가격이 바뀌면 이 표를 같이 고친다
+MODEL_RATES = {
+    "anthropic/claude-haiku-5.5": (0.0000001, 0.0000005, ({"min_prompt_tokens": 100000, "prompt": "0.0000005", "completion": "0.0000025"},)),
+    "anthropic/claude-sonnet-5.5": (0.000002, 0.00001, ()),
+}
+
+
 @dataclass
 class EvaluationBudget:
     """평가 전용 호출 예산(호출 수·시간·예약 비용·출력 토큰 상한)."""
@@ -84,6 +93,9 @@ class EvaluationBudget:
     embedding_rate: float = 0.000001
     max_tokens: int = 1024
     pricing_tiers: tuple = ()
+    # [왜] True면 OpenRouter 호출의 예약을 그 호출이 실제로 쓰는 모델 단가(MODEL_RATES)로 잡는다. 서비스 분석만 켠다.
+    #      평가 실행기는 원시 결과의 예약액이 이전 실행과 같은 기준이어야 해서 꺼 둔 채(prompt_rate · completion_rate 하나)로 둔다
+    per_model_rates: bool = False
     calls: int = 0
     reserved_usd: float = 0.0
     started: float = field(default_factory=time.monotonic)
@@ -112,10 +124,10 @@ class EvaluationBudget:
                 if not math.isfinite(rate) or rate < 0:
                     raise ValueError("가격 구간의 단가가 잘못되었습니다")
 
-    def reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+    def reserve(self, text: str, *, output_tokens: int, embedding: bool = False, model: str | None = None) -> float:
         # LangGraph/판정 읽기가 병렬로 호출해도 같은 요청의 한도를 공유한다.
         with self._lock:
-            return self._reserve(text, output_tokens=output_tokens, embedding=embedding)
+            return self._reserve(text, output_tokens=output_tokens, embedding=embedding, model=model)
 
     def remaining(self) -> float:
         remaining = self.max_seconds - (time.monotonic() - self.started)
@@ -123,10 +135,11 @@ class EvaluationBudget:
             raise EvaluationLimitError('분석 시간 상한')
         return min(45.0, remaining)
 
-    def _reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+    def _reserve(self, text: str, *, output_tokens: int, embedding: bool = False, model: str | None = None) -> float:
         """호출 한 번의 최대 비용을 호출 전에 예약하고, 이 호출에 줄 제한 시간(초, 최대 45 또는 남은 시간)을 돌려준다.
 
         text의 바이트 수에 여유 8192를 더해 입력 토큰 상한으로 본다. embedding=True면 임베딩 단가를 쓴다.
+        per_model_rates가 켜져 있고 model이 MODEL_RATES에 있으면 그 모델의 단가 · 가격 구간을 쓰고, 없으면 예산의 단가를 쓴다.
         Raises:
             EvaluationLimitError: 호출 수·시간·예약 비용 상한을 넘길 때(다음 호출 전에 중단).
             ValueError: output_tokens가 0 이상 max_tokens 이하가 아닐 때.
@@ -137,10 +150,14 @@ class EvaluationBudget:
         remaining = self.max_seconds - (time.monotonic() - self.started)
         # [왜] 토큰 수를 정확히 세지 않고 바이트 수+여유로 입력 토큰의 위쪽 경계를 잡아 비용을 보수적으로 예약한다
         upper = len(text.encode("utf-8")) + 8192
-        tiers = [p for p in self.pricing_tiers if p.get("min_prompt_tokens", 0) <= upper] if not embedding else []
+        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 3번(다수결)과
+        #      Supervisor만으로 분석 한 번의 예약 상한($0.50)을 넘어 판정 질문이 멈췄다(11-10 데모 기록 실측). 실제 모델 단가로 잡는다
+        prompt_rate, completion_rate, price_tiers = (MODEL_RATES[model] if self.per_model_rates and model in MODEL_RATES
+                                                      else (self.prompt_rate, self.completion_rate, self.pricing_tiers))
+        tiers = [p for p in price_tiers if p.get("min_prompt_tokens", 0) <= upper] if not embedding else []
         # [왜] 가격 구간이 여럿이면 가장 비싼 단가로 예약해 실제보다 적게 잡는 일을 막는다
-        rate = self.embedding_rate if embedding else max([self.prompt_rate, *[float(p.get("prompt", 0)) for p in tiers]])
-        output_rate = max([self.completion_rate, *[float(p.get("completion", 0)) for p in tiers]])
+        rate = self.embedding_rate if embedding else max([prompt_rate, *[float(p.get("prompt", 0)) for p in tiers]])
+        output_rate = max([completion_rate, *[float(p.get("completion", 0)) for p in tiers]])
         cost = upper * rate + output_tokens * output_rate
         if remaining <= 0 or self.calls >= self.max_calls or self.reserved_usd + cost > self.max_usd:
             raise EvaluationLimitError("평가 호출/시간/예약비용 상한")
@@ -375,7 +392,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
     config = langfuse_prompts.invocation_config()
     if budget:
         # [주의] 평가 중이면 출력 토큰·시간 상한을 예산에서 받아 덮어쓴다
-        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens)
+        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens, model=name)
         options.update(max_tokens=budget.max_tokens, timeout=timeout)
     structured = model.with_structured_output(schema)
     system_content = system
