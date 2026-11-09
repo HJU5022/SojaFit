@@ -76,6 +76,17 @@ class JudgeRead(BaseModel):
         #      조각 앞까지만 남긴다(빈 칸이 되면 요구 없음). 짧은 칸에는 JSON 괄호 · '키': 모양이 올 일이 없다
         return LEAK.split(v, 1)[0].rstrip(" '\"") if isinstance(v, str) else v
 
+    @field_validator('revision_wanted', mode='before')
+    @classmethod
+    def drop_revision_prose(cls, v):
+        # [왜] 읽기가 개정 코드 대신 설명 글('Order code difference (A… no revision specified.')을 40자 넘게 적어 형식 오류로 다시 불렸다.
+        #      세 회차 v3 판정 읽기의 재시도 4번이 모두 이것이고, 노드마다 2.1~3.6초 늦었다. 재시도 답은 4번 다 빈 칸이었다(사전 등록 #45).
+        #      개정 코드 · 판('K2611' · '2027 edition')은 짧다. 40자를 넘는 글은 요구 없음으로 받는다
+        # shortcut: 긴 문장 안에 적힌 개정 코드도 함께 버린다(개정판 거절이 안 남). 그런 문항이 나오면 코드 모양('K2611' · 연도)만 골라 남긴다
+        # [주의] JSON 조각을 자른 뒤의 길이를 본다(cut_json_leak과 어느 쪽이 먼저 돌아도 'K2611','package_wanted':… 의 K2611이 남는다)
+        cut = LEAK.split(v, 1)[0].rstrip(" '\"") if isinstance(v, str) else ''
+        return '' if len(cut) > 40 else v
+
 
 def render_read(state: dict, rules: dict) -> str:
     """읽기 LLM에 줄 user 글: 역할 목록(이름 · 알아보는 법 · 그 역할이 받는 값 이름과 종류), 대상 주변 회로, 사용 조건, 질문."""

@@ -142,6 +142,14 @@ def test_json_fragment_in_a_field_is_cut_off():
     assert J.Value(name='temp', quote='주변 온도는 25°C이다.](condition)').quote == '주변 온도는 25°C이다.'
 
 
+def test_long_prose_in_revision_wanted_is_read_as_no_revision():
+    """[왜] 읽기가 개정 코드 대신 40자 넘는 설명 글을 적어 형식 재시도로 노드가 2~3.6초 늦었다(세 회차 v3 재시도 4번 모두, 사전 등록 #45)."""
+    assert J.JudgeRead(role='R01', revision_wanted='Order code difference (A0G vs R0G); no revision specified.').revision_wanted == ''
+    assert J.JudgeRead(role='R01', revision_wanted='2027 edition').revision_wanted == '2027 edition'
+    # JSON 조각이 붙어 40자를 넘어도 조각 앞의 개정 코드는 남는다(조각 자르기와 같이 돈다)
+    assert J.JudgeRead(role='R01', revision_wanted="K2611','package_wanted':'SMA (DO-214AC)','category_wanted':'x'").revision_wanted == 'K2611'
+
+
 def test_revision_not_in_the_user_text_and_family_words_do_not_refuse():
     """[왜] 읽기가 질문에 없는 'K2611'을 지어내 개정판 거절(h3-15), '쇼트키 정류형'을 사양 표에 없는 성질로 봐 거절했다(h3-14)."""
     made_up = J.JudgeRead(role='R06', revision_wanted='K2611')
