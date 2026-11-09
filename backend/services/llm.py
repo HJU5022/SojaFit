@@ -182,20 +182,20 @@ def embed_texts(texts: list[str]) -> tuple[list[list[float]], int, str, str]:
     return vectors, response.usage.total_tokens, provider, model
 
 
-def _voyage_post(path: str, payload: dict, *, max_attempts: int = 5) -> dict:
+def _voyage_post(path: str, payload: dict) -> dict:
     """Voyage REST에 POST해 JSON 본문을 돌려준다. 429·5xx는 5번까지 늘려 가며 다시 부르고, 결제 신호(402)는 바로 멈춘다."""
     import httpx
 
     key = os.getenv("VOYAGE_API_KEY")
     if not key:
         raise RuntimeError("VOYAGE_API_KEY is required")
-    for attempt in range(max_attempts):  # [왜] 실험은 요청별 예산 예약을 위해 1회만 시도한다
+    for attempt in range(5):  # [왜] 재시도 상한. 키 한도(조당 30달러)를 무한 루프가 쓰지 않게 한다
         r = httpx.post(f"https://api.voyageai.com/v1/{path}", timeout=180, headers={"Authorization": f"Bearer {key}"}, json=payload)
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
             raise RuntimeError(f"Voyage payment signal {r.status_code}")
-        if r.status_code in (429, 500, 502, 503, 504) and attempt < max_attempts - 1:
+        if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
             time.sleep(5 * 2**attempt)
             continue
         raise RuntimeError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
@@ -206,23 +206,6 @@ def voyage_embed(texts: list[str], input_type: str) -> list[list[float]]:
     d = _voyage_post("embeddings", {"input": texts, "model": "voyage-4-large", "input_type": input_type,
                                     "truncation": True, "output_dimension": 1024})
     return [x["embedding"] for x in sorted(d["data"], key=lambda x: x["index"])]
-
-
-def voyage_embed_batch(texts: list[str], input_type: str) -> tuple[list[list[float]], int]:
-    """실험용: 절단·자동 재시도 없이 고정 Voyage 벡터와 실제 사용량을 검증한다."""
-    import math
-    if input_type not in ('document', 'query') or not texts or any(not t for t in texts):
-        raise ValueError('invalid embedding input')
-    d = _voyage_post('embeddings', {'input': texts, 'model': 'voyage-4-large', 'input_type': input_type,
-                                  'truncation': False, 'output_dimension': 1024}, max_attempts=1)
-    data = sorted(d.get('data', []), key=lambda x: x['index'])
-    tokens = d.get('usage', {}).get('total_tokens')
-    if [x['index'] for x in data] != list(range(len(texts))) or type(tokens) is not int or tokens < 0:
-        raise ValueError('invalid embedding response or usage')
-    vectors = [x['embedding'] for x in data]
-    if any(len(v) != 1024 or not all(math.isfinite(n) for n in v) or not any(v) for v in vectors):
-        raise ValueError('invalid embedding vector')
-    return vectors, tokens
 
 
 def voyage_rerank(query: str, docs: list[str], model: str = "rerank-3") -> list[int]:

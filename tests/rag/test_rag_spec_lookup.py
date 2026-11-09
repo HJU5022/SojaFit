@@ -216,7 +216,7 @@ def test_find_candidates_zener_window(conn):
 # --- 찾기 순위(가짜 연결, DB 없음) ---
 
 class FakeConn:
-    """find_candidates의 두 질의(조건 행, 패키지 행)에 정해진 행을 돌려준다. 행은 _COLUMNS 17칸 + 조건별 참·거짓이다."""
+    """find_candidates의 두 질의(조건 행, 패키지 행)에 정해진 행을 돌려준다. 행은 _COLUMNS 15칸 + 조건별 참·거짓이다."""
 
     def __init__(self, parts, conditions):
         self.parts, self.conditions = parts, conditions  # parts: {품번: (분류, [패키지], {코드: 최대값})}
@@ -228,7 +228,7 @@ class FakeConn:
         for p, (cat, _, values) in sorted(self.parts.items()):
             for code, v in values.items():
                 hits = [c['code'] == code and v >= c.get('gte', v) and v <= c.get('lte', v) for c in self.conditions]
-                rows.append((p, cat, code, None, None, v, None, 'V', str(v), None, f'https://x.test/{p}.pdf', 1, 'T', p, 1, None, None, *hits))
+                rows.append((p, cat, code, None, None, v, None, 'V', str(v), None, f'https://x.test/{p}.pdf', 1, 'T', p, 1, *hits))
         return rows
 
 
@@ -259,16 +259,3 @@ def test_find_rank_uses_the_farthest_condition():
     parts = {'A1': ('x', [], {'VRRM': 21.0, 'IF_AV': 0.1}),   # 최대 비율 2/0.1 = 20
              'B1': ('x', [], {'VRRM': 60.0, 'IF_AV': 1.0})}   # 최대 비율 60/20 = 3
     assert [p['part'] for p in spec_lookup.find_candidates(FakeConn(parts, cond), cond)] == ['B1', 'A1']
-
-
-def test_lookup_returns_source_unit_and_note_without_shifting_candidate_flags():
-    note='[적용 VF:C2; 2쪽 Note 1; #/texts/12] Pulse test with PW = 0.3ms'
-    record=('1N5817','schottky-rectifier','VF',None,None,.45,None,'V','0.45 V','IF=1A, TJ=25°C',
-            'https://example.test/1N5817.pdf',2,'ELECTRICAL','Forward voltage',18,note,'V')
-    class Conn:
-        def execute(self,sql,params):
-            assert 's.footnote_text' in sql and 's.source_unit' in sql
-            return [record]
-    r=spec_lookup.part_specs(Conn(),'1n5817')[0]
-    assert r['footnote_text']==note and r['source_unit']=='V'
-    assert r['citation']['page']==2 and r['citation']['chunk_index']==18

@@ -310,34 +310,6 @@ def test_voyage_rerank_returns_ranked_indices(monkeypatch):
     assert sent[0] == ("https://api.voyageai.com/v1/rerank", {"query": "q", "documents": ["a", "b", "c"], "model": "rerank-3", "truncation": True})
 
 
-def test_strict_voyage_batch_disables_truncation_and_returns_usage(monkeypatch):
-    sent = _voyage_http(monkeypatch, _reply(200, {"data": [{"index": 0, "embedding": [1.0] * 1024}],
-                                                "usage": {"total_tokens": 7}}))
-    vectors, tokens = llm.voyage_embed_batch(["a"], "document")
-    assert len(vectors[0]) == 1024 and tokens == 7
-    assert sent[0][1] == {"input": ["a"], "model": "voyage-4-large", "input_type": "document",
-                          "truncation": False, "output_dimension": 1024}
-
-
-@pytest.mark.parametrize('bad', ['dimension', 'nan', 'index', 'usage'])
-def test_strict_voyage_batch_rejects_invalid_response(monkeypatch, bad):
-    reply = {"data": [{"index": 0, "embedding": [1.0] * 1024}], "usage": {"total_tokens": 7}}
-    if bad == 'dimension': reply['data'][0]['embedding'] = [1.0]
-    if bad == 'nan': reply['data'][0]['embedding'][0] = float('nan')
-    if bad == 'index': reply['data'][0]['index'] = 1
-    if bad == 'usage': reply.pop('usage')
-    _voyage_http(monkeypatch, _reply(200, reply))
-    with pytest.raises(ValueError):
-        llm.voyage_embed_batch(['a'], 'query')
-
-
-def test_strict_voyage_batch_has_no_hidden_retry(monkeypatch):
-    sent = _voyage_http(monkeypatch, _reply(429))
-    with pytest.raises(RuntimeError):
-        llm.voyage_embed_batch(['a'], 'query')
-    assert len(sent) == 1
-
-
 def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     sent = _voyage_http(monkeypatch, _reply(429), _reply(200, {"data": [{"index": 0}]}))
     assert llm.voyage_rerank("q", ["a"]) == [0] and len(sent) == 2

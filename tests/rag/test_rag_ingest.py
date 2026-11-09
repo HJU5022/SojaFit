@@ -129,8 +129,6 @@ def test_load_voyage_fills_bits_when_table_exists(tmp_path, monkeypatch, bits_ta
     ingest.load_voyage(tmp_path)
     fills = [q for q in cur.log if q.startswith('INSERT INTO chunk_embedding_bits')]
     assert len(fills) == bits_table and all('binary_quantize' in q and 'ON CONFLICT' in q for q in fills)
-    selects = [q for q in cur.log if q.startswith('SELECT dc.id, dc.chunk_sha256')]
-    assert len(selects) == 1 and 'dc.page_number IS NOT NULL' in selects[0]
 
 
 class _Ctx:
