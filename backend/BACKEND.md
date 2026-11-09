@@ -7,7 +7,10 @@
 - 담당: 서비스·운영 (하위 폴더는 각 폴더 설명 파일의 담당)
 
 ## 파일
+- `conversations.py` — 인증 사용자별 업로드·thread 소유권·DB 체크포인트·조건 재개·버전별 승인과 Store. THREADS_ENABLED=1에서 새 계획형 그래프에 저장소·승인 기억을 연결
+- 승인 원본은 질문·재개·실제 판정 입력을 보존한다. 사용자 일일/실행 예약 한도는 DB에서 공유하며 `ANALYSIS_*`로 설정한다. 상세 API는 버전별 Store 저장 상태와 제공/선택/관련 기억을 구분해 반환한다.
 - `__init__.py` — 패키지 표시
+- `/workspace`, `/api/circuits`, `/api/threads`, `/api/memories`는 main.py가 conversations.py에 위임한다. thread 오류도 공통 error.code/message/request_id와 Cache-Control: no-store를 사용한다.
 - `main.py` — FastAPI 진입점. `/health`, 같은 출처 로그인 화면(`/login`), 로그인 API(`/api/auth/*`), 관리자 API(`/api/admin/users`), 가격·재고 API(`/api/prices`: 로그인 필요, 요청 때 `services/mouser.py`로 한 번 조회, `Cache-Control: no-store`, 데모 모드·키 없음이면 Mouser를 부르지 않음, ADR 0009), 서버 생성 `X-Request-ID`와 공통 JSON 오류 응답, Uvicorn 접속 로그의 Google 콜백 쿼리 제거. 인증 처리는 `auth.py`에 맡깁니다
 - `auth.py` — scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 인증·연결 승인과 철회, 관리자 계정 관리 명령(`python -m backend.auth`). 대화·장기 기억 저장은 연결하지 않습니다
 - `multi_agent/` — D5 멀티 에이전트(Supervisor + 서브에이전트). D4 단일 그래프(`graph/`)와 분리. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)

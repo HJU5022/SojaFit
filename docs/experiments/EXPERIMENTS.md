@@ -7,6 +7,7 @@
 - 담당: 그 실험의 담당
 
 ## 파일
+- `thread-memory-operations.md` — thread·기억 품질/병렬/복원/비용 검증 명령·합격 기준·실행 경계
 - `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선(30청크·18질의 프록시 표본)
 - `embedding-candidate-runner.md` — 임베딩 후보 확장 평가기 설계. 상태: 설계 계약만 있고 구현·테스트·2026-11-02 원시 결과는 `main`에 없음
 - `embedding-voyage-candidates.md` — Voyage 4 Nano·Voyage 4 후보 추가 계약. 상태: 설계 계약만 있고 구현·테스트·원시 JSON은 `main`에 없음

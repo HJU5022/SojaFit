@@ -12,14 +12,28 @@ services:
         required: false
     environment:
       DEMO_MODE: ${DEMO_MODE:-1}
+      DEMO_SCENARIOS: ${DEMO_SCENARIOS:-${DEMO_MODE:-1}}
+      THREADS_ENABLED: "1"
+      AUTH_ORIGIN: ${DEMO_AUTH_ORIGIN:-http://localhost:8000}
       # 호스트 이름 db는 아래 db 서비스. .env의 DATABASE_URL보다 이 값이 우선한다.
       DATABASE_URL: postgresql://app:app@db:5432/app
     # db가 healthcheck를 통과한 뒤에 api를 띄운다(스키마 적재 전에 연결하지 않게).
     depends_on:
       db:
         condition: service_healthy
+      thread-setup:
+        condition: service_completed_successfully
     # Apple Silicon에서 이미지가 안 뜨면 아래 주석을 해제해 보세요
     # platform: linux/amd64
+
+  thread-setup:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/app
+    command: ["python", "-m", "backend.conversations", "--setup"]
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     # pgvector 확장이 들어 있는 Postgres. 스냅샷 적재는 db/ 아래에 SQL로 추가하세요.

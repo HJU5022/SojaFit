@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "label": "합성 데모 · 실제 부품/데이터시트 분석 아님",
+  "questions": {
+    "role": "데모 역할 설명",
+    "judge": "데모 후보 판정",
+    "refuse": "데모 근거 없음"
+  },
+  "netlist": "(export (components (comp (ref \"D1\") (value \"DEMO1\") (footprint \"Diode:DO-41\")) (comp (ref \"J1\") (value \"DEMO_POWER\")) (comp (ref \"U1\") (value \"DEMO_LOAD\"))) (nets (net (name \"INPUT\") (node (ref \"J1\") (pin \"1\")) (node (ref \"D1\") (pin \"A\"))) (net (name \"RAW\") (node (ref \"D1\") (pin \"K\")) (node (ref \"U1\") (pin \"1\")))))",
+  "original": "DEMO1",
+  "candidate": "DEMO2",
+  "parts": {
+    "DEMO1": {"VRRM": 40, "IF_AV": 1, "IFSM": 10},
+    "DEMO2": {"VRRM": 60, "IF_AV": 2, "IFSM": 20}
+  },
+  "document": "합성 데모 사양표 v1 (실제 데이터시트 아님)",
+  "role_answer": "합성 회로에서 D1은 입력과 부하 사이에 직렬로 연결된 역극성 보호용 다이오드로 해석합니다 [넷리스트]. 전원이 반대로 연결됐을 때 부하 쪽 전류를 제한하는 연결이며 실제 부품의 보호 성능을 보장하지 않습니다 [넷리스트]."
+}

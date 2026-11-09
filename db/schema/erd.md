@@ -72,6 +72,8 @@ erDiagram
 
 ## 라이브러리가 만드는 표
 
+사용자 분석 런타임은 `sojafit_agent` 비공개 스키마를 사용합니다. `013_agent_memory.sql`은 `circuits`(소유자·넷리스트 원문·연결), `threads`(소유자·회로·대상·결과 버전·재시도 횟수), `messages`(대화 이력·checkpoint별 답변 중복 방지), `approvals`(thread·버전별 승인 원본)를 만듭니다. `public.users`를 참조하며, 기존 업무 초안의 public.analysis_runs 등을 생성하지 않습니다. `python -m backend.conversations --setup`이 이어서 아래 라이브러리 표를 같은 비공개 스키마에 만듭니다. 웹 런타임은 DDL을 실행하지 않습니다. 기존 공유 DB 적용은 별도 검토 대상입니다.
+
 `langgraph-checkpoint-postgres` 3.2.0의 `setup()`이 만듭니다. 우리 SQL에서 만들지 않습니다.
 
 | 표 | 만드는 곳 | 하는 일 |
