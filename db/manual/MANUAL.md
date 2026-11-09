@@ -9,4 +9,4 @@
 ## 파일
 - 이 폴더는 번호 004를 갖는 초안의 보관처입니다. `db/`에 001과 004가 없는 것은 의도입니다(001은 비워 둠, 004는 이 초안).
 - `004_create_business_tables.sql.draft` — 나머지 업무 테이블 11개의 초안(Migration 1 초안). 코퍼스·인증 테이블을 참조함. 적용할 때는 `db/`의 다음 번호로 옮깁니다
-- `halfvec.sql.manual` — 백업을 확보한 복제 DB에서 명시적으로 실행하는 halfvec(1536) 전환·HNSW 제거(재생성 없음). 기본 vector 유지. 역변환으로 정밀도 복구 불가
+- `halfvec.sql.manual` — `008_multi_dim_embeddings.sql` 도입 전 복제 DB에서 사용하던 halfvec(1536) 전환·HNSW 제거 이력. 새 DB의 현재 자동 초기화는 `008`의 차원 없는 halfvec을 사용하며, 이 수동 SQL은 기본 경로가 아님

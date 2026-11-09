@@ -58,7 +58,7 @@ erDiagram
 |---|---|---|
 | `source_documents` | 코퍼스 문서(데이터시트)의 출처·개정판·해시·파서 | `002_rag_corpus.sql` |
 | `document_chunks` | 검색 청크의 본문·쪽·표 이름·행 | `002_rag_corpus.sql` |
-| `chunk_embeddings` | 기본 `vector(1536)`과 HNSW; 선택적으로 복제 DB에서 `halfvec(1536)` 전환 시험. 수동 전환 뒤 HNSW 없음 | `002_rag_corpus.sql`, 수동 `manual/halfvec.sql.manual` |
+| `chunk_embeddings` | `002`가 만든 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 Voyage 1024차원 행을 함께 저장. HNSW 없음, 정확 검색 | `002_rag_corpus.sql`, `008_multi_dim_embeddings.sql` |
 | `chunk_embedding_bits` | voyage-4-large 임베딩의 1비트 코드 `BIT(1024)`, 인덱스 없음(dense 1단계 Hamming 후보) | `009_chunk_embedding_bits.sql` |
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
