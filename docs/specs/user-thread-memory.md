@@ -2,7 +2,7 @@
 
 **11-09 변경:** 장기 기억을 승인한 판정 사례에서 사용자 사실 3칸으로 바꿨다(아래 "사용자 사실 기억", SPEC 8.5). 승인 사례는 이제 승인 기록이다. 승인 원본과 승인·`/api/memories` 관리 API는 그대로 두지만 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않는다. 그 아래 절의 "승인 사례 기억" 설계·AC 중 "(11-09 대체)"를 붙인 줄은 그 전 설계다.
 
-상태: 로컬·공유 DB·운영0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
+상태: 로컬·공유 DB·운영 0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
 
 ## Why
 - 로그인 사용자가 자기 회로의 특정 부품 분석을 이어가고, 승인한 사례를 다음 분석에서 찾아볼 수 있어야 한다.
@@ -29,7 +29,7 @@
 
 ## How
 ### 2026-11-09 기억 관리 완료 계약
-- 정정은 승인 원본을 바꾸지 않는 사용자 정정 메모(최대1000자)다. 원래 조건·판정과 구분하고 모델에 비신뢰 과거 데이터로 전달한다. 새 사양값·현재 조건으로 자동 채우지 않는다.
+- 정정은 승인 원본을 바꾸지 않는 사용자 정정 메모(최대 1000자)다. 원래 조건·판정과 구분하고 모델에 비신뢰 과거 데이터로 전달한다. 새 사양값·현재 조건으로 자동 채우지 않는다.
 - 철회는 모델 참조/기억 목록에서 즉시 제외하며 복구할 수 있다. 삭제는 Store 사본을 제거하고 삭제 표식을 남겨 같은 승인 재요청으로 되살아나지 않게 한다. 기존 대화·불변 승인 원본은 보존한다. 화면에서 '기억에서 삭제(대화·승인 원본 유지)'를 명시하며 전체 대화/계정 삭제로 오인시키지 않는다. 자동 삭제는 아래 "보관 · 삭제"(11-09, 마지막 활동 뒤 60일)만 따른다.
 - lifecycle의 권한은 thread 소유자다. 상태가 철회/삭제면 Store 삭제 실패·과거 checkpoint의 기억 사본이 있어도 이후 모델 입력/참조로 사용하지 않는다. 과거 완료 답변 문장은 소급 재작성하지 않는다.
 - 판정 사례 승인과 견적 승인·저장은 별개임을 승인 UI/API 설명에 표시한다. NOT_VERIFIED 과거 사례를 현재 적합성 근거로 삼지 않는다.
@@ -39,10 +39,10 @@ Goal: 기존 분석 서비스의 사례 기억을 평가자 시연·데모·CI·
 Architecture: 기존 Conversations/DB/그래프를 유지한다. 고정 응답 데모는 별도 DEMO_SCENARIOS=1과 DEMO_MODE=1을 모두 요구해 기존 BM25 실제 모델 평가를 보존한다. lifecycle은 승인 원본 옆 상태/정정 메모로 관리하고 실제 모델 입력 직전에 권한·상태를 재확인한다.
 Tech stack: 기존 FastAPI/LangGraph/PostgreSQL/uv/Docker/Langfuse, 새 패키지 없음.
 Spec: 이 문서와 evaluator-demo-readiness.md. 현재 사용자 요청은 준비안의 실행 승인으로 해석한다. 자동 삭제 없음은 사용자 선택, 삭제 범위를 기억 참조/Store로 한정하고 원본을 보존하는 것은 명시적 UI 표시를 전제로 한 구현 결정이다.
-Constraints: STH 유지, 동결셋/주요 문서 수정 금지, 새 파일만 SOJAFIT 등록, 기존 데이터 자동 삭제 없음, 운영 트래픽0% 유지, 조장만 병합, 자격증명 로그 금지.
+Constraints: STH 유지, 동결셋/주요 문서 수정 금지, 새 파일만 SOJAFIT 등록, 기존 데이터 자동 삭제 없음, 운영 트래픽 0% 유지, 조장만 병합, 자격증명 로그 금지.
 Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승인 부활, A/B 교차 관리, demo의 유료 fallback, 관측 실패의 저장 실패 전파.
 - [x] 1. 범위/승인 용어/보관 정책 안내: workspace·작업서, 기존 API markup 검사.
-- [x] 2a. services/demo.py+data/demo/scenarios.json: 합성 시나리오 입력의 명시 모드와 허용 질문·회로 검증, 기존 그래프/판정 재사용. tests/api/test_threads.py·tests/services/test_llm.py에서 키 있어도 외부호출0/미등록 거부 RED→GREEN.
+- [x] 2a. services/demo.py+data/demo/scenarios.json: 합성 시나리오 입력의 명시 모드와 허용 질문·회로 검증, 기존 그래프/판정 재사용. tests/api/test_threads.py·tests/services/test_llm.py에서 키 있어도 외부호출 0/미등록 거부 RED→GREEN.
 - [x] 2b. Dockerfile·Compose·명시 bootstrap·CI: 빈 격리 DB에서 checkpoint 준비/데모 시나리오/THREADS_ENABLED, TEST_THREAD_DATABASE_URL 설정. 실제 API·화면 재개/승인/A·B, 새 Compose project cold-start 검증.
 - [x] 2c. services/langfuse_prompts.py·Conversations: 인증 user/thread/version/request/trace/단계별 실행 시간을 내용 없이 저장·반환하고 선택적 Langfuse 전달. DB/trace 전송 장애가 판정·승인을 잃게 하지 않는 검사와 실제 trace 증거.
 - [x] 3. db/016_memory_controls.sql·017_analysis_events.sql와 Conversations/main/workspace: 정정/철회/복구/기억 삭제/보관안내. UI·소유권·Store 실패·pending/retry 참조 차단·멱등/재승인 부활 거부 RED→GREEN. 공유 DB는 가산 적용 전 현행 구조 확인.
@@ -174,7 +174,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 색인: `PostgresStore(index={'dims': 1024, 'embed': VoyageEmbeddings(), 'fields': ['text'], 'ann_index_config': {'kind': 'flat'}})`. LangGraph 동기 `PostgresStore`는 검색 질문도 `embed_documents`로 임베딩하므로, 검색하는 동안만 입력 종류를 `query`로 바꾼다(`contextvars`). 근사 색인(HNSW)은 namespace 조건과 함께 쓰면 다른 사용자 벡터에 밀려 결과가 빌 수 있어 만들지 않는다.
 - 켜는 조건: `VOYAGE_API_KEY`가 있고 `DEMO_MODE`가 1이 아니며 `sojafit_agent.store_vectors`가 있을 때. 셋 중 하나라도 아니면 색인 없는 Store로 쓰고 읽는다. 키가 있는데 표가 없으면 시작 때 경고 로그(`profile_index_unavailable`)를 남긴다.
 - 스키마 경로: 준비 명령과 색인을 켠 서비스 연결은 `search_path`를 `sojafit_agent, <vector 확장 스키마>`로 둔다. 색인 표의 `vector(1024)` 형과 검색의 `::vector` · `<=>`가 이름으로 찾히기 때문이다. 표는 첫 스키마인 `sojafit_agent`에 생긴다. 확장 스키마는 `pg_extension`에서 읽는다(로컬 Compose `public`, Supabase `extensions`). 준비 명령은 확장을 설치하지 않는다.
-- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 에이전트 연결(11-10): 멀티 그래프의 `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 선호 실장 방식 한 칸만 읽어 `mount_preference`로 두고, 판정 에이전트가 찾기 후보 순서에만 쓴다(질문이 실장 방식을 말하면 질문이 이김, 판정 · 거르기 · 프롬프트는 그대로, 결과 `preferred_mount`). 소속 · 직무는 그래프 상태 · 프롬프트에 넣지 않는다. 승인 사례 프롬프트 문단("Historical approved cases")과 늘 빈 `approved_memories` · `memory_refs` 길의 제거는 아직 하지 않았다.
+- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 에이전트 연결(11-10): 멀티 그래프의 `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 선호 실장 방식 한 칸만 읽어 `mount_preference`로 두고, 대체 부품 에이전트가 찾기 후보 순서에만 쓴다(질문이 실장 방식을 말하면 질문이 이김, 판정 · 거르기 · 프롬프트는 그대로, 결과 `preferred_mount`). 소속 · 직무는 그래프 상태 · 프롬프트에 넣지 않는다. 승인 사례 프롬프트 문단("Historical approved cases")과 늘 빈 `approved_memories` · `memory_refs` 길의 제거는 아직 하지 않았다.
 - 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장), `tests/multi_agent/test_build.py` · `test_judge.py` · `tests/judge/test_judge_verdict.py`(기억 읽기 격리, 찾기 순서, 질문 우선, Store 없으면 예전 순서).
 
 ### 보관 · 삭제 (결정 11-09)

@@ -20,7 +20,7 @@ KINDS = ('number', 'flag', 'condition')
 TIERS = ('required', 'conditional')
 OPS = ('>=', '<=', 'within')
 EXEMPTS = ('schottky', 'sic', 'none')  # TRR 면제 범위: 쇼트키 계열 모두(기본) · SiC 쇼트키만 · 면제 없음
-SLOTS = ('min', 'typ', 'max')  # 조건의 slot: 후보 행에서 그 칸 값만 본다(spec_lookup.SLOTS와 같은 이름)
+SLOTS = ('min', 'typ', 'max')  # 조건의 slot: 후보 행에서 그 칸 값만 본다(찾기 조건의 slot과 같은 이름)
 COMMON_INPUTS = {'temp': 'condition'}  # [왜] 사용 온도(TA 또는 TJ)는 모든 역할의 정격 비교에 걸린다
 _BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
 

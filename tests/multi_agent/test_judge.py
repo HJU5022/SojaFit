@@ -1,4 +1,4 @@
-"""판정 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
+"""대체 부품 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
 
 - 역할: AC-02(질문에 없는 숫자는 버림) · AC-07(other) · AC-08(인터럽트 1번) · AC-09(비교는 verdict에서만), 찾기 흐름.
 - 하지 않는 일: 실제 LLM · MCP · DB 호출.
@@ -165,7 +165,7 @@ def test_find_does_not_filter_by_original_part_values(monkeypatch):
 
 
 def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
-    """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(B3). 모르면 None."""
+    """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(SPEC 8.3 찾기 순위). 모르면 None."""
     monkeypatch.setattr(J, 'interrupt', unknown)
     seen = []
 

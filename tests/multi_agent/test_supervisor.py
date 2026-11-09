@@ -55,7 +55,7 @@ def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
     p = plan(task(1), task(2, agent='judge', kind='candidate_judge'), question_type='candidate_judge').model_dump(mode='json')
     sends = S.after_plan({**STATE, 'plan': p, 'refusal_reason': ''})
     assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', '대체 부품 에이전트']
-    assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # 문서 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
+    assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
     assert sends[1].arg['question_type'] == 'candidate_judge' and sends[1].arg['facts'] == STATE['facts']
     for nxt, node in (('finish', '끝내기'), ('price', '가격 안내')):
         assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == node  # 갈림 함수는 계획서 값이 아니라 노드 이름을 돌려준다
@@ -133,7 +133,7 @@ def test_prompts_keep_constraints_but_no_routing_table():
     for reason in ('out_of_scope', 'part_missing', 'revision_missing', 'not_found'):
         assert reason in S.PROMPT, reason
     assert 'never compare numbers' in S.PROMPT
-    # [왜] 예전 "보고 뒤에 어디로" 규칙표를 그대로 따라가 판단이 4번씩 났다(B-지시서 2절). 계획형에는 보고 뒤 규칙이 없다
+    # [왜] 예전 "보고 뒤에 어디로" 규칙표를 그대로 따라가 판단이 4번씩 났다(MULTI_AGENT.md "구조 결정"의 이유). 계획형에는 보고 뒤 규칙이 없다
     for gone in ('After a search report', 'After a writer report', 'After a verifier report', '`verifier`', '`writer`'):
         assert gone not in S.PROMPT, gone
     assert 'do not restate its table' in S.SYNTH_PROMPT
@@ -190,7 +190,7 @@ def test_declined_parts_are_appended_with_their_refusal_reason():
     p = plan(task(1), declined=[{'ask': 'TSC ES1DQ의 VRRM', 'reason': 'part_missing'}]).model_dump(mode='json')
     state = {**STATE, 'plan': p, 'facts': {'parts': {'ES1DQ': False}}, 'final_reports': [report(1, answer='VRRM은 40 V이다 [7].')]}
     out = S.single_node(state)
-    # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(B-지시서 4-5.3, c20-15)
+    # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(c20-15)
     assert out['answer'].startswith('VRRM은 40 V이다 [7].') and "답하지 않은 부분 'TSC ES1DQ의 VRRM'" in out['answer'] and 'ES1DQ' in out['answer']
     import pytest
     from pydantic import ValidationError

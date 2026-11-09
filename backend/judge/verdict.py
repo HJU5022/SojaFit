@@ -418,7 +418,7 @@ def judge_part(rule: dict, role: str, part: str, values: dict, conds: dict, rows
 
 
 def search_conditions(rule: dict, values: dict) -> list[dict]:
-    """찾기용 사양 표 검색 조건(find_parts_by_specs). 시험 조건이 없는 필수 조건의 하한 · 상한만 쓰고 최대 10개(MCP 한도)."""
+    """찾기 조건(카드 찾기 card_find, SPEC 8.7). 시험 조건이 없는 필수 조건의 하한 · 상한만 쓰고 최대 10개(지운 MCP 찾기 도구의 한도를 그대로 둠)."""
     out = []
     for cond in rule['conditions']:
         if cond['tier'] != 'required' or cond.get('at') or _off(cond, values):

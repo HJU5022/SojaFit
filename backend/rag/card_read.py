@@ -2,11 +2,11 @@
 
 - 역할: `read_values`가 카드마다 `pipeline/specs.py` 규칙(`read_card`, 카드 한 장)으로 먼저 읽고, 원하는 코드의 값을 하나도 받지
   못했거나 검토 표시가 난 카드만 `llm_read`로 넘긴다(한 프롬프트에 4장씩, LLM 노드 `card_read`). 코드 읽기와 LLM 읽기 모두 값마다
-  카드 번호 · 인용 · 숫자 · 단위 차원 · 품번을 같은 규칙(`_check`)으로 확인하고, 받은 값은 `spec_lookup._row`와 같은 모양(SI 값)으로 돌려줘
-  판정 코드가 사양 표 행처럼 쓴다. 틀린 값은 고치지 않고 사유와 함께 버린다.
+  카드 번호 · 인용 · 숫자 · 단위 차원 · 품번을 같은 규칙(`_check`)으로 확인하고, 받은 값은 사양 행 모양(`_row`, SI 값)으로 돌려줘
+  찾기 · 판정 코드가 그대로 쓴다. 틀린 값은 고치지 않고 사유와 함께 버린다.
 - 하지 않는 일: 조건과 값 비교 · 판정(`backend/judge/`, AGENTS 지킬 것 7), 카드 찾기(부르는 쪽), LLM 직접 호출(chat을 받아 쓴다),
   사양 표 만들기 · 저장(팀 결정: 질문 때 카드를 읽는다). 여기서 숫자를 보는 일은 "읽은 숫자가 인용 글에 있는가"뿐이다.
-- 출처: 사양 표 제거 뒤 카드 읽기(lab v3 b-redesign), 코드 먼저 읽기(사전 등록 #43, 11-09 조사), 행 모양은 `spec_lookup._row`,
+- 출처: 사양 표 제거 뒤 카드 읽기(lab v3 b-redesign), 코드 먼저 읽기(사전 등록 #43, 11-09 조사), 행 모양은 지운 사양 표 행(ADR 0013)과 같은 칸,
   단위 환산은 `units.to_si`(SPEC 3절)
 """
 import contextvars
@@ -114,7 +114,7 @@ def _check(r: Reading, card: dict | None, codes: list[str], doc_parts: dict) -> 
 
 
 def _row(r: Reading, card: dict) -> dict:
-    """받은 값 → `spec_lookup._row`와 같은 모양의 사양 한 줄(+ 인용 글)."""
+    """받은 값 → 사양 한 줄(part · category · code · min/typ/max(SI) · text · unit · source_value_text · test_condition · citation, + 인용 글)."""
     value, unit = to_si(float(r.value.replace(',', '')), r.unit)
     # [왜] 100 µA를 SI로 바꾸면 9.999999999999999e-05가 된다. 유효숫자 12자리로 맞춰 판정의 경계 비교가 어긋나지 않게 한다
     slots = {s: float(f'{value:.12g}') if s == r.slot else None for s in ('min', 'typ', 'max')}
@@ -217,7 +217,7 @@ def llm_read(cards: list[dict], codes: list[str], doc_parts: dict[str, list[str]
     - cards: [{'chunk_id', 'document'(PDF 파일 이름), 'page', 'table', 'row', 'content'}]. codes: 읽을 코드(SI 표의 키).
     - doc_parts: 문서 파일 이름 → 그 문서 표지의 품번. 품번 없는 정격 행을 붙일 품번이고, 넘긴 품번 수만큼 읽기가 늘어난다.
     - chat: `chat(node, system, user, schema)`(`llm.node_chat`과 같은 모양). 카드나 코드가 없으면 부르지 않는다.
-    - 반환: rows는 `spec_lookup._row` 모양 + citation.chunk_id + quote. rejected는 읽은 값 + 'reason'.
+    - 반환: rows는 `_row` 모양(citation.chunk_id · quote 포함). rejected는 읽은 값 + 'reason'.
     """
     if not cards or not codes:
         return [], []

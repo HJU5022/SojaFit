@@ -76,7 +76,7 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
     # [왜] 검색기와 체크포인터를 인자로 받아야 가짜 검색기·메모리 체크포인터로 키 없이 시험하고 요청 수를 셀 수 있다
     # retriever: (question, *, parts) 모양의 검색 함수. checkpointer: None이면 대화를 저장하지 않는다
     # lookup: 사실 확인 함수(state → Facts, 멀티와 같은 `make_lookup(mcp.check)`). None이면 확인 없이 비워 둔다
-    # specs · find: 사양 표 도구(MCP `get_part_specs` · `find_parts_by_specs`). chat: 판정 읽기 LLM 호출, None이면 `llm.node_chat`
+    # specs · find: 판정 값 · 찾기 도구(카드 도구 `card_specs.default_specs()` · `card_find.default_find()`). chat: 판정 읽기 LLM 호출, None이면 `llm.node_chat`
     judging = specs is not None or find is not None
     if judging and (specs is None or find is None or checkpointer is None):
         raise ValueError("판정 길은 사양 표 도구(specs · find)와 체크포인터가 있어야 잇습니다")  # [왜] 켜진 척 조용히 무시하면 측정이 거짓이 된다

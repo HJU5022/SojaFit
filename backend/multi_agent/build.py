@@ -67,7 +67,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
                 specs=None, find=None, checkpointer=None, store=None):
     """멀티 에이전트 그래프를 만들어 compile한다. chat은 `(node, system, user, schema)` 모양의 LLM 호출이다.
 
-    판정을 켜려면 specs(`get_part_specs`) · find(`find_parts_by_specs`) 도구와 checkpointer가 필요하다(인터럽트 재개).
+    판정을 켜려면 specs(`card_specs.default_specs()`) · find(`card_find.default_find()`) 도구와 checkpointer가 필요하다(인터럽트 재개).
     """
     if web_enabled:
         raise ValueError('웹 조회 에이전트는 아직 없어 켤 수 없습니다')  # [왜] 켜진 척 조용히 무시하면 측정이 거짓이 된다

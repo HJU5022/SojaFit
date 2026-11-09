@@ -6,7 +6,7 @@
     후보 판정은 그 후보의 판정 코드가 같아야 하고, 찾기는 보여 준 후보가 하나 이상이며 모두 정답 집합 안이어야 한다.
   - 답하면 안 되는 부분: 답 전체가 거절이거나, 그 부분의 열쇠 낱말(품번 · 판 코드 · 영문 낱말)이 든 문장에 '확인 못 함' 말이 있다.
 - 하지 않는 일: 그래프 실행, 문항별 점수 합산(run_gate · gate_report).
-- 출처: 회의록 D4-D5 B-지시서 4-5.3("채점은 부분마다 기존 기준으로, score_item은 import"), evals/runners/score_answer.py
+- 출처: evals/runners/RUNNERS.md `score_compound.py`(채점은 부분마다 기존 기준으로, score_item은 import), evals/runners/score_answer.py
 """
 import re
 

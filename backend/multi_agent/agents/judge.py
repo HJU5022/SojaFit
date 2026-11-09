@@ -1,4 +1,4 @@
-"""판정 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
+"""대체 부품 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
 
 - 역할: `judge_read_agent`(읽기 노드)와 `judge_agent`(판정 노드). 읽기를 따로 두는 이유는 인터럽트에서 재개하면
   노드가 처음부터 다시 돌기 때문이다(읽기 결과를 먼저 상태에 남겨 LLM을 다시 부르지 않는다).
@@ -444,7 +444,7 @@ OUTSIDE_WORDS = re.compile(r'(?-i:\bFIT\b)|MTBF|고장|수명|lifetime|reliab|�
                            r'반품|guarant|보장|aec-?q200', re.I)  # 사양 표가 담지 않는 성질 낱말
 SAME_AS = re.compile(r'same|같은|동등|equivalent|as good as|현재|지금|기존|current|existing|fitted', re.I)  # 지금 부품과 같기를 바라는 말
 # [왜] '표면실장 · 삽입형'은 패키지 이름이 아니라 실장 방식이다. 패키지 이름으로 도구에 넘기면 그 이름의 패키지가 없어 0개였다(11-07 v2 n01 · n09).
-#      사양 표 패키지 56종 중 스루홀(리드 · 나사 고정)은 아래 17종이고 나머지는 표면실장이다(11-07 DB 실측)
+#      스루홀(리드 · 나사 고정) 패키지 이름은 `spec_lookup.THT_PACKAGES`(17종, 11-07 사양 표 패키지 56종 DB 실측)이고 나머지는 표면실장으로 본다
 SMD_WORDS = re.compile(r'표면\s*실장|surface[- ]?mount|(?-i:\bSMD\b|\bSMT\b)', re.I)
 THT_WORDS = re.compile(r'삽입\s*형|스루\s*홀|through[- ]?hole|(?-i:\bTHT\b)|리드\s*형|axial', re.I)
 
@@ -634,7 +634,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     rules = {r: ({**rules[r], 'conditions': [c for c in rules[r]['conditions'] if 'any' in c or keep(c)] + extra} if extra else rules[r])
              for r in roles}
     read = read.model_copy(update={'original_part': _original_from_text(read, text)})
-    # [왜] 카드에서 판정 값을 읽는 specs(lab 3단계, backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. 사양 표 specs에는 prefetch가 없다
+    # [왜] 카드에서 판정 값을 읽는 specs(backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. prefetch가 없는 specs(데모 · 시험 가짜)는 건너뛴다
     prefetch = getattr(specs, 'prefetch', None)
     need = sorted(_rule_codes([rules[r] for r in roles]) | {x.code for x in read.required_specs})
     # [왜] 사용자가 패키지를 여럿 허용하면('MiniMELF 또는 SOD-123F') 패키지마다 찾아 합친다. 도구는 패키지 하나만 거른다(11-06 v3-13)

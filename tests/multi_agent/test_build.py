@@ -4,7 +4,7 @@
   판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기,
   기억 읽기(Store의 선호 실장 방식 → 찾기 후보 순서, Store 없으면 예전 순서)를 본다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
-- 출처: backend/multi_agent/build.py, 참조/아티팩트 "SojaFit 멀티 에이전트 구조", 회의록 D4-D5 B-지시서 4-4 시험 목록
+- 출처: backend/multi_agent/build.py, backend/multi_agent/MULTI_AGENT.md "구조 결정"
 """
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
@@ -135,7 +135,7 @@ def test_two_ok_docs_answers_are_joined_by_code_without_the_synth_llm():
 
 
 def test_all_tasks_failing_ends_as_refusal_with_the_reason():
-    # [왜] 설계 v2: 문서가 근거를 못 찾으면 Supervisor ①이 한 번 다시 계획한다. 재계획도 거절을 고르면 거절로 끝난다
+    # [왜] 설계 v2: 문서가 근거를 못 찾으면 Supervisor(계획)가 한 번 다시 계획한다. 재계획도 거절을 고르면 거절로 끝난다
     chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()]),
                                 Plan(question_type='rating', next='refuse', reason=Reason.NOT_FOUND)],
                     docs_answer=[DocsAnswer(grade='none'), DocsAnswer(grade='none')])

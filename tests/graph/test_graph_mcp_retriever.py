@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.graph import mcp_retriever as M
 from backend.graph import nodes
 from backend.graph.build import build_graph
 from backend.graph.mcp_retriever import (
@@ -169,16 +168,3 @@ def test_stdio_retriever_check_rejects_invalid_payload(bad):
         with pytest.raises(RetrievalUnavailableError) as info:
             retriever.check(["A"], [])
     assert info.value.kind == "invalid_response"
-
-
-def test_decode_list_result_reads_structured_list():
-    rows = [{'part': 'SS14', 'code': 'VRRM', 'max': 40.0}]
-    assert M.decode_list_result(SimpleNamespace(isError=False, structuredContent={'result': rows}, content=[])) == rows
-
-
-def test_decode_list_result_rejects_tool_error_and_non_list():
-    with pytest.raises(M.RetrievalUnavailableError) as e:
-        M.decode_list_result(SimpleNamespace(isError=True, structuredContent=None, content=[]))
-    assert e.value.kind == 'tool_error'
-    with pytest.raises(M.RetrievalUnavailableError):
-        M.decode_list_result(SimpleNamespace(isError=False, structuredContent={'result': {'x': 1}}, content=[]))

@@ -1,43 +1,26 @@
 """데이터시트 표 행 청크를 읽는 규칙과 해석기. 서버는 규칙 상수(`SI` · `SYMS` · `KEYWORDS` · `PKG` · `packages_of` · `family` · `BOTH_DIRECTIONS` · `AEC_H` · `AEC_ALL`)와 카드 한 장을 질문 때 코드로 읽는 `read_card`(`card_read.read_values`)를 쓴다.
 
-[주의] 부품 사양 표(part_specifications) 만들기 · 적재(`build` · `load`)는 11-09에 서비스에서 쓰지 않기로 했다(ADR 0016). 같은 해석기(`Doc`)를 `read_card`가 카드 한 장에 쓰므로(사전 등록 #43, 카드 값 코드 먼저 읽기) 해석 코드를 지우지 않는다.
-
-
-- 역할: chunks.jsonl의 표지 청크(품번 목록)와 표 행 청크("머리 경로: 값")를 읽어 품번마다 파라미터 코드 17종
-  (5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD)의 값을 SI 단위로 뽑는다. 값 하나는 원문 칸 하나에서 나오고
-  청크 번호(doc + idx)를 같이 적는다. 모호한 값은 표에 넣지 않고 review.jsonl에 사유와 청크 번호를 남긴다:
+- 역할: 표 행 청크("머리 경로: 값")를 읽어 품번마다 파라미터 코드 17종
+  (5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD)의 값을 SI 단위로 뽑는다(`Doc` 해석기, `read_card`는 카드 한 장).
+  값 하나는 원문 칸 하나에서 나오고 청크 번호를 같이 적는다. 모호한 값은 후보로 내지 않고 검토 표시(사유 · 청크 번호)로 남긴다:
   계열 범위·여러 값(range_unsplittable), 같은 자리·같은 조건의 다른 값(conflict), 모르는 단위(unknown_unit),
   원문 청크에 없는 숫자(value_not_in_source), 음수·무한(implausible), 파서가 머리를 밀거나 행을 합친 표(garbled_table),
   일부 품번 전용인데 대상 품번을 알 수 없는 행(scope_unclear), 최소·대표·최대 표시가 없는 항복·제너 전압(slot_unclear).
-  문서마다 표 단서(주문표의 품번별 패키지, 'Package' 행의 열별 패키지, 첫 행에 붙은 Min·Nom·Max)를 먼저 모으고,
+  문서 전체를 읽을 때(`Doc.run`)는 표 단서(주문표의 품번별 패키지, 'Package' 행의 열별 패키지, 첫 행에 붙은 Min·Nom·Max)를 먼저 모으고,
   이어지는 행(이름 없이 TYP·MAX만), 세로로 합친 품번·조건 칸은 같은 파라미터 행 묶음 안에서 채운다(11-05 PDF 대조 뒤).
   문서가 'Electrical characteristics apply in both directions'라고 밝힐 때만 양방향(C·CA) 품번에 단방향 행 값을 붙인다.
   2차 대조 뒤: IF_AV는 평균·연속 전류만(첨두·서지·반복·IFRM·IF,MAX 행은 IFSM이거나 제외), 머리 끝 숫자는 첫 행이 빨려 든 것이라
   떼고 읽음, 조건 주기로 품번 묶음 구간을 정함, 병합 칸 값은 가운데 열에서 대칭으로 펼침, 붙은 열 이름 칸을 나눔.
-  `sample`은 13개 분류에서 품번 50개를 골라 사람이 PDF와 대조할 한국어 대조표(markdown)를 쓴다.
-  `load`는 build 결과(part_specifications.jsonl·packages.jsonl)를 DB `part_specifications`(db/011)에 문서 단위로 바꿔 넣는다:
-  한 트랜잭션 안에서 대상 문서의 행을 지우고 새 행을 넣어, 다시 돌려도 같고 새·고친 데이터시트 하나만(`--docs`) 다시 넣을 수 있다(ADR 0007).
-- 하지 않는 일: LLM·임베딩 호출, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기.
-  결과는 데이터시트에서 나온 값이라 저장소 밖(`SojaFit/corpus/tsc/specs/`)에 쓴다. review.jsonl(뺀 값)은 DB에 넣지 않는다.
-  [주의] `load`는 DATABASE_URL을 읽지 않는다. 운영 DB에 실수로 쓰지 않도록 접속 주소를 `--dsn`으로만 받는다.
-- 출처: db/schema/table-definition.md 5.7 `part_specifications`, SPEC.md 3절(단위 환산은 `backend/rag/units.py`),
-  원형 `전자_데이터시트/evidence/spec_table/build.py`와 README의 대조 오류 수정(11-03), 50개 품번 PDF 대조(11-05, ADR 0013)
-
-실행(저장소 루트):
-  uv run python -m backend.rag.pipeline.specs build <chunks.jsonl> <out_dir>
-  uv run python -m backend.rag.pipeline.specs sample <out_dir> <sheet.md> --n 50 --seed 0
-  uv run python -m backend.rag.pipeline.specs load <out_dir> --dsn <postgres 주소> [--docs <PDF 파일 이름> ...]
+- 하지 않는 일: LLM·임베딩 호출, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기, 파일 · DB 쓰기.
+  부품 사양 표(part_specifications) 만들기 · 대조표 · 적재 명령(`build` · `sample` · `load`)은 11-09에 버리고 11-10에 지웠다(ADR 0016).
+- 출처: db/schema/table-definition.md 5.7(코드 목록), SPEC.md 3절(단위 환산은 `backend/rag/units.py`),
+  원형 `전자_데이터시트/evidence/spec_table/build.py`와 README의 대조 오류 수정(11-03), 50개 품번 PDF 대조(11-05, ADR 0013),
+  카드 값 코드 먼저 읽기(사전 등록 #43)
 """
-import argparse
 from collections import Counter, defaultdict
-import json
 import math
-from pathlib import Path
-import random
 import re
-import time
 
-from backend.rag.retrieve import COVER
 from backend.rag.units import to_si
 
 # 코드마다 정규화 단위. 단위 차원이 다른 칸(예: IR 열 옆의 "@ VR / V" 조건 칸)은 그 코드의 값이 아니라서 버린다
@@ -84,23 +67,11 @@ KEY_COL = re.compile(r'(?:^|\s)(PARAMETER|SYMBOL|UNIT|CONDITIONS?)$')
 VALUE_COL = re.compile(r'(?:^|\s)(VALUE|LIMITS?|RATINGS?|MIN|MINIMUM|TYP|TYPICAL|NOM|NOMINAL|MAX|MAXIMUM)$')
 NUM = r'[-+]?\s?\d+(?:,\d{3})*(?:\.\d+)?'
 PARTLIKE = re.compile(r'(?=.*[A-Z])(?=.*\d)(?!IEC|JESD|AEC|MIL|EIA|JEDEC)[A-Z0-9][A-Z0-9.\-]{3,}')  # 품번처럼 생긴 낱말(규격 이름 제외)
-# 출처 우선순위: 품번 열·품번 한 줄(part) > 품번 묶음이 적힌 행의 값 칸(group) > 문서 전체에 붙는 값 칸(value) > KEY PARAMETERS(key, 계열 요약)
-# [왜] 파서가 둘째 묶음 행의 품번 칸을 잃으면(HERF1001G SERIES 21·22행) 그 행이 모든 품번에 붙는다. 품번을 적은 행이 이긴다
-LEVELS = ('part', 'group', 'value', 'key')
 # [주의] 글자로만 된 패키지 이름(SMA · ABS 등)은 대소문자를 구분한다((?-i:...)). 'Case: SOD-123 small outline'의 small이 SMA로 잡혔다(11-05, 59건)
 # [주의] 'Thin SMA'(38문서) · 'Micro SMA'(23) · 'Sub SMA'(20)는 SMA와 다른 패키지다. 앞말을 같이 잡아야 SMA 조건 · 기판 비교에 걸리지 않는다(11-06 v3-14)
 PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:(?:Thin|Micro|Sub) SM[ABCFP]\w*|SMA\w*|SMB\w*|SMC\w*|SMF\w*|SMP\w*)|DO-?\d+\w*|TO-?\d+\w*|MiniMELF|MicroMELF|(?-i:MMELF)|'
                  r'MELF|D2PAK|DPAK|DFN\w*|R-?\d\b|(?-i:GBU\w*|KBP\w*|KBJ\w*|GBJ\w*|ABS\w*|MBS\w*|MBF\w*)|TS\w*FL|SC-\d+\w*|'
                  r'PDI\w*|SOP-?\d+)', re.I)
-# 대조표에서 분류별로 보여 줄 핵심 코드. 'VRRM|VR'은 VRRM이 없으면 VR을 본다
-KEY_CODES = {'zener-diode': ['VZ', 'PD'], 'tvs': ['VRWM', 'VBR', 'VC', 'IPP', 'PPPM'],
-             'esd-protection': ['VRWM', 'VBR', 'VC', 'CJ', 'VESD']}
-RECTIFIER_KEYS = ['VRRM|VR', 'IF_AV', 'IFSM', 'VF']
-REASONS_KO = {'range_unsplittable': '계열 범위·여러 값이라 품번별로 나눌 수 없음', 'conflict': '같은 자리·같은 조건에 값이 둘 이상',
-              'unknown_unit': '단위를 알 수 없음', 'value_not_in_source': '숫자가 원문 청크에 없음',
-              'implausible': '음수·무한 등 있을 수 없는 값', 'garbled_table': '파서가 표 머리를 밀거나 행을 합친 것으로 보임',
-              'scope_unclear': '일부 품번 전용 행인데 대상 품번을 알 수 없음',
-              'slot_unclear': '최소·대표·최대 중 어느 칸인지 표시가 없음'}
 SLOT_KO = {'minimum_value': '최소', 'typical_value': '대표', 'maximum_value': '최대'}
 # 11-05 PDF 대조 뒤 더한 규칙의 글 모양들
 BOTH_NOTE = 'Electrical characteristics apply in both directions'
@@ -847,322 +818,5 @@ def packages_of(c):
     return out
 
 
-def resolve(cands):
-    """출처 우선순위로 거르고, 같은 품번·코드·자리·조건에 값이 갈리면 모두 빼서 conflict 검토로 보낸다."""
-    best = {}
-    for r in cands:
-        k = (r['part'], r['doc'], r['parameter_code'])
-        best[k] = min(best.get(k, 9), LEVELS.index(r['source_level']))
-    kept = [r for r in cands if LEVELS.index(r['source_level']) == best[(r['part'], r['doc'], r['parameter_code'])]]
-    dropped = len(cands) - len(kept)
-    groups = defaultdict(list)
-    for r in kept:
-        slots = tuple(s for s in SLOT_KO if r[s] is not None)
-        groups[(r['part'], r['doc'], r['parameter_code'], slots, r['test_condition'])].append(r)
-    rows, review = [], []
-    for (part, doc, code, slots, cond), rs in groups.items():
-        values = {tuple(f'{r[s]:.6g}' for s in slots) for r in rs}  # [왜] 150 mA와 0.15 A는 같은 값이다
-        if len(values) == 1:
-            rows.append(rs[0])  # 같은 값이 여러 청크에 있으면 첫 청크 하나만 남긴다
-            continue
-        r = rs[0]
-        review.append({'reason': 'conflict', 'parts': [part], 'doc': doc, 'family': r['family'], 'parameter_code': code,
-                       'source_value_text': ' ≠ '.join(dict.fromkeys(x['source_value_text'] for x in rs)),
-                       'test_condition': cond, 'page_number': r['page_number'], 'table_name': r['table_name'],
-                       'row_label': r['row_label'], 'chunks': [x['chunk'] for x in rs],
-                       'detail': f'자리 {"·".join(SLOT_KO[s] for s in slots)}, 출처 {r["source_level"]}'})
-    return rows, review, dropped
-
-
 AEC_H = re.compile(r'"H"\s*means\s*AEC[- ]?Q101\s+qualified', re.I)  # 주문 정보 주석: H로 끝나는 품번만 인증품
 AEC_ALL = re.compile(r'AEC[- ]?Q101\s+qualified(?!\s+available)', re.I)    # FEATURES: 그 문서 품번 전체가 인증품
-
-
-def aec_of(chunks, part):
-    """품번의 AEC-Q101 근거 청크 {'idx', 'page', 'text'} 또는 None. 문서가 밝힌 문장만 본다(값 추정 없음).
-
-    '"H" means AEC-Q101 qualified' 주석이 있으면 H로 끝나는 품번만, 없으면 FEATURES의 'AEC-Q101 qualified'(뒤에 available 없음)로 문서 전체를 본다.
-    [주의] 'AEC-Q101 qualified available' · 'AEC-Q101 available' · 'Qualification reference AEC-Q101'은 인증품이라는 문장이 아니라 쓰지 않는다
-    """
-    note = next((c for c in chunks if c['kind'] in ('note', 'text', 'table_row') and AEC_H.search(c['text'])), None)
-    if note is not None:
-        return {'idx': note['idx'], 'page': note['page'], 'text': 'AEC-Q101 qualified ("H")'} if part.upper().endswith('H') else None
-    feat = next((c for c in chunks if c['kind'] == 'text' and '· FEATURES]' in c['text'] and AEC_ALL.search(c['text'])), None)
-    return {'idx': feat['idx'], 'page': feat['page'], 'text': 'AEC-Q101 qualified'} if feat is not None else None
-
-
-def h_copies(rows, docs, by_doc):
-    """주문 정보 틀로만 적힌 H 품번(표지 품번 목록의 'XH', 표에는 X만)에 기본 품번 X의 행을 그대로 붙인다(인용도 X의 행 그대로).
-
-    [왜] 문서가 '"H" means AEC-Q101 qualified'라고만 밝히고 값 표는 기본 품번으로 적는다. H 품번 행이 없으면 1N5819H가 '사양 표에 값 없음'이었다
-         (11-06 판정 dev 14). AEC-Q101 행은 aec_of가 H로 끝나는 품번에 따로 단다
-    """
-    out = []
-    for name, d in docs.items():
-        if not any(AEC_H.search(c['text']) for c in by_doc[name]):
-            continue
-        mine = defaultdict(list)
-        for r in rows:
-            if r['doc'] == name:
-                mine[r['part'].upper()].append(r)
-        for p in d.parts:
-            P = p.upper()
-            if P.endswith('H') and P[:-1] in mine:
-                # [주의] 문서 전체에 붙는 값(KEY PARAMETERS의 IF_AV 등)은 H 품번에도 이미 붙는다. 품번별 행(key 밖)이 있는 코드만 두고 나머지는 붙인다.
-                #        key 행만 있는 코드를 두면 시험 조건이 없어 원래 품번 행과 짝이 안 맞아 사양 동등을 못 냈다(11-06 판정 dev 14 IFSM)
-                have = {r['parameter_code'] for r in mine.get(P, []) if r.get('source_level') != 'key'}
-                out += [{**r, 'part': p} for r in mine[P[:-1]] if r['parameter_code'] not in have]
-    return out
-
-
-def build(chunks):
-    """청크 목록 → {'rows', 'review', 'packages', 'stats'}. 표지 청크가 없는 문서는 품번을 몰라 건너뛴다."""
-    docs, by_doc = {}, defaultdict(list)
-    for c in chunks:
-        m = c['kind'] == 'cover' and COVER.match(c['text'])
-        if m:
-            docs[c['doc']] = Doc(c['doc'], [p.strip() for p in m.group(1).split(', ') if p.strip()], family(c['category']))
-        by_doc[c['doc']].append(c)
-    pkgs = defaultdict(list)
-    for name, d in docs.items():
-        pkgs[name] = [(x, c) for c in by_doc[name] if c['kind'] in ('text', 'table_row') for x in packages_of(c)]
-        d.run(by_doc[name])
-    cands = [r for d in docs.values() for r in d.cands]
-    rows, conflicts, dropped = resolve(cands)
-    rows += h_copies(rows, docs, by_doc)
-    review = [r for d in docs.values() for r in d.review] + conflicts
-    checked = sum((d.checked for d in docs.values()), Counter())
-    # [주의] 패키지는 문서 단위다(원형과 같음). 한 문서에 패키지가 여럿이면 품번별로 나누지 못해 모든 품번에 같은 목록이 붙는다
-    where = {}  # (문서, 패키지 이름) → 그 이름이 처음 나온 청크의 {idx, page}. [왜] 판정 답이 패키지 근거의 쪽을 인용해야 한다(11-06 손실)
-    for doc_name, found in pkgs.items():
-        for x, c in found:
-            where.setdefault((doc_name, x), {'idx': c['idx'], 'page': c['page']})
-    packages = [{'part': p, 'doc': d.doc, 'family': d.family, 'packages': list(dict.fromkeys(x for x, _ in pkgs[d.doc])),
-                 'where': {x: where[(d.doc, x)] for x, _ in pkgs[d.doc]}, 'aec': aec_of(by_doc[d.doc], p)}
-                for d in docs.values() for p in d.parts]
-    return {'rows': rows, 'review': review, 'packages': packages,
-            'stats': {'candidates_checked': checked['candidates'], 'value_not_in_source': checked['value_in_source'],
-                      'implausible': checked['plausible'], 'dropped_lower_precedence': dropped}}
-
-
-def has_code(codes, key):
-    return any(k in codes for k in key.split('|'))
-
-
-def summarize(out):
-    """분류 × 코드 채움률(값이 하나라도 있는 품번 / 품번), 검토 사유별 수, 자동 검사 수."""
-    have = defaultdict(set)
-    for r in out['rows']:
-        have[(r['part'], r['doc'])].add(r['parameter_code'])
-    fams = defaultdict(list)
-    for p in out['packages']:
-        fams[p['family']].append(have[(p['part'], p['doc'])])
-    coverage, key_complete = {}, {}
-    for fam, sets in sorted(fams.items()):
-        coverage[fam] = {code: {'parts_with_value': sum(code in s for s in sets), 'parts': len(sets)} for code in SI}
-        keys = KEY_CODES.get(fam, RECTIFIER_KEYS)
-        key_complete[fam] = {'keys': keys, 'parts_with_every_key': sum(all(has_code(s, k) for k in keys) for s in sets),
-                             'parts': len(sets)}
-    return {'totals': {'docs': len({p['doc'] for p in out['packages']}), 'parts': len(out['packages']),
-                       'rows': len(out['rows']), 'rows_by_code': dict(Counter(r['parameter_code'] for r in out['rows']).most_common())},
-            'review_by_reason': dict(Counter(r['reason'] for r in out['review']).most_common()),
-            'auto_checks': out['stats'], 'key_complete': key_complete, 'coverage': coverage}
-
-
-def write_jsonl(path, items):
-    with open(path, 'w', encoding='utf-8') as f:
-        f.writelines(json.dumps(x, ensure_ascii=False) + '\n' for x in items)
-
-
-def read_jsonl(path):
-    with open(path, encoding='utf-8') as f:
-        return [json.loads(line) for line in f if line.strip()]
-
-
-def cmd_build(chunks_path, out_dir):
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out = build(read_jsonl(chunks_path))
-    write_jsonl(out_dir / 'part_specifications.jsonl', out['rows'])
-    write_jsonl(out_dir / 'review.jsonl', out['review'])
-    write_jsonl(out_dir / 'packages.jsonl', out['packages'])
-    summary = summarize(out)
-    (out_dir / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding='utf-8')
-    print(json.dumps({k: summary[k] for k in ('totals', 'review_by_reason', 'auto_checks')}, ensure_ascii=False))
-
-
-def allocate(counts, n=50, floor=3, cap=5):
-    """분류별 표본 수: 모두 floor개씩 준 뒤 남은 수를 품번 수 비례 몫이 가장 모자란 분류부터 1개씩(cap까지)."""
-    fams = sorted(counts)
-    alloc = {f: min(floor, counts[f]) for f in fams}
-    total = sum(counts.values())
-    while sum(alloc.values()) < n:
-        open_ = [f for f in fams if alloc[f] < min(cap, counts[f])]
-        if not open_:
-            break
-        f = max(open_, key=lambda f: n * counts[f] / total - alloc[f])  # 같으면 이름순 앞(max는 첫 최댓값을 고른다)
-        alloc[f] += 1
-    return alloc
-
-
-def cell(s):
-    return str(s if s not in (None, '') else '-').replace('|', '\\|').replace('\n', ' ')
-
-
-def fmt(v, unit):
-    return f'{v:.6g} {unit}'
-
-
-def cmd_sample(out_dir, sheet, n=50, seed=0):
-    """대조표: 분류마다 3~5개 품번을 고정 seed로 뽑아 핵심 값과 출처, 빠진 값의 검토 사유를 적는다."""
-    out_dir = Path(out_dir)
-    rows, review, parts = (read_jsonl(out_dir / f) for f in ('part_specifications.jsonl', 'review.jsonl', 'packages.jsonl'))
-    by_fam = defaultdict(list)
-    for p in parts:
-        by_fam[p['family']].append((p['part'], p['doc']))
-    alloc = allocate({f: len(v) for f, v in by_fam.items()}, n)
-    rng = random.Random(seed)
-    picked = [(fam, part, doc) for fam in sorted(by_fam) for part, doc in rng.sample(sorted(by_fam[fam]), alloc[fam])]
-    have = defaultdict(list)
-    for r in rows:
-        have[(r['part'], r['doc'], r['parameter_code'])].append(r)
-    why = defaultdict(list)
-    for r in review:
-        for p in r['parts']:
-            why[(p, r['doc'], r['parameter_code'])].append(r)
-    lines = [f'# 부품 사양 표 대조표 ({len(picked)}개 품번, seed {seed})', '',
-             '부품 사양 표(part_specifications)에 규칙으로 뽑아 넣은 값이 데이터시트 PDF와 같은지 사람이 확인하는 표입니다.',
-             '',
-             '확인 방법',
-             '1. 품번 제목 아래 PDF 경로(`SojaFit/` 폴더 기준)를 열고, 각 줄의 `쪽`으로 갑니다.',
-             '2. `표`·`행` 이름으로 그 칸을 찾아 `원문 표기`(숫자와 단위)와 `시험 조건`이 PDF와 같은지 봅니다. '
-             '`표에 넣은 값`은 SI 기본 단위(V, A, W, s, F, °C)로 바꾼 값입니다(예: 150 mA → 0.15 A).',
-             '3. 같으면 `O/X` 칸에 O, 다르면 X를 적고 `메모`에 PDF의 실제 값을 적습니다. 판단이 어려우면 `?`와 이유를 적습니다.',
-             '4. `빠진 값`은 표에 넣지 않은 핵심 값과 그 이유입니다. PDF에 그 값이 정말 있는지(있으면 놓친 것) 보고 메모합니다.',
-             '', '자리: 최소·대표·최대는 데이터시트의 Min·Typ(Nom)·Max 칸입니다. 표시가 없는 정격 칸은 최대로, 정전용량은 대표로 넣었고, '
-             '항복·제너 전압은 표시가 없으면 넣지 않았습니다.',
-             'TVS의 C·CA(양방향) 품번은 데이터시트 표에 자기 행이 없는 경우가 많아 값이 비어 있습니다'
-             '(단방향 행의 값을 옮겨 적지 않았습니다).', '']
-    complete = 0
-    for i, (fam, part, doc) in enumerate(picked, 1):
-        keys = KEY_CODES.get(fam, RECTIFIER_KEYS)
-        lines += [f'## {i}. {part} ({fam})', '', f'- 문서: `{doc}` · PDF: `corpus/tsc/pdf/{doc}`', '',
-                  '| 코드 | 자리 | 표에 넣은 값 | 원문 표기 | 시험 조건 | 쪽 | 표 | 행 | O/X | 메모 |',
-                  '|---|---|---|---|---|---|---|---|---|---|']
-        missing = []
-        for key in keys:
-            code = next((c for c in key.split('|') if have[(part, doc, c)]), None)
-            if code is None:
-                missing.append(key)
-                continue
-            for r in have[(part, doc, code)]:
-                slots = [s for s in SLOT_KO if r[s] is not None]
-                lines.append('| ' + ' | '.join(cell(x) for x in [
-                    code, '·'.join(SLOT_KO[s] for s in slots), ' / '.join(fmt(r[s], r['normalized_unit']) for s in slots),
-                    r['source_value_text'], r['test_condition'], r['page_number'], r['table_name'], r['row_label']])
-                    + ' |  |  |')  # O/X·메모는 사람이 채우는 빈칸
-        complete += not missing
-        lines.append('')
-        for key in missing:
-            # [왜] KEY PARAMETERS의 계열 범위(range_unsplittable)는 거의 모든 품번에 걸려 있어, 더 구체적인 사유를 먼저 보여 준다
-            rs = sorted((r for c in key.split('|') for r in why[(part, doc, c)]),
-                        key=lambda r: r['reason'] == 'range_unsplittable')
-            if rs:
-                ex = rs[0]
-                lines.append(f'- 빠진 값 {key}: {REASONS_KO[ex["reason"]]} ({ex["reason"]}, {ex["page_number"]}쪽 '
-                             f'`{cell(ex["table_name"])}` 행 `{cell(ex["row_label"])}`, 원문 `{cell(ex["source_value_text"])}`)'
-                             + (f' 외 검토 {len(rs) - 1}건' if len(rs) > 1 else ''))
-            else:
-                lines.append(f'- 빠진 값 {key}: 검토 목록에도 없음(표에서 그 값을 찾지 못함)')
-        if missing:
-            lines.append('')
-    lines.insert(2, f'핵심 값이 모두 있는 품번: {complete}/{len(picked)}개. 분류별 표본 수: '
-                 + ', '.join(f'{f} {k}' for f, k in sorted(alloc.items())) + '.')
-    lines.insert(3, '')
-    Path(sheet).write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    print(f'대조표 {sheet}: 품번 {len(picked)}개, 핵심 값 모두 있음 {complete}개')
-
-
-# DB part_specifications에 넣는 열 순서(db/011). id·created_at은 DB가 채운다
-LOAD_COLS = ('document_id', 'part_number', 'chunk_index', 'category', 'parameter_code', 'symbol', 'minimum_value',
-             'typical_value', 'maximum_value', 'text_value', 'source_value_text', 'source_unit', 'normalized_unit',
-             'test_condition', 'page_number', 'table_name', 'row_label', 'footnote_text')
-
-
-def num(v):
-    """SI 값(float)을 NUMERIC 글자로. 유효숫자 15자리로 적는다."""
-    # [왜] 환산한 float에는 이진 꼬리가 붙는다(200 µA → 0.00019999999999999998). 그대로 넣으면 '0.0002 이상' 조건에서 빠진다.
-    # 15자리는 float가 정확히 담는 자릿수이고 Postgres가 float8을 NUMERIC으로 바꿀 때도 15자리다. 데이터시트 값은 4자리 안팎이라 잃는 값이 없다
-    return None if v is None else format(v, '.15g')
-
-
-def load(specs_dir, dsn, docs=None):
-    """사양 표 폴더를 DB part_specifications에 문서 단위로 바꿔 넣는다. 반환: 바꾼 문서 수, DB에 없는 문서, 코드별 넣은 행 수."""
-    import psycopg
-    from backend.rag.pipeline.chunk import doc_key  # 'SS32 SERIES_Q2412.pdf' → source_documents.document_key
-    specs_dir = Path(specs_dir)
-    by_doc = defaultdict(list)  # PDF 파일 이름 → document_id를 뺀 행(LOAD_COLS[1:] 순서) 목록
-    for r in read_jsonl(specs_dir / 'part_specifications.jsonl'):
-        by_doc[r['doc']].append((r['part'], r['chunk']['idx'], r['family'], r['parameter_code'], r['symbol'],
-                                 num(r['minimum_value']), num(r['typical_value']), num(r['maximum_value']), r['text_value'],
-                                 r['source_value_text'], r['source_unit'], r['normalized_unit'], r['test_condition'],
-                                 r['page_number'], r['table_name'], r['row_label'], r['footnote_text']))
-    for p in read_jsonl(specs_dir / 'packages.jsonl'):
-        # [왜] 패키지는 숫자가 아니라 PACKAGE 코드 행의 text_value에 둔다. 문서 단위 목록이라 표는 없고, 이름이 처음 나온 청크 · 쪽을 단다
-        # [주의] 'where'가 없는 옛 packages.jsonl이면 청크 · 쪽 없이 넣는다
-        for name in p['packages']:
-            at = (p.get('where') or {}).get(name) or {}
-            by_doc[p['doc']].append((p['part'], at.get('idx'), p['family'], 'PACKAGE', None, None, None, None, name, name,
-                                     None, None, None, at.get('page'), None, None, None))
-        if p.get('aec'):  # [왜] 찾기 · 판정이 'AEC-Q101 적합' 요구를 근거 쪽과 함께 확인하게 문서가 밝힌 문장을 행으로 둔다(11-06 v3-14)
-            a = p['aec']
-            by_doc[p['doc']].append((p['part'], a['idx'], p['family'], 'AEC_Q101', None, None, None, None, a['text'], a['text'],
-                                     None, None, None, a['page'], None, None, None))
-    targets = list(docs) if docs else sorted(by_doc)
-    start = time.monotonic()
-    with psycopg.connect(dsn) as conn:  # with: 오류 없이 끝나면 커밋, 예외면 롤백한다(지우기와 넣기가 한 트랜잭션)
-        doc_id = dict(conn.execute('SELECT document_key, id FROM source_documents').fetchall())
-        found = {d: doc_id[doc_key(d)] for d in targets if doc_key(d) in doc_id}
-        missing = [d for d in targets if d not in found]  # [주의] DB에 문서가 없으면 FK를 못 걸어 건너뛴다(먼저 ingest로 문서를 넣는다)
-        conn.execute('DELETE FROM part_specifications WHERE document_id = ANY(%s)', (list(found.values()),))
-        counts = Counter()
-        with conn.cursor().copy(f'COPY part_specifications ({", ".join(LOAD_COLS)}) FROM STDIN') as cp:
-            for d, i in found.items():
-                for row in by_doc.get(d, []):  # 파일에 행이 없는 문서는 지우기만 한다(새 판에서 값이 다 빠진 경우)
-                    cp.write_row((i,) + row)
-                    counts[row[3]] += 1
-        total = conn.execute('SELECT count(*) FROM part_specifications').fetchone()[0]
-    out = {'docs': len(found), 'missing_docs': missing, 'rows_by_code': dict(counts.most_common())}
-    print(json.dumps({**out, 'missing_docs': len(missing), 'rows': sum(counts.values()), 'table_rows': total,
-                      'seconds': round(time.monotonic() - start, 2)}, ensure_ascii=False))
-    if missing:
-        print('DB에 없는 문서(건너뜀):', ', '.join(missing[:20]) + (f' 외 {len(missing) - 20}건' if len(missing) > 20 else ''))
-    return out
-
-
-def main(argv=None):
-    ap = argparse.ArgumentParser(description='부품 사양 표 만들기·대조표 표본')
-    sub = ap.add_subparsers(dest='cmd', required=True)
-    b = sub.add_parser('build', help='chunks.jsonl → part_specifications·review·packages·summary')
-    b.add_argument('chunks')
-    b.add_argument('out_dir')
-    s = sub.add_parser('sample', help='사람 대조표(markdown) 쓰기')
-    s.add_argument('out_dir')
-    s.add_argument('sheet')
-    s.add_argument('--n', type=int, default=50)
-    s.add_argument('--seed', type=int, default=0)
-    d = sub.add_parser('load', help='사양 표 폴더 → DB part_specifications(문서 단위로 바꿔 넣기)')
-    d.add_argument('out_dir')
-    d.add_argument('--dsn', required=True, help='Postgres 접속 주소. DATABASE_URL은 읽지 않는다')
-    d.add_argument('--docs', nargs='+', help='이 PDF 파일 이름의 문서만 다시 넣는다(기본: 폴더의 모든 문서)')
-    a = ap.parse_args(argv)
-    if a.cmd == 'build':
-        cmd_build(a.chunks, a.out_dir)
-    elif a.cmd == 'sample':
-        cmd_sample(a.out_dir, a.sheet, a.n, a.seed)
-    else:
-        load(a.out_dir, a.dsn, a.docs)
-
-
-if __name__ == '__main__':
-    main()
