@@ -6,6 +6,9 @@ React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 �
 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
 분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
 DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 토큰이 아니라 예약이다.
+삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
+탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
+분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
 """
 import argparse
 import os
@@ -22,11 +25,12 @@ from uuid import uuid4
 import psycopg
 from fastapi import HTTPException
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.store.base import PutOp
 from langgraph.store.postgres import PostgresStore
 from langgraph.types import Command
 from psycopg import sql
 from psycopg.conninfo import make_conninfo
-from psycopg.rows import dict_row
+from psycopg.rows import dict_row, tuple_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
@@ -57,6 +61,37 @@ def _token_budget_class():
             return super()._reserve(text, output_tokens=output_tokens, embedding=embedding)
 
     return TokenBudget
+
+
+def delete_analysis_threads(conn, user, ids=None):
+    """사용자의 분석 thread(ids가 없으면 전부)와 딸린 checkpoint · 메시지 · 승인 기록 · 분석 사건 · 회로를 conn의 트랜잭션에서 지운다.
+
+    프로젝트 삭제(ids = 그 프로젝트의 React 대화 UUID)와 탈퇴(ids 없음)가 쓴다. 지운 건수를 돌려주고, 분석 서비스 표가 없는 DB면 모두 0이다.
+    [주의] 사용자 조건(user_id)으로 고른 thread만 지운다. 호출자가 ids의 소유권을 따로 확인했어도 다른 사용자 행은 건드리지 않는다.
+    """
+    counts = {'analysis_threads': 0, 'analysis_circuits': 0, 'checkpoints': 0}
+    cur = conn.cursor(row_factory=tuple_row)  # [왜] 프로젝트 API 연결(튜플 행)과 이 서비스 연결(dict 행) 둘 다에서 같은 모양으로 읽는다
+    has_threads, has_checkpoints = cur.execute("SELECT to_regclass('sojafit_agent.threads') IS NOT NULL, "
+                                               "to_regclass('sojafit_agent.checkpoints') IS NOT NULL").fetchone()
+    if not has_threads:
+        return counts
+    owned, params = 'SELECT id FROM sojafit_agent.threads WHERE user_id=%s', (user,)
+    if ids is not None:
+        owned, params = owned + ' AND id = ANY(%s::uuid[])', (user, list(ids))
+    if has_checkpoints:
+        # [왜] LangGraph checkpoint 표 3개는 thread_id(글자)로만 묶이고 FK가 없어 thread보다 먼저 직접 지운다
+        for table in ('checkpoint_writes', 'checkpoint_blobs', 'checkpoints'):
+            deleted = cur.execute(sql.SQL('DELETE FROM sojafit_agent.{} WHERE thread_id IN (SELECT id::text FROM ({}) o)').format(
+                sql.Identifier(table), sql.SQL(owned)), params).rowcount
+        counts['checkpoints'] = deleted
+    # 메시지 · 승인 기록 · 분석 사건은 thread FK cascade로 함께 지워진다
+    counts['analysis_threads'] = cur.execute(sql.SQL('DELETE FROM sojafit_agent.threads WHERE id IN ({})').format(sql.SQL(owned)), params).rowcount
+    # 회로: 탈퇴면 사용자 회로 전부, 프로젝트 삭제면 같은 UUID 회로 중 남은 thread가 없는 것(React 대화 하나 = 회로 하나)
+    circuits = 'DELETE FROM sojafit_agent.circuits c WHERE c.user_id=%s'
+    if ids is not None:
+        circuits += ' AND c.id = ANY(%s::uuid[]) AND NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t WHERE t.circuit_id=c.id)'
+    counts['analysis_circuits'] = cur.execute(circuits, params).rowcount
+    return counts
 
 
 def _vector_schema(conn):
@@ -150,9 +185,56 @@ class Conversations:
             raise HTTPException(429, SERVICE_TOKENS_FULL)
 
     def admission(self, user):
-        """React run · 재개가 스트림을 열기 전에 부른다. 하루 토큰 상한이 찼으면 공통 오류 429로 거절한다."""
+        """React run · 재개가 스트림을 열기 전에 부른다. 탈퇴 중이면 409, 하루 토큰 상한이 찼으면 429(공통 오류)로 거절한다."""
         with self.connection() as conn:
+            self._hold_account(conn, user)  # 확인만 한다. 연결을 닫으면 풀리고, 실행은 locked()가 다시 잡는다
             self._token_room(conn, user)
+
+    @staticmethod
+    def _hold_account(conn, user):
+        """이 연결이 닫힐 때까지 계정 공유 잠금을 잡는다. 탈퇴(같은 키의 배타 잠금)가 진행 중이면 409."""
+        # [왜] 분석 · 기록 쓰기끼리는 서로 막지 않고(공유), 탈퇴와만 서로 막는다(배타). DB 세션 잠금이라 프로세스가 죽어도 연결과 함께 풀린다
+        if not conn.execute('SELECT pg_try_advisory_lock_shared(hashtextextended(%s,0)) AS ok', (f'account:{user}',)).fetchone()['ok']:
+            raise HTTPException(409, '계정 삭제를 처리하는 중입니다.')
+
+    @contextmanager
+    def account_writer(self, user):
+        """분석 밖의 기록 쓰기(내 설정 Store)를 계정 공유 잠금 안에서 한다. 탈퇴 중이면 409."""
+        with self.connection() as conn:
+            self._hold_account(conn, user)
+            yield
+
+    @contextmanager
+    def account_deletion(self, user):
+        """탈퇴: 계정 배타 잠금을 잡고 분석 기록 → Store namespace 순서로 지운 건수를 넘긴다. 호출자는 with 안에서 계정을 마지막에 지운다.
+
+        진행 중인 분석 · 기록 쓰기(공유 잠금)가 있으면 409. 잠금은 with가 끝나 연결을 닫을 때 풀린다.
+        [주의] 계정을 먼저 지우면 기록 삭제가 실패했을 때 다시 요청할 방법이 없다. 중간에 실패해도 계정이 남아 있어
+        다시 요청하면 남은 것부터 이어서 지운다(이미 지운 것은 0건으로 센다).
+        """
+        with self.connection() as conn:
+            if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (f'account:{user}',)).fetchone()['ok']:
+                raise HTTPException(409, '진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.')
+            with conn.transaction():
+                counts = delete_analysis_threads(conn, user)
+            counts['memory_items'] = self._delete_store(user)
+            yield counts
+
+    def _delete_store(self, user):
+        """사용자의 Store 항목을 namespace 접두사로 찾아 모두 지우고 지운 수를 돌려준다."""
+        # [왜] 아는 key만 지우면 나중에 생길 namespace가 남는다. 첫 칸이 사용자인 `(user, ...)` 전부와 옛 승인 사본 `("memories", user)`를 지운다
+        # [주의] 접두사 검색은 칸 단위다(`("1",)`은 `("10", ...)`과 맞지 않음, 시험이 확인). 색인 벡터 행은 Store 표 FK cascade로 함께 지워진다
+        deleted = 0
+        for prefix in ((str(user),), namespace(str(user))):
+            for _ in range(100):  # [왜] 반복 상한(한 번에 100개, 1만 개). 넘으면 503이고 다시 요청하면 이어서 지운다
+                items = self.store.search(prefix, limit=100)
+                if not items:
+                    break
+                self.store.batch([PutOp(item.namespace, item.key, None) for item in items])
+                deleted += len(items)
+            else:
+                raise HTTPException(503, '계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.')
+        return deleted
 
     def _budget(self, user):
         budget, daily, interval = self._budget_settings()
@@ -224,6 +306,7 @@ class Conversations:
     def locked(self, user, thread):
         with self.connection() as conn:
             row = self._owned(conn, user, thread)
+            self._hold_account(conn, user)  # [왜] 실행이 끝날 때까지 탈퇴가 끼어들어 지운 기록을 다시 만들지 않게 한다
             if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (str(thread),)).fetchone()['ok']:
                 raise HTTPException(409, '분석을 처리 중입니다. 잠시 후 다시 시도하세요.')
             try:
@@ -243,6 +326,7 @@ class Conversations:
             if connections != parse_netlist(configuration()['netlist']):
                 raise HTTPException(422, '합성 데모 회로만 업로드할 수 있습니다.')
         with self.connection() as conn:
+            self._hold_account(conn, user)
             if conn.execute('SELECT count(*) AS n FROM circuits WHERE user_id=%s', (user,)).fetchone()['n'] >= 100:
                 raise HTTPException(409, '회로 저장 한도(100건)에 도달했습니다.')
             circuit = str(uuid4())
@@ -257,6 +341,7 @@ class Conversations:
 
     def create(self, user, circuit, target):
         with self.connection() as conn:
+            self._hold_account(conn, user)
             row = conn.execute('SELECT connections FROM circuits WHERE id=%s AND user_id=%s', (circuit, user)).fetchone()
             if not row:
                 raise HTTPException(404, '회로를 찾을 수 없습니다.')
@@ -277,6 +362,7 @@ class Conversations:
             if connections != parse_netlist(configuration()['netlist']):
                 raise HTTPException(422, '합성 데모 회로만 분석할 수 있습니다.')
         with self.connection() as conn:
+            self._hold_account(conn, user)  # 탈퇴 중이면 409(지운 분석 기록을 다시 만들지 않게)
             # [왜] React 대화 하나 = 분석 회로 하나 + thread 하나라 회로 id도 thread UUID를 쓴다. 동시 첫 실행에도 행이 하나만 생긴다
             # [주의] React 업로드는 원본을 저장하지 않으므로 netlist 칸은 빈 글자로 둔다
             with conn.transaction():

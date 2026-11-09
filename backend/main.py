@@ -1,6 +1,6 @@
 """SojaFit FastAPI 진입점.
 
-역할: 인증·가입·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
+역할: 인증·가입·탈퇴(`DELETE /api/me`)·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
@@ -365,6 +365,22 @@ def logout(request: Request, response: Response):
     auth.logout(request)
     response.delete_cookie(auth.COOKIE, path="/")
     return {"ok": True}
+
+
+@app.delete("/api/me")
+def delete_me(request: Request, response: Response, user: tuple[int, str] = Depends(auth.current_user)):
+    """탈퇴: 로그인 사용자의 기록을 먼저, 계정을 마지막에 지우고 지운 건수를 돌려준다(SPEC 8.5, 개인정보 보호법 37조 동의 철회)."""
+    # [주의] 403 Origin 불일치, 409 관리자 · 진행 중 분석, 503 분석 저장소 없음 · 일부만 지움(다시 요청하면 남은 것부터 이어서 지움)
+    auth.check_origin(request)
+    if user[1] != "user":
+        raise HTTPException(status_code=409, detail="관리자 계정은 이 기능으로 삭제할 수 없습니다.")
+    try:
+        with conversation_service(request).account_deletion(user[0]) as deleted:
+            deleted.update(auth.delete_account(user[0]))  # 계정은 마지막: 앞에서 실패하면 계정이 남아 다시 요청할 수 있다
+    except (psycopg.Error, PoolTimeout, OSError):
+        raise HTTPException(status_code=503, detail="계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.") from None
+    response.delete_cookie(auth.COOKIE, path="/")
+    return {"deleted": deleted}
 
 
 class AccountState(BaseModel):

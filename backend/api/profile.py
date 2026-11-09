@@ -1,7 +1,7 @@
 """내 설정(사용자 사실 기억) HTTP 경계: `GET · PATCH · DELETE /api/me/memory`.
 
 - 로그인 사용자만 쓴다. 사용자 id는 세션에서만 오고, 본문의 사용자 id · 모르는 칸은 공통 422다.
-- 바꾸는 요청(PATCH · DELETE)은 다른 상태 변경 경로처럼 Origin을 확인한다(다르면 403).
+- 바꾸는 요청(PATCH · DELETE)은 다른 상태 변경 경로처럼 Origin을 확인한다(다르면 403). PATCH는 탈퇴가 진행 중이면 409다.
 - 기억은 분석 저장소(`THREADS_ENABLED=1`의 `app.state.conversations.profile`)에 있다. 없으면 공통 503.
 하지 않는 일: 칸 검사 · 문장 만들기 · Store 쓰기 · 의미 검색(`backend/conversations/profile.py`), 대화에서 사실 뽑기.
 출처: SPEC.md 8.5절, docs/specs/user-thread-memory.md "사용자 사실 기억".
@@ -47,9 +47,11 @@ def read_memory(q: str | None = Query(default=None, min_length=1, max_length=500
 
 
 @router.patch('/memory', dependencies=[Depends(auth.check_origin)])
-def update_memory(body: ProfileUpdate, user_id: int = Depends(auth.current_user_id), memory=Depends(profile_memory)):
-    """보낸 칸만 덮어쓰고(version 올림) 바뀐 뒤 내 사실 목록을 돌려준다."""
-    return memory.update(user_id, body.model_dump(exclude_none=True))
+def update_memory(body: ProfileUpdate, request: Request, user_id: int = Depends(auth.current_user_id), memory=Depends(profile_memory)):
+    """보낸 칸만 덮어쓰고(version 올림) 바뀐 뒤 내 사실 목록을 돌려준다. 탈퇴 중이면 409."""
+    # [왜] 탈퇴가 Store를 지운 뒤 이 쓰기가 끼어들면 지운 계정의 사실이 남는다. 계정 공유 잠금 안에서 쓴다
+    with request.app.state.conversations.account_writer(user_id):
+        return memory.update(user_id, body.model_dump(exclude_none=True))
 
 
 @router.delete('/memory', status_code=204, dependencies=[Depends(auth.check_origin)])

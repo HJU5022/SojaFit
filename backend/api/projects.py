@@ -1,4 +1,4 @@
-"""기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API."""
+"""기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -143,9 +143,12 @@ def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(
 
 
 def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
-    # run 생성·재개와 같은 project 행을 잠그고 업무 행을 한 트랜잭션에서 지운다.
-    # [주의] 대화의 체크포인트·승인·Store 기억은 같은 UUID의 사용자 분석 thread(sojafit_agent)에 있고 지우지 않는다.
-    # checkpoint_delete는 같은 트랜잭션에서 thread id로 더 지울 일이 있을 때 넘기는 자리다(잠금·rollback 시험이 쓴다)
+    """프로젝트와 딸린 것을 바로 지운다: public 업무 행(FK cascade)과 같은 UUID의 분석 thread · checkpoint · 메시지 · 승인 기록 · 분석 사건."""
+    # run 생성·재개와 같은 project 행을 잠그고 한 트랜잭션에서 지운다. 분석 기록 삭제가 실패하면 프로젝트도 남는다(11-09 결정, SPEC 8.5)
+    # checkpoint_delete(conn, thread_ids)는 시험이 지우는 함수를 바꿔 끼우는 자리다. 기본은 memory_service.delete_analysis_threads
+    if checkpoint_delete is None:
+        from backend.conversations.memory_service import delete_analysis_threads
+        checkpoint_delete = lambda conn, ids: delete_analysis_threads(conn, user_id, ids)
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound

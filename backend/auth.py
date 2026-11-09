@@ -1,4 +1,4 @@
-"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 자기 가입, 관리자 계정 관리).
+"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 자기 가입, 탈퇴의 계정 행 삭제, 관리자 계정 관리).
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
@@ -455,6 +455,32 @@ def delete_provisioned_user(user_id: int) -> bool:
         conn.execute("DELETE FROM users WHERE id=%s", (user_id,))  # auth_sessions uses ON DELETE CASCADE
         conn.execute("DELETE FROM auth_login_attempts WHERE login_hash=%s", (login_hash,))
     return True
+
+
+def delete_account(user_id: int) -> dict:
+    """탈퇴의 마지막 단계: 일반 계정 행을 지우고 지운 건수를 돌려준다(backend/main.py `DELETE /api/me`가 분석 기록 · 기억을 지운 뒤 부른다).
+
+    계정 행을 지우면 세션 · 프로젝트(회로 · 대화 · run · 메시지) · 승인 · 견적 · 승인 사례 · 분석 사용량이 FK cascade로 함께 지워진다.
+    그 이메일의 로그인 실패 기록도 지운다. 계정이 이미 없으면 모두 0이다.
+    Raises:
+        HTTPException: 409 관리자 계정(운영자 CLI `--delete-user-id`도 관리자는 지우지 않는다).
+    """
+    with connection() as conn:
+        account = conn.execute("SELECT login_id FROM users WHERE id=%s", (user_id,)).fetchone()
+        if not account:
+            return {"projects": 0, "quotes": 0, "account": 0}
+        login_hash = hashlib.sha256(account[0].strip().lower().encode()).hexdigest()
+        # [왜] authenticate()와 같은 순서(실패 행 → 사용자 행)로 잠가 같은 이메일의 로그인과 교착하지 않는다
+        conn.execute("INSERT INTO auth_login_attempts(login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (login_hash,))
+        conn.execute("SELECT login_hash FROM auth_login_attempts WHERE login_hash=%s FOR UPDATE", (login_hash,))
+        current = conn.execute("SELECT role FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
+        if current and current[0] != "user":
+            raise HTTPException(status_code=409, detail="관리자 계정은 이 기능으로 삭제할 수 없습니다.")
+        counts = {"projects": conn.execute("SELECT count(*) FROM projects WHERE user_id=%s", (user_id,)).fetchone()[0],
+                  "quotes": conn.execute("SELECT count(*) FROM quotes WHERE user_id=%s", (user_id,)).fetchone()[0],
+                  "account": conn.execute("DELETE FROM users WHERE id=%s", (user_id,)).rowcount}
+        conn.execute("DELETE FROM auth_login_attempts WHERE login_hash=%s", (login_hash,))
+    return counts
 
 
 def provision() -> None:

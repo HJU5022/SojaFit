@@ -117,7 +117,7 @@ SojaFit (proj3-b)
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
-│   ├── main.py             <- FastAPI 진입점: /health, 로그인·Google 관리자 로그인, me·로그아웃, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
+│   ├── main.py             <- FastAPI 진입점: /health, 로그인·Google 관리자 로그인, me·로그아웃·탈퇴, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
@@ -127,7 +127,7 @@ SojaFit (proj3-b)
 │   │   ├── conversations.py <- 소유 대화·실행·SSE API. run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
-│   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
+│   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -137,7 +137,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고와 준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·준비 명령. React 대화도 같은 UUID thread로 실행
 │   │   ├── profile.py      <- 사용자 사실 3칸 장기 기억(Store): 칸 검사·틀 문장·덮어쓰기·지우기·Voyage 의미 검색
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
@@ -413,6 +413,7 @@ SojaFit (proj3-b)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
+│   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음

@@ -4,6 +4,7 @@
 DB 시험은 격리 TEST_THREAD_DATABASE_URL이 있을 때만, 색인 시험은 그 DB에 pgvector(`vector` 확장)가 있을 때만 돈다.
 """
 import os
+from contextlib import nullcontext
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -126,7 +127,7 @@ def test_embedding_index_needs_voyage_key_and_live_mode(monkeypatch):
 def client(memory, monkeypatch):
     """로그인 사용자 7 · 가짜 분석 서비스(사실 기억만)로 TestClient를 연다."""
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
-    app.state.conversations = SimpleNamespace(profile=memory)
+    app.state.conversations = SimpleNamespace(profile=memory, account_writer=lambda user: nullcontext())
     app.dependency_overrides[auth.current_user_id] = lambda: 7
     yield TestClient(app, raise_server_exceptions=False)
     app.dependency_overrides.clear()

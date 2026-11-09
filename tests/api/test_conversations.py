@@ -216,17 +216,19 @@ def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
         assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
 
 
-def test_project_delete_with_threads_needs_no_checkpoint_tables(monkeypatch):
-    executed = []
+def test_project_delete_with_threads_deletes_analysis_records_before_project(monkeypatch):
+    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread · 회로를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
+    thread, executed = str(uuid4()), []
     class Conn:
         def __enter__(self): return self
         def __exit__(self, *args): pass
-        def execute(self, query, params):
-            assert 'checkpoint' not in query
-            executed.append(query.split()[0])
-            rows = {'SELECT id FROM projects': [(1,)], 'SELECT 1 FROM runs': [], 'SELECT id FROM threads': [(str(uuid4()),)]}
-            found = next((v for k, v in rows.items() if query.startswith(k)), [])
-            return SimpleNamespace(fetchone=lambda: found[0] if found else None, fetchall=lambda: found)
+        def cursor(self, row_factory=None): return self
+        def execute(self, query, params=()):
+            text = query if isinstance(query, str) else query.as_string(None)
+            executed.append((text, params))
+            rows = {'SELECT id FROM projects': [(1,)], 'SELECT 1 FROM runs': [], 'SELECT id FROM threads': [(thread,)], 'SELECT to_regclass': [(True, True)]}
+            found = next((v for k, v in rows.items() if text.startswith(k)), [])
+            return SimpleNamespace(fetchone=lambda: found[0] if found else None, fetchall=lambda: found, rowcount=1)
     monkeypatch.setattr(auth, 'connection', lambda: Conn())
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
     app.dependency_overrides[auth.current_user_id] = lambda: 1
@@ -236,7 +238,10 @@ def test_project_delete_with_threads_needs_no_checkpoint_tables(monkeypatch):
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 204
-    assert executed[-1] == 'DELETE'
+    deletes = [(text, params) for text, params in executed if text.startswith('DELETE')]
+    assert [text.split()[2] for text, _ in deletes] == ['sojafit_agent."checkpoint_writes"', 'sojafit_agent."checkpoint_blobs"', 'sojafit_agent."checkpoints"',
+                                                       'sojafit_agent.threads', 'sojafit_agent.circuits', 'projects']
+    assert all(params[:2] == (1, [thread]) for _, params in deletes[:-1])  # 사용자 조건과 그 프로젝트의 대화 UUID만
 
 
 def test_disconnected_stream_keeps_running_and_saves_terminal():

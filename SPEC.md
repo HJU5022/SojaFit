@@ -278,6 +278,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 저장: 칸 하나가 Store 항목 하나입니다. namespace는 `(str(user_id), "profile")`(첫 칸이 격리 단위, namespace는 접근 권한 검사가 아님), key는 칸 이름, 값은 `{kind, value, text, version, updated_at, source: "user_settings"}`입니다. `text`는 코드가 정한 틀로 만든 한국어 문장(예: "이 사용자는 SMD 실장을 선호한다.")이고 LLM이 쓴 글이 아닙니다. 고치면 같은 key를 덮어쓰고 `version`을 1 올리며 다시 임베딩합니다.
 - 의미 검색: `PostgresStore` 색인을 `text` 칸에 켭니다. 임베딩은 `llm.voyage_embed`(voyage-4-large, 1024차원)를 감싸 저장 문장은 `document`, 질문은 `query` 입력 종류로 보냅니다. 근사 색인 없이 정확 검색(flat)입니다. 색인 표(`store_vectors`·`vector_migrations`)는 준비 명령(`python -m backend.conversations.memory_service --setup`)이 `vector` 확장이 설치된 DB에서만 `sojafit_agent`에 만듭니다.
 - 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
+- 삭제(11-09 결정, 상세와 개인정보 보호법 조항 대응은 [작업서](docs/specs/user-thread-memory.md) "보관 · 삭제"): 사용자가 지우면 숨김이 아니라 바로 지웁니다. 프로젝트 삭제(`DELETE /api/projects/{id}`)는 React 업무 행과 같은 UUID의 분석 thread·checkpoint·메시지·승인 기록·분석 사건을 한 트랜잭션에서 지웁니다. 탈퇴(`DELETE /api/me`, 같은 출처, 일반 계정만, 관리자 409)는 분석 기록 → Store namespace `(user_id, ...)` 전부(옛 `("memories", user_id)` 포함) → 계정(세션·프로젝트·견적은 FK cascade) 순서로 지우고 지운 건수를 돌려줍니다. 중간에 실패하면 계정이 남아 다시 요청하면 이어서 지웁니다. 계정 단위 잠금으로 그 사용자의 분석이 도는 동안 탈퇴는 409, 탈퇴가 도는 동안 그 사용자의 새 분석·재개·설정 저장은 409입니다.
 - 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(분석 thread 질문·재개 응답, React run 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다. 모델 프롬프트·판정 입력에는 넣지 않습니다(`backend/multi_agent/` 병합 뒤 연결).
 - 승인 기록: 승인 원본(`sojafit_agent.approvals`)과 `POST /api/threads/{id}/approve`·`GET /api/memories`·`POST /api/memories/{thread}/{version}/control`은 승인 기록으로 남습니다. 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
 - 한계:
@@ -301,6 +302,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 요청 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
 - GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
 - GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 UTC 하루 200,000·서비스 전체 하루 2,000,000에서 외부 호출 전에 429(`TOO_MANY_REQUESTS`)로 거부한다. 토큰은 공급자 청구량이 아니라 USD 예약과 같은 위쪽 경계(입력 바이트 + 여유 8192 + 출력 상한)의 예약 합이고(임베딩 호출 포함), 기존 USD 한도는 유지한다(11-09 결정, `db/022_token_limits.sql`).
+- GIVEN 로그인한 일반 사용자, WHEN 같은 출처에서 `DELETE /api/me`, THEN 그 사용자의 프로젝트·대화·분석 기록·checkpoint·Store·세션·계정을 지우고 지운 건수를 돌려준다. 다른 사용자 행은 남고, 관리자 계정과 그 사용자의 분석이 도는 중이면 409다.
 - GIVEN 데모 외 환경에서 AUTH_SECRET이 없거나 32바이트 미만이면, WHEN 서버를 시작하면, THEN 시작을 거부한다. 키가 없는 데모 모드는 기존 세션 방식으로 실행한다.
 - GIVEN 잘못된 정보, WHEN 로그인하면, THEN `error.code/message/request_id` 공통 오류와 같은 값의 `X-Request-ID`를 반환하고 입력값을 노출하지 않는다.
 - GIVEN 15분 집계 구간에 로그인 5회 실패, WHEN 다시 로그인하면, THEN 마지막 실패 시점부터 15분 동안 거부한다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
