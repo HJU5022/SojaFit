@@ -9,7 +9,7 @@
 ## 실행과 주의
 - 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 만들던 `011_part_specifications.sql`을 지웠고, 운영 DB의 표는 11-09에 지웠다. 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다(이 폴더에 `DROP` SQL은 두지 않았다). 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣은 기록이 있다(`docs/worklog/sth.md`).
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`·`004`·`011`은 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 업무 표 초안으로 `manual/004_create_business_tables.sql.draft`에 있으며, `011`(부품 사양 표)은 11-09에 지웠습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `013_projects.sql` → `014_conversations.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `015_approvals_quotes.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `021_auth_ip_limits.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
 - Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행한다. 013~017을 멱등 적용하고 PostgresSaver/PostgresStore의 내부 표를 준비한 뒤 API가 시작된다. 이 서비스는 Compose 로컬 `db`에 연결하며 앱 일반 기동에는 DDL을 넣지 않는다. 기존 DB에 명령을 수동 실행할 때는 대상·권한·적용 이력을 먼저 확인한다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
 - 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행되며, 기존 DB에는 환경변수를 준비한 뒤 검토된 SQL을 별도로 적용합니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
@@ -18,7 +18,7 @@
 ## 파일
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
 - `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
-- `021_auth_ip_limits.sql` — 클라이언트 IP 한도 표 2개(IP 원문 없이 키 해시만). `auth_signup_attempts`는 IP별 UTC 하루 가입 요청 수, `auth_login_ip_attempts`는 IP별 15분 로그인 실패 수·잠금(열은 `auth_login_attempts`와 같음). RLS를 켜고 공개 역할 권한을 회수한다. 다시 실행해도 아무것도 바꾸지 않는다. 018~020은 다른 파일 번호 정리용으로 비워 둔다. 기존 DB에는 자동 적용되지 않는다. [주의] 이 표가 없으면 비밀번호 로그인과 가입이 모두 503이 되므로, 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다
+- `021_auth_ip_limits.sql` — 클라이언트 IP 한도 표 2개(IP 원문 없이 키 해시만). `auth_signup_attempts`는 IP별 UTC 하루 가입 요청 수, `auth_login_ip_attempts`는 IP별 15분 로그인 실패 수·잠금(열은 `auth_login_attempts`와 같음). RLS를 켜고 공개 역할 권한을 회수한다. 다시 실행해도 아무것도 바꾸지 않는다. 기존 DB에는 자동 적용되지 않는다. [주의] 이 표가 없으면 비밀번호 로그인과 가입이 모두 503이 되므로, 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다
   - 11-09 팀 Supabase 적용: 이 파일을 한 트랜잭션으로 직접 실행했다(Supabase 마이그레이션 기록 `supabase_migrations`에는 남지 않음). 적용 뒤 두 표 0행 · RLS 켜짐 · `anon` · `authenticated`의 SELECT · INSERT 권한 없음, `users` 5행 그대로를 확인했다
 - `015_analysis_limits.sql` — 비공개 사용자별 UTC 일일 예약액·빈도 제한 표. 실패도 예약액은 보존하며 실제 청구액과 구분
 - `014_thread_inputs.sql` — threads.input_record nullable JSONB 추가. 기존 원본·행을 수정하지 않고 setup 명령에서 013 뒤 적용
@@ -33,9 +33,9 @@
 - `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용하며, 다시 실행해도 있는 행은 그대로
 - `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
 - `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 분류 이름(예: `schottky-rectifier`, `pipeline/specs.py`의 `family`)이고 `ingest.py`가 문서를 넣을 때 채운다. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 DB에는 따로 적용하고 기존 행은 청크 파일에서 채운다.
-- `014_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트는 같은 UUID의 사용자 분석 thread로 `sojafit_agent` 스키마에 둔다(`013_agent_memory.sql`과 setup CLI). 기존·공유 DB에는 자동 적용하지 않는다.
-- `015_approvals_quotes.sql` — 사람 승인·가격 없는 견적·승인 사례, 소유자 인덱스·삭제 cascade·공개 권한 제한과 중첩 가격·재고 키 거절. 기존·공유 DB에는 자동 적용하지 않는다.
-- `013_projects.sql` — 사용자 소유 프로젝트와 정규화 회로 1:1 저장. 사용자·프로젝트 삭제 cascade, 소유자별 목록 인덱스, 명시적 CHECK, 공개 역할 및 sequence 권한 회수, RLS(공개 정책 없음). 새 빈 볼륨에서 012 다음 실행하며 기존 볼륨·공유 DB에는 자동 적용하지 않는다. `manual/004_create_business_tables.sql.draft`의 옛 `circuits`와 충돌하므로 초안을 그대로 적용하지 않는다. 현재 서버는 데모 생성만 제공한다.
+- `019_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트는 같은 UUID의 사용자 분석 thread로 `sojafit_agent` 스키마에 둔다(`013_agent_memory.sql`과 setup CLI). 기존·공유 DB에는 자동 적용하지 않는다.
+- `020_approvals_quotes.sql` — 사람 승인·가격 없는 견적·승인 사례, 소유자 인덱스·삭제 cascade·공개 권한 제한과 중첩 가격·재고 키 거절. 기존·공유 DB에는 자동 적용하지 않는다.
+- `018_projects.sql` — 사용자 소유 프로젝트와 정규화 회로 1:1 저장. 사용자·프로젝트 삭제 cascade, 소유자별 목록 인덱스, 명시적 CHECK, 공개 역할 및 sequence 권한 회수, RLS(공개 정책 없음). 새 빈 볼륨에서 017 다음 실행하며 기존 볼륨·공유 DB에는 자동 적용하지 않는다. `manual/004_create_business_tables.sql.draft`의 옛 `circuits`와 충돌하므로 초안을 그대로 적용하지 않는다. 현재 서버는 데모 생성만 제공한다.
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
 

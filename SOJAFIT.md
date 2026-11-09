@@ -255,9 +255,9 @@ SojaFit (proj3-b)
 │   ├── 016_memory_controls.sql <- 승인 사례 정정 메모·철회·삭제 상태
 │   ├── 017_analysis_events.sql <- 내용 없는 분석 요청·단계 지연 기록
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
-│   ├── 013_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
-│   ├── 014_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
-│   ├── 015_approvals_quotes.sql <- 승인·가격 없는 견적·사례 및 재귀 금지 키 제약
+│   ├── 018_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
+│   ├── 019_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
+│   ├── 020_approvals_quotes.sql <- 승인·가격 없는 견적·사례 및 재귀 금지 키 제약
 │   ├── 021_auth_ip_limits.sql <- 클라이언트 IP 해시별 하루 가입 수·15분 로그인 실패 잠금(RLS·공개 권한 제한)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명

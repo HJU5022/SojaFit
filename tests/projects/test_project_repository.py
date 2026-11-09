@@ -22,7 +22,7 @@ def storage(monkeypatch):
         monkeypatch.setattr(auth, "connection", connect)
         try:
             with connect() as conn:
-                for name in ("003_auth.sql", "005_auth_attempt_window.sql", "006_user_roles.sql", "013_projects.sql"):
+                for name in ("003_auth.sql", "005_auth_attempt_window.sql", "006_user_roles.sql", "018_projects.sql"):
                     conn.execute(Path("db", name).read_text(encoding="utf-8-sig"))
                 users = [row[0] for row in conn.execute(
                     "INSERT INTO users (login_id, password_hash, role) VALUES "

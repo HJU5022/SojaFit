@@ -2,7 +2,7 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/013_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `circuits`는 현재 013과 호환되지 않으므로 그대로 적용하면 안 됩니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/018_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `circuits`는 현재 018과 호환되지 않으므로 그대로 적용하면 안 됩니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
 
 열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
@@ -73,8 +73,8 @@
 | 구분 | 논리명 | 물리명 | 역할 | 상태 |
 |---|---|---|---|---|
 | 사용자 | 사용자 | `users` | 로그인 사용자와 승인자를 식별 | 확정 |
-| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 013 구현 |
-| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 013 구현 |
+| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 018 구현 |
+| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 018 구현 |
 | 분석 | 분석 실행 | `analysis_runs` | 특정 회로 부품에 대한 한 번의 대체 분석 저장 | 확정 |
 | 부품 | 부품 | `parts` | 원본 부품과 후보 부품의 기본정보 저장 | 확정 |
 | 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 버림(2026-11-09, ADR 0016) |
@@ -106,9 +106,9 @@
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 생성 시각 | 확정 |
 | `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 마지막 수정 시각 | 가정 |
 
-### 5.2 사용자 프로젝트와 정규화 회로 — 013 현재 스키마
+### 5.2 사용자 프로젝트와 정규화 회로 — 018 현재 스키마
 
-정본은 `db/013_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 현재 서비스에 적용하지 않습니다. 이하 분석·견적 표는 여전히 미적용 초안이며 후속 구현에서 프로젝트 관계에 맞춰 검토합니다.
+정본은 `db/018_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 현재 서비스에 적용하지 않습니다. 이하 분석·견적 표는 여전히 미적용 초안이며 후속 구현에서 프로젝트 관계에 맞춰 검토합니다.
 
 | 표 | 컬럼 | 자료형·제약 | 의미 |
 |---|---|---|---|
@@ -512,10 +512,10 @@ PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표�
 4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`008_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/schema/erd.md`로 옮기고 이 문서를 지웁니다.
 
-## 대화 저장 (014)
+## 대화 저장 (019)
 
-`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/014_conversations.sql`이다.
+`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/019_conversations.sql`이다.
 
-## 승인·견적·사례 저장 (015)
+## 승인·견적·사례 저장 (020)
 
-`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/015_approvals_quotes.sql`이다.
+`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/020_approvals_quotes.sql`이다.

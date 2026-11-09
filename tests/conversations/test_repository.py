@@ -20,7 +20,7 @@ def storage(monkeypatch):
         monkeypatch.setattr(auth, 'connection', connect)
         try:
             with connect() as conn:
-                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '013_projects.sql', '014_conversations.sql'):
+                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '018_projects.sql', '019_conversations.sql'):
                     conn.execute(Path('db', name).read_text(encoding='utf-8-sig'))
                 users = [r[0] for r in conn.execute("INSERT INTO users(login_id,password_hash,role) VALUES ('owner@test','fake','user'),('other@test','fake','user') RETURNING id")]
                 project = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'test','upload') RETURNING id", (users[0],)).fetchone()[0]
