@@ -1,7 +1,7 @@
 """카드(표 행 청크)를 읽어 숫자 조건에 맞는 부품 찾기: 사양 표(part_specifications) 없이 `spec_lookup.find_candidates`와 같은 계약.
 
 - 역할: `make_find(...)`가 돌려주는 find(conditions, category, package, limit, original_packages, original_category)는
-  조건으로 검색 문장 하나를 만들어 검색하고(retrieve 1번), 앞 문서 n_docs개의 표 행 카드를 읽어(card_read.read_values, LLM 1번)
+  조건으로 검색 문장 하나를 만들어 검색하고(retrieve 1번), 앞 문서 n_docs개의 표 행 카드를 읽어(card_read.read_values: 코드가 먼저, 못 읽은 카드만 LLM)
   사양 행을 얻은 뒤 find_candidates와 같은 규칙으로 거르고(모든 조건을 행 하나 이상이 채움) 줄 세운다
   (원래 부품의 패키지 → 원래 부품의 분류 → 기준에 가까운 순 → 품번 순). 반환 모양도 같다: [{'part', 'category', 'packages', 'matches'}].
   `default_find()`는 실제 검색 · DB(DATABASE_URL) · 카드 읽기 · node_chat을 묶는다. 테스트는 make_find에 가짜를 넘긴다.
@@ -62,7 +62,7 @@ def search_sentence(conditions, category=None, package=None):
 
 
 def mentions(text, codes):
-    """카드 글이 codes 중 하나의 기호나 설명 낱말을 담는지(LLM에 넘길 카드를 줄이는 거친 거르기, 값은 보지 않는다)."""
+    """카드 글이 codes 중 하나의 기호나 설명 낱말을 담는지(읽을 카드를 줄이는 거친 거르기, 값은 보지 않는다)."""
     # [주의] 시험 조건의 기호(VF 행의 'IF = 1A')도 걸린다. 넘치게 넘기는 쪽이라 괜찮다(빠뜨리면 못 찾는다)
     symbols = re.findall(r'[A-Z][A-Z0-9()]*', text.upper())
     return any(SYMS.get(s) in codes for s in symbols) or any(code in codes and p.search(text) for p, code in KEYWORDS)
@@ -135,7 +135,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
     memo = {}  # (조건, 분류, 패키지) → (rows, keys, docs, meta)
 
     def gather(conditions, category, package):
-        """검색 → 문서 고르기 → 카드 적재 → 카드 읽기(LLM 1번). 같은 (조건, 분류, 패키지)는 한 번만 읽는다."""
+        """검색 → 문서 고르기 → 카드 적재 → 카드 읽기(코드가 먼저, 못 읽은 카드만 LLM). 같은 (조건, 분류, 패키지)는 한 번만 읽는다."""
         # [왜] judge.py는 순서용 인자(original_*)만 바꿔 같은 조건으로 find를 두 번 부른다. 순서는 아래에서 다시 매기므로 읽기를 다시 쓴다
         memo_key = json.dumps([conditions, category, package], sort_keys=True, default=str)
         if memo_key in memo:
@@ -314,7 +314,7 @@ def overview_lines(category):
 
 
 def default_find(n_docs=10):
-    """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 LLM 2번(문서 고르기 + 카드 읽기), 없으면 검색 1번 + LLM 1번."""
+    """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 LLM 문서 고르기 1번, 없으면 검색 1번. 카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만."""
     from backend.rag.card_read import read_values
     from backend.rag.retrieve import retrieve
     from backend.services.llm import node_chat

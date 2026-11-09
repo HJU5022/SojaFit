@@ -1,4 +1,4 @@
-"""데이터시트 표 행 청크를 부품 사양 표(part_specifications) 행으로 바꾸는 오프라인 도구(서버가 import하지 않는다).
+"""데이터시트 표 행 청크를 부품 사양 표(part_specifications) 행으로 바꾸는 오프라인 도구(서버는 규칙 상수와 카드 한 장 읽기 `read_card`만 쓴다).
 
 - 역할: chunks.jsonl의 표지 청크(품번 목록)와 표 행 청크("머리 경로: 값")를 읽어 품번마다 파라미터 코드 17종
   (5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD)의 값을 SI 단위로 뽑는다. 값 하나는 원문 칸 하나에서 나오고
@@ -815,6 +815,20 @@ class Doc:
         if code in SLOT_REQUIRED:
             return None
         return 'typical_value' if code in TYPICAL_BY_DEFAULT else 'maximum_value'
+
+
+def read_card(file, parts, card):
+    """카드 한 장(card_read 모양: chunk_id · page · table · row · content) → (후보 행, 검토 표시, 행 코드). 표를 만들거나 저장하지 않는다.
+
+    행 코드: 파라미터 행이면 그 코드, 품번 한 줄 행이면 'per_part', 읽을 행이 아니면 None. `card_read`가 질문 때 LLM보다 먼저 부른다.
+    [왜] 문서 전체(Doc.run)로 읽으면 이웃 행 규칙이 SSA1H60H VRRM에 RMS 행 값(42 V)을 붙였다(11-09 조사). 카드 하나만 보고 표 단서(learn)도 쓰지 않는다
+    """
+    D = Doc(file, parts, '')
+    info = D.describe({'kind': 'table_row', 'text': card['content'], 'idx': card['chunk_id'], 'page': card['page'],
+                       'table': card['table'], 'row': card['row']})
+    if info:  # 파라미터 행. 품번 한 줄 행은 describe가 이미 후보를 냈다(per_part)
+        D.emit_row(info)
+    return D.cands, D.review, info['code'] if info else 'per_part' if D.cands or D.review else None
 
 
 def packages_of(c):

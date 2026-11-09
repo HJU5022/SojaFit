@@ -1,7 +1,7 @@
 """판정 값을 카드(청크)에서 읽기(3단계): 사양 표(part_specifications) 없이 `spec_lookup.part_specs`와 같은 모양의 행을 돌려준다.
 
-- 역할: `make_specs(...)`가 돌려주는 specs(part, codes=None)는 품번이 적힌 문서의 카드를 LLM이 읽게 하고(card_read.read_values,
-  문서마다 LLM 1번), 코드가 확인한 숫자 행에 패키지(PACKAGE) · AEC-Q101(AEC_Q101) 행과 분류를 붙여 돌려준다.
+- 역할: `make_specs(...)`가 돌려주는 specs(part, codes=None)는 품번이 적힌 문서의 카드를 읽고(card_read.read_values: 코드가 먼저,
+  코드가 못 읽은 카드만 LLM), 확인을 거친 숫자 행에 패키지(PACKAGE) · AEC-Q101(AEC_Q101) 행과 분류를 붙여 돌려준다.
   `specs.prefetch(parts, codes)`는 후보 여러 개를 문서별로 묶어 동시에 읽어 둔다(판정이 후보마다 한 번씩 부르기 전에).
   `specs.doc_rows(part)`는 LLM 없이 그 품번 문서의 PACKAGE 행만 준다(사실 확인 노드가 문서 · 개정만 볼 때).
 - 하지 않는 일: 판정 · 비교(`backend/judge/`), 카드 값 대조(`card_read.py`), 찾기(`card_find.py`), LLM 직접 호출(chat을 받아 넘긴다).
@@ -16,7 +16,7 @@ from backend.rag.card_find import MAX_CARDS, bi_copies, doc_packages, h_copies, 
 from backend.rag.card_read import SI, _names
 from backend.rag.pipeline.specs import AEC_ALL
 
-NUMERIC = tuple(SI)  # 카드에서 LLM이 읽는 숫자 코드. PACKAGE · AEC_Q101은 코드가 글에서 정한다
+NUMERIC = tuple(SI)  # 카드에서 읽는 숫자 코드(코드가 먼저, 못 읽은 카드만 LLM). PACKAGE · AEC_Q101은 코드가 글에서 정한다
 
 
 def _bases(part: str) -> set[str]:
@@ -74,7 +74,7 @@ def make_specs(*, load_cards, read, chat, doc_meta, part_docs, shared=None):
             meta.update(doc_meta(new))
 
     def _read_doc(key, wanted, codes):
-        """문서 하나에서 wanted 품번들의 codes를 읽는다(LLM 1번). 품번이 적힌 카드와 품번 없는 문서 전체 카드만 넘긴다."""
+        """문서 하나에서 wanted 품번들의 codes를 읽는다(코드가 먼저, 못 읽은 카드만 LLM). 품번이 적힌 카드와 품번 없는 문서 전체 카드만 넘긴다."""
         doc = docs[key]
         want = {p.upper() for p in wanted}
         hit = (shared or {}).get(key)
@@ -163,7 +163,7 @@ def part_docs_index():
 
 
 def default_specs():
-    """실제 DB · 카드 읽기 · node_chat을 묶은 specs. 품번 하나(또는 prefetch의 문서 하나)마다 LLM 1번이다."""
+    """실제 DB · 카드 읽기 · node_chat을 묶은 specs. 카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만 부른다."""
     from backend.rag.card_find import SHARED_READS, doc_meta, load_cards
     from backend.rag.card_read import read_values
     from backend.services.llm import node_chat
