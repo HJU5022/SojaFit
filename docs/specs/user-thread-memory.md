@@ -40,6 +40,7 @@
 - 쿠키 기반 상태 변경 API는 기존 auth.check_origin을 사용한다. 응답에는 Cache-Control: no-store를 붙인다.
 
 ### API 계약 제안
+- 모든 thread/업로드/기억 API 오류는 main의 error.code/message/request_id 계약을 사용한다. DB 연결 실패(503)와 본문 초과(413)도 동일하며 입력·DB 예외 원문은 숨긴다. workspace는 error.message를 읽는다.
 - POST /api/circuits: 파일명과 UTF-8 넷리스트 본문을 받아 검증·저장하고 대상 선택용 부품 목록을 반환한다.
 - GET /api/circuits: 내 회로와 부품 목록만 반환한다.
 - POST /api/threads: 자기 circuit_id·대상을 지정해 thread 생성. 소유자는 세션에서 결정한다.
@@ -53,6 +54,7 @@
 - 요청의 최대 길이, 페이지 크기, 동시 실행 제한과 오류 모양은 구현 계획에 확정하고 테스트한다.
 
 ### 저장·승인 일관성
+- PR #72 main 통합: 현재 그래프는 Plan → 문서/판정 Send → 모으기 → 답 정리/종합 → 답 검사다. store 인자를 compile까지 전달하고 approved_memories를 계획·문서·판정 하위 그래프·종합 모델에 전달한다. 구 verifier는 복원하지 않고 docs의 인용 정리와 최종 check_node에 사례 출처 검사를 연결한다. 판정 읽기의 지시서·다수결 등 main 개선을 유지하며 기억을 숫자 grounding 본문에 넣지 않는다.
 - 신규 승인 snapshot에는 당시 사용자 조건·질문·판정 입력 해석·대상 회로 정보를 보관한다. 기존 snapshot의 없는 정보는 확인 불가로 표시한다. 기억의 품번·요약·조건은 소유권을 확인한 승인 원본에서 구성하며 Store 값 자체를 신뢰하지 않는다.
 - 모델 입력은 서버가 선별한 approved_memories 별도 필드로 전달한다. 매 새 질문에서 목록을 갱신(없으면 빈 목록)하며 interrupt 재개는 기존 목록을 유지한다. 사례별 텍스트·전체 건수를 제한한다. 기억은 지시가 아닌 데이터이며 현재 회로 조건·데이터시트보다 우선하지 않는다. 승인 사례 인용은 데이터시트 번호와 구분한다.
 - saver/store를 앱 수명 동안 관리하고 재사용한다. RAM 저장소는 단위 테스트에만 쓴다.
@@ -69,6 +71,8 @@
 - 원격 push·PR 생성·배포는 이번 로컬 구현 승인에 포함하지 않는다.
 
 ## AC
+- GIVEN 새 계획형 판정 하위 그래프의 interrupt WHEN PostgreSQL 연결을 닫고 다시 열어 소유자가 재개 THEN 같은 조건 질문·기억을 유지하고 판정 읽기 모델을 다시 호출하지 않으며 완료 결과를 승인할 수 있다.
+- GIVEN thread API의 DB 장애 또는 본문 크기 초과 WHEN 오류 응답 THEN 공통 error 본문과 X-Request-ID가 일치하고 no-store이며 DB 예외 원문은 노출하지 않는다.
 - GIVEN A/B가 같은 품번의 서로 다른 사례를 승인 WHEN 각각 새 thread 질문 THEN 실제 그래프의 모델 입력에는 자기 사례만 포함되고 다른 사용자의 사례는 포함되지 않는다. 기억을 읽는 가짜 모델의 응답으로 연결을 검증한다.
 - GIVEN 과거 승인 조건에만 숫자가 존재 WHEN 새 분석에서 모델이 그 숫자를 현재 조건으로 제안 THEN 기존 grounded 검증이 거부하고 필요한 조건을 묻는다.
 - GIVEN 관련 기억 없음 또는 다음 질문에서 관련 기억이 사라짐 WHEN 그래프 실행 THEN 빈 목록을 전달해 이전 턴 기억이 재사용되지 않는다.

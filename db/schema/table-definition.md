@@ -32,7 +32,7 @@
 - 후보 판정의 대체 조건별 비교 결과
 - 승인 후 저장되는 견적서
 - RAG 원문 문서와 일반 텍스트 청크 메타데이터
-- 청크 임베딩 표와 벡터 인덱스(`pgvector`). 벡터 차원은 1536(`text-embedding-3-small`, ADR 0004 임시 결정)
+- 청크 임베딩 표(`pgvector`). `002`의 초기 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 `voyage-4-large` 1024차원 행을 함께 저장
 
 ### 제외
 
@@ -160,6 +160,7 @@ RAG 코퍼스에 포함된 데이터시트와 공개 문서의 출처, 버전 �
 | `chars_kept` | 보존 글자 수 | `INTEGER` | N | 0 이상 CHECK | manifest의 `chars_kept` | 확정 |
 | `truncated` | 잘림 여부 | `BOOLEAN` | N |  | manifest의 `truncated`. 원문을 잘라 넣었으면 true | 확정 |
 | `retired_at` | 제외 시각 | `TIMESTAMPTZ` | Y |  | 증분 수집에서 사라진 문서를 검색에서 빼는 논리 삭제 시각. 인용 기록은 남김(A-18) | 확정 |
+| `category` | 분류 | `TEXT` | Y |  | 문서의 다이오드 분류(5.7 `category`와 같은 값, 예: `schottky-rectifier`). 사양 표 없이 후보 찾기 거르기용(`db/012_document_category.sql`) | 확정 |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | DB 레코드 생성 시각 | 가정 |
 
 ### 5.5 `part_documents` — 부품 문서 연결
@@ -377,14 +378,14 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 |---|---|---|---|---|---|---|
 | `chunk_id` | 청크 ID | `BIGINT` | N | PK 일부, FK → `document_chunks.id` | 임베딩한 청크 | 확정 |
 | `embedding_model` | 임베딩 모델 | `VARCHAR(200)` | N | PK 일부 | 임베딩에 쓴 모델 이름 | 확정 |
-| `embedding` | 임베딩 벡터 | `vector(1536)` | N |  | `text-embedding-3-small`의 출력 차원. 본평가 전 임시 결정(ADR 0004) | 확정(임시) |
+| `embedding` | 임베딩 벡터 | `halfvec`(차원 없음) | N |  | 과거 `text-embedding-3-small` 1536차원 행과 현재 `voyage-4-large` 1024차원 행을 모델명과 함께 저장 | 확정 |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
 
-- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, `backend/rag/retrieve.py`는 인덱스 스캔을 끄고 정확 검색합니다(11-01 실측에서 HNSW가 가까운 청크를 놓침). `vector` 타입의 HNSW 인덱스는 2,000차원까지 걸 수 있으므로 차원은 2,000 이하여야 합니다.
-- 현재 RAG 기본 열은 vector(1536)이며, 원본 코퍼스를 유지한 복제 DB에만 `manual/halfvec.sql.manual`로 halfvec(1536) 저장·HNSW 제거 전환을 시험할 수 있습니다. 검색 거리는 float32로 계산합니다. 최종 채택은 동일 코퍼스 품질·전체 DB 용량 실측 후 결정하며 현재 기본값은 바꾸지 않았습니다.
+- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 초기 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, 뒤이어 실행되는 `db/008_multi_dim_embeddings.sql`이 인덱스를 제거하고 열을 차원 없는 `halfvec`으로 전환합니다. `backend/rag/retrieve.py`는 인덱스를 쓰지 않고 모델에 맞는 차원으로 변환해 정확 검색합니다.
+- 새 DB의 자동 초기화 최종 상태는 차원 없는 `halfvec`입니다. `manual/halfvec.sql.manual`은 `008` 이전 복제 DB에서 수행하던 1536차원 전환 이력이며 현재 자동 초기화 기본 경로가 아닙니다.
 - 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 지금 검색은 정확 검색이라 해당하지 않고, HNSW를 다시 쓰면 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
-- 차원이 다른 모델로 바꾸면 `embedding` 열을 새 Migration으로 바꿉니다.
-- 이 표와 HNSW 인덱스는 `db/002_rag_corpus.sql`이 만듭니다.
+- 차원이 다른 모델도 같은 열에 저장할 수 있지만, 검색할 때 `embedding_model`을 고정하고 해당 모델의 차원으로 변환해야 합니다.
+- 이 표는 `db/002_rag_corpus.sql`이 만들고 `db/008_multi_dim_embeddings.sql`이 현재 저장 형식으로 전환합니다.
 
 ## 6. 관계 정의 초안
 

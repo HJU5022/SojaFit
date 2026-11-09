@@ -928,3 +928,14 @@
 - 규모: 사용자 업로드→분석 상태 보존→승인/기억→모델 전달의 하나의 기능이며 핵심 코드/테스트/계약이 400줄을 넘는다. 분리하면 API/DB/그래프 계약이 실행 불가능한 중간 상태가 되므로 현재 동작 가능한 기능 스냅샷으로 보관한다. 후속 PR에서는 이 사유와 로컬 검사 결과/남은 운영 과제를 기재해야 한다.
 - 기존 사용자 변경 보존: 같은 worklog의 별도 Supabase 구조 비교/적용 2개 항목은 이번 대화에서 검증한 변경이 아니므로 작업 파일에 유지하되 이 로컬 커밋에서는 제외한다.
 - 스테이징 확인: 이번 기능의 41개 파일을 대상으로 .env의 비밀 필드 9개 실제 값 일치와 private key/OpenAI·OpenRouter/Google/GitHub 토큰 패턴을 값 출력 없이 검사했고 findings=0이었다. gitleaks 실행 결과는 아니며 원격 CI secret scan은 미실행이다. git diff --cached --check 통과. 별도 Supabase 두 절 16줄은 작업 폴더에 남겼다.
+
+## 2026-11-09 PR #72 main 충돌 해결·STH 통합
+- 사용자 승인/범위: PR #72의 충돌을 순서대로 해소하고 STH 커밋·푸시까지 수행하도록 직접 요청했다. 이 요청을 이번 STH 일반 푸시의 승인 범위로 적용한다. main 직접 커밋/강제 푸시/PR 머지/리뷰어 지정/배포는 하지 않는다. 새 브랜치/워크트리는 만들지 않는다.
+- 기준: 병합 전 STH a09a951, main 2e32a64. git ls-remote에서 PR #72 head가 STH와 같음을 확인했다. GitHub connector PR 조회는 404였으며 Git 원격으로 확인했다. 작업 트리가 깨끗한 상태에서 fetch 후 git merge --no-commit --no-ff origin/main을 수행했다.
+- 충돌 11개: SOJAFIT.md, BACKEND.md, main.py, MULTI_AGENT.md, agents/judge.py, agents/verifier.py(modify/delete), multi_agent/build.py, supervisor.py, prompts/PROMPTS.md, prompts/supervisor.md, docs/specs/SPECS.md. 주요 문서는 main의 조장 변경을 유지하고 SOJAFIT에는 기존 STH 신규 파일 7줄만 반영했다. SPEC/README/ADR/EVAL_REPORT는 main의 변경을 그대로 가져오며 STH의 임의 수정은 없다.
+- 통합 방식: main의 Plan→Send(문서/판정 하위 그래프)→모으기→종합/답 검사 구조를 유지했다. build_graph에 store 인자/compile 연결을 복원하고 approved_memories를 render_plan, Send payload, JudgeState, docs_answer, render_synth로 전달했다. 구 verifier.py는 main 삭제를 유지하고 사례 출처 검사를 docs의 인용 정리와 supervisor.check_node에 이식했다. judge 읽기의 작업 지시서/다수결/관문과 main LLM 캐싱·추론 설정·재시도 개선은 유지했다.
+- API 계약: thread DB 503/본문 크기 413도 error.code/message/request_id 형식과 X-Request-ID/no-store를 사용한다. workspace는 error.message를 읽는다. 기존 내부 오류 테스트는 개인 .env AUTH_ORIGIN 값에 따라 403으로 잘못 끝났으므로 테스트에 의도한 localhost origin을 명시해 500 비밀 보호를 확인했다.
+- RED→GREEN: main 기준 기계적 충돌 해소 뒤 새 계약 테스트에서 6 failed, 38 passed(Store 인자, 기억 전달, 사례 인용, 화면/DB 오류 계약). 이식 후 같은 검사 44 passed. 새 판정 하위 그래프를 실제 PostgreSQL에 중단 저장→연결 종료→재연결→재개→승인하고 판정 읽기 재호출 없음/기억 유지까지 확인했다. A/B 새 Plan/docs 모델 입력·응답 격리, 잘못된 타인 포인터 제외, 혼합 사례 인용 정리, 과거 숫자가 종합의 현재 값 검사를 완화하지 않음도 시험했다.
+- 최종 검사: TEST_THREAD_DATABASE_URL=기존 로컬 격리DB, uv run --no-sync --offline pytest -q → 923 passed, 57 skipped, 1 warning, 28.77초. warning은 Docling ListItem 부모 보정 deprecation이다. 전용 인증 DB/외부 리소스 등의 환경 의존 항목은 skip했다. 최초 repo 검사에서 unmerged 인덱스의 중복 경로를 대소문자 충돌로 보고했으나 해결 파일 git add 뒤 최종 전체 검사는 통과했다. backend 설명 누락도 복원했다. db/012_document_category.sql은 main의 정식 파일을 가져와 종전 트리 불일치가 해소됐다.
+- 문서: user-thread-memory/API 오류 작업서 및 backend/multi_agent/prompts 설명을 새 구조에 맞췄다. 구 구조로 수행한 실제 generate smoke는 과거 기록이며 이 통합의 실제 모델 결과로 재사용하지 않는다.
+- 미실행/남은 위험: 유료 모델·동결 평가 재측정·Cloud Run·공유 DB·Langfuse 원격 프롬프트 갱신은 하지 않았다. 승인 사례의 의미적 사양 검증/최종 interrupt 조건 snapshot 보완/운영 예산·관측·복구 UI는 기존 후속 과제다. 이번 작업은 그래프 통합과 충돌 해소 범위다.

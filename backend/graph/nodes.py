@@ -173,13 +173,17 @@ def short_reply(state: AgentState) -> dict:
             "path": ["짧은 답"]}
 
 
+# 품번이 아닌 규격 · 인증 이름(AEC-Q101, IEC61000, J-STD-020, ISO7637, UL94, JESD201). [왜] 'AEC-Q101'을 코퍼스에 없는 품번으로 셌다(11-06 v3-14)
+STANDARD = re.compile(r'(AEC-?Q\d+|IEC-?\d+(-\d+)*|J-?STD-?\d+|ISO-?\d+|UL-?\d+|JESD-?\d+)', re.I)
+
+
 def find_parts(text: str, refs: set[str]) -> list[str]:
     """글에서 품번으로 보이는 낱말(영문+숫자)을 나온 순서대로 중복 없이 뽑는다. refs(회로 기호)·값·개정 코드는 뺀다."""
     found = []
     for word in WORD.findall(text):  # [왜] 영문·숫자만 이어 붙여 "1N5819는"의 조사 "는"이 떨어진다
         if not (re.search(r"[A-Za-z]", word) and re.search(r"\d", word)):
             continue  # TSC, USB(숫자 없음)와 2026(영문 없음)은 품번이 아니다
-        if word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word):
+        if word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word) or STANDARD.fullmatch(word):
             continue
         found.append(word)
     # [주의] 코퍼스에 없는 품번(1N4001, BAT85)도 남긴다. 그래야 retrieve가 []를 돌려 "문서로 확인 안 됨"으로 간다
@@ -228,9 +232,19 @@ def other_part_row(doc: dict, parts: list[str]) -> bool:
     """표 한 줄 청크가 같은 문서의 다른 품번만 적힌 줄이면 True(예: 1N5819를 물었는데 1N5817 순방향 전압 줄)."""
     if not doc.get("table") or not parts:
         return False  # 글 청크("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
+    if doc["content"].split("] ", 1)[0].endswith("주석"):
+        # [왜] 표 주석 카드(청킹 v4부터 따로 된 카드)는 표 한 줄이 아니다. 'C or CA suffix for types SMAJ5.0 - Types SMAJ188'처럼
+        #      계열 범위 품번을 적어 다른 품번 줄로 버려지면 양방향 품번 규칙 근거가 사라졌다(v3-19, 11-09)
+        return False
     # [왜] 문서 표지 품번 목록과 겹치는 낱말만 품번으로 본다. 그래야 패키지 이름(DO-41, SOD-123F)이 든 줄을 버리지 않는다
-    named = {w.lower() for w in find_parts(LABEL.sub("", doc["content"]), set())} & set(doc.get("doc_parts", []))
-    return bool(named) and not named & {p.lower() for p in parts}
+    # [주의] 청킹 v3가 행 끝에 붙인 표 주석('\n주: … 2.4V (BZV55B2V4) to 75V (BZV55B75)')의 예시 품번은 그 행의 품번이 아니라 보지 않는다(11-06 v3-18)
+    body = LABEL.sub("", doc["content"]).split("\n주: ", 1)[0]
+    named = {w.lower() for w in find_parts(body, set())} & set(doc.get("doc_parts", []))
+    # [왜] TSC TVS는 양방향 품번(C · CA)이 단방향 행(… · …A)의 값을 쓴다('Electrical characteristics apply in both directions'). SMAJ6.5CA를 물으면 SMAJ6.5A 행이 근거다(v3-19)
+    # [왜] H 품번(AEC-Q101)도 값 표에는 기본 품번으로 적힌다('"H" means AEC-Q101 qualified'). SMAJ6.5CAH → SMAJ6.5CA · SMAJ6.5A
+    bases = {p.lower() for p in parts} | {p.lower()[:-1] for p in parts if p.lower().endswith("h")}
+    asked = bases | {re.sub(r"c(a?)$", r"\1", p) for p in bases}
+    return bool(named) and not named & asked
 
 
 def grade(state: AgentState) -> dict:

@@ -10,7 +10,9 @@
   문항별 트레이스·점수는 Langfuse(환경 이름 eval, session graph-<평가셋>-<월일-시분>-<공급자>)에, 문항별 한 줄은 표준출력에 찍는다.
 - 필요한 것: DATABASE_URL, OPENROUTER_API_KEY(LLM_PROVIDER=openrouter), LANGFUSE_PUBLIC_KEY·SECRET_KEY·BASE_URL.
   DEMO_MODE=1이면 검색은 임베딩 없이 BM25만 쓴다(backend/rag/retrieve.py).
+  LAB_FIND=cards면 찾기 도구(find)를 사양 표(MCP find_parts_by_specs) 대신 카드 읽기(backend/rag/card_find.py, 찾기마다 검색 1번 + LLM 1번)로 바꾼다.
 
+LAB_SPECS=cards: 판정 값(get_part_specs)도 카드에서 읽는다(backend/rag/card_specs.py).
 실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]
   기본은 D4 v2 단일 그래프다(사실 확인 · 판정 길을 켜려고 MCP 서버를 연다). 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
   --multi: 단일 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점 · 같은 MCP 도구로 잰다.
@@ -127,7 +129,10 @@ def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) ->
         if '__interrupt__' not in state:
             break
         # [주의] 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다. 답 없음은 {'answers': {}}로 보낸다(11-06 실측)
-        state = app.invoke(Command(resume={'answers': {}}), config)
+        # [주의] 판정 할 일이 둘(판정 + 찾기)이면 인터럽트도 둘이다. id 없이 재개하면 RuntimeError라 인터럽트마다 답을 준다(11-07 c20-11)
+        pending = state['__interrupt__']
+        resume = {i.id: {'answers': {}} for i in pending} if len(pending) > 1 else {'answers': {}}
+        state = app.invoke(Command(resume=resume), config)
     return state
 
 
@@ -139,7 +144,14 @@ def make_app(multi: bool, stack: ExitStack):
     mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
     # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
-    tools = {"lookup": make_lookup(mcp.check), "specs": mcp.part_specs, "find": mcp.find_parts, "checkpointer": InMemorySaver()}
+    tools = {"lookup": make_lookup(mcp.check, mcp.part_specs), "specs": mcp.part_specs, "find": mcp.find_parts, "checkpointer": InMemorySaver()}
+    if os.environ.get("LAB_FIND") == "cards":
+        from backend.rag.card_find import default_find
+        tools["find"] = default_find()  # [왜] lab DB의 사양 표가 비어 있어 찾기를 카드(표 행 청크) 읽기로 한다. 같은 인자 · 같은 반환 모양
+    if os.environ.get("LAB_SPECS") == "cards":
+        from backend.rag.card_specs import default_specs
+        specs = default_specs()  # [왜] 판정 값도 카드에서 읽는다(lab 3단계). 사실 확인은 문서 · 개정만 보므로 LLM 없는 doc_rows를 쓴다
+        tools.update(specs=specs, lookup=make_lookup(mcp.check, specs.doc_rows))
     if not multi:
         from backend.graph.build import build_graph
         return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve

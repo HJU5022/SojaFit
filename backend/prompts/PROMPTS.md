@@ -10,7 +10,7 @@
 `evals/runners/run_graph.py`와 `evals/runners/run_skill_pair.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`(이 설명 파일)만 뺍니다. 그래서 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라집니다. 프롬프트가 아닌 문서는 이 폴더에 두지 않습니다.
 
 ## 노드별 모델(시작값)
-`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor`가 `anthropic/claude-sonnet-5.5`, `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor` · `synth`가 `anthropic/claude-sonnet-5.5`, `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read` · `docs_answer`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
 
 ## 버전 기록
 
@@ -18,7 +18,11 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-09 | `supervisor.md`, `docs_answer.md`, `synth.md` | main 계획형 구조 통합·원격 등록 전 | main의 Plan/Send/종합 규칙을 유지하고 과거 승인 JSON의 데이터 경계·현재 근거 우선·사례 출처 구분 지침 추가 | PR #72 충돌 해결과 thread 기억 전달 유지 | 가짜 모델/실제 PostgreSQL 통합 및 전체 회귀 결과는 worklog/sth.md |
 | 2026-11-09 | `supervisor.md`, `judge_read.md`, `generate.md` | 로컬 변경·Langfuse 등록 전 | 별도 historical approved cases 데이터 경계, 현재 조건·사양 근거 우선, 과거 값 복사 금지, 사례 출처 구분 | 새 thread에서 자기 승인 사례 참고 | 실제 DB/가짜 모델 격리 시험 및 실제 generate 합성 A 1건 회상 smoke 확인. 전체 평가 재측정 없음 |
+| 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 허브 구조의 "다음 노드 고르기 · 보고 뒤 규칙"을 빼고 계획서(질문 종류 · 다음 길 tasks · finish · price · refuse · 할 일 최대 3개와 지시서: 에이전트 · 종류 · 목표 · 출력 · 경계 · 첫 검색어)를 내게 다시 씀. 제약(숫자 비교 금지 · 거절 사유 · 판정은 후보 판정 · 찾기만 · 사실 믿기)과 질문 종류 정의, 검색어 쓰는 법(예전 `rewrite.md`)은 남김 | 멀티 재설계(11-06 정운 결정, 참조/아티팩트 "SojaFit 멀티 에이전트 구조"): 규칙표를 따라가 질문당 판단 4번 · 비용 20배(D5) | v3 측정 전 |
+| 2026-11-06 | `docs_answer.md` | v1(Langfuse 등록 전) | 처음 작성. 문서 에이전트의 근거 채점(enough · partial · none, 없으면 다른 검색어)과 답 쓰기(문장마다 [번호] · [넷리스트], 값은 그대로, 대체 판단 없음)를 한 호출로 | 예전 채점(Luna) · 생성(Haiku) 두 호출을 하나로. 11-06 강사 지적 "채점은 질문 맥락을 가진 쪽이" | v3 측정 전 |
+| 2026-11-06 | `synth.md` | v1(Langfuse 등록 전) | 처음 작성. Supervisor ② 종합: 할 일 2개 이상의 부분 답을 한 답으로, 인용 유지, 판정 표 · 숫자는 다시 쓰지 않음(코드가 붙임), 실패한 부분은 이유와 함께 | 위와 같음 | v3 측정 전 |
 | 2026-11-06 | `judge_read.md` | 다음 버전(Langfuse 등록 전) | 출력 칸 `required_specs`(꼭 요구한 성질: 사용자 말 + 사양 표 항목 18개 중 하나 또는 `none`) · `maker_wanted`(요구한 제조사, TSC는 `TSC`) · `revision_wanted`(요구한 개정 코드 · 판)와 사양 표 항목 뜻 목록 "Spec-table items"를 더함. 바꾸는 이유(원가 · 재고 · 단종)와 회로 값은 요구 성질로 쓰지 않게 함 | 코퍼스 밖 요구 거절(SPEC 8.3). 고장률 · 잡음 · 다른 제조사 · 없는 판을 요구한 비관련 질문이 판정 답을 받았다(동결 평가 비관련 35건 중 8~10건) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 규칙 3: 판정 보고가 fail이면 보고의 사유로 거절(search_error 외에 코퍼스 밖 요구의 part_missing · revision_missing · not_found) | 위와 같음. 코드도 같은 경우를 거절로 바꾼다(`supervisor.decide`) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `judge_read.md` | 다음 버전(Langfuse 등록 전) | `values`의 `name`을 고른 역할(`role_alt` 포함)이 받는 이름으로만 쓰게 하고(입력 글의 역할 줄에 `inputs: 이름 (종류)`를 코드가 붙임), 사용자가 다른 말로 준 값은 그 역할에서 같은 양을 뜻하는 이름으로 옮기게 함. 모든 값 이름의 뜻 · 단위 목록 "Value names"를 더함 | 모든 역할의 이름을 한 줄로 주던 때 다른 역할의 이름(`i_out` · `v_in_max` · `v_bus` · `v_clamp`)으로 읽어 코드가 버리고 기준값이 비었다(동결 평가 4회 실측, 인용 없는 답 40건 중 20건) | 아직 없음(가짜 LLM 시험만) |
@@ -47,7 +51,9 @@
 
 ## 파일
 - `PROMPTS.md` — 이 폴더 설명과 버전 기록 표(프롬프트 해시에서 제외)
-- `supervisor.md` — 멀티 에이전트 Supervisor의 시스템 프롬프트(다음 노드 선택, 거절 사유, 판단 규칙). 영어. Langfuse `supervisor` v4까지 등록됨(11-06 판정 연결 · 가격 길 본문은 등록 전)
+- `supervisor.md` — 멀티 에이전트 Supervisor ① 계획의 시스템 프롬프트(질문 종류, 할 일 목록과 지시서, 거절 사유, 검색어 쓰는 법). 영어. Langfuse `supervisor` v4까지 등록됨(11-06 계획형 본문은 등록 전)
+- `docs_answer.md` — 멀티 문서 에이전트의 근거 채점 + 답 쓰기 시스템 프롬프트. 영어, 답은 한국어. 등록 전
+- `synth.md` — 멀티 Supervisor ② 종합의 시스템 프롬프트(할 일 2개 이상일 때만). 영어, 답은 한국어. 등록 전
 - `route.md` — 라우팅 노드의 시스템 프롬프트(질문 종류 8가지(가격 포함), 확인된 사실로 정하는 검색 전 거절 사유, 일상 대화 답). 영어
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)

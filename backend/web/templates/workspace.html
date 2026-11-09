@@ -52,7 +52,7 @@
       ...(body === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
     if (response.status === 401) { $('main').replaceChildren(); location.replace('/login'); throw new Error('로그인이 필요합니다.'); }
     const data = await response.json();
-    if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '입력값을 확인해 주세요.');
+    if (!response.ok) throw new Error(data.error?.message || '입력값을 확인해 주세요.');
     return data;
   }
   async function action(work) {

@@ -1,6 +1,40 @@
 # 오세창 작업 기록
 
+## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
+
+- 목적: 최신 main의 v4h 청킹·Voyage 검색 구현과 과거 v1 측정, 저장소 밖 lab 실행을 문서에서 서로 다른 근거로 구분하고 PR #71의 구현 현황 문서에 함께 반영한다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/EVALS.md`, `data/DATA.md`, `SPEC.md`, `backend/mcp_skill/MCP_SKILL.md`, `docs/experiments/embedding-voyage-candidates.md`, `docs/experiments/corpus-storage-budget.md`, `docs/research/embedding-candidate-investigation.md`, `docs/research/model-licenses.md`, 이 파일.
+- 바꾼 내용: 평가 보고서 상단을 현재 코드 계약과 2026-11-01 측정 스냅샷으로 나누고, 임베딩 선택 완료 상태와 v1 manifest provenance를 명시했다. SPEC의 v3 50문항 수치는 저장소 밖 lab 결정 근거이며 공식 G5 결과가 아니라고 표시하고, 과거 STH 브랜치 안내를 현재 MCP 의존성·시험 경계로 바꿨다. 2026-11-02 후보 조사·실험 문서의 `text-embedding-3-small` 현재형 문구는 당시 상태로 날짜를 붙이고 현재 Voyage 계약의 정본을 연결했다.
+- 작업 경계: 동결 평가셋과 원시 결과는 수정하지 않았고 API 호출·DB 적재·배포는 하지 않았다.
+- 검증: `uv lock --check`, `docker compose config --quiet`, `git diff --check`, 충돌 표식 검색을 통과했다. `PYTHONUTF8=1 uv run --frozen pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다. 동결 파일(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `FROZEN.json`) 변경은 0건이다.
+
 > **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
+
+## 2026-11-09 닫힌 PR #67 최신 main 재적용
+
+- 한 일: 머지된 청킹 PR #70과 이후 변경이 포함된 최신 `origin/main` 위에 닫힌 PR #67의 두 커밋을 순서대로 다시 적용했다. Git 충돌은 발생하지 않았고, `SOJAFIT.md`의 문서 분류 SQL·공통 오류 계약 항목과 `db/schema/table-definition.md`의 `category`·`halfvec` 설명이 함께 유지되는지 대조했다.
+- 추가 정합성 보완: 최신 main의 `tsc-v4h-2026-11-08` 코드와 11-08 외부 전체 실행 기록을 다시 읽어, v1 manifest·운영 스냅샷 52,244청크와 v4h 외부 실행 51,967카드를 구분했다. 현재 v4h 청킹 규칙, `AEC_Q101`·판정 전용 `DIRECTION`, 평가 실행기의 카드 읽기 경로를 `README.md`, `SPEC.md`, `data/corpus/CORPUS.md`, `docs/GATES.md`, `docs/specs/rag-pipeline.md`에 반영했다.
+- 검증: `git diff --check`와 충돌 표식 검색을 통과했다. `uv run pytest -q tests/api tests/repo/test_repo_layout.py`는 `53 passed, 21 skipped`, `uv lock --check`와 전체 `uv run pytest -q`는 `885 passed, 58 skipped`였다.
+- 추가 보완 뒤 검증: `uv run pytest -q tests/repo/test_repo_layout.py -p no:cacheprovider`는 `5 passed`, 전체 `uv run pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다. `uv lock --check`, `docker compose config --quiet`, `git diff --check`도 통과했고 검증 중 HEAD는 바뀌지 않았다.
+- PR 생성: 정합성 보완 커밋까지 `OSC-chunk`에 fast-forward push하고 `main` 대상 PR #71을 만들었다. GitHub의 CI `test`와 `gitleaks`가 통과했고 mergeable 상태는 `MERGEABLE`·`CLEAN`이었다.
+- 확인 못 한 것: 건너뛴 DB 통합 시험 58건과 실제 배포 응답은 확인하지 않았다.
+- 추가 확인 못 한 것: 저장소 밖 전체 입력으로 v4h 청킹을 두 번 재실행한 산출물 해시와 에이전트 길 재측정은 이번 문서 정합성 작업에서 실행하지 않았다.
+- 다음 할 일: PR #71에서 조원 1명 이상의 리뷰 승인을 받은 뒤 조장이 병합한다.
+
+## 2026-11-08 FastAPI 공통 오류 응답 규약
+
+- 한 일: 최신 `main` 기준 `backend/main.py`에 서버 생성 UUID 요청 식별자와 `X-Request-ID` 헤더를 추가하고, HTTP·검증·처리되지 않은 예외를 `error.code/message/request_id` JSON 구조로 통일했다. 기존 `/api/prices`와 Mouser 호출 경로는 유지했다.
+- 바꾼 파일: `backend/main.py`, `backend/BACKEND.md`, `tests/api/test_health.py`, `tests/api/test_prices.py`, `tests/api/API.md`, `docs/specs/api-error-contract.md`, `docs/specs/SPECS.md`, `SOJAFIT.md`, 이 작업 기록.
+- 확인 방법: 테스트를 먼저 추가해 기존 코드에서 실패를 확인한 뒤 구현했다. 최종 `uv run pytest -q -p no:cacheprovider`는 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check`는 통과했다.
+- 미확인: `TEST_AUTH_DATABASE_URL`·`TEST_DATABASE_URL`이 없어 건너뛴 통합 시험 43건, 실제 배포 응답과 외부 로그 저장소의 요청 ID 연결. DB·외부 API·배포는 변경하지 않았다.
+
+## 2026-11-08 현재 구현 기준 문서 정합성 점검
+
+- 팀장 요청에 따라 현재 상태를 설명하는 문서를 실제 저장소 코드와 대조했다. 과거 ADR·평가 결과·제출 주제서·작업 기록은 당시 증거로 보존하고, 현재 상태 문서에서만 구현·목표·외부 운영 이력을 구분했다.
+- `README.md`, `SPEC.md`, `SOJAFIT.md`, `docs/GATES.md`에 현재 서비스 API 범위(로그인·Google 관리자·관리자 계정·가격 조회·공통 오류)와 미구현 범위(질문·회로·대화·견적 승인/저장·Store·영속 체크포인트·업무 화면)를 반영했다.
+- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 최신 main 재대조에서 v1 manifest·운영 스냅샷 52,244청크와 11-08 저장소 밖 v4h 전체 실행 51,967카드를 구분하고, v4h 전체 입력·산출물의 새 clone 재현과 에이전트 길 재측정은 아직 별도 증거가 필요하다고 바로잡았다.
+- Google 관리자 로그인 문서의 코드·SQL·CLI·합성 테스트 구현 항목은 완료로, 현재 Cloud Run·Secret Manager·운영 DB·실계정 상태는 재검증이 필요한 항목으로 분리했다. MCP 그래프 통합 문서는 구현 전 계획과 현재 `StdioMcpRetriever` 구현을 구분했다.
+- 검증: 저장소 구조 검사 `5 passed`, 전체 테스트 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check` 통과. 운영 배포·DB 상태는 이번 작업에서 조회하지 않았다.
 
 ## 2026-11-05 GCP Google OAuth 로그 보호 실측
 

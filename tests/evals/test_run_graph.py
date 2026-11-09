@@ -201,7 +201,7 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
     mcp = fake_mcp(monkeypatch)
     with ExitStack() as stack:
         app = make_app(True, stack)
-        assert mcp.events == ["open"] and "supervisor" in app.get_graph().nodes and "judge" in app.get_graph().nodes
+        assert mcp.events == ["open"] and "plan" in app.get_graph().nodes and "judge" in app.get_graph().nodes
     assert mcp.events == ["open", "close"]
 
 
@@ -248,3 +248,20 @@ def test_second_interrupt_is_not_resumed_again():
     app = Always()
     state = R.invoke_with_resume(app, {'input': 'q'}, {'configurable': {'thread_id': 'x'}})
     assert '__interrupt__' in state and len(app.calls) == 2  # 상한 1번(AGENTS 6번)
+
+
+def test_resume_answers_every_pending_interrupt_by_id():
+    from types import SimpleNamespace
+    from evals.runners.run_graph import invoke_with_resume
+    seen = []
+
+    class App:
+        def invoke(self, arg, config):
+            if not seen:
+                seen.append('first')
+                return {'__interrupt__': [SimpleNamespace(id='a'), SimpleNamespace(id='b')]}
+            seen.append(arg.resume)
+            return {'answer': 'ok'}
+    assert invoke_with_resume(App(), {'input': 'q'}, {})['answer'] == 'ok'
+    # [왜] 판정 할 일 둘이 동시에 물으면 id 없이 재개할 수 없다(11-07 c20-11 RuntimeError)
+    assert seen[1] == {'a': {'answers': {}}, 'b': {'answers': {}}}

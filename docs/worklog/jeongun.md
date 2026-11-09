@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-08 밤 청킹 v4d ~ v4h 커밋, v4h 임베딩 · 검색만 재기, 청킹 멈춤 기준(결정 23)
+- 한 일: lab 청킹 v4d ~ v4h(`tsc-v4h-2026-11-08`)를 커밋했다(lab `v3` 브랜치 8003f82, 원격에 푸시하지 않음). v4h 카드 51,967개를 다시 임베딩해 로컬 DB `sojafit_v4`에 넣고, 검색만(LLM 없음) 잰 결과와 청킹을 멈추는 기준을 문서에 적었다.
+- 바꾼 파일: `backend/rag/pipeline/chunk.py` · `tests/rag/test_rag_chunk.py`(커밋), `docs/experiments/b-redesign/3차-청킹-진단.md` 13절, `decisions.md` 23, `raw/r3/`에 원본 7개(`ret_v4h.json` · `regress.py` · `chunk_diff.py` · `gather.py` · `sample_new.py` · `partial.py` · `spec_cmp_v4h.json`), 이 파일. 문서는 정운 확인 전이라 커밋하지 않았다.
+- 실행한 명령과 결과: `PYTHONPATH=. .venv/bin/python -m pytest -q tests/rag/` 156 passed, 21 skipped. 예전 사양 표 대조 v4h 같음 73,349 · 예전만 121, v4e 대비 잃은 값 0. 임베딩 467초, 적재 11초. 검색만 103질의 오류 0, p95 1.25초, 상위 5 밖으로 나간 문항 0.
+- 확인 못 한 것: 에이전트 길(LLM이 검색어를 씀) v4h 재측정, 값 읽기(`specs.py`) 문제 고침, 전체 시험.
+- 다음 할 일: 카드 기반 에이전트(사양 표 없이, 결정 21의 다음 단계).
+
 ## 2026-11-06 평가셋 v3 · 청킹부터 다시 재기 결정(ADR 0015)과 main 바로잡기 준비
 - 한 일: 정운 결정(11-06)과 중간 점검 강사 최소 기준을 ADR 0015로 적고, 관련 문서를 맞췄다. 기준 평가셋은 판정 분야를 늘린 v3로 새로 만들고(v1 · v2 파일과 해시는 기록으로 둠), 청킹 결함을 고친 코퍼스부터 다시 잰다. 목표는 질문 1건 p95 10초 이내, 문서 · 페이지 단위 Recall@5 · MRR 0.95 이상이다.
 - 같이 찾은 것: 11-06 쌓아 올린 PR #58 ~ #63이 main이 아니라 바로 아래 브랜치(`jeongun-1` ~ `jeongun-6`)로 merge되어, main에는 #57만 들어갔다. main과 로컬 `jeongun`의 차이는 111개 파일 +11,883줄이고, 전부 모인 곳은 `origin/jeongun-6`이다(로컬 `jeongun`과 내용 같음). `origin/main`을 `jeongun`에 합쳤다(62d427a, 충돌 없음, 합친 뒤에도 `jeongun-6`과 내용 같음).

@@ -203,7 +203,7 @@ def test_http_recovers_old_approval_after_new_question(runtime, monkeypatch):
 
 def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkeypatch):
     from backend.multi_agent.build import build_graph
-    from backend.multi_agent.contracts import Decision
+    from backend.multi_agent.contracts import Plan, Task
     from backend.services import llm
     app, (a, b), dsn = runtime
     sources = {}
@@ -226,10 +226,10 @@ def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkey
     def chat(node, system, user, schema, **kwargs):
         calls.append((node, system, user))
         if node == 'supervisor':
-            return Decision(next='finish' if 'writer → ok' in user else 'writer', question_type='role')
-        assert node == 'generate'
+            return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain prior case')])
+        assert node == 'docs_answer'
         marker = 'PRIVATE_A_CASE' if 'PRIVATE_A_CASE' in user else 'PRIVATE_B_CASE' if 'PRIVATE_B_CASE' in user else 'NO_MEMORY'
-        return schema(answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].')
+        return schema(grade='enough', answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].')
     monkeypatch.setattr(llm, 'node_chat', chat)
     app.graph = build_graph(chat=chat, retriever=lambda *args, **kwargs: [], checkpointer=app.saver, store=app.store)
     for owner, own, foreign in ((a, 'PRIVATE_A_CASE', 'PRIVATE_B_CASE'), (b, 'PRIVATE_B_CASE', 'PRIVATE_A_CASE')):
@@ -237,7 +237,7 @@ def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkey
         thread = make_thread(app, owner)
         result = app.message(owner, thread, 'D1 역할과 과거 사례를 설명해줘')
         assert own in result['answer'] and foreign not in result['answer']
-        assert {c[0] for c in calls} == {'supervisor', 'generate'}
+        assert {c[0] for c in calls} == {'supervisor', 'docs_answer'}
         for _, system, prompt in calls:
             assert own in prompt and foreign not in prompt and '과거 조건 12V' in prompt
             assert 'UNRELATED_CASE' not in prompt and 'FORGED_CASE' not in prompt
@@ -269,6 +269,45 @@ def test_thread_lock_rejects_concurrent_write_and_refusal_cannot_be_approved(run
     assert not result['can_approve']
     with pytest.raises(HTTPException):
         app.approve(a, thread, result['version'])
+
+
+def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runtime):
+    from backend.multi_agent.build import build_graph
+    from backend.multi_agent.contracts import Plan, Task
+    app, (a, _), dsn = runtime
+    source = make_thread(app, a)
+    app.message(a, source, '판정')
+    app.graph.update_state(app.config(source), {'answer': 'MEMORY_FOR_JUDGE'})
+    app.approve(a, source, 1)
+    calls = []
+    def chat(node, system, user, schema):
+        calls.append(node)
+        assert 'MEMORY_FOR_JUDGE' in user
+        if node == 'supervisor':
+            return Plan(next='tasks', question_type='candidate_judge', tasks=[
+                Task(id=1, agent='judge', kind='candidate_judge', goal='judge SS34')])
+        assert node == 'judge_read'
+        return schema(role='R01', original_part='SS34', candidates=['SS34'])
+    def factory(saver, store):
+        return build_graph(chat=chat, retriever=lambda *args, **kwargs: [], judge_enabled=True,
+                           specs=lambda *args, **kwargs: [], find=lambda *args, **kwargs: [],
+                           checkpointer=saver, store=store)
+    app.graph = factory(app.saver, app.store)
+    thread = make_thread(app, a)
+    pending = app.message(a, thread, 'SS34를 판정해줘')
+    assert pending['status'] == 'WAITING' and pending['interrupt']['missing']
+    assert calls.count('judge_read') == 1
+    app.close()
+    reopened = Conversations(dsn, factory=factory)
+    try:
+        assert reopened.detail(a, thread)['interrupt'] == pending['interrupt']
+        result = reopened.resume(a, thread, {}, '', pending['version'])
+        assert result['status'] == 'DONE' and result['can_approve']
+        assert calls.count('judge_read') == 1
+        assert reopened.approve(a, thread, result['version'])['ok']
+        assert len(reopened.memories(a)) == 2
+    finally:
+        reopened.close()
 
 
 def test_http_flow_uses_session_owner_and_rejects_state_injection(runtime, monkeypatch):
@@ -313,6 +352,28 @@ def test_workspace_and_login_have_upload_and_analysis_navigation():
     for expected in ('id="netlist"', 'id="target"', 'id="messages"', 'id="approve"', 'id="memories"'):
         assert expected in html
     assert 'localStorage' not in html and 'innerHTML' not in html
+    assert 'data.error?.message' in html
+
+
+def test_thread_database_error_uses_common_error_envelope(runtime, monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.main import app as api
+    app, (a, _), _ = runtime
+    api.state.conversations = app
+    api.dependency_overrides[auth.current_user_id] = lambda: a
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    monkeypatch.setattr(app, 'upload', lambda *args: (_ for _ in ()).throw(psycopg.OperationalError('private-db-detail')))
+    try:
+        response = TestClient(api).post('/api/circuits', headers={'Origin': 'http://localhost:8000'},
+                                        json={'filename': 'my.net', 'netlist': NET})
+        assert response.status_code == 503 and response.headers['cache-control'] == 'no-store'
+        assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
+        assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
+        assert 'private-db-detail' not in response.text
+    finally:
+        api.dependency_overrides.clear()
+        del api.state.conversations
 
 
 def test_failed_node_can_retry_its_saved_execution(runtime):

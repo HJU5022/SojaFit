@@ -19,6 +19,8 @@
 - `test_supervisor_jev.py` — Jev typed answer·gold 격리·provider 정책·예산·70-job manifest를 API 없이 검증
 - `test_supervisor_stage3_report.py` — 3차 집계의 gold·형식·라우팅 분모와 완전한 3회 비교·과거 Jev 수치 재계산 검증
 - `test_score_answer.py` — 답변·거절 5지표 채점기: 데이터시트·회로 근거 인용, 다른 쪽·허위 인용 오답 처리, `n01` `relevant + NOT_VERIFIED` 조건 부족 설명 대 단순 거절 구분, 비관련 4종 거절 대 환각 위험, v1 50건·v2 70건 분모·제외 처리 확인(API·DB 없이)
+- `test_score_compound.py` — 여러 개를 묻는 질문 부분별 채점: 부분마다 자기 규칙(답할 부분의 근거 · 판정, 답하면 안 되는 부분의 거절 말)으로 채점하는지, 열쇠 낱말로 품번 · 영문 낱말을 고르는지
+- `test_gate_report.py` — 기준표 집계: verdict 칸 없는 옛 평가셋(v2)은 expected의 첫 판정 코드를 쓰는지, 문서 할 일 검색이 있으면 그것을 · 없으면 판정 표 근거 칸을 근거 위치로 쓰는지, 비율 · 오탐 · p95 기준 미달을 빠짐없이 고르는지(그래프 · LLM 없음)
 - `test_embedding_grid.py` — 격자 평가 실행기의 문항 읽기(v1에서 19건)·순위·요약·카드 묶기, 격자 결과 파일 78칸의 요약을 문항별 값으로 다시 계산해 대조, 모델 표와 임베딩 기록의 일치
 - `test_retrieval_layers.py` — 층별 재측정의 토큰화·nDCG·판정 규칙(순 차이 +5와 부트스트랩 구간), 층 결과 파일 요약의 재계산 일치, 나머지 측정 스크립트 문법(환경변수는 시험 뒤 되돌림)
 - `test_bit_search.py` — 비트 검색의 recall·상위 5 일치 계산, 결과 파일에서 다시 계산한 recall이 문서 값(N=1,600 0.949, N=3,200 0.980)과 같음
