@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-09 Supervisor 모델 Haiku 5.5 측정(#46) — 받지 않음, 되돌림
+- 한 일: 조장 결정(11-09, 비용 줄이기)으로 `NODE_MODELS["supervisor"]`를 Haiku 5.5로 바꿔 v3 50문항 2세트를 쟀다. 사전 등록 #46의 받지 않는 조건에 걸려 되돌렸다.
+- 바꾼 파일: `backend/services/langfuse_prompts.py`, `tests/services/test_langfuse_prompts.py` · `test_llm.py`, `tests/evals/test_run_graph.py`(a8e9134, 077f6e4로 되돌림), `evals/guides/preregister.md`.
+- 실행한 명령과 결과: 오프라인 전체 시험 905 passed. 측정은 `scratchpad/stage9/run_e.sh`(31a3aa3 측정과 같은 조건, 깨끗한 작업 폴더 + lab 회로 파일 63개). 통과 47 · 45/50, 무관 거절 실패 3건, p95 12.6 · 12.8초, LLM 비용 세트당 약 $0.10(Sonnet Supervisor 세트당 $0.17~0.32). 수치는 사전 등록 #46 측정 결과 줄.
+- 확인 못 한 것: 측정 스크립트가 Langfuse `development` 라벨에 Haiku 설정의 supervisor 프롬프트(버전 10)를 등록했다. 다음 측정 때 Sonnet 설정으로 다시 등록된다(앱은 이 라벨을 읽지 않음).
+- 다음 할 일: 비용은 Supervisor 출력 줄이기 · 캐시 쓰기 비용(첫 세트) 쪽을 본다.
+
 ## 2026-11-09 찾기 문서 고르기 코드 먼저(#44) · 판정 읽기 revision_wanted 긴 글 받기(#45)
 - 한 일: 조장 승인(11-09, 목표 v3 50문항 p95 12.5 → 8~9초)에 따라 두 가지를 바꿨다. ① 찾기에서 읽을 문서를 코드가 개요 줄(PDF 1쪽 제목)의 전압 · 전류 · 전력 범위와 패키지로 고르고(`card_find.code_pick`), 제목으로 줄 세울 근거가 없을 때만 LLM(`card_pick`)이 고른다. 삽입형 패키지 목록(`THT_PACKAGES`)은 판정과 같이 쓰려고 `spec_lookup.py`로 옮겼다. ② 판정 읽기의 늦은 답을 Langfuse로 따져 보니 4.5초 넘은 노드 4개 모두 셋째 읽기의 형식 재시도였고, 원인은 넷 다 `revision_wanted`에 40자 넘는 설명 글이었다. 시각만 보는 합치기 규칙(첫 읽기만 · 마감 D초 등)은 합친 읽기를 바꾸지 않고 줄일 시간이 없어(처음 둘이 다른 노드 31/42) 넣지 않고, 40자 넘는 `revision_wanted`를 요구 없음으로 받게 했다. 읽기 수(`LAB_READ_VOTES=3`)와 합치기 규칙은 그대로다.
 - 바꾼 파일: `backend/rag/card_find.py` · `spec_lookup.py`, `backend/multi_agent/agents/judge.py`, `tests/rag/test_card_find.py`(4개 추가), `tests/multi_agent/test_judge_read.py`(1개 추가), `SPEC.md`(3절 숫자 출처 줄 · 8.3 코퍼스 밖 요구 줄), `SOJAFIT.md`(트리 두 줄), `backend/rag/RAG.md`, `backend/prompts/PROMPTS.md`, `tests/rag/RAG.md`, `tests/multi_agent/MULTI_AGENT.md`, `evals/guides/preregister.md`(#44 · #45), 이 파일. 커밋 5433169(사전 등록) · bec0ee1(#44) · 4d9e6ab(#45).
