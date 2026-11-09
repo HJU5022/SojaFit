@@ -308,7 +308,7 @@ def test_unless_turns_off_on_any_given_value_like_when_turns_on():
 
 
 def test_tvs_compares_rated_values_when_both_sheets_use_same_waveform():
-    # [왜] 사용자가 서지 파형을 말하지 않아도 두 문서가 같은 정격 파형(10/1000µs · tp = 1ms)이면 정격 VC끼리 비교한다(정운 결정 11-06, R06)
+    # [왜] 사용자가 서지 파형을 말하지 않아도 두 문서가 같은 정격 파형(10/1000µs · tp = 1ms)이면 정격 VC끼리 비교한다(판정 기준표 R06)
     from backend.judge import conditions as C
     from backend.judge import verdict as V
 
@@ -328,7 +328,7 @@ def test_tvs_compares_rated_values_when_both_sheets_use_same_waveform():
 
 def test_user_surge_on_the_rated_waveform_is_compared_at_rated_values():
     # [왜] 사용자가 정격과 같은 파형의 서지(10A, 10/1000µs)를 말해도 데이터시트에는 정격 IPP 행만 있다. 서지 전류가 정격 IPP 이하면
-    #      정격 VC끼리 비교한다(정운 결정 11-06, v3-09 SMBJ14AH). 다른 파형이나 정격을 넘는 서지는 그대로 확인 안 됨
+    #      정격 VC끼리 비교한다(판정 기준표 R06, v3-09 SMBJ14AH). 다른 파형이나 정격을 넘는 서지는 그대로 확인 안 됨
     from backend.judge import conditions as C
     from backend.judge import verdict as V
 

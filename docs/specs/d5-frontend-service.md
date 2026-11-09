@@ -1,7 +1,5 @@
 # D5 프론트엔드 서비스 기능 계약
 
-승인 설계: [D5 프론트엔드 서비스 설계](../superpowers/specs/2026-11-09-d5-frontend-service-design.md)
-
 ## Why
 
 - **페르소나**: 로그인한 SojaFit 사용자.

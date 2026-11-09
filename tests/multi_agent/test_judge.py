@@ -193,7 +193,7 @@ ORDER_DOCS = [ordering_row('1N4148 R0', 26965), ordering_row('1N4448 R0G', 26973
 
 @pytest.mark.parametrize('original,candidate', [('1N4148 A0G', '1N4148 R0G'), ('TSC 1N4148 A0G', '1N4148 r0g'), ('1N4148 A0G', '1N4148')])
 def test_order_code_only_difference_is_identical_with_ordering_table_citation(monkeypatch, original, candidate):
-    """같은 기본 품번에 주문 코드(R · A · L · M + 글자 하나 + 선택 G)만 다르면 동일품이고, 주문 정보 표의 그 주문 코드 행을 인용한다(B2, 정운 11-06)."""
+    """같은 기본 품번에 주문 코드(R · A · L · M + 글자 하나 + 선택 G)만 다르면 동일품이고, 주문 정보 표의 그 주문 코드 행을 인용한다(SPEC 8.3 주문 코드 동일품)."""
     monkeypatch.setattr(J, 'interrupt', unknown)
     table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
     asked = []

@@ -36,7 +36,7 @@ PARTS = {'1N4001': ('standard-rectifier', ['DO-41'], {'VRRM': 50.0}),
 
 
 def test_find_ranks_all_matches_before_the_limit():
-    """품번 순으로 자르면 앞의 1N4001만 남지만, 원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 순으로 모두 줄 세운 뒤 자른다(B3, 정운 11-06)."""
+    """품번 순으로 자르면 앞의 1N4001만 남지만, 원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 순으로 모두 줄 세운 뒤 자른다(SPEC 8.3 찾기 순위)."""
     cond = [{'code': 'VRRM', 'gte': 15}]
     conn = FakeConn(PARTS, cond)
     top = spec_lookup.find_candidates(conn, cond, limit=1, original_packages=['DO-214AC'], original_category='schottky-rectifier')

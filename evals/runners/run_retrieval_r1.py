@@ -33,7 +33,7 @@ FILTERS = [None, 'part', 'part+kind']
 RERANKS = [None, 'rerank-3', 'rerank-3-lite', 'Qwen/Qwen3-Reranker-0.6B']
 QWEN_RR = 'Qwen/Qwen3-Reranker-0.6B'
 BASE = dict(chunk='C', model='te3s', S='hybrid', kw='bm25', T='T0', rrf_k=60, n=50, Q='Q2', F='part', rerank=None)  # 지금 서비스
-CAP = 5.0  # [주의] 정운 11-03 결정: OpenRouter는 이번 실험 전체 5달러를 넘기지 않는다
+CAP = 5.0  # [주의] 사전 등록 #25 예산 · 중단: OpenRouter는 이번 실험 전체 5달러를 넘기지 않는다
 GPU = {'kure': ('nlpai-lab/KURE-v1', '8b418a58414668e75532ed045c22d9ca018ae2b2'),
        'qwen06': ('Qwen/Qwen3-Embedding-0.6B', '97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3'),
        'bgem3': ('BAAI/bge-m3', '5617a9f61b028005a4858fdac845db406aefb181'),
@@ -130,7 +130,7 @@ def gpu_qvec(args):
             log[key] = {'model': name, 'revision': rev, 'n': len(T), 'contract_cos': [round(c, 5) for c in cos]}
             del m
             torch.cuda.empty_cache()
-        except Exception as e:  # noqa: BLE001  [왜] 정운 결정: 한 모델이 안 되면 그 모델만 빼고 계속한다
+        except Exception as e:  # noqa: BLE001  [왜] 사전 등록 #25 예산 · 중단: 한 모델이 안 되면 그 모델만 빼고 계속한다
             log[key] = {'skipped': f'{type(e).__name__}: {str(e)[:200]}'}
         print(key, log[key], flush=True)
     D3.jdump(log, qdir / 'gpu_qvec_log.json')
@@ -270,7 +270,7 @@ def run(args):
         for cfg in todo:
             try:
                 c = D3.run_cell(cfg, ctx)
-            except Exception as e:  # noqa: BLE001  [왜] 정운 결정: 그 칸만 건너뛰고 이유를 결과 맨 위에 적는다
+            except Exception as e:  # noqa: BLE001  [왜] 사전 등록 #25 예산 · 중단: 그 칸만 건너뛰고 이유를 결과 맨 위에 적는다
                 skipped.append({'split': split, 'cell': D3.name(cfg), 'reason': f'{type(e).__name__}: {str(e)[:160]}'})
                 continue
             c['qs_group'] = [q['group'] for q in ctx['qs']]

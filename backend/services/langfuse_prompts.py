@@ -24,7 +24,7 @@ NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read", "d
 # [왜] judge_read는 판정 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
 # [왜] card_read는 데이터시트 카드에서 사양 값을 읽는 노드(backend/rag/card_read.py, 사양 표 대신), 서브에이전트라 Haiku. card_pick은 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 노드(backend/rag/card_find.py)
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
-# [왜] Supervisor는 Haiku(11-09 정운 결정, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
+# [왜] Supervisor는 Haiku(ADR 0017, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
 # [왜] docs_answer는 멀티 문서 에이전트의 근거 채점 + 답 쓰기(예전 grade Luna · generate Haiku를 한 호출로, 서브에이전트라 Haiku),
 #      synth는 Supervisor ②의 종합(할 일 2개 이상일 때만 불림, Haiku로 검증되지 않아 Sonnet 유지 #47). 11-06 멀티 재설계(참조/아티팩트 "SojaFit 멀티 에이전트 구조")
 NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": HAIKU, "judge_read": HAIKU,

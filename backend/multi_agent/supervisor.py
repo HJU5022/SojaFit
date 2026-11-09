@@ -10,8 +10,8 @@
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
   질문 종류 · 거절 · 할 일 나누기 판단(LLM이 계획으로 정한다). 코드가 바꾸는 것은 상한 초과 · 판정 꺼짐 · 형식 실패와
-  찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, 11-09 정운 결정).
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(11-06 정운 결정), 회의록 D4-D5 B-지시서 4-4, backend/prompts/supervisor.md · synth.md
+  찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, ADR 0017).
+- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"(MULTI_AGENT.md 11-06 재설계), 회의록 D4-D5 B-지시서 4-4, backend/prompts/supervisor.md · synth.md
 """
 import re
 from pathlib import Path
@@ -90,7 +90,7 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
             and not any(t.agent == 'judge' and t.kind == 'candidate_find' for t in plan.tasks)):
         # [주의] 코드 라우팅(11-10 조장 결정, ADR 0017): 계획 스스로 찾기 질문이라 해 놓고 판정 찾기 할 일을 내지 않으면 코드가 그 할 일로 바꾼다.
         #      Haiku Supervisor가 찾기를 문서 할 일(rating · candidate_find)이나 문서 + 이름 없는 판정으로 나눠 후보를 못 냈다
-        #      (#46 v3-12 · 14 · 15, HL-5 · 6 h4-12: 문제를 적어 다시 물어도 같은 계획). 역할 할 일만 남긴다(다른 물음)
+        #      (#46 v3-12 · 14 · 15, h4-12 찾기 질문: 문제를 적어 다시 물어도 같은 계획). 역할 할 일만 남긴다(다른 물음)
         roles = [t for t in plan.tasks if t.kind == 'role']
         find = Task(id=1, agent='judge', kind='candidate_find', goal='Find candidates that meet the conditions in the question.')
         plan = plan.model_copy(update={'tasks': [find, *(t.model_copy(update={'id': i}) for i, t in enumerate(roles, 2))], 'replan': False})
@@ -150,7 +150,7 @@ def collect_node(state: dict) -> dict:
         final = [r for r in reports if r.round < rnd and r.status == 'ok' and plan.get('keep_earlier')] + current
     else:
         final = reports
-    # [왜] 설계 v2(11-07 강사 지적): 다시 해 볼 만한 실패 · 앞 결과가 필요한 계획이면 Supervisor ①로 한 번 되돌린다.
+    # [왜] 설계 v2(11-07, MULTI_AGENT.md 실패 고리): 다시 해 볼 만한 실패 · 앞 결과가 필요한 계획이면 Supervisor ①로 한 번 되돌린다.
     #      확정 거절 사유(코퍼스 밖 · 목록 대조 · 도구 장애 · 상한)는 다시 해도 같아 되돌리지 않는다. 무엇을 할지는 ①이 정한다
     # [주의] 문서 에이전트의 '일부만 답함'(partial, 사유 없음)은 되돌리지 않는다. 답은 있고, 매번 Sonnet을 한 번 더 부르면 시간이 는다
     # [주의] 문서 에이전트가 검색어를 바꿔 두 번 찾고도 근거가 아니라고 본 것(all_rejected)은 되돌리지 않는다. 그 데이터시트에 없는 성질을

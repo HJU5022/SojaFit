@@ -155,7 +155,7 @@ def test_replan_runs_a_second_round_with_parts_and_answers_from_it():
 
 
 def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
-    """[왜] 강사 피드백(11-09): 그림이 강의처럼 읽혀야 한다. 노드 이름이 한국어이고, 조건 라벨은 답 모으기 → Supervisor 되돌림 하나뿐이다."""
+    """[왜] 그림이 강의처럼 읽혀야 한다(MULTI_AGENT.md 11-09 노드 이름). 노드 이름이 한국어이고, 조건 라벨은 답 모으기 → Supervisor 되돌림 하나뿐이다."""
     from backend.multi_agent.supervisor import REPLAN
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {

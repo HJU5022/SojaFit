@@ -338,7 +338,7 @@ def _ordering_row(retriever, code: str, base: str) -> dict | None:
 
 
 def _identical(retriever, original: str, candidate: str) -> tuple[bool, dict | None]:
-    """같은 기본 품번인지 → (동일품인가, 근거 인용). 주문 코드만 다르면 주문 정보 표의 그 행이 근거다(B2, 정운 11-06).
+    """같은 기본 품번인지 → (동일품인가, 근거 인용). 주문 코드만 다르면 주문 정보 표의 그 행이 근거다(SPEC 8.3 주문 코드 동일품).
 
     주문 코드 규칙을 먼저 보고, 그 행을 못 찾으면 제조사가 같은 제품이라고 밝힌 청크를 찾아 그 청크를 인용한다(EC-10).
     """
@@ -665,7 +665,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
-            # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(B3, 정운 11-06)
+            # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(SPEC 8.3 찾기 순위)
             near = {'original_packages': [x['text'] for x in original_rows if x['code'] == 'PACKAGE' and x.get('text')] or None,
                     'original_category': next((x['category'] for x in original_rows if x.get('category')), None)}
             mount = mount_wanted(read)
@@ -745,7 +745,7 @@ def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
     status = r['status']
     if status == 'partial' and not judgement.get('results'):
         # [왜] 판정한 후보가 없는 보고는 답이 아니라 실패다. 일부 답(partial)으로 두면 재계획이 '있는 답으로'를 고를 때 빈 판정이 답으로 나갔다
-        #      (#46 Haiku Supervisor v3-31 USB-C 커넥터 · HL-2 h3-31 인덕터: 판정 읽기 셋이 모두 23역할 밖으로 읽음).
+        #      (#46 Haiku Supervisor의 v3-31 USB-C 커넥터 질문 · h3-31 인덕터 질문: 판정 읽기 셋이 모두 23역할 밖으로 읽음).
         #      23역할 밖이면 이 서비스에 판정 규칙이 없어 다시 해도 같다(not_found). 후보를 못 찾은 것은 조건을 바꿔 다시 찾을 수 있다(no_result)
         status = 'fail'
         reason = reason or (Reason.NOT_FOUND.value if judgement.get('kind') == 'no_rule' else Reason.NO_RESULT.value)

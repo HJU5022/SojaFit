@@ -114,8 +114,6 @@ Jev는 Luna보다 정확도가 5.71%p 낮지만 reported cost가 약 75.5% 낮�
 
 - `evals/runners/run_supervisor_jev.py` — Jev 전용 request, typed-answer 변환, ZDR preflight, smoke, 부분 저장, 호출 전 비용 추정 차단, summary. `--max-usd`는 실제 청구액의 절대 상한이 아니며 한 job의 실제 비용으로 초과할 수 있음
 - `tests/evals/test_supervisor_jev.py` — gold 격리, schema 검증, 비용 예약, live gate, Decisions catalog, canonical snapshot 검사
-- `docs/superpowers/specs/2026-11-04-jev-supervisor-evaluation-design.md` — 승인된 평가 설계
-- `docs/superpowers/plans/2026-11-04-jev-supervisor-evaluation.md` — 테스트 우선 구현 계획
 
 ### Jev 결과
 

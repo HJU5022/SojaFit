@@ -27,7 +27,7 @@ WINNER = 'C|v4large|hybrid|bm25|T0|60|50|Q3|part+kind|rerank-3'  # 사전 등록
 R1_DATA, R1_REWRITE = ROOT / 'evals/samples/retrieval_r1.jsonl', ROOT / 'evals/samples/retrieval_r1_rewrite_q3.json'
 R1_RESULT = ROOT / 'evals/results/retrieval/r1_2026-11-03.json'
 V2_REF = 0.8246  # 사람 판정 19문항 Page Recall@5(전자_데이터시트/evidence/r1/v2check/v2check_2026-11-03.json)
-CAP = 1.0  # [주의] 정운 결정: OpenRouter는 이 측정 합계 1달러를 넘기지 않는다
+CAP = 1.0  # [주의] 사전 등록 #26 예산 · 중단: OpenRouter는 이 측정 합계 1달러를 넘기지 않는다
 KEYS = [f'{m}@{k}' for m in ('page_hit', 'page_recall', 'all_evidence') for k in KS] + ['page_mrr']
 
 

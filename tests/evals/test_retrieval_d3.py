@@ -3,7 +3,7 @@
 - 역할: gold 줄의 쪽 풀기(뒤에 이어 적은 쪽·범위), 페이지 단위 지표(적중·회수율·Full Recall·회수 가능만·중복 제거 nDCG·실패 유형),
   정확 부호 검정, no_result 임계값 고르기를 가짜 청크로 확인한다.
 - 하지 않는 일: 실제 청크·벡터·API로 측정하지 않는다(결과는 사전 등록 #24의 실행으로만 본다).
-- 출처: evals/guides/preregister.md #24, Codex 검토(11-03) gold 쪽 누락 사례.
+- 출처: evals/guides/preregister.md #24, 자동 검토(11-03)의 gold 쪽 누락 사례.
 """
 from collections import Counter
 

@@ -13,7 +13,7 @@ from pathlib import Path
 import yaml
 
 RULES_FILE = Path(__file__).with_name('rules') / 'roles.yaml'
-MARGINS = {'kV': 1.25, 'kI': 1 / 0.7}  # [왜] 전압은 정격의 80%, 전류는 70% 안에서 쓴다(정답 판정 기준표 3절, 정운 10-30)
+MARGINS = {'kV': 1.25, 'kI': 1 / 0.7}  # [왜] 전압은 정격의 80%, 전류는 70% 안에서 쓴다(정답 판정 기준표 3절)
 ROLES = tuple(f'R{n:02d}' for n in range(1, 24))
 CODES = ('VRRM', 'IF_AV', 'IFSM', 'VF', 'IR', 'TRR', 'VZ', 'PD', 'CJ', 'TJ_MAX', 'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD')
 KINDS = ('number', 'flag', 'condition')

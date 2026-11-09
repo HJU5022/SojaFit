@@ -16,7 +16,7 @@ SojaFit (proj3-b)
 ├── SOJAFIT.md              <- 이 문서: 디렉토리 트리(파일 위치의 정본)와 이름 규칙
 ├── SPEC.md                 <- 기능의 정본: 범위, 흐름, 대체 판정 5종, 계약, 규칙 파일, 코퍼스 경계, 데모 모드, AC
 ├── AGENTS.md               <- AI 코딩 에이전트 지침과 조 팀 규칙
-├── CLAUDE.md               <- Claude Code 진입점. AGENTS.md를 불러옴
+├── CLAUDE.md               <- AI 코딩 에이전트 진입점. AGENTS.md를 불러옴
 ├── EVAL_REPORT.md          <- 개선 전후 지표, 판정 기준, 실패 분석, 재현 명령 (고정)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
@@ -571,25 +571,11 @@ SojaFit (proj3-b)
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
-│   │   ├── mcp-graph-integration-plan.md  <- MCP 그래프 통합의 테스트 우선 구현 계획
 │   │   ├── judge-agent.md  <- 판정 에이전트와 대체품 찾기
-│   │   ├── judge-agent-plan.md  <- 판정 에이전트의 테스트 우선 구현 계획
 │   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
 │   │   └── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
-│   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
-│   │   ├── SUPERPOWERS.md  <- 폴더 설명
-│   │   ├── specs/
-│   │       ├── 2026-11-05-supervisor-prompt-v0-design.md  <- Supervisor Prompt V0 설계
-│   │       ├── 2026-11-09-d5-frontend-service-design.md  <- React·Vite 작업대와 D5 서비스 연결 설계
-│   │       ├── 2026-11-09-dark-frontend-design.md  <- Flux형 기본 다크 프론트엔드 설계
-│   │       └── 2026-11-09-dummy-full-flow-design.md  <- 개발 전용 전체 더미 흐름 설계
-│   │   └── plans/
-│   │       ├── 2026-11-09-d5-frontend-service.md  <- D5 프론트엔드 6개 PR 구현 계획
-│   │       ├── 2026-11-09-circuit-context-diagram.md  <- 대상 부품 주변 연결 개념도 구현 계획
-│   │       ├── 2026-11-09-dark-frontend.md  <- 전체 프론트 기본 다크 테마 구현 계획
-│   │       └── 2026-11-09-dummy-full-flow.md  <- 개발 전용 전체 더미 흐름 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -711,7 +697,6 @@ SojaFit (proj3-b)
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
-| `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 설계의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |

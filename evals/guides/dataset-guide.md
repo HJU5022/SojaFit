@@ -73,7 +73,7 @@ v2를 동결한 뒤에는 **단일 에이전트 기준 점수도 v2로 다시 �
 
 하정운 1차 판정과 김재훈 2차 검토·수정 의견을 반영해 합의한 v1 50건을 2026-11-02에 동결했다. 최종 평가셋은 `dataset_v1.jsonl`이며 SHA256은 `FROZEN.json`에 기록했다.
 
-v2는 2026-11-03에 동결했다(`dataset_v2.jsonl`, 70건). 추가 20건(후보 찾기)은 Codex가 출제와 정답을 나눠 쓴 초안(11-01)을 하정운 1차·김재훈 2차 사람 판정에서 모두 O로 받아들였다(검토표 `drafts/draft_v2add_20_review.md`). 후보 찾기 관련 10건은 **열린 정답**이다. 조건을 모두 만족하는 코퍼스 품번이면 어느 것이든 정답이고, `gold_chunks`의 후보 문서는 예시다. 그래서 `run_retrieval.py`는 이 문항을 검색 순위로 채점하지 않고 `candidate_find_skipped`에 id만 적는다.
+v2는 2026-11-03에 동결했다(`dataset_v2.jsonl`, 70건). 추가 20건(후보 찾기)은 출제와 정답을 나눠 쓴 자동 초안(11-01)을 하정운 1차·김재훈 2차 사람 판정에서 모두 O로 받아들였다(검토표 `drafts/draft_v2add_20_review.md`). 후보 찾기 관련 10건은 **열린 정답**이다. 조건을 모두 만족하는 코퍼스 품번이면 어느 것이든 정답이고, `gold_chunks`의 후보 문서는 예시다. 그래서 `run_retrieval.py`는 이 문항을 검색 순위로 채점하지 않고 `candidate_find_skipped`에 id만 적는다.
 
 동결본과 검수 이력을 읽을 때 알아 둘 점:
 - `draft_30.jsonl`·`draft_50.jsonl`의 `status`·`review_flags`·`review_hold`·`author_review`는 동결 직전까지의 검수 이력이다. "not_frozen", "do_not_freeze", "검토 전" 같은 값이 남아 있어도 동결 여부는 `FROZEN.json`이 정한다.

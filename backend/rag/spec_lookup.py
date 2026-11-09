@@ -82,7 +82,7 @@ def find_candidates(conn, conditions, category=None, package=None, limit=50, ori
       slot은 min|typ|max(기본 max, CJ는 typ). gte(이상)·lte(이하) 중 하나 이상, 둘 다 주면 둘 다 채워야 한다(경계 포함).
     - 한 조건은 그 품번의 행 하나 이상이 채우면 된다. 조건마다 다른 행이어도 된다(제너 VZ 최소 행과 최대 행).
     - category: 분류 이름과 같아야 한다(예: zener-diode). package: 패키지 이름이 같아야 한다(대소문자 · 하이픈 · 공백 무시, 'SMA'는 SMAF에 걸리지 않음).
-    - 순서(11-06 정운 결정): 원래 부품의 패키지(original_packages 중 하나와 이름이 같음) → 원래 부품의 분류(original_category)
+    - 순서(SPEC 8.3 찾기 순위): 원래 부품의 패키지(original_packages 중 하나와 이름이 같음) → 원래 부품의 분류(original_category)
       → 기준에 가까운 것 → 품번 순. 줄 세우기는 조건을 채운 품번 전부에 하고 그 뒤 limit에서 자른다(4,081개 중 63번째 1N5817이 잘리던 문제).
     - 반환: [{"part", "category", "packages", "matches": 조건을 채운 행(part_specs와 같은 모양)}]. 값 비교는 행 거르기와 순서뿐이고 판정이 아니다.
     """

@@ -132,7 +132,7 @@ def _within_rating(user: dict, wave: str, rows: list[dict]) -> bool:
 
 def _waveform(rows: list[dict]) -> str | None:
     """TVS 부품 행들의 정격 서지 파형. PPPM · IPP · VC 행 조건(표 제목 포함)에서 읽고, 모르면 None."""
-    # [왜] SMAJ · SMCJ의 'tp = 1ms'와 SMBJ의 '10/1000µs'는 주석 · 그림이 가리키는 같은 10/1000 µs 파형이다(판정 dev 해석 8, 정운 결정 11-06)
+    # [왜] SMAJ · SMCJ의 'tp = 1ms'와 SMBJ의 '10/1000µs'는 주석 · 그림이 가리키는 같은 10/1000 µs 파형이다(판정 dev 해석 8, 판정 기준표 R06)
     for r in rows:
         if r['code'] in ('PPPM', 'IPP', 'VC'):
             text = f"{r.get('test_condition') or ''} {(r.get('citation') or {}).get('table') or ''}"
@@ -171,14 +171,14 @@ def _check(cond: dict, values: dict, conds: dict, rows: list[dict], original_row
     wave = _waveform(rows) if cond.get('at') and cond.get('at_default') == 'rated' else None
     same_wave = bool(wave) and wave == _waveform(original_rows)
     if cond.get('at') and cond['at'] not in conds:
-        # [왜] at_default: rated면, 사용자가 파형을 말하지 않아도 두 데이터시트가 같은 정격 파형이면 정격 값끼리 비교한다(정운 결정 11-06, R06)
+        # [왜] at_default: rated면, 사용자가 파형을 말하지 않아도 두 데이터시트가 같은 정격 파형이면 정격 값끼리 비교한다(판정 기준표 R06)
         if same_wave:
             rated = True
         else:
             lack.append(cond['at'])
     elif same_wave and _within_rating(conds[cond['at']], wave, rows):
         # [왜] 사용자가 정격과 같은 파형의 서지('피크 10A의 단발 10/1000µs')를 말해도 데이터시트에는 정격 IPP(27A) 행만 있다.
-        #      서지 전류가 후보의 정격 IPP 이하이면 같은 파형의 정격 값끼리 비교한다(정운 결정 11-06 "같은 정격 파형이면 비교", v3-09 SMBJ14AH)
+        #      서지 전류가 후보의 정격 IPP 이하이면 같은 파형의 정격 값끼리 비교한다(판정 기준표 R06, v3-09 SMBJ14AH)
         rated = True
     if lack:
         return Check(**{**base, **_known(cond, rows, codes)}, result='unverified', why='빠진 값: ' + ', '.join(lack)), lack, note
@@ -316,7 +316,7 @@ def _slots(r: dict) -> frozenset:
 
 def _compare_major(major: dict, rows: list[dict], original_rows: list[dict], required: bool) -> bool:
     """major 항목마다 비교한다. required면 짝이 없을 때 False, 아니면 짝이 없는 항목은 건너뛴다."""
-    # [왜] TVS의 PPPM · IPP · VC는 두 문서가 같은 정격 파형이면 각 품번의 정격 값끼리 비교한다(판정 조건과 같은 규칙, 정운 결정 11-06).
+    # [왜] TVS의 PPPM · IPP · VC는 두 문서가 같은 정격 파형이면 각 품번의 정격 값끼리 비교한다(판정 조건과 같은 규칙, 판정 기준표 R06).
     #      시험 조건 글('10/1000µs waveform' 대 'tp = 1ms')만 맞추면 짝이 없어 사양 동등을 못 냈다(판정 dev 19 · 22)
     wave = _waveform(rows)
     rated = bool(wave) and wave == _waveform(original_rows)

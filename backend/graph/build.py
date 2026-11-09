@@ -6,7 +6,7 @@
 - 하지 않는 일: 노드 동작(`nodes.py`), 상태 칸 정의(`state.py`), Supervisor와 서브에이전트(멀티 그래프 `backend/multi_agent/`),
   체크포인터 만들기(부르는 쪽이 넘긴다), 견적서 저장 승인(interrupt)과 장기 기억 Store 연결(아직 없음, SPEC 2절).
 - 출처: SPEC.md 2절 "그래프"(노드 표, 재검색 상한), backend/graph/GRAPH.md, ADR 0006(근거가 없어도 대화는 이어 간다), 강의 2주 20강,
-  D4 v2 흐름(11-06 강사 검토: 범위 판정을 첫 단에서, 단순 직렬 흐름이 아니게), docs/specs/judge-agent.md(판정 길).
+  D4 v2 흐름(11-06: 범위 판정을 첫 단에서, 단순 직렬 흐름이 아니게, GRAPH.md 설계 근거), docs/specs/judge-agent.md(판정 길).
 - 근거 충분 여부는 어휘 겹침 같은 점수 하나로 정하지 않고, 품번·개정판 같은 결정적 검사를 따로 둔다(채점 노드).
   품번 목록·낱말 가중치 같은 코퍼스 의존 값은 코드에 고정하지 않는다(코퍼스가 커지면 새 대상을 전부 거절하게 된다).
 """
@@ -30,7 +30,7 @@ def after_route(state: AgentState) -> str:
     돌려주는 값은 갈림길 값이고, 갈 노드는 build_graph의 연결표가 정한다("검색"은 재작성으로 먼저, "판정"은 판정 길이 없으면 재작성으로).
     """
     if (state.get("route") or {}).get("reason"):
-        # [왜] 범위 판정을 첫 단에서 한다: 범위 밖 · 다른 부품 · 코퍼스에 없는 품번 · 개정판은 검색조차 하지 않는다(11-06 강사 지적)
+        # [왜] 범위 판정을 첫 단에서 한다: 범위 밖 · 다른 부품 · 코퍼스에 없는 품번 · 개정판은 검색조차 하지 않는다(GRAPH.md 설계 근거)
         return "거절"
     question_type = state.get("question_type")
     if question_type == "chat":
@@ -100,7 +100,7 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
 
     b.add_edge(START, "입력 읽기")  # 항상 입력 읽기에서 시작한다
     b.add_edge("입력 읽기", "사실 확인")
-    b.add_edge("사실 확인", "라우팅")  # [왜] 범위 판정을 첫 단에서 한다: 라우팅이 확인된 사실로 검색 전에 거절을 정한다(11-06 강사 지적)
+    b.add_edge("사실 확인", "라우팅")  # [왜] 범위 판정을 첫 단에서 한다: 라우팅이 확인된 사실로 검색 전에 거절을 정한다(GRAPH.md 설계 근거)
     # {갈림길이 돌려준 값: 갈 노드}. [왜] 첫 검색부터 재작성한 검색어로 찾는다(사전 등록 #25 Q3)
     b.add_conditional_edges("라우팅", after_route, {"거절": "거절", "짧은 답": "짧은 답", "가격 안내": "가격 안내", "생성": "생성", "검색": "재작성",
                                                      "판정": "판정 읽기" if judging else "재작성"})

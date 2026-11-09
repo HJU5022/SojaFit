@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-02
 - 상태: 채택
-- 근거: 조장 하정운 결정(11-02), 로컬 compose DB 실측(11-02), Supabase 대시보드(11-02), `backend/rag/retrieve.py`의 `_dense`
+- 근거: 조장 결정(11-02), 로컬 compose DB 실측(11-02), Supabase 대시보드(11-02), `backend/rag/retrieve.py`의 `_dense`
 
 ## 결정
 - 서비스 표와 코퍼스를 Supabase 프로젝트 하나(무료, DB 500MB)에 둔다. 용량 때문에 코퍼스를 줄이지 않는다.

@@ -13,7 +13,7 @@
 - 앱 합성 시나리오는 `DEMO_SCENARIOS=1`과 `DEMO_MODE=1`에서만 `demo.py`가 처리한다. `DEMO_MODE=1`만 켠 기존 평가는 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
 - `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
 
-## llm.py가 한 곳이어야 하는 이유 (강사 안내)
+## llm.py가 한 곳이어야 하는 이유
 라우터나 그래프 노드가 `openai`를 직접 import하지 않고 전부 `llm.py`를 거칩니다. 여기서 세 가지를 처리합니다.
 1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다.
 2. 앱 합성 데모는 서비스 조립에서 `demo.py`의 검증된 응답/도구를 주입하며 `llm.py`나 MCP를 호출하지 않는다. 실제 평가 경로와 별개다.
