@@ -410,11 +410,11 @@ def overview_lines(category):
     return [{'key': k, 'file': unquote(os.path.basename(urlparse(u).path)), 'text': t} for k, u, t in rows]
 
 
-def default_find(n_docs=10):
+def default_find(n_docs=10, chat=None):
     """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 개요 줄로 문서 고르기(코드가 못 고를 때만 LLM 1번), 없으면 검색 1번.
-    카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만."""
+    카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만. chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`)."""
     from backend.rag.card_read import read_values
     from backend.rag.retrieve import retrieve
     from backend.services.llm import node_chat
-    return make_find(retrieve=retrieve, load_cards=load_cards, read=read_values, chat=node_chat, doc_meta=doc_meta, n_docs=n_docs,
+    return make_find(retrieve=retrieve, load_cards=load_cards, read=read_values, chat=chat or node_chat, doc_meta=doc_meta, n_docs=n_docs,
                      overviews=overview_lines, shared=SHARED_READS)

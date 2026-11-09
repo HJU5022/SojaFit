@@ -1,14 +1,18 @@
 # demo
 
 ## 역할
-- 이 폴더: 명시적 `DEMO_SCENARIOS=1`·`DEMO_MODE=1` 앱 데모가 사용하는 합성 회로·응답·사양입니다. 실제 코퍼스/모델 정확도를 평가하지 않습니다. `DEMO_MODE=1`만 켠 기존 BM25 평가는 실제 LLM을 유지합니다. `snapshot/`은 키 없는 compose가 로컬 DB에 넣는 실제 TSC 데이터시트 청크 일부(42문서)이며, 합성 시나리오와 달리 검색(`retrieve`·MCP `search_corpus`)이 BM25로 읽습니다.
-- 넣는 것: 데모 시나리오용으로 만들어 사람이 검토한 LLM 응답(합성 회로 설명은 [넷리스트], 합성 사양은 가상 문서·쪽·표·행 출처를 표시하며 실제 데이터시트 근거와 구분). 가격표와 Mouser 형식의 가격·재고 응답은 두지 않습니다. 데모 모드의 `/api/prices`는 값 없이 `available: false`를 돌려줍니다(SPEC 7절, ADR 0009). 키 없는 compose가 적재할 데모 코퍼스 스냅샷(`snapshot/`, 전체 v4h 청크에서 규칙대로 뽑은 manifest·청크 줄, 임베딩 없음).
-- 넣지 않는 것: 실제 API 응답 원본, 키, 원본 PDF(`data/corpus/`), `snapshot/` 밖의 데이터시트 청크·발췌.
+- 이 폴더: 명시적 `DEMO_SCENARIOS=1`·`DEMO_MODE=1` 앱 데모가 사용하는 합성 회로·응답·사양입니다. 실제 코퍼스/모델 정확도를 평가하지 않습니다. `DEMO_MODE=1`만 켠 기존 BM25 평가는 실제 LLM을 유지합니다. `snapshot/`은 키 없는 compose가 로컬 DB에 넣는 실제 TSC 데이터시트 청크 일부(42문서)이며, 합성 시나리오와 달리 검색(`retrieve`·MCP `search_corpus`)이 BM25로 읽습니다. `recordings/`는 우리 멀티 에이전트 그래프를 이 스냅샷 DB에서 실제 LLM 키로 한 번 돌려 남긴 LLM 응답 기록이며, 키 없는 데모가 같은 질문을 재생할 때 읽습니다(서비스 연결은 아직 없음).
+- 넣는 것: 데모 시나리오용으로 만들어 사람이 검토한 LLM 응답(합성 회로 설명은 [넷리스트], 합성 사양은 가상 문서·쪽·표·행 출처를 표시하며 실제 데이터시트 근거와 구분). 가격표와 Mouser 형식의 가격·재고 응답은 두지 않습니다. 데모 모드의 `/api/prices`는 값 없이 `available: false`를 돌려줍니다(SPEC 7절, ADR 0009). 키 없는 compose가 적재할 데모 코퍼스 스냅샷(`snapshot/`, 전체 v4h 청크에서 규칙대로 뽑은 manifest·청크 줄, 임베딩 없음). 우리 시스템의 LLM 응답 기록(`recordings/`): 그래프 노드가 schema로 검증한 응답 칸과 질문별 결과만.
+- 넣지 않는 것: 외부 API 응답 원본(HTTP 본문·헤더·사용량·비용), 키, 가격, 원본 PDF(`data/corpus/`), `snapshot/` 밖의 데이터시트 청크·발췌.
 - 담당: 서비스·운영
 
 ## 파일
 - `scenarios.json` — 합성 회로, 지원 질문 3개, 역할 응답과 가상 부품 사양. 실제 데이터시트가 아니다.
 - `snapshot/` — compose `corpus-load`가 로컬 DB에 넣는 데모 코퍼스 스냅샷(TSC 42문서, 청크 1,556개). 출처·이용 조건·고른 규칙·sha256은 [SNAPSHOT.md](snapshot/SNAPSHOT.md)
+- `recordings/` — (아직 없음. 유료 기록을 돌리면 생김) LLM 응답 기록. [scripts/demo/record_demo.py](../../scripts/demo/record_demo.py) `record`가 만들고 `replay`가 키 없이 대조한다. 실행 방법은 [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md)
+  - `calls.jsonl` — LLM 호출마다 한 줄: `sha256`(노드 · system · user · schema 이름을 묶은 해시, 재생의 찾기 키) · `node` · `schema` · `response`(파싱한 응답). 키 · 헤더 · 모델 이름 · 비용은 없다
+  - `outcomes.json` — 기록 날짜, 노드별 모델, DB 지문(문서 · 청크 수와 청크 id · 본문 sha256 목록의 해시), 질문별 입력 · 경로 · 답 · 판정 · 거절 코드 · 인터럽트와 재개 값
+  - [주의] 프롬프트에 청크 id가 들어가 빈 볼륨에 `corpus-load`로 넣은 DB에서만 맞는다. 같은 대화의 두 번째 질문부터는 이전 입력이 프롬프트에 붙어 기록과 달라지므로 데모 질문은 새 대화의 첫 질문으로만 재생된다
 
 ## 실행·시연
 - 새 환경에서 `.env` 없이 `docker compose up --build` 후 `http://localhost:8000/login`을 연다. **비밀번호 없이 "데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼으로 들어간다.** A · B는 로컬 데모 전용 일반 사용자이며 평가용으로 제출한 계정과 다르다(비밀번호 로그인 불가). 사용자별 격리는 창 두 개(시크릿 창이나 다른 브라우저, 쿠키가 따로)에서 A와 B로 각각 들어가 확인한다.
