@@ -1,5 +1,11 @@
 # jeongun 작업 기록
 
+## 2026-11-10 레포 점검과 정리(묶음 A ~ F)
+- 한 일: 레포 전체 점검(문서 · 구조 · 표현 · 코드 · 앱 5갈래, 읽기 전용) 뒤 묶음별로 고쳤다. E 실행 환경(a9f6fdb), B 화면 문구(5de4c7c), A AI 도구 작업 흔적(4ebfc34), C 문서 현행화(00a036a), D 버린 사양 표 코드 정리(6673b42), F 용어 통일(359916e).
+- 실행한 명령과 결과: 오프라인 전체 시험 1059 passed, 117 skipped(사양 표 · MCP 사양 도구 시험 39개 삭제, 2개 추가). 프런트 `npm run test:run` 107 passed, `npm run build` 성공, 운영 번들에 목업 문자열 0. `docker compose config -q` 0. `specs.py`에서 남긴 정의 47개는 정리 전과 같음(지운 21개는 표 만들기 · 적재 명령과 그것만 쓰던 도우미).
+- 확인 못 한 것: 새 CI 프런트 작업은 GitHub에서 돌려 보지 않음. e2e · compose 기동 · 이미지 빌드 안 함. 정리 뒤 v3를 다시 재지 않음(평가 실행기 기본 도구가 카드 도구로 바뀜, 서비스 경로는 그대로).
+- 다음 할 일(결정 필요): 서비스 판정 읽기 기본 1번 vs 측정 3번(`LAB_READ_VOTES`), compose `DEMO_AUTH_ORIGIN` 유지 여부, 찾기 질문 승인 후보를 표에 보인 후보로 한정한 것, ADR 0015 정할 것 3개, 단일 그래프 전용 프롬프트 정리.
+
 ## 2026-11-09 ~ 11-10 Supervisor Haiku 전환과 실패 문항 고침(#47 ~ #50), 멀티 구조 확정(ADR 0017)
 - 한 일: Supervisor를 Haiku 5.5로(종합은 Sonnet), 찾기 질문은 코드가 판정 에이전트로 맞춤, 판정 쪽 없는 후보 거절 · 빈 판정 실패(#47). v3 실패 문항을 원인에서 고침: 회로 값 vz_min · vz_max는 범위 인용만(#48, v3-13), 문서 에이전트 일부 답 재검색(#49, v3-20), 요구 말 연산은 원문(#50, v3-09). ADR 0017으로 구조를 확정했다.
 - 바꾼 파일: `backend/services/langfuse_prompts.py`, `backend/multi_agent/supervisor.py` · `agents/judge.py` · `agents/docs.py`, `backend/prompts/supervisor.md` · `docs_answer.md`, 시험 `tests/multi_agent/test_supervisor.py` · `test_judge_read.py` · `test_judge.py` · `test_agents.py` · `tests/services/*` · `tests/evals/test_run_graph.py`, 문서 `AGENTS.md` · `README.md` · `SPEC.md` · `docs/adr/0017-…` · `ADR.md` · `0014-…` · `MULTI_AGENT.md` · `PROMPTS.md`.
