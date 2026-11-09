@@ -1,0 +1,4 @@
+# 검증 요약의 backend/auth.py SHA-256 오탐 1건만 제외한다.
+# 해당 값은 파일 바이트의 SHA-256과 대조했다. 새 커밋/다른 위치/다른 규칙은 제외하지 않는다.
+# https://github.com/gitleaks/gitleaks#-gitleaksignore
+ccadd3f2601e56478aefb09d37ec1d3d10af166a:evals/results/graph/memory_operations_2026-11-09.json:generic-api-key:121

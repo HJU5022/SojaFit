@@ -1,5 +1,12 @@
 # STH 작업 기록
 
+## 2026-11-09 PR #73 Secret Scan 오탐 수정
+- 한 일: PR head 7ff0d4a의 일반 test CI는 성공, gitleaks만 실패한 로그를 확인했다. memory_operations_2026-11-09.json의 runtime_sha256.backend/auth.py가 generic-api-key로 탐지됐다. 64자리 값이 실제 backend/auth.py 바이트의 SHA-256과 일치함을 대조했다.
+- 바꾼 파일: .gitleaksignore(원래 커밋·파일·규칙·줄 fingerprint 한 건), SOJAFIT.md(신규 설정 파일 한 줄만), docs/research/thread-memory-operations-review.md, docs/worklog/sth.md. 기본 규칙·기존 경로 예외·탐지 workflow와 원격 Git 이력은 변경하지 않는다.
+- 실행한 명령과 결과: CI와 동일한 gitleaks image digest c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f로 docker run --rm -v <repo>:/repo:ro <image> detect --source /repo --no-banner --redact 실행. 수정 전453 commits/35.04MB에서 leaks1·exit1, 동일 명령 수정 후 no leaks·exit0(6.06초). stdin 검출 대조군에서는 같은 비밀 아닌 해시가 다른 위치에서 여전히 leaks1·exit1임을 확인했다. uv run --no-sync --offline pytest tests/repo -q →5 passed(0.30초).
+- 확인 못 한 것: 새 커밋의 원격 CI 결과는 푸시 후 확인한다. 앱 코드·모델·DB·배포 변경은 없으므로 유료 평가/배포는 다시 실행하지 않는다.
+- 다음 할 일: 보완 커밋을 같은 STH/PR #73에 일반 푸시하고 원격 test/gitleaks 완료 결과를 확인해 기존 PR 본문에 반영한다. 새 PR·리뷰어 지정·병합·강제 푸시는 하지 않는다.
+
 ## 2026-11-09 문서 규칙 보완·PR 본문 준비
 - 한 일: 기능 작업서의 실측/이전 스냅샷/정본 반영 제안을 research/thread-memory-operations-review.md로 분리했다. 최신 마무리 기록을 파일 위로 옮기고 원문 기록을 보존했다. DB 013~017·thread-setup 순서, 웹 화면 범위, 합성 데모 출처와 관측 계약을 현재 구현에 맞췄다.
 - 바꾼 파일: docs/specs/evaluator-demo-readiness.md·user-thread-memory.md, docs/research/thread-memory-operations-review.md·RESEARCH.md, docs/experiments/thread-memory-operations.md, docs/worklog/sth.md, db/DB.md, backend/web/WEB.md, data/demo/DEMO.md, SOJAFIT.md(신규 파일 한 줄만).

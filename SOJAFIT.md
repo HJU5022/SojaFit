@@ -22,6 +22,7 @@ SojaFit (proj3-b)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
 ├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일 하나만 제외
+├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── Dockerfile              <- API 이미지. backend/와 data/만 복사 (고정)
 ├── docker-compose.yml      <- api + pgvector DB 한 줄 실행, 키 없는 데모 모드 (고정)

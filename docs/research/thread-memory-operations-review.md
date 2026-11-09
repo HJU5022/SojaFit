@@ -4,6 +4,11 @@
 
 기능 계약: [사용자별 thread·기억](../specs/user-thread-memory.md), [평가자·데모·관측](../specs/evaluator-demo-readiness.md). 측정 절차: [운영 검증 계약](../experiments/thread-memory-operations.md).
 
+## 2026-11-09 원격 CI 후속 확인
+- head 7ff0d4a에서 [일반 test CI](https://github.com/aihuman-7th/proj3-b/actions/runs/42574594948)는 성공했고 [Secret Scan](https://github.com/aihuman-7th/proj3-b/actions/runs/42574594978)은 검증 요약의 소스 SHA-256 한 건을 generic-api-key로 오탐했다. 아래 초기 결과의 원격 CI 미확인은 당시 상태이며 이 실행 결과와 구분한다.
+- 해당 값은 실제 backend/auth.py 파일 해시와 대조했다. [.gitleaksignore](../../.gitleaksignore)는 커밋·파일·규칙·줄 fingerprint 한 건에만 적용되며 파일/규칙 전체를 제외하지 않는다. [공식 fingerprint 문서](https://github.com/gitleaks/gitleaks#-gitleaksignore)를 따랐다.
+- CI와 같은 이미지의 로컬 전체 이력 검사453 commits/35.04MB를 실패1→탐지0으로 재검증했고, 다른 입력 위치의 검출 대조군은 여전히 탐지됐다. 변경 커밋의 원격 완료 결과는 PR #73의 최신 Checks를 따른다.
+
 ## 최종 실행 결과
 
 - 시험 tag: thread-memory-test → sojafit-api-00020-miv, 운영0%. 운영 00008-2h5는100% 유지. 시험만 출력 상한2048이고 기본 코드4096/일일$3/실행$0.50은 유지한다. Secret Manager 참조/TLS verify-full/CA/동시성4/timeout120/max인스턴스1 유지.
