@@ -10,7 +10,7 @@
 `evals/runners/run_graph.py`와 `evals/runners/run_skill_pair.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`(이 설명 파일)만 뺍니다. 그래서 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라집니다. 프롬프트가 아닌 문서는 이 폴더에 두지 않습니다.
 
 ## 노드별 모델(시작값)
-`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. `synth`는 `anthropic/claude-sonnet-5.5`, `supervisor`는 11-09부터 `anthropic/claude-haiku-5.5`(ADR 0016), `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read` · `docs_answer`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. `synth`는 `anthropic/claude-sonnet-5.5`, `supervisor`는 11-09부터 `anthropic/claude-haiku-5.5`(ADR 0017), `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read` · `docs_answer`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
 
 ## 버전 기록
 
