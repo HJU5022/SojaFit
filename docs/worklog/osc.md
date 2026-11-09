@@ -8,9 +8,10 @@
 - 추가 정합성 보완: 최신 main의 `tsc-v4h-2026-11-08` 코드와 11-08 외부 전체 실행 기록을 다시 읽어, v1 manifest·운영 스냅샷 52,244청크와 v4h 외부 실행 51,967카드를 구분했다. 현재 v4h 청킹 규칙, `AEC_Q101`·판정 전용 `DIRECTION`, 평가 실행기의 카드 읽기 경로를 `README.md`, `SPEC.md`, `data/corpus/CORPUS.md`, `docs/GATES.md`, `docs/specs/rag-pipeline.md`에 반영했다.
 - 검증: `git diff --check`와 충돌 표식 검색을 통과했다. `uv run pytest -q tests/api tests/repo/test_repo_layout.py`는 `53 passed, 21 skipped`, `uv lock --check`와 전체 `uv run pytest -q`는 `885 passed, 58 skipped`였다.
 - 추가 보완 뒤 검증: `uv run pytest -q tests/repo/test_repo_layout.py -p no:cacheprovider`는 `5 passed`, 전체 `uv run pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다. `uv lock --check`, `docker compose config --quiet`, `git diff --check`도 통과했고 검증 중 HEAD는 바뀌지 않았다.
-- 확인 못 한 것: 건너뛴 DB 통합 시험 58건과 실제 배포 응답은 확인하지 않았다. 원격 push와 새 PR 생성은 수행하지 않았다.
+- PR 생성: 정합성 보완 커밋까지 `OSC-chunk`에 fast-forward push하고 `main` 대상 PR #71을 만들었다. GitHub의 CI `test`와 `gitleaks`가 통과했고 mergeable 상태는 `MERGEABLE`·`CLEAN`이었다.
+- 확인 못 한 것: 건너뛴 DB 통합 시험 58건과 실제 배포 응답은 확인하지 않았다.
 - 추가 확인 못 한 것: 저장소 밖 전체 입력으로 v4h 청킹을 두 번 재실행한 산출물 해시와 에이전트 길 재측정은 이번 문서 정합성 작업에서 실행하지 않았다.
-- 다음 할 일: 최신 원격 `main`과 차이를 다시 확인한 뒤 조장 승인 범위에 맞춰 다음 PR을 생성한다.
+- 다음 할 일: PR #71에서 조원 1명 이상의 리뷰 승인을 받은 뒤 조장이 병합한다.
 
 ## 2026-11-08 FastAPI 공통 오류 응답 규약
 
