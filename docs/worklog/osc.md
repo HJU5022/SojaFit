@@ -1,5 +1,15 @@
 # 오세창 작업 기록
 
+## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
+
+- 한 일: 기존 API만 연결했다. HttpOnly 세션을 `/api/auth/me`로 복원하고 로그인 성공 후 me에서 role을 확인한다. 보호 경로와 역할별 관리자 탐색, 마스킹된 계정 목록·활성 상태 변경, 설정된 Google 링크·기존 callback 실패 안내, 로그아웃을 연결했다. API 401은 메모리 인증 상태를 비우고 로그인으로 보낸다.
+- 가격 경계: 후보 품번을 받는 PricePanel은 열 때만 no-store 조회하며 React component memory에만 결과를 둔다. 닫기·품번 변경·화면 이탈 시 결과와 요청을 버린다. 같은 패널을 다시 열어도 새로 조회한다. 기존 Mouser nullable 응답을 표시하되 가격을 만들거나 숫자 비교를 하지 않는다. 작업대에는 아직 후보 공급 기능이 없어 빈 상태만 둔다.
+- 바꾼 파일: `frontend/src/api/`·`auth/`·`pages/`·`components/` 신규 소스/동작 테스트, `test/network.ts`, `App.tsx`·`App.test.tsx`·`styles.css`·`SRC.md`, 신규 파일만 적은 `SOJAFIT.md` 트리, 이 기록. 서버 계약·백엔드 소스·동결 평가셋은 변경하지 않았다.
+- RED: 최초 `npm run test:run`은 `7 files failed; 9 failed, 1 passed`와 아직 없는 모듈 import 4 suite 실패. 세션 만료·nullable 회귀는 `2 failed, 6 passed`, no-store 경계는 `1 failed, 2 passed`, 기존 Google callback 실패 안내는 `1 failed, 2 passed`를 관측하고 각각 최소 수정했다. 네트워크 fetch만 대체하고 실제 페이지·Provider·Router·PricePanel을 실행한다.
+- 실행한 명령과 실제 결과: 최종 `npm run test:run` → `7 files, 21 passed in 1.91s`; `npm run build` → TypeScript·Vite 성공, 78 modules; `uv run pytest -q tests/api/test_auth.py tests/api/test_prices.py tests/api/test_frontend.py` → `57 passed, 21 skipped in 14.25s`; `uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.25s`; `git diff --check` 통과.
+- 확인 못 한 것: TEST_AUTH_DATABASE_URL 등이 필요한 기존 DB 통합 21건은 생략됐다. 실제 DB/계정·OAuth 왕복, 실제 Mouser, 브라우저 E2E/시각 확인·Docker 배포·모델 평가 재측정은 수행하지 않았다. 검색·판정 변경이나 평가 점수 개선을 주장하지 않는다.
+- 다음 할 일: 후속 작업이 실제 후보 목록을 PricePanel에 공급한다. OSC의 주요 문서 소유 규칙에 따라 SPEC은 직접 수정하지 않고, 조장에게 기존 `docs/specs/d5-frontend-service.md`의 AC-01/AC-07 및 인증·가격 경계 문단을 SPEC 정본에 반영하도록 요청한다. 400줄을 넘는 핵심 diff는 인증·권한·가격의 안전 경계를 검증하는 테스트와 구조 문서가 대부분이며 요청된 하나의 연결 작업/커밋으로 유지한다.
+
 ## 2026-11-09 D5 같은 출처 React 기반 (Task 2)
 
 - 한 일: React·Vite·TypeScript 셸과 `/login`, `/app`, `/admin/users` 경로, `/` 로그인 이동, Query provider·Router·API 개발 프록시를 추가했다. 인증·프로젝트·실행·승인 화면 동작은 후속 범위다. Node 24 다단계 빌드의 정적 산출물만 Python runtime에 복사한다.

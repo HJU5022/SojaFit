@@ -50,8 +50,29 @@ SojaFit (proj3-b)
 │       ├── App.tsx         <- 로그인·작업대·관리자 화면 셸
 │       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
 │       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
+│       ├── api/            <- 기존 서버 API의 typed fetch 경계
+│       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
+│       │   ├── auth.ts     <- 로그인·세션 복원·로그아웃·Google 상태 API
+│       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
+│       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
+│       │   └── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
+│       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
+│       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·로그아웃·401 처리
+│       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
+│       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
+│       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
+│       │   ├── LoginPage.tsx <- 비밀번호 로그인·설정된 Google 링크
+│       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장 테스트
+│       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
+│       │   ├── AdminUsersPage.test.tsx <- 권한 차단·목록 변경·세션 만료 테스트
+│       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
+│       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
+│       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
+│       │   └── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       └── test/           <- 화면 테스트 설정
-│           └── setup.ts    <- jest-dom matcher와 화면 정리
+│           ├── setup.ts    <- jest-dom matcher와 화면 정리
+│           └── network.ts  <- 손작성 완전한 API 응답·fetch 경계 테스트 대역
 │
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명

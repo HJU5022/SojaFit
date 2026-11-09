@@ -21,6 +21,21 @@ nav a.active { color: var(--trace); border-color: var(--trace); }
 main { max-width: 1280px; margin: 0 auto; padding: 56px 32px; }
 h1 { margin: 0 0 16px; font-size: 28px; line-height: 1.4; font-weight: 650; letter-spacing: -.03em; }
 p { margin: 0; color: var(--muted); line-height: 1.8; }
+.panel { margin-top: 24px; padding: 24px; border: 1px solid var(--divider); background: var(--surface); border-radius: 8px; }
+.login-panel { max-width: 480px; margin: 0 auto; }
+h2 { margin: 0 0 12px; font-size: 20px; }
+label { display: block; margin: 20px 0 8px; font-weight: 600; }
+input { width: 100%; padding: 12px; color: inherit; background: var(--surface); border: 1px solid var(--muted); border-radius: 4px; font: inherit; }
+button { padding: 10px 16px; color: #fff; background: var(--trace); border: 1px solid var(--trace); border-radius: 4px; font: inherit; cursor: pointer; }
+form button, .panel > button { margin: 20px 0 12px; }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
+[role="alert"] { margin: 16px 0; padding: 12px; color: #8b3030; background: #fff2f0; border-left: 3px solid #8b3030; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 14px 12px; border-bottom: 1px solid var(--divider); white-space: nowrap; }
+th { color: var(--muted); font-size: 14px; }
+.price-part { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--divider); }
 @media (max-width: 600px) {
   .topbar { align-items: flex-start; flex-direction: column; padding: 20px; gap: 16px; }
   nav { gap: 20px; }

@@ -1,6 +1,26 @@
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
+import { AuthProvider, useAuth } from './auth/AuthProvider'
+import RequireAuth from './auth/RequireAuth'
+import { errorMessage } from './api/client'
+import LoginPage from './pages/LoginPage'
+import AdminUsersPage from './pages/AdminUsersPage'
+import WorkbenchPage from './pages/WorkbenchPage'
 
 export default function App() {
+  return <AuthProvider><Shell /></AuthProvider>
+}
+
+function Shell() {
+  const { user, logout } = useAuth()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  async function signOut() {
+    if (busy) return
+    setBusy(true); setError(null)
+    try { await logout() } catch (error) { setError(error) }
+    finally { setBusy(false) }
+  }
   return (
     <div className="shell">
       <header className="topbar">
@@ -10,16 +30,18 @@ export default function App() {
         </a>
         <nav aria-label="주요 화면">
           <NavLink to="/app">작업대</NavLink>
-          <NavLink to="/login">로그인</NavLink>
-          <NavLink to="/admin/users">사용자 관리</NavLink>
+          {!user && <NavLink to="/login">로그인</NavLink>}
+          {user?.role === 'admin' && <NavLink to="/admin/users">사용자 관리</NavLink>}
+          {user && <button disabled={busy} onClick={() => void signOut()}>{busy ? '로그아웃 중…' : '로그아웃'}</button>}
         </nav>
       </header>
       <main id="main">
+        {error ? <p role="alert">{errorMessage(error)}</p> : null}
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<><h1>로그인</h1><p>회로 검토를 시작하는 곳입니다.</p></>} />
-          <Route path="/app" element={<><h1>회로 작업대</h1><p>회로의 역할과 부품 대체 근거를 함께 검토합니다.</p></>} />
-          <Route path="/admin/users" element={<><h1>사용자 관리</h1><p>계정 접근 권한을 관리하는 공간입니다.</p></>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/app" element={<RequireAuth><WorkbenchPage /></RequireAuth>} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
         </Routes>
       </main>
     </div>
