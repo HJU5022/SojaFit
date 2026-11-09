@@ -29,7 +29,7 @@ NUMBER = re.compile(r'\d+(?:\.\d+)?')
 #      draw_mermaid 그림에 영어 라벨이 붙지 않는다. 계획서 · 모으기의 값(docs · finish · single 등)은 그대로 두고 여기서만 옮긴다
 NODE = {'docs': 'RAG 에이전트', 'judge': '대체 부품 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
         'collect': '답 모으기', 'single': '답 정리', 'synth': '종합'}
-REPLAN = '모두 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
+REPLAN = '다시 해 볼 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
 
 
 class Facts(BaseModel):
