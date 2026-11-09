@@ -249,7 +249,9 @@ SojaFit (proj3-b)
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 자료: 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
-│       ├── recordings/     <- (예정) 멀티 그래프의 LLM 응답 기록(calls.jsonl)과 질문별 결과 · DB 지문(outcomes.json). scripts/demo/record_demo.py가 만듦
+│       ├── recordings/     <- 멀티 그래프의 LLM 응답 기록(calls.jsonl)과 질문별 결과 · DB 지문(outcomes.json). scripts/demo/record_demo.py가 만듦
+│       │   ├── calls.jsonl     <- LLM 호출마다 sha256 키 · 노드 · schema 이름 · 파싱한 응답(키 · 헤더 · 비용 없음)
+│       │   └── outcomes.json   <- 기록 날짜 · 노드별 모델 · DB 지문 · 질문별 입력 · 경로 · 답 · 판정 · 거절 코드
 │       └── snapshot/       <- 키 없는 compose의 corpus-load가 로컬 DB에 넣는 코퍼스 스냅샷(TSC 42문서, 청크 1,556개, 임베딩 없음)
 │           ├── SNAPSHOT.md <- 폴더 설명: 출처·이용 조건·고른 규칙·문서 목록·크기·sha256·청커 버전
 │           ├── manifest.jsonl  <- 스냅샷 문서 42줄(전체 v4h manifest 줄 그대로)

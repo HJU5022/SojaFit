@@ -234,7 +234,7 @@ def test_every_demo_question_has_a_react_demo_project_with_the_same_circuit(tmp_
     from backend.projects.repository import demo_path
     fake_recording(monkeypatch, tmp_path, [{**q, 'resume': None} for q in S.QUESTIONS])
     found = {q['id']: q['demo_id'] for q in demo.questions()}
-    assert found == {'v3-01': 'attiny85_time_switch', 'demo-find': 'franzininho_diy', 'demo-rating': 'breadboard_supply',
+    assert found == {'v3-01': 'attiny85_time_switch', 'demo-find': 'franzininho_diy', 'demo-rating': 'franzininho_diy',
                      'v3-36': 'franzininho_diy', 'v3-30': 'franzininho_diy'}
     for q in S.QUESTIONS:
         data = json.loads(demo_path(found[q['id']]).read_text(encoding='utf-8'))

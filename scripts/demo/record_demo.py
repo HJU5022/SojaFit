@@ -47,9 +47,10 @@ QUESTIONS = [
                    '구매 규격은 TSC 스위칭 다이오드, 반복 피크 역전압 정격 75V 이상, 평균 순방향 전류 정격 150mA 이상이다. 정격은 데이터시트 표에 적힌 시험 조건 그대로 비교한다.',
      'question': 'D3의 대체 후보를 위 구매 규격으로만 추려 줘. 각 후보의 전압·전류 정격과 패키지를 근거와 함께 알려 줘.',
      'answers': {}, 'interrupt': False, 'calls': (2, 12)},
-    {'id': 'demo-rating', 'kind': '정격 확인(v3-21의 1N5408G를 스냅샷에 있는 1N4001G로 바꿈)', 'circuit': 'SparkFun Breadboard Supply', 'netlist': BREAD,
-     'target': 'D1', 'conditions': '',
-     'question': 'TSC 1N4001G는 전원을 처음 넣을 때처럼 잠깐 몰리는 큰 전류를 어디까지 견딘다고 돼 있어? 한 번만 흘리는 건지, 전류 파형과 지속 시간·온도 조건도 같이 알려 줘.',
+    {'id': 'demo-rating', 'kind': '정격 확인(데모 회로 D3의 1N4148, 스냅샷 문서)', 'circuit': 'Franzininho DIY', 'netlist': FRANZ,
+     'target': 'D3', 'conditions': '',
+     # [왜] 11-10 첫 기록의 1N4001G 서지 전류 질문은 답 검사에서 거절(verify_failed)돼 데모로 쓸 수 없었다. 스냅샷에 표가 있는 1N4148 정격으로 바꾼다
+     'question': 'TSC 1N4148의 반복 피크 역전압(VRRM)과 평균 순방향 전류 정격은 얼마야? 데이터시트의 표를 근거로 알려 줘.',
      'answers': {}, 'interrupt': False, 'calls': (2, 5)},
     {'id': 'v3-36', 'kind': '거절(코퍼스에 없는 품번)', 'circuit': 'Franzininho DIY', 'netlist': FRANZ, 'target': 'D3',
      'conditions': 'USB 전원은 최대 5.25V, D3 경로 전류는 최대 40mA, 주변 온도는 25°C이며 PWM은 없다. 현재 1N4148이고 MiniMELF용 기판 수정은 가능하다.',

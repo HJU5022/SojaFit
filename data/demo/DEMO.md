@@ -8,7 +8,7 @@
 
 ## 파일
 - `snapshot/` — compose `corpus-load`가 로컬 DB에 넣는 데모 코퍼스 스냅샷(TSC 42문서, 청크 1,556개). 출처·이용 조건·고른 규칙·sha256은 [SNAPSHOT.md](snapshot/SNAPSHOT.md)
-- `recordings/` — (아직 없음. 유료 기록을 돌리면 생김) LLM 응답 기록. [scripts/demo/record_demo.py](../../scripts/demo/record_demo.py) `record`가 만들고 `replay`가 키 없이 대조한다. 실행 방법은 [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md)
+- `recordings/` — LLM 응답 기록(11-10 기록: 데모 질문 5개 · 호출 8줄, 키 없이 재생 대조 같음). [scripts/demo/record_demo.py](../../scripts/demo/record_demo.py) `record`가 만들고 `replay`가 키 없이 대조한다. 실행 방법은 [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md)
   - `calls.jsonl` — LLM 호출마다 한 줄: `sha256`(노드 · system · user · schema 이름을 묶은 해시, 재생의 찾기 키) · `node` · `schema` · `response`(파싱한 응답). 키 · 헤더 · 모델 이름 · 비용은 없다
   - `outcomes.json` — 기록 날짜, 노드별 모델, DB 지문(문서 · 청크 수와 청크 id · 본문 sha256 목록의 해시), 질문별 입력 · 경로 · 답 · 판정 · 거절 코드 · 인터럽트와 재개 값
   - [주의] 프롬프트에 청크 id가 들어가 빈 볼륨에 `corpus-load`로 넣은 DB에서만 맞는다. 같은 대화의 두 번째 질문부터는 이전 입력이 프롬프트에 붙어 기록과 달라지므로 데모 질문은 새 대화의 첫 질문으로만 재생된다

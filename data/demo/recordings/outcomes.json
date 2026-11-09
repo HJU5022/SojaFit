@@ -1,0 +1,193 @@
+{
+ "recorded_at": "2026-11-09",
+ "db": {
+  "documents": 42,
+  "chunks": 1556,
+  "ids_sha256": "7c0338cde344266540b3b0789a90e9ce1bb17ed0c4d409045bedd59aaae31127"
+ },
+ "models": {
+  "route": "anthropic/claude-haiku-5.5",
+  "grade": "openai/gpt-6-luna",
+  "rewrite": "anthropic/claude-haiku-5.5",
+  "generate": "anthropic/claude-haiku-5.5",
+  "supervisor": "anthropic/claude-haiku-5.5",
+  "judge_read": "anthropic/claude-haiku-5.5",
+  "docs_answer": "anthropic/claude-haiku-5.5",
+  "synth": "anthropic/claude-sonnet-5.5",
+  "card_read": "anthropic/claude-haiku-5.5",
+  "card_pick": "anthropic/claude-haiku-5.5"
+ },
+ "questions": [
+  {
+   "id": "v3-01",
+   "kind": "판정 + 조건 인터럽트",
+   "circuit": "ATtiny85 Time Switch",
+   "netlist": "data/circuits/collected/received-20261030/c01/received/c01-attiny85-time-switch.net",
+   "target": "D1",
+   "conditions": "VIN은 최대 15V, D1의 연속 전류는 최대 120mA이며 주변 온도는 25°C이다. PWM 없이 직류로 쓴다. 현재 부품은 넷리스트의 onsemi 1N4007RLG이고 제조사를 바꿔도 된다. 기판의 리드 간격은 수정할 수 있다. 이번 부품 승인에서 순방향 전압강하는 제한 항목으로 삼지 않는다. 투입 시 D1 전류는 초기 접합온도 25°C에서 피크 2A·폭 8.3ms의 단발 반정현파이다.",
+   "question": "전원 입력의 D1을 TSC 1N4007G로 바꿔도 될까? 전기 조건과 실장 변경 여부를 같이 봐 줘.",
+   "interrupt": {
+    "missing": [
+     "v_drop_allowed"
+    ],
+    "role_choices": [],
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed"
+   },
+   "resume": {
+    "answers": {},
+    "role": ""
+   },
+   "path": [
+    "입력 읽기",
+    "기억 읽기",
+    "사실 확인",
+    "계획",
+    "판정 읽기",
+    "판정",
+    "모으기",
+    "답 정리",
+    "답 검사",
+    "끝"
+   ],
+   "question_type": "candidate_judge",
+   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (부하 쪽 전원 넷); D1.A → VIN (커넥터·퓨즈 쪽); 직렬 극성 보호 배치)\n\n**1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 2 (2.0) | 30 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "refusal": ""
+  },
+  {
+   "id": "demo-find",
+   "kind": "후보 찾기(v3-11 모양, 데모 회로 · 스위칭 다이오드로 바꿈)",
+   "circuit": "Franzininho DIY",
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net",
+   "target": "D3",
+   "conditions": "USB 전원은 최대 5.25V, D3 경로 전류는 최대 40mA, 주변 온도는 25°C이며 PWM은 없다. 현재 1N4148이고 표면실장으로 기판을 바꿀 수 있다. 구매 규격은 TSC 스위칭 다이오드, 반복 피크 역전압 정격 75V 이상, 평균 순방향 전류 정격 150mA 이상이다. 정격은 데이터시트 표에 적힌 시험 조건 그대로 비교한다.",
+   "question": "D3의 대체 후보를 위 구매 규격으로만 추려 줘. 각 후보의 전압·전류 정격과 패키지를 근거와 함께 알려 줘.",
+   "interrupt": {
+    "missing": [
+     "i_fault",
+     "orig_schottky",
+     "high_impedance",
+     "fast_signal"
+    ],
+    "role_choices": [],
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): i_fault, orig_schottky, high_impedance, fast_signal"
+   },
+   "resume": {
+    "answers": {},
+    "role": ""
+   },
+   "path": [
+    "입력 읽기",
+    "기억 읽기",
+    "사실 확인",
+    "계획",
+    "판정 읽기",
+    "판정",
+    "모으기",
+    "답 정리",
+    "답 검사",
+    "끝"
+   ],
+   "question_type": "candidate_find",
+   "answer": "역할: R08 (근거: D3.A → Net-(D3-PadA) (USB VBUS 측); D3.C → 5V; D3 parallel to 5V/VBUS path, cathode on 5V supply side)\n\n사양 표에서 건 조건: VRRM ≥ 6.562, VRRM ≥ 75, IF_AV ≥ 0.15\n**1N4148WH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Average rectified output current |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WH_A2501.pdf 2쪽 ORDERING INFORMATION).\n\n**1N4148WS: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N4148WSH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Average rectified output current |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WSH_A2501.pdf 2쪽 ORDERING INFORMATION).\n\n**1N4148W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N4448W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "verdicts": [
+    [
+     "1N4148WH",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "1N4148WS",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "1N4148WSH",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "1N4148W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448W",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "refusal": ""
+  },
+  {
+   "id": "demo-rating",
+   "kind": "정격 확인(데모 회로 D3의 1N4148, 스냅샷 문서)",
+   "circuit": "Franzininho DIY",
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net",
+   "target": "D3",
+   "conditions": "",
+   "question": "TSC 1N4148의 반복 피크 역전압(VRRM)과 평균 순방향 전류 정격은 얼마야? 데이터시트의 표를 근거로 알려 줘.",
+   "interrupt": null,
+   "resume": null,
+   "path": [
+    "입력 읽기",
+    "기억 읽기",
+    "사실 확인",
+    "계획",
+    "문서",
+    "모으기",
+    "답 정리",
+    "답 검사",
+    "끝"
+   ],
+   "question_type": "rating",
+   "answer": "TSC 1N4148의 반복 피크 역전압(VRRM)은 100 V입니다 [79]. 평균 순방향 전류 정격에 해당하는 항목으로 데이터시트 절대최대정격 표에는 순방향 전류(IF)가 150 mA로 나와 있습니다 [80].",
+   "verdicts": [],
+   "refusal": ""
+  },
+  {
+   "id": "v3-36",
+   "kind": "거절(코퍼스에 없는 품번)",
+   "circuit": "Franzininho DIY",
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net",
+   "target": "D3",
+   "conditions": "USB 전원은 최대 5.25V, D3 경로 전류는 최대 40mA, 주변 온도는 25°C이며 PWM은 없다. 현재 1N4148이고 MiniMELF용 기판 수정은 가능하다.",
+   "question": "D3용 TSC LL4149의 전압강하 최댓값과 시험 전류가 어떻게 돼? LL4148 말고 발주서에 적힌 LL4149를 확인해 줘.",
+   "interrupt": null,
+   "resume": null,
+   "path": [
+    "입력 읽기",
+    "기억 읽기",
+    "사실 확인",
+    "계획",
+    "거절"
+   ],
+   "question_type": "rating",
+   "answer": "LL4149의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "verdicts": [],
+   "refusal": "part_missing"
+  },
+  {
+   "id": "v3-30",
+   "kind": "거절(범위 밖)",
+   "circuit": "Franzininho DIY",
+   "netlist": "data/circuits/collected/received-20261030/c09/received/c09-franzininho-diy.net",
+   "target": "D3",
+   "conditions": "USB 전원 5V로 동작하고 D3는 유지한다. IC1은 넷리스트의 ATtiny85이며 펌웨어는 수정할 수 있다.",
+   "question": "D3 교체 대신 펌웨어 쪽을 먼저 보려고 해. 이 ATtiny85가 USB 소프트웨어 통신에 맞는 클록으로 뜨도록 퓨즈 바이트 설정 후보를 골라 줘.",
+   "interrupt": null,
+   "resume": null,
+   "path": [
+    "입력 읽기",
+    "기억 읽기",
+    "사실 확인",
+    "계획",
+    "거절"
+   ],
+   "question_type": "out_of_scope",
+   "answer": "이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.",
+   "verdicts": [],
+   "refusal": "out_of_scope"
+  }
+ ]
+}
