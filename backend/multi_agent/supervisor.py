@@ -3,7 +3,7 @@
 - 역할:
   - `plan_node`: 질문 · 대상 회로 · 확인된 사실을 글로 만들어 LLM에 주고 지시서(`Plan`: 범위 판정 · 질문 종류 · 다음 길 하나와
     그 에이전트의 지시)를 받는다. 형식이 틀리면 `llm.chat`이 다시 부르고, 끝내 틀리면 거절한다.
-    `after_plan`은 지시서의 `next`를 그대로 돌려주고, 어느 노드로 갈지는 `build.py`의 간선 표가 정한다.
+    `after_plan`은 지시서의 `next`를 갈 노드 이름(`ROUTES`)으로 바꿔 돌려준다. 그래프 그림의 간선에 영어 라벨이 붙지 않게 노드 이름 그대로다.
   - `check_node`(답 검사, 코드): 인용 번호가 에이전트가 받은 근거 안인지, 근거 인용이 하나라도 있는지 본다.
 - 하지 않는 일: 검색 · 판정 자체(에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
   여러 에이전트의 답 합치기(11-09부터 에이전트 하나가 질문 전체를 답한다).
@@ -18,6 +18,8 @@ from backend.multi_agent.contracts import Plan, Reason
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
+# [왜] 지시서의 다음 길(LLM이 쓰는 영어 이름) → 갈 노드 이름. 갈림 함수가 노드 이름을 돌려줘야 간선 표가 {'거절': '거절'}처럼 되고 그림에 라벨이 없다(강의 20강)
+ROUTES = {'docs': 'RAG 에이전트', 'judge': '대체 부품 에이전트', 'price': '가격 안내', 'refuse': '거절', 'finish': '끝내기'}
 
 
 class Facts(BaseModel):
@@ -66,9 +68,9 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
 
 
 def after_plan(state: dict) -> str:
-    """Supervisor 뒤 갈림길: 지시서의 다음 길 이름(docs · judge · finish · price · refuse). 형식 실패면 refuse."""
+    """Supervisor 뒤 갈림길: 갈 노드 이름(RAG 에이전트 · 대체 부품 에이전트 · 가격 안내 · 거절 · 끝내기). 형식 실패 · 거절 사유가 있으면 거절."""
     plan = state.get('plan') or {}
-    return 'refuse' if state.get('refusal_reason') or not plan else plan['next']
+    return '거절' if state.get('refusal_reason') or not plan else ROUTES[plan['next']]
 
 
 def check_node(state: dict) -> dict:
@@ -88,5 +90,5 @@ def check_node(state: dict) -> dict:
 
 
 def after_check(state: dict) -> str:
-    """답 검사 뒤 갈림길: 거절 사유가 있으면 refuse, 없으면 finish."""
-    return 'refuse' if state.get('refusal_reason') else 'finish'
+    """답 검사 뒤 갈림길: 거절 사유가 있으면 '거절', 없으면 '끝내기'(노드 이름)."""
+    return '거절' if state.get('refusal_reason') else '끝내기'

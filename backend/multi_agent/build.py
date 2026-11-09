@@ -1,6 +1,6 @@
 """멀티 에이전트 조립: 입력 읽기 → 품번·판 확인 → Supervisor → (RAG 에이전트 | 대체 부품 에이전트) → 답 검사 → 끝내기 · 거절.
 
-- 역할: 노드와 간선을 정하고 compile한다. Supervisor는 다음 길 하나를 고르고(강의 15강), 갈림길은 모두 간선 표(path map)로 적는다(강의 03강).
+- 역할: 노드와 간선을 정하고 compile한다. Supervisor는 다음 길 하나를 고르고(강의 15강), 갈림길은 모두 간선 표(path map)로 적는다. 갈림 함수는 노드 이름을 돌려주고 간선 표의 키도 노드 이름이다(강의 20강 {"거절": "거절"}, 그림에 영어 라벨이 없게)(강의 03강).
   - RAG 에이전트(하위 그래프): 검색 → 근거 채점·답 쓰기, 근거가 없으면 검색으로 되돌아가는 고리(강의 18 · 20강, 상한 MAX_SEARCHES).
   - 대체 부품 에이전트(하위 그래프): 회로 역할 읽기 → 대체 부품 판정. 판정이 인터럽트로 한 번 묻고(강의 09강), 재개하면
     판정 노드부터 다시 돌아 읽기 LLM을 다시 부르지 않는다.
@@ -52,7 +52,7 @@ def rag_subgraph(*, chat, retriever, find):
     g.add_node('근거 채점·답 쓰기', partial(docs.answer_step, chat=chat))
     g.add_edge(START, '검색')
     g.add_edge('검색', '근거 채점·답 쓰기')
-    g.add_conditional_edges('근거 채점·답 쓰기', docs.after_answer, {'검색': '검색', '나가기': END})  # 다른 검색어로 다시 찾는 고리
+    g.add_conditional_edges('근거 채점·답 쓰기', docs.after_answer, {'검색': '검색', END: END})  # 다른 검색어로 다시 찾는 고리, 아니면 나감
     return g.compile()
 
 
@@ -92,15 +92,15 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_edge(START, '입력 읽기')
     g.add_edge('입력 읽기', '품번·판 확인')
     g.add_edge('품번·판 확인', 'Supervisor')
-    # [왜] Supervisor의 다음 길(지시서 next) → 노드 이름 표. 에이전트는 하나만 고른다(강의 15강)
-    routes = {'docs': 'RAG 에이전트', 'price': '가격 안내', 'refuse': '거절', 'finish': '끝내기'}
+    # [왜] Supervisor가 고를 수 있는 노드(에이전트는 하나만, 강의 15강). 대체 부품이 꺼지면 plan_node가 RAG로 돌려 그 이름이 나오지 않는다
+    targets = ['RAG 에이전트', '가격 안내', '거절', '끝내기']
     if judge_enabled:
         g.add_node('대체 부품 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
         g.add_edge('대체 부품 에이전트', '답 검사')
-        routes['judge'] = '대체 부품 에이전트'
-    g.add_conditional_edges('Supervisor', sup.after_plan, routes)
+        targets.append('대체 부품 에이전트')
+    g.add_conditional_edges('Supervisor', sup.after_plan, {t: t for t in targets})
     g.add_edge('RAG 에이전트', '답 검사')
-    g.add_conditional_edges('답 검사', sup.after_check, {'finish': '끝내기', 'refuse': '거절'})
+    g.add_conditional_edges('답 검사', sup.after_check, {'끝내기': '끝내기', '거절': '거절'})
     g.add_edge('끝내기', END)
     g.add_edge('거절', END)
     g.add_edge('가격 안내', END)

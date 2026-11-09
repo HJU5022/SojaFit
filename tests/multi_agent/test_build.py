@@ -75,6 +75,8 @@ def test_graph_shape_is_supervisor_picks_one_agent_then_check():
     assert edges(rag) == {('__start__', '검색'), ('검색', '근거 채점·답 쓰기'), ('근거 채점·답 쓰기', '검색'), ('근거 채점·답 쓰기', '__end__')}
     judge = B.judge_subgraph(chat=None, specs=None, find=None, retriever=None)
     assert edges(judge) == {('__start__', '회로 역할 읽기'), ('회로 역할 읽기', '대체 부품 판정'), ('대체 부품 판정', '__end__')}
+    # [왜] 갈림 함수가 노드 이름을 돌려주고 간선 표 키도 노드 이름이라 그림의 간선에 라벨(docs · refuse 같은 영어 이름)이 없다
+    assert [e for e in graph.get_graph(xray=True).edges if e.data is not None] == []
     # 대체 부품 에이전트를 켜지 않으면 그 노드 · 간선이 없다
     assert '대체 부품 에이전트' not in app(scripted()).get_graph().nodes
 

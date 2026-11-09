@@ -6,7 +6,7 @@
     그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4). 역할 질문처럼 검색어가 없으면 찾지 않고 넷리스트만 쓴다.
   - `answer_step`(근거 채점 · 답 쓰기): Haiku 1번에 질문 · 지시서 · 대상 회로 · 청크를 주고 채점과 답을 함께 받는다. 인용 검사(코드: 보여 준 청크
     번호와 넷리스트만) 뒤 답을 내거나, 근거가 없으면 거절 사유(not_found)와 다음 검색어를 낸다.
-  - `after_answer`: 다음 검색어가 있고 상한(MAX_SEARCHES) 전이면 검색으로 되돌아가고, 아니면 하위 그래프를 나간다.
+  - `after_answer`: 다음 검색어가 있고 상한(MAX_SEARCHES) 전이면 '검색'으로 되돌아가고, 아니면 END(하위 그래프를 나감)를 돌려준다.
 - 하지 않는 일: 질문 종류 정하기(Supervisor), 숫자 비교 · 대체 판정(대체 부품 에이전트와 `backend/judge/`),
   LLM 직접 호출(`chat`을 받아 쓴다. 실제 연결은 `llm.node_chat`).
 - 출처: 강의 IV-2 18강 · 20강(채점 → 재작성 → 검색 고리를 조건부 간선으로), 예전 채점 Luna · 생성 Haiku를 한 호출로 합침(11-06 강사 지적
@@ -15,6 +15,8 @@
 import re
 from pathlib import Path
 from typing import Literal
+
+from langgraph.graph import END
 
 from pydantic import BaseModel, Field
 
@@ -183,5 +185,5 @@ def answer_step(state: dict, *, chat) -> dict:
 
 
 def after_answer(state: dict) -> str:
-    """고리 갈림길: 다시 찾을 검색어가 있고 상한 전이면 '검색', 아니면 '나가기'(AGENTS 6, B-지시서 4-4)."""
-    return '검색' if state.get('next_query') and (state.get('tries') or 0) < MAX_SEARCHES else '나가기'
+    """고리 갈림길: 다시 찾을 검색어가 있고 상한 전이면 '검색', 아니면 END(AGENTS 6, B-지시서 4-4). 노드 이름을 그대로 돌려줘 그림에 라벨이 없다."""
+    return '검색' if state.get('next_query') and (state.get('tries') or 0) < MAX_SEARCHES else END

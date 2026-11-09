@@ -26,7 +26,7 @@ def test_format_failure_ends_as_refusal_without_agents():
         raise ValueError('형식을 3번 모두 어겼다')  # llm.chat이 다시 불러도 틀렸을 때 내는 오류
     out = S.plan_node(STATE, chat=chat, judge_enabled=True)
     assert out['refusal_reason'] == Reason.LIMIT_REACHED.value and out['plan'] == {} and out['counters']['hops'] == 1
-    assert S.after_plan({**STATE, **out}) == 'refuse'
+    assert S.after_plan({**STATE, **out}) == '거절'
 
 
 def test_supervisor_writes_the_brief_for_the_chosen_agent_and_counts_one_call():
@@ -42,11 +42,12 @@ def test_judge_goes_to_the_rag_agent_when_judge_is_off():
     assert out['plan']['next'] == 'docs' and out['task']['query'] == 'goal 1'  # 검색어가 없으면 목표로 찾는다
 
 
-def test_after_plan_returns_the_next_step_name_for_the_edge_table():
-    """[왜] 어느 노드로 갈지는 build.py 간선 표가 정한다(강의 03강). 갈림길 함수는 지시서의 이름만 돌려준다."""
-    for nxt in ('docs', 'judge', 'finish', 'price', 'refuse'):
-        assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == nxt
-    assert S.after_plan({'plan': {'next': 'refuse'}, 'refusal_reason': 'out_of_scope'}) == 'refuse'
+def test_after_plan_returns_the_target_node_name():
+    """[왜] 갈림 함수가 노드 이름을 돌려줘야 간선 표 키가 노드 이름과 같아 그림에 영어 라벨이 없다(강의 20강)."""
+    want = {'docs': 'RAG 에이전트', 'judge': '대체 부품 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절'}
+    for nxt, node in want.items():
+        assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == node
+    assert S.after_plan({'plan': {'next': 'docs'}, 'refusal_reason': 'out_of_scope'}) == '거절'
 
 
 def test_check_blocks_fake_citations_and_uncited_answers():
@@ -59,8 +60,8 @@ def test_check_blocks_fake_citations_and_uncited_answers():
     assert 'refusal_reason' not in S.check_node({**STATE, 'answer': '1N5817: 불충족', 'judgement': {'kind': 'judge'}})
     # 에이전트가 이미 거절 사유를 냈으면 검사하지 않고 거절로 보낸다
     out = S.check_node({**one, 'answer': '', 'refusal_reason': 'not_found'})
-    assert out == {'path': ['답 검사']} and S.after_check({'refusal_reason': 'not_found'}) == 'refuse'
-    assert S.after_check({'refusal_reason': ''}) == 'finish'
+    assert out == {'path': ['답 검사']} and S.after_check({'refusal_reason': 'not_found'}) == '거절'
+    assert S.after_check({'refusal_reason': ''}) == '끝내기'
 
 
 def test_prompt_picks_one_agent_and_keeps_constraints():
