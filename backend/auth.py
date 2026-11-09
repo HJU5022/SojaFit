@@ -1,14 +1,16 @@
-"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 관리자 계정 관리).
+"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 자기 가입, 관리자 계정 관리).
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
-auth_sessions에 저장한다. 실패 5회는 15분 잠금(auth_login_attempts), 세션은 절대 8시간·유휴 30분이다.
+auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
+(auth_login_ip_attempts), 세션은 절대 8시간·유휴 30분이다.
+자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다.
 호출자: backend/main.py(API 라우트), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
-하지 않는 일: HTTP 라우트·쿠키 설정(backend/main.py), 회원가입(관리자가 만든 계정만 로그인), 테이블 생성(db/*.sql),
+하지 않는 일: HTTP 라우트·쿠키 설정(backend/main.py), 테이블 생성(db/*.sql), 이메일 인증,
 회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
-출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
+출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
-DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000).
-테이블 정의는 db/003_auth.sql·005·006.
+DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
+테이블 정의는 db/003_auth.sql·005·006·021.
 """
 import getpass
 import argparse
@@ -32,6 +34,8 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # [왜] scrypt 검증 한 번에 128MiB를 쓴다. authenticate()가 DB advisory lock 2칸으로 동시 검증을 2개까지만 허용한다.
 # N=2**17(CPU·메모리 비용), R=블록 크기, P=병렬도. [주의] 바꾸면 기존 해시가 검증되지 않는다
 N, R, P = 2**17, 8, 1
+SIGNUP_IP_DAILY = 3  # 클라이언트 IP당 UTC 하루 가입 요청 상한(11-09 결정)
+LOGIN_IP_FAILURES = 30  # 클라이언트 IP당 15분 로그인 실패 상한. 닿으면 그 IP를 15분 잠근다(11-09 결정)
 
 
 def validate_auth_configuration() -> None:
@@ -238,22 +242,25 @@ def check_origin(request: Request) -> None:
         raise HTTPException(status_code=403, detail="요청 출처를 확인할 수 없습니다.")
 
 
-def authenticate(email: str, password: str) -> tuple[str, int] | None:
+def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:
     """이메일·비밀번호를 검증하고 성공하면 새 세션을 만든다.
 
-    scrypt 동시 검증은 DB advisory lock 2칸으로 제한한다(메모리 보호). 실패 5회(15분 창)면 15분 잠금이다.
+    scrypt 동시 검증은 DB advisory lock 2칸으로 제한한다(메모리 보호). 계정당 실패 5회(15분 창)면 15분 잠금,
+    클라이언트 IP당 실패 LOGIN_IP_FAILURES회(15분 창)면 그 IP를 15분 잠근다(여러 계정에 나눠 보내는 대입 방어).
     없는 계정도 같은 비용으로 검증해 응답 시간 차이(timing attack)로 계정 존재를 알 수 없게 한다.
 
     Args:
         email: 로그인 이메일(공백 제거·소문자로 맞춘다).
         password: 평문 비밀번호.
+        ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
     Returns:
-        (세션 토큰, user_id). 실패·잠금·비활성 계정이면 None.
+        (세션 토큰, user_id). 실패·계정 잠금·IP 잠금·비활성 계정이면 None(호출자가 같은 401로 돌려 잠금을 드러내지 않는다).
     Raises:
         HTTPException: 503, 동시 검증 슬롯이 모두 찼을 때.
     """
     email = email.strip().lower()
     key = hashlib.sha256(email.encode()).hexdigest()
+    ip_key = session_token_hash(ip)  # [왜] 가입 한도와 같은 키 해시라 IP 원문이 DB에 남지 않는다
     with connection() as conn, conn.cursor() as cur:
         # [왜] 트랜잭션 단위 advisory lock 2칸(736125,1·2) 중 하나를 못 잡으면 scrypt를 돌리지 않고 503으로 돌려보낸다
         cur.execute("SELECT pg_try_advisory_xact_lock(736125, 1) OR pg_try_advisory_xact_lock(736125, 2)")
@@ -261,15 +268,21 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
             raise HTTPException(status_code=503, detail="잠시 후 다시 시도해 주세요.")
         # [왜] 무작위 이메일로 시도 행이 끝없이 쌓이지 않게, 창·잠금이 끝난 행(지워도 같은 결과)과 만료 세션을 함께 지운다
         cur.execute("DELETE FROM auth_login_attempts WHERE (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP) AND (window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes')")
+        cur.execute("DELETE FROM auth_login_ip_attempts WHERE (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP) AND (window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes')")
         cur.execute("DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP")
         # [왜] 이메일 원문 대신 sha256(key)로 시도 기록을 남기고, 행이 없으면 만들어 아래 FOR UPDATE로 잠글 대상을 확보한다
         cur.execute("INSERT INTO auth_login_attempts (login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (key,))
         cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP, window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes' FROM auth_login_attempts WHERE login_hash = %s FOR UPDATE", (key,))
         count, locked, window_expired = cur.fetchone()  # 실패 횟수, 잠금 중 여부, 15분 집계 창이 끝났는지
+        # [왜] IP 행도 같은 방식(없으면 만들고 FOR UPDATE)으로 잡는다. 잠그는 순서는 계정 시도 행 → IP 행 → 사용자 행으로 고정해 교착을 피한다
+        cur.execute("INSERT INTO auth_login_ip_attempts (ip_hash) VALUES (%s) ON CONFLICT DO NOTHING", (ip_key,))
+        cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP, window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes' FROM auth_login_ip_attempts WHERE ip_hash = %s FOR UPDATE", (ip_key,))
+        ip_count, ip_locked, ip_window_expired = cur.fetchone()
         # [왜] 계정 행을 FOR UPDATE로 잠가 로그인과 계정 비활성화·세션 폐기가 동시에 끼어들지 않게 직렬화한다
         cur.execute("SELECT id, password_hash, is_active FROM users WHERE login_id = %s FOR UPDATE", (email,))
         user = cur.fetchone()
-        if locked:
+        # [주의] 잠긴 동안은 비밀번호가 맞아도 거절하고 횟수도 올리지 않는다(계정·IP 같은 규칙)
+        if locked or ip_locked:
             return None
         # [주의] 없는 계정도 더미 해시로 같은 scrypt 비용을 치러 응답 시간으로 계정 존재를 알 수 없게 한다
         encoded = user[1] if user else "scrypt$" + "00" * 16 + "$" + "00" * 32
@@ -278,8 +291,67 @@ def authenticate(email: str, password: str) -> tuple[str, int] | None:
             # 창이 끝났으면 1부터 다시 세고, 아니면 누적한다. 5회째에 locked_until을 15분 뒤로 건다
             count = 1 if window_expired else count + 1
             cur.execute("UPDATE auth_login_attempts SET failed_count = %s, window_started_at = CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE window_started_at END, locked_until = CASE WHEN %s >= 5 THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE login_hash = %s", (count, window_expired, count, key))
+            # IP도 같은 규칙: 창이 끝났으면 1부터, LOGIN_IP_FAILURES회째에 15분 잠금
+            ip_count = 1 if ip_window_expired else ip_count + 1
+            cur.execute("UPDATE auth_login_ip_attempts SET failed_count = %s, window_started_at = CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE window_started_at END, locked_until = CASE WHEN %s >= %s THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE ip_hash = %s", (ip_count, ip_window_expired, ip_count, LOGIN_IP_FAILURES, ip_key))
             return None
-        cur.execute("DELETE FROM auth_login_attempts WHERE login_hash = %s", (key,))  # 성공하면 실패 기록을 지운다
+        cur.execute("DELETE FROM auth_login_attempts WHERE login_hash = %s", (key,))  # 성공하면 그 계정의 실패 기록을 지운다
+        # [주의] IP 실패 기록은 성공해도 지우지 않는다. 지우면 공격자가 자기 계정 로그인을 끼워 넣어 IP 횟수를 계속 되돌릴 수 있다
+        token = secrets.token_urlsafe(32)
+        cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
+        return token, user[0]
+
+
+def client_ip(request: Request) -> str:
+    """요청한 클라이언트 IP. Cloud Run에서는 X-Forwarded-For의 마지막 값, 그 밖에서는 소켓 주소."""
+    # [왜] Cloud Run(run.app 직접 호출)은 Google 프런트엔드가 접속한 클라이언트 IP를 X-Forwarded-For 끝에 덧붙이고,
+    # 그 앞의 값은 클라이언트가 보낸 것이라 위조할 수 있다. 그래서 마지막 값만 쓴다. 소켓 주소는 Google 내부 주소라 쓸 수 없다.
+    # 출처: https://docs.cloud.google.com/load-balancing/docs/https#x-forwarded-for_header (Google이 덧붙인 값만 신뢰, 앞 값은 클라이언트가 보낸 것),
+    # https://github.com/GoogleCloudPlatform/nodejs-docs-samples/pull/3586 (Google의 Cloud Run 샘플이 프록시 1단 = 마지막 값만 신뢰),
+    # https://docs.cloud.google.com/run/docs/container-contract (K_SERVICE는 Cloud Run이 모든 컨테이너에 넣는 변수)
+    # [주의] Cloud Run 앞에 외부 부하분산기를 두면 마지막 값이 부하분산기 IP가 되어 모두 한 IP로 묶인다. 그때는 끝에서 두 번째 값으로 바꾼다
+    forwarded = ",".join(request.headers.getlist("x-forwarded-for"))
+    if os.getenv("K_SERVICE") and forwarded:
+        return forwarded.rsplit(",", 1)[-1].strip()
+    # [주의] 로컬·Compose에서는 X-Forwarded-For를 믿지 않는다(앞에 Google 프런트엔드가 없어 누구나 넣을 수 있음)
+    return request.client.host if request.client else ""
+
+
+def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
+    """승인 없이 일반 사용자(role=user) 계정을 만들고 바로 새 세션을 발급한다.
+
+    클라이언트 IP당 UTC 하루 SIGNUP_IP_DAILY회까지 받는다. 중복 이메일도 1회로 센다(409가 계정 존재를 알려 주므로
+    존재 확인 남용도 같은 한도로 묶는다). 한도 초과·503은 트랜잭션이 되돌려져 세지 않는다.
+
+    Args:
+        email: 가입 이메일(공백 제거·소문자로 맞춘다).
+        password: 평문 비밀번호(길이 검증은 호출자 main.py가 한다).
+        ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
+    Returns:
+        (세션 토큰, user_id). 이미 있는 이메일이면 None(호출자가 409).
+    Raises:
+        HTTPException: 429 IP 하루 한도 초과, 503 동시 scrypt 슬롯이 모두 찼을 때.
+    """
+    email = email.strip().lower()
+    with connection() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM auth_signup_attempts WHERE day < (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date")  # 지난 날짜 행은 결과에 영향이 없어 지운다
+        # [왜] 행을 만들거나 1 올리는 문장 하나로 같은 IP의 동시 요청을 직렬화하고, 상한에 닿았으면 행을 돌려주지 않는다
+        cur.execute(
+            "INSERT INTO auth_signup_attempts (ip_hash, day) VALUES (%s, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) "
+            "ON CONFLICT (ip_hash, day) DO UPDATE SET signup_count = auth_signup_attempts.signup_count + 1 "
+            "WHERE auth_signup_attempts.signup_count < %s RETURNING signup_count",
+            (session_token_hash(ip), SIGNUP_IP_DAILY),
+        )
+        if not cur.fetchone():
+            raise HTTPException(status_code=429, detail="오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.")
+        # [왜] scrypt 한 번에 128MiB를 쓰므로 로그인(authenticate)과 같은 advisory lock 2칸을 나눠 써 동시 계산을 2개로 묶는다
+        cur.execute("SELECT pg_try_advisory_xact_lock(736125, 1) OR pg_try_advisory_xact_lock(736125, 2)")
+        if not cur.fetchone()[0]:
+            raise HTTPException(status_code=503, detail="잠시 후 다시 시도해 주세요.")
+        cur.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, 'user') ON CONFLICT (login_id) DO NOTHING RETURNING id", (email, hash_password(password)))
+        user = cur.fetchone()
+        if not user:
+            return None  # [주의] 예외 없이 끝내야 위 가입 횟수가 커밋된다
         token = secrets.token_urlsafe(32)
         cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]

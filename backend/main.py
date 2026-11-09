@@ -1,6 +1,6 @@
 """SojaFit FastAPI 진입점.
 
-역할: 인증·관리자·가격 API, #73의 회로·thread·기억 API, OSC의 프로젝트·D5 run·승인·견적 API와 React SPA를 같은 출처로 등록한다.
+역할: 인증·가입·관리자·가격 API, #73의 회로·thread·기억 API, OSC의 프로젝트·D5 run·승인·견적 API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
@@ -304,23 +304,51 @@ class Login(BaseModel):
         return email
 
 
-@app.post("/api/auth/login")
-def login(body: Login, request: Request, response: Response):
-    """이메일·비밀번호를 검증하고 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
-    # [주의] 403 Origin 불일치, 401 인증 실패·잠금, 503 DB 사용 불가 또는 동시 검증 슬롯 부족(authenticate가 냄)
-    auth.check_origin(request)
-    try:
-        result = auth.authenticate(body.email, body.password)
-    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
-        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
-    if result is None:
-        # [왜] 계정 없음·비밀번호 틀림·잠금·비활성을 같은 메시지로 돌려 계정 존재를 알 수 없게 한다
-        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호를 확인해 주세요.")
-    token, user_id = result
+def set_session_cookie(response: Response, token: str) -> None:
+    """로그인·가입이 같은 세션 쿠키를 심는다."""
     # [왜] AUTH_ORIGIN이 https일 때만 Secure를 켠다(로컬 http 개발에서는 쿠키가 안 붙는 것을 피함)
     secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
     # [주의] httponly=JS가 못 읽게 해 토큰 탈취를 막고, samesite=lax는 CSRF를 줄인다. 8시간은 세션 절대 만료와 같다
     response.set_cookie(auth.COOKIE, token, httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
+
+
+@app.post("/api/auth/login")
+def login(body: Login, request: Request, response: Response):
+    """이메일·비밀번호를 검증하고 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
+    # [주의] 403 Origin 불일치, 401 인증 실패·계정 잠금·IP 잠금, 503 DB 사용 불가 또는 동시 검증 슬롯 부족(authenticate가 냄)
+    auth.check_origin(request)
+    try:
+        result = auth.authenticate(body.email, body.password, auth.client_ip(request))
+    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        # [왜] 계정 없음·비밀번호 틀림·계정 잠금·IP 잠금·비활성을 같은 메시지로 돌려 계정 존재와 잠금을 알 수 없게 한다
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호를 확인해 주세요.")
+    token, user_id = result
+    set_session_cookie(response, token)
+    return {"user_id": user_id}
+
+
+class Signup(Login):
+    """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상이다(11-09 결정)."""
+
+    password: str = Field(min_length=8, max_length=1024)
+
+
+@app.post("/api/auth/signup")
+def signup(body: Signup, request: Request, response: Response):
+    """승인 없이 user 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
+    # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패(입력값 미노출, validation_error가 냄),
+    # 429 IP 하루 한도, 503 DB 사용 불가 또는 동시 scrypt 슬롯 부족(auth.signup이 냄)
+    auth.check_origin(request)
+    try:
+        result = auth.signup(body.email, body.password, auth.client_ip(request))
+    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+        raise HTTPException(status_code=503, detail="가입 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
+    token, user_id = result
+    set_session_cookie(response, token)
     return {"user_id": user_id}
 
 

@@ -133,6 +133,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
 - 인증: `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`. 사전 생성된 이메일 계정과 DB 세션을 사용합니다. 회로·대화·기억·견적의 사용자별 API 연결은 미구현입니다. 상세는 `docs/specs/login-auth.md`.
+- 가입: `POST /api/auth/signup` `{"email", "password"}`(같은 출처, 비밀번호 8자 이상). 관리자 승인·이메일 인증 없이 `user` 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 `{"user_id"}`를 돌려줍니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정). 상세는 `docs/specs/login-auth.md`.
 - 관리자 계정은 `GET /api/admin/users`로 계정 목록을 조회하고 `PATCH /api/admin/users/{id}`로 일반 계정의 활성 상태를 변경합니다. 일반 사용자는 관리자 API를 호출할 수 없으며, 비활성화할 때 기존 세션을 삭제합니다. 관리자 계정의 상태는 이 API에서 변경하지 않습니다.
 - 가격·재고: `GET /api/prices?parts=품번,품번`(로그인 필요, 품번 1~10개, 품번마다 3~40자, `|` 금지). 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
 - Google 관리자 로그인: 설정이 켜진 경우 `GET /api/auth/google/status`, `/start`, `/callback`, `/pending`을 제공하고 승인된 활성 관리자만 기존 서버 세션을 발급받습니다. 연결 승인·철회는 `python -m backend.auth`의 운영자 CLI를 사용합니다. 상세는 `docs/specs/google-admin-login.md`입니다.
@@ -267,6 +268,10 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ### 8.6 로그인
 
 - GIVEN 사전 생성된 활성 계정, WHEN 올바른 이메일·비밀번호를 제출하면, THEN 서버 세션을 발급하고 사용자 ID를 확인할 수 있다.
+- GIVEN 새 이메일과 8자 이상 비밀번호, WHEN 같은 출처에서 가입하면, THEN 승인 없이 `user` 계정을 만들고 바로 세션을 발급한다. 중복 이메일은 409, 입력 오류는 422(입력값 미노출), Origin 없음·불일치는 403이다.
+- GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 요청 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
+- GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
+- GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 하루 200,000·서비스 전체 하루 2,000,000에서 거부한다. 기존 USD 한도는 유지한다. (11-09 결정, 다음 작업에서 구현)
 - GIVEN 데모 외 환경에서 AUTH_SECRET이 없거나 32바이트 미만이면, WHEN 서버를 시작하면, THEN 시작을 거부한다. 키가 없는 데모 모드는 기존 세션 방식으로 실행한다.
 - GIVEN 잘못된 정보, WHEN 로그인하면, THEN `error.code/message/request_id` 공통 오류와 같은 값의 `X-Request-ID`를 반환하고 입력값을 노출하지 않는다.
 - GIVEN 15분 집계 구간에 로그인 5회 실패, WHEN 다시 로그인하면, THEN 마지막 실패 시점부터 15분 동안 거부한다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.

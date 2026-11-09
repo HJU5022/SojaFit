@@ -119,7 +119,7 @@ def test_validation_error_uses_safe_error_contract():
 
 def test_unhandled_error_does_not_expose_internal_message(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    def fail_authentication(email, password):
+    def fail_authentication(email, password, ip):
         raise RuntimeError("private traceback detail")
 
     monkeypatch.setattr("backend.main.auth.authenticate", fail_authentication)
