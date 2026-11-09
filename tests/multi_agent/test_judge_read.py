@@ -21,7 +21,7 @@ STATE = {'question': 'D2를 TSC 1N5819로 바꿔도 돼?',
 @pytest.fixture(autouse=True)
 def one_read(monkeypatch):
     """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
-    monkeypatch.setenv('LAB_READ_VOTES', '1')
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
 
 
 
@@ -239,11 +239,16 @@ def test_reads_are_merged_by_majority_per_field(monkeypatch):
     def chat(node, system, user, schema):
         calls.append(node)
         return reads[len(calls) % 3]
-    monkeypatch.delenv('LAB_READ_VOTES', raising=False)  # 서비스 기본은 3번(측정과 같은 구성, 11-10)
+    monkeypatch.delenv('JUDGE_READ_VOTES', raising=False)  # 서비스 기본은 3번(측정과 같은 구성, 11-10)
     out = J.judge_read_agent({**STATE}, chat=chat)
     assert len(calls) == 3 and out['judge_read']['role'] in ('R22', 'R03')
     calls.clear()
-    monkeypatch.setenv('LAB_READ_VOTES', '1')  # 환경값으로 1을 주면 한 번만 읽는다
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')  # 환경값으로 1을 주면 한 번만 읽는다
+    J.judge_read_agent({**STATE}, chat=chat)
+    assert len(calls) == 1
+    calls.clear()
+    monkeypatch.delenv('JUDGE_READ_VOTES')
+    monkeypatch.setenv('LAB_READ_VOTES', '1')  # 예전 이름도 받는다(새 이름이 없을 때만)
     J.judge_read_agent({**STATE}, chat=chat)
     assert len(calls) == 1
 
@@ -274,7 +279,7 @@ def test_two_agreeing_reads_end_the_vote_early(monkeypatch):
         if len(calls) == 3:
             time.sleep(2)  # 늦은 셋째
         return same
-    monkeypatch.setenv('LAB_READ_VOTES', '3')
+    monkeypatch.setenv('JUDGE_READ_VOTES', '3')
     t = time.perf_counter()
     out = J.judge_read_agent({**STATE}, chat=chat)
     assert out['judge_read']['role'] == 'R01' and time.perf_counter() - t < 1.5

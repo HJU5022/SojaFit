@@ -19,7 +19,7 @@ STATE = {'question': 'D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 �
 @pytest.fixture(autouse=True)
 def one_read(monkeypatch):
     """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
-    monkeypatch.setenv('LAB_READ_VOTES', '1')
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
 
 
 

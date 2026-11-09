@@ -103,7 +103,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
             summary = {'set': s, 'done': len(rows), 'total': len(items), 'passed': sum(r['pass'] for r in rows),
                        'p95_s': p95(lat), 'p50_s': sorted(lat)[len(lat) // 2] if lat else 0.0, 'session': session,
                        'stopped_at': next((r['id'] for r in rows if not r['pass']), None),
-                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT', 'LAB_READ_VOTES')},
+                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT', 'LAB_READ_VOTES', 'JUDGE_READ_VOTES')},
                        'db': os.getenv('DATABASE_URL', '').rsplit('/', 1)[-1],  # DB 이름만(접속 정보는 남기지 않는다)
                        'llm_provider': llm.LLM_PROVIDER, 'claude_direct': llm.LLM_PROVIDER == 'openrouter' and bool(os.getenv('ANTHROPIC_API_KEY')),  # [왜] Anthropic 직통인지 OpenRouter인지(응답 시간이 다르다). claude_cli는 키를 빼고 구독으로 부르므로 직통이 아니다
                        'git': _git_rev()}

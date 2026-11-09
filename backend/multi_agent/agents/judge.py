@@ -118,8 +118,9 @@ def judge_read_agent(state: dict, *, chat) -> dict:
     # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
     user += memory_context(state.get('approved_memories') or [])
     # [왜] 서비스 기본은 3번 다수결이다. v3 측정(50/50, 사전 등록 #47 ~ #50)을 모두 3번으로 했고, 1번 읽기가 흔들려 틀린 문항이 있었다(v3-13 · v3-14).
-    #      세 번은 동시에 돌아 시간은 거의 같고, 비용은 50문항당 약 $0.02 는다(11-10 조장 결정). 환경값으로 1을 주면 한 번만 읽는다
-    votes = max(1, int(os.getenv('LAB_READ_VOTES', '3')))
+    #      세 번은 동시에 돌아 시간은 거의 같고, 비용은 50문항당 약 $0.02 는다(11-10 조장 결정). 환경값 JUDGE_READ_VOTES=1이면 한 번만 읽는다
+    # [주의] LAB_READ_VOTES는 실험 때 쓴 예전 이름이라 JUDGE_READ_VOTES가 없을 때만 받는다
+    votes = max(1, int(os.getenv('JUDGE_READ_VOTES') or os.getenv('LAB_READ_VOTES') or '3'))
     if votes == 1:
         read = chat('judge_read', PROMPT, user, JudgeRead)
     else:
