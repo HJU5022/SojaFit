@@ -81,6 +81,15 @@ SojaFit (proj3-b)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
+│   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
+│   │   ├── API.md          <- 폴더 설명
+│   │   ├── __init__.py     <- 패키지 표시
+│   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
+│   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
+│   │   ├── PROJECTS.md     <- 폴더 설명
+│   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
+│   │   └── repository.py   <- 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
 │   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트·견적 승인 단계는 아직 없음)
 │   │   ├── __init__.py     <- 패키지 표시
@@ -192,6 +201,7 @@ SojaFit (proj3-b)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
+│   ├── 013_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -335,7 +345,11 @@ SojaFit (proj3-b)
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
+│   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
+│   │   ├── PROJECTS.md     <- 폴더 설명
+│   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
@@ -548,6 +562,8 @@ SojaFit (proj3-b)
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
+| `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |
+| `backend/projects/` | [PROJECTS.md](backend/projects/PROJECTS.md) | 서비스·운영 |
 | `backend/graph/` | [GRAPH.md](backend/graph/GRAPH.md) | 에이전트 |
 | `backend/multi_agent/` | [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) | 에이전트 |
 | `backend/prompts/` | [PROMPTS.md](backend/prompts/PROMPTS.md) | 에이전트 |
@@ -572,6 +588,7 @@ SojaFit (proj3-b)
 | `evals/samples/` | [SAMPLES.md](evals/samples/SAMPLES.md) | 검색·데이터 |
 | `tests/` | [TESTS.md](tests/TESTS.md) | 각 모듈 담당 |
 | `tests/api/` | [API.md](tests/api/API.md) | 서비스·운영 |
+| `tests/projects/` | [PROJECTS.md](tests/projects/PROJECTS.md) | 서비스·운영 |
 | `tests/graph/` | [GRAPH.md](tests/graph/GRAPH.md) | 에이전트 |
 | `tests/multi_agent/` | [MULTI_AGENT.md](tests/multi_agent/MULTI_AGENT.md) | 에이전트 |
 | `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |

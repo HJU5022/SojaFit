@@ -1,8 +1,8 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`), 공통 JSON 오류·요청 ID와 Google 콜백 접속 로그 보호를 등록한다.
+역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`), 사용자 프로젝트 라우터, 공통 JSON 오류·요청 ID와 Google 콜백 접속 로그 보호를 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py·tests/api/test_prices.py.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 질문·답변 API, 회로·대화·기억·견적 API.
+하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 프로젝트 SQL(backend/projects/), 질문·답변·대화·기억·견적 API.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, StrictBool, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
+from backend.api.projects import router as projects_router
 from backend.services import mouser
 from backend.web.app import mount_frontend
 
@@ -374,4 +375,5 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
 
 
 # API·health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 등록한다.
+app.include_router(projects_router)
 mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)

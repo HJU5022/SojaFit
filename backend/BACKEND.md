@@ -10,6 +10,8 @@
 - `__init__.py` — 패키지 표시
 - `main.py` — FastAPI 진입점. `/health`, 같은 출처 로그인 화면(`/login`), 로그인 API(`/api/auth/*`), 관리자 API(`/api/admin/users`), 가격·재고 API(`/api/prices`: 로그인 필요, 요청 때 `services/mouser.py`로 한 번 조회, `Cache-Control: no-store`, 데모 모드·키 없음이면 Mouser를 부르지 않음, ADR 0009), 서버 생성 `X-Request-ID`와 공통 JSON 오류 응답, Uvicorn 접속 로그의 Google 콜백 쿼리 제거. 인증 처리는 `auth.py`에 맡깁니다
 - `auth.py` — scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 인증·연결 승인과 철회, 관리자 계정 관리 명령(`python -m backend.auth`). 대화·장기 기억 저장은 연결하지 않습니다
+- `api/` — 세션·Origin·공통 오류를 사용하는 사용자 프로젝트 HTTP 라우터. [API.md](api/API.md)
+- `projects/` — 사용자 소유 데모 프로젝트·정규화 회로 저장소와 DTO. [PROJECTS.md](projects/PROJECTS.md)
 - `multi_agent/` — D5 멀티 에이전트(Supervisor + 서브에이전트). D4 단일 그래프(`graph/`)와 분리. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)
 - `graph/` — LangGraph 그래프: 상태, 노드, 조립, 사용자별 장기 기억 규칙(`memory.py`). [GRAPH.md](graph/GRAPH.md)
 - `prompts/` — 노드가 LLM에 보내는 프롬프트 원문과 버전 기록. [PROMPTS.md](prompts/PROMPTS.md)

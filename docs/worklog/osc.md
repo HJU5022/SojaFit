@@ -318,3 +318,14 @@
 - 확인: `uv run pytest -q tests/repo/test_repo_layout.py` 실행 결과: `5 passed in 0.28s`. 문서 구조·링크·요청 제안은 승인 설계와 대조한다.
 - 확인 못 한 것: 구현 및 프론트/백엔드 런타임 테스트는 이 계약 작성 범위가 아니다. `SPEC.md` 및 ADR 반영은 조장 검토 후 별도로 진행해야 한다.
 - 다음 할 일: 조장이 요청 문단과 ADR 제목을 검토하고 정본에 반영한 뒤 후속 구현 작업을 시작한다.
+
+## 2026-11-09 D5 Task 4 사용자 프로젝트 저장
+
+- 목적·범위: 데모 회로 5종으로 사용자 소유 프로젝트를 만들고 목록·상세·이름 변경·삭제를 제공한다. 업로드·D5 실행·가격 저장은 제외한다. `SPEC.md` 등 조장 소유 문서는 수정하지 않고 승인된 `docs/specs/d5-frontend-service.md` AC-02/09/10의 해당 범위만 구현한다.
+- TDD RED: 먼저 저장소·API 테스트를 작성했다. `uv run pytest -q tests/projects tests/api/test_projects.py` 결과 `15 failed, 5 skipped in 0.80s`. 신규 라우트 미등록 때문에 인증 401·Origin 403·카탈로그 200 대신 404였고 저장소는 `ModuleNotFoundError: backend.projects`였다. DB 주소가 없어 통합 시험 5건은 이 최초 실행에서 건너뛰었다.
+- GREEN 중간 확인: 구현 후 DB 없이 `15 passed, 5 skipped`; 이후 공유 DB와 무관한 새 Docker `postgres:16-alpine` 컨테이너(로컬 loopback 랜덤 포트, 기존 볼륨 연결 없음)의 전용 시험 DB에서 `20 passed in 2.62s`. 실제 PostgreSQL SQL로 소유자·타 사용자/관리자 분리, 생성 rollback, 사용자·프로젝트 cascade를 확인했다. 레이아웃 `5 passed`.
+- 변경: `db/013_projects.sql`, `backend/projects/`, `backend/api/`, `backend/main.py`, `tests/projects/`, `tests/api/test_projects.py`와 폴더·스키마 문서. BIGINT/TIMESTAMPTZ, CHECK, users→projects→circuits cascade, user_id 선두 복합 인덱스, circuits PK의 FK 인덱스 겸용, RLS·공개 역할/sequence 권한 회수를 사용한다. 데모 hash는 기존 정규화 JSON의 SHA-256이다.
+- 전체 회귀 사전 기록: 라우터·스키마 경계가 바뀌므로 `PYTHONUTF8=1`, `TEST_AUTH_DATABASE_URL=<새 일회용 로컬 시험 DB>`로 `uv run pytest -q`를 한 번 실행한다. 비교 조건은 기존 전체 백엔드 suite, 외부 모델/API 호출 예산 0달러, DB는 이번에 만든 컨테이너만 사용한다. 실패하면 원인을 확인하고 수정 범위가 Task 4를 벗어나면 보고한다. 무한 재실행·공유 DB 적용은 하지 않는다.
+- 최종 검증: anon/authenticated 역할이 실제 존재하는 새 시험 DB에서 집중 명령 `uv run pytest -q tests/projects tests/api/test_projects.py tests/repo/test_repo_layout.py`는 `25 passed in 2.97s`. 전체 `uv run pytest -q`는 `976 passed, 37 skipped in 75.20s`; 신규 DB 시험 skip은 0건이며 기존 suite의 선택적 시험은 해당 설정이 없으면 skip한다. 전체 실행 중 외부 모델/API 비용 0달러. `git diff --check` 통과. 데모 JSON 5종의 최상위 구조가 components/nets 및 공개 sample 상태뿐임을 확인했다.
+- 자체 검토: get/list/rename/delete SQL의 소유자 필터·관리자 예외 없음·transaction rollback·파라미터 바인딩·신규 경로의 세션/Origin과 안전한 공통 오류를 대조했다. 원본·가격 필드와 업로드 경로를 추가하지 않았다. 실제 배포·기존/공유 DB 마이그레이션 및 RAG 평가셋 재측정은 실행하지 않았으며 RAG 품질 개선을 주장하지 않는다. 권장 400줄을 넘는 경우에도 단일 프로젝트 저장 기능과 소유권 회귀를 함께 검토하도록 요청된 한 커밋 범위를 유지한다.
+- 비밀값 점검: staged diff를 `ghcr.io/gitleaks/gitleaks:latest stdin --redact --no-banner --log-level warn`으로 검사했다. 실제 비밀값을 추가하지 않았으며 테스트 세션 문자열은 일회용 fixture다. 최종 diff는 Task 4의 20개 파일에 한정된다. 새 시험 컨테이너만 정리하고 지정 메시지로 로컬 커밋한다.

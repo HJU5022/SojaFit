@@ -11,6 +11,8 @@
 ```mermaid
 erDiagram
     USERS ||--o{ AUTH_SESSIONS : "로그인 세션"
+    USERS ||--o{ PROJECTS : "소유 프로젝트"
+    PROJECTS ||--|| CIRCUITS : "정규화 회로"
     USERS ||--o| AUTH_GOOGLE_IDENTITIES : "승인된 Google 관리자 연결"
 
     USERS {
@@ -61,6 +63,8 @@ erDiagram
 | `chunk_embeddings` | `002`가 만든 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 Voyage 1024차원 행을 함께 저장. HNSW 없음, 정확 검색 | `002_rag_corpus.sql`, `008_multi_dim_embeddings.sql` |
 | `chunk_embedding_bits` | voyage-4-large 임베딩의 1비트 코드 `BIT(1024)`, 인덱스 없음(dense 1단계 Hamming 후보) | `009_chunk_embedding_bits.sql` |
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
+| `projects` | 사용자 소유 회로 프로젝트·출처·이름·시각. 소유자별 목록 인덱스 | `013_projects.sql` |
+| `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전. 프로젝트 삭제 cascade, PK가 FK 인덱스를 겸함 | `013_projects.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
 | `auth_google_states` | state·브라우저 비밀·PKCE verifier·nonce를 보관하는 10분짜리 일회성 Google 로그인 상태 | `010_google_auth.sql` |

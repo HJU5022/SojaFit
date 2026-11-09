@@ -2,7 +2,7 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 부품 사양 표(5.7)는 `db/011_part_specifications.sql`이 이미 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안에도 `part_specifications`(`part_id` 열)가 있어 011과 겹치므로, Migration 1을 적용하기 전에 초안에서 이 표를 빼거나 011에 맞춰 고칩니다. ERD 그림은 아직 없습니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 부품 사양 표(5.7)는 `db/011_part_specifications.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/013_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `part_specifications`와 `circuits`는 현재 011·013과 호환되지 않으므로 그대로 적용하면 안 됩니다.
 
 열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.7·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
@@ -73,7 +73,8 @@
 | 구분 | 논리명 | 물리명 | 역할 | 상태 |
 |---|---|---|---|---|
 | 사용자 | 사용자 | `users` | 로그인 사용자와 승인자를 식별 | 확정 |
-| 회로 | 회로 | `circuits` | 업로드한 KiCad 넷리스트와 파일 메타데이터 저장 | 확정 |
+| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 013 구현 |
+| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 013 구현 |
 | 분석 | 분석 실행 | `analysis_runs` | 특정 회로 부품에 대한 한 번의 대체 분석 저장 | 확정 |
 | 부품 | 부품 | `parts` | 원본 부품과 후보 부품의 기본정보 저장 | 확정 |
 | 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 확정 |
@@ -105,21 +106,25 @@
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 생성 시각 | 확정 |
 | `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 마지막 수정 시각 | 가정 |
 
-### 5.2 `circuits` — 회로
+### 5.2 사용자 프로젝트와 정규화 회로 — 013 현재 스키마
 
-사용자가 업로드한 KiCad 넷리스트를 분석 가능한 단위로 저장합니다. MVP에서는 입력 원문을 보존해 같은 분석을 재현할 수 있어야 합니다.
+정본은 `db/013_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 현재 서비스에 적용하지 않습니다. 이하 분석·견적 표는 여전히 미적용 초안이며 후속 구현에서 프로젝트 관계에 맞춰 검토합니다.
 
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 회로 ID | `BIGINT` | N | PK | 회로 식별자 | 확정 |
-| `user_id` | 소유 사용자 ID | `BIGINT` | N | FK → `users.id` | 회로를 등록한 사용자 | 확정 |
-| `name` | 회로 이름 | `VARCHAR(200)` | N |  | 사용자가 구분하는 회로 이름 | 가정 |
-| `original_filename` | 원본 파일명 | `VARCHAR(255)` | N |  | 업로드 당시 파일명 | 확정 |
-| `netlist_format` | 넷리스트 형식 | `VARCHAR(50)` | N | CHECK: `KICAD_NET` | KiCad `.net` 넷리스트(평가·시연 회로 `data/circuits/`와 같은 형식) | 가정 |
-| `netlist_content` | 넷리스트 원문 | `TEXT` | N | 업로드 최대 1MB(API에서 검증) | 분석 재현에 사용하는 원본 내용. 파일 저장소는 쓰지 않음(A-03·A-04) | 확정 |
-| `content_sha256` | 콘텐츠 해시 | `CHAR(64)` | N | 인덱스. UNIQUE 아님(같은 파일을 다시 올려도 됨) | 동일 입력 확인과 재현에 사용하는 SHA-256 | 확정 |
-| `created_at` | 등록 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 회로 등록 시각 | 확정 |
-| `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 회로 정보 수정 시각 | 가정 |
+| 표 | 컬럼 | 자료형·제약 | 의미 |
+|---|---|---|---|
+| `projects` | `id` | BIGSERIAL PK | 프로젝트 ID |
+| `projects` | `user_id` | BIGINT NOT NULL FK → users.id, ON DELETE CASCADE | 소유 사용자. 관리자 우회 없음 |
+| `projects` | `name` | TEXT NOT NULL CHECK(trim 일치, 1~200자) | 서버가 공백을 제거한 이름 |
+| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 현재 생성 API는 demo만 허용 |
+| `projects` | `demo_id` | TEXT NULL, demo는 허용 5종 필수, upload는 NULL | 데모 카탈로그 ID |
+| `projects` | `created_at`, `updated_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 이름 변경 때 updated_at 갱신 |
+| `circuits` | `project_id` | BIGINT PK FK → projects.id, ON DELETE CASCADE | 프로젝트당 회로 1개 |
+| `circuits` | `connections` | JSONB NOT NULL CHECK(object) | 정규화 연결 정보 |
+| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모 connections.json 바이트 SHA-256 |
+| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1 |
+| `circuits` | `created_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 회로 저장 시각 |
+
+`ix_projects_user_updated(user_id, updated_at DESC, id DESC)`는 소유자별 목록과 users FK 조회를 지원합니다. `circuits.project_id` PK 인덱스가 cascade의 FK 조회를 지원해 중복 인덱스는 만들지 않습니다. 두 표의 RLS를 켜고 정책은 두지 않으며 PUBLIC·존재하는 anon/authenticated 역할의 표 및 projects_id_seq 권한을 회수합니다. 서버 DB 역할에서 SQL의 user_id 필터를 적용합니다. 원본 업로드·넷리스트·가격 필드는 없습니다.
 
 ### 5.3 `parts` — 부품
 
