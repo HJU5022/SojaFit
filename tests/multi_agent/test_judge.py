@@ -114,7 +114,38 @@ def test_find_question_filters_judges_and_ranks(monkeypatch):
     j = J.judge_agent(state, specs=specs_of(SPECS), find=find, retriever=None)['judgement']
     assert seen[0][0] == {'code': 'VRRM', 'gte': pytest.approx(15.0)}
     assert [x['part'] for x in j['shown']] == ['1N5817', 'SS14']  # 1N5817은 DO-41이라 기판 수정 없음 → 먼저
-    assert j['kind'] == 'find' and j['capped'] is False
+    assert j['kind'] == 'find' and j['capped'] is False and j['preferred_mount'] == ''  # 선호 없음(Store 없는 평가 실행기와 같음)
+
+
+def find_state(read=None, **extra):
+    """찾기 질문 상태. 대상 풋프린트가 없어 두 후보(SS14 SMA · 1N5817 DO-41)의 기판 수정 여부가 같다(모름)."""
+    base = dict(READ, candidates=[], values=[dict(v, number=12, quote='입력 전압의 최댓값은 12V') if v['name'] == 'v_in_max' else v
+                                             for v in READ['values']])
+    return {**STATE, 'question_type': 'candidate_find', 'conditions': STATE['conditions'].replace('20V', '12V'),
+            'target_part': {**STATE['target_part'], 'footprint': ''}, 'judge_read': {**base, **(read or {})}, **extra}
+
+
+def two_found(conditions, category, package, limit, **near):
+    return [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA']},
+            {'part': '1N5817', 'category': 'schottky-rectifier', 'packages': ['DO-41']}]
+
+
+def test_stored_mount_preference_reorders_shown_without_changing_verdicts(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    run = lambda **extra: J.judge_agent(find_state(**extra), specs=specs_of(SPECS), find=two_found, retriever=None)['judgement']
+    none, smd, tht = run(), run(mount_preference='smd'), run(mount_preference='tht')
+    assert [x['part'] for x in none['shown']] == ['1N5817', 'SS14'] and none['preferred_mount'] == ''  # 같은 판정 · 기판 수정 모름이면 품번 순
+    assert [x['part'] for x in smd['shown']] == ['SS14', '1N5817'] and smd['preferred_mount'] == 'smd'
+    assert [x['part'] for x in tht['shown']] == ['1N5817', 'SS14'] and tht['preferred_mount'] == 'tht'
+    assert smd['results'] == none['results']  # 판정 · 후보 목록은 그대로(거르지 않음)
+
+
+def test_mount_asked_in_the_question_wins_over_the_stored_preference(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    asked = {'required_specs': [{'words': '스루홀 부품', 'code': 'none'}]}
+    j = J.judge_agent(find_state(read=asked, mount_preference='smd'), specs=specs_of(SPECS), find=two_found, retriever=None)['judgement']
+    # [왜] 질문이 스루홀을 요구했으면 그 요구로 거르고, 내 설정(SMD)은 쓰지 않는다(SPEC 8.5)
+    assert [x['part'] for x in j['shown']] == ['1N5817'] and j['preferred_mount'] == ''
 
 
 def test_find_does_not_filter_by_original_part_values(monkeypatch):

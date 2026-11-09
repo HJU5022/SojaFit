@@ -309,7 +309,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
 - 삭제(11-09 결정, 상세와 개인정보 보호법 조항 대응은 [작업서](docs/specs/user-thread-memory.md) "보관 · 삭제"): 사용자가 지우면 숨김이 아니라 바로 지웁니다. 프로젝트 삭제(`DELETE /api/projects/{id}`)는 React 업무 행과 같은 UUID의 분석 thread·checkpoint·메시지·승인 기록·분석 사건을 한 트랜잭션에서 지웁니다. 탈퇴(`DELETE /api/me`, 같은 출처, 일반 계정만, 관리자 409)는 분석 기록 → Store namespace `(user_id, ...)` 전부(옛 `("memories", user_id)` 포함) → 계정(세션·프로젝트·견적은 FK cascade) 순서로 지우고 지운 건수를 돌려줍니다. 중간에 실패하면 계정이 남아 다시 요청하면 이어서 지웁니다. 계정 단위 잠금으로 그 사용자의 분석이 도는 동안 탈퇴는 409, 탈퇴가 도는 동안 그 사용자의 새 분석·재개·설정 저장은 409입니다.
 - 보관 기간(11-09 결정): 프로젝트와 딸린 것(대화·checkpoint·승인·견적, 같은 UUID 분석 기록)과 프로젝트 없는 분석 대화는 마지막 활동 뒤 60일, 기록(분석 사건·하루 사용량·로그인·가입 시도)은 30일 뒤에 지웁니다. 사용자 사실은 자동 만료가 없습니다. 스케줄러 없이 새 분석(질문)을 시작할 때 규칙마다 SQL 함수 하나(`sojafit_agent.purge_inactive_projects`·`purge_log_records`, `db/023_retention.sql`)를 작은 묶음으로 부르고, 청소가 실패해도 분석은 계속합니다. 아직 걸린 로그인 잠금은 지우지 않습니다.
-- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(분석 thread 질문·재개 응답, React run 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다. 모델 프롬프트·판정 입력에는 넣지 않습니다(`backend/multi_agent/` 병합 뒤 연결).
+- 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(분석 thread 질문·재개 응답, React run 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다.
+- 에이전트 활용(선호 실장 방식만): 멀티 그래프의 `기억 읽기` 노드(`입력 읽기` 다음, `backend/graph/memory.py`)가 compile에 넘긴 Store에서 세션 사용자(`user_id`)의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→빈 값으로 상태 `mount_preference`에 둡니다. 대체 부품 에이전트는 후보 찾기에서 질문이 실장 방식을 말하지 않았을 때만 이 값으로 같은 판정·같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둡니다(`verdict.rank`). 판정·거르기·답 글·프롬프트는 바꾸지 않고, 질문이 실장 방식을 말하면 질문이 이깁니다. 판정마다 3개·전체 5개로 자르므로 같은 판정 후보가 많으면 보여 줄 후보가 바뀔 수 있습니다. 쓴 값은 판정 결과의 `preferred_mount`(트레이스·API)에 남습니다. 소속·직무는 모델 프롬프트·판정 입력에 넣지 않습니다. 저장되는 것은 선호 코드뿐입니다: 체크포인트의 `mount_preference`와, 판정 결과의 `preferred_mount`가 실린 저장 결과(run·메시지 결과, 승인 기록 snapshot)입니다. 이들은 분석 thread·프로젝트와 같은 보관 기간(60일)·삭제를 따릅니다(내 설정을 지우면 다음 질문부터 빈 값이고, 이미 저장된 코드는 그 thread·프로젝트·계정을 지울 때 함께 지워집니다). 평가 실행기는 Store 없이 compile해 순서가 예전과 같습니다.
 - 승인 기록: 승인 원본(`sojafit_agent.approvals`)과 `POST /api/threads/{id}/approve`·`GET /api/memories`·`POST /api/memories/{thread}/{version}/control`은 승인 기록으로 남습니다. 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
 - 한계:
   - Voyage 키가 없거나 `DEMO_MODE=1`이거나 색인 표가 없으면 색인 없이 쓰고, 검색은 순위 없이 사실(최근에 고친 순)을 돌려줍니다. 검색 중 임베딩 장애도 같습니다. 색인이 켜진 채 임베딩이 실패하면 고치기는 503이고 아무 칸도 바뀌지 않습니다.
@@ -324,6 +325,9 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   - GIVEN 칸 하나 또는 전부를 지움, WHEN 조회·검색·다음 질문, THEN 지운 칸은 나오지 않고 그 색인 벡터도 없습니다.
   - GIVEN 색인과 사실 3칸, WHEN 다른 말로 물으면(예: "표면실장" ↔ SMD), THEN 맞는 칸이 첫째입니다.
   - GIVEN 승인한 판정 사례, WHEN 새 분석, THEN 모델 입력에 승인 사례가 없고 `approved_memories`는 빈 목록입니다.
+  - GIVEN 사용자 A의 선호 실장 방식 SMD와 판정·기판 수정 여부가 같은 후보 SS14(SMA)·1N5817(DO-41), WHEN A가 실장 방식을 말하지 않고 후보 찾기를 물으면, THEN 보여 줄 후보 순서는 SS14 → 1N5817이고 판정은 Store 없을 때와 같으며 `preferred_mount`는 `smd`입니다.
+  - GIVEN 같은 선호(SMD), WHEN 질문이 스루홀을 요구하면, THEN 질문의 요구로 거르고 `preferred_mount`는 빈 값입니다.
+  - GIVEN Store 없이 compile한 그래프(평가 실행기) 또는 선호가 없는 사용자 B, WHEN 같은 찾기 질문, THEN `mount_preference`는 빈 값이고 순서는 예전과 같습니다(B는 A의 선호를 보지 않음).
 
 ### 8.6 로그인
 

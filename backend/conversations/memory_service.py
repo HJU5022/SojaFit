@@ -1,8 +1,9 @@
 """세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
 React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
-장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로만 돌려주고,
-모델 프롬프트 · 판정 입력에는 넣지 않는다(`backend/multi_agent/` 병합 뒤). 승인한 판정 사례는 기억이 아니라 승인 기록이다:
+장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
+그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
+사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
 분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
 DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 토큰이 아니라 예약이다.

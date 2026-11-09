@@ -168,14 +168,14 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 
 칸 · 저장 · 검색 · 활용 · 고치기 · 지우기 · 한계 · 수용 기준의 정본은 [SPEC 8.5](../../SPEC.md)다. 여기에는 구현 위치와 세부를 둔다.
 
-- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 runtime으로 Store를 받는다(병합 뒤). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
+- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 LangGraph가 넣어 주는 Store를 받는다(멀티 그래프 `기억 읽기`, 11-10). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
 - 코드: `backend/conversations/profile.py`(칸 검사 `clean`, 틀 문장 `sentence`, `VoyageEmbeddings`, `ProfileMemory.facts · update · delete`), `backend/api/profile.py`(`/api/me/memory`), `memory_service.Conversations.profile`과 `_profile_hints`, `dto.result_dto(profile_hints=...)`.
 - 저장 모양: Store `(str(user_id), "profile")` / key = 칸 이름 / 값 `{kind, value, text, version, updated_at, source: "user_settings"}`. 여러 칸을 한 번에 고치면 `PutOp`을 한 `batch`로 보내 임베딩도 한 번 부른다.
 - 색인: `PostgresStore(index={'dims': 1024, 'embed': VoyageEmbeddings(), 'fields': ['text'], 'ann_index_config': {'kind': 'flat'}})`. LangGraph 동기 `PostgresStore`는 검색 질문도 `embed_documents`로 임베딩하므로, 검색하는 동안만 입력 종류를 `query`로 바꾼다(`contextvars`). 근사 색인(HNSW)은 namespace 조건과 함께 쓰면 다른 사용자 벡터에 밀려 결과가 빌 수 있어 만들지 않는다.
 - 켜는 조건: `VOYAGE_API_KEY`가 있고 `DEMO_MODE`가 1이 아니며 `sojafit_agent.store_vectors`가 있을 때. 셋 중 하나라도 아니면 색인 없는 Store로 쓰고 읽는다. 키가 있는데 표가 없으면 시작 때 경고 로그(`profile_index_unavailable`)를 남긴다.
 - 스키마 경로: 준비 명령과 색인을 켠 서비스 연결은 `search_path`를 `sojafit_agent, <vector 확장 스키마>`로 둔다. 색인 표의 `vector(1024)` 형과 검색의 `::vector` · `<=>`가 이름으로 찾히기 때문이다. 표는 첫 스키마인 `sojafit_agent`에 생긴다. 확장 스키마는 `pg_extension`에서 읽는다(로컬 Compose `public`, Supabase `extensions`). 준비 명령은 확장을 설치하지 않는다.
-- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 모델 프롬프트 · 판정 입력 연결과 승인 사례 프롬프트 문단("Historical approved cases") 제거는 `backend/multi_agent/` · `backend/prompts/` 병합 뒤에 한다.
-- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장).
+- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 에이전트 연결(11-10): 멀티 그래프의 `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 선호 실장 방식 한 칸만 읽어 `mount_preference`로 두고, 판정 에이전트가 찾기 후보 순서에만 쓴다(질문이 실장 방식을 말하면 질문이 이김, 판정 · 거르기 · 프롬프트는 그대로, 결과 `preferred_mount`). 소속 · 직무는 그래프 상태 · 프롬프트에 넣지 않는다. 승인 사례 프롬프트 문단("Historical approved cases")과 늘 빈 `approved_memories` · `memory_refs` 길의 제거는 아직 하지 않았다.
+- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장), `tests/multi_agent/test_build.py` · `test_judge.py` · `tests/judge/test_judge_verdict.py`(기억 읽기 격리, 찾기 순서, 질문 우선, Store 없으면 예전 순서).
 
 ### 보관 · 삭제 (결정 11-09)
 - 사용자 사실은 자동 만료가 없다. 사용자가 지우거나 계정을 지울 때 지운다.

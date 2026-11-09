@@ -441,10 +441,13 @@ def search_conditions(rule: dict, values: dict) -> list[dict]:
     return out[:10]
 
 
-def rank(judgements: list[Judgement], per_verdict: int = 3, total: int = 5) -> tuple[list[Judgement], list[Judgement]]:
-    """찾기 결과 → (보여 줄 후보, 확인 안 됨 후보). 불충족은 뺀다. 판정 순서 → 기판 수정 불필요 먼저 → 품번 순."""
+def rank(judgements: list[Judgement], per_verdict: int = 3, total: int = 5,
+         preferred: set[str] = frozenset()) -> tuple[list[Judgement], list[Judgement]]:
+    """찾기 결과 → (보여 줄 후보, 확인 안 됨 후보). 불충족은 뺀다. 판정 순서 → 기판 수정 불필요 먼저 → 선호 후보(preferred) 먼저 → 품번 순."""
+    # [왜] preferred는 사용자 설정(선호 실장 방식)에 맞는 패키지의 후보 품번이다(SPEC 8.5). 판정 · 기판 수정 여부보다 뒤에 둬 판정을 넘지 않는다.
+    # [주의] 판정마다 3개 · 전체 5개로 자르므로, 같은 판정 후보가 많으면 순서뿐 아니라 보여 줄 후보도 바뀔 수 있다. 비면 예전 순서 그대로다
     good = sorted((j for j in judgements if j.verdict in ORDER[:3]),
-                  key=lambda j: (ORDER.index(j.verdict), j.board_change is True, j.part))
+                  key=lambda j: (ORDER.index(j.verdict), j.board_change is True, j.part not in preferred, j.part))
     shown, count = [], {}
     for j in good:
         if count.get(j.verdict, 0) < per_verdict and len(shown) < total:

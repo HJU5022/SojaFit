@@ -1,10 +1,10 @@
-"""멀티 에이전트 조립: 입력 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · 대체 부품 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
+"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · 대체 부품 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
 
 - 역할: 노드와 연결을 정하고 compile한다. 노드 이름은 강의처럼 한국어로 달아 `get_graph().draw_mermaid()` 그림이 그대로 읽히게 한다.
   답 모으기 → Supervisor 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 RAG 에이전트(`agents/docs.py`, 노드 하나)와
   대체 부품 에이전트(회로 역할 읽기 → 대체 부품 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
   일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
-  LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다.
+  LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다. 기억 읽기는 compile에 넘긴 Store에서 선호 실장 방식만 읽는다(`graph/memory.py`).
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 웹 조회 에이전트(아직 없어서 켜려 하면 거부한다), 체크포인터 만들기(부르는 쪽이 넘긴다).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계), backend/graph/build.py(조립 방식을 따름)
 """
@@ -12,6 +12,7 @@ from functools import partial
 
 from langgraph.graph import END, START, StateGraph
 
+from backend.graph.memory import read_profile
 from backend.multi_agent import facts as facts_mod
 from backend.multi_agent import supervisor as sup
 from backend.multi_agent.agents.docs import docs_agent
@@ -76,6 +77,7 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g = StateGraph(MultiState)
     # [왜] 노드 이름 = 그림에 보이는 이름. 갈림 함수(supervisor.after_*)도 이 이름을 돌려준다(supervisor.NODE)
     g.add_node('입력 읽기', partial(parse_node, parse=parse or nodes.read_input))
+    g.add_node('기억 읽기', read_profile)  # Store(사용자 사실)에서 선호 실장 방식만 읽는다. Store 없이 compile하면(평가 실행기) 선호 없음
     g.add_node('품번·판 확인', partial(facts_mod.facts_node, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled))  # 계획(LLM 1번)
     g.add_node('RAG 에이전트', partial(docs_agent, retriever=retriever, chat=chat, find=find))  # find: 품번 없이 정격만 준 질문의 품번 찾기
@@ -88,7 +90,8 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     # [왜] 가격 안내는 단일 그래프 노드를 그대로 쓴다. Mouser는 그래프 밖 /api/prices만 부른다(ADR 0009)
     g.add_node('가격 안내', nodes.price_answer)
     g.add_edge(START, '입력 읽기')
-    g.add_edge('입력 읽기', '품번·판 확인')
+    g.add_edge('입력 읽기', '기억 읽기')
+    g.add_edge('기억 읽기', '품번·판 확인')
     g.add_edge('품번·판 확인', 'Supervisor')
     agents = ['RAG 에이전트']
     if judge_enabled:

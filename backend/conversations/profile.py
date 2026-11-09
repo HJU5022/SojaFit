@@ -2,7 +2,8 @@
 
 역할: 칸 검사(소속 · 직무 · 선호 실장 방식), 코드가 정한 틀로 한국어 문장(`text`) 만들기, Store 쓰기 · 덮어쓰기(version 올림) · 지우기,
   질문 글로 의미 검색(Voyage 임베딩 색인. 키가 없거나 데모 모드면 순위 없이 사실을 돌려줌).
-하지 않는 일: HTTP · 세션(`backend/api/profile.py`), 대화에서 사실 뽑기(이번 범위 밖), 모델 프롬프트 · 판정 입력에 넣기(`backend/multi_agent/` 병합 뒤).
+하지 않는 일: HTTP · 세션(`backend/api/profile.py`), 대화에서 사실 뽑기(이번 범위 밖), 모델 프롬프트에 넣기.
+  그래프가 읽는 것은 선호 실장 방식 한 칸뿐이고 읽는 노드는 `backend/graph/memory.py`의 기억 읽기다(찾기 후보 순서에만 씀, SPEC 8.5).
   승인한 판정 사례 · 전압 · 전류(회로마다 다름, 규칙 AC-02) · 주문 수량은 기억이 아니다.
 출처: SPEC.md 8.5절, docs/specs/user-thread-memory.md "사용자 사실 기억".
 """

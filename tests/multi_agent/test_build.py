@@ -1,7 +1,8 @@
 """멀티 에이전트 조립(backend/multi_agent/build.py) 시험: 가짜 LLM · 검색기로 계획 → 서브에이전트 → 모으기 → 답 검사 길을 끝까지 돌려 본다.
 
 - 역할: 바로 끝내는 길(일상 대화 · 가격 안내 · 범위 밖 거절 · 계획 형식 실패), 할 일 1개(역할 · 정격)와 2개(동시 실행 → 종합),
-  판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기를 본다.
+  판정 길의 인터럽트 재개(읽기 LLM을 다시 부르지 않고, 함께 돈 문서 할 일도 다시 돌지 않음), 판정 거절 보고, 새 턴에서 칸 비우기,
+  기억 읽기(Store의 선호 실장 방식 → 찾기 후보 순서, Store 없으면 예전 순서)를 본다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
 - 출처: backend/multi_agent/build.py, 참조/아티팩트 "SojaFit 멀티 에이전트 구조", 회의록 D4-D5 B-지시서 4-4 시험 목록
 """
@@ -49,7 +50,7 @@ def docs_task(i=1, kind='rating', query='1N4148 VRRM'):
 def test_chat_finishes_with_the_plan_reply_without_agents():
     chat = scripted(supervisor=[Plan(question_type='chat', next='finish', reply='안녕하세요! 회로 속 다이오드를 도와 드려요.')])
     out = app(chat).invoke({'input': '안녕'})
-    assert out['path'] == ['입력 읽기', '사실 확인', '계획', '끝'] and out['answer'].startswith('안녕하세요') and chat.calls == ['supervisor']
+    assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '끝'] and out['answer'].startswith('안녕하세요') and chat.calls == ['supervisor']
 
 
 def test_out_of_scope_and_plan_format_failure_are_refused():
@@ -59,7 +60,7 @@ def test_out_of_scope_and_plan_format_failure_are_refused():
     def broken(node, system, user, schema):
         raise ValueError('형식 실패')
     out = app(broken).invoke({'input': 'SS14 정격?'})
-    assert out['path'] == ['입력 읽기', '사실 확인', '계획', '거절'] and out['refusal']['code'] == 'limit_reached'
+    assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '거절'] and out['refusal']['code'] == 'limit_reached'
 
 
 def test_missing_part_fact_reaches_the_plan_and_refusal_names_the_part():
@@ -83,7 +84,7 @@ def test_price_question_ends_with_the_same_notice_as_the_single_graph_and_no_mou
     monkeypatch.setattr(httpx.Client, 'send', no_http)
     searched = []
     out = app(scripted(supervisor=[Plan(question_type='price', next='price')]), searched=searched).invoke({'input': '1N5817 지금 가격이랑 재고 알려 줘'})
-    assert searched == [] and out['path'] == ['입력 읽기', '사실 확인', '계획', '가격 안내']
+    assert searched == [] and out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '가격 안내']
     assert out['price_parts'] == ['1N5817'] and out['answer'] == price_message(['1N5817']) and out['question_type'] == 'price'
 
 
@@ -91,7 +92,7 @@ def test_one_docs_task_answers_without_a_second_supervisor_call():
     chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()])],
                     docs_answer=[DocsAnswer(grade='enough', answer='1N4148의 VRRM은 75 V이다 [7].')])
     out = app(chat, docs=[doc(7)]).invoke({'input': '1N4148 VRRM?'})
-    assert out['path'] == ['입력 읽기', '사실 확인', '계획', '문서', '모으기', '답 정리', '답 검사', '끝']
+    assert out['path'] == ['입력 읽기', '기억 읽기', '사실 확인', '계획', '문서', '모으기', '답 정리', '답 검사', '끝']
     assert chat.calls == ['supervisor', 'docs_answer']  # Supervisor 1번 + 서브에이전트 1번
     assert out['answer'].endswith('[7].') and out['passed'] == [7] and out['check']['used'] == ['7'] and out['counters']['searches'] == 1
 
@@ -159,9 +160,10 @@ def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     from backend.multi_agent.supervisor import REPLAN
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {
-        '입력 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', '대체 부품 에이전트:회로 역할 읽기', '대체 부품 에이전트:대체 부품 판정',
+        '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', '대체 부품 에이전트:회로 역할 읽기', '대체 부품 에이전트:대체 부품 판정',
         '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내'}
     assert [(e.source, e.target, e.data) for e in g.edges if e.data] == [('답 모으기', 'Supervisor', REPLAN)]
+    assert {('입력 읽기', '기억 읽기'), ('기억 읽기', '품번·판 확인')} <= {(e.source, e.target) for e in g.edges}
     assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', '대체 부품 에이전트:회로 역할 읽기'}  # Send 동시 실행
 
 
@@ -217,3 +219,74 @@ def test_new_turn_clears_previous_reports_and_judgement():
     assert out['reports'] is None and out['judgement'] == {} and out['plan'] == {} and out['refusal_reason'] == ''
     from backend.multi_agent.state import add_or_reset
     assert add_or_reset([{'task': 1}], None) == [] and add_or_reset([{'task': 1}], [{'task': 2}]) == [{'task': 1}, {'task': 2}]
+
+
+def stored(**prefs):
+    """사용자 id → 선호 실장 방식을 설정 API와 같은 코드(ProfileMemory.update)로 써 둔 색인 없는 Store."""
+    from langgraph.store.memory import InMemoryStore
+    from backend.conversations.profile import ProfileMemory
+    store = InMemoryStore()
+    for user, value in prefs.items():
+        ProfileMemory(store, indexed=False).update(user, {'mounting_preference': value})
+    return store
+
+
+def test_memory_node_reads_only_the_users_own_mount_preference():
+    from backend.graph.memory import read_profile
+    store = stored(a='smd', b='through_hole', c='any')
+    assert read_profile({'user_id': 'a'}, store=store) == {'mount_preference': 'smd', 'path': ['기억 읽기']}
+    assert read_profile({'user_id': 'b'}, store=store)['mount_preference'] == 'tht'
+    assert read_profile({'user_id': 'c'}, store=store)['mount_preference'] == ''  # 상관없음은 선호 없음
+    assert read_profile({'user_id': 'd'}, store=store)['mount_preference'] == ''  # 사실 없음: 다른 사용자(a)의 smd가 보이지 않는다
+    assert read_profile({'user_id': 'a'}, store=None)['mount_preference'] == ''  # Store 없이 compile(평가 실행기)
+    assert read_profile({}, store=store)['mount_preference'] == ''  # 서버가 user_id를 넣지 않았다
+
+
+def test_memory_node_continues_without_preference_when_the_store_fails(caplog):
+    from backend.graph.memory import read_profile
+
+    class Broken:
+        def get(self, *a, **k):
+            raise RuntimeError('db down secret-detail')
+    out = read_profile({'user_id': 'a'}, store=Broken())
+    assert out['mount_preference'] == '' and 'mount_preference_unavailable' in caplog.text and 'secret-detail' not in caplog.text
+
+
+SPECS = {name: [{'part': name, 'code': code, 'min': None, 'typ': None, 'max': mx, 'text': text, 'unit': unit, 'source_value_text': str(mx),
+                 'test_condition': None, 'citation': {'document': f'{name}.pdf', 'page': 1, 'table': ROWS[0]['citation']['table'], 'row': code, 'chunk_index': 1}}
+                for code, mx, unit, text in [('VRRM', vrrm, 'V', None), ('IF_AV', 1.0, 'A', None), ('PACKAGE', None, None, pkg)]]
+         for name, vrrm, pkg in [('1N5817', 20.0, 'DO-41'), ('SS14', 40.0, 'SMA')]}
+
+
+def find_app(store=None):
+    """찾기 질문을 끝까지 돌리는 그래프. 대상 풋프린트(DO-35)가 두 후보 패키지(DO-41 · SMA)와 모두 달라 기판 수정 여부가 같다."""
+    def find(conditions, category, package, limit, **near):
+        return [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA']},
+                {'part': '1N5817', 'category': 'schottky-rectifier', 'packages': ['DO-41']}]
+    read = J.JudgeRead(role='R01', values=[J.Value(name='v_in_max', number=12, unit='V', quote='12V'),
+                                           J.Value(name='i_max', number=0.15, unit='A', quote='150mA')])
+    p = Plan(question_type='candidate_find', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_find', goal='find')])
+    chat = scripted(supervisor=[p], judge_read=[read])
+    return app(chat, judge_enabled=True, specs=lambda part, codes=None: SPECS.get(part.upper(), []), find=find,
+               checkpointer=InMemorySaver(), store=store)
+
+
+def run_find(graph, inputs, thread):
+    config = {'configurable': {'thread_id': thread}}
+    state = graph.invoke(inputs, config)
+    if '__interrupt__' in state:
+        state = graph.invoke(Command(resume={'answers': {}}), config)
+    return state
+
+
+def test_stored_mount_preference_reorders_find_candidates_and_no_store_keeps_the_old_order():
+    """[왜] 평가 실행기는 Store · 사용자 없이 compile한다. 그때 찾기 순서가 예전과 같아야 측정이 그대로다(SPEC 8.5)."""
+    q = {'input': 'D1(입력 12V, 150mA) 대체 후보를 찾아 줘'}
+    old = run_find(find_app(), q, 'f1')
+    assert old['mount_preference'] == '' and old['judgement']['preferred_mount'] == ''
+    assert [x['part'] for x in old['judgement']['shown']] == ['1N5817', 'SS14']  # 같은 판정 · 같은 기판 수정이면 품번 순
+    new = run_find(find_app(stored(u7='smd')), {**q, 'user_id': 'u7'}, 'f2')
+    assert '기억 읽기' in new['path'] and new['judgement']['preferred_mount'] == 'smd'
+    assert [x['part'] for x in new['judgement']['shown']] == ['SS14', '1N5817']  # SMA(SMD) 후보가 앞으로
+    verdicts = lambda s: {x['part']: (x['verdict'], x['board_change']) for x in s['judgement']['results']}
+    assert verdicts(new) == verdicts(old)  # 판정 · 기판 수정 여부 · 후보 목록은 그대로, 순서만 바뀐다

@@ -66,6 +66,7 @@ class SafeJudgement(SafeModel):
     unverified: list[SafeCandidate] = Field(default_factory=list)
     terms: list[SafeTerm] = Field(default_factory=list)
     capped: bool = False
+    preferred_mount: Literal['', 'smd', 'tht'] = ''  # 찾기 순서에 쓴 내 설정의 선호 실장 방식(SPEC 8.5). 없으면 ''
 
 
 class SafeInterrupt(SafeModel):

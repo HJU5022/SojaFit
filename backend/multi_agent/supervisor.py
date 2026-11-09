@@ -113,7 +113,8 @@ def payload(state: dict, task: dict) -> dict:
         base['approved_memories'] = state['approved_memories']
     if task['agent'] == 'judge':
         base.update(conditions=state.get('conditions', ''), target=state.get('target', ''), facts=state.get('facts') or {},
-                    question_type=task['kind'])  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다
+                    question_type=task['kind'],  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다
+                    mount_preference=state.get('mount_preference') or '')  # [왜] 기억 읽기가 읽은 선호 실장 방식. 판정 에이전트만 쓴다(찾기 순서)
     return base
 
 
