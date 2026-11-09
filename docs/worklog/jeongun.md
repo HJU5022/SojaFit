@@ -625,3 +625,8 @@
 - 실행한 명령과 결과: 바뀐 문서 8개의 상대 링크 30개를 대조해 깨진 링크 0개. 커밋마다 `git diff --cached --check` 통과. ERD의 라이브러리 표 이름은 `.venv`의 `langgraph-checkpoint-postgres` 3.2.0 소스에서 확인했다.
 - 확인 못 한 것: 백로그 보드(GitHub Projects)는 파일이 아니라 만들지 않았다. 데이터시트를 검색 색인용으로 나누는 것이 약관의 "비수정"에 맞는지는 SPEC 6절에 확인할 것으로 남겼다.
 - 다음 할 일: 조 회의에서 SPEC의 숫자 성공 기준, 대체 판정 5종의 코드 값과 채점 처리, 그래프 노드를 정한다. 화면 방식(FastAPI 직접 또는 별도 프론트)을 정해 ADR로 남긴다.
+
+## 2026-11-09 G4 · D7 로컬 증거와 문서 갱신 (브랜치 `jeongun-8`)
+- 한 일: `.env` 없이 새 볼륨으로 `docker compose up --build`(13초, 빌드 캐시 있음, db · thread-setup · api 정상, 표 public 20 · sojafit_agent 15, 데모 사용자 2) 뒤 HTTP로 G4 · D7 항목 14개를 눌러 `evals/results/threads/local_g4_isolation_2026-11-09.json`에 남겼다. 조건 질문 interrupt → `docker compose restart api` 뒤 WAITING 유지 → 재개 DONE, 같은 승인 두 번 → 승인 원본 1건, 데모 B의 A 대화 조회 · 승인 404, 내 설정 저장 · 남의 id 422 · B에 A 기억 없음. api 로그에 오류 없음.
+- 바꾼 파일: `docs/GATES.md`(G2 · G4 상태, G4 추가 확인 첫 항목 체크와 증거, 둘째 항목 진행 상황), `README.md` 5절(키 없는 시연 순서 · 한계 · 증거 링크), `SPEC.md` 맨 위 현재 구현 경계.
+- 확인 못 한 것: 캐시 없는 새 clone 기동 시간, 실제 Voyage 임베딩으로 기억 의미 순위, 배포 주소.
