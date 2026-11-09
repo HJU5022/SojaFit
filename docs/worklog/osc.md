@@ -2,6 +2,13 @@
 
 > **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
 
+## 2026-11-09 닫힌 PR #67 최신 main 재적용
+
+- 한 일: 머지된 청킹 PR #70과 이후 변경이 포함된 최신 `origin/main` 위에 닫힌 PR #67의 두 커밋을 순서대로 다시 적용했다. Git 충돌은 발생하지 않았고, `SOJAFIT.md`의 문서 분류 SQL·공통 오류 계약 항목과 `db/schema/table-definition.md`의 `category`·`halfvec` 설명이 함께 유지되는지 대조했다.
+- 검증: `git diff --check`와 충돌 표식 검색을 통과했다. `uv run pytest -q tests/api tests/repo/test_repo_layout.py`는 `53 passed, 21 skipped`, `uv lock --check`와 전체 `uv run pytest -q`는 `885 passed, 58 skipped`였다.
+- 확인 못 한 것: 건너뛴 DB 통합 시험 58건과 실제 배포 응답은 확인하지 않았다. 원격 push와 새 PR 생성은 수행하지 않았다.
+- 다음 할 일: 최신 원격 `main`과 차이를 다시 확인한 뒤 조장 승인 범위에 맞춰 다음 PR을 생성한다.
+
 ## 2026-11-08 FastAPI 공통 오류 응답 규약
 
 - 한 일: 최신 `main` 기준 `backend/main.py`에 서버 생성 UUID 요청 식별자와 `X-Request-ID` 헤더를 추가하고, HTTP·검증·처리되지 않은 예외를 `error.code/message/request_id` JSON 구조로 통일했다. 기존 `/api/prices`와 Mouser 호출 경로는 유지했다.
