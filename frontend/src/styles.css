@@ -1,0 +1,28 @@
+:root {
+  font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
+  color: #18303c;
+  background: #f2f5f7;
+  font-synthesis: none;
+  --surface: #fff;
+  --muted: #607480;
+  --trace: #167c80;
+  --divider: #d6e0e5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; }
+a:focus-visible { outline: 3px solid var(--trace); outline-offset: 5px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 32px; background: var(--surface); border-bottom: 1px solid var(--divider); }
+.brand { display: flex; align-items: center; gap: 12px; font: 600 24px Bahnschrift, 'Segoe UI', sans-serif; text-decoration: none; }
+.brand svg { width: 48px; height: 20px; fill: var(--surface); stroke: var(--trace); stroke-width: 1.5; }
+nav { display: flex; flex-wrap: wrap; gap: 24px; }
+nav a { padding: 8px 0; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; }
+nav a.active { color: var(--trace); border-color: var(--trace); }
+main { max-width: 1280px; margin: 0 auto; padding: 56px 32px; }
+h1 { margin: 0 0 16px; font-size: 28px; line-height: 1.4; font-weight: 650; letter-spacing: -.03em; }
+p { margin: 0; color: var(--muted); line-height: 1.8; }
+@media (max-width: 600px) {
+  .topbar { align-items: flex-start; flex-direction: column; padding: 20px; gap: 16px; }
+  nav { gap: 20px; }
+  main { padding: 32px 20px; }
+}

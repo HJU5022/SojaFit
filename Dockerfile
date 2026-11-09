@@ -1,4 +1,12 @@
 # G2: 평가자가 `docker compose up` 한 줄로 띄울 수 있어야 합니다.
+FROM node:24-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
+COPY frontend/src/ ./src/
+RUN npm run build
+
 FROM python:3.12-slim
 
 # 의존성은 uv.lock에 고정된 버전 그대로 설치합니다.
@@ -20,6 +28,7 @@ RUN uv sync --locked --no-dev --no-cache
 ENV PATH="/app/.venv/bin:$PATH"
 
 COPY backend/ ./backend/
+COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
 # data/는 서비스가 읽는 데이터(코퍼스·회로·데모)다. evals/·tests/·scripts/는 서비스에 필요 없어 넣지 않는다.
 COPY data/ ./data/
 

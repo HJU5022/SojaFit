@@ -1,5 +1,17 @@
 # 오세창 작업 기록
 
+## 2026-11-09 D5 같은 출처 React 기반 (Task 2)
+
+- 한 일: React·Vite·TypeScript 셸과 `/login`, `/app`, `/admin/users` 경로, `/` 로그인 이동, Query provider·Router·API 개발 프록시를 추가했다. 인증·프로젝트·실행·승인 화면 동작은 후속 범위다. Node 24 다단계 빌드의 정적 산출물만 Python runtime에 복사한다.
+- 서버 경계: API 등록 뒤 response-aware SPA middleware를 연결한다. 비API GET/HEAD의 downstream 404만 index(미빌드이면 기존 로그인)로 바꾸고, API·health·assets·다른 메서드·리다이렉트는 보존한다. 화면에도 기존 요청 ID를 유지한다.
+- 사용자 승인 예외: 표준 Vite가 요구하는 `frontend/` 도구 루트와 기존 design.md·정적 제공 어댑터를 함께 두는 `backend/web`에만 한 종류 규칙 예외를 둔다. 하위 폴더는 제외하지 않고 API 업무 로직은 어댑터에 넣지 않는다. 단순 GET catchall이 Google 끝 `/`와 POST 404를 바꾸는 실제 회귀가 확인되어 사용자가 response-aware 방식으로 대체를 승인했다.
+- 바꾼 파일: `frontend/`의 package/lock·HTML·Vite/TypeScript 설정·폴더 설명·React 진입점/셸/스타일/단위 테스트, `backend/web/app.py`, `backend/main.py`, `Dockerfile`, `.gitignore`, `backend/web/WEB.md`, `backend/BACKEND.md`, `tests/api/test_frontend.py`, `tests/api/test_auth.py`, `tests/api/test_health.py`, `tests/api/API.md`, `tests/repo/test_repo_layout.py`, `SOJAFIT.md` 신규 파일 트리·설명 표 행, 이 작업 기록.
+- RED: 최초 frontend API 테스트 `2 failed, 3 passed`; helper stub 경계 확장 `9 failed, 4 passed`; React null stub `4 failed`; 루트 진입 추가 `1 failed, 4 passed`. 단순 catchall의 추가 인증 검사 `3 failed, 49 passed, 21 skipped`와 HEAD/메서드/health 검사 `4 failed, 14 passed`를 관측한 뒤 middleware로 고쳤다.
+- 실행한 명령과 실제 결과: `uv run pytest -q tests/api/test_frontend.py tests/api/test_health.py tests/api/test_auth.py` → `56 passed, 21 skipped in 13.97s`; `uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.29s`; `cd frontend`, `npm run test:run` → 1 파일·5건 통과; `npm run build` → TypeScript·Vite 성공, 68 modules, `dist/index.html` 생성; 전체 `uv run pytest -q` → `935 passed, 58 skipped in 22.07s`.
+- 확인 방법: 테스트는 실제 FastAPI/TestClient, 임시 dist 파일, 실제 React·MemoryRouter를 사용한다. `/` 404의 과거 health 가정은 API 404 검사로 이동했고 legacy 폼 assertion은 미빌드 fallback으로 격리했다. 화면 소스는 로컬 system font와 반응형·키보드 초점 스타일을 사용한다. npm audit는 의존성 설치 시 0 vulnerabilities였다.
+- 확인 못 한 것: 격리 DB·별도 외부 환경이 필요한 58건은 생략됐다. Docker 이미지 자체의 빌드/실행, 실제 OAuth 왕복, 브라우저 E2E·스크린샷, 모델 평가·라이브 API는 실행하지 않았다. 검색·판정 모델을 바꾸지 않아 평가 점수 향상을 주장하지 않는다.
+- 다음 할 일: 후속 Task에서 실제 로그인·세션 복구·관리자 기능을 셸에 연결한다. SPEC 변경이 필요하면 OSC에서 주요 문서를 수정하지 않고 조장에게 승인 계약 반영을 요청한다. push·배포하지 않는다.
+
 ## 2026-11-09 D5 프론트엔드 구현 계획
 
 - 한 일: 승인된 D5 프론트엔드 설계를 기능 계약, React 기반, 프로젝트·업로드, D5 영속 실행, 작업대, 승인·견적·기억, 통합 검증의 6개 PR과 13개 테스트 우선 작업으로 나눴다.

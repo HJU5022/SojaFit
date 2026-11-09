@@ -141,6 +141,10 @@ def test_one_kind_of_file_per_folder():
         d = str(p.parent)
         if d == "." or f.startswith((".github/", EXTERNAL)) or p.name == ".gitkeep" or p.name == p.parent.name.upper() + ".md":
             continue
+        # 표준 Vite 도구는 package.json·index.html·vite.config.ts를 같은 루트에 요구한다(사용자 승인 예외).
+        # backend/web은 기존 화면 설계와 정적 제공 어댑터만 함께 둔다(별도 사용자 승인 예외).
+        if d in {"frontend", "backend/web"}:
+            continue
         by_dir.setdefault(d, set()).add(KINDS.get(p.suffix, "기타"))
     mixed = {d: sorted(k) for d, k in by_dir.items() if len(k) > 1}
     assert not mixed, f"한 폴더에 종류가 섞였다(하위 폴더로 나눈다): {mixed}"

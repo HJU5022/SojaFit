@@ -35,6 +35,24 @@ SojaFit (proj3-b)
 │       ├── ci.yml          <- PR마다 테스트(격리한 인증 시험 DB 포함)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
+│   ├── FRONTEND.md         <- 폴더 설명
+│   ├── package.json        <- npm 의존성과 실행 명령
+│   ├── package-lock.json   <- npm 의존성 고정
+│   ├── index.html          <- React 진입 HTML
+│   ├── vite.config.ts      <- React·API 프록시·Vitest 설정
+│   ├── tsconfig.json       <- TypeScript 프로젝트 참조
+│   ├── tsconfig.app.json   <- 화면 TypeScript 설정
+│   ├── tsconfig.node.json  <- Vite TypeScript 설정
+│   └── src/                <- 화면 소스와 단위 테스트
+│       ├── SRC.md          <- 폴더 설명
+│       ├── main.tsx        <- Router·QueryClient·React 진입점
+│       ├── App.tsx         <- 로그인·작업대·관리자 화면 셸
+│       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
+│       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
+│       └── test/           <- 화면 테스트 설정
+│           └── setup.ts    <- jest-dom matcher와 화면 정리
+│
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
@@ -113,6 +131,7 @@ SojaFit (proj3-b)
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
 │   │   ├── WEB.md          <- 폴더 설명
+│   │   ├── app.py          <- API 우선 SPA·정적 파일 제공과 미빌드 로그인 fallback
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
 │   │   ├── templates/      <- 화면 HTML 템플릿
 │   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
@@ -292,6 +311,7 @@ SojaFit (proj3-b)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
+│   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
@@ -504,6 +524,8 @@ SojaFit (proj3-b)
 
 | 폴더 | 설명 파일 | 담당 |
 |---|---|---|
+| `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
+| `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/graph/` | [GRAPH.md](backend/graph/GRAPH.md) | 에이전트 |
 | `backend/multi_agent/` | [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md) | 에이전트 |

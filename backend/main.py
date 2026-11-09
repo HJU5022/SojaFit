@@ -23,12 +23,13 @@ import psycopg
 from authlib.common.errors import AuthlibBaseError
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field, StrictBool, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
 from backend.services import mouser
+from backend.web.app import mount_frontend
 
 
 class GoogleCallbackLogFilter(logging.Filter):
@@ -96,6 +97,7 @@ app = FastAPI(
     responses=COMMON_ERROR_RESPONSES,
 )
 LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 GOOGLE_COOKIE = "sojafit_google_browser"
 GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
 
@@ -269,12 +271,6 @@ def health() -> dict:
     return {"status": "ok"}
 
 
-@app.get("/login", include_in_schema=False)
-def login_page():
-    """같은 출처의 로그인 화면을 제공한다."""
-    return FileResponse(LOGIN_PAGE, media_type="text/html; charset=utf-8")
-
-
 class Login(BaseModel):
     """로그인 요청 본문."""
 
@@ -375,3 +371,7 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
         return {"available": True, **mouser.search_parts(names)}
     except mouser.MouserError as error:
         return price_unavailable(error.kind)  # [주의] 오류를 로그에 쓰지 않는다. 종류만 화면에 알린다
+
+
+# API·health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 등록한다.
+mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)
