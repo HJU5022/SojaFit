@@ -11,6 +11,10 @@ from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 import hashlib
 from pathlib import Path
+import os
+import time
+from threading import Lock
+from langchain_core.callbacks import BaseCallbackHandler
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
@@ -29,6 +33,71 @@ SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
 _invocation = ContextVar("langfuse_invocation", default=None)
+_analysis = ContextVar('analysis_timings', default=None)
+
+
+class AnalysisTimings(BaseCallbackHandler):
+    """그래프 노드 이름·시간·결과만 수집한다. 입력/출력/오류 본문은 보관하지 않는다."""
+    def __init__(self):
+        self.starts, self.stages, self.lock = {}, [], Lock()
+
+    def on_chain_start(self, serialized, inputs, *, run_id, name=None, metadata=None, **kwargs):
+        if name and (metadata or {}).get('langgraph_node') == name:
+            with self.lock:
+                self.starts[run_id] = (name, time.monotonic())
+
+    def _end(self, run_id, status):
+        with self.lock:
+            item = self.starts.pop(run_id, None)
+            if item:
+                self.stages.append({'stage': item[0], 'status': status, 'elapsed_ms': int((time.monotonic()-item[1])*1000)})
+
+    def on_chain_end(self, outputs, *, run_id, **kwargs):
+        self._end(run_id, 'ok')
+
+    def on_chain_error(self, error, *, run_id, **kwargs):
+        self._end(run_id, 'interrupted' if type(error).__name__ == 'GraphInterrupt' else 'failed')
+
+    def report(self):
+        observed = {s['stage'] for s in self.stages}
+        return self.stages + [{'stage':name,'status':'skipped','elapsed_ms':0}
+            for name in ('plan','search','judge_read','judge','synth','check') if name not in observed]
+
+
+@contextmanager
+def analysis_timings(timings):
+    token = _analysis.set(timings)
+    try:
+        yield
+    finally:
+        _analysis.reset(token)
+
+
+def timed_tool(name, tool):
+    def run(*args, **kwargs):
+        active = _analysis.get()
+        if active is None:
+            return tool(*args, **kwargs)
+        started, status = time.monotonic(), 'failed'
+        try:
+            result = tool(*args, **kwargs); status = 'ok'; return result
+        finally:
+            with active.lock:
+                active.stages.append({'stage':name,'status':status,'elapsed_ms':int((time.monotonic()-started)*1000)})
+    return run
+
+
+def publish_analysis_trace(user, thread, event):
+    """실측 메타데이터 요약만 큐에 넣는다. queued는 원격 수신 확인을 뜻하지 않는다."""
+    if not os.getenv('LANGFUSE_PUBLIC_KEY') or not os.getenv('LANGFUSE_SECRET_KEY'):
+        return 'disabled'
+    from langfuse import get_client, propagate_attributes
+    client = get_client()
+    with propagate_attributes(user_id=str(user), session_id=str(thread), tags=['analysis', event['mode']]):
+        with client.start_as_current_observation(name='analysis-metadata', as_type='span',
+                trace_context={'trace_id': event['trace_id']}, metadata=event):
+            pass
+    return 'queued'
 
 
 def callback():

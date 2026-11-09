@@ -34,10 +34,16 @@ def fake_graph(saver, store):
 
 
 @pytest.fixture
-def runtime():
+def runtime(monkeypatch):
+    monkeypatch.setenv('ANALYSIS_MIN_INTERVAL_SECONDS', '0')
     dsn = os.getenv('TEST_THREAD_DATABASE_URL')
     if not dsn:
         pytest.skip('requires isolated TEST_THREAD_DATABASE_URL')
+    if os.getenv('TEST_THREAD_BACKUP_CONTAINER'):
+        from psycopg.conninfo import conninfo_to_dict
+        info = conninfo_to_dict(dsn)
+        if info.get('host') not in ('127.0.0.1', 'localhost') or not info.get('dbname', '').startswith('thread_test'):
+            pytest.fail('Backup drill requires a disposable loopback thread_test DB before initialization', pytrace=False)
     initialize(dsn)
     with psycopg.connect(dsn) as conn:
         users = [conn.execute("INSERT INTO public.users(login_id,password_hash) VALUES (%s,'test-only') RETURNING id",
@@ -57,6 +63,192 @@ def runtime():
 def make_thread(app, user):
     circuit = app.upload(user, 'my.net', NET)
     return app.create(user, circuit['id'], 'D1')['id']
+
+
+def test_demo_scenarios_use_real_graph_and_storage_without_external_calls(runtime, monkeypatch):
+    from backend.services import demo, llm
+    from backend.graph.mcp_retriever import StdioMcpRetriever
+    app, (a, b), dsn = runtime
+    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '1')
+    monkeypatch.setenv('OPENROUTER_API_KEY', 'must-not-be-used')
+    monkeypatch.setattr(llm, '_chat_model', lambda *a: pytest.fail('paid model called'))
+    monkeypatch.setattr(StdioMcpRetriever, '__enter__', lambda *a: pytest.fail('external MCP called'))
+    app.graph = app._graph()
+    fixture = demo.configuration()
+    circuit = app.upload(a, 'demo.net', fixture['netlist'])
+    thread = app.create(a, circuit['id'], 'D1')['id']
+    first = app.message(a, thread, fixture['questions']['judge'])
+    assert first['status'] == 'WAITING' and first['mode'] == 'demo'
+    result = app.resume(a, thread, {'v_in_max':'12V', 'i_max':'0.1A', 'v_drop_allowed':'모름'}, '', 1)
+    assert result['can_approve'] and '합성' in result['answer']
+    assert app.approve(a, thread, 1)['ok'] and len(app.memories(a)) == 1
+    with pytest.raises(HTTPException) as error:
+        app.detail(b, thread)
+    assert error.value.status_code == 404 and app.memories(b) == []
+    second = app.create(a, circuit['id'], 'D1')['id']
+    role = app.message(a, second, fixture['questions']['role'])
+    assert role['referenced_memories'] and role['mode'] == 'demo'
+    with pytest.raises(HTTPException) as error:
+        app.message(a, second, '지원하지 않는 질문')
+    assert error.value.status_code == 422 and app.detail(a, second)['version'] == 1
+    with pytest.raises(HTTPException):
+        app.upload(a, 'other.net', NET)
+
+
+def test_demo_mode_is_explicit_and_never_enables_replay_for_real_evaluations(monkeypatch):
+    from backend.services import demo
+    monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_SCENARIOS', raising=False)
+    assert not demo.enabled()
+    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '0')
+    with pytest.raises(ValueError):
+        demo.enabled()
+
+
+def test_keyless_demo_http_login_to_approval_and_new_thread(runtime, monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.main import app as api
+    from backend.services import demo,llm
+    from backend.graph.mcp_retriever import StdioMcpRetriever
+    service,(a,b),dsn=runtime
+    monkeypatch.setenv('DEMO_SCENARIOS','1'); monkeypatch.setenv('DEMO_MODE','1')
+    monkeypatch.setenv('DATABASE_URL',dsn); monkeypatch.setenv('AUTH_ORIGIN','http://testserver')
+    monkeypatch.setenv('AUTH_SECRET','isolated-demo-http-test-secret-32-bytes')
+    monkeypatch.setattr(llm,'_chat_model',lambda *a:pytest.fail('paid model called'))
+    monkeypatch.setattr(StdioMcpRetriever,'__enter__',lambda *a:pytest.fail('external MCP called'))
+    service.graph=service._graph()
+    monkeypatch.setattr(api.state,'conversations',service,raising=False)
+    clients=[TestClient(api),TestClient(api)]
+    with psycopg.connect(dsn) as conn:
+        for uid,client in zip((a,b),clients):
+            email=conn.execute('UPDATE public.users SET password_hash=%s WHERE id=%s RETURNING login_id',
+                (auth.hash_password('synthetic-demo-test-password'),uid)).fetchone()[0]
+            conn.commit()
+            assert client.post('/api/auth/login',headers={'Origin':'http://testserver'},json={'email':email,'password':'synthetic-demo-test-password'}).status_code==200
+    origin={'Origin':'http://testserver'}; client,other=clients
+    def post(path,body):
+        response=client.post(path,headers=origin,json=body); assert response.status_code==200,response.text; return response.json()
+    config=client.get('/api/analysis/demo').json(); assert config['enabled']
+    circuit=post('/api/circuits',{'filename':'demo.net','netlist':config['netlist']})['id']
+    thread=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
+    assert post(f'/api/threads/{thread}/messages',{'text':config['questions']['judge']})['interrupt']
+    assert post(f'/api/threads/{thread}/resume',{'version':1,'answers':{'v_in_max':'12V','i_max':'0.1A','v_drop_allowed':'모름'}})['can_approve']
+    post(f'/api/threads/{thread}/approve',{'version':1})
+    assert other.get(f'/api/threads/{thread}').status_code==404 and other.get('/api/memories').json()==[]
+    new=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
+    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['referenced_memories']
+    post(f'/api/memories/{thread}/1/control',{'action':'revoke'})
+    assert not post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['consulted_memories']
+    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['refuse']})['can_approve'] is False
+
+
+def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime, monkeypatch):
+    from backend.services import langfuse_prompts
+    app, (a, b), dsn = runtime
+    monkeypatch.setattr(langfuse_prompts, 'publish_analysis_trace', lambda *a, **k: (_ for _ in ()).throw(RuntimeError('private-key')))
+    thread = make_thread(app, a)
+    app.message(a, thread, '조건 질문', request_id='request-1')
+    app.resume(a, thread, {'VIN_MAX':'12'}, '', 1, request_id='request-2')
+    events = app.detail(a, thread)['events']
+    assert len(events) == 2 and {e['status'] for e in events} == {'WAITING','DONE'}
+    assert {e['request_id'] for e in events} == {'request-1','request-2'}
+    assert all(e['version'] == 1 and e['elapsed_ms'] >= 0 and e['trace_delivery'] == 'failed' for e in events)
+    assert all(e['stages'] for e in events)
+    assert '조건 질문' not in str(events) and 'private-key' not in str(events)
+    with pytest.raises(HTTPException):
+        app.detail(b, thread)
+
+
+def test_memory_controls_preserve_approval_and_block_restore_after_delete(runtime):
+    app, (a, b), dsn = runtime
+    thread = make_thread(app, a)
+    app.message(a, thread, '판정'); app.approve(a, thread, 1)
+    original = app.memories(a)[0]['judgement']
+    with pytest.raises(HTTPException) as error:
+        app.control_memory(b, thread, 1, 'revoke', '')
+    assert error.value.status_code == 404
+    app.control_memory(a, thread, 1, 'correct', '조건 12V는 측정 전 추정값')
+    assert app.memories(a)[0]['correction'] == '조건 12V는 측정 전 추정값'
+    assert app.memories(a)[0]['judgement'] == original
+    app.control_memory(a, thread, 1, 'revoke', '')
+    assert app.memories(a) == [] and app.detail(a, thread)['approvals'][0]['memory_state'] == 'revoked'
+    with pytest.raises(HTTPException):
+        app.approve(a, thread, 1)
+    app.control_memory(a, thread, 1, 'restore', '')
+    assert len(app.memories(a)) == 1
+    app.control_memory(a, thread, 1, 'delete', '')
+    assert app.memories(a) == [] and not app.store.get(('memories',str(a)), f'{thread}:1')
+    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'deleted'
+    for call in (lambda:app.approve(a, thread, 1), lambda:app.control_memory(a,thread,1,'restore','')):
+        with pytest.raises(HTTPException) as error:
+            call()
+        assert error.value.status_code == 409
+    with psycopg.connect(dsn) as conn:
+        assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()[0]['judgement'] == original
+
+
+def test_revoked_memory_in_interrupted_checkpoint_is_not_sent_on_resume(runtime):
+    from backend.graph.memory import memory_context, memory_sources
+    app, (a, _), _ = runtime
+    original = make_thread(app, a); app.message(a, original, '판정'); app.approve(a, original, 1)
+    seen = []
+    def interrupted(state):
+        interrupt({'missing':['VIN_MAX'],'role_choices':[]})
+        seen.append((memory_context(state['approved_memories']), memory_sources(state['approved_memories'])))
+        return {'answer':'재개됨','judgement':{}}
+    graph = StateGraph(AgentState); graph.add_node('read', read_input); graph.add_node('work',interrupted)
+    graph.add_edge(START,'read'); graph.add_edge('read','work'); graph.add_edge('work',END)
+    app.graph = graph.compile(checkpointer=app.saver, store=app.store)
+    thread = make_thread(app, a); app.message(a, thread, '조건 질문')
+    assert app.graph.get_state(app.config(thread)).values['approved_memories']
+    app.control_memory(a, original, 1, 'revoke', '')
+    app.resume(a, thread, {'VIN_MAX':'12'}, '', 1)
+    assert seen == [('',set())]
+
+
+def test_store_delete_failure_still_blocks_memory_and_repeated_delete_cleans_up(runtime, monkeypatch):
+    app, (a, _), _ = runtime
+    thread=make_thread(app,a); app.message(a,thread,'판정'); app.approve(a,thread,1)
+    delete=app.store.delete
+    monkeypatch.setattr(app.store,'delete',lambda *a,**k: (_ for _ in ()).throw(RuntimeError('synthetic')))
+    with pytest.raises(HTTPException) as error:
+        app.control_memory(a,thread,1,'delete','')
+    assert error.value.status_code==503 and app.memories(a)==[]
+    monkeypatch.setattr(app.store,'delete',delete)
+    app.control_memory(a,thread,1,'delete','')
+    assert not app.store.get(('memories',str(a)),f'{thread}:1')
+
+
+def test_memory_control_http_checks_origin_owner_and_payload(runtime,monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.main import app as api
+    service,(a,b),_=runtime
+    thread=make_thread(service,a); service.message(a,thread,'판정'); service.approve(a,thread,1)
+    monkeypatch.setenv('AUTH_ORIGIN','http://localhost:8000')
+    monkeypatch.setattr(api.state,'conversations',service,raising=False)
+    api.dependency_overrides[auth.current_user_id]=lambda:a
+    try:
+        client=TestClient(api); url=f'/api/memories/{thread}/1/control'; body={'action':'correct','correction':'<script>untrusted</script>'}
+        assert client.post(url,json=body,headers={'Origin':'https://evil.example'}).status_code==403
+        origin={'Origin':'http://localhost:8000'}
+        assert client.post(url,json={**body,'user_id':a},headers=origin).status_code==422
+        assert client.post(url,json={**body,'correction':'x'*1001},headers=origin).status_code==422
+        assert client.post(url,json=body,headers=origin).status_code==200
+        api.dependency_overrides[auth.current_user_id]=lambda:b
+        assert client.post(url,json={'action':'delete'},headers=origin).status_code==404
+        assert client.get('/api/memories').json()==[]
+    finally:
+        api.dependency_overrides.clear()
+
+
+def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
+    from psycopg.conninfo import make_conninfo
+    app, _, _ = runtime
+    app.readiness()
+    monkeypatch.setattr(app, 'dsn', make_conninfo(app.dsn, options='-c search_path=pg_catalog'))
+    with pytest.raises(psycopg.errors.UndefinedTable):
+        app.readiness()
 
 
 def test_other_user_cannot_access_circuit_thread_resume_or_approval(runtime):
@@ -125,6 +317,42 @@ def test_store_failure_can_be_retried_without_losing_approval(runtime, monkeypat
     monkeypatch.setattr(app.store, 'put', put)
     app.approve(a, thread, version)
     assert len(app.memories(a)) == 1
+
+
+def test_approval_snapshot_preserves_final_conditions_and_is_immutable(runtime):
+    app, (a, _), dsn = runtime
+    thread = make_thread(app, a)
+    pending = app.message(a, thread, '조건 질문', conditions='현재 입력은 아직 모름')
+    app.resume(a, thread, {'VIN_MAX': '12'}, '', pending['version'])
+    app.approve(a, thread, pending['version'])
+    with psycopg.connect(dsn) as conn:
+        snapshot = conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s AND version=1', (thread,)).fetchone()[0]
+    record = snapshot['context']['input_record']
+    assert record['question'] == '조건 질문' and record['conditions'] == '현재 입력은 아직 모름'
+    assert record['resumes'] == [{'answers': {'VIN_MAX': '12'}, 'role': ''}]
+    app.message(a, thread, '새 질문', conditions='다른 조건 24V')
+    app.approve(a, thread, 1)
+    with psycopg.connect(dsn) as conn:
+        assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s AND version=1', (thread,)).fetchone()[0] == snapshot
+
+
+def test_old_approval_exposes_pending_state_and_can_recover_from_detail(runtime, monkeypatch):
+    app, (a, _), _ = runtime
+    thread = make_thread(app, a)
+    app.message(a, thread, '판정')
+    put = app.store.put
+    monkeypatch.setattr(app.store, 'put', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
+    with pytest.raises(HTTPException):
+        app.approve(a, thread, 1)
+    monkeypatch.setattr(app.store, 'put', put)
+    app.message(a, thread, '다른 질문')
+    row = app.detail(a, thread)['approvals'][0]
+    assert row['version'] == 1 and row['memory_state'] == 'pending'
+    assert row['input_record']['question'] == '판정'
+    assert app.approve(a, thread, row['version'])['ok']
+    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'stored'
+    monkeypatch.setattr(app.store, 'get', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
+    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'unknown'
 
 
 @pytest.mark.parametrize('legacy_snapshot', [False, True])
@@ -229,7 +457,8 @@ def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkey
             return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain prior case')])
         assert node == 'docs_answer'
         marker = 'PRIVATE_A_CASE' if 'PRIVATE_A_CASE' in user else 'PRIVATE_B_CASE' if 'PRIVATE_B_CASE' in user else 'NO_MEMORY'
-        return schema(grade='enough', answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].')
+        refs = [f'승인사례:{sources[owner]}:1'] if marker != 'NO_MEMORY' else []
+        return schema(grade='enough', answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].', memory_refs=refs)
     monkeypatch.setattr(llm, 'node_chat', chat)
     app.graph = build_graph(chat=chat, retriever=lambda *args, **kwargs: [], checkpointer=app.saver, store=app.store)
     for owner, own, foreign in ((a, 'PRIVATE_A_CASE', 'PRIVATE_B_CASE'), (b, 'PRIVATE_B_CASE', 'PRIVATE_A_CASE')):
@@ -237,6 +466,8 @@ def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkey
         thread = make_thread(app, owner)
         result = app.message(owner, thread, 'D1 역할과 과거 사례를 설명해줘')
         assert own in result['answer'] and foreign not in result['answer']
+        assert result['referenced_memories'][0]['thread_id'] == sources[owner]
+        assert result['consulted_memories'] == result['referenced_memories']
         assert {c[0] for c in calls} == {'supervisor', 'docs_answer'}
         for _, system, prompt in calls:
             assert own in prompt and foreign not in prompt and '과거 조건 12V' in prompt
@@ -269,6 +500,149 @@ def test_thread_lock_rejects_concurrent_write_and_refusal_cannot_be_approved(run
     assert not result['can_approve']
     with pytest.raises(HTTPException):
         app.approve(a, thread, result['version'])
+
+
+def test_daily_reservations_are_atomic_across_requests_and_users(runtime, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    app, (a, b), dsn = runtime
+    monkeypatch.setenv('ANALYSIS_DAILY_USD', '0.03')
+    budgets = [app._budget(a), app._budget(a)]
+    def reserve(budget):
+        try:
+            budget.reserve('x', output_tokens=0)
+            return True
+        except HTTPException as exc:
+            assert exc.status_code == 429
+            return False
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(reserve, budgets)) == [False, True]
+    assert reserve(app._budget(b))
+    with psycopg.connect(dsn) as conn:
+        rows = conn.execute('SELECT reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id IN (%s,%s)', (a, b)).fetchall()
+    assert len(rows) == 2 and all(0 < float(row[0]) <= 0.03 for row in rows)
+
+
+def test_rate_limit_rejects_before_changing_thread_version(runtime, monkeypatch):
+    app, (a, _), _ = runtime
+    monkeypatch.setenv('ANALYSIS_MIN_INTERVAL_SECONDS', '60')
+    thread = make_thread(app, a)
+    app.message(a, thread, '판정')
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, '새 질문')
+    assert error.value.status_code == 429
+    assert app.detail(a, thread)['version'] == 1
+
+
+def test_eight_parallel_threads_share_daily_budget_without_mixing(runtime, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    from backend.services import llm
+    app, (a, b), dsn = runtime
+    monkeypatch.setenv('ANALYSIS_DAILY_USD', '0.08')
+    threads = [make_thread(app, a) for _ in range(8)]
+    barrier, invoke = Barrier(8), app.graph.invoke
+    def charged(inputs, config):
+        llm._evaluation_budget.get().reserve('x', output_tokens=0)
+        return invoke(inputs, config)
+    monkeypatch.setattr(app.graph, 'invoke', charged)
+    def send(thread):
+        barrier.wait(timeout=10)
+        try:
+            return app.message(a, thread, thread)['status']
+        except HTTPException as error:
+            assert error.status_code == 429
+            return 'LIMIT'
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        states = list(pool.map(send, threads))
+    assert 1 <= states.count('DONE') <= 3 and set(states) <= {'DONE', 'LIMIT'}
+    for thread, status in zip(threads, states):
+        detail = app.detail(a, thread)
+        assert all(m['content'] not in set(threads)-{thread} for m in detail['messages'])
+        if status == 'DONE':
+            assert detail['status'] == 'DONE' and detail['messages'][0]['content'] == thread
+        elif not detail['messages']:
+            assert detail['version'] == 0  # 입장 단계의 429는 질문 저장 전에 거부한다.
+    with psycopg.connect(dsn) as conn:
+        reserved = conn.execute('SELECT reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id=%s', (a,)).fetchone()[0]
+    assert 0 < float(reserved) <= 0.08
+    assert app.threads(b) == [] and app.memories(b) == []
+
+
+def test_dump_restore_preserves_owned_memory_and_pending_resume(runtime):
+    import json, subprocess, time
+    from psycopg.conninfo import conninfo_to_dict, make_conninfo
+    from psycopg import sql
+    container = os.getenv('TEST_THREAD_BACKUP_CONTAINER')
+    if not container:
+        pytest.skip('requires explicit disposable local TEST_THREAD_BACKUP_CONTAINER')
+    app, (a, b), dsn = runtime
+    info = conninfo_to_dict(dsn)
+    assert info['host'] in ('127.0.0.1', 'localhost') and info['dbname'].startswith('thread_test')
+    ports = json.loads(subprocess.check_output(['docker','inspect','--format','{{json .NetworkSettings.Ports}}',container], timeout=10))
+    assert any(p['HostIp']=='127.0.0.1' and p['HostPort']==info['port'] for p in ports['5432/tcp'])
+    approved, waiting = make_thread(app, a), make_thread(app, a)
+    app.message(a, approved, '승인 원본'); app.approve(a, approved, 1)
+    app.message(a, waiting, '조건 질문')
+    before = app.memories(a)
+    start = time.monotonic()
+    dump = subprocess.run(['docker','exec',container,'pg_dump','-U',info['user'],'-d',info['dbname'],'-Fc','--no-owner','--no-acl'], capture_output=True, timeout=30)
+    assert dump.returncode == 0 and 0 < len(dump.stdout) < 256*1024*1024
+    dump_seconds = time.monotonic()-start
+    target = 'thread_restore_' + uuid4().hex
+    with psycopg.connect(dsn, autocommit=True) as admin:
+        admin.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(target)))
+        try:
+            start = time.monotonic()
+            restored = subprocess.run(['docker','exec','-i',container,'pg_restore','-U',info['user'],'-d',target,'--no-owner','--no-acl','--exit-on-error'], input=dump.stdout, capture_output=True, timeout=60)
+            assert restored.returncode == 0
+            restore_seconds = time.monotonic()-start
+            copy = Conversations(make_conninfo(dsn, dbname=target), factory=fake_graph)
+            try:
+                assert copy.memories(a) == before and copy.memories(b) == []
+                with pytest.raises(HTTPException) as error:
+                    copy.detail(b, approved)
+                assert error.value.status_code == 404
+                assert copy.detail(a, approved)['approvals'][0]['memory_state'] == 'stored'
+                assert copy.detail(a, waiting)['status'] == 'WAITING'
+                assert copy.resume(a, waiting, {'VIN_MAX':'12'}, '', 1)['status'] == 'DONE'
+                copy.approve(a, waiting, 1)
+                assert len(copy.memories(a)) == 2
+                assert app.detail(a, waiting)['status'] == 'WAITING'
+            finally:
+                copy.close()
+            print(json.dumps({'backup_bytes':len(dump.stdout),'dump_seconds':round(dump_seconds,3),'restore_seconds':round(restore_seconds,3)}))
+        finally:
+            admin.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(sql.Identifier(target)))
+
+
+def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
+    import json
+    from backend.services import llm
+    app, (a, _), _ = runtime
+    def expire(state):
+        budget = llm._evaluation_budget.get()
+        budget.started -= budget.max_seconds + 1
+        return {'answer': 'synthetic result', 'judgement': {'shown':[{'part':'SS34'}]}}
+    graph = StateGraph(AgentState)
+    graph.add_node('read', read_input)
+    graph.add_node('expire', expire)
+    graph.add_edge(START, 'read')
+    graph.add_edge('read', 'expire')
+    graph.add_edge('expire', END)
+    app.graph = graph.compile(checkpointer=app.saver)
+    thread = make_thread(app, a)
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, 'PRIVATE_CONDITION', request_id='synthetic-request-id')
+    detail=app.detail(a,thread)
+    assert detail['status']=='FAILED' and not detail['can_approve'] and not detail['answer']
+    with pytest.raises(HTTPException) as denied:
+        app.approve(a,thread,1)
+    assert denied.value.status_code==409
+    assert error.value.status_code == 504
+    record = next(r for r in caplog.records if r.name == 'backend.conversations')
+    metadata = json.loads(record.message)
+    assert metadata['request_id'] == 'synthetic-request-id' and metadata['error_type'] == 'EvaluationLimitError'
+    assert 'PRIVATE_CONDITION' not in record.message
 
 
 def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runtime):
@@ -353,6 +727,8 @@ def test_workspace_and_login_have_upload_and_analysis_navigation():
         assert expected in html
     assert 'localStorage' not in html and 'innerHTML' not in html
     assert 'data.error?.message' in html
+    assert '기억 저장 다시 시도' in html and "dataset.approvalVersion" in html
+    assert 'referenced_memories' in html and 'consulted_memories' in html
 
 
 def test_thread_database_error_uses_common_error_envelope(runtime, monkeypatch):

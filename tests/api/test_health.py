@@ -5,10 +5,41 @@
 - 출처: docs/GATES.md G1·G2, docs/specs/api-error-contract.md
 """
 from uuid import UUID
+from types import SimpleNamespace
+
+import psycopg
+import pytest
 
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend import auth
+
+
+def test_analysis_readiness_requires_login():
+    assert TestClient(app).get('/api/analysis/readiness').status_code == 401
+
+
+@pytest.mark.parametrize('state', ['disabled', 'ready', 'unavailable'])
+def test_analysis_readiness_checks_storage_without_exposing_details(monkeypatch, state):
+    def readiness():
+        if state == 'unavailable':
+            raise psycopg.OperationalError('private-dsn-detail')
+    monkeypatch.delattr(app.state, 'conversations', raising=False)
+    if state != 'disabled':
+        monkeypatch.setattr(app.state, 'conversations', SimpleNamespace(readiness=readiness), raising=False)
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    try:
+        response = TestClient(app).get('/api/analysis/readiness')
+        assert response.status_code == (200 if state == 'ready' else 503)
+        assert response.headers['cache-control'] == 'no-store'
+        assert 'private-dsn-detail' not in response.text
+        if state == 'ready':
+            assert response.json() == {'status': 'ready', 'storage': 'ready'}
+        else:
+            assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_health():

@@ -7,6 +7,7 @@
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
 ## 실행과 주의
+- 2026-11-09 사양 표 상태: 운영 DB의 기존 0행에서 document_id=8(B2104) 한 문서의 검증된 사양·패키지 70행을 적재했다. 같은 문서의 실제 청크 번호·쪽·행과 원본 PDF 해시를 대조했고 원문·청크·임베딩은 변경하지 않았다. 다른 문서는 아직 사양 행이 없으며 전체 적재 완료로 해석하지 않는다.
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`과 `004`는 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 업무 표 초안으로 `manual/004_create_business_tables.sql.draft`에 있습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
 - 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `011_part_specifications.sql` → `012_document_category.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
@@ -14,6 +15,10 @@
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
+- `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
+- `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
+- `015_analysis_limits.sql` — 비공개 사용자별 UTC 일일 예약액·빈도 제한 표. 실패도 예약액은 보존하며 실제 청구액과 구분
+- `014_thread_inputs.sql` — threads.input_record nullable JSONB 추가. 기존 원본·행을 수정하지 않고 setup 명령에서 013 뒤 적용
 - `013_agent_memory.sql` — 비공개 sojafit_agent 스키마의 업로드·thread·대화 이력·승인 원본. 라이브러리 내부 표는 별도 setup CLI가 생성
 - `000_init.sql` — pgvector 확장 생성
 - `002_rag_corpus.sql` — 코퍼스 문서·청크·임베딩 테이블과 관련 인덱스

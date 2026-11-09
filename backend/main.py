@@ -17,6 +17,7 @@ from http import HTTPStatus
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 from urllib.parse import unquote, urlencode
 from uuid import uuid4
@@ -80,6 +81,7 @@ ERROR_CODES = {
     422: "VALIDATION_ERROR",
     429: "TOO_MANY_REQUESTS",
     503: "SERVICE_UNAVAILABLE",
+    504: "GATEWAY_TIMEOUT",
 }
 
 
@@ -392,7 +394,7 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
 
 @app.middleware('http')
 async def conversation_boundary(request: Request, call_next):
-    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories'))
+    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories', '/api/analysis/'))
     if private and request.method == 'POST':
         limit = 7 * 1024 * 1024 if request.url.path == '/api/circuits' else 128 * 1024
         data = bytearray()
@@ -423,6 +425,20 @@ def conversation_service(request: Request):
     if service is None:
         raise HTTPException(503, '분석 저장소가 준비되지 않았습니다.')
     return service
+
+
+@app.get('/api/analysis/readiness')
+def analysis_readiness(request: Request, user: int = Depends(auth.current_user_id)):
+    """분석 저장소 준비 확인. 외부 모델·검색의 품질/가용성은 보증하지 않는다."""
+    conversation_service(request).readiness()
+    return {'status': 'ready', 'storage': 'ready'}
+
+
+@app.get('/api/analysis/demo')
+def demo_configuration(request: Request, user: int = Depends(auth.current_user_id)):
+    """명시적으로 켠 합성 데모의 회로와 지원 질문만 제공한다."""
+    from backend.services import demo
+    return {'enabled': True, **demo.configuration()} if conversation_service(request).mode == 'demo' else {'enabled': False}
 
 
 class CircuitUpload(BaseModel):
@@ -469,6 +485,12 @@ class ThreadApproval(BaseModel):
     version: int = Field(ge=1)
 
 
+class MemoryControl(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    action: Literal['correct','revoke','restore','delete']
+    correction: str = Field(default='', max_length=1000)
+
+
 @app.get('/workspace', include_in_schema=False)
 def workspace_page():
     return FileResponse(LOGIN_PAGE.with_name('workspace.html'), media_type='text/html; charset=utf-8')
@@ -504,27 +526,34 @@ def thread_detail(thread_id: UUID, request: Request, user: int = Depends(auth.cu
 @app.post('/api/threads/{thread_id}/messages')
 def thread_message(thread_id: UUID, body: ThreadMessage, request: Request, user: int = Depends(auth.current_user_id)):
     auth.check_origin(request)
-    return conversation_service(request).message(user, str(thread_id), body.text, body.conditions)
+    return conversation_service(request).message(user, str(thread_id), body.text, body.conditions, request_id=request_id_for(request))
 
 
 @app.post('/api/threads/{thread_id}/resume')
 def thread_resume(thread_id: UUID, body: ThreadResume, request: Request, user: int = Depends(auth.current_user_id)):
     auth.check_origin(request)
-    return conversation_service(request).resume(user, str(thread_id), body.answers, body.role, body.version)
+    return conversation_service(request).resume(user, str(thread_id), body.answers, body.role, body.version, request_id=request_id_for(request))
 
 
 @app.post('/api/threads/{thread_id}/approve')
 def thread_approve(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
     auth.check_origin(request)
-    return conversation_service(request).approve(user, str(thread_id), body.version)
+    return conversation_service(request).approve(user, str(thread_id), body.version, request_id=request_id_for(request))
 
 
 @app.post('/api/threads/{thread_id}/retry')
 def thread_retry(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
     auth.check_origin(request)
-    return conversation_service(request).retry(user, str(thread_id), body.version)
+    return conversation_service(request).retry(user, str(thread_id), body.version, request_id=request_id_for(request))
 
 
 @app.get('/api/memories')
 def list_memories(request: Request, user: int = Depends(auth.current_user_id)):
     return conversation_service(request).memories(user)
+
+
+@app.post('/api/memories/{thread_id}/{version}/control')
+def control_memory(thread_id: UUID, version: int, body: MemoryControl, request: Request, user: int = Depends(auth.current_user_id)):
+    """사례 기억의 정정 메모·철회·복구·삭제. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
+    auth.check_origin(request)
+    return conversation_service(request).control_memory(user, str(thread_id), version, body.action, body.correction)

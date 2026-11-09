@@ -20,7 +20,9 @@
 <body><main>
   <header><h1>SojaFit · 내 회로 분석</h1><button id="logout" type="button">로그아웃</button></header>
   <p class="notice">같은 동작은 보장하지 않습니다. 실제 회로 조건과 데이터시트 근거를 확인한 뒤 판정 사례를 승인하세요. 이 화면은 견적서를 발행하지 않습니다.</p>
+  <p class="muted">장기기억은 관련 승인 사례를 참고하는 기능입니다. 모든 대화를 자동으로 기억하거나 자유롭게 과거 기록을 검색하는 기능은 아닙니다. 판정 사례 승인과 견적서 승인·저장은 별개입니다. 자동 삭제 없이 보관합니다.</p>
   <p id="status" role="status" aria-live="polite">로그인 확인 중입니다.</p>
+  <section id="demo" hidden><h2>합성 데모 · 실제 부품 분석 아님</h2><p>외부 모델·검색 호출 없이 저장·조건 보충·승인·새 분석의 기억 참조를 확인합니다. 후보 판정 조건 예: 12V, 0.1A, 전압 강하 모름.</p><button id="demo-start" type="button">데모 회로로 새 분석 시작</button><div id="demo-questions"></div></section>
   <div class="layout">
     <div>
       <section aria-labelledby="upload-title"><h2 id="upload-title">넷리스트 올리기</h2>
@@ -40,7 +42,11 @@
         <button id="retry" type="button" hidden>실패한 분석 이어서 재시도</button>
       </section>
       <section aria-labelledby="related-title"><h2 id="related-title">관련된 내 승인 사례</h2><p class="muted">같은 역할 또는 원래 품번의 과거 승인입니다. 현재 판정의 데이터시트 근거를 대신하지 않습니다.</p><div id="related"></div></section>
+      <section aria-labelledby="approval-title"><h2 id="approval-title">버전별 승인·기억 저장 상태</h2><div id="approvals"></div></section>
+      <section aria-labelledby="referenced-title"><h2 id="referenced-title">답변과 분리한 과거 승인 기록</h2><p class="muted">과거 승인은 현재 회로의 사양·적합성을 보증하지 않습니다.</p><div id="referenced"></div></section>
+      <section aria-labelledby="consulted-title"><h2 id="consulted-title">실행에 연결한 승인 사례 (현재 활성 기억만)</h2><p class="muted">철회·삭제한 사례는 이 목록에서 제외합니다. 이전에 이미 작성한 답변은 소급 수정하지 않습니다.</p><div id="consulted"></div></section>
       <section aria-labelledby="memory-title"><h2 id="memory-title">내 승인 사례</h2><div id="memories"></div></section>
+      <section aria-labelledby="events-title"><h2 id="events-title">분석 처리 기록</h2><p class="muted">조건 입력 대기를 제외한 요청별 시간입니다. 병렬 단계의 합은 총 시간과 다를 수 있습니다. queued는 Langfuse 수신 확인이 아닙니다.</p><div id="events"></div></section>
     </div>
   </div>
 </main>
@@ -83,7 +89,7 @@
     for (const item of items) {
       const detail = document.createElement('details'), title = document.createElement('summary'), text = document.createElement('pre');
       title.textContent = `${item.part || '품번 미확인'} · 승인 사례 · 결과 ${item.version}`;
-      text.textContent = `${item.summary}\n승인: ${item.approved_at}`;
+      text.textContent = `${item.summary}\n승인: ${item.approved_at}${item.correction ? '\n사용자 정정 메모 (원본 판정 변경 아님): '+item.correction : ''}`;
       detail.append(title, text); root.append(detail);
     }
   }
@@ -125,6 +131,45 @@
       }
     }
     showMemories('#related', data.related_memories);
+    showMemories('#referenced', data.referenced_memories || []);
+    showMemories('#consulted', data.consulted_memories || []);
+    $('#approvals').replaceChildren();
+    for (const approval of data.approvals || []) {
+      const row = document.createElement('details'), title = document.createElement('summary'), text = document.createElement('pre');
+      const labels = {stored:'기억 저장됨', pending:'기억 저장 대기', unknown:'저장 상태 확인 불가', revoked:'기억 참조 철회됨', deleted:'기억에서 삭제됨 · 원본 유지'};
+      title.textContent = `결과 ${approval.version} · ${labels[approval.memory_state]} · ${approval.approved_at}`;
+      text.textContent = `${approval.summary}\n승인 당시 입력: ${approval.input_record ? JSON.stringify(approval.input_record,null,2) : '이전 기록에는 상세 입력이 없습니다.'}`;
+      row.append(title,text);
+      if (['pending','unknown'].includes(approval.memory_state)) {
+        const button = document.createElement('button'); button.type = 'button';
+        button.dataset.approvalVersion = approval.version; button.textContent = '기억 저장 다시 시도';
+        button.onclick = () => action(async () => {
+          await api(`/api/threads/${data.id}/approve`,{version:approval.version});
+          render(await api(`/api/threads/${data.id}`)); await loadList();
+          return `결과 ${approval.version}의 승인 원본으로 기억을 다시 저장했습니다.`;
+        });
+        row.append(button);
+      }
+      if (approval.memory_state !== 'deleted') {
+        const label = document.createElement('label'), note = document.createElement('textarea');
+        note.id = `correction-${approval.version}`; note.maxLength=1000; note.value=approval.correction || '';
+        label.htmlFor=note.id; label.textContent='사용자 정정 메모 · 원본 판정은 유지됩니다'; row.append(label,note);
+        for (const [operation, caption] of [['correct','정정 메모 저장'],[approval.memory_state==='revoked'?'restore':'revoke',approval.memory_state==='revoked'?'기억 참조 복구':'기억 참조 철회']]) {
+          const button=document.createElement('button'); button.type='button'; button.textContent=caption;
+          button.onclick=()=>action(async()=>{ await api(`/api/memories/${data.id}/${approval.version}/control`,{action:operation,correction:note.value}); render(await api(`/api/threads/${data.id}`)); await loadList(); }); row.append(button);
+        }
+      }
+      const remove=document.createElement('button'); remove.type='button'; remove.textContent=approval.memory_state==='deleted'?'Store 사본 삭제 재시도':'기억에서 삭제 (대화·승인 원본 유지)';
+      remove.onclick=()=>{ if (!confirm('앞으로 이 사례를 기억으로 참조하지 않습니다. 기억은 복구할 수 없고, 대화·승인 원본은 유지됩니다. 진행할까요?')) return;
+        action(async()=>{ await api(`/api/memories/${data.id}/${approval.version}/control`,{action:'delete'}); render(await api(`/api/threads/${data.id}`)); await loadList(); }); }; row.append(remove);
+      $('#approvals').append(row);
+    }
+    $('#events').replaceChildren();
+    for (const event of data.events || []) {
+      const detail=document.createElement('details'), title=document.createElement('summary'), text=document.createElement('pre');
+      title.textContent=`결과 ${event.version} · ${event.status} · ${event.elapsed_ms} ms · ${event.mode}`;
+      text.textContent=`요청: ${event.request_id}\nTrace: ${event.trace_id} (${event.trace_delivery})\n`+(event.stages || []).map(s=>`${s.stage}: ${s.elapsed_ms} ms (${s.status})`).join('\n'); detail.append(title,text); $('#events').append(detail);
+    }
   }
   $('#circuit').onchange = showTargets;
   $('#upload-form').onsubmit = event => { event.preventDefault(); action(async () => {
@@ -157,8 +202,20 @@
   $('#logout').onclick = () => action(async () => { await api('/api/auth/logout',{}); $('main').replaceChildren(); location.replace('/login'); });
   async function boot() {
     const session = await api('/api/auth/me');
-    if (sessionUser !== session.user_id) { current = null; $('#messages').replaceChildren(); $('#related').replaceChildren(); $('#memories').replaceChildren(); $('#threads').replaceChildren(); }
-    sessionUser = session.user_id; await loadCircuits(); await loadList();
+    if (sessionUser !== session.user_id) { current = null; for (const id of ['messages','related','memories','threads','approvals','referenced','consulted']) $(`#${id}`).replaceChildren(); }
+    sessionUser = session.user_id; await api('/api/analysis/readiness'); await loadCircuits(); await loadList();
+    const demo = await api('/api/analysis/demo'); $('#demo').hidden = !demo.enabled;
+    if (demo.enabled) {
+      $('#demo-start').onclick = () => action(async () => {
+        const circuit = await api('/api/circuits',{filename:'synthetic-demo.net',netlist:demo.netlist});
+        const thread = await api('/api/threads',{circuit_id:circuit.id,target:'D1'});
+        await loadCircuits(circuit.id); render(await api(`/api/threads/${thread.id}`)); await loadList();
+      });
+      $('#demo-questions').replaceChildren(...Object.values(demo.questions).map(question => {
+        const button = document.createElement('button'); button.type='button'; button.textContent=question;
+        button.onclick=()=>{ $('#question').value=question; $('#conditions').value=''; $('#question').focus(); }; return button;
+      }));
+    }
   }
   window.addEventListener('pageshow', () => action(boot));
 </script></body></html>
