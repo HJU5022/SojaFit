@@ -616,3 +616,17 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령(맥, lab 작업 폴더 `.wt/S9`, 가상환경은 lab `.venv`): `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi --out evals/results/graph/step_S9multi_set<n>.json` 두 번 동시.
 - 한계: 맥과 Docker에서 측정이 10개 넘게 동시에 돌아 응답 시간이 #40보다 늘 수 있다. 1회씩 2세트라 흔들림은 범위만 안다.
 - 결과(11-06, session `multi-dataset_v2-1106-0602-openrouter`, lab `.wt/S9/evals/results/graph/step_S9multi_set<n>.json`): 두 세트 70문항 실패 0. cited_gold 22 · 23, over_refusal 7 · 5, wrong_citation 6 · 7, correct_refusal 34 · 33, hallucination_risk 1 · 2, 판정 일치 7 · 9/9, p50 15.7 · 16.9초. 기대 대조: 모든 지표가 기대 안. 비용 Sonnet 3.27 + Haiku 0.12달러(두 세트, 개인 Anthropic) + Luna 0.01달러. 단일(S9)과 지표 차이는 흔들림 안이다.
+
+### 2026-11-09 #43: 카드 값 읽기를 코드 먼저, LLM은 코드가 못 읽은 카드만 (v3 50문항, 이 변경 전 코드와 비교)
+
+- 왜: 사양 표를 지운 뒤(팀 결정, 사양 표를 다시 만들거나 저장하지 않음) 판정 · 찾기 값은 질문 때 카드를 LLM(`card_read`)이 읽는다. v3 50문항 한 회차(run-4 set1 Langfuse)에 `card_read` 호출이 약 400번이었고, 찾기 · 판정 문항 시간의 대부분이다. 비용 0 조사(11-09, 저장 없음): `pipeline/specs.py` 규칙을 카드 한 장씩 돌리면 값이 있어야 할 카드 25,442장 중 97.8%를 깨끗이, 0.8%를 일부, 1.5%를 못 읽었다. run-4에서 LLM이 읽어 받은 (품번, 코드) 3,489쌍과 코드 값이 모두 같았다(최소 · 대표 · 최대 칸 포함, 다름 0 · 코드가 놓침 0). 문서 전체(`Doc.run`)로 읽으면 SSA1H60H VRRM에 RMS 행 값(42 V)이 붙어 카드 한 장씩 읽는다.
+- 바꾸는 것(하나): `card_read.read_values`가 카드마다 코드로 먼저 읽는다(`specs.py`의 `Doc.describe → emit_row`를 그 카드 하나에만, 표 · DB 쓰기 없음). 코드 읽기도 LLM 읽기와 같은 확인(카드 번호 · 인용 · 숫자 · 단위 차원 · 품번, `_check`)과 같은 행 모양(`_row`)을 거친다. LLM에는 원하는 코드의 값을 코드가 하나도 받지 못했거나 원하는 코드에 검토 표시(여러 값 칸 · 자리 표시 없음 · 대상 불명 등)가 난 카드만 보낸다. 프롬프트가 읽지 말라는 행(RMS · TSTG · IFRM 등), 숫자 칸이 없는 행, 다른 코드의 행, 품번 없는 계열 범위뿐인 행은 보내지 않는다.
+- 고정: `card_read.md` 프롬프트, 노드별 모델, 검색 · 문서 고르기(`card_pick`), `card_find` · `card_specs` 흐름, `backend/judge/`.
+- 기대(측정 전, 고치지 않음):
+  - v3 50문항 한 회차 `card_read` LLM 호출: 약 400 → 0~30(조사 어림 1~21).
+  - 찾기 · 판정 문항 응답 시간 중앙값: 이 변경 전 코드보다 30~70% 짧다. 50문항 p95도 짧아진다(10~50%).
+  - 정확도는 떨어지지 않는다: 관련 정답(cited_gold) · 판정 일치가 이 변경 전 코드 두 세트의 흔들림(cited_gold 차이 4) 밖으로 내려가지 않는다. 실패 0~2.
+  - 오프라인(이번 커밋, LLM · 쓰기 없음): 로컬 DB `sojafit_v4` 카드 전체에서 합친 함수가 깨끗이 읽는 비율 97~98.5%.
+- 측정(이번에는 돌리지 않음, 비용이 드는 실행이라 정운 확인 뒤): lab `v3`에 같은 변경을 옮기고, 같은 날 같은 설정으로 이 변경 전 커밋과 뒤 커밋을 v3 50문항 각 2세트(`run_gate`). Langfuse 트레이스에서 `card_read` 생성 호출 수를 세고, p50 · p95 · 비용 · 관련 정답 · 판정 일치를 함께 적는다.
+- 지켜볼 회귀 위험: 시험 조건 글 모양이 LLM(`@ IZT`)과 코드(`IZT = 5 mA`)로 다르다. 판정의 `_same_condition`은 한쪽에만 적힌 항목이 있으면 다른 조건으로 본다(원래 부품은 코드, 후보는 LLM으로 읽힌 드문 경우 짝을 못 지을 수 있음). CJ는 자리 표시가 없으면 코드가 대표, 프롬프트는 최대로 적는다. 카드 한 장만 보므로 이름 없는 이어지는 행 · 세로 합친 칸은 코드가 못 읽어 LLM으로 간다. VBR · CJ · TJ_MAX · VR · VESD는 조사에서 LLM과 대조하지 않았다.
+- 사전 등록 전에 이미 본 숫자: 위 조사 숫자(카드 비율 · 대조 쌍)뿐. 이 변경을 넣은 회차의 점수 · 시간은 보지 않았다.
