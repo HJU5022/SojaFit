@@ -13,7 +13,7 @@ CREATE TABLE projects (
     CONSTRAINT ck_projects_source_kind CHECK (source_kind IN ('demo', 'upload')),
     CONSTRAINT ck_projects_demo CHECK (
         (source_kind = 'demo' AND demo_id IS NOT NULL AND demo_id IN (
-            'breadboard_supply', 'mosfet_driver', 'attiny85_dev', 'pro_micro', 'franzininho_diy'
+            'breadboard_supply', 'mosfet_driver', 'attiny85_dev', 'pro_micro', 'franzininho_diy', 'attiny85_time_switch'
         )) OR (source_kind = 'upload' AND demo_id IS NULL)
     )
 );
