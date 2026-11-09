@@ -429,9 +429,11 @@ SojaFit (proj3-b)
 │   │   └── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
 │   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
 │   │   ├── SUPERPOWERS.md  <- 폴더 설명
-│   │   └── specs/
+│   │   ├── specs/
 │   │       ├── 2026-11-05-supervisor-prompt-v0-design.md  <- Supervisor Prompt V0 설계
 │   │       └── 2026-11-09-d5-frontend-service-design.md  <- React·Vite 작업대와 D5 서비스 연결 설계
+│   │   └── plans/
+│   │       └── 2026-11-09-d5-frontend-service.md  <- D5 프론트엔드 6개 PR 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
