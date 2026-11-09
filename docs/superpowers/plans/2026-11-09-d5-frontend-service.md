@@ -593,4 +593,3 @@ git commit -m "test(web): D5 서비스 전체 사용자 흐름"
 - Stop if the leader-owned `SPEC.md`/ADR updates are required for the next PR and no leader review path is available; report the exact proposed text already recorded in the feature spec.
 - Stop if current `origin/main` changes D5 contracts, auth cookie behavior, or DB migration numbers; rebase the plan against the new source before coding.
 - Do not claim completion until the full backend, frontend, Playwright, and Docker checks in Task 13 pass or the unverified checks are explicitly reported.
-

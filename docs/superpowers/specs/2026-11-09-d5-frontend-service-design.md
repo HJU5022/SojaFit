@@ -273,4 +273,3 @@ SSE 이벤트는 `run_started`, `status`, `requires_input`, `completed`, `refuse
 - 사용자별 권한과 삭제가 통합 테스트로 검증된다.
 - 프론트·백엔드·저장소 구조 테스트가 통과한다.
 - 외부 웹 조회를 구현된 것처럼 표시하지 않는다.
-
