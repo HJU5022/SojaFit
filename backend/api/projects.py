@@ -1,16 +1,13 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API."""
-import asyncio
-import sys
 import psycopg
+from psycopg import sql
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
 
 from backend import auth
-from backend.api.conversations import service_factory
 from backend.conversations.repository import InvalidRunState
-from starlette.concurrency import run_in_threadpool
 from backend.projects.models import Project, ProjectSummary
 from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
@@ -146,8 +143,14 @@ def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(
     return repo.rename_owned(user_id, project_id, body.name)
 
 
-def delete_owned_with_checkpoints(user_id, project_id, service):
-    # 동시 run 생성·재개도 같은 project 행을 잠근다. 외부 checkpoint 삭제는 별도 트랜잭션이다.
+def delete_checkpoints(conn, thread_ids):
+    """같은 DATABASE_URL의 LangGraph 표를 프로젝트 삭제 트랜잭션 안에서 정리한다."""
+    for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
+        conn.execute(sql.SQL('DELETE FROM {} WHERE thread_id = ANY(%s)').format(sql.Identifier(table)), (thread_ids,))
+
+
+def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
+    # run 생성·재개와 같은 project 행을 잠그고 checkpoint/업무 행을 한 트랜잭션에서 지운다.
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound
@@ -155,21 +158,14 @@ def delete_owned_with_checkpoints(user_id, project_id, service):
             raise InvalidRunState
         ids = [str(row[0]) for row in conn.execute('SELECT id FROM threads WHERE project_id=%s', (project_id,)).fetchall()]
         if ids:
-            async def remove():
-                async with service() as d5:
-                    for thread_id in ids:
-                        await d5.delete_thread(thread_id)
-            if sys.platform == 'win32':
-                asyncio.run(remove(), loop_factory=asyncio.SelectorEventLoop)
-            else:
-                asyncio.run(remove())
+            (checkpoint_delete or delete_checkpoints)(conn, ids)
         conn.execute('DELETE FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id))
 
 
 @router.delete("/projects/{project_id}", status_code=204, dependencies=[Depends(auth.check_origin)])
-async def delete_project(project_id: int, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository), service=Depends(service_factory)):
+def delete_project(project_id: int, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     try:
-        await run_in_threadpool(delete_owned_with_checkpoints, user_id, project_id, service)
+        delete_owned_with_checkpoints(user_id, project_id)
     except InvalidRunState:
         raise HTTPException(409, 'run_in_progress') from None
     except ProjectNotFound:

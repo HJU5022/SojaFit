@@ -170,7 +170,7 @@ def test_terminal_run_cannot_be_finished_twice(storage):
         assert conn.execute('SELECT count(*) FROM messages').fetchone()[0] == 2
 
 
-def test_service_deletes_checkpoint_data(storage):
+def test_project_delete_atomically_removes_checkpoint_data(storage):
     import asyncio
     import sys
     from psycopg.conninfo import make_conninfo
@@ -190,35 +190,32 @@ def test_service_deletes_checkpoint_data(storage):
             assert [e async for e in service.start(thread, data)][-1].type == 'completed'
             with connect() as conn:
                 assert conn.execute('SELECT count(*) FROM checkpoints WHERE thread_id=%s', (thread,)).fetchone()[0] > 0
-            await service.delete_thread(thread)
+            from backend.api.projects import delete_owned_with_checkpoints
+            delete_owned_with_checkpoints(owner, project)
         with connect() as conn:
             for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
                 assert conn.execute(sql.SQL('SELECT count(*) FROM {} WHERE thread_id=%s').format(sql.Identifier(table)), (thread,)).fetchone()[0] == 0
+            assert conn.execute('SELECT count(*) FROM projects WHERE id=%s', (project,)).fetchone()[0] == 0
     asyncio.run(run(), loop_factory=asyncio.SelectorEventLoop) if sys.platform == 'win32' else asyncio.run(run())
 
 
 def test_delete_rejects_active_then_removes_owned_checkpoints(storage):
-    from contextlib import asynccontextmanager
     from backend.api.projects import delete_owned_with_checkpoints
     from backend.conversations.repository import InvalidRunState
     repo, (owner, other), project, connect = storage
     thread = repo.create_thread(owner, project)
     run, _ = repo.start(owner, thread, {'question': 'hi'})
     deleted = []
-    @asynccontextmanager
-    async def service():
-        class Fake:
-            async def delete_thread(self, thread_id): deleted.append(thread_id)
-        yield Fake()
+    def delete_checkpoints(_conn, thread_ids): deleted.extend(thread_ids)
     with pytest.raises(InvalidRunState):
-        delete_owned_with_checkpoints(owner, project, service)
+        delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == []
     repo.finish(owner, thread, run, 'requires_input', {'answer': '', 'interrupt': {'missing': ['voltage']}})
     with pytest.raises(InvalidRunState):
-        delete_owned_with_checkpoints(owner, project, service)
+        delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     repo.resume(owner, thread, run)
     repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
-    delete_owned_with_checkpoints(owner, project, service)
+    delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == [thread]
     with connect() as conn:
         assert conn.execute('SELECT count(*) FROM projects WHERE id=%s', (project,)).fetchone()[0] == 0
@@ -238,21 +235,16 @@ def test_resume_result_survives_repository_reconstruction(storage):
 def test_project_deletion_serializes_new_run(storage):
     import threading
     from concurrent.futures import ThreadPoolExecutor
-    from contextlib import asynccontextmanager
     from backend.api.projects import delete_owned_with_checkpoints
     from backend.conversations.repository import ConversationNotFound
     repo, (owner, _), project, _ = storage
     thread = repo.create_thread(owner, project)
     entered, release = threading.Event(), threading.Event()
-    @asynccontextmanager
-    async def service():
-        class Fake:
-            async def delete_thread(self, thread_id):
-                entered.set()
-                assert release.wait(5)
-        yield Fake()
+    def delete_checkpoints(_conn, _thread_ids):
+        entered.set()
+        assert release.wait(5)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        deletion = pool.submit(delete_owned_with_checkpoints, owner, project, service)
+        deletion = pool.submit(delete_owned_with_checkpoints, owner, project, delete_checkpoints)
         try:
             assert entered.wait(5)
             start = pool.submit(repo.start, owner, thread, {'question': 'hi'})
@@ -262,6 +254,21 @@ def test_project_deletion_serializes_new_run(storage):
         deletion.result(timeout=5)
         with pytest.raises(ConversationNotFound):
             start.result(timeout=5)
+
+
+def test_project_and_checkpoint_cleanup_share_one_rollback(storage):
+    from backend.api.projects import delete_owned_with_checkpoints
+    repo, (owner, _), project, connect = storage
+    repo.create_thread(owner, project)
+
+    def partial_then_fail(conn, _thread_ids):
+        conn.execute("UPDATE projects SET name='partial' WHERE id=%s", (project,))
+        raise RuntimeError('checkpoint cleanup failed')
+
+    with pytest.raises(RuntimeError):
+        delete_owned_with_checkpoints(owner, project, partial_then_fail)
+    with connect() as conn:
+        assert conn.execute('SELECT name FROM projects WHERE id=%s', (project,)).fetchone() == ('test',)
 
 
 def test_database_rejects_nested_private_fields_and_bad_types(storage):

@@ -17,21 +17,21 @@ export default function ApprovalPanel({ runId, judgement }: { runId?: string; ju
   const [approval, setApproval] = useState<ApprovalDto | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
-  const selected = candidates.find(item => item.part === candidate)
+  const selected = candidate === '' ? undefined : candidates[Number(candidate)]
   async function approve() {
     if (!runId || !selected || busy) return
     setBusy(true); setError(null)
     try {
       const run = await getRun(runId)
       if (!run.message_id) throw { code: 'APPROVAL_NOT_READY', message: '승인할 결과 메시지를 찾을 수 없습니다.', requestId: run.result.request_id }
-      setApproval(await approveMessage(run.message_id, selected.part)); setConfirm(false)
+      setApproval(await approveMessage(run.message_id, selected.part, selected.verdict)); setConfirm(false)
       void client.invalidateQueries({ queryKey: ['approved-cases'] })
     } catch (error) { setError(error) } finally { setBusy(false) }
   }
   return <section className="panel result-section" aria-labelledby="approval-heading"><h2 id="approval-heading">사람 승인</h2>
     <p>근거와 판정을 직접 확인한 뒤 승인하세요.</p>
     <label htmlFor="approval-candidate">승인할 후보</label><select id="approval-candidate" value={candidate} disabled={busy || !!approval} onChange={event => { setCandidate(event.target.value); setConfirm(false) }}>
-      <option value="">후보를 선택하세요</option>{candidates.map(item => <option key={`${item.part}-${item.verdict}`} value={item.part}>{item.part} · {LABELS[item.verdict]}</option>)}
+      <option value="">후보를 선택하세요</option>{candidates.map((item, index) => <option key={`${item.part}-${item.verdict}-${index}`} value={index}>{item.part} · {LABELS[item.verdict]}</option>)}
     </select>
     <button disabled={!runId || !selected || busy || !!approval} onClick={() => setConfirm(true)}>판정 승인 확인</button>
     {confirm && selected && <div role="group" aria-label="판정 승인 확인"><p>{selected.part} 후보의 “{LABELS[selected.verdict]}” 판정을 승인할까요?</p>

@@ -54,14 +54,14 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
         'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
     })
     saved = conversations.get_run(owner, run)
-    approval = quotes.approve(owner, saved['message_id'], 'SS34')
+    approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     quote = quotes.create_quote(owner, approval['id'], 25)
     assert quote['part_number'] == 'SS34' and quote['quantity'] == 25
     assert quotes.list_quotes(owner, project.id)[0]['id'] == quote['id']
     assert quotes.list_cases(owner)[0]['candidate_part'] == 'SS34'
 
     with pytest.raises(ConversationNotFound): conversations.get_run(other, run)
-    with pytest.raises(QuoteNotFound): quotes.approve(other, saved['message_id'], 'SS34')
+    with pytest.raises(QuoteNotFound): quotes.approve(other, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     with pytest.raises(QuoteNotFound): quotes.list_quotes(other, project.id)
     with pytest.raises(psycopg.errors.CheckViolation), connect() as conn:
         conn.execute("UPDATE approvals SET snapshot=snapshot || %s WHERE id=%s", (Jsonb({'product_url': 'https://forbidden.test'}), approval['id']))

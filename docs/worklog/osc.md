@@ -412,3 +412,9 @@
 - frontend 전체: 최초 Vitest가 Playwright `e2e/*.spec.ts`를 단위 테스트로 수집해 실패하여 Vite test exclude에 `e2e/**`를 추가했다. 이후 `npm ci`는 취약점 0건, `npm run test:run`은 13 files·62 tests 통과, `npm run build` 성공. Playwright Chromium 설치 후 최초 E2E는 과도한 `**/api/**` 패턴이 `/src/api/client.ts`까지 가로채는 문제를 발견했고, 호스트 루트 `/api/`만 가로채도록 고쳐 `npx playwright test --reporter=line` 2 passed.
 - 보안·무결성: 승인 뒤 승인 사례 query를 무효화해 사용자별 캐시를 갱신한다. quote 요청 본문은 수량만 보내고, 화면 가격·재고 응답은 견적/사례 저장 DTO와 DB snapshot에 들어가지 않는다. 복합 소유자 FK·RLS/권한 회수·재귀 금지 키 CHECK와 전체 서비스 시험을 유지했다. worktree 경로를 읽지 못한 최초 Docker 호출은 유효 검사로 세지 않았고, 코드 커밋 `43fb8f2`를 임시 일반 clone으로 만든 뒤 CI와 같은 gitleaks 전체 Git 이력 검사 결과 탐지 0건·종료 코드 0이었다. 임시 clone은 검사 뒤 삭제했다.
 - 남은 경계: 실제 외부 공급자·MCP·모델과 배포 환경, 프로세스 재시작 중 run 자동 복구, checkpoint 삭제와 프로젝트 삭제의 단일 트랜잭션 원자성은 확인하지 않았다. `README.md`·`SPEC.md`·ADR은 조장 소유이므로 수정하지 않았으며, 조장은 D5 로컬 실행·전체 사용자 흐름과 위 장애 경계를 정본 문서에 반영할지 검토해야 한다.
+
+### 최종 독립 검토 1회 반영
+
+- 검토 이슈 1: 같은 품번이 `results`와 `shown`에 서로 다른 verdict로 나타나면 품번만 보낸 승인이 다른 판정을 저장할 수 있었다. 화면 선택값을 후보 index로 분리하고 API가 `{candidate_part, verdict}` 쌍을 요구하며 service가 두 값이 모두 같은 후보만 snapshot으로 고르도록 수정했다. 누락 verdict 422와 중복 품번의 명시 verdict 선택을 회귀 시험으로 고정했다.
+- 검토 이슈 2: checkpoint를 thread별 외부 트랜잭션으로 먼저 지우던 삭제는 중간 실패 때 일부만 지울 수 있었다. 서비스와 업무 표가 같은 `DATABASE_URL`을 쓰는 계약에 맞춰 checkpoint 세 표와 project cascade를 project 행 잠금이 유지되는 단일 PostgreSQL 트랜잭션으로 옮겼다. 격리 DB에서 실제 checkpoint 삭제·project cascade, 실행 시작과의 직렬화, cleanup 중 오류의 전체 rollback을 확인했다.
+- 검토 방식·확인: 허용된 독립 최종 검토는 이 1회로 끝냈고 재검토는 하지 않았다. 수정 뒤 backend focused·실제 DB·repo layout `33 passed`, frontend focused `2 passed`, production build, 브라우저 E2E `2 passed`를 확인했다. Task 13의 전체 suite와 gitleaks는 앞서 한 번 수행한 결과를 유지하며 다시 실행하지 않았다.

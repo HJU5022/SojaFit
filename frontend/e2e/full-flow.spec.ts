@@ -19,7 +19,11 @@ test('completes judgement, transient price, approval, price-free quote, and case
     if (path === '/api/projects/1/threads') return route.fulfill({ status: 201, json: { id: 'thread-1', project_id: 1 } })
     if (path === '/api/threads/thread-1/runs') return route.fulfill({ contentType: 'text/event-stream', body: `event: run_started\ndata: {"run_id":"run-1"}\n\nevent: completed\ndata: ${JSON.stringify(result)}\n\n` })
     if (path === '/api/runs/run-1') return route.fulfill({ json: { id: 'run-1', thread_id: 'thread-1', message_id: 9, result } })
-    if (path === '/api/messages/9/approvals') { caseExists = true; return route.fulfill({ status: 201, json: { id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4 } }) }
+    if (path === '/api/messages/9/approvals') {
+      expect(request.postDataJSON()).toEqual({ candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT' })
+      caseExists = true
+      return route.fulfill({ status: 201, json: { id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4 } })
+    }
     if (path === '/api/approved-cases' && request.method() === 'GET') return route.fulfill({ json: caseExists ? [{ id: 4, approval_id: 3, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT' }] : [] })
     if (path === '/api/approved-cases/4') { caseExists = false; return route.fulfill({ status: 204, body: '' }) }
     if (path === '/api/approvals/3/quotes') {
@@ -34,7 +38,7 @@ test('completes judgement, transient price, approval, price-free quote, and case
   await page.getByLabel('질문').fill('D1을 SS34로 바꿔도 되나요?')
   await page.getByRole('button', { name: 'D5에 질문하기' }).click()
   await expect(page.getByText('같은 동작은 보장하지 않습니다.')).toBeVisible()
-  await page.getByLabel('승인할 후보').selectOption('SS34')
+  await page.getByLabel('승인할 후보').selectOption('0')
   await page.getByRole('button', { name: '판정 승인 확인' }).click()
   await expect(page.getByText('SS34 후보의 “역할상 충분” 판정을 승인할까요?')).toBeVisible()
   await page.getByRole('button', { name: '확인 후 승인' }).click()

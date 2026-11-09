@@ -28,13 +28,14 @@ def assert_no_price_data(value):
             assert_no_price_data(item)
 
 
-def approval_snapshot(result: dict, candidate_part: str) -> dict:
+def approval_snapshot(result: dict, candidate_part: str, verdict: str) -> dict:
     judgement = result.get('judgement') if isinstance(result, dict) else None
     if not isinstance(judgement, dict):
         raise InvalidApproval('승인할 판정이 없습니다.')
     candidates = [item for key in ('results', 'shown') for item in judgement.get(key, []) if isinstance(item, dict)]
-    candidate = next((item for item in candidates if item.get('part') == candidate_part), None)
-    if candidate is None or candidate.get('verdict') not in APPROVABLE:
+    candidate = next((item for item in candidates
+                      if item.get('part') == candidate_part and item.get('verdict') == verdict), None)
+    if candidate is None or verdict not in APPROVABLE:
         raise InvalidApproval('승인 가능한 후보 판정이 아닙니다.')
     snapshot = {'answer': result.get('answer', ''), 'question_type': result.get('question_type', ''),
                 'candidate': deepcopy(candidate), 'evidence': deepcopy(result.get('evidence') or [])}
@@ -43,7 +44,7 @@ def approval_snapshot(result: dict, candidate_part: str) -> dict:
 
 
 class QuoteService:
-    def approve(self, user_id: int, message_id: int, candidate_part: str):
+    def approve(self, user_id: int, message_id: int, candidate_part: str, verdict: str):
         with auth.connection() as conn:
             row = conn.execute("""SELECT r.status,r.safe_result FROM messages m
                 JOIN runs r ON r.id=m.run_id AND r.thread_id=m.thread_id
@@ -53,7 +54,7 @@ class QuoteService:
                 raise QuoteNotFound
             if row[0] != 'completed':
                 raise InvalidApproval('완료된 판정만 승인할 수 있습니다.')
-            snapshot = approval_snapshot(row[1] or {}, candidate_part)
+            snapshot = approval_snapshot(row[1] or {}, candidate_part, verdict)
             approval = conn.execute('INSERT INTO approvals(user_id,message_id,snapshot) VALUES (%s,%s,%s) RETURNING id,created_at',
                                     (user_id, message_id, Jsonb(snapshot))).fetchone()
             case = conn.execute('INSERT INTO approved_cases(user_id,approval_id,snapshot) VALUES (%s,%s,%s) RETURNING id',

@@ -1,5 +1,6 @@
 """사람 승인 뒤의 견적·승인 사례 API. 가격·재고는 받지 않는다."""
 import re
+from typing import Literal
 
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -14,6 +15,7 @@ router = APIRouter(prefix='/api', tags=['quotes'])
 class ApproveBody(BaseModel):
     model_config = ConfigDict(extra='forbid')
     candidate_part: str = Field(min_length=1, max_length=100)
+    verdict: Literal['IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT']
 
     @field_validator('candidate_part')
     @classmethod
@@ -41,7 +43,7 @@ def service():
 
 @router.post('/messages/{message_id}/approvals', status_code=201, dependencies=[Depends(auth.check_origin)])
 def approve(message_id: int, body: ApproveBody, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
-    return quotes.approve(user_id, message_id, body.candidate_part)
+    return quotes.approve(user_id, message_id, body.candidate_part, body.verdict)
 
 
 @router.post('/approvals/{approval_id}/quotes', status_code=201, dependencies=[Depends(auth.check_origin)])
