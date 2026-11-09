@@ -7,8 +7,9 @@
 - 구조 충돌 수정: #73의 `backend/conversations.py`가 기존 `backend/conversations/` 패키지에 가려지는 문제를 `backend/conversations/memory_service.py`로 이동해 해결하고 main·Compose setup CLI·테스트·트리 문서를 함께 바꿨다. `tests/graph/test_netlist.py`와 기존 `tests/projects/test_netlist.py`의 pytest 모듈명 충돌은 전자를 `test_agent_netlist.py`로 바꿔 해결했다.
 - DB·문서: 양쪽 초기화 SQL은 실제 파일명 정렬 순서대로 문서화했다. 루트 `SPEC.md`와 v4h RAG 정본은 최신 main 내용을 유지하고 OSC 구현 설명은 하위 작업서와 이 기록에 남겼다.
 - 검증: API·SPA·thread 집중 검사는 `88 passed, 33 skipped`, 프론트는 `16 files / 87 tests passed`, production build 성공, 전체 backend는 `1074 passed, 113 skipped in 26.32s`였다. FastAPI method/path 중복 검사 결과는 `[]`였다.
-- 확인 못 한 것: 건너뛴 PostgreSQL·외부 모델·공유 DB·실제 배포와 Langfuse 전송은 확인하지 않았다. 로컬에 gitleaks 실행 파일이 없어 최종 비밀값 검사는 별도 방식으로 확인한다.
-- 다음 할 일: Compose 설정·잠금·diff·가상 merge를 다시 확인하고 PR #73 통합 merge commit을 남긴다. PR 생성과 원격 push는 사용자 별도 승인 전 수행하지 않는다.
+- 추가 검증: `uv lock --check`, `docker compose config --quiet`, 전체 diff whitespace와 FastAPI method/path 중복 0건을 확인했다. 일반 로컬 clone을 Docker gitleaks로 검사해 `414 commits scanned`, `no leaks found`였다. 현재 main 및 PR #73 선병합 가상 main과의 `git merge-tree --write-tree --quiet`는 모두 exit 0이었다.
+- 확인 못 한 것: 건너뛴 PostgreSQL·외부 모델·공유 DB·실제 배포와 Langfuse 전송은 확인하지 않았다.
+- 다음 할 일: 최종 diff와 Git 상태를 확인한 뒤, 사용자 승인 시에만 push·PR 생성을 진행한다.
 
 ## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
 
