@@ -182,7 +182,14 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 프로젝트와 거기에 딸린 것(대화, checkpoint, 승인, 견적)은 마지막 활동 뒤 60일에 자동으로 지운다.
 - 기록 종류(분석 사건, 로그인 · 가입 시도, 하루 사용량)는 30일 뒤에 지운다.
 - 사용자가 직접 지우면 숨기지 않고 바로 지운다.
-- 정리는 스케줄러 없이 새 분석을 시작할 때 작은 묶음으로 한다. 자동 정리(60일 · 30일)는 아직 구현하지 않았다.
+- 정리는 스케줄러 없이 새 분석을 시작할 때 작은 묶음으로 한다.
+
+#### 자동 정리(구현, `db/023_retention.sql`)
+- 규칙 하나 = SQL 함수 하나(`sojafit_agent` 스키마, 공개 역할 EXECUTE 회수). 분석 서비스가 새 질문(`Conversations.message`)마다 그 thread를 잠그기 전에 `SELECT purge_inactive_projects(), purge_log_records()`를 따로 연결로 부른다(`_purge_expired`). 실패하면 `backend.conversations.retention` 경고(`retention_purge_failed`)만 남기고 분석은 계속한다. 시작 때 두 함수가 없으면 서비스가 뜨지 않는다(규칙이 조용히 꺼지지 않게).
+- `purge_inactive_projects(keep_days DEFAULT 60, batch_size DEFAULT 20)`: ① React 프로젝트의 마지막 활동 = 프로젝트 `updated_at`(이름 변경) · 대화 생성 · run `updated_at`(시작 · 끝 · 재개) · 승인 · 견적 중 가장 늦은 시각. 지난 것을 최대 batch_size개 `FOR UPDATE SKIP LOCKED`로 골라 사용자가 지울 때와 같은 순서(같은 UUID의 checkpoint → 분석 thread → 빈 분석 회로 → 프로젝트 cascade)로 지운다 ② React 대화에 딸리지 않은 분석 thread(`/api/threads`로 직접 만든 것, 예전 규칙으로 프로젝트만 지워져 남은 것)는 자기 마지막 활동(생성 · 메시지 · 분석 사건 · 승인 · 승인 기록 관리)으로 본다 ③ thread가 없는 분석 회로(업로드 넷리스트 원문)는 올린 뒤 60일. React 표가 없는 DB에서는 아무것도 지우지 않는다.
+- `purge_log_records(keep_days DEFAULT 30, batch_size DEFAULT 200)`: 분석 사건(`created_at`), 하루 사용량(사용자 · 서비스 전체, UTC 날짜), 가입 시도(UTC 날짜), 로그인 시도(계정 · IP: 15분 창 시작이 30일 지났고 잠금이 없거나 끝난 행만)를 표마다 최대 batch_size개(ctid 묶음) 지운다.
+- 두 함수 모두 트랜잭션 advisory lock(`736128` · `736129`)으로 동시에 한 곳만 청소하고 나머지는 기다리지 않고 0을 돌려준다. Supabase pg_cron으로 하루 한 번 같은 함수를 부를 수 있다(지금은 켜지 않음, SQL 머리 주석에 예).
+- 60일 · 30일의 이유: 회로는 몇 주 뒤에 다시 여는 일이 많아 한 달보다 넉넉히 둔다. 기록은 최근 디버깅과 남용 한도 확인에만 쓴다.
 
 #### 사용자가 지울 때(구현)
 - 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.

@@ -1005,7 +1005,7 @@ def test_message_sends_no_approved_cases_and_returns_profile_hints():
     @contextmanager
     def locked(user, thread):
         yield Conn(), {'version': 0, 'target': 'D1', 'filename': 'my.net', 'connections': {'components': [{'ref': 'D1', 'value': 'SS34'}]}}
-    app.locked, app._reconcile, app._budget = locked, lambda conn, row: None, lambda user: 'budget'
+    app.locked, app._reconcile, app._budget, app._purge_expired = locked, lambda conn, row: None, lambda user: 'budget', lambda: None
     app.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(next=()))
     app.memories = lambda *args, **kwargs: pytest.fail('approved cases looked up for a new analysis')
     app._invoke = lambda conn, thread, inputs, budget, request_id='': seen.update(inputs)

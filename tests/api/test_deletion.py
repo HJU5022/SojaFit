@@ -269,3 +269,121 @@ def test_admin_cannot_self_delete(served):
     with pytest.raises(HTTPException) as error:  # 계정 단계도 관리자를 거절한다(역할이 도중에 바뀌어도)
         auth.delete_account(admin)
     assert error.value.status_code == 409
+
+
+def age(dsn, days, projects=(), threads=()):
+    """프로젝트(React 행 전부)와 분석 thread(메시지 · 사건 · 승인 · 회로)의 활동 시각을 days일 전으로 옮긴다."""
+    when = {'w': days}
+    with psycopg.connect(dsn) as conn:
+        for project in projects:
+            when['p'] = project
+            conn.execute("UPDATE public.projects SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day', updated_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' WHERE id=%(p)s", when)
+            conn.execute("UPDATE public.threads SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' WHERE project_id=%(p)s", when)
+            conn.execute("UPDATE public.runs r SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day', updated_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' "
+                         "FROM public.threads t WHERE t.id=r.thread_id AND t.project_id=%(p)s", when)
+            conn.execute("UPDATE public.approvals a SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' FROM public.messages m JOIN public.threads t ON t.id=m.thread_id "
+                         "WHERE m.id=a.message_id AND t.project_id=%(p)s", when)
+            conn.execute("UPDATE public.quotes q SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' FROM public.approvals a JOIN public.messages m ON m.id=a.message_id "
+                         "JOIN public.threads t ON t.id=m.thread_id WHERE a.id=q.approval_id AND t.project_id=%(p)s", when)
+        when['t'] = [str(t) for t in threads]
+        conn.execute("UPDATE sojafit_agent.threads SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' WHERE id = ANY(%(t)s::uuid[])", when)
+        conn.execute("UPDATE sojafit_agent.circuits c SET created_at=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' FROM sojafit_agent.threads t "
+                     "WHERE t.circuit_id=c.id AND t.id = ANY(%(t)s::uuid[])", when)
+        for table, column in (('messages', 'created_at'), ('analysis_events', 'created_at'), ('approvals', 'approved_at')):
+            conn.execute(f"UPDATE sojafit_agent.{table} SET {column}=CURRENT_TIMESTAMP - %(w)s * INTERVAL '1 day' WHERE thread_id = ANY(%(t)s::uuid[])", when)
+
+
+def test_purge_inactive_projects_deletes_only_past_60_days_in_bounded_batches(world):
+    app, (a, b, _), dsn = world
+    mine, other = seed(app, dsn, a, projects=3), seed(app, dsn, b)
+    old, recent_run = mine['projects'][:2], mine['threads'][2]
+    age(dsn, 61, projects=mine['projects'], threads=mine['threads'] + [mine['direct']])  # 셋째 프로젝트는 아래에서 run만 어제로
+    age(dsn, 59, projects=other['projects'], threads=other['threads'] + [other['direct']])  # 60일이 안 됨
+    empty_old, empty_new = app.upload(a, 'old.net', NET)['id'], app.upload(a, 'new.net', NET)['id']
+    with psycopg.connect(dsn) as conn:
+        conn.execute("UPDATE public.runs SET updated_at=CURRENT_TIMESTAMP - INTERVAL '1 day' WHERE thread_id=%s", (recent_run,))
+        conn.execute("UPDATE sojafit_agent.circuits SET created_at=CURRENT_TIMESTAMP - INTERVAL '61 days' WHERE id=%s", (empty_old,))
+    before_other = remaining(dsn, b, other['threads'] + [other['direct']])
+    def projects_left():
+        with psycopg.connect(dsn) as conn:
+            return {row[0] for row in conn.execute('SELECT id FROM public.projects WHERE id = ANY(%s)', (mine['projects'],))}
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        first = conn.execute('SELECT sojafit_agent.purge_inactive_projects(60, 1)').fetchone()[0]
+        assert 1 <= first <= 3 and len(set(old) & projects_left()) >= 1  # 한 번에 단계마다 1개까지만
+        for _ in range(5):
+            if not conn.execute('SELECT sojafit_agent.purge_inactive_projects(60, 1)').fetchone()[0]:
+                break
+    assert projects_left() == {mine['projects'][2]}  # 이름 변경은 61일 전이어도 어제 run이 있으면 남는다
+    gone = remaining(dsn, a, mine['threads'][:2] + [mine['direct']])
+    for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages', 'analysis_events', 'checkpoints', 'checkpoint_writes'):
+        assert gone[name] == 0, name
+    assert remaining(dsn, a, [recent_run])['analysis_threads'] == 1 and remaining(dsn, a, [recent_run])['checkpoints'] > 0
+    with psycopg.connect(dsn) as conn:
+        circuits = {str(row[0]) for row in conn.execute('SELECT id FROM sojafit_agent.circuits WHERE user_id=%s', (a,))}
+    assert circuits == {recent_run, empty_new}  # 빈 회로는 61일 지난 것만, 직접 thread의 회로는 thread와 함께
+    assert remaining(dsn, b, other['threads'] + [other['direct']]) == before_other
+    assert remaining(dsn, a, [])['store'] == 4  # 사용자 사실은 자동 만료가 없다
+
+
+def test_purge_log_records_deletes_only_past_30_days_and_keeps_active_locks(world):
+    app, (a, _, _), dsn = world
+    thread = seed(app, dsn, a)['direct']
+    key = lambda: uuid4().hex + uuid4().hex
+    signup_old, signup_new, login_old, login_locked, login_new, ip_old, ip_locked, ip_new = (key() for _ in range(8))
+    ago = "CURRENT_TIMESTAMP - %s * INTERVAL '1 day'"
+    day = "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date - %s"
+    with psycopg.connect(dsn) as conn:
+        for days in (31, 31, 31, 29):
+            conn.execute(f"INSERT INTO sojafit_agent.analysis_events(id,thread_id,version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery,created_at) "
+                         f"VALUES (%s,%s,1,%s,'live','DONE',1,'[]','t','skipped',{ago})", (uuid4(), thread, f'log-{days}', days))
+        for days in (31, 29):
+            conn.execute(f"INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed) VALUES (%s,{day},CURRENT_TIMESTAMP)", (a, days))
+            conn.execute(f'INSERT INTO sojafit_agent.analysis_service_usage(day) VALUES ({day}) ON CONFLICT DO NOTHING', (days,))
+        conn.execute(f'INSERT INTO public.auth_signup_attempts(ip_hash,day) VALUES (%s,{day}),(%s,{day})', (signup_old, 31, signup_new, 0))
+        for table, column, old, locked, new in (('auth_login_attempts', 'login_hash', login_old, login_locked, login_new),
+                                                ('auth_login_ip_attempts', 'ip_hash', ip_old, ip_locked, ip_new)):
+            conn.execute(f"INSERT INTO public.{table}({column},failed_count,window_started_at,locked_until) VALUES "
+                         f"(%s,3,{ago},NULL),(%s,5,{ago},CURRENT_TIMESTAMP + INTERVAL '10 minutes'),(%s,1,CURRENT_TIMESTAMP,NULL)",
+                         (old, 31, locked, 31, new))
+    def left():
+        with psycopg.connect(dsn) as conn:
+            return {
+                'events': [r[0] for r in conn.execute('SELECT request_id FROM sojafit_agent.analysis_events WHERE thread_id=%s AND request_id LIKE %s ORDER BY 1', (thread, 'log-%'))],
+                'usage': conn.execute(f'SELECT count(*) FROM sojafit_agent.analysis_usage WHERE user_id=%s AND day < {day}', (a, 30)).fetchone()[0],
+                'service': conn.execute(f'SELECT count(*) FROM sojafit_agent.analysis_service_usage WHERE day < {day}', (30,)).fetchone()[0],
+                'auth': {h for h in (signup_old, signup_new, login_old, login_locked, login_new, ip_old, ip_locked, ip_new)
+                         if conn.execute('SELECT 1 FROM public.auth_signup_attempts WHERE ip_hash=%(h)s UNION ALL SELECT 1 FROM public.auth_login_attempts '
+                                         'WHERE login_hash=%(h)s UNION ALL SELECT 1 FROM public.auth_login_ip_attempts WHERE ip_hash=%(h)s', {'h': h}).fetchone()}}
+    try:
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            assert conn.execute('SELECT sojafit_agent.purge_log_records(30, 2)').fetchone()[0] >= 2
+            assert len([e for e in left()['events'] if e == 'log-31']) == 1  # 표마다 한 번에 2개까지만
+            for _ in range(5):
+                if not conn.execute('SELECT sojafit_agent.purge_log_records(30, 2)').fetchone()[0]:
+                    break
+        result = left()
+        assert result['events'] == ['log-29'] and result['usage'] == 0 and result['service'] == 0
+        assert result['auth'] == {signup_new, login_locked, login_new, ip_locked, ip_new}  # 아직 걸린 잠금과 15분 창 안의 행은 남는다
+        with psycopg.connect(dsn) as conn:
+            assert conn.execute(f'SELECT count(*) FROM sojafit_agent.analysis_usage WHERE user_id=%s AND day = {day}', (a, 29)).fetchone()[0] == 1
+    finally:
+        with psycopg.connect(dsn) as conn:
+            for table, column in (('auth_signup_attempts', 'ip_hash'), ('auth_login_attempts', 'login_hash'), ('auth_login_ip_attempts', 'ip_hash')):
+                conn.execute(f'DELETE FROM public.{table} WHERE {column} = ANY(%s)', ([signup_new, login_locked, login_new, ip_locked, ip_new],))
+            conn.execute(f'DELETE FROM sojafit_agent.analysis_service_usage WHERE day = {day}', (29,))
+
+
+def test_new_analysis_runs_cleanup_and_cleanup_failure_does_not_block(world, monkeypatch, caplog):
+    app, (a, b, _), dsn = world
+    mine = seed(app, dsn, a)
+    age(dsn, 61, projects=mine['projects'], threads=mine['threads'])
+    thread = app.create(b, app.upload(b, 'b.net', NET)['id'], 'D1')['id']
+    assert app.message(b, thread, '판정')['status'] == 'DONE'  # 다른 사용자의 새 분석이 청소를 부른다
+    assert remaining(dsn, a, mine['threads'])['projects'] == 0 and remaining(dsn, a, mine['threads'])['analysis_threads'] == 0
+    assert remaining(dsn, a, [mine['direct']])['analysis_threads'] == 1
+    def down():
+        raise psycopg.OperationalError('synthetic outage')
+    monkeypatch.setattr(app, 'connection', down)
+    with caplog.at_level('WARNING', logger='backend.conversations.retention'):
+        app._purge_expired()
+    assert [r.message for r in caplog.records if r.name == 'backend.conversations.retention'] == ['retention_purge_failed']

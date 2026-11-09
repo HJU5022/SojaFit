@@ -137,7 +137,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·새 분석 때 보관 기간 청소·준비 명령. React 대화도 같은 UUID thread로 실행
 │   │   ├── profile.py      <- 사용자 사실 3칸 장기 기억(Store): 칸 검사·틀 문장·덮어쓰기·지우기·Voyage 의미 검색
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
@@ -266,6 +266,7 @@ SojaFit (proj3-b)
 │   ├── 020_approvals_quotes.sql <- 승인·가격 없는 견적·사례 및 재귀 금지 키 제약
 │   ├── 021_auth_ip_limits.sql <- 클라이언트 IP 해시별 하루 가입 수·15분 로그인 실패 잠금(RLS·공개 권한 제한)
 │   ├── 022_token_limits.sql <- 하루 LLM 예약 토큰 카운터(사용자 열 · 서비스 전체 날짜 행)
+│   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 업무 표 마이그레이션 초안
@@ -413,7 +414,7 @@ SojaFit (proj3-b)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
-│   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409 시험
+│   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음

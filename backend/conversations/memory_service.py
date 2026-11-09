@@ -9,6 +9,7 @@ DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 �
 삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
 분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
+보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/023)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
 """
 import argparse
 import os
@@ -39,6 +40,7 @@ from backend.graph.memory import namespace, memory_policy
 from backend.graph.netlist import parse_netlist
 
 LOGGER = logging.getLogger('backend.conversations')
+RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
 USER_DAILY_TOKENS = 200_000
@@ -104,7 +106,7 @@ def initialize(dsn):
     """인증 DB에 전용 스키마를 준비한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
         for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql',
-                       '022_token_limits.sql'):
+                       '022_token_limits.sql', '023_retention.sql'):
             conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
         vector = _vector_schema(conn)
         # [왜] 의미 색인 표(store_vectors)의 vector 형은 확장이 설치된 스키마에 있다. sojafit_agent만 보면 형을 못 찾는다.
@@ -126,6 +128,10 @@ class Conversations:
                 if not all(conn.execute("SELECT to_regclass(%s) AS name", (name,)).fetchone()['name']
                            for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage', 'analysis_service_usage')):
                     raise RuntimeError('분석 DB 준비 명령을 먼저 실행하세요.')
+                # [왜] 청소 함수가 없으면 보관 기간 규칙이 조용히 꺼진다. 표와 같이 시작 때 확인한다(db/023)
+                if not all(conn.execute('SELECT to_regprocedure(%s) AS name', (name,)).fetchone()['name']
+                           for name in ('purge_inactive_projects(integer,integer)', 'purge_log_records(integer,integer)')):
+                    raise RuntimeError('분석 DB 준비 명령으로 보관 기간 청소 함수(db/023)를 만드세요.')
                 if not conn.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='input_record'").fetchone():
                     raise RuntimeError('분석 DB 준비 명령으로 입력 기록 마이그레이션을 적용하세요.')
                 vector = _vector_schema(conn) if conn.execute("SELECT to_regclass('store_vectors') AS name").fetchone()['name'] else None
@@ -419,7 +425,17 @@ class Conversations:
                                         if f"승인사례:{m['thread_id']}:{m['version']}" in (state.get('memory_refs') or [])
                                         and not pending and not state.get('refusal')]}
 
+    def _purge_expired(self):
+        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/023). 실패해도 분석은 계속한다."""
+        try:
+            with self.connection() as conn:
+                conn.execute('SELECT purge_inactive_projects(), purge_log_records()')
+        except psycopg.Error:
+            RETENTION_LOGGER.warning('retention_purge_failed')
+
     def message(self, user, thread, text, conditions='', request_id=''):
+        # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
+        self._purge_expired()
         with self.locked(user, thread) as (conn, row):
             if self.mode == 'demo':
                 from backend.services.demo import validate_question
