@@ -15,9 +15,9 @@ import os
 import re
 from urllib.parse import unquote, urlparse
 
-# 5.7·ADR 0013의 17개 + PACKAGE(패키지 이름, text_value)
+# 5.7·ADR 0013의 17개 + PACKAGE(패키지 이름, text_value) + AEC_Q101(문서가 밝힌 AEC-Q101 인증, text_value, lab v3 11-06)
 CODES = ('VRRM', 'IF_AV', 'IFSM', 'VF', 'IR', 'TRR', 'VZ', 'PD', 'CJ', 'TJ_MAX',
-         'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD', 'PACKAGE')
+         'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD', 'PACKAGE', 'AEC_Q101')
 SLOTS = {'min': 'minimum_value', 'typ': 'typical_value', 'max': 'maximum_value'}  # 조건의 slot → 열 이름(SQL에 넣는 글자는 이 표 값뿐)
 # [왜] 적재 규칙(pipeline/specs.py)이 최소·대표·최대 표시 없는 정격 칸은 최대로, 정전용량은 대표로 넣었다. slot을 안 주면 같은 자리를 본다
 DEFAULT_SLOT = {'CJ': 'typ'}
@@ -50,8 +50,12 @@ def part_specs(conn, part, codes=None):
     return [_row(r) for r in conn.execute(sql + ' ORDER BY s.parameter_code, s.id', params)]
 
 
+ALIASES = {'MINIMELF': 'MMELF'}  # [왜] 사용자는 MiniMELF라고 쓰지만 TSC 문서는 MMELF로 적는다(BZV55 등 4문서, 11-06 v3-13)
+
+
 def _norm_package(name):
-    return re.sub(r'[^A-Z0-9]', '', (name or '').upper())  # 영문 · 숫자만(아래 SQL의 패키지 거르기와 같은 규칙)
+    key = re.sub(r'[^A-Z0-9]', '', (name or '').upper())  # 영문 · 숫자만(아래 SQL의 패키지 거르기와 같은 규칙)
+    return ALIASES.get(key, key)
 
 
 def _ratio(cond, row):

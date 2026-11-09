@@ -332,6 +332,12 @@ def test_lowercase_words_are_not_package_names():
     assert specs.PKG.findall('MiniMELF, absolute maximum') == ['MiniMELF']
 
 
+def test_thin_micro_sub_sma_are_their_own_packages():
+    """[왜] 'Thin SMA' · 'Micro SMA' · 'Sub SMA'가 SMA로 잡혀 SMA를 원한 찾기에 SS14ALH(Thin SMA) · SS14LH(Sub SMA)가 나왔다(11-06 v3-14)."""
+    assert specs.PKG.findall('Case: Thin SMA') == ['Thin SMA'] and specs.PKG.findall('Micro SMA, Sub SMA') == ['Micro SMA', 'Sub SMA']
+    assert specs.pkg_keys('Thin SMA') == {'THINSMA'} and specs.pkg_keys('SMA (DO-214AC)') == {'SMA', 'DO214AC'}
+
+
 def test_packages_are_doc_level():
     doc = 'S1A SERIES_A01.pdf'
     out = specs.build([
@@ -849,3 +855,17 @@ def test_zener_and_breakdown_condition_from_test_current_column():
                       ('Maximum Clamping Voltage VC@ IPPM (V) 10.8', '15.0')], 'tvs-18', 2))
     assert values(rows, 'P6KE10', 'VBR') == [('IT = 1 mA', 9.0, None, None), ('IT = 1 mA', None, None, 11.0)]
     assert [r['maximum_value'] for r in pick(rows, 'P6KE10', 'VC')] == [15.0]
+
+
+def test_h_variant_gets_the_base_part_rows():
+    """[왜] 값 표는 기본 품번으로만 적혀 H 품번 행이 없었다(판정 dev 14 1N5819H). 기본 품번 행을 인용 그대로 붙인다."""
+    from types import SimpleNamespace
+    rows = [{'doc': 'a.pdf', 'part': '1N5819', 'parameter_code': 'VRRM', 'maximum_value': 40.0}]
+    docs = {'a.pdf': SimpleNamespace(parts=['1N5819', '1N5819H'])}
+    by_doc = {'a.pdf': [{'kind': 'note', 'text': '2. "H" means AEC-Q101 qualified'}]}
+    assert specs.h_copies(rows, docs, by_doc) == [{**rows[0], 'part': '1N5819H'}]
+    own = {'doc': 'a.pdf', 'part': '1N5819H', 'parameter_code': 'IF_AV', 'maximum_value': 1.0, 'source_level': 'part'}  # H 품번 자체 행
+    assert specs.h_copies(rows + [own], docs, by_doc) == [{**rows[0], 'part': '1N5819H'}]
+    key = {**own, 'parameter_code': 'VRRM', 'source_level': 'key'}  # 문서 전체 값만 있는 코드는 기본 품번 행을 붙인다
+    assert specs.h_copies(rows + [key], docs, by_doc) == [{**rows[0], 'part': '1N5819H'}]
+    assert specs.h_copies(rows, docs, {'a.pdf': []}) == []

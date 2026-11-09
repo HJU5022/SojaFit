@@ -111,13 +111,13 @@ def find_parts_by_specs(conditions: list[dict], category: str | None = None, pac
     _validate_conditions(conditions)
     if category is not None and (not isinstance(category, str) or not 1 <= len(category) <= 100):
         raise ValueError("category must contain 1 to 100 characters")
-    if package is not None and (not isinstance(package, str) or not re.fullmatch(r'[A-Za-z0-9.\-]{1,30}', package)):
-        raise ValueError("package must be 1 to 30 letters, digits, dots or hyphens")
+    if package is not None and (not isinstance(package, str) or not re.fullmatch(r'[A-Za-z0-9. \-]{1,30}', package)):
+        raise ValueError("package must be 1 to 30 letters, digits, spaces, dots or hyphens")
     if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 50:
         raise ValueError("limit must be between 1 and 50")
     if original_packages is not None and (not isinstance(original_packages, list) or len(original_packages) > 10 or not all(
-            isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9.\-]{1,30}', p) for p in original_packages)):
-        raise ValueError("original_packages must be up to 10 package names of 1 to 30 letters, digits, dots or hyphens")
+            isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9. \-]{1,30}', p) for p in original_packages)):
+        raise ValueError("original_packages must be up to 10 package names of 1 to 30 letters, digits, spaces, dots or hyphens")
     if original_category is not None and (not isinstance(original_category, str) or not 1 <= len(original_category) <= 100):
         raise ValueError("original_category must contain 1 to 100 characters")
     with _connect() as conn:
