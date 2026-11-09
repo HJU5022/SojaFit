@@ -71,8 +71,10 @@ def test_google_callback_query_is_not_written_to_uvicorn_access_logs(http_impl):
     assert "synthetic-code" not in logs
     assert "synthetic-state" not in logs
     assert "/api/auth/google/callback" in logs
-    assert "/api/auth/google/callback-other?request=ordinary" in logs
-    assert "/health?request=ordinary" in logs
+    # [왜] 쿼리 글은 Google 콜백뿐 아니라 모든 경로에서 가린다(backend/logs.py의 hide_query). 경로는 남는다
+    assert "/api/auth/google/callback-other?<redacted>" in logs
+    assert "/health?<redacted>" in logs
+    assert "request=ordinary" not in logs
 
 
 def test_google_auth_schema_restricts_public_access_and_duplicate_bindings():

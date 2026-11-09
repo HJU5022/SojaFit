@@ -1,9 +1,9 @@
 """JSON 한 줄 로그(backend/logs.py)의 모양 · 요청 ID · 메시지 없는 traceback · 설정 시험.
 
 - 역할: 줄마다 severity · time · logger · message, 문맥 변수와 extra의 request_id, traceback에 예외 메시지가 없는지,
-  setup이 루트에 처리기가 있으면 손대지 않고 없으면 한 번만 붙이는지 본다.
+  setup이 루트에 처리기가 있으면 손대지 않고 없으면 한 번만 붙이는지, 접속 줄의 쿼리 글을 가리는지 본다.
 - 하지 않는 일: 앱에 연결한 뒤의 오류 한 줄(tests/api/test_errors.py), 실제 uvicorn 서버 실행.
-- 출처: ADR 0019 결과, SPEC.md 4절 공통 오류.
+- 출처: ADR 0019 결과, SPEC.md 4절 공통 오류 · 7절(접속 로그 쿼리 가리기).
 """
 import io
 import json
@@ -112,3 +112,19 @@ def test_setup_leaves_existing_logging_alone():
     # [왜] pytest가 루트에 로그 수집 처리기를 붙여 둔다. setup이 그걸 바꾸면 '로그에 키가 없다' 시험이 빈 로그로 통과한다
     before = logging.getLogger().handlers[:]
     assert before and logs.setup(io.StringIO()) is False and logging.getLogger().handlers == before
+
+
+def test_setup_hides_query_text_in_access_lines():
+    # [왜] `/api/me/memory?q=`의 검색어 같은 사용자 글이 접속 줄로 로그에 남지 않게 한다. 경로 · 상태 · request_id는 남긴다
+    stream, access = io.StringIO(), logging.getLogger('uvicorn.access')
+    token = logs.REQUEST_ID.set('req-query')
+    with bare_root():
+        access.setLevel(logging.INFO)  # uvicorn 기본 설정처럼
+        assert logs.setup(stream) is True
+        access.info('%s - "%s %s HTTP/%s" %d', '127.0.0.1:1', 'GET', '/api/me/memory?q=PRIVATE_SEARCH+%ED%95%9C', '1.1', 200)
+        access.info('%s - "%s %s HTTP/%s" %d', '127.0.0.1:1', 'DELETE', '/api/me/memory', '1.1', 204)  # 쿼리 없는 줄은 그대로
+    logs.REQUEST_ID.reset(token)
+    lines = [json.loads(line) for line in stream.getvalue().splitlines()]
+    assert [line['message'] for line in lines] == ['127.0.0.1:1 - "GET /api/me/memory?<redacted> HTTP/1.1" 200',
+                                                   '127.0.0.1:1 - "DELETE /api/me/memory HTTP/1.1" 204']
+    assert lines[0]['severity'] == 'INFO' and lines[0]['request_id'] == 'req-query' and 'PRIVATE_SEARCH' not in stream.getvalue()

@@ -305,7 +305,8 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - `demo_mode`, `live_vector_search`, 검색 모드, 모델·코퍼스 버전을 업무 화면과 응답에 표시하는 기능은 아직 구현되지 않았습니다.
 - 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
 - 기본 호출은 별도 계측 없이 Langfuse 프롬프트·응답을 기록하지 않습니다. 명시적 `langfuse_prompts.session()`의 고정 버전·노드 추적은 5절을 따릅니다.
-- 그래프 평가 실행(`evals/runners/run_graph.py`)은 문항마다 CallbackHandler로 트레이스를 남깁니다. 단계별 입력·출력(데이터시트 청크 내용 포함), LLM 호출의 토큰·비용, 실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시), 실행 점수(경로·질문 종류·검색 횟수·인용 검사 등)를 기록합니다. 팀만 보는 비공개 프로젝트에만 보내고 Mouser 응답은 남기지 않습니다(6절). 같은 실행의 문항별 지표와 요약은 `evals/results/graph/`에 결과 파일로 남기고, 답변 문장과 청크 원문은 넣지 않습니다(6절). 서비스 분석은 Langfuse 키가 있으면 질문 · 답 글 없이 상태 · 단계별 시간만 담은 `analysis-metadata` 기록을 사용자 id · thread id와 함께 보냅니다(`langfuse_prompts.publish_analysis_trace`, 보낸 결과는 `sojafit_agent.analysis_events.trace_delivery`).
+- 그래프 평가 실행(`evals/runners/run_graph.py`)은 문항마다 CallbackHandler로 트레이스를 남깁니다. 단계별 입력·출력(데이터시트 청크 내용 포함), LLM 호출의 토큰·비용, 실행 조건(공급자·모델·검색 방식·git 커밋·프롬프트 해시), 실행 점수(경로·질문 종류·검색 횟수·인용 검사 등)를 기록합니다. 팀만 보는 비공개 프로젝트에만 보내고 Mouser 응답은 남기지 않습니다(6절). 같은 실행의 문항별 지표와 요약은 `evals/results/graph/`에 결과 파일로 남기고, 답변 문장과 청크 원문은 넣지 않습니다(6절). 서비스 분석은 Langfuse 키가 있으면 질문 · 답 글 없이 상태 · 단계별 시간만 담은 `analysis-metadata` 기록을 Langfuse `user_id`(thread 행의 소유자, 요청 본문이 아님) · `session_id`(thread id)와 함께 보냅니다(`langfuse_prompts.publish_analysis_trace`, 보낸 결과는 `sojafit_agent.analysis_events.trace_delivery`).
+- 서버 접속 로그(uvicorn 접속 줄)는 모든 경로에서 쿼리 글만 `?<redacted>`로 바꿔 남깁니다(`backend/logs.py`의 `hide_query`). 기억 검색어(`/api/me/memory?q=`)가 로그에 남지 않습니다.
 
 ## 8. 기능별 수용 기준 (AC)
 

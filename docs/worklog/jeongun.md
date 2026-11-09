@@ -782,3 +782,10 @@
 - 시험: `tests/services/test_llm.py`에 3개(단가표 키 = 노드 모델, Supervisor + 판정 읽기 3번이 새 예약으로는 $0.05 미만 · 예전 예약으로는 네 번째에서 상한, 표에 없는 모델은 예산 단가). 전체 1202 passed · 111 skipped, 실패 1건은 멈춘 기록이 남긴 `data/demo/recordings/calls.jsonl`(다시 기록하면 덮어씀).
 - 확인 못 한 것: 실제 서비스 분석 한 번의 예약 합계, OpenRouter 가격 변경 감시(단가를 코드에 고정, shortcut 주석).
 - 다음: 데모 기록을 다시 돌리고 키 없이 재생 대조.
+
+## 2026-11-10 서비스 분석 기록의 Langfuse user · session 확인과 접속 로그 쿼리 가리기 (브랜치 `jeongun`)
+- 한 일: (1) 서비스 분석 기록(`analysis-metadata`)에 Langfuse `user_id` · `session_id`를 붙이는 코드는 이미 있었다(`langfuse_prompts.publish_analysis_trace`의 `propagate_attributes`, 커밋 245be70, 사용자 id는 `_record_event`가 thread 행에서 읽음). 코드는 고치지 않고, 실제 SDK가 `trace_context`로 만든 span에 그 값을 싣는지 오프라인 시험만 더했다. (2) uvicorn 접속 줄의 경로에서 쿼리 글을 모든 경로에서 `?<redacted>`로 바꾸는 필터 `hide_query`를 `backend/logs.py`의 `setup`에 붙였다(`/api/me/memory?q=` 기억 검색어가 로그에 남던 문제). `main.py`의 Google 콜백 필터는 그대로 두었다.
+- 바꾼 파일: `backend/logs.py`, `tests/services/test_langfuse_prompts.py`(시험 1개: 메모리 내보내기로 `user.id` · `session.id` · trace id, metadata 칸이 `_record_event`의 7칸뿐인지, 질문 글이 없는지), `tests/api/test_logs.py`(시험 1개), `tests/api/test_auth.py`(일반 쿼리가 로그에 남는다던 단언 2줄을 "경로는 남고 쿼리 글은 없다"로), `SPEC.md` 7절(분석 기록 문장 보강, 접속 로그 한 줄), `backend/BACKEND.md` · `tests/api/API.md` · `tests/services/SERVICES.md`의 파일 줄, 이 파일.
+- 실행한 명령과 결과: `uv run pytest -q -p no:cacheprovider`(Langfuse 키 환경변수를 비우고) 1199 passed · 111 skipped · 1 failed. 실패는 `tests/repo/test_repo_layout.py::test_tree_matches_files`로, 데모 기록 실행이 만든 추적 안 된 `data/demo/recordings/calls.jsonl`이 트리에 없어서다(이 작업 밖). `tests/repo/test_repo_layout.py` 4 passed · 1 failed(같은 이유). 새 Langfuse 시험은 `langfuse.get_client`를 메모리 내보내기 client로 바꿔 원격으로 보내지 않는다. `test_auth.py`의 Google 콜백 로그 시험(로컬 uvicorn 하위 프로세스, h11 · httptools)은 통과했다.
+- 확인 못 한 것: 실제 Langfuse 화면에서 Users · Sessions 묶음을 보지 않았다(키 · 네트워크 안 씀). Cloud Run 로그에서 가려진 줄을 보지 않았다.
+- 다음 할 일: 조장 검토 뒤 커밋. `backend/main.py`의 `GoogleCallbackLogFilter`는 이제 `setup`이 붙은 서버에서는 겹친다(루트에 다른 처리기가 있을 때만 남는 역할). 지울지는 조장 결정.
