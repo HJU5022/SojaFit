@@ -146,6 +146,8 @@ def test_long_prose_in_revision_wanted_is_read_as_no_revision():
     """[왜] 읽기가 개정 코드 대신 40자 넘는 설명 글을 적어 형식 재시도로 노드가 2~3.6초 늦었다(세 회차 v3 재시도 4번 모두, 사전 등록 #45)."""
     assert J.JudgeRead(role='R01', revision_wanted='Order code difference (A0G vs R0G); no revision specified.').revision_wanted == ''
     assert J.JudgeRead(role='R01', revision_wanted='2027 edition').revision_wanted == '2027 edition'
+    # 긴 글 안에 개정 코드가 있으면 그 코드만 남긴다(통째로 버리면 개정판 거절이 빠진다)
+    assert J.JudgeRead(role='R01', revision_wanted='The user requires the datasheet revision K2611 specifically.').revision_wanted == 'K2611'
     # JSON 조각이 붙어 40자를 넘어도 조각 앞의 개정 코드는 남는다(조각 자르기와 같이 돈다)
     assert J.JudgeRead(role='R01', revision_wanted="K2611','package_wanted':'SMA (DO-214AC)','category_wanted':'x'").revision_wanted == 'K2611'
 

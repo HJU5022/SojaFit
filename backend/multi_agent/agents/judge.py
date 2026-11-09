@@ -81,11 +81,14 @@ class JudgeRead(BaseModel):
     def drop_revision_prose(cls, v):
         # [왜] 읽기가 개정 코드 대신 설명 글('Order code difference (A… no revision specified.')을 40자 넘게 적어 형식 오류로 다시 불렸다.
         #      세 회차 v3 판정 읽기의 재시도 4번이 모두 이것이고, 노드마다 2.1~3.6초 늦었다. 재시도 답은 4번 다 빈 칸이었다(사전 등록 #45).
-        #      개정 코드 · 판('K2611' · '2027 edition')은 짧다. 40자를 넘는 글은 요구 없음으로 받는다
-        # shortcut: 긴 문장 안에 적힌 개정 코드도 함께 버린다(개정판 거절이 안 남). 그런 문항이 나오면 코드 모양('K2611' · 연도)만 골라 남긴다
+        #      개정 코드 · 판('K2611' · '2027 edition')은 짧다. 40자를 넘는 글은 그 안의 개정 코드 모양(K2611)만 남기고, 없으면 요구 없음으로 받는다
+        # [주의] 긴 글을 통째로 버리면 문장 안에 적힌 개정 코드도 사라져 개정판 거절이 빠진다. 그래서 코드 모양만 골라 남긴다
         # [주의] JSON 조각을 자른 뒤의 길이를 본다(cut_json_leak과 어느 쪽이 먼저 돌아도 'K2611','package_wanted':… 의 K2611이 남는다)
         cut = LEAK.split(v, 1)[0].rstrip(" '\"") if isinstance(v, str) else ''
-        return '' if len(cut) > 40 else v
+        if len(cut) <= 40:
+            return v
+        code = re.search(r'(?<![A-Za-z0-9])[A-Za-z]\d{4}(?!\d)', cut)  # 개정 코드는 글자 하나 + 연월 4자리(facts.REVISION과 같은 모양)
+        return code.group(0) if code else ''
 
 
 def render_read(state: dict, rules: dict) -> str:
