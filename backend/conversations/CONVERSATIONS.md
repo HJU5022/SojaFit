@@ -9,6 +9,7 @@
 ## 파일
 - `CONVERSATIONS.md` — 이 문서
 - `__init__.py` — 패키지 표시
+- `memory_service.py` — 인증 사용자별 업로드·thread 소유권·DB 체크포인트·조건 재개·버전별 승인과 Store. `THREADS_ENABLED=1`에서 사용하며 `--setup` CLI를 제공
 - `dto.py` — 브라우저 결과 허용 목록
 - `models.py` — 실행 상태와 저장 허용 결과 형식
 - `repository.py` — 소유자 조건, 실행 생성·재개 및 결과 저장

@@ -31,6 +31,7 @@ COPY backend/ ./backend/
 COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
 # data/는 서비스가 읽는 데이터(코퍼스·회로·데모)다. evals/·tests/·scripts/는 서비스에 필요 없어 넣지 않는다.
 COPY data/ ./data/
+COPY db/ ./db/
 
 EXPOSE 8000
 # 0.0.0.0: 컨테이너 밖(compose의 포트 연결)에서 접속하려면 모든 인터페이스에 열어야 한다.

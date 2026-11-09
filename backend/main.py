@@ -1,11 +1,12 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, 인증·관리자·가격 API와 사용자 프로젝트·대화·승인·견적 라우터, React SPA, 공통 JSON 오류·요청 ID와 Google 콜백 접속 로그 보호를 등록한다.
+역할: 인증·관리자·가격 API, #73의 회로·thread·기억 API, OSC의 프로젝트·D5 run·승인·견적 API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
-하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 프로젝트·대화 SQL과 그래프 실행 자체.
+하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
+THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
 import base64
@@ -15,6 +16,8 @@ from http import HTTPStatus
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
+from uuid import UUID
 from urllib.parse import unquote, urlencode
 from uuid import uuid4
 
@@ -23,8 +26,9 @@ import psycopg
 from authlib.common.errors import AuthlibBaseError
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
+from psycopg_pool import PoolTimeout
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
@@ -55,9 +59,17 @@ async def lifespan(app: FastAPI):
     logger = logging.getLogger("uvicorn.access")
     log_filter = GoogleCallbackLogFilter()
     logger.addFilter(log_filter)
+    conversations = None
     try:
+        if os.getenv('THREADS_ENABLED') == '1':
+            from backend.conversations.memory_service import Conversations
+            conversations = Conversations(os.environ['DATABASE_URL'])
+            app.state.conversations = conversations
         yield
     finally:
+        if conversations:
+            conversations.close()
+            del app.state.conversations
         logger.removeFilter(log_filter)
 
 
@@ -67,9 +79,11 @@ ERROR_CODES = {
     403: "FORBIDDEN",
     404: "NOT_FOUND",
     409: "CONFLICT",
+    413: "PAYLOAD_TOO_LARGE",
     422: "VALIDATION_ERROR",
     429: "TOO_MANY_REQUESTS",
     503: "SERVICE_UNAVAILABLE",
+    504: "GATEWAY_TIMEOUT",
 }
 
 
@@ -375,7 +389,174 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
         return price_unavailable(error.kind)  # [주의] 오류를 로그에 쓰지 않는다. 종류만 화면에 알린다
 
 
-# API·health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 등록한다.
+@app.middleware('http')
+async def conversation_boundary(request: Request, call_next):
+    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories', '/api/analysis/'))
+    if private and request.method == 'POST':
+        limit = 7 * 1024 * 1024 if request.url.path == '/api/circuits' else 128 * 1024
+        data = bytearray()
+        async for chunk in request.stream():
+            if len(data) + len(chunk) > limit:
+                return error_response(request, status_code=413, code=ERROR_CODES[413],
+                                      message='요청이 너무 큽니다.', headers={'Cache-Control': 'no-store'})
+            data.extend(chunk)
+        request._body = bytes(data)  # downstream JSON 검증에도 한도 내에서 읽은 같은 본문을 전달한다
+    response = await call_next(request)
+    if private or request.url.path == '/workspace':
+        response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+async def database_unavailable(request: Request, error):
+    return error_response(request, status_code=503, code=ERROR_CODES[503],
+                          message='저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.',
+                          headers={'Cache-Control': 'no-store'})
+
+
+app.add_exception_handler(psycopg.Error, database_unavailable)
+app.add_exception_handler(PoolTimeout, database_unavailable)
+
+
+def conversation_service(request: Request):
+    service = getattr(request.app.state, 'conversations', None)
+    if service is None:
+        raise HTTPException(503, '분석 저장소가 준비되지 않았습니다.')
+    return service
+
+
+@app.get('/api/analysis/readiness')
+def analysis_readiness(request: Request, user: int = Depends(auth.current_user_id)):
+    """분석 저장소 준비 확인. 외부 모델·검색의 품질/가용성은 보증하지 않는다."""
+    conversation_service(request).readiness()
+    return {'status': 'ready', 'storage': 'ready'}
+
+
+@app.get('/api/analysis/demo')
+def demo_configuration(request: Request, user: int = Depends(auth.current_user_id)):
+    """명시적으로 켠 합성 데모의 회로와 지원 질문만 제공한다."""
+    from backend.services import demo
+    return {'enabled': True, **demo.configuration()} if conversation_service(request).mode == 'demo' else {'enabled': False}
+
+
+class CircuitUpload(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    filename: str = Field(min_length=1, max_length=200)
+    netlist: str = Field(min_length=1, max_length=1024 * 1024)
+
+
+class ThreadCreate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    circuit_id: UUID
+    target: str = Field(min_length=1, max_length=100)
+
+
+class ThreadMessage(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    text: str = Field(min_length=1, max_length=10000)
+    conditions: str = Field(default='', max_length=4000)
+
+    @field_validator('text')
+    @classmethod
+    def nonempty(cls, value):
+        if not value.strip():
+            raise ValueError('질문을 입력하세요.')
+        return value
+
+
+class ThreadResume(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    version: int = Field(ge=1)
+    answers: dict[str, str] = Field(default_factory=dict, max_length=50)
+    role: str = Field(default='', max_length=100)
+
+    @field_validator('answers')
+    @classmethod
+    def answer_lengths(cls, value):
+        if any(len(k) > 100 or len(v) > 200 for k, v in value.items()):
+            raise ValueError('조건 답변이 너무 깁니다.')
+        return value
+
+
+class ThreadApproval(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    version: int = Field(ge=1)
+
+
+class MemoryControl(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    action: Literal['correct','revoke','restore','delete']
+    correction: str = Field(default='', max_length=1000)
+
+
+@app.get('/workspace', include_in_schema=False)
+def workspace_page():
+    return FileResponse(LOGIN_PAGE.with_name('workspace.html'), media_type='text/html; charset=utf-8')
+
+
+@app.post('/api/circuits')
+def upload_circuit(body: CircuitUpload, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).upload(user, body.filename, body.netlist)
+
+
+@app.get('/api/circuits')
+def list_circuits(request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).circuits(user)
+
+
+@app.post('/api/threads')
+def create_thread(body: ThreadCreate, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).create(user, str(body.circuit_id), body.target)
+
+
+@app.get('/api/threads')
+def list_threads(request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).threads(user)
+
+
+@app.get('/api/threads/{thread_id}')
+def thread_detail(thread_id: UUID, request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).detail(user, str(thread_id))
+
+
+@app.post('/api/threads/{thread_id}/messages')
+def thread_message(thread_id: UUID, body: ThreadMessage, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).message(user, str(thread_id), body.text, body.conditions, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/resume')
+def thread_resume(thread_id: UUID, body: ThreadResume, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).resume(user, str(thread_id), body.answers, body.role, body.version, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/approve')
+def thread_approve(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).approve(user, str(thread_id), body.version, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/retry')
+def thread_retry(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).retry(user, str(thread_id), body.version, request_id=request_id_for(request))
+
+
+@app.get('/api/memories')
+def list_memories(request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).memories(user)
+
+
+@app.post('/api/memories/{thread_id}/{version}/control')
+def control_memory(thread_id: UUID, version: int, body: MemoryControl, request: Request, user: int = Depends(auth.current_user_id)):
+    """사례 기억의 정정 메모·철회·복구·삭제. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
+    auth.check_origin(request)
+    return conversation_service(request).control_memory(user, str(thread_id), version, body.action, body.correction)
+
+
+# 직접 등록한 #73 API와 health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 연결한다.
 from backend.api.conversations import router as conversations_router
 app.include_router(projects_router)
 app.include_router(quotes_router)

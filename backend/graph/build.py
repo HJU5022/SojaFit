@@ -66,7 +66,7 @@ def after_judge(state: AgentState) -> str:
     return "거절" if state.get("retrieval_error") or state.get("refusal") else "답 틀"
 
 
-def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, find=None, chat=None):
+def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, find=None, chat=None, store=None):
     """D4 v2 단일 에이전트 그래프를 조립해 compile한 앱을 돌려준다(SPEC 2절 노드 표).
 
     specs · find를 둘 다 주면 판정 · 찾기 질문이 판정 길로 가고, 주지 않으면 예전처럼 검색 고리로 간다(기존 호출을 깨지 않는다).
@@ -112,4 +112,4 @@ def build_graph(retriever=None, checkpointer=None, *, lookup=None, specs=None, f
     b.add_edge("짧은 답", END)
     b.add_edge("가격 안내", END)
     # checkpointer를 주면 thread마다 메모장이 저장돼 다음 메시지에서 이어진다(강의 2주 05강). 시험에서는 None
-    return b.compile(checkpointer=checkpointer)
+    return b.compile(checkpointer=checkpointer, store=store)

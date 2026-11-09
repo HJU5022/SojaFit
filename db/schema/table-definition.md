@@ -93,7 +93,7 @@
 
 ### 5.1 `users` — 사용자
 
-로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 평가용 데모 계정 2개는 `db/` SQL로 비밀번호 해시와 함께 적재합니다(A-01. 로컬 Compose에서는 `007_demo_accounts.sql`이 `.env`의 해시로 적재하고 비밀번호는 저장소에 두지 않음, PR #30). LangGraph `thread_id`와 Store namespace에는 `str(users.id)`를 씁니다(A-02).
+로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 평가용 데모 계정 2개는 `db/` SQL로 비밀번호 해시와 함께 적재합니다(A-01. 로컬 Compose에서는 `007_demo_accounts.sql`이 `.env`의 해시로 적재하고 비밀번호는 저장소에 두지 않음, PR #30). 그래프 user_id와 Store namespace에는 `str(users.id)`, thread_id에는 분석마다 별도 UUID를 씁니다(A-02).
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -462,7 +462,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 | ID | 항목 | 결정 | 반영한 곳 |
 |---|---|---|---|
 | A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장하고 데모 계정 2개는 `db/` SQL로 적재. 로컬 Compose는 `007_demo_accounts.sql`이 `.env`의 해시로 적재(PR #30), 그 밖의 계정은 `python -m backend.auth` | `users`, `backend/auth.py` |
-| A-02 | 사용자 ID 형식 | `users.id`는 `BIGINT`. LangGraph `thread_id`와 Store namespace에는 `str(users.id)` | 사용자 FK, `backend/graph/memory.py` |
+| A-02 | 사용자 ID 형식 | `users.id`는 `BIGINT`. 그래프 user_id와 Store namespace에는 `str(users.id)`. thread_id는 분석마다 서버가 발급한 별도 UUID | 사용자 FK, `backend/graph/memory.py`, `backend/conversations/memory_service.py` |
 | A-03 | 회로 원문 저장 위치 | DB `TEXT` | `circuits.netlist_content` |
 | A-04 | 파일 크기·보존 | 업로드 최대 1MB(API에서 검증), MVP에는 삭제 기능 없음 | `circuits`, API |
 | A-05 | 부품 분류 코드 | `RECTIFIER`, `SCHOTTKY`, `ZENER`, `TVS`, `ESD`, `SWITCHING`, `SIC_SCHOTTKY` | `parts.category_code` |

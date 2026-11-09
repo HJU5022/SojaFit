@@ -1,0 +1,36 @@
+{
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "ids": [
+    "draft30-e01"
+  ],
+  "limits": {
+    "max_usd": 0.5,
+    "max_calls": 16,
+    "max_seconds": 90,
+    "max_tokens": 4096
+  },
+  "reservations_usd": 0.244257,
+  "reserved_calls": 2,
+  "calls": [
+    {
+      "response_id": "gen-1794198929-JP20HJvjKcA2YxtBKwvd",
+      "model": "anthropic/claude-sonnet-5.5",
+      "prompt_tokens": 7210,
+      "completion_tokens": 168,
+      "reported_cost_usd": 0.0196465
+    },
+    {
+      "response_id": "gen-1794198932-fo9y6c16dv35mmfpojUe",
+      "model": "anthropic/claude-haiku-5.5",
+      "prompt_tokens": 2582,
+      "completion_tokens": 254,
+      "reported_cost_usd": 0.000441825
+    }
+  ],
+  "reported_cost_total_usd": 0.020088325,
+  "missing_response_ids": 0,
+  "error_type": null,
+  "failed_items": 0,
+  "billing_reconciled": false,
+  "note": "Provider reports only. Reconcile Activity IDs and separate Voyage/infrastructure bills; missing/failed responses may still be billed."
+}

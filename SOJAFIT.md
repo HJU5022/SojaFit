@@ -22,6 +22,7 @@ SojaFit (proj3-b)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
 ├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일 하나만 제외
+├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── Dockerfile              <- API 이미지. backend/와 data/만 복사 (고정)
 ├── docker-compose.yml      <- api + pgvector DB 한 줄 실행, 키 없는 데모 모드 (고정)
@@ -131,6 +132,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 사례 Store와 준비 명령
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
 │   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
@@ -142,6 +144,7 @@ SojaFit (proj3-b)
 │   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
+│   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
@@ -202,6 +205,7 @@ SojaFit (proj3-b)
 │   │   ├── d5.py           <- D5 실행·체크포인트·의존성 조립
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
+│   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
@@ -209,6 +213,7 @@ SojaFit (proj3-b)
 │   │   ├── app.py          <- API 우선 SPA·정적 파일 제공과 미빌드 로그인 fallback
 │   │   ├── design.md       <- 화면 디자인 규칙 초안
 │   │   ├── templates/      <- 화면 HTML 템플릿
+│   │   │   ├── workspace.html <- 사용자 넷리스트 업로드·내 분석 대화·재개·승인 사례 화면
 │   │   │   └── login.html  <- 같은 출처 로그인·세션 확인·로그아웃 화면
 │   │   └── static/         <- 화면 정적 파일(지금은 .gitkeep)
 │   └── mcp_skill/          <- 가산: RAG 검색을 노출하는 MCP 서버와 도메인 Skill
@@ -230,7 +235,8 @@ SojaFit (proj3-b)
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 응답을 둘 자리. 현재 설명 파일만 있고 재생 코드는 없음
-│       └── DEMO.md         <- 폴더 설명
+│       ├── DEMO.md         <- 폴더 설명
+│       └── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
 │
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
@@ -245,6 +251,11 @@ SojaFit (proj3-b)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
+│   ├── 013_agent_memory.sql <- 사용자 업로드·thread·대화·승인 원본 전용 스키마
+│   ├── 014_thread_inputs.sql <- 승인 당시 질문·조건·재개 답변의 현재 버전 입력 기록
+│   ├── 015_analysis_limits.sql <- UTC 일자별 사용자 분석 예약 예산과 입장 빈도 제한
+│   ├── 016_memory_controls.sql <- 승인 사례 정정 메모·철회·삭제 상태
+│   ├── 017_analysis_events.sql <- 내용 없는 분석 요청·단계 지연 기록
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 013_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
 │   ├── 014_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
@@ -283,6 +294,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-prompt-v0.md  <- Supervisor Prompt V0의 API 없는 plan·smoke·본 실행·집계 절차
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
+│   │   ├── run_thread_validation.py <- 호출 없는 준비 확인과 상한 있는 품질·보고 비용 평가
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
@@ -396,6 +408,7 @@ SojaFit (proj3-b)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
+│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
@@ -409,6 +422,7 @@ SojaFit (proj3-b)
 │   │   ├── GRAPH.md        <- 폴더 설명
 │   │   ├── test_graph_supervisor.py  <- Supervisor V0 입력·출력·상태별 의미 계약
 │   │   ├── test_graph_state.py  <- 상태 칸의 덮어쓰기·쌓기
+│   │   ├── test_agent_netlist.py  <- 에이전트용 KiCad 업로드의 형식·참조·자원 제한 시험
 │   │   ├── test_graph_read_input.py  <- 입력 나누기, 넷리스트 읽기, 저장소 밖 경로 차단
 │   │   ├── test_graph_route.py  <- 라우팅 노드
 │   │   ├── test_graph_search.py  <- 검색 노드의 품번 고르기
@@ -529,9 +543,11 @@ SojaFit (proj3-b)
 │   │   └── ADR.md          <- 폴더 설명과 결정 목록
 │   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
 │   │   ├── SPECS.md        <- 폴더 설명
+│   │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
+│   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 사례 Store 연결 설계와 수용 기준
 │   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
@@ -559,6 +575,7 @@ SojaFit (proj3-b)
 │   │       └── 2026-11-09-dummy-full-flow.md  <- 개발 전용 전체 더미 흐름 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
+│   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
 │   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
@@ -572,6 +589,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
+│   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
 │   │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사

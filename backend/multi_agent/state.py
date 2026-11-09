@@ -20,7 +20,11 @@ def add_or_reset(old: list | None, new: list | None) -> list:
 class MultiState(TypedDict, total=False):
     # ── 입력 읽기 노드가 채운다 (단일 그래프와 같은 칸) ──
     input: str
+    approved_memories: list[dict]  # 새 질문마다 서버가 갱신, 현재 조건·사양 근거와 분리
+    memory_refs: list[str]  # 모델이 선택하고 현재 요청의 제공 사례와 대조한 ID
     user_id: str
+    connections: dict
+    run_version: int
     circuit: str
     netlist_path: str
     target: str
@@ -57,6 +61,7 @@ class MultiState(TypedDict, total=False):
 class JudgeState(TypedDict, total=False):
     """판정 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
     task: dict
+    approved_memories: list[dict]  # 부모가 소유권을 확인한 사례만 Send로 전달한다
     question: str
     conditions: str
     target: str

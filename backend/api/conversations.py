@@ -80,11 +80,6 @@ def create_thread(project_id: int, user_id: int = Depends(auth.current_user_id),
     return {'id': repo.create_thread(user_id, project_id), 'project_id': project_id}
 
 
-@router.get('/threads/{thread_id}')
-def get_thread(thread_id: UUID, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
-    return repo.thread_detail(user_id, str(thread_id))
-
-
 @router.get('/runs/{run_id}')
 def get_run(run_id: UUID, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
     run = repo.get_run(user_id, str(run_id))

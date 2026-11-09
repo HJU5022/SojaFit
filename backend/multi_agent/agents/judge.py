@@ -18,6 +18,7 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, Field, field_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
+from backend.graph.memory import memory_context
 from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
@@ -99,6 +100,8 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         # [왜] 멀티에서는 Supervisor 지시서가 질문의 어느 부분을 판정할지 알려 준다. 숫자 확인 글(render_read)에는 넣지 않는다:
         #      지시서는 사용자가 준 값이 아니라서, 거기 적힌 숫자로 회로 값을 확인하면 안 된다(AC-02)
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
+    # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
+    user += memory_context(state.get('approved_memories') or [])
     votes = max(1, int(os.getenv('LAB_READ_VOTES', '1')))
     if votes == 1:
         read = chat('judge_read', PROMPT, user, JudgeRead)
@@ -572,6 +575,8 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         values, conds = merge_reply(reply.get('answers') or {}, values, conds, kinds)
         if reply.get('role') in roles:
             roles = [reply['role']]
+    base['analysis_inputs'] = {'roles': roles, 'values_si': dict(values), 'test_conditions': dict(conds),
+                               'read_values': [v.model_dump(mode='json') for v in read.values]}
     # [왜] 사용자가 숫자로 적은 규격('VRRM 400~600V', 'trr 최댓값 100ns 이하')을 역할 규칙 조건 뒤에 필수 조건으로 붙인다.
     #      판정과 찾기가 같은 규칙을 쓴다. 붙이지 않으면 규격 밖 후보를 보여 주거나 원래 부품 값과만 비교했다(11-06 v3-05 · 11 · 12)
     # [왜] 한계 값('전압강하 1.8V까지')을 읽기가 회차마다 요구 성질(VF)로도, 이 역할에 없는 회로 값 이름(v_drop_allowed)으로도 적었다.

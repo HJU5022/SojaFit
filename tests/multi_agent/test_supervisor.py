@@ -61,6 +61,39 @@ def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
         assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == nxt
 
 
+def test_owned_memory_reaches_plan_and_both_task_payloads_but_not_grounding():
+    memory = {'thread_id': 'owned-case', 'version': 1, 'part': 'SS34', 'approved_at': '2026-11-09',
+              'summary': 'historical 987V', 'context': None}
+    state = {**STATE, 'approved_memories': [memory]}
+    assert 'owned-case' in S.render_plan(state, judge_enabled=True)
+    for agent in ('docs', 'judge'):
+        t = task(1, agent=agent, kind='candidate_judge' if agent == 'judge' else 'role').model_dump(mode='json')
+        payload = S.payload(state, t)
+        assert payload['approved_memories'] == [memory]
+        assert '987V' not in payload['question']
+    assert 'owned-case' in S.render_synth(state, [TaskReport(task=1, agent='docs', status='partial', summary='s')])
+
+
+def test_memory_does_not_relax_synthesis_current_number_check():
+    memory = {'thread_id': 'owned-case', 'version': 1, 'part': 'SS34', 'approved_at': '2026-11-09',
+              'summary': 'historical 987V', 'context': None}
+    reports = [TaskReport(task=i, agent='docs', status='partial', summary='s',
+                          answer='현재 연결을 확인했습니다 [넷리스트].').model_dump(mode='json') for i in (1, 2)]
+    state = {**STATE, 'approved_memories': [memory], 'reports': reports,
+             'answer': '현재 회로는 987V입니다 [넷리스트].', 'synth_text': '현재 회로는 987V입니다 [넷리스트].'}
+    assert S.check_node(state)['refusal_reason'] == 'verify_failed'
+
+
+def test_historical_case_cannot_support_current_spec_even_with_mixed_citation():
+    memory = {'thread_id': 'owned', 'version': 1, 'part': 'SS34', 'approved_at': '2026-11-09',
+              'summary': '승인됨', 'context': None}
+    reports = [TaskReport(task=1, agent='docs', status='ok', summary='s').model_dump(mode='json')]
+    for cite in ('승인사례:owned:1', '넷리스트, 승인사례:owned:1'):
+        state = {**STATE, 'approved_memories': [memory], 'reports': reports,
+                 'answer': f'SS34의 허용 전압은 999V입니다 [{cite}].'}
+        assert S.check_node(state)['refusal_reason'] == 'verify_failed'
+
+
 def test_collect_picks_single_synth_or_refuse_from_report_status():
     base = {'counters': {'hops': 1}}
     assert S.collect_node({**base, 'reports': [report(1)]})['outcome'] == 'single'

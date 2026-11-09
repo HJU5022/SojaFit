@@ -7,6 +7,7 @@
 - 담당: 평가
 
 ## 파일
+- `run_thread_validation.py` — v2 1~4건 dry-run과 명시적 유료 실행. 합계 예약 $0.50/16회/90초. 공급자 ID·보고 비용을 기록. [운영 검증](../../docs/experiments/thread-memory-operations.md)
 - `freeze.py` — 평가셋 sha256·건수를 `../FROZEN.json`에 기록. `uv run python evals/runners/freeze.py dataset_v1.jsonl`(동결), `--check`(동결 뒤 바뀐 파일 검사)
 - `benchmark_embeddings.py` — 프록시 표본([embedding_sample_v0.jsonl](../samples/embedding_sample_v0.jsonl))의 dense Recall@5·MRR·지연 측정. `uv run python -m evals.runners.benchmark_embeddings --model bge-m3 --output evals/results/embedding/embedding_bge_m3_proxy_<날짜>.json`
 - `run_retrieval.py` — 평가셋 관련 문항으로 `retrieve()`의 문서 Recall@k·MRR·Page Hit@k를 재고 결과 json을 남김. `uv run python -m evals.runners.run_retrieval <평가셋 jsonl> <결과 json> [k] [method]`. 검색 방식은 `hybrid`(기본)·`dense`·`bm25`. 결과는 `../results/retrieval/`에 둠

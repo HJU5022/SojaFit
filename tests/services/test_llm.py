@@ -9,6 +9,40 @@ import io
 from types import SimpleNamespace
 
 import pytest
+
+
+def test_budget_reservations_are_thread_safe_and_callback_precedes_accounting():
+    from concurrent.futures import ThreadPoolExecutor
+    from backend.services.llm import EvaluationBudget, EvaluationLimitError
+    charges = []
+    budget = EvaluationBudget(max_calls=1, max_usd=1, max_seconds=30,
+                              prompt_rate=0.000001, completion_rate=0.000001, on_reserve=charges.append)
+    def reserve(_):
+        try:
+            budget.reserve('x', output_tokens=0)
+            return True
+        except EvaluationLimitError:
+            return False
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(reserve, range(2))) == [False, True]
+    assert len(charges) == 1 and budget.calls == 1
+    assert budget.remaining() <= 30
+
+
+def test_exhausted_runtime_budget_does_not_invoke_provider(monkeypatch):
+    from backend.services import llm
+    class Model:
+        def with_structured_output(self, schema):
+            return self
+        def invoke(self, *args, **kwargs):
+            raise AssertionError('external provider must not run')
+    monkeypatch.setattr(llm, '_chat_model', lambda *args: Model())
+    budget = llm.EvaluationBudget(max_calls=1, max_usd=1, max_seconds=30,
+                                 prompt_rate=0.000001, completion_rate=0.000001, on_reserve=lambda cost: None)
+    budget.reserve('first', output_tokens=0)
+    from backend.graph.nodes import Answer
+    with llm.evaluation_limits(budget), pytest.raises(llm.EvaluationLimitError):
+        llm._openrouter_call('system', 'user', Answer)
 from pydantic import BaseModel
 
 from backend.services import llm
@@ -345,6 +379,15 @@ def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     with pytest.raises(RuntimeError, match="payment"):
         llm.voyage_rerank("q", ["a"])
     assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다
+
+
+def test_voyage_runtime_retry_reserves_before_each_external_call(monkeypatch):
+    sent = _voyage_http(monkeypatch, _reply(429))
+    charges = []
+    budget = llm.EvaluationBudget(1, 1, 30, 0.000001, 0.000001, on_reserve=charges.append)
+    with llm.evaluation_limits(budget), pytest.raises(llm.EvaluationLimitError):
+        llm.voyage_rerank('q', ['a'])
+    assert len(sent) == len(charges) == budget.calls == 1
 
 
 HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"

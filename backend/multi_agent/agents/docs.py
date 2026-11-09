@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
+from backend.graph.memory import memory_context, memory_sources
 from backend.graph.nodes import NOT_FOUND, REVISION, WORD, citations, netlist_block, other_part_row, search
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.rag.units import to_si
@@ -31,6 +32,7 @@ class DocsAnswer(BaseModel):
     """근거 채점 + 답 쓰기 LLM의 답안지."""
     grade: Literal['enough', 'partial', 'none'] = Field(description='Does the evidence answer the task: enough, partial or none')
     answer: str = Field(default='', description='Korean answer, every sentence ending with its evidence number like [12]; empty when grade is none')
+    memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; never cite these in answer')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
     next_query: str = Field(default='', max_length=200, description='When grade is none: a different English search query to try once')
 
@@ -90,7 +92,7 @@ def drop_fake_citations(answer: str, valid: set[str]) -> tuple[str, list[str]]:
 
 def _clean_group(m, valid: set[str]) -> str:
     items = [x.strip() for x in m.group(1).split(',')]
-    if not any(x.isdigit() or x == '넷리스트' for x in items):
+    if not any(x.isdigit() or x == '넷리스트' or x.startswith('승인사례:') for x in items):
         return m.group(0)  # [0.60 V]처럼 번호가 아닌 괄호는 그대로
     left = [x for x in items if x in valid]
     return f"[{', '.join(left)}]" if left else ''
@@ -159,7 +161,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
                 continue
             break  # 보여 줄 근거가 하나도 없으면 LLM을 부르지 않는다
-        result, shown = chat('docs_answer', PROMPT, render(question, task, docs, part), DocsAnswer), docs
+        user = render(question, task, docs, part) + memory_context(payload.get('approved_memories') or [])
+        result, shown = chat('docs_answer', PROMPT, user, DocsAnswer), docs
         calls += 1
         if result.grade != 'none' or not result.next_query.strip():
             break
@@ -173,6 +176,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     # [왜] 인용 검사는 LLM의 자기 검사를 믿지 않고 코드로 다시 센다. 보여 준 적 없는 번호만 근거로 단 문장은 빼고, 진짜 번호도 단 문장은
     #      가짜 번호만 지운다. 가짜 번호 하나로 답 전체를 거절하던 것을 바꿨다(11-06 공식 5회차 v3-18 '[5816]')
     valid = {str(d['chunk_id']) for d in shown} | ({'넷리스트'} if part else set())
+    allowed_memories = memory_sources(payload.get('approved_memories') or [])
+    if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
+        return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
     answer, dropped_fake = drop_fake_citations(answer, valid)
     cited = citations(answer)
     if not cited & valid:
@@ -180,4 +186,5 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
     status = 'ok' if result.grade == 'enough' else 'partial'
     summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
-    return report(status, summary, answer=answer, evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)
+    return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
+                  evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

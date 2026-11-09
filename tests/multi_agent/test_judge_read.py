@@ -19,6 +19,23 @@ STATE = {'question': 'D2를 TSC 1N5819로 바꿔도 돼?',
          'question_type': 'candidate_judge'}
 
 
+def test_historical_numbers_reach_reader_but_are_not_current_grounding(monkeypatch):
+    memory = {'thread_id': 'old', 'version': 1, 'approved_at': '2026-11-09', 'part': '1N5819',
+              'summary': '입력 전압은 987V', 'context': {'conditions': '입력 전압은 987V'}}
+    state = {**STATE, 'approved_memories': [memory]}
+    read = J.JudgeRead(role='R02', candidates=['1N5819'], values=[
+        J.Value(name='v_reverse_max', number=987, unit='V', quote='입력 전압은 987V')])
+    def chat(node, system, user, schema):
+        assert '987V' in user and 'never copy historical' in system.lower()
+        return read
+    result = J.judge_read_agent(state, chat=chat)
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.extend(payload['missing']) or {'answers': {}})
+    judged = J.judge_agent({**state, **result}, specs=lambda *args: [], find=None, retriever=None)['judgement']
+    assert 'v_reverse_max' in judged['dropped'] and 'v_reverse_max' in asked
+    assert '987V' not in J.render_read(state, {})
+
+
 def test_read_input_lists_each_roles_own_value_names_and_kinds():
     text = J.render_read(STATE, RULES)
     for rid, rule in RULES.items():
@@ -57,6 +74,8 @@ def test_roles_own_names_reach_the_thresholds(monkeypatch):
     j = J.judge_agent({**STATE, 'judge_read': read}, specs=lambda part, codes=None: rows, find=None, retriever=None)['judgement']
     vrrm = next(c for c in j['results'][0]['checks'] if c['code'] in ('VRRM', 'VR'))
     assert vrrm['threshold'] == pytest.approx(6.25) and vrrm['result'] == 'pass'  # 5V × 1.25
+    assert j['analysis_inputs']['values_si']['v_reverse_max'] == 5.0
+    assert j['analysis_inputs']['roles'] == ['R02']
     assert j['dropped'] == ['i_out'] and 'i_max' in j['asked']  # 다른 역할 이름은 버리고, 그 역할의 이름으로 묻는다
 
 

@@ -7,6 +7,7 @@
 - 담당: 검색·데이터
 
 ## 구현 상태
+- 2026-11-09 운영 재검증: 사양 표가 0행인 상태를 확인해 기존 문서/청크를 바꾸지 않고 `1N4001G-K SERIES_B2104.pdf` 1문서·7품번·70행만 기존 specs 도구로 재적재했다. 공식 PDF 해시와 70행의 document_id/chunk_index/쪽 연결을 검증했다. 전체 코퍼스 사양 적재가 완료됐다는 뜻은 아니다. 상세는 `docs/worklog/sth.md`와 `docs/experiments/thread-memory-operations.md`를 따른다.
 - 있음: 수집, 파싱, 청킹, 적재, 하이브리드 검색(BM25 + dense, RRF), 품번 필터(`parts`), vector/halfvec 용량 비교, 단위 환산(`units.py`, SPEC 3절: judge가 읽기만 함), 부품 사양 표 변환(`pipeline/specs.py`, 결과는 저장소 밖 파일)과 DB 적재(`specs load`, `db/011`), 사양 조회(`spec_lookup.py`, MCP 도구 2종). 판정 에이전트(`backend/multi_agent/agents/judge.py`)가 이 MCP 도구로 사양 표를 읽고, 사양 표는 11-05 Supabase에도 적재했습니다([db/DB.md](../../db/DB.md)).
 - 아직 없음: GraphRAG·증분 수집 자동화는 SPEC에 없어 계획에 적지 않습니다.
 

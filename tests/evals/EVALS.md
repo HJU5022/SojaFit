@@ -9,6 +9,7 @@
 실행: `uv run pytest -q tests/evals`(저장소 루트).
 
 ## 파일
+- `test_run_graph.py`의 운영 준비 검사 — run_thread_validation의 dry-run/ID·덮어쓰기 거부, 공급자 보고 비용 누락/null·본문 제외 확인
 - `EVALS.md` — 이 문서
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_retrieval_d3.py` — D3 검색 측정 실행기: gold 줄의 모든 쪽 풀기(이어 적은 쪽·범위), Page Hit·회수율·Full Recall·회수 가능만·중복 제거 nDCG, 실패 유형 4종, 정확 부호 검정, no_result 임계값을 가짜 청크로 확인(데이터·API 없이)

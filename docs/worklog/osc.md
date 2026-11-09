@@ -1,5 +1,15 @@
 # 오세창 작업 기록
 
+## 2026-11-09 PR #73 선반영 통합
+
+- 목적: PR #73이 `main`에 먼저 병합된 상태를 가정하고, OSC의 React/D5 작업대와 #73의 사용자별 회로·thread·승인 기억·합성 데모 경로를 함께 유지한다. 원격 push·PR 생성·배포는 하지 않는다.
+- 통합: 기존 프론트 변경을 `84e69fa`로 보존한 뒤 최신 `origin/main`을 `320538e`로 병합했다. 이어서 PR #73 head를 통합해 `/workspace`·`/api/circuits|threads|memories`와 React SPA·`/api/projects|runs|quotes`를 함께 등록하고 SPA는 모든 API 뒤에 mount했다. 겹치던 `GET /api/threads/{id}`는 #73 경로를 단일 소유자로 유지했다.
+- 구조 충돌 수정: #73의 `backend/conversations.py`가 기존 `backend/conversations/` 패키지에 가려지는 문제를 `backend/conversations/memory_service.py`로 이동해 해결하고 main·Compose setup CLI·테스트·트리 문서를 함께 바꿨다. `tests/graph/test_netlist.py`와 기존 `tests/projects/test_netlist.py`의 pytest 모듈명 충돌은 전자를 `test_agent_netlist.py`로 바꿔 해결했다.
+- DB·문서: 양쪽 초기화 SQL은 실제 파일명 정렬 순서대로 문서화했다. 루트 `SPEC.md`와 v4h RAG 정본은 최신 main 내용을 유지하고 OSC 구현 설명은 하위 작업서와 이 기록에 남겼다.
+- 검증: API·SPA·thread 집중 검사는 `88 passed, 33 skipped`, 프론트는 `16 files / 87 tests passed`, production build 성공, 전체 backend는 `1074 passed, 113 skipped in 26.32s`였다. FastAPI method/path 중복 검사 결과는 `[]`였다.
+- 확인 못 한 것: 건너뛴 PostgreSQL·외부 모델·공유 DB·실제 배포와 Langfuse 전송은 확인하지 않았다. 로컬에 gitleaks 실행 파일이 없어 최종 비밀값 검사는 별도 방식으로 확인한다.
+- 다음 할 일: Compose 설정·잠금·diff·가상 merge를 다시 확인하고 PR #73 통합 merge commit을 남긴다. PR 생성과 원격 push는 사용자 별도 승인 전 수행하지 않는다.
+
 ## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
 
 - 목적: 최신 main의 v4h 청킹·Voyage 검색 구현과 과거 v1 측정, 저장소 밖 lab 실행을 문서에서 서로 다른 근거로 구분하고 PR #71의 구현 현황 문서에 함께 반영한다.
