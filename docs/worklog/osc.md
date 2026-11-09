@@ -21,6 +21,14 @@
 - GREEN: focused project/workbench/AuthProvider 6개 파일 `33 passed in 2.76s`; 전체 `npm run test:run` → `10 files, 50 passed in 3.07s`; `npm run build` → TypeScript/Vite 성공(82 modules, 144ms). whitespace 검사를 통과했다. 실제 서비스/DB/browser E2E는 실행하지 않았다. 브라우저 abort가 이미 전달된 서버 mutation의 rollback을 보장하지는 않는다.
 - 변경 파일: frontend/src/api/projects.ts, CircuitSetup.tsx, ProjectSidebar.tsx, App.test.tsx, ProjectSidebar.test.tsx, test/projects.tsx 및 이 기록. report의 Fix Round 1에 정확한 RED/GREEN 명령·출력을 남긴다. 신규 파일·의존성·backend·정본 문서 변경은 없다. staged 7개 파일의 whitespace 통과, Docker gitleaks stdin redacted 스캔 exit 0(비밀값 0건), 생성물 미포함을 확인했다. 별도의 fix(web) 로컬 커밋으로 남긴다.
 
+### Task 6 Fix Round 2
+
+- 범위: 프로젝트 전환 때 CircuitSetup이 유지되어 create/upload의 늦은 성공이 목록을 invalidate하는 지적만 수정한다.
+- RED: production 전에 demo/upload deferred 전환 시험 2건 추가. `npm run test:run -- src/components/CircuitSetup.test.tsx src/pages/WorkbenchPage.test.tsx src/App.test.tsx --reporter=dot` → `1 file failed, 2 passed; 2 failed, 23 passed in 2.69s`. 다른 프로젝트/D2를 선택한 뒤 이전 성공 응답이 추가 `/api/projects` GET을 일으켜 실패했다.
+- 변경: 기존 선택 세대를 CircuitSetup의 React key로 연결하는 1줄과 주석. 선택 세대 전환 시 기존 component cleanup이 mutation을 abort하고 이전 guard가 늦은 응답·invalidate·auto-selection을 무시한다. 새 폼은 빈 사용 가능 상태로 시작하며 오래된 upload finally는 이전 input만 비운다. 정상 생성 auto-selection은 유지한다.
+- GREEN: 프로젝트 전환 직후(target 변경 전) abort도 별도로 확인한 최종 focused 3개 파일 `25 passed in 2.40s`; 전체 `npm run test:run` → `10 files, 52 passed in 3.04s`; build → TypeScript/Vite 성공(82 modules, 123ms). 기존 성공/400/413 input reset과 auth/admin/price/재로그인 경합 회귀도 유지된다.
+- 파일/한계: WorkbenchPage.tsx, CircuitSetup.test.tsx와 이 기록. backend·API·영속 저장·신규 파일·의존성 변경 없음. 실제 서비스/DB/browser E2E는 미실행이고 브라우저 abort는 이미 전달된 서버 변경의 rollback을 보장하지 않는다. 최종 staged whitespace/비밀값/생성물을 점검한 뒤 별도 fix(web) 커밋을 남긴다.
+
 ## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
 
 - Fix Round 1: StrictMode의 이전 복원 401이 새 로그인을 해제하는 순서와, 관리자 PATCH 대기 중 로그아웃/경로 이동 후 후속 목록 GET이 실행되는 순서를 deferred-response 테스트로 먼저 재현했다. focused RED는 `3 failed, 5 passed`; effect별 AbortController·API signal 전달·응답/JSON 파싱 뒤 abort 검사·관리자 후속 GET/상태 변경 guard로 수정 후 `8 passed`. 전체 프런트 `24 passed in 2.01s`, build(TypeScript+Vite 78 modules), `git diff --check` 통과. non-JSON 오류 본문 Minor는 요청대로 최종 검토에 보류했다. backend·화면 범위·저장 경계는 변경하지 않았다.

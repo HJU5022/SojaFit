@@ -50,7 +50,8 @@ export default function WorkbenchPage() {
     <div className="workbench-grid">
       <ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={selectProject} onDeleted={deleted} />
       <div className="workbench-main">
-        <CircuitSetup onCreated={created} />
+        {/* 선택 세대가 바뀌면 생성 폼과 진행 요청도 함께 폐기한다. */}
+        <CircuitSetup key={version} onCreated={created} />
         {id !== null && detail.isPending && <p role="status">회로를 불러오는 중입니다.</p>}
         {detail.error ? <p role="alert">{errorMessage(detail.error)}</p> : detail.data && <CircuitSummary project={detail.data} targetRef={targetRef} onTarget={ref => {
           setParams(current => { const next = new URLSearchParams(current); if (ref) next.set('targetRef', ref); else next.delete('targetRef'); return next })

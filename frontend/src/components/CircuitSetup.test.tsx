@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
@@ -76,4 +76,46 @@ it.each([[400, '올바른 UTF-8 KiCad 넷리스트를 올려 주세요.'], [413,
   await waitFor(() => expect(input.value).toBe(''))
   expect(screen.getByLabelText('현재 경로')).toBeEmptyDOMElement()
   expect(screen.queryByLabelText('대상 부품')).not.toBeInTheDocument()
+})
+
+it.each(['demo', 'upload'] as const)('cancels pending %s on project switching without late refresh or selection changes', async (kind) => {
+  let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined
+  const projectReads: string[] = []
+  network((path, init) => {
+    if (path === '/api/demo-circuits') return Response.json([demo])
+    if (init.method === 'POST') { signal = init.signal; return new Promise(resolve => { finish = resolve }) }
+    projectReads.push(path)
+    return Response.json(path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('heading', { name: first.name })
+  fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
+  const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
+  if (kind === 'demo') {
+    await screen.findByRole('option', { name: demo.name })
+    fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
+    fireEvent.click(screen.getByRole('button', { name: '데모로 만들기' }))
+  } else {
+    fireEvent.change(input, { target: { files: [new File(['server input'], 'board.net')] } })
+    Object.defineProperty(input, 'value', { writable: true, configurable: true, value: 'C:\\fakepath\\board.net' })
+    fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
+  }
+  await waitFor(() => expect(finish).toBeTypeOf('function'))
+  fireEvent.click(screen.getByRole('button', { name: second.name }))
+  await screen.findByRole('heading', { name: second.name })
+  expect(signal?.aborted).toBe(true)
+  fireEvent.change(screen.getByLabelText('대상 부품'), { target: { value: 'D2' } })
+  const before = [...projectReads]
+  await act(async () => finish(Response.json(kind === 'demo' ? first : { ...second, id: 13 }, { status: 201 })))
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('?projectId=12&targetRef=D2')
+  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByText('선택한 대상: D2')).toBeInTheDocument()
+  expect(projectReads).toEqual(before)
+  expect(signal?.aborted).toBe(true)
+  expect(screen.getByLabelText('새 프로젝트 이름')).toBeEnabled()
+  expect(screen.getByLabelText('KiCad 넷리스트')).toBeEnabled()
+  if (kind === 'upload') {
+    expect(input.value).toBe('')
+    expect(screen.getByLabelText('KiCad 넷리스트')).toHaveValue('')
+  }
 })
