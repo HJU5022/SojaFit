@@ -399,5 +399,6 @@
 
 - RED: 공개 DTO 부재·대화 API 404, interrupt 복구 DTO, 공개 판정 필드, 인용 메타데이터, 가격 필드 및 중첩 SQL 제약을 각각 실패 테스트로 확인했다.
 - 구현: 소유자별 thread/run 조회·생성·재개, 인증·Origin, SSE, 허용된 DTO, terminal 저장 후 전송, 연결 종료 후 백그라운드 실행. 공개 판정/인용만 저장하며 요청 ID와 가격·재고는 저장하지 않는다. 프로젝트 행 잠금으로 활성 실행 중 삭제와 새 실행 경쟁을 방지하고 체크포인터 API로 삭제한다. SQL 결과 검증은 허용 키와 중첩 타입을 검사한다.
+- Task 8 검토 반영: 복수 역할 인터럽트의 선택값을 허용 목록으로 검증해 같은 checkpoint에 전달하고, terminal 상태 저장의 일시적 DB 오류는 3회 안에서 제한 재시도한다. `uv run pytest -q tests/api/test_conversations.py tests/conversations/test_dto.py tests/services/test_d5.py` 결과는 20 passed이며 재검토는 최종 검토로 미뤘다.
 - 확인: 격리 PostgreSQL 컨테이너에서 `uv run pytest -q tests/api/test_conversations.py tests/conversations tests/services/test_d5.py tests/api/test_projects.py` → 71 passed. 이전 layout 검사 5 passed, 집중 DB 검사 73 passed(이후 문서 근거 보완 전). 실제 모델·MCP, 공유 DB, 배포, 동결 평가셋 재측정은 하지 않았다.
 - 한계: checkpoint와 프로젝트 삭제는 별도 트랜잭션으로 원자적이지 않으며 중간 장애 때 checkpoint 일부가 먼저 지워질 수 있다. 서버 재시작·프로세스 중단 시 진행 run 복구, 다중 인스턴스 장애 주입 및 실제 checkpointer cascade는 Task 13에서 검증한다. 문서 근거는 최종 보고서에서 인용한 청크의 메타데이터만 반환한다.

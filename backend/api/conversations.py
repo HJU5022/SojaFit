@@ -31,6 +31,7 @@ class StartRun(BaseModel):
 class ResumeRun(BaseModel):
     model_config = ConfigDict(extra='forbid')
     answers: dict[str, str] = Field(max_length=30)
+    role: str | None = Field(default=None, pattern=r'R(?:0[1-9]|1[0-9]|2[0-3])')
 
     @field_validator('answers')
     @classmethod
@@ -85,13 +86,33 @@ def frame(kind, payload):
     return f'event: {kind}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n'
 
 
+FINISH_RETRY_DELAYS = (0, 0.05, 0.2)
+
+
+async def finish_with_retry(repo, user_id, thread_id, run_id, status, result):
+    """짧은 DB 장애에는 제한된 횟수만 재시도하고, 상태 저장 전 terminal 이벤트를 보내지 않는다."""
+    last_error = None
+    for delay in FINISH_RETRY_DELAYS:
+        if delay:
+            await asyncio.sleep(delay)
+        try:
+            await run_in_threadpool(repo.finish, user_id, thread_id, run_id, status, result)
+            return
+        except (psycopg.Error, OSError) as exc:
+            last_error = exc
+    raise last_error
+
+
 def stream(repo, user_id, thread_id, run_id, request_id, service, data, resume=False):
     queue = asyncio.Queue()
     async def execute():
         terminal = False
         try:
             async with service() as d5:
-                source = d5.resume(thread_id, data) if resume else d5.start(thread_id, data)
+                if resume:
+                    source = d5.resume(thread_id, data['answers'], role=data.get('role')) if data.get('role') else d5.resume(thread_id, data['answers'])
+                else:
+                    source = d5.start(thread_id, data)
                 async for event in source:
                     if event.type == 'status':
                         await queue.put(frame('status', result_dto({}, request_id=request_id, status='running', stage=STAGES.get(event.stage, '결과 정리')).model_dump()))
@@ -99,7 +120,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, service, data, resume=F
                         safe = result_dto(event.state, request_id=request_id, status=event.type,
                                           stage=STAGES.get(event.stage, '추가 정보 필요' if event.type == 'requires_input' else '완료'), interrupt=event.interrupt)
                         saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
-                        await run_in_threadpool(repo.finish, user_id, thread_id, run_id, event.type, saved)
+                        await finish_with_retry(repo, user_id, thread_id, run_id, event.type, saved)
                         terminal = True
                         await queue.put(frame(event.type, safe.model_dump()))
                         break
@@ -107,7 +128,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, service, data, resume=F
             pass
         if not terminal:
             try:
-                await run_in_threadpool(repo.finish, user_id, thread_id, run_id, 'failed', None)
+                await finish_with_retry(repo, user_id, thread_id, run_id, 'failed', None)
                 await queue.put(frame('failed', result_dto({}, request_id=request_id, status='failed', stage='거절').model_dump()))
             except Exception:
                 pass
@@ -136,5 +157,11 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
 @router.post('/runs/{run_id}/resume', dependencies=[Depends(auth.check_origin)])
 async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), service=Depends(service_factory)):
     run = await run_in_threadpool(repo.get_run, user_id, str(run_id))
+    choices = (run.get('safe_result') or {}).get('interrupt', {}).get('role_choices', [])
+    if choices and body.role not in choices:
+        raise HTTPException(422, '요청된 역할 중 하나를 선택해 주세요.')
+    if not choices and body.role is not None:
+        raise HTTPException(422, '이 run에는 역할 선택이 필요하지 않습니다.')
     await run_in_threadpool(repo.resume, user_id, run['thread_id'], str(run_id))
-    return stream(repo, user_id, run['thread_id'], str(run_id), request.state.request_id, service, body.answers, resume=True)
+    return stream(repo, user_id, run['thread_id'], str(run_id), request.state.request_id,
+                  service, body.model_dump(exclude_none=True), resume=True)

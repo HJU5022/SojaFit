@@ -72,8 +72,11 @@ class D5Service:
         async for event in self._run(thread_id, state):
             yield event
 
-    async def resume(self, thread_id: str, answers: dict) -> AsyncIterator[RunEvent]:
-        async for event in self._run(thread_id, Command(resume={'answers': answers})):
+    async def resume(self, thread_id: str, answers: dict, role: str | None = None) -> AsyncIterator[RunEvent]:
+        payload = {'answers': answers}
+        if role is not None:
+            payload['role'] = role
+        async for event in self._run(thread_id, Command(resume=payload)):
             yield event
 
     async def delete_thread(self, thread_id: str) -> None:

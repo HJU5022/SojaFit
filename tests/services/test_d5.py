@@ -50,12 +50,12 @@ def test_resume_uses_command_and_same_graph_thread():
     async def run():
         data = RunInput(question='hello', target_ref='D1', connections={'components': [{'ref': 'D1'}], 'nets': []})
         await collect(service.start('stable', data))
-        await collect(service.resume('stable', {'voltage': '5 V'}))
+        await collect(service.resume('stable', {'voltage': '5 V'}, role='R02'))
     async def collect(items): return [x async for x in items]
     asyncio.run(run())
     first, second = service.graph.calls
     assert first[1]['configurable']['thread_id'] == second[1]['configurable']['thread_id'] == 'stable'
-    assert isinstance(second[0], Command) and second[0].resume == {'answers': {'voltage': '5 V'}}
+    assert isinstance(second[0], Command) and second[0].resume == {'answers': {'voltage': '5 V'}, 'role': 'R02'}
     assert first[0]['target_part']['ref'] == 'D1'
     assert 'connections' not in first[0]
 
