@@ -349,3 +349,9 @@
 - 정책 근거: 기존 공개 KiCad 5종의 13/8/14/44/14 nets는 모두 ASCII 양의 정수 code를 사용한다. 표준 표기 `[1-9][0-9]*`와 net 간 유일성을 요구한다. code는 문자열로 유지하며 0/음수/소수/부호/지수/앞자리 0/비ASCII 숫자는 거절한다. NUL은 metadata 포함 입력 전체에서 거절한다. filename은 비어 있지 않고 공백 제거·대소문자 무시 후 `.net`으로 끝나야 한다.
 - 검증 계획: 새 일회용 `postgres:16-alpine` 컨테이너만 사용한다(기존 볼륨/공유 DB 없음). CI의 003/005/006 인증 SQL과 anon/authenticated NOLOGIN 역할을 먼저 준비하고 두 요청 시험 파일·repo layout·저장소 시험을 실행한다. 그 후 `PYTHONUTF8=1 TEST_AUTH_DATABASE_URL=<새 일회용 DB> uv run pytest -q` 전체 backend suite를 한 번 실행한다. 외부 API/모델 예산 0달러, 반복 실패하면 원인·범위 확인 후 중단한다.
 - GREEN: `uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py tests/projects/test_project_repository.py tests/repo/test_repo_layout.py` → `82 passed in 4.25s`; 전체 backend 한 번 실행 → `1033 passed, 37 skipped in 75.35s`. 신규 시험 skip은 없으며 기존 선택적 시험 37건만 skip했다. `uv lock --check`, `git diff --check`도 통과했다. 새 정상화 코드로 공개 KiCad 5종을 모두 읽어 net 수 13/8/14/44/14를 유지했다. 원본/DB schema/정규화 shape/의존성은 바꾸지 않았다. staged diff·비밀값을 확인하고 지정된 fix 커밋을 남긴 뒤 이번 시험 컨테이너만 정리한다.
+
+### Task 5 Fix Round 2
+
+- filename 누락 시험만 먼저 `PYTHONUTF8=1 uv run pytest -vv tests/api/test_projects.py::test_upload_rejects_missing_filename_before_reading_or_persisting`로 재현해 `1 passed in 0.57s`를 확인했다. 실제 400이며 422와의 결과 불일치는 없다. filename 없는 file은 두 번째 text field이므로 Starlette의 headers 처리에서 max_fields=1을 초과해 MultiPartException을 낸다. route의 공통 400 번역이 적용되어 type/shape의 422 검사는 실행되지 않는다.
+- 변경: filename 누락과 빈/공백/잘못된 확장자 거절 시험에서 공통 error code·정확한 message·서버 request ID 전체 DTO를 확인한다. 기존 read 0·저장소 미호출·생성된 UploadFile close 검증을 유지했다. production 코드는 바꾸지 않았다.
+- 확인: 두 요청 시험 파일 `70 passed, 1 skipped in 1.60s`; repo layout `5 passed in 0.29s`, diff whitespace 통과. 이번에는 DB를 새로 만들거나 연결하지 않아 기존 실제 DB CRUD 시험 1개만 skip했다. 부모 요청대로 production 변경이 없으므로 전체 suite는 다시 실행하지 않았으며 직전 Fix Round 1의 전체 결과는 `1033 passed, 37 skipped`이다. raw/text 수명 Minor는 최종 검토까지 보류한다.
