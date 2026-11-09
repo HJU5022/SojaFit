@@ -254,7 +254,8 @@ def test_requirement_outside_the_corpus_ends_as_a_refusal_without_asking(monkeyp
     from backend.multi_agent.messages import refusal_for
     app = judge_app(monkeypatch, lambda part, codes=None: pytest.fail("사양 표를 읽었다"), [],
                     read=J.JudgeRead(role="R01", candidates=["1N5817"], **extra), revisions=revisions)
-    state = app.invoke({"input": JUDGE_INPUT}, {"configurable": {"thread_id": f"gate-{code}-{extra}"}})
+    asked = JUDGE_INPUT + " " + extra.get("revision_wanted", "")  # 판 요구는 사용자 글에 있어야 한다(지어낸 판으로 거절하지 않게, 11-06 h3-15)
+    state = app.invoke({"input": asked}, {"configurable": {"thread_id": f"gate-{code}-{extra}"}})
     assert "__interrupt__" not in state
     assert state["path"][-3:] == ["판정 읽기", "판정", "거절"] and state["refusal"]["code"] == code
     assert state["answer"] == refusal_for(Reason(code), state["facts"]) and "1N5817" not in state["answer"]  # 있는 품번은 없다고 하지 않는다

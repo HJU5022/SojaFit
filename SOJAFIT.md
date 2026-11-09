@@ -21,6 +21,7 @@ SojaFit (proj3-b)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
+├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일 하나만 제외
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── Dockerfile              <- API 이미지. backend/와 data/만 복사 (고정)
 ├── docker-compose.yml      <- api + pgvector DB 한 줄 실행, 키 없는 데모 모드 (고정)
@@ -61,9 +62,7 @@ SojaFit (proj3-b)
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── judge.py    <- 판정 에이전트(읽기 · 판정 노드)
-│   │       ├── search.py   <- 검색 에이전트: 재작성·검색·채점 한 번, 통과 청크와 실패 사유를 보고. 결과 없음 뒤엔 필터를 풂
-│   │       ├── writer.py   <- 작성 에이전트: 단일 그래프의 생성으로 답을 쓰고 거절 답이면 실패 보고. 판정 결과는 코드 틀로
-│   │       └── verifier.py <- 검증 에이전트: 인용을 다시 계산해 확인(걸리면 실패, enforce=False면 기록만)
+│   │       └── docs.py     <- 문서 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
@@ -82,7 +81,9 @@ SojaFit (proj3-b)
 │   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)
-│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 다음 노드 선택·거절 사유·판단 규칙. Langfuse `supervisor` v4까지 등록(11-06 본문은 등록 전)
+│   │   ├── docs_answer.md  <- 멀티 문서 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
+│   │   ├── synth.md        <- 멀티 Supervisor ② 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor ① 계획(질문 종류 · 할 일 최대 3개 · 지시서)·거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
@@ -186,12 +187,16 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
+│   │   ├── run_retrieval_v3.py  <- v3 평가셋 검색 지표를 에이전트 검색 길(입력 읽기 → 재작성 → 품번 필터 검색) 그대로 잼(문서 · 쪽 Recall@5 · MRR)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프(`--multi`면 멀티 에이전트)로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
+│   │   ├── run_gate.py     <- 감시 실행기: 평가셋을 멀티 에이전트로 여러 세트 연달아 돌리며 처음 실패한 문항이나 p95 초과에서 멈춤(v3 반복 측정)
+│   │   ├── gate_report.py  <- run_gate 결과 세트를 기준표(정답률 · 오탐 · 검색 Recall@5 · MRR · 응답 시간)로 집계
 │   │   ├── run_judge_dev.py  <- 판정 연습 문제를 멀티 그래프로 돌려 역할 정답률·판정 일치율을 results/judge/에 저장
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
 │   │   ├── run_supervisor_jev.py  <- Jev Decisions API 평가 계획·호출·집계
 │   │   ├── report_supervisor_stage3.py  <- 1~3차 원시 행의 API 없는 비교·3차 재집계
 │   │   ├── score_answer.py <- 평가셋 문항과 그래프 실행 상태를 대조해 답변·거절 5지표를 규칙 기반으로 채점
+│   │   ├── score_compound.py  <- 여러 개를 묻는 질문의 부분별 채점(답할 부분은 기존 기준, 답하면 안 되는 부분은 거절했는지)
 │   │   ├── eval_grader.py  <- 채점기 기준선(#36): 검색·통과 청크가 정답 쪽을 충분·부분·부족으로 가졌는지 계산해 results/grader/에 저장
 │   │   ├── run_skill_pair.py  <- 같은 검색 상태에서 Skill 유무에 따른 답 차이를 순차 비교(사전 등록 #17)
 │   │   ├── freeze.py       <- 평가셋 sha256·건수를 FROZEN.json에 기록, --check로 검사
@@ -293,6 +298,7 @@ SojaFit (proj3-b)
 │   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
 │   │   ├── test_agents.py  <- 검색·작성·검증 에이전트, 사실 확인, 거절 문구
+│   │   ├── test_docs_agent.py  <- 문서 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
 │   │   ├── test_judge.py   <- 판정 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
 │   │   └── test_build.py   <- 조립 길 시험: 직행·검색 경로·못 찾음 거절·범위 밖·검증 실패 뒤 다시 쓰기·판정 길(인터럽트 1번)
@@ -325,6 +331,8 @@ SojaFit (proj3-b)
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출·멀티 실행 점수·노드별 모델 기록·그래프 조립·인터럽트 재개(가짜)
 │   │   ├── test_run_judge_dev.py  <- 판정 연습 문제 채점(역할·판정 일치, 찾기는 보여 준 후보 집합)
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
+│   │   ├── test_score_compound.py  <- 여러 개를 묻는 질문 부분별 채점: 답할 부분의 근거 · 판정, 답하면 안 되는 부분의 거절 말
+│   │   ├── test_gate_report.py  <- 기준표 집계: 옛 평가셋 판정 칸 채우기, 근거 위치 고르기, 기준 미달 찾기
 │   │   ├── test_supervisor_models.py  <- 수퍼바이저 평가 실행·중단·집계·provider 증거 검증
 │   │   ├── test_supervisor_jev.py  <- Jev typed answer·안전 gate·manifest 검증
 │   │   ├── test_supervisor_stage3_report.py  <- 3차 집계 분모·라우팅·3회 비교 검증

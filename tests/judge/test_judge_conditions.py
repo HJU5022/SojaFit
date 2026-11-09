@@ -110,3 +110,88 @@ def test_needed_asks_first_any_member_and_default_values_only_when_nothing_is_co
     """'A 또는 B'는 계산할 수 있는 멤버가 없을 때만 첫 멤버의 값을, 기본값이 있는 조건은 기준식 값이 없을 때 기본값 식의 값을 묻는다."""
     assert C.needed(OR_RULE, set()) == ['i_coil', 'pulse_test', 'v_bus']
     assert C.needed(OR_RULE, {'i_coil', 'v_sw_transient'}) == []
+
+
+def test_user_conditions_from_required_specs():
+    # [왜] 사용자가 숫자로 적은 규격을 판정 · 찾기 조건으로 써야 규격 밖 후보를 안 보여 준다(11-06 v3-11 · 12)
+    from backend.judge.conditions import user_conditions
+    got = lambda w, c: [(x['op'], round(float(x['basis']), 12)) for x in user_conditions([(w, c)])]  # noqa: E731
+    assert got('반복 피크 역전압 정격 400~600V', 'VRRM') == [('>=', 400.0), ('<=', 600.0)]
+    assert got('평균 순방향 전류 정격 1A 이상 2A 미만', 'IF_AV') == [('>=', 1.0), ('<=', 1.999999998)]
+    assert got('역회복 시간 최댓값 75ns 이하', 'TRR') == [('<=', 7.5e-08)]
+    assert got('10/1000µs 피크 펄스 전력 400W 이상 600W 미만', 'PPPM') == [('>=', 400.0), ('<=', 599.9999994)]  # 1000µs는 W가 아니라 버린다
+    assert got('작동 스탠드오프 전압 5.0V', 'VRWM') == [('>=', 5.0)]  # 연산 말 없음 · 정격 아님 → 좋은 방향
+    assert got('average forward current rating 1A', 'IF_AV') == [('>=', 1.0), ('<=', 1.0)]  # 정격이면 같음
+    assert got('피크 10A 서지 전류 보호 유지', 'IPP') == [('>=', 10.0)] and got('forward voltage drop up to 1.8V', 'VF') == [('<=', 1.8)]
+    assert got('smaller reverse leakage', 'IR') == [] and got('AEC-Q101', 'none') == []
+
+
+def test_english_range_words_use_the_operator_nearest_each_number():
+    """[왜] '400W or more and less than 600W'의 400 뒤 글에 600의 'less than'이 같이 있어 400W가 미만으로 읽혔다(11-06 v3-15)."""
+    from backend.judge import conditions as C
+    got = [(c['op'], round(float(c['basis']))) for c in C.user_conditions([('peak pulse power 400W or more and less than 600W', 'PPPM')])]
+    assert got == [('>=', 400), ('<=', 600)]
+    assert [c['op'] for c in C.user_conditions([('at least 1A and under 2A', 'IF_AV')])] == ['>=', '<=']
+
+
+def test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots():
+    """[왜] '공칭 3.3V, 공차 ±2%(B 등급)'를 최대 칸으로 봐 3.3V 제너가 떨어졌고, 'nominal'의 min을 이상으로 읽었다(11-06 v3-13)."""
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+    got = [(c['op'], round(float(c['basis']), 3), c.get('slot')) for c in C.user_conditions([('nominal 3.3V, tolerance ±2% (B grade)', 'VZ')])]
+    assert got == [('>=', 3.3, 'typ'), ('<=', 3.3, 'typ'), ('>=', 3.184, 'min'), ('<=', 3.284, 'min'), ('>=', 3.316, 'max'), ('<=', 3.416, 'max')]
+    assert [c['op'] for c in C.user_conditions([('nominal zener voltage 3.3V', 'VZ')])] == ['>=', '<=']
+    rule = {'conditions': C.user_conditions([('nominal 3.3V ±2%', 'VZ')])}
+    assert {t.get('slot') for t in V.search_conditions(rule, {})} == {'typ', 'min', 'max'}  # 찾기도 같은 칸으로 거른다
+
+    def row(mn, ty, mx):
+        return [{'part': 'X', 'code': 'VZ', 'min': mn, 'typ': None, 'max': None, 'unit': 'V', 'test_condition': 'IZT = 5 mA', 'citation': {}},
+                {'part': 'X', 'code': 'VZ', 'min': None, 'typ': ty, 'max': None, 'unit': 'V', 'test_condition': 'IZT = 5 mA', 'citation': {}},
+                {'part': 'X', 'code': 'VZ', 'min': None, 'typ': None, 'max': mx, 'unit': 'V', 'test_condition': 'IZT = 5 mA', 'citation': {}}]
+    b_grade = V.judge_part(rule, 'R04', 'BZT52B3V3', {}, {}, row(3.23, 3.3, 3.37))
+    c_grade = V.judge_part(rule, 'R04', 'BZT52C3V3', {}, {}, row(3.1, 3.3, 3.5))
+    assert b_grade.verdict == 'ROLE_SUFFICIENT' and c_grade.verdict == 'NOT_SUFFICIENT'
+
+
+def test_lone_upper_bound_on_a_higher_is_better_rating_is_a_load_to_withstand():
+    """[왜] '투입 피크 최대 2A'를 IFSM ≤ 2A로 읽어 IFSM 30A 후보가 불충족이 됐다(11-06 v3-01). 범위는 그대로 둔다."""
+    from backend.judge import conditions as C
+    assert [(c['op'], float(c['basis'])) for c in C.user_conditions([('inrush surge up to 2A 8.3ms', 'IFSM')])] == [('>=', 2.0)]
+    assert [c['op'] for c in C.user_conditions([('IF(AV) 1A 이상 2A 미만', 'IF_AV')])] == ['>=', '<=']
+    assert [c['op'] for c in C.user_conditions([('VF 1.8V까지', 'VF')])] == ['<=']
+
+
+def test_tolerance_class_excludes_tighter_grades_too():
+    """[왜] 공차는 등급이다. ±5% 찾기에 ±2% 부품(BZV55B5V1)이 나왔다(11-06 h3-13). 같은 등급(C 4.8 / 5.4)만 남는다."""
+    from backend.judge import conditions as C
+    from backend.judge import verdict as V
+    rule = {'conditions': C.user_conditions([('nominal 5.1V, tolerance ±5%', 'VZ')])}
+
+    def rows(mn, mx):
+        return [{'part': 'X', 'code': 'VZ', 'min': a, 'typ': b, 'max': c, 'unit': 'V', 'test_condition': 'IZT = 5 mA', 'citation': {}}
+                for a, b, c in ((mn, None, None), (None, 5.1, None), (None, None, mx))]
+    assert V.judge_part(rule, 'R04', 'BZV55C5V1', {}, {}, rows(4.8, 5.4)).verdict == 'ROLE_SUFFICIENT'
+    assert V.judge_part(rule, 'R04', 'BZV55B5V1', {}, {}, rows(5.0, 5.2)).verdict == 'NOT_SUFFICIENT'
+
+
+def test_lone_lower_bound_on_a_lower_is_better_item_is_an_upper_limit():
+    """[왜] '보호 노드 허용 전압 최대 9.2V'를 VC ≥ 9.2로 읽어 VC 10.3 V 후보가 통과했다(공식 6회차 v3-10)."""
+    from backend.judge import conditions as C
+    assert [(c['op'], float(c['basis'])) for c in C.user_conditions([('clamping voltage must stay above 9.2V', 'VC')])] == [('<=', 9.2)]
+
+
+def test_operator_word_followed_by_a_number_belongs_to_that_number():
+    """[왜] 'clamp at 23.2V under 10A surge'의 under는 10A의 것이다. 23.2V를 미만으로 읽어 23.2 V 후보가 떨어졌다(v3-09 안정성 측정)."""
+    from backend.judge import conditions as C
+    got = [(c['op'], float(c['basis'])) for c in C.user_conditions([('keep the clamp at 23.2V under a 10A surge', 'VC')])]
+    assert got == [('<=', 23.2)]
+    assert [c['op'] for c in C.user_conditions([('at least 1A and under 2A', 'IF_AV')])] == ['>=', '<=']
+
+
+def test_zener_voltage_ranges_pick_the_nominal_or_the_spread_columns():
+    from backend.judge.conditions import user_conditions
+    nominal = user_conditions([('공칭 VZ 3.6~3.9V', 'VZ')])
+    spread = user_conditions([('클램프 전압 허용 범위는 3.42~3.78V', 'VZ')])
+    # [왜] 표의 VZ는 최소 · 대표 · 최대가 행으로 나뉜다. 칸을 정해야 최소 행과 비교하지 않는다(11-07 h4-13)
+    assert [(c['op'], c.get('slot')) for c in nominal] == [('>=', 'typ'), ('<=', 'typ')]
+    assert [(c['op'], c.get('slot')) for c in spread] == [('>=', 'min'), ('<=', 'max')]

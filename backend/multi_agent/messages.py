@@ -74,7 +74,9 @@ def _one(j: dict) -> list[str]:
     if j['cautions']:
         lines.append('- 사람이 확인할 것: ' + ' / '.join(j['cautions']))
     if j.get('board_change'):
-        lines.append('- 패키지가 달라 기판 수정이 필요해요.')
+        cite = j.get('package_citation') or {}
+        where = f" (후보 패키지 근거: {cite.get('document', '')} {cite.get('page', '')}쪽 {cite.get('table', '')})" if cite else ''
+        lines.append(f'- 패키지가 달라 기판 수정이 필요해요{where}.')
     return lines
 
 
@@ -92,8 +94,16 @@ def render_judgement(judgement: dict) -> str:
             lines.append('이 조건을 모두 채우는 TSC 부품을 사양 표에서 찾지 못했어요.')
         for j in judgement['shown']:
             lines += _one(j) + ['']
-        if judgement['unverified']:
-            lines.append('문서로 확인 안 됨(견적 대상 아님): ' + ', '.join(j['part'] for j in judgement['unverified']))
+        unverified = judgement['unverified']
+        if not judgement['shown'] and unverified:
+            # [왜] 확인된 후보가 없으면 확인 안 됨 후보 상위 3개를 근거 표와 함께 보인다. 빠진 회로 값을 알려 주면 판정할 수 있는 후보다
+            #      (11-07 v2 찾기: 이름만 나열해 근거가 없었다). 판정은 그대로 '확인 안 됨'이다
+            lines.append('아래 후보는 표 값은 있지만 빠진 값 · 다른 시험 조건 때문에 문서로 확인 안 됨이에요(견적 대상 아님).')
+            for j in unverified[:3]:
+                lines += _one(j) + ['']
+            unverified = unverified[3:]
+        if unverified:
+            lines.append('문서로 확인 안 됨(견적 대상 아님): ' + ', '.join(j['part'] for j in unverified))
     else:
         for j in judgement['results']:
             lines += _one(j) + ['']

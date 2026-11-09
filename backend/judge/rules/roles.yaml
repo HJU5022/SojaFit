@@ -4,7 +4,7 @@
 # - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
 #   unless(값이 있고 거짓이 아니면 꺼짐: flag는 참, 숫자는 주어짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
 #   slot(후보 행에서 볼 칸 min · typ · max. 적으면 그 칸 값만 보고 다른 칸으로 물러나지 않는다. within에는 쓰지 않는다).
-#   any(원본의 "A 또는 B": [{code, op, basis, at?}, …] 중 하나라도 통과하면 통과, tier · when · unless는 묶음에 쓴다).
+#   at_default(at 값이 없을 때: rated면 두 문서가 같은 정격 파형일 때 정격 값끼리 비교). any(원본의 "A 또는 B": [{code, op, basis, at?}, …] 중 하나라도 통과하면 통과, tier · when · unless는 묶음에 쓴다).
 #   exempt(TRR 면제 범위: schottky 쇼트키 계열 모두(기본) · sic SiC 쇼트키만 · none 면제 없음). 면제는 판정 노드가 한다.
 # - 회로 값 이름(읽기 출력 칸과 같은 목록, 같은 이름은 모든 역할에서 같은 뜻 · 종류)
 #   전압: v_in_max 입력(전원) 최대 · v_in_min 입력 최소 · v_reverse_max 반대쪽 전원 최대(R02) · v_coil 코일 전압 · v_ac_rms AC 실효값
@@ -106,10 +106,11 @@ R06:
   inputs: {v_line_max: number, surge_test: condition, data_line: flag, external_port: flag}
   conditions:
     - {tier: required, code: VRWM, op: ">=", basis: "v_line_max"}
-    # [왜] VC · IPP · PPPM은 같은 시험 파형끼리만 비교한다. 파형을 모르면 확인 안 됨(정운 판정 R06)
-    - {tier: required, code: VC, op: "<=", basis: "orig.VC", at: surge_test}
+    # [왜] VC · IPP · PPPM은 같은 시험 파형끼리만 비교한다. 사용자가 파형(surge_test)을 말하지 않으면, 두 데이터시트가 같은 정격 파형
+    #      (TSC는 10/1000 µs: 'tp = 1ms' · '10/1000µs')일 때 각 품번의 정격 값끼리 비교하고, 파형이 다르거나 모르면 확인 안 됨(정운 판정 R06, 11-06 결정)
+    - {tier: required, code: VC, op: "<=", basis: "orig.VC", at: surge_test, at_default: rated}
     # [왜] 원본은 "PPPM 또는 IPP ≥ 원래 값"이다
-    - {tier: required, any: [{code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test}, {code: IPP, op: ">=", basis: "orig.IPP", at: surge_test}]}
+    - {tier: required, any: [{code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test, at_default: rated}, {code: IPP, op: ">=", basis: "orig.IPP", at: surge_test, at_default: rated}]}
     - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
     - {tier: conditional, code: VESD, op: ">=", basis: "orig.VESD", when: external_port}
   major: {PPPM: higher, IPP: higher, VC: lower}
