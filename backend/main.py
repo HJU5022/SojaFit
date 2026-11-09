@@ -375,5 +375,7 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
 
 
 # API·health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 등록한다.
+from backend.api.conversations import router as conversations_router
 app.include_router(projects_router)
+app.include_router(conversations_router)
 mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)

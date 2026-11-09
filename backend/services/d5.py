@@ -1,5 +1,6 @@
 """D5 실행 어댑터: 검증된 회로와 체크포인터만 받아 그래프를 실행한다."""
 from contextlib import asynccontextmanager
+import re
 from typing import AsyncIterator, Literal
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -7,6 +8,7 @@ from langgraph.types import Command
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.graph.nodes import circuit_around
+from backend.conversations.dto import safe_judgement
 from backend.multi_agent.build import build_graph
 from backend.multi_agent.facts import make_lookup
 
@@ -24,6 +26,35 @@ class RunEvent(BaseModel):
     stage: str = ''
     state: dict = Field(default_factory=dict)
     interrupt: dict = Field(default_factory=dict)
+
+
+def public_state(state: dict) -> dict:
+    """공개 계약에 구조화된 값만 선택한다. 원문 문서와 보고서는 복사하지 않는다."""
+    answer = state.get('answer', '')
+    question_type = state.get('question_type', '')
+    parts = state.get('price_parts', [])
+    result = {'answer': answer if isinstance(answer, str) else '',
+              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
+              'price_parts': [p for p in parts if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(parts, list) else []}
+    reports = state.get('final_reports') or state.get('reports') or []
+    cited = {str(item) for report in reports if isinstance(report, dict)
+             for item in report.get('evidence_ids', [])}
+    evidence = []
+    for doc in state.get('docs') or []:
+        if not isinstance(doc, dict) or str(doc.get('chunk_id')) not in cited:
+            continue
+        document, page, table = doc.get('file'), doc.get('page'), doc.get('table')
+        if not isinstance(document, str) or not isinstance(page, (int, str)) or not isinstance(table, (str, type(None))):
+            continue
+        entry = {'document': document.replace('\\', '/').rsplit('/', 1)[-1], 'page': page,
+                 'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
+        if entry not in evidence:
+            evidence.append(entry)
+    if evidence:
+        result['evidence'] = evidence
+    if judgement := safe_judgement(state.get('judgement')):
+        result['judgement'] = judgement
+    return result
 
 
 class D5Service:
@@ -64,7 +95,7 @@ class D5Service:
             snapshot = await self.graph.aget_state(config)
             state = snapshot.values
             kind = 'refused' if state.get('refusal') else 'completed'
-            yield RunEvent(type=kind, stage='finished', state={'answer': state.get('answer', '')})
+            yield RunEvent(type=kind, stage='finished', state=public_state(state))
         except Exception:
             yield RunEvent(type='failed', stage='failed')
 

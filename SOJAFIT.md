@@ -92,6 +92,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── conversations.py <- 소유 대화·실행·SSE API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
@@ -102,6 +103,7 @@ SojaFit (proj3-b)
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
+│   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
 │   │   └── repository.py   <- 소유권 검증·실행 생성·재개·결과 저장
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
@@ -361,6 +363,7 @@ SojaFit (proj3-b)
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
@@ -369,6 +372,7 @@ SojaFit (proj3-b)
 │   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
+│   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
 │   │   └── test_repository.py  <- 소유권·원자성·접근 권한·체크포인트 시험
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명

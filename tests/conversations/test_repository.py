@@ -195,3 +195,103 @@ def test_service_deletes_checkpoint_data(storage):
             for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
                 assert conn.execute(sql.SQL('SELECT count(*) FROM {} WHERE thread_id=%s').format(sql.Identifier(table)), (thread,)).fetchone()[0] == 0
     asyncio.run(run(), loop_factory=asyncio.SelectorEventLoop) if sys.platform == 'win32' else asyncio.run(run())
+
+
+def test_delete_rejects_active_then_removes_owned_checkpoints(storage):
+    from contextlib import asynccontextmanager
+    from backend.api.projects import delete_owned_with_checkpoints
+    from backend.conversations.repository import InvalidRunState
+    repo, (owner, other), project, connect = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    deleted = []
+    @asynccontextmanager
+    async def service():
+        class Fake:
+            async def delete_thread(self, thread_id): deleted.append(thread_id)
+        yield Fake()
+    with pytest.raises(InvalidRunState):
+        delete_owned_with_checkpoints(owner, project, service)
+    assert deleted == []
+    repo.finish(owner, thread, run, 'requires_input', {'answer': '', 'interrupt': {'missing': ['voltage']}})
+    with pytest.raises(InvalidRunState):
+        delete_owned_with_checkpoints(owner, project, service)
+    repo.resume(owner, thread, run)
+    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
+    delete_owned_with_checkpoints(owner, project, service)
+    assert deleted == [thread]
+    with connect() as conn:
+        assert conn.execute('SELECT count(*) FROM projects WHERE id=%s', (project,)).fetchone()[0] == 0
+
+
+def test_resume_result_survives_repository_reconstruction(storage):
+    repo, (owner, _), project, _ = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    repo.finish(owner, thread, run, 'requires_input', {'answer': '', 'interrupt': {'missing': ['voltage'], 'question': 'value?'}})
+    from backend.conversations.repository import ConversationRepository
+    saved = ConversationRepository().get_run(owner, run)
+    assert saved['status'] == 'requires_input'
+    assert saved['safe_result']['interrupt']['missing'] == ['voltage']
+
+
+def test_project_deletion_serializes_new_run(storage):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    from contextlib import asynccontextmanager
+    from backend.api.projects import delete_owned_with_checkpoints
+    from backend.conversations.repository import ConversationNotFound
+    repo, (owner, _), project, _ = storage
+    thread = repo.create_thread(owner, project)
+    entered, release = threading.Event(), threading.Event()
+    @asynccontextmanager
+    async def service():
+        class Fake:
+            async def delete_thread(self, thread_id):
+                entered.set()
+                assert release.wait(5)
+        yield Fake()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        deletion = pool.submit(delete_owned_with_checkpoints, owner, project, service)
+        try:
+            assert entered.wait(5)
+            start = pool.submit(repo.start, owner, thread, {'question': 'hi'})
+            assert not start.done()
+        finally:
+            release.set()
+        deletion.result(timeout=5)
+        with pytest.raises(ConversationNotFound):
+            start.result(timeout=5)
+
+
+def test_database_rejects_nested_private_fields_and_bad_types(storage):
+    from psycopg.types.json import Jsonb
+    from backend.conversations.models import SafeResult
+    repo, (owner, _), project, connect = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    safe = SafeResult.model_validate({'answer': 'ok', 'judgement': {'kind': 'judge', 'results': [{'part': '1N5817', 'verdict': 'NOT_VERIFIED', 'checks': [{'code': 'VRRM', 'citation': {'document': 'a.pdf'}}]}]}}).model_dump(mode='json')
+    import copy
+    bad = copy.deepcopy(safe)
+    bad['judgement']['results'][0]['checks'][0]['citation']['text'] = 'secret'
+    bad2 = copy.deepcopy(safe)
+    bad2['judgement']['results'][0]['checks'][0]['citation']['page'] = {'path': '/private'}
+    bad3 = copy.deepcopy(safe)
+    bad3['price_parts'] = ['https://example.test/secret']
+    for value in (bad, bad2, bad3):
+        with pytest.raises(psycopg.errors.CheckViolation), connect() as conn:
+            conn.execute('UPDATE runs SET safe_result=%s WHERE id=%s', (Jsonb(value), run))
+
+
+def test_docs_evidence_is_persisted_without_raw_chunk(storage):
+    from backend.services.d5 import public_state
+    from backend.conversations.dto import result_dto
+    repo, (owner, _), project, _ = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    state = public_state({'answer': 'ok [3]', 'final_reports': [{'evidence_ids': ['3']}], 'docs': [{'chunk_id': 3, 'file': 'a.pdf', 'page': 2, 'table': None, 'content': 'RAW_CHUNK_MARKER', 'doc_parts': ['RAW_CHUNK_MARKER']}]})
+    repo.finish(owner, thread, run, 'completed', state)
+    saved = repo.get_run(owner, run)['safe_result']
+    assert saved['evidence'][0]['document'] == 'a.pdf'
+    assert result_dto(saved, status='completed', request_id='r').evidence[0]['citation_number'] == '3'
+    assert 'RAW_CHUNK_MARKER' not in str(saved)

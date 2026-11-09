@@ -9,7 +9,8 @@
 ## 파일
 - `CONVERSATIONS.md` — 이 문서
 - `__init__.py` — 패키지 표시
+- `dto.py` — 브라우저 결과 허용 목록
 - `models.py` — 실행 상태와 저장 허용 결과 형식
 - `repository.py` — 소유자 조건, 실행 생성·재개 및 결과 저장
 
-`str(threads.id)`가 불변 LangGraph `thread_id` 정본이다. 프로젝트 cascade만으로 라이브러리 checkpoint는 삭제되지 않는다. Task 8은 소유권 검증·실행 중단과 `D5Service.delete_thread`를 프로젝트 삭제와 연결해야 하며 Task 13에서 cascade E2E를 검증한다. 라이브러리 API와 프로젝트 삭제는 현재 같은 트랜잭션이 아니므로 실패 복구와 동시 실행 경계가 미해결이다.
+`str(threads.id)`가 불변 LangGraph `thread_id` 정본이다. 프로젝트 삭제는 project 행 잠금으로 새 실행·재개와 직렬화하고 활성 실행이 있으면 거절한 뒤 라이브러리 checkpoint 삭제와 project cascade를 수행한다. 두 삭제는 다른 연결이므로 원자적이지 않다. 중간 실패 복구와 실제 checkpoint cascade E2E는 Task 13에서 검증한다. 저장 결과는 answer, question_type, 품번, interrupt, 공개 판정·인용 메타데이터만 허용하며 request_id는 저장하지 않는다. 문서 질문의 raw chunk는 반환하지 않는다.

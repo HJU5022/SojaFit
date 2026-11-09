@@ -1,4 +1,32 @@
 -- Project ownership is enforced by repository queries; public API roles have no access.
+-- Validate the stored public result recursively without accepting unknown nested keys.
+CREATE FUNCTION conversation_json_matches(value jsonb, shape jsonb) RETURNS boolean
+LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+DECLARE item jsonb; field record; required_keys text[];
+BEGIN
+    IF jsonb_typeof(shape) = 'string' THEN
+        RETURN jsonb_typeof(value) = (shape #>> '{}');
+    ELSIF shape ? '$any' THEN
+        FOR item IN SELECT * FROM jsonb_array_elements(shape->'$any') LOOP
+            IF conversation_json_matches(value, item) THEN RETURN true; END IF;
+        END LOOP;
+        RETURN false;
+    ELSIF shape ? '$array' THEN
+        IF jsonb_typeof(value) <> 'array' THEN RETURN false; END IF;
+        FOR item IN SELECT * FROM jsonb_array_elements(value) LOOP
+            IF NOT conversation_json_matches(item, shape->'$array') THEN RETURN false; END IF;
+        END LOOP;
+        RETURN true;
+    END IF;
+    IF jsonb_typeof(value) <> 'object' THEN RETURN false; END IF;
+    SELECT coalesce(array_agg(x), ARRAY[]::text[]) INTO required_keys FROM jsonb_array_elements_text(shape->'$required') AS x;
+    IF NOT value ?& required_keys THEN RETURN false; END IF;
+    FOR field IN SELECT * FROM jsonb_each(value) LOOP
+        IF NOT shape ? field.key OR field.key LIKE '$%' OR NOT conversation_json_matches(field.value, shape->field.key) THEN RETURN false; END IF;
+    END LOOP;
+    RETURN true;
+END $$;
+
 CREATE TABLE threads (
     id UUID PRIMARY KEY,
     project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -9,7 +37,7 @@ CREATE TABLE runs (
     id UUID PRIMARY KEY,
     thread_id UUID NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('running', 'requires_input', 'completed', 'refused', 'failed')),
-    safe_result JSONB CHECK (safe_result IS NULL OR (jsonb_typeof(safe_result) = 'object' AND safe_result ? 'answer' AND jsonb_typeof(safe_result->'answer') = 'string' AND safe_result - 'answer' = '{}'::jsonb)),
+    safe_result JSONB CHECK (safe_result IS NULL OR conversation_json_matches(safe_result, '{"$required":["answer","question_type","price_parts","interrupt","judgement","evidence"],"answer":"string","question_type":"string","price_parts":{"$array":"string"},"interrupt":{"$required":["missing","role_choices","question"],"missing":{"$array":"string"},"role_choices":{"$array":"string"},"question":"string"},"judgement":{"$any":[{"$required":["kind"],"kind":"string","roles":{"$array":"string"},"role_evidence":{"$array":"string"},"results":{"$array":{"$required":["part","verdict"],"part":"string","role":"string","verdict":"string","checks":{"$array":{"$required":["code"],"code":"string","tier":"string","op":"string","basis":"string","threshold":{"$any":["number",{"$array":"number"},"null"]},"value":{"$any":["number",{"$array":"number"},"null"]},"unit":{"$any":["string","null"]},"condition":{"$any":["string","null"]},"result":"string","why":"string","citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"missing":{"$array":"string"},"uncertain":{"$array":"string"},"cautions":{"$array":"string"},"board_change":{"$any":["boolean","null"]},"package_citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"shown":{"$array":{"$required":["part","verdict"],"part":"string","role":"string","verdict":"string","checks":{"$array":{"$required":["code"],"code":"string","tier":"string","op":"string","basis":"string","threshold":{"$any":["number",{"$array":"number"},"null"]},"value":{"$any":["number",{"$array":"number"},"null"]},"unit":{"$any":["string","null"]},"condition":{"$any":["string","null"]},"result":"string","why":"string","citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"missing":{"$array":"string"},"uncertain":{"$array":"string"},"cautions":{"$array":"string"},"board_change":{"$any":["boolean","null"]},"package_citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"unverified":{"$array":{"$required":["part","verdict"],"part":"string","role":"string","verdict":"string","checks":{"$array":{"$required":["code"],"code":"string","tier":"string","op":"string","basis":"string","threshold":{"$any":["number",{"$array":"number"},"null"]},"value":{"$any":["number",{"$array":"number"},"null"]},"unit":{"$any":["string","null"]},"condition":{"$any":["string","null"]},"result":"string","why":"string","citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"missing":{"$array":"string"},"uncertain":{"$array":"string"},"cautions":{"$array":"string"},"board_change":{"$any":["boolean","null"]},"package_citation":{"$any":[{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","chunk_index":{"$any":["number","null"]},"chunk_id":{"$any":["string","number","null"]}},"null"]}}},"terms":{"$array":{"$required":["code"],"code":"string","gte":{"$any":["number","null"]},"lte":{"$any":["number","null"]}}},"capped":"boolean"},"null"]},"evidence":{"$array":{"$required":[],"document":"string","page":{"$any":["number","string","null"]},"table":"string","row":"string","section":"string","citation_number":"string"}}}'::jsonb) AND NOT jsonb_path_exists(safe_result->'price_parts', '$[*] ? (!(@ like_regex "^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$"))')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (id, thread_id)

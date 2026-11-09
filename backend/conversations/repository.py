@@ -17,6 +17,8 @@ class ConversationRepository:
     def create_thread(self, user_id, project_id):
         thread_id = uuid4()
         with auth.connection() as conn:
+            if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
             row = conn.execute('INSERT INTO threads(id,project_id) SELECT %s,id FROM projects WHERE id=%s AND user_id=%s RETURNING id',
                                (thread_id, project_id, user_id)).fetchone()
             if row is None:
@@ -34,6 +36,8 @@ class ConversationRepository:
     def start(self, user_id, thread_id, data):
         run_id = uuid4()
         with auth.connection() as conn:
+            if conn.execute('SELECT p.id FROM projects p JOIN threads t ON t.project_id=p.id WHERE t.id=%s AND p.user_id=%s FOR UPDATE OF p', (thread_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
             row = conn.execute("INSERT INTO runs(id,thread_id,status) SELECT %s,t.id,'running' FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s RETURNING id", (run_id, thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
@@ -56,9 +60,30 @@ class ConversationRepository:
 
     def resume(self, user_id, thread_id, run_id):
         with auth.connection() as conn:
+            if conn.execute('SELECT p.id FROM projects p JOIN threads t ON t.project_id=p.id WHERE t.id=%s AND p.user_id=%s FOR UPDATE OF p', (thread_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
             row = conn.execute("UPDATE runs r SET status='running',updated_at=CURRENT_TIMESTAMP FROM threads t JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND r.thread_id=t.id AND t.id=%s AND p.user_id=%s AND r.status='requires_input' RETURNING r.id", (run_id, thread_id, user_id)).fetchone()
             if row is None:
                 owned = conn.execute('SELECT r.id FROM runs r JOIN threads t ON t.id=r.thread_id JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND t.id=%s AND p.user_id=%s', (run_id, thread_id, user_id)).fetchone()
                 if owned is None:
                     raise ConversationNotFound
                 raise InvalidRunState
+
+    def list_threads(self, user_id, project_id):
+        with auth.connection() as conn:
+            if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
+            return [{'id': str(row[0]), 'project_id': project_id} for row in conn.execute('SELECT id FROM threads WHERE project_id=%s ORDER BY created_at,id', (project_id,))]
+
+    def thread_detail(self, user_id, thread_id):
+        row = self.get_thread(user_id, thread_id)
+        with auth.connection() as conn:
+            rows = conn.execute('SELECT m.role,m.content FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s ORDER BY m.id', (thread_id, user_id)).fetchall()
+        return {'id': str(row[0]), 'project_id': row[1], 'messages': [{'role': r[0], 'content': r[1]} for r in rows]}
+
+    def get_run(self, user_id, run_id):
+        with auth.connection() as conn:
+            row = conn.execute('SELECT r.id,r.thread_id,r.status,r.safe_result FROM runs r JOIN threads t ON t.id=r.thread_id JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND p.user_id=%s', (run_id,user_id)).fetchone()
+            if row is None:
+                raise ConversationNotFound
+            return {'id': str(row[0]), 'thread_id': str(row[1]), 'status': row[2], 'safe_result': row[3] or {}}

@@ -393,3 +393,11 @@
 - 한계: 모델·MCP 실호출, 공유 DB·배포, 동결 평가셋 재측정은 하지 않았다. D5Service는 인증·DB 결과 저장을 직접 처리하지 않으며 후속 API가 소유권 검증과 저장을 연결해야 한다. Windows psycopg async는 SelectorEventLoop가 필요하다.
 
 - 추가 검증: 실제 checkpoint가 프로젝트 cascade만으로 지워지지 않는 RED를 확인했다. `D5Service.delete_thread`는 라이브러리 `adelete_thread`로 checkpoint를 정리하며 격리 DB에서 검증했다. 프로젝트 삭제와 원자적 결합·실행 중 삭제 경계는 미구현으로 Task 8 연동 및 Task 13 E2E가 필요하다. `str(threads.id)`가 LangGraph thread_id 정본이다.
+
+
+### Task 8 — 대화 API와 D5 실행 스트림
+
+- RED: 공개 DTO 부재·대화 API 404, interrupt 복구 DTO, 공개 판정 필드, 인용 메타데이터, 가격 필드 및 중첩 SQL 제약을 각각 실패 테스트로 확인했다.
+- 구현: 소유자별 thread/run 조회·생성·재개, 인증·Origin, SSE, 허용된 DTO, terminal 저장 후 전송, 연결 종료 후 백그라운드 실행. 공개 판정/인용만 저장하며 요청 ID와 가격·재고는 저장하지 않는다. 프로젝트 행 잠금으로 활성 실행 중 삭제와 새 실행 경쟁을 방지하고 체크포인터 API로 삭제한다. SQL 결과 검증은 허용 키와 중첩 타입을 검사한다.
+- 확인: 격리 PostgreSQL 컨테이너에서 `uv run pytest -q tests/api/test_conversations.py tests/conversations tests/services/test_d5.py tests/api/test_projects.py` → 71 passed. 이전 layout 검사 5 passed, 집중 DB 검사 73 passed(이후 문서 근거 보완 전). 실제 모델·MCP, 공유 DB, 배포, 동결 평가셋 재측정은 하지 않았다.
+- 한계: checkpoint와 프로젝트 삭제는 별도 트랜잭션으로 원자적이지 않으며 중간 장애 때 checkpoint 일부가 먼저 지워질 수 있다. 서버 재시작·프로세스 중단 시 진행 run 복구, 다중 인스턴스 장애 주입 및 실제 checkpointer cascade는 Task 13에서 검증한다. 문서 근거는 최종 보고서에서 인용한 청크의 메타데이터만 반환한다.

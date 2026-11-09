@@ -26,7 +26,7 @@
 - `011_part_specifications.sql` — 부품 사양 표(`part_specifications`, `schema/table-definition.md` 5.7)와 품번(대소문자 무시)·코드·문서 인덱스. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 로컬 볼륨과 Supabase에는 따로 적용한다. 행은 SQL이 아니라 `python -m backend.rag.pipeline.specs load <사양 표 폴더> --dsn <주소>`가 넣는다(문서 단위로 지우고 다시 넣음). RLS를 켜고 정책은 두지 않는다(다른 public 표와 같음, Supabase 공개 API로는 못 읽음). 다시 적재한 직후에는 지운 행이 VACUUM 전까지 남아 크기가 약 두 배가 된다.
   - 11-05 Supabase 적용(조장 승인): 011 SQL 적용 → 적재 90,961행(숫자 77,340 + 패키지 13,621) · 문서 1,360개(빠진 문서 0) · 품번 9,589개, 6.4초 → `ANALYZE`. 표 22.7 MB(인덱스 포함), DB 전체 207.2 → 230.0 MB(무료 500 MB · 알람 400 MB 안). 같은 날 로컬 볼륨에도 같은 행 수와 RLS를 적용했다. 공개 API 역할(`anon` · `authenticated`)로 바꿔 시험하면 읽기 0행 · 고치기/지우기 0행 · 넣기 거부였다(시험은 되돌림)
 - `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 사양 표의 `category`와 같은 분류 이름(예: `schottky-rectifier`)이고 `ingest.py`가 문서를 넣을 때 채운다. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 DB에는 따로 적용하고 기존 행은 청크 파일에서 채운다.
-- `014_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한. 체크포인트 표는 `backend.services.d5.setup_checkpoints`가 라이브러리 설치 경로로 별도 생성한다. 기존·공유 DB에는 자동 적용하지 않는다.
+- `014_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트 표는 `backend.services.d5.setup_checkpoints`가 라이브러리 설치 경로로 별도 생성한다. 기존·공유 DB에는 자동 적용하지 않는다.
 - `013_projects.sql` — 사용자 소유 프로젝트와 정규화 회로 1:1 저장. 사용자·프로젝트 삭제 cascade, 소유자별 목록 인덱스, 명시적 CHECK, 공개 역할 및 sequence 권한 회수, RLS(공개 정책 없음). 새 빈 볼륨에서 012 다음 실행하며 기존 볼륨·공유 DB에는 자동 적용하지 않는다. `manual/004_create_business_tables.sql.draft`의 옛 `circuits`와 충돌하므로 초안을 그대로 적용하지 않는다. 현재 서버는 데모 생성만 제공한다.
 - `manual/` — 자동 실행하지 않는 SQL(업무 표 초안, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
