@@ -175,7 +175,7 @@ class FailingAnalysis:
     """스트림 안에서 error를 내는 가짜 분석 서비스. 실행 중 로그 한 줄도 남긴다(스레드 풀에서 request_id가 이어지는지 볼 때)."""
     def __init__(self, error): self.error = error
     def admission(self, user): pass
-    def ensure_thread(self, *args): pass
+    def ensure_thread(self, *args, **kwargs): pass  # run은 질문 · 조건도 키워드로 넘긴다(키 없는 데모의 스트림 전 확인)
     def message(self, user, thread, text, conditions='', request_id=''):
         logging.getLogger('backend.conversations').warning('fake_step')
         raise self.error

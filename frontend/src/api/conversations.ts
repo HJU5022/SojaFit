@@ -12,8 +12,13 @@ export type ThreadDto = { id: string; project_id: number }
 export type RunDto = { id: string; thread_id: string; message_id: number | null; result: ResultDto }
 export type StreamEvent = { event: 'run_started' | 'status' | 'requires_input' | 'completed' | 'refused' | 'failed'; data: Record<string, unknown> }
 export type RoleLabel = { code: string; name: string }
+// 키 없는 데모가 재생하는 기록 질문 하나. resume은 조건 질문에 보낼 기록한 답(인터럽트가 없던 질문은 null)
+export type DemoQuestionDto = { id: string; kind: string; circuit: string; demo_id: string | null; target: string; question: string; conditions: string
+  resume: { answers: Record<string, string>; role: string } | null }
 
 export const listJudgeRoles = (signal?: AbortSignal) => apiFetch<RoleLabel[]>('/api/judge/roles', { signal })
+// 키 없는 데모(DEMO_REPLAY=1)에서만 있는 목록. 아니면 404라 화면은 버튼을 숨긴다(getDemoStatus와 같은 방식)
+export const listDemoQuestions = (signal?: AbortSignal) => apiFetch<DemoQuestionDto[]>('/api/demo-questions', { signal })
 export const listThreads = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto[]>(`/api/projects/${projectId}/threads`, { signal })
 export const createThread = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto>(`/api/projects/${projectId}/threads`, { method: 'POST', signal })
 export const getRun = (runId: string, signal?: AbortSignal) => apiFetch<RunDto>(`/api/runs/${runId}`, { signal })

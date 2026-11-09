@@ -25,6 +25,7 @@ from backend.errors import code_for, log_error
 from backend.conversations.dto import BrowserResult, public_state, result_dto
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
 from backend.judge import conditions as judge_conditions
+from backend.services import demo
 
 router = APIRouter(prefix='/api', tags=['conversations'])
 _tasks = set()
@@ -58,6 +59,23 @@ class ResumeRun(BaseModel):
                or len(answer) > 200 or '://' in answer for key, answer in value.items()):
             raise ValueError('invalid answer')
         return value
+
+
+class DemoResume(BaseModel):
+    answers: dict[str, str]  # 비면 '모름'으로 재개한 것이다
+    role: str  # 역할을 묻지 않았으면 빈 글자
+
+
+class DemoQuestion(BaseModel):
+    """키 없는 데모가 재생하는 기록 질문 하나(data/demo/recordings/outcomes.json). 기록한 답 · 판정 · 경로는 싣지 않는다."""
+    id: str
+    kind: str
+    circuit: str
+    demo_id: str | None  # React 데모 회로 id(GET /api/demo-circuits). 카탈로그에 없는 회로면 null
+    target: str
+    question: str  # 이 글자 그대로 새 대화의 첫 질문으로 보내야 재생된다(사용 조건도 같음)
+    conditions: str
+    resume: DemoResume | None  # 조건 질문에 보낼 기록한 답 · 역할. 조건 질문이 없던 질문은 null
 
 
 class Thread(BaseModel):
@@ -107,6 +125,15 @@ def analysis_service(request: Request):
 def list_judge_roles(user_id: int = Depends(auth.current_user_id)):
     del user_id
     return [RoleLabel(code=code, name=rule['name']) for code, rule in sorted(judge_conditions.load().items())]
+
+
+@router.get('/demo-questions', response_model=list[DemoQuestion])
+def list_demo_questions(user_id: int = Depends(auth.current_user_id), analysis=Depends(analysis_service)):
+    """키 없는 데모(DEMO_REPLAY=1)의 기록 질문 목록. 재생 모드가 아니면 404(화면은 버튼을 숨긴다), 기록 파일이 없으면 503."""
+    del user_id
+    if analysis.mode != 'demo':
+        raise HTTPException(404, '키 없는 데모 재생 모드가 아닙니다.')
+    return demo.questions()  # [주의] 응답 모델이 칸을 고른다. outcomes.json의 답 · 판정 · 넷리스트 경로는 나가지 않는다
 
 
 @router.get('/projects/{project_id}/threads', response_model=list[Thread])
@@ -215,10 +242,12 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
 @router.post('/threads/{thread_id}/runs', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
     thread, request_id = str(thread_id), request.state.request_id
-    # [왜] 하루 토큰 상한(429) · 대상 부품 확인(422·409)을 run 행보다 먼저 끝내야 거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
+    # [왜] 하루 토큰 상한(429) · 대상 부품 확인(422·409) · 데모 질문 확인(422 · 기록 없음 503)을 run 행보다 먼저 끝내야
+    #      거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
     await run_in_threadpool(analysis.admission, user_id)
     _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
-    await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref)
+    await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref,
+                            question=body.question, conditions=body.conditions)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
     call = lambda: analysis.message(user_id, thread, body.question, body.conditions, request_id=request_id)
     return stream(repo, user_id, thread, run_id, request_id, analysis, call)

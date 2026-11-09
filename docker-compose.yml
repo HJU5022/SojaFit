@@ -12,7 +12,8 @@ services:
         required: false
     environment:
       DEMO_MODE: ${DEMO_MODE:-1}
-      DEMO_SCENARIOS: ${DEMO_SCENARIOS:-${DEMO_MODE:-1}}
+      # 키 없는 데모의 분석은 LLM 응답 기록(data/demo/recordings/)을 재생한다. 기본은 DEMO_MODE를 따른다(.env.example 참고).
+      DEMO_REPLAY: ${DEMO_REPLAY:-${DEMO_MODE:-1}}
       THREADS_ENABLED: "1"
       # .env의 AUTH_ORIGIN(배포 주소일 수 있음) 대신 compose 전용 DEMO_AUTH_ORIGIN을 쓴다(.env.example 참고).
       AUTH_ORIGIN: ${DEMO_AUTH_ORIGIN:-http://localhost:8000}

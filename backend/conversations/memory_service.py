@@ -16,6 +16,9 @@ DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 �
 보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/023)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
 오류 코드(ADR 0019, backend/errors.py): 하루 토큰 · USD 상한과 실행 한 번의 호출 · 예약 상한은 429 `LIMIT_EXCEEDED`, 호출 간격은 429 `RATE_LIMITED`,
 조건 질문 대기는 409 `CONDITION_PENDING`, 분석 실패는 LLM · 임베딩 공급자 장애면 502 `UPSTREAM_ERROR`, 시간 예산 초과는 504, 그 밖은 503이다.
+키 없는 데모(`DEMO_REPLAY=1` · `DEMO_MODE=1`, SPEC 7절): 같은 그래프를 돌리고 LLM 응답만 기록에서 꺼낸다(`backend/services/demo.py`).
+기록한 회로 · 대상 · 질문 · 사용 조건을 새 대화의 첫 질문으로만 받고(아니면 422), 재개는 기록한 답 · 역할만 받는다(아니면 422).
+기록 파일이 없으면 503, 확인을 통과했는데 기록에 없는 호출(ReplayMiss)도 503으로 이유를 보인다.
 """
 import argparse
 import os
@@ -284,28 +287,27 @@ class Conversations:
         return budget
 
     def _graph(self):
+        from functools import update_wrapper
         from backend.graph.mcp_retriever import StdioMcpRetriever
         from backend.multi_agent.build import build_graph
-        from backend.services import demo
-        from backend.services.langfuse_prompts import timed_tool
-        if demo.enabled():
-            self.mode = 'demo'
-            return build_graph(chat=demo.chat, retriever=lambda *a, **k: [], judge_enabled=True,
-                lookup=demo.lookup, specs=timed_tool('specs',demo.specs), find=lambda *a, **k: [], checkpointer=self.saver, store=self.store)
-        from functools import update_wrapper
         from backend.multi_agent.facts import make_lookup
         from backend.rag.card_find import default_find
         from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
-        from backend.services import llm
+        from backend.services import demo, llm
+        from backend.services.langfuse_prompts import timed_tool
+        # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
+        #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
+        chat = demo.service_chat() if self.mode == 'demo' else llm.node_chat
         mcp = self.stack.enter_context(StdioMcpRetriever())  # 사실 확인(check_corpus)만 MCP로 부른다
         # [왜] 사양 표(part_specifications)를 11-09에 버리고 후보 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016, 평가 실행기 run_graph.py와 같은 조립)
         # [주의] 카드 도구는 MCP를 거치지 않고 DATABASE_URL로 DB를 직접 읽는다. 표지 품번 색인은 조립 때가 아니라 첫 판정 때 한 번 읽는다
-        specs, find = default_specs(), default_find()
+        specs, find = default_specs(chat=chat), default_find(chat=chat)
         # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. 대체 부품 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
-        return build_graph(chat=llm.node_chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
+        # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
+        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
-            find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=self.store)
+            find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
     @staticmethod
     def config(thread):
@@ -338,10 +340,7 @@ class Conversations:
             connections = parse_netlist(netlist)
         except ValueError:
             raise HTTPException(422, '넷리스트 형식·크기·부품 참조를 확인하세요.') from None
-        if self.mode == 'demo':
-            from backend.services.demo import configuration
-            if connections != parse_netlist(configuration()['netlist']):
-                raise HTTPException(422, '합성 데모 회로만 업로드할 수 있습니다.')
+        # 데모 모드의 회로 · 질문 확인은 HTTP 입구가 거치는 ensure_thread · message가 한다(이 메서드는 DB 시험 전용)
         with self.connection() as conn:
             self._hold_account(conn, user)
             if conn.execute('SELECT count(*) AS n FROM circuits WHERE user_id=%s', (user,)).fetchone()['n'] >= 100:
@@ -363,16 +362,21 @@ class Conversations:
             conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s)', (thread, user, circuit, target))
         return {'id': thread}
 
-    def ensure_thread(self, user, thread, filename, connections, target):
-        """React 대화 하나를 같은 UUID의 분석 회로·thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409."""
+    def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
+        """React 대화 하나를 같은 UUID의 분석 회로·thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
+
+        키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
         # React 정규화 회로는 부품 목록이 parts, 데모 회로는 components다. 넷리스트 원문은 다시 읽지 않는다
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
         if target not in {p['ref'] for p in connections['components']}:
             raise HTTPException(422, '회로에 없는 대상 부품입니다.')
         if self.mode == 'demo':
-            from backend.services.demo import configuration
-            if connections != parse_netlist(configuration()['netlist']):
-                raise HTTPException(422, '합성 데모 회로만 분석할 수 있습니다.')
+            from backend.services import demo
+            # [왜] run 스트림을 열기 전에 거른다(공통 오류 JSON). 기록이 없으면 503, 기록한 회로 · 대상 · 질문이 아니면 422
+            if not demo.match(connections, target):
+                raise demo.refusal('이 회로 · 대상 부품에는 기록한 데모 질문이 없습니다.')
+            if question is not None and not demo.match(connections, target, question, conditions):
+                raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
         with self.connection() as conn:
             self._hold_account(conn, user)  # 탈퇴 중이면 409(지운 분석 기록을 다시 만들지 않게)
             # [왜] React 대화 하나 = 분석 회로 하나 + thread 하나라 회로 id도 thread UUID를 쓴다. 동시 첫 실행에도 행이 하나만 생긴다
@@ -443,9 +447,6 @@ class Conversations:
         # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
         self._purge_expired()
         with self.locked(user, thread) as (conn, row):
-            if self.mode == 'demo':
-                from backend.services.demo import validate_question
-                validate_question(text, conditions)
             self._reconcile(conn, row)
             if self.graph.get_state(self.config(thread)).next:
                 # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
@@ -453,6 +454,17 @@ class Conversations:
             history = conn.execute("SELECT content FROM messages WHERE thread_id=%s AND role='user' ORDER BY id", (thread,)).fetchall()
             if len(history) >= 50:
                 raise HTTPException(409, '분석당 질문 한도(50건)에 도달했습니다.')
+            if self.mode == 'demo':
+                from backend.rag.card_find import SHARED_READS
+                from backend.services import demo
+                # [왜] 같은 대화의 두 번째 질문부터는 '이전 사용자 입력'이 프롬프트에 붙어 기록과 달라진다(재생이 멈춤). 첫 질문만 받는다
+                if history:
+                    raise demo.refusal('데모 질문은 새 대화의 첫 질문으로만 재생합니다. 새 대화에서 보내세요.')
+                if not demo.match(row['connections'], row['target'], text, conditions):
+                    raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
+                # [왜] 기록은 질문마다 카드 읽기 공유 칸을 비우고 돌았다(record_demo.run_question). 앞 질문이 읽어 둔 카드가 남으면 호출 · 답이 달라진다
+                # shortcut: 데모 사용자 둘이 동시에 돌리면 한쪽이 다른 쪽의 공유 칸을 비워 재생이 멈출 수 있다(503). 동시 시연이 필요하면 실행별 칸으로 바꾼다
+                SHARED_READS.clear()
             version = row['version'] + 1
             content = (f'사용 조건: {conditions}\n' if conditions else '') + text
             budget = self._budget(user)
@@ -491,6 +503,16 @@ class Conversations:
                 raise HTTPException(422, '요청한 조건의 답만 입력하세요.')
             if role and role not in (pending[0].get('role_choices') or []):
                 raise HTTPException(422, '제시된 역할을 선택하세요.')
+            if self.mode == 'demo':
+                from backend.services import demo
+                record = row.get('input_record') or {}
+                recorded = demo.match(row['connections'], row['target'], record.get('question'), record.get('conditions'))
+                want = (recorded[0].get('resume') if recorded else None) or {}
+                # [왜] 재개 답도 프롬프트에 들어간다. 기록 때 보낸 답 · 역할과 같아야 재생된다
+                if not want or (answers, role) != (want['answers'], want['role']):
+                    shown = ', '.join(f'{k}={v}' for k, v in (want.get('answers') or {}).items()) or '모름'
+                    raise HTTPException(422, f"키 없는 데모는 기록한 답(답: {shown}, 역할: {want.get('role') or '없음'})으로만 재개합니다. "
+                                             "화면의 '기록한 답으로 계속하기'를 누르세요.")
             budget = self._budget(user)
             content = '조건 답변:\n' + ('\n'.join(f'{key}: {value}' for key, value in answers.items()) or '모름')
             if role:
@@ -508,6 +530,7 @@ class Conversations:
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts
+        from backend.services.demo import ReplayMiss
         timings = langfuse_prompts.AnalysisTimings()
         started = time.monotonic()
         try:
@@ -527,6 +550,10 @@ class Conversations:
                                                      'elapsed_ms': int((time.monotonic()-budget.started)*1000)})
             if isinstance(error, HTTPException):
                 raise
+            if isinstance(error, ReplayMiss):
+                # [왜] 확인을 통과한 데모 질문인데 기록에 없는 호출이면 DB · 코드 · 설정이 기록 때와 다르다. 실제 LLM으로 넘기지 않고 이유를 보인다
+                raise HTTPException(503, f'데모 기록을 재생하지 못했습니다. {error} 기록 때와 DB · 코드가 다를 수 있습니다'
+                                         '(scripts/demo/DEMO.md의 재생 확인).') from error
             late = time.monotonic()-budget.started >= budget.max_seconds
             # [왜] 바깥 호출에는 남은 시간만큼만 제한 시간을 준다(llm.EvaluationBudget). 시간 예산을 다 써 끊긴 바깥 호출도 504다
             if isinstance(error, EvaluationLimitError) or (late and is_upstream_error(error)):

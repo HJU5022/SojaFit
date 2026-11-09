@@ -4,7 +4,7 @@
   데모 질문 목록(`QUESTIONS`)으로 돌린다. `record`는 실제 LLM 응답을 `backend/services/demo.py`의 recorder로
   `data/demo/recordings/calls.jsonl`에 남기고, 질문마다 결과(경로 · 답 · 판정 · 거절 · 인터럽트와 재개 값)와
   DB 지문을 `outcomes.json`에 남긴다. `replay`는 키 없이 같은 질문을 replayer로 다시 돌려 결과가 기록과 같은지 본다.
-- 하지 않는 일: 서비스에 재생 연결(`memory_service._graph()`가 할 일), 동결 평가셋 고치기(데모 전용 변형은 `demo-` id로 따로 둔다),
+- 하지 않는 일: 서비스의 재생(`memory_service`가 `DEMO_REPLAY=1`에서 `demo.service_chat()`으로 한다), 동결 평가셋 고치기(데모 전용 변형은 `demo-` id로 따로 둔다),
   채점(`evals/runners/`), 키 · 헤더 · 가격 기록.
 - 출처: data/demo/DEMO.md, data/demo/snapshot/SNAPSHOT.md, backend/conversations/memory_service.py `_graph()` · `message()` · `resume()`,
   evals/runners/run_graph.py(조립), AGENTS.md 지킬 것 2 · 4 · 6
@@ -88,15 +88,10 @@ def db_fingerprint(conn) -> dict:
     return {'documents': docs, 'chunks': chunks, 'ids_sha256': digest}
 
 
-def connections(netlist: str) -> dict:
-    """React 데모 회로와 같은 연결 정보: 넷리스트 옆 connections.json을 ensure_thread와 같은 모양({components, nets})으로."""
-    from backend.graph.nodes import _connections_file
-    data = json.loads(_connections_file(netlist).read_text(encoding='utf-8'))
-    return {'components': data.get('components', data.get('parts', [])), 'nets': data.get('nets', [])}
-
-
 def service_inputs(q: dict) -> dict:
     """memory_service.message()가 새 대화의 첫 질문에 만드는 그래프 입력과 같은 모양."""
+    # [왜] 연결 정보는 서비스의 데모 확인(demo.match)과 같은 함수로 읽는다. 둘이 다르면 확인은 통과하고 재생이 멈춘다
+    from backend.services.demo import connections
     # [주의] 같은 대화의 두 번째 질문부터는 '이전 사용자 입력'이 붙어 프롬프트가 달라진다. 기록은 새 대화의 첫 질문만 맞는다
     content = (f"사용 조건: {q['conditions']}\n" if q['conditions'] else '') + q['question']
     return {'input': content, 'connections': connections(q['netlist']), 'circuit': q['circuit'], 'target': q['target'],

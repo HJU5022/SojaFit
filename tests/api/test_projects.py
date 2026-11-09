@@ -47,7 +47,7 @@ def test_demo_catalog_and_invalid_creation(client):
     response = client.get("/api/demo-circuits")
     assert response.status_code == 200
     assert {item["id"] for item in response.json()} == {
-        "breadboard_supply", "mosfet_driver", "attiny85_dev", "pro_micro", "franzininho_diy",
+        "breadboard_supply", "mosfet_driver", "attiny85_dev", "pro_micro", "franzininho_diy", "attiny85_time_switch",
     }
     for body in ({"demo_id": "../../secret", "name": "회로"}, {"demo_id": "breadboard_supply", "name": " "},
                  {"demo_id": "breadboard_supply", "name": "x" * 201},

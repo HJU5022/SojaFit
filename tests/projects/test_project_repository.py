@@ -44,6 +44,34 @@ def test_invalid_demo_never_opens_database(monkeypatch):
             ProjectRepository().create_demo(1, demo_id, name)
 
 
+def test_received_demo_circuit_is_read_from_its_own_folder(monkeypatch):
+    """[왜] c01(키 없는 데모 v3-01의 회로)은 samples/가 아니라 received-20261030/c01에 있다. DB 없이 넣는 값만 본다."""
+    import hashlib
+    import json
+    from backend.projects.repository import ProjectRepository, demo_path
+    sent = []
+
+    class Conn:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def execute(self, query, params): sent.append(params); return self
+        def fetchone(self): return (5,)
+    monkeypatch.setattr(auth, "connection", Conn)
+    monkeypatch.setattr(ProjectRepository, "_get_owned", lambda self, conn, user_id, project_id: project_id)
+    assert ProjectRepository().create_demo(1, "attiny85_time_switch", "타임 스위치") == 5
+    source = demo_path("attiny85_time_switch").read_bytes()
+    assert demo_path("attiny85_time_switch").as_posix().endswith("received-20261030/c01/connections.json")
+    assert sent[0] == (1, "타임 스위치", "attiny85_time_switch")
+    assert sent[1][1].obj == json.loads(source) and sent[1][2] == hashlib.sha256(source).hexdigest()
+
+
+def test_received_demo_circuit_is_stored_and_owned(storage):
+    repo, (owner, other), _ = storage
+    project = repo.create_demo(owner, "attiny85_time_switch", "타임 스위치")
+    assert project.demo_id == "attiny85_time_switch" and "D1" in {p["ref"] for p in project.connections["components"]}
+    assert repo.list_owned(other) == []
+
+
 def test_upload_stores_only_normalized_data_and_remains_owned(storage):
     import hashlib
     from backend.projects.netlist import normalize_netlist

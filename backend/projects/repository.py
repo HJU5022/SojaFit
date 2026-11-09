@@ -16,7 +16,10 @@ DEMOS = {
     "attiny85_dev": "ATtiny85 dev board",
     "pro_micro": "SparkFun Pro Micro v13",
     "franzininho_diy": "Franzininho DIY",
+    "attiny85_time_switch": "ATtiny85 Time Switch",
 }
+# 받은 회로(received-20261030)의 회로 번호 폴더. 나머지 데모는 samples/<id>/converted에 있다
+RECEIVED = {"franzininho_diy": "c09", "attiny85_time_switch": "c01"}
 FIELDS = "id, name, source_kind, demo_id, created_at, updated_at"
 
 
@@ -26,6 +29,14 @@ class ProjectNotFound(Exception):
 
 class InvalidProject(ValueError):
     """알 수 없는 데모 또는 잘못된 프로젝트 이름."""
+
+
+def demo_path(demo_id: str) -> Path:
+    """카탈로그(DEMOS)에 있는 데모 회로의 연결 정보 파일. 키 없는 데모 재생도 이 경로로 기록 질문의 회로를 잇는다."""
+    base = ROOT / "data/circuits/collected"
+    if demo_id in RECEIVED:
+        return base / "received-20261030" / RECEIVED[demo_id] / "connections.json"
+    return base / "samples" / demo_id / "converted/connections.json"
 
 
 def project_name(name: str) -> str:
@@ -53,10 +64,7 @@ class ProjectRepository:
         if demo_id not in DEMOS:
             raise InvalidProject("등록된 데모 회로를 선택해 주세요.")
         # 사용자 입력을 경로로 사용하지 않고 허용된 카탈로그에서만 고른다.
-        base = ROOT / "data/circuits/collected"
-        path = (base / "received-20261030/c09/connections.json" if demo_id == "franzininho_diy"
-                else base / "samples" / demo_id / "converted/connections.json")
-        source = path.read_bytes()
+        source = demo_path(demo_id).read_bytes()
         connections = json.loads(source)
         with auth.connection() as conn:
             project_id = conn.execute(

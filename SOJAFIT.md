@@ -65,7 +65,7 @@ SojaFit (proj3-b)
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
-│       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
+│       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API, 키 없는 데모의 기록 질문 목록
 │       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
 │       │   ├── profile.ts   <- 내 설정(사용자 사실 3칸) 조회·저장·삭제 API
 │       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
@@ -101,7 +101,7 @@ SojaFit (proj3-b)
 │       │   ├── CircuitContextDiagram.test.tsx <- SVG·상태·무방향 연결 렌더링 테스트
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
 │       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
-│       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면
+│       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면, 키 없는 데모의 기록 질문 버튼(새 대화) · 기록한 답으로 재개
 │       │   ├── RunStatus.tsx <- 접근 가능한 D5 진행 상태
 │       │   ├── ProfileHints.tsx <- 결과 옆 참고(내 설정): 질문으로 찾은 내 사실, 판정 근거와 분리
 │       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
@@ -127,7 +127,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- 세션·Origin·공통 오류를 사용하는 서비스 HTTP 라우터
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── conversations.py <- 소유 대화·실행·SSE API. run·재개는 사용자 분석 서비스(memory_service)를 거침
+│   │   ├── conversations.py <- 소유 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(GET /api/demo-questions). run·재개는 사용자 분석 서비스(memory_service)를 거침
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·공개 데모 카탈로그 API
@@ -136,11 +136,11 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
 │   │   ├── netlist.py      <- 원본을 남기지 않는 제한된 KiCad export 정규화
-│   │   └── repository.py   <- 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   │   └── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·새 분석 때 보관 기간 청소·준비 명령. React 대화도 같은 UUID thread로 실행
+│   │   ├── memory_service.py <- 사용자 업로드·thread 소유권·DB 체크포인트·승인 기록·질문별 사용자 사실 참고·하루 토큰 상한·탈퇴 잠금과 분석 기록 삭제·새 분석 때 보관 기간 청소·준비 명령. React 대화도 같은 UUID thread로 실행. 키 없는 데모(DEMO_REPLAY=1)는 같은 그래프에 재생 chat을 넣고 기록한 질문 · 재개 답만 받음
 │   │   ├── profile.py      <- 사용자 사실 3칸 장기 기억(Store): 칸 검사·틀 문장·덮어쓰기·지우기·Voyage 의미 검색
 │   │   ├── dto.py          <- 브라우저 공개 결과 허용 목록, 그래프 상태의 공개 값 고르기(public_state)
 │   │   ├── models.py       <- 실행 상태·안전 결과 형식
@@ -213,7 +213,7 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 기록 · 재생은 demo.py)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
-│   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구와 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 외부 호출 없음
+│   │   ├── demo.py           <- 키 없는 데모의 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 재생 모드 판단, 기록한 데모 질문 목록 · 대조, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
@@ -237,9 +237,8 @@ SojaFit (proj3-b)
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
-│   └── demo/               <- 키 없는 데모 자료: 합성 시나리오, 코퍼스 스냅샷, LLM 응답 기록
+│   └── demo/               <- 키 없는 데모 자료: 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
-│       ├── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
 │       ├── recordings/     <- (예정) 멀티 그래프의 LLM 응답 기록(calls.jsonl)과 질문별 결과 · DB 지문(outcomes.json). scripts/demo/record_demo.py가 만듦
 │       └── snapshot/       <- 키 없는 compose의 corpus-load가 로컬 DB에 넣는 코퍼스 스냅샷(TSC 42문서, 청크 1,556개, 임베딩 없음)
 │           ├── SNAPSHOT.md <- 폴더 설명: 출처·이용 조건·고른 규칙·문서 목록·크기·sha256·청커 버전
@@ -413,22 +412,22 @@ SojaFit (proj3-b)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
-│   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_errors.py  <- 오류 코드 15개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
-│   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
+│   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험, 데모 질문 목록(재생 모드에서만, 기록한 답 · 판정 비노출)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
+│   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
-│   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증
+│   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
@@ -478,7 +477,7 @@ SojaFit (proj3-b)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
-│   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과, 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
+│   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   └── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계

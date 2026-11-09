@@ -11,9 +11,9 @@
 - `App.tsx` — AuthProvider·보호 경로·역할별 탐색·로그아웃 셸
 - `styles.css` — 작업대 색·글꼴·반응형·키보드 초점 스타일
 - `App.test.tsx` — 비로그인 경로 차단·세션 복원·복원 오류 테스트
-- `api/` — 기존 typed fetch 경계. `conversations.ts`는 thread/run DTO와 SSE frame, `quotes.ts`는 승인·가격 없는 견적·사례 API, `profile.ts`는 내 설정 `/api/me/memory`, `dummy.ts`는 명시적 개발 mode의 비영속 전체 흐름을 담당(`client.ts`가 그 mode에서만 동적 import해 운영 번들에는 없음)
+- `api/` — 기존 typed fetch 경계. `conversations.ts`는 thread/run DTO와 SSE frame, 키 없는 데모의 기록 질문 목록(`listDemoQuestions`, 재생 모드가 아니면 404), `quotes.ts`는 승인·가격 없는 견적·사례 API, `profile.ts`는 내 설정 `/api/me/memory`, `dummy.ts`는 명시적 개발 mode의 비영속 전체 흐름을 담당(`client.ts`가 그 mode에서만 동적 import해 운영 번들에는 없음)
 - `auth/` — `AuthProvider.tsx`: 메모리 세션 상태 복원·로그인·가입·로그아웃·탈퇴·401 처리와 세션을 잃을 때 화면 캐시·탭 저장소 비우기, `RequireAuth.tsx`: 로그인·관리자 렌더링 경계, `AuthProvider.test.tsx`: 실제 세션 상태 변화 테스트
 - `pages/` — `LoginPage.tsx`·`SignupPage.tsx`(가입·처리방침 고지 `PrivacyNotice`)·`AdminUsersPage.tsx`·`WorkbenchPage.tsx`·`SettingsPage.tsx`: 기존 API 연결 화면과 각 `*.test.tsx` 동작 테스트
-- `hooks/` — `useRunStream.ts`와 테스트: SSE 순서, interrupt 재개, 연결 종료 뒤 GET 복구, 자동 재전송 금지
-- `components/` — 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
+- `hooks/` — `useRunStream.ts`와 테스트: SSE 순서, interrupt 재개, 연결 종료 뒤 GET 복구, 자동 재전송 금지, `failed` frame의 서버 오류 문구 표시
+- `components/` — 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름, 키 없는 데모면 기록 질문 버튼과 기록한 답으로 재개)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
 - `test/` — `setup.ts`: jsdom의 jest-dom matcher와 테스트별 화면 정리, `network.ts`: 완전한 손작성 API 응답과 fetch 경계 대역, `projects.tsx`: 현재 프로젝트/데모 전체 DTO와 QueryClient·Router 테스트 렌더러

@@ -94,5 +94,5 @@ DEMO_SNAPSHOT_SOURCE=<chunks-v4h 폴더> uv run pytest tests/rag/test_demo_snaps
 
 ## 적재와 쓰는 곳
 - Compose의 `corpus-load` 서비스가 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`를 돌리고, api는 이 서비스가 성공한 뒤 시작합니다. 이미 있는 문서·청크는 건너뛰므로 다시 떠도 행이 늘지 않습니다.
-- `DEMO_MODE=1`에서 검색(`backend/rag/retrieve.py`의 `retrieve`, MCP `search_corpus`)은 임베딩·리랭크 없이 BM25로 이 스냅샷을 찾습니다. 지금 React 작업대의 키 없는 분석(`DEMO_SCENARIOS=1`)은 합성 시나리오(`../scenarios.json`)로 답하고 이 스냅샷을 읽지 않습니다.
+- `DEMO_MODE=1`에서 검색(`backend/rag/retrieve.py`의 `retrieve`, MCP `search_corpus`)은 임베딩·리랭크 없이 BM25로 이 스냅샷을 찾습니다. React 작업대의 키 없는 분석(`DEMO_REPLAY=1`)도 같은 그래프로 이 스냅샷을 검색하고, LLM 응답만 기록(`../recordings/`)에서 꺼냅니다.
 - 규모 게이트(G3, 서로 다른 청크 1만 개·문서 50건)는 이 스냅샷이 아니라 전체 코퍼스 manifest로 봅니다.

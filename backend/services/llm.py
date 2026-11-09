@@ -4,7 +4,7 @@
 호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`·Decisions 평가), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
 Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voyage_rerank`(rerank-3). 사전 등록 #25의 측정 설정이다(ADR 0004 갱신 2026-11-03).
-하지 않는 일: 데모 모드 응답 기록 · 재생(backend/services/demo.py의 recorder · replayer, 서비스 연결은 아직 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
+하지 않는 일: 데모 모드 응답 기록 · 재생(backend/services/demo.py의 recorder · replayer. 서비스는 DEMO_REPLAY=1에서 이 파일 대신 재생 chat을 쓴다. DEMO_MODE는 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
 프롬프트 원문(backend/prompts/), 프롬프트 등록·고정 버전 검증(langfuse_prompts.py), 수치 비교(backend/judge/).
 출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
 [왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.

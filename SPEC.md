@@ -4,7 +4,7 @@
 
 아직 정하지 않은 칸은 `(정할 것)`으로 둡니다.
 
-**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · 자기 가입 · 데모 모드 버튼 로그인 · Google 관리자 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모의 녹화 재생, Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모 모드에서 React 분석은 합성 데모 질문만 받아 실제 데모 회로로는 422입니다. 합성 데모 회로는 React로 만들 수 없어(데모 카탈로그에 없고 업로드 형식이 다름) React 이전 화면 `/workspace`를 지운 11-10부터 키 없는 모드에서 분석을 끝까지 보는 길이 없습니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
+**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · 자기 가입 · 데모 모드 버튼 로그인 · Google 관리자 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모가 재생할 LLM 응답 기록 파일(`data/demo/recordings/`, 기록 실행 전), Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모(`DEMO_REPLAY=1`)의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생하며(7절), 기록 파일이 생기기 전까지는 분석 요청이 503입니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
 
 ## 1. Why·Goal
 
@@ -132,7 +132,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- HTTP API: 경로 36개입니다. `/openapi.json`(`/docs`)에 32개가 보이고, Google 관리자 로그인 4개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 28개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+- HTTP API: 경로 37개입니다. `/openapi.json`(`/docs`)에 33개가 보이고, Google 관리자 로그인 4개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 29개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
   - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 18개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
@@ -144,11 +144,12 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `POST /api/auth/logout` | 없음(쿠키의 세션을 지움) | - | 200 `Ok` `{ok}` | | 세션을 끝내고 다른 계정으로 바꿈(8.6 로그아웃, G4 두 계정 확인) |
     | `GET /api/auth/demo` | 데모 모드 | - | 200 `Enabled` `{enabled}` | 404 | 키 없는 데모에서 로그인 화면이 데모 버튼을 보일지 정함(G2, 7절 · 8.6) |
     | `POST /api/auth/demo-login` | 데모 모드 | `DemoLogin` `{account: a \| b}` | 200 `UserId` + 세션 쿠키 | 404(계정 없음) · 422 | 평가자가 비밀번호 없이 데모 사용자 A · B로 들어가 격리를 봄(G2 · G4, 8.6) |
+    | `GET /api/demo-questions` | 로그인 | - | 200 `list[DemoQuestion]` `[{id, kind, circuit, demo_id, target, question, conditions, resume: {answers, role} \| null}]` | 404(재생 모드 아님) · 503(기록 파일 · 분석 서비스 없음) | 키 없는 데모에서 화면이 기록한 질문을 데모 회로 · 대상별 버튼으로 보이고 같은 글자로 보냄(G2, 7절). 기록한 답 · 판정은 싣지 않음 |
     | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[Thread]` `[{id, project_id}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
     | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
-    | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
+    | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
     | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
-    | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인) |
+    | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404. 키 없는 데모에서 기록과 다른 답 · 역할은 스트림 뒤 `failed` 422 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인) |
     | `POST /api/messages/{id}/approvals` | 로그인 | `ApproveBody` `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 `Approval` `{id, message_id, candidate_part, verdict, case_id, created_at}` | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 | 견적서는 사람이 승인한 뒤에만 저장(1절 하는 일, 8.4, G4 견적서 승인 지점) |
     | `GET /api/me/memory` | 로그인 | 선택 쿼리 `q` 1~500자 | 200 `list[ProfileFact]` `[{kind, value, text, version, updated_at, source}]` | 422 · 503 | 사용자 사실 장기 기억 조회 · 의미 검색(G4 기억 격리, 8.5) |
     | `PATCH /api/me/memory` | 로그인 | `ProfileUpdate` `{affiliation?, job_role?, mounting_preference?}` | 200 `list[ProfileFact]` | 409(탈퇴 중) · 422 · 503 | 사용자가 자기 사실을 고침(8.5, 대화에서 사실을 뽑지 않음) |
@@ -291,11 +292,13 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ## 7. 데모 모드·오프라인 규칙
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
-- `data/demo/`에는 합성 시나리오(`scenarios.json`)와 데모 코퍼스 스냅샷(`snapshot/`)이 있고, 기록 응답 재생 데이터·코드는 없습니다. 실제 API 응답 원본은 넣지 않습니다.
+- `data/demo/`에는 데모 코퍼스 스냅샷(`snapshot/`)과 LLM 응답 기록(`recordings/`: `calls.jsonl` · `outcomes.json`, 아직 기록 전)을 둡니다. 실제 API 응답 원본(HTTP 본문 · 헤더 · 사용량 · 비용)과 키는 넣지 않고, 기록은 그래프 노드가 schema로 검증한 응답 칸만 담습니다.
+- 분석 재생(`DEMO_REPLAY=1`, `DEMO_MODE=1`과 함께여야 함. compose 기본은 `DEMO_MODE`와 같은 값): 서비스(`backend/conversations/memory_service.py`)가 실제 분석과 같은 멀티 에이전트 그래프 · 카드 도구 · BM25 검색 · MCP 사실 확인을 쓰고, LLM 호출만 `backend/services/demo.py`의 재생 chat으로 바꿉니다. 호출마다 (노드, system, user, schema 이름)의 sha256으로 기록 응답을 찾고, 없으면 실제 LLM이나 비슷한 기록으로 넘기지 않고 멈춥니다(`ReplayMiss` → 503, 노드 이름을 문구에 담음). 기록과 같게 Store(선호 실장 방식)는 그래프에 넘기지 않고, 질문마다 카드 읽기 공유 칸을 비웁니다. `DEMO_MODE=1`만 켜면 실제 LLM을 그대로 씁니다(평가 · 실제 모델 확인).
+- 재생은 기록한 데모 질문(`scripts/demo/record_demo.py`의 5개: `v3-01` 판정 + 조건 질문, `demo-find` 후보 찾기, `demo-rating` 정격, `v3-36` · `v3-30` 거절)만 받습니다. 회로 연결 정보 · 대상 부품 · 질문 · 사용 조건이 기록과 글자까지 같고 새 대화의 첫 질문이어야 하며, 아니면 422로 데모 질문 목록을 문구에 담아 거절합니다(회로 · 대상 · 질문은 run 스트림 전, 같은 대화의 두 번째 질문은 스트림 뒤 `failed`). 조건 질문의 재개는 기록한 답 · 역할만 받습니다. 기록 파일이 없으면 서버는 뜨고 분석 요청만 503입니다. React 작업대는 `GET /api/demo-questions`로 목록을 받아, 같은 데모 회로(`demo_id`) · 대상 부품의 질문을 버튼으로 보이고 누르면 새 대화로 같은 글자를 보내며, 조건 질문에는 "기록한 답으로 계속하기" 버튼으로 기록한 답을 보냅니다. 데모 회로 카탈로그에 `v3-01`의 회로(`attiny85_time_switch`, `data/circuits/collected/received-20261030/c01`)가 있습니다.
 - 데모 모드의 `/api/prices`는 Mouser를 부르지 않고 `available: false`, `reason: demo_mode`, `parts: []`를 반환합니다. 가공 가격표 표시는 아직 구현되지 않았고 Mouser 응답은 데모 응답으로도 기록하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 검색은 데모 모드에서 임베딩·리랭크 API와 벡터 검색을 부르지 않고 BM25만 씁니다(`backend/rag/retrieve.py`). 데모 요청에서 다른 임베딩 모델로 바꾸지 않습니다.
 - 키 없는 compose는 `corpus-load` 서비스가 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음)을 `backend/rag/pipeline/ingest.py --chunks-only`로 로컬 DB에 넣은 뒤 api를 띄웁니다. 이미 있는 문서 · 청크는 건너뜁니다. 고른 규칙과 출처는 `data/demo/snapshot/SNAPSHOT.md`, 규모 조건(6절 끝)은 스냅샷이 아니라 전체 코퍼스 manifest로 봅니다.
-- 승인한 데모 질의의 응답 재생과 기록에 없는 질의의 추출형 답변은 아직 구현되지 않았습니다.
+- 기록에 없는 질의의 추출형 답변은 구현하지 않았습니다(재생은 기록한 질문만).
 - `demo_mode`, `live_vector_search`, 검색 모드, 모델·코퍼스 버전을 업무 화면과 응답에 표시하는 기능은 아직 구현되지 않았습니다.
 - 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
 - 기본 호출은 별도 계측 없이 Langfuse 프롬프트·응답을 기록하지 않습니다. 명시적 `langfuse_prompts.session()`의 고정 버전·노드 추적은 5절을 따릅니다.

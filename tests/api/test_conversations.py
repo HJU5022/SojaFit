@@ -22,8 +22,8 @@ class FakeAnalysis:
     def admission(self, user):
         if self.refuse:  # 실제 서비스의 하루 토큰 상한 429처럼 스트림 전에 거절한다
             raise self.refuse
-    def ensure_thread(self, user, thread, filename, connections, target):
-        self.calls.append(('ensure', thread, filename, target))
+    def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
+        self.calls.append(('ensure', thread, filename, target, question, conditions))
         if self.targets.setdefault(thread, target) != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
     def _run(self, *call):
@@ -106,7 +106,8 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
         recovered = client.get(f'/api/runs/{run}')
     assert recovered.json()['result']['answer'] == 'ok'
     assert recovered.json()['result']['status'] == 'completed'
-    assert analysis.calls == [('ensure', thread, '프로젝트', 'D1'), ('message', thread, 'hello', '')]
+    # 데모 질문 확인도 스트림 전에 하도록 질문 · 조건을 같이 넘긴다
+    assert analysis.calls == [('ensure', thread, '프로젝트', 'D1', 'hello', ''), ('message', thread, 'hello', '')]
     assert repo.calls == ['start', ('commit', 'completed')]
 
 
@@ -358,3 +359,23 @@ def test_terminal_commit_retries_a_transient_database_failure(web):
     assert response.status_code == 200
     assert 'event: completed' in response.text
     assert attempts == ['completed', 'completed']
+
+
+def test_demo_questions_only_in_replay_mode_and_without_recorded_results(web, monkeypatch):
+    from backend.services import demo
+    recorded = {'id': 'v3-01', 'kind': '판정 + 조건 인터럽트', 'circuit': 'ATtiny85 Time Switch', 'demo_id': 'attiny85_time_switch',
+                'target': 'D1', 'question': '질문', 'conditions': '조건', 'resume': {'answers': {}, 'role': 'R01'},
+                'netlist': 'data/circuits/x.net', 'answer': '기록한 답', 'verdicts': [['1N4007G', 'ROLE_SUFFICIENT']], 'path': ['입력 읽기']}
+    monkeypatch.setattr(demo, 'questions', lambda: [recorded])
+    analysis = FakeAnalysis()
+    analysis.mode = 'live'
+    with web(analysis, None) as client:
+        assert client.get('/api/demo-questions').status_code == 404  # 재생 모드가 아니면 화면이 버튼을 숨긴다
+        analysis.mode = 'demo'
+        listed = client.get('/api/demo-questions').json()
+        def missing():
+            raise HTTPException(503, demo.MISSING)
+        monkeypatch.setattr(demo, 'questions', missing)
+        unavailable = client.get('/api/demo-questions')
+    assert listed == [{k: recorded[k] for k in ('id', 'kind', 'circuit', 'demo_id', 'target', 'question', 'conditions', 'resume')}]
+    assert unavailable.status_code == 503 and unavailable.json()['error']['code'] == 'UNAVAILABLE'

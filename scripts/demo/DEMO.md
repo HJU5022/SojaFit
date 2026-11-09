@@ -1,9 +1,9 @@
 # demo
 
 ## 역할
-- 이 폴더: 키 없는 데모가 재생할 LLM 응답을 실제 키로 한 번 기록하고, 키 없이 재생해 결과가 같은지 확인하는 스크립트를 둡니다. 키 없는 compose의 DB(데모 코퍼스 스냅샷)에서 compose 네트워크 안으로 실행합니다.
+- 이 폴더: 키 없는 데모가 재생할 LLM 응답을 실제 키로 한 번 기록하고, 키 없이 재생해 결과가 같은지 확인하는 스크립트를 둡니다. 키 없는 compose의 DB(데모 코퍼스 스냅샷)에서 compose 네트워크 안으로 실행합니다. 서비스(`DEMO_REPLAY=1`)는 이 기록을 React 작업대의 분석에서 재생합니다(`backend/conversations/memory_service.py`, SPEC 7절).
 - 넣는 것: 기록 · 재생 확인 스크립트(`record_demo.py`).
-- 넣지 않는 것: 기록 · 재생 함수(`backend/services/demo.py`), 기록 파일(`data/demo/recordings/`), 스냅샷 만들기(`backend/rag/pipeline/demo_snapshot.py`), 평가 실행(`evals/runners/`), 테스트(`tests/services/test_demo_replay.py`).
+- 넣지 않는 것: 기록 · 재생 함수와 서비스의 질문 대조(`backend/services/demo.py`), 기록 파일(`data/demo/recordings/`), 스냅샷 만들기(`backend/rag/pipeline/demo_snapshot.py`), 평가 실행(`evals/runners/`), 테스트(`tests/services/test_demo_replay.py`).
 - 담당: 서비스·운영
 
 ## 파일
@@ -19,6 +19,9 @@
 | `demo-rating` | 정격 확인과 인용 | SparkFun Breadboard Supply · D1 | 데모 전용(v3-21의 1N5408G → 1N4001G) |
 | `v3-36` | 코퍼스에 없는 품번 거절(LL4148은 있고 LL4149는 없음) | Franzininho DIY · D3 | 동결 v3 그대로 |
 | `v3-30` | 범위 밖 거절 | Franzininho DIY · D3 | 동결 v3 그대로 |
+
+- React 데모 회로(`backend/projects/repository.py`의 `DEMOS`): ATtiny85 Time Switch = `attiny85_time_switch`(`received-20261030/c01`, 11-10 추가), Franzininho DIY = `franzininho_diy`(`c09`), SparkFun Breadboard Supply = `breadboard_supply`. 서비스는 프로젝트의 연결 정보가 기록 질문의 넷리스트 옆 `connections.json`과 같을 때만 그 질문을 받는다(`tests/services/test_demo_replay.py`가 다섯 질문 모두 확인).
+- 화면은 이 표의 질문을 버튼으로 보이고 글자 그대로 새 대화의 첫 질문으로 보낸다. `v3-01`의 조건 질문에는 기록한 재개 값(`outcomes.json`의 `resume`)을 그대로 보낸다.
 
 ## 실행
 

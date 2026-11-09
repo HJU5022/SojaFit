@@ -73,43 +73,60 @@ def make_thread(app, user):
     return app.create(user, circuit['id'], 'D1')['id']
 
 
-def test_demo_scenarios_use_real_graph_and_storage_without_external_calls(runtime, monkeypatch):
-    from backend.services import demo, llm
-    from backend.graph.mcp_retriever import StdioMcpRetriever
-    app, (a, b), dsn = runtime
-    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '1')
-    monkeypatch.setenv('OPENROUTER_API_KEY', 'must-not-be-used')
-    monkeypatch.setattr(llm, '_chat_model', lambda *a: pytest.fail('paid model called'))
-    monkeypatch.setattr(StdioMcpRetriever, '__enter__', lambda *a: pytest.fail('external MCP called'))
-    app.graph = app._graph()
-    fixture = demo.configuration()
-    circuit = app.upload(a, 'demo.net', fixture['netlist'])
-    thread = app.create(a, circuit['id'], 'D1')['id']
-    first = app.message(a, thread, fixture['questions']['judge'])
-    assert first['status'] == 'WAITING' and first['mode'] == 'demo'
-    result = app.resume(a, thread, {'v_in_max':'12V', 'i_max':'0.1A', 'v_drop_allowed':'모름'}, '', 1)
-    assert result['can_approve'] and '합성' in result['answer']
-    assert app.approve(a, thread, 1)['ok'] and len(app.memories(a)) == 1
-    with pytest.raises(HTTPException) as error:
-        app.detail(b, thread)
-    assert error.value.status_code == 404 and app.memories(b) == []
-    second = app.create(a, circuit['id'], 'D1')['id']
-    role = app.message(a, second, fixture['questions']['role'])
-    assert role['referenced_memories'] == role['consulted_memories'] == [] and role['mode'] == 'demo'
-    with pytest.raises(HTTPException) as error:
-        app.message(a, second, '지원하지 않는 질문')
-    assert error.value.status_code == 422 and app.detail(a, second)['version'] == 1
-    with pytest.raises(HTTPException):
-        app.upload(a, 'other.net', NET)
+def recorded_demo(monkeypatch, tmp_path, resume):
+    """가짜 데모 기록(calls.jsonl은 비어 있고 outcomes.json에 질문 하나). 회로는 저장소의 데모 보드(breadboard_supply) D1이다."""
+    import json
+    from backend.services import demo
+    calls, outcomes = tmp_path / 'calls.jsonl', tmp_path / 'outcomes.json'
+    calls.write_text('', encoding='utf-8')
+    question = {'id': 'demo-x', 'kind': '시험', 'circuit': '시험 회로', 'target': 'D1', 'conditions': '', 'question': '조건 질문',
+                'netlist': 'data/circuits/collected/samples/breadboard_supply/converted/circuit.net', 'resume': resume}
+    outcomes.write_text(json.dumps({'questions': [question]}, ensure_ascii=False), encoding='utf-8')
+    monkeypatch.setattr(demo, 'RECORDING', calls)
+    monkeypatch.setattr(demo, 'OUTCOMES', outcomes)
+    return question
 
 
-def test_live_graph_uses_card_tools_and_keeps_their_attributes(monkeypatch):
-    """[왜] 사양 표를 버리고 카드 도구가 기본이다(ADR 0016). timed_tool로 감싸도 판정이 getattr로 찾는 prefetch · also_read가 남아야 한다."""
+def test_demo_replay_takes_only_recorded_first_questions_and_recorded_resume(runtime, monkeypatch, tmp_path):
+    """키 없는 데모(DEMO_REPLAY=1): 기록한 회로 · 대상 · 질문만 새 대화의 첫 질문으로 받고, 재개는 기록한 답만 받는다. 기록이 없으면 503."""
+    from backend.services import demo
+    app, (a, _), _ = runtime
+    app.mode = 'demo'  # [왜] 그래프는 가짜(fake_graph)로 두고 서비스의 데모 확인 자리만 본다. 재생 자체는 tests/services/test_demo_replay.py
+    q = recorded_demo(monkeypatch, tmp_path, {'answers': {'VIN_MAX': '12'}, 'role': ''})
+    circuit, thread = demo.connections(q['netlist']), str(uuid4())
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', circuit, 'C1')  # 회로에는 있지만 기록한 대상이 아니다
+    assert error.value.status_code == 422 and '[demo-x]' in error.value.detail
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', circuit, 'D1', question='기록에 없는 질문')  # React run은 스트림 전에 여기서 거른다
+    assert error.value.status_code == 422
+    app.ensure_thread(a, thread, '프로젝트', circuit, 'D1', question='조건 질문')
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, '기록에 없는 질문')
+    assert error.value.status_code == 422 and app.detail(a, thread)['version'] == 0
+    assert app.message(a, thread, '조건 질문')['status'] == 'WAITING'
+    with pytest.raises(HTTPException) as error:
+        app.resume(a, thread, {'VIN_MAX': '15'}, '', 1)  # 기록과 다른 답은 프롬프트가 달라 재생할 수 없다
+    assert error.value.status_code == 422 and 'VIN_MAX=12' in error.value.detail
+    assert app.resume(a, thread, {'VIN_MAX': '12'}, '', 1)['status'] == 'DONE'
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, '조건 질문')  # 같은 대화의 두 번째 질문은 '이전 사용자 입력'이 붙어 기록과 다르다
+    assert error.value.status_code == 422 and app.detail(a, thread)['version'] == 1
+    monkeypatch.setattr(demo, 'OUTCOMES', tmp_path / 'missing.json')
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, str(uuid4()), '프로젝트', circuit, 'D1')
+    assert error.value.status_code == 503 and 'recordings' in error.value.detail
+
+
+@pytest.mark.parametrize('mode', ['live', 'demo'])
+def test_graph_uses_card_tools_with_one_chat_and_keeps_their_attributes(monkeypatch, mode):
+    """[왜] 사양 표를 버리고 카드 도구가 기본이다(ADR 0016). timed_tool로 감싸도 판정이 getattr로 찾는 prefetch · also_read가 남아야 한다.
+    데모 재생은 같은 조립에서 chat 하나만 재생 chat으로 바꿔 카드 읽기까지 같은 chat을 쓰고, 기록처럼 Store를 넘기지 않는다."""
     from contextlib import ExitStack
     from backend.graph import mcp_retriever
     from backend.multi_agent import build
     from backend.rag import card_find, card_specs
-    from backend.services import demo
+    from backend.services import demo, llm
 
     class Mcp:
         def __enter__(self): return self
@@ -119,24 +136,30 @@ def test_live_graph_uses_card_tools_and_keeps_their_attributes(monkeypatch):
     specs.prefetch, specs.doc_rows = (lambda parts, codes: None), (lambda part, codes=None: [])
     def find(*a, **k): return ['part']
     find.also_read = lambda codes: None
-    seen = {}
-    monkeypatch.setattr(demo, 'enabled', lambda: False)
+    def replay(node, system, user, schema): raise AssertionError('조립만 본다')
+    seen, chats = {}, []
+    monkeypatch.setattr(demo, 'service_chat', lambda: replay)
     monkeypatch.setattr(mcp_retriever, 'StdioMcpRetriever', Mcp)
-    monkeypatch.setattr(card_specs, 'default_specs', lambda: specs)
-    monkeypatch.setattr(card_find, 'default_find', lambda: find)
+    monkeypatch.setattr(card_specs, 'default_specs', lambda chat=None: chats.append(chat) or specs)
+    monkeypatch.setattr(card_find, 'default_find', lambda chat=None: chats.append(chat) or find)
     monkeypatch.setattr(build, 'build_graph', lambda **kw: seen.update(kw) or 'graph')
     app = Conversations.__new__(Conversations)  # [왜] DB 없이 조립만 본다
-    app.stack, app.saver, app.store = ExitStack(), None, None
+    app.mode, app.stack, app.saver, app.store = mode, ExitStack(), None, 'store'
     assert app._graph() == 'graph'
+    want = replay if mode == 'demo' else llm.node_chat
+    assert seen['chat'] is want and chats == [want, want]
+    assert seen['store'] == (None if mode == 'demo' else 'store')
     assert seen['specs']('SS34') == ['row'] and seen['specs'].prefetch is specs.prefetch
     assert seen['find']() == ['part'] and seen['find'].also_read is find.also_read
 
 
-def test_demo_mode_is_explicit_and_never_enables_replay_for_real_evaluations(monkeypatch):
+def test_replay_needs_demo_mode_and_demo_mode_alone_keeps_the_real_llm(monkeypatch):
     from backend.services import demo
-    monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_SCENARIOS', raising=False)
-    assert not demo.enabled()
-    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_REPLAY', raising=False)
+    assert not demo.enabled()  # [왜] DEMO_MODE=1만 켠 평가 · 실제 모델 확인은 실제 LLM을 그대로 쓴다
+    monkeypatch.setenv('DEMO_REPLAY', '1')
+    assert demo.enabled()
+    monkeypatch.setenv('DEMO_MODE', '0')
     with pytest.raises(ValueError):
         demo.enabled()
 

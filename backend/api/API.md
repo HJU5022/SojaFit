@@ -8,12 +8,12 @@
 ## 파일
 - `API.md` — 이 문서
 - `__init__.py` — 패키지 표시
-- `conversations.py` — 대화·실행·SSE API
+- `conversations.py` — 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(`GET /api/demo-questions`)
 - `quotes.py` — 완료 판정의 사람 승인, 가격 없는 견적, 사용자 승인 사례 API
 - `profile.py` — 내 설정(사용자 사실 기억) `GET/PATCH/DELETE /api/me/memory`
 - `projects.py` — `GET/POST /api/projects`, `POST /api/projects/upload`, `GET/PATCH/DELETE /api/projects/{project_id}`, `GET /api/demo-circuits`
 
-요청 · 응답 모델(SPEC 4절 엔드포인트 표): JSON 본문 모델은 `model_config`의 `json_schema_extra`로 `/docs` 예시를 달고 모르는 칸을 422로 막는다(`extra="forbid"`). 성공 응답은 경로 옆에 둔 응답 모델로 적는다: `projects.py`의 `DemoCircuit`(그리고 `backend/projects/models.py`의 `ProjectSummary` · `Project`), `quotes.py`의 `Approval` · `Quote` · `ApprovedCase`, `conversations.py`의 `Thread` · `Run`(`result`는 `BrowserResult`) · `RoleLabel`, `profile.py`의 `ProfileFact`. `response_model`은 선언하지 않은 칸을 응답에서 지우므로 칸을 더하면 모델과 `frontend/src/api/*.ts`를 함께 고친다(`tests/api/test_openapi.py`). run · 재개(SSE)는 `SSE_RESPONSE`로 `text/event-stream`과 이벤트 설명만 적고, 업로드는 본문을 직접 읽으므로 `UPLOAD_BODY`로 multipart `file` · `name` 칸을 OpenAPI에만 적는다.
+요청 · 응답 모델(SPEC 4절 엔드포인트 표): JSON 본문 모델은 `model_config`의 `json_schema_extra`로 `/docs` 예시를 달고 모르는 칸을 422로 막는다(`extra="forbid"`). 성공 응답은 경로 옆에 둔 응답 모델로 적는다: `projects.py`의 `DemoCircuit`(그리고 `backend/projects/models.py`의 `ProjectSummary` · `Project`), `quotes.py`의 `Approval` · `Quote` · `ApprovedCase`, `conversations.py`의 `Thread` · `Run`(`result`는 `BrowserResult`) · `RoleLabel` · `DemoQuestion`(`resume`은 `DemoResume`), `profile.py`의 `ProfileFact`. `response_model`은 선언하지 않은 칸을 응답에서 지우므로 칸을 더하면 모델과 `frontend/src/api/*.ts`를 함께 고친다(`tests/api/test_openapi.py`). run · 재개(SSE)는 `SSE_RESPONSE`로 `text/event-stream`과 이벤트 설명만 적고, 업로드는 본문을 직접 읽으므로 `UPLOAD_BODY`로 multipart `file` · `name` 칸을 OpenAPI에만 적는다.
 
 모든 경로에 로그인 세션이 필요하다. 데모 POST는 `{demo_id, name}`, PATCH는 `{name}`만 받고, 다른 필드·공백 이름·200자 초과 이름·알 수 없는 데모는 공통 422로 거절한다. POST/PATCH/DELETE는 `auth.check_origin`을 적용한다. POST는 201 상세, GET 목록은 메타데이터 배열, GET/PATCH 상세는 `connections` 포함, DELETE는 204를 반환한다. 없는 프로젝트·다른 사용자 프로젝트는 같은 메시지의 공통 404다. DB 오류·DB 설정 누락은 안전한 503이다.
 
@@ -30,7 +30,7 @@ UploadFile의 filename은 비어 있지 않아야 하며 양끝 공백을 제외
 run과 resume은 사용자 분석 서비스(`app.state.conversations`, `THREADS_ENABLED=1`)를 거친다. 서비스가 없으면 스트림을 열기 전에 공통 503, 오늘(UTC) 예약 토큰이 사용자 200,000 또는 서비스 전체 2,000,000에 닿았으면 스트림 · run 행 전에 공통 429(`LIMIT_EXCEEDED`)다(`Conversations.admission`). 실행 도중 상한에 닿으면 그 호출 전에 멈추고 `failed` frame의 `error`가 429 코드다. 첫 run이 React 대화와 같은 UUID의 분석 회로·thread를 프로젝트의 `connections`와 `target_ref`로 만들고, 같은 대화에서 다른 `target_ref`를 보내면 run을 만들기 전에 409(`대상 부품을 바꾸려면 새 대화를 시작하세요.`), 회로에 없는 부품이면 422다. run은 `Conversations.message`, resume은 그 thread의 현재 버전으로 `Conversations.resume`을 스레드 풀에서 부르므로 사용자 사실 찾기, 실행·하루 예산과 호출 간격, 영속 체크포인트, Langfuse 사건 기록이 같이 적용된다. 완료·거절 frame에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 칸·값·문장 최대 3개)이 붙고, `public.runs`에는 저장하지 않아 `GET /api/runs/{id}`의 결과에서는 빈 목록이다. 결과는 그래프 상태에서 `public_state`로 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 보낸다. 진행 frame은 시작 때 `status` 하나다. `failed` frame에는 `error: {code, message}`가 붙는다. 코드는 공통 오류와 같은 표(ADR 0019, `backend/errors.py`: 409 `CONDITION_PENDING` · `CONFLICT`, 429 `LIMIT_EXCEEDED` · `RATE_LIMITED`, 422 `VALIDATION_ERROR`, 502 `UPSTREAM_ERROR`(LLM · 임베딩 공급자 장애), 503 `UNAVAILABLE`(분석 전 DB 장애 포함), 504 `TIMEOUT`, 그 밖 `INTERNAL_ERROR`)이고 문구는 분석 서비스의 공개 문구다. 실패마다 `request_id` · `run_id` · `code` · `status` 로그 한 줄을 남긴다(4xx는 INFO, 5xx와 예상 못 한 예외는 traceback까지, 예상 못 한 예외의 문구는 고정 문장).
 
 알려진 한계:
-- 합성 데모(`DEMO_SCENARIOS=1`)의 분석 서비스는 합성 회로와 지원 질문 3개만 받는다. React 프로젝트 회로(데모 보드 · 업로드 모두)로 run하면 422다. 합성 회로(`data/demo/scenarios.json`)는 데모 카탈로그(`GET /api/demo-circuits`)에 없고, 넷에 `code`가 없어 업로드도 400이다(넣어도 정규화한 넷의 `code` 때문에 같은 회로로 보지 않아 422). 그래서 지금 키 없는 모드에는 React로 분석을 끝까지 보는 길이 없다(11-10, React 이전 화면을 지운 뒤).
+- 키 없는 데모(`DEMO_REPLAY=1`, SPEC 7절): `GET /api/demo-questions`는 기록한 데모 질문을 `DemoQuestion`(id · 종류 · 회로 이름 · React 데모 회로 id · 대상 · 질문 · 사용 조건 · 기록한 재개 값)으로만 돌려준다. 기록한 답 · 판정 · 넷리스트 경로는 응답 모델이 지운다. 재생 모드가 아니면 404(화면이 버튼을 숨김), 기록 파일이 없으면 503이다. run은 스트림을 열기 전에 `ensure_thread`에 질문 · 사용 조건을 넘겨, 기록한 회로 · 대상 · 질문 · 조건이 아니면 공통 422(문구에 데모 질문 목록)로 끝난다. 같은 대화의 두 번째 질문과 기록과 다른 재개 답은 스트림 뒤 `failed` 422다.
 - React 승인(`POST /messages/{message_id}/approvals`)은 public 승인·견적·승인 사례만 저장한다. 분석 서비스의 옛 승인 기록(`sojafit_agent.approvals`)은 새로 쓰는 경로가 없다. 승인 사례는 장기 기억이 아니며(11-09) 새 분석에 넘기지 않는다.
 - 재개가 4xx·429로 실패하면 React run은 `failed`가 되고 분석 thread는 조건 질문을 기다린 채 남아, 같은 대화의 새 질문은 409다. 새 대화를 시작해야 한다. 그래프 도중 실패한 thread도 같다(재시도 경로는 없다).
 

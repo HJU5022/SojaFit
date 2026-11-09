@@ -101,3 +101,75 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   expect(screen.getByText('SS34 데이터시트 근거')).toBeInTheDocument()
   expect(screen.getByText('ss34.pdf')).toBeInTheDocument()
 })
+
+// 키 없는 데모(DEMO_REPLAY=1)의 기록 질문 목록. 데모 회로 · 대상이 같은 것만 버튼이 된다
+const recorded = [
+  { id: 'v3-01', kind: '판정 + 조건 인터럽트', circuit: '시험 전원 회로', demo_id: demo.id, target: 'D1',
+    question: 'D1을 TSC 1N4007G로 바꿔도 될까?', conditions: 'VIN은 최대 15V이다. ', resume: { answers: {}, role: 'R01' } },
+  { id: 'demo-rating', kind: '정격 확인', circuit: '시험 전원 회로', demo_id: demo.id, target: 'C1', question: 'C1 정격은?', conditions: '', resume: null },
+  { id: 'demo-find', kind: '후보 찾기', circuit: 'Franzininho DIY', demo_id: 'franzininho_diy', target: 'D1', question: 'D3 후보는?', conditions: '', resume: null },
+]
+const frames = (...items: [string, object][]) => new Response(items.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''))
+const runResult = { answer: '판정 완료', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], price_parts: [], refusal: '', interrupt: {}, request_id: 'req-run', judgement: {} }
+
+it('sends a recorded demo question as a new conversation and resumes with the recorded answers', async () => {
+  const sent: [string, unknown][] = []
+  let threads = 0
+  network((path, init) => {
+    if (init.method === 'POST') sent.push([path, init.body ? JSON.parse(String(init.body)) : null])
+    if (path === '/api/demo-questions') return Response.json(recorded)
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads' && init.method === 'POST') return Response.json({ id: `thread-${++threads}`, project_id: 11 }, { status: 201 })
+    if (path === '/api/projects/11/threads') return Response.json([{ id: 'old-thread', project_id: 11 }])
+    if (path === '/api/threads/thread-1/runs') return frames(['run_started', { run_id: 'run-1' }],
+      ['requires_input', { ...runResult, status: 'requires_input', interrupt: { missing: ['v_drop_allowed'], role_choices: ['R01', 'R02'], question: '허용 전압강하를 알려 주세요.' } }])
+    if (path === '/api/runs/run-1/resume') return frames(['run_started', { run_id: 'run-1' }], ['completed', runResult])
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  const group = await screen.findByRole('group', { name: '데모 질문' })
+  // 다른 데모 회로 · 다른 대상의 질문은 버튼이 없다
+  expect(within(group).getAllByRole('button')).toHaveLength(1)
+  fireEvent.click(within(group).getByRole('button', { name: recorded[0].question }))
+  expect(await screen.findByRole('button', { name: '기록한 답으로 계속하기' })).toBeInTheDocument()
+  expect(screen.getByText('기록한 답: 모름 · 역할: R01')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '같은 실행 계속하기' })).not.toBeInTheDocument()
+  expect(screen.getByLabelText('사용 조건 (선택)')).toHaveValue(recorded[0].conditions)
+  fireEvent.click(screen.getByRole('button', { name: '기록한 답으로 계속하기' }))
+  expect(await screen.findByText('분석이 끝났습니다.')).toBeInTheDocument()
+  // 있던 대화(old-thread)가 아니라 새 대화에, 글자를 다듬지 않고 기록 그대로 보낸다
+  expect(sent).toEqual([
+    ['/api/projects/11/threads', null],
+    ['/api/threads/thread-1/runs', { question: recorded[0].question, target_ref: 'D1', conditions: recorded[0].conditions }],
+    ['/api/runs/run-1/resume', { answers: {}, role: 'R01' }],
+  ])
+})
+
+it('names the demo targets when the selected part has no recorded question', async () => {
+  network(path => {
+    if (path === '/api/demo-questions') return Response.json(recorded.slice(0, 1))
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=C1')
+  const group = await screen.findByRole('group', { name: '데모 질문' })
+  expect(within(group).queryByRole('button')).not.toBeInTheDocument()
+  expect(within(group).getByText('데모 질문이 있는 대상 부품: D1')).toBeInTheDocument()
+})
+
+it('hides demo questions when the server is not replaying a recording', async () => {
+  const asked: string[] = []
+  network(path => {
+    asked.push(path)
+    if (path === '/api/demo-questions') return failure('NOT_FOUND', '찾을 수 없습니다.', 404)
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await waitFor(() => expect(asked).toContain('/api/demo-questions'))
+  await screen.findByRole('button', { name: '질문하기' })
+  expect(screen.queryByRole('group', { name: '데모 질문' })).not.toBeInTheDocument()
+})

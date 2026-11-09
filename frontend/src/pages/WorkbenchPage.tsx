@@ -92,7 +92,7 @@ export default function WorkbenchPage() {
           setParams(current => { const next = new URLSearchParams(current); if (ref) next.set('targetRef', ref); else next.delete('targetRef'); return next })
         }} />}
         {roles.error && <p role="alert">역할 정보를 불러오지 못했습니다. {errorMessage(roles.error)}</p>}
-        {id !== null && detail.data && <ConversationPanel key={`${id}-${targetRef}`} projectId={id} targetRef={targetRef}
+        {id !== null && detail.data && <ConversationPanel key={`${id}-${targetRef}`} projectId={id} demoId={detail.data.demo_id} targetRef={targetRef}
           roleLabels={roleLabels} onResult={receiveRun} onConditions={setProvidedConditions} />}
       </div>
       <aside className="workbench-results" aria-label="분석 결과">
