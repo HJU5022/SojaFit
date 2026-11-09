@@ -1,6 +1,6 @@
 # G2: `docker compose up` 한 줄로 전체 서비스가 10분 안에 떠야 합니다.
 # 평가자에게는 API 키가 없으므로 기본값은 데모 모드(DEMO_MODE=1)입니다.
-# 필요 없는 서비스는 지우고, 필요한 것(redis 등)은 추가하세요.
+# 서비스 4개: api(FastAPI + 빌드한 React 화면), thread-setup(분석 저장소 준비 후 종료), corpus-load(데모 코퍼스 스냅샷 적재 후 종료), db(pgvector PostgreSQL).
 services:
   api:
     build: .
@@ -14,6 +14,7 @@ services:
       DEMO_MODE: ${DEMO_MODE:-1}
       DEMO_SCENARIOS: ${DEMO_SCENARIOS:-${DEMO_MODE:-1}}
       THREADS_ENABLED: "1"
+      # .env의 AUTH_ORIGIN(배포 주소일 수 있음) 대신 compose 전용 DEMO_AUTH_ORIGIN을 쓴다(.env.example 참고).
       AUTH_ORIGIN: ${DEMO_AUTH_ORIGIN:-http://localhost:8000}
       # 호스트 이름 db는 아래 db 서비스. .env의 DATABASE_URL보다 이 값이 우선한다.
       DATABASE_URL: postgresql://app:app@db:5432/app
@@ -38,6 +39,7 @@ services:
         condition: service_healthy
 
   # 데모 코퍼스 스냅샷(data/demo/snapshot/, 임베딩 없음)을 문서·청크 표에 넣는다. 이미 있는 문서·청크는 건너뛰어 다시 떠도 늘지 않는다.
+  # DEMO_MODE와 상관없이 늘 돈다. DEMO_MODE=0으로 띄워도 같은 DB에 이 데모 스냅샷이 들어간다.
   corpus-load:
     build: .
     environment:

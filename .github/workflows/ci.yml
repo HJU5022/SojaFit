@@ -42,3 +42,21 @@ jobs:
         with:
           name: test-results
           path: test-results.xml
+
+  # 프런트 단위 테스트와 빌드. e2e(playwright)는 서버가 필요해 넣지 않는다.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      # [왜] Dockerfile 빌드 단계(node:24-slim)와 같은 버전. 잠금 파일의 vitest 5·jsdom 31이 Node 22.12 이상을 요구해 20은 안 된다.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run test:run
+      - run: npm run build
