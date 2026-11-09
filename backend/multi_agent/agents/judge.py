@@ -493,11 +493,13 @@ def _tolerance_words(words: str, code: str, text: str) -> str:
     return f'{words} ±{GRADE[g.group(1) or g.group(2)]}%' if g else words
 
 
-def _ground_ops(words: str, text: str) -> str:
+def _ground_ops(words: str, text: str, code: str = '') -> str:
     """요구 말의 숫자가 사용자 원문에 그대로 있으면, 원문의 그 구절(연산 말 포함)로 바꾼다. 연산 말은 원문을 믿는다."""
     # [왜] 원문 '허용하는 전압은 최대 23.2V'를 읽기가 'below 23.2 V'로 옮긴 회차만 미만(<)이 되어 23.2V 후보가 불충족이었다(11-07 m2 v3-09).
     #      숫자 · 단위가 하나뿐인 말만, 원문 구절에 연산 말(최대 · 이하 · 미만 · 이상 …)이 있을 때만 바꾼다. 범위 · 단위를 바꿔 쓴 말은 그대로 둔다
-    nums = re.findall(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)', words)
+    # [왜] 'at 10A 10/1000µs at or below 23.2V'처럼 시험 조건 숫자가 섞이면 숫자가 셋이라 건너뛰어 같은 일이 났다(11-10 v3-09, 사전 등록 #50).
+    #      그 항목 단위(VC면 V)의 숫자만 센다. 다른 단위 숫자는 조건을 만들 때도 버려진다(conditions.user_conditions)
+    nums = [(n, u) for n, u in re.findall(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)', words) if code not in C.CODE_UNIT or C._si(n, u, code) is not None]
     if len(nums) != 1 or C._RANGE.search(words):
         return words
     num, unit = nums[0]
@@ -612,7 +614,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         if _restates_circuit_value(x, values, [rules[r] for r in roles]):
             continue
         spec_words[x.code] = f'{spec_words[x.code]}, {x.words}' if x.code in spec_words else x.words
-    extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text), text), code, text), code) for code, w in spec_words.items()] + limits)
+    extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text, code), text), code, text), code) for code, w in spec_words.items()] + limits)
     given = {c['code'] for c in extra}
 
     def keep(cond: dict) -> bool:

@@ -326,6 +326,10 @@ def test_operator_words_come_from_the_users_own_clause():
     assert '최대 23.2V' in grounded and C.user_conditions([(grounded, 'VC')])[0]['op'] == '<='
     assert J._ground_ops('VZ 3.42~3.78V', text) == 'VZ 3.42~3.78V'  # 범위는 그대로
     assert J._ground_ops('surge current 0.25 A', '전류는 250mA 이하') == 'surge current 0.25 A'  # 단위를 바꿔 쓴 말은 그대로
+    # [왜] 시험 조건 숫자(10A · 10/1000µs)가 섞여도 그 항목 단위(V)의 숫자가 하나면 원문을 믿는다(11-10 v3-09, 사전 등록 #50)
+    mixed = J._ground_ops('clamping voltage at 10A 10/1000µs at or below 23.2V', text, 'VC')
+    assert '최대 23.2V' in mixed and C.user_conditions([(mixed, 'VC')])[0]['op'] == '<='
+    assert J._ground_ops('clamping voltage at 10A at or below 23.2V', text) == 'clamping voltage at 10A at or below 23.2V'  # 항목을 모르면 그대로
 
 
 def test_an_original_of_unknown_or_other_maker_is_not_read_from_the_tsc_document():
