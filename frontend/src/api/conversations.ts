@@ -1,0 +1,54 @@
+import { apiFetch } from './client'
+
+export type EvidenceDto = { document: string; page: number | string | null; table: string; row: string; section: string; citation_number: string }
+export type CitationDto = { document?: string; page?: number | string | null; table?: string; row?: string; chunk_id?: string | number | null; chunk_index?: number | null }
+export type CheckDto = { code: string; basis?: string; value?: number | number[] | null; threshold?: number | number[] | null; unit?: string | null; condition?: string | null; result?: string; why?: string; citation?: CitationDto | null }
+export type CandidateDto = { part: string; role?: string; verdict: 'IDENTICAL' | 'SPEC_EQUIVALENT' | 'ROLE_SUFFICIENT' | 'NOT_VERIFIED' | 'NOT_SUFFICIENT'; checks?: CheckDto[]; missing?: string[]; uncertain?: string[]; cautions?: string[]; board_change?: boolean | null; package_citation?: CitationDto | null }
+export type JudgementDto = { kind: 'judge' | 'find' | 'no_rule'; roles: string[]; role_evidence: string[]; results: CandidateDto[]; shown: CandidateDto[]; unverified: CandidateDto[]; capped: boolean }
+export type InterruptDto = { missing?: string[]; role_choices?: string[]; question?: string }
+export type ResultDto = { answer: string; status: string; stage: string; question_type: string; evidence: EvidenceDto[]; judgement: JudgementDto | Record<string, never>; price_parts: string[]; refusal: string; interrupt: InterruptDto; request_id: string }
+export type ThreadDto = { id: string; project_id: number }
+export type RunDto = { id: string; thread_id: string; result: ResultDto }
+export type StreamEvent = { event: 'run_started' | 'status' | 'requires_input' | 'completed' | 'refused' | 'failed'; data: Record<string, unknown> }
+
+export const listThreads = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto[]>(`/api/projects/${projectId}/threads`, { signal })
+export const createThread = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto>(`/api/projects/${projectId}/threads`, { method: 'POST', signal })
+export const getRun = (runId: string, signal?: AbortSignal) => apiFetch<RunDto>(`/api/runs/${runId}`, { signal })
+
+export async function openRunStream(path: string, body: unknown, signal: AbortSignal): Promise<Response> {
+  const response = await fetch(path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal,
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string; request_id?: string } } | null
+    if (response.status === 401) window.dispatchEvent(new Event('sojafit:session-expired'))
+    throw { code: payload?.error?.code ?? 'HTTP_ERROR', message: payload?.error?.message ?? '요청을 처리할 수 없습니다.',
+      requestId: payload?.error?.request_id ?? response.headers.get('X-Request-ID') ?? '' }
+  }
+  if (!response.body) throw { code: 'STREAM_CLOSED', message: '실행 스트림을 열 수 없습니다.', requestId: response.headers.get('X-Request-ID') ?? '' }
+  return response
+}
+
+export async function readEventStream(response: Response, onEvent: (event: StreamEvent) => void, signal: AbortSignal) {
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    signal.throwIfAborted()
+    buffer += decoder.decode(value, { stream: !done })
+    let boundary = buffer.indexOf('\n\n')
+    while (boundary >= 0) {
+      const frame = buffer.slice(0, boundary).replace(/\r/g, '')
+      buffer = buffer.slice(boundary + 2)
+      const event = frame.split('\n').find(line => line.startsWith('event: '))?.slice(7)
+      const data = frame.split('\n').find(line => line.startsWith('data: '))?.slice(6)
+      if (!event || !data) throw new Error('malformed SSE frame')
+      const parsed = JSON.parse(data) as Record<string, unknown>
+      if (!['run_started', 'status', 'requires_input', 'completed', 'refused', 'failed'].includes(event)) throw new Error('unknown SSE event')
+      onEvent({ event: event as StreamEvent['event'], data: parsed })
+      boundary = buffer.indexOf('\n\n')
+    }
+    if (done) break
+  }
+  if (buffer.trim()) throw new Error('incomplete SSE frame')
+}

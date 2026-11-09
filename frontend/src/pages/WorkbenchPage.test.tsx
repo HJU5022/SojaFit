@@ -53,3 +53,16 @@ it.each(['missing', 'foreign'])('shows the common safe error for a %s project', 
   expect(await screen.findByRole('alert')).toHaveTextContent('프로젝트를 찾을 수 없습니다. (요청 ID: req-test)')
   expect(screen.queryByLabelText('대상 부품')).not.toBeInTheDocument()
 })
+
+it('exposes keyboard-operable result tabs and a labelled project drawer', async () => {
+  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  openWorkbench()
+  const toggle = screen.getByRole('button', { name: '프로젝트 열기' })
+  fireEvent.click(toggle)
+  expect(screen.getByRole('dialog', { name: '내 프로젝트' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+  expect(toggle).toHaveFocus()
+  const judgement = screen.getByRole('tab', { name: '판정' })
+  fireEvent.click(judgement)
+  expect(judgement).toHaveAttribute('aria-selected', 'true')
+})

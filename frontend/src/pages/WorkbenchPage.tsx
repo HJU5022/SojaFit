@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { getProject } from '../api/projects'
@@ -8,6 +8,11 @@ import ProjectSidebar from '../components/ProjectSidebar'
 import CircuitSetup from '../components/CircuitSetup'
 import CircuitSummary from '../components/CircuitSummary'
 import PricePanel from '../components/PricePanel'
+import ConversationPanel from '../components/ConversationPanel'
+import EvidencePanel from '../components/EvidencePanel'
+import JudgementTable from '../components/JudgementTable'
+import ApprovalPanel from '../components/ApprovalPanel'
+import type { RunState } from '../hooks/useRunStream'
 
 export default function WorkbenchPage() {
   const client = useQueryClient()
@@ -21,6 +26,10 @@ export default function WorkbenchPage() {
   }
   const version = selection.current.version
   const mounted = useRef(true)
+  const drawerButton = useRef<HTMLButtonElement>(null)
+  const [drawer, setDrawer] = useState(false)
+  const [resultTab, setResultTab] = useState<'evidence' | 'judgement' | 'actions'>('evidence')
+  const [runState, setRunState] = useState<RunState>({ status: 'idle' })
   useEffect(() => {
     mounted.current = true
     return () => {
@@ -45,10 +54,19 @@ export default function WorkbenchPage() {
     if (next.get('projectId') === String(projectId)) {
       next.delete('projectId'); next.delete('targetRef'); setParams(next, { replace: true })
     }
+    setDrawer(false)
+    queueMicrotask(() => drawerButton.current?.focus())
   }
+  const receiveRun = useCallback((state: RunState) => setRunState(state), [])
+  const result = runState.status === 'completed' || runState.status === 'refused' ? runState.result : null
   return <><h1>회로 작업대</h1><p>회로의 역할과 부품 대체 근거를 함께 검토합니다.</p>
+    <button ref={drawerButton} className="mobile-project-toggle secondary" aria-expanded={drawer} onClick={() => setDrawer(true)}>프로젝트 열기</button>
+    {drawer && <div className="drawer-backdrop" role="dialog" aria-modal="true" aria-label="내 프로젝트"><div className="drawer-panel">
+      <button className="secondary drawer-close" onClick={() => { setDrawer(false); drawerButton.current?.focus() }}>닫기</button>
+      <ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={projectId => { selectProject(projectId); setDrawer(false) }} onDeleted={deleted} />
+    </div></div>}
     <div className="workbench-grid">
-      <ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={selectProject} onDeleted={deleted} />
+      <div className="project-rail"><ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={selectProject} onDeleted={deleted} /></div>
       <div className="workbench-main">
         {/* 선택 세대가 바뀌면 생성 폼과 진행 요청도 함께 폐기한다. */}
         <CircuitSetup key={version} onCreated={created} />
@@ -56,8 +74,16 @@ export default function WorkbenchPage() {
         {detail.error ? <p role="alert">{errorMessage(detail.error)}</p> : detail.data && <CircuitSummary project={detail.data} targetRef={targetRef} onTarget={ref => {
           setParams(current => { const next = new URLSearchParams(current); if (ref) next.set('targetRef', ref); else next.delete('targetRef'); return next })
         }} />}
-        <PricePanel parts={[]} />
+        {id !== null && detail.data && <ConversationPanel key={`${id}-${targetRef}`} projectId={id} targetRef={targetRef} onResult={receiveRun} />}
       </div>
-    </div>
+      <aside className="workbench-results" aria-label="D5 결과">
+        <div className="result-tabs" role="tablist" aria-label="결과 보기">
+          {([['evidence', '근거'], ['judgement', '판정'], ['actions', '가격과 승인']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={resultTab === key} onClick={() => setResultTab(key)}>{label}</button>)}
+        </div>
+        <div className={`right-tab-panel ${resultTab === 'evidence' ? 'active' : ''}`} role="tabpanel"><EvidencePanel evidence={result?.evidence ?? []} /></div>
+        <div className={`right-tab-panel ${resultTab === 'judgement' ? 'active' : ''}`} role="tabpanel"><JudgementTable judgement={result?.judgement} /></div>
+        <div className={`right-tab-panel ${resultTab === 'actions' ? 'active' : ''}`} role="tabpanel"><PricePanel parts={result?.price_parts ?? []} /><ApprovalPanel /></div>
+      </aside>
+      </div>
   </>
 }

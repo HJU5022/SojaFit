@@ -44,6 +44,10 @@ SojaFit (proj3-b)
 │   ├── tsconfig.json       <- TypeScript 프로젝트 참조
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
+│   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
+│   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
+│   │   ├── E2E.md          <- 폴더 설명
+│   │   └── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
@@ -56,11 +60,15 @@ SojaFit (proj3-b)
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
-│       │   └── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
+│       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
+│       │   └── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
 │       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·로그아웃·401 처리
 │       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
 │       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
+│       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
+│       │   ├── useRunStream.ts <- D5 시작·재개·연결 복구 상태 머신
+│       │   └── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 비밀번호 로그인·설정된 Google 링크
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장 테스트
@@ -76,7 +84,14 @@ SojaFit (proj3-b)
 │       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택
 │       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
-│       │   └── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
+│       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
+│       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면
+│       │   ├── RunStatus.tsx <- 접근 가능한 D5 진행 상태
+│       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
+│       │   ├── EvidencePanel.tsx <- 문서 위치 근거 목록
+│       │   ├── JudgementTable.tsx <- 5종 후보 판정 표
+│       │   ├── ApprovalPanel.tsx <- 후속 승인 API 전 비활성 패널
+│       │   └── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
 │       └── test/           <- 화면 테스트 설정
 │           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리

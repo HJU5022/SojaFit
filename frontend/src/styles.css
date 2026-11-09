@@ -25,11 +25,12 @@ p { margin: 0; color: var(--muted); line-height: 1.8; }
 .login-panel { max-width: 480px; margin: 0 auto; }
 h2 { margin: 0 0 12px; font-size: 20px; }
 label { display: block; margin: 20px 0 8px; font-weight: 600; }
-input { width: 100%; padding: 12px; color: inherit; background: var(--surface); border: 1px solid var(--muted); border-radius: 4px; font: inherit; }
+input, textarea { width: 100%; padding: 12px; color: inherit; background: var(--surface); border: 1px solid var(--muted); border-radius: 4px; font: inherit; }
+textarea { resize: vertical; }
 button { padding: 10px 16px; color: #fff; background: var(--trace); border: 1px solid var(--trace); border-radius: 4px; font: inherit; cursor: pointer; }
 form button, .panel > button { margin: 20px 0 12px; }
 button:disabled { opacity: .55; cursor: default; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 [role="alert"] { margin: 16px 0; padding: 12px; color: #8b3030; background: #fff2f0; border-left: 3px solid #8b3030; overflow-wrap: anywhere; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -41,7 +42,7 @@ th { color: var(--muted); font-size: 14px; }
   nav { gap: 20px; }
   main { padding: 32px 20px; }
 }
-.workbench-grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); align-items: start; gap: 24px; }
+.workbench-grid { display: grid; grid-template-columns: 18rem minmax(24rem, 1fr) minmax(20rem, 28rem); align-items: start; gap: 24px; }
 .workbench-grid > *, .workbench-main { min-width: 0; }
 .project-list { list-style: none; padding: 0; margin: 16px 0; }
 .project-list li + li { margin-top: 8px; }
@@ -55,4 +56,32 @@ select:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 .delete-confirmation { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--divider); }
 .delete-confirmation button { margin: 12px 8px 0 0; }
 .workbench-grid h2, .workbench-grid p { overflow-wrap: anywhere; }
-@media (max-width: 800px) { .workbench-grid { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+.mobile-project-toggle, .result-tabs { display: none; }
+.workbench-results { min-width: 0; }
+.workbench-results .panel { margin-top: 0; margin-bottom: 24px; }
+.run-status { margin: 12px 0; padding: 10px 12px; border-left: 3px solid var(--trace); background: #eaf5f4; }
+.run-failed, .run-refused { border-color: #8b3030; background: #fff2f0; }
+.interrupt-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--divider); }
+.interrupt-form h3 { margin: 0 0 8px; }
+.evidence-list { padding-left: 24px; }
+.evidence-list li { margin: 12px 0; }
+.evidence-list span { display: block; margin-top: 4px; color: var(--muted); }
+.disclaimer { margin: 12px 0; padding: 10px; color: #6c4917; background: #fff7df; border-left: 3px solid #b7791f; }
+.drawer-backdrop { position: fixed; inset: 0; z-index: 20; padding: 16px; background: rgba(12, 31, 39, .55); }
+.drawer-panel { width: min(24rem, 100%); height: 100%; overflow: auto; padding: 16px; background: var(--surface); box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+.drawer-close { width: 100%; }
+@media (max-width: 1100px) and (min-width: 901px) {
+  main { max-width: none; }
+  .workbench-grid { grid-template-columns: 16rem minmax(22rem, 1fr) minmax(18rem, 24rem); gap: 16px; }
+}
+@media (max-width: 900px) {
+  .workbench-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .project-rail { display: none; }
+  .mobile-project-toggle { display: inline-block; margin-top: 20px; }
+  .result-tabs { display: flex; gap: 6px; margin: 24px 0 12px; overflow-x: auto; }
+  .result-tabs button { flex: 1 0 auto; color: var(--trace); background: var(--surface); }
+  .result-tabs button[aria-selected="true"] { color: #fff; background: var(--trace); }
+  .right-tab-panel { display: none; }
+  .right-tab-panel.active { display: block; }
+  .workbench-results .panel { margin-top: 0; }
+}
