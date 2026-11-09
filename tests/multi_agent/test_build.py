@@ -17,6 +17,12 @@ from backend.multi_agent.supervisor import Synth
 
 PART = {'ref': 'D1', 'value': '1N4148', 'footprint': 'DO-35', 'nets': []}
 
+@pytest.fixture(autouse=True)
+def one_read(monkeypatch):
+    """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
+    monkeypatch.setenv('LAB_READ_VOTES', '1')
+
+
 
 def scripted(**by_node):
     """노드 이름마다 답을 차례로 내는 가짜 LLM. 부른 노드 이름을 순서대로 남긴다."""

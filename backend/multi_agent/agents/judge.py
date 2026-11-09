@@ -117,12 +117,14 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
     # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
     user += memory_context(state.get('approved_memories') or [])
-    votes = max(1, int(os.getenv('LAB_READ_VOTES', '1')))
+    # [왜] 서비스 기본은 3번 다수결이다. v3 측정(50/50, 사전 등록 #47 ~ #50)을 모두 3번으로 했고, 1번 읽기가 흔들려 틀린 문항이 있었다(v3-13 · v3-14).
+    #      세 번은 동시에 돌아 시간은 거의 같고, 비용은 50문항당 약 $0.02 는다(11-10 조장 결정). 환경값으로 1을 주면 한 번만 읽는다
+    votes = max(1, int(os.getenv('LAB_READ_VOTES', '3')))
     if votes == 1:
         read = chat('judge_read', PROMPT, user, JudgeRead)
     else:
         # [왜] lab 실험(11-06): 같은 질문의 읽기가 회차마다 달라(일관성 측정 38문항 중 7~12문항) 3세트 연속 통과가 막혔다.
-        #      같은 읽기를 동시에 여러 번 부르고 칸마다 다수결로 하나를 만든다(판정 코드 · 인터럽트는 그대로 한 번). 기본은 1번(설계 그림)
+        #      같은 읽기를 동시에 여러 번 부르고 칸마다 다수결로 하나를 만든다(판정 코드 · 인터럽트는 그대로 한 번)
         def one(_):
             try:
                 return chat('judge_read', PROMPT, user, JudgeRead)
