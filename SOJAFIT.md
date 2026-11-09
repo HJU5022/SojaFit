@@ -47,7 +47,8 @@ SojaFit (proj3-b)
 │   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
-│   │   └── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
+│   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
+│   │   └── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
@@ -386,6 +387,7 @@ SojaFit (proj3-b)
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
+│   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
@@ -611,6 +613,7 @@ SojaFit (proj3-b)
 | 폴더 | 설명 파일 | 담당 |
 |---|---|---|
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
+| `frontend/e2e/` | [E2E.md](frontend/e2e/E2E.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |

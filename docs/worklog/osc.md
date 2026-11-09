@@ -404,3 +404,11 @@
 - Task 11·12 승인·견적: 완료된 성공 판정 후보만 메시지당 한 번 승인하고 immutable snapshot으로 가격 없는 견적·승인 사례를 저장한다. Python과 PostgreSQL이 중첩 가격·재고·URL·조회 시각 키를 거절한다. UI는 후보·판정명을 다시 확인하고 승인 전 견적을 막으며 견적을 열 때 가격을 새로 조회한다. backend focused 31 passed, frontend focused 12 passed와 build 성공.
 - 확인: 격리 PostgreSQL 컨테이너에서 `uv run pytest -q tests/api/test_conversations.py tests/conversations tests/services/test_d5.py tests/api/test_projects.py` → 71 passed. 이전 layout 검사 5 passed, 집중 DB 검사 73 passed(이후 문서 근거 보완 전). 실제 모델·MCP, 공유 DB, 배포, 동결 평가셋 재측정은 하지 않았다.
 - 한계: checkpoint와 프로젝트 삭제는 별도 트랜잭션으로 원자적이지 않으며 중간 장애 때 checkpoint 일부가 먼저 지워질 수 있다. 서버 재시작·프로세스 중단 시 진행 run 복구, 다중 인스턴스 장애 주입 및 실제 checkpointer cascade는 Task 13에서 검증한다. 문서 근거는 최종 보고서에서 인용한 청크의 메타데이터만 반환한다.
+
+### Task 13 — 전체 서비스 흐름 검증
+
+- 범위: 업로드 정규화 → 사용자 소유 프로젝트·대화 → D5 추가 입력/완료 → 근거·판정 → 명시적 승인 → 가격 없는 견적·승인 사례 삭제를 실제 저장소/service·격리 PostgreSQL과 브라우저 가짜 API 흐름으로 검증했다. 전체 backend suite의 API 시험은 별도로 함께 통과했다. 외부 모델·MCP·Mouser, 공유 DB, 배포는 호출하지 않았다.
+- backend 전체: 전용 볼륨 없는 `postgres:16-alpine`의 일회용 `ci_auth` DB에 003/005/006/013/014/015 migration과 `anon`/`authenticated` NOLOGIN 역할을 준비했다. 최초 실행의 15 failures는 CI 인증 스키마 초기화 누락과 신규 `frontend/e2e/` 폴더 설명 누락 때문이었고, 시험 환경·트리 설명을 바로잡은 뒤 `PYTHONUTF8=1 uv run pytest -q` 결과 `1082 passed, 37 skipped in 86.85s`. 신규 전체 흐름은 타 사용자 접근 거절, PostgreSQL의 중첩 가격 키 거절, 프로젝트 cascade까지 포함한다. `uv lock --check`도 통과했다.
+- frontend 전체: 최초 Vitest가 Playwright `e2e/*.spec.ts`를 단위 테스트로 수집해 실패하여 Vite test exclude에 `e2e/**`를 추가했다. 이후 `npm ci`는 취약점 0건, `npm run test:run`은 13 files·62 tests 통과, `npm run build` 성공. Playwright Chromium 설치 후 최초 E2E는 과도한 `**/api/**` 패턴이 `/src/api/client.ts`까지 가로채는 문제를 발견했고, 호스트 루트 `/api/`만 가로채도록 고쳐 `npx playwright test --reporter=line` 2 passed.
+- 보안·무결성: 승인 뒤 승인 사례 query를 무효화해 사용자별 캐시를 갱신한다. quote 요청 본문은 수량만 보내고, 화면 가격·재고 응답은 견적/사례 저장 DTO와 DB snapshot에 들어가지 않는다. 복합 소유자 FK·RLS/권한 회수·재귀 금지 키 CHECK와 전체 서비스 시험을 유지했다. worktree 경로를 읽지 못한 최초 Docker 호출은 유효 검사로 세지 않았고, 코드 커밋 `43fb8f2`를 임시 일반 clone으로 만든 뒤 CI와 같은 gitleaks 전체 Git 이력 검사 결과 탐지 0건·종료 코드 0이었다. 임시 clone은 검사 뒤 삭제했다.
+- 남은 경계: 실제 외부 공급자·MCP·모델과 배포 환경, 프로세스 재시작 중 run 자동 복구, checkpoint 삭제와 프로젝트 삭제의 단일 트랜잭션 원자성은 확인하지 않았다. `README.md`·`SPEC.md`·ADR은 조장 소유이므로 수정하지 않았으며, 조장은 D5 로컬 실행·전체 사용자 흐름과 위 장애 경계를 정본 문서에 반영할지 검토해야 한다.
