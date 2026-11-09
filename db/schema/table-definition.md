@@ -160,6 +160,7 @@ RAG 코퍼스에 포함된 데이터시트와 공개 문서의 출처, 버전 �
 | `chars_kept` | 보존 글자 수 | `INTEGER` | N | 0 이상 CHECK | manifest의 `chars_kept` | 확정 |
 | `truncated` | 잘림 여부 | `BOOLEAN` | N |  | manifest의 `truncated`. 원문을 잘라 넣었으면 true | 확정 |
 | `retired_at` | 제외 시각 | `TIMESTAMPTZ` | Y |  | 증분 수집에서 사라진 문서를 검색에서 빼는 논리 삭제 시각. 인용 기록은 남김(A-18) | 확정 |
+| `category` | 분류 | `TEXT` | Y |  | 문서의 다이오드 분류(5.7 `category`와 같은 값, 예: `schottky-rectifier`). 사양 표 없이 후보 찾기 거르기용(`db/012_document_category.sql`) | 확정 |
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | DB 레코드 생성 시각 | 가정 |
 
 ### 5.5 `part_documents` — 부품 문서 연결
