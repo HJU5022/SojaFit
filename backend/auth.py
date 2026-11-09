@@ -4,8 +4,8 @@
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
 (auth_login_ip_attempts), 세션은 절대 8시간·유휴 30분이다.
 자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다.
-호출자: backend/main.py(API 라우트), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
-하지 않는 일: HTTP 라우트·쿠키 설정(backend/main.py), 테이블 생성(db/*.sql), 이메일 인증,
+호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
+하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 이메일 인증,
 회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
@@ -336,7 +336,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
 
     Args:
         email: 가입 이메일(공백 제거·소문자로 맞춘다).
-        password: 평문 비밀번호(길이 검증은 호출자 main.py가 한다).
+        password: 평문 비밀번호(길이 검증은 호출자 backend/api/auth.py가 한다).
         ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
     Returns:
         (세션 토큰, user_id). 이미 있는 이메일이면 None(호출자가 409).
@@ -369,7 +369,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
 
 
 def demo_session(account: str) -> tuple[str, int] | None:
-    """데모 버튼 로그인: 시드한 데모 계정(A · B)에 새 세션을 발급한다(데모 모드 확인은 호출자 backend/main.py가 한다).
+    """데모 버튼 로그인: 시드한 데모 계정(A · B)에 새 세션을 발급한다(데모 모드 확인은 호출자 backend/api/auth.py가 한다).
 
     [주의] 정해진 이메일이고, 비밀번호 표식(DEMO_PASSWORD_HASH)을 가진 활성 일반 사용자일 때만 받는다.
     같은 이메일로 가입한 계정(비밀번호 해시가 있음) · 관리자 · 비활성 계정에는 세션을 주지 않는다.
@@ -488,7 +488,7 @@ def delete_provisioned_user(user_id: int) -> bool:
 
 
 def delete_account(user_id: int) -> dict:
-    """탈퇴의 마지막 단계: 일반 계정 행을 지우고 지운 건수를 돌려준다(backend/main.py `DELETE /api/me`가 분석 기록 · 기억을 지운 뒤 부른다).
+    """탈퇴의 마지막 단계: 일반 계정 행을 지우고 지운 건수를 돌려준다(backend/api/profile.py `DELETE /api/me`가 분석 기록 · 기억을 지운 뒤 부른다).
 
     계정 행을 지우면 세션 · 프로젝트(회로 · 대화 · run · 메시지) · 승인 · 견적 · 승인 사례 · 분석 사용량이 FK cascade로 함께 지워진다.
     그 이메일의 로그인 실패 기록도 지운다. 계정이 이미 없으면 모두 0이다.

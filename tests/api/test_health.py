@@ -91,7 +91,7 @@ def test_unhandled_error_does_not_expose_internal_message(monkeypatch):
     def fail_authentication(email, password, ip):
         raise RuntimeError("private traceback detail")
 
-    monkeypatch.setattr("backend.main.auth.authenticate", fail_authentication)
+    monkeypatch.setattr("backend.auth.authenticate", fail_authentication)
     response = TestClient(app, raise_server_exceptions=False).post(
         "/api/auth/login",
         headers={"origin": "http://localhost:8000"},

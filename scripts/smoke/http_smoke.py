@@ -7,7 +7,7 @@
 - 하지 않는 일: 답 · 판정이 맞는지 채점(`evals/`), 서버 · docker · DB 띄우기, 만든 프로젝트 · 승인 · 견적 지우기,
   가입 · 업로드 · 가격 · 내 설정 경로. 결과 파일에 비밀번호 · 쿠키 · 세션 · 이메일(계정은 A · B로만) · 답 글 · 오류 문구를 적지 않는다.
 - 출처: SPEC 2절 목표 사용자 흐름, 4절 계약(HTTP API 표 · 공통 오류 · SSE 이벤트), 8.4 견적서 승인, 8.6 로그인,
-  backend/api/*.py, backend/main.py 로그인 경로, backend/auth.py `check_origin`.
+  backend/api/*.py(로그인 경로는 backend/api/auth.py), backend/auth.py `check_origin`.
   질문 · 조건 글은 scripts/demo/record_demo.py의 `QUESTIONS`(v3-01 · v3-30)를 그대로 읽는다.
 - 입력: `--base-url`. `--demo`면 데모 버튼 로그인(`POST /api/auth/demo-login`, A · B), 아니면 환경변수
   SMOKE_A_EMAIL · SMOKE_A_PASSWORD · SMOKE_B_EMAIL · SMOKE_B_PASSWORD(비밀번호는 명령줄 인자로 받지 않는다).

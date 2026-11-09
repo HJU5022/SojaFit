@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: 서버 API(`/health`, 로그인·세션, 가격·재고)를 확인하는 회귀 테스트를 둡니다.
-- 넣는 것: `backend/main.py`·`backend/auth.py`·`backend/errors.py`·`backend/logs.py`를 대상으로 한 `test_*.py`. DB 시험은 전용 DB 주소 환경변수가 있을 때만 돌립니다.
+- 넣는 것: `backend/main.py`·`backend/api/*.py`·`backend/auth.py`·`backend/errors.py`·`backend/logs.py`를 대상으로 한 `test_*.py`. DB 시험은 전용 DB 주소 환경변수가 있을 때만 돌립니다.
 - 넣지 않는 것: 그래프 노드 시험(`tests/graph/`), 검색·적재 시험(`tests/rag/`), LLM 호출 시험(`tests/services/`), 일회성 인증 실측(`scripts/auth/`).
 - 담당: 서비스·운영
 
@@ -23,7 +23,7 @@
 - `test_deletion.py` — 격리 DB(public에 React 표가 있을 때만)의 삭제 범위: 프로젝트 삭제가 그 프로젝트의 React 행과 같은 UUID 분석 기록 · checkpoint만 지움, 탈퇴가 그 사용자의 모든 기록 · Store namespace · 계정을 지우고 다른 사용자(접두사가 같은 namespace 포함)는 남김, 일부 실패 뒤 다시 요청하면 마저 지움, 진행 중 분석과 탈퇴가 서로 409, 관리자 409. 보관 기간 청소: 60일 지난 프로젝트 · 분석 대화 · 빈 회로만(어제 run이 있는 프로젝트 · 59일 · 사용자 사실은 남김), 30일 지난 기록만(아직 걸린 로그인 잠금 · 15분 창 안의 행은 남김), 단계 · 표마다 묶음 상한, 새 분석이 청소를 부르고 청소 실패는 분석을 막지 않음
 - `test_projects.py` — 세션·Origin·데모 5종·입력 검증·안전한 DB 오류·실제 DB CRUD와 관리자 포함 타 사용자 비공개 404. 업로드의 제한 수신·disk rollover 없음·저장소 payload·원본 즉시 close·오류 request ID. DB 시험은 `TEST_AUTH_DATABASE_URL`이 있을 때만 실행
 - `test_errors.py` — 오류 코드 15개(ADR 0019): 표 · 기본 코드 · 표에 없는 405, `DATABASE_URL` 없음 503 `UNAVAILABLE`(500 아님) · Google 콜백은 그래도 로그인 화면 오류로 이동, 남의 run 404, 가입 IP 한도 `RATE_LIMITED`, 하루 토큰 · USD `LIMIT_EXCEEDED`와 호출 간격 `RATE_LIMITED`, 조건 대기 `CONDITION_PENDING`, 분석 실패의 502(공급자) · 503(DB · 설정) · 504(시간) · 실행 상한 429, SSE `failed`의 같은 코드, 오류 로그 줄의 severity · request_id(스레드 풀 · 응답 보낼 때까지) · 5xx traceback · 질문 글 · 이메일 비노출(DB · 바깥 호출 없음)
-- `test_openapi.py` — HTTP API 계약(`/openapi.json` · `/docs`): JSON 본문 모델 11개마다 예시가 있고 그대로 통과하며 모르는 칸을 막음, 업로드의 multipart `file` · `name` 칸, SSE 두 경로의 `text/event-stream`과 이벤트 6개 설명, 204 · SSE 밖 성공 응답의 빈 스키마 없음, 응답 모델이 화면이 읽는 칸(`frontend/src/api/*.ts`)을 지우지 않음(승인 · 견적 · 사례 · 대화 · run은 가짜 연결로 실제 저장소 코드를, 내 설정은 실제 `ProfileMemory`를 거침)
+- `test_openapi.py` — HTTP API 계약(`/openapi.json` · `/docs`): JSON 본문 모델 11개마다 예시가 있고 그대로 통과하며 모르는 칸을 막음, 업로드의 multipart `file` · `name` 칸, SSE 두 경로의 `text/event-stream`과 이벤트 6개 설명, 204 · SSE 밖 성공 응답의 빈 스키마 없음, 경로 37개(메서드, 경로) 고정과 모두 `backend/api/` 라우터에 태그와 함께 있음(`main.py`에 경로 함수 없음), 응답 모델이 화면이 읽는 칸(`frontend/src/api/*.ts`)을 지우지 않음(승인 · 견적 · 사례 · 대화 · run은 가짜 연결로 실제 저장소 코드를, 내 설정은 실제 `ProfileMemory`를 거침)
 - `test_logs.py` — JSON 한 줄 로그(`backend/logs.py`): 칸(severity · time · logger · message · extra), 문맥 변수와 직접 넘긴 request_id, 예외 메시지 없는 traceback(원인 사슬 · 고리), setup이 처리기 있는 루트는 그대로 두고 없으면 한 번 붙여 uvicorn 줄도 JSON으로 · 500과 겹친 uvicorn 줄 빼기
 - `test_prices.py` — `GET /api/prices`를 가짜 Mouser transport(손으로 쓴 응답)로 확인: 로그인 필요(401), `Cache-Control: no-store`, 화면 칸과 조회 시각만 돌려주기, 데모 모드·키 없음·호출 상한·Mouser 실패의 값 없음 모양, 품번 11개 이상·형식 오류의 공통 422 응답, 로그에 키·요청 주소·Mouser 값 없음
 - `test_http_smoke.py` — HTTP 점검 스크립트(`scripts/smoke/http_smoke.py`)를 쿠키 · Origin · 소유권을 지키는 가짜 서버(`httpx.MockTransport`)로: 1~9단계 전체 통과(두 번째 승인 409 `ALREADY_APPROVED`를 통과로 셈), `requires_input`이 없거나 스트림 전 503이면 그 단계 실패 · 5~7단계 건너뜀 · 8단계 격리는 계속 · 종료 코드 1, 결과 파일 · 화면에 비밀번호 · 쿠키 값 · 이메일 · 답 글 없음, `--confirm-live` 없으면 요청 없이 멈춤, 재개 값 규칙, 데모 질문 회로가 데모 카탈로그에 있음

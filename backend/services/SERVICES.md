@@ -9,7 +9,7 @@
 ## 구현 상태
 - 사용자 분석은 기존 `EvaluationBudget`을 재사용해 실행당 예약 $0.50/16회/90초, 출력 4096토큰, 사용자별 UTC 하루 예약 $3와 2초 간격을 적용한다. DB 원자 갱신으로 여러 thread/인스턴스의 사용자 한도를 공유한다. Voyage·MCP도 남은 시간을 적용한다. 실패 예약은 환불하지 않으며 실제 청구액은 아니다. 이미 진행 중인 작업을 강제 종료하는 방식은 아니다. `ANALYSIS_*` 설정은 `.env.example`을 따른다.
 - 없는 파일: 견적서 저장(`quote.py`)은 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
-- Mouser: `mouser.py`는 `/api/prices`(backend/main.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
+- Mouser: `mouser.py`는 `/api/prices`(backend/api/prices.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
 - 키 없는 데모의 분석 재생은 `DEMO_REPLAY=1`과 `DEMO_MODE=1`에서만 켜진다(`demo.enabled()`). `DEMO_MODE=1`만 켠 실행(평가 · 실제 모델 확인)은 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
 - `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
 

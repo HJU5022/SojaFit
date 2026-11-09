@@ -3,6 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/api/*.ts의 타입)을 지우지 않는지 본다.
+  경로 37개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -13,17 +14,19 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 from langgraph.store.memory import InMemoryStore
 
-from backend import auth, main
-from backend.api import conversations, profile, projects, quotes
+from backend import auth
+from backend.api import admin, conversations, profile, projects, quotes
+from backend.api import auth as auth_api  # [주의] 위 auth는 세션 로직(backend/auth.py), 이것은 로그인 경로 라우터다
 from backend.conversations.profile import ProfileMemory
 from backend.main import app
 
 ORIGIN = {'origin': 'http://testserver'}
 # 요청 본문 모델 전부. 새 본문 모델을 만들면 여기에 넣어야 아래 시험이 예시 · 모르는 칸 금지를 본다
-BODY_MODELS = [main.Login, main.Signup, main.DemoLogin, main.AccountState, projects.CreateProject, projects.RenameProject,
+BODY_MODELS = [auth_api.Login, auth_api.Signup, auth_api.DemoLogin, admin.AccountState, projects.CreateProject, projects.RenameProject,
                quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, profile.ProfileUpdate]
 
 
@@ -71,6 +74,36 @@ def test_no_success_response_has_an_empty_schema():
                 if not content.get('application/json', {}).get('schema'):
                     empty.append(f'{method.upper()} {path} {status}')
     assert empty == []
+
+
+# (메서드, 경로) 37개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+ROUTES = {
+    ('GET', '/health'),
+    ('POST', '/api/auth/login'), ('POST', '/api/auth/signup'), ('GET', '/api/auth/demo'), ('POST', '/api/auth/demo-login'),
+    ('GET', '/api/auth/me'), ('POST', '/api/auth/logout'), ('GET', '/api/auth/google/status'), ('GET', '/api/auth/google/start'),
+    ('GET', '/api/auth/google/callback'), ('GET', '/api/auth/google/pending'),
+    ('GET', '/api/admin/users'), ('PATCH', '/api/admin/users/{target_id}'),
+    ('GET', '/api/prices'),
+    ('DELETE', '/api/me'), ('GET', '/api/me/memory'), ('PATCH', '/api/me/memory'), ('DELETE', '/api/me/memory'),
+    ('GET', '/api/demo-circuits'), ('GET', '/api/projects'), ('POST', '/api/projects'), ('POST', '/api/projects/upload'),
+    ('GET', '/api/projects/{project_id}'), ('PATCH', '/api/projects/{project_id}'), ('DELETE', '/api/projects/{project_id}'),
+    ('POST', '/api/messages/{message_id}/approvals'), ('POST', '/api/approvals/{approval_id}/quotes'),
+    ('GET', '/api/projects/{project_id}/quotes'), ('GET', '/api/approved-cases'), ('DELETE', '/api/approved-cases/{case_id}'),
+    ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
+    ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
+    ('POST', '/api/runs/{run_id}/resume'),
+}
+
+
+def test_routes_are_pinned_and_live_only_in_api_routers():
+    """경로 37개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
+    assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
+    # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다
+    routes = [r for group in app.routes if hasattr(group, 'original_router') for r in group.original_router.routes]
+    assert sorted((method, r.path) for r in routes for method in r.methods) == sorted(ROUTES)
+    # 라우터마다 태그가 있어야 /docs가 묶음(auth · admin · prices · health …)으로 보이고 이름 없는 default 묶음이 생기지 않는다
+    assert all(r.tags and r.endpoint.__module__.startswith('backend.api.') for r in routes)
 
 
 class Conn:

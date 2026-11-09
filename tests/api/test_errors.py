@@ -90,7 +90,7 @@ def test_google_callback_without_database_url_still_redirects_to_login(monkeypat
 def test_signup_daily_ip_limit_is_rate_limited(web, monkeypatch):
     def limited(*args):  # auth.signup이 IP 하루 3회를 넘기면 내는 오류와 같다
         raise HTTPException(status_code=429, detail='오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.')
-    monkeypatch.setattr('backend.main.auth.signup', limited)
+    monkeypatch.setattr('backend.auth.signup', limited)
     response = web().post('/api/auth/signup', json={'email': 'a@example.test', 'password': 'synthetic-pass-123', 'consent': True}, headers=ORIGIN)
     assert response.status_code == 429 and response.json()['error']['code'] == 'RATE_LIMITED'
 
@@ -242,7 +242,7 @@ def test_every_run_log_line_has_request_id_and_no_question(web):
 def test_unhandled_500_and_4xx_log_lines(web, monkeypatch):
     def broken(*args):
         raise RuntimeError(f'login failed for {QUESTION}')
-    monkeypatch.setattr('backend.main.auth.authenticate', broken)
+    monkeypatch.setattr('backend.auth.authenticate', broken)
     with json_lines() as lines:
         failed = web().post('/api/auth/login', json={'email': 'user@example.test', 'password': 'synthetic-pass-123'}, headers=ORIGIN)
         refused = web().post('/api/auth/logout', headers={'origin': 'https://evil.example'})
