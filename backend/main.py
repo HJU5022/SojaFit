@@ -1,6 +1,6 @@
 """SojaFit FastAPI 진입점.
 
-역할: 인증·가입·탈퇴(`DELETE /api/me`)·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
+역할: 인증·가입·데모 버튼 로그인(`DEMO_MODE=1`만)·탈퇴(`DELETE /api/me`)·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
@@ -356,6 +356,41 @@ def signup(body: Signup, request: Request, response: Response):
         raise HTTPException(status_code=503, detail="가입 서비스를 사용할 수 없습니다.") from None
     if result is None:
         raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
+    token, user_id = result
+    set_session_cookie(response, token)
+    return {"user_id": user_id}
+
+
+def demo_mode() -> None:
+    """데모 버튼 로그인 경로는 DEMO_MODE=1일 때만 있다. 아니면 본문을 읽기 전에 공통 404."""
+    if os.getenv("DEMO_MODE", "1") != "1":
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+@app.get("/api/auth/demo", dependencies=[Depends(demo_mode)])
+def demo_status():
+    """데모 모드면 로그인 화면이 데모 사용자 A · B 버튼을 보인다(로그인 필요 없음)."""
+    return {"enabled": True}
+
+
+class DemoLogin(BaseModel):
+    """데모 버튼 로그인 본문. 계정은 a · b 둘 중 하나만(이메일 · 사용자 id는 받지 않음)."""
+
+    model_config = ConfigDict(extra="forbid")
+    account: Literal["a", "b"]
+
+
+@app.post("/api/auth/demo-login", dependencies=[Depends(demo_mode)])
+def demo_login(body: DemoLogin, request: Request, response: Response):
+    """데모 모드에서 시드한 데모 사용자 A · B로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
+    # [주의] 404 데모 모드 아님 · 데모 계정 없음(새 볼륨에서만 시드), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
+    auth.check_origin(request)
+    try:
+        result = auth.demo_session(body.account)
+    except (psycopg.Error, KeyError):
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        raise HTTPException(status_code=404, detail="데모 계정이 없습니다. 데모 모드로 새 DB 볼륨을 만들어 다시 시작하세요.")
     token, user_id = result
     set_session_cookie(response, token)
     return {"user_id": user_id}

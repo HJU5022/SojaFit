@@ -12,5 +12,11 @@ export const login = (email: string, password: string) => apiFetch<{ user_id: nu
 export const signup = (email: string, password: string) => apiFetch<{ user_id: number }>('/api/auth/signup', {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, consent: true }),
 })
+// 데모 모드(DEMO_MODE=1)에서만 있는 버튼 로그인. 아니면 둘 다 404라 화면은 버튼을 숨긴다
+export type DemoAccount = 'a' | 'b'
+export const getDemoStatus = () => apiFetch<{ enabled: boolean }>('/api/auth/demo')
+export const demoLogin = (account: DemoAccount) => apiFetch<{ user_id: number }>('/api/auth/demo-login', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account }),
+})
 export const logout = () => apiFetch<{ ok: boolean }>('/api/auth/logout', { method: 'POST' })
 export const deleteAccount = () => apiFetch<{ deleted: DeletedCounts }>('/api/me', { method: 'DELETE' })

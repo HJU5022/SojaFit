@@ -106,12 +106,7 @@ docker compose up         # .env 없이 띄우면 DEMO_MODE=1(데모 모드). ap
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
-`.env`가 없으면 compose가 `DEMO_MODE=1`로 띄운다. 키 없이 뜨고, 검색은 임베딩 API 없이 BM25만 쓴다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 새 DB 볼륨을 데모 모드로 만들면 아래 로컬 전용 계정이 생긴다. 제출용·실제 계정에는 쓰지 않는다.
-
-| 역할 | 이메일 | 데모 비밀번호 |
-|---|---|---|
-| 관리자 | `demo-admin@example.test` | `demo-admin-1234` |
-| 사용자 | `demo-user@example.test` | `demo-user-1234` |
+`.env`가 없으면 compose가 `DEMO_MODE=1`로 띄운다. 키 없이 뜨고, 검색은 임베딩 API 없이 BM25만 쓴다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 데모 모드(`DEMO_MODE=1`)로 새 DB 볼륨을 만들면 로그인 화면에 **"데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼**이 생긴다. 비밀번호 없이 버튼으로 들어가고, 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다.
 
 ### 키를 넣고 실제 모드
 

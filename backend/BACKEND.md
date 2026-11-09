@@ -10,8 +10,8 @@
 - 승인 원본은 질문·재개·실제 판정 입력을 보존한다. 사용자 일일/실행 예약 한도는 DB에서 공유하며 `ANALYSIS_*`로 설정한다. 상세 API는 버전별 Store 저장 상태와 제공/선택/관련 기억을 구분해 반환한다.
 - `__init__.py` — 패키지 표시
 - `/workspace`, `/api/circuits`, `/api/threads`, `/api/memories`는 `main.py`가 `conversations/memory_service.py`에 위임한다. thread 오류도 공통 error.code/message/request_id와 Cache-Control: no-store를 사용한다.
-- `main.py` — FastAPI 진입점. `/health`, 같은 출처 로그인 화면(`/login`), 로그인·가입 API(`/api/auth/*`), 탈퇴(`DELETE /api/me`: Origin 확인, 관리자 409, 분석 기록 → Store → 계정 순서, 지운 건수), 관리자 API(`/api/admin/users`), 가격·재고 API(`/api/prices`: 로그인 필요, 요청 때 `services/mouser.py`로 한 번 조회, `Cache-Control: no-store`, 데모 모드·키 없음이면 Mouser를 부르지 않음, ADR 0009), 서버 생성 `X-Request-ID`와 공통 JSON 오류 응답, Uvicorn 접속 로그의 Google 콜백 쿼리 제거. 인증 처리는 `auth.py`에 맡깁니다
-- `auth.py` — scrypt 비밀번호, DB 세션, 로그인 잠금(계정당 15분 5회, 클라이언트 IP당 15분 30회), 자기 가입(클라이언트 IP당 UTC 하루 3회, IP 판단 `client_ip`), Google 관리자 인증·연결 승인과 철회, 탈퇴의 마지막 단계인 계정 행 삭제(`delete_account`, 일반 계정만), 관리자 계정 관리 명령(`python -m backend.auth`). 대화·장기 기억 저장은 연결하지 않습니다
+- `main.py` — FastAPI 진입점. `/health`, 같은 출처 로그인 화면(`/login`), 로그인·가입 API(`/api/auth/*`), 데모 버튼 로그인(`GET /api/auth/demo` · `POST /api/auth/demo-login`, `DEMO_MODE=1`에서만, 아니면 404), 탈퇴(`DELETE /api/me`: Origin 확인, 관리자 409, 분석 기록 → Store → 계정 순서, 지운 건수), 관리자 API(`/api/admin/users`), 가격·재고 API(`/api/prices`: 로그인 필요, 요청 때 `services/mouser.py`로 한 번 조회, `Cache-Control: no-store`, 데모 모드·키 없음이면 Mouser를 부르지 않음, ADR 0009), 서버 생성 `X-Request-ID`와 공통 JSON 오류 응답, Uvicorn 접속 로그의 Google 콜백 쿼리 제거. 인증 처리는 `auth.py`에 맡깁니다
+- `auth.py` — scrypt 비밀번호, DB 세션, 로그인 잠금(계정당 15분 5회, 클라이언트 IP당 15분 30회), 자기 가입(클라이언트 IP당 UTC 하루 3회, IP 판단 `client_ip`), 데모 버튼 로그인(`demo_session`: 비밀번호 표식을 가진 시드 일반 계정 A · B에만 세션), Google 관리자 인증·연결 승인과 철회, 탈퇴의 마지막 단계인 계정 행 삭제(`delete_account`, 일반 계정만), 관리자 계정 관리 명령(`python -m backend.auth`). 대화·장기 기억 저장은 연결하지 않습니다
 - `api/` — 세션·Origin·공통 오류를 사용하는 사용자 프로젝트 HTTP 라우터. [API.md](api/API.md)
 - `conversations/` — 프로젝트 소유 대화 저장소와 #73의 사용자별 thread·승인 기억 서비스. [CONVERSATIONS.md](conversations/CONVERSATIONS.md)
 - `projects/` — 사용자 소유 데모 프로젝트·정규화 회로 저장소와 DTO. [PROJECTS.md](projects/PROJECTS.md)

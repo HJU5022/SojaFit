@@ -49,3 +49,31 @@ it('uses the dark editor theme by default', () => {
   expect(root.getPropertyValue('--canvas').trim()).toBe('#0b0f14')
   expect(root.getPropertyValue('--trace').trim()).toBe('#35d0ba')
 })
+
+it('shows demo A/B buttons above the password form only in demo mode and logs in without a password', async () => {
+  let signedIn = false
+  const bodies: string[] = []
+  network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
+    if (path === '/api/auth/demo-login') { bodies.push(String(init.body)); signedIn = true; return Response.json({ user_id: 8 }) }
+    if (path === '/api/projects' || path === '/api/demo-circuits') return Response.json([])
+    if (path.endsWith('/status')) return Response.json({ enabled: false })
+    return signedIn ? Response.json({ user_id: 8, role: 'user' }) : failure()
+  })
+  open()
+  const buttons = await screen.findByRole('group', { name: '데모 로그인' })
+  expect(buttons).toHaveTextContent('평가 계정 아님')
+  expect(buttons.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: '데모 사용자 B로 들어가기' }))
+  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
+  expect(bodies).toEqual([JSON.stringify({ account: 'b' })])
+})
+it('hides the demo buttons when the server is not in demo mode', async () => {
+  network((path) => path === '/api/auth/demo' ? failure('NOT_FOUND', 'Not Found', 404)
+    : path.endsWith('/status') ? Response.json({ enabled: false }) : failure())
+  open()
+  expect(await screen.findByLabelText('이메일')).toBeInTheDocument()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  expect(screen.queryByRole('group', { name: '데모 로그인' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '데모 사용자 A로 들어가기' })).not.toBeInTheDocument()
+})

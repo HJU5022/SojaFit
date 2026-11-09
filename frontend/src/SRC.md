@@ -3,7 +3,7 @@
 ## 역할
 - 넣는 것: React 진입점, 화면 경로 셸, 공통 스타일, 실제 화면 동작 단위 테스트와 테스트 설정.
 - 넣지 않는 것: 서버 API·권한 판정(`backend/`), 외부 모델 호출, 사용자 토큰의 브라우저 저장, 생성된 빌드 산출물.
-- `/login`은 비밀번호·설정된 Google 로그인, `/signup`은 가입(이메일·8자 이상 비밀번호·처리방침 고지 동의 필수), `/app`은 인증된 작업대, `/settings`는 내 설정(소속·직무·선호 실장 방식, SPEC 8.5)과 일반 계정의 계정 삭제(확인 뒤 `DELETE /api/me`), `/admin/users`는 관리자 전용 계정 활성 상태 관리입니다. 작업대는 프로젝트·회로 선택, D5 질문·진행·추가 입력·연결 복구, 근거와 5종 판정을 제공합니다. `projectId`·`targetRef`만 URL query에 두며 화면 이탈 시 프로젝트·run 요청을 폐기합니다. 로그아웃·탈퇴·세션 만료 때 `AuthProvider`가 React Query 캐시와 sessionStorage를 비우고, 보호 화면이 `/login`으로 replace해 주소의 프로젝트 id를 지웁니다. 900px 이하에서는 프로젝트 drawer와 결과 tab을 사용합니다.
+- `/login`은 데모 모드면 비밀번호 없는 "데모 사용자 A · B로 들어가기" 버튼(로컬 데모 전용 계정, 평가 계정 아님)을 위에, 그 아래 비밀번호·설정된 Google 로그인, `/signup`은 가입(이메일·8자 이상 비밀번호·처리방침 고지 동의 필수), `/app`은 인증된 작업대, `/settings`는 내 설정(소속·직무·선호 실장 방식, SPEC 8.5)과 일반 계정의 계정 삭제(확인 뒤 `DELETE /api/me`), `/admin/users`는 관리자 전용 계정 활성 상태 관리입니다. 작업대는 프로젝트·회로 선택, D5 질문·진행·추가 입력·연결 복구, 근거와 5종 판정을 제공합니다. `projectId`·`targetRef`만 URL query에 두며 화면 이탈 시 프로젝트·run 요청을 폐기합니다. 로그아웃·탈퇴·세션 만료 때 `AuthProvider`가 React Query 캐시와 sessionStorage를 비우고, 보호 화면이 `/login`으로 replace해 주소의 프로젝트 id를 지웁니다. 900px 이하에서는 프로젝트 drawer와 결과 tab을 사용합니다.
 
 ## 파일
 - `SRC.md` — 이 문서

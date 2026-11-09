@@ -1,4 +1,4 @@
-"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 자기 가입, 탈퇴의 계정 행 삭제, 관리자 계정 관리).
+"""PostgreSQL 기반 인증(비밀번호 scrypt, DB 세션, 로그인 잠금, 자기 가입, 데모 버튼 로그인, 탈퇴의 계정 행 삭제, 관리자 계정 관리).
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
@@ -36,6 +36,10 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 N, R, P = 2**17, 8, 1
 SIGNUP_IP_DAILY = 3  # 클라이언트 IP당 UTC 하루 가입 요청 상한(11-09 결정)
 LOGIN_IP_FAILURES = 30  # 클라이언트 IP당 15분 로그인 실패 상한. 닿으면 그 IP를 15분 잠근다(11-09 결정)
+# 데모 모드 버튼 로그인 계정(db/007_demo_accounts.sql이 새 볼륨에 만듦). 로컬 데모 전용 일반 사용자이고 평가 계정이 아니다
+DEMO_ACCOUNTS = {"a": "demo-a@example.test", "b": "demo-b@example.test"}
+# [왜] scrypt 형식이 아닌 표식이라 verify_password가 늘 False다(비밀번호 로그인 불가). 버튼 로그인은 이 표식을 가진 계정만 받는다
+DEMO_PASSWORD_HASH = "demo-button-login-only"
 
 
 def validate_auth_configuration() -> None:
@@ -354,6 +358,25 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
             return None  # [주의] 예외 없이 끝내야 위 가입 횟수가 커밋된다
         token = secrets.token_urlsafe(32)
         cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
+        return token, user[0]
+
+
+def demo_session(account: str) -> tuple[str, int] | None:
+    """데모 버튼 로그인: 시드한 데모 계정(A · B)에 새 세션을 발급한다(데모 모드 확인은 호출자 backend/main.py가 한다).
+
+    [주의] 정해진 이메일이고, 비밀번호 표식(DEMO_PASSWORD_HASH)을 가진 활성 일반 사용자일 때만 받는다.
+    같은 이메일로 가입한 계정(비밀번호 해시가 있음) · 관리자 · 비활성 계정에는 세션을 주지 않는다.
+    Returns:
+        (세션 토큰, user_id). 그런 데모 계정이 없으면 None(호출자가 404).
+    """
+    with connection() as conn:
+        # [왜] 로그인 · 비활성화와 같이 사용자 행을 FOR UPDATE로 잠가 비활성화와 세션 발급이 엇갈리지 않게 한다
+        user = conn.execute("SELECT id FROM users WHERE login_id=%s AND password_hash=%s AND role='user' AND is_active FOR UPDATE",
+                            (DEMO_ACCOUNTS[account], DEMO_PASSWORD_HASH)).fetchone()
+        if not user:
+            return None
+        token = secrets.token_urlsafe(32)
+        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]
 
 

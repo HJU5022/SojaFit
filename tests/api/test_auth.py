@@ -673,15 +673,9 @@ def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
     assert encoded.startswith("scrypt$")
     assert auth.verify_password("a-strong-demo-password", encoded)
 
-@pytest.mark.parametrize("mode,config,expected", [
-    ("1", ("", "", "", ""), "default"),
-    ("1", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
-    ("1", ("custom-admin@", "valid", "custom-user@example.test", "valid"), "invalid"),
-    ("1", ("partial@example.test", "", "", ""), "invalid"),
-    ("0", ("", "", "", ""), "none"),
-    ("0", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
-])
-def test_demo_seed_configuration(mode, config, expected):
+@pytest.mark.parametrize("mode", ["1", "0", ""])
+def test_demo_seed_configuration(mode):
+    """데모 모드에서만 비밀번호 없는 데모 일반 사용자 A · B를 만들고(다시 실행해도 그대로), 저장소에 비밀번호 해시가 없다."""
     import os
     from pathlib import Path
     import psycopg
@@ -690,31 +684,84 @@ def test_demo_seed_configuration(mode, config, expected):
     if not database_url:
         pytest.skip("requires an isolated authentication test database")
     seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
+    assert "scrypt$" not in seed and f"'{auth.DEMO_PASSWORD_HASH}'" in seed  # 앱과 같은 표식, 고정 해시 없음
     statement = seed[seed.index("DO $$"):]
-    password_hash = auth.hash_password("custom-test-password") if "valid" in config else ""
-    values = [password_hash if value == "valid" else value for value in config]
     with psycopg.connect(database_url) as conn:
         with conn.transaction(force_rollback=True):
             conn.execute("CREATE TEMP TABLE users (login_id text PRIMARY KEY, password_hash text NOT NULL, role text NOT NULL) ON COMMIT DROP")
-            for key, value in zip(("demo_admin_email", "demo_admin_password_hash", "demo_user_email", "demo_user_password_hash"), values):
-                conn.execute("SELECT set_config(%s, %s, true)", ("sojafit." + key, value))
             conn.execute("SELECT set_config('sojafit.demo_mode', %s, true)", (mode,))
-            if expected == "invalid":
-                with pytest.raises(psycopg.errors.RaiseException):
-                    conn.execute(statement)
-                return
-            conn.execute(statement)
-            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY role").fetchall()
-            if expected == "none":
-                assert rows == []
-            elif expected == "custom":
-                assert rows == [(config[0], password_hash, "admin"), (config[2], password_hash, "user")]
-            else:
-                assert [(row[0], row[2]) for row in rows] == [("demo-admin@example.test", "admin"), ("demo-user@example.test", "user")]
-                assert auth.verify_password("demo-admin-1234", rows[0][1])
-                assert auth.verify_password("demo-user-1234", rows[1][1])
-            conn.execute(statement)
-            assert conn.execute("SELECT count(*) FROM users").fetchone()[0] == len(rows)
+            for _ in range(2):
+                conn.execute(statement)
+            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY login_id").fetchall()
+    if mode == "1":
+        assert rows == [(email, auth.DEMO_PASSWORD_HASH, "user") for email in auth.DEMO_ACCOUNTS.values()]
+        assert not auth.verify_password("", auth.DEMO_PASSWORD_HASH) and not auth.verify_password("demo-button-login-only", auth.DEMO_PASSWORD_HASH)
+    else:
+        assert rows == []
+
+
+def test_demo_login_routes_do_not_exist_outside_demo_mode(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "0")
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "demo_session", lambda *args: pytest.fail("demo login must not run outside demo mode"))
+    client = TestClient(app)
+    for response in (client.get("/api/auth/demo"), client.post("/api/auth/demo-login", headers={"origin": "http://testserver"}, json={"account": "a"}),
+                     client.post("/api/auth/demo-login", json={"account": "z"})):
+        assert response.status_code == 404 and response.json()["error"]["code"] == "NOT_FOUND"
+    monkeypatch.setenv("DEMO_MODE", "1")
+    assert client.get("/api/auth/demo").json() == {"enabled": True}
+    assert client.post("/api/auth/demo-login", json={"account": "a"}).status_code == 403  # Origin 없음
+    for body in ({"account": "c"}, {"account": "demo-a@example.test"}, {"account": "a", "user_id": 1}, {}):
+        assert client.post("/api/auth/demo-login", headers={"origin": "http://testserver"}, json=body).status_code == 422
+
+
+def test_database_demo_buttons_log_into_separate_seeded_users_only(monkeypatch):
+    """버튼 로그인은 시드한 데모 계정 A · B(서로 다른 일반 사용자)에만 세션을 주고, 비밀번호 로그인은 늘 실패하며, 다른 계정에는 닿지 않는다."""
+    import hashlib
+    import os
+    from pathlib import Path
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("DEMO_MODE", "1")
+    seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
+    headers = {"origin": "http://testserver"}
+    emails = list(auth.DEMO_ACCOUNTS.values())
+    with psycopg.connect(database_url) as conn:
+        conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+        conn.execute("SELECT set_config('sojafit.demo_mode', '1', false)")
+        conn.execute(seed[seed.index("DO $$"):])
+    try:
+        clients = {account: TestClient(app) for account in auth.DEMO_ACCOUNTS}
+        ids = {}
+        for account, client in clients.items():
+            response = client.post("/api/auth/demo-login", headers=headers, json={"account": account})
+            assert response.status_code == 200 and "httponly" in response.headers["set-cookie"].lower()
+            ids[account] = response.json()["user_id"]
+            assert client.get("/api/auth/me").json() == {"user_id": ids[account], "role": "user"}
+        assert ids["a"] != ids["b"]  # 두 창(쿠키가 따로)에서 서로 다른 사용자다
+        for password in ("", "demo-button-login-only", auth.DEMO_PASSWORD_HASH):  # 비밀번호 로그인은 늘 실패
+            response = TestClient(app).post("/api/auth/login", headers=headers, json={"email": emails[0], "password": password or "x"})
+            assert response.status_code == 401
+        # 같은 이메일이지만 비밀번호로 가입한 계정 · 관리자로 바뀐 계정 · 비활성 계정은 버튼으로 닿지 않는다
+        with psycopg.connect(database_url) as conn:
+            conn.execute("UPDATE users SET password_hash=%s WHERE login_id=%s", (auth.hash_password("a-real-password-123"), emails[1]))
+            conn.execute("UPDATE users SET role='admin' WHERE login_id=%s", (emails[0],))
+        for account in auth.DEMO_ACCOUNTS:
+            response = TestClient(app).post("/api/auth/demo-login", headers=headers, json={"account": account})
+            assert response.status_code == 404 and "set-cookie" not in response.headers
+        with psycopg.connect(database_url) as conn:
+            conn.execute("UPDATE users SET role='user', is_active=FALSE WHERE login_id=%s", (emails[0],))
+        assert TestClient(app).post("/api/auth/demo-login", headers=headers, json={"account": "a"}).status_code == 404
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+            conn.execute("DELETE FROM auth_login_attempts WHERE login_hash = ANY(%s)", ([hashlib.sha256(email.encode()).hexdigest() for email in emails],))
 
 
 def test_session_token_hash_uses_key_when_provided(monkeypatch):

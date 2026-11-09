@@ -59,7 +59,7 @@ SojaFit (proj3-b)
 │       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
 │       ├── api/            <- 기존 서버 API의 typed fetch 경계
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
-│       │   ├── auth.ts     <- 로그인·가입(동의)·세션 복원·로그아웃·탈퇴·Google 상태 API
+│       │   ├── auth.ts     <- 로그인·가입(동의)·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
@@ -77,8 +77,8 @@ SojaFit (proj3-b)
 │       │   ├── useRunStream.ts <- D5 시작·재개·연결 복구 상태 머신
 │       │   └── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
-│       │   ├── LoginPage.tsx <- 비밀번호 로그인·설정된 Google 링크
-│       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장 테스트
+│       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
+│       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
 │       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
 │       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
@@ -119,7 +119,7 @@ SojaFit (proj3-b)
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
-│   ├── main.py             <- FastAPI 진입점: /health, 로그인·Google 관리자 로그인, me·로그아웃·탈퇴, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
+│   ├── main.py             <- FastAPI 진입점: /health, 로그인·데모 버튼 로그인·Google 관리자 로그인, me·로그아웃·탈퇴, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
@@ -253,7 +253,7 @@ SojaFit (proj3-b)
 │   ├── 004_create_business_tables.sql  <- 업무 표(회로·판정·견적). 확정되면 manual/의 초안을 옮김 (예정)
 │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
 │   ├── 006_user_roles.sql  <- 사용자 역할(admin/user) 열
-│   ├── 007_demo_accounts.sql  <- 로컬 Compose 데모 계정(.env의 이메일·scrypt 해시)
+│   ├── 007_demo_accounts.sql  <- 데모 모드 새 볼륨의 데모 사용자 A · B(비밀번호 없음, 버튼 로그인 전용)
 │   ├── 008_multi_dim_embeddings.sql  <- 임베딩 열을 차원 없는 halfvec으로(모델별 차원 공존)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블

@@ -8,6 +8,7 @@ type Auth = {
   user: auth.User | null; loading: boolean; error: unknown
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string) => Promise<void>
+  demoLogin: (account: auth.DemoAccount) => Promise<void>
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
@@ -55,6 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await auth.getMe())
     setError(null)
   }
+  async function demoLogin(account: auth.DemoAccount) {
+    if (dummy) { setUser(DUMMY_USER); setError(null); return }
+    await auth.demoLogin(account)
+    setUser(await auth.getMe())
+    setError(null)
+  }
   async function logout() {
     if (dummy) { endSession(); return }
     await auth.logout()
@@ -65,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await auth.deleteAccount()
     endSession()
   }
-  return <AuthContext.Provider value={{ user, loading, error, login, signup, logout, deleteAccount }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, error, login, signup, demoLogin, logout, deleteAccount }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

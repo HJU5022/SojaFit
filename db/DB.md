@@ -2,17 +2,17 @@
 
 ## 역할
 - 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL만 바로 아래에 둡니다. 스키마 문서는 `schema/`, 자동 실행하지 않는 SQL은 `manual/`에 둡니다. Compose가 `./db`를 Postgres 초기화 폴더로 마운트해 최상위 `.sql`만 실행하므로 SQL을 하위 폴더로 옮기지 않습니다.
-- 넣는 것: 확장·스키마·인덱스 생성 SQL. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/pipeline/ingest.py`가 합니다. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`이 `.env`의 이메일·scrypt 해시로 만들고, 그 밖의 계정은 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 넣지 않습니다.
+- 넣는 것: 확장·스키마·인덱스 생성 SQL. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/pipeline/ingest.py`가 합니다. 로컬 Compose 데모 계정(데모 사용자 A · B, 비밀번호 없음)은 `007_demo_accounts.sql`이 데모 모드에서 만들고, 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 넣지 않습니다.
 - 넣지 않는 것: 표 설계 문서(`db/schema/`), 평가용 계정 비밀번호(강사에게 따로 제출), 원본 문서(`data/corpus/`), 자동 실행하면 안 되는 SQL(`db/manual/`).
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
 ## 실행과 주의
 - 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 만들던 `011_part_specifications.sql`을 지웠고, 운영 DB의 표는 11-09에 지웠다. 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다(이 폴더에 `DROP` SQL은 두지 않았다). 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣은 기록이 있다(`docs/worklog/sth.md`).
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`·`004`·`011`은 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 업무 표 초안으로 `manual/004_create_business_tables.sql.draft`에 있으며, `011`(부품 사양 표)은 11-09에 지웠습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql` → `022_token_limits.sql` → `023_retention.sql`입니다. 데모 모드에서 네 개의 계정 설정 변수가 모두 비어 있으면 기본 데모 계정이 생성됩니다. 네 값이 모두 유효하면 해당 계정을 사용하고, 일부만 설정하면 초기화가 실패합니다. 데모 모드가 꺼져 있고 네 값이 비어 있으면 기본 계정을 생성하지 않습니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql` → `022_token_limits.sql` → `023_retention.sql`입니다. 데모 모드(`DEMO_MODE=1`)면 데모 사용자 A · B를 만들고, 아니면 계정을 만들지 않습니다.
 - Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행한다. 013~017 · 022 · 023을 멱등 적용하고 PostgresSaver/PostgresStore의 내부 표를 준비한 뒤 API가 시작된다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만든다(확장은 설치하지 않음, SPEC 8.5). 이 서비스는 Compose 로컬 `db`에 연결하며 앱 일반 기동에는 DDL을 넣지 않는다. 기존 DB에 명령을 수동 실행할 때는 대상·권한·적용 이력을 먼저 확인한다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 코퍼스 SQL과 인증 SQL이 먼저 필요하며, 자동 실행 전 파일 순서·마이그레이션 이력 방식을 확정해야 합니다.
-- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행되며, 기존 DB에는 환경변수를 준비한 뒤 검토된 SQL을 별도로 적용합니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
+- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행됩니다(기존 로컬 볼륨에는 데모 사용자 A · B가 없어 버튼 로그인이 404입니다). 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
@@ -30,7 +30,7 @@
 - `003_auth.sql` — 사용자·인증 세션·로그인 시도 테이블
 - `005_auth_attempt_window.sql` — 로그인 실패 집계 시간 컬럼 추가
 - `006_user_roles.sql` — 계정 역할 추가. 기존 계정은 일반 사용자로 유지하며 관리자는 `python -m backend.auth --role admin`으로 따로 만든다
-- `007_demo_accounts.sql` — 로컬 Compose용 관리자·일반 데모 계정 생성. 데모 모드 기본 계정 또는 네 환경변수로 지정한 이메일·scrypt 해시를 사용한다. `$`가 포함된 해시는 `.env`에서 작은따옴표로 감싼다. 실제 계정 비밀번호는 저장소에 두지 않는다. 새 볼륨 초기화 때 한 번 실행
+- `007_demo_accounts.sql` — 데모 모드(`DEMO_MODE=1`)에서만 로컬 데모 전용 일반 사용자 2개(`demo-a@example.test` · `demo-b@example.test`, 평가 계정 아님)를 만든다. 비밀번호 해시 칸에는 scrypt 형식이 아닌 표식(`backend/auth.py` `DEMO_PASSWORD_HASH`)을 넣어 비밀번호 로그인은 늘 실패하고, 데모 모드의 버튼 로그인(`POST /api/auth/demo-login`)만 이 표식을 가진 계정에 세션을 준다. 저장소에 비밀번호 · 해시를 두지 않는다(11-09). 새 볼륨 초기화 때 한 번 실행
 - `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용. 열이 halfvec(n)이면 `USING` 없이 차원 표시만 떼 표를 다시 쓰지 않는다(`scripts/db/voyage_rollout.py migrate`가 filenode 전후로 확인)
 - `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용하며, 다시 실행해도 있는 행은 그대로
 - `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
@@ -108,4 +108,4 @@ ORDER BY conrelid::regclass::text, conname;
 
 - 이미 `auth_login_attempts`가 있으면 `window_started_at` 존재 여부와 적용 이력을 확인합니다. 컬럼이 없고 다른 구조가 인증 코드와 일치하는 경우에만 검토된 `005_auth_attempt_window.sql` 적용을 계획합니다. 존재한다면 무조건 다시 실행하지 않습니다. 기존 데이터를 지우지 않고 테스트 DB에서 먼저 확인합니다. 애플리케이션 갱신 전 DB 마이그레이션이 선행돼야 합니다.
 - `006_user_roles.sql`도 기존 `users.role` 유무와 이력을 확인한 뒤 한 번만 적용합니다. 기존 계정은 `user`로 유지합니다. 새 API 코드보다 먼저 반영해야 합니다.
-- `007_demo_accounts.sql`은 새 Compose 볼륨에서만 자동 실행됩니다. 기존 DB에 적용할 경우 대상 계정 이메일의 중복과 역할을 확인하고 테스트 DB에서 먼저 검증합니다. 시드 SQL은 이미 있는 계정의 비밀번호나 역할을 덮어쓰지 않습니다.
+- `007_demo_accounts.sql`은 새 Compose 볼륨에서만 자동 실행되며 서비스 DB에는 적용하지 않습니다. 시드 SQL은 이미 있는 계정의 비밀번호나 역할을 덮어쓰지 않습니다(같은 이메일로 가입한 계정은 표식이 없어 버튼으로 들어갈 수 없음).
