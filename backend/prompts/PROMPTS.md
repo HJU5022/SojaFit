@@ -10,7 +10,7 @@
 `evals/runners/run_graph.py`와 `evals/runners/run_skill_pair.py`는 이 폴더의 `*.md`를 모두 읽어 프롬프트 해시를 만들되 `PROMPTS.md`(이 설명 파일)만 뺍니다. 그래서 이 파일을 고쳐도 해시는 바뀌지 않지만, 다른 `.md`를 추가·수정하면 해시가 바뀌어 평가 결과와 묶이는 버전이 달라집니다. 프롬프트가 아닌 문서는 이 폴더에 두지 않습니다.
 
 ## 노드별 모델(시작값)
-`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. 시작값은 `supervisor` · `synth`가 `anthropic/claude-sonnet-5.5`, `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read` · `docs_answer`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
+`backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 노드마다 쓸 모델을 정합니다. `synth`는 `anthropic/claude-sonnet-5.5`, `supervisor`는 11-09부터 `anthropic/claude-haiku-5.5`(ADR 0016), `grade`가 `openai/gpt-6-luna`, `route` · `rewrite` · `generate` · `judge_read` · `docs_answer`가 `anthropic/claude-haiku-5.5`이며 **최종 결정이 아닙니다**(11-05 정운 결정: Supervisor는 Sonnet, 서브에이전트는 Haiku, 채점은 Luna. 측정 뒤 ADR로 정합니다). Luna에만 `temperature`를 보내지 않고 Haiku · Sonnet은 0입니다. 환경변수 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나를 씁니다(11-04 기준선 재현용). Langfuse 등록 설정의 `model`도 노드별로 이 표를 따릅니다.
 
 ## 버전 기록
 
@@ -18,6 +18,8 @@
 
 | 날짜 | 파일 | 버전 | 바꾼 것 | 이유 | 평가 결과 |
 |---|---|---|---|---|---|
+| 2026-11-10 | `docs_answer.md` | 다음 버전 | `partial`일 때도 빠진 부분을 겨눈 다른 검색어를 `next_query`에 쓴다 | 일부만 답하고 끝내 정답 근거 없이 답했다(v3-20, 사전 등록 #49) | 측정 예정 |
+| 2026-11-09 | `supervisor.md` | 다음 버전 | 판단 순서 3단계(범위 → 확인된 사실 → 질문 종류별 에이전트), 후보 판정 · 찾기는 다이오드만 | Supervisor를 Haiku로 바꾸면서 범위 밖 · 없는 품번 · 찾기 연결을 틀렸다(#46, 사전 등록 #47) | 사전 등록 #47 측정 결과 |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 허브 구조의 "다음 노드 고르기 · 보고 뒤 규칙"을 빼고 계획서(질문 종류 · 다음 길 tasks · finish · price · refuse · 할 일 최대 3개와 지시서: 에이전트 · 종류 · 목표 · 출력 · 경계 · 첫 검색어)를 내게 다시 씀. 제약(숫자 비교 금지 · 거절 사유 · 판정은 후보 판정 · 찾기만 · 사실 믿기)과 질문 종류 정의, 검색어 쓰는 법(예전 `rewrite.md`)은 남김 | 멀티 재설계(11-06 정운 결정, 참조/아티팩트 "SojaFit 멀티 에이전트 구조"): 규칙표를 따라가 질문당 판단 4번 · 비용 20배(D5) | v3 측정 전 |
 | 2026-11-06 | `docs_answer.md` | v1(Langfuse 등록 전) | 처음 작성. 문서 에이전트의 근거 채점(enough · partial · none, 없으면 다른 검색어)과 답 쓰기(문장마다 [번호] · [넷리스트], 값은 그대로, 대체 판단 없음)를 한 호출로 | 예전 채점(Luna) · 생성(Haiku) 두 호출을 하나로. 11-06 강사 지적 "채점은 질문 맥락을 가진 쪽이" | v3 측정 전 |
 | 2026-11-06 | `synth.md` | v1(Langfuse 등록 전) | 처음 작성. Supervisor ② 종합: 할 일 2개 이상의 부분 답을 한 답으로, 인용 유지, 판정 표 · 숫자는 다시 쓰지 않음(코드가 붙임), 실패한 부분은 이유와 함께 | 위와 같음 | v3 측정 전 |

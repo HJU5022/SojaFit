@@ -96,7 +96,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 사람 승인(interrupt): 견적서 저장 직전, 그리고 틀린 사례 기억을 고칠 때(둘 다 아직 없음). 판정의 빠진 회로 값 묻기는 문항당 1번 인터럽트로 구현했고 체크포인터가 있어야 켭니다
 - 재검색·재시도 상한: 검색은 2회(재작성한 첫 검색 + 재작성 뒤 1회)입니다. LLM 출력 형식이 틀리면 2회까지 다시 부릅니다.
-- LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor는 `anthropic/claude-sonnet-5.5`, 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
+- LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0016](docs/adr/0016-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py` `_chat_model`). v3 50문항(OpenRouter · Supabase · Langfuse)에서 정확도는 그대로이고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄어 끄기로 했습니다(11-09 조장 결정).
 - 출발점 그림은 `docs/조원-계약서.md`의 "요청 흐름"입니다. 확정되면 이 절로 옮깁니다.
 

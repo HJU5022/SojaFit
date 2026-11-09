@@ -73,7 +73,7 @@ KiCad 넷리스트 + 질문
 | 구성 | 지금 |
 |---|---|
 | 그래프 | LangGraph D4 v2 단일 그래프(위 흐름, 11-06)와 D5 멀티 그래프(Supervisor + 검색 · 판정 · 작성 · 검증 서브에이전트). 판정 길은 가짜 LLM 시험만 했다 |
-| LLM | Supervisor `anthropic/claude-sonnet-5.5`, 그 밖 `anthropic/claude-haiku-5.5`, 채점 `openai/gpt-6-luna` (OpenRouter, ADR 0014) |
+| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 채점 `openai/gpt-6-luna` (OpenRouter, ADR 0016) |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3`, 첫 검색 전 쿼리 재작성, 표지 청크 제외(사전 등록 #25, ADR 0004 갱신 2026-11-03) |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수 |
 | 로그인 | 이메일·비밀번호(scrypt), DB 세션, 5회 실패 시 15분 잠금, 관리자 계정 관리 API |

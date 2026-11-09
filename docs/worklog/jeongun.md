@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-09 ~ 11-10 Supervisor Haiku 전환과 실패 문항 고침(#47 ~ #50), 멀티 구조 확정(ADR 0016)
+- 한 일: Supervisor를 Haiku 5.5로(종합은 Sonnet), 찾기 질문은 코드가 판정 에이전트로 맞춤, 판정 쪽 없는 후보 거절 · 빈 판정 실패(#47). v3 실패 문항을 원인에서 고침: 회로 값 vz_min · vz_max는 범위 인용만(#48, v3-13), 문서 에이전트 일부 답 재검색(#49, v3-20), 요구 말 연산은 원문(#50, v3-09). ADR 0016으로 구조를 확정했다.
+- 바꾼 파일: `backend/services/langfuse_prompts.py`, `backend/multi_agent/supervisor.py` · `agents/judge.py` · `agents/docs.py`, `backend/prompts/supervisor.md` · `docs_answer.md`, 시험 `tests/multi_agent/test_supervisor.py` · `test_judge_read.py` · `test_judge.py` · `test_agents.py` · `tests/services/*` · `tests/evals/test_run_graph.py`, 문서 `AGENTS.md` · `README.md` · `SPEC.md` · `docs/adr/0016-…` · `ADR.md` · `0014-…` · `MULTI_AGENT.md` · `PROMPTS.md`.
+- 실행한 명령과 결과: 오프라인 전체 시험 910 passed, 57 skipped. 측정은 레포 밖 `exp-haiku-1109/`의 `run_gate_traced.py`(Langfuse 추적, 깨끗한 작업 폴더 + lab 회로 63개). #47(4a61fd0, 5개 동시): v3 50 · 48, h4 46, h3 45, c20 12/20. #48 · #49(5d37cd0): v3 50 · 49. #50(93a497c): v3 50 · 50, 재현 2세트 50 · 50, p95 8.6 ~ 8.9초, 50문항 LLM $0.044 ~ $0.052. 수치는 사전 등록 #47 ~ #50 결과 줄.
+- 확인 못 한 것: c20 · h3 · h4를 최종 구성으로 다시 재지 않음. c20 Sonnet 비교 없음. synth Haiku 미검증. 세션 임시 폴더가 11-09 22:51 비워져 실험 클론(exp-haiku-luna)과 결과 일부를 잃음(patch · 기록은 `exp-haiku-1109/`에 복구).
+- 다음 할 일: 품번·판 확인(코드) 2.4 ~ 2.6초 줄이기(판정 질문에서 Supervisor보다 김). 회의 자료는 회의록 `D6-2026-11-10/트레이싱/`.
+
 ## 2026-11-09 Supervisor 모델 Haiku 5.5 측정(#46) — 받지 않음, 되돌림
 - 한 일: 조장 결정(11-09, 비용 줄이기)으로 `NODE_MODELS["supervisor"]`를 Haiku 5.5로 바꿔 v3 50문항 2세트를 쟀다. 사전 등록 #46의 받지 않는 조건에 걸려 되돌렸다.
 - 바꾼 파일: `backend/services/langfuse_prompts.py`, `tests/services/test_langfuse_prompts.py` · `test_llm.py`, `tests/evals/test_run_graph.py`(a8e9134, 077f6e4로 되돌림), `evals/guides/preregister.md`.
