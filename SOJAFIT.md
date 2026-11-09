@@ -421,7 +421,8 @@ SojaFit (proj3-b)
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
-│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험
+│   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
+│   │   ├── test_http_smoke.py  <- HTTP 점검 스크립트(scripts/smoke/)를 가짜 서버로: 전체 통과 · 두 번째 승인 409 통과, requires_input 없으면 실패 · 뒤 단계 건너뜀, 결과 파일에 비밀번호 · 쿠키 · 이메일 없음
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
@@ -548,6 +549,9 @@ SojaFit (proj3-b)
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
 │       ├── hnsw/           <- HNSW 대 정확 검색
+│   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
+│   │   ├── SMOKE.md        <- 폴더 설명
+│   │   └── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
 │       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
@@ -563,6 +567,7 @@ SojaFit (proj3-b)
 │   │   ├── SPECS.md        <- 폴더 설명
 │   │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
+│       ├── smoke/          <- (예정) HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
 │   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
@@ -713,6 +718,7 @@ SojaFit (proj3-b)
 [ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
 
 - **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서 하나뿐입니다.
+| `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
 - **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
 - **대문자의 효과와 한계**
   - GitHub 파일 목록, 터미널 `ls`, `git ls-files`는 대문자 이름을 소문자보다 먼저 정렬해 폴더 설명 파일이 파일 목록 맨 위에 옵니다(2026-11-03 확인). 같은 폴더에 다른 대문자 문서가 없어야 이 효과가 살아 있어서, 대문자를 아래 예외 밖에서 쓰지 않습니다.
