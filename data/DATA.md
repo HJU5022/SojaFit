@@ -9,7 +9,7 @@
 전체 PDF·파싱·청크·임베딩 산출물은 저장소에 포함하지 않습니다. 작업자가 지정한 저장소 밖 경로에 둘 수 있지만 이 문서는 특정 로컬 경로의 존재나 전체 처리 완료를 보장하지 않습니다. 저장소에서 확인 가능한 정본은 `manifest.jsonl`과 PDF 표본 3건입니다.
 
 ## 파일
-- `manifest.jsonl` — 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256, 쪽 수, 청크 수). `backend/rag/pipeline/chunk.py`가 만들고 `backend/rag/pipeline/ingest.py`·`collect.py`가 읽습니다. 원래 PDF 파일 이름은 `source_url` 끝에 있습니다
+- `manifest.jsonl` — 2026-11-01 v1 청킹 당시 체크인한 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256, 쪽 수, 청크 수). 현재 `backend/rag/pipeline/chunk.py`도 같은 형식의 새 manifest를 만들고 `backend/rag/pipeline/ingest.py`·`collect.py`가 읽지만, v4h 실행 결과는 저장소 밖 산출물이며 이 파일을 자동으로 갱신하지 않습니다. 원래 PDF 파일 이름은 `source_url` 끝에 있습니다
 - `corpus/` — 코퍼스 원본 문서 표본(TSC PDF 3건). [CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로와 라이선스. [CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — 키 없는 데모 모드가 재생할 응답 자리. 지금은 설명 파일만 있습니다. [DEMO.md](demo/DEMO.md)
@@ -30,7 +30,7 @@ G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(
 
 manifest는 **512,000바이트 아래**로 둡니다. Checkpoint 대시보드가 1,012,774바이트 manifest를 "커서 읽지 못함"으로 표시했고(11-02), GitHub GraphQL은 파일 내용을 512,000바이트에서 자릅니다. `tests/rag/test_rag_chunk.py`가 크기를 확인합니다.
 
-청크에 들어가지 못한 원문 글자가 있으면 `chars_kept`가 `chars_original`보다 작고 `truncated`가 true입니다(TSC 1,360건 중 1,356건). TSC 코퍼스에서 `chars_original`은 Docling 본문(머리글·바닥글 제외) 글 조각과 표 칸의 글자 수, `chars_kept`는 그중 청크에 들어간 글자 수입니다(`backend/rag/pipeline/chunk.py`). 얼마나 잘랐는지 숨기면 파싱 대조가 의미가 없어집니다.
+v1 manifest에서 청크에 들어가지 못한 원문 글자가 있으면 `chars_kept`가 `chars_original`보다 작고 `truncated`가 true입니다(2026-11-01 v1 스냅샷: TSC 1,360건 중 1,356건). 이 수치는 현재 v4h 청킹 통계가 아닙니다. 당시 TSC 코퍼스에서 `chars_original`은 Docling 본문(머리글·바닥글 제외) 글 조각과 표 칸의 글자 수, `chars_kept`는 그중 청크에 들어간 글자 수였습니다. 현재 청커의 보존 여부는 새 manifest와 `chunks.jsonl`로 다시 확인합니다.
 
 청크 단위 기록은 `backend/rag/pipeline/chunk.py`가 만드는 `chunks.jsonl`(저장소 밖 로컬)에 있고, 청크마다 문서(`doc`)·순번(`idx`)·쪽·표·본문 해시(`sha256`)를 적습니다. 청크 수의 합이 1만을 넘고 **서로 다른 본문 해시가 1만 개 이상**이라는 것이 G3의 증거입니다. 같은 문구가 여러 문서에 나오면 해시가 같으므로 한 개로 셉니다.
 

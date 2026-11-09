@@ -1,5 +1,13 @@
 # 오세창 작업 기록
 
+## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
+
+- 목적: 최신 main의 v4h 청킹·Voyage 검색 구현과 과거 v1 측정, 저장소 밖 lab 실행을 문서에서 서로 다른 근거로 구분하고 PR #71의 구현 현황 문서에 함께 반영한다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/EVALS.md`, `data/DATA.md`, `SPEC.md`, `backend/mcp_skill/MCP_SKILL.md`, `docs/experiments/embedding-voyage-candidates.md`, `docs/experiments/corpus-storage-budget.md`, `docs/research/embedding-candidate-investigation.md`, `docs/research/model-licenses.md`, 이 파일.
+- 바꾼 내용: 평가 보고서 상단을 현재 코드 계약과 2026-11-01 측정 스냅샷으로 나누고, 임베딩 선택 완료 상태와 v1 manifest provenance를 명시했다. SPEC의 v3 50문항 수치는 저장소 밖 lab 결정 근거이며 공식 G5 결과가 아니라고 표시하고, 과거 STH 브랜치 안내를 현재 MCP 의존성·시험 경계로 바꿨다. 2026-11-02 후보 조사·실험 문서의 `text-embedding-3-small` 현재형 문구는 당시 상태로 날짜를 붙이고 현재 Voyage 계약의 정본을 연결했다.
+- 작업 경계: 동결 평가셋과 원시 결과는 수정하지 않았고 API 호출·DB 적재·배포는 하지 않았다.
+- 검증: `uv lock --check`, `docker compose config --quiet`, `git diff --check`, 충돌 표식 검색을 통과했다. `PYTHONUTF8=1 uv run --frozen pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다. 동결 파일(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `FROZEN.json`) 변경은 0건이다.
+
 > **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
 
 ## 2026-11-09 닫힌 PR #67 최신 main 재적용

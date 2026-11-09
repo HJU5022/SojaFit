@@ -1,6 +1,6 @@
 # Voyage 임베딩 후보 추가 계약
 
-> **상태: 설계 계약만 포함.** Voyage allowlist와 입력 어댑터 구현, 테스트, 실제 PDF 표본과 원시 JSON은 현재 `main`에 없다. 로컬 실행·차단 이력은 [embedding-candidate-investigation.md](../research/embedding-candidate-investigation.md)에 있으며 최종 선정 근거가 아니다.
+> **상태: 2026-11-02 당시 설계 계약만 포함.** 이 문서가 제안한 Voyage 4 Nano·OpenRouter Voyage 4 평가기와 원시 JSON은 `main`에 없습니다. 이후 서비스 선택은 별도 사전 등록 #25에서 `voyage-4-large` 1024차원으로 완료됐으며 현재 계약은 루트 `SPEC.md` 6절과 `EVAL_REPORT.md` 1-4절을 따릅니다. 아래 내용은 당시 후보 평가 계약으로 보존합니다.
 
 ## Why
 
@@ -58,7 +58,7 @@
   - 문서 `input_type=document`, 질의 `input_type=query`, `dimensions=1024`
   - 공개 단가 `$0.06/M tokens`는 실행 전 다시 확인
   - `backend/services/llm.py::embed_texts` 경계만 사용하고 자동 재시도 0
-- 서비스 경계: Voyage 2종은 평가 후보다. 현재 서비스 적재·검색과 DB는 `text-embedding-3-small`·`vector(1536)`을 유지한다. Voyage를 서비스 기본값으로 채택하려면 동결 본평가 뒤 별도 ADR·Migration·런타임 설정이 필요하다.
+- 서비스 경계(2026-11-02 당시): Voyage 2종은 평가 후보였고 서비스 적재·검색과 DB는 `text-embedding-3-small`·`vector(1536)`을 유지했다. 이후 별도 평가와 ADR 0004 갱신으로 서비스는 `voyage-4-large` 1024차원·차원 없는 `halfvec`을 사용한다. 이 작업서 자체가 현재 서비스 기본값을 정하는 문서는 아니다.
 
 ## AC
 
