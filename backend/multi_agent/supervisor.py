@@ -25,6 +25,11 @@ PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
 SYNTH_PROMPT = (PROMPTS / 'synth.md').read_text(encoding='utf-8')
 NUMBER = re.compile(r'\d+(?:\.\d+)?')
+# [왜] 그래프 노드 이름은 강의처럼 한국어다(build.py가 이 이름으로 노드를 단다). 갈림 함수는 다음 노드 이름을 그대로 돌려줘
+#      draw_mermaid 그림에 영어 라벨이 붙지 않는다. 계획서 · 모으기의 값(docs · finish · single 등)은 그대로 두고 여기서만 옮긴다
+NODE = {'docs': 'RAG 에이전트', 'judge': '대체 부품 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
+        'collect': '답 모으기', 'single': '답 정리', 'synth': '종합'}
+REPLAN = '모두 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
 
 
 class Facts(BaseModel):
@@ -101,16 +106,16 @@ def payload(state: dict, task: dict) -> dict:
 
 
 def after_plan(state: dict):
-    """계획 뒤 갈림길: 일상 대화 → 끝, 가격 → 가격 안내, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send."""
+    """계획 뒤 갈림길: 일상 대화 → 끝내기, 가격 → 가격 안내, 거절 → 거절, 할 일 → 서브에이전트에 동시에 Send. 노드 이름을 돌려준다."""
     plan = state.get('plan') or {}
     if state.get('refusal_reason') or not plan:
-        return 'refuse'
+        return NODE['refuse']
     if plan['next'] == 'answer':
-        return 'collect'  # 재계획이 더 할 일 없이 받은 보고로 답하라고 했다
+        return NODE['collect']  # 재계획이 더 할 일 없이 받은 보고로 답하라고 했다
     if plan['next'] != 'tasks':
-        return plan['next']
+        return NODE[plan['next']]
     # [왜] 할 일끼리 서로 기다릴 필요가 없어 한 번에 보낸다. LangGraph가 같은 단계에서 동시에 돌리고, 보고는 add_or_reset이 이어 붙인다
-    return [Send(t['agent'], payload(state, t)) for t in plan['tasks']]
+    return [Send(NODE[t['agent']], payload(state, t)) for t in plan['tasks']]
 
 
 def final_reports(state: dict) -> list[TaskReport]:
@@ -158,7 +163,8 @@ def collect_node(state: dict) -> dict:
 
 
 def after_collect(state: dict) -> str:
-    return state['outcome']
+    """모으기 뒤 갈림길: 모으기가 정한 길(outcome)을 노드 이름으로, 재계획은 간선 라벨 키(REPLAN)로 돌려준다."""
+    return REPLAN if state['outcome'] == 'replan' else NODE[state['outcome']]
 
 
 def _merged(reports: list[TaskReport]) -> dict:
@@ -245,4 +251,4 @@ def check_node(state: dict) -> dict:
 
 
 def after_check(state: dict) -> str:
-    return 'refuse' if state.get('refusal_reason') else 'finish'
+    return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']

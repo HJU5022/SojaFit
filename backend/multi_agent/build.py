@@ -1,7 +1,8 @@
-"""멀티 에이전트 조립: 입력 읽기 → 사실 확인 → Supervisor ① 계획 → 서브에이전트(Send 동시 실행) → Supervisor ② 모으기 · 종합 → 답 검사 → 끝.
+"""멀티 에이전트 조립: 입력 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · 대체 부품 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
 
-- 역할: 노드와 연결을 정하고 compile한다. 모으기 → 계획 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 문서 에이전트(`agents/docs.py`, 노드 하나)와
-  판정 에이전트(읽기 → 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
+- 역할: 노드와 연결을 정하고 compile한다. 노드 이름은 강의처럼 한국어로 달아 `get_graph().draw_mermaid()` 그림이 그대로 읽히게 한다.
+  답 모으기 → Supervisor 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 RAG 에이전트(`agents/docs.py`, 노드 하나)와
+  대체 부품 에이전트(회로 역할 읽기 → 대체 부품 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
   일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
   LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다.
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 웹 조회 에이전트(아직 없어서 켜려 하면 거부한다), 체크포인터 만들기(부르는 쪽이 넘긴다).
@@ -45,14 +46,14 @@ def refuse_node(state: dict) -> dict:
 
 
 def judge_subgraph(*, chat, specs, find, retriever):
-    """판정 에이전트: 읽기(LLM 1번) → 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
+    """대체 부품 에이전트: 회로 역할 읽기(LLM 1번) → 대체 부품 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
-    g.add_node('judge_read', partial(judge_read_agent, chat=chat))
-    g.add_node('judge', partial(judge_task_node, specs=specs, find=find, retriever=retriever))
-    g.add_edge(START, 'judge_read')
-    g.add_edge('judge_read', 'judge')
-    g.add_edge('judge', END)
+    g.add_node('회로 역할 읽기', partial(judge_read_agent, chat=chat))
+    g.add_node('대체 부품 판정', partial(judge_task_node, specs=specs, find=find, retriever=retriever))
+    g.add_edge(START, '회로 역할 읽기')
+    g.add_edge('회로 역할 읽기', '대체 부품 판정')
+    g.add_edge('대체 부품 판정', END)
     return g.compile()
 
 
@@ -68,34 +69,36 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
         raise ValueError('판정 에이전트는 사양 표 도구(specs · find)와 체크포인터가 있어야 켭니다')
     from backend.graph import nodes  # [왜] 여기서 불러와야 가짜 함수를 넣는 시험이 키 없이 돈다
     g = StateGraph(MultiState)
-    g.add_node('parse', partial(parse_node, parse=parse or nodes.read_input))
-    g.add_node('facts', partial(facts_mod.facts_node, lookup=lookup))
-    g.add_node('plan', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled))
-    g.add_node('docs', partial(docs_agent, retriever=retriever, chat=chat, find=find))  # find: 품번 없이 정격만 준 질문의 품번 찾기
-    g.add_node('collect', sup.collect_node)
-    g.add_node('single', sup.single_node)
-    g.add_node('synth', partial(sup.synth_node, chat=chat))
-    g.add_node('check', sup.check_node)
-    g.add_node('finish', finish_node)
-    g.add_node('refuse', refuse_node)
+    # [왜] 노드 이름 = 그림에 보이는 이름. 갈림 함수(supervisor.after_*)도 이 이름을 돌려준다(supervisor.NODE)
+    g.add_node('입력 읽기', partial(parse_node, parse=parse or nodes.read_input))
+    g.add_node('품번·판 확인', partial(facts_mod.facts_node, lookup=lookup))
+    g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled))  # 계획(LLM 1번)
+    g.add_node('RAG 에이전트', partial(docs_agent, retriever=retriever, chat=chat, find=find))  # find: 품번 없이 정격만 준 질문의 품번 찾기
+    g.add_node('답 모으기', sup.collect_node)  # 코드만(LLM 없음). 두 번째 Supervisor가 아니다
+    g.add_node('답 정리', sup.single_node)
+    g.add_node('종합', partial(sup.synth_node, chat=chat))
+    g.add_node('답 검사', sup.check_node)
+    g.add_node('끝내기', finish_node)
+    g.add_node('거절', refuse_node)
     # [왜] 가격 안내는 단일 그래프 노드를 그대로 쓴다. Mouser는 그래프 밖 /api/prices만 부른다(ADR 0009)
-    g.add_node('price', nodes.price_answer)
-    g.add_edge(START, 'parse')
-    g.add_edge('parse', 'facts')
-    g.add_edge('facts', 'plan')
-    agents = ['docs']
+    g.add_node('가격 안내', nodes.price_answer)
+    g.add_edge(START, '입력 읽기')
+    g.add_edge('입력 읽기', '품번·판 확인')
+    g.add_edge('품번·판 확인', 'Supervisor')
+    agents = ['RAG 에이전트']
     if judge_enabled:
-        g.add_node('judge', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
-        agents.append('judge')
-    g.add_conditional_edges('plan', sup.after_plan, ['finish', 'price', 'refuse', 'collect', *agents])  # collect: 재계획이 '있는 답으로'
+        g.add_node('대체 부품 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
+        agents.append('대체 부품 에이전트')
+    # [왜] 목록(path_map)의 이름 = 노드 이름이라 그림에 라벨이 붙지 않는다. 할 일이 둘이면 두 에이전트에 동시에 Send
+    g.add_conditional_edges('Supervisor', sup.after_plan, ['끝내기', '가격 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
     for agent in agents:
-        g.add_edge(agent, 'collect')  # [왜] 같은 단계에서 동시에 돈 서브에이전트가 모두 끝나야 모으기가 한 번 돈다
-    # [왜] 설계 v2(11-07): 모으기가 다시 해 볼 만한 실패를 보면 Supervisor ① 계획으로 한 번 되돌린다(MAX_REPLANS)
-    g.add_conditional_edges('collect', sup.after_collect, {'single': 'single', 'synth': 'synth', 'refuse': 'refuse', 'replan': 'plan'})
-    g.add_edge('single', 'check')
-    g.add_edge('synth', 'check')
-    g.add_conditional_edges('check', sup.after_check, ['finish', 'refuse'])
-    g.add_edge('finish', END)
-    g.add_edge('refuse', END)
-    g.add_edge('price', END)
+        g.add_edge(agent, '답 모으기')  # [왜] 같은 단계에서 동시에 돈 서브에이전트가 모두 끝나야 모으기가 한 번 돈다
+    # [왜] 설계 v2(11-07): 모으기가 다시 해 볼 만한 실패를 보면 Supervisor로 한 번 되돌린다(MAX_REPLANS). 이 간선만 키가 노드 이름과 달라 그림에 조건이 라벨로 보인다
+    g.add_conditional_edges('답 모으기', sup.after_collect, {'답 정리': '답 정리', '종합': '종합', '거절': '거절', sup.REPLAN: 'Supervisor'})
+    g.add_edge('답 정리', '답 검사')
+    g.add_edge('종합', '답 검사')
+    g.add_conditional_edges('답 검사', sup.after_check, ['끝내기', '거절'])
+    g.add_edge('끝내기', END)
+    g.add_edge('거절', END)
+    g.add_edge('가격 안내', END)
     return g.compile(checkpointer=checkpointer)
