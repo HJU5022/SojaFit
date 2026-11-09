@@ -78,3 +78,18 @@ def test_docs_evidence_selects_only_cited_metadata():
                                     {'chunk_id': 4, 'file': 'unused.pdf', 'page': 3, 'content': 'other private'}]})
     assert result['evidence'] == [{'document': 'sheet.pdf', 'page': 2, 'table': 'T', 'row': '', 'section': '', 'citation_number': '3'}]
     assert 'private' not in str(result) and 'unused' not in str(result)
+
+
+def test_safe_judgement_fields_match_runs_sql_shape():
+    # [왜] 11-10 SafeJudgement에 preferred_mount를 더하고 runs.safe_result 저장 검사(db/019)를 빠뜨려, 판정이 붙은 run이 저장에서 거부됐다
+    import json
+    from pathlib import Path
+    from backend.conversations.models import SafeJudgement
+    root = Path(__file__).resolve().parents[2] / 'db'
+    for name in ('019_conversations.sql', '025_runs_safe_result_preferred_mount.sql'):
+        text = (root / name).read_text(encoding='utf-8')
+        key = "conversation_json_matches(safe_result, '"
+        start = text.index(key) + len(key)
+        shape = json.loads(text[start:text.index("'", start)])
+        allowed = [alt for alt in shape['judgement']['$any'] if isinstance(alt, dict)][0]
+        assert set(SafeJudgement.model_fields) <= set(allowed), (name, set(SafeJudgement.model_fields) - set(allowed))

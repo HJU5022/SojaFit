@@ -281,6 +281,7 @@ SojaFit (proj3-b)
 │   ├── 022_token_limits.sql <- 하루 LLM 예약 토큰 카운터(사용자 열 · 서비스 전체 날짜 행)
 │   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
+│   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
