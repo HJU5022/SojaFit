@@ -66,6 +66,7 @@ SojaFit (proj3-b)
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
 │       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
 │       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
+│       │   ├── profile.ts   <- 내 설정(사용자 사실 3칸) 조회·저장·삭제 API
 │       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
 │       │   └── dummy.test.ts <- 더미 API 상태·비저장·404 테스트
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
@@ -80,6 +81,8 @@ SojaFit (proj3-b)
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장 테스트
 │       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
 │       │   ├── AdminUsersPage.test.tsx <- 권한 차단·목록 변경·세션 만료 테스트
+│       │   ├── SettingsPage.tsx <- 내 설정: 소속·직무·선호 실장 방식 저장·칸별 지우기·확인 후 모두 지우기
+│       │   ├── SettingsPage.test.tsx <- 바뀐 칸만 전송·칸별 삭제·모두 지우기 확인·오류 표시 테스트
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
@@ -97,6 +100,7 @@ SojaFit (proj3-b)
 │       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면
 │       │   ├── RunStatus.tsx <- 접근 가능한 D5 진행 상태
+│       │   ├── ProfileHints.tsx <- 결과 옆 참고(내 설정): 질문으로 찾은 내 사실, 판정 근거와 분리
 │       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
 │       │   ├── EvidencePanel.tsx <- 문서 위치 근거 목록
 │       │   ├── JudgementTable.tsx <- 5종 후보 판정 표

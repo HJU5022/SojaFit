@@ -88,6 +88,10 @@ select:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 .run-failed, .run-refused { color: #ffb3b3; border-color: #71353d; border-left-color: var(--danger); background: var(--danger-soft); }
 .interrupt-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--divider); }
 .interrupt-form h3 { margin: 0 0 8px; }
+.profile-hints { margin: 12px 0; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 4px; }
+.profile-hints h3 { margin: 0 0 6px; font-size: 1rem; }
+.profile-hints ul, .profile-facts { margin: 0 0 6px; padding-left: 18px; }
+.quote-header { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 .evidence-list { padding-left: 24px; }
 .evidence-list li { margin: 12px 0; }
 .evidence-list span { display: block; margin-top: 4px; color: var(--muted); }

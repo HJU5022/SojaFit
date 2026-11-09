@@ -5,6 +5,7 @@ import { errorMessage } from '../api/client'
 import { useRunStream } from '../hooks/useRunStream'
 import RunStatus from './RunStatus'
 import InterruptForm from './InterruptForm'
+import ProfileHints from './ProfileHints'
 
 export default function ConversationPanel({ projectId, targetRef, onResult, onConditions }: {
   projectId: number
@@ -47,6 +48,7 @@ export default function ConversationPanel({ projectId, targetRef, onResult, onCo
   const interruptState = run.state.status === 'requires_input' ? run.state : null
   return <section className="panel conversation-panel" aria-labelledby="conversation-heading"><h2 id="conversation-heading">D5 대화</h2>
     <RunStatus state={run.state} />
+    {(run.state.status === 'completed' || run.state.status === 'refused') && <ProfileHints hints={run.state.result.profile_hints ?? []} />}
     <label htmlFor="d5-question">질문</label><textarea id="d5-question" rows={4} maxLength={4000} value={question} disabled={busy} onChange={event => setQuestion(event.target.value)} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
     <label htmlFor="d5-conditions">사용 조건 (선택)</label><textarea id="d5-conditions" rows={2} maxLength={2000} value={conditions} disabled={busy} onChange={event => setConditions(event.target.value)} />
     <button disabled={busy || !targetRef || !question.trim()} onClick={() => void submit()}>D5에 질문하기</button>

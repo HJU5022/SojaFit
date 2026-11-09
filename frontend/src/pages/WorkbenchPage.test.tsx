@@ -70,6 +70,7 @@ it('exposes keyboard-operable result tabs and a labelled project drawer', async 
 it('connects project, role, run, candidate, and citation API data without a fixture fallback', async () => {
   const result = {
     answer: '판정 완료', status: 'completed', stage: '완료', question_type: 'judge', evidence: [], price_parts: [], refusal: '', interrupt: {}, request_id: 'req-run',
+    profile_hints: [{ kind: 'mounting_preference', value: 'smd', text: '이 사용자는 SMD 실장을 선호한다.' }],
     judgement: { kind: 'judge', roles: ['R01'], role_evidence: ['D1.K → GND'], shown: [], unverified: [], capped: false,
       results: [{ part: 'SS34', role: 'R01', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', value: 40, unit: 'V', condition: '입력 최대 전압', citation: { document: 'ss34.pdf', page: 3, table: 'Ratings', row: 'VRRM' } }] }] },
   }
@@ -92,6 +93,7 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   fireEvent.change(screen.getByLabelText('사용 조건 (선택)'), { target: { value: '입력 최대 12 V' } })
   fireEvent.click(screen.getByRole('button', { name: 'D5에 질문하기' }))
   expect(await screen.findByText('역극성 보호(직렬)')).toBeInTheDocument()
+  expect(within(screen.getByRole('complementary', { name: '참고(내 설정)' })).getByText('이 사용자는 SMD 실장을 선호한다.')).toBeInTheDocument()
   expect(within(screen.getByLabelText('개념도 사용 조건')).getByText('입력 최대 12 V')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('tab', { name: '판정' }))
   fireEvent.click(await screen.findByRole('button', { name: 'SS34 후보 선택' }))

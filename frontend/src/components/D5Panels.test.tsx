@@ -4,6 +4,7 @@ import EvidencePanel from './EvidencePanel'
 import InterruptForm from './InterruptForm'
 import JudgementTable from './JudgementTable'
 import RunStatus from './RunStatus'
+import ProfileHints from './ProfileHints'
 
 it('renders evidence coordinates exactly without inventing text', () => {
   render(<EvidencePanel evidence={[{ document: 'sheet.pdf', page: 2, table: 'RATINGS', row: 'VRRM', section: '', citation_number: '7' }]} />)
@@ -63,4 +64,12 @@ it('requires missing values and a listed role before resuming', () => {
 it('announces run progress through a polite live region', () => {
   render(<RunStatus state={{ status: 'running', runId: 'run-1', stage: '판정' }} />)
   expect(screen.getByText('판정 진행 중')).toHaveAttribute('aria-live', 'polite')
+})
+
+it('shows profile hints as reference apart from evidence and nothing when empty', () => {
+  const { rerender } = render(<ProfileHints hints={[{ kind: 'mounting_preference', value: 'smd', text: '이 사용자는 SMD 실장을 선호한다.' }]} />)
+  expect(screen.getByRole('complementary', { name: '참고(내 설정)' })).toHaveTextContent('이 사용자는 SMD 실장을 선호한다.')
+  expect(screen.getByText('판정 근거가 아니라 내 설정에서 찾은 사실입니다.')).toBeInTheDocument()
+  rerender(<ProfileHints hints={[]} />)
+  expect(screen.queryByRole('complementary', { name: '참고(내 설정)' })).not.toBeInTheDocument()
 })

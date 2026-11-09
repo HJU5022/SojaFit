@@ -16,6 +16,7 @@ it('names the candidate and verdict before approval and sends no price fields to
     if (path === '/api/messages/9/approvals') return Promise.resolve(Response.json({ id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4 }, { status: 201 }))
     if (path === '/api/approvals/3/quotes') return Promise.resolve(Response.json({ id: 5, approval_id: 3, part_number: 'SS34', quantity: 2 }, { status: 201 }))
     if (path.startsWith('/api/prices?')) return Promise.resolve(Response.json({ available: false, source: 'Mouser Electronics', reason: 'demo_mode', message: '가격 없음', parts: [] }))
+    if (path === '/api/me/memory') return Promise.resolve(Response.json([{ kind: 'affiliation', value: '한빛전자', text: '이 사용자의 소속은 한빛전자이다.', version: 1, updated_at: '', source: 'user_settings' }]))
     throw new Error(`unexpected ${path}`)
   }))
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
@@ -27,7 +28,9 @@ it('names the candidate and verdict before approval and sends no price fields to
   fireEvent.click(screen.getByRole('button', { name: '확인 후 승인' }))
   await screen.findByText('SS34 판정을 승인했습니다.')
   expect(JSON.parse(calls.find(call => call.path === '/api/messages/9/approvals')!.body!)).toEqual({ candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT' })
+  expect(calls.some(call => call.path === '/api/me/memory')).toBe(false)  // 견적을 열기 전에는 내 설정을 읽지 않는다
   fireEvent.click(screen.getByRole('button', { name: '견적 열기' }))
+  expect(await screen.findByText('소속: 한빛전자')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
   await screen.findByText('가격 없음')
   fireEvent.change(screen.getByLabelText('수량'), { target: { value: '2' } })
