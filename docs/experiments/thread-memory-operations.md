@@ -1,6 +1,6 @@
 # Thread·승인 기억 운영 검증
 
-상태: STH의 검증 계약. 선택 문항·실제 HTTP·로컬 복원 결과는 `../specs/evaluator-demo-readiness.md`와 `../worklog/sth.md`를 따른다. 원격 부하·공유 DB 복원·전체 동결셋 품질 비교는 실행하지 않았다.
+상태: STH의 검증 계약. 선택 문항·실제 HTTP·로컬 복원 결과는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)를 따른다. 원격 부하·공유 DB 복원·전체 동결셋 품질 비교는 실행하지 않았다.
 
 ## Why
 격리·저장은 확인했지만 전체 답변 품질, 운영 부하, 운영 백업 복구와 청구액은 별도 증거가 필요하다. 예약액·참조 ID·HTTP200만으로 통과 처리하지 않는다.

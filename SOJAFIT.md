@@ -435,6 +435,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
+│   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
 │   │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
 │   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
