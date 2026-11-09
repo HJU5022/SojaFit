@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **상태:** 구현 전 계획 이력입니다. 현재는 `backend/graph/mcp_retriever.py`와 `evals/runners/run_graph.py`에 MCP stdio 연결이 구현되어 있습니다. 아래 체크박스는 당시 실행 순서를 보존한 것이며 현재 미구현 목록으로 사용하지 않습니다. 현재 경계는 `backend/graph/GRAPH.md`와 `docs/specs/mcp-graph-integration.md`를 따릅니다.
+
 **Goal:** 기존 동기 LangGraph 검색 주입 계약에 FastMCP stdio `search_corpus`를 연결하고 정상 빈 결과와 MCP 장애를 구분한다.
 
 **Architecture:** `StdioMcpRetriever`가 그래프가 기대하는 동기 callable을 제공하고 내부 전용 asyncio 루프에서 stdio 서버와 `ClientSession`을 한 번 열어 재사용한다. 기존 그래프는 직접 retriever 기본값을 유지하며, MCP 어댑터가 낸 제한된 오류만 State에 기록해 빈 결과와 다른 거절 경로로 보낸다.

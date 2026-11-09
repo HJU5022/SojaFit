@@ -8,7 +8,7 @@
 
 후보별로 왜 선정했고 어디까지 실행했으며 왜 조사 단계에서 멈췄는지는 [embedding-candidate-investigation.md](embedding-candidate-investigation.md)에 기록한다.
 
-현재 서비스 기본값은 `text-embedding-3-small` API이며 로컬 가중치와 추가 API allowlist는 후보 평가에만 사용한다. 최종 모델 확정 뒤 외부 관리형 API를 선택하면 provider의 서비스 약관, 데이터 보관·학습 사용, ZDR, 지역, 재위탁 provider 조건을 적용한다. OpenRouter 사용 전에는 [Privacy Policy](https://openrouter.ai/privacy/), [Zero Data Retention](https://openrouter.ai/docs/guides/features/zdr), [provider별 데이터 정책](https://openrouter.ai/providers/)을 모델 endpoint와 함께 다시 확인한다. 팀이 모델을 별도 추론 서버에 배포해 자체 API로 제공하면 MIT·Apache-2.0 같은 가중치 라이선스와 배포물 고지 의무, 이미지·서버 보안이 운영 조건에 포함된다. 오픈 가중치 라이선스가 곧 관리형 API 제공을 뜻하지 않으며, API 호출 방식이라는 사실만으로 가중치 배포 의무가 사라지는 것도 아니다.
+2026-11-02 조사 당시 서비스 기본값은 `text-embedding-3-small` API였습니다. 이후 사전 등록 #25와 ADR 0004 갱신으로 현재 서비스 코드는 Voyage API의 `voyage-4-large` 1024차원을 사용합니다. 따라서 실제 운영 전에는 Voyage의 최신 서비스 약관, 데이터 보관·학습 사용, ZDR, 지역과 재위탁 조건을 현재 endpoint 기준으로 다시 확인해야 합니다. 아래 후보 표와 당시 OpenRouter·로컬 가중치 검토는 2026-11-02 조사 기록으로 보존하며, 현재 서비스 계약은 루트 `SPEC.md` 6절과 `EVAL_REPORT.md` 1-4절을 따릅니다. 팀이 모델을 별도 추론 서버에 배포하면 가중치 라이선스와 배포물 고지 의무, 이미지·서버 보안도 별도로 적용됩니다.
 
 | 모델 | 고정 revision | 공식 라이선스/약관 | 분류 | 가중치 GitHub 포함 | 확인 출처 |
 |---|---|---|---|---|---|

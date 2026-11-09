@@ -38,8 +38,8 @@ SojaFit (proj3-b)
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
 │   ├── __init__.py         <- 패키지 표시
-│   ├── main.py             <- FastAPI 진입점: /health, 로그인·me·로그아웃, 관리자 계정 API, 가격·재고 API(/api/prices) (고정: Dockerfile이 실행)
-│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, 관리자 계정 관리, 계정 생성 CLI
+│   ├── main.py             <- FastAPI 진입점: /health, 로그인·Google 관리자 로그인, me·로그아웃, 관리자 계정·가격 API, 공통 오류·요청 ID (고정: Dockerfile이 실행)
+│   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── settings.py         <- 환경변수를 한곳에서 읽는 설정 (예정)
 │   ├── schemas.py          <- 모듈 사이에 주고받는 데이터 형식 (예정)
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
@@ -127,13 +127,13 @@ SojaFit (proj3-b)
 │   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
 │   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
-│   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건은 저장소 밖 ../corpus/tsc/pdf/
+│   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건 외부 작업 자료의 위치·준비 상태는 별도 확인
 │   │   ├── public/         <- KiCad 문서·Wikipedia·SparkFun 등 공개 라이선스 문서(지금은 .gitkeep)
 │   │   └── injection_tests/  <- 간접 인젝션 시험 문서 3건 이상(지금은 .gitkeep)
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
-│   └── demo/               <- 키 없는 데모 모드가 재생할 응답(파일 이름은 데모 시나리오를 정할 때 정함)
+│   └── demo/               <- 키 없는 데모 응답을 둘 자리. 현재 설명 파일만 있고 재생 코드는 없음
 │       └── DEMO.md         <- 폴더 설명
 │
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
@@ -394,9 +394,10 @@ SojaFit (proj3-b)
 │   │   ├── SPECS.md        <- 폴더 설명
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
-│   │   ├── google-admin-login.md <- Google 관리자 로그인 설계와 구현 계획
+│   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
 │   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
+│   │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
