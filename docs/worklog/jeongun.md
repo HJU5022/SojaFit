@@ -807,3 +807,23 @@
 - 바꾼 파일: `evals/guides/preregister.md`(#51), `EVAL_REPORT.md` 6절(5행 · 실행 표 · 남은 것), 새 `evals/results/threads/claim_consistency_after_plan_20261109T203153Z.json` · `_after_live_` · `_after_review_`(같은 run id). 기존 before 원시 · 검토는 그대로(SHA256 85081e11… 확인).
 - 확인 못 한 것: 위험 원문을 최종에서 막는 장면은 실측되지 않았다(저장 응답 재생으로만). 문서 답 `enough`인 답 정리 경로는 이번 실측으로 지나지 않았다. 1회 관찰이라 방어율 · 반복성이 아니다. 실제 검색 DB · Supervisor 계획 · HTTP는 거치지 않았다.
 - 다음 할 일: 조장 검토 뒤 커밋. `docs/experiments/c2-defense-recheck.md`의 "4단계 실행 안 함" 문구 갱신은 이번 범위 밖이라 그대로 뒀다.
+
+## 2026-11-10 G2 한 줄 기동 재측정 — 기록 응답 재생 데모로 맥 · WSL2 (브랜치 `jeongun`, 5631309)
+
+- 목적 · 승인: 키 없는 데모가 기록 응답을 재생하게 된 뒤 G2("`docker compose up` 한 줄로 10분 안", 키 없는 데모)를 빈 엔진에서 다시 잰다. 조장 승인(11-10). LLM 호출 없음(비용 $0). 커밋 · 푸시 안 함.
+- 방법(두 컴퓨터 같음): `git bundle create sojafit.bundle HEAD jeongun`(원격 `origin/jeongun`은 뒤처져 push하지 않음) → `docker run -d --privileged -p 18000:8000 docker:dind`로 이미지 0개 · 볼륨 0개인 엔진(29.9.3, overlayfs) → 번들을 넣고 시계 시작 → `git clone -b jeongun` → `.env` 없이 `DEMO_AUTH_ORIGIN=http://localhost:18000 docker compose up -d` → `/health` 200을 0.5초마다 확인 → `POST /api/auth/demo-login`(A, `Origin` 헤더) → `uv run python scripts/smoke/http_smoke.py --base-url http://localhost:18000 --demo --refusal`. clone 안에 `.env` 없음과 커밋을 확인했다. pgvector는 새로 받고 api · thread-setup · corpus-load는 python 3.12-slim · node 24-slim · uv 0.12.9를 새로 받아 빌드했다(compose 기록).
+- 결과(clone 시작부터, 스모크 23단계 모두 통과):
+
+| 컴퓨터 | clone | `compose up -d` 끝 | `/health` 200 | 데모 A 로그인 200 | 스모크 끝 |
+|---|---|---|---|---|---|
+| 맥 Apple M2 arm64(로컬 Docker 29.7.2 위 dind) | 0.7초 | 53.4초 | 55.6초 | 55.7초 | 62.9초 |
+| WSL2 `desktop-gpu` i9-12900KF x86_64(WSL Docker 29.1.3 위 dind) | 0.7초 | 57.6초 | 59.8초 | 59.9초 | 67.5초 |
+
+  - 스모크: 판정 질문 v3-01 `requires_input` → 재개 `completed` → 승인 201 · 같은 승인 409 `ALREADY_APPROVED` → 견적 201 · 목록 200 → B가 A의 프로젝트 · thread 목록 · run 404 → v3-30 `refused`. 스모크 안에 분석 앞 대기(`GAP_SECONDS`) 3초가 두 번 들어 있다. 결과 `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥) · `_055423.json`(WSL), 비밀값 · 이메일 · 쿠키 문자열 없음 확인.
+  - 두 컴퓨터 모두 corpus-load `source_documents 42` · `document_chunks 1556`, thread-setup 완료, api 기동. 맥은 `/` 200.
+  - WSL은 Tailscale 주소의 포트가 응답하지 않아(curl 5초 시간 초과) 방화벽은 건드리지 않고 맥에서 SSH 터널(`ssh -L 18000:localhost:18000`)로 `http://localhost:18000`을 불렀다. 요청마다 터널 왕복이 더해진다.
+  - GitHub에서 main clone: 맥 3.6초. 저장소가 비공개(로그인 없이 404)라 맥에 저장된 자격 증명으로 받았고, WSL은 자격 증명이 없어 재지 않았다.
+- 이 측정에서 찾아 고친 것: (1) b8576f8에서 v3-01 프로젝트 만들기가 503 — 빈 볼륨의 `ck_projects_demo` 허용 목록에 `attiny85_time_switch`가 없었다(02457ec가 `DEMOS`에만 더함) → d0bd7dd. (2) d0bd7dd에서 재개가 `failed`(UNAVAILABLE) — `runs_safe_result_check`가 판정의 `preferred_mount` 칸(44e8287)을 몰라 저장을 거부 → 5631309. 실패 결과는 `smoke_localhost-18000_2026-11-10_053242.json` · `_054705.json`. 맥에서 실패한 두 번의 기동 시간은 `/health` 55.4초 · 53.4초였다.
+- 바꾼 파일: `docs/GATES.md` G2 상태(이전 `jeongun-8` 수치는 한 마디로 남김), 새 `scripts/results/smoke/` 결과 4개.
+- 확인 못 한 것: Windows의 Docker Desktop, WSL에서 GitHub clone, Tailscale 포트로 직접 부르기(터널로 대신함), 브라우저 React 화면 시연. 맥 측정 동안 다른 작업이 함께 돌아 load average가 4~7이었다.
+- 다음 할 일: 조장 검토 뒤 커밋. 제출 직전 최종 main으로 다시 잰다.
