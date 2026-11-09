@@ -58,7 +58,7 @@ def test_forbidden_uses_error_contract():
     assert response.status_code == 403
     assert response.json() == {
         "error": {
-            "code": "FORBIDDEN",
+            "code": "ORIGIN_MISMATCH",
             "message": "요청 출처를 확인할 수 없습니다.",
             "request_id": response.headers["X-Request-ID"],
         }

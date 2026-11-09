@@ -172,7 +172,7 @@ def test_settings_api_needs_login_and_analysis_store(monkeypatch):
     app.dependency_overrides[auth.current_user_id] = lambda: 7
     try:
         response = TestClient(app, raise_server_exceptions=False).get('/api/me/memory')
-        assert response.status_code == 503 and response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
+        assert response.status_code == 503 and response.json()['error']['code'] == 'UNAVAILABLE'
     finally:
         app.dependency_overrides.clear()
 

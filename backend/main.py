@@ -3,9 +3,10 @@
 역할: 인증·가입·데모 버튼 로그인(`DEMO_MODE=1`만)·탈퇴(`DELETE /api/me`)·관리자·가격 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
 호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
 하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
-출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
+출처: SPEC.md 4절(인증·관리자·가격·재고 계약, 공통 오류)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009 · 0019, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
-시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
+시작할 때 JSON 로그를 켜고(`backend/logs.py`), auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
+오류 응답의 `error.code`는 `backend/errors.py`의 표(ADR 0019, 15개)에서 고르고, 오류 응답마다 code · status · request_id 로그 한 줄을 남긴다.
 THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
@@ -30,7 +31,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 from psycopg_pool import PoolTimeout
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from backend import auth
+from backend import auth, logs
+from backend.errors import DEFAULT_CODES, SPECIAL_CODES, code_for, log_error
 from backend.api.projects import router as projects_router
 from backend.api.quotes import router as quotes_router
 from backend.services import mouser
@@ -52,7 +54,8 @@ class GoogleCallbackLogFilter(logging.Filter):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """서버 시작 시 인증 설정을 검사한다."""
+    """서버 시작 시 JSON 로그를 켜고 인증 설정을 검사한다."""
+    logs.setup()  # [주의] 루트 로거에 처리기가 이미 있으면(pytest 등) 손대지 않는다
     # [왜] 잘못된 AUTH_SECRET으로 뜬 서버가 약한 세션 해시를 쓰지 않도록 RuntimeError로 기동 자체를 막는다
     auth.validate_auth_configuration()
     logger = logging.getLogger("uvicorn.access")
@@ -72,20 +75,6 @@ async def lifespan(app: FastAPI):
         logger.removeFilter(log_filter)
 
 
-ERROR_CODES = {
-    400: "BAD_REQUEST",
-    401: "UNAUTHORIZED",
-    403: "FORBIDDEN",
-    404: "NOT_FOUND",
-    409: "CONFLICT",
-    413: "PAYLOAD_TOO_LARGE",
-    422: "VALIDATION_ERROR",
-    429: "TOO_MANY_REQUESTS",
-    503: "SERVICE_UNAVAILABLE",
-    504: "GATEWAY_TIMEOUT",
-}
-
-
 class ErrorPayload(BaseModel):
     """클라이언트가 분기하고 사용자에게 표시할 공개 오류 정보."""
 
@@ -100,11 +89,11 @@ class ErrorEnvelope(BaseModel):
     error: ErrorPayload
 
 
+# OpenAPI 설명에는 상태마다 나올 수 있는 code를 적는다(예: 409 → CONFLICT · CONDITION_PENDING · ALREADY_APPROVED)
 COMMON_ERROR_RESPONSES = {
-    status_code: {"model": ErrorEnvelope, "description": code}
-    for status_code, code in ERROR_CODES.items()
+    status_code: {"model": ErrorEnvelope, "description": " · ".join([code, *(c for c, s in SPECIAL_CODES.items() if s == status_code)])}
+    for status_code, code in DEFAULT_CODES.items()
 }
-COMMON_ERROR_RESPONSES[500] = {"model": ErrorEnvelope, "description": "INTERNAL_ERROR"}
 
 app = FastAPI(
     title="SojaFit API",
@@ -132,9 +121,13 @@ def error_response(
     code: str,
     message: str,
     headers: dict[str, str] | None = None,
+    error: BaseException | None = None,
 ) -> JSONResponse:
-    """공개 가능한 오류 정보만 공통 계약으로 반환한다."""
+    """공개 가능한 오류 정보만 공통 계약으로 반환하고, 같은 code · status · request_id로 로그 한 줄을 남긴다(5xx는 error의 traceback까지)."""
     request_id = request_id_for(request)
+    # [왜] 모든 JSON 오류(HTTP · 검증 · 500 · DB 503 · 본문 413)가 여기를 지나 로그도 한 곳에서 남긴다. request_id는 직접 넘겨
+    #      요청 ID 미들웨어보다 먼저 난 오류(request_id_for가 새로 만든 ID)에서도 응답과 로그의 ID가 같다
+    log_error(status_code, code, error, request_id=request_id)
     response_headers = dict(headers or {})
     response_headers["X-Request-ID"] = request_id
     return JSONResponse(
@@ -150,10 +143,12 @@ def error_response(
     )
 
 
-@app.middleware("http")
 async def add_request_id(request: Request, call_next):
-    """클라이언트 값 대신 서버 UUID를 모든 응답에 넣는다."""
+    """클라이언트 값 대신 서버 UUID를 모든 응답에 넣고, 이 요청에서 남기는 로그 줄에도 같은 값을 붙인다(등록은 파일 끝)."""
     request.state.request_id = str(uuid4())
+    # [왜] 문맥 변수는 이 요청의 task와 거기서 만든 task · 스레드 풀 호출에 복사된다.
+    #      가장 바깥 미들웨어는 응답을 보내는 task(uvicorn 접속 로그를 남기는 곳)와 같아 거기까지 같은 ID가 붙는다
+    logs.REQUEST_ID.set(request.state.request_id)
     response = await call_next(request)
     response.headers["X-Request-ID"] = request.state.request_id
     return response
@@ -253,9 +248,10 @@ async def http_error(request: Request, exc: StarletteHTTPException):
     return error_response(
         request,
         status_code=exc.status_code,
-        code=ERROR_CODES.get(exc.status_code, "HTTP_ERROR"),
+        code=code_for(exc.status_code, exc),  # 상황 코드(ApiError)가 없으면 상태의 기본 코드
         message=message,
         headers=exc.headers,
+        error=exc,
     )
 
 
@@ -276,6 +272,7 @@ async def internal_error(request: Request, exc: Exception):
         status_code=500,
         code="INTERNAL_ERROR",
         message="요청을 처리하지 못했습니다.",
+        error=exc,  # [왜] 응답에는 숨기고 로그에만 traceback(예외 메시지는 뺀 모양)을 남긴다
     )
 
 
@@ -484,7 +481,7 @@ async def conversation_boundary(request: Request, call_next):
         data = bytearray()
         async for chunk in request.stream():
             if len(data) + len(chunk) > limit:
-                return error_response(request, status_code=413, code=ERROR_CODES[413],
+                return error_response(request, status_code=413, code=DEFAULT_CODES[413],
                                       message='요청이 너무 큽니다.', headers={'Cache-Control': 'no-store'})
             data.extend(chunk)
         request._body = bytes(data)  # downstream JSON 검증에도 한도 내에서 읽은 같은 본문을 전달한다
@@ -495,9 +492,9 @@ async def conversation_boundary(request: Request, call_next):
 
 
 async def database_unavailable(request: Request, error):
-    return error_response(request, status_code=503, code=ERROR_CODES[503],
+    return error_response(request, status_code=503, code=DEFAULT_CODES[503],
                           message='저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.',
-                          headers={'Cache-Control': 'no-store'})
+                          headers={'Cache-Control': 'no-store'}, error=error)
 
 
 app.add_exception_handler(psycopg.Error, database_unavailable)
@@ -519,3 +516,6 @@ app.include_router(quotes_router)
 app.include_router(conversations_router)
 app.include_router(profile_router)
 mount_frontend(app, FRONTEND_DIST)
+# [주의] 마지막에 등록한 미들웨어가 가장 바깥에서 돈다. 요청 ID를 화면 연결 · 본문 한도 미들웨어보다 먼저 정해야
+#        본문 413 · 500 · 접속 로그까지 같은 ID를 쓴다(안쪽 미들웨어 task에서 넣은 문맥 변수는 바깥 task로 올라오지 않는다)
+app.middleware("http")(add_request_id)

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend import auth
+from backend.errors import ApiError
 from backend.services.quote import InvalidApproval, QuoteNotFound, QuoteService
 
 router = APIRouter(prefix='/api', tags=['quotes'])
@@ -36,7 +37,8 @@ def service():
     except QuoteNotFound:
         raise HTTPException(404, '승인 자료를 찾을 수 없습니다.') from None
     except (InvalidApproval, psycopg.errors.UniqueViolation):
-        raise HTTPException(409, '승인할 수 없는 판정이거나 이미 승인되었습니다.') from None
+        # [왜] 화면은 이 코드면 승인을 다시 보내지 않는다(ADR 0019). 완료 판정이 아닌 경우와 같은 메시지 승인 두 번을 한 코드로 둔다
+        raise ApiError(409, '승인할 수 없는 판정이거나 이미 승인되었습니다.', code='ALREADY_APPROVED') from None
     except (psycopg.Error, KeyError, TypeError):
         raise HTTPException(503, '승인·견적 서비스를 사용할 수 없습니다.') from None
 

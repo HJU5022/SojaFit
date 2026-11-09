@@ -14,13 +14,14 @@ DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 �
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
 분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
 보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/023)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
+오류 코드(ADR 0019, backend/errors.py): 하루 토큰 · USD 상한과 실행 한 번의 호출 · 예약 상한은 429 `LIMIT_EXCEEDED`, 호출 간격은 429 `RATE_LIMITED`,
+조건 질문 대기는 409 `CONDITION_PENDING`, 분석 실패는 LLM · 임베딩 공급자 장애면 502 `UPSTREAM_ERROR`, 시간 예산 초과는 504, 그 밖은 503이다.
 """
 import argparse
 import os
 import math
 import time
 import logging
-import json
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
 from functools import lru_cache
@@ -40,6 +41,7 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
 from backend.conversations import profile
+from backend.errors import ApiError
 from backend.graph.memory import namespace, memory_policy
 from backend.graph.netlist import parse_netlist
 
@@ -189,10 +191,11 @@ class Conversations:
         used = conn.execute("SELECT (SELECT reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS mine, "
                             "(SELECT reserved_tokens FROM analysis_service_usage WHERE day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS service",
                             (user,)).fetchone()
+        # [왜] 하루 상한은 잠시 뒤 다시 보내도 다시 걸린다. 화면이 다음 날까지 기다리게 RATE_LIMITED와 코드를 나눈다(ADR 0019)
         if (used['mine'] or 0) + TOKEN_MARGIN > USER_DAILY_TOKENS:
-            raise HTTPException(429, USER_TOKENS_FULL)
+            raise ApiError(429, USER_TOKENS_FULL, code='LIMIT_EXCEEDED')
         if (used['service'] or 0) + TOKEN_MARGIN > SERVICE_DAILY_TOKENS:
-            raise HTTPException(429, SERVICE_TOKENS_FULL)
+            raise ApiError(429, SERVICE_TOKENS_FULL, code='LIMIT_EXCEEDED')
 
     def admission(self, user):
         """React run · 재개가 스트림을 열기 전에 부른다. 탈퇴 중이면 409, 하루 토큰 상한이 찼으면 429(공통 오류)로 거절한다."""
@@ -254,8 +257,12 @@ class Conversations:
                 "ON CONFLICT(user_id,day) DO UPDATE SET attempts=analysis_usage.attempts+1,next_allowed=EXCLUDED.next_allowed "
                 "WHERE analysis_usage.next_allowed<=CURRENT_TIMESTAMP AND analysis_usage.reserved_usd<%s RETURNING day",
                 (user, interval, Decimal(str(daily)))).fetchone()
+            # [왜] 위 문장은 호출 간격 · 하루 USD 중 무엇에 걸렸는지 돌려주지 않는다. 걸렸을 때만 USD를 한 번 더 읽어 코드를 가른다(ADR 0019)
+            if not row and conn.execute("SELECT reserved_usd >= %s AS spent FROM analysis_usage WHERE user_id=%s AND day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date",
+                                        (Decimal(str(daily)), user)).fetchone()['spent']:
+                raise ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED')
         if not row:
-            raise HTTPException(429, '호출 간격 또는 하루 분석 예약 예산을 확인하세요.', headers={'Retry-After': str(max(1, math.ceil(interval)))})
+            raise HTTPException(429, '분석 호출 간격이 너무 짧습니다. 잠시 후 다시 시도하세요.', headers={'Retry-After': str(max(1, math.ceil(interval)))})
         def charge(cost):
             """호출 한 번의 예약 USD · 토큰을 사용자 행과 서비스 행에 한 트랜잭션으로 더한다. 하나라도 넘으면 모두 되돌리고 429."""
             tokens, cost = budget.reserving_tokens, Decimal(str(cost))
@@ -264,13 +271,13 @@ class Conversations:
                 usage = conn.execute('SELECT reserved_usd,reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=%s FOR UPDATE',
                                      (user, row['day'])).fetchone()
                 if usage['reserved_tokens'] + tokens > USER_DAILY_TOKENS:
-                    raise HTTPException(429, USER_TOKENS_FULL)
+                    raise ApiError(429, USER_TOKENS_FULL, code='LIMIT_EXCEEDED')
                 if usage['reserved_usd'] + cost > Decimal(str(daily)):
-                    raise HTTPException(429, '하루 분석 예약 예산에 도달했습니다.')
+                    raise ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED')
                 conn.execute('INSERT INTO analysis_service_usage(day) VALUES (%s) ON CONFLICT DO NOTHING', (row['day'],))
                 if not conn.execute('UPDATE analysis_service_usage SET reserved_tokens=reserved_tokens+%s WHERE day=%s AND reserved_tokens+%s<=%s RETURNING day',
                                     (tokens, row['day'], tokens, SERVICE_DAILY_TOKENS)).fetchone():
-                    raise HTTPException(429, SERVICE_TOKENS_FULL)
+                    raise ApiError(429, SERVICE_TOKENS_FULL, code='LIMIT_EXCEEDED')
                 conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s,reserved_tokens=reserved_tokens+%s WHERE user_id=%s AND day=%s',
                              (cost, tokens, user, row['day']))
         budget.on_reserve = charge
@@ -441,7 +448,8 @@ class Conversations:
                 validate_question(text, conditions)
             self._reconcile(conn, row)
             if self.graph.get_state(self.config(thread)).next:
-                raise HTTPException(409, '먼저 요청한 조건에 답해주세요.')
+                # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
+                raise ApiError(409, '먼저 요청한 조건에 답해주세요.', code='CONDITION_PENDING')
             history = conn.execute("SELECT content FROM messages WHERE thread_id=%s AND role='user' ORDER BY id", (thread,)).fetchall()
             if len(history) >= 50:
                 raise HTTPException(409, '분석당 질문 한도(50건)에 도달했습니다.')
@@ -498,7 +506,7 @@ class Conversations:
         return self.detail(user, thread, hints)
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
-        from backend.services.llm import evaluation_limits, EvaluationLimitError
+        from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts
         timings = langfuse_prompts.AnalysisTimings()
         started = time.monotonic()
@@ -515,15 +523,21 @@ class Conversations:
             conn.execute("UPDATE threads SET status='FAILED' WHERE id=%s", (thread,))
             if isinstance(error, EvaluationLimitError) or (isinstance(error,HTTPException) and error.status_code==429):
                 conn.execute("UPDATE threads SET input_record=jsonb_set(COALESCE(input_record,'{}'::jsonb),'{execution_limit_reached}','true') WHERE id=%s", (thread,))
-            LOGGER.warning(json.dumps({'event': 'analysis_failed', 'request_id': request_id,
-                'thread_id': str(thread), 'error_type': type(error).__name__,
-                'elapsed_ms': int((time.monotonic()-budget.started)*1000)}))
+            LOGGER.warning('analysis_failed', extra={'request_id': request_id, 'thread_id': str(thread), 'error_type': type(error).__name__,
+                                                     'elapsed_ms': int((time.monotonic()-budget.started)*1000)})
             if isinstance(error, HTTPException):
                 raise
-            if isinstance(error, EvaluationLimitError):
-                status = 504 if time.monotonic()-budget.started >= budget.max_seconds else 429
-                raise HTTPException(status, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.') from None
-            raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from None
+            late = time.monotonic()-budget.started >= budget.max_seconds
+            # [왜] 바깥 호출에는 남은 시간만큼만 제한 시간을 준다(llm.EvaluationBudget). 시간 예산을 다 써 끊긴 바깥 호출도 504다
+            if isinstance(error, EvaluationLimitError) or (late and is_upstream_error(error)):
+                if late:
+                    raise HTTPException(504, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.') from None
+                # [왜] 실행 한 번의 호출 수 · 예약 USD 상한이다. 같은 요청을 곧바로 되풀이해도 다시 걸려 LIMIT_EXCEEDED로 둔다(ADR 0019 결과)
+                raise ApiError(429, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.', code='LIMIT_EXCEEDED') from None
+            # [왜] LLM · 임베딩 공급자 장애(502)와 우리 DB · 설정 문제(503)를 코드로 가른다(ADR 0019). from error는 로그 traceback에 원인 프레임을 남긴다
+            if is_upstream_error(error):
+                raise HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다. 잠시 후 다시 시도하세요.') from error
+            raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from error
         finally:
             self._record_event(conn,thread,started,timings.report(),request_id)
 
@@ -542,8 +556,7 @@ class Conversations:
             conn.execute('INSERT INTO analysis_events(id,thread_id,version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery) '
                          'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                          (uuid4(),thread,event['version'],request_id,self.mode,event['status'],event['elapsed_ms'],Jsonb(stages),event['trace_id'],delivery))
-            LOGGER.info(json.dumps({'event':'analysis_finished','user_id':row['user_id'],
-                'thread_id':str(thread),**event,'trace_delivery':delivery}))
+            LOGGER.info('analysis_finished', extra={'user_id': row['user_id'], 'thread_id': str(thread), **event, 'trace_delivery': delivery})
         except Exception:
             LOGGER.warning('analysis_metadata_unavailable')
 

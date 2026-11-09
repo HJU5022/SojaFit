@@ -376,9 +376,9 @@ def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     sent = _voyage_http(monkeypatch, _reply(429), _reply(200, {"data": [{"index": 0}]}))
     assert llm.voyage_rerank("q", ["a"]) == [0] and len(sent) == 2
     sent = _voyage_http(monkeypatch, _reply(402, text="payment required"))
-    with pytest.raises(RuntimeError, match="payment"):
+    with pytest.raises(llm.UpstreamError, match="payment") as error:  # [왜] 바깥 공급자 장애라 분석 실패는 502(ADR 0019)
         llm.voyage_rerank("q", ["a"])
-    assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다
+    assert len(sent) == 1 and llm.is_upstream_error(error.value)  # 결제 신호는 다시 부르지 않는다
 
 
 def test_voyage_runtime_retry_reserves_before_each_external_call(monkeypatch):

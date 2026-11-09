@@ -6,6 +6,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from backend import auth
+from backend.errors import ApiError
 from backend.main import app
 
 ORIGIN = {'origin': 'http://testserver'}
@@ -144,7 +145,7 @@ def test_missing_analysis_service_is_503_before_stream(web):
     for response in (start, resume):
         assert response.status_code == 503
         assert response.headers['content-type'].startswith('application/json')
-        assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
+        assert response.json()['error']['code'] == 'UNAVAILABLE'
     assert repo.calls == []
 
 
@@ -152,7 +153,7 @@ def test_failed_frame_carries_public_error_code_and_logs_unexpected_exception(we
     thread = str(uuid4())
     analysis = FakeAnalysis(error=RuntimeError('private exception marker'))
     repo = FakeRepo(thread, str(uuid4()))
-    with caplog.at_level('ERROR', logger='backend.api.conversations'), web(analysis, repo) as client:
+    with caplog.at_level('ERROR', logger='backend.errors'), web(analysis, repo) as client:
         response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
     assert 'event: failed' in response.text and '"code": "INTERNAL_ERROR"' in response.text
     # [왜] 시스템 오류를 '거절'(답할 수 없는 질문)과 같은 단계 이름으로 보이지 않는다
@@ -160,31 +161,33 @@ def test_failed_frame_carries_public_error_code_and_logs_unexpected_exception(we
     assert failed['status'] == 'failed' and failed['stage'] == '오류'
     assert 'private exception marker' not in response.text
     request_id = response.text.split('"request_id": "', 1)[1].split('"', 1)[0]
-    logged = [r for r in caplog.records if request_id in r.getMessage()]
+    logged = [r for r in caplog.records if getattr(r, 'request_id', None) == request_id]
     assert logged and logged[0].exc_info and 'private exception marker' in str(logged[0].exc_info[1])
+    assert (logged[0].code, logged[0].status, logged[0].levelname) == ('INTERNAL_ERROR', 500, 'ERROR')
     assert repo.calls == ['start', ('commit', 'failed')]
 
 
 def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
     thread = str(uuid4())
-    analysis = FakeAnalysis(error=HTTPException(429, '하루 분석 예약 예산에 도달했습니다.'))
-    with caplog.at_level('ERROR', logger='backend.api.conversations'), web(analysis, FakeRepo(thread, str(uuid4()))) as client:
+    analysis = FakeAnalysis(error=ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED'))
+    with caplog.at_level('INFO', logger='backend.errors'), web(analysis, FakeRepo(thread, str(uuid4()))) as client:
         response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
-    assert '"error": {"code": "TOO_MANY_REQUESTS", "message": "하루 분석 예약 예산에 도달했습니다."}' in response.text
-    assert not caplog.records
+    assert '"error": {"code": "LIMIT_EXCEEDED", "message": "하루 분석 예약 예산에 도달했습니다."}' in response.text
+    # [왜] 4xx는 traceback 없는 INFO 한 줄(code · status)만 남긴다
+    assert [(r.levelname, r.code, r.status, r.exc_info) for r in caplog.records] == [('INFO', 'LIMIT_EXCEEDED', 429, None)]
 
 
 def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
     """하루 토큰 상한(admission 429)은 스트림 · run 행 · 재개 전이 전에 공통 오류로 끝나고 분석을 부르지 않는다."""
     thread, run = str(uuid4()), str(uuid4())
-    analysis = FakeAnalysis(refuse=HTTPException(429, '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다.'))
+    analysis = FakeAnalysis(refuse=ApiError(429, '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
     repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': {'missing': ['VIN_MAX'], 'role_choices': [], 'question': '?'}})
     with web(analysis, repo) as client:
         start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
     for response in (start, resume):
         assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
-        assert response.json()['error']['code'] == 'TOO_MANY_REQUESTS' and '200,000 토큰' in response.json()['error']['message']
+        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and '200,000 토큰' in response.json()['error']['message']
     assert analysis.calls == [] and repo.calls == []
 
 
