@@ -88,7 +88,7 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
         plan = plan.model_copy(update={'next': 'refuse', 'reason': Reason.LIMIT_REACHED})  # 받은 보고가 없는데 '있는 답으로'는 형식 오류다
     if (not replan and judge_enabled and plan.next == 'tasks' and plan.question_type == 'candidate_find'
             and not any(t.agent == 'judge' and t.kind == 'candidate_find' for t in plan.tasks)):
-        # [주의] 코드 라우팅(조장 결정 필요): 계획 스스로 찾기 질문이라 해 놓고 판정 찾기 할 일을 내지 않으면 코드가 그 할 일로 바꾼다.
+        # [주의] 코드 라우팅(11-10 조장 결정, ADR 0017): 계획 스스로 찾기 질문이라 해 놓고 판정 찾기 할 일을 내지 않으면 코드가 그 할 일로 바꾼다.
         #      Haiku Supervisor가 찾기를 문서 할 일(rating · candidate_find)이나 문서 + 이름 없는 판정으로 나눠 후보를 못 냈다
         #      (#46 v3-12 · 14 · 15, HL-5 · 6 h4-12: 문제를 적어 다시 물어도 같은 계획). 역할 할 일만 남긴다(다른 물음)
         roles = [t for t in plan.tasks if t.kind == 'role']
