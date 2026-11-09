@@ -158,7 +158,7 @@ SojaFit (proj3-b)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 단일 그래프 앱을 만듦(평가 비교용, 서비스는 멀티 그래프)
 │   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
-│   │   └── memory.py       <- 사용자별 Store namespace 규칙, 승인 사례를 크기 제한된 모델 입력으로 만들기. graph/nodes.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
+│   │   └── memory.py       <- 사용자별 Store namespace 규칙, 승인 사례를 크기 제한된 모델 입력으로 만들기, 멀티 그래프의 `기억 읽기` 노드(`read_profile`: Store의 선호 실장 방식만 `mount_preference`로). graph/nodes.py · multi_agent/build.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · 대체 부품 에이전트). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
@@ -167,7 +167,7 @@ SojaFit (proj3-b)
 │   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·결정서·횟수는 dict, path는 단일 그래프와 같은 말
 │   │   ├── facts.py        <- 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 Facts를 만듦
 │   │   ├── messages.py     <- 거절 사유를 사용자 일상어 문구로 바꿈(내부 코드는 로그에만), 가격 안내 문구, 판정 답 틀
-│   │   ├── build.py        <- 조립(노드 이름은 한국어): 입력 읽기 → 품번·판 확인 → Supervisor → RAG · 대체 부품 에이전트(Send) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절. 판정은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
+│   │   ├── build.py        <- 조립(노드 이름은 한국어): 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG · 대체 부품 에이전트(Send) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절. 판정은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
 │   │       ├── judge.py    <- 대체 부품 에이전트(회로 역할 읽기 · 대체 부품 판정 노드)
