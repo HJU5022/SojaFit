@@ -1,10 +1,15 @@
 import { StrictMode } from 'react'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { AuthProvider, useAuth } from './AuthProvider'
+import { AuthProvider, dummyAuthEnabled, useAuth } from './AuthProvider'
 import { failure, network, user } from '../test/network'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+it('limits dummy authentication to explicit development-only settings', () => {
+  expect(dummyAuthEnabled({ DEV: true, MODE: 'dummy' })).toBe(true)
+  expect(dummyAuthEnabled({ DEV: true, MODE: 'development', VITE_DUMMY_AUTH: '1' })).toBe(true)
+  expect(dummyAuthEnabled({ DEV: false, MODE: 'dummy', VITE_DUMMY_AUTH: '1' })).toBe(false)
+})
 function Session() {
   const { user, loading, login, logout } = useAuth()
   return <><span>{loading ? '복원 중' : user ? `사용자 ${user.user_id}` : '비로그인'}</span><button onClick={() => void login('user@example.test', 'test-only')}>접속</button><button onClick={() => void logout()}>종료</button></>
@@ -46,4 +51,26 @@ it('ignores an older StrictMode restore 401 after a new login succeeds', async (
   await act(async () => { restores[0].resolve(failure()) })
   expect(screen.getByText('사용자 7')).toBeInTheDocument()
   expect(restores[0].signal?.aborted).toBe(true)
+})
+
+it('uses the explicit development dummy session without calling the auth API', async () => {
+  vi.stubEnv('VITE_DUMMY_AUTH', '1')
+  network((path) => { throw new Error(`Dummy auth must not request ${path}`) })
+  render(<AuthProvider><Session /></AuthProvider>)
+  expect(await screen.findByText('사용자 0')).toBeInTheDocument()
+})
+
+it('uses the dummy session for the explicit dummy Vite mode', async () => {
+  vi.stubEnv('MODE', 'dummy')
+  network((path) => { throw new Error(`Dummy mode must not request ${path}`) })
+  render(<AuthProvider><Session /></AuthProvider>)
+  expect(await screen.findByText('사용자 0')).toBeInTheDocument()
+})
+
+it('never enables dummy auth in a production build', async () => {
+  vi.stubEnv('DEV', false)
+  vi.stubEnv('VITE_DUMMY_AUTH', '1')
+  network(() => failure())
+  render(<AuthProvider><Session /></AuthProvider>)
+  expect(await screen.findByText('비로그인')).toBeInTheDocument()
 })

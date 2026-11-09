@@ -5,7 +5,8 @@ export type ProjectSummary = {
   created_at: string; updated_at: string
 }
 export type CircuitPart = { ref: string; value: string; footprint: string; description?: string }
-type CircuitNet = { code?: string; name: string; nodes: { ref: string; pin: string; pinfunction?: string; function?: string | null }[] }
+export type CircuitNode = { ref: string; pin: string; pinfunction?: string; function?: string | null }
+export type CircuitNet = { code?: string; name: string; nodes: CircuitNode[] }
 export type Project = ProjectSummary & { connections: {
   parts?: CircuitPart[]; components?: CircuitPart[]; nets: CircuitNet[]; sample_id?: string; status?: string
 } }

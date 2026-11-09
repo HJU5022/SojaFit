@@ -6,7 +6,12 @@ import { useRunStream } from '../hooks/useRunStream'
 import RunStatus from './RunStatus'
 import InterruptForm from './InterruptForm'
 
-export default function ConversationPanel({ projectId, targetRef, onResult }: { projectId: number; targetRef: string; onResult: (result: ReturnType<typeof useRunStream>['state']) => void }) {
+export default function ConversationPanel({ projectId, targetRef, onResult, onConditions }: {
+  projectId: number
+  targetRef: string
+  onResult: (result: ReturnType<typeof useRunStream>['state']) => void
+  onConditions?: (conditions: string) => void
+}) {
   const client = useQueryClient()
   const threads = useQuery({ queryKey: ['threads', projectId], queryFn: ({ signal }) => listThreads(projectId, signal), retry: false, gcTime: 0 })
   const [threadId, setThreadId] = useState('')
@@ -31,7 +36,11 @@ export default function ConversationPanel({ projectId, targetRef, onResult }: { 
   }
   async function submit() {
     if (!question.trim() || !targetRef || run.state.status === 'running') return
-    try { const id = await ensureThread(); void run.start(id, { question: question.trim(), target_ref: targetRef, conditions: conditions.trim() }) }
+    try {
+      const id = await ensureThread()
+      onConditions?.(conditions.trim())
+      void run.start(id, { question: question.trim(), target_ref: targetRef, conditions: conditions.trim() })
+    }
     catch (error) { onResult({ status: 'failed', error: error as never }) }
   }
   const busy = creating || run.state.status === 'running'

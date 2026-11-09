@@ -3,11 +3,17 @@ import { StrictMode } from 'react'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
-import App from './App'
+import App, { DummyModeNotice } from './App'
 import WorkbenchPage from './pages/WorkbenchPage'
 import { administrator, failure, network, user } from './test/network'
 
 afterEach(() => vi.unstubAllGlobals())
+it('shows a persistent non-storage notice only when dummy mode is enabled', () => {
+  const { rerender } = render(<DummyModeNotice enabled />)
+  expect(screen.getByText('더미 실행 모드 · 저장되지 않음')).toBeVisible()
+  rerender(<DummyModeNotice enabled={false} />)
+  expect(screen.queryByText('더미 실행 모드 · 저장되지 않음')).not.toBeInTheDocument()
+})
 it.each(['/', '/app', '/admin/users'])('anonymous %s entry redirects to login without requesting admin data', async (path) => {
   const requested: string[] = []
   network((url) => { requested.push(url); return url.endsWith('/me') ? failure() : Response.json({ enabled: false }) })

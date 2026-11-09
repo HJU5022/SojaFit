@@ -418,3 +418,38 @@
 - 검토 이슈 1: 같은 품번이 `results`와 `shown`에 서로 다른 verdict로 나타나면 품번만 보낸 승인이 다른 판정을 저장할 수 있었다. 화면 선택값을 후보 index로 분리하고 API가 `{candidate_part, verdict}` 쌍을 요구하며 service가 두 값이 모두 같은 후보만 snapshot으로 고르도록 수정했다. 누락 verdict 422와 중복 품번의 명시 verdict 선택을 회귀 시험으로 고정했다.
 - 검토 이슈 2: checkpoint를 thread별 외부 트랜잭션으로 먼저 지우던 삭제는 중간 실패 때 일부만 지울 수 있었다. 서비스와 업무 표가 같은 `DATABASE_URL`을 쓰는 계약에 맞춰 checkpoint 세 표와 project cascade를 project 행 잠금이 유지되는 단일 PostgreSQL 트랜잭션으로 옮겼다. 격리 DB에서 실제 checkpoint 삭제·project cascade, 실행 시작과의 직렬화, cleanup 중 오류의 전체 rollback을 확인했다.
 - 검토 방식·확인: 허용된 독립 최종 검토는 이 1회로 끝냈고 재검토는 하지 않았다. 수정 뒤 backend focused·실제 DB·repo layout `33 passed`, frontend focused `2 passed`, production build, 브라우저 E2E `2 passed`를 확인했다. Task 13의 전체 suite와 gitleaks는 앞서 한 번 수행한 결과를 유지하며 다시 실행하지 않았다.
+
+### 교체 대상 부품 주변 연결 개념도
+
+- 목적·범위: 기존 `OSC` 작업대의 가운데 회로 요약을 프로젝트 `connections`와 안전한 D5 결과에 연결된 SVG 개념도로 확장했다. 실제 PCB·회로도, 이미지 생성·검색, 새 그래프 라이브러리, 업로드·견적 저장 확장은 추가하지 않았다. 루트 `SPEC.md`와 `docs/adr/`도 수정하지 않았다.
+- 기능 계약: `docs/specs/circuit-context-diagram.md`에 Why·Goal·What·How·AC를 작성했다. 연결 adapter는 `backend/graph/nodes.py::circuit_around`와 같은 net 순서, `MAX_NET_NODES=8`, 통과 부품 연결 net 수 3 이하 규칙을 사용한다. 대상은 중앙, 직접 연결은 안쪽, 2단계 연결은 바깥쪽·낮은 대비로 표시한다. 현재 연결 DTO에는 방향이 없어 SVG marker·화살표를 만들지 않는다.
+- 실제 연결: 인증된 프로젝트 상세 API의 `parts|components`·`nets`, SSE/복구 run 결과의 역할 코드·근거·후보·판정·citation을 사용한다. 역할명은 `roles.yaml` 정본에서 `code`·`name`만 반환하는 인증된 `GET /api/judge/roles`로 제공한다. 사용 조건은 D5 요청에 실제로 보낸 원문만 화면 메모리에서 표시하며 후보 데이터시트 `checks.value`를 회로 조건으로 오인해 표시하지 않는다. production 코드에는 test fixture import나 실패 시 fixture fallback이 없다.
+- 후보 연동: 판정 행을 선택하면 같은 후보의 check/package citation을 기존 근거 패널에 표시한다. 같은 품번이 다른 verdict로 중복될 수 있어 품번 문자열이 아니라 후보 index로 선택 상태를 유지한다.
+- TDD/검증: 역할 API 미구현 404, adapter/component module 미존재, 후보 선택·Workbench 전달 부재를 RED로 먼저 확인했다. 최종 `npm run test:run`은 `15 files, 76 tests passed`, `npm run build`는 TypeScript와 Vite production build 성공, `uv run pytest -q tests/api/test_conversations.py tests/repo/test_repo_layout.py`는 `15 passed in 3.25s`, `git diff --check`는 통과했다. 외부 모델·MCP·공급자 API와 공유/배포 DB는 호출하지 않았다.
+- fixture와 미확인: `breadboard_supply` D1의 `J1`, `S1`, `F1`, `U1` 및 무방향 선 AC는 실제 저장소 sample을 축약한 frontend test fixture로 검증했다. 이 작업에서 브라우저가 실제 배포 서버에 연결된 상태의 업로드→변환→D5 모델 실행은 재실행하지 않았다. 기존 `.net` 업로드·`connections` 정규화와 프로젝트/run API는 존재하지만, 실제 모델·MCP 응답 및 배포 환경 round-trip은 별도 운영 검증이 필요하다. run을 새로 시작할 때 입력한 사용 조건은 표시되지만 기존 safe result에는 구조화된 원 사용자 조건이 없어 페이지 재접속 뒤 복원하지 않는다.
+- 다음 할 일: 조장이 아래 제안 문구를 루트 `SPEC.md`의 작업대/API 절에 반영할지 검토한다. 배포 환경에서 공개 demo와 실제 `.net` 업로드 각각 한 번의 authenticated round-trip을 확인하고, 재접속 뒤 사용 조건 복원이 필요하면 safe result 계약을 별도 기능으로 설계한다.
+
+### 로컬 프론트 더미 로그인
+
+- 원인: `5173`의 OSC Vite는 정상 실행됐지만 프록시 대상 `localhost:8000`은 현재 작업트리 서버가 아니라 `proj3-b-sth-api-1` Docker 컨테이너였다. 이 서비스의 `/api/auth/me` 401은 현재 공통 오류 계약 대신 `{"detail":"로그인이 필요합니다."}`를 반환해 프론트가 일반 요청 오류로 표시했다.
+- 변경: `VITE_DUMMY_AUTH=1`이면서 Vite 개발 모드일 때만 인증 API 호출 없이 ID 0의 일반 더미 사용자로 시작한다. production build에서는 플래그가 있어도 비활성이고 프로젝트·역할 등 업무 API 응답은 더미로 대체하지 않는다. `docs/specs/login-auth.md`와 `frontend/FRONTEND.md`에 이 경계를 기록했다.
+- TDD/검증: 신규 시험이 기존 구현에서 `1 failed, 2 passed`로 RED인 것을 확인했다. 구현과 production 차단 시험을 추가한 뒤 `npm run test:run -- src/auth/AuthProvider.test.tsx src/pages/LoginPage.test.tsx`는 `2 files, 7 tests passed`, `npm run build`와 `git diff --check`는 통과했다. Vite를 플래그와 함께 재시작하고 브라우저가 `/app`의 `회로 작업대`와 `로그아웃`을 표시하는 것을 확인했다.
+- 남은 것: 로그인 경계만 임시 통과한 상태다. `proj3-b-sth-api-1`은 현재 OSC의 프로젝트·역할 API 계약과 맞지 않아 작업대의 실제 데이터 요청은 계속 실패한다. 현재 작업트리 FastAPI와 격리 DB를 별도 포트에 올리고 Vite proxy를 맞추는 작업은 아직 하지 않았다.
+
+### Flux형 기본 다크 프론트엔드
+
+- 범위: 로그인·관리자·작업대·drawer·표·상태·승인/견적·SVG 연결 개념도를 기본 다크 테마로 통일했다. Flux PCB Editor 문서의 편집기 셸과 panel 위계를 참고하되 화면 구조·브랜드를 복제하지 않았고, API·인증·데이터 계약·연결 의미는 바꾸지 않았다.
+- 설계/계획: `docs/superpowers/specs/2026-11-09-dark-frontend-design.md`와 `docs/superpowers/plans/2026-11-09-dark-frontend.md`에 색상 토큰, 반응형, 접근성, 구현·검증 범위를 기록했다. 라이트 모드·전환 버튼·외부 폰트·새 라이브러리는 추가하지 않았다.
+- TDD: `LoginPage.test.tsx`에 기본 `color-scheme: dark`, canvas `#0b0f14`, trace `#35d0ba` 계약을 먼저 추가했고 기존 CSS에서 `expected dark, received normal`로 RED를 확인했다. Vitest 기본값이 CSS를 DOM에 주입하지 않아 `vite.config.ts`의 test `css: true`만 추가했으며 Node 타입이나 의존성은 늘리지 않았다.
+- 구현: `styles.css`에 의미 토큰, 어두운 sticky tool bar, panel 깊이, form·표·오류·경고·선택 상태, 키보드 focus와 reduced-motion을 적용했다. 연결 개념도에는 20px 격자, 청록 직접 연결, 낮은 대비 2단계 연결, 대상 부품의 제한된 glow를 적용했고 marker/화살표는 추가하지 않았다.
+- 검증: 로그인·관리자 집중 `10 passed`, 작업대·개념도 집중 `21 passed`, 전체 `15 files / 79 tests passed`. `npm run build` 성공, repo layout `5 passed`, `git diff --check` 통과. 브라우저에서 1440×900 3열 작업대와 390×844 프로젝트 버튼·결과 tab 전환형 레이아웃을 확인한 뒤 viewport를 복원했다.
+- 확인하지 못한 것: 현재 `localhost:8000`은 다른 `proj3-b-sth-api-1` 컨테이너라 실제 프로젝트·역할 데이터는 오류 상태다. 다크 화면의 정상·오류·빈 상태는 확인했지만 현재 OSC backend와 실제 데이터가 연결된 브라우저 흐름은 별도 후속 작업이다.
+
+### 개발 전용 전체 더미 흐름
+
+- 목적·범위: 사용자가 현재 다크 작업대에서 로그인부터 프로젝트 선택, D5 분석, 근거·판정, 사람 승인, 가격 조회, 가격 없는 견적 저장, 승인 사례 삭제까지 직접 조작하도록 개발 전용 비영속 API를 추가했다. 실제 LLM·RAG·Mouser·DB·업로드 변환은 호출하지 않는다.
+- 설계 경계: `DEV && MODE === 'dummy'`일 때만 공통 `apiRequest`가 메모리 API를 사용한다. 일반 `npm run dev`와 production build는 기존 실제 `/api` 경계를 유지한다. 정의되지 않은 더미 API는 실제 서버로 fallback하지 않고 공통 404를 반환하며, 화면에 `더미 실행 모드 · 저장되지 않음`을 표시한다.
+- TDD RED: mode 판별 export 부재로 client test `1 failed`, 메모리 API 미구현으로 dummy test `4 failed`, mode 인증·고지 부재로 auth/App test `3 failed`, 일반 개발 서버의 브라우저 흐름은 더미 고지가 없어 `1 failed`를 각각 확인했다.
+- 구현: `frontend/src/api/dummy.ts`가 `breadboard_supply`의 D1·J1·S1·F1·U1 연결, R01 역할 근거, SS34 판정·데이터시트 위치, SSE, 승인·사례·견적·조회 순간 가격을 실제 DTO 형태로 제공한다. 상태는 모듈 메모리에만 있고 견적 JSON에는 가격·재고 필드가 없다. `npm run dev:dummy`와 route 가로채기 없는 Playwright 흐름을 추가했다.
+- 검증: focused API `12 passed`, auth/App `21 passed`, 신규 직접 더미 E2E `1 passed`. 전체 `npm run test:run`은 `16 files / 87 tests passed`, `npm run build` 성공, `npm run e2e`는 기존 2건과 신규 1건 모두 통과했다. `uv run pytest -q tests/repo/test_repo_layout.py`는 `5 passed`, `git diff --check`는 CRLF 안내 외 오류 없이 통과했다. `127.0.0.1:5173`을 dummy mode로 다시 띄우고 브라우저에서 프로젝트·D1·R01·SS34 판정·승인·더미 가격·수량 2의 가격 없는 견적 저장까지 직접 확인했으며 사례 삭제는 같은 서버를 사용하는 E2E에서 확인했다.
+- 확인하지 않은 것: 이 기능은 의도적으로 외부 서비스와 실제 DB를 검증하지 않는다. production bundle은 더미 모드를 실행하지 않지만 배포 환경 round-trip 검증은 이번 범위가 아니다. 커밋·push·PR은 만들지 않는다.

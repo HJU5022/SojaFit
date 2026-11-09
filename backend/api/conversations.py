@@ -15,10 +15,16 @@ from starlette.concurrency import run_in_threadpool
 from backend import auth
 from backend.conversations.dto import result_dto
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
+from backend.judge import conditions as judge_conditions
 from backend.services.d5 import RunInput, production_service
 
 router = APIRouter(prefix='/api', tags=['conversations'])
 _tasks = set()
+
+
+class RoleLabel(BaseModel):
+    code: str
+    name: str
 
 
 class StartRun(BaseModel):
@@ -56,6 +62,12 @@ def repository():
 
 def service_factory():
     return lambda: production_service(os.environ['DATABASE_URL'])
+
+
+@router.get('/judge/roles', response_model=list[RoleLabel])
+def list_judge_roles(user_id: int = Depends(auth.current_user_id)):
+    del user_id
+    return [RoleLabel(code=code, name=rule['name']) for code, rule in sorted(judge_conditions.load().items())]
 
 
 @router.get('/projects/{project_id}/threads')

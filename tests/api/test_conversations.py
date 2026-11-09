@@ -3,6 +3,23 @@ from backend import auth
 from backend.main import app
 
 
+def test_role_catalog_requires_login_and_exposes_only_code_and_name():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get('/api/judge/roles').status_code == 401
+
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    try:
+        with TestClient(app, raise_server_exceptions=False) as client:
+            response = client.get('/api/judge/roles')
+        assert response.status_code == 200
+        roles = response.json()
+        assert {'code': 'R01', 'name': '역극성 보호(직렬)'} in roles
+        assert roles == sorted(roles, key=lambda role: role['code'])
+        assert all(set(role) == {'code', 'name'} for role in roles)
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_thread_endpoint_requires_login():
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.get('/api/projects/1/threads')

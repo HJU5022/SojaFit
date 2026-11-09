@@ -2,13 +2,17 @@ import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
-import { errorMessage } from './api/client'
+import { dummyFlowEnabled, errorMessage } from './api/client'
 import LoginPage from './pages/LoginPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>
+}
+
+export function DummyModeNotice({ enabled }: { enabled: boolean }) {
+  return enabled ? <p className="dummy-mode-notice" role="status">더미 실행 모드 · 저장되지 않음</p> : null
 }
 
 function Shell() {
@@ -35,6 +39,7 @@ function Shell() {
           {user && <button disabled={busy} onClick={() => void signOut()}>{busy ? '로그아웃 중…' : '로그아웃'}</button>}
         </nav>
       </header>
+      <DummyModeNotice enabled={dummyFlowEnabled(import.meta.env)} />
       <main id="main">
         {error ? <p role="alert">{errorMessage(error)}</p> : null}
         <Routes>

@@ -1,7 +1,17 @@
+import { dummyApiFetch } from './dummy'
+
 export type ApiError = { code: string; message: string; requestId: string }
 
+export function dummyFlowEnabled(env: { DEV: boolean; MODE: string }) {
+  return env.DEV && env.MODE === 'dummy'
+}
+
+export function apiRequest(path: string, init: RequestInit = {}) {
+  return dummyFlowEnabled(import.meta.env) ? dummyApiFetch(path, init) : fetch(path, init)
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, { ...init, credentials: 'same-origin', cache: 'no-store' })
+  const response = await apiRequest(path, { ...init, credentials: 'same-origin', cache: 'no-store' })
   init.signal?.throwIfAborted()
   if (response.status === 204 && response.ok) return undefined as T
   const body = await response.json()

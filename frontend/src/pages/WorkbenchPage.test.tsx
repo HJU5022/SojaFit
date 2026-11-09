@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
@@ -65,4 +65,37 @@ it('exposes keyboard-operable result tabs and a labelled project drawer', async 
   const judgement = screen.getByRole('tab', { name: '판정' })
   fireEvent.click(judgement)
   expect(judgement).toHaveAttribute('aria-selected', 'true')
+})
+
+it('connects project, role, run, candidate, and citation API data without a fixture fallback', async () => {
+  const result = {
+    answer: '판정 완료', status: 'completed', stage: '완료', question_type: 'judge', evidence: [], price_parts: [], refusal: '', interrupt: {}, request_id: 'req-run',
+    judgement: { kind: 'judge', roles: ['R01'], role_evidence: ['D1.K → GND'], shown: [], unverified: [], capped: false,
+      results: [{ part: 'SS34', role: 'R01', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', value: 40, unit: 'V', condition: '입력 최대 전압', citation: { document: 'ss34.pdf', page: 3, table: 'Ratings', row: 'VRRM' } }] }] },
+  }
+  network((path, init) => {
+    if (path === '/api/judge/roles') return Response.json([{ code: 'R01', name: '역극성 보호(직렬)' }])
+    if (path === '/api/demo-circuits') return Response.json([demo])
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads' && init.method === 'POST') return Response.json({ id: 'thread-1', project_id: 11 }, { status: 201 })
+    if (path === '/api/projects/11/threads') return Response.json([])
+    if (path === '/api/threads/thread-1/runs') return new Response([
+      'event: run_started', 'data: {"run_id":"run-1","request_id":"req-run"}', '',
+      'event: completed', `data: ${JSON.stringify(result)}`, '', '',
+    ].join('\n'))
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByText('D1 / 1N4001')
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1을 SS34로 바꿔도 되나요?' } })
+  fireEvent.change(screen.getByLabelText('사용 조건 (선택)'), { target: { value: '입력 최대 12 V' } })
+  fireEvent.click(screen.getByRole('button', { name: 'D5에 질문하기' }))
+  expect(await screen.findByText('역극성 보호(직렬)')).toBeInTheDocument()
+  expect(within(screen.getByLabelText('개념도 사용 조건')).getByText('입력 최대 12 V')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('tab', { name: '판정' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'SS34 후보 선택' }))
+  fireEvent.click(screen.getByRole('tab', { name: '근거' }))
+  expect(screen.getByText('SS34 데이터시트 근거')).toBeInTheDocument()
+  expect(screen.getByText('ss34.pdf')).toBeInTheDocument()
 })

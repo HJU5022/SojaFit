@@ -3,7 +3,7 @@
 ## 역할
 - 넣는 것: React + Vite + TypeScript 도구 설정과 같은 출처 화면 소스. 운영에서는 빌드 산출물만 FastAPI 이미지로 전달합니다.
 - 넣지 않는 것: API·인증·판정 로직(`backend/`), D5 내부 상태와 비밀값. 화면은 서버의 안전 DTO만 표시하고 판정을 새로 계산하지 않습니다.
-- 개발: `npm ci`, `npm run dev`. `/api`는 `http://localhost:8000`으로 프록시합니다.
+- 개발: `npm ci`, `npm run dev`. `/api`는 `http://localhost:8000`으로 프록시합니다. 인증 DB 없이 UI만 확인할 때는 명시적으로 `VITE_DUMMY_AUTH=1`을 설정할 수 있으며 production build에서는 이 값이 무시됩니다. 로그인부터 승인·견적까지 비영속 전체 흐름은 `npm run dev:dummy`에서만 사용할 수 있습니다.
 - 확인: `npm run test:run`, `npm run build`, `npm run e2e`. e2e는 로컬 Vite와 가짜 API만 사용합니다.
 - `frontend/` 도구 루트는 표준 Vite가 package.json·index.html·vite.config.ts를 함께 요구하므로 사용자 승인으로 한 종류 규칙의 좁은 예외입니다. `src/` 등은 예외가 아닙니다.
 

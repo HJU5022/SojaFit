@@ -1,10 +1,19 @@
 import type { Project } from '../api/projects'
+import type { JudgementDto, RoleLabel } from '../api/conversations'
+import CircuitContextDiagram from './CircuitContextDiagram'
+import { buildCircuitContext } from './circuitContext'
 
-export default function CircuitSummary({ project, targetRef, onTarget }: {
+export default function CircuitSummary({ project, targetRef, onTarget, judgement, roleLabels = [], missing = [], providedConditions = '', analysisStatus = 'idle' }: {
   project: Project; targetRef: string; onTarget: (ref: string) => void
+  judgement?: JudgementDto
+  roleLabels?: RoleLabel[]
+  missing?: string[]
+  providedConditions?: string
+  analysisStatus?: 'idle' | 'running' | 'requires_input' | 'completed' | 'refused' | 'failed'
 }) {
   const parts = project.connections.parts ?? project.connections.components ?? []
   const target = parts.some(part => part.ref === targetRef) ? targetRef : ''
+  const context = targetRef ? buildCircuitContext(project, targetRef, judgement, roleLabels, missing, providedConditions) : null
   return <section className="panel" aria-label="회로 요약">
     <h2>{project.name}</h2>
     <p>{project.source_kind === 'demo' ? '공개 데모 회로' : '업로드한 회로'} · 서버에서 확인한 연결 정보</p>
@@ -14,6 +23,8 @@ export default function CircuitSummary({ project, targetRef, onTarget }: {
       <option value="">대상을 선택하세요</option>
       {parts.map(part => <option key={part.ref} value={part.ref}>{part.ref} · {part.value || '값 없음'}</option>)}
     </select>
-    {target ? <p>선택한 대상: {target}</p> : <p>검토할 부품의 참조 번호를 선택하세요.</p>}
+    {target ? <><p>선택한 대상: {target}</p><CircuitContextDiagram key={target} context={context!} analysisStatus={analysisStatus} /></>
+      : targetRef && context ? <CircuitContextDiagram key={targetRef} context={context} analysisStatus={analysisStatus} />
+        : <p>검토할 부품의 참조 번호를 선택하세요.</p>}
   </section>
 }

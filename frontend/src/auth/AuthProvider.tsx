@@ -9,12 +9,19 @@ type Auth = {
   logout: () => Promise<void>
 }
 const AuthContext = createContext<Auth | null>(null)
+const DUMMY_USER: auth.User = { user_id: 0, role: 'user' }
+
+export function dummyAuthEnabled(env: { DEV: boolean; MODE?: string; VITE_DUMMY_AUTH?: string }) {
+  return env.DEV && (env.MODE === 'dummy' || env.VITE_DUMMY_AUTH === '1')
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<auth.User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const dummy = dummyAuthEnabled(import.meta.env)
+  const [user, setUser] = useState<auth.User | null>(dummy ? DUMMY_USER : null)
+  const [loading, setLoading] = useState(!dummy)
   const [error, setError] = useState<unknown>(null)
   useEffect(() => {
+    if (dummy) return
     let current = true
     const controller = new AbortController()
     const expire = () => setUser(null)
@@ -23,13 +30,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (current && error.code !== 'UNAUTHORIZED') setError(error)
     }).finally(() => { if (current) setLoading(false) })
     return () => { current = false; controller.abort(); window.removeEventListener('sojafit:session-expired', expire) }
-  }, [])
+  }, [dummy])
   async function login(email: string, password: string) {
+    if (dummy) { setUser(DUMMY_USER); setError(null); return }
     await auth.login(email, password)
     setUser(await auth.getMe())
     setError(null)
   }
   async function logout() {
+    if (dummy) { setUser(null); setError(null); return }
     await auth.logout()
     setUser(null)
     setError(null)

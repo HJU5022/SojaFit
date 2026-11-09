@@ -8,5 +8,5 @@
 
 ## 파일
 - `SUPERPOWERS.md` — 이 폴더 설명.
-- `specs/` — 사용자와 합의한 설계 문서. `2026-11-05-supervisor-prompt-v0-design.md`, `2026-11-09-d5-frontend-service-design.md`가 있습니다.
-- `plans/` — 승인된 설계를 테스트 우선 작업과 커밋 단위로 옮긴 구현 계획. 현재 `2026-11-09-d5-frontend-service.md`가 있습니다.
+- `specs/` — 사용자와 합의한 설계 문서. `2026-11-05-supervisor-prompt-v0-design.md`, `2026-11-09-d5-frontend-service-design.md`, `2026-11-09-dark-frontend-design.md`, `2026-11-09-dummy-full-flow-design.md`가 있습니다.
+- `plans/` — 승인된 설계를 테스트 우선 작업으로 옮긴 구현 계획. `2026-11-09-d5-frontend-service.md`, `2026-11-09-circuit-context-diagram.md`, `2026-11-09-dark-frontend.md`, `2026-11-09-dummy-full-flow.md`가 있습니다.

@@ -48,7 +48,8 @@ SojaFit (proj3-b)
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
-│   │   └── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
+│   │   ├── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
+│   │   └── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
@@ -63,7 +64,9 @@ SojaFit (proj3-b)
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
 │       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API
-│       │   └── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
+│       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
+│       │   ├── dummy.ts     <- 개발 전용 비영속 전체 흐름 API
+│       │   └── dummy.test.ts <- 더미 API 상태·비저장·404 테스트
 │       ├── auth/           <- 메모리 인증 상태·보호 화면 경계
 │       │   ├── AuthProvider.tsx <- 서버 세션 복원·로그인·로그아웃·401 처리
 │       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
@@ -83,8 +86,12 @@ SojaFit (proj3-b)
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
 │       │   ├── CircuitSetup.test.tsx <- 데모·업로드·오류·입력 폐기·비저장 테스트
-│       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택
+│       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택·연결 개념도 조합
 │       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
+│       │   ├── circuitContext.ts <- 프로젝트 연결·안전 판정 응답의 순수 화면 adapter
+│       │   ├── circuitContext.test.ts <- 직접·2단계 연결·누락값 adapter 테스트
+│       │   ├── CircuitContextDiagram.tsx <- 대상 중심 SVG 연결 개념도·노드 상세
+│       │   ├── CircuitContextDiagram.test.tsx <- SVG·상태·무방향 연결 렌더링 테스트
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
 │       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면
@@ -535,14 +542,21 @@ SojaFit (proj3-b)
 │   │   ├── judge-agent.md  <- 판정 에이전트와 대체품 찾기
 │   │   ├── judge-agent-plan.md  <- 판정 에이전트의 테스트 우선 구현 계획
 │   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
-│   │   └── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
+│   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
+│   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
+│   │   └── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
 │   ├── superpowers/        <- 사용자와 합의한 설계와 단계별 구현 계획
 │   │   ├── SUPERPOWERS.md  <- 폴더 설명
 │   │   ├── specs/
 │   │       ├── 2026-11-05-supervisor-prompt-v0-design.md  <- Supervisor Prompt V0 설계
-│   │       └── 2026-11-09-d5-frontend-service-design.md  <- React·Vite 작업대와 D5 서비스 연결 설계
+│   │       ├── 2026-11-09-d5-frontend-service-design.md  <- React·Vite 작업대와 D5 서비스 연결 설계
+│   │       ├── 2026-11-09-dark-frontend-design.md  <- Flux형 기본 다크 프론트엔드 설계
+│   │       └── 2026-11-09-dummy-full-flow-design.md  <- 개발 전용 전체 더미 흐름 설계
 │   │   └── plans/
-│   │       └── 2026-11-09-d5-frontend-service.md  <- D5 프론트엔드 6개 PR 구현 계획
+│   │       ├── 2026-11-09-d5-frontend-service.md  <- D5 프론트엔드 6개 PR 구현 계획
+│   │       ├── 2026-11-09-circuit-context-diagram.md  <- 대상 부품 주변 연결 개념도 구현 계획
+│   │       ├── 2026-11-09-dark-frontend.md  <- 전체 프론트 기본 다크 테마 구현 계획
+│   │       └── 2026-11-09-dummy-full-flow.md  <- 개발 전용 전체 더미 흐름 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선

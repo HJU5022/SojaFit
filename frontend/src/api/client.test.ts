@@ -1,8 +1,13 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { apiFetch } from './client'
+import { apiFetch, dummyFlowEnabled } from './client'
 import { fetchPrices } from './prices'
 
 afterEach(() => vi.unstubAllGlobals())
+it('enables the full dummy flow only for the explicit Vite development mode', () => {
+  expect(dummyFlowEnabled({ DEV: true, MODE: 'dummy' })).toBe(true)
+  expect(dummyFlowEnabled({ DEV: false, MODE: 'dummy' })).toBe(false)
+  expect(dummyFlowEnabled({ DEV: true, MODE: 'development' })).toBe(false)
+})
 it('preserves common error code, message and request id', async () => {
   vi.stubGlobal('fetch', async () => Response.json({ error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', request_id: 'req-1' } }, { status: 401 }))
   await expect(apiFetch('/api/auth/me')).rejects.toMatchObject({ code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', requestId: 'req-1' })

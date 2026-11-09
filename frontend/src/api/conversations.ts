@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch, apiRequest } from './client'
 
 export type EvidenceDto = { document: string; page: number | string | null; table: string; row: string; section: string; citation_number: string }
 export type CitationDto = { document?: string; page?: number | string | null; table?: string; row?: string; chunk_id?: string | number | null; chunk_index?: number | null }
@@ -10,13 +10,15 @@ export type ResultDto = { answer: string; status: string; stage: string; questio
 export type ThreadDto = { id: string; project_id: number }
 export type RunDto = { id: string; thread_id: string; message_id: number | null; result: ResultDto }
 export type StreamEvent = { event: 'run_started' | 'status' | 'requires_input' | 'completed' | 'refused' | 'failed'; data: Record<string, unknown> }
+export type RoleLabel = { code: string; name: string }
 
+export const listJudgeRoles = (signal?: AbortSignal) => apiFetch<RoleLabel[]>('/api/judge/roles', { signal })
 export const listThreads = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto[]>(`/api/projects/${projectId}/threads`, { signal })
 export const createThread = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto>(`/api/projects/${projectId}/threads`, { method: 'POST', signal })
 export const getRun = (runId: string, signal?: AbortSignal) => apiFetch<RunDto>(`/api/runs/${runId}`, { signal })
 
 export async function openRunStream(path: string, body: unknown, signal: AbortSignal): Promise<Response> {
-  const response = await fetch(path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal,
+  const response = await apiRequest(path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal,
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string; request_id?: string } } | null

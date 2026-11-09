@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
 import { failure, network, user } from '../test/network'
+import '../styles.css'
 
 afterEach(() => vi.unstubAllGlobals())
 function open() { render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>) }
@@ -40,4 +41,11 @@ it('explains the existing Google callback failure redirect', async () => {
   network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
   render(<MemoryRouter initialEntries={['/login?google=error']}><App /></MemoryRouter>)
   expect(await screen.findByRole('alert')).toHaveTextContent('Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.')
+})
+
+it('uses the dark editor theme by default', () => {
+  const root = getComputedStyle(document.documentElement)
+  expect(root.colorScheme).toBe('dark')
+  expect(root.getPropertyValue('--canvas').trim()).toBe('#0b0f14')
+  expect(root.getPropertyValue('--trace').trim()).toBe('#35d0ba')
 })
