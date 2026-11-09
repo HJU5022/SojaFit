@@ -95,6 +95,35 @@ def test_demo_scenarios_use_real_graph_and_storage_without_external_calls(runtim
         app.upload(a, 'other.net', NET)
 
 
+def test_live_graph_uses_card_tools_and_keeps_their_attributes(monkeypatch):
+    """[왜] 사양 표를 버리고 카드 도구가 기본이다(ADR 0016). timed_tool로 감싸도 판정이 getattr로 찾는 prefetch · also_read가 남아야 한다."""
+    from contextlib import ExitStack
+    from backend.graph import mcp_retriever
+    from backend.multi_agent import build
+    from backend.rag import card_find, card_specs
+    from backend.services import demo
+
+    class Mcp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def check(self, parts, revisions): return {'parts': {}, 'revisions': {}}
+    def specs(part, codes=None): return ['row']
+    specs.prefetch, specs.doc_rows = (lambda parts, codes: None), (lambda part, codes=None: [])
+    def find(*a, **k): return ['part']
+    find.also_read = lambda codes: None
+    seen = {}
+    monkeypatch.setattr(demo, 'enabled', lambda: False)
+    monkeypatch.setattr(mcp_retriever, 'StdioMcpRetriever', Mcp)
+    monkeypatch.setattr(card_specs, 'default_specs', lambda: specs)
+    monkeypatch.setattr(card_find, 'default_find', lambda: find)
+    monkeypatch.setattr(build, 'build_graph', lambda **kw: seen.update(kw) or 'graph')
+    app = Conversations.__new__(Conversations)  # [왜] DB 없이 조립만 본다
+    app.stack, app.saver, app.store = ExitStack(), None, None
+    assert app._graph() == 'graph'
+    assert seen['specs']('SS34') == ['row'] and seen['specs'].prefetch is specs.prefetch
+    assert seen['find']() == ['part'] and seen['find'].also_read is find.also_read
+
+
 def test_demo_mode_is_explicit_and_never_enables_replay_for_real_evaluations(monkeypatch):
     from backend.services import demo
     monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_SCENARIOS', raising=False)

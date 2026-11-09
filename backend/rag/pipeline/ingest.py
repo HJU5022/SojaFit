@@ -168,7 +168,7 @@ def main(manifest_path, chunks_path, vec_dir, cache_only=False, chunks_only=Fals
     cache = VectorCache(vec_dir)
     texts = {c['sha256']: c['text'] for c in cards}
     # 문서 키 → 분류. 한 문서의 카드는 모두 같은 category를 갖는다(chunks-v4h 1,360문서 확인)
-    # [왜] 사양 표 없이 찾는 코드가 part_specifications.category와 같은 값으로 거르게 specs.py의 family()를 그대로 쓴다('tvs-18' → 'tvs')
+    # [왜] 사양 표 없이 찾는 코드(card_find)가 문서 분류로 거르게 specs.py의 family()를 쓴다('tvs-18' → 'tvs')
     # [주의] 분류가 없는 카드면 빈 글자 대신 NULL을 넣는다
     category = {doc_key(c['doc']): family(c.get('category')) or None for c in cards}
     with psycopg.connect(os.environ['DATABASE_URL']) as conn:  # with: 오류 없이 끝나면 커밋, 예외면 롤백한다

@@ -5,7 +5,7 @@
   `specs.prefetch(parts, codes)`는 후보 여러 개를 문서별로 묶어 동시에 읽어 둔다(판정이 후보마다 한 번씩 부르기 전에).
   `specs.doc_rows(part)`는 LLM 없이 그 품번 문서의 PACKAGE 행만 준다(사실 확인 노드가 문서 · 개정만 볼 때).
 - 하지 않는 일: 판정 · 비교(`backend/judge/`), 카드 값 대조(`card_read.py`), 찾기(`card_find.py`), LLM 직접 호출(chat을 받아 넘긴다).
-- 출처: lab v3 결정 21의 3단계(표 없이 판정 값), 행 모양은 `spec_lookup._row`, 패키지 · AEC 규칙은 `pipeline/specs.py`(packages_of · aec_of)
+- 출처: lab v3 결정 21의 3단계(표 없이 판정 값), 행 모양은 `spec_lookup._row`, 패키지 규칙은 `pipeline/specs.py`(packages_of), AEC 규칙은 11-09에 지운 사양 표 변환의 aec_of와 같음
 """
 import contextvars
 import os
@@ -47,7 +47,7 @@ def _where(doc, word):
 
 
 def text_rows(part, doc, category):
-    """PACKAGE 행(문서의 패키지 이름마다)과 AEC_Q101 행(문서가 밝혔을 때만, specs.aec_of와 같은 규칙)."""
+    """PACKAGE 행(문서의 패키지 이름마다)과 AEC_Q101 행(문서가 밝혔을 때만, 11-09에 지운 사양 표 변환의 aec_of와 같은 규칙)."""
     rows = [_text_row(part, 'PACKAGE', name, doc, category, _where(doc, name)) for name in doc_packages(doc)]
     if doc.get('aec_h'):
         if part.upper().endswith('H'):

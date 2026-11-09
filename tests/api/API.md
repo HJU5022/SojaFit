@@ -11,6 +11,7 @@
 ## 파일
 - `test_threads.py` — 격리 PostgreSQL의 업로드·소유권·체크포인트 복구·재개·승인 멱등성과 기억 격리 시험
 - 같은 파일에서 실제 로그인 쿠키의 키 없는 합성 HTTP 흐름, 기억 정정/철회/삭제/재승인 차단, 중단 checkpoint의 철회 기억 배제, 내용 없는 단계 기록/trace 실패 격리와 시간 초과 결과의 승인 차단을 확인한다.
+- 같은 파일에서 DB 없이 실제 분석 그래프 조립이 카드 도구(`card_find` · `card_specs`)를 넘기고, `timed_tool`로 감싼 뒤에도 `prefetch` · `also_read`가 남는지 본다(ADR 0016).
 - 같은 파일의 운영 준비 시험: 8개 병렬 thread의 일일 예약과 질문 격리, 명시적 TEST_THREAD_BACKUP_CONTAINER에서 pg_dump→일회용 DB 복원→Store/소유권/interrupt 재개. 공유 DB 복원은 실행하지 않는다.
 - `API.md` — 이 문서
 - `test_conversations.py` — 대화 인증·스트림·삭제 경계

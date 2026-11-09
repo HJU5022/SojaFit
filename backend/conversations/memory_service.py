@@ -112,13 +112,20 @@ class Conversations:
             self.mode = 'demo'
             return build_graph(chat=demo.chat, retriever=lambda *a, **k: [], judge_enabled=True,
                 lookup=demo.lookup, specs=timed_tool('specs',demo.specs), find=lambda *a, **k: [], checkpointer=self.saver, store=self.store)
+        from functools import update_wrapper
         from backend.multi_agent.facts import make_lookup
+        from backend.rag.card_find import default_find
+        from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
         from backend.services import llm
-        mcp = self.stack.enter_context(StdioMcpRetriever())
+        mcp = self.stack.enter_context(StdioMcpRetriever())  # 사실 확인(check_corpus)만 MCP로 부른다
+        # [왜] 사양 표(part_specifications)를 11-09에 버리고 후보 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016, run_graph.py의 LAB_FIND · LAB_SPECS=cards와 같은 조립)
+        # [주의] 카드 도구는 MCP를 거치지 않고 DATABASE_URL로 DB를 직접 읽는다. default_specs()는 여기서 표지 품번 색인을 한 번 읽는다
+        specs, find = default_specs(), default_find()
+        # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. 판정 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
         return build_graph(chat=llm.node_chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
-            lookup=make_lookup(mcp.check), specs=timed_tool('specs',mcp.part_specs), find=timed_tool('find',mcp.find_parts),
-            checkpointer=self.saver, store=self.store)
+            lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
+            find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=self.store)
 
     @staticmethod
     def config(thread):

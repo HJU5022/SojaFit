@@ -166,10 +166,12 @@ class StdioMcpRetriever:
         """코퍼스에 품번 · 개정 코드가 있는지 `check_corpus` 도구로 묻는다(같은 세션을 쓴다)."""
         return self._run(self._check(parts, revisions))
 
+    # shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
     def part_specs(self, part: str, codes: list[str] | None = None) -> list[dict]:
         """품번 하나의 사양 표 행을 `get_part_specs` 도구로 읽는다(같은 세션을 쓴다)."""
         return self._run(self._list("get_part_specs", {"part": part, "codes": codes}))
 
+    # shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
     def find_parts(self, conditions: list[dict], category: str | None = None, package: str | None = None,
                    limit: int = 50, original_packages: list[str] | None = None, original_category: str | None = None) -> list[dict]:
         """숫자 조건을 채운 품번을 `find_parts_by_specs` 도구로 찾는다. original_*는 원래 부품의 패키지 · 분류로, 순서에만 쓴다."""

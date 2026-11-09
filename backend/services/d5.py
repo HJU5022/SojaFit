@@ -121,8 +121,12 @@ async def setup_checkpoints(connection_string: str) -> None:
 async def production_service(connection_string: str):
     """호출자가 수명과 소유권 검증을 관리한다. setup은 별도 관리 단계다."""
     from backend.graph.mcp_retriever import StdioMcpRetriever
+    from backend.rag.card_find import default_find
+    from backend.rag.card_specs import default_specs
     from backend.services import llm
     async with AsyncPostgresSaver.from_conn_string(connection_string) as saver:
         with StdioMcpRetriever() as mcp:
-            yield D5Service(chat=llm.node_chat, retriever=mcp, lookup=make_lookup(mcp.check, mcp.part_specs),
-                            specs=mcp.part_specs, find=mcp.find_parts, checkpointer=saver)
+            # [왜] 사양 표를 11-09에 버리고 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016). 카드 도구는 DATABASE_URL로 DB를 직접 읽는다
+            specs = default_specs()
+            yield D5Service(chat=llm.node_chat, retriever=mcp, lookup=make_lookup(mcp.check, specs.doc_rows),
+                            specs=specs, find=default_find(), checkpointer=saver)

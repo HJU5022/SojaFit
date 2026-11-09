@@ -1,12 +1,14 @@
-"""부품 사양 표(part_specifications, db/011) 조회: 품번 하나의 사양 행, 숫자 조건에 맞는 부품 찾기.
+"""사양 코드 목록 · 찾기 순서 규칙과, 11-09에 버린 부품 사양 표(part_specifications) 조회 함수 두 개.
 
-- 역할: MCP 서버(`get_part_specs`, `find_parts_by_specs`)가 import하는 조회 함수 두 개. 연결은 부르는 쪽이 넘긴다.
+- 역할: 사양 코드 목록 `CODES`(판정 에이전트 · MCP 서버 import)와 순서 규칙 `DEFAULT_SLOT` · `_norm_package` · `_ratio`
+  (카드 찾기 `card_find.py` import). 행 모양 `_row`는 카드 도구가 같은 모양으로 만든다.
+  MCP 서버(`get_part_specs`, `find_parts_by_specs`)가 import하는 조회 함수 두 개는 `run_graph.py` 기본값 때문에 남겼다(ADR 0016). 연결은 부르는 쪽이 넘긴다.
   - `part_specs`: 품번(대소문자 무시)의 모든 행을 분류·값·단위·시험 조건·인용(문서 파일 이름, 쪽, 표, 행, 청크 순번)과 함께 돌려준다.
   - `find_candidates`: 조건마다 "그 품번의 행 하나 이상이 채우는가"만 보고, 모든 조건을 채운 품번을 모두 줄 세운 뒤
     limit개까지 돌려준다(원래 부품과 같은 패키지 → 같은 분류 → 기준에 가까운 순 → 품번 순).
 - 하지 않는 일: 판정 5종과 대체 가능 여부(`backend/judge/`, AGENTS 지킬 것 7), 단위 환산(값은 이미 SI), 시험 조건 맞추기,
-  LLM 호출, 표 적재(`pipeline/specs.py load`). 비교는 행을 거르는 `>=`·`<=`와 순서를 정하는 비율(값/기준)뿐이다.
-- 출처: db/schema/table-definition.md 5.7, ADR 0013, SPEC.md 8.7
+  LLM 호출, 표 만들기 · 적재(11-09에 지움). 비교는 행을 거르는 `>=`·`<=`와 순서를 정하는 비율(값/기준)뿐이다.
+- 출처: db/schema/table-definition.md 5.7, ADR 0013(대체됨) · 0016, SPEC.md 8.7
 
 [주의] 표에 없는 값은 "조건 불충족"이 아니라 "문서로 확인 안 됨"이다(ADR 0013이 애매한 값을 뺐다). 여기서 빠진 품번을
 불충족으로 판정하지 않는다. 시험 조건(test_condition)이 다른 행도 같은 코드면 함께 비교하므로, 조건 차이는 judge가 본다.
@@ -41,6 +43,7 @@ def _row(r):
                          'row': r[13], 'chunk_index': r[14]}}
 
 
+# shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
 def part_specs(conn, part, codes=None):
     """품번 하나(대소문자 무시)의 사양 행 목록. codes를 주면 그 코드만. 코드·행 순서로 정렬한다."""
     sql, params = f'SELECT {_COLUMNS}{_FROM} WHERE upper(s.part_number) = upper(%s)', [part]
@@ -68,6 +71,7 @@ def _ratio(cond, row):
     return max(ratios, default=1.0)
 
 
+# shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
 def find_candidates(conn, conditions, category=None, package=None, limit=50, original_packages=None, original_category=None):
     """모든 조건을 채운 품번 목록(모두 줄 세운 뒤 limit개까지).
 

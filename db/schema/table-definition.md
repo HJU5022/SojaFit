@@ -2,9 +2,9 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 부품 사양 표(5.7)는 `db/011_part_specifications.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/013_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `part_specifications`와 `circuits`는 현재 011·013과 호환되지 않으므로 그대로 적용하면 안 됩니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/013_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `circuits`는 현재 013과 호환되지 않으므로 그대로 적용하면 안 됩니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
 
-열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.7·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
+열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
 현재 프로젝트의 핵심 흐름은 다음과 같습니다.
 
@@ -77,7 +77,7 @@
 | 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 013 구현 |
 | 분석 | 분석 실행 | `analysis_runs` | 특정 회로 부품에 대한 한 번의 대체 분석 저장 | 확정 |
 | 부품 | 부품 | `parts` | 원본 부품과 후보 부품의 기본정보 저장 | 확정 |
-| 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 확정 |
+| 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 버림(2026-11-09, ADR 0016) |
 | 분석 | 대체 조건 | `replacement_requirements` | 회로 역할에서 도출한 필수·선택 조건 저장 | 확정 |
 | 분석 | 후보 판정 | `candidate_evaluations` | 분석별 후보 부품의 5종 판정 저장 | 확정 |
 | 분석 | 조건별 비교 | `requirement_checks` | 후보 판정마다 대체 조건 하나씩의 비교 결과 저장 | 확정 |
@@ -203,11 +203,11 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 제약조건 초안: `UNIQUE (document_id, chunk_index)`.
 
-### 5.7 `part_specifications` — 부품 사양
+### 5.7 `part_specifications` — 부품 사양(버림)
 
 데이터시트에서 추출한 숫자 사양과 시험 조건을 구조화해 저장합니다. `backend/judge/`가 LLM 대신 숫자와 단위를 비교할 때 사용하는 데이터입니다. 최소·대표·최대값은 `backend/rag/`의 단위 환산 함수로 SI 기본 단위로 바꿔 저장하고, 원문 표기는 `source_value_text`에 그대로 남깁니다(A-08).
 
-`db/011_part_specifications.sql`이 만들고 `python -m backend.rag.pipeline.specs load`가 문서 단위로 지우고 다시 넣습니다(ADR 0007·0013). 읽는 곳은 `backend/rag/spec_lookup.py`(MCP `get_part_specs`·`find_parts_by_specs`)입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣습니다. 문서 FK는 `CASCADE`입니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
+2026-11-09에 이 표를 버렸습니다(ADR 0016, ADR 0013은 대체됨). 표를 만들던 `db/011_part_specifications.sql`과 적재 코드(`python -m backend.rag.pipeline.specs load`)를 지웠고, 운영 DB의 표는 조장이 지웁니다. 판정 값과 후보 찾기는 카드 도구(`backend/rag/card_specs.py` · `card_find.py`)가 `document_chunks`의 표 행 청크를 그때그때 읽어 같은 모양의 행으로 만듭니다. 아래 열 정의는 11-05 SQL의 기록입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣었습니다. 문서 FK는 `CASCADE`였습니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|

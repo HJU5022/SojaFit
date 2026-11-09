@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'card_read.md').read_text(encoding='utf-8')
-# 코드마다 SI 단위. pipeline/specs.py의 SI와 같은 표다(오프라인 도구라 서버 코드가 import하지 않는다)
+# 코드마다 SI 단위. pipeline/specs.py의 SI와 같은 표다
 SI = {'VRRM': 'V', 'VR': 'V', 'VRWM': 'V', 'VBR': 'V', 'VC': 'V', 'VZ': 'V', 'VF': 'V', 'VESD': 'V',
       'IF_AV': 'A', 'IFSM': 'A', 'IR': 'A', 'IPP': 'A', 'PD': 'W', 'PPPM': 'W', 'TRR': 's', 'CJ': 'F', 'TJ_MAX': 'degC'}
 NUM = re.compile(r'\d+(?:\.\d+)?')
