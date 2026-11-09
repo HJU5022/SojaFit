@@ -36,3 +36,21 @@ def test_rows_already_read_by_find_are_reused_and_missing_parts_are_read():
     assert calls == [] and {r['code'] for r in specs('P1')} == {'VRRM', 'IFSM'}
     specs.prefetch(['P2'], ['VRRM'])  # shared에 P2 행이 없으면 새로 읽는다
     assert calls == [('VRRM',)]
+
+
+def test_part_docs_index_reads_corpus_on_first_lookup_only(monkeypatch):
+    """[왜] 서버 시작 때 코퍼스 표를 읽으면 코퍼스 없는 DB(CI)에서 앱이 뜨지 않는다. 색인은 첫 찾기 때 한 번만 읽는다."""
+    import psycopg
+    from backend.rag import card_specs
+    connects = []
+
+    class Conn:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def execute(self, sql): return [('doc-1', '[ss34.pdf] 이 데이터시트의 품번: SS34, SS36')]
+    monkeypatch.setenv('DATABASE_URL', 'postgresql://unused')
+    monkeypatch.setattr(psycopg, 'connect', lambda dsn: connects.append(dsn) or Conn())
+    lookup = card_specs.part_docs_index()
+    assert connects == []
+    assert lookup('ss34') == lookup('SS34 ') == ['doc-1'] and connects == ['postgresql://unused']
+    assert lookup('SS99') == [] and len(connects) == 1

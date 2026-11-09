@@ -1,5 +1,10 @@
 # jeongun 작업 기록
 
+## 2026-11-09 카드 판정 값의 품번 색인을 첫 사용 때 읽기 (브랜치 `jeongun-8`)
+- 한 일: `5ad0a2e`부터 앱 시작(분석 서비스 그래프 조립)에서 `card_specs.default_specs()`가 `part_docs_index()`로 `document_chunks`를 바로 읽어, 코퍼스 표가 없는 DB(CI의 `postgres:16`, 인증 표만)에서 `tests/api/test_threads.py::test_enabled_app_lifespan_opens_and_closes_real_persistence`가 실패했다. `part_docs_index()`가 찾는 함수만 돌려주고 색인은 첫 찾기 때 한 번 만들게 바꿨다(읽기 실패면 다음 호출이 다시 읽음). `make_specs`가 붙이는 `prefetch` · `doc_rows` 속성과 `update_wrapper` 전달은 그대로다.
+- 바꾼 파일: `backend/rag/card_specs.py`, `backend/conversations/memory_service.py`(주석 한 줄), 시험 `tests/rag/test_card_specs.py`(첫 찾기 전에는 DB 연결 0번, 그 뒤 1번), `backend/rag/RAG.md` · `tests/rag/RAG.md`, 이 파일
+- 실행한 명령과 결과: 일회용 Postgres(`docker run -d --rm --name profile-mem-pg … pgvector/pgvector:pg16`, 127.0.0.1:55444)에 CI와 같이 003 · 005 · 006 · 021만 넣은 DB(`vector` 확장 없음)로 `TEST_THREAD_DATABASE_URL=… pytest -q tests/api/test_threads.py -k lifespan` 바꾸기 전 1 failed(`relation "document_chunks" does not exist`) → 뒤 1 passed. 키 없는 전체 1043 passed, 106 skipped.
+
 ## 2026-11-09 React용 SQL 번호를 018~020으로 정리 (브랜치 `jeongun-8`)
 - 한 일: 같은 번호를 분석 서비스 SQL과 나눠 쓰던 React용 SQL을 비워 둔 018~020으로 옮겼다. `db/013_projects.sql` → `db/018_projects.sql`, `db/014_conversations.sql` → `db/019_conversations.sql`, `db/015_approvals_quotes.sql` → `db/020_approvals_quotes.sql`(`git mv`, 내용 그대로). 공유 DB에 적용한 적이 없는 파일이다. 분석 서비스 SQL 013~017은 그대로다. 빈 볼륨 실행 순서는 017 다음 018~020, 그다음 021이 된다.
 - 바꾼 파일: SQL 3개 이름, `db/DB.md`(실행 순서 · 파일 목록 · 021의 "018~020 비움" 문장 지움), `db/schema/erd.md`(만든 곳 · 019 문단의 체크포인트 문장을 분석 thread 기준으로), `db/schema/table-definition.md`(머리 · 표 목록 · 5.2 · 대화 · 승인 절 번호), `backend/projects/PROJECTS.md`, `SOJAFIT.md`(트리 3줄), 시험 4개의 SQL 목록(`tests/api/test_full_service_flow.py` · `test_projects.py`, `tests/conversations/test_repository.py`, `tests/projects/test_project_repository.py`), 이 파일. CI · Compose · scripts에는 옛 이름이 없었다. 지난 작업 기록과 `docs/superpowers/` 계획은 그때 기록이라 고치지 않았다.

@@ -149,17 +149,29 @@ def make_specs(*, load_cards, read, chat, doc_meta, part_docs, shared=None):
 
 
 def part_docs_index():
-    """표지(chunk_index 0)의 품번 목록으로 품번 대문자 → 문서 키 목록을 한 번 만들어 찾는 함수를 돌려준다(DATABASE_URL 필요)."""
-    import psycopg
-    from backend.rag.retrieve import COVER
-    index = {}
-    with psycopg.connect(os.environ['DATABASE_URL']) as conn:
-        for key, content in conn.execute('SELECT d.document_key, c.content FROM document_chunks c JOIN source_documents d'
-                                         ' ON d.id = c.document_id WHERE c.chunk_index = 0'):
-            m = COVER.match(content)
-            for p in (m.group(1).split(', ') if m else []):
-                index.setdefault(p.strip().upper(), []).append(key)
-    return lambda part: index.get((part or '').strip().upper(), [])
+    """품번 대문자 → 문서 키 목록을 찾는 함수를 돌려준다. 색인(표지 chunk_index 0의 품번 목록)은 처음 찾을 때 한 번 만든다(DATABASE_URL 필요)."""
+    index = None
+
+    def load():
+        import psycopg
+        from backend.rag.retrieve import COVER
+        built = {}
+        with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+            for key, content in conn.execute('SELECT d.document_key, c.content FROM document_chunks c JOIN source_documents d'
+                                             ' ON d.id = c.document_id WHERE c.chunk_index = 0'):
+                m = COVER.match(content)
+                for p in (m.group(1).split(', ') if m else []):
+                    built.setdefault(p.strip().upper(), []).append(key)
+        return built
+
+    def lookup(part):
+        nonlocal index
+        # [왜] 서버 시작(default_specs 조립) 때 코퍼스 표를 읽으면 코퍼스 없는 DB(CI)에서 앱이 뜨지 않는다. 첫 판정 때 읽는다
+        # [주의] 읽기가 실패하면 index는 None으로 남아 다음 호출이 다시 읽는다. 동시에 처음 부르면 두 번 읽을 수 있으나 결과는 같다
+        if index is None:
+            index = load()
+        return index.get((part or '').strip().upper(), [])
+    return lookup
 
 
 def default_specs():
