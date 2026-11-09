@@ -24,6 +24,7 @@ from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
 from backend.multi_agent.facts import ORDER_CODE
 from backend.rag.spec_lookup import CODES as SPEC_CODES
+from backend.rag.spec_lookup import THT_PACKAGES
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'judge_read.md').read_text(encoding='utf-8')
@@ -424,8 +425,6 @@ SAME_AS = re.compile(r'same|같은|동등|equivalent|as good as|현재|지금|�
 #      사양 표 패키지 56종 중 스루홀(리드 · 나사 고정)은 아래 17종이고 나머지는 표면실장이다(11-07 DB 실측)
 SMD_WORDS = re.compile(r'표면\s*실장|surface[- ]?mount|(?-i:\bSMD\b|\bSMT\b)', re.I)
 THT_WORDS = re.compile(r'삽입\s*형|스루\s*홀|through[- ]?hole|(?-i:\bTHT\b)|리드\s*형|axial', re.I)
-THT_PACKAGES = {'DO204AC', 'DO15', 'DO41', 'DO204AL', 'DO201', 'DO201AD', 'TO220AB', 'TO247AD', 'TO3P', 'TO220AC', 'GBU', 'DO35',
-                'R6', 'TO247', 'KBJL', 'KBPF', 'TO247BD'}
 
 
 def mount_wanted(read) -> str:

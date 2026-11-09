@@ -51,6 +51,9 @@ def part_specs(conn, part, codes=None):
 
 
 ALIASES = {'MINIMELF': 'MMELF'}  # [왜] 사용자는 MiniMELF라고 쓰지만 TSC 문서는 MMELF로 적는다(BZV55 등 4문서, 11-06 v3-13)
+# 삽입형(스루홀) 패키지 이름(_norm_package 모양). 판정의 실장 방식 거르기(judge.mount_of)와 찾기의 문서 고르기(card_find.code_pick)가 같이 쓴다
+THT_PACKAGES = {'DO204AC', 'DO15', 'DO41', 'DO204AL', 'DO201', 'DO201AD', 'TO220AB', 'TO247AD', 'TO3P', 'TO220AC', 'GBU', 'DO35',
+                'R6', 'TO247', 'KBJL', 'KBPF', 'TO247BD'}
 
 
 def _norm_package(name):
