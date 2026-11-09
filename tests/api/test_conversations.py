@@ -12,11 +12,14 @@ ORIGIN = {'origin': 'http://testserver'}
 
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
-    def __init__(self, state=None, interrupt=None, error=None):
+    def __init__(self, state=None, interrupt=None, error=None, refuse=None):
         self.calls, self.targets, self.version, self.hints = [], {}, 1, []
-        self.state, self.interrupt, self.error = state or {'answer': 'ok'}, interrupt, error
+        self.state, self.interrupt, self.error, self.refuse = state or {'answer': 'ok'}, interrupt, error, refuse
         self.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(values=self.state))
     def config(self, thread): return {'configurable': {'thread_id': thread}}
+    def admission(self, user):
+        if self.refuse:  # 실제 서비스의 하루 토큰 상한 429처럼 스트림 전에 거절한다
+            raise self.refuse
     def ensure_thread(self, user, thread, filename, connections, target):
         self.calls.append(('ensure', thread, filename, target))
         if self.targets.setdefault(thread, target) != target:
@@ -165,6 +168,20 @@ def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
         response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
     assert '"error": {"code": "TOO_MANY_REQUESTS", "message": "하루 분석 예약 예산에 도달했습니다."}' in response.text
     assert not caplog.records
+
+
+def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
+    """하루 토큰 상한(admission 429)은 스트림 · run 행 · 재개 전이 전에 공통 오류로 끝나고 분석을 부르지 않는다."""
+    thread, run = str(uuid4()), str(uuid4())
+    analysis = FakeAnalysis(refuse=HTTPException(429, '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다.'))
+    repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': {'missing': ['VIN_MAX'], 'role_choices': [], 'question': '?'}})
+    with web(analysis, repo) as client:
+        start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
+        resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
+    for response in (start, resume):
+        assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
+        assert response.json()['error']['code'] == 'TOO_MANY_REQUESTS' and '200,000 토큰' in response.json()['error']['message']
+    assert analysis.calls == [] and repo.calls == []
 
 
 def test_project_delete_rejects_active_run_before_checkpoint_deletion(monkeypatch):

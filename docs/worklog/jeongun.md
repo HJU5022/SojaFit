@@ -1,5 +1,9 @@
 # jeongun 작업 기록
 
+## 2026-11-09 보관 기간 · 탈퇴 · 가입 마무리 (브랜치 `jeongun-8`)
+- 한 일(1, 토큰 상한): 하루 LLM 토큰 상한(사용자 200,000 · 서비스 전체 2,000,000, UTC)을 분석 서비스에 넣었다. `llm.EvaluationBudget`을 이어받은 예산(`memory_service._token_budget_class`, llm.py는 고치지 않음)이 호출마다 USD 예약과 같은 위쪽 경계 토큰(입력 바이트 + 8192 + 출력 상한, 임베딩 포함)을 두고, `on_reserve`가 사용자 행(`analysis_usage.reserved_tokens`) → 서비스 행(`analysis_service_usage`) 순서로 잠가 USD와 한 트랜잭션으로 더한다. 넘으면 모두 되돌리고 429. 입장(`_budget`)과 React run · 재개의 스트림 전(`admission`)에서도 한 번 자리(8192)가 없으면 429. 새 SQL `db/022_token_limits.sql`(준비 명령이 015 뒤에 적용).
+- 정한 세부(1): ① 상한 값은 환경변수 없이 코드 상수(시험은 DB 카운터를 상한 가까이 놓고 확인) ② 429 문구에 상한과 다시 시도할 시각(한국 시각 오전 9시) ③ 서비스 행은 날짜별 한 행이라 모든 호출이 잠깐 줄을 선다(이 규모에서 받아들임) ④ 시험 fixture가 끝날 때 오늘 서비스 행을 지운다(격리 시험 DB에서 하루에 여러 번 돌려도 상한에 걸리지 않게).
+
 ## 2026-11-09 React 내 설정 화면과 참고(내 설정) 표시 (브랜치 `jeongun-8`)
 - 한 일: `/settings`(로그인 필요, 위 메뉴 "내 설정")에서 소속(100자) · 직무 · 선호 실장 방식을 저장한다. 바뀐 칸만 PATCH로 보내고 빈 칸은 보내지 않는다. 저장한 사실마다 "지우기"(그 칸만), "모두 지우기"는 확인 뒤에만 지운다. D5 대화의 완료 · 거절 결과 아래에 `profile_hints`를 "참고(내 설정)"로 보이고(판정 근거가 아니라는 문장 포함), 견적을 열면 머리에 "소속: …"을 보인다(견적을 열 때만 `/api/me/memory`를 읽음, 못 읽으면 소속 줄만 비움). 지금 React는 답 글을 따로 보이지 않아 참고는 진행 상태 줄 바로 아래에 둔다.
 - 바꾼 파일: 새 `frontend/src/api/profile.ts` · `pages/SettingsPage.tsx` · `pages/SettingsPage.test.tsx` · `components/ProfileHints.tsx`, `App.tsx`(경로 · 메뉴), `api/conversations.ts`(`profile_hints?`), `components/ConversationPanel.tsx` · `QuotePanel.tsx`, `styles.css`, 시험 `App.test.tsx` · `components/D5Panels.test.tsx` · `QuotePanels.test.tsx` · `pages/WorkbenchPage.test.tsx`, `frontend/src/SRC.md`, `SOJAFIT.md`(새 파일 4줄), 이 파일

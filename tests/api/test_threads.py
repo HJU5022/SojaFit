@@ -59,6 +59,8 @@ def runtime(monkeypatch):
                 conn.execute('DELETE FROM sojafit_agent.threads WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM sojafit_agent.circuits WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM public.users WHERE id=%s', (user,))
+            # [왜] 서비스 전체 하루 토큰 카운터는 사용자와 무관한 한 행이다. 격리 시험 DB에서 시험마다 비워 다음 시험이 상한에 걸리지 않게 한다
+            conn.execute("DELETE FROM sojafit_agent.analysis_service_usage WHERE day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date")
 
 
 def make_thread(app, user):
@@ -559,6 +561,89 @@ def test_daily_reservations_are_atomic_across_requests_and_users(runtime, monkey
     with psycopg.connect(dsn) as conn:
         rows = conn.execute('SELECT reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id IN (%s,%s)', (a, b)).fetchall()
     assert len(rows) == 2 and all(0 < float(row[0]) <= 0.03 for row in rows)
+
+
+def test_daily_token_caps_per_user_and_service_reject_before_external_call(runtime, monkeypatch):
+    """하루 토큰 상한(사용자 200,000 · 서비스 2,000,000): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.api.conversations import repository
+    from backend.conversations import memory_service as ms
+    from backend.main import app as api
+    from backend.services import llm
+    app, (a, b), dsn = runtime
+    external, per_call = [], 100 + ms.TOKEN_MARGIN + 50
+    def node(state):
+        for _ in range(2):
+            llm._evaluation_budget.get().reserve('x' * 100, output_tokens=50)
+            external.append(state['question'])  # 실제 모델 호출 자리. 예약이 막히면 여기에 오지 않는다
+        return {'answer': '역할상 충분 [1]', 'judgement': {}}
+    graph = StateGraph(AgentState)
+    graph.add_node('read', read_input)
+    graph.add_node('call', node)
+    graph.add_edge(START, 'read')
+    graph.add_edge('read', 'call')
+    graph.add_edge('call', END)
+    app.graph = graph.compile(checkpointer=app.saver)
+    today = "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date"
+    def usage(user):
+        with psycopg.connect(dsn) as conn:
+            return conn.execute(f'SELECT reserved_tokens,reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id=%s AND day={today}', (user,)).fetchone()
+    def service(value=None):
+        with psycopg.connect(dsn) as conn:
+            if value is not None:
+                conn.execute(f'INSERT INTO sojafit_agent.analysis_service_usage(day,reserved_tokens) VALUES ({today},%s) '
+                             'ON CONFLICT(day) DO UPDATE SET reserved_tokens=EXCLUDED.reserved_tokens', (value,))
+            return conn.execute(f'SELECT reserved_tokens FROM sojafit_agent.analysis_service_usage WHERE day={today}').fetchone()[0]
+    def refused(user, question, text):
+        with pytest.raises(HTTPException) as error:
+            app.message(user, make_thread(app, user), question)
+        assert error.value.status_code == 429 and text in error.value.detail
+
+    # 정상: 호출 2번의 예약 토큰이 사용자 · 서비스 행에 같게 쌓이고, USD 예약은 같은 위쪽 경계(입력 바이트 + 여유)로 계산된다
+    before = service(0)
+    assert app.message(b, make_thread(app, b), '정상')['status'] == 'DONE'
+    tokens, usd = usage(b)
+    assert tokens == 2 * per_call and service() == before + 2 * per_call
+    assert abs(float(usd) - 2 * ((per_call - 50) * 0.000003 + 50 * 0.000015)) < 1e-9
+
+    # 사용자 상한: 한 번 자리만 남으면 첫 호출만 나가고 둘째는 호출 전 429, 서비스 행은 첫 호출만큼만 오른다
+    with psycopg.connect(dsn) as conn:
+        conn.execute(f"INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed,reserved_tokens) VALUES (%s,{today},CURRENT_TIMESTAMP,%s)",
+                     (a, ms.USER_DAILY_TOKENS - per_call))
+    before, external[:] = service(), []
+    refused(a, '사용자 상한 도중', '200,000 토큰')
+    assert external == ['사용자 상한 도중'] and usage(a)[0] == ms.USER_DAILY_TOKENS and service() == before + per_call
+    refused(a, '사용자 상한 입장', '200,000 토큰')  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
+    assert external == ['사용자 상한 도중'] and app.threads(a)[0]['version'] == 0
+    app.admission(b)  # 다른 사용자는 막지 않는다
+
+    # 서비스 상한: 사용자 자리는 있어도 서비스 행이 넘치면 429이고, 그 호출의 사용자 행 차감도 되돌린다
+    service(ms.SERVICE_DAILY_TOKENS - per_call - 100)
+    mine = usage(b)[0]
+    refused(b, '서비스 상한 도중', '2,000,000 토큰')
+    assert external[-1] == '서비스 상한 도중' and external.count('서비스 상한 도중') == 1
+    assert usage(b)[0] == mine + per_call and service() == ms.SERVICE_DAILY_TOKENS - 100
+    refused(b, '서비스 상한 입장', '2,000,000 토큰')
+    assert '서비스 상한 입장' not in external
+
+    # React run은 스트림 · run 행 전에 공통 오류 429로 끝난다
+    class Repo:
+        def __getattr__(self, name):
+            pytest.fail('token cap must refuse before the repository is used')
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    api.state.conversations = app
+    api.dependency_overrides[auth.current_user_id] = lambda: b
+    api.dependency_overrides[repository] = lambda: Repo()
+    try:
+        with TestClient(api) as client:
+            response = client.post(f'/api/threads/{uuid4()}/runs', headers={'Origin': 'http://localhost:8000'},
+                                   json={'question': '서비스 상한 React', 'target_ref': 'D1'})
+    finally:
+        api.dependency_overrides.clear()
+        del api.state.conversations
+    assert response.status_code == 429 and response.json()['error']['code'] == 'TOO_MANY_REQUESTS'
+    assert '2,000,000 토큰' in response.json()['error']['message']
 
 
 def test_rate_limit_rejects_before_changing_thread_version(runtime, monkeypatch):

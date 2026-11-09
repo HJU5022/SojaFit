@@ -4,6 +4,8 @@ React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 �
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로만 돌려주고,
 모델 프롬프트 · 판정 입력에는 넣지 않는다(`backend/multi_agent/` 병합 뒤). 승인한 판정 사례는 기억이 아니라 승인 기록이다:
 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
+분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
+DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 토큰이 아니라 예약이다.
 """
 import argparse
 import os
@@ -13,6 +15,7 @@ import logging
 import json
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
+from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
 
@@ -33,6 +36,28 @@ from backend.graph.netlist import parse_netlist
 
 LOGGER = logging.getLogger('backend.conversations')
 
+# 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
+USER_DAILY_TOKENS = 200_000
+SERVICE_DAILY_TOKENS = 2_000_000
+TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
+USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+
+
+@lru_cache(maxsize=1)
+def _token_budget_class():
+    """EvaluationBudget을 이어받아 호출마다 예약 토큰 수를 `reserving_tokens`에 두는 클래스."""
+    # [왜] llm은 import 때 .env를 읽는다. 준비 CLI가 .env의 원격 DB를 집지 않게 처음 예산을 만들 때 import한다
+    from backend.services.llm import EvaluationBudget
+
+    class TokenBudget(EvaluationBudget):
+        def _reserve(self, text, *, output_tokens, embedding=False):
+            # [왜] reserve()가 잠금을 잡은 채 부르므로 이 값은 같은 호출의 on_reserve(DB 차감)만 읽는다
+            self.reserving_tokens = len(text.encode('utf-8')) + TOKEN_MARGIN + output_tokens
+            return super()._reserve(text, output_tokens=output_tokens, embedding=embedding)
+
+    return TokenBudget
+
 
 def _vector_schema(conn):
     """설치된 pgvector 확장의 스키마 이름(로컬 Compose는 public, Supabase는 extensions). 없으면 None."""
@@ -43,7 +68,8 @@ def _vector_schema(conn):
 def initialize(dsn):
     """인증 DB에 전용 스키마를 준비한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
-        for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql'):
+        for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql',
+                       '022_token_limits.sql'):
             conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
         vector = _vector_schema(conn)
         # [왜] 의미 색인 표(store_vectors)의 vector 형은 확장이 설치된 스키마에 있다. sojafit_agent만 보면 형을 못 찾는다.
@@ -63,7 +89,7 @@ class Conversations:
         try:
             with self.connection() as conn:
                 if not all(conn.execute("SELECT to_regclass(%s) AS name", (name,)).fetchone()['name']
-                           for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage')):
+                           for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage', 'analysis_service_usage')):
                     raise RuntimeError('분석 DB 준비 명령을 먼저 실행하세요.')
                 if not conn.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='input_record'").fetchone():
                     raise RuntimeError('분석 DB 준비 명령으로 입력 기록 마이그레이션을 적용하세요.')
@@ -95,13 +121,13 @@ class Conversations:
     def readiness(self):
         """모델 호출·사용자 행 읽기 없이 현재 분석 저장소의 연결과 스키마를 확인한다."""
         with self.connection() as conn:
-            conn.execute('SELECT t.input_record,a.memory_status,a.correction FROM threads t, circuits c, messages m, approvals a, analysis_usage u, analysis_events e LIMIT 0')
+            conn.execute('SELECT t.input_record,a.memory_status,a.correction,u.reserved_tokens,s.reserved_tokens FROM threads t, circuits c, messages m, approvals a, '
+                         'analysis_usage u, analysis_events e, analysis_service_usage s LIMIT 0')
             conn.execute('SELECT 1 FROM checkpoints, checkpoint_blobs, checkpoint_writes, store LIMIT 0')
 
     @staticmethod
     def _budget_settings():
-        from backend.services.llm import EvaluationBudget
-        budget = EvaluationBudget(max_calls=int(os.getenv('ANALYSIS_MAX_CALLS', '16')),
+        budget = _token_budget_class()(max_calls=int(os.getenv('ANALYSIS_MAX_CALLS', '16')),
             max_usd=float(os.getenv('ANALYSIS_MAX_USD', '0.50')), max_seconds=float(os.getenv('ANALYSIS_MAX_SECONDS', '90')),
             max_tokens=int(os.getenv('ANALYSIS_MAX_TOKENS', '4096')),
             prompt_rate=float(os.getenv('ANALYSIS_PROMPT_RATE', '0.000003')),
@@ -112,9 +138,26 @@ class Conversations:
             raise ValueError('분석 일일 예산/빈도 설정을 확인하세요.')
         return budget, daily, interval
 
+    @staticmethod
+    def _token_room(conn, user):
+        """오늘(UTC) 사용자 · 서비스 전체 예약 토큰에 호출 한 번(여유 TOKEN_MARGIN) 자리가 없으면 429. 외부 호출 전에 거른다."""
+        used = conn.execute("SELECT (SELECT reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS mine, "
+                            "(SELECT reserved_tokens FROM analysis_service_usage WHERE day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS service",
+                            (user,)).fetchone()
+        if (used['mine'] or 0) + TOKEN_MARGIN > USER_DAILY_TOKENS:
+            raise HTTPException(429, USER_TOKENS_FULL)
+        if (used['service'] or 0) + TOKEN_MARGIN > SERVICE_DAILY_TOKENS:
+            raise HTTPException(429, SERVICE_TOKENS_FULL)
+
+    def admission(self, user):
+        """React run · 재개가 스트림을 열기 전에 부른다. 하루 토큰 상한이 찼으면 공통 오류 429로 거절한다."""
+        with self.connection() as conn:
+            self._token_room(conn, user)
+
     def _budget(self, user):
         budget, daily, interval = self._budget_settings()
         with self.connection() as conn:
+            self._token_room(conn, user)
             row = conn.execute("INSERT INTO analysis_usage(user_id,day,next_allowed) VALUES (%s,(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,CURRENT_TIMESTAMP + %s * INTERVAL '1 second') "
                 "ON CONFLICT(user_id,day) DO UPDATE SET attempts=analysis_usage.attempts+1,next_allowed=EXCLUDED.next_allowed "
                 "WHERE analysis_usage.next_allowed<=CURRENT_TIMESTAMP AND analysis_usage.reserved_usd<%s RETURNING day",
@@ -122,11 +165,22 @@ class Conversations:
         if not row:
             raise HTTPException(429, '호출 간격 또는 하루 분석 예약 예산을 확인하세요.', headers={'Retry-After': str(max(1, math.ceil(interval)))})
         def charge(cost):
-            with self.connection() as conn:
-                charged = conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s WHERE user_id=%s AND day=%s AND reserved_usd+%s<=%s RETURNING user_id',
-                    (Decimal(str(cost)), user, row['day'], Decimal(str(cost)), Decimal(str(daily)))).fetchone()
-            if not charged:
-                raise HTTPException(429, '하루 분석 예약 예산에 도달했습니다.')
+            """호출 한 번의 예약 USD · 토큰을 사용자 행과 서비스 행에 한 트랜잭션으로 더한다. 하나라도 넘으면 모두 되돌리고 429."""
+            tokens, cost = budget.reserving_tokens, Decimal(str(cost))
+            with self.connection() as conn, conn.transaction():
+                # [왜] 사용자 행 → 서비스 행 순서로만 잠가 동시 호출끼리 교착하지 않는다. 예외가 나면 트랜잭션이 둘 다 되돌린다
+                usage = conn.execute('SELECT reserved_usd,reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=%s FOR UPDATE',
+                                     (user, row['day'])).fetchone()
+                if usage['reserved_tokens'] + tokens > USER_DAILY_TOKENS:
+                    raise HTTPException(429, USER_TOKENS_FULL)
+                if usage['reserved_usd'] + cost > Decimal(str(daily)):
+                    raise HTTPException(429, '하루 분석 예약 예산에 도달했습니다.')
+                conn.execute('INSERT INTO analysis_service_usage(day) VALUES (%s) ON CONFLICT DO NOTHING', (row['day'],))
+                if not conn.execute('UPDATE analysis_service_usage SET reserved_tokens=reserved_tokens+%s WHERE day=%s AND reserved_tokens+%s<=%s RETURNING day',
+                                    (tokens, row['day'], tokens, SERVICE_DAILY_TOKENS)).fetchone():
+                    raise HTTPException(429, SERVICE_TOKENS_FULL)
+                conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s,reserved_tokens=reserved_tokens+%s WHERE user_id=%s AND day=%s',
+                             (cost, tokens, user, row['day']))
         budget.on_reserve = charge
         return budget
 

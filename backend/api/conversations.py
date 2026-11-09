@@ -3,7 +3,7 @@
 - 첫 run에 같은 UUID의 분석 회로·thread를 만들고 대상 부품을 고정한다(바꾸면 409).
 - 결과는 그래프 상태에서 공개 값만 골라 `public.runs`·`public.messages`에 저장한 뒤 SSE로 보낸다.
 - 완료 · 거절 결과에는 그 질문으로 찾은 사용자 사실(`profile_hints`, 참고(내 설정))을 붙여 보낸다. run 기록에는 저장하지 않는다.
-- 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503이다.
+- 분석 서비스가 없으면(THREADS_ENABLED≠1) 스트림을 열기 전에 503, 하루 토큰 상한이 찼으면 스트림을 열기 전에 429다(`admission`).
 하지 않는 일: 그래프 조립·예산·Store 기억·Langfuse(분석 서비스가 맡는다), 저장 SQL(`backend/conversations/repository.py`).
 """
 import asyncio
@@ -182,7 +182,8 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
 @router.post('/threads/{thread_id}/runs', dependencies=[Depends(auth.check_origin)])
 async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
     thread, request_id = str(thread_id), request.state.request_id
-    # [왜] 대상 부품 확인(422·409)을 run 행보다 먼저 끝내야 거절된 요청이 '실행 중' run을 남기지 않는다
+    # [왜] 하루 토큰 상한(429) · 대상 부품 확인(422·409)을 run 행보다 먼저 끝내야 거절된 요청이 '실행 중' run을 남기지 않고 공통 오류로 끝난다
+    await run_in_threadpool(analysis.admission, user_id)
     _, _, connections, name = await run_in_threadpool(repo.get_thread, user_id, thread)
     await run_in_threadpool(analysis.ensure_thread, user_id, thread, name, connections, body.target_ref)
     run_id, _ = await run_in_threadpool(repo.start, user_id, thread, body.model_dump())
@@ -199,6 +200,7 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
     if not choices and body.role is not None:
         raise HTTPException(422, '이 run에는 역할 선택이 필요하지 않습니다.')
     thread, request_id = run['thread_id'], request.state.request_id
+    await run_in_threadpool(analysis.admission, user_id)  # 스트림 전에 공통 오류 429로 거절한다(run 상태를 바꾸지 않음)
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
     call = lambda: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'], request_id=request_id)
