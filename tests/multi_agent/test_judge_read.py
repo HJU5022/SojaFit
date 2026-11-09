@@ -107,23 +107,23 @@ def test_requirement_inside_the_corpus_is_judged(monkeypatch, extra, facts):
 
 @pytest.mark.parametrize('extra, facts, code', GATE)
 def test_multi_graph_ends_the_gate_report_as_a_refusal(extra, facts, code):
-    """[왜] 판정 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
+    """[왜] 대체 부품 에이전트가 코퍼스 밖 요구로 실패하면 그 사유로 답 검사를 지나 거절한다. 답을 쓰지 않는다."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     from backend.multi_agent import build as B
     from backend.multi_agent.contracts import Plan, Task
     from backend.multi_agent.supervisor import Facts
-    plan = Plan(question_type='candidate_find', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_find', goal='find')])
+    plan = Plan(question_type='candidate_find', next='judge', task=Task(goal='find'))
     queue = {'supervisor': [plan], 'judge_read': [J.JudgeRead(role='R02', **extra)]}
 
     def chat(node, system, user, schema):
-        return queue[node].pop(0)  # docs_answer · synth를 부르면 KeyError로 실패한다
+        return queue[node].pop(0)  # docs_answer를 부르면 KeyError로 실패한다
     app = B.build_graph(chat=chat, retriever=lambda q, parts=None: [], lookup=lambda state: Facts(**facts),
                         parse=lambda s: {'question': s['input'], 'target': 'D2', 'conditions': STATE['conditions'],
                                          'target_part': STATE['target_part']},
                         judge_enabled=True, specs=lambda *a, **k: [], find=lambda *a, **k: [], checkpointer=InMemorySaver())
     out = app.invoke({'input': 'D2 대체 후보를 찾아 줘 ' + extra.get('revision_wanted', '')}, {'configurable': {'thread_id': code + str(extra)}})
-    assert out['path'][-4:] == ['판정 읽기', '판정', '모으기', '거절'] and out['refusal']['code'] == code
+    assert out['path'][-4:] == ['판정 읽기', '판정', '답 검사', '거절'] and out['refusal']['code'] == code
 
 
 def test_refusal_names_only_parts_confirmed_missing():

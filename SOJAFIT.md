@@ -50,19 +50,19 @@ SojaFit (proj3-b)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
 │   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
 │   │   └── memory.py       <- 사용자별 장기 기억(Store) namespace 규칙. 아직 부르는 곳 없음
-│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + 검색·판정·작성·검증). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
+│   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor가 RAG · 대체 부품 에이전트 중 하나를 고름). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
-│   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
-│   │   ├── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
-│   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·결정서·횟수는 dict, path는 단일 그래프와 같은 말
+│   │   ├── contracts.py    <- Supervisor 지시서(다음 길 하나 · 에이전트 지시)의 모양과 형식 검사, 이유 코드, 검색 상한
+│   │   ├── supervisor.py   <- Supervisor: 질문·사실을 글로 만들어 LLM에 주고 지시서를 받음(형식 실패면 거절), 답 검사(인용)
+│   │   ├── state.py        <- 멀티용 공용 메모장(MultiState)과 두 에이전트 하위 그래프의 받는 칸 · 돌려주는 칸, path는 단일 그래프와 같은 말
 │   │   ├── facts.py        <- 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 Facts를 만듦
-│   │   ├── messages.py     <- 거절 사유를 사용자 일상어 문구로 바꿈(내부 코드는 로그에만), 가격 안내 문구, 판정 답 틀
-│   │   ├── build.py        <- 조립: Supervisor를 가운데 두고 서브에이전트가 끝나면 돌아오게 연결. 판정은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
+│   │   ├── messages.py     <- 거절 사유를 사용자 일상어 문구로 바꿈(내부 코드는 로그에만), 가격 안내 문구, 판정 답 틀, 거절한 부분 붙이기
+│   │   ├── build.py        <- 조립: 입력 읽기 → 품번·판 확인 → Supervisor → 에이전트 하나(하위 그래프) → 답 검사 → 끝내기 · 거절. 대체 부품은 도구·체크포인터가 있을 때 켬, 웹은 아직 거부
 │   │   └── agents/         <- 서브에이전트. 깊은 폴더라 설명은 MULTI_AGENT.md에
 │   │       ├── __init__.py <- 패키지 표시
-│   │       ├── judge.py    <- 판정 에이전트(읽기 · 판정 노드)
-│   │       └── docs.py     <- 문서 에이전트: 검색 → 근거 채점+답 쓰기(LLM 1번) → 다시 찾기 1번 → 인용 검사
+│   │       ├── judge.py    <- 대체 부품 에이전트(회로 역할 읽기 · 판정 노드, 답 틀로 답 만들기)
+│   │       └── docs.py     <- RAG 에이전트 노드: 검색 → 근거 채점·답 쓰기(LLM 1번, 인용 검사) → 근거 없으면 검색으로 1번 되돌아가는 갈림길
 │   ├── judge/              <- 회로 역할·대체 조건·판정의 결정적 코드. 숫자·단위 비교는 여기서만
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
@@ -81,9 +81,8 @@ SojaFit (proj3-b)
 │   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)
-│   │   ├── docs_answer.md  <- 멀티 문서 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
-│   │   ├── synth.md        <- 멀티 Supervisor ② 종합: 할 일 2개 이상의 부분 답을 한 답으로(영어, 답은 한국어)
-│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor ① 계획(질문 종류 · 할 일 최대 3개 · 지시서)·거절 사유. Langfuse `supervisor` v4까지 등록(11-06 계획형 본문은 등록 전)
+│   │   ├── docs_answer.md  <- 멀티 RAG 에이전트: 근거 채점 + 답 쓰기(영어, 답은 한국어)
+│   │   └── supervisor.md   <- 멀티 에이전트 Supervisor: 질문 종류 · 다음 길 하나(RAG · 대체 부품 · 끝내기 · 가격 · 거절)와 그 에이전트의 지시 · 거절 사유. Langfuse `supervisor` v4까지 등록(11-09 본문은 등록 전)
 │   ├── rag/                <- 하이브리드 검색(서버)과 벡터 저장 형식. 오프라인 데이터 도구는 pipeline/
 │   │   ├── RAG.md          <- 폴더 설명과 CLI 실행 순서
 │   │   ├── __init__.py     <- 패키지 표시
@@ -294,14 +293,14 @@ SojaFit (proj3-b)
 │   │   └── test_graph_mcp_stdio.py  <- 격리 DB에서 실제 stdio MCP 검색 경로
 │   ├── multi_agent/        <- 멀티 에이전트 시험. 소스 폴더와 같은 이름으로 짝을 맞춤
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명
-│   │   ├── test_contracts.py  <- 결정서·보고서 검사, 이유 코드, 한도 규칙
-│   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
+│   │   ├── test_contracts.py  <- Supervisor 지시서 형식 검사, 이유 코드, 상한 숫자
+│   │   ├── test_supervisor.py  <- Supervisor 입력 글·지시서 처리·갈림길 이름·답 검사·프롬프트 점검(가짜 LLM)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
-│   │   ├── test_agents.py  <- 검색·작성·검증 에이전트, 사실 확인, 거절 문구
-│   │   ├── test_docs_agent.py  <- 문서 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
+│   │   ├── test_agents.py  <- RAG 에이전트 하위 그래프(검색 고리 · 상한 · 인용 검사 · 정격으로 품번 찾기), 사실 확인, 거절 문구, 판정 답 틀
+│   │   ├── test_docs_agent.py  <- RAG 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
 │   │   ├── test_judge.py   <- 판정 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
 │   │   ├── test_judge_read.py  <- 판정 읽기: 역할별 값 이름·다른 이름 버리기, 코퍼스 밖 요구 거절과 멀티 그래프 거절 끝(가짜 LLM·사양 표)
-│   │   └── test_build.py   <- 조립 길 시험: 직행·검색 경로·못 찾음 거절·범위 밖·검증 실패 뒤 다시 쓰기·판정 길(인터럽트 1번)
+│   │   └── test_build.py   <- 조립 시험: 그래프 모양(노드 이름 · 간선), Supervisor 길 다섯, RAG 고리 · 상한, 거절한 부분, 대체 부품 인터럽트 재개
 │   ├── rag/                <- 검색과 오프라인 데이터 도구
 │   │   ├── RAG.md          <- 폴더 설명
 │   │   ├── test_rag_collect.py  <- 수집 도구(네트워크 없이)

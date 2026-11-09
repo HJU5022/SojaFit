@@ -1,20 +1,16 @@
-"""멀티 에이전트의 공용 메모장(MultiState)과, 판정 에이전트 하위 그래프의 메모장(JudgeState).
+"""멀티 에이전트의 공용 메모장(MultiState)과, 두 에이전트 하위 그래프의 메모장(RAG · 대체 부품).
 
-- 역할: 질문 하나가 Supervisor ① 계획 → 서브에이전트(동시 실행) → Supervisor ② 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
-  단일 그래프 `AgentState`와 칸이 달라서(계획서, 보고서 목록, 횟수, 사실, 거절 기록) 따로 둔다.
+- 역할: 질문 하나가 입력 읽기 → 품번·판 확인 → Supervisor → 에이전트 하나 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
+  단일 그래프 `AgentState`와 칸이 달라서(지시서, 횟수, 사실, 거절 기록) 따로 둔다.
+  하위 그래프마다 받는 칸(`…In`) · 안에서 쓰는 칸 · 돌려주는 칸(`…Out`)을 나눈다.
 - 하지 않는 일: 노드 동작, 노드 연결(`build.py`), 사용자별 장기 기억.
-- 출처: 참조/아티팩트 "SojaFit 멀티 에이전트 구조"의 공용 메모장 칸, backend/graph/state.py(칸 이름을 맞춘 부분)
+- 출처: 강의 IV-2 14강(서브그래프: 그래프를 노드로), backend/graph/state.py(칸 이름을 맞춘 부분)
 
-[왜] 계획서 · 보고서 · 횟수는 pydantic 객체가 아니라 dict로 저장한다. 체크포인터가 저장하고 Langfuse 트레이스에 그대로 보여야 해서다.
+[왜] 지시서 · 횟수는 pydantic 객체가 아니라 dict로 저장한다. 체크포인터가 저장하고 Langfuse 트레이스에 그대로 보여야 해서다.
+[왜] 하위 그래프의 받는 칸에는 `path`를 넣지 않는다. 넣으면 하위 그래프가 바깥 경로 전체를 받아 끝에 다시 돌려주어 경로가 두 번 쌓인다.
 """
 import operator
 from typing import Annotated, TypedDict
-
-
-def add_or_reset(old: list | None, new: list | None) -> list:
-    """보고서 칸의 합치기 규칙: 서브에이전트가 동시에 올린 보고를 이어 붙이고, None이 오면 비운다(새 질문 시작)."""
-    # [왜] 서브에이전트는 Send로 동시에 돌아 한 단계에서 같은 칸에 여러 번 쓴다. 덮어쓰기 칸이면 LangGraph가 InvalidUpdateError를 낸다
-    return [] if new is None else (old or []) + new
 
 
 class MultiState(TypedDict, total=False):
@@ -28,22 +24,19 @@ class MultiState(TypedDict, total=False):
     question: str
     target_part: dict
 
-    # ── 사실 · Supervisor ① 계획 ──
+    # ── 품번·판 확인 · Supervisor ──
     facts: dict          # 코드가 목록에서 확인한 사실(품번 · 개정판이 코퍼스에 있나). `supervisor.Facts`
-    plan: dict           # 계획서 `contracts.Plan`(할 일마다 지시서)
-    question_type: str   # 계획이 정한 질문 종류
-    counters: dict       # {'hops': Supervisor LLM 호출, 'agents': 서브에이전트 실행, 'searches': 검색, 'replans': 재계획} — 평가 실행기가 읽는다
-    round: int           # 지금 계획 회차(첫 계획 1, 재계획 뒤 2). 보고서의 round와 맞춰 이번 회차 보고를 가린다
-    reports: Annotated[list, add_or_reset]  # 서브에이전트 보고서 `contracts.TaskReport` 목록
+    plan: dict           # Supervisor 지시서 `contracts.Plan`(다음 길 하나 · 거절한 부분)
+    task: dict           # 고른 에이전트의 지시 `contracts.Task`(두 하위 그래프가 이 칸으로 받는다)
+    question_type: str   # Supervisor가 정한 질문 종류
+    counters: dict       # {'hops': Supervisor LLM 호출, 'searches': RAG 검색} — 평가 실행기가 읽는다
 
-    # ── Supervisor ② 모으기 · 마무리 ──
-    outcome: str         # 모으기가 정한 다음 길: single · synth · refuse · replan
-    final_reports: list  # 답에 쓰는 보고(재계획 뒤에는 이번 회차 + 계획이 남기라 한 앞 회차 보고). 비면 reports 전체
-    synth_text: str      # 종합 LLM이 쓴 글(판정 답 틀을 붙이기 전). 답 검사가 이 글의 숫자만 본다
-    refusal_reason: str  # 거절로 끝낼 때의 이유 코드(계획 · 모으기 · 답 검사가 정한다)
-    docs: list[dict]     # 문서 할 일들이 보여 준 청크(채점기가 인용 위치를 읽는다)
+    # ── 에이전트가 낸 답 · 답 검사 ──
+    searches: list       # RAG 검색마다 {query, parts, top: [[파일, 쪽], ...]}(감시 실행기의 검색 지표용)
+    refusal_reason: str  # 거절로 끝낼 때의 이유 코드(Supervisor · 에이전트 · 답 검사가 정한다)
+    docs: list[dict]     # RAG 에이전트가 답에 쓴 청크(채점기가 인용 위치를 읽는다)
     passed: list         # 그 청크 id(채점기 칸 이름을 단일 그래프와 맞춘다)
-    judgement: dict      # 판정 할 일의 판정 · 찾기 결과(답 틀의 입력)
+    judgement: dict      # 대체 부품 에이전트의 판정 · 찾기 결과(답 틀의 입력)
     price_parts: list[str]  # 가격 · 재고를 물은 품번. 값은 넣지 않는다(ADR 0009, 화면이 /api/prices로 조회)
     answer: str
     check: dict          # 답 검사 결과 {used, fake_citations, uncited_sentences, judgement}
@@ -54,22 +47,57 @@ class MultiState(TypedDict, total=False):
     path: Annotated[list[str], operator.add]
 
 
-class JudgeState(TypedDict, total=False):
-    """판정 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
+class AgentOut(TypedDict, total=False):
+    """두 에이전트 하위 그래프가 바깥 메모장에 돌려주는 칸: 답(또는 거절 사유)과 지나간 노드."""
+    answer: str
+    refusal_reason: str
+    path: Annotated[list[str], operator.add]
+
+
+class RagIn(TypedDict, total=False):
+    """RAG 에이전트가 바깥 메모장에서 받는 칸."""
+    task: dict
+    question: str
+    target_part: dict
+    plan: dict           # 거절한 부분(declined)을 답 끝에 붙이려고 받는다
+    facts: dict
+    counters: dict
+
+
+class RagOut(AgentOut, total=False):
+    docs: list[dict]
+    passed: list
+    searches: list
+    counters: dict
+
+
+class RagState(RagIn, RagOut, total=False):
+    """RAG 에이전트 하위 그래프의 메모장: 받는 칸 + 돌려주는 칸 + 검색 → 근거 채점 고리가 쓰는 칸."""
+    tries: int           # 검색 → 근거 채점을 몇 바퀴 돌았나(MAX_SEARCHES까지)
+    query: str           # 이번 바퀴의 검색어(첫 바퀴는 지시서 검색어, 다음 바퀴는 근거 채점이 준 다른 검색어)
+    next_query: str      # 근거 채점이 다시 찾으라고 준 검색어. 비면 고리를 나간다
+    relax: bool          # 품번 필터 안에서 0건이라 필터를 풀고 다시 찾는 중
+    filter_parts: list   # 묘사한 정격으로 사양 표에서 찾은 품번(그 문서 안에서만 찾는다)
+    found: list[dict]    # 이번 바퀴에 LLM에 보여 줄 청크
+    error: str           # 검색 · 사양 표 도구 장애나 정격에 맞는 품번 없음(이유 코드). 있으면 LLM을 부르지 않는다
+
+
+class JudgeIn(TypedDict, total=False):
+    """대체 부품 에이전트가 바깥 메모장에서 받는 칸."""
     task: dict
     question: str
     conditions: str
     target: str
     target_part: dict
     facts: dict
-    question_type: str   # 할 일의 종류(candidate_judge · candidate_find). 판정 코드가 찾기인지 이걸로 가른다
-    round: int           # 이 할 일의 계획 회차(보고서에 그대로 적는다)
-    judge_read: dict     # 읽기 노드 결과(인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다)
-    reports: Annotated[list, add_or_reset]
-    path: Annotated[list[str], operator.add]
+    question_type: str   # candidate_judge · candidate_find. 판정 코드가 찾기인지 이걸로 가른다
+    plan: dict
 
 
-class JudgeOut(TypedDict, total=False):
-    """하위 그래프가 바깥 메모장에 돌려주는 칸(보고와 지나간 노드만)."""
-    reports: Annotated[list, add_or_reset]
-    path: Annotated[list[str], operator.add]
+class JudgeOut(AgentOut, total=False):
+    judgement: dict
+
+
+class JudgeState(JudgeIn, JudgeOut, total=False):
+    """대체 부품 에이전트 하위 그래프의 메모장."""
+    judge_read: dict     # 회로 역할 읽기 결과(인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다)

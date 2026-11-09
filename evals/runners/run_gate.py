@@ -83,9 +83,9 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                     scores = run_scores(state, seconds, [], item=it)
                     row = result_row(it, state, scores, client.get_trace_url(trace_id=trace_id))
                     row['answer'] = state.get('answer', '')  # [왜] 멈춘 문항의 원인을 보려면 답 글이 필요하다(로컬 결과 폴더에만 남긴다)
-                    # [왜] 검색 지표(Recall@5 · MRR)를 에이전트가 실제로 쓴 검색어 · 상위 5개로 계산하려고 문서 할 일의 검색 기록을 남긴다
-                    row['tasks'] = [{k: r.get(k) for k in ('task', 'agent', 'status', 'reason', 'summary', 'llm_calls', 'searches', 'round')}
-                                    for r in state.get('reports') or []]
+                    # [왜] 검색 지표(Recall@5 · MRR)를 에이전트가 실제로 쓴 검색어 · 상위 5개로 계산하려고 RAG 에이전트의 검색 기록을 남긴다.
+                    #      gate_report가 읽는 모양(tasks[].agent · searches)은 그대로 둔다(11-09부터 에이전트는 하나라 줄도 하나)
+                    row['tasks'] = [{'agent': 'docs', 'searches': state['searches']}] if state.get('searches') else []
                     if it.get('parts'):
                         from evals.runners.score_compound import score_parts
                         row['parts_result'] = score_parts(it, state)  # [왜] 여러 개를 묻는 질문은 부분마다 채점한다(B-지시서 4-5.3)

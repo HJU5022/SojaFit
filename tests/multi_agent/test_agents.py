@@ -1,14 +1,15 @@
-"""서브에이전트(문서 에이전트)와 사실 · 거절 문구 · 판정 답 틀 시험.
+"""RAG 에이전트(하위 그래프)와 사실 · 거절 문구 · 판정 답 틀 시험.
 
-- 역할: 문서 에이전트가 지시서의 검색어로 찾고(역할 할 일은 검색 없이 넷리스트로), 근거 채점 + 답 쓰기를 LLM 한 번으로 하고,
-  근거가 없으면 LLM이 준 다른 검색어로 한 번만 다시 찾고, 보여 준 적 없는 근거 인용을 코드로 막는지,
-  다른 품번 줄을 LLM에 보이기 전에 거르는지, 검색 장애 · 0건을 보고하는지 본다. 사실 확인과 거절 문구 · 판정 답 틀도 확인한다.
+- 역할: RAG 에이전트가 지시서의 검색어로 찾고(역할 질문은 검색 없이 넷리스트로), 근거 채점 + 답 쓰기를 LLM 한 번으로 하고,
+  근거가 없으면 LLM이 준 다른 검색어로 고리를 한 번만 더 돌고(상한 MAX_SEARCHES), 보여 준 적 없는 근거 인용을 코드로 막는지,
+  다른 품번 줄을 LLM에 보이기 전에 거르는지, 검색 장애 · 0건이면 거절 사유를 내는지 본다. 사실 확인과 거절 문구 · 판정 답 틀도 확인한다.
 - 하지 않는 일: 실제 LLM · 검색 · DB 호출.
-- 출처: backend/multi_agent/agents/docs.py, facts.py, messages.py
+- 출처: backend/multi_agent/agents/docs.py · build.py(rag_subgraph), facts.py, messages.py
 """
 import pytest
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
+from backend.multi_agent import build as B
 from backend.multi_agent import facts as F
 from backend.multi_agent import messages as M
 from backend.multi_agent import messages as Msg
@@ -32,18 +33,20 @@ def llm(*answers):
     return chat
 
 
-def run(task, chat, docs=(), seen=None, error=None, question='SS14의 VRRM은?', part=PART):
+def run(task, chat, docs=(), seen=None, error=None, question='SS14의 VRRM은?', part=PART, find=None):
+    """RAG 에이전트 하위 그래프를 혼자 돌려 바깥에 돌려주는 칸(답 · 거절 사유 · 근거 · 검색 기록 · 경로)을 받는다."""
     def retriever(query, parts=None):
         if seen is not None:
             seen.append((query, parts))
         if error:
             raise RetrievalUnavailableError(error)
         return list(docs(query, parts) if callable(docs) else docs)
-    return D.docs_agent({'task': task, 'question': question, 'target_part': part}, retriever=retriever, chat=chat)['reports'][0]
+    return B.rag_subgraph(chat=chat, retriever=retriever, find=find).invoke(
+        {'task': task, 'question': question, 'target_part': part, 'counters': {'hops': 1, 'searches': 0}})
 
 
 def task(**kw):
-    return {'id': 1, 'agent': 'docs', 'kind': 'rating', 'goal': 'VRRM of SS14', 'query': 'SS14 Repetitive peak reverse voltage VRRM', **kw}
+    return {'goal': 'VRRM of SS14', 'query': 'SS14 Repetitive peak reverse voltage VRRM', **kw}
 
 
 def test_rating_task_searches_with_the_brief_query_and_answers_in_one_llm_call():
@@ -51,37 +54,39 @@ def test_rating_task_searches_with_the_brief_query_and_answers_in_one_llm_call()
     chat = llm(D.DocsAnswer(grade='enough', answer='SS14의 VRRM은 40 V이다 [3].'))
     r = run(task(), chat, docs=[doc(3)], seen=seen)
     assert seen == [('SS14 Repetitive peak reverse voltage VRRM', ['SS14'])]  # 지시서 검색어 + 질문의 품번 필터
-    assert r['status'] == 'ok' and r['evidence_ids'] == ['3'] and r['llm_calls'] == 1 and r['docs'][0]['chunk_id'] == 3
-    assert r['searches'][0]['top'] == [['SS12 SERIES_K2301.pdf', 2]]
+    assert r['path'] == ['검색', '근거 채점·답 쓰기'] and r['refusal_reason'] == '' and r['passed'] == [3] and len(chat.seen) == 1
+    assert r['searches'][0]['top'] == [['SS12 SERIES_K2301.pdf', 2]] and r['counters'] == {'hops': 1, 'searches': 1}
     node, user = chat.seen[0]
     assert node == 'docs_answer' and 'goal: VRRM of SS14' in user and '[3] SS12 SERIES_K2301.pdf' in user and '[넷리스트] D1 SS14' in user
 
 
 def test_role_task_uses_only_the_netlist_without_searching():
     seen = []
-    r = run(task(kind='role', query=''), llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].')), seen=seen)
-    assert seen == [] and r['status'] == 'ok' and r['evidence_ids'] == ['넷리스트'] and r['searches'] == []
+    r = run(task(query=''), llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].')), seen=seen)
+    assert seen == [] and r['answer'].endswith('[넷리스트].') and r['passed'] == [] and 'searches' not in r
 
 
-def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason():
+def test_no_evidence_loops_once_with_the_llm_query_then_refuses_as_not_found():
     seen = []
     chat = llm(D.DocsAnswer(grade='none', next_query='SS14 Peak reverse voltage'), D.DocsAnswer(grade='none', next_query='again'))
     r = run(task(), chat, docs=[doc(3)], seen=seen)
-    assert [q for q, _ in seen] == ['SS14 Repetitive peak reverse voltage VRRM', 'SS14 Peak reverse voltage']  # 검색은 2번까지
-    # [왜] 설계 v2: 문서 에이전트는 거절을 정하지 않고 다시 찾을 사유를 올린다(청크는 봤지만 근거가 아님 → all_rejected)
-    assert r['status'] == 'fail' and r['reason'] == Reason.ALL_REJECTED.value and r['llm_calls'] == 2
+    # [왜] 고리는 상한(MAX_SEARCHES = 2)까지만 돈다. 둘째 채점이 또 검색어를 줘도 나간다(AGENTS 6)
+    assert [q for q, _ in seen] == ['SS14 Repetitive peak reverse voltage VRRM', 'SS14 Peak reverse voltage']
+    assert r['path'] == ['검색', '근거 채점·답 쓰기'] * 2 and len(chat.seen) == 2
+    assert r['refusal_reason'] == Reason.NOT_FOUND.value and r['answer'] == '' and r['docs'] == []
 
 
 def test_fake_or_missing_citation_is_blocked_by_code():
     fake = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [9].')), docs=[doc(3)])
     none = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다.')), docs=[doc(3)])
-    assert fake['status'] == none['status'] == 'fail' and fake['reason'] == none['reason'] == Reason.VERIFY_FAILED.value
+    assert fake['refusal_reason'] == none['refusal_reason'] == Reason.VERIFY_FAILED.value and fake['answer'] == ''
     # [왜] 가짜 번호 하나로 답 전체를 거절하지 않는다(공식 5회차 v3-18). 그 번호만 단 문장은 빼고, 함께 단 괄호에서는 그 번호만 지운다
     mixed = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [3, 9]. 주문 코드는 같은 소자다 [9].')), docs=[doc(3)])
-    assert mixed['status'] == 'ok' and mixed['answer'] == 'VRRM은 40 V이다 [3].'
+    assert mixed['refusal_reason'] == '' and mixed['answer'] == 'VRRM은 40 V이다 [3].'
     assert D.drop_fake_citations('값은 [0.60 V]이다 [3].', {'3'}) == ('값은 [0.60 V]이다 [3].', [])
+    # [왜] 일부만 답함(partial)도 답으로 낸다. 여러 개를 묻는 질문에서 근거가 있는 부분만 답한다
     partial = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', missing=['IFSM'])), docs=[doc(3)])
-    assert partial['status'] == 'partial' and partial['missing'] == ['IFSM']
+    assert partial['refusal_reason'] == '' and partial['answer'] == 'VRRM은 40 V이다 [3].'
 
 
 def test_rows_of_other_part_numbers_are_dropped_before_the_llm_sees_them():
@@ -93,11 +98,13 @@ def test_rows_of_other_part_numbers_are_dropped_before_the_llm_sees_them():
 
 def test_search_error_and_empty_filter_result():
     err = run(task(), llm(), error='timeout')
-    assert err['status'] == 'fail' and err['reason'] == Reason.SEARCH_ERROR.value
+    assert err['refusal_reason'] == Reason.SEARCH_ERROR.value and err['path'] == ['검색', '근거 채점·답 쓰기']  # LLM을 부르지 않는다
     seen = []
     chat = llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [5].'))
     r = run(task(), chat, docs=lambda q, parts: [] if parts else [doc(5)], seen=seen, part={})
-    assert [p for _, p in seen] == [['SS14'], None] and r['status'] == 'ok'  # 품번 필터 안 0건이면 필터를 풀어 한 번 더
+    # [왜] 품번 필터 안에서 0건이면 필터를 풀어 같은 검색어로 고리를 한 번 더 돈다(LLM은 근거가 생긴 둘째 바퀴에만 부른다)
+    assert [p for _, p in seen] == [['SS14'], None] and r['refusal_reason'] == '' and len(chat.seen) == 1
+    assert r['path'] == ['검색', '근거 채점·답 쓰기'] * 2
 
 
 def test_make_facts_checks_parts_and_revisions_against_lists():
@@ -136,14 +143,6 @@ def test_render_find_with_no_candidates_says_so_and_shows_terms():
     assert 'VRRM ≥ 15' in text and '찾지 못했어요' in text and '50개 상한' in text
 
 
-def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
-    seen = []
-    r = run(task(parts=['TS40P05G']), llm(D.DocsAnswer(grade='enough', answer='TJ는 150°C이다 [3].')), docs=[doc(3)], seen=seen,
-            question='반복 역전압 1000 V, 평균 40 A 브리지 정류기의 접합부 온도 한계는?', part={})
-    # [왜] 재계획이 앞 회차 찾기의 품번을 지시서에 넣었다. 질문에 품번이 없어도 그 품번 문서 안에서만 찾는다(설계 v2)
-    assert seen[0][1] == ['TS40P05G'] and r['searches'][0]['parts'] == ['TS40P05G'] and r['status'] == 'ok'
-
-
 def test_described_ratings_find_parts_with_those_exact_values_then_search_only_them():
     calls, seen = [], []
 
@@ -158,17 +157,15 @@ def test_described_ratings_find_parts_with_those_exact_values_then_search_only_t
     def docs(q, parts):
         retriever_seen.append(parts)
         return [doc(3)]
-    r = D.docs_agent({'task': t, 'question': '반복 역전압 70 V 평균 70 mA 쇼트키의 소모 전력은?', 'target_part': {}},
-                     retriever=lambda q, parts=None: docs(q, parts), chat=chat, find=find)['reports'][0]
+    r = run(t, chat, docs=docs, question='반복 역전압 70 V 평균 70 mA 쇼트키의 소모 전력은?', part={}, find=find)
     conds, category, _, package = calls[0]
     assert package == 'SOT-23'  # 묘사의 패키지도 거른다(h4-20)
     # [왜] 묘사한 정격은 '그 값인 부품'이다: 감쇄율 · 이상 없이 같은 값(반올림 폭 0.5%), SI 단위(70 mA = 0.07 A), 제너 전압은 대표 칸
     assert conds[0]['gte'] <= 70 <= conds[0]['lte'] and conds[0]['lte'] < 71 and abs(conds[1]['gte'] - 0.07) < 0.001
     assert conds[2]['slot'] == 'typ' and category == 'schottky-diode'
-    assert retriever_seen[0] == ['BAS70'] and r['status'] == 'ok' and 'BAS70' in r['summary']
-    none = D.docs_agent({'task': t, 'question': 'q', 'target_part': {}}, retriever=lambda q, parts=None: [doc(3)], chat=llm(),
-                        find=lambda *a: [])['reports'][0]
-    assert none['status'] == 'fail' and none['reason'] == Reason.NO_RESULT.value  # 그 정격의 품번이 없으면 다시 찾을 사유
+    assert retriever_seen[0] == ['BAS70'] and r['refusal_reason'] == '' and r['searches'][0]['parts'] == ['BAS70']
+    none = run(t, llm(), docs=[doc(3)], question='q', part={}, find=lambda *a: [])
+    assert none['refusal_reason'] == Reason.NOT_FOUND.value and 'searches' not in none  # 그 정격의 품번이 없으면 검색 · LLM 없이 '못 찾음'
 
 
 def test_zener_voltage_falls_back_to_the_min_max_window_when_no_nominal_column():

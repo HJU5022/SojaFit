@@ -3,6 +3,7 @@
 - 역할: 거절 사유(`Reason`)를 사용자가 알아들을 말로 바꾸고, 가능하면 다음에 할 행동을 같이 알려 준다.
   가격 · 재고 질문에는 값 없이 화면이 따로 보여 준다는 안내를 만든다(`price_message`, 단일 · 멀티 가격 안내 노드가 같이 쓴다).
   판정 결과(`judgement`)를 코드 틀의 답 글로 바꾼다(`render_judgement`, 숫자 · 인용은 판정 결과를 그대로 옮긴다).
+  Supervisor가 거절한 부분을 답 끝에 한 줄씩 붙인다(`with_declined`, 멀티의 두 에이전트가 답을 낼 때 같이 쓴다).
 - 하지 않는 일: 거절 결정(Supervisor · 단일 그래프 라우팅), 코드 이름 노출, 숫자 비교(`backend/judge/`), 가격 · 재고 조회(`backend/services/mouser.py`).
   "코퍼스" 같은 우리끼리 쓰는 말은 쓰지 않는다.
 - 출처: backend/multi_agent/MULTI_AGENT.md 구조 결정(11-05, 내부 코드와 사용자 문구 분리), SPEC 2절 가격 안내 · 6절 Mouser(ADR 0009)
@@ -35,6 +36,13 @@ def refusal_for(reason: Reason, facts: dict) -> str:
     missing_parts = [p for p, ok in (facts.get('parts') or {}).items() if not ok]
     missing_revs = [r for r, ok in (facts.get('revisions') or {}).items() if not ok]
     return refusal_message(reason, missing_parts, missing_revs)
+
+
+def with_declined(state: dict, answer: str) -> str:
+    """Supervisor가 거절한 부분마다 답 끝에 한 줄: 물은 말 + 거절 문구(사용자 문구는 거절 노드와 같은 refusal_for)."""
+    lines = [f"- 답하지 않은 부분 '{d['ask']}': {refusal_for(Reason(d['reason']), state.get('facts') or {})}"
+             for d in (state.get('plan') or {}).get('declined') or []]
+    return '\n\n'.join([answer, '\n'.join(lines)]) if lines else answer
 
 
 def price_message(parts: list[str]) -> str:
