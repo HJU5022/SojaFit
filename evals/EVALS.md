@@ -48,11 +48,12 @@
 - `results/supervisor/2026-11-04-jev-stage1-ready-v1/` — Jev 1차 manifest·70문항 행·smoke·summary. 2차와 짝 비교하는 원본
 - `results/supervisor/2026-11-05-stage2-five-v1/`, `2026-11-05-jev-stage2-v1/` — 2차 6종의 manifest·smoke·원시 행. 5종 raw summary는 3회 계획 분모를 쓰므로 2차 집계에는 원시 `run_index=2` 행만 사용
 - `results/supervisor/2026-11-05-stage2-comparison-v1/stage2_summary_v2.json` — 2차 6종 정정 집계 정본. 앞서 만든 정의 오류 파일은 PR에 포함하지 않음
-- `results/supervisor/2026-11-05-stage3-five-v1/`, `2026-11-05-jev-stage3-v1/` — 3차 사전 등록 #33의 manifest·smoke·문항별 행. 5종 폴더에 6종 공통 공개 catalog preflight·실행 metadata·환경 버전을 함께 보존한다. 5종 manifest의 전체 계획 1,050건 중 `run_index=3`의 350건만 실행하고 Jev는 3차 70건을 실행한다
+- `results/supervisor/2026-11-05-stage3-five-v1/`, `2026-11-05-jev-stage3-v1/` — 3차 사전 등록 #36의 manifest·smoke·문항별 행. 5종 폴더에 6종 공통 공개 catalog preflight·실행 metadata·환경 버전을 함께 보존한다. 5종 manifest의 전체 계획 1,050건 중 `run_index=3`의 350건만 실행하고 Jev는 3차 70건을 실행한다
 - `results/supervisor/2026-11-05-stage3-comparison-v1/stage3_summary.json` — 원시 1~3차 행에서 API 없이 재계산한 3차 정본. gold 35문항 점수·전체 70문항 형식 통과·자체 범위 밖 예측의 라우팅 모순·비교 가능한 3회 coverage·agreement/flip과 모든 출처 hash를 담음
+- `results/supervisor/2026-11-06-prompt-v0-v1/` — 사전 등록 #37의 Supervisor Prompt V0 세 후보 exact-provider smoke·13건 원시 행·통합 summary·실행 상한과 출처 hash. `langfuse_import.json`은 기존 결과를 가져온 Dataset·Experiment 식별자와 외부 재조회 검증을 기록한다. 기존 v2 70문항 결과와 별도이며 운영 모델을 자동 확정하지 않음
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/research/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 
-`embedding_sample_v0.jsonl`은 후보를 거르는 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 실제 모델 결정은 TSC 1,360건 실제 청크 평가를 별도 사전 등록한 뒤 수행합니다.
+`embedding_sample_v0.jsonl`은 후보를 거른 2026-10-30 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 서비스 임베딩 결정은 이후 TSC 1,360건 실제 청크를 사용한 사전 등록 #25의 R1 dev/test 비교에서 `voyage-4-large` 1024차원으로 완료됐고, 선택 과정과 한계는 루트 [EVAL_REPORT.md](../EVAL_REPORT.md) 1-4절을 따릅니다. 이 결정은 새 v3 평가셋과 v4h 코퍼스의 공식 재측정이 끝났다는 뜻이 아닙니다.
 
 평가셋 필드·정답 기준·동결·채점 방식은 [dataset-guide.md](guides/dataset-guide.md)가 정본입니다.

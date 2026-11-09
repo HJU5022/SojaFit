@@ -1,0 +1,58 @@
+{
+  "dataset_name": "sojafit-supervisor-v0",
+  "dataset_id": "cmw3s0oiz02j1ad0gfv1t91zy",
+  "dataset_item_count": 13,
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "source_commit": "68367c5",
+  "imported_existing_result": true,
+  "model_calls_performed": 0,
+  "score_names": [
+    "schema_valid",
+    "question_type_correct",
+    "required_evidence_exact",
+    "next_action_correct",
+    "reason_code_correct",
+    "semantic_valid",
+    "exact_decision_match"
+  ],
+  "score_count": 273,
+  "external_verification": {
+    "dataset_item_count": 13,
+    "experiment_count": 3,
+    "experiment_item_count_each": 13,
+    "score_count_each_name": 39,
+    "score_value_sums": {
+      "schema_valid": 39,
+      "question_type_correct": 38,
+      "required_evidence_exact": 37,
+      "next_action_correct": 35,
+      "reason_code_correct": 38,
+      "semantic_valid": 34,
+      "exact_decision_match": 33
+    }
+  },
+  "experiments": [
+    {
+      "model_id": "openai/gpt-6-luna",
+      "run_name": "supervisor-v0-luna-azure-2026-11-06",
+      "experiment_id": "3bc051aaa67b9ae5f47c6ccc77b090c2",
+      "experiment_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/experiments/results?baseline=3bc051aaa67b9ae5f47c6ccc77b090c2",
+      "item_count": 13
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "run_name": "supervisor-v0-haiku-google-2026-11-06",
+      "experiment_id": "d88d6e074e48e620659f2487f6958a9b",
+      "experiment_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/experiments/results?baseline=d88d6e074e48e620659f2487f6958a9b",
+      "item_count": 13
+    },
+    {
+      "model_id": "typesafe/jev-1.14",
+      "run_name": "supervisor-v0-jev-typesafe-2026-11-06",
+      "experiment_id": "153c6b44d6e71cce7aca788bb0cd479a",
+      "experiment_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/experiments/results?baseline=153c6b44d6e71cce7aca788bb0cd479a",
+      "item_count": 13
+    }
+  ]
+}

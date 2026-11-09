@@ -7,6 +7,7 @@
 - 담당: 그 실험의 담당
 
 ## 파일
+- `thread-memory-operations.md` — thread·기억 품질/병렬/복원/비용 검증 명령·합격 기준·실행 경계
 - `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선(30청크·18질의 프록시 표본)
 - `embedding-candidate-runner.md` — 임베딩 후보 확장 평가기 설계. 상태: 설계 계약만 있고 구현·테스트·2026-11-02 원시 결과는 `main`에 없음
 - `embedding-voyage-candidates.md` — Voyage 4 Nano·Voyage 4 후보 추가 계약. 상태: 설계 계약만 있고 구현·테스트·원시 JSON은 `main`에 없음
@@ -17,4 +18,4 @@
 - `supervisor-model-comparison.md` — 수퍼바이저 후보 5종의 70문항 1회 비교 방법·경량 집계·선정 결론. 실험상 최종 선정은 `openai/gpt-6-luna`, 서비스 적용은 조장 소유 정본 갱신 뒤 수행
 - `supervisor-model-comparison-postregistration.md` — 완료된 수퍼바이저 후보 5종 비교의 실제 조건·실행 중 변경·채점 범위·선정 기준·한계를 기록한 사후등록
 - `supervisor-stage2-six-models.md` — 기존 5종과 Jev의 2차 70문항 공동 평가 계약(#32). 실측은 `../research/supervisor-stage2-results.md`
-- `supervisor-stage3-six-models.md` — 같은 6종·동결 70문항의 3차 `run_index=3` 공동 평가 계약(#33). 실측은 `../research/supervisor-stage3-results.md`
+- `supervisor-stage3-six-models.md` — 같은 6종·동결 70문항의 3차 `run_index=3` 공동 평가 계약(#36). 실측은 `../research/supervisor-stage3-results.md`

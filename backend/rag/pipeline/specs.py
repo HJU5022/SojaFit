@@ -1,4 +1,7 @@
-"""데이터시트 표 행 청크를 부품 사양 표(part_specifications) 행으로 바꾸는 오프라인 도구(서버는 규칙 상수와 카드 한 장 읽기 `read_card`만 쓴다).
+"""데이터시트 표 행 청크를 읽는 규칙과 해석기. 서버는 규칙 상수(`SI` · `SYMS` · `KEYWORDS` · `PKG` · `packages_of` · `family` · `BOTH_DIRECTIONS` · `AEC_H` · `AEC_ALL`)와 카드 한 장을 질문 때 코드로 읽는 `read_card`(`card_read.read_values`)를 쓴다.
+
+[주의] 부품 사양 표(part_specifications) 만들기 · 적재(`build` · `load`)는 11-09에 서비스에서 쓰지 않기로 했다(ADR 0016). 같은 해석기(`Doc`)를 `read_card`가 카드 한 장에 쓰므로(사전 등록 #43, 카드 값 코드 먼저 읽기) 해석 코드를 지우지 않는다.
+
 
 - 역할: chunks.jsonl의 표지 청크(품번 목록)와 표 행 청크("머리 경로: 값")를 읽어 품번마다 파라미터 코드 17종
   (5.7의 10종 + VR + TVS·ESD용 VRWM·VBR·VC·IPP·PPPM·VESD)의 값을 SI 단위로 뽑는다. 값 하나는 원문 칸 하나에서 나오고

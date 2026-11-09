@@ -1,20 +1,25 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`)와 Google 콜백 접속 로그 보호를 등록한다.
-호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py·tests/api/test_prices.py.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 질문·답변 API, 회로·대화·기억·견적 API.
-출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, ADR 0009, backend/BACKEND.md.
+역할: 인증·가입·데모 버튼 로그인(`DEMO_MODE=1`만)·탈퇴(`DELETE /api/me`)·관리자·가격 API, #73의 회로·thread·승인 기록 API, OSC의 프로젝트·D5 run·승인·견적 API, 내 설정(사용자 사실 기억) API와 React SPA를 같은 출처로 등록한다.
+호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스와 API·프론트 통합 테스트.
+하지 않는 일: 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
+출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, docs/specs/api-error-contract.md, ADR 0009, backend/BACKEND.md.
 읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
+THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
 import base64
 import hashlib
 import logging
+from http import HTTPStatus
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
+from uuid import UUID
 from urllib.parse import unquote, urlencode
+from uuid import uuid4
 
 import httpx
 import psycopg
@@ -22,10 +27,15 @@ from authlib.common.errors import AuthlibBaseError
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
+from psycopg_pool import PoolTimeout
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth
+from backend.api.projects import router as projects_router
+from backend.api.quotes import router as quotes_router
 from backend.services import mouser
+from backend.web.app import mount_frontend
 
 
 class GoogleCallbackLogFilter(logging.Filter):
@@ -49,16 +59,106 @@ async def lifespan(app: FastAPI):
     logger = logging.getLogger("uvicorn.access")
     log_filter = GoogleCallbackLogFilter()
     logger.addFilter(log_filter)
+    conversations = None
     try:
+        if os.getenv('THREADS_ENABLED') == '1':
+            from backend.conversations.memory_service import Conversations
+            conversations = Conversations(os.environ['DATABASE_URL'])
+            app.state.conversations = conversations
         yield
     finally:
+        if conversations:
+            conversations.close()
+            del app.state.conversations
         logger.removeFilter(log_filter)
 
 
-app = FastAPI(title="SojaFit API", lifespan=lifespan)
+ERROR_CODES = {
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+    413: "PAYLOAD_TOO_LARGE",
+    422: "VALIDATION_ERROR",
+    429: "TOO_MANY_REQUESTS",
+    503: "SERVICE_UNAVAILABLE",
+    504: "GATEWAY_TIMEOUT",
+}
+
+
+class ErrorPayload(BaseModel):
+    """클라이언트가 분기하고 사용자에게 표시할 공개 오류 정보."""
+
+    code: str
+    message: str
+    request_id: str
+
+
+class ErrorEnvelope(BaseModel):
+    """모든 JSON 오류 응답의 최상위 구조."""
+
+    error: ErrorPayload
+
+
+COMMON_ERROR_RESPONSES = {
+    status_code: {"model": ErrorEnvelope, "description": code}
+    for status_code, code in ERROR_CODES.items()
+}
+COMMON_ERROR_RESPONSES[500] = {"model": ErrorEnvelope, "description": "INTERNAL_ERROR"}
+
+app = FastAPI(
+    title="SojaFit API",
+    lifespan=lifespan,
+    responses=COMMON_ERROR_RESPONSES,
+)
 LOGIN_PAGE = Path(__file__).parent / "web" / "templates" / "login.html"
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 GOOGLE_COOKIE = "sojafit_google_browser"
 GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
+
+
+def request_id_for(request: Request) -> str:
+    """현재 요청 ID를 반환하되 예외가 미들웨어보다 먼저 나도 안전하게 만든다."""
+    request_id = getattr(request.state, "request_id", None)
+    if request_id is None:
+        request_id = str(uuid4())
+        request.state.request_id = request_id
+    return request_id
+
+
+def error_response(
+    request: Request,
+    *,
+    status_code: int,
+    code: str,
+    message: str,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
+    """공개 가능한 오류 정보만 공통 계약으로 반환한다."""
+    request_id = request_id_for(request)
+    response_headers = dict(headers or {})
+    response_headers["X-Request-ID"] = request_id
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {
+                "code": code,
+                "message": message,
+                "request_id": request_id,
+            }
+        },
+        headers=response_headers,
+    )
+
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    """클라이언트 값 대신 서버 UUID를 모든 응답에 넣는다."""
+    request.state.request_id = str(uuid4())
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request.state.request_id
+    return response
 
 
 def google_enabled() -> bool:
@@ -145,21 +245,46 @@ def google_pending(request: Request):
     return response
 
 
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request: Request, exc: StarletteHTTPException):
+    try:
+        default_message = HTTPStatus(exc.status_code).phrase
+    except ValueError:
+        default_message = "HTTP error"
+    message = exc.detail if isinstance(exc.detail, str) else default_message
+    return error_response(
+        request,
+        status_code=exc.status_code,
+        code=ERROR_CODES.get(exc.status_code, "HTTP_ERROR"),
+        message=message,
+        headers=exc.headers,
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=422, content={"detail": [{key: value for key, value in error.items() if key not in {"input", "ctx"}} for error in exc.errors()]})
+    return error_response(
+        request,
+        status_code=422,
+        code="VALIDATION_ERROR",
+        message="요청 형식이 올바르지 않습니다.",
+    )
+
+
+@app.exception_handler(Exception)
+async def internal_error(request: Request, exc: Exception):
+    return error_response(
+        request,
+        status_code=500,
+        code="INTERNAL_ERROR",
+        message="요청을 처리하지 못했습니다.",
+    )
 
 
 @app.get("/health")
 def health() -> dict:
     """서비스 생존 확인용. 배포 환경과 평가자가 부르며 항상 {"status": "ok"}를 돌려준다."""
     return {"status": "ok"}
-
-
-@app.get("/login", include_in_schema=False)
-def login_page():
-    """같은 출처의 로그인 화면을 제공한다."""
-    return FileResponse(LOGIN_PAGE, media_type="text/html; charset=utf-8")
 
 
 class Login(BaseModel):
@@ -179,23 +304,95 @@ class Login(BaseModel):
         return email
 
 
-@app.post("/api/auth/login")
-def login(body: Login, request: Request, response: Response):
-    """이메일·비밀번호를 검증하고 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
-    # [주의] 403 Origin 불일치, 401 인증 실패·잠금, 503 DB 사용 불가 또는 동시 검증 슬롯 부족(authenticate가 냄)
-    auth.check_origin(request)
-    try:
-        result = auth.authenticate(body.email, body.password)
-    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
-        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
-    if result is None:
-        # [왜] 계정 없음·비밀번호 틀림·잠금·비활성을 같은 메시지로 돌려 계정 존재를 알 수 없게 한다
-        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호를 확인해 주세요.")
-    token, user_id = result
+def set_session_cookie(response: Response, token: str) -> None:
+    """로그인·가입이 같은 세션 쿠키를 심는다."""
     # [왜] AUTH_ORIGIN이 https일 때만 Secure를 켠다(로컬 http 개발에서는 쿠키가 안 붙는 것을 피함)
     secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
     # [주의] httponly=JS가 못 읽게 해 토큰 탈취를 막고, samesite=lax는 CSRF를 줄인다. 8시간은 세션 절대 만료와 같다
     response.set_cookie(auth.COOKIE, token, httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
+
+
+@app.post("/api/auth/login")
+def login(body: Login, request: Request, response: Response):
+    """이메일·비밀번호를 검증하고 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
+    # [주의] 403 Origin 불일치, 401 인증 실패·계정 잠금·IP 잠금, 503 DB 사용 불가 또는 동시 검증 슬롯 부족(authenticate가 냄)
+    auth.check_origin(request)
+    try:
+        result = auth.authenticate(body.email, body.password, auth.client_ip(request))
+    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        # [왜] 계정 없음·비밀번호 틀림·계정 잠금·IP 잠금·비활성을 같은 메시지로 돌려 계정 존재와 잠금을 알 수 없게 한다
+        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호를 확인해 주세요.")
+    token, user_id = result
+    set_session_cookie(response, token)
+    return {"user_id": user_id}
+
+
+class Signup(Login):
+    """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상, 처리방침 고지 동의(consent)는 true여야 한다(11-09 결정)."""
+
+    password: str = Field(min_length=8, max_length=1024)
+    # [왜] 가입 화면의 처리방침 고지(개인정보 보호법 15조 2항)를 읽고 동의했다는 표시. 없거나 true가 아니면 공통 422다
+    consent: StrictBool
+
+    @field_validator("consent")
+    @classmethod
+    def agreed(cls, consent: bool) -> bool:
+        if consent is not True:
+            raise ValueError("개인정보 수집 · 이용 동의가 필요합니다.")
+        return consent
+
+
+@app.post("/api/auth/signup")
+def signup(body: Signup, request: Request, response: Response):
+    """승인 없이 user 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
+    # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패·동의(consent) 없음(입력값 미노출, validation_error가 냄),
+    # 429 IP 하루 한도, 503 DB 사용 불가 또는 동시 scrypt 슬롯 부족(auth.signup이 냄)
+    auth.check_origin(request)
+    try:
+        result = auth.signup(body.email, body.password, auth.client_ip(request))
+    except (psycopg.Error, KeyError):  # KeyError는 DATABASE_URL 누락
+        raise HTTPException(status_code=503, detail="가입 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
+    token, user_id = result
+    set_session_cookie(response, token)
+    return {"user_id": user_id}
+
+
+def demo_mode() -> None:
+    """데모 버튼 로그인 경로는 DEMO_MODE=1일 때만 있다. 아니면 본문을 읽기 전에 공통 404."""
+    if os.getenv("DEMO_MODE", "1") != "1":
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+@app.get("/api/auth/demo", dependencies=[Depends(demo_mode)])
+def demo_status():
+    """데모 모드면 로그인 화면이 데모 사용자 A · B 버튼을 보인다(로그인 필요 없음)."""
+    return {"enabled": True}
+
+
+class DemoLogin(BaseModel):
+    """데모 버튼 로그인 본문. 계정은 a · b 둘 중 하나만(이메일 · 사용자 id는 받지 않음)."""
+
+    model_config = ConfigDict(extra="forbid")
+    account: Literal["a", "b"]
+
+
+@app.post("/api/auth/demo-login", dependencies=[Depends(demo_mode)])
+def demo_login(body: DemoLogin, request: Request, response: Response):
+    """데모 모드에서 시드한 데모 사용자 A · B로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
+    # [주의] 404 데모 모드 아님 · 데모 계정 없음(새 볼륨에서만 시드), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
+    auth.check_origin(request)
+    try:
+        result = auth.demo_session(body.account)
+    except (psycopg.Error, KeyError):
+        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
+    if result is None:
+        raise HTTPException(status_code=404, detail="데모 계정이 없습니다. 데모 모드로 새 DB 볼륨을 만들어 다시 시작하세요.")
+    token, user_id = result
+    set_session_cookie(response, token)
     return {"user_id": user_id}
 
 
@@ -212,6 +409,22 @@ def logout(request: Request, response: Response):
     auth.logout(request)
     response.delete_cookie(auth.COOKIE, path="/")
     return {"ok": True}
+
+
+@app.delete("/api/me")
+def delete_me(request: Request, response: Response, user: tuple[int, str] = Depends(auth.current_user)):
+    """탈퇴: 로그인 사용자의 기록을 먼저, 계정을 마지막에 지우고 지운 건수를 돌려준다(SPEC 8.5, 개인정보 보호법 37조 동의 철회)."""
+    # [주의] 403 Origin 불일치, 409 관리자 · 진행 중 분석, 503 분석 저장소 없음 · 일부만 지움(다시 요청하면 남은 것부터 이어서 지움)
+    auth.check_origin(request)
+    if user[1] != "user":
+        raise HTTPException(status_code=409, detail="관리자 계정은 이 기능으로 삭제할 수 없습니다.")
+    try:
+        with conversation_service(request).account_deletion(user[0]) as deleted:
+            deleted.update(auth.delete_account(user[0]))  # 계정은 마지막: 앞에서 실패하면 계정이 남아 다시 요청할 수 있다
+    except (psycopg.Error, PoolTimeout, OSError):
+        raise HTTPException(status_code=503, detail="계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.") from None
+    response.delete_cookie(auth.COOKIE, path="/")
+    return {"deleted": deleted}
 
 
 class AccountState(BaseModel):
@@ -262,3 +475,181 @@ def prices(response: Response, parts: str = Query(min_length=1, max_length=450, 
         return {"available": True, **mouser.search_parts(names)}
     except mouser.MouserError as error:
         return price_unavailable(error.kind)  # [주의] 오류를 로그에 쓰지 않는다. 종류만 화면에 알린다
+
+
+@app.middleware('http')
+async def conversation_boundary(request: Request, call_next):
+    private = request.url.path.startswith(('/api/circuits', '/api/threads', '/api/memories', '/api/analysis/', '/api/me/memory'))
+    if private and request.method == 'POST':
+        limit = 7 * 1024 * 1024 if request.url.path == '/api/circuits' else 128 * 1024
+        data = bytearray()
+        async for chunk in request.stream():
+            if len(data) + len(chunk) > limit:
+                return error_response(request, status_code=413, code=ERROR_CODES[413],
+                                      message='요청이 너무 큽니다.', headers={'Cache-Control': 'no-store'})
+            data.extend(chunk)
+        request._body = bytes(data)  # downstream JSON 검증에도 한도 내에서 읽은 같은 본문을 전달한다
+    response = await call_next(request)
+    if private or request.url.path == '/workspace':
+        response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+async def database_unavailable(request: Request, error):
+    return error_response(request, status_code=503, code=ERROR_CODES[503],
+                          message='저장소에 연결할 수 없습니다. 잠시 후 다시 시도하세요.',
+                          headers={'Cache-Control': 'no-store'})
+
+
+app.add_exception_handler(psycopg.Error, database_unavailable)
+app.add_exception_handler(PoolTimeout, database_unavailable)
+
+
+def conversation_service(request: Request):
+    service = getattr(request.app.state, 'conversations', None)
+    if service is None:
+        raise HTTPException(503, '분석 저장소가 준비되지 않았습니다.')
+    return service
+
+
+@app.get('/api/analysis/readiness')
+def analysis_readiness(request: Request, user: int = Depends(auth.current_user_id)):
+    """분석 저장소 준비 확인. 외부 모델·검색의 품질/가용성은 보증하지 않는다."""
+    conversation_service(request).readiness()
+    return {'status': 'ready', 'storage': 'ready'}
+
+
+@app.get('/api/analysis/demo')
+def demo_configuration(request: Request, user: int = Depends(auth.current_user_id)):
+    """명시적으로 켠 합성 데모의 회로와 지원 질문만 제공한다."""
+    from backend.services import demo
+    return {'enabled': True, **demo.configuration()} if conversation_service(request).mode == 'demo' else {'enabled': False}
+
+
+class CircuitUpload(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    filename: str = Field(min_length=1, max_length=200)
+    netlist: str = Field(min_length=1, max_length=1024 * 1024)
+
+
+class ThreadCreate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    circuit_id: UUID
+    target: str = Field(min_length=1, max_length=100)
+
+
+class ThreadMessage(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    text: str = Field(min_length=1, max_length=10000)
+    conditions: str = Field(default='', max_length=4000)
+
+    @field_validator('text')
+    @classmethod
+    def nonempty(cls, value):
+        if not value.strip():
+            raise ValueError('질문을 입력하세요.')
+        return value
+
+
+class ThreadResume(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    version: int = Field(ge=1)
+    answers: dict[str, str] = Field(default_factory=dict, max_length=50)
+    role: str = Field(default='', max_length=100)
+
+    @field_validator('answers')
+    @classmethod
+    def answer_lengths(cls, value):
+        if any(len(k) > 100 or len(v) > 200 for k, v in value.items()):
+            raise ValueError('조건 답변이 너무 깁니다.')
+        return value
+
+
+class ThreadApproval(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    version: int = Field(ge=1)
+
+
+class MemoryControl(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    action: Literal['correct','revoke','restore','delete']
+    correction: str = Field(default='', max_length=1000)
+
+
+@app.get('/workspace', include_in_schema=False)
+def workspace_page():
+    return FileResponse(LOGIN_PAGE.with_name('workspace.html'), media_type='text/html; charset=utf-8')
+
+
+@app.post('/api/circuits')
+def upload_circuit(body: CircuitUpload, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).upload(user, body.filename, body.netlist)
+
+
+@app.get('/api/circuits')
+def list_circuits(request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).circuits(user)
+
+
+@app.post('/api/threads')
+def create_thread(body: ThreadCreate, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).create(user, str(body.circuit_id), body.target)
+
+
+@app.get('/api/threads')
+def list_threads(request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).threads(user)
+
+
+@app.get('/api/threads/{thread_id}')
+def thread_detail(thread_id: UUID, request: Request, user: int = Depends(auth.current_user_id)):
+    return conversation_service(request).detail(user, str(thread_id))
+
+
+@app.post('/api/threads/{thread_id}/messages')
+def thread_message(thread_id: UUID, body: ThreadMessage, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).message(user, str(thread_id), body.text, body.conditions, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/resume')
+def thread_resume(thread_id: UUID, body: ThreadResume, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).resume(user, str(thread_id), body.answers, body.role, body.version, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/approve')
+def thread_approve(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).approve(user, str(thread_id), body.version, request_id=request_id_for(request))
+
+
+@app.post('/api/threads/{thread_id}/retry')
+def thread_retry(thread_id: UUID, body: ThreadApproval, request: Request, user: int = Depends(auth.current_user_id)):
+    auth.check_origin(request)
+    return conversation_service(request).retry(user, str(thread_id), body.version, request_id=request_id_for(request))
+
+
+@app.get('/api/memories')
+def list_memories(request: Request, user: int = Depends(auth.current_user_id)):
+    """자기 승인 기록(철회·삭제 안 한 것). 장기 기억(사용자 사실)은 `/api/me/memory`다."""
+    return conversation_service(request).memories(user)
+
+
+@app.post('/api/memories/{thread_id}/{version}/control')
+def control_memory(thread_id: UUID, version: int, body: MemoryControl, request: Request, user: int = Depends(auth.current_user_id)):
+    """승인 기록의 정정 메모·철회·복구·삭제 표식. 대화·판정 승인 원본과 견적서는 변경하지 않는다."""
+    auth.check_origin(request)
+    return conversation_service(request).control_memory(user, str(thread_id), version, body.action, body.correction)
+
+
+# 직접 등록한 #73 API와 health·Google 콜백이 SPA보다 먼저 처리되도록 마지막에 연결한다.
+from backend.api.conversations import router as conversations_router
+from backend.api.profile import router as profile_router
+app.include_router(projects_router)
+app.include_router(quotes_router)
+app.include_router(conversations_router)
+app.include_router(profile_router)
+mount_frontend(app, FRONTEND_DIST, LOGIN_PAGE)

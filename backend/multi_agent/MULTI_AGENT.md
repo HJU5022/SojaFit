@@ -41,7 +41,9 @@
 
 ## 구현 상태
 - 있음: 약속(`contracts.py`), Supervisor(`supervisor.py`), 서브에이전트 2개(`agents/docs.py`, `agents/judge.py`), 사실 확인(MCP `check_corpus`, `make_lookup`), 거절 문구 · 판정 답 틀(`messages.py`), 조립(`build.py`), 평가 실행(`evals/runners/run_graph.py --multi`, `evals/runners/run_gate.py`).
-- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 새 프롬프트(`supervisor` · `docs_answer` · `synth`)의 Langfuse 등록, 영속 체크포인트(평가 실행은 메모리 체크포인터).
+- 서비스: `backend/conversations/memory_service.py`가 실제 PostgreSQL Checkpointer/Store를 새 그래프에 연결한다. 인증 사용자의 같은 품번 승인 사례 최대 5건을 계획 → Send(문서·판정) → 종합에 별도 과거 데이터로 전달한다. 판정 하위 그래프의 숫자 grounding에는 기억을 넣지 않는다. 평가 실행기는 메모리 체크포인터를 유지한다.
+- 승인 기억은 본문 근거로 허용하지 않는다. docs와 supervisor.check_node가 본문의 기억 인용을 거부하고, 별도 memory_refs를 제공된 자기 사례 ID와 대조한다. main에서 삭제한 구 verifier.py는 복원하지 않는다. 데이터시트 모든 문장의 의미적 정확성 검증은 후속 과제다.
+- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 새 프롬프트(`supervisor` · `docs_answer` · `synth`)의 Langfuse 원격 등록·운영 배포 검증.
 
 ## 파일
 - `MULTI_AGENT.md` — 이 문서

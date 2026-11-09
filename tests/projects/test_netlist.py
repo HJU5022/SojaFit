@@ -1,0 +1,132 @@
+"""합성 KiCad 입력의 제한·문법·불변 정규화와 원본 폐기를 확인한다."""
+import hashlib
+import importlib
+import importlib.util
+from dataclasses import fields, FrozenInstanceError
+from pathlib import Path
+
+import pytest
+
+FIXTURES = Path(__file__).parents[1] / "fixtures/netlists"
+MAX_BYTES = 5 * 1024 * 1024
+
+
+def parser():
+    assert importlib.util.find_spec("backend.projects.netlist") is not None, "bounded KiCad normalizer is missing"
+    return importlib.import_module("backend.projects.netlist")
+
+
+def test_normalize_exact_shape_hash_and_immutable_result():
+    raw = (FIXTURES / "minimal.net").read_bytes()
+    result = parser().normalize_netlist(raw)
+    assert result.parts == ("D1", "R1")
+    assert result.connections == {
+        "parts": ({"ref": "D1", "value": "1N4148", "footprint": "Diode:SOD-123"},
+                  {"ref": "R1", "value": "1k", "footprint": "Resistor:R_0603"}),
+        "nets": ({"code": "1", "name": "GND", "nodes": ({"ref": "D1", "pin": "2"}, {"ref": "R1", "pin": "1"})},),
+    }
+    assert result.source_sha256 == hashlib.sha256(raw).hexdigest()
+    assert {f.name for f in fields(result)} == {"connections", "source_sha256", "parts"}
+    assert "RAW_UPLOAD_MARKER" not in repr(result)
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        result.source_sha256 = "changed"
+    with pytest.raises(TypeError):
+        result.connections["parts"][0]["value"] = "changed"
+
+
+@pytest.mark.parametrize("raw", [
+    b"\xff", b"", b"(not_export (components) (nets))", b"(export (nets))",
+    b"(export (components))", b"(export (components) (nets))",
+    (FIXTURES / "invalid.net").read_bytes(), b"(export))", b"(export) (export)",
+    b"(export) trailing", b'(export (design (source "unterminated)))',
+    b"(export (components (comp (ref D1))) (nets (net (code 1) (name GND) (node (ref UNKNOWN) (pin 1)))))",
+])
+def test_rejects_invalid_encoding_structure_and_unknown_nodes(raw):
+    module = parser()
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)
+
+
+def test_size_is_rejected_before_decode_and_hash(monkeypatch):
+    module = parser()
+    def unexpected_hash(*args):
+        pytest.fail("oversize bytes must be rejected before hashing")
+    monkeypatch.setattr(module.hashlib, "sha256", unexpected_hash)
+    with pytest.raises(module.NetlistTooLarge):
+        module.normalize_netlist(b"\xff" * (MAX_BYTES + 1))
+
+
+def test_exact_byte_limit_is_allowed():
+    raw = (FIXTURES / "minimal.net").read_bytes()
+    assert parser().normalize_netlist(raw + b" " * (MAX_BYTES - len(raw))).parts == ("D1", "R1")
+
+
+def test_hash_happens_before_strict_decode(monkeypatch):
+    module = parser()
+    calls = []
+    original = hashlib.sha256
+    monkeypatch.setattr(module.hashlib, "sha256", lambda raw: (calls.append(raw), original(raw))[1])
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(b"\xff")
+    assert calls == [b"\xff"]
+
+
+def test_depth_limit_in_ignored_metadata():
+    module = parser()
+    raw = (FIXTURES / "minimal.net").read_bytes()
+    for depth, valid in ((63, True), (64, False)):
+        metadata = b"(ignored " * depth + b")" * depth
+        candidate = raw.rstrip()[:-1] + metadata + b")\n"
+        if valid:
+            module.normalize_netlist(candidate)
+        else:
+            with pytest.raises(module.InvalidNetlist):
+                module.normalize_netlist(candidate)
+
+
+def test_token_limit_in_ignored_metadata():
+    module = parser()
+    raw = b"(export (ignored " + b"x " * 500_000 + b"))"
+    with pytest.raises(module.InvalidNetlist, match="token"):
+        module.normalize_netlist(raw)
+
+
+@pytest.mark.parametrize("setting,section", [
+    ("MAX_COMPONENTS", "(components (comp(ref D1))(comp(ref R1))(comp(ref C1))) (nets(net(code 1)(name G)(node(ref D1)(pin 1))))"),
+    ("MAX_NETS", "(components(comp(ref D1))) (nets(net(code 1)(name A)(node(ref D1)(pin 1)))(net(code 2)(name B)(node(ref D1)(pin 1)))(net(code 3)(name C)(node(ref D1)(pin 1))))"),
+])
+def test_component_and_net_limits_before_accumulation(monkeypatch, setting, section):
+    module = parser()
+    assert getattr(module, setting) == 100_000
+    monkeypatch.setattr(module, setting, 2)
+    with pytest.raises(module.InvalidNetlist, match="limit"):
+        module.normalize_netlist(f"(export {section})".encode())
+
+
+def test_quoted_escapes_and_optional_empty_fields():
+    raw = b'(export(components(comp(ref D1)(value "a\\\"b\\\\c")(footprint)))(nets(net(code 1)(name "G ND")(node(ref D1)(pin 1)))))'
+    result = parser().normalize_netlist(raw)
+    assert result.connections["parts"][0] == {"ref": "D1", "value": 'a"b\\c', "footprint": ""}
+
+
+@pytest.mark.parametrize("code", ['"0"', '"-1"', '"1.0"', '"+1"', '"1e2"', '"01"', '"abc"', '"1 2"', '"١"'])
+def test_net_code_requires_canonical_positive_ascii_integer(code):
+    module = parser()
+    raw = f'(export(components(comp(ref D1)))(nets(net(code {code})(name GND)(node(ref D1)(pin 1)))))'.encode()
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)
+
+
+def test_duplicate_net_codes_rejected_even_when_names_and_nodes_differ():
+    module = parser()
+    raw = b'(export(components(comp(ref D1)))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))(net(code "1")(name VCC)(node(ref D1)(pin 2)))))'
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)
+
+
+@pytest.mark.parametrize("value", [b'"\x00"', b'\x00'])
+def test_nul_is_rejected_in_quoted_and_unquoted_values(value):
+    module = parser()
+    raw = b'(export(components(comp(ref D1)(value ' + value + b')))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))))'
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)

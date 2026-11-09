@@ -351,7 +351,7 @@ def bi_copies(rows, doc):
     """양방향 품번(…C · …CA · …CH · …CAH)에 단방향 품번(C를 뺀 이름) 행을 붙인다. 문서가 '특성은 양방향 모두 적용'이라고 밝혔을 때만.
 
     [왜] TVS 값 표는 단방향 품번으로만 적어, 양방향 TVS 찾기에서 정답 5개를 모두 놓쳤다(h4-15, 11-09 claude -p 실측).
-         pipeline/specs.py copy_bidirectional과 같은 규칙이다. 이미 그 코드 값이 있는 양방향 품번은 건드리지 않는다
+         11-09에 지운 사양 표 변환(pipeline/specs.py)의 양방향 규칙과 같다. 이미 그 코드 값이 있는 양방향 품번은 건드리지 않는다
     """
     if not doc.get('both'):
         return []
@@ -372,7 +372,7 @@ def h_copies(rows, doc):
     """H 품번(표지에는 'XH', 값 표에는 X만)에 기본 품번 X의 행을 붙인다. 문서가 '"H" means AEC-Q101 qualified'라고 밝혔을 때만.
 
     [왜] 값 표는 기본 품번으로만 적어, 카드 읽기가 1N4005GH의 VRRM을 못 읽었다(h4-11 GH 3개, 11-08 claude -p 실측).
-         pipeline/specs.py h_copies와 같은 규칙이다. 이미 그 코드 값이 있는 H 품번은 건드리지 않는다
+         11-09에 지운 사양 표 변환(pipeline/specs.py)의 h_copies와 같은 규칙이다. 이미 그 코드 값이 있는 H 품번은 건드리지 않는다
     """
     if not doc.get('aec_h'):
         return []

@@ -1,0 +1,177 @@
+{
+  "date": "2026-11-09",
+  "branch": "STH",
+  "scope": "owned approved-case memory, not automatic conversation recall or quote approval",
+  "tests": {
+    "passed": 972,
+    "skipped": 36,
+    "warning": "Docling ListItem deprecation",
+    "seconds": 57.86,
+    "auth_and_thread_db": true,
+    "local_dump_restore": true,
+    "remote_github_ci_run": false
+  },
+  "synthetic_demo": {
+    "http_checks": {
+      "anonymous_401": true,
+      "interrupt": true,
+      "can_approve": true,
+      "stored": true,
+      "B_no_memory": true,
+      "B_detail_404": true,
+      "B_control_404": true,
+      "new_thread_reference": true,
+      "correction": true,
+      "revoked": true,
+      "revoked_not_referenced": true,
+      "restored": true,
+      "deleted": true,
+      "reapprove_denied": true,
+      "original_preserved": true,
+      "events": true,
+      "unregistered_422": true
+    },
+    "paid_calls": 0,
+    "final_test_url": "http://localhost:8773",
+    "semantic_accuracy_claim": false
+  },
+  "trial": {
+    "revision": "sojafit-api-00020-miv",
+    "image_digest": "cdc9ed1d2b5881a2792ed1f46d5ae808d3bac99c406caa055d38155fe79056f4",
+    "url": "https://thread-memory-test---sojafit-api-q5lzmlc4wq-du.a.run.app",
+    "traffic_percent": 0,
+    "production_revision": "sojafit-api-00008-2h5",
+    "production_percent": 100,
+    "test_max_tokens": 2048
+  },
+  "live_workflow": {
+    "approved_thread": "3609152d-6c49-4874-93fb-a5ebf87d4fa0",
+    "new_thread": "0bb0592d-bd4b-4532-8317-5e1b56ed8c57",
+    "checks": {
+      "http POST /api/auth/login": true,
+      "http GET /api/analysis/readiness": true,
+      "readiness": true,
+      "http GET /api/analysis/demo": true,
+      "real mode": true,
+      "http POST /api/circuits": true,
+      "http POST /api/threads": true,
+      "http POST /api/threads/3609152d-6c49-4874-93fb-a5ebf87d4fa0/messages": true,
+      "wait for conditions": true,
+      "known requested fields": true,
+      "http POST /api/threads/3609152d-6c49-4874-93fb-a5ebf87d4fa0/resume": true,
+      "approve final": true,
+      "http POST /api/threads/3609152d-6c49-4874-93fb-a5ebf87d4fa0/approve": true,
+      "http GET /api/memories": true,
+      "one owned case": true,
+      "B thread denied": true,
+      "B control denied": true,
+      "http POST /api/threads/0bb0592d-bd4b-4532-8317-5e1b56ed8c57/messages": true,
+      "new thread owned context": true,
+      "answer separate from case citation": true,
+      "http GET /api/threads/3609152d-6c49-4874-93fb-a5ebf87d4fa0": true,
+      "real events": true,
+      "combined reservation within half dollar": true,
+      "B has no checkpoints": true
+    },
+    "additional_reservation_usd": 0.426852,
+    "reservation_cap_usd": 0.5,
+    "test_prefill_not_actual_usage_usd": 2.5,
+    "model_selected_case": false,
+    "billing_reconciled": false,
+    "cleanup": "test accounts disabled; auth sessions removed; business evidence retained",
+    "latencies_ms": {
+      "approved": [
+        {
+          "status": "APPROVED",
+          "elapsed_ms": 262
+        },
+        {
+          "status": "DONE",
+          "elapsed_ms": 396
+        },
+        {
+          "status": "WAITING",
+          "elapsed_ms": 13145
+        }
+      ],
+      "role": [
+        {
+          "status": "DONE",
+          "elapsed_ms": 6357
+        }
+      ]
+    }
+  },
+  "trace_checks": {
+    "received": true,
+    "same_user": true,
+    "same_thread": true,
+    "trace_ids_match": true
+  },
+  "trace_ids": [
+    "4b27e65fb033452bb283ce72810f1782",
+    "1194f9b06476492aaba9256f703280c1",
+    "3c3ea76f5ea74211b74302820cc3e348"
+  ],
+  "frozen_sha256": {
+    "dataset_v1.jsonl": "2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b",
+    "dataset_v2.jsonl": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9"
+  },
+  "runtime_sha256": {
+    "backend/auth.py": "516631d321a30636af0935f28bb3c5c8ae78604c247419b969cbe5b62b60b3bd",
+    "backend/conversations.py": "6e6ae4fba242822870dcc7875c47ab4b2525c89b6c89e0aae59f702b26c68ae8",
+    "backend/main.py": "912b3eb9753f207dbe3d0bc11560f1b48b286558233001c1db11f0b5f02b0e6c",
+    "backend/__init__.py": "a5228266a26e488dc9d31953278bacac3675eb7dc6104fed5bf48a6ec3cda80e",
+    "backend/graph/build.py": "290202ad77a19f2070fc920fec29313159f93fc124fce6e09031250552d38c42",
+    "backend/graph/mcp_retriever.py": "593d3e4237674c1912f4edacedab2da4fcf23ee75d3da6c99856a242eb20feea",
+    "backend/graph/memory.py": "c696529a3f9e679ae1386f544f9a43867a29985dd24ebf06290f329a22d046f1",
+    "backend/graph/netlist.py": "b10d05728393bd442c50a9bc28a86e9152a11514085e0f8bc9f28797c575c587",
+    "backend/graph/nodes.py": "262de3ff693019eac8734effeccd880950a56ff63c44bb3aed24ef8c6b38c108",
+    "backend/graph/state.py": "8c13dee2cb7903213451e3e23437ff784cb953101083f667b92833f27f76e773",
+    "backend/graph/__init__.py": "50ac82624b121b6e1f27e86ef3f3d62c9f437f7829af48a8d432e02e57bc081d",
+    "backend/judge/conditions.py": "05175f0d757e6a9cb55399ba4e34914868c69445bb27204606aee8d7519c84a2",
+    "backend/judge/sheet_conditions.py": "b5f30402f26d605340af56ccb58f184f1bae351f7961f30a832e818b72349a11",
+    "backend/judge/verdict.py": "fa0247ac468278f1b54239444576d9deb711d7fae93469318d2eae7b3c219076",
+    "backend/judge/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/multi_agent/build.py": "74927d1ce197d5c03bd8a9a2c208de49b71f980bd573f2257f7dc3f768990b54",
+    "backend/multi_agent/contracts.py": "1835057e11c89e6898726a02ae574d48c7b91731d4c84c764eb66e376b823ab3",
+    "backend/multi_agent/facts.py": "415b917e53d321678b75a3633debd4b9bcd55f168e174d97acaa1e8a78c744be",
+    "backend/multi_agent/messages.py": "4f820834de94e7e3343730d2521f63ace3f4887b43654922bed6716fffcbb22a",
+    "backend/multi_agent/state.py": "a1b10003462a6c0223960dfe1b9d5914df3deeb54f1539e2d54fcd8c177e6ce0",
+    "backend/multi_agent/supervisor.py": "11f805d2af8b982fd2c3d559b13d667a36506c3b96b450cf9ad3972b313776d0",
+    "backend/multi_agent/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/rag/card_find.py": "fcf6b80150146d3e65a4e308e035bc9a5fb26a1a365d7b574a08885f06405499",
+    "backend/rag/card_read.py": "fb5e15d4c5e6f16f58187060a57b805a6cb6e1eca083825ac1b675d655401253",
+    "backend/rag/card_specs.py": "d667baca6aad7f5818c0e5864b36e178025705a54b1efb729476444ea3659e4e",
+    "backend/rag/retrieve.py": "8885120310d9e2130bdc3a9a1796d2e1953e9d81d61f954bce2ce602307a1f75",
+    "backend/rag/spec_lookup.py": "c873f3c0dbd2aba507b04836d5a88238c674a86b870196497c1436b78ce2e2f7",
+    "backend/rag/storage.py": "e9b8b4f93ce415510b22c38f2a12a2643c971c26fa60b761d625815b2514734e",
+    "backend/rag/units.py": "f2021bb3049dac45b1abe147492ff194bc2b4eff1aaec55b8e366683f303ac64",
+    "backend/rag/__init__.py": "9b952b95670c302eccc3bb1113c4440776c0887b875b3a89abc914d8dd1a506d",
+    "backend/services/demo.py": "058f403dea6be9cb4a03a893911da85790183278a853a8fb9db34f9d1b57edfb",
+    "backend/services/langfuse_prompts.py": "144779d44e6b0cc17e9afb3d63e6bae2923a4252c90e2229b245e6e235fd8cdc",
+    "backend/services/llm.py": "44a1c9b595c549ca81b98e317a4f878ba36804739b34ed6bd1eb0cce33f823b0",
+    "backend/services/mouser.py": "9a75003108560402338b8b8f0eb76005cd1665cc921dd019773fedfc23a0c326",
+    "backend/services/__init__.py": "c79899f2a1c3929449f679929587e077656930e7c3eb66b9f9d12946454eca40",
+    "backend/mcp_skill/mcp_server/server.py": "cb8a04a9d67d24df0503e0d40eef6d69006cde3d52ef2c7afedc25699807a349",
+    "backend/multi_agent/agents/docs.py": "e3f9dd6a2c3b66479819c4ac895a8d31850bb83916d8b5d6fd15ce12ecdd6960",
+    "backend/multi_agent/agents/judge.py": "839cd9973aad51f2670667fa986114acf4001912b996a7bf66a6dc5ab5fbc602",
+    "backend/multi_agent/agents/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/rag/pipeline/chunk.py": "bad837d5cf80309fd4eaf3250fa99826c0c57d66d60043d0153ee01dc018a35d",
+    "backend/rag/pipeline/collect.py": "0c2b1642f1e3516fbcb32336ae2cee5bf2c4ece87a918ce7607f39120141ba1f",
+    "backend/rag/pipeline/ingest.py": "45b9f04206acea1c2b54dc769b18386aa7f94d7d2bff98d09609cf3cfe79b1ef",
+    "backend/rag/pipeline/parse.py": "37fda639841f3edbb42dee4e0d4ccd9e511a79f84d0a6c8ec51048ffc91fe8ed",
+    "backend/rag/pipeline/specs.py": "27ecce3c15f548ca17e5a13dc8607328e1fc769250ae6a4bda776ecb5d500a73",
+    "backend/rag/pipeline/subset.py": "426b7010999e7a53b7123b1df08c080eb4956f5078f7b38bb50db2f773acaa2e",
+    "backend/rag/pipeline/__init__.py": "cd9b671d765bdc0afeb73ce729c4d159f6feb6b0dfb18e7f81ff728e55b3b042",
+    "backend/web/templates/login.html": "b3f485b7628e709acc15689dfd875a8dc6359c4804f12e72ddf49beec7e6250c",
+    "backend/web/templates/workspace.html": "44bd4480053e689b55b907ca504f04c2350ff43c41db1efc6fe9d51c09b38424"
+  },
+  "limits": [
+    "No full frozen before/after evaluation in final lifecycle pass",
+    "Case delivered to real model; no explicit case selected in that answer",
+    "Metadata spans only; generation/billing completeness not claimed",
+    "Footprint string comparison and None package warning remain judge follow-up",
+    "Lead review, source-of-truth document synchronization and merge pending"
+  ]
+}

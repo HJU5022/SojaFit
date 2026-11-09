@@ -1,5 +1,21 @@
 # 사전 등록
 
+## 2026-11-09 Supabase HTTP 전체 흐름 검증 (실행 전)
+- 실행 결과(14:16 KST): 실제 TCP HTTP/Supabase/OpenRouter로 47/47 통과/25.891초/exit0. WAITING→서버 재시작→12V/0.1A/전압강하 모름 재개→DONE→합성 승인→원본/Store 각1개→B격리→재시작 후 기억 유지→로그아웃401. 예약 $0.289812/입장2회. 최종 NOT_VERIFIED이며 후보 사양값·인용 부재를 긍정 판정으로 바꾸지 않았다. 합성 계정12/13 비활성화·세션폐기·서버종료 성공. 결과는 현재 세션 visualizations/http_supabase_e2e_20261109T051627Z.json. 실제 청구·배포 UI·전체 품질 검증으로 확대하지 않는다.
+- 사용자 요청에 따라 실제 TCP HTTP FastAPI/로그인 세션/팀 Supabase/기존 모델/MCP를 연결한다. 코드·모델·코퍼스·동결 정답은 변경하지 않는다. 합성 A/B 신규 일반계정, breadboard_supply D1의 메모리상 업로드 변형1N4001G-K→후보1N4007G-K를 사용한다.
+- 기대: 로그인200/me 소유자 일치→업로드/Thread 생성→실제 판정(필요시 조건 interrupt 및 재시작 후 재개)→DONE/승인 가능→시험 승인 원본/Store 각1건→중복 방지/재시작 후 유지→B조회·승인404/빈 기억→로그아웃401. 긍정 대체 판정은 합격 조건이 아니며 NOT_VERIFIED는 문서 부족 결과로 기록한다.
+- 상한: 합성 A의 DB 일일 예약 $0.50로 최초질문1회·재개최대1회 누적 제한, 요청별16회·90초·4096토큰. 한도/오류 뒤 증액·유료 재시도 없음. 과거 사례 합성 승인은 기능 시험용이며 실제 설계 승인으로 해석하지 않는다. 종료 시 시험계정 비활성화/세션 폐기, 실행 기록은 유지. 실행기는 현재 세션 visualizations/http_supabase_e2e.py이며 결과는 같은 폴더의 JSON. 실제 청구·Cloud Run·Google OAuth·부하 검증은 제외한다.
+
+## 2026-11-09 사용자 업로드·영속 thread 실제 모델 연결 smoke (실행 전)
+- 바꾸는 것: 기존 공개 회로 파일 경로 입력 대신 같은 넷리스트를 사용자 업로드 API의 연결 데이터로 전달하고, RAM 대신 격리 PostgreSQL 체크포인트를 쓴다. 모델·판정 규칙·동결 정답은 수정하지 않는다.
+- 고정 문항: 동결 v2의 `draft30-e01`(역할), `draft30-e03`(정격), `draft30-m04`(후보 판정), `draft30-e06`(비관련). 표본 4건이며 전체 평가나 성능 향상 근거로 쓰지 않는다.
+- 조건: 기존 D5 + MCP 사실 확인·사양 도구, OpenRouter 노드별 현재 모델, `DEMO_MODE=1`의 BM25 검색(임베딩·리랭커 추가 과금 없음), 출력 최대 1024 토큰. 공유 코퍼스는 읽기만 사용하고 업로드·thread·체크포인트는 로컬 일회용 PostgreSQL에만 쓴다. 조건 interrupt는 답 없음으로 한 번 재개한다.
+- 기대: 문항 실행 완료 4/4, 요청 사용자와 checkpoint user_id 일치 4/4. 답변·거절 5지표는 기존 `run_scores`로 기록하되 점수 개선 기대치는 두지 않는다.
+- 예산·중단: 기존 evaluation_limits로 최대 40회·480초·보수적 예약액 $1.00. 가격은 공개 모델 메타데이터에서 가장 높은 기본 단가(prompt $0.000002/token, completion $0.00001/token)를 모든 모델에 적용해 과소 예약을 피한다. 호출 전 한도 초과 시 중단하고 미완료 문항을 실패로 기록한다. 실제 청구액은 별도로 확인되지 않으면 미확인으로 둔다.
+- 실행 전 이미 본 숫자: 입력 경로 비교 v1/v2 120건 일치, 동결 해시 일치. 실제 모델 smoke 결과는 아직 보지 않음.
+- 명령: `uv run --no-sync --offline python <visualizations>/thread_live_eval.py`. 원시 결과 `evals/results/threads/live_smoke_2026-11-09.json`(본문·비밀값 없이 지표·실패 유형만).
+- 결과: 실행 후 worklog와 원시 결과에 기록한다.
+
 바꾸기 **전에** 적습니다. 결과를 본 뒤에 기준을 정하면 어떤 결과든 성공처럼 보입니다. 한 번에 하나만 바꿉니다.
 
 기대는 **숫자 범위**로 적습니다(예: "0.60~0.75"). "좋아질 것"은 기대가 아닙니다. 기대가 틀려도 불이익은 없고, 틀린 기대를 기록으로 남기는 것이 이 표의 목적입니다(아래 #5에서는 기대 다섯 개 중 네 개가 틀렸습니다). 측정 뒤에 "맞음/틀림" 칸만 채우고 위의 기대 칸은 고치지 않습니다.
@@ -481,6 +497,22 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 계획 비용·중단: 본 실행 모델별 US$0.10 · 0.10 · 0.07 · 0.30 · 0.30 · 0.01(합계 US$0.88), smoke US$0.004 · 0.004 · 0.002 · 0.011 · 0.011 · 0.001(합계 US$0.033), 전체 계획값 US$0.913. 모델별 최대 70 outputs·210 raw calls·7,200초, 호출당 45초, 형식 재시도 최대 2회. 호출 전 가격·첫 문항 예약·ZDR·model/provider를 재확인하고 불일치 또는 반복 provider 실패 시 해당 모델만 멈춘다. Jev의 `--max-usd`는 입력 비용 추정에 따른 다음 job 차단값이며 실제 청구액의 절대 상한이 아니다. 자동 증액·재실행은 하지 않는다.
 - 실행 전 manifest: `2026-11-05-stage3-five-v1/manifest.json` SHA-256 `71501a4334aa111b1835d887952c5f3b43813c3b02b51d80dcfa28cb3bf7e4de`(전체 계획 1,050건 중 3차 대상 350건), `2026-11-05-jev-stage3-v1/manifest.json` SHA-256 `79f0b487fda7e5e57d7de2229e559dc6c4c40ed3ee3e2425355a0d89116ef4b8`(3차 대상 70건). Jev 실행기 `run_supervisor_jev.py`의 LF 정규화 SHA-256은 `291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f`다. Jev manifest에는 이 코드 hash가 없으므로 실행 전 수동 대조한다. manifest 생성은 API 없는 로컬 준비다. 유료 smoke·본 실행 전에 사전 등록을 커밋해 시점을 고정하고 5종 manifest의 실행 코드 hash도 대조한다.
 
+### 2026-11-06 #37: Supervisor Prompt V0 세 후보 상태 라우팅 평가
+
+- 상태: 결과 확인 전 사전 등록. 이 절을 로컬 커밋한 뒤에도 아래 정확한 총비용 상한에 대한 사용자 승인이 없으면 live 호출을 시작하지 않는다.
+- 목적: 확정본이 아닌 Supervisor Prompt V0가 같은 사용자 요청에서도 현재 근거 상태에 따라 `circuit_agent` → `search_agent` → `judge_answer_agent` 또는 `refuse`를 구분하는지 세 후보에서 확인한다. 기존 v2 70문항 1~3차 결과는 다른 prompt·상태 입력·채점 계약이므로 V0 점수로 재사용하지 않는다.
+- 후보·API·provider: Chat Completions `openai/gpt-6-luna`/`Azure`, `anthropic/claude-haiku-5.5`/`Google`; Decisions `typesafe/jev-1.14`/`TypeSafe`. 2026-11-06 공개 catalog에서 세 모델의 ZDR 노출과 단가를 확인했다. smoke 요청부터 provider를 `only`로 고정하고 본 실행은 성공한 smoke의 actual model·provider가 같을 때만 시작한다.
+- 고정 입력: `evals/samples/supervisor_prompt_v0.jsonl` 13건 SHA-256 `70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330`. 같은 요청의 회로 근거 없음/있음, 데이터시트 없음/있음, 승인 사례 없음/있음, 재시도 소진 상태를 포함한다. 모델에는 `user_request`, `current_state`, `external_material`만 보내며 `id`와 `gold`는 보내지 않는다.
+- 고정 계약·코드: 의미 계약 `backend/graph/supervisor.py` SHA-256 `488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c`; Chat prompt SHA-256 `be843de4a12d8b2c75bd47e894027aa6f009a2ee6af4ce2c6d33ac07f03efa4d`; 공통 평가기 SHA-256 `ab81a133926f42b55eed9cddc5d93f999ce67efd175341bbe05b1ed03cb52618`; Chat 실행기 SHA-256 `ffc04a01b47a4dab28201d4eb5277916822266b1e50930ce379afd4b2d31ab4c`; Jev 실행기 SHA-256 `8134c774bfa95d7a5cc1af3e1f2d85bb809ef45d6506c3656320879b0130327e`. 하나라도 다르면 live 전에 중단하고 새 hash를 사전 등록한다.
+- 출력·채점: 공통 네 필드 `question_type`, `required_evidence`, `next_action`, `reason_code`. 전체 13건을 분모로 필드별 정확도, 최종 schema valid, semantic valid, exact decision match를 계산한다. Chat은 첫 응답 schema valid도 계산하고 Jev에는 적용 불가능하므로 `None`으로 둔다. Jev confidence·probability는 별도 metadata이며 Chat 지표로 바꾸지 않는다.
+- 기대(결과 확인 전): 세 모델 모두 13/13 output을 기록하고 semantic valid 12/13 이상, exact decision match 10/13 이상일 것으로 예상한다. 하나라도 미달하면 해당 실패 유형을 V0 수정 후보로 기록하되 이 13건만으로 운영 모델을 자동 선정하지 않는다. latency·usage·비용은 품질 가중 점수에 합치지 않는다.
+- 가격·예산: catalog 단가는 Luna·Haiku 모두 input `$0.0000001`/token, output `$0.0000005`/token, Jev input `$0.000000042`/token, output `$0`. Chat 실행기의 보수 예약 계산상 문항당 최대 `$0.0013906`, 모델별 smoke 3회 최대 약 `$0.00410`, 본 실행 39회 최대 약 `$0.05424`다. 적용 상한은 Chat 모델별 smoke `$0.005` + 본 실행 `$0.060`; Jev smoke 승인 `$0.005` + 본 실행 승인 `$0.010`; 총 명령 상한 `$0.145`다. 자동 증액·실패 문항 재실행은 하지 않는다. Jev 비용은 API가 집행 가능한 usage를 보고하지 않아 승인 기록이며 기술적 USD cap이라고 주장하지 않는다.
+- 호출·시간 상한: Chat 모델별 smoke 최대 3 raw calls·180초, 본 실행 최대 39 raw calls·1,800초. Jev smoke 1 call·180초, 본 실행 13 calls·1,800초. 전체 최악 98 raw calls다. smoke 실패, model/provider/hash 불일치, 비용·시간·호출 상한, Chat provider 오류 3회 연속, Jev provider/model 변경 중 하나가 발생하면 해당 모델을 중단하고 자동 재시작하지 않는다.
+- privacy·보존: OpenRouter ZDR, `data_collection=deny`, fallback 금지, Chat `require_parameters=true`. 원시 prompt·response, 예외 원문, API key는 저장하지 않는다. 결과는 새 `evals/results/supervisor/2026-11-06-prompt-v0-v1/` 아래 Chat plan·rows·smoke, Jev plan·rows·smoke, 공통 summary만 보존한다.
+- 실행 순서: API 없는 plan 두 개 → 세 provider의 1건 smoke → 세 후보의 13건 본 실행 → dataset·contract hash와 13개 case 집합이 모두 같은 경우에만 집계. 결과를 본 뒤 prompt·gold·재시도·상한을 바꾸지 않는다.
+- 명령: `OPENROUTER_API_KEY` 값은 기존 루트 `.env`에서 현재 process에만 주입하고 출력하지 않는다. Chat에는 `--prompt-rate 0.0000001 --completion-rate 0.0000005`, smoke에는 각각 `--provider Azure`, `--provider Google`; Jev smoke에는 `--provider TypeSafe`를 사용한다. 모든 live 명령은 `--confirm-live`를 포함한다.
+- 결과(2026-11-06, 사전 등록 커밋 `50444fc` 이후): 사용자가 총 명령 상한 `$0.145`를 승인했고 exact provider smoke 뒤 세 후보를 각 13건 실행했다. Luna/Azure와 Haiku/Google은 모두 13/13 schema valid·semantic valid·exact decision match였다. Jev/TypeSafe는 schema valid 13/13, question type 12/13, required evidence 11/13, next action 9/13, reason code 12/13, semantic valid 8/13, exact decision match 7/13이었다. Jev 의미 오류 5건은 모두 `next_action`이며, `sv0-01`은 범위 밖 MOSFET 요청을 `candidate_find`로 분류했고 `sv0-02`는 정보 부족 요청에 불필요한 datasheet 근거를 요구해 exact mismatch가 추가됐다. 실제 raw calls는 smoke 포함 42회, provider 보고 usage cost 합계는 `$0.007086424`다. Jev 사용량에 cost 값은 있었지만 실행기가 사전에 강제 가능한 USD cap은 아니므로 기존 한계를 유지한다. 통합 정본은 `evals/results/supervisor/2026-11-06-prompt-v0-v1/summary.json` SHA-256 `a3142005df6421506a9526027ad611770e0de5b7e13042da3e7a1cb7e52d7db4`다. 이 13건만으로 운영 모델을 확정하지 않으며 V0 기준으로 Luna·Haiku는 기대를 충족했고 Jev는 기대에 미달했다.
+
 ### 2026-11-05 #36: 채점기 기준선(지금 2갈래 채점이 정답 쪽을 얼마나 유지하나)
 
 - 번호: 처음 #33으로 적었으나 `main`의 #33(수퍼바이저 6종 3차, 오세창)과 겹쳐 11-05에 #36으로 바꿨다. 커밋 `66769c7` · `e84c674`의 메시지에는 #33으로 남아 있다. 내용은 바꾸지 않았다.
@@ -616,6 +648,66 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 명령(맥, lab 작업 폴더 `.wt/S9`, 가상환경은 lab `.venv`): `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi --out evals/results/graph/step_S9multi_set<n>.json` 두 번 동시.
 - 한계: 맥과 Docker에서 측정이 10개 넘게 동시에 돌아 응답 시간이 #40보다 늘 수 있다. 1회씩 2세트라 흔들림은 범위만 안다.
 - 결과(11-06, session `multi-dataset_v2-1106-0602-openrouter`, lab `.wt/S9/evals/results/graph/step_S9multi_set<n>.json`): 두 세트 70문항 실패 0. cited_gold 22 · 23, over_refusal 7 · 5, wrong_citation 6 · 7, correct_refusal 34 · 33, hallucination_risk 1 · 2, 판정 일치 7 · 9/9, p50 15.7 · 16.9초. 기대 대조: 모든 지표가 기대 안. 비용 Sonnet 3.27 + Haiku 0.12달러(두 세트, 개인 Anthropic) + Luna 0.01달러. 단일(S9)과 지표 차이는 흔들림 안이다.
+
+### 2026-11-09 사용자 승인 기억 답변 연결 소규모 검증 (실행 전)
+- 목적/변경: 기존 화면 반환용 사례를 새 질문 실행 전 서버 선별로 바꾸고 모델 입력에 전달한다. 같은 SS34를 승인한 합성 A/B의 새 thread에서 각자의 설계명과 당시 조건만 회상하는지 확인한다. 정확도 개선 수치를 주장하는 평가가 아니라 기능 smoke다.
+- 기대: 자기 설계명 포함 2/2, 다른 사용자 설계명 포함 0/2. 현재 적합성은 과거 승인으로 단정하지 않는다. 동결 v1/v2 파일은 사용·수정하지 않는다.
+- 조건: 실제 PostgresStore/PostgresSaver와 서비스 Conversations, 실제 generate 모델(기존 node_model 설정). Supervisor의 writer→finish 경로만 고정해 유료 모델 호출은 generate 2회로 제한한다. 합성 회로/승인만 전송하며 팀 문서/사용자 자료는 전송하지 않는다.
+- 예산/중단: evaluation_limits(max_calls=2,max_usd=0.25,max_seconds=100,max_tokens=512), 보수적 예약 단가 입력 0.000005/출력 0.000025 USD/token (실제 가격 주장 아님). 상한/호출 오류 시 중단, 모델 추가 재시도도 2회 상한 안. 전체 평가셋 재측정은 범위 밖.
+- 명령: uv run --no-sync --offline python <세션 산출물>/approved_memory_smoke.py. 결과는 같은 폴더 JSON에 합성 응답/버전/해시/시간/예약액으로 기록한다.
+
+### 2026-11-09 승인 기억 smoke 출력 상한 보정 (추가 호출 전)
+- 관찰: 최초와 진단 호출 모두 성공 응답 없이 중단. 진단 예외 체인은 LengthFinishReasonError로, 출력 512 토큰 상한 초과였다. 두 번의 보수적 예약 합계는 0.14624달러이며 실제 청구액은 이 경로에서 수집하지 못했다.
+- 한 번에 바꾸는 변수: max_tokens 512→2048만 변경. A 한 건을 이전 동일 질의/그래프/모델/합성 A/B 기억에서 확인한다. 기대는 자기 설계명 포함/타 사용자 설계명 미포함이다.
+- 별도 추가 단계 예산: 최대 1회/0.12달러/60초, 오류 또는 초과 시 종료. 최초 단계와 합산 최대 3회/예약상한 0.37달러. 모델/프롬프트/저장 구현은 바꾸지 않는다.
+- 결과: 최초 512토큰 두 시도는 LengthFinishReasonError로 답변 미확인. 출력 상한 보정 후 A 1건은 자기 설계명 APRICOT_729와 당시 12V를 실제 모델이 사례 출처와 함께 회상했고 B의 COBALT_481은 미포함이었다. 두 사용자 모두의 실제 모델 성공 2/2라는 최초 기대는 검증하지 못했다. A/B 양방향 격리는 별도 가짜 모델 DB 통합 테스트로 확인했다. 총 3회 보수적 예약액 0.25776달러, 실제 청구액 미수집. 전체 평가셋 성능 향상을 뜻하지 않는다.
+
+### 2026-11-09 Cloud Run 0% 시험 revision 기능 smoke (실행 전)
+- 대상: sojafit-api-00018-tus, thread-memory-test tag. HEAD 9abcb1d + 운영 보완 미커밋 변경, 별도 trial-build-manifest.json으로 배포 backend 해시 보존. 동결 평가셋·코퍼스를 수정하지 않는다. 운영 트래픽 승격 없음.
+- 조건: 팀 DB의 전용 합성 일반 계정 A/B 각각 업로드·서로 다른 SS34 승인 fixture를 준비하고, 배포 API에서 각자의 새 thread 실행을 최대 1회씩 한다. fixture는 합성 과거 기록이며 실제 적합성 승인이 아니다. 비밀번호는 메모리에서만 생성하고 종료 시 시험 행·checkpoint·Store·세션을 정리한다.
+- 기대: 로그인/업로드/소유권 404, 같은 품번의 자기 사례만 모델 입력과 consulted_memories에 제공, B의 A thread 접근 실패. 본문에 승인사례 ID가 현재 사양 근거로 나오지 않아야 한다. 실제 답변 회상 성공 여부는 별도 관찰하며 정확도 개선 수치를 주장하지 않는다.
+- 예산/중단: 사용자당 UTC 하루 예약 $3, 요청당 $0.50/16회/90초/4096토큰. HTTP 실행 최대 2회, 예약합계 최대 $1.00(실제 청구액 아님). 오류·초과 시 그 요청을 다시 보내지 않고 진단한다. 빌드1회/900초 제한은 별도 worklog 참조.
+- 명령: `uv run --no-sync --offline python <세션 산출물>/cloud_trial_smoke.py`; 결과는 합성 응답·상태·예약액·시간만 JSON에 기록한다. 쿠키/비밀번호/DB URL을 기록하지 않는다. 전체 품질 평가·부하·백업 복원은 범위 밖.
+- 최초 결과: 로그인·업로드·승인 복구·목록·A/B 소유권/모델 입력 격리는 통과했다. 실제 모델 2건은 과거 기록만 묻는 질문을 범위 밖으로 거절해 설계명 회상은 0/2다. 예약액은 $0.139050/$0.139056, 실제 청구액은 수집하지 않았다. 합성 사용자·thread·Store·checkpoint는 정리했다.
+- 추가 1회 실행 전: 코드/모델/fixture를 유지하고 질문만 서비스 범위인 현재 회로 역할+과거 사례 구분 요청으로 바꾼다. A 1회만, 추가 예약 최대$0.50/90초/16회. 최초와 누적 최대 HTTP3회/예약상한$1.50. 목표는 현재 근거와 별도 기억 참조를 동시에 확인하는 기능 smoke이며, 거절/오류 뒤 추가 호출은 하지 않는다.
+- 추가 결과: HTTP200/5.781초, 예약 $0.247407. 답변은 D1의 1번 핀이 VCC에 연결됐음을 [넷리스트]로 설명하고 반대쪽 연결이 없어 역할을 단정하지 않았다. 자기 승인 원본만 consulted_memories에 제공됐고 모델이 선택한 referenced_memories 1건이 별도 반환됐다. 본문에 설계명을 회상하지 않았으며 현재 사양 근거로 승인 ID를 쓰지 않았다. 세 실행 예약 합계 $0.525513, 실제 청구액 미수집. 전체 평가가 아닌 합성 기능 검증이다.
+
+### 2026-11-09 미검증 항목의 실행 준비 (유료 실행 전, 아직 미실행)
+- 계약: docs/experiments/thread-memory-operations.md. 운영 준비용 실행기는 기본 dry-run이며 동결 v2에서 명시한1~4건만 받는다. 유료 기본 표본은 draft30-e01 1건, 기존 모델/코퍼스/하이브리드/멀티 경로 유지. 성공 기대는 규칙 채점 통과·실행 오류0·PDF 수동 의미 대조 일치다. 기억 질문의 범위 밖 제한과 데이터시트 의미 정확도는 별도 기록한다.
+- 상한: 전체 선택 문항 합계 예약$0.50/16회/90초/4096토큰, 입력단가0.000003/출력0.000015 USD/token. Voyage도 호출별 예약·시간 제한 적용. 상한·오류에서 자동 증액/재시도하지 않는다. 명령은 작업서의 run_thread_validation --execute이며 지금은 준비만 했다.
+- 보고: 공급자 응답 ID별 토큰/보고 비용을 usage.json에 남긴다. 누락은 null/미확인이고 실제 청구 확인은 Activity 대조가 필요하다. 실패 응답·Voyage·인프라 비용을 누락해 실제 비용0이라고 주장하지 않는다. 전체70건·원격12요청 이하 부하·운영 복원은 별도 대상/예산/키 잔액 확인 뒤 실행한다.
+
+### 2026-11-09 draft30-e01 실제 실행 결과 ($0.50 한도)
+- 사용자 실행 승인 뒤 사전 조건 그대로 1회 실행. results/graph/thread_validation_2026-11-09.json 및 .usage.json. Git 9abcb1d+dirty, 동결v2 sha256 81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9. 프롬프트 해시는 결과 meta에 보존. Supervisor Sonnet5.5, 문서 Haiku5.5. 1건/오류0/5.9초/LLM2회/검색0회.
+- 자동: role 라우팅 일치, cited_gold1, fake_citations0, uncited_sentences0. 역할 문항이라 실제로는 데이터시트 검색 없이 넷리스트로 답했다. 설정상 hybrid라는 사실을 검색 품질 검증으로 해석하지 않는다.
+- 수동 의미 대조: 원본 circuit.net의 D1.C–F1.P$1(419~420행), D1.A–S1.3(437~438행), F1.P$2–RAW–U1.IN(439~442행)이 답변과 일치했다. 그러나 역극성 보호라는 목적과 역접속 때 전류 제한 원리를 명시하지 않았고 J1 단독 공급 한계도 답변에 재명시하지 않았다. 연결 사실은 일치하나 '왜 필요한가' 설명 완결성은 부분 충족으로 평가한다. 동결 expected/채점 규칙은 수정하지 않았다.
+- 비용: 예약$0.244257<$0.50, 공급자 보고 비용 Sonnet$0.0196465+Haiku$0.000441825=$0.020088325. 응답ID2/누락0/실행기exit0. Activity/최종 청구 내역은 미대조다. 추가 모델 호출·유료 재시도 없음. 기억 활용·정격 판정·전체70건·운영 성능의 성공으로 확대하지 않는다.
+
+### 2026-11-09 실제 후보 판정→조건 재개→승인 기억 (운영 DB, 실행 전)
+- 사용자 요청: 전체 흐름을 실제 모델로 검증하고 이번 전체 예약 예산을 $0.50로 제한. 후속 운영 DB 선호를 반영해 팀 SojaFit DB에 새 합성 일반 계정2개와 자기 회로/thread만 만든다. 기존 계정·데이터·스키마·배포·트래픽은 바꾸지 않는다. 시험 행은 확인용으로 남기고 끝에 해당 계정만 비활성화한다.
+- 조건: 공개 breadboard_supply 회로의 D1(1N4001)→후보1N4007, J1 단독 전원. 처음 최대 입력·부하전류를 생략하고 질문된 항목에만 합성12V/0.1A를 답한다(역할 선택 필요시 제시된 R01만 선택). 기존 모델/사양 표/MCP/Conversations/PostgresSaver/PostgresStore 사용, 숫자 비교는 기존 judge만 수행한다. 별도 HTTP 부하·운영 UI 시험은 아니다.
+- 기대: WAITING/조건질문→런타임 닫고 재연결→같은 version/thread 재개→DONE/기존 코드 판정·근거→사용자 요청에 따른 시험 사례 승인→승인 원본/조건/Store namespace/key 일치→중복 승인1건/다른 합성 사용자404·빈 기억. 긍정 판정을 강제하지 않고 불확실/불충족도 원문대로 기록한다.
+- 예산: message/resume의 _budget 입장·일일 DB 예약은 원래 코드로 수행하고 반환 예산 객체만 시험 프로세스에서 공유해 전체$0.50/16회/90초/4096토큰으로 제한한다. 새 요청마다 예산을 리셋하지 않는다. 실제 node_chat만 호출하고 읽기 노드 재호출 여부와 공급자 보고 비용/ID를 기록한다. 상한/오류 뒤 유료 재실행·증액 없음. 실제 청구액은 공급자 보고와 구분한다.
+- 명령: `uv run --env-file .env --no-sync --offline python <세션 산출물>/candidate_ops_e2e.py`. 원시 응답·검사 결과는 해당 세션 산출물에 저장하고 비밀번호·세션·접속 문자열은 출력/저장하지 않는다. 계정 비활성화 실패는 별도 보고한다.
+- 최초 결과/진단: 기본품번1N4001/1N4007 코퍼스 없음으로 첫 Supervisor에서 거절, WAITING 아님/승인불가. 예약$0.13896/공급자 보고$0.0190525, 추가 읽기 호출 없음. 생성 계정10/11은 비활성화했다. 읽기 SQL에서 문서1360/청크51967/part_specifications0 확인. 실제 코퍼스 표지는 1N4001G-K~1N4007G-K를 제공한다.
+- 수정 사례 실행 전: 판정에 필요한 데이터 공백을 기록하고 합성 업로드 D1 값만1N4001G-K로 명시해 후보1N4007G-K를 요청한다. 첫 실행 비용을 포함한 남은 예약$0.36104/최대15회/추가90초만 허용(첫 실행과 누적예약$0.50). 시간은 진단 후 수정 실행에 새로 주며 비용은 리셋하지 않는다. 기존 비활성 합성계정10/11 기록만 재사용한다. 사양 표를 생성/적재하지 않으며 긍정판정은 기대하지 않는다. 조건 보충 후 근거 부족 결과가 나오면 그 사실을 명시한 시험 사례로만 승인해 원본/Store/격리를 확인한다. 다시 오류/상한이면 유료 실행을 끝낸다.
+- 수정 사례 결과: 검사 18개 모두 통과. WAITING(v_in_max/i_max/v_drop_allowed)→12V/0.1A/모름 보충→연결 재생성 후 같은 thread/version1 DONE→NOT_VERIFIED→시험 승인/Store 1건. judge_read는 1번만 호출되고 재개 때 재호출되지 않았다. 결과의 기준은 기존 judge 계산으로 VRRM 15V/IF_AV 0.142857A, 후보 값·인용은 사양 표 부재로 미확인이다. 원문 조건·재개 답변·실제 SI 값이 승인 snapshot에 보존됐고 중복 승인 1건·B의 빈 기억/조회404/승인404를 확인했다.
+- 총 비용: 최초 예약$0.138960+수정예약$0.290787=$0.429747<$0.50. 공급자 보고 LLM비용$0.0190525+$0.02188555=$0.04093805, 응답3회. 수정 흐름17.094초. 최종 청구대조 없음. 운영 DB 사양 표 적재·출처 정합성 검증 뒤에야 후보의 실제 충족 판정을 재검증할 수 있다. 추가 유료 호출 없이 종료.
+
+### 2026-11-09 사양 출처 검증·대상 문서 적재 후 동일 후보 재시험 (실행 전)
+- 사용자 요청에 따라 대상 B2104 문서1건의 현재 청크로 기존 결정적 specs.build/load를 수행한다. 숫자56+패키지14행, 범위가 모호한1건은 제외. PDF해시·쪽·행·숫자·조건을 대조했으며 적재 후 사양의 document_id/chunk_index JOIN을 검증한다. 원문/코퍼스/평가셋·판정코드·프롬프트는 바꾸지 않는다.
+- 비교: 직전 동일 합성 회로/원래1N4001G-K/후보1N4007G-K, J1단독, 누락조건 질문 후12V/0.1A/전압강하모름, runtime재연결, 시험승인/Store/격리. 실험 변수는 대상 문서의 사양 표 적재 여부 하나다. 기존 NOT_VERIFIED 승인 원본을 덮어쓰지 않고 같은 circuit의 새 thread를 사용한다.
+- 이번 회차 예산$0.50/16회/90초/4096토큰(이전 $0.429747과 별도), message/resume는 같은 예산객체 공유. 기대는 사양 값·인용이 실제로 채워지고 판정은 기존 judge가 결정하며 조건/원본/Store 일치와 B격리를 유지하는 것이다. 성공 판정을 강제하지 않는다. 상한/오류 뒤 추가 유료 요청 없이 중단. 명령은 세션의 load_candidate_specs.py 후 candidate_ops_loaded.py. 공급자 보고 비용과 실제 청구 대조를 구분한다.
+- 결과: 운영 대상1문서·7품번·70행(숫자56/패키지14) 적재 성공. 모든 source JOIN/쪽 일치, broken_chunk_links0/page_mismatches0, 다른 문서 사양행0 유지. 공식 PDF 해시와 실제 page1~2 시각 대조 완료. 모호한 계열 요약 범위1건은 적재에서 제외했다.
+- 실제 재시험: 새 합성 사용자14/15(기억 없음), 같은 회로 연결·원래1N4001G-K·후보1N4007G-K/12V/0.1A/전압강하모름. 서비스 검사19개 통과, runtime 재연결 후 동일version1 DONE, judge_read1회 유지, 필수 두 조건의 값/인용 반환. 현행 judge 판정 SPEC_EQUIVALENT, VRRM기준15V/후보1000V 및 IF_AV기준0.142857A/후보1A 모두pass. 근거 B2104 PDF1쪽/청크15·17의 원문 행과 일치했다. 시험승인·Store1건·중복방지·B빈기억/404, 이전 NOT_VERIFIED 승인 원본 불변 확인.
+- 시간/비용:17.484초/LLM2회/예약$0.290793/공급자보고$0.02185325, 최종청구대조없음. 사용자14/15 비활성화·시험기록보존. 1문서만 적재했고 전체코퍼스는 미완료다. 허용전압강하·사용온도·발열은 미확인이다.
+- 새 관찰: 출력의 board_change=true는 기존 verdict.board_change가 import_input:DIODE-0.4와 DO204AL/DO41의 이름 포함만 비교해 생겼다. 실제 패드·치수 불일치를 확인한 결과가 아니므로 해당 기판수정 문구의 정확성은 미확인으로 보고한다. 기존 shortcut의 한계를 이번 사례에서 확인했으며 판정코드/원본 승인 결과를 이번 데이터적재 작업에서 수정하지 않았다.
+
+## 2026-11-09 앱 사례 기억 운영 재검증
+- 가설: 기억 관리·내용 없는 관측 추가 후에도 실제 후보 판정의 조건 보충/승인과 같은 사용자의 새 thread 기억 참조가 유지된다. 다른 사용자 기억은 제공하지 않는다.
+- 방법: 시험 URL, 기존 G-K 변형 회로1건, 12V/0.1A/전압강하모름, 실제 모델 실행 최대2회, 합산 예약$0.50. 출력 상한2048의 시험 설정임을 별도 표시한다.
+- 지표: A/B HTTP 소유권, missing 조건 후 같은 버전 재개, 승인 원본/Store 일치, 새 thread의 활성 사례 연결 및 유효 memory_refs, 처리 사건/실제 Langfuse 수신 연결. 전체 정확도 개선을 주장하지 않는다.
+- 중단: 예약 예산/호출/시간 상한이나 HTTP 실패 발생 시 유료 재실행 없이 기록한다. 동결 평가셋/원래 코퍼스는 수정하지 않는다.
 
 ### 2026-11-09 #43: 카드 값 읽기를 코드 먼저, LLM은 코드가 못 읽은 카드만 (v3 50문항, 이 변경 전 코드와 비교)
 

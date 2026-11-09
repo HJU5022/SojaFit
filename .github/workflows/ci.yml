@@ -25,6 +25,7 @@ jobs:
     env:
       # 이 변수가 없으면 인증 DB 테스트는 건너뛴다. 포트 5432는 위 services의 연결이다(scripts/의 실측 스크립트는 로컬 55434 전용).
       TEST_AUTH_DATABASE_URL: postgresql://ci_auth:ci_auth_only@127.0.0.1:5432/ci_auth
+      TEST_THREAD_DATABASE_URL: postgresql://ci_auth:ci_auth_only@127.0.0.1:5432/ci_auth
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v10.3.3
@@ -32,7 +33,12 @@ jobs:
           version: "0.12.9"
       # --locked: uv.lock이 pyproject.toml과 어긋나면 실패해 잠금 파일 누락을 PR에서 잡는다.
       - run: uv sync --locked
-      # 인증 테이블만 순서대로 적용한다(003 테이블, 005 실패 구간, 006 역할). utf-8-sig는 SQL 파일 맨 앞 BOM을 제거한다.
+      # 인증 테이블만 순서대로 적용한다(003 테이블, 005 실패 구간, 006 역할, 021 IP 가입·로그인 실패 한도). utf-8-sig는 SQL 파일 맨 앞 BOM을 제거한다.
       - name: Initialize authentication test database
-        run: uv run python -c "import os, psycopg; from pathlib import Path; c=psycopg.connect(os.environ['TEST_AUTH_DATABASE_URL']); [c.execute(Path(f'db/{name}').read_text(encoding='utf-8-sig')) for name in ('003_auth.sql','005_auth_attempt_window.sql','006_user_roles.sql')]; c.commit(); c.close()"
-      - run: uv run pytest -q
+        run: uv run python -c "import os, psycopg; from pathlib import Path; c=psycopg.connect(os.environ['TEST_AUTH_DATABASE_URL']); [c.execute(Path(f'db/{name}').read_text(encoding='utf-8-sig')) for name in ('003_auth.sql','005_auth_attempt_window.sql','006_user_roles.sql','021_auth_ip_limits.sql')]; c.commit(); c.close()"
+      - run: uv run pytest -q --junitxml=test-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml

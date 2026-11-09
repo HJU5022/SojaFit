@@ -1,6 +1,145 @@
 # 오세창 작업 기록
 
+## 2026-11-09 PR #73 선반영 통합
+
+- 목적: PR #73이 `main`에 먼저 병합된 상태를 가정하고, OSC의 React/D5 작업대와 #73의 사용자별 회로·thread·승인 기억·합성 데모 경로를 함께 유지한다. 원격 push·PR 생성·배포는 하지 않는다.
+- 통합: 기존 프론트 변경을 `84e69fa`로 보존한 뒤 최신 `origin/main`을 `320538e`로 병합했다. 이어서 PR #73 head를 통합해 `/workspace`·`/api/circuits|threads|memories`와 React SPA·`/api/projects|runs|quotes`를 함께 등록하고 SPA는 모든 API 뒤에 mount했다. 겹치던 `GET /api/threads/{id}`는 #73 경로를 단일 소유자로 유지했다.
+- 구조 충돌 수정: #73의 `backend/conversations.py`가 기존 `backend/conversations/` 패키지에 가려지는 문제를 `backend/conversations/memory_service.py`로 이동해 해결하고 main·Compose setup CLI·테스트·트리 문서를 함께 바꿨다. `tests/graph/test_netlist.py`와 기존 `tests/projects/test_netlist.py`의 pytest 모듈명 충돌은 전자를 `test_agent_netlist.py`로 바꿔 해결했다.
+- DB·문서: 양쪽 초기화 SQL은 실제 파일명 정렬 순서대로 문서화했다. 루트 `SPEC.md`와 v4h RAG 정본은 최신 main 내용을 유지하고 OSC 구현 설명은 하위 작업서와 이 기록에 남겼다.
+- 검증: API·SPA·thread 집중 검사는 `88 passed, 33 skipped`, 프론트는 `16 files / 87 tests passed`, production build 성공, 전체 backend는 `1074 passed, 113 skipped in 26.32s`였다. FastAPI method/path 중복 검사 결과는 `[]`였다.
+- 추가 검증: `uv lock --check`, `docker compose config --quiet`, 전체 diff whitespace와 FastAPI method/path 중복 0건을 확인했다. 일반 로컬 clone을 Docker gitleaks로 검사해 `414 commits scanned`, `no leaks found`였다. 현재 main 및 PR #73 선병합 가상 main과의 `git merge-tree --write-tree --quiet`는 모두 exit 0이었다.
+- 확인 못 한 것: 건너뛴 PostgreSQL·외부 모델·공유 DB·실제 배포와 Langfuse 전송은 확인하지 않았다.
+- 다음 할 일: 최종 diff와 Git 상태를 확인한 뒤, 사용자 승인 시에만 push·PR 생성을 진행한다.
+
+## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
+
+- 목적: 최신 main의 v4h 청킹·Voyage 검색 구현과 과거 v1 측정, 저장소 밖 lab 실행을 문서에서 서로 다른 근거로 구분하고 PR #71의 구현 현황 문서에 함께 반영한다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/EVALS.md`, `data/DATA.md`, `SPEC.md`, `backend/mcp_skill/MCP_SKILL.md`, `docs/experiments/embedding-voyage-candidates.md`, `docs/experiments/corpus-storage-budget.md`, `docs/research/embedding-candidate-investigation.md`, `docs/research/model-licenses.md`, 이 파일.
+- 바꾼 내용: 평가 보고서 상단을 현재 코드 계약과 2026-11-01 측정 스냅샷으로 나누고, 임베딩 선택 완료 상태와 v1 manifest provenance를 명시했다. SPEC의 v3 50문항 수치는 저장소 밖 lab 결정 근거이며 공식 G5 결과가 아니라고 표시하고, 과거 STH 브랜치 안내를 현재 MCP 의존성·시험 경계로 바꿨다.
+- 작업 경계: 동결 평가셋과 원시 결과는 수정하지 않았고 API 호출·DB 적재·배포는 하지 않았다.
+- 검증: `uv lock --check`, `docker compose config --quiet`, `git diff --check`, 충돌 표식 검색을 통과했다. `PYTHONUTF8=1 uv run --frozen pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다.
+
+## 2026-11-09 회로 프로젝트와 대상 선택 (Task 6)
+
+- 범위: 승인된 `docs/specs/d5-frontend-service.md` AC-02/03/09의 프로젝트 화면만 기존 owner API에 연결했다. 프로젝트/대상 참조 선택에서 끝내며 D5 실행·대화·승인·견적·후보 가격 공급·React KiCad 파싱은 추가하지 않는다. 원격 쓰기·실제 서비스 호출은 없다.
+- TDD RED: 신규 API 경계·실제 Workbench 상호작용 시험을 먼저 작성한 후 집중 5개 파일 실행에서 `16 failed, 3 passed in 5.76s`. 새 프로젝트 UI가 없어 label/선택/오류를 찾지 못했고, 기존 공통 fetch는 DELETE의 204 빈 본문을 JSON 파싱해 실패했다. 최소 구현 후 집중 `19 passed in 2.06s`.
+- 중간 확인: 데모 option이 로드되기 전에 disabled select를 바꾸던 시험을 실제 option 대기로 보정했다. jsdom의 합성 FileList를 native validity가 보지 못해 업로드 시험은 실제 form submit 이벤트를 명시한다. required/파일 guard는 production에 유지한다. 오래된 삭제 callback의 Router query updater가 이전 params를 참조하는 문제는 현재 query signature를 사용해 해결했다.
+- 추가 RED/GREEN: logout 직후 소유 Query 캐시가 다음 세션에 남지 않아야 한다는 StrictMode 시험이 `1 failed, 5 passed in 1.78s`. gcTime=0의 다음 timer를 기다리지 않고 Workbench 이탈 시 프로젝트·데모 쿼리를 즉시 remove/cancel한다. 보완 후 App/Workbench 집중 `11 passed in 1.76s`.
+- API/상태: `['projects']`, `['project', id]`, `['demo-circuits']`를 사용하고 생성·이름 변경·삭제 후 해당 목록/상세를 invalidate한다. 삭제는 확인/취소 후 owner DELETE 204이며 해당 상세 쿼리를 취소·제거한다. `projectId`와 `targetRef`만 URL query에 두고, 서버 connections의 데모 components 또는 업로드 parts와 nets에서 요약/참조를 표시한다. 파일은 React state/Query mutation cache에 보관하지 않으며 업로드 성공/실패 finally에서 input을 비운다.
+- 경합/경계: 이전 상세·생성·삭제 응답이 새 프로젝트 선택을 덮지 않는 시험, 대상 선택·전환 시 초기화, 없는/타 사용자 404·400/413 request ID 표시, rename/list/detail 갱신, 명시적 delete 취소·확인, 브라우저 비저장, 기존 auth/admin/price 회귀를 포함한다.
+- 바꾼 파일: frontend/src/api/projects.ts·client.ts(+시험), ProjectSidebar/CircuitSetup/CircuitSummary(+각 시험), WorkbenchPage(+시험), styles.css, test/projects.tsx, 기존 App/Login/Admin 시험의 QueryClient wrapper·현재 DTO 대역, frontend 폴더 문서, SOJAFIT 신규 파일 8줄, 이 기록. backend·의존성·동결 평가셋은 수정하지 않았다.
+- 최종 확인: `npm run test:run` → `10 files, 40 passed in 2.64s`; `npm run build` → TypeScript/Vite 성공(82 modules, 142ms). `PYTHONUTF8=1 uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.35s`; diff whitespace 통과. 신규 코드의 localStorage/sessionStorage/IndexedDB/persist/FileReader/readAs/파일 text 호출이 없음을 대조했다. 빌드 dist/node_modules/tsbuildinfo와 작업 report는 무시 경로이며 커밋하지 않는다.
+- 미검증/검토: live API·실제 DB·브라우저 E2E/시각 확인·배포·RAG 평가셋 재측정은 범위 밖이다. backend DTO/라우터/기존 API 시험 소스의 계약이 명확해 backend API 시험은 다시 실행하지 않았다. SPEC 정본은 OSC 소유 규칙대로 직접 바꾸지 않았으며 승인 spec AC-02/03/09의 화면 반영을 조장에게 요청한다. 권장 400줄을 넘는 UI/회귀 변경은 단일 프로젝트 선택 기능과 비동기/소유권 경계를 함께 검토하도록 요청된 한 커밋으로 유지한다. 최종 staged 20개 파일은 이 범위뿐이며 Docker gitleaks stdin(`--redact --no-banner --log-level warn`) 스캔에서 비밀값 0건, staged whitespace 통과를 확인했다. 요청된 `feat(web): 회로 프로젝트와 대상 선택`으로 로컬 커밋한다.
+
+### Task 6 Fix Round 1
+
+- 범위: 프로젝트 create/upload/rename/delete의 늦은 401이 재로그인한 세션을 종료하는 Important만 수정한다. backend·auth 정책·영속 저장은 바꾸지 않는다.
+- RED: production 수정 전 `npm run test:run -- src/App.test.tsx src/components/ProjectSidebar.test.tsx --reporter=dot` → `2 files failed; 10 failed, 10 passed in 2.36s`. 실제 StrictMode App/AuthProvider/Workbench의 logout→relogin→old 401 네 종류 모두 새 세션이 로그인 화면으로 바뀌었고, unmount/switch 후 성공 응답 여섯 종류는 불필요한 GET이 1회 추가됐다.
+- 변경: projects API mutation 4종에 signal 전달, CircuitSetup/ProjectActions effect별 AbortController·unmount abort·각 await 뒤 guard. 종료한 컴포넌트의 invalidate/selection/error/busy 업데이트를 막고 업로드 input finally reset은 유지한다. 정상 delete는 상세 cancel/remove·목록 invalidate 이후 선택을 지워 자체 unmount 전에 필요한 처리를 마친다.
+- 회귀: create/upload/rename/delete 모두 새 세션·새 프로젝트·D2 선택 유지와 읽기 요청 수 불변/abort를 확인한다. 같은 QueryClient에 다시 연 작업대의 이전 성공 응답과 rename/delete editor 전환도 검증한다. test/projects 렌더러는 QueryClient 재사용을 허용하도록 보정했다.
+- GREEN: focused project/workbench/AuthProvider 6개 파일 `33 passed in 2.76s`; 전체 `npm run test:run` → `10 files, 50 passed in 3.07s`; `npm run build` → TypeScript/Vite 성공(82 modules, 144ms). whitespace 검사를 통과했다. 실제 서비스/DB/browser E2E는 실행하지 않았다. 브라우저 abort가 이미 전달된 서버 mutation의 rollback을 보장하지는 않는다.
+- 변경 파일: frontend/src/api/projects.ts, CircuitSetup.tsx, ProjectSidebar.tsx, App.test.tsx, ProjectSidebar.test.tsx, test/projects.tsx 및 이 기록. report의 Fix Round 1에 정확한 RED/GREEN 명령·출력을 남긴다. 신규 파일·의존성·backend·정본 문서 변경은 없다. staged 7개 파일의 whitespace 통과, Docker gitleaks stdin redacted 스캔 exit 0(비밀값 0건), 생성물 미포함을 확인했다. 별도의 fix(web) 로컬 커밋으로 남긴다.
+
+### Task 6 Fix Round 2
+
+- 범위: 프로젝트 전환 때 CircuitSetup이 유지되어 create/upload의 늦은 성공이 목록을 invalidate하는 지적만 수정한다.
+- RED: production 전에 demo/upload deferred 전환 시험 2건 추가. `npm run test:run -- src/components/CircuitSetup.test.tsx src/pages/WorkbenchPage.test.tsx src/App.test.tsx --reporter=dot` → `1 file failed, 2 passed; 2 failed, 23 passed in 2.69s`. 다른 프로젝트/D2를 선택한 뒤 이전 성공 응답이 추가 `/api/projects` GET을 일으켜 실패했다.
+- 변경: 기존 선택 세대를 CircuitSetup의 React key로 연결하는 1줄과 주석. 선택 세대 전환 시 기존 component cleanup이 mutation을 abort하고 이전 guard가 늦은 응답·invalidate·auto-selection을 무시한다. 새 폼은 빈 사용 가능 상태로 시작하며 오래된 upload finally는 이전 input만 비운다. 정상 생성 auto-selection은 유지한다.
+- GREEN: 프로젝트 전환 직후(target 변경 전) abort도 별도로 확인한 최종 focused 3개 파일 `25 passed in 2.40s`; 전체 `npm run test:run` → `10 files, 52 passed in 3.04s`; build → TypeScript/Vite 성공(82 modules, 123ms). 기존 성공/400/413 input reset과 auth/admin/price/재로그인 경합 회귀도 유지된다.
+- 파일/한계: WorkbenchPage.tsx, CircuitSetup.test.tsx와 이 기록. backend·API·영속 저장·신규 파일·의존성 변경 없음. 실제 서비스/DB/browser E2E는 미실행이고 브라우저 abort는 이미 전달된 서버 변경의 rollback을 보장하지 않는다. 최종 staged whitespace/비밀값/생성물을 점검한 뒤 별도 fix(web) 커밋을 남긴다.
+
+## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
+
+- Fix Round 1: StrictMode의 이전 복원 401이 새 로그인을 해제하는 순서와, 관리자 PATCH 대기 중 로그아웃/경로 이동 후 후속 목록 GET이 실행되는 순서를 deferred-response 테스트로 먼저 재현했다. focused RED는 `3 failed, 5 passed`; effect별 AbortController·API signal 전달·응답/JSON 파싱 뒤 abort 검사·관리자 후속 GET/상태 변경 guard로 수정 후 `8 passed`. 전체 프런트 `24 passed in 2.01s`, build(TypeScript+Vite 78 modules), `git diff --check` 통과. non-JSON 오류 본문 Minor는 요청대로 최종 검토에 보류했다. backend·화면 범위·저장 경계는 변경하지 않았다.
+- 한 일: 기존 API만 연결했다. HttpOnly 세션을 `/api/auth/me`로 복원하고 로그인 성공 후 me에서 role을 확인한다. 보호 경로와 역할별 관리자 탐색, 마스킹된 계정 목록·활성 상태 변경, 설정된 Google 링크·기존 callback 실패 안내, 로그아웃을 연결했다. API 401은 메모리 인증 상태를 비우고 로그인으로 보낸다.
+- 가격 경계: 후보 품번을 받는 PricePanel은 열 때만 no-store 조회하며 React component memory에만 결과를 둔다. 닫기·품번 변경·화면 이탈 시 결과와 요청을 버린다. 같은 패널을 다시 열어도 새로 조회한다. 기존 Mouser nullable 응답을 표시하되 가격을 만들거나 숫자 비교를 하지 않는다. 작업대에는 아직 후보 공급 기능이 없어 빈 상태만 둔다.
+- 바꾼 파일: `frontend/src/api/`·`auth/`·`pages/`·`components/` 신규 소스/동작 테스트, `test/network.ts`, `App.tsx`·`App.test.tsx`·`styles.css`·`SRC.md`, 신규 파일만 적은 `SOJAFIT.md` 트리, 이 기록. 서버 계약·백엔드 소스·동결 평가셋은 변경하지 않았다.
+- RED: 최초 `npm run test:run`은 `7 files failed; 9 failed, 1 passed`와 아직 없는 모듈 import 4 suite 실패. 세션 만료·nullable 회귀는 `2 failed, 6 passed`, no-store 경계는 `1 failed, 2 passed`, 기존 Google callback 실패 안내는 `1 failed, 2 passed`를 관측하고 각각 최소 수정했다. 네트워크 fetch만 대체하고 실제 페이지·Provider·Router·PricePanel을 실행한다.
+- 실행한 명령과 실제 결과: 최종 `npm run test:run` → `7 files, 21 passed in 1.91s`; `npm run build` → TypeScript·Vite 성공, 78 modules; `uv run pytest -q tests/api/test_auth.py tests/api/test_prices.py tests/api/test_frontend.py` → `57 passed, 21 skipped in 14.25s`; `uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.25s`; `git diff --check` 통과.
+- 확인 못 한 것: TEST_AUTH_DATABASE_URL 등이 필요한 기존 DB 통합 21건은 생략됐다. 실제 DB/계정·OAuth 왕복, 실제 Mouser, 브라우저 E2E/시각 확인·Docker 배포·모델 평가 재측정은 수행하지 않았다. 검색·판정 변경이나 평가 점수 개선을 주장하지 않는다.
+- 다음 할 일: 후속 작업이 실제 후보 목록을 PricePanel에 공급한다. OSC의 주요 문서 소유 규칙에 따라 SPEC은 직접 수정하지 않고, 조장에게 기존 `docs/specs/d5-frontend-service.md`의 AC-01/AC-07 및 인증·가격 경계 문단을 SPEC 정본에 반영하도록 요청한다. 400줄을 넘는 핵심 diff는 인증·권한·가격의 안전 경계를 검증하는 테스트와 구조 문서가 대부분이며 요청된 하나의 연결 작업/커밋으로 유지한다.
+
+## 2026-11-09 D5 같은 출처 React 기반 (Task 2)
+
+- 한 일: React·Vite·TypeScript 셸과 `/login`, `/app`, `/admin/users` 경로, `/` 로그인 이동, Query provider·Router·API 개발 프록시를 추가했다. 인증·프로젝트·실행·승인 화면 동작은 후속 범위다. Node 24 다단계 빌드의 정적 산출물만 Python runtime에 복사한다.
+- 서버 경계: API 등록 뒤 response-aware SPA middleware를 연결한다. 비API GET/HEAD의 downstream 404만 index(미빌드이면 기존 로그인)로 바꾸고, API·health·assets·다른 메서드·리다이렉트는 보존한다. 화면에도 기존 요청 ID를 유지한다.
+- 사용자 승인 예외: 표준 Vite가 요구하는 `frontend/` 도구 루트와 기존 design.md·정적 제공 어댑터를 함께 두는 `backend/web`에만 한 종류 규칙 예외를 둔다. 하위 폴더는 제외하지 않고 API 업무 로직은 어댑터에 넣지 않는다. 단순 GET catchall이 Google 끝 `/`와 POST 404를 바꾸는 실제 회귀가 확인되어 사용자가 response-aware 방식으로 대체를 승인했다.
+- 바꾼 파일: `frontend/`의 package/lock·HTML·Vite/TypeScript 설정·폴더 설명·React 진입점/셸/스타일/단위 테스트, `backend/web/app.py`, `backend/main.py`, `Dockerfile`, `.gitignore`, `backend/web/WEB.md`, `backend/BACKEND.md`, `tests/api/test_frontend.py`, `tests/api/test_auth.py`, `tests/api/test_health.py`, `tests/api/API.md`, `tests/repo/test_repo_layout.py`, `SOJAFIT.md` 신규 파일 트리·설명 표 행, 이 작업 기록.
+- RED: 최초 frontend API 테스트 `2 failed, 3 passed`; helper stub 경계 확장 `9 failed, 4 passed`; React null stub `4 failed`; 루트 진입 추가 `1 failed, 4 passed`. 단순 catchall의 추가 인증 검사 `3 failed, 49 passed, 21 skipped`와 HEAD/메서드/health 검사 `4 failed, 14 passed`를 관측한 뒤 middleware로 고쳤다.
+- 실행한 명령과 실제 결과: `uv run pytest -q tests/api/test_frontend.py tests/api/test_health.py tests/api/test_auth.py` → `56 passed, 21 skipped in 13.97s`; `uv run pytest -q tests/repo/test_repo_layout.py` → `5 passed in 0.29s`; `cd frontend`, `npm run test:run` → 1 파일·5건 통과; `npm run build` → TypeScript·Vite 성공, 68 modules, `dist/index.html` 생성; 전체 `uv run pytest -q` → `935 passed, 58 skipped in 22.07s`.
+- 확인 방법: 테스트는 실제 FastAPI/TestClient, 임시 dist 파일, 실제 React·MemoryRouter를 사용한다. `/` 404의 과거 health 가정은 API 404 검사로 이동했고 legacy 폼 assertion은 미빌드 fallback으로 격리했다. 화면 소스는 로컬 system font와 반응형·키보드 초점 스타일을 사용한다. npm audit는 의존성 설치 시 0 vulnerabilities였다.
+- 확인 못 한 것: 격리 DB·별도 외부 환경이 필요한 58건은 생략됐다. Docker 이미지 자체의 빌드/실행, 실제 OAuth 왕복, 브라우저 E2E·스크린샷, 모델 평가·라이브 API는 실행하지 않았다. 검색·판정 모델을 바꾸지 않아 평가 점수 향상을 주장하지 않는다.
+- 다음 할 일: 후속 Task에서 실제 로그인·세션 복구·관리자 기능을 셸에 연결한다. SPEC 변경이 필요하면 OSC에서 주요 문서를 수정하지 않고 조장에게 승인 계약 반영을 요청한다. push·배포하지 않는다.
+
+## 2026-11-09 D5 프론트엔드 구현 계획
+
+- 한 일: 승인된 D5 프론트엔드 설계를 기능 계약, React 기반, 프로젝트·업로드, D5 영속 실행, 작업대, 승인·견적·기억, 통합 검증의 6개 PR과 13개 테스트 우선 작업으로 나눴다.
+- 계획 원칙: D5 내부 판단은 바꾸지 않고 안전한 API DTO만 추가한다. 가격·재고와 업로드 원본은 저장하지 않으며, 외부 웹 조회는 제외한다. 각 작업은 실패 테스트 → 최소 구현 → 통과 확인 → 목적별 커밋 순서다.
+- 바꾼 파일: `docs/superpowers/plans/2026-11-09-d5-frontend-service.md`, `docs/superpowers/SUPERPOWERS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`.
+- 확인 못 한 것: 실제 구현·npm 의존성 설치·DB migration·라이브 D5·브라우저 E2E는 실행하지 않았다.
+- 다음 할 일: 실행 방식을 선택한 뒤 PR 1의 기능 계약부터 시작한다.
+
+## 2026-11-09 D5 프론트엔드 서비스 설계
+
+- 한 일: React + Vite + TypeScript 작업대에서 D5 멀티 에이전트를 그대로 사용하기 위한 전체 구조를 사용자와 합의했다. 데모·업로드 회로, 사용자별 프로젝트, D5 실행·인터럽트 재개, 근거·판정·가격, 승인·견적·사례 기억의 경계를 설계했다.
+- 핵심 결정: D5만 서비스에 연결하고 D4는 평가용으로 둔다. 업로드 원본은 정규화 뒤 폐기하고 정규화 회로만 저장한다. 가격·재고는 그래프와 DB에 저장하지 않는다. 외부 웹 조회는 현재 D5에 없으므로 이번 범위에서 제외한다.
+- 바꾼 파일: `docs/superpowers/specs/2026-11-09-d5-frontend-service-design.md`, `docs/superpowers/SUPERPOWERS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`.
+- 확인 방법: 설계 문서의 목적·범위·API·저장·오류·테스트·PR 경계를 대조하고, 새 파일을 `SOJAFIT.md` 트리와 폴더 설명에 반영한다. 코드와 런타임은 변경하지 않는다.
+- 확인 못 한 것: 실제 React 빌드, D5 서비스 API, DB migration, E2E는 구현 계획 승인 뒤 각 PR에서 검증한다.
+- 다음 할 일: 사용자가 설계서를 검토한 뒤, 승인되면 `writing-plans` 절차로 구현 계획을 작성한다.
+
+## 2026-11-09 main → OSC 병합
+
+- 한 일: 최신 `origin/main`을 로컬 `OSC`에 merge하고, 충돌 7개 문서는 main 내용을 기준으로 두면서 기존 Supervisor Prompt V0 계약·평가·결과·트리 항목을 함께 보존했다. 이어 원격 `origin/OSC`에 남아 있던 닫힌 #67의 두 커밋(`feat(api)`, 구현 상태 문서)도 병합해 로컬 OSC가 원격 OSC보다 뒤처지지 않게 했다.
+- 충돌 파일: `SOJAFIT.md`, `backend/graph/GRAPH.md`, `backend/prompts/PROMPTS.md`, `docs/specs/SPECS.md`, `docs/worklog/osc.md`, `evals/guides/preregister.md`, `evals/runners/RUNNERS.md`.
+- 실행한 명령과 결과: 첫 병합에서 `uv lock --check` 통과, V0·저장소 구조 대상 테스트 `38 passed`, 전체 테스트 `911 passed, 58 skipped`, 충돌 해소분 기준 `git diff origin/main --check` 통과. #67 두 커밋 병합 뒤 API·V0·구조 대상 테스트 `56 passed`, 전체 테스트 `918 passed, 58 skipped`를 다시 확인했다. merge 전체의 `git diff --cached --check`는 main에서 들어온 `backend/rag/spec_lookup.py`의 EOF 빈 줄 1건을 알렸고 해당 main 내용은 바꾸지 않았다.
+- 확인 못 한 것: PR 상태와 원격 push 결과는 이번 범위에서 확인하지 않았다. 팀 규칙에 따라 push하지 않았다.
+- 다음 할 일: 필요하면 조장 승인 후 로컬 merge commit을 `origin/OSC`에 push하고 다음 PR의 기준으로 사용한다.
+
+## 2026-11-06 Supervisor Prompt V0 Langfuse 가져오기
+
+- 한 일: 완료된 V0 13문항과 세 후보 결과를 모델 재호출 없이 Langfuse Dataset `sojafit-supervisor-v0`과 Experiment 3개로 가져왔다. 입력에는 정답과 case id를 넣지 않고 정답은 Dataset expected output으로 분리했다. 형식·네 필드·의미·전체 일치의 결정적 점수 7개를 문항마다 기록했다.
+- 바꾼 파일: `docs/specs/supervisor-v0-langfuse-import.md`, `evals/runners/import_supervisor_prompt_v0_langfuse.py`, `tests/evals/test_import_supervisor_prompt_v0_langfuse.py`, `evals/results/supervisor/2026-11-06-prompt-v0-v1/langfuse_import.json`과 폴더 색인·트리.
+- 실행한 명령과 결과: API 없는 `plan`에서 Dataset 13개·Experiment 3개·점수 273개를 확인했고 전용 테스트 7건과 저장소 구조 테스트를 통과했다. 첫 외부 시도에서 `.env`의 trailing slash와 Langfuse 5.0.4의 OTEL endpoint 문자열 결합 때문에 Dataset만 저장되고 Experiment는 0건이었다. `.env`는 바꾸지 않고 실행기에서 base URL을 정규화한 뒤 서버의 Experiment 0건을 확인하고 다시 실행했다.
+- 외부 재조회: Dataset 13개, Experiment 3개, 각 Experiment 13개 항목을 확인했다. 점수 이름별 39개씩 총 273개이며 합계는 schema 39, question type 38, required evidence 37, next action 35, reason code 38, semantic 34, exact 33으로 로컬 결과 합계와 일치했다. `imported_existing_result=true`를 기록했으며 원래 live trace로 가장하지 않는다. 모델 호출은 0회다.
+- 확인 못 한 것: in-app browser에는 Langfuse 로그인 세션이 없어 UI 표를 직접 보지는 못했다. 인증된 API로 Dataset·Experiment·trace별 score를 재조회했다.
+- 다음 할 일: Langfuse에 로그인한 팀원이 세 Experiment 비교 화면을 확인하고 필요하면 제출용 화면을 캡처한다. 프롬프트 인젝션 방어 설계는 별도 작업으로 진행한다.
+
+## 2026-11-06 Supervisor Prompt V0 live 평가 사전 준비
+
+- 목적·비교 조건: V0 상태 표본 13건에서 Luna/Azure, Haiku/Google, Jev/TypeSafe가 같은 네 필드 의미 계약을 지키는지 비교한다. 기존 v2 70문항 결과는 V0 점수로 재사용하지 않는다. 기대와 판정은 `evals/guides/preregister.md` #37에 결과 확인 전에 기록했다.
+- 코드 보완: 본 실행이 성공한 smoke의 exact model/provider만 사용하도록 회귀 테스트를 RED로 확인한 뒤 고쳤고, smoke 요청에도 `--provider`를 필수로 두었다. 관련 API 없는 테스트 40건과 후속 선택 테스트 35건이 통과했다. 커밋은 `2834f96`, `ac82964`다.
+- 현재 catalog: 세 모델 모두 ZDR catalog에 노출됐다. 적용 provider는 기존 성공 근거와 현재 endpoint를 대조해 Luna `Azure`, Haiku `Google`, Jev `TypeSafe`로 정했다. 단가는 Chat 두 모델 input/output `$0.0000001`/`$0.0000005` per token, Jev input `$0.000000042`, output `$0`다.
+- 예산·시간·중단: Chat 모델별 smoke `$0.005`·3 raw calls·180초, 본 실행 `$0.060`·39 raw calls·1,800초. Jev smoke 승인 `$0.005`·1 call·180초, 본 실행 승인 `$0.010`·13 calls·1,800초. 전체 명령 상한 `$0.145`, 최악 98 raw calls다. smoke 실패, hash/model/provider 불일치, 상한 도달, 반복 provider 오류에서 중단하고 자동 증액·재실행하지 않는다. Jev USD는 기술적 cap이 아니라 승인 기록이다.
+- 실행 명령·보존: API 없는 두 plan 뒤 `--confirm-live`·exact provider로 smoke 세 건, 본 실행 세 건, hash가 같은 13건만 통합 집계한다. 결과 예정 경로는 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`이다. 루트 `.env`에서는 `OPENROUTER_API_KEY`만 현재 process에 주입하고 값은 출력·기록하지 않는다.
+- 실행 결과: 사용자가 총 상한 `$0.145`를 승인한 뒤 exact provider smoke와 본 실행을 수행했다. Luna/Azure와 Haiku/Google은 13/13 schema·semantic·exact match, Jev/TypeSafe는 schema 13/13이나 semantic 8/13·exact 7/13이었다. Jev의 의미 오류 5건은 모두 `next_action` 상태 라우팅이었다. 실제 raw calls는 42회, provider 보고 usage cost 합계는 smoke 포함 `$0.007086424`다. 결과·실행 조건·출처 hash는 `evals/results/supervisor/2026-11-06-prompt-v0-v1/`에 보존했고 `.gitattributes`로 해당 JSON 원시 바이트를 유지한다.
+- 해석: V0 기준에서는 Luna와 Haiku가 사전 기대를 충족했고 Jev는 semantic 12/13·exact 10/13 기대에 미달했다. 이 소형 13건은 prompt 프로토타입 검증이며 운영 모델 확정이나 기존 70문항 결과 대체 근거로 사용하지 않는다. 추가 유료 재실행이나 prompt·gold 수정은 하지 않았다.
+
+## 2026-11-05 Supervisor Prompt V0 프로토타입
+
+- 한 일: 확정본이 아닌 Supervisor 전용 V0 prompt와 입력·출력·상태 라우팅 계약을 만들었다. 별도 13건 상태 표본에서 `openai/gpt-6-luna`, `anthropic/claude-haiku-5.5`, `typesafe/jev-1.14`를 같은 네 필드로 비교할 수 있도록 Chat·Decisions 독립 실행기와 API 없는 통합 집계기를 추가했다. 현재 `build_graph()`에는 연결하지 않았다.
+- 계약: 입력은 `user_request`, `current_state`, `external_material`로 분리하고 정답·case id를 모델에 보내지 않는다. 출력은 `question_type`, `required_evidence`, `next_action`, `reason_code` 네 필드다. 외부 자료는 지시가 아닌 데이터로 취급하며 상세 프롬프트 인젝션 방어는 다음 작업으로 남겼다.
+- 실행 안전: `plan`은 네트워크를 사용하지 않는다. Chat live 경로는 호출·시간·예약 비용 상한과 최대 3회 형식 시도를 사용한다. Jev는 호출·시간 상한을 집행하지만 비용 미보고 API라 USD는 승인 기록과 `Not Reported`를 구분한다. 구현 중 live 모델 호출과 유료 평가를 하지 않았다.
+- 바꾼 파일: `backend/graph/supervisor.py`, `backend/prompts/supervisor_v0.md`, `evals/samples/supervisor_prompt_v0*`, V0 공통·Chat·Jev·통합 집계 실행기와 테스트, 설계·구현 계획·평가 절차 및 폴더 색인.
+- 검증: 각 단계에서 모듈 부재 RED를 확인한 뒤 구현했다. V0 선택 테스트, 인접 LLM 서비스 테스트, 저장소 구조 검사를 API 없이 실행했다. `ruff`는 개발 의존성에 없어 실행하지 못했다. 전체 테스트의 기존 Windows 기본 인코딩 실패 `tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file`은 이 작업 범위에서 수정하지 않았다.
+- 다음 할 일: 별도 승인 뒤 exact model/provider 1건 smoke와 13건을 실행하고, dataset·의미 계약 hash와 case 집합이 같은 결과만 비교한다. 그 뒤 프롬프트 인젝션 방어를 별도 설계한다.
+
 > **2026-11-02 항목의 문서 전용 반영 범위**: 아래 2026-11-02 항목은 `OSC` 로컬에서 수행했던 탐색·구현·검증의 역사 기록이다. 해당 항목에는 임베딩 후보 관련 문서만 포함하며, 여기에 언급된 평가기 코드, 테스트, 입력 표본, 원시 JSON과 모델 캐시는 포함하지 않는다. 따라서 해당 항목의 테스트 통과·재현 성공 문구는 현재 `main`의 상태를 증명하지 않으며, 현재 저장소에서는 문서 정합성만 검증한다.
+
+## 2026-11-08 FastAPI 공통 오류 응답 규약
+
+- 한 일: 최신 `main` 기준 `backend/main.py`에 서버 생성 UUID 요청 식별자와 `X-Request-ID` 헤더를 추가하고, HTTP·검증·처리되지 않은 예외를 `error.code/message/request_id` JSON 구조로 통일했다. 기존 `/api/prices`와 Mouser 호출 경로는 유지했다.
+- 바꾼 파일: `backend/main.py`, `backend/BACKEND.md`, `tests/api/test_health.py`, `tests/api/test_prices.py`, `tests/api/API.md`, `docs/specs/api-error-contract.md`, `docs/specs/SPECS.md`, `SOJAFIT.md`, 이 작업 기록.
+- 확인 방법: 테스트를 먼저 추가해 기존 코드에서 실패를 확인한 뒤 구현했다. 최종 `uv run pytest -q -p no:cacheprovider`는 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check`는 통과했다.
+- 미확인: `TEST_AUTH_DATABASE_URL`·`TEST_DATABASE_URL`이 없어 건너뛴 통합 시험 43건, 실제 배포 응답과 외부 로그 저장소의 요청 ID 연결. DB·외부 API·배포는 변경하지 않았다.
+
+## 2026-11-08 현재 구현 기준 문서 정합성 점검
+
+- 팀장 요청에 따라 현재 상태를 설명하는 문서를 실제 저장소 코드와 대조했다. 과거 ADR·평가 결과·제출 주제서·작업 기록은 당시 증거로 보존하고, 현재 상태 문서에서만 구현·목표·외부 운영 이력을 구분했다.
+- `README.md`, `SPEC.md`, `SOJAFIT.md`, `docs/GATES.md`에 현재 서비스 API 범위(로그인·Google 관리자·관리자 계정·가격 조회·공통 오류)와 미구현 범위(질문·회로·대화·견적 승인/저장·Store·영속 체크포인트·업무 화면)를 반영했다.
+- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 최신 main 재대조에서 v1 manifest·운영 스냅샷 52,244청크와 11-08 저장소 밖 v4h 전체 실행 51,967카드를 구분하고, 새 clone 재현과 에이전트 길 재측정은 별도 증거가 필요하다고 바로잡았다.
+- Google 관리자 로그인 문서의 코드·SQL·CLI·합성 테스트 구현 항목은 완료로, 현재 Cloud Run·Secret Manager·운영 DB·실계정 상태는 재검증이 필요한 항목으로 분리했다. MCP 그래프 통합 문서는 구현 전 계획과 현재 `StdioMcpRetriever` 구현을 구분했다.
+- 검증: 저장소 구조 검사 `5 passed`, 전체 테스트 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check` 통과. 운영 배포·DB 상태는 이번 작업에서 조회하지 않았다.
 
 ## 2026-11-05 GCP Google OAuth 로그 보호 실측
 
@@ -219,3 +358,117 @@
 - 1~3차 대조표에서 provider 오류로 3문항만 시도한 `deepseek/deepseek-v4.1-flash` 1차의 Accuracy와 Schema Valid Rate를 모두 `Not Comparable (3/70 attempted, 0 valid)`로 표시했다. 원래의 계획 분모 계산값 0/70은 집계 JSON에 보존하며 완주한 2·3차와의 직접 비교를 피한다.
 - 보고서 생성 코드와 재생성 결과, 부분 실행 두 셀의 표기를 확인하는 회귀 테스트를 함께 수정했다. 원시 파일·모델별 수치·출처 hash·실행 기록은 변경하지 않았다. 관련 테스트 15건과 `git diff --check`를 통과했다. 파생 집계 SHA-256은 코드 hash 갱신에 따라 `77139315fb0b99a2d5441fe2c5b728f90984850763f6846f2b32237cfc5e4659`로 바뀌었다.
 - 유료 API 재호출은 하지 않았다. 기존 인증 테스트 대소문자 비교와 과거 임베딩 캐시 Secret Scan 문제는 이번 표기 수정 범위에 포함하지 않았다.
+
+## 2026-11-09 D5 프론트엔드 기능 계약
+
+- 한 일: 승인된 D5 프론트엔드 설계를 10개 AC가 있는 Why/Goal/What/How/AC 기능 계약으로 구체화했다. 조장 소유 `SPEC.md` §2·§4·§8.4·§8.5 반영 문단과 ADR 제목을 요청 섹션에 제시했다.
+- 바꾼 파일: `docs/specs/d5-frontend-service.md`, `docs/specs/SPECS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`.
+- 확인: `uv run pytest -q tests/repo/test_repo_layout.py` 실행 결과: `5 passed in 0.28s`. 문서 구조·링크·요청 제안은 승인 설계와 대조한다.
+- 확인 못 한 것: 구현 및 프론트/백엔드 런타임 테스트는 이 계약 작성 범위가 아니다. `SPEC.md` 및 ADR 반영은 조장 검토 후 별도로 진행해야 한다.
+- 다음 할 일: 조장이 요청 문단과 ADR 제목을 검토하고 정본에 반영한 뒤 후속 구현 작업을 시작한다.
+
+## 2026-11-09 D5 Task 4 사용자 프로젝트 저장
+
+- 목적·범위: 데모 회로 5종으로 사용자 소유 프로젝트를 만들고 목록·상세·이름 변경·삭제를 제공한다. 업로드·D5 실행·가격 저장은 제외한다. `SPEC.md` 등 조장 소유 문서는 수정하지 않고 승인된 `docs/specs/d5-frontend-service.md` AC-02/09/10의 해당 범위만 구현한다.
+- TDD RED: 먼저 저장소·API 테스트를 작성했다. `uv run pytest -q tests/projects tests/api/test_projects.py` 결과 `15 failed, 5 skipped in 0.80s`. 신규 라우트 미등록 때문에 인증 401·Origin 403·카탈로그 200 대신 404였고 저장소는 `ModuleNotFoundError: backend.projects`였다. DB 주소가 없어 통합 시험 5건은 이 최초 실행에서 건너뛰었다.
+- GREEN 중간 확인: 구현 후 DB 없이 `15 passed, 5 skipped`; 이후 공유 DB와 무관한 새 Docker `postgres:16-alpine` 컨테이너(로컬 loopback 랜덤 포트, 기존 볼륨 연결 없음)의 전용 시험 DB에서 `20 passed in 2.62s`. 실제 PostgreSQL SQL로 소유자·타 사용자/관리자 분리, 생성 rollback, 사용자·프로젝트 cascade를 확인했다. 레이아웃 `5 passed`.
+- 변경: `db/013_projects.sql`, `backend/projects/`, `backend/api/`, `backend/main.py`, `tests/projects/`, `tests/api/test_projects.py`와 폴더·스키마 문서. BIGINT/TIMESTAMPTZ, CHECK, users→projects→circuits cascade, user_id 선두 복합 인덱스, circuits PK의 FK 인덱스 겸용, RLS·공개 역할/sequence 권한 회수를 사용한다. 데모 hash는 기존 정규화 JSON의 SHA-256이다.
+- 전체 회귀 사전 기록: 라우터·스키마 경계가 바뀌므로 `PYTHONUTF8=1`, `TEST_AUTH_DATABASE_URL=<새 일회용 로컬 시험 DB>`로 `uv run pytest -q`를 한 번 실행한다. 비교 조건은 기존 전체 백엔드 suite, 외부 모델/API 호출 예산 0달러, DB는 이번에 만든 컨테이너만 사용한다. 실패하면 원인을 확인하고 수정 범위가 Task 4를 벗어나면 보고한다. 무한 재실행·공유 DB 적용은 하지 않는다.
+- 최종 검증: anon/authenticated 역할이 실제 존재하는 새 시험 DB에서 집중 명령 `uv run pytest -q tests/projects tests/api/test_projects.py tests/repo/test_repo_layout.py`는 `25 passed in 2.97s`. 전체 `uv run pytest -q`는 `976 passed, 37 skipped in 75.20s`; 신규 DB 시험 skip은 0건이며 기존 suite의 선택적 시험은 해당 설정이 없으면 skip한다. 전체 실행 중 외부 모델/API 비용 0달러. `git diff --check` 통과. 데모 JSON 5종의 최상위 구조가 components/nets 및 공개 sample 상태뿐임을 확인했다.
+- 자체 검토: get/list/rename/delete SQL의 소유자 필터·관리자 예외 없음·transaction rollback·파라미터 바인딩·신규 경로의 세션/Origin과 안전한 공통 오류를 대조했다. 원본·가격 필드와 업로드 경로를 추가하지 않았다. 실제 배포·기존/공유 DB 마이그레이션 및 RAG 평가셋 재측정은 실행하지 않았으며 RAG 품질 개선을 주장하지 않는다. 권장 400줄을 넘는 경우에도 단일 프로젝트 저장 기능과 소유권 회귀를 함께 검토하도록 요청된 한 커밋 범위를 유지한다.
+- 비밀값 점검: staged diff를 `ghcr.io/gitleaks/gitleaks:latest stdin --redact --no-banner --log-level warn`으로 검사했다. 실제 비밀값을 추가하지 않았으며 테스트 세션 문자열은 일회용 fixture다. 최종 diff는 Task 4의 20개 파일에 한정된다. 새 시험 컨테이너만 정리하고 지정 메시지로 로컬 커밋한다.
+
+## 2026-11-09 D5 Task 5 KiCad 업로드 정규화
+
+- 목적·범위: 승인된 `docs/specs/d5-frontend-service.md` AC-03 범위에서 인증된 multipart 업로드를 제한된 메모리에서 정규화하고 원본 없이 저장한다. frontend·D5 실행·가격·공유 DB·원격 변경은 제외한다. 주요 문서는 신규 파일의 `SOJAFIT.md` 트리 줄만 추가한다.
+- TDD RED: 구현 전에 `uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py` → `32 failed, 14 passed, 1 skipped in 1.02s`. 정규화 모듈 없음 assertion과 미등록 업로드 405가 예상 원인이다. 추가로 저장소 호출 전에 원본 버퍼가 닫혀야 한다는 시험을 RED(`1 failed, 2 passed`)로 확인하고 정규화 직후 close를 추가했다.
+- 구현: `backend/projects/netlist.py`의 immutable 연결(parts/nets)/hash/ref tuple, `backend/api/projects.py`의 인증 후 제한 multipart 수신, `ProjectRepository.create_upload`의 원자적 저장. `uv add python-multipart`로 직접 의존성과 lock을 함께 갱신했다. 합성 정상/불완전 fixture와 파서·API·실제 DB 시험, 폴더 문서·신규 파일 트리를 추가했다.
+- 상한·폐기: 파일 5 MiB, read 5 MiB+1 한 번, 깊이 64, token 500,000, component/net 각 100,000. 기본 multipart의 1 MiB disk spool 대신 파일/전체 요청 상한을 검사해 메모리에만 둔다. 원본 버퍼는 정규화 직후 닫고 finally에서도 성공/실패·부분 multipart 전체를 닫는다. 저장소 인수는 정규화 연결·hash·parser version뿐이다. 잘못된 UTF-8/문법은 공통 400, 초과는 공통 413이며 요청 ID를 유지한다.
+- GREEN 중간 확인: 새 `postgres:16-alpine` 일회용 컨테이너(기존 볼륨 없음, loopback 임의 포트, 전용 `task5_test` DB)의 `uv run pytest -q tests/projects tests/api/test_projects.py tests/repo/test_repo_layout.py` → `60 passed in 4.11s`. DB rollback·타 사용자/관리자 비공개 404·저장 행 원본 없음·제한된 read·disk rollover 없음·close·불변 데이터·hash 순서를 검증했다. 공개 Breadboard export는 부품 20·넷 13개로 읽었다. `uv lock --check`, `git diff --check` 통과.
+- 전체 회귀 사전 기록: multipart·API·DB 경계가 바뀌므로 `PYTHONUTF8=1`, `TEST_AUTH_DATABASE_URL=<이번 새 일회용 DB>`로 `uv run pytest -q`를 한 번 실행한다. 비교 조건은 기존 backend 전체 suite, 외부 API/모델 예산 0달러, `anon`/`authenticated` NOLOGIN 역할이 존재하는 시험 DB다. 실패 시 원인을 조사하며 Task 5 밖 변경·무한 재시도는 하지 않는다. RAG 동작은 바꾸지 않으므로 동결 평가셋 재측정·품질 개선 주장은 하지 않는다.
+- 규모·미검증: 보안 파서·API 경계·실제 DB 회귀를 한 기능으로 검토하기 위해 핵심 변경은 권장 400줄을 넘는다. 코드/시험/폴더 계약을 기계적으로 분리하지 않고 요청된 한 커밋으로 남긴다. `SPEC.md` 반영은 조장 검토 대상이며 이번에 수정하지 않는다. 기존 공통 handler의 413 code는 `HTTP_ERROR`이며 413 전용 code 추가는 이 범위에 포함하지 않았다.
+- 전체 회귀 결과: 1차 `14 failed, 997 passed, 37 skipped in 43.16s`는 새 시험 DB의 public 인증 테이블 초기화를 빠뜨린 준비 오류였다. CI와 동일한 003/005/006 SQL만 이번 시험 DB에 적용한 뒤 `1011 passed, 37 skipped in 75.84s`. production 수정 없이 해결했다. 기존 선택적 시험 37건은 설정/자산이 없어 skip했으며 신규 Task 5 DB 시험 skip은 0건이다. 외부 API/모델 호출 비용 0달러.
+- 최종 확인: CRLF/LF에 무관한 fixture 처리로 시험을 보정한 뒤 집중/레이아웃 `60 passed in 4.16s`, lock·staged whitespace 검사 통과. staged 17개 파일은 Task 5 범위이며 합성 fixture 외 원본·생성 결과를 넣지 않았다. staged diff를 로컬 Docker gitleaks stdin(`--redact --no-banner --log-level warn`)으로 검사해 비밀값 발견 0건을 확인했다. 새 시험 컨테이너만 정리하며 요청된 메시지로 로컬 커밋한다.
+
+### Task 5 Fix Round 1
+
+- 검토에서 지적된 파일명/확장자, net code 유일성·형식, quoted NUL만 보완한다. raw/text 지역 참조 수명 관련 Minor는 요청대로 최종 검토까지 보류한다.
+- RED: production 수정 전 `PYTHONUTF8=1 uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py` → `20 failed, 49 passed, 1 skipped in 1.82s`. 비정상 입력이 정상 반환/201로 통과하는 것이 예상 원인이었다.
+- 정책 근거: 기존 공개 KiCad 5종의 13/8/14/44/14 nets는 모두 ASCII 양의 정수 code를 사용한다. 표준 표기 `[1-9][0-9]*`와 net 간 유일성을 요구한다. code는 문자열로 유지하며 0/음수/소수/부호/지수/앞자리 0/비ASCII 숫자는 거절한다. NUL은 metadata 포함 입력 전체에서 거절한다. filename은 비어 있지 않고 공백 제거·대소문자 무시 후 `.net`으로 끝나야 한다.
+- 검증 계획: 새 일회용 `postgres:16-alpine` 컨테이너만 사용한다(기존 볼륨/공유 DB 없음). CI의 003/005/006 인증 SQL과 anon/authenticated NOLOGIN 역할을 먼저 준비하고 두 요청 시험 파일·repo layout·저장소 시험을 실행한다. 그 후 `PYTHONUTF8=1 TEST_AUTH_DATABASE_URL=<새 일회용 DB> uv run pytest -q` 전체 backend suite를 한 번 실행한다. 외부 API/모델 예산 0달러, 반복 실패하면 원인·범위 확인 후 중단한다.
+- GREEN: `uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py tests/projects/test_project_repository.py tests/repo/test_repo_layout.py` → `82 passed in 4.25s`; 전체 backend 한 번 실행 → `1033 passed, 37 skipped in 75.35s`. 신규 시험 skip은 없으며 기존 선택적 시험 37건만 skip했다. `uv lock --check`, `git diff --check`도 통과했다. 새 정상화 코드로 공개 KiCad 5종을 모두 읽어 net 수 13/8/14/44/14를 유지했다. 원본/DB schema/정규화 shape/의존성은 바꾸지 않았다. staged diff·비밀값을 확인하고 지정된 fix 커밋을 남긴 뒤 이번 시험 컨테이너만 정리한다.
+
+### Task 5 Fix Round 2
+
+- filename 누락 시험만 먼저 `PYTHONUTF8=1 uv run pytest -vv tests/api/test_projects.py::test_upload_rejects_missing_filename_before_reading_or_persisting`로 재현해 `1 passed in 0.57s`를 확인했다. 실제 400이며 422와의 결과 불일치는 없다. filename 없는 file은 두 번째 text field이므로 Starlette의 headers 처리에서 max_fields=1을 초과해 MultiPartException을 낸다. route의 공통 400 번역이 적용되어 type/shape의 422 검사는 실행되지 않는다.
+- 변경: filename 누락과 빈/공백/잘못된 확장자 거절 시험에서 공통 error code·정확한 message·서버 request ID 전체 DTO를 확인한다. 기존 read 0·저장소 미호출·생성된 UploadFile close 검증을 유지했다. production 코드는 바꾸지 않았다.
+- 확인: 두 요청 시험 파일 `70 passed, 1 skipped in 1.60s`; repo layout `5 passed in 0.29s`, diff whitespace 통과. 이번에는 DB를 새로 만들거나 연결하지 않아 기존 실제 DB CRUD 시험 1개만 skip했다. 부모 요청대로 production 변경이 없으므로 전체 suite는 다시 실행하지 않았으며 직전 Fix Round 1의 전체 결과는 `1033 passed, 37 skipped`이다. raw/text 수명 Minor는 최종 검토까지 보류한다.
+
+### Task 7 — D5 실행 및 영속 대화
+
+- 변경: `backend/services/d5.py`, `backend/conversations/`, `db/014_conversations.sql`, 관련 테스트와 폴더·DB 설명. D5 그래프 하나만 사용하고 API는 추가하지 않았다. 업로드·데모 연결을 기존 대상 부품 형식으로 바꾼다.
+- RED: 서비스·SQL 부재를 확인했고, DB의 잘못된 결과 형식·다른 대화의 실행 연결·중복 종료 시험도 각각 먼저 실패했다. 격리 PostgreSQL만 사용, 실제 모델·검색 호출 없음.
+- 검증: 전용 볼륨 없는 postgres 컨테이너에서 `uv run pytest -q tests/services/test_d5.py tests/conversations tests/multi_agent` 151 passed; `uv run pytest -q tests/repo/test_repo_layout.py` 5 passed; `uv lock --check` 통과. 전체 `uv run pytest -q` 첫 실행은 인증 기본 표 미준비로 14 failed, 1030 passed, 37 skipped; 격리 DB에 003/005/006을 준비한 재실행은 1044 passed, 37 skipped. 이후 안전 결과 SQL과 중복 종료 보호를 추가하여 집중 테스트로 재검증했다.
+- 한계: 모델·MCP 실호출, 공유 DB·배포, 동결 평가셋 재측정은 하지 않았다. D5Service는 인증·DB 결과 저장을 직접 처리하지 않으며 후속 API가 소유권 검증과 저장을 연결해야 한다. Windows psycopg async는 SelectorEventLoop가 필요하다.
+
+- 추가 검증: 실제 checkpoint가 프로젝트 cascade만으로 지워지지 않는 RED를 확인했다. `D5Service.delete_thread`는 라이브러리 `adelete_thread`로 checkpoint를 정리하며 격리 DB에서 검증했다. 프로젝트 삭제와 원자적 결합·실행 중 삭제 경계는 미구현으로 Task 8 연동 및 Task 13 E2E가 필요하다. `str(threads.id)`가 LangGraph thread_id 정본이다.
+
+
+### Task 8 — 대화 API와 D5 실행 스트림
+
+- RED: 공개 DTO 부재·대화 API 404, interrupt 복구 DTO, 공개 판정 필드, 인용 메타데이터, 가격 필드 및 중첩 SQL 제약을 각각 실패 테스트로 확인했다.
+- 구현: 소유자별 thread/run 조회·생성·재개, 인증·Origin, SSE, 허용된 DTO, terminal 저장 후 전송, 연결 종료 후 백그라운드 실행. 공개 판정/인용만 저장하며 요청 ID와 가격·재고는 저장하지 않는다. 프로젝트 행 잠금으로 활성 실행 중 삭제와 새 실행 경쟁을 방지하고 체크포인터 API로 삭제한다. SQL 결과 검증은 허용 키와 중첩 타입을 검사한다.
+- Task 8 검토 반영: 복수 역할 인터럽트의 선택값을 허용 목록으로 검증해 같은 checkpoint에 전달하고, terminal 상태 저장의 일시적 DB 오류는 3회 안에서 제한 재시도한다. `uv run pytest -q tests/api/test_conversations.py tests/conversations/test_dto.py tests/services/test_d5.py` 결과는 20 passed이며 재검토는 최종 검토로 미뤘다.
+- Task 9·10 UI: 안전 DTO/SSE 상태 머신, 질문·진행·추가 입력·근거·5종 판정·가격/비활성 승인 패널, 3열 작업대와 900px 이하 프로젝트 drawer·결과 tab을 연결했다. 연결 종료는 run GET만 조회하고 질문을 재전송하지 않는다. focused Vitest 13 passed, production build 성공. Playwright smoke는 가짜 API 전용으로 작성했고 Task 13 전체 검증에서 실행한다.
+- Task 11·12 승인·견적: 완료된 성공 판정 후보만 메시지당 한 번 승인하고 immutable snapshot으로 가격 없는 견적·승인 사례를 저장한다. Python과 PostgreSQL이 중첩 가격·재고·URL·조회 시각 키를 거절한다. UI는 후보·판정명을 다시 확인하고 승인 전 견적을 막으며 견적을 열 때 가격을 새로 조회한다. backend focused 31 passed, frontend focused 12 passed와 build 성공.
+- 확인: 격리 PostgreSQL 컨테이너에서 `uv run pytest -q tests/api/test_conversations.py tests/conversations tests/services/test_d5.py tests/api/test_projects.py` → 71 passed. 이전 layout 검사 5 passed, 집중 DB 검사 73 passed(이후 문서 근거 보완 전). 실제 모델·MCP, 공유 DB, 배포, 동결 평가셋 재측정은 하지 않았다.
+- 한계: checkpoint와 프로젝트 삭제는 별도 트랜잭션으로 원자적이지 않으며 중간 장애 때 checkpoint 일부가 먼저 지워질 수 있다. 서버 재시작·프로세스 중단 시 진행 run 복구, 다중 인스턴스 장애 주입 및 실제 checkpointer cascade는 Task 13에서 검증한다. 문서 근거는 최종 보고서에서 인용한 청크의 메타데이터만 반환한다.
+
+### Task 13 — 전체 서비스 흐름 검증
+
+- 범위: 업로드 정규화 → 사용자 소유 프로젝트·대화 → D5 추가 입력/완료 → 근거·판정 → 명시적 승인 → 가격 없는 견적·승인 사례 삭제를 실제 저장소/service·격리 PostgreSQL과 브라우저 가짜 API 흐름으로 검증했다. 전체 backend suite의 API 시험은 별도로 함께 통과했다. 외부 모델·MCP·Mouser, 공유 DB, 배포는 호출하지 않았다.
+- backend 전체: 전용 볼륨 없는 `postgres:16-alpine`의 일회용 `ci_auth` DB에 003/005/006/013/014/015 migration과 `anon`/`authenticated` NOLOGIN 역할을 준비했다. 최초 실행의 15 failures는 CI 인증 스키마 초기화 누락과 신규 `frontend/e2e/` 폴더 설명 누락 때문이었고, 시험 환경·트리 설명을 바로잡은 뒤 `PYTHONUTF8=1 uv run pytest -q` 결과 `1082 passed, 37 skipped in 86.85s`. 신규 전체 흐름은 타 사용자 접근 거절, PostgreSQL의 중첩 가격 키 거절, 프로젝트 cascade까지 포함한다. `uv lock --check`도 통과했다.
+- frontend 전체: 최초 Vitest가 Playwright `e2e/*.spec.ts`를 단위 테스트로 수집해 실패하여 Vite test exclude에 `e2e/**`를 추가했다. 이후 `npm ci`는 취약점 0건, `npm run test:run`은 13 files·62 tests 통과, `npm run build` 성공. Playwright Chromium 설치 후 최초 E2E는 과도한 `**/api/**` 패턴이 `/src/api/client.ts`까지 가로채는 문제를 발견했고, 호스트 루트 `/api/`만 가로채도록 고쳐 `npx playwright test --reporter=line` 2 passed.
+- 보안·무결성: 승인 뒤 승인 사례 query를 무효화해 사용자별 캐시를 갱신한다. quote 요청 본문은 수량만 보내고, 화면 가격·재고 응답은 견적/사례 저장 DTO와 DB snapshot에 들어가지 않는다. 복합 소유자 FK·RLS/권한 회수·재귀 금지 키 CHECK와 전체 서비스 시험을 유지했다. worktree 경로를 읽지 못한 최초 Docker 호출은 유효 검사로 세지 않았고, 코드 커밋 `43fb8f2`를 임시 일반 clone으로 만든 뒤 CI와 같은 gitleaks 전체 Git 이력 검사 결과 탐지 0건·종료 코드 0이었다. 임시 clone은 검사 뒤 삭제했다.
+- 남은 경계: 실제 외부 공급자·MCP·모델과 배포 환경, 프로세스 재시작 중 run 자동 복구, checkpoint 삭제와 프로젝트 삭제의 단일 트랜잭션 원자성은 확인하지 않았다. `README.md`·`SPEC.md`·ADR은 조장 소유이므로 수정하지 않았으며, 조장은 D5 로컬 실행·전체 사용자 흐름과 위 장애 경계를 정본 문서에 반영할지 검토해야 한다.
+
+### 최종 독립 검토 1회 반영
+
+- 검토 이슈 1: 같은 품번이 `results`와 `shown`에 서로 다른 verdict로 나타나면 품번만 보낸 승인이 다른 판정을 저장할 수 있었다. 화면 선택값을 후보 index로 분리하고 API가 `{candidate_part, verdict}` 쌍을 요구하며 service가 두 값이 모두 같은 후보만 snapshot으로 고르도록 수정했다. 누락 verdict 422와 중복 품번의 명시 verdict 선택을 회귀 시험으로 고정했다.
+- 검토 이슈 2: checkpoint를 thread별 외부 트랜잭션으로 먼저 지우던 삭제는 중간 실패 때 일부만 지울 수 있었다. 서비스와 업무 표가 같은 `DATABASE_URL`을 쓰는 계약에 맞춰 checkpoint 세 표와 project cascade를 project 행 잠금이 유지되는 단일 PostgreSQL 트랜잭션으로 옮겼다. 격리 DB에서 실제 checkpoint 삭제·project cascade, 실행 시작과의 직렬화, cleanup 중 오류의 전체 rollback을 확인했다.
+- 검토 방식·확인: 허용된 독립 최종 검토는 이 1회로 끝냈고 재검토는 하지 않았다. 수정 뒤 backend focused·실제 DB·repo layout `33 passed`, frontend focused `2 passed`, production build, 브라우저 E2E `2 passed`를 확인했다. Task 13의 전체 suite와 gitleaks는 앞서 한 번 수행한 결과를 유지하며 다시 실행하지 않았다.
+
+### 교체 대상 부품 주변 연결 개념도
+
+- 목적·범위: 기존 `OSC` 작업대의 가운데 회로 요약을 프로젝트 `connections`와 안전한 D5 결과에 연결된 SVG 개념도로 확장했다. 실제 PCB·회로도, 이미지 생성·검색, 새 그래프 라이브러리, 업로드·견적 저장 확장은 추가하지 않았다. 루트 `SPEC.md`와 `docs/adr/`도 수정하지 않았다.
+- 기능 계약: `docs/specs/circuit-context-diagram.md`에 Why·Goal·What·How·AC를 작성했다. 연결 adapter는 `backend/graph/nodes.py::circuit_around`와 같은 net 순서, `MAX_NET_NODES=8`, 통과 부품 연결 net 수 3 이하 규칙을 사용한다. 대상은 중앙, 직접 연결은 안쪽, 2단계 연결은 바깥쪽·낮은 대비로 표시한다. 현재 연결 DTO에는 방향이 없어 SVG marker·화살표를 만들지 않는다.
+- 실제 연결: 인증된 프로젝트 상세 API의 `parts|components`·`nets`, SSE/복구 run 결과의 역할 코드·근거·후보·판정·citation을 사용한다. 역할명은 `roles.yaml` 정본에서 `code`·`name`만 반환하는 인증된 `GET /api/judge/roles`로 제공한다. 사용 조건은 D5 요청에 실제로 보낸 원문만 화면 메모리에서 표시하며 후보 데이터시트 `checks.value`를 회로 조건으로 오인해 표시하지 않는다. production 코드에는 test fixture import나 실패 시 fixture fallback이 없다.
+- 후보 연동: 판정 행을 선택하면 같은 후보의 check/package citation을 기존 근거 패널에 표시한다. 같은 품번이 다른 verdict로 중복될 수 있어 품번 문자열이 아니라 후보 index로 선택 상태를 유지한다.
+- TDD/검증: 역할 API 미구현 404, adapter/component module 미존재, 후보 선택·Workbench 전달 부재를 RED로 먼저 확인했다. 최종 `npm run test:run`은 `15 files, 76 tests passed`, `npm run build`는 TypeScript와 Vite production build 성공, `uv run pytest -q tests/api/test_conversations.py tests/repo/test_repo_layout.py`는 `15 passed in 3.25s`, `git diff --check`는 통과했다. 외부 모델·MCP·공급자 API와 공유/배포 DB는 호출하지 않았다.
+- fixture와 미확인: `breadboard_supply` D1의 `J1`, `S1`, `F1`, `U1` 및 무방향 선 AC는 실제 저장소 sample을 축약한 frontend test fixture로 검증했다. 이 작업에서 브라우저가 실제 배포 서버에 연결된 상태의 업로드→변환→D5 모델 실행은 재실행하지 않았다. 기존 `.net` 업로드·`connections` 정규화와 프로젝트/run API는 존재하지만, 실제 모델·MCP 응답 및 배포 환경 round-trip은 별도 운영 검증이 필요하다. run을 새로 시작할 때 입력한 사용 조건은 표시되지만 기존 safe result에는 구조화된 원 사용자 조건이 없어 페이지 재접속 뒤 복원하지 않는다.
+- 다음 할 일: 조장이 아래 제안 문구를 루트 `SPEC.md`의 작업대/API 절에 반영할지 검토한다. 배포 환경에서 공개 demo와 실제 `.net` 업로드 각각 한 번의 authenticated round-trip을 확인하고, 재접속 뒤 사용 조건 복원이 필요하면 safe result 계약을 별도 기능으로 설계한다.
+
+### 로컬 프론트 더미 로그인
+
+- 원인: `5173`의 OSC Vite는 정상 실행됐지만 프록시 대상 `localhost:8000`은 현재 작업트리 서버가 아니라 `proj3-b-sth-api-1` Docker 컨테이너였다. 이 서비스의 `/api/auth/me` 401은 현재 공통 오류 계약 대신 `{"detail":"로그인이 필요합니다."}`를 반환해 프론트가 일반 요청 오류로 표시했다.
+- 변경: `VITE_DUMMY_AUTH=1`이면서 Vite 개발 모드일 때만 인증 API 호출 없이 ID 0의 일반 더미 사용자로 시작한다. production build에서는 플래그가 있어도 비활성이고 프로젝트·역할 등 업무 API 응답은 더미로 대체하지 않는다. `docs/specs/login-auth.md`와 `frontend/FRONTEND.md`에 이 경계를 기록했다.
+- TDD/검증: 신규 시험이 기존 구현에서 `1 failed, 2 passed`로 RED인 것을 확인했다. 구현과 production 차단 시험을 추가한 뒤 `npm run test:run -- src/auth/AuthProvider.test.tsx src/pages/LoginPage.test.tsx`는 `2 files, 7 tests passed`, `npm run build`와 `git diff --check`는 통과했다. Vite를 플래그와 함께 재시작하고 브라우저가 `/app`의 `회로 작업대`와 `로그아웃`을 표시하는 것을 확인했다.
+- 남은 것: 로그인 경계만 임시 통과한 상태다. `proj3-b-sth-api-1`은 현재 OSC의 프로젝트·역할 API 계약과 맞지 않아 작업대의 실제 데이터 요청은 계속 실패한다. 현재 작업트리 FastAPI와 격리 DB를 별도 포트에 올리고 Vite proxy를 맞추는 작업은 아직 하지 않았다.
+
+### Flux형 기본 다크 프론트엔드
+
+- 범위: 로그인·관리자·작업대·drawer·표·상태·승인/견적·SVG 연결 개념도를 기본 다크 테마로 통일했다. Flux PCB Editor 문서의 편집기 셸과 panel 위계를 참고하되 화면 구조·브랜드를 복제하지 않았고, API·인증·데이터 계약·연결 의미는 바꾸지 않았다.
+- 설계/계획: `docs/superpowers/specs/2026-11-09-dark-frontend-design.md`와 `docs/superpowers/plans/2026-11-09-dark-frontend.md`에 색상 토큰, 반응형, 접근성, 구현·검증 범위를 기록했다. 라이트 모드·전환 버튼·외부 폰트·새 라이브러리는 추가하지 않았다.
+- TDD: `LoginPage.test.tsx`에 기본 `color-scheme: dark`, canvas `#0b0f14`, trace `#35d0ba` 계약을 먼저 추가했고 기존 CSS에서 `expected dark, received normal`로 RED를 확인했다. Vitest 기본값이 CSS를 DOM에 주입하지 않아 `vite.config.ts`의 test `css: true`만 추가했으며 Node 타입이나 의존성은 늘리지 않았다.
+- 구현: `styles.css`에 의미 토큰, 어두운 sticky tool bar, panel 깊이, form·표·오류·경고·선택 상태, 키보드 focus와 reduced-motion을 적용했다. 연결 개념도에는 20px 격자, 청록 직접 연결, 낮은 대비 2단계 연결, 대상 부품의 제한된 glow를 적용했고 marker/화살표는 추가하지 않았다.
+- 검증: 로그인·관리자 집중 `10 passed`, 작업대·개념도 집중 `21 passed`, 전체 `15 files / 79 tests passed`. `npm run build` 성공, repo layout `5 passed`, `git diff --check` 통과. 브라우저에서 1440×900 3열 작업대와 390×844 프로젝트 버튼·결과 tab 전환형 레이아웃을 확인한 뒤 viewport를 복원했다.
+- 확인하지 못한 것: 현재 `localhost:8000`은 다른 `proj3-b-sth-api-1` 컨테이너라 실제 프로젝트·역할 데이터는 오류 상태다. 다크 화면의 정상·오류·빈 상태는 확인했지만 현재 OSC backend와 실제 데이터가 연결된 브라우저 흐름은 별도 후속 작업이다.
+
+### 개발 전용 전체 더미 흐름
+
+- 목적·범위: 사용자가 현재 다크 작업대에서 로그인부터 프로젝트 선택, D5 분석, 근거·판정, 사람 승인, 가격 조회, 가격 없는 견적 저장, 승인 사례 삭제까지 직접 조작하도록 개발 전용 비영속 API를 추가했다. 실제 LLM·RAG·Mouser·DB·업로드 변환은 호출하지 않는다.
+- 설계 경계: `DEV && MODE === 'dummy'`일 때만 공통 `apiRequest`가 메모리 API를 사용한다. 일반 `npm run dev`와 production build는 기존 실제 `/api` 경계를 유지한다. 정의되지 않은 더미 API는 실제 서버로 fallback하지 않고 공통 404를 반환하며, 화면에 `더미 실행 모드 · 저장되지 않음`을 표시한다.
+- TDD RED: mode 판별 export 부재로 client test `1 failed`, 메모리 API 미구현으로 dummy test `4 failed`, mode 인증·고지 부재로 auth/App test `3 failed`, 일반 개발 서버의 브라우저 흐름은 더미 고지가 없어 `1 failed`를 각각 확인했다.
+- 구현: `frontend/src/api/dummy.ts`가 `breadboard_supply`의 D1·J1·S1·F1·U1 연결, R01 역할 근거, SS34 판정·데이터시트 위치, SSE, 승인·사례·견적·조회 순간 가격을 실제 DTO 형태로 제공한다. 상태는 모듈 메모리에만 있고 견적 JSON에는 가격·재고 필드가 없다. `npm run dev:dummy`와 route 가로채기 없는 Playwright 흐름을 추가했다.
+- 검증: focused API `12 passed`, auth/App `21 passed`, 신규 직접 더미 E2E `1 passed`. 전체 `npm run test:run`은 `16 files / 87 tests passed`, `npm run build` 성공, `npm run e2e`는 기존 2건과 신규 1건 모두 통과했다. `uv run pytest -q tests/repo/test_repo_layout.py`는 `5 passed`, `git diff --check`는 CRLF 안내 외 오류 없이 통과했다. `127.0.0.1:5173`을 dummy mode로 다시 띄우고 브라우저에서 프로젝트·D1·R01·SS34 판정·승인·더미 가격·수량 2의 가격 없는 견적 저장까지 직접 확인했으며 사례 삭제는 같은 서버를 사용하는 E2E에서 확인했다.
+- 확인하지 않은 것: 이 기능은 의도적으로 외부 서비스와 실제 DB를 검증하지 않는다. production bundle은 더미 모드를 실행하지 않지만 배포 환경 round-trip 검증은 이번 범위가 아니다. 커밋·push·PR은 만들지 않는다.

@@ -5,7 +5,12 @@ data/corpus/tsc/*.pdf -text
 evals/results/supervisor/2026-11-05-stage3-five-v1/*.json -text whitespace=cr-at-eol
 evals/results/supervisor/2026-11-05-jev-stage3-v1/*.json -text whitespace=cr-at-eol
 evals/results/supervisor/2026-11-05-stage3-comparison-v1/*.json -text whitespace=cr-at-eol
+# Supervisor Prompt V0 실측 JSON과 기록한 출처 해시의 원시 바이트를 보존한다.
+evals/results/supervisor/2026-11-06-prompt-v0-v1/*.json -text whitespace=cr-at-eol
+evals/results/supervisor/2026-11-06-prompt-v0-v1/**/*.json -text whitespace=cr-at-eol
 # 동결 평가셋을 FROZEN.json에 기록한 LF 바이트 해시로 체크아웃한다.
 evals/dataset_v*.jsonl text eol=lf
+# 데모 코퍼스 스냅샷을 SNAPSHOT.md에 기록한 LF 바이트 해시로 체크아웃한다.
+data/demo/snapshot/*.jsonl text eol=lf
 # 제작자 원본은 고치지 않으므로 공백 검사에서 뺀다.
 data/circuits/collected/**/original/** -whitespace

@@ -63,6 +63,7 @@ def _validate_codes(codes: object) -> None:
         raise ValueError(f"codes must be a list of up to {len(CODES)} codes from {', '.join(CODES)}")
 
 
+# shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
 @mcp.tool()
 def get_part_specs(part: str, codes: list[str] | None = None) -> list[dict]:
     """품번 하나의 데이터시트 사양 표 행을 돌려줍니다(값을 비교하거나 판정하지 않습니다).
@@ -91,6 +92,7 @@ def _validate_conditions(conditions: object) -> None:
             raise ValueError("each condition needs a numeric code, optional slot min|typ|max, and finite gte and/or lte")
 
 
+# shortcut: 사양 표는 11-09에 지웠다. run_graph.py 기본값이 아직 이 도구를 불러 남겨 둔다. jeongun 브랜치 병합 때 지운다.
 @mcp.tool()
 def find_parts_by_specs(conditions: list[dict], category: str | None = None, package: str | None = None,
                         limit: int = 20, original_packages: list[str] | None = None,
