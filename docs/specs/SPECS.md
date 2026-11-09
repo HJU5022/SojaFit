@@ -10,6 +10,7 @@
 `login-auth.md`의 수용 기준은 루트 `SPEC.md` 8.6(로그인)과 겹칩니다. 내용이 다르면 `SPEC.md`를 따릅니다.
 
 ## 파일
+- `evaluator-demo-readiness.md` — 평가자 HTTP·키 없는 Compose 데모·서비스 관측·CI 회귀와 제출 증거 수정 준비
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
 - `login-auth.md` — 로그인과 사용자 식별 작업서(이메일·비밀번호 로그인, 서버 세션)
 - `google-admin-login.md` — 기존 인증을 유지하는 Google 관리자 로그인 설계·구현 상태와 남은 운영 검증

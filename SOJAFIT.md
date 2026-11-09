@@ -109,6 +109,7 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 재생은 아직 없음)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
+│   │   ├── demo.py           <- 앱 전용 합성 시나리오 응답·도구, 외부 호출 없음
 │   │   ├── quote.py        <- 사람이 승인한 견적서 저장(SPEC 8.4) (예정)
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 같은 출처 로그인 화면과 앞으로의 입력·승인·견적 화면
@@ -137,7 +138,8 @@ SojaFit (proj3-b)
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 응답을 둘 자리. 현재 설명 파일만 있고 재생 코드는 없음
-│       └── DEMO.md         <- 폴더 설명
+│       ├── DEMO.md         <- 폴더 설명
+│       └── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
 │
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
@@ -153,6 +155,10 @@ SojaFit (proj3-b)
 │   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
 │   ├── 011_part_specifications.sql  <- 부품 사양 표(품번·코드 17종+PACKAGE·SI 값·인용). 기존 DB·Supabase에는 따로 적용
 │   ├── 013_agent_memory.sql <- 사용자 업로드·thread·대화·승인 원본 전용 스키마
+│   ├── 014_thread_inputs.sql <- 승인 당시 질문·조건·재개 답변의 현재 버전 입력 기록
+│   ├── 015_analysis_limits.sql <- UTC 일자별 사용자 분석 예약 예산과 입장 빈도 제한
+│   ├── 016_memory_controls.sql <- 승인 사례 정정 메모·철회·삭제 상태
+│   ├── 017_analysis_events.sql <- 내용 없는 분석 요청·단계 지연 기록
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -187,6 +193,7 @@ SojaFit (proj3-b)
 │   │   └── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
+│   │   ├── run_thread_validation.py <- 호출 없는 준비 확인과 상한 있는 품질·보고 비용 평가
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
 │   │   ├── run_retrieval_r1.py  <- R1 검색 측정(84문항, 임베딩×필터×질의×리랭커 264칸을 dev 세트에서 고르고 test 세트에서 한 번 비교)
@@ -398,6 +405,7 @@ SojaFit (proj3-b)
 │   │   └── ADR.md          <- 폴더 설명과 결정 목록
 │   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
 │   │   ├── SPECS.md        <- 폴더 설명
+│   │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
@@ -413,6 +421,7 @@ SojaFit (proj3-b)
 │   │   └── judge-agent-plan.md  <- 판정 에이전트의 테스트 우선 구현 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
+│   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
 │   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가

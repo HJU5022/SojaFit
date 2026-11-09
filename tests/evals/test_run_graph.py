@@ -8,6 +8,62 @@ from evals.runners import run_graph as R
 from evals.runners.run_graph import run_scores
 
 
+def test_validation_usage_preserves_missing_cost_and_drops_text():
+    from types import SimpleNamespace
+    from evals.runners.run_thread_validation import usage_rows, cost_total
+    child = SimpleNamespace(run_type='llm', outputs={'llm_output': {'id':'gen-synthetic',
+        'model_name':'synthetic/model', 'token_usage':{'prompt_tokens':12,'completion_tokens':3,'cost':0.02}},
+        'generations':['PRIVATE_ANSWER']}, child_runs=[])
+    root = SimpleNamespace(run_type='chain', outputs={'input':'PRIVATE_QUESTION'}, child_runs=[child])
+    rows = usage_rows([root])
+    assert rows == [{'response_id':'gen-synthetic','model':'synthetic/model',
+                     'prompt_tokens':12,'completion_tokens':3,'reported_cost_usd':0.02}]
+    assert cost_total(rows) == 0.02
+    child.outputs['llm_output']['token_usage'].pop('cost')
+    assert cost_total(usage_rows([root])) is None and cost_total([]) is None
+
+
+def test_validation_dry_run_and_invalid_ids_never_invoke_graph(tmp_path, monkeypatch):
+    import json
+    import pytest
+    from evals.runners import run_thread_validation as V
+    monkeypatch.setattr(R, 'main', lambda *a, **k: pytest.fail('dry-run must not execute'))
+    out = tmp_path/'result.json'
+    assert V.main(['--ids','draft30-e01','--out',str(out)]) == 0
+    assert not out.exists()
+    for ids in (['missing'], ['draft30-e01']*2, ['draft30-e01']*5):
+        with pytest.raises(ValueError):
+            V.main(['--ids',*ids,'--out',str(out)])
+    out.write_text(json.dumps({}), encoding='utf-8')
+    with pytest.raises(FileExistsError):
+        V.main(['--ids','draft30-e01','--out',str(out)])
+
+
+def test_validation_execute_writes_usage_even_when_cost_is_missing(tmp_path, monkeypatch):
+    import json
+    from pathlib import Path
+    from backend.services import llm
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    from evals.runners import run_thread_validation as V
+    original = llm.chat
+    monkeypatch.setattr(llm, 'LLM_PROVIDER', 'openrouter')
+    def fake_main(dataset, ids, out, multi):
+        budget = llm._evaluation_budget.get()
+        assert multi and budget.max_usd == 0.50 and budget.on_reserve is not None
+        budget.reserve('synthetic', output_tokens=0)
+        FakeListChatModel(responses=['PRIVATE_ANSWER']).invoke('PRIVATE_QUESTION')
+        Path(out).write_text(json.dumps({'failed':[]}), encoding='utf-8')
+        llm.chat = lambda *a: None
+    monkeypatch.setattr(R, 'main', fake_main)
+    out = tmp_path/'result.json'
+    assert V.main(['--ids','draft30-e01','--out',str(out),'--execute']) == 2
+    report_text = out.with_suffix('.usage.json').read_text(encoding='utf-8')
+    report = json.loads(report_text)
+    assert llm.chat is original and report['reported_cost_total_usd'] is None
+    assert len(report['calls']) == report['reserved_calls'] == report['missing_response_ids'] == 1
+    assert not report['billing_reconciled'] and 'PRIVATE_' not in report_text
+
+
 def test_answer_path_scores_include_citation_check():
     state = {"path": ["입력 읽기", "라우팅", "검색", "채점", "생성"], "question_type": "rating", "tries": 1,
              "docs": [{"chunk_id": 7}, {"chunk_id": 8}], "passed": [7], "answer": "VRRM은 20 V다 [7]. 근거 없는 문장.",
