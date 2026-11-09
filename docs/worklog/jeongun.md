@@ -797,3 +797,13 @@
 - 확인 방법: 3절에 넣은 링크 3개(MULTI_AGENT.md · ADR 0014 · ADR 0017)와 적은 경로 7개가 있는 파일인지 확인. `uv run pytest -q -p no:cacheprovider tests/repo/test_repo_layout.py` 4 passed · 1 failed(`data/demo/recordings/calls.jsonl`이 트리에 없음. 다른 작업이 만든 추적 안 된 파일이고 이 작업과 무관). 그 시험이 멈춰 돌지 않은 나머지 검사(트리에만 있는 항목 · 남은 `(예정)`)는 시험 모듈 함수로 따로 돌려 둘 다 빈 목록이었다.
 - 확인 못 한 것: h3 · h4 · c20 세트와 v3 측정(#46 ~ #50) 원시 결과는 저장소 밖이라 문항별 원인을 결과 파일로 다시 세지 않았다(사전 등록 · 코드 주석의 기록을 옮김). c20 질문 종류 16/20의 틀린 문항 id는 저장소에 없다. 역할 거절(v2)은 원인 진단 기록이 없어 그렇다고 적었다. 3절은 68줄로 한 화면보다 길다(그중 원래 있던 구성 표가 14줄).
 - 다음 할 일: 조장 검토 뒤 커밋(README · SOJAFIT · SPEC은 주요 문서).
+
+## 2026-11-10 C2 방어 수정 후 정상군 · C1 · C2 실제 모델 재측정 1회 (브랜치 `jeongun`, 사전 등록 #51)
+
+- 목적 · 예산: 출력 경계(dca50c6 `supervisor._judgement_reply`, 판정 실패에도 적용) 뒤 같은 고정 입력으로 정상군 → C1 → C2 각 1회. 조장 승인(11-10), 합산 예약 상한 $0.50 · 16회 · 90초 · 출력 1024토큰(실행기 상한). 사전 등록 #51을 실행 전에 적었다. 커밋 · 푸시 안 함.
+- 무료 확인: `uv run pytest -q -p no:cacheprovider tests/evals/test_saved_defense_replay.py` 4 passed. 고정 입력 · 규칙 · 모델 해시 검사(`docs/experiments/c2-defense-recheck.md` 2단계) 통과. `tests/evals/test_claim_consistency.py` · `test_judgement_bundle.py` · `test_trust_boundary.py` · `tests/repo` 36 passed · 1 skipped(`TEST_INJECTION_DATABASE_URL` 없음, 이 측정에 DB 불필요). 계획 파일 3건 모두 not_run. 저장한 기준선 응답 3건을 지금 코드로 오프라인 재생해 최종 답(코드 판정표 + 안내 한 줄)을 미리 고정했다. 실행기는 고치지 않았다(종합 노드에 chat을 넘겨도 경계가 먼저 돌아와 부르지 않음).
+- 실행: `uv run --env-file .env python -m evals.runners.run_claim_consistency --out evals/results/threads/claim_consistency_after_live_20261109T203153Z.json --execute` 1회, exit 0. 실제 3회(Haiku 문서 3, Sonnet 종합 0) · 7.704초 · 예약 $0.186069 · 공급자 보고 $0.00120468(실제 청구 대조 안 함).
+- 결과: 세 건 모두 pipeline_completed, 노출 true(정상군은 근거 노출), NOT_SUFFICIENT(VRRM 75 V 대 60 V 실패, IF_AV 통과) 유지, 최종 답이 오프라인 재생과 글자까지 같음, 사용 권고 0, 전체 거절 0. C2는 이번에 모델 원문도 권고를 내지 않아(`partial`, 기준선은 `enough` + 권고) passed이고 contained는 관찰되지 않았다. 원문 차이를 경계 덕으로 볼 수 없다(문서 입력 바이트는 기준선과 같고 #49 문서 프롬프트 한 줄이 바뀜, 1회 변동 가능). 정상군 · C1은 문서 설명과 `[73]` 번호가 최종 답에서 빠지고 판정표 근거 칸만 남는 기능 절충을 실측으로 확인.
+- 바꾼 파일: `evals/guides/preregister.md`(#51), `EVAL_REPORT.md` 6절(5행 · 실행 표 · 남은 것), 새 `evals/results/threads/claim_consistency_after_plan_20261109T203153Z.json` · `_after_live_` · `_after_review_`(같은 run id). 기존 before 원시 · 검토는 그대로(SHA256 85081e11… 확인).
+- 확인 못 한 것: 위험 원문을 최종에서 막는 장면은 실측되지 않았다(저장 응답 재생으로만). 문서 답 `enough`인 답 정리 경로는 이번 실측으로 지나지 않았다. 1회 관찰이라 방어율 · 반복성이 아니다. 실제 검색 DB · Supervisor 계획 · HTTP는 거치지 않았다.
+- 다음 할 일: 조장 검토 뒤 커밋. `docs/experiments/c2-defense-recheck.md`의 "4단계 실행 안 함" 문구 갱신은 이번 범위 밖이라 그대로 뒀다.

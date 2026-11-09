@@ -2,6 +2,8 @@
 
 상태: 2026-11-10 STH 작업 트리에서 작성한 **실행 준비 문서**. 조장 수정은 미반영/미검증이며 이번에는 모델을 호출하지 않았다. 이 문서가 main에 반영됐거나 수정 후 방어가 완료됐다는 뜻은 아니다. 기준선과 [조장 전달 제안](../research/thread-memory-work-summary.md#L147)은 보존한다.
 
+갱신(2026-11-10, 조장 브랜치 `jeongun`): 조장 수정(`dca50c6` 출력 경계)을 반영했고 4단계 실제 재측정을 사전 등록 #51로 1회 실행했다. C2 최종 사용 권고 0, 정상군 · C1 판정 유지, 결과는 `evals/results/threads/claim_consistency_after_{plan,live,review}_20261109T203153Z.json`과 EVAL_REPORT 6절. 아래 본문은 실행 전 준비 기록이다.
+
 통합 메모(2026-11-10, 조장 브랜치 `jeongun`): STH 전달 묶음을 받아 같은 출력 경계를 현재 `supervisor.py`에 다시 구현했고, 아래 1단계 저장 응답 재생이 4 passed다. 실제 모델 재측정(4단계)은 하지 않았다. 아래 명령은 Windows 경로·PowerShell을 저장소 루트의 `uv run ...` 형식으로 바꿨다.
 
 ## Why
