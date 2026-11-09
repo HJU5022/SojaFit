@@ -53,6 +53,6 @@
 
 임베딩 결과의 수치와 공통 해석은 루트 [EVAL_REPORT.md](../EVAL_REPORT.md), 후보 13종을 선정한 이유·개별 실행 과정·중단 사유·다음 조건은 [embedding-candidate-investigation.md](../docs/research/embedding-candidate-investigation.md)를 봅니다. 2026-11-02 확장 평가기·실제 PDF 표본·원시 결과는 저장소에 없어 재현할 수 없습니다. 차단 결과는 Recall@5·MRR 0점이나 품질 탈락으로 환산하지 않습니다.
 
-`embedding_sample_v0.jsonl`은 후보를 거르는 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 실제 모델 결정은 TSC 1,360건 실제 청크 평가를 별도 사전 등록한 뒤 수행합니다.
+`embedding_sample_v0.jsonl`은 후보를 거른 2026-10-30 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 서비스 임베딩 결정은 이후 TSC 1,360건 실제 청크를 사용한 사전 등록 #25의 R1 dev/test 비교에서 `voyage-4-large` 1024차원으로 완료됐고, 선택 과정과 한계는 루트 [EVAL_REPORT.md](../EVAL_REPORT.md) 1-4절을 따릅니다. 이 결정은 새 v3 평가셋과 v4h 코퍼스의 공식 재측정이 끝났다는 뜻이 아닙니다.
 
 평가셋 필드·정답 기준·동결·채점 방식은 [dataset-guide.md](guides/dataset-guide.md)가 정본입니다.

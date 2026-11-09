@@ -18,4 +18,4 @@
 1. 3차 RAG 검색 등을 MCP 서버(FastMCP)로 노출하고, LangGraph 에이전트가 MCP 클라이언트로 호출합니다. (`mcp_server/`) 사실 확인 · 사양 표 조회는 그래프에 연결했고(위 역할), 검색을 MCP로 부르는 경로는 시험(`tests/graph/test_graph_mcp_retriever.py`)에서만 씁니다.
 2. 도메인 판단 규칙을 Skill 문서(`skills/SKILL.md`)로 분리해 에이전트가 쓰고, **같은 평가셋으로 Skill이 있을 때와 없을 때의 점수 차이**를 보입니다.
 
-이 STH 브랜치에는 MCP Python SDK 의존성이 잠금 파일에 포함되어 있습니다. main 통합 전에는 해당 브랜치의 실행·import 상태를 별도로 확인합니다.
+MCP Python SDK 의존성은 `pyproject.toml`과 `uv.lock`에서 관리합니다. import와 stdio 연결 계약은 `tests/mcp_skill/test_mcp_server.py`, `tests/graph/test_graph_mcp_retriever.py`, `tests/graph/test_graph_mcp_stdio.py`로 확인합니다.

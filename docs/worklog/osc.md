@@ -1,5 +1,13 @@
 # 오세창 작업 기록
 
+## 2026-11-09 PR #71 현재 구현·평가 근거 계약 보완
+
+- 목적: 최신 main의 v4h 청킹·Voyage 검색 구현과 과거 v1 측정, 저장소 밖 lab 실행을 문서에서 서로 다른 근거로 구분하고 PR #71의 구현 현황 문서에 함께 반영한다.
+- 바꾼 파일: `EVAL_REPORT.md`, `evals/EVALS.md`, `data/DATA.md`, `SPEC.md`, `backend/mcp_skill/MCP_SKILL.md`, `docs/experiments/embedding-voyage-candidates.md`, `docs/experiments/corpus-storage-budget.md`, `docs/research/embedding-candidate-investigation.md`, `docs/research/model-licenses.md`, 이 파일.
+- 바꾼 내용: 평가 보고서 상단을 현재 코드 계약과 2026-11-01 측정 스냅샷으로 나누고, 임베딩 선택 완료 상태와 v1 manifest provenance를 명시했다. SPEC의 v3 50문항 수치는 저장소 밖 lab 결정 근거이며 공식 G5 결과가 아니라고 표시하고, 과거 STH 브랜치 안내를 현재 MCP 의존성·시험 경계로 바꿨다.
+- 작업 경계: 동결 평가셋과 원시 결과는 수정하지 않았고 API 호출·DB 적재·배포는 하지 않았다.
+- 검증: `uv lock --check`, `docker compose config --quiet`, `git diff --check`, 충돌 표식 검색을 통과했다. `PYTHONUTF8=1 uv run --frozen pytest -q -p no:cacheprovider`는 `885 passed, 58 skipped`였다.
+
 ## 2026-11-09 회로 프로젝트와 대상 선택 (Task 6)
 
 - 범위: 승인된 `docs/specs/d5-frontend-service.md` AC-02/03/09의 프로젝트 화면만 기존 owner API에 연결했다. 프로젝트/대상 참조 선택에서 끝내며 D5 실행·대화·승인·견적·후보 가격 공급·React KiCad 파싱은 추가하지 않는다. 원격 쓰기·실제 서비스 호출은 없다.
@@ -118,7 +126,7 @@
 
 - 팀장 요청에 따라 현재 상태를 설명하는 문서를 실제 저장소 코드와 대조했다. 과거 ADR·평가 결과·제출 주제서·작업 기록은 당시 증거로 보존하고, 현재 상태 문서에서만 구현·목표·외부 운영 이력을 구분했다.
 - `README.md`, `SPEC.md`, `SOJAFIT.md`, `docs/GATES.md`에 현재 서비스 API 범위(로그인·Google 관리자·관리자 계정·가격 조회·공통 오류)와 미구현 범위(질문·회로·대화·견적 승인/저장·Store·영속 체크포인트·업무 화면)를 반영했다.
-- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 1,360문서·52,244청크 등 v1 수치는 날짜가 있는 외부 산출물·DB 이력으로 두고 현재 진행 중인 v2 전체 청킹 완료 증거로 사용하지 않도록 했다.
+- RAG·데이터 문서에서 현재 `voyage-4-large` 1024차원, `rerank-3`, `008` 이후 차원 없는 `halfvec`을 기준으로 정리했다. 최신 main 재대조에서 v1 manifest·운영 스냅샷 52,244청크와 11-08 저장소 밖 v4h 전체 실행 51,967카드를 구분하고, 새 clone 재현과 에이전트 길 재측정은 별도 증거가 필요하다고 바로잡았다.
 - Google 관리자 로그인 문서의 코드·SQL·CLI·합성 테스트 구현 항목은 완료로, 현재 Cloud Run·Secret Manager·운영 DB·실계정 상태는 재검증이 필요한 항목으로 분리했다. MCP 그래프 통합 문서는 구현 전 계획과 현재 `StdioMcpRetriever` 구현을 구분했다.
 - 검증: 저장소 구조 검사 `5 passed`, 전체 테스트 `770 passed, 43 skipped`, `uv lock --check`, `docker compose config --quiet`, `git diff --check` 통과. 운영 배포·DB 상태는 이번 작업에서 조회하지 않았다.
 
