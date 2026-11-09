@@ -150,7 +150,7 @@ SojaFit (proj3-b)
 │   │   ├── supervisor.py   <- Supervisor Prompt V0 네 필드 출력·입력 envelope·상태별 의미 검증 계약(현재 그래프에는 미연결)
 │   │   ├── nodes.py        <- 노드 11개: 입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀(사실 확인 · 판정 읽기는 multi_agent 코드를 씀)
 │   │   ├── mcp_retriever.py  <- PR #44 MCP 응답을 검증하고 stdio 세션을 재사용하는 LangGraph 검색기(`check_corpus` 확인 호출 포함)
-│   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 그래프 앱을 만듦
+│   │   ├── build.py        <- 노드를 잇고 갈림길을 정해 단일 그래프 앱을 만듦(평가 비교용, 서비스는 멀티 그래프)
 │   │   ├── netlist.py      <- 사용자 KiCad 넷리스트 파싱과 입력 제한
 │   │   └── memory.py       <- 사용자별 Store namespace 규칙, 승인 사례를 크기 제한된 모델 입력으로 만들기. graph/nodes.py · multi_agent/supervisor.py · multi_agent/agents/docs.py · agents/judge.py · conversations/memory_service.py가 import
 │   ├── multi_agent/        <- D5 멀티 에이전트(Supervisor + RAG 에이전트 · 대체 부품 에이전트). D4 단일 그래프(graph/)는 비교 기준선이라 따로 둠
@@ -177,10 +177,10 @@ SojaFit (proj3-b)
 │   ├── prompts/            <- 노드가 LLM에 보내는 프롬프트 원문과 버전 기록
 │   │   ├── PROMPTS.md      <- 폴더 설명과 프롬프트 버전 기록 표
 │   │   ├── supervisor_v0.md  <- Supervisor V0 질문 분류·근거 선택·상태 기반 다음 경로 계약
-│   │   ├── route.md        <- 질문 종류 분류(라우팅 노드)
-│   │   ├── grade.md        <- 검색 청크 채점(채점 노드)
-│   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드)
-│   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드)
+│   │   ├── route.md        <- 질문 종류 분류(라우팅 노드). 단일 그래프 전용(평가 비교용)
+│   │   ├── grade.md        <- 검색 청크 채점(채점 노드). 단일 그래프 전용(평가 비교용)
+│   │   ├── rewrite.md      <- 검색어 다시 쓰기(재작성 노드). 단일 그래프 전용(평가 비교용)
+│   │   ├── generate.md     <- 통과 청크만 근거로 답하기(생성 노드). 단일 그래프 전용(평가 비교용)
 │   │   ├── judge_read.md   <- 판정 읽기 프롬프트(영어)
 │   │   ├── card_read.md    <- 카드 읽기 프롬프트(영어)
 │   │   ├── card_pick.md    <- 읽을 문서 고르기 프롬프트(영어)

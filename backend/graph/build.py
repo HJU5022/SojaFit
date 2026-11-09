@@ -1,4 +1,4 @@
-"""그래프 조립 (G4). D4 v2 단일 에이전트 그래프: 노드(`nodes.py`)를 이어 compile하고 갈림길(라우팅 · 검색 · 채점 · 판정 뒤)을 정한다.
+"""그래프 조립 (G4). D4 v2 단일 에이전트 그래프(평가 비교용: 서비스는 멀티 그래프 `backend/multi_agent/`만 쓴다. EVAL_REPORT 4장의 단일 대 멀티 비교를 다시 잴 때 쓴다): 노드(`nodes.py`)를 이어 compile하고 갈림길(라우팅 · 검색 · 채점 · 판정 뒤)을 정한다.
 
 - 역할: `build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`가 앱을 돌려주고, `evals/runners/run_graph.py`(평가)와 시험이
   `app.invoke({"input": ...})`로 돌린다. 흐름: 입력 읽기 → 사실 확인 → 라우팅 → 거절 / 짧은 답 / 가격 안내 / 생성(역할) /

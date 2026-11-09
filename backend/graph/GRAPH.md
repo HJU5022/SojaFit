@@ -1,7 +1,7 @@
 # graph
 
 ## 역할
-- 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. D4 단일 에이전트 그래프(11-06에 D4 v2로 고침)가 있고, 멀티 그래프는 `backend/multi_agent/`에 있습니다.
+- 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. 단일 그래프(`build.py`)는 평가 비교용입니다(서비스는 멀티 그래프만 씀, EVAL_REPORT 4장). D4 단일 에이전트 그래프(11-06에 D4 v2로 고침)가 있고, 멀티 그래프는 `backend/multi_agent/`에 있습니다.
 - 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), Supervisor 공통 입출력 계약(`supervisor.py`), 사용자별 장기 기억 Store namespace 규칙(`memory.py`).
 - 넣지 않는 것: 숫자·단위 비교 판정(`backend/judge/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 검색 구현(`backend/rag/`), 프롬프트 원문(`backend/prompts/`), 로그인·세션(`backend/auth.py`).
 - 담당: 에이전트
