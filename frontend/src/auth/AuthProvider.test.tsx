@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { StrictMode } from 'react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { AuthProvider, useAuth } from './AuthProvider'
 import { failure, network, user } from '../test/network'
@@ -25,4 +26,24 @@ it('exposes login and logout using the server session and refreshes role after l
   fireEvent.click(screen.getByText('종료'))
   expect(await screen.findByText('비로그인')).toBeInTheDocument()
   expect(requests.find(({ path }) => path.endsWith('/logout'))?.init.method).toBe('POST')
+})
+it('ignores an older StrictMode restore 401 after a new login succeeds', async () => {
+  const restores: { resolve: (response: Response) => void; signal: AbortSignal | null | undefined }[] = []
+  let signedIn = false
+  network((path, init) => {
+    if (path === '/api/auth/login') { signedIn = true; return Response.json({ user_id: 7 }) }
+    if (path === '/api/auth/me' && signedIn) return Response.json(user)
+    if (path === '/api/auth/me') return new Promise((resolve) => restores.push({ resolve, signal: init.signal }))
+    throw new Error(`Unexpected request: ${path}`)
+  })
+  render(<StrictMode><AuthProvider><Session /></AuthProvider></StrictMode>)
+  await waitFor(() => expect(restores).toHaveLength(2))
+  await act(async () => { restores[1].resolve(failure()) })
+  expect(await screen.findByText('비로그인')).toBeInTheDocument()
+  fireEvent.click(screen.getByText('접속'))
+  expect(await screen.findByText('사용자 7')).toBeInTheDocument()
+  // 취소된 fetch가 늦게 응답하는 네트워크 경계도 재현한다.
+  await act(async () => { restores[0].resolve(failure()) })
+  expect(screen.getByText('사용자 7')).toBeInTheDocument()
+  expect(restores[0].signal?.aborted).toBe(true)
 })

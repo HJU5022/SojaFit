@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { StrictMode } from 'react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -40,5 +41,33 @@ it('redirects to login and removes account data when the session expires during 
   open(); await screen.findByText('u***@example.test')
   fireEvent.click(screen.getByRole('button', { name: '비활성화' }))
   expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
+  expect(screen.queryByText('u***@example.test')).not.toBeInTheDocument()
+})
+it.each(['logout', 'navigation'])('cancels an outstanding update and skips its follow-up list after %s', async (exit) => {
+  let finish!: (response: Response) => void
+  let patchSignal: AbortSignal | null | undefined
+  let lists = 0
+  network((path, init) => {
+    if (path === '/api/auth/me') return Response.json(administrator)
+    if (path === '/api/auth/logout') return Response.json({ ok: true })
+    if (path === '/api/auth/google/status') return Response.json({ enabled: false })
+    if (path === '/api/admin/users/7' && init.method === 'PATCH') {
+      patchSignal = init.signal
+      return new Promise((resolve) => { finish = resolve })
+    }
+    if (path === '/api/admin/users') { lists++; return Response.json({ users: accounts }) }
+    throw new Error(`Unexpected request: ${path}`)
+  })
+  render(<StrictMode><MemoryRouter initialEntries={['/admin/users']}><App /></MemoryRouter></StrictMode>)
+  await screen.findByText('u***@example.test')
+  fireEvent.click(screen.getByRole('button', { name: '비활성화' }))
+  await waitFor(() => expect(finish).toBeTypeOf('function'))
+  const beforeExit = lists
+  if (exit === 'logout') fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+  else fireEvent.click(screen.getByRole('link', { name: '작업대' }))
+  await screen.findByRole('heading', { name: exit === 'logout' ? '로그인' : '회로 작업대' })
+  await act(async () => { finish(Response.json({ ok: true })) })
+  expect(lists).toBe(beforeExit)
+  expect(patchSignal?.aborted).toBe(true)
   expect(screen.queryByText('u***@example.test')).not.toBeInTheDocument()
 })

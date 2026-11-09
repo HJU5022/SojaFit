@@ -16,12 +16,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<unknown>(null)
   useEffect(() => {
     let current = true
+    const controller = new AbortController()
     const expire = () => setUser(null)
     window.addEventListener('sojafit:session-expired', expire)
-    auth.getMe().then((user) => { if (current) setUser(user) }).catch((error: ApiError) => {
+    auth.getMe(controller.signal).then((user) => { if (current) setUser(user) }).catch((error: ApiError) => {
       if (current && error.code !== 'UNAUTHORIZED') setError(error)
     }).finally(() => { if (current) setLoading(false) })
-    return () => { current = false; window.removeEventListener('sojafit:session-expired', expire) }
+    return () => { current = false; controller.abort(); window.removeEventListener('sojafit:session-expired', expire) }
   }, [])
   async function login(email: string, password: string) {
     await auth.login(email, password)

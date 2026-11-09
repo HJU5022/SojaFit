@@ -2,6 +2,7 @@
 
 ## 2026-11-09 인증·관리자·화면 메모리 가격 연결 (Task 3)
 
+- Fix Round 1: StrictMode의 이전 복원 401이 새 로그인을 해제하는 순서와, 관리자 PATCH 대기 중 로그아웃/경로 이동 후 후속 목록 GET이 실행되는 순서를 deferred-response 테스트로 먼저 재현했다. focused RED는 `3 failed, 5 passed`; effect별 AbortController·API signal 전달·응답/JSON 파싱 뒤 abort 검사·관리자 후속 GET/상태 변경 guard로 수정 후 `8 passed`. 전체 프런트 `24 passed in 2.01s`, build(TypeScript+Vite 78 modules), `git diff --check` 통과. non-JSON 오류 본문 Minor는 요청대로 최종 검토에 보류했다. backend·화면 범위·저장 경계는 변경하지 않았다.
 - 한 일: 기존 API만 연결했다. HttpOnly 세션을 `/api/auth/me`로 복원하고 로그인 성공 후 me에서 role을 확인한다. 보호 경로와 역할별 관리자 탐색, 마스킹된 계정 목록·활성 상태 변경, 설정된 Google 링크·기존 callback 실패 안내, 로그아웃을 연결했다. API 401은 메모리 인증 상태를 비우고 로그인으로 보낸다.
 - 가격 경계: 후보 품번을 받는 PricePanel은 열 때만 no-store 조회하며 React component memory에만 결과를 둔다. 닫기·품번 변경·화면 이탈 시 결과와 요청을 버린다. 같은 패널을 다시 열어도 새로 조회한다. 기존 Mouser nullable 응답을 표시하되 가격을 만들거나 숫자 비교를 하지 않는다. 작업대에는 아직 후보 공급 기능이 없어 빈 상태만 둔다.
 - 바꾼 파일: `frontend/src/api/`·`auth/`·`pages/`·`components/` 신규 소스/동작 테스트, `test/network.ts`, `App.tsx`·`App.test.tsx`·`styles.css`·`SRC.md`, 신규 파일만 적은 `SOJAFIT.md` 트리, 이 기록. 서버 계약·백엔드 소스·동결 평가셋은 변경하지 않았다.
