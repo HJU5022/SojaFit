@@ -42,7 +42,7 @@ def test_graph_reaches_real_search_through_stdio_mcp_within_cold_start_budget(mo
     with StdioMcpRetriever(env=env, timeout_seconds=10.0) as retriever:
         app = build_graph(retriever=retriever)
         state = app.invoke({"input": "질문: SS34 정격이 어떻게 돼?"})
-    assert state["path"] == ["입력 읽기", "라우팅", "재작성", "검색", "채점", "생성"]
+    assert state["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "채점", "생성"]
     assert state["docs"]
     assert all(card["file"] == "SS32 SERIES_Q2412.pdf" for card in state["docs"])
     assert all(card["document_key"] and card["page"] for card in state["docs"])

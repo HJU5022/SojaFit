@@ -58,6 +58,38 @@ def decode_search_result(result) -> list[dict]:
     return payload
 
 
+def decode_check_result(result) -> dict:
+    """`check_corpus` 응답을 {"parts": {이름: bool}, "revisions": {이름: bool}}로 검증해 변환한다."""
+    if getattr(result, "isError", False) is True:
+        raise RetrievalUnavailableError("tool_error")
+    payload = getattr(result, "structuredContent", None)
+    if not isinstance(payload, dict) or "parts" not in payload:
+        content = getattr(result, "content", None)
+        if (not isinstance(content, list) or len(content) != 1
+                or not isinstance(getattr(content[0], "text", None), str)):
+            raise RetrievalUnavailableError("invalid_response")
+        try:
+            payload = json.loads(content[0].text)
+        except (json.JSONDecodeError, TypeError):
+            raise RetrievalUnavailableError("invalid_response") from None
+    if not (isinstance(payload, dict) and all(
+            isinstance(payload.get(key), dict) and all(isinstance(v, bool) for v in payload[key].values())
+            for key in ("parts", "revisions"))):
+        raise RetrievalUnavailableError("invalid_response")
+    return {"parts": payload["parts"], "revisions": payload["revisions"]}
+
+
+def decode_list_result(result) -> list[dict]:
+    """목록을 돌려주는 MCP 도구(`get_part_specs` · `find_parts_by_specs`) 응답을 검증해 dict 목록으로 바꾼다."""
+    if getattr(result, "isError", False) is True:
+        raise RetrievalUnavailableError("tool_error")
+    structured = getattr(result, "structuredContent", None)
+    payload = structured.get("result") if isinstance(structured, dict) else None
+    if not isinstance(payload, list) or not all(isinstance(x, dict) for x in payload):
+        raise RetrievalUnavailableError("invalid_response")
+    return payload
+
+
 @asynccontextmanager
 async def open_stdio_session(params):
     """stdio 서버를 시작하고 초기화된 MCP 세션 하나를 제공한다."""
@@ -102,10 +134,15 @@ class StdioMcpRetriever:
         return self
 
     def __call__(self, query: str, *, parts: list[str] | None = None) -> list[dict]:
+        return self._run(self._call(query, parts))
+
+    def _run(self, coroutine):
+        """세션 스레드의 이벤트 루프에서 코루틴을 돌리고, 장애는 `RetrievalUnavailableError`로 바꿔 던진다."""
         if (self._thread is None or not self._thread.is_alive()
                 or self._loop is None or self._session is None):
+            coroutine.close()  # [왜] 돌리지 못한 코루틴은 닫아야 "never awaited" 경고가 안 난다
             raise RetrievalUnavailableError("mcp_unavailable")
-        future = asyncio.run_coroutine_threadsafe(self._call(query, parts), self._loop)
+        future = asyncio.run_coroutine_threadsafe(coroutine, self._loop)
         try:
             return future.result(self.timeout_seconds)
         except FutureTimeoutError:
@@ -115,6 +152,21 @@ class StdioMcpRetriever:
             raise
         except BaseException:
             raise RetrievalUnavailableError("mcp_unavailable") from None
+
+    def check(self, parts: list[str], revisions: list[str]) -> dict:
+        """코퍼스에 품번 · 개정 코드가 있는지 `check_corpus` 도구로 묻는다(같은 세션을 쓴다)."""
+        return self._run(self._check(parts, revisions))
+
+    def part_specs(self, part: str, codes: list[str] | None = None) -> list[dict]:
+        """품번 하나의 사양 표 행을 `get_part_specs` 도구로 읽는다(같은 세션을 쓴다)."""
+        return self._run(self._list("get_part_specs", {"part": part, "codes": codes}))
+
+    def find_parts(self, conditions: list[dict], category: str | None = None, package: str | None = None,
+                   limit: int = 50, original_packages: list[str] | None = None, original_category: str | None = None) -> list[dict]:
+        """숫자 조건을 채운 품번을 `find_parts_by_specs` 도구로 찾는다. original_*는 원래 부품의 패키지 · 분류로, 순서에만 쓴다."""
+        return self._run(self._list("find_parts_by_specs",
+                                    {"conditions": conditions, "category": category, "package": package, "limit": limit,
+                                     "original_packages": original_packages, "original_category": original_category}))
 
     def __exit__(self, exc_type, exc, traceback):
         if self._loop is not None and self._stop is not None:
@@ -143,6 +195,14 @@ class StdioMcpRetriever:
         except BaseException as error:
             self._startup_error = error
             self._ready.set()
+
+    async def _check(self, parts: list[str], revisions: list[str]) -> dict:
+        result = await self._session.call_tool("check_corpus", {"parts": parts, "revisions": revisions})
+        return decode_check_result(result)
+
+    async def _list(self, tool: str, arguments: dict) -> list[dict]:
+        result = await self._session.call_tool(tool, arguments)
+        return decode_list_result(result)
 
     async def _call(self, query: str, parts: list[str] | None) -> list[dict]:
         result = await self._session.call_tool(

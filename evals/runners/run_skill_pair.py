@@ -36,6 +36,18 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def load_frozen_items(dataset, frozen_path):
+    """UTF-8 동결 평가셋을 읽고 기록된 해시·건수와 일치하는 문항 목록을 돌려준다."""
+    dataset, frozen_path = Path(dataset), Path(frozen_path)
+    frozen = json.loads(frozen_path.read_text(encoding="utf-8"))[dataset.name]
+    if digest(dataset) != frozen["sha256"]:
+        raise ValueError("동결 평가셋 해시 불일치")
+    items = [json.loads(line) for line in dataset.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if len(items) != frozen["count"]:
+        raise ValueError("동결 평가셋 건수 불일치")
+    return items
+
+
 def prepare(item, retriever):
     """한 문항을 그림의 노드 순서(입력 읽기, 라우팅, 검색, 채점, 재작성, 거절)대로 생성 직전까지 진행해 상태 dict를 돌려준다.
 
@@ -146,12 +158,7 @@ def main():
         parser.error("OpenRouter 키만 사용해야 합니다")
     dataset = ROOT / "evals/dataset_v1.jsonl"
     # [주의] 동결 평가셋의 해시·건수가 FROZEN.json과 다르면 정답이 바뀐 것이므로 ValueError로 중단한다
-    frozen = json.loads((ROOT / "evals/FROZEN.json").read_text())[dataset.name]
-    if digest(dataset) != frozen["sha256"]:
-        raise ValueError("동결 평가셋 해시 불일치")
-    items = [json.loads(x) for x in dataset.read_text().splitlines() if x.strip()]
-    if len(items) != frozen["count"]:
-        raise ValueError("동결 평가셋 건수 불일치")
+    items = load_frozen_items(dataset, ROOT / "evals/FROZEN.json")
     catalog = []  # OpenRouter 모델 목록(단가 포함). 예약 비용을 계산하려고 실행 전에 한 번 받는다
     for endpoint in ("models", "embeddings/models"):
         with urlopen(f"https://openrouter.ai/api/v1/{endpoint}", timeout=15) as response:

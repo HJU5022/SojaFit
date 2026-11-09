@@ -251,3 +251,56 @@ def test_run_graph_scores_include_answer_metric_when_item_given():
     }
     scores = run_scores(state, 1.2, ["Route", "Grade", "Answer"], item=DATASHEET_ITEM)
     assert scores["answer_metric"][:2] == ("cited_gold", "CATEGORICAL")
+
+
+def _judge_state(document, page):
+    """판정 길 답 상태: 코드 틀 답(check.judgement)과 사양 표 인용이 달린 판정 결과."""
+    check = {"code": "VRRM", "citation": {"document": document, "page": page, "table": "ABSOLUTE MAXIMUM RATINGS", "row": "VRRM"}}
+    return {"path": ["입력 읽기", "판정", "답 틀"], "answer": "역할: 역극성 보호\n\n**1N5817: 불충족**",
+            "check": {"used": [], "judgement": True},
+            "judgement": {"kind": "judge", "results": [{"part": "1N5817", "verdict": "NOT_SUFFICIENT", "checks": [check]}]}}
+
+
+def test_judge_answer_citing_gold_page_is_cited_gold():
+    """판정 답이 사양 표로 정답 (PDF, 쪽)을 인용하면 [n] 인용과 같이 cited_gold다(사전 등록 #39 · #40)."""
+    row = score_item(DATASHEET_ITEM, _judge_state("1N5817 SERIES_H2104.pdf", 1))
+    assert row["metric"] == "cited_gold"
+    assert row["cited_locations"] == [["1N5817 SERIES_H2104.pdf", 1]]
+
+
+def test_judge_answer_citing_other_page_is_wrong_citation():
+    """판정 답의 사양 표 인용이 정답 쪽이 아니면 wrong_citation이다."""
+    assert score_item(DATASHEET_ITEM, _judge_state("1N5817 SERIES_H2104.pdf", 2))["metric"] == "wrong_citation"
+
+
+def test_result_row_keeps_verdict_codes_only():
+    """결과 줄에는 후보별 판정 코드만 남고 답 글은 남지 않는다."""
+    from evals.runners.run_graph import result_row
+    scores = {"question_type": ("candidate_judge", "CATEGORICAL", ""), "answer_metric": ("cited_gold", "CATEGORICAL", "")}
+    row = result_row(DATASHEET_ITEM, _judge_state("1N5817 SERIES_H2104.pdf", 1), scores, "")
+    assert row["verdicts"] == [["1N5817", "NOT_SUFFICIENT"]]
+    assert "answer" not in row
+
+
+def test_find_answer_counts_only_shown_candidates():
+    """찾기 답은 답 글에 나간 후보(shown)의 인용만 센다. 판정만 하고 안 보여 준 후보의 인용으로 정답이 되지 않는다."""
+    gold = {"document": "1N5817 SERIES_H2104.pdf", "page": 1}
+    other = {"document": "SS12 SERIES_R2305.pdf", "page": 1}
+    hidden = {"part": "1N5817", "verdict": "ROLE_SUFFICIENT", "checks": [{"code": "VRRM", "citation": gold}]}
+    shown = {"part": "SS14", "verdict": "ROLE_SUFFICIENT", "checks": [{"code": "VRRM", "citation": other}]}
+    state = {"path": ["판정", "답 틀"], "answer": "역할: 역극성 보호", "check": {"used": [], "judgement": True},
+             "judgement": {"kind": "find", "results": [hidden, shown], "shown": [shown], "unverified": []}}
+    assert score_item(DATASHEET_ITEM, state)["metric"] == "wrong_citation"
+
+
+def test_combined_answer_counts_both_chunk_and_spec_table_citations():
+    """[왜] 멀티의 종합 답은 문서 할 일의 [n] 인용과 판정 표 인용이 한 답에 같이 있다. 둘 다 센다(11-06 계획형 멀티 v3-07)."""
+    state = _judge_state("1N5817 SERIES_H2104.pdf", 1)
+    docs = [{"chunk_id": 7, "file": "SS12 SERIES_R2305.pdf", "page": 2, "content": "x"}]
+    state.update(answer="D1은 전원 경로에 있다 [넷리스트]. VF는 0.75 V이다 [7].", docs=docs, passed=[7],
+                 target_part={"ref": "D1"}, check={"used": ["7", "넷리스트"], "fake_citations": [], "judgement": True})
+    row = score_item(DATASHEET_ITEM, state)
+    assert row["metric"] == "cited_gold"
+    assert row["cited_locations"] == [["SS12 SERIES_R2305.pdf", 2], ["1N5817 SERIES_H2104.pdf", 1]]
+    fake = {**state, "check": {**state["check"], "fake_citations": ["9"]}}
+    assert score_item(DATASHEET_ITEM, fake)["metric"] == "wrong_citation"  # 없는 근거 인용은 판정 표가 있어도 걸린다

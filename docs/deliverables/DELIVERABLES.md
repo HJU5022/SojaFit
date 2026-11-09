@@ -7,7 +7,7 @@
 - 담당: 평가·문서
 
 ## 파일
-- `ai_tools_log.md` — AI 코딩 도구 사용 기록(양식, 작성 전)
+- `ai_tools_log.md` — AI 코딩 도구 사용 기록(11-05부터 작성 중)
 - `failure_analysis.md` — 실패 사례 분석 글(양식, 작성 전)
 - `portfolio.md` — 포트폴리오 1장 양식. 조원마다 `portfolio-{이름}.md`로 복사해 냅니다
 - `langfuse/` — Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 화면 1장 이상 포함) 자리. 지금은 `.gitkeep`뿐입니다

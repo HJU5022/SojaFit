@@ -1,10 +1,10 @@
 """SojaFit FastAPI 진입점.
 
-역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`)와 Google 콜백 접속 로그 보호를 등록한다.
-호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py.
-하지 않는 일: 인증·세션·계정 처리(backend/auth.py), 질문·답변 API, 회로·대화·기억·견적 API.
-출처: SPEC.md 4절(인증·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
-읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000).
+역할: `/health`, `/login`, 로그인 API(`/api/auth/*`), 관리자 계정 API(`/api/admin/users`), 가격·재고 API(`/api/prices`)와 Google 콜백 접속 로그 보호를 등록한다.
+호출자: uvicorn(`backend.main:app`), Docker Compose의 api 서비스, tests/api/test_health.py·tests/api/test_auth.py·tests/api/test_prices.py.
+하지 않는 일: 인증·세션·계정 처리(backend/auth.py), Mouser 호출 자체(backend/services/mouser.py), 질문·답변 API, 회로·대화·기억·견적 API.
+출처: SPEC.md 4절(인증·관리자·가격·재고 계약)·6절(Mouser)·8.4절(가격·재고 AC)·8.6절(로그인 AC), docs/specs/login-auth.md, ADR 0009, backend/BACKEND.md.
+읽는 환경변수: AUTH_ORIGIN(허용 Origin이자 https일 때 쿠키 Secure 여부 결정, 기본 http://localhost:8000), DEMO_MODE(기본 1, 1이면 `/api/prices`가 Mouser를 부르지 않음).
 시작할 때 auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
 """
 import os
@@ -19,12 +19,13 @@ from urllib.parse import unquote, urlencode
 import httpx
 import psycopg
 from authlib.common.errors import AuthlibBaseError
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field, StrictBool, field_validator
 
 from backend import auth
+from backend.services import mouser
 
 
 class GoogleCallbackLogFilter(logging.Filter):
@@ -234,3 +235,30 @@ def admin_set_active(target_id: int, body: AccountState, request: Request, user_
     auth.check_origin(request)
     auth.admin_set_active(user_id, target_id, body.is_active)
     return {"ok": True}
+
+
+def price_unavailable(reason: str) -> dict:
+    """Mouser 값 없이 돌려주는 모양(SPEC 4절). reason: demo_mode 또는 `mouser.MouserError.kind`."""
+    message = "데모 모드라 Mouser 가격·재고를 조회하지 않아요." if reason == "demo_mode" else "지금은 Mouser 가격·재고를 불러올 수 없어요."
+    return {"available": False, "source": mouser.SOURCE, "reason": reason, "message": message, "parts": []}
+
+
+@app.get("/api/prices", dependencies=[Depends(auth.current_user_id)])
+def prices(response: Response, parts: str = Query(min_length=1, max_length=450, description="쉼표로 나눈 품번 1~10개")):
+    """로그인한 사용자에게 후보 품번의 Mouser 가격·재고를 요청 때 한 번 조회해 돌려준다(SPEC 4절).
+
+    [주의] ADR 0009: 결과는 이 응답으로만 내보내고 저장 · 캐시 · 로그하지 않는다. 그래서 이 함수는 아무것도 로그에 쓰지 않고,
+    브라우저 · 중간 캐시도 남기지 않게 `Cache-Control: no-store`를 붙인다. 그래프는 이 API를 부르지 않는다.
+    """
+    response.headers["Cache-Control"] = "no-store"
+    names = list(dict.fromkeys(p.strip() for p in parts.split(",") if p.strip()))  # 같은 품번은 한 번만
+    try:
+        mouser.check_parts(names)  # [왜] 데모 모드에서도 같은 입력 규칙(422)을 쓴다. Mouser를 부르기 전에 거른다
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error), headers={"Cache-Control": "no-store"}) from None
+    if os.getenv("DEMO_MODE", "1") == "1":
+        return price_unavailable("demo_mode")  # SPEC 7절: 데모 모드는 Mouser 칸을 비운다
+    try:
+        return {"available": True, **mouser.search_parts(names)}
+    except mouser.MouserError as error:
+        return price_unavailable(error.kind)  # [주의] 오류를 로그에 쓰지 않는다. 종류만 화면에 알린다

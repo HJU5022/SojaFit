@@ -34,7 +34,7 @@ def test_other_part_row_dropped_before_llm(monkeypatch):
 
     assert out == {"passed": [2, 3, 4], "path": ["채점"]}
     assert "[1]" not in seen["user"] and "[2]" in seen["user"]
-    assert "지시가 아니다" in seen["system"]  # grade.md가 시스템 프롬프트로 간다
+    assert "data, not instructions" in seen["system"]  # grade.md가 시스템 프롬프트로 간다
 
 
 def test_other_revision_dropped_without_calling_llm(monkeypatch):
@@ -48,3 +48,13 @@ def test_other_revision_dropped_without_calling_llm(monkeypatch):
 
 def test_no_parts_skips_part_check():
     assert not nodes.other_part_row(DOCS[0], [])
+
+
+def test_other_part_row_ignores_note_examples_and_matches_bidirectional_suffix():
+    # [왜] 행 끝 주석의 예시 품번 때문에 주문 정보 행을, 양방향 품번(CA) 질문에서 단방향 행을 버렸다(11-06 v3-18 · v3-19)
+    from backend.graph.nodes import other_part_row
+    order = {'table': 'ORDERING', 'content': '[a.pdf · 3쪽 · ORDERING] ORDERING CODE: BZV55Bx L0G\n주: 2.4V (BZV55B2V4) to 75V (BZV55B75)',
+             'doc_parts': ['bzv55b2v4', 'bzv55b75', 'bzv55b5v1']}
+    row = {'table': 'Part number', 'content': '[s.pdf · 2쪽 · Part number] Part number: SMAJ6.5A | VWM: 6.5', 'doc_parts': ['smaj6.5a', 'smaj6.5ca']}
+    assert not other_part_row(order, ['BZV55B5V1'])
+    assert not other_part_row(row, ['SMAJ6.5CA']) and other_part_row(row, ['SMAJ7.0A'])

@@ -10,8 +10,13 @@
   문항별 트레이스·점수는 Langfuse(환경 이름 eval, session graph-<평가셋>-<월일-시분>-<공급자>)에, 문항별 한 줄은 표준출력에 찍는다.
 - 필요한 것: DATABASE_URL, OPENROUTER_API_KEY(LLM_PROVIDER=openrouter), LANGFUSE_PUBLIC_KEY·SECRET_KEY·BASE_URL.
   DEMO_MODE=1이면 검색은 임베딩 없이 BM25만 쓴다(backend/rag/retrieve.py).
+  LAB_FIND=cards면 찾기 도구(find)를 사양 표(MCP find_parts_by_specs) 대신 카드 읽기(backend/rag/card_find.py, 찾기마다 검색 1번 + LLM 1번)로 바꾼다.
 
-실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]
+LAB_SPECS=cards: 판정 값(get_part_specs)도 카드에서 읽는다(backend/rag/card_specs.py).
+실행(저장소 루트에서): uv run python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]
+  기본은 D4 v2 단일 그래프다(사실 확인 · 판정 길을 켜려고 MCP 서버를 연다). 판정 인터럽트는 빈 답(= 모름)으로 한 번 재개한다(사람이 답할 수 없어서).
+  --multi: 단일 그래프 대신 멀티 에이전트(Supervisor + 서브에이전트, backend/multi_agent)를 같은 평가셋 · 같은 채점 · 같은 MCP 도구로 잰다.
+           결과는 multi_<평가셋>_<날짜>.json
   예) LLM_PROVIDER=openrouter DEMO_MODE=1 uv run python -m evals.runners.run_graph evals/dataset_v1.jsonl draft30-e01 draft30-e03
 """
 import hashlib
@@ -20,6 +25,7 @@ import os
 import subprocess
 import sys
 import time
+from contextlib import ExitStack
 from pathlib import Path
 
 
@@ -42,6 +48,16 @@ def run_scores(state: dict, seconds: float, llm_calls: list[str], item: dict | N
     if "fake_citations" in check:  # 생성 노드를 지난 문항만 인용 검사 결과가 있다
         scores["fake_citations"] = (float(len(check["fake_citations"])), "NUMERIC", "넘긴 적 없는 근거 번호 수")
         scores["uncited_sentences"] = (float(check["uncited_sentences"]), "NUMERIC", "근거 번호가 없는 문장 수")
+    counters = state.get("counters")
+    if counters:  # 멀티 에이전트만: 검색 횟수는 단일 그래프의 tries와 같은 뜻으로 맞추고, Supervisor 판단 횟수를 더한다
+        scores["tries"] = (float(counters["searches"]), "NUMERIC", "검색 횟수")
+        scores["hops"] = (float(counters["hops"]), "NUMERIC", "Supervisor 판단 횟수")
+    if counters or "refusal" in state:  # 멀티와 D4 v2 단일 그래프는 거절 사유 코드를 refusal 칸에 남긴다
+        scores["refusal_code"] = ((state.get("refusal") or {}).get("code", ""), "CATEGORICAL", None)
+        # [왜] 첫 단 거절은 사용자용 일상어 문구라 NOT_FOUND로 시작하지 않는다. 예전 단일과 같은 뜻(범위 밖이 아닌 '못 찾음')으로 맞춰 나란히 비교한다
+        code = scores["refusal_code"][0]
+        if code and code != "out_of_scope":
+            scores["not_found"] = (1.0, "BOOLEAN", scores["not_found"][2])
     if item is not None:
         from evals.runners.score_answer import score_item
         scored = score_item(item, state)
@@ -58,6 +74,10 @@ def result_row(item: dict, state: dict, scores: dict, trace_url: str) -> dict:
            "routed_type": scores["question_type"][0]}
     row.update({name: value for name, (value, _, _) in scores.items() if name != "question_type"})
     row["passed"] = list(state.get("passed") or [])  # 채점을 통과한 청크 id. 원문은 DB에서 id로 다시 볼 수 있다
+    if state.get("judgement"):
+        from evals.runners.score_answer import judgement_parts
+        # [왜] 판정이 정답 판정과 맞는지 실행 뒤에 세려면 후보별 판정 코드가 남아야 한다(답 글은 남기지 않는다)
+        row["verdicts"] = [[p.get("part"), p.get("verdict")] for p in judgement_parts(state["judgement"])]
     row["trace_url"] = trace_url
     return row
 
@@ -89,10 +109,56 @@ def summarize(rows: list[dict], failed: list[dict]) -> dict:
     }
 
 
-def default_out(dataset_path: str, today: str) -> Path:
+def default_out(dataset_path: str, today: str, name: str = "graph") -> Path:
     """결과 파일 기본 경로. 같은 날 같은 평가셋을 또 돌리면 시각을 붙여 덮어쓰지 않는다."""
-    out = Path("evals/results/graph") / f"graph_{Path(dataset_path).stem}_{today}.json"
+    out = Path("evals/results/graph") / f"{name}_{Path(dataset_path).stem}_{today}.json"
     return out.with_name(f"{out.stem}-{time.strftime('%H%M')}.json") if out.exists() else out
+
+
+def node_models() -> dict:
+    """노드마다 실제로 쓸 모델(결과 파일과 Langfuse 메타데이터에 남겨, 어느 모델 조합으로 쟀는지 구분한다)."""
+    from backend.services import langfuse_prompts, llm
+    return {node: llm.node_model(node) for node in langfuse_prompts.NODES}
+
+
+def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) -> dict:
+    """그래프를 돌리고, 인터럽트로 멈추면 빈 답(= 모름)으로 최대 max_resumes번 재개한다."""
+    from langgraph.types import Command
+    state = app.invoke(inputs, config)
+    for _ in range(max_resumes):
+        if '__interrupt__' not in state:
+            break
+        # [주의] 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다. 답 없음은 {'answers': {}}로 보낸다(11-06 실측)
+        # [주의] 판정 할 일이 둘(판정 + 찾기)이면 인터럽트도 둘이다. id 없이 재개하면 RuntimeError라 인터럽트마다 답을 준다(11-07 c20-11)
+        pending = state['__interrupt__']
+        resume = {i.id: {'answers': {}} for i in pending} if len(pending) > 1 else {'answers': {}}
+        state = app.invoke(Command(resume=resume), config)
+    return state
+
+
+def make_app(multi: bool, stack: ExitStack):
+    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인 · 사양 표 도구로 쓰고 판정 길을 켠다."""
+    from backend.graph import mcp_retriever
+    from backend.multi_agent.facts import make_lookup
+    from langgraph.checkpoint.memory import InMemorySaver
+    mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
+    # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
+    # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
+    tools = {"lookup": make_lookup(mcp.check, mcp.part_specs), "specs": mcp.part_specs, "find": mcp.find_parts, "checkpointer": InMemorySaver()}
+    if os.environ.get("LAB_FIND") == "cards":
+        from backend.rag.card_find import default_find
+        tools["find"] = default_find()  # [왜] lab DB의 사양 표가 비어 있어 찾기를 카드(표 행 청크) 읽기로 한다. 같은 인자 · 같은 반환 모양
+    if os.environ.get("LAB_SPECS") == "cards":
+        from backend.rag.card_specs import default_specs
+        specs = default_specs()  # [왜] 판정 값도 카드에서 읽는다(lab 3단계). 사실 확인은 문서 · 개정만 보므로 LLM 없는 doc_rows를 쓴다
+        tools.update(specs=specs, lookup=make_lookup(mcp.check, specs.doc_rows))
+    if not multi:
+        from backend.graph.build import build_graph
+        return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
+    from backend.multi_agent.build import build_graph as build_multi
+    from backend.rag.retrieve import retrieve
+    from backend.services import llm
+    return build_multi(chat=llm.node_chat, retriever=retrieve, judge_enabled=True, **tools)
 
 
 def _git(*args):
@@ -111,7 +177,7 @@ def select_items(items, ids):
     return [it for it in items if it["id"] in set(ids)]
 
 
-def main(dataset_path, ids=(), out=None):
+def main(dataset_path, ids=(), out=None, multi=False):
     """문항을 하나씩 그래프로 돌리고 Langfuse에 트레이스·실행 점수를, 결과 파일에 문항별 지표를 남긴다(ids가 비면 전부)."""
     # [주의] 문항마다 LLM을 부르는 유료 실행이다. 전체(50건)를 돌리기 전에 문항 id 한두 개로 먼저 확인한다
     # [왜] 다른 코드의 트레이스와 나눠 보려고 환경 이름을 둔다. Langfuse 클라이언트가 만들어지기 전에 정해야 한다
@@ -120,7 +186,6 @@ def main(dataset_path, ids=(), out=None):
     from langfuse.langchain import CallbackHandler
 
     from backend.graph import nodes
-    from backend.graph.build import build_graph
     from backend.services import llm  # load_dotenv와 LANGFUSE_HOST → LANGFUSE_BASE_URL 맞추기가 여기서 일어난다
 
     if os.environ.get("LANGFUSE_BASE_URL", "").endswith("/"):
@@ -132,10 +197,11 @@ def main(dataset_path, ids=(), out=None):
         raise SystemExit(f"돌릴 문항이 없습니다: {dataset_path} {' '.join(ids)}")
 
     client = get_client()
-    session = f"graph-{Path(dataset_path).stem}-{time.strftime('%m%d-%H%M')}-{llm.LLM_PROVIDER}"  # 이번 실행 문항들을 한 묶음으로
+    family = "multi" if multi else "graph"  # [왜] 같은 평가셋 · 같은 채점으로 멀티 에이전트도 재서 결과 모양을 같게 둔다
+    session = f"{family}-{Path(dataset_path).stem}-{time.strftime('%m%d-%H%M')}-{llm.LLM_PROVIDER}"  # 이번 실행 문항들을 한 묶음으로
     common = {"provider": llm.LLM_PROVIDER,
               "model": llm.LLM_MODEL if llm.LLM_PROVIDER == "openrouter" else f"claude-cli:{llm.LLM_CLI_MODEL}",
-              "demo_mode": llm.DEMO_MODE,
+              "demo_mode": llm.DEMO_MODE, "node_models": node_models(),
               "retrieval": "bm25" if llm.DEMO_MODE else "hybrid",  # DEMO_MODE=1이면 retrieve가 임베딩 없이 BM25만 쓴다
               "dataset": dataset_path,
               "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain") else ""),
@@ -148,39 +214,41 @@ def main(dataset_path, ids=(), out=None):
     # [주의] llm.chat을 이 프로세스 안에서 바꿔 끼운다(호출 이름만 기록하고 그대로 넘긴다). 서비스 코드는 건드리지 않는다
     llm.chat = lambda system, user, schema: calls.append(schema.__name__) or chat(system, user, schema)
 
-    app = build_graph()  # 서비스와 같은 줄기 그래프(SPEC 2절)를 한 번 조립해 문항마다 재사용한다
-    rows, failed = [], []  # 결과 파일에 남길 문항별 지표, 오류로 멈춘 문항
-    for it in items:
-        calls.clear()  # 이전 문항의 호출 기록을 비운다
-        # [왜] 트레이스 id를 직접 정해 넘긴다. 핸들러의 last_trace_id는 실제로 보낸 트레이스 id와 달랐다(11-03 실측)
-        trace_id = client.create_trace_id()
-        meta = {**common, "question_id": it["id"], "kind": it["kind"], "corpus_version": it.get("corpus_version"),
-                "langfuse_session_id": session, "langfuse_tags": ["graph-eval", it["id"], llm.LLM_PROVIDER, it["kind"]]}
-        if it.get("irrelevant_type"):
-            meta["irrelevant_type"] = it["irrelevant_type"]
-        # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
-        config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"graph {it['id']}",
-                  "metadata": meta}
-        start = time.perf_counter()
-        try:
-            state = app.invoke({"input": it["input"]}, config)
-        except Exception as error:  # [왜] 한 문항이 죽어도 나머지는 잰다. 실패는 끝에 세고 결과 파일에도 남긴다
-            failed.append({"id": it["id"], "error": f"{type(error).__name__}: {str(error)[:200]}"})
-            print(f"{it['id']}\t실패\t{type(error).__name__}: {error}", flush=True)
-            continue
-        seconds = time.perf_counter() - start
-        scores = run_scores(state, seconds, list(calls), item=it)
-        # 점수 하나하나를 이 문항의 트레이스에 붙인다
-        for name, (value, kind, comment) in scores.items():
-            client.create_score(trace_id=trace_id, name=name, value=value, data_type=kind, comment=comment)
-        url = client.get_trace_url(trace_id=trace_id)
-        rows.append(result_row(it, state, scores, url))
-        print(f"{it['id']}\t{'>'.join(state['path'])}\t{scores['answer_metric'][0]}\t검색 {state.get('tries', 0)}번\t"
-              f"{seconds:.1f}초\t{url}", flush=True)
+    with ExitStack() as stack:  # [왜] 멀티는 MCP 서버를 전 문항 동안 한 번만 열어 두고 끝나면 닫는다
+        app = make_app(multi, stack)  # 그래프를 한 번 조립해 문항마다 재사용한다
+        rows, failed = [], []  # 결과 파일에 남길 문항별 지표, 오류로 멈춘 문항
+        for it in items:
+            calls.clear()  # 이전 문항의 호출 기록을 비운다
+            # [왜] 트레이스 id를 직접 정해 넘긴다. 핸들러의 last_trace_id는 실제로 보낸 트레이스 id와 달랐다(11-03 실측)
+            trace_id = client.create_trace_id()
+            meta = {**common, "question_id": it["id"], "kind": it["kind"], "corpus_version": it.get("corpus_version"),
+                    "langfuse_session_id": session, "langfuse_tags": [f"{family}-eval", it["id"], llm.LLM_PROVIDER, it["kind"]]}
+            if it.get("irrelevant_type"):
+                meta["irrelevant_type"] = it["irrelevant_type"]
+            # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
+            # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 · 멀티 모두 메모리 체크포인터를 쓴다)
+            config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
+                      "metadata": meta, "configurable": {"thread_id": it["id"]}}
+            start = time.perf_counter()
+            try:
+                state = invoke_with_resume(app, {"input": it["input"]}, config)
+            except Exception as error:  # [왜] 한 문항이 죽어도 나머지는 잰다. 실패는 끝에 세고 결과 파일에도 남긴다
+                failed.append({"id": it["id"], "error": f"{type(error).__name__}: {str(error)[:200]}"})
+                print(f"{it['id']}\t실패\t{type(error).__name__}: {error}", flush=True)
+                continue
+            seconds = time.perf_counter() - start
+            scores = run_scores(state, seconds, list(calls), item=it)
+            # 점수 하나하나를 이 문항의 트레이스에 붙인다
+            for name, (value, kind, comment) in scores.items():
+                client.create_score(trace_id=trace_id, name=name, value=value, data_type=kind, comment=comment)
+            url = client.get_trace_url(trace_id=trace_id)
+            rows.append(result_row(it, state, scores, url))
+            print(f"{it['id']}\t{'>'.join(state['path'])}\t{scores['answer_metric'][0]}\t검색 {scores['tries'][0]:.0f}번\t"
+                  f"{seconds:.1f}초\t{url}", flush=True)
     client.flush()  # [주의] 보내기는 백그라운드라 끝나기 전에 비워야 트레이스와 점수가 다 올라간다
 
     # [왜] 평가자는 Langfuse에 들어올 수 없으니, 같은 지표를 레포에 남겨 숫자를 맞춰 볼 수 있게 한다(가이드 v5 제출물)
-    out_path = Path(out) if out else default_out(dataset_path, time.strftime("%Y-%m-%d"))
+    out_path = Path(out) if out else default_out(dataset_path, time.strftime("%Y-%m-%d"), family)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     meta = {**common, "session": session, "ran_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "dataset_sha256": hashlib.sha256(Path(dataset_path).read_bytes()).hexdigest(), "ids": list(ids) or "all"}
@@ -195,6 +263,8 @@ if __name__ == "__main__":
     if "--out" in args:  # [왜] 시험 실행(10문항)과 본 실행을 같은 날 따로 남기려고 결과 파일 이름을 고를 수 있게 한다
         i = args.index("--out")
         out, args = args[i + 1], args[:i] + args[i + 2:]
+    multi = "--multi" in args
+    args = [a for a in args if a != "--multi"]
     if not args:
-        raise SystemExit("사용법: python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>]")
-    main(args[0], args[1:], out)
+        raise SystemExit("사용법: python -m evals.runners.run_graph <평가셋 jsonl> [문항 id ...] [--out <결과 json>] [--multi]")
+    main(args[0], args[1:], out, multi)

@@ -480,3 +480,139 @@ API와 로컬 후보는 실행 환경이 다릅니다. Recall@5·MRR·다중 근
 - 채점 범위: 70문항 전부 실행, 유형 gold 35문항만 Accuracy·Macro-F1 채점. 비관련 35문항의 답변 적절성·거절 정답률은 이 실험에서 측정하지 않는다. 세 회차 일치·flip은 같은 모델·문항의 세 행이 모두 유효할 때만 분모에 넣고 불완전 문항 수를 별도 기록한다.
 - 계획 비용·중단: 본 실행 모델별 US$0.10 · 0.10 · 0.07 · 0.30 · 0.30 · 0.01(합계 US$0.88), smoke US$0.004 · 0.004 · 0.002 · 0.011 · 0.011 · 0.001(합계 US$0.033), 전체 계획값 US$0.913. 모델별 최대 70 outputs·210 raw calls·7,200초, 호출당 45초, 형식 재시도 최대 2회. 호출 전 가격·첫 문항 예약·ZDR·model/provider를 재확인하고 불일치 또는 반복 provider 실패 시 해당 모델만 멈춘다. Jev의 `--max-usd`는 입력 비용 추정에 따른 다음 job 차단값이며 실제 청구액의 절대 상한이 아니다. 자동 증액·재실행은 하지 않는다.
 - 실행 전 manifest: `2026-11-05-stage3-five-v1/manifest.json` SHA-256 `71501a4334aa111b1835d887952c5f3b43813c3b02b51d80dcfa28cb3bf7e4de`(전체 계획 1,050건 중 3차 대상 350건), `2026-11-05-jev-stage3-v1/manifest.json` SHA-256 `79f0b487fda7e5e57d7de2229e559dc6c4c40ed3ee3e2425355a0d89116ef4b8`(3차 대상 70건). Jev 실행기 `run_supervisor_jev.py`의 LF 정규화 SHA-256은 `291a3367856d5650b50925ae649254330fd230b766d1751ddb03f899b08a5e1f`다. Jev manifest에는 이 코드 hash가 없으므로 실행 전 수동 대조한다. manifest 생성은 API 없는 로컬 준비다. 유료 smoke·본 실행 전에 사전 등록을 커밋해 시점을 고정하고 5종 manifest의 실행 코드 hash도 대조한다.
+
+### 2026-11-05 #36: 채점기 기준선(지금 2갈래 채점이 정답 쪽을 얼마나 유지하나)
+
+- 번호: 처음 #33으로 적었으나 `main`의 #33(수퍼바이저 6종 3차, 오세창)과 겹쳐 11-05에 #36으로 바꿨다. 커밋 `66769c7` · `e84c674`의 메시지에는 #33으로 남아 있다. 내용은 바꾸지 않았다.
+
+- 왜: 채점을 충분 · 부분 · 부족 3갈래로 바꾸기 전에, 지금 채점이 정답 쪽을 얼마나 통과시키는지 재현 가능한 기록으로 남긴다. 바꾸는 것은 없다(측정만).
+- 대상: 동결 v2 중 쪽 단위 정답지가 있는 관련 19문항(`evals/inputs/qrels_v2_pages.json`)과 비관련 35문항. 후보 찾기 10 · 역할 6은 정답 쪽이 열려 있어 제외한다.
+- 입력: #31의 70문항 실행(session `graph-dataset_v2-1104-2122-openrouter`, commit `a630454`)에서 채점 노드가 마지막으로 본 검색 청크(번호 · 파일 · 쪽)와 통과시킨 청크 번호. 청크 본문은 쓰지 않는다. 스냅샷은 `evals/inputs/grader_cases_v2.json`.
+- 정의: 필요 쪽 = 정답 쪽 − 회수 불가 쪽. 검색 판정 = 검색 청크의 쪽이 필요 쪽을 전부 · 일부 · 하나도 못 가짐(충분 · 부분 · 부족). 통과 판정 = 통과 청크의 쪽으로 같은 방식으로 계산한다.
+- 지표: ① 정답 쪽 유지율 = 검색 판정이 충분인 문항 중 통과 판정도 충분인 비율. ② 검색 판정 × 통과 판정 표(관련 19문항). ③ 비관련 중 통과 청크가 0개인 문항 비율. ④ 필요 쪽 통과 재현율 평균(참고).
+- 사전 등록 전에 이미 본 숫자: 11-05에 같은 스냅샷을 임시로 계산해 봤다. 검색 판정 충분 15 · 부분 4, 통과 판정은 충분 → 충분 12 · 충분 → 부분 2 · 충분 → 부족 1 · 부분 → 부분 4(유지율 12/15), 비관련은 35문항 중 34문항이 통과 0개였다.
+- 기대(측정 전, 고치지 않음): 위 숫자와 똑같이 재현된다. 스냅샷에서 계산이 결정적이라 범위가 아니라 일치로 둔다. ④는 처음 계산하므로 기대를 두지 않는다.
+- 예산: LLM · API 호출 0, 비용 0.
+- 한계: 쪽 단위 정답이라 정답이 아닌 쪽에 같은 값이 있어도 버린 것으로 센다. 19문항이다. 재검색한 문항은 마지막 검색만 본다. 개발에는 R1 dev를 쓰고 v2는 측정에만 쓴다는 결정(11-05)은 이 측정이 아니라 3갈래 채점기를 만드는 다음 조각에 적용한다.
+
+### 2026-11-05 #34: 채점기 기준선 R1 dev(지금 2갈래 채점의 R1 dev 46문항 기준선)
+
+- 왜: 3갈래 채점기는 R1 dev에서 개발하고 v2로 한 번만 공식 측정한다(결정 11-05). #36은 v2 기준선이라 R1 dev 기준선이 따로 있어야 개발 중 좋아졌는지 비교할 수 있다. 바꾸는 것은 없다(측정만).
+- 대상: `evals/samples/retrieval_r1.jsonl` 중 `split = dev` 46문항(정답 쪽 = `gold`, 회수 불가 없음). R1 test 38문항은 쓰지 않는다.
+- 방법: 고정 재작성 질의 Q3(`evals/samples/retrieval_r1_rewrite_q3.json`)와 `find_parts(질문, set())`의 품번 필터로 서비스 `retrieve()`(k=5, `DEMO_MODE=0`)를 1번 부르고, 그 결과에 지금 채점 노드 `grade()`를 1번 돌린다. 재작성 · 재검색은 하지 않는다. 입력 스냅샷은 `evals/inputs/grader_cases_r1_dev.json`(청크 번호 · 파일 · 쪽만, 본문 없음).
+- 지표: #36과 같은 ①~④(R1은 전부 관련 문항이라 ③은 없음). 계산은 `evals/runners/eval_grader.py`.
+- 사전 등록 전에 이미 본 숫자: R1 dev의 검색 쪽 회수율은 #25에서 봤다(고른 조합 쪽 회수율@5 0.859, 리랭커 · 품번+카드 종류 필터 포함이라 이번 조건과 같지 않다). 채점 통과분은 이번이 처음이다.
+- 기대(측정 전, 고치지 않음): 검색 판정이 충분인 문항 비율 0.75~0.95, 정답 쪽 유지율 0.80~1.00(v2 12/15 = 0.80을 참고, R1은 정답 쪽이 1~2개인 값 찾기 문제라 더 쉬울 것으로 봄), 필요 쪽 통과 재현율 평균 0.70~0.95. 정답 쪽이 2개인 8문항에서만 부분 판정이 나올 수 있다.
+- 예산 · 중단: OpenRouter 합계 US$0.05 이하(채점 호출 최대 46회), Voyage는 무료 토큰 안(임베딩 · 리랭크 46회씩), 운영 DB는 읽기만. 3문항 연속 오류면 멈추고 보고한다.
+- 한계: 첫 검색 1번만 본다. 필터는 품번만이고 R1 1위 조합의 품번+카드 종류 필터가 아니다. 46문항이라 1문항이 2%p를 움직인다. 같은 질문에 LLM 채점이 흔들릴 수 있는데 1번만 잰다.
+- 결과(11-05, commit `6e097fa`): R1 dev 46문항 모두 끝남, 오류 0, OpenRouter 0.0133달러. 검색 판정은 충분 39 · 부분 1 · 부족 6(검색이 정답 쪽을 못 가져온 r1-083 · 089 · 090 · 094 · 096 · 100). 채점 통과 기준으로 충분 → 충분 36 · 충분 → 부분 1(r1-071) · 충분 → 부족 2(r1-050 · r1-078) · 부분 → 부분 1(r1-063) · 부족 → 부족 6. 정답 쪽 유지율 36/39 = 0.923, 필요 쪽 통과 재현율 평균 0.804, 통과 청크가 0개인 문항 7(그중 정답 쪽을 가진 채 버린 것이 2). 기대 대조: 검색 판정 충분 비율 0.75~0.95 맞음(39/46 = 0.848), 정답 쪽 유지율 0.80~1.00 맞음(0.923), 쪽 재현율 평균 0.70~0.95 맞음(0.804). v2(#36)의 유지율 12/15 = 0.80과 R1 dev의 0.923은 평가셋이 달라 합치지 않고 따로 적는다. 입력 스냅샷 `evals/inputs/grader_cases_r1_dev.json`, 결과 `evals/results/grader/grader_baseline_r1_dev_2026-11-05.json`.
+
+### 2026-11-05 #35: 단일 그래프 프롬프트 4개 영어 번역 (동결 v2 70문항, #31과 비교)
+
+- 왜: 모델이 영어 지시를 더 안정적으로 읽고, 같은 내용이면 영어가 토큰이 적다는 판단(11-05 정운 결정). D5 멀티 에이전트를 영어 프롬프트 위에 쌓으므로, 단일 그래프를 영어 프롬프트로 다시 재어 새 비교 기준을 만든다.
+- 바꾸는 것(하나): `backend/prompts/{route,grade,rewrite,generate}.md` 4개를 한국어에서 영어로 번역한다. 규칙 내용은 바꾸지 않는다. 답변은 계속 한국어이고 거절 문구 "문서로 확인 안 됨"과 근거 번호 `[넷리스트]`는 그대로다. 코드·평가셋·모델·검색 설정은 #31과 같다. Langfuse에는 각 프롬프트 v2로 등록한다.
+- 비교 대상: #31 결과(관련 cited_gold 12 · over_refusal 23 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 31/35, p50 7.4초, LLM 호출 227, 비용 0.0519달러).
+- 기대(측정 전, 고치지 않음): 번역은 개선이 아니라 "나빠지지 않음"을 확인하는 실험이다.
+  - 관련 cited_gold 9~15, over_refusal 18~26, wrong_citation 0~3.
+  - 무관 correct_refusal 32~35, hallucination_risk 0~3.
+  - 관련 라우팅 일치 28~33/35.
+  - 실패 문항 0~3, p50 5~12초.
+  - OpenRouter 합계 0.03~0.07달러(입력 토큰이 줄어 #31 이하가 될 것으로 보지만 확실하지 않다).
+  - 답변 언어: 거절이 아닌 답변이 한국어가 아닌 문항 0건.
+  - #31과 지표가 같은 문항 80% 이상. 다른 문항은 목록으로 남기고 고치지 않는다.
+- 판정: 위 범위를 벗어난 지표가 하나라도 있으면 번역의 효과로 단정하지 않고 문항 목록을 본다. 나빠졌으면 나빠졌다고 기록하고, 멀티 에이전트의 기준은 #31 한국어 결과와 이 결과를 둘 다 적는다.
+- 명령: `uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` (결과 `evals/results/graph/graph_dataset_v2_<날짜>.json`). 실행 전에 Langfuse에 번역본을 등록하고 `load_development`로 로컬과 같은지 확인한다.
+- 예산 · 중단: OpenRouter 합계 1달러. 실패가 3문항 연달아 나면 멈추고 보고한다.
+- 알려진 한계: 응답 변동 폭을 재지 않았다(1회 측정). 관련 35문항이라 일반화 근거는 작다. 번역 한 번만 시험하므로 어느 프롬프트가 영향을 줬는지는 가르지 못한다.
+- 결과(11-05 14:18~14:25, 커밋 `961c759`, session `graph-dataset_v2-1105-1417-openrouter`, 시험 2문항이 같은 session에 있어 70문항 집계는 14:18 이후 생성만 뽑음): 70문항 모두 끝남, 실패 0. 관련 35: cited_gold 12 · over_refusal 23 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 관련 유형별은 #31과 같음(rating 9 · 1, role 3 · 3, candidate_judge over_refusal 9, candidate_find over_refusal 10). 관련 라우팅 일치 32/35(#31 31). 검색 횟수 0번 16 · 1번 41 · 2번 13(#31은 15 · 34 · 21). latency_s p50 6.25 · p95 14.4 · 최대 19.6초(#31 7.4 · 15.8 · 20.0). LLM 호출 합계 215(#31 227), 입력 토큰 287,526 · 출력 8,400(#31 319,044 · 9,295, 시험 포함 session 전체가 아닌 #31 같은 session 기준), OpenRouter 0.0463달러(#31 0.0519, -11%). fake_citations 0, uncited_sentences 4(#31 2). #31과 답 지표가 같은 문항 68/70(97%): draft30-e02(over_refusal → cited_gold), draft30-h02(cited_gold → over_refusal)만 다름. 기대 대조: cited_gold 9~15 맞음(12), over_refusal 18~26 맞음(23), wrong_citation 0~3 맞음(0), correct_refusal 32~35 맞음(35), hallucination_risk 0~3 맞음(0), 라우팅 28~33 맞음(32), 실패 0~3 맞음(0), p50 5~12초 맞음(6.25), 비용 0.03~0.07달러 맞음(0.0463), 지표 같은 문항 80% 이상 맞음(97%). 답변 언어 확인(거절이 아닌 답이 한국어인지)은 이번에 하지 않았다. 판정: 번역으로 점수는 같고(12 · 23 · 35), 토큰과 비용은 줄었다. 재검색 문항이 21에서 13으로 줄었으나 근거 인용 정답은 늘지 않았다. 응답 변동 폭을 재지 않아 h02 · e02 같은 소폭 변동은 번역 효과로 단정하지 않는다. 이 결과(`evals/results/graph/graph_dataset_v2_2026-11-05.json`)를 D5 비교의 영어 프롬프트 기준으로 쓴다.
+
+### 2026-11-05 #37: 단일 그래프 채점 모델 Luna (동결 v2 70문항, #35와 비교)
+
+- 왜: 11-05에 노드별 모델 표(`NODE_MODELS`)를 만들면서 단일 그래프의 채점(`grade`)이 Haiku에서 Luna로 바뀌었다. 멀티(#38)와 비교하기 전에 이 변화 하나의 효과를 따로 잰다.
+- 바꾸는 것(하나): `grade` 모델 `anthropic/claude-haiku-5.5` → `openai/gpt-6-luna`(temperature 없음, Langfuse `grade` v3). `route` · `rewrite` · `generate`는 Haiku 그대로이고 프롬프트 본문(영어) · 코드 경로 · 평가셋 · 검색 설정은 #35와 같다.
+- 비교 대상: #35(관련 cited_gold 12 · over_refusal 23 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 32/35, p50 6.25초, LLM 호출 215, 0.0463달러).
+- 기대(측정 전, 고치지 않음): cited_gold 9~15, over_refusal 18~26, wrong_citation 0~3, correct_refusal 32~35, hallucination_risk 0~3, 관련 라우팅 일치 29~34/35(라우팅은 Haiku 그대로), 실패 0~3, p50 5~15초, OpenRouter 0.02~0.08달러, #35와 답 지표가 같은 문항 75% 이상. 채점 통과 청크 수가 늘지 줄지는 예상하지 않는다.
+- 명령: `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl` (같은 날 결과 파일이 있으면 새 이름으로 저장된다).
+- 예산 · 중단: OpenRouter 0.30달러. 실행기에 연속 실패 중단이 없어 끝까지 돈다. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정이라 응답 변동 폭을 모른다. 측정하는 동안 작업 폴더에 이 실험과 무관한 미커밋 파일(부품 사양 표 변환기, ADR 0013)이 있어 결과 meta의 git에 `+dirty`가 붙을 수 있다. 그래프 · 채점 · 실행기 코드는 이 사전 등록 커밋과 같다.
+- 결과(11-05 20:45~20:54, 커밋 `3cfb58f`, session `graph-dataset_v2-1105-2045-openrouter`, 결과 `evals/results/graph/graph_dataset_v2_2026-11-05-2054.json`): 70문항 모두 끝남, 실패 0, meta의 git에 `+dirty` 없음. 관련 35: cited_gold 13 · over_refusal 22 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 관련 라우팅 일치 31/35(#35 32). 검색 횟수 0번 16 · 1번 40 · 2번 14(#35 16 · 41 · 13). latency_s p50 8.6 · p95 16.2 · 최대 23.7초(#35 6.25 · 14.4 · 19.6). LLM 호출 216(Haiku 171 · Luna 45, #35 215), Langfuse 생성 비용 합 0.0426달러(Haiku 0.0295 · Luna 0.0131, #35 0.0463). 채점 통과 청크 합 49(#35 77). #35와 답 지표가 같은 문항 69/70(99%), 다른 문항은 draft30-h01(over_refusal → cited_gold) 하나다. 기대 대조: cited_gold 9~15 맞음(13), over_refusal 18~26 맞음(22), wrong_citation 0~3 맞음(0), correct_refusal 32~35 맞음(35), hallucination_risk 0~3 맞음(0), 라우팅 29~34 맞음(31), 실패 0~3 맞음(0), p50 5~15초 맞음(8.6), 비용 0.02~0.08달러 맞음(0.0426), 지표 같은 문항 75% 이상 맞음(99%). 판정: 채점을 Luna로 바꿔도 답 지표는 1문항만 달라 효과로 단정하지 않는다. 채점이 통과시킨 청크는 77 → 49로 줄었다(Luna가 더 적게 통과시킴). 이 결과를 #38(멀티)의 비교 기준으로 쓴다.
+
+### 2026-11-05 #38: 멀티 에이전트 첫 측정 (동결 v2 70문항, #37과 비교)
+
+- 왜: D5 "단일과 멀티를 v2로 재측정". 판정 · 웹 조회 에이전트가 없는 지금의 멀티(Supervisor + 검색 · 작성 · 검증)가 단일과 어떻게 다른지 첫 숫자를 남긴다.
+- 바꾸는 것(하나): 구조. 단일 그래프 → `backend/multi_agent`. Supervisor는 `anthropic/claude-sonnet-5.5`(temperature 0, Langfuse `supervisor` v4), 사실 확인은 MCP `check_corpus`, 검색 에이전트는 단일의 `rewrite` · `search` · `grade`를 감싸고, 작성은 `generate`, 검증은 인용을 다시 계산한다(`enforce=True`). 그 밖의 노드 모델은 #37과 같다(`grade` Luna, 나머지 Haiku). 판정 · 웹은 꺼져 있다.
+- 비교 대상: #37(같은 날 측정). #35 · #31도 함께 적는다.
+- 측정 전에 이미 본 것: 시험 2문항(Supervisor가 Luna였던 11-05 20:14 실행)에서 draft30-m01 cited_gold, draftv2-n16 correct_refusal(revision_missing)이었다. 오프라인 점검에서 draft50-n06 질문의 포장 코드 `A0G` · `R0G`가 코퍼스에 없는 품번으로 사실 확인에 넘어가 `part_missing` 거절로 갈 수 있다. v2를 보고 고치면 맞추기가 되므로 고치지 않았다. 질문의 회로 이름이 품번으로 뽑히는 문항은 v2에 0건이다.
+- 기대(측정 전, 고치지 않음): cited_gold 8~15, over_refusal 17~27, wrong_citation 0~3, correct_refusal 31~35, hallucination_risk 0~4, 관련 문항 질문 종류 일치 27~34/35, 실패 0~4, p50 8~25초, Supervisor 판단 횟수 중앙값 2~5, #37과 답 지표가 같은 문항 70% 이상. 후보 찾기 · 판정 19문항은 판정 에이전트가 없어 대부분 거절로 본다. OpenRouter 0.5~2.0달러(Sonnet 단가 입력 2 · 출력 10달러/백만 토큰으로 Haiku의 20배, Supervisor 호출이 문항당 2~4번).
+- 비용 집계: Langfuse 관리 가격표의 Sonnet 이름은 `claude-sonnet-5-5`(하이픈)라 OpenRouter 이름 `anthropic/claude-sonnet-5.5`와 맞지 않아 생성 비용이 비어 있을 수 있다. 그때는 Sonnet 토큰 수 × 관리 가격표 단가로 계산하고 그렇게 계산했다고 적는다.
+- 명령: `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`
+- 예산 · 중단: OpenRouter 2.50달러. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정. 구조와 Supervisor 모델이 함께 들어온다(Supervisor는 멀티에만 있다). 의미 채점이 없어 역할 해석 · 판정의 맞고 틀림은 재지 않는다. #37과 같은 `+dirty` 한계가 있다.
+- 실행 전 변경(11-05 21:05, 측정 전): 정운 결정으로 Supervisor(Sonnet)는 팀 OpenRouter 키 대신 정운 개인 Anthropic 키로 Anthropic API를 직접 부른다(모델 id `claude-sonnet-5-5`, temperature · thinking 미전송, 구조화 출력은 `output_config.format`). 팀 레포는 그대로 두고 로컬 복제본(`lab/repo`, 브랜치 `lab-anthropic`, 커밋 `e86b1e6` = 이 레포 `3cfb58f` + `llm.py` 직통 분기 · `langchain-anthropic` 1.7.7)을 Docker 컨테이너에서 돌린다. Haiku · Luna는 OpenRouter 그대로라 #37과 노드 모델 · 공급자는 Supervisor만 다르다. 명령: `docker exec sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`(`LLM_PROVIDER=openrouter DEMO_MODE=0`). 시험 2문항(21:02, session `multi-dataset_v2-1105-1202-openrouter`): draft30-m01 cited_gold, draftv2-n16 correct_refusal(revision_missing), 실패 0. Sonnet 실제 호출 4번에 입력 2,846~3,084 · 출력 35~74토큰, 호출당 약 0.0064달러. Langfuse가 Sonnet 호출 하나를 `ChatAnthropic`과 `anthropic.messages.create` 두 생성으로 기록해 비용 합이 두 배로 보인다(0.0512 → 실제 약 0.026달러). 그래서 #38 비용은 `ChatAnthropic` 생성만 센다. 비용 기대를 다시 적는다: Sonnet 0.8~2.0달러(문항당 판단 2~4번) + Haiku · Luna 0.02~0.08달러. 예산 · 중단은 Anthropic 3달러 · OpenRouter 0.5달러.
+- 결과(11-05 21:03~21:26, lab 커밋 `e86b1e6`(+dirty는 미커밋 시험 2문항 결과 파일 때문이고 코드 변경 없음), session `multi-dataset_v2-1105-1203-openrouter`(이름의 시각은 컨테이너 UTC), 결과 `evals/results/graph/multi_dataset_v2_2026-11-05-1226.json`(lab에서 복사, 파일 이름 시각도 UTC)): 70문항 중 67 끝남, 실패 3(draft50-n01 · draftv2-n07 · draftv2-n10, 모두 Supervisor 결정서가 형식 검사를 3번 어김. Langfuse에서 확인한 1건은 `brief`가 300자 제한을 넘었다). 끝난 관련 32: cited_gold 10 · over_refusal 22 · wrong_citation 0. 무관 35: correct_refusal 35 · hallucination_risk 0. 질문 종류 일치 32/32. 유형별 rating cited_gold 8 · over_refusal 2, role 2 · 4, candidate_judge over_refusal 8, candidate_find over_refusal 8. #37과 답 지표가 같은 문항은 끝난 67 중 64, 다른 문항은 draft30-e02 · draft30-h01 · draft50-n05(모두 cited_gold → over_refusal). Supervisor 판단 횟수 중앙값 3(1번 19 · 3번 16 · 4번 19 · 5번 11 · 6번 2), 검색 횟수 0번 21 · 1번 9 · 2번 37, 거절 사유 not_found 43 · part_missing 8 · revision_missing 4 · out_of_scope 2. latency_s p50 18.9 · p95 41.1 · 최대 49.0초. 비용은 Sonnet(`ChatAnthropic` 228호출, 입력 679,341 · 출력 41,319토큰) 1.7719달러 + Haiku 0.0272 + Luna 0.0203 = 약 1.82달러. 기대 대조: cited_gold 8~15 맞음(10), over_refusal 17~27 맞음(22), wrong_citation 0~3 맞음(0), correct_refusal 31~35 맞음(35), hallucination_risk 0~4 맞음(0), 질문 종류 일치 27~34 맞음(32, 끝난 문항 기준), 실패 0~4 맞음(3), p50 8~25초 맞음(18.9), 판단 횟수 중앙값 2~5 맞음(3), #37과 같은 문항 70% 이상 맞음(64/67), Sonnet 비용 0.8~2.0달러 맞음(1.77). 판정: 판정 · 웹 에이전트가 없는 지금의 멀티는 단일 #37보다 근거 인용 정답이 3문항 적고(13 → 10) 과잉 거절은 같으며(22), 응답 시간 중앙값은 약 2.2배(8.6 → 18.9초), 비용은 약 43배(0.0426 → 1.82달러)다. 차이가 3문항이라 나빠졌다고 단정하지 않고 문항 목록으로 남긴다. 후보 찾기 · 판정은 단일과 같이 끝난 16문항 모두 거절이다.
+
+### 2026-11-06 #39: D4 v2 단일 그래프 (동결 v2 70문항, #37과 비교)
+
+- 왜: 강사 지적("범위 판정을 첫 단에서 먼저", "단순 직렬 흐름")으로 D4 단일 그래프를 다시 짰다. 회의(D4 · D5) 전에 고친 구조의 첫 숫자를 남긴다.
+- 바꾸는 것(구조 한 묶음): 입력 읽기 뒤 사실 확인(코드가 품번 · 개정판을 코퍼스 목록과 대조), 라우팅 7가지(일상 대화 · 다른 부품 추가), 판정 길(판정 읽기 Haiku 1번 → 숫자 확인 → 빠진 값 인터럽트 → 사양 표 조회 → 코드 판정 → 답 틀). 정격 · 역할의 검색 고리는 그대로다. 하나만 바꾸는 규칙의 예외다. 강사 지적이 구조 전체에 걸려 있어 묶어서 고쳤고, 노드별 효과는 가르지 않는다.
+- 함께 바뀌는 것: ① lab에서 Haiku를 OpenRouter 대신 정운 개인 Anthropic 키로 직접 부른다(lab 커밋 `54a76c2`, 같은 모델 · 다른 공급자). ② 채점기 EC-07(`d3c1816`): 판정 길 답은 사양 표 인용(문서 · 쪽)을 정답 위치와 대조한다. #37 상태에는 판정 결과가 없어 #37 점수는 이 규칙으로 바뀌지 않는다. ③ 인터럽트는 답 없음(`{"answers": {}}`)으로 한 번 재개한다. 사람이 값을 채우는 경우는 재지 않는다.
+- 측정 코드: 이 레포 `6b47c6f`(판정 에이전트 · D4 v2 끝) + `d3c1816`(채점기) + 이 사전 등록 커밋. 가격 질문 종류(`9c2fe20` 이후)는 넣지 않는다. Langfuse에는 이 코드의 `route` · `judge_read` · `supervisor` 본문을 development로 등록하고 `load_development`로 로컬과 같은지 확인한다.
+- 비교 대상: #37(관련 cited_gold 13 · over_refusal 22 · wrong_citation 0, 무관 correct_refusal 35, 라우팅 일치 31/35, p50 8.6초, LLM 호출 216, 0.0426달러). 후보 판정 9 · 찾기 10은 #37에서 모두 over_refusal이었다.
+- 기대(측정 전, 고치지 않음):
+  - 관련 35: cited_gold 14~28, over_refusal 2~12, wrong_citation 3~14. 판정 · 찾기 19문항은 거절 대신 판정 답이 나와 over_refusal이 크게 줄고, 인용 쪽이 정답과 어긋난 문항은 wrong_citation으로 옮겨 갈 것으로 본다.
+  - 유형별: rating cited_gold 7~10, role 1~4, candidate_judge cited_gold 3~8, candidate_find cited_gold 2~8.
+  - 무관 35: correct_refusal 31~35, hallucination_risk 0~4(일상 대화 갈래가 거절할 문항에 짧은 답을 할 수 있다).
+  - 판정 일치(새 지표): candidate_judge 9문항 중 결과 줄 `verdicts`의 판정 코드가 정답 글에 처음 나오는 판정 코드(괄호 안 대문자)와 같은 문항 3~7. 후보가 둘 이상이면 모두 같아야 일치, 판정이 없으면 불일치로 센다.
+  - 관련 라우팅 일치 29~35/35, 실패 0~3, p50 5~15초.
+  - 비용: Anthropic(Haiku) 0.02~0.10달러, OpenRouter(Luna) 0.005~0.03달러.
+- 명령(lab): `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl`
+- 예산 · 중단: #40과 합쳐 Anthropic 3.5달러 · OpenRouter 0.3달러. 실패가 3건을 넘으면 점수를 쓰지 않고 원인부터 본다.
+- 한계: 1회 측정이라 응답 변동 폭을 모른다. 구조 묶음과 Haiku 공급자가 함께 바뀐다. 판정 일치는 판정 코드만 보고 조건 · 인용 내용은 보지 않는다. 시간은 정운 맥 → 운영 Supabase(왕복 16~25 ms, 11-06 실측) 경로이고 배포(Cloud Run) 경로가 아니다.
+
+### 2026-11-06 #40: D5 멀티 에이전트 + 판정 에이전트 (동결 v2 70문항, #38과 비교)
+
+- 왜: D5 "단일과 멀티를 v2로 재측정". #38에는 판정 에이전트가 없어 후보 판정 · 찾기가 모두 거절이었다. 판정 에이전트를 붙인 멀티의 숫자를 #39와 같은 코드 · 같은 날에 남긴다.
+- 바꾸는 것(하나): 판정 에이전트를 켠다(Supervisor가 `judge`를 고르면 판정 읽기 → 판정이 이어서 돌고 Supervisor로 돌아온다). Supervisor 프롬프트는 판정 갈래가 든 11-06 본문이다.
+- 함께 바뀌는 것: #39의 ① · ② · ③과 같다. Supervisor는 #38처럼 Sonnet(개인 Anthropic 키)이다.
+- 측정 코드: #39와 같다.
+- 비교 대상: #38(끝난 67문항: 관련 cited_gold 10 · over_refusal 22 · wrong_citation 0, 무관 correct_refusal 35, 실패 3, p50 18.9초, Supervisor 판단 중앙값 3, 약 1.82달러). #39(같은 코드의 단일)도 함께 적는다.
+- 기대(측정 전, 고치지 않음):
+  - 관련 35: cited_gold 12~27, over_refusal 3~14, wrong_citation 3~14. 무관 35: correct_refusal 31~35, hallucination_risk 0~4.
+  - 판정 일치: candidate_judge 9문항 중 3~7(#39와 같은 규칙).
+  - 실패 0~4, 질문 종류 일치 28~35/35, Supervisor 판단 횟수 중앙값 2~4.
+  - p50 10~25초. 판정 · 찾기 19문항의 응답 시간 중앙값은 #38의 같은 문항보다 짧다(검색 고리를 돌다 거절하던 길이 판정 길로 바뀐다).
+  - 비용: Anthropic(Sonnet + Haiku) 1.0~2.5달러, OpenRouter(Luna) 0.01~0.05달러.
+- 명령(lab): `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi`(#39와 동시에 돌린다)
+- 예산 · 중단: #39와 합쳐서 본다.
+- 한계: #39와 같다. 구조(멀티)와 Supervisor 모델이 함께 들어온다. 노드별 시간은 Langfuse 트레이스에서 따로 뽑는다.
+- 반복 측정(11-06, 2세트째 시작 전 추가): #39 · #40을 같은 lab 커밋 `d765e7b` · 같은 Langfuse 버전으로 한 번 더 돌린다(재현성 확인, 코드 · 프롬프트 변경 없음). 2세트째 단일 · 멀티는 1세트 멀티가 도는 중에 함께 시작한다(정운 결정). 지표마다 두 값을 함께 적고, 두 실행에서 답 지표가 같은 문항 비율을 센다. 기대 범위는 위와 같다. 추가 비용 약 2.1달러. 결과 파일은 `--out`으로 `*_run2.json`에 남긴다. 동시에 4개까지 돌아 응답 시간이 1회 측정보다 늘 수 있다.
+
+### 2026-11-06 #41: 판정 길 개선을 하나씩 쌓아 단계마다 단일 그래프 재측정 (동결 v2 70문항, 단계마다 2세트)
+
+- 왜: #39 · #40 진단(위키 원장 "판정 길 실패 진단 (11-06)")에서 판정 길 실패의 원인이 종류별로 나왔다. 원인 하나씩 고쳐 쌓고, 단계마다 바로 앞 단계와 비교해 효과를 가른다(한 번에 하나씩). v2 문항 글을 보고 고치지 않고 실패 종류로만 고쳤으며, 거절 문은 dev셋 무관 20문항(`전자_데이터시트/evidence/judge_dev/judge_dev_irrelevant.jsonl`, v2와 다른 회로)으로 따로 확인한다.
+- 기준점(S0): #39 두 세트를 고친 채점기(61a29f1, 찾기는 보여 준 후보 인용만)로 다시 채점한 값. 관련 cited_gold 16 · 12, over_refusal 5 · 7, wrong_citation 14 · 16, 무관 correct_refusal 25 · 25, hallucination_risk 10 · 10, 판정 일치 6 · 6/9, 라우팅 일치 34 · 32/35.
+- 단계(각 단계 = 앞 단계 + 커밋 하나 묶음, 해시는 측정 때 결과에 적는다):
+  - S2 가격 질문 종류(9c2fe20 ~ 7af5d3f, route · supervisor 프롬프트 바뀜): S0과 같다고 본다(cited_gold 흔들림 ±4 안). 무관 문항 중 판매처 · 재고를 묻는 문항이 가격 안내로 가 hallucination_risk +0~1.
+  - S3 사실 확인 주문 코드(cd41132 · 2190440): 주문 코드가 붙은 품번 문항이 첫 단 거절 대신 판정으로 간다. over_refusal −0~1, 그 밖은 그대로.
+  - S4 품번 앞 'TSC ' 떼기: 인용 0개 문항 중 이 원인(세트당 1~2)이 사양 표를 찾는다. cited_gold +0~2.
+  - S5 판정 읽기 값 이름을 역할 입력 이름에 맞추기(judge_read 프롬프트 바뀜): 인용 0개 문항 중 이 원인(세트당 약 5)이 조건을 계산한다. cited_gold +2~6, 판정 일치 +0~2.
+  - S6 판정 길 거절 문(judge_read 프롬프트 바뀜): hallucination_risk 10 → 0~4, correct_refusal 25 → 31~35, over_refusal +0~2(관련 문항을 잘못 막는 경우).
+  - S7 찾기 정렬(같은 패키지 → 같은 분류 → 여유 작은 순 뒤 50개): candidate_find cited_gold +1~5.
+  - S8 제너 클램프 규칙 R04(원래 VZ 최대값 · 사용자 VZ 범위 칸 · 표 이름을 시험 조건으로 읽지 않음): 판정 일치 +0~1, cited_gold +0~3.
+  - S9 주문 코드만 다른 같은 품번은 동일품: 판정 일치 +0~1.
+- 마지막 단계(S9) 기대: 관련 cited_gold 22~30, over_refusal 2~7, wrong_citation 2~10, 무관 correct_refusal 31~35, hallucination_risk 0~4, 판정 일치 7~9/9, 실패 0~3, p50 5~15초. dev셋: 판정 24문항 판정 일치는 S0 대비 떨어지지 않고, 무관 20문항 거절 16/20 이상.
+- 명령: 단계마다 lab에 그 커밋의 작업 폴더를 만들고 `docker exec -e LLM_PROVIDER=openrouter -e DEMO_MODE=0 sojafit-lab uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --out <단계 결과>`를 두 번 동시에 돌린다. Langfuse development 프롬프트가 같은 단계끼리 묶어 동시에 돌린다(S2~S4, S5, S6~S9).
+- 예산 · 중단: 개인 Anthropic 1.5달러 · 팀 OpenRouter 0.2달러. 한 단계에서 실패가 3건을 넘으면 그 단계 점수를 쓰지 않고 원인부터 본다. 멀티 그래프는 마지막 단계만 2세트 잰다(따로 사전 등록).
+- 한계: 단계마다 2회라 흔들림은 범위만 안다(같은 코드 두 세트 차이가 cited_gold 4). 단계 효과가 흔들림 폭보다 작으면 효과로 단정하지 않는다. 동시 실행이라 응답 시간은 1회 측정보다 늘 수 있다.
+- 순서 바꿈(11-06, S4 측정 전): 구현이 먼저 끝난 순서로 쌓는다. S4 = 판정 읽기 값 이름(e9e12f4), S5 = 판정 길 거절 문(bcbc92a, judge_read · supervisor 프롬프트 바뀜), 그다음 사양 표 쪽 'TSC ' 떼기 → 동일품 → 찾기 정렬 → 제너 규칙을 S6~S9로 쌓는다. 단계별 기대 범위는 위 이름별 기대 그대로다.
+- 결과(11-06, 단계 · 세트별 결과는 lab `.wt/<단계>/evals/results/graph/step_<단계>_set<n>.json`, 위키 evidence `개선단계측정-2026-11-06`): 모든 단계 70문항 실패 0(S4 · S5의 draft30-e03 시간 초과와 S2 1세트 DNS 오류는 그 문항만 다시 돌려 채움). 세트 1 · 2 관련 cited_gold / over_refusal / wrong_citation, 무관 correct_refusal / hallucination_risk, 판정 일치: S2 12·14/5·6/18·15, 24·25/11·10, 5·6. S3 14·15/4·5/17·15, 25·25/10·10, 6·6. S4 14·16/4·4/17·15, 25·25/10·10, 6·7. S5 18·15/4·4/13·16, 34·33/1·2, 7·6. S6 16·17/6·4/13·14, 34·35/1·0, 5·5. S7 16·17/5·5/14·13, 32·34/3·1, 7·5. S8 19·20/4·5/12·10, 33·33/2·2, 6·8. S9 21·22/5·4/9·9, 33·34/2·1, 9·8. 흔들림(같은 코드 두 세트 cited_gold 차이 최대 3)을 넘은 단계는 S5(거절 문)와 S8 · S9(찾기 정렬 · 제너 규칙)다. S9 기대 대조: cited_gold 22~30에서 1세트 21로 1 모자람, 나머지 지표는 모두 기대 안. dev셋 44문항(S2 → S9): 판정 일치 5 → 12/24, cited_gold 4 → 12, 무관 거절 20/20 → 20/20(무관 20문항은 고치기 전에도 다 거절돼 거절 문 효과는 dev셋으로 확인 못 함). 비용: Haiku 약 1.36달러(개인 Anthropic) · Luna 약 0.04달러(팀 OpenRouter), 메모리 부족으로 죽은 실행 포함. 한계: Docker 메모리 부족(OOMKilled)으로 S2 · S3 2세트를 맥에서 다시 돌렸고, Langfuse session이 분 단위라 동시 실행이 한 session에 섞였다.
+
+### 2026-11-06 #42: 판정 길 개선을 모두 쌓은 멀티 그래프 (동결 v2 70문항, 2세트, #40과 비교)
+
+- 왜: D5 회의에 쓸 멀티 숫자. #41의 마지막 단계(S9, 레포 a420a7a)와 같은 코드로 멀티를 잰다.
+- 적은 때: 시간을 줄이려고 두 세트를 시작한 직후, 결과를 보기 전에 적었다(11-06).
+- 비교 대상: #40 두 세트를 고친 채점기로 다시 채점한 값(관련 cited_gold 13 · 15, over_refusal 5 · 5, wrong_citation 17 · 15, 무관 correct_refusal 27 · 26, hallucination_risk 8 · 9, 판정 일치 5 · 6/9, p50 18.1 · 17.1초, 약 1.8달러).
+- 기대(결과 보기 전, 고치지 않음): cited_gold 20~30, over_refusal 2~8, wrong_citation 2~10, correct_refusal 31~35, hallucination_risk 0~4, 판정 일치 7~9/9, 실패 0~4, p50 12~25초, Anthropic 1.0~2.5달러. 단일(#41 S9)과 지표 차이는 두 세트 흔들림(cited_gold 4) 안으로 본다.
+- 명령(맥, lab 작업 폴더 `.wt/S9`, 가상환경은 lab `.venv`): `LLM_PROVIDER=openrouter DEMO_MODE=0 uv run --frozen python -m evals.runners.run_graph evals/dataset_v2.jsonl --multi --out evals/results/graph/step_S9multi_set<n>.json` 두 번 동시.
+- 한계: 맥과 Docker에서 측정이 10개 넘게 동시에 돌아 응답 시간이 #40보다 늘 수 있다. 1회씩 2세트라 흔들림은 범위만 안다.
+- 결과(11-06, session `multi-dataset_v2-1106-0602-openrouter`, lab `.wt/S9/evals/results/graph/step_S9multi_set<n>.json`): 두 세트 70문항 실패 0. cited_gold 22 · 23, over_refusal 7 · 5, wrong_citation 6 · 7, correct_refusal 34 · 33, hallucination_risk 1 · 2, 판정 일치 7 · 9/9, p50 15.7 · 16.9초. 기대 대조: 모든 지표가 기대 안. 비용 Sonnet 3.27 + Haiku 0.12달러(두 세트, 개인 Anthropic) + Luna 0.01달러. 단일(S9)과 지표 차이는 흔들림 안이다.

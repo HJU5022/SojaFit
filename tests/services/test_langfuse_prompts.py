@@ -14,7 +14,7 @@ from backend.services import llm
 
 
 class Prompt:
-    name = "sojafit/generate"
+    name = "generate"
     version = 7
     config = {"model": "anthropic/claude-haiku-5.5", "temperature": 0, "max_tokens": 4096}
 
@@ -36,7 +36,7 @@ class Client:
 def test_managed_generation_links_prompt_and_skill_without_changing_user(monkeypatch):
     client = Client()
     seen = []
-    skill = SimpleNamespace(name="sojafit/skills/diode-evidence", version=3, prompt="skill")
+    skill = SimpleNamespace(name="skill-diode-evidence", version=3, prompt="skill")
     monkeypatch.setattr(managed, "callback", lambda: "callback")
 
     def chat(system, user, schema):
@@ -77,7 +77,7 @@ def test_budget_preserves_langfuse_invocation_config(monkeypatch):
     monkeypatch.setattr(managed, "invocation_config", lambda: sentinel)
     monkeypatch.setattr(managed, "bind_prompt", lambda runnable, options: SimpleNamespace(
         invoke=lambda messages, **kwargs: runnable.invoke(messages, **options, **kwargs)))
-    monkeypatch.setattr(llm, "_chat_model", lambda: SimpleNamespace(
+    monkeypatch.setattr(llm, "_chat_model", lambda *_: SimpleNamespace(
         with_structured_output=lambda schema: SimpleNamespace(invoke=invoke)))
     from pydantic import BaseModel
 
@@ -125,7 +125,7 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
     key = "pk-lf-local-test"
     client = Langfuse(public_key=key, secret_key="sk-lf-local-test", base_url="https://example.invalid",
                       span_exporter=exported)
-    prompt = ChatPromptClient(Prompt_Chat(type="chat", name="sojafit/generate", version=7,
+    prompt = ChatPromptClient(Prompt_Chat(type="chat", name="generate", version=7,
         config=managed.CONFIG, labels=["development"], tags=[], prompt=[
             {"type": "chatmessage", "role": "system", "content": "base{{domain_skill}}"},
             {"type": "chatmessage", "role": "user", "content": "{{input}}"}]))
@@ -144,14 +144,14 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
     with httpx.Client(transport=httpx.MockTransport(transport)) as http:
         model = ChatOpenAI(model=managed.CONFIG["model"], api_key="test", base_url="https://example.invalid",
                            http_client=http, max_retries=0)
-        monkeypatch.setattr(llm, "_chat_model", lambda: model)
+        monkeypatch.setattr(llm, "_chat_model", lambda *_: model)
         budget = llm.EvaluationBudget(1, 1, 60, 0.000001, 0.000001, max_tokens=4096)
         with managed.session(client, {"generate": prompt}, None), llm.evaluation_limits(budget):
             assert llm.node_chat("generate", "base", "question", Answer).answer == "ok"
     client.flush()
     generations = [s for s in exported.get_finished_spans() if s.attributes.get("langfuse.observation.type") == "generation"]
     assert len(generations) == 1
-    assert generations[0].attributes["langfuse.observation.prompt.name"] == "sojafit/generate"
+    assert generations[0].attributes["langfuse.observation.prompt.name"] == "generate"
     assert generations[0].attributes["langfuse.observation.prompt.version"] == 7
     client.shutdown()
 
@@ -159,10 +159,10 @@ def test_sdk_generation_keeps_prompt_version_with_budget(monkeypatch):
 def test_publish_reuses_sdk_message_representation(monkeypatch):
     existing = SimpleNamespace(prompt=[{"type": "message", "role": "system", "content": "base"}], config=managed.CONFIG)
     client = SimpleNamespace(api=SimpleNamespace(prompts=SimpleNamespace(list=lambda **kwargs: SimpleNamespace(
-        data=[SimpleNamespace(name="sojafit/route", labels=["development"])]))),
+        data=[SimpleNamespace(name="route", labels=["development"])]))),
         get_prompt=lambda *args, **kwargs: existing,
         create_prompt=lambda **kwargs: pytest.fail("본문이 같으면 새 버전을 만들지 않는다"))
-    assert managed.publish(client, "sojafit/route", [{"role": "system", "content": "base"}],
+    assert managed.publish(client, "route", [{"role": "system", "content": "base"}],
                            kind="chat", config=managed.CONFIG) is existing
 
 
@@ -294,7 +294,7 @@ def test_timeline_rejects_generation_time_or_node_coverage(broken):
     def generation(id, parent, node, start, end):
         return {"id": id, "type": "GENERATION", "parent_observation_id": parent,
                 "start_time": stamp(start), "end_time": stamp(end), "model": managed.CONFIG["model"],
-                "prompt_name": f"sojafit/{node}", "prompt_version": 4}
+                "prompt_name": node, "prompt_version": 4}
     observations = [span("root", "sojafit-skill-rating", 0, 12, None),
                     span("read", "read_input", 0, 1), span("route", "route", 1, 3),
                     span("search", "search", 3, 4), span("grade", "grade", 4, 6),
@@ -302,17 +302,17 @@ def test_timeline_rejects_generation_time_or_node_coverage(broken):
                     generation("r", "route", "route", 1, 2),
                     generation("g", "grade", "grade", 4, 5),
                     generation("a", "generate", "generate", 6, 7)]
-    prompts = {name: SimpleNamespace(name=f"sojafit/{name}", version=4)
+    prompts = {name: SimpleNamespace(name=name, version=4)
                for name in ("route", "grade", "generate")}
     validate_timeline(observations, prompts, 3, case_kind="rating")
     observations = deepcopy(observations)
-    generation = next(o for o in observations if o.get("prompt_name") == "sojafit/generate")
+    generation = next(o for o in observations if o.get("prompt_name") == "generate")
     if broken == "outside_parent":
         generation["start_time"] = "2099-01-01T00:00:00+00:00"
         generation["end_time"] = "2099-01-01T00:00:01+00:00"
     else:
         route = next(o for o in observations if o["name"] == "route" and o["type"] == "SPAN")
-        generation.update(parent_observation_id=route["id"], prompt_name="sojafit/route",
+        generation.update(parent_observation_id=route["id"], prompt_name="route",
                           start_time=route["start_time"], end_time=route["end_time"])
     with pytest.raises(ValueError):
         validate_timeline(observations, prompts, 3, case_kind="rating")
@@ -329,10 +329,37 @@ def test_load_existing_versions_rejects_unpublished_local_skill(monkeypatch, tmp
     (folder / "SKILL.md").write_text("local draft")
     monkeypatch.setattr(managed, "ROOT", tmp_path)
     class ExistingPrompt:
-        config = managed.CONFIG
+        def __init__(self, name):
+            self.config = managed.node_config(name)  # 노드마다 등록된 모델 설정이 다르다
         def compile(self, **values):
             return [{"role": "system", "content": "base"}, {"role": "user", "content": values["input"]}]
     old_skill = SimpleNamespace(prompt="published version", config={"sha256": hashlib.sha256(b"published version").hexdigest()})
-    client = SimpleNamespace(get_prompt=lambda name, **kwargs: old_skill if name == managed.SKILL_NAME else ExistingPrompt())
+    client = SimpleNamespace(get_prompt=lambda name, **kwargs: old_skill if name == managed.SKILL_NAME else ExistingPrompt(name))
     with pytest.raises(ValueError, match="Skill 불일치"):
         managed.load_development(client)
+
+
+def test_node_config_gives_each_node_its_model():
+    assert managed.node_config("route") == managed.CONFIG
+    luna = managed.node_config("grade")
+    assert luna["model"] == "openai/gpt-6-luna"
+    assert "temperature" not in luna and luna["max_tokens"] == managed.CONFIG["max_tokens"]
+    sonnet = managed.node_config("supervisor")  # [왜] Sonnet은 Haiku와 같은 Anthropic 모델이라 temperature 0을 그대로 보낸다(11-05)
+    assert sonnet == {**managed.CONFIG, "model": "anthropic/claude-sonnet-5.5"}
+    assert "judge_read" in managed.NODES and managed.node_config("judge_read") == managed.CONFIG  # 판정 읽기는 서브에이전트라 Haiku(ADR 0014)
+    assert set(managed.NODES) == set(managed.NODE_MODELS)
+
+
+def test_publish_nodes_registers_each_prompt_with_its_node_config(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(managed, "publish", lambda client, node, body, *, kind, config: seen.setdefault(node, config))
+    managed.publish_nodes(object())
+    assert seen == {node: managed.node_config(node) for node in managed.NODES}
+
+
+def test_prompt_scope_rejects_config_of_another_nodes_model():
+    prompt = SimpleNamespace(name="supervisor", version=1, config=managed.CONFIG)  # Sonnet 노드에 Haiku 설정이 등록됨
+    with managed.session(SimpleNamespace(), {"supervisor": prompt}, None):
+        with pytest.raises(ValueError, match="모델 설정"):
+            with managed.prompt_scope("supervisor", "s", "u"):
+                pass

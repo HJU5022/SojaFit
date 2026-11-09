@@ -1,10 +1,14 @@
 """줄기 그래프의 노드들. 노드는 상태(메모장)를 받아 자기가 바꾼 칸만 dict로 돌려준다.
 
-- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 검색, 채점, 재작성, 생성, 거절 7개).
+- 역할: SPEC 2절 노드 표의 일을 노드 함수 하나씩으로 한다(입력 읽기, 라우팅, 짧은 답, 가격 안내, 검색, 채점, 재작성, 생성, 거절, 판정, 답 틀 11개).
+  가격 안내(`price_answer`)는 멀티 그래프도 그대로 쓴다.
+  사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`), LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다).
-- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다).
+- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 판정 에이전트를 부르기만 한다),
+  LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다), Mouser 가격 · 재고 조회(그래프 밖 `/api/prices`, ADR 0009).
+- 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
+  backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
 """
 import hashlib
 import json
@@ -12,10 +16,13 @@ import re
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
+from backend.multi_agent.contracts import QuestionType, Reason
+from backend.multi_agent.messages import price_message, refusal_for, render_judgement
+from backend.multi_agent.supervisor import Facts, render_facts
 from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
@@ -89,8 +96,10 @@ def circuit_around(connections: dict, target: str) -> dict:
     nets = []
     for name in names:
         nodes = net_by_name[name]["nodes"]
-        nets.append({"name": name, "nodes": [show(n) for n in nodes[:MAX_NET_NODES]],
-                     "more": max(0, len(nodes) - MAX_NET_NODES)})
+        # [왜] 큰 넷(GND · VCC)은 앞 MAX_NET_NODES개만 보이는데, 대상 자신의 핀이 잘리면 역할을 못 읽는다(AC-10). 대상 핀을 앞에 둔다
+        mine = [n for n in nodes if n["ref"] == target]
+        shown = (mine + [n for n in nodes if n["ref"] != target])[:MAX_NET_NODES]
+        nets.append({"name": name, "nodes": [show(n) for n in shown], "more": max(0, len(nodes) - MAX_NET_NODES)})
     target_part = parts[target]
     return {"ref": target, "value": target_part.get("value", ""), "footprint": target_part.get("footprint", ""), "nets": nets}
 
@@ -110,25 +119,57 @@ def read_input(state: AgentState) -> dict:
     # 안 비우면 낡은 query로 검색하고, 낡은 passed·docs로 역할 질문에 답하고, 낡은 tries 때문에 재작성 없이 거절한다.
     # [주의] tries는 더하기 칸(operator.add)이라 0을 덮어쓸 수 없다. 지금 값의 음수를 돌려줘야 합쳐서 0이 된다.
     reset = {"query": "", "parts": [], "docs": [], "passed": [], "retrieval_error": None,
-             "tries": -state.get("tries", 0)}
+             "tries": -state.get("tries", 0),
+             # 사실 · 거절 코드 · 판정 칸: 앞 질문의 것으로 새 질문을 거절하거나 답하지 않게 한다(멀티 parse_node와 같은 이유)
+             "facts": {}, "refusal": {}, "judge_read": {}, "judgement": {},
+             "price_parts": []}  # 앞 질문의 가격 안내 품번이 새 답에 붙지 않게 한다
     # [주의] 뒤에 오는 dict가 앞을 덮는다. 입력에서 나눈 칸이 reset 값보다 앞서야 해서 reset을 먼저 펼친다
     return {**reset, **fields, "target_part": target_part, "path": ["입력 읽기"]}  # path는 쌓는 칸이라 이름만 돌려주면 이어 붙는다
 
 
+# 라우팅이 검색 전에 정할 수 있는 거절 사유. 한도 · 검증 · 검색 장애는 그 뒤 단계에서만 생긴다
+FirstStageReason = Literal[Reason.OUT_OF_SCOPE, Reason.PART_MISSING, Reason.REVISION_MISSING, Reason.NOT_FOUND]
+REFUSED_TYPES = {"out_of_scope": Reason.OUT_OF_SCOPE, "other_part": Reason.NOT_FOUND}  # 종류만으로 거절이 정해지는 질문(멀티 Supervisor 규칙과 같음)
+
+
 class Route(BaseModel):
-    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할)."""
-    # Literal로 다섯 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
-    question_type: Literal["out_of_scope", "role", "candidate_find", "candidate_judge", "rating"] = Field(
-        description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
+    """라우팅 노드가 LLM에게 받는 답안지(강의 2주 20강의 Route와 같은 역할). 질문 종류는 멀티 Supervisor와 같은 8가지다."""
+    # Literal로 정한 값만 허용한다. LLM이 다른 글자를 내면 pydantic 검사에서 걸러진다(structured output)
+    question_type: QuestionType = Field(description="질문 종류. backend/prompts/route.md의 순서대로 처음 맞는 것")
+    reason: FirstStageReason | None = Field(default=None, description="검색 전에 거절할 때만 거절 사유. 거절하지 않으면 비운다")
+    reply: str = Field(default="", max_length=300, description="일상 대화(chat)일 때 사용자에게 보여 줄 한국어 답")
+
+    @model_validator(mode="after")
+    def refusal_reason_and_reply(self):
+        if self.reason is None and self.question_type in REFUSED_TYPES:
+            # [왜] 범위 밖 · 다른 부품은 종류만으로 사유가 정해진다. 비워 왔다고 형식 재시도(유료)로 다시 부르지 않고 채운다
+            self.reason = REFUSED_TYPES[self.question_type]
+        if self.question_type == "chat" and not self.reply.strip():
+            raise ValueError("일상 대화에는 reply가 필요하다")  # [왜] 짧은 답 노드는 LLM을 다시 부르지 않고 이 reply를 답으로 쓴다
+        return self
 
 
 def route(state: AgentState) -> dict:
-    """라우팅 노드: 질문 종류를 다섯 가지 중 하나로 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
+    """라우팅 노드: 질문 종류(8가지)와 검색 전 거절 사유 · 일상 대화 답을 정한다(SPEC 2절). 어디로 갈지는 build.py의 갈림길이 정한다."""
     # [왜] 질문만 주면 "D1은 무슨 역할이야"처럼 대상이 빠진 질문을 놓칠 수 있어 대상 기호와 값을 같이 준다
     part = state.get("target_part") or {}
-    user = f"대상: {state.get('target', '')} {part.get('value', '')}\n질문: {state['question']}"
+    # [왜] 사실 확인 결과를 멀티 Supervisor와 같은 글(render_facts)로 붙여, 코퍼스에 없는 품번 · 개정판을 검색 전에 거절하게 한다
+    facts = render_facts(Facts(**(state.get("facts") or {})))
+    user = "\n".join([f"대상: {state.get('target', '')} {part.get('value', '')}", f"질문: {state['question']}", *facts])
     answer = llm.node_chat("route", (PROMPTS / "route.md").read_text(encoding="utf-8"), user, Route)
-    return {"question_type": answer.question_type, "path": ["라우팅"]}  # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다
+    # 바뀐 칸만 돌려준다: 나머지 칸은 그대로 남는다. route 칸은 갈림길 · 거절 · 짧은 답 노드가 읽는다
+    return {"question_type": answer.question_type, "route": answer.model_dump(mode="json"), "path": ["라우팅"]}
+
+
+def short_reply(state: AgentState) -> dict:
+    """짧은 답 노드: 일상 대화는 라우팅이 낸 reply를 그대로 답으로 쓴다. LLM을 더 부르지 않는다(멀티 Supervisor의 끝내기와 같음)."""
+    # [왜] check · skill도 덮어쓴다. 같은 thread 앞 턴의 인용 검사 · Skill 적용 정보가 이 답의 것으로 보이면 안 된다
+    return {"answer": state["route"]["reply"], "check": {}, "skill": {"enabled": False, "applied": False, "sha256": None},
+            "path": ["짧은 답"]}
+
+
+# 품번이 아닌 규격 · 인증 이름(AEC-Q101, IEC61000, J-STD-020, ISO7637, UL94, JESD201). [왜] 'AEC-Q101'을 코퍼스에 없는 품번으로 셌다(11-06 v3-14)
+STANDARD = re.compile(r'(AEC-?Q\d+|IEC-?\d+(-\d+)*|J-?STD-?\d+|ISO-?\d+|UL-?\d+|JESD-?\d+)', re.I)
 
 
 def find_parts(text: str, refs: set[str]) -> list[str]:
@@ -137,11 +178,26 @@ def find_parts(text: str, refs: set[str]) -> list[str]:
     for word in WORD.findall(text):  # [왜] 영문·숫자만 이어 붙여 "1N5819는"의 조사 "는"이 떨어진다
         if not (re.search(r"[A-Za-z]", word) and re.search(r"\d", word)):
             continue  # TSC, USB(숫자 없음)와 2026(영문 없음)은 품번이 아니다
-        if word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word):
+        if word in refs or QUANTITY.fullmatch(word) or REVISION.fullmatch(word) or STANDARD.fullmatch(word):
             continue
         found.append(word)
     # [주의] 코퍼스에 없는 품번(1N4001, BAT85)도 남긴다. 그래야 retrieve가 []를 돌려 "문서로 확인 안 됨"으로 간다
     return list(dict.fromkeys(found))  # 같은 품번이 두 번 나와도 한 번만
+
+
+def price_answer(state: AgentState) -> dict:
+    """가격 안내 노드: 가격 · 재고를 물은 품번만 `price_parts`에 남기고 정해진 안내로 끝낸다. LLM · Mouser를 부르지 않는다(SPEC 2절).
+
+    [왜] Mouser 값은 그래프 상태 · 체크포인트 · Langfuse 트레이스에 남으면 안 된다(ADR 0009). 값은 화면이 그래프 밖 `/api/prices`로
+    볼 때마다 조회한다. 멀티 그래프도 이 노드를 그대로 붙인다(D4 · D5가 같은 답을 내게).
+    """
+    part = state.get("target_part") or {}
+    refs = {part.get("ref", "")} | {node.split(".")[0] for net in part.get("nets", []) for node in net["nodes"]}  # 검색 노드와 같은 회로 기호
+    # 검색 노드와 같은 규칙: 질문 속 품번, 없으면 대상 값의 품번("D1 가격 얼마야" → D1 값의 품번)
+    parts = find_parts(state["question"], refs) or find_parts(part.get("value", ""), refs)
+    # [왜] check · skill도 비운다(짧은 답과 같은 이유). 멀티 메모장에는 skill 칸이 없어 LangGraph가 그 칸을 버린다
+    return {"price_parts": parts, "answer": price_message(parts), "check": {},
+            "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["가격 안내"]}
 
 
 def search(state: AgentState, retriever) -> dict:
@@ -171,9 +227,19 @@ def other_part_row(doc: dict, parts: list[str]) -> bool:
     """표 한 줄 청크가 같은 문서의 다른 품번만 적힌 줄이면 True(예: 1N5819를 물었는데 1N5817 순방향 전압 줄)."""
     if not doc.get("table") or not parts:
         return False  # 글 청크("FEATURES" 등)는 문서 전체 이야기라 거르지 않는다. 물은 품번이 없으면 비교할 것이 없다
+    if doc["content"].split("] ", 1)[0].endswith("주석"):
+        # [왜] 표 주석 카드(청킹 v4부터 따로 된 카드)는 표 한 줄이 아니다. 'C or CA suffix for types SMAJ5.0 - Types SMAJ188'처럼
+        #      계열 범위 품번을 적어 다른 품번 줄로 버려지면 양방향 품번 규칙 근거가 사라졌다(v3-19, 11-09)
+        return False
     # [왜] 문서 표지 품번 목록과 겹치는 낱말만 품번으로 본다. 그래야 패키지 이름(DO-41, SOD-123F)이 든 줄을 버리지 않는다
-    named = {w.lower() for w in find_parts(LABEL.sub("", doc["content"]), set())} & set(doc.get("doc_parts", []))
-    return bool(named) and not named & {p.lower() for p in parts}
+    # [주의] 청킹 v3가 행 끝에 붙인 표 주석('\n주: … 2.4V (BZV55B2V4) to 75V (BZV55B75)')의 예시 품번은 그 행의 품번이 아니라 보지 않는다(11-06 v3-18)
+    body = LABEL.sub("", doc["content"]).split("\n주: ", 1)[0]
+    named = {w.lower() for w in find_parts(body, set())} & set(doc.get("doc_parts", []))
+    # [왜] TSC TVS는 양방향 품번(C · CA)이 단방향 행(… · …A)의 값을 쓴다('Electrical characteristics apply in both directions'). SMAJ6.5CA를 물으면 SMAJ6.5A 행이 근거다(v3-19)
+    # [왜] H 품번(AEC-Q101)도 값 표에는 기본 품번으로 적힌다('"H" means AEC-Q101 qualified'). SMAJ6.5CAH → SMAJ6.5CA · SMAJ6.5A
+    bases = {p.lower() for p in parts} | {p.lower()[:-1] for p in parts if p.lower().endswith("h")}
+    asked = bases | {re.sub(r"c(a?)$", r"\1", p) for p in bases}
+    return bool(named) and not named & asked
 
 
 def grade(state: AgentState) -> dict:
@@ -270,22 +336,54 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
     return {"answer": answer, "check": check, "skill": skill_info, "path": ["생성"]}
 
 
+def judge(state: AgentState, *, specs, find, retriever) -> dict:
+    """판정 노드: 멀티의 판정 에이전트(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
+
+    입력: judge_read · question_type · conditions · target_part · facts. 출력: judgement, path(사양 표 도구 장애면 retrieval_error,
+    코퍼스 밖 요구면 refusal 코드도).
+    주의: 단일 메모장에는 보고서 칸이 없어 `reports`는 버린다. 보고서의 거절 사유는 칸으로 옮겨 거절로 보낸다.
+    """
+    from backend.multi_agent.agents.judge import judge_agent  # [왜] 판정 길을 이을 때만 판정 규칙 · 프롬프트를 읽는다
+    out = judge_agent(state, specs=specs, find=find, retriever=retriever)
+    reason = out.pop("reports")[-1].get("reason")
+    if reason == Reason.SEARCH_ERROR.value:
+        out["retrieval_error"] = {"kind": "spec_table"}
+    elif reason:
+        out["refusal"] = {"code": reason}  # 코퍼스 밖 요구(SPEC 8.3). 거절 노드가 이 코드로 멀티와 같은 문구를 만든다
+    return out
+
+
+def judgement_answer(state: AgentState) -> dict:
+    """답 틀 노드: 판정 결과를 코드 틀(`render_judgement`)로 답 글로 만든다. LLM이 숫자 · 인용을 다시 쓰지 않는다(AGENTS 7번, 멀티 작성과 같음)."""
+    return {"answer": render_judgement(state["judgement"]), "check": {"used": [], "judgement": True},
+            "skill": {"enabled": False, "applied": False, "sha256": None}, "path": ["답 틀"]}
+
+
 def refuse(state: AgentState) -> dict:
-    """거절 노드: 이유(범위 밖 / 근거 없음)와 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절)."""
-    skill_info = {"enabled": False, "applied": False, "sha256": None}
-    if state.get("question_type") == "out_of_scope":
-        answer = "이 질문은 SojaFit 범위 밖입니다. SojaFit은 회로 속 다이오드의 역할·정격과 대체 후보를 TSC 데이터시트로 확인합니다."
-        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}  # 이전 턴의 적용 정보도 비운다
-    if state.get("retrieval_error"):
+    """거절 노드: 이유 코드(`refusal`)와 안내문, 다음 할 일(단서 요청)을 답으로 남기고 끝낸다. LLM을 쓰지 않는다(SPEC 2절).
+
+    이유 코드는 멀티 그래프와 같은 `contracts.Reason` 값이다: 라우팅이 정한 사유(out_of_scope · part_missing · revision_missing ·
+    not_found), 판정이 코퍼스 밖 요구로 정한 사유(part_missing · revision_missing · not_found), 검색 장애(search_error),
+    검색 고리에서 못 찾음(not_found). 평가 실행기가 이 코드로 거절 종류를 센다.
+    """
+    skill_info = {"enabled": False, "applied": False, "sha256": None}  # 이전 턴의 Skill 적용 정보도 비운다
+    # 라우팅이 첫 단에서 정한 사유, 없으면 판정이 코퍼스 밖 요구로 정한 사유(SPEC 8.3)
+    reason = (state.get("route") or {}).get("reason") or (state.get("refusal") or {}).get("code")
+    if reason:
+        # 검색 없이 거절한다. [왜] 문구는 멀티 거절과 같은 함수로 만든다(D4 · D5를 같은 문구로 비교)
+        answer = refusal_for(Reason(reason), state.get("facts") or {})
+    elif state.get("retrieval_error"):
+        reason = Reason.SEARCH_ERROR.value
         answer = "검색 도구를 사용할 수 없어 문서 근거를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요."
-        return {"answer": answer, "check": {}, "skill": skill_info, "path": ["거절"]}
-    docs, parts = state.get("docs") or [], state.get("parts") or []
-    # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
-    if not docs:
-        found = f"{', '.join(parts)} 데이터시트를 찾지 못했습니다" if parts else "질문에 맞는 데이터시트를 찾지 못했습니다"
     else:
-        files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
-        found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
-    # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
-    return {"answer": f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다.",
-            "check": {}, "skill": skill_info, "path": ["거절"]}
+        reason = Reason.NOT_FOUND.value  # [왜] 없는 품번은 사실 확인에서 걸러지므로, 검색 고리의 거절은 '찾지 못함'(추정)이다
+        docs, parts = state.get("docs") or [], state.get("parts") or []
+        # [왜] 근거 없음을 둘로 나눠 보여 준다. 품번 문서가 아예 없는 것과, 문서는 있는데 답이 없는 것은 사용자가 줄 단서가 다르다
+        if not docs:
+            found = f"{', '.join(parts)} 데이터시트를 찾지 못했습니다" if parts else "질문에 맞는 데이터시트를 찾지 못했습니다"
+        else:
+            files = ", ".join(sorted({d["file"] for d in docs}))  # SPEC 3절: 찾아본 문서를 보여 준다
+            found = f"찾아본 문서({files})에서 질문에 답할 근거를 찾지 못했습니다(검색 {state.get('tries', 0)}번)"
+        # 대화는 끊지 않는다. 사용자가 단서를 주면 같은 thread의 다음 메시지로 다시 찾는다(SPEC 2절, ADR 0006)
+        answer = f"{NOT_FOUND}: {found}. 단서({CLUES})를 알려 주시면 다시 찾겠습니다."
+    return {"answer": answer, "check": {}, "skill": skill_info, "refusal": {"code": reason, "message": answer}, "path": ["거절"]}

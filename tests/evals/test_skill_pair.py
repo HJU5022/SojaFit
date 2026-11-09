@@ -13,6 +13,18 @@ from backend.services import llm
 from evals.runners import run_skill_pair as pair
 
 
+def test_load_frozen_items_reads_utf8_on_windows(tmp_path):
+    """동결 평가셋의 한글을 Windows 기본 CP949와 무관하게 UTF-8로 읽는다."""
+    item = {"id": "한글-1", "input": "질문: 역전압", "expected": "40 V"}
+    dataset = tmp_path / "dataset_v1.jsonl"
+    dataset.write_text(json.dumps(item, ensure_ascii=False) + "\n", encoding="utf-8")
+    frozen = tmp_path / "FROZEN.json"
+    frozen.write_text(json.dumps({dataset.name: {
+        "sha256": pair.digest(dataset), "count": 1}}, ensure_ascii=False), encoding="utf-8")
+
+    assert pair.load_frozen_items(dataset, frozen) == [item]
+
+
 @pytest.mark.parametrize("kind,passes,empty,want", [
     ("role", [], False, ["입력 읽기", "라우팅"]),
     ("out_of_scope", [], False, ["입력 읽기", "라우팅", "거절"]),
@@ -147,7 +159,7 @@ def test_raw_chat_and_embedding_share_budget_and_restore_defaults(monkeypatch):
             calls.append("embed")
             return SimpleNamespace(data=[SimpleNamespace(embedding=[0.1])], usage=SimpleNamespace(total_tokens=1))
 
-    monkeypatch.setattr(llm, "_chat_model", Model)
+    monkeypatch.setattr(llm, "_chat_model", lambda *_: Model())
     monkeypatch.setattr(llm, "_embedding_client", lambda: (Embedding(), "openrouter", "small"))
     budget = llm.EvaluationBudget(2, 1, 60, 0.000001, 0.000001)
     with llm.evaluation_limits(budget):
@@ -199,7 +211,7 @@ def test_actual_sdk_request_receives_evaluation_timeout(monkeypatch):
     with httpx.Client(transport=httpx.MockTransport(transport)) as client:
         model = ChatOpenAI(model="gpt-4o", api_key="test-key", base_url="https://example.invalid/v1",
                            http_client=client, max_retries=0)
-        monkeypatch.setattr(llm, "_chat_model", lambda: model)
+        monkeypatch.setattr(llm, "_chat_model", lambda *_: model)
         with llm.evaluation_limits(llm.EvaluationBudget(1, 1, 60, 0.000001, 0.000001)):
             assert llm._openrouter_call("sys", "q", nodes.Answer).answer == "ok"
     timeout, body = seen[0]

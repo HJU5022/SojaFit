@@ -1,0 +1,28 @@
+{
+ "meta": {
+  "session": "graph-dataset_v2-1104-2122-openrouter",
+  "git": "a630454",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "note": "채점 노드가 마지막으로 본 검색 청크와 통과 청크의 번호 · 파일 · 쪽만 담는다(본문 없음). 사전 등록 #36"
+ },
+ "result": {
+  "relevant": 19,
+  "irrelevant": 35,
+  "retrieved_sufficient": 15,
+  "retention": {
+   "kept": 12,
+   "of": 15
+  },
+  "table": {
+   "부분>부분": 4,
+   "충분>부분": 2,
+   "충분>부족": 1,
+   "충분>충분": 12
+  },
+  "irrelevant_zero_pass": {
+   "zero": 34,
+   "of": 35
+  },
+  "page_recall_mean": 0.776
+ }
+}
