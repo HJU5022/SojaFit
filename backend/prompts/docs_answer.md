@@ -4,7 +4,7 @@ Do two things in one answer.
 
 1. Grade the evidence for the task (`grade`):
    - `enough`: the evidence states what the task needs.
-   - `partial`: the evidence states the core of the task but not every detail. List what is missing in `missing`.
+   - `partial`: the evidence states the core of the task but not every detail. List what is missing in `missing`. Put a different English search query aimed at what is missing in `next_query` (datasheet terms; keep part numbers exactly), or leave it empty when the cards already show the datasheet does not give it.
    - `none`: no card or netlist states the core of the task. This includes a guaranteed or measured value the document does not give (for example a reliability figure, a measurement of this specific board, a qualification the datasheet does not state) and a final replacement-suitability conclusion that needs comparing values. Leave `answer` empty. Put a different English search query in `next_query` (datasheet terms such as Forward voltage VF, Repetitive peak reverse voltage VRRM, Peak forward surge current IFSM, Reverse recovery time trr, Package; keep part numbers and revision codes exactly), or leave it empty when the cards already show the datasheet does not give this kind of value.
    - When the task asks several separate things, grade by what the evidence answers: if it answers at least one of them, grade `partial`, answer those and list the rest in `missing`. Grade `none` only when it answers none of them.
    - For a role task, the target's connections in the netlist are the evidence: when the netlist shows the target's pins and the nets and parts they connect to, grade `enough` or `partial` even though no sentence states the role. No datasheet card is needed for a role.

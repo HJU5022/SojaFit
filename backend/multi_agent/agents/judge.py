@@ -196,6 +196,9 @@ def merge_reads(reads: list[JudgeRead]) -> JudgeRead:
 
 
 NUM = re.compile(r'\d+(?:\.\d+)?')
+# 인용 글의 숫자 범위('3.42~3.78V' · '3.42–3.78 V' · '3.42V에서 3.78V' · '3.42 to 3.78V')
+NUM_RANGE = re.compile(r'\d(?:\.\d+)?\s*[a-zA-Z]*\s*(?:~|〜|–|—|-|에서|부터|to)\s*\d', re.I)
+RANGE_ONLY = {'vz_min', 'vz_max'}  # 사용자가 범위로 정한 값만 받는 이름(judge_read.md: 공칭 ± 공차는 required_specs)
 QTY = re.compile(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%Ω]*)')  # 인용 글의 숫자와 바로 뒤 단위
 REPLY = re.compile(r'^\s*(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%]*)\s*$')
 YES, NO = {'예', '네', '응', 'yes', 'true', 'y'}, {'아니오', '아니', 'no', 'false', 'n'}
@@ -233,7 +236,9 @@ def to_inputs(read: JudgeRead, text: str, kinds: dict) -> tuple[dict, dict, list
         if v.name not in kinds and SAME_QUANTITY.get(v.name) in kinds:
             v = v.model_copy(update={'name': SAME_QUANTITY[v.name]})  # 같은 자리 두 역할의 같은 양을 다른 이름으로 읽은 경우
         kind = kinds.get(v.name)
-        if kind is None or not grounded(text, v):
+        # [왜] 읽기가 구매 규격 '공칭 제너 전압 3.3V, 공차 ±2%'를 vz_min · vz_max = 3.3V로도 읽어, 사양 조건에 더해 '최소 VZ ≥ 3.3 · 최대 VZ ≤ 3.3'이
+        #      걸려 실제 3.3V 제너가 모두 불충족이 됐다(v3-13, Sonnet 31a3aa3 1세트 · Haiku 4a61fd0 2세트, 사전 등록 #48). 범위가 없는 인용은 버린다
+        if kind is None or not grounded(text, v) or (v.name in RANGE_ONLY and not NUM_RANGE.search(v.quote)):
             dropped.append(v.name)
         elif kind == 'flag' and v.flag is not None:
             values[v.name] = v.flag

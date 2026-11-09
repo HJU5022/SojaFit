@@ -378,3 +378,17 @@ def test_judge_report_without_any_judged_candidate_is_a_failure(monkeypatch):
         monkeypatch.setattr(J, 'judge_agent', agent(kind))
         r = J.judge_task_node(state, specs=None, find=None, retriever=None)['reports'][0]
         assert (r['status'], r['reason']) == ('fail', reason)
+
+
+def test_vz_window_is_read_only_from_an_explicit_range():
+    """[왜] 구매 규격 '공칭 3.3V, 공차 ±2%'를 vz_min · vz_max = 3.3으로 읽어 3.3V 제너가 모두 불충족이 됐다(v3-13, 사전 등록 #48)."""
+    kinds = C.inputs(RULES['R04'])
+    text = '공칭 제너 전압 3.3V, 공차 ±2%. 다른 보드는 제너 전압 3.42~3.78V 범위를 쓴다.'
+    nominal = J.JudgeRead(role='R04', values=[J.Value(name='vz_min', number=3.3, unit='V', quote='공칭 제너 전압 3.3V, 공차 ±2%'),
+                                              J.Value(name='vz_max', number=3.3, unit='V', quote='공칭 제너 전압 3.3V')])
+    values, _, dropped = J.to_inputs(nominal, text, kinds)
+    assert 'vz_min' not in values and 'vz_max' not in values and {'vz_min', 'vz_max'} <= set(dropped)
+    ranged = J.JudgeRead(role='R04', values=[J.Value(name='vz_min', number=3.42, unit='V', quote='제너 전압 3.42~3.78V'),
+                                             J.Value(name='vz_max', number=3.78, unit='V', quote='제너 전압 3.42~3.78V')])
+    values, _, _ = J.to_inputs(ranged, text, kinds)
+    assert (values['vz_min'], values['vz_max']) == (3.42, 3.78)

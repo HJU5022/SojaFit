@@ -179,3 +179,20 @@ def test_zener_voltage_falls_back_to_the_min_max_window_when_no_nominal_column()
         return [] if len(calls) == 1 else [{'part': 'BZT52B68'}]
     parts = D.lookup_parts(D.Task.model_validate(task(specs=[{'code': 'VZ', 'value': 68, 'unit': 'V'}])), find)
     assert parts == ['BZT52B68'] and calls[1] == [{'code': 'VZ', 'slot': 'min', 'lte': 68.0}, {'code': 'VZ', 'slot': 'max', 'gte': 68.0}]
+
+
+def test_partial_answer_searches_once_more_for_what_is_missing_and_keeps_the_first_evidence():
+    """[왜] 일부만 답하고 끝내 정답 근거(SS14H · SS14 정격표) 없이 답했다(v3-20, 사전 등록 #49)."""
+    seen = []
+    chat = llm(D.DocsAnswer(grade='partial', answer='주문 코드는 SS1xH이다 [3].', missing=['IF'], next_query='SS14H SS14 average forward current IF'),
+               D.DocsAnswer(grade='enough', answer='주문 코드는 SS1xH이다 [3]. IF는 둘 다 1 A이다 [4].'))
+    r = run(task(), chat, docs=lambda q, parts: [doc(3)] if 'VRRM' in q else [doc(3), doc(4, content='IF 1 A')], seen=seen)
+    assert [q for q, _ in seen] == ['SS14 Repetitive peak reverse voltage VRRM', 'SS14H SS14 average forward current IF']
+    assert r['status'] == 'ok' and r['evidence_ids'] == ['3', '4'] and r['llm_calls'] == 2
+    assert '[3]' in chat.seen[1][1] and '[4]' in chat.seen[1][1]  # 두 번째 답 쓰기는 앞 근거와 새 근거를 함께 본다
+    # 새 근거가 없으면 다시 부르지 않고, 다시 답이 none이면 첫 일부 답을 쓴다
+    same = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', next_query='more')), docs=[doc(3)])
+    assert same['status'] == 'partial' and same['llm_calls'] == 1
+    worse = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', next_query='more'), D.DocsAnswer(grade='none')),
+                docs=lambda q, parts: [doc(3)] if 'VRRM' in q else [doc(5)])
+    assert worse['status'] == 'partial' and worse['answer'] == 'VRRM은 40 V이다 [3].' and worse['llm_calls'] == 2

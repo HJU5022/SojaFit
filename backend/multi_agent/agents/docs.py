@@ -1,7 +1,7 @@
 """문서 에이전트: 지시서의 검색어로 찾고, 근거 채점과 답 쓰기를 LLM 한 번으로 하고, 인용을 코드로 검사해 보고한다.
 
 - 역할: 검색(지시서의 첫 검색어 · 질문의 품번 필터, BM25 + voyage-4-large → rerank-3 상위 5) → 다른 품번 줄 · 다른 판 거르기(코드) →
-  근거 채점 + 답 쓰기(Haiku 1번: 질문 · 지시서 · 대상 회로 · 청크를 함께 받는다) → 근거가 없으면 LLM이 준 다른 검색어로 1번만 다시 →
+  근거 채점 + 답 쓰기(Haiku 1번: 질문 · 지시서 · 대상 회로 · 청크를 함께 받는다) → 근거가 없거나 일부만 답했으면 LLM이 준 다른 검색어로 1번만 다시(일부 답은 앞 근거와 함께, #49) →
   인용 검사(코드: 보여 준 청크 번호와 넷리스트만) → 보고(ok · partial · fail + 200자 요약 + 부분 답 + 근거).
   지시서에 품번(parts)이 있으면 그 품번 문서 안에서만 찾는다(재계획이 넣는다, 설계 v2). 품번 없이 정격(specs)만 있으면
   사양 표 도구(find_parts_by_specs)로 그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4).
@@ -32,7 +32,7 @@ class DocsAnswer(BaseModel):
     grade: Literal['enough', 'partial', 'none'] = Field(description='Does the evidence answer the task: enough, partial or none')
     answer: str = Field(default='', description='Korean answer, every sentence ending with its evidence number like [12]; empty when grade is none')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
-    next_query: str = Field(default='', max_length=200, description='When grade is none: a different English search query to try once')
+    next_query: str = Field(default='', max_length=200, description='When grade is none or partial: a different English search query to try once (for partial, aimed at what is missing)')
 
 
 def keep_docs(docs: list[dict], parts: list[str], question: str) -> list[dict]:
@@ -126,6 +126,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     question, part, rnd = payload['question'], payload.get('target_part') or {}, payload.get('round') or 1
     query, searches, shown, result, calls, relax = task.query.strip(), [], [], None, 0, False
     filter_parts, looked_up = list(task.parts), ''
+    carry, first = [], None  # 일부만 답한 근거와 그 답(다시 찾을 때 근거를 함께 보이고, 못 늘리면 그 답을 쓴다)
 
     def report(status: str, summary: str, **kw) -> dict:
         r = TaskReport(task=task.id, agent='docs', status=status, summary=summary[:200], searches=searches, llm_calls=calls, round=rnd, **kw)
@@ -154,6 +155,12 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             searches.append({'query': out['query'], 'parts': used_parts, 'top': [[d['file'], d['page']] for d in out['docs']]})
             docs = keep_docs(out['docs'], used_parts, question)
             docs += variant_notes(used_parts, docs, retriever)
+        if carry:
+            seen = {d['chunk_id'] for d in carry}
+            docs = carry + [d for d in docs if d['chunk_id'] not in seen]
+            if len(docs) == len(carry):
+                result, shown = first  # 새 근거가 없으면 다시 부르지 않고 첫 일부 답을 쓴다
+                break
         if not docs and not part:
             if query and not relax:
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
@@ -161,9 +168,15 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             break  # 보여 줄 근거가 하나도 없으면 LLM을 부르지 않는다
         result, shown = chat('docs_answer', PROMPT, render(question, task, docs, part), DocsAnswer), docs
         calls += 1
-        if result.grade != 'none' or not result.next_query.strip():
+        if result.grade == 'enough' or not result.next_query.strip():
             break
-        query = result.next_query.strip()  # 근거가 없다고 채점했으면 LLM이 준 다른 검색어로 한 번만 다시
+        if result.grade == 'partial':
+            # [왜] 일부만 답하고 끝내면, 검색어가 질문의 한쪽만 겨눈 경우 정답 근거 없이 답했다(v3-20: 'H 접미사 뜻'만 찾아 SS14H · SS14 정격표를 못 봄,
+            #      사전 등록 #49). 빠진 부분을 다른 검색어로 한 번 더 찾고, 앞 근거와 함께 다시 답한다(검색 2번 상한 안)
+            carry, first = shown, (result, shown)
+        query = result.next_query.strip()  # 근거가 없거나 모자라다고 채점했으면 LLM이 준 다른 검색어로 한 번만 다시
+    if first and (result.grade == 'none' or not result.answer.strip()):
+        result, shown = first  # 다시 찾은 답이 더 나쁘면 첫 일부 답을 쓴다
     answer = (result.answer.strip() if result else '')
     if not result or result.grade == 'none' or not answer or answer.startswith(NOT_FOUND):
         # [왜] 설계 v2: 못 찾았다고 거절을 정하지 않고 다시 찾을 사유로 보고한다(0건 no_result, 근거가 아님 all_rejected). 거절은 Supervisor가 정한다
