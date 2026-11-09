@@ -826,7 +826,7 @@
 - 이 측정에서 찾아 고친 것: (1) b8576f8에서 v3-01 프로젝트 만들기가 503 — 빈 볼륨의 `ck_projects_demo` 허용 목록에 `attiny85_time_switch`가 없었다(02457ec가 `DEMOS`에만 더함) → d0bd7dd. (2) d0bd7dd에서 재개가 `failed`(UNAVAILABLE) — `runs_safe_result_check`가 판정의 `preferred_mount` 칸(44e8287)을 몰라 저장을 거부 → 5631309. 실패 결과는 `smoke_localhost-18000_2026-11-10_053242.json` · `_054705.json`. 맥에서 실패한 두 번의 기동 시간은 `/health` 55.4초 · 53.4초였다.
 - 바꾼 파일: `docs/GATES.md` G2 상태(이전 `jeongun-8` 수치는 한 마디로 남김), 새 `scripts/results/smoke/` 결과 4개.
 - 확인 못 한 것: Windows의 Docker Desktop, WSL에서 GitHub clone, Tailscale 포트로 직접 부르기(터널로 대신함), 브라우저 React 화면 시연. 맥 측정 동안 다른 작업이 함께 돌아 load average가 4~7이었다.
-- 다음 할 일: 조장 검토 뒤 커밋. 제출 직전 최종 main으로 다시 잰다.
+- 다음 할 일: 제출 직전 최종 main으로 다시 잰다(이 기록은 커밋 `bf620e6`).
 
 ## 2026-11-10 Cloud Run에 `jeongun` 5631309 배포 (0% 확인 → 100% 전환, 조장 승인 "끝까지 진행")
 
@@ -841,5 +841,11 @@
 - 걸린 시간: 약 40분(점검 · DB 적용 · 빌드 · 확인 · 문서). 비용: Cloud Build 1회, LLM 호출 0.
 - 운영 DB 쓰기 흔적: 가짜 로그인 실패 2회(태그 · 기본 주소) 뒤 `auth_login_attempts` 1행 · `auth_login_ip_attempts` 1행(배포 전 0 · 0), `users` 5 · `auth_sessions` 0 그대로. 가입은 부르지 않았다.
 - 판정 run 저장 확인(쓰기 없이 SELECT만): HEAD DTO로 만든 저장 본문(`api/conversations.py` `stream`의 `saved` → `SafeResult`) 3종(판정+`preferred_mount`, 찾기+`preferred_mount`, 답만)이 운영 `runs_safe_result_check` 식을 모두 통과. `tests/conversations/test_dto.py` · `tests/projects/test_project_repository.py` 13 passed · 6 skipped(DB 없음).
-- 바꾼 파일: `docs/GATES.md` G1 행, `SPEC.md` 첫머리 "현재 구현 경계"의 배포 문장, `README.md` 7행 · 119행(배포본 설명), 이 파일. 커밋 안 함.
+- 바꾼 파일: `docs/GATES.md` G1 행, `SPEC.md` 첫머리 "현재 구현 경계"의 배포 문장, `README.md` 7행 · 119행(배포본 설명), 이 파일(커밋 `dba2869`).
 - 확인 못 한 것: 실제 계정 로그인 · 업로드 · 분석(실제 모델) · 승인 · 견적 끝까지(조장이 `scripts/smoke/http_smoke.py`로 진행), 브라우저 화면 조작, Google 로그인 실제 흐름, 부하 · 다중 인스턴스, Langfuse 수신, 실제 청구액. `MOUSER_API_KEY`를 넣으려면 조장이 Secret Manager에 `MOUSER_API_KEY`를 만든 뒤 `gcloud run services update sojafit-api --update-secrets MOUSER_API_KEY=MOUSER_API_KEY:latest --no-traffic --tag mouser --project sojafit --region asia-northeast3` → 태그 주소에서 같은 확인 → `update-traffic --to-revisions=<새 revision>=100`. [주의] 지금 트래픽은 revision 이름(`sojafit-api-5631309`)에 고정돼 있어, 새 revision을 만들어도 트래픽 전환 없이는 반영되지 않는다.
+
+## 2026-11-10 문서 현재 상태 맞추기 — 구현 경계 · 엔드포인트 개수 단위 (브랜치 `jeongun`)
+
+- 바꾼 것: `SPEC.md` 첫머리 "현재 구현 경계"를 11-10 `jeongun` 기준으로(데모 기록 파일 · 기억 읽기는 구현됨, 남은 것은 회로 없이 질문하는 입구 · 승인 사례를 다음 판정에 보이기), `README.md` "아직 없는 것"에서 녹화 재생을 뺌(커밋 `ebce11c`). 엔드포인트 개수를 "동작(메서드 + 경로)"과 "경로"로 나눠 SPEC 4절 · GATES G1 · `tests/api/test_openapi.py` 설명에서 같게 적음: 동작 37개 · 경로 31개, `/openapi.json`에 동작 33개 · 경로 27개, 숨긴 Google 4개.
+- 확인: `uv run --frozen pytest -q` 1205 passed · 111 skipped(HEAD `ebce11c`), `tests/repo` 5 passed. 프런트는 `b8576f8` 뒤 바뀐 파일이 없어 다시 돌리지 않음. 숨긴 경로 4개는 `backend/api/auth.py`의 `include_in_schema=False` 4곳으로 셈.
+- 확인 못 한 것: 배포 주소에서 실제 계정으로 끝까지 도는 점검.
