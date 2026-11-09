@@ -183,6 +183,50 @@ def test_upload_closes_on_partial_multipart_failure(upload_boundary, extra, trun
     assert uploads and all(upload.file.closed for upload in uploads)
 
 
+@pytest.mark.parametrize("filename", ["circuit.txt", "", "   ", "circuit.net.txt"])
+def test_upload_requires_nonempty_net_filename_and_closes(upload_boundary, filename):
+    client, payloads, uploads, reads = upload_boundary
+    raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
+    content = (b'--boundary\r\nContent-Disposition: form-data; name="name"\r\n\r\ncircuit\r\n'
+               + f'--boundary\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n\r\n'.encode()
+               + raw + b'\r\n--boundary--\r\n')
+    response = client.post("/api/projects/upload", content=content,
+                           headers={"origin": "http://testserver", "content-type": "multipart/form-data; boundary=boundary"})
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "BAD_REQUEST"
+    assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
+    assert payloads == [] and reads == []
+    assert uploads and all(upload.file.closed for upload in uploads)
+
+
+def test_upload_rejects_missing_filename_before_reading_or_persisting(upload_boundary):
+    client, payloads, uploads, reads = upload_boundary
+    response = client.post("/api/projects/upload", data={"name": "회로"},
+                           files={"file": (None, Path("tests/fixtures/netlists/minimal.net").read_bytes())},
+                           headers={"origin": "http://testserver"})
+    assert response.status_code == 400
+    assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
+    assert payloads == [] and uploads == [] and reads == []
+
+
+@pytest.mark.parametrize("raw", [
+    b'(export(components(comp(ref D1)(value "\x00")))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))))',
+    b'(export(components(comp(ref D1)))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))(net(code 1)(name VCC)(node(ref D1)(pin 2)))))',
+    b'(export(components(comp(ref D1)))(nets(net(code 0)(name GND)(node(ref D1)(pin 1)))))',
+    b'(export(components(comp(ref D1)))(nets(net(code -1)(name GND)(node(ref D1)(pin 1)))))',
+    b'(export(components(comp(ref D1)))(nets(net(code "not-an-integer")(name GND)(node(ref D1)(pin 1)))))',
+])
+def test_invalid_net_identity_and_nul_never_reach_storage(upload_boundary, raw):
+    client, payloads, uploads, _ = upload_boundary
+    response = client.post("/api/projects/upload", data={"name": "회로"}, files={"file": ("synthetic.net", raw)},
+                           headers={"origin": "http://testserver"})
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "BAD_REQUEST"
+    assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
+    assert payloads == []
+    assert uploads and all(upload.file.closed for upload in uploads)
+
+
 def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch):
     url = os.getenv("TEST_AUTH_DATABASE_URL")
     if not url:

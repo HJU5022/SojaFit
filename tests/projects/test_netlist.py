@@ -107,3 +107,26 @@ def test_quoted_escapes_and_optional_empty_fields():
     raw = b'(export(components(comp(ref D1)(value "a\\\"b\\\\c")(footprint)))(nets(net(code 1)(name "G ND")(node(ref D1)(pin 1)))))'
     result = parser().normalize_netlist(raw)
     assert result.connections["parts"][0] == {"ref": "D1", "value": 'a"b\\c', "footprint": ""}
+
+
+@pytest.mark.parametrize("code", ['"0"', '"-1"', '"1.0"', '"+1"', '"1e2"', '"01"', '"abc"', '"1 2"', '"١"'])
+def test_net_code_requires_canonical_positive_ascii_integer(code):
+    module = parser()
+    raw = f'(export(components(comp(ref D1)))(nets(net(code {code})(name GND)(node(ref D1)(pin 1)))))'.encode()
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)
+
+
+def test_duplicate_net_codes_rejected_even_when_names_and_nodes_differ():
+    module = parser()
+    raw = b'(export(components(comp(ref D1)))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))(net(code "1")(name VCC)(node(ref D1)(pin 2)))))'
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)
+
+
+@pytest.mark.parametrize("value", [b'"\x00"', b'\x00'])
+def test_nul_is_rejected_in_quoted_and_unquoted_values(value):
+    module = parser()
+    raw = b'(export(components(comp(ref D1)(value ' + value + b')))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))))'
+    with pytest.raises(module.InvalidNetlist):
+        module.normalize_netlist(raw)

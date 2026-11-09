@@ -341,3 +341,11 @@
 - 규모·미검증: 보안 파서·API 경계·실제 DB 회귀를 한 기능으로 검토하기 위해 핵심 변경은 권장 400줄을 넘는다. 코드/시험/폴더 계약을 기계적으로 분리하지 않고 요청된 한 커밋으로 남긴다. `SPEC.md` 반영은 조장 검토 대상이며 이번에 수정하지 않는다. 기존 공통 handler의 413 code는 `HTTP_ERROR`이며 413 전용 code 추가는 이 범위에 포함하지 않았다.
 - 전체 회귀 결과: 1차 `14 failed, 997 passed, 37 skipped in 43.16s`는 새 시험 DB의 public 인증 테이블 초기화를 빠뜨린 준비 오류였다. CI와 동일한 003/005/006 SQL만 이번 시험 DB에 적용한 뒤 `1011 passed, 37 skipped in 75.84s`. production 수정 없이 해결했다. 기존 선택적 시험 37건은 설정/자산이 없어 skip했으며 신규 Task 5 DB 시험 skip은 0건이다. 외부 API/모델 호출 비용 0달러.
 - 최종 확인: CRLF/LF에 무관한 fixture 처리로 시험을 보정한 뒤 집중/레이아웃 `60 passed in 4.16s`, lock·staged whitespace 검사 통과. staged 17개 파일은 Task 5 범위이며 합성 fixture 외 원본·생성 결과를 넣지 않았다. staged diff를 로컬 Docker gitleaks stdin(`--redact --no-banner --log-level warn`)으로 검사해 비밀값 발견 0건을 확인했다. 새 시험 컨테이너만 정리하며 요청된 메시지로 로컬 커밋한다.
+
+### Task 5 Fix Round 1
+
+- 검토에서 지적된 파일명/확장자, net code 유일성·형식, quoted NUL만 보완한다. raw/text 지역 참조 수명 관련 Minor는 요청대로 최종 검토까지 보류한다.
+- RED: production 수정 전 `PYTHONUTF8=1 uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py` → `20 failed, 49 passed, 1 skipped in 1.82s`. 비정상 입력이 정상 반환/201로 통과하는 것이 예상 원인이었다.
+- 정책 근거: 기존 공개 KiCad 5종의 13/8/14/44/14 nets는 모두 ASCII 양의 정수 code를 사용한다. 표준 표기 `[1-9][0-9]*`와 net 간 유일성을 요구한다. code는 문자열로 유지하며 0/음수/소수/부호/지수/앞자리 0/비ASCII 숫자는 거절한다. NUL은 metadata 포함 입력 전체에서 거절한다. filename은 비어 있지 않고 공백 제거·대소문자 무시 후 `.net`으로 끝나야 한다.
+- 검증 계획: 새 일회용 `postgres:16-alpine` 컨테이너만 사용한다(기존 볼륨/공유 DB 없음). CI의 003/005/006 인증 SQL과 anon/authenticated NOLOGIN 역할을 먼저 준비하고 두 요청 시험 파일·repo layout·저장소 시험을 실행한다. 그 후 `PYTHONUTF8=1 TEST_AUTH_DATABASE_URL=<새 일회용 DB> uv run pytest -q` 전체 backend suite를 한 번 실행한다. 외부 API/모델 예산 0달러, 반복 실패하면 원인·범위 확인 후 중단한다.
+- GREEN: `uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py tests/projects/test_project_repository.py tests/repo/test_repo_layout.py` → `82 passed in 4.25s`; 전체 backend 한 번 실행 → `1033 passed, 37 skipped in 75.35s`. 신규 시험 skip은 없으며 기존 선택적 시험 37건만 skip했다. `uv lock --check`, `git diff --check`도 통과했다. 새 정상화 코드로 공개 KiCad 5종을 모두 읽어 net 수 13/8/14/44/14를 유지했다. 원본/DB schema/정규화 shape/의존성은 바꾸지 않았다. staged diff·비밀값을 확인하고 지정된 fix 커밋을 남긴 뒤 이번 시험 컨테이너만 정리한다.

@@ -138,6 +138,8 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
         text = raw.decode("utf-8", errors="strict")
     except UnicodeDecodeError:
         raise InvalidNetlist("expected UTF-8") from None
+    if "\x00" in text:
+        raise InvalidNetlist("NUL is not allowed")
     root = _read_export(text)
     components, net_sections = _children(root, "components"), _children(root, "nets")
     if len(components) != 1 or len(net_sections) != 1:
@@ -149,12 +151,17 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
         raise InvalidNetlist("missing or duplicate components")
     known_refs = set(refs)
     nets = []
+    codes = set()
     for net in _children(net_sections[0], "net"):
+        code = _field(net, "code", True)
+        if not code.isascii() or not code.isdecimal() or code.startswith("0") or code in codes:
+            raise InvalidNetlist("expected unique positive integer net code")
+        codes.add(code)
         nodes = tuple(MappingProxyType({name: _field(item, name, True) for name in ("ref", "pin")})
                       for item in _children(net, "node"))
         if not nodes or any(item["ref"] not in known_refs for item in nodes):
             raise InvalidNetlist("missing or unknown nodes")
-        nets.append(MappingProxyType({"code": _field(net, "code", True), "name": _field(net, "name", True), "nodes": nodes}))
+        nets.append(MappingProxyType({"code": code, "name": _field(net, "name", True), "nodes": nodes}))
     if not nets:
         raise InvalidNetlist("missing nets")
     return NormalizedCircuit(MappingProxyType({"parts": parts, "nets": tuple(nets)}), source_sha256, refs)

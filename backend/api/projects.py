@@ -113,6 +113,8 @@ async def upload_project(request: Request, user_id: int = Depends(auth.current_u
         upload, name = form.get("file"), form.get("name")
         if len(items) != 2 or set(form) != {"file", "name"} or not isinstance(upload, UploadFile) or not isinstance(name, str):
             raise HTTPException(422, "파일과 프로젝트 이름만 입력해 주세요.")
+        if not upload.filename or not upload.filename.strip().lower().endswith(".net"):
+            raise HTTPException(400, ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.")
         name = project_name(name)
         normalized = normalize_netlist(await upload.read(MAX_BYTES + 1))
         await upload.close()  # 정규화 직후 원본 버퍼를 폐기하고 DB 경계를 지난다.
