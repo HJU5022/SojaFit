@@ -22,5 +22,6 @@
 - `test_rag_spec_lookup.py` — `find_candidates` 찾기 순위(가짜 연결, DB 없음): 자르기 전에 모두 줄 세움, 패키지 → 분류 → 기준에 가까운 순, 가장 먼 조건의 비율. 사양 표 SQL · 적재 · DB 조회 시험은 11-09에 지웠다(ADR 0016)
 - `test_rag_storage.py` — 형식 설정 검증, halfvec 전환·재실행·이진 재적재·정확 검색, 시간/표본 부족 표시. DB 시험은 `TEST_DATABASE_URL` 필요
 - `test_rag_subset.py` — 분류별 사본·입력 보존·gold 누락·기존 출력·불완전/중복 청크 오류, 벡터 payload 추정
+- `test_demo_snapshot.py` — 데모 코퍼스 스냅샷(`data/demo/snapshot/`): 두 파일 sha256 · 문서 · 청크 수가 SNAPSHOT.md와 같음, manifest 문서마다 청크 0..n-1, 고르기 규칙 1~4와 같은 분류 상한(가짜 원본), 원본에서 다시 뽑은 바이트가 같음(`DEMO_SNAPSHOT_SOURCE`가 있을 때만)
 - `test_rag_units.py` — 단위 환산(mA·µA(µ/μ/u)·nA·ns·pF·kV(KV)·mW·°C)과 모르는 단위(MA·Ω·°C/W 등)는 None
 - `test_voyage_rollout.py` — `scripts/db/voyage_rollout.py`의 STOP 규칙(열 형식 · 예상 크기 420 MB)과 `db/008` SQL의 halfvec(n) 무USING 분기, STOP이면 migrate가 DB를 건드리지 않는 것(가짜 연결)

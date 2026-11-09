@@ -25,15 +25,16 @@
 - `card_specs.py` — 서비스 기본 판정 값(ADR 0016), 카드에서 읽음: `specs(part, codes)`가 `spec_lookup.part_specs`(MCP `get_part_specs`)와 같은 모양으로 돌려줌(PACKAGE · AEC_Q101 행 포함), 사실 확인용 `doc_rows`(LLM 없음). `DATABASE_URL`로 DB를 직접 읽음. 품번 → 문서 색인은 조립 때가 아니라 첫 찾기 때 한 번 읽음(코퍼스 없는 DB에서도 서버가 뜸)
 - `units.py` — `to_si(값, 단위)`: 표 단위(mA·µA·nA·ns·pF·kV·mW·°C 등)를 SI 기본 단위(V, A, W, s, F, degC) 값으로. 모르는 단위·비율 단위(°C/W)는 None
 - `storage.py` — 벡터 열 형식 `RAG_VECTOR_TYPE=vector|halfvec` 계약(서버와 적재 도구가 함께 씀), 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`)
-- `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음, `specs.py` 공용 규칙만 카드 도구가 import). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 여섯 모듈과 `__init__.py`(패키지 표시)가 있습니다
+- `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음, `specs.py` 공용 규칙만 카드 도구가 import). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 일곱 모듈과 `__init__.py`(패키지 표시)가 있습니다
   - `pipeline/collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)
   - `pipeline/parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
   - `pipeline/chunk.py` — Docling 결과를 청크(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
   - `pipeline/ingest.py` — manifest와 청크를 DB 코퍼스 표에 넣고 임베딩을 붙임(벡터는 본문 해시 캐시를 다시 씀). `--voyage <벡터 폴더>`는 미리 만든 `v4large.f32`·`v4large.sha.txt`를 API 없이 붙임. `DATABASE_URL` 필요
   - `pipeline/specs.py` — 표 행 청크 공용 규칙만 둠: 코드 17종의 SI 단위(`SI`), 기호 · 설명 낱말 → 코드(`SYMS` · `KEYWORDS`), 패키지 이름(`PKG` · `packages_of`), 분류 이름(`family`, `ingest.py`가 `source_documents.category`에 넣음), 양방향 · AEC-Q101 문장(`BOTH_DIRECTIONS` · `AEC_H` · `AEC_ALL`). 사양 표 만들기 · 적재(`build` · `sample` · `load`)는 11-09에 지웠다(ADR 0016)
   - `pipeline/subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·청크 사본을 새 폴더에 만듦. 원본은 고치지 않고, 서비스·초기화·적재에서 부르지 않음
+  - `pipeline/demo_snapshot.py` — 전체 v4h `manifest.jsonl`·`chunks.jsonl`에서 1N4148 · 1N4148로 시작하는 품번 · 1N4001G/1N4007G로 시작하는 품번 문서와 1N4148 문서의 같은 분류(`family`) 문서(이름 순 60건 상한)를 줄 그대로 골라 `data/demo/snapshot/`에 씀. 키 없는 compose의 `corpus-load`가 `ingest.py --chunks-only`로 적재한다([SNAPSHOT.md](../../data/demo/snapshot/SNAPSHOT.md))
 
-작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다.
+작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다(키 없는 데모용 42문서 청크만 `data/demo/snapshot/`).
 
 원본 코퍼스 유지·축소 보류·복제 DB 전환 순서는 [corpus-storage-budget.md](../../docs/experiments/corpus-storage-budget.md)를 봅니다. 원본 float32 캐시는 보존하며 `halfvec`은 적재할 때만 변환합니다. 공식 검색 품질 확인 전 기본값은 vector입니다. `ingest`는 행을 지우지 않으므로 이미 적재한 DB를 줄이는 데 쓸 수 없습니다. 원본 캐시의 복사본과 `ingest --cache-only`를 쓰면 캐시에 없는 벡터가 있을 때 API를 부르지 않고 멈춥니다.
 

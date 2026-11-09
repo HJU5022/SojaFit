@@ -106,7 +106,7 @@ docker compose up         # .env 없이 띄우면 DEMO_MODE=1(데모 모드). ap
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
-`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_SCENARIOS=1`로 띄운다. db(pgvector) → thread-setup(분석 저장소 준비) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
+`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_SCENARIOS=1`로 띄운다. db(pgvector) → thread-setup(분석 저장소 준비) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 지금 React 작업대의 키 없는 분석은 합성 시나리오로 답해 이 스냅샷을 읽지 않는다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
 
 키 없는 시연 순서:
 

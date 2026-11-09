@@ -1,9 +1,9 @@
 # data
 
 ## 역할
-- 이 폴더: 서비스·평가가 읽는 고정 데이터를 둡니다. 코퍼스 문서 목록(`manifest.jsonl`), 코퍼스 원본 표본, 평가·시연용 공개 회로가 있고, 데모 모드 응답 폴더는 아직 비어 있습니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
-- 넣는 것: `manifest.jsonl`(문서 단위 목록), 데이터시트 원본 표본(`corpus/tsc/` 3건), 공개 KiCad 회로(`circuits/`), 데모 모드가 재생할 응답(`demo/`, 아직 없음).
-- 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·청크(`chunks.jsonl`)·임베딩 캐시(저장소 밖 작업 자료), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
+- 이 폴더: 서비스·평가가 읽는 고정 데이터를 둡니다. 코퍼스 문서 목록(`manifest.jsonl`), 코퍼스 원본 표본, 평가·시연용 공개 회로, 키 없는 데모의 합성 시나리오와 데모 코퍼스 스냅샷(`demo/`)이 있습니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
+- 넣는 것: `manifest.jsonl`(문서 단위 목록), 데이터시트 원본 표본(`corpus/tsc/` 3건), 공개 KiCad 회로(`circuits/`), 키 없는 데모 자료(`demo/`: 합성 시나리오, compose가 로컬 DB에 넣는 코퍼스 스냅샷 42문서 `demo/snapshot/`).
+- 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·전체 청크(`chunks.jsonl`, 데모 스냅샷 `demo/snapshot/` 42문서만 예외)·임베딩 캐시(저장소 밖 작업 자료), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 
 전체 PDF·파싱·청크·임베딩 산출물은 저장소에 포함하지 않습니다. 작업자가 지정한 저장소 밖 경로에 둘 수 있지만 이 문서는 특정 로컬 경로의 존재나 전체 처리 완료를 보장하지 않습니다. 저장소에서 확인 가능한 정본은 `manifest.jsonl`과 PDF 표본 3건입니다.
@@ -12,7 +12,7 @@
 - `manifest.jsonl` — 2026-11-01 v1 청킹 당시 체크인한 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256, 쪽 수, 청크 수). 현재 `backend/rag/pipeline/chunk.py`도 같은 형식의 새 manifest를 만들고 `backend/rag/pipeline/ingest.py`·`collect.py`가 읽지만, v4h 실행 결과는 저장소 밖 산출물이며 이 파일을 자동으로 갱신하지 않습니다. 원래 PDF 파일 이름은 `source_url` 끝에 있습니다
 - `corpus/` — 코퍼스 원본 문서 표본(TSC PDF 3건). [CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로와 라이선스. [CIRCUITS.md](circuits/CIRCUITS.md)
-- `demo/` — 키 없는 데모 모드가 재생할 응답 자리. 지금은 설명 파일만 있습니다. [DEMO.md](demo/DEMO.md)
+- `demo/` — 키 없는 데모의 합성 시나리오(`scenarios.json`)와 compose가 로컬 DB에 넣는 코퍼스 스냅샷(`snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음). [DEMO.md](demo/DEMO.md)
 
 ## 기준
 
@@ -40,4 +40,4 @@ v1 manifest에서 청크에 들어가지 못한 원문 글자가 있으면 `char
 
 ## 저장소 크기 주의
 
-현재 서비스 임베딩은 `voyage-4-large` 1024차원입니다. `text-embedding-3-small` 1536차원 행은 복구·과거 비교용으로 같은 표에 남길 수 있고, `db/008_multi_dim_embeddings.sql`은 두 차원을 함께 담는 차원 없는 `halfvec` 열로 전환합니다. 청크 본문과 벡터는 저장소에 넣지 않고 DB에만 둡니다(SPEC 6절, ADR 0005).
+현재 서비스 임베딩은 `voyage-4-large` 1024차원입니다. `text-embedding-3-small` 1536차원 행은 복구·과거 비교용으로 같은 표에 남길 수 있고, `db/008_multi_dim_embeddings.sql`은 두 차원을 함께 담는 차원 없는 `halfvec` 열로 전환합니다. 청크 본문과 벡터는 저장소에 넣지 않고 DB에만 둡니다(SPEC 6절, ADR 0005). 예외는 키 없는 데모용 스냅샷 `demo/snapshot/`의 청크 1,556개(벡터 없음)입니다.

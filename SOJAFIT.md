@@ -206,7 +206,8 @@ SojaFit (proj3-b)
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
 │   │       ├── specs.py    <- 표 행 청크 공용 규칙: 코드 · SI 단위 · 기호 · 낱말 표, 패키지 이름, 분류 이름, 양방향 · AEC-Q101 문장(카드 도구 · ingest가 import)
-│   │       └── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
+│   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
+│   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
 │   ├── services/           <- 외부 호출을 모으는 한 곳: LLM·임베딩, Langfuse, 견적·가격
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -241,9 +242,13 @@ SojaFit (proj3-b)
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
-│   └── demo/               <- 키 없는 데모 응답을 둘 자리. 현재 설명 파일만 있고 재생 코드는 없음
+│   └── demo/               <- 키 없는 데모 자료: 합성 시나리오와 코퍼스 스냅샷. 기록 응답 재생 코드는 없음
 │       ├── DEMO.md         <- 폴더 설명
-│       └── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
+│       ├── scenarios.json  <- 합성 회로·지원 질문·응답·가상 사양
+│       └── snapshot/       <- 키 없는 compose의 corpus-load가 로컬 DB에 넣는 코퍼스 스냅샷(TSC 42문서, 청크 1,556개, 임베딩 없음)
+│           ├── SNAPSHOT.md <- 폴더 설명: 출처·이용 조건·고른 규칙·문서 목록·크기·sha256·청커 버전
+│           ├── manifest.jsonl  <- 스냅샷 문서 42줄(전체 v4h manifest 줄 그대로)
+│           └── chunks.jsonl  <- 스냅샷 청크 1,556줄(전체 v4h 청크 줄 그대로)
 │
 ├── db/                     <- Postgres가 첫 기동 때 바로 아래 .sql만 이름순으로 자동 실행 (고정: compose가 ./db를 초기화 폴더로 붙임)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
@@ -469,7 +474,8 @@ SojaFit (proj3-b)
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
-│   │   └── test_rag_subset.py  <- 문서 일부 뽑기 계약
+│   │   ├── test_rag_subset.py  <- 문서 일부 뽑기 계약
+│   │   └── test_demo_snapshot.py  <- 데모 코퍼스 스냅샷의 sha256·건수·ingest 모양, 고르기 규칙, 원본에서 다시 뽑기(DEMO_SNAPSHOT_SOURCE가 있을 때만)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험

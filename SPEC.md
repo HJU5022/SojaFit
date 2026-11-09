@@ -206,9 +206,10 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ## 7. 데모 모드·오프라인 규칙
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
-- `data/demo/`는 키 없는 데모 응답을 둘 자리지만 현재 설명 파일만 있고 재생 데이터·코드는 없습니다. 실제 API 응답 원본은 넣지 않습니다.
+- `data/demo/`에는 합성 시나리오(`scenarios.json`)와 데모 코퍼스 스냅샷(`snapshot/`)이 있고, 기록 응답 재생 데이터·코드는 없습니다. 실제 API 응답 원본은 넣지 않습니다.
 - 데모 모드의 `/api/prices`는 Mouser를 부르지 않고 `available: false`, `reason: demo_mode`, `parts: []`를 반환합니다. 가공 가격표 표시는 아직 구현되지 않았고 Mouser 응답은 데모 응답으로도 기록하지 않습니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 검색은 데모 모드에서 임베딩·리랭크 API와 벡터 검색을 부르지 않고 BM25만 씁니다(`backend/rag/retrieve.py`). 데모 요청에서 다른 임베딩 모델로 바꾸지 않습니다.
+- 키 없는 compose는 `corpus-load` 서비스가 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음)을 `backend/rag/pipeline/ingest.py --chunks-only`로 로컬 DB에 넣은 뒤 api를 띄웁니다. 이미 있는 문서 · 청크는 건너뜁니다. 고른 규칙과 출처는 `data/demo/snapshot/SNAPSHOT.md`, 규모 조건(6절 끝)은 스냅샷이 아니라 전체 코퍼스 manifest로 봅니다.
 - 승인한 데모 질의의 응답 재생과 기록에 없는 질의의 추출형 답변은 아직 구현되지 않았습니다.
 - `demo_mode`, `live_vector_search`, 검색 모드, 모델·코퍼스 버전을 업무 화면과 응답에 표시하는 기능은 아직 구현되지 않았습니다.
 - 그 밖에 키 없이 쓰는 모델과 파일: (정할 것)
