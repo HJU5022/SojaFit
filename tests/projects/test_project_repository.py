@@ -44,6 +44,34 @@ def test_invalid_demo_never_opens_database(monkeypatch):
             ProjectRepository().create_demo(1, demo_id, name)
 
 
+def test_upload_stores_only_normalized_data_and_remains_owned(storage):
+    import hashlib
+    from backend.projects.netlist import normalize_netlist
+    from backend.projects.repository import ProjectNotFound
+    repo, (owner, other), connect = storage
+    raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
+    normalized = normalize_netlist(raw)
+    project = repo.create_upload(owner, "업로드", connections=normalized.connections,
+                                 source_sha256=normalized.source_sha256, parser_version="kicad-export-v1")
+    assert project.source_kind == "upload" and project.demo_id is None
+    assert set(project.connections) == {"parts", "nets"}
+    with connect() as conn:
+        row = conn.execute("SELECT row_to_json(circuits) FROM circuits WHERE project_id=%s", (project.id,)).fetchone()[0]
+    assert set(row) == {"project_id", "connections", "source_sha256", "parser_version", "created_at"}
+    assert row["source_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert row["parser_version"] == "kicad-export-v1"
+    assert "RAW_UPLOAD_MARKER" not in str(row)
+    assert repo.list_owned(other) == []
+    with pytest.raises(ProjectNotFound):
+        repo.get_owned(other, project.id)
+    with connect() as conn:
+        conn.execute("ALTER TABLE circuits ADD CONSTRAINT reject_upload CHECK (false) NOT VALID")
+    with pytest.raises(psycopg.errors.CheckViolation):
+        repo.create_upload(owner, "rollback", connections=normalized.connections,
+                           source_sha256=normalized.source_sha256, parser_version="kicad-export-v1")
+    assert [item.id for item in repo.list_owned(owner)] == [project.id]
+
+
 def test_every_repository_boundary_is_owner_scoped(storage):
     from backend.projects.repository import ProjectNotFound
     repo, (owner, other), _ = storage

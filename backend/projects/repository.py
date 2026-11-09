@@ -1,4 +1,4 @@
-"""소유자 조건을 포함한 프로젝트 SQL. 데모 JSON만 저장하며 업로드는 처리하지 않는다."""
+"""소유자 조건을 포함한 프로젝트 SQL. 데모 또는 정규화 연결 JSON만 저장한다."""
 import hashlib
 import json
 from pathlib import Path
@@ -35,6 +35,19 @@ def project_name(name: str) -> str:
 
 
 class ProjectRepository:
+    def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str) -> Project:
+        name = project_name(name)
+        with auth.connection() as conn:
+            project_id = conn.execute(
+                "INSERT INTO projects (user_id, name, source_kind) VALUES (%s, %s, 'upload') RETURNING id",
+                (user_id, name),
+            ).fetchone()[0]
+            conn.execute(
+                "INSERT INTO circuits (project_id, connections, source_sha256, parser_version) VALUES (%s, %s, %s, %s)",
+                (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version),
+            )
+            return self._get_owned(conn, user_id, project_id)
+
     def create_demo(self, user_id: int, demo_id: str, name: str) -> Project:
         name = project_name(name)
         if demo_id not in DEMOS:

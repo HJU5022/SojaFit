@@ -1,10 +1,13 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API."""
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
+from starlette.datastructures import UploadFile
+from starlette.formparsers import MultiPartException, MultiPartParser
 
 from backend import auth
 from backend.projects.models import Project, ProjectSummary
+from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
 
 router = APIRouter(prefix="/api", tags=["projects"])
@@ -55,6 +58,75 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
 @router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
 def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     return repo.create_demo(user_id, body.demo_id, body.name)
+
+
+class UploadLimit(MultiPartException):
+    """multipart 수신 제한 초과. 프레임워크 오류 원문을 공개하지 않는다."""
+
+
+class MemoryUploadParser(MultiPartParser):
+    # 기본 1 MiB disk rollover를 막고, 이 값 전에 파일/전체 수신 제한으로 거절한다.
+    spool_max_size = MAX_BYTES + 2
+
+    def __init__(self, headers, stream):
+        super().__init__(headers, stream, max_files=1, max_fields=1, max_part_size=800)
+        self.uploads = []
+        self.file_bytes = 0
+        self.finished = False
+
+    def on_headers_finished(self):
+        super().on_headers_finished()
+        if self._current_part.file is not None:
+            self.uploads.append(self._current_part.file)
+
+    def on_part_data(self, data, start, end):
+        if self._current_part.file is not None:
+            self.file_bytes += end - start
+            if self.file_bytes > MAX_BYTES + 1:
+                raise UploadLimit("file limit")
+        super().on_part_data(data, start, end)
+
+    def on_end(self):
+        self.finished = True
+        super().on_end()
+
+
+@router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
+async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    # File/Form 의존성은 인증 전에 원본을 디스크에 spool할 수 있으므로 직접 제한한다.
+    async def bounded_stream():
+        received = 0
+        async for chunk in request.stream():
+            received += len(chunk)
+            if received > MAX_BYTES + 16_384:
+                raise UploadLimit("request limit")
+            yield chunk
+
+    parser = MemoryUploadParser(request.headers, bounded_stream())
+    try:
+        if request.headers.get("content-type", "").split(";")[0].strip().lower() != "multipart/form-data":
+            raise HTTPException(400, "multipart 파일과 이름이 필요합니다.")
+        form = await parser.parse()
+        if not parser.finished:
+            raise HTTPException(400, "업로드 형식이 올바르지 않습니다.")
+        items = form.multi_items()
+        upload, name = form.get("file"), form.get("name")
+        if len(items) != 2 or set(form) != {"file", "name"} or not isinstance(upload, UploadFile) or not isinstance(name, str):
+            raise HTTPException(422, "파일과 프로젝트 이름만 입력해 주세요.")
+        name = project_name(name)
+        normalized = normalize_netlist(await upload.read(MAX_BYTES + 1))
+        await upload.close()  # 정규화 직후 원본 버퍼를 폐기하고 DB 경계를 지난다.
+        return repo.create_upload(user_id, name, connections=normalized.connections,
+                                  source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+    except (UploadLimit, NetlistTooLarge):
+        raise HTTPException(413, "넷리스트는 5 MiB 이하여야 합니다.") from None
+    except InvalidProject as exc:
+        raise HTTPException(422, str(exc)) from None
+    except (MultiPartException, InvalidNetlist):
+        raise HTTPException(400, "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.") from None
+    finally:
+        for upload in parser.uploads:
+            await upload.close()
 
 
 @router.get("/projects/{project_id}", response_model=Project)

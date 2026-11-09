@@ -89,6 +89,7 @@ SojaFit (proj3-b)
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
+│   │   ├── netlist.py      <- 원본을 남기지 않는 제한된 KiCad export 정규화
 │   │   └── repository.py   <- 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
 │   ├── graph/              <- LangGraph 그래프: 상태, 노드, 조립, 사용자별 기억
 │   │   ├── GRAPH.md        <- 폴더 설명. D4 v2 흐름, 구현 상태(DB 체크포인트·견적 승인 단계는 아직 없음)
@@ -349,6 +350,7 @@ SojaFit (proj3-b)
 │   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
+│   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
 │   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증
 │   ├── graph/              <- 그래프 노드·조립
 │   │   ├── GRAPH.md        <- 폴더 설명
@@ -431,6 +433,9 @@ SojaFit (proj3-b)
 │   │   ├── REPO.md         <- 폴더 설명
 │   │   └── test_repo_layout.py  <- 이 문서의 트리·이름 규칙·폴더 설명 파일·한 폴더 한 종류를 지킴
 │   └── fixtures/           <- 단위 테스트용 가공 회로(지금은 .gitkeep)
+│       └── netlists/        <- 외부 원본을 쓰지 않은 합성 KiCad 업로드 표본
+│           ├── minimal.net <- 연결 정보와 버릴 원본 marker가 있는 최소 정상 표본
+│           └── invalid.net <- 괄호가 닫히지 않은 잘못된 표본
 │
 ├── scripts/                <- 서비스 코드 밖에서 손으로 돌리는 일회성 측정·점검 스크립트, 주제별 하위 폴더
 │   ├── SCRIPTS.md          <- 폴더 설명과 실행 방법
