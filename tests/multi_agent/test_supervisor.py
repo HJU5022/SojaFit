@@ -32,8 +32,9 @@ def report(i, agent='docs', status='ok', **kw):
 
 def test_plan_input_has_question_target_facts_and_agents():
     text = S.render_plan(STATE, judge_enabled=True)
-    for want in ('D1을 1N5817로', 'D1 1N4148 DO-35', '입력 최대 20V', 'part 1N5817: in corpus', 'part BAT85: NOT in corpus', 'docs, judge'):
+    for want in ('D1을 1N5817로', 'D1 1N4148', '입력 최대 20V', 'part 1N5817: in corpus', 'part BAT85: NOT in corpus', 'docs, judge'):
         assert want in text, want
+    assert 'DO-35' not in text and STATE['target_part']['footprint']=='DO-35'
     assert 'judge' not in S.render_plan(STATE, judge_enabled=False).split('Agents you may use:')[1]
 
 

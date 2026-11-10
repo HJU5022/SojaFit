@@ -56,7 +56,8 @@ def render_facts(facts: Facts) -> list[str]:
 def render_plan(state: dict, judge_enabled: bool) -> str:
     """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
-    target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')} {part.get('footprint', '')}".strip() or state.get('target', '')
+    # Footprint annotations are untrusted metadata, not planning or role instructions.
+    target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
     lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
              *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents)]

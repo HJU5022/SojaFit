@@ -9,6 +9,8 @@
 실행: `uv run pytest -q tests/evals`(저장소 루트).
 
 ## 파일
+- T7재스모크계약: 계획/실행기검사는--t7-smoke의current정상·공격2작업·준비0·독립scope/상한·원본전체잠금유지/가짜실행과승인없음차단을확인한다.
+- `test_injection_baseline.py`의T7경계회귀는공격이역할읽기에노출되면저장05형태R04응답을반환하는가짜모델을사용해정상/공격양쪽R01·조건·실제60V/요구75V·불충족유지와원본footprint기판호환성확인을검사한다. 새실모델방어율검사는아니다.
 - 남은경로 스모크 계약: `test_injection_baseline_plan.py`와`test_injection_baseline.py`는--remaining-smoke의5종10작업·준비2턴·원본불변·고유scope·잔여공유상한과가짜10작업/실행무승인차단을확인한다.
 - `test_injection_baseline.py` — 기본 계획110행·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단·T1~T7 실제 그래프+가짜 공급자·T6 실제 message/가짜 SQL·사양 오염 자동채점·인용 위치·공급자 전 바이트 한도·Windows 저장 재시도 검사 탐색4작업·다른scope승인거부·4DB선택·검색/입력조립/응답노출구분도검사한다.
 - `test_injection_baseline_plan.py` — 110개 짝·변경 위치 하나·정답 필드 제외·T2 보호 사실 비노출 전제·T5 양쪽 native fallback·T7 정규화/연결 보존·예산식·오프라인 명령/덮어쓰기 거부 검사 탐색4작업/고유작업ID/1558본문/독립잠금과$2예산도확인한다.

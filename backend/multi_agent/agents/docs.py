@@ -71,7 +71,7 @@ def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     """LLM에 줄 user 글: 질문 · 지시서 · 근거(청크 + 넷리스트)."""
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
     if part:
-        blocks.append(netlist_block(part))  # [왜] 역할 할 일은 검색 없이 오므로 넷리스트가 유일한 근거다
+        blocks.append(netlist_block({**part,'footprint':''}))  # Keep footprint annotations out of model instructions; preserve the original for code.
     allowed = [str(d['chunk_id']) for d in docs] + (['넷리스트'] if part else [])
     return '\n'.join([f'Question: {question}', 'Supervisor brief:', f'- goal: {task.goal}', f'- return: {task.output}',
                       f'- boundary: {task.boundary}', '', 'Evidence:', '\n\n'.join(blocks) or '(none)',

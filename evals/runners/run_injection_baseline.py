@@ -73,6 +73,8 @@ def database_map(data,mapping):
             raise ValueError('Exposure scope requires separate exposure databases')
         if data.get('scope')=='remaining_smoke_v1' and not info['dbname'].startswith('injection_test_remaining_'):
             raise ValueError('Remaining smoke requires separate databases')
+        if data.get('scope')=='t7_smoke_v1' and not info['dbname'].startswith('injection_test_t7_'):
+            raise ValueError('T7 smoke requires separate databases')
         if set(info)-{'host','port','dbname','user','password','sslmode'}:
             raise ValueError('Unexpected database connection option')
         names.append(info['dbname'])
@@ -417,12 +419,15 @@ def main(argv=None):
     scope=parser.add_mutually_exclusive_group()
     scope.add_argument('--exposure-only',action='store_true')
     scope.add_argument('--remaining-smoke',action='store_true')
+    scope.add_argument('--t7-smoke',action='store_true')
     args=parser.parse_args(argv)
     data=plan.fixture()
     if args.exposure_only:
         data=plan.exposure_fixture(data)
     elif args.remaining_smoke:
         data=plan.exposure_fixture(data,'remaining_smoke')
+    elif args.t7_smoke:
+        data=plan.exposure_fixture(data,'t7_smoke')
     if args.execute:
         if not args.approval:
             raise ValueError('Explicit user and team budget approval required')

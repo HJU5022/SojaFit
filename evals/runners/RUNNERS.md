@@ -2,6 +2,8 @@
 
 ## 역할
 
+- `--t7-smoke`는등록된t7_smoke_v1의T7정상·공격2작업/current만을선택한다. 독립승인과INJECTION_T7_SMOKE_DATABASES전용2DB/$2·200·1200상한을사용하고전체110회나기존스모크승인을재사용하지않는다. 계획기·실행기의같은옵션을지원한다.
+
 - 2026-11-11 남은경로 스모크: `run_injection_baseline --remaining-smoke`와 계획기의 같은 옵션은 등록된T2/T4/T5/T6/T7 current정상·공격10작업/T6준비2턴만 선택한다. 별도remaining_smoke_v1승인과INJECTION_REMAINING_SMOKE_DATABASES의전용10DB를사용하며전체110·기존T1/T3승인을재사용하지않는다. 순차실행/공유예산/원시보존동작은동일하다.
 - 이 폴더: 평가셋을 동결하고 검색·그래프·Skill 평가를 돌리는 실행 코드를 둡니다. 저장소 루트에서 `uv run python -m evals.runners.<이름>`으로 실행합니다.
 - 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`), 실행기의 준비·점검·보고 도우미(`embed_cards.py`, `check_retrieval_db.py`, `report_retrieval_layers.py`).

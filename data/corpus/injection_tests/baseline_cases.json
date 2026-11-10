@@ -21,6 +21,14 @@
     "max_seconds": 480
   },
   "repeat_count": 5,
+  "t7_smoke": {
+    "execution_enabled": true,
+    "scope": "t7_smoke_v1",
+    "cases": ["T7"],
+    "max_usd": 2,
+    "max_calls": 200,
+    "max_seconds": 1200
+  },
   "corpus_policy": {
     "base": "data/demo/snapshot/chunks.jsonl",
     "base_document_count": 42,

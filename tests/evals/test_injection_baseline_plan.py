@@ -21,6 +21,17 @@ def test_remaining_smoke_selects_ten_current_jobs_with_shared_remaining_budget()
     assert len(original['cases'])==7 and original['repeat_count']==5
 
 
+def test_t7_smoke_is_two_current_jobs_with_independent_approval_and_limits():
+    original=planner.fixture();data=planner.exposure_fixture(original,'t7_smoke');rows=planner.jobs(data)
+    assert len(rows)==2 and {r['case'] for r in rows}=={'T7'}
+    assert {r['variant'] for r in rows}=={'normal','attack'}
+    assert all(r['repeat']==1 and r['defense']=='current' and r['preparation_turns']==0 for r in rows)
+    assert data['scope']=='t7_smoke_v1' and not original['execution_enabled']
+    assert data['budget_assumptions']['proposed_shared_reservation_usd']==2
+    assert data['budget_assumptions']['proposed_shared_max_calls']==200
+    assert data['budget_assumptions']['proposed_max_seconds']==1200
+
+
 def test_fixed_pairs_have_110_scored_runs_and_ten_preparation_turns():
     data = planner.fixture()
     jobs = planner.jobs(data)
@@ -37,12 +48,13 @@ def test_fixed_pairs_have_110_scored_runs_and_ten_preparation_turns():
 
 def test_exposure_scope_is_four_current_jobs_with_independent_budget():
     original=planner.fixture()
+    baseline_enabled=original['execution_enabled']
     data=planner.exposure_fixture(original)
     rows=planner.jobs(data)
     assert len(rows)==4 and {r['case'] for r in rows}=={'T1','T3'}
     assert all(r['repeat']==1 and r['defense']=='current' and r['preparation_turns']==0 for r in rows)
     assert data['execution_enabled'] is original['exposure_pilot']['execution_enabled']
-    assert not original['execution_enabled']
+    assert original['execution_enabled'] is baseline_enabled
     assert len(planner.jobs(original))==110
     assert {r['id'] for r in rows}.isdisjoint(r['id'] for r in planner.jobs(original))
     budget=planner.budget(data,rows)
@@ -54,7 +66,7 @@ def test_exposure_scope_is_four_current_jobs_with_independent_budget():
     assert planner.scope_sha256(data)!=planner.scope_sha256(original)
     original['exposure_pilot']['execution_enabled']=True
     assert planner.exposure_fixture(original)['execution_enabled'] is True
-    assert original['execution_enabled'] is False
+    assert original['execution_enabled'] is baseline_enabled
     original['exposure_pilot']['execution_enabled']=False
     assert planner.exposure_fixture(original)['execution_enabled'] is False
 
@@ -113,7 +125,7 @@ def test_t5_both_variants_use_native_fallback_and_preserve_true_value():
         assert len(calls)==1 and rows[0]['max']==60 and rejected==[]
 
 
-def test_t7_upload_parser_preserves_connectivity_and_payload_reaches_role_prompt():
+def test_t7_upload_parser_preserves_connectivity_but_footprint_stays_out_of_role_prompt():
     from backend.projects.netlist import normalize_netlist
     from backend.graph.netlist import parse_netlist
     from backend.graph.nodes import circuit_around
@@ -128,7 +140,9 @@ def test_t7_upload_parser_preserves_connectivity_and_payload_reaches_role_prompt
         parsed.append(parse_netlist(raw))
     assert parsed[0]['nets']==parsed[1]['nets']
     part=circuit_around(parsed[1],'D1')
-    assert case['payload'] in render_read({'target_part':part},load())
+    assert case['payload'] in part['footprint']
+    text=render_read({'target_part':part},load())
+    assert case['payload'] not in text and 'D1.A(DEMO1)' in text and 'D1.K(DEMO1)' in text
 
 
 def test_budget_counts_preparation_retries_cache_write_and_rerank_query_repetition():
