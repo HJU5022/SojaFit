@@ -1,5 +1,17 @@
 # jeongun 작업 기록
 
+## 2026-11-11 서비스 DB 재설계 구현 · 새 Supabase 프로젝트로 전환 · 배포
+- 구현(범위 A, 서비스 표만): 승인 스냅샷을 `approvals` 한 곳으로 단일화, 분석 회로 사본과 죽은 표 삭제, FK와 체크포인트 삭제 트리거, DB CHECK 단순화, 구글 승인 대기 삭제, 데모 계정은 첫 로그인 때 생성(007 삭제), 만료 세션 청소. 서비스 표 23 → 21개, DB 전체 35 → 33개(코퍼스 4 · LangGraph 8 불변). 기준선 `db/020_service_baseline.sql`, 옛 증분 SQL은 `db/legacy`, 운영 이전 · 되돌리기 · precheck는 `db/migrations`. 표 정의서 · ERD는 `scripts/db/gen_schema_docs.py`가 DB에서 만든다(`db/schema/*.md`).
+- 시험: 통합 결과 PG16(pgvector) 1346 passed · 29 skipped · 1 failed, PG17 1343 · 32 · 1(실패 1건은 기존에 알려진 `test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases`). 독립 검증 3회(P1 · P2 · 인증 · 스키마, 회귀, 이전 · 되돌리기)와 변이 확인.
+- 적용 방식(중요): 옛 운영 DB(다른 Supabase 조직, 서울)에는 이전 SQL을 적용하지 않았다. 대신 새 Supabase 프로젝트 `SojaFit_2`(hajeongun.dev 조직, 서울 ap-northeast-2, Postgres 17.11)에 기준선 SQL(000 · 002 · 008 · 009 · 012 · 020_service_baseline · 026)과 LangGraph 표 준비(`--setup`)를 적용하고, 옛 DB에서 코퍼스 4표만 `pg_dump`/`pg_restore`로 옮겼다(`source_documents` 1,360 · `document_chunks` 51,967 · `chunk_embeddings` 51,967 · `chunk_embedding_bits` 51,967행, 개인정보 표는 읽지 않음). 서비스 표(계정 · 프로젝트 · 대화 · 승인 · 견적)는 옮기지 않고 새로 시작했다. 옛 운영 DB는 백업으로 남김(현재 미사용), 옛 DB Egress 약 266MB. 그래서 운영 이전 SQL(`db/migrations`)은 시험 DB에서만 검증했고 실제 운영 DB에는 실행하지 않았다.
+- 검색 시험(새 DB, `retrieval_r1` 질문 10개, 읽기 전용): 정답 문서 상위 5 안 9/10(못 맞힌 r1-083은 이전 운영 기록에서도 실패), 지연 1.1~1.7초, 이전 기록과 문항별 같음.
+- 배포(11-11 약 04:00~04:25 KST): Secret Manager에 새 비밀 `DATABASE_URL_NEW` 생성(기존 `DATABASE_URL`은 그대로). 점검 리비전(`sojafit-api-27a410d` 계열, 태그 `newdb`)을 0%로 올려 0% 주소 스모크 28/0/0 통과(`scripts/results/smoke/smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json`). `DEMO_MODE=0` · `AUTH_ORIGIN`=운영 주소로 최종 리비전 `sojafit-api-27a410d-live`를 만들어 트래픽 100% 전환, 기본 주소 스모크 28/0/0 통과(`smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json`). 그 전에 같은 주소 스모크가 비밀번호 입력 문제(B 계정 401)로 두 번 실패했다(`*_042105.json` 2/4/22, `*_042119.json` 19/1/8, 서비스 문제 아님. 로그인 5회 실패 15분 잠금 주의). 구글 로그인 실제 왕복 확인(구글 계정으로 로그인해 `users`에 구글 로그인 전용 계정이 생김). 점검용 리비전 3개는 삭제, 옛 리비전(`716c6d6` 등)은 되돌리기용으로 유지.
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-716c6d6=100 --project sojafit --region asia-northeast3` (옛 리비전은 옛 DB 주소를 가진 `DATABASE_URL` 비밀을 쓴다).
+- 새 DB 계정: 데모 계정 `demo1@gmail.com` · `demo2@gmail.com`(비밀번호 계정 role user, 정운이 CLI로 생성. 비밀번호는 기록하지 않음)과 구글 계정 1개. 이전 안내의 `example.com` 이메일과 다르다. 점검 데이터(프로젝트 6개 안팎, 승인 · 견적 2개)가 새 DB에 남아 있다(지울지 미정).
+- 알려진 사항: 서버 로그의 Langfuse `Failed to export spans 403 Forbidden`은 옛 리비전(`716c6d6`, `b884849`)에서도 어제부터 나던 것이다(이번 변경 무관, 미해결). Supabase 무료 한도 주의(활성 프로젝트 2개, 약 1주 비활성 시 자동 중지 [문서 기억]).
+- 확인 못 한 것: 코퍼스 84문항 전체 점수 대조, 대용량 동시 요청, 서버 경유 `DELETE /api/me` 호출, 새 Supabase 풀러의 장시간 동작.
+- 코드 위치: 재설계 커밋 38개를 통합 브랜치 `rd-final-int`에서 `jeongun` 위로 cherry-pick했다(내용이 같은 `716c6d6` · `d23345e` · `ee3405d`는 `jeongun`에 이미 있어 건너뜀). push는 하지 않았다.
+
 ## 2026-11-10 23:18 승인 422(표시 이름 `TSC 1N4007G`) 원인 수정 · 사용자당 하루 한도 상향 배포
 - 발견: 배포 주소 실제 계정 스모크(demo2가 A)에서 6단계 승인이 422였다. 운영 DB에서 그 실행의 후보 품번을 읽기 전용으로 조회하니 `TSC 1N4007G`(제조사 이름 + 공백)였다. demo1의 22:53 실행은 같은 질문에서 승인 201이었다(모델이 매번 다르게 적음). 한도 초과(`LIMIT_EXCEEDED`)는 별개로 demo1이 22:53 점검 한 번에 하루 200,000 예약 토큰을 다 쓴 것이다(예약 토큰은 돌려주지 않음).
 - 원인: 판정 결과의 `results[].part`는 모델이 읽은 이름을 질문에 쓴 대로 보여 주는 계약이다(`tests/multi_agent/test_judge.py`가 `res['part'] == name`으로 고정, 11-06 B1). 승인 요청 검증(`ApproveBody`, 공백 불가)과 견적 DB(`quotes.part_number` CHECK, 공백 불가)는 그것을 깨끗한 식별 품번으로 가정했다. 에이전트 쪽이 아니라 승인 · 견적 경계의 계약 어긋남이다.
