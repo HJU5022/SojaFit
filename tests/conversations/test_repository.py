@@ -212,8 +212,9 @@ def test_project_and_checkpoint_cleanup_share_one_rollback(storage):
         assert conn.execute('SELECT name FROM projects WHERE id=%s', (project,)).fetchone() == ('test',)
 
 
-def test_database_rejects_nested_private_fields_and_bad_types(storage):
+def test_app_model_rejects_nested_private_fields_and_database_checks_required_keys(storage):
     from psycopg.types.json import Jsonb
+    from pydantic import ValidationError
     from backend.conversations.models import SafeResult
     repo, (owner, _), project, connect = storage
     thread = repo.create_thread(owner, project)
@@ -226,7 +227,12 @@ def test_database_rejects_nested_private_fields_and_bad_types(storage):
     bad2['judgement']['results'][0]['checks'][0]['citation']['page'] = {'path': '/private'}
     bad3 = copy.deepcopy(safe)
     bad3['price_parts'] = ['https://example.test/secret']
+    # [왜] D4: 중첩 모양은 DB CHECK가 아니라 앱 모델(SafeResult)이 정본이다. DB는 객체 + 필수 키 6개만 본다
     for value in (bad, bad2, bad3):
+        with pytest.raises(ValidationError):
+            SafeResult.model_validate(value)
+    missing = {k: v for k, v in safe.items() if k != 'evidence'}
+    for value in ([], 'text', missing):
         with pytest.raises(psycopg.errors.CheckViolation), connect() as conn:
             conn.execute('UPDATE runs SET safe_result=%s WHERE id=%s', (Jsonb(value), run))
 
