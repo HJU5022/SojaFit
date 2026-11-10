@@ -1,5 +1,14 @@
 # jeongun 작업 기록
 
+## 2026-11-10 밤 Google 일반 로그인 · 세션 유휴 2시간 · 세창 작업대 화면(#84) 포함 배포
+- 한 일: 일반 사용자 Google 가입 · 로그인(`google_session` · `google_signup`, 이메일이 이미 있으면 자동 연결 없이 승인 대기, 처리방침 동의 쿠키가 있어야 새 계정), 이메일 가입은 `DEMO_MODE=1`에서만(공개 배포는 404), 세션 유휴 만료 30분 → 2시간(절대 8시간 그대로)을 구현해 배포했다. 배포 화면이 오세창 PR #84(작업대 UI · 랜딩, 11-10 16:13 main 머지) 이전이라 `origin/main`을 합친 뒤 다시 배포했다. 합치기 충돌은 `LoginPage.tsx`(두 상태 변수 모두 유지) · `SPEC.md`(양쪽 문장 합침), `App.test.tsx`의 가입 링크 시험은 새 동작(가입 링크 없음)에 맞게 고쳤다.
+- 코드 위치: 메인 `jeongun` 작업 폴더가 아니라 별도 `git worktree`(세션 임시 폴더 `gl-wt`)의 커밋 `3067342` · `3a7813f` · `5f27d33` · `6d5880e` · 합치기 `b884849`다. 다른 세션이 메인 폴더에서 작업 중이라 건드리지 않았다. **메인 `jeongun`에는 아직 없다**(배포본과 브랜치가 다름).
+- 배포: revision `sojafit-api-b884849`(태그 `osc84`)를 `--no-traffic`으로 올려 0% 주소 점검 뒤 100% 전환. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-6d5880e=100 --project sojafit --region asia-northeast3`(그 전 `5f27d33` · `07c6629` · `5631309`도 0%로 남아 있음). 점검: `/health` · `/login` · `/app` 200, `/api/auth/me` 401, `POST /api/auth/signup` 404, 구글 시작 303, 새 번들에만 세창 작업대 문구 있음.
+- 시험: 인증 `tests/api/test_auth.py` 74 passed(일회용 Postgres, 스킵 0), 프런트 135 passed + 빌드 성공, 키 · DB 없는 전체 1211 passed · 118 skipped(`tests/repo` 통과).
+- 사고: 점검 중 옛 주소에 가입 요청을 보내 운영 DB에 시험 계정(`probe@example.test`, user_id 20)이 만들어졌고 탈퇴 API로 바로 지웠다(삭제 뒤 로그인 401).
+- 확인 못 한 것: 구글 실제 왕복(테스트 사용자 등록 · 브라우저 클릭은 조장), 브라우저 화면 눈으로 확인, 평가자 계정 생성(조장이 직접).
+- 다음 할 일: 위 커밋을 메인 `jeongun`으로 옮기기(`SPEC.md` 충돌 예상) 또는 `origin/main`을 합친 브랜치 정리, ADR(이메일 인증 없는 자기 가입 결정 뒤집기), 평가자 계정 2개 생성, Google 테스트 사용자 등록.
+
 ## 2026-11-10 D6 · D7 · D8 남은 항목 마무리 (브랜치 `jeongun`, 커밋 전)
 - 한 일: ① `/api/` 아래 POST · PATCH · PUT · DELETE 본문 128 KiB 한도를 재개 · 승인 · 로그인까지 넓혔다(넷리스트 업로드는 자기 5 MiB 한도). ② 모든 응답에 보안 헤더 4개(`X-Content-Type-Options` · `X-Frame-Options` · `Referrer-Policy` · `Strict-Transport-Security`). ③ `hide_query`와 겹치던 `GoogleCallbackLogFilter`를 지웠다. ④ 컨테이너를 일반 계정(`USER nobody`)으로 실행. ⑤ 견적 금지 키가 코드(`quote.FORBIDDEN`)와 DB 검사(`db/020`)에서 같은지 보는 시험. ⑥ `EVAL_REPORT.md` 7장 빈칸 2개(사용자 · 세션 연결, 느림 원인 사례)와 8장 LLM 단계별 시간 · 비용, `docs/GATES.md` G1 · G6 줄.
 - 바꾼 파일: `backend/main.py`, `Dockerfile`, `tests/api/test_conversations.py`, `tests/services/test_quote_service.py`, `SPEC.md`, `backend/BACKEND.md`, `EVAL_REPORT.md`, `docs/GATES.md`.
