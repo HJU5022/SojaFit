@@ -1,4 +1,4 @@
-"""대체 부품 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
+"""Spec 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
 
 - 역할: `judge_read_agent`(읽기 노드)와 `judge_agent`(판정 노드). 읽기를 따로 두는 이유는 인터럽트에서 재개하면
   노드가 처음부터 다시 돌기 때문이다(읽기 결과를 먼저 상태에 남겨 LLM을 다시 부르지 않는다).
@@ -7,10 +7,8 @@
 - 출처: docs/specs/judge-agent.md What · How
 """
 import contextvars
-import os
 import re
-from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Literal
 
@@ -23,6 +21,7 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
+from backend.multi_agent.agents.part_names import MAKER, ground_part_names
 from backend.multi_agent.facts import ORDER_CODE
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
@@ -117,88 +116,12 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
     # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
     user += memory_context(state.get('approved_memories') or [])
-    # [왜] 서비스 기본은 3번 다수결이다. v3 측정(50/50, 사전 등록 #47 ~ #50)을 모두 3번으로 했고, 1번 읽기가 흔들려 틀린 문항이 있었다(v3-13 · v3-14).
-    #      세 번은 동시에 돌아 시간은 거의 같고, 비용은 50문항당 약 $0.02 는다(11-10 조장 결정). 환경값 JUDGE_READ_VOTES=1이면 한 번만 읽는다
-    # [주의] LAB_READ_VOTES는 실험 때 쓴 예전 이름이라 JUDGE_READ_VOTES가 없을 때만 받는다
-    votes = max(1, int(os.getenv('JUDGE_READ_VOTES') or os.getenv('LAB_READ_VOTES') or '3'))
-    if votes == 1:
-        read = chat('judge_read', PROMPT, user, JudgeRead)
-    else:
-        # [왜] lab 실험(11-06): 같은 질문의 읽기가 회차마다 달라(일관성 측정 38문항 중 7~12문항) 3세트 연속 통과가 막혔다.
-        #      같은 읽기를 동시에 여러 번 부르고 칸마다 다수결로 하나를 만든다(판정 코드 · 인터럽트는 그대로 한 번)
-        def one(_):
-            try:
-                return chat('judge_read', PROMPT, user, JudgeRead)
-            except ValueError:
-                return None  # 형식을 끝내 어긴 한 번은 표에서 뺀다
-        pool = ThreadPoolExecutor(votes)
-        # [주의] 스레드마다 문맥(contextvars)을 복사해 넘긴다. 그래야 LangGraph · Langfuse 추적이 이 노드 아래로 이어진다
-        futures = [pool.submit(contextvars.copy_context().run, one, i) for i in range(votes)]
-        reads = []
-        for f in as_completed(futures):
-            if (r := f.result()) is not None:
-                reads.append(r)
-            if len(reads) == 2 and _agree(*reads):
-                break  # [왜] 먼저 끝난 두 읽기가 핵심 칸에서 같으면 다수결이 이미 정해졌다. 형식 재시도로 늦은 셋째를 기다리지 않는다(v3-14 17.5초)
-        pool.shutdown(wait=False, cancel_futures=True)
-        if not reads:
-            raise ValueError('판정 읽기가 모두 형식을 어겼다')
-        read = merge_reads(reads)
+    # [왜] 읽기는 한 번이다. 3번 다수결과 한 번 읽기 + 읽기 뒤 품번 바로잡기를 비교하니 정확도가 같았다(v3 50문항 50/50 둘 다, 흔들린 15문항 92% 대 92%)
+    read = chat('judge_read', PROMPT, user, JudgeRead)
+    # [왜] 읽기가 같은 질문에서 품번을 'SS34'(넷리스트)·'SS26'(사용 조건), '1N5231'·'TSC 1N5231B'로 회차마다 다르게 적었다(11-10 6회 반복). 사용자 글의 품번으로 코드가 맞춘다
+    original, candidates = ground_part_names(read.original_part, read.candidates, state)
+    read = read.model_copy(update={'original_part': original, 'candidates': candidates})
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
-
-
-def _most(items: list, key=lambda x: x):
-    """가장 많이 나온 것(같으면 먼저 나온 것)."""
-    counts = Counter(key(x) for x in items)
-    best = max(counts.values())
-    return next(x for x in items if counts[key(x)] == best)
-
-
-def _agree(a: JudgeRead, b: JudgeRead) -> bool:
-    """두 읽기가 판정을 바꾸는 칸(역할 · 값 이름과 숫자 · 요구 항목 · 원래 부품 · 후보 · 패키지)에서 같은가."""
-    # [주의] 정렬하지 않고 개수로 비교한다. 같은 이름 값이 둘(숫자 없음 · 있음)이면 정렬이 None과 숫자를 비교해 TypeError가 났다(공식 8회차 v3-09)
-    key = lambda r: (r.role, r.role_alt, Counter((v.name, v.number, v.flag) for v in r.values), Counter(x.code for x in r.required_specs),
-                     re.sub(r'[^A-Z0-9]', '', r.original_part.upper()), [re.sub(r'[^A-Z0-9]', '', c.upper()) for c in r.candidates],
-                     re.sub(r'[^A-Z0-9]', '', r.package_wanted.upper()))
-    return key(a) == key(b)
-
-
-def merge_reads(reads: list[JudgeRead]) -> JudgeRead:
-    """읽기 여러 번을 칸마다 다수결로 하나로 만든다. 값 · 요구 성질은 절반 넘는 읽기에 나온 이름 · 항목만 남긴다."""
-    need = len(reads) // 2 + 1
-    role = _most([r.role for r in reads])
-    pick = next(r for r in reads if r.role == role)  # 역할 근거는 그 역할을 고른 첫 읽기에서
-    role_alt = _most([r.role_alt for r in reads])
-    norm = lambda x: re.sub(r'[^A-Z0-9]', '', (x or '').upper())
-    rules = C.load()
-    names = {n for rid in (role, role_alt) if rid in rules for n in C.inputs(rules[rid])}
-    # [왜] 같은 사실을 읽기마다 다른 모양으로 적으면 모양별 표가 모두 절반 아래라 사실이 통째로 빠졌다
-    #      (공식 3회차 v3-04: 전압강하 한계를 요구 성질 VF · 회로 값 v_drop_allowed · 없음으로 나눠 적음). 세기 전에 모양을 맞춘다
-    def name_of(v):
-        return SAME_QUANTITY[v.name] if v.name not in names and SAME_QUANTITY.get(v.name) in names else v.name
-    def has_code(r, code):
-        return any(x.code == code for x in r.required_specs) or any(LIMITS.get(v.name) == code for v in r.values)
-    values = []
-    for name in dict.fromkeys(name_of(v) for r in reads for v in r.values):
-        got = [v.model_copy(update={'name': name}) for r in reads for v in r.values if name_of(v) == name]
-        held = sum(any(name_of(v) == name for v in r.values) for r in reads)
-        if held >= need or (name in LIMITS and sum(has_code(r, LIMITS[name]) for r in reads) >= need):
-            values.append(_most(got, key=lambda v: (v.number, norm(v.unit), v.flag)))
-    specs = []
-    for code in dict.fromkeys(x.code for r in reads for x in r.required_specs):
-        if sum(has_code(r, code) for r in reads) < need:
-            continue
-        # [왜] 한 읽기가 같은 항목을 둘로 나눠 적기도('공칭 3.3V' · '±2% B 등급') 하고 읽기마다 담은 말이 다르다. 읽기마다 그 항목 말을 잇고
-        #      가장 긴 것을 쓴다. 첫 말만 쓰니 공차가 빠져 ±5% 부품이 나왔다(공식 4회차 v3-13)
-        joined = [', '.join(x.words for x in r.required_specs if x.code == code) for r in reads]
-        specs.append(RequiredSpec(words=max(joined, key=len)[:160], code=code))
-    return JudgeRead(role=role, role_alt=role_alt, role_evidence=pick.role_evidence, values=values,
-                     original_part=_most([r.original_part for r in reads], key=norm),
-                     candidates=list(_most([tuple(r.candidates) for r in reads], key=lambda c: tuple(norm(x) for x in c))),
-                     package_wanted=_most([r.package_wanted for r in reads], key=norm),
-                     category_wanted=_most([r.category_wanted for r in reads]), required_specs=specs,
-                     maker_wanted=_most([r.maker_wanted for r in reads], key=norm),
-                     revision_wanted=_most([r.revision_wanted for r in reads], key=norm))
 
 
 NUM = re.compile(r'\d+(?:\.\d+)?')
@@ -285,7 +208,6 @@ def _ask_text(missing: list[str], roles: list[str], rules: dict) -> str:
 
 # [왜] 읽기가 품번을 'TSC 1N5817'처럼 제조사 이름과 함께 낸다. 사양 표 품번에는 제조사 이름이 없어 0행이 된다(11-06 평가 7건)
 EDITION = re.compile(r'[A-Z]\d{4}|(?:19|20)\d{2}|판|EDITION|VERSION|\bREV', re.I)  # 데이터시트 판으로 보이는 글
-MAKER = re.compile(r'^\s*(?:TSC|Taiwan\s+Semiconductor)\s+', re.I)
 
 
 def _part(name: str) -> str:

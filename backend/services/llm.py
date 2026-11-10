@@ -150,7 +150,7 @@ class EvaluationBudget:
         remaining = self.max_seconds - (time.monotonic() - self.started)
         # [왜] 토큰 수를 정확히 세지 않고 바이트 수+여유로 입력 토큰의 위쪽 경계를 잡아 비용을 보수적으로 예약한다
         upper = len(text.encode("utf-8")) + 8192
-        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 3번(다수결)과
+        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 여러 번과
         #      Supervisor만으로 분석 한 번의 예약 상한($0.50)을 넘어 판정 질문이 멈췄다(11-10 데모 기록 실측). 실제 모델 단가로 잡는다
         prompt_rate, completion_rate, price_tiers = (MODEL_RATES[model] if self.per_model_rates and model in MODEL_RATES
                                                       else (self.prompt_rate, self.completion_rate, self.pricing_tiers))

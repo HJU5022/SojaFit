@@ -7,7 +7,7 @@
   찾기 도구(find, 카드 찾기)로 그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4).
   근거를 끝내 못 찾으면 거절을 정하지 않고 다시 찾을 사유(no_result · all_rejected)로 보고한다.
   역할 할 일처럼 검색어가 없으면 검색 없이 넷리스트만으로 답한다.
-- 하지 않는 일: 할 일 정하기(Supervisor), 숫자 비교 · 대체 판정(대체 부품 에이전트와 `backend/judge/`), 여러 할 일 합치기(종합),
+- 하지 않는 일: 할 일 정하기(Supervisor), 숫자 비교 · 대체 판정(Spec 에이전트와 `backend/judge/`), 여러 할 일 합치기(종합),
   LLM 직접 호출(`chat`을 받아 쓴다. 실제 연결은 `llm.node_chat`).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"의 RAG 에이전트(예전 채점 Luna · 생성 Haiku를 한 호출로 합침, 채점은 질문 맥락을
   가진 쪽이 한다), backend/graph/nodes.py(검색 · 다른 품번 줄 거르기 · 인용 함수를 그대로 쓴다)

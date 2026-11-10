@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 1180" width="1360" height="1180" font-family="'Apple SD Gothic Neo','Pretendard','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="ag" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="15" markerHeight="15" orient="auto-start-reverse"><path d="M2 1.5 L10 6 L2 10.5" fill="none" stroke="#7d7d7d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="ao" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="20" markerHeight="20" orient="auto-start-reverse"><path d="M2 1.5 L10 6 L2 10.5" fill="none" stroke="#e0552d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1360" height="1180" fill="#ffffff"/>
+
+  <!-- 맨 윗줄 -->
+  <rect x="40" y="40" width="180" height="70" rx="35" fill="#faf9f7" stroke="#cfcdc8"/>
+  <text x="130" y="86" text-anchor="middle" font-size="30" font-weight="700" fill="#222">질문</text>
+  <line x1="222" y1="75" x2="252" y2="75" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <rect x="262" y="22" width="300" height="106" rx="18" fill="#f1efe9" stroke="#8a8780"/>
+  <text x="412" y="68" text-anchor="middle" font-size="30" font-weight="700" fill="#222">입력 준비</text>
+  <text x="412" y="105" text-anchor="middle" font-size="22" fill="#555">읽기 · 기억 · 품번 확인</text>
+  <line x1="412" y1="130" x2="412" y2="196" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <rect x="640" y="40" width="180" height="70" rx="35" fill="#faf9f7" stroke="#cfcdc8"/>
+  <text x="730" y="86" text-anchor="middle" font-size="30" font-weight="700" fill="#222">답 (끝)</text>
+  <line x1="730" y1="198" x2="730" y2="118" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+  <text x="752" y="162" font-size="24" fill="#444">검사 통과 · 일상 대화 · 가격</text>
+
+  <!-- Supervisor -->
+  <rect x="40" y="200" width="1280" height="160" rx="22" fill="#eeecff" stroke="#5b4fcf"/>
+  <text x="680" y="250" text-anchor="middle" font-size="32" font-weight="700" fill="#3b3496">Supervisor</text>
+  <text x="680" y="293" text-anchor="middle" font-size="24" fill="#4f46c8">계획 LLM 1회 + 코드 규칙</text>
+  <text x="680" y="332" text-anchor="middle" font-size="24" fill="#4f46c8">답 모으기 · 답 검사 · 거절은 코드 · 답이 섞일 때만 종합 LLM 1회</text>
+
+  <!-- Supervisor ↔ 에이전트 화살표 -->
+  <line x1="95" y1="362" x2="95" y2="466" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+  <text x="112" y="425" font-size="22" fill="#444">지시서</text>
+  <line x1="215" y1="468" x2="215" y2="364" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <text x="230" y="425" font-size="22" fill="#444">보고</text>
+  <text x="520" y="415" text-anchor="middle" font-size="24" fill="#444">두 에이전트에 동시에 보냄</text>
+  <text x="520" y="455" text-anchor="middle" font-size="24" fill="#e0552d">↻ 실패 보고면 재지시 최대 1번</text>
+  <line x1="790" y1="468" x2="790" y2="364" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <text x="776" y="425" text-anchor="end" font-size="22" fill="#444">보고</text>
+  <line x1="925" y1="362" x2="925" y2="466" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+  <text x="942" y="425" font-size="22" fill="#444">지시서</text>
+  <line x1="1185" y1="362" x2="1185" y2="466" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+
+  <!-- Spec 에이전트 -->
+  <rect x="40" y="470" width="470" height="610" rx="30" fill="#ffffff" stroke="#777"/>
+  <text x="275" y="530" text-anchor="middle" font-size="30" font-weight="700" fill="#222">Spec 에이전트</text>
+  <rect x="70" y="565" width="410" height="145" rx="18" fill="#eeecff" stroke="#5b4fcf"/>
+  <text x="275" y="610" text-anchor="middle" font-size="30" font-weight="700" fill="#3b3496">회로 읽기</text>
+  <text x="275" y="652" text-anchor="middle" font-size="23" fill="#4f46c8">LLM 1번</text>
+  <text x="275" y="685" text-anchor="middle" font-size="23" fill="#4f46c8">읽은 뒤 코드가 부품 이름 정리</text>
+  <line x1="275" y1="712" x2="275" y2="746" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <rect x="70" y="750" width="410" height="130" rx="18" fill="#f1efe9" stroke="#8a8780"/>
+  <text x="275" y="800" text-anchor="middle" font-size="30" font-weight="700" fill="#222">대체 부품 판정</text>
+  <text x="275" y="843" text-anchor="middle" font-size="23" fill="#555">코드 · 사양 조회 · 조건 비교</text>
+  <line x1="120" y1="882" x2="120" y2="942" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+  <line x1="200" y1="944" x2="200" y2="886" stroke="#7d7d7d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ag)"/>
+  <rect x="70" y="948" width="150" height="72" rx="36" fill="#faf9f7" stroke="#cfcdc8"/>
+  <text x="145" y="994" text-anchor="middle" font-size="30" font-weight="700" fill="#222">사용자</text>
+  <text x="240" y="978" font-size="26" fill="#444">interrupt</text>
+  <text x="240" y="1010" font-size="21" fill="#444">빠진 값 1번 묻고 재개</text>
+
+  <!-- RAG 에이전트 -->
+  <rect x="530" y="470" width="500" height="610" rx="30" fill="#ffffff" stroke="#777"/>
+  <text x="750" y="530" text-anchor="middle" font-size="30" font-weight="700" fill="#222">RAG 에이전트</text>
+  <rect x="560" y="565" width="380" height="145" rx="18" fill="#f1efe9" stroke="#8a8780"/>
+  <text x="750" y="618" text-anchor="middle" font-size="30" font-weight="700" fill="#222">검색</text>
+  <text x="750" y="662" text-anchor="middle" font-size="23" fill="#555">코드 · 검색어 + 품번 필터</text>
+  <line x1="750" y1="712" x2="750" y2="746" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <rect x="560" y="750" width="380" height="130" rx="18" fill="#eeecff" stroke="#5b4fcf"/>
+  <text x="750" y="800" text-anchor="middle" font-size="30" font-weight="700" fill="#3b3496">근거 채점 + 답 쓰기</text>
+  <text x="750" y="843" text-anchor="middle" font-size="24" fill="#4f46c8">LLM 1번</text>
+  <line x1="750" y1="882" x2="750" y2="916" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
+  <rect x="560" y="920" width="380" height="110" rx="18" fill="#f1efe9" stroke="#8a8780"/>
+  <text x="750" y="967" text-anchor="middle" font-size="30" font-weight="700" fill="#222">인용 검사</text>
+  <text x="750" y="1004" text-anchor="middle" font-size="23" fill="#555">코드</text>
+  <text x="750" y="1064" text-anchor="middle" font-size="24" fill="#e0552d">↻ 근거 부족이면 재검색 1번</text>
+  <path d="M941 815 H988 V637 H944" fill="none" stroke="#e0552d" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#ao)"/>
+
+  <!-- 거절: 에이전트와 같은 줄 -->
+  <rect x="1050" y="470" width="270" height="140" rx="24" fill="#f1efe9" stroke="#8a8780" stroke-dasharray="7 6"/>
+  <text x="1185" y="526" text-anchor="middle" font-size="30" font-weight="700" fill="#222">거절 (끝)</text>
+  <text x="1185" y="566" text-anchor="middle" font-size="20" fill="#555">범위 밖 · 실패 · 검사 걸림</text>
+  <text x="1185" y="594" text-anchor="middle" font-size="20" fill="#555">코드</text>
+
+  <!-- 범례 -->
+  <rect x="40" y="1128" width="44" height="30" rx="8" fill="#eeecff" stroke="#5b4fcf"/>
+  <text x="96" y="1152" font-size="26" fill="#444">LLM 단계</text>
+  <rect x="226" y="1128" width="44" height="30" rx="8" fill="#f1efe9" stroke="#8a8780"/>
+  <text x="282" y="1152" font-size="26" fill="#444">코드 단계</text>
+  <line x1="410" y1="1143" x2="476" y2="1143" stroke="#7d7d7d" stroke-width="3"/>
+  <text x="488" y="1152" font-size="26" fill="#444">항상 가는 길</text>
+  <line x1="650" y1="1143" x2="716" y2="1143" stroke="#7d7d7d" stroke-width="3" stroke-dasharray="7 6"/>
+  <text x="728" y="1152" font-size="26" fill="#444">조건에 따라</text>
+  <line x1="880" y1="1143" x2="946" y2="1143" stroke="#e0552d" stroke-width="3" stroke-dasharray="7 6"/>
+  <text x="958" y="1152" font-size="26" fill="#444">다시 하기 (각 1번)</text>
+</svg>

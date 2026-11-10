@@ -1,8 +1,8 @@
-"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · 대체 부품 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
+"""멀티 에이전트 조립: 입력 읽기 → 기억 읽기 → 품번·판 확인 → Supervisor → RAG 에이전트 · Spec 에이전트(Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기.
 
 - 역할: 노드와 연결을 정하고 compile한다. 노드 이름은 강의처럼 한국어로 달아 `get_graph().draw_mermaid()` 그림이 그대로 읽히게 한다.
   답 모으기 → Supervisor 되돌림(재계획, 설계 v2)이 유일한 고리다. 서브에이전트는 RAG 에이전트(`agents/docs.py`, 노드 하나)와
-  대체 부품 에이전트(회로 역할 읽기 → 대체 부품 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
+  Spec 에이전트(회로 읽기 → 대체 부품 판정 두 노드의 하위 그래프, 인터럽트 재개 때 읽기 LLM을 다시 부르지 않게)다.
   일상 대화는 계획의 reply로 끝, 가격 · 재고는 가격 안내(단일 그래프와 같은 노드)로 끝, 범위 밖 · 코퍼스 밖은 거절로 끝난다.
   LLM · 검색기 · 사양 표 도구는 인자로 받아 시험에서 가짜로 바꾼다. 기억 읽기는 compile에 넘긴 Store에서 선호 실장 방식만 읽는다(`graph/memory.py`).
 - 하지 않는 일: 판단 규칙(프롬프트와 Supervisor의 몫), 웹 조회 에이전트(아직 없어서 켜려 하면 거부한다), 체크포인터 만들기(부르는 쪽이 넘긴다).
@@ -52,13 +52,13 @@ def refuse_node(state: dict) -> dict:
 
 
 def judge_subgraph(*, chat, specs, find, retriever):
-    """대체 부품 에이전트: 회로 역할 읽기(LLM 1번) → 대체 부품 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
+    """Spec 에이전트: 회로 읽기(LLM 1번) → 대체 부품 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
-    g.add_node('회로 역할 읽기', partial(judge_read_agent, chat=chat))
+    g.add_node('회로 읽기', partial(judge_read_agent, chat=chat))
     g.add_node('대체 부품 판정', partial(judge_task_node, specs=specs, find=find, retriever=retriever))
-    g.add_edge(START, '회로 역할 읽기')
-    g.add_edge('회로 역할 읽기', '대체 부품 판정')
+    g.add_edge(START, '회로 읽기')
+    g.add_edge('회로 읽기', '대체 부품 판정')
     g.add_edge('대체 부품 판정', END)
     return g.compile()
 
@@ -95,8 +95,8 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_edge('품번·판 확인', 'Supervisor')
     agents = ['RAG 에이전트']
     if judge_enabled:
-        g.add_node('대체 부품 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
-        agents.append('대체 부품 에이전트')
+        g.add_node('Spec 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
+        agents.append('Spec 에이전트')
     # [왜] 목록(path_map)의 이름 = 노드 이름이라 그림에 라벨이 붙지 않는다. 할 일이 둘이면 두 에이전트에 동시에 Send
     g.add_conditional_edges('Supervisor', sup.after_plan, ['끝내기', '가격 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'
     for agent in agents:

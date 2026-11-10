@@ -310,7 +310,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             return (bool(want) and not want & {_norm_package(x) for x in p['packages']},
                     original_category is not None and p['category'] != original_category, max(met[key].values()), key)
         return [found[k] for k in sorted(found, key=order)][:limit]
-    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # 대체 부품 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
+    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # Spec 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
     return find
 
 

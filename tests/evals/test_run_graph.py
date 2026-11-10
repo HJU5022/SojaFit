@@ -269,7 +269,7 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
     mcp = fake_mcp(monkeypatch)
     with ExitStack() as stack:
         app = make_app(True, stack)
-        assert mcp.events == ["open"] and "Supervisor" in app.get_graph().nodes and "대체 부품 에이전트" in app.get_graph().nodes
+        assert mcp.events == ["open"] and "Supervisor" in app.get_graph().nodes and "Spec 에이전트" in app.get_graph().nodes
     assert mcp.events == ["open", "close"]
 
 

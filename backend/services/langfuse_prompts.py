@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 CONFIG = {"model": HAIKU, "temperature": 0, "max_tokens": 4096}
 NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read", "docs_answer", "synth", "card_read", "card_pick")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
-# [왜] judge_read는 대체 부품 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
+# [왜] judge_read는 Spec 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
 # [왜] card_read는 데이터시트 카드에서 사양 값을 읽는 노드(backend/rag/card_read.py, 사양 표 대신), 서브에이전트라 Haiku. card_pick은 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 노드(backend/rag/card_find.py)
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
 # [왜] Supervisor는 Haiku(ADR 0017, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
