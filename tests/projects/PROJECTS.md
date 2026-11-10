@@ -8,6 +8,7 @@
 ## 파일
 - `PROJECTS.md` — 이 문서
 - `test_netlist.py` — 합성 입력의 크기·UTF-8·문법·깊이/token/부품/net 상한·정확한 불변 정규화와 hash
-- `test_project_repository.py` — 전 경계 소유자 필터, 관리자 접근 차단, 이름 변경, 생성 실패 롤백, 사용자·프로젝트 삭제 cascade, RLS·공개 역할 권한·FK 인덱스·CHECK, 업로드 정규화 전용 저장·rollback, 받은 회로 데모(c01 `attiny85_time_switch`)를 `received-20261030/c01`에서 읽어 저장
+- `test_project_repository.py` — 전 경계 소유자 필터, 관리자 접근 차단, 이름 변경, 생성 실패 롤백, 사용자·프로젝트 삭제 cascade, RLS·공개 역할 권한·FK 인덱스·CHECK, 업로드 정규화 전용 저장·rollback, 받은 회로 데모(c01 `attiny85_time_switch`)를 `received-20261030/c01`에서 읽어 저장, 데모 CHECK(데모일 때만 `demo_id`)
+- `test_service_schema.py` — 일회용 데이터베이스(sojafit_agent 포함)에서 서비스 표 재설계 규칙: 프로젝트 · 계정 삭제 연쇄(분석 대화 · 체크포인트), 체크포인트 삭제 트리거, 분석 대화 FK 거부, 죽은 표 · 칸 삭제, `runs.safe_result` 필수 키 6개 CHECK, 승인 칸 3개 NOT NULL · 형식, 승인당 견적 중복 허용
 
 `uv run pytest -q tests/projects`. DB 테스트는 `TEST_AUTH_DATABASE_URL`로 지정한 격리 시험 DB에서만 실행한다. 각 시험은 임의 이름 schema에 인증 및 013 SQL을 적용하고 그 schema만 정리한다. URL이 없으면 DB 시험을 건너뛴다. 운영·공유 DB URL을 설정하지 않는다.
