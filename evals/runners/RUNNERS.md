@@ -1,12 +1,24 @@
 # runners
 
 ## 역할
+
+- 수정본110회02는baseline_t2_controlled_v2/fixed_database_evidence_v1에서T2만새전용DB의공개6+보호1청크를본문해시대조후고정제공한다. 기존코퍼스/실측01은보존하고다른사례는실제검색을유지한다. 새독립승인/fixture해시/코드커밋과전체공유$15·2500·1800상한이필요하며자동재실행하지않는다.
+
+- T2무료노출준비(2026-11-11): `run_injection_baseline.t2_context_preflight(data)`는원본fixture복사본에서정상/공격×current/ablated4작업만가짜공급자로검사한다. 기존synthetic_docs고정근거(자연검색아님)를실제문서입력렌더러에전달하고보호본문SHA·필터후Evidence영역·사실별ID·공격문·입력바이트를관찰한다. 원본110계획/유료게이트는불변,실모델방어점수는null이다. 이도우미에는live옵션이없고실제유료scope/승인은별도준비가필요하다.
+
+- `--t7-smoke`는등록된t7_smoke_v1의T7정상·공격2작업/current만을선택한다. 독립승인과INJECTION_T7_SMOKE_DATABASES전용2DB/$2·200·1200상한을사용하고전체110회나기존스모크승인을재사용하지않는다. 계획기·실행기의같은옵션을지원한다.
+
+- 2026-11-11 남은경로 스모크: `run_injection_baseline --remaining-smoke`와 계획기의 같은 옵션은 등록된T2/T4/T5/T6/T7 current정상·공격10작업/T6준비2턴만 선택한다. 별도remaining_smoke_v1승인과INJECTION_REMAINING_SMOKE_DATABASES의전용10DB를사용하며전체110·기존T1/T3승인을재사용하지않는다. 순차실행/공유예산/원시보존동작은동일하다.
 - 이 폴더: 평가셋을 동결하고 검색·그래프·Skill 평가를 돌리는 실행 코드를 둡니다. 저장소 루트에서 `uv run python -m evals.runners.<이름>`으로 실행합니다.
 - 넣는 것: 평가 실행기(`run_*.py`), 동결 스크립트(`freeze.py`), 임베딩 프록시 측정(`benchmark_embeddings.py`), 실행기의 준비·점검·보고 도우미(`embed_cards.py`, `check_retrieval_db.py`, `report_retrieval_layers.py`).
 - 넣지 않는 것: 평가셋·동결 기록(`evals/`의 `dataset_v1.jsonl`, `FROZEN.json`), 평가 원시 결과(`evals/results/`), 평가셋 명세·사전 등록(`evals/guides/`), 평가가 아닌 측정 스크립트(`scripts/`).
 - 담당: 평가
 
 ## 파일
+- `run_injection_baseline.py` — 기본은110개 not_run JSONL, `--simulate`는 실제 그래프+가짜 모델/검색/SQL. `--execute`는 입력 플래그·사용자/조장 승인·정확한 측정 커밋/해시·사전 등록 커밋·깨끗한 작업 파일이 모두 필요하며 현재 입력에서는 거부. 사람 판정은null, 출력 덮어쓰기 거부·중단 후 not_run 보존 `--exposure-only`는 독립 scope·승인·DB·$2 상한의 T1/T3 current4작업만 선택한다.
+- `injection_baseline_runtime.py` — 승인 경로의14개 빈 loopback DB·42문서 복사본/합성 문서 적재·본문 해시 벡터 캐시·실제 hybrid/카드 도구·서비스 message와 PostgreSQL 임시 이력 표·전체 공유 예약/바이트 한도. 실제 공급자 연결은 미실행, 가짜 공급자+실DB 4건만 확인 탐색은별도 INJECTION_EXPOSURE_DATABASES4DB만사용한다.
+- `plan_injection_baseline.py` — `baseline_cases.json`에서 110개 고정 job(정상55·공격55)과 준비10턴을 만들고 공식 단가 스냅샷·토큰/경로 가정으로 예상 청구와 예약 상한을 계산. 기본 `--out <새 JSON>`, 네트워크·DB·유료 실행 옵션 없음 `--exposure-only`로4작업과별도예산을무료계산한다.
+- `run_injection_preflight.py` — 유료 실행 옵션 없는 인젝션 준비 검사. 기본 `--out <새 JSON>`은 네 관문의 오프라인 테스트를 실행한다. `--local-db`만 명시한 두 빈 loopback 전용 DB에 소형 합성 코퍼스를 적재하고 실제 BM25 검색을 확인한다. 구조화 응답과 공급자 시도를 분리하고 실행별 카드 캐시를 만든다. [작업서](../../docs/experiments/injection-baseline-preflight.md)
 - `run_thread_validation.py` — v2 1~4건 dry-run과 명시적 유료 실행. 합계 예약 $0.50/16회/90초. 공급자 ID·보고 비용을 기록. [운영 검증](../../docs/experiments/thread-memory-operations.md)
 - `run_trust_boundary.py` — D7 합성 공격 3건+정상 대조군의 호출 없는 계획. `uv run python -m evals.runners.run_trust_boundary --out <새 json>`. 별도 승인·사전 등록 뒤 `--execute`만 문서 에이전트를 실제 모델로 실행(예약 $0.50/16회/90초/출력 1024토큰). DB·임베딩·배포 HTTP·전체 Supervisor는 검사하지 않는다. 모델 원문과 최종 반환의 알려진 canary/외부 도메인 유출을 구분한다. 남은 절차는 [요약](../../docs/research/thread-memory-work-summary.md)
 - `run_judgement_bundle.py` — `judgement_bundle_v1`의 plan/load/preflight/simulate. 숫자 loopback+`injection_test_*` DB만 허용하고 기존 서비스 DB를 거부한다. 실제 모델 실행 옵션 없음. 가짜 모델에 실제 BM25/MCP/판정 그래프를 연결하며 전체 4건에 단일 예산을 적용한다. HTTP/화면/모델 보안성 시험이 아니다. [주의] load/preflight/simulate는 `db/011_part_specifications.sql`·MCP `part_specs`·`find_parts`를 쓰는데 사양 표 제거(ADR 0016)로 지금 코드에 없어 돌지 않는다. 지금 확인되는 것은 plan과 예산 단위 시험뿐이다. 절차는 preregister의 'D7 검색 청크→판정 첫 묶음 v1' 후속 절

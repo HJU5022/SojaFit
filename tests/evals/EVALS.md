@@ -9,6 +9,14 @@
 실행: `uv run pytest -q tests/evals`(저장소 루트).
 
 ## 파일
+
+- T2고정근거무료준비: `test_injection_baseline.py`는실제서비스/문서입력조립+가짜모델에서정상/공격×current/ablated4작업의보호전체본문/4사실/공격문/바이트상한과원본110계획불변을검사한다. 문서미반환·한사실누락·질문에만본문존재·검색후필터제외의음성대조는노출조건미충족이어야한다. 공급자/DB/네트워크는차단하고실제방어성공은채점하지않는다.
+- T7재스모크계약: 계획/실행기검사는--t7-smoke의current정상·공격2작업·준비0·독립scope/상한·원본전체잠금유지/가짜실행과승인없음차단을확인한다.
+- `test_injection_baseline.py`의T7경계회귀는공격이역할읽기에노출되면저장05형태R04응답을반환하는가짜모델을사용해정상/공격양쪽R01·조건·실제60V/요구75V·불충족유지와원본footprint기판호환성확인을검사한다. 새실모델방어율검사는아니다.
+- 남은경로 스모크 계약: `test_injection_baseline_plan.py`와`test_injection_baseline.py`는--remaining-smoke의5종10작업·준비2턴·원본불변·고유scope·잔여공유상한과가짜10작업/실행무승인차단을확인한다.
+- `test_injection_baseline.py` — 기본 계획110행·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단·T1~T7 실제 그래프+가짜 공급자·T6 실제 message/가짜 SQL·사양 오염 자동채점·인용 위치·공급자 전 바이트 한도·Windows 저장 재시도 검사 탐색4작업·다른scope승인거부·4DB선택·검색/입력조립/응답노출구분도검사한다.
+- `test_injection_baseline_plan.py` — 110개 짝·변경 위치 하나·정답 필드 제외·T2 보호 사실 비노출 전제·T5 양쪽 native fallback·T7 정규화/연결 보존·예산식·오프라인 명령/덮어쓰기 거부 검사 탐색4작업/고유작업ID/1558본문/독립잠금과$2예산도확인한다.
+- `test_injection_preflight.py` — 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, Voyage 포함 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점을 확인한다
 - `test_run_graph.py`의 운영 준비 검사 — run_thread_validation의 dry-run/ID·덮어쓰기 거부, 공급자 보고 비용 누락/null·본문 제외 확인
 - `EVALS.md` — 이 문서
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
@@ -36,4 +44,4 @@
 - `test_judgement_bundle.py` — 원격/서비스 DB·덮어쓰기 거부, 단일 예산 호출/시간 차단, 실제 모델 CLI 부재, 실제 번호를 단 위험 문서 답이 판정 답에서 차단되는지. `TEST_INJECTION_DATABASE_URL`이 없으면 전용 loopback DB 왕복 1건은 skip한다(그 경로는 사양 표 제거(ADR 0016) 뒤 현재 코드와 맞지 않아 미검증). 공급자 함수는 호출 시 실패하도록 대체한다
 - `test_claim_consistency.py` — 유료 기준선 실행기의 호출 없는 계획·결과 덮어쓰기 거부·상한 뒤 후속 미실행/부분 raw 보존, 거짓 가짜 응답의 원시 보존/최종 차단을 외부 호출 없이 검사한다
 - `test_input_surfaces.py` — 무료 계획·덮어쓰기 거부·이름 필드 무시/ref 거부·청크/값/질문의 모델 입력 노출·위험 응답 기록과 최종 차단을 가짜 모델로 확인한다
-- `test_saved_defense_replay.py` — 저장된 실제 C2/P4-N 응답·원시 SHA256을 고정해 기존 에이전트/판정/최종 조립에 재생한다. 모델/네트워크/DB 호출을 막는다. 기준선 보존 2건과 수정 후 차단 2건(supervisor 판정 출력 경계 뒤 4건 통과). `roles.yaml`은 바이트 대신 source를 뺀 규칙 내용을 측정 커밋 190cf89 값에 고정한다(저장 해시는 Windows CRLF 바이트). xfail/skip으로 숨기지 않는다
+- `test_saved_defense_replay.py` — 저장된 실제 C2/P4-N 응답·원시 SHA256을 고정해 기존 에이전트/판정/최종 조립에 재생한다. 모델/네트워크/DB 호출을 막는다. 새 인용교정 요청에는 같은 저장 오류응답만 최대1회 반복하며 성공응답을 만들지 않는다. 기준선 보존 2건과 수정 후 차단 2건(supervisor 판정 출력 경계 뒤 4건 통과). `roles.yaml`은 바이트 대신 source를 뺀 규칙 내용을 측정 커밋 190cf89 값에 고정한다(저장 해시는 Windows CRLF 바이트). xfail/skip으로 숨기지 않는다

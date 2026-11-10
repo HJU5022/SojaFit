@@ -103,10 +103,10 @@ def test_one_docs_task_answers_without_a_second_supervisor_call():
     assert out['answer'].endswith('[7].') and out['passed'] == [7] and out['check']['used'] == ['7'] and out['counters']['searches'] == 1
 
 
-def test_two_tasks_run_in_one_step_and_are_joined_by_synth():
+def test_two_docs_tasks_with_partial_answer_are_joined_by_code():
     p = Plan(question_type='role', next='tasks', tasks=[docs_task(1, kind='role', query=''), docs_task(2)])
     by_goal = {'goal 1': DocsAnswer(grade='enough', answer='D1은 신호를 보호한다 [넷리스트].'),
-               'goal 2': DocsAnswer(grade='partial', answer='VRRM은 75 V이다 [7].', missing=['IFSM'])}  # 일부만 답해 종합(LLM)이 이유를 쓴다
+               'goal 2': DocsAnswer(grade='partial', answer='VRRM은 75 V이다 [7].', missing=['IFSM'])}
     calls = []
 
     def chat(node, system, user, schema):
@@ -114,22 +114,26 @@ def test_two_tasks_run_in_one_step_and_are_joined_by_synth():
         calls.append(node)
         if node == 'supervisor':
             return p
-        if node == 'synth':
-            return Synth(answer='D1은 신호를 보호한다 [넷리스트]. 1N4148의 VRRM은 75 V이다 [7].')
+        assert node != 'synth', 'Partial document answers must be preserved without synthesis'
         return by_goal[next(g for g in by_goal if f'goal: {g}' in user)]
     chat.calls = calls
     out = app(chat, docs=[doc(7)]).invoke({'input': 'D1 역할과 VRRM?'})
     assert out['path'].count('문서') == 2 and out['path'].count('모으기') == 1  # 두 할 일이 같은 단계에서 돌고 모으기는 한 번
-    assert out['path'][-3:] == ['종합', '답 검사', '끝'] and chat.calls[-1] == 'synth' and out['counters']['hops'] == 2
+    assert out['path'][-3:] == ['답 정리', '답 검사', '끝'] and 'synth' not in chat.calls and out['counters']['hops'] == 1
     assert out['check']['used'] == ['7', '넷리스트']
+    assert all(reply.answer in out['answer'] for reply in by_goal.values())
+    assert '일부 문서 작업은 완료되지 않았습니다' in out['answer']
 
 
 def test_synth_that_invents_a_number_is_refused_by_the_check():
-    p = Plan(question_type='rating', next='tasks', tasks=[docs_task(1), docs_task(2)])
-    chat = scripted(supervisor=[p], docs_answer=[DocsAnswer(grade='partial', answer='VRRM은 75 V이다 [7].')] * 2,
-                    synth=[Synth(answer='VRRM은 100 V이다 [7].')])
-    out = app(chat, docs=[doc(7)]).invoke({'input': 'q'})
-    assert out['path'][-2:] == ['답 검사', '거절'] and out['refusal']['code'] == 'verify_failed'
+    from backend.multi_agent import supervisor as S
+    from backend.multi_agent.contracts import TaskReport
+    # Exercise the remaining synthesis boundary directly; docs-only graphs no longer enter it.
+    state={'question':'q','conditions':'','counters':{'hops':1},'reports':[
+        TaskReport(task=i,agent='docs',status='partial',summary='partial',answer='VRRM은 75 V이다 [7].',
+                   docs=[doc(7)]).model_dump(mode='json') for i in (1,2)]}
+    state.update(S.synth_node(state,chat=scripted(synth=[Synth(answer='VRRM은 100 V이다 [7].')])))
+    assert S.check_node(state)['refusal_reason']=='verify_failed'
 
 
 def test_two_ok_docs_answers_are_joined_by_code_without_the_synth_llm():

@@ -7,6 +7,8 @@
 - 담당: 그 실험의 담당
 
 ## 파일
+- `injection-baseline-preflight.md` — STH/main dbe7177 기준 네 준비 관문 구현·30개 준비 검사·실제 격리 합성 적재·386개 관련 회귀. 유료 실행 없음
+- `injection-baseline-plan.md` — T1~T7 고정 짝·사람 채점·110개 job와 준비10턴·공식 단가·예상/예약 예산·유료 승인 전제 T1/T3 독립4작업노출탐색계약·별도$2승인/예산포함.
 - `thread-memory-operations.md` — thread·기억 품질/병렬/복원/비용 검증 명령·합격 기준·실행 경계
 - `c2-defense-recheck.md` — 조장 수정 후 고정 정상군/C1/C2의 입력·모델·무료 호환성·유료 실행 명령·전후 의미 비교·중단/예산·증거 보관 절차. 수정 후 무료 재생(4 passed)까지 반영, 실제 모델 재측정은 미실행
 - `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선(30청크·18질의 프록시 표본)

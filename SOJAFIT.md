@@ -244,6 +244,7 @@ SojaFit (proj3-b)
 │   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건 외부 작업 자료의 위치·준비 상태는 별도 확인
 │   │   ├── public/         <- KiCad 문서·Wikipedia·SparkFun 등 공개 라이선스 문서(지금은 .gitkeep)
 │   │   └── injection_tests/  <- 공유 코퍼스에 적재하지 않는 합성 신뢰 경계 시험 데이터(평가·문서 담당)
+│   │       ├── baseline_cases.json <- T1~T7 정상·공격 짝·합성 보호 사실·채점·단가·예산 가정
 │   │       ├── instruction_override.json  <- 상위 지시 사칭 공격 문서
 │   │       ├── source_exfiltration.json  <- 원문·링크 유출 공격 문서
 │   │       ├── foreign_memory.json  <- 타 사용자 사례 권한 사칭 공격 문서
@@ -326,6 +327,10 @@ SojaFit (proj3-b)
 │   │   ├── run_trust_boundary.py <- 합성 코퍼스 공격 3건의 호출 없는 계획과 명시적 유료 문서 에이전트 검사
 │   │   ├── run_judgement_bundle.py <- 로컬 합성 적재·BM25/MCP·가짜모델 판정과 묶음 예산 검사(DB 단계는 ADR 0016 뒤 현재 코드와 안 맞음)
 │   │   ├── run_claim_consistency.py <- 실제 모델의 거짓 인용·설명 충돌 기준선, 합산 예산·원시 결과 보관
+│   │   ├── run_injection_preflight.py <- 유료 옵션 없는 인젝션 준비 검사·격리 합성 적재·관찰·예산·캐시·채점 도구
+│   │   ├── run_injection_baseline.py <- 기본110개 계획·가짜 그래프 검증·승인/커밋 게이트·원시 JSONL 보존
+│   │   ├── injection_baseline_runtime.py <- 승인 후 전용 코퍼스 준비·공유 예산·실제 카드/서비스 이력 어댑터
+│   │   ├── plan_injection_baseline.py <- 유료 실행 없는 110개 job 고정과 준비 턴·검색·재시도·예약 예산 계산
 │   │   ├── run_input_surfaces.py <- 입력 위치별 무료 호환성·합산 예산 내 컴포넌트 실측
 │   │   ├── run_retrieval.py  <- 관련 문항의 검색 지표(문서 Recall@k·MRR·Page Hit@k)를 재서 results/retrieval/에 저장
 │   │   ├── run_retrieval_d3.py  <- D3 공식 검색 측정(v2 페이지 단위 qrels, 한 번에 한 조건 E1~E8·필터 끔 재측정·no_result·탐색 격자)
@@ -533,6 +538,9 @@ SojaFit (proj3-b)
 │   │   ├── test_trust_boundary.py <- 신뢰 경계 실행기의 호출 차단·유출 탐지·정상 대조군·오류 보존
 │   │   ├── test_judgement_bundle.py <- 로컬DB 경계·합산 예산·가짜모델 판정 경로·판정 출력 경계 검사
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
+│   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
+│   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
+│   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
 │   │   ├── test_input_surfaces.py <- 입력 위치별 파서·모델 노출·위험 출력 기록 무료 검사
 │   │   └── test_saved_defense_replay.py <- 저장된 C2·정상군 응답의 무료 재생·수정 후 차단 회귀 기준
 │   ├── mcp_skill/          <- MCP 서버 도구 6종(오프라인, 외부 호출 0회)
@@ -617,6 +625,8 @@ SojaFit (proj3-b)
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
 │   │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
+│   │   ├── injection-baseline-preflight.md <- 인젝션 기준선의 격리 적재·호출 관찰·예산·캐시·채점 준비 작업서
+│   │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
 │   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
@@ -630,7 +640,9 @@ SojaFit (proj3-b)
 │   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
+│   │   ├── injection-smoke-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
 │   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
+│   │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
 │   │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
 │   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
 │   │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위

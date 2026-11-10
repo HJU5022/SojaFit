@@ -1,0 +1,1324 @@
+{
+  "schema_version": 1,
+  "purpose": "review_bundle_not_executable_approval",
+  "paid_inference_calls": 0,
+  "index": "evals/results/threads/injection_baseline_artifact_index_2026-11-10.json",
+  "notes": [
+    "Historical observations are retained separately; their counts are not combined.",
+    "All simulation results use fake providers. No real exposure or defense success is established.",
+    "This review bundle cannot replace an execution approval or committed preregistration."
+  ],
+  "plans": {
+    "baseline": {
+      "source_artifact": "evals/results/threads/injection_baseline_plan_v4_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "source_worktree_sha256": "397f8dd801eb881e3dd6628e8a969af23477b8e6ed2869d96d652d41f8e1bdf2",
+      "record": {
+        "status": "awaiting_execution_approval",
+        "fixture_sha256": "5be83eec292bea1e6c34d658d5cf71924327c6af108608faa78ae9136b51b4fe",
+        "scope": "baseline",
+        "scope_sha256": "c73d1178c9d7dffa51bf08493082794acced20fd89605906687b737d611bf426",
+        "baseline_commit": "dbe71772a7c8d0c71194e7dea55bc9be44f68d9a",
+        "jobs": [
+          {
+            "id": "T5:1:ablated:normal",
+            "case": "T5",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T5:1:ablated",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:1:ablated:attack",
+            "case": "T5",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T5:1:ablated",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:1:current:normal",
+            "case": "T5",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T5:1:current",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:1:current:attack",
+            "case": "T5",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T5:1:current",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:2:current:attack",
+            "case": "T5",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T5:2:current",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:2:current:normal",
+            "case": "T5",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T5:2:current",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:2:ablated:attack",
+            "case": "T5",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T5:2:ablated",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:2:ablated:normal",
+            "case": "T5",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T5:2:ablated",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:3:ablated:normal",
+            "case": "T5",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T5:3:ablated",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:3:ablated:attack",
+            "case": "T5",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T5:3:ablated",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:3:current:normal",
+            "case": "T5",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T5:3:current",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:3:current:attack",
+            "case": "T5",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T5:3:current",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:4:current:attack",
+            "case": "T5",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T5:4:current",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:4:current:normal",
+            "case": "T5",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T5:4:current",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:4:ablated:attack",
+            "case": "T5",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T5:4:ablated",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:4:ablated:normal",
+            "case": "T5",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T5:4:ablated",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:5:ablated:normal",
+            "case": "T5",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T5:5:ablated",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:5:ablated:attack",
+            "case": "T5",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T5:5:ablated",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:5:current:normal",
+            "case": "T5",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T5:5:current",
+            "input_sha256": "00fcca56c5ec75b5f1c83ed9e8011442b7ab1a91f5ba377f4714f73444c2c694",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T5:5:current:attack",
+            "case": "T5",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T5:5:current",
+            "input_sha256": "22b6829c78d7b35b20ee086af8cd4b9e601c02ce30b11543a4051c4ae9634a03",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:1:ablated:normal",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T1:1:ablated",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:1:ablated:attack",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T1:1:ablated",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:1:current:normal",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T1:1:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:1:current:attack",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T1:1:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:2:current:attack",
+            "case": "T1",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T1:2:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:2:current:normal",
+            "case": "T1",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T1:2:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:2:ablated:attack",
+            "case": "T1",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T1:2:ablated",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:2:ablated:normal",
+            "case": "T1",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T1:2:ablated",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:3:ablated:normal",
+            "case": "T1",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T1:3:ablated",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:3:ablated:attack",
+            "case": "T1",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T1:3:ablated",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:3:current:normal",
+            "case": "T1",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T1:3:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:3:current:attack",
+            "case": "T1",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T1:3:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:4:current:attack",
+            "case": "T1",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T1:4:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:4:current:normal",
+            "case": "T1",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T1:4:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:4:ablated:attack",
+            "case": "T1",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T1:4:ablated",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:4:ablated:normal",
+            "case": "T1",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T1:4:ablated",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:5:ablated:normal",
+            "case": "T1",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T1:5:ablated",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:5:ablated:attack",
+            "case": "T1",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T1:5:ablated",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:5:current:normal",
+            "case": "T1",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T1:5:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T1:5:current:attack",
+            "case": "T1",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T1:5:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:1:ablated:normal",
+            "case": "T2",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T2:1:ablated",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:1:ablated:attack",
+            "case": "T2",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T2:1:ablated",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:1:current:normal",
+            "case": "T2",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T2:1:current",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:1:current:attack",
+            "case": "T2",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T2:1:current",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:2:current:attack",
+            "case": "T2",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T2:2:current",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:2:current:normal",
+            "case": "T2",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T2:2:current",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:2:ablated:attack",
+            "case": "T2",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T2:2:ablated",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:2:ablated:normal",
+            "case": "T2",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T2:2:ablated",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:3:ablated:normal",
+            "case": "T2",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T2:3:ablated",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:3:ablated:attack",
+            "case": "T2",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T2:3:ablated",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:3:current:normal",
+            "case": "T2",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T2:3:current",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:3:current:attack",
+            "case": "T2",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T2:3:current",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:4:current:attack",
+            "case": "T2",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T2:4:current",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:4:current:normal",
+            "case": "T2",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T2:4:current",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:4:ablated:attack",
+            "case": "T2",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T2:4:ablated",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:4:ablated:normal",
+            "case": "T2",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T2:4:ablated",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:5:ablated:normal",
+            "case": "T2",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T2:5:ablated",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:5:ablated:attack",
+            "case": "T2",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T2:5:ablated",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:5:current:normal",
+            "case": "T2",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T2:5:current",
+            "input_sha256": "5769633138c47f75ce1da52fb185989027c08f0536f66e3e3ec5f99df7348689",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T2:5:current:attack",
+            "case": "T2",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T2:5:current",
+            "input_sha256": "7baa082f1df625be5bad4d6fecd532984fc03303f614f4ed25ab8edfab30086d",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:1:ablated:normal",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T3:1:ablated",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:1:ablated:attack",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T3:1:ablated",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:1:current:normal",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T3:1:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:1:current:attack",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T3:1:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:2:current:attack",
+            "case": "T3",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T3:2:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:2:current:normal",
+            "case": "T3",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T3:2:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:2:ablated:attack",
+            "case": "T3",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T3:2:ablated",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:2:ablated:normal",
+            "case": "T3",
+            "repeat": 2,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T3:2:ablated",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:3:ablated:normal",
+            "case": "T3",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T3:3:ablated",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:3:ablated:attack",
+            "case": "T3",
+            "repeat": 3,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T3:3:ablated",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:3:current:normal",
+            "case": "T3",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T3:3:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:3:current:attack",
+            "case": "T3",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T3:3:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:4:current:attack",
+            "case": "T3",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T3:4:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:4:current:normal",
+            "case": "T3",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T3:4:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:4:ablated:attack",
+            "case": "T3",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T3:4:ablated",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:4:ablated:normal",
+            "case": "T3",
+            "repeat": 4,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T3:4:ablated",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:5:ablated:normal",
+            "case": "T3",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "normal",
+            "pair_key": "T3:5:ablated",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:5:ablated:attack",
+            "case": "T3",
+            "repeat": 5,
+            "defense": "ablated",
+            "variant": "attack",
+            "pair_key": "T3:5:ablated",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:5:current:normal",
+            "case": "T3",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T3:5:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T3:5:current:attack",
+            "case": "T3",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T3:5:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:1:current:normal",
+            "case": "T4",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T4:1:current",
+            "input_sha256": "a77e3ee188f68c970098efbe60242707b3b1431837bcec4f5b6dbc86047fc7d7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:1:current:attack",
+            "case": "T4",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T4:1:current",
+            "input_sha256": "8c3c769d6a1fd4ce754b6e847717f4c1d7d98f040ed84c8eea4565f954d2fb01",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:2:current:attack",
+            "case": "T4",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T4:2:current",
+            "input_sha256": "8c3c769d6a1fd4ce754b6e847717f4c1d7d98f040ed84c8eea4565f954d2fb01",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:2:current:normal",
+            "case": "T4",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T4:2:current",
+            "input_sha256": "a77e3ee188f68c970098efbe60242707b3b1431837bcec4f5b6dbc86047fc7d7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:3:current:normal",
+            "case": "T4",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T4:3:current",
+            "input_sha256": "a77e3ee188f68c970098efbe60242707b3b1431837bcec4f5b6dbc86047fc7d7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:3:current:attack",
+            "case": "T4",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T4:3:current",
+            "input_sha256": "8c3c769d6a1fd4ce754b6e847717f4c1d7d98f040ed84c8eea4565f954d2fb01",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:4:current:attack",
+            "case": "T4",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T4:4:current",
+            "input_sha256": "8c3c769d6a1fd4ce754b6e847717f4c1d7d98f040ed84c8eea4565f954d2fb01",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:4:current:normal",
+            "case": "T4",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T4:4:current",
+            "input_sha256": "a77e3ee188f68c970098efbe60242707b3b1431837bcec4f5b6dbc86047fc7d7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:5:current:normal",
+            "case": "T4",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T4:5:current",
+            "input_sha256": "a77e3ee188f68c970098efbe60242707b3b1431837bcec4f5b6dbc86047fc7d7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T4:5:current:attack",
+            "case": "T4",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T4:5:current",
+            "input_sha256": "8c3c769d6a1fd4ce754b6e847717f4c1d7d98f040ed84c8eea4565f954d2fb01",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T6:1:current:normal",
+            "case": "T6",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T6:1:current",
+            "input_sha256": "e6c0ab6f76d7d48daca051461b021f7a5bdcb68a1f2dd85237fd5a22528917d9",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:1:current:attack",
+            "case": "T6",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T6:1:current",
+            "input_sha256": "9ed5fd26ae597ddfc964bc678c1d9d2e729869e5cb8e00818c000431e1cdc3f4",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:2:current:attack",
+            "case": "T6",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T6:2:current",
+            "input_sha256": "9ed5fd26ae597ddfc964bc678c1d9d2e729869e5cb8e00818c000431e1cdc3f4",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:2:current:normal",
+            "case": "T6",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T6:2:current",
+            "input_sha256": "e6c0ab6f76d7d48daca051461b021f7a5bdcb68a1f2dd85237fd5a22528917d9",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:3:current:normal",
+            "case": "T6",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T6:3:current",
+            "input_sha256": "e6c0ab6f76d7d48daca051461b021f7a5bdcb68a1f2dd85237fd5a22528917d9",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:3:current:attack",
+            "case": "T6",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T6:3:current",
+            "input_sha256": "9ed5fd26ae597ddfc964bc678c1d9d2e729869e5cb8e00818c000431e1cdc3f4",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:4:current:attack",
+            "case": "T6",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T6:4:current",
+            "input_sha256": "9ed5fd26ae597ddfc964bc678c1d9d2e729869e5cb8e00818c000431e1cdc3f4",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:4:current:normal",
+            "case": "T6",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T6:4:current",
+            "input_sha256": "e6c0ab6f76d7d48daca051461b021f7a5bdcb68a1f2dd85237fd5a22528917d9",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:5:current:normal",
+            "case": "T6",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T6:5:current",
+            "input_sha256": "e6c0ab6f76d7d48daca051461b021f7a5bdcb68a1f2dd85237fd5a22528917d9",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T6:5:current:attack",
+            "case": "T6",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T6:5:current",
+            "input_sha256": "9ed5fd26ae597ddfc964bc678c1d9d2e729869e5cb8e00818c000431e1cdc3f4",
+            "preparation_turns": 1
+          },
+          {
+            "id": "T7:1:current:normal",
+            "case": "T7",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T7:1:current",
+            "input_sha256": "81736eb8aed30fa3993d50e43d4ba8bfe68f0f974fdf46d01ea8c98b686598cb",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:1:current:attack",
+            "case": "T7",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T7:1:current",
+            "input_sha256": "ffc032e463e02be4ab5934321a51d91aff29e273bf47cba24932b74bb79f7bb7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:2:current:attack",
+            "case": "T7",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T7:2:current",
+            "input_sha256": "ffc032e463e02be4ab5934321a51d91aff29e273bf47cba24932b74bb79f7bb7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:2:current:normal",
+            "case": "T7",
+            "repeat": 2,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T7:2:current",
+            "input_sha256": "81736eb8aed30fa3993d50e43d4ba8bfe68f0f974fdf46d01ea8c98b686598cb",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:3:current:normal",
+            "case": "T7",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T7:3:current",
+            "input_sha256": "81736eb8aed30fa3993d50e43d4ba8bfe68f0f974fdf46d01ea8c98b686598cb",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:3:current:attack",
+            "case": "T7",
+            "repeat": 3,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T7:3:current",
+            "input_sha256": "ffc032e463e02be4ab5934321a51d91aff29e273bf47cba24932b74bb79f7bb7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:4:current:attack",
+            "case": "T7",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T7:4:current",
+            "input_sha256": "ffc032e463e02be4ab5934321a51d91aff29e273bf47cba24932b74bb79f7bb7",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:4:current:normal",
+            "case": "T7",
+            "repeat": 4,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T7:4:current",
+            "input_sha256": "81736eb8aed30fa3993d50e43d4ba8bfe68f0f974fdf46d01ea8c98b686598cb",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:5:current:normal",
+            "case": "T7",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "T7:5:current",
+            "input_sha256": "81736eb8aed30fa3993d50e43d4ba8bfe68f0f974fdf46d01ea8c98b686598cb",
+            "preparation_turns": 0
+          },
+          {
+            "id": "T7:5:current:attack",
+            "case": "T7",
+            "repeat": 5,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "T7:5:current",
+            "input_sha256": "ffc032e463e02be4ab5934321a51d91aff29e273bf47cba24932b74bb79f7bb7",
+            "preparation_turns": 0
+          }
+        ],
+        "budget": {
+          "logical_node_calls": {
+            "supervisor": 120,
+            "judge_read": 120,
+            "card_read": 20,
+            "docs_answer": 110,
+            "synth": 30
+          },
+          "logical_llm_calls": 400,
+          "searches": 110,
+          "llm_attempts_if_every_call_uses_all_format_retries": 1200,
+          "graph_invocations": 120,
+          "unique_embedding_texts": 1570,
+          "embedding_text_utf8_bytes": 278920,
+          "embedding_batches_without_retry": 13,
+          "scenario_llm_usd": 0.808375,
+          "scenario_embedding_usd": 0.00916,
+          "scenario_rerank_usd": 0.088,
+          "rerank_scenario_billable_tokens": 1760000,
+          "scenario_total_usd": 0.905535,
+          "no_retry_llm_reservation_usd": 6.14992,
+          "no_retry_voyage_preparation_reservation_usd": 0.420444,
+          "no_retry_search_reservation_usd": 7.30224,
+          "no_retry_total_reservation_usd": 13.872604,
+          "reservation_cap_usd": 15,
+          "max_calls": 2500,
+          "max_seconds": 7200,
+          "paid_execution_authorized": false,
+          "completion_guaranteed": false,
+          "limitations": [
+            "Counts and token volumes are scenarios, not measured graph traces.",
+            "Preparation byte/4 is a token estimate, not provider tokenization.",
+            "Replans, unexpected tasks, card batches and retries consume the same cap.",
+            "Estimates depend on the live request caps and cache-write-aware reservation rates."
+          ]
+        },
+        "prerequisites": [
+          "freeze and commit input/preregistration before paid results",
+          "verify scoped actual corpus/service-history live adapter",
+          "verify retrieval/model exposure, request caps and cache-write reservation",
+          "revalidate official prices and obtain user plus team-lead budget authorization"
+        ]
+      }
+    },
+    "exposure": {
+      "source_artifact": "evals/results/threads/injection_exposure_plan_v3_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "source_worktree_sha256": "036dc53ec6feca56d4227b0e5631067aee4af45921cd56a9570a8a45cb07ef1e",
+      "record": {
+        "status": "awaiting_execution_approval",
+        "fixture_sha256": "5be83eec292bea1e6c34d658d5cf71924327c6af108608faa78ae9136b51b4fe",
+        "scope": "exposure_t1_t3_v1",
+        "scope_sha256": "a04a7949d7bc06d9c7454e9841fb2d6270990ef8b084d60964b3850dc0fad928",
+        "baseline_commit": "dbe71772a7c8d0c71194e7dea55bc9be44f68d9a",
+        "jobs": [
+          {
+            "id": "exposure_t1_t3_v1:T1:1:current:normal",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "exposure_t1_t3_v1:T1:1:current",
+            "input_sha256": "97b6c4e9fb71e7a9536930ae86419f2ac72f3685ae885fe082ed22b59f4241cf",
+            "preparation_turns": 0
+          },
+          {
+            "id": "exposure_t1_t3_v1:T1:1:current:attack",
+            "case": "T1",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "exposure_t1_t3_v1:T1:1:current",
+            "input_sha256": "c8b8971de31afa8ed60303d07aeedd144f3374b76b050c9ee4510281b1bb5619",
+            "preparation_turns": 0
+          },
+          {
+            "id": "exposure_t1_t3_v1:T3:1:current:normal",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "normal",
+            "pair_key": "exposure_t1_t3_v1:T3:1:current",
+            "input_sha256": "006b89f089b410f66959d904f53e0d0937d400b7786aa600c7701f3fba016a66",
+            "preparation_turns": 0
+          },
+          {
+            "id": "exposure_t1_t3_v1:T3:1:current:attack",
+            "case": "T3",
+            "repeat": 1,
+            "defense": "current",
+            "variant": "attack",
+            "pair_key": "exposure_t1_t3_v1:T3:1:current",
+            "input_sha256": "f3d6ca8e1eb9fda14b8ccb9a8f5e79b6bb7c1b724ae4c8fd6d91274a8041c7a4",
+            "preparation_turns": 0
+          }
+        ],
+        "budget": {
+          "logical_node_calls": {
+            "supervisor": 4,
+            "docs_answer": 6,
+            "synth": 2
+          },
+          "logical_llm_calls": 12,
+          "searches": 6,
+          "llm_attempts_if_every_call_uses_all_format_retries": 36,
+          "graph_invocations": 4,
+          "unique_embedding_texts": 1558,
+          "embedding_text_utf8_bytes": 277021,
+          "embedding_batches_without_retry": 13,
+          "scenario_llm_usd": 0.038775,
+          "scenario_embedding_usd": 0.008354,
+          "scenario_rerank_usd": 0.0048,
+          "rerank_scenario_billable_tokens": 96000,
+          "scenario_total_usd": 0.051929,
+          "no_retry_llm_reservation_usd": 0.2918,
+          "no_retry_voyage_preparation_reservation_usd": 0.418338,
+          "no_retry_search_reservation_usd": 0.398304,
+          "no_retry_total_reservation_usd": 1.108442,
+          "reservation_cap_usd": 2,
+          "max_calls": 200,
+          "max_seconds": 1200,
+          "paid_execution_authorized": false,
+          "completion_guaranteed": false,
+          "limitations": [
+            "Counts and token volumes are scenarios, not measured graph traces.",
+            "Preparation byte/4 is a token estimate, not provider tokenization.",
+            "Replans, unexpected tasks, card batches and retries consume the same cap.",
+            "Estimates depend on the live request caps and cache-write-aware reservation rates."
+          ]
+        },
+        "prerequisites": [
+          "freeze and commit input/preregistration before paid results",
+          "verify scoped actual corpus/service-history live adapter",
+          "verify retrieval/model exposure, request caps and cache-write reservation",
+          "revalidate official prices and obtain user plus team-lead budget authorization"
+        ]
+      }
+    }
+  },
+  "simulation": {
+    "raw_result": "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl",
+    "raw_sha256": "6a8f834a866c225b053a1a49441932b991210c7fc4585b983dfe5bf311ac221d",
+    "metadata": {
+      "source_artifact": "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "source_worktree_sha256": "274b678730475c4ce801fff7ec2c5abe5a1f763d5b020a56f368dc62a9989a8d",
+      "record": {
+        "scope": "exposure_t1_t3_v1",
+        "scope_sha256": "a04a7949d7bc06d9c7454e9841fb2d6270990ef8b084d60964b3850dc0fad928",
+        "mode": "simulate",
+        "simulation": true,
+        "human_review": "pending",
+        "sources": {
+          "evals\\runners\\run_injection_baseline.py": "cd3116517d5e3449d9d70a9263664ce319c10e17fdcd4ae979ccbfca8114f010",
+          "evals\\runners\\injection_baseline_runtime.py": "7e608cc5d84c4bf78712b33234df97c5c406b4c95a4107e3dd6157e83049d667",
+          "data\\corpus\\injection_tests\\baseline_cases.json": "5be83eec292bea1e6c34d658d5cf71924327c6af108608faa78ae9136b51b4fe",
+          "evals\\runners\\run_injection_preflight.py": "0c8d88f4094fc6e2afcc7e5a2df58fc10f188c54c67a78c00b5fff2bd8877552",
+          "evals\\runners\\plan_injection_baseline.py": "4843497b636d41e9718dcd462dbbc445230434e72928c139f94f8ede174cf32a",
+          "backend\\conversations\\memory_service.py": "6a8b6102f62f8e65dfe0c4ff77939309c23d30ff6cc86b623e70baae75d725bf"
+        }
+      }
+    }
+  },
+  "conditional_user_approval": {
+    "source_artifact": "evals/results/threads/injection_exposure_user_approval_2026-11-10.json",
+    "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+    "source_worktree_sha256": "4d41c637bab2e68157d7834f2c1db5bbe9216a4083c70e068eb7e2b508dfd61d",
+    "record": {
+      "draft": true,
+      "approved_by_user": true,
+      "approved_by_team_lead": false,
+      "scope": "exposure_t1_t3_v1",
+      "scope_sha256": "a04a7949d7bc06d9c7454e9841fb2d6270990ef8b084d60964b3850dc0fad928",
+      "fixture_sha256": "5be83eec292bea1e6c34d658d5cf71924327c6af108608faa78ae9136b51b4fe",
+      "runtime_sha256": {
+        "run_injection_baseline.py": "cd3116517d5e3449d9d70a9263664ce319c10e17fdcd4ae979ccbfca8114f010",
+        "injection_baseline_runtime.py": "7e608cc5d84c4bf78712b33234df97c5c406b4c95a4107e3dd6157e83049d667"
+      },
+      "measured_commit": null,
+      "preregister_commit": null,
+      "max_usd": 2,
+      "max_calls": 200,
+      "max_seconds": 1200,
+      "jobs": [
+        "exposure_t1_t3_v1:T1:1:current:normal",
+        "exposure_t1_t3_v1:T1:1:current:attack",
+        "exposure_t1_t3_v1:T3:1:current:normal",
+        "exposure_t1_t3_v1:T3:1:current:attack"
+      ],
+      "note": "Conditional user authorization recorded. Not executable approval: team lead and preregistration missing; both fixture execution flags remain false. Bind final hashes and exact HEAD after all conditions are satisfied.",
+      "user_approval_scope": "T1/T3 normal and attack once each, current defense only; 4 jobs; maximum USD2 / 200 provider attempts / 1200 seconds",
+      "user_approval_conditions": [
+        "committed preregistration",
+        "frozen code and input",
+        "verified official prices and keys",
+        "team-lead shared budget approval"
+      ],
+      "team_lead_and_registration_status": "User explicitly confirmed both are absent; paid execution must wait"
+    }
+  }
+}
