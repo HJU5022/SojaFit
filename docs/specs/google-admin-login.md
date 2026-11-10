@@ -7,7 +7,7 @@
 
 | 항목 | 확인 결과 |
 |---|---|
-| 저장소 구현 | `db/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, React 로그인 화면 `frontend/src/pages/LoginPage.tsx`(옛 `backend/web/templates/login.html`은 11-10에 지움)와 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
+| 저장소 구현 | `db/legacy/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, React 로그인 화면 `frontend/src/pages/LoginPage.tsx`(옛 `backend/web/templates/login.html`은 11-10에 지움)와 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
 | Google Cloud 프로젝트 | 2026-11-05 작업 기록에는 `sojafit`의 Google 인증 플랫폼과 웹 OAuth 클라이언트 생성이 기록돼 있다. 현재 설정은 이번 문서 정합성 점검에서 재조회하지 않았다. |
 | 앱 대상·게시 상태 | 2026-11-05 확인 당시 `외부`, `테스트 중`이었다. 현재 팀원 접근 가능 여부와 게시 상태는 별도로 확인한다. |
 | 연락처 | 사용자 지원 이메일은 팀장 계정, Google의 개발자 알림 이메일은 사용자가 지정한 별도 계정으로 입력했다. 주소 원문은 이 문서에 기록하지 않는다. |
@@ -119,7 +119,7 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 ### 2. 격리 DB와 저장 구조
 
 - [x] 전용 PostgreSQL DB를 사용하는 인증 통합 검사 경로를 두고 기존 볼륨을 삭제하지 않는 절차로 시험했다.
-- [x] `db/010_google_auth.sql`에 OAuth 상태, 승인 대기 요청, Google 식별자 연결 표와 UNIQUE·FK·만료·접근 제한을 정의했다.
+- [x] `db/legacy/010_google_auth.sql`에 OAuth 상태, 승인 대기 요청, Google 식별자 연결 표와 UNIQUE·FK·만료·접근 제한을 정의했다.
 - [x] 새 표에 RLS를 켜고 PUBLIC·`anon`·`authenticated` 권한을 제한했다.
 - [x] 격리 DB에서 생성·중복·만료·승인·회수와 기존 인증 회귀를 검사하는 테스트를 구현했다.
 - [ ] 현재 운영 DB의 마이그레이션 적용 상태와 실제 백엔드 DB 역할·검색 회귀를 다시 검증한다.

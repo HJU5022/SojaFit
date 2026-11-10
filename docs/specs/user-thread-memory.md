@@ -47,7 +47,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - [x] 2a. services/demo.py+data/demo/scenarios.json: 합성 시나리오 입력의 명시 모드와 허용 질문·회로 검증, 기존 그래프/판정 재사용. tests/api/test_threads.py·tests/services/test_llm.py에서 키 있어도 외부호출 0/미등록 거부 RED→GREEN.
 - [x] 2b. Dockerfile·Compose·명시 bootstrap·CI: 빈 격리 DB에서 checkpoint 준비/데모 시나리오/THREADS_ENABLED, TEST_THREAD_DATABASE_URL 설정. 실제 API·화면 재개/승인/A·B, 새 Compose project cold-start 검증.
 - [x] 2c. services/langfuse_prompts.py·Conversations: 인증 user/thread/version/request/trace/단계별 실행 시간을 내용 없이 저장·반환하고 선택적 Langfuse 전달. DB/trace 전송 장애가 판정·승인을 잃게 하지 않는 검사와 실제 trace 증거.
-- [x] 3. db/016_memory_controls.sql·017_analysis_events.sql와 Conversations/main/workspace: 정정/철회/복구/기억 삭제/보관안내. UI·소유권·Store 실패·pending/retry 참조 차단·멱등/재승인 부활 거부 RED→GREEN. 공유 DB는 가산 적용 전 현행 구조 확인.
+- [x] 3. db/legacy/016_memory_controls.sql·017_analysis_events.sql와 Conversations/main/workspace: 정정/철회/복구/기억 삭제/보관안내. UI·소유권·Store 실패·pending/retry 참조 차단·멱등/재승인 부활 거부 RED→GREEN. 공유 DB는 가산 적용 전 현행 구조 확인.
 - [x] 4. 판정 사례 승인/견적 기능 경계 문구와 API 설명 대조. lifecycle·기억 모델 입력 통합 시험.
 - [x] 5. 관련/전체 검사·동결해시·비밀값검사·독립 리뷰 후 목적별 로컬 커밋. 조장 반영용 SPEC/GATES 변경 지점·검증/배포/남은 한계를 정리한다. 병합은 실행하지 않는다.
 각 작업의 실제 명령/결과/설계 조정은 docs/worklog/sth.md에 남기며 새 우려가 없으면 통과한 검사를 반복 확대하지 않는다.
@@ -149,7 +149,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 실행 방식: 현재 STH에서 직접 실행하며 TDD와 마지막 독립 리뷰를 수행한다. 새 브랜치/워크트리는 팀 규칙상 만들지 않는다.
 
 1. `backend/graph/netlist.py`와 `tests/graph/test_agent_netlist.py`: 가공 회로와 기존 공개 샘플로 KiCad 두 형식 파싱·1 MiB 제한·비정상 입력 RED→GREEN. 기존 `circuit_around` 연결 형식을 재사용한다.
-2. `db/013_agent_memory.sql`, `backend/conversations/memory_service.py`, `tests/api/test_threads.py`: 전용 스키마의 circuits/threads/messages/approvals와 연결 풀·setup CLI를 작성한다. 012 번호는 기존 트리에 예약되어 사용하지 않는다. app.state 런타임은 THREADS_ENABLED=1일 때만 초기화하며 공개 인증 DB를 유지한다.
+2. `db/legacy/013_agent_memory.sql`, `backend/conversations/memory_service.py`, `tests/api/test_threads.py`: 전용 스키마의 circuits/threads/messages/approvals와 연결 풀·setup CLI를 작성한다. 012 번호는 기존 트리에 예약되어 사용하지 않는다. app.state 런타임은 THREADS_ENABLED=1일 때만 초기화하며 공개 인증 DB를 유지한다.
 3. 같은 테스트 파일에서 실제 PostgresSaver/PostgresStore와 가짜 그래프를 이용해 소유권·재연결·interrupt·동시 실행·승인 멱등성 RED→GREEN. 승인 key는 thread:version, 원본은 별도 승인 표에 보존한다.
 4. `backend/main.py`, 그래프 두 build/state 및 `nodes.read_input`: 엄격한 API 스키마, Origin/no-store, 고정된 업로드 연결 주입, Store 전달을 연결한다. 요청에 내부 state/사용자/파일 경로를 받지 않는다. 현재 모델 그래프는 기존 평가 실행기와 같은 MCP 도구·D5 조립을 재사용한다.
 5. `backend/web/templates/workspace.html`와 기존 로그인 화면: 업로드·대상·대화 목록·이력·조건 질문·승인·관련 사례를 DOM textContent로 표시한다. 비로그인·401 때 민감한 화면을 비우고 /login으로 이동한다. 파일/질문/응답은 브라우저 영구 저장소에 보관하지 않는다.
@@ -187,7 +187,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 사용자가 직접 지우면 숨기지 않고 바로 지운다.
 - 정리는 스케줄러 없이 새 분석을 시작할 때 작은 묶음으로 한다.
 
-#### 자동 정리(구현, `db/023_retention.sql`)
+#### 자동 정리(구현, `db/legacy/023_retention.sql`)
 - 규칙 하나 = SQL 함수 하나(`sojafit_agent` 스키마, 공개 역할 EXECUTE 회수). 분석 서비스가 새 질문(`Conversations.message`)마다 그 thread를 잠그기 전에 `SELECT purge_inactive_projects(), purge_log_records()`를 따로 연결로 부른다(`_purge_expired`). 실패하면 `backend.conversations.retention` 경고(`retention_purge_failed`)만 남기고 분석은 계속한다. 시작 때 두 함수가 없으면 서비스가 뜨지 않는다(규칙이 조용히 꺼지지 않게).
 - `purge_inactive_projects(keep_days DEFAULT 60, batch_size DEFAULT 20)`: ① React 프로젝트의 마지막 활동 = 프로젝트 `updated_at`(이름 변경) · 대화 생성 · run `updated_at`(시작 · 끝 · 재개) · 승인 · 견적 중 가장 늦은 시각. 지난 것을 최대 batch_size개 `FOR UPDATE SKIP LOCKED`로 골라 사용자가 지울 때와 같은 순서(같은 UUID의 checkpoint → 분석 thread → 빈 분석 회로 → 프로젝트 cascade)로 지운다 ② React 대화에 딸리지 않은 분석 thread(`/api/threads`로 직접 만든 것, 예전 규칙으로 프로젝트만 지워져 남은 것)는 자기 마지막 활동(생성 · 메시지 · 분석 사건 · 승인 · 승인 기록 관리)으로 본다 ③ thread가 없는 분석 회로(업로드 넷리스트 원문)는 올린 뒤 60일. React 표가 없는 DB에서는 아무것도 지우지 않는다.
 - `purge_log_records(keep_days DEFAULT 30, batch_size DEFAULT 200)`: 분석 사건(`created_at`), 하루 사용량(사용자 · 서비스 전체, UTC 날짜), 가입 시도(UTC 날짜), 로그인 시도(계정 · IP: 15분 창 시작이 30일 지났고 잠금이 없거나 끝난 행만)를 표마다 최대 batch_size개(ctid 묶음) 지운다.
@@ -198,7 +198,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 
 | 규칙 | 구현 | 조항 |
 |---|---|---|
-| 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/023_retention.sql` 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
+| 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/legacy/023_retention.sql` 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
 | 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
 | 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
 | 가입 때 처리방침을 알리고 동의를 받는다 | React `/signup`의 고지(`PrivacyNotice`: 목적 · 저장 항목 · 보관 기간 · 삭제 · Langfuse · 외부 서비스 · 거부 권리)와 동의 체크, 서버 `consent` 필수(없으면 422) | 15조 2항(동의를 받을 때 알릴 사항) |

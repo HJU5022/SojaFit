@@ -226,7 +226,7 @@ COMMIT;
 
 ### L02 · 암호 처리·개인정보 항목 검토 — A안 사용자 선택, 팀·환경 확인 대기
 
-파일: `../../backend/auth.py`, `../../backend/main.py`, `../../db/003_auth.sql`, `login-auth.md`.
+파일: `../../backend/auth.py`, `../../backend/main.py`, `../../db/legacy/003_auth.sql`, `login-auth.md`.
 
 - [x] 비밀번호는 기존 scrypt 비교를 유지하고 복호화 요구는 제외한다. 세션은 기존 `session_token_hash(token)`으로 비교하며 원문은 DB에 저장하지 않는다. `tests/api/test_auth.py`의 해시·키 테스트 포함 19개 DB 없는 사례가 통과했다.
 - [ ] 이메일·선택 표시명·계정 역할·세션 시각·실패 기록별로 수집 목적, 열람 주체, 보관 종료와 삭제 방법을 팀과 정한다. 합성 시험에는 실제 이름·연락처를 수집하지 않는다.
@@ -242,7 +242,7 @@ COMMIT;
 
 ### L03 · 서비스 DB 대상과 스키마 확인 — 접근 차단 (테스트 프로젝트는 분리 준비)
 
-파일: `../../db/DB.md`, `../../db/003_auth.sql`, `../../db/005_auth_attempt_window.sql`, `../../db/006_user_roles.sql`.
+파일: `../../db/DB.md`, `../../db/legacy/003_auth.sql`, `../../db/legacy/005_auth_attempt_window.sql`, `../../db/legacy/006_user_roles.sql`.
 
 - [ ] DB 담당자에게 실제 서비스 프로젝트·환경과 Cloud Run 연결 대상의 일치를 확인한다. 채팅으로 접속 비밀번호나 URL 원문을 받지 않는다.
 - [x] 기존 Supabase 프로젝트 두 개는 `INACTIVE`였고 서비스 DB 대상은 확인되지 않았다. 사용자 선택으로 별도 `sojafit-auth-test`를 만들었지만 Cloud Run의 서비스 DB와 같은 대상이라는 증거는 없다.
@@ -257,7 +257,7 @@ COMMIT;
 
 2026-11-04 후속 실행: 기존 로컬 컨테이너 안에 별도 빈 DB `auth_check_83a26b9e75a9`를 만들고 인증 SQL 3개만 적용한 뒤 인증 테스트 `34 passed in 19.50s`를 확인했다. 시험 데이터와 DB는 로컬에 남아 있으며, Supabase나 Cloud Run 로그인 검증을 대신하지 않는다.
 
-파일: 기존 `../../tests/api/test_auth.py`, `../../db/003_auth.sql`, `../../db/005_auth_attempt_window.sql`, `../../db/006_user_roles.sql`.
+파일: 기존 `../../tests/api/test_auth.py`, `../../db/legacy/003_auth.sql`, `../../db/legacy/005_auth_attempt_window.sql`, `../../db/legacy/006_user_roles.sql`.
 
 - [x] pgvector 확장이 없는 PostgreSQL 테스트 DB를 서비스 DB와 분리했다. 2026-11-04 `postgres:16` 컨테이너를 `127.0.0.1:55434`에만 열어 후속 로컬 작업용으로 유지한다.
 - [x] 인증 SQL 3개만 순서대로 적용하고 `TEST_AUTH_DATABASE_URL`을 해당 격리 대상으로 사용한다. `.env`와 Compose의 pgvector DB는 사용하지 않았다.
