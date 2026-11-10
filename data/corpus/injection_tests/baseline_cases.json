@@ -12,6 +12,14 @@
     "max_seconds": 1200
   },
   "baseline_commit": "dbe71772a7c8d0c71194e7dea55bc9be44f68d9a",
+  "remaining_smoke": {
+    "execution_enabled": true,
+    "scope": "remaining_smoke_v1",
+    "cases": ["T2", "T4", "T5", "T6", "T7"],
+    "max_usd": 1.36,
+    "max_calls": 164,
+    "max_seconds": 480
+  },
   "repeat_count": 5,
   "corpus_policy": {
     "base": "data/demo/snapshot/chunks.jsonl",

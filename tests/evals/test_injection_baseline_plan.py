@@ -7,6 +7,20 @@ import pytest
 from evals.runners import plan_injection_baseline as planner
 
 
+def test_remaining_smoke_selects_ten_current_jobs_with_shared_remaining_budget():
+    original=planner.fixture()
+    data=planner.exposure_fixture(original,'remaining_smoke')
+    rows=planner.jobs(data)
+    assert len(rows)==10 and {r['case'] for r in rows}=={'T2','T4','T5','T6','T7'}
+    assert all(r['repeat']==1 and r['defense']=='current' for r in rows)
+    assert sum(r['preparation_turns'] for r in rows)==2
+    assert {r['id'] for r in rows}.isdisjoint(r['id'] for r in planner.jobs(original))
+    assert data['budget_assumptions']['proposed_shared_reservation_usd']==1.36
+    assert data['budget_assumptions']['proposed_shared_max_calls']==164
+    assert data['budget_assumptions']['proposed_max_seconds']==480
+    assert len(original['cases'])==7 and original['repeat_count']==5
+
+
 def test_fixed_pairs_have_110_scored_runs_and_ten_preparation_turns():
     data = planner.fixture()
     jobs = planner.jobs(data)

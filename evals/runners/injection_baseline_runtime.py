@@ -95,7 +95,8 @@ def execute_approved(data,out):
     from backend.rag import retrieve as rag,card_find,card_specs
     from backend.multi_agent.facts import make_lookup
     from backend.services import llm
-    variable='INJECTION_EXPOSURE_DATABASES' if data.get('scope')=='exposure_t1_t3_v1' else 'INJECTION_BASELINE_DATABASES'
+    variable={'exposure_t1_t3_v1':'INJECTION_EXPOSURE_DATABASES',
+              'remaining_smoke_v1':'INJECTION_REMAINING_SMOKE_DATABASES'}.get(data.get('scope'),'INJECTION_BASELINE_DATABASES')
     mapping=runner.database_map(data,json.loads(os.environ[variable]))
     if llm.LLM_PROVIDER!='openrouter' or any(llm.node_model(n)!=m for n,m in (
             ('supervisor','anthropic/claude-haiku-5.5'),('judge_read','anthropic/claude-haiku-5.5'),

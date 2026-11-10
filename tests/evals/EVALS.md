@@ -9,6 +9,7 @@
 실행: `uv run pytest -q tests/evals`(저장소 루트).
 
 ## 파일
+- 남은경로 스모크 계약: `test_injection_baseline_plan.py`와`test_injection_baseline.py`는--remaining-smoke의5종10작업·준비2턴·원본불변·고유scope·잔여공유상한과가짜10작업/실행무승인차단을확인한다.
 - `test_injection_baseline.py` — 기본 계획110행·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단·T1~T7 실제 그래프+가짜 공급자·T6 실제 message/가짜 SQL·사양 오염 자동채점·인용 위치·공급자 전 바이트 한도·Windows 저장 재시도 검사 탐색4작업·다른scope승인거부·4DB선택·검색/입력조립/응답노출구분도검사한다.
 - `test_injection_baseline_plan.py` — 110개 짝·변경 위치 하나·정답 필드 제외·T2 보호 사실 비노출 전제·T5 양쪽 native fallback·T7 정규화/연결 보존·예산식·오프라인 명령/덮어쓰기 거부 검사 탐색4작업/고유작업ID/1558본문/독립잠금과$2예산도확인한다.
 - `test_injection_preflight.py` — 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, Voyage 포함 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점을 확인한다

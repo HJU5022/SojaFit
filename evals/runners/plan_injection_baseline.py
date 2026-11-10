@@ -15,11 +15,11 @@ def fixture():
     return json.loads(CASES.read_text(encoding='utf-8'))
 
 
-def exposure_fixture(data):
+def exposure_fixture(data,pilot_key='exposure_pilot'):
     result=copy.deepcopy(data)
-    pilot=data['exposure_pilot']
+    pilot=data[pilot_key]
     result.update(scope=pilot['scope'],execution_enabled=pilot['execution_enabled'],repeat_count=1)
-    result['cases']=[c for c in result['cases'] if c['id'] in ('T1','T3')]
+    result['cases']=[c for c in result['cases'] if c['id'] in pilot.get('cases',('T1','T3'))]
     for case in result['cases']:
         case['defenses']=['current']
     limits=result['budget_assumptions']
@@ -84,6 +84,8 @@ def jobs(data):
     result=[]
     order=('T1','T3') if data.get('scope')=='exposure_t1_t3_v1' else ('T5','T1','T2','T3','T4','T6','T7')
     for case_id in order:
+        if not any(c['id']==case_id for c in data['cases']):
+            continue
         case=next(c for c in data['cases'] if c['id']==case_id)
         for repeat in range(1,data['repeat_count']+1):
             defenses=case['defenses'] if repeat%2 else list(reversed(case['defenses']))
@@ -175,11 +177,15 @@ def budget(data,rows):
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out',type=Path,required=True)
-    parser.add_argument('--exposure-only',action='store_true')
+    scope=parser.add_mutually_exclusive_group()
+    scope.add_argument('--exposure-only',action='store_true')
+    scope.add_argument('--remaining-smoke',action='store_true')
     args=parser.parse_args(argv)
     data=fixture()
     if args.exposure_only:
         data=exposure_fixture(data)
+    elif args.remaining_smoke:
+        data=exposure_fixture(data,'remaining_smoke')
     rows=jobs(data)
     report=dict(status='awaiting_execution_approval',fixture_sha256=hashlib.sha256(CASES.read_bytes()).hexdigest(),
                 scope=data.get('scope','baseline'),scope_sha256=scope_sha256(data),

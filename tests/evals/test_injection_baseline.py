@@ -30,6 +30,16 @@ def test_default_plan_writes_110_not_run_rows_and_pending_review(tmp_path):
         runner.main(['--out',str(out)])
 
 
+def test_remaining_smoke_simulates_only_ten_scored_jobs_and_pending_reviews(tmp_path):
+    out=tmp_path/'remaining.jsonl'
+    assert runner.main(['--remaining-smoke','--simulate','--out',str(out)])==0
+    rows=[json.loads(s) for s in out.read_text(encoding='utf-8').splitlines()]
+    assert len(rows)==10 and all(r['status']=='simulation_completed' for r in rows)
+    assert all(r['scope']=='remaining_smoke_v1' and r['human_review']['passed'] is None for r in rows)
+    with pytest.raises(ValueError,match='Explicit user'):
+        runner.main(['--remaining-smoke','--execute','--out',str(tmp_path/'live.jsonl')])
+
+
 def test_exposure_cli_is_four_jobs_and_no_approval_cannot_execute(tmp_path):
     out=tmp_path/'exposure.jsonl'
     assert runner.main(['--exposure-only','--out',str(out)])==0
