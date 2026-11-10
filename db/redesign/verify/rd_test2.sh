@@ -1,0 +1,30 @@
+#!/bin/bash
+NAME=$1; PORT=$2
+HERE="$(cd "$(dirname "$0")" && pwd)"; V="$HERE"; S="${OUT:-/tmp/rd_verify_out}"; mkdir -p "$S"
+R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/redesign/to-be/sql"; PY="${PY:-python3}"   # PY: psycopg가 설치된 파이썬(예: PY=$(pwd)/.venv/bin/python)
+q() { docker exec -i $NAME psql -v ON_ERROR_STOP=1 -q -At -U app -d app "$@"; }
+t() { if q -c "$2" >/dev/null 2>&1; then echo "  [실행됨] $1"; else echo "  [거부됨] $1"; fi; }
+echo "== 6. 새 제약 동작 (거부돼야 하는 것은 [거부됨])"
+t "approvals NOT NULL: part_number 없이 INSERT" "INSERT INTO approvals(user_id,message_id,snapshot,candidate_part,verdict) VALUES (1,2,'{}','x','IDENTICAL')"
+t "approvals CHECK: 공백 든 part_number" "UPDATE approvals SET part_number='TSC 1N4007G' WHERE id=1"
+t "approvals CHECK: 알 수 없는 verdict" "UPDATE approvals SET verdict='NOT_SUFFICIENT' WHERE id=1"
+t "runs CHECK: 필수 키 없는 safe_result" "UPDATE runs SET safe_result='{\"answer\":\"x\"}' WHERE id='10000000-0000-0000-0000-000000000001'"
+t "projects CHECK: 데모 이름이 새 회로여도 허용(6개 목록 없음)" "INSERT INTO projects(user_id,name,source_kind,demo_id) VALUES (1,'p9','demo','brand_new_demo_circuit')"
+t "projects CHECK: 업로드인데 demo_id 있음" "INSERT INTO projects(user_id,name,source_kind,demo_id) VALUES (1,'p8','upload','x')"
+t "quotes: snapshot 칸 없음" "INSERT INTO quotes(user_id,approval_id,part_number,quantity,snapshot) VALUES (1,1,'A',1,'{}')"
+t "approved_cases: 내용 없이 표시 행만 INSERT" "INSERT INTO approved_cases(user_id,approval_id) VALUES (1,3) ON CONFLICT DO NOTHING"
+t "agent.threads FK: public.threads에 없는 UUID" "INSERT INTO sojafit_agent.threads(id,user_id,target) VALUES ('99999999-0000-0000-0000-000000000009',1,'D1')"
+echo "== 7. 삭제 연쇄: 프로젝트 1 삭제 → 분석 대화 · 메시지 · 이벤트 · 체크포인트 3종이 같이 사라지는가"
+q -c "SELECT 'before  agent.threads='||(SELECT count(*) FROM sojafit_agent.threads)||' agent.messages='||(SELECT count(*) FROM sojafit_agent.messages)||' events='||(SELECT count(*) FROM sojafit_agent.analysis_events)||' checkpoints='||(SELECT count(*) FROM sojafit_agent.checkpoints)||'/'||(SELECT count(*) FROM sojafit_agent.checkpoint_blobs)||'/'||(SELECT count(*) FROM sojafit_agent.checkpoint_writes)||' approvals='||(SELECT count(*) FROM approvals)"
+q -c "DELETE FROM projects WHERE id=1"
+q -c "SELECT 'after   agent.threads='||(SELECT count(*) FROM sojafit_agent.threads)||' agent.messages='||(SELECT count(*) FROM sojafit_agent.messages)||' events='||(SELECT count(*) FROM sojafit_agent.analysis_events)||' checkpoints='||(SELECT count(*) FROM sojafit_agent.checkpoints)||'/'||(SELECT count(*) FROM sojafit_agent.checkpoint_blobs)||'/'||(SELECT count(*) FROM sojafit_agent.checkpoint_writes)||' approvals='||(SELECT count(*) FROM approvals)"
+echo "== 8. 보관 기간 청소: 프로젝트 2의 활동을 100일 전으로 → purge_inactive_projects"
+q -c "UPDATE projects SET updated_at=now()-interval '100 days'; UPDATE threads SET created_at=now()-interval '100 days'; UPDATE runs SET updated_at=now()-interval '100 days'; UPDATE approvals SET created_at=now()-interval '100 days'; UPDATE quotes SET created_at=now()-interval '100 days'" 
+q -c "SELECT 'purge_inactive_projects 반환='||sojafit_agent.purge_inactive_projects(60,20)"
+q -c "SELECT 'after   projects='||(SELECT count(*) FROM projects)||' agent.threads='||(SELECT count(*) FROM sojafit_agent.threads)||' checkpoints='||(SELECT count(*) FROM sojafit_agent.checkpoints)"
+echo "== 9. 사용자 삭제: 남은 사용자 행을 지워도 RESTRICT에 막히지 않는가"
+q -c "INSERT INTO projects(user_id,name,source_kind) VALUES (1,'again','upload'); INSERT INTO circuits(project_id,connections,source_sha256,parser_version) SELECT max(id),'{\"parts\":[]}',repeat('c',64),'v1' FROM projects; INSERT INTO threads(id,project_id) SELECT '00000000-0000-0000-0000-0000000000aa',max(id) FROM projects; INSERT INTO sojafit_agent.threads(id,user_id,target) VALUES ('00000000-0000-0000-0000-0000000000aa',1,'D1'); INSERT INTO sojafit_agent.checkpoints(thread_id,checkpoint_id) VALUES ('00000000-0000-0000-0000-0000000000aa','cz'); INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed) VALUES (1,CURRENT_DATE-1,now())"
+t "DELETE FROM users WHERE id=1 (분석 데이터가 있는 사용자)" "DELETE FROM users WHERE id=1"
+q -c "SELECT 'after   users='||(SELECT count(*) FROM users)||' agent.threads='||(SELECT count(*) FROM sojafit_agent.threads)||' analysis_usage='||(SELECT count(*) FROM sojafit_agent.analysis_usage)||' checkpoints='||(SELECT count(*) FROM sojafit_agent.checkpoints)"
+echo "== 10. 로그 청소 함수가 오류 없이 도는가"
+q -c "SELECT 'purge_log_records 반환='||sojafit_agent.purge_log_records(1,100)"

@@ -17,6 +17,7 @@
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
+- `redesign/` — 서비스 DB 재설계(11-11) **검토용 초안**: 현재 · 목표 구조 문서, 기준선 · 운영 이전 SQL 초안, 일회용 Postgres 16 · 17 검증 스크립트. **이 안의 SQL은 compose가 실행하지 않고 어디에도 적용하지 않았다**(정운 확정 뒤 `db/` 바로 아래 번호 파일로 옮긴다). 요약은 `redesign/REDESIGN.md`
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
 - `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
 - `021_auth_ip_limits.sql` — 클라이언트 IP 한도 표 2개(IP 원문 없이 키 해시만). `auth_signup_attempts`는 IP별 UTC 하루 가입 요청 수, `auth_login_ip_attempts`는 IP별 15분 로그인 실패 수·잠금(열은 `auth_login_attempts`와 같음). RLS를 켜고 공개 역할 권한을 회수한다. 다시 실행해도 아무것도 바꾸지 않는다. 기존 DB에는 자동 적용되지 않는다. [주의] 이 표가 없으면 비밀번호 로그인과 가입이 모두 503이 되므로, 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다

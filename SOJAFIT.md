@@ -294,10 +294,39 @@ SojaFit (proj3-b)
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
 │   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
-│   └── schema/             <- 스키마 설명 문서
-│       ├── SCHEMA.md       <- 폴더 설명
-│       ├── erd.md          <- DB ERD
-│       └── table-definition.md  <- 업무 표(회로·판정·견적) 설계 초안
+│   ├── schema/             <- 스키마 설명 문서
+│   │   ├── SCHEMA.md       <- 폴더 설명
+│   │   ├── erd.md          <- DB ERD
+│   │   └── table-definition.md  <- 업무 표(회로·판정·견적) 설계 초안
+│   └── redesign/           <- 서비스 DB 재설계 검토용 산출물(11-11 초안, 어디에도 적용하지 않음)
+│       ├── REDESIGN.md     <- 폴더 설명 + 검토용 요약 · 정운이 결정할 항목
+│       ├── as-is/          <- 현재 구조(운영 DB 기준) 문서
+│       │   ├── erd.md      <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
+│       │   └── tables.md   <- 현재 서비스 표 25개의 정의서(운영 DB에서 자동 생성 + 의미 · 소유 코드)
+│       ├── to-be/          <- 목표 설계안 문서
+│       │   ├── design.md   <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
+│       │   ├── erd.md      <- 목표 ERD(추천안과 보류안)
+│       │   ├── tables.md   <- 목표 표 정의서 + 현재와의 차이
+│       │   ├── impact.md   <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
+│       │   └── sql/        <- 기준선 · 운영 이전 SQL 초안(실행하지 않음)
+│       │       ├── baseline_service.sql  <- 빈 DB에서 서비스 표 전부를 만드는 기준선(RLS 명시, 삭제 트리거 포함)
+│       │       ├── migrate_prod_1_expand.sql  <- 운영 이전 1단계: 옛 코드가 돌아도 안전한 추가 변경
+│       │       ├── migrate_prod_2_contract_p1.sql  <- 운영 이전 2단계: 스냅샷 복사본 · 미사용 칸 삭제, 단순 검사
+│       │       ├── migrate_prod_2b_optional_drop_dead_auth.sql  <- 선택: 승인 대기 표 삭제(코드 제거 뒤)
+│       │       ├── migrate_prod_3_contract_p2.sql  <- 운영 이전 3단계: 분석 회로 사본 · 죽은 승인 표 삭제
+│       │       └── migrate_prod_4_rollback.sql  <- 단계별 되돌리기(B2 → B1 → A)
+│       └── verify/         <- 위 SQL을 일회용 Postgres 16 · 17에서 검증(운영 DB 접속 없음)
+│           ├── run_all.sh  <- 16 · 17 전체 검증
+│           ├── rd_test.sh  <- 현재 구조 → 표본 데이터 → expand → contract → 기준선과 구조 비교
+│           ├── rd_test2.sh  <- 새 제약 · 삭제 연쇄 · 청소 함수 동작
+│           ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
+│           ├── rd_test4.sh  <- P1만 적용한 중간 상태에서 옛 삭제 경로 · 청소 함수
+│           ├── rd_test5.sh  <- expand만 적용 + 새 코드 행 + expand 되돌리기
+│           ├── lib/        <- 검증 보조 코드
+│           │   └── rd_struct.py  <- 서비스 표 구조를 정규화해 출력(비교용)
+│           └── sql/        <- 검증용 표본 데이터 · 체크포인트 대역 표
+│               ├── rd_sample.sql  <- 표본 데이터
+│               └── rd_stub.sql  <- LangGraph 체크포인트 대역 표
 │
 ├── evals/                  <- 평가셋과 평가 실행. 루트에는 동결 평가셋만 둠 (고정: 루트의 평가셋·FROZEN.json)
 │   ├── EVALS.md            <- 폴더 설명
@@ -717,6 +746,7 @@ SojaFit (proj3-b)
 | `db/` | [DB.md](db/DB.md) | 서비스·운영 |
 | `db/manual/` | [MANUAL.md](db/manual/MANUAL.md) | 서비스·운영 |
 | `db/schema/` | [SCHEMA.md](db/schema/SCHEMA.md) | 서비스·운영 |
+| `db/redesign/` | [REDESIGN.md](db/redesign/REDESIGN.md) | 서비스·운영 |
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
 | `evals/inputs/` | [INPUTS.md](evals/inputs/INPUTS.md) | 평가·데이터 |
