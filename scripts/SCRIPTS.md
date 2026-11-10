@@ -14,7 +14,7 @@
 - `db/` — 운영 DB 손 작업(voyage-4-large 적용 점검·마이그레이션·검증). [DB.md](db/DB.md)
 - `langfuse/` — Langfuse 프롬프트·Skill 연결 점검 스크립트. [LANGFUSE.md](langfuse/LANGFUSE.md)
 - `demo/` — 키 없는 데모가 재생할 LLM 응답을 실제 키로 한 번 기록하고 키 없이 재생해 대조하는 스크립트. [DEMO.md](demo/DEMO.md)
-- `smoke/` — 로컬 compose · 배포 주소의 정상 사용자 흐름(로그인 → 판정 · 재개 → 승인 · 견적 → 다른 계정 404)을 HTTP로 한 번 돌려 보는 점검 스크립트. [SMOKE.md](smoke/SMOKE.md)
+- `smoke/` — 로컬 compose · 배포 주소의 정상 사용자 흐름(로그인 → 판정 · 재개 → 승인 · 견적 → 다른 계정 404)을 HTTP로 한 번 돌려 보는 점검 스크립트. [SMOKE.md](smoke/SMOKE.md) 같은 폴더의 `injection_http.py`는 인젝션 T4 · T6 · T7을 배포 HTTP로 정상/공격 짝으로 보낸다.
 - `results/` — 측정 원시 결과(폴더 설명 파일 없음). 평가 지표는 `evals/results/`
   - `auth/` — 인증 실측 결과
     - `auth_boundary_2026-11-02.json` — 로그인 잠금·세션 만료 경계 실측(`scripts/auth/auth_boundary_after_merge.py`)
