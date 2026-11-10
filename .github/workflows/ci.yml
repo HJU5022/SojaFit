@@ -33,7 +33,7 @@ jobs:
           version: "0.12.9"
       # --locked: uv.lock이 pyproject.toml과 어긋나면 실패해 잠금 파일 누락을 PR에서 잡는다.
       - run: uv sync --locked
-      # 서비스 표(인증 · 프로젝트 · 대화 · 승인 · 견적 · 분석 서비스)를 새 체인 순서로 만든다. 파일 이름은 tests/db_schema.py 한 곳에만 있다.
+      # 서비스 표(인증 · 프로젝트 · 대화 · 승인 · 견적 · 분석 서비스)를 새 기준선(db/020_service_baseline.sql)으로 만든다. 파일 이름은 tests/db_schema.py 한 곳에만 있다.
       # LangGraph 표는 시험이 memory_service.initialize로 만든다.
       - name: Initialize service test database
         run: uv run python -c "import os, psycopg; from tests.db_schema import apply_service_schema; c=psycopg.connect(os.environ['TEST_AUTH_DATABASE_URL']); apply_service_schema(c, agent=True); c.commit(); c.close()"

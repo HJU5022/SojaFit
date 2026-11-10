@@ -11,7 +11,7 @@ auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
 DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
-테이블 정의는 db/003_auth.sql·005·006·021·027(세션 인덱스)·029(승인 대기 표 삭제).
+테이블 정의는 db/020_service_baseline.sql(옛 증분 003·005·006·010·021·027·029는 db/legacy/).
 """
 import getpass
 import argparse

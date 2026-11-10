@@ -1,16 +1,17 @@
--- 서비스 DB 목표 기준선(baseline) 초안: 빈 DB에서 한 번에 서비스 표 전부를 만든다. (11-11 재설계 초안, 정운 확정 전)
+-- 서비스 표 기준선(baseline): 새 DB 첫 기동에서 서비스 표 전부를 한 번에 만든다. (11-11 재설계 M 단계, 옛 db/003~025 + 027~029를 대체)
 --
 -- [범위] public: users · auth_* 5개 · projects · circuits · threads · runs · messages · approvals · quotes · approved_cases · app_migrations,
---        sojafit_agent: threads · messages · analysis_events · analysis_usage · analysis_service_usage + 청소 함수 2개.
---        코퍼스 4표(002 · 008 · 009 · 012)와 LangGraph 표(checkpoints · store 등, `memory_service --setup`이 만듦)는 포함하지 않는다.
--- [상태] 이 파일은 README의 "필수 + 권장" 단계(P1 + P2)가 코드까지 끝난 뒤의 구조다. 지금 운영 코드와는 맞지 않는다(sojafit_agent.circuits ·
---        approvals가 없고 approvals에 candidate_part 등이 있다). 확정 전에는 레포의 db/*.sql(000 ~ 025)이 정본이다.
--- [순서] 000_init(확장) → 코퍼스 SQL → 이 파일 → (데모 계정 시드 007, 앱 CLI로 옮기는 안은 README 결정 항목) → 026 보안(공개 역할 권한 회수) → memory_service --setup(LangGraph 표).
+--        sojafit_agent: threads · messages · analysis_events · analysis_usage · analysis_service_usage + 함수 3개(체크포인트 삭제 트리거 · 청소 2개).
+--        코퍼스 4표(000 · 002 · 008 · 009 · 012)와 LangGraph 표(checkpoints · store 등, `memory_service --setup`이 만듦)는 포함하지 않는다.
+-- [순서] 000_init(확장) → 002 코퍼스 → 008 · 009 · 012 → 이 파일 → 026 보안(공개 역할 권한 회수 + RLS) → memory_service --setup(LangGraph 표, compose thread-setup).
+--        compose initdb는 db/ 바로 아래 *.sql을 이름순으로 실행한다(하위 폴더 legacy · migrations는 실행하지 않는다).
+-- [같은 구조] 옛 체인(db/legacy/003~029)과 운영 이전 SQL(db/migrations/)을 적용한 결과와 구조가 같다. scripts/db/verify_chain/verify_chain.sh가 차이 0줄을 확인한다.
+-- [분리선] 아래 `-- @@AGENT@@` 줄 앞은 public 표만 쓰고(표 이름에 스키마를 붙이지 않음) 뒤는 sojafit_agent를 이름 붙여 부른다. tests/db_schema.py가 앞부분만 격리 스키마
+--        (search_path)에 적용해 시험하고, 일회용 DB에서만 전체를 적용한다. 줄을 지우거나 앞부분에 `public.`을 붙이면 시험 헬퍼가 깨진다.
 -- [환경] 운영은 Postgres 17.11 · 컴포즈 · CI는 16이라 둘 다에서 실행해 확인했다. 확장 `vector`는 이 파일이 쓰지 않는다(운영은 extensions 스키마, 컴포즈는 public).
 -- [규칙] 새 객체 이름: 키 pk_<표> · 외래키 fk_<표>_<대상> · 인덱스 ix_<표>_<칸> · 고유 uq_<표>_<칸> · 검사 ck_<표>_<무엇>.
 --        기존 표에서 Postgres가 붙인 기본 이름(threads_pkey 등)은 운영과 같게 두었다(이전 SQL이 이름을 바꾸지 않게).
-
-CREATE SCHEMA IF NOT EXISTS sojafit_agent;
+-- [주의] 한 DB에 한 번만 적용한다(CREATE TABLE이 다시 실행되면 실패). 이미 서비스 표가 있는 DB(운영)에는 쓰지 않는다: db/migrations/를 쓴다.
 
 -- ── 마이그레이션 적용 이력 ────────────────────────────────────────────────────────────────
 -- (Supabase 도구의 `supabase_migrations.schema_migrations`는 다른 스키마의 다른 표다. 11-05~09에 적용한 초기 5건만 있고 이 SQL은 건드리지 않는다.)
@@ -201,6 +202,30 @@ CREATE TABLE approved_cases (
 );
 CREATE INDEX ix_approved_cases_user ON approved_cases(user_id);
 
+-- ── RLS 명시(운영 · compose · CI가 같은 결과가 되게) ───────────────────────────────────────────
+-- Supabase 운영에는 `ensure_rls` 이벤트 트리거가 있어 public의 새 표가 자동으로 RLS ON이 되지만 sojafit_agent 표와 compose · CI(일반 Postgres)에는 없다.
+-- 같은 SQL이 환경마다 다른 상태를 만들지 않게 여기서 직접 켠다. 정책은 만들지 않는다(= 공개 역할은 기본 거부). 서버 연결 역할(운영 postgres: BYPASSRLS,
+-- compose · CI: 슈퍼유저)은 RLS를 우회하므로 서비스 동작은 그대로다. FORCE는 쓰지 않는다. 공개 역할 권한 회수는 026이 한다(역할이 없는 DB에서는 건너뜀).
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_login_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_login_ip_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_signup_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_google_states ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth_google_identities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE circuits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE approvals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE approved_cases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_migrations ENABLE ROW LEVEL SECURITY;
+
+-- @@AGENT@@  ← 이 줄 뒤는 일회용 DB의 진짜 public에만 적용한다(tests/db_schema.py agent=True)
+CREATE SCHEMA IF NOT EXISTS sojafit_agent;
+
 -- ── 분석 서비스(sojafit_agent): 대화 상태 · 분석 문맥 · 운영 기록 · 사용량 ─────────────────────
 CREATE TABLE sojafit_agent.threads (
     -- [왜] 화면의 대화(public.threads)와 같은 UUID를 쓰던 논리 연결을 진짜 FK로 만든다. 프로젝트 · 대화를 지우면 분석 기록이 같이 지워진다.
@@ -353,30 +378,10 @@ END $$;
 
 REVOKE ALL ON FUNCTION sojafit_agent.purge_inactive_projects(integer, integer), sojafit_agent.purge_log_records(integer, integer) FROM PUBLIC;
 
--- ── RLS 명시(운영 · compose · CI가 같은 결과가 되게) ───────────────────────────────────────────
--- Supabase 운영에는 `ensure_rls` 이벤트 트리거가 있어 public의 새 표가 자동으로 RLS ON이 되지만 sojafit_agent 표와 compose · CI(일반 Postgres)에는 없다.
--- 같은 SQL이 환경마다 다른 상태를 만들지 않게 여기서 직접 켠다. 정책은 만들지 않는다(= 공개 역할은 기본 거부). 서버 연결 역할(운영 postgres: BYPASSRLS,
--- compose · CI: 슈퍼유저)은 RLS를 우회하므로 서비스 동작은 그대로다. FORCE는 쓰지 않는다. 공개 역할 권한 회수는 026이 한다(역할이 없는 DB에서는 건너뜀).
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_login_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_login_ip_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_signup_attempts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_google_states ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_google_identities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.circuits ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.threads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.runs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.approvals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.approved_cases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.app_migrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sojafit_agent.threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sojafit_agent.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sojafit_agent.analysis_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sojafit_agent.analysis_usage ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sojafit_agent.analysis_service_usage ENABLE ROW LEVEL SECURITY;
 
-INSERT INTO app_migrations (version, note) VALUES ('2026-11-service-baseline', '서비스 표 기준선(P1 + P2 상태)');
+INSERT INTO public.app_migrations (version, note) VALUES ('2026-11-service-baseline', 'db/020_service_baseline.sql: 서비스 표 기준선(재설계 P1 + P2 + 2b 상태)');
