@@ -144,16 +144,20 @@ def make_app(multi: bool, stack: ExitStack):
     mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
     # [왜] 사양 표는 11-09에 버렸다(ADR 0016). 서비스(memory_service.py)와 같은 조립: 찾기 · 판정 값은 카드 읽기, 사실 확인의 문서 행은 LLM 없는 doc_rows
     specs = card_specs.default_specs()
+    from functools import update_wrapper
+    from backend.services.langfuse_prompts import timed_tool  # [왜] 서비스와 같은 칸 이름(search · specs · find)으로 단계 시간을 남긴다. 기록기가 없으면 그대로 통과한다
+    raw_specs, raw_find = specs, card_find.default_find()
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
     # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
-    tools = {"lookup": make_lookup(mcp.check, specs.doc_rows), "specs": specs, "find": card_find.default_find(), "checkpointer": InMemorySaver()}
+    tools = {"lookup": make_lookup(mcp.check, specs.doc_rows), "specs": update_wrapper(timed_tool("specs", raw_specs), raw_specs),
+             "find": update_wrapper(timed_tool("find", raw_find), raw_find), "checkpointer": InMemorySaver()}
     if not multi:
         from backend.graph.build import build_graph
         return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
     from backend.multi_agent.build import build_graph as build_multi
     from backend.rag.retrieve import retrieve
     from backend.services import llm
-    return build_multi(chat=llm.node_chat, retriever=retrieve, judge_enabled=True, **tools)
+    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools)
 
 
 def _git(*args):

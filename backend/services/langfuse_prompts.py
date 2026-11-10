@@ -59,9 +59,8 @@ class AnalysisTimings(BaseCallbackHandler):
         self._end(run_id, 'interrupted' if type(error).__name__ == 'GraphInterrupt' else 'failed')
 
     def report(self):
-        observed = {s['stage'] for s in self.stages}
-        return self.stages + [{'stage':name,'status':'skipped','elapsed_ms':0}
-            for name in ('plan','search','judge_read','judge','synth','check') if name not in observed]
+        # [왜] 예전에는 옛 영어 노드 이름(plan · judge_read 등)이 안 돌았다며 0ms 'skipped' 행을 덧붙였지만, 지금 노드 이름은 한국어라 늘 거짓 행이 됐다(11-11)
+        return list(self.stages)
 
 
 @contextmanager

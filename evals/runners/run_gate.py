@@ -19,7 +19,9 @@ import time
 from contextlib import ExitStack
 from pathlib import Path
 
+from backend.services.langfuse_prompts import analysis_timings
 from evals.runners.run_graph import invoke_with_resume, make_app, result_row, run_scores
+from evals.runners.stage_timing import StageRecorder, drain_voyage, voyage_timing
 
 
 def verdict_ok(item: dict, row: dict) -> bool:
@@ -67,6 +69,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
     client = get_client()
     stamp = time.strftime('%m%d-%H%M')
     with ExitStack() as stack:
+        stack.enter_context(voyage_timing())  # [왜] 검색 단계를 임베딩 · 리랭크 · 나머지로 나누려고 Voyage 호출 시간을 모은다
         app = make_app(True, stack)
         for s in range(1, sets + 1):
             rows, session = [], f'gate-{Path(dataset_path).stem}-{stamp}-set{s}'
@@ -74,11 +77,14 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                 trace_id = client.create_trace_id()
                 meta = {'question_id': it['id'], 'kind': it['kind'], 'langfuse_session_id': session,
                         'langfuse_tags': ['gate', it['id'], f'set{s}']}
-                config = {'callbacks': [CallbackHandler(trace_context={'trace_id': trace_id})], 'run_name': f'gate {it["id"]}',
+                rec = StageRecorder()  # [왜] 문항마다 노드 단위 시간과 LLM 호출별 시간 · 토큰 · 비용을 행에 남긴다(새 칸 stages · llm_call_log · voyage. 기존 llm_calls(건수)는 그대로)
+                drain_voyage()
+                config = {'callbacks': [CallbackHandler(trace_context={'trace_id': trace_id}), rec], 'run_name': f'gate {it["id"]}',
                           'metadata': meta, 'configurable': {'thread_id': f'{session}-{it["id"]}'}}
                 start = time.perf_counter()
                 try:
-                    state = invoke_with_resume(app, {'input': it['input']}, config)
+                    with analysis_timings(rec):
+                        state = invoke_with_resume(app, {'input': it['input']}, config)
                     seconds = time.perf_counter() - start
                     scores = run_scores(state, seconds, [], item=it)
                     row = result_row(it, state, scores, client.get_trace_url(trace_id=trace_id))
@@ -93,6 +99,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                     import traceback  # [왜] 멈춘 오류의 자리를 다시 재현하지 않고 보려고 마지막 몇 줄을 남긴다
                     row = {'id': it['id'], 'kind': it['kind'], 'error': f'{type(error).__name__}: {str(error)[:300]}',
                            'trace': traceback.format_exc(limit=6)[-1500:], 'latency_s': round(time.perf_counter() - start, 1)}
+                row.update(stages=rec.report(), llm_call_log=rec.llm_calls, voyage=drain_voyage())
                 row['pass'] = 'error' not in row and passed(it, row)
                 rows.append(row)
                 print(f'set{s}\t{it["id"]}\t{"PASS" if row["pass"] else "FAIL"}\t{row.get("answer_metric", row.get("error"))}\t'
