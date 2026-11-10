@@ -268,41 +268,50 @@ SojaFit (proj3-b)
 │   ├── DB.md               <- 폴더 설명, 실행 순서, 기존 DB 점검 절차
 │   ├── 000_init.sql        <- pgvector 확장
 │   ├── 002_rag_corpus.sql  <- 코퍼스 문서·청크·벡터 표
-│   ├── 003_auth.sql        <- 사용자·세션·로그인 시도 표
-│   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
-│   ├── 006_user_roles.sql  <- 사용자 역할(admin/user) 열
-│   ├── 007_demo_accounts.sql  <- 데모 모드 새 볼륨의 데모 사용자 A · B(비밀번호 없음, 버튼 로그인 전용)
 │   ├── 008_multi_dim_embeddings.sql  <- 임베딩 열을 차원 없는 halfvec으로(모델별 차원 공존)
 │   ├── 009_chunk_embedding_bits.sql  <- voyage 임베딩의 1비트 코드 표(dense 1단계 Hamming 후보용)
-│   ├── 010_google_auth.sql  <- Google 관리자 인증 상태·승인 대기·계정 연결 테이블
-│   ├── 013_agent_memory.sql <- 사용자 업로드·thread·대화·승인 원본 전용 스키마
-│   ├── 014_thread_inputs.sql <- 승인 당시 질문·조건·재개 답변의 현재 버전 입력 기록
-│   ├── 015_analysis_limits.sql <- UTC 일자별 사용자 분석 예약 예산과 입장 빈도 제한
-│   ├── 016_memory_controls.sql <- 승인 사례 정정 메모·철회·삭제 상태
-│   ├── 017_analysis_events.sql <- 내용 없는 분석 요청·단계 지연 기록
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
-│   ├── 018_projects.sql    <- 사용자 프로젝트·정규화 회로·FK cascade·인덱스·공개 권한 제한
-│   ├── 019_conversations.sql  <- 소유 대화·메시지·실행 및 접근 제한
-│   ├── 020_approvals_quotes.sql <- 승인·가격 없는 견적·사례 및 재귀 금지 키 제약
-│   ├── 021_auth_ip_limits.sql <- 클라이언트 IP 해시별 하루 가입 수·15분 로그인 실패 잠금(RLS·공개 권한 제한)
-│   ├── 022_token_limits.sql <- 하루 LLM 예약 토큰 카운터(사용자 열 · 서비스 전체 날짜 행)
-│   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
-│   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
-│   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
+│   ├── 020_service_baseline.sql  <- 서비스 표 기준선(11-11 M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
-│   ├── 027_service_redesign_p1.sql <- 서비스 표 재설계 1/3: 승인 칸 3개 · 스냅샷 복사본 제거 · 단순 CHECK · 세션 인덱스 · app_migrations(public 표만, 운영 이전 expand + contract P1을 빈 DB용으로 이어 붙임)
-│   ├── 028_service_redesign_agent.sql <- 서비스 표 재설계 2/3: 분석 서비스 FK · 체크포인트 삭제 트리거 · 회로 사본 · 죽은 승인 표 제거 · 청소 함수 교체(운영 이전 expand E2 · E5 + contract P2)
-│   ├── 029_drop_google_pending.sql <- 서비스 표 재설계 3/3: 쓰지 않는 구글 승인 대기 표 삭제(운영 이전 2b)
+│   ├── legacy/             <- 기준선 이전의 옛 증분 서비스 SQL(이력용, 실행하지 않음)
+│   │   ├── LEGACY.md       <- 폴더 설명
+│   │   ├── 003_auth.sql  <- 사용자·세션·로그인 시도 표
+│   │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
+│   │   ├── 006_user_roles.sql  <- 사용자 역할 열
+│   │   ├── 010_google_auth.sql  <- Google 로그인 상태·승인 대기·계정 연결 표
+│   │   ├── 013_agent_memory.sql  <- 분석 서비스 스키마(thread·대화·승인 원본)
+│   │   ├── 014_thread_inputs.sql  <- thread 입력 기록
+│   │   ├── 015_analysis_limits.sql  <- 일자별 사용자 분석 예약 예산
+│   │   ├── 016_memory_controls.sql  <- 승인 사례 정정 메모 상태
+│   │   ├── 017_analysis_events.sql  <- 분석 요청·단계 지연 기록
+│   │   ├── 018_projects.sql  <- 프로젝트·정규화 회로
+│   │   ├── 019_conversations.sql  <- 대화·메시지·실행
+│   │   ├── 020_approvals_quotes.sql  <- 승인·견적·승인 사례
+│   │   ├── 021_auth_ip_limits.sql  <- IP 해시별 가입·로그인 실패 한도
+│   │   ├── 022_token_limits.sql  <- 하루 LLM 예약 토큰 카운터
+│   │   ├── 023_retention.sql  <- 보관 기간 청소 함수
+│   │   ├── 024_projects_demo_c01.sql  <- 데모 프로젝트 허용 목록에 c01 추가(11-10 긴급 수정)
+│   │   ├── 025_runs_safe_result_preferred_mount.sql  <- 분석 결과 형식에 preferred_mount 추가(11-10 긴급 수정)
+│   │   ├── 027_service_redesign_p1.sql  <- 재설계 1/3
+│   │   ├── 028_service_redesign_agent.sql  <- 재설계 2/3
+│   │   └── 029_drop_google_pending.sql  <- 재설계 3/3
+│   ├── migrations/         <- 운영 DB 이전 SQL(이미 서비스 표가 있는 DB용, 자동 실행하지 않음)
+│   │   ├── MIGRATIONS.md   <- 폴더 설명, 적용 순서와 되돌리기
+│   │   ├── migrate_prod_1_expand.sql  <- 운영 이전 1단계: 옛 코드가 돌아도 안전한 추가 변경
+│   │   ├── migrate_prod_2_contract_p1.sql  <- 운영 이전 2단계: 스냅샷 복사본 · 미사용 칸 삭제, 단순 검사
+│   │   ├── migrate_prod_2b_optional_drop_dead_auth.sql  <- 선택: 승인 대기 표 삭제(코드 제거 뒤)
+│   │   ├── migrate_prod_3_contract_p2.sql  <- 운영 이전 3단계: 분석 회로 사본 · 죽은 승인 표 삭제
+│   │   └── migrate_prod_4_rollback.sql  <- 단계별 되돌리기(B2b → B2 → B1 → A, RLS · 함수 권한까지 복원)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
 │   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
 │   ├── schema/             <- 스키마 설명 문서
 │   │   ├── SCHEMA.md       <- 폴더 설명
-│   │   ├── erd.md          <- DB ERD
-│   │   └── table-definition.md  <- 업무 표(회로·판정·견적) 설계 초안
-│   └── redesign/           <- 서비스 DB 재설계 검토용 산출물(11-11 초안, 어디에도 적용하지 않음)
-│       ├── REDESIGN.md     <- 폴더 설명 + 검토용 요약 · 정운이 결정할 항목
+│   │   ├── erd.md          <- 서비스 표 ERD(DB에서 자동 생성)
+│   │   └── table-definition.md  <- 서비스 표 정의서(DB에서 자동 생성)
+│   └── redesign/           <- 서비스 DB 재설계(11-11) 설계 문서와 일회용 DB 검증 스크립트
+│       ├── REDESIGN.md     <- 폴더 설명 + 요약 · 결정 항목
 │       ├── as-is/          <- 현재 구조(운영 DB 기준) 문서
 │       │   ├── erd.md      <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
 │       │   └── tables.md   <- 현재 서비스 표 25개의 정의서(운영 DB에서 자동 생성 + 의미 · 소유 코드)
@@ -310,16 +319,10 @@ SojaFit (proj3-b)
 │       │   ├── design.md   <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
 │       │   ├── erd.md      <- 목표 ERD(추천안과 보류안)
 │       │   ├── tables.md   <- 목표 표 정의서 + 현재와의 차이
-│       │   ├── impact.md   <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
-│       │   └── sql/        <- 기준선 · 운영 이전 SQL 초안(실행하지 않음)
-│       │       ├── baseline_service.sql  <- 빈 DB에서 서비스 표 전부를 만드는 기준선(RLS 명시, 삭제 트리거 포함)
-│       │       ├── migrate_prod_1_expand.sql  <- 운영 이전 1단계: 옛 코드가 돌아도 안전한 추가 변경
-│       │       ├── migrate_prod_2_contract_p1.sql  <- 운영 이전 2단계: 스냅샷 복사본 · 미사용 칸 삭제, 단순 검사
-│       │       ├── migrate_prod_2b_optional_drop_dead_auth.sql  <- 선택: 승인 대기 표 삭제(코드 제거 뒤)
-│       │       ├── migrate_prod_3_contract_p2.sql  <- 운영 이전 3단계: 분석 회로 사본 · 죽은 승인 표 삭제
-│       │       └── migrate_prod_4_rollback.sql  <- 단계별 되돌리기(B2 → B1 → A)
-│       └── verify/         <- 위 SQL을 일회용 Postgres 16 · 17에서 검증(운영 DB 접속 없음)
+│       │   └── impact.md   <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
+│       └── verify/         <- 운영 이전 SQL(db/migrations/)과 기준선을 일회용 Postgres 16 · 17에서 검증(운영 DB 접속 없음)
 │           ├── run_all.sh  <- 16 · 17 전체 검증
+│           ├── old_chain.sh  <- 기준선 이전 옛 체인(db/legacy 포함) 파일 목록을 번호순으로 출력
 │           ├── rd_test.sh  <- 현재 구조 → 표본 데이터 → expand → contract → 기준선과 구조 비교
 │           ├── rd_test2.sh  <- 새 제약 · 삭제 연쇄 · 청소 함수 동작
 │           ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
@@ -468,7 +471,7 @@ SojaFit (proj3-b)
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
-│   ├── db_schema.py        <- 서비스 표 SQL을 순서대로 적용하는 시험 헬퍼 apply_service_schema(SQL 파일 이름을 부르는 유일한 곳)
+│   ├── db_schema.py        <- 서비스 표 기준선(db/020_service_baseline.sql)을 시험 DB에 적용하는 헬퍼 apply_service_schema(기준선 파일 이름을 부르는 유일한 곳)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
@@ -489,7 +492,11 @@ SojaFit (proj3-b)
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
-│   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
+│   │   ├── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
+│   │   └── test_service_schema.py  <- 서비스 표 재설계 규칙 시험: 삭제 연쇄 · 승인 칸 · 단순 CHECK · 견적 제약(일회용 DB, 기준선 적용)
+│   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)
+│   │   ├── DB.md           <- 폴더 설명
+│   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
@@ -613,9 +620,10 @@ SojaFit (proj3-b)
 │   │   └── hf_data.py      <- 카드·질의를 비공개 저장소로 올리고 결과 벡터를 받아 검증·삭제
 │   ├── db/                 <- 운영 DB 손 작업
 │   │   ├── DB.md           <- 폴더 설명
-│   │   ├── verify_chain/   <- 새 DB 체인이 운영 이전 SQL 결과와 같은 구조인지 일회용 컨테이너로 확인(운영 DB 접속 없음)
+│   │   ├── gen_schema_docs.py  <- 서비스 표 정의서 · ERD(db/schema)를 DB의 pg_catalog에서 자동 생성(--check는 어긋남만 확인)
+│   │   ├── verify_chain/   <- 새 DB 기준선이 옛 체인 + 운영 이전 SQL 결과와 같은 구조인지 일회용 컨테이너로 확인(운영 DB 접속 없음)
 │   │   │   ├── VERIFY_CHAIN.md  <- 폴더 설명
-│   │   │   └── verify_chain.sh  <- 현재 구조 + 이전 SQL 결과 대 새 체인 구조 비교, 되돌리기 뒤 처음 구조 비교(Postgres 16 · 17)
+│   │   │   └── verify_chain.sh  <- 옛 체인 + 이전 SQL 결과 대 새 기준선 구조 비교(0줄), 옛 증분 체인 000~029와 비교, 되돌리기 뒤 처음 구조 · RLS · 함수 권한 비교(Postgres 16 · 17)
 │   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
 │   └── results/            <- 측정 원시 결과(평가 지표가 아님). <무엇>_<날짜>.json을 주제 폴더에
 │       ├── auth/           <- 로그인 경계·동시 scrypt
@@ -751,6 +759,8 @@ SojaFit (proj3-b)
 | `data/circuits/` | [CIRCUITS.md](data/circuits/CIRCUITS.md) | 평가·문서 |
 | `data/demo/` | [DEMO.md](data/demo/DEMO.md) | 서비스·운영 |
 | `db/` | [DB.md](db/DB.md) | 서비스·운영 |
+| `db/legacy/` | [LEGACY.md](db/legacy/LEGACY.md) | 서비스·운영 |
+| `db/migrations/` | [MIGRATIONS.md](db/migrations/MIGRATIONS.md) | 서비스·운영 |
 | `db/manual/` | [MANUAL.md](db/manual/MANUAL.md) | 서비스·운영 |
 | `db/schema/` | [SCHEMA.md](db/schema/SCHEMA.md) | 서비스·운영 |
 | `db/redesign/` | [REDESIGN.md](db/redesign/REDESIGN.md) | 서비스·운영 |
@@ -765,6 +775,7 @@ SojaFit (proj3-b)
 | `tests/api/` | [API.md](tests/api/API.md) | 서비스·운영 |
 | `tests/conversations/` | [CONVERSATIONS.md](tests/conversations/CONVERSATIONS.md) | 서비스·운영 |
 | `tests/projects/` | [PROJECTS.md](tests/projects/PROJECTS.md) | 서비스·운영 |
+| `tests/db/` | [DB.md](tests/db/DB.md) | 서비스·운영 |
 | `tests/graph/` | [GRAPH.md](tests/graph/GRAPH.md) | 에이전트 |
 | `tests/multi_agent/` | [MULTI_AGENT.md](tests/multi_agent/MULTI_AGENT.md) | 에이전트 |
 | `tests/rag/` | [RAG.md](tests/rag/RAG.md) | 검색·데이터 |

@@ -149,7 +149,9 @@ docker compose up --build   # .env 없이 띄우면 DEMO_MODE=1(데모 모드). 
 curl http://localhost:8000/health   # {"status":"ok"}
 ```
 
-`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_REPLAY=1`로 띄운다. db(pgvector) → thread-setup(분석 저장소 준비) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 키 없는 분석은 이 스냅샷 DB에서 실제 멀티 에이전트 그래프를 돌리고, LLM 응답만 미리 기록한 것(`data/demo/recordings/`)을 재생한다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`와 `DEMO_REPLAY`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
+`.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_REPLAY=1`로 띄운다. db(pgvector) → thread-setup(LangGraph 표 준비. 서비스 표는 db가 첫 기동 때 `db/020_service_baseline.sql`로 만든다) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 키 없는 분석은 이 스냅샷 DB에서 실제 멀티 에이전트 그래프를 돌리고, LLM 응답만 미리 기록한 것(`data/demo/recordings/`)을 재생한다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`와 `DEMO_REPLAY`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
+
+**배포 노트(DB 재설계, 11-11)**: DB 구조가 바뀌었다. 이전 버전으로 만든 로컬 DB 볼륨(재설계 `028` 이전)은 새 코드와 맞지 않으므로 **`docker compose down -v`로 볼륨을 지우고 다시 `docker compose up`** 해야 한다(`down -v`는 로컬 DB 데이터를 지운다). 새 볼륨은 initdb가 `db/` 바로 아래 SQL(코퍼스 → `020_service_baseline.sql` → `026`)을 이름순으로 한 번만 실행한다. 이미 서비스 표가 있는 운영 DB는 `db/migrations/`의 이전 SQL을 쓴다([db/DB.md](db/DB.md)).
 
 키 없는 모드의 화면은 React 작업대 하나다(React 이전 화면 `/workspace`는 11-10에 지웠다). 키 없이 되는 것과 안 되는 것:
 
@@ -161,7 +163,7 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 키 없는 데모는 기록한 질문 5개(`scripts/demo/DEMO.md`의 데모 질문 표)만 재생한다. 질문 · 사용 조건이 글자 하나라도 다르거나, 같은 대화의 두 번째 질문이거나, 조건 질문에 기록과 다른 답을 보내면 422로 데모 질문 목록을 보여 준다. 답은 실제 그래프 · 데이터시트 스냅샷에서 실제 모델이 기록 때 낸 응답이라, 같은 질문에 같은 답을 내는 것만 보여 주고 새 질문에 대한 품질은 보여 주지 않는다. **[주의] 기록 파일(`data/demo/recordings/`)이 저장소에 들어오기 전에는 키 없는 분석이 503(LLM 응답 기록이 없다는 안내)이다.** 기록 · 재생 확인 방법은 [`scripts/demo/DEMO.md`](scripts/demo/DEMO.md)에 있다. 11-09의 키 없는 조건 질문 · 재개 · 승인 확인 기록(확인 14개 모두 통과, [`evals/results/threads/local_g4_isolation_2026-11-09.json`](evals/results/threads/local_g4_isolation_2026-11-09.json))은 지금은 지운 합성 시나리오와 `/workspace` 화면에서 잰 것이다.
 
-데모 모드(`DEMO_MODE=1`)로 새 DB 볼륨을 만들면 로그인 화면에 **"데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼**이 생긴다. 비밀번호 없이 버튼으로 들어가고, 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다.
+데모 모드(`DEMO_MODE=1`)면 로그인 화면에 **"데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼**이 생긴다. 비밀번호 없이 버튼으로 들어가고(계정은 SQL 시드가 아니라 버튼을 처음 누를 때 앱이 만든다), 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다.
 
 ### 키를 넣고 실제 모드
 

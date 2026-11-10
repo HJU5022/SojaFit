@@ -1,6 +1,6 @@
 # Google 관리자 로그인 설계와 구현 상태
 
-> 2026-11-10 변경: 연결 안 된 계정도 이메일이 같으면 승인 없이 자동 연결(아래 11-10 확장). 이 문서의 승인 대기 · 승인 CLI 절은 그 이전(11-08) 기준이다.
+> 2026-11-10 변경: 연결 안 된 계정도 이메일이 같으면 승인 없이 자동 연결(아래 11-10 확장). 이 문서의 승인 대기 · 승인 CLI 절은 그 이전(11-08) 기준이다. 11-11 재설계로 승인 대기 코드(`request_google_link` · `approve_google_link` · `google_pending_email` · `GET /api/auth/google/pending` · `--approve-google`)와 `auth_google_pending` 표가 **삭제**됐다(`db/migrations/migrate_prod_2b_optional_drop_dead_auth.sql`, 새 DB는 기준선에 표가 없다).
 > 2026-11-08 저장소 기준: 기존 비밀번호 인증을 유지한 Google 관리자 로그인, 승인 대기, 운영자 승인·철회·비활성화 CLI, 공통 세션 사용, 콜백 접속 로그 보호, SQL과 합성 테스트가 구현되어 있다. 아래 날짜별 기록의 Cloud Run·Secret Manager·팀 DB 작업은 당시 확인한 운영 이력이며 현재 외부 상태를 뜻하지 않는다. 실제 운영 설정·계정·DB 적용 상태는 대상 환경에서 다시 확인한다.
 
 ## 현재 확인된 상태

@@ -133,7 +133,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- HTTP API: 동작(메서드 + 경로) 37개, 경로 31개입니다. `/openapi.json`(`/docs`)에 동작 33개(경로 27개)가 보이고, Google 관리자 로그인 4개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 29개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+- HTTP API: 동작(메서드 + 경로) 36개, 경로 30개입니다. `/openapi.json`(`/docs`)에 동작 33개(경로 27개)가 보이고, Google 관리자 로그인 3개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 29개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
   - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 18개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
@@ -178,7 +178,6 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/auth/google/status` | 없음(문서에서 숨김) | - | 200 `Enabled` | | 로그인 화면이 Google 진입을 보일지 정함(8.6, `docs/specs/google-admin-login.md`) |
     | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | Google 가입 · 로그인 시작. 쿼리 `consent=1`이면 처리방침 동의 쿠키를 함께 심는다(8.6) |
     | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(세션) · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급(연결된 신원 · 이메일이 같은 활성 계정에 자동 연결 · 동의한 새 이메일). 연결할 수 없으면(비활성 · 이미 다른 Google 신원에 연결됨) `/login?google=error`. 동의 없는 새 이메일은 `/login?google=consent`(8.6) |
-    | `GET /api/auth/google/pending` | 없음(대기 쿠키, 숨김) | - | 200 HTML(이메일 · 요청 번호) | 400 · 404 · 503 | 예전 승인 대기 요청 번호를 보여 줌(콜백은 더 이상 이 화면으로 보내지 않음, 되돌림 · 호환용) |
     | `GET /api/admin/users` | 관리자 | - | 200 `Accounts` `{users: [{id, email(가림), role, is_active}]}` | 403 | 계정 상태 확인(8.6 관리자) |
     | `PATCH /api/admin/users/{id}` | 관리자 | `AccountState` `{is_active}` | 200 `Ok` | 403 · 404 · 422 | 일반 계정 비활성화와 세션 폐기(8.6) |
     | `POST /api/auth/signup` | 없음 | `Signup` `{email, password ≥8자, consent: true}` | 200 `UserId` + 세션 쿠키 | 404(`DEMO_MODE`≠1) · 409 · 422 · 429 `RATE_LIMITED` | 로컬 데모 전용 이메일 가입. 공개 배포는 닫혀 있고 Google로 가입한다(11-10 결정이 11-09 결정을 대체, 8.6) |
@@ -295,6 +294,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ## 7. 데모 모드·오프라인 규칙
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
+- **[주의] `DEMO_MODE` 기본값**: 코드는 `DEMO_MODE`가 설정되지 않으면 `'1'`(데모)로 읽습니다(`backend/auth.py` · `backend/api/auth.py` · `backend/services/llm.py` 등). 그래서 운영 같은 실제 배포는 **반드시 `DEMO_MODE=0`을 명시**해야 합니다(빠지면 이메일 가입 · 데모 버튼 로그인이 열립니다). 운영 Cloud Run에는 `DEMO_MODE=0`이 명시돼 있는 것을 gcloud로 확인했습니다 [실측, 11-11]. 새 환경을 만들 때도 이 변수를 확인합니다.
 - `data/demo/`에는 데모 코퍼스 스냅샷(`snapshot/`)과 LLM 응답 기록(`recordings/`: `calls.jsonl` · `outcomes.json`, 아직 기록 전)을 둡니다. 실제 API 응답 원본(HTTP 본문 · 헤더 · 사용량 · 비용)과 키는 넣지 않고, 기록은 그래프 노드가 schema로 검증한 응답 칸만 담습니다.
 - 분석 재생(`DEMO_REPLAY=1`, `DEMO_MODE=1`과 함께여야 함. compose 기본은 `DEMO_MODE`와 같은 값): 서비스(`backend/conversations/memory_service.py`)가 실제 분석과 같은 멀티 에이전트 그래프 · 카드 도구 · BM25 검색 · MCP 사실 확인을 쓰고, LLM 호출만 `backend/services/demo.py`의 재생 chat으로 바꿉니다. 호출마다 (노드, system, user, schema 이름)의 sha256으로 기록 응답을 찾고, 없으면 실제 LLM이나 비슷한 기록으로 넘기지 않고 멈춥니다(`ReplayMiss` → 503, 노드 이름을 문구에 담음). 기록과 같게 Store(선호 실장 방식)는 그래프에 넘기지 않고, 질문마다 카드 읽기 공유 칸을 비웁니다. `DEMO_MODE=1`만 켜면 실제 LLM을 그대로 씁니다(평가 · 실제 모델 확인).
 - 재생은 기록한 데모 질문(`scripts/demo/record_demo.py`의 5개: `v3-01` 판정 + 조건 질문, `demo-find` 후보 찾기, `demo-rating` 정격, `v3-36` · `v3-30` 거절)만 받습니다. 회로 연결 정보 · 대상 부품 · 질문 · 사용 조건이 기록과 글자까지 같고 새 대화의 첫 질문이어야 하며, 아니면 422로 데모 질문 목록을 문구에 담아 거절합니다(회로 · 대상 · 질문은 run 스트림 전, 같은 대화의 두 번째 질문은 스트림 뒤 `failed`). 조건 질문의 재개는 기록한 답 · 역할만 받습니다. 기록 파일이 없으면 서버는 뜨고 분석 요청만 503입니다. React 작업대는 `GET /api/demo-questions`로 목록을 받아, 같은 데모 회로(`demo_id`) · 대상 부품의 질문을 버튼으로 보이고 누르면 새 대화로 같은 글자를 보내며, 조건 질문에는 "기록한 답으로 계속하기" 버튼으로 기록한 답을 보냅니다. 데모 회로 카탈로그에 `v3-01`의 회로(`attiny85_time_switch`, `data/circuits/collected/received-20261030/c01`)가 있습니다.
@@ -377,7 +377,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 기억이 아닌 것: 승인한 판정 사례(승인 기록으로만 둠), 전압·전류 같은 회로 값(회로마다 다름, AC-02), 주문 수량.
 - 저장: 칸 하나가 Store 항목 하나입니다. namespace는 `(str(user_id), "profile")`(첫 칸이 격리 단위, namespace는 접근 권한 검사가 아님), key는 칸 이름, 값은 `{kind, value, text, version, updated_at, source: "user_settings"}`입니다. `text`는 코드가 정한 틀로 만든 한국어 문장(예: "이 사용자는 SMD 실장을 선호한다.")이고 LLM이 쓴 글이 아닙니다. 고치면 같은 key를 덮어쓰고 `version`을 1 올리며 다시 임베딩합니다.
-- 의미 검색: `PostgresStore` 색인을 `text` 칸에 켭니다. 임베딩은 `llm.voyage_embed`(voyage-4-large, 1024차원)를 감싸 저장 문장은 `document`, 질문은 `query` 입력 종류로 보냅니다. 근사 색인 없이 정확 검색(flat)입니다. 색인 표(`store_vectors`·`vector_migrations`)는 준비 명령(`python -m backend.conversations.memory_service --setup`)이 `vector` 확장이 설치된 DB에서만 `sojafit_agent`에 만듭니다.
+- 의미 검색: `PostgresStore` 색인을 `text` 칸에 켭니다. 임베딩은 `llm.voyage_embed`(voyage-4-large, 1024차원)를 감싸 저장 문장은 `document`, 질문은 `query` 입력 종류로 보냅니다. 근사 색인 없이 정확 검색(flat)입니다. 색인 표(`store_vectors`·`vector_migrations`)는 준비 명령(`python -m backend.conversations.memory_service --setup`)이 `vector` 확장이 설치된 DB에서만 `sojafit_agent`에 만듭니다. `--setup`은 **LangGraph 표(체크포인트 · Store)만** 만들고 SQL 파일을 적용하지 않습니다. 서비스 표는 새 DB의 기준선(`db/020_service_baseline.sql`, compose initdb)이나 기존 DB의 이전 SQL(`db/migrations/`)이 만듭니다(11-11).
 - 고치기·지우기: 설정 API로만 씁니다(대화에서 사실을 뽑지 않음). `GET /api/me/memory`(선택 `q` → 의미가 가까운 순 최대 3개), `PATCH /api/me/memory`(세 칸만), `DELETE /api/me/memory`(전부, `?kind=`면 한 칸, 204). 로그인 사용자만 쓰고 사용자 id는 세션에서 옵니다. 사실은 자동 만료가 없습니다.
 - 삭제(11-09 결정, 상세와 개인정보 보호법 조항 대응은 [작업서](docs/specs/user-thread-memory.md) "보관 · 삭제"): 사용자가 지우면 숨김이 아니라 바로 지웁니다. 프로젝트 삭제(`DELETE /api/projects/{id}`)는 React 업무 행과 같은 UUID의 분석 thread·checkpoint·메시지·승인 기록·분석 사건을 한 트랜잭션에서 지웁니다. 탈퇴(`DELETE /api/me`, 같은 출처, 일반 계정만, 관리자 409)는 분석 기록 → Store namespace `(user_id, ...)` 전부(옛 `("memories", user_id)` 포함) → 계정(세션·프로젝트·견적은 FK cascade) 순서로 지우고 지운 건수를 돌려줍니다. 중간에 실패하면 계정이 남아 다시 요청하면 이어서 지웁니다. 계정 단위 잠금으로 그 사용자의 분석이 도는 동안 탈퇴는 409, 탈퇴가 도는 동안 그 사용자의 새 분석·재개·설정 저장은 409입니다.
 - 보관 기간(11-09 결정): 프로젝트와 딸린 것(대화·checkpoint·승인·견적, 같은 UUID 분석 기록)과 프로젝트 없는 분석 대화는 마지막 활동 뒤 60일, 기록(분석 사건·하루 사용량·로그인·가입 시도)은 30일 뒤에 지웁니다. 사용자 사실은 자동 만료가 없습니다. 스케줄러 없이 새 분석(질문)을 시작할 때 규칙마다 SQL 함수 하나(`sojafit_agent.purge_inactive_projects`·`purge_log_records`, `db/023_retention.sql`)를 작은 묶음으로 부르고, 청소가 실패해도 분석은 계속합니다. 아직 걸린 로그인 잠금은 지우지 않습니다.
@@ -416,7 +416,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 로그아웃했거나 만료된 세션, WHEN 사용자 정보를 요청하면, THEN 인증을 거부한다.
 - GIVEN 서로 다른 두 계정, WHEN 각각 로그인 상태를 확인하면, THEN 각자의 ID와 DB에서 확인한 역할(admin 또는 user)을 반환한다. 회로·대화·기억·견적 API는 세션 사용자 id로 소유권을 확인하고 다른 사용자의 자료에는 404를 낸다(4절).
 - GIVEN 관리자와 일반 사용자, WHEN 관리자 API에 접근하면, THEN 관리자만 목록을 조회하고 일반 계정의 활성 상태를 변경한다. 비활성화된 사용자의 기존 세션은 재활성화 후에도 사용할 수 없다.
-- GIVEN 새 Compose DB와 `DEMO_MODE=1`, WHEN 초기화 SQL이 실행되면, THEN 로컬 데모 전용 일반 사용자 2개(데모 사용자 A · B, 평가 계정 아님)를 비밀번호 없이(scrypt가 아닌 표식) 만들고 기존 계정을 덮어쓰지 않는다. `DEMO_MODE`가 1이 아니면 계정을 만들지 않는다. 저장소에는 비밀번호 · 해시가 없다(11-09).
+- GIVEN 새 Compose DB와 `DEMO_MODE=1`, WHEN 데모 사용자 A 또는 B 버튼으로 처음 로그인하면, THEN 앱이 로컬 데모 전용 일반 사용자(데모 사용자 A · B, 평가 계정 아님)를 비밀번호 없이(scrypt가 아닌 표식) 그 자리에서 만들고 기존 계정을 덮어쓰지 않는다(SQL 시드 없음, 11-11 D8). `DEMO_MODE`가 1이 아니면 계정을 만들지 않는다. 저장소에는 비밀번호 · 해시가 없다(11-09).
 - GIVEN 데모 모드, WHEN 로그인 화면의 "데모 사용자 A · B로 들어가기"를 누르면(`POST /api/auth/demo-login` `{"account": "a"|"b"}`, 같은 출처), THEN 그 시드 계정에 로그인과 같은 세션을 발급하고 A · B는 서로 다른 사용자다. 두 계정의 비밀번호 로그인은 늘 실패하고, 표식이 없는 계정(같은 이메일로 가입한 계정) · 관리자 · 비활성 계정에는 세션을 주지 않는다(404). 데모 모드가 아니면 `GET /api/auth/demo`와 `POST /api/auth/demo-login`은 공통 404다.
 - GIVEN Google 로그인이 설정되지 않음, WHEN 로그인 화면과 Google 상태 API를 사용하면, THEN 기존 비밀번호 로그인을 유지하고 Google 진입은 비활성으로 표시한다.
 - GIVEN `DEMO_MODE=0`, WHEN `POST /api/auth/signup`을 보내면, THEN 본문을 읽기 전에 공통 404다.
