@@ -1,6 +1,7 @@
 # 진짜 모델 평가(버튼 실행): 기준 평가셋 v3 50문항을 실제 LLM · 운영 DB로 재고, gate_report 기준(정답 0.95 · 오류 0.05 · p95 10초)에
 # 못 미치면 실패한다. PR마다 도는 키 없는 회귀(ci.yml eval-replay)가 못 잡는 모델 쪽 변화를 본다.
 # [주의] 돌릴 때마다 돈이 든다(v3 1세트 약 $0.05). 키는 저장소 Settings > Secrets에만 둔다(코드 · 로그에 적지 않음).
+# [참고] 인젝션 베이스라인 실측(run_injection_baseline --execute)은 승인 파일 · 전용 DB 14개가 필요해 이 버튼으로 돌리지 않는다(로컬 절차: evals/guides/preregister.md).
 # 필요한 Secrets: OPENROUTER_API_KEY, VOYAGE_API_KEY, DATABASE_URL(운영 DB 읽기), LANGFUSE_PUBLIC_KEY · LANGFUSE_SECRET_KEY · LANGFUSE_BASE_URL
 name: Eval (live)
 on:

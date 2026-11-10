@@ -3,6 +3,8 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 jobs:
   test:
@@ -76,3 +78,20 @@ jobs:
             api python scripts/demo/record_demo.py replay
       - if: always()
         run: docker compose -p sojafit-ci down -v
+
+  # 인젝션 평가 회귀(키 · 네트워크 · DB 없음): ① 저장한 실측03 결과(110작업)가 사전 등록 기준을 지키는지 확인하고
+  # (evals/runners/check_injection_result.py, 기준 근거는 그 파일 머리말), ② 인젝션 베이스라인 실행기(가짜 모델 · 실제 그래프)와
+  # 저장한 C2 · 정상군 응답 재생을 다시 돈다. 기준 미달이면 실패한다.
+  # [왜] 진짜 모델 호출은 비용 · 비밀 때문에 여기 넣지 않는다. 인젝션 실측(--execute)은 승인 파일 · 전용 DB 14개가 필요해 이 저장소의 로컬 절차(evals/guides/preregister.md)로만 돌린다.
+  eval-injection-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.12.9"
+      - run: uv sync --locked
+      - name: Check saved injection baseline against preregistered criteria
+        run: uv run python -m evals.runners.check_injection_result
+      - name: Replay injection baseline harness and saved defense responses
+        run: uv run pytest -q -p no:cacheprovider tests/evals/test_check_injection_result.py tests/evals/test_injection_baseline.py tests/evals/test_injection_baseline_plan.py tests/evals/test_injection_preflight.py tests/evals/test_saved_defense_replay.py
