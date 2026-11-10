@@ -210,28 +210,38 @@ def google_session(issuer: str, subject: str) -> tuple[str, int] | None:
 
 
 def google_signup(issuer: str, subject: str, email: str, consent: bool) -> tuple[str, int] | str | None:
-    """처음 온 Google 신원으로 일반 사용자 계정(비밀번호 없음)을 만들고 세션을 발급한다. Google이 보증한 이메일(email_verified)만 들어온다.
+    """처음 온 Google 신원을 계정에 붙이고 세션을 발급한다. Google이 보증한 이메일(email_verified)만 들어온다.
+
+    - 이메일이 활성 계정의 login_id와 정확히 같으면(소문자 · 공백 제거) 그 계정에 신원을 연결한다. 관리자도 같다(11-10 결정: 운영자 승인 없음).
+    - DB에 없는 이메일이면 처리방침 동의(consent)가 있을 때만 비밀번호 없는 일반 사용자 계정을 만든다.
 
     Returns:
-        (세션 토큰, user_id). 이메일이 이미 users에 있으면 None: 자동 연결 · 로그인하지 않는다(호출자가 승인 대기로 보냄).
-        처리방침 동의(consent)가 없으면 "consent": 사용자 행을 만들지 않는다.
+        (세션 토큰, user_id). 처리방침 동의가 없으면 "consent"(사용자 행을 만들지 않음).
+        None: 연결할 수 없다 — 비활성 계정이거나 그 계정이 이미 다른 Google 신원에 연결됐거나 같은 신원이 동시에 연결됐다(호출자가 로그인 오류로 보냄).
     """
     email = email.strip().lower()
     with connection() as conn:
-        if conn.execute("SELECT 1 FROM users WHERE login_id=%s", (email,)).fetchone():
-            return None  # [주의] 같은 이메일의 비밀번호 · 관리자 계정을 Google 로그인으로 가로채지 못하게 한다
-        if not consent:
-            return "consent"
-        user = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, 'user') ON CONFLICT (login_id) DO NOTHING RETURNING id",
-                            (email, GOOGLE_PASSWORD_HASH)).fetchone()
-        linked = user and conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING RETURNING user_id",
-                                       (issuer, subject, user[0])).fetchone()
+        # [왜] 로그인 · 비활성화와 같이 사용자 행을 잠가 비활성화와 연결 · 세션 발급이 엇갈리지 않게 한다
+        existing = conn.execute("SELECT id, is_active FROM users WHERE login_id=%s FOR UPDATE", (email,)).fetchone()
+        if existing:
+            if not existing[1]:
+                return None
+            user_id = existing[0]
+        else:
+            if not consent:
+                return "consent"
+            created = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, 'user') ON CONFLICT (login_id) DO NOTHING RETURNING id",
+                                   (email, GOOGLE_PASSWORD_HASH)).fetchone()
+            user_id = created[0] if created else None
+        # [왜] user_id UNIQUE · (issuer, subject) PK 충돌이면 행이 안 들어간다: 이미 다른 신원에 연결된 계정, 같은 신원의 동시 연결
+        linked = user_id and conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING RETURNING user_id",
+                                          (issuer, subject, user_id)).fetchone()
         if not linked:
-            conn.rollback()  # 동시 요청이 먼저 만든 경우: 사용자 행도 남기지 않는다
+            conn.rollback()  # 새로 만든 사용자 행도 남기지 않는다
             return None
         token = secrets.token_urlsafe(32)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
-        return token, user[0]
+        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
+        return token, user_id
 
 
 def revoke_google_link(user_id: int) -> bool:

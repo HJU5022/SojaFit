@@ -98,7 +98,8 @@ def google_callback(request: Request):
         identity = auth.fetch_google_identity(code, *stored)
         if not identity:
             return google_failure()
-        # 연결된 신원이면 바로 로그인, 처음 오는 이메일이면 동의 쿠키가 있을 때만 계정을 만든다. 이메일이 이미 있으면(None) 자동 연결 없이 승인 대기
+        # 연결된 신원이면 바로 로그인한다. 아니면 Google이 확인한 이메일이 활성 계정(관리자 포함)의 로그인 이메일과 같을 때 자동 연결하고(운영자 승인 없음),
+        # DB에 없는 이메일이면 동의 쿠키가 있을 때만 새 계정을 만든다. 연결할 수 없으면(None: 비활성 · 이미 다른 신원에 연결됨) 로그인 오류다
         session = auth.google_session(identity[0], identity[1]) or auth.google_signup(*identity, consent=request.cookies.get(GOOGLE_CONSENT_COOKIE) == "1")
         if session == "consent":
             response = RedirectResponse("/login?google=consent", status_code=303)
@@ -107,10 +108,7 @@ def google_callback(request: Request):
             secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
             response.set_cookie(auth.COOKIE, session[0], httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
         else:
-            request_id = auth.request_google_link(*identity)
-            response = RedirectResponse("/api/auth/google/pending", status_code=303)
-            secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
-            response.set_cookie(GOOGLE_PENDING_COOKIE, request_id, max_age=900, httponly=True, secure=secure, samesite="lax", path="/api/auth/google/pending")
+            return google_failure()
     # [왜] 콜백은 브라우저 이동이라 DB 설정 누락(auth.connection의 503)도 JSON 대신 로그인 화면 오류로 돌려보낸다
     except (psycopg.Error, HTTPException, KeyError, httpx.HTTPError, AuthlibBaseError, ValueError, TypeError):
         return google_failure()
