@@ -7,6 +7,8 @@
 - 담당: 에이전트
 
 ## 구현 상태
+
+- 2026-11-10: 공통 다른 품번 행 검사(other_part_row)는 ORDERING CODE에 숫자 뒤 x가 있고 주석이 x를 정의한 경우만 숫자 wildcard를 펼쳐 접미사까지 대조한다. 기본형G 질문에 GH 주문행이 남는 오류를 차단하며 H형의 기본형 값 행 허용은 유지한다. 이 검사는 단일 grade와 멀티 keep_docs가 공유한다.
 - 있음: D4 v2 단일 그래프(아래 흐름). 사실 확인(`lookup`), 판정 길(`specs` · `find` · `chat`), 체크포인터를 인자로 받아(`build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`) 가짜 검색기 · 가짜 도구로 키 없이 시험할 수 있습니다. 판정 길의 빠진 값 묻기(interrupt, 문항당 1번)는 체크포인터가 있어야 켜지고, 평가 실행기는 메모리 체크포인터(`InMemorySaver`)를 넘깁니다.
 - 서비스 연결: `backend/conversations/memory_service.py`가 업로드 연결과 인증 사용자·thread를 검증하고 DB Checkpointer/Store를 앱 수명 동안 연결합니다. 이 폴더의 build는 저장소를 인자로 받습니다. 견적서 승인 단계(interrupt)는 아직 없습니다. 판정 사례 승인은 별도 인증 API입니다.
 - 과거 기억은 현재 답변의 인용 근거로 쓰지 않고 `memory_refs`로만 선택합니다. generate는 본문 기억 인용과 제공되지 않은 ID를 거부합니다. 모델용 과거 문맥은 재개 답변·최종 판정 입력을 질문보다 앞에 제한해서 담습니다.

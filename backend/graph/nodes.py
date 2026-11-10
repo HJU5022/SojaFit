@@ -244,6 +244,13 @@ def other_part_row(doc: dict, parts: list[str]) -> bool:
     # [왜] H 품번(AEC-Q101)도 값 표에는 기본 품번으로 적힌다('"H" means AEC-Q101 qualified'). SMAJ6.5CAH → SMAJ6.5CA · SMAJ6.5A
     bases = {p.lower() for p in parts} | {p.lower()[:-1] for p in parts if p.lower().endswith("h")}
     asked = bases | {re.sub(r"c(a?)$", r"\1", p) for p in bases}
+    order = re.search(r'\bORDERING CODE(?:\(\d+\))*\s*:\s*([^|\n]+)', body, re.I)
+    if order and re.search(r'''["']x["']\s+defines\b''', doc['content'], re.I):
+        # Only a documented numeric wildcard expands; retain suffixes so G never matches GH.
+        codes = [w.lower() for w in WORD.findall(order.group(1)) if re.search(r'\dx', w, re.I)]
+        if codes:
+            return not any(re.fullmatch(re.sub(r'(?<=\d)x+', lambda m: r'\d+', re.escape(code)), p)
+                           for code in codes for p in asked)
     return bool(named) and not named & asked
 
 

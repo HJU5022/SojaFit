@@ -101,6 +101,11 @@ def _clean_group(m, valid: set[str]) -> str:
     return f"[{', '.join(left)}]" if left else ''
 
 
+def has_uncited_sentence(answer: str) -> bool:
+    """A cited fact must not let an unsupported sentence ride into a joined answer."""
+    return any(s.strip() and not citations(s) for s in re.split(r'(?<=[.。])\s+', answer))
+
+
 def lookup_parts(task: Task, find) -> list[str]:
     """품번 없이 정격으로 묘사한 부품: 계획이 옮겨 적은 정격과 같은 값을 가진 품번을 사양 표 도구로 찾는다(값 비교는 도구 안 SQL)."""
     def conditions(vz_range: bool) -> list[dict]:
@@ -196,11 +201,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
         return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
     cited = citations(answer)
-    if cited - valid or not cited & valid:
+    if cited - valid or not cited & valid or has_uncited_sentence(answer):
         # A single bounded regeneration uses the same evidence; never guess a citation for the model.
         correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
-        correction += ('\nCitation correction: the previous output used missing or unsupported citation IDs. '
-                       'Re-answer only from the evidence above, copying its allowed IDs exactly. '
+        correction += ('\nCitation correction: the previous output had unsupported IDs or sentences without evidence citations. '
+                       'Answer only the assigned task in the Supervisor brief, not the other tasks in the full question. '
+                       'Re-answer only from the evidence above, copying its allowed IDs exactly for every sentence. '
+                       'Put missing facts for this task in missing, not unsupported absence claims in answer. '
                        'Do not invent support; use grade none if it is absent.')
         repaired = chat('docs_answer', PROMPT, correction, DocsAnswer)
         calls += 1
@@ -209,14 +216,18 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
             return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
                           reason=Reason.VERIFY_FAILED, docs=shown)
-        if repaired.grade != 'none' and repaired_cites & valid and not (repaired_cites - valid):
+        if (repaired.grade != 'none' and repaired_cites & valid and not (repaired_cites - valid)
+                and not has_uncited_sentence(repaired_answer)):
             result, answer = repaired, repaired_answer
     answer, dropped_fake = drop_fake_citations(answer, valid)
+    if has_uncited_sentence(answer):
+        return report('fail', 'answer contains sentences without evidence citations after bounded correction',
+                      reason=Reason.VERIFY_FAILED, docs=shown)
     cited = citations(answer)
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' and not dropped_fake else 'partial'
+    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake else 'partial'
     summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
     return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
                   evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

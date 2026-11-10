@@ -21,6 +21,89 @@ def smoke_cards():
             for r in rows if r['doc']=='1N4001G SERIES_P2104.pdf' and r['idx'] in (15,4)]
 
 
+# Exact voltage-task outputs from smoke02; source JSONL SHA256 starts 31d837ddcb67.
+SAVED_SMOKE02_VOLTAGE = [
+    '1N4007G의 반복 최대 역전압(VRRM)은 1000 V입니다[16]. 패키지는 증거에 명시되어 있지 않고, 넷리스트에서 D1의 패키지가 Diode:DO-41로 표기되어 있습니다[넷리스트]. 다만 이는 회로 내 부품 표기이므로 데이터시트 패키지 정보로 단정하지 않습니다.',
+    '1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)의 VRRM 행을 근거로 함] [16]. 패키지는 증거 카드에 명시되어 있지 않아 답할 수 없습니다.',
+    '1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [16]. 문서의 패키지 정보는 제공된 근거에 없으며, 극성 식별 방법도 근거에 없습니다.',
+    '1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [16]. 이 값은 TA = 25°C 기준 절대 최대 정격 표에 적힌 값입니다 [16]. 패키지와 극성 식별 방법은 제공된 근거에 없어 답할 수 없습니다.',
+]
+
+
+@pytest.mark.parametrize('saved', SAVED_SMOKE02_VOLTAGE)
+def test_smoke02_uncited_absence_claim_requests_bounded_task_scoped_repair(saved):
+    fixed = '1N4007G의 VRRM은 1000 V입니다 [16].'
+    result, calls, _ = citation_replay([
+        D.DocsAnswer(grade='enough', answer=saved), D.DocsAnswer(grade='enough', answer=fixed)])
+    assert result['answer'] == fixed and result['status'] == 'ok'
+    assert len(calls) == 2 and 'Citation correction' in calls[1]
+    assert 'only the assigned task' in calls[1]
+
+
+def test_smoke02_persisting_contradiction_is_rejected_instead_of_joined():
+    saved = D.DocsAnswer(grade='enough', answer=SAVED_SMOKE02_VOLTAGE[2])
+    result, calls, _ = citation_replay([saved, saved])
+    assert result['status'] == 'fail' and result['reason'] == 'verify_failed'
+    assert not result['answer'] and len(calls) == 2
+
+
+def test_enough_with_missing_is_not_reported_as_complete():
+    result, _, _ = citation_replay([D.DocsAnswer(grade='enough', answer='VRRM은 1000 V입니다 [16].', missing=['package'])])
+    assert result['status'] == 'partial' and result['missing'] == ['package']
+
+
+def test_smoke02_wrong_ordering_row_is_removed_and_cannot_support_package():
+    rows = [json.loads(s) for s in Path('data/demo/snapshot/chunks.jsonl').read_text(encoding='utf-8').splitlines()]
+    cards = [dict(chunk_id=r['idx']+1, file=r['doc'], page=r['page'], table=r['table'], content=r['text'], doc_parts=r['parts'])
+             for r in rows if r['doc']=='1N4001G SERIES_P2104.pdf' and r['idx'] in (4,15,27,29)]
+    kept = D.keep_docs(cards, ['1N4007G'], '1N4007G의 패키지')
+    assert {d['chunk_id'] for d in kept} == {5,16,28}
+    bad = D.DocsAnswer(grade='enough', answer='1N4007G의 VRRM 정격은 1000V이며, 1N4001G~1N4007G 시리즈 표에서 1N 4007G 값으로 제시됩니다 [16]. 패키지는 DO-204AL (DO-41)입니다 [30]. 문서는 극성을 음극 띠(cathode band)로 표시한다고 설명합니다 [5].')
+    fixed = '1N4007G의 패키지는 DO-204AL (DO-41)입니다 [28]. 극성은 캐소드 밴드로 표시합니다 [5].'
+    queue = [bad, D.DocsAnswer(grade='enough', answer=fixed)]
+    calls = []
+    def chat(node, system, user, schema):
+        calls.append(user)
+        return queue.pop(0)
+    payload = {'question':'1N4007G의 패키지', 'task':dict(id=1,agent='docs',kind='rating',goal='package',query='package',parts=['1N4007G'])}
+    report = D.docs_agent(payload,retriever=lambda *a,**k:cards,chat=chat)['reports'][0]
+    assert report['evidence_ids'] == ['28','5'] and report['status'] == 'ok'
+    assert all('[30]' not in call for call in calls) and len(calls)==2
+
+
+@pytest.mark.parametrize('asked,allowed', [('1N4007G',{28}),('1N4007GH',{28,30}),('1N4002G',{28})])
+def test_ordering_wildcard_preserves_suffix_and_base_row_for_h_variant(asked,allowed):
+    rows = [json.loads(s) for s in Path('data/demo/snapshot/chunks.jsonl').read_text(encoding='utf-8').splitlines()]
+    cards = [dict(chunk_id=r['idx']+1,file=r['doc'],page=r['page'],table=r['table'],content=r['text'],doc_parts=r['parts'])
+             for r in rows if r['doc']=='1N4001G SERIES_P2104.pdf' and r['idx'] in (27,29)]
+    assert {d['chunk_id'] for d in D.keep_docs(cards,[asked],asked)} == allowed
+
+
+@pytest.mark.parametrize('saved', SAVED_SMOKE02_VOLTAGE)
+def test_smoke02_corrected_task_replay_joins_without_absence_claims(saved):
+    from backend.multi_agent.build import build_graph
+    from backend.multi_agent.contracts import Plan, Task
+    calls = []
+    def chat(node,system,user,schema):
+        calls.append(node)
+        if node=='supervisor':
+            return Plan(question_type='rating',next='tasks',tasks=[
+                Task(id=1,agent='docs',kind='rating',goal='voltage',query='1N4007G VRRM',parts=['1N4007G']),
+                Task(id=2,agent='docs',kind='rating',goal='package and polarity',query='1N4007G package',parts=['1N4007G'])])
+        assert node=='docs_answer', 'Successful scoped reports must join without a synth call'
+        if '- goal: voltage\n' in user:
+            answer = '1N4007G의 VRRM은 1000 V입니다 [16].' if 'Citation correction' in user else saved
+        else:
+            answer = '패키지는 DO-41입니다 [5]. 극성은 캐소드 밴드로 표시합니다 [5].'
+        return D.DocsAnswer(grade='enough',answer=answer)
+    graph=build_graph(chat=chat,retriever=lambda *a,**k:smoke_cards(),
+        parse=lambda s:dict(question=s['input'],conditions='',target='',target_part={}))
+    state=graph.invoke({'input':'1N4007G의 VRRM과 패키지, 극성 식별 방법을 알려 주세요.'})
+    assert not state['refusal'] and state['check']['fake_citations']==[] and state['check']['uncited_sentences']==0
+    assert state['answer']=='1N4007G의 VRRM은 1000 V입니다 [16].\n\n패키지는 DO-41입니다 [5]. 극성은 캐소드 밴드로 표시합니다 [5].'
+    assert calls.count('docs_answer')==3 and 'synth' not in calls
+
+
 def citation_replay(answers):
     cards=smoke_cards()
     calls=[];searches=[];queue=list(answers)

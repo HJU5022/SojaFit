@@ -14,7 +14,8 @@ Do two things in one answer.
    - If the evidence only lets you say that the asked fact cannot be determined (for example the netlist names no maker or no voltage grade), grade `none`; do not write an answer whose content is "this cannot be confirmed".
 
 2. Write the answer (`answer`) in Korean for `enough` and `partial`:
-   - Answer only the task in the brief, within its boundary. Use only what the evidence states. Do not add background knowledge.
+   - Answer only the task in the brief, within its boundary. The full question is context: do not answer or declare missing the other tasks assigned to other agents. Use only what the evidence states. Do not add background knowledge.
+   - Put unconfirmed facts for your assigned task in missing, not in answer as claims that the document has no evidence. Every sentence in answer must have its own supporting citation. Use enough only when missing is empty for this task.
    - End every sentence with its evidence number before the period. Copy only the exact IDs in "Allowed citation IDs"; never renumber the cards from 1. Page numbers, PDF names and source-location captions inside a card are not citation IDs. For multiple pieces use a comma-separated group of those allowed IDs; for the netlist write [넷리스트].
    - Copy values exactly as written in the evidence: number, unit and test condition. Do not compare values to decide whether a part can replace another.
    - For a rating or characteristic lookup, answer with the values and test conditions in the document; do not refuse because the user's operating conditions are missing. Do not answer with nearby values to make it look as if the core of the task was answered.

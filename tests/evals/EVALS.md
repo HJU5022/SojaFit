@@ -39,4 +39,4 @@
 - `test_judgement_bundle.py` — 원격/서비스 DB·덮어쓰기 거부, 단일 예산 호출/시간 차단, 실제 모델 CLI 부재, 실제 번호를 단 위험 문서 답이 판정 답에서 차단되는지. `TEST_INJECTION_DATABASE_URL`이 없으면 전용 loopback DB 왕복 1건은 skip한다(그 경로는 사양 표 제거(ADR 0016) 뒤 현재 코드와 맞지 않아 미검증). 공급자 함수는 호출 시 실패하도록 대체한다
 - `test_claim_consistency.py` — 유료 기준선 실행기의 호출 없는 계획·결과 덮어쓰기 거부·상한 뒤 후속 미실행/부분 raw 보존, 거짓 가짜 응답의 원시 보존/최종 차단을 외부 호출 없이 검사한다
 - `test_input_surfaces.py` — 무료 계획·덮어쓰기 거부·이름 필드 무시/ref 거부·청크/값/질문의 모델 입력 노출·위험 응답 기록과 최종 차단을 가짜 모델로 확인한다
-- `test_saved_defense_replay.py` — 저장된 실제 C2/P4-N 응답·원시 SHA256을 고정해 기존 에이전트/판정/최종 조립에 재생한다. 모델/네트워크/DB 호출을 막는다. 기준선 보존 2건과 수정 후 차단 2건(supervisor 판정 출력 경계 뒤 4건 통과). `roles.yaml`은 바이트 대신 source를 뺀 규칙 내용을 측정 커밋 190cf89 값에 고정한다(저장 해시는 Windows CRLF 바이트). xfail/skip으로 숨기지 않는다
+- `test_saved_defense_replay.py` — 저장된 실제 C2/P4-N 응답·원시 SHA256을 고정해 기존 에이전트/판정/최종 조립에 재생한다. 모델/네트워크/DB 호출을 막는다. 새 인용교정 요청에는 같은 저장 오류응답만 최대1회 반복하며 성공응답을 만들지 않는다. 기준선 보존 2건과 수정 후 차단 2건(supervisor 판정 출력 경계 뒤 4건 통과). `roles.yaml`은 바이트 대신 source를 뺀 규칙 내용을 측정 커밋 190cf89 값에 고정한다(저장 해시는 Windows CRLF 바이트). xfail/skip으로 숨기지 않는다
