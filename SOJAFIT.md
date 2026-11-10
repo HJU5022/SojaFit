@@ -373,6 +373,7 @@ SojaFit (proj3-b)
 │   │   ├── run_judgement_bundle.py <- 로컬 합성 적재·BM25/MCP·가짜모델 판정과 묶음 예산 검사(DB 단계는 ADR 0016 뒤 현재 코드와 안 맞음)
 │   │   ├── run_claim_consistency.py <- 실제 모델의 거짓 인용·설명 충돌 기준선, 합산 예산·원시 결과 보관
 │   │   ├── run_injection_preflight.py <- 유료 옵션 없는 인젝션 준비 검사·격리 합성 적재·관찰·예산·캐시·채점 도구
+│   │   ├── check_injection_result.py <- 저장한 인젝션 실측03 결과(110작업)가 사전 등록 기준을 지키는지 키 없이 확인, 미달이면 종료 코드 1(ci.yml eval-injection-replay)
 │   │   ├── run_injection_baseline.py <- 기본110개 계획·가짜 그래프 검증·승인/커밋 게이트·원시 JSONL 보존
 │   │   ├── injection_baseline_runtime.py <- 승인 후 전용 코퍼스 준비·공유 예산·실제 카드/서비스 이력 어댑터
 │   │   ├── plan_injection_baseline.py <- 유료 실행 없는 110개 job 고정과 준비 턴·검색·재시도·예약 예산 계산
@@ -591,6 +592,7 @@ SojaFit (proj3-b)
 │   │   ├── test_judgement_bundle.py <- 로컬DB 경계·합산 예산·가짜모델 판정 경로·판정 출력 경계 검사
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
+│   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
 │   │   ├── test_input_surfaces.py <- 입력 위치별 파서·모델 노출·위험 출력 기록 무료 검사
