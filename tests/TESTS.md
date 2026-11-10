@@ -13,6 +13,7 @@
 - `db_schema.py` — 서비스 표 SQL을 순서대로 적용하는 시험 헬퍼 `apply_service_schema(conn, agent=False)`. SQL 파일 이름을 부르는 유일한 곳이다
 - `api/` — 서버 API·인증 시험. [API.md](api/API.md)
 - `conversations/` — 격리 DB 대화·체크포인트 시험. [CONVERSATIONS.md](conversations/CONVERSATIONS.md)
+- `db/` — 서비스 DB 문서 생성 도구(`scripts/db/gen_schema_docs.py`)와 커밋된 문서-DB 어긋남 시험. [DB.md](db/DB.md)
 - `projects/` — 실제 격리 DB에서 소유권·cascade·원자성·권한 시험. [PROJECTS.md](projects/PROJECTS.md)
 - `evals/` — 동결 감시·평가 실행기·Skill 쌍 시험. [EVALS.md](evals/EVALS.md)
 - `multi_agent/` — 멀티 에이전트 시험. [MULTI_AGENT.md](multi_agent/MULTI_AGENT.md)
