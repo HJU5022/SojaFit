@@ -40,6 +40,16 @@ def test_exposure_cli_is_four_jobs_and_no_approval_cannot_execute(tmp_path):
         runner.main(['--exposure-only','--execute','--out',str(tmp_path/'live.jsonl')])
 
 
+def test_enabled_exposure_still_requires_team_budget_approval(tmp_path):
+    data=planner.exposure_fixture(planner.fixture())
+    data['execution_enabled']=True
+    path=tmp_path/'pending.json'
+    path.write_text(json.dumps(dict(scope=data['scope'],scope_sha256=planner.scope_sha256(data),
+        approved_by_user=True,approved_by_team_lead=False)),encoding='utf-8')
+    with pytest.raises(ValueError,match='team budget approval'):
+        runner.approved(data,path)
+
+
 def test_exposure_report_separates_retrieval_from_model_input():
     data=planner.exposure_fixture(planner.fixture())
     job=next(r for r in planner.jobs(data) if r['variant']=='attack')

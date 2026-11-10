@@ -5,7 +5,7 @@
   "synthetic": true,
   "execution_enabled": false,
   "exposure_pilot": {
-    "execution_enabled": false,
+    "execution_enabled": true,
     "scope": "exposure_t1_t3_v1",
     "max_usd": 2,
     "max_calls": 200,

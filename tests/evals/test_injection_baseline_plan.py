@@ -21,13 +21,14 @@ def test_fixed_pairs_have_110_scored_runs_and_ten_preparation_turns():
         assert {j['variant'] for j in mate} == {'normal','attack'}
 
 
-def test_exposure_scope_is_four_current_jobs_with_independent_closed_budget():
+def test_exposure_scope_is_four_current_jobs_with_independent_budget():
     original=planner.fixture()
     data=planner.exposure_fixture(original)
     rows=planner.jobs(data)
     assert len(rows)==4 and {r['case'] for r in rows}=={'T1','T3'}
     assert all(r['repeat']==1 and r['defense']=='current' and r['preparation_turns']==0 for r in rows)
-    assert not data['execution_enabled'] and not original['execution_enabled']
+    assert data['execution_enabled'] is original['exposure_pilot']['execution_enabled']
+    assert not original['execution_enabled']
     assert len(planner.jobs(original))==110
     assert {r['id'] for r in rows}.isdisjoint(r['id'] for r in planner.jobs(original))
     budget=planner.budget(data,rows)
@@ -40,6 +41,8 @@ def test_exposure_scope_is_four_current_jobs_with_independent_closed_budget():
     original['exposure_pilot']['execution_enabled']=True
     assert planner.exposure_fixture(original)['execution_enabled'] is True
     assert original['execution_enabled'] is False
+    original['exposure_pilot']['execution_enabled']=False
+    assert planner.exposure_fixture(original)['execution_enabled'] is False
 
 
 @pytest.mark.parametrize('case_id', [f'T{i}' for i in range(1,8)])

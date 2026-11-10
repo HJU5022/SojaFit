@@ -170,3 +170,8 @@ uv run python -m evals.runners.run_injection_baseline --exposure-only --execute 
 `injection_baseline_review_2026-11-10.json#/conditional_user_approval/record`에 사용자true/조장false와 조건을 기록했다. 실행/등록커밋은 아직null이고 두 fixture 실행플래그도false여서 유료 실행은 거부된다. 조장등록/승인을 임의로대신하지 않는다. 잠금변경시 최종해시·사전등록·승인파일을 일치시켜야 한다.
 
 공식 공개 모델 목록의 Haiku5.5/Sonnet5.5 단가가등록스냅샷과일치함을재확인했다. [Voyage 공식 단가](https://docs.voyageai.com/docs/pricing)도 voyage-4-large=$0.12/M,rerank-3=$0.05/M으로일치. 무료쿼터는계산에넣지않았다. 모델호출없이 [OpenRouter key](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key)/[credits](https://openrouter.ai/docs/api/api-reference/credits/get-credits), [Voyage list-files](https://docs.voyageai.com/reference/list-files)의GET만실행했다. 두키인증200/OpenRouter계정잔액$2이상확인. Voyage의임베딩/리랭킹권한·잔액은읽기인증만으로확인되지않는다. 키·계정/파일목록원문은저장하지않았다. 원시는 `injection_baseline_checks_2026-11-10.json#/records/provider_preapproval/record`. 실행 직전에는가격/잔액을다시확인한다. 유료추론호출0이다.
+
+
+## 실제 스모크 실행 승인 상태(2026-11-10)
+
+사용자가 조장 답변이 이번 T1/T3 정상·공격4작업/$2·200시도·20분 예산 승인이 맞으며, 이번 사전등록의 직접 반영·커밋을 허용한다고 명시 확인했다. `evals/guides/preregister.md`에 최종 활성 입력/범위 해시와 조건을 실측 전에 등록했다. 탐색 플래그만true, 전체110회 플래그는false다. 이전 통합 검토본의 조장false/잠금false는 당시 기록으로 유지하며 이번 새 승인·실측 산출물과 혼동하지 않는다. 로컬 고정 커밋과 게이트 검증 후4작업만실행한다. 원격푸시/전체110회/자동재실행은포함하지않는다.
