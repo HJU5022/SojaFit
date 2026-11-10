@@ -31,7 +31,7 @@ expand의 `DO` 사전점검(값 형식)과 contract의 데이터 손실 가드�
 - 풀러(6543)밖에 못 쓰면 한 트랜잭션에 넣는다: `(echo "BEGIN; SET LOCAL app.ack_drop_display_name='yes';"; cat db/migrations/migrate_prod_2_contract_p1.sql) | psql "$DATABASE_URL" -v ON_ERROR_STOP=1` (파일 안의 `BEGIN`은 경고만 내고 파일 끝 `COMMIT`이 끝낸다). 이 경로는 `rd_test6.sh`가 확인한다.
 
 ## 백업 복원
-백업에서 새 DB(예: 새 Supabase 프로젝트)로 옮기는 절차는 [`db/DB.md`](../DB.md) "백업 복원"을 따른다. `pg_dump`/`pg_restore`는 복원 중 `search_path`를 비우는데, 재귀 함수(`quote_snapshot_has_forbidden_key`, 옛 `conversation_json_matches`)가 자기 자신을 스키마 없이 불러 설정이 없으면 `approvals` 등의 COPY가 `function ... does not exist`로 실패한다. 기준선은 함수에 `SET search_path`를 붙여 만들고, `expand`(E0)가 운영 함수 둘에 같은 설정을 붙이며, 되돌리기 셸 단계가 다시 만든 `conversation_json_matches`에도 붙인다. `rd_test7.sh`가 네 경우(새 기준선 · 이전 SQL 뒤 · 되돌린 뒤 · 이전 전 옛 구조)의 왕복을 확인한다.
+백업에서 새 DB(예: 새 Supabase 프로젝트)로 옮기는 절차는 [`db/DB.md`](../DB.md) "백업 복원"을 따른다. `pg_dump`/`pg_restore`는 복원 중 `search_path`를 비우는데, 재귀 함수(`quote_snapshot_has_forbidden_key`, 옛 `conversation_json_matches`)가 자기 자신을 스키마 없이 불러 설정이 없으면 `approvals` 등의 COPY가 `function ... does not exist`로 실패한다. 기준선은 함수에 `SET search_path`를 붙여 만들고, `expand`(E0)가 운영 함수 둘에 같은 설정을 붙이며, 되돌리기 셸 단계가 다시 만든 `conversation_json_matches`에도 붙인다. 복원 뒤에는 `db/026`을 다시 실행하고 `post_restore_privileges.sql`로 함수 PUBLIC 실행 권한을 회수한 뒤 점검한다(`--no-privileges` 복원은 함수 권한을 되살리지 않는다). `rd_test7.sh`가 네 경우(새 기준선 · 이전 SQL 뒤 · 되돌린 뒤 · 이전 전 옛 구조)의 왕복을 확인한다.
 
 ## 데이터 손실 가드 (11-11)
 - 되돌릴 수 없는 삭제 앞에 사전 점검(`DO` 블록)이 있어 **버려지는 데이터가 있으면 명시 확인 없이는 `EXCEPTION`으로 중단**한다(트랜잭션 전체 롤백). 점검 수치는 `NOTICE`로 찍힌다. 확인하려면 같은 `psql` 세션에서 먼저 `SET`한다: `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_display_name='yes'" -f db/migrations/migrate_prod_2_contract_p1.sql`
@@ -47,4 +47,5 @@ expand의 `DO` 사전점검(값 형식)과 contract의 데이터 손실 가드�
 - `migrate_prod_3_contract_p2.sql` — 3단계 contract P2(분석 회로 사본 · 죽은 승인 표 제거, 삭제 CASCADE, 체크포인트 삭제 트리거, 청소 함수 교체)
 - `migrate_prod_4_rollback.sql` — 되돌리기(B2b · B2 · B1 · A 절)
 - `precheck_1_before_expand.sql` · `precheck_2_before_p1.sql` · `precheck_3_before_p2.sql` · `precheck_4_before_2b.sql` — 단계 직전 읽기 전용 점검(개수만 출력)
+- `post_restore_privileges.sql` — 백업 복원 직후(`db/026` 재실행 뒤) 함수 PUBLIC 실행 권한 회수 + 권한 점검(어긋나면 EXCEPTION)
 - `MIGRATIONS.md` — 이 문서

@@ -37,6 +37,13 @@
   2. `psql <새 DB> -c 'ALTER FUNCTION public.quote_snapshot_has_forbidden_key(jsonb) SET search_path = "$user", public' -c 'ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public'`
   3. `pg_restore ... --section=data 파일.dump`, 이어서 `pg_restore ... --section=post-data 파일.dump`
 - 운영에서 `migrate_prod_1_expand.sql`(E0)을 적용한 뒤 받은 백업은 위 2번이 이미 들어 있어 한 번에 복원된다. 새 프로젝트에서는 `vector` 확장이 필요하다(덤프에 `CREATE EXTENSION`이 들어 있고, Supabase는 `extensions` 스키마에 설치된다).
+- **복원 뒤 권한 복구(필수)**: `--no-privileges` 복원은 함수의 `REVOKE ... FROM PUBLIC`을 되살리지 않아, 복원한 함수(`sojafit_agent.purge_inactive_projects` · `purge_log_records` · `purge_thread_checkpoints`, `public.quote_snapshot_has_forbidden_key` 등)가 PUBLIC 실행 가능이 된다. 복원 직후 **`db/026`을 다시 실행하고 `db/migrations/post_restore_privileges.sql`을 실행**한다: `psql <새 DB> -v ON_ERROR_STOP=1 -f db/026_revoke_public_grants_and_rls.sql -f db/migrations/post_restore_privileges.sql`. 이 파일이 우리 함수 전부의 PUBLIC(과 `anon` · `authenticated`) 실행 권한을 회수하고, PUBLIC 실행 가능 함수 0 · 공개 역할 표 권한 0 · RLS 꺼진 표 0이 아니면 `EXCEPTION`으로 멈춘다. `rd_test7.sh`가 복원 → 이 절차 뒤 권한 지문(함수 PUBLIC 실행 · 표 RLS · PUBLIC 표 권한)이 원본과 같아지는 것을 확인한다.
+- **이전 전 백업은 3단계 `--section` 순서를 어기기 쉽다**(`pre-data` 뒤 함수 설정을 건너뛰고 바로 `data`로 가면 `approvals` COPY가 실패). 순서 요약:
+  ```
+  1) pg_restore --section=pre-data   2) ALTER FUNCTION ... SET search_path (위 2번 두 문장)
+  3) pg_restore --section=data       4) pg_restore --section=post-data
+  5) psql -f db/026_revoke_public_grants_and_rls.sql -f db/migrations/post_restore_privileges.sql
+  ```
 - 백업 파일은 질문 · 답 · 이메일을 담으므로 저장소에 두지 않는다.
 
 ## 팀 Supabase 적재 현황 스냅샷 (2026-11-05 기록)

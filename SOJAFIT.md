@@ -301,6 +301,7 @@ SojaFit (proj3-b)
 │   │   ├── precheck_2_before_p1.sql  <- P1 contract 직전 점검
 │   │   ├── precheck_3_before_p2.sql  <- P2 contract 직전 점검
 │   │   ├── precheck_4_before_2b.sql  <- 2b 직전 점검
+│   │   ├── post_restore_privileges.sql  <- 백업 복원 직후 함수 PUBLIC 실행 권한 회수 + 권한 점검
 │   │   ├── migrate_prod_1_expand.sql  <- 운영 이전 1단계: 옛 코드가 돌아도 안전한 추가 변경
 │   │   ├── migrate_prod_2_contract_p1.sql  <- 운영 이전 2단계: 스냅샷 복사본 · 미사용 칸 삭제, 단순 검사
 │   │   ├── migrate_prod_2b_optional_drop_dead_auth.sql  <- 선택: 승인 대기 표 삭제(코드 제거 뒤)
