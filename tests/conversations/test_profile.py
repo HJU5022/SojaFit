@@ -223,9 +223,10 @@ def test_setup_and_search_work_when_vector_lives_in_extensions_schema(embed, mon
         with psycopg.connect(other, autocommit=True) as conn:
             conn.execute('CREATE SCHEMA extensions')
             conn.execute('CREATE EXTENSION vector SCHEMA extensions')
-            conn.execute("CREATE TABLE public.users (id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, login_id TEXT)")
-            user = conn.execute("INSERT INTO public.users(login_id) VALUES ('ext@example.test') RETURNING id").fetchone()[0]
-            conn.execute('CREATE SCHEMA sojafit_agent')
+            # [왜] initialize는 SQL을 적용하지 않고 LangGraph 표만 만든다. 서비스 표(sojafit_agent 포함)는 헬퍼가 먼저 만든다
+            from tests.db_schema import apply_service_schema
+            apply_service_schema(conn, agent=True)
+            user = conn.execute("INSERT INTO public.users(login_id,password_hash,role) VALUES ('ext@example.test','test-only','user') RETURNING id").fetchone()[0]
             conn.execute('SET search_path TO sojafit_agent')
             with pytest.raises(psycopg.errors.UndefinedObject):
                 PostgresStore(conn, index=profile.INDEX).setup()  # 고치기 전 방식: vector 형을 못 찾는다
