@@ -30,6 +30,15 @@
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`는 DB에서 자동 생성). [SCHEMA.md](schema/SCHEMA.md)
 
 
+## 백업 복원 (새 DB · 새 Supabase 프로젝트로 옮길 때)
+- 순서는 **구조 → 데이터 → 제약 · 인덱스**다. 새 기준선 DB, 이전 SQL을 적용한 DB, 되돌린 DB의 백업(`pg_dump -Fc`)은 빈 DB에 한 번에 `pg_restore`해도 오류가 없다(`db/redesign/verify/rd_test7.sh`가 PG16 · 17에서 확인). 명령: `pg_restore -d <새 DB> --no-owner --no-privileges --exit-on-error 파일.dump`.
+- **이전 SQL을 적용하기 전의 옛 구조에서 받은 백업**은 한 번에 복원하면 `approvals` COPY가 `function quote_snapshot_has_forbidden_key does not exist`로 실패한다(재귀 함수에 `search_path`가 없고 `pg_restore`는 복원 중 `search_path`를 비움). 그때는 세 번에 나눠 복원한다:
+  1. `pg_restore -d <새 DB> --no-owner --no-privileges --section=pre-data 파일.dump`
+  2. `psql <새 DB> -c 'ALTER FUNCTION public.quote_snapshot_has_forbidden_key(jsonb) SET search_path = "$user", public' -c 'ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public'`
+  3. `pg_restore ... --section=data 파일.dump`, 이어서 `pg_restore ... --section=post-data 파일.dump`
+- 운영에서 `migrate_prod_1_expand.sql`(E0)을 적용한 뒤 받은 백업은 위 2번이 이미 들어 있어 한 번에 복원된다. 새 프로젝트에서는 `vector` 확장이 필요하다(덤프에 `CREATE EXTENSION`이 들어 있고, Supabase는 `extensions` 스키마에 설치된다).
+- 백업 파일은 질문 · 답 · 이메일을 담으므로 저장소에 두지 않는다.
+
 ## 팀 Supabase 적재 현황 스냅샷 (2026-11-05 기록)
 
 > 이 절은 2026-11-05의 조회 기록이며 지금 상태가 아닙니다. 그 뒤의 변경(11-09 코퍼스 교체와 사양 표 삭제, 11-09 `021_auth_ip_limits.sql` 적용 등)은 아래 표에 반영하지 않았습니다.

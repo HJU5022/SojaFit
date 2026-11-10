@@ -54,6 +54,11 @@ ALTER TABLE public.approvals
 ALTER TABLE public.quotes ALTER COLUMN snapshot DROP NOT NULL;
 ALTER TABLE public.approved_cases ALTER COLUMN snapshot DROP NOT NULL;
 
+-- E0. 백업 복원 가능하게: 두 함수가 자기 자신을 스키마 없이 부르는데(재귀) pg_restore는 search_path를 비우고 복원해, 이 함수가 걸린 CHECK(approvals · quotes · runs)의 COPY가
+--     'function ... does not exist'로 실패한다. 함수에 search_path를 붙인다(동작 불변, 새 DB 기준선의 quote_snapshot_has_forbidden_key와 같은 설정).
+ALTER FUNCTION public.quote_snapshot_has_forbidden_key(jsonb) SET search_path = "$user", public;
+ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public;
+
 -- E2. 분석 대화와 화면 대화를 진짜 FK로 잇는다(같은 UUID, 대화를 지우면 분석 기록도 지워짐). 고아 0은 위에서 확인했다
 ALTER TABLE sojafit_agent.threads ADD CONSTRAINT fk_agent_threads_thread FOREIGN KEY (id) REFERENCES public.threads(id) ON DELETE CASCADE NOT VALID;
 ALTER TABLE sojafit_agent.threads VALIDATE CONSTRAINT fk_agent_threads_thread;

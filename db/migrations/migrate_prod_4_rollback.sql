@@ -118,6 +118,7 @@ COMMIT;
 
 -- 옛 JSON 모양 검사와 옛 청소 함수(셸에서, 레포 루트): 함수를 다시 만들고 검사를 다시 건다
 --   sed -n '/^CREATE FUNCTION conversation_json_matches/,/^END \$\$;/p' db/legacy/019_conversations.sql | psql "$DATABASE_URL" -v ON_ERROR_STOP=1
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public'   # [왜] 재귀 함수라 이 설정이 없으면 이 DB의 백업을 복원할 수 없다
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'REVOKE ALL ON FUNCTION public.conversation_json_matches(jsonb, jsonb) FROM PUBLIC'   # [왜] 026이 회수해 둔 상태로 맞춘다(새로 만든 함수는 PUBLIC 실행 권한을 받는다)
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/legacy/025_runs_safe_result_preferred_mount.sql      # runs_safe_result_check를 최신 모양으로 다시 만든다
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/legacy/024_projects_demo_c01.sql                    # ck_projects_demo 6개 이름 목록 검사

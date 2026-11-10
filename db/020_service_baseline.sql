@@ -150,7 +150,11 @@ CREATE INDEX ix_messages_run ON messages(run_id);
 -- ── 승인 · 견적 ───────────────────────────────────────────────────────────────────────────
 -- 승인 스냅샷에 가격 · 재고 키가 있으면 거부한다(어느 깊이에서도). 승인 스냅샷 한 곳에만 건다.
 CREATE FUNCTION quote_snapshot_has_forbidden_key(value JSONB) RETURNS BOOLEAN
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+LANGUAGE plpgsql IMMUTABLE STRICT
+-- [왜] pg_dump / pg_restore는 복원 중 search_path를 비운다. 이 함수는 자기 자신을 스키마 없이 부르므로(재귀) 설정이 없으면 approvals COPY가
+--      'function quote_snapshot_has_forbidden_key does not exist'로 실패해 백업을 복원할 수 없다. 만든 때의 search_path를 함수에 붙여 둔다.
+SET search_path FROM CURRENT
+AS $$
 DECLARE field RECORD; item JSONB;
 BEGIN
     IF jsonb_typeof(value) = 'object' THEN
