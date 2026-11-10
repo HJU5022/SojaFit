@@ -327,6 +327,7 @@ def test_approval_is_bound_to_exact_measured_commit(tmp_path,monkeypatch):
     approval=tmp_path/'approval.json'
     runtime=Path(runner.__file__)
     approval.write_text(json.dumps(dict(approved_by_user=True,approved_by_team_lead=True,
+        scope=data.get('scope','baseline'),scope_sha256=planner.scope_sha256(data),
         fixture_sha256=hashlib.sha256(planner.CASES.read_bytes()).hexdigest(),
         runtime_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                        (runtime,runtime.with_name('injection_baseline_runtime.py'))},measured_commit='1'*40)),encoding='utf-8')
