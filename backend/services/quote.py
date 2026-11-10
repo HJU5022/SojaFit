@@ -1,4 +1,5 @@
 """완료 판정의 사람 승인·견적·재사용 사례 저장 경계. 가격·재고는 저장하지 않는다."""
+import re
 from copy import deepcopy
 
 from psycopg.types.json import Jsonb
@@ -7,6 +8,13 @@ from backend import auth
 
 FORBIDDEN = {'price', 'price_breaks', 'stock', 'availability', 'product_url', 'fetched_at'}
 APPROVABLE = {'IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'}
+
+
+# [왜] 판정 결과의 품번은 모델이 읽은 이름을 질문에 쓴 대로 보여 준다('TSC 1N4007G', '1N4148 A0G', 판정 시험이 고정한 계약).
+#      견적의 part_number는 DB 규칙(공백 없는 영문 · 숫자 · . _ + / -)이라 둘이 어긋나면 승인 · 견적이 422 · 저장 실패였다(11-10 배포 점검).
+#      그래서 승인할 때 표시 이름은 그대로 두고 식별용 품번을 따로 만든다. 제조사 이름 규칙은 judge.py의 MAKER와 같게 둔다
+MAKER = re.compile(r'^\s*(?:TSC|Taiwan\s+Semiconductor)\s+', re.I)
+PART_NUMBER = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}')
 
 
 class QuoteNotFound(Exception):
@@ -28,6 +36,18 @@ def assert_no_price_data(value):
             assert_no_price_data(item)
 
 
+def part_number(display: str) -> str:
+    """표시 이름('TSC 1N4007G')에서 견적용 식별 품번('1N4007G')을 만든다: 제조사 이름을 떼고 남은 공백(주문 코드)은 '-'로 잇는다.
+
+    Raises:
+        InvalidApproval: 그래도 DB 품번 규칙에 안 맞으면(호출자가 409로 거절).
+    """
+    number = re.sub(r'\s+', '-', MAKER.sub('', display or '').strip())
+    if not PART_NUMBER.fullmatch(number):
+        raise InvalidApproval('견적에 쓸 수 있는 품번이 아닙니다.')
+    return number
+
+
 def approval_snapshot(result: dict, candidate_part: str, verdict: str) -> dict:
     judgement = result.get('judgement') if isinstance(result, dict) else None
     if not isinstance(judgement, dict):
@@ -38,7 +58,8 @@ def approval_snapshot(result: dict, candidate_part: str, verdict: str) -> dict:
     if candidate is None or verdict not in APPROVABLE:
         raise InvalidApproval('승인 가능한 후보 판정이 아닙니다.')
     snapshot = {'answer': result.get('answer', ''), 'question_type': result.get('question_type', ''),
-                'candidate': deepcopy(candidate), 'evidence': deepcopy(result.get('evidence') or [])}
+                'candidate': {**deepcopy(candidate), 'part_number': part_number(candidate_part)},  # 승인할 때 만들어 견적이 못 쓰는 품번의 승인을 막는다
+                'evidence': deepcopy(result.get('evidence') or [])}
     assert_no_price_data(snapshot)
     return snapshot
 
@@ -69,7 +90,8 @@ class QuoteService:
                 raise QuoteNotFound
             snapshot = deepcopy(row[0])
             assert_no_price_data(snapshot)
-            part = snapshot['candidate']['part']
+            candidate = snapshot['candidate']
+            part = candidate.get('part_number') or part_number(candidate['part'])  # 식별 품번이 없는 옛 승인도 같은 규칙으로 만든다
             quote = conn.execute('INSERT INTO quotes(user_id,approval_id,part_number,quantity,snapshot) VALUES (%s,%s,%s,%s,%s) RETURNING id,created_at',
                                  (user_id, approval_id, part, quantity, Jsonb(snapshot))).fetchone()
             return {'id': quote[0], 'approval_id': approval_id, 'part_number': part, 'quantity': quantity, 'created_at': quote[1]}

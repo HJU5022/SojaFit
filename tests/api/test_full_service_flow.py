@@ -79,3 +79,55 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
         counts = {name: conn.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(name))).fetchone()[0]
                   for name in ('projects', 'circuits', 'threads', 'runs', 'messages', 'approvals', 'quotes', 'approved_cases')}
     assert not any(counts.values())
+
+
+@pytest.mark.parametrize('shown, number', [('TSC 1N4007G', '1N4007G'), ('1N4148 A0G', '1N4148-A0G'), ('SS34', 'SS34')])
+def test_approval_and_quote_with_maker_name_or_order_code_in_real_postgres(full_storage, shown, number):
+    """판정 결과의 표시 이름에 제조사 이름 · 주문 코드 공백이 있어도 승인 → 견적이 DB 품번 규칙(CHECK)을 통과한다(11-10 배포 점검의 422)."""
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.netlist import PARSER_VERSION, normalize_netlist
+    from backend.projects.repository import ProjectRepository
+    from backend.services.quote import QuoteService
+    owner = full_storage[0][0]
+    projects, conversations, quotes = ProjectRepository(), ConversationRepository(), QuoteService()
+    normalized = normalize_netlist(Path('tests/fixtures/netlists/minimal.net').read_bytes())
+    project = projects.create_upload(owner, '표시 이름 흐름', connections=normalized.connections,
+                                     source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+    thread = conversations.create_thread(owner, project.id)
+    run, _ = conversations.start(owner, thread, {'question': f'{normalized.parts[0]} 대체?', 'target_ref': normalized.parts[0]})
+    conversations.finish(owner, thread, run, 'completed', {
+        'answer': '역할상 충분합니다.', 'question_type': 'candidate_judge', 'evidence': [],
+        'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': shown, 'verdict': 'ROLE_SUFFICIENT'}]},
+    })
+    message_id = conversations.get_run(owner, run)['message_id']
+    approval = quotes.approve(owner, message_id, shown, 'ROLE_SUFFICIENT')
+    assert approval['candidate_part'] == shown  # 화면에는 보인 이름 그대로
+    quote = quotes.create_quote(owner, approval['id'], 5)
+    assert quote['part_number'] == number
+    assert quotes.list_quotes(owner, project.id)[0]['part_number'] == number
+    assert quotes.list_cases(owner)[0]['candidate_part'] == shown
+
+
+def test_quote_for_an_old_approval_without_identifier_uses_the_same_rule(full_storage):
+    """식별 품번(part_number)이 없던 옛 승인 스냅샷도 견적을 저장한다(이미 운영 DB에 있는 승인)."""
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.netlist import PARSER_VERSION, normalize_netlist
+    from backend.projects.repository import ProjectRepository
+    from backend.services.quote import QuoteService
+    owner, _ = full_storage[0]
+    connect = full_storage[1]
+    projects, conversations, quotes = ProjectRepository(), ConversationRepository(), QuoteService()
+    normalized = normalize_netlist(Path('tests/fixtures/netlists/minimal.net').read_bytes())
+    project = projects.create_upload(owner, '옛 승인', connections=normalized.connections,
+                                     source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+    thread = conversations.create_thread(owner, project.id)
+    run, _ = conversations.start(owner, thread, {'question': f'{normalized.parts[0]} 대체?', 'target_ref': normalized.parts[0]})
+    conversations.finish(owner, thread, run, 'completed', {
+        'answer': '역할상 충분합니다.', 'question_type': 'candidate_judge', 'evidence': [],
+        'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
+    })
+    approval = quotes.approve(owner, conversations.get_run(owner, run)['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    with connect() as conn:  # 옛 승인: 식별 품번 칸이 없는 스냅샷
+        conn.execute("UPDATE approvals SET snapshot = snapshot #- '{candidate,part_number}' WHERE id=%s", (approval['id'],))
+    assert quotes.create_quote(owner, approval['id'], 3)['part_number'] == 'SS34'
+
