@@ -8,6 +8,8 @@
 -- 되돌리기: migrate_prod_4_rollback.sql의 B2 절(회로 사본은 public에서 다시 만든다, 승인 표는 0행이었다).
 -- 데이터 손실 가드: 지워지는 표에 데이터가 있으면 명시 확인 없이는 중단한다. 같은 psql 세션에서 먼저 SET 한다:
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_agent_approvals='yes'" -c "SET app.ack_drop_agent_circuits='yes'" -f db/migrations/migrate_prod_3_contract_p2.sql
+--   [주의] SET은 연결(세션) 단위다. Supabase 풀러의 transaction 모드(6543)는 문장마다 연결이 바뀔 수 있어 확인 변수가 사라져 막힐 수 있다: **직접 연결 또는 session 모드(5432)**로 실행한다.
+--   풀러(6543)만 쓸 수 있으면 한 트랜잭션 안의 SET LOCAL로 넘긴다: (echo "BEGIN; SET LOCAL app.ack_drop_agent_approvals='yes';"; cat db/migrations/migrate_prod_3_contract_p2.sql) | psql "$DATABASE_URL" -v ON_ERROR_STOP=1   (파일 안의 BEGIN은 경고만 내고 COMMIT이 끝낸다)
 BEGIN;
 
 -- G1. 사전 점검(삭제 전)
@@ -19,12 +21,15 @@ BEGIN
     IF n > 0 AND COALESCE(current_setting('app.ack_drop_agent_approvals', true), '') <> 'yes' THEN
         RAISE EXCEPTION 'sojafit_agent.approvals에 %행이 있다. 옛 승인 경로의 기록이라 되살릴 수 없다. 지워도 되면 SET app.ack_drop_agent_approvals=''yes'' 를 같은 세션에서 먼저 실행하라', n;
     END IF;
-    -- 분석 회로 사본은 public.circuits의 복사본이라 지워도 되살린다(되돌리기 B2). 단 thread가 가리키지 않는 사본 · 대응하는 public 회로가 없는 사본은 되살릴 수 없다
+    -- 분석 회로 사본은 public.circuits의 복사본이라 지워도 되살린다(되돌리기 B2는 netlist를 빈 글자로, filename을 프로젝트 이름으로, connections를 public 회로에서 만든다).
+    -- 따라서 (a) thread와 public 회로로 이어지지 않거나 (b) netlist가 빈 글자가 아니거나 (c) filename이 프로젝트 이름과 다른 사본은 지우면 값이 사라진다
     SELECT count(*) INTO n FROM sojafit_agent.circuits c
-        WHERE NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id JOIN public.circuits pc ON pc.project_id = pt.project_id WHERE t.circuit_id = c.id);
-    RAISE NOTICE '[점검] 대응하는 public 회로가 없어 되살릴 수 없는 sojafit_agent.circuits 행: %', n;
+        WHERE NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id
+                          JOIN public.projects p ON p.id = pt.project_id JOIN public.circuits pc ON pc.project_id = p.id
+                          WHERE t.circuit_id = c.id AND c.netlist = '' AND c.filename = p.name);
+    RAISE NOTICE '[점검] 되살릴 수 없는(연결 없음 · netlist 값 있음 · filename이 프로젝트 이름과 다름) sojafit_agent.circuits 행: %', n;
     IF n > 0 AND COALESCE(current_setting('app.ack_drop_agent_circuits', true), '') <> 'yes' THEN
-        RAISE EXCEPTION 'sojafit_agent.circuits % 행은 public.circuits에서 되살릴 수 없다(thread가 없거나 화면 대화가 없음). 지워도 되면 SET app.ack_drop_agent_circuits=''yes'' 를 먼저 실행하라', n;
+        RAISE EXCEPTION 'sojafit_agent.circuits % 행은 public에서 되살릴 수 없다(thread · 화면 대화가 없거나, netlist가 비어 있지 않거나, filename이 프로젝트 이름과 다름). 지워도 되면 SET app.ack_drop_agent_circuits=''yes'' 를 먼저 실행하라', n;
     END IF;
 END $$;
 

@@ -10,6 +10,8 @@
 -- 되돌리기: migrate_prod_4_rollback.sql의 B1 절(지운 것은 모두 다른 표의 복사본이거나 미사용이라 무손실).
 -- 데이터 손실 가드: 아래 삭제가 버리는 값이 있으면 **명시 확인 없이는 중단**한다. 확인이 필요하면 같은 psql 세션에서 먼저 SET 한다:
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_display_name='yes'" -f db/migrations/migrate_prod_2_contract_p1.sql
+--   [주의] SET은 연결(세션) 단위다. Supabase 풀러의 transaction 모드(6543)는 문장마다 연결이 바뀔 수 있어 확인 변수가 사라져 막힐 수 있다: **직접 연결 또는 session 모드(5432)**로 실행한다.
+--   풀러(6543)만 쓸 수 있으면 한 트랜잭션 안의 SET LOCAL로 넘긴다: (echo "BEGIN; SET LOCAL app.ack_drop_display_name='yes';"; cat db/migrations/migrate_prod_2_contract_p1.sql) | psql "$DATABASE_URL" -v ON_ERROR_STOP=1   (파일 안의 BEGIN은 경고만 내고 COMMIT이 끝낸다)
 BEGIN;
 
 -- G1. 사전 점검(삭제 전). 사전 점검 수치는 NOTICE로 찍힌다
