@@ -587,6 +587,10 @@ SojaFit (proj3-b)
 │   ├── evaluation-prep.md  <- 배점·가산 항목별 준비 점검
 │   ├── 조원-계약서.md      <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
 │   ├── glossary.md         <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
+│   ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
+│   │   ├── ASSETS.md       <- 폴더 설명
+│   │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
+│   │   └── agent-flow.svg  <- 위 그림의 원본
 │   ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
 │   │   └── ADR.md          <- 폴더 설명과 결정 목록
 │   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
@@ -730,6 +734,7 @@ SojaFit (proj3-b)
 | `scripts/demo/` | [DEMO.md](scripts/demo/DEMO.md) | 서비스·운영 |
 | `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
+| `docs/assets/` | [ASSETS.md](docs/assets/ASSETS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
