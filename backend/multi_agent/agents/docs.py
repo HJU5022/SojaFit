@@ -31,7 +31,7 @@ CITE_GROUP = re.compile(r'\[([^\]]*)\]')  # 답 속 인용 괄호(nodes.CITE와 
 class DocsAnswer(BaseModel):
     """근거 채점 + 답 쓰기 LLM의 답안지."""
     grade: Literal['enough', 'partial', 'none'] = Field(description='Does the evidence answer the task: enough, partial or none')
-    answer: str = Field(default='', description='Korean answer, every sentence ending with its evidence number like [12]; empty when grade is none')
+    answer: str = Field(default='', description='Korean answer citing only the exact allowed evidence IDs from the input; never renumber or cite page numbers; empty when grade is none')
     memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; never cite these in answer')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
     next_query: str = Field(default='', max_length=200, description='When grade is none or partial: a different English search query to try once (for partial, aimed at what is missing)')
@@ -72,8 +72,11 @@ def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
     if part:
         blocks.append(netlist_block(part))  # [왜] 역할 할 일은 검색 없이 오므로 넷리스트가 유일한 근거다
+    allowed = [str(d['chunk_id']) for d in docs] + (['넷리스트'] if part else [])
     return '\n'.join([f'Question: {question}', 'Supervisor brief:', f'- goal: {task.goal}', f'- return: {task.output}',
-                      f'- boundary: {task.boundary}', '', 'Evidence:', '\n\n'.join(blocks) or '(none)'])
+                      f'- boundary: {task.boundary}', '', 'Evidence:', '\n\n'.join(blocks) or '(none)',
+                      'Allowed citation IDs: '+', '.join(f'[{cid}]' for cid in allowed)+
+                      '. Copy these IDs exactly; page numbers and source captions are not citation IDs.'])
 
 
 def drop_fake_citations(answer: str, valid: set[str]) -> tuple[str, list[str]]:
@@ -192,12 +195,28 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     allowed_memories = memory_sources(payload.get('approved_memories') or [])
     if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
         return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
+    cited = citations(answer)
+    if cited - valid or not cited & valid:
+        # A single bounded regeneration uses the same evidence; never guess a citation for the model.
+        correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
+        correction += ('\nCitation correction: the previous output used missing or unsupported citation IDs. '
+                       'Re-answer only from the evidence above, copying its allowed IDs exactly. '
+                       'Do not invent support; use grade none if it is absent.')
+        repaired = chat('docs_answer', PROMPT, correction, DocsAnswer)
+        calls += 1
+        repaired_answer = repaired.answer.strip()
+        repaired_cites = citations(repaired_answer)
+        if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
+            return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
+                          reason=Reason.VERIFY_FAILED, docs=shown)
+        if repaired.grade != 'none' and repaired_cites & valid and not (repaired_cites - valid):
+            result, answer = repaired, repaired_answer
     answer, dropped_fake = drop_fake_citations(answer, valid)
     cited = citations(answer)
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' else 'partial'
+    status = 'ok' if result.grade == 'enough' and not dropped_fake else 'partial'
     summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
     return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
                   evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

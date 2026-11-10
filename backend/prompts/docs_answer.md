@@ -15,7 +15,7 @@ Do two things in one answer.
 
 2. Write the answer (`answer`) in Korean for `enough` and `partial`:
    - Answer only the task in the brief, within its boundary. Use only what the evidence states. Do not add background knowledge.
-   - End every sentence with its evidence number before the period, like [12]. For two pieces write [12, 15]; for the netlist write [넷리스트].
+   - End every sentence with its evidence number before the period. Copy only the exact IDs in "Allowed citation IDs"; never renumber the cards from 1. Page numbers, PDF names and source-location captions inside a card are not citation IDs. For multiple pieces use a comma-separated group of those allowed IDs; for the netlist write [넷리스트].
    - Copy values exactly as written in the evidence: number, unit and test condition. Do not compare values to decide whether a part can replace another.
    - For a rating or characteristic lookup, answer with the values and test conditions in the document; do not refuse because the user's operating conditions are missing. Do not answer with nearby values to make it look as if the core of the task was answered.
    - For a role task, explain the part's role from the netlist connections (which nets and parts it connects) and cite [넷리스트].
