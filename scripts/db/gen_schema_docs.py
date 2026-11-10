@@ -123,7 +123,7 @@ TABLES = {
     'public.quotes': ('승인에서 만든 가격 없는 견적', {
         'id': '견적 번호',
         'user_id': '소유자',
-        'approval_id': '근거 승인(승인당 1건)',
+        'approval_id': '근거 승인(한 승인에 견적 여러 건 가능, UNIQUE 없음)',
         'part_number': '견적 품번(공백 없는 영문 · 숫자 · . _ + / -, CHECK)',
         'quantity': '수량 1~100000',
         'created_at': '저장 시각',
@@ -153,7 +153,7 @@ TABLES = {
         'id': '번호',
         'thread_id': '분석 대화',
         'role': 'user | assistant',
-        'checkpoint_id': '그 답을 만든 LangGraph 체크포인트(중복 방지 고유 색인)',
+        'checkpoint_id': '그 답을 만든 LangGraph 체크포인트(thread_id와 함께 중복 방지 UNIQUE 색인, 값이 있을 때만)',
         'content': "사용자는 '사용 조건: …' 접두 + 질문",
         'created_at': '시각',
     }),
@@ -224,7 +224,8 @@ def _read(conn):
             cons.append({'name': name, 'kind': KINDS[kind], 'def': definition, 'cols': [names[k] for k in key or ()],
                          'parent': f'{parent_schema}.{parent}' if parent else None, 'rule': DELETE_RULES.get(rule)})
         cons.sort(key=lambda c: (list(KINDS.values()).index(c['kind']), c['name']))
-        idx = [(name, re.sub(r'^.* USING ', '', definition)) for name, definition in conn.execute(
+        # [왜] UNIQUE 표시를 지우면 UNIQUE 인덱스가 일반 인덱스로 보여 중복 방지 장치가 문서에서 사라진다
+        idx = [(name, ('UNIQUE ' if ' UNIQUE INDEX ' in definition else '') + re.sub(r'^.* USING ', '', definition)) for name, definition in conn.execute(
             "SELECT ic.relname, pg_get_indexdef(i.indexrelid) FROM pg_index i JOIN pg_class ic ON ic.oid = i.indexrelid "
             "WHERE i.indrelid = %s ORDER BY ic.relname", (oid,)).fetchall()]
         trig = conn.execute("SELECT tgname, pg_get_triggerdef(oid) FROM pg_trigger WHERE tgrelid = %s AND NOT tgisinternal ORDER BY tgname", (oid,)).fetchall()
@@ -264,12 +265,13 @@ def render_erd(found):
     edges, linked = [], set()
     for table, info in found.items():
         unique_sets = [set(c['cols']) for c in info['cons'] if c['kind'] in ('PK', 'UNIQUE')]
+        unique_sets += [set(re.findall(r'\((\w+)\)', d)) for n, d in info['idx'] if d.startswith('UNIQUE ') and ' WHERE ' not in d and ',' not in d]  # 단독 칸 UNIQUE 인덱스(부분 인덱스는 제외)
         notnull = {c[0]: c[2] for c in info['cols']}
         for con in info['cons']:
             if con['kind'] != 'FK':
                 continue
             parent_side = '||' if all(notnull[c] for c in con['cols']) else '|o'
-            child_side = 'o|' if set(con['cols']) in unique_sets else 'o{'
+            child_side = 'o|' if any(u and u <= set(con['cols']) for u in unique_sets) else 'o{'  # [왜] UNIQUE 칸이 FK 칸에 들어 있으면(복합 FK 안의 단독 UNIQUE) 부모당 자식은 최대 1
             edges.append(f'    {entity(con["parent"])} {parent_side}--{child_side} {entity(table)} : "{"+".join(con["cols"])} ({con["rule"]})"')
             linked |= {table, con['parent']}
     lines += sorted(edges) + ['']
