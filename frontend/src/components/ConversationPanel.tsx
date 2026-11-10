@@ -7,6 +7,7 @@ import { useRunStream } from '../hooks/useRunStream'
 import RunStatus from './RunStatus'
 import InterruptForm from './InterruptForm'
 import ProfileHints from './ProfileHints'
+import SafeMarkdown from './SafeMarkdown'
 
 export default function ConversationPanel({ projectId, demoId = null, targetRef, roleLabels = [], initialQuestion = '', initialConditions = '', onResult, onConditions, onShowEvidence, onShowJudgement }: {
   projectId: number
@@ -73,7 +74,7 @@ export default function ConversationPanel({ projectId, demoId = null, targetRef,
       {interruptState && <article className="conversation-card interrupt-card"><span className="card-kicker">추가 정보 요청</span>{resume
         ? <div className="interrupt-form"><h3>추가 정보</h3><p>{interruptState.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</p><p>기록한 답: {Object.entries(resume.answers).map(([key, value]) => `${key}=${value}`).join(', ') || '모름'} · 역할: {resume.role || '없음'}</p><button onClick={() => void run.resume(interruptState.runId, { answers: resume.answers, role: resume.role || undefined })}>기록한 답으로 계속하기</button></div>
         : <InterruptForm interrupt={interruptState.interrupt} roleLabels={roleLabels} busy={false} onSubmit={(answers, role) => void run.resume(interruptState.runId, { answers, role })} />}</article>}
-      {(run.state.status === 'completed' || run.state.status === 'refused') && <article className={`conversation-card final-card status-${run.state.status}`}><span className="card-kicker">{run.state.status === 'completed' ? '최종 답변' : '거절 또는 확인 불가'}</span><p>{run.state.result.answer || run.state.result.refusal || '표시할 답변이 없습니다.'}</p><ProfileHints hints={run.state.result.profile_hints ?? []} />{run.state.status === 'completed' && <div className="composer-actions"><button className="secondary" onClick={() => onShowEvidence?.()}>근거 보기</button><button className="secondary" onClick={() => onShowJudgement?.()}>후보 비교 결과 보기</button></div>}</article>}
+      {(run.state.status === 'completed' || run.state.status === 'refused') && <article className={`conversation-card final-card status-${run.state.status}`}><span className="card-kicker">{run.state.status === 'completed' ? '최종 답변' : '거절 또는 확인 불가'}</span>{run.state.result.answer || run.state.result.refusal ? <SafeMarkdown text={run.state.result.answer || run.state.result.refusal} /> : <p>표시할 답변이 없습니다.</p>}<ProfileHints hints={run.state.result.profile_hints ?? []} />{run.state.status === 'completed' && <div className="composer-actions"><button className="secondary" onClick={() => onShowEvidence?.()}>근거 보기</button><button className="secondary" onClick={() => onShowJudgement?.()}>후보 비교 결과 보기</button></div>}</article>}
       {threads.error && <p role="alert">{errorMessage(threads.error)}</p>}
       {run.state.status === 'failed' && <p ref={errorSummary} role="alert" tabIndex={-1}>{errorMessage(run.state.error)}</p>}
     </div>

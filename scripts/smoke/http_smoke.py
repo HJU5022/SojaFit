@@ -126,6 +126,8 @@ class Smoke:
     def stream(self, step, check, who, client, path, body, expect, *, label, needs=()):
         """run · 재개 SSE를 마지막 이벤트까지 읽고 한 줄을 남긴다. (run_id, 기대한 마지막 이벤트면 그 data 아니면 None)."""
         request = f'POST {label}'
+        want = (expect,) if isinstance(expect, str) else tuple(expect)  # [왜] 마지막 이벤트가 둘 중 하나여도 정상인 호출이 있다(injection_http.py의 시작 질문)
+        expect = ' | '.join(want)
         if self.skipped(step, check, who, request, expect, needs):
             return None, None
         started, events, run_id, last, data, response, note = time.monotonic(), [], None, None, None, None, ''
@@ -156,10 +158,10 @@ class Smoke:
         if last is None and not note:
             note = '마지막 이벤트 없이 스트림이 끝남'  # [주의] 실패 상태도 저장하지 못하면 서버는 마지막 frame 없이 끝낸다(SPEC 4절)
         error = ((data or {}).get('error') or {}) if last == 'failed' else {}  # failed frame의 error.code는 공통 오류 표와 같다
-        self.add(step, check, who, request, expect, 'pass' if last == expect else 'fail', response, started, error.get('code'), note, events=events)
+        self.add(step, check, who, request, expect, 'pass' if last in want else 'fail', response, started, error.get('code'), note, events=events)
         if error.get('message'):
             print(f"    서버 문구: {error['message'][:200]}")
-        return run_id, data if last == expect else None
+        return run_id, data if last in want else None
 
 
 def login(smoke, client, who, demo, env):

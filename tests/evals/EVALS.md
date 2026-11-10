@@ -17,6 +17,7 @@
 - `test_injection_baseline.py` — 기본 계획110행·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단·T1~T7 실제 그래프+가짜 공급자·T6 실제 message/가짜 SQL·사양 오염 자동채점·인용 위치·공급자 전 바이트 한도·Windows 저장 재시도 검사 탐색4작업·다른scope승인거부·4DB선택·검색/입력조립/응답노출구분도검사한다.
 - `test_injection_baseline_plan.py` — 110개 짝·변경 위치 하나·정답 필드 제외·T2 보호 사실 비노출 전제·T5 양쪽 native fallback·T7 정규화/연결 보존·예산식·오프라인 명령/덮어쓰기 거부 검사 탐색4작업/고유작업ID/1558본문/독립잠금과$2예산도확인한다.
 - `test_injection_preflight.py` — 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, Voyage 포함 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점을 확인한다
+- `test_import_human_review.py` — 사람 채점 시트 변환(O/X/보류 파싱 · 미채점 건너뜀 · human_review 채움 · 일치율 · 원본 덮어쓰기 거부), 합성 시트만(DB 없음)
 - `test_check_injection_result.py` — 저장한 실측03이 기준을 통과하고, 작업 수 · 상태 · 판정 기준 · 노출 전제를 깬 변이는 실패로 바뀜(키 없음)
 - `test_run_graph.py`의 운영 준비 검사 — run_thread_validation의 dry-run/ID·덮어쓰기 거부, 공급자 보고 비용 누락/null·본문 제외 확인
 - `EVALS.md` — 이 문서
