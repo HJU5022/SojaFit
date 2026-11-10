@@ -92,6 +92,10 @@ def publish_analysis_trace(user, thread, event):
     if not os.getenv('LANGFUSE_PUBLIC_KEY') or not os.getenv('LANGFUSE_SECRET_KEY'):
         return 'disabled'
     from langfuse import get_client, propagate_attributes
+    from backend.services import service_trace
+    # [왜] 이 프로세스의 첫 Langfuse client는 반드시 본문을 지우는 훅이 걸린 것이어야 한다(훅 없는 client가 먼저 만들어지면 재사용된다)
+    if not service_trace.ensure_client():
+        return 'disabled'
     client = get_client()
     with propagate_attributes(user_id=str(user), session_id=str(thread), tags=['analysis', event['mode']]):
         with client.start_as_current_observation(name='analysis-metadata', as_type='span',

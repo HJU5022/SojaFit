@@ -15,7 +15,7 @@
 
 ## llm.py가 한 곳이어야 하는 이유
 라우터나 그래프 노드가 `openai`를 직접 import하지 않고 전부 `llm.py`를 거칩니다. 여기서 세 가지를 처리합니다.
-1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다.
+1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다. 서비스 분석은 이와 별개로 키가 있으면 `service_trace.py`가 모델 호출 메타만 보냅니다(본문 제거).
 2. 키 없는 데모는 서비스 조립에서 `llm.node_chat` 대신 `demo.py`의 재생 chat을 그래프 · 카드 도구에 주입해 `llm.py`를 부르지 않는다. 그래프 · 검색(BM25) · MCP 사실 확인은 실제 경로와 같다.
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/pipeline/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
@@ -27,4 +27,5 @@
 
 Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.
 - `mouser.py` — Mouser Search API 품번 검색(`POST /api/v1/search/partnumber`, 키는 `apiKey` 쿼리) 클라이언트. `check_parts`(1~10개, 3~40자, `|` 금지), `search_parts(parts, transport=None)`가 한 번만 보내고(재시도 없음, 제한 시간 10초, 프로세스당 누적 `MAX_CALLS` 300회) 품번 · 제조사 · 수량별 가격과 통화 · 재고 표시 · 상품 주소와 조회 시각만 돌려줌. 실패는 `MouserError(kind)`로만 알리고 요청 주소 · 키 · Mouser 문구를 담지 않음. httpx 요청 로그에서 Mouser 주소 줄을 버리는 필터. 읽는 환경변수 `MOUSER_API_KEY`
+- `service_trace.py` — 서비스 분석(memory_service `_invoke`)의 모델 호출별 Langfuse 추적. 키가 있으면 모든 모드에서 켜지고, 내보내기 직전 훅(`mask_otel_spans`)이 남기는 목록 밖의 칸(입력 · 출력 · metadata · 오류 문구 · 모델 매개변수)을 지우고 입력 · 출력은 `[redacted]`로 바꾼다. 같은 요청은 `analysis_events.trace_id`로 `analysis-metadata`와 한 trace에 묶인다. 평가(`evals/`)는 이 파일을 쓰지 않는다(별도 프로세스, 입력 · 출력을 남김)
 - `langfuse_prompts.py` — 노드별 모델 표(`NODE_MODELS`, 노드 `route` · `grade` · `rewrite` · `generate` · `supervisor` · `judge_read`), development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)
