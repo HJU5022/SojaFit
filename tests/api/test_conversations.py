@@ -379,3 +379,21 @@ def test_demo_questions_only_in_replay_mode_and_without_recorded_results(web, mo
         unavailable = client.get('/api/demo-questions')
     assert listed == [{k: recorded[k] for k in ('id', 'kind', 'circuit', 'demo_id', 'target', 'question', 'conditions', 'resume')}]
     assert unavailable.status_code == 503 and unavailable.json()['error']['code'] == 'UNAVAILABLE'
+
+
+@pytest.mark.parametrize('path', ['/api/runs/{id}/resume', '/api/messages/1/approvals', '/api/auth/login'])
+def test_other_api_json_bodies_over_128_kib_are_413(path):
+    """재개 · 승인 · 로그인 등 `/api/` 아래 본문도 128 KiB까지다. 넷리스트 업로드(5 MiB)만 이 한도 밖이다."""
+    response = TestClient(app).post(path.format(id=uuid4()), content=b'x' * (128 * 1024 + 1))
+    assert response.status_code == 413 and response.json()['error']['code'] == 'PAYLOAD_TOO_LARGE'
+    upload = TestClient(app).post('/api/projects/upload', content=b'x' * (128 * 1024 + 1))
+    assert upload.status_code != 413
+
+
+def test_every_response_has_security_headers():
+    """보안 응답 헤더는 가장 바깥 미들웨어가 모든 응답(오류 포함)에 붙인다(`backend/main.py`의 `SECURITY_HEADERS`)."""
+    for path in ('/health', '/api/auth/me'):
+        headers = TestClient(app).get(path).headers
+        assert headers['x-content-type-options'] == 'nosniff' and headers['x-frame-options'] == 'DENY'
+        assert headers['referrer-policy'] == 'strict-origin-when-cross-origin' and 'max-age' in headers['strict-transport-security']
+
