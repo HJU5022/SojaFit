@@ -110,6 +110,8 @@ SojaFit (proj3-b)
 │       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면, 키 없는 데모의 기록 질문 버튼(새 대화) · 기록한 답으로 재개
 │       │   ├── RunStatus.tsx <- 접근 가능한 D5 진행 상태
 │       │   ├── ProfileHints.tsx <- 결과 옆 참고(내 설정): 질문으로 찾은 내 사실, 판정 근거와 분리
+│       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)
+│       │   ├── SafeMarkdown.test.tsx <- 표·굵게·목록 렌더와 악성 마크다운(이미지·링크·HTML) 차단 시험
 │       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
 │       │   ├── EvidencePanel.tsx <- 문서 위치 근거 목록
 │       │   ├── JudgementTable.tsx <- 5종 후보 판정 표
