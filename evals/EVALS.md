@@ -1,5 +1,7 @@
 # evals
 
+T3 스모크07은 `results/threads/injection_t3_smoke_live_2026-11-11_07.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json`에 별도 기록한다. 정상·공격/current 2작업이며 기존110회03과 합산하지 않는다.
+
 T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.
 
 실측01·02와 스모크01~06의 원시·메타·예산·승인 32개는 저장소 밖 원본 백업으로 옮겼다(2026-11-11). 최신03의4개만저장소에남기고, [보관·해시 인덱스](results/threads/injection_baseline_artifact_index_2026-11-10.json#/measured_runs_archive)에36개전체의크기/SHA256·보관위치·복원방법을기록한다. 이전32개는Git미추적파일이었으므로Git이력복구를대체수단으로가정하지않는다. 백업은현재로컬전용이며이전실측의내용/판정을변경하지않았다.

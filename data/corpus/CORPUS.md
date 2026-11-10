@@ -1,6 +1,8 @@
 # corpus
 
 ## 역할
+
+- baseline_cases.json의 t3_smoke는 정상/공격 2작업 전용 승인 범위다. 전체110회 execution_enabled=false는 유지하며 별도 해시·사전등록·정확한 커밋/승인 없이는 유료 실행할 수 없다.
 - 이 폴더: 코퍼스 원본 문서를 출처별로 둡니다. 지금은 TSC 다이오드 데이터시트 표본 3건뿐이며, 전체 1,360건은 저장소에 포함하지 않습니다. 원본은 고치지 않습니다.
 - 넣는 것: `tsc/`(Taiwan Semiconductor 다이오드 데이터시트 원본 PDF 표본).
 - 넣지 않는 것: 파싱 결과와 목록(문서 목록은 `data/manifest.jsonl`, 청크·파싱 결과는 저장소 밖 작업 자료, 키 없는 데모용 42문서 청크만 `data/demo/snapshot/`), 재배포를 금지하는 제조사(TI, Diodes, Vishay, ST, Nexperia, PANJIT)의 데이터시트, TSC PDF 전체.

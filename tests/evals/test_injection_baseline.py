@@ -30,6 +30,149 @@ def test_default_plan_writes_110_not_run_rows_and_pending_review(tmp_path):
         runner.main(['--out',str(out)])
 
 
+@pytest.mark.parametrize('failure', [None, 'trial', 'flush', 'init', 'callback', 'url'])
+def test_live_tracing_preserves_trial_results_and_flushes(tmp_path, monkeypatch, failure):
+    from langchain_core.runnables import RunnableLambda
+    from langchain_core.callbacks import BaseCallbackHandler
+    from types import SimpleNamespace
+    import langfuse
+    import langfuse.langchain
+    events=[]
+    class Handler(BaseCallbackHandler):
+        def __init__(self, *, trace_context):
+            if failure=='callback':
+                raise RuntimeError('fake callback failure')
+            events.append(('handler', trace_context['trace_id']))
+        def on_chain_start(self, serialized, inputs, **kwargs):
+            events.append(('start', kwargs.get('metadata', {})))
+    def flush():
+        events.append(('flush',))
+        if failure=='flush':
+            raise RuntimeError('fake exporter failure')
+    ids=iter(['a'*32,'b'*32])
+    def trace_url(**kw):
+        if failure=='url':
+            raise RuntimeError('fake projects lookup failure')
+        return 'https://cloud.langfuse.com/test/'+kw['trace_id']
+    client=SimpleNamespace(create_trace_id=lambda: next(ids),
+        get_trace_url=trace_url,flush=flush)
+    def get_client():
+        if failure=='init':
+            raise RuntimeError('fake init failure')
+        return client
+    monkeypatch.setenv('LANGFUSE_PUBLIC_KEY','fake-public')
+    monkeypatch.setenv('LANGFUSE_SECRET_KEY','fake-secret')
+    monkeypatch.setenv('LANGFUSE_TRACING_ENABLED','true')
+    monkeypatch.setattr(langfuse,'get_client',get_client)
+    monkeypatch.setattr(langfuse.langchain,'CallbackHandler',Handler)
+    data=planner.fixture()
+    jobs=planner.jobs(data)[:2]
+    monkeypatch.setattr(planner,'jobs',lambda data:jobs)
+    from backend.services import llm
+    budget=llm.EvaluationBudget(max_calls=2,max_usd=1,max_seconds=30,
+        prompt_rate=.000001,completion_rate=.000001)
+    def trial(row):
+        graph=SimpleNamespace(invoke=RunnableLambda(lambda payload:payload).invoke,
+            get_state=lambda config:SimpleNamespace(next=()))
+        inputs=planner.materialize(data,data['cases'][0],row['variant'])
+        runner.service_turns(graph,inputs,budget,runner.MockHistory(),[])
+        budget.reserve('synthetic',output_tokens=1)
+        if failure=='trial':
+            raise runner.TrialFailure({'answer':'partial'})
+        return {'answer':'unchanged','status':'completed'}
+    out=tmp_path/'live.jsonl'
+    assert runner.run(data,out,'live',trial)==(1 if failure=='trial' else 0)
+    rows=[json.loads(s) for s in out.read_text().splitlines()]
+    assert budget.calls==(1 if failure=='trial' else 2)
+    assert rows[0]['answer']==('partial' if failure=='trial' else 'unchanged')
+    if failure=='trial':
+        assert rows[0]['status']=='error' and rows[1]['status']=='not_run'
+    if failure not in ('init','callback'):
+        assert rows[0]['trace_id']=='a'*32
+        assert rows[0]['trace_status']=='queued'
+        if failure=='url':
+            assert rows[0]['trace_url'] is None
+        else:
+            assert rows[0]['trace_url'].endswith('a'*32)
+        starts=[e[1] for e in events if e[0]=='start']
+        assert starts and all(m['trace_origin']=='live' for m in starts)
+        assert all(m['case']==jobs[0]['case'] and 'gold' not in m for m in starts)
+        if failure!='trial':
+            assert rows[1]['trace_id']=='b'*32
+            assert rows[0]['trace_session']==rows[1]['trace_session']
+        assert events[-1]==('flush',)
+    else:
+        assert rows[0]['trace_status']=='unavailable'
+    assert runner._TRACE_CONFIG.get() is None
+
+
+@pytest.mark.parametrize('mode', ['plan','simulate'])
+def test_offline_modes_never_initialize_langfuse(tmp_path,monkeypatch,mode):
+    import langfuse
+    monkeypatch.setattr(langfuse,'get_client',lambda:pytest.fail('Offline trace initialization'))
+    assert runner.run(planner.fixture(),tmp_path/(mode+'.jsonl'),mode,
+        lambda row:dict(status='simulation_completed'))==0
+
+
+@pytest.mark.parametrize('disabled', ['keys','flag'])
+def test_live_without_enabled_tracing_keeps_running(tmp_path,monkeypatch,disabled):
+    import langfuse
+    monkeypatch.setattr(langfuse,'get_client',lambda:pytest.fail('Disabled trace initialization'))
+    if disabled=='keys':
+        monkeypatch.delenv('LANGFUSE_SECRET_KEY',raising=False)
+    else:
+        monkeypatch.setenv('LANGFUSE_TRACING_ENABLED','false')
+    out=tmp_path/'disabled.jsonl'
+    assert runner.run(planner.fixture(),out,'live',lambda row:dict(status='completed'))==0
+    rows=[json.loads(s) for s in out.read_text().splitlines()]
+    assert len(rows)==110 and all(r['trace_status']=='disabled' and 'trace_id' not in r for r in rows)
+
+
+def test_real_langfuse_sdk_exports_t6_preparation_and_model_spans_locally(tmp_path,monkeypatch):
+    import langfuse
+    from langfuse.langchain import CallbackHandler
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
+    from langchain_core.messages import AIMessage
+    from langchain_core.runnables import RunnableLambda
+    from types import SimpleNamespace
+    exporter=InMemorySpanExporter()
+    monkeypatch.setenv('LANGFUSE_TRACING_ENABLED','true')
+    monkeypatch.setenv('LANGFUSE_PUBLIC_KEY','fake-local-sdk')
+    monkeypatch.setenv('LANGFUSE_SECRET_KEY','fake-secret')
+    client=langfuse.Langfuse(public_key='fake-local-sdk',secret_key='fake-secret',
+        tracer_provider=TracerProvider(),span_exporter=exporter,environment='eval')
+    monkeypatch.setattr(client.api.projects,'get',lambda **kw:SimpleNamespace(data=[SimpleNamespace(id='local-project')]))
+    monkeypatch.setattr(langfuse,'get_client',lambda **kw:client)
+    monkeypatch.setitem(CallbackHandler.__init__.__globals__,'get_client',lambda **kw:client)
+    data=planner.fixture()
+    job=next(j for j in planner.jobs(data) if j['case']=='T6')
+    monkeypatch.setattr(planner,'jobs',lambda data:[job])
+    model=FakeMessagesListChatModel(responses=[AIMessage(content='synthetic answer')])
+    def graph_step(payload):
+        return {'answer':model.invoke(payload['input']).content}
+    graph=SimpleNamespace(invoke=RunnableLambda(graph_step).invoke,
+        get_state=lambda config:SimpleNamespace(next=()))
+    def trial(row):
+        inputs=planner.materialize(data,next(c for c in data['cases'] if c['id']=='T6'),row['variant'])
+        state,preparation=runner.service_turns(graph,inputs,None,runner.MockHistory(),[])
+        assert len(preparation)==1
+        return dict(status='completed',answer=state['answer'])
+    out=tmp_path/'sdk.jsonl'
+    try:
+        assert runner.run(data,out,'live',trial)==0
+        row=json.loads(out.read_text())
+        spans=exporter.get_finished_spans()
+        generations=[s for s in spans if s.attributes.get('langfuse.observation.type')=='generation']
+        assert len(generations)==2
+        assert all(format(s.context.trace_id,'032x')==row['trace_id'] for s in spans)
+        assert all(s.parent is not None for s in generations)
+        assert row['answer']=='synthetic answer' and row['trace_status']=='queued'
+    finally:
+        client.shutdown()
+
+
 def test_t2_controlled_context_preflight_confirms_four_pairs_without_mutating_baseline():
     import copy
     data=planner.fixture();before=copy.deepcopy(data)
@@ -109,14 +252,25 @@ def test_remaining_smoke_simulates_only_ten_scored_jobs_and_pending_reviews(tmp_
         runner.main(['--remaining-smoke','--execute','--out',str(tmp_path/'live.jsonl')])
 
 
-def test_t7_only_smoke_simulation_has_two_rows_and_keeps_full_run_locked(tmp_path):
-    out=tmp_path/'t7.jsonl'
-    assert runner.main(['--t7-smoke','--simulate','--out',str(out)])==0
+@pytest.mark.parametrize('case,flag,scope',[('T7','--t7-smoke','t7_smoke_v1'),('T3','--t3-smoke','t3_smoke_v1')])
+def test_single_case_smoke_simulation_has_two_rows_and_keeps_full_run_locked(tmp_path,case,flag,scope):
+    out=tmp_path/'smoke.jsonl'
+    assert runner.main([flag,'--simulate','--out',str(out)])==0
     rows=[json.loads(s) for s in out.read_text(encoding='utf-8').splitlines()]
-    assert len(rows)==2 and all(r['case']=='T7' and r['scope']=='t7_smoke_v1' for r in rows)
+    assert len(rows)==2 and all(r['case']==case and r['scope']==scope for r in rows)
     assert all(r['status']=='simulation_completed' and r['human_review']['passed'] is None for r in rows)
     with pytest.raises(ValueError,match='Explicit user'):
-        runner.main(['--t7-smoke','--execute','--out',str(tmp_path/'live.jsonl')])
+        runner.main([flag,'--execute','--out',str(tmp_path/'live.jsonl')])
+
+
+def test_t3_smoke_rejects_extra_cases_and_reused_database_names():
+    data=planner.exposure_fixture(planner.fixture(),'t3_smoke')
+    mapping={f'T3:{v}':f'postgresql://test:test@127.0.0.1:55479/injection_test_t3_smoke07_{v}' for v in ('normal','attack')}
+    assert len(runner.database_map(data,mapping))==2
+    with pytest.raises(ValueError,match='Exactly'):
+        runner.database_map(data,{**mapping,'T1:normal':mapping['T3:normal']})
+    with pytest.raises(ValueError,match='T3 smoke'):
+        runner.database_map(data,{k:v.replace('injection_test_t3_','injection_test_exposure_') for k,v in mapping.items()})
 
 
 @pytest.mark.parametrize('variant',['normal','attack'])

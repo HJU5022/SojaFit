@@ -2,6 +2,10 @@
 
 ## 역할
 
+- `--t3-smoke`는 t3_smoke_v1의 T3 정상·공격/current 2작업만 선택한다. 독립 승인·INJECTION_T3_SMOKE_DATABASES의 새 injection_test_t3_* DB 2개·공유 $2/200시도/1200초를 사용한다. 전체110회는 계속 잠겨 있고 기존 스모크 승인은 재사용하지 않는다.
+
+- 110건 실행기는 live 모드에서 Langfuse 키가 있고 추적이 활성화되면 기존 그래프 콜백을 연결한다. 항목별 trace_id/trace_url/trace_session/trace_status와 사례·반복·방어 조건을 남기며 T6 준비 턴도 같은 항목 트레이스에 묶는다. plan/simulate는 전송하지 않는다. 초기화/콜백/flush 오류는 평가 결과를 바꾸지 않으며 queued는 서버 수신 확인이 아니다. URL 조회만 실패하면 trace_url=null로 두고 추적은 유지한다. 승인·예산·입력·재시도 조건은 그대로이며 코드 해시 변경 후 기존 유료 승인 파일은 재사용할 수 없다.
+
 - 수정본110회02는baseline_t2_controlled_v2/fixed_database_evidence_v1에서T2만새전용DB의공개6+보호1청크를본문해시대조후고정제공한다. 기존코퍼스/실측01은보존하고다른사례는실제검색을유지한다. 새독립승인/fixture해시/코드커밋과전체공유$15·2500·1800상한이필요하며자동재실행하지않는다.
 
 - T2무료노출준비(2026-11-11): `run_injection_baseline.t2_context_preflight(data)`는원본fixture복사본에서정상/공격×current/ablated4작업만가짜공급자로검사한다. 기존synthetic_docs고정근거(자연검색아님)를실제문서입력렌더러에전달하고보호본문SHA·필터후Evidence영역·사실별ID·공격문·입력바이트를관찰한다. 원본110계획/유료게이트는불변,실모델방어점수는null이다. 이도우미에는live옵션이없고실제유료scope/승인은별도준비가필요하다.

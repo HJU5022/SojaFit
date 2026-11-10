@@ -287,7 +287,9 @@ def check_node(state: dict) -> dict:
         return {'path': ['답 검사']}  # 종합이 상한으로 멈췄다
     answer = state.get('answer') or ''
     reports = final_reports(state)
-    valid = {str(i) for i in state.get('passed') or []} | ({'넷리스트'} if state.get('target_part') else set())
+    valid = {str(i) for i in state.get('passed') or []}
+    if state.get('target_part') and any(r.agent == 'docs' and r.status != 'fail' and '넷리스트' in r.evidence_ids for r in reports):
+        valid.add('넷리스트')  # 재계획에서 버린 보고나 실패한 역할 작업은 최종 답에 근거 권한을 주지 않는다.
     invalid_memories = set(state.get('memory_refs') or []) - memory_sources(state.get('approved_memories') or [])
     judge_only = all(r.agent == 'judge' for r in reports if r.status != 'fail')
     cited = citations(answer)
