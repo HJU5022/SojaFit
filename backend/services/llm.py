@@ -4,7 +4,7 @@
 호출자: backend/graph 노드(`node_chat`), backend/rag(`embed_texts`), evals/*(`evaluation_limits`·Decisions 평가), tests/services/test_llm.py.
 입력: 시스템·사용자 프롬프트와 Pydantic schema. 출력: 검증된 schema 객체(임베딩은 벡터 목록).
 Voyage(검색): `voyage_embed`(질문 임베딩 voyage-4-large 1024차원), `voyage_rerank`(rerank-3). 사전 등록 #25의 측정 설정이다(ADR 0004 갱신 2026-11-03).
-하지 않는 일: 데모 모드 응답 재생(G2, 코드 없음. DEMO_MODE는 지금 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
+하지 않는 일: 데모 모드 응답 기록 · 재생(backend/services/demo.py의 recorder · replayer. 서비스는 DEMO_REPLAY=1에서 이 파일 대신 재생 chat을 쓴다. DEMO_MODE는 검색의 임베딩 호출만 끈다, backend/rag/retrieve.py),
 프롬프트 원문(backend/prompts/), 프롬프트 등록·고정 버전 검증(langfuse_prompts.py), 수치 비교(backend/judge/).
 출처: SPEC.md 2절(모델·공급자)·5절(Langfuse 프롬프트와 실행 추적, 평가 예산)·7절(데모 모드), ADR 0010, backend/services/SERVICES.md.
 [왜] 호출을 한 곳에 모아야 그래프 노드가 openai를 직접 import하지 않고, 재시도 상한과 키 한도(조당 30달러)를 한 곳에서 지킨다.
@@ -51,12 +51,34 @@ class EvaluationLimitError(RuntimeError):
     """평가 호출 수·시간·예약 비용 상한을 넘겼을 때 내는 오류."""
 
 
+class UpstreamError(RuntimeError):
+    """바깥 공급자(Voyage)가 오류 상태로 답했을 때 내는 오류. 키 없음처럼 우리 설정 문제는 RuntimeError 그대로다."""
+
+
+def is_upstream_error(error: BaseException) -> bool:
+    """LLM · 임베딩 공급자(OpenRouter · OpenAI · Voyage)가 실패했거나 연결이 끊겼으면 True(분석 실패 502 · 503 가르기, ADR 0019)."""
+    # [왜] openai SDK 예외는 이 모듈만 import한다(AGENTS.md 지킬 것 2). LangChain ChatOpenAI는 openai 예외를 감싸지 않고 올린다
+    import httpx
+    from openai import APIError  # 연결 끊김 · 시간 초과(APIConnectionError)와 공급자 오류 상태(APIStatusError)의 공통 부모
+
+    return isinstance(error, (UpstreamError, APIError, httpx.HTTPError))  # httpx: Voyage 호출의 연결 · 시간 초과
+
+
 class EvaluationFormatError(RuntimeError):
     """provider 응답은 받았지만 평가 schema 검증에 실패했을 때 metadata를 보존하는 오류."""
 
     def __init__(self, metadata: dict):
         super().__init__("평가 응답 schema 불일치")
         self.metadata = metadata
+
+
+# 서비스 예약에 쓰는 모델별 OpenRouter 단가(토큰당 USD): (입력, 출력, 가격 구간). 출처는 11-10 실행 전 확인한 OpenRouter 가격
+# (evals/results/threads/claim_consistency_live_2026-11-10.json의 preflight.pricing). 키는 langfuse_prompts.HAIKU · SONNET과 같다.
+# shortcut: 단가를 코드에 고정했다. OpenRouter 가격이 오르면 예약이 실제보다 적어질 수 있으니 모델이나 가격이 바뀌면 이 표를 같이 고친다
+MODEL_RATES = {
+    "anthropic/claude-haiku-5.5": (0.0000001, 0.0000005, ({"min_prompt_tokens": 100000, "prompt": "0.0000005", "completion": "0.0000025"},)),
+    "anthropic/claude-sonnet-5.5": (0.000002, 0.00001, ()),
+}
 
 
 @dataclass
@@ -71,6 +93,9 @@ class EvaluationBudget:
     embedding_rate: float = 0.000001
     max_tokens: int = 1024
     pricing_tiers: tuple = ()
+    # [왜] True면 OpenRouter 호출의 예약을 그 호출이 실제로 쓰는 모델 단가(MODEL_RATES)로 잡는다. 서비스 분석만 켠다.
+    #      평가 실행기는 원시 결과의 예약액이 이전 실행과 같은 기준이어야 해서 꺼 둔 채(prompt_rate · completion_rate 하나)로 둔다
+    per_model_rates: bool = False
     calls: int = 0
     reserved_usd: float = 0.0
     started: float = field(default_factory=time.monotonic)
@@ -99,10 +124,10 @@ class EvaluationBudget:
                 if not math.isfinite(rate) or rate < 0:
                     raise ValueError("가격 구간의 단가가 잘못되었습니다")
 
-    def reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+    def reserve(self, text: str, *, output_tokens: int, embedding: bool = False, model: str | None = None) -> float:
         # LangGraph/판정 읽기가 병렬로 호출해도 같은 요청의 한도를 공유한다.
         with self._lock:
-            return self._reserve(text, output_tokens=output_tokens, embedding=embedding)
+            return self._reserve(text, output_tokens=output_tokens, embedding=embedding, model=model)
 
     def remaining(self) -> float:
         remaining = self.max_seconds - (time.monotonic() - self.started)
@@ -110,10 +135,11 @@ class EvaluationBudget:
             raise EvaluationLimitError('분석 시간 상한')
         return min(45.0, remaining)
 
-    def _reserve(self, text: str, *, output_tokens: int, embedding: bool = False) -> float:
+    def _reserve(self, text: str, *, output_tokens: int, embedding: bool = False, model: str | None = None) -> float:
         """호출 한 번의 최대 비용을 호출 전에 예약하고, 이 호출에 줄 제한 시간(초, 최대 45 또는 남은 시간)을 돌려준다.
 
         text의 바이트 수에 여유 8192를 더해 입력 토큰 상한으로 본다. embedding=True면 임베딩 단가를 쓴다.
+        per_model_rates가 켜져 있고 model이 MODEL_RATES에 있으면 그 모델의 단가 · 가격 구간을 쓰고, 없으면 예산의 단가를 쓴다.
         Raises:
             EvaluationLimitError: 호출 수·시간·예약 비용 상한을 넘길 때(다음 호출 전에 중단).
             ValueError: output_tokens가 0 이상 max_tokens 이하가 아닐 때.
@@ -124,10 +150,14 @@ class EvaluationBudget:
         remaining = self.max_seconds - (time.monotonic() - self.started)
         # [왜] 토큰 수를 정확히 세지 않고 바이트 수+여유로 입력 토큰의 위쪽 경계를 잡아 비용을 보수적으로 예약한다
         upper = len(text.encode("utf-8")) + 8192
-        tiers = [p for p in self.pricing_tiers if p.get("min_prompt_tokens", 0) <= upper] if not embedding else []
+        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 3번(다수결)과
+        #      Supervisor만으로 분석 한 번의 예약 상한($0.50)을 넘어 판정 질문이 멈췄다(11-10 데모 기록 실측). 실제 모델 단가로 잡는다
+        prompt_rate, completion_rate, price_tiers = (MODEL_RATES[model] if self.per_model_rates and model in MODEL_RATES
+                                                      else (self.prompt_rate, self.completion_rate, self.pricing_tiers))
+        tiers = [p for p in price_tiers if p.get("min_prompt_tokens", 0) <= upper] if not embedding else []
         # [왜] 가격 구간이 여럿이면 가장 비싼 단가로 예약해 실제보다 적게 잡는 일을 막는다
-        rate = self.embedding_rate if embedding else max([self.prompt_rate, *[float(p.get("prompt", 0)) for p in tiers]])
-        output_rate = max([self.completion_rate, *[float(p.get("completion", 0)) for p in tiers]])
+        rate = self.embedding_rate if embedding else max([prompt_rate, *[float(p.get("prompt", 0)) for p in tiers]])
+        output_rate = max([completion_rate, *[float(p.get("completion", 0)) for p in tiers]])
         cost = upper * rate + output_tokens * output_rate
         if remaining <= 0 or self.calls >= self.max_calls or self.reserved_usd + cost > self.max_usd:
             raise EvaluationLimitError("평가 호출/시간/예약비용 상한")
@@ -214,12 +244,12 @@ def _voyage_post(path: str, payload: dict) -> dict:
         if r.status_code == 200:
             return r.json()
         if r.status_code == 402 or re.search("payment|billing", r.text, re.I):
-            raise RuntimeError(f"Voyage payment signal {r.status_code}")
+            raise UpstreamError(f"Voyage payment signal {r.status_code}")
         if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
             delay = 5 * 2**attempt
             time.sleep(min(delay, budget.remaining()) if runtime else delay)
             continue
-        raise RuntimeError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
+        raise UpstreamError(f"Voyage error {r.status_code}")  # [주의] 응답 본문과 키는 메시지에 넣지 않는다
 
 
 def voyage_embed(texts: list[str], input_type: str) -> list[list[float]]:
@@ -254,7 +284,7 @@ def _chat_model(model: str):
     # [왜] 라이브러리 자체 재시도는 끄고(max_retries=0) 재시도 상한은 chat()의 MAX_FORMAT_RETRIES 하나로만 센다
     # [왜] Luna에는 temperature를 보내지 않는다(3차 실측 계약). Haiku·Sonnet은 0. 출력 상한은 LangChain이 max_completion_tokens로 바꿔 보낸다
     temperature = None if model == langfuse_prompts.LUNA else 0
-    # [왜] 생각(추론)은 기본으로 끈다(11-09 정운 결정). OpenRouter · Supabase · Langfuse로 v3 50문항을 재니 정확도는 그대로이고
+    # [왜] 생각(추론)은 기본으로 끈다(SPEC 2절 "생각(추론)"). OpenRouter · Supabase · Langfuse로 v3 50문항을 재니 정확도는 그대로이고
     #      응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었다
     # [주의] Sonnet 5.5는 생각을 끄면 OpenRouter가 400("Reasoning is mandatory")을 내서 끄지 않고 짧게(effort low) 한다. Luna 등 다른 모델에는 보내지 않는다
     reasoning = {langfuse_prompts.HAIKU: {"enabled": False}, langfuse_prompts.SONNET: {"effort": "low"}}.get(model)
@@ -362,7 +392,7 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
     config = langfuse_prompts.invocation_config()
     if budget:
         # [주의] 평가 중이면 출력 토큰·시간 상한을 예산에서 받아 덮어쓴다
-        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens)
+        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens, model=name)
         options.update(max_tokens=budget.max_tokens, timeout=timeout)
     structured = model.with_structured_output(schema)
     system_content = system

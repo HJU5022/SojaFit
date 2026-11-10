@@ -8,6 +8,7 @@
 
 ## 파일
 - `thread-memory-operations.md` — thread·기억 품질/병렬/복원/비용 검증 명령·합격 기준·실행 경계
+- `c2-defense-recheck.md` — 조장 수정 후 고정 정상군/C1/C2의 입력·모델·무료 호환성·유료 실행 명령·전후 의미 비교·중단/예산·증거 보관 절차. 수정 후 무료 재생(4 passed)까지 반영, 실제 모델 재측정은 미실행
 - `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선(30청크·18질의 프록시 표본)
 - `embedding-candidate-runner.md` — 임베딩 후보 확장 평가기 설계. 상태: 설계 계약만 있고 구현·테스트·2026-11-02 원시 결과는 `main`에 없음
 - `embedding-voyage-candidates.md` — Voyage 4 Nano·Voyage 4 후보 추가 계약. 상태: 설계 계약만 있고 구현·테스트·원시 JSON은 `main`에 없음

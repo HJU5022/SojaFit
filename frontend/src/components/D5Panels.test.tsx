@@ -4,6 +4,7 @@ import EvidencePanel from './EvidencePanel'
 import InterruptForm from './InterruptForm'
 import JudgementTable from './JudgementTable'
 import RunStatus from './RunStatus'
+import ProfileHints from './ProfileHints'
 
 it('renders evidence coordinates exactly without inventing text', () => {
   render(<EvidencePanel evidence={[{ document: 'sheet.pdf', page: 2, table: 'RATINGS', row: 'VRRM', section: '', citation_number: '7' }]} />)
@@ -63,4 +64,35 @@ it('requires missing values and a listed role before resuming', () => {
 it('announces run progress through a polite live region', () => {
   render(<RunStatus state={{ status: 'running', runId: 'run-1', stage: '판정' }} />)
   expect(screen.getByText('판정 진행 중')).toHaveAttribute('aria-live', 'polite')
+})
+
+it('shows role names with codes and Korean value names but sends the internal keys', () => {
+  const submit = vi.fn()
+  render(<InterruptForm interrupt={{ missing: ['v_in_max', 'new_key'], role_choices: ['R01', 'R08'] }} busy={false} onSubmit={submit}
+    roleLabels={[{ code: 'R01', name: '역극성 보호(직렬)' }]} />)
+  expect(screen.getByRole('option', { name: '역극성 보호(직렬) (R01)' })).toHaveValue('R01')
+  expect(screen.getByRole('option', { name: 'R08' })).toBeInTheDocument()  // 이름을 못 받은 역할은 코드 그대로
+  fireEvent.change(screen.getByLabelText('회로 역할'), { target: { value: 'R01' } })
+  fireEvent.change(screen.getByLabelText('입력 전원 최대 전압'), { target: { value: '12V' } })
+  fireEvent.change(screen.getByLabelText('new_key'), { target: { value: '1' } })  // 모르는 이름은 내부 이름 그대로
+  fireEvent.click(screen.getByRole('button', { name: '같은 실행 계속하기' }))
+  expect(submit).toHaveBeenCalledWith({ v_in_max: '12V', new_key: '1' }, 'R01')
+})
+
+it('separates a system failure from a refusal answer and keeps completion neutral', () => {
+  const result = { answer: '', status: 'completed', stage: '완료', question_type: 'rating', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
+  const { rerender } = render(<RunStatus state={{ status: 'completed', runId: 'run-1', result }} />)
+  expect(screen.getByText('분석이 끝났습니다.')).toBeInTheDocument()
+  rerender(<RunStatus state={{ status: 'refused', runId: 'run-1', result: { ...result, status: 'refused' } }} />)
+  expect(screen.getByText('이 질문에는 답할 수 없어 거절했습니다.')).toBeInTheDocument()
+  rerender(<RunStatus state={{ status: 'failed', runId: 'run-1', error: { code: 'RUN_FAILED', message: '실행을 완료하지 못했습니다.', requestId: 'req-1' } }} />)
+  expect(screen.getByText('오류로 멈췄습니다. 실행을 완료하지 못했습니다.')).toBeInTheDocument()
+})
+
+it('shows profile hints as reference apart from evidence and nothing when empty', () => {
+  const { rerender } = render(<ProfileHints hints={[{ kind: 'mounting_preference', value: 'smd', text: '이 사용자는 SMD 실장을 선호한다.' }]} />)
+  expect(screen.getByRole('complementary', { name: '참고(내 설정)' })).toHaveTextContent('이 사용자는 SMD 실장을 선호한다.')
+  expect(screen.getByText('판정 근거가 아니라 내 설정에서 찾은 사실입니다.')).toBeInTheDocument()
+  rerender(<ProfileHints hints={[]} />)
+  expect(screen.queryByRole('complementary', { name: '참고(내 설정)' })).not.toBeInTheDocument()
 })

@@ -36,7 +36,7 @@ test('completes judgement, transient price, approval, price-free quote, and case
   await page.goto('/app?projectId=1')
   await page.getByLabel('대상 부품').selectOption('D1')
   await page.getByLabel('질문').fill('D1을 SS34로 바꿔도 되나요?')
-  await page.getByRole('button', { name: 'D5에 질문하기' }).click()
+  await page.getByRole('button', { name: '질문하기' }).click()
   await expect(page.getByText('같은 동작은 보장하지 않습니다.')).toBeVisible()
   await page.getByLabel('승인할 후보').selectOption('0')
   await page.getByRole('button', { name: '판정 승인 확인' }).click()

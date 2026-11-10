@@ -1,6 +1,6 @@
 # G2: `docker compose up` 한 줄로 전체 서비스가 10분 안에 떠야 합니다.
 # 평가자에게는 API 키가 없으므로 기본값은 데모 모드(DEMO_MODE=1)입니다.
-# 필요 없는 서비스는 지우고, 필요한 것(redis 등)은 추가하세요.
+# 서비스 4개: api(FastAPI + 빌드한 React 화면), thread-setup(분석 저장소 준비 후 종료), corpus-load(데모 코퍼스 스냅샷 적재 후 종료), db(pgvector PostgreSQL).
 services:
   api:
     build: .
@@ -12,8 +12,10 @@ services:
         required: false
     environment:
       DEMO_MODE: ${DEMO_MODE:-1}
-      DEMO_SCENARIOS: ${DEMO_SCENARIOS:-${DEMO_MODE:-1}}
+      # 키 없는 데모의 분석은 LLM 응답 기록(data/demo/recordings/)을 재생한다. 기본은 DEMO_MODE를 따른다(.env.example 참고).
+      DEMO_REPLAY: ${DEMO_REPLAY:-${DEMO_MODE:-1}}
       THREADS_ENABLED: "1"
+      # .env의 AUTH_ORIGIN(배포 주소일 수 있음) 대신 compose 전용 DEMO_AUTH_ORIGIN을 쓴다(.env.example 참고).
       AUTH_ORIGIN: ${DEMO_AUTH_ORIGIN:-http://localhost:8000}
       # 호스트 이름 db는 아래 db 서비스. .env의 DATABASE_URL보다 이 값이 우선한다.
       DATABASE_URL: postgresql://app:app@db:5432/app
@@ -22,6 +24,8 @@ services:
       db:
         condition: service_healthy
       thread-setup:
+        condition: service_completed_successfully
+      corpus-load:
         condition: service_completed_successfully
     # Apple Silicon에서 이미지가 안 뜨면 아래 주석을 해제해 보세요
     # platform: linux/amd64
@@ -35,19 +39,30 @@ services:
       db:
         condition: service_healthy
 
+  # 데모 코퍼스 스냅샷(data/demo/snapshot/, 임베딩 없음)을 문서·청크 표에 넣는다. 이미 있는 문서·청크는 건너뛰어 다시 떠도 늘지 않는다.
+  # DEMO_MODE와 상관없이 늘 돈다. DEMO_MODE=0으로 띄워도 같은 DB에 이 데모 스냅샷이 들어간다.
+  corpus-load:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://app:app@db:5432/app
+      # db/008이 임베딩 열을 차원 없는 halfvec으로 바꿨다. ingest.py가 열 형식을 이 값과 대조한다.
+      RAG_VECTOR_TYPE: halfvec
+    # 세 번째 인자(벡터 캐시 폴더)는 --chunks-only에서 쓰지 않지만 ingest.py가 받는다.
+    command: ["python", "-m", "backend.rag.pipeline.ingest", "data/demo/snapshot/manifest.jsonl",
+              "data/demo/snapshot/chunks.jsonl", "/tmp/vectors", "--chunks-only"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
-    # pgvector 확장이 들어 있는 Postgres. 스냅샷 적재는 db/ 아래에 SQL로 추가하세요.
+    # pgvector 확장이 들어 있는 Postgres. 표는 db/의 SQL이 만들고, 데모 코퍼스 스냅샷은 위 corpus-load가 넣는다.
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: app
-      # 아래 DEMO_* 값은 db/007_demo_accounts.sql이 빈 DB 첫 기동 때 데모 계정을 만드는 데 쓴다. 비어 있으면 계정을 만들지 않는다.
+      # db/007_demo_accounts.sql이 빈 DB 첫 기동 때 DEMO_MODE=1이면 비밀번호 없는 데모 사용자 A · B(버튼 로그인 전용)를 만든다.
       DEMO_MODE: ${DEMO_MODE:-1}
-      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:-}
-      DEMO_ADMIN_PASSWORD_HASH: ${DEMO_ADMIN_PASSWORD_HASH:-}
-      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-}
-      DEMO_USER_PASSWORD_HASH: ${DEMO_USER_PASSWORD_HASH:-}
     volumes:
       - pgdata:/var/lib/postgresql/data   # 컨테이너를 지워도 데이터 유지. 초기화하려면 docker compose down -v
       # initdb 폴더의 .sql은 데이터 폴더가 비어 있을 때 첫 기동에만 파일 이름순으로 실행된다.

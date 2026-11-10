@@ -5,8 +5,16 @@ def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints'}
     assert 'secret' not in str(body)
+
+
+def test_profile_hints_keep_only_kind_value_text():
+    """참고(내 설정)는 사실의 칸 · 값 · 문장만 내보내고 버전 · 출처 같은 다른 칸은 버린다(최대 3개)."""
+    from backend.conversations.dto import result_dto
+    hint = {'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.', 'version': 2, 'source': 'user_settings'}
+    body = result_dto({'answer': 'ok'}, request_id='req-1', status='completed', profile_hints=[hint] * 4).model_dump()
+    assert body['profile_hints'] == [{'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.'}] * 3
 
 
 def test_interrupt_result_round_trip_has_no_private_fields():
@@ -32,6 +40,14 @@ def test_safe_public_judgement_removes_internal_data():
     assert 'private' not in str(body)
 
 
+def test_judgement_keeps_the_applied_mount_preference_code():
+    """찾기 순서에 쓴 선호 실장 방식 코드(SPEC 8.5)만 내보낸다. 소속 · 직무 같은 다른 사실은 판정 칸에 없다."""
+    from backend.conversations.dto import result_dto
+    body = result_dto({'answer': 'ok', 'judgement': {'kind': 'find', 'preferred_mount': 'smd'}}, request_id='req').model_dump()
+    assert body['judgement']['preferred_mount'] == 'smd'
+    assert result_dto({'answer': 'ok', 'judgement': {'kind': 'judge'}}, request_id='req').model_dump()['judgement']['preferred_mount'] == ''
+
+
 def test_refusal_and_judgement_citation_are_public_metadata_only():
     from backend.conversations.dto import result_dto
     state = {'answer': 'no', 'judgement': {'kind': 'judge', 'results': [{'part': '1N5817', 'verdict': 'NOT_VERIFIED', 'checks': [{'code': 'VRRM', 'citation': {'document': '/private/a.pdf', 'page': 1, 'text': 'private'}}]}]}}
@@ -47,3 +63,33 @@ def test_interrupt_never_exposes_unrecognized_graph_payload():
     assert dto['interrupt']['missing'] == ['v_in']
     assert dto['interrupt']['role_choices'] == ['R01']
     assert 'private' not in str(dto)
+
+
+def test_terminal_public_result_preserves_safe_graph_fields_only():
+    from backend.conversations.dto import public_state
+    result = public_state({'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819', 'https://private'], 'facts': {'x': 'secret'}, 'reports': [{'secret': 1}]})
+    assert result == {'answer': 'ok', 'question_type': 'candidate_judge', 'price_parts': ['1N5819']}
+
+
+def test_docs_evidence_selects_only_cited_metadata():
+    from backend.conversations.dto import public_state
+    result = public_state({'answer': 'ok [3]', 'final_reports': [{'evidence_ids': ['3'], 'summary': 'secret summary'}],
+                           'docs': [{'chunk_id': 3, 'file': '/private/sheet.pdf', 'page': 2, 'table': 'T', 'content': 'private chunk', 'doc_parts': ['private']},
+                                    {'chunk_id': 4, 'file': 'unused.pdf', 'page': 3, 'content': 'other private'}]})
+    assert result['evidence'] == [{'document': 'sheet.pdf', 'page': 2, 'table': 'T', 'row': '', 'section': '', 'citation_number': '3'}]
+    assert 'private' not in str(result) and 'unused' not in str(result)
+
+
+def test_safe_judgement_fields_match_runs_sql_shape():
+    # [왜] 11-10 SafeJudgement에 preferred_mount를 더하고 runs.safe_result 저장 검사(db/019)를 빠뜨려, 판정이 붙은 run이 저장에서 거부됐다
+    import json
+    from pathlib import Path
+    from backend.conversations.models import SafeJudgement
+    root = Path(__file__).resolve().parents[2] / 'db'
+    for name in ('019_conversations.sql', '025_runs_safe_result_preferred_mount.sql'):
+        text = (root / name).read_text(encoding='utf-8')
+        key = "conversation_json_matches(safe_result, '"
+        start = text.index(key) + len(key)
+        shape = json.loads(text[start:text.index("'", start)])
+        allowed = [alt for alt in shape['judgement']['$any'] if isinstance(alt, dict)][0]
+        assert set(SafeJudgement.model_fields) <= set(allowed), (name, set(SafeJudgement.model_fields) - set(allowed))

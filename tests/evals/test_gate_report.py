@@ -2,7 +2,7 @@
 
 - 역할: v2처럼 verdict 칸이 없는 판정 문항에서 expected의 첫 판정 코드를 쓰는지, 문서 할 일 검색이 있으면 그것을 · 없으면 판정 표 근거 칸을
   근거 위치로 쓰는지, 비율 · 오탐 · p95 기준 미달을 빠짐없이 고르는지 본다. 그래프 · LLM 없음.
-- 출처: evals/runners/gate_report.py, 정운 지시(11-07)
+- 출처: evals/runners/gate_report.py, ADR 0015 목표 지표와 11-07 조장 결정
 """
 from evals.runners import gate_report as G
 

@@ -8,6 +8,7 @@
 
 ## 파일
 - `thread-memory-operations-review.md` — 사용자 thread·승인 기억의 운영 실측, 이전 검증 스냅샷과 조장 정본 반영 제안
+- `thread-memory-work-summary.md` — 프롬프트 인젝션 관련 절만 뽑은 발췌(STH): D6·D7 검증 경계, 판정 출력 변경 제안, C1/C2 실제 모델 기준선과 조장 전달용 C2 재현·원인·수정 위치·재검증 기준
 - `embedding-candidate-investigation.md` — 임베딩 후보 13종을 넣은 이유, 개별 조사·실행 과정, 중단 사유와 다음 평가 조건
 - `model-licenses.md` — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부
 - `skill-feasibility.md` — 도메인 Skill 후보와 기존 기능과의 경계, 선행 조건, 작업 순서 조사

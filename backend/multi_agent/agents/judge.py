@@ -1,4 +1,4 @@
-"""판정 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
+"""대체 부품 에이전트: 역할 · 회로 값을 읽고(LLM 1번), 빠진 값을 묻고(인터럽트), 사양 표 값으로 판정한다(코드).
 
 - 역할: `judge_read_agent`(읽기 노드)와 `judge_agent`(판정 노드). 읽기를 따로 두는 이유는 인터럽트에서 재개하면
   노드가 처음부터 다시 돌기 때문이다(읽기 결과를 먼저 상태에 남겨 LLM을 다시 부르지 않는다).
@@ -25,6 +25,7 @@ from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
 from backend.multi_agent.facts import ORDER_CODE
 from backend.rag.spec_lookup import CODES as SPEC_CODES
+from backend.rag.spec_lookup import THT_PACKAGES
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'judge_read.md').read_text(encoding='utf-8')
@@ -76,6 +77,20 @@ class JudgeRead(BaseModel):
         #      조각 앞까지만 남긴다(빈 칸이 되면 요구 없음). 짧은 칸에는 JSON 괄호 · '키': 모양이 올 일이 없다
         return LEAK.split(v, 1)[0].rstrip(" '\"") if isinstance(v, str) else v
 
+    @field_validator('revision_wanted', mode='before')
+    @classmethod
+    def drop_revision_prose(cls, v):
+        # [왜] 읽기가 개정 코드 대신 설명 글('Order code difference (A… no revision specified.')을 40자 넘게 적어 형식 오류로 다시 불렸다.
+        #      세 회차 v3 판정 읽기의 재시도 4번이 모두 이것이고, 노드마다 2.1~3.6초 늦었다. 재시도 답은 4번 다 빈 칸이었다(사전 등록 #45).
+        #      개정 코드 · 판('K2611' · '2027 edition')은 짧다. 40자를 넘는 글은 그 안의 개정 코드 모양(K2611)만 남기고, 없으면 요구 없음으로 받는다
+        # [주의] 긴 글을 통째로 버리면 문장 안에 적힌 개정 코드도 사라져 개정판 거절이 빠진다. 그래서 코드 모양만 골라 남긴다
+        # [주의] JSON 조각을 자른 뒤의 길이를 본다(cut_json_leak과 어느 쪽이 먼저 돌아도 'K2611','package_wanted':… 의 K2611이 남는다)
+        cut = LEAK.split(v, 1)[0].rstrip(" '\"") if isinstance(v, str) else ''
+        if len(cut) <= 40:
+            return v
+        code = re.search(r'(?<![A-Za-z0-9])[A-Za-z]\d{4}(?!\d)', cut)  # 개정 코드는 글자 하나 + 연월 4자리(facts.REVISION과 같은 모양)
+        return code.group(0) if code else ''
+
 
 def render_read(state: dict, rules: dict) -> str:
     """읽기 LLM에 줄 user 글: 역할 목록(이름 · 알아보는 법 · 그 역할이 받는 값 이름과 종류), 대상 주변 회로, 사용 조건, 질문."""
@@ -102,12 +117,15 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         user += f"\nSupervisor brief (the part of the question this task covers): {state['task'].get('goal', '')}"
     # 과거 사례는 모델에만 보여 주고 render_read 기반 숫자 grounding에는 넣지 않는다.
     user += memory_context(state.get('approved_memories') or [])
-    votes = max(1, int(os.getenv('LAB_READ_VOTES', '1')))
+    # [왜] 서비스 기본은 3번 다수결이다. v3 측정(50/50, 사전 등록 #47 ~ #50)을 모두 3번으로 했고, 1번 읽기가 흔들려 틀린 문항이 있었다(v3-13 · v3-14).
+    #      세 번은 동시에 돌아 시간은 거의 같고, 비용은 50문항당 약 $0.02 는다(11-10 조장 결정). 환경값 JUDGE_READ_VOTES=1이면 한 번만 읽는다
+    # [주의] LAB_READ_VOTES는 실험 때 쓴 예전 이름이라 JUDGE_READ_VOTES가 없을 때만 받는다
+    votes = max(1, int(os.getenv('JUDGE_READ_VOTES') or os.getenv('LAB_READ_VOTES') or '3'))
     if votes == 1:
         read = chat('judge_read', PROMPT, user, JudgeRead)
     else:
         # [왜] lab 실험(11-06): 같은 질문의 읽기가 회차마다 달라(일관성 측정 38문항 중 7~12문항) 3세트 연속 통과가 막혔다.
-        #      같은 읽기를 동시에 여러 번 부르고 칸마다 다수결로 하나를 만든다(판정 코드 · 인터럽트는 그대로 한 번). 기본은 1번(설계 그림)
+        #      같은 읽기를 동시에 여러 번 부르고 칸마다 다수결로 하나를 만든다(판정 코드 · 인터럽트는 그대로 한 번)
         def one(_):
             try:
                 return chat('judge_read', PROMPT, user, JudgeRead)
@@ -184,6 +202,9 @@ def merge_reads(reads: list[JudgeRead]) -> JudgeRead:
 
 
 NUM = re.compile(r'\d+(?:\.\d+)?')
+# 인용 글의 숫자 범위('3.42~3.78V' · '3.42–3.78 V' · '3.42V에서 3.78V' · '3.42 to 3.78V')
+NUM_RANGE = re.compile(r'\d(?:\.\d+)?\s*[a-zA-Z]*\s*(?:~|〜|–|—|-|에서|부터|to)\s*\d', re.I)
+RANGE_ONLY = {'vz_min', 'vz_max'}  # 사용자가 범위로 정한 값만 받는 이름(judge_read.md: 공칭 ± 공차는 required_specs)
 QTY = re.compile(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%Ω]*)')  # 인용 글의 숫자와 바로 뒤 단위
 REPLY = re.compile(r'^\s*(\d+(?:\.\d+)?)\s*([a-zA-Zµμ°%]*)\s*$')
 YES, NO = {'예', '네', '응', 'yes', 'true', 'y'}, {'아니오', '아니', 'no', 'false', 'n'}
@@ -221,7 +242,9 @@ def to_inputs(read: JudgeRead, text: str, kinds: dict) -> tuple[dict, dict, list
         if v.name not in kinds and SAME_QUANTITY.get(v.name) in kinds:
             v = v.model_copy(update={'name': SAME_QUANTITY[v.name]})  # 같은 자리 두 역할의 같은 양을 다른 이름으로 읽은 경우
         kind = kinds.get(v.name)
-        if kind is None or not grounded(text, v):
+        # [왜] 읽기가 구매 규격 '공칭 제너 전압 3.3V, 공차 ±2%'를 vz_min · vz_max = 3.3V로도 읽어, 사양 조건에 더해 '최소 VZ ≥ 3.3 · 최대 VZ ≤ 3.3'이
+        #      걸려 실제 3.3V 제너가 모두 불충족이 됐다(v3-13, Sonnet 31a3aa3 1세트 · Haiku 4a61fd0 2세트, 사전 등록 #48). 범위가 없는 인용은 버린다
+        if kind is None or not grounded(text, v) or (v.name in RANGE_ONLY and not NUM_RANGE.search(v.quote)):
             dropped.append(v.name)
         elif kind == 'flag' and v.flag is not None:
             values[v.name] = v.flag
@@ -318,7 +341,7 @@ def _ordering_row(retriever, code: str, base: str) -> dict | None:
 
 
 def _identical(retriever, original: str, candidate: str) -> tuple[bool, dict | None]:
-    """같은 기본 품번인지 → (동일품인가, 근거 인용). 주문 코드만 다르면 주문 정보 표의 그 행이 근거다(B2, 정운 11-06).
+    """같은 기본 품번인지 → (동일품인가, 근거 인용). 주문 코드만 다르면 주문 정보 표의 그 행이 근거다(SPEC 8.3 주문 코드 동일품).
 
     주문 코드 규칙을 먼저 보고, 그 행을 못 찾으면 제조사가 같은 제품이라고 밝힌 청크를 찾아 그 청크를 인용한다(EC-10).
     """
@@ -424,11 +447,9 @@ OUTSIDE_WORDS = re.compile(r'(?-i:\bFIT\b)|MTBF|고장|수명|lifetime|reliab|�
                            r'반품|guarant|보장|aec-?q200', re.I)  # 사양 표가 담지 않는 성질 낱말
 SAME_AS = re.compile(r'same|같은|동등|equivalent|as good as|현재|지금|기존|current|existing|fitted', re.I)  # 지금 부품과 같기를 바라는 말
 # [왜] '표면실장 · 삽입형'은 패키지 이름이 아니라 실장 방식이다. 패키지 이름으로 도구에 넘기면 그 이름의 패키지가 없어 0개였다(11-07 v2 n01 · n09).
-#      사양 표 패키지 56종 중 스루홀(리드 · 나사 고정)은 아래 17종이고 나머지는 표면실장이다(11-07 DB 실측)
+#      스루홀(리드 · 나사 고정) 패키지 이름은 `spec_lookup.THT_PACKAGES`(17종, 11-07 사양 표 패키지 56종 DB 실측)이고 나머지는 표면실장으로 본다
 SMD_WORDS = re.compile(r'표면\s*실장|surface[- ]?mount|(?-i:\bSMD\b|\bSMT\b)', re.I)
 THT_WORDS = re.compile(r'삽입\s*형|스루\s*홀|through[- ]?hole|(?-i:\bTHT\b)|리드\s*형|axial', re.I)
-THT_PACKAGES = {'DO204AC', 'DO15', 'DO41', 'DO204AL', 'DO201', 'DO201AD', 'TO220AB', 'TO247AD', 'TO3P', 'TO220AC', 'GBU', 'DO35',
-                'R6', 'TO247', 'KBJL', 'KBPF', 'TO247BD'}
 
 
 def mount_wanted(read) -> str:
@@ -478,11 +499,13 @@ def _tolerance_words(words: str, code: str, text: str) -> str:
     return f'{words} ±{GRADE[g.group(1) or g.group(2)]}%' if g else words
 
 
-def _ground_ops(words: str, text: str) -> str:
+def _ground_ops(words: str, text: str, code: str = '') -> str:
     """요구 말의 숫자가 사용자 원문에 그대로 있으면, 원문의 그 구절(연산 말 포함)로 바꾼다. 연산 말은 원문을 믿는다."""
     # [왜] 원문 '허용하는 전압은 최대 23.2V'를 읽기가 'below 23.2 V'로 옮긴 회차만 미만(<)이 되어 23.2V 후보가 불충족이었다(11-07 m2 v3-09).
     #      숫자 · 단위가 하나뿐인 말만, 원문 구절에 연산 말(최대 · 이하 · 미만 · 이상 …)이 있을 때만 바꾼다. 범위 · 단위를 바꿔 쓴 말은 그대로 둔다
-    nums = re.findall(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)', words)
+    # [왜] 'at 10A 10/1000µs at or below 23.2V'처럼 시험 조건 숫자가 섞이면 숫자가 셋이라 건너뛰어 같은 일이 났다(11-10 v3-09, 사전 등록 #50).
+    #      그 항목 단위(VC면 V)의 숫자만 센다. 다른 단위 숫자는 조건을 만들 때도 버려진다(conditions.user_conditions)
+    nums = [(n, u) for n, u in re.findall(r'(\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)', words) if code not in C.CODE_UNIT or C._si(n, u, code) is not None]
     if len(nums) != 1 or C._RANGE.search(words):
         return words
     num, unit = nums[0]
@@ -526,6 +549,11 @@ def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
     if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI'):
         return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not TSC'
+    # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
+    #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
+    missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
+    if gone := [c for c in read.candidates if _part(c).upper() in missing]:
+        return Reason.PART_MISSING, 'candidate not in the corpus: ' + ', '.join(gone)
     wanted = read.revision_wanted.strip().upper()
     # [왜] 판정 길에는 코퍼스 개정판 전체 목록이 없다. 사실 확인이 코퍼스에 있다고 확인한 개정 코드(K2611)를 담을 때만 통과한다
     # [주의] 판으로 보이는 글(개정 코드 · 연도 · '판' · edition · rev)만 요구로 본다. 읽기가 포장 코드 'L0'을 넣어 개정판 거절로 끝났다(11-06 v3-03)
@@ -594,7 +622,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         if _restates_circuit_value(x, values, [rules[r] for r in roles]):
             continue
         spec_words[x.code] = f'{spec_words[x.code]}, {x.words}' if x.code in spec_words else x.words
-    extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text), text), code, text), code) for code, w in spec_words.items()] + limits)
+    extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text, code), text), code, text), code) for code, w in spec_words.items()] + limits)
     given = {c['code'] for c in extra}
 
     def keep(cond: dict) -> bool:
@@ -609,7 +637,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     rules = {r: ({**rules[r], 'conditions': [c for c in rules[r]['conditions'] if 'any' in c or keep(c)] + extra} if extra else rules[r])
              for r in roles}
     read = read.model_copy(update={'original_part': _original_from_text(read, text)})
-    # [왜] 카드에서 판정 값을 읽는 specs(lab 3단계, backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. 사양 표 specs에는 prefetch가 없다
+    # [왜] 카드에서 판정 값을 읽는 specs(backend/rag/card_specs.py)는 읽을 코드를 알면 덜 읽는다. prefetch가 없는 specs(데모 · 시험 가짜)는 건너뛴다
     prefetch = getattr(specs, 'prefetch', None)
     need = sorted(_rule_codes([rules[r] for r in roles]) | {x.code for x in read.required_specs})
     # [왜] 사용자가 패키지를 여럿 허용하면('MiniMELF 또는 SOD-123F') 패키지마다 찾아 합친다. 도구는 패키지 하나만 거른다(11-06 v3-13)
@@ -640,7 +668,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         footprint = part.get('footprint')
         if state.get('question_type') == 'candidate_find':
             terms = V.search_conditions(rules[roles[0]], values)
-            # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(B3, 정운 11-06)
+            # [왜] 원래 부품의 패키지 · 분류를 주면 도구가 그 순서로 모두 줄 세운 뒤 50개에서 자른다(SPEC 8.3 찾기 순위)
             near = {'original_packages': [x['text'] for x in original_rows if x['code'] == 'PACKAGE' and x.get('text')] or None,
                     'original_category': next((x['category'] for x in original_rows if x.get('category')), None)}
             mount = mount_wanted(read)
@@ -676,8 +704,12 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found if not orig_base or f['part'].upper() != orig_base]
             if mount:
                 candidates = [c for c in candidates if mount in mount_of(c[2])]  # 요구한 실장 방식의 패키지가 있는 후보만
+            # [왜] 내 설정의 선호 실장 방식(기억 읽기, SPEC 8.5)은 질문이 실장 방식을 말하지 않았을 때만 쓴다. 질문의 요구가 이긴다.
+            #      거르지 않고 같은 판정 · 같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둔다(V.rank)
+            prefer = '' if mount else state.get('mount_preference') or ''
+            preferred = {c[0] for c in candidates if prefer and prefer in mount_of(c[2])}
         else:
-            terms, found = [], []
+            terms, found, prefer, preferred = [], [], '', set()
             candidates = [(p, '', None) for p in read.candidates]
         results = []
         if prefetch and candidates:
@@ -696,11 +728,11 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     except RetrievalUnavailableError as error:
         return {'judgement': {**base, 'kind': 'judge'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('fail', f'spec table tool failed: {error.kind}', reason=Reason.SEARCH_ERROR)]}
-    shown, unverified = V.rank(results) if state.get('question_type') == 'candidate_find' else (results, [])
+    shown, unverified = V.rank(results, preferred=preferred) if state.get('question_type') == 'candidate_find' else (results, [])
     judgement = {**base, 'kind': 'find' if state.get('question_type') == 'candidate_find' else 'judge', 'roles': roles,
                  'results': [j.model_dump(mode='json') for j in results], 'shown': [j.model_dump(mode='json') for j in shown],
                  'unverified': [j.model_dump(mode='json') for j in unverified], 'terms': terms, 'capped': len(found) >= 50,
-                 'dropped': dropped, 'asked': asked}
+                 'dropped': dropped, 'asked': asked, 'preferred_mount': prefer}  # 순서에 쓴 선호 실장 방식(트레이스 · API에서 보이게)
     missing = sorted({m for j in results for m in j.missing})
     status = 'ok' if results else 'partial'
     summary = f'{len(results)} candidates judged' + (f', {len(shown)} shown' if judgement['kind'] == 'find' else '')
@@ -717,8 +749,13 @@ def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
         # [왜] 재계획이 요약만 읽고 찾은 품번을 다음 할 일(그 품번 문서 검색)에 쓸 수 있게 상위 후보 품번을 요약에 넣는다(설계 v2)
         names = [p.get('part') for p in judgement.get('shown') or [] if p.get('part')][:8]
         summary = f"{summary}: {', '.join(names)}" if names else summary
-    if r['status'] == 'partial' and not judgement.get('results') and not reason:
-        reason = Reason.NO_RESULT.value  # 후보를 하나도 못 찾았다: 조건을 바꿔 다시 찾을 수 있는 실패다
-    report = TaskReport(task=state['task']['id'], agent='judge', status=r['status'], summary=summary[:200], reason=reason,
+    status = r['status']
+    if status == 'partial' and not judgement.get('results'):
+        # [왜] 판정한 후보가 없는 보고는 답이 아니라 실패다. 일부 답(partial)으로 두면 재계획이 '있는 답으로'를 고를 때 빈 판정이 답으로 나갔다
+        #      (#46 Haiku Supervisor의 v3-31 USB-C 커넥터 질문 · h3-31 인덕터 질문: 판정 읽기 셋이 모두 23역할 밖으로 읽음).
+        #      23역할 밖이면 이 서비스에 판정 규칙이 없어 다시 해도 같다(not_found). 후보를 못 찾은 것은 조건을 바꿔 다시 찾을 수 있다(no_result)
+        status = 'fail'
+        reason = reason or (Reason.NOT_FOUND.value if judgement.get('kind') == 'no_rule' else Reason.NO_RESULT.value)
+    report = TaskReport(task=state['task']['id'], agent='judge', status=status, summary=summary[:200], reason=reason,
                         missing=r.get('missing') or [], judgement=judgement, llm_calls=1, round=state.get('round') or 1)
     return {'reports': [report.model_dump(mode='json')], 'path': out['path']}

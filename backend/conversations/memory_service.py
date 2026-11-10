@@ -1,39 +1,129 @@
-"""세션 사용자별 업로드·분석 thread·승인 사례. 공유 DB setup은 명시적 CLI만 수행한다."""
+"""세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
+
+React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+HTTP 입구는 React 작업대의 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 남은 `upload` · `create` · `threads` · `approve`는 HTTP 경로가 없고,
+DB 시험이 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다(tests/api/test_threads.py · test_deletion.py).
+장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
+그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
+사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
+새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
+분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
+DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 토큰이 아니라 예약이다.
+삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
+탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
+분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
+보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/023)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
+오류 코드(ADR 0019, backend/errors.py): 하루 토큰 · USD 상한과 실행 한 번의 호출 · 예약 상한은 429 `LIMIT_EXCEEDED`, 호출 간격은 429 `RATE_LIMITED`,
+조건 질문 대기는 409 `CONDITION_PENDING`, 분석 실패는 LLM · 임베딩 공급자 장애면 502 `UPSTREAM_ERROR`, 시간 예산 초과는 504, 그 밖은 503이다.
+키 없는 데모(`DEMO_REPLAY=1` · `DEMO_MODE=1`, SPEC 7절): 같은 그래프를 돌리고 LLM 응답만 기록에서 꺼낸다(`backend/services/demo.py`).
+기록한 회로 · 대상 · 질문 · 사용 조건을 새 대화의 첫 질문으로만 받고(아니면 422), 재개는 기록한 답 · 역할만 받는다(아니면 422).
+기록 파일이 없으면 503, 확인을 통과했는데 기록에 없는 호출(ReplayMiss)도 503으로 이유를 보인다.
+"""
 import argparse
 import os
 import math
 import time
 import logging
-import json
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
+from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
 
 import psycopg
 from fastapi import HTTPException
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.store.base import PutOp
 from langgraph.store.postgres import PostgresStore
 from langgraph.types import Command
+from psycopg import sql
 from psycopg.conninfo import make_conninfo
-from psycopg.rows import dict_row
+from psycopg.rows import dict_row, tuple_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
+from backend.conversations import profile
+from backend.errors import ApiError
 from backend.graph.memory import namespace, memory_policy
 from backend.graph.netlist import parse_netlist
 
 LOGGER = logging.getLogger('backend.conversations')
+RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
+
+# 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
+USER_DAILY_TOKENS = 200_000
+SERVICE_DAILY_TOKENS = 2_000_000
+TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
+USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+
+
+@lru_cache(maxsize=1)
+def _token_budget_class():
+    """EvaluationBudget을 이어받아 호출마다 예약 토큰 수를 `reserving_tokens`에 두는 클래스."""
+    # [왜] llm은 import 때 .env를 읽는다. 준비 CLI가 .env의 원격 DB를 집지 않게 처음 예산을 만들 때 import한다
+    from backend.services.llm import EvaluationBudget
+
+    class TokenBudget(EvaluationBudget):
+        def _reserve(self, text, *, output_tokens, embedding=False, model=None):
+            # [왜] reserve()가 잠금을 잡은 채 부르므로 이 값은 같은 호출의 on_reserve(DB 차감)만 읽는다
+            self.reserving_tokens = len(text.encode('utf-8')) + TOKEN_MARGIN + output_tokens
+            return super()._reserve(text, output_tokens=output_tokens, embedding=embedding, model=model)
+
+    return TokenBudget
+
+
+def delete_analysis_threads(conn, user, ids=None):
+    """사용자의 분석 thread(ids가 없으면 전부)와 딸린 checkpoint · 메시지 · 승인 기록 · 분석 사건 · 회로를 conn의 트랜잭션에서 지운다.
+
+    프로젝트 삭제(ids = 그 프로젝트의 React 대화 UUID)와 탈퇴(ids 없음)가 쓴다. 지운 건수를 돌려주고, 분석 서비스 표가 없는 DB면 모두 0이다.
+    [주의] 사용자 조건(user_id)으로 고른 thread만 지운다. 호출자가 ids의 소유권을 따로 확인했어도 다른 사용자 행은 건드리지 않는다.
+    """
+    counts = {'analysis_threads': 0, 'analysis_circuits': 0, 'checkpoints': 0}
+    cur = conn.cursor(row_factory=tuple_row)  # [왜] 프로젝트 API 연결(튜플 행)과 이 서비스 연결(dict 행) 둘 다에서 같은 모양으로 읽는다
+    has_threads, has_checkpoints = cur.execute("SELECT to_regclass('sojafit_agent.threads') IS NOT NULL, "
+                                               "to_regclass('sojafit_agent.checkpoints') IS NOT NULL").fetchone()
+    if not has_threads:
+        return counts
+    owned, params = 'SELECT id FROM sojafit_agent.threads WHERE user_id=%s', (user,)
+    if ids is not None:
+        owned, params = owned + ' AND id = ANY(%s::uuid[])', (user, list(ids))
+    if has_checkpoints:
+        # [왜] LangGraph checkpoint 표 3개는 thread_id(글자)로만 묶이고 FK가 없어 thread보다 먼저 직접 지운다
+        for table in ('checkpoint_writes', 'checkpoint_blobs', 'checkpoints'):
+            deleted = cur.execute(sql.SQL('DELETE FROM sojafit_agent.{} WHERE thread_id IN (SELECT id::text FROM ({}) o)').format(
+                sql.Identifier(table), sql.SQL(owned)), params).rowcount
+        counts['checkpoints'] = deleted
+    # 메시지 · 승인 기록 · 분석 사건은 thread FK cascade로 함께 지워진다
+    counts['analysis_threads'] = cur.execute(sql.SQL('DELETE FROM sojafit_agent.threads WHERE id IN ({})').format(sql.SQL(owned)), params).rowcount
+    # 회로: 탈퇴면 사용자 회로 전부, 프로젝트 삭제면 같은 UUID 회로 중 남은 thread가 없는 것(React 대화 하나 = 회로 하나)
+    circuits = 'DELETE FROM sojafit_agent.circuits c WHERE c.user_id=%s'
+    if ids is not None:
+        circuits += ' AND c.id = ANY(%s::uuid[]) AND NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t WHERE t.circuit_id=c.id)'
+    counts['analysis_circuits'] = cur.execute(circuits, params).rowcount
+    return counts
+
+
+def _vector_schema(conn):
+    """설치된 pgvector 확장의 스키마 이름(로컬 Compose는 public, Supabase는 extensions). 없으면 None."""
+    row = conn.execute("SELECT n.nspname AS name FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace WHERE e.extname='vector'").fetchone()
+    return row['name'] if row else None
 
 
 def initialize(dsn):
     """인증 DB에 전용 스키마를 준비한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
-        for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql'):
+        for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql',
+                       '022_token_limits.sql', '023_retention.sql'):
             conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
-        conn.execute('SET search_path TO sojafit_agent')
+        vector = _vector_schema(conn)
+        # [왜] 의미 색인 표(store_vectors)의 vector 형은 확장이 설치된 스키마에 있다. sojafit_agent만 보면 형을 못 찾는다.
+        #      표는 search_path 첫 스키마(sojafit_agent)에 만들어진다
+        conn.execute(sql.SQL('SET search_path TO sojafit_agent{}').format(sql.SQL(', {}').format(sql.Identifier(vector)) if vector else sql.SQL('')))
         PostgresSaver(conn).setup()
-        PostgresStore(conn).setup()
+        # [주의] vector 확장이 없으면(CI의 postgres:16) 색인 표 없이 준비한다. 확장 설치는 여기서 하지 않는다(db/000_init.sql · Supabase 몫)
+        PostgresStore(conn, index=profile.INDEX if vector else None).setup()
 
 
 class Conversations:
@@ -45,15 +135,28 @@ class Conversations:
         try:
             with self.connection() as conn:
                 if not all(conn.execute("SELECT to_regclass(%s) AS name", (name,)).fetchone()['name']
-                           for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage')):
+                           for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage', 'analysis_service_usage')):
                     raise RuntimeError('분석 DB 준비 명령을 먼저 실행하세요.')
+                # [왜] 청소 함수가 없으면 보관 기간 규칙이 조용히 꺼진다. 표와 같이 시작 때 확인한다(db/023)
+                if not all(conn.execute('SELECT to_regprocedure(%s) AS name', (name,)).fetchone()['name']
+                           for name in ('purge_inactive_projects(integer,integer)', 'purge_log_records(integer,integer)')):
+                    raise RuntimeError('분석 DB 준비 명령으로 보관 기간 청소 함수(db/023)를 만드세요.')
                 if not conn.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='input_record'").fetchone():
                     raise RuntimeError('분석 DB 준비 명령으로 입력 기록 마이그레이션을 적용하세요.')
+                vector = _vector_schema(conn) if conn.execute("SELECT to_regclass('store_vectors') AS name").fetchone()['name'] else None
+            indexed = bool(vector) and profile.embedding_enabled()
+            if indexed:
+                # [왜] 의미 검색 SQL이 vector 형 · 거리 연산자를 이름만으로 찾는다. 확장 스키마를 뒤에 붙인다(같은 이름 표는 sojafit_agent가 먼저)
+                self.dsn = make_conninfo(dsn, options=f'-c search_path=sojafit_agent,"{vector}"')
+            elif profile.embedding_enabled():
+                LOGGER.warning('profile_index_unavailable: 분석 DB 준비 명령으로 의미 색인 표를 만드세요. 지금은 순위 없이 사실을 돌려줍니다.')
             self._budget_settings()
             self.readiness()
             self.pool = self.stack.enter_context(ConnectionPool(self.dsn, min_size=1, max_size=4, timeout=5,
                 kwargs={'autocommit': True, 'row_factory': dict_row, 'prepare_threshold': 0}))
             self.saver, self.store = PostgresSaver(self.pool), PostgresStore(self.pool)
+            # [왜] 그래프에 넘기는 Store에는 색인을 켜지 않는다(다른 put이 임베딩 호출을 부르지 않게). 사실 기억만 색인 Store를 쓴다
+            self.profile = profile.ProfileMemory(PostgresStore(self.pool, index=profile.INDEX) if indexed else self.store, indexed)
             self.graph = factory(self.saver, self.store) if factory else self._graph()
         except Exception:
             self.stack.close()
@@ -68,57 +171,145 @@ class Conversations:
     def readiness(self):
         """모델 호출·사용자 행 읽기 없이 현재 분석 저장소의 연결과 스키마를 확인한다."""
         with self.connection() as conn:
-            conn.execute('SELECT t.input_record,a.memory_status,a.correction FROM threads t, circuits c, messages m, approvals a, analysis_usage u, analysis_events e LIMIT 0')
+            conn.execute('SELECT t.input_record,a.memory_status,a.correction,u.reserved_tokens,s.reserved_tokens FROM threads t, circuits c, messages m, approvals a, '
+                         'analysis_usage u, analysis_events e, analysis_service_usage s LIMIT 0')
             conn.execute('SELECT 1 FROM checkpoints, checkpoint_blobs, checkpoint_writes, store LIMIT 0')
 
     @staticmethod
     def _budget_settings():
-        from backend.services.llm import EvaluationBudget
-        budget = EvaluationBudget(max_calls=int(os.getenv('ANALYSIS_MAX_CALLS', '16')),
+        budget = _token_budget_class()(max_calls=int(os.getenv('ANALYSIS_MAX_CALLS', '16')),
             max_usd=float(os.getenv('ANALYSIS_MAX_USD', '0.50')), max_seconds=float(os.getenv('ANALYSIS_MAX_SECONDS', '90')),
             max_tokens=int(os.getenv('ANALYSIS_MAX_TOKENS', '4096')),
             prompt_rate=float(os.getenv('ANALYSIS_PROMPT_RATE', '0.000003')),
-            completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')))
+            completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')),
+            # [왜] 판정 읽기 3번(다수결)이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
+            per_model_rates=True)
         daily = float(os.getenv('ANALYSIS_DAILY_USD', '3'))
         interval = float(os.getenv('ANALYSIS_MIN_INTERVAL_SECONDS', '2'))
         if not math.isfinite(daily) or daily <= 0 or not math.isfinite(interval) or interval < 0:
             raise ValueError('분석 일일 예산/빈도 설정을 확인하세요.')
         return budget, daily, interval
 
+    @staticmethod
+    def _token_room(conn, user):
+        """오늘(UTC) 사용자 · 서비스 전체 예약 토큰에 호출 한 번(여유 TOKEN_MARGIN) 자리가 없으면 429. 외부 호출 전에 거른다."""
+        used = conn.execute("SELECT (SELECT reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS mine, "
+                            "(SELECT reserved_tokens FROM analysis_service_usage WHERE day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) AS service",
+                            (user,)).fetchone()
+        # [왜] 하루 상한은 잠시 뒤 다시 보내도 다시 걸린다. 화면이 다음 날까지 기다리게 RATE_LIMITED와 코드를 나눈다(ADR 0019)
+        if (used['mine'] or 0) + TOKEN_MARGIN > USER_DAILY_TOKENS:
+            raise ApiError(429, USER_TOKENS_FULL, code='LIMIT_EXCEEDED')
+        if (used['service'] or 0) + TOKEN_MARGIN > SERVICE_DAILY_TOKENS:
+            raise ApiError(429, SERVICE_TOKENS_FULL, code='LIMIT_EXCEEDED')
+
+    def admission(self, user):
+        """React run · 재개가 스트림을 열기 전에 부른다. 탈퇴 중이면 409, 하루 토큰 상한이 찼으면 429(공통 오류)로 거절한다."""
+        with self.connection() as conn:
+            self._hold_account(conn, user)  # 확인만 한다. 연결을 닫으면 풀리고, 실행은 locked()가 다시 잡는다
+            self._token_room(conn, user)
+
+    @staticmethod
+    def _hold_account(conn, user):
+        """이 연결이 닫힐 때까지 계정 공유 잠금을 잡는다. 탈퇴(같은 키의 배타 잠금)가 진행 중이면 409."""
+        # [왜] 분석 · 기록 쓰기끼리는 서로 막지 않고(공유), 탈퇴와만 서로 막는다(배타). DB 세션 잠금이라 프로세스가 죽어도 연결과 함께 풀린다
+        if not conn.execute('SELECT pg_try_advisory_lock_shared(hashtextextended(%s,0)) AS ok', (f'account:{user}',)).fetchone()['ok']:
+            raise HTTPException(409, '계정 삭제를 처리하는 중입니다.')
+
+    @contextmanager
+    def account_writer(self, user):
+        """분석 밖의 기록 쓰기(내 설정 Store)를 계정 공유 잠금 안에서 한다. 탈퇴 중이면 409."""
+        with self.connection() as conn:
+            self._hold_account(conn, user)
+            yield
+
+    @contextmanager
+    def account_deletion(self, user):
+        """탈퇴: 계정 배타 잠금을 잡고 분석 기록 → Store namespace 순서로 지운 건수를 넘긴다. 호출자는 with 안에서 계정을 마지막에 지운다.
+
+        진행 중인 분석 · 기록 쓰기(공유 잠금)가 있으면 409. 잠금은 with가 끝나 연결을 닫을 때 풀린다.
+        [주의] 계정을 먼저 지우면 기록 삭제가 실패했을 때 다시 요청할 방법이 없다. 중간에 실패해도 계정이 남아 있어
+        다시 요청하면 남은 것부터 이어서 지운다(이미 지운 것은 0건으로 센다).
+        """
+        with self.connection() as conn:
+            if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (f'account:{user}',)).fetchone()['ok']:
+                raise HTTPException(409, '진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.')
+            with conn.transaction():
+                counts = delete_analysis_threads(conn, user)
+            counts['memory_items'] = self._delete_store(user)
+            yield counts
+
+    def _delete_store(self, user):
+        """사용자의 Store 항목을 namespace 접두사로 찾아 모두 지우고 지운 수를 돌려준다."""
+        # [왜] 아는 key만 지우면 나중에 생길 namespace가 남는다. 첫 칸이 사용자인 `(user, ...)` 전부와 옛 승인 사본 `("memories", user)`를 지운다
+        # [주의] 접두사 검색은 칸 단위다(`("1",)`은 `("10", ...)`과 맞지 않음, 시험이 확인). 색인 벡터 행은 Store 표 FK cascade로 함께 지워진다
+        deleted = 0
+        for prefix in ((str(user),), namespace(str(user))):
+            for _ in range(100):  # [왜] 반복 상한(한 번에 100개, 1만 개). 넘으면 503이고 다시 요청하면 이어서 지운다
+                items = self.store.search(prefix, limit=100)
+                if not items:
+                    break
+                self.store.batch([PutOp(item.namespace, item.key, None) for item in items])
+                deleted += len(items)
+            else:
+                raise HTTPException(503, '계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.')
+        return deleted
+
     def _budget(self, user):
         budget, daily, interval = self._budget_settings()
         with self.connection() as conn:
+            self._token_room(conn, user)
             row = conn.execute("INSERT INTO analysis_usage(user_id,day,next_allowed) VALUES (%s,(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date,CURRENT_TIMESTAMP + %s * INTERVAL '1 second') "
                 "ON CONFLICT(user_id,day) DO UPDATE SET attempts=analysis_usage.attempts+1,next_allowed=EXCLUDED.next_allowed "
                 "WHERE analysis_usage.next_allowed<=CURRENT_TIMESTAMP AND analysis_usage.reserved_usd<%s RETURNING day",
                 (user, interval, Decimal(str(daily)))).fetchone()
+            # [왜] 위 문장은 호출 간격 · 하루 USD 중 무엇에 걸렸는지 돌려주지 않는다. 걸렸을 때만 USD를 한 번 더 읽어 코드를 가른다(ADR 0019)
+            if not row and conn.execute("SELECT reserved_usd >= %s AS spent FROM analysis_usage WHERE user_id=%s AND day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date",
+                                        (Decimal(str(daily)), user)).fetchone()['spent']:
+                raise ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED')
         if not row:
-            raise HTTPException(429, '호출 간격 또는 하루 분석 예약 예산을 확인하세요.', headers={'Retry-After': str(max(1, math.ceil(interval)))})
+            raise HTTPException(429, '분석 호출 간격이 너무 짧습니다. 잠시 후 다시 시도하세요.', headers={'Retry-After': str(max(1, math.ceil(interval)))})
         def charge(cost):
-            with self.connection() as conn:
-                charged = conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s WHERE user_id=%s AND day=%s AND reserved_usd+%s<=%s RETURNING user_id',
-                    (Decimal(str(cost)), user, row['day'], Decimal(str(cost)), Decimal(str(daily)))).fetchone()
-            if not charged:
-                raise HTTPException(429, '하루 분석 예약 예산에 도달했습니다.')
+            """호출 한 번의 예약 USD · 토큰을 사용자 행과 서비스 행에 한 트랜잭션으로 더한다. 하나라도 넘으면 모두 되돌리고 429."""
+            tokens, cost = budget.reserving_tokens, Decimal(str(cost))
+            with self.connection() as conn, conn.transaction():
+                # [왜] 사용자 행 → 서비스 행 순서로만 잠가 동시 호출끼리 교착하지 않는다. 예외가 나면 트랜잭션이 둘 다 되돌린다
+                usage = conn.execute('SELECT reserved_usd,reserved_tokens FROM analysis_usage WHERE user_id=%s AND day=%s FOR UPDATE',
+                                     (user, row['day'])).fetchone()
+                if usage['reserved_tokens'] + tokens > USER_DAILY_TOKENS:
+                    raise ApiError(429, USER_TOKENS_FULL, code='LIMIT_EXCEEDED')
+                if usage['reserved_usd'] + cost > Decimal(str(daily)):
+                    raise ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED')
+                conn.execute('INSERT INTO analysis_service_usage(day) VALUES (%s) ON CONFLICT DO NOTHING', (row['day'],))
+                if not conn.execute('UPDATE analysis_service_usage SET reserved_tokens=reserved_tokens+%s WHERE day=%s AND reserved_tokens+%s<=%s RETURNING day',
+                                    (tokens, row['day'], tokens, SERVICE_DAILY_TOKENS)).fetchone():
+                    raise ApiError(429, SERVICE_TOKENS_FULL, code='LIMIT_EXCEEDED')
+                conn.execute('UPDATE analysis_usage SET reserved_usd=reserved_usd+%s,reserved_tokens=reserved_tokens+%s WHERE user_id=%s AND day=%s',
+                             (cost, tokens, user, row['day']))
         budget.on_reserve = charge
         return budget
 
     def _graph(self):
+        from functools import update_wrapper
         from backend.graph.mcp_retriever import StdioMcpRetriever
         from backend.multi_agent.build import build_graph
-        from backend.services import demo
-        from backend.services.langfuse_prompts import timed_tool
-        if demo.enabled():
-            self.mode = 'demo'
-            return build_graph(chat=demo.chat, retriever=lambda *a, **k: [], judge_enabled=True,
-                lookup=demo.lookup, specs=timed_tool('specs',demo.specs), find=lambda *a, **k: [], checkpointer=self.saver, store=self.store)
         from backend.multi_agent.facts import make_lookup
+        from backend.rag.card_find import default_find
+        from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
-        from backend.services import llm
-        mcp = self.stack.enter_context(StdioMcpRetriever())
-        return build_graph(chat=llm.node_chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
-            lookup=make_lookup(mcp.check), specs=timed_tool('specs',mcp.part_specs), find=timed_tool('find',mcp.find_parts),
-            checkpointer=self.saver, store=self.store)
+        from backend.services import demo, llm
+        from backend.services.langfuse_prompts import timed_tool
+        # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
+        #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
+        chat = demo.service_chat() if self.mode == 'demo' else llm.node_chat
+        mcp = self.stack.enter_context(StdioMcpRetriever())  # 사실 확인(check_corpus)만 MCP로 부른다
+        # [왜] 사양 표(part_specifications)를 11-09에 버리고 후보 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016, 평가 실행기 run_graph.py와 같은 조립)
+        # [주의] 카드 도구는 MCP를 거치지 않고 DATABASE_URL로 DB를 직접 읽는다. 표지 품번 색인은 조립 때가 아니라 첫 판정 때 한 번 읽는다
+        specs, find = default_specs(chat=chat), default_find(chat=chat)
+        # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. 대체 부품 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
+        # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
+        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
+            lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
+            find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
     @staticmethod
     def config(thread):
@@ -136,6 +327,7 @@ class Conversations:
     def locked(self, user, thread):
         with self.connection() as conn:
             row = self._owned(conn, user, thread)
+            self._hold_account(conn, user)  # [왜] 실행이 끝날 때까지 탈퇴가 끼어들어 지운 기록을 다시 만들지 않게 한다
             if not conn.execute('SELECT pg_try_advisory_lock(hashtextextended(%s,0)) AS ok', (str(thread),)).fetchone()['ok']:
                 raise HTTPException(409, '분석을 처리 중입니다. 잠시 후 다시 시도하세요.')
             try:
@@ -150,11 +342,9 @@ class Conversations:
             connections = parse_netlist(netlist)
         except ValueError:
             raise HTTPException(422, '넷리스트 형식·크기·부품 참조를 확인하세요.') from None
-        if self.mode == 'demo':
-            from backend.services.demo import configuration
-            if connections != parse_netlist(configuration()['netlist']):
-                raise HTTPException(422, '합성 데모 회로만 업로드할 수 있습니다.')
+        # 데모 모드의 회로 · 질문 확인은 HTTP 입구가 거치는 ensure_thread · message가 한다(이 메서드는 DB 시험 전용)
         with self.connection() as conn:
+            self._hold_account(conn, user)
             if conn.execute('SELECT count(*) AS n FROM circuits WHERE user_id=%s', (user,)).fetchone()['n'] >= 100:
                 raise HTTPException(409, '회로 저장 한도(100건)에 도달했습니다.')
             circuit = str(uuid4())
@@ -162,13 +352,9 @@ class Conversations:
                          (circuit, user, filename, netlist, Jsonb(connections)))
         return {'id': circuit, 'filename': filename, 'components': connections['components']}
 
-    def circuits(self, user):
-        with self.connection() as conn:
-            rows = conn.execute('SELECT id,filename,connections FROM circuits WHERE user_id=%s ORDER BY created_at DESC LIMIT 100', (user,)).fetchall()
-        return [{'id': str(r['id']), 'filename': r['filename'], 'components': r['connections']['components']} for r in rows]
-
     def create(self, user, circuit, target):
         with self.connection() as conn:
+            self._hold_account(conn, user)
             row = conn.execute('SELECT connections FROM circuits WHERE id=%s AND user_id=%s', (circuit, user)).fetchone()
             if not row:
                 raise HTTPException(404, '회로를 찾을 수 없습니다.')
@@ -178,13 +364,42 @@ class Conversations:
             conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s)', (thread, user, circuit, target))
         return {'id': thread}
 
+    def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
+        """React 대화 하나를 같은 UUID의 분석 회로·thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
+
+        키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
+        # React 정규화 회로는 부품 목록이 parts, 데모 회로는 components다. 넷리스트 원문은 다시 읽지 않는다
+        connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
+        if target not in {p['ref'] for p in connections['components']}:
+            raise HTTPException(422, '회로에 없는 대상 부품입니다.')
+        if self.mode == 'demo':
+            from backend.services import demo
+            # [왜] run 스트림을 열기 전에 거른다(공통 오류 JSON). 기록이 없으면 503, 기록한 회로 · 대상 · 질문이 아니면 422
+            if not demo.match(connections, target):
+                raise demo.refusal('이 회로 · 대상 부품에는 기록한 데모 질문이 없습니다.')
+            if question is not None and not demo.match(connections, target, question, conditions):
+                raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
+        with self.connection() as conn:
+            self._hold_account(conn, user)  # 탈퇴 중이면 409(지운 분석 기록을 다시 만들지 않게)
+            # [왜] React 대화 하나 = 분석 회로 하나 + thread 하나라 회로 id도 thread UUID를 쓴다. 동시 첫 실행에도 행이 하나만 생긴다
+            # [주의] React 업로드는 원본을 저장하지 않으므로 netlist 칸은 빈 글자로 둔다
+            with conn.transaction():
+                conn.execute('INSERT INTO circuits(id,user_id,filename,netlist,connections) VALUES (%s,%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
+                             (thread, user, filename, '', Jsonb(connections)))
+                conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
+                             (thread, user, thread, target))
+            row = self._owned(conn, user, thread)
+        if row['target'] != target:
+            raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
+
     def threads(self, user):
         with self.connection() as conn:
             rows = conn.execute('SELECT t.id,t.target,t.status,t.version,c.filename FROM threads t JOIN circuits c ON c.id=t.circuit_id '
                                 'WHERE t.user_id=%s ORDER BY t.created_at DESC LIMIT 100', (user,)).fetchall()
         return [{**r, 'id': str(r['id'])} for r in rows]
 
-    def detail(self, user, thread):
+    def detail(self, user, thread, hints=()):
+        """thread 상태 · 결과 · 승인 기록. hints는 이번 질문으로 찾은 사용자 사실(message · resume만 넘기고 GET은 빈 목록)."""
         with self.connection() as conn:
             row = self._owned(conn, user, thread)
             # 실행 중인 연결이 잠금을 가진 동안에는 중간 체크포인트를 완료로 바꾸지 않는다.
@@ -199,14 +414,9 @@ class Conversations:
             events = conn.execute('SELECT version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery FROM analysis_events WHERE thread_id=%s ORDER BY created_at DESC LIMIT 20', (thread,)).fetchall()
         approval_rows = []
         for approval in approvals:
-            memory_state = approval['memory_status']
-            if memory_state == 'active':
-                try:
-                    memory_state = 'stored' if self.store.get(namespace(str(user)), f"{thread}:{approval['version']}") else 'pending'
-                except Exception:
-                    memory_state = 'unknown'
+            # [왜] 승인 사례는 이제 Store 기억이 아니라 승인 기록이다. 상태는 승인 원본 옆 표식(active · revoked · deleted) 그대로다
             approval_rows.append({'version': approval['version'], 'approved_at': approval['approved_at'].isoformat(),
-                                  'memory_state': memory_state, 'summary': approval['snapshot']['answer'][:2000],
+                                  'memory_state': approval['memory_status'], 'summary': approval['snapshot']['answer'][:2000],
                                   'correction': approval['correction'],
                                   'input_record': (approval['snapshot'].get('context') or {}).get('input_record')})
         snapshot = self.graph.get_state(self.config(thread))
@@ -222,27 +432,45 @@ class Conversations:
                 'interrupt': pending[0] if pending else None, 'can_approve': bool(can_approve),
                 'can_retry': bool(snapshot.next and not pending and row['retries'] < 2 and state.get('run_version') == row['version']),
                 'related_memories': related[:5], 'approvals': approval_rows, 'events': events,
-                'consulted_memories': visible_memories,
+                'profile_hints': list(hints), 'consulted_memories': visible_memories,
                 'referenced_memories': [m for m in visible_memories
                                         if f"승인사례:{m['thread_id']}:{m['version']}" in (state.get('memory_refs') or [])
                                         and not pending and not state.get('refusal')]}
 
+    def _purge_expired(self):
+        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/023). 실패해도 분석은 계속한다."""
+        try:
+            with self.connection() as conn:
+                conn.execute('SELECT purge_inactive_projects(), purge_log_records()')
+        except psycopg.Error:
+            RETENTION_LOGGER.warning('retention_purge_failed')
+
     def message(self, user, thread, text, conditions='', request_id=''):
+        # [왜] 새 분석이 시작될 때 청소한다(스케줄러 없음). 이 thread를 잠그기 전에 해서, 60일 지난 thread면 반쯤 쓴 상태 없이 404로 끝난다
+        self._purge_expired()
         with self.locked(user, thread) as (conn, row):
-            if self.mode == 'demo':
-                from backend.services.demo import validate_question
-                validate_question(text, conditions)
             self._reconcile(conn, row)
             if self.graph.get_state(self.config(thread)).next:
-                raise HTTPException(409, '먼저 요청한 조건에 답해주세요.')
+                # [왜] 화면은 이 코드면 조건 입력 폼을 다시 보여 준다(ADR 0019). 다른 409는 문구만 보여 준다
+                raise ApiError(409, '먼저 요청한 조건에 답해주세요.', code='CONDITION_PENDING')
             history = conn.execute("SELECT content FROM messages WHERE thread_id=%s AND role='user' ORDER BY id", (thread,)).fetchall()
             if len(history) >= 50:
                 raise HTTPException(409, '분석당 질문 한도(50건)에 도달했습니다.')
+            if self.mode == 'demo':
+                from backend.rag.card_find import SHARED_READS
+                from backend.services import demo
+                # [왜] 같은 대화의 두 번째 질문부터는 '이전 사용자 입력'이 프롬프트에 붙어 기록과 달라진다(재생이 멈춤). 첫 질문만 받는다
+                if history:
+                    raise demo.refusal('데모 질문은 새 대화의 첫 질문으로만 재생합니다. 새 대화에서 보내세요.')
+                if not demo.match(row['connections'], row['target'], text, conditions):
+                    raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
+                # [왜] 기록은 질문마다 카드 읽기 공유 칸을 비우고 돌았다(record_demo.run_question). 앞 질문이 읽어 둔 카드가 남으면 호출 · 답이 달라진다
+                # shortcut: 데모 사용자 둘이 동시에 돌리면 한쪽이 다른 쪽의 공유 칸을 비워 재생이 멈출 수 있다(503). 동시 시연이 필요하면 실행별 칸으로 바꾼다
+                SHARED_READS.clear()
             version = row['version'] + 1
             content = (f'사용 조건: {conditions}\n' if conditions else '') + text
-            part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-            memories = self.memories(user, part=part)[:5] if part else []
             budget = self._budget(user)
+            hints = self._profile_hints(user, text)
             with conn.transaction():
                 conn.execute("UPDATE threads SET version=%s,status='RUNNING',retries=0,input_record=%s WHERE id=%s",
                              (version, Jsonb({'version': version, 'question': text, 'conditions': conditions, 'resumes': []}), thread))
@@ -252,9 +480,18 @@ class Conversations:
             inputs = {'input': f'이전 사용자 입력:\n{context}\n현재 질문:\n{content}' if context else content,
                       'connections': row['connections'], 'circuit': row['filename'], 'target': row['target'],
                       'conditions': conditions, 'user_id': str(user), 'run_version': version,
-                      'approved_memories': memories}
+                      # [왜] 승인 사례는 더 이상 새 분석에 넘기지 않는다. 빈 목록을 넣어 checkpoint에 남은 이전 목록도 지운다
+                      'approved_memories': []}
             self._invoke(conn, thread, inputs, budget, request_id)
-        return self.detail(user, thread)
+        return self.detail(user, thread, hints)
+
+    def _profile_hints(self, user, question):
+        """질문 글로 사용자 사실을 찾아 화면 참고용 칸(kind · value · text)만 돌려준다. 실패해도 분석은 계속한다."""
+        try:
+            return [{key: fact[key] for key in ('kind', 'value', 'text')} for fact in self.profile.facts(user, question)] if question else []
+        except Exception:
+            LOGGER.warning('profile_hints_unavailable')
+            return []
 
     def resume(self, user, thread, answers, role, version, request_id=''):
         with self.locked(user, thread) as (conn, row):
@@ -268,6 +505,16 @@ class Conversations:
                 raise HTTPException(422, '요청한 조건의 답만 입력하세요.')
             if role and role not in (pending[0].get('role_choices') or []):
                 raise HTTPException(422, '제시된 역할을 선택하세요.')
+            if self.mode == 'demo':
+                from backend.services import demo
+                record = row.get('input_record') or {}
+                recorded = demo.match(row['connections'], row['target'], record.get('question'), record.get('conditions'))
+                want = (recorded[0].get('resume') if recorded else None) or {}
+                # [왜] 재개 답도 프롬프트에 들어간다. 기록 때 보낸 답 · 역할과 같아야 재생된다
+                if not want or (answers, role) != (want['answers'], want['role']):
+                    shown = ', '.join(f'{k}={v}' for k, v in (want.get('answers') or {}).items()) or '모름'
+                    raise HTTPException(422, f"키 없는 데모는 기록한 답(답: {shown}, 역할: {want.get('role') or '없음'})으로만 재개합니다. "
+                                             "화면의 '기록한 답으로 계속하기'를 누르세요.")
             budget = self._budget(user)
             content = '조건 답변:\n' + ('\n'.join(f'{key}: {value}' for key, value in answers.items()) or '모름')
             if role:
@@ -278,12 +525,14 @@ class Conversations:
             with conn.transaction():
                 conn.execute('UPDATE threads SET input_record=%s WHERE id=%s', (Jsonb(record), thread))
                 conn.execute("INSERT INTO messages(thread_id,role,content) VALUES (%s,'user',%s)", (thread, content))
+            hints = self._profile_hints(user, record.get('question'))
             self._invoke(conn, thread, Command(resume={'answers': answers, 'role': role}), budget, request_id)
-        return self.detail(user, thread)
+        return self.detail(user, thread, hints)
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
-        from backend.services.llm import evaluation_limits, EvaluationLimitError
+        from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
         from backend.services import langfuse_prompts
+        from backend.services.demo import ReplayMiss
         timings = langfuse_prompts.AnalysisTimings()
         started = time.monotonic()
         try:
@@ -299,15 +548,25 @@ class Conversations:
             conn.execute("UPDATE threads SET status='FAILED' WHERE id=%s", (thread,))
             if isinstance(error, EvaluationLimitError) or (isinstance(error,HTTPException) and error.status_code==429):
                 conn.execute("UPDATE threads SET input_record=jsonb_set(COALESCE(input_record,'{}'::jsonb),'{execution_limit_reached}','true') WHERE id=%s", (thread,))
-            LOGGER.warning(json.dumps({'event': 'analysis_failed', 'request_id': request_id,
-                'thread_id': str(thread), 'error_type': type(error).__name__,
-                'elapsed_ms': int((time.monotonic()-budget.started)*1000)}))
+            LOGGER.warning('analysis_failed', extra={'request_id': request_id, 'thread_id': str(thread), 'error_type': type(error).__name__,
+                                                     'elapsed_ms': int((time.monotonic()-budget.started)*1000)})
             if isinstance(error, HTTPException):
                 raise
-            if isinstance(error, EvaluationLimitError):
-                status = 504 if time.monotonic()-budget.started >= budget.max_seconds else 429
-                raise HTTPException(status, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.') from None
-            raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from None
+            if isinstance(error, ReplayMiss):
+                # [왜] 확인을 통과한 데모 질문인데 기록에 없는 호출이면 DB · 코드 · 설정이 기록 때와 다르다. 실제 LLM으로 넘기지 않고 이유를 보인다
+                raise HTTPException(503, f'데모 기록을 재생하지 못했습니다. {error} 기록 때와 DB · 코드가 다를 수 있습니다'
+                                         '(scripts/demo/DEMO.md의 재생 확인).') from error
+            late = time.monotonic()-budget.started >= budget.max_seconds
+            # [왜] 바깥 호출에는 남은 시간만큼만 제한 시간을 준다(llm.EvaluationBudget). 시간 예산을 다 써 끊긴 바깥 호출도 504다
+            if isinstance(error, EvaluationLimitError) or (late and is_upstream_error(error)):
+                if late:
+                    raise HTTPException(504, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.') from None
+                # [왜] 실행 한 번의 호출 수 · 예약 USD 상한이다. 같은 요청을 곧바로 되풀이해도 다시 걸려 LIMIT_EXCEEDED로 둔다(ADR 0019 결과)
+                raise ApiError(429, '분석 실행의 시간·호출·예약 예산 상한에 도달했습니다.', code='LIMIT_EXCEEDED') from None
+            # [왜] LLM · 임베딩 공급자 장애(502)와 우리 DB · 설정 문제(503)를 코드로 가른다(ADR 0019). from error는 로그 traceback에 원인 프레임을 남긴다
+            if is_upstream_error(error):
+                raise HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다. 잠시 후 다시 시도하세요.') from error
+            raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from error
         finally:
             self._record_event(conn,thread,started,timings.report(),request_id)
 
@@ -326,8 +585,7 @@ class Conversations:
             conn.execute('INSERT INTO analysis_events(id,thread_id,version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery) '
                          'VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                          (uuid4(),thread,event['version'],request_id,self.mode,event['status'],event['elapsed_ms'],Jsonb(stages),event['trace_id'],delivery))
-            LOGGER.info(json.dumps({'event':'analysis_finished','user_id':row['user_id'],
-                'thread_id':str(thread),**event,'trace_delivery':delivery}))
+            LOGGER.info('analysis_finished', extra={'user_id': row['user_id'], 'thread_id': str(thread), **event, 'trace_delivery': delivery})
         except Exception:
             LOGGER.warning('analysis_metadata_unavailable')
 
@@ -348,18 +606,6 @@ class Conversations:
         if (snapshot.values or {}).get('run_version') == row['version'] and (not snapshot.next or pending):
             self._finish(conn, row['id'], snapshot)
 
-    def retry(self, user, thread, version, request_id=''):
-        with self.locked(user, thread) as (conn, row):
-            snapshot = self.graph.get_state(self.config(thread))
-            pending = [i for task in snapshot.tasks for i in task.interrupts]
-            if (version != row['version'] or row['retries'] >= 2 or not snapshot.next or pending
-                    or (snapshot.values or {}).get('run_version') != version):
-                raise HTTPException(409, '현재 실패한 실행만 최대 두 번 재시도할 수 있습니다.')
-            budget = self._budget(user)
-            conn.execute("UPDATE threads SET retries=retries+1,status='RUNNING',input_record=input_record-'execution_limit_reached' WHERE id=%s", (thread,))
-            self._invoke(conn, thread, None, budget, request_id)
-        return self.detail(user, thread)
-
     def approve(self, user, thread, version, request_id=''):
         with self.connection() as conn:
             self._owned(conn,user,thread)
@@ -375,7 +621,7 @@ class Conversations:
             approved = conn.execute('SELECT snapshot,approved_at,memory_status FROM approvals WHERE thread_id=%s AND version=%s', (thread, version)).fetchone()
             if approved and approved['memory_status'] != 'active':
                 raise HTTPException(409, '철회·삭제한 기억은 재승인으로 복구할 수 없습니다. 철회 복구 기능을 사용하세요.')
-            # 기존 승인은 현재 그래프 상태와 무관하게 불변 원본으로 Store만 복구한다.
+            # 이미 승인한 버전은 현재 그래프 상태와 무관하게 원본을 그대로 두고 성공으로 답한다(멱등).
             if not approved:
                 self._reconcile(conn, row)
                 detail = self.detail(user, thread)
@@ -396,47 +642,32 @@ class Conversations:
                                                                   'conditions': state.get('conditions', ''),
                                                                   'target_part': state.get('target_part') or {},
                                                                   'judge_read': state.get('judge_read') or {}}})))
-                approved = conn.execute('SELECT snapshot,approved_at FROM approvals WHERE thread_id=%s AND version=%s', (thread, version)).fetchone()
-            judgement = approved['snapshot']['judgement']
-            # 이전 스냅샷에는 part가 없다. 변경 불가인 업로드 회로의 고정 대상에서 읽는다.
-            part = approved['snapshot'].get('part')
-            if part is None:
-                part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-            value = {'thread_id': str(thread), 'version': version, 'approved_at': approved['approved_at'].isoformat(),
-                     'roles': judgement.get('roles') or [], 'part': part,
-                     'summary': approved['snapshot']['answer'][:2000]}
-            try:
-                self.store.put(namespace(str(user)), f'{thread}:{version}', value)
-            except Exception:
-                raise HTTPException(503, '승인 원본은 보관했습니다. 기억 저장을 위해 같은 결과를 다시 승인하세요.') from None
+            # [왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09 결정). Store에 쓰지 않는다
         return {'ok': True, 'version': version}
 
     def memories(self, user, roles=None, part=None):
-        items = self.store.search(namespace(str(user)), filter={'part': part} if part and not roles else None, limit=100)
-        matches = [i.value for i in items if (not roles and not part) or
-                   set(roles or []) & set(i.value.get('roles') or []) or
-                   (part and part.casefold() == i.value.get('part', '').casefold())]
-        results = []
+        """자기 승인 기록(철회 · 삭제 안 한 것, 최근 승인 순 최대 100건). roles · part를 주면 역할이나 품번이 같은 것만."""
         with self.connection() as conn:
-            for value in matches:
-                row = conn.execute('SELECT a.snapshot,a.approved_at,a.correction,c.connections,t.target FROM approvals a JOIN threads t ON t.id=a.thread_id '
-                                   'JOIN circuits c ON c.id=t.circuit_id '
-                                   "WHERE t.user_id=%s AND a.thread_id=%s AND a.version=%s AND a.memory_status='active'",
-                                   (user, value['thread_id'], value['version'])).fetchone()
-                if row:
-                    snapshot = row['snapshot']
-                    original_part = snapshot.get('part')
-                    if original_part is None:
-                        original_part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-                    original_roles = snapshot['judgement'].get('roles') or []
-                    if (roles or part) and not (set(roles or []) & set(original_roles) or
-                                               (part and part.casefold() == original_part.casefold())):
-                        continue
-                    results.append({'thread_id': value['thread_id'], 'version': value['version'],
-                                    'approved_at': row['approved_at'].isoformat(), 'part': original_part,
-                                    'roles': original_roles, 'summary': snapshot['answer'][:2000],
-                                    'correction': row['correction'],
-                                    'context': snapshot.get('context'), 'judgement': snapshot['judgement']})
+            rows = conn.execute('SELECT a.thread_id,a.version,a.snapshot,a.approved_at,a.correction,c.connections,t.target FROM approvals a '
+                                'JOIN threads t ON t.id=a.thread_id JOIN circuits c ON c.id=t.circuit_id '
+                                "WHERE t.user_id=%s AND c.user_id=%s AND a.memory_status='active' ORDER BY a.approved_at DESC LIMIT 100",
+                                (user, user)).fetchall()
+        results = []
+        for row in rows:
+            snapshot = row['snapshot']
+            # 이전 스냅샷에는 part가 없다. 변경 불가인 업로드 회로의 고정 대상에서 읽는다.
+            original_part = snapshot.get('part')
+            if original_part is None:
+                original_part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
+            original_roles = snapshot['judgement'].get('roles') or []
+            if (roles or part) and not (set(roles or []) & set(original_roles) or
+                                       (part and part.casefold() == original_part.casefold())):
+                continue
+            results.append({'thread_id': str(row['thread_id']), 'version': row['version'],
+                            'approved_at': row['approved_at'].isoformat(), 'part': original_part,
+                            'roles': original_roles, 'summary': snapshot['answer'][:2000],
+                            'correction': row['correction'],
+                            'context': snapshot.get('context'), 'judgement': snapshot['judgement']})
         return results
 
     def _current_memories(self, user, items):
@@ -446,28 +677,6 @@ class Conversations:
         active = {(m['thread_id'],m['version']):m for m in self.memories(user)}
         return [active[(m['thread_id'],m['version'])] for m in items
                 if (m['thread_id'],m['version']) in active]
-
-    def control_memory(self, user, thread, version, action, correction):
-        if action not in ('correct','revoke','restore','delete') or len(correction) > 1000:
-            raise HTTPException(422, '기억 관리 요청을 확인하세요.')
-        with self.locked(user, thread) as (conn, _):
-            row = conn.execute('SELECT memory_status FROM approvals WHERE thread_id=%s AND version=%s', (thread,version)).fetchone()
-            if not row:
-                raise HTTPException(404, '승인 사례를 찾을 수 없습니다.')
-            if row['memory_status'] == 'deleted' and action != 'delete':
-                raise HTTPException(409, '기억에서 삭제한 사례는 복구할 수 없습니다. 대화·승인 원본은 유지됩니다.')
-            if action == 'correct':
-                conn.execute('UPDATE approvals SET correction=%s,memory_updated_at=CURRENT_TIMESTAMP WHERE thread_id=%s AND version=%s', (correction,thread,version))
-            else:
-                status = {'revoke':'revoked','restore':'active','delete':'deleted'}[action]
-                conn.execute('UPDATE approvals SET memory_status=%s,memory_updated_at=CURRENT_TIMESTAMP WHERE thread_id=%s AND version=%s', (status,thread,version))
-                if action == 'delete':
-                    # 먼저 삭제 표식을 확정한다. Store 장애가 있어도 이후 모델 입력은 차단된다.
-                    try:
-                        self.store.delete(namespace(str(user)), f'{thread}:{version}')
-                    except Exception:
-                        raise HTTPException(503, '기억 참조는 차단했습니다. Store 사본 제거를 위해 기억 삭제를 다시 요청하세요.') from None
-        return {'ok':True, 'version':version}
 
 
 if __name__ == '__main__':

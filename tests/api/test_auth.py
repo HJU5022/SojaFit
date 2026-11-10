@@ -1,6 +1,6 @@
-"""인증 단위·DB 통합 테스트: 비밀번호 해시, 세션, 로그인 잠금, 관리자 API.
+"""인증 단위·DB 통합 테스트: 비밀번호 해시, 세션, 로그인 잠금, 자기 가입, 관리자 API.
 
-- 역할: 비밀번호 해시, 세션 HMAC, 로그인 실패 제한·잠금 경계, 유휴·절대 만료, 사용자 격리, 관리자 권한, scrypt 동시 검증 상한을 확인한다.
+- 역할: 비밀번호 해시, 세션 HMAC, 로그인 실패 제한·잠금 경계, 유휴·절대 만료, 사용자 격리, 관리자 권한, scrypt 동시 검증 상한, 가입(중복 409·입력 미노출 422·출처 403·IP 하루 3회 429·Cloud Run IP 판단), IP당 15분 로그인 실패 30회 잠금을 확인한다.
 - 하지 않는 일: DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만 돈다(없으면 건너뜀). 서비스 DB(Supabase)나 실제 사용자 데이터는 쓰지 않는다.
 - 출처: SPEC 8.6(로그인 AC), docs/specs/login-auth.md, docs/research/auth-login-verification.md
 """
@@ -9,6 +9,21 @@ from fastapi.testclient import TestClient
 
 from backend import auth
 from backend.main import app
+
+
+@pytest.fixture(autouse=True)
+def clear_login_ip_attempts():
+    """DB 시험마다 IP 로그인 실패 기록을 비운다."""
+    # [왜] TestClient는 모든 요청을 같은 주소('testclient')로 보내므로 여러 시험의 로그인 실패가 한 IP에 쌓인다.
+    # 15분 안에 30회를 넘으면 상관없는 뒤 시험이 IP 잠금(401)에 걸리므로 시험마다 비운다. 격리된 시험 DB에서만 돈다
+    import os
+
+    import psycopg
+
+    url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if url:
+        with psycopg.connect(url) as conn:
+            conn.execute("DELETE FROM auth_login_ip_attempts")
 
 
 @pytest.mark.parametrize("http_impl", ["h11", "httptools"])
@@ -56,8 +71,10 @@ def test_google_callback_query_is_not_written_to_uvicorn_access_logs(http_impl):
     assert "synthetic-code" not in logs
     assert "synthetic-state" not in logs
     assert "/api/auth/google/callback" in logs
-    assert "/api/auth/google/callback-other?request=ordinary" in logs
-    assert "/health?request=ordinary" in logs
+    # [왜] 쿼리 글은 Google 콜백뿐 아니라 모든 경로에서 가린다(backend/logs.py의 hide_query). 경로는 남는다
+    assert "/api/auth/google/callback-other?<redacted>" in logs
+    assert "/health?<redacted>" in logs
+    assert "request=ordinary" not in logs
 
 
 def test_google_auth_schema_restricts_public_access_and_duplicate_bindings():
@@ -499,7 +516,7 @@ def test_existing_active_lock_remains_after_schema_update(monkeypatch):
     with psycopg.connect(database_url) as conn:
         conn.execute("INSERT INTO users(login_id,password_hash) VALUES (%s,%s)", (email, auth.hash_password(password)))
         conn.execute("INSERT INTO auth_login_attempts(login_hash,failed_count,locked_until) VALUES (%s,5,CURRENT_TIMESTAMP + INTERVAL '5 minutes')", (key,))
-    assert auth.authenticate(email, password) is None
+    assert auth.authenticate(email, password, "testclient") is None
     with psycopg.connect(database_url) as conn:
         state = conn.execute("SELECT failed_count, window_started_at FROM auth_login_attempts WHERE login_hash=%s", (key,)).fetchone()
         assert state == (5, None)
@@ -507,7 +524,7 @@ def test_existing_active_lock_remains_after_schema_update(monkeypatch):
 
 def test_https_login_cookie_and_cross_origin_logout(monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "https://testserver")
-    monkeypatch.setattr(auth, "authenticate", lambda email, password: ("test-token", 42))
+    monkeypatch.setattr(auth, "authenticate", lambda email, password, ip: ("test-token", 42))
     client = TestClient(app, base_url="https://testserver")
     response = client.post("/api/auth/login", headers={"origin": "https://testserver"}, json={"email": "test@example.test", "password": "test-only"})
     assert response.status_code == 200
@@ -520,7 +537,7 @@ def test_login_database_error_does_not_expose_details(monkeypatch):
     import psycopg
 
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
-    def fail(email, password):
+    def fail(email, password, ip):
         raise psycopg.OperationalError("test-sensitive-detail")
     monkeypatch.setattr(auth, "authenticate", fail)
     response = TestClient(app).post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": "test@example.test", "password": "test-only"})
@@ -596,7 +613,7 @@ def test_auth_database_rejects_login_when_both_scrypt_slots_are_busy(monkeypatch
         assert lock_a.execute("SELECT pg_try_advisory_xact_lock(736125,1)").fetchone()[0]
         assert lock_b.execute("SELECT pg_try_advisory_xact_lock(736125,2)").fetchone()[0]
         with pytest.raises(HTTPException) as error:
-            auth.authenticate("busy@example.test", "test-only")
+            auth.authenticate("busy@example.test", "test-only", "testclient")
         assert error.value.status_code == 503
     finally:
         lock_a.rollback()
@@ -658,15 +675,9 @@ def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
     assert encoded.startswith("scrypt$")
     assert auth.verify_password("a-strong-demo-password", encoded)
 
-@pytest.mark.parametrize("mode,config,expected", [
-    ("1", ("", "", "", ""), "default"),
-    ("1", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
-    ("1", ("custom-admin@", "valid", "custom-user@example.test", "valid"), "invalid"),
-    ("1", ("partial@example.test", "", "", ""), "invalid"),
-    ("0", ("", "", "", ""), "none"),
-    ("0", ("custom-admin@example.test", "valid", "custom-user@example.test", "valid"), "custom"),
-])
-def test_demo_seed_configuration(mode, config, expected):
+@pytest.mark.parametrize("mode", ["1", "0", ""])
+def test_demo_seed_configuration(mode):
+    """데모 모드에서만 비밀번호 없는 데모 일반 사용자 A · B를 만들고(다시 실행해도 그대로), 저장소에 비밀번호 해시가 없다."""
     import os
     from pathlib import Path
     import psycopg
@@ -675,31 +686,84 @@ def test_demo_seed_configuration(mode, config, expected):
     if not database_url:
         pytest.skip("requires an isolated authentication test database")
     seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
+    assert "scrypt$" not in seed and f"'{auth.DEMO_PASSWORD_HASH}'" in seed  # 앱과 같은 표식, 고정 해시 없음
     statement = seed[seed.index("DO $$"):]
-    password_hash = auth.hash_password("custom-test-password") if "valid" in config else ""
-    values = [password_hash if value == "valid" else value for value in config]
     with psycopg.connect(database_url) as conn:
         with conn.transaction(force_rollback=True):
             conn.execute("CREATE TEMP TABLE users (login_id text PRIMARY KEY, password_hash text NOT NULL, role text NOT NULL) ON COMMIT DROP")
-            for key, value in zip(("demo_admin_email", "demo_admin_password_hash", "demo_user_email", "demo_user_password_hash"), values):
-                conn.execute("SELECT set_config(%s, %s, true)", ("sojafit." + key, value))
             conn.execute("SELECT set_config('sojafit.demo_mode', %s, true)", (mode,))
-            if expected == "invalid":
-                with pytest.raises(psycopg.errors.RaiseException):
-                    conn.execute(statement)
-                return
-            conn.execute(statement)
-            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY role").fetchall()
-            if expected == "none":
-                assert rows == []
-            elif expected == "custom":
-                assert rows == [(config[0], password_hash, "admin"), (config[2], password_hash, "user")]
-            else:
-                assert [(row[0], row[2]) for row in rows] == [("demo-admin@example.test", "admin"), ("demo-user@example.test", "user")]
-                assert auth.verify_password("demo-admin-1234", rows[0][1])
-                assert auth.verify_password("demo-user-1234", rows[1][1])
-            conn.execute(statement)
-            assert conn.execute("SELECT count(*) FROM users").fetchone()[0] == len(rows)
+            for _ in range(2):
+                conn.execute(statement)
+            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY login_id").fetchall()
+    if mode == "1":
+        assert rows == [(email, auth.DEMO_PASSWORD_HASH, "user") for email in auth.DEMO_ACCOUNTS.values()]
+        assert not auth.verify_password("", auth.DEMO_PASSWORD_HASH) and not auth.verify_password("demo-button-login-only", auth.DEMO_PASSWORD_HASH)
+    else:
+        assert rows == []
+
+
+def test_demo_login_routes_do_not_exist_outside_demo_mode(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "0")
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "demo_session", lambda *args: pytest.fail("demo login must not run outside demo mode"))
+    client = TestClient(app)
+    for response in (client.get("/api/auth/demo"), client.post("/api/auth/demo-login", headers={"origin": "http://testserver"}, json={"account": "a"}),
+                     client.post("/api/auth/demo-login", json={"account": "z"})):
+        assert response.status_code == 404 and response.json()["error"]["code"] == "NOT_FOUND"
+    monkeypatch.setenv("DEMO_MODE", "1")
+    assert client.get("/api/auth/demo").json() == {"enabled": True}
+    assert client.post("/api/auth/demo-login", json={"account": "a"}).status_code == 403  # Origin 없음
+    for body in ({"account": "c"}, {"account": "demo-a@example.test"}, {"account": "a", "user_id": 1}, {}):
+        assert client.post("/api/auth/demo-login", headers={"origin": "http://testserver"}, json=body).status_code == 422
+
+
+def test_database_demo_buttons_log_into_separate_seeded_users_only(monkeypatch):
+    """버튼 로그인은 시드한 데모 계정 A · B(서로 다른 일반 사용자)에만 세션을 주고, 비밀번호 로그인은 늘 실패하며, 다른 계정에는 닿지 않는다."""
+    import hashlib
+    import os
+    from pathlib import Path
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("DEMO_MODE", "1")
+    seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
+    headers = {"origin": "http://testserver"}
+    emails = list(auth.DEMO_ACCOUNTS.values())
+    with psycopg.connect(database_url) as conn:
+        conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+        conn.execute("SELECT set_config('sojafit.demo_mode', '1', false)")
+        conn.execute(seed[seed.index("DO $$"):])
+    try:
+        clients = {account: TestClient(app) for account in auth.DEMO_ACCOUNTS}
+        ids = {}
+        for account, client in clients.items():
+            response = client.post("/api/auth/demo-login", headers=headers, json={"account": account})
+            assert response.status_code == 200 and "httponly" in response.headers["set-cookie"].lower()
+            ids[account] = response.json()["user_id"]
+            assert client.get("/api/auth/me").json() == {"user_id": ids[account], "role": "user"}
+        assert ids["a"] != ids["b"]  # 두 창(쿠키가 따로)에서 서로 다른 사용자다
+        for password in ("", "demo-button-login-only", auth.DEMO_PASSWORD_HASH):  # 비밀번호 로그인은 늘 실패
+            response = TestClient(app).post("/api/auth/login", headers=headers, json={"email": emails[0], "password": password or "x"})
+            assert response.status_code == 401
+        # 같은 이메일이지만 비밀번호로 가입한 계정 · 관리자로 바뀐 계정 · 비활성 계정은 버튼으로 닿지 않는다
+        with psycopg.connect(database_url) as conn:
+            conn.execute("UPDATE users SET password_hash=%s WHERE login_id=%s", (auth.hash_password("a-real-password-123"), emails[1]))
+            conn.execute("UPDATE users SET role='admin' WHERE login_id=%s", (emails[0],))
+        for account in auth.DEMO_ACCOUNTS:
+            response = TestClient(app).post("/api/auth/demo-login", headers=headers, json={"account": account})
+            assert response.status_code == 404 and "set-cookie" not in response.headers
+        with psycopg.connect(database_url) as conn:
+            conn.execute("UPDATE users SET role='user', is_active=FALSE WHERE login_id=%s", (emails[0],))
+        assert TestClient(app).post("/api/auth/demo-login", headers=headers, json={"account": "a"}).status_code == 404
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+            conn.execute("DELETE FROM auth_login_attempts WHERE login_hash = ANY(%s)", ([hashlib.sha256(email.encode()).hexdigest() for email in emails],))
 
 
 def test_session_token_hash_uses_key_when_provided(monkeypatch):
@@ -844,24 +908,11 @@ def test_login_purges_expired_attempts_and_sessions_before_recording(monkeypatch
         def cursor(self): return Cursor()
 
     monkeypatch.setattr(auth, "connection", lambda: Conn())
-    assert auth.authenticate("nobody@example.test", "x") is None
+    assert auth.authenticate("nobody@example.test", "x", "testclient") is None
     kinds = [s.split()[0] + " " + s.split()[2] for s in statements]
     assert kinds.index("DELETE auth_login_attempts") < kinds.index("INSERT auth_login_attempts")
+    assert kinds.index("DELETE auth_login_ip_attempts") < kinds.index("INSERT auth_login_ip_attempts")
     assert any(s.startswith("DELETE FROM auth_sessions WHERE expires_at") for s in statements)
-
-
-def test_unbuilt_login_page_has_no_question_controls(tmp_path):
-    from fastapi import FastAPI
-    from backend.main import LOGIN_PAGE
-    from backend.web.app import mount_frontend
-
-    # 빌드 뒤에는 React index를 제공하므로 기존 폼 검사는 미빌드 fallback에 한정한다.
-    unbuilt_app = FastAPI()
-    mount_frontend(unbuilt_app, tmp_path / "missing-dist", LOGIN_PAGE)
-    response = TestClient(unbuilt_app).get("/login")
-    assert response.status_code == 200
-    assert 'id="login-form"' in response.text
-    assert 'id="question-form"' not in response.text
 
 
 def test_question_endpoint_is_not_exposed(monkeypatch):
@@ -879,3 +930,207 @@ def test_question_endpoint_is_not_exposed(monkeypatch):
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 404
+
+
+def test_signup_rejects_missing_or_cross_origin(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    client = TestClient(app)
+    body = {"email": "new-person@example.test", "password": "synthetic-pass-123", "consent": True}
+    assert client.post("/api/auth/signup", json=body).status_code == 403
+    assert client.post("/api/auth/signup", json=body, headers={"origin": "https://evil.example"}).status_code == 403
+
+
+@pytest.mark.parametrize("email, password", [("new-person@example.test", "short-7"), ("person@", "synthetic-pass-123"), ("@example.test", "synthetic-pass-123")])
+def test_signup_validation_errors_do_not_echo_input(email, password, monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json={"email": email, "password": password, "consent": True})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert email not in response.text and password not in response.text
+
+
+@pytest.mark.parametrize("consent", ["missing", False, None, "true", 1])
+def test_signup_requires_explicit_consent_before_touching_the_database(consent, monkeypatch):
+    """처리방침 고지 동의(consent)가 정확히 true가 아니면 공통 422이고 가입 처리(DB)를 부르지 않는다."""
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "signup", lambda *args: pytest.fail("signup must not run without consent"))
+    body = {"email": "new-person@example.test", "password": "synthetic-pass-123"}
+    if consent != "missing":
+        body["consent"] = consent
+    response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json=body)
+    assert response.status_code == 422 and response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert "synthetic-pass-123" not in response.text
+
+
+@pytest.mark.parametrize("method, path, body, handler", [
+    ("post", "/api/auth/login", {"email": "user@example.test", "password": "synthetic-pass-123"}, "authenticate"),
+    ("post", "/api/auth/signup", {"email": "user@example.test", "password": "synthetic-pass-123", "consent": True}, "signup"),
+    ("patch", "/api/admin/users/2", {"is_active": False}, "admin_set_active"),
+])
+def test_unknown_body_field_is_422_before_touching_the_database(method, path, body, handler, monkeypatch):
+    """로그인 · 가입 · 계정 상태 본문에 모르는 칸(예: role)이 있으면 공통 422이고 인증 처리(DB)를 부르지 않는다."""
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, handler, lambda *args: pytest.fail(f"{handler} must not run with an unknown field"))
+    app.dependency_overrides[auth.current_user_id] = lambda: 1  # 관리자 경로가 본문 검사까지 가게 한다
+    try:
+        response = TestClient(app).request(method, path, headers={"origin": "http://testserver"}, json={**body, "role": "admin"})
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 422 and response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert "synthetic-pass-123" not in response.text
+
+
+def test_client_ip_trusts_only_the_last_forwarded_entry_on_cloud_run(monkeypatch):
+    from starlette.requests import Request
+
+    def request(*forwarded: str) -> Request:
+        return Request({"type": "http", "headers": [(b"x-forwarded-for", value.encode()) for value in forwarded], "client": ("169.254.1.1", 4321)})
+
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    # 로컬·Compose: 클라이언트가 보낸 X-Forwarded-For는 무시하고 소켓 주소를 쓴다
+    assert auth.client_ip(request("203.0.113.9")) == "169.254.1.1"
+    monkeypatch.setenv("K_SERVICE", "sojafit-api")
+    # Cloud Run: 앞의 값(클라이언트가 위조 가능)은 버리고 Google 프런트엔드가 덧붙인 마지막 값만 쓴다
+    assert auth.client_ip(request("192.0.2.1, 198.51.100.2, 203.0.113.9")) == "203.0.113.9"
+    assert auth.client_ip(request("192.0.2.1", "203.0.113.9")) == "203.0.113.9"
+    assert auth.client_ip(request()) == "169.254.1.1"
+
+
+def test_ip_limit_schema_is_idempotent_and_not_public():
+    import os
+    from pathlib import Path
+
+    import psycopg
+
+    url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not url:
+        pytest.skip("requires an isolated authentication test database")
+    sql = Path("db/021_auth_ip_limits.sql").read_text(encoding="utf-8")
+    with psycopg.connect(url) as conn:
+        conn.execute(sql)
+        conn.execute(sql)  # [왜] 두 번 실행해도 오류 없이 그대로여야 한다(멱등)
+        rows = conn.execute(
+            "SELECT relname, relrowsecurity, EXISTS (SELECT 1 FROM aclexplode(coalesce(relacl, acldefault('r', relowner))) a WHERE a.grantee = 0) "
+            "FROM pg_class WHERE relname IN ('auth_signup_attempts', 'auth_login_ip_attempts') ORDER BY relname"
+        ).fetchall()
+    assert rows == [("auth_login_ip_attempts", True, False), ("auth_signup_attempts", True, False)]
+
+
+def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch):
+    import os
+    import secrets
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("K_SERVICE", "sojafit-api")
+    headers = {"origin": "http://testserver", "x-forwarded-for": f"2001:db8::{secrets.token_hex(2)}:{secrets.token_hex(2)}"}
+    email, password = f"signup-{secrets.token_hex(6)}@example.test", "synthetic-pass-123"
+    client = TestClient(app)
+    try:
+        response = client.post("/api/auth/signup", headers=headers, json={"email": email, "password": password, "consent": True})
+        assert response.status_code == 200
+        user_id = response.json()["user_id"]
+        assert "httponly" in response.headers["set-cookie"].lower()
+        assert client.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
+        assert TestClient(app).post("/api/auth/login", headers=headers, json={"email": email, "password": password}).json() == {"user_id": user_id}
+        duplicate = TestClient(app).post("/api/auth/signup", headers=headers, json={"email": f"  {email.upper()} ", "password": "another-pass-456", "consent": True})
+        assert duplicate.status_code == 409
+        assert duplicate.json()["error"]["code"] == "CONFLICT"
+        with psycopg.connect(database_url) as conn:
+            assert conn.execute("SELECT role, is_active FROM users WHERE login_id=%s", (email,)).fetchall() == [("user", True)]
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id=%s", (email,))
+
+
+def test_database_signup_limits_each_client_ip_to_three_per_day(monkeypatch):
+    import os
+    import secrets
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("K_SERVICE", "sojafit-api")
+    ip_a, ip_b = (f"2001:db8::{secrets.token_hex(2)}:{secrets.token_hex(2)}" for _ in range(2))
+    suffix = secrets.token_hex(6)
+    emails = [f"limit-{n}-{suffix}@example.test" for n in range(4)] + [f"other-ip-{suffix}@example.test"]
+
+    def signup(email: str, ip: str, spoofed: str):
+        # [왜] 클라이언트가 앞에 넣은 값(spoofed)이 매번 달라도 마지막 값(Google 프런트엔드가 덧붙인 IP)으로 센다
+        headers = {"origin": "http://testserver", "x-forwarded-for": f"{spoofed}, {ip}"}
+        return TestClient(app).post("/api/auth/signup", headers=headers, json={"email": email, "password": "synthetic-pass-123", "consent": True}).status_code
+
+    try:
+        assert signup(emails[0], ip_a, "192.0.2.1") == 200
+        assert signup(emails[1], ip_a, "192.0.2.2") == 200
+        assert signup(emails[0], ip_a, "192.0.2.3") == 409  # 중복 이메일도 1회로 센다
+        assert signup(emails[3], ip_a, "192.0.2.4") == 429
+        assert signup(emails[4], ip_b, "192.0.2.1") == 200
+        with psycopg.connect(database_url) as conn:
+            created = {row[0] for row in conn.execute("SELECT login_id FROM users WHERE login_id = ANY(%s)", (emails,))}
+        assert created == {emails[0], emails[1], emails[4]}
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+            conn.execute("DELETE FROM auth_signup_attempts WHERE ip_hash = ANY(%s)", ([auth.session_token_hash(ip) for ip in (ip_a, ip_b)],))
+
+
+def test_database_login_ip_limit_blocks_after_thirty_failures_and_window_expires(monkeypatch):
+    import hashlib
+    import os
+    import secrets
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("K_SERVICE", "sojafit-api")
+    ip_a, ip_b = (f"2001:db8::{secrets.token_hex(2)}:{secrets.token_hex(2)}" for _ in range(2))
+    suffix = secrets.token_hex(6)
+    email, password = f"ip-limit-{suffix}@example.test", "not-a-real-password-123"
+    sprayed = [f"spray-{n}-{suffix}@example.test" for n in range(31)]
+    ip_hash = auth.session_token_hash(ip_a)
+    with psycopg.connect(database_url) as conn:
+        conn.execute("INSERT INTO users (login_id, password_hash) VALUES (%s, %s)", (email, auth.hash_password(password)))
+
+    def login(ip: str, login_email: str, secret: str) -> int:
+        # [왜] 앞 값은 클라이언트가 넣은 가짜, 마지막 값이 Cloud Run이 덧붙인 IP다
+        headers = {"origin": "http://testserver", "x-forwarded-for": f"192.0.2.1, {ip}"}
+        return TestClient(app).post("/api/auth/login", headers=headers, json={"email": login_email, "password": secret}).status_code
+
+    def ip_state():
+        with psycopg.connect(database_url) as conn:
+            return conn.execute("SELECT failed_count, locked_until IS NOT NULL FROM auth_login_ip_attempts WHERE ip_hash=%s", (ip_hash,)).fetchone()
+
+    try:
+        # [왜] 30번 모두 다른 이메일로 틀려 계정당 5회 잠금은 걸리지 않고 IP 한도만 닿게 한다(여러 계정 대입)
+        for target in sprayed[:30]:
+            assert login(ip_a, target, "wrong-password") == 401
+        assert ip_state() == (30, True)
+        assert login(ip_a, email, password) == 401  # 31번째는 비밀번호가 맞아도 거절(같은 401)
+        assert login(ip_b, email, password) == 200  # 다른 IP는 막지 않는다
+        assert login(ip_a, email, password) == 401  # 다른 IP의 성공이 A의 잠금·횟수를 되돌리지 않는다
+        assert ip_state() == (30, True)
+        with psycopg.connect(database_url) as conn:
+            # 15분 창과 잠금이 끝난 것처럼 시각을 되돌린다
+            conn.execute("UPDATE auth_login_ip_attempts SET window_started_at = CURRENT_TIMESTAMP - INTERVAL '16 minutes', locked_until = CURRENT_TIMESTAMP - INTERVAL '1 second' WHERE ip_hash=%s", (ip_hash,))
+        assert login(ip_a, sprayed[30], "wrong-password") == 401
+        assert ip_state() == (1, False)  # 창이 끝난 실패는 다음 실패부터 1로 다시 센다
+        assert login(ip_a, email, password) == 200
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id=%s", (email,))
+            conn.execute("DELETE FROM auth_login_attempts WHERE login_hash = ANY(%s)", ([hashlib.sha256(e.encode()).hexdigest() for e in sprayed + [email]],))
+            conn.execute("DELETE FROM auth_login_ip_attempts WHERE ip_hash = ANY(%s)", ([auth.session_token_hash(ip) for ip in (ip_a, ip_b)],))

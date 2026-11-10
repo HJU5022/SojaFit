@@ -18,6 +18,12 @@ STATE = {'question': 'D2를 TSC 1N5819로 바꿔도 돼?',
          'target': 'D2', 'target_part': {'ref': 'D2', 'value': '1N5819', 'footprint': 'SOD-123', 'nets': []},
          'question_type': 'candidate_judge'}
 
+@pytest.fixture(autouse=True)
+def one_read(monkeypatch):
+    """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
+
+
 
 def test_historical_numbers_reach_reader_but_are_not_current_grounding(monkeypatch):
     memory = {'thread_id': 'old', 'version': 1, 'approved_at': '2026-11-09', 'part': '1N5819',
@@ -126,7 +132,7 @@ def test_requirement_inside_the_corpus_is_judged(monkeypatch, extra, facts):
 
 @pytest.mark.parametrize('extra, facts, code', GATE)
 def test_multi_graph_ends_the_gate_report_as_a_refusal(extra, facts, code):
-    """[왜] 판정 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
+    """[왜] 대체 부품 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     from backend.multi_agent import build as B
@@ -159,6 +165,16 @@ def test_json_fragment_in_a_field_is_cut_off():
     assert J.JudgeRead(role='R01', revision_wanted='K2611판', package_wanted='SOD-123F').revision_wanted == 'K2611판'
     assert J.Value(name='temp', quote="25°C','condition':'TA=25°C").quote == '25°C'
     assert J.Value(name='temp', quote='주변 온도는 25°C이다.](condition)').quote == '주변 온도는 25°C이다.'
+
+
+def test_long_prose_in_revision_wanted_is_read_as_no_revision():
+    """[왜] 읽기가 개정 코드 대신 40자 넘는 설명 글을 적어 형식 재시도로 노드가 2~3.6초 늦었다(세 회차 v3 재시도 4번 모두, 사전 등록 #45)."""
+    assert J.JudgeRead(role='R01', revision_wanted='Order code difference (A0G vs R0G); no revision specified.').revision_wanted == ''
+    assert J.JudgeRead(role='R01', revision_wanted='2027 edition').revision_wanted == '2027 edition'
+    # 긴 글 안에 개정 코드가 있으면 그 코드만 남긴다(통째로 버리면 개정판 거절이 빠진다)
+    assert J.JudgeRead(role='R01', revision_wanted='The user requires the datasheet revision K2611 specifically.').revision_wanted == 'K2611'
+    # JSON 조각이 붙어 40자를 넘어도 조각 앞의 개정 코드는 남는다(조각 자르기와 같이 돈다)
+    assert J.JudgeRead(role='R01', revision_wanted="K2611','package_wanted':'SMA (DO-214AC)','category_wanted':'x'").revision_wanted == 'K2611'
 
 
 def test_revision_not_in_the_user_text_and_family_words_do_not_refuse():
@@ -223,9 +239,18 @@ def test_reads_are_merged_by_majority_per_field(monkeypatch):
     def chat(node, system, user, schema):
         calls.append(node)
         return reads[len(calls) % 3]
-    monkeypatch.setenv('LAB_READ_VOTES', '3')
+    monkeypatch.delenv('JUDGE_READ_VOTES', raising=False)  # 서비스 기본은 3번(측정과 같은 구성, 11-10)
     out = J.judge_read_agent({**STATE}, chat=chat)
     assert len(calls) == 3 and out['judge_read']['role'] in ('R22', 'R03')
+    calls.clear()
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')  # 환경값으로 1을 주면 한 번만 읽는다
+    J.judge_read_agent({**STATE}, chat=chat)
+    assert len(calls) == 1
+    calls.clear()
+    monkeypatch.delenv('JUDGE_READ_VOTES')
+    monkeypatch.setenv('LAB_READ_VOTES', '1')  # 예전 이름도 받는다(새 이름이 없을 때만)
+    J.judge_read_agent({**STATE}, chat=chat)
+    assert len(calls) == 1
 
 
 def test_ac_rms_value_implies_ac_input():
@@ -254,7 +279,7 @@ def test_two_agreeing_reads_end_the_vote_early(monkeypatch):
         if len(calls) == 3:
             time.sleep(2)  # 늦은 셋째
         return same
-    monkeypatch.setenv('LAB_READ_VOTES', '3')
+    monkeypatch.setenv('JUDGE_READ_VOTES', '3')
     t = time.perf_counter()
     out = J.judge_read_agent({**STATE}, chat=chat)
     assert out['judge_read']['role'] == 'R01' and time.perf_counter() - t < 1.5
@@ -367,3 +392,37 @@ def test_limit_sentence_in_the_conditions_is_read_when_every_read_missed_it(monk
     state = {**STATE, 'conditions': '전류는 최대 250mA이다. 다이오드 전압강하는 1.8V까지 허용한다.', 'facts': {}, 'judge_read': read.model_dump(mode='json')}
     out = J.judge_agent(state, specs=lambda part, codes=None: rows, find=None, retriever=lambda q, parts=None: [])
     assert any(c['code'] == 'VF' and c['result'] == 'unverified' for c in out['judgement']['results'][0]['checks'])
+
+
+def test_candidate_that_facts_say_is_not_in_the_corpus_is_refused():
+    """[왜] 코퍼스에 없는 1N5408X · UF4007X를 비슷한 품번 문서로 판정해 답했다(#46 v3-32 · 34, 사전 등록 #47). 원래 부품은 거절 이유가 아니다."""
+    facts = {'parts': {'1N5408X': False, '1N4007': True}}
+    assert J.outside_corpus(J.JudgeRead(role='R01', candidates=['TSC 1N5408X']), facts)[0] == J.Reason.PART_MISSING
+    assert J.outside_corpus(J.JudgeRead(role='R01', candidates=['1N4007']), facts) is None
+    assert J.outside_corpus(J.JudgeRead(role='R01', original_part='1N5408X', candidates=['1N4007']), facts) is None
+
+
+def test_judge_report_without_any_judged_candidate_is_a_failure(monkeypatch):
+    """[왜] 판정한 후보가 없는 보고를 일부 답(partial)으로 두면 빈 판정이 답으로 나갔다(#46 v3-31, 사전 등록 #47)."""
+    def agent(kind):
+        return lambda state, **kw: {'judgement': {'kind': kind, 'results': [], 'shown': []}, 'path': ['판정'],
+                                    'reports': [{'status': 'partial', 'summary': '0 candidates judged', 'missing': []}]}
+    state = {'task': {'id': 1}, 'question_type': 'candidate_judge'}
+    for kind, reason in (('no_rule', J.Reason.NOT_FOUND.value), ('judge', J.Reason.NO_RESULT.value)):
+        monkeypatch.setattr(J, 'judge_agent', agent(kind))
+        r = J.judge_task_node(state, specs=None, find=None, retriever=None)['reports'][0]
+        assert (r['status'], r['reason']) == ('fail', reason)
+
+
+def test_vz_window_is_read_only_from_an_explicit_range():
+    """[왜] 구매 규격 '공칭 3.3V, 공차 ±2%'를 vz_min · vz_max = 3.3으로 읽어 3.3V 제너가 모두 불충족이 됐다(v3-13, 사전 등록 #48)."""
+    kinds = C.inputs(RULES['R04'])
+    text = '공칭 제너 전압 3.3V, 공차 ±2%. 다른 보드는 제너 전압 3.42~3.78V 범위를 쓴다.'
+    nominal = J.JudgeRead(role='R04', values=[J.Value(name='vz_min', number=3.3, unit='V', quote='공칭 제너 전압 3.3V, 공차 ±2%'),
+                                              J.Value(name='vz_max', number=3.3, unit='V', quote='공칭 제너 전압 3.3V')])
+    values, _, dropped = J.to_inputs(nominal, text, kinds)
+    assert 'vz_min' not in values and 'vz_max' not in values and {'vz_min', 'vz_max'} <= set(dropped)
+    ranged = J.JudgeRead(role='R04', values=[J.Value(name='vz_min', number=3.42, unit='V', quote='제너 전압 3.42~3.78V'),
+                                             J.Value(name='vz_max', number=3.78, unit='V', quote='제너 전압 3.42~3.78V')])
+    values, _, _ = J.to_inputs(ranged, text, kinds)
+    assert (values['vz_min'], values['vz_max']) == (3.42, 3.78)

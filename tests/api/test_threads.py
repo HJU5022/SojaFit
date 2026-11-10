@@ -1,6 +1,11 @@
-"""격리 PostgreSQL에서 사용자별 업로드·thread·체크포인트·승인 기억을 검증한다."""
+"""격리 PostgreSQL에서 사용자 분석 서비스(`Conversations`)의 thread · 체크포인트 · 예산 · 승인 기록 · 사용자 사실 참고(profile_hints)를 검증한다.
+
+React run · 재개가 거치는 `ensure_thread` · `message` · `resume` · `admission`과, React 대화 HTTP가 이 서비스로 이어지는지 본다.
+React 이전 화면(`/workspace`)의 HTTP 경로 시험은 11-10에 경로와 함께 지웠다. `make_thread`의 `upload` · `create`와 `approve`는
+HTTP 경로가 없는 서비스 메서드로, 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다.
+"""
 import os
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import psycopg
 import pytest
@@ -55,9 +60,12 @@ def runtime(monkeypatch):
         app.close()
         with psycopg.connect(dsn) as conn:
             for user in users:
+                conn.execute('DELETE FROM sojafit_agent.store WHERE prefix LIKE %s', (f'{user}.%',))  # 사용자 사실(namespace 첫 칸 = 사용자)
                 conn.execute('DELETE FROM sojafit_agent.threads WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM sojafit_agent.circuits WHERE user_id=%s', (user,))
                 conn.execute('DELETE FROM public.users WHERE id=%s', (user,))
+            # [왜] 서비스 전체 하루 토큰 카운터는 사용자와 무관한 한 행이다. 격리 시험 DB에서 시험마다 비워 다음 시험이 상한에 걸리지 않게 한다
+            conn.execute("DELETE FROM sojafit_agent.analysis_service_usage WHERE day=(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date")
 
 
 def make_thread(app, user):
@@ -65,81 +73,95 @@ def make_thread(app, user):
     return app.create(user, circuit['id'], 'D1')['id']
 
 
-def test_demo_scenarios_use_real_graph_and_storage_without_external_calls(runtime, monkeypatch):
-    from backend.services import demo, llm
-    from backend.graph.mcp_retriever import StdioMcpRetriever
-    app, (a, b), dsn = runtime
-    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '1')
-    monkeypatch.setenv('OPENROUTER_API_KEY', 'must-not-be-used')
-    monkeypatch.setattr(llm, '_chat_model', lambda *a: pytest.fail('paid model called'))
-    monkeypatch.setattr(StdioMcpRetriever, '__enter__', lambda *a: pytest.fail('external MCP called'))
-    app.graph = app._graph()
-    fixture = demo.configuration()
-    circuit = app.upload(a, 'demo.net', fixture['netlist'])
-    thread = app.create(a, circuit['id'], 'D1')['id']
-    first = app.message(a, thread, fixture['questions']['judge'])
-    assert first['status'] == 'WAITING' and first['mode'] == 'demo'
-    result = app.resume(a, thread, {'v_in_max':'12V', 'i_max':'0.1A', 'v_drop_allowed':'모름'}, '', 1)
-    assert result['can_approve'] and '합성' in result['answer']
-    assert app.approve(a, thread, 1)['ok'] and len(app.memories(a)) == 1
-    with pytest.raises(HTTPException) as error:
-        app.detail(b, thread)
-    assert error.value.status_code == 404 and app.memories(b) == []
-    second = app.create(a, circuit['id'], 'D1')['id']
-    role = app.message(a, second, fixture['questions']['role'])
-    assert role['referenced_memories'] and role['mode'] == 'demo'
-    with pytest.raises(HTTPException) as error:
-        app.message(a, second, '지원하지 않는 질문')
-    assert error.value.status_code == 422 and app.detail(a, second)['version'] == 1
-    with pytest.raises(HTTPException):
-        app.upload(a, 'other.net', NET)
-
-
-def test_demo_mode_is_explicit_and_never_enables_replay_for_real_evaluations(monkeypatch):
+def recorded_demo(monkeypatch, tmp_path, resume):
+    """가짜 데모 기록(calls.jsonl은 비어 있고 outcomes.json에 질문 하나). 회로는 저장소의 데모 보드(breadboard_supply) D1이다."""
+    import json
     from backend.services import demo
-    monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_SCENARIOS', raising=False)
-    assert not demo.enabled()
-    monkeypatch.setenv('DEMO_SCENARIOS', '1'); monkeypatch.setenv('DEMO_MODE', '0')
+    calls, outcomes = tmp_path / 'calls.jsonl', tmp_path / 'outcomes.json'
+    calls.write_text('', encoding='utf-8')
+    question = {'id': 'demo-x', 'kind': '시험', 'circuit': '시험 회로', 'target': 'D1', 'conditions': '', 'question': '조건 질문',
+                'netlist': 'data/circuits/collected/samples/breadboard_supply/converted/circuit.net', 'resume': resume}
+    outcomes.write_text(json.dumps({'questions': [question]}, ensure_ascii=False), encoding='utf-8')
+    monkeypatch.setattr(demo, 'RECORDING', calls)
+    monkeypatch.setattr(demo, 'OUTCOMES', outcomes)
+    return question
+
+
+def test_demo_replay_takes_only_recorded_first_questions_and_recorded_resume(runtime, monkeypatch, tmp_path):
+    """키 없는 데모(DEMO_REPLAY=1): 기록한 회로 · 대상 · 질문만 새 대화의 첫 질문으로 받고, 재개는 기록한 답만 받는다. 기록이 없으면 503."""
+    from backend.services import demo
+    app, (a, _), _ = runtime
+    app.mode = 'demo'  # [왜] 그래프는 가짜(fake_graph)로 두고 서비스의 데모 확인 자리만 본다. 재생 자체는 tests/services/test_demo_replay.py
+    q = recorded_demo(monkeypatch, tmp_path, {'answers': {'VIN_MAX': '12'}, 'role': ''})
+    circuit, thread = demo.connections(q['netlist']), str(uuid4())
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', circuit, 'C1')  # 회로에는 있지만 기록한 대상이 아니다
+    assert error.value.status_code == 422 and '[demo-x]' in error.value.detail
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', circuit, 'D1', question='기록에 없는 질문')  # React run은 스트림 전에 여기서 거른다
+    assert error.value.status_code == 422
+    app.ensure_thread(a, thread, '프로젝트', circuit, 'D1', question='조건 질문')
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, '기록에 없는 질문')
+    assert error.value.status_code == 422 and app.detail(a, thread)['version'] == 0
+    assert app.message(a, thread, '조건 질문')['status'] == 'WAITING'
+    with pytest.raises(HTTPException) as error:
+        app.resume(a, thread, {'VIN_MAX': '15'}, '', 1)  # 기록과 다른 답은 프롬프트가 달라 재생할 수 없다
+    assert error.value.status_code == 422 and 'VIN_MAX=12' in error.value.detail
+    assert app.resume(a, thread, {'VIN_MAX': '12'}, '', 1)['status'] == 'DONE'
+    with pytest.raises(HTTPException) as error:
+        app.message(a, thread, '조건 질문')  # 같은 대화의 두 번째 질문은 '이전 사용자 입력'이 붙어 기록과 다르다
+    assert error.value.status_code == 422 and app.detail(a, thread)['version'] == 1
+    monkeypatch.setattr(demo, 'OUTCOMES', tmp_path / 'missing.json')
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, str(uuid4()), '프로젝트', circuit, 'D1')
+    assert error.value.status_code == 503 and 'recordings' in error.value.detail
+
+
+@pytest.mark.parametrize('mode', ['live', 'demo'])
+def test_graph_uses_card_tools_with_one_chat_and_keeps_their_attributes(monkeypatch, mode):
+    """[왜] 사양 표를 버리고 카드 도구가 기본이다(ADR 0016). timed_tool로 감싸도 판정이 getattr로 찾는 prefetch · also_read가 남아야 한다.
+    데모 재생은 같은 조립에서 chat 하나만 재생 chat으로 바꿔 카드 읽기까지 같은 chat을 쓰고, 기록처럼 Store를 넘기지 않는다."""
+    from contextlib import ExitStack
+    from backend.graph import mcp_retriever
+    from backend.multi_agent import build
+    from backend.rag import card_find, card_specs
+    from backend.services import demo, llm
+
+    class Mcp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def check(self, parts, revisions): return {'parts': {}, 'revisions': {}}
+    def specs(part, codes=None): return ['row']
+    specs.prefetch, specs.doc_rows = (lambda parts, codes: None), (lambda part, codes=None: [])
+    def find(*a, **k): return ['part']
+    find.also_read = lambda codes: None
+    def replay(node, system, user, schema): raise AssertionError('조립만 본다')
+    seen, chats = {}, []
+    monkeypatch.setattr(demo, 'service_chat', lambda: replay)
+    monkeypatch.setattr(mcp_retriever, 'StdioMcpRetriever', Mcp)
+    monkeypatch.setattr(card_specs, 'default_specs', lambda chat=None: chats.append(chat) or specs)
+    monkeypatch.setattr(card_find, 'default_find', lambda chat=None: chats.append(chat) or find)
+    monkeypatch.setattr(build, 'build_graph', lambda **kw: seen.update(kw) or 'graph')
+    app = Conversations.__new__(Conversations)  # [왜] DB 없이 조립만 본다
+    app.mode, app.stack, app.saver, app.store = mode, ExitStack(), None, 'store'
+    assert app._graph() == 'graph'
+    want = replay if mode == 'demo' else llm.node_chat
+    assert seen['chat'] is want and chats == [want, want]
+    assert seen['store'] == (None if mode == 'demo' else 'store')
+    assert seen['specs']('SS34') == ['row'] and seen['specs'].prefetch is specs.prefetch
+    assert seen['find']() == ['part'] and seen['find'].also_read is find.also_read
+
+
+def test_replay_needs_demo_mode_and_demo_mode_alone_keeps_the_real_llm(monkeypatch):
+    from backend.services import demo
+    monkeypatch.setenv('DEMO_MODE', '1'); monkeypatch.delenv('DEMO_REPLAY', raising=False)
+    assert not demo.enabled()  # [왜] DEMO_MODE=1만 켠 평가 · 실제 모델 확인은 실제 LLM을 그대로 쓴다
+    monkeypatch.setenv('DEMO_REPLAY', '1')
+    assert demo.enabled()
+    monkeypatch.setenv('DEMO_MODE', '0')
     with pytest.raises(ValueError):
         demo.enabled()
-
-
-def test_keyless_demo_http_login_to_approval_and_new_thread(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    from backend.services import demo,llm
-    from backend.graph.mcp_retriever import StdioMcpRetriever
-    service,(a,b),dsn=runtime
-    monkeypatch.setenv('DEMO_SCENARIOS','1'); monkeypatch.setenv('DEMO_MODE','1')
-    monkeypatch.setenv('DATABASE_URL',dsn); monkeypatch.setenv('AUTH_ORIGIN','http://testserver')
-    monkeypatch.setenv('AUTH_SECRET','isolated-demo-http-test-secret-32-bytes')
-    monkeypatch.setattr(llm,'_chat_model',lambda *a:pytest.fail('paid model called'))
-    monkeypatch.setattr(StdioMcpRetriever,'__enter__',lambda *a:pytest.fail('external MCP called'))
-    service.graph=service._graph()
-    monkeypatch.setattr(api.state,'conversations',service,raising=False)
-    clients=[TestClient(api),TestClient(api)]
-    with psycopg.connect(dsn) as conn:
-        for uid,client in zip((a,b),clients):
-            email=conn.execute('UPDATE public.users SET password_hash=%s WHERE id=%s RETURNING login_id',
-                (auth.hash_password('synthetic-demo-test-password'),uid)).fetchone()[0]
-            conn.commit()
-            assert client.post('/api/auth/login',headers={'Origin':'http://testserver'},json={'email':email,'password':'synthetic-demo-test-password'}).status_code==200
-    origin={'Origin':'http://testserver'}; client,other=clients
-    def post(path,body):
-        response=client.post(path,headers=origin,json=body); assert response.status_code==200,response.text; return response.json()
-    config=client.get('/api/analysis/demo').json(); assert config['enabled']
-    circuit=post('/api/circuits',{'filename':'demo.net','netlist':config['netlist']})['id']
-    thread=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
-    assert post(f'/api/threads/{thread}/messages',{'text':config['questions']['judge']})['interrupt']
-    assert post(f'/api/threads/{thread}/resume',{'version':1,'answers':{'v_in_max':'12V','i_max':'0.1A','v_drop_allowed':'모름'}})['can_approve']
-    post(f'/api/threads/{thread}/approve',{'version':1})
-    assert other.get(f'/api/threads/{thread}').status_code==404 and other.get('/api/memories').json()==[]
-    new=post('/api/threads',{'circuit_id':circuit,'target':'D1'})['id']
-    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['referenced_memories']
-    post(f'/api/memories/{thread}/1/control',{'action':'revoke'})
-    assert not post(f'/api/threads/{new}/messages',{'text':config['questions']['role']})['consulted_memories']
-    assert post(f'/api/threads/{new}/messages',{'text':config['questions']['refuse']})['can_approve'] is False
 
 
 def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime, monkeypatch):
@@ -159,35 +181,7 @@ def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime
         app.detail(b, thread)
 
 
-def test_memory_controls_preserve_approval_and_block_restore_after_delete(runtime):
-    app, (a, b), dsn = runtime
-    thread = make_thread(app, a)
-    app.message(a, thread, '판정'); app.approve(a, thread, 1)
-    original = app.memories(a)[0]['judgement']
-    with pytest.raises(HTTPException) as error:
-        app.control_memory(b, thread, 1, 'revoke', '')
-    assert error.value.status_code == 404
-    app.control_memory(a, thread, 1, 'correct', '조건 12V는 측정 전 추정값')
-    assert app.memories(a)[0]['correction'] == '조건 12V는 측정 전 추정값'
-    assert app.memories(a)[0]['judgement'] == original
-    app.control_memory(a, thread, 1, 'revoke', '')
-    assert app.memories(a) == [] and app.detail(a, thread)['approvals'][0]['memory_state'] == 'revoked'
-    with pytest.raises(HTTPException):
-        app.approve(a, thread, 1)
-    app.control_memory(a, thread, 1, 'restore', '')
-    assert len(app.memories(a)) == 1
-    app.control_memory(a, thread, 1, 'delete', '')
-    assert app.memories(a) == [] and not app.store.get(('memories',str(a)), f'{thread}:1')
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'deleted'
-    for call in (lambda:app.approve(a, thread, 1), lambda:app.control_memory(a,thread,1,'restore','')):
-        with pytest.raises(HTTPException) as error:
-            call()
-        assert error.value.status_code == 409
-    with psycopg.connect(dsn) as conn:
-        assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()[0]['judgement'] == original
-
-
-def test_revoked_memory_in_interrupted_checkpoint_is_not_sent_on_resume(runtime):
+def test_approved_cases_are_not_sent_to_new_analysis_or_resume(runtime):
     from backend.graph.memory import memory_context, memory_sources
     app, (a, _), _ = runtime
     original = make_thread(app, a); app.message(a, original, '판정'); app.approve(a, original, 1)
@@ -200,46 +194,9 @@ def test_revoked_memory_in_interrupted_checkpoint_is_not_sent_on_resume(runtime)
     graph.add_edge(START,'read'); graph.add_edge('read','work'); graph.add_edge('work',END)
     app.graph = graph.compile(checkpointer=app.saver, store=app.store)
     thread = make_thread(app, a); app.message(a, thread, '조건 질문')
-    assert app.graph.get_state(app.config(thread)).values['approved_memories']
-    app.control_memory(a, original, 1, 'revoke', '')
+    assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
     app.resume(a, thread, {'VIN_MAX':'12'}, '', 1)
-    assert seen == [('',set())]
-
-
-def test_store_delete_failure_still_blocks_memory_and_repeated_delete_cleans_up(runtime, monkeypatch):
-    app, (a, _), _ = runtime
-    thread=make_thread(app,a); app.message(a,thread,'판정'); app.approve(a,thread,1)
-    delete=app.store.delete
-    monkeypatch.setattr(app.store,'delete',lambda *a,**k: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.control_memory(a,thread,1,'delete','')
-    assert error.value.status_code==503 and app.memories(a)==[]
-    monkeypatch.setattr(app.store,'delete',delete)
-    app.control_memory(a,thread,1,'delete','')
-    assert not app.store.get(('memories',str(a)),f'{thread}:1')
-
-
-def test_memory_control_http_checks_origin_owner_and_payload(runtime,monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    service,(a,b),_=runtime
-    thread=make_thread(service,a); service.message(a,thread,'판정'); service.approve(a,thread,1)
-    monkeypatch.setenv('AUTH_ORIGIN','http://localhost:8000')
-    monkeypatch.setattr(api.state,'conversations',service,raising=False)
-    api.dependency_overrides[auth.current_user_id]=lambda:a
-    try:
-        client=TestClient(api); url=f'/api/memories/{thread}/1/control'; body={'action':'correct','correction':'<script>untrusted</script>'}
-        assert client.post(url,json=body,headers={'Origin':'https://evil.example'}).status_code==403
-        origin={'Origin':'http://localhost:8000'}
-        assert client.post(url,json={**body,'user_id':a},headers=origin).status_code==422
-        assert client.post(url,json={**body,'correction':'x'*1001},headers=origin).status_code==422
-        assert client.post(url,json=body,headers=origin).status_code==200
-        api.dependency_overrides[auth.current_user_id]=lambda:b
-        assert client.post(url,json={'action':'delete'},headers=origin).status_code==404
-        assert client.get('/api/memories').json()==[]
-    finally:
-        api.dependency_overrides.clear()
+    assert seen == [('',set())] and len(app.memories(a)) == 1
 
 
 def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
@@ -251,14 +208,71 @@ def test_readiness_checks_current_schema_and_permissions(runtime, monkeypatch):
         app.readiness()
 
 
+def test_react_thread_maps_to_one_owned_analysis_thread_with_fixed_target(runtime):
+    """React 정규화 회로(parts)로 같은 UUID의 분석 thread를 만들고, 대상 고정 · 소유권 · 원본 미저장을 지킨다."""
+    app, (a, b), dsn = runtime
+    thread = str(uuid4())
+    react = {'parts': [{'ref': 'D1', 'value': 'SS34', 'footprint': ''}, {'ref': 'D2', 'value': 'SS14', 'footprint': ''}],
+             'nets': [{'code': '1', 'name': 'VCC', 'nodes': [{'ref': 'D1', 'pin': '1'}, {'ref': 'D2', 'pin': '1'}]}]}
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', react, 'U9')
+    assert error.value.status_code == 422
+    for _ in range(2):  # 같은 대상의 다음 run은 행을 더 만들지 않는다
+        app.ensure_thread(a, thread, '프로젝트', react, 'D1')
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(a, thread, '프로젝트', react, 'D2')
+    assert error.value.status_code == 409 and error.value.detail == '대상 부품을 바꾸려면 새 대화를 시작하세요.'
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(b, thread, '프로젝트', react, 'D1')
+    assert error.value.status_code == 404
+    result = app.message(a, thread, '판정')
+    assert result['status'] == 'DONE' and result['can_approve']
+    with psycopg.connect(dsn) as conn:
+        rows = conn.execute('SELECT c.id, c.netlist, c.connections FROM sojafit_agent.circuits c WHERE c.user_id=%s', (a,)).fetchall()
+    assert rows == [(UUID(thread), '', {'components': react['parts'], 'nets': react['nets']})]
+
+
+def test_react_run_and_resume_go_through_analysis_service(runtime, monkeypatch):
+    """React run · 재개 HTTP가 실제 분석 서비스(가짜 그래프)의 checkpoint · 버전으로 이어진다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.api.conversations import repository
+    from backend.main import app as api
+    app, (a, _), _ = runtime
+    thread, run, saved = str(uuid4()), str(uuid4()), {}
+    class Repo:
+        def get_thread(self, user, thread_id):
+            return thread_id, 1, {'parts': [{'ref': 'D1', 'value': 'SS34'}], 'nets': [{'code': '1', 'name': 'VCC', 'nodes': [{'ref': 'D1', 'pin': '1'}]}]}, 'react'
+        def start(self, user, thread_id, data): return run, {}
+        def get_run(self, user, run_id): return {'id': run, 'thread_id': thread, 'status': saved['status'], 'safe_result': saved['result']}
+        def resume(self, *args): pass
+        def finish(self, user, thread_id, run_id, status, result): saved.update(status=status, result=result)
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    api.state.conversations = app
+    api.dependency_overrides[auth.current_user_id] = lambda: a
+    api.dependency_overrides[repository] = lambda: Repo()
+    origin = {'Origin': 'http://localhost:8000'}
+    try:
+        with TestClient(api) as client:
+            first = client.post(f'/api/threads/{thread}/runs', headers=origin, json={'question': '조건 질문', 'target_ref': 'D1'})
+            assert 'event: requires_input' in first.text and saved['result']['interrupt']['missing'] == ['VIN_MAX']
+            done = client.post(f'/api/runs/{run}/resume', headers=origin, json={'answers': {'VIN_MAX': '12'}})
+            assert 'event: completed' in done.text and saved['result']['answer'] == '역할상 충분 [1]'
+    finally:
+        api.dependency_overrides.clear()
+        del api.state.conversations
+    detail = app.detail(a, thread)
+    assert detail['version'] == 1 and detail['can_approve']
+
+
 def test_other_user_cannot_access_circuit_thread_resume_or_approval(runtime):
     app, (a, b), _ = runtime
     circuit = app.upload(a, 'my.net', NET)
     thread = app.create(a, circuit['id'], 'D1')['id']
-    assert app.circuits(b) == [] and app.threads(b) == []
+    assert app.threads(b) == []
     for call in (lambda: app.create(b, circuit['id'], 'D1'), lambda: app.detail(b, thread),
                  lambda: app.message(b, thread, '판정해줘'), lambda: app.resume(b, thread, {}, '', 0),
-                 lambda: app.approve(b, thread, 0), lambda: app.retry(b, thread, 0)):
+                 lambda: app.approve(b, thread, 0)):
         with pytest.raises(HTTPException) as error:
             call()
         assert error.value.status_code == 404
@@ -305,17 +319,13 @@ def test_approval_is_owned_versioned_and_idempotent(runtime):
     assert app.memories(a)[0]['judgement']['shown'][0]['part'] == 'SS34'
 
 
-def test_store_failure_can_be_retried_without_losing_approval(runtime, monkeypatch):
+def test_approval_keeps_original_without_store_copy(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
     version = app.message(a, thread, '판정')['version']
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.approve(a, thread, version)
-    assert error.value.status_code == 503
-    monkeypatch.setattr(app.store, 'put', put)
-    app.approve(a, thread, version)
+    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: pytest.fail('approved case written to Store'))
+    monkeypatch.setattr(app.store, 'batch', lambda *args, **kwargs: pytest.fail('approved case written to Store'))
+    assert app.approve(a, thread, version)['ok']
     assert len(app.memories(a)) == 1
 
 
@@ -336,43 +346,31 @@ def test_approval_snapshot_preserves_final_conditions_and_is_immutable(runtime):
         assert conn.execute('SELECT snapshot FROM sojafit_agent.approvals WHERE thread_id=%s AND version=1', (thread,)).fetchone()[0] == snapshot
 
 
-def test_old_approval_exposes_pending_state_and_can_recover_from_detail(runtime, monkeypatch):
+def test_approval_history_shows_status_and_input_record(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
     app.message(a, thread, '판정')
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException):
-        app.approve(a, thread, 1)
-    monkeypatch.setattr(app.store, 'put', put)
+    app.approve(a, thread, 1)
     app.message(a, thread, '다른 질문')
+    monkeypatch.setattr(app.store, 'get', lambda *args: pytest.fail('approval state read from Store'))
     row = app.detail(a, thread)['approvals'][0]
-    assert row['version'] == 1 and row['memory_state'] == 'pending'
+    assert row['version'] == 1 and row['memory_state'] == 'active'
     assert row['input_record']['question'] == '판정'
     assert app.approve(a, thread, row['version'])['ok']
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'stored'
-    monkeypatch.setattr(app.store, 'get', lambda *args: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    assert app.detail(a, thread)['approvals'][0]['memory_state'] == 'unknown'
 
 
 @pytest.mark.parametrize('legacy_snapshot', [False, True])
-def test_old_approval_store_recovers_after_new_question(runtime, monkeypatch, legacy_snapshot):
+def test_old_approval_is_idempotent_after_new_question(runtime, legacy_snapshot):
     app, (a, b), dsn = runtime
     thread = make_thread(app, a)
     version = app.message(a, thread, '판정')['version']
-    put = app.store.put
-    monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-    with pytest.raises(HTTPException) as error:
-        app.approve(a, thread, version)
-    assert error.value.status_code == 503
+    app.approve(a, thread, version)
     with psycopg.connect(dsn) as conn:
         if legacy_snapshot:
             conn.execute("UPDATE sojafit_agent.approvals SET snapshot=snapshot-'part' WHERE thread_id=%s", (thread,))
         original = conn.execute('SELECT snapshot,approved_at FROM sojafit_agent.approvals WHERE thread_id=%s', (thread,)).fetchone()
         if not legacy_snapshot:
             assert original[0]['part'] == 'SS34'
-    monkeypatch.setattr(app.store, 'put', put)
-    assert app.memories(a) == []
     assert app.message(a, thread, '거절')['version'] == version + 1
     # 현재 상태의 품번을 복구 원본으로 잘못 쓰지 않는지 확인한다.
     app.graph.update_state(app.config(thread), {'target_part': {'value': 'DIFFERENT'}})
@@ -401,88 +399,31 @@ def test_unapproved_old_version_still_cannot_be_approved(runtime):
     assert app.memories(a) == []
 
 
-def test_http_recovers_old_approval_after_new_question(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, _), _ = runtime
-    thread = make_thread(app, a)
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    api.state.conversations = app
-    api.dependency_overrides[auth.current_user_id] = lambda: a
-    client = TestClient(api)
-    origin = {'Origin': 'http://localhost:8000'}
-    try:
-        version = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '판정'}).json()['version']
-        put = app.store.put
-        monkeypatch.setattr(app.store, 'put', lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('synthetic')))
-        assert client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version}).status_code == 503
-        monkeypatch.setattr(app.store, 'put', put)
-        newer = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '거절'})
-        assert newer.status_code == 200 and newer.json()['version'] == version + 1
-        recovered = client.post(f'/api/threads/{thread}/approve', headers=origin, json={'version': version})
-        assert recovered.status_code == 200 and recovered.json() == {'ok': True, 'version': version}
-        memories = client.get('/api/memories').json()
-        assert len(memories) == 1 and memories[0]['version'] == version and memories[0]['part'] == 'SS34'
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
-
-
-def test_new_threads_pass_only_owned_approved_memories_to_models(runtime, monkeypatch):
+def test_new_threads_send_no_approved_cases_to_models(runtime, monkeypatch):
+    """[왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09). 새 분석의 모델 입력에 어느 사용자 사례도 들어가지 않는다."""
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
     from backend.services import llm
-    app, (a, b), dsn = runtime
-    sources = {}
+    app, (a, b), _ = runtime
     for user, marker in ((a, 'PRIVATE_A_CASE'), (b, 'PRIVATE_B_CASE')):
         thread = make_thread(app, user)
         app.message(user, thread, '판정', conditions='과거 조건 12V')
         app.graph.update_state(app.config(thread), {'answer': marker})
         app.approve(user, thread, 1)
-        sources[user] = thread
-    # 같은 사용자의 무관 품번과, 자기 namespace에 잘못 들어간 타인 포인터도 제외한다.
-    unrelated = app.upload(a, 'other.net', NET.replace('SS34', '1N4148'))
-    unrelated_thread = app.create(a, unrelated['id'], 'D1')['id']
-    app.message(a, unrelated_thread, '판정')
-    app.graph.update_state(app.config(unrelated_thread), {'answer': 'UNRELATED_CASE'})
-    app.approve(a, unrelated_thread, 1)
-    from backend.graph.memory import namespace
-    app.store.put(namespace(str(a)), 'foreign-pointer', {'thread_id': sources[b], 'version': 1,
-                  'part': 'SS34', 'roles': [], 'summary': 'FORGED_CASE'})
-    calls = []
+    prompts = []
     def chat(node, system, user, schema, **kwargs):
-        calls.append((node, system, user))
+        prompts.append(user)
         if node == 'supervisor':
-            return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain prior case')])
-        assert node == 'docs_answer'
-        marker = 'PRIVATE_A_CASE' if 'PRIVATE_A_CASE' in user else 'PRIVATE_B_CASE' if 'PRIVATE_B_CASE' in user else 'NO_MEMORY'
-        refs = [f'승인사례:{sources[owner]}:1'] if marker != 'NO_MEMORY' else []
-        return schema(grade='enough', answer=f'{marker} 사례를 참고하되 현재 회로에서 다시 확인합니다 [넷리스트].', memory_refs=refs)
+            return Plan(next='tasks', question_type='role', tasks=[Task(id=1, agent='docs', kind='role', goal='explain role')])
+        return schema(grade='enough', answer='현재 회로에서 다시 확인합니다 [넷리스트].', memory_refs=[])
     monkeypatch.setattr(llm, 'node_chat', chat)
     app.graph = build_graph(chat=chat, retriever=lambda *args, **kwargs: [], checkpointer=app.saver, store=app.store)
-    for owner, own, foreign in ((a, 'PRIVATE_A_CASE', 'PRIVATE_B_CASE'), (b, 'PRIVATE_B_CASE', 'PRIVATE_A_CASE')):
-        calls.clear()
-        thread = make_thread(app, owner)
-        result = app.message(owner, thread, 'D1 역할과 과거 사례를 설명해줘')
-        assert own in result['answer'] and foreign not in result['answer']
-        assert result['referenced_memories'][0]['thread_id'] == sources[owner]
-        assert result['consulted_memories'] == result['referenced_memories']
-        assert {c[0] for c in calls} == {'supervisor', 'docs_answer'}
-        for _, system, prompt in calls:
-            assert own in prompt and foreign not in prompt and '과거 조건 12V' in prompt
-            assert 'UNRELATED_CASE' not in prompt and 'FORGED_CASE' not in prompt
-            assert sources[owner] in prompt and 'historical' in system.lower()
-        state = app.graph.get_state(app.config(thread)).values
-        assert len(state['approved_memories']) == 1
-        assert state['approved_memories'][0]['thread_id'] == sources[owner]
-        # 사용자 소유권을 확인할 수 없는 Store 항목과 무관 품번은 모델에 전달하지 않는다.
-        with psycopg.connect(dsn) as conn:
-            conn.execute('DELETE FROM sojafit_agent.approvals WHERE thread_id=%s', (sources[owner],))
-        calls.clear()
-        assert 'NO_MEMORY' in app.message(owner, thread, '다시 설명해줘')['answer']
-        assert all(own not in prompt and foreign not in prompt for _, _, prompt in calls)
-        assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
+    thread = make_thread(app, a)
+    result = app.message(a, thread, 'D1 역할과 과거 사례를 설명해줘')
+    assert prompts and all('PRIVATE_' not in prompt and '과거 조건 12V' not in prompt for prompt in prompts)
+    assert result['consulted_memories'] == result['referenced_memories'] == []
+    assert app.graph.get_state(app.config(thread)).values['approved_memories'] == []
+    assert len(app.memories(a)) == 1 and len(app.memories(b)) == 1
 
 
 def test_thread_lock_rejects_concurrent_write_and_refusal_cannot_be_approved(runtime):
@@ -520,6 +461,89 @@ def test_daily_reservations_are_atomic_across_requests_and_users(runtime, monkey
     with psycopg.connect(dsn) as conn:
         rows = conn.execute('SELECT reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id IN (%s,%s)', (a, b)).fetchall()
     assert len(rows) == 2 and all(0 < float(row[0]) <= 0.03 for row in rows)
+
+
+def test_daily_token_caps_per_user_and_service_reject_before_external_call(runtime, monkeypatch):
+    """하루 토큰 상한(사용자 200,000 · 서비스 2,000,000): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.api.conversations import repository
+    from backend.conversations import memory_service as ms
+    from backend.main import app as api
+    from backend.services import llm
+    app, (a, b), dsn = runtime
+    external, per_call = [], 100 + ms.TOKEN_MARGIN + 50
+    def node(state):
+        for _ in range(2):
+            llm._evaluation_budget.get().reserve('x' * 100, output_tokens=50)
+            external.append(state['question'])  # 실제 모델 호출 자리. 예약이 막히면 여기에 오지 않는다
+        return {'answer': '역할상 충분 [1]', 'judgement': {}}
+    graph = StateGraph(AgentState)
+    graph.add_node('read', read_input)
+    graph.add_node('call', node)
+    graph.add_edge(START, 'read')
+    graph.add_edge('read', 'call')
+    graph.add_edge('call', END)
+    app.graph = graph.compile(checkpointer=app.saver)
+    today = "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date"
+    def usage(user):
+        with psycopg.connect(dsn) as conn:
+            return conn.execute(f'SELECT reserved_tokens,reserved_usd FROM sojafit_agent.analysis_usage WHERE user_id=%s AND day={today}', (user,)).fetchone()
+    def service(value=None):
+        with psycopg.connect(dsn) as conn:
+            if value is not None:
+                conn.execute(f'INSERT INTO sojafit_agent.analysis_service_usage(day,reserved_tokens) VALUES ({today},%s) '
+                             'ON CONFLICT(day) DO UPDATE SET reserved_tokens=EXCLUDED.reserved_tokens', (value,))
+            return conn.execute(f'SELECT reserved_tokens FROM sojafit_agent.analysis_service_usage WHERE day={today}').fetchone()[0]
+    def refused(user, question, text):
+        with pytest.raises(HTTPException) as error:
+            app.message(user, make_thread(app, user), question)
+        assert error.value.status_code == 429 and text in error.value.detail
+
+    # 정상: 호출 2번의 예약 토큰이 사용자 · 서비스 행에 같게 쌓이고, USD 예약은 같은 위쪽 경계(입력 바이트 + 여유)로 계산된다
+    before = service(0)
+    assert app.message(b, make_thread(app, b), '정상')['status'] == 'DONE'
+    tokens, usd = usage(b)
+    assert tokens == 2 * per_call and service() == before + 2 * per_call
+    assert abs(float(usd) - 2 * ((per_call - 50) * 0.000003 + 50 * 0.000015)) < 1e-9
+
+    # 사용자 상한: 한 번 자리만 남으면 첫 호출만 나가고 둘째는 호출 전 429, 서비스 행은 첫 호출만큼만 오른다
+    with psycopg.connect(dsn) as conn:
+        conn.execute(f"INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed,reserved_tokens) VALUES (%s,{today},CURRENT_TIMESTAMP,%s)",
+                     (a, ms.USER_DAILY_TOKENS - per_call))
+    before, external[:] = service(), []
+    refused(a, '사용자 상한 도중', '200,000 토큰')
+    assert external == ['사용자 상한 도중'] and usage(a)[0] == ms.USER_DAILY_TOKENS and service() == before + per_call
+    refused(a, '사용자 상한 입장', '200,000 토큰')  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
+    assert external == ['사용자 상한 도중'] and app.threads(a)[0]['version'] == 0
+    app.admission(b)  # 다른 사용자는 막지 않는다
+
+    # 서비스 상한: 사용자 자리는 있어도 서비스 행이 넘치면 429이고, 그 호출의 사용자 행 차감도 되돌린다
+    service(ms.SERVICE_DAILY_TOKENS - per_call - 100)
+    mine = usage(b)[0]
+    refused(b, '서비스 상한 도중', '2,000,000 토큰')
+    assert external[-1] == '서비스 상한 도중' and external.count('서비스 상한 도중') == 1
+    assert usage(b)[0] == mine + per_call and service() == ms.SERVICE_DAILY_TOKENS - 100
+    refused(b, '서비스 상한 입장', '2,000,000 토큰')
+    assert '서비스 상한 입장' not in external
+
+    # React run은 스트림 · run 행 전에 공통 오류 429로 끝난다
+    class Repo:
+        def __getattr__(self, name):
+            pytest.fail('token cap must refuse before the repository is used')
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    api.state.conversations = app
+    api.dependency_overrides[auth.current_user_id] = lambda: b
+    api.dependency_overrides[repository] = lambda: Repo()
+    try:
+        with TestClient(api) as client:
+            response = client.post(f'/api/threads/{uuid4()}/runs', headers={'Origin': 'http://localhost:8000'},
+                                   json={'question': '서비스 상한 React', 'target_ref': 'D1'})
+    finally:
+        api.dependency_overrides.clear()
+        del api.state.conversations
+    assert response.status_code == 429 and response.json()['error']['code'] == 'LIMIT_EXCEEDED'
+    assert '2,000,000 토큰' in response.json()['error']['message']
 
 
 def test_rate_limit_rejects_before_changing_thread_version(runtime, monkeypatch):
@@ -602,7 +626,7 @@ def test_dump_restore_preserves_owned_memory_and_pending_resume(runtime):
                 with pytest.raises(HTTPException) as error:
                     copy.detail(b, approved)
                 assert error.value.status_code == 404
-                assert copy.detail(a, approved)['approvals'][0]['memory_state'] == 'stored'
+                assert copy.detail(a, approved)['approvals'][0]['memory_state'] == 'active'
                 assert copy.detail(a, waiting)['status'] == 'WAITING'
                 assert copy.resume(a, waiting, {'VIN_MAX':'12'}, '', 1)['status'] == 'DONE'
                 copy.approve(a, waiting, 1)
@@ -616,7 +640,6 @@ def test_dump_restore_preserves_owned_memory_and_pending_resume(runtime):
 
 
 def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
-    import json
     from backend.services import llm
     app, (a, _), _ = runtime
     def expire(state):
@@ -639,13 +662,12 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
         app.approve(a,thread,1)
     assert denied.value.status_code==409
     assert error.value.status_code == 504
-    record = next(r for r in caplog.records if r.name == 'backend.conversations')
-    metadata = json.loads(record.message)
-    assert metadata['request_id'] == 'synthetic-request-id' and metadata['error_type'] == 'EvaluationLimitError'
-    assert 'PRIVATE_CONDITION' not in record.message
+    record = next(r for r in caplog.records if r.name == 'backend.conversations' and r.getMessage() == 'analysis_failed')
+    assert record.request_id == 'synthetic-request-id' and record.error_type == 'EvaluationLimitError'
+    assert 'PRIVATE_CONDITION' not in str(vars(record))
 
 
-def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runtime):
+def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime):
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
     app, (a, _), dsn = runtime
@@ -656,7 +678,7 @@ def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runti
     calls = []
     def chat(node, system, user, schema):
         calls.append(node)
-        assert 'MEMORY_FOR_JUDGE' in user
+        assert 'MEMORY_FOR_JUDGE' not in user
         if node == 'supervisor':
             return Plan(next='tasks', question_type='candidate_judge', tasks=[
                 Task(id=1, agent='judge', kind='candidate_judge', goal='judge SS34')])
@@ -684,102 +706,6 @@ def test_planned_judge_subgraph_preserves_memory_and_resumes_from_postgres(runti
         reopened.close()
 
 
-def test_http_flow_uses_session_owner_and_rejects_state_injection(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, b), _ = runtime
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    api.state.conversations = app
-    client = TestClient(api)
-    origin = {'Origin': 'http://localhost:8000'}
-    try:
-        assert client.get('/api/threads').status_code == 401
-        api.dependency_overrides[auth.current_user_id] = lambda: a
-        response = client.post('/api/circuits', headers=origin, json={'filename': 'my.net', 'netlist': NET})
-        assert response.status_code == 200
-        circuit = response.json()['id']
-        created = client.post('/api/threads', headers=origin, json={'circuit_id': circuit, 'target': 'D1'})
-        thread = created.json()['id']
-        injected = client.post(f'/api/threads/{thread}/messages', headers=origin,
-                               json={'text': 'test', 'user_id': b, 'netlist_path': '.env'})
-        assert injected.status_code == 422
-        result = client.post(f'/api/threads/{thread}/messages', headers=origin, json={'text': '넷리스트: .env\n대상: D999\nSS34 판정'})
-        assert result.status_code == 200 and result.json()['target'] == 'D1'
-        assert result.headers['cache-control'] == 'no-store'
-        assert client.post(f'/api/threads/{thread}/approve', headers={'Origin': 'https://wrong.example'},
-                           json={'version': result.json()['version']}).status_code == 403
-        api.dependency_overrides[auth.current_user_id] = lambda: b
-        assert client.get(f'/api/threads/{thread}').status_code == 404
-        assert client.get('/api/memories').json() == []
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
-
-
-def test_react_login_and_legacy_workspace_are_both_available():
-    from fastapi.testclient import TestClient
-    from backend.main import app
-    client = TestClient(app)
-    login = client.get('/login')
-    assert login.status_code == 200
-    assert '<div id="root"></div>' in login.text or 'href="/workspace"' in login.text
-    workspace = client.get('/workspace')
-    assert workspace.status_code == 200
-    html = workspace.text
-    for expected in ('id="netlist"', 'id="target"', 'id="messages"', 'id="approve"', 'id="memories"'):
-        assert expected in html
-    assert 'localStorage' not in html and 'innerHTML' not in html
-    assert 'data.error?.message' in html
-    assert '기억 저장 다시 시도' in html and "dataset.approvalVersion" in html
-    assert 'referenced_memories' in html and 'consulted_memories' in html
-
-
-def test_thread_database_error_uses_common_error_envelope(runtime, monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app as api
-    app, (a, _), _ = runtime
-    api.state.conversations = app
-    api.dependency_overrides[auth.current_user_id] = lambda: a
-    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    monkeypatch.setattr(app, 'upload', lambda *args: (_ for _ in ()).throw(psycopg.OperationalError('private-db-detail')))
-    try:
-        response = TestClient(api).post('/api/circuits', headers={'Origin': 'http://localhost:8000'},
-                                        json={'filename': 'my.net', 'netlist': NET})
-        assert response.status_code == 503 and response.headers['cache-control'] == 'no-store'
-        assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
-        assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
-        assert 'private-db-detail' not in response.text
-    finally:
-        api.dependency_overrides.clear()
-        del api.state.conversations
-
-
-def test_failed_node_can_retry_its_saved_execution(runtime):
-    app, (a, _), _ = runtime
-    attempts = []
-    def sometimes(state):
-        attempts.append(1)
-        if len(attempts) == 1:
-            raise RuntimeError('synthetic transient model failure')
-        return {'answer': '복구됨', 'judgement': {'roles': ['REVERSE_POLARITY'], 'shown': [{'part': 'SS34'}]}}
-    graph = StateGraph(AgentState)
-    graph.add_node('judge', sometimes)
-    graph.add_edge(START, 'judge')
-    graph.add_edge('judge', END)
-    app.graph = graph.compile(checkpointer=app.saver, store=app.store)
-    thread = make_thread(app, a)
-    with pytest.raises(HTTPException) as error:
-        app.message(a, thread, '판정')
-    assert error.value.status_code == 503
-    detail = app.detail(a, thread)
-    assert detail['can_retry'] and not detail['interrupt']
-    recovered = app.retry(a, thread, detail['version'])
-    assert recovered['answer'] == '복구됨' and recovered['can_approve']
-    assert len([m for m in recovered['messages'] if m['role'] == 'user']) == 1
-
-
 def test_completed_checkpoint_reconciles_failed_metadata_without_duplicate_answer(runtime, monkeypatch):
     app, (a, _), _ = runtime
     thread = make_thread(app, a)
@@ -800,27 +726,9 @@ def test_completed_checkpoint_reconciles_failed_metadata_without_duplicate_answe
     assert app.approve(a, thread, detail['version'])['ok']
 
 
-def test_retry_limit_and_private_schema_permissions(runtime):
+def test_private_schema_is_closed_to_other_roles(runtime):
     from psycopg import sql
-    app, (a, _), dsn = runtime
-    def fail(state):
-        raise RuntimeError('synthetic persistent failure')
-    graph = StateGraph(AgentState)
-    graph.add_node('fail', fail)
-    graph.add_edge(START, 'fail')
-    graph.add_edge('fail', END)
-    app.graph = graph.compile(checkpointer=app.saver)
-    thread = make_thread(app, a)
-    with pytest.raises(HTTPException):
-        app.message(a, thread, '판정')
-    for _ in range(2):
-        with pytest.raises(HTTPException) as error:
-            app.retry(a, thread, 1)
-        assert error.value.status_code == 503
-    assert not app.detail(a, thread)['can_retry']
-    with pytest.raises(HTTPException) as error:
-        app.retry(a, thread, 1)
-    assert error.value.status_code == 409
+    _, _, dsn = runtime
     with psycopg.connect(dsn) as conn:
         role = 'probe_' + uuid4().hex
         conn.execute(sql.SQL('CREATE ROLE {} NOLOGIN').format(sql.Identifier(role)))
@@ -829,23 +737,6 @@ def test_retry_limit_and_private_schema_permissions(runtime):
         with pytest.raises(psycopg.errors.InsufficientPrivilege), conn.transaction():
             conn.execute('SELECT * FROM sojafit_agent.threads')
         conn.rollback()
-
-
-def test_http_body_size_and_resume_values_are_bounded(monkeypatch):
-    from fastapi.testclient import TestClient
-    from backend import auth
-    from backend.main import app
-    client = TestClient(app)
-    try:
-        app.dependency_overrides[auth.current_user_id] = lambda: 1
-        monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-        response = client.post('/api/circuits', content=b'x' * (7 * 1024 * 1024 + 1))
-        assert response.status_code == 413 and response.headers['cache-control'] == 'no-store'
-        response = client.post(f'/api/threads/{uuid4()}/resume', headers={'Origin': 'http://localhost:8000'},
-                               json={'version': 1, 'answers': {'VIN_MAX': 'x' * 201}})
-        assert response.status_code == 422
-    finally:
-        app.dependency_overrides.clear()
 
 
 def test_enabled_app_lifespan_opens_and_closes_real_persistence(runtime, monkeypatch):
@@ -860,3 +751,108 @@ def test_enabled_app_lifespan_opens_and_closes_real_persistence(runtime, monkeyp
         assert client.get('/health').status_code == 200
         assert app.state.conversations.graph.store is app.state.conversations.store
     assert not hasattr(app.state, 'conversations')
+
+
+def test_message_sends_no_approved_cases_and_returns_profile_hints():
+    """DB 없이 분석 서비스의 질문 한 번: 승인 사례를 찾지 않고 빈 목록을 넘기며, 그 질문으로 찾은 사용자 사실을 결과에 붙인다."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+    from langgraph.store.memory import InMemoryStore
+    from backend.conversations.profile import ProfileMemory
+    app = Conversations.__new__(Conversations)  # [왜] DB 없이 message의 입력 조립만 본다
+    app.mode, seen = 'live', {}
+    app.profile = ProfileMemory(InMemoryStore(), indexed=False)
+    app.profile.update(7, {'mounting_preference': 'smd'})
+    app.profile.update(8, {'affiliation': '다른 사용자 회사'})
+
+    class Conn:
+        def execute(self, *args): return SimpleNamespace(fetchall=lambda: [], fetchone=lambda: None)
+        @contextmanager
+        def transaction(self): yield
+    @contextmanager
+    def locked(user, thread):
+        yield Conn(), {'version': 0, 'target': 'D1', 'filename': 'my.net', 'connections': {'components': [{'ref': 'D1', 'value': 'SS34'}]}}
+    app.locked, app._reconcile, app._budget, app._purge_expired = locked, lambda conn, row: None, lambda user: 'budget', lambda: None
+    app.graph = SimpleNamespace(get_state=lambda config: SimpleNamespace(next=()))
+    app.memories = lambda *args, **kwargs: pytest.fail('approved cases looked up for a new analysis')
+    app._invoke = lambda conn, thread, inputs, budget, request_id='': seen.update(inputs)
+    app.detail = lambda user, thread, hints=(): {'profile_hints': list(hints)}
+    result = app.message(7, 'thread-1', 'SMD로 바꿀 수 있나요?')
+    assert seen['approved_memories'] == []
+    assert result['profile_hints'] == [{'kind': 'mounting_preference', 'value': 'smd', 'text': '이 사용자는 SMD 실장을 선호한다.'}]
+
+
+def test_profile_hints_are_owned_and_follow_update_and_delete(runtime):
+    """색인 없이(키 없음) 실제 Store: 질문 결과의 참고(내 설정)는 자기 사실만, 고친 값 · 지운 칸을 바로 따른다."""
+    app, (a, b), _ = runtime
+    app.profile.update(a, {'mounting_preference': 'smd', 'affiliation': 'A회사'})
+    app.profile.update(b, {'affiliation': 'B회사'})
+    thread, other = make_thread(app, a), make_thread(app, b)
+    assert {h['value'] for h in app.message(a, thread, '판정')['profile_hints']} == {'smd', 'A회사'}
+    assert [h['value'] for h in app.message(b, other, '판정')['profile_hints']] == ['B회사']
+    app.profile.update(a, {'mounting_preference': 'through_hole'})
+    app.profile.delete(a, 'affiliation')
+    pending = app.message(a, thread, '조건 질문')
+    expected = [{'kind': 'mounting_preference', 'value': 'through_hole', 'text': '이 사용자는 스루홀 실장을 선호한다.'}]
+    assert pending['profile_hints'] == expected
+    assert app.resume(a, thread, {'VIN_MAX': '12'}, '', pending['version'])['profile_hints'] == expected
+    assert app.detail(a, thread)['profile_hints'] == []  # GET 상세는 다시 찾지 않는다
+    assert app.profile.facts(a)[0]['version'] == 2 and [f['value'] for f in app.profile.facts(b)] == ['B회사']
+    app.profile.delete(a)
+    assert app.message(a, thread, '판정')['profile_hints'] == [] and app.profile.facts(b)
+
+
+def test_indexed_profile_ranks_paraphrase_reembeds_and_isolates_users(runtime, monkeypatch):
+    """pgvector 색인 + 가짜 Voyage: 다른 말로 물어도 맞는 사실이 먼저, 고치면 새 벡터, 지우면 벡터도 사라지고, 사용자끼리 섞이지 않는다."""
+    from fastapi.testclient import TestClient
+    from backend import auth
+    from backend.main import app as api
+    from backend.services import llm
+    _, (a, b), dsn = runtime
+    with psycopg.connect(dsn) as conn:
+        if not conn.execute("SELECT to_regclass('sojafit_agent.store_vectors')").fetchone()[0]:
+            pytest.skip('requires the vector extension in the test DB before setup')
+    concepts, kinds = [('smd', '표면실장'), ('스루홀', '리드 부품'), ('구매', '발주'), ('소속', '회사')], []
+    def fake(texts, input_type):
+        kinds.append(input_type)
+        return [[0.01 + sum(t.lower().count(w) for w in concepts[i]) if i < len(concepts) else 0.01 for i in range(1024)] for t in texts]
+    monkeypatch.setattr(llm, 'voyage_embed', fake)
+    monkeypatch.setenv('VOYAGE_API_KEY', 'test-not-used'); monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
+    app = Conversations(dsn, factory=fake_graph)
+    try:
+        assert app.profile.indexed
+        app.profile.update(a, {'affiliation': '한빛전자', 'job_role': 'purchasing', 'mounting_preference': 'smd'})
+        app.profile.update(b, {'affiliation': '다른회사', 'mounting_preference': 'through_hole'})
+        assert set(kinds) == {'document'}
+        kinds.clear()
+        assert app.profile.facts(a, '표면실장 부품으로 바꿀 수 있나요?')[0]['kind'] == 'mounting_preference'
+        assert app.profile.facts(a, '발주 담당자 기준으로')[0]['kind'] == 'job_role'
+        assert app.profile.facts(a, '어느 회사인가요')[0]['kind'] == 'affiliation'
+        assert set(kinds) == {'query'}
+        thread = make_thread(app, a)
+        hints = app.message(a, thread, '표면실장으로 바꿔도 되나요')['profile_hints']
+        assert hints[0]['value'] == 'smd' and all(h['value'] not in ('다른회사', 'through_hole') for h in hints)
+        api.state.conversations = app
+        api.dependency_overrides[auth.current_user_id] = lambda: b
+        client = TestClient(api)
+        found = client.get('/api/me/memory', params={'q': '한빛전자 구매 표면실장'}).json()
+        assert {f['value'] for f in found} == {'다른회사', 'through_hole'}
+        api.dependency_overrides[auth.current_user_id] = lambda: a
+        updated = client.patch('/api/me/memory', json={'mounting_preference': 'through_hole'}, headers={'Origin': 'http://localhost:8000'})
+        assert updated.status_code == 200
+        top = client.get('/api/me/memory', params={'q': '리드 부품도 괜찮나요'}).json()[0]
+        assert top['kind'] == 'mounting_preference' and top['version'] == 2 and top['text'] == '이 사용자는 스루홀 실장을 선호한다.'
+        assert client.delete('/api/me/memory', params={'kind': 'mounting_preference'}, headers={'Origin': 'http://localhost:8000'}).status_code == 204
+        assert 'mounting_preference' not in {f['kind'] for f in client.get('/api/me/memory', params={'q': '리드 부품'}).json()}
+        assert all(h['kind'] != 'mounting_preference' for h in app.message(a, thread, '리드 부품으로')['profile_hints'])
+        with psycopg.connect(dsn) as conn:
+            rows = conn.execute("SELECT prefix, key FROM sojafit_agent.store_vectors WHERE prefix IN (%s,%s) ORDER BY prefix, key",
+                                (f'{a}.profile', f'{b}.profile')).fetchall()
+        assert rows == sorted([(f'{a}.profile', 'affiliation'), (f'{a}.profile', 'job_role'),
+                               (f'{b}.profile', 'affiliation'), (f'{b}.profile', 'mounting_preference')])
+    finally:
+        api.dependency_overrides.clear()
+        if hasattr(api.state, 'conversations'):
+            del api.state.conversations
+        app.close()

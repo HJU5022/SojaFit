@@ -1,13 +1,15 @@
-"""카드(표 행 청크)를 읽어 숫자 조건에 맞는 부품 찾기: 사양 표(part_specifications) 없이 `spec_lookup.find_candidates`와 같은 계약.
+"""카드(표 행 청크)를 읽어 숫자 조건에 맞는 부품 찾기(서비스 · 평가 실행기 기본, ADR 0016). 찾기 계약은 SPEC.md 8.7.
 
 - 역할: `make_find(...)`가 돌려주는 find(conditions, category, package, limit, original_packages, original_category)는
-  조건으로 검색 문장 하나를 만들어 검색하고(retrieve 1번), 앞 문서 n_docs개의 표 행 카드를 읽어(card_read.read_values, LLM 1번)
-  사양 행을 얻은 뒤 find_candidates와 같은 규칙으로 거르고(모든 조건을 행 하나 이상이 채움) 줄 세운다
+  읽을 문서를 고르고(분류가 있으면 그 분류 문서의 개요 줄을 코드가 먼저 보고(`code_pick`), 근거가 없을 때만 LLM `pick_docs`,
+  분류가 없으면 조건으로 만든 검색 문장 하나로 retrieve 1번), 앞 문서 n_docs개의 표 행 카드를 읽어(card_read.read_values: 코드가 먼저, 못 읽은 카드만 LLM)
+  사양 행을 얻은 뒤 거르고(모든 조건을 행 하나 이상이 채움) 줄 세운다
   (원래 부품의 패키지 → 원래 부품의 분류 → 기준에 가까운 순 → 품번 순). 반환 모양도 같다: [{'part', 'category', 'packages', 'matches'}].
   `default_find()`는 실제 검색 · DB(DATABASE_URL) · 카드 읽기 · node_chat을 묶는다. 테스트는 make_find에 가짜를 넘긴다.
 - 하지 않는 일: 판정 · 대체 가능 여부(`backend/judge/`, AGENTS 지킬 것 7), 카드 값 읽기와 원문 대조(`card_read.py`),
   단위 환산(조건 · 행 값은 이미 SI), LLM 직접 호출(chat을 받아 넘긴다). 비교는 행을 거르는 >= · <=와 순서 비율뿐이다(spec_lookup과 같음).
-- 출처: `spec_lookup.find_candidates`(ADR 0013, SPEC.md 8.7), lab v3 사양 표 제거(part_specifications가 빈 sojafit_v4)
+- 출처: 지운 사양 표 찾기(ADR 0013 → 0016)와 같은 규칙(SPEC.md 8.7), lab v3 사양 표 제거(part_specifications가 빈 sojafit_v4),
+  문서 고르기 코드 먼저(사전 등록 #44)
 
 [주의] 검색에 걸린 앞 문서 n_docs개만 본다. 여기서 빠진 품번은 "조건 불충족"이 아니라 "못 찾음"이다(spec_lookup과 같은 뜻).
 """
@@ -21,9 +23,9 @@ from urllib.parse import unquote, urlparse
 
 from pydantic import BaseModel, Field
 
-from backend.rag.pipeline.specs import AEC_H, BOTH_DIRECTIONS, KEYWORDS, SI, SYMS, packages_of
+from backend.rag.pipeline.specs import AEC_H, BOTH_DIRECTIONS, KEYWORDS, PKG, SI, SYMS, packages_of
 from backend.rag.retrieve import COVER
-from backend.rag.spec_lookup import DEFAULT_SLOT, _norm_package, _ratio
+from backend.rag.spec_lookup import DEFAULT_SLOT, THT_PACKAGES, _norm_package, _ratio
 
 # 코드 → 검색 문장에 넣을 설명 낱말 + 기호(데이터시트 표의 PARAMETER · SYMBOL 칸 말투)
 WORDS = {'VRRM': 'repetitive peak reverse voltage VRRM', 'VR': 'DC reverse voltage VR', 'VRWM': 'reverse stand-off voltage VRWM',
@@ -62,14 +64,14 @@ def search_sentence(conditions, category=None, package=None):
 
 
 def mentions(text, codes):
-    """카드 글이 codes 중 하나의 기호나 설명 낱말을 담는지(LLM에 넘길 카드를 줄이는 거친 거르기, 값은 보지 않는다)."""
+    """카드 글이 codes 중 하나의 기호나 설명 낱말을 담는지(읽을 카드를 줄이는 거친 거르기, 값은 보지 않는다)."""
     # [주의] 시험 조건의 기호(VF 행의 'IF = 1A')도 걸린다. 넘치게 넘기는 쪽이라 괜찮다(빠뜨리면 못 찾는다)
     symbols = re.findall(r'[A-Z][A-Z0-9()]*', text.upper())
     return any(SYMS.get(s) in codes for s in symbols) or any(code in codes and p.search(text) for p, code in KEYWORDS)
 
 
 def doc_packages(doc):
-    """문서 하나의 패키지 이름(표 행의 PACKAGE 열 · 본문 'Case:' 글, specs.build와 같은 규칙, 문서 단위)."""
+    """문서 하나의 패키지 이름(표 행의 PACKAGE 열 · 본문 'Case:' 글, `pipeline/specs.py`의 packages_of 규칙, 문서 단위)."""
     names = [x for c in doc['cards'] for x in packages_of({'kind': 'table_row', 'text': c['content']})]
     names += [x for t in doc['texts'] for x in packages_of({'kind': 'text', 'text': t})]
     return list(dict.fromkeys(names))
@@ -109,8 +111,98 @@ def pick_docs(conditions, package, overviews, *, chat):
     return keys[:N_PICK]
 
 
+# 개요 줄(제목)에서 값 읽기. [주의] 품번 · 패키지 이름 안의 숫자('SMA6J10A' · 'SOD-123W' · 'BZT52B2V4')는 값이 아니라 앞이 글자 · 점 · 하이픈이면 건너뛴다
+_EDGE, _NUM = r'(?<![\w.\-])', r'(\d+(?:\.\d+)?)'
+TITLE_V_RANGE = re.compile(_EDGE + _NUM + r'\s*V?\s*-\s*' + _NUM + r'\s*V\b')  # '50V - 1000V' · '50 - 1000 V' · '100-250V'
+TITLE_V = re.compile(_EDGE + r'(?:VWM\s*=\s*)?' + _NUM + r'\s*V\b')  # '600V' · ESD 'VWM=5V'
+TITLE_A = re.compile(_EDGE + _NUM + r'\s*(m?)A\b')
+TITLE_W = re.compile(_EDGE + _NUM + r'\s*([km]?)W\b')
+PART_RANGE = re.compile(r'^\s*\S+\s+-\s+\S+\s*$', re.M)  # 품번 범위뿐인 줄('SMAJ5.0(A)H - SMAJ188(A)H'). 패키지 이름(SMAJ5)처럼 읽혀 뺀다
+SURFACE = re.compile(r'surface[- ]?mount|(?-i:\bSMD\b)', re.I)
+TITLE_V_CODE = {'zener-diode': 'VZ', 'tvs': 'VRWM', 'esd-protection': 'VRWM'}  # 제목 전압이 뜻하는 코드(그 밖 분류는 VRRM)
+TITLE_W_CODE = {'zener-diode': 'PD', 'tvs': 'PPPM'}
+# [왜] 제목 값은 대표 값이다(제너 VZ는 공칭이라 최소 · 최대 칸과 다르고, TVS 제목 전압은 VBR일 때가 있다). 10% 넘게 어긋날 때만 버린다
+SLACK = 1.1
+_SCALE = {'': 1, 'm': 1e-3, 'k': 1e3}
+
+
+def title_values(text, category):
+    """개요 줄 → {코드: (낮은 값, 높은 값)}(SI). 전압은 분류의 대표 코드, 전류는 IF_AV, 전력은 제너 PD · TVS PPPM. 못 읽은 코드는 없다."""
+    t = ' '.join(text.split('] ', 1)[-1].split())
+    out = {}
+    if m := TITLE_V_RANGE.search(t) or TITLE_V.search(t):
+        out[TITLE_V_CODE.get(category, 'VRRM')] = (float(m.group(1)), float(m.groups()[-1]))  # 범위면 (낮은, 높은), 값 하나면 (값, 값)
+    if amps := [float(n) * _SCALE[p] for n, p in TITLE_A.findall(t)]:
+        out['IF_AV'] = (min(amps), max(amps))
+    if (watts := [float(n) * _SCALE[p] for n, p in TITLE_W.findall(t)]) and category in TITLE_W_CODE:
+        out[TITLE_W_CODE[category]] = (min(watts), max(watts))
+    return out
+
+
+def _title_fit(conditions, values):
+    """제목 값과 조건: 어긋나면 None, 아니면 (제목으로 확인한 조건 수, 제목 범위가 조건 안에 다 드는가, 기준에서 먼 비율)."""
+    known, inside, ratio = 0, True, 1.0
+    for code in dict.fromkeys(c['code'] for c in conditions):
+        if code not in values:
+            continue  # 제목에 없는 값(trr · VC 등)은 확인 못 할 뿐 어긋남이 아니다
+        lo, hi = values[code]
+        cs = [c for c in conditions if c['code'] == code]
+        if any('gte' in c and hi * SLACK < c['gte'] or 'lte' in c and lo > c['lte'] * SLACK for c in cs):
+            return None
+        low = max((c['gte'] for c in cs if 'gte' in c), default=None)
+        high = min((c['lte'] for c in cs if 'lte' in c), default=None)
+        known += len(cs)
+        inside = inside and (low is None or lo * SLACK >= low) and (high is None or hi <= high * SLACK)
+        # find의 _ratio와 같은 뜻: 범위 안에서 기준에 가장 가까운 값이 기준에서 얼마나 먼가(1이면 범위가 기준을 품음)
+        if low is not None and low > 0:
+            ratio = max(ratio, min(max(low, lo), hi) / low)
+        elif high is not None and high > 0 and (near := min(max(high, lo), hi)) > 0:
+            ratio = max(ratio, high / near)
+    return known, inside, ratio
+
+
+def code_pick(conditions, package, overviews, category):
+    """개요 줄의 범위 · 단위 · 패키지로 문서를 고른다(LLM 없음). → 문서 키 N_PICK개까지, 코드가 고를 근거가 없으면 None(LLM이 고른다).
+
+    - 버림: 제목 값이 조건과 10% 넘게 어긋남, 제목이 원하는 패키지 말고 다른 패키지만 적음, 삽입형을 원하는데 제목이 표면실장.
+    - 순서: 제목의 패키지(원하는 것 → 없음 → 원하는 이름이 다른 이름에 붙음) → 제목으로 확인한 조건 수 → 제목 범위가 조건 안에 다 듦
+      → 기준에 가까운 순 → 파일 이름.
+    - None: 어느 제목에서도 조건 코드 값을 못 읽었거나, 10번째 문서도 제목으로 확인한 조건이 없을 때(줄 세울 근거가 없다).
+    """
+    want = _norm_package(package) if package else ''
+    codes = {c['code'] for c in conditions}
+    ranked, checked = [], False
+    for o in overviews:
+        title = o['text'].split('] ', 1)[-1]
+        values = title_values(o['text'], category)
+        checked = checked or bool(codes & set(values))
+        fit = _title_fit(conditions, values)
+        if fit is None:
+            continue
+        pkgs = {_norm_package(x) for x in PKG.findall(PART_RANGE.sub('', title))}
+        tier = 1  # 0 제목이 원하는 패키지를 적음, 1 제목에 패키지 없음(모름), 2 다른 패키지를 적었지만 원하는 이름이 글에 붙어 있음
+        if want and want in pkgs:
+            tier = 0
+        elif want:
+            if want in THT_PACKAGES and SURFACE.search(title):
+                continue  # [왜] DO-41을 원하는데 표면실장 문서가 자리를 차지해 정답 문서(UF1A)가 10개 밖으로 밀렸다(11-09 v3-12 시제품)
+            if pkgs:
+                # [주의] 'TO-263AB (D 2 PAK)'(D2PAK) · 'Micro SMA'(SMA)처럼 원하는 이름이 글에 붙어 있으면 버리지 않고 맨 뒤에 둔다
+                if want not in re.sub(r'[^A-Z0-9]', '', title.upper()):
+                    continue
+                tier = 2
+        known, inside, ratio = fit
+        ranked.append(((tier, -known, not inside, ratio, o['file']), o['key']))
+    if not checked:
+        return None
+    ranked.sort()
+    if len(ranked) > N_PICK and ranked[N_PICK - 1][0][1] == 0:
+        return None
+    return [k for _, k in ranked[:N_PICK]]
+
+
 def _meets(cond, row):
-    """행 하나가 조건 하나를 채우는지. find_candidates의 SQL과 같은 뜻(그 칸이 비면 거짓, 경계 포함)."""
+    """행 하나가 조건 하나를 채우는지(그 칸이 비면 거짓, 경계 포함)."""
     v = row.get(cond.get('slot') or DEFAULT_SLOT.get(cond['code'], 'max'))
     return row['code'] == cond['code'] and v is not None and v >= cond.get('gte', v) and v <= cond.get('lte', v)
 
@@ -125,25 +217,30 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
     """의존(검색 · 카드 적재 · 카드 읽기 · LLM · 문서 분류)을 받아 find를 만든다.
 
     - overviews(category) → 그 분류 문서들의 개요 줄 [{'key', 'file', 'text'}]. 주면 분류가 있는 찾기는 검색 대신
-      LLM이 개요 줄을 보고 문서를 고른다(`pick_docs`, LLM 1번 더). 분류가 없으면 검색으로 고른다.
+      코드가 개요 줄의 범위 · 패키지로 문서를 고르고(`code_pick`), 줄 세울 근거가 없을 때만 LLM이 고른다(`pick_docs`). 분류가 없으면 검색으로 고른다.
     - retrieve(sentence, k=40) → 청크 목록(`document_key` 필요, retrieve.retrieve와 같은 모양).
     - doc_meta(document_keys) → {document_key: {'category': 분류 이름 또는 None}}. 모르는 문서 · 빈 분류는 분류로 거르지 않는다.
     - load_cards(document_keys) → {document_key: {'file', 'parts'(표지 품번), 'cards'(표 행 카드), 'texts'(표 밖 글 본문)}}.
-    - read(cards, codes, doc_parts, chat=chat) → (사양 행 목록(spec_lookup._row 모양), 버린 읽기). card_read.read_values와 같은 모양.
+    - read(cards, codes, doc_parts, chat=chat) → (사양 행 목록(card_read._row 모양), 버린 읽기). card_read.read_values와 같은 모양.
     - shared: 주면 문서마다 읽은 행을 담아 둔다(card_specs가 같은 dict를 받아 다시 읽지 않는다).
     """
     memo = {}  # (조건, 분류, 패키지) → (rows, keys, docs, meta)
 
     def gather(conditions, category, package):
-        """검색 → 문서 고르기 → 카드 적재 → 카드 읽기(LLM 1번). 같은 (조건, 분류, 패키지)는 한 번만 읽는다."""
+        """검색 → 문서 고르기 → 카드 적재 → 카드 읽기(코드가 먼저, 못 읽은 카드만 LLM). 같은 (조건, 분류, 패키지)는 한 번만 읽는다."""
         # [왜] judge.py는 순서용 인자(original_*)만 바꿔 같은 조건으로 find를 두 번 부른다. 순서는 아래에서 다시 매기므로 읽기를 다시 쓴다
         memo_key = json.dumps([conditions, category, package], sort_keys=True, default=str)
         if memo_key in memo:
             return memo[memo_key]
         if category is not None and overviews is not None:
             # [왜] 검색은 '600 V'처럼 숫자로 문서를 잘 못 고른다(h4-11 정답 문서가 검색 59등 · h4-13은 17등, 11-08 실측).
-            #      문서마다 PDF 1쪽 제목 줄('1N4001G - 1N4007G 1A, 50V - 1000V Standard Rectifier')을 LLM이 보고 고르게 한다
-            keys = pick_docs(conditions, package, overviews(category), chat=chat)
+            #      문서마다 PDF 1쪽 제목 줄('1N4001G - 1N4007G 1A, 50V - 1000V Standard Rectifier')을 보고 고른다
+            # [왜] 코드가 제목의 범위 · 패키지로 먼저 고른다. LLM 고르기가 찾기 문항 시간의 약 3초였고, 기록된 18번 모두 코드가 정답 문서를
+            #      LLM만큼 이상 골랐다(사전 등록 #44). 제목으로 줄 세울 근거가 없을 때만 LLM이 고른다
+            lines = overviews(category)
+            keys = code_pick(conditions, package, lines, category)
+            if keys is None:
+                keys = pick_docs(conditions, package, lines, chat=chat)
         else:
             hits = retrieve(search_sentence(conditions, category, package), k=K_SEARCH)
             keys = list(dict.fromkeys(h['document_key'] for h in hits))  # 처음 나온 순서(검색 순위)
@@ -178,7 +275,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
         return memo[memo_key]
 
     def find(conditions, category=None, package=None, limit=50, original_packages=None, original_category=None):
-        """모든 조건을 채운 품번 목록. 인자 · 반환 · 순서는 spec_lookup.find_candidates와 같다(카드를 읽어 행을 만든다는 것만 다름)."""
+        """모든 조건을 채운 품번 목록. 인자 · 반환 · 순서는 SPEC.md 8.7(지운 사양 표 찾기와 같고, 카드를 읽어 행을 만든다는 것만 다름)."""
         rows, keys, docs, meta = gather(conditions, category, package)
         if not rows:
             return []
@@ -191,7 +288,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             for p in docs[k]['parts']:
                 cat_of.setdefault(p.upper(), (meta.get(k) or {}).get('category'))
                 pkgs_of[p.upper()] = list(dict.fromkeys(pkgs_of.get(p.upper(), []) + pkgs))
-        parts, met = {}, {}  # find_candidates와 같은 두 표: 품번 → 결과 한 개, 품번 → {채운 조건 번호: 가장 가까운 비율}
+        parts, met = {}, {}  # 두 표: 품번 → 결과 한 개, 품번 → {채운 조건 번호: 가장 가까운 비율}
         for row in rows:
             ok = [i for i, c in enumerate(conditions) if _meets(c, row)]
             if not ok:
@@ -204,7 +301,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
                 near[i] = min(near.get(i, float('inf')), _ratio(conditions[i], row))
         found = {k: p for k, p in parts.items() if len(met[k]) == len(conditions)}
         if package is not None:
-            # [왜] find_candidates와 같이 이름이 같을 때만 같은 패키지다(SMA는 SMAF에 걸리지 않음)
+            # [왜] 이름이 같을 때만 같은 패키지다. 부분 일치면 SMA가 다른 패키지 SMAF까지 잡는다(11-05, 564개 중 36개)
             found = {k: p for k, p in found.items() if _norm_package(package) in {_norm_package(x) for x in p['packages']}}
         want = {_norm_package(p) for p in original_packages or []} - {''}
 
@@ -213,7 +310,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             return (bool(want) and not want & {_norm_package(x) for x in p['packages']},
                     original_category is not None and p['category'] != original_category, max(met[key].values()), key)
         return [found[k] for k in sorted(found, key=order)][:limit]
-    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # 판정 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
+    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # 대체 부품 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
     return find
 
 
@@ -254,7 +351,7 @@ def bi_copies(rows, doc):
     """양방향 품번(…C · …CA · …CH · …CAH)에 단방향 품번(C를 뺀 이름) 행을 붙인다. 문서가 '특성은 양방향 모두 적용'이라고 밝혔을 때만.
 
     [왜] TVS 값 표는 단방향 품번으로만 적어, 양방향 TVS 찾기에서 정답 5개를 모두 놓쳤다(h4-15, 11-09 claude -p 실측).
-         pipeline/specs.py copy_bidirectional과 같은 규칙이다. 이미 그 코드 값이 있는 양방향 품번은 건드리지 않는다
+         문서 전체 해석기(`pipeline/specs.py`의 Doc)의 양방향 규칙과 같다. 이미 그 코드 값이 있는 양방향 품번은 건드리지 않는다
     """
     if not doc.get('both'):
         return []
@@ -275,7 +372,7 @@ def h_copies(rows, doc):
     """H 품번(표지에는 'XH', 값 표에는 X만)에 기본 품번 X의 행을 붙인다. 문서가 '"H" means AEC-Q101 qualified'라고 밝혔을 때만.
 
     [왜] 값 표는 기본 품번으로만 적어, 카드 읽기가 1N4005GH의 VRRM을 못 읽었다(h4-11 GH 3개, 11-08 claude -p 실측).
-         pipeline/specs.py h_copies와 같은 규칙이다. 이미 그 코드 값이 있는 H 품번은 건드리지 않는다
+         11-10에 지운 사양 표 변환(pipeline/specs.py h_copies)과 같은 규칙이다. 이미 그 코드 값이 있는 H 품번은 건드리지 않는다
     """
     if not doc.get('aec_h'):
         return []
@@ -313,10 +410,11 @@ def overview_lines(category):
     return [{'key': k, 'file': unquote(os.path.basename(urlparse(u).path)), 'text': t} for k, u, t in rows]
 
 
-def default_find(n_docs=10):
-    """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 LLM 2번(문서 고르기 + 카드 읽기), 없으면 검색 1번 + LLM 1번."""
+def default_find(n_docs=10, chat=None):
+    """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 개요 줄로 문서 고르기(코드가 못 고를 때만 LLM 1번), 없으면 검색 1번.
+    카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만. chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`)."""
     from backend.rag.card_read import read_values
     from backend.rag.retrieve import retrieve
     from backend.services.llm import node_chat
-    return make_find(retrieve=retrieve, load_cards=load_cards, read=read_values, chat=node_chat, doc_meta=doc_meta, n_docs=n_docs,
+    return make_find(retrieve=retrieve, load_cards=load_cards, read=read_values, chat=chat or node_chat, doc_meta=doc_meta, n_docs=n_docs,
                      overviews=overview_lines, shared=SHARED_READS)

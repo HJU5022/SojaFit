@@ -28,8 +28,10 @@ export type CircuitContext = {
 
 const EMPTY_TARGET: CircuitPart = { ref: '', value: '', footprint: '' }
 
-function candidatesOf(judgement?: JudgementDto): CandidateDto[] {
-  if (!judgement) return []
+// [왜] 판정 표 · 근거 선택 · 승인 · 연결 개념도가 같은 후보 목록과 순서(번호)를 써야 한다. 표의 선택 번호로 다른 화면이 후보를 찾는다
+// [주의] 찾기의 results는 줄 세우기 전 전체 후보이고 shown은 그 일부다. 둘을 합치면 같은 후보가 두 번 나온다(판정 질문도 shown = results)
+export function candidatesOf(judgement?: JudgementDto | Record<string, never>): CandidateDto[] {
+  if (!judgement || !('kind' in judgement)) return []
   return judgement.kind === 'find' ? [...judgement.shown, ...judgement.unverified] : judgement.results
 }
 

@@ -1,6 +1,5 @@
-"""기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API."""
+"""기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
 import psycopg
-from psycopg import sql
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.datastructures import UploadFile
@@ -16,7 +15,7 @@ router = APIRouter(prefix="/api", tags=["projects"])
 
 
 class RenameProject(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"name": "전원부 다이오드 교체 검토"}]})
     name: str
 
     @field_validator("name")
@@ -26,6 +25,8 @@ class RenameProject(BaseModel):
 
 
 class CreateProject(RenameProject):
+    # [주의] 이름 바꾸기의 예시를 물려받으면 demo_id가 빠져 422가 된다
+    model_config = ConfigDict(json_schema_extra={"examples": [{"demo_id": "attiny85_dev", "name": "ATtiny85 보드 다이오드 검토"}]})
     demo_id: str
 
     @field_validator("demo_id")
@@ -47,7 +48,12 @@ def repository():
         raise HTTPException(503, "프로젝트 서비스를 사용할 수 없습니다.") from None
 
 
-@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)])
+class DemoCircuit(BaseModel):
+    id: str
+    name: str
+
+
+@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)], response_model=list[DemoCircuit])
 def demo_circuits():
     return [{"id": demo_id, "name": name} for demo_id, name in DEMOS.items()]
 
@@ -93,7 +99,16 @@ class MemoryUploadParser(MultiPartParser):
         super().on_end()
 
 
-@router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
+# [왜] 본문을 직접 읽어(아래 MemoryUploadParser) FastAPI가 multipart 칸을 모른다. /docs에 파일 · 이름 칸이 보이게 OpenAPI에만 적는다.
+#      모양은 FastAPI가 UploadFile · Form에 만드는 스키마와 같고, 수신 상한 · 오류 코드는 아래 처리기가 정한다
+UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-data": {"schema": {
+    "type": "object", "required": ["file", "name"], "additionalProperties": False,
+    "properties": {"file": {"type": "string", "contentMediaType": "application/octet-stream",
+                            "description": "KiCad 넷리스트(.net, UTF-8, 5 MiB 이하)"},
+                   "name": {"type": "string", "description": "프로젝트 이름(앞뒤 공백 제외 1~200자)"}}}}}}}
+
+
+@router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
 async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     # File/Form 의존성은 인증 전에 원본을 디스크에 spool할 수 있으므로 직접 제한한다.
     async def bounded_stream():
@@ -143,22 +158,21 @@ def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(
     return repo.rename_owned(user_id, project_id, body.name)
 
 
-def delete_checkpoints(conn, thread_ids):
-    """같은 DATABASE_URL의 LangGraph 표를 프로젝트 삭제 트랜잭션 안에서 정리한다."""
-    for table in ('checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
-        conn.execute(sql.SQL('DELETE FROM {} WHERE thread_id = ANY(%s)').format(sql.Identifier(table)), (thread_ids,))
-
-
 def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
-    # run 생성·재개와 같은 project 행을 잠그고 checkpoint/업무 행을 한 트랜잭션에서 지운다.
+    """프로젝트와 딸린 것을 바로 지운다: public 업무 행(FK cascade)과 같은 UUID의 분석 thread · checkpoint · 메시지 · 승인 기록 · 분석 사건."""
+    # run 생성·재개와 같은 project 행을 잠그고 한 트랜잭션에서 지운다. 분석 기록 삭제가 실패하면 프로젝트도 남는다(11-09 결정, SPEC 8.5)
+    # checkpoint_delete(conn, thread_ids)는 시험이 지우는 함수를 바꿔 끼우는 자리다. 기본은 memory_service.delete_analysis_threads
+    if checkpoint_delete is None:
+        from backend.conversations.memory_service import delete_analysis_threads
+        checkpoint_delete = lambda conn, ids: delete_analysis_threads(conn, user_id, ids)
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound
         if conn.execute("SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND r.status IN ('running','requires_input') LIMIT 1", (project_id,)).fetchone():
             raise InvalidRunState
         ids = [str(row[0]) for row in conn.execute('SELECT id FROM threads WHERE project_id=%s', (project_id,)).fetchall()]
-        if ids:
-            (checkpoint_delete or delete_checkpoints)(conn, ids)
+        if ids and checkpoint_delete:
+            checkpoint_delete(conn, ids)
         conn.execute('DELETE FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id))
 
 

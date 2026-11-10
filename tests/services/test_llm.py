@@ -376,9 +376,9 @@ def test_voyage_retries_429_but_stops_on_payment_signal(monkeypatch):
     sent = _voyage_http(monkeypatch, _reply(429), _reply(200, {"data": [{"index": 0}]}))
     assert llm.voyage_rerank("q", ["a"]) == [0] and len(sent) == 2
     sent = _voyage_http(monkeypatch, _reply(402, text="payment required"))
-    with pytest.raises(RuntimeError, match="payment"):
+    with pytest.raises(llm.UpstreamError, match="payment") as error:  # [왜] 바깥 공급자 장애라 분석 실패는 502(ADR 0019)
         llm.voyage_rerank("q", ["a"])
-    assert len(sent) == 1  # 결제 신호는 다시 부르지 않는다
+    assert len(sent) == 1 and llm.is_upstream_error(error.value)  # 결제 신호는 다시 부르지 않는다
 
 
 def test_voyage_runtime_retry_reserves_before_each_external_call(monkeypatch):
@@ -414,7 +414,7 @@ def test_openrouter_thinking_off_disables_haiku_and_shortens_sonnet(monkeypatch)
 
 def test_node_model_follows_table_and_env_override_wins(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
-    assert llm.node_model("supervisor") == SONNET and llm.node_model("grade") == LUNA
+    assert llm.node_model("supervisor") == HAIKU and llm.node_model("synth") == SONNET and llm.node_model("grade") == LUNA
     assert [llm.node_model(n) for n in ("route", "rewrite", "generate")] == [HAIKU] * 3
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert {llm.node_model(n) for n in ("route", "grade", "generate", "supervisor")} == {"x/y"}
@@ -431,8 +431,40 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
             invoke=lambda messages: schema.model_validate_json('{"kind": "role"}')))
 
     monkeypatch.setattr(llm, "_chat_model", chat_model)
-    llm.node_chat("supervisor", "sys", "q", Route)
+    llm.node_chat("synth", "sys", "q", Route)
     llm.node_chat("route", "sys", "q", Route)
     assert used == [SONNET, HAIKU]
     llm.chat("sys", "q", Route)  # node_chat 밖의 호출은 기본 모델
     assert used[-1] == llm.LLM_MODEL
+
+
+def test_model_rates_keys_match_node_models():
+    from backend.services import langfuse_prompts, llm
+    # [왜] 서비스 노드 모델(Haiku · Sonnet)이 단가표에 없으면 예약이 Sonnet 이상 기본 단가로 돌아가 판정 질문이 상한에 걸린다
+    assert set(llm.MODEL_RATES) == {langfuse_prompts.HAIKU, langfuse_prompts.SONNET}
+    assert {m for n, m in langfuse_prompts.NODE_MODELS.items() if n in ('supervisor', 'judge_read', 'docs_answer', 'card_read', 'card_pick', 'synth')} <= set(llm.MODEL_RATES)
+
+
+def test_service_budget_fits_supervisor_and_three_judge_reads():
+    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 3번(다수결), 지시문 약 15KB씩
+    from backend.conversations.memory_service import Conversations
+    from backend.services import langfuse_prompts, llm
+    prompt = 'x' * 15000
+    budget, _, _ = Conversations._budget_settings()
+    assert budget.per_model_rates
+    for _ in range(4):
+        budget.reserve(prompt, output_tokens=budget.max_tokens, model=langfuse_prompts.HAIKU)
+    assert budget.reserved_usd < 0.05  # 실제 Haiku 단가라 넉넉하다
+    old = llm.EvaluationBudget(max_calls=16, max_usd=0.50, max_seconds=90, prompt_rate=0.000003,
+                               completion_rate=0.000015, max_tokens=4096)  # 예전 서비스 예약(모든 호출 같은 단가)
+    with pytest.raises(llm.EvaluationLimitError):
+        for _ in range(4):
+            old.reserve(prompt, output_tokens=4096, model=langfuse_prompts.HAIKU)  # 네 번째 예약에서 $0.50을 넘는다
+
+
+def test_unknown_model_falls_back_to_budget_rates():
+    from backend.services import llm
+    budget = llm.EvaluationBudget(max_calls=2, max_usd=1, max_seconds=30, prompt_rate=0.000003,
+                                  completion_rate=0.000015, max_tokens=100, per_model_rates=True)
+    budget.reserve('a' * 1000, output_tokens=100, model='openai/gpt-6-luna')
+    assert budget.reserved_usd == pytest.approx((1000 + 8192) * 0.000003 + 100 * 0.000015)

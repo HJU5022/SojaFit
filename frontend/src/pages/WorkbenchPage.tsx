@@ -15,6 +15,7 @@ import EvidencePanel from '../components/EvidencePanel'
 import JudgementTable from '../components/JudgementTable'
 import ApprovalPanel from '../components/ApprovalPanel'
 import ApprovedCasesPanel from '../components/ApprovedCasesPanel'
+import { candidatesOf } from '../components/circuitContext'
 import type { RunState } from '../hooks/useRunStream'
 
 export default function WorkbenchPage() {
@@ -48,6 +49,7 @@ export default function WorkbenchPage() {
   }, [client])
   const detail = useQuery({ queryKey: ['project', id], queryFn: ({ signal }) => getProject(id!, signal), enabled: id !== null, retry: false, gcTime: 0 })
   const roles = useQuery({ queryKey: ['judge-roles'], queryFn: ({ signal }) => listJudgeRoles(signal), retry: false, gcTime: 0 })
+  const roleLabels = Array.isArray(roles.data) ? roles.data : []
   function selectProject(projectId: number) {
     selection.current.version++
     setParams(current => { const next = new URLSearchParams(current); next.set('projectId', String(projectId)); next.delete('targetRef'); return next })
@@ -67,7 +69,7 @@ export default function WorkbenchPage() {
   const receiveRun = useCallback((state: RunState) => setRunState(state), [])
   const result = runState.status === 'completed' || runState.status === 'refused' ? runState.result : null
   const judgement = result?.judgement && 'kind' in result.judgement ? result.judgement as JudgementDto : undefined
-  const candidates = useMemo(() => !judgement ? [] : judgement.kind === 'find' ? [...judgement.shown, ...judgement.unverified] : judgement.results, [judgement])
+  const candidates = useMemo(() => candidatesOf(judgement), [judgement])
   const candidate = selectedCandidateIndex === null ? undefined : candidates[selectedCandidateIndex] as CandidateDto | undefined
   useEffect(() => { setSelectedCandidateIndex(null) }, [id, targetRef, result])
   useEffect(() => { setProvidedConditions('') }, [id, targetRef])
@@ -84,16 +86,16 @@ export default function WorkbenchPage() {
         <CircuitSetup key={version} onCreated={created} />
         {id !== null && detail.isPending && <p role="status">회로를 불러오는 중입니다.</p>}
         {detail.error ? <p role="alert">{errorMessage(detail.error)}</p> : detail.data && <CircuitSummary project={detail.data} targetRef={targetRef}
-          judgement={judgement} roleLabels={Array.isArray(roles.data) ? roles.data : []}
+          judgement={judgement} roleLabels={roleLabels}
           missing={runState.status === 'requires_input' ? runState.interrupt.missing ?? [] : []} providedConditions={providedConditions}
           analysisStatus={runState.status} onTarget={ref => {
           setParams(current => { const next = new URLSearchParams(current); if (ref) next.set('targetRef', ref); else next.delete('targetRef'); return next })
         }} />}
         {roles.error && <p role="alert">역할 정보를 불러오지 못했습니다. {errorMessage(roles.error)}</p>}
-        {id !== null && detail.data && <ConversationPanel key={`${id}-${targetRef}`} projectId={id} targetRef={targetRef}
-          onResult={receiveRun} onConditions={setProvidedConditions} />}
+        {id !== null && detail.data && <ConversationPanel key={`${id}-${targetRef}`} projectId={id} demoId={detail.data.demo_id} targetRef={targetRef}
+          roleLabels={roleLabels} onResult={receiveRun} onConditions={setProvidedConditions} />}
       </div>
-      <aside className="workbench-results" aria-label="D5 결과">
+      <aside className="workbench-results" aria-label="분석 결과">
         <div className="result-tabs" role="tablist" aria-label="결과 보기">
           {([['evidence', '근거'], ['judgement', '판정'], ['actions', '가격과 승인']] as const).map(([key, label]) => <button key={key} role="tab" aria-selected={resultTab === key} onClick={() => setResultTab(key)}>{label}</button>)}
         </div>

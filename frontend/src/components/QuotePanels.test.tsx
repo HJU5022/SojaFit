@@ -16,6 +16,7 @@ it('names the candidate and verdict before approval and sends no price fields to
     if (path === '/api/messages/9/approvals') return Promise.resolve(Response.json({ id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4 }, { status: 201 }))
     if (path === '/api/approvals/3/quotes') return Promise.resolve(Response.json({ id: 5, approval_id: 3, part_number: 'SS34', quantity: 2 }, { status: 201 }))
     if (path.startsWith('/api/prices?')) return Promise.resolve(Response.json({ available: false, source: 'Mouser Electronics', reason: 'demo_mode', message: '가격 없음', parts: [] }))
+    if (path === '/api/me/memory') return Promise.resolve(Response.json([{ kind: 'affiliation', value: '한빛전자', text: '이 사용자의 소속은 한빛전자이다.', version: 1, updated_at: '', source: 'user_settings' }]))
     throw new Error(`unexpected ${path}`)
   }))
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
@@ -27,7 +28,9 @@ it('names the candidate and verdict before approval and sends no price fields to
   fireEvent.click(screen.getByRole('button', { name: '확인 후 승인' }))
   await screen.findByText('SS34 판정을 승인했습니다.')
   expect(JSON.parse(calls.find(call => call.path === '/api/messages/9/approvals')!.body!)).toEqual({ candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT' })
+  expect(calls.some(call => call.path === '/api/me/memory')).toBe(false)  // 견적을 열기 전에는 내 설정을 읽지 않는다
   fireEvent.click(screen.getByRole('button', { name: '견적 열기' }))
+  expect(await screen.findByText('소속: 한빛전자')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
   await screen.findByText('가격 없음')
   fireEvent.change(screen.getByLabelText('수량'), { target: { value: '2' } })
@@ -35,6 +38,21 @@ it('names the candidate and verdict before approval and sends no price fields to
   await screen.findByText('SS34 2개 견적을 저장했습니다. 가격은 저장하지 않았습니다.')
   expect(JSON.parse(calls.find(call => call.path === '/api/approvals/3/quotes')!.body!)).toEqual({ quantity: 2 })
   expect(calls.some(call => call.path.startsWith('/api/prices?parts=SS34'))).toBe(true)
+})
+
+it('offers each candidate once and only the candidates the judgement table shows', () => {
+  const ss34 = { part: 'SS34', verdict: 'ROLE_SUFFICIENT' as const }
+  const sk34 = { part: 'SK34', verdict: 'SPEC_EQUIVALENT' as const }
+  const hidden = { part: 'SS36', verdict: 'IDENTICAL' as const }
+  const client = new QueryClient()
+  // 판정 질문은 백엔드가 shown = results로 보낸다(합치면 두 번 나왔다)
+  const { rerender } = render(<QueryClientProvider client={client}><ApprovalPanel runId="run-1"
+    judgement={{ ...judgement, results: [ss34], shown: [ss34] }} /></QueryClientProvider>)
+  expect(screen.getAllByRole('option', { name: 'SS34 · 역할상 충분' })).toHaveLength(1)
+  // 찾기의 results는 줄 세우기 전 전체 후보다. 표에 없는 후보(SS36)는 승인 목록에도 없다
+  rerender(<QueryClientProvider client={client}><ApprovalPanel runId="run-1"
+    judgement={{ ...judgement, kind: 'find', results: [ss34, sk34, hidden], shown: [ss34, sk34], unverified: [] }} /></QueryClientProvider>)
+  expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['후보를 선택하세요', 'SS34 · 역할상 충분', 'SK34 · 사양 동등'])
 })
 
 it('requires confirmation before deleting an approved case', async () => {

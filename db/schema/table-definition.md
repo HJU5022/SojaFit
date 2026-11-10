@@ -2,9 +2,9 @@
 
 ## 1. 문서 목적
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 부품 사양 표(5.7)는 `db/011_part_specifications.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/013_projects.sql`이 만들고, 나머지 업무 표는 `db/manual/004_create_business_tables.sql.draft`(Migration 1 초안)로 검토 중입니다. [주의] 초안의 `part_specifications`와 `circuits`는 현재 011·013과 호환되지 않으므로 그대로 적용하면 안 됩니다.
+이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/018_projects.sql`, 대화 · 실행 · 메시지는 `db/019_conversations.sql`, 승인 · 견적 · 승인 사례는 `db/020_approvals_quotes.sql`이 만듭니다(이 문서 끝 "대화 저장 (019)" · "승인·견적·사례 저장 (020)"). 5.3 · 5.5 · 5.8~5.14는 그 전에 쓴 옛 설계 초안(`db/manual/004_create_business_tables.sql.draft`)이고 018~020으로 대체돼 적용하지 않습니다. [주의] 초안의 `circuits`는 018과 충돌합니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
 
-열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.7·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
+열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
 
 현재 프로젝트의 핵심 흐름은 다음과 같습니다.
 
@@ -73,11 +73,11 @@
 | 구분 | 논리명 | 물리명 | 역할 | 상태 |
 |---|---|---|---|---|
 | 사용자 | 사용자 | `users` | 로그인 사용자와 승인자를 식별 | 확정 |
-| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 013 구현 |
-| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 013 구현 |
+| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 018 구현 |
+| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 018 구현 |
 | 분석 | 분석 실행 | `analysis_runs` | 특정 회로 부품에 대한 한 번의 대체 분석 저장 | 확정 |
 | 부품 | 부품 | `parts` | 원본 부품과 후보 부품의 기본정보 저장 | 확정 |
-| 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 확정 |
+| 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 버림(2026-11-09, ADR 0016) |
 | 분석 | 대체 조건 | `replacement_requirements` | 회로 역할에서 도출한 필수·선택 조건 저장 | 확정 |
 | 분석 | 후보 판정 | `candidate_evaluations` | 분석별 후보 부품의 5종 판정 저장 | 확정 |
 | 분석 | 조건별 비교 | `requirement_checks` | 후보 판정마다 대체 조건 하나씩의 비교 결과 저장 | 확정 |
@@ -93,7 +93,7 @@
 
 ### 5.1 `users` — 사용자
 
-로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 평가용 데모 계정 2개는 `db/` SQL로 비밀번호 해시와 함께 적재합니다(A-01. 로컬 Compose에서는 `007_demo_accounts.sql`이 `.env`의 해시로 적재하고 비밀번호는 저장소에 두지 않음, PR #30). 그래프 user_id와 Store namespace에는 `str(users.id)`, thread_id에는 분석마다 별도 UUID를 씁니다(A-02).
+로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 로컬 데모 계정 2개(데모 사용자 A · B, 평가 계정과 다름)는 `db/007_demo_accounts.sql`이 데모 모드의 새 볼륨에 비밀번호 없이 적재하고 로그인 화면 버튼으로만 들어갑니다(A-01, 11-09). 그래프 user_id와 Store namespace에는 `str(users.id)`, thread_id에는 분석마다 별도 UUID를 씁니다(A-02).
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -106,22 +106,22 @@
 | `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 생성 시각 | 확정 |
 | `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 마지막 수정 시각 | 가정 |
 
-### 5.2 사용자 프로젝트와 정규화 회로 — 013 현재 스키마
+### 5.2 사용자 프로젝트와 정규화 회로 — 018 현재 스키마
 
-정본은 `db/013_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 현재 서비스에 적용하지 않습니다. 이하 분석·견적 표는 여전히 미적용 초안이며 후속 구현에서 프로젝트 관계에 맞춰 검토합니다.
+정본은 `db/018_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 서비스에 적용하지 않습니다. 이하 5.3 · 5.5 · 5.8~5.14의 분석·견적 표는 019 · 020으로 대체된 옛 초안입니다.
 
 | 표 | 컬럼 | 자료형·제약 | 의미 |
 |---|---|---|---|
 | `projects` | `id` | BIGSERIAL PK | 프로젝트 ID |
 | `projects` | `user_id` | BIGINT NOT NULL FK → users.id, ON DELETE CASCADE | 소유 사용자. 관리자 우회 없음 |
 | `projects` | `name` | TEXT NOT NULL CHECK(trim 일치, 1~200자) | 서버가 공백을 제거한 이름 |
-| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 현재 생성 API는 demo만 허용 |
+| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 데모 생성(`POST /api/projects`)은 demo, 넷리스트 업로드(`POST /api/projects/upload`)는 upload |
 | `projects` | `demo_id` | TEXT NULL, demo는 허용 5종 필수, upload는 NULL | 데모 카탈로그 ID |
 | `projects` | `created_at`, `updated_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 이름 변경 때 updated_at 갱신 |
 | `circuits` | `project_id` | BIGINT PK FK → projects.id, ON DELETE CASCADE | 프로젝트당 회로 1개 |
 | `circuits` | `connections` | JSONB NOT NULL CHECK(object) | 정규화 연결 정보 |
-| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모 connections.json 바이트 SHA-256 |
-| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1 |
+| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모는 connections.json 바이트, 업로드는 올린 `.net` 원본 바이트의 SHA-256(원본은 저장하지 않음, `backend/projects/netlist.py`) |
+| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1, 업로드는 kicad-export-v1 |
 | `circuits` | `created_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 회로 저장 시각 |
 
 `ix_projects_user_updated(user_id, updated_at DESC, id DESC)`는 소유자별 목록과 users FK 조회를 지원합니다. `circuits.project_id` PK 인덱스가 cascade의 FK 조회를 지원해 중복 인덱스는 만들지 않습니다. 두 표의 RLS를 켜고 정책은 두지 않으며 PUBLIC·존재하는 anon/authenticated 역할의 표 및 projects_id_seq 권한을 회수합니다. 서버 DB 역할에서 SQL의 user_id 필터를 적용합니다. 원본 업로드·넷리스트·가격 필드는 없습니다.
@@ -203,11 +203,11 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 제약조건 초안: `UNIQUE (document_id, chunk_index)`.
 
-### 5.7 `part_specifications` — 부품 사양
+### 5.7 `part_specifications` — 부품 사양(버림)
 
 데이터시트에서 추출한 숫자 사양과 시험 조건을 구조화해 저장합니다. `backend/judge/`가 LLM 대신 숫자와 단위를 비교할 때 사용하는 데이터입니다. 최소·대표·최대값은 `backend/rag/`의 단위 환산 함수로 SI 기본 단위로 바꿔 저장하고, 원문 표기는 `source_value_text`에 그대로 남깁니다(A-08).
 
-`db/011_part_specifications.sql`이 만들고 `python -m backend.rag.pipeline.specs load`가 문서 단위로 지우고 다시 넣습니다(ADR 0007·0013). 읽는 곳은 `backend/rag/spec_lookup.py`(MCP `get_part_specs`·`find_parts_by_specs`)입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣습니다. 문서 FK는 `CASCADE`입니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
+2026-11-09에 이 표를 버렸습니다(ADR 0016, ADR 0013은 대체됨). 표를 만들던 `db/011_part_specifications.sql`과 적재 코드(`python -m backend.rag.pipeline.specs load`)를 지웠고, 운영 DB의 표는 조장이 지웁니다. 판정 값과 후보 찾기는 카드 도구(`backend/rag/card_specs.py` · `card_find.py`)가 `document_chunks`의 표 행 청크를 그때그때 읽어 같은 모양의 행으로 만듭니다. 아래 열 정의는 11-05 SQL의 기록입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣었습니다. 문서 FK는 `CASCADE`였습니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -323,7 +323,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ### 5.12 `quotes` — 견적서
 
-사람이 승인한 뒤에만 견적서를 저장합니다. 승인 전 초안은 LangGraph 체크포인트 상태에 두는 것을 기본안으로 합니다.
+[옛 초안] 지금 견적은 `db/020_approvals_quotes.sql`의 `quotes`(승인 · 품번 · 수량 · 승인 snapshot, 가격·재고 없음)입니다. 아래 표는 적용하지 않은 이력입니다. 사람이 승인한 뒤에만 견적서를 저장합니다. 승인 전 초안은 LangGraph 체크포인트 상태에 두는 것을 기본안으로 합니다.
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -340,7 +340,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ### 5.13 `quote_items` — 견적 항목
 
-승인된 견적서에 포함된 후보 부품, 수량 및 승인 당시의 가격을 저장합니다.
+[옛 초안] 지금 견적에는 항목 표와 가격이 없습니다(ADR 0009, `db/020_approvals_quotes.sql`). 아래 표는 적용하지 않은 이력입니다. 승인된 견적서에 포함된 후보 부품, 수량 및 승인 당시의 가격을 저장합니다.
 
 | 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
 |---|---|---|---|---|---|---|
@@ -461,7 +461,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 | ID | 항목 | 결정 | 반영한 곳 |
 |---|---|---|---|
-| A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장하고 데모 계정 2개는 `db/` SQL로 적재. 로컬 Compose는 `007_demo_accounts.sql`이 `.env`의 해시로 적재(PR #30), 그 밖의 계정은 `python -m backend.auth` | `users`, `backend/auth.py` |
+| A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장. 데모 계정 2개는 `007_demo_accounts.sql`이 데모 모드에서 비밀번호 없이 적재(버튼 로그인 전용, 11-09), 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth` | `users`, `backend/auth.py` |
 | A-02 | 사용자 ID 형식 | `users.id`는 `BIGINT`. 그래프 user_id와 Store namespace에는 `str(users.id)`. thread_id는 분석마다 서버가 발급한 별도 UUID | 사용자 FK, `backend/graph/memory.py`, `backend/conversations/memory_service.py` |
 | A-03 | 회로 원문 저장 위치 | DB `TEXT` | `circuits.netlist_content` |
 | A-04 | 파일 크기·보존 | 업로드 최대 1MB(API에서 검증), MVP에는 삭제 기능 없음 | `circuits`, API |
@@ -498,7 +498,7 @@ PK 초안: `PRIMARY KEY (part_id, document_id)`.
 
 ## 11. 다음 단계
 
-PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다룬다. 실행 순서·이력 방식은 확정 전이다.
+[이력] 아래 계획은 018~020 전의 것이다. 업무 표는 Migration 1 초안 대신 `db/018_projects.sql` · `019_conversations.sql` · `020_approvals_quotes.sql`로 만들었고, 초안은 적용하지 않는다. PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다뤘다.
 
 1. 이 정의서로 `db/schema/erd.md`에 표 관계도(mermaid `erDiagram`)를 그립니다.
 2. Migration은 두 번으로 나눕니다.
@@ -508,14 +508,14 @@ PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표�
 | Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/manual/004_create_business_tables.sql.draft` | ERD 승인 |
 | Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 완료: `db/002_rag_corpus.sql`(1536 임시, ADR 0004) |
 
-3. 로컬 Compose 데모 계정은 `007_demo_accounts.sql`, 그 밖의 계정은 `python -m backend.auth`로 만듭니다(`db/DB.md`).
+3. 로컬 Compose 데모 계정(A · B, 버튼 로그인)은 `007_demo_accounts.sql`, 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth`로 만듭니다(`db/DB.md`).
 4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`008_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
 5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/schema/erd.md`로 옮기고 이 문서를 지웁니다.
 
-## 대화 저장 (014)
+## 대화 저장 (019)
 
-`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/014_conversations.sql`이다.
+`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/019_conversations.sql`이다.
 
-## 승인·견적·사례 저장 (015)
+## 승인·견적·사례 저장 (020)
 
-`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/015_approvals_quotes.sql`이다.
+`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/020_approvals_quotes.sql`이다.

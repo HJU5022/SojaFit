@@ -5,41 +5,10 @@
 - 출처: docs/GATES.md G1·G2, docs/specs/api-error-contract.md
 """
 from uuid import UUID
-from types import SimpleNamespace
-
-import psycopg
-import pytest
 
 from fastapi.testclient import TestClient
 
 from backend.main import app
-from backend import auth
-
-
-def test_analysis_readiness_requires_login():
-    assert TestClient(app).get('/api/analysis/readiness').status_code == 401
-
-
-@pytest.mark.parametrize('state', ['disabled', 'ready', 'unavailable'])
-def test_analysis_readiness_checks_storage_without_exposing_details(monkeypatch, state):
-    def readiness():
-        if state == 'unavailable':
-            raise psycopg.OperationalError('private-dsn-detail')
-    monkeypatch.delattr(app.state, 'conversations', raising=False)
-    if state != 'disabled':
-        monkeypatch.setattr(app.state, 'conversations', SimpleNamespace(readiness=readiness), raising=False)
-    app.dependency_overrides[auth.current_user_id] = lambda: 1
-    try:
-        response = TestClient(app).get('/api/analysis/readiness')
-        assert response.status_code == (200 if state == 'ready' else 503)
-        assert response.headers['cache-control'] == 'no-store'
-        assert 'private-dsn-detail' not in response.text
-        if state == 'ready':
-            assert response.json() == {'status': 'ready', 'storage': 'ready'}
-        else:
-            assert response.json()['error']['code'] == 'SERVICE_UNAVAILABLE'
-    finally:
-        app.dependency_overrides.clear()
 
 
 def test_health():
@@ -89,7 +58,7 @@ def test_forbidden_uses_error_contract():
     assert response.status_code == 403
     assert response.json() == {
         "error": {
-            "code": "FORBIDDEN",
+            "code": "ORIGIN_MISMATCH",
             "message": "요청 출처를 확인할 수 없습니다.",
             "request_id": response.headers["X-Request-ID"],
         }
@@ -119,10 +88,10 @@ def test_validation_error_uses_safe_error_contract():
 
 def test_unhandled_error_does_not_expose_internal_message(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://localhost:8000')
-    def fail_authentication(email, password):
+    def fail_authentication(email, password, ip):
         raise RuntimeError("private traceback detail")
 
-    monkeypatch.setattr("backend.main.auth.authenticate", fail_authentication)
+    monkeypatch.setattr("backend.auth.authenticate", fail_authentication)
     response = TestClient(app, raise_server_exceptions=False).post(
         "/api/auth/login",
         headers={"origin": "http://localhost:8000"},

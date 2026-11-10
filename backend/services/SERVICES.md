@@ -9,20 +9,19 @@
 ## 구현 상태
 - 사용자 분석은 기존 `EvaluationBudget`을 재사용해 실행당 예약 $0.50/16회/90초, 출력 4096토큰, 사용자별 UTC 하루 예약 $3와 2초 간격을 적용한다. DB 원자 갱신으로 여러 thread/인스턴스의 사용자 한도를 공유한다. Voyage·MCP도 남은 시간을 적용한다. 실패 예약은 환불하지 않으며 실제 청구액은 아니다. 이미 진행 중인 작업을 강제 종료하는 방식은 아니다. `ANALYSIS_*` 설정은 `.env.example`을 따른다.
 - 없는 파일: 견적서 저장(`quote.py`)은 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
-- Mouser: `mouser.py`는 `/api/prices`(backend/main.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
-- 앱 합성 시나리오는 `DEMO_SCENARIOS=1`과 `DEMO_MODE=1`에서만 `demo.py`가 처리한다. `DEMO_MODE=1`만 켠 기존 평가는 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
+- Mouser: `mouser.py`는 `/api/prices`(backend/api/prices.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
+- 키 없는 데모의 분석 재생은 `DEMO_REPLAY=1`과 `DEMO_MODE=1`에서만 켜진다(`demo.enabled()`). `DEMO_MODE=1`만 켠 실행(평가 · 실제 모델 확인)은 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
 - `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
 
-## llm.py가 한 곳이어야 하는 이유 (강사 안내)
+## llm.py가 한 곳이어야 하는 이유
 라우터나 그래프 노드가 `openai`를 직접 import하지 않고 전부 `llm.py`를 거칩니다. 여기서 세 가지를 처리합니다.
 1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다.
-2. 앱 합성 데모는 서비스 조립에서 `demo.py`의 검증된 응답/도구를 주입하며 `llm.py`나 MCP를 호출하지 않는다. 실제 평가 경로와 별개다.
+2. 키 없는 데모는 서비스 조립에서 `llm.node_chat` 대신 `demo.py`의 재생 chat을 그래프 · 카드 도구에 주입해 `llm.py`를 부르지 않는다. 그래프 · 검색(BM25) · MCP 사실 확인은 실제 경로와 같다.
 3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/pipeline/ingest.py`의 `MAX_RETRY`)에 있습니다.
 
 ## 파일
-- `demo.py` — 명시적 `DEMO_SCENARIOS=1`·`DEMO_MODE=1` 앱 데모의 합성 응답/도구. 유료 모델·MCP 호출을 하지 않는다. 기존 BM25 평가 모드는 유지한다.
+- `demo.py` — 키 없는 데모의 LLM 응답 기록(`recorder`) · 재생(`replayer`, 기록에 없으면 노드 이름을 담은 `ReplayMiss`), 재생 모드 판단(`enabled`, `DEMO_REPLAY=1` · `DEMO_MODE=1`), 서비스 재생 chat(`service_chat`, 기록 파일이 없으면 부를 때 503), 기록한 데모 질문 목록 · 대조(`questions` · `match`, `data/demo/recordings/outcomes.json`)와 질문 목록을 붙인 422(`refusal`). 유료 모델을 부르지 않는다.
 - `__init__.py` — 패키지 표시
-- `d5.py` — 소유권 검증 후 받은 회로로 D5 실행, 안전 이벤트·인터럽트 재개, PostgreSQL 체크포인터 조립. Windows에서는 psycopg async에 SelectorEventLoop가 필요하다. 체크포인트 setup은 관리 단계에서 별도로 실행한다.
 - `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 저장하고 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
 - `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 노드별 `langfuse_prompts.NODE_MODELS`를 `node_model(node)`로 고르고 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나, ADR 0014), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
 

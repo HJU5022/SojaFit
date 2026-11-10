@@ -67,8 +67,8 @@ erDiagram
 | `chunk_embeddings` | `002`가 만든 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 Voyage 1024차원 행을 함께 저장. HNSW 없음, 정확 검색 | `002_rag_corpus.sql`, `008_multi_dim_embeddings.sql` |
 | `chunk_embedding_bits` | voyage-4-large 임베딩의 1비트 코드 `BIT(1024)`, 인덱스 없음(dense 1단계 Hamming 후보) | `009_chunk_embedding_bits.sql` |
 | `users` | 로그인 사용자와 관리자·일반 사용자 역할 | `003_auth.sql`, `006_user_roles.sql` |
-| `projects` | 사용자 소유 회로 프로젝트·출처·이름·시각. 소유자별 목록 인덱스 | `013_projects.sql` |
-| `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전. 프로젝트 삭제 cascade, PK가 FK 인덱스를 겸함 | `013_projects.sql` |
+| `projects` | 사용자 소유 회로 프로젝트·출처·이름·시각. 소유자별 목록 인덱스 | `018_projects.sql` |
+| `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전. 프로젝트 삭제 cascade, PK가 FK 인덱스를 겸함 | `018_projects.sql` |
 | `auth_sessions` | 사용자 세션 해시와 만료 시각 | `003_auth.sql` |
 | `auth_login_attempts` | 로그인 시도 제한 | `003_auth.sql`, `005_auth_attempt_window.sql` |
 | `auth_google_states` | state·브라우저 비밀·PKCE verifier·nonce를 보관하는 10분짜리 일회성 Google 로그인 상태 | `010_google_auth.sql` |
@@ -94,6 +94,6 @@ erDiagram
 | `store_vectors` | `PostgresStore` | 기억의 임베딩(인덱스를 설정할 때) |
 | `store_migrations`, `vector_migrations` | `PostgresStore` | Store 스키마 버전 |
 
-`db/014_conversations.sql`은 프로젝트 소유 대화·실행·메시지를 만든다. 체크포인트 표는 LangGraph 설치 경로로 별도 생성한다.
+`db/019_conversations.sql`은 프로젝트 소유 대화·실행·메시지를 만든다. 체크포인트는 같은 UUID의 사용자 분석 thread로 위 `sojafit_agent` 표에 둔다.
 
-`db/015_approvals_quotes.sql`은 `messages → approvals → quotes/approved_cases`를 연결한다. 승인은 메시지당 하나이며 프로젝트·메시지 삭제가 승인·견적·사례까지 cascade한다. snapshot은 가격·재고 관련 키를 어떤 깊이에서도 허용하지 않는다.
+`db/020_approvals_quotes.sql`은 `messages → approvals → quotes/approved_cases`를 연결한다. 승인은 메시지당 하나이며 프로젝트·메시지 삭제가 승인·견적·사례까지 cascade한다. snapshot은 가격·재고 관련 키를 어떤 깊이에서도 허용하지 않는다.

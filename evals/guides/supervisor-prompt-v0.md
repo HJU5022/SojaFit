@@ -13,8 +13,6 @@
 
 ## 연결된 파일
 
-- [설계 문서](../../docs/superpowers/specs/2026-11-05-supervisor-prompt-v0-design.md)
-- [구현 계획](../../docs/superpowers/plans/2026-11-05-supervisor-prompt-v0.md)
 - [Supervisor prompt](../../backend/prompts/supervisor_v0.md)
 - [13건 상태 표본](../samples/supervisor_prompt_v0.jsonl)과 [무결성 기록](../samples/supervisor_prompt_v0_frozen.json)
 - [Chat 실행기](../runners/run_supervisor_prompt_v0.py), [Jev 실행기](../runners/run_supervisor_prompt_v0_jev.py), [통합 집계기](../runners/compare_supervisor_prompt_v0.py)

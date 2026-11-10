@@ -53,7 +53,7 @@ class AgentState(TypedDict, total=False):  # total=False: 처음에는 비어 �
     # ── 채점 노드가 채운다 ──
     passed: list[int]   # 채점을 통과한 청크 id(chunk_id). 비어 있으면 재작성이나 거절로 간다
 
-    # ── 판정 길이 채운다 (멀티 판정 에이전트 코드, backend/multi_agent/agents/judge.py) ──
+    # ── 판정 길이 채운다 (멀티 대체 부품 에이전트 코드, backend/multi_agent/agents/judge.py) ──
     judge_read: dict    # 판정 읽기 결과 `JudgeRead`(역할 · 회로 값). 인터럽트 재개 때 LLM을 다시 부르지 않게 남긴다
     judgement: dict     # 판정 · 찾기 결과. 답 틀 노드가 답 글로 바꾼다
 

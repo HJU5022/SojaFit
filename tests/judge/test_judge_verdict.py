@@ -154,6 +154,18 @@ def test_rank_drops_not_sufficient_and_puts_no_board_change_first():
     assert [x.part for x in shown] == ['D', 'A', 'B'] and [x.part for x in unverified] == ['E']
 
 
+def test_rank_puts_preferred_parts_first_only_within_the_same_verdict_and_board_change():
+    def j(part, verdict, board):
+        return V.Judgement(part=part, role='R01', verdict=verdict, board_change=board)
+    found = [j('A', 'ROLE_SUFFICIENT', False), j('B', 'ROLE_SUFFICIENT', False), j('C', 'ROLE_SUFFICIENT', True),
+             j('D', 'SPEC_EQUIVALENT', True), j('E', 'NOT_VERIFIED', False), j('F', 'NOT_VERIFIED', False)]
+    before = V.rank(found)
+    assert [x.part for x in before[0]] == ['D', 'A', 'B', 'C'] and V.rank(found, preferred=set()) == before  # 비면 예전 순서 그대로
+    shown, unverified = V.rank(found, preferred={'B', 'C', 'F'})
+    # [왜] 선호는 판정(D가 먼저) · 기판 수정 불필요(A · B가 C보다 먼저)를 넘지 않고, 같은 칸 안에서만 앞으로 온다. 확인 안 됨 순서는 그대로
+    assert [x.part for x in shown] == ['D', 'B', 'A', 'C'] and [x.part for x in unverified] == [x.part for x in before[1]] == ['E', 'F']
+
+
 def test_rank_limits_per_verdict_and_total():
     many = [V.Judgement(part=f'P{i}', role='R01', verdict='ROLE_SUFFICIENT') for i in range(6)]
     shown, _ = V.rank(many)
@@ -308,7 +320,7 @@ def test_unless_turns_off_on_any_given_value_like_when_turns_on():
 
 
 def test_tvs_compares_rated_values_when_both_sheets_use_same_waveform():
-    # [왜] 사용자가 서지 파형을 말하지 않아도 두 문서가 같은 정격 파형(10/1000µs · tp = 1ms)이면 정격 VC끼리 비교한다(정운 결정 11-06, R06)
+    # [왜] 사용자가 서지 파형을 말하지 않아도 두 문서가 같은 정격 파형(10/1000µs · tp = 1ms)이면 정격 VC끼리 비교한다(판정 기준표 R06)
     from backend.judge import conditions as C
     from backend.judge import verdict as V
 
@@ -328,7 +340,7 @@ def test_tvs_compares_rated_values_when_both_sheets_use_same_waveform():
 
 def test_user_surge_on_the_rated_waveform_is_compared_at_rated_values():
     # [왜] 사용자가 정격과 같은 파형의 서지(10A, 10/1000µs)를 말해도 데이터시트에는 정격 IPP 행만 있다. 서지 전류가 정격 IPP 이하면
-    #      정격 VC끼리 비교한다(정운 결정 11-06, v3-09 SMBJ14AH). 다른 파형이나 정격을 넘는 서지는 그대로 확인 안 됨
+    #      정격 VC끼리 비교한다(판정 기준표 R06, v3-09 SMBJ14AH). 다른 파형이나 정격을 넘는 서지는 그대로 확인 안 됨
     from backend.judge import conditions as C
     from backend.judge import verdict as V
 

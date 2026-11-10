@@ -1,0 +1,3096 @@
+{
+ "meta": {
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-5.5",
+  "demo_mode": false,
+  "node_models": {
+   "route": "anthropic/claude-haiku-5.5",
+   "grade": "openai/gpt-6-luna",
+   "rewrite": "anthropic/claude-haiku-5.5",
+   "generate": "anthropic/claude-haiku-5.5",
+   "supervisor": "anthropic/claude-sonnet-5.5",
+   "judge_read": "anthropic/claude-haiku-5.5"
+  },
+  "retrieval": "hybrid",
+  "dataset": "evals/dataset_v2.jsonl",
+  "git": "d765e7b+dirty",
+  "prompts": {
+   "generate": "f96512cc",
+   "grade": "d003481a",
+   "judge_read": "d7034cfd",
+   "rewrite": "6d6e6384",
+   "route": "1ad02c3a",
+   "supervisor": "14ded7ce",
+   "tool_use": "7618dbf2"
+  },
+  "session": "multi-dataset_v2-1105-1910-openrouter",
+  "ran_at": "2026-11-05T19:30:21+0000",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "ids": "all"
+ },
+ "summary": {
+  "items": 70,
+  "finished": 70,
+  "failed": 0,
+  "metrics": {
+   "cited_gold": 16,
+   "correct_refusal": 26,
+   "hallucination_risk": 9,
+   "over_refusal": 5,
+   "wrong_citation": 14
+  },
+  "by_kind": {
+   "relevant": {
+    "cited_gold": 16,
+    "over_refusal": 5,
+    "wrong_citation": 14
+   },
+   "irrelevant": {
+    "correct_refusal": 26,
+    "hallucination_risk": 9
+   }
+  },
+  "by_type": {
+   "irrelevant/missing_attribute": {
+    "correct_refusal": 6,
+    "hallucination_risk": 4
+   },
+   "irrelevant/out_of_domain": {
+    "correct_refusal": 7,
+    "hallucination_risk": 1
+   },
+   "irrelevant/unknown_entity": {
+    "correct_refusal": 6,
+    "hallucination_risk": 3
+   },
+   "irrelevant/wrong_period": {
+    "correct_refusal": 7,
+    "hallucination_risk": 1
+   },
+   "relevant/candidate_find": {
+    "cited_gold": 2,
+    "wrong_citation": 8
+   },
+   "relevant/candidate_judge": {
+    "cited_gold": 2,
+    "over_refusal": 1,
+    "wrong_citation": 6
+   },
+   "relevant/rating": {
+    "cited_gold": 9,
+    "over_refusal": 1
+   },
+   "relevant/role": {
+    "cited_gold": 3,
+    "over_refusal": 3
+   }
+  },
+  "routing_match_relevant": 35,
+  "relevant": 35,
+  "latency_p50_s": 17.1,
+  "llm_calls_total": 345.0
+ },
+ "rows": [
+  {
+   "id": "draft30-e01",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 8.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 31.6,
+   "hops": 4.0,
+   "refusal_code": "not_found",
+   "answer_metric": "over_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/24297192e5ff0ad3a6cc436100b8bf0a"
+  },
+  {
+   "id": "draft30-e02",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>작성>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 10.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 34.0,
+   "hops": 5.0,
+   "refusal_code": "not_found",
+   "answer_metric": "over_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/0b53628759fa7d67fa1e69a630a86409"
+  },
+  {
+   "id": "draft30-e03",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 1.0,
+   "latency_s": 19.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    1186
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/42aed5020116f967efc2479989bf60dc"
+  },
+  {
+   "id": "draft30-e04",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 2.0,
+   "latency_s": 16.7,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    555,
+    541
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c29d620db2f92b774eed7512b7a6936a"
+  },
+  {
+   "id": "draft30-e05",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 2.0,
+   "latency_s": 18.6,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    1175,
+    1176
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3e2e6c8140cf61aaf3a5afbaa7fa38e3"
+  },
+  {
+   "id": "draft30-e06",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 3.4,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/432e73eacc75437b48a40d55dce377c6"
+  },
+  {
+   "id": "draft30-e07",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.0,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/59e9005e1695750ae299d782cf132d0c"
+  },
+  {
+   "id": "draft30-e08",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 4.0,
+   "latency_s": 19.3,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    37114,
+    37115,
+    37116,
+    37117
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e5fdf6d677a540adbd0050f8659cd6ea"
+  },
+  {
+   "id": "draft30-e09",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 6.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 18.3,
+   "hops": 3.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/823e4b95ccf41c5bd39e62b3cf4df492"
+  },
+  {
+   "id": "draft30-e10",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 19.8,
+   "hops": 3.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/28a60881b70aedf91bfa0e11152fe214"
+  },
+  {
+   "id": "draft30-m01",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 4.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 3.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3ec69360bb55893610eee9ae8dc2d906"
+  },
+  {
+   "id": "draft30-m02",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 4.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 9.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 3.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c8f38da06f13b05bdeb7967d5f868f9c"
+  },
+  {
+   "id": "draft30-m03",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 2.0,
+   "latency_s": 16.7,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    5510,
+    5485
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b3d34eea2608535e95c6f723d0baf947"
+  },
+  {
+   "id": "draft30-m04",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 10.7,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "BZT52C3V6",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/2790573f839ddf09259a9e0e173f8fee"
+  },
+  {
+   "id": "draft30-m05",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 10.0,
+   "docs_found": 5.0,
+   "passed_cards": 1.0,
+   "latency_s": 26.2,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 6.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    548
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/4ec77991df9e4f8b642ee112fd5d5cfd"
+  },
+  {
+   "id": "draft30-m06",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.3,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/fd95c45544ce1123468cbab272351edd"
+  },
+  {
+   "id": "draft30-m07",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 10.0,
+   "docs_found": 5.0,
+   "passed_cards": 3.0,
+   "latency_s": 32.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 6.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    6196,
+    6188,
+    6189
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/bb119d37a06afa0c2a575282bc533a67"
+  },
+  {
+   "id": "draft30-m08",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 6.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 22.7,
+   "hops": 3.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/18d10e25b31503ea054aeefdfdad6eb9"
+  },
+  {
+   "id": "draft30-m09",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 19.2,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [
+    [
+     "BZT52C3V6",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/f4ecb3f4bbac63b8a490d3edb0e2c4ad"
+  },
+  {
+   "id": "draft30-m10",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 9.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 25.0,
+   "hops": 4.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c2d12de59d2d6260b26e44422b773b3d"
+  },
+  {
+   "id": "draft30-h01",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 4.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 12.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 3.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/170f996c0190e79374a4492a5c193d7e"
+  },
+  {
+   "id": "draft30-h02",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>작성>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 11.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 36.3,
+   "hops": 5.0,
+   "refusal_code": "not_found",
+   "answer_metric": "over_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/84ac8706697c42efe06eb9fe7a65be8c"
+  },
+  {
+   "id": "draft30-h03",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 9.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 28.5,
+   "hops": 4.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/2f9de2b64a58574a96f1e1df14123b50"
+  },
+  {
+   "id": "draft30-h04",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 14.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N5819",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/914f38031be80a1e6128af20ef9e1cce"
+  },
+  {
+   "id": "draft30-h05",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 16.9,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC 1N5817",
+     "NOT_VERIFIED"
+    ],
+    [
+     "TSC 1N5819",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/6056b6263ccf0d8c6492c78d7ea7464b"
+  },
+  {
+   "id": "draft30-h06",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 3.7,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/82b0df468b20567f53773623b629e430"
+  },
+  {
+   "id": "draft30-h07",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.5,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c1017d76115e4f5f9b2473d15e6ce204"
+  },
+  {
+   "id": "draft30-h08",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 18.3,
+   "hops": 3.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/bc8c57b5da5e2ba73d7032dc03b28167"
+  },
+  {
+   "id": "draft30-h09",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>작성>판단>거절",
+   "not_found": 1.0,
+   "tries": 1.0,
+   "llm_calls": 8.0,
+   "docs_found": 5.0,
+   "passed_cards": 1.0,
+   "latency_s": 34.2,
+   "hops": 4.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [
+    50726
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/0881a444bd23c33b41b728359fdceee7"
+  },
+  {
+   "id": "draft30-h10",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 9.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 28.6,
+   "hops": 4.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/11b78277e1d67868943f112e26440035"
+  },
+  {
+   "id": "draft50-n01",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 15.1,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC 1N5817",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/711bd90aab326eef1a03cbc348a19164"
+  },
+  {
+   "id": "draft50-n02",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 13.8,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC BAS70",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e37e3fcc57bcd9092ab520bcfc80c587"
+  },
+  {
+   "id": "draft50-n03",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 1.0,
+   "latency_s": 15.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    562
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/eb8adc8c7d1e9328de07bf805a2511b4"
+  },
+  {
+   "id": "draft50-n04",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 15.9,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC BZT52C5V1",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e483355a8f0a8a295fe806bf4dd5a93b"
+  },
+  {
+   "id": "draft50-n05",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 2.0,
+   "llm_calls": 10.0,
+   "docs_found": 5.0,
+   "passed_cards": 2.0,
+   "latency_s": 29.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 5.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    5502,
+    5503
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/5f441e4a511adfbc6a20d5c5f9c74ae7"
+  },
+  {
+   "id": "draft50-n06",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.4,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "over_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3569e4ee6206133eb2f6a0af02f694ca"
+  },
+  {
+   "id": "draft50-n07",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 15.2,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N5817",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/655ef3926d7b3decdb132de0e47cd969"
+  },
+  {
+   "id": "draft50-n08",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 14.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4148",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/99e6aebcbe58d772165b8f26ecfc363c"
+  },
+  {
+   "id": "draft50-n09",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 3.4,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e23c9ee887a224b48587ecfe50b9e3b2"
+  },
+  {
+   "id": "draft50-n10",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.6,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/4fb7766864d7e1bbe35223ff071bbe51"
+  },
+  {
+   "id": "draft50-n11",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.7,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/eb1ec4abc36ac9a1a92cacc4d08552b5"
+  },
+  {
+   "id": "draft50-n12",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.6,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/9286273627c7b7772f6e183c05d325c7"
+  },
+  {
+   "id": "draft50-n14",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>검색>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 7.0,
+   "docs_found": 5.0,
+   "passed_cards": 0.0,
+   "latency_s": 18.1,
+   "hops": 3.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b12a1de973aa3f6ff17f9191f3780879"
+  },
+  {
+   "id": "draft50-n15",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e3338f9360aa27ac59741bd347ca3405"
+  },
+  {
+   "id": "draft50-n16",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.1,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/ac5bf99fc73675edb7e343a2267bb25b"
+  },
+  {
+   "id": "draft50-n17",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3766ef088c347605a8c53e20bdf06e1b"
+  },
+  {
+   "id": "draft50-n18",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "out_of_scope",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.4,
+   "hops": 1.0,
+   "refusal_code": "out_of_scope",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/643ba35e24bc73d1dfb67b835917e8e1"
+  },
+  {
+   "id": "draft50-n19",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.2,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3e918bf14650ad1a723b9ac89eda065c"
+  },
+  {
+   "id": "draft50-n20",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "out_of_scope",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 3.5,
+   "hops": 1.0,
+   "refusal_code": "out_of_scope",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/63b44b6f5a870a462ed438e70824f4bf"
+  },
+  {
+   "id": "draft52-n21",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검색>판단>작성>판단>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 11.0,
+   "docs_found": 5.0,
+   "passed_cards": 2.0,
+   "latency_s": 31.1,
+   "hops": 5.0,
+   "refusal_code": "not_found",
+   "answer_metric": "over_refusal",
+   "passed": [
+    1198,
+    1199
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/d513d4c694f7695fb06820f8c8649700"
+  },
+  {
+   "id": "draftv2-n01",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 32.1,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4001G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4002G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4002G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4003G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4003G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4004G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4004G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4005G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4005G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4006G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4006G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4007G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148W-G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148WH",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148WSH",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4148WTH",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4933G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4934G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4934G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4935G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4935G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4936G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4936G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4937G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4937G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5391G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5391G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5392G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5392G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5393G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5393G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5395G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5395G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5397G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5397G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5398G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5398G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5399G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5399G-T",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N5400G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/f51a5ddb092fa78bcd7cf0512352a01f"
+  },
+  {
+   "id": "draftv2-n02",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 17.1,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/963c1356df2d09ea0325f40c2c9ffdcd"
+  },
+  {
+   "id": "draftv2-n03",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 18.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/982b8cad2ea9edbdfb4103fabba091f1"
+  },
+  {
+   "id": "draftv2-n04",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 32.9,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WSH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WTH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/4b2775a26df49b5a7376b7a992709001"
+  },
+  {
+   "id": "draftv2-n05",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 18.2,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/55bf00fe9d0f94256d34e53b9b5fd93c"
+  },
+  {
+   "id": "draftv2-n06",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 19.0,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e4c138b7bfe2c30d21cd740733c7dd6c"
+  },
+  {
+   "id": "draftv2-n07",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 33.5,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5401G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5401G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5402G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5402G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5404G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5404G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5406G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5406G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5407G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5407G-K",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c6a56982548b11fbf7425afdd03ece55"
+  },
+  {
+   "id": "draftv2-n08",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 36.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5401G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5401G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5402G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5402G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5404G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5404G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5406G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5406G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5407G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5407G-K",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/a32c8f365d8e0230c27bd7ce1853add8"
+  },
+  {
+   "id": "draftv2-n09",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 16.8,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "wrong_citation",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/818a7b6ac2b28553024cb8310b8a41a7"
+  },
+  {
+   "id": "draftv2-n10",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 35.4,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148",
+     "IDENTICAL"
+    ],
+    [
+     "1N4148W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WSH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WTH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/8113d5639d310219ed921c2f5d4bac03"
+  },
+  {
+   "id": "draftv2-n11",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.3,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/0760b267b08ccd4f65544ed3ee054f0a"
+  },
+  {
+   "id": "draftv2-n12",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 19.4,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/f9aa1d7d1462958ad9f75932485a2f39"
+  },
+  {
+   "id": "draftv2-n13",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 34.4,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WSH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WTH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/2fc67218c6f60a55b2b423f79a26dced"
+  },
+  {
+   "id": "draftv2-n14",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 13.6,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/ecab5b1d2e04fd208a06dd1b44609bea"
+  },
+  {
+   "id": "draftv2-n15",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 17.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b4ecffd2ccb181e63ecd65a1709f19ba"
+  },
+  {
+   "id": "draftv2-n16",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 1.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.4,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/31c1b979babf60ddd6bfdd7e7b4b04b2"
+  },
+  {
+   "id": "draftv2-n17",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 22.1,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/7401ccac460ba5ab2fd6d58afda3e7a8"
+  },
+  {
+   "id": "draftv2-n18",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 13.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/53a89ea837f6edcef2f6dd70f4fa8226"
+  },
+  {
+   "id": "draftv2-n19",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 36.1,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148",
+     "IDENTICAL"
+    ],
+    [
+     "1N4148W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WSH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WTH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e4293169a0cf900c7e77a66fdc959eb6"
+  },
+  {
+   "id": "draftv2-n20",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 5.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 39.3,
+   "hops": 4.0,
+   "refusal_code": "",
+   "answer_metric": "hallucination_risk",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4001G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4001G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4002G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4003G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4004G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4005G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4006G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4007G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148",
+     "IDENTICAL"
+    ],
+    [
+     "1N4148W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148W-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WS-G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WSH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4148WTH",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448W",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4448WS",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4933G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4934G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4935G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4936G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N4937G-K",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5391G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5392G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5393G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5395G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5397G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5398G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5399G-T",
+     "NOT_VERIFIED"
+    ],
+    [
+     "1N5400G",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/8f210d14291749ec4c173153f1af3609"
+  }
+ ],
+ "failed": []
+}

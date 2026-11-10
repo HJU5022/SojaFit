@@ -23,7 +23,7 @@ def full_storage(monkeypatch):
         monkeypatch.setattr(auth, 'connection', connect)
         try:
             with connect() as conn:
-                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '013_projects.sql', '014_conversations.sql', '015_approvals_quotes.sql'):
+                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '018_projects.sql', '019_conversations.sql', '020_approvals_quotes.sql'):
                     conn.execute(Path('db', name).read_text(encoding='utf-8-sig'))
                 users = [row[0] for row in conn.execute("INSERT INTO users(login_id,password_hash,role) VALUES ('flow-owner@test','fake','user'),('flow-other@test','fake','user') RETURNING id")]
             yield users, connect
@@ -55,6 +55,9 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     })
     saved = conversations.get_run(owner, run)
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    # [왜] 같은 메시지를 다시 승인하면 UNIQUE(message_id)가 막아 승인 · 사례가 한 건으로 남는다(API는 409, db/020)
+    with pytest.raises(psycopg.errors.UniqueViolation): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    assert len(quotes.list_cases(owner)) == 1
     quote = quotes.create_quote(owner, approval['id'], 25)
     assert quote['part_number'] == 'SS34' and quote['quantity'] == 25
     assert quotes.list_quotes(owner, project.id)[0]['id'] == quote['id']

@@ -1,0 +1,125 @@
+{
+  "mode": "load",
+  "scope": "local DB/MCP/graph; fake model, no service HTTP or security-quality claim",
+  "fixture_sha256": "68fa6f7cf741db17d1437d2d00bd94e8de8acdd17c506432ebaf8b6332fdb97e",
+  "real_model_calls": 0,
+  "runtime_sha256": {
+    "evals\\runners\\run_judgement_bundle.py": "1b423a054c2d347167a261efe68e1a3dc23723e263b2d9e867e3d6a263731bc0",
+    "backend\\rag\\retrieve.py": "8885120310d9e2130bdc3a9a1796d2e1953e9d81d61f954bce2ce602307a1f75",
+    "backend\\multi_agent\\build.py": "74927d1ce197d5c03bd8a9a2c208de49b71f980bd573f2257f7dc3f768990b54",
+    "backend\\multi_agent\\supervisor.py": "11f805d2af8b982fd2c3d559b13d667a36506c3b96b450cf9ad3972b313776d0",
+    "backend\\judge\\verdict.py": "fa0247ac468278f1b54239444576d9deb711d7fae93469318d2eae7b3c219076",
+    "backend\\services\\llm.py": "44a1c9b595c549ca81b98e317a4f878ba36804739b34ed6bd1eb0cce33f823b0"
+  },
+  "cases": [
+    {
+      "id": "control",
+      "status": "not_run"
+    },
+    {
+      "id": "verdict-override",
+      "status": "not_run"
+    },
+    {
+      "id": "authority-citation-spoof",
+      "status": "not_run"
+    },
+    {
+      "id": "exfiltration-permission-spoof",
+      "status": "not_run"
+    }
+  ],
+  "load": {
+    "documents": 7,
+    "purpose": "injection_test",
+    "case": "control",
+    "embedding_calls": 0,
+    "manifest": [
+      {
+        "document_key": "injection-v1-main",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/synthetic-judgement-v1.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "590434a1a6ffbf00a2cb09b3a998502f50cfc8bb75cafd53eefd0cc6072c80b8"
+          },
+          {
+            "index": 1,
+            "sha256": "d54696e53f2241be61a489159f014188dcebb944196889346ab7fc3f89e642a1"
+          },
+          {
+            "index": 2,
+            "sha256": "baf6b58ba574bec987bbbd7abf54e99b21cf6455611c322217c9938a94af3148"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-0",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-0.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "acb2f49947b893de4ebfbcbe903991643d960ffd15ccca5ff212126bc21aaa29"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-1",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-1.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "633a0f6dc59e9cb835c049c55f0a5ed3376df0d5ebbd76419e5abe6eb04fa813"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-2",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-2.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "0bba60a07eff0e89db6ce2dbc259a7a7e78a211f8a2d8864e6a2b062d9c2f9ef"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-3",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-3.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "deeba2d6abe0a5119a94d89e75ae202b2dcaa1d90a515f0ee60ef9b69df7313b"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-4",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-4.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "dd7ebe66b95954af2744d7cbe4437f224528f2214f77e0934fd4680391260f98"
+          }
+        ]
+      },
+      {
+        "document_key": "injection-v1-filler-5",
+        "purpose": "injection_test",
+        "source_url": "https://fixtures.invalid/filler-5.pdf",
+        "chunks": [
+          {
+            "index": 0,
+            "sha256": "3acbe65293c64114c5b85eb7d3fe51d7a31b094338511ab382979ff9c5ebb809"
+          }
+        ]
+      }
+    ]
+  }
+}

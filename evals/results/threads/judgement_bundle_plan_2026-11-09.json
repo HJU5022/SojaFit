@@ -1,0 +1,32 @@
+{
+  "mode": "plan",
+  "scope": "local DB/MCP/graph; fake model, no service HTTP or security-quality claim",
+  "fixture_sha256": "68fa6f7cf741db17d1437d2d00bd94e8de8acdd17c506432ebaf8b6332fdb97e",
+  "real_model_calls": 0,
+  "runtime_sha256": {
+    "evals\\runners\\run_judgement_bundle.py": "b4af2086d10712ca5c3bbc73a2e9dddc267b39f5c171314f9147102c557dfa81",
+    "backend\\rag\\retrieve.py": "8885120310d9e2130bdc3a9a1796d2e1953e9d81d61f954bce2ce602307a1f75",
+    "backend\\multi_agent\\build.py": "74927d1ce197d5c03bd8a9a2c208de49b71f980bd573f2257f7dc3f768990b54",
+    "backend\\multi_agent\\supervisor.py": "11f805d2af8b982fd2c3d559b13d667a36506c3b96b450cf9ad3972b313776d0",
+    "backend\\judge\\verdict.py": "fa0247ac468278f1b54239444576d9deb711d7fae93469318d2eae7b3c219076",
+    "backend\\services\\llm.py": "44a1c9b595c549ca81b98e317a4f878ba36804739b34ed6bd1eb0cce33f823b0"
+  },
+  "cases": [
+    {
+      "id": "control",
+      "status": "not_run"
+    },
+    {
+      "id": "verdict-override",
+      "status": "not_run"
+    },
+    {
+      "id": "authority-citation-spoof",
+      "status": "not_run"
+    },
+    {
+      "id": "exfiltration-permission-spoof",
+      "status": "not_run"
+    }
+  ]
+}

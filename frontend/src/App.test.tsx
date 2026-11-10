@@ -27,9 +27,10 @@ it('restores a session before showing the workbench and admin navigation', async
   render(<MemoryRouter initialEntries={['/app']}><App /></MemoryRouter>)
   expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: '사용자 관리' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '내 설정' })).toBeInTheDocument()
 })
 it('shows restore failures instead of granting access', async () => {
-  network(() => failure('SERVICE_UNAVAILABLE', '로그인 서비스를 사용할 수 없습니다.', 503))
+  network(() => failure('UNAVAILABLE', '로그인 서비스를 사용할 수 없습니다.', 503))
   render(<MemoryRouter initialEntries={['/app']}><App /></MemoryRouter>)
   expect(await screen.findByRole('alert')).toHaveTextContent('로그인 서비스를 사용할 수 없습니다.')
   expect(screen.getByRole('alert')).toHaveTextContent('req-test')

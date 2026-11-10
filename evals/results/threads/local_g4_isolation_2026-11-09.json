@@ -1,0 +1,100 @@
+{
+  "what": "키 없는 로컬 compose에서 G4(영속 체크포인트 · 사람 승인 interrupt · 재시작 뒤 재개 · 사용자별 thread · 사용자별 Store 기억) 와 D7(계정 2개 격리 · 같은 승인 두 번) 확인",
+  "when": "2026-11-09T22:54:58+09:00",
+  "commit": "f6b6d7e",
+  "environment": "docker compose(.env 없음, DEMO_MODE=1, DEMO_SCENARIOS=1, 새 볼륨), 포트 8088, 데모 계정 A/B 버튼 로그인, 합성 데모 회로 · 질문",
+  "restart": "phase1 뒤 `docker compose restart api`",
+  "limits": [
+    "합성 데모라 실제 데이터시트 · 모델 품질과 무관",
+    "임베딩 키가 없어 기억 검색은 순위 없이 목록(의미 순위는 키가 있는 환경에서 확인 필요)",
+    "배포 주소(Cloud Run) 확인 아님"
+  ],
+  "checks": [
+    {
+      "check": "데모 A 버튼 로그인",
+      "expected": "200, role user",
+      "actual": "200, role user",
+      "pass": true
+    },
+    {
+      "check": "후보 판정 질문이 조건 질문에서 멈춤(interrupt)",
+      "expected": "status WAITING + 빠진 조건 목록",
+      "actual": "status WAITING, missing ['v_in_max', 'i_max', 'v_drop_allowed']",
+      "pass": true
+    },
+    {
+      "check": "API 서버 재시작 뒤 같은 대화가 멈춘 상태 그대로",
+      "expected": "status WAITING",
+      "actual": "status WAITING",
+      "pass": true
+    },
+    {
+      "check": "재시작 뒤 조건에 답하고 재개 → 판정 완료",
+      "expected": "status DONE, can_approve true",
+      "actual": "status DONE, can_approve True",
+      "pass": true
+    },
+    {
+      "check": "같은 승인 요청 두 번 → 승인 원본 1건",
+      "expected": "두 요청 모두 처리, DB 승인 1건",
+      "actual": "200/200, DB 1건",
+      "pass": true
+    },
+    {
+      "check": "내 설정(장기 기억 3칸) 저장",
+      "expected": "200",
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "check": "표현을 바꾼 질문으로 기억 검색(키 없으면 순위 없이 목록)",
+      "expected": "3칸 반환",
+      "actual": "반환 ['affiliation', 'job_role', 'mounting_preference']",
+      "pass": true
+    },
+    {
+      "check": "요청 본문에 다른 사용자 id → 거절",
+      "expected": "422",
+      "actual": 422,
+      "pass": true
+    },
+    {
+      "check": "데모 B 버튼 로그인",
+      "expected": "200, role user",
+      "actual": "200, role user",
+      "pass": true
+    },
+    {
+      "check": "A와 B는 다른 사용자",
+      "expected": "user_id 다름",
+      "actual": "A 1, B 2",
+      "pass": true
+    },
+    {
+      "check": "B가 A의 대화 조회",
+      "expected": "404",
+      "actual": 404,
+      "pass": true
+    },
+    {
+      "check": "B가 A의 대화 승인",
+      "expected": "404",
+      "actual": 404,
+      "pass": true
+    },
+    {
+      "check": "B의 대화 목록에 A 대화 없음",
+      "expected": "0건",
+      "actual": "0건",
+      "pass": true
+    },
+    {
+      "check": "B의 기억에 A가 저장한 소속 없음",
+      "expected": "SojaFit 데모팀 없음",
+      "actual": "0칸",
+      "pass": true
+    }
+  ],
+  "passed": 14,
+  "total": 14
+}

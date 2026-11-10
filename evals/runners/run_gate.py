@@ -6,7 +6,7 @@
   - 문항 통과: 관련은 정답 (PDF, 쪽) 인용(`cited_gold`) + 후보 판정이면 첫 후보 판정 == `verdict`
     + 후보 찾기면 보여 준 후보가 모두 `qualifying_parts` 안이고 하나 이상. 무관은 올바른 거절(`correct_refusal`). 실행 오류는 실패.
 - 하지 않는 일: 평가셋 고치기(사람 · 세션이 원인을 보고 고친다), 검색 지표(별도 실행기), 동시 실행.
-- 출처: 정운 지시(11-06: 0.95 기준 3세트, 하나라도 이상하면 멈추고 고친 뒤 처음부터), run_graph.py(조립 · 채점 함수를 그대로 씀)
+- 출처: ADR 0015 목표 지표와 11-06 조장 결정(0.95 기준 3세트, 하나라도 이상하면 멈추고 고친 뒤 처음부터), run_graph.py(조립 · 채점 함수를 그대로 씀)
 
 - `--keep-going`: 실패해도 멈추지 않고 세트를 끝까지 돈다(11-07 기준이 '세트마다 0.95'로 바뀌어 전체 비율을 재야 한다). 집계는 `gate_report.py`.
 
@@ -88,7 +88,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                                     for r in state.get('reports') or []]
                     if it.get('parts'):
                         from evals.runners.score_compound import score_parts
-                        row['parts_result'] = score_parts(it, state)  # [왜] 여러 개를 묻는 질문은 부분마다 채점한다(B-지시서 4-5.3)
+                        row['parts_result'] = score_parts(it, state)  # [왜] 여러 개를 묻는 질문은 부분마다 채점한다(RUNNERS.md `score_compound.py`)
                 except Exception as error:  # [왜] 실행 오류도 "이상한 데이터"다. 멈추고 오류를 남긴다
                     import traceback  # [왜] 멈춘 오류의 자리를 다시 재현하지 않고 보려고 마지막 몇 줄을 남긴다
                     row = {'id': it['id'], 'kind': it['kind'], 'error': f'{type(error).__name__}: {str(error)[:300]}',
@@ -103,7 +103,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
             summary = {'set': s, 'done': len(rows), 'total': len(items), 'passed': sum(r['pass'] for r in rows),
                        'p95_s': p95(lat), 'p50_s': sorted(lat)[len(lat) // 2] if lat else 0.0, 'session': session,
                        'stopped_at': next((r['id'] for r in rows if not r['pass']), None),
-                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT', 'LAB_READ_VOTES')},
+                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT', 'LAB_READ_VOTES', 'JUDGE_READ_VOTES')},
                        'db': os.getenv('DATABASE_URL', '').rsplit('/', 1)[-1],  # DB 이름만(접속 정보는 남기지 않는다)
                        'llm_provider': llm.LLM_PROVIDER, 'claude_direct': llm.LLM_PROVIDER == 'openrouter' and bool(os.getenv('ANTHROPIC_API_KEY')),  # [왜] Anthropic 직통인지 OpenRouter인지(응답 시간이 다르다). claude_cli는 키를 빼고 구독으로 부르므로 직통이 아니다
                        'git': _git_rev()}

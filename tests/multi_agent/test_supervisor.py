@@ -11,6 +11,7 @@ from langgraph.types import Send
 from backend.multi_agent import contracts as C
 from backend.multi_agent import supervisor as S
 from backend.multi_agent.contracts import Plan, Reason, TaskReport
+import pytest
 
 STATE = {'question': 'D1을 1N5817로 바꿔도 돼?', 'target': 'D1', 'conditions': '입력 최대 20V',
          'target_part': {'ref': 'D1', 'value': '1N4148', 'footprint': 'DO-35', 'nets': []},
@@ -41,7 +42,7 @@ def test_plan_format_failure_ends_as_refusal_without_agents():
         raise ValueError('형식을 3번 모두 어겼다')  # llm.chat이 다시 불러도 틀렸을 때 내는 오류
     out = S.plan_node(STATE, chat=chat, judge_enabled=True)
     assert out['refusal_reason'] == Reason.LIMIT_REACHED.value and out['plan'] == {}
-    assert S.after_plan({**STATE, **out}) == 'refuse'
+    assert S.after_plan({**STATE, **out}) == '거절'
 
 
 def test_judge_tasks_become_docs_tasks_when_judge_is_off():
@@ -54,11 +55,11 @@ def test_judge_tasks_become_docs_tasks_when_judge_is_off():
 def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
     p = plan(task(1), task(2, agent='judge', kind='candidate_judge'), question_type='candidate_judge').model_dump(mode='json')
     sends = S.after_plan({**STATE, 'plan': p, 'refusal_reason': ''})
-    assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['docs', 'judge']
-    assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # 문서 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
+    assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', '대체 부품 에이전트']
+    assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
     assert sends[1].arg['question_type'] == 'candidate_judge' and sends[1].arg['facts'] == STATE['facts']
-    for nxt in ('finish', 'price'):
-        assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == nxt
+    for nxt, node in (('finish', '끝내기'), ('price', '가격 안내')):
+        assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == node  # 갈림 함수는 계획서 값이 아니라 노드 이름을 돌려준다
 
 
 def test_owned_memory_reaches_plan_and_both_task_payloads_but_not_grounding():
@@ -133,7 +134,7 @@ def test_prompts_keep_constraints_but_no_routing_table():
     for reason in ('out_of_scope', 'part_missing', 'revision_missing', 'not_found'):
         assert reason in S.PROMPT, reason
     assert 'never compare numbers' in S.PROMPT
-    # [왜] 예전 "보고 뒤에 어디로" 규칙표를 그대로 따라가 판단이 4번씩 났다(B-지시서 2절). 계획형에는 보고 뒤 규칙이 없다
+    # [왜] 예전 "보고 뒤에 어디로" 규칙표를 그대로 따라가 판단이 4번씩 났다(MULTI_AGENT.md "구조 결정"의 이유). 계획형에는 보고 뒤 규칙이 없다
     for gone in ('After a search report', 'After a writer report', 'After a verifier report', '`verifier`', '`writer`'):
         assert gone not in S.PROMPT, gone
     assert 'do not restate its table' in S.SYNTH_PROMPT
@@ -190,9 +191,91 @@ def test_declined_parts_are_appended_with_their_refusal_reason():
     p = plan(task(1), declined=[{'ask': 'TSC ES1DQ의 VRRM', 'reason': 'part_missing'}]).model_dump(mode='json')
     state = {**STATE, 'plan': p, 'facts': {'parts': {'ES1DQ': False}}, 'final_reports': [report(1, answer='VRRM은 40 V이다 [7].')]}
     out = S.single_node(state)
-    # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(B-지시서 4-5.3, c20-15)
+    # [왜] 여러 개를 묻는 질문의 코퍼스 밖 부분을 말없이 빼지 않는다(c20-15)
     assert out['answer'].startswith('VRRM은 40 V이다 [7].') and "답하지 않은 부분 'TSC ES1DQ의 VRRM'" in out['answer'] and 'ES1DQ' in out['answer']
     import pytest
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         plan(task(1), declined=[{'ask': 'x', 'reason': 'no_result'}])  # 재시도 사유는 거절 사유가 아니다
+
+
+def test_find_question_without_a_judge_find_task_is_matched_to_the_judge_agent_by_code():
+    """[왜] Haiku Supervisor가 찾기 질문을 문서 정격 조회로 보내 후보를 못 냈다(h4-12 · 13, 사전 등록 #47). 역할 할 일은 남긴다."""
+    p = plan(task(1, kind='rating'), task(2, kind='role'), question_type='candidate_find')
+    tasks = S.plan_node(STATE, chat=lambda *a: p, judge_enabled=True)['plan']['tasks']
+    assert [(t['id'], t['agent'], t['kind']) for t in tasks] == [(1, 'judge', 'candidate_find'), (2, 'docs', 'role')]
+    kept = plan(task(1, agent='judge', kind='candidate_find'), question_type='candidate_find')
+    assert S.plan_node(STATE, chat=lambda *a: kept, judge_enabled=True)['plan']['tasks'][0]['goal'] == 'goal 1'  # 맞게 냈으면 그대로
+    assert S.plan_node(STATE, chat=lambda *a: p, judge_enabled=False)['plan']['tasks'][0]['agent'] == 'docs'  # 판정이 꺼지면 바꾸지 않는다
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+@pytest.mark.parametrize('second_status', ['ok', 'fail'])
+def test_judgement_output_contains_all_code_reports_without_free_prose(node, second_status):
+    from evals.runners.run_claim_consistency import inputs, measure_case
+    from backend.multi_agent.agents.docs import DocsAnswer
+    b, cases = inputs()
+    result = measure_case(b, cases[0], lambda *_: DocsAnswer(grade='enough', answer='사용해도 됩니다 [73].'))
+    first = result['judgement']
+    import copy
+    second = copy.deepcopy(first)
+    second['results'][0]['part'] = 'OTHER'
+    reports = [report(1, answer='부하 전류는 미제공입니다 [73].', docs=result['document_report']['docs']),
+               report(2, agent='judge', judgement=first), report(3, agent='judge', status=second_status, judgement=second)]
+    state = {**STATE, 'final_reports': reports, 'reports': reports, 'counters': {'hops': 0},
+             'synth_text': '이전 턴의 잘못된 설명'}
+    kw = {'chat': lambda *_: pytest.fail('No synth call for code judgement')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer'] and '미제공입니다' not in out['answer']
+    assert '**DEMO2: 불충족**' in out['answer']
+    assert ('**OTHER: 불충족**' in out['answer']) == (second_status == 'ok')
+    if second_status == 'fail':
+        assert '일부 부품의 판정은 완료하지 못했습니다' in out['answer']
+    assert '문서' in out['answer'] and '포함하지 않았습니다' in out['answer']
+    assert out['synth_text'] == ''
+    assert len(out['final_reports']) == (2 if second_status == 'ok' else 1)
+    assert all(r['agent'] == 'judge' for r in out['final_reports'])
+    assert state['reports'] == reports  # Preserve the complete raw report history.
+    assert not S.check_node({**state, **out}).get('refusal_reason')
+
+
+def test_docs_only_synthesis_still_runs_and_find_is_not_rerouted():
+    state = {**STATE, 'reports': [report(1, status='partial', answer='40 V입니다 [7].')], 'counters': {'hops': 0}}
+    calls = []
+    def fake(*_):
+        calls.append(True)
+        return S.Synth(answer='40 V입니다 [7].')
+    assert S.synth_node(state, chat=fake)['answer'] == '40 V입니다 [7].'
+    assert calls == [True]
+    finding = {'kind': 'find', 'roles': ['R01'], 'role_evidence': [], 'terms': [],
+               'capped': False, 'shown': [], 'unverified': []}
+    out = S.single_node({**STATE, 'reports': [report(1, answer='독립 문서 설명 [7].'),
+                                            report(2, agent='judge', judgement=finding)]})
+    assert '독립 문서 설명 [7].' in out['answer']
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+def test_partial_judgement_does_not_fall_back_to_unsafe_prose(node):
+    partial = {'kind': 'judge', 'roles': ['R01'], 'role_evidence': [], 'results': []}
+    state = {**STATE, 'counters': {'hops': 0}, 'reports': [
+        report(1, answer='사용해도 됩니다 [7].'), report(2, agent='judge', status='partial', judgement=partial)]}
+    kw = {'chat': lambda *_: pytest.fail('No fallback model call')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer']
+    assert '판정은 완료하지 못했습니다' in out['answer']
+    assert not S.check_node({**state, **out}).get('refusal_reason')
+
+
+@pytest.mark.parametrize('node', [S.single_node, S.synth_node])
+def test_failed_judgement_with_docs_answer_still_uses_code_boundary(node):
+    # 판정한 후보가 없으면 판정 보고는 fail이 된다(judge_task_node). 그때도 문서 자유 글이 최종 답에 나가면 안 된다(11-10)
+    failed = {'kind': 'judge', 'roles': ['R01'], 'role_evidence': [], 'results': []}
+    state = {**STATE, 'counters': {'hops': 0}, 'reports': [
+        report(1, answer='사용해도 됩니다 [7].'), report(2, agent='judge', status='fail', judgement=failed)]}
+    kw = {'chat': lambda *_: pytest.fail('No synth call when a judgement was asked')} if node is S.synth_node else {}
+    out = node(state, **kw)
+    assert '사용해도 됩니다' not in out['answer']
+    assert out['answer'].startswith('판정을 완료하지 못했습니다.')
+    assert '포함하지 않았습니다' in out['answer']
+    assert [r['agent'] for r in out['final_reports']] == ['judge']
+    assert not S.check_node({**state, **out}).get('refusal_reason')  # 거절이 아니라 안내 답으로 끝난다

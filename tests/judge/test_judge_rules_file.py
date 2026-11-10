@@ -1,7 +1,7 @@
 """실제 규칙 파일(backend/judge/rules/roles.yaml) 시험: 23개가 다 있고 모든 기준식 · 이름이 문법에 맞는지 본다.
 
 - 역할: 규칙을 옮겨 적다 생긴 오타(없는 회로 값 이름, 없는 사양 코드, 문법 밖 기준식)를 막는다.
-- 하지 않는 일: 규칙 내용이 공학적으로 맞는지(정운 판정 · 연습 문제로 본다).
+- 하지 않는 일: 규칙 내용이 공학적으로 맞는지(조장 판정 · 연습 문제로 본다).
 - 출처: docs/specs/judge-agent.md "역할 23개", 저장소 밖 규칙 원본 3개 파일
 """
 from backend.judge import conditions as C
@@ -33,13 +33,13 @@ def test_or_rules_are_any_groups_and_fallbacks_are_defaults():
 
 
 def test_r14_high_frequency_trr_exempts_only_sic_schottky():
-    """R14: 100 kHz 초과면 trr ≤ 35 ns 또는 SiC 쇼트키만(보류 5개 규칙안, 정운 11-06). 75 ns 조건은 쇼트키 계열 모두 면제."""
+    """R14: 100 kHz 초과면 trr ≤ 35 ns 또는 SiC 쇼트키만(보류 5개 규칙안 R14, 11-06). 75 ns 조건은 쇼트키 계열 모두 면제."""
     trr = {c['basis']: c.get('exempt', 'schottky') for c in C.load()['R14']['conditions'] if c.get('code') == 'TRR'}
     assert trr == {'75e-9': 'schottky', '35e-9': 'sic'}
 
 
 def test_r13_uses_spike_margin_by_snubber_flag():
-    """R13: 스너버가 있으면 ×1.25, 없거나 모르면 ×2(보류 5개 규칙안, 정운 11-06)."""
+    """R13: 스너버가 있으면 ×1.25, 없거나 모르면 ×2(보류 5개 규칙안 R13, 11-06)."""
     r13 = C.load()['R13']
     bases = {c['basis'] for c in r13['conditions'] if c['code'] == 'VRRM' or c['code'] == ['VRRM']}
     assert '(v_out + v_in_max * ns_np) * kV' in bases and '(v_out + v_in_max * ns_np) * 2' in bases

@@ -3,7 +3,7 @@
 - 역할: 형식이 틀린 계획(거절 사유 없음 · 일상 대화 reply 없음 · 할 일 0개나 4개 · 번호 순서 · 판정에 맞지 않는 종류 · 검색어 없는 문서 할 일)이
   ValidationError로 걸리는지(llm.chat이 다시 부르는 조건), 보고 요약이 200자를 넘지 못하는지, 상한이 합의한 숫자인지 본다.
 - 하지 않는 일: LLM · 그래프 실행.
-- 출처: backend/multi_agent/contracts.py, 참조/아티팩트 "SojaFit 멀티 에이전트 구조", 회의록 D4-D5 B-지시서 4-4
+- 출처: backend/multi_agent/contracts.py, backend/multi_agent/MULTI_AGENT.md "구조 결정"(상한)
 """
 import pytest
 from pydantic import ValidationError

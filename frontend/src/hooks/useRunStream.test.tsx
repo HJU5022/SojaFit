@@ -31,3 +31,11 @@ it('turns a malformed frame into a public failure', async () => {
   await act(async () => { await result.current.start('thread-1', { question: '질문', target_ref: 'D1' }) })
   expect(result.current.state).toMatchObject({ status: 'failed', error: { code: 'STREAM_ERROR' } })
 })
+
+it('shows the server message of a failed frame', async () => {
+  const error = { code: 'VALIDATION_ERROR', message: '기록한 데모 질문과 질문 · 사용 조건이 다릅니다.' }
+  vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(sse(['run_started', { run_id: 'run-3' }], ['failed', { ...dto, status: 'failed', error }]))))
+  const { result } = renderHook(() => useRunStream())
+  await act(async () => { await result.current.start('thread-1', { question: '질문', target_ref: 'D1' }) })
+  expect(result.current.state).toMatchObject({ status: 'failed', runId: 'run-3', error: { ...error, requestId: 'req-1' } })
+})

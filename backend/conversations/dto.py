@@ -1,4 +1,4 @@
-"""브라우저에 내보낼 결과의 고정 허용 목록."""
+"""브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
 from pydantic import BaseModel, ValidationError
 from backend.conversations.models import SafeEvidence, SafeJudgement
@@ -15,6 +15,7 @@ class BrowserResult(BaseModel):
     refusal: str = ''
     interrupt: dict = {}
     request_id: str = ''
+    profile_hints: list = []  # 참고(내 설정): 이번 질문으로 찾은 사용자 사실. 판정 근거가 아니며 저장하지 않는다
 
 
 def _pick(value, keys):
@@ -30,7 +31,7 @@ def _pick(value, keys):
 def _safe_judgement(value):
     if not isinstance(value, dict) or not value:
         return None
-    result = _pick(value, ('kind', 'roles', 'role_evidence', 'capped'))
+    result = _pick(value, ('kind', 'roles', 'role_evidence', 'capped', 'preferred_mount'))
     for key in ('results', 'shown', 'unverified'):
         candidates = []
         for item in value.get(key, []):
@@ -60,7 +61,37 @@ def safe_judgement(value):
         return None
 
 
-def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '', interrupt: dict | None = None) -> BrowserResult:
+def public_state(state: dict) -> dict:
+    """그래프 상태에서 공개 계약에 구조화된 값만 선택한다. 원문 문서와 보고서는 복사하지 않는다."""
+    answer = state.get('answer', '')
+    question_type = state.get('question_type', '')
+    parts = state.get('price_parts', [])
+    result = {'answer': answer if isinstance(answer, str) else '',
+              'question_type': question_type if isinstance(question_type, str) and question_type in {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'} else '',
+              'price_parts': [p for p in parts if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(parts, list) else []}
+    reports = state.get('final_reports') or state.get('reports') or []
+    cited = {str(item) for report in reports if isinstance(report, dict)
+             for item in report.get('evidence_ids', [])}
+    evidence = []
+    for doc in state.get('docs') or []:
+        if not isinstance(doc, dict) or str(doc.get('chunk_id')) not in cited:
+            continue
+        document, page, table = doc.get('file'), doc.get('page'), doc.get('table')
+        if not isinstance(document, str) or not isinstance(page, (int, str)) or not isinstance(table, (str, type(None))):
+            continue
+        entry = {'document': document.replace('\\', '/').rsplit('/', 1)[-1], 'page': page,
+                 'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
+        if entry not in evidence:
+            evidence.append(entry)
+    if evidence:
+        result['evidence'] = evidence
+    if judgement := safe_judgement(state.get('judgement')):
+        result['judgement'] = judgement
+    return result
+
+
+def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '', interrupt: dict | None = None,
+               profile_hints=()) -> BrowserResult:
     # 명시적으로 구조화한 공개 칸만 선택한다.
     answer = state.get('answer', '')
     safe_interrupt = {}
@@ -99,4 +130,5 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                          evidence=evidence, refusal=answer if status == 'refused' and isinstance(answer, str) else '',
                          question_type=question_type if isinstance(question_type, str) and question_type in question_types else '',
                          price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(state.get('price_parts', []), list) else [],
-                         interrupt=safe_interrupt, judgement=judgement, request_id=request_id)
+                         interrupt=safe_interrupt, judgement=judgement, request_id=request_id,
+                         profile_hints=[{key: str(hint.get(key, '')) for key in ('kind', 'value', 'text')} for hint in profile_hints][:3])

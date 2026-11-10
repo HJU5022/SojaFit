@@ -2,7 +2,7 @@
 
 - 역할: 품번 1~10개를 Mouser Search API 품번 검색(`POST /api/v1/search/partnumber`)에 한 번 보내고, 화면에 필요한 칸
   (품번 · 제조사 · 수량별 가격과 통화 · 재고 표시 · 상품 주소)과 조회 시각만 골라 돌려준다. 프로세스당 호출 횟수에 상한을 둔다.
-  호출자: backend/main.py `GET /api/prices`(요청 때마다), tests/services/test_mouser.py · tests/api/test_prices.py(가짜 transport).
+  호출자: backend/api/prices.py `GET /api/prices`(요청 때마다), tests/services/test_mouser.py · tests/api/test_prices.py(가짜 transport).
 - 하지 않는 일: 응답 저장 · 캐시 · 로그(DB · 파일 · 로그 · 그래프 상태 어디에도 남기지 않는다), 재시도, 그래프 안에서 부르기(그래프는 품번만 정한다),
   데모 모드 판단(`/api/prices`가 한다), 제조사 거르기 · 가격 비교.
 - 출처: SPEC 4절(가격·재고 계약) · 6절(Mouser), ADR 0009, Mouser Search API v1 문서(https://api.mouser.com/api/docs/V1, 11-06 확인:

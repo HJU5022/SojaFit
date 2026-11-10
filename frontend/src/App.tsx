@@ -4,8 +4,10 @@ import { AuthProvider, useAuth } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
 import { dummyFlowEnabled, errorMessage } from './api/client'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
+import SettingsPage from './pages/SettingsPage'
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>
@@ -35,6 +37,8 @@ function Shell() {
         <nav aria-label="주요 화면">
           <NavLink to="/app">작업대</NavLink>
           {!user && <NavLink to="/login">로그인</NavLink>}
+          {!user && <NavLink to="/signup">가입</NavLink>}
+          {user && <NavLink to="/settings">내 설정</NavLink>}
           {user?.role === 'admin' && <NavLink to="/admin/users">사용자 관리</NavLink>}
           {user && <button disabled={busy} onClick={() => void signOut()}>{busy ? '로그아웃 중…' : '로그아웃'}</button>}
         </nav>
@@ -45,7 +49,9 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/app" element={<RequireAuth><WorkbenchPage /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Routes>
       </main>

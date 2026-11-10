@@ -14,7 +14,7 @@
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_retrieval_d3.py` — D3 검색 측정 실행기: gold 줄의 모든 쪽 풀기(이어 적은 쪽·범위), Page Hit·회수율·Full Recall·회수 가능만·중복 제거 nDCG, 실패 유형 4종, 정확 부호 검정, no_result 임계값을 가짜 청크로 확인(데이터·API 없이)
 - `test_retrieval_service.py` — 서비스 경로 재측정 실행기: 지표 정의, R1 1위 칸과 상위 5개 대조, 백분위·상한, 파일 이름 대응, 오류 문항 건너뛰기를 가짜 retrieve로 확인(DB·API 없이)
-- `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지, 단일 · 멀티 거절 사유 코드를 같은 이름으로 세는지, 단일 · 멀티 모두 MCP 서버를 열어 사실 확인 · 판정 도구로 잇는지(가짜 MCP), 판정 인터럽트를 빈 답으로 한 번만 재개하는지 확인(Langfuse·LLM 없이)
+- `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지, 단일 · 멀티 거절 사유 코드를 같은 이름으로 세는지, 단일 · 멀티 모두 MCP 서버를 열어 사실 확인에 쓰고 찾기 · 판정 값은 카드 도구로 잇는지(가짜 MCP · 가짜 카드 도구), 판정 인터럽트를 빈 답으로 한 번만 재개하는지 확인(Langfuse·LLM 없이)
 - `test_run_judge_dev.py` — 판정 연습 문제 채점: 판정 문항의 역할 · 판정 일치, 찾기 문항의 보여 준 후보 · 판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기. 실제 그래프는 돌리지 않음
 - `test_supervisor_models.py` — 동결 입력·schema 재시도·provider 중단·예산·집계·증거 hash를 API 호출 없이 검증
 - `test_supervisor_jev.py` — Jev typed answer·gold 격리·provider 정책·예산·70-job manifest를 API 없이 검증
@@ -32,3 +32,8 @@
 - `test_bit_search.py` — 비트 검색의 recall·상위 5 일치 계산, 결과 파일에서 다시 계산한 recall이 문서 값(N=1,600 0.949, N=3,200 0.980)과 같음
 - `test_eval_grader.py` — 충분 · 부분 · 부족 판정 규칙, 정답 쪽 유지율 · 판정 표 계산, 스냅샷 만들기(본문을 버리는지), 스냅샷 문항 만들기와 R1 수집(가짜 검색 · 채점, 연속 오류 3번 중단), v2 스냅샷이 사전 등록 #36의 숫자(15 · 12/15 · 34/35)를, R1 dev 스냅샷이 #34 결과(39 · 36/39)를 재현하는지
 - `test_skill_pair.py` — Skill 쌍 순차 실행의 경로·검색 상한, 사본 격리·실행 순서 교차, 예외 시 부분 결과·덮어쓰기 금지, 평가 호출·예약비용 상한을 API 없이 확인
+- `test_trust_boundary.py` — D7 실행기의 dry-run 외부 호출 0, 기존 결과 보존, 정상 대조군, 공격 노출·canary 유출 탐지, 타 사용자 참조의 코드 차단, 오류 후 not_run 보존. 가짜 모델 검사이며 실제 공격 방어율이 아니다
+- `test_judgement_bundle.py` — 원격/서비스 DB·덮어쓰기 거부, 단일 예산 호출/시간 차단, 실제 모델 CLI 부재, 실제 번호를 단 위험 문서 답이 판정 답에서 차단되는지. `TEST_INJECTION_DATABASE_URL`이 없으면 전용 loopback DB 왕복 1건은 skip한다(그 경로는 사양 표 제거(ADR 0016) 뒤 현재 코드와 맞지 않아 미검증). 공급자 함수는 호출 시 실패하도록 대체한다
+- `test_claim_consistency.py` — 유료 기준선 실행기의 호출 없는 계획·결과 덮어쓰기 거부·상한 뒤 후속 미실행/부분 raw 보존, 거짓 가짜 응답의 원시 보존/최종 차단을 외부 호출 없이 검사한다
+- `test_input_surfaces.py` — 무료 계획·덮어쓰기 거부·이름 필드 무시/ref 거부·청크/값/질문의 모델 입력 노출·위험 응답 기록과 최종 차단을 가짜 모델로 확인한다
+- `test_saved_defense_replay.py` — 저장된 실제 C2/P4-N 응답·원시 SHA256을 고정해 기존 에이전트/판정/최종 조립에 재생한다. 모델/네트워크/DB 호출을 막는다. 기준선 보존 2건과 수정 후 차단 2건(supervisor 판정 출력 경계 뒤 4건 통과). `roles.yaml`은 바이트 대신 source를 뺀 규칙 내용을 측정 커밋 190cf89 값에 고정한다(저장 해시는 Windows CRLF 바이트). xfail/skip으로 숨기지 않는다

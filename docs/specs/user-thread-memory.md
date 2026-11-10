@@ -1,6 +1,10 @@
-# 사용자별 분석 thread와 승인 사례 기억
+# 사용자별 분석 thread · 승인 기록 · 사용자 사실 기억
 
-상태: 로컬·공유 DB·운영0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
+**11-09 변경:** 장기 기억을 승인한 판정 사례에서 사용자 사실 3칸으로 바꿨다(아래 "사용자 사실 기억", SPEC 8.5). 승인 사례는 이제 승인 기록이다. 승인 원본과 승인·`/api/memories` 관리 API는 그대로 두지만 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않는다. 그 아래 절의 "승인 사례 기억" 설계·AC 중 "(11-09 대체)"를 붙인 줄은 그 전 설계다.
+
+**11-10 변경:** React만 남기기로 하고(조장 결정) React 이전 화면 `/workspace`(`backend/web/templates/workspace.html`)와 그 경로(`/api/circuits` · `/api/threads` 목록 · 상세 · `messages` · `resume` · `approve` · `retry` · `/api/memories` · `/api/memories/{thread}/{version}/control` · `/api/analysis/readiness` · `/api/analysis/demo`)를 지웠다. 지금 분석 입구는 React 대화 API(`POST /api/threads/{id}/runs` · `POST /api/runs/{id}/resume`, SPEC 4절)이고, 승인은 React의 `POST /api/messages/{id}/approvals`다. 옛 승인 기록(`sojafit_agent.approvals`)은 새로 쓰는 경로 없이 삭제 · 보관 기간 규칙만 따르며, 정정 · 철회 · 재시도 기능은 없다. 아래 절의 화면 · 경로 설명은 11-09까지의 기록이다.
+
+상태: 로컬·공유 DB·운영 0% 시험 배포 검증 수행. 조장 리뷰·정본 문서 반영·병합은 남는다. 목표 시각: 2026-11-09 17:30 KST. 사용자는 분석 한 건당 thread 하나와 사용자 넷리스트 업로드·화면 연결을 선택했다. 최신 증거·한계는 [운영 검증 결과](../research/thread-memory-operations-review.md)와 [작업 기록](../worklog/sth.md)을 따른다. Why의 미구현 설명은 착수 당시 상태다.
 
 ## Why
 - 로그인 사용자가 자기 회로의 특정 부품 분석을 이어가고, 승인한 사례를 다음 분석에서 찾아볼 수 있어야 한다.
@@ -14,10 +18,10 @@
 - 기존 비밀번호·Google 로그인과 세션을 그대로 사용한다.
 - 17:30까지 구현·검증을 목표로 하되 로컬 검증, 공유 DB 적용, 배포 검증을 구분해 보고한다.
 - 로그인 후 넷리스트 업로드, 대상 선택, 내 분석 목록·질문·재개·승인·관련 사례를 같은 출처 화면에서 제공한다.
-- Out of Scope: 한 thread 안의 여러 분석, 회원가입, 기존 업무 표 초안 전체 적용, 견적서 발행·가격 저장, 기억 임베딩·자동 학습.
+- Out of Scope: 한 thread 안의 여러 분석, 회원가입, 기존 업무 표 초안 전체 적용, 견적서 발행·가격 저장, 대화에서 기억 자동 학습(사용자 사실은 설정 API로만 쓴다).
 
 ## What
-- 승인 기억 활용: 새 질문 실행 전에 인증 사용자의 같은 품번 승인 사례를 최대 5건 조회해 별도 그래프 상태로 전달한다. Supervisor·판정 읽기·답변 생성 모델이 참고하되 과거 조건을 현재 조건으로 자동 채우거나 승인을 사양 근거로 쓰지 않는다. 숫자 판정과 현재 근거 검증은 유지한다.
+- (11-09 대체) 승인 기억 활용: 새 질문 실행 전에 인증 사용자의 같은 품번 승인 사례를 최대 5건 조회해 별도 그래프 상태로 전달한다. Supervisor·판정 읽기·답변 생성 모델이 참고하되 과거 조건을 현재 조건으로 자동 채우거나 승인을 사양 근거로 쓰지 않는다. 숫자 판정과 현재 근거 검증은 유지한다.
 - 사용자가 회로·대상 부품을 정해 분석 thread를 만들고 질문한다. 조건 보충·후보 비교는 같은 thread를 쓴다.
 - 조건 질문 interrupt는 같은 thread에서 재개한다. 다른 회로·대상 분석은 새 thread를 만든다.
 - 서버가 생성한 현재 판정 결과를 사용자가 명시적으로 승인하면 그 결과와 승인 시점을 남기고 자기 namespace에 사례를 저장한다.
@@ -27,8 +31,8 @@
 
 ## How
 ### 2026-11-09 기억 관리 완료 계약
-- 정정은 승인 원본을 바꾸지 않는 사용자 정정 메모(최대1000자)다. 원래 조건·판정과 구분하고 모델에 비신뢰 과거 데이터로 전달한다. 새 사양값·현재 조건으로 자동 채우지 않는다.
-- 철회는 모델 참조/기억 목록에서 즉시 제외하며 복구할 수 있다. 삭제는 Store 사본을 제거하고 삭제 표식을 남겨 같은 승인 재요청으로 되살아나지 않게 한다. 기존 대화·불변 승인 원본은 보존한다. 화면에서 '기억에서 삭제(대화·승인 원본 유지)'를 명시하며 전체 대화/계정 삭제로 오인시키지 않는다. 자동 만료/삭제는 없다.
+- 정정은 승인 원본을 바꾸지 않는 사용자 정정 메모(최대 1000자)다. 원래 조건·판정과 구분하고 모델에 비신뢰 과거 데이터로 전달한다. 새 사양값·현재 조건으로 자동 채우지 않는다.
+- 철회는 모델 참조/기억 목록에서 즉시 제외하며 복구할 수 있다. 삭제는 Store 사본을 제거하고 삭제 표식을 남겨 같은 승인 재요청으로 되살아나지 않게 한다. 기존 대화·불변 승인 원본은 보존한다. 화면에서 '기억에서 삭제(대화·승인 원본 유지)'를 명시하며 전체 대화/계정 삭제로 오인시키지 않는다. 자동 삭제는 아래 "보관 · 삭제"(11-09, 마지막 활동 뒤 60일)만 따른다.
 - lifecycle의 권한은 thread 소유자다. 상태가 철회/삭제면 Store 삭제 실패·과거 checkpoint의 기억 사본이 있어도 이후 모델 입력/참조로 사용하지 않는다. 과거 완료 답변 문장은 소급 재작성하지 않는다.
 - 판정 사례 승인과 견적 승인·저장은 별개임을 승인 UI/API 설명에 표시한다. NOT_VERIFIED 과거 사례를 현재 적합성 근거로 삼지 않는다.
 
@@ -37,10 +41,10 @@ Goal: 기존 분석 서비스의 사례 기억을 평가자 시연·데모·CI·
 Architecture: 기존 Conversations/DB/그래프를 유지한다. 고정 응답 데모는 별도 DEMO_SCENARIOS=1과 DEMO_MODE=1을 모두 요구해 기존 BM25 실제 모델 평가를 보존한다. lifecycle은 승인 원본 옆 상태/정정 메모로 관리하고 실제 모델 입력 직전에 권한·상태를 재확인한다.
 Tech stack: 기존 FastAPI/LangGraph/PostgreSQL/uv/Docker/Langfuse, 새 패키지 없음.
 Spec: 이 문서와 evaluator-demo-readiness.md. 현재 사용자 요청은 준비안의 실행 승인으로 해석한다. 자동 삭제 없음은 사용자 선택, 삭제 범위를 기억 참조/Store로 한정하고 원본을 보존하는 것은 명시적 UI 표시를 전제로 한 구현 결정이다.
-Constraints: STH 유지, 동결셋/주요 문서 수정 금지, 새 파일만 SOJAFIT 등록, 기존 데이터 자동 삭제 없음, 운영 트래픽0% 유지, 조장만 병합, 자격증명 로그 금지.
+Constraints: STH 유지, 동결셋/주요 문서 수정 금지, 새 파일만 SOJAFIT 등록, 기존 데이터 자동 삭제 없음, 운영 트래픽 0% 유지, 조장만 병합, 자격증명 로그 금지.
 Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승인 부활, A/B 교차 관리, demo의 유료 fallback, 관측 실패의 저장 실패 전파.
 - [x] 1. 범위/승인 용어/보관 정책 안내: workspace·작업서, 기존 API markup 검사.
-- [x] 2a. services/demo.py+data/demo/scenarios.json: 합성 시나리오 입력의 명시 모드와 허용 질문·회로 검증, 기존 그래프/판정 재사용. tests/api/test_threads.py·tests/services/test_llm.py에서 키 있어도 외부호출0/미등록 거부 RED→GREEN.
+- [x] 2a. services/demo.py+data/demo/scenarios.json: 합성 시나리오 입력의 명시 모드와 허용 질문·회로 검증, 기존 그래프/판정 재사용. tests/api/test_threads.py·tests/services/test_llm.py에서 키 있어도 외부호출 0/미등록 거부 RED→GREEN.
 - [x] 2b. Dockerfile·Compose·명시 bootstrap·CI: 빈 격리 DB에서 checkpoint 준비/데모 시나리오/THREADS_ENABLED, TEST_THREAD_DATABASE_URL 설정. 실제 API·화면 재개/승인/A·B, 새 Compose project cold-start 검증.
 - [x] 2c. services/langfuse_prompts.py·Conversations: 인증 user/thread/version/request/trace/단계별 실행 시간을 내용 없이 저장·반환하고 선택적 Langfuse 전달. DB/trace 전송 장애가 판정·승인을 잃게 하지 않는 검사와 실제 trace 증거.
 - [x] 3. db/016_memory_controls.sql·017_analysis_events.sql와 Conversations/main/workspace: 정정/철회/복구/기억 삭제/보관안내. UI·소유권·Store 실패·pending/retry 참조 차단·멱등/재승인 부활 거부 RED→GREEN. 공유 DB는 가산 적용 전 현행 구조 확인.
@@ -70,6 +74,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 - 쿠키 기반 상태 변경 API는 기존 auth.check_origin을 사용한다. 응답에는 Cache-Control: no-store를 붙인다.
 
 ### API 계약 제안
+(11-10에 아래 경로를 React 이전 화면과 함께 지웠다. 지금 계약은 SPEC 4절.)
 - 모든 thread/업로드/기억 API 오류는 main의 error.code/message/request_id 계약을 사용한다. DB 연결 실패(503)와 본문 초과(413)도 동일하며 입력·DB 예외 원문은 숨긴다. workspace는 error.message를 읽는다.
 - POST /api/circuits: 파일명과 UTF-8 넷리스트 본문을 받아 검증·저장하고 대상 선택용 부품 목록을 반환한다.
 - GET /api/circuits: 내 회로와 부품 목록만 반환한다.
@@ -103,20 +108,20 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 ## AC
 - GIVEN 새 계획형 판정 하위 그래프의 interrupt WHEN PostgreSQL 연결을 닫고 다시 열어 소유자가 재개 THEN 같은 조건 질문·기억을 유지하고 판정 읽기 모델을 다시 호출하지 않으며 완료 결과를 승인할 수 있다.
 - GIVEN thread API의 DB 장애 또는 본문 크기 초과 WHEN 오류 응답 THEN 공통 error 본문과 X-Request-ID가 일치하고 no-store이며 DB 예외 원문은 노출하지 않는다.
-- GIVEN A/B가 같은 품번의 서로 다른 사례를 승인 WHEN 각각 새 thread 질문 THEN 실제 그래프의 모델 입력에는 자기 사례만 포함되고 다른 사용자의 사례는 포함되지 않는다. 기억을 읽는 가짜 모델의 응답으로 연결을 검증한다.
-- GIVEN 과거 승인 조건에만 숫자가 존재 WHEN 새 분석에서 모델이 그 숫자를 현재 조건으로 제안 THEN 기존 grounded 검증이 거부하고 필요한 조건을 묻는다.
+- (11-09 대체: 이제 어느 사례도 모델 입력에 넣지 않는다) GIVEN A/B가 같은 품번의 서로 다른 사례를 승인 WHEN 각각 새 thread 질문 THEN 실제 그래프의 모델 입력에는 자기 사례만 포함되고 다른 사용자의 사례는 포함되지 않는다. 기억을 읽는 가짜 모델의 응답으로 연결을 검증한다.
+- (11-09 대체) GIVEN 과거 승인 조건에만 숫자가 존재 WHEN 새 분석에서 모델이 그 숫자를 현재 조건으로 제안 THEN 기존 grounded 검증이 거부하고 필요한 조건을 묻는다.
 - GIVEN 관련 기억 없음 또는 다음 질문에서 관련 기억이 사라짐 WHEN 그래프 실행 THEN 빈 목록을 전달해 이전 턴 기억이 재사용되지 않는다.
-- GIVEN 승인 기억의 지시문 WHEN 모델 입력 구성 THEN 데이터 경계와 현재 근거 우선 규칙을 전달하며 기억만으로 사양 근거가 생기지 않는다.
+- (11-09 대체) GIVEN 승인 기억의 지시문 WHEN 모델 입력 구성 THEN 데이터 경계와 현재 근거 우선 규칙을 전달하며 기억만으로 사양 근거가 생기지 않는다.
 - GIVEN 미인증 요청 WHEN thread/기억 API 호출 THEN 401이며 그래프·Store를 호출하지 않는다.
 - GIVEN 사용자 A와 B WHEN B가 A의 thread를 조회·질문·재개·승인 THEN 모두 404이며 A의 상태·기억은 바뀌지 않는다.
 - GIVEN 같은 사용자 WHEN 분석 두 건 생성 THEN 서로 다른 thread와 독립된 체크포인트를 사용한다.
 - GIVEN 저장된 thread WHEN 런타임 연결을 닫고 다시 열어 조회·재개 THEN 기존 상태를 유지한다.
 - GIVEN 중단된 분석 WHEN 소유자가 답변 THEN 같은 thread에서 재개하고 판정 결과를 반환한다.
 - GIVEN 질문·거절·중단 상태 WHEN 승인 THEN 거부하고 기억을 만들지 않는다.
-- GIVEN 완료된 판정 WHEN 소유자가 현재 결과 버전을 승인 THEN 승인 스냅샷과 자기 namespace의 사례 한 건이 남는다.
-- GIVEN 같은 결과 WHEN 승인 재요청 또는 Store 장애 후 재시도 THEN 기억을 중복 생성하지 않고 성공 여부를 정확히 반환한다.
+- GIVEN 완료된 판정 WHEN 소유자가 현재 결과 버전을 승인 THEN 승인 스냅샷이 남는다(11-09부터 Store에는 쓰지 않는다).
+- GIVEN 같은 결과 WHEN 승인 재요청 THEN 승인 원본을 중복 생성하지 않고 성공을 반환한다.
 - GIVEN 다음 질문으로 결과 변경 WHEN 승인 원본이 없는 과거 결과 버전 승인 THEN 409로 거부한다.
-- GIVEN 승인 원본 저장 후 Store 실패 WHEN 같은 thread에 새 질문 후 이전 승인 버전 재요청 THEN 원본·승인 시각·품번을 유지한 기억 한 건을 복구한다. 현재 결과가 거절이어도 복구하며 다른 사용자는 404로 거부한다. 품번 필드가 없는 기존 승인 원본도 복구한다.
+- (11-09 대체: Store에 쓰지 않으므로 이전 승인 버전 재요청은 원본을 그대로 두고 성공) GIVEN 승인 원본 저장 후 Store 실패 WHEN 같은 thread에 새 질문 후 이전 승인 버전 재요청 THEN 원본·승인 시각·품번을 유지한 기억 한 건을 복구한다. 현재 결과가 거절이어도 복구하며 다른 사용자는 404로 거부한다. 품번 필드가 없는 기존 승인 원본도 복구한다.
 - GIVEN 사용자 A의 승인 사례 WHEN A와 B가 기억 조회 THEN A에게만 표시된다.
 - GIVEN 역할·품번이 같은 자기 승인 사례 WHEN 새 분석 결과 조회 THEN 최대 5건의 관련 사례를 함께 표시하고 다른 사용자 사례와 일치하지 않는 사례는 제외한다.
 - GIVEN 한 thread의 서로 다른 결과를 각각 승인 WHEN 과거 사례 조회 THEN 각 버전의 승인 원본을 유지한다.
@@ -161,3 +166,47 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 ## 관련 문서
 - [검증 결과와 이전 스냅샷](../research/thread-memory-operations-review.md)
 - [운영 검증 절차](../experiments/thread-memory-operations.md)
+
+## 사용자 사실 기억 (11-09)
+
+칸 · 저장 · 검색 · 활용 · 고치기 · 지우기 · 한계 · 수용 기준의 정본은 [SPEC 8.5](../../SPEC.md)다. 여기에는 구현 위치와 세부를 둔다.
+
+- 결정(조장 11-09): 체크포인터는 이번 대화의 상태, Store는 다음 대화에서도 유효한 사람에 대한 사실이다. namespace의 첫 칸(사용자 id)이 격리 단위이고, 노드는 LangGraph가 넣어 주는 Store를 받는다(멀티 그래프 `기억 읽기`, 11-10). namespace는 접근 권한 검사가 아니다. 칸은 소속(`affiliation`) · 직무(`job_role`) · 선호 실장 방식(`mounting_preference`) 3개다.
+- 코드: `backend/conversations/profile.py`(칸 검사 `clean`, 틀 문장 `sentence`, `VoyageEmbeddings`, `ProfileMemory.facts · update · delete`), `backend/api/profile.py`(`/api/me/memory`), `memory_service.Conversations.profile`과 `_profile_hints`, `dto.result_dto(profile_hints=...)`.
+- 저장 모양: Store `(str(user_id), "profile")` / key = 칸 이름 / 값 `{kind, value, text, version, updated_at, source: "user_settings"}`. 여러 칸을 한 번에 고치면 `PutOp`을 한 `batch`로 보내 임베딩도 한 번 부른다.
+- 색인: `PostgresStore(index={'dims': 1024, 'embed': VoyageEmbeddings(), 'fields': ['text'], 'ann_index_config': {'kind': 'flat'}})`. LangGraph 동기 `PostgresStore`는 검색 질문도 `embed_documents`로 임베딩하므로, 검색하는 동안만 입력 종류를 `query`로 바꾼다(`contextvars`). 근사 색인(HNSW)은 namespace 조건과 함께 쓰면 다른 사용자 벡터에 밀려 결과가 빌 수 있어 만들지 않는다.
+- 켜는 조건: `VOYAGE_API_KEY`가 있고 `DEMO_MODE`가 1이 아니며 `sojafit_agent.store_vectors`가 있을 때. 셋 중 하나라도 아니면 색인 없는 Store로 쓰고 읽는다. 키가 있는데 표가 없으면 시작 때 경고 로그(`profile_index_unavailable`)를 남긴다.
+- 스키마 경로: 준비 명령과 색인을 켠 서비스 연결은 `search_path`를 `sojafit_agent, <vector 확장 스키마>`로 둔다. 색인 표의 `vector(1024)` 형과 검색의 `::vector` · `<=>`가 이름으로 찾히기 때문이다. 표는 첫 스키마인 `sojafit_agent`에 생긴다. 확장 스키마는 `pg_extension`에서 읽는다(로컬 Compose `public`, Supabase `extensions`). 준비 명령은 확장을 설치하지 않는다.
+- 활용: `Conversations.message`(그 질문 글)와 `resume`(그 버전의 질문 글)이 그래프를 돌리기 전에 사실을 찾고, 응답의 `profile_hints`에 칸 · 값 · 문장만 담는다. 찾기가 실패하면 빈 목록이고 분석은 계속한다. React run은 완료 · 거절 frame에만 싣고 `public.runs`에는 저장하지 않는다. 에이전트 연결(11-10): 멀티 그래프의 `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 선호 실장 방식 한 칸만 읽어 `mount_preference`로 두고, 대체 부품 에이전트가 찾기 후보 순서에만 쓴다(질문이 실장 방식을 말하면 질문이 이김, 판정 · 거르기 · 프롬프트는 그대로, 결과 `preferred_mount`). 소속 · 직무는 그래프 상태 · 프롬프트에 넣지 않는다. 승인 사례 프롬프트 문단("Historical approved cases")과 늘 빈 `approved_memories` · `memory_refs` 길의 제거는 아직 하지 않았다.
+- 수용 기준 시험: `tests/conversations/test_profile.py`(칸 검사 · 틀 문장 · version · 지우기 · 의미 순위 · 입력 종류 · 대체 경로 · API 422 · 403 · 401 · 503, DB: 색인 표 위치, `extensions` 스키마), `tests/api/test_threads.py`(승인 사례 미전달, 질문 · 재개의 참고, A/B 격리, 색인 DB에서 다시 임베딩 · 지운 벡터), `tests/api/test_conversations.py`(React frame의 참고, run 기록 미저장), `tests/multi_agent/test_build.py` · `test_judge.py` · `tests/judge/test_judge_verdict.py`(기억 읽기 격리, 찾기 순서, 질문 우선, Store 없으면 예전 순서).
+
+### 보관 · 삭제 (결정 11-09)
+- 사용자 사실은 자동 만료가 없다. 사용자가 지우거나 계정을 지울 때 지운다.
+- 프로젝트와 거기에 딸린 것(대화, checkpoint, 승인, 견적)은 마지막 활동 뒤 60일에 자동으로 지운다.
+- 기록 종류(분석 사건, 로그인 · 가입 시도, 하루 사용량)는 30일 뒤에 지운다.
+- 사용자가 직접 지우면 숨기지 않고 바로 지운다.
+- 정리는 스케줄러 없이 새 분석을 시작할 때 작은 묶음으로 한다.
+
+#### 자동 정리(구현, `db/023_retention.sql`)
+- 규칙 하나 = SQL 함수 하나(`sojafit_agent` 스키마, 공개 역할 EXECUTE 회수). 분석 서비스가 새 질문(`Conversations.message`)마다 그 thread를 잠그기 전에 `SELECT purge_inactive_projects(), purge_log_records()`를 따로 연결로 부른다(`_purge_expired`). 실패하면 `backend.conversations.retention` 경고(`retention_purge_failed`)만 남기고 분석은 계속한다. 시작 때 두 함수가 없으면 서비스가 뜨지 않는다(규칙이 조용히 꺼지지 않게).
+- `purge_inactive_projects(keep_days DEFAULT 60, batch_size DEFAULT 20)`: ① React 프로젝트의 마지막 활동 = 프로젝트 `updated_at`(이름 변경) · 대화 생성 · run `updated_at`(시작 · 끝 · 재개) · 승인 · 견적 중 가장 늦은 시각. 지난 것을 최대 batch_size개 `FOR UPDATE SKIP LOCKED`로 골라 사용자가 지울 때와 같은 순서(같은 UUID의 checkpoint → 분석 thread → 빈 분석 회로 → 프로젝트 cascade)로 지운다 ② React 대화에 딸리지 않은 분석 thread(`/api/threads`로 직접 만든 것, 예전 규칙으로 프로젝트만 지워져 남은 것)는 자기 마지막 활동(생성 · 메시지 · 분석 사건 · 승인 · 승인 기록 관리)으로 본다 ③ thread가 없는 분석 회로(업로드 넷리스트 원문)는 올린 뒤 60일. React 표가 없는 DB에서는 아무것도 지우지 않는다.
+- `purge_log_records(keep_days DEFAULT 30, batch_size DEFAULT 200)`: 분석 사건(`created_at`), 하루 사용량(사용자 · 서비스 전체, UTC 날짜), 가입 시도(UTC 날짜), 로그인 시도(계정 · IP: 15분 창 시작이 30일 지났고 잠금이 없거나 끝난 행만)를 표마다 최대 batch_size개(ctid 묶음) 지운다.
+- 두 함수 모두 트랜잭션 advisory lock(`736128` · `736129`)으로 동시에 한 곳만 청소하고 나머지는 기다리지 않고 0을 돌려준다. Supabase pg_cron으로 하루 한 번 같은 함수를 부를 수 있다(지금은 켜지 않음, SQL 머리 주석에 예).
+- 60일 · 30일의 이유: 회로는 몇 주 뒤에 다시 여는 일이 많아 한 달보다 넉넉히 둔다. 기록은 최근 디버깅과 남용 한도 확인에만 쓴다.
+
+#### 규칙과 개인정보 보호법 조항
+
+| 규칙 | 구현 | 조항 |
+|---|---|---|
+| 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/023_retention.sql` 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
+| 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
+| 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
+| 가입 때 처리방침을 알리고 동의를 받는다 | React `/signup`의 고지(`PrivacyNotice`: 목적 · 저장 항목 · 보관 기간 · 삭제 · Langfuse · 외부 서비스 · 거부 권리)와 동의 체크, 서버 `consent` 필수(없으면 422) | 15조 2항(동의를 받을 때 알릴 사항) |
+
+#### 사용자가 지울 때(구현)
+- 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.
+- 탈퇴 `DELETE /api/me`(`backend/main.py`): Origin 확인, 관리자는 409(운영자 CLI `--delete-user-id`도 관리자는 지우지 않음). 순서는 기록 먼저, 계정 마지막이다. ① 계정 배타 잠금 ② 그 사용자의 분석 thread · 회로 · checkpoint 전부(한 트랜잭션) ③ Store를 namespace 접두사로 찾아 지우는 반복(`(user_id,)` 아래 전부와 옛 `("memories", user_id)`, 한 번에 100개 · 최대 1만 개) ④ 계정 행(세션 · 프로젝트 · 견적 · 승인 사례 · 하루 사용량은 FK cascade, 그 이메일의 로그인 실패 행도 지움). 응답은 `{"deleted": {analysis_threads, analysis_circuits, checkpoints, memory_items, projects, quotes, account}}`이고 세션 쿠키를 지운다.
+- 멱등: 계정을 먼저 지우면 기록 삭제가 실패했을 때 다시 요청할 방법이 없다. 그래서 계정을 마지막에 지우고, 중간 실패는 503(`계정 삭제를 끝내지 못했습니다. 다시 요청하면 남은 기록부터 이어서 지웁니다.`)이며 다시 요청하면 남은 것만 지운다(이미 지운 것은 0건).
+- 잠금(선택: advisory lock, 표 없음): 키 `hashtextextended('account:<user_id>', 0)`. 분석 실행(`locked`) · 대화 연결(`ensure_thread`) · 업로드 · thread 만들기 · 설정 저장(`account_writer`)은 공유로, 탈퇴는 배타로 잡는다. 공유끼리는 서로 막지 않고 탈퇴와만 막으므로 그 사용자의 분석이 도는 동안 탈퇴는 409(`진행 중인 분석이나 저장이 끝난 뒤 다시 시도하세요.`), 탈퇴가 도는 동안 그 사용자의 새 분석 · 재개 · 설정 저장은 409(`계정 삭제를 처리하는 중입니다.`)다. React run · 재개는 스트림을 열기 전(`admission`)에도 확인한다. 표식 표 대신 잠금을 고른 이유: DB 세션 잠금이라 프로세스가 죽어도 연결과 함께 풀려 남는 표식이 없고, 탈퇴가 실패해도 계정이 남아 있어 다시 요청하면 된다. 공유 public 업무 표의 쓰기(프로젝트 · 대화 · 견적)는 계정 행 삭제의 FK cascade가 지우므로 잠그지 않는다.
+- 화면: 내 설정(`/settings`)의 "계정 삭제"(일반 계정만 보임)는 확인 뒤에만 `DELETE /api/me`를 보낸다. 로그아웃 · 탈퇴 · 세션 만료로 로그인 상태를 잃으면 React가 화면 메모리(React Query 캐시)와 sessionStorage를 비우고, 보호 화면은 `/login`으로 바꿔(replace) 주소의 `projectId` · `targetRef`를 남기지 않는다(공용 PC의 다음 사람이 보지 않게).
+- 한계: 분석 서비스(`THREADS_ENABLED=1`)가 없으면 탈퇴는 503이다(분석 기록 · Store를 지울 수 없으므로). React run 행이 `running`으로 남은 상태(서버가 실행 도중 죽음)는 잠금이 없어 탈퇴를 막지 않는다.

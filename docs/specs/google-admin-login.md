@@ -6,7 +6,7 @@
 
 | 항목 | 확인 결과 |
 |---|---|
-| 저장소 구현 | `db/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, `backend/web/templates/login.html`과 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
+| 저장소 구현 | `db/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, React 로그인 화면 `frontend/src/pages/LoginPage.tsx`(옛 `backend/web/templates/login.html`은 11-10에 지움)와 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
 | Google Cloud 프로젝트 | 2026-11-05 작업 기록에는 `sojafit`의 Google 인증 플랫폼과 웹 OAuth 클라이언트 생성이 기록돼 있다. 현재 설정은 이번 문서 정합성 점검에서 재조회하지 않았다. |
 | 앱 대상·게시 상태 | 2026-11-05 확인 당시 `외부`, `테스트 중`이었다. 현재 팀원 접근 가능 여부와 게시 상태는 별도로 확인한다. |
 | 연락처 | 사용자 지원 이메일은 팀장 계정, Google의 개발자 알림 이메일은 사용자가 지정한 별도 계정으로 입력했다. 주소 원문은 이 문서에 기록하지 않는다. |

@@ -1,4 +1,4 @@
-"""판정 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
+"""대체 부품 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
 
 - 역할: AC-02(질문에 없는 숫자는 버림) · AC-07(other) · AC-08(인터럽트 1번) · AC-09(비교는 verdict에서만), 찾기 흐름.
 - 하지 않는 일: 실제 LLM · MCP · DB 호출.
@@ -15,6 +15,12 @@ STATE = {'question': 'D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 �
          'target': 'D1', 'target_part': {'ref': 'D1', 'value': '1N4001', 'footprint': 'Diode_THT:D_DO-41_SOD81_P10.16mm',
                                          'nets': [{'name': 'RAW', 'nodes': ['D1.K(1N4001)', 'F1.1(500mA)'], 'more': 0}]},
          'question_type': 'candidate_judge'}
+
+@pytest.fixture(autouse=True)
+def one_read(monkeypatch):
+    """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
+
 
 
 def test_judge_read_calls_llm_once_with_roles_and_circuit():
@@ -114,7 +120,38 @@ def test_find_question_filters_judges_and_ranks(monkeypatch):
     j = J.judge_agent(state, specs=specs_of(SPECS), find=find, retriever=None)['judgement']
     assert seen[0][0] == {'code': 'VRRM', 'gte': pytest.approx(15.0)}
     assert [x['part'] for x in j['shown']] == ['1N5817', 'SS14']  # 1N5817은 DO-41이라 기판 수정 없음 → 먼저
-    assert j['kind'] == 'find' and j['capped'] is False
+    assert j['kind'] == 'find' and j['capped'] is False and j['preferred_mount'] == ''  # 선호 없음(Store 없는 평가 실행기와 같음)
+
+
+def find_state(read=None, **extra):
+    """찾기 질문 상태. 대상 풋프린트가 없어 두 후보(SS14 SMA · 1N5817 DO-41)의 기판 수정 여부가 같다(모름)."""
+    base = dict(READ, candidates=[], values=[dict(v, number=12, quote='입력 전압의 최댓값은 12V') if v['name'] == 'v_in_max' else v
+                                             for v in READ['values']])
+    return {**STATE, 'question_type': 'candidate_find', 'conditions': STATE['conditions'].replace('20V', '12V'),
+            'target_part': {**STATE['target_part'], 'footprint': ''}, 'judge_read': {**base, **(read or {})}, **extra}
+
+
+def two_found(conditions, category, package, limit, **near):
+    return [{'part': 'SS14', 'category': 'schottky-rectifier', 'packages': ['SMA']},
+            {'part': '1N5817', 'category': 'schottky-rectifier', 'packages': ['DO-41']}]
+
+
+def test_stored_mount_preference_reorders_shown_without_changing_verdicts(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    run = lambda **extra: J.judge_agent(find_state(**extra), specs=specs_of(SPECS), find=two_found, retriever=None)['judgement']
+    none, smd, tht = run(), run(mount_preference='smd'), run(mount_preference='tht')
+    assert [x['part'] for x in none['shown']] == ['1N5817', 'SS14'] and none['preferred_mount'] == ''  # 같은 판정 · 기판 수정 모름이면 품번 순
+    assert [x['part'] for x in smd['shown']] == ['SS14', '1N5817'] and smd['preferred_mount'] == 'smd'
+    assert [x['part'] for x in tht['shown']] == ['1N5817', 'SS14'] and tht['preferred_mount'] == 'tht'
+    assert smd['results'] == none['results']  # 판정 · 후보 목록은 그대로(거르지 않음)
+
+
+def test_mount_asked_in_the_question_wins_over_the_stored_preference(monkeypatch):
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    asked = {'required_specs': [{'words': '스루홀 부품', 'code': 'none'}]}
+    j = J.judge_agent(find_state(read=asked, mount_preference='smd'), specs=specs_of(SPECS), find=two_found, retriever=None)['judgement']
+    # [왜] 질문이 스루홀을 요구했으면 그 요구로 거르고, 내 설정(SMD)은 쓰지 않는다(SPEC 8.5)
+    assert [x['part'] for x in j['shown']] == ['1N5817'] and j['preferred_mount'] == ''
 
 
 def test_find_does_not_filter_by_original_part_values(monkeypatch):
@@ -134,7 +171,7 @@ def test_find_does_not_filter_by_original_part_values(monkeypatch):
 
 
 def test_find_passes_original_package_and_category_for_ranking(monkeypatch):
-    """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(B3). 모르면 None."""
+    """찾기는 원래 부품의 패키지 · 분류를 도구에 넘겨 50개로 자르기 전에 그 순서로 줄 세우게 한다(SPEC 8.3 찾기 순위). 모르면 None."""
     monkeypatch.setattr(J, 'interrupt', unknown)
     seen = []
 
@@ -193,7 +230,7 @@ ORDER_DOCS = [ordering_row('1N4148 R0', 26965), ordering_row('1N4448 R0G', 26973
 
 @pytest.mark.parametrize('original,candidate', [('1N4148 A0G', '1N4148 R0G'), ('TSC 1N4148 A0G', '1N4148 r0g'), ('1N4148 A0G', '1N4148')])
 def test_order_code_only_difference_is_identical_with_ordering_table_citation(monkeypatch, original, candidate):
-    """같은 기본 품번에 주문 코드(R · A · L · M + 글자 하나 + 선택 G)만 다르면 동일품이고, 주문 정보 표의 그 주문 코드 행을 인용한다(B2, 정운 11-06)."""
+    """같은 기본 품번에 주문 코드(R · A · L · M + 글자 하나 + 선택 G)만 다르면 동일품이고, 주문 정보 표의 그 주문 코드 행을 인용한다(SPEC 8.3 주문 코드 동일품)."""
     monkeypatch.setattr(J, 'interrupt', unknown)
     table = {**SPECS, '1N4148': [r('1N4148', 'VRRM', 100.0), r('1N4148', 'IF_AV', 0.15, 'A')]}
     asked = []
@@ -326,6 +363,10 @@ def test_operator_words_come_from_the_users_own_clause():
     assert '최대 23.2V' in grounded and C.user_conditions([(grounded, 'VC')])[0]['op'] == '<='
     assert J._ground_ops('VZ 3.42~3.78V', text) == 'VZ 3.42~3.78V'  # 범위는 그대로
     assert J._ground_ops('surge current 0.25 A', '전류는 250mA 이하') == 'surge current 0.25 A'  # 단위를 바꿔 쓴 말은 그대로
+    # [왜] 시험 조건 숫자(10A · 10/1000µs)가 섞여도 그 항목 단위(V)의 숫자가 하나면 원문을 믿는다(11-10 v3-09, 사전 등록 #50)
+    mixed = J._ground_ops('clamping voltage at 10A 10/1000µs at or below 23.2V', text, 'VC')
+    assert '최대 23.2V' in mixed and C.user_conditions([(mixed, 'VC')])[0]['op'] == '<='
+    assert J._ground_ops('clamping voltage at 10A at or below 23.2V', text) == 'clamping voltage at 10A at or below 23.2V'  # 항목을 모르면 그대로
 
 
 def test_an_original_of_unknown_or_other_maker_is_not_read_from_the_tsc_document():

@@ -1,3 +1,4 @@
+import psycopg
 from fastapi.testclient import TestClient
 
 from backend import auth
@@ -5,13 +6,15 @@ from backend.api.quotes import service
 from backend.main import app
 from backend.services.quote import InvalidApproval, QuoteNotFound
 
+CREATED = '2026-11-10T09:00:00+00:00'  # 실제 서비스(backend/services/quote.py)처럼 DB의 created_at을 함께 돌려준다
+
 
 class FakeQuotes:
     def __init__(self): self.calls = []
-    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4}
-    def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity}
+    def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
+    def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
     def list_quotes(self, user, project): return []
-    def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]
+    def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
 
 
@@ -49,7 +52,10 @@ def test_mutations_require_origin_and_case_delete_is_explicit(monkeypatch):
 
 def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
     monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
-    for error, status in [(QuoteNotFound(), 404), (InvalidApproval('no'), 409)]:
+    # [왜] 같은 메시지를 두 번 승인하면 DB의 UNIQUE(message_id)가 UniqueViolation을 내고, 승인은 한 건으로 남은 채 409다(db/020)
+    # [왜] 409 둘 다 ALREADY_APPROVED라 화면은 승인을 다시 보내지 않는다(ADR 0019)
+    for error, status, code in [(QuoteNotFound(), 404, 'NOT_FOUND'), (InvalidApproval('no'), 409, 'ALREADY_APPROVED'),
+                                (psycopg.errors.UniqueViolation(), 409, 'ALREADY_APPROVED')]:
         class Broken(FakeQuotes):
             def approve(self, *args): raise error
         app.dependency_overrides.clear()
@@ -57,5 +63,5 @@ def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
         monkeypatch.setattr('backend.api.quotes.QuoteService', Broken)
         with TestClient(app, raise_server_exceptions=False) as web:
             response = web.post('/api/messages/9/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}, headers={'origin': 'http://testserver'})
-        assert response.status_code == status
+        assert response.status_code == status and response.json()['error']['code'] == code
         assert response.json()['error']['request_id'] == response.headers['X-Request-ID']

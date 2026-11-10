@@ -1,5 +1,5 @@
 # 역할 23개 규칙. 숫자는 SI 단위(V · A · W · s · F, 온도 °C). kV = 1.25(전압 정격의 80%), kI = 1/0.7(전류 정격의 70%).
-# 원본: 저장소 밖 전자_데이터시트/역할-후보-20.md · 역할-판정-2차의견-2026-11-05.md · 보류-5개-규칙안-2026-11-06.md(판정 하정운)
+# 원본: 저장소 밖 전자_데이터시트/역할-후보-20.md · 역할-판정-2차의견-2026-11-05.md · 보류-5개-규칙안-2026-11-06.md(조장 판정)
 # - 하지 않는 일: 계산 · 비교(backend/judge/conditions.py · verdict.py). 이 파일은 규칙만 적는다.
 # - 칸: tier(required · conditional), code(앞에서부터 대체), op(>= · <= · within), basis(기준식), when(값이 있고 거짓이 아니면 켜짐),
 #   unless(값이 있고 거짓이 아니면 꺼짐: flag는 참, 숫자는 주어짐), at(시험 조건 값 이름), default(basis에 쓸 값이 없을 때 대신 쓸 기준식, 원본의 "알면 A, 모르면 B").
@@ -38,10 +38,10 @@ R02:
   recognize: 캐소드 둘 이상이 같은 전원 넷, 또는 USB·충전 입력 → 배터리·다른 전원 넷, 또는 백업 셀 → RTC 전원 핀
   inputs: {v_reverse_max: number, i_max: number, ir_allowed: number, vf_selects_source: flag, vf_test: condition, hot_test: condition}
   conditions:
-    # [왜] 역전압은 전원 켜짐 · 꺼짐 조합 중 최댓값이다(정운 판정 R02)
+    # [왜] 역전압은 전원 켜짐 · 꺼짐 조합 중 최댓값이다(판정 기준표 R02)
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_reverse_max * kV"}
     - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
-    # [왜] 회로 허용 역류량을 주면 그 값, 없으면 원래 IR(같은 시험 조건일 때만, 정운 판정 R02)
+    # [왜] 회로 허용 역류량을 주면 그 값, 없으면 원래 IR(같은 시험 조건일 때만, 판정 기준표 R02)
     - {tier: required, code: IR, op: "<=", basis: "ir_allowed", default: "orig.IR"}
     - {tier: conditional, code: VF, op: "<=", basis: "orig.VF", when: vf_selects_source, at: vf_test}
     - {tier: conditional, code: IR, op: "<=", basis: "ir_allowed", default: "orig.IR", when: hot_test, at: hot_test}
@@ -54,7 +54,7 @@ R03:
   inputs: {v_coil: number, i_coil: number, pulse_test: condition, pwm: flag}
   conditions:
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_coil * kV"}
-    # [왜] 원본은 "IF_AV 또는 IFSM ≥ 코일 전류"다. IFSM은 질문의 차단 펄스와 시험 파형이 같을 때만 쓰고, 아니면 IF_AV로 본다(정운 판정 R03)
+    # [왜] 원본은 "IF_AV 또는 IFSM ≥ 코일 전류"다. IFSM은 질문의 차단 펄스와 시험 파형이 같을 때만 쓰고, 아니면 IF_AV로 본다(판정 기준표 R03)
     - {tier: required, any: [{code: IFSM, op: ">=", basis: "i_coil", at: pulse_test}, {code: IF_AV, op: ">=", basis: "i_coil"}]}
     - {tier: conditional, code: TRR, op: "<=", basis: "orig.TRR", when: pwm}
   major: {VRRM: higher, IF_AV: higher, IFSM: higher}
@@ -72,7 +72,7 @@ R04:
     # [주의] 범위가 없으면 원래 VZ와 같음(허용 오차 안)을 최대 VZ가 원래와 같은지로 본다. orig.VZ는 원래 부품의 최대 VZ 하나뿐이라 범위를 비교할 수 없다
     - {tier: required, code: VZ, op: ">=", basis: "orig.VZ", slot: max, unless: vz_min}
     - {tier: required, code: VZ, op: "<=", basis: "orig.VZ", slot: max, unless: vz_max}
-    # [왜] 실제 소비(Iz × VZ) × kI. Iz를 모르면 원래 PD(정운 판정 R04). 범위를 주면 VZ는 그 최대로 계산한다
+    # [왜] 실제 소비(Iz × VZ) × kI. Iz를 모르면 원래 PD(판정 기준표 R04). 범위를 주면 VZ는 그 최대로 계산한다
     - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD", unless: vz_max}
     - {tier: conditional, code: PD, op: ">=", basis: "i_z * vz_max * kI", default: "orig.PD", when: vz_max}
     - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: data_line}
@@ -92,7 +92,7 @@ R05:
     # [왜] 입력 최대 피크 × kV. 무극성 DC 입력이면 DC 최대, AC면 실효값 × √2
     - {tier: required, code: VRRM, op: ">=", basis: "v_in_max * kV", unless: ac_input}
     - {tier: conditional, code: VRRM, op: ">=", basis: "v_ac_rms * 1.41421356 * kV", when: ac_input}
-    # [왜] 브리지 부품 하나면 부하 전류 전체, 다이오드 4개 따로면 하나가 절반(정운 판정 R05)
+    # [왜] 브리지 부품 하나면 부하 전류 전체, 다이오드 4개 따로면 하나가 절반(판정 기준표 R05)
     - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI", unless: discrete_bridge}
     - {tier: conditional, code: IF_AV, op: ">=", basis: "i_max * 0.5 * kI", when: discrete_bridge}
     - {tier: conditional, code: IFSM, op: ">=", basis: "orig.IFSM", when: bulk_cap}
@@ -107,7 +107,7 @@ R06:
   conditions:
     - {tier: required, code: VRWM, op: ">=", basis: "v_line_max"}
     # [왜] VC · IPP · PPPM은 같은 시험 파형끼리만 비교한다. 사용자가 파형(surge_test)을 말하지 않으면, 두 데이터시트가 같은 정격 파형
-    #      (TSC는 10/1000 µs: 'tp = 1ms' · '10/1000µs')일 때 각 품번의 정격 값끼리 비교하고, 파형이 다르거나 모르면 확인 안 됨(정운 판정 R06, 11-06 결정)
+    #      (TSC는 10/1000 µs: 'tp = 1ms' · '10/1000µs')일 때 각 품번의 정격 값끼리 비교하고, 파형이 다르거나 모르면 확인 안 됨(판정 기준표 R06, 11-06 결정)
     - {tier: required, code: VC, op: "<=", basis: "orig.VC", at: surge_test, at_default: rated}
     # [왜] 원본은 "PPPM 또는 IPP ≥ 원래 값"이다
     - {tier: required, any: [{code: PPPM, op: ">=", basis: "orig.PPPM", at: surge_test, at_default: rated}, {code: IPP, op: ">=", basis: "orig.IPP", at: surge_test, at_default: rated}]}
@@ -157,12 +157,12 @@ R09:
   inputs: {i_max: number, v_in_min: number, v_dd_min: number, n_diodes: number, vf_test: condition}
   conditions:
     - {tier: required, code: IF_AV, op: ">=", basis: "i_max * kI"}
-    # [왜] VF 최댓값 @ 최대 전류 ≤ (입력 최소 − 부하 최소 VDD) ÷ 개수(정운 11-06 채택)
+    # [왜] VF 최댓값 @ 최대 전류 ≤ (입력 최소 − 부하 최소 VDD) ÷ 개수(보류 5개 규칙안 R09, 11-06 채택)
     - {tier: required, code: VF, op: "<=", basis: "(v_in_min - v_dd_min) / n_diodes", at: vf_test}
   major: {IF_AV: higher}
   cautions:
     - VF 최솟값 @ 최소 전류 ≥ (입력 최대 − 부하 최대 VDD) ÷ 개수. 데이터시트에 최솟값이 거의 없어 부하 전압 위쪽 한계는 보장할 수 없음(불확실)
-  source: "Microchip DS41285A Tip #3 [문서], 보류 5개 규칙안 R09(정운 11-06)"
+  source: "Microchip DS41285A Tip #3 [문서], 보류 5개 규칙안 R09(11-06)"
 
 R10:
   name: 신호선 다이오드 OR
@@ -231,26 +231,26 @@ R13:
 R14:
   name: RCD 스너버
   recognize: 애노드 = 1차 스위치 드레인(스위처 DRAIN 핀), 캐소드 = R‖C 노드, R‖C 다른 쪽이 1차 입력 고압
-  # [왜] v_clamp는 스너버 커패시터 전압(AN-4147의 Vsn)이다. 드레인 최대 전압으로 읽으면 입력을 두 번 더한다(정운 11-06 채택)
+  # [왜] v_clamp는 스너버 커패시터 전압(AN-4147의 Vsn)이다. 드레인 최대 전압으로 읽으면 입력을 두 번 더한다(보류 5개 규칙안 R14, 11-06 채택)
   inputs: {v_in_max: number, v_clamp: number, v_dss: number, i_d: number, f_over_100khz: flag}
   conditions:
-    # [왜] 클램프 전압을 알면 (입력 최대 + 클램프 전압) × 1.5, 모르면 스위치 내압 VDSS × 1.1(정운 11-06 채택)
+    # [왜] 클램프 전압을 알면 (입력 최대 + 클램프 전압) × 1.5, 모르면 스위치 내압 VDSS × 1.1(보류 5개 규칙안 R14, 11-06 채택)
     - {tier: required, code: VRRM, op: ">=", basis: "(v_in_max + v_clamp) * 1.5", default: "v_dss * 1.1"}
     - {tier: required, code: TRR, op: "<=", basis: "75e-9"}
-    # [왜] 100 kHz를 넘으면 trr ≤ 35 ns 또는 SiC 쇼트키만이다. 일반 쇼트키는 이 조건에서 면제하지 않는다(정운 11-06 채택)
+    # [왜] 100 kHz를 넘으면 trr ≤ 35 ns 또는 SiC 쇼트키만이다. 일반 쇼트키는 이 조건에서 면제하지 않는다(보류 5개 규칙안 R14, 11-06 채택)
     - {tier: conditional, code: TRR, op: "<=", basis: "35e-9", when: f_over_100khz, exempt: sic}
     # [왜] ID를 못 받으면 AN-4147의 "보통 1 A 정격 초고속 다이오드"를 기본값으로 쓴다
     - {tier: required, code: IF_AV, op: ">=", basis: "i_d * 0.3", default: "1"}
   cautions:
     - 동작 주파수가 100 kHz를 넘으면 TRR 35 ns 이하 또는 SiC 쇼트키만
-  source: "보류 5개 규칙안 R14(정운 11-06), Fairchild AN-4147 [문서], Maxim AN848 [문서]"
+  source: "보류 5개 규칙안 R14(11-06), Fairchild AN-4147 [문서], Maxim AN848 [문서]"
 
 R15:
   name: 부트스트랩
   recognize: 애노드 = 게이트 드라이버 VDD·VCC, 캐소드 = VB·HB·BOOT 핀, 커패시터가 VB–VS(SW) 사이
   inputs: {v_bus: number, v_sw_transient: number, i_boot_peak: number, long_high_side: flag, hot_test: condition}
   conditions:
-    # [왜] 스위칭 노드 과도 전압을 주면 그 값, 없으면 버스 × 1.25(정운 판정 R15)
+    # [왜] 스위칭 노드 과도 전압을 주면 그 값, 없으면 버스 × 1.25(판정 기준표 R15)
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_sw_transient", default: "v_bus * kV"}
     - {tier: required, code: TRR, op: "<=", basis: "orig.TRR"}
     # [왜] 시동 피크 전류 = (VDD − VF) / Rboot. 부트 저항이 없으면 원래 IFSM
@@ -266,7 +266,7 @@ R15:
 R16:
   name: 차지펌프(양전압 2배 · 음전압)
   recognize: 다이오드 2개 같은 방향 직렬, 가운데 노드의 커패시터가 PWM·555 출력으로. 음전압이면 출력 넷이 V-·VNEG이고 다이오드 방향이 반대
-  # [왜] 여유 1.3 · 2.0 · 1.5는 정운이 정한 역할별 값이다(공통 kV · kI와 다름, 정운 11-06 채택)
+  # [왜] 여유 1.3 · 2.0 · 1.5는 보류 5개 규칙안 R16이 정한 역할별 값이다(공통 kV · kI와 다름, 11-06 채택)
   inputs: {v_in_max: number, v_out_abs: number, i_out: number, negative_out: flag}
   conditions:
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "2 * v_in_max * 1.3", unless: negative_out}
@@ -274,7 +274,7 @@ R16:
     - {tier: required, code: IF_AV, op: ">=", basis: "i_out * 2", unless: negative_out}
     - {tier: conditional, code: IF_AV, op: ">=", basis: "i_out * 1.5", when: negative_out}
   major: {VRRM: higher, IF_AV: higher}
-  source: "보류 5개 규칙안 R16 정운안(11-06), TI SLFA002 [문서·요약]"
+  source: "보류 5개 규칙안 R16 조장안(11-06), TI SLFA002 [문서·요약]"
 
 R17:
   name: 피크 검파(피크 홀드 · 포락선)
@@ -291,14 +291,14 @@ R17:
   cautions:
     - 다이오드만으로 VF 조건을 못 맞추면 OP앰프 정밀 정류가 필요
     - 응답 시간(신호 주기의 10% 안)은 신호 주파수가 있어야 계산 가능
-  source: "보류 5개 규칙안 R17(정운 11-06), TI E2E OPA615 포럼 [문서·요약], ADI 피크 검파 설계 노트 [문서·요약]"
+  source: "보류 5개 규칙안 R17(11-06), TI E2E OPA615 포럼 [문서·요약], ADI 피크 검파 설계 노트 [문서·요약]"
 
 R18:
   name: 게이트 보호 제너
   recognize: 제너 계열이 MOSFET 게이트 넷과 소스 넷 사이(한쪽이 GND가 아니라 소스), 게이트에 풀다운·분압 저항
   inputs: {v_gs_on: number, v_gs_max: number, i_z: number}
   conditions:
-    # [왜] 게이트를 충분히 켤 전압 ≤ VZ 최소, VZ 최대 ≤ VGS 최대 정격(MOSFET 값은 되물음, 정운 판정 R18)
+    # [왜] 게이트를 충분히 켤 전압 ≤ VZ 최소, VZ 최대 ≤ VGS 최대 정격(MOSFET 값은 되물음, 판정 기준표 R18)
     - {tier: required, code: VZ, op: within, basis: [v_gs_on, v_gs_max]}
     - {tier: required, code: PD, op: ">=", basis: "i_z * orig.VZ * kI", default: "orig.PD"}
   major: {PD: higher}
@@ -364,7 +364,7 @@ R23:
   inputs: {v_cc: number, v_logic_margin: number, large_pullup: flag, fast_signal: flag, vf_test: condition}
   conditions:
     - {tier: required, code: [VRRM, VR], op: ">=", basis: "v_cc * kV"}
-    # [왜] VF 로직 여유를 필수로(정운 판정 R23). 못 얻으면 원래 VF
+    # [왜] VF 로직 여유를 필수로(판정 기준표 R23). 못 얻으면 원래 VF
     - {tier: required, code: VF, op: "<=", basis: "v_logic_margin", default: "orig.VF", at: vf_test}
     - {tier: conditional, code: IR, op: "<=", basis: "orig.IR", when: large_pullup}
     - {tier: conditional, code: CJ, op: "<=", basis: "orig.CJ", when: fast_signal}

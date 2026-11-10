@@ -1,16 +1,41 @@
-"""사용자별 장기 기억(G4)의 Store namespace 이름 규칙.
+"""사용자별 장기 기억(G4)의 Store namespace 이름 규칙과, 멀티 그래프의 기억 읽기 노드.
 
 역할: 서버가 인증한 사용자 id로 기억 공간 이름을 만들고, 선별된 승인 사례를 크기가 제한된 모델 입력으로 만든다.
-하지 않는 일: 접근 권한 검사와 실제 저장(conversations.py). namespace 자체는 인증 수단이 아니다.
-출처: SPEC.md 8.5절(사용자별 사례 기억, 정할 것), backend/BACKEND.md.
+  기억 읽기 노드(`read_profile`): 그래프에 넣은 Store에서 사용자 사실 중 선호 실장 방식 한 칸만 읽어 판정 코드의 말로 남긴다.
+하지 않는 일: 접근 권한 검사와 실제 저장(conversations.py · conversations/profile.py). namespace 자체는 인증 수단이 아니다.
+  소속 · 직무는 그래프 상태에 옮기지 않는다(체크포인터가 상태를 저장하므로 옮기는 값을 최소로 둔다).
+출처: SPEC.md 8.5절(사용자 사실 기억 "활용"), backend/BACKEND.md.
 """
 
 
 import json
+import logging
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from langgraph.store.base import BaseStore
+
+from backend.conversations import profile
+
+LOGGER = logging.getLogger('backend.graph.memory')
 _policy = ContextVar('approved_memory_policy', default=None)
+# 내 설정의 선호 실장 방식 값 → 판정 코드의 실장 방식 말(agents/judge.py mount_of와 같은 'smd' · 'tht'). any는 선호 없음('')
+MOUNT = {'smd': 'smd', 'through_hole': 'tht'}
+
+
+def read_profile(state: dict, *, store: BaseStore) -> dict:
+    """그래프 노드 기억 읽기: Store의 선호 실장 방식 한 칸을 'smd' · 'tht' · ''(없음)로 `mount_preference`에 남긴다."""
+    # [주의] store는 LangGraph가 compile(store=...)의 Store를 넣는다. 매개변수 타입이 BaseStore여야 넣어 주고, Store 없이 compile하면 None이다
+    # [주의] user_id는 서버가 세션에서 넣은 값만 온다(memory_service.message). 요청 본문의 id가 아니다
+    user, mount = state.get('user_id'), ''
+    if store is not None and user:
+        try:
+            item = store.get(profile.namespace(user), 'mounting_preference')
+            mount = MOUNT.get(item.value.get('value'), '') if item else ''
+        except Exception:
+            # [왜] 기억은 순서 참고일 뿐이다. 읽지 못해도 분석은 선호 없이 계속한다. 사용자 값 · 오류 원문은 로그에 넣지 않는다(_profile_hints와 같음)
+            LOGGER.warning('mount_preference_unavailable')
+    return {'mount_preference': mount, 'path': ['기억 읽기']}
 
 
 @contextmanager

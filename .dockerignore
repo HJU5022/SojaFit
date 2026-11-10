@@ -1,0 +1,15 @@
+# docker build 컨텍스트에서 뺄 것. Dockerfile이 COPY하는 pyproject.toml·uv.lock·.python-version·backend/·data/·db/·frontend 소스는 빼지 않는다.
+.git
+.venv
+**/__pycache__
+.pytest_cache
+graphify-out
+frontend/node_modules
+frontend/dist
+evals/results
+evals/drafts
+docs/worklog
+# 비밀값이 빌드 컨텍스트로 가지 않게 한다. 예시 파일만 남긴다.
+.env
+.env.*
+!.env.example

@@ -41,7 +41,11 @@ export function useRunStream() {
         terminal = true
         const result = data as unknown as ResultDto
         if (event === 'completed' || event === 'refused') setState({ status: event, runId, result })
-        else setState({ status: 'failed', runId, error: { code: 'RUN_FAILED', message: '실행을 완료하지 못했습니다.', requestId: result.request_id ?? '' } })
+        else {
+          // [왜] 서버가 정한 공통 오류 문구(데모 질문 422, 기록 재생 실패 503 등)가 있으면 그대로 보인다
+          const error = (data as { error?: { code?: string; message?: string } }).error
+          setState({ status: 'failed', runId, error: { code: error?.code ?? 'RUN_FAILED', message: error?.message ?? '실행을 완료하지 못했습니다.', requestId: result.request_id ?? '' } })
+        }
       }, active.signal)
       if (!terminal && runId) {
         let recovered = await getRun(runId, active.signal)

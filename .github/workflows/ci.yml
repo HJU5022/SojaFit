@@ -33,12 +33,45 @@ jobs:
           version: "0.12.9"
       # --locked: uv.lock이 pyproject.toml과 어긋나면 실패해 잠금 파일 누락을 PR에서 잡는다.
       - run: uv sync --locked
-      # 인증 테이블만 순서대로 적용한다(003 테이블, 005 실패 구간, 006 역할). utf-8-sig는 SQL 파일 맨 앞 BOM을 제거한다.
+      # 인증 테이블만 순서대로 적용한다(003 테이블, 005 실패 구간, 006 역할, 021 IP 가입·로그인 실패 한도). utf-8-sig는 SQL 파일 맨 앞 BOM을 제거한다.
       - name: Initialize authentication test database
-        run: uv run python -c "import os, psycopg; from pathlib import Path; c=psycopg.connect(os.environ['TEST_AUTH_DATABASE_URL']); [c.execute(Path(f'db/{name}').read_text(encoding='utf-8-sig')) for name in ('003_auth.sql','005_auth_attempt_window.sql','006_user_roles.sql')]; c.commit(); c.close()"
+        run: uv run python -c "import os, psycopg; from pathlib import Path; c=psycopg.connect(os.environ['TEST_AUTH_DATABASE_URL']); [c.execute(Path(f'db/{name}').read_text(encoding='utf-8-sig')) for name in ('003_auth.sql','005_auth_attempt_window.sql','006_user_roles.sql','021_auth_ip_limits.sql')]; c.commit(); c.close()"
       - run: uv run pytest -q --junitxml=test-results.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
           path: test-results.xml
+
+  # 프런트 단위 테스트와 빌드. e2e(playwright)는 서버가 필요해 넣지 않는다.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      # [왜] Dockerfile 빌드 단계(node:24-slim)와 같은 버전. 잠금 파일의 vitest 5·jsdom 31이 Node 22.12 이상을 요구해 20은 안 된다.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run test:run
+      - run: npm run build
+  # 평가 회귀(키 없음): 기록한 LLM 응답으로 데모 질문 5개(v3 문항 3개 포함)를 서비스와 같은 멀티 그래프로 끝까지 돌리고,
+  # 경로 · 판정 · 거절 · DB 지문이 기록(data/demo/recordings/outcomes.json)과 다르면 실패한다(scripts/demo/record_demo.py replay).
+  # [왜] CI에는 API 키를 두지 않는다. 진짜 모델 점수는 eval-live.yml을 버튼으로 돌린다.
+  eval-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # [왜] -p로 새 프로젝트(빈 볼륨)를 써야 corpus-load가 스냅샷을 넣어 청크 id(DB 지문)가 기록 때와 같다
+      - name: Replay recorded demo questions without keys
+        run: |
+          docker compose -p sojafit-ci run --rm -e DEMO_MODE=1 -e OPENROUTER_API_KEY= -e VOYAGE_API_KEY= \
+            -v "${PWD}/scripts:/app/scripts:ro" -v "${PWD}/evals:/app/evals:ro" -v "${PWD}/data/demo:/app/data/demo:ro" \
+            api python scripts/demo/record_demo.py replay
+      - if: always()
+        run: docker compose -p sojafit-ci down -v
