@@ -595,6 +595,7 @@ SojaFit (proj3-b)
 │   │   ├── test_judgement_bundle.py <- 로컬DB 경계·합산 예산·가짜모델 판정 경로·판정 출력 경계 검사
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
+│   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
@@ -632,6 +633,9 @@ SojaFit (proj3-b)
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   └── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
+│   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환
+│   │   ├── EVAL.md         <- 폴더 설명
+│   │   └── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
 │   │   ├── BIT_SEARCH.md   <- 폴더 설명
 │   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
@@ -819,6 +823,7 @@ SojaFit (proj3-b)
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `scripts/demo/` | [DEMO.md](scripts/demo/DEMO.md) | 서비스·운영 |
 | `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
+| `scripts/eval/` | [EVAL.md](scripts/eval/EVAL.md) | 에이전트 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/assets/` | [ASSETS.md](docs/assets/ASSETS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
