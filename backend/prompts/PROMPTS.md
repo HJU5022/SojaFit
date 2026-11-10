@@ -33,8 +33,8 @@
 | 2026-11-06 | `route.md` | 다음 버전(Langfuse 등록 전) | 질문 종류에 `price`(다이오드 품번의 현재 가격 · 재고)를 4번째로 더해 8가지로 하고, 범위 밖에서 가격 · 재고를 빼고 주문 · 결제 · 판매처 찾기 · 비교만 남김 | 실시간 가격 · 재고 표시(SPEC 1절, 11-06 결정). 값은 그래프 밖 화면이 Mouser로 조회한다(ADR 0009) | 아직 없음(가짜 LLM 시험만). 동결 n18(SS34 판매처 · 재고 · 가격)은 정답이 범위 밖 거절이라 가격 길로 가면 채점이 달라진다 |
 | 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 다음 노드 `price`와 질문 종류 `price`를 더하고, 첫 판단에서 가격 질문은 검색 없이 `price`로. 범위 밖에 주문 · 결제 · 판매처 찾기 · 비교를 적어 `route.md`와 맞춤 | 위와 같음. D4 · D5가 같은 질문을 같은 길로 보내게 한다 | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-06 | `route.md` | 다음 버전(Langfuse 등록 전) | 질문 종류를 멀티 Supervisor와 같은 7가지(chat · out_of_scope · other_part · role · candidate_find · candidate_judge · rating)로 넓히고, 입력의 확인된 사실(Verified facts)로 검색 전 거절 사유 `reason`(out_of_scope · not_found · part_missing · revision_missing)과 일상 대화 답 `reply`(300자)를 낸다 | D4 v2: 범위 판정을 첫 단에서 하고 질문 종류마다 다른 길로 보낸다(11-06) | 아직 없음(가짜 LLM 시험만) |
-| 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 판정 · 찾기 질문을 `judge`가 보일 때 바로 `judge`로 보냄(검색을 먼저 거치지 않음). 검색 보고 뒤에는 `writer`로. 판정 보고가 ok · partial이면 `writer`, search_error 실패면 거절. `judge` 설명에 candidate_find를 더함 | 대체 부품 에이전트 연결(docs/specs/judge-agent.md What 1번) | 아직 없음(가짜 LLM 시험만) |
-| 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | 대체 부품 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
+| 2026-11-06 | `supervisor.md` | 다음 버전(Langfuse 등록 전) | 판정 · 찾기 질문을 `judge`가 보일 때 바로 `judge`로 보냄(검색을 먼저 거치지 않음). 검색 보고 뒤에는 `writer`로. 판정 보고가 ok · partial이면 `writer`, search_error 실패면 거절. `judge` 설명에 candidate_find를 더함 | Spec 에이전트 연결(docs/specs/judge-agent.md What 1번) | 아직 없음(가짜 LLM 시험만) |
+| 2026-11-06 | `judge_read.md` | v1 | 처음 작성. 대상 다이오드의 역할(R01~R23 · other)과 근거 핀, 질문에 적힌 회로 값(quote 그대로), 원래 부품 · 후보 품번 · 원하는 패키지 · 분류를 정해진 칸으로 낸다. 숫자를 비교하거나 적합 여부를 정하지 않는다. 영어. Langfuse에는 아직 등록하지 않음 | Spec 에이전트 읽기 노드(docs/specs/judge-agent.md) | 아직 없음(가짜 LLM 시험만) |
 | 2026-11-05 | `supervisor_v0.md` | v0 | 여섯 질문 유형·전체 필요 근거·현재 상태별 다음 경로를 네 필드로 반환 | Luna·Haiku·Jev의 상태 기반 라우팅 비교 기준선 | V0 13건: Luna·Haiku 13/13 exact, Jev 7/13 exact |
 | 2026-11-05 | `route.md`, `grade.md`, `rewrite.md`, `generate.md` | Langfuse 이름 변경 | 등록 이름에서 `sojafit/` 폴더를 뺌: `route`, `grade`, `rewrite`, `generate`, Skill은 `skill-diode-evidence`. 본문은 그대로 | 프로젝트가 SojaFit 하나라 접두사가 필요 없고 목록이 한 줄로 보이게 함(조장 요청). 이전 `sojafit/` 폴더 프롬프트는 과거 트레이스가 가리켜 지우지 않음 | 동작 변화 없음(이름만) |
 | 2026-11-05 | `supervisor.md` | v1 | 처음 작성(11-05 영어로 다시 씀, Langfuse `supervisor` v1 등록). 다음 노드 7종(search · judge · writer · verifier · web · finish · refuse)과 거절 사유 7종, 보고 뒤 판단 규칙 | 멀티 에이전트 Supervisor(D5). 코드 규칙 if 문이 아니라 LLM이 판단한다는 설계 기준 | 아직 없음(가짜 LLM 시험만) |
@@ -65,6 +65,6 @@
 - `grade.md` — 채점 노드의 시스템 프롬프트(근거가 든 청크 번호 고르기)
 - `rewrite.md` — 재작성 노드의 시스템 프롬프트(원래 질문을 영어 검색어 한 줄로)
 - `generate.md` — 생성 노드의 시스템 프롬프트(근거만으로 인용을 붙여 답하기)
-- `judge_read.md` — 대체 부품 에이전트 읽기 노드의 시스템 프롬프트(역할 · 회로 값 읽기, 숫자 비교 없음). 영어. Langfuse `judge_read`용이며 아직 등록하지 않음
+- `judge_read.md` — Spec 에이전트 읽기 노드의 시스템 프롬프트(역할 · 회로 값 읽기, 숫자 비교 없음). 영어. Langfuse `judge_read`용이며 아직 등록하지 않음
 - `card_read.md` — 카드 읽기 노드(`backend/rag/card_read.py`)의 시스템 프롬프트(카드에서 값 · 원문 인용 읽기). 영어. Langfuse `card_read`용이며 아직 등록하지 않음
 - `card_pick.md` — 카드 찾기(`backend/rag/card_find.py`)가 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 시스템 프롬프트. 11-09부터 코드 고르기(`code_pick`)가 제목으로 줄 세울 근거가 없을 때만 쓴다(사전 등록 #44). 영어. Langfuse `card_pick`용이며 아직 등록하지 않음

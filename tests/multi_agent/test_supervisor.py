@@ -55,7 +55,7 @@ def test_judge_tasks_become_docs_tasks_when_judge_is_off():
 def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
     p = plan(task(1), task(2, agent='judge', kind='candidate_judge'), question_type='candidate_judge').model_dump(mode='json')
     sends = S.after_plan({**STATE, 'plan': p, 'refusal_reason': ''})
-    assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', '대체 부품 에이전트']
+    assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', 'Spec 에이전트']
     assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
     assert sends[1].arg['question_type'] == 'candidate_judge' and sends[1].arg['facts'] == STATE['facts']
     for nxt, node in (('finish', '끝내기'), ('price', '가격 안내')):

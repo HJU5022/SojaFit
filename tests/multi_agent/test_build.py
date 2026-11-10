@@ -166,11 +166,11 @@ def test_graph_drawing_uses_korean_node_names_and_labels_only_the_replan_loop():
     from backend.multi_agent.supervisor import REPLAN
     g = judge_app(scripted()).get_graph(xray=True)
     assert set(g.nodes) - {'__start__', '__end__'} == {
-        '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', '대체 부품 에이전트:회로 역할 읽기', '대체 부품 에이전트:대체 부품 판정',
+        '입력 읽기', '기억 읽기', '품번·판 확인', 'Supervisor', 'RAG 에이전트', 'Spec 에이전트:회로 역할 읽기', 'Spec 에이전트:대체 부품 판정',
         '답 모으기', '답 정리', '종합', '답 검사', '끝내기', '거절', '가격 안내'}
     assert [(e.source, e.target, e.data) for e in g.edges if e.data] == [('답 모으기', 'Supervisor', REPLAN)]
     assert {('입력 읽기', '기억 읽기'), ('기억 읽기', '품번·판 확인')} <= {(e.source, e.target) for e in g.edges}
-    assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', '대체 부품 에이전트:회로 역할 읽기'}  # Send 동시 실행
+    assert {e.target for e in g.edges if e.source == 'Supervisor'} >= {'RAG 에이전트', 'Spec 에이전트:회로 역할 읽기'}  # Send 동시 실행
 
 
 def test_unbuilt_features_are_rejected_instead_of_silently_ignored():
