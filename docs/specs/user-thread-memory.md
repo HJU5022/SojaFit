@@ -201,7 +201,7 @@ Review focus: 철회/삭제 후 pending/retry 기억 재사용, 삭제의 재승
 | 보관 기간이 지나면 자동으로 지운다(프로젝트 · 분석 대화 60일, 기록 30일) | `db/legacy/023_retention.sql` 청소 함수 2개, 새 분석 때 작은 묶음 | 21조(파기): 보유기간이 지나 불필요해진 개인정보는 지체 없이 파기 |
 | 사용자가 프로젝트 · 내 설정을 지우면 바로 실제로 지운다 | `DELETE /api/projects/{id}`(같은 UUID 분석 기록 · checkpoint 포함), `DELETE /api/me/memory` | 36조(삭제 요구) |
 | 탈퇴하면 계정과 모든 기록을 지운다 | `DELETE /api/me`(기록 먼저, 계정 마지막, 다시 요청하면 이어서) | 37조(처리정지 요구 · 동의 철회) |
-| 가입 때 처리방침을 알리고 동의를 받는다 | React `/signup`의 고지(`PrivacyNotice`: 목적 · 저장 항목 · 보관 기간 · 삭제 · Langfuse · 외부 서비스 · 거부 권리)와 동의 체크, 서버 `consent` 필수(없으면 422) | 15조 2항(동의를 받을 때 알릴 사항) |
+| 가입 때 처리방침을 알리고 동의를 받는다 | React `/signup`의 고지(`PrivacyNotice`: 목적 · 저장 항목 · 보관 기간 · 삭제 · Langfuse(질문 · 답변 글은 넣지 않고 모델 호출의 이름 · 모델 · 토큰 · 비용 · 시간만 보냄, `service_trace.py`) · 외부 서비스 · 거부 권리)와 동의 체크, 서버 `consent` 필수(없으면 422) | 15조 2항(동의를 받을 때 알릴 사항) |
 
 #### 사용자가 지울 때(구현)
 - 프로젝트 삭제 `DELETE /api/projects/{id}`(`backend/api/projects.py` `delete_owned_with_checkpoints`): 프로젝트 행을 잠근 같은 트랜잭션에서 그 프로젝트 대화 UUID의 분석 checkpoint 표 3개(`checkpoint_writes` · `checkpoint_blobs` · `checkpoints`, thread_id 글자) → 분석 thread(메시지 · 승인 기록 · 분석 사건은 FK cascade) → 남은 thread가 없는 같은 UUID 분석 회로 → 프로젝트(회로 · 대화 · run · 메시지 · 승인 · 견적 · 승인 사례는 FK cascade) 순서로 지운다(`memory_service.delete_analysis_threads`, 사용자 조건으로만 고름). 하나라도 실패하면 모두 되돌린다. 사용자 사실(Store)은 프로젝트에 딸리지 않아 남는다.
