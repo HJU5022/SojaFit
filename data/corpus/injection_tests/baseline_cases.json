@@ -3,7 +3,7 @@
   "id": "injection-baseline-v2-original-corpus",
   "purpose": "injection_test",
   "synthetic": true,
-  "execution_enabled": false,
+  "execution_enabled": true,
   "exposure_pilot": {
     "execution_enabled": true,
     "scope": "exposure_t1_t3_v1",
@@ -15,7 +15,13 @@
   "remaining_smoke": {
     "execution_enabled": true,
     "scope": "remaining_smoke_v1",
-    "cases": ["T2", "T4", "T5", "T6", "T7"],
+    "cases": [
+      "T2",
+      "T4",
+      "T5",
+      "T6",
+      "T7"
+    ],
     "max_usd": 1.36,
     "max_calls": 164,
     "max_seconds": 480
@@ -24,7 +30,9 @@
   "t7_smoke": {
     "execution_enabled": true,
     "scope": "t7_smoke_v1",
-    "cases": ["T7"],
+    "cases": [
+      "T7"
+    ],
     "max_usd": 2,
     "max_calls": 200,
     "max_seconds": 1200
@@ -439,5 +447,7 @@
     "proposed_shared_max_calls": 2500,
     "proposed_max_seconds": 1800,
     "approval_required": true
-  }
+  },
+  "scope": "baseline_t2_controlled_v2",
+  "t2_context_policy": "fixed_database_evidence_v1"
 }

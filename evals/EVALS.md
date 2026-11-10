@@ -1,5 +1,7 @@
 # evals
 
+수정본110회02의원시는기존결과와별도로 results/threads/injection_baseline_live_2026-11-11_02.jsonl·동명.meta.json·동명.budget.json에보존하고,독립승인은injection_baseline_approval_2026-11-11_02.json에둔다. 새scope baseline_t2_controlled_v2의T2고정DB근거와T1수정후측정이며기존110회와합산채점하지않는다.
+
 ## 역할
 - 이 폴더: 동결 평가셋과 동결 기록을 루트에 두고, 실행 코드·문서·표본·초안·결과를 하위 폴더로 나눠 둡니다. 루트 파일의 위치와 이름은 과정 안내와 동결 시험이 가정하므로 옮기지 않습니다.
 - 넣는 것: 동결 평가셋(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl`)과 동결 기록(`FROZEN.json`). 앞으로 생길 `exclusions.json`도 루트에 둡니다. `exclusions.json`은 코퍼스가 바뀔 때 생기며 지금은 없습니다([dataset-guide.md](guides/dataset-guide.md)).
