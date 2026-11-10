@@ -849,3 +849,11 @@
 - 바꾼 것: `SPEC.md` 첫머리 "현재 구현 경계"를 11-10 `jeongun` 기준으로(데모 기록 파일 · 기억 읽기는 구현됨, 남은 것은 회로 없이 질문하는 입구 · 승인 사례를 다음 판정에 보이기), `README.md` "아직 없는 것"에서 녹화 재생을 뺌(커밋 `ebce11c`). 엔드포인트 개수를 "동작(메서드 + 경로)"과 "경로"로 나눠 SPEC 4절 · GATES G1 · `tests/api/test_openapi.py` 설명에서 같게 적음: 동작 37개 · 경로 31개, `/openapi.json`에 동작 33개 · 경로 27개, 숨긴 Google 4개.
 - 확인: `uv run --frozen pytest -q` 1205 passed · 111 skipped(HEAD `ebce11c`), `tests/repo` 5 passed. 프런트는 `b8576f8` 뒤 바뀐 파일이 없어 다시 돌리지 않음. 숨긴 경로 4개는 `backend/api/auth.py`의 `include_in_schema=False` 4곳으로 셈.
 - 확인 못 한 것: 배포 주소에서 실제 계정으로 끝까지 도는 점검.
+
+## 2026-11-10 CI 평가 회귀 연결 — PR마다 키 없는 재생, 버튼으로 진짜 모델 v3 (브랜치 `jeongun`)
+
+- 왜: D8 "평가 회귀 테스트를 CI에 연결". CI에 키를 두지 않으려고 둘로 나눴다(조장 결정 11-10).
+- 바꾼 것: `ci.yml`에 `eval-replay` 잡(키 없는 compose로 `scripts/demo/record_demo.py replay`, 기록과 경로 · 판정 · 거절 · DB 지문이 다르면 실패), 새 `eval-live.yml`(workflow_dispatch로 `run_gate` v3 → `gate_report` 기준 0.95 · 0.05 · p95 10초, Secrets 키 사용), `.gitleaks.toml`에 시험용 가짜 값(tests/ 안 접두어) · SQL 파일 이름 허용 목록 2개.
+- 확인: CI와 같은 gitleaks 이미지로 깨끗한 복제본 전체 이력 검사 20건 → 0건. 워크플로 YAML 읽기 확인. 재생 명령은 11-10 새 compose 프로젝트에서 성공한 명령과 같다.
+- 확인 못 한 것: GitHub Actions가 조직 결제 한도로 시작되지 않아(11-09 #73부터 main도 같음) 세 잡 모두 실제 실행을 못 봤다. `eval-live`는 Secrets 등록 전이라 돌리지 않았다. 일부러 기준 미달로 만든 변경에서 실패하는 기록은 Actions가 풀린 뒤에 남긴다.
+

@@ -21,7 +21,7 @@ SojaFit (proj3-b)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
-├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일 하나만 제외
+├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 시험용 가짜 값, SQL 파일 이름 제외
 ├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
@@ -34,7 +34,8 @@ SojaFit (proj3-b)
 ├── .github/                <- GitHub 설정(설명 파일 없음)
 │   ├── PULL_REQUEST_TEMPLATE.md  <- PR 본문 양식
 │   └── workflows/
-│       ├── ci.yml          <- PR마다 파이썬 테스트(격리한 인증 시험 DB 포함)와 화면 작업(npm 시험 · 빌드)
+│       ├── ci.yml          <- PR마다 파이썬 테스트(격리한 인증 시험 DB 포함), 화면 작업(npm 시험 · 빌드), 키 없는 평가 회귀(기록 응답 재생)
+│       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
 ├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정

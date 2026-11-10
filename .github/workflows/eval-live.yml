@@ -1,0 +1,38 @@
+# 진짜 모델 평가(버튼 실행): 기준 평가셋 v3 50문항을 실제 LLM · 운영 DB로 재고, gate_report 기준(정답 0.95 · 오류 0.05 · p95 10초)에
+# 못 미치면 실패한다. PR마다 도는 키 없는 회귀(ci.yml eval-replay)가 못 잡는 모델 쪽 변화를 본다.
+# [주의] 돌릴 때마다 돈이 든다(v3 1세트 약 $0.05). 키는 저장소 Settings > Secrets에만 둔다(코드 · 로그에 적지 않음).
+# 필요한 Secrets: OPENROUTER_API_KEY, VOYAGE_API_KEY, DATABASE_URL(운영 DB 읽기), LANGFUSE_PUBLIC_KEY · LANGFUSE_SECRET_KEY · LANGFUSE_BASE_URL
+name: Eval (live)
+on:
+  workflow_dispatch:
+    inputs:
+      sets:
+        description: "v3 50문항을 몇 세트 잴지(세트당 약 $0.05)"
+        default: "1"
+jobs:
+  v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LLM_PROVIDER: openrouter
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.12.9"
+      - run: uv sync --locked
+      - name: Run v3 sets
+        run: uv run python -m evals.runners.run_gate evals/dataset_v3.jsonl --out eval-out --sets "${{ inputs.sets }}" --keep-going
+      - name: Check thresholds
+        run: uv run python -m evals.runners.gate_report evals/dataset_v3.jsonl eval-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-v3
+          path: eval-out/
