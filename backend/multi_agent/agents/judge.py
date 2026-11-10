@@ -23,6 +23,7 @@ from backend.judge import conditions as C
 from backend.judge import sheet_conditions as S
 from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
+from backend.multi_agent.agents.part_names import MAKER, ground_part_names
 from backend.multi_agent.facts import ORDER_CODE
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
@@ -144,6 +145,9 @@ def judge_read_agent(state: dict, *, chat) -> dict:
         if not reads:
             raise ValueError('판정 읽기가 모두 형식을 어겼다')
         read = merge_reads(reads)
+    # [왜] 읽기가 같은 질문에서 품번을 'SS34'(넷리스트)·'SS26'(사용 조건), '1N5231'·'TSC 1N5231B'로 회차마다 다르게 적었다(11-10 6회 반복). 사용자 글의 품번으로 코드가 맞춘다
+    original, candidates = ground_part_names(read.original_part, read.candidates, state)
+    read = read.model_copy(update={'original_part': original, 'candidates': candidates})
     return {'judge_read': read.model_dump(mode='json'), 'path': ['판정 읽기']}
 
 
@@ -285,7 +289,6 @@ def _ask_text(missing: list[str], roles: list[str], rules: dict) -> str:
 
 # [왜] 읽기가 품번을 'TSC 1N5817'처럼 제조사 이름과 함께 낸다. 사양 표 품번에는 제조사 이름이 없어 0행이 된다(11-06 평가 7건)
 EDITION = re.compile(r'[A-Z]\d{4}|(?:19|20)\d{2}|판|EDITION|VERSION|\bREV', re.I)  # 데이터시트 판으로 보이는 글
-MAKER = re.compile(r'^\s*(?:TSC|Taiwan\s+Semiconductor)\s+', re.I)
 
 
 def _part(name: str) -> str:
