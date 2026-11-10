@@ -4,7 +4,7 @@
 
 아직 정하지 않은 칸은 `(정할 것)`으로 둡니다.
 
-**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · 자기 가입 · 데모 모드 버튼 로그인 · Google 관리자 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모가 재생할 LLM 응답 기록 파일(`data/demo/recordings/`, 기록 실행 전), Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모(`DEMO_REPLAY=1`)의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생하며(7절), 기록 파일이 생기기 전까지는 분석 요청이 503입니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
+**현재 구현 경계(2026-11-09 `jeongun-8` 코드 기준):** 서비스 API는 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 데모 모드 이메일 가입 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 키 없는 데모가 재생할 LLM 응답 기록 파일(`data/demo/recordings/`, 기록 실행 전), Supervisor의 기억 활용, 배포 주소 반영(운영 Cloud Run은 이전 버전). 키 없는 데모(`DEMO_REPLAY=1`)의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생하며(7절), 기록 파일이 생기기 전까지는 분석 요청이 503입니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
 
 ## 1. Why·Goal
 
@@ -176,20 +176,20 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
     |---|---|---|---|---|---|
     | `GET /api/auth/google/status` | 없음(문서에서 숨김) | - | 200 `Enabled` | | 로그인 화면이 Google 진입을 보일지 정함(8.6, `docs/specs/google-admin-login.md`) |
-    | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | 승인된 관리자의 Google 로그인 시작(8.6) |
-    | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(세션) · `/api/auth/google/pending` · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급 또는 연결 요청(8.6) |
+    | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | Google 가입 · 로그인 시작. 쿼리 `consent=1`이면 처리방침 동의 쿠키를 함께 심는다(8.6) |
+    | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(세션) · `/api/auth/google/pending` · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급(연결된 신원 · 동의한 새 이메일) 또는 연결 요청(이메일이 이미 있음). 동의 없는 새 이메일은 `/login?google=consent`(8.6) |
     | `GET /api/auth/google/pending` | 없음(대기 쿠키, 숨김) | - | 200 HTML(이메일 · 요청 번호) | 400 · 404 · 503 | 운영자 승인을 기다리는 연결 요청 번호를 보여 줌(운영자 CLI로 승인) |
     | `GET /api/admin/users` | 관리자 | - | 200 `Accounts` `{users: [{id, email(가림), role, is_active}]}` | 403 | 계정 상태 확인(8.6 관리자) |
     | `PATCH /api/admin/users/{id}` | 관리자 | `AccountState` `{is_active}` | 200 `Ok` | 403 · 404 · 422 | 일반 계정 비활성화와 세션 폐기(8.6) |
-    | `POST /api/auth/signup` | 없음 | `Signup` `{email, password ≥8자, consent: true}` | 200 `UserId` + 세션 쿠키 | 409 · 422 · 429 `RATE_LIMITED` | 사전 계정 없이 쓰는 자기 가입(11-09 결정, 8.6) |
+    | `POST /api/auth/signup` | 없음 | `Signup` `{email, password ≥8자, consent: true}` | 200 `UserId` + 세션 쿠키 | 404(`DEMO_MODE`≠1) · 409 · 422 · 429 `RATE_LIMITED` | 로컬 데모 전용 이메일 가입. 공개 배포는 닫혀 있고 Google로 가입한다(11-10 결정이 11-09 결정을 대체, 8.6) |
     | `DELETE /api/me` | 로그인(일반 계정) | - | 200 `Deleted` `{deleted: {이름: 건수}}` | 409(관리자 · 진행 중 분석) · 503 | 동의 철회 · 탈퇴(8.5 삭제, 개인정보 보호법 37조) |
     | `GET /api/approved-cases` | 로그인 | - | 200 `list[ApprovedCase]` `[{id, approval_id, candidate_part, verdict, created_at}]` | | 내가 승인한 사례 확인(`docs/specs/d5-frontend-service.md` How, 장기 기억이 아님 8.5) |
     | `DELETE /api/approved-cases/{id}` | 로그인 | - | 204 | 404 | 승인 사례를 확인 뒤 지움(같은 작업서) |
     | `GET /api/prices` | 로그인 | 쿼리 `parts` 품번 1~10개 | 200 `PricesAvailable \| PricesUnavailable` | 422 | 후보의 가격 · 재고를 근거와 따로 보임, 저장하지 않음(1절 하는 일, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
 
-  - 인증 · 가입: 사전 생성된 이메일 계정 · 자기 가입 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). 가입은 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422이고, 관리자 승인 · 이메일 인증 없이 `user` 계정을 만들어 로그인과 같은 세션 쿠키를 심습니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정).
+  - 인증 · 가입: 사전 생성된 이메일 계정 · Google 계정 · (데모 모드) 이메일 가입 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). **11-10 결정: 공개 배포(`DEMO_MODE=0`)는 이메일 인증이 없는 이메일 자기 가입(11-09 결정)을 닫고, 이메일은 Google이 확인한 것만 받습니다.** 이메일 가입(`DEMO_MODE=1`)은 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422이고, 관리자 승인 · 이메일 인증 없이 `user` 계정을 만들어 로그인과 같은 세션 쿠키를 심습니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정).
   - 관리자: 일반 사용자는 관리자 API를 부를 수 없고, 비활성화하면 그 계정의 기존 세션을 지웁니다. 관리자 계정의 상태는 이 API로 바꾸지 않습니다.
-  - Google 관리자 로그인: `GOOGLE_AUTH_ENABLED=1`과 클라이언트 설정이 있을 때만 켜지고, 승인된 활성 관리자만 기존 서버 세션을 받습니다. 연결 승인 · 철회는 `python -m backend.auth`의 운영자 CLI를 씁니다(상세 `docs/specs/google-admin-login.md`).
+  - Google 가입 · 로그인: `GOOGLE_AUTH_ENABLED=1`과 클라이언트 설정이 있을 때만 켜집니다. 연결된 활성 계정(관리자 · 일반 사용자)은 기존 서버 세션을 받고, 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작했을 때만(`consent=1` 쿠키) 비밀번호 없는 `user` 계정이 만들어집니다. 이메일이 이미 `users`에 있는 신원(관리자 · 비밀번호 계정)은 자동 연결 없이 운영자 승인 대기로 갑니다. 관리자 연결 승인 · 철회는 `python -m backend.auth`의 운영자 CLI를 씁니다(상세 `docs/specs/google-admin-login.md`).
   - 가격 · 재고: 품번마다 3~40자, `|` 금지입니다. 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
 - 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. `error.code`는 화면이 다르게 반응해야 할 때만 나눈 아래 15개 중 하나이고(ADR 0019, `backend/errors.py`), 분석 SSE의 마지막 이벤트 `failed`의 `error.code`도 같은 표입니다. `message`는 사람이 읽는 한국어 문장입니다. 상세는 `docs/specs/api-error-contract.md`입니다.
 
@@ -403,7 +403,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ### 8.6 로그인
 
 - GIVEN 사전 생성된 활성 계정, WHEN 올바른 이메일·비밀번호를 제출하면, THEN 서버 세션을 발급하고 사용자 ID를 확인할 수 있다.
-- GIVEN 새 이메일과 8자 이상 비밀번호와 처리방침 고지 동의, WHEN 같은 출처에서 가입하면, THEN 승인 없이 `user` 계정을 만들고 바로 세션을 발급한다. 중복 이메일은 409, 입력 오류·동의 없음은 422(입력값 미노출), Origin 없음·불일치는 403이다. React `/signup`은 저장 항목·목적·보관 기간·삭제·Langfuse·외부 서비스·거부 권리를 고지하고 동의 체크 전에는 보내지 않는다.
+- GIVEN `DEMO_MODE=1`(로컬 데모), 새 이메일과 8자 이상 비밀번호와 처리방침 고지 동의, WHEN 같은 출처에서 가입하면, THEN 승인 없이 `user` 계정을 만들고 바로 세션을 발급한다. 중복 이메일은 409, 입력 오류·동의 없음은 422(입력값 미노출), Origin 없음·불일치는 403이다. React `/signup`은 저장 항목·목적·보관 기간·삭제·Langfuse·외부 서비스·거부 권리를 고지하고 동의 체크 전에는 보내지 않는다.
 - GIVEN 로그아웃·탈퇴·세션 만료, WHEN React 화면이 로그인 상태를 잃으면, THEN 화면 메모리(React Query 캐시)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꿔(replace) 주소의 프로젝트 id를 남기지 않는다.
 - GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 요청 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
 - GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
@@ -418,7 +418,10 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 새 Compose DB와 `DEMO_MODE=1`, WHEN 초기화 SQL이 실행되면, THEN 로컬 데모 전용 일반 사용자 2개(데모 사용자 A · B, 평가 계정 아님)를 비밀번호 없이(scrypt가 아닌 표식) 만들고 기존 계정을 덮어쓰지 않는다. `DEMO_MODE`가 1이 아니면 계정을 만들지 않는다. 저장소에는 비밀번호 · 해시가 없다(11-09).
 - GIVEN 데모 모드, WHEN 로그인 화면의 "데모 사용자 A · B로 들어가기"를 누르면(`POST /api/auth/demo-login` `{"account": "a"|"b"}`, 같은 출처), THEN 그 시드 계정에 로그인과 같은 세션을 발급하고 A · B는 서로 다른 사용자다. 두 계정의 비밀번호 로그인은 늘 실패하고, 표식이 없는 계정(같은 이메일로 가입한 계정) · 관리자 · 비활성 계정에는 세션을 주지 않는다(404). 데모 모드가 아니면 `GET /api/auth/demo`와 `POST /api/auth/demo-login`은 공통 404다.
 - GIVEN Google 로그인이 설정되지 않음, WHEN 로그인 화면과 Google 상태 API를 사용하면, THEN 기존 비밀번호 로그인을 유지하고 Google 진입은 비활성으로 표시한다.
-- GIVEN Google이 확인한 계정이 기존 활성 관리자에 운영자 승인으로 연결됨, WHEN Google 콜백 검증이 끝나면, THEN 기존 서버 세션을 발급한다. 미승인·일반 사용자·비활성 관리자는 세션을 받지 못한다.
+- GIVEN `DEMO_MODE=0`, WHEN `POST /api/auth/signup`을 보내면, THEN 본문을 읽기 전에 공통 404다.
+- GIVEN Google이 확인한 계정이 이미 연결된 활성 계정(관리자 · 일반 사용자), WHEN Google 콜백 검증이 끝나면, THEN 같은 계정의 기존 서버 세션을 발급하고 계정 행을 늘리지 않는다.
+- GIVEN 처음 오는 Google 신원과 이메일, WHEN 처리방침 동의(`consent=1`) 없이 콜백이 오면, THEN 사용자 행을 만들지 않고 `/login?google=consent`로 보낸다. 동의가 있으면 비밀번호 없는(`google-login-only` 표식) `user` 계정을 만들고 세션을 발급한다. 그 계정은 비밀번호 · 데모 버튼으로 로그인할 수 없다(401 · 404).
+- GIVEN Google 신원의 이메일이 이미 `users`에 있음(관리자 · 비밀번호 계정, 대소문자 무시), WHEN 콜백이 오면, THEN 자동 연결 · 로그인 없이 운영자 승인 대기로 보낸다. 비활성 계정 · 미연결 신원은 세션을 받지 못한다.
 
 ### 8.7 MCP 검색 도구 1차
 

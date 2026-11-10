@@ -26,7 +26,8 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 
 - 승인된 관리자 Gmail 2개 이상을 각기 다른 관리자 계정에 안전하게 연결하고 로그인·세션 폐기를 확인한다.
 - 미승인 Google 계정은 관리자 세션을 발급받지 못한다. 기존 평가자 로그인·로그아웃과 권한 제한을 유지한다.
-- 범위 밖: 일반 사용자 Google 로그인, 회원가입, 업무 데이터 소유권 연결, Supabase Auth 전환, 운영 배포 자동화.
+- 범위 밖: 업무 데이터 소유권 연결, Supabase Auth 전환, 운영 배포 자동화.
+- **11-10 확장(일반 사용자 Google 가입 · 로그인)**: 11-09의 이메일 자기 가입은 이메일 인증이 없어 공개 배포에서 닫고(`DEMO_MODE=0`이면 `POST /api/auth/signup` 404), Google이 확인한 이메일(`email_verified`)로 가입한다. 연결된 신원이면 role과 상관없이 로그인하고(`auth.google_session`), 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작해야(`/api/auth/google/start?consent=1` → 동의 쿠키) 비밀번호 없는 `user` 계정이 만들어진다(`auth.google_signup`, `password_hash = google-login-only`). **이메일이 이미 `users`에 있는 신원은 자동 연결하지 않고** 기존 승인 대기(`request_google_link`)로 보낸다. 관리자 연결 승인 · 철회 CLI와 DB 표(010)는 그대로다. 평가자는 Google 계정 대신 운영 DB에 미리 만든 이메일 · 비밀번호 계정으로 로그인한다.
 
 ## Approaches
 

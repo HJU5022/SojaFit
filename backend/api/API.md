@@ -9,7 +9,7 @@
 - `API.md` — 이 문서
 - `__init__.py` — 패키지 표시
 - `admin.py` — 관리자 계정 목록(`GET /api/admin/users`, 이메일 사용자명 가림) · 일반 계정 활성 상태 변경(`PATCH /api/admin/users/{target_id}`)
-- `auth.py` — `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(둘 다 `DEMO_MODE=1`에서만) · `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 Google 관리자 로그인 `GET /api/auth/google/status|start|callback|pending`
+- `auth.py` — `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(`POST /api/auth/signup`까지 셋 다 `DEMO_MODE=1`에서만) · `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 Google 가입 · 로그인 `GET /api/auth/google/status|start|callback|pending`
 - `conversations.py` — 대화·실행·SSE API, 키 없는 데모의 기록 질문 목록(`GET /api/demo-questions`)
 - `health.py` — 서비스 생존 확인 `GET /health`(늘 `{"status": "ok"}`)
 - `prices.py` — 가격·재고 `GET /api/prices`(로그인 필요, 요청 때 Mouser 한 번, `Cache-Control: no-store`, 데모 모드·키 없음이면 Mouser를 부르지 않음, ADR 0009)
