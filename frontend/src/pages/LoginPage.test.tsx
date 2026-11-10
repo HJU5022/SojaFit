@@ -24,8 +24,9 @@ it('logs in and out through real pages without browser storage', async () => {
   })
   const local = vi.spyOn(Storage.prototype, 'setItem')
   open(); await screen.findByLabelText('이메일'); fill()
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+  expect(await screen.findByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /사용자 \d+/ }))
+  fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
   expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
   expect(local).not.toHaveBeenCalled(); local.mockRestore()
 })
@@ -61,11 +62,17 @@ it('explains the existing Google callback failure redirect', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.')
 })
 
+it('explains when Google login availability cannot be checked', async () => {
+  network((path) => path.endsWith('/status') ? failure('TEMPORARY', '상태 확인 실패', 503) : failure())
+  open()
+  expect(await screen.findByText('Google 로그인을 사용할 수 없습니다. 이메일 로그인으로 진행해 주세요.')).toBeInTheDocument()
+})
+
 it('uses the dark editor theme by default', () => {
   const root = getComputedStyle(document.documentElement)
   expect(root.colorScheme).toBe('dark')
   expect(root.getPropertyValue('--canvas').trim()).toBe('#0b0f14')
-  expect(root.getPropertyValue('--trace').trim()).toBe('#35d0ba')
+  expect(root.getPropertyValue('--trace').trim()).toBe('#7ec2b5')
 })
 
 it('shows demo A/B buttons above the password form only in demo mode and logs in without a password', async () => {
@@ -84,7 +91,7 @@ it('shows demo A/B buttons above the password form only in demo mode and logs in
   expect(screen.getByRole('link', { name: '가입' })).toHaveAttribute('href', '/signup')  // 이메일 가입 링크는 데모 모드에서만
   expect(buttons.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: '데모 사용자 B로 들어가기' }))
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).toBeInTheDocument()
   expect(bodies).toEqual([JSON.stringify({ account: 'b' })])
 })
 it('hides the demo buttons when the server is not in demo mode', async () => {

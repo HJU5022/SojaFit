@@ -5,6 +5,7 @@ import { createQuote } from '../api/quotes'
 import { errorMessage } from '../api/client'
 import { getProfile } from '../api/profile'
 import PricePanel from './PricePanel'
+import AccessibleDialog from './AccessibleDialog'
 
 export default function QuotePanel({ approval }: { approval: ApprovalDto | null }) {
   const [open, setOpen] = useState(false)
@@ -20,13 +21,13 @@ export default function QuotePanel({ approval }: { approval: ApprovalDto | null 
     setBusy(true); setError(null)
     try { setSaved(await createQuote(approval.id, quantity)) } catch (error) { setError(error) } finally { setBusy(false) }
   }
-  return <div className="quote-panel"><button className="secondary" disabled={!approval} onClick={() => setOpen(value => !value)}>견적 열기</button>
-    {open && approval && <div><header className="quote-header"><h3>견적</h3>{affiliation && <p>소속: {affiliation}</p>}</header>
-      <PricePanel parts={[approval.candidate_part]} />
+  return <div className="quote-panel"><button className="secondary" disabled={!approval} onClick={() => setOpen(true)}>견적 열기</button>
+    {open && approval && <AccessibleDialog title="견적 만들기" onClose={() => setOpen(false)}><header className="quote-header"><h3>견적</h3>{affiliation && <p>소속: {affiliation}</p>}</header>
+      <p>{approval.candidate_part}의 현재 가격·재고를 새로 조회한 뒤 수량만 저장합니다.</p><PricePanel parts={[approval.candidate_part]} />
       <label htmlFor="quote-quantity">수량</label><input id="quote-quantity" type="number" min={1} max={100000} value={quantity} onChange={event => setQuantity(Number(event.target.value))} />
-      <button disabled={busy || quantity < 1 || quantity > 100000} onClick={() => void save()}>가격 없이 견적 저장</button>
+      <button disabled={busy || quantity < 1 || quantity > 100000} onClick={() => void save()}>수량만 견적에 저장</button>
       {saved && <p role="status">{saved.part_number} {saved.quantity}개 견적을 저장했습니다. 가격은 저장하지 않았습니다.</p>}
       {error ? <p role="alert">{errorMessage(error)}</p> : null}
-    </div>}
+    </AccessibleDialog>}
   </div>
 }

@@ -7,6 +7,7 @@ import { approveMessage } from '../api/quotes'
 import { errorMessage } from '../api/client'
 import QuotePanel from './QuotePanel'
 import { candidatesOf } from './circuitContext'
+import AccessibleDialog from './AccessibleDialog'
 
 const LABELS: Partial<Record<CandidateDto['verdict'], string>> = { IDENTICAL: '동일품', SPEC_EQUIVALENT: '사양 동등', ROLE_SUFFICIENT: '역할상 충분' }
 
@@ -36,8 +37,8 @@ export default function ApprovalPanel({ runId, judgement }: { runId?: string; ju
       <option value="">후보를 선택하세요</option>{candidates.map((item, index) => <option key={`${item.part}-${item.verdict}-${index}`} value={index}>{item.part} · {LABELS[item.verdict]}</option>)}
     </select>
     <button disabled={!runId || !selected || busy || !!approval} onClick={() => setConfirm(true)}>판정 승인 확인</button>
-    {confirm && selected && <div role="group" aria-label="판정 승인 확인"><p>{selected.part} 후보의 “{LABELS[selected.verdict]}” 판정을 승인할까요?</p>
-      <button disabled={busy} onClick={() => void approve()}>확인 후 승인</button><button className="secondary" disabled={busy} onClick={() => setConfirm(false)}>취소</button></div>}
+    {confirm && selected && <AccessibleDialog title="판정 승인 확인" closeOnBackdrop={false} onClose={() => setConfirm(false)}><p>{selected.part} 후보의 “{LABELS[selected.verdict]}” 판정을 승인할까요?</p>
+      <p>승인된 결과만 견적 단계로 이동합니다.</p><div className="dialog-actions"><button disabled={busy} onClick={() => void approve()}>확인 후 승인</button><button className="secondary" disabled={busy} onClick={() => setConfirm(false)}>취소</button></div></AccessibleDialog>}
     {approval && <p role="status">{approval.candidate_part} 판정을 승인했습니다.</p>}
     {error ? <p role="alert">{errorMessage(error)}</p> : null}
     <QuotePanel approval={approval} />

@@ -19,15 +19,17 @@ function Panel({ parts }: { parts: string[] }) {
 function PriceResult({ parts }: { parts: string[] }) {
   const [result, setResult] = useState<Prices | null>(null)
   const [error, setError] = useState<unknown>(null)
+  const [attempt, setAttempt] = useState(0)
   const names = parts.join(',')
   useEffect(() => {
     let current = true
     const controller = new AbortController()
+    setError(null)
     fetchPrices(names.split(','), controller.signal).then((result) => { if (current) setResult(result) })
       .catch((error) => { if (current) setError(error) })
     return () => { current = false; controller.abort() }
-  }, [names])
-  if (error) return <p role="alert">{errorMessage(error)}</p>
+  }, [names, attempt])
+  if (error) return <div><p role="alert">{errorMessage(error)}</p><button className="secondary" onClick={() => setAttempt(value => value + 1)}>가격·재고 다시 조회</button></div>
   if (!result) return <p role="status">가격·재고 조회 중입니다.</p>
   if (!result.available) return <p>{result.message}</p>
   return <div><p>출처: {result.source} · 조회 시각: <time>{result.fetched_at}</time></p>

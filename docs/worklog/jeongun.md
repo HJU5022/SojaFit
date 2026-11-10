@@ -807,3 +807,53 @@
 - 바꾼 파일: `evals/guides/preregister.md`(#51), `EVAL_REPORT.md` 6절(5행 · 실행 표 · 남은 것), 새 `evals/results/threads/claim_consistency_after_plan_20261109T203153Z.json` · `_after_live_` · `_after_review_`(같은 run id). 기존 before 원시 · 검토는 그대로(SHA256 85081e11… 확인).
 - 확인 못 한 것: 위험 원문을 최종에서 막는 장면은 실측되지 않았다(저장 응답 재생으로만). 문서 답 `enough`인 답 정리 경로는 이번 실측으로 지나지 않았다. 1회 관찰이라 방어율 · 반복성이 아니다. 실제 검색 DB · Supervisor 계획 · HTTP는 거치지 않았다.
 - 다음 할 일: 조장 검토 뒤 커밋. `docs/experiments/c2-defense-recheck.md`의 "4단계 실행 안 함" 문구 갱신은 이번 범위 밖이라 그대로 뒀다.
+
+## 2026-11-10 G2 한 줄 기동 재측정 — 기록 응답 재생 데모로 맥 · WSL2 (브랜치 `jeongun`, 5631309)
+
+- 목적 · 승인: 키 없는 데모가 기록 응답을 재생하게 된 뒤 G2("`docker compose up` 한 줄로 10분 안", 키 없는 데모)를 빈 엔진에서 다시 잰다. 조장 승인(11-10). LLM 호출 없음(비용 $0). 커밋 · 푸시 안 함.
+- 방법(두 컴퓨터 같음): `git bundle create sojafit.bundle HEAD jeongun`(원격 `origin/jeongun`은 뒤처져 push하지 않음) → `docker run -d --privileged -p 18000:8000 docker:dind`로 이미지 0개 · 볼륨 0개인 엔진(29.9.3, overlayfs) → 번들을 넣고 시계 시작 → `git clone -b jeongun` → `.env` 없이 `DEMO_AUTH_ORIGIN=http://localhost:18000 docker compose up -d` → `/health` 200을 0.5초마다 확인 → `POST /api/auth/demo-login`(A, `Origin` 헤더) → `uv run python scripts/smoke/http_smoke.py --base-url http://localhost:18000 --demo --refusal`. clone 안에 `.env` 없음과 커밋을 확인했다. pgvector는 새로 받고 api · thread-setup · corpus-load는 python 3.12-slim · node 24-slim · uv 0.12.9를 새로 받아 빌드했다(compose 기록).
+- 결과(clone 시작부터, 스모크 23단계 모두 통과):
+
+| 컴퓨터 | clone | `compose up -d` 끝 | `/health` 200 | 데모 A 로그인 200 | 스모크 끝 |
+|---|---|---|---|---|---|
+| 맥 Apple M2 arm64(로컬 Docker 29.7.2 위 dind) | 0.7초 | 53.4초 | 55.6초 | 55.7초 | 62.9초 |
+| WSL2 `desktop-gpu` i9-12900KF x86_64(WSL Docker 29.1.3 위 dind) | 0.7초 | 57.6초 | 59.8초 | 59.9초 | 67.5초 |
+
+  - 스모크: 판정 질문 v3-01 `requires_input` → 재개 `completed` → 승인 201 · 같은 승인 409 `ALREADY_APPROVED` → 견적 201 · 목록 200 → B가 A의 프로젝트 · thread 목록 · run 404 → v3-30 `refused`. 스모크 안에 분석 앞 대기(`GAP_SECONDS`) 3초가 두 번 들어 있다. 결과 `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥) · `_055423.json`(WSL), 비밀값 · 이메일 · 쿠키 문자열 없음 확인.
+  - 두 컴퓨터 모두 corpus-load `source_documents 42` · `document_chunks 1556`, thread-setup 완료, api 기동. 맥은 `/` 200.
+  - WSL은 Tailscale 주소의 포트가 응답하지 않아(curl 5초 시간 초과) 방화벽은 건드리지 않고 맥에서 SSH 터널(`ssh -L 18000:localhost:18000`)로 `http://localhost:18000`을 불렀다. 요청마다 터널 왕복이 더해진다.
+  - GitHub에서 main clone: 맥 3.6초. 저장소가 비공개(로그인 없이 404)라 맥에 저장된 자격 증명으로 받았고, WSL은 자격 증명이 없어 재지 않았다.
+- 이 측정에서 찾아 고친 것: (1) b8576f8에서 v3-01 프로젝트 만들기가 503 — 빈 볼륨의 `ck_projects_demo` 허용 목록에 `attiny85_time_switch`가 없었다(02457ec가 `DEMOS`에만 더함) → d0bd7dd. (2) d0bd7dd에서 재개가 `failed`(UNAVAILABLE) — `runs_safe_result_check`가 판정의 `preferred_mount` 칸(44e8287)을 몰라 저장을 거부 → 5631309. 실패 결과는 `smoke_localhost-18000_2026-11-10_053242.json` · `_054705.json`. 맥에서 실패한 두 번의 기동 시간은 `/health` 55.4초 · 53.4초였다.
+- 바꾼 파일: `docs/GATES.md` G2 상태(이전 `jeongun-8` 수치는 한 마디로 남김), 새 `scripts/results/smoke/` 결과 4개.
+- 확인 못 한 것: Windows의 Docker Desktop, WSL에서 GitHub clone, Tailscale 포트로 직접 부르기(터널로 대신함), 브라우저 React 화면 시연. 맥 측정 동안 다른 작업이 함께 돌아 load average가 4~7이었다.
+- 다음 할 일: 제출 직전 최종 main으로 다시 잰다(이 기록은 커밋 `bf620e6`).
+
+## 2026-11-10 Cloud Run에 `jeongun` 5631309 배포 (0% 확인 → 100% 전환, 조장 승인 "끝까지 진행")
+
+- 배포 전 상태(실측): 트래픽 100%는 `sojafit-api-oauth-login-1109073330`(태그 `oauth-login-fix`, 옛 코드, `/openapi.json` 6경로, `GET /` 404)이었다. 지시서의 00008 · 00017이 아니었다. 0% 태그 `tls-check-00009` · `google-login-test` · `main-3bc2ff3` · `thread-memory-test`(00020-miv)는 그대로 둠.
+- 새 revision: `sojafit-api-5631309`(태그 `cand`, 이미지 sha256:b4b4f92aadaf1…). 소스는 `git archive 5631309`를 세션 임시 폴더에 풀어 `gcloud run deploy sojafit-api --source <폴더> --project sojafit --region asia-northeast3 --no-traffic --tag cand --revision-suffix 5631309 --update-env-vars THREADS_ENABLED=1,DEMO_REPLAY=0`로 올렸다(`.env` · 작업 중 파일 · 무시 파일 미포함, `.gcloudignore` 없음). 빌드+배포 2분 2초(05:54:04~05:56:06). 05:58:40 `update-traffic --to-revisions=sojafit-api-5631309=100`.
+- 트래픽: 전 `oauth-login-1109073330` 100% → 후 `sojafit-api-5631309` 100%, 이전 revision은 0%(태그 `oauth-login-fix` 유지).
+- 환경변수: 바꾼 것 `THREADS_ENABLED` 0→1, 새로 넣은 것 `DEMO_REPLAY=0`. 나머지(`DEMO_MODE=0`, `AUTH_ORIGIN`=서비스 주소, `PGSSL*`, `ANALYSIS_*`, `GOOGLE_*`, `DEMO_SCENARIOS`)와 비밀 참조 8개(`DATABASE_URL` · `OPENROUTER_API_KEY` · `VOYAGE_API_KEY` · `AUTH_SECRET` · `LANGFUSE_*` 3개 · `GOOGLE_CLIENT_SECRET` 버전 2), CA 볼륨, 최대 인스턴스 1 · 동시 4 · 제한 120초 · 1 CPU/1Gi는 그대로임을 revision describe로 확인. `MOUSER_API_KEY`는 Secret Manager에 없어 넣지 않았다(이전 배포에도 없음, 가격 조회는 `available:false, reason:no_key`로 200).
+- 운영 DB(Supabase, Cloud Run `DATABASE_URL`과 로컬 `.env`의 host · port · dbname · user가 같음을 값 출력 없이 확인): 읽기 전용 조회에서 public React 표(018~020), `analysis_usage.reserved_tokens` · `analysis_service_usage`(022), 청소 함수(023), `store_vectors`가 없었다. 적용 순서: (1) 05:35 `018_projects.sql` · `019_conversations.sql` · `020_approvals_quotes.sql`(b8576f8 내용)을 존재 확인 뒤 `SET LOCAL search_path TO public`의 한 트랜잭션으로(가산, 다시 실행 불가형), (2) 05:36 `uv run --env-file .env python -m backend.conversations.memory_service --setup`(013~017은 변화 없음, 022 · 023 적용, checkpoint v9 · store v3는 이미 최신, `store_vectors` · `vector_migrations` 생성), (3) 05:53 `024_projects_demo_c01.sql` · `025_runs_safe_result_preferred_mount.sql`을 한 트랜잭션으로(CHECK 두 개 교체, 두 표 0행). 확인: 새 표 8개 RLS 켜짐 · anon/authenticated 권한 0 · 청소 함수 anon EXECUTE 없음, `ck_projects_demo` 목록 = `DEMOS`, `runs_safe_result_check` 형식 = HEAD `db/019`, users 5 · 문서 1,360 · 청크/임베딩/비트 51,967행 전후 같음. 로컬에서 운영 DB로 `Conversations(dsn)` 시작 검사 통과(indexed=True). 청소 대상 표는 모두 0행이라 023 함수가 지울 행은 없었다.
+- 0% 태그 주소 확인(05:58, 13개 중 12개 통과, 1개는 기대값 오류): `/health` 200 · `/openapi.json` 27경로 · 33동작이 로컬 `app.openapi()`와 경로 · 메서드까지 같음(숨김 Google 경로 4개를 더하면 37) · `GET /` React HTML 200 · `/assets/index-DeHvl8xo.js` 200 · `/login` 200 · `/api/auth/me` 401 `UNAUTHORIZED` + `X-Request-ID`(본문 request_id와 같음) · `/api/judge/roles` 401 · `/api/projects` 401 · `/api/auth/demo` 404(데모 꺼짐) · Origin 없는 로그인 403 `ORIGIN_MISMATCH` · 가짜 이메일(`nobody@example.invalid`) 로그인 401(Origin=서비스 주소, 0.98초, DB 도달) · 세션 없는 로그아웃 200. `/api/demo-questions`는 로그인 검사가 먼저라 401이 맞고 내 기대값(404)이 틀려 고쳤다. 로그: JSON 줄 24개 모두 severity 있음, `Application startup complete.`, Traceback 0, `profile_index_unavailable` 0, WARNING 7개는 모두 4xx 요청 로그.
+- 전환 뒤 기본 주소 확인(05:58:49): 같은 13개 모두 통과(가짜 로그인 401 0.94초, Origin 확인 POST 로그아웃 200), `/api/auth/google/status` `{"enabled":true}`, 두 번째 주소 `/health` 200, 새 revision의 ERROR · 5xx · Traceback 로그 0.
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-oauth-login-1109073330=100 --project sojafit --region asia-northeast3`. 옛 코드는 새 표 · 함수를 읽지 않으므로 DB 추가가 되돌리기를 막지 않는다.
+- 걸린 시간: 약 40분(점검 · DB 적용 · 빌드 · 확인 · 문서). 비용: Cloud Build 1회, LLM 호출 0.
+- 운영 DB 쓰기 흔적: 가짜 로그인 실패 2회(태그 · 기본 주소) 뒤 `auth_login_attempts` 1행 · `auth_login_ip_attempts` 1행(배포 전 0 · 0), `users` 5 · `auth_sessions` 0 그대로. 가입은 부르지 않았다.
+- 판정 run 저장 확인(쓰기 없이 SELECT만): HEAD DTO로 만든 저장 본문(`api/conversations.py` `stream`의 `saved` → `SafeResult`) 3종(판정+`preferred_mount`, 찾기+`preferred_mount`, 답만)이 운영 `runs_safe_result_check` 식을 모두 통과. `tests/conversations/test_dto.py` · `tests/projects/test_project_repository.py` 13 passed · 6 skipped(DB 없음).
+- 바꾼 파일: `docs/GATES.md` G1 행, `SPEC.md` 첫머리 "현재 구현 경계"의 배포 문장, `README.md` 7행 · 119행(배포본 설명), 이 파일(커밋 `dba2869`).
+- 확인 못 한 것: 실제 계정 로그인 · 업로드 · 분석(실제 모델) · 승인 · 견적 끝까지(조장이 `scripts/smoke/http_smoke.py`로 진행), 브라우저 화면 조작, Google 로그인 실제 흐름, 부하 · 다중 인스턴스, Langfuse 수신, 실제 청구액. `MOUSER_API_KEY`를 넣으려면 조장이 Secret Manager에 `MOUSER_API_KEY`를 만든 뒤 `gcloud run services update sojafit-api --update-secrets MOUSER_API_KEY=MOUSER_API_KEY:latest --no-traffic --tag mouser --project sojafit --region asia-northeast3` → 태그 주소에서 같은 확인 → `update-traffic --to-revisions=<새 revision>=100`. [주의] 지금 트래픽은 revision 이름(`sojafit-api-5631309`)에 고정돼 있어, 새 revision을 만들어도 트래픽 전환 없이는 반영되지 않는다.
+
+## 2026-11-10 문서 현재 상태 맞추기 — 구현 경계 · 엔드포인트 개수 단위 (브랜치 `jeongun`)
+
+- 바꾼 것: `SPEC.md` 첫머리 "현재 구현 경계"를 11-10 `jeongun` 기준으로(데모 기록 파일 · 기억 읽기는 구현됨, 남은 것은 회로 없이 질문하는 입구 · 승인 사례를 다음 판정에 보이기), `README.md` "아직 없는 것"에서 녹화 재생을 뺌(커밋 `ebce11c`). 엔드포인트 개수를 "동작(메서드 + 경로)"과 "경로"로 나눠 SPEC 4절 · GATES G1 · `tests/api/test_openapi.py` 설명에서 같게 적음: 동작 37개 · 경로 31개, `/openapi.json`에 동작 33개 · 경로 27개, 숨긴 Google 4개.
+- 확인: `uv run --frozen pytest -q` 1205 passed · 111 skipped(HEAD `ebce11c`), `tests/repo` 5 passed. 프런트는 `b8576f8` 뒤 바뀐 파일이 없어 다시 돌리지 않음. 숨긴 경로 4개는 `backend/api/auth.py`의 `include_in_schema=False` 4곳으로 셈.
+- 확인 못 한 것: 배포 주소에서 실제 계정으로 끝까지 도는 점검.
+
+## 2026-11-10 CI 평가 회귀 연결 — PR마다 키 없는 재생, 버튼으로 진짜 모델 v3 (브랜치 `jeongun`)
+
+- 왜: D8 "평가 회귀 테스트를 CI에 연결". CI에 키를 두지 않으려고 둘로 나눴다(조장 결정 11-10).
+- 바꾼 것: `ci.yml`에 `eval-replay` 잡(키 없는 compose로 `scripts/demo/record_demo.py replay`, 기록과 경로 · 판정 · 거절 · DB 지문이 다르면 실패), 새 `eval-live.yml`(workflow_dispatch로 `run_gate` v3 → `gate_report` 기준 0.95 · 0.05 · p95 10초, Secrets 키 사용), `.gitleaks.toml`에 시험용 가짜 값(tests/ 안 접두어) · SQL 파일 이름 허용 목록 2개.
+- 확인: CI와 같은 gitleaks 이미지로 깨끗한 복제본 전체 이력 검사 20건 → 0건. 워크플로 YAML 읽기 확인. 재생 명령은 11-10 새 compose 프로젝트에서 성공한 명령과 같다.
+- 확인 못 한 것: GitHub Actions가 조직 결제 한도로 시작되지 않아(11-09 #73부터 main도 같음) 세 잡 모두 실제 실행을 못 봤다. `eval-live`는 Secrets 등록 전이라 돌리지 않았다. 일부러 기준 미달로 만든 변경에서 실패하는 기록은 Actions가 풀린 뒤에 남긴다.
+

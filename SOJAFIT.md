@@ -21,7 +21,7 @@ SojaFit (proj3-b)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
-├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일 하나만 제외
+├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 시험용 가짜 값, SQL 파일 이름 제외
 ├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
@@ -34,7 +34,8 @@ SojaFit (proj3-b)
 ├── .github/                <- GitHub 설정(설명 파일 없음)
 │   ├── PULL_REQUEST_TEMPLATE.md  <- PR 본문 양식
 │   └── workflows/
-│       ├── ci.yml          <- PR마다 파이썬 테스트(격리한 인증 시험 DB 포함)와 화면 작업(npm 시험 · 빌드)
+│       ├── ci.yml          <- PR마다 파이썬 테스트(격리한 인증 시험 DB 포함), 화면 작업(npm 시험 · 빌드), 키 없는 평가 회귀(기록 응답 재생)
+│       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
 ├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
@@ -47,6 +48,9 @@ SojaFit (proj3-b)
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
 │   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
+│   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
+│   │   ├── PUBLIC.md       <- 폴더 설명
+│   │   └── sojafit-circuit-hero.png <- 프로젝트 미선택 랜딩의 회로 배경 이미지
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
@@ -89,6 +93,8 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
+│       │   ├── LandingServiceIntroduction.tsx <- 랜딩의 회로·근거·사람 승인 서비스 소개
 │       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
@@ -605,7 +611,8 @@ SojaFit (proj3-b)
 │   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-│   │   └── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+│   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+│   │   └── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -680,6 +687,7 @@ SojaFit (proj3-b)
 | 폴더 | 설명 파일 | 담당 |
 |---|---|---|
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
+| `frontend/public/` | [PUBLIC.md](frontend/public/PUBLIC.md) | 서비스·운영 |
 | `frontend/e2e/` | [E2E.md](frontend/e2e/E2E.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |

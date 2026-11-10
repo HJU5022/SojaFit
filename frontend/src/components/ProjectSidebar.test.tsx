@@ -4,6 +4,7 @@ import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
 
 afterEach(() => vi.unstubAllGlobals())
+function openProjectList() { fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ })) }
 it('renames through the owner API and refreshes list and detail', async () => {
   let name = first.name
   network((path, init) => {
@@ -13,6 +14,7 @@ it('renames through the owner API and refreshes list and detail', async () => {
     return Response.json({ ...first, name })
   })
   openWorkbench('/app?projectId=11&targetRef=D1')
+  openProjectList()
   fireEvent.change(await screen.findByLabelText('프로젝트 이름 변경'), { target: { value: '수정한 회로' } })
   fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
   expect(await screen.findByRole('heading', { name: '수정한 회로' })).toBeInTheDocument()
@@ -29,6 +31,7 @@ it('requires explicit confirmation and clears project/target after successful 20
   })
   const client = openWorkbench('/app?projectId=11&targetRef=D1')
   await screen.findByLabelText('대상 부품')
+  openProjectList()
   fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
   const confirmation = screen.getByRole('group', { name: '프로젝트 삭제 확인' })
   expect(deletes).toBe(0)
@@ -53,6 +56,7 @@ it('keeps the new selection when an older deletion settles', async () => {
   })
   openWorkbench('/app?projectId=11&targetRef=D1')
   await screen.findByLabelText('대상 부품')
+  openProjectList()
   fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
   fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
   fireEvent.click(screen.getByRole('button', { name: second.name }))
@@ -64,9 +68,28 @@ it('keeps the new selection when an older deletion settles', async () => {
 it('shows owner mutation errors and their request IDs', async () => {
   network((path, init) => init.method === 'PATCH' ? failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404) : Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first)] : first))
   openWorkbench('/app?projectId=11')
+  openProjectList()
   fireEvent.change(await screen.findByLabelText('프로젝트 이름 변경'), { target: { value: '수정' } })
   fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('프로젝트를 찾을 수 없습니다. (요청 ID: req-test)')
+})
+
+it('offers a reload action when the project list request fails', async () => {
+  let attempts = 0
+  network((path) => {
+    if (path === '/api/demo-circuits') return Response.json([demo])
+    if (path === '/api/projects') {
+      attempts++
+      return attempts === 1 ? failure('TEMPORARY', '프로젝트를 불러오지 못했습니다.', 503) : Response.json([summary(first)])
+    }
+    return Response.json(first)
+  })
+  openWorkbench('/app')
+  openProjectList()
+  expect(await screen.findByRole('alert')).toHaveTextContent('프로젝트를 불러오지 못했습니다.')
+  fireEvent.click(screen.getByRole('button', { name: '프로젝트 다시 불러오기' }))
+  expect(await screen.findByRole('button', { name: first.name })).toBeInTheDocument()
+  expect(attempts).toBe(2)
 })
 
 it.each(['rename', 'delete'] as const)('cancels an owning %s editor when switching projects and skips stale refreshes', async (kind) => {
@@ -79,6 +102,7 @@ it.each(['rename', 'delete'] as const)('cancels an owning %s editor when switchi
     return Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
   })
   openWorkbench('/app?projectId=11')
+  openProjectList()
   await screen.findByLabelText('프로젝트 이름 변경')
   if (kind === 'rename') fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
   else {

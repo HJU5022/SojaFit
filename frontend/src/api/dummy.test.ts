@@ -89,3 +89,25 @@ it('returns a standard 404 without falling through and honors an already aborted
   controller.abort()
   await expect(request('/api/projects', { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' })
 })
+
+it('creates demo projects through the same POST contract as the real API', async () => {
+  const request = await freshDummy()
+  const response = await request('/api/projects', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ demo_id: 'breadboard_supply', name: '내 데모' }),
+  })
+  expect(response.status).toBe(201)
+  const created = await json(response) as { id: number }
+  expect(created).toMatchObject({ name: '내 데모', source_kind: 'demo', demo_id: 'breadboard_supply', connections: expect.any(Object) })
+  const threads = await request(`/api/projects/${created.id}/threads`)
+  expect(threads.status).toBe(200)
+  expect(await json(threads)).toEqual([])
+})
+
+it('creates uploaded projects through the same multipart contract as the real API', async () => {
+  const request = await freshDummy()
+  const body = new FormData(); body.append('name', '업로드 회로'); body.append('file', new File(['(export (components))'], 'board.net'))
+  const response = await request('/api/projects/upload', { method: 'POST', body })
+  expect(response.status).toBe(201)
+  expect(await json(response)).toMatchObject({ name: '업로드 회로', source_kind: 'upload', demo_id: null, connections: expect.any(Object) })
+})

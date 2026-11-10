@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('shows a completed judgement from a local fake backend', async ({ page }) => {
+test('shows a completed D5 judgement from a local fake backend', async ({ page }) => {
   const project = { id: 1, name: '데모 회로', source_kind: 'demo', demo_id: 'breadboard_supply', created_at: '2026-11-09T00:00:00Z', updated_at: '2026-11-09T00:00:00Z',
     connections: { parts: [{ ref: 'D1', value: '1N5819', footprint: 'SOD-123' }], nets: [] } }
   await page.route(/^https?:\/\/[^/]+\/api\//, async route => {
@@ -23,8 +23,10 @@ test('shows a completed judgement from a local fake backend', async ({ page }) =
   await page.goto('/app?projectId=1')
   await page.getByLabel('대상 부품').selectOption('D1')
   await page.getByLabel('질문').fill('D1을 SS34로 바꿔도 되나요?')
-  await page.getByRole('button', { name: '질문하기' }).click()
+  await page.getByRole('button', { name: '분석하기' }).click()
+  await page.getByRole('tab', { name: '근거' }).click()
   await expect(page.getByText('SS34.pdf')).toBeVisible()
+  await page.getByRole('tab', { name: '후보 비교' }).click()
   await expect(page.getByRole('cell', { name: '역할상 충분' })).toBeVisible()
   await expect(page.getByText('같은 동작은 보장하지 않습니다.')).toBeVisible()
 })

@@ -4,6 +4,15 @@ import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
 
 afterEach(() => vi.unstubAllGlobals())
+function openCreator() {
+  const trigger = screen.queryAllByRole('button', { name: '프로젝트 만들기' })[0]
+  if (trigger) fireEvent.click(trigger)
+  else {
+    fireEvent.click(screen.getByRole('button', { name: 'D1을 SS34로 바꿔도 되나요?' }))
+    fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
+  }
+}
+function openProjectList() { fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ })) }
 it('creates a demo, selects its server summary and keeps data out of browser storage', async () => {
   let created = false
   network((path, init) => {
@@ -19,6 +28,7 @@ it('creates a demo, selects its server summary and keeps data out of browser sto
   const storage = vi.spyOn(Storage.prototype, 'setItem')
   const database = vi.fn(); vi.stubGlobal('indexedDB', { open: database })
   const client = openWorkbench()
+  openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '나의 회로' } })
   await screen.findByRole('option', { name: demo.name })
   fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
@@ -26,11 +36,12 @@ it('creates a demo, selects its server summary and keeps data out of browser sto
   expect(await screen.findByRole('heading', { name: first.name })).toBeInTheDocument()
   expect(screen.getByText('부품 2개 · 넷 1개')).toBeInTheDocument()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11')
+  openProjectList()
   expect(await screen.findByRole('button', { name: first.name })).toBeInTheDocument()
   expect(client.getQueryData(['projects'])).toEqual([summary(first)])
   expect(client.getQueryData(['project', 11])).toEqual(first)
   expect(client.getQueryData(['demo-circuits'])).toEqual([demo])
-  expect(screen.getByRole('button', { name: '가격·재고 조회' })).toBeDisabled()
+  expect(screen.queryByRole('button', { name: '가격·재고 조회' })).not.toBeInTheDocument()
   expect(storage).not.toHaveBeenCalled(); expect(database).not.toHaveBeenCalled(); storage.mockRestore()
 })
 it('uploads .net multipart without parsing and clears the input on success', async () => {
@@ -50,6 +61,7 @@ it('uploads .net multipart without parsing and clears the input on success', asy
     throw new Error(`Unexpected request: ${path}`)
   })
   openWorkbench()
+  openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '회로 업로드' } })
   const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
   expect(input).toHaveAttribute('accept', '.net')
@@ -66,6 +78,7 @@ it.each([[400, '올바른 UTF-8 KiCad 넷리스트를 올려 주세요.'], [413,
   network((path) => path === '/api/projects/upload' ? failure('HTTP_ERROR', message, status)
     : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
+  openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '실패 회로' } })
   const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
   fireEvent.change(input, { target: { files: [new File(['bad'], 'board.net')] } })
@@ -89,6 +102,7 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
   })
   openWorkbench('/app?projectId=11&targetRef=D1')
   await screen.findByRole('heading', { name: first.name })
+  openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
   const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
   if (kind === 'demo') {
@@ -101,6 +115,8 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
     fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
   }
   await waitFor(() => expect(finish).toBeTypeOf('function'))
+  fireEvent.click(screen.getByRole('button', { name: /^닫기$/ }))
+  openProjectList()
   fireEvent.click(screen.getByRole('button', { name: second.name }))
   await screen.findByRole('heading', { name: second.name })
   expect(signal?.aborted).toBe(true)
@@ -112,10 +128,34 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
   expect(screen.getByText('선택한 대상: D2')).toBeInTheDocument()
   expect(projectReads).toEqual(before)
   expect(signal?.aborted).toBe(true)
+  openCreator()
   expect(screen.getByLabelText('새 프로젝트 이름')).toBeEnabled()
   expect(screen.getByLabelText('KiCad 넷리스트')).toBeEnabled()
   if (kind === 'upload') {
     expect(input.value).toBe('')
     expect(screen.getByLabelText('KiCad 넷리스트')).toHaveValue('')
   }
+})
+
+it('keeps file creation disabled until a file is selected', async () => {
+  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  openWorkbench(); openCreator()
+  fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '파일 회로' } })
+  const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
+  const button = screen.getByRole('button', { name: '파일로 만들기' })
+  expect(button).toBeDisabled()
+  fireEvent.change(input, { target: { files: [new File(['server input'], 'board.net')] } })
+  expect(button).toBeEnabled()
+})
+
+it('offers retry when demo loading fails', async () => {
+  let attempts = 0
+  network(path => path === '/api/demo-circuits'
+    ? (++attempts === 1 ? failure('HTTP_ERROR', '데모를 불러오지 못했습니다.', 503) : Response.json([demo]))
+    : Response.json([]))
+  openWorkbench(); openCreator()
+  expect(await screen.findByRole('button', { name: '다시 불러오기' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '다시 불러오기' }))
+  expect(await screen.findByRole('option', { name: demo.name })).toBeInTheDocument()
+  expect(attempts).toBe(2)
 })
