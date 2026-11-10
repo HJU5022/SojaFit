@@ -2,14 +2,14 @@
 # 사용: rd_test.sh <이미지> <컨테이너 이름> <포트>   예: rd_test.sh pgvector/pgvector:pg16 rd-pg16 55443
 IMG=$1; NAME=$2; PORT=$3
 HERE="$(cd "$(dirname "$0")" && pwd)"; V="$HERE"; S="${OUT:-/tmp/rd_verify_out}"; mkdir -p "$S"
-R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/redesign/to-be/sql"; PY="${PY:-python3}"   # PY: psycopg가 설치된 파이썬(예: PY=$(pwd)/.venv/bin/python)
+R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/migrations"; PY="${PY:-python3}"   # PY: psycopg가 설치된 파이썬(예: PY=$(pwd)/.venv/bin/python)
 psql_() { docker exec -i $NAME psql -v ON_ERROR_STOP=1 -q -U app -d "${DB:-app}" "$@"; }
 docker rm -f $NAME >/dev/null 2>&1
 docker run -d --name $NAME -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app -e POSTGRES_DB=app -p $PORT:5432 $IMG >/dev/null || exit 1
 for i in $(seq 1 40); do docker exec $NAME pg_isready -U app -d app >/dev/null 2>&1 && sleep 1 && docker exec $NAME pg_isready -U app -d app >/dev/null 2>&1 && break; sleep 1; done
 echo "== 서버: $(docker exec $NAME psql -U app -d app -Atc 'show server_version')"
 echo "== 1. as-is 구성: db/*.sql 23개 파일을 initdb 순서로 적용"
-for f in $(ls $R/db/0*.sql | sort); do psql_ < $f 2>&1 | grep -v "^$" | grep -iv "notice" | head -3; done
+for f in $(bash $V/old_chain.sh $R); do psql_ < $f 2>&1 | grep -v "^$" | grep -iv "notice" | head -3; done
 psql_ < $V/sql/rd_stub.sql
 psql_ -c "SELECT 'as-is 표 개수(서비스)', count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND n.nspname IN ('public','sojafit_agent')"
 echo "== 2. 표본 데이터"; psql_ < $V/sql/rd_sample.sql && psql_ -Atc "SELECT 'users',count(*) FROM users UNION ALL SELECT 'approvals',count(*) FROM approvals UNION ALL SELECT 'agent.threads',count(*) FROM sojafit_agent.threads"
@@ -26,6 +26,6 @@ psql_ -Atc "SELECT part_number||' | '||candidate_part||' | '||verdict FROM appro
 $PY $V/lib/rd_struct.py $PORT app > $S/rd_${NAME}_migrated.txt
 echo "== 5. 기준선만 적용한 새 DB와 구조 비교"
 docker exec $NAME psql -U app -d app -qc "DROP DATABASE IF EXISTS base" -c "CREATE DATABASE base" >/dev/null
-DB=base psql_ < $TB/baseline_service.sql 2>&1 | tail -2; DB=base psql_ < $V/sql/rd_stub.sql
+DB=base psql_ < $R/db/020_service_baseline.sql 2>&1 | tail -2; DB=base psql_ < $V/sql/rd_stub.sql
 $PY $V/lib/rd_struct.py $PORT base > $S/rd_${NAME}_baseline.txt
 diff <(grep -v "app_migrations" $S/rd_${NAME}_migrated.txt) <(grep -v "app_migrations" $S/rd_${NAME}_baseline.txt) > $S/rd_${NAME}_diff.txt; echo "구조 차이 줄 수: $(wc -l < $S/rd_${NAME}_diff.txt)"; head -40 $S/rd_${NAME}_diff.txt

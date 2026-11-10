@@ -22,3 +22,6 @@ with psycopg.connect(f"postgresql://app:app@127.0.0.1:{port}/{dbname}") as c:
             print(f"RLS  {schema}.{t} {'ON' if rls else 'OFF'}")
     for r in c.execute("SELECT n.nspname||'.'||p.proname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','sojafit_agent') AND p.prokind='f' AND p.proname NOT IN ('rls_auto_enable') AND p.proname !~ '^(vector|halfvec|sparsevec|bit|l2|l1|cosine|inner|hamming|jaccard|ivfflat|hnsw|array_to|binary_quantize|subvector)' ORDER BY 1"):
         print(f"FUN  {r[0]}")
+    # [왜] 함수 이름만 비교하면 되돌리기가 다시 만든 함수가 026이 회수한 PUBLIC 실행 권한을 되살려도 못 잡는다
+    for r in c.execute("SELECT n.nspname||'.'||p.proname, COALESCE(p.proacl::text, 'default') FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','sojafit_agent') AND p.proname IN ('conversation_json_matches','quote_snapshot_has_forbidden_key','purge_thread_checkpoints','purge_inactive_projects','purge_log_records') ORDER BY 1"):
+        print(f"FACL {r[0]} {r[1]}")

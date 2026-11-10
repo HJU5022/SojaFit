@@ -1,7 +1,7 @@
 #!/bin/bash
 NAME=$1; PORT=$2
 HERE="$(cd "$(dirname "$0")" && pwd)"; V="$HERE"; S="${OUT:-/tmp/rd_verify_out}"; mkdir -p "$S"
-R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/redesign/to-be/sql"; PY="${PY:-python3}"   # PY: psycopg가 설치된 파이썬(예: PY=$(pwd)/.venv/bin/python)
+R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/migrations"; PY="${PY:-python3}"   # PY: psycopg가 설치된 파이썬(예: PY=$(pwd)/.venv/bin/python)
 q() { docker exec -i $NAME psql -v ON_ERROR_STOP=1 -q -At -U app -d app "$@"; }
 t() { if q -c "$2" >/dev/null 2>&1; then echo "  [실행됨] $1"; else echo "  [거부됨] $1"; fi; }
 echo "== 6. 새 제약 동작 (거부돼야 하는 것은 [거부됨])"

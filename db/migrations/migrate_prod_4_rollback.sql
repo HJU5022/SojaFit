@@ -1,10 +1,25 @@
--- 운영 DB 이전 되돌리기: A 절 = expand, B2 절 = contract P2, B1 절 = contract P1을 되돌림(구조 복원 + 복사본 재생성). **적용한 순서의 반대로**(B2 → B1 → A) 한 절씩 실행한다.
+-- 운영 DB 이전 되돌리기: A 절 = expand, B2b 절 = 선택 2b, B2 절 = contract P2, B1 절 = contract P1을 되돌림(구조 복원 + 복사본 재생성). **적용한 순서의 반대로**(B2b → B2 → B1 → A) 한 절씩 실행한다.
 -- **초안, 아직 어디에도 실행하지 않았다.** 한 번에 한 절씩, 트랜잭션 하나로 실행한다.
 --
 -- B 절이 무손실인 이유: contract가 지운 것은 전부 "다른 표의 복사본"(quotes · approved_cases의 snapshot = approvals.snapshot, sojafit_agent.circuits =
 -- public.circuits 복사 + 파일 이름 = 프로젝트 이름) 또는 "0행 · 미사용"(sojafit_agent.approvals, users.display_name)이다. 단 contract **이후에 쌓인 데이터**는
 -- 복사본을 새로 만들어 채우므로 그대로 복원된다(승인 snapshot은 contract 뒤에도 approvals에 있다).
 -- B 절 끝의 "옛 검사 · 옛 청소 함수"는 레포 파일에서 다시 실행한다(아래 셸 명령).
+
+-- ===================================================== B2b. 선택 2b(승인 대기 표 삭제) 되돌리기 (2b를 적용했을 때만, 가장 먼저) =====================================================
+-- 빈 표만 다시 만든다(옛 코드가 읽는 표 정의는 db/legacy/010_google_auth.sql과 같다). 이메일 평문이 든 표라 RLS ON + PUBLIC 권한 0까지 010처럼 맞춘다
+BEGIN;
+CREATE TABLE public.auth_google_pending (
+    request_id text PRIMARY KEY,
+    issuer text NOT NULL,
+    subject text NOT NULL,
+    email text NOT NULL,
+    expires_at timestamptz NOT NULL
+);
+ALTER TABLE public.auth_google_pending ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.auth_google_pending FROM PUBLIC;
+DELETE FROM public.app_migrations WHERE version IN ('2026-11-drop-google-pending');
+COMMIT;
 
 -- ===================================================== B2. contract P2 되돌리기 =====================================================
 -- (migrate_prod_3_contract_p2.sql을 적용한 상태에서만. 순서: B2 → B1 → A)
@@ -20,6 +35,8 @@ CREATE TABLE sojafit_agent.approvals (
     memory_updated_at TIMESTAMPTZ,
     PRIMARY KEY (thread_id, version)
 );
+-- [왜] 026이 sojafit_agent 표 전부를 RLS ON으로 만들어 뒀는데, 표를 새로 만들면 꺼진 채로 돌아와 공개 역할 방어가 한 겹으로 줄어든다(표를 되돌린 뒤에도 RLS ON 유지)
+ALTER TABLE sojafit_agent.approvals ENABLE ROW LEVEL SECURITY;
 
 -- 분석 회로 사본: 대화 UUID = 회로 UUID, connections는 public.circuits에서, 파일 이름은 프로젝트 이름에서 다시 만든다(netlist는 원래 빈 글자)
 CREATE TABLE sojafit_agent.circuits (
@@ -31,6 +48,7 @@ CREATE TABLE sojafit_agent.circuits (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX agent_circuits_owner ON sojafit_agent.circuits (user_id, created_at DESC);
+ALTER TABLE sojafit_agent.circuits ENABLE ROW LEVEL SECURITY;
 INSERT INTO sojafit_agent.circuits (id, user_id, filename, netlist, connections, created_at)
     SELECT t.id, t.user_id, p.name, '', c.connections, t.created_at
     FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id
@@ -44,7 +62,7 @@ ALTER TABLE sojafit_agent.threads ADD CONSTRAINT threads_user_id_fkey FOREIGN KE
 
 DELETE FROM public.app_migrations WHERE version IN ('2026-11-contract-p2');
 COMMIT;
--- 옛 청소 함수(셸에서, 레포 루트): psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/023_retention.sql
+-- 옛 청소 함수(셸에서, 레포 루트): psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/legacy/023_retention.sql
 
 -- ===================================================== B1. contract P1 되돌리기 =====================================================
 -- (migrate_prod_2_contract_p1.sql을 적용한 상태에서만)
@@ -93,7 +111,8 @@ COMMIT;
 
 
 -- 옛 JSON 모양 검사와 옛 청소 함수(셸에서, 레포 루트): 함수를 다시 만들고 검사를 다시 건다
---   sed -n '/^CREATE FUNCTION conversation_json_matches/,/^END \$\$;/p' db/019_conversations.sql | psql "$DATABASE_URL" -v ON_ERROR_STOP=1
---   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/025_runs_safe_result_preferred_mount.sql      # runs_safe_result_check를 최신 모양으로 다시 만든다
---   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/024_projects_demo_c01.sql                    # ck_projects_demo 6개 이름 목록 검사
+--   sed -n '/^CREATE FUNCTION conversation_json_matches/,/^END \$\$;/p' db/legacy/019_conversations.sql | psql "$DATABASE_URL" -v ON_ERROR_STOP=1
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'REVOKE ALL ON FUNCTION public.conversation_json_matches(jsonb, jsonb) FROM PUBLIC'   # [왜] 026이 회수해 둔 상태로 맞춘다(새로 만든 함수는 PUBLIC 실행 권한을 받는다)
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/legacy/025_runs_safe_result_preferred_mount.sql      # runs_safe_result_check를 최신 모양으로 다시 만든다
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/legacy/024_projects_demo_c01.sql                    # ck_projects_demo 6개 이름 목록 검사
 -- (ck_runs_safe_result · 새 ck_projects_demo는 옛 검사와 같은 표에 공존해도 무해하다. 정리하려면 DROP CONSTRAINT ck_runs_safe_result;)
