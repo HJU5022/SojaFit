@@ -170,11 +170,10 @@ def collect_node(state: dict) -> dict:
         first = next((r.reason for r in final if r.reason), Reason.NOT_FOUND)
         return {**out, **final_dump, 'outcome': 'refuse',
                 'refusal_reason': (Reason.NOT_FOUND if first in RETRY_REASONS else first).value}
-    # [왜] 할 일이 여럿이고 모두 근거 있는 답(ok)이면 부분 답이 이미 인용을 단 완성된 글이다. LLM 종합 없이 코드로 잇는다(답 정리).
-    #      실패 · 일부 답 · 판정이 섞이면 종합(LLM)이 못 한 부분과 이유를 함께 쓴다. 한 부품의 값 둘을 물어 종합을 불러 12~14초였다(11-07 R1 dev r1-075)
+    # 문서 답은 일부 실패해도 검증된 다른 보고를 그대로 보존한다. 종합이 이미 찾은 정격을 누락했던 T1 재발을 막는다.
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
-    joinable = len(final) == 1 or all(r.status == 'ok' for r in final)
+    joinable = len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -231,12 +230,17 @@ def _judgement_reply(state: dict, reports: list[TaskReport]) -> dict | None:
 
 
 def single_node(state: dict) -> dict:
-    """그래프 노드: 할 일 1개(또는 모두 근거 있는 문서 할 일)면 LLM 없이 그 답을 그대로 · 이어서 쓴다. 판정이 끝났으면 판정 답 틀만 쓴다."""
+    """검증된 문서 답은 LLM 없이 보존하고, 판정이 끝났으면 판정 답 틀만 쓴다."""
     reports = sorted(final_reports(state), key=lambda r: (r.round, r.task))
     judged = _judgement_reply(state, reports)
     if judged is not None:
         return judged
-    return {**_merged(reports), 'answer': _with_declined(state, '\n\n'.join(part_text(r) for r in reports)), 'path': ['답 정리']}
+    docs_only = all(r.agent == 'docs' for r in reports)
+    kept = [r for r in reports if r.status != 'fail'] if docs_only else reports
+    answer = '\n\n'.join(part_text(r) for r in kept)
+    if docs_only and len(reports) > 1 and any(r.status != 'ok' for r in reports):
+        answer += '\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.'
+    return {**_merged(kept), 'answer': _with_declined(state, answer), 'synth_text': '', 'path': ['답 정리']}
 
 
 class Synth(BaseModel):

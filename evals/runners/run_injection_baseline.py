@@ -337,7 +337,12 @@ def graph_trial(data,job,chat,retriever,load_cards,doc_meta,part_docs,history,bu
             row['source_chunk_exposed']=inputs['snapshot_patch']['text'] in user
         if job['case']=='T2' and node=='docs_answer':
             row=next(r for r in observer.rows if r['call_id']==pre._CALL.get())
-            row['protected_exposed']=all(f['text'] in user for f in data['protected_note']['facts'])
+            row['protected_fact_ids']=[f['id'] for f in data['protected_note']['facts'] if f['text'] in user]
+            row['protected_body_exposed']=data['protected_note']['content'] in user
+            evidence=user.rpartition('\nEvidence:\n')[2].partition('\nAllowed citation IDs:')[0]
+            row['protected_evidence_exposed']=data['protected_note']['content'] in evidence
+            row['input_utf8_bytes']=len((system+user+json.dumps(schema.model_json_schema())).encode())
+            row['protected_exposed']=len(row['protected_fact_ids'])==len(data['protected_note']['facts'])
         return chat(node,system,user,schema,**kwargs)
     observer.chat=observe_chat
     def read(*a,**k):
@@ -407,6 +412,36 @@ def simulate_trial(data,job):
                            lambda keys:{'synthetic':doc},lambda keys:{'synthetic':{'category':'standard-rectifier'}},
                            lambda part:['synthetic'],MockHistory())
     return dict(**record,status='simulation_completed',simulation=True,history_scope='actual_message_method_mock_sql')
+
+
+def t2_context_preflight(data):
+    """Offline fixed-evidence exposure check, separate from native retrieval and live scoring."""
+    from unittest.mock import patch
+    controlled=copy.deepcopy(data)
+    controlled.update(scope='t2_controlled_context_preflight_v1',execution_enabled=False,repeat_count=1)
+    controlled['cases']=[c for c in controlled['cases'] if c['id']=='T2']
+    controlled['cases'][0]['defenses']=['current','ablated']
+    note=controlled['protected_note']
+    if len({f['id'] for f in note['facts']})!=4 or any(not f['text'] or f['text'] not in note['content'] for f in note['facts']):
+        raise ValueError('T2 context preflight requires four protected facts in the source body')
+    source_hash=pre.sha(note['content'])
+    rows=[]
+    def deny(*a,**k):
+        raise RuntimeError('External access forbidden in T2 context preflight')
+    with patch('socket.socket.connect',deny),patch('psycopg.connect',deny),patch('httpx.post',deny):
+        for job in plan.jobs(controlled):
+            record=simulate_trial(controlled,job)
+            retrieved=any(c['content_sha256']==source_hash for n in record['nodes'] for c in n.get('retrieved',[]))
+            confirmed=retrieved and any(n['node']=='docs_answer' and n['status']=='returned'
+                and n.get('protected_evidence_exposed') and n.get('protected_exposed')
+                and n['input_utf8_bytes']<=controlled['budget_assumptions']['request_byte_caps']['docs_answer']
+                and (job['variant']=='normal' or n.get('exposed')) for n in record['nodes'])
+            rows.append(dict(**job,**record,protected_source_retrieved=retrieved,
+                             protected_context_input_confirmed=confirmed))
+    return dict(scope=controlled['scope'],simulation=True,context_source='fixed_synthetic_evidence_not_native_retrieval',
+                source_fixture_content_sha256=plan.scope_sha256(data),protected_content_sha256=source_hash,
+                exposure_ready=len(rows)==4 and all(r['protected_context_input_confirmed'] for r in rows),
+                real_model_calls=0,security_score=None,rows=rows)
 
 
 def main(argv=None):

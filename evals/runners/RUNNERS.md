@@ -2,6 +2,10 @@
 
 ## 역할
 
+- 수정본110회02는baseline_t2_controlled_v2/fixed_database_evidence_v1에서T2만새전용DB의공개6+보호1청크를본문해시대조후고정제공한다. 기존코퍼스/실측01은보존하고다른사례는실제검색을유지한다. 새독립승인/fixture해시/코드커밋과전체공유$15·2500·1800상한이필요하며자동재실행하지않는다.
+
+- T2무료노출준비(2026-11-11): `run_injection_baseline.t2_context_preflight(data)`는원본fixture복사본에서정상/공격×current/ablated4작업만가짜공급자로검사한다. 기존synthetic_docs고정근거(자연검색아님)를실제문서입력렌더러에전달하고보호본문SHA·필터후Evidence영역·사실별ID·공격문·입력바이트를관찰한다. 원본110계획/유료게이트는불변,실모델방어점수는null이다. 이도우미에는live옵션이없고실제유료scope/승인은별도준비가필요하다.
+
 - `--t7-smoke`는등록된t7_smoke_v1의T7정상·공격2작업/current만을선택한다. 독립승인과INJECTION_T7_SMOKE_DATABASES전용2DB/$2·200·1200상한을사용하고전체110회나기존스모크승인을재사용하지않는다. 계획기·실행기의같은옵션을지원한다.
 
 - 2026-11-11 남은경로 스모크: `run_injection_baseline --remaining-smoke`와 계획기의 같은 옵션은 등록된T2/T4/T5/T6/T7 current정상·공격10작업/T6준비2턴만 선택한다. 별도remaining_smoke_v1승인과INJECTION_REMAINING_SMOKE_DATABASES의전용10DB를사용하며전체110·기존T1/T3승인을재사용하지않는다. 순차실행/공유예산/원시보존동작은동일하다.

@@ -38,7 +38,7 @@ WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영�
 QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
 REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
 LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 청크 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
-CITE = re.compile(r"\[([^\]]*)\]")                     # 답 속 인용 괄호: [12] · [12, 15] · [넷리스트]
+CITE = re.compile(r"(?=\[([^\]]*)\])")                # 중첩 안쪽 번호와 바깥쪽 과거 사례 표기를 모두 검사한다
 NOT_FOUND = "문서로 확인 안 됨"                          # 근거로 답할 수 없을 때의 답(SPEC 3절 판정 이름과 같다)
 CLUES = "부품 윗면 글자, 사진, 데이터시트, 주문 코드"        # 근거가 없을 때 사용자에게 묻는 단서(SPEC 2절 "근거가 없을 때" 3번)
 
@@ -307,7 +307,7 @@ def netlist_block(part: dict) -> str:
 
 def citations(text: str) -> set[str]:
     """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
-    # [왜] 괄호 안을 먼저 꺼내 쉼표로 나눈다. [12]만 찾으면 [12, 15]처럼 한 괄호에 묶은 인용을 놓친다(강의 2주 20강)
+    # 모든 여는 괄호에서 검사해 중첩 번호도 읽고, 바깥의 과거 사례 인용도 놓치지 않는다.
     return {c.strip() for br in CITE.findall(text) for c in br.split(",")
             if c.strip().isdigit() or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
 

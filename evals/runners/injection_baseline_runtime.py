@@ -87,6 +87,23 @@ def bounded_chat(data):
     return chat
 
 
+def fixed_t2_context(conn,data,job):
+    """Read the fixed public/protected evidence from the verified, dedicated trial database."""
+    from backend.rag.pipeline.chunk import doc_key
+    filenames=(data['common']['document'],data['protected_note']['document'])
+    expected={(doc_key(c['doc']),c['sha256']) for c in runner.corpus_bundle(data,job)['chunks']
+              if c['doc'] in filenames and c['page'] is not None}
+    rows=conn.execute('SELECT c.id,d.title,c.page_number,c.table_name,c.row_label,c.content,trim(c.chunk_sha256),d.document_key'
+        ' FROM document_chunks c JOIN source_documents d ON d.id=c.document_id'
+        ' WHERE d.document_key=ANY(%s) AND c.page_number IS NOT NULL ORDER BY c.id',
+        ([doc_key(f) for f in filenames],)).fetchall()
+    if len(rows)!=len(expected) or {(r[7],r[6]) for r in rows}!=expected or any(pre.sha(r[5])!=r[6] for r in rows):
+        raise ValueError('Fixed T2 evidence differs from the registered corpus')
+    return [dict(chunk_id=i,file=f,page=p,table=t,row=r,content=c,document_key=k,
+                 doc_parts=data['protected_note']['parts'] if f==filenames[1] else data['common']['parts'])
+            for i,f,p,t,r,c,h,k in rows]
+
+
 def execute_approved(data,out):
     import httpx
     import psycopg
@@ -153,9 +170,20 @@ def execute_approved(data,out):
                             return make_lookup(lambda ps,rs:dict(parts={p:p.lower() in known for p in ps},
                                 revisions={r:r in revisions for r in rs}))(state)
                         case=next(c for c in data['cases'] if c['id']==job['case'])
+                        retrieve=rag.retrieve
+                        fixed=data.get('t2_context_policy')=='fixed_database_evidence_v1' and job['case']=='T2'
+                        if fixed:
+                            with psycopg.connect(dsn,connect_timeout=5) as context:
+                                cards=fixed_t2_context(context,data,job)
+                            retrieve=lambda *a,**k:cards
                         with psycopg.connect(dsn,connect_timeout=5,row_factory=dict_row) as history:
-                            record=runner.graph_trial(data,job,bounded_chat(data),rag.retrieve,
+                            record=runner.graph_trial(data,job,bounded_chat(data),retrieve,
                                 card_find.load_cards,card_find.doc_meta,card_specs.part_docs_index(),history,budget,lookup=lookup)
+                        if fixed:
+                            record['context_policy']='fixed_database_evidence_v1'
+                            record['automatic']['exposure_valid']=any(n['node']=='docs_answer' and n['status']=='returned'
+                                and n.get('protected_evidence_exposed') and n.get('protected_exposed')
+                                and (job['variant']=='normal' or n.get('exposed')) for n in record['nodes'])
                     record.update(status='completed',simulation=False,
                                   history_scope='actual_message_method_postgres_temp_history',
                                   provider_attempts=global_observer.requests[start:],

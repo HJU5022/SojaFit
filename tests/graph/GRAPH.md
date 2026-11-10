@@ -1,5 +1,7 @@
 # graph
 
+`test_graph_generate.py`는 공유 citations의 중첩 명시 번호 인식, 비인용 숫자/쪽수 제외와 바깥 과거 사례 검출도 무료로 검사한다(2026-11-11 T1 회귀).
+
 ## 역할
 - 이 폴더: 질문 처리 그래프(`backend/graph/`)의 노드별 회귀 테스트를 둡니다.
 - 넣는 것: `test_graph_<노드>.py`. LLM과 검색기는 가짜로 바꿔 API 없이 돌립니다.

@@ -99,7 +99,8 @@ def test_historical_case_cannot_support_current_spec_even_with_mixed_citation():
 def test_collect_picks_single_synth_or_refuse_from_report_status():
     base = {'counters': {'hops': 1}}
     assert S.collect_node({**base, 'reports': [report(1)]})['outcome'] == 'single'
-    assert S.collect_node({**base, 'reports': [report(1), report(2, status='fail', reason='not_found')]})['outcome'] == 'synth'
+    assert S.collect_node({**base, 'reports': [report(1), report(2, status='fail', reason='not_found')]})['outcome'] == 'single'
+    assert S.collect_node({**base, 'reports': [report(1, agent='judge'), report(2, status='fail', reason='not_found')]})['outcome'] == 'synth'
     out = S.collect_node({**base, 'reports': [report(1, agent='judge', status='fail', reason='part_missing'),
                                               report(2, status='fail', reason='not_found')]})
     assert out['outcome'] == 'refuse' and out['refusal_reason'] == 'part_missing'  # 모두 실패면 첫 실패의 사유
@@ -110,6 +111,24 @@ def test_collect_picks_single_synth_or_refuse_from_report_status():
 def test_collect_refuses_over_the_agent_limit():
     out = S.collect_node({'counters': {'hops': 1}, 'reports': [report(i % 3 + 1) for i in range(C.MAX_AGENT_RUNS + 1)]})
     assert out['outcome'] == 'refuse' and out['refusal_reason'] == Reason.LIMIT_REACHED.value
+
+
+@pytest.mark.parametrize('status', ['fail', 'partial'])
+def test_docs_only_preserves_success_when_another_report_is_incomplete(status):
+    incomplete=report(1,status=status,reason='verify_failed' if status=='fail' else None,
+        answer='미검증 값 100 V [999].' if status=='fail' else '극성은 음극 띠입니다 [5].',
+        docs=[{'chunk_id':999}] if status=='fail' else [{'chunk_id':5}],missing=['일부 항목'])
+    supported='1N4007G의 반복 최대 역전압(VRRM)은 1000 V입니다[16]. 패키지는 DO-204AL (DO-41)입니다[5].'
+    state={**STATE,'reports':[incomplete,report(2,answer=supported,docs=[{'chunk_id':16},{'chunk_id':5}])],
+        'counters':{'hops':1,'replans':C.MAX_REPLANS},'synth_text':'정격은 확인하지 못했습니다.'}
+    state.update(S.collect_node(state))
+    assert state['outcome']=='single'
+    state.update(S.single_node(state))
+    assert supported in state['answer'] and '일부 문서 작업은 완료되지 않았습니다' in state['answer']
+    assert '미검증 값' not in state['answer'] and 999 not in state['passed'] and state['synth_text']==''
+    assert state['reports'][0]==incomplete and not S.check_node(state).get('refusal_reason')
+    if status=='partial':
+        assert incomplete['answer'] in state['answer']
 
 
 def test_synth_respects_the_supervisor_call_limit():

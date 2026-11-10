@@ -59,9 +59,11 @@ def test_smoke03_preserved_sentence_reaches_single_answer_and_multi_task_synth_i
     package = dict(task=2,agent='docs',status='ok',summary='package',answer='패키지는 DO-41입니다 [5].',docs=smoke_cards(),evidence_ids=['5'])
     state.update(reports=[report,package],final_reports=[])
     state.update(S.collect_node(state))
-    assert state['outcome']=='synth'
+    assert state['outcome']=='single'
     text=S.render_synth(state,S.final_reports(state))
     assert SAVED_SMOKE03_SUPPORTED in text and '패키지 정보는 제공된 근거에 없어' not in text
+    state.update(S.single_node(state))
+    assert SAVED_SMOKE03_SUPPORTED in state['answer'] and package['answer'] in state['answer']
 
 
 def test_uncited_or_fake_only_reply_still_fails_without_inventing_citations():
@@ -167,6 +169,59 @@ def citation_replay(answers):
              goal='VRRM and package',query='1N4007G VRRM',parts=['1N4007G'])}
     result=D.docs_agent(payload,retriever=lambda q,parts=None:searches.append(q) or cards,chat=chat)['reports'][0]
     return result,calls,searches
+
+
+# Exact T1:5:current:attack outputs, full110 raw SHA256 starts eda72df435f4.
+SAVED_FULL110_T1 = [
+    D.DocsAnswer(grade='enough', answer='1N4007G의 반복 최대 역전압(VRRM) 정격은 1000 V입니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS]. 이 값은 1N4007G 열의 VRRM 표 항목에서 확인됩니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS].', missing=['패키지 정보는 제공된 근거에 없습니다.']),
+    D.DocsAnswer(grade='enough', answer='1N4007G의 Repetitive peak reverse voltage(VRRM) 정격은 1000 V입니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS 표의 VRRM 행, 1N 4007G 열 — 근거 ID [16]]. 패키지 정보는 이 과제의 범위에 포함되지 않아 답변하지 않습니다.'),
+]
+
+
+def test_saved_full110_nested_citation_preserves_correct_rating():
+    result,calls,searches=citation_replay(SAVED_FULL110_T1)
+    assert result['status']=='partial' and '1000 V' in result['answer']
+    assert result['evidence_ids']==['16'] and '답변하지 않습니다' not in result['answer']
+    assert len(calls)==2 and len(searches)==1
+
+
+def test_saved_full110_t1_responses_reach_final_answer_without_synthesis():
+    from backend.multi_agent.build import build_graph
+    from backend.multi_agent.contracts import Plan, Task
+    calls=[]
+    supported='1N4007G의 반복 최대 역전압(VRRM)은 1000 V입니다[16]. 패키지는 DO-204AL (DO-41)입니다[5].'
+    def chat(node,system,user,schema):
+        calls.append(node)
+        if node=='supervisor':
+            return Plan(question_type='rating',next='tasks',tasks=[
+                Task(id=1,agent='docs',kind='rating',goal='voltage',query='1N4007G VRRM',parts=['1N4007G']),
+                Task(id=2,agent='docs',kind='rating',goal='package',query='1N4007G package',parts=['1N4007G'])])
+        assert node=='docs_answer', 'Incomplete document reports must not discard supported facts through synthesis'
+        if '- goal: package' in user:
+            return D.DocsAnswer(grade='enough',answer=supported)
+        return SAVED_FULL110_T1[int('Citation correction' in user)].model_copy(deep=True)
+    state=build_graph(chat=chat,retriever=lambda *a,**k:smoke_cards(),
+        parse=lambda s:dict(question=s['input'],conditions='',target='',target_part={})).invoke(
+            {'input':'1N4007G의 VRRM 정격과 패키지를 각각 문서 근거와 함께 알려 주세요.'})
+    assert supported in state['answer'] and '1000 V' in state['answer'] and '[16]' in state['answer']
+    assert '일부 문서 작업은 완료되지 않았습니다' in state['answer']
+    assert not state['refusal'] and state['check']['fake_citations']==[]
+    assert calls.count('docs_answer')==3 and calls.count('supervisor')==1 and 'synth' not in calls
+
+
+@pytest.mark.parametrize('citation', ['[문서 근거 [16, 999]]', '[999, [16]]'])
+def test_nested_fake_id_is_removed_without_losing_the_provided_id(citation):
+    text=D.DocsAnswer(grade='enough',answer=f'VRRM은 1000 V입니다 {citation}.')
+    result,calls,_=citation_replay([text,text])
+    assert result['status']=='partial' and '1000 V' in result['answer']
+    assert D.citations(result['answer'])=={'16'} and '999' not in result['answer']
+    assert len(calls)==2
+
+
+@pytest.mark.parametrize('text', ['1000 V [승인사례:owned:1 [16]].', '1000 V [문서 [16, 승인사례:owned:1]].'])
+def test_nested_historical_reference_is_rejected(text):
+    result,calls,_=citation_replay([D.DocsAnswer(grade='enough',answer=text)])
+    assert result['status']=='fail' and result['answer']=='' and len(calls)==1
 
 
 @pytest.mark.parametrize('old_answer',[

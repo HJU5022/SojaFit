@@ -30,6 +30,75 @@ def test_default_plan_writes_110_not_run_rows_and_pending_review(tmp_path):
         runner.main(['--out',str(out)])
 
 
+def test_t2_controlled_context_preflight_confirms_four_pairs_without_mutating_baseline():
+    import copy
+    data=planner.fixture();before=copy.deepcopy(data)
+    result=runner.t2_context_preflight(data)
+    assert data==before and len(planner.jobs(data))==110
+    assert result['scope']=='t2_controlled_context_preflight_v1' and result['simulation'] is True
+    assert result['exposure_ready'] is True and result['real_model_calls']==0 and result['security_score'] is None
+    assert len(result['rows'])==4 and len({r['id'] for r in result['rows']})==4
+    assert {(r['defense'],r['variant']) for r in result['rows']}=={(d,v) for d in ('current','ablated') for v in ('normal','attack')}
+    for r in result['rows']:
+        assert r['protected_source_retrieved'] and r['protected_context_input_confirmed']
+        assert r['human_review']['passed'] is None
+        inputs=[n for n in r['nodes'] if n['node']=='docs_answer']
+        assert any(n['protected_body_exposed'] and n['protected_evidence_exposed']
+                   and len(n['protected_fact_ids'])==4 for n in inputs)
+        assert all(n['input_utf8_bytes']<=data['budget_assumptions']['request_byte_caps']['docs_answer'] for n in inputs)
+        assert r['exposed'] is (r['variant']=='attack')
+
+
+@pytest.mark.parametrize('missing', ['document','one_fact','question_only','filtered_document'])
+def test_t2_preflight_does_not_confirm_incomplete_or_misattributed_exposure(monkeypatch,missing):
+    data=planner.fixture();original=runner.synthetic_docs
+    if missing in ('question_only','filtered_document'):
+        case=next(c for c in data['cases'] if c['id']=='T2')
+        case['question']+='\n'+data['protected_note']['content']
+    if missing=='filtered_document':
+        from backend.multi_agent.agents import docs
+        keep=docs.keep_docs
+        monkeypatch.setattr(docs,'keep_docs',lambda cards,*args:[c for c in keep(cards,*args)
+            if c['file']!=data['protected_note']['document']])
+    def altered(data,inputs):
+        cards=original(data,inputs)
+        if missing in ('document','question_only'):
+            return [c for c in cards if c['file']!=data['protected_note']['document']]
+        for c in cards:
+            if missing=='one_fact' and c['file']==data['protected_note']['document']:
+                c['content']=c['content'].replace(data['protected_note']['facts'][0]['text'],'REDACTED')
+        return cards
+    monkeypatch.setattr(runner,'synthetic_docs',altered)
+    result=runner.t2_context_preflight(data)
+    assert result['exposure_ready'] is False and result['security_score'] is None
+    assert all(r['protected_source_retrieved'] is (missing=='filtered_document')
+               and not r['protected_context_input_confirmed'] for r in result['rows'])
+
+
+def test_t2_preflight_rejects_empty_protected_fact_definition():
+    data=planner.fixture();data['protected_note']['facts']=[]
+    with pytest.raises(ValueError,match='four protected facts'):
+        runner.t2_context_preflight(data)
+
+
+def test_live_t2_fixed_context_uses_verified_database_rows():
+    from evals.runners import injection_baseline_runtime as live
+    from backend.rag.pipeline.chunk import doc_key
+    data=planner.fixture();job=next(j for j in planner.jobs(data) if j['case']=='T2' and j['variant']=='attack')
+    bundle=runner.corpus_bundle(data,job)
+    chunks=[c for c in bundle['chunks'] if c['doc'] in (data['common']['document'],data['protected_note']['document']) and c['page'] is not None]
+    class Conn:
+        def execute(self,*args):return self
+        def fetchall(self):return [(i,c['doc'],c['page'],c['table'],c['row'],c['text'],c['sha256'],doc_key(c['doc'])) for i,c in enumerate(chunks,1)]
+    cards=live.fixed_t2_context(Conn(),data,job)
+    assert len(cards)==len(chunks)==7
+    assert any(c['content']==data['protected_note']['content'] for c in cards)
+    assert any(next(c for c in data['cases'] if c['id']=='T2')['payload'] in c['content'] for c in cards)
+    chunks[-1]={**chunks[-1],'text':'changed body'}
+    with pytest.raises(ValueError,match='Fixed T2'):
+        live.fixed_t2_context(Conn(),data,job)
+
+
 def test_remaining_smoke_simulates_only_ten_scored_jobs_and_pending_reviews(tmp_path):
     out=tmp_path/'remaining.jsonl'
     assert runner.main(['--remaining-smoke','--simulate','--out',str(out)])==0

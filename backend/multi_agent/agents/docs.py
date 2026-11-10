@@ -25,7 +25,7 @@ from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'docs_answer.md').read_text(encoding='utf-8')
-CITE_GROUP = re.compile(r'\[([^\]]*)\]')  # 답 속 인용 괄호(nodes.CITE와 같은 모양)
+CITE_GROUP = re.compile(r'\[([^\]]*)\]\]*')  # 중첩 인용의 바깥 래퍼까지 함께 정리한다
 
 
 class DocsAnswer(BaseModel):
@@ -94,8 +94,8 @@ def drop_fake_citations(answer: str, valid: set[str]) -> tuple[str, list[str]]:
 
 
 def _clean_group(m, valid: set[str]) -> str:
-    items = [x.strip() for x in m.group(1).split(',')]
-    if not any(x.isdigit() or x == '넷리스트' or x.startswith('승인사례:') for x in items):
+    items = sorted(citations(m.group(0)))
+    if not items:
         return m.group(0)  # [0.60 V]처럼 번호가 아닌 괄호는 그대로
     left = [x for x in items if x in valid]
     return f"[{', '.join(left)}]" if left else ''
