@@ -10,6 +10,7 @@
 
 ## 파일
 - `TESTS.md` — 이 문서
+- `db_schema.py` — 서비스 표 SQL을 순서대로 적용하는 시험 헬퍼 `apply_service_schema(conn, agent=False)`. SQL 파일 이름을 부르는 유일한 곳이다
 - `api/` — 서버 API·인증 시험. [API.md](api/API.md)
 - `conversations/` — 격리 DB 대화·체크포인트 시험. [CONVERSATIONS.md](conversations/CONVERSATIONS.md)
 - `projects/` — 실제 격리 DB에서 소유권·cascade·원자성·권한 시험. [PROJECTS.md](projects/PROJECTS.md)
