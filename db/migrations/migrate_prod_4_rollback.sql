@@ -50,7 +50,10 @@ CREATE TABLE sojafit_agent.circuits (
 CREATE INDEX agent_circuits_owner ON sojafit_agent.circuits (user_id, created_at DESC);
 ALTER TABLE sojafit_agent.circuits ENABLE ROW LEVEL SECURITY;
 INSERT INTO sojafit_agent.circuits (id, user_id, filename, netlist, connections, created_at)
-    SELECT t.id, t.user_id, p.name, '', c.connections, t.created_at
+    SELECT t.id, t.user_id, p.name, '',
+           -- [왜] public.circuits.connections는 {parts, nets}이고 옛 분석 코드는 connections['components']를 읽는다(없으면 KeyError → 503). 옛 모양으로 바꿔 넣는다
+           jsonb_build_object('components', COALESCE(c.connections->'components', c.connections->'parts', '[]'::jsonb),
+                              'nets', COALESCE(c.connections->'nets', '[]'::jsonb)), t.created_at
     FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id
     JOIN public.projects p ON p.id = pt.project_id JOIN public.circuits c ON c.project_id = p.id;
 ALTER TABLE sojafit_agent.threads ADD COLUMN circuit_id UUID;
@@ -90,7 +93,10 @@ UPDATE public.approved_cases c SET snapshot = a.snapshot FROM public.approvals a
 ALTER TABLE public.quotes ALTER COLUMN snapshot SET NOT NULL;
 ALTER TABLE public.approved_cases ALTER COLUMN snapshot SET NOT NULL;
 INSERT INTO sojafit_agent.circuits (id, user_id, filename, netlist, connections, created_at)
-    SELECT t.id, t.user_id, p.name, '', c.connections, t.created_at
+    SELECT t.id, t.user_id, p.name, '',
+           -- [왜] public.circuits.connections는 {parts, nets}이고 옛 분석 코드는 connections['components']를 읽는다(없으면 KeyError → 503). 옛 모양으로 바꿔 넣는다
+           jsonb_build_object('components', COALESCE(c.connections->'components', c.connections->'parts', '[]'::jsonb),
+                              'nets', COALESCE(c.connections->'nets', '[]'::jsonb)), t.created_at
     FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id
     JOIN public.projects p ON p.id = pt.project_id JOIN public.circuits c ON c.project_id = p.id
     WHERE t.circuit_id IS NULL ON CONFLICT (id) DO NOTHING;
