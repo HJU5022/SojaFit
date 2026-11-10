@@ -45,6 +45,19 @@ it('shows unavailable and common errors without fabricated prices', async () => 
   expect(await screen.findByRole('alert')).toHaveTextContent('품번을 확인해 주세요.')
   expect(screen.getByRole('alert')).toHaveTextContent('req-test')
 })
+it('offers a retry action after a price request fails', async () => {
+  let attempts = 0
+  network(() => {
+    attempts++
+    return attempts === 1 ? failure('TEMPORARY', '판매처 조회에 실패했습니다.', 503) : Response.json(unavailable)
+  })
+  render(<PricePanel parts={['SS34']} />)
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('판매처 조회에 실패했습니다.')
+  fireEvent.click(screen.getByRole('button', { name: '가격·재고 다시 조회' }))
+  expect(await screen.findByText(unavailable.message)).toBeInTheDocument()
+  expect(attempts).toBe(2)
+})
 it('handles supplier fields that are null in the canonical price response', async () => {
   network(() => Response.json({ available: true, source: 'Mouser Electronics', fetched_at: '2026-11-09T00:00:00Z', parts: [{ part_number: 'SS34', manufacturer: null, price_breaks: [{ quantity: null, price: null, currency: null }], availability: null, product_url: null }] }))
   render(<PricePanel parts={['SS34']} />)

@@ -11,7 +11,7 @@ export default function ProjectSidebar({ selectedId, project, onSelect, onDelete
   return <aside className="panel project-sidebar" aria-label="내 프로젝트">
     <h2>내 프로젝트</h2>
     {projects.isPending && <p role="status">프로젝트를 불러오는 중입니다.</p>}
-    {projects.error ? <p role="alert">{errorMessage(projects.error)}</p> : <ul className="project-list">
+    {projects.error ? <div><p role="alert">{errorMessage(projects.error)}</p><button className="secondary" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div> : <ul className="project-list">
       {projects.data?.map(project => <li key={project.id}><button aria-current={selectedId === project.id ? 'true' : undefined} onClick={() => onSelect(project.id)}>{project.name}</button></li>)}
     </ul>}
     {projects.data?.length === 0 && <p>프로젝트가 없습니다. 데모 또는 파일로 시작하세요.</p>}

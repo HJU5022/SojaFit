@@ -15,9 +15,10 @@ export default function LoginPage() {
   const [error, setError] = useState<unknown>(null)
   const [google, setGoogle] = useState(false)
   const [demo, setDemo] = useState(false)
+  const [googleUnavailable, setGoogleUnavailable] = useState(false)
   useEffect(() => {
     let current = true
-    getGoogleStatus().then(({ enabled }) => { if (current) setGoogle(enabled) }).catch(() => {})
+    getGoogleStatus().then(({ enabled }) => { if (current) setGoogle(enabled) }).catch(() => { if (current) setGoogleUnavailable(true) })
     // 데모 모드가 아니면 404라 버튼을 숨긴 그대로 둔다
     getDemoStatus().then(({ enabled }) => { if (current) setDemo(enabled) }).catch(() => {})
     return () => { current = false }
@@ -53,5 +54,6 @@ export default function LoginPage() {
       : params.get('google') === 'error' && <p role="alert">Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.</p>}
     <p>처음이면 <Link to="/signup">가입</Link></p>
     {google && <p><a href="/api/auth/google/start">Google 관리자 로그인</a></p>}
+    {googleUnavailable && <p className="panel-note">Google 로그인을 사용할 수 없습니다. 이메일 로그인으로 진행해 주세요.</p>}
   </section>
 }

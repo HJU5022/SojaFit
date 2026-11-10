@@ -15,5 +15,5 @@
 - `auth/` — `AuthProvider.tsx`: 메모리 세션 상태 복원·로그인·가입·로그아웃·탈퇴·401 처리와 세션을 잃을 때 화면 캐시·탭 저장소 비우기, `RequireAuth.tsx`: 로그인·관리자 렌더링 경계, `AuthProvider.test.tsx`: 실제 세션 상태 변화 테스트
 - `pages/` — `LoginPage.tsx`·`SignupPage.tsx`(가입·처리방침 고지 `PrivacyNotice`)·`AdminUsersPage.tsx`·`WorkbenchPage.tsx`·`SettingsPage.tsx`: 기존 API 연결 화면과 각 `*.test.tsx` 동작 테스트
 - `hooks/` — `useRunStream.ts`와 테스트: SSE 순서, interrupt 재개, 연결 종료 뒤 GET 복구, 자동 재전송 금지, `failed` frame의 서버 오류 문구 표시
-- `components/` — 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름, 키 없는 데모면 기록 질문 버튼과 기록한 답으로 재개)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
+- `components/` — `AccessibleDialog.tsx` 공통 키보드 dialog, `LandingServiceIntroduction.tsx` 랜딩 서비스 소개, 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름, 키 없는 데모면 기록 질문 버튼과 기록한 답으로 재개)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
 - `test/` — `setup.ts`: jsdom의 jest-dom matcher와 테스트별 화면 정리, `network.ts`: 완전한 손작성 API 응답과 fetch 경계 대역, `projects.tsx`: 현재 프로젝트/데모 전체 DTO와 QueryClient·Router 테스트 렌더러

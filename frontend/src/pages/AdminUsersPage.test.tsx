@@ -67,7 +67,7 @@ it.each(['logout', 'navigation'])('cancels an outstanding update and skips its f
   const beforeExit = lists
   if (exit === 'logout') fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
   else fireEvent.click(screen.getByRole('link', { name: '작업대' }))
-  await screen.findByRole('heading', { name: exit === 'logout' ? '로그인' : '회로 작업대' })
+  await screen.findByRole('heading', { name: exit === 'logout' ? '로그인' : '회로에 맞는 대체 부품을 찾아보세요' })
   await act(async () => { finish(Response.json({ ok: true })) })
   expect(lists).toBe(beforeExit)
   expect(patchSignal?.aborted).toBe(true)

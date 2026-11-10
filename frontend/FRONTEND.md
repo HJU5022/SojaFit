@@ -25,5 +25,6 @@
 - `tsconfig.app.json` — 화면 TypeScript 검사 설정
 - `tsconfig.node.json` — Vite 설정 TypeScript 검사 설정
 - `playwright.config.ts` — 로컬 Vite Playwright 설정
+- `public/` — Vite가 루트 경로로 제공하는 화면 전용 정적 이미지. [PUBLIC.md](public/PUBLIC.md)
 - `e2e/` — 외부 호출 없는 브라우저 smoke. [E2E.md](e2e/E2E.md)
 - `src/` — 화면 소스와 단위 테스트. [SRC.md](src/SRC.md)

@@ -8,6 +8,17 @@ import WorkbenchPage from './pages/WorkbenchPage'
 import { administrator, failure, network, user } from './test/network'
 
 afterEach(() => vi.unstubAllGlobals())
+function openProjectCreator() {
+  const trigger = screen.queryAllByRole('button', { name: '프로젝트 만들기' })[0]
+  if (trigger) fireEvent.click(trigger)
+  else {
+    fireEvent.click(screen.getByRole('button', { name: 'D1을 SS34로 바꿔도 되나요?' }))
+    fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
+  }
+}
+function openProjectList() { fireEvent.click(screen.getByRole('button', { name: '프로젝트 열기' })) }
+function openAccountMenu() { fireEvent.click(screen.getByRole('button', { name: /사용자 \d+/ })) }
+function logoutFromWorkbench() { openAccountMenu(); fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' })) }
 it('shows a persistent non-storage notice only when dummy mode is enabled', () => {
   const { rerender } = render(<DummyModeNotice enabled />)
   expect(screen.getByText('더미 실행 모드 · 저장되지 않음')).toBeVisible()
@@ -22,19 +33,44 @@ it.each(['/', '/app', '/admin/users'])('anonymous %s entry redirects to login wi
   expect(screen.queryByRole('link', { name: '사용자 관리' })).not.toBeInTheDocument()
   expect(requested).not.toContain('/api/admin/users')
 })
+
+it('keeps one main landmark on login and workbench routes', async () => {
+  network(path => {
+    if (path === '/api/auth/me') return failure()
+    if (path === '/api/auth/google/status') return Response.json({ enabled: false })
+    return Response.json([])
+  })
+  const view = render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('main')).toBeInTheDocument()
+  view.unmount()
+  network(path => {
+    if (path === '/api/auth/me') return Response.json(user)
+    if (path === '/api/projects' || path === '/api/demo-circuits' || path === '/api/judge/roles') return Response.json([])
+    return Response.json([])
+  })
+  render(<MemoryRouter initialEntries={['/app']}><App /></MemoryRouter>)
+  await screen.findByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })
+  expect(screen.getAllByRole('main')).toHaveLength(1)
+})
+
+it('links anonymous users to the public signup page', async () => {
+  network(path => Response.json(path === '/api/auth/google/status' ? { enabled: false } : {}, { status: path === '/api/auth/me' ? 401 : 200 }))
+  render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('link', { name: '가입' })).toHaveAttribute('href', '/signup')
+})
 it('restores a session before showing the workbench and admin navigation', async () => {
   network(path => Response.json(path === '/api/auth/me' ? administrator : []))
   render(<MemoryRouter initialEntries={['/app']}><App /></MemoryRouter>)
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '사용자 관리' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '내 설정' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).toBeInTheDocument()
+  openAccountMenu()
+  expect(screen.getByRole('menuitem', { name: '사용자 관리' })).toBeInTheDocument()
 })
 it('shows restore failures instead of granting access', async () => {
-  network(() => failure('UNAVAILABLE', '로그인 서비스를 사용할 수 없습니다.', 503))
+  network(() => failure('SERVICE_UNAVAILABLE', '로그인 서비스를 사용할 수 없습니다.', 503))
   render(<MemoryRouter initialEntries={['/app']}><App /></MemoryRouter>)
   expect(await screen.findByRole('alert')).toHaveTextContent('로그인 서비스를 사용할 수 없습니다.')
   expect(screen.getByRole('alert')).toHaveTextContent('req-test')
-  expect(screen.queryByRole('heading', { name: '회로 작업대' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).not.toBeInTheDocument()
 })
 
 
@@ -53,7 +89,10 @@ it('removes owned project cache immediately on logout before another session can
   expect(client.getQueryData(['projects'])).toEqual([summary(first)])
   vi.useFakeTimers()
   try {
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '로그아웃' })) })
+    openAccountMenu()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
+    })
     expect(screen.getByRole('heading', { name: '로그인' })).toBeInTheDocument()
     expect(client.getQueryData(['projects'])).toBeUndefined()
     expect(client.getQueryData(['project', 11])).toBeUndefined()
@@ -81,6 +120,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
   render(<StrictMode><MemoryRouter initialEntries={['/app?projectId=11']}><App /></MemoryRouter></StrictMode>)
   await screen.findByRole('heading', { name: first.name })
   if (kind === 'demo' || kind === 'upload') {
+    openProjectCreator()
     fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
     if (kind === 'demo') {
       await screen.findByRole('option', { name: demo.name })
@@ -91,18 +131,21 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
       fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
     }
   } else if (kind === 'rename') {
+    openProjectList()
     fireEvent.change(screen.getByLabelText('프로젝트 이름 변경'), { target: { value: '진행 중 이름' } })
     fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
   } else {
+    openProjectList()
     fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
     fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
   }
   await waitFor(() => expect(finish).toBeTypeOf('function'))
-  fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+  logoutFromWorkbench()
   await screen.findByRole('heading', { name: '로그인' })
   fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'next@example.test' } })
   fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'test-only' } })
   fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+  fireEvent.click(await screen.findByRole('button', { name: '프로젝트 열기' }))
   fireEvent.click(await screen.findByRole('button', { name: second.name }))
   await screen.findByRole('heading', { name: second.name })
   fireEvent.change(screen.getByLabelText('대상 부품'), { target: { value: 'D2' } })
@@ -110,7 +153,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
   await act(async () => { finish(failure()) })
   expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
   expect(screen.getByText('선택한 대상: D2')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /사용자 \d+/ })).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: '로그인' })).not.toBeInTheDocument()
   expect(reads).toBe(before)
   expect(signal?.aborted).toBe(true)
@@ -128,6 +171,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount inv
   const { unmount, client } = render(<MemoryRouter initialEntries={['/app?projectId=11']}><WorkbenchPage /></MemoryRouter>)
   await screen.findByRole('heading', { name: first.name })
   if (kind === 'demo' || kind === 'upload') {
+    openProjectCreator()
     fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
     if (kind === 'demo') {
       await screen.findByRole('option', { name: demo.name })
@@ -137,8 +181,9 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount inv
       fireEvent.change(screen.getByLabelText('KiCad 넷리스트'), { target: { files: [new File(['server input'], 'board.net')] } })
       fireEvent.submit(screen.getByRole('button', { name: '파일로 만들기' }).closest('form')!)
     }
-  } else if (kind === 'rename') fireEvent.click(screen.getByRole('button', { name: '이름 저장' }))
+  } else if (kind === 'rename') { openProjectList(); fireEvent.click(screen.getByRole('button', { name: '이름 저장' })) }
   else {
+    openProjectList()
     fireEvent.click(screen.getByRole('button', { name: '프로젝트 삭제' }))
     fireEvent.click(screen.getByRole('button', { name: '삭제 확인' }))
   }

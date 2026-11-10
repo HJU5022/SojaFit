@@ -1,10 +1,30 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { expect, it, vi } from 'vitest'
 import EvidencePanel from './EvidencePanel'
 import InterruptForm from './InterruptForm'
 import JudgementTable from './JudgementTable'
 import RunStatus from './RunStatus'
 import ProfileHints from './ProfileHints'
+import ConversationPanel from './ConversationPanel'
+
+const startRun = vi.fn()
+let mockedRunState: any = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
+vi.mock('../api/conversations', async () => {
+  const actual = await vi.importActual<typeof import('../api/conversations')>('../api/conversations')
+  return { ...actual, listThreads: vi.fn().mockResolvedValue([]), createThread: vi.fn().mockResolvedValue({ id: 'thread-1' }) }
+})
+vi.mock('../hooks/useRunStream', () => ({
+  useRunStream: () => ({
+    state: mockedRunState,
+    start: startRun, resume: vi.fn(), cancel: vi.fn(), reset: vi.fn(),
+  }),
+}))
+
+function renderConversation(props: Partial<React.ComponentProps<typeof ConversationPanel>> = {}) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" onResult={vi.fn()} {...props} /></QueryClientProvider>)
+}
 
 it('renders evidence coordinates exactly without inventing text', () => {
   render(<EvidencePanel evidence={[{ document: 'sheet.pdf', page: 2, table: 'RATINGS', row: 'VRRM', section: '', citation_number: '7' }]} />)
@@ -13,12 +33,33 @@ it('renders evidence coordinates exactly without inventing text', () => {
   expect(screen.getByText('인용 7')).toBeInTheDocument()
 })
 
+it('opens evidence details from supplied citation fields without fabricating a PDF', () => {
+  render(<EvidencePanel evidence={[{ document: 'sheet.pdf', page: 2, table: 'RATINGS', row: 'VRRM', section: 'Absolute maximum', citation_number: '7' }]} />)
+  const trigger = screen.getByRole('button', { name: /sheet\.pdf/ })
+  trigger.focus()
+  fireEvent.click(trigger)
+  const dialog = screen.getByRole('dialog', { name: '데이터시트 근거 상세' })
+  expect(within(dialog).getByText('Absolute maximum')).toBeInTheDocument()
+  expect(within(dialog).getByText('저장소에 원문이 제공되지 않은 경우 PDF 내용을 대신 표시하지 않습니다.')).toBeInTheDocument()
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(trigger).toHaveFocus()
+})
+
 it('maps only backend verdict codes and always shows the disclaimer', () => {
   render(<JudgementTable judgement={{ kind: 'judge', roles: ['R01'], role_evidence: [], shown: [], unverified: [], capped: false,
     results: [{ part: 'SS34', verdict: 'ROLE_SUFFICIENT', board_change: true }] }} />)
   expect(screen.getByText('역할상 충분')).toBeInTheDocument()
   expect(screen.getByText('필요')).toBeInTheDocument()
   expect(screen.getByText('같은 동작은 보장하지 않습니다.')).toBeInTheDocument()
+})
+
+it('shows candidate details with explicit missing values', () => {
+  render(<JudgementTable judgement={{ kind: 'judge', roles: ['R01'], role_evidence: [], shown: [], unverified: [], capped: false,
+    results: [{ part: 'SS34', verdict: 'NOT_VERIFIED', checks: [{ code: 'IF', value: null, unit: 'A' }] }] }} />)
+  fireEvent.click(screen.getByRole('button', { name: 'SS34 상세' }))
+  const dialog = screen.getByRole('dialog', { name: '후보 상세' })
+  expect(within(dialog).getAllByText('MISSING')).toHaveLength(2)
+  expect(within(dialog).getByText('문서로 확인 안 됨')).toBeInTheDocument()
 })
 
 it('selects a candidate and shows only its supplied datasheet coordinates', () => {
@@ -52,13 +93,44 @@ it('keeps duplicate part numbers distinct by candidate index', () => {
 
 it('requires missing values and a listed role before resuming', () => {
   const submit = vi.fn()
-  render(<InterruptForm interrupt={{ missing: ['v_in'], role_choices: ['R01', 'R02'], question: '값을 알려 주세요.' }} busy={false} onSubmit={submit} />)
+  render(<InterruptForm interrupt={{ missing: ['v_in_max'], role_choices: ['R01', 'R02'], question: '값을 알려 주세요.' }} busy={false} onSubmit={submit} />)
   const button = screen.getByRole('button', { name: '같은 실행 계속하기' })
   expect(button).toBeDisabled()
   fireEvent.change(screen.getByLabelText('회로 역할'), { target: { value: 'R02' } })
-  fireEvent.change(screen.getByLabelText('v_in'), { target: { value: '5 V' } })
+  fireEvent.change(screen.getByLabelText('입력 전원 최대 전압'), { target: { value: '5 V' } })
   fireEvent.click(button)
-  expect(submit).toHaveBeenCalledWith({ v_in: '5 V' }, 'R02')
+  expect(submit).toHaveBeenCalledWith({ v_in_max: '5 V' }, 'R02')
+})
+
+it('translates condition keys into Korean labels', () => {
+  render(<InterruptForm interrupt={{ missing: ['v_in_max'], question: '값을 알려 주세요.' }} busy={false} onSubmit={vi.fn()} />)
+  expect(screen.getByLabelText('입력 전원 최대 전압')).toBeInTheDocument()
+})
+
+it('uses user-facing analysis wording and offers a retry with the submitted inputs', async () => {
+  startRun.mockClear()
+  renderConversation()
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '교체 가능한가요?' } })
+  fireEvent.change(screen.getByLabelText('사용 조건 (선택)'), { target: { value: '5 V' } })
+  expect(screen.getByRole('button', { name: '분석하기' })).toBeInTheDocument()
+  expect(screen.queryByText('D5 실행 흐름')).not.toBeInTheDocument()
+  expect(screen.queryByText('우측 회로 탭에서 교체할 부품을 선택하세요.')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '분석하기' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: '다시 분석하기' })).toBeInTheDocument())
+  fireEvent.click(screen.getByRole('button', { name: '다시 분석하기' }))
+  await waitFor(() => expect(startRun).toHaveBeenCalledTimes(2))
+})
+
+it('exposes evidence and candidate comparison callbacks in the final answer', () => {
+  const showEvidence = vi.fn()
+  const showJudgement = vi.fn()
+  mockedRunState = { status: 'completed', runId: 'run-1', result: { answer: '교체 가능합니다.', evidence: [], judgement: { kind: 'find', shown: [], unverified: [] } } }
+  renderConversation({ onShowEvidence: showEvidence, onShowJudgement: showJudgement })
+  fireEvent.click(screen.getByRole('button', { name: '근거 보기' }))
+  fireEvent.click(screen.getByRole('button', { name: '후보 비교 결과 보기' }))
+  expect(showEvidence).toHaveBeenCalledTimes(1)
+  expect(showJudgement).toHaveBeenCalledTimes(1)
+  mockedRunState = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
 })
 
 it('announces run progress through a polite live region', () => {
