@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-10 D6 · D7 · D8 남은 항목 마무리 (브랜치 `jeongun`, 커밋 전)
+- 한 일: ① `/api/` 아래 POST · PATCH · PUT · DELETE 본문 128 KiB 한도를 재개 · 승인 · 로그인까지 넓혔다(넷리스트 업로드는 자기 5 MiB 한도). ② 모든 응답에 보안 헤더 4개(`X-Content-Type-Options` · `X-Frame-Options` · `Referrer-Policy` · `Strict-Transport-Security`). ③ `hide_query`와 겹치던 `GoogleCallbackLogFilter`를 지웠다. ④ 컨테이너를 일반 계정(`USER nobody`)으로 실행. ⑤ 견적 금지 키가 코드(`quote.FORBIDDEN`)와 DB 검사(`db/020`)에서 같은지 보는 시험. ⑥ `EVAL_REPORT.md` 7장 빈칸 2개(사용자 · 세션 연결, 느림 원인 사례)와 8장 LLM 단계별 시간 · 비용, `docs/GATES.md` G1 · G6 줄.
+- 바꾼 파일: `backend/main.py`, `Dockerfile`, `tests/api/test_conversations.py`, `tests/services/test_quote_service.py`, `SPEC.md`, `backend/BACKEND.md`, `EVAL_REPORT.md`, `docs/GATES.md`.
+- 실행한 명령과 결과: `env -u DATABASE_URL PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q` 1210 passed, 111 skipped(추가한 시험 5개 포함). `docker build` 성공 뒤 `docker run --rm <이미지> sh -c 'id; python -c "import backend.main"'` → uid 65534(nobody), 불러오기 성공, `/app` 쓰기 거부. 단계별 집계는 저장소 밖 `exp-haiku-1109/stage_costs.py`(Langfuse 읽기만)로 v3 3세트(`gate-v3_draft-1110-0040-set1`) 50트레이스를 읽었다: LLM 호출 112번, 합계 $0.047(#50 결과 줄과 같음), Supervisor p50 1.36 · p95 1.93초, 판정 읽기 16문항 · 48번, 문서 답 쓰기 10문항 · 13번. 원본 `exp-haiku-1109/results/stage-costs-R-v3a.json`.
+- 확인 못 한 것: 일반 계정 이미지로 compose 기동 · 스모크 23단계 · CI 재생(`record_demo.py replay`) · Cloud Run 배포를 돌리지 않았다. 보안 헤더는 시험(TestClient)으로만 봤다. LLM이 아닌 단계(검색 · 판정 코드)는 트레이스에 단계 이름이 없어 집계에서 빠졌다. `SojaFit/.env`의 Langfuse 키는 새 프로젝트 `SojaFit_v2`이고 11-09 ~ 10 측정 트레이스는 옛 프로젝트 `SojaFit`에 있다(`lab/repo/.env` 키로 읽음). Langfuse 옛 조회 API(`/api/public/traces` · `observations`)는 11-16에 없어진다고 응답했다.
+- 다음 할 일: compose 기동으로 일반 계정 확인 뒤 커밋, 배포 주소 실제 계정 2개 점검, Langfuse 캡처 3장을 저장소 어디에 둘지, 서버 시작 직후 일반 글 로그 2줄, `/health`의 DB 확인 여부, CI에서 일부러 실패시킨 기록(GitHub Actions 결제 한도가 풀린 뒤).
+
 ## 2026-11-10 레포 점검과 정리(묶음 A ~ F)
 - 한 일: 레포 전체 점검(문서 · 구조 · 표현 · 코드 · 앱 5갈래, 읽기 전용) 뒤 묶음별로 고쳤다. E 실행 환경(a9f6fdb), B 화면 문구(5de4c7c), A AI 도구 작업 흔적(4ebfc34), C 문서 현행화(00a036a), D 버린 사양 표 코드 정리(6673b42), F 용어 통일(359916e).
 - 실행한 명령과 결과: 오프라인 전체 시험 1059 passed, 117 skipped(사양 표 · MCP 사양 도구 시험 39개 삭제, 2개 추가). 프런트 `npm run test:run` 107 passed, `npm run build` 성공, 운영 번들에 목업 문자열 0. `docker compose config -q` 0. `specs.py`에서 남긴 정의 47개는 정리 전과 같음(지운 21개는 표 만들기 · 적재 명령과 그것만 쓰던 도우미).
