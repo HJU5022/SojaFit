@@ -300,7 +300,8 @@ def test_make_app_uses_card_tools_for_find_and_specs(monkeypatch):
     monkeypatch.setattr(build, "build_graph", lambda **tools: seen.update(tools))
     with ExitStack() as stack:
         make_app(False, stack)
-    assert seen["specs"] is fake_specs and seen["find"] is fake_find
+    # [왜] 서비스처럼 timed_tool로 감싸 단계 시간을 남긴다. 감싼 함수가 원래 도구를 가리키는지(__wrapped__)로 확인한다
+    assert seen["specs"].__wrapped__ is fake_specs and seen["find"].__wrapped__ is fake_find
 
 
 
