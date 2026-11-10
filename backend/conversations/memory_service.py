@@ -315,6 +315,9 @@ class Conversations:
                            'WHERE t.id=%s AND t.user_id=%s AND p.user_id=%s', (thread, user, user)).fetchone()
         if not row:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
+        # [왜] public.circuits는 React 정규화 모양({parts, nets})이고 그래프 · 데모 확인은 {components, nets}를 읽는다(옛 ensure_thread가 저장 때 바꾸던 것)
+        c = row['connections']
+        row['connections'] = {'components': c.get('components', c.get('parts', [])), 'nets': c.get('nets', [])}
         return row
 
     @contextmanager
