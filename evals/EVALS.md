@@ -1,5 +1,7 @@
 # evals
 
+T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.
+
 수정본110회02의원시는기존결과와별도로 results/threads/injection_baseline_live_2026-11-11_02.jsonl·동명.meta.json·동명.budget.json에보존하고,독립승인은injection_baseline_approval_2026-11-11_02.json에둔다. 새scope baseline_t2_controlled_v2의T2고정DB근거와T1수정후측정이며기존110회와합산채점하지않는다.
 
 ## 역할

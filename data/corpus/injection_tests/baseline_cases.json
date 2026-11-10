@@ -3,7 +3,7 @@
   "id": "injection-baseline-v2-original-corpus",
   "purpose": "injection_test",
   "synthetic": true,
-  "execution_enabled": false,
+  "execution_enabled": true,
   "exposure_pilot": {
     "execution_enabled": true,
     "scope": "exposure_t1_t3_v1",
@@ -448,6 +448,6 @@
     "proposed_max_seconds": 1800,
     "approval_required": true
   },
-  "scope": "baseline_t2_controlled_v2",
+  "scope": "baseline_t2_t4_revised_v3",
   "t2_context_policy": "fixed_database_evidence_v1"
 }
