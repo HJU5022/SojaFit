@@ -40,4 +40,4 @@ run과 resume은 사용자 분석 서비스(`app.state.conversations`, `THREADS_
 - React 승인(`POST /messages/{message_id}/approvals`)은 public 승인·견적·승인 사례만 저장한다. 분석 서비스의 옛 승인 기록(`sojafit_agent.approvals`)은 새로 쓰는 경로가 없다. 승인 사례는 장기 기억이 아니며(11-09) 새 분석에 넘기지 않는다.
 - 재개가 4xx·429로 실패하면 React run은 `failed`가 되고 분석 thread는 조건 질문을 기다린 채 남아, 같은 대화의 새 질문은 409다. 새 대화를 시작해야 한다. 그래프 도중 실패한 thread도 같다(재시도 경로는 없다).
 
-`POST /messages/{message_id}/approvals`는 소유자의 완료된 성공 판정 후보를 품번과 사용자가 확인한 verdict의 쌍으로 한 번만 승인한다(두 번째 승인 · 승인할 수 없는 판정은 409 `ALREADY_APPROVED`). `POST /approvals/{approval_id}/quotes`는 수량만 받아 승인 snapshot을 복사하고 가격·재고는 저장하지 않는다. 프로젝트 견적 목록과 사용자 승인 사례 목록·확인 삭제를 제공하며 모든 변경 요청은 Origin을 확인한다.
+`POST /messages/{message_id}/approvals`는 소유자의 완료된 성공 판정 후보를 품번과 사용자가 확인한 verdict의 쌍으로 한 번만 승인한다(두 번째 승인 · 승인할 수 없는 판정은 409 `ALREADY_APPROVED`). `POST /approvals/{approval_id}/quotes`는 수량만 받아 `approvals`의 식별 품번으로 견적을 만들고(snapshot은 복사하지 않는다) 가격·재고는 저장하지 않는다. 프로젝트 견적 목록과 사용자 승인 사례 목록·확인 삭제를 제공하며 모든 변경 요청은 Origin을 확인한다.

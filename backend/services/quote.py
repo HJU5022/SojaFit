@@ -76,24 +76,22 @@ class QuoteService:
             if row[0] != 'completed':
                 raise InvalidApproval('완료된 판정만 승인할 수 있습니다.')
             snapshot = approval_snapshot(row[1] or {}, candidate_part, verdict)
-            approval = conn.execute('INSERT INTO approvals(user_id,message_id,snapshot) VALUES (%s,%s,%s) RETURNING id,created_at',
-                                    (user_id, message_id, Jsonb(snapshot))).fetchone()
-            case = conn.execute('INSERT INTO approved_cases(user_id,approval_id,snapshot) VALUES (%s,%s,%s) RETURNING id',
-                                (user_id, approval[0], Jsonb(snapshot))).fetchone()
+            candidate = snapshot['candidate']
+            # [왜] 승인 스냅샷은 approvals 한 곳에만 둔다(견적 · 승인 사례에 복사하지 않는다). 목록 · 견적이 읽는 값 3개는 칸으로 같이 저장한다
+            approval = conn.execute('INSERT INTO approvals(user_id,message_id,snapshot,candidate_part,verdict,part_number) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id,created_at',
+                                    (user_id, message_id, Jsonb(snapshot), candidate['part'], candidate['verdict'], candidate['part_number'])).fetchone()
+            case = conn.execute('INSERT INTO approved_cases(user_id,approval_id) VALUES (%s,%s) RETURNING id', (user_id, approval[0])).fetchone()
             return {'id': approval[0], 'message_id': message_id, 'candidate_part': candidate_part,
                     'verdict': snapshot['candidate']['verdict'], 'case_id': case[0], 'created_at': approval[1]}
 
     def create_quote(self, user_id: int, approval_id: int, quantity: int):
         with auth.connection() as conn:
-            row = conn.execute('SELECT snapshot FROM approvals WHERE id=%s AND user_id=%s', (approval_id, user_id)).fetchone()
+            row = conn.execute('SELECT part_number,candidate_part FROM approvals WHERE id=%s AND user_id=%s', (approval_id, user_id)).fetchone()
             if row is None:
                 raise QuoteNotFound
-            snapshot = deepcopy(row[0])
-            assert_no_price_data(snapshot)
-            candidate = snapshot['candidate']
-            part = candidate.get('part_number') or part_number(candidate['part'])  # 식별 품번이 없는 옛 승인도 같은 규칙으로 만든다
-            quote = conn.execute('INSERT INTO quotes(user_id,approval_id,part_number,quantity,snapshot) VALUES (%s,%s,%s,%s,%s) RETURNING id,created_at',
-                                 (user_id, approval_id, part, quantity, Jsonb(snapshot))).fetchone()
+            part = row[0] or part_number(row[1] or '')  # [주의] 칸이 비어 있는 옛 승인(expand 뒤 contract 전)만 같은 규칙으로 계산한다. 견적에는 스냅샷을 복사하지 않는다
+            quote = conn.execute('INSERT INTO quotes(user_id,approval_id,part_number,quantity) VALUES (%s,%s,%s,%s) RETURNING id,created_at',
+                                 (user_id, approval_id, part, quantity)).fetchone()
             return {'id': quote[0], 'approval_id': approval_id, 'part_number': part, 'quantity': quantity, 'created_at': quote[1]}
 
     def list_quotes(self, user_id: int, project_id: int):
@@ -107,9 +105,9 @@ class QuoteService:
 
     def list_cases(self, user_id: int):
         with auth.connection() as conn:
-            rows = conn.execute('SELECT id,approval_id,snapshot,created_at FROM approved_cases WHERE user_id=%s ORDER BY id DESC', (user_id,)).fetchall()
-            return [{'id': r[0], 'approval_id': r[1], 'candidate_part': r[2]['candidate']['part'],
-                     'verdict': r[2]['candidate']['verdict'], 'created_at': r[3]} for r in rows]
+            rows = conn.execute("""SELECT c.id,c.approval_id,a.candidate_part,a.verdict,c.created_at FROM approved_cases c
+                JOIN approvals a ON a.id=c.approval_id WHERE c.user_id=%s ORDER BY c.id DESC""", (user_id,)).fetchall()
+            return [{'id': r[0], 'approval_id': r[1], 'candidate_part': r[2], 'verdict': r[3], 'created_at': r[4]} for r in rows]
 
     def delete_case(self, user_id: int, case_id: int):
         with auth.connection() as conn:

@@ -22,7 +22,7 @@
 ## 파일
 - `demo.py` — 키 없는 데모의 LLM 응답 기록(`recorder`) · 재생(`replayer`, 기록에 없으면 노드 이름을 담은 `ReplayMiss`), 재생 모드 판단(`enabled`, `DEMO_REPLAY=1` · `DEMO_MODE=1`), 서비스 재생 chat(`service_chat`, 기록 파일이 없으면 부를 때 503), 기록한 데모 질문 목록 · 대조(`questions` · `match`, `data/demo/recordings/outcomes.json`)와 질문 목록을 붙인 422(`refusal`). 유료 모델을 부르지 않는다.
 - `__init__.py` — 패키지 표시
-- `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 저장하고 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
+- `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 `approvals`에만 저장하고(후보 · verdict · 식별 품번은 칸 3개로도 저장, 견적 · 승인 사례에는 복사하지 않는다) 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
 - `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 노드별 `langfuse_prompts.NODE_MODELS`를 `node_model(node)`로 고르고 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나, ADR 0014), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
 
 Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.

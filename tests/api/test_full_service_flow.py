@@ -9,6 +9,7 @@ from psycopg import sql
 from psycopg.types.json import Jsonb
 
 from backend import auth
+from tests.db_schema import apply_service_schema
 
 
 @pytest.fixture
@@ -23,8 +24,7 @@ def full_storage(monkeypatch):
         monkeypatch.setattr(auth, 'connection', connect)
         try:
             with connect() as conn:
-                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '018_projects.sql', '019_conversations.sql', '020_approvals_quotes.sql'):
-                    conn.execute(Path('db', name).read_text(encoding='utf-8-sig'))
+                apply_service_schema(conn)
                 users = [row[0] for row in conn.execute("INSERT INTO users(login_id,password_hash,role) VALUES ('flow-owner@test','fake','user'),('flow-other@test','fake','user') RETURNING id")]
             yield users, connect
         finally:
@@ -69,8 +69,15 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
     with pytest.raises(psycopg.errors.CheckViolation), connect() as conn:
         conn.execute("UPDATE approvals SET snapshot=snapshot || %s WHERE id=%s", (Jsonb({'product_url': 'https://forbidden.test'}), approval['id']))
     with connect() as conn:
-        stored = ''.join(row[0] for row in conn.execute('SELECT snapshot::text FROM approvals UNION ALL SELECT snapshot::text FROM quotes UNION ALL SELECT snapshot::text FROM approved_cases'))
+        stored = ''.join(row[0] for row in conn.execute('SELECT snapshot::text FROM approvals'))
+        # [왜] 스냅샷은 approvals 한 곳뿐이다: 견적 · 승인 사례에는 snapshot 칸이 없고, 승인 칸 3개가 스냅샷과 같은 값을 가진다
+        assert conn.execute("SELECT count(*) FROM information_schema.columns WHERE table_schema=current_schema() AND column_name='snapshot' "
+                            "AND table_name IN ('quotes','approved_cases')").fetchone()[0] == 0
+        assert conn.execute('SELECT candidate_part,verdict,part_number FROM approvals WHERE id=%s', (approval['id'],)).fetchone() == ('SS34', 'ROLE_SUFFICIENT', 'SS34')
     assert not any(key in stored for key in ('price', 'stock', 'availability', 'product_url', 'fetched_at'))
+    # [주의] 승인당 견적은 DB가 하나로 막지 않는다(quotes에 approval_id UNIQUE 없음): 같은 승인으로 두 번째 견적도 저장된다
+    assert quotes.create_quote(owner, approval['id'], 1)['id'] != quote['id']
+    assert len(quotes.list_quotes(owner, project.id)) == 2
 
     quotes.delete_case(owner, approval['case_id'])
     assert quotes.list_cases(owner) == []
@@ -109,7 +116,7 @@ def test_approval_and_quote_with_maker_name_or_order_code_in_real_postgres(full_
 
 
 def test_quote_for_an_old_approval_without_identifier_uses_the_same_rule(full_storage):
-    """식별 품번(part_number)이 없던 옛 승인 스냅샷도 견적을 저장한다(이미 운영 DB에 있는 승인)."""
+    """식별 품번 칸(approvals.part_number)이 NULL인 옛 승인(expand 뒤 contract 전)도 같은 규칙으로 계산해 견적을 저장한다."""
     from backend.conversations.repository import ConversationRepository
     from backend.projects.netlist import PARSER_VERSION, normalize_netlist
     from backend.projects.repository import ProjectRepository
@@ -127,7 +134,8 @@ def test_quote_for_an_old_approval_without_identifier_uses_the_same_rule(full_st
         'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
     })
     approval = quotes.approve(owner, conversations.get_run(owner, run)['message_id'], 'SS34', 'ROLE_SUFFICIENT')
-    with connect() as conn:  # 옛 승인: 식별 품번 칸이 없는 스냅샷
-        conn.execute("UPDATE approvals SET snapshot = snapshot #- '{candidate,part_number}' WHERE id=%s", (approval['id'],))
+    with connect() as conn:  # 옛 승인: contract(NOT NULL) 전의 expand 상태를 흉내 낸다. 칸 part_number가 NULL이고 스냅샷에도 식별 품번이 없다
+        conn.execute('ALTER TABLE approvals ALTER COLUMN part_number DROP NOT NULL')
+        conn.execute("UPDATE approvals SET part_number=NULL, snapshot = snapshot #- '{candidate,part_number}' WHERE id=%s", (approval['id'],))
     assert quotes.create_quote(owner, approval['id'], 3)['part_number'] == 'SS34'
 

@@ -39,7 +39,7 @@ def test_snapshot_uses_the_explicitly_confirmed_verdict_for_duplicate_part_numbe
 
 
 def test_forbidden_keys_match_the_sql_check():
-    # [왜] 승인 · 승인 사례 · 견적 snapshot의 DB 검사(db/020)와 코드의 금지 키가 어긋나면 저장이 거부되거나 가격이 저장된다
+    # [왜] 승인 snapshot(approvals)의 DB 검사(db/020)와 코드의 금지 키가 어긋나면 저장이 거부되거나 가격이 저장된다
     import re
     from pathlib import Path
     from backend.services.quote import FORBIDDEN
