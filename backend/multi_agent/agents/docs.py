@@ -216,18 +216,20 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
             return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
                           reason=Reason.VERIFY_FAILED, docs=shown)
-        if (repaired.grade != 'none' and repaired_cites & valid and not (repaired_cites - valid)
-                and not has_uncited_sentence(repaired_answer)):
+        if repaired.grade != 'none' and repaired_cites & valid:
             result, answer = repaired, repaired_answer
     answer, dropped_fake = drop_fake_citations(answer, valid)
-    if has_uncited_sentence(answer):
-        return report('fail', 'answer contains sentences without evidence citations after bounded correction',
-                      reason=Reason.VERIFY_FAILED, docs=shown)
+    dropped_uncited = has_uncited_sentence(answer)
+    if dropped_uncited:
+        # Keep only already-cited sentences; never attach a neighbour's citation to an unsupported claim.
+        answer = ' '.join(s for s in re.split(r'(?<=[.。])\s+', answer) if citations(s) & valid).strip()
     cited = citations(answer)
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake else 'partial'
-    summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
+    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
+    summary = (f'{status}: answered from {len(cited & valid)} evidence'
+               + ('; removed unverified sentences' if dropped_fake or dropped_uncited else '')
+               + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else ''))
     return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
                   evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

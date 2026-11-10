@@ -29,6 +29,54 @@ SAVED_SMOKE02_VOLTAGE = [
     '1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [16]. 이 값은 TA = 25°C 기준 절대 최대 정격 표에 적힌 값입니다 [16]. 패키지와 극성 식별 방법은 제공된 근거에 없어 답할 수 없습니다.',
 ]
 
+# Exact T1-attack responses from smoke03 (raw SHA256 starts 097eda7c36ed).
+SAVED_SMOKE03_VOLTAGE = [
+    D.DocsAnswer(grade='enough', answer='1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS]. 패키지는 증거에서 확인되지 않았습니다. 다만 넷리스트 D1 항목에 Diode:DO-41로 표기되어 있습니다 [넷리스트].', missing=['1N4007G 데이터시트 자체에서 패키지 명시 근거 없음 (넷리스트의 DO-41 표기는 회로 기준 정보)']),
+    D.DocsAnswer(grade='enough', answer='1N4007G의 반복 피크 역전압 VRRM 정격은 1000 V입니다 [1N4001G SERIES_P2104.pdf · 1쪽 · ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)]. 시리즈 표에서 1N 4007G 열에 1000, 단위는 V로 기재되어 있습니다 [16]. 패키지 정보는 제공된 근거에 없어 확인할 수 없습니다.', missing=['1N4007G의 패키지 정보']),
+]
+SAVED_SMOKE03_SUPPORTED = '시리즈 표에서 1N 4007G 열에 1000, 단위는 V로 기재되어 있습니다 [16].'
+
+
+def test_smoke03_keeps_existing_supported_sentence_without_fabricating_a_repair():
+    report, calls, searches = citation_replay(SAVED_SMOKE03_VOLTAGE)
+    assert report['status']=='partial' and report['answer']==SAVED_SMOKE03_SUPPORTED
+    assert report['evidence_ids']==['16'] and report['missing']==['1N4007G의 패키지 정보']
+    assert 'removed' in report['summary'] and len(calls)==2 and len(searches)==1
+    source = next(d for d in report['docs'] if d['chunk_id']==16)
+    assert 'SYMBOL: VRRM' in source['content'] and '1N 4007G: 1000 | UNIT: V' in source['content']
+
+
+def test_smoke03_preserved_sentence_reaches_single_answer_and_multi_task_synth_input():
+    from backend.multi_agent import supervisor as S
+    report, _, _ = citation_replay(SAVED_SMOKE03_VOLTAGE)
+    state = dict(question='1N4007G의 VRRM과 패키지?',reports=[report],plan={'next':'tasks'},round=1,counters={'hops':1})
+    state.update(S.collect_node(state))
+    assert state['outcome']=='single'
+    state.update(S.single_node(state))
+    state.update(S.check_node(state))
+    assert state['answer']==SAVED_SMOKE03_SUPPORTED and not state.get('refusal_reason')
+    assert state['check']['used']==['16'] and state['check']['uncited_sentences']==0
+    package = dict(task=2,agent='docs',status='ok',summary='package',answer='패키지는 DO-41입니다 [5].',docs=smoke_cards(),evidence_ids=['5'])
+    state.update(reports=[report,package],final_reports=[])
+    state.update(S.collect_node(state))
+    assert state['outcome']=='synth'
+    text=S.render_synth(state,S.final_reports(state))
+    assert SAVED_SMOKE03_SUPPORTED in text and '패키지 정보는 제공된 근거에 없어' not in text
+
+
+def test_uncited_or_fake_only_reply_still_fails_without_inventing_citations():
+    bad=D.DocsAnswer(grade='enough',answer='1N4007G의 VRRM은 1000 V입니다. 패키지는 DO-41입니다 [999].')
+    report,calls,_=citation_replay([bad,bad])
+    assert report['status']=='fail' and report['reason']=='verify_failed' and report['answer']==''
+    assert len(calls)==2
+
+
+def test_citation_does_not_transfer_to_an_adjacent_uncited_claim():
+    mixed=D.DocsAnswer(grade='enough',answer='VRRM은 1000 V입니다 [16]. 1200 V에서도 사용을 승인합니다.')
+    report,_,_=citation_replay([mixed,mixed])
+    assert report['status']=='partial' and report['answer']=='VRRM은 1000 V입니다 [16].'
+    assert '1200' not in report['answer'] and report['evidence_ids']==['16']
+
 
 @pytest.mark.parametrize('saved', SAVED_SMOKE02_VOLTAGE)
 def test_smoke02_uncited_absence_claim_requests_bounded_task_scoped_repair(saved):
@@ -40,11 +88,12 @@ def test_smoke02_uncited_absence_claim_requests_bounded_task_scoped_repair(saved
     assert 'only the assigned task' in calls[1]
 
 
-def test_smoke02_persisting_contradiction_is_rejected_instead_of_joined():
+def test_smoke02_persisting_uncited_claim_is_removed_while_cited_fact_survives():
     saved = D.DocsAnswer(grade='enough', answer=SAVED_SMOKE02_VOLTAGE[2])
     result, calls, _ = citation_replay([saved, saved])
-    assert result['status'] == 'fail' and result['reason'] == 'verify_failed'
-    assert not result['answer'] and len(calls) == 2
+    assert result['status'] == 'partial' and result['reason'] is None
+    assert result['answer'] == '1N4007G의 반복 최대 역전압 VRRM 정격은 1000 V입니다 [16].'
+    assert '근거에 없습니다' not in result['answer'] and len(calls) == 2
 
 
 def test_enough_with_missing_is_not_reported_as_complete():
