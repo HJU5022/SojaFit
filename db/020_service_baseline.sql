@@ -331,7 +331,7 @@ BEGIN
         LIMIT batch_size
         FOR UPDATE OF p SKIP LOCKED
     LOOP
-        DELETE FROM public.projects WHERE id = victim.id;  -- 회로 · 대화 · 분석 기록 · run · 메시지 · 승인 · 견적은 cascade, 체크포인트는 트리거가 지운다
+        DELETE FROM public.projects WHERE id = victim.id;  -- 체크포인트는 expand가 만든 트리거가 지운다
         done := done + 1;
     END LOOP;
     RETURN done;

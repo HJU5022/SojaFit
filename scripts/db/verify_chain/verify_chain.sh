@@ -5,6 +5,7 @@
 #   예: bash scripts/db/verify_chain/verify_chain.sh pgvector/pgvector:pg16 rd-schema-db16 55450
 # [왜] 기준선과 운영 이전 SQL이 따로 자라면 새 DB와 운영 DB의 구조가 갈라진다. 이 비교가 0줄이어야 한다.
 set -u
+RC=0   # 비교에서 차이(허용 목록 밖)가 나오면 1로 끝낸다
 IMG=$1; NAME=$2; PORT=$3
 R="$(cd "$(dirname "$0")/../../.." && pwd)"; V="$R/db/redesign/verify"; TB="$R/db/migrations"
 S="${OUT:-/tmp/rd_chain_out}"; mkdir -p "$S"; PY="${PY:-uv run --no-sync python}"
@@ -27,12 +28,13 @@ $PY $V/lib/rd_struct.py $PORT old > $S/${NAME}_migrated.txt
 mk chain; DB=chain; apply $(ls $R/db/*.sql | sort); q chain < $V/sql/rd_stub.sql
 $PY $V/lib/rd_struct.py $PORT chain > $S/${NAME}_chain.txt
 diff <(grep -v app_migrations $S/${NAME}_migrated.txt) <(grep -v app_migrations $S/${NAME}_chain.txt) > $S/${NAME}_chain_diff.txt
-echo "== 새 기준선 vs 옛 체인 + 운영 이전 결과: 구조 차이 줄 수 $(wc -l < $S/${NAME}_chain_diff.txt) (app_migrations 줄 제외)"; head -20 $S/${NAME}_chain_diff.txt
+echo "== 새 기준선 vs 옛 체인 + 운영 이전 결과: 구조 차이 줄 수 $(wc -l < $S/${NAME}_chain_diff.txt) (app_migrations 줄 제외)"; head -20 $S/${NAME}_chain_diff.txt; [ -s $S/${NAME}_chain_diff.txt ] && RC=1
 # 3b. 옛 증분 체인 전체(000~029)와도 비교(legacy 폴더가 이력으로 남아도 기준선과 같은 결과를 내야 한다)
 mk legfull; DB=legfull; apply $(legacy_chain 9999); q legfull < $V/sql/rd_stub.sql
 $PY $V/lib/rd_struct.py $PORT legfull > $S/${NAME}_legacyfull.txt
-diff <(grep -v app_migrations $S/${NAME}_legacyfull.txt) <(grep -v app_migrations $S/${NAME}_chain.txt) > $S/${NAME}_legacyfull_diff.txt
-echo "== 새 기준선 vs 옛 증분 체인 000~029: 구조 차이 줄 수 $(wc -l < $S/${NAME}_legacyfull_diff.txt)"; head -20 $S/${NAME}_legacyfull_diff.txt
+# 허용: 옛 증분 파일(legacy 020)은 재귀 함수에 search_path를 붙이지 않았다(백업 복원 불가였던 원인). 기준선만 붙인다
+diff <(grep -v app_migrations $S/${NAME}_legacyfull.txt) <(grep -v app_migrations $S/${NAME}_chain.txt) | grep '^[<>]' | grep -vE '^[<>] FCFG public\.quote_snapshot_has_forbidden_key\(' > $S/${NAME}_legacyfull_diff.txt
+echo "== 새 기준선 vs 옛 증분 체인 000~029: 구조 차이 줄 수 $(wc -l < $S/${NAME}_legacyfull_diff.txt) (허용: 옛 파일에는 없는 search_path 설정)"; head -20 $S/${NAME}_legacyfull_diff.txt; [ -s $S/${NAME}_legacyfull_diff.txt ] && RC=1
 echo "== 이력 표: 체인 $(q chain <<< 'SELECT string_agg(version, $$,$$ ORDER BY applied_at, version) FROM app_migrations')"
 echo "== 이력 표: 이전 $(q old <<< 'SELECT string_agg(version, $$,$$ ORDER BY applied_at, version) FROM app_migrations')"
 # 4. 되돌리기 B2 → B1 → A 뒤 처음 구조(000~026)와 비교(app_migrations · RLS · 단순 검사 이름 제외)
@@ -53,8 +55,13 @@ for k in B2b B2 B1; do q old < $S/rb_$k.sql >/dev/null 2>&1 || echo "ERROR $k"
 done
 q old < $S/rb_A.sql >/dev/null 2>&1 || echo "ERROR A"
 $PY $V/lib/rd_struct.py $PORT old > $S/${NAME}_rolledback.txt
-diff <(grep -v "app_migrations\|ck_runs_safe_result" $S/${NAME}_asis.txt) <(grep -v "app_migrations\|ck_runs_safe_result" $S/${NAME}_rolledback.txt) > $S/${NAME}_rb_diff.txt
-echo "== 되돌리기 뒤 처음 구조와 차이 줄 수 $(wc -l < $S/${NAME}_rb_diff.txt) (RLS · 함수 권한 줄 포함, app_migrations · 단순 검사 이름 제외)"; head -20 $S/${NAME}_rb_diff.txt
+diff $S/${NAME}_asis.txt $S/${NAME}_rolledback.txt | grep '^[<>]' > $S/${NAME}_rb_diff_raw.txt
+# 되돌리기 뒤에도 남는 것으로 알려진 차이(명시 허용 목록. 여기 없는 줄은 모두 실패다):
+#  ① app_migrations 표와 그 줄(이력 표는 남긴다) ② 새 단순 검사 ck_runs_safe_result(B1이 지우지 않고 옛 검사 runs_safe_result_check 옆에 둠, 무해)
+#  ③ 재귀 함수 2개의 search_path 설정(FCFG, 백업 복원 가능하게 일부러 남김) ④ 그 함수의 본문 해시는 같아야 하므로 허용하지 않음
+ALLOW='app_migrations|^[<>] CON  public\.runs ck_runs_safe_result |^[<>] FCFG public\.(quote_snapshot_has_forbidden_key|conversation_json_matches)\('
+grep -vE "$ALLOW" $S/${NAME}_rb_diff_raw.txt > $S/${NAME}_rb_diff.txt
+echo "== 되돌리기 뒤 처음 구조와 허용 목록 밖 차이 줄 수 $(wc -l < $S/${NAME}_rb_diff.txt) (허용: app_migrations · 단순 검사 ck_runs_safe_result · 재귀 함수 search_path 설정, 원본 차이 $(wc -l < $S/${NAME}_rb_diff_raw.txt)줄)"; head -20 $S/${NAME}_rb_diff.txt; [ -s $S/${NAME}_rb_diff.txt ] && RC=1
 # 되돌리기가 다시 만든 표 · 함수의 보안 상태를 직접 확인한다: RLS OFF 표(내 소유) 0개, 공개 역할 · PUBLIC 권한이 남은 표 0개, 함수 PUBLIC 실행 권한 없음
 q old <<'SQLEOF' | sed 's/^/   /'
 SELECT 'RLS OFF 표: ' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -65,3 +72,4 @@ SELECT 'PUBLIC 권한 남은 서비스 표: ' || count(*) FROM pg_class c JOIN p
 SELECT 'conversation_json_matches PUBLIC 실행 권한: ' || COALESCE((SELECT bool_or(a.grantee = 0) FROM pg_proc p, LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a WHERE p.proname = 'conversation_json_matches'), false);
 SQLEOF
 docker rm -f $NAME >/dev/null 2>&1
+exit $RC
