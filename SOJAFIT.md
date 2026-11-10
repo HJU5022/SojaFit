@@ -328,6 +328,7 @@ SojaFit (proj3-b)
 │           ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
 │           ├── rd_test4.sh  <- P1만 적용한 중간 상태에서 옛 삭제 경로 · 청소 함수
 │           ├── rd_test5.sh  <- expand만 적용 + 새 코드 행 + expand 되돌리기
+│           ├── rd_test6.sh  <- 이전 SQL의 데이터 손실 가드: 정상 데이터는 통과, 위반 데이터(display_name 값 · 다른 snapshot · 승인 행 · 승인 대기 행)는 중단
 │           ├── lib/        <- 검증 보조 코드
 │           │   └── rd_struct.py  <- 서비스 표 구조를 정규화해 출력(비교용)
 │           └── sql/        <- 검증용 표본 데이터 · 체크포인트 대역 표

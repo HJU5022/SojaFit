@@ -7,12 +7,19 @@
 - 담당: 서비스·운영
 
 ## 순서 (운영, 정운이 백업 뒤 직접 실행)
-1. `migrate_prod_1_expand.sql` — 옛 코드가 돌고 있어도 안전한 "더하기"만(새 칸 · 검사 · 인덱스 · FK · 이력 표). 머리에 `pg_dump` 백업 명령.
+1. `migrate_prod_1_expand.sql` — 옛 코드가 돌고 있어도 안전한 "더하기"만(새 칸 · 검사 · 인덱스 · FK · 이력 표). 머리에 `pg_dump` 백업 명령(세 파일: sojafit_agent 전체 · public 서비스 표 · public 구조 + 함수).
 2. P1 새 코드 배포(0% → 점검 → 100%) → 스모크.
 3. `migrate_prod_2_contract_p1.sql` — 되돌릴 수 없는 삭제(스냅샷 복사본 · `display_name`).
 4. P2 새 코드 배포 → `migrate_prod_3_contract_p2.sql`. 선택: `migrate_prod_2b_optional_drop_dead_auth.sql`(구글 승인 대기 표 삭제, 코드 제거 배포 뒤에만).
-5. 되돌리기: `migrate_prod_4_rollback.sql`을 **적용의 반대 순서**(B2b → B2 → B1 → A)로 한 절씩. contract 뒤에는 **코드보다 DB를 먼저** 되돌린다(옛 코드가 지운 칸을 읽는다). B1 끝의 셸 단계(`db/legacy/`의 옛 검사 · 청소 함수 재생성 + `REVOKE`)도 실행한다. 다시 만든 표는 RLS ON, 함수는 PUBLIC 실행 권한 없음으로 돌아온다.
+5. 되돌리기: `migrate_prod_4_rollback.sql`을 **적용의 반대 순서**(B2b → B2 → B1 → A)로 한 절씩. contract 뒤에는 **코드보다 DB를 먼저** 되돌린다(옛 코드가 지운 칸을 읽는다). 되돌린 회로 사본은 옛 코드가 읽는 `{components, nets}` 모양으로 복사된다. B1 끝의 셸 단계(`db/legacy/`의 옛 검사 · 청소 함수 재생성 + `REVOKE`)도 실행한다. 다시 만든 표는 RLS ON, 함수는 PUBLIC 실행 권한 없음으로 돌아온다.
 - 검증: `scripts/db/verify_chain/verify_chain.sh`가 일회용 Postgres 16 · 17에서 "옛 구조 + 이 SQL들 = 새 기준선", "되돌리기 뒤 = 처음 구조(RLS · 함수 권한 포함)"를 확인한다. 운영 DB에는 실행한 적이 없다.
+
+## 데이터 손실 가드 (11-11)
+- 되돌릴 수 없는 삭제 앞에 사전 점검(`DO` 블록)이 있어 **버려지는 데이터가 있으면 명시 확인 없이는 `EXCEPTION`으로 중단**한다(트랜잭션 전체 롤백). 점검 수치는 `NOTICE`로 찍힌다. 확인하려면 같은 `psql` 세션에서 먼저 `SET`한다: `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_display_name='yes'" -f db/migrations/migrate_prod_2_contract_p1.sql`
+- `2_contract_p1`: `users.display_name`에 값이 있으면 `app.ack_drop_display_name`, `quotes` · `approved_cases`의 snapshot이 `approvals.snapshot`과 다르면(NULL은 통과) 확인 변수로도 못 넘기고 중단.
+- `3_contract_p2`: `sojafit_agent.approvals`에 행이 있으면 `app.ack_drop_agent_approvals`, public 회로로 되살릴 수 없는 `sojafit_agent.circuits` 사본이 있으면 `app.ack_drop_agent_circuits`.
+- `2b`: `auth_google_pending`에 행이 있으면 `app.ack_drop_google_pending`.
+- 시험: `db/redesign/verify/rd_test6.sh`가 가짜 운영 구조에서 정상 데이터는 통과하고 위반 데이터는 막히는 것을 확인한다.
 
 ## 파일
 - `migrate_prod_1_expand.sql` — 1단계 expand

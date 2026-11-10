@@ -6,7 +6,27 @@
 --      sojafit_agent.circuits(분석 회로 사본)와 sojafit_agent.approvals(옛 승인 경로)를 읽지도 쓰지도 않고 회로 · 파일 이름은 public.circuits · projects에서 읽는다.
 --   ③ 실행 직전 백업을 받았다.
 -- 되돌리기: migrate_prod_4_rollback.sql의 B2 절(회로 사본은 public에서 다시 만든다, 승인 표는 0행이었다).
+-- 데이터 손실 가드: 지워지는 표에 데이터가 있으면 명시 확인 없이는 중단한다. 같은 psql 세션에서 먼저 SET 한다:
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_agent_approvals='yes'" -c "SET app.ack_drop_agent_circuits='yes'" -f db/migrations/migrate_prod_3_contract_p2.sql
 BEGIN;
+
+-- G1. 사전 점검(삭제 전)
+DO $$
+DECLARE n bigint;
+BEGIN
+    SELECT count(*) INTO n FROM sojafit_agent.approvals;
+    RAISE NOTICE '[점검] sojafit_agent.approvals 행: % (0행이어야 한다. 이 표는 삭제된다)', n;
+    IF n > 0 AND COALESCE(current_setting('app.ack_drop_agent_approvals', true), '') <> 'yes' THEN
+        RAISE EXCEPTION 'sojafit_agent.approvals에 %행이 있다. 옛 승인 경로의 기록이라 되살릴 수 없다. 지워도 되면 SET app.ack_drop_agent_approvals=''yes'' 를 같은 세션에서 먼저 실행하라', n;
+    END IF;
+    -- 분석 회로 사본은 public.circuits의 복사본이라 지워도 되살린다(되돌리기 B2). 단 thread가 가리키지 않는 사본 · 대응하는 public 회로가 없는 사본은 되살릴 수 없다
+    SELECT count(*) INTO n FROM sojafit_agent.circuits c
+        WHERE NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t JOIN public.threads pt ON pt.id = t.id JOIN public.circuits pc ON pc.project_id = pt.project_id WHERE t.circuit_id = c.id);
+    RAISE NOTICE '[점검] 대응하는 public 회로가 없어 되살릴 수 없는 sojafit_agent.circuits 행: %', n;
+    IF n > 0 AND COALESCE(current_setting('app.ack_drop_agent_circuits', true), '') <> 'yes' THEN
+        RAISE EXCEPTION 'sojafit_agent.circuits % 행은 public.circuits에서 되살릴 수 없다(thread가 없거나 화면 대화가 없음). 지워도 되면 SET app.ack_drop_agent_circuits=''yes'' 를 먼저 실행하라', n;
+    END IF;
+END $$;
 
 -- C3. 분석 서비스: 회로 사본 · 죽은 승인 표 제거, 삭제 규칙을 CASCADE로
 ALTER TABLE sojafit_agent.threads DROP CONSTRAINT threads_circuit_id_fkey;
@@ -16,7 +36,7 @@ ALTER TABLE sojafit_agent.threads ADD CONSTRAINT threads_user_id_fkey FOREIGN KE
 DROP TABLE sojafit_agent.circuits;
 DROP TABLE sojafit_agent.approvals;
 
--- C5. 청소 함수 교체(같은 이름 · 같은 인자). 새 본문은 baseline_service.sql과 같다
+-- C5. 청소 함수 교체(같은 이름 · 같은 인자). 새 본문은 db/020_service_baseline.sql과 같다
 CREATE OR REPLACE FUNCTION sojafit_agent.purge_inactive_projects(keep_days integer DEFAULT 60, batch_size integer DEFAULT 20)
 RETURNS integer LANGUAGE plpgsql AS $$
 DECLARE

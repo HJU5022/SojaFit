@@ -8,7 +8,29 @@
 -- 하는 일: 승인 칸 NOT NULL, 스냅샷 복사본 2개 제거, 앱 JSON 모양을 복제하던 검사를 단순 검사로 교체, 미사용 칸 제거.
 -- 분석 서비스(sojafit_agent) 쪽 정리는 코드 변경이 커서 migrate_prod_3_contract_p2.sql로 따로 둔다(P1만 먼저 끝낼 수 있다).
 -- 되돌리기: migrate_prod_4_rollback.sql의 B1 절(지운 것은 모두 다른 표의 복사본이거나 미사용이라 무손실).
+-- 데이터 손실 가드: 아래 삭제가 버리는 값이 있으면 **명시 확인 없이는 중단**한다. 확인이 필요하면 같은 psql 세션에서 먼저 SET 한다:
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SET app.ack_drop_display_name='yes'" -f db/migrations/migrate_prod_2_contract_p1.sql
 BEGIN;
+
+-- G1. 사전 점검(삭제 전). 사전 점검 수치는 NOTICE로 찍힌다
+DO $$
+DECLARE n bigint; named bigint; cases bigint;
+BEGIN
+    SELECT count(display_name) INTO named FROM public.users;
+    RAISE NOTICE '[점검] users.display_name 값이 있는 행: % (이 칸은 삭제된다)', named;
+    IF named > 0 AND COALESCE(current_setting('app.ack_drop_display_name', true), '') <> 'yes' THEN
+        RAISE EXCEPTION 'users.display_name에 값이 있는 행이 %개다. 지워도 되는지 확인한 뒤 SET app.ack_drop_display_name=''yes'' 를 같은 세션에서 먼저 실행하라', named;
+    END IF;
+    -- quotes · approved_cases의 snapshot은 approvals.snapshot과 같다는 가정이 삭제의 근거다. NULL(새 코드가 안 채움)은 허용, 값이 있는데 다르면 중단
+    SELECT count(*) INTO n FROM public.quotes q JOIN public.approvals a ON a.id = q.approval_id
+        WHERE q.snapshot IS NOT NULL AND q.snapshot IS DISTINCT FROM a.snapshot;
+    RAISE NOTICE '[점검] quotes.snapshot이 approvals.snapshot과 다른 행: %', n;
+    IF n > 0 THEN RAISE EXCEPTION 'quotes.snapshot % 행이 approvals.snapshot과 다르다: 복사본이 아니므로 지우면 정보가 사라진다', n; END IF;
+    SELECT count(*) INTO cases FROM public.approved_cases c JOIN public.approvals a ON a.id = c.approval_id
+        WHERE c.snapshot IS NOT NULL AND c.snapshot IS DISTINCT FROM a.snapshot;
+    RAISE NOTICE '[점검] approved_cases.snapshot이 approvals.snapshot과 다른 행: %', cases;
+    IF cases > 0 THEN RAISE EXCEPTION 'approved_cases.snapshot % 행이 approvals.snapshot과 다르다: 복사본이 아니므로 지우면 정보가 사라진다', cases; END IF;
+END $$;
 
 -- C0. 옛 코드가 expand 뒤 배포 전까지 넣은 승인 행(새 칸 NULL)을 채우고 NOT NULL로 만든다
 UPDATE public.approvals SET
