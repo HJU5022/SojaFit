@@ -62,14 +62,37 @@ diff $S/${NAME}_asis.txt $S/${NAME}_rolledback.txt | grep '^[<>]' > $S/${NAME}_r
 ALLOW='app_migrations|^[<>] CON  public\.runs ck_runs_safe_result |^[<>] FCFG public\.(quote_snapshot_has_forbidden_key|conversation_json_matches)\('
 grep -vE "$ALLOW" $S/${NAME}_rb_diff_raw.txt > $S/${NAME}_rb_diff.txt
 echo "== 되돌리기 뒤 처음 구조와 허용 목록 밖 차이 줄 수 $(wc -l < $S/${NAME}_rb_diff.txt) (허용: app_migrations · 단순 검사 ck_runs_safe_result · 재귀 함수 search_path 설정, 원본 차이 $(wc -l < $S/${NAME}_rb_diff_raw.txt)줄)"; head -20 $S/${NAME}_rb_diff.txt; [ -s $S/${NAME}_rb_diff.txt ] && RC=1
-# 되돌리기가 다시 만든 표 · 함수의 보안 상태를 직접 확인한다: RLS OFF 표(내 소유) 0개, 공개 역할 · PUBLIC 권한이 남은 표 0개, 함수 PUBLIC 실행 권한 없음
-q old <<'SQLEOF' | sed 's/^/   /'
+# 권한 확인(되돌린 DB와 새 기준선 DB 둘 다): RLS OFF 서비스 표 0, PUBLIC · anon · authenticated 표 권한 0, PUBLIC 실행 가능 함수 0. 하나라도 있으면 실패.
+# [주의] 기준선 DB는 compose initdb처럼 db/*.sql(026 포함)을 적용한 것이고, 체크포인트 대역 표(rd_stub)는 026 뒤에 만들어져 RLS 검사에서 뺀다.
+secchk() { # <db> <설명>
+  local out; out=$(q $1 <<'SQLEOF'
 SELECT 'RLS OFF 표: ' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
- WHERE n.nspname IN ('public','sojafit_agent') AND c.relkind IN ('r','p') AND NOT c.relrowsecurity AND pg_get_userbyid(c.relowner) = current_user
-   AND c.relname NOT IN ('source_documents','document_chunks','chunk_embeddings','chunk_embedding_bits') AND c.relname NOT LIKE 'checkpoint%' AND c.relname !~ '^store';
-SELECT 'PUBLIC 권한 남은 서비스 표: ' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace, LATERAL aclexplode(c.relacl) a
- WHERE n.nspname IN ('public','sojafit_agent') AND c.relkind IN ('r','p','S') AND a.grantee = 0;
-SELECT 'conversation_json_matches PUBLIC 실행 권한: ' || COALESCE((SELECT bool_or(a.grantee = 0) FROM pg_proc p, LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a WHERE p.proname = 'conversation_json_matches'), false);
+ WHERE n.nspname IN ('public','sojafit_agent') AND c.relkind IN ('r','p') AND NOT c.relrowsecurity AND pg_get_userbyid(c.relowner) = current_user AND c.relname NOT LIKE 'checkpoint%' AND c.relname !~ '^store';
+SELECT 'PUBLIC · 공개 역할 권한 남은 표 · 시퀀스: ' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace, LATERAL aclexplode(c.relacl) a
+ WHERE n.nspname IN ('public','sojafit_agent') AND c.relkind IN ('r','p','S') AND (a.grantee = 0 OR pg_get_userbyid(a.grantee) IN ('anon','authenticated'));
+SELECT 'PUBLIC 실행 가능 함수: ' || count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace, LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a
+ WHERE n.nspname IN ('public','sojafit_agent') AND a.grantee = 0 AND a.privilege_type = 'EXECUTE' AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e');
 SQLEOF
+)
+  echo "== 권한 확인($2)"; echo "$out" | sed 's/^/   /'
+  echo "$out" | grep -qE ': [1-9][0-9]*$' && { echo "   → 실패: 0이어야 한다"; RC=1; }
+}
+secchk old "되돌린 DB"
+secchk chain "새 기준선 DB"
+# 코퍼스 4표: 배포된 코드(716c6d6)의 db/*.sql이 만든 표와 새 기준선 DB의 표를 pg_dump -s 표별로 대조한다(RLS 켜는 줄은 026이 나중에 더한 것이라 뺀다)
+CORPUS_REF=${CORPUS_REF:-716c6d6}
+if git -C "${CORPUS_GIT:-$R}" cat-file -e $CORPUS_REF^{commit} 2>/dev/null; then
+  mk corp_ref
+  for f in $(git -C "${CORPUS_GIT:-$R}" ls-tree --name-only $CORPUS_REF db/ | grep '\.sql$' | sort); do git -C "${CORPUS_GIT:-$R}" show $CORPUS_REF:$f | q corp_ref 2>&1 | grep -iE "error|fatal" | head -2; done
+  cdiff=0
+  for t in source_documents document_chunks chunk_embeddings chunk_embedding_bits; do
+    a=$(docker exec $NAME pg_dump -U app -d corp_ref -s --no-owner --no-privileges -t public.$t | grep -vE '^--|^SET |^SELECT pg_catalog|^\\(un)?restrict |ENABLE ROW LEVEL SECURITY|^$')
+    b=$(docker exec $NAME pg_dump -U app -d chain -s --no-owner --no-privileges -t public.$t | grep -vE '^--|^SET |^SELECT pg_catalog|^\\(un)?restrict |ENABLE ROW LEVEL SECURITY|^$')
+    n=$(diff <(echo "$a") <(echo "$b") | grep -c '^[<>]'); echo "   코퍼스 표 $t: 배포 코드($CORPUS_REF)와 차이 ${n}줄"; cdiff=$((cdiff+n)); [ $n != 0 ] && diff <(echo "$a") <(echo "$b") | grep '^[<>]' | head -6 | cut -c1-160 | sed 's/^/      /' 
+  done
+  echo "== 코퍼스 4표 구조 대 $CORPUS_REF: 차이 줄 수 $cdiff"; [ $cdiff != 0 ] && RC=1
+else
+  echo "== 코퍼스 4표 구조 대 $CORPUS_REF: 건너뜀(저장소 $R에 커밋이 없다. git 저장소 안에서 돌려야 한다)"
+fi
 docker rm -f $NAME >/dev/null 2>&1
 exit $RC
