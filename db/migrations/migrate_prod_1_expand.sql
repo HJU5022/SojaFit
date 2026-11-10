@@ -29,6 +29,20 @@ BEGIN
     IF n > 0 THEN RAISE EXCEPTION 'agent.threads 고아 % 행: 같은 UUID의 public.threads가 없다. FK를 걸기 전에 정리해야 한다', n; END IF;
     SELECT count(*) INTO n FROM public.approvals WHERE snapshot #>> '{candidate,part}' IS NULL OR snapshot #>> '{candidate,verdict}' IS NULL;
     IF n > 0 THEN RAISE EXCEPTION 'approvals % 행의 snapshot에 candidate.part · verdict가 없다', n; END IF;
+    -- 칸으로 꺼낼 값이 새 CHECK(아래 E1)를 통과하는지: 어기면 ADD CONSTRAINT가 중간에 실패하므로 여기서 먼저 센다. 행 내용(질문 · 답)은 출력하지 않고 개수와 id만 낸다
+    SELECT count(*) INTO n FROM public.approvals
+        WHERE char_length(snapshot #>> '{candidate,part}') NOT BETWEEN 1 AND 100;
+    IF n > 0 THEN RAISE EXCEPTION 'approvals % 행의 candidate.part가 1~100자가 아니다 (id: %)', n,
+        (SELECT array_agg(id) FROM (SELECT id FROM public.approvals WHERE char_length(snapshot #>> '{candidate,part}') NOT BETWEEN 1 AND 100 ORDER BY id LIMIT 20) x); END IF;
+    SELECT count(*) INTO n FROM public.approvals WHERE snapshot #>> '{candidate,verdict}' NOT IN ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT');
+    IF n > 0 THEN RAISE EXCEPTION 'approvals % 행의 candidate.verdict가 허용 3값이 아니다 (id: %)', n,
+        (SELECT array_agg(id) FROM (SELECT id FROM public.approvals WHERE snapshot #>> '{candidate,verdict}' NOT IN ('IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT') ORDER BY id LIMIT 20) x); END IF;
+    -- 품번: E1이 만드는 값(candidate.part_number, 없으면 이름에서 제조사 이름을 떼고 공백을 '-'로 바꾼 값)이 품번 형식에 맞는지
+    SELECT count(*) INTO n FROM public.approvals WHERE COALESCE(snapshot #>> '{candidate,part_number}',
+        regexp_replace(regexp_replace(btrim(snapshot #>> '{candidate,part}'), '^\s*(TSC|Taiwan\s+Semiconductor)\s+', '', 'i'), '\s+', '-', 'g')) !~ '^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$';
+    IF n > 0 THEN RAISE EXCEPTION 'approvals % 행의 품번이 형식(영문 · 숫자 · . _ + / -, 100자)에 맞지 않는다 (id: %)', n,
+        (SELECT array_agg(id) FROM (SELECT id FROM public.approvals WHERE COALESCE(snapshot #>> '{candidate,part_number}',
+            regexp_replace(regexp_replace(btrim(snapshot #>> '{candidate,part}'), '^\s*(TSC|Taiwan\s+Semiconductor)\s+', '', 'i'), '\s+', '-', 'g')) !~ '^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$' ORDER BY id LIMIT 20) x); END IF;
     SELECT count(*) INTO n FROM public.projects WHERE (source_kind = 'demo') <> (demo_id IS NOT NULL);
     IF n > 0 THEN RAISE EXCEPTION 'projects % 행이 새 검사(데모일 때만 demo_id)에 맞지 않는다', n; END IF;
     SELECT count(*) INTO n FROM public.runs WHERE safe_result IS NOT NULL

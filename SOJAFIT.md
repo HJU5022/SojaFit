@@ -296,7 +296,11 @@ SojaFit (proj3-b)
 │   │   ├── 028_service_redesign_agent.sql  <- 재설계 2/3
 │   │   └── 029_drop_google_pending.sql  <- 재설계 3/3
 │   ├── migrations/         <- 운영 DB 이전 SQL(이미 서비스 표가 있는 DB용, 자동 실행하지 않음)
-│   │   ├── MIGRATIONS.md   <- 폴더 설명, 적용 순서와 되돌리기
+│   │   ├── MIGRATIONS.md   <- 폴더 설명, 적용 순서, 실행 전 점검, 풀러 · 백업 복원 안내, 되돌리기
+│   │   ├── precheck_1_before_expand.sql  <- expand 직전 읽기 전용 점검(개수만 출력)
+│   │   ├── precheck_2_before_p1.sql  <- P1 contract 직전 점검
+│   │   ├── precheck_3_before_p2.sql  <- P2 contract 직전 점검
+│   │   ├── precheck_4_before_2b.sql  <- 2b 직전 점검
 │   │   ├── migrate_prod_1_expand.sql  <- 운영 이전 1단계: 옛 코드가 돌아도 안전한 추가 변경
 │   │   ├── migrate_prod_2_contract_p1.sql  <- 운영 이전 2단계: 스냅샷 복사본 · 미사용 칸 삭제, 단순 검사
 │   │   ├── migrate_prod_2b_optional_drop_dead_auth.sql  <- 선택: 승인 대기 표 삭제(코드 제거 뒤)
@@ -328,11 +332,13 @@ SojaFit (proj3-b)
 │           ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
 │           ├── rd_test4.sh  <- P1만 적용한 중간 상태에서 옛 삭제 경로 · 청소 함수
 │           ├── rd_test5.sh  <- expand만 적용 + 새 코드 행 + expand 되돌리기
+│           ├── rd_test7.sh  <- 백업 복원 왕복(pg_dump -Fc → 빈 DB pg_restore): 새 기준선 · 이전 SQL 뒤 · 되돌린 뒤 · 이전 전 옛 구조, 오류 0 · 행 수 동일
 │           ├── rd_test6.sh  <- 이전 SQL의 데이터 손실 가드: 정상 데이터는 통과, 위반 데이터(display_name 값 · 다른 snapshot · 승인 행 · 승인 대기 행)는 중단
 │           ├── lib/        <- 검증 보조 코드
 │           │   └── rd_struct.py  <- 서비스 표 구조를 정규화해 출력(비교용)
 │           └── sql/        <- 검증용 표본 데이터 · 체크포인트 대역 표
-│               ├── rd_sample.sql  <- 표본 데이터
+│               ├── rd_sample.sql  <- 표본 데이터(옛 구조)
+│               ├── rd_sample_new.sql  <- 합성 데이터(새 기준선 구조, 백업 복원 시험용)
 │               └── rd_stub.sql  <- LangGraph 체크포인트 대역 표
 │
 ├── evals/                  <- 평가셋과 평가 실행. 루트에는 동결 평가셋만 둠 (고정: 루트의 평가셋·FROZEN.json)
