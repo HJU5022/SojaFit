@@ -1,0 +1,242 @@
+{
+ "D-v3a": {
+  "label": "v3 1세트",
+  "session": "gate-v3_draft-1110-0033-set1",
+  "n": 50,
+  "pass": 50,
+  "relevant": 25,
+  "relevant_pass": 25,
+  "type_match": 25,
+  "irrelevant": 25,
+  "refused_ok": 25,
+  "hallucination": 0,
+  "p50": 2.6,
+  "p95": 8.6,
+  "max": 10.3,
+  "runner_p95": 8.6,
+  "usd": 0.0523,
+  "usd_per_q": 0.00105,
+  "llm_calls": 107,
+  "by_node": {
+   "supervisor(claude-haiku-5.5)": 50,
+   "judge_read(claude-haiku-5.5)": 45,
+   "docs_answer(claude-haiku-5.5)": 11,
+   "card_read(claude-haiku-5.5)": 1
+  },
+  "fails": [],
+  "by_type": {
+   "candidate_find": [
+    8.2,
+    9.3
+   ],
+   "candidate_judge": [
+    6.5,
+    8.1
+   ],
+   "missing_attribute": [
+    1.5,
+    1.7
+   ],
+   "out_of_domain": [
+    1.1,
+    1.4
+   ],
+   "rating": [
+    6.8,
+    10.3
+   ],
+   "role": [
+    3.8,
+    4.8
+   ],
+   "unknown_entity": [
+    1.4,
+    1.6
+   ],
+   "wrong_period": [
+    1.4,
+    1.5
+   ]
+  }
+ },
+ "D-v3b": {
+  "label": "v3 2세트",
+  "session": "gate-v3_draft-1110-0034-set1",
+  "n": 50,
+  "pass": 50,
+  "relevant": 25,
+  "relevant_pass": 25,
+  "type_match": 25,
+  "irrelevant": 25,
+  "refused_ok": 25,
+  "hallucination": 0,
+  "p50": 3.65,
+  "p95": 8.9,
+  "max": 9.7,
+  "runner_p95": 8.9,
+  "usd": 0.0456,
+  "usd_per_q": 0.00091,
+  "llm_calls": 112,
+  "by_node": {
+   "supervisor(claude-haiku-5.5)": 50,
+   "judge_read(claude-haiku-5.5)": 48,
+   "docs_answer(claude-haiku-5.5)": 13,
+   "card_read(claude-haiku-5.5)": 1
+  },
+  "fails": [],
+  "by_type": {
+   "candidate_find": [
+    6.9,
+    9.7
+   ],
+   "candidate_judge": [
+    6.2,
+    8.7
+   ],
+   "missing_attribute": [
+    1.6,
+    1.6
+   ],
+   "out_of_domain": [
+    1.1,
+    1.4
+   ],
+   "rating": [
+    6.4,
+    9.1
+   ],
+   "role": [
+    6.1,
+    8.9
+   ],
+   "unknown_entity": [
+    1.4,
+    4.6
+   ],
+   "wrong_period": [
+    1.6,
+    1.9
+   ]
+  }
+ },
+ "R-v3a": {
+  "label": "v3 3세트(재현)",
+  "session": "gate-v3_draft-1110-0040-set1",
+  "n": 50,
+  "pass": 50,
+  "relevant": 25,
+  "relevant_pass": 25,
+  "type_match": 25,
+  "irrelevant": 25,
+  "refused_ok": 25,
+  "hallucination": 0,
+  "p50": 3.8,
+  "p95": 8.9,
+  "max": 12.3,
+  "runner_p95": 8.9,
+  "usd": 0.047,
+  "usd_per_q": 0.00094,
+  "llm_calls": 112,
+  "by_node": {
+   "supervisor(claude-haiku-5.5)": 50,
+   "judge_read(claude-haiku-5.5)": 48,
+   "docs_answer(claude-haiku-5.5)": 13,
+   "card_read(claude-haiku-5.5)": 1
+  },
+  "fails": [],
+  "by_type": {
+   "candidate_find": [
+    6.9,
+    9.4
+   ],
+   "candidate_judge": [
+    6.2,
+    8.9
+   ],
+   "missing_attribute": [
+    1.5,
+    1.8
+   ],
+   "out_of_domain": [
+    1.2,
+    1.6
+   ],
+   "rating": [
+    7.1,
+    12.3
+   ],
+   "role": [
+    4.0,
+    6.8
+   ],
+   "unknown_entity": [
+    1.3,
+    4.4
+   ],
+   "wrong_period": [
+    1.4,
+    2.3
+   ]
+  }
+ },
+ "R-v3b": {
+  "label": "v3 4세트(재현)",
+  "session": "gate-v3_draft-1110-0041-set1",
+  "n": 50,
+  "pass": 50,
+  "relevant": 25,
+  "relevant_pass": 25,
+  "type_match": 25,
+  "irrelevant": 25,
+  "refused_ok": 25,
+  "hallucination": 0,
+  "p50": 2.75,
+  "p95": 8.6,
+  "max": 9.8,
+  "runner_p95": 8.6,
+  "usd": 0.0443,
+  "usd_per_q": 0.00089,
+  "llm_calls": 109,
+  "by_node": {
+   "supervisor(claude-haiku-5.5)": 50,
+   "judge_read(claude-haiku-5.5)": 45,
+   "docs_answer(claude-haiku-5.5)": 13,
+   "card_read(claude-haiku-5.5)": 1
+  },
+  "fails": [],
+  "by_type": {
+   "candidate_find": [
+    7.0,
+    9.1
+   ],
+   "candidate_judge": [
+    6.1,
+    8.3
+   ],
+   "missing_attribute": [
+    1.5,
+    1.8
+   ],
+   "out_of_domain": [
+    0.9,
+    1.3
+   ],
+   "rating": [
+    6.6,
+    9.8
+   ],
+   "role": [
+    4.7,
+    8.6
+   ],
+   "unknown_entity": [
+    1.4,
+    1.6
+   ],
+   "wrong_period": [
+    1.2,
+    1.6
+   ]
+  }
+ }
+}

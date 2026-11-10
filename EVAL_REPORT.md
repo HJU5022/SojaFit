@@ -391,9 +391,12 @@ S0(기준점)은 #39 두 세트를 고친 채점기(`61a29f1`)로 다시 채점�
 | 전체(v3 50문항, 4세트) | 3.5 · 3.8 · 3.9 · 3.7초 | 8.6 · 8.9 · 8.9 · 8.6초 | 50문항 LLM 0.044 ~ 0.052달러(문항당 약 0.0009 ~ 0.0010달러) |
 
 - `retrieve()` 전체는 p50 1.16 · p95 1.48초였다(#28).
-- LLM 단계 행의 p50 · p95는 그 단계를 부른 문항만의 값이고, 판정 읽기는 동시에 도는 3번의 시간을 더한 값이라 실제로 기다린 시간은 그보다 짧다(v3-01 타임라인에서 3.6초). 종합(Sonnet)은 이 세트에서 불리지 않았다. 검색 · 판정 코드 · 승인 대기처럼 LLM이 아닌 단계는 이 세트의 트레이스에 단계 이름이 없어 따로 집계하지 못했다(타임라인 한 건으로 본 품번 · 판 확인 2.6초는 7장). 집계 원본은 저장소 밖이다(Langfuse 프로젝트 `SojaFit`).
+- LLM 단계 행의 p50 · p95는 그 단계를 부른 문항만의 값이고, 판정 읽기는 동시에 도는 3번의 시간을 더한 값이라 실제로 기다린 시간은 그보다 짧다(v3-01 타임라인에서 3.6초). 종합(Sonnet)은 이 세트에서 불리지 않았다. 검색 · 판정 코드 · 승인 대기처럼 LLM이 아닌 단계는 이 세트의 트레이스에 단계 이름이 없어 따로 집계하지 못했다(타임라인 한 건으로 본 품번 · 판 확인 2.6초는 7장). 집계 원본은 `evals/results/graph/2026-11-10-v3-haiku-sets/stage_costs_gate-v3_draft-1110-0040-set1.json`이다(문항별 단계 시간 포함, 만든 집계 스크립트는 남아 있지 않음).
 - 전체 4세트는 동결 전 실험 초안으로 쟀다. 그 파일을 그대로 옮긴 동결 `evals/dataset_v3.jsonl`로 병합 뒤 다시 잰 2세트(커밋 `f2b914e`)는 통과 50 · 50/50, p95 10.4 · 7.8초, 50문항 LLM 0.055 · 0.044달러였다. 10.4초 세트는 같은 맥에서 다른 작업 5개가 돌던 중이었다(#50 "병합 뒤 확인").
-- 4세트와 병합 뒤 2세트의 원시 결과는 저장소 밖 근거다(Langfuse 세션 `gate-v3_draft-1110-0033-set1` 등, `evals/guides/preregister.md` #50).
+- 4세트와 병합 뒤 2세트의 원시 결과(문항별 행)는 `evals/results/graph/2026-11-10-v3-haiku-sets/`의 `gate-<Langfuse 세션 이름>.json` 6개이고 원본 경로 · sha256은 같은 폴더의 `sources_2026-11-11.json`이다(Langfuse 세션 `gate-v3_draft-1110-0033-set1` 등, `evals/guides/preregister.md` #50). 비용은 세트 파일에 없고 `summary_4sets_93a497c.json` · `summary_merged_2sets_f2b914e.json`(Langfuse 토큰 집계)에 있다. 이 표의 p50은 실행기 정의 `sorted(latency)[n//2]`이고, summary 파일의 p50은 진짜 중앙값이라 1세트가 3.5초와 2.6초로 다르다(p95는 같다).
+- 이 표의 LLM 단계(판정 읽기 3번 다수결)는 커밋 `93a497c` 때의 코드다. 지금 `jeongun`은 11-10 20:45 `963fefe`부터 읽기 1번이라 판정 읽기 칸의 호출 수 · 시간 · 비용이 다르다(배포본 `27a410d`는 아직 3번). 현재 코드의 단계별 값은 아직 재지 않았고 계획 · 비용 견적은 [`docs/experiments/d8-stage-remeasure-plan.md`](docs/experiments/d8-stage-remeasure-plan.md)에 있다.
+- 원본이 없는 숫자: 승인 대기 시간(측정한 적 없음), 판정 질문 v3-01 타임라인의 품번 · 판 확인 2.6초와 판정 읽기 3.6초(회의록 캡처 이미지뿐), rerank-3 가격 100만 토큰당 0.05달러(Voyage 가격표, 저장소에 가격 파일 없음), "같은 맥에서 다른 작업 5개가 돌던 중"(사전 등록 #50 서술뿐), 실제 청구액.
+- 재현 명령. 당시 4세트: 저장소 밖 `exp-haiku-1109/run_d50.sh` · `run_r50.sh`(`93a497c`에서 `run_gate_traced.py`, 환경 `LAB_READ_VOTES=3` 등). 지금 코드 v3 50문항 1세트: `uv run --env-file .env python -m evals.runners.run_gate evals/dataset_v3.jsonl --out <새 폴더> --sets 1 --keep-going`(운영 DB · OpenRouter · Voyage 키 필요, 유료). 검색 단계: `uv run --env-file .env python -m evals.runners.run_retrieval_service --stages 20 --out <새 파일>`. 배포 API 한 흐름: `uv run python scripts/smoke/http_smoke.py --base-url <배포 주소> --confirm-live`.
 - LLM 비용은 사전 등록 결과 줄의 값이다. 같은 실행기를 쓴 #46은 이 값을 Langfuse 토큰 × OpenRouter 가격으로 센다고 적었다.
 
 **왜 이 모델과 이 구성인가** (한 문장): Supervisor를 Sonnet에서 Haiku로 바꿔 v3 50문항 LLM 비용을 0.17 ~ 0.32달러에서 0.044 ~ 0.052달러로 줄이고 같은 v3 4세트에서 통과 50/50을 유지했지만, 이 4세트는 고친 실패 문항을 담은 셋이라 독립 확인이 아니다(ADR 0017).
