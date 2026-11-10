@@ -111,6 +111,107 @@ def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
     assert repo.calls == ['start', ('commit', 'completed')]
 
 
+@pytest.fixture
+def native_input_path(monkeypatch):
+    """Real HTTP/service/graph; fake SQL, auth and model replies only."""
+    from contextlib import contextmanager
+    from evals.runners import plan_injection_baseline as plan, run_injection_baseline as baseline
+    from evals.runners import run_injection_preflight as pre
+    from backend.conversations.memory_service import Conversations
+    from backend.graph.netlist import parse_netlist
+    from backend.services import llm
+    def deny(*a,**k):
+        pytest.fail('Provider or database forbidden in free surface checks')
+    for name in ('node_chat','_chat_model','voyage_embed','voyage_rerank'):
+        monkeypatch.setattr(llm,name,deny)
+    monkeypatch.setattr('psycopg.connect',deny)
+    monkeypatch.setattr('httpx.post',deny)
+    monkeypatch.setenv('JUDGE_READ_VOTES','1')
+    def build(case_id,name,missing_current=False):
+        data=plan.fixture(); job=next(j for j in plan.jobs(data) if j['case']==case_id and j['variant']=='normal')
+        case=next(c for c in data['cases'] if c['id']==case_id)
+        inputs=plan.materialize(data,case,'normal'); cards=baseline.synthetic_docs(data,inputs)
+        doc=dict(file=data['common']['document'],parts=['DEMO1','DEMO2'],
+                 cards=[dict(c,document=c['file']) for c in cards if c['row'] is not None],
+                 texts=[c['content'] for c in cards if c['row'] is None],text_cards=[])
+        scripted=baseline.fake_chat(data,job,inputs); prompts=[]
+        def chat(node,system,user,schema,**kwargs):
+            prompts.append((node,user))
+            reply=scripted(node,system,user,schema)
+            if node=='judge_read' and missing_current:
+                reply.values=[v for v in reply.values if v.name!='i_max']
+            return reply
+        graph=pre.make_trial(pre.Observer(chat),retriever=lambda *a,**k:cards,
+            load_cards=lambda keys:{'synthetic':doc},doc_meta=lambda keys:{'synthetic':{'category':'standard-rectifier'}},
+            part_docs=lambda p:['synthetic'])['app']
+        thread,run=str(uuid4()),str(uuid4())
+        class Repo(FakeRepo):
+            def get_thread(self,user,tid):
+                return tid,1,parse_netlist(inputs['netlist']),name
+        class History(baseline.MockHistory):
+            record={}
+            def execute(self,query,params=()):
+                if query.startswith('UPDATE threads SET input_record='):
+                    self.record=params[0].obj
+                    return self
+                if query.startswith('UPDATE threads SET version='):
+                    self.record=params[1].obj
+                return super().execute(query,params)
+        history=History(); service=object.__new__(Conversations)
+        service.graph,service.mode=graph,'live'; saved={}
+        @contextmanager
+        def locked(user,tid):
+            yield history,dict(saved,version=history.version,input_record=history.record)
+        def ensure(user,tid,filename,connections,target,**kwargs):
+            saved.update(filename=filename,connections=connections,target=target)
+        def detail(*args):
+            state=graph.get_state(service.config(thread))
+            pending=[i.value for task in state.tasks for i in task.interrupts]
+            return dict(version=history.version,interrupt=pending[0] if pending else None)
+        service.locked=locked; service.ensure_thread=ensure; service.detail=detail
+        service._invoke=lambda conn,tid,payload,budget,request_id='':graph.invoke(payload,service.config(tid))
+        service.admission=lambda user:None; service._budget=lambda user:None
+        service._purge_expired=lambda:None; service._reconcile=lambda *a:None; service._profile_hints=lambda *a:[]
+        return service,Repo(thread,run),prompts,history,inputs['question']
+    return build
+
+
+@pytest.mark.parametrize('name',['PROJECT_NAME_SURFACE','FILE_NAME_SURFACE.net'])
+@pytest.mark.parametrize('case_id',['T1','T5'])
+def test_free_http_names_stay_out_of_model_prompts_but_conditions_reach(web,native_input_path,name,case_id):
+    analysis,repo,prompts,_,question=native_input_path(case_id,name)
+    with web(analysis,repo) as client:
+        response=client.post(f'/api/threads/{repo.thread}/runs',json={
+            'question':question,'conditions':'CONDITION_SURFACE','target_ref':'D1'},headers=ORIGIN)
+    assert response.status_code==200 and 'event: completed' in response.text
+    assert analysis.graph.get_state(analysis.config(repo.thread)).values['circuit']==name
+    assert {'supervisor','docs_answer' if case_id=='T1' else 'judge_read'}<={node for node,_ in prompts}
+    assert all(name not in user for _,user in prompts)
+    assert any('CONDITION_SURFACE' in user for _,user in prompts)
+
+
+def test_free_resume_text_reaches_later_question_history_not_immediate_read(web,native_input_path):
+    analysis,repo,prompts,history,question=native_input_path('T5','synthetic.net',missing_current=True)
+    question=question.replace('부하 최대 0.1 A, ','')
+    marker='RESUME_HISTORY_SURFACE'
+    with web(analysis,repo) as client:
+        first=client.post(f'/api/threads/{repo.thread}/runs',json={'question':question,'target_ref':'D1'},headers=ORIGIN)
+        assert 'event: requires_input' in first.text
+        count=len([p for p in prompts if p[0]=='judge_read']); start=len(prompts)
+        resumed=client.post(f'/api/runs/{repo.run}/resume',json={'answers':{'i_max':marker}},headers=ORIGIN)
+        assert resumed.status_code==200 and 'event: failed' not in resumed.text
+        assert len([p for p in prompts if p[0]=='judge_read'])==count
+        assert all(marker not in user for _,user in prompts[start:])
+        assert any(marker in h['content'] for h in history.history)
+        state=analysis.graph.get_state(analysis.config(repo.thread)).values
+        values=state['judgement']['analysis_inputs']['values_si']
+        assert values['v_in_max']==60 and 'i_max' not in values
+        start=len(prompts)
+        later=client.post(f'/api/threads/{repo.thread}/runs',json={'question':'DEMO2의 정격을 다시 확인해 주세요.','target_ref':'D1'},headers=ORIGIN)
+        assert later.status_code==200 and 'event: failed' not in later.text
+        assert any(marker in user for _,user in prompts[start:])
+
+
 def test_completed_frame_carries_profile_hints_but_run_record_does_not(web):
     """참고(내 설정)는 이번 결과 frame에만 붙고 run 기록에는 저장하지 않는다(지운 사실이 지난 run 조회에 남지 않게)."""
     thread, run = str(uuid4()), str(uuid4())

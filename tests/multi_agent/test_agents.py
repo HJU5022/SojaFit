@@ -73,12 +73,15 @@ def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason
 
 
 def test_fake_or_missing_citation_is_blocked_by_code():
-    fake = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [9].')), docs=[doc(3)])
-    none = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다.')), docs=[doc(3)])
+    bad=D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [9].')
+    uncited=D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다.')
+    fake = run(task(), llm(bad,bad), docs=[doc(3)])
+    none = run(task(), llm(uncited,uncited), docs=[doc(3)])
     assert fake['status'] == none['status'] == 'fail' and fake['reason'] == none['reason'] == Reason.VERIFY_FAILED.value
     # [왜] 가짜 번호 하나로 답 전체를 거절하지 않는다(공식 5회차 v3-18). 그 번호만 단 문장은 빼고, 함께 단 괄호에서는 그 번호만 지운다
-    mixed = run(task(), llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [3, 9]. 주문 코드는 같은 소자다 [9].')), docs=[doc(3)])
-    assert mixed['status'] == 'ok' and mixed['answer'] == 'VRRM은 40 V이다 [3].'
+    partly_cited=D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [3, 9]. 주문 코드는 같은 소자다 [9].')
+    mixed = run(task(), llm(partly_cited,partly_cited), docs=[doc(3)])
+    assert mixed['status'] == 'partial' and mixed['answer'] == 'VRRM은 40 V이다 [3].'
     assert D.drop_fake_citations('값은 [0.60 V]이다 [3].', {'3'}) == ('값은 [0.60 V]이다 [3].', [])
     partial = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', missing=['IFSM'])), docs=[doc(3)])
     assert partial['status'] == 'partial' and partial['missing'] == ['IFSM']

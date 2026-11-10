@@ -1,5 +1,9 @@
 # evals
 
+T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.
+
+실측01·02와 스모크01~06의 원시·메타·예산·승인 32개는 저장소 밖 원본 백업으로 옮겼다(2026-11-11). 최신03의4개만저장소에남기고, [보관·해시 인덱스](results/threads/injection_baseline_artifact_index_2026-11-10.json#/measured_runs_archive)에36개전체의크기/SHA256·보관위치·복원방법을기록한다. 이전32개는Git미추적파일이었으므로Git이력복구를대체수단으로가정하지않는다. 백업은현재로컬전용이며이전실측의내용/판정을변경하지않았다.
+
 ## 역할
 - 이 폴더: 동결 평가셋과 동결 기록을 루트에 두고, 실행 코드·문서·표본·초안·결과를 하위 폴더로 나눠 둡니다. 루트 파일의 위치와 이름은 과정 안내와 동결 시험이 가정하므로 옮기지 않습니다.
 - 넣는 것: 동결 평가셋(`dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl`)과 동결 기록(`FROZEN.json`). 앞으로 생길 `exclusions.json`도 루트에 둡니다. `exclusions.json`은 코퍼스가 바뀔 때 생기며 지금은 없습니다([dataset-guide.md](guides/dataset-guide.md)).
@@ -60,3 +64,14 @@
 `embedding_sample_v0.jsonl`은 후보를 거른 2026-10-30 비동결 프록시이며 v1·v2나 G5 건수에 포함하지 않습니다. 서비스 임베딩 결정은 이후 TSC 1,360건 실제 청크를 사용한 사전 등록 #25의 R1 dev/test 비교에서 `voyage-4-large` 1024차원으로 완료됐고, 선택 과정과 한계는 루트 [EVAL_REPORT.md](../EVAL_REPORT.md) 1-4절을 따릅니다. 이 결정은 새 v3 평가셋과 v4h 코퍼스의 공식 재측정이 끝났다는 뜻이 아닙니다.
 
 평가셋 필드·정답 기준·동결·채점 방식은 [dataset-guide.md](guides/dataset-guide.md)가 정본입니다.
+
+
+### 인젝션 준비 산출물 통합(2026-11-10)
+
+`results/threads/`의 기존 인젝션 준비33개는 다음4개로 정리했다. 결과 폴더는 개별 파일을 루트 트리에 나열하지 않는다.
+- `injection_baseline_review_2026-11-10.json` — 전체/노출 계획, 최신 모의 실행 메타데이터, 사용자 조건부 승인. 실행 승인 파일 아님
+- `injection_baseline_checks_2026-11-10.json` — 서로 다른 무료 검사8건을 원래 해시/시점/범위 그대로 보존. 통과 수나 사람 판정을 합산하지 않음
+- `injection_baseline_artifact_index_2026-11-10.json` — 원래33개 경로·Git/작업트리 해시·통합 위치·과거20개 복구 안내·중복/실패 이력
+- `injection_exposure_simulated_v3_2026-11-10.jsonl` — 최신4작업 모의 실행 원시 기록, 원래바이트 보존
+
+과거 원본은 STH의 현재 이력에서 분리했고, 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`가 커밋107aaa3을 보존한다. 이 복구 참조는 STH를 공유하는 것만으로 함께 공유되지 않는다. Windows CRLF를 포함한 작업트리 원본의 해시까지 복구 검증했다. 앞으로 실행기가 새 JSONL/meta를 생성하는 동작은 변경하지 않았다. 기존 code_freeze 기록은 이번33개 밖의 파일이므로 유지한다.

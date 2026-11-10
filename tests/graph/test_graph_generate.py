@@ -53,6 +53,13 @@ def test_citations_ignore_non_number_brackets():
     assert nodes.citations("값은 [0.60 V]이다 [2, 3]. 회로는 [넷리스트].") == {"2", "3", "넷리스트"}
 
 
+def test_nested_citations_keep_explicit_ids_and_historical_reference_detection():
+    assert nodes.citations('1000 V [문서 설명 · 근거 ID [16]].') == {'16'}
+    assert nodes.citations('[문서 [16, 999]]') == {'16', '999'}
+    assert nodes.citations('[문서 16쪽 · 0.60 V]') == set()
+    assert any(c.startswith('승인사례:') for c in nodes.citations('[승인사례:owned:1 [16]]'))
+
+
 def test_memory_sources_are_separate_bounded_and_checked(monkeypatch):
     import json
     from backend.graph.memory import memory_context

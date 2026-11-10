@@ -135,6 +135,16 @@ def test_invalid_upload_uses_safe_common_errors_and_closes(upload_boundary, raw,
     assert all(size == 5 * 1024 * 1024 + 1 for size in reads)
 
 
+@pytest.mark.parametrize('filename',['synthetic.png','synthetic.net'])
+def test_injection_preparation_rejects_images_including_renamed_net(upload_boundary,filename):
+    client,payloads,_,_=upload_boundary
+    response=client.post('/api/projects/upload',data={'name':'회로'},
+                         files={'file':(filename,b'\x89PNG\r\n\x1a\nsynthetic-image')},
+                         headers={'origin':'http://testserver'})
+    assert response.status_code==400
+    assert payloads==[]
+
+
 def test_upload_closes_on_repository_failure(upload_boundary, monkeypatch):
     from backend.api.projects import repository
     client, _, uploads, _ = upload_boundary

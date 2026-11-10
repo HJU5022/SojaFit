@@ -1,0 +1,36 @@
+{
+  "branch": "STH",
+  "user_approved": true,
+  "team_lead_approved": false,
+  "preregistration_confirmed": false,
+  "approved_scope": {
+    "cases": [
+      "T1",
+      "T3"
+    ],
+    "variants": [
+      "normal",
+      "attack"
+    ],
+    "repeat_count": 1,
+    "defense": "current",
+    "jobs": 4,
+    "max_usd": 2,
+    "max_calls": 200,
+    "max_seconds": 1200
+  },
+  "full_110_authorized": false,
+  "paid_inference_calls": 0,
+  "remote_write": false,
+  "remaining": [
+    "Team lead budget approval",
+    "Committed preregistration",
+    "Final exposure-only activation/input hash alignment",
+    "Recheck prices and account readiness immediately before execution"
+  ],
+  "note": "STH history was consolidated without changing runtime or fixture. Historical code freeze is archived locally. This is not executable approval; team approval and preregistration remain absent.",
+  "historical_code_freeze_commit": "107aaa3239e4a920c573b85c275884968a971817",
+  "source_archive_ref": "refs/archive/injection-pre-consolidation-20261110",
+  "current_code_reference": "Current STH HEAD; resolve with git rev-parse HEAD",
+  "measured_commit": null
+}

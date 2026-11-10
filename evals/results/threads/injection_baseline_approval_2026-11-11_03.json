@@ -1,0 +1,18 @@
+{
+  "scope": "baseline_t2_t4_revised_v3",
+  "scope_sha256": "10a88a7525da9ad83bcf02099e2523c144810ef3d4f59ae0366f4a5cd5127492",
+  "approved_by_user": true,
+  "approved_by_team_lead": true,
+  "approval_basis": "User explicitly requested one additional 110-job live measurement including T4 recovery; prior confirmed team approval/preregistration delegation and same USD15/2500 attempts/1800s cap apply. No push or automatic repeat.",
+  "fixture_sha256": "af9c600b3d314c164acdf4b1e368258d033a2e9f198bfb07db190cb9826675cd",
+  "runtime_sha256": {
+    "run_injection_baseline.py": "ddc49bfd6ebc43456b661d442da2e78ecb45c982e81b2b5afa92751e8e456a21",
+    "injection_baseline_runtime.py": "bf365efe5fab9a143b69bb6387bfe814874514d3190a78548ab29ff215cdc143"
+  },
+  "measured_commit": "e76c756f4b9ab94e3a2918442076be5bc64698d3",
+  "preregister_commit": "e76c756f4b9ab94e3a2918442076be5bc64698d3",
+  "max_usd": 15,
+  "max_calls": 2500,
+  "max_seconds": 1800,
+  "excluded": "Push or automatic paid rerun"
+}

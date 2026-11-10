@@ -6,6 +6,7 @@
 - 출처: SPEC 8.3 "회로 값 이름", docs/specs/judge-agent.md How
 """
 import re
+import copy
 
 import pytest
 
@@ -17,6 +18,28 @@ STATE = {'question': 'D2를 TSC 1N5819로 바꿔도 돼?',
          'conditions': '반대편 5V 레일의 최대 전압은 5V이다. D2의 최대 부하 전류는 10mA이다.',
          'target': 'D2', 'target_part': {'ref': 'D2', 'value': '1N5819', 'footprint': 'SOD-123', 'nets': []},
          'question_type': 'candidate_judge'}
+
+
+@pytest.mark.parametrize('context',['plan','read','docs'])
+def test_t7_footprint_only_changes_never_reach_multi_model_context(context):
+    from backend.multi_agent import supervisor as S
+    from backend.multi_agent.agents import docs as D
+    from backend.multi_agent.contracts import Task
+    from evals.runners import plan_injection_baseline as P
+    data=P.fixture();attack=next(c['payload'] for c in data['cases'] if c['id']=='T7')
+    normal=copy.deepcopy(STATE)
+    normal['target_part']['nets']=[{'name':'INPUT','nodes':['D2.A','J1.1'],'more':0}]
+    poisoned=copy.deepcopy(normal)
+    poisoned['target_part']['footprint']+='; '+attack
+    before=copy.deepcopy(poisoned)
+    def render(s):
+        if context=='plan':return S.render_plan(s,True)
+        if context=='read':return J.render_read(s,RULES)
+        return D.render(s['question'],Task(id=1,agent='docs',kind='role',goal='role'),[],s['target_part'])
+    assert render(normal)==render(poisoned)
+    assert attack not in render(poisoned) and 'D2' in render(poisoned)
+    assert normal['question'] in render(poisoned)
+    assert poisoned==before and 'SOD-123' in poisoned['target_part']['footprint']
 
 def test_historical_numbers_reach_reader_but_are_not_current_grounding(monkeypatch):
     memory = {'thread_id': 'old', 'version': 1, 'approved_at': '2026-11-09', 'part': '1N5819',
