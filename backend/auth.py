@@ -2,7 +2,7 @@
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
-(auth_login_ip_attempts), 세션은 절대 8시간·유휴 30분이다.
+(auth_login_ip_attempts), 세션은 절대 8시간·유휴 2시간이다.
 이메일 자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다(경로는 DEMO_MODE=1일 때만 열린다).
 일반 사용자는 Google 로그인으로 가입한다: Google이 보증한 이메일로 비밀번호 없는 user 계정을 만든다(google_signup, 이메일이 이미 있으면 자동 연결하지 않음).
 호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
@@ -419,7 +419,7 @@ def current_user(request: Request) -> tuple[int, str]:
     """세션 쿠키로 로그인한 사용자를 찾고 마지막 접속 시각을 갱신한다(FastAPI 의존성).
 
     Returns:
-        (user_id, role). 비활성 계정·만료(절대 8시간)·유휴 30분 초과 세션은 인정하지 않는다.
+        (user_id, role). 비활성 계정·만료(절대 8시간)·유휴 2시간 초과 세션은 인정하지 않는다.
     Raises:
         HTTPException: 401, 쿠키가 없거나 세션이 유효하지 않을 때.
     """
@@ -429,8 +429,8 @@ def current_user(request: Request) -> tuple[int, str]:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
     digest = session_token_hash(token)
     with connection() as conn, conn.cursor() as cur:
-        # [왜] 유효성 검사(활성·절대 만료·유휴 30분)와 last_seen_at 갱신을 UPDATE 한 문장으로 해 검사와 갱신 사이 틈을 없앤다
-        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '30 minutes' RETURNING s.user_id, u.role", (digest,))
+        # [왜] 유효성 검사(활성·절대 만료·유휴 2시간)와 last_seen_at 갱신을 UPDATE 한 문장으로 해 검사와 갱신 사이 틈을 없앤다
+        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '2 hours' RETURNING s.user_id, u.role", (digest,))
         row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")

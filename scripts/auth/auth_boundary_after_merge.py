@@ -97,11 +97,11 @@ try:
         token_hash = auth.session_token_hash(token)
         initial_seconds = conn.execute("SELECT EXTRACT(EPOCH FROM (expires_at-CURRENT_TIMESTAMP)) FROM auth_sessions WHERE token_hash=%s", (token_hash,)).fetchone()[0]
         assert initial_seconds == 28800  # 절대 만료 8시간 = 28,800초
-        # 3단계: 마지막 사용 시각을 30분 -1us / 30분 / 30분 +1us 전으로 돌려 유휴 만료 경계를 본다(30분 이상이면 401)
+        # 3단계: 마지막 사용 시각을 2시간 -1us / 2시간 / 2시간 +1us 전으로 돌려 유휴 만료 경계를 본다(2시간 이상이면 401)
         for label, interval, expected in (
-            ("idle 1us under 30m", "29 minutes 59.999999 seconds", 200),
-            ("idle exactly 30m", "30 minutes", 401),
-            ("idle 1us over 30m", "30 minutes 0.000001 seconds", 401),
+            ("idle 1us under 2h", "1 hour 59 minutes 59.999999 seconds", 200),
+            ("idle exactly 2h", "2 hours", 401),
+            ("idle 1us over 2h", "2 hours 0.000001 seconds", 401),
         ):
             conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - %s::interval WHERE token_hash=%s", (interval, token_hash))
             request(client, label, "GET", "/api/auth/me", expected)

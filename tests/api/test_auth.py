@@ -701,10 +701,10 @@ def test_idle_and_absolute_session_expiry_boundaries(monkeypatch):
     headers = {"origin": "http://testserver"}
     assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
     with psycopg.connect(database_url) as conn:
-        conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '29 minutes 50 seconds' WHERE user_id=%s", (user_id,))
+        conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '1 hour 59 minutes 50 seconds' WHERE user_id=%s", (user_id,))
     assert client.get("/api/auth/me").status_code == 200
     with psycopg.connect(database_url) as conn:
-        conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '30 minutes 5 seconds' WHERE user_id=%s", (user_id,))
+        conn.execute("UPDATE auth_sessions SET last_seen_at=CURRENT_TIMESTAMP - INTERVAL '2 hours 5 seconds' WHERE user_id=%s", (user_id,))
     assert client.get("/api/auth/me").status_code == 401
     assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
     with psycopg.connect(database_url) as conn:
