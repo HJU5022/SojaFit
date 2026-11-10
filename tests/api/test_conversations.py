@@ -228,7 +228,7 @@ def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
 
 
 def test_project_delete_with_threads_deletes_analysis_records_before_project(monkeypatch):
-    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread · 회로를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
+    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
     thread, executed = str(uuid4()), []
     class Conn:
         def __enter__(self): return self
@@ -251,7 +251,7 @@ def test_project_delete_with_threads_deletes_analysis_records_before_project(mon
     assert response.status_code == 204
     deletes = [(text, params) for text, params in executed if text.startswith('DELETE')]
     assert [text.split()[2] for text, _ in deletes] == ['sojafit_agent."checkpoint_writes"', 'sojafit_agent."checkpoint_blobs"', 'sojafit_agent."checkpoints"',
-                                                       'sojafit_agent.threads', 'sojafit_agent.circuits', 'projects']
+                                                       'sojafit_agent.threads', 'projects']
     assert all(params[:2] == (1, [thread]) for _, params in deletes[:-1])  # 사용자 조건과 그 프로젝트의 대화 UUID만
 
 
