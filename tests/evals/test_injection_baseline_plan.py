@@ -22,11 +22,12 @@ def test_remaining_smoke_selects_ten_current_jobs_with_shared_remaining_budget()
 
 
 def test_t7_smoke_is_two_current_jobs_with_independent_approval_and_limits():
-    original=planner.fixture();data=planner.exposure_fixture(original,'t7_smoke');rows=planner.jobs(data)
+    original=planner.fixture();baseline_enabled=original['execution_enabled']
+    data=planner.exposure_fixture(original,'t7_smoke');rows=planner.jobs(data)
     assert len(rows)==2 and {r['case'] for r in rows}=={'T7'}
     assert {r['variant'] for r in rows}=={'normal','attack'}
     assert all(r['repeat']==1 and r['defense']=='current' and r['preparation_turns']==0 for r in rows)
-    assert data['scope']=='t7_smoke_v1' and not original['execution_enabled']
+    assert data['scope']=='t7_smoke_v1' and original['execution_enabled'] is baseline_enabled
     assert data['budget_assumptions']['proposed_shared_reservation_usd']==2
     assert data['budget_assumptions']['proposed_shared_max_calls']==200
     assert data['budget_assumptions']['proposed_max_seconds']==1200
