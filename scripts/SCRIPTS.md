@@ -14,6 +14,7 @@
 - `db/` — 운영 DB 손 작업(voyage-4-large 적용 점검·마이그레이션·검증). [DB.md](db/DB.md)
 - `langfuse/` — Langfuse 프롬프트·Skill 연결 점검 스크립트. [LANGFUSE.md](langfuse/LANGFUSE.md)
 - `demo/` — 키 없는 데모가 재생할 LLM 응답을 실제 키로 한 번 기록하고 키 없이 재생해 대조하는 스크립트. [DEMO.md](demo/DEMO.md)
+- `eval/` — 평가 결과 파일과 서비스 DB 시각에서 단계별 응답 시간 · 비용 · 사람 대기 시간(승인 대기)을 모으는 집계 스크립트(D8). [EVAL.md](eval/EVAL.md)
 - `smoke/` — 로컬 compose · 배포 주소의 정상 사용자 흐름(로그인 → 판정 · 재개 → 승인 · 견적 → 다른 계정 404)을 HTTP로 한 번 돌려 보는 점검 스크립트. [SMOKE.md](smoke/SMOKE.md)
 - `results/` — 측정 원시 결과(폴더 설명 파일 없음). 평가 지표는 `evals/results/`
   - `auth/` — 인증 실측 결과

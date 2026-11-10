@@ -385,7 +385,8 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_retrieval_v3.py  <- v3 평가셋 검색 지표를 에이전트 검색 길(입력 읽기 → 재작성 → 품번 필터 검색) 그대로 잼(문서 · 쪽 Recall@5 · MRR)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프(`--multi`면 멀티 에이전트)로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
-│   │   ├── run_gate.py     <- 감시 실행기: 평가셋을 멀티 에이전트로 여러 세트 연달아 돌리며 처음 실패한 문항이나 p95 초과에서 멈춤(v3 반복 측정)
+│   │   ├── run_gate.py     <- 감시 실행기: 평가셋을 멀티 에이전트로 여러 세트 연달아 돌리며 처음 실패한 문항이나 p95 초과에서 멈춤(v3 반복 측정) 문항 행에 단계 시간 · 모델 호출별 토큰 · 비용도 남김
+│   │   ├── stage_timing.py <- 단계 시간 기록기: 서비스와 같은 노드 단위 시간(AnalysisTimings) + LLM 호출별 {노드, 모델, 초, 토큰, 공급자 보고 비용} + Voyage 임베딩 · 리랭크 시간(D8)
 │   │   ├── gate_report.py  <- run_gate 결과 세트를 기준표(정답률 · 오탐 · 검색 Recall@5 · MRR · 응답 시간)로 집계
 │   │   ├── run_judge_dev.py  <- 판정 연습 문제를 멀티 그래프로 돌려 역할 정답률·판정 일치율을 results/judge/에 저장
 │   │   ├── run_supervisor_models.py  <- 수퍼바이저 5종 평가 계획·호출·집계와 provider 검증
@@ -438,7 +439,9 @@ SojaFit (proj3-b)
 │       ├── grader/         <- 채점기 기준선(eval_grader)
 │       ├── graph/          <- 그래프 전체 실행의 문항별 지표(run_graph, 단일 · 멀티)와 분석 thread · 기억 운영 확인
 │       │   ├── 2026-11-06-judge-steps/  <- 사전 등록 #39 ~ #42(동결 v2 70문항) 원시 결과를 lab에서 그대로 옮김과 출처 · sha256(sources_2026-11-10.json)
-│       │   └── 2026-11-10-v3-haiku-sets/  <- 8장 인용 v3 50문항 Haiku 구성 측정(#50) 원시 결과를 그대로 옮김과 출처 · sha256(sources_2026-11-11.json)
+│       │   ├── 2026-11-10-v3-haiku-sets/  <- 8장 인용 v3 50문항 Haiku 구성 측정(#50) 원시 결과를 그대로 옮김과 출처 · sha256(sources_2026-11-11.json)
+│       │   ├── 2026-11-11-d8-stages/  <- D8 현재 코드 v3 50문항 1세트(문항별 단계 시간 · 모델 호출별 비용)와 집계(stage_summary.json)
+│       │   └── 2026-11-11-d8-stages-rerun/  <- 같은 측정에서 공급자 429로 실패한 8문항 재실행
 │       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
 │       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
@@ -573,6 +576,8 @@ SojaFit (proj3-b)
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
 │   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
+│   │   ├── test_stage_timing.py  <- 단계 시간 기록기(노드 이름 · 토큰 · 보고 비용 · Voyage 종류별 · 옛 건너뜀 행 없음)와 단계 집계(p50 · p95 정의 · 행 대체)를 가짜로
+│   │   ├── test_approval_wait_report.py  <- 승인 대기 보고: 합성 이벤트로 재개 · 승인 대기와 서버 시간 분리 · 자동 호출 제외 · id 미출력, 일회용 DB로 읽기 전용 연결
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출·멀티 실행 점수·노드별 모델 기록·그래프 조립·인터럽트 재개(가짜)
 │   │   ├── test_run_judge_dev.py  <- 판정 연습 문제 채점(역할·판정 일치, 찾기는 보여 준 후보 집합)
 │   │   ├── test_score_answer.py  <- 답변·거절 5지표 채점기
@@ -629,6 +634,10 @@ SojaFit (proj3-b)
 │   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
 │   │   ├── DEMO.md         <- 폴더 설명
 │   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 5개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
+│   ├── eval/               <- 평가 결과 파일과 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계 스크립트(D8)
+│   │   ├── EVAL.md         <- 폴더 설명
+│   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
+│   │   └── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   └── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
@@ -691,7 +700,7 @@ SojaFit (proj3-b)
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
 │   │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
 │   │   ├── injection-baseline-preflight.md <- 인젝션 기준선의 격리 적재·호출 관찰·예산·캐시·채점 준비 작업서
-│   │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록, 모델 호출 없음)
+│   │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
 │   │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
@@ -818,6 +827,7 @@ SojaFit (proj3-b)
 | `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
 | `scripts/demo/` | [DEMO.md](scripts/demo/DEMO.md) | 서비스·운영 |
+| `scripts/eval/` | [EVAL.md](scripts/eval/EVAL.md) | 평가 |
 | `scripts/smoke/` | [SMOKE.md](scripts/smoke/SMOKE.md) | 서비스·운영 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/assets/` | [ASSETS.md](docs/assets/ASSETS.md) | 평가·문서 |
