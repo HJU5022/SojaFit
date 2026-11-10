@@ -52,10 +52,10 @@ LOGGER = logging.getLogger('backend.conversations')
 RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
-USER_DAILY_TOKENS = 200_000
+USER_DAILY_TOKENS = 1_000_000  # 11-10: 예약 토큰은 실제 사용보다 크게 잡혀(돌려주지 않음) 20만으로는 점검 한 번에 한 계정의 하루치가 찼다
 SERVICE_DAILY_TOKENS = 2_000_000
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
-USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 

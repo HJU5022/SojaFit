@@ -464,7 +464,7 @@ def test_daily_reservations_are_atomic_across_requests_and_users(runtime, monkey
 
 
 def test_daily_token_caps_per_user_and_service_reject_before_external_call(runtime, monkeypatch):
-    """하루 토큰 상한(사용자 200,000 · 서비스 2,000,000): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
+    """하루 토큰 상한(사용자 1,000,000 · 서비스 2,000,000): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
     from fastapi.testclient import TestClient
     from backend import auth
     from backend.api.conversations import repository
@@ -512,9 +512,9 @@ def test_daily_token_caps_per_user_and_service_reject_before_external_call(runti
         conn.execute(f"INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed,reserved_tokens) VALUES (%s,{today},CURRENT_TIMESTAMP,%s)",
                      (a, ms.USER_DAILY_TOKENS - per_call))
     before, external[:] = service(), []
-    refused(a, '사용자 상한 도중', '200,000 토큰')
+    refused(a, '사용자 상한 도중', '1,000,000 토큰')
     assert external == ['사용자 상한 도중'] and usage(a)[0] == ms.USER_DAILY_TOKENS and service() == before + per_call
-    refused(a, '사용자 상한 입장', '200,000 토큰')  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
+    refused(a, '사용자 상한 입장', '1,000,000 토큰')  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
     assert external == ['사용자 상한 도중'] and app.threads(a)[0]['version'] == 0
     app.admission(b)  # 다른 사용자는 막지 않는다
 
