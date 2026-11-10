@@ -81,7 +81,7 @@ ROUTES = {
     ('GET', '/health'),
     ('POST', '/api/auth/login'), ('POST', '/api/auth/signup'), ('GET', '/api/auth/demo'), ('POST', '/api/auth/demo-login'),
     ('GET', '/api/auth/me'), ('POST', '/api/auth/logout'), ('GET', '/api/auth/google/status'), ('GET', '/api/auth/google/start'),
-    ('GET', '/api/auth/google/callback'), ('GET', '/api/auth/google/pending'),
+    ('GET', '/api/auth/google/callback'),
     ('GET', '/api/admin/users'), ('PATCH', '/api/admin/users/{target_id}'),
     ('GET', '/api/prices'),
     ('DELETE', '/api/me'), ('GET', '/api/me/memory'), ('PATCH', '/api/me/memory'), ('DELETE', '/api/me/memory'),

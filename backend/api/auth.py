@@ -1,7 +1,7 @@
 """로그인 · 가입 · 데모 버튼 로그인 · 로그아웃 · 내 계정 HTTP 경계(`/api/auth/*`)와 숨긴 Google 관리자 로그인 경로.
 
 - 경로: `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(셋 다 `DEMO_MODE=1`에서만, 아니면 404) ·
-  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback|pending`(일반 사용자 Google 가입 · 로그인, 관리자 연결).
+  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback`(Google 가입 · 로그인, 같은 이메일 계정 자동 연결).
 - 화면 쪽 짝: `frontend/src/api/auth.ts`.
 하지 않는 일: 비밀번호 · 세션 · 잠금 · 가입 한도 · Google 신원 확인(`backend/auth.py`), 탈퇴(`backend/api/profile.py`),
   관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 Google 콜백 쿼리 지우기(`backend/main.py`).
@@ -12,7 +12,6 @@
 import os
 import base64
 import hashlib
-from html import escape
 from typing import Literal
 from urllib.parse import urlencode
 
@@ -20,14 +19,13 @@ import httpx
 import psycopg
 from authlib.common.errors import AuthlibBaseError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from backend import auth
 
 router = APIRouter(prefix='/api/auth', tags=['auth'])
 GOOGLE_COOKIE = "sojafit_google_browser"
-GOOGLE_PENDING_COOKIE = "sojafit_google_pending"
 GOOGLE_CONSENT_COOKIE = "sojafit_google_consent"  # 로그인 화면에서 처리방침에 동의하고 시작했다는 표시(처음 오는 계정을 만들 때만 본다)
 
 
@@ -123,23 +121,6 @@ def google_failure():
     response = RedirectResponse("/login?google=error", status_code=303)
     response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
     response.delete_cookie(GOOGLE_CONSENT_COOKIE, path="/api/auth/google/callback")
-    response.headers["Cache-Control"] = "no-store"
-    response.headers["Referrer-Policy"] = "no-referrer"
-    return response
-
-
-@router.get("/google/pending", include_in_schema=False)
-def google_pending(request: Request):
-    if not google_enabled():
-        raise HTTPException(status_code=404, detail="Google 로그인을 사용할 수 없습니다.")
-    request_id = request.cookies.get(GOOGLE_PENDING_COOKIE, "")
-    try:
-        email = auth.google_pending_email(request_id)
-    except psycopg.Error:
-        raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
-    if not email:
-        raise HTTPException(status_code=400, detail="연결 요청이 만료되었거나 처리되었습니다.")
-    response = HTMLResponse(f"<h1>관리자 연결 승인 대기</h1><p>확인된 이메일: {escape(email)}</p><p>요청 번호: {escape(request_id)}</p><p>이 정보를 신뢰할 수 있는 경로로 운영자에게 전달하세요.</p>")
     response.headers["Cache-Control"] = "no-store"
     response.headers["Referrer-Policy"] = "no-referrer"
     return response
@@ -243,15 +224,15 @@ class DemoLogin(BaseModel):
 
 @router.post("/demo-login", dependencies=[Depends(demo_mode)], response_model=UserId)
 def demo_login(body: DemoLogin, request: Request, response: Response):
-    """데모 모드에서 시드한 데모 사용자 A · B로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
-    # [주의] 404 데모 모드 아님 · 데모 계정 없음(새 볼륨에서만 시드), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
+    """데모 모드의 데모 사용자 A · B(없으면 만든다)로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
+    # [주의] 404 데모 모드 아님(데모 계정은 첫 로그인 때 만든다), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
     auth.check_origin(request)
     try:
         result = auth.demo_session(body.account)
     except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     if result is None:
-        raise HTTPException(status_code=404, detail="데모 계정이 없습니다. 데모 모드로 새 DB 볼륨을 만들어 다시 시작하세요.")
+        raise HTTPException(status_code=404, detail="데모 계정을 사용할 수 없습니다.")
     token, user_id = result
     set_session_cookie(response, token)
     return {"user_id": user_id}

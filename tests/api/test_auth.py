@@ -79,21 +79,18 @@ def test_google_callback_query_is_not_written_to_uvicorn_access_logs(http_impl):
 
 def test_google_auth_schema_restricts_public_access_and_duplicate_bindings():
     import os
-    from pathlib import Path
 
     import psycopg
 
     url = os.environ.get("TEST_AUTH_DATABASE_URL")
     if not url:
         pytest.skip("requires an isolated authentication test database")
-    sql = Path("db/010_google_auth.sql").read_text(encoding="utf-8")
     with psycopg.connect(url) as conn:
-        conn.execute(sql)
         rows = conn.execute(
             "SELECT relname, relrowsecurity, EXISTS (SELECT 1 FROM aclexplode(coalesce(relacl, acldefault('r', relowner))) a WHERE a.grantee = 0) "
-            "FROM pg_class WHERE relname IN ('auth_google_states', 'auth_google_pending', 'auth_google_identities')"
+            "FROM pg_class WHERE relname IN ('auth_google_states', 'auth_google_identities')"
         ).fetchall()
-        assert len(rows) == 3
+        assert len(rows) == 2  # auth_google_pending은 029가 지웠다
         assert all(rls and not public_select for _, rls, public_select in rows)
         user = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('google-schema@example.test', 'fake', 'admin') RETURNING id").fetchone()[0]
         conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES ('issuer', 'subject', %s)", (user,))
@@ -106,7 +103,6 @@ def test_google_auth_schema_restricts_public_access_and_duplicate_bindings():
 
 def test_google_state_is_bound_to_browser_and_consumed_once(monkeypatch):
     import os
-    from pathlib import Path
 
     import psycopg
 
@@ -114,25 +110,18 @@ def test_google_state_is_bound_to_browser_and_consumed_once(monkeypatch):
     if not url:
         pytest.skip("requires an isolated authentication test database")
     monkeypatch.setenv("DATABASE_URL", url)
+    state, browser, verifier, nonce = auth.create_google_state()
+    assert auth.consume_google_state(state, "another-browser") is None
+    assert auth.consume_google_state(state, browser) == (verifier, nonce)
+    assert auth.consume_google_state(state, browser) is None
+    state, browser, _, _ = auth.create_google_state()
     with psycopg.connect(url) as conn:
-        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
-    try:
-        state, browser, verifier, nonce = auth.create_google_state()
-        assert auth.consume_google_state(state, "another-browser") is None
-        assert auth.consume_google_state(state, browser) == (verifier, nonce)
-        assert auth.consume_google_state(state, browser) is None
-        state, browser, _, _ = auth.create_google_state()
-        with psycopg.connect(url) as conn:
-            conn.execute("UPDATE auth_google_states SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second'")
-        assert auth.consume_google_state(state, browser) is None
-    finally:
-        with psycopg.connect(url) as conn:
-            conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
+        conn.execute("UPDATE auth_google_states SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second'")
+    assert auth.consume_google_state(state, browser) is None
 
 
-def test_google_admin_requires_approval_and_revocation_clears_sessions(monkeypatch):
+def test_google_revocation_clears_the_link_and_sessions(monkeypatch):
     import os
-    from pathlib import Path
 
     import psycopg
 
@@ -141,15 +130,9 @@ def test_google_admin_requires_approval_and_revocation_clears_sessions(monkeypat
         pytest.skip("requires an isolated authentication test database")
     monkeypatch.setenv("DATABASE_URL", url)
     with psycopg.connect(url) as conn:
-        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
         user_id = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('oauth-admin@example.test', 'fake', 'admin') RETURNING id").fetchone()[0]
+        conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES ('https://accounts.google.com', 'synthetic-subject', %s)", (user_id,))
     try:
-        assert auth.google_session("https://accounts.google.com", "synthetic-subject") is None
-        request_id = auth.request_google_link("https://accounts.google.com", "synthetic-subject", "oauth-admin@example.test")
-        assert auth.google_session("https://accounts.google.com", "synthetic-subject") is None
-        assert not auth.approve_google_link(request_id, user_id, "wrong@example.test")
-        assert auth.approve_google_link(request_id, user_id, "oauth-admin@example.test")
-        assert not auth.approve_google_link(request_id, user_id, "oauth-admin@example.test")
         token, actual_id = auth.google_session("https://accounts.google.com", "synthetic-subject")
         assert actual_id == user_id
         assert auth.revoke_google_link(user_id)
@@ -159,20 +142,23 @@ def test_google_admin_requires_approval_and_revocation_clears_sessions(monkeypat
     finally:
         with psycopg.connect(url) as conn:
             conn.execute("DELETE FROM users WHERE id=%s", (user_id,))
-            conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
 
 
-def test_google_approval_cli_requires_explicit_email_and_user_id(monkeypatch):
-    import builtins
+def test_google_approval_flow_is_gone(monkeypatch):
+    """2b: 승인 대기 코드가 없다. CLI 옵션은 거절되고 pending 라우트는 구글을 켜도 404이며 함수도 남지 않았다."""
     import sys
 
-    answers = iter(["request-number", "42", "admin@example.test"])
-    calls = []
+    for name in ("request_google_link", "google_pending_email", "approve_google_link"):
+        assert not hasattr(auth, name)
     monkeypatch.setattr(sys, "argv", ["backend.auth", "--approve-google"])
-    monkeypatch.setattr(builtins, "input", lambda prompt: next(answers))
-    monkeypatch.setattr(auth, "approve_google_link", lambda request, user_id, email: calls.append((request, user_id, email)) or True)
-    auth.provision()
-    assert calls == [("request-number", 42, "admin@example.test")]
+    with pytest.raises(SystemExit) as exit_info:
+        auth.provision()
+    assert exit_info.value.code == 2  # argparse: 모르는 옵션
+    monkeypatch.setenv("GOOGLE_AUTH_ENABLED", "1")
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "synthetic-client")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "synthetic-secret")
+    response = TestClient(app).get("/api/auth/google/pending", cookies={"sojafit_google_pending": "x"})
+    assert response.status_code == 404
 
 
 def test_admin_deactivation_revokes_sessions(monkeypatch):
@@ -261,7 +247,6 @@ def test_google_callback_requires_state_and_logs_in_the_account_with_the_same_em
     monkeypatch.setattr(auth, "google_session", lambda issuer, subject: None)
     outcome = {"signup": ("session-token", 4)}  # 이메일이 같은 기존 계정에 연결됨
     monkeypatch.setattr(auth, "google_signup", lambda issuer, subject, email, consent: outcome["signup"])
-    monkeypatch.setattr(auth, "request_google_link", lambda *args: pytest.fail("승인 대기 요청을 만들면 안 된다"))
     client = TestClient(app)
     start = client.get("/api/auth/google/start", follow_redirects=False)
     assert start.status_code == 303
@@ -272,7 +257,7 @@ def test_google_callback_requires_state_and_logs_in_the_account_with_the_same_em
     assert failed.headers["location"] == "/login?google=error"
     client.get("/api/auth/google/start", follow_redirects=False)
     linked = client.get("/api/auth/google/callback?code=synthetic-code&state=state-value", follow_redirects=False)
-    assert linked.status_code == 303 and linked.headers["location"] == "/login"  # 승인 대기(/api/auth/google/pending)가 아니다
+    assert linked.status_code == 303 and linked.headers["location"] == "/login"  # 승인 대기 화면이 아니라 바로 로그인
     assert f"{auth.COOKIE}=session-token" in linked.headers["set-cookie"]
     assert linked.headers["cache-control"] == "no-store"
     outcome["signup"] = None  # 비활성 · 이미 다른 신원에 연결됨
@@ -327,12 +312,9 @@ def google_db(monkeypatch):
         pytest.skip("requires an isolated authentication test database")
     monkeypatch.setenv("DATABASE_URL", url)
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
-    with psycopg.connect(url) as conn:
-        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
     yield url
     with psycopg.connect(url) as conn:
         conn.execute("DELETE FROM users WHERE login_id LIKE 'gt-%' OR login_id = 'demo-a@example.test'")
-        conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
 
 
 def _count(url, sql, *args):
@@ -461,7 +443,6 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "synthetic-secret")
     monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", code, f"{code}@example.test"))
     with psycopg.connect(url) as conn:
-        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
         ids = [conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, 'fake', 'admin') RETURNING id", (f"google-{i}@example.test",)).fetchone()[0] for i in (1, 2)]
         for index, user_id in enumerate(ids, 1):
             conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES (%s, %s, %s)", ("https://accounts.google.com", f"google-{index}", user_id))
@@ -480,7 +461,6 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
     finally:
         with psycopg.connect(url) as conn:
             conn.execute("DELETE FROM users WHERE id = ANY(%s)", (ids,))
-            conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
 
 
 def test_unlinked_google_admin_with_the_same_email_signs_in_through_the_callback_without_approval(monkeypatch):
@@ -501,7 +481,6 @@ def test_unlinked_google_admin_with_the_same_email_signs_in_through_the_callback
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "synthetic-secret")
     monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", code, f"{code}@example.test"))
     with psycopg.connect(url) as conn:
-        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
         admin = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('gt-auto-admin@example.test', 'fake', 'admin') RETURNING id").fetchone()[0]
     try:
         from urllib.parse import parse_qs, urlsplit
@@ -516,11 +495,10 @@ def test_unlinked_google_admin_with_the_same_email_signs_in_through_the_callback
         assert client.get("/api/auth/me").json() == {"user_id": admin, "role": "admin"}
         with psycopg.connect(url) as conn:
             assert conn.execute("SELECT count(*) FROM auth_google_identities WHERE user_id = %s", (admin,)).fetchone()[0] == 1
-            assert conn.execute("SELECT count(*) FROM auth_google_pending").fetchone()[0] == 0  # 승인 대기 요청이 생기지 않았다
+            assert conn.execute("SELECT to_regclass('auth_google_pending')").fetchone()[0] is None  # 승인 대기 표가 없다(029)
     finally:
         with psycopg.connect(url) as conn:
             conn.execute("DELETE FROM users WHERE id = %s", (admin,))
-            conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
 
 
 def test_password_hash_is_salted_and_rejects_bad_password():
@@ -885,30 +863,73 @@ def test_hash_only_cli_prints_a_scrypt_hash(monkeypatch, capsys):
     assert auth.verify_password("a-strong-demo-password", encoded)
 
 @pytest.mark.parametrize("mode", ["1", "0", ""])
-def test_demo_seed_configuration(mode):
-    """데모 모드에서만 비밀번호 없는 데모 일반 사용자 A · B를 만들고(다시 실행해도 그대로), 저장소에 비밀번호 해시가 없다."""
+def test_demo_accounts_are_created_on_first_demo_login_only_in_demo_mode(mode, monkeypatch):
+    """데모 모드에서만 첫 데모 로그인이 비밀번호 없는 일반 사용자 A · B를 만들고(다시 불러도 그 행 그대로), 저장소에 비밀번호 해시가 없다."""
     import os
-    from pathlib import Path
+
     import psycopg
 
     database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
     if not database_url:
         pytest.skip("requires an isolated authentication test database")
-    seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
-    assert "scrypt$" not in seed and f"'{auth.DEMO_PASSWORD_HASH}'" in seed  # 앱과 같은 표식, 고정 해시 없음
-    statement = seed[seed.index("DO $$"):]
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("DEMO_MODE", mode)
+    emails = list(auth.DEMO_ACCOUNTS.values())
     with psycopg.connect(database_url) as conn:
-        with conn.transaction(force_rollback=True):
-            conn.execute("CREATE TEMP TABLE users (login_id text PRIMARY KEY, password_hash text NOT NULL, role text NOT NULL) ON COMMIT DROP")
-            conn.execute("SELECT set_config('sojafit.demo_mode', %s, true)", (mode,))
-            for _ in range(2):
-                conn.execute(statement)
-            rows = conn.execute("SELECT login_id, password_hash, role FROM users ORDER BY login_id").fetchall()
-    if mode == "1":
-        assert rows == [(email, auth.DEMO_PASSWORD_HASH, "user") for email in auth.DEMO_ACCOUNTS.values()]
-        assert not auth.verify_password("", auth.DEMO_PASSWORD_HASH) and not auth.verify_password("demo-button-login-only", auth.DEMO_PASSWORD_HASH)
-    else:
-        assert rows == []
+        conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+    try:
+        results = [auth.demo_session(account) for account in ("a", "b", "a")]
+        with psycopg.connect(database_url) as conn:
+            rows = conn.execute("SELECT id, login_id, password_hash, role, is_active FROM users WHERE login_id = ANY(%s) ORDER BY login_id", (emails,)).fetchall()
+        if mode == "1":
+            assert all(results) and results[0][1] == results[2][1] != results[1][1]  # 두 번째 A는 같은 계정을 재사용한다
+            assert [row[1:] for row in rows] == [(email, auth.DEMO_PASSWORD_HASH, "user", True) for email in emails]
+            assert not auth.verify_password("", auth.DEMO_PASSWORD_HASH) and not auth.verify_password("demo-button-login-only", auth.DEMO_PASSWORD_HASH)
+        else:
+            assert results == [None, None, None] and rows == []
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
+
+
+def test_session_issuing_paths_purge_expired_sessions(monkeypatch):
+    """만료 세션 청소: 데모 로그인 · 구글 로그인 · 가입이 세션을 주기 전에 만료 행을 지우고, 안 만료된 행은 남긴다."""
+    import os
+
+    import psycopg
+
+    database_url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not database_url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    monkeypatch.setenv("DEMO_MODE", "1")
+    monkeypatch.setenv("AUTH_SECRET", "test-only-secret-32-bytes-minimum")
+    with psycopg.connect(database_url) as conn:
+        owner = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('purge-owner@example.test', 'fake', 'user') RETURNING id").fetchone()[0]
+        conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES ('https://accounts.google.com', 'purge-subject', %s)", (owner,))
+    emails = list(auth.DEMO_ACCOUNTS.values()) + ["purge-signup@example.test"]
+
+    def reset():
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM auth_sessions WHERE token_hash IN ('e' || repeat('0', 63), 'f' || repeat('0', 63))")
+            conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES ('e' || repeat('0', 63), %s, CURRENT_TIMESTAMP - INTERVAL '1 second'), "
+                         "('f' || repeat('0', 63), %s, CURRENT_TIMESTAMP + INTERVAL '1 hour')", (owner, owner))
+
+    def counts():
+        with psycopg.connect(database_url) as conn:
+            return [conn.execute("SELECT count(*) FROM auth_sessions WHERE token_hash = %s", (h,)).fetchone()[0] for h in ("e" + "0" * 63, "f" + "0" * 63)]
+
+    try:
+        for issue in (lambda: auth.demo_session("a"), lambda: auth.google_session("https://accounts.google.com", "purge-subject"),
+                      lambda: auth.google_signup("https://accounts.google.com", "purge-new", "purge-signup@example.test", True),
+                      lambda: auth.signup("purge-signup2@example.test", "a-strong-demo-password", "purge-ip")):
+            reset()
+            assert issue()
+            assert counts() == [0, 1]
+    finally:
+        with psycopg.connect(database_url) as conn:
+            conn.execute("DELETE FROM users WHERE id = %s OR login_id = ANY(%s) OR login_id = 'purge-signup2@example.test'", (owner, emails))
+            conn.execute("DELETE FROM auth_signup_attempts")
 
 
 def test_demo_login_routes_do_not_exist_outside_demo_mode(monkeypatch):
@@ -926,11 +947,10 @@ def test_demo_login_routes_do_not_exist_outside_demo_mode(monkeypatch):
         assert client.post("/api/auth/demo-login", headers={"origin": "http://testserver"}, json=body).status_code == 422
 
 
-def test_database_demo_buttons_log_into_separate_seeded_users_only(monkeypatch):
-    """버튼 로그인은 시드한 데모 계정 A · B(서로 다른 일반 사용자)에만 세션을 주고, 비밀번호 로그인은 늘 실패하며, 다른 계정에는 닿지 않는다."""
+def test_database_demo_buttons_create_and_log_into_separate_users_only(monkeypatch):
+    """버튼 로그인은 첫 로그인 때 만든 데모 계정 A · B(서로 다른 일반 사용자)에만 세션을 주고, 비밀번호 로그인은 늘 실패하며, 다른 계정에는 닿지 않는다."""
     import hashlib
     import os
-    from pathlib import Path
 
     import psycopg
 
@@ -940,13 +960,10 @@ def test_database_demo_buttons_log_into_separate_seeded_users_only(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     monkeypatch.setenv("DEMO_MODE", "1")
-    seed = Path("db/007_demo_accounts.sql").read_text(encoding="utf-8")
     headers = {"origin": "http://testserver"}
     emails = list(auth.DEMO_ACCOUNTS.values())
     with psycopg.connect(database_url) as conn:
         conn.execute("DELETE FROM users WHERE login_id = ANY(%s)", (emails,))
-        conn.execute("SELECT set_config('sojafit.demo_mode', '1', false)")
-        conn.execute(seed[seed.index("DO $$"):])
     try:
         clients = {account: TestClient(app) for account in auth.DEMO_ACCOUNTS}
         ids = {}
@@ -1205,19 +1222,15 @@ def test_client_ip_trusts_only_the_last_forwarded_entry_on_cloud_run(monkeypatch
     assert auth.client_ip(request()) == "169.254.1.1"
 
 
-def test_ip_limit_schema_is_idempotent_and_not_public():
+def test_ip_limit_tables_are_not_public():
     import os
-    from pathlib import Path
 
     import psycopg
 
     url = os.environ.get("TEST_AUTH_DATABASE_URL")
     if not url:
         pytest.skip("requires an isolated authentication test database")
-    sql = Path("db/021_auth_ip_limits.sql").read_text(encoding="utf-8")
     with psycopg.connect(url) as conn:
-        conn.execute(sql)
-        conn.execute(sql)  # [왜] 두 번 실행해도 오류 없이 그대로여야 한다(멱등)
         rows = conn.execute(
             "SELECT relname, relrowsecurity, EXISTS (SELECT 1 FROM aclexplode(coalesce(relacl, acldefault('r', relowner))) a WHERE a.grantee = 0) "
             "FROM pg_class WHERE relname IN ('auth_signup_attempts', 'auth_login_ip_attempts') ORDER BY relname"
