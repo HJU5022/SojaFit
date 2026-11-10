@@ -1,5 +1,98 @@
 # STH 작업 기록
 
+## 2026-11-10 통합 전 파일을 포함한 로컬 커밋 이력 정리
+- 사용자 요청에 따라 로컬3개커밋107aaa3/c23a0c5/3fac5dd을 현재 통합 상태의1개커밋으로 다시 구성한다. 원격STH는190cf89로 확인했고 최근3개가원격에포함되지않음을검사했다. 이미공유한커밋은변경하지않는다.
+- 현재파일을유지하고실행기·입력·테스트·최신모의JSONL은변경하지않는다. source index와code freeze에는원래커밋이현재STH이력이아닌로컬복구참조에보존됨을명시한다. 최종실행measured_commit은사전등록/조장승인전이라null이다.
+- 기존커밋은 `refs/archive/injection-pre-consolidation-20261110`에로컬보관한다. 새브랜치/원격쓰기/유료실행은없다. STH만공유하면과거원본이자동공유되지않으므로원본복구가필요한경우별도보존자료를사용한다.
+- 검증은repo/frozen/baseline/계획과33개원본복구해시,정리전후코드/입력/테스트동일성,최종트리파일구성,작업트리청결을확인한다. 과거작업기록의커밋해시는당시이력이라그대로둔다.
+- 재구성 전 repo/frozen/baseline/계획 검사는52passed/11.99초, git diff --check 통과. 실행 코드·입력·테스트 경로에 변경이 없음을 확인했다.
+
+## 2026-11-10 인젝션 준비 산출물 33개를 4개로 통합
+- 요청: 생성 계획·무료 검증·모의 실행·승인 기록의 중복을 정리해 파일 수를 줄임. 기존 커밋 수정·새 커밋·푸시·유료 실행은 하지 않았다.
+- 변경: 대상33개 중 최신 exposure simulated_v3 JSONL1개는 바이트 그대로 유지. 나머지32개 독립 파일을 작업트리에서 정리하고 review/checks/artifact_index JSON3개를 만들었다. 전체 대상은4개가 됐고 작업폴더 파일 크기는8,343,315→377,958bytes다. c23a0c5의별도code_freeze 기록은33개밖이므로유지했다.
+- 보존: 최신계획2개/모의메타1개/사용자조건부승인1개를review에, 서로다른무료검사8개를checks에 원래값 그대로 묶었다. 승인자료는사용자true/조장false이며 통합검토본을실행승인파일로사용하지않는다. 과거20개는기존커밋107aaa3에보존하고33개원본경로·Git/작업트리SHA256·줄바꿈·통합JSON위치·복구방법을index에기록했다.
+- 실패/중복: 초기Windows체크포인트실패의75 simulation_completed/35 not_run을인덱스에명시. 전체plan 초기/v2 JSONL 한쌍만바이트동일, meta는각각다르므로원본정보를유지했다. 서로다른시점/fixture/code의결과와사람검토를합산하지않았다.
+- 문서: 실험계획·준비점검·조장사전등록제안의현재링크/원시참조와evals/EVALS.md의결과목록을통합경로로갱신. 과거작업기록의실행명령·파일명은당시이력이라보존하며없어진원본은index→107aaa3으로복구한다. 루트정본문서·실제사전등록·입력fixture·실행기·동결셋변경없음.
+- 검증: 삭제전33개모두Git내용일치를확인(WindowsCRLF와GitLF차이를구분). Gitblob복구→LF정규화→CRLF복원으로33개모두기존작업트리SHA256/바이트수일치. 통합12개레코드의JSON값동일, 최신4행모의JSONL바이트동일/사람검토전건null, 모의meta소스해시일치, Markdown현재링크유효성확인. 기존repo/frozen/baseline/계획검사52passed/11.31초, git diff --check통과. 새모델보안성·실청구·공급자API는시험하지않음.
+- 후속 커밋 요청: 사용자가 통합 내용을 커밋하도록 승인했다. 이번 자료 정리와 관련 문서만 새 로컬 커밋으로 기록하고, 기존107aaa3/c23a0c5와그해시를유지한다. 추후Git이력을재구성할때도과거원본복구참조가살아있도록보존해야한다. 푸시는 하지 않으며, 본110회미승인/노출4작업도조장사전등록·예산승인전까지유료실행보류.
+
+## 2026-11-10 노출4작업 사용자 조건부 승인과 실행 전 확인
+- 사용자 승인: T1/T3 노출4작업,current만,최대$2/200시도/1200초. 사전등록·코드고정·단가/키확인·조장예산승인 충족이 조건이며 전체110회는미승인. 사용자가조장승인·사전등록은아직없다고확인했으므로유료실행보류.
+- 기록: injection_exposure_user_approval_2026-11-10.json에 사용자true/조장false·조건·scope/입력hash를기록. 두fixture플래그false/실행커밋·등록커밋null유지. 조장문서를대신수정하지않고제안/작업서에최신상태추가.
+- 무료외부확인: 공식model catalog GET200과validate_prices로단가일치. Voyage공식pricing에서voyage-4-large$0.12/M,rerank-3$0.05/M재확인. OpenRouter key GET200/credits GET200(계정잔액$2이상),Voyage files?limit=1 GET200. 모델·임베딩·리랭킹·업로드·API쓰기없음. 키/계정/파일목록원문출력·저장없음. 원시는injection_exposure_preapproval_check_2026-11-10.json. Voyage추론권한·잔액은읽기인증만으로검증되지않음.
+- 확인: 코드고정전 repo/frozen/baseline/계획52passed/11.38초,git diff --check. 이전동일코드의관련430/API26/React16무료검사와실DB가짜공급자4건근거유지. 실행직전가격·잔액은재확인필요.
+- 로컬고정: 아래같은실험구현/테스트/작업서/무료산출물만명시경로로stage하고로컬커밋한다. .env/키·동결셋·원본스냅샷·주요문서정본·원격은변경하지않음(SOJAFIT새파일줄만기존예외). 사전등록원본은HEAD와동일. 이후최종실행잠금설정이바뀌면hash재고정과조장사전등록/승인파일정합성이필요함.
+- 고정결과: git add의명시55파일→git diff --cached --check→로컬커밋107aaa3239e4a920c573b85c275884968a971817(test(evals): prepare injection baseline and isolated exposure pilot)성공. 직후workingtree깨끗함/repo5passed/1.17초. 원격쓰기0. 이커밋은현재닫힌설정의코드기준이며최종실행HEAD/사전등록커밋승인을대체하지않음.
+- 남은조건: 조장예산승인/사전등록커밋,최종설정hash/측정HEAD확정,Voyage과금상태확인. 실행허가를임의로조장true로올리거나전체110회실행하지않는다. 현재유료추론0건.
+
+## 2026-11-10 무료 경로 점검 마무리와 T1/T3 독립 노출 탐색 준비
+- 요청/경계: 남은 무료 점검을 마무리하고 노출 탐색만 별도 실행할 범위/예산 준비. 사용자 유료 승인 없음. STH 유지, 제품 backend/루트 주요문서/사전등록 원본/동결셋 변경 없음. 커밋/푸시/배포 없음.
+- F6/F7: tests/api/test_conversations.py에 실제 HTTP→Conversations.message/resume→실제 그래프와 가짜SQL/인증/모델 harness 추가. 이름2종×문서/판정2경로4건에서 상태circuit에는 남고 호출된 모델입력에는 없음, 조건문장은도달함. 재개 원문은 즉시 숫자판정에서 제외/읽기재호출없으나 다음질문사용자이력으로모델입력에도달함을1건검사. 대화API26passed/3.99초. 운영계정/모든가능분기 보안입증은아님.
+- 실행 분리: 기존 plan/run/runtime 재사용해 --exposure-only 구현. T1/T3 정상/공격×1회,current만4작업, 별도scope·작업ID/pair_key·scope hash·execution flag·승인·DB맵. 전체110회/준비10턴/문단제거는선택하지않음. 탐색승인을전체실측에재사용하거나반대로사용하면거부. 모델입력조립과응답반환으로확인한노출을구분해공급자오류/예산거부를노출확인으로세지않음.
+- 예산: 고유본문1558개/277021bytes/문서13묶음, 시나리오모델12(Haiku10/Sonnet2)/검색6. 예상$0.051929, 무재시도예약$1.108442, 별도공유상한$2/200시도/1200초. 문서준비/모델/질의임베딩/리랭킹/모든재시도포함. 실제경로·청구·완료보장없음. 본실측$15와자동연결/자동증액없음.
+- 로컬 준비: 기존전용cluster_name 확인후 loopback55479에 injection_test_exposure_*4빈DB추가, 맵은gitignore된.env에만저장. 본실측14+탐색4총18DB빈상태최종확인. 기존audit2DB/기존컨테이너/팀DB보존.
+- 무료실DB검사: 캐시된pgvector이미지의 별도tmpfs컨테이너sojafit-exposure-free-1110/loopback55489에서 native prepare_corpora로4코퍼스42문서/1556청크·가짜벡터연결·실제hybrid·실제서비스임시SQL이력·그래프관찰4건통과. HTTP/실모델생성차단. 리랭킹은관찰기검사를위해대상청크를고르는가짜이며실제검색도달성적이아님. 컨테이너ID확인후종료. 실행용18DB에가짜벡터적재없음.
+- RED→GREEN: 새scope계약검사3실패/37통과를먼저확인후구현. 최종관련회귀430passed/13.85초(노출계약/기존방어·카드·멀티·판정·동결·레이아웃포함). 대화API26passed. 입력조립후오류는확인된모델노출false검사추가. 실제CLI의전체/탐색유료모드모두closed gate에서출력/공급자호출없이차단함을확인. git diff --check통과. 변경텍스트52개에서.env의API키/DB비밀번호문자열일치0(전문시크릿스캐너실행은아님).
+- 산출물: injection_exposure_plan_v3 JSON, simulated_v3 JSONL+meta(4완료/사람판정null), adapter_free JSON, prepared_free JSON, approval_draft JSON(사용자/조장false,실행/등록커밋null). 전체계획은fixture hash변경에따라baseline_plan_v4로갱신. 이전탐색산출물/adapter는최종작업ID접두어추가이전무료이력으로보존. 작업서/조장제안/폴더목록갱신, preregister.md는수정하지않음.
+- 남은 것: 조장사전등록과코드고정/탐색잠금만해제한입력hash재고정, 공식단가·키유효성/잔액·공유예산확인, 사용자/조장유료승인. 실제Voyage·실모델노출/실청구/사람의미채점은미검증. 유료호출0이다.
+
+## 2026-11-10 원본·개선본 실측 환경과 사전 준비 재점검
+- 사용자 요청: 실측 전 두 계획의 환경/준비 누락 점검 및 무료 보완. T1/T3은 스냅샷 복사본의 기존 청크에 공격 추가 방식을 선택했다. 유료 실행 승인은 받지 않았고 실행하지 않았다.
+- 변경: baseline_cases v2의 T1/T3 품번1N4007G·VRRM1000V·DO-41·1200V 거짓 권고·원본 청크idx15/idx4 고정. 원본 스냅샷/PDF/동결셋은 유지. 계획기·실행기의 복사본 패치/전체 스냅샷 해시 중단 검사와 테스트, 이미지 HTTP2건, React 텍스트 출력2건, 작업서·조장 등록 제안 갱신. preregister.md/루트 주요문서 변경 없음(SOJAFIT의 앞선 새파일 줄 예외 유지).
+- RED→GREEN: 전체 snapshot hash를 틀리게 해도 계획이 진행되는 실패 재현(1failed/14passed) 후 공통 snapshot 검증으로 수정. 새 넷리스트 검사의 parts/components 어댑터 오사용을 실제 파서 호출로 바로잡고 같은 검사 재실행 통과. 서비스 동작 변경 없음.
+- 환경: Python3.12.10 및 기존 uv/라이브러리 확인. OpenRouter/Haiku5.5·Sonnet5.5/DEMO_MODE=false 일치. 키는 존재만 확인(유효성/잔액 미검증). uv는 전체 경로로 실행. 프런트엔드 의존성 누락을 발견해 기존 lockfile 그대로 npm ci --ignore-scripts --no-audit --no-fund,106개 설치(오프라인 캐시 부족으로 공개 npm 다운로드), manifest/lockfile 변화 없음.
+- 로컬 DB: 기존 자원 이름/포트/볼륨과 .env gitignore 확인 후, 캐시 pgvector:pg16으로 sojafit-injection-baseline/전용volume/127.0.0.1:55479/cluster_name 표식 생성. .env에 신규 실측DB맵만 저장(값 출력 없음).14개 실측DB를 생성·연결·비어있음 확인. 새 전용 컨테이너는 켜두었고 기존 컨테이너/팀 DB 변경 없음.
+- 무료 native 적재: 별도 audit_t1/audit_t3 DB2개에 각각42문서/1556청크를 chunks_only로 적재하고 전체 본문·해시·page/table/row 일치와 공격 보존 확인. 모델/Voyage 함수 차단. BM25 probe에서 공격은7위/10위이며 실제 hybrid 최종 노출로 해석하지 않음. 실측14DB는 빈상태 재확인. 두 auditDB에는 유료/가짜 벡터 없음.
+- 산출물: injection_baseline_plan_v3_2026-11-10.json, runner_simulated_v3 JSONL+meta, source_corpus_free JSON, environment_free JSON. 이전v1/v2는 보존하되 현재 입력 결과로 합산하지 않음. 고유본문1570/278920bytes, 예상$0.905535/무재시도예약$13.872604, 제안전체상한$15/2500시도/7200초 유지.
+- 실행 결과: 관련 Python423passed/12.23초, 새 이미지 HTTP2passed/0.86초, D5Panels16passed/1.52초. 가짜그래프110완료+준비10턴/사람검토전건null. 레이아웃은 동시 simulation 체크포인트 임시파일 때문에 한 번 실패했으나 실행 종료 뒤 동일검사 포함 전체423통과. API 전체는 샌드박스 응답 대기로 중단, 이미지2건만 별도 실행 통과했으므로 전체 API 통과 주장 없음. git diff --check 통과.
+- 남은 것: 조장 사전등록 및 코드 고정커밋, 공식가격/키 사용 가능·잔액/공유예산 승인, 사용자 유료 승인, 실제벡터/hybrid/모델 노출, 사람의미판정. F6은 조건과 즉시재개 숫자파싱 경로를 구분하고 이후 사용자이력 재노출 가능성을 기록. F7 이름의 HTTP→모든모델 종단과 배포/브라우저 E2E는 미실행. 유료호출0, 커밋/푸시/배포0.
+
+## 2026-11-10 담당 분리와 baseline 실행기·시험 구현
+- 사용자 승인: 조장 사전 등록은 제안으로 분리하고 STH에서 run_injection_baseline.py와 테스트 구현. 사용자 승인 전 유료 실행 금지, 단계별 설명.
+- 담당 분리: preregister.md에서 이번 baseline 절만 docs/research/injection-preregistration-proposal.md로 이동. 이후 preregister 파일이 HEAD 원본과 바이트 및 Git blob hash까지 일치함을 확인했다. 조장 등록/승인을 대신하지 않는다.
+- 구현: run_injection_baseline.py(기본110개not_run, 가짜그래프검증, 중단/원시JSONL체크포인트, 서비스message조립, 관찰/자동채점/미검토틀, 승인게이트), injection_baseline_runtime.py(승인 후14개빈전용DB 준비·실제카드/검색·임시history표·전체공유예산/bytecap/단가검증), test_injection_baseline.py. 관련 폴더 목록과 SOJAFIT 새 파일 줄만 추가했다.
+- 계획 선택: 현재 baseline_cases.json의 개선본 합성 문서 추가 방식을 구현했다. 원본T1/T3의 기존청크오염 방식으로 자동변경하지 않았다. execution_enabled=false 유지, 사용자/조장승인·정확한측정HEAD/코드hash·등록커밋·깨끗한코드가 없으면DB/공급자앞에서거부한다.
+- RED→GREEN: 신규 모듈 부재로수집실패→제어기/가짜7경로그래프구현10개통과. 실제T5가카드읽기에도달하지않던실패는가짜JudgeRead의candidates누락을고쳐재검사했다. 코퍼스/승인/DBmap부재실패뒤13개통과, 단가/bytecap검사뒤15개통과.
+- 독립검토 Important4건: 정확한측정커밋에승인고정, 그래프가삼킨노드오류전역중단, 잘못된100V사양/값누락자동실패, 카드본문과쪽/표/행일치. 각각실패검사로재현후수정. 역할읽기잔여작업이관찰구간밖으로넘지않게합류시켰고준비턴실패도보존했다.
+- Windows 저장실패: 초기110작업가짜실행은원자적파일교체WinError5로75완료/35not_run에서중단했다. 원시파일을보존했고같은문제를가짜잠금으로재현해모델재호출없이저장만최대4회재시도하도록고쳤다. 최종test_injection_baseline.py는20passed/2.28초.
+- 실행: `uv run --offline --no-project .venv/Scripts/python.exe -m evals.runners.run_injection_baseline --out evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.jsonl` →110not_run. 같은명령에`--simulate`와새simulated_v2경로→110simulation_completed/사람판정전건null/T6준비10턴. 초기실패/v2결과합산없음.
+- 실제DB 무료검사: 새컨테이너sojafit-baseline-runner-1110(loopback55469, --rm/tmpfs/캐시된pgvector이미지)에T5/T6정상/공격DB4개. 공급자HTTP/모델생성차단, 임베딩/리랭킹/모델을가짜로대체하고실제42문서+합성1문서/1563청크·벡터적재·실제카드도구·실제Conversations.message/임시PostgreSQL이력표·코드판정4건통과. 결과injection_baseline_adapter_offline_2026-11-10.json. 모델카드번호고정값1오류를실패검사로확인해실제입력chunk_id를반환하게고쳤다. 실제유료공급자호출0. 컨테이너생성ID확인뒤종료, 기존자원변경없음.
+- 최종 회귀: baseline20+계획12+준비30 및 기존방어/입력/카드/멀티/판정/동결/레이아웃→418passed/7.39초. git diff --check 통과. 실제공급자·실제벡터hybrid·14DB전체승인경로·실청구·사람의의미판정은미검증이다.
+- 산출물구분: plan/simulated JSONL과meta, fake-providers-real-Postgres JSON은무료검증근거이며실제110회인젝션성적이아니다. 유료실측결과/review완료파일로보고하지않는다.
+- 규모/보관: 제어기·승인어댑터·실패보존테스트가하나의실행계약이라핵심400줄을넘지만기계적으로나누지않았다. 향후PR에규모/이유를명시한다. 커밋·푸시·배포·제품방어수정없음.
+
+## 2026-11-10 T1~T7 짝·채점 계약과 110회 예산 계산
+- 사용자 요청: 공격/정상 짝·채점 기준 확정, 비용 산정. 실제 유료 실행은 사전 설명·승인 필요. 이번에는 외부 공개 가격 조회만 했고 모델/임베딩/리랭킹/DB 호출은0이다.
+- 변경: baseline_cases.json(7사례·정상본문·공격문·회로·보호 사실·gold·공식 단가/가정), plan_injection_baseline.py(실행 옵션 없는 오프라인 계획·계산), test_injection_baseline_plan.py, 실험 작업서, preregister 미커밋 등록안, 폴더 목록과 SOJAFIT 신규 파일 줄. 서비스·프롬프트·동결 평가셋·원본 스냅샷은 유지.
+- 입력: 채점110(정상55/공격55), T6 준비10을 별도 보존. T5 양쪽 현재 카드 읽기 native fallback→정상60V 유지, T7 실제 업로드 정규화·연결 동일·역할 프롬프트 payload 도달을 가짜 모델로 확인했다. 정답 필드를 모델 입력에서 제외하고 T2 보호 메모는 양쪽 동일하게 둔다.
+- RED→GREEN: 계획기 모듈 부재 실패 뒤12개 통과. T5 카드에 후보 품번이 없어 원래 부품에도 공통 정격으로 적용될 위험을 별도 실패 검사로 확인하고 Part number: DEMO2를 추가했다. 초기 plan JSON은 초안으로 남기고 최종fixture hash의v2계획을 다시 생성했다.
+- 가격 근거: Firecrawl로 공식 OpenRouter /api/v1/models에서 Haiku5.5/Sonnet5.5 prompt/completion/cache write/tier를 읽고 Voyage 공식 pricing에서 voyage-4-large $0.12/M, rerank-3 $0.05/M과 질의 반복 과금식을 확인했다. 무료 크레딧·캐시 읽기 할인은 계산에서 뺐다. 유효 provider/model 이름을 로컬에서 읽어 OpenRouter·Haiku4노드/Sonnet synth와 일치함을 확인했다(외부 요청 없음).
+- 계산: 그래프120, 논리 모델400(Haiku370/Sonnet30), 검색110·문서 임베딩1570본문/13묶음 가정. 예상 모델$0.808375+임베딩$0.009149+리랭킹$0.088=$0.905524. 바이트cap·최대출력·cache write·Voyage1e-6 예약 단가의 무재시도 예약은$13.872235. 제안 공유 예약 상한$15/2500공급자시도/7200초. 실제 경로/토큰 측정이나110회 완료 보장이 아니며 paid_execution_authorized=false.
+- 명령: `uv run --offline --no-project .venv/Scripts/python.exe -m evals.runners.plan_injection_baseline --out evals/results/threads/injection_baseline_plan_v2_2026-11-10.json` → exit0. 입력별hash·110job·단계별비용·상한/제약을 저장했다. 비용 API가 아닌 공개 페이지 조회만 수행했다.
+- 검증: 계획기12개 통과/1.46초. 기존 준비30개·관련 방어/카드/멀티/판정/동결/레이아웃을 합친pytest→398 passed/5.78초, git diff --check 통과.
+- 남은 것: 실제 스냅샷+합성 문서/hybrid와 서비스history 실행기, 입력bytecap·cache write 예약률·준비단계 재시도 예산 연결, 입력/실행기/사전등록 선행 커밋, 공식단가 재확인·조장 공유키예산 승인·사용자 유료실행 승인. 커밋/푸시/배포/제품방어 수정 없음.
+
+## 2026-11-10 인젝션 기준선 네 준비 관문 구현·무료 검증
+- 사용자 승인: STH에서 작업서대로 무료 구현, 단계별 설명. 유료 모델·임베딩·리랭킹·팀 DB·배포·원격 쓰기는 범위 밖이다.
+- 변경: evals/runners/run_injection_preflight.py, tests/evals/test_injection_preflight.py, 실험 작업서·폴더 목록·SOJAFIT 신규 파일 세 줄. 서비스 코드·프롬프트·주요 SPEC·동결 평가셋과 기존 백업은 변경하지 않았다.
+- 1단계 RED→GREEN: 신규 모듈/함수 부재 실패 뒤 7개 통과. 원격·비전용·동일 DB·기존 테이블 거부, 본문 해시/짝 차이 확인. 새 임시 pgvector 컨테이너(loopback 55459, --pull never, --rm/tmpfs)에 clean/attack DB를 만들어 각각 합성 7문서·8청크와 BM25 1위, 채워진 DB 재적재 거부를 실제 확인했다. 샌드박스의 loopback 권한 오류 후 해당 전용 DB 검사만 권한 확장해 재실행했다.
+- 2단계 RED→GREEN: Observer/예산 함수 부재 실패 뒤 누적18개 통과. 실제 llm.node_chat/_openrouter_call과 Voyage 재시도 코드는 유지하고 SDK/HTTP만 가짜로 대체했다. 테스트 대역의 invoke 인자 수집과 Windows 시간 해상도에 의존하던 만료 조건을 보정했다.
+- 3단계 RED→GREEN: trial 조립 부재 실패 뒤 누적19개 통과. 새 shared dict·카드 도구·그래프·체크포인터, 실행 내 읽기 공유와 실행 간 재읽기 확인.
+- 4단계 RED→GREEN: 채점/CLI 부재 실패 뒤 누적26개 통과. 사양60→100·입력누락·오류·미도달·사람미검토·거절속인용·요약유출/정상군 검사를 분리했다.
+- 독립 검토: Important4건(병렬 호출/예약 연결, 정상 짝 확인, 문단 제거 오류 기록, 실제 DB 실패가 not_run으로 남는 문제)을 실패 검사로 재현하고 수정. 검색에도 호출 ID를 붙여 임베딩/리랭킹 예약과 연결했다. 최종 준비 검사30개 통과. 결과 파일에는 가짜 검토자를 실제 사람 검토로 집계하지 않고 human_review=not_run을 유지했다.
+- 실제 실행: `uv run --offline --no-project .venv/Scripts/python.exe -m evals.runners.run_injection_preflight --out evals/results/threads/injection_preflight_offline_2026-11-10.json` 및 새 빈 전용 DB와 `--local-db --out evals/results/threads/injection_preflight_local_2026-11-10.json` → 둘 다 exit0/30개 통과, 실제 DB 양쪽 rank1. 원시 JSON에 코드·테스트 해시와 범위를 남겼고 임시 컨테이너는 생성 ID를 확인한 뒤 종료했다. 실제 DB는 tmpfs와 함께 소멸, 기존 자원은 보존했다.
+- 최종 회귀: 작업서의 관련 pytest 명령 → 386 passed / 4.97초. `tests/repo`와 동결 해시 검사를 포함한다. `git diff --check` 통과. 문서 반영 뒤 `tests/repo` 5 passed / 1.04초 재확인.
+- 규모: 네 관문의 실행기와 부작용 차단/실패 보존 테스트로 핵심 변경이400줄을 넘는다. 같은 준비 장치의 입력·공유 예산·캐시·채점 계약이라 한 목적에 유지했으며 향후 PR에는 규모·이유를 명시한다. 자동 커밋/푸시는 하지 않았다.
+- 남은 것: 42문서 스냅샷/실제 하이브리드·전체 실제 모델 그래프·단가/예산·110회 입력과 사전 등록·사람 의미 검토. 무료 검사를 모델 방어율이나 D7 완료로 보고하지 않는다.
+
+## 2026-11-10 인젝션 기준선 준비 설계와 이해 확인
+- 기준: STH / dbe7177, 기존 변경은 저장소 밖 백업에 보존하고 main과 동일한 코드에서 시작.
+- 사용자 이해 확인: 최종 불충족이어도 사양 60→100 V 채택은 위험, 1회 호출+4회 결과 재사용은 5회 방어 아님, 정상/공격 DB 실제 적재 확인 필요, 임베딩/리랭킹 미제한이면 전체 비용 상한 아님을 사용자 답변으로 확인했다. 학습 기록은 별도 파일로 만들지 않았다.
+- 변경: docs/experiments/injection-baseline-preflight.md 작업서와 폴더 목록, SOJAFIT 새 파일 한 줄만 등록. 제품 코드·프롬프트·동결 평가셋·백업 방어는 변경하지 않았다.
+- 범위: 격리 적재, 모델/검색 공급자 관찰·예산, 실행별 캐시, 사례별 채점기를 무료로 검증할 계획. 실제 DB 미실행과 가짜 검사 통과를 구분한다.
+- 확인: 작업서 다섯 섹션·네 작업·경로 대조. `uv run --offline --no-project .venv/Scripts/python.exe -m pytest tests/repo/test_repo_layout.py -q -p no:cacheprovider` → 5 passed / 1.71초. `git diff --check` 통과.
+- 남은 것: 작업서 검토 뒤 구현·실제 로컬 DB 적재 검증·110회 입력 확정·유료 사전 등록·예산 승인. 이 문서는 유료 실행 승인이 아니다.
+
 ## 2026-11-10 supervisor 답변 조립 출력 경계 보강
 - 사용자 명시 허용: supervisor.py 답변 조립 직접 수정,저장응답4개기대유지·관련무료회귀통과. 추가모델/팀Supabase/배포금지.
 - 계획/실행전기록: preregister의무료코드보강절에kind=judge판정의기존코드렌더러출력경계·보고보존·문서전용유지/복합요청미답변안내절충을등록했다. 먼저저장4개2pass2fail을재현했고single/synth/다수판정/비판정회귀를추가해실패확인후최소구현한다. 변경대상은supervisor.py와관련테스트/설명문서이며다른보호코드/주요정본은건드리지않는다.

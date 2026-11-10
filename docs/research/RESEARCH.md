@@ -7,6 +7,7 @@
 - 담당: 쓴 사람
 
 ## 파일
+- `injection-preregistration-proposal.md` — 조장 담당 preregister 새 절을 분리한 미반영 제안. 현재 개선본 기준이며 실제 사전 등록 커밋·유료 실행 승인이 아님
 - `thread-memory-operations-review.md` — 사용자 thread·승인 기억의 운영 실측, 이전 검증 스냅샷과 조장 정본 반영 제안
 - `thread-memory-work-summary.md` — 프롬프트 인젝션 관련 절만 뽑은 발췌(STH): D6·D7 검증 경계, 판정 출력 변경 제안, C1/C2 실제 모델 기준선과 조장 전달용 C2 재현·원인·수정 위치·재검증 기준
 - `embedding-candidate-investigation.md` — 임베딩 후보 13종을 넣은 이유, 개별 조사·실행 과정, 중단 사유와 다음 평가 조건

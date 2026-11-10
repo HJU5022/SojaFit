@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "purpose": "artifact_provenance_and_historical_recovery",
+  "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+  "original_file_count": 33,
+  "consolidated_file_count": 4,
+  "historical_files_retained_in_git": 20,
+  "canonical_files": [
+    "evals/results/threads/injection_baseline_review_2026-11-10.json",
+    "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+    "evals/results/threads/injection_baseline_artifact_index_2026-11-10.json",
+    "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl"
+  ],
+  "exact_duplicate_groups": [
+    [
+      "evals/results/threads/injection_baseline_runner_plan_2026-11-10.jsonl",
+      "evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.jsonl"
+    ]
+  ],
+  "preserved_failure_notes": [
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_2026-11-10.jsonl",
+      "observation": "Windows checkpoint replacement failed after 75 simulation_completed rows; 35 not_run rows were preserved. This is not a model failure or a paid result."
+    }
+  ],
+  "artifacts": [
+    {
+      "original_path": "evals/results/threads/injection_baseline_adapter_offline_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "6224f39139db6452c73372ce940c940bb2bc461f43e198ea2111f6955c0e1717",
+      "original_worktree_sha256": "082cc3ef62cd60729bc443f208380d86c55fc01b265c58eb158ab35f4826ac3a",
+      "original_bytes": 2387,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_adapter_offline_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/baseline_adapter/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_environment_free_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "7ee7d15470a1d3ca6f45f86ff44fb0fb9297e5d16981fbc81d8d2216dc9a7676",
+      "original_worktree_sha256": "786d77e22588e5f24968ac52c4466706cb90c52b33622ea89ccc7fa15e34bb96",
+      "original_bytes": 1397,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_environment_free_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/baseline_environment/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_plan_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "8589a94f8e8065df97509a66172ac88c2bda33712277afbcf909894f4dfcf7c6",
+      "original_worktree_sha256": "0f4728196a38eb7865a1396978b5df29f1b737b4dd59201a0966c7aed1bd65da",
+      "original_bytes": 35498,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_plan_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_plan_v2_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "5dd12d76e7ec8bff8964b600943039ab044d5549427c0df6e08093f31ecc5451",
+      "original_worktree_sha256": "bd6f60f879c013b505dd6a309888b6e6c47728b2aef4e77c2dd163c84ac35d55",
+      "original_bytes": 35498,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_plan_v2_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_plan_v3_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "93202cecb1833407a635dfaff74888b0cb9118f2299c6f4e2945e9788c0b6aac",
+      "original_worktree_sha256": "6adf63c635bddead6448959826b29266a2cc06cc824ce2a4726e7215cc9bd9f0",
+      "original_bytes": 35497,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_plan_v3_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_plan_v4_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "f9ba2fa9c699bedeb63a5d2290741721ca5754cb477aa9e38f2384b11c85fc93",
+      "original_worktree_sha256": "397f8dd801eb881e3dd6628e8a969af23477b8e6ed2869d96d652d41f8e1bdf2",
+      "original_bytes": 35584,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_plan_v4_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_review_2026-11-10.json",
+        "json_pointer": "/plans/baseline/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_plan_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "350c92e5538688f3ae26bc5ffbeb38e2061a9358ba4020225213439db42de26e",
+      "original_worktree_sha256": "9f0910d26286e595174d37c780ac899a5087c0c07b06899c12fe5f942df2a5b9",
+      "original_bytes": 66890,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_plan_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 110,
+        "statuses": {
+          "not_run": 110
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_plan_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "2aa72cc1123244a77c1b107098677cde3acf64667fda83f1e8deb49fde39059a",
+      "original_worktree_sha256": "6d4084ee66b8caacd7ee466f4e067a892cae0c801761b7320e762142cf643c8c",
+      "original_bytes": 698,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_plan_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "350c92e5538688f3ae26bc5ffbeb38e2061a9358ba4020225213439db42de26e",
+      "original_worktree_sha256": "9f0910d26286e595174d37c780ac899a5087c0c07b06899c12fe5f942df2a5b9",
+      "original_bytes": 66890,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 110,
+        "statuses": {
+          "not_run": 110
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "70e7a40ccc38c1e3d936280211dbec24f3160d7437d1cd8392cd3c4687d216c9",
+      "original_worktree_sha256": "691eaf96397622918d28721c2cbde4c03d1d43b28e2961b299971fa133268101",
+      "original_bytes": 698,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_plan_v2_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "46c3acc2aaa35866ed7039d218726154d42bc4915ce6f9eb2b7ba50ed0077910",
+      "original_worktree_sha256": "44efa8d1e44a35a8cbc9d9e1fc3d3800f1678eeb11991c3df0007c052c517d17",
+      "original_bytes": 1226618,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 110,
+        "statuses": {
+          "simulation_completed": 75,
+          "not_run": 35
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "96900e21dfd04859a593f527625ebf9f65a0b137d216f90015e7d7ee19103f23",
+      "original_worktree_sha256": "ebaacea22b29677289eca2512ed46ca962dc465a3e0580ef8bee3c982182b0e2",
+      "original_bytes": 701,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_v2_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "e39edd3d70dba775623a3c94242f948dff270a853bc45d0066fa1e0f9359bc3c",
+      "original_worktree_sha256": "213af0fb7749dfed30248da3b22da352345a260d2cb70164cfe49f0cbe6999c4",
+      "original_bytes": 1884104,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_v2_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 110,
+        "statuses": {
+          "simulation_completed": 110
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_v2_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "37fd4568f419b1f5d37a32d441e9c28088c759ac7654c9c292d308492a64fe1c",
+      "original_worktree_sha256": "afea5f11b3e0f472880dbb8524f1c3f44f05191b6bfdebaceaeaefa9b9370565",
+      "original_bytes": 701,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_v2_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_v3_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "54d5b28446c3e8a83da2c5e1a58d746eb5d6f1188967e16c058eb0cb97ec4367",
+      "original_worktree_sha256": "5297c202a6d0c2127c28f669223313bebc07e1d38d86ffd62dc558262018b16d",
+      "original_bytes": 4094781,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_v3_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 110,
+        "statuses": {
+          "simulation_completed": 110
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_runner_simulated_v3_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "0865fdf9cf586edf88276247f17157a7ab6c08870ef0d25de9d6f38106f7da2e",
+      "original_worktree_sha256": "ec04068f416c8d5b2c6a7535364926ee749df01806d04f562fbc0ed405cbe665",
+      "original_bytes": 701,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_runner_simulated_v3_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_baseline_source_corpus_free_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "a7757d0c52dcdc7398bde8f30aee810579cd12c572a146c09f8433b344644878",
+      "original_worktree_sha256": "05bd264a73ad1b895c7c0569f08f68c3da6696e52535df70d704f2e64df3589e",
+      "original_bytes": 1078,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_baseline_source_corpus_free_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/source_corpus/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_adapter_free_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "43be6a8f3262727f71f4a55b665778ad35d48c2576ea6b215d31879ca838d45d",
+      "original_worktree_sha256": "846d7466f767d662cdef543fd46fb9a219f4b26a11f864457583ca6b009187f6",
+      "original_bytes": 4064,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_adapter_free_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/exposure_adapter/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_approval_draft_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "4c5bd54c014a8fe2f67ef8bf5b0c6d6366caea28d8975ac622761729a93877e0",
+      "original_worktree_sha256": "242f5f7cc205a3c2228f781a2f47b788570ef0137fee32cae537e606595a5184",
+      "original_bytes": 992,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_approval_draft_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_plan_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "dfcecdeca9b3debb103e8a4174dbcce290393d44c5e4a21ac8da837b47d6e2b8",
+      "original_worktree_sha256": "88efd03d4efa9f0d08a3f41bd52983632e644e9cc25ea9d101ba959946033662",
+      "original_bytes": 3222,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_plan_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_plan_v2_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "353a2ad45baa51b44b89379af37e318e0da283d9cae9805e6beb809b3e8c769a",
+      "original_worktree_sha256": "76308e8d4a72e0591ea6dd9b0adcb24ecca2c7b31558297d2634d627a377d55b",
+      "original_bytes": 3198,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_plan_v2_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_plan_v3_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "8604087a24cd687f7becbb27b92ecb5fceb6bb60ad8fcd89bc0beccb3f577619",
+      "original_worktree_sha256": "036dc53ec6feca56d4227b0e5631067aee4af45921cd56a9570a8a45cb07ef1e",
+      "original_bytes": 3342,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_plan_v3_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_review_2026-11-10.json",
+        "json_pointer": "/plans/exposure/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_preapproval_check_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "ad047a628f3d49483e103fba2cfff9ef4505f48fe4687b4f981d7e4beb0fef84",
+      "original_worktree_sha256": "0f6adf74592359f3c2093f188d8ddfca00b38f52eb05e41b50042ffb7f5b6ed8",
+      "original_bytes": 2070,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_preapproval_check_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/provider_preapproval/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_prepared_free_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "d11359c104d7bc99d4965f02e56d9280110e024c836017cb3de5d117cc9eb17b",
+      "original_worktree_sha256": "b98a0bc49c2ed90ac92a265832f33125b0f082c6dc6a0239317949c4d46596ad",
+      "original_bytes": 2522,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_prepared_free_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/exposure_prepared/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "39baad3f4ab6aae82a0969a09b9353d2562794078bea48b8a18d68ba7e367a5f",
+      "original_worktree_sha256": "3e42e10eec0a33e2b6ed2aed5a6e58b6c14b3c2b9ad5814c2821f161d49fb4b8",
+      "original_bytes": 275428,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 4,
+        "statuses": {
+          "simulation_completed": 4
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "90000275e937aaca115ae6c8ade3e68adf06c03ffb219480245b6c27a93fffe7",
+      "original_worktree_sha256": "400f871dd7d324ed7c84216dd6bdb19f26f6ed525e9d3a4bd21ccc38b4a26e8d",
+      "original_bytes": 821,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_v2_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "7e52b6782bc036ba7dd2bdd7d442dc9dd76dc61de7dfe264b91e68f577e28411",
+      "original_worktree_sha256": "82a2f009301eede828596b19d1061fdf7935d757e2f184ec31b0835af81f9e61",
+      "original_bytes": 275580,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_v2_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null,
+      "observations": {
+        "rows": 4,
+        "statuses": {
+          "simulation_completed": 4
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_v2_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "11bbdf1c9050a09fb269cef23792d283624026eb2efe7794fc3f2e413126b074",
+      "original_worktree_sha256": "f1ac2502099be203ba47d590cca5e688ab881d3adb43dd7d88aadfd809adcc3b",
+      "original_bytes": 943,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_v2_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "historical_in_git",
+      "canonical": null
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "c1376778e466425e346c03d3281ad3769041d293cfa599056417255dad84b88b",
+      "original_worktree_sha256": "6a8f834a866c225b053a1a49441932b991210c7fc4585b983dfe5bf311ac221d",
+      "original_bytes": 275813,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl",
+        "json_pointer": null
+      },
+      "observations": {
+        "rows": 4,
+        "statuses": {
+          "simulation_completed": 4
+        }
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_simulated_v3_2026-11-10.meta.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "6ec6d423fcd0987dfccbc28ca3801f9f516858d964657ef9c437cd3c8f24260b",
+      "original_worktree_sha256": "274b678730475c4ce801fff7ec2c5abe5a1f763d5b020a56f368dc62a9989a8d",
+      "original_bytes": 943,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_simulated_v3_2026-11-10.meta.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_review_2026-11-10.json",
+        "json_pointer": "/simulation/metadata/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_exposure_user_approval_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "fbfdfe1639f1d2b90a374b62edd3dc219a69189a35b55c51ae725aff760d6c9c",
+      "original_worktree_sha256": "4d41c637bab2e68157d7834f2c1db5bbe9216a4083c70e068eb7e2b508dfd61d",
+      "original_bytes": 1526,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_exposure_user_approval_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_review_2026-11-10.json",
+        "json_pointer": "/conditional_user_approval/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_preflight_local_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "2873da9771d0b6fd7303063118438d7b747047acf22855e33df6b83b1f451209",
+      "original_worktree_sha256": "3f715c58b2f1e01b3f7bb6f98bdcefd850a4816588f59245f35364e8c33b85b9",
+      "original_bytes": 1688,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_preflight_local_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/preflight_local/record"
+      }
+    },
+    {
+      "original_path": "evals/results/threads/injection_preflight_offline_2026-11-10.json",
+      "source_commit": "107aaa3239e4a920c573b85c275884968a971817",
+      "git_blob_sha256": "e17bea25489ed817826f35c36c7368598bfac49003ab1f909c7026ab4214bdc4",
+      "original_worktree_sha256": "b3b9af0654a75b69aaa54dd118dbd4bfa07ffc2529fa47dffb5ecc94b4ef0a18",
+      "original_bytes": 1442,
+      "worktree_newlines": "CRLF",
+      "recovery": {
+        "git_object": "107aaa3239e4a920c573b85c275884968a971817:evals/results/threads/injection_preflight_offline_2026-11-10.json",
+        "newline_conversion": "Normalize Git blob to LF, then expand LF to CRLF; verify original_worktree_sha256."
+      },
+      "disposition": "consolidated_current_or_supporting_record",
+      "canonical": {
+        "file": "evals/results/threads/injection_baseline_checks_2026-11-10.json",
+        "json_pointer": "/records/preflight_offline/record"
+      }
+    }
+  ],
+  "source_archive_ref": "refs/archive/injection-pre-consolidation-20261110",
+  "source_history_is_on_active_branch": false,
+  "recovery_scope": "Original commits are retained by this local archive ref, not by the rewritten STH branch. Sharing STH alone will not share the archived originals."
+}
