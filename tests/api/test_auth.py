@@ -144,18 +144,18 @@ def test_google_admin_requires_approval_and_revocation_clears_sessions(monkeypat
         conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
         user_id = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('oauth-admin@example.test', 'fake', 'admin') RETURNING id").fetchone()[0]
     try:
-        assert auth.google_admin_session("https://accounts.google.com", "synthetic-subject") is None
+        assert auth.google_session("https://accounts.google.com", "synthetic-subject") is None
         request_id = auth.request_google_link("https://accounts.google.com", "synthetic-subject", "oauth-admin@example.test")
-        assert auth.google_admin_session("https://accounts.google.com", "synthetic-subject") is None
+        assert auth.google_session("https://accounts.google.com", "synthetic-subject") is None
         assert not auth.approve_google_link(request_id, user_id, "wrong@example.test")
         assert auth.approve_google_link(request_id, user_id, "oauth-admin@example.test")
         assert not auth.approve_google_link(request_id, user_id, "oauth-admin@example.test")
-        token, actual_id = auth.google_admin_session("https://accounts.google.com", "synthetic-subject")
+        token, actual_id = auth.google_session("https://accounts.google.com", "synthetic-subject")
         assert actual_id == user_id
         assert auth.revoke_google_link(user_id)
         with psycopg.connect(url) as conn:
             assert conn.execute("SELECT 1 FROM auth_sessions WHERE token_hash=%s", (auth.session_token_hash(token),)).fetchone() is None
-        assert auth.google_admin_session("https://accounts.google.com", "synthetic-subject") is None
+        assert auth.google_session("https://accounts.google.com", "synthetic-subject") is None
     finally:
         with psycopg.connect(url) as conn:
             conn.execute("DELETE FROM users WHERE id=%s", (user_id,))
@@ -246,7 +246,8 @@ def test_google_oauth_is_disabled_without_configuration(monkeypatch):
     assert TestClient(app).get("/api/auth/google/start", follow_redirects=False).status_code == 404
 
 
-def test_google_callback_requires_state_and_never_grants_unapproved_session(monkeypatch):
+def test_google_callback_requires_state_and_sends_taken_email_to_approval(monkeypatch):
+    # [왜] 11-10 이후: 처음 오는 이메일은 동의하면 계정이 생기지만, 이미 있는 이메일(관리자 · 비밀번호 계정)은 자동 연결 없이 승인 대기다
     from urllib.parse import parse_qs, urlsplit
 
     monkeypatch.setenv("GOOGLE_AUTH_ENABLED", "1")
@@ -256,7 +257,8 @@ def test_google_callback_requires_state_and_never_grants_unapproved_session(monk
     monkeypatch.setattr(auth, "create_google_state", lambda: ("state-value", "browser-value", "verifier-value", "nonce-value"))
     monkeypatch.setattr(auth, "consume_google_state", lambda state, browser: ("verifier-value", "nonce-value") if (state, browser) == ("state-value", "browser-value") else None)
     monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", "synthetic-subject", "admin@example.test"))
-    monkeypatch.setattr(auth, "google_admin_session", lambda issuer, subject: None)
+    monkeypatch.setattr(auth, "google_session", lambda issuer, subject: None)
+    monkeypatch.setattr(auth, "google_signup", lambda issuer, subject, email, consent: None)  # 이메일이 이미 있다
     monkeypatch.setattr(auth, "request_google_link", lambda issuer, subject, email: "pending-request")
     monkeypatch.setattr(auth, "google_pending_email", lambda request_id: "admin@example.test" if request_id == "pending-request" else None)
     client = TestClient(app)
@@ -276,6 +278,118 @@ def test_google_callback_requires_state_and_never_grants_unapproved_session(monk
     assert pending.headers["cache-control"] == "no-store"
 
 
+def _google_callback_env(monkeypatch, signup):
+    monkeypatch.setenv("GOOGLE_AUTH_ENABLED", "1")
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "synthetic-client")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "synthetic-secret")
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "create_google_state", lambda: ("state-value", "browser-value", "verifier-value", "nonce-value"))
+    monkeypatch.setattr(auth, "consume_google_state", lambda state, browser: ("verifier-value", "nonce-value") if (state, browser) == ("state-value", "browser-value") else None)
+    monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", "new-subject", "new@example.test"))
+    monkeypatch.setattr(auth, "google_session", lambda issuer, subject: None)
+    monkeypatch.setattr(auth, "google_signup", signup)
+
+
+def test_google_new_identity_creates_account_only_with_consent_cookie(monkeypatch):
+    calls = []
+
+    def signup(issuer, subject, email, consent):
+        calls.append(consent)
+        return ("session-token", 7) if consent else "consent"
+
+    _google_callback_env(monkeypatch, signup)
+    client = TestClient(app)
+    client.get("/api/auth/google/start", follow_redirects=False)  # 동의 표시 없이 시작
+    refused = client.get("/api/auth/google/callback?code=c&state=state-value", follow_redirects=False)
+    assert refused.headers["location"] == "/login?google=consent"
+    assert auth.COOKIE not in refused.headers.get("set-cookie", "")
+    client.get("/api/auth/google/start?consent=1", follow_redirects=False)  # 로그인 화면의 동의 체크 뒤
+    created = client.get("/api/auth/google/callback?code=c&state=state-value", follow_redirects=False)
+    assert created.headers["location"] == "/login"
+    assert f"{auth.COOKIE}=session-token" in created.headers["set-cookie"]
+    assert calls == [False, True]
+    assert "sojafit_google_consent" not in client.cookies  # 한 번 쓰고 지운다
+
+
+@pytest.fixture
+def google_db(monkeypatch):
+    import os
+    from pathlib import Path
+
+    import psycopg
+
+    url = os.environ.get("TEST_AUTH_DATABASE_URL")
+    if not url:
+        pytest.skip("requires an isolated authentication test database")
+    monkeypatch.setenv("DATABASE_URL", url)
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    with psycopg.connect(url) as conn:
+        conn.execute(Path("db/010_google_auth.sql").read_text(encoding="utf-8"))
+    yield url
+    with psycopg.connect(url) as conn:
+        conn.execute("DELETE FROM users WHERE login_id LIKE 'gt-%' OR login_id = 'demo-a@example.test'")
+        conn.execute("DROP TABLE auth_google_states, auth_google_pending, auth_google_identities")
+
+
+def _count(url, sql, *args):
+    import psycopg
+
+    with psycopg.connect(url) as conn:
+        return conn.execute(sql, args).fetchone()[0]
+
+
+ISSUER = "https://accounts.google.com"
+
+
+def test_google_signup_without_consent_creates_no_user(google_db):
+    assert auth.google_signup(ISSUER, "gt-sub-1", "gt-1@example.test", False) == "consent"
+    assert _count(google_db, "SELECT count(*) FROM users WHERE login_id = 'gt-1@example.test'") == 0
+    assert _count(google_db, "SELECT count(*) FROM auth_google_identities WHERE subject = 'gt-sub-1'") == 0
+
+
+def test_google_signup_account_has_no_usable_password_and_second_login_reuses_it(google_db):
+    token, user_id = auth.google_signup(ISSUER, "gt-sub-2", "GT-2@Example.test", True)  # 이메일은 소문자로 저장
+    assert token and _count(google_db, "SELECT role FROM users WHERE id = %s", user_id) == "user"
+    assert _count(google_db, "SELECT password_hash FROM users WHERE id = %s", user_id) == auth.GOOGLE_PASSWORD_HASH != auth.DEMO_PASSWORD_HASH
+    again = auth.google_session(ISSUER, "gt-sub-2")  # 두 번째 로그인: 같은 계정, 행은 그대로
+    assert again and again[1] == user_id
+    assert _count(google_db, "SELECT count(*) FROM users WHERE login_id = 'gt-2@example.test'") == 1
+    assert _count(google_db, "SELECT count(*) FROM auth_google_identities WHERE subject = 'gt-sub-2'") == 1
+    # 비밀번호 로그인은 500이 아니라 평범한 401이다
+    response = TestClient(app).post("/api/auth/login", json={"email": "gt-2@example.test", "password": auth.GOOGLE_PASSWORD_HASH}, headers={"origin": "http://testserver"})
+    assert response.status_code == 401
+
+
+def test_google_password_marker_never_matches_demo_button_login(google_db):
+    assert auth.google_signup(ISSUER, "gt-sub-3", "demo-a@example.test", True)  # 데모 계정과 같은 이메일을 Google 가입이 먼저 차지한 경우
+    assert auth.demo_session("a") is None
+
+
+@pytest.mark.parametrize("role", ["user", "admin"])
+def test_google_signup_never_links_an_existing_email(google_db, role):
+    import psycopg
+
+    with psycopg.connect(google_db) as conn:
+        conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES ('gt-taken@example.test', 'fake', %s)", (role,))
+    assert auth.google_signup(ISSUER, "gt-sub-4", "GT-Taken@example.test", True) is None
+    assert auth.google_session(ISSUER, "gt-sub-4") is None
+    assert _count(google_db, "SELECT count(*) FROM auth_google_identities WHERE subject = 'gt-sub-4'") == 0
+    assert _count(google_db, "SELECT count(*) FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE u.login_id = 'gt-taken@example.test'") == 0
+
+
+def test_google_signup_rolls_back_the_user_when_the_identity_is_already_linked(google_db):
+    assert auth.google_signup(ISSUER, "gt-sub-5", "gt-5@example.test", True)
+    assert auth.google_signup(ISSUER, "gt-sub-5", "gt-5b@example.test", True) is None  # 같은 신원, 다른 이메일: 새 사용자 행도 남기지 않는다
+    assert _count(google_db, "SELECT count(*) FROM users WHERE login_id = 'gt-5b@example.test'") == 0
+
+
+def test_email_signup_is_closed_unless_demo_mode(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "0")
+    response = TestClient(app).post("/api/auth/signup", json={"email": "someone@example.test", "password": "long-enough-password", "consent": True},
+                                    headers={"origin": "http://testserver"})
+    assert response.status_code == 404 and response.json()["error"]["code"] == "NOT_FOUND"
+
+
 def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
     import os
     from pathlib import Path
@@ -287,6 +401,8 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
         pytest.skip("requires an isolated authentication test database")
     monkeypatch.setenv("DATABASE_URL", url)
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setenv("DEMO_MODE", "0")  # 공개 배포와 같은 설정: 이메일 가입은 닫혀도 연결된 관리자는 Google로 들어온다
+    monkeypatch.setenv("AUTH_SECRET", "test-only-secret-32-bytes-minimum")
     monkeypatch.setenv("GOOGLE_AUTH_ENABLED", "1")
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "synthetic-client")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "synthetic-secret")

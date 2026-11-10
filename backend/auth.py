@@ -3,9 +3,10 @@
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
 (auth_login_ip_attempts), 세션은 절대 8시간·유휴 30분이다.
-자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다.
+이메일 자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다(경로는 DEMO_MODE=1일 때만 열린다).
+일반 사용자는 Google 로그인으로 가입한다: Google이 보증한 이메일로 비밀번호 없는 user 계정을 만든다(google_signup, 이메일이 이미 있으면 자동 연결하지 않음).
 호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
-하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 이메일 인증,
+하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 메일 발송 이메일 인증(Google이 확인한 이메일만 믿음),
 회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
@@ -42,6 +43,9 @@ LOGIN_IP_FAILURES = 30  # 클라이언트 IP당 15분 로그인 실패 상한. �
 DEMO_ACCOUNTS = {"a": "demo-a@example.test", "b": "demo-b@example.test"}
 # [왜] scrypt 형식이 아닌 표식이라 verify_password가 늘 False다(비밀번호 로그인 불가). 버튼 로그인은 이 표식을 가진 계정만 받는다
 DEMO_PASSWORD_HASH = "demo-button-login-only"
+# [왜] Google로 가입한 계정은 비밀번호가 없다. scrypt 형식이 아닌 표식이라 verify_password가 늘 False이고(비밀번호 로그인 401),
+#      DEMO_PASSWORD_HASH와 달라 데모 버튼 로그인(demo_session)에도 걸리지 않는다
+GOOGLE_PASSWORD_HASH = "google-login-only"
 
 
 def validate_auth_configuration() -> None:
@@ -192,18 +196,42 @@ def approve_google_link(request_id: str, user_id: int, email: str) -> bool:
         return True
 
 
-def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
+def google_session(issuer: str, subject: str) -> tuple[str, int] | None:
+    """연결된 Google 신원의 활성 계정(관리자 · 일반 사용자)에 새 세션을 발급한다. 연결이 없거나 비활성이면 None."""
     with connection() as conn:
-        identity = conn.execute("SELECT user_id FROM auth_google_identities WHERE issuer=%s AND subject=%s", (issuer, subject)).fetchone()
-        if not identity:
-            return None
-        user_id = identity[0]
-        user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
-        if user != ("admin", True) or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
+        # [왜] 사용자 행을 FOR UPDATE로 잠가 비활성화 · 연결 해지와 세션 발급이 엇갈리지 않게 한다
+        user = conn.execute("SELECT u.id FROM auth_google_identities g JOIN users u ON u.id = g.user_id "
+                            "WHERE g.issuer=%s AND g.subject=%s AND u.is_active FOR UPDATE OF u", (issuer, subject)).fetchone()
+        if not user:
             return None
         token = secrets.token_urlsafe(32)
-        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
-        return token, user_id
+        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
+        return token, user[0]
+
+
+def google_signup(issuer: str, subject: str, email: str, consent: bool) -> tuple[str, int] | str | None:
+    """처음 온 Google 신원으로 일반 사용자 계정(비밀번호 없음)을 만들고 세션을 발급한다. Google이 보증한 이메일(email_verified)만 들어온다.
+
+    Returns:
+        (세션 토큰, user_id). 이메일이 이미 users에 있으면 None: 자동 연결 · 로그인하지 않는다(호출자가 승인 대기로 보냄).
+        처리방침 동의(consent)가 없으면 "consent": 사용자 행을 만들지 않는다.
+    """
+    email = email.strip().lower()
+    with connection() as conn:
+        if conn.execute("SELECT 1 FROM users WHERE login_id=%s", (email,)).fetchone():
+            return None  # [주의] 같은 이메일의 비밀번호 · 관리자 계정을 Google 로그인으로 가로채지 못하게 한다
+        if not consent:
+            return "consent"
+        user = conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, 'user') ON CONFLICT (login_id) DO NOTHING RETURNING id",
+                            (email, GOOGLE_PASSWORD_HASH)).fetchone()
+        linked = user and conn.execute("INSERT INTO auth_google_identities (issuer, subject, user_id) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING RETURNING user_id",
+                                       (issuer, subject, user[0])).fetchone()
+        if not linked:
+            conn.rollback()  # 동시 요청이 먼저 만든 경우: 사용자 행도 남기지 않는다
+            return None
+        token = secrets.token_urlsafe(32)
+        conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
+        return token, user[0]
 
 
 def revoke_google_link(user_id: int) -> bool:
