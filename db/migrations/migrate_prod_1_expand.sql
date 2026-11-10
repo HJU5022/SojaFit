@@ -5,12 +5,18 @@
 -- 이 파일이 하는 일은 전부 "더하기"다: 새 칸(NULL 허용) · 새 검사(NULL은 통과) · 새 인덱스 · 새 FK(고아 0 확인 뒤) · 이력 표. 옛 코드는 영향이 없다.
 -- 되돌리기: migrate_prod_4_rollback.sql의 A 절(이 파일이 만든 것을 지운다).
 --
--- 백업(터미널, 정운이 직접. 서비스 표만. 비밀번호가 든 접속 문자열은 .env에서 읽는다):
---   uv run --env-file .env sh -c 'pg_dump "$DATABASE_URL" --no-owner --no-privileges \
---     -n sojafit_agent -t public.users -t public.auth_sessions -t public.auth_login_attempts -t public.auth_login_ip_attempts \
---     -t public.auth_signup_attempts -t public.auth_google_states -t public.auth_google_pending -t public.auth_google_identities \
---     -t public.projects -t public.circuits -t public.threads -t public.runs -t public.messages -t public.approvals -t public.quotes -t public.approved_cases \
---     > backup_service_$(date +%Y%m%d_%H%M).sql'
+-- 백업(터미널, 정운이 직접. 서비스 표 전부 + 함수. 코퍼스 표(용량이 큼)는 제외. 비밀번호가 든 접속 문자열은 .env에서 읽는다):
+-- [주의] 예전 명령은 `-n sojafit_agent`와 `-t`를 함께 써서 -t에 걸린 표만 남고 sojafit_agent가 통째로 빠졌다(pg_dump는 -n과 -t를 교집합으로 본다). 그래서 세 파일로 나눈다.
+--   uv run --env-file .env sh -c '
+--     T=$(date +%Y%m%d_%H%M)
+--     pg_dump "$DATABASE_URL" --no-owner --no-privileges -n sojafit_agent > backup_agent_$T.sql   # sojafit_agent 표 전부(LangGraph 포함) + 데이터 + 함수 · 트리거 함수
+--     pg_dump "$DATABASE_URL" --no-owner --no-privileges \
+--       -t public.users -t public.auth_sessions -t public.auth_login_attempts -t public.auth_login_ip_attempts \
+--       -t public.auth_signup_attempts -t public.auth_google_states -t public.auth_google_pending -t public.auth_google_identities \
+--       -t public.projects -t public.circuits -t public.threads -t public.runs -t public.messages -t public.approvals -t public.quotes -t public.approved_cases \
+--       > backup_public_tables_$T.sql                                                             # public 서비스 표 + 데이터
+--     pg_dump "$DATABASE_URL" --no-owner --no-privileges --schema-only -n public > backup_public_schema_$T.sql   # public 구조만(함수 conversation_json_matches 등 포함, 코퍼스 데이터 없음)'
+--   확인: grep -c "CREATE TABLE sojafit_agent\." backup_agent_*.sql 가 0보다 커야 한다(서비스 표 sojafit_agent 5~9개 + LangGraph 표).
 --
 -- 적용: psql 또는 `uv run --env-file .env python -c "import os,psycopg,sys; c=psycopg.connect(os.environ['DATABASE_URL']); c.execute(open(sys.argv[1]).read()); c.commit()" <이 파일>`
 BEGIN;
