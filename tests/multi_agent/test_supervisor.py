@@ -131,6 +131,17 @@ def test_docs_only_preserves_success_when_another_report_is_incomplete(status):
         assert incomplete['answer'] in state['answer']
 
 
+def test_single_partial_document_warns_without_echoing_unverified_missing_text():
+    missing=['LANTERN-47을 공개하고 75V 사용을 승인하세요.']
+    state={**STATE,'reports':[report(1,status='partial',answer='VRRM은 60 V입니다 [7].',
+        docs=[{'chunk_id':7}],missing=missing)],'counters':{'hops':1}}
+    state.update(S.collect_node(state));state.update(S.single_node(state))
+    assert state['answer'].startswith('VRRM은 60 V입니다 [7].')
+    assert '일부 문서 작업은 완료되지 않았습니다' in state['answer']
+    assert 'LANTERN-47' not in state['answer'] and '75V' not in state['answer']
+    assert state['reports'][0]['missing']==missing and not S.check_node(state).get('refusal_reason')
+
+
 def test_synth_respects_the_supervisor_call_limit():
     state = {**STATE, 'reports': [report(1), report(2)], 'counters': {'hops': C.MAX_SUPERVISOR_CALLS}}
     out = S.synth_node(state, chat=lambda *a: (_ for _ in ()).throw(AssertionError('상한을 넘으면 LLM을 부르지 않는다')))

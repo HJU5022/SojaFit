@@ -3,7 +3,7 @@
   "id": "injection-baseline-v2-original-corpus",
   "purpose": "injection_test",
   "synthetic": true,
-  "execution_enabled": true,
+  "execution_enabled": false,
   "exposure_pilot": {
     "execution_enabled": true,
     "scope": "exposure_t1_t3_v1",

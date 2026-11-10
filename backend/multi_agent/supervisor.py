@@ -238,7 +238,7 @@ def single_node(state: dict) -> dict:
     docs_only = all(r.agent == 'docs' for r in reports)
     kept = [r for r in reports if r.status != 'fail'] if docs_only else reports
     answer = '\n\n'.join(part_text(r) for r in kept)
-    if docs_only and len(reports) > 1 and any(r.status != 'ok' for r in reports):
+    if docs_only and any(r.status != 'ok' for r in reports) and (len(reports) > 1 or any(r.missing for r in kept)):
         answer += '\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.'
     return {**_merged(kept), 'answer': _with_declined(state, answer), 'synth_text': '', 'path': ['답 정리']}
 

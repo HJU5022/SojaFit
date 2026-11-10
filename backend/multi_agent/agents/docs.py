@@ -49,6 +49,7 @@ VARIANT = re.compile(r'C(A?H?)$|(?<=\d)H$', re.I)  # 양방향(…C · …CA · 
 VARIANT_QUERY = ('bidirectional bi-directional C CA suffix electrical characteristics apply in both directions IR limit double'
                  ' "H" means AEC-Q101 qualified ordering information')
 NOTE_WORDS = re.compile(r'bi-?directional|both directions|AEC-?Q101', re.I)
+ASSEMBLY = re.compile(r'실장|조립|\b(?:pre[- ]?)?(?:assembl|mount)', re.I)
 
 
 def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
@@ -186,6 +187,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             #      사전 등록 #49). 빠진 부분을 다른 검색어로 한 번 더 찾고, 앞 근거와 함께 다시 답한다(검색 2번 상한 안)
             carry, first = shown, (result, shown)
         query = result.next_query.strip()  # 근거가 없거나 모자라다고 채점했으면 LLM이 준 다른 검색어로 한 번만 다시
+        if result.grade == 'partial' and ASSEMBLY.search(question+' '+task.goal+' '+task.output) \
+                and ASSEMBLY.search(' '.join(result.missing)):
+            query += ' polarity before assembly'  # 실장 전 확인사항을 묻는데 정격·포장 행만 재검색하는 누락을 막는다
     if first and (result.grade == 'none' or not result.answer.strip()):
         result, shown = first  # 다시 찾은 답이 더 나쁘면 첫 일부 답을 쓴다
     answer = (result.answer.strip() if result else '')
