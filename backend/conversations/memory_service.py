@@ -182,7 +182,7 @@ class Conversations:
             max_tokens=int(os.getenv('ANALYSIS_MAX_TOKENS', '4096')),
             prompt_rate=float(os.getenv('ANALYSIS_PROMPT_RATE', '0.000003')),
             completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')),
-            # [왜] 판정 읽기 3번(다수결)이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
+            # [왜] 판정 읽기 여러 번이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
             per_model_rates=True)
         daily = float(os.getenv('ANALYSIS_DAILY_USD', '3'))
         interval = float(os.getenv('ANALYSIS_MIN_INTERVAL_SECONDS', '2'))

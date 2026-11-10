@@ -41,9 +41,9 @@
   <rect x="40" y="470" width="470" height="610" rx="30" fill="#ffffff" stroke="#777"/>
   <text x="275" y="530" text-anchor="middle" font-size="30" font-weight="700" fill="#222">Spec 에이전트</text>
   <rect x="70" y="565" width="410" height="145" rx="18" fill="#eeecff" stroke="#5b4fcf"/>
-  <text x="275" y="610" text-anchor="middle" font-size="30" font-weight="700" fill="#3b3496">회로 역할 읽기</text>
-  <text x="275" y="652" text-anchor="middle" font-size="23" fill="#4f46c8">LLM · 같은 읽기 3회 동시</text>
-  <text x="275" y="685" text-anchor="middle" font-size="23" fill="#4f46c8">2회 이상 일치한 값만 사용</text>
+  <text x="275" y="610" text-anchor="middle" font-size="30" font-weight="700" fill="#3b3496">회로 읽기</text>
+  <text x="275" y="652" text-anchor="middle" font-size="23" fill="#4f46c8">LLM 1번</text>
+  <text x="275" y="685" text-anchor="middle" font-size="23" fill="#4f46c8">읽은 뒤 코드가 부품 이름 정리</text>
   <line x1="275" y1="712" x2="275" y2="746" stroke="#7d7d7d" stroke-width="2.5" marker-end="url(#ag)"/>
   <rect x="70" y="750" width="410" height="130" rx="18" fill="#f1efe9" stroke="#8a8780"/>
   <text x="275" y="800" text-anchor="middle" font-size="30" font-weight="700" fill="#222">대체 부품 판정</text>
