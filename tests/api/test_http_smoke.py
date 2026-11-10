@@ -29,10 +29,12 @@ DONE = {'status': 'completed', 'answer': ANSWER, 'judgement': {'kind': 'judge', 
     {'part': '1N4007RLG', 'verdict': 'NOT_VERIFIED'}, {'part': '1N4007G', 'verdict': 'ROLE_SUFFICIENT'}]}}
 
 
-def fake_server(run_mode='interrupt', accounts=None):
-    """쿠키 · Origin · 소유권을 지키는 가짜 API. run_mode: interrupt(정상) · completed(조건 질문 없이 끝남) · unavailable(스트림 전 503)."""
+def fake_server(run_mode='interrupt', accounts=None, leaky=False):
+    """쿠키 · Origin · 소유권을 지키는 가짜 API. run_mode: interrupt(정상) · completed(조건 질문 없이 끝남) · unavailable(스트림 전 503).
+
+    leaky=True면 승인 · 견적 · 승인 사례의 소유권 검사만 빼 격리가 깨진 서버를 흉내 낸다(8단계 확인이 실제로 실패하는지 보려고)."""
     tokens = {'A': 'tok-a-' + secrets.token_hex(8), 'B': 'tok-b-' + secrets.token_hex(8)}
-    state = {'projects': {}, 'runs': {}, 'approved': set(), 'quotes': [], 'calls': [], 'tokens': tokens}
+    state = {'projects': {}, 'runs': {}, 'approved': set(), 'quotes': [], 'cases': [], 'approval_owner': {}, 'calls': [], 'tokens': tokens}
 
     def reply(status, data=None, code=None, cookie=None):
         headers = {'x-request-id': f"rid-{len(state['calls'])}"}
@@ -101,13 +103,24 @@ def fake_server(run_mode='interrupt', accounts=None):
         if path == '/api/messages/7/approvals':
             if body != {'candidate_part': '1N4007G', 'verdict': 'ROLE_SUFFICIENT'}:
                 return reply(422, code='VALIDATION_ERROR')
+            if not leaky and state['runs'].get('run1') != user:  # 메시지 7은 run1의 것: 남의 메시지는 없는 것처럼 404
+                return reply(404, code='NOT_FOUND')
             if 7 in state['approved']:
-                return reply(409, code='ALREADY_APPROVED')
+                return reply(409, code='ALREADY_APPROVED')  # 서버 DB의 메시지당 승인 1개 제약
             state['approved'].add(7)
+            state['approval_owner'][3] = user
+            state['cases'].append({'id': 9, 'approval_id': 3, 'candidate_part': body['candidate_part'], 'verdict': body['verdict'],
+                                   'created_at': '2026-11-10T00:00:00+09:00', 'owner': user})
             return reply(201, {'id': 3, 'message_id': 7})
         if path == '/api/approvals/3/quotes':
+            if not leaky and state['approval_owner'].get(3) != user:
+                return reply(404, code='NOT_FOUND')
+            if state['quotes']:
+                return reply(409, code='ALREADY_APPROVED')  # 서버 DB의 승인당 견적 1개 제약
             state['quotes'].append({'id': 5, 'approval_id': 3, 'quantity': body['quantity']})
             return reply(201, state['quotes'][-1])
+        if path == '/api/approved-cases':
+            return reply(200, [{k: v for k, v in c.items() if k != 'owner'} for c in state['cases'] if leaky or c['owner'] == user])
         return reply(404, code='NOT_FOUND')
 
     return handler, state
@@ -134,6 +147,10 @@ def test_demo_flow_all_pass(tmp_path, monkeypatch):
     assert (again['status'], again['code']) == (409, 'ALREADY_APPROVED')
     assert next(r for r in rows if r['step'] == '4' and 'runs' in r['request'])['events'] == ['run_started', 'status', 'requires_input']
     assert next(r for r in rows if r['step'] == '9' and 'runs' in r['request'])['events'][-1] == 'refused'
+    isolation = {r['check']: (r['status'], r['code'], r['result']) for r in rows if r['step'] == '8'}
+    for check in ('B가 A의 견적 목록 읽기', 'B가 A의 메시지 승인', 'B가 A의 승인으로 견적 저장'):
+        assert isolation[check] == (404, 'NOT_FOUND', 'pass'), check
+    assert isolation['A 승인 사례 목록'][2] == isolation['B 승인 사례 목록'][2] == 'pass'
     assert result['openapi'] == {'paths': 2, 'operations': 3}  # 'parameters'는 연산이 아니다
     assert (result['base_host'], result['mode'], result['counts']) == ('smoke.test', 'demo', {'pass': len(rows)})
     assert all(r['request_id'] and r['ms'] is not None for r in rows)
@@ -196,3 +213,26 @@ def test_demo_questions_are_in_the_catalog():
     """스크립트는 데모 질문의 회로 이름으로 서버의 데모 회로 id를 찾는다. 카탈로그 이름이 바뀌면 여기서 먼저 깨진다."""
     assert {Q[smoke.JUDGE_ID]['circuit'], Q[smoke.REFUSAL_ID]['circuit']} <= set(DEMOS.values())
     assert Q[smoke.JUDGE_ID]['interrupt'] is True  # 4단계는 조건 질문에서 멈추는 질문이어야 한다
+
+
+def test_broken_isolation_on_approvals_quotes_and_cases_is_caught(tmp_path, monkeypatch):
+    """승인 · 견적 · 승인 사례의 소유권 검사가 빠진 서버에서는 8단계의 해당 확인이 실패하고 종료 코드 1이다. 그래도 A의 자료는 늘지 않는다."""
+    handler, state = fake_server(leaky=True)
+    code, result, _ = run(tmp_path, monkeypatch, ['--base-url', BASE, '--demo'], handler)
+    rows = {r['check']: r for r in result['steps'] if r['step'] == '8'}
+    assert code == 1
+    assert rows['B가 A의 메시지 승인']['result'] == 'fail' and rows['B가 A의 메시지 승인']['status'] == 409  # 새로 만들지 못하고 중복으로 막힘
+    assert rows['B가 A의 승인으로 견적 저장']['result'] == 'fail' and rows['B가 A의 승인으로 견적 저장']['status'] == 409
+    assert rows['B 목록에 A 승인 사례 없음']['result'] == 'fail'
+    assert len(state['quotes']) == 1 and len(state['cases']) == 1 and state['approved'] == {7}  # B의 POST가 A의 자료를 바꾸지 않음
+
+
+def test_isolation_checks_are_skipped_without_approval_or_quote(tmp_path, monkeypatch):
+    """A가 승인 · 견적을 못 만든 흐름(4단계 실패)에서는 B의 POST를 보내지 않고 건너뛴다."""
+    handler, state = fake_server('unavailable')
+    code, result, _ = run(tmp_path, monkeypatch, ['--base-url', BASE, '--demo'], handler)
+    rows = {r['check']: r['result'] for r in result['steps'] if r['step'] == '8'}
+    assert code == 1
+    assert rows['B가 A의 메시지 승인'] == rows['B가 A의 승인으로 견적 저장'] == rows['B가 A의 견적 목록 읽기'] == 'skip'
+    assert not [call for call in state['calls'] if call.startswith('POST /api/messages') or call.startswith('POST /api/approvals')]
+

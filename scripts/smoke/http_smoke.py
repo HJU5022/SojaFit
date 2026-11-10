@@ -1,7 +1,7 @@
 """정상 사용자 흐름을 HTTP로 처음부터 끝까지 한 번 돌려 단계마다 통과 · 실패를 남기는 점검(스모크). 저장소 루트에서 손으로 돌린다.
 
 - 역할: 로컬 compose나 배포 주소(Cloud Run)의 API를 화면 대신 불러, SPEC 2절 "목표 사용자 흐름"(로그인 → 데모 회로 프로젝트 →
-  판정 질문 → 조건 질문 재개 → 승인 → 견적)과 계정 격리(B가 A의 프로젝트 · thread 목록 · run을 읽으면 404)가 지금 서버에서 이어지는지 본다.
+  판정 질문 → 조건 질문 재개 → 승인 → 견적)과 계정 격리(B가 A의 프로젝트 · thread 목록 · run · 견적 · 승인 · 승인 사례에 접근하면 404, 승인 사례 목록에 A 것 없음)가 지금 서버에서 이어지는지 본다.
   요청마다 HTTP 상태 · `error.code` · `X-Request-ID` · 걸린 ms를, run · 재개는 SSE 이벤트 이름 순서를 적는다.
   `/openapi.json`의 경로 · 연산 수와 이 작업 트리의 커밋을 함께 남겨 배포가 어느 코드인지 대조한다.
 - 하지 않는 일: 답 · 판정이 맞는지 채점(`evals/`), 서버 · docker · DB 띄우기, 만든 프로젝트 · 승인 · 견적 지우기,
@@ -259,7 +259,7 @@ def flow(smoke, questions, demo, refusal, env):
     quotes = smoke.call('7', '견적 목록', 'A', a, 'GET', f'/api/projects/{pid}/quotes', 200, label='/api/projects/{id}/quotes', needs=(quote,))
     if quotes is not None and quote.get('id') not in {item.get('id') for item in quotes}:
         smoke.fail('7', '저장한 견적이 목록에 있음', 'A', '저장한 견적이 프로젝트 견적 목록에 없음')
-    # 8. B는 A의 자료를 404로만 본다(남의 자료도 404, SPEC 4절). GET만 보내 격리가 깨져도 B가 A의 자료를 바꾸지 않게 한다
+    # 8. B는 A의 자료를 404로만 본다(남의 자료도 404, SPEC 4절). 먼저 GET만 보내고, 승인 · 견적의 POST는 아래 8-2에서 DB 제약으로 막히는 경우에만 보낸다
     b = smoke.client()
     signed = login(smoke, b, 'B', demo, env)
     for what, path, label, need in (('프로젝트', f'/api/projects/{pid}', '/api/projects/{A}', pid),
@@ -269,6 +269,21 @@ def flow(smoke, questions, demo, refusal, env):
     listed = smoke.call('8', 'B 프로젝트 목록', 'B', b, 'GET', '/api/projects', 200, needs=(signed, pid))
     if listed is not None and pid in {item.get('id') for item in listed}:
         smoke.fail('8', 'B 목록에 A 프로젝트 없음', 'B', 'A의 프로젝트가 B의 목록에 보임')
+    # 8-2. 승인 · 견적 · 승인 사례도 B에게 404로 숨겨지는지 본다. B의 POST 두 개는 A가 이미 승인 · 견적을 만들어 둔 뒤에만 보내며
+    #      (메시지당 승인 1개 · 승인당 견적 1개 DB 제약), 격리가 깨져도 새로 만들지 못하고 409로 끝나 실패로만 남는다. DELETE는 보내지 않는다
+    smoke.call('8', 'B가 A의 견적 목록 읽기', 'B', b, 'GET', f'/api/projects/{pid}/quotes', 404, code='NOT_FOUND',
+               label='/api/projects/{A}/quotes', needs=(signed, quote))
+    smoke.call('8', 'B가 A의 메시지 승인', 'B', b, 'POST', f'/api/messages/{message_id}/approvals', 404, code='NOT_FOUND',
+               label='/api/messages/{A}/approvals', needs=(signed, approval, message_id, approve), body=approve)
+    smoke.call('8', 'B가 A의 승인으로 견적 저장', 'B', b, 'POST', f'/api/approvals/{aid}/quotes', 404, code='NOT_FOUND',
+               label='/api/approvals/{A}/quotes', needs=(signed, quote, aid), body={'quantity': 1})
+    mine = smoke.call('8', 'A 승인 사례 목록', 'A', a, 'GET', '/api/approved-cases', 200, needs=(quote,))
+    theirs = smoke.call('8', 'B 승인 사례 목록', 'B', b, 'GET', '/api/approved-cases', 200, needs=(signed, quote))
+    # [왜] A 목록에 A의 사례가 보여야 "B 목록에 없다"가 의미가 있다(둘 다 비어 있으면 겹침이 없어 보일 뿐이다)
+    if mine is not None and aid not in {item.get('approval_id') for item in mine}:
+        smoke.fail('8', 'A 목록에 A 승인 사례 있음', 'A', 'A의 승인 사례가 A의 목록에 없어 격리를 비교할 수 없음')
+    if mine is not None and theirs is not None and {item.get('id') for item in mine} & {item.get('id') for item in theirs}:
+        smoke.fail('8', 'B 목록에 A 승인 사례 없음', 'B', 'A의 승인 사례가 B의 목록에 보임')
     # 9. (선택) 범위 밖 질문은 거절(refused)로 끝난다. 거절은 오류가 아니라 분석 결과다(SPEC 4절)
     if refusal:
         tid2 = make_thread(smoke, a, make_project(smoke, a, circuits, refuse, '9'), '9')
