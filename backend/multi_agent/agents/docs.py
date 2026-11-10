@@ -232,7 +232,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
+    # A bare partial label is not remaining work; explicit missing facts, retries and removed claims still are.
+    complete = result.grade == 'enough' or not result.next_query.strip()
+    status = 'ok' if complete and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
     summary = (f'{status}: answered from {len(cited & valid)} evidence'
                + ('; removed unverified sentences' if dropped_fake or dropped_uncited else '')
                + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else ''))

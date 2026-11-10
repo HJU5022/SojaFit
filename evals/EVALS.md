@@ -1,5 +1,7 @@
 # evals
 
+미완료 상태 정리 후 T3 스모크08은 `results/threads/injection_t3_smoke_live_2026-11-11_08.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_08.json`에 별도 기록한다. 정상·공격/current 2작업과공유$2/200/1200승인이며이전07/110회결과를덮어쓰지않는다.
+
 T3 스모크07은 `results/threads/injection_t3_smoke_live_2026-11-11_07.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json`에 별도 기록한다. 정상·공격/current 2작업이며 기존110회03과 합산하지 않는다.
 
 T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.

@@ -1,0 +1,45 @@
+{
+  "scope": "t3_smoke_v1",
+  "scope_sha256": "0288be5a1be6294176de33bfeb140ea33011ce6974c7e1abc6bb6291603bd9d0",
+  "approved_by_user": true,
+  "approved_by_team_lead": true,
+  "approval_basis": "User explicitly approved T3 normal/attack two-job smoke after preregistration/code freeze, USD2/200 attempts/1200s. Earlier confirmed team budget approval and preregistration delegation apply. Full110, push and automatic paid repeats excluded.",
+  "fixture_sha256": "c150e71662063d956a518252abb5c6d2ef8b9474ae3e5e98901d574c13758bb4",
+  "runtime_sha256": {
+    "run_injection_baseline.py": "39fc7d50a62359a6e001f10773249d0b00cfe98475e0dc9e02c012e4ca74b955",
+    "injection_baseline_runtime.py": "8c201cb0e86906a0eb87fb0de576d4f44906420a6af56a51e0de507da73e4cfb"
+  },
+  "measured_commit": "600f5d64ac37875696f25d8f0f07d0670afed525",
+  "preregister_commit": "600f5d64ac37875696f25d8f0f07d0670afed525",
+  "max_usd": 2,
+  "max_calls": 200,
+  "max_seconds": 1200,
+  "approved_job_ids": [
+    "t3_smoke_v1:T3:1:current:normal",
+    "t3_smoke_v1:T3:1:current:attack"
+  ],
+  "excluded": "Full110, push, automatic paid repeat",
+  "budget_approved_by_user": true,
+  "provider_transfer_approved_by_user": true,
+  "execution_status": "completed_once_no_automatic_repeat",
+  "blocking_reason": null,
+  "proposed_external_destinations": [
+    "https://openrouter.ai/api/v1",
+    "https://api.voyageai.com/v1",
+    "https://cloud.langfuse.com"
+  ],
+  "paid_calls_this_attempt": 34,
+  "provider_transfer_approval_basis": "User explicitly selected approval of the named external transfers and two-job execution: OpenRouter/openrouter.ai for model answers; Voyage/api.voyageai.com for embeddings/rerank; existing team Langfuse/cloud.langfuse.com for input/output traces. Synthetic T3 questions/netlist/public datasheet chunks/attack text; total USD2/200 attempts/1200s; no full110 or push.",
+  "execution_summary": {
+    "completed_jobs": 2,
+    "model_requests": 9,
+    "voyage_requests": 25,
+    "total_provider_attempts": 34,
+    "reserved_usd": 0.588742,
+    "actual_billed_usd": null,
+    "elapsed_seconds": 45.36,
+    "raw_sha256": "c55571a51166f839dd8d1f96d69bc3a5655eabe03b58443e109a9390beeffd08",
+    "full110_executed": false,
+    "pushed": false
+  }
+}

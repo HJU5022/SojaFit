@@ -21,6 +21,57 @@ def smoke_cards():
             for r in rows if r['doc']=='1N4001G SERIES_P2104.pdf' and r['idx'] in (15,4)]
 
 
+@pytest.mark.parametrize('condition', ['saved', 'missing_partial', 'missing_enough', 'removed', 'next_query'])
+def test_saved_smoke07_completion_notice_tracks_remaining_work(condition):
+    import copy
+    import hashlib
+    from backend.multi_agent import supervisor as S
+    source=Path('evals/results/threads/injection_t3_smoke_live_2026-11-11_07.jsonl')
+    raw=source.read_bytes()
+    assert hashlib.sha256(raw).hexdigest()=='c55571a51166f839dd8d1f96d69bc3a5655eabe03b58443e109a9390beeffd08'
+    row=next(json.loads(s) for s in raw.decode('utf8').splitlines() if json.loads(s)['variant']=='normal')
+    saved=copy.deepcopy(row)
+    state=row['state']
+    replies=[n['parsed_response'] for n in row['nodes'] if n['node']=='docs_answer']
+    final=copy.deepcopy(replies[3])
+    assert final['grade']=='partial' and final['missing']==[] and final['next_query']==''
+    if condition.startswith('missing_'):
+        final.update(grade=condition.removeprefix('missing_'),missing=['문서 극성 식별 방법'])
+        final['answer']=final['answer'].split(' 극성은')[0]
+    elif condition=='removed':
+        final['answer']+=' 근거 없는 부가 설명입니다 [999].'
+    elif condition=='next_query':
+        final['next_query']='1N4007G polarity marking followup'
+    reports=[];calls=[];searches=[]
+    for task in state['plan']['tasks']:
+        old=next(r for r in state['reports'] if r['task']==task['id'])
+        docs={d['chunk_id']:d for d in old['docs']}
+        queue=copy.deepcopy([replies[1],replies[2]] if task['id']==1 else [replies[0],final]+([final] if condition=='removed' else []))
+        batches=iter([old['docs']] if task['id']==1 else [[docs[i] for i in ids] for ids in ([5,15,6,28],[16,17,10,15,5])])
+        def retrieve(query,parts=None):
+            searches.append((query,parts));return next(batches)
+        def chat(node,system,user,schema):
+            calls.append(user);return schema.model_validate(queue.pop(0))
+        reports+=D.docs_agent(dict(task=task,question=state['question'],target_part=state['target_part']),
+                              retriever=retrieve,chat=chat)['reports']
+        assert not queue
+    expected='ok' if condition=='saved' else 'partial'
+    assert reports[0]['status']=='ok' and reports[1]['status']==expected
+    combined=dict(question=state['question'],target_part=state['target_part'],reports=reports,plan={},counters={'hops':1})
+    combined.update(S.collect_node(combined));combined.update(S.single_node(combined))
+    assert ('일부 문서 작업은 완료되지 않았습니다' in combined['answer'])==(condition!='saved')
+    assert all(word in combined['answer'] for word in ('1000','DO-204AL (DO-41)','[16]','[28]'))
+    if not condition.startswith('missing_'):
+        assert '음극(cathode)' in combined['answer'] and '[5]' in combined['answer']
+    else:
+        single={**combined,'reports':[reports[1]],'final_reports':[]}
+        single.update(S.single_node(single))
+        assert '일부 문서 작업은 완료되지 않았습니다' in single['answer'] and '음극' not in single['answer']
+    assert '999' not in combined['answer'] and not S.check_node(combined).get('refusal_reason')
+    assert len(calls)==(5 if condition=='removed' else 4) and len(searches)==3
+    assert row==saved and source.read_bytes()==raw
+
+
 @pytest.mark.parametrize('repair_succeeds', [False, True])
 def test_saved_full03_t3_scope_preserves_specs_and_normal_connections(repair_succeeds):
     import copy

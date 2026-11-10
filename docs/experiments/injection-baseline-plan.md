@@ -1,5 +1,12 @@
 # 인젝션 기준선 v2 — T1~T7 짝·채점·예산
 
+## 2026-11-11 스모크07 미완료 상태 불일치 무료 보완 작업서
+
+- Why: 정상 T3의 최종 문서 응답은 1000V·패키지·극성을 포함하고 missing=[]/next_query=''였지만 grade=partial이었다. docs_agent가 그 등급만으로 partial 보고를 만들어 single_node의 미완료 안내가 붙었다.
+- Goal: 명시된 누락·추가검색·검증 문장 제거가 없는 partial 상태 불일치만 정상화해 저장07 정상 답의 사양·인용을 보존하면서 불필요 안내를 없앤다. 누락이 명시되거나 문장이 제거된 부분답/실패는 안내를 유지한다. 새 모델·전체110회·DB·푸시·커밋·기존 실측 재채점은 범위 밖이다.
+- What/How: docs_agent의 최종 상태 산출만 보완한다. enough뿐 아니라 partial/missing없음/next_query빈값이면 완료 후보로 다루되 기존 인용검사를 통과하고 제거 문장이 없어야 한다. supervisor 안내 조건·검색/교정 상한·TaskReport 스키마는 유지한다. 원시 grade/응답/사람review는 보존한다. missing 미보고 상태의 실제 의미적 누락까지 탐지하는 기능은 추가하지 않는다.
+- AC: Given 저장07 정상 초기/재검색/교정 응답, When 무료 재생, Then 두 문서 보고ok·최종1000V/DO-41/극성/인용유지·미완료안내없음. Given 극성 답을 빼고 missing에 명시한 enough/partial, Then 보고partial 및 단일/복합답 안내유지. Given 미제공인용 문장 제거 또는 다음검색 요청이 남음, Then partial/안내유지. 외부호출차단·원시SHA보존·같은실패검사재실행 및 관련회귀로 확인한다.
+
 ## 2026-11-11 실행기 Langfuse 추적 연결 작업서
 
 - **Why**: 실제 실행 결과가 JSONL에만 남아 팀 Langfuse에서 호출 흐름을 볼 수 없었다.
