@@ -12,6 +12,7 @@ it('selects a server reference in the URL and clears it on project switching', a
   fireEvent.change(select, { target: { value: 'D1' } })
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
   expect(screen.getByText('선택한 대상: D1')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ }))
   fireEvent.click(screen.getByRole('button', { name: second.name }))
   expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
   expect(screen.getByLabelText('대상 부품')).toHaveValue('')

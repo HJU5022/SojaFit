@@ -48,6 +48,9 @@ SojaFit (proj3-b)
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
 │   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
+│   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
+│   │   ├── PUBLIC.md       <- 폴더 설명
+│   │   └── sojafit-circuit-hero.png <- 프로젝트 미선택 랜딩의 회로 배경 이미지
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
@@ -90,6 +93,8 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
+│       │   ├── LandingServiceIntroduction.tsx <- 랜딩의 회로·근거·사람 승인 서비스 소개
 │       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
@@ -606,7 +611,8 @@ SojaFit (proj3-b)
 │   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-│   │   └── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+│   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+│   │   └── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -681,6 +687,7 @@ SojaFit (proj3-b)
 | 폴더 | 설명 파일 | 담당 |
 |---|---|---|
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
+| `frontend/public/` | [PUBLIC.md](frontend/public/PUBLIC.md) | 서비스·운영 |
 | `frontend/e2e/` | [E2E.md](frontend/e2e/E2E.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |

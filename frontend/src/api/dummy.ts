@@ -81,6 +81,7 @@ const result: ResultDto = {
 
 let approval: ApprovalDto | null = null
 let approvedCase: ApprovedCaseDto | null = null
+let projects: Project[] = [project]
 
 function json(data: unknown, status = 200) {
   return Response.json(data, { status })
@@ -101,13 +102,35 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   const pathname = url.pathname
 
   if (method === 'GET' && pathname === '/api/projects') {
-    const { connections: _connections, ...summary } = project
-    return json([summary])
+    return json(projects.map(({ connections: _connections, ...summary }) => summary))
   }
-  if (method === 'GET' && pathname === '/api/projects/1') return json(project)
+  const projectMatch = pathname.match(/^\/api\/projects\/(\d+)$/)
+  if (method === 'GET' && projectMatch) {
+    const found = projects.find(item => item.id === Number(projectMatch[1]))
+    return found ? json(found) : notFound()
+  }
+  if (method === 'POST' && pathname === '/api/projects') {
+    const body = JSON.parse(String(init.body ?? '{}')) as { demo_id?: string; name?: string }
+    const created: Project = { ...project, id: Math.max(...projects.map(item => item.id)) + 1,
+      name: body.name?.trim() || project.name, demo_id: body.demo_id ?? project.demo_id, source_kind: 'demo',
+      created_at: NOW, updated_at: NOW }
+    projects = [...projects, created]
+    return json(created, 201)
+  }
+  if (method === 'POST' && pathname === '/api/projects/upload') {
+    const body = init.body instanceof FormData ? init.body : null
+    const created: Project = { ...project, id: Math.max(...projects.map(item => item.id)) + 1,
+      name: String(body?.get('name') || project.name), demo_id: null, source_kind: 'upload',
+      created_at: NOW, updated_at: NOW }
+    projects = [...projects, created]
+    return json(created, 201)
+  }
   if (method === 'GET' && pathname === '/api/demo-circuits') return json([{ id: 'breadboard_supply', name: 'breadboard_supply' }])
   if (method === 'GET' && pathname === '/api/judge/roles') return json([{ code: 'R01', name: '역극성 보호(직렬)' }])
-  if (method === 'GET' && pathname === '/api/projects/1/threads') return json([])
+  const projectThreadsMatch = pathname.match(/^\/api\/projects\/(\d+)\/threads$/)
+  if (method === 'GET' && projectThreadsMatch) {
+    return projects.some(item => item.id === Number(projectThreadsMatch[1])) ? json([]) : notFound()
+  }
   if (method === 'POST' && pathname === '/api/projects/1/threads') return json({ id: 'dummy-thread', project_id: 1 }, 201)
 
   if (method === 'POST' && pathname === '/api/threads/dummy-thread/runs') {

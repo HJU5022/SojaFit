@@ -8,21 +8,25 @@ import RunStatus from './RunStatus'
 import InterruptForm from './InterruptForm'
 import ProfileHints from './ProfileHints'
 
-export default function ConversationPanel({ projectId, demoId = null, targetRef, roleLabels = [], onResult, onConditions }: {
+export default function ConversationPanel({ projectId, demoId = null, targetRef, roleLabels = [], initialQuestion = '', initialConditions = '', onResult, onConditions, onShowEvidence, onShowJudgement }: {
   projectId: number
   demoId?: string | null
   targetRef: string
   roleLabels?: RoleLabel[]
+  initialQuestion?: string
+  initialConditions?: string
   onResult: (result: ReturnType<typeof useRunStream>['state']) => void
   onConditions?: (conditions: string) => void
+  onShowEvidence?: () => void
+  onShowJudgement?: () => void
 }) {
   const client = useQueryClient()
   const threads = useQuery({ queryKey: ['threads', projectId], queryFn: ({ signal }) => listThreads(projectId, signal), retry: false, gcTime: 0 })
   const [threadId, setThreadId] = useState('')
-  const [question, setQuestion] = useState('')
-  const [conditions, setConditions] = useState('')
+  const [question, setQuestion] = useState(initialQuestion)
+  const [conditions, setConditions] = useState(initialConditions)
+  const [submitted, setSubmitted] = useState<{ question: string; conditions: string } | null>(null)
   const [creating, setCreating] = useState(false)
-  // 키 없는 데모면 이 데모 회로의 기록 질문. 데모 모드가 아니면 목록이 404라 버튼이 없다
   const demoQuestions = useQuery({ queryKey: ['demo-questions'], queryFn: ({ signal }) => listDemoQuestions(signal), retry: false, gcTime: 0, enabled: demoId !== null })
   const recorded = Array.isArray(demoQuestions.data) ? demoQuestions.data.filter(item => item.demo_id === demoId) : []
   const [demoItem, setDemoItem] = useState<DemoQuestionDto | null>(null)
@@ -47,12 +51,11 @@ export default function ConversationPanel({ projectId, demoId = null, targetRef,
     try {
       const id = await ensureThread(fresh)
       onConditions?.(extra)
+      setSubmitted({ question: text, conditions: extra })
       void run.start(id, { question: text, target_ref: targetRef, conditions: extra })
-    }
-    catch (error) { onResult({ status: 'failed', error: error as never }) }
+    } catch (error) { onResult({ status: 'failed', error: error as never }) }
   }
   function askRecorded(item: DemoQuestionDto) {
-    // [왜] 기록은 새 대화의 첫 질문을 글자 그대로 보낼 때만 재생된다. 새 대화를 만들고 다듬지(trim) 않고 보낸다
     setQuestion(item.question); setConditions(item.conditions); setDemoItem(item)
     void submit(item.question, item.conditions, true)
   }
@@ -60,26 +63,24 @@ export default function ConversationPanel({ projectId, demoId = null, targetRef,
   const interruptState = run.state.status === 'requires_input' ? run.state : null
   const forTarget = recorded.filter(item => item.target === targetRef)
   const resume = demoItem?.resume
-  return <section className="panel conversation-panel" aria-labelledby="conversation-heading"><h2 id="conversation-heading">대화</h2>
-    <RunStatus state={run.state} />
-    {(run.state.status === 'completed' || run.state.status === 'refused') && <ProfileHints hints={run.state.result.profile_hints ?? []} />}
-    {recorded.length > 0 && <div className="demo-questions" role="group" aria-label="데모 질문">
-      <p>키 없는 데모는 기록한 질문만 재생합니다. 누르면 새 대화로 보냅니다.</p>
-      {forTarget.map(item => <button key={item.id} className="secondary" disabled={busy} onClick={() => askRecorded(item)}>{item.question}</button>)}
-      {forTarget.length === 0 && <p>데모 질문이 있는 대상 부품: {[...new Set(recorded.map(item => item.target))].join(', ')}</p>}
-    </div>}
-    <label htmlFor="d5-question">질문</label><textarea id="d5-question" rows={4} maxLength={4000} value={question} disabled={busy} onChange={event => setQuestion(event.target.value)} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
-    <label htmlFor="d5-conditions">사용 조건 (선택)</label><textarea id="d5-conditions" rows={2} maxLength={2000} value={conditions} disabled={busy} onChange={event => setConditions(event.target.value)} />
-    <button disabled={busy || !targetRef || !question.trim()} onClick={() => { setDemoItem(null); void submit() }}>질문하기</button>
-    {!targetRef && <p>먼저 대상 부품을 선택하세요.</p>}
-    {threads.error && <p role="alert">{errorMessage(threads.error)}</p>}
-    {run.state.status === 'failed' && <p ref={errorSummary} role="alert" tabIndex={-1}>{errorMessage(run.state.error)}</p>}
-    {interruptState && (resume
-      // [왜] 기록 재생은 기록할 때 보낸 답 · 역할 그대로여야 이어진다. 빈 답('모름')은 입력 폼으로 보낼 수 없어 버튼 하나로 보낸다
-      ? <div className="interrupt-form"><h3>추가 정보</h3><p>{interruptState.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</p>
-        <p>기록한 답: {Object.entries(resume.answers).map(([key, value]) => `${key}=${value}`).join(', ') || '모름'} · 역할: {resume.role || '없음'}</p>
-        <button onClick={() => void run.resume(interruptState.runId, { answers: resume.answers, role: resume.role || undefined })}>기록한 답으로 계속하기</button></div>
-      : <InterruptForm interrupt={interruptState.interrupt} roleLabels={roleLabels} busy={false} onSubmit={(answers, role) => void run.resume(interruptState.runId, { answers, role })} />)}
-    <button className="secondary" disabled={!busy} onClick={run.cancel}>실행 취소</button>
+  return <section className="conversation-panel" aria-labelledby="conversation-heading"><div className="conversation-title"><div><span className="eyebrow">분석 대화</span><h2 id="conversation-heading">대체 가능성 분석 흐름</h2></div><span className="target-badge">{targetRef || '대상 미선택'}</span></div>
+    <div className="conversation-stream" aria-live="polite">
+      {recorded.length > 0 && <div className="demo-questions" role="group" aria-label="데모 질문"><p>키 없는 데모는 기록한 질문만 재생합니다. 누르면 새 대화로 보냅니다.</p>
+        {forTarget.map(item => <button key={item.id} className="secondary" disabled={busy} onClick={() => askRecorded(item)}>{item.question}</button>)}
+        {forTarget.length === 0 && <p>데모 질문이 있는 대상 부품: {[...new Set(recorded.map(item => item.target))].join(', ')}</p>}</div>}
+      {!submitted && <article className="conversation-card input-card"><span className="card-kicker">회로 입력 확인</span><h3>{targetRef ? `${targetRef} 분석 준비` : '대상 부품을 선택하세요'}</h3><p>{targetRef ? '질문과 실제 사용 조건을 입력하면 대체 가능성 분석을 시작합니다.' : '회로에서 교체할 부품을 선택하세요.'}</p></article>}
+      {submitted && <><article className="conversation-card user-card"><span className="card-kicker">사용자 질문</span><h3>{submitted.question}</h3><p>{submitted.conditions || '사용 조건 정보 필요'}</p></article><article className={`conversation-card status-card status-${run.state.status}`}><span className="card-kicker">분석 상태</span><RunStatus state={run.state} /></article></>}
+      {interruptState && <article className="conversation-card interrupt-card"><span className="card-kicker">추가 정보 요청</span>{resume
+        ? <div className="interrupt-form"><h3>추가 정보</h3><p>{interruptState.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</p><p>기록한 답: {Object.entries(resume.answers).map(([key, value]) => `${key}=${value}`).join(', ') || '모름'} · 역할: {resume.role || '없음'}</p><button onClick={() => void run.resume(interruptState.runId, { answers: resume.answers, role: resume.role || undefined })}>기록한 답으로 계속하기</button></div>
+        : <InterruptForm interrupt={interruptState.interrupt} roleLabels={roleLabels} busy={false} onSubmit={(answers, role) => void run.resume(interruptState.runId, { answers, role })} />}</article>}
+      {(run.state.status === 'completed' || run.state.status === 'refused') && <article className={`conversation-card final-card status-${run.state.status}`}><span className="card-kicker">{run.state.status === 'completed' ? '최종 답변' : '거절 또는 확인 불가'}</span><p>{run.state.result.answer || run.state.result.refusal || '표시할 답변이 없습니다.'}</p><ProfileHints hints={run.state.result.profile_hints ?? []} />{run.state.status === 'completed' && <div className="composer-actions"><button className="secondary" onClick={() => onShowEvidence?.()}>근거 보기</button><button className="secondary" onClick={() => onShowJudgement?.()}>후보 비교 결과 보기</button></div>}</article>}
+      {threads.error && <p role="alert">{errorMessage(threads.error)}</p>}
+      {run.state.status === 'failed' && <p ref={errorSummary} role="alert" tabIndex={-1}>{errorMessage(run.state.error)}</p>}
+    </div>
+    <div className="composer"><div className="composer-context"><strong>대상 {targetRef || '미선택'}</strong><span>{busy ? '분석 중에는 중복 전송할 수 없습니다.' : '질문과 확인된 조건만 전송합니다.'}</span></div>
+      <label htmlFor="d5-question">질문</label><textarea id="d5-question" rows={3} maxLength={4000} value={question} disabled={busy} onChange={event => setQuestion(event.target.value)} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
+      <label htmlFor="d5-conditions">사용 조건 (선택)</label><textarea id="d5-conditions" rows={2} maxLength={2000} value={conditions} disabled={busy} onChange={event => setConditions(event.target.value)} />
+      <div className="composer-actions"><button disabled={busy || !targetRef || !question.trim()} onClick={() => { setDemoItem(null); void submit() }}>{run.state.status === 'failed' && submitted ? '다시 분석하기' : '분석하기'}</button><button className="secondary" disabled={!busy} onClick={run.cancel}>분석 취소</button></div>
+      {!targetRef && <p>먼저 대상 부품을 선택하세요.</p>}</div>
   </section>
 }
