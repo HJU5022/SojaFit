@@ -72,7 +72,9 @@ B를 고른 이유: A의 이득(원자성)은 크지만 에이전트 입력과 �
 | **단순화** | `safe_result`는 "객체 + 필수 키 6개", `projects`는 "데모일 때만 `demo_id`". 세부는 앱 모델(`SafeResult`)이 검증 | 코드 0 / 시험 2(SQL 텍스트를 파싱하던 시험 교체) |
 | 제거 | CHECK 없음 | 코드 0 — 앱 버그가 틀린 JSON을 저장해도 DB가 못 잡음 |
 
-DB는 "필수 키가 있는 객체"까지만 막아 저장 데이터를 보호하고, 세부 모양은 응답을 만드는 앱 모델이 정본이다. 이미 저장된 데이터는 새 검사를 모두 통과한다(이전 SQL이 사전 점검한다).
+DB는 "필수 키가 있는 객체"까지만 막아 저장 데이터를 보호하고, 세부 모양은 응답을 만드는 앱 모델이 정본이다.
+
+**빠지는 검사 한 줄(명시)**: 옛 `safe_result` 재귀 검사는 `price_parts` 항목의 품번 정규식 CHECK도 포함했는데 단순 CHECK는 이를 **뺀다**. 이 형식은 앱의 `SafeResult` 모델(pattern)이 검증하고 DB는 더 이상 막지 않는다(저장된 기존 데이터는 영향 없음). 이미 저장된 데이터는 새 검사를 모두 통과한다(이전 SQL이 사전 점검한다).
 
 ### D5. 인증 표 — 추천: **`auth_google_pending`만 삭제(선택 단계 2b)**
 
@@ -82,15 +84,15 @@ DB는 "필수 키가 있는 객체"까지만 막아 저장 데이터를 보호�
 | `auth_signup_attempts` | 유지 | 이메일 가입은 `DEMO_MODE=1` 전용으로 아직 코드가 있음. IP 해시 + 30일 청소. 가입 경로를 지울 때 같이 |
 | `auth_login_attempts` + `auth_login_ip_attempts` 합치기 | 보류 | 칸이 거의 같지만 `authenticate` · `delete_account`를 고쳐야 하고 이득이 작음 |
 
-### D6. 마이그레이션 방식과 이력 표 — 추천: **증분 파일 먼저, 기준선 교체는 P2 뒤**
+### D6. 마이그레이션 방식과 이력 표 — 추천: **증분 파일 먼저, 기준선 교체는 P2 뒤** → [결정·구현 11-11] P2 뒤 기준선으로 교체함: 새 DB는 `db/020_service_baseline.sql` 한 파일, 옛 증분은 `db/legacy/`(이력), 운영 이전은 `db/migrations/`
 
 | 안 | 내용 | 비용 | 위험 |
 |---|---|---|---|
-| A. 기준선으로 교체 | `db/003~025`를 `baseline_service.sql` 하나로. compose initdb · CI · 시험이 이 파일만 읽음. 이후 변경은 번호 파일 | 시험 파일 약 7개, CI, `memory_service.initialize` | 기준선이 P1+P2 완료 상태라 **P2 코드가 끝난 뒤에만** 맞다. 동결 직전에 첫 기동 경로를 바꾼다 |
+| A. 기준선으로 교체 | `db/003~025`를 `db/020_service_baseline.sql` 하나로. compose initdb · CI · 시험이 이 파일만 읽음. 이후 변경은 번호 파일 | 시험 파일 약 7개, CI, `memory_service.initialize` | 기준선이 P1+P2 완료 상태라 **P2 코드가 끝난 뒤에만** 맞다. 동결 직전에 첫 기동 경로를 바꾼다 |
 | **B. 증분 파일(추천 먼저)** | 기존 `000~025`를 그대로 두고 `026`(보안, 만들어 둠) · `027`(P1) · `028`(P2)를 **새 DB용 + 운영 이전용으로 같이 쓴다**(멱등 + 안전한 순서). 이력은 `app_migrations`에 기록 | 시험 파일 0(기존 파일이 안 바뀜) | "한 번에 완성된 스키마가 없는" 구조 부채는 남음 |
 | C. 현상 | 파일 23개 + 수동 | 0 | 이력 없음, 4갈래 적용 |
 
-이력 표: **우리 표 `public.app_migrations`**. Supabase의 `supabase_migrations.schema_migrations`는 (a) 초기 5건뿐이고 (b) Supabase 도구 형식이며 (c) compose · CI에는 없다. 우리 표는 세 환경에서 같고 `(version, applied_at, note)`만으로 충분하다. 적용 도구는 만들지 않는다(psql 한 줄, 이력 INSERT는 파일 끝에 포함). **기준선은 만들어 두었으므로**(`baseline_service.sql`, 16 · 17에서 실행 확인) P2 코드가 끝나고 시간이 남으면 A로 바꾼다.
+이력 표: **우리 표 `public.app_migrations`**. Supabase의 `supabase_migrations.schema_migrations`는 (a) 초기 5건뿐이고 (b) Supabase 도구 형식이며 (c) compose · CI에는 없다. 우리 표는 세 환경에서 같고 `(version, applied_at, note)`만으로 충분하다. 적용 도구는 만들지 않는다(psql 한 줄, 이력 INSERT는 파일 끝에 포함). **기준선은 만들어 두었으므로**(`db/020_service_baseline.sql`, 16 · 17에서 실행 확인) P2 코드가 끝나고 시간이 남으면 A로 바꾼다.
 
 ### D7. RLS를 기준선에서 명시할까 — 추천: **명시**
 
@@ -142,7 +144,7 @@ as-is 대비: 질문 · 답 사본이 2곳(`quotes` · `approved_cases` 스냅�
 
 | 확인 | 결과 |
 |---|---|
-| `baseline_service.sql`이 빈 DB에서 오류 없이 실행 | 서비스 표 21개(public 16 + sojafit_agent 5), 함수 · 트리거 정상 |
+| `db/020_service_baseline.sql`이 빈 DB에서 오류 없이 실행 | 서비스 표 21개(public 16 + sojafit_agent 5), 함수 · 트리거 정상 |
 | 현재 구조(`db/000~025` 적용) + 표본 데이터 → **expand** | 오류 없음. 사전 점검(고아 · 위반 행)이 통과 |
 | expand 뒤 **옛 코드**가 새 칸 없이 승인을 INSERT | 통과(NULL 칸 허용) |
 | **contract P1**(옛 코드가 넣은 행 백필 포함) | `TSC 1N4007G → 1N4007G`, `TSC SS34 → SS34`, `Taiwan Semiconductor 1N4148 A0G → 1N4148-A0G` |

@@ -18,7 +18,7 @@ erDiagram
     runs ||--o{ messages : "run의 메시지"
     messages ||--o| approvals : "승인(메시지당 1건)"
     users ||--o{ approvals : "승인자"
-    approvals ||--o| quotes : "견적(승인당 1건)"
+    approvals ||--o{ quotes : "견적(승인 하나에서 여러 건 가능)"
     approvals ||--o| approved_cases : "승인 사례"
     users ||--o{ quotes : "소유"
     users ||--o{ approved_cases : "소유"

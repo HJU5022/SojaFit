@@ -1,6 +1,6 @@
 # 목표(to-be) ERD
 
-- 기준: [`baseline_service.sql`](sql/baseline_service.sql). 표 정의서는 [`tables.md`](tables.md), 현재 구조는 [`../as-is/erd.md`](../as-is/erd.md).
+- 기준: [`db/020_service_baseline.sql`](../../020_service_baseline.sql). 표 정의서는 [`tables.md`](tables.md), 현재 구조는 [`../as-is/erd.md`](../as-is/erd.md).
 - **모든 선이 DB의 FK다.** 현재 구조의 점선(같은 UUID로만 묶임)이 사라졌고, `sojafit_agent.*`의 FK는 전부 `CASCADE`다.
 - `agent_*`는 `sojafit_agent.*` 스키마의 표를 그림 이름 규칙 때문에 줄여 쓴 것이다.
 

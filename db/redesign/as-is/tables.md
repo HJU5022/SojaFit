@@ -20,7 +20,7 @@
 | `public.runs` | 10 | 112 KB | 질문 한 번의 실행과 공개 결과(safe_result). GET /api/runs/{id}의 응답 원본 |
 | `public.messages` | 18 | 96 KB | 화면에 보이는 대화 기록(사용자 질문 · 어시스턴트 답) |
 | `public.approvals` | 3 | 112 KB | 사람이 후보 하나를 승인한 기록. 승인 시점의 판정 스냅샷(JSON) 보관. 메시지당 1건 |
-| `public.quotes` | 3 | 64 KB | 승인에서 만든 가격 없는 견적(품번 · 수량). 승인당 1건 |
+| `public.quotes` | 3 | 64 KB | 승인에서 만든 가격 없는 견적(품번 · 수량). 승인당 UNIQUE는 없어 한 승인에서 여러 건 가능 |
 | `public.approved_cases` | 3 | 64 KB | 화면의 '승인 사례' 목록. 승인과 같이 만들고 사용자가 지울 수 있음. 새 분석에 기억으로 넘기지 않음(11-09 중단) |
 | `sojafit_agent.circuits` | 10 | 168 KB | 분석 서비스용 회로 사본. 대화 하나당 1행(id = 대화 UUID), public.circuits.connections의 … |
 | `sojafit_agent.threads` | 10 | 48 KB | 분석 서비스의 대화 상태 기계(version · retries · status · 현재 입력 기록). id = public.… |
@@ -350,7 +350,7 @@
 
 ## `public.quotes`
 
-- **목적**: 승인에서 만든 가격 없는 견적(품번 · 수량). 승인당 1건
+- **목적**: 승인에서 만든 가격 없는 견적(품번 · 수량). 승인당 UNIQUE는 없어 한 승인에서 여러 건 가능
 - **쓰는 코드**: backend/services/quote.py (create_quote)
 - **행 수 / 크기**: 3행 / 64 KB
 - **비고**: snapshot 칸을 아무도 읽지 않음
@@ -359,7 +359,7 @@
 |---|---|---|---|---|
 | `id` | bigint | NOT NULL | nextval('quotes_id_seq'::regclass) | 견적 번호 |
 | `user_id` | bigint | NOT NULL |  | 소유자 |
-| `approval_id` | bigint | NOT NULL |  | 근거 승인(승인당 1건) |
+| `approval_id` | bigint | NOT NULL |  | 근거 승인(승인당 UNIQUE 없음) |
 | `part_number` | text | NOT NULL |  | 견적 품번(공백 없는 영문 · 숫자 · . _ + / -, CHECK) |
 | `quantity` | integer | NOT NULL |  | 수량 1~100000 |
 | `snapshot` | jsonb | NOT NULL |  | 승인 스냅샷의 복사본(읽는 코드 없음) |

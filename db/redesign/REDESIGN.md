@@ -1,14 +1,14 @@
 # redesign
 
 ## 역할
-- 이 폴더: 서비스 DB 재설계(11-11) **검토용 산출물**. 현재 구조 문서(`as-is/`), 목표 설계안(`to-be/`), 운영 이전 · 기준선 SQL 초안(`to-be/sql/`), 일회용 Postgres 검증 스크립트(`verify/`).
-- 넣는 것: 설계 문서 · 초안 SQL · 검증 스크립트. 확정 · 구현된 SQL은 `db/` 바로 아래 번호 파일로 옮긴다.
+- 이 폴더: 서비스 DB 재설계(11-11) 설계 문서. 현재 구조 문서(`as-is/`), 목표 설계안(`to-be/`), 일회용 Postgres 검증 스크립트(`verify/`).
+- 넣는 것: 설계 문서 · 검증 스크립트. 확정 · 구현된 SQL은 `db/` 바로 아래(기준선 `020_service_baseline.sql`)와 `db/migrations/`(운영 이전)에 있다. 이 폴더에는 SQL을 두지 않는다.
 - 넣지 않는 것: 실제로 자동 실행되는 SQL(`db/*.sql`), 운영 DB 접속 · 백업 파일, 정본 문서(SPEC · ADR).
-- 이 폴더의 SQL은 **어디에도 적용되지 않았다**(운영 · compose · CI 모두). `docker compose`가 읽는 것은 `db/` 바로 아래 `.sql`뿐이다.
+- 상태(통합): 기준선은 새 DB(compose · CI · 시험)에 적용되고, 운영 이전 SQL은 일회용 DB에서만 확인했다(**운영에는 아직 실행하지 않았다**).
 
 ## 파일
 - `as-is/` — 현재 구조 문서: `erd.md`(그림), `tables.md`(운영 DB에서 자동 생성한 표 25개 정의서 + 의미 · 소유 코드)
-- `to-be/` — 목표 설계안: `design.md`(원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과), `erd.md`, `tables.md`, `impact.md`(영향 지도 · 단계별 비용 · ADR 후보), `sql/`(기준선 · 운영 이전 · 되돌리기 SQL 초안, 실행하지 않음)
+- `to-be/` — 목표 설계안: `design.md`(원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과), `erd.md`, `tables.md`, `impact.md`(영향 지도 · 단계별 비용 · ADR 후보)
 - `verify/` — 위 SQL을 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`), 보조 코드(`lib/`), 표본 데이터(`sql/`). 운영 DB에는 접속하지 않는다
 
 # 서비스 DB 재설계 — 검토용 요약 (정운 확정 전 초안, 11-11)
@@ -64,14 +64,14 @@ flowchart LR
 | **P2 권장** | 분석 회로 사본 · 죽은 승인 경로 삭제, 소유자 CASCADE | 11 | 약 25 | 12~16h | 중간 |
 | D8 권장 | 데모 계정 지연 생성(007 제거) | 1 | 2~3 | 2~3h | 낮음 |
 | 2b 선택 | `auth_google_pending` + 승인 대기 코드 제거 | 5 | 약 5 | 3~4h | 낮음 |
-| M 권장 | 기준선 교체(`baseline_service.sql` 하나) | 1 | 파일 7개 | 8~10h | 중간(P2 이후에만) |
+| M 권장 | 기준선 교체(`db/020_service_baseline.sql` 하나) | 1 | 파일 7개 | 8~10h | 중간(P2 이후에만) |
 | P3 · D10 보류 | 완전 통합 · 비노출 스키마 | 22 · 다수 | 60+ | 3~4일 · 1일 | 높음 |
 
 자세한 `파일:함수` 목록은 [`to-be/impact.md`](to-be/impact.md).
 
 ## 5. 위험과 되돌리기
 
-- 운영 이전은 **expand → 새 코드 배포 → contract** 순서이고 expand · contract P1 · contract P2가 별도 파일이다(`to-be/sql/migrate_prod_*.sql`). P2 코드가 늦으면 P1까지만 하고 멈출 수 있다.
+- 운영 이전은 **expand → 새 코드 배포 → contract** 순서이고 expand · contract P1 · contract P2가 별도 파일이다(`db/migrations/migrate_prod_*.sql`). P2 코드가 늦으면 P1까지만 하고 멈출 수 있다.
 - 되돌리기: `migrate_prod_4_rollback.sql`(B2 → B1 → A, **적용의 반대 순서**). contract가 지운 것은 전부 다른 표의 복사본이거나 0행이라 **무손실로 다시 만든다**. contract 뒤에는 **코드보다 DB를 먼저** 되돌린다(옛 코드가 지운 칸을 읽음).
 - 실행 전 백업 명령이 expand 파일 머리에 있다. 운영 DB에는 아직 아무것도 실행하지 않았다.
 
@@ -96,7 +96,7 @@ flowchart LR
 
 | # | 사실 | 반영한 곳 |
 |---|---|---|
-| 1 | Data API 켜짐 · `public`에 anon USAGE | RLS ON + 정책 0 + 권한 0(`026`). 기준선이 RLS 명시(`baseline_service.sql` 끝). `design.md` §1 · D7 · D10 |
+| 1 | Data API 켜짐 · `public`에 anon USAGE | RLS ON + 정책 0 + 권한 0(`026`). 기준선이 RLS 명시(`db/020_service_baseline.sql` 끝). `design.md` §1 · D7 · D10 |
 | 2 | `ensure_rls` 트리거(운영 `public`만), compose · CI 없음 | 기준선 RLS 명시(D7). 기준선 + 026 적용 뒤 "공개 권한 0 · RLS OFF 표 0" 시험 |
 | 3 | `supabase_migrations.schema_migrations` 5건, 나머지 수동 | 우리 `app_migrations` 신설, 첫 행에 `legacy-sql-000-025` 기록(D6, expand E6) |
 | 4 | 프런트가 표에 묶인 3곳 | `impact.md` §6: 3곳의 응답 값 불변, 프런트 수정 0 |
@@ -116,7 +116,7 @@ flowchart LR
 | `as-is/tables.md` · `erd.md` | 현재 구조(운영 DB에서 자동 생성 + 의미 · 소유 코드) |
 | `to-be/design.md` | 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과 |
 | `to-be/erd.md` · `tables.md` | 목표 구조(추천안 + 보류안), 표 정의서 + as-is 차이 |
-| `to-be/sql/baseline_service.sql` | 빈 DB 기준선(16 · 17에서 실행 확인, 026 위에서도 확인) |
-| `to-be/sql/migrate_prod_1_expand.sql` · `2_contract_p1` · `3_contract_p2` · `2b_optional_drop_dead_auth` · `4_rollback` | 운영 이전 초안(실행하지 않음) |
+| `../020_service_baseline.sql` | 새 DB 기준선(16 · 17에서 실행 확인, 026 위에서도 확인). 옛 체인 + 이전 SQL 결과와 구조 차이 0 |
+| `../migrations/migrate_prod_*.sql` (`1_expand` · `2_contract_p1` · `3_contract_p2` · `2b_optional_drop_dead_auth` · `4_rollback`) | 운영 이전 SQL(운영에는 실행하지 않음) |
 | `to-be/impact.md` | 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보 |
 | `verify/` | 위를 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`). 운영 DB 접속 없음 |

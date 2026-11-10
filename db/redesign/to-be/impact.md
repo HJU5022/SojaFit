@@ -12,7 +12,7 @@
 | **P2 권장** | 분석 회로 사본 삭제, 죽은 승인 경로 삭제, 소유자 FK CASCADE, 청소 함수 교체 | **11** (`memory_service.py`) | 약 25 | `contract_p2` | 12~16시간 | 중간. 시험이 많이 얽힘, `detail()` 응답 키 확인 필요 |
 | **D8 권장** | 데모 계정을 첫 데모 로그인 때 만든다(007 제거) | 1 (`auth.py demo_session`) | 2~3 | 007 삭제 | 2~3시간 | 낮음 |
 | **2b 선택** | `auth_google_pending` 삭제와 승인 대기 코드 제거 | 3 + 라우트 1 + CLI 분기 1 | 약 5 | `2b` | 3~4시간 | 낮음 |
-| **M 권장** | 기준선 교체: compose · CI · 시험이 `baseline_service.sql` 하나만 읽고, 앱이 시작 때 SQL을 적용하지 않음 | 1 (`memory_service.initialize` 제거) | 파일 약 7개의 하드코딩 → 헬퍼 | `baseline` | 8~10시간 | 중간. **P2 코드 완료 후에만 맞음**, 첫 기동 경로 변경 |
+| **M 권장** | 기준선 교체: compose · CI · 시험이 `db/020_service_baseline.sql` 하나만 읽고, 앱이 시작 때 SQL을 적용하지 않음 | 1 (`memory_service.initialize` 제거) | 파일 약 7개의 하드코딩 → 헬퍼 | `baseline` | 8~10시간 | 중간. **P2 코드 완료 후에만 맞음**, 첫 기동 경로 변경 |
 | **P3 보류** | 분석 대화 · 메시지 표를 `public`으로 완전 통합 | 약 22 | 60여 개 | 신규 | 3~4일 | 높음(데모 재생) |
 | **D10 보류** | 서비스 표를 `public` 밖 비노출 스키마로 | SQL 정규화 이름 다수 | 스키마 설정 확인 | 신규 | 1일 | 중간 |
 
@@ -93,7 +93,7 @@
 
 | 구분 | 곳 | 바뀌는 것 |
 |---|---|---|
-| CI | `.github/workflows/ci.yml` | `003 · 005 · 006 · 021` 4개 로드 → `baseline_service.sql` 1개 |
+| CI | `.github/workflows/ci.yml` | `003 · 005 · 006 · 021` 4개 로드 → `db/020_service_baseline.sql` 1개 |
 | compose | `docker-compose.yml`, `Dockerfile` | initdb 마운트는 그대로(`db/` 폴더). `thread-setup`은 LangGraph 표만 |
 | 코드 | `backend/conversations/memory_service.py initialize`(013~017 · 022 · 023을 런타임에 적용), `backend/auth.py`(003 · 007 참조 주석), `evals/runners/run_judgement_bundle.py` | `initialize`의 SQL 파일 적용 제거(앱은 DDL을 안 돌린다) |
 | 시험 | `tests/api/test_auth.py`(8) · `test_full_service_flow.py`(6) · `conversations/test_repository.py`(5) · `projects/test_project_repository.py`(5) · `api/test_projects.py`(5) · `conversations/test_dto.py`(2) · `services/test_quote_service.py`(1) | 파일 이름 하드코딩 → 헬퍼 `apply_baseline(conn)` 하나 |

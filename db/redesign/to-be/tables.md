@@ -1,6 +1,6 @@
 # 목표(to-be) 서비스 표 정의서
 
-- 기준: [`baseline_service.sql`](sql/baseline_service.sql)을 빈 Postgres(16 · 17)에 적용한 결과를 `pg_catalog`에서 자동 생성했다(칸 · 타입 · 키 · 인덱스). 의미 · 차이는 손으로 적었다.
+- 기준: [`db/020_service_baseline.sql`](../../020_service_baseline.sql)을 빈 Postgres(16 · 17)에 적용한 결과를 `pg_catalog`에서 자동 생성했다(칸 · 타입 · 키 · 인덱스). 의미 · 차이는 손으로 적었다.
 - 상태: **정운 확정 전 초안**. "필수 + 권장" 단계(P1 + P2)가 끝난 뒤의 구조다. 단계 구분은 [`../REDESIGN.md`](../REDESIGN.md), 근거와 선택지는 [`design.md`](design.md), 그림은 [`erd.md`](erd.md).
 - 현재 구조와의 비교는 [`../as-is/tables.md`](../as-is/tables.md). 범위 밖(코퍼스 4표 · LangGraph 표)은 그대로다.
 
@@ -57,7 +57,7 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `users_login_id_key` | `btree (login_id)` |
+| `users_login_id_key` | `UNIQUE btree (login_id)` |
 
 ## `public.auth_sessions`
 
@@ -165,7 +165,7 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `auth_google_identities_user_id_key` | `btree (user_id)` |
+| `auth_google_identities_user_id_key` | `UNIQUE btree (user_id)` |
 
 ## `public.projects`
 
@@ -259,9 +259,9 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `ix_runs_active` | `btree (thread_id) WHERE (status = ANY (ARRAY['running'::text, 'requires_input'::text]))` |
+| `ix_runs_active` | `UNIQUE btree (thread_id) WHERE (status = ANY (ARRAY['running'::text, 'requires_input'::text]))` |
 | `ix_runs_thread` | `btree (thread_id)` |
-| `runs_id_thread_id_key` | `btree (id, thread_id)` |
+| `runs_id_thread_id_key` | `UNIQUE btree (id, thread_id)` |
 
 ## `public.messages`
 
@@ -319,8 +319,8 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `approvals_id_user_id_key` | `btree (id, user_id)` |
-| `approvals_message_id_key` | `btree (message_id)` |
+| `approvals_id_user_id_key` | `UNIQUE btree (id, user_id)` |
+| `approvals_message_id_key` | `UNIQUE btree (message_id)` |
 | `ix_approvals_user` | `btree (user_id)` |
 
 ## `public.quotes`
@@ -332,7 +332,7 @@
 |---|---|---|---|---|
 | `id` | bigint | NOT NULL | nextval('quotes_id_seq'::regclass) | 견적 번호 |
 | `user_id` | bigint | NOT NULL |  | 소유자 |
-| `approval_id` | bigint | NOT NULL |  | 근거 승인(승인당 1건) |
+| `approval_id` | bigint | NOT NULL |  | 근거 승인(승인 하나에서 견적 여러 건 가능: 승인당 UNIQUE 없음) |
 | `part_number` | text | NOT NULL |  | 견적 품번(공백 없는 영문 · 숫자 · . _ + / -, CHECK) |
 | `quantity` | integer | NOT NULL |  | 수량 1~100000 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 저장 시각 |
@@ -371,7 +371,7 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `approved_cases_approval_id_key` | `btree (approval_id)` |
+| `approved_cases_approval_id_key` | `UNIQUE btree (approval_id)` |
 | `ix_approved_cases_user` | `btree (user_id)` |
 
 ## `public.app_migrations`
@@ -438,7 +438,7 @@
 
 | 인덱스 | 정의 |
 |---|---|
-| `agent_messages_checkpoint` | `btree (thread_id, checkpoint_id) WHERE (checkpoint_id IS NOT NULL)` |
+| `agent_messages_checkpoint` | `UNIQUE btree (thread_id, checkpoint_id) WHERE (checkpoint_id IS NOT NULL)` |
 | `agent_messages_thread` | `btree (thread_id, id)` |
 
 ## `sojafit_agent.analysis_events`
