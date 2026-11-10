@@ -38,7 +38,7 @@ p50 정의가 둘이다. 세트 파일의 `summary.p50_s`는 실행기 정의 `s
 | 단계 | 평가 실행기(`run_gate`) | 서비스 경로(`analysis_events.stages`) | 비고 |
 |---|---|---|---|
 | 검색: 질문 임베딩 · DB+BM25+RRF · 리랭킹 | 못 냄(문항 행에 단계 시간 없음) | `search`(`timed_tool`) 한 칸. 임베딩 · 리랭킹으로 쪼개지 않음 | 쪼갠 값은 `run_retrieval_service --stages`만 낸다(`retrieve()` 단독) |
-| LLM 단계별(Supervisor · 회로 읽기 · 문서 답 · 카드 읽기 · 종합) | 못 냄. Langfuse generation(`trace_url`)을 API로 읽어야 함 | 노드 단위만(`Supervisor`, `RAG 에이전트`, `회로 읽기` 등). LLM 호출 단위는 없음 | LLM 호출은 LangChain 콜백이 아니라 `llm.chat`이라 `AnalysisTimings`에 안 잡힌다 |
+| LLM 단계별(Supervisor · 회로 읽기 · 문서 답 · 카드 읽기 · 종합) | 못 냄. Langfuse generation(`trace_url`)을 API로 읽어야 함 | 노드 단위만(`Supervisor`, `RAG 에이전트`, `회로 읽기` 등). LLM 호출 단위는 `analysis_events`에 없음. 11-11 병합된 `backend/services/service_trace.py`가 서비스 분석에 호출별 Langfuse 추적(모델 · 토큰 · 비용 · 시간, 본문 제외)을 붙이므로 그것이 켜져 있으면 Langfuse에서 호출 단위를 읽을 수 있다(실제로 LLM 호출 span이 생기는지, 배포본이 이 코드인지는 확인하지 못함) | LLM 호출은 LangChain 콜백이 아니라 `llm.chat`이라 `AnalysisTimings`에 안 잡힌다 |
 | 판정 코드 | 못 냄 | `대체 부품 판정` 노드와 `specs` · `find` 도구 칸 | `품번·판 확인` 노드도 칸이 있다 |
 | 승인 대기 | 해당 없음 | 칸 없음. DB 시각으로 계산(아래 4) | 사람이 기다린 시간이라 자동 스크립트로는 못 잰다 |
 
@@ -86,7 +86,7 @@ FROM sojafit_agent.analysis_events WHERE thread_id = :thread ORDER BY created_at
 ## 6. 필요한 코드 변경 (목록만, 아직 하지 않음)
 
 1. `run_graph.make_app`/`run_gate`: `AnalysisTimings()`를 콜백에 넣고 `analysis_timings()`로 감싼 뒤, retriever · specs · find를 서비스와 같이 `timed_tool`로 감싸(`memory_service.py` 292 ~ 304행 조립) `row['stages'] = timings.report()`를 결과 행에 쓴다. 서비스와 같은 칸 이름으로 나란히 볼 수 있다.
-2. LLM 호출 단위 시간 · 토큰 · 비용: `llm.chat`(또는 `node_chat`)에서 호출마다 `{노드, 모델, 초, 입력 · 출력 토큰, 공급자 보고 비용}`을 contextvar 목록에 쌓아 결과 행에 쓴다. 공급자 보고 비용은 이미 `budget.reconcile(usage.cost)`로 읽고 있다. 없으면 Langfuse API로 읽는 집계 스크립트를 `scripts/langfuse/`에 저장소 코드로 만들어야 한다(지금 8장 집계 스크립트는 남아 있지 않음).
+2. LLM 호출 단위 시간 · 토큰 · 비용(평가 실행기 쪽. 서비스 쪽은 `service_trace.py`가 생기면서 일부 해결 가능성이 있어 먼저 그것을 확인): `llm.chat`(또는 `node_chat`)에서 호출마다 `{노드, 모델, 초, 입력 · 출력 토큰, 공급자 보고 비용}`을 contextvar 목록에 쌓아 결과 행에 쓴다. 공급자 보고 비용은 이미 `budget.reconcile(usage.cost)`로 읽고 있다. 없으면 Langfuse API로 읽는 집계 스크립트를 `scripts/langfuse/`에 저장소 코드로 만들어야 한다(지금 8장 집계 스크립트는 남아 있지 않음).
 3. `AnalysisTimings.report()`의 건너뜀 목록을 지금 노드 이름으로 고치거나 없앤다.
 4. `retrieve()`를 임베딩 · DB · 리랭크로 쪼갠 시간을 서비스 경로에서도 내려면 `retrieve.py`에 단계 시간 반환(또는 로그)이 필요하다. 지금은 `run_retrieval_service.py`가 `retrieve()` 안쪽 함수를 따로 불러 잰다.
 5. 배포 API 반복 측정: `http_smoke.py`는 v3-01 · v3-30 둘뿐이라 문항 목록 · 반복 횟수 인자와 승인 대기 시간을 일부러 넣는 옵션이 필요하다(또는 새 스크립트).
