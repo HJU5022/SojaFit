@@ -1,0 +1,726 @@
+{
+  "components": [
+    {
+      "ref": "C1",
+      "value": "820uF 25V",
+      "footprint": "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "C2",
+      "value": "0.1uF 25V",
+      "footprint": "custom-parts:C_Disc_D6.0mm_W2.0mm_P3.81mm",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C3",
+      "value": "47uF 16V",
+      "footprint": "Capacitor_THT:CP_Radial_Tantal_D5.5mm_P2.50mm",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "C4",
+      "value": "0.1uF 25V",
+      "footprint": "custom-parts:C_Disc_D6.0mm_W2.0mm_P3.81mm",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C5",
+      "value": "0.1uF 25V",
+      "footprint": "custom-parts:C_Disc_D6.0mm_W2.0mm_P3.81mm",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "D1",
+      "value": "1N5819",
+      "footprint": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+      "description": "Schottky diode"
+    },
+    {
+      "ref": "D2",
+      "value": "1N5819",
+      "footprint": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+      "description": "Schottky diode"
+    },
+    {
+      "ref": "D3",
+      "value": "1N5819",
+      "footprint": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+      "description": "Schottky diode"
+    },
+    {
+      "ref": "D4",
+      "value": "1N5819",
+      "footprint": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+      "description": "Schottky diode"
+    },
+    {
+      "ref": "D5",
+      "value": "1N5231",
+      "footprint": "Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal",
+      "description": "Zener diode"
+    },
+    {
+      "ref": "F1",
+      "value": "2A",
+      "footprint": "custom-parts:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal_Large_Pads",
+      "description": "Fuse"
+    },
+    {
+      "ref": "H1",
+      "value": "MountingHole_Pad",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "description": "Mounting Hole with connection"
+    },
+    {
+      "ref": "H2",
+      "value": "MountingHole_Pad",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "description": "Mounting Hole with connection"
+    },
+    {
+      "ref": "H3",
+      "value": "MountingHole_Pad",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "description": "Mounting Hole with connection"
+    },
+    {
+      "ref": "H4",
+      "value": "MountingHole_Pad",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "description": "Mounting Hole with connection"
+    },
+    {
+      "ref": "H5",
+      "value": "MountingHole_Pad",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "description": "Mounting Hole with connection"
+    },
+    {
+      "ref": "HS1",
+      "value": "Heatsink_Pad",
+      "footprint": "custom-parts:Heatsink_TO220_W23.5mm_L15.0mm_H30.0mm",
+      "description": "Heatsink with electrical connection, 1 pin"
+    },
+    {
+      "ref": "HS2",
+      "value": "Heatsink_Pad",
+      "footprint": "custom-parts:Heatsink_TO220_W23.5mm_L15.0mm_H30.0mm",
+      "description": "Heatsink with electrical connection, 1 pin"
+    },
+    {
+      "ref": "J1",
+      "value": "CTB7000/6",
+      "footprint": "custom-parts:CamdenBoss_CTB7000_6_L30.0mm_P5.0mm",
+      "description": "Generic screw terminal, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)"
+    },
+    {
+      "ref": "J2",
+      "value": "CTB7000/2",
+      "footprint": "custom-parts:CamdenBoss_CTB7000_2_L10.0mm_P5.0mm",
+      "description": "Generic screw terminal, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+    },
+    {
+      "ref": "Q1",
+      "value": "IRL540N",
+      "footprint": "Package_TO_SOT_THT:TO-220-3_Vertical",
+      "description": "33A Id, 100V Vds, HEXFET N-Channel MOSFET, TO-220"
+    },
+    {
+      "ref": "R1",
+      "value": "560R",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R2",
+      "value": "1K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P5.08mm_Vertical",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R3",
+      "value": "10K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P5.08mm_Vertical",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R4",
+      "value": "10K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R5",
+      "value": "330R",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R6",
+      "value": "1K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R7",
+      "value": "1K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R8",
+      "value": "10K",
+      "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+      "description": "Resistor"
+    },
+    {
+      "ref": "RV1",
+      "value": "14D271K",
+      "footprint": "Varistor:RV_Disc_D15.5mm_W3.9mm_P7.5mm",
+      "description": "Voltage dependent resistor"
+    },
+    {
+      "ref": "RV2",
+      "value": "25K",
+      "footprint": "custom-parts:Potentiometer_ACP_CA6-V2,5_Vertical",
+      "description": "Potentiometer"
+    },
+    {
+      "ref": "SW1",
+      "value": "SW_Push",
+      "footprint": "Button_Switch_THT:SW_PUSH_6mm_H4.3mm",
+      "description": "Push button switch, generic, two pins"
+    },
+    {
+      "ref": "T1",
+      "value": "Hahn EL 305 2051",
+      "footprint": "custom-parts:Hahn_EL_305_2051",
+      "description": "Hahn EL 305 2051, 3VA, 230V Primary, 9V Secondary Transformer, PCB"
+    },
+    {
+      "ref": "U1",
+      "value": "BAJ0CC0T",
+      "footprint": "Package_TO_SOT_THT:TO-220-3_Vertical",
+      "description": "Positive 1A 35V Linear Regulator, Fixed Output 10V, TO-220"
+    },
+    {
+      "ref": "U2",
+      "value": "Digispark USB",
+      "footprint": "custom-parts:Digispark_USB",
+      "description": "Digistump Digispark USB ATtiny85 Microcontroller Module"
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V",
+      "nodes": [
+        {
+          "ref": "R4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "7",
+          "pinfunction": "5V_7"
+        }
+      ]
+    },
+    {
+      "name": "+10V",
+      "nodes": [
+        {
+          "ref": "C3",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "3",
+          "pinfunction": "VO_3"
+        },
+        {
+          "ref": "U2",
+          "pin": "9",
+          "pinfunction": "VIN_9"
+        }
+      ]
+    },
+    {
+      "name": "ENABLE",
+      "nodes": [
+        {
+          "ref": "C5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R7",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R8",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "1",
+          "pinfunction": "P0_1"
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C3",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C5",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "D3",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "D4",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "D5",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "H3",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "H4",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "H5",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "HS1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "3",
+          "pinfunction": "Pin_3_3"
+        },
+        {
+          "ref": "J1",
+          "pin": "4",
+          "pinfunction": "Pin_4_4"
+        },
+        {
+          "ref": "Q1",
+          "pin": "3",
+          "pinfunction": "S_3"
+        },
+        {
+          "ref": "R3",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R8",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV2",
+          "pin": "3",
+          "pinfunction": "3_3"
+        },
+        {
+          "ref": "SW1",
+          "pin": "2",
+          "pinfunction": "2_2"
+        },
+        {
+          "ref": "U1",
+          "pin": "2",
+          "pinfunction": "GND_2"
+        },
+        {
+          "ref": "U2",
+          "pin": "8",
+          "pinfunction": "GND_8"
+        }
+      ]
+    },
+    {
+      "name": "LINE",
+      "nodes": [
+        {
+          "ref": "F1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "J2",
+          "pin": "2",
+          "pinfunction": "Pin_2_2"
+        }
+      ]
+    },
+    {
+      "name": "NEUT",
+      "nodes": [
+        {
+          "ref": "J2",
+          "pin": "1",
+          "pinfunction": "Pin_1_1"
+        },
+        {
+          "ref": "RV1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "T1",
+          "pin": "5",
+          "pinfunction": "AB_5"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D1-A)",
+      "nodes": [
+        {
+          "ref": "D1",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "D3",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "T1",
+          "pin": "9",
+          "pinfunction": "SA_9"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D1-K)",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "D1",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "D2",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "U1",
+          "pin": "1",
+          "pinfunction": "VI_1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D2-A)",
+      "nodes": [
+        {
+          "ref": "D2",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "D4",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "T1",
+          "pin": "7",
+          "pinfunction": "SB_7"
+        }
+      ]
+    },
+    {
+      "name": "Net-(D5-K)",
+      "nodes": [
+        {
+          "ref": "D5",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "R6",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R7",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(Q1-G)",
+      "nodes": [
+        {
+          "ref": "Q1",
+          "pin": "1",
+          "pinfunction": "G_1"
+        },
+        {
+          "ref": "R2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R3",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(R4-Pad1)",
+      "nodes": [
+        {
+          "ref": "R4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R5",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "SW1",
+          "pin": "1",
+          "pinfunction": "1_1"
+        }
+      ]
+    },
+    {
+      "name": "Net-(T1-AA)",
+      "nodes": [
+        {
+          "ref": "F1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "T1",
+          "pin": "1",
+          "pinfunction": "AA_1"
+        }
+      ]
+    },
+    {
+      "name": "POT_POS",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "6",
+          "pinfunction": "Pin_6_6"
+        },
+        {
+          "ref": "R1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV2",
+          "pin": "1",
+          "pinfunction": "1_1"
+        }
+      ]
+    },
+    {
+      "name": "PWM",
+      "nodes": [
+        {
+          "ref": "R2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "2",
+          "pinfunction": "P1_2"
+        }
+      ]
+    },
+    {
+      "name": "RESET",
+      "nodes": [
+        {
+          "ref": "R5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "6",
+          "pinfunction": "P5_6"
+        }
+      ]
+    },
+    {
+      "name": "SENSE",
+      "nodes": [
+        {
+          "ref": "C4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV2",
+          "pin": "2",
+          "pinfunction": "2_2"
+        },
+        {
+          "ref": "U2",
+          "pin": "3",
+          "pinfunction": "P2_3"
+        }
+      ]
+    },
+    {
+      "name": "SW_NEG",
+      "nodes": [
+        {
+          "ref": "HS2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "5",
+          "pinfunction": "Pin_5_5"
+        },
+        {
+          "ref": "Q1",
+          "pin": "2",
+          "pinfunction": "D_2"
+        }
+      ]
+    },
+    {
+      "name": "SW_POS",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "1",
+          "pinfunction": "Pin_1_1"
+        },
+        {
+          "ref": "J1",
+          "pin": "2",
+          "pinfunction": "Pin_2_2"
+        },
+        {
+          "ref": "R6",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(H1-Pad1)",
+      "nodes": [
+        {
+          "ref": "H1",
+          "pin": "1",
+          "pinfunction": "1_1"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(H2-Pad1)",
+      "nodes": [
+        {
+          "ref": "H2",
+          "pin": "1",
+          "pinfunction": "1_1"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(U2-P3-Pad4)",
+      "nodes": [
+        {
+          "ref": "U2",
+          "pin": "4",
+          "pinfunction": "P3_4"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(U2-P4-Pad5)",
+      "nodes": [
+        {
+          "ref": "U2",
+          "pin": "5",
+          "pinfunction": "P4_5"
+        }
+      ]
+    }
+  ]
+}

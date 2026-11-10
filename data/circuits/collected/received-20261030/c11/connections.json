@@ -1,0 +1,660 @@
+{
+  "components": [
+    {
+      "ref": "U2",
+      "value": "ATtiny85",
+      "footprint": "Package_SO:SOIC-8_5.23x5.23mm_P1.27mm",
+      "description": ""
+    },
+    {
+      "ref": "J2",
+      "value": "Hall_Conn",
+      "footprint": "hrem:X8821WRS-03-9TSN",
+      "description": "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
+    },
+    {
+      "ref": "C1",
+      "value": "47uF",
+      "footprint": "Capacitor_Tantalum_SMD:CP_EIA-3528-15_AVX-H_Pad1.50x2.35mm_HandSolder",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "C2",
+      "value": "22uF",
+      "footprint": "Capacitor_Tantalum_SMD:CP_EIA-3528-15_AVX-H_Pad1.50x2.35mm_HandSolder",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "D1",
+      "value": "SS14-E3/61T",
+      "footprint": "Diode_SMD:D_SMA_Handsoldering",
+      "description": "20V 1A Schottky Barrier Rectifier Diode, DO-41"
+    },
+    {
+      "ref": "R2",
+      "value": "680R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R1",
+      "value": "10K",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "BZ1",
+      "value": "Buzzer",
+      "footprint": "hrem:buzzer",
+      "description": "Buzzer, polarized"
+    },
+    {
+      "ref": "U1",
+      "value": "HT7733A",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5_HandSoldering",
+      "description": ""
+    },
+    {
+      "ref": "L1",
+      "value": "100uH",
+      "footprint": "hrem:Murata LQH43",
+      "description": "Inductor symbol for simulation only"
+    },
+    {
+      "ref": "R4",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "SW1",
+      "value": "SW_Push_Dual",
+      "footprint": "hrem:Diptronics DTSM-65N",
+      "description": "Push button switch, generic, two pins"
+    },
+    {
+      "ref": "C3",
+      "value": "100nF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "U4",
+      "value": "74LVC1G125",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5_HandSoldering",
+      "description": "Single Buffer Gate Tri-State, Low-Voltage CMOS"
+    },
+    {
+      "ref": "R5",
+      "value": "0R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "J1",
+      "value": "AVR-ISP",
+      "footprint": "Connector_IDC:IDC-Header_2x05_P2.54mm_Vertical",
+      "description": "Atmel 10-pin ISP connector"
+    },
+    {
+      "ref": "TP2",
+      "value": "TestPoint_Flag",
+      "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+      "description": "test point (alternative flag-style design)"
+    },
+    {
+      "ref": "TP5",
+      "value": "TestPoint_Flag",
+      "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+      "description": "test point (alternative flag-style design)"
+    },
+    {
+      "ref": "TP3",
+      "value": "TestPoint_Flag",
+      "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+      "description": "test point (alternative flag-style design)"
+    },
+    {
+      "ref": "TP4",
+      "value": "TestPoint_Flag",
+      "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+      "description": "test point (alternative flag-style design)"
+    },
+    {
+      "ref": "TP1",
+      "value": "TestPoint_Flag",
+      "footprint": "TestPoint:TestPoint_Loop_D2.50mm_Drill1.0mm",
+      "description": "test point (alternative flag-style design)"
+    },
+    {
+      "ref": "BT1",
+      "value": "1xAAA",
+      "footprint": "hrem:AAA battery",
+      "description": "Single-cell battery"
+    },
+    {
+      "ref": "R6",
+      "value": "0R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "U3",
+      "value": "74LVC1G125",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5_HandSoldering",
+      "description": "Single Buffer Gate Tri-State, Low-Voltage CMOS"
+    },
+    {
+      "ref": "R3",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "D2",
+      "value": "LED",
+      "footprint": "LED_THT:LED_D3.0mm",
+      "description": "Light emitting diode, small symbol"
+    },
+    {
+      "ref": "C4",
+      "value": "100nF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C5",
+      "value": "100nF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "Q1",
+      "value": "MMBT4401-7-F",
+      "footprint": "Package_TO_SOT_SMD:SOT-23_Handsoldering",
+      "description": "NPN transistor, base/collector/emitter"
+    }
+  ],
+  "nets": [
+    {
+      "name": "Net-(R2-Pad2)",
+      "nodes": [
+        {
+          "ref": "U2",
+          "pin": "3",
+          "pinfunction": null
+        },
+        {
+          "ref": "R2",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(J2-Pad2)",
+      "nodes": [
+        {
+          "ref": "U2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "TP4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J2",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "C2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "D2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U3",
+          "pin": "3",
+          "pinfunction": null
+        },
+        {
+          "ref": "U3",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C5",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "BT1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "TP1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J2",
+          "pin": "3",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "8",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "4",
+          "pinfunction": null
+        },
+        {
+          "ref": "Q1",
+          "pin": "3",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "6",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "4",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "10",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "4",
+          "pinfunction": null
+        },
+        {
+          "ref": "U4",
+          "pin": "3",
+          "pinfunction": null
+        },
+        {
+          "ref": "U4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C3",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "SW1",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "/SCK",
+      "nodes": [
+        {
+          "ref": "SW1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "7",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "7",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "/RST",
+      "nodes": [
+        {
+          "ref": "U2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "5",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "/MOSI",
+      "nodes": [
+        {
+          "ref": "R5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "5",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(BZ1-Pad2)",
+      "nodes": [
+        {
+          "ref": "BZ1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "Q1",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(U1-Pad3)",
+      "nodes": [
+        {
+          "ref": "U1",
+          "pin": "3",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D1-Pad2)",
+      "nodes": [
+        {
+          "ref": "D1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "L1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "5",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(Q1-Pad1)",
+      "nodes": [
+        {
+          "ref": "Q1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "TP3",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(BZ1-Pad1)",
+      "nodes": [
+        {
+          "ref": "BZ1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R4",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "/Vbat",
+      "nodes": [
+        {
+          "ref": "L1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "BT1",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "VCC",
+      "nodes": [
+        {
+          "ref": "R4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C3",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "TP2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "8",
+          "pinfunction": null
+        },
+        {
+          "ref": "U4",
+          "pin": "5",
+          "pinfunction": null
+        },
+        {
+          "ref": "C5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "D1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U3",
+          "pin": "5",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(J2-Pad1)",
+      "nodes": [
+        {
+          "ref": "TP5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R5",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "J2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U4",
+          "pin": "4",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(J1-Pad3)",
+      "nodes": [
+        {
+          "ref": "J1",
+          "pin": "3",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(R3-Pad1)",
+      "nodes": [
+        {
+          "ref": "R6",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "U3",
+          "pin": "4",
+          "pinfunction": null
+        },
+        {
+          "ref": "R3",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "/MISO",
+      "nodes": [
+        {
+          "ref": "R6",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U2",
+          "pin": "6",
+          "pinfunction": null
+        },
+        {
+          "ref": "J1",
+          "pin": "9",
+          "pinfunction": null
+        },
+        {
+          "ref": "U3",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D2-Pad2)",
+      "nodes": [
+        {
+          "ref": "D2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R3",
+          "pin": "2",
+          "pinfunction": null
+        }
+      ]
+    }
+  ]
+}

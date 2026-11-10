@@ -10,5 +10,14 @@ evals/results/supervisor/2026-11-06-prompt-v0-v1/*.json -text whitespace=cr-at-e
 evals/results/supervisor/2026-11-06-prompt-v0-v1/**/*.json -text whitespace=cr-at-eol
 # 동결 평가셋을 FROZEN.json에 기록한 LF 바이트 해시로 체크아웃한다.
 evals/dataset_v*.jsonl text eol=lf
+# 데모 코퍼스 스냅샷을 SNAPSHOT.md에 기록한 LF 바이트 해시로 체크아웃한다.
+data/demo/snapshot/*.jsonl text eol=lf
 # 제작자 원본은 고치지 않으므로 공백 검사에서 뺀다.
 data/circuits/collected/**/original/** -whitespace
+# 프롬프트 인젝션 시험 자료와 그 원시 결과는 시험(test_saved_defense_replay 등)·검토 기록이 바이트 해시를 고정한다.
+data/corpus/injection_tests/*.json -text whitespace=cr-at-eol
+evals/results/threads/claim_consistency_*.json -text whitespace=cr-at-eol
+evals/results/threads/input_surface_*.json -text whitespace=cr-at-eol
+evals/results/threads/judgement_bundle_*.json -text whitespace=cr-at-eol
+evals/results/threads/saved_defense_replay_*.json -text whitespace=cr-at-eol
+evals/results/threads/trust_boundary_*.json -text whitespace=cr-at-eol
