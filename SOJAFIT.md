@@ -289,6 +289,7 @@ SojaFit (proj3-b)
 │   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
 │   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
+│   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
@@ -446,6 +447,7 @@ SojaFit (proj3-b)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험, 데모 질문 목록(재생 모드에서만, 기록한 답 · 판정 비노출)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
+│   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
