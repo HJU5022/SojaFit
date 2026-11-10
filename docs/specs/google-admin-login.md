@@ -1,5 +1,6 @@
 # Google 관리자 로그인 설계와 구현 상태
 
+> 2026-11-10 변경: 연결 안 된 계정도 이메일이 같으면 승인 없이 자동 연결(아래 11-10 확장). 이 문서의 승인 대기 · 승인 CLI 절은 그 이전(11-08) 기준이다.
 > 2026-11-08 저장소 기준: 기존 비밀번호 인증을 유지한 Google 관리자 로그인, 승인 대기, 운영자 승인·철회·비활성화 CLI, 공통 세션 사용, 콜백 접속 로그 보호, SQL과 합성 테스트가 구현되어 있다. 아래 날짜별 기록의 Cloud Run·Secret Manager·팀 DB 작업은 당시 확인한 운영 이력이며 현재 외부 상태를 뜻하지 않는다. 실제 운영 설정·계정·DB 적용 상태는 대상 환경에서 다시 확인한다.
 
 ## 현재 확인된 상태
@@ -27,7 +28,7 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 - 승인된 관리자 Gmail 2개 이상을 각기 다른 관리자 계정에 안전하게 연결하고 로그인·세션 폐기를 확인한다.
 - 미승인 Google 계정은 관리자 세션을 발급받지 못한다. 기존 평가자 로그인·로그아웃과 권한 제한을 유지한다.
 - 범위 밖: 업무 데이터 소유권 연결, Supabase Auth 전환, 운영 배포 자동화.
-- **11-10 확장(일반 사용자 Google 가입 · 로그인)**: 11-09의 이메일 자기 가입은 이메일 인증이 없어 공개 배포에서 닫고(`DEMO_MODE=0`이면 `POST /api/auth/signup` 404), Google이 확인한 이메일(`email_verified`)로 가입한다. 연결된 신원이면 role과 상관없이 로그인하고(`auth.google_session`), 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작해야(`/api/auth/google/start?consent=1` → 동의 쿠키) 비밀번호 없는 `user` 계정이 만들어진다(`auth.google_signup`, `password_hash = google-login-only`). **이메일이 이미 `users`에 있는 신원은 자동 연결하지 않고** 기존 승인 대기(`request_google_link`)로 보낸다. 관리자 연결 승인 · 철회 CLI와 DB 표(010)는 그대로다. 평가자는 Google 계정 대신 운영 DB에 미리 만든 이메일 · 비밀번호 계정으로 로그인한다.
+- **11-10 확장(일반 사용자 Google 가입 · 로그인)**: 11-09의 이메일 자기 가입은 이메일 인증이 없어 공개 배포에서 닫고(`DEMO_MODE=0`이면 `POST /api/auth/signup` 404), Google이 확인한 이메일(`email_verified`)로 가입한다. 연결된 신원이면 role과 상관없이 로그인하고(`auth.google_session`), 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작해야(`/api/auth/google/start?consent=1` → 동의 쿠키) 비밀번호 없는 `user` 계정이 만들어진다(`auth.google_signup`, `password_hash = google-login-only`). **이메일이 이미 `users`에 있는 신원도 Google이 확인한 이메일이 활성 계정(관리자 포함)의 로그인 이메일과 정확히 같으면 운영자 승인 없이 그 계정에 연결해 로그인한다**(`auth.google_signup`, 동의 불필요, 기존 비밀번호 로그인 유지, 비활성 · 이미 다른 Google 신원에 연결된 계정은 `/login?google=error`). 11-10 정운 결정으로 11-09~10의 "이메일이 이미 있으면 자동 연결하지 않고 운영자 승인"을 뒤집었다(근거: Google이 이메일 소유를 확인(`email_verified`), 이메일 가입을 닫음, Google 콘솔 테스트 사용자 허용 목록, Marvia에서도 같은 방식). 승인 대기 코드(`request_google_link` · `/api/auth/google/pending` · `--approve-google` CLI · `auth_google_pending` 표)는 콜백이 더 이상 쓰지 않지만 되돌림 · 호환용으로 남겨 둔다. 연결 철회 CLI는 그대로다. 평가자는 Google 계정 대신 운영 DB에 미리 만든 이메일 · 비밀번호 계정으로 로그인한다.
 
 ## Approaches
 
