@@ -290,6 +290,9 @@ SojaFit (proj3-b)
 │   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
 │   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
+│   ├── 027_service_redesign_p1.sql <- 서비스 표 재설계 1/3: 승인 칸 3개 · 스냅샷 복사본 제거 · 단순 CHECK · 세션 인덱스 · app_migrations(public 표만, 운영 이전 expand + contract P1을 빈 DB용으로 이어 붙임)
+│   ├── 028_service_redesign_agent.sql <- 서비스 표 재설계 2/3: 분석 서비스 FK · 체크포인트 삭제 트리거 · 회로 사본 · 죽은 승인 표 제거 · 청소 함수 교체(운영 이전 expand E2 · E5 + contract P2)
+│   ├── 029_drop_google_pending.sql <- 서비스 표 재설계 3/3: 쓰지 않는 구글 승인 대기 표 삭제(운영 이전 2b)
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
@@ -465,6 +468,7 @@ SojaFit (proj3-b)
 │
 ├── tests/                  <- PR마다 CI가 돌리는 회귀 테스트. 영역별 하위 폴더, pytest가 하위 폴더까지 찾음 (고정: 루트 tests/)
 │   ├── TESTS.md            <- 폴더 설명과 실행 명령
+│   ├── db_schema.py        <- 서비스 표 SQL을 순서대로 적용하는 시험 헬퍼 apply_service_schema(SQL 파일 이름을 부르는 유일한 곳)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
@@ -609,6 +613,9 @@ SojaFit (proj3-b)
 │   │   └── hf_data.py      <- 카드·질의를 비공개 저장소로 올리고 결과 벡터를 받아 검증·삭제
 │   ├── db/                 <- 운영 DB 손 작업
 │   │   ├── DB.md           <- 폴더 설명
+│   │   ├── verify_chain/   <- 새 DB 체인이 운영 이전 SQL 결과와 같은 구조인지 일회용 컨테이너로 확인(운영 DB 접속 없음)
+│   │   │   ├── VERIFY_CHAIN.md  <- 폴더 설명
+│   │   │   └── verify_chain.sh  <- 현재 구조 + 이전 SQL 결과 대 새 체인 구조 비교, 되돌리기 뒤 처음 구조 비교(Postgres 16 · 17)
 │   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
 │   └── results/            <- 측정 원시 결과(평가 지표가 아님). <무엇>_<날짜>.json을 주제 폴더에
 │       ├── auth/           <- 로그인 경계·동시 scrypt
@@ -769,6 +776,7 @@ SojaFit (proj3-b)
 | `scripts/` | [SCRIPTS.md](scripts/SCRIPTS.md) | 각 모듈 담당 |
 | `scripts/auth/` | [AUTH.md](scripts/auth/AUTH.md) | 서비스·운영 |
 | `scripts/db/` | [DB.md](scripts/db/DB.md) | 서비스·운영 |
+| `scripts/db/verify_chain/` | [VERIFY_CHAIN.md](scripts/db/verify_chain/VERIFY_CHAIN.md) | 서비스·운영 |
 | `scripts/bit_search/` | [BIT_SEARCH.md](scripts/bit_search/BIT_SEARCH.md) | 서비스·운영 |
 | `scripts/hf_jobs/` | [HF_JOBS.md](scripts/hf_jobs/HF_JOBS.md) | 검색·데이터 |
 | `scripts/langfuse/` | [LANGFUSE.md](scripts/langfuse/LANGFUSE.md) | 에이전트 |
