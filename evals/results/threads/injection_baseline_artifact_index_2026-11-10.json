@@ -577,5 +577,342 @@
   ],
   "source_archive_ref": "refs/archive/injection-pre-consolidation-20261110",
   "source_history_is_on_active_branch": false,
-  "recovery_scope": "Original commits are retained by this local archive ref, not by the rewritten STH branch. Sharing STH alone will not share the archived originals."
+  "recovery_scope": "Original commits are retained by this local archive ref, not by the rewritten STH branch. Sharing STH alone will not share the archived originals.",
+  "measured_runs_archive": {
+    "schema_version": 1,
+    "purpose": "measured_injection_artifact_backup",
+    "backup_verified_at_kst": "2026-11-11T04:55:45.7301511+09:00",
+    "source_repository": "E:/teamproject3/proj3-b",
+    "source_head": "e76c756f4b9ab94e3a2918442076be5bc64698d3",
+    "archive_root": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111",
+    "backup_status": "verified",
+    "availability": "local_backup_only_not_team_shared",
+    "archived_file_count": 32,
+    "retained_file_count": 4,
+    "git_recovery_available_for_archived_files": false,
+    "artifacts": {
+      "injection_baseline_approval_2026-11-11_01.json": {
+        "original_path": "evals/results/threads/injection_baseline_approval_2026-11-11_01.json",
+        "bytes": 1074,
+        "sha256": "255bf4a5ce9d407c92d08bdbd005565c176f60ecc5645a09e7b5d78727c73e85",
+        "source_last_write_time_utc": "2026-11-10T15:52:36.6004945Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_approval_2026-11-11_01.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_approval_2026-11-11_01.json"
+      },
+      "injection_baseline_approval_2026-11-11_02.json": {
+        "original_path": "evals/results/threads/injection_baseline_approval_2026-11-11_02.json",
+        "bytes": 1002,
+        "sha256": "e927dd6914f09c9862b5e317618136244725f648761b29e93209bd78f70e0d59",
+        "source_last_write_time_utc": "2026-11-10T18:47:09.9845286Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_approval_2026-11-11_02.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_approval_2026-11-11_02.json"
+      },
+      "injection_baseline_approval_2026-11-11_03.json": {
+        "original_path": "evals/results/threads/injection_baseline_approval_2026-11-11_03.json",
+        "bytes": 1010,
+        "sha256": "268e16d681f48dea7bef4ba74c34d48b769c8828e8f7c055c55bc3731144cf62",
+        "source_last_write_time_utc": "2026-11-10T19:24:02.9568932Z",
+        "storage": "repository"
+      },
+      "injection_baseline_live_2026-11-11_01.budget.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.budget.json",
+        "bytes": 491847,
+        "sha256": "c92d48f785aed3d2d0dabf399c6a314e32814efa256b0f154c925477c4bd087b",
+        "source_last_write_time_utc": "2026-11-10T16:05:50.3523279Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_01.budget.json"
+      },
+      "injection_baseline_live_2026-11-11_01.jsonl": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.jsonl",
+        "bytes": 3077021,
+        "sha256": "eda72df435f4e8f2f6d649f9098ec2981d3f7edac61e08d2fbd6959e910c94a6",
+        "source_last_write_time_utc": "2026-11-10T16:05:50.3278165Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_01.jsonl"
+      },
+      "injection_baseline_live_2026-11-11_01.meta.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.meta.json",
+        "bytes": 931,
+        "sha256": "1c3d4756102140908e7206ce576f09889b5f8cd79cae4f884c7023a357aa0f1a",
+        "source_last_write_time_utc": "2026-11-10T15:53:17.0655873Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_01.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_01.meta.json"
+      },
+      "injection_baseline_live_2026-11-11_02.budget.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.budget.json",
+        "bytes": 473349,
+        "sha256": "333e123049eed171229b17bd75b2543d619802ec5978731b84c33b896f9d0013",
+        "source_last_write_time_utc": "2026-11-10T18:59:24.4347435Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_02.budget.json"
+      },
+      "injection_baseline_live_2026-11-11_02.jsonl": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.jsonl",
+        "bytes": 3172961,
+        "sha256": "cfd9c17a726e3905fa4967ce49f1bb36b6e86b019852a7c5865d6714a37d586e",
+        "source_last_write_time_utc": "2026-11-10T18:59:24.4232408Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_02.jsonl"
+      },
+      "injection_baseline_live_2026-11-11_02.meta.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.meta.json",
+        "bytes": 1248,
+        "sha256": "18289cfd7db07c361f02c34adbfdfee76a62aa17f92fe36514ed52503b00c9fc",
+        "source_last_write_time_utc": "2026-11-10T18:59:24.4362432Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_baseline_live_2026-11-11_02.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_baseline_live_2026-11-11_02.meta.json"
+      },
+      "injection_baseline_live_2026-11-11_03.budget.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_03.budget.json",
+        "bytes": 472039,
+        "sha256": "a6b3f2465b207a92e19dc079d45c29055b102f5818fbd73510ba82ca09cbf887",
+        "source_last_write_time_utc": "2026-11-10T19:35:44.4478152Z",
+        "storage": "repository"
+      },
+      "injection_baseline_live_2026-11-11_03.jsonl": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl",
+        "bytes": 3203724,
+        "sha256": "637f324fe1b9a57e1c7b48af5215dfd294400f7f5e932048a951671f29afc813",
+        "source_last_write_time_utc": "2026-11-10T19:35:44.4343119Z",
+        "storage": "repository"
+      },
+      "injection_baseline_live_2026-11-11_03.meta.json": {
+        "original_path": "evals/results/threads/injection_baseline_live_2026-11-11_03.meta.json",
+        "bytes": 1276,
+        "sha256": "b070b87858062bb11d6da544f1989ac7df27ba14de7252b7e53bc40785610f4c",
+        "source_last_write_time_utc": "2026-11-10T19:35:44.4678237Z",
+        "storage": "repository"
+      },
+      "injection_exposure_smoke_approval_2026-11-10_01.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_01.json",
+        "bytes": 965,
+        "sha256": "d8456bc1db69841dbef2e250ab54457b51877cbae07ee933d566b31f2311fc75",
+        "source_last_write_time_utc": "2026-11-10T14:01:27.1395628Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_01.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_approval_2026-11-10_01.json"
+      },
+      "injection_exposure_smoke_approval_2026-11-10_02.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_02.json",
+        "bytes": 984,
+        "sha256": "cfaf70d01204f5497c0fe4a7f26c48f854d48faff161bb3dd6357769c5509e16",
+        "source_last_write_time_utc": "2026-11-10T14:29:28.1422030Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_02.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_approval_2026-11-10_02.json"
+      },
+      "injection_exposure_smoke_approval_2026-11-10_03.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_03.json",
+        "bytes": 1002,
+        "sha256": "e1b9c7f239ad3d104642f28c94f2215d1bfa67a7e9148687a4202f6a20f87bca",
+        "source_last_write_time_utc": "2026-11-10T14:51:24.2201635Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-10_03.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_approval_2026-11-10_03.json"
+      },
+      "injection_exposure_smoke_approval_2026-11-11_04.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-11_04.json",
+        "bytes": 1063,
+        "sha256": "8760b4559468ea944d4b8222b722ec20ac06cc504e9b9fe17416638a37a1bc22",
+        "source_last_write_time_utc": "2026-11-10T15:10:22.9813301Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_approval_2026-11-11_04.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_approval_2026-11-11_04.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_01.budget.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.budget.json",
+        "bytes": 31160,
+        "sha256": "5843a47337c2677ecb23788109b630855e2325921ab2e7df246c8057603a0e12",
+        "source_last_write_time_utc": "2026-11-10T14:02:29.1872146Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.budget.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_01.jsonl": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.jsonl",
+        "bytes": 140293,
+        "sha256": "d33d41f5f99a3950e140ff97846be38ddc1bb8d89415579c45891f582445762b",
+        "source_last_write_time_utc": "2026-11-10T14:02:29.1827149Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.jsonl"
+      },
+      "injection_exposure_smoke_live_2026-11-10_01.meta.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.meta.json",
+        "bytes": 940,
+        "sha256": "1554ce411095b12ccd77223168253dc9d8f16bf09b9ae8c655ce59bf69f7bc05",
+        "source_last_write_time_utc": "2026-11-10T14:01:29.1670635Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_01.meta.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_02.budget.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.budget.json",
+        "bytes": 33434,
+        "sha256": "85a3c5cf986bd88218649c950cae87a387309049c96c0b9cba9b3fe3e6334784",
+        "source_last_write_time_utc": "2026-11-10T14:30:20.2030398Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.budget.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_02.jsonl": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.jsonl",
+        "bytes": 162731,
+        "sha256": "31d837ddcb67f6546a60d62147c3ccbd1497f18e8131d742d13d1ea45bfc3c53",
+        "source_last_write_time_utc": "2026-11-10T14:30:20.1960390Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.jsonl"
+      },
+      "injection_exposure_smoke_live_2026-11-10_02.meta.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.meta.json",
+        "bytes": 940,
+        "sha256": "1554ce411095b12ccd77223168253dc9d8f16bf09b9ae8c655ce59bf69f7bc05",
+        "source_last_write_time_utc": "2026-11-10T14:29:30.5670592Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_02.meta.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_03.budget.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.budget.json",
+        "bytes": 28269,
+        "sha256": "66d6970fb2feb2add04484815c8d0c213418287c2014cdbf67d152442f2abd42",
+        "source_last_write_time_utc": "2026-11-10T14:52:37.6153535Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.budget.json"
+      },
+      "injection_exposure_smoke_live_2026-11-10_03.jsonl": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.jsonl",
+        "bytes": 119494,
+        "sha256": "097eda7c36eddcd562f7277a36ced738dafba892a5ddc88b50739f17f9a1615d",
+        "source_last_write_time_utc": "2026-11-10T14:52:37.6103521Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.jsonl"
+      },
+      "injection_exposure_smoke_live_2026-11-10_03.meta.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.meta.json",
+        "bytes": 940,
+        "sha256": "1554ce411095b12ccd77223168253dc9d8f16bf09b9ae8c655ce59bf69f7bc05",
+        "source_last_write_time_utc": "2026-11-10T14:51:49.4310147Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-10_03.meta.json"
+      },
+      "injection_exposure_smoke_live_2026-11-11_04.budget.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.budget.json",
+        "bytes": 25402,
+        "sha256": "672261a9016f0606c2bb203d03f92951f47bf8e13f4b86467373ed7e60cca806",
+        "source_last_write_time_utc": "2026-11-10T15:11:29.1304213Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.budget.json"
+      },
+      "injection_exposure_smoke_live_2026-11-11_04.jsonl": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.jsonl",
+        "bytes": 109089,
+        "sha256": "6adceb36db5abeb93176e1189ffd51d2979c835b7a527beca3fbd4e22c6a11ea",
+        "source_last_write_time_utc": "2026-11-10T15:11:29.1249215Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.jsonl"
+      },
+      "injection_exposure_smoke_live_2026-11-11_04.meta.json": {
+        "original_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.meta.json",
+        "bytes": 940,
+        "sha256": "1554ce411095b12ccd77223168253dc9d8f16bf09b9ae8c655ce59bf69f7bc05",
+        "source_last_write_time_utc": "2026-11-10T15:10:43.7763595Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_exposure_smoke_live_2026-11-11_04.meta.json"
+      },
+      "injection_remaining_smoke_approval_2026-11-11_05.json": {
+        "original_path": "evals/results/threads/injection_remaining_smoke_approval_2026-11-11_05.json",
+        "bytes": 943,
+        "sha256": "1b3793189371a05ac43a76a06001eddb363e8d45bc284891d6907902785ea2d0",
+        "source_last_write_time_utc": "2026-11-10T15:19:06.2357210Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_remaining_smoke_approval_2026-11-11_05.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_remaining_smoke_approval_2026-11-11_05.json"
+      },
+      "injection_remaining_smoke_live_2026-11-11_05.budget.json": {
+        "original_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.budget.json",
+        "bytes": 49615,
+        "sha256": "eeac3cf93f3c4c960be782c14bfcb0b557ffa72e82bdd63be34d4fae05a18caa",
+        "source_last_write_time_utc": "2026-11-10T15:21:00.8712254Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.budget.json"
+      },
+      "injection_remaining_smoke_live_2026-11-11_05.jsonl": {
+        "original_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.jsonl",
+        "bytes": 245808,
+        "sha256": "4d6400859c01efe3ff54a042a62e7a82e272743a00919685eb0f7defa2a197ac",
+        "source_last_write_time_utc": "2026-11-10T15:21:00.8647262Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.jsonl"
+      },
+      "injection_remaining_smoke_live_2026-11-11_05.meta.json": {
+        "original_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.meta.json",
+        "bytes": 941,
+        "sha256": "ab495467150699755db7722c94a2b4b575fa48a8d0a99356a47fed9365823099",
+        "source_last_write_time_utc": "2026-11-10T15:19:30.3718131Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_remaining_smoke_live_2026-11-11_05.meta.json"
+      },
+      "injection_t7_smoke_approval_2026-11-11_06.json": {
+        "original_path": "evals/results/threads/injection_t7_smoke_approval_2026-11-11_06.json",
+        "bytes": 1002,
+        "sha256": "601f8d3131089cc24bf7ecbc71dae435800de499586451f079d72cf647a3852e",
+        "source_last_write_time_utc": "2026-11-10T15:43:40.6501783Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_t7_smoke_approval_2026-11-11_06.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_t7_smoke_approval_2026-11-11_06.json"
+      },
+      "injection_t7_smoke_live_2026-11-11_06.budget.json": {
+        "original_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.budget.json",
+        "bytes": 16148,
+        "sha256": "f3a99fadff44289e9b2461df09ee2a6afc2e38fc0ea9721dc11adf7b996a2917",
+        "source_last_write_time_utc": "2026-11-10T15:44:45.3743832Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.budget.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_t7_smoke_live_2026-11-11_06.budget.json"
+      },
+      "injection_t7_smoke_live_2026-11-11_06.jsonl": {
+        "original_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.jsonl",
+        "bytes": 58506,
+        "sha256": "e77ab1ddc32e4f1344cc45bfec220ab3bfd7ee7b8f28605cde8fc3c014394af5",
+        "source_last_write_time_utc": "2026-11-10T15:44:45.3698612Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.jsonl",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_t7_smoke_live_2026-11-11_06.jsonl"
+      },
+      "injection_t7_smoke_live_2026-11-11_06.meta.json": {
+        "original_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.meta.json",
+        "bytes": 934,
+        "sha256": "1aa9bcfc76ed55e6927709302db784d2234a3a97d6ffdcf132f37accdced6942",
+        "source_last_write_time_utc": "2026-11-10T15:44:14.6143296Z",
+        "storage": "external_local_backup",
+        "archive_relative_path": "evals/results/threads/injection_t7_smoke_live_2026-11-11_06.meta.json",
+        "archive_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/injection_t7_smoke_live_2026-11-11_06.meta.json"
+      }
+    },
+    "archive_manifest_path": "E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/manifest.json",
+    "restoration_instructions": [
+      "외부 백업 폴더를 확보하고 manifest.json의 bytes/SHA256을 대조한다.",
+      "external_local_backup 항목의 archive_relative_path를 저장소 루트 아래 original_path로 복사한다. 기존 파일이 있으면 덮어쓰지 않고 해시를 먼저 대조한다.",
+      "저장소 밖 백업은 아직 팀 공유 저장소에 업로드하지 않았다. 최신03의4개는 저장소 안에 원래 이름으로 남는다."
+    ]
+  }
 }

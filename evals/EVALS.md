@@ -2,7 +2,7 @@
 
 T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.
 
-수정본110회02의원시는기존결과와별도로 results/threads/injection_baseline_live_2026-11-11_02.jsonl·동명.meta.json·동명.budget.json에보존하고,독립승인은injection_baseline_approval_2026-11-11_02.json에둔다. 새scope baseline_t2_controlled_v2의T2고정DB근거와T1수정후측정이며기존110회와합산채점하지않는다.
+실측01·02와 스모크01~06의 원시·메타·예산·승인 32개는 저장소 밖 원본 백업으로 옮겼다(2026-11-11). 최신03의4개만저장소에남기고, [보관·해시 인덱스](results/threads/injection_baseline_artifact_index_2026-11-10.json#/measured_runs_archive)에36개전체의크기/SHA256·보관위치·복원방법을기록한다. 이전32개는Git미추적파일이었으므로Git이력복구를대체수단으로가정하지않는다. 백업은현재로컬전용이며이전실측의내용/판정을변경하지않았다.
 
 ## 역할
 - 이 폴더: 동결 평가셋과 동결 기록을 루트에 두고, 실행 코드·문서·표본·초안·결과를 하위 폴더로 나눠 둡니다. 루트 파일의 위치와 이름은 과정 안내와 동결 시험이 가정하므로 옮기지 않습니다.
