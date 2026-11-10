@@ -259,7 +259,7 @@ def flow(smoke, questions, demo, refusal, env):
     quotes = smoke.call('7', '견적 목록', 'A', a, 'GET', f'/api/projects/{pid}/quotes', 200, label='/api/projects/{id}/quotes', needs=(quote,))
     if quotes is not None and quote.get('id') not in {item.get('id') for item in quotes}:
         smoke.fail('7', '저장한 견적이 목록에 있음', 'A', '저장한 견적이 프로젝트 견적 목록에 없음')
-    # 8. B는 A의 자료를 404로만 본다(남의 자료도 404, SPEC 4절). 먼저 GET만 보내고, 승인 · 견적의 POST는 아래 8-2에서 DB 제약으로 막히는 경우에만 보낸다
+    # 8. B는 A의 자료를 404로만 본다(남의 자료도 404, SPEC 4절). 먼저 GET만 보내고, 승인 · 견적의 POST는 아래 8-2에서만 보낸다
     b = smoke.client()
     signed = login(smoke, b, 'B', demo, env)
     for what, path, label, need in (('프로젝트', f'/api/projects/{pid}', '/api/projects/{A}', pid),
@@ -270,7 +270,9 @@ def flow(smoke, questions, demo, refusal, env):
     if listed is not None and pid in {item.get('id') for item in listed}:
         smoke.fail('8', 'B 목록에 A 프로젝트 없음', 'B', 'A의 프로젝트가 B의 목록에 보임')
     # 8-2. 승인 · 견적 · 승인 사례도 B에게 404로 숨겨지는지 본다. B의 POST 두 개는 A가 이미 승인 · 견적을 만들어 둔 뒤에만 보내며
-    #      (메시지당 승인 1개 · 승인당 견적 1개 DB 제약), 격리가 깨져도 새로 만들지 못하고 409로 끝나 실패로만 남는다. DELETE는 보내지 않는다
+    #      DB가 막는 것은 메시지당 승인 1개(approvals.message_id UNIQUE)뿐이라 B의 승인 POST는 격리가 깨져도 409로 끝나지만,
+    #      견적은 승인당 여러 건이 허용돼(quotes에 UNIQUE 없음) 격리가 깨지면 B의 견적 POST가 A의 승인에 견적을 실제로 더한다(201, 실패로 남음).
+    #      그래서 현재 서버가 격리를 지킬 때(404)만 안전한 점검이다. DELETE는 보내지 않는다
     smoke.call('8', 'B가 A의 견적 목록 읽기', 'B', b, 'GET', f'/api/projects/{pid}/quotes', 404, code='NOT_FOUND',
                label='/api/projects/{A}/quotes', needs=(signed, quote))
     smoke.call('8', 'B가 A의 메시지 승인', 'B', b, 'POST', f'/api/messages/{message_id}/approvals', 404, code='NOT_FOUND',

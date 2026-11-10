@@ -106,7 +106,7 @@ def fake_server(run_mode='interrupt', accounts=None, leaky=False):
             if not leaky and state['runs'].get('run1') != user:  # 메시지 7은 run1의 것: 남의 메시지는 없는 것처럼 404
                 return reply(404, code='NOT_FOUND')
             if 7 in state['approved']:
-                return reply(409, code='ALREADY_APPROVED')  # 서버 DB의 메시지당 승인 1개 제약
+                return reply(409, code='ALREADY_APPROVED')  # approvals.message_id UNIQUE
             state['approved'].add(7)
             state['approval_owner'][3] = user
             state['cases'].append({'id': 9, 'approval_id': 3, 'candidate_part': body['candidate_part'], 'verdict': body['verdict'],
@@ -115,8 +115,6 @@ def fake_server(run_mode='interrupt', accounts=None, leaky=False):
         if path == '/api/approvals/3/quotes':
             if not leaky and state['approval_owner'].get(3) != user:
                 return reply(404, code='NOT_FOUND')
-            if state['quotes']:
-                return reply(409, code='ALREADY_APPROVED')  # 서버 DB의 승인당 견적 1개 제약
             state['quotes'].append({'id': 5, 'approval_id': 3, 'quantity': body['quantity']})
             return reply(201, state['quotes'][-1])
         if path == '/api/approved-cases':
@@ -216,15 +214,15 @@ def test_demo_questions_are_in_the_catalog():
 
 
 def test_broken_isolation_on_approvals_quotes_and_cases_is_caught(tmp_path, monkeypatch):
-    """승인 · 견적 · 승인 사례의 소유권 검사가 빠진 서버에서는 8단계의 해당 확인이 실패하고 종료 코드 1이다. 그래도 A의 자료는 늘지 않는다."""
+    """승인 · 견적 · 승인 사례의 소유권 검사가 빠진 서버에서는 8단계의 해당 확인이 실패하고 종료 코드 1이다. 승인은 UNIQUE로 막히지만 견적은 승인당 중복이 허용돼 B의 POST가 A의 승인에 견적을 더한다."""
     handler, state = fake_server(leaky=True)
     code, result, _ = run(tmp_path, monkeypatch, ['--base-url', BASE, '--demo'], handler)
     rows = {r['check']: r for r in result['steps'] if r['step'] == '8'}
     assert code == 1
     assert rows['B가 A의 메시지 승인']['result'] == 'fail' and rows['B가 A의 메시지 승인']['status'] == 409  # 새로 만들지 못하고 중복으로 막힘
-    assert rows['B가 A의 승인으로 견적 저장']['result'] == 'fail' and rows['B가 A의 승인으로 견적 저장']['status'] == 409
+    assert rows['B가 A의 승인으로 견적 저장']['result'] == 'fail' and rows['B가 A의 승인으로 견적 저장']['status'] == 201  # 실제 DB처럼 막히지 않음
     assert rows['B 목록에 A 승인 사례 없음']['result'] == 'fail'
-    assert len(state['quotes']) == 1 and len(state['cases']) == 1 and state['approved'] == {7}  # B의 POST가 A의 자료를 바꾸지 않음
+    assert len(state['quotes']) == 2 and len(state['cases']) == 1 and state['approved'] == {7}  # 견적만 하나 늘고 승인 · 사례는 그대로
 
 
 def test_isolation_checks_are_skipped_without_approval_or_quote(tmp_path, monkeypatch):
