@@ -194,6 +194,18 @@ def test_analysis_events_are_owned_content_free_and_separate_resume_wait(runtime
         app.detail(b, thread)
 
 
+def test_model_call_trace_shares_trace_id_with_analysis_metadata(runtime, monkeypatch):
+    """[왜] 모델 호출별 추적이 analysis-metadata와 같은 trace_id(analysis_events.trace_id) 아래 묶인다."""
+    from backend.services import langfuse_prompts, service_trace
+    app, (a, _), _ = runtime
+    given, published = [], []
+    monkeypatch.setattr(service_trace, 'callbacks', lambda trace_id, thread, mode: given.append((trace_id, str(thread), mode)) or ([], {}))
+    monkeypatch.setattr(langfuse_prompts, 'publish_analysis_trace', lambda user, thread, event: published.append(event['trace_id']) or 'queued')
+    thread = make_thread(app, a)
+    app.message(a, thread, '조건 질문', request_id='request-1')
+    assert len(given) == 1 and given[0][1:] == (str(thread), app.mode) and published == [given[0][0]]
+
+
 def test_resume_sends_no_approved_cases_and_new_threads_keep_user_input_out_of_models(runtime, monkeypatch):
     """[왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09). 새 분석 · 재개의 모델 입력에는 어느 사용자의 이전 사례도 들어가지 않는다."""
     from backend.graph.memory import memory_context, memory_sources

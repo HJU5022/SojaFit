@@ -24,3 +24,17 @@ description = "SQL 마이그레이션 파일 이름(비밀값 아님)"
 condition = "AND"
 paths = ['''^backend/conversations/memory_service\.py$''']
 regexes = ['''^\d{3}_[a-z_]+\.sql$''']
+
+# [왜] 11-11 PR #85 병합 뒤 로컬 검사에서 generic-api-key 64건이 나왔고 모두 키가 아니었다(실제 키 형식 직접 검색은 0건).
+#      인젝션 측정 원시 결과의 document_key는 코퍼스 문서 식별 값이다(60건).
+[[allowlists]]
+description = "인젝션 측정 원시 결과의 document_key(코퍼스 문서 식별 값, 비밀값 아님)"
+targetRules = ["generic-api-key"]
+paths = ['''evals/results/threads/injection_baseline_live_.*\.jsonl''']
+
+# [왜] 작업 기록의 되돌리기 명령 `--to-revisions=sojafit-api-716c6d6=100`의 배포 리비전 이름이 키로 오인됐다(4건).
+[[allowlists]]
+description = "작업 기록의 되돌리기 명령 --to-revisions=<리비전 이름>(비밀값 아님)"
+targetRules = ["generic-api-key"]
+paths = ['''^docs/worklog/.*\.md$''']
+regexes = ['''--to-revisions=''']

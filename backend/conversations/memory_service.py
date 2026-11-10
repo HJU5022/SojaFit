@@ -483,14 +483,17 @@ class Conversations:
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
-        from backend.services import langfuse_prompts
+        from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
         timings = langfuse_prompts.AnalysisTimings()
         started = time.monotonic()
+        # [왜] 모델 호출별 추적을 analysis-metadata와 같은 trace_id로 묶으려고 실행 시작에 trace_id를 정한다(키가 없으면 빈 값)
+        trace_id = uuid4().hex
+        traces, trace_metadata = service_trace.callbacks(trace_id, thread, self.mode)
         try:
             with evaluation_limits(budget), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
-                self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings]})
+                self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings, *traces], 'metadata': trace_metadata})
                 budget.remaining()
             saved = time.monotonic()
             self._finish(conn, thread, self.graph.get_state(self.config(thread)))
@@ -519,16 +522,16 @@ class Conversations:
                 raise HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다. 잠시 후 다시 시도하세요.') from error
             raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from error
         finally:
-            self._record_event(conn,thread,started,timings.report(),request_id)
+            self._record_event(conn,thread,started,timings.report(),request_id,trace_id=trace_id)
 
-    def _record_event(self, conn, thread, started, stages, request_id, status=None, version=None):
+    def _record_event(self, conn, thread, started, stages, request_id, status=None, version=None, trace_id=None):
         from backend.services import langfuse_prompts
         # 관측 장애가 이미 저장한 checkpoint/답변/승인의 성공 여부를 바꾸지 않는다.
         try:
             row = conn.execute('SELECT user_id,version,status FROM threads WHERE id=%s', (thread,)).fetchone()
             event = {'version': version if version is not None else row['version'], 'request_id': request_id,
                      'mode': self.mode, 'status': status or row['status'], 'elapsed_ms': int((time.monotonic()-started)*1000),
-                     'stages': stages, 'trace_id': uuid4().hex}
+                     'stages': stages, 'trace_id': trace_id or uuid4().hex}
             try:
                 delivery = langfuse_prompts.publish_analysis_trace(row['user_id'], thread, event)
             except Exception:
