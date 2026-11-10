@@ -1,0 +1,267 @@
+{
+ "questions": 50,
+ "passed": 50,
+ "errors": 0,
+ "latency_s": {
+  "n": 50,
+  "p50": 4.9,
+  "p95": 10.7,
+  "p50_definition": "true median",
+  "p95_definition": "nearest rank ceil(0.95n)",
+  "runner_p50_s": 4.9
+ },
+ "stages_s": {
+  "specs": {
+   "n": 82,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "Supervisor": {
+   "n": 51,
+   "p50": 1.525,
+   "p95": 2.488
+  },
+  "입력 읽기": {
+   "n": 50,
+   "p50": 0.001,
+   "p95": 0.006
+  },
+  "기억 읽기": {
+   "n": 50,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "품번·판 확인": {
+   "n": 50,
+   "p50": 0.38,
+   "p95": 0.761
+  },
+  "답 모으기": {
+   "n": 29,
+   "p50": 0.001,
+   "p95": 0.012
+  },
+  "답 정리": {
+   "n": 25,
+   "p50": 0.0,
+   "p95": 0.002
+  },
+  "답 검사": {
+   "n": 25,
+   "p50": 0.001,
+   "p95": 0.007
+  },
+  "끝내기": {
+   "n": 25,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "거절": {
+   "n": 25,
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "find": {
+   "n": 22,
+   "p50": 0.101,
+   "p95": 1.552
+  },
+  "회로 읽기": {
+   "n": 17,
+   "p50": 2.738,
+   "p95": 3.485
+  },
+  "대체 부품 판정": {
+   "n": 17,
+   "p50": 1.6,
+   "p95": 5.872
+  },
+  "Spec 에이전트": {
+   "n": 17,
+   "p50": 2.012,
+   "p95": 8.55
+  },
+  "search": {
+   "n": 15,
+   "p50": 1.396,
+   "p95": 5.192
+  },
+  "RAG 에이전트": {
+   "n": 12,
+   "p50": 4.124,
+   "p95": 9.235
+  }
+ },
+ "stages_not_ok": {
+  "대체 부품 판정": 14,
+  "Spec 에이전트": 14
+ },
+ "latency_s_by_kind": {
+  "relevant": {
+   "n": 25,
+   "p50": 6.8,
+   "p95": 11.6
+  },
+  "irrelevant": {
+   "n": 25,
+   "p50": 1.3,
+   "p95": 5.1
+  }
+ },
+ "search_s": {
+  "total": {
+   "n": 9,
+   "p50": 3.034,
+   "p95": 5.192
+  },
+  "embed": {
+   "n": 9,
+   "p50": 0.578,
+   "p95": 1.351
+  },
+  "rerank": {
+   "n": 9,
+   "p50": 0.687,
+   "p95": 1.254
+  },
+  "db_bm25_rrf": {
+   "n": 9,
+   "p50": 1.35,
+   "p95": 4.267
+  }
+ },
+ "llm_by_node": {
+  "RAG 에이전트": {
+   "calls": 16,
+   "questions": 11,
+   "seconds": {
+    "n": 16,
+    "p50": 2.268,
+    "p95": 3.277
+   },
+   "usd_per_call": 0.000435,
+   "input_tokens_mean": 3833,
+   "output_tokens_mean": 304,
+   "cached_tokens_mean": 1420,
+   "usd_total": 0.00696,
+   "models": [
+    "anthropic/claude-haiku-5.5"
+   ]
+  },
+  "Supervisor": {
+   "calls": 51,
+   "questions": 50,
+   "seconds": {
+    "n": 51,
+    "p50": 1.519,
+    "p95": 1.943
+   },
+   "usd_per_call": 0.000252,
+   "input_tokens_mean": 7994,
+   "output_tokens_mean": 155,
+   "cached_tokens_mean": 7117,
+   "usd_total": 0.012837,
+   "models": [
+    "anthropic/claude-haiku-5.5"
+   ]
+  },
+  "대체 부품 판정": {
+   "calls": 1,
+   "questions": 1,
+   "seconds": {
+    "n": 1,
+    "p50": 1.33,
+    "p95": 1.33
+   },
+   "usd_per_call": 0.000509,
+   "input_tokens_mean": 3431,
+   "output_tokens_mean": 171,
+   "cached_tokens_mean": 0,
+   "usd_total": 0.000509,
+   "models": [
+    "anthropic/claude-haiku-5.5"
+   ]
+  },
+  "회로 읽기": {
+   "calls": 17,
+   "questions": 17,
+   "seconds": {
+    "n": 17,
+    "p50": 2.732,
+    "p95": 3.479
+   },
+   "usd_per_call": 0.000692,
+   "input_tokens_mean": 10085,
+   "output_tokens_mean": 504,
+   "cached_tokens_mean": 6310,
+   "usd_total": 0.011771,
+   "models": [
+    "anthropic/claude-haiku-5.5"
+   ]
+  }
+ },
+ "cost_usd": {
+  "llm_total": 0.03208,
+  "rerank_total": 0.00659,
+  "per_question_mean": 0.000773,
+  "per_question_p50": 0.000876,
+  "per_question_p95": 0.001869,
+  "llm_calls": 85,
+  "llm_calls_without_reported_cost": 0
+ },
+ "voyage_call_s": {
+  "embed": {
+   "n": 15,
+   "p50": 0.317,
+   "p95": 0.702
+  },
+  "rerank": {
+   "n": 15,
+   "p50": 0.4,
+   "p95": 0.672
+  }
+ },
+ "voyage": {
+  "embed_tokens": 262,
+  "rerank_tokens": 131849,
+  "calls": 30
+ },
+ "replaced_rows": [
+  "v3-14",
+  "v3-15",
+  "v3-16",
+  "v3-17",
+  "v3-18",
+  "v3-19",
+  "v3-20",
+  "v3-21"
+ ],
+ "retrieval_stages": {
+  "embed": {
+   "n": 20,
+   "p50": 0.318,
+   "p95": 0.659
+  },
+  "rerank": {
+   "n": 20,
+   "p50": 0.35,
+   "p95": 0.458
+  },
+  "db_bm25_rrf": {
+   "n": 20,
+   "p50": 0.509,
+   "p95": 0.606
+  },
+  "total": {
+   "n": 20,
+   "p50": 1.224,
+   "p95": 1.575
+  },
+  "rerank_tokens_per_call": {
+   "n": 20,
+   "p50": 3032.0,
+   "p95": 6303
+  },
+  "rerank_usd_per_question": 0.000183
+ }
+}
