@@ -86,10 +86,10 @@ class QuoteService:
 
     def create_quote(self, user_id: int, approval_id: int, quantity: int):
         with auth.connection() as conn:
-            row = conn.execute('SELECT part_number,candidate_part FROM approvals WHERE id=%s AND user_id=%s', (approval_id, user_id)).fetchone()
+            row = conn.execute("SELECT part_number,candidate_part,snapshot #>> '{candidate,part}' FROM approvals WHERE id=%s AND user_id=%s", (approval_id, user_id)).fetchone()
             if row is None:
                 raise QuoteNotFound
-            part = row[0] or part_number(row[1] or '')  # [주의] 칸이 비어 있는 옛 승인(expand 뒤 contract 전)만 같은 규칙으로 계산한다. 견적에는 스냅샷을 복사하지 않는다
+            part = row[0] or part_number(row[1] or row[2] or '')  # [주의] expand 뒤 contract 전에 옛 코드가 넣은 승인은 칸 3개가 모두 NULL이라 스냅샷의 후보 이름으로 폴백해 같은 규칙으로 계산한다. 견적에는 스냅샷을 복사하지 않는다
             quote = conn.execute('INSERT INTO quotes(user_id,approval_id,part_number,quantity) VALUES (%s,%s,%s,%s) RETURNING id,created_at',
                                  (user_id, approval_id, part, quantity)).fetchone()
             return {'id': quote[0], 'approval_id': approval_id, 'part_number': part, 'quantity': quantity, 'created_at': quote[1]}
@@ -105,7 +105,7 @@ class QuoteService:
 
     def list_cases(self, user_id: int):
         with auth.connection() as conn:
-            rows = conn.execute("""SELECT c.id,c.approval_id,a.candidate_part,a.verdict,c.created_at FROM approved_cases c
+            rows = conn.execute("""SELECT c.id,c.approval_id,COALESCE(a.candidate_part,a.snapshot #>> '{candidate,part}'),COALESCE(a.verdict,a.snapshot #>> '{candidate,verdict}'),c.created_at FROM approved_cases c
                 JOIN approvals a ON a.id=c.approval_id WHERE c.user_id=%s ORDER BY c.id DESC""", (user_id,)).fetchall()
             return [{'id': r[0], 'approval_id': r[1], 'candidate_part': r[2], 'verdict': r[3], 'created_at': r[4]} for r in rows]
 

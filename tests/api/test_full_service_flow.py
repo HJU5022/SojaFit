@@ -116,7 +116,7 @@ def test_approval_and_quote_with_maker_name_or_order_code_in_real_postgres(full_
 
 
 def test_quote_for_an_old_approval_without_identifier_uses_the_same_rule(full_storage):
-    """식별 품번 칸(approvals.part_number)이 NULL인 옛 승인(expand 뒤 contract 전)도 같은 규칙으로 계산해 견적을 저장한다."""
+    """승인 칸 3개가 모두 NULL인 옛 승인(expand 뒤 contract 전)도 같은 규칙으로 계산해 견적을 저장한다."""
     from backend.conversations.repository import ConversationRepository
     from backend.projects.netlist import PARSER_VERSION, normalize_netlist
     from backend.projects.repository import ProjectRepository
@@ -134,8 +134,10 @@ def test_quote_for_an_old_approval_without_identifier_uses_the_same_rule(full_st
         'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
     })
     approval = quotes.approve(owner, conversations.get_run(owner, run)['message_id'], 'SS34', 'ROLE_SUFFICIENT')
-    with connect() as conn:  # 옛 승인: contract(NOT NULL) 전의 expand 상태를 흉내 낸다. 칸 part_number가 NULL이고 스냅샷에도 식별 품번이 없다
-        conn.execute('ALTER TABLE approvals ALTER COLUMN part_number DROP NOT NULL')
-        conn.execute("UPDATE approvals SET part_number=NULL, snapshot = snapshot #- '{candidate,part_number}' WHERE id=%s", (approval['id'],))
+    with connect() as conn:  # 옛 승인: contract(NOT NULL) 전의 expand 상태를 흉내 낸다. 옛 코드는 칸 3개를 모르고 넣어 모두 NULL이고 스냅샷에도 식별 품번이 없다
+        conn.execute('ALTER TABLE approvals ALTER COLUMN candidate_part DROP NOT NULL, ALTER COLUMN verdict DROP NOT NULL, ALTER COLUMN part_number DROP NOT NULL')
+        conn.execute("UPDATE approvals SET candidate_part=NULL, verdict=NULL, part_number=NULL, snapshot = snapshot #- '{candidate,part_number}' WHERE id=%s", (approval['id'],))
     assert quotes.create_quote(owner, approval['id'], 3)['part_number'] == 'SS34'
+    # 목록도 칸이 NULL인 옛 승인에서 스냅샷 값으로 읽는다
+    assert [(c['candidate_part'], c['verdict']) for c in quotes.list_cases(owner)] == [('SS34', 'ROLE_SUFFICIENT')]
 
