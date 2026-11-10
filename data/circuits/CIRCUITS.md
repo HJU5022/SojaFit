@@ -7,8 +7,9 @@
 - 담당: 평가·문서
 
 ## 파일
-- `collected/` — 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종. 설명 파일은 두지 않고 이 문서가 설명합니다.
+- `collected/` — 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종과 v3(`evals/dataset_v3.jsonl`)가 더 쓰는 받은 회로 10종. 설명 파일은 두지 않고 이 문서가 설명합니다.
   - `received-20261030/c09/` — 받은 회로 1종(Franzininho DIY): `received/`(받은 넷리스트), `connections.json`, `original/`(LICENSE·README)
+  - `received-20261030/{c01,c02,c03,c04,c05,c07,c08,c10,c11,c12}/` — v3가 쓰는 받은 회로 10종(11-10 동결 때 lab에서 옮김): 같은 모양(`received/` · `connections.json` · `original/`)
   - `samples/{attiny85_dev,breadboard_supply,mosfet_driver,pro_micro}/` — 공개 표본 4종: `converted/`(`circuit.net`, `connections.json`), `original/`(LICENSE·README)
 
 ## 회로 출처
@@ -20,7 +21,18 @@
 | ATtiny85 dev board | `collected/samples/attiny85_dev/converted/circuit.net` | https://github.com/tomasr8/attiny85-dev-board | `488b99063b6bdbafa0f367ecc25901b55c4c7144` | MIT |
 | Franzininho DIY | `collected/received-20261030/c09/received/c09-franzininho-diy.net` | https://github.com/Franzininho/franzininho-diy-board | `abdb4b48d867190d6b9794280be8b85b81aa1772` | CC BY-SA 4.0(하드웨어) |
 | SparkFun Pro Micro v13 | `collected/samples/pro_micro/converted/circuit.net` | https://github.com/sparkfun/Pro_Micro | `df836f3bf2955c4f1199a852f618d2ac80866d47` | CC BY-SA 4.0 |
+| ATtiny85 Time Switch | `collected/received-20261030/c01/received/c01-attiny85-time-switch.net` | https://github.com/UCSIG/attiny85_time_switch | `3566a94ffc17471e3f0a592bacc63480a2898641` | MIT |
+| FC ROM Vomitter | `collected/received-20261030/c02/received/c02-fc-rom-vomitter.net` | https://github.com/Keitark/fc-rom-vomitter | `f64502c301ca5e11add76efdf7dd52b343f8baaf` | MIT |
+| ATtiny2313A Thermostat | `collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net` | https://github.com/sergeyyarkov/attiny2313a_thermostat | `4e956f152368fc8a6f68e9e2e0d273ea25249840` | MIT |
+| tiny85 Fan Control | `collected/received-20261030/c04/received/c04-tiny85fancontrol.net` | https://github.com/Colahall/tiny85fancontrol | `66366bd10b66e4bc3e944902f9e6c93a44ddeac4` | MIT |
+| UG56 PWM Controller | `collected/received-20261030/c05/received/c05-ug56-pwm-controller.net` | https://github.com/universalgeek56/UG56-attiny13a-pwm-controller | `91f19385e76a92e9b58c681f22e9891ba1c8aebe` | MIT |
+| Car Radio ACC Delay | `collected/received-20261030/c07/received/c07-car-radio-acc-delay.net` | https://github.com/alexwarg/car-radio-acc-delay | `5d5048f196ea539ae2464c6bc766384444ea8696` | MIT |
+| OverEngineered PSU | `collected/received-20261030/c08/received/c08-overengineered-psu.net` | https://github.com/MAATHES-THILAK-K/OverEngineered-PSU | `5b8b7757e9742b4f97ddf61c434c7cf2e48b1867` | MIT |
+| tinydimmer | `collected/received-20261030/c10/received/c10-tinydimmer.net` | https://github.com/virtual-machinist/tinydimmer | `52ee6077344b044bf046e6c616cefe3675091b46` | CC BY-SA 4.0 |
+| HRem | `collected/received-20261030/c11/received/c11-hrem.net` | https://github.com/bazhenov/hrem | `7d6d56d1a7d75231c0d7109d90839474f59f3f1d` | MIT |
+| ZR7 Taillight | `collected/received-20261030/c12/received/c12-zr7-taillight.net` | https://github.com/slabua/zr7-taillight | `777c5d5f034361a6d143fedeb3de9a8bb81ca532` | MIT |
 
 - Breadboard Supply·MOSFET Driver·Pro Micro는 Eagle 원본을 KiCad로 변환해 넷리스트를 뽑았고, ATtiny85 dev는 KiCad 원본에서 내보냈고, Franzininho는 원 저장소의 넷리스트를 그대로 썼다.
+- 받은 회로 10종(c01 ~ c05 · c07 · c08 · c10 ~ c12)은 lab `data/circuits`에 있던 받은 넷리스트 · `connections.json` · 원본 LICENSE · README를 그대로 옮겼다(11-10, v3 동결).
 - 원본 회로도·PCB 파일은 넣지 않는다. 필요하면 위 저장소의 해당 커밋에서 받는다.
 - CC BY-SA 회로에서 만든 넷리스트는 원본과 같은 라이선스를 따른다.
