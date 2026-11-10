@@ -12,6 +12,8 @@
 - 확인 못 한 것: 코퍼스 84문항 전체 점수 대조, 대용량 동시 요청, 서버 경유 `DELETE /api/me` 호출, 새 Supabase 풀러의 장시간 동작.
 - 코드 위치: 재설계 커밋 38개를 통합 브랜치 `rd-final-int`에서 `jeongun` 위로 cherry-pick했다(내용이 같은 `716c6d6` · `d23345e` · `ee3405d`는 `jeongun`에 이미 있어 건너뜀). push는 하지 않았다.
 - 문서 정정(11-11): README 배포본 줄(5631309 → `sojafit-api-27a410d-live`) · `/signup` 설명 · 로그인 줄, GATES G1(현재 상태 앞에, 11-11 스모크 JSON 4개 링크) · G3 · G4 · G5, SOJAFIT.md 옛 표 정의서 설명, EVAL_REPORT 7장 Langfuse 문장을 고쳤다. API 개수는 코드로 센 값(동작 36 = `/openapi.json` 33 + 숨긴 Google 3, 경로 30)으로 GATES의 37을 바로잡았다. 옛 코퍼스가 52,244에서 51,967로 바뀐 날짜 · 이유는 작업 기록에서 못 찾아 '확인 필요'로 남겼다.
+- PR #85 병합 반영(11-11): 팀원 심태현의 인젝션 베이스라인(origin/main `c96dbbe`, 110작업 실측03 포함)을 jeongun에 병합했다. 충돌 2건(`MULTI_AGENT.md`는 main의 무료 수정 기록 4건을 살리고 구조 결정 줄은 jeongun 표기 유지, `test_judge_read.py`는 main의 T7 시험을 살리고 다수결 제거로 불필요한 `one_read` 픽스처는 뺌). 전체 pytest 1509 passed · 31 skipped · 0 failed(jeongun 1366 + PR #85 시험 약 141 + 새 확인기 2), 프런트 test:run 137 passed. 푸시 안 함.
+- 평가 회귀 CI 연결(11-11): `ci.yml`에 키·네트워크·DB 없는 `eval-injection-replay` 잡 추가(저장한 실측03 결과를 `evals/runners/check_injection_result.py`로 사전 등록 기준 대조 + 인젝션 실행기·저장 방어 응답 재생 pytest 5파일), `push: main` 트리거 추가. 기존 `eval-replay`(데모 응답 재생)는 그대로. 진짜 모델 호출은 `eval-live.yml` 수동 버튼 그대로이고 인젝션 실측(`--execute`)은 승인 파일·전용 DB 14개가 필요해 CI에 넣지 않았다. 같은 명령을 로컬에서 실행해 94 passed 확인, 결과 파일 1행을 기준 미달로 바꾸면 종료 코드 1로 실패(되돌림), actionlint 통과. 한계: GitHub Actions는 결제 문제로 11-09부터 실행되지 않아 Actions에서 실제로 도는지는 확인하지 못했다.
 
 ## 2026-11-10 23:18 승인 422(표시 이름 `TSC 1N4007G`) 원인 수정 · 사용자당 하루 한도 상향 배포
 - 발견: 배포 주소 실제 계정 스모크(demo2가 A)에서 6단계 승인이 422였다. 운영 DB에서 그 실행의 후보 품번을 읽기 전용으로 조회하니 `TSC 1N4007G`(제조사 이름 + 공백)였다. demo1의 22:53 실행은 같은 질문에서 승인 201이었다(모델이 매번 다르게 적음). 한도 초과(`LIMIT_EXCEEDED`)는 별개로 demo1이 22:53 점검 한 번에 하루 200,000 예약 토큰을 다 쓴 것이다(예약 토큰은 돌려주지 않음).
