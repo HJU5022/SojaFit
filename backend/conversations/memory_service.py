@@ -29,7 +29,6 @@ import logging
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
 from functools import lru_cache
-from pathlib import Path
 from uuid import uuid4
 
 import psycopg
