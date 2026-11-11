@@ -597,3 +597,12 @@
 - API: 기존 전체 목록 응답을 유지하면서 ID·이름 검색, offset/limit, 5분 public cache header를 추가했다. 원본/배포 hash와 로컬 경로는 공개 응답에 포함하지 않는다.
 - TDD: 6종만 반환하는 기존 구현과 6종 visual catalog에서 계약 테스트가 실패하는 것을 먼저 확인했다. 이후 catalog 기반 구현과 15종 자산을 추가했다.
 - 검증: backend 전체 pytest `1304 passed, 112 skipped`, frontend Vitest `19 files / 157 passed`, production build, catalog 대상 Playwright `1 passed`(15종 원본 이미지 natural width), repo layout `5 passed`, `uv lock --check`, Docker image build와 실행 smoke(`/health` 200, 신규 9개 PNG 9/9 HTTP 200)를 통과했다. 전체 Playwright는 catalog 흐름을 포함해 `9 passed`였으나, 동시에 추가된 별도 스크롤바 hover E2E 1건이 투명 상태로 남아 `1 failed`이며 이 catalog 작업 범위에서는 수정하지 않았다.
+
+## 2026-11-11 PR 준비와 최신 main 통합
+
+- 범위 정리: 작업대 랜딩·대화 입력·근거·승인/견적 흐름과 15종 회로 catalog·원본 회로도·연결 개념도 자동 배치를 하나의 사용자 흐름으로 검토했다. API DTO, catalog, Vite dummy, Docker 정적 자산, 화면과 검증이 함께 바뀌어 분리하면 통합 계약을 중복 수정해야 하므로 한 PR로 유지하며, 400줄 초과 이유와 리뷰 지점을 PR 본문에 명시한다.
+- 저장소 구조: `SOJAFIT.md`에서 누락됐던 회로 배치 Worker·client·test·E2E와 오버레이 스크롤 hook 6개를 실제 트리에 맞게 등록했다. `uv run --no-sync pytest -q tests/repo/test_repo_layout.py`는 `5 passed`다.
+- main 통합: 기능 커밋 `f551b87`을 만든 뒤 `origin/main` `c96dbbe`를 merge commit `e50c657`로 충돌 없이 반영했다. 동결 평가셋은 수정하지 않았고 PR 기준 변경은 100개 파일이다.
+- 브라우저 회귀 수정: 병합 직후 전체 Playwright에서 초기 정보 패널을 접힌 상태로 가정한 시험과, 모바일 가로 오버레이 스크롤바의 투명 track이 프로젝트 버튼 클릭을 가로막는 문제가 드러났다. 초기 패널의 현재 계약을 시험에 반영하고 track은 클릭을 통과시키되 thumb만 드래그 입력을 받도록 수정했다(`a4403b1`). 실패 시험을 재현한 뒤 집중 Playwright `1 passed`, 전체 Playwright `11 passed`를 확인했다.
+- 최종 검증: `uv run --no-sync pytest -q`는 `1445 passed, 112 skipped`, `npm run test:run`은 `20 files / 163 tests passed`, `npm run build`는 TypeScript·Vite production build 성공, `npm run e2e -- --reporter=line`은 `11 passed`, `uv lock --check`, `git diff origin/main...HEAD --check`와 repo layout `5 passed`를 확인했다. PR diff 593 KB를 Gitleaks stdin으로 검사해 `no leaks found`를 확인했다. worktree 전체 `dir` 검사는 Git 비추적 `.env`와 `.venv`까지 읽어 유효하지 않았으며 값은 출력하지 않았다.
+- 확인하지 않은 것: 실제 외부 모델·MCP·Mouser·공유 PostgreSQL·배포 환경 round-trip, 데이터시트 외부 URL의 장기 가용성은 이번 로컬 PR 검증 범위가 아니다. GitHub Actions의 전체 이력 Gitleaks와 CI는 push 후 확인한다.
