@@ -9,6 +9,7 @@
 실행: `uv run pytest -q tests/services`(저장소 루트).
 
 ## 파일
+- `test_datasheet_rows.py` — 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
 - `SERVICES.md` — 이 문서
 - `test_langfuse_prompts.py` — 프롬프트·Skill 버전/본문 대조, 일반 호출의 로컬 경계, 예산·계측 실패 시 결과 보존, 타임라인 확인, 내보내기 자격증명 제외, 서비스 분석 기록(`analysis-metadata`)의 user · session id와 질문 글 미포함을 API 없이 확인
 - `test_mouser.py` — 가짜 transport(손으로 쓴 응답)로 Mouser 요청 모양(POST · `apiKey` 쿼리 · `|`로 이은 품번), 화면 칸만 고르기, 한 번만 보내기, 실패 종류(키 거부 · HTTP · Errors · 형식), 품번 조건 · 키 없음 · 호출 상한에서 부르지 않기, 로그와 오류 문구에 키 · 요청 주소가 없는지 확인
