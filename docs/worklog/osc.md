@@ -629,3 +629,10 @@
 - 1차 로그인 실행은 텍스트로 W행을 선택하는 방식에서 verify_failed로 거절됐다. 선택을 모델의 구조화 필드 `pdf_rows`로 옮겼다. 외부 근거만 있으면 모델의 자유 답변 필드는 빈 문자열이어야 한다. 서버가 PDF 셀의 품번·행·수치·단위로 문장을 만들며 최종 검사에서 인용 번호와 문장 해시를 다시 확인한다.
 - 수정 후 같은 질문을 새 로그인 세션에서 재검증했다. 각 실행에서 Exa 1회, 최종 실행에서 공식 PDF 200, 외부 문서 모델 enough·W1, SSE completed, GET 재조회 일치. 원문 1쪽 MAXIMUM RATINGS의 Maximum repetitive peak reverse voltage 행은 SS33=30, SS34=40, 단위 V였다. 테스트는 400 V, 다른 품번, 다른 단위, 최종 인용 변경을 거절했다. 관련 pytest 193건 통과. 전체 동결 평가셋 재측정·운영 배포 검증은 미실시.
 - 멀티 에이전트 전체와 관련 서비스·대화·레이아웃으로 넓힌 회귀 검사: 315 passed.
+
+## 2026-11-11 중단·재개 후 저장 답변의 PDF 인용 유지
+
+- 수정 전에는 독립 검색이 모두 W1부터 시작해 두 공식 PDF의 표 행이 같은 문장을 만들면 마지막 URL만 남았다. `backend/judge/pdf_claims.py`와 `backend/multi_agent/supervisor.py`에서 체크포인트 보고를 회차·작업 순으로 읽고 기존 문장 해시를 검증한 뒤 실행 전체 번호를 부여한다. 같은 위치의 같은 주장은 번호를 재사용한다. `backend/graph/nodes.py`와 `backend/conversations/dto.py`에서도 W4 이후 번호를 읽는다.
+- 격리 PostgreSQL 16과 FastAPI TestClient에서 일반 계정 로그인 → 실행 → requires_input → 분석 서비스와 DB 풀 재생성 → 같은 run 재개 → completed → 새 클라이언트로 로그인 → GET /api/runs/{id} 순서로 확인했다. 인증·체크포인트·DB 저장은 실제 경로를 사용했다. 두 검색과 모델 응답은 고정했고 PDF는 테스트에서 생성했다. 외부 공급자 호출은 0회였다.
+- 두 PDF의 SS34 `Peak reverse voltage` 행이 모두 40 V인 조건에서 완료 응답과 재조회 결과가 일치했다. W1은 test-a.pdf 1쪽 Table 1, W2는 test-b.pdf 2쪽 Table 2였다. 로그아웃 상태의 GET은 401이었다. `tests/services/test_datasheet_rows.py`에 같은 표를 다시 찾은 경우, 변조된 400 V 거절, W4 재조회도 포함했다.
+- 관련 pytest는 317 passed. 격리 DB에서 `uv run --no-sync pytest -q --tb=line`으로 전체를 비교했다. 깨끗한 Windows 체크아웃에서 수정 전 `2d726e3`은 1548 passed, 수정 후 1550 passed였고, 양쪽 모두 같은 11 failed, 3 errors, 39 skipped였다. 이 중 평가 표본 해시 문제는 Git의 CRLF 변환으로 재현했다. 실제 작업 폴더의 첫 실행은 이전 frontend/dist에 회로도 이미지가 없어 데모 API도 실패했다. 동결 평가셋이나 다른 기능의 실패는 이번 수정에 포함하지 않았다.

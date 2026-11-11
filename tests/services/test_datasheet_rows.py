@@ -13,7 +13,7 @@ from backend.services.datasheet_rows import official_pdf
 URL = 'https://www.vishay.com/docs/88751/ss32.pdf'
 
 
-def family_pdf():
+def family_pdf(*, cover=False):
     # A small self-contained PDF with a ruled table and different ratings per part.
     commands = ['0.5 w']
     for y in (50, 70, 90):
@@ -30,6 +30,9 @@ def family_pdf():
                b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 350 180] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
                b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
                b'<< /Length %d >>\nstream\n' % len(stream) + stream + b'\nendstream']
+    if cover:
+        objects[1] = b'<< /Type /Pages /Kids [6 0 R 3 0 R] /Count 2 >>'
+        objects.append(b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 350 180] >>')
     body = bytearray(b'%PDF-1.4\n')
     offsets = []
     for i, obj in enumerate(objects, start=1):
@@ -112,6 +115,70 @@ def test_related_part_and_unrelated_spec_provide_no_evidence(transport):
     mock, _ = transport
     assert not exa.search_evidence(['SS34A'], 'reverse voltage', transport=mock)
     assert not exa.search_evidence(['SS34'], 'capacitance', transport=mock)
+
+
+def test_replanned_reports_keep_their_pdf_cells_on_reload(transport):
+    from backend.multi_agent.supervisor import collect_node, single_node
+
+    mock, _ = transport
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+            'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+    def lookup(transport):
+        return docs_agent({'question': 'SS34?', 'task': task}, retriever=lambda *a, **kw: [],
+                          chat=lambda *a: PdfOnlyAnswer(grade='enough', pdf_rows=['W1']),
+                          web_search=lambda p,t: exa.search_evidence(p,t,transport=transport))['reports'][0]
+
+    second_url = 'https://www.onsemi.com/pdf/datasheet/other.pdf'
+    def second_source(req):
+        if req.method == 'POST':
+            return httpx.Response(200, json={'results': [{'url': second_url}]})
+        return httpx.Response(200, content=family_pdf(cover=True).replace(b'Table 1.', b'Table 2.'))
+
+    report, later = lookup(mock), lookup(httpx.MockTransport(second_source))
+    old = report['docs'][0]
+    # 체크포인트에 저장된 검색별 W1을 재생한다. 같은 표를 다시 찾으면 동일한 실행 번호를 쓴다.
+    reports = [report, {**later, 'round': 2}, {**report, 'round': 2, 'task': 2}]
+    state = {'question': 'SS34?', 'round': 2, 'plan': {'keep_earlier': True}, 'reports': reports}
+    state.update(collect_node(state))
+    assert [r['evidence_ids'] for r in state['final_reports']] == [['W1'], ['W2'], ['W1']]
+    assert reports[1]['docs'][0]['chunk_id'] == 'W1'
+    state.update(single_node(state))
+    assert 'refusal_reason' not in check_node(state)
+    assert check_node({**state, 'answer': state['answer'].replace('40 V입니다 [W2]', '400 V입니다 [W2]')})['refusal_reason'] == 'verify_failed'
+    result = result_dto(public_state(state), request_id='finish')
+    reopened = result_dto({'evidence': stored_evidence(result.evidence)}, request_id='reopen')
+    assert [(d['citation_number'], d['source_url'], d['table'], d['row']) for d in reopened.evidence] == [
+        ('W1', URL + '#page=1', old['table'], old['row']),
+        ('W2', second_url + '#page=2', 'Table 2. Maximum ratings', old['row'])]
+
+    # 재번호화가 체크포인트에 섞인 잘못된 수치에 새 해시를 발급해서는 안 된다.
+    bad = {**report, 'answer': report['answer'].replace('40 V', '400 V')}
+    assert collect_node({**state, 'reports': [bad]})['refusal_reason'] == 'verify_failed'
+
+
+def test_run_labels_cross_search_limit_without_cascading_replacements():
+    from backend.judge.pdf_claims import bind_run_citations, row_sentence, sentence_digest
+    from backend.multi_agent.contracts import TaskReport
+
+    def make_report(round_number, pages):
+        docs, lines = [], []
+        for index, page in enumerate(pages, 1):
+            doc = {'chunk_id': f'W{index}', 'source_type': 'external_web', 'source_url': URL,
+                   'file': 'ss32.pdf', 'page': page, 'table': 'Ratings', 'row': 'VRRM',
+                   'doc_parts': ['SS34'], 'cells': [('SS34', '40')], 'unit': 'V'}
+            lines.append(row_sentence(doc))
+            docs.append({**doc, 'sentence_sha256': sentence_digest(lines[-1])})
+        return TaskReport(round=round_number, task=1, agent='docs', status='ok', summary='',
+                          answer='\n'.join(reversed(lines)), docs=docs, evidence_ids=[d['chunk_id'] for d in docs])
+
+    first, second = make_report(1, [1, 2]), make_report(2, [3, 4])
+    assert bind_run_citations([second, first])
+    state = {'final_reports': [r.model_dump() for r in (first, second)], 'passed': ['W1', 'W2', 'W3', 'W4'],
+             'docs': first.docs + second.docs, 'answer': first.answer + '\n' + second.answer, 'question': 'SS34?'}
+    assert [line[-5:] for line in state['answer'].splitlines()] == ['[W2].', '[W1].', '[W4].', '[W3].']
+    assert 'refusal_reason' not in check_node(state)
+    evidence = result_dto(public_state(state), request_id='cross-limit').evidence
+    assert [(d['citation_number'], d['page']) for d in evidence] == [('W1', 1), ('W2', 2), ('W3', 3), ('W4', 4)]
 
 
 @pytest.mark.parametrize('url', ['http://www.vishay.com/docs/88751/ss32.pdf',

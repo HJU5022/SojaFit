@@ -20,7 +20,7 @@ from pathlib import Path
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from backend.graph.memory import memory_context, memory_sources
-from backend.judge.pdf_claims import check_pdf_lines
+from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
@@ -148,6 +148,8 @@ def collect_node(state: dict) -> dict:
     out = {'counters': c, 'path': ['모으기']}
     if len(reports) > MAX_AGENT_RUNS:
         return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.LIMIT_REACHED.value}
+    if not bind_run_citations(reports):
+        return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.VERIFY_FAILED.value}
     current = [r for r in reports if r.round == rnd]
     if plan.get('next') == 'answer':
         final = [r for r in current if r.status != 'fail'] or current  # 재계획이 '있는 답으로'라 했다: 이번 회차의 쓸 만한 보고

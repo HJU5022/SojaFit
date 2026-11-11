@@ -103,7 +103,7 @@ def public_state(state: dict) -> dict:
                  'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
         if doc.get('source_type') == 'external_web':
             url = official_pdf(doc.get('source_url'))
-            if not (url and re.fullmatch(r'W[1-3]', entry['citation_number']) and
+            if not (url and re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']) and
                     type(page) is int and page > 0 and table and isinstance(doc.get('row'), str) and doc['row']):
                 continue
             entry.update(document=url, row=doc['row'])
@@ -159,7 +159,7 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
         try:
             clean = _pick(item, ('document', 'page', 'table', 'row', 'section', 'citation_number'))
             entry = SafeEvidence.model_validate(clean).model_dump(mode='json')
-            if re.fullmatch(r'W[1-3]', entry['citation_number']):
+            if re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']):
                 url = official_pdf(item.get('document'))
                 if not url or type(entry['page']) is not int or entry['page'] < 1 or not entry['table'] or not entry['row']:
                     continue
