@@ -1,0 +1,11641 @@
+[
+ {
+  "set": "graph#1",
+  "id": "draft30-h03",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_bus"
+  ],
+  "dropped_synonym": [
+   "v_bus"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "1N5819"
+  ],
+  "read_values": [
+   "v_bus"
+  ],
+  "trace": "1a77f5dd87fa748f7ed7c4bb29b2c030"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-h03",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "v_bus"
+  ],
+  "dropped_synonym": [
+   "v_bus"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "",
+  "read_candidates": [
+   "1N5819"
+  ],
+  "read_values": [
+   "v_bus"
+  ],
+  "trace": "a7ad32322a75f449d4cd4686f33ca6e1"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft30-m09",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "9933a8d1cf8b452881ad8080e74bdade"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-m09",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "753c1e96740af8db320836d412478699"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft30-m09",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "3445d8e27b3cd5481048626f97bbb2b9"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft30-m09",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "f4ecb3f4bbac63b8a490d3edb0e2c4ad"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n12",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "3d857dd0bcb92e79a20a2de1cc85ac7a"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n12",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "f9aa1d7d1462958ad9f75932485a2f39"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n14",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "6bcd6549ec17141fd965abe332165921"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n14",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "6afb026e6f989808f97dffef1b696fdf"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n14",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "7977ef738511c412feff52373428fa8d"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n14",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "ecab5b1d2e04fd208a06dd1b44609bea"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n18",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "temp"
+  ],
+  "trace": "a4b8b03082a02cfad6c5c349f3af86f8"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n18",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "temp"
+  ],
+  "trace": "1e94f2a8cdc7ba7e9f3dfc20aa8c8e2c"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n18",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "temp"
+  ],
+  "trace": "7fb24918ad34d755f556ef012c2518fb"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n18",
+  "kind": "irrelevant",
+  "type": "missing_attribute",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "temp"
+  ],
+  "trace": "53a89ea837f6edcef2f6dd70f4fa8226"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n19",
+  "kind": "irrelevant",
+  "type": "out_of_domain",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_bus",
+   "v_drop_allowed",
+   "vf_test"
+  ],
+  "dropped_synonym": [
+   "v_bus"
+  ],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "v_bus",
+   "i_max",
+   "v_drop_allowed",
+   "vf_test"
+  ],
+  "trace": "6734d485a1bf1faf76f97fdc67afbfce"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n19",
+  "kind": "irrelevant",
+  "type": "out_of_domain",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "original_part",
+   "i_d",
+   "v_drop_allowed",
+   "v_line_max"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_line_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "original_part",
+   "i_d",
+   "v_drop_allowed",
+   "vf_test",
+   "v_line_max",
+   "temp"
+  ],
+  "trace": "4864acd0c67464c472f4ea5f47d25f73"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n19",
+  "kind": "irrelevant",
+  "type": "out_of_domain",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "original_part",
+   "v_drop_allowed",
+   "pulse_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "original_part",
+   "i_max",
+   "v_drop_allowed",
+   "vf_test",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "e4293169a0cf900c7e77a66fdc959eb6"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n13",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "pwm"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "b057814096bf4290f1fd24cce9f852a3"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n13",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "i_d",
+   "surge_test"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "surge_test",
+   "temp",
+   "pwm"
+  ],
+  "trace": "0fa2a29f8fa25bf38aa8ed2a3be85a0e"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n13",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "pulse_test",
+   "temp",
+   "pwm"
+  ],
+  "trace": "c2841452b96a5dfd86b0e245f20bf328"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n13",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "pwm"
+  ],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "2fc67218c6f60a55b2b423f79a26dced"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n15",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test",
+   "high_impedance"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "pulse_test",
+   "temp",
+   "high_impedance"
+  ],
+  "trace": "645c86c23714dc30630d46dbfe1f6009"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n15",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "v_clamp"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp"
+  ],
+  "trace": "910a32d3fb0b977396ae9129ac4e4d23"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n15",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "445668aa07d49f635d56b03811fbec1b"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n15",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "v_clamp"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp"
+  ],
+  "trace": "b4ecffd2ccb181e63ecd65a1709f19ba"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n17",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "v_in_max",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out",
+   "v_in_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_in_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "ae7d3717b47e3818918670fc48c95d82"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n17",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "pulse_test",
+   "temp"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_reverse_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "14a0a621729abfed648a6dde7a576dda"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n17",
+  "kind": "irrelevant",
+  "type": "unknown_entity",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "v_in_max",
+   "orig_schottky",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out",
+   "v_in_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_in_max",
+   "vf_selects_source",
+   "orig_schottky",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "7401ccac460ba5ab2fd6d58afda3e7a8"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft30-m10",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "dc128141ced9fb03c445a71842465a58"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-m10",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [],
+  "trace": "31964e1beef0a25adf2aed39fb240b27"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n20",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_drop_allowed",
+   "v_bus"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_bus"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_drop_allowed",
+   "vf_test",
+   "v_bus",
+   "temp"
+  ],
+  "trace": "56b743053b661c7cf8eeab23199ef998"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n20",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_drop_allowed",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 6.25
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "v_reverse_max",
+   "i_d",
+   "v_drop_allowed",
+   "vf_test",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "0b5136a6b78ca39e547c18ef9ec30301"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n20",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_drop_allowed",
+   "v_in_max"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_in_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_drop_allowed",
+   "vf_test",
+   "temp",
+   "v_in_max"
+  ],
+  "trace": "1c3068d776b16e7a249ac21ade5916e6"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n20",
+  "kind": "irrelevant",
+  "type": "wrong_period",
+  "metric": "hallucination_risk",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_drop_allowed",
+   "v_line_max"
+  ],
+  "dropped_synonym": [
+   "v_line_max"
+  ],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "v_drop_allowed",
+   "vf_test",
+   "temp",
+   "v_line_max"
+  ],
+  "trace": "8f210d14291749ec4c173153f1af3609"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n01",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max"
+  ],
+  "dropped": [
+   "i_out"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_in_max",
+   "temp",
+   "v_drop_allowed",
+   "vf_test"
+  ],
+  "trace": "b87a587602609ef3d193dddebe0237e6"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n01",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "original_part"
+  ],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "original_part"
+  ],
+  "trace": "17acbd02c9be327db3aa9e3d982a1aad"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n01",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [],
+  "dropped": [
+   "pulse_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   },
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "v_in_max",
+   "temp",
+   "pulse_test",
+   "v_drop_allowed"
+  ],
+  "trace": "f06091ea4b47e05c617b35d68927c971"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n01",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4001G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4002G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4002G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4003G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4003G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4004G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4004G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4005G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4005G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4006G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4006G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4007G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4007G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148W",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148W-G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148WH",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148WSH",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4148WTH",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4448",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4448W",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4933G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4934G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4934G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4935G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4935G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4936G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4936G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4937G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N4937G-K",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5391G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5391G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5392G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5392G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5393G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5393G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5395G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5395G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5397G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5397G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5398G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5398G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5399G",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5399G-T",
+    "ROLE_SUFFICIENT"
+   ],
+   [
+    "1N5400G",
+    "ROLE_SUFFICIENT"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "original_part",
+   "external_port"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   },
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4001G",
+   "1N4001G-K",
+   "1N4002G"
+  ],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": true,
+  "read_role": "R01",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "original_part",
+   "i_max",
+   "v_in_max",
+   "temp",
+   "vf_test",
+   "external_port"
+  ],
+  "trace": "f51a5ddb092fa78bcd7cf0512352a01f"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n02",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max"
+  ],
+  "dropped": [
+   "i_out",
+   "external_port"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_drop_allowed",
+   "vf_test",
+   "temp",
+   "external_port"
+  ],
+  "trace": "8b0a3ab02c998d65ddcec75cb5d9b25e"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n02",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max"
+  ],
+  "dropped": [
+   "vf_test",
+   "temp"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.014285714285714287
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "v_drop_allowed",
+   "vf_test",
+   "temp"
+  ],
+  "trace": "22d72983eff944c642a2de5586ea1df5"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n02",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max"
+  ],
+  "dropped": [
+   "i_out",
+   "pulse_test",
+   "external_port",
+   "orig_schottky"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_drop_allowed",
+   "pulse_test",
+   "temp",
+   "external_port",
+   "orig_schottky"
+  ],
+  "trace": "20a6028a6fe3927983e466bf16778ffe"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n02",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max"
+  ],
+  "dropped": [
+   "i_out"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_drop_allowed",
+   "vf_test",
+   "temp"
+  ],
+  "trace": "963c1356df2d09ea0325f40c2c9ffdcd"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n03",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "i_d",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "f0dc5b325b2ff85fe5ebd209151e2e88"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n03",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "edb9aefb3dd041d39ed3e8c59d7ea9b9"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n03",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "i_d",
+   "surge_test"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "surge_test",
+   "temp",
+   "pwm"
+  ],
+  "trace": "ff74811af211a2b2e2db3174fdb31f2e"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n03",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "v_coil"
+  ],
+  "dropped": [
+   "v_bus",
+   "surge_test"
+  ],
+  "dropped_synonym": [
+   "v_bus"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_bus",
+   "i_coil",
+   "pwm",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "982b8cad2ea9edbdfb4103fabba091f1"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n04",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "i_coil",
+   "pulse_test",
+   "pwm"
+  ],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "3cf8df5e3318950fa425dd54b3bc3149"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n04",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "i_coil",
+   "pulse_test",
+   "pwm"
+  ],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "501a2f6fa8be3901da0d7ada0f049999"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n04",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "i_coil"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "pwm",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "381f8b393196b220781177c4a877a817"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n04",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "i_coil",
+   "pulse_test"
+  ],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 15.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "1N5817",
+   "SS14"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_coil",
+   "pwm",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "4b2775a26df49b5a7376b7a992709001"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n05",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "efdd45abf9dfbabfb02cd55ce3066d32"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n05",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "v_clamp"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp"
+  ],
+  "trace": "87be4a9eed1b1af94f21e55617ba6d05"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n05",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "i_z",
+   "pulse_test",
+   "v_clamp",
+   "high_impedance"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp",
+   "high_impedance"
+  ],
+  "trace": "535fcfb898279901cc3dd52410c489ee"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n05",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "temp",
+   "v_clamp",
+   "high_impedance"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp",
+   "high_impedance"
+  ],
+  "trace": "55bf00fe9d0f94256d34e53b9b5fd93c"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n06",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test",
+   "high_impedance"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4 SERIES_G1804.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "BZT52C3V6",
+  "read_candidates": [],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "pulse_test",
+   "temp",
+   "high_impedance"
+  ],
+  "trace": "246fa553c67e710b319884f517471fc4"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n06",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "v_clamp"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4 SERIES_G1804.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "BZT52C3V6",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp"
+  ],
+  "trace": "d517c1d6fbca52d9ae28b1d76587dabb"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n06",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "high_impedance"
+  ],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4 SERIES_G1804.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "BZT52C3V6",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "high_impedance"
+  ],
+  "trace": "bb085f1d3579d9f37dafe78d99291aa7"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n06",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04: no search terms (orig.* only)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "pulse_test",
+   "v_clamp",
+   "fast_signal",
+   "high_impedance"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "BZT52C3V6S",
+   "BZT52B3V6S"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52B2V4S SERIES_I2411.pdf",
+   "BZT52C2V4 SERIES_G1804.pdf",
+   "BZT52C2V4S SERIES_K2411.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R04",
+  "read_original": "BZT52C3V6",
+  "read_candidates": [],
+  "read_values": [
+   "i_z",
+   "pulse_test",
+   "temp",
+   "v_clamp",
+   "fast_signal",
+   "high_impedance"
+  ],
+  "trace": "e4c138b7bfe2c30d21cd740733c7dd6c"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n07",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_in_max",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_in_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_in_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "633b42a41ff9d0b0fe8fb47dc179249c"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n07",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "v_in_max",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out",
+   "v_in_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_in_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "6c7b7afc1a9bcb830be254d8d1338569"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n07",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G-K",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_in_max",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_in_max"
+  ],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.7142857142857143
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf",
+   "1N5400G-K SERIES_C2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "v_in_max",
+   "temp",
+   "pulse_test",
+   "vf_selects_source"
+  ],
+  "trace": "7d2107ac3598b2324350cdc9988bfa9e"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n07",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G-K",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_in_max",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_in_max"
+  ],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.7142857142857143
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf",
+   "1N5400G-K SERIES_C2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "v_in_max",
+   "temp",
+   "pulse_test",
+   "vf_selects_source"
+  ],
+  "trace": "c6a56982548b11fbf7425afdd03ece55"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n08",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "original_part",
+   "i_out",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "original_part",
+   "i_out",
+   "vf_selects_source",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "e86dca99bb6e1ec8450fbc7b563135f6"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n08",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "pulse_test",
+   "orig_schottky"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "pulse_test",
+   "temp",
+   "orig_schottky",
+   "vf_selects_source"
+  ],
+  "trace": "f6e95e28fac70a38cc991181f423af51"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n08",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "role=other(no_rule)",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "other",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "27fb166124ccf5879c65027286387aa5"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n08",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "b",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5401G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5402G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5404G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5406G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5407G-K",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "hot_test"
+  ],
+  "dropped": [
+   "pulse_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [
+   {
+    "code": "IF_AV",
+    "gte": 0.7142857142857143
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "SS14",
+   "SS14L"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf",
+   "1N5400G-K SERIES_C2105.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf",
+   "SS12 SERIES_R2305.pdf",
+   "SS12L SERIES_Q2103.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N5819",
+  "read_candidates": [],
+  "read_values": [
+   "i_max",
+   "pulse_test",
+   "temp",
+   "vf_selects_source"
+  ],
+  "trace": "a32c8f365d8e0230c27bd7ce1853add8"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n09",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R01",
+   "R02"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_reverse_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "original_part",
+   "i_d",
+   "v_line_max"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_line_max"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R01",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "original_part",
+   "i_d",
+   "v_drop_allowed",
+   "vf_test",
+   "v_line_max",
+   "temp"
+  ],
+  "trace": "7b154c59260b00706c18d08bfacc3fa4"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n09",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "v_line_max",
+   "i_out",
+   "v_drop_allowed"
+  ],
+  "dropped_synonym": [
+   "i_out",
+   "v_line_max"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 25.0
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf"
+  ],
+  "hit_via_shown_or_unverified": true,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "v_line_max",
+   "i_out",
+   "v_drop_allowed",
+   "vf_test",
+   "v_reverse_max",
+   "temp"
+  ],
+  "trace": "5432365f2cab8fa5f41eb4f106835775"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n09",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_drop_allowed",
+   "vf_test"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_drop_allowed",
+   "vf_test"
+  ],
+  "trace": "8a1d11cd68cd227ff03b7583d0afaa06"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n09",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "required values missing -> no search terms",
+  "expected": null,
+  "verdicts": [],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_bus",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_bus"
+  ],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [
+   "1N4148W",
+   "1N4148WS"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148WS SERIES_N2212.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_bus",
+   "vf_test",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "818a7b6ac2b28553024cb8310b8a41a7"
+ },
+ {
+  "set": "graph#1",
+  "id": "draftv2-n10",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914B",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914BW",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914BWS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1SS355",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1SS400",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS116",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS16",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS16H",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS19",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS19W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS20",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS20W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21H",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21S",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS316WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-04",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-05",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-06",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40M5",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-04",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-05",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-06",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT46GW",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV101",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV103",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV19W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV19WS",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 6.25
+   },
+   {
+    "code": "IR",
+    "lte": 1e-06
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [
+   "BAS16",
+   "BAS316"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "BAS16"
+  ],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1SS355_D2212.pdf",
+   "1SS400_E2510.pdf",
+   "BAS116_F2001.pdf",
+   "BAS16H_A2412.pdf",
+   "BAS16_F2001.pdf",
+   "BAS19 SERIES_C2001.pdf",
+   "BAS19W SERIES_B14.pdf",
+   "BAS21 SERIES_E2001.pdf",
+   "BAS21H_A2412.pdf",
+   "BAS316WS_F2212.pdf",
+   "BAS40 SERIES_I2606.pdf",
+   "BAS40M5_B2606.pdf",
+   "BAS70 SERIES_G2606.pdf",
+   "BAT42W SERIES_H2606.pdf",
+   "BAT42WS SERIES_J2606.pdf",
+   "BAT42WSH SERIES_A2502.pdf",
+   "BAT46GW_B2606.pdf",
+   "BAV101 SERIES_E2301.pdf",
+   "BAV19W SERIES_E15.pdf",
+   "BAV19WS SERIES_K2212.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "BAS16_F2001.pdf",
+   "BAS316_E1907.pdf"
+  ],
+  "hit_via_shown_or_unverified": true,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_out",
+   "v_reverse_max",
+   "ir_allowed",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "d0bea0877953ebcd94b8c66b27fce8a1"
+ },
+ {
+  "set": "graph#2",
+  "id": "draftv2-n10",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914B",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914BW",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N914BWS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1SS355",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1SS400",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS116",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS16",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS16H",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS19",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS19W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS20",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS20W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21H",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21S",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS21W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS316WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-04",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-05",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40-06",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS40M5",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-04",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-05",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAS70-06",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT42WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT43WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAT46GW",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV101",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV103",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV19W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "BAV19WS",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 6.25
+   },
+   {
+    "code": "IR",
+    "lte": 1e-06
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [
+   "BAS16",
+   "BAS316"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [
+   "BAS16"
+  ],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1SS355_D2212.pdf",
+   "1SS400_E2510.pdf",
+   "BAS116_F2001.pdf",
+   "BAS16H_A2412.pdf",
+   "BAS16_F2001.pdf",
+   "BAS19 SERIES_C2001.pdf",
+   "BAS19W SERIES_B14.pdf",
+   "BAS21 SERIES_E2001.pdf",
+   "BAS21H_A2412.pdf",
+   "BAS316WS_F2212.pdf",
+   "BAS40 SERIES_I2606.pdf",
+   "BAS40M5_B2606.pdf",
+   "BAS70 SERIES_G2606.pdf",
+   "BAT42W SERIES_H2606.pdf",
+   "BAT42WS SERIES_J2606.pdf",
+   "BAT42WSH SERIES_A2502.pdf",
+   "BAT46GW_B2606.pdf",
+   "BAV101 SERIES_E2301.pdf",
+   "BAV19W SERIES_E15.pdf",
+   "BAV19WS SERIES_K2212.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "BAS16_F2001.pdf",
+   "BAS316_E1907.pdf"
+  ],
+  "hit_via_shown_or_unverified": true,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_reverse_max",
+   "ir_allowed",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "145e64eb62df23813652aa3972b9423d"
+ },
+ {
+  "set": "multi#1",
+  "id": "draftv2-n10",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "found 50, every check unverified",
+  "expected": null,
+  "verdicts": [
+   [
+    "1.5KE100",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE100A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE100C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE100CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE11",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE110",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE110A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE110C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE110CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE11A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE11C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE11CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE12",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE120",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE120A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE120C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE120CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE12A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE12C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE12CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE13",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE130",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE130A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE130C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE130CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE13A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE13C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE13CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE15",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE150",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE150A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE150C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE150CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE15A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE15C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE15CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE16",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE160",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE160A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE160C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE160CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE16A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE16C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE16CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE170",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE170A",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE170C",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE170CA",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE18",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1.5KE180",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_d",
+   "v_bus",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_d",
+   "v_bus"
+  ],
+  "terms": [
+   {
+    "code": "IR",
+    "lte": 1e-06
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [],
+  "gold_cand": [
+   "BAS16",
+   "BAS316"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "BAS16_F2001.pdf",
+   "BAS316_E1907.pdf"
+  ],
+  "hit_via_shown_or_unverified": false,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "i_d",
+   "v_bus",
+   "ir_allowed",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "31832cabfc80ba591187be683d16406f"
+ },
+ {
+  "set": "multi#2",
+  "id": "draftv2-n10",
+  "kind": "relevant",
+  "type": "candidate_find",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [
+   [
+    "1N4001G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4001G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4002G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4003G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4004G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4005G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4006G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4007G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148",
+    "IDENTICAL"
+   ],
+   [
+    "1N4148W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148W-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WS-G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WSH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148WTH",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448W",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4448WS",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4933G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4934G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4935G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4936G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4937G-K",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5391G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5392G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5393G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5395G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5397G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5398G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5399G-T",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5400G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [
+   "i_out",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "i_out"
+  ],
+  "terms": [
+   {
+    "code": "VRRM",
+    "gte": 6.25
+   }
+  ],
+  "n_judged": 50,
+  "capped": true,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [
+   "BAS16",
+   "BAS316"
+  ],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4001G SERIES_P2104.pdf",
+   "1N4001G-K SERIES_B2104.pdf",
+   "1N4148 SERIES_K2301.pdf",
+   "1N4148W SERIES_K1804.pdf",
+   "1N4148W-G_D1601.pdf",
+   "1N4148WH_A2501.pdf",
+   "1N4148WS SERIES_N2212.pdf",
+   "1N4148WS-G_C2211.pdf",
+   "1N4148WSH_A2501.pdf",
+   "1N4148WTH_A2501.pdf",
+   "1N4933G SERIES_I2104.pdf",
+   "1N4933G-K SERIES_B2104.pdf",
+   "1N5391G SERIES_G2309.pdf",
+   "1N5391G-T SERIES_B2105.pdf",
+   "1N5400G SERIES_K2105.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf",
+   "BAS16_F2001.pdf",
+   "BAS316_E1907.pdf"
+  ],
+  "hit_via_shown_or_unverified": true,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [],
+  "read_values": [
+   "v_reverse_max",
+   "i_out",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "8113d5639d310219ed921c2f5d4bac03"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft30-h04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02",
+   "R01"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test",
+   "v_in_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "b98271fba793ff0b9c3af6ddcebd5b39"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-h04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "TSC 1N5819"
+  ],
+  "read_values": [],
+  "trace": "fa5a8638baf1fe2e31a146facf30d82b"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft30-h04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02",
+   "R01"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test",
+   "v_in_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "30d5ae6070f54ffb2c2cf3bd5751b8bd"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft30-h04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "v_in_max",
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "",
+  "read_candidates": [
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "914f38031be80a1e6128af20ef9e1cce"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft30-h05",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 2,
+  "capped": false,
+  "shown": [
+   "1N5817",
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "1N5817",
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "2ac66f06f7885a40ba99cf810b0870fc"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-h05",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 2,
+  "capped": false,
+  "shown": [
+   "1N5817",
+   "1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "1N5817",
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "04837456f86b8b7ccabf47d02a0ea772"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft30-h05",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "role=other(no_rule)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [
+   "1N5817",
+   "1N5819"
+  ],
+  "read_values": [],
+  "trace": "3660f8e266e1f45502bb9d403ffb3a2b"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft30-h05",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "circuit values missing (all checks unverified)",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5817",
+    "NOT_VERIFIED"
+   ],
+   [
+    "TSC 1N5819",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 2,
+  "capped": false,
+  "shown": [
+   "TSC 1N5817",
+   "TSC 1N5819"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "",
+  "read_candidates": [
+   "TSC 1N5817",
+   "TSC 1N5819"
+  ],
+  "read_values": [],
+  "trace": "6056b6263ccf0d8c6492c78d7ea7464b"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft30-m04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "1dabef6f32617dc0405807e1020b3a5f"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-m04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "57f307de1da1b8289078e61a9a16c9fc"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft30-m04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "a73b6b54d2d01f002eedc724227ea4e8"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft30-m04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "BZT52C3V6",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C3V6"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C3V6"
+  ],
+  "read_values": [],
+  "trace": "2790573f839ddf09259a9e0e173f8fee"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft50-n01",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5817",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [
+   "TSC 1N5817"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "pulse_test",
+   "temp",
+   "pwm"
+  ],
+  "trace": "9a967ec2eed093d4632d62b9dcf74388"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft50-n01",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows + missing values",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5817",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "pwm"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [
+   "TSC 1N5817"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "i_d",
+   "pulse_test",
+   "temp"
+  ],
+  "trace": "ece9682188d79ea00e75434b1f894ffc"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n01",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5817",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [
+   "TSC 1N5817"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pulse_test",
+   "temp",
+   "pwm"
+  ],
+  "trace": "51f991e9716dbf07a44e86af63fe4ac7"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft50-n01",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows + missing values",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N5817",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "pwm"
+  ],
+  "dropped": [
+   "surge_test"
+  ],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "TSC 1N5819",
+  "read_candidates": [
+   "TSC 1N5817"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "surge_test",
+   "temp"
+  ],
+  "trace": "711bd90aab326eef1a03cbc348a19164"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft50-n02",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "BAS70",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BAS70"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "BAS70 SERIES_G2606.pdf"
+  ],
+  "gold_docs": [
+   "BAS70 SERIES_G2606.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [
+   "BAS70"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "temp"
+  ],
+  "trace": "587ec36c68d3f78ed2469aae83a8e139"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft50-n02",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows + missing values",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC BAS70",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [
+   "pwm"
+  ],
+  "dropped": [
+   "pwm"
+  ],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC BAS70"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BAS70 SERIES_G2606.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [
+   "TSC BAS70"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "temp"
+  ],
+  "trace": "09ad2d3699747770efc49ad7f5ae2a38"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n02",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC BAS70",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC BAS70"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BAS70 SERIES_G2606.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "1N400x/SM4002",
+  "read_candidates": [
+   "TSC BAS70"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "temp"
+  ],
+  "trace": "415c633f992a2cc579c5fdf4e086f4f3"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft50-n02",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "c",
+  "sub": "TSC prefix -> 0 spec rows",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC BAS70",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R03"
+  ],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC BAS70"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BAS70 SERIES_G2606.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R03",
+  "read_original": "",
+  "read_candidates": [
+   "TSC BAS70"
+  ],
+  "read_values": [
+   "v_coil",
+   "i_coil",
+   "pwm",
+   "temp"
+  ],
+  "trace": "e37e3fcc57bcd9092ab520bcfc80c587"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft50-n04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "TSC BZT52C5V1",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC BZT52C5V1"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "TSC BZT52C5V1"
+  ],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "temp",
+   "pulse_test"
+  ],
+  "trace": "4a85040ecfb5f628ef1afe7a09d3e1f1"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft50-n04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "BZT52C5V1",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C5V1"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C5V1"
+  ],
+  "read_values": [
+   "v_clamp",
+   "v_clamp",
+   "i_z",
+   "temp",
+   "pulse_test"
+  ],
+  "trace": "1f3dacbe03981fa53f8384e41ae54d1a"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "BZT52C5V1",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "BZT52C5V1"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "BZT52C5V1"
+  ],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "temp",
+   "pulse_test"
+  ],
+  "trace": "18df42e8d6cdf738755a8964c273f7f6"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft50-n04",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "R04 orig.* with no original part",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "TSC BZT52C5V1",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R04"
+  ],
+  "asked": [
+   "data_line"
+  ],
+  "dropped": [
+   "v_clamp",
+   "pulse_test"
+  ],
+  "dropped_synonym": [
+   "v_clamp"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC BZT52C5V1"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "BZT52C2V4 SERIES_G1804.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R04",
+  "read_original": "",
+  "read_candidates": [
+   "TSC BZT52C5V1"
+  ],
+  "read_values": [
+   "v_clamp",
+   "i_z",
+   "temp",
+   "pulse_test"
+  ],
+  "trace": "e483355a8f0a8a295fe806bf4dd5a93b"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n06",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "IDENTICAL",
+  "verdicts": [
+   [
+    "1N4148 A0G",
+    "NOT_VERIFIED"
+   ],
+   [
+    "1N4148 R0G",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 2,
+  "capped": false,
+  "shown": [
+   "1N4148 A0G",
+   "1N4148 R0G"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [
+   "1N4148 A0G",
+   "1N4148 R0G"
+  ],
+  "read_values": [],
+  "trace": "7359ad0e3b0dae493b2b940079f079b1"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft50-n07",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_SUFFICIENT"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N5817"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "1e258a91d06499dbb8b858310ed54dc9"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft50-n07",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_SUFFICIENT"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N5817"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "8314d1b56613b90710644fe9f326ed94"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n07",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_SUFFICIENT"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N5817"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "db6dda527375c71d730920a8311c1d7c"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft50-n07",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N5817",
+    "NOT_SUFFICIENT"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d",
+   "external_port"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N5817"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "gold_docs": [
+   "1N5817 SERIES_H2104.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N5817"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp",
+   "external_port"
+  ],
+  "trace": "655ef3926d7b3decdb132de0e47cd969"
+ },
+ {
+  "set": "graph#1",
+  "id": "draft50-n08",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N4148"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "eeb70073d66a8f7d1748619de438f64b"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft50-n08",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N4148"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "9d4e72918416e6548ad21bad1d825187"
+ },
+ {
+  "set": "multi#1",
+  "id": "draft50-n08",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "wrong_citation",
+  "cat": "d",
+  "sub": "TSC prefix -> 0 spec rows + missing values",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "TSC 1N4148",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "TSC 1N4148"
+  ],
+  "read_values": [
+   "v_in_max",
+   "i_d",
+   "temp"
+  ],
+  "trace": "cb2a64a05e620d88cfd44be314ffeb35"
+ },
+ {
+  "set": "multi#2",
+  "id": "draft50-n08",
+  "kind": "relevant",
+  "type": "candidate_judge",
+  "metric": "cited_gold",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_SUFFICIENT",
+  "verdicts": [
+   [
+    "1N4148",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R01"
+  ],
+  "asked": [
+   "i_max",
+   "v_drop_allowed"
+  ],
+  "dropped": [
+   "i_d"
+  ],
+  "dropped_synonym": [
+   "i_d"
+  ],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R01",
+  "read_original": "1N4001",
+  "read_candidates": [
+   "1N4148"
+  ],
+  "read_values": [
+   "i_d",
+   "v_in_max",
+   "temp"
+  ],
+  "trace": "99e6aebcbe58d772165b8f26ecfc363c"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-e04",
+  "kind": "relevant",
+  "type": "rating",
+  "metric": "wrong_citation",
+  "cat": "",
+  "sub": "",
+  "expected": null,
+  "verdicts": [],
+  "roles": [],
+  "asked": [],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 0,
+  "capped": false,
+  "shown": [],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "other",
+  "read_original": "",
+  "read_candidates": [
+   "1N4148"
+  ],
+  "read_values": [],
+  "trace": "a1499f51d0f714ecd59dc7e0987b4687"
+ },
+ {
+  "set": "graph#2",
+  "id": "draft30-m05",
+  "kind": "relevant",
+  "type": "rating",
+  "metric": "wrong_citation",
+  "cat": "",
+  "sub": "",
+  "expected": "NOT_VERIFIED",
+  "verdicts": [
+   [
+    "TSC 1N4148",
+    "NOT_VERIFIED"
+   ]
+  ],
+  "roles": [
+   "R02"
+  ],
+  "asked": [
+   "v_reverse_max",
+   "i_max",
+   "vf_selects_source",
+   "hot_test"
+  ],
+  "dropped": [],
+  "dropped_synonym": [],
+  "terms": [],
+  "n_judged": 1,
+  "capped": false,
+  "shown": [
+   "TSC 1N4148"
+  ],
+  "gold_cand": [],
+  "gold_cand_in_shown": [],
+  "gold_cand_in_judged": [],
+  "cited_docs": [],
+  "gold_docs": [
+   "1N4148 SERIES_K2301.pdf"
+  ],
+  "hit_via_shown_or_unverified": null,
+  "read_role": "R02",
+  "read_original": "1N4148",
+  "read_candidates": [
+   "TSC 1N4148"
+  ],
+  "read_values": [],
+  "trace": "75bdf21eb7898280ba77671ed009d932"
+ }
+]

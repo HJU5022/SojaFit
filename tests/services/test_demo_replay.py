@@ -113,7 +113,7 @@ def test_script_refuses_without_demo_mode_or_key():
     assert any('DEMO_MODE' in p for p in S.env_problems('record', {'OPENROUTER_API_KEY': 'x'}))
     assert any('DEMO_MODE' in p for p in S.env_problems('replay', {'DEMO_MODE': '0'}))
     assert any('OPENROUTER_API_KEY' in p for p in S.env_problems('record', {'DEMO_MODE': '1'}))
-    assert any('LAB_' in p for p in S.env_problems('replay', {'DEMO_MODE': '1', 'LAB_READ_VOTES': '3'}))
+    assert any('LAB_' in p for p in S.env_problems('replay', {'DEMO_MODE': '1', 'LAB_THINKING': '1'}))
     assert any('LLM_MODEL' in p for p in S.env_problems('record', {'DEMO_MODE': '1', 'OPENROUTER_API_KEY': 'x', 'LLM_MODEL': 'm'}))
     assert S.env_problems('record', {'DEMO_MODE': '1', 'OPENROUTER_API_KEY': 'x'}) == []
     assert S.env_problems('replay', {'DEMO_MODE': '1'}) == []  # 재생은 키가 없어도 돈다
@@ -275,7 +275,6 @@ def service_graph(monkeypatch, chat):
 
 def test_service_replays_a_recorded_judgement_with_interrupt_and_recorded_resume(tmp_path, monkeypatch):
     from backend.multi_agent.agents import judge as J
-    monkeypatch.setenv('JUDGE_READ_VOTES', '1')  # [왜] 가짜 LLM은 판정 읽기 한 번만 본다(다수결은 test_judge_read.py)
     real_service_chat = demo.service_chat
     read = J.JudgeRead(role='R01', candidates=['1N5817'], values=[J.Value(name='v_in_max', number=20, unit='V', quote='20V')])
     plan = Plan(question_type='candidate_judge', next='tasks', tasks=[Task(id=1, agent='judge', kind='candidate_judge', goal='judge 1N5817')])

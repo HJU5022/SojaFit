@@ -5,7 +5,7 @@
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 대체 부품 에이전트를 부르기만 한다),
+- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 Spec 에이전트를 부르기만 한다),
   LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다), Mouser 가격 · 재고 조회(그래프 밖 `/api/prices`, ADR 0009).
 - 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
   backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
@@ -358,7 +358,7 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
 
 
 def judge(state: AgentState, *, specs, find, retriever) -> dict:
-    """판정 노드: 멀티 대체 부품 에이전트의 판정 노드(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
+    """판정 노드: 멀티 Spec 에이전트의 판정 노드(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
 
     입력: judge_read · question_type · conditions · target_part · facts. 출력: judgement, path(사양 표 도구 장애면 retrieval_error,
     코퍼스 밖 요구면 refusal 코드도).

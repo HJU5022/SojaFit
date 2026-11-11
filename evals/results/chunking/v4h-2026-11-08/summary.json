@@ -1,0 +1,17 @@
+{
+ "cards": 51967,
+ "distinct_text": 51967,
+ "kinds": {
+  "cover": 1360,
+  "overview": 1348,
+  "text": 8323,
+  "table_row": 38385,
+  "note": 2551
+ },
+ "chunker_version": "tsc-v4h-2026-11-08",
+ "tables_by_reader": {
+  "pdfplumber": 6832,
+  "docling": 60
+ },
+ "table_suspects": 89
+}

@@ -1,0 +1,574 @@
+{
+ "summary": {
+  "n": 50,
+  "stages": {
+   "LLM:card_read": {
+    "traces": 1,
+    "p50": 1.44,
+    "p95": 1.44,
+    "mean_over_all": 0.03
+   },
+   "LLM:docs_answer": {
+    "traces": 10,
+    "p50": 2.46,
+    "p95": 5.45,
+    "mean_over_all": 0.57
+   },
+   "LLM:judge_read": {
+    "traces": 16,
+    "p50": 7.31,
+    "p95": 8.69,
+    "mean_over_all": 2.35
+   },
+   "LLM:supervisor": {
+    "traces": 50,
+    "p50": 1.36,
+    "p95": 1.93,
+    "mean_over_all": 1.33
+   },
+   "card_read": {
+    "traces": 1,
+    "p50": 1.45,
+    "p95": 1.45,
+    "mean_over_all": 0.03
+   },
+   "docs_answer": {
+    "traces": 10,
+    "p50": 2.47,
+    "p95": 5.46,
+    "mean_over_all": 0.58
+   },
+   "judge_read": {
+    "traces": 16,
+    "p50": 7.33,
+    "p95": 8.71,
+    "mean_over_all": 2.36
+   },
+   "supervisor": {
+    "traces": 50,
+    "p50": 1.37,
+    "p95": 1.96,
+    "mean_over_all": 1.34
+   }
+  },
+  "usd_per_question": {
+   "judge_read": 0.000651,
+   "supervisor": 0.000175,
+   "card_read": 1e-05,
+   "docs_answer": 0.000104
+  },
+  "calls": {
+   "judge_read": 48,
+   "supervisor": 50,
+   "card_read": 1,
+   "docs_answer": 13
+  },
+  "usd_total": 0.047
+ },
+ "rows": [
+  {
+   "id": "v3-01",
+   "trace": "f3357f6fac51cea95349335a91b665e5",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 8.692,
+    "judge_read": 8.703,
+    "LLM:supervisor": 1.769,
+    "supervisor": 2.067
+   }
+  },
+  {
+   "id": "v3-02",
+   "trace": "535f5864c880d24421021cc0b74a34cc",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.648,
+    "judge_read": 7.689,
+    "LLM:supervisor": 1.478,
+    "supervisor": 1.487
+   }
+  },
+  {
+   "id": "v3-03",
+   "trace": "9344c45db8dba2ca587e6d0682792fbe",
+   "n_obs": 39,
+   "stages": {
+    "LLM:judge_read": 7.176,
+    "judge_read": 7.202999999999999,
+    "LLM:supervisor": 1.658,
+    "supervisor": 1.667
+   }
+  },
+  {
+   "id": "v3-04",
+   "trace": "132e0ab88b862c9794465bd54e4298db",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.158000000000001,
+    "judge_read": 7.195,
+    "LLM:supervisor": 1.323,
+    "supervisor": 1.331
+   }
+  },
+  {
+   "id": "v3-05",
+   "trace": "bdfbd6785ee7d93a6294c2c8892ce881",
+   "n_obs": 49,
+   "stages": {
+    "LLM:card_read": 1.444,
+    "card_read": 1.45,
+    "LLM:judge_read": 7.257,
+    "judge_read": 7.273999999999999,
+    "LLM:supervisor": 1.498,
+    "supervisor": 1.505
+   }
+  },
+  {
+   "id": "v3-06",
+   "trace": "a2e6b6deab3fa24e3dea3014f1b02487",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 6.821,
+    "judge_read": 6.835000000000001,
+    "LLM:supervisor": 1.522,
+    "supervisor": 1.53
+   }
+  },
+  {
+   "id": "v3-07",
+   "trace": "8518d75f82d253873e868f32888c00cd",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.457,
+    "judge_read": 7.474,
+    "LLM:supervisor": 1.341,
+    "supervisor": 1.352
+   }
+  },
+  {
+   "id": "v3-08",
+   "trace": "6972bd49e6bbaf2e0df06821c4e01cc7",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 8.675999999999998,
+    "judge_read": 8.706999999999999,
+    "LLM:supervisor": 1.422,
+    "supervisor": 1.427
+   }
+  },
+  {
+   "id": "v3-09",
+   "trace": "2cebd213197a52075267586d7112ae58",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 6.313000000000001,
+    "judge_read": 6.3420000000000005,
+    "LLM:supervisor": 1.858,
+    "supervisor": 1.863
+   }
+  },
+  {
+   "id": "v3-10",
+   "trace": "fdd0715c13f06267cec97c3795d2be5f",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.624,
+    "judge_read": 7.643,
+    "LLM:supervisor": 1.966,
+    "supervisor": 1.975
+   }
+  },
+  {
+   "id": "v3-11",
+   "trace": "afa6263a039fe56b9d98cbbdecdbbc8c",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.045,
+    "judge_read": 7.067,
+    "LLM:supervisor": 1.786,
+    "supervisor": 1.791
+   }
+  },
+  {
+   "id": "v3-12",
+   "trace": "e6ed4f31c520194650a8082c4497d852",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 6.741999999999999,
+    "judge_read": 6.771,
+    "LLM:supervisor": 1.372,
+    "supervisor": 1.379
+   }
+  },
+  {
+   "id": "v3-13",
+   "trace": "f46f7e9e32400c14ad195f37e0756ada",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.359999999999999,
+    "judge_read": 7.379999999999999,
+    "LLM:supervisor": 1.633,
+    "supervisor": 1.637
+   }
+  },
+  {
+   "id": "v3-14",
+   "trace": "3692bbb3d9c4ad59599329e7e871b5c1",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.852,
+    "judge_read": 7.878,
+    "LLM:supervisor": 1.952,
+    "supervisor": 1.958
+   }
+  },
+  {
+   "id": "v3-15",
+   "trace": "2a161adb524bd4e62d285ecc6b114664",
+   "n_obs": 43,
+   "stages": {
+    "LLM:judge_read": 7.984999999999999,
+    "judge_read": 8.014000000000001,
+    "LLM:supervisor": 1.59,
+    "supervisor": 1.595
+   }
+  },
+  {
+   "id": "v3-16",
+   "trace": "4def6eae77fce58aac30cd321be757aa",
+   "n_obs": 30,
+   "stages": {
+    "LLM:docs_answer": 3.4749999999999996,
+    "docs_answer": 3.489,
+    "LLM:supervisor": 1.623,
+    "supervisor": 1.63
+   }
+  },
+  {
+   "id": "v3-17",
+   "trace": "65c806fdd7616cbd0d620c4df714b440",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 1.272,
+    "docs_answer": 1.279,
+    "LLM:supervisor": 1.636,
+    "supervisor": 1.642
+   }
+  },
+  {
+   "id": "v3-18",
+   "trace": "bf8991f1f0d5435c80a92211fb968942",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 1.963,
+    "docs_answer": 1.968,
+    "LLM:supervisor": 1.694,
+    "supervisor": 1.699
+   }
+  },
+  {
+   "id": "v3-19",
+   "trace": "177f5b1f5e0f0f390abaa8b66ce0edce",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 2.43,
+    "docs_answer": 2.435,
+    "LLM:supervisor": 1.673,
+    "supervisor": 1.68
+   }
+  },
+  {
+   "id": "v3-20",
+   "trace": "b5042e72b241c0b5b77ade9c43e515c0",
+   "n_obs": 30,
+   "stages": {
+    "LLM:docs_answer": 5.449,
+    "docs_answer": 5.461,
+    "LLM:supervisor": 1.578,
+    "supervisor": 1.586
+   }
+  },
+  {
+   "id": "v3-21",
+   "trace": "6384d8b4a6c8486b68e0a86320a5765e",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 1.532,
+    "docs_answer": 1.54,
+    "LLM:supervisor": 1.726,
+    "supervisor": 1.735
+   }
+  },
+  {
+   "id": "v3-22",
+   "trace": "e7a652fe307fbd6f618f27fa54395442",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 2.248,
+    "docs_answer": 2.256,
+    "LLM:supervisor": 1.435,
+    "supervisor": 1.442
+   }
+  },
+  {
+   "id": "v3-23",
+   "trace": "de8921c75e89b4d23f44722986fead21",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 2.492,
+    "docs_answer": 2.496,
+    "LLM:supervisor": 1.413,
+    "supervisor": 1.421
+   }
+  },
+  {
+   "id": "v3-24",
+   "trace": "3848d695214c2c39a0c9977fcc4d456e",
+   "n_obs": 30,
+   "stages": {
+    "LLM:docs_answer": 5.377000000000001,
+    "docs_answer": 5.391,
+    "LLM:supervisor": 1.365,
+    "supervisor": 1.374
+   }
+  },
+  {
+   "id": "v3-25",
+   "trace": "fe7cfdb4dfc08420d0fa13f66aade7e5",
+   "n_obs": 24,
+   "stages": {
+    "LLM:docs_answer": 2.512,
+    "docs_answer": 2.516,
+    "LLM:supervisor": 1.424,
+    "supervisor": 1.43
+   }
+  },
+  {
+   "id": "v3-26",
+   "trace": "e5f78047cefc66c874fe8abd5d1855d8",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.746,
+    "supervisor": 0.752
+   }
+  },
+  {
+   "id": "v3-27",
+   "trace": "70edba43a4a5837bc255977a274a932b",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.762,
+    "supervisor": 0.77
+   }
+  },
+  {
+   "id": "v3-28",
+   "trace": "97b3d1870e06048870bc9e71313241a1",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.963,
+    "supervisor": 0.973
+   }
+  },
+  {
+   "id": "v3-29",
+   "trace": "2910f711b1bf48901fc3e68d14b24011",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.053,
+    "supervisor": 1.059
+   }
+  },
+  {
+   "id": "v3-30",
+   "trace": "38948ff16cc621334ef25e1a6eae871b",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.168,
+    "supervisor": 1.173
+   }
+  },
+  {
+   "id": "v3-31",
+   "trace": "527af86daf5e64f7a9516ea2e7c9cbb2",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.16,
+    "supervisor": 1.242
+   }
+  },
+  {
+   "id": "v3-32",
+   "trace": "702e2a218f065643a05705d5e2682022",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.874,
+    "supervisor": 0.881
+   }
+  },
+  {
+   "id": "v3-33",
+   "trace": "4ff07c89b52ef01207faaf78ecc1f069",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.934,
+    "supervisor": 0.942
+   }
+  },
+  {
+   "id": "v3-34",
+   "trace": "3a943bbaf78a6ef36c520c7eb109bd0a",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.887,
+    "supervisor": 0.894
+   }
+  },
+  {
+   "id": "v3-35",
+   "trace": "3dc7ec0af2d1184a0fc807a9b6bf82fa",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.897,
+    "supervisor": 0.905
+   }
+  },
+  {
+   "id": "v3-36",
+   "trace": "d7c2d9db06d97ce91297793bfaf33a5f",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.055,
+    "supervisor": 1.065
+   }
+  },
+  {
+   "id": "v3-37",
+   "trace": "3f1585e7585d93d0b9b734b2aa8fe083",
+   "n_obs": 36,
+   "stages": {
+    "LLM:judge_read": 5.647,
+    "judge_read": 5.664,
+    "LLM:supervisor": 1.926,
+    "supervisor": 1.933
+   }
+  },
+  {
+   "id": "v3-38",
+   "trace": "f19fd9028916e52b9e0ac07a140b4d62",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.887,
+    "supervisor": 0.896
+   }
+  },
+  {
+   "id": "v3-39",
+   "trace": "68031cb5a9f8865fd644f252528d167f",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.0,
+    "supervisor": 1.009
+   }
+  },
+  {
+   "id": "v3-40",
+   "trace": "e67691b1860c9a0ac3a9705d894acf89",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.128,
+    "supervisor": 1.137
+   }
+  },
+  {
+   "id": "v3-41",
+   "trace": "b88ab453cda242b62b7c376cea49f5b7",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.354,
+    "supervisor": 1.36
+   }
+  },
+  {
+   "id": "v3-42",
+   "trace": "87ea76e8175c450adcb484875f06a323",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.322,
+    "supervisor": 1.331
+   }
+  },
+  {
+   "id": "v3-43",
+   "trace": "680901aa0494762dc47cb5faf41b849f",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.095,
+    "supervisor": 1.105
+   }
+  },
+  {
+   "id": "v3-44",
+   "trace": "4deb27d8d43052add9fc6059f4db6512",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.938,
+    "supervisor": 0.946
+   }
+  },
+  {
+   "id": "v3-45",
+   "trace": "aa04d5ffe3fb885a5f7654eb9d656c0c",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.887,
+    "supervisor": 1.892
+   }
+  },
+  {
+   "id": "v3-46",
+   "trace": "988a32dde75b252a1f79aa27ef17eda8",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.825,
+    "supervisor": 0.833
+   }
+  },
+  {
+   "id": "v3-47",
+   "trace": "7dad38ff21d9ab9bb2421dfe8eaee457",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.039,
+    "supervisor": 1.048
+   }
+  },
+  {
+   "id": "v3-48",
+   "trace": "0ae87de4c77877167bf218911437e7c9",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 1.044,
+    "supervisor": 1.052
+   }
+  },
+  {
+   "id": "v3-49",
+   "trace": "19818cf30d609adbf06d1e37240c4040",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.869,
+    "supervisor": 0.876
+   }
+  },
+  {
+   "id": "v3-50",
+   "trace": "900a93e7b794667464fbae74228f8bc3",
+   "n_obs": 12,
+   "stages": {
+    "LLM:supervisor": 0.86,
+    "supervisor": 0.869
+   }
+  }
+ ]
+}

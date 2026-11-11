@@ -18,7 +18,7 @@ it('shows the privacy notice and sends nothing until consent and an 8+ character
   network((path) => { requested.push(path); return path.endsWith('/status') ? Response.json({ enabled: false }) : failure() })
   open()
   const notice = await screen.findByRole('region', { name: '개인정보 처리 안내' })
-  for (const text of ['쓰는 목적', '계정(이메일', '내 설정 3칸', '60일', '30일', '직접 지울 때까지', '바로 지웁니다', '질문 · 답변 글을 넣지 않습니다', '서비스 데이터베이스에 저장', 'OpenRouter', 'Voyage', '거부하면 가입할 수 없습니다'])
+  for (const text of ['쓰는 목적', '계정(이메일', '내 설정 3칸', '60일', '30일', '직접 지울 때까지', '바로 지웁니다', '질문 · 답변 글을 넣지 않습니다', '이름 · 모델 · 토큰 · 비용 · 시간만 보냅니다', '서비스 데이터베이스에 저장', 'OpenRouter', 'Voyage', '거부하면 가입할 수 없습니다'])
     expect(notice).toHaveTextContent(text)
   const submit = screen.getByRole('button', { name: '가입' })
   fill('short-7'); fireEvent.click(screen.getByRole('checkbox', { name: /개인정보 수집 · 이용에 동의합니다/ }))

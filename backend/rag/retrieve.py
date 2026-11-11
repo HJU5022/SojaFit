@@ -162,6 +162,9 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, metho
     주의: parts=None은 품번 필터 없음(표지 청크를 뺀 코퍼스 전체), parts=[]는 필터는 있되 허용 청크가 없으므로 []이다. method가 셋 밖이면 ValueError.
     """
     # [왜] 방식별 기준선(dense만·BM25만, evals/guides/preregister.md #16)을 같은 함수로 재려고 둔다
+    env_method = os.getenv('RETRIEVE_METHOD', '').strip()
+    if env_method:
+        method = env_method  # [왜] 속도 A/B용. 비우면 호출 인자(기본 hybrid)를 쓴다
     if method not in ('hybrid', 'dense', 'bm25'):
         raise ValueError(f"method는 'hybrid', 'dense', 'bm25' 중 하나입니다: {method!r}")
     from backend.services import llm
@@ -177,7 +180,8 @@ def retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, metho
         dense = _dense(conn, question, allowed, nocover_all=parts is None) if method != 'bm25' else []
         keyword = _keyword(question, allowed) if method != 'dense' else []
         fused = rrf(dense, keyword)  # 목록 하나만 있으면 RRF는 그 목록 순서를 그대로 둔다
-        rerank = method == 'hybrid' and not llm.DEMO_MODE  # [왜] 방식별 기준선과 키 없는 데모는 리랭크 API를 부르지 않는다
+        # [왜] hybrid만 리랭크. RETRIEVE_RERANK=0이면 RRF 상위 k만(Voyage rerank API 생략, 속도 A/B용)
+        rerank = method == 'hybrid' and not llm.DEMO_MODE and os.getenv('RETRIEVE_RERANK', '1') != '0'
         top = fused if rerank else fused[:k]  # 리랭크는 합친 후보 전부를 본문과 함께 넘기므로 k장으로 자르지 않는다
         rows = conn.execute(
             'SELECT dc.id, sd.document_key, sd.source_url, dc.page_number, dc.table_name, dc.content, dc.document_id'

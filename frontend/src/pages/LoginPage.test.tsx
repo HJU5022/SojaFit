@@ -38,6 +38,24 @@ it('shows login error and request id, clears password, and offers configured Goo
   expect(screen.getByLabelText('비밀번호')).toHaveValue('')
   expect(await screen.findByRole('link', { name: 'Google로 계속하기' })).toHaveAttribute('href', '/api/auth/google/start')
 })
+it('starts Google sign-up only after the privacy consent is checked and sends consent=1', async () => {
+  network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
+  open()
+  const notice = await screen.findByRole('region', { name: '개인정보 처리 안내' })
+  expect(notice).toHaveTextContent('Google 계정 식별자')
+  const start = screen.getByRole('button', { name: 'Google로 시작하기' })
+  expect(start).toBeDisabled()
+  expect(start.closest('form')).toHaveAttribute('action', '/api/auth/google/start')
+  expect(start.closest('form')?.querySelector('input[name="consent"]')).toHaveValue('1')
+  fireEvent.click(screen.getByRole('checkbox', { name: /동의합니다/ }))
+  expect(start).toBeEnabled()
+})
+it('hides the Google section and explains the consent redirect', async () => {
+  network((path) => path.endsWith('/status') ? Response.json({ enabled: false }) : failure())
+  render(<MemoryRouter initialEntries={['/login?google=consent']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('alert')).toHaveTextContent('개인정보 수집 · 이용에 동의해야 Google로 가입할 수 있습니다.')
+  expect(screen.queryByRole('button', { name: 'Google로 시작하기' })).not.toBeInTheDocument()
+})
 it('explains the existing Google callback failure redirect', async () => {
   network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
   render(<MemoryRouter initialEntries={['/login?google=error']}><App /></MemoryRouter>)
@@ -70,6 +88,7 @@ it('shows demo A/B buttons above the password form only in demo mode and logs in
   open()
   const buttons = await screen.findByRole('group', { name: '데모 로그인' })
   expect(buttons).toHaveTextContent('평가 계정 아님')
+  expect(screen.getByRole('link', { name: '가입' })).toHaveAttribute('href', '/signup')  // 이메일 가입 링크는 데모 모드에서만
   expect(buttons.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: '데모 사용자 B로 들어가기' }))
   expect(await screen.findByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
@@ -98,4 +117,5 @@ it('hides the demo buttons when the server is not in demo mode', async () => {
   await new Promise(resolve => setTimeout(resolve, 0))
   expect(screen.queryByRole('group', { name: '데모 로그인' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '데모 사용자 A로 들어가기' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: '가입' })).not.toBeInTheDocument()  // 상단 내비에도 로그인 화면에도 이메일 가입 링크가 없다
 })

@@ -1,4 +1,4 @@
-"""멀티 에이전트의 공용 메모장(MultiState)과, 대체 부품 에이전트 하위 그래프의 메모장(JudgeState).
+"""멀티 에이전트의 공용 메모장(MultiState)과, Spec 에이전트 하위 그래프의 메모장(JudgeState).
 
 - 역할: 질문 하나가 Supervisor(계획) → 서브에이전트(동시 실행) → 답 모으기 · 종합 → 답 검사를 지나는 동안 쓰는 칸과 그 타입을 정한다.
   단일 그래프 `AgentState`와 칸이 달라서(계획서, 보고서 목록, 횟수, 사실, 거절 기록) 따로 둔다.
@@ -61,7 +61,7 @@ class MultiState(TypedDict, total=False):
 
 
 class JudgeState(TypedDict, total=False):
-    """대체 부품 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
+    """Spec 에이전트 하위 그래프의 메모장. Send 꾸러미(지시서 + 필요한 입력)만 받는다."""
     task: dict
     approved_memories: list[dict]  # 부모가 소유권을 확인한 사례만 Send로 전달한다
     question: str
