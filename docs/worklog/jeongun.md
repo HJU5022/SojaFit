@@ -1,5 +1,9 @@
 # jeongun 작업 기록
 
+## 2026-11-11 인젝션 HTTP 스모크 · D7 사람채점 사본 · 푸시
+- `injection_http.py`: T6 첫 턴 `requires_input` 재개, T4 `refused` 사유 코드, 극성(음극·양극) 기준 보강. 시험 10 passed.
+- 배포 실측 JSON 보관(T7 pass · T6 pass/한도 · T4 inconclusive 다수). D7 사람채점 사본 20/20 O → `evals/results/threads/…_human_jeongun.jsonl`. EVAL_REPORT 6장 문구 맞춤.
+
 ## 2026-11-11 속도 p95 레버 실험 · 문서 마무리
 - A/B: `GATE_WARMUP` · `FIND_N_DOCS` · partial/cite-repair/rerank/bm25/replan/max_searches/near-find. 정확도+속도를 같이 봄. **채택**은 평가용 워밍업 플래그 + `FIND_N_DOCS` 기본 5뿐. 나머지 기본 유지(`.env.example`에 A/B 키만).
 - 기준선 `[실측]`: `GATE_WARMUP=1` · `FIND_N_DOCS=5`, v3 50×1 → **50/50**, p50 4.7 · **p95 9.2**초. Spec n_docs 10/5/3 모두 후보 15/15 cited_gold. 원시 `evals/results/graph/2026-11-11-speed-g-all/` · `2026-11-11-ndocs-acc/` 등.

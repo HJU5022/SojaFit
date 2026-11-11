@@ -30,10 +30,11 @@ HIJACKED = {**GOOD, 'roles': ['R04'], 'results': [{**GOOD['results'][0], 'verdic
 DOCS = f'{ANSWER} 1N4007G의 VRRM은 1,000 V이고 패키지는 DO-204AL(DO-41)입니다. 극성은 캐소드 띠로 식별합니다.'
 
 
-def fake_server(follow=(), limit_after=None, bad_normal=False):
+def fake_server(follow=(), limit_after=None, bad_normal=False, prep_interrupt=False):
     """로그인 · 프로젝트 · 업로드 · thread · run · 재개를 흉내 낸다. follow에 든 케이스('T6' · 'T7' · 'T4')는 공격문이 실리면 공격을 따라간 결과를 돌려준다.
 
-    limit_after=N이면 N번째 분석 요청부터 하루 한도 429를 SSE 실패 frame으로 돌려준다. bad_normal=True면 정상 판정도 틀리게 돌려준다."""
+    limit_after=N이면 N번째 분석 요청부터 하루 한도 429를 SSE 실패 frame으로 돌려준다. bad_normal=True면 정상 판정도 틀리게 돌려준다.
+    prep_interrupt=True면 T6 첫 턴을 requires_input으로 돌려 재개 뒤 completed가 되게 한다(배포 11-11 실측)."""
     state = {'calls': [], 'bodies': [], 'uploads': {}, 'threads': {}, 'analysis': 0, 'cookie': 'tok-' + secrets.token_hex(6)}
 
     def reply(status, data=None, code=None, cookie=None):
@@ -80,6 +81,11 @@ def fake_server(follow=(), limit_after=None, bad_normal=False):
                 return sse(f'run{state["analysis"]}', ('failed', {'status': 'failed', 'error': {'code': 'LIMIT_EXCEEDED', 'message': '가짜 한도'}}))
             if '검토합니다' in body['question']:  # T6 첫 턴
                 thread['attacked'] = TEXT['T6_payload'] in body['question']
+                if prep_interrupt:
+                    thread['prep'] = True
+                    thread['run'] = f'run{state["analysis"]}'
+                    state.setdefault('runs', {})[thread['run']] = thread
+                    return sse(thread['run'], ('requires_input', {'status': 'requires_input', 'interrupt': {'missing': ['v_in_max'], 'role_choices': []}}))
                 return sse(f'run{state["analysis"]}', ('completed', {'status': 'completed', 'answer': ANSWER, 'question_type': 'chat'}))
             if '실장 전' in body['question']:
                 attacked = TEXT['T4_payload'] in body['question']
@@ -91,6 +97,8 @@ def fake_server(follow=(), limit_after=None, bad_normal=False):
         if m := re.fullmatch(r'/api/runs/(run\d+)/resume', path):
             state['analysis'] += 1
             thread = state['runs'][m[1]]
+            if thread.pop('prep', False):
+                return sse(m[1], ('completed', {'status': 'completed', 'answer': ANSWER, 'question_type': 'chat'}))
             case = 'T7' if thread['project'] > 1 else 'T6'
             return sse(m[1], ('completed', judged(thread['attacked'], case)))
         return reply(404, code='NOT_FOUND')
@@ -121,6 +129,15 @@ def test_all_pass_and_attack_text_reaches_requests(tmp_path):
     assert 'DEMO' not in ''.join(bodies) and 'D_A-405' in uploads[0]
 
 
+def test_t6_prep_requires_input_then_resumes(tmp_path):
+    """T6 첫 턴이 requires_input이어도 재개 뒤 판정 질문까지 가 통과한다(배포에서 막히던 경로)."""
+    handler, state = fake_server(prep_interrupt=True)
+    code, result, _ = run(tmp_path, ['--confirm-live', '--cases', 'T6'], handler)
+    assert code == 0 and result['pairs'] == [{'case': 'T6', 'result': 'pass'}]
+    assert all(r['ok'] for r in result['runs']) and state['analysis'] == 8  # 첫턴+재개+판정+재개 ×2
+    assert sum('/resume' in c for c in state['calls']) == 4
+
+
 def test_attack_changes_result_is_failure(tmp_path):
     """(b) 공격에서만 판정이 바뀌면 그 짝은 attack_differs, 종료 코드 1. 나머지 짝은 그대로 통과."""
     handler, _ = fake_server(follow=('T6',))
@@ -139,6 +156,33 @@ def test_normal_failure_is_inconclusive(tmp_path):
     handler, _ = fake_server(bad_normal=True)
     code, result, _ = run(tmp_path, ['--confirm-live', '--cases', 'T7'], handler)
     assert code == 1 and result['pairs'] == [{'case': 'T7', 'result': 'inconclusive_normal_failed'}]
+
+
+def test_t4_refused_records_refuse_code_without_answer(tmp_path):
+    """T4가 refused여도 사유 코드·question_type만 note에 남기고 답 글은 결과 파일에 없다."""
+    handler, state = fake_server()
+    original = handler
+
+    def refuse_normal(request):
+        if request.url.path.startswith('/api/threads/') and request.method == 'POST' and '/runs' in request.url.path:
+            body = json.loads(request.content)
+            if '실장 전' in body['question'] and TEXT['T4_payload'] not in body['question']:
+                state['analysis'] = state.get('analysis', 0) + 1
+                text = ''.join(
+                    f'event: {kind}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n'
+                    for kind, data in [
+                        ('run_started', {'run_id': f'run{state["analysis"]}'}),
+                        ('refused', {'status': 'refused', 'answer': '이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.',
+                                     'refusal': '이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.',
+                                     'question_type': 'out_of_scope'})])
+                return httpx.Response(200, text=text, headers={'content-type': 'text/event-stream'})
+        return original(request)
+
+    code, result, text = run(tmp_path, ['--confirm-live', '--cases', 'T4'], refuse_normal)
+    normal = next(r for r in result['runs'] if r['variant'] == 'normal')
+    assert code == 1 and normal['status'] == 'refused' and 'refuse_code=out_of_scope' in normal['note']
+    assert 'question_type=out_of_scope' in normal['note']
+    assert '회로나 부품' not in text and ANSWER not in text
 
 
 def test_limit_stops_and_marks_rest_not_run(tmp_path):
