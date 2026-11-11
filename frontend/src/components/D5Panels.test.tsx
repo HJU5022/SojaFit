@@ -65,6 +65,17 @@ function renderConversation(props: Partial<React.ComponentProps<typeof Conversat
   return render(<QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" onResult={vi.fn()} {...props} /></QueryClientProvider>)
 }
 
+it.each(['completed', 'refused'])('renders %s answer links, images and HTML as text', (status) => {
+  const previous = mockedRunState
+  const answer = '[link](https://fixtures.invalid/leak) ![image](https://fixtures.invalid/pixel) <img src="https://fixtures.invalid/html" />'
+  mockedRunState = { status, runId: 'run-1', result: { answer, refusal: '', profile_hints: [] } }
+  try {
+    const { container } = renderConversation()
+    expect(screen.getByText(answer)).toBeInTheDocument()
+    expect(container.querySelector('a, img')).toBeNull()
+  } finally { mockedRunState = previous }
+})
+
 it('renders evidence coordinates exactly without inventing text', () => {
   render(<EvidencePanel evidence={[{ document: 'sheet.pdf', page: 2, table: 'RATINGS', row: 'VRRM', section: '', citation_number: '7' }]} />)
   expect(screen.getByText('sheet.pdf')).toBeInTheDocument()

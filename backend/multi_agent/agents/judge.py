@@ -101,7 +101,7 @@ def render_read(state: dict, rules: dict) -> str:
     lines += [f'- {rid}: {r["name"]} — {r["recognize"]} | inputs: ' + ', '.join(f'{n} ({k})' for n, k in C.inputs(r).items())
               for rid, r in rules.items()]
     lines += [f'Question type: {state.get("question_type", "")}',
-              f'Target: {part.get("ref", state.get("target", ""))} value={part.get("value", "")} footprint={part.get("footprint", "")}',
+              f'Target: {part.get("ref", state.get("target", ""))} value={part.get("value", "")}',
               'Nets around the target:']
     lines += [f'- {n["name"]}: ' + ', '.join(n['nodes']) + (f' (+{n["more"]} more)' if n.get('more') else '') for n in part.get('nets', [])]
     lines += [f'Conditions: {state.get("conditions", "")}', f'Question: {state.get("question", "")}']

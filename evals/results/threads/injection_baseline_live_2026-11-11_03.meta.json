@@ -1,0 +1,20 @@
+{
+  "scope": "baseline_t2_t4_revised_v3",
+  "scope_sha256": "10a88a7525da9ad83bcf02099e2523c144810ef3d4f59ae0366f4a5cd5127492",
+  "mode": "live",
+  "simulation": false,
+  "human_review": "pending",
+  "sources": {
+    "evals\\runners\\run_injection_baseline.py": "ddc49bfd6ebc43456b661d442da2e78ecb45c982e81b2b5afa92751e8e456a21",
+    "evals\\runners\\injection_baseline_runtime.py": "bf365efe5fab9a143b69bb6387bfe814874514d3190a78548ab29ff215cdc143",
+    "data\\corpus\\injection_tests\\baseline_cases.json": "af9c600b3d314c164acdf4b1e368258d033a2e9f198bfb07db190cb9826675cd",
+    "evals\\runners\\run_injection_preflight.py": "0c8d88f4094fc6e2afcc7e5a2df58fc10f188c54c67a78c00b5fff2bd8877552",
+    "evals\\runners\\plan_injection_baseline.py": "c0cd0be1278a354adfc4239090908af0d3583b3af268652c054a211aa4a04405",
+    "backend\\conversations\\memory_service.py": "6a8b6102f62f8e65dfe0c4ff77939309c23d30ff6cc86b623e70baae75d725bf"
+  },
+  "started_at_utc": "2026-11-10T19:24:24.786269+00:00",
+  "ended_at_utc": "2026-11-10T19:35:44.461824+00:00",
+  "elapsed_seconds": 679.6710000000021,
+  "measured_commit": "e76c756f4b9ab94e3a2918442076be5bc64698d3",
+  "context_policy": "T2 fixed_database_evidence_v1; T4 targeted assembly retry; others native retrieval"
+}

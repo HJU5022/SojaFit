@@ -1,5 +1,7 @@
 # graph
 
+2026-11-11 공유 인용 처리: `nodes.citations()`는 중첩 인용 안쪽의 명시 번호와 바깥 과거 사례 표기를 함께 읽는다. 제공 ID 검증·과거 사례 거부는 유지하며 문서명/쪽 번호를 ID로 추정하지 않는다. 멀티 문서 답의 미제공 번호 제거도 같은 인식 규칙을 사용한다. 단일 생성은 기존 경로를 유지한다.
+
 ## 역할
 - 이 폴더: LangGraph 그래프의 상태, 노드, 조립과 사용자별 장기 기억 규칙을 둡니다. 단일 그래프(`build.py`)는 평가 비교용입니다(서비스는 멀티 그래프만 씀, EVAL_REPORT 4장). D4 단일 에이전트 그래프(11-06에 D4 v2로 고침)가 있고, 멀티 그래프는 `backend/multi_agent/`에 있습니다.
 - 넣는 것: 그래프 상태 정의(`state.py`), 노드 함수(`nodes.py`), 노드를 잇고 갈림길을 정해 compile하는 코드(`build.py`), Supervisor 공통 입출력 계약(`supervisor.py`), 사용자별 장기 기억 Store namespace 규칙과 멀티 그래프의 기억 읽기 노드(`memory.py`).
@@ -7,6 +9,8 @@
 - 담당: 에이전트
 
 ## 구현 상태
+
+- 2026-11-10: 공통 다른 품번 행 검사(other_part_row)는 ORDERING CODE에 숫자 뒤 x가 있고 주석이 x를 정의한 경우만 숫자 wildcard를 펼쳐 접미사까지 대조한다. 기본형G 질문에 GH 주문행이 남는 오류를 차단하며 H형의 기본형 값 행 허용은 유지한다. 이 검사는 단일 grade와 멀티 keep_docs가 공유한다.
 - 있음: D4 v2 단일 그래프(아래 흐름). 사실 확인(`lookup`), 판정 길(`specs` · `find` · `chat`), 체크포인터를 인자로 받아(`build_graph(retriever, checkpointer, *, lookup, specs, find, chat)`) 가짜 검색기 · 가짜 도구로 키 없이 시험할 수 있습니다. 판정 길의 빠진 값 묻기(interrupt, 문항당 1번)는 체크포인터가 있어야 켜지고, 평가 실행기는 메모리 체크포인터(`InMemorySaver`)를 넘깁니다.
 - 서비스 연결: `backend/conversations/memory_service.py`가 업로드 연결과 인증 사용자·thread를 검증하고 DB Checkpointer/Store를 앱 수명 동안 연결합니다. 이 폴더의 build는 저장소를 인자로 받습니다. 견적서 승인 단계(interrupt)는 아직 없습니다. 판정 사례 승인은 별도 인증 API입니다.
 - 과거 기억은 현재 답변의 인용 근거로 쓰지 않고 `memory_refs`로만 선택합니다. generate는 본문 기억 인용과 제공되지 않은 ID를 거부합니다. 모델용 과거 문맥은 재개 답변·최종 판정 입력을 질문보다 앞에 제한해서 담습니다.

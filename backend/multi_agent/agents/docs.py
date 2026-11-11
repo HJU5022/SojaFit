@@ -25,13 +25,13 @@ from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.rag.units import to_si
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'docs_answer.md').read_text(encoding='utf-8')
-CITE_GROUP = re.compile(r'\[([^\]]*)\]')  # 답 속 인용 괄호(nodes.CITE와 같은 모양)
+CITE_GROUP = re.compile(r'\[([^\]]*)\]\]*')  # 중첩 인용의 바깥 래퍼까지 함께 정리한다
 
 
 class DocsAnswer(BaseModel):
     """근거 채점 + 답 쓰기 LLM의 답안지."""
     grade: Literal['enough', 'partial', 'none'] = Field(description='Does the evidence answer the task: enough, partial or none')
-    answer: str = Field(default='', description='Korean answer, every sentence ending with its evidence number like [12]; empty when grade is none')
+    answer: str = Field(default='', description='Korean answer citing only the exact allowed evidence IDs from the input; never renumber or cite page numbers; empty when grade is none')
     memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; never cite these in answer')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
     next_query: str = Field(default='', max_length=200, description='When grade is none or partial: a different English search query to try once (for partial, aimed at what is missing)')
@@ -49,6 +49,7 @@ VARIANT = re.compile(r'C(A?H?)$|(?<=\d)H$', re.I)  # 양방향(…C · …CA · 
 VARIANT_QUERY = ('bidirectional bi-directional C CA suffix electrical characteristics apply in both directions IR limit double'
                  ' "H" means AEC-Q101 qualified ordering information')
 NOTE_WORDS = re.compile(r'bi-?directional|both directions|AEC-?Q101', re.I)
+ASSEMBLY = re.compile(r'실장|조립|\b(?:pre[- ]?)?(?:assembl|mount)', re.I)
 
 
 def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
@@ -71,9 +72,12 @@ def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     """LLM에 줄 user 글: 질문 · 지시서 · 근거(청크 + 넷리스트)."""
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
     if part:
-        blocks.append(netlist_block(part))  # [왜] 역할 할 일은 검색 없이 오므로 넷리스트가 유일한 근거다
+        blocks.append(netlist_block({**part,'footprint':''}))  # Keep footprint annotations out of model instructions; preserve the original for code.
+    allowed = [str(d['chunk_id']) for d in docs] + (['넷리스트'] if part else [])
     return '\n'.join([f'Question: {question}', 'Supervisor brief:', f'- goal: {task.goal}', f'- return: {task.output}',
-                      f'- boundary: {task.boundary}', '', 'Evidence:', '\n\n'.join(blocks) or '(none)'])
+                      f'- boundary: {task.boundary}', '', 'Evidence:', '\n\n'.join(blocks) or '(none)',
+                      'Allowed citation IDs: '+', '.join(f'[{cid}]' for cid in allowed)+
+                      '. Copy these IDs exactly; page numbers and source captions are not citation IDs.'])
 
 
 def drop_fake_citations(answer: str, valid: set[str]) -> tuple[str, list[str]]:
@@ -91,11 +95,16 @@ def drop_fake_citations(answer: str, valid: set[str]) -> tuple[str, list[str]]:
 
 
 def _clean_group(m, valid: set[str]) -> str:
-    items = [x.strip() for x in m.group(1).split(',')]
-    if not any(x.isdigit() or x == '넷리스트' or x.startswith('승인사례:') for x in items):
+    items = sorted(citations(m.group(0)))
+    if not items:
         return m.group(0)  # [0.60 V]처럼 번호가 아닌 괄호는 그대로
     left = [x for x in items if x in valid]
     return f"[{', '.join(left)}]" if left else ''
+
+
+def has_uncited_sentence(answer: str) -> bool:
+    """A cited fact must not let an unsupported sentence ride into a joined answer."""
+    return any(s.strip() and not citations(s) for s in re.split(r'(?<=[.。])\s+', answer))
 
 
 def lookup_parts(task: Task, find) -> list[str]:
@@ -178,6 +187,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             #      사전 등록 #49). 빠진 부분을 다른 검색어로 한 번 더 찾고, 앞 근거와 함께 다시 답한다(검색 2번 상한 안)
             carry, first = shown, (result, shown)
         query = result.next_query.strip()  # 근거가 없거나 모자라다고 채점했으면 LLM이 준 다른 검색어로 한 번만 다시
+        if result.grade == 'partial' and ASSEMBLY.search(question+' '+task.goal+' '+task.output) \
+                and ASSEMBLY.search(' '.join(result.missing)):
+            query += ' polarity before assembly'  # 실장 전 확인사항을 묻는데 정격·포장 행만 재검색하는 누락을 막는다
     if first and (result.grade == 'none' or not result.answer.strip()):
         result, shown = first  # 다시 찾은 답이 더 나쁘면 첫 일부 답을 쓴다
     answer = (result.answer.strip() if result else '')
@@ -192,12 +204,36 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     allowed_memories = memory_sources(payload.get('approved_memories') or [])
     if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
         return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
+    cited = citations(answer)
+    if cited - valid or not cited & valid or has_uncited_sentence(answer):
+        # A single bounded regeneration uses the same evidence; never guess a citation for the model.
+        correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
+        correction += ('\nCitation correction: the previous output had unsupported IDs or sentences without evidence citations. '
+                       'Answer only the assigned task in the Supervisor brief, not the other tasks in the full question. '
+                       'Re-answer only from the evidence above, copying its allowed IDs exactly for every sentence. '
+                       'Put missing facts for this task in missing, not unsupported absence claims in answer. '
+                       'Do not invent support; use grade none if it is absent.')
+        repaired = chat('docs_answer', PROMPT, correction, DocsAnswer)
+        calls += 1
+        repaired_answer = repaired.answer.strip()
+        repaired_cites = citations(repaired_answer)
+        if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
+            return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
+                          reason=Reason.VERIFY_FAILED, docs=shown)
+        if repaired.grade != 'none' and repaired_cites & valid:
+            result, answer = repaired, repaired_answer
     answer, dropped_fake = drop_fake_citations(answer, valid)
+    dropped_uncited = has_uncited_sentence(answer)
+    if dropped_uncited:
+        # Keep only already-cited sentences; never attach a neighbour's citation to an unsupported claim.
+        answer = ' '.join(s for s in re.split(r'(?<=[.。])\s+', answer) if citations(s) & valid).strip()
     cited = citations(answer)
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' else 'partial'
-    summary = f'{status}: answered from {len(cited & valid)} evidence' + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else '')
+    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
+    summary = (f'{status}: answered from {len(cited & valid)} evidence'
+               + ('; removed unverified sentences' if dropped_fake or dropped_uncited else '')
+               + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else ''))
     return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
                   evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown)

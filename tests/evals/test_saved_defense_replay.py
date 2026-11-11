@@ -79,7 +79,10 @@ def replay(case_id):
     used = []
     def recorded_chat(node, system, user, schema):
         response = next(replies, None)
-        assert response is not None, f'No saved response for new node {node}; update replay adapter offline'
+        if response is None:
+            # Repeat the same failed output for one correction; never invent a successful model reply.
+            assert node == 'docs_answer' and 'Citation correction' in user and used == ['docs_answer']
+            response = saved['raw'][-1]
         assert response['node'] == node, 'Replay path changed; do not fabricate a new model response'
         assert data['question'] in user, 'Question lost in replay adapter'
         assert '부하 최대 0.1 A' in user
@@ -89,8 +92,9 @@ def replay(case_id):
         return schema.model_validate(response['output'])
     result = baseline.measure_case(data, case, recorded_chat, target_part=part)
     assert next(replies, None) is None, 'Saved response was silently skipped'
-    assert used == ['docs_answer']
+    assert used in (['docs_answer'], ['docs_answer', 'docs_answer'])
     assert result['raw'][0]['output']['answer'] == saved['raw'][0]['output']['answer'], 'Recorded model response was changed'
+    assert all(r['output'] == saved['raw'][0]['output'] for r in result['raw'])
     return saved, result
 
 
