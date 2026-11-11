@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS sojafit_agent.checkpoints(thread_id text NOT NULL, checkpoint_ns text NOT NULL DEFAULT '', checkpoint_id text NOT NULL, checkpoint jsonb NOT NULL DEFAULT '{}', PRIMARY KEY(thread_id,checkpoint_ns,checkpoint_id));
+CREATE TABLE IF NOT EXISTS sojafit_agent.checkpoint_blobs(thread_id text NOT NULL, checkpoint_ns text NOT NULL, channel text NOT NULL, version text NOT NULL, type text NOT NULL, blob bytea, PRIMARY KEY(thread_id,checkpoint_ns,channel,version));
+CREATE TABLE IF NOT EXISTS sojafit_agent.checkpoint_writes(thread_id text NOT NULL, checkpoint_ns text NOT NULL, checkpoint_id text NOT NULL, task_id text NOT NULL, idx int NOT NULL, channel text NOT NULL, blob bytea NOT NULL, PRIMARY KEY(thread_id,checkpoint_ns,checkpoint_id,task_id,idx));

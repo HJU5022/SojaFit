@@ -1,521 +1,536 @@
-# SojaFit DB 테이블 정의서
+# SojaFit DB 표 정의서
 
-## 1. 문서 목적
+<!-- 자동 생성: scripts/db/gen_schema_docs.py. 직접 고치지 않는다(표 설명은 그 파일의 TABLES, 구조는 DB). -->
 
-이 문서는 SojaFit의 업무 데이터를 PostgreSQL에 저장하기 위한 테이블 정의서입니다. 사용자 표(5.1)는 `db/003_auth.sql`·`db/006_user_roles.sql`, 코퍼스 표(5.4·5.6·5.15)는 `db/002_rag_corpus.sql`, 사용자 프로젝트·정규화 회로(5.2)는 `db/018_projects.sql`, 대화 · 실행 · 메시지는 `db/019_conversations.sql`, 승인 · 견적 · 승인 사례는 `db/020_approvals_quotes.sql`이 만듭니다(이 문서 끝 "대화 저장 (019)" · "승인·견적·사례 저장 (020)"). 5.3 · 5.5 · 5.8~5.14는 그 전에 쓴 옛 설계 초안(`db/manual/004_create_business_tables.sql.draft`)이고 018~020으로 대체돼 적용하지 않습니다. [주의] 초안의 `circuits`는 018과 충돌합니다. 부품 사양 표(5.7)는 2026-11-09에 버렸습니다(ADR 0016).
+- 구조(타입 · NULL · 기본값 · 제약 · 인덱스)는 실제 DB에서 읽은 값이고, 목적 · 칸 의미는 `scripts/db/gen_schema_docs.py`의 `TABLES`에 있다. 그림은 [erd.md](erd.md).
+- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 21개.
 
-열의 정본은 SQL입니다(`db/schema/erd.md` 기본 규칙). SQL이 이미 있는 5.1·5.4·5.6·5.15는 SQL을 따릅니다. Migration 1을 적용하면 이 문서의 표 설명은 `db/schema/erd.md`로 옮기고 이 문서는 지웁니다.
-
-현재 프로젝트의 핵심 흐름은 다음과 같습니다.
-
-```text
-사용자 로그인
-→ KiCad 넷리스트 등록
-→ 교체 대상 부품 분석
-→ 회로 역할과 대체 조건 도출
-→ 후보 부품별 판정과 근거 제시
-→ 사람 승인
-→ 승인된 견적서 저장
-```
-
-## 2. 현재 범위
-
-### 포함
-
-- 로그인 사용자 식별
-- KiCad 넷리스트와 회로 정보
-- 부품과 데이터시트 기반 구조화 사양
-- 분석 실행과 교체 대상 부품
-- 역할 기반 대체 조건
-- 후보 부품별 5종 판정
-- 판정에 사용한 문서 인용
-- 후보 판정의 대체 조건별 비교 결과
-- 승인 후 저장되는 견적서
-- RAG 원문 문서와 일반 텍스트 청크 메타데이터
-- 청크 임베딩 표(`pgvector`). `002`의 초기 `vector(1536)`을 `008`이 차원 없는 `halfvec`으로 전환해 과거 1536차원 행과 현재 `voyage-4-large` 1024차원 행을 함께 저장
-
-### 제외
-
-- 실시간 가격·재고 조회
-- 실제 주문·결제
-- ERD
-- Migration SQL
-- LangGraph 라이브러리가 자동 생성하는 체크포인트와 Store 테이블
-
-## 3. 작성 기준
-
-### 3.1 확정 상태
-
-| 상태 | 의미 |
+| 스키마.표 | 목적 |
 |---|---|
-| 확정 | 현재 `SPEC.md`와 프로젝트 문서에서 필요성이 확인됨 |
-| 가정 | 초안을 작성하기 위해 합리적인 기본값을 두었으나 팀 합의가 필요함 |
-| 미정 | 요구사항이나 기술 선택이 정해지지 않아 추가 결정이 필요함 |
+| `public.users` | 계정 |
+| `public.auth_sessions` | 로그인 세션 |
+| `public.auth_login_attempts` | 계정별 로그인 실패 · 잠금 |
+| `public.auth_login_ip_attempts` | IP별 로그인 실패 · 잠금 |
+| `public.auth_signup_attempts` | IP별 하루 가입 요청 수(데모 모드 전용) |
+| `public.auth_google_states` | Google OAuth 일회용 상태 |
+| `public.auth_google_identities` | Google 신원 ↔ 사용자 연결 |
+| `public.projects` | 프로젝트 |
+| `public.circuits` | 프로젝트의 정규화 회로(1:1) |
+| `public.threads` | 프로젝트 안의 대화 |
+| `public.runs` | 질문 한 번의 실행과 공개 결과 |
+| `public.messages` | 화면 대화 기록 |
+| `public.approvals` | 사람의 후보 승인(스냅샷의 유일한 사본) |
+| `public.quotes` | 승인에서 만든 가격 없는 견적 |
+| `public.approved_cases` | 화면의 승인 사례 목록(사용자가 지울 수 있는 표시 행) |
+| `public.app_migrations` | 마이그레이션 적용 이력(우리 것) |
+| `sojafit_agent.threads` | 분석 서비스의 대화 상태 기계 |
+| `sojafit_agent.messages` | 분석 문맥용 사용자 입력 + 어시스턴트 답 |
+| `sojafit_agent.analysis_events` | 내용 없는 운영 기록 |
+| `sojafit_agent.analysis_usage` | 사용자 · 날짜별 LLM 예약 사용량 |
+| `sojafit_agent.analysis_service_usage` | 서비스 전체 날짜별 예약 토큰 |
 
-`가정` 항목은 Migration 작성자가 적힌 기본값으로 반영하고, 바꾸면 같은 PR에서 이 문서를 고칩니다. `미정` 항목은 결정한 뒤 반영합니다. 결정 내용은 9절에 있습니다.
+## `public.users`
 
-### 3.2 공통 규칙 초안
+- **목적**: 계정
 
-- 테이블명과 컬럼명은 영문 `snake_case`를 사용합니다.
-- 애플리케이션이 생성하는 주요 테이블의 PK는 `BIGINT`를 사용합니다. 자동 증가 방식은 Migration 단계에서 결정합니다.
-- 날짜와 시각은 `TIMESTAMPTZ`를 사용하고 UTC로 저장하는 것을 가정합니다.
-- 금액은 부동소수점 오차를 피하기 위해 `NUMERIC`을 사용합니다.
-- 측정값은 원본 단위와 정규화된 단위를 구분할 수 있어야 합니다.
-- 원본 문서, 회로 파일 및 판정 결과는 재현을 위해 버전 또는 해시를 남깁니다.
-- `created_at`, `updated_at`의 자동 갱신 방식은 Migration 단계에서 결정합니다.
-- 코드 값(부품 분류, 회로 역할, 사양, 비교 연산자, 판정, 상태)은 영문 대문자 `SNAKE_CASE`로 쓰고 CHECK 제약으로 허용 값을 제한합니다. 코드 표는 따로 두지 않습니다.
-- 모든 FK의 삭제 동작은 `RESTRICT`입니다. MVP에는 사용자 데이터 삭제 기능이 없고, 코퍼스 문서는 `source_documents.retired_at`으로 논리 삭제합니다(A-18).
-- 벡터 열 타입은 스키마 이름 없이 `vector(N)`으로 씁니다. 확장은 로컬 compose에서는 `public`, Supabase에서는 `extensions` 스키마에 설치됩니다.
-- Migration은 번호를 붙여 계속 추가하고, 이미 적용한 파일은 고치지 않습니다. 로컬 compose와 Supabase에 같은 방법으로 적용하고 적용 이력을 남깁니다.
-
-## 4. 테이블 목록
-
-| 구분 | 논리명 | 물리명 | 역할 | 상태 |
+| 칸 | 타입 | NULL | 기본값 | 의미 |
 |---|---|---|---|---|
-| 사용자 | 사용자 | `users` | 로그인 사용자와 승인자를 식별 | 확정 |
-| 프로젝트 | 사용자 프로젝트 | `projects` | 사용자별 프로젝트 이름·출처·시각 | 018 구현 |
-| 회로 | 정규화 회로 | `circuits` | 프로젝트 1:1 정규화 연결 JSON·출처 hash·파서 버전 | 018 구현 |
-| 분석 | 분석 실행 | `analysis_runs` | 특정 회로 부품에 대한 한 번의 대체 분석 저장 | 확정 |
-| 부품 | 부품 | `parts` | 원본 부품과 후보 부품의 기본정보 저장 | 확정 |
-| 부품 | 부품 사양 | `part_specifications` | 데이터시트에서 추출한 구조화된 사양 저장 | 버림(2026-11-09, ADR 0016) |
-| 분석 | 대체 조건 | `replacement_requirements` | 회로 역할에서 도출한 필수·선택 조건 저장 | 확정 |
-| 분석 | 후보 판정 | `candidate_evaluations` | 분석별 후보 부품의 5종 판정 저장 | 확정 |
-| 분석 | 조건별 비교 | `requirement_checks` | 후보 판정마다 대체 조건 하나씩의 비교 결과 저장 | 확정 |
-| 근거 | 출처 문서 | `source_documents` | 데이터시트와 공개 문서의 출처·버전 저장 | 확정 |
-| 근거 | 문서 청크 | `document_chunks` | 검색 가능한 일반 텍스트 청크와 위치 저장 | 확정 |
-| 근거 | 청크 임베딩 | `chunk_embeddings` | 청크의 임베딩 벡터 저장 | 확정(1536 임시) |
-| 근거 | 부품 문서 연결 | `part_documents` | 부품과 해당 데이터시트 연결 | 가정 |
-| 근거 | 판정 인용 | `evidence_citations` | 후보 판정에 사용한 페이지·표·행 근거 저장 | 확정 |
-| 견적 | 견적서 | `quotes` | 사람 승인 후 확정된 견적서 저장 | 확정 |
-| 견적 | 견적 항목 | `quote_items` | 견적서에 포함된 부품·수량·가격 저장 | 확정 |
-
-## 5. 테이블 상세 정의
-
-### 5.1 `users` — 사용자
-
-로그인 사용자를 식별하고 사용자별 회로, 분석, 기억 및 승인을 분리합니다. 로그인은 아이디·비밀번호를 직접 구현하고, 로컬 데모 계정 2개(데모 사용자 A · B, 평가 계정과 다름)는 `db/007_demo_accounts.sql`이 데모 모드의 새 볼륨에 비밀번호 없이 적재하고 로그인 화면 버튼으로만 들어갑니다(A-01, 11-09). 그래프 user_id와 Store namespace에는 `str(users.id)`, thread_id에는 분석마다 별도 UUID를 씁니다(A-02).
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 사용자 ID | `BIGINT` | N | PK | 내부 사용자 식별자 | 확정 |
-| `login_id` | 로그인 ID | `VARCHAR(100)` | N | UNIQUE | 사용자가 로그인할 때 사용하는 식별자 | 확정 |
-| `password_hash` | 비밀번호 해시 | `VARCHAR(255)` | N |  | 비밀번호 해시. 평문 비밀번호는 저장하지 않음 | 확정 |
-| `display_name` | 표시 이름 | `VARCHAR(100)` | Y |  | 화면에 표시할 이름 | 가정 |
-| `is_active` | 활성 여부 | `BOOLEAN` | N | 기본값 `true` 가정 | 비활성 계정의 접근을 막기 위한 값 | 가정 |
-| `role` | 역할 | `TEXT` | N | CHECK: `admin`, `user`. 기본값 `user` | 관리자·일반 사용자 구분(`db/006_user_roles.sql`) | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 생성 시각 | 확정 |
-| `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 계정 마지막 수정 시각 | 가정 |
-
-### 5.2 사용자 프로젝트와 정규화 회로 — 018 현재 스키마
-
-정본은 `db/018_projects.sql`입니다. 이전 `manual/004_create_business_tables.sql.draft`의 원본 넷리스트 보존 설계는 서비스에 적용하지 않습니다. 이하 5.3 · 5.5 · 5.8~5.14의 분석·견적 표는 019 · 020으로 대체된 옛 초안입니다.
-
-| 표 | 컬럼 | 자료형·제약 | 의미 |
-|---|---|---|---|
-| `projects` | `id` | BIGSERIAL PK | 프로젝트 ID |
-| `projects` | `user_id` | BIGINT NOT NULL FK → users.id, ON DELETE CASCADE | 소유 사용자. 관리자 우회 없음 |
-| `projects` | `name` | TEXT NOT NULL CHECK(trim 일치, 1~200자) | 서버가 공백을 제거한 이름 |
-| `projects` | `source_kind` | TEXT NOT NULL CHECK(demo/upload) | 데모 생성(`POST /api/projects`)은 demo, 넷리스트 업로드(`POST /api/projects/upload`)는 upload |
-| `projects` | `demo_id` | TEXT NULL, demo는 허용 5종 필수, upload는 NULL | 데모 카탈로그 ID |
-| `projects` | `created_at`, `updated_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 이름 변경 때 updated_at 갱신 |
-| `circuits` | `project_id` | BIGINT PK FK → projects.id, ON DELETE CASCADE | 프로젝트당 회로 1개 |
-| `circuits` | `connections` | JSONB NOT NULL CHECK(object) | 정규화 연결 정보 |
-| `circuits` | `source_sha256` | TEXT NOT NULL CHECK(64자 소문자 hex) | 데모는 connections.json 바이트, 업로드는 올린 `.net` 원본 바이트의 SHA-256(원본은 저장하지 않음, `backend/projects/netlist.py`) |
-| `circuits` | `parser_version` | TEXT NOT NULL CHECK(공백 아님) | 데모는 demo-connections-v1, 업로드는 kicad-export-v1 |
-| `circuits` | `created_at` | TIMESTAMPTZ NOT NULL, 기본 현재 시각 | 회로 저장 시각 |
-
-`ix_projects_user_updated(user_id, updated_at DESC, id DESC)`는 소유자별 목록과 users FK 조회를 지원합니다. `circuits.project_id` PK 인덱스가 cascade의 FK 조회를 지원해 중복 인덱스는 만들지 않습니다. 두 표의 RLS를 켜고 정책은 두지 않으며 PUBLIC·존재하는 anon/authenticated 역할의 표 및 projects_id_seq 권한을 회수합니다. 서버 DB 역할에서 SQL의 user_id 필터를 적용합니다. 원본 업로드·넷리스트·가격 필드는 없습니다.
-
-### 5.3 `parts` — 부품
-
-원본 부품과 대체 후보 부품을 같은 부품 목록에서 관리합니다. 원본인지 후보인지는 분석 안에서의 역할이므로 이 테이블에 고정하지 않습니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 부품 ID | `BIGINT` | N | PK | 부품 식별자 | 확정 |
-| `manufacturer` | 제조사 | `VARCHAR(150)` | N | 복합 UNIQUE 후보 | 제조사명 | 확정 |
-| `part_number` | 품번 | `VARCHAR(150)` | N | 복합 UNIQUE 후보 | 제조사가 부여한 품번 | 확정 |
-| `category_code` | 부품 분류 코드 | `VARCHAR(50)` | N | CHECK: `RECTIFIER`, `SCHOTTKY`, `ZENER`, `TVS`, `ESD`, `SWITCHING`, `SIC_SCHOTTKY` | MVP 다이오드 분류(A-05) | 확정 |
-| `package_code` | 패키지 코드 | `VARCHAR(100)` | Y |  | SOD-123, DO-41 등 패키지 정보 | 확정 |
-| `description` | 부품 설명 | `TEXT` | Y |  | 부품의 짧은 설명 | 가정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 부품 등록 시각 | 확정 |
-| `updated_at` | 수정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 부품 정보 수정 시각 | 가정 |
-
-제약조건 초안: 동일 제조사의 동일 품번이 중복되지 않도록 `UNIQUE (manufacturer, part_number)`를 검토합니다. 패키지별 품번 표기 방식이 확인된 뒤 확정합니다.
-
-### 5.4 `source_documents` — 출처 문서
-
-RAG 코퍼스에 포함된 데이터시트와 공개 문서의 출처, 버전 및 이용 조건을 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 문서 ID | `BIGINT` | N | PK | 출처 문서 식별자 | 확정 |
-| `document_key` | 문서 키 | `VARCHAR(200)` | N | UNIQUE | manifest(`data/DATA.md`의 형식)의 `doc_id`와 같은 값 | 확정 |
-| `document_type` | 문서 종류 | `VARCHAR(50)` | N | CHECK: `DATASHEET`, `PUBLIC_DOC` | 제조사 데이터시트 또는 공개 문서 | 확정 |
-| `title` | 문서 제목 | `VARCHAR(500)` | N |  | 문서 제목 | 확정 |
-| `publisher` | 발행처 | `VARCHAR(200)` | N |  | 제조사 또는 공개 문서 발행처 | 확정 |
-| `source_url` | 원본 URL | `TEXT` | N |  | 문서 원본 위치 | 확정 |
-| `revision` | 문서 개정 정보 | `VARCHAR(100)` | Y |  | 발행일, 버전 또는 revision | 확정 |
-| `license_text` | 이용 조건 | `TEXT` | Y |  | 라이선스와 재배포 조건 요약 | 확정 |
-| `file_sha256` | 파일 해시 | `CHAR(64)` | N | UNIQUE | 실제 수집 파일의 SHA-256 | 확정 |
-| `corpus_version` | 코퍼스 버전 | `VARCHAR(100)` | N |  | 해당 문서가 포함된 코퍼스 버전 | 확정 |
-| `collected_at` | 수집 시각 | `TIMESTAMPTZ` | N |  | 원본을 수집한 시각 | 확정 |
-| `parser` | 파서 | `VARCHAR(50)` | N |  | manifest의 `parser`. 원문을 텍스트로 바꾼 방식 | 확정 |
-| `chars_original` | 원문 글자 수 | `INTEGER` | N | 0 이상 CHECK | manifest의 `chars_original` | 확정 |
-| `chars_kept` | 보존 글자 수 | `INTEGER` | N | 0 이상 CHECK | manifest의 `chars_kept` | 확정 |
-| `truncated` | 잘림 여부 | `BOOLEAN` | N |  | manifest의 `truncated`. 원문을 잘라 넣었으면 true | 확정 |
-| `retired_at` | 제외 시각 | `TIMESTAMPTZ` | Y |  | 증분 수집에서 사라진 문서를 검색에서 빼는 논리 삭제 시각. 인용 기록은 남김(A-18) | 확정 |
-| `category` | 분류 | `TEXT` | Y |  | 문서의 다이오드 분류(5.7 `category`와 같은 값, 예: `schottky-rectifier`). 사양 표 없이 후보 찾기 거르기용(`db/012_document_category.sql`) | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | DB 레코드 생성 시각 | 가정 |
-
-### 5.5 `part_documents` — 부품 문서 연결
-
-하나의 부품에 여러 문서가 연결되거나 한 문서가 여러 부품을 다루는 경우를 표현합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `part_id` | 부품 ID | `BIGINT` | N | PK 일부, FK → `parts.id` | 문서에 설명된 부품 | 확정 |
-| `document_id` | 문서 ID | `BIGINT` | N | PK 일부, FK → `source_documents.id` | 부품을 설명하는 문서 | 확정 |
-| `relationship_type` | 관계 종류 | `VARCHAR(30)` | N | 허용 코드 미정 | 기본 데이터시트, 보충 문서 등의 구분 | 가정 |
-| `is_primary` | 대표 문서 여부 | `BOOLEAN` | N | 기본값 `false` 가정 | 부품의 대표 데이터시트인지 표시 | 가정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 연결 생성 시각 | 가정 |
-
-PK 초안: `PRIMARY KEY (part_id, document_id)`.
-
-### 5.6 `document_chunks` — 문서 청크
-
-출처 문서에서 추출한 일반 텍스트와 문서 내 위치를 저장합니다. 임베딩은 이 표에 두지 않고 `chunk_embeddings`(5.15)에 둡니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 청크 ID | `BIGINT` | N | PK | 청크 식별자 | 확정 |
-| `document_id` | 문서 ID | `BIGINT` | N | FK → `source_documents.id` | 원본 문서 | 확정 |
-| `chunk_index` | 청크 순서 | `INTEGER` | N | 문서 안에서 UNIQUE | 원문 내 청크 순서. 0부터 시작 | 확정 |
-| `content` | 청크 본문 | `TEXT` | N |  | 검색과 인용에 사용하는 텍스트 | 확정 |
-| `chunk_sha256` | 본문 해시 | `CHAR(64)` | N | 인덱스. UNIQUE 아님 | 본문의 SHA-256. 서로 다른 청크 수(G3)는 이 값의 고유 개수로 셈 | 확정 |
-| `page_number` | 페이지 번호 | `INTEGER` | Y | 양수 CHECK 후보 | PDF 기준 페이지 번호 | 확정 |
-| `section_name` | 절 이름 | `VARCHAR(500)` | Y |  | 원문 내 절 또는 제목 | 확정 |
-| `table_name` | 표 이름 | `VARCHAR(500)` | Y |  | 표에서 추출한 경우 표 이름 | 확정 |
-| `row_label` | 행 식별자 | `VARCHAR(500)` | Y |  | 표의 행 이름 또는 항목명 | 확정 |
-| `token_count` | 토큰 수 | `INTEGER` | Y | 0 이상 CHECK 후보 | 사용한 토크나이저 기준 토큰 수 | 가정 |
-| `chunker_version` | 청커 버전 | `VARCHAR(100)` | N |  | 청크 생성 규칙 또는 코드 버전 | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 청크 생성 시각 | 가정 |
-
-제약조건 초안: `UNIQUE (document_id, chunk_index)`.
-
-### 5.7 `part_specifications` — 부품 사양(버림)
-
-데이터시트에서 추출한 숫자 사양과 시험 조건을 구조화해 저장합니다. `backend/judge/`가 LLM 대신 숫자와 단위를 비교할 때 사용하는 데이터입니다. 최소·대표·최대값은 `backend/rag/`의 단위 환산 함수로 SI 기본 단위로 바꿔 저장하고, 원문 표기는 `source_value_text`에 그대로 남깁니다(A-08).
-
-2026-11-09에 이 표를 버렸습니다(ADR 0016, ADR 0013은 대체됨). 표를 만들던 `db/011_part_specifications.sql`과 적재 코드(`python -m backend.rag.pipeline.specs load`)를 지웠고, 운영 DB의 표는 조장이 지웁니다. 판정 값과 후보 찾기는 카드 도구(`backend/rag/card_specs.py` · `card_find.py`)가 `document_chunks`의 표 행 청크를 그때그때 읽어 같은 모양의 행으로 만듭니다. 아래 열 정의는 11-05 SQL의 기록입니다. 11-05에 SQL을 만들며 바꾼 점: `parts` 표가 아직 없어 `part_id` 대신 `part_number`를 두고, 원본 청크 순번(`chunk_index`)과 분류(`category`)를 더했으며, 패키지 이름을 `PACKAGE` 행으로 넣었습니다. 문서 FK는 `CASCADE`였습니다(청크에서 다시 만드는 파생 데이터라 문서와 함께 지움, 3.2의 `RESTRICT` 규칙의 예외).
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 부품 사양 ID | `BIGINT` | N | PK | 사양 식별자 | 확정 |
-| `part_number` | 품번 | `VARCHAR(100)` | N | 인덱스 `upper(part_number)` | 데이터시트 표지의 품번. `parts` 표가 생기면 `part_id`로 바꿀지 정함. 조회는 대소문자 무시 | 확정 |
-| `document_id` | 출처 문서 ID | `BIGINT` | N | FK → `source_documents.id` `ON DELETE CASCADE`, 인덱스 | 값을 추출한 데이터시트 | 확정 |
-| `chunk_index` | 청크 순번 | `INTEGER` | Y |  | 값이 나온 `document_chunks`의 같은 문서 청크 순번. `PACKAGE` 행은 문서 단위라 NULL | 확정 |
-| `category` | 분류 | `VARCHAR(100)` | Y |  | 청크의 다이오드 분류(예: `schottky-rectifier`, `zener-diode`). 후보 찾기 거르기용 | 확정 |
-| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | CHECK: `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD`, `PACKAGE`, 인덱스 | 표준화된 사양 항목(A-07, `VR`부터 7개는 ADR 0013). `PACKAGE`는 패키지 이름(`text_value`)으로 표면 실장·스루홀 거르기용 | 확정 |
-| `symbol` | 데이터시트 기호 | `VARCHAR(50)` | Y |  | 데이터시트에 표시된 `VRRM`, `IF` 등의 기호 | 확정 |
-| `minimum_value` | 최소값 | `NUMERIC` | Y |  | 데이터시트 최소값. 정규화 단위로 환산한 값 | 확정 |
-| `typical_value` | 대표값 | `NUMERIC` | Y |  | 데이터시트 대표값. 정규화 단위로 환산한 값 | 확정 |
-| `maximum_value` | 최대값 | `NUMERIC` | Y |  | 데이터시트 최대값. 정규화 단위로 환산한 값 | 확정 |
-| `text_value` | 비수치 값 | `TEXT` | Y |  | 숫자로 표현할 수 없는 사양값. 지금은 `PACKAGE` 행의 패키지 이름만 | 확정 |
-| `source_value_text` | 원문 표기 | `TEXT` | N |  | 데이터시트에 적힌 그대로의 값과 단위(예: `1.1 V`, `500 μA`). 인용 화면과 단위 깨짐 확인에 사용 | 확정 |
-| `source_unit` | 원본 단위 | `VARCHAR(30)` | Y |  | 데이터시트에 표기된 단위 | 확정 |
-| `normalized_unit` | 정규화 단위 | `VARCHAR(30)` | Y | CHECK: `V`, `A`, `s`, `W`, `F`, `degC` | SI 기본 단위(A-08). `PACKAGE` 행은 NULL | 확정 |
-| `test_condition` | 시험 조건 | `TEXT` | Y |  | 온도, 전류 등 값이 성립하는 조건 | 확정 |
-| `page_number` | 페이지 번호 | `INTEGER` | Y |  | 데이터시트 페이지 | 확정 |
-| `table_name` | 표 이름 | `VARCHAR(500)` | Y |  | 값이 나온 표 이름 | 확정 |
-| `row_label` | 행 식별자 | `VARCHAR(500)` | Y |  | 값이 나온 행 또는 항목명 | 확정 |
-| `footnote_text` | 각주 | `TEXT` | Y |  | 값에 적용되는 데이터시트 각주 | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 사양 적재 시각 | 가정 |
-
-최소값, 대표값, 최대값, 비수치 값이 모두 비어 있는 행은 받지 않습니다(CHECK). 사양 표 파일의 한 줄은 원문 칸 하나라 한 행에는 보통 최소·대표·최대 중 하나만 있습니다(제너 VZ의 최소와 최대는 다른 행). 애매해서 뺀 값(`review.jsonl`)은 넣지 않습니다(ADR 0013).
-
-### 5.8 `analysis_runs` — 분석 실행
-
-사용자가 특정 회로의 특정 부품을 대상으로 수행한 한 번의 대체 분석을 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 분석 실행 ID | `BIGINT` | N | PK | 분석 실행 식별자 | 확정 |
-| `user_id` | 사용자 ID | `BIGINT` | N | FK → `users.id` | 분석을 요청한 사용자 | 확정 |
-| `circuit_id` | 회로 ID | `BIGINT` | N | FK → `circuits.id` | 분석 대상 회로 | 확정 |
-| `thread_id` | 그래프 thread ID | `VARCHAR(200)` | N | UNIQUE | 이 분석을 실행한 LangGraph thread. 승인 대기 중인 그래프를 재개할 때 체크포인트를 찾는 열 | 확정 |
-| `original_part_id` | 원본 부품 ID | `BIGINT` | Y | FK → `parts.id` | 넷리스트의 원본 품번이 식별된 경우 연결 | 확정 |
-| `target_reference` | 교체 대상 참조명 | `VARCHAR(100)` | N |  | `D1`, `D2` 등 회로 내 참조명 | 확정 |
-| `role_code` | 회로 역할 코드 | `VARCHAR(100)` | Y | CHECK: `REVERSE_POLARITY`, `RECTIFICATION`, `FLYBACK`, `CLAMP_ESD`, `ZENER_REFERENCE`, `REVERSE_BLOCKING` | 역극성 보호, 정류, 플라이백, 신호 클램프·ESD 보호, 제너 기준 전압, 역류 방지(A-06). 역할을 정하기 전에는 NULL | 확정 |
-| `role_description` | 회로 역할 설명 | `TEXT` | Y |  | 사용자에게 보여 주는 역할 설명 | 확정 |
-| `status_code` | 분석 상태 | `VARCHAR(30)` | N | CHECK: `RUNNING`, `AWAITING_APPROVAL`, `APPROVED`, `REJECTED`, `FAILED` | `RUNNING` → `AWAITING_APPROVAL` → `APPROVED` 또는 `REJECTED`, 도중 실패는 `FAILED`(A-11) | 확정 |
-| `corpus_version` | 코퍼스 버전 | `VARCHAR(100)` | N |  | 검색에 사용한 코퍼스 버전 | 확정 |
-| `rule_version` | 판정 규칙 버전 | `VARCHAR(100)` | N |  | 대체 조건 규칙 파일의 SHA-256(A-16) | 확정 |
-| `model_name` | 모델 이름 | `VARCHAR(200)` | N |  | 이 분석에 쓴 LLM 모델 이름(A-16) | 확정 |
-| `prompt_version` | 프롬프트 버전 | `VARCHAR(100)` | N |  | `backend/prompts/`의 프롬프트 버전(A-16) | 확정 |
-| `trace_id` | 트레이스 ID | `VARCHAR(200)` | Y |  | Langfuse 트레이스 ID. 데모 모드에서는 NULL(A-16) | 확정 |
-| `started_at` | 시작 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 분석 시작 시각 | 확정 |
-| `completed_at` | 완료 시각 | `TIMESTAMPTZ` | Y |  | 분석 완료 또는 종료 시각 | 확정 |
-| `failure_reason` | 실패 사유 | `TEXT` | Y |  | 분석 실패 시 사용자에게 설명할 사유 | 가정 |
-
-동일한 회로와 부품을 여러 번 분석할 수 있으므로 `(circuit_id, target_reference)`에는 UNIQUE를 두지 않습니다.
-
-### 5.9 `replacement_requirements` — 대체 조건
-
-회로 역할에서 도출한 후보 부품의 필수 또는 선택 조건을 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 대체 조건 ID | `BIGINT` | N | PK | 대체 조건 식별자 | 확정 |
-| `analysis_run_id` | 분석 실행 ID | `BIGINT` | N | FK → `analysis_runs.id` | 조건이 도출된 분석 | 확정 |
-| `parameter_code` | 파라미터 코드 | `VARCHAR(100)` | N | `part_specifications.parameter_code`와 같은 CHECK | 후보 사양과 비교할 항목(A-07) | 확정 |
-| `comparison_operator` | 비교 연산자 | `VARCHAR(20)` | N | CHECK: `>=`, `<=`, `=`, `BETWEEN`, `IN` | 비교 방식(A-09) | 확정 |
-| `required_value` | 요구값 | `NUMERIC` | Y |  | 조건의 첫 번째 수치 | 확정 |
-| `secondary_value` | 두 번째 요구값 | `NUMERIC` | Y |  | 범위 조건의 두 번째 수치 | 가정 |
-| `required_text` | 비수치 요구값 | `TEXT` | Y |  | 패키지나 재질처럼 문자열로 비교하는 값 | 가정 |
-| `unit` | 비교 단위 | `VARCHAR(30)` | Y | `part_specifications.normalized_unit`과 같은 CHECK | 정규화된 비교 단위(A-08) | 확정 |
-| `test_condition` | 적용 조건 | `TEXT` | Y |  | 온도, 전류 등 요구값이 적용되는 조건 | 확정 |
-| `is_mandatory` | 필수 여부 | `BOOLEAN` | N | 기본값 `true` 가정 | 불충족 시 후보를 탈락시킬 조건인지 표시 | 확정 |
-| `rationale` | 도출 이유 | `TEXT` | N |  | 회로 역할에서 이 조건을 도출한 이유 | 확정 |
-| `sort_order` | 표시 순서 | `INTEGER` | N | 0 이상 CHECK 후보 | 화면에서 조건을 보여 줄 순서 | 가정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 조건 생성 시각 | 가정 |
-
-연산자별 값 조합 CHECK: `BETWEEN`은 `required_value`와 `secondary_value`가 모두 있어야 하고, `IN`은 `required_text`(쉼표로 나눈 목록)가 있어야 하며, `>=`·`<=`는 `required_value`만 씁니다. `=`는 `required_value`와 `required_text` 중 하나만 씁니다(A-09).
-
-### 5.10 `candidate_evaluations` — 후보 판정
-
-분석 실행에서 후보 부품마다 내린 대체 판정과 판정 이유를 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 후보 판정 ID | `BIGINT` | N | PK | 판정 식별자 | 확정 |
-| `analysis_run_id` | 분석 실행 ID | `BIGINT` | N | FK → `analysis_runs.id` | 판정이 속한 분석 | 확정 |
-| `candidate_part_id` | 후보 부품 ID | `BIGINT` | N | FK → `parts.id` | 판정 대상 후보 부품 | 확정 |
-| `verdict_code` | 대체 판정 코드 | `VARCHAR(30)` | N | CHECK: `IDENTICAL`, `SPEC_EQUIVALENT`, `ROLE_SUFFICIENT`, `NOT_SUFFICIENT`, `NOT_VERIFIED` | 동일품, 사양 동등, 역할상 충분, 불충족, 문서로 확인 안 됨. 뜻과 판정 순서는 `SPEC.md` 3절(A-10) | 확정 |
-| `reason` | 판정 이유 | `TEXT` | N |  | 조건 비교와 문서 근거를 요약한 설명 | 확정 |
-| `board_change_required` | 기판 수정 필요 | `BOOLEAN` | N | 기본값 `false` 가정 | 패키지 차이로 PCB 수정이 필요한지 표시 | 확정 |
-| `uncertainty_reason` | 확인 불가 사유 | `TEXT` | Y |  | 화면에 보여 줄 요약. 조건별 이유는 `requirement_checks`에 둠 | 확정 |
-| `created_at` | 판정 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 판정 생성 시각 | 확정 |
-
-제약조건 초안: 한 번의 분석에서 같은 후보를 중복 판정하지 않도록 `UNIQUE (analysis_run_id, candidate_part_id)`를 둡니다.
-
-### 5.11 `evidence_citations` — 판정 인용
-
-후보 판정에 사용한 데이터시트의 페이지·표·행 또는 공개 문서의 절을 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 인용 ID | `BIGINT` | N | PK | 인용 식별자 | 확정 |
-| `candidate_evaluation_id` | 후보 판정 ID | `BIGINT` | N | FK → `candidate_evaluations.id` | 인용이 뒷받침하는 판정 | 확정 |
-| `document_id` | 문서 ID | `BIGINT` | N | FK → `source_documents.id` | 인용 원문 | 확정 |
-| `chunk_id` | 청크 ID | `BIGINT` | Y | FK → `document_chunks.id` | 검색에서 사용한 청크 | 확정 |
-| `requirement_check_id` | 조건별 비교 ID | `BIGINT` | Y | FK → `requirement_checks.id` | 특정 대체 조건의 근거일 때 연결. 판정 전체의 근거면 NULL(A-17) | 확정 |
-| `citation_type` | 인용 종류 | `VARCHAR(30)` | N | 허용 코드 미정 | 페이지, 표, 행, 절 등의 구분 | 가정 |
-| `page_number` | 페이지 번호 | `INTEGER` | Y |  | PDF 페이지 번호 | 확정 |
-| `section_name` | 절 이름 | `VARCHAR(500)` | Y |  | 공개 문서 또는 데이터시트 절 | 확정 |
-| `table_name` | 표 이름 | `VARCHAR(500)` | Y |  | 데이터시트 표 이름 | 확정 |
-| `row_label` | 행 식별자 | `VARCHAR(500)` | Y |  | 표의 행 또는 항목명 | 확정 |
-| `quoted_text` | 인용 문구 | `TEXT` | N |  | 판정에 실제로 사용한 짧은 원문 | 확정 |
-| `sort_order` | 표시 순서 | `INTEGER` | N | 0 이상 CHECK 후보 | 판정 화면의 근거 표시 순서 | 가정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 인용 생성 시각 | 가정 |
-
-`chunk_id`가 있을 때 해당 청크의 `document_id`와 인용의 `document_id`가 같아야 합니다. DB 제약 또는 애플리케이션 검증 중 어느 쪽에서 보장할지 Migration 단계에서 결정합니다.
-
-### 5.12 `quotes` — 견적서
-
-[옛 초안] 지금 견적은 `db/020_approvals_quotes.sql`의 `quotes`(승인 · 품번 · 수량 · 승인 snapshot, 가격·재고 없음)입니다. 아래 표는 적용하지 않은 이력입니다. 사람이 승인한 뒤에만 견적서를 저장합니다. 승인 전 초안은 LangGraph 체크포인트 상태에 두는 것을 기본안으로 합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 견적서 ID | `BIGINT` | N | PK | 견적서 식별자 | 확정 |
-| `analysis_run_id` | 분석 실행 ID | `BIGINT` | N | FK → `analysis_runs.id` | 견적의 근거가 된 분석 | 확정 |
-| `quote_number` | 견적서 번호 | `VARCHAR(100)` | N | UNIQUE | 화면과 문서에 표시할 견적 번호 | 가정 |
-| `approved_by_user_id` | 승인 사용자 ID | `BIGINT` | N | FK → `users.id` | 저장을 승인한 사용자 | 확정 |
-| `currency_code` | 통화 코드 | `CHAR(3)` | N | ISO 4217. MVP는 `USD` | 가격 표시 통화(A-14) | 확정 |
-| `total_amount` | 총 금액 | `NUMERIC(18,4)` | N | 0 이상 CHECK 후보 | 견적 총액 스냅샷 | 가정 |
-| `approved_at` | 승인 시각 | `TIMESTAMPTZ` | N |  | 사람이 승인한 시각 | 확정 |
-| `created_at` | 저장 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 승인된 견적을 DB에 저장한 시각 | 확정 |
-
-한 분석에는 승인된 견적 1건만 둡니다: `UNIQUE (analysis_run_id)`(A-12). 반려 후 다시 하려면 분석을 새로 실행합니다. 승인 이력은 `approved_by_user_id`와 `approved_at`만 두고, 반려 이력 표(`quote_approvals`)는 확장 단계로 미룹니다(A-13).
-
-### 5.13 `quote_items` — 견적 항목
-
-[옛 초안] 지금 견적에는 항목 표와 가격이 없습니다(ADR 0009, `db/020_approvals_quotes.sql`). 아래 표는 적용하지 않은 이력입니다. 승인된 견적서에 포함된 후보 부품, 수량 및 승인 당시의 가격을 저장합니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 견적 항목 ID | `BIGINT` | N | PK | 견적 항목 식별자 | 확정 |
-| `quote_id` | 견적서 ID | `BIGINT` | N | FK → `quotes.id` | 항목이 속한 견적서 | 확정 |
-| `candidate_evaluation_id` | 후보 판정 ID | `BIGINT` | N | FK → `candidate_evaluations.id` | 견적 선택의 근거가 된 후보 판정. 견적 대상 부품은 이 판정의 `candidate_part_id`(A-15) | 확정 |
-| `quantity` | 수량 | `INTEGER` | N | 1 이상 CHECK 후보 | 견적 수량 | 확정 |
-| `unit_price` | 단가 | `NUMERIC(18,4)` | N | 0 이상 CHECK 후보 | 승인 당시 단가 | 가정 |
-| `line_amount` | 항목 금액 | `NUMERIC(18,4)` | N | 0 이상 CHECK 후보 | 수량과 단가를 반영한 금액 스냅샷 | 가정 |
-| `price_source` | 가격 출처 | `VARCHAR(200)` | N |  | MVP는 `demo`(`data/demo/` 가공 가격표). Mouser 연동은 확장(A-14) | 확정 |
-| `price_as_of` | 가격 기준 시각 | `TIMESTAMPTZ` | Y |  | 가격표의 기준 시각 | 가정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 견적 항목 생성 시각 | 가정 |
-
-견적 항목은 판정이 `IDENTICAL`, `SPEC_EQUIVALENT`, `ROLE_SUFFICIENT`인 후보만 가리키고, 그 판정은 견적과 같은 분석에 속해야 합니다. 다른 표를 봐야 하는 규칙이라 애플리케이션에서 저장 전에 검증합니다. `NOT_SUFFICIENT`와 `NOT_VERIFIED` 후보는 견적에 넣지 않습니다.
-
-### 5.14 `requirement_checks` — 조건별 비교
-
-후보 판정 하나에서 대체 조건 하나씩을 비교한 결과를 저장합니다. 화면에 "어느 조건이 왜 통과·불충족·확인 안 됨인지"를 보여 주고, 검색 실패 분석에서 이유별로 셀 때 씁니다(A-17). 비교는 `backend/judge/`가 하고, LLM은 비교하지 않습니다.
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `id` | 조건별 비교 ID | `BIGINT` | N | PK | 비교 식별자 | 확정 |
-| `candidate_evaluation_id` | 후보 판정 ID | `BIGINT` | N | FK → `candidate_evaluations.id` | 비교가 속한 후보 판정 | 확정 |
-| `requirement_id` | 대체 조건 ID | `BIGINT` | N | FK → `replacement_requirements.id` | 비교한 대체 조건 | 확정 |
-| `part_specification_id` | 부품 사양 ID | `BIGINT` | Y | FK → `part_specifications.id` | 비교에 쓴 후보 사양 행(쪽·표·행이 여기에 있음). 값을 못 찾았으면 NULL | 확정 |
-| `result_code` | 비교 결과 | `VARCHAR(20)` | N | CHECK: `PASS`, `FAIL`, `UNKNOWN` | 조건 충족, 불충족, 확인 안 됨 | 확정 |
-| `unknown_reason_code` | 확인 불가 이유 | `VARCHAR(30)` | Y | CHECK: `VALUE_MISSING`, `CONDITION_MISMATCH`, `DOC_NOT_FOUND` | 값이 문서에 없음, 시험 조건이 다름, 데이터시트가 코퍼스에 없음 | 확정 |
-| `compared_value` | 비교한 값 | `NUMERIC` | Y |  | judge가 조건과 비교한 후보 값(정규화 단위) | 확정 |
-| `compared_text` | 비교한 문자열 | `TEXT` | Y |  | 패키지처럼 문자열로 비교한 값 | 확정 |
-| `note` | 설명 | `TEXT` | Y |  | 화면에 보여 줄 한 줄 설명(예: "데이터시트에는 100°C 값만 있음") | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 비교 생성 시각 | 가정 |
-
-제약조건: `UNIQUE (candidate_evaluation_id, requirement_id)`. `result_code = 'UNKNOWN'`일 때만 `unknown_reason_code`가 있어야 합니다(CHECK). 대체 조건이 판정과 같은 분석에 속하는지는 애플리케이션에서 검증합니다.
-
-### 5.15 `chunk_embeddings` — 청크 임베딩
-
-청크마다 임베딩 벡터를 저장합니다. 청크 표와 나눠 두어 임베딩 모델을 바꾸거나 다시 만들 때 `document_chunks`를 건드리지 않습니다(A-19).
-
-| 컬럼 | 논리명 | 자료형 초안 | NULL | 키·제약 초안 | 설명 | 상태 |
-|---|---|---|---|---|---|---|
-| `chunk_id` | 청크 ID | `BIGINT` | N | PK 일부, FK → `document_chunks.id` | 임베딩한 청크 | 확정 |
-| `embedding_model` | 임베딩 모델 | `VARCHAR(200)` | N | PK 일부 | 임베딩에 쓴 모델 이름 | 확정 |
-| `embedding` | 임베딩 벡터 | `halfvec`(차원 없음) | N |  | 과거 `text-embedding-3-small` 1536차원 행과 현재 `voyage-4-large` 1024차원 행을 모델명과 함께 저장 | 확정 |
-| `created_at` | 생성 시각 | `TIMESTAMPTZ` | N | 현재 시각 기본값 가정 | 임베딩 생성 시각 | 가정 |
-
-- 거리 함수는 코사인 거리입니다. `db/002_rag_corpus.sql`이 초기 HNSW 인덱스(`vector_cosine_ops`)를 만들지만, 뒤이어 실행되는 `db/008_multi_dim_embeddings.sql`이 인덱스를 제거하고 열을 차원 없는 `halfvec`으로 전환합니다. `backend/rag/retrieve.py`는 인덱스를 쓰지 않고 모델에 맞는 차원으로 변환해 정확 검색합니다.
-- 새 DB의 자동 초기화 최종 상태는 차원 없는 `halfvec`입니다. `manual/halfvec.sql.manual`은 `008` 이전 복제 DB에서 수행하던 1536차원 전환 이력이며 현재 자동 초기화 기본 경로가 아닙니다.
-- 메타데이터 필터(문서 종류, 제조사 등)를 같이 걸면 HNSW가 오류 없이 결과를 적게 돌려줄 수 있습니다. 지금 검색은 정확 검색이라 해당하지 않고, HNSW를 다시 쓰면 검색 코드에서 `hnsw.ef_search`와 `hnsw.iterative_scan`을 설정합니다.
-- 차원이 다른 모델도 같은 열에 저장할 수 있지만, 검색할 때 `embedding_model`을 고정하고 해당 모델의 차원으로 변환해야 합니다.
-- 이 표는 `db/002_rag_corpus.sql`이 만들고 `db/008_multi_dim_embeddings.sql`이 현재 저장 형식으로 전환합니다.
-
-## 6. 관계 정의 초안
-
-| 부모 | 관계 | 자식 | 설명 |
-|---|---:|---|---|
-| `users` | 1:N | `circuits` | 한 사용자가 여러 회로를 등록할 수 있음 |
-| `users` | 1:N | `analysis_runs` | 한 사용자가 여러 분석을 실행할 수 있음 |
-| `circuits` | 1:N | `analysis_runs` | 같은 회로의 여러 부품 또는 같은 부품을 반복 분석할 수 있음 |
-| `parts` | 1:N | `analysis_runs` | 하나의 부품이 여러 분석에서 원본 부품으로 사용될 수 있음 |
-| `parts` | N:M | `source_documents` | `part_documents`가 연결함 |
-| `source_documents` | 1:N | `document_chunks` | 한 문서를 여러 청크로 나눔 |
-| `parts` | 1:N | `part_specifications` | 한 부품에 여러 사양과 시험 조건이 존재함. 지금은 FK 없이 `part_number` 글자로 잇는다(5.7) |
-| `source_documents` | 1:N | `part_specifications` | 한 문서에서 여러 구조화 사양을 추출함 |
-| `analysis_runs` | 1:N | `replacement_requirements` | 한 분석에서 여러 대체 조건을 도출함 |
-| `analysis_runs` | 1:N | `candidate_evaluations` | 한 분석에서 여러 후보를 판정함 |
-| `parts` | 1:N | `candidate_evaluations` | 같은 부품이 여러 분석에서 후보가 될 수 있음 |
-| `candidate_evaluations` | 1:N | `evidence_citations` | 한 판정에 여러 문서 근거를 붙일 수 있음 |
-| `source_documents` | 1:N | `evidence_citations` | 같은 문서가 여러 판정의 근거가 될 수 있음 |
-| `candidate_evaluations` | 1:N | `requirement_checks` | 한 판정에서 대체 조건마다 비교 결과를 남김 |
-| `replacement_requirements` | 1:N | `requirement_checks` | 한 조건을 여러 후보와 비교함 |
-| `part_specifications` | 1:N | `requirement_checks` | 한 사양 행이 여러 비교의 근거가 될 수 있음 |
-| `requirement_checks` | 1:N | `evidence_citations` | 한 조건 비교에 여러 인용을 붙일 수 있음 |
-| `document_chunks` | 1:N | `chunk_embeddings` | 한 청크를 모델마다 임베딩할 수 있음 |
-| `analysis_runs` | 1:1 | `quotes` | 한 분석에 승인된 견적은 1건 |
-| `quotes` | 1:N | `quote_items` | 한 견적서에 여러 부품 항목을 넣을 수 있음 |
-| `candidate_evaluations` | 1:N | `quote_items` | 견적 항목의 부품은 판정의 후보 부품 |
-
-## 7. 주요 제약조건 초안
-
-| 대상 | 제약조건 | 상태 |
+| `id` | bigint | NOT NULL |  | 계정 번호(내부 키) |
+| `login_id` | character varying(100) | NOT NULL |  | 로그인 이메일(소문자). 구글 가입도 같은 칸에 이메일 저장 |
+| `password_hash` | character varying(255) | NOT NULL |  | scrypt 해시. Google 전용은 'google-login-only', 로컬 데모 버튼은 'demo-button-login-only' 표식(비밀번호 로그인 불가) |
+| `is_active` | boolean | NOT NULL | true | 비활성이면 로그인 · 세션 불가 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 가입 시각 |
+| `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 수정 시각 |
+| `role` | text | NOT NULL | 'user'::text | admin \| user |
+
+| 제약 | 종류 | 정의 |
 |---|---|---|
-| `parts` | 제조사와 품번의 조합 중복 금지 | 가정 |
-| `source_documents` | 문서 키 중복 금지 | 확정 |
-| `source_documents` | 같은 파일 해시 중복 금지(한 파일이 여러 부품을 다루면 `part_documents`로 연결) | 가정 |
-| `part_documents` | 같은 부품과 문서 연결 중복 금지 | 확정 |
-| `document_chunks` | 같은 문서에서 청크 순번 중복 금지 | 확정 |
-| `analysis_runs` | `thread_id` 중복 금지 | 확정 |
-| `candidate_evaluations` | 같은 분석에서 후보 부품 중복 판정 금지 | 확정 |
-| `requirement_checks` | 같은 판정에서 같은 조건 중복 비교 금지, `UNKNOWN`일 때만 확인 불가 이유 | 확정 |
-| `chunk_embeddings` | 같은 청크·모델 조합 중복 금지 | 확정 |
-| `quotes` | 한 분석에 견적 1건 | 확정 |
-| `quote_items` | 수량은 1 이상 | 확정 |
-| `quotes`, `quote_items` | 금액은 0 이상 | 확정 |
-| `quote_items` | 판정이 동일품·사양 동등·역할상 충분인 후보만(애플리케이션 검증) | 확정 |
-| `replacement_requirements` | 연산자에 맞는 요구값 조합만 허용 | 확정 |
-| `part_specifications` | 최소·대표·최대·텍스트 값 중 하나 이상 있어야 함 | 확정 |
-| 코드 열 전체 | 3.2의 코드 목록만 허용(CHECK) | 확정 |
-| 전체 FK | 삭제는 `RESTRICT`, 코퍼스 문서는 논리 삭제 | 확정 |
+| `users_pkey` | PK | `PRIMARY KEY (id)` |
+| `users_login_id_key` | UNIQUE | `UNIQUE (login_id)` |
+| `users_role_check` | CHECK | `CHECK ((role = ANY (ARRAY['admin'::text, 'user'::text])))` |
 
-## 8. 라이브러리 관리 테이블
+| 인덱스 | 정의 |
+|---|---|
+| `users_login_id_key` | `UNIQUE btree (login_id)` |
+| `users_pkey` | `UNIQUE btree (id)` |
 
-다음 테이블은 `langgraph-checkpoint-postgres`의 `PostgresSaver` 또는 `PostgresStore`가 생성하고 관리합니다. 애플리케이션 Migration에서 직접 생성하거나 컬럼을 수정하지 않습니다.
+## `public.auth_sessions`
 
-| 테이블 | 관리 주체 | 용도 |
+- **목적**: 로그인 세션
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `token_hash` | character(64) | NOT NULL |  | 세션 토큰의 SHA-256(원문 저장 안 함) |
+| `user_id` | bigint | NOT NULL |  | 소유 계정 |
+| `expires_at` | timestamp with time zone | NOT NULL |  | 절대 만료 시각 |
+| `last_seen_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 마지막 사용 시각(유휴 만료 판단) |
+
+| 제약 | 종류 | 정의 |
 |---|---|---|
-| `checkpoints` | `PostgresSaver` | thread별 그래프 체크포인트 |
-| `checkpoint_blobs` | `PostgresSaver` | 체크포인트 채널 값 |
-| `checkpoint_writes` | `PostgresSaver` | 재개에 사용하는 중간 쓰기 |
-| `checkpoint_migrations` | `PostgresSaver` | 체크포인트 스키마 버전 |
-| `store` | `PostgresStore` | 사용자별 장기 기억 |
-| `store_vectors` | `PostgresStore` | 장기 기억 임베딩. Store에 의미 검색 인덱스를 설정할 때만 생기며, MVP는 설정하지 않음(A-20) |
-| `store_migrations` | `PostgresStore` | Store 스키마 버전 |
-| `vector_migrations` | `PostgresStore` | Store 벡터 스키마 버전 |
+| `auth_sessions_pkey` | PK | `PRIMARY KEY (token_hash)` |
+| `auth_sessions_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
 
-## 9. 결정 기록
+| 인덱스 | 정의 |
+|---|---|
+| `auth_sessions_pkey` | `UNIQUE btree (token_hash)` |
+| `ix_auth_sessions_expires` | `btree (expires_at)` |
+| `ix_auth_sessions_user` | `btree (user_id)` |
 
-초안의 추가 검토 항목 A-01~A-20은 2026-10-30에 조장(하정운)이 아래와 같이 정했습니다. A-19의 벡터 차원은 2026-11-01에 1536으로 임시 결정했습니다(ADR 0004).
+## `public.auth_login_attempts`
 
-| ID | 항목 | 결정 | 반영한 곳 |
-|---|---|---|---|
-| A-01 | 로그인 방식 | 아이디·비밀번호 직접 구현. 비밀번호는 해시로 저장. 데모 계정 2개는 `007_demo_accounts.sql`이 데모 모드에서 비밀번호 없이 적재(버튼 로그인 전용, 11-09), 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth` | `users`, `backend/auth.py` |
-| A-02 | 사용자 ID 형식 | `users.id`는 `BIGINT`. 그래프 user_id와 Store namespace에는 `str(users.id)`. thread_id는 분석마다 서버가 발급한 별도 UUID | 사용자 FK, `backend/graph/memory.py`, `backend/conversations/memory_service.py` |
-| A-03 | 회로 원문 저장 위치 | DB `TEXT` | `circuits.netlist_content` |
-| A-04 | 파일 크기·보존 | 업로드 최대 1MB(API에서 검증), MVP에는 삭제 기능 없음 | `circuits`, API |
-| A-05 | 부품 분류 코드 | `RECTIFIER`, `SCHOTTKY`, `ZENER`, `TVS`, `ESD`, `SWITCHING`, `SIC_SCHOTTKY` | `parts.category_code` |
-| A-06 | 역할 코드 | `REVERSE_POLARITY`, `RECTIFICATION`, `FLYBACK`, `CLAMP_ESD`, `ZENER_REFERENCE`, `REVERSE_BLOCKING`. 역할별 필수 조건은 규칙 파일(`SPEC.md` 5절) | `analysis_runs.role_code` |
-| A-07 | 사양 파라미터 코드 | `VRRM`, `IF_AV`, `IFSM`, `VF`, `IR`, `TRR`, `VZ`, `PD`, `CJ`, `TJ_MAX`, `VR`, `VRWM`, `VBR`, `VC`, `IPP`, `PPPM`, `VESD`(`VR`부터 7개는 11-05 추가, [ADR 0013](../../docs/adr/0013-부품-사양-표는-13종을-규칙으로-만들고-애매한-값은-뺀다.md)) | `part_specifications`, `replacement_requirements` |
-| A-08 | 단위 표준 | SI 기본 단위(`V`, `A`, `s`, `W`, `F`, `degC`)로 환산해 저장하고 원문 표기는 `source_value_text`에 보존. 환산은 `backend/rag/`, 비교는 `backend/judge/` | 부품 사양, 대체 조건 |
-| A-09 | 대체 조건 연산자 | `>=`, `<=`, `=`, `BETWEEN`, `IN`과 5.9의 값 조합 | `replacement_requirements` |
-| A-10 | 대체 판정 코드 | `IDENTICAL`, `SPEC_EQUIVALENT`, `ROLE_SUFFICIENT`, `NOT_SUFFICIENT`, `NOT_VERIFIED`. CHECK로 제한하고 코드 표는 두지 않음 | `candidate_evaluations`, `SPEC.md` 3절 |
-| A-11 | 분석 상태 코드 | `RUNNING` → `AWAITING_APPROVAL` → `APPROVED` 또는 `REJECTED`, 실패는 `FAILED` | `analysis_runs` |
-| A-12 | 견적 저장 정책 | 분석 1건당 승인된 견적 1건 | `quotes` |
-| A-13 | 승인 감사 이력 | `approved_by_user_id`, `approved_at`만 둠. `quote_approvals`는 확장 | `quotes` |
-| A-14 | 가격과 통화 | `data/demo/` 가공 가격표, `USD`, `price_source = 'demo'` | `quotes`, `quote_items` |
-| A-15 | 견적 항목 중복 컬럼 | `quote_items.part_id`를 빼고 판정의 후보 부품을 씀 | `quote_items` |
-| A-16 | 판정·규칙 버전 | `rule_version`은 규칙 파일 SHA-256. `model_name`, `prompt_version`, `trace_id` 열 추가 | `analysis_runs` |
-| A-17 | 인용 대상 범위 | 조건별 비교 표 `requirement_checks`를 두고 인용을 조건에도 연결. 역할 설명의 인용은 MVP에서 제외 | `requirement_checks`, `evidence_citations` |
-| A-18 | 삭제 정책 | 모든 FK `RESTRICT`. 코퍼스 문서는 `retired_at`으로 논리 삭제 | 전체 테이블 |
-| A-19 | pgvector 구조 | `chunk_embeddings` 표, 코사인 거리, HNSW. 벡터 차원 N은 임베딩 모델을 정한 뒤 채움. 바뀜: 1536 임시(ADR 0004), 검색은 인덱스 없이 정확 검색(`backend/rag/retrieve.py`) | `chunk_embeddings` |
-| A-20 | 승인 사례 장기 기억 | 원본은 업무 표(`quotes`, `candidate_evaluations`). Store에는 사례 요약과 `quote_id`·`analysis_run_id` 참조만 두고 의미 검색 인덱스는 쓰지 않음 | Store, `quotes` |
+- **목적**: 계정별 로그인 실패 · 잠금
 
-검토하며 더한 열: `analysis_runs.thread_id`(승인 재개), `document_chunks.chunk_sha256`(G3 서로 다른 청크 수), `source_documents`의 manifest 열(`parser`, `chars_original`, `chars_kept`, `truncated`).
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `login_hash` | character(64) | NOT NULL |  | 이메일의 SHA-256 |
+| `failed_count` | integer | NOT NULL | 0 | 집계 창 안의 실패 횟수 |
+| `locked_until` | timestamp with time zone | NULL |  | 잠금 끝 시각 |
+| `window_started_at` | timestamp with time zone | NULL |  | 15분 집계 창 시작 |
 
-## 10. 향후 추가 가능 영역
-
-다음 항목은 현재 MVP 범위에 바로 넣지 않습니다. 요구사항이 확정되면 별도 테이블 또는 컬럼으로 추가합니다.
-
-- 견적 승인·반려 이력 `quote_approvals`
-- 판정 수정 및 기억 정정 이력
-- 실시간 가격과 재고 스냅샷(ADR 0009로 만들지 않음)
-- Mouser API 요청·응답 이력(ADR 0009로 만들지 않음)
-- 제조사 마스터 테이블
-- 부품 패키지 마스터 테이블
-- 주문과 결제
-
-## 11. 다음 단계
-
-[이력] 아래 계획은 018~020 전의 것이다. 업무 표는 Migration 1 초안 대신 `db/018_projects.sql` · `019_conversations.sql` · `020_approvals_quotes.sql`로 만들었고, 초안은 적용하지 않는다. PR #17 코퍼스 SQL(`db/002_rag_corpus.sql`)이 문서·청크·임베딩 표를, 인증 SQL(`db/003_auth.sql`)이 사용자 표를 먼저 생성하므로, Migration 1 초안(`db/manual/004_create_business_tables.sql.draft`)은 나머지 업무 표 11개만 다뤘다.
-
-1. 이 정의서로 `db/schema/erd.md`에 표 관계도(mermaid `erDiagram`)를 그립니다.
-2. Migration은 두 번으로 나눕니다.
-
-| 순서 | 내용 | 시작 조건 |
+| 제약 | 종류 | 정의 |
 |---|---|---|
-| Migration 1 | 업무 표 11개(5.2·5.3·5.5·5.7~5.14)와 CHECK·FK·UNIQUE. 초안은 `db/manual/004_create_business_tables.sql.draft` | ERD 승인 |
-| Migration 2 | 5.15 `chunk_embeddings`와 HNSW 인덱스 | 완료: `db/002_rag_corpus.sql`(1536 임시, ADR 0004) |
+| `auth_login_attempts_pkey` | PK | `PRIMARY KEY (login_hash)` |
 
-3. 로컬 Compose 데모 계정(A · B, 버튼 로그인)은 `007_demo_accounts.sql`, 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth`로 만듭니다(`db/DB.md`).
-4. 개발 중 표나 열이 더 필요하면 다음 세 자리 번호(`008_`부터, `db/DB.md`)로 SQL 파일을 이어 추가하고, 이미 적용한 Migration은 고치지 않습니다.
-5. Migration 1을 넣는 PR에서 이 문서의 표 설명을 `db/schema/erd.md`로 옮기고 이 문서를 지웁니다.
+| 인덱스 | 정의 |
+|---|---|
+| `auth_login_attempts_pkey` | `UNIQUE btree (login_hash)` |
 
-## 대화 저장 (019)
+## `public.auth_login_ip_attempts`
 
-`threads`는 프로젝트를 참조한다. `runs`는 실행 상태·안전 결과를 저장하고 활성 상태는 대화당 하나다. `messages`는 같은 대화의 실행을 참조한다. 모두 삭제 cascade와 공개 역할 권한 제한을 적용한다. 상세 제약의 정본은 `db/019_conversations.sql`이다.
+- **목적**: IP별 로그인 실패 · 잠금
 
-## 승인·견적·사례 저장 (020)
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `ip_hash` | character(64) | NOT NULL |  | 클라이언트 IP 키의 SHA-256 |
+| `failed_count` | integer | NOT NULL | 0 | 실패 횟수 |
+| `window_started_at` | timestamp with time zone | NULL |  | 집계 창 시작 |
+| `locked_until` | timestamp with time zone | NULL |  | 잠금 끝 |
 
-`approvals`는 소유자의 완료 판정 메시지와 immutable snapshot을 1:1로 저장한다. `quotes`는 승인·품번·수량·같은 snapshot만 저장하며 가격·재고는 없다. `approved_cases`는 승인당 한 사례를 두고 사용자가 명시적으로 삭제할 수 있다. 세 표의 snapshot은 재귀 함수로 가격·재고·판매처 URL·조회 시각 키를 거절하며 상세 제약의 정본은 `db/020_approvals_quotes.sql`이다.
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_login_ip_attempts_pkey` | PK | `PRIMARY KEY (ip_hash)` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_login_ip_attempts_pkey` | `UNIQUE btree (ip_hash)` |
+
+## `public.auth_signup_attempts`
+
+- **목적**: IP별 하루 가입 요청 수(데모 모드 전용)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `ip_hash` | character(64) | NOT NULL |  | IP 키 해시 |
+| `day` | date | NOT NULL |  | UTC 날짜 |
+| `signup_count` | integer | NOT NULL | 1 | 그날 가입 요청 수(상한 3) |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_signup_attempts_pkey` | PK | `PRIMARY KEY (ip_hash, day)` |
+| `auth_signup_attempts_signup_count_check` | CHECK | `CHECK ((signup_count >= 1))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_signup_attempts_pkey` | `UNIQUE btree (ip_hash, day)` |
+
+## `public.auth_google_states`
+
+- **목적**: Google OAuth 일회용 상태
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `state_hash` | text | NOT NULL |  | state의 해시 |
+| `browser_hash` | text | NOT NULL |  | 브라우저 쿠키 해시(다른 브라우저의 콜백 거부) |
+| `verifier` | text | NOT NULL |  | PKCE verifier |
+| `nonce` | text | NOT NULL |  | ID 토큰 nonce |
+| `expires_at` | timestamp with time zone | NOT NULL |  | 10분 뒤 만료 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_google_states_pkey` | PK | `PRIMARY KEY (state_hash)` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_google_states_pkey` | `UNIQUE btree (state_hash)` |
+
+## `public.auth_google_identities`
+
+- **목적**: Google 신원 ↔ 사용자 연결
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `issuer` | text | NOT NULL |  | https://accounts.google.com |
+| `subject` | text | NOT NULL |  | Google 계정 식별자(sub) |
+| `user_id` | bigint | NOT NULL |  | 연결된 계정(사용자당 1개) |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_google_identities_pkey` | PK | `PRIMARY KEY (issuer, subject)` |
+| `auth_google_identities_user_id_key` | UNIQUE | `UNIQUE (user_id)` |
+| `auth_google_identities_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_google_identities_pkey` | `UNIQUE btree (issuer, subject)` |
+| `auth_google_identities_user_id_key` | `UNIQUE btree (user_id)` |
+
+## `public.projects`
+
+- **목적**: 프로젝트
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('projects_id_seq'::regclass) | 프로젝트 번호 |
+| `user_id` | bigint | NOT NULL |  | 소유자 |
+| `name` | text | NOT NULL |  | 이름(공백 제거 1~200자) |
+| `source_kind` | text | NOT NULL |  | demo \| upload |
+| `demo_id` | text | NULL |  | 데모 회로 이름(데모일 때만, DB가 6개 이름 목록으로 검사) |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 만든 시각 |
+| `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 이름 변경 · 대화 활동 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `pk_projects` | PK | `PRIMARY KEY (id)` |
+| `fk_projects_user` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `ck_projects_demo` | CHECK | `CHECK (((source_kind = 'demo'::text) = (demo_id IS NOT NULL)))` |
+| `ck_projects_name` | CHECK | `CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 200))))` |
+| `ck_projects_source_kind` | CHECK | `CHECK ((source_kind = ANY (ARRAY['demo'::text, 'upload'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `ix_projects_user_updated` | `btree (user_id, updated_at DESC, id DESC)` |
+| `pk_projects` | `UNIQUE btree (id)` |
+
+## `public.circuits`
+
+- **목적**: 프로젝트의 정규화 회로(1:1)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `project_id` | bigint | NOT NULL |  | 프로젝트(1:1, 키) |
+| `connections` | jsonb | NOT NULL |  | 정규화한 회로(부품 · 넷 JSON) |
+| `source_sha256` | text | NOT NULL |  | 원본 넷리스트 SHA-256(원문은 저장 안 함) |
+| `parser_version` | text | NOT NULL |  | 회로 변환기 버전 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP |  |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `pk_circuits` | PK | `PRIMARY KEY (project_id)` |
+| `fk_circuits_project` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
+| `ck_circuits_connections` | CHECK | `CHECK ((jsonb_typeof(connections) = 'object'::text))` |
+| `ck_circuits_parser_version` | CHECK | `CHECK ((char_length(btrim(parser_version)) > 0))` |
+| `ck_circuits_sha256` | CHECK | `CHECK ((source_sha256 ~ '^[0-9a-f]{64}$'::text))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `pk_circuits` | `UNIQUE btree (project_id)` |
+
+## `public.threads`
+
+- **목적**: 프로젝트 안의 대화
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | uuid | NOT NULL |  | 대화 UUID(URL에 노출) |
+| `project_id` | bigint | NOT NULL |  | 소속 프로젝트 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 만든 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `threads_pkey` | PK | `PRIMARY KEY (id)` |
+| `threads_project_id_fkey` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `ix_threads_project` | `btree (project_id)` |
+| `threads_pkey` | `UNIQUE btree (id)` |
+
+| 트리거 | 정의 |
+|---|---|
+| `trg_threads_purge_checkpoints` | `CREATE TRIGGER trg_threads_purge_checkpoints BEFORE DELETE ON public.threads FOR EACH ROW EXECUTE FUNCTION sojafit_agent.purge_thread_checkpoints()` |
+
+## `public.runs`
+
+- **목적**: 질문 한 번의 실행과 공개 결과
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | uuid | NOT NULL |  | run UUID(URL에 노출) |
+| `thread_id` | uuid | NOT NULL |  | 소속 대화 |
+| `status` | text | NOT NULL |  | running \| requires_input \| completed \| refused \| failed |
+| `safe_result` | jsonb | NULL |  | 공개 결과 JSON(answer · question_type · price_parts · interrupt · judgement · evidence). 모양을 DB CHECK 함수가 재귀 검사 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시작 |
+| `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 마지막 변경 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `runs_pkey` | PK | `PRIMARY KEY (id)` |
+| `runs_id_thread_id_key` | UNIQUE | `UNIQUE (id, thread_id)` |
+| `runs_thread_id_fkey` | FK | `FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE` |
+| `ck_runs_safe_result` | CHECK | `CHECK (((safe_result IS NULL) OR ((jsonb_typeof(safe_result) = 'object'::text) AND (safe_result ?& ARRAY['answer'::text, 'question_type'::text, 'price_parts'::text, 'interrupt'::text, 'judgement'::text, 'evidence'::text]))))` |
+| `runs_status_check` | CHECK | `CHECK ((status = ANY (ARRAY['running'::text, 'requires_input'::text, 'completed'::text, 'refused'::text, 'failed'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `ix_runs_active` | `UNIQUE btree (thread_id) WHERE (status = ANY (ARRAY['running'::text, 'requires_input'::text]))` |
+| `ix_runs_thread` | `btree (thread_id)` |
+| `runs_id_thread_id_key` | `UNIQUE btree (id, thread_id)` |
+| `runs_pkey` | `UNIQUE btree (id)` |
+
+## `public.messages`
+
+- **목적**: 화면 대화 기록
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('messages_id_seq'::regclass) | 메시지 번호 |
+| `thread_id` | uuid | NOT NULL |  | 대화 |
+| `run_id` | uuid | NOT NULL |  | run(대화와 함께 복합 FK) |
+| `role` | text | NOT NULL |  | user \| assistant |
+| `content` | text | NOT NULL |  | 질문 · 답 글 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `messages_pkey` | PK | `PRIMARY KEY (id)` |
+| `messages_run_id_thread_id_fkey` | FK | `FOREIGN KEY (run_id, thread_id) REFERENCES runs(id, thread_id) ON DELETE CASCADE` |
+| `messages_thread_id_fkey` | FK | `FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE` |
+| `messages_role_check` | CHECK | `CHECK ((role = ANY (ARRAY['user'::text, 'assistant'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `ix_messages_run` | `btree (run_id)` |
+| `ix_messages_thread` | `btree (thread_id)` |
+| `messages_pkey` | `UNIQUE btree (id)` |
+
+## `public.approvals`
+
+- **목적**: 사람의 후보 승인(스냅샷의 유일한 사본)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('approvals_id_seq'::regclass) | 승인 번호 |
+| `user_id` | bigint | NOT NULL |  | 승인한 사용자 |
+| `message_id` | bigint | NOT NULL |  | 승인한 어시스턴트 메시지(고유, 메시지당 1건) |
+| `candidate_part` | text | NOT NULL |  | 승인한 후보 품번의 **표시 이름**(판정 결과가 보여 준 그대로. 예 'TSC 1N4007G'). 승인 JSON에서 꺼낸 칸 |
+| `verdict` | text | NOT NULL |  | 승인한 판정 IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT. 승인 JSON에서 꺼낸 칸 |
+| `part_number` | text | NOT NULL |  | 견적용 **식별 품번**: 제조사 이름(TSC 등)을 떼고 남은 공백(주문 코드)은 '-'(예 '1N4007G', '1N4148-A0G'). 승인 JSON에서 꺼낸 칸 |
+| `snapshot` | jsonb | NOT NULL |  | 승인 시점의 {answer, question_type, candidate, evidence} 증빙 JSON. **스냅샷의 유일한 사본**. 가격 · 재고 키는 CHECK 함수가 거부 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 승인 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `approvals_pkey` | PK | `PRIMARY KEY (id)` |
+| `approvals_id_user_id_key` | UNIQUE | `UNIQUE (id, user_id)` |
+| `approvals_message_id_key` | UNIQUE | `UNIQUE (message_id)` |
+| `approvals_message_id_fkey` | FK | `FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE` |
+| `approvals_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `approvals_snapshot_check` | CHECK | `CHECK (((jsonb_typeof(snapshot) = 'object'::text) AND (NOT quote_snapshot_has_forbidden_key(snapshot))))` |
+| `ck_approvals_candidate_part` | CHECK | `CHECK (((char_length(candidate_part) >= 1) AND (char_length(candidate_part) <= 100)))` |
+| `ck_approvals_part_number` | CHECK | `CHECK ((part_number ~ '^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$'::text))` |
+| `ck_approvals_verdict` | CHECK | `CHECK ((verdict = ANY (ARRAY['IDENTICAL'::text, 'SPEC_EQUIVALENT'::text, 'ROLE_SUFFICIENT'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `approvals_id_user_id_key` | `UNIQUE btree (id, user_id)` |
+| `approvals_message_id_key` | `UNIQUE btree (message_id)` |
+| `approvals_pkey` | `UNIQUE btree (id)` |
+| `ix_approvals_user` | `btree (user_id)` |
+
+## `public.quotes`
+
+- **목적**: 승인에서 만든 가격 없는 견적
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('quotes_id_seq'::regclass) | 견적 번호 |
+| `user_id` | bigint | NOT NULL |  | 소유자 |
+| `approval_id` | bigint | NOT NULL |  | 근거 승인(한 승인에 견적 여러 건 가능, UNIQUE 없음) |
+| `part_number` | text | NOT NULL |  | 견적 품번(공백 없는 영문 · 숫자 · . _ + / -, CHECK) |
+| `quantity` | integer | NOT NULL |  | 수량 1~100000 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 저장 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `quotes_pkey` | PK | `PRIMARY KEY (id)` |
+| `quotes_approval_id_user_id_fkey` | FK | `FOREIGN KEY (approval_id, user_id) REFERENCES approvals(id, user_id) ON DELETE CASCADE` |
+| `quotes_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `quotes_part_number_check` | CHECK | `CHECK ((part_number ~ '^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$'::text))` |
+| `quotes_quantity_check` | CHECK | `CHECK (((quantity >= 1) AND (quantity <= 100000)))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `ix_quotes_approval` | `btree (approval_id)` |
+| `ix_quotes_user` | `btree (user_id)` |
+| `quotes_pkey` | `UNIQUE btree (id)` |
+
+## `public.approved_cases`
+
+- **목적**: 화면의 승인 사례 목록(사용자가 지울 수 있는 표시 행)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL | nextval('approved_cases_id_seq'::regclass) | 사례 번호 |
+| `user_id` | bigint | NOT NULL |  | 소유자 |
+| `approval_id` | bigint | NOT NULL |  | 근거 승인(고유). 후보 이름 · 판정은 approvals에서 읽는다 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `approved_cases_pkey` | PK | `PRIMARY KEY (id)` |
+| `approved_cases_approval_id_key` | UNIQUE | `UNIQUE (approval_id)` |
+| `approved_cases_approval_id_user_id_fkey` | FK | `FOREIGN KEY (approval_id, user_id) REFERENCES approvals(id, user_id) ON DELETE CASCADE` |
+| `approved_cases_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `approved_cases_approval_id_key` | `UNIQUE btree (approval_id)` |
+| `approved_cases_pkey` | `UNIQUE btree (id)` |
+| `ix_approved_cases_user` | `btree (user_id)` |
+
+## `public.app_migrations`
+
+- **목적**: 마이그레이션 적용 이력(우리 것)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `version` | text | NOT NULL |  | 적용한 변경의 이름 |
+| `applied_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 적용 시각 |
+| `note` | text | NOT NULL | ''::text | 한 줄 설명 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `app_migrations_pkey` | PK | `PRIMARY KEY (version)` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `app_migrations_pkey` | `UNIQUE btree (version)` |
+
+## `sojafit_agent.threads`
+
+- **목적**: 분석 서비스의 대화 상태 기계
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | uuid | NOT NULL |  | **public.threads.id와 같은 UUID이며 FK**(대화를 지우면 같이 지워짐) |
+| `user_id` | bigint | NOT NULL |  | 소유자(CASCADE). 소유 조회를 빠르게 하려고 둔 의도된 비정규화 |
+| `target` | text | NOT NULL |  | 교체 대상 부품 참조(예: D1) |
+| `version` | integer | NOT NULL | 0 | 질문 차수(새 질문마다 +1) |
+| `retries` | integer | NOT NULL | 0 | 같은 질문의 재시도 횟수(상한 2) |
+| `status` | text | NOT NULL | 'NEW'::text | NEW \| RUNNING \| WAITING \| DONE \| FAILED |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시각 |
+| `input_record` | jsonb | NULL |  | 현재 차수의 원문 질문 · 조건 · 재개 답(JSON) |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `threads_pkey` | PK | `PRIMARY KEY (id)` |
+| `fk_agent_threads_thread` | FK | `FOREIGN KEY (id) REFERENCES threads(id) ON DELETE CASCADE` |
+| `threads_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `threads_status_check` | CHECK | `CHECK ((status = ANY (ARRAY['NEW'::text, 'RUNNING'::text, 'WAITING'::text, 'DONE'::text, 'FAILED'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `agent_threads_owner` | `btree (user_id, created_at DESC)` |
+| `threads_pkey` | `UNIQUE btree (id)` |
+
+## `sojafit_agent.messages`
+
+- **목적**: 분석 문맥용 사용자 입력 + 어시스턴트 답
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | bigint | NOT NULL |  | 번호 |
+| `thread_id` | uuid | NOT NULL |  | 분석 대화 |
+| `role` | text | NOT NULL |  | user \| assistant |
+| `checkpoint_id` | text | NULL |  | 그 답을 만든 LangGraph 체크포인트(thread_id와 함께 중복 방지 UNIQUE 색인, 값이 있을 때만) |
+| `content` | text | NOT NULL |  | 사용자는 '사용 조건: …' 접두 + 질문 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `messages_pkey` | PK | `PRIMARY KEY (id)` |
+| `messages_thread_id_fkey` | FK | `FOREIGN KEY (thread_id) REFERENCES sojafit_agent.threads(id) ON DELETE CASCADE` |
+| `messages_role_check` | CHECK | `CHECK ((role = ANY (ARRAY['user'::text, 'assistant'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `agent_messages_checkpoint` | `UNIQUE btree (thread_id, checkpoint_id) WHERE (checkpoint_id IS NOT NULL)` |
+| `agent_messages_thread` | `btree (thread_id, id)` |
+| `messages_pkey` | `UNIQUE btree (id)` |
+
+## `sojafit_agent.analysis_events`
+
+- **목적**: 내용 없는 운영 기록
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `id` | uuid | NOT NULL |  | UUID |
+| `thread_id` | uuid | NOT NULL |  | 분석 대화 |
+| `version` | integer | NOT NULL |  | 질문 차수 |
+| `request_id` | text | NOT NULL |  | X-Request-ID |
+| `mode` | text | NOT NULL |  | real \| demo |
+| `status` | text | NOT NULL |  | 결과 상태 |
+| `elapsed_ms` | integer | NOT NULL |  | 사람 대기 제외 실행 시간 |
+| `stages` | jsonb | NOT NULL |  | 단계별 ms(내용 없음) |
+| `trace_id` | text | NOT NULL |  | Langfuse trace id |
+| `trace_delivery` | text | NOT NULL |  | queued 등 전달 상태 |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `analysis_events_pkey` | PK | `PRIMARY KEY (id)` |
+| `analysis_events_thread_id_fkey` | FK | `FOREIGN KEY (thread_id) REFERENCES sojafit_agent.threads(id) ON DELETE CASCADE` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `agent_events_thread` | `btree (thread_id, created_at DESC)` |
+| `analysis_events_pkey` | `UNIQUE btree (id)` |
+
+## `sojafit_agent.analysis_usage`
+
+- **목적**: 사용자 · 날짜별 LLM 예약 사용량
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `user_id` | bigint | NOT NULL |  | 사용자 |
+| `day` | date | NOT NULL |  | UTC 날짜 |
+| `reserved_usd` | numeric(16,10) | NOT NULL | 0 | 예약 비용(청구액 아님, 환불 안 함) |
+| `attempts` | integer | NOT NULL | 1 | 그날 시도 수 |
+| `next_allowed` | timestamp with time zone | NOT NULL |  | 다음 허용 시각(호출 간격) |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 예약 토큰(상한 사용자 200,000 → 운영 1,000,000) |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `analysis_usage_pkey` | PK | `PRIMARY KEY (user_id, day)` |
+| `analysis_usage_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `analysis_usage_reserved_tokens_check` | CHECK | `CHECK ((reserved_tokens >= 0))` |
+| `analysis_usage_reserved_usd_check` | CHECK | `CHECK ((reserved_usd >= (0)::numeric))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `analysis_usage_pkey` | `UNIQUE btree (user_id, day)` |
+
+## `sojafit_agent.analysis_service_usage`
+
+- **목적**: 서비스 전체 날짜별 예약 토큰
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `day` | date | NOT NULL |  | UTC 날짜 |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 서비스 전체 예약 토큰(상한 2,000,000) |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `analysis_service_usage_pkey` | PK | `PRIMARY KEY (day)` |
+| `analysis_service_usage_reserved_tokens_check` | CHECK | `CHECK ((reserved_tokens >= 0))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `analysis_service_usage_pkey` | `UNIQUE btree (day)` |
+
+## 코퍼스 · LangGraph 표(이 문서 범위 밖)
+
+서비스 표가 아니라 이 문서의 그림 · 정의에 넣지 않는다. 이름만 적는다.
+
+- 코퍼스(`public`, `db/002` · `009`): `source_documents` · `document_chunks` · `chunk_embeddings` · `chunk_embedding_bits`
+- LangGraph 라이브러리(`sojafit_agent`, `PostgresSaver` · `PostgresStore`가 만든다): `checkpoints` · `checkpoint_blobs` · `checkpoint_writes` · `checkpoint_migrations` · `store` · `store_vectors` · `store_migrations` · `vector_migrations`
