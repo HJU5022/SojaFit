@@ -10,6 +10,7 @@
 """
 import json
 import logging
+import re
 import sys
 import traceback
 from contextvars import ContextVar
@@ -36,12 +37,14 @@ def safe_traceback(error: BaseException) -> str:
 
 
 def hide_query(record: logging.LogRecord) -> bool:
-    """uvicorn 접속 줄의 경로에서 쿼리 글만 `?<redacted>`로 바꾼다. 줄은 버리지 않는다."""
+    """uvicorn 접속 줄의 쿼리와 외부 회로도 signed token을 가린다. 줄은 버리지 않는다."""
     # [왜] 쿼리에는 사용자 글이 섞인다(`/api/me/memory?q=` 기억 검색어, Google 콜백의 code · state). 모든 경로에서 뺀다
     # uvicorn 접속 줄은 '%s - "%s %s HTTP/%s" %d' % (주소, 메서드, 쿼리 붙은 경로, HTTP 버전, 상태)다
     args = record.args
-    if isinstance(args, tuple) and len(args) == 5 and isinstance(args[2], str) and '?' in args[2]:
-        record.args = (*args[:2], args[2].partition('?')[0] + '?<redacted>', *args[3:])
+    if isinstance(args, tuple) and len(args) == 5 and isinstance(args[2], str):
+        path, separator, _ = args[2].partition('?')
+        path = re.sub(r'(^/api/external-circuits/schematics/)[^/]+', r'\1<redacted>', path)
+        record.args = (*args[:2], path + ('?<redacted>' if separator else ''), *args[3:])
     return True
 
 
