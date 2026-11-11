@@ -14,6 +14,7 @@
   찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, ADR 0017).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계, 11-07 실패 고리), ADR 0017, backend/prompts/supervisor.md · synth.md
 """
+import os
 import re
 from pathlib import Path
 
@@ -31,7 +32,7 @@ SYNTH_PROMPT = (PROMPTS / 'synth.md').read_text(encoding='utf-8')
 NUMBER = re.compile(r'\d+(?:\.\d+)?')
 # [왜] 그래프 노드 이름은 강의처럼 한국어다(build.py가 이 이름으로 노드를 단다). 갈림 함수는 다음 노드 이름을 그대로 돌려줘
 #      draw_mermaid 그림에 영어 라벨이 붙지 않는다. 계획서 · 모으기의 값(docs · finish · single 등)은 그대로 두고 여기서만 옮긴다
-NODE = {'docs': 'RAG 에이전트', 'judge': '대체 부품 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
+NODE = {'docs': 'RAG 에이전트', 'judge': 'Spec 에이전트', 'finish': '끝내기', 'price': '가격 안내', 'refuse': '거절',
         'collect': '답 모으기', 'single': '답 정리', 'synth': '종합'}
 REPLAN = '다시 해 볼 실패 · 다시 계획(최대 1번)'  # 답 모으기 → Supervisor 되돌림만 노드 이름이 아닌 키라 그림에 이 라벨이 붙는다
 
@@ -99,7 +100,7 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
         find = Task(id=1, agent='judge', kind='candidate_find', goal='Find candidates that meet the conditions in the question.')
         plan = plan.model_copy(update={'tasks': [find, *(t.model_copy(update={'id': i}) for i, t in enumerate(roles, 2))], 'replan': False})
     if not judge_enabled:
-        # [왜] 대체 부품 에이전트가 없으면 판정 할 일은 문서 할 일로 돌린다(거절이 아니라 근거로 답하는 길, 예전 Supervisor와 같음)
+        # [왜] Spec 에이전트가 없으면 판정 할 일은 문서 할 일로 돌린다(거절이 아니라 근거로 답하는 길, 예전 Supervisor와 같음)
         plan.tasks = [t.model_copy(update={'agent': 'docs', 'query': t.query or t.goal}) if t.agent == 'judge' else t for t in plan.tasks]
     out = {'plan': plan.model_dump(mode='json'), 'counters': c, 'path': ['계획'],
            'round': (state.get('round') or 0) + (1 if plan.next == 'tasks' else 0)}
@@ -118,7 +119,7 @@ def payload(state: dict, task: dict) -> dict:
     if task['agent'] == 'judge':
         base.update(conditions=state.get('conditions', ''), target=state.get('target', ''), facts=state.get('facts') or {},
                     question_type=task['kind'],  # [왜] 판정 코드는 question_type으로 판정 · 찾기를 가른다. 할 일 종류가 그 값이다
-                    mount_preference=state.get('mount_preference') or '')  # [왜] 기억 읽기가 읽은 선호 실장 방식. 대체 부품 에이전트만 쓴다(찾기 순서)
+                    mount_preference=state.get('mount_preference') or '')  # [왜] 기억 읽기가 읽은 선호 실장 방식. Spec 에이전트만 쓴다(찾기 순서)
     return base
 
 
@@ -166,7 +167,10 @@ def collect_node(state: dict) -> dict:
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
                                                      or (r.status == 'partial' and r.reason in RETRY_REASONS))]
     if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (retry or plan.get('replan')):
-        return {**out, 'outcome': 'replan'}
+        if os.getenv('SUPERVISOR_REPLAN', '1') == '0':
+            pass  # [왜] 속도·정확도 A/B용. 기본(1)은 재계획 유지. 0이면 no_result 등에서도 docs 재시도 없이 아래 거절·답으로 간다
+        else:
+            return {**out, 'outcome': 'replan'}
     final_dump = {'final_reports': [r.model_dump(mode='json') for r in final]}
     good = [r for r in final if r.status != 'fail']
     if not good:

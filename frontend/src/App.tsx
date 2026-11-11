@@ -49,7 +49,6 @@ function Shell() {
         <nav aria-label="주요 화면">
           <NavLink to="/app">작업대</NavLink>
           {!user && <NavLink to="/login">로그인</NavLink>}
-          {!user && <NavLink to="/signup">가입</NavLink>}
           {user && <NavLink to="/settings">내 설정</NavLink>}
           {user?.role === 'admin' && <NavLink to="/admin/users">사용자 관리</NavLink>}
           {user && <button disabled={busy} onClick={() => void signOut()}>{busy ? '로그아웃 중…' : '로그아웃'}</button>}
