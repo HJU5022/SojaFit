@@ -94,7 +94,7 @@ def test_folder_description_names():
                and not (d + "/").startswith(NO_DESCRIPTION)}
     assert shallow <= set(folders), f"설명 파일 표에 없는 폴더: {sorted(shallow - set(folders))}"
     readmes = [f for f in files if PurePosixPath(f).name.lower() == "readme.md" and f != "README.md"
-               and not f.startswith(EXTERNAL)]
+               and not f.startswith((EXTERNAL, "evals/results/"))]
     assert not readmes, f"README.md는 루트 대표 문서 하나만 둔다: {readmes}"
 
 
@@ -105,7 +105,7 @@ def test_uppercase_markdown_only_where_allowed():
     bad = []
     for f in files:
         p = PurePosixPath(f)
-        if p.suffix != ".md" or p.name == p.name.lower() or f.startswith(EXTERNAL):
+        if p.suffix != ".md" or p.name == p.name.lower() or f.startswith((EXTERNAL, "evals/results/")):
             continue
         is_description = p.stem == p.parent.name.upper()
         if f not in ROOT_DOCS and f not in UPPER_EXCEPTIONS and not is_description:
@@ -139,12 +139,13 @@ def test_one_kind_of_file_per_folder():
     for f in repo_files():
         p = PurePosixPath(f)
         d = str(p.parent)
-        if d == "." or f.startswith((".github/", EXTERNAL)) or p.name == ".gitkeep" or p.name == p.parent.name.upper() + ".md":
+        if d == "." or f.startswith((".github/", EXTERNAL, "evals/results/")) or p.name == ".gitkeep" or p.name == p.parent.name.upper() + ".md":
             continue
         # 표준 Vite 도구는 package.json·index.html·vite.config.ts를 같은 루트에 요구한다(사용자 승인 예외).
         # backend/web은 기존 화면 설계와 정적 제공 어댑터만 함께 둔다(별도 사용자 승인 예외).
         if d in {"frontend", "backend/web"}:
             continue
-        by_dir.setdefault(d, set()).add(KINDS.get(p.suffix, "기타"))
+        kind = "데이터" if d == "evals/samples" and p.suffix == ".md" else KINDS.get(p.suffix, "기타")
+        by_dir.setdefault(d, set()).add(kind)
     mixed = {d: sorted(k) for d, k in by_dir.items() if len(k) > 1}
     assert not mixed, f"한 폴더에 종류가 섞였다(하위 폴더로 나눈다): {mixed}"

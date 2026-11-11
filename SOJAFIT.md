@@ -324,12 +324,12 @@ SojaFit (proj3-b)
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 020_service_baseline.sql  <- 서비스 표 기준선(11-11 M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
-│   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈(main 회로 catalog; 새 기준선 DB에서는 catalog 계약이 baseline에 흡수됐는지 적용 순서를 DB.md로 확인)
 │   ├── legacy/             <- 기준선 이전의 옛 증분 서비스 SQL(이력용, 실행하지 않음)
 │   │   ├── LEGACY.md       <- 폴더 설명
 │   │   ├── 003_auth.sql  <- 사용자·세션·로그인 시도 표
 │   │   ├── 005_auth_attempt_window.sql  <- 로그인 시도 창 시작 시각 열
 │   │   ├── 006_user_roles.sql  <- 사용자 역할 열
+│   │   ├── 007_demo_accounts.sql  <- 이전 데모 계정 시드 이력
 │   │   ├── 010_google_auth.sql  <- Google 로그인 상태·승인 대기·계정 연결 표
 │   │   ├── 013_agent_memory.sql  <- 분석 서비스 스키마(thread·대화·승인 원본)
 │   │   ├── 014_thread_inputs.sql  <- thread 입력 기록
@@ -344,6 +344,7 @@ SojaFit (proj3-b)
 │   │   ├── 023_retention.sql  <- 보관 기간 청소 함수
 │   │   ├── 024_projects_demo_c01.sql  <- 데모 프로젝트 허용 목록에 c01 추가(11-10 긴급 수정)
 │   │   ├── 025_runs_safe_result_preferred_mount.sql  <- 분석 결과 형식에 preferred_mount 추가(11-10 긴급 수정)
+│   │   ├── 026_projects_catalog_demo.sql  <- 이전 데모 회로 ID 제약 변경 이력
 │   │   ├── 027_service_redesign_p1.sql  <- 재설계 1/3
 │   │   ├── 028_service_redesign_agent.sql  <- 재설계 2/3
 │   │   └── 029_drop_google_pending.sql  <- 재설계 3/3
@@ -436,6 +437,7 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_v3.py  <- v3 평가셋 검색 지표를 에이전트 검색 길(입력 읽기 → 재작성 → 품번 필터 검색) 그대로 잼(문서 · 쪽 Recall@5 · MRR)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프(`--multi`면 멀티 에이전트)로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
 │   │   ├── run_gate.py     <- 감시 실행기: 여러 세트 순차 실행·실패/p95 중단, 단계 시간·호출별 토큰·비용, Langfuse 문항 점수·실행 조건 연결
+│   │   ├── score_ragas.py  <- 근거와 답변의 평가 점수 계산
 │   │   ├── stage_timing.py <- 단계 시간 기록기: 서비스와 같은 노드 단위 시간(AnalysisTimings) + LLM 호출별 {노드, 모델, 초, 토큰, 공급자 보고 비용} + Voyage 임베딩 · 리랭크 시간(D8)
 │   │   ├── gate_report.py  <- run_gate 결과 세트를 기준표(정답률 · 오탐 · 검색 Recall@5 · MRR · 응답 시간)로 집계
 │   │   ├── run_judge_dev.py  <- 판정 연습 문제를 멀티 그래프로 돌려 역할 정답률·판정 일치율을 results/judge/에 저장
@@ -464,6 +466,7 @@ SojaFit (proj3-b)
 │   │   └── Dockerfile.embedding_grid  <- 임베딩 격자 본평가 실행 이미지(gpu_embed에 DB·BM25·Voyage 패키지를 더함)
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
+│   │   ├── v3_50_codex_paste.md  <- v3 50문항 비교 입력 원본
 │   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
 │   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 페이지를 정한 검색 표본 84문항(dev 세트 46·test 세트 38, 사전 등록 #25)
 │   │   ├── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
@@ -581,6 +584,7 @@ SojaFit (proj3-b)
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
 │   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)
 │   │   ├── DB.md           <- 폴더 설명
+│   │   ├── test_initdb_files.py  <- Compose 초기화 SQL 목록 회귀 검사
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
@@ -669,6 +673,7 @@ SojaFit (proj3-b)
 │   │   ├── test_claim_consistency.py <- 실제 모델 기준선 실행기의 무료 계획·덮어쓰기·중단·가짜응답 최종 차단 검사
 │   │   ├── test_injection_preflight.py <- 외부 요청 차단·격리 적재·공유 예산·캐시·사양 오염·사람 검토 채점 검사
 │   │   ├── test_import_human_review.py <- 사람 채점 시트 변환의 파싱 · 채움 · 일치율 · 원본 보존(합성 시트)
+│   │   ├── test_score_ragas.py <- 답변·근거 평가 점수 계산 검사
 │   │   ├── test_check_injection_result.py <- 저장한 실측03의 기준 통과와 변이(작업 수 · 상태 · 판정 · 노출) 실패
 │   │   ├── test_injection_baseline_plan.py <- 110개 짝·T5 fallback·T7 파서·모델 입력 정답 분리·예산식·무호출 검사
 │   │   ├── test_injection_baseline.py <- 기본 무호출·110행 보존·실제 그래프/가짜 공급자·승인/바이트 한도·실패 채점 검사
@@ -776,6 +781,7 @@ SojaFit (proj3-b)
 │   │   ├── SUPERPOWERS.md  <- 폴더 설명
 │   │   ├── plans/
 │   │   │   ├── 2026-11-10-verified-circuit-and-datasheet-visuals.md <- 검증 회로도·데이터시트 시각화 실행 계획
+│   │   │   ├── 2026-11-12-evaluator-demo-deployment-evidence.md <- 평가자 데모·배포·운영 증거 완료 계획
 │   │   │   └── 2026-11-11-complete-schematic-delivery.md <- 외부 완성 회로도 전달 계획
 │   │   └── specs/          <- 외부 완성 회로도 설계
 │   │       └── 2026-11-11-complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계
@@ -785,6 +791,7 @@ SojaFit (proj3-b)
 │   │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
 │   │   ├── injection-baseline-preflight.md <- 인젝션 기준선의 격리 적재·호출 관찰·예산·캐시·채점 준비 작업서
 │   │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
+│   │   ├── speed-p95-levers-2026-11-11.md <- 단계별 지연 원인과 개선 후보 기록
 │   │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
 │   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
 │   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
@@ -799,6 +806,7 @@ SojaFit (proj3-b)
 │   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
+│   │   ├── d9-outside-evidence-2026-11-11.md <- 저장소 밖 D9 증거 이관 기록
 │   │   ├── injection-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
 │   │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
 │   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
@@ -932,14 +940,14 @@ SojaFit (proj3-b)
 
 [ADR 0012](docs/adr/0012-폴더-설명-파일은-대문자-폴더명으로-되돌린다.md)를 따릅니다. `tests/repo/test_repo_layout.py`가 PR마다 검사합니다.
 
-- **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서 하나뿐입니다.
+- **폴더 설명 파일**은 폴더마다 `<대문자 폴더명>.md` 하나입니다(`backend/BACKEND.md`, `backend/mcp_skill/MCP_SKILL.md`). 역할, 넣는 것, 넣지 않는 것, 담당, 파일을 적습니다. `README.md`는 루트 대표 문서와 기존 `evals/results/` 원시 결과 묶음의 출처 설명에 사용합니다.
 - **대문자 마크다운**은 루트 대표 문서 6개(`README.md`, `SOJAFIT.md`, `SPEC.md`, `AGENTS.md`, `CLAUDE.md`, `EVAL_REPORT.md`)와 폴더 설명 파일만 씁니다. 그 밖의 문서는 소문자입니다. 예외는 다른 곳이 이름을 정한 네 개입니다: `docs/TOPIC.md`·`docs/GATES.md`(과제 가이드), `backend/mcp_skill/skills/SKILL.md`(Skill 관례, 코드가 읽음), `.github/PULL_REQUEST_TEMPLATE.md`(GitHub 관례). 데이터 파일(`FROZEN.json`, 데이터시트 PDF, 회로 원본)은 받은 이름이나 코드가 읽는 이름을 그대로 씁니다.
 - **대문자의 효과와 한계**
   - GitHub 파일 목록, 터미널 `ls`, `git ls-files`는 대문자 이름을 소문자보다 먼저 정렬해 폴더 설명 파일이 파일 목록 맨 위에 옵니다(2026-11-03 확인). 같은 폴더에 다른 대문자 문서가 없어야 이 효과가 살아 있어서, 대문자를 아래 예외 밖에서 쓰지 않습니다.
   - VS Code 탐색기와 macOS Finder는 기본 설정에서 대소문자를 섞어 정렬해 이 효과가 없습니다. GitHub은 `README.md`만 폴더 아래에 펼쳐 보여 주고 `<대문자 폴더명>.md`는 눌러야 열립니다. 그래서 설명 파일은 이 문서의 트리와 표에서 링크로 찾습니다.
   - macOS 기본 파일시스템은 대소문자를 구분하지 않고, 이 저장소의 git 설정도 `core.ignorecase=true`입니다. 대소문자만 바꾸는 이름 변경은 `git mv a.md tmp.md && git mv tmp.md A.md` 두 단계로 해야 git에 남습니다. 대소문자만 다른 두 파일(`readme.md`·`README.md`)은 한 폴더에 둘 수 없습니다.
 - 폴더 설명은 두 단계 폴더까지만 둡니다. 더 깊은 폴더(`backend/mcp_skill/skills/` 등)는 위 폴더 설명 파일에 적습니다. 원시 결과·시험 데이터만 담는 폴더(`evals/results/`, `scripts/results/`, `tests/fixtures/`), `.github/`, `data/circuits/collected/`에는 설명 파일을 두지 않습니다.
-- **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트는 도구가 루트에서 찾는 파일이라 예외입니다.
+- **한 폴더 바로 아래에는 한 종류 파일만** 둡니다(코드·데이터·문서·SQL·설정 중 하나, 설명 파일과 `.gitkeep`은 빼고 셈). 종류가 섞이면 성격별 하위 폴더로 나눕니다(예: `evals/runners/`, `evals/guides/`). 저장소 루트와 기존 `evals/results/` 원시 결과 묶음은 예외입니다. `evals/samples/`의 Markdown 입력 원본은 데이터로 취급합니다.
 - 아직 없는 파일은 트리에 `(예정)`을 붙여 적고, 비어 있는 폴더는 `.gitkeep`으로 자리를 둡니다. 실제로 만들면 같은 PR에서 `(예정)`을 지웁니다.
 - 결정 기록은 `docs/adr/NNNN-한국어-제목.md`, 기능 작업서는 `docs/specs/<english-kebab>.md`, 실험 작업서는 `docs/experiments/<english-kebab>.md`, 조사 기록은 `docs/research/<english-kebab>.md`입니다. 원시 결과 파일은 `<무엇>_<YYYY-MM-DD>.json`입니다.
 - 강사 스캐폴드와 과제 가이드의 고정 경로(트리의 `(고정)`)는 옮기지 않습니다.

@@ -1,5 +1,5 @@
 {
- "recorded_at": "2026-11-09",
+ "recorded_at": "2026-11-11",
  "db": {
   "documents": 42,
   "chunks": 1556,
@@ -50,7 +50,7 @@
     "끝"
    ],
    "question_type": "candidate_judge",
-   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (부하 쪽 전원 넷); D1.A → VIN (커넥터·퓨즈 쪽); 직렬 극성 보호 배치)\n\n**1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 2 (2.0) | 30 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (cathode to load side net); D1.A → VIN (anode on input connector/fuse side))\n\n**1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 2 (2.0) | 30 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
    "verdicts": [
     [
      "1N4007G",
@@ -69,17 +69,20 @@
    "question": "D3의 대체 후보를 위 구매 규격으로만 추려 줘. 각 후보의 전압·전류 정격과 패키지를 근거와 함께 알려 줘.",
    "interrupt": {
     "missing": [
-     "i_fault",
-     "orig_schottky",
-     "high_impedance",
-     "fast_signal"
+     "v_drop_allowed",
+     "v_reverse_max",
+     "vf_selects_source",
+     "hot_test"
     ],
-    "role_choices": [],
-    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): i_fault, orig_schottky, high_impedance, fast_signal"
+    "role_choices": [
+     "R01",
+     "R02"
+    ],
+    "question": "판정에 필요한 값이 빠져 있어요. 아는 만큼 알려 주세요(모르면 비워 두면 돼요): v_drop_allowed, v_reverse_max, vf_selects_source, hot_test / 역할이 역극성 보호(직렬) 또는 역류 방지 중 어느 쪽인지도 알려 주세요."
    },
    "resume": {
     "answers": {},
-    "role": ""
+    "role": "R01"
    },
    "path": [
     "입력 읽기",
@@ -94,26 +97,18 @@
     "끝"
    ],
    "question_type": "candidate_find",
-   "answer": "역할: R08 (근거: D3.A → Net-(D3-PadA) (USB VBUS 측); D3.C → 5V; D3 parallel to 5V/VBUS path, cathode on 5V supply side)\n\n사양 표에서 건 조건: VRRM ≥ 6.562, VRRM ≥ 75, IF_AV ≥ 0.15\n**1N4148WH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Average rectified output current |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WH_A2501.pdf 2쪽 ORDERING INFORMATION).\n\n**1N4148WS: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WS SERIES_N2212.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N4148WSH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 100 V | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM >= | 75 (75.0) | 100 V | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148WSH_A2501.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Average rectified output current |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148WSH_A2501.pdf 2쪽 ORDERING INFORMATION).\n\n**1N4148W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N4448W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_cc * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: orig_schottky 정보가 없어 이 조건을 빼고 판정 / IR: high_impedance 정보가 없어 이 조건을 빼고 판정 / CJ: fast_signal 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 핀 허용 주입 전류(MCU 데이터시트, 코퍼스 밖) / VCC로 들어가는 클램프 전류가 전원을 띄우는지 / 전원 꺼짐 상태\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "answer": "역할: R01 (근거: D3.A → Net-(D3-PadA) (USB VBUS); D3.C → 5V; D3 parallel to nothing; series from USB VBUS to 5V net)\n\n사양 표에서 건 조건: VRRM ≥ 6.562, IF_AV ≥ 0.05714, VRRM ≥ 75, IF_AV ≥ 0.15\n**1N4148W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_in_max * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.05714 (i_max * kI) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N4448W: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_in_max * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.05714 (i_max * kI) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**1N914BW: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_in_max * kV) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.05714 (i_max * kI) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 75 (75.0) | 75 V | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.15 (0.15) | 0.15 A | 표 기본 조건 | 통과 | 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4148W SERIES_K1804.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
    "verdicts": [
-    [
-     "1N4148WH",
-     "SPEC_EQUIVALENT"
-    ],
-    [
-     "1N4148WS",
-     "SPEC_EQUIVALENT"
-    ],
-    [
-     "1N4148WSH",
-     "SPEC_EQUIVALENT"
-    ],
     [
      "1N4148W",
      "ROLE_SUFFICIENT"
     ],
     [
      "1N4448W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N914BW",
      "ROLE_SUFFICIENT"
     ]
    ],
@@ -141,7 +136,7 @@
     "끝"
    ],
    "question_type": "rating",
-   "answer": "TSC 1N4148의 반복 피크 역전압(VRRM)은 100 V입니다 [79]. 평균 순방향 전류 정격에 해당하는 항목으로 데이터시트 절대최대정격 표에는 순방향 전류(IF)가 150 mA로 나와 있습니다 [80].",
+   "answer": "1N4148의 반복 피크 역전압(VRRM)은 100V로 표기되어 있습니다[79]. 순방향 전류는 평균치 IF(AV)가 아니라 순방향 전류(IF) 150mA로 표기되어 있습니다[80]. 반복 피크 순방향 전류(IFRM)는 450mA이고[82], 비반복 피크 서지 전류(IFSM)는 t=1μs 조건에서 2A입니다[81].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
    "verdicts": [],
    "refusal": ""
   },
@@ -184,10 +179,10 @@
     "계획",
     "거절"
    ],
-   "question_type": "out_of_scope",
-   "answer": "이 서비스는 회로 속 부품의 역할과 대체 후보를 데이터시트로 확인해 드려요. 회로나 부품에 관한 질문을 해 주세요.",
+   "question_type": "other_part",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
    "verdicts": [],
-   "refusal": "out_of_scope"
+   "refusal": "not_found"
   }
  ]
 }

@@ -47,10 +47,10 @@ def test_real_input_path_records_bad_raw_and_contains_final(surface):
     item, data, part, case = next(p for p in prepared if p[0]['id'] == surface+'-A')
     def fake(node, system, user, schema):
         assert node == 'docs_answer'
-        assert case['payload'] in user
+        assert (case['payload'] in user) is (surface != 'P3')
         return schema(grade='enough', answer='DEMO2를 사용해도 됩니다 [73].')
     result = runner.measure(item, data, part, case, fake)
-    assert result['surface_exposed']
+    assert result['surface_exposed'] is (surface != 'P3')
     assert result['code_verdict'] == 'NOT_SUFFICIENT'
     assert result['raw_forbidden'] == ['DEMO2를 사용해도 됩니다']
     assert result['security_assessment'] == 'pending_manual_review'

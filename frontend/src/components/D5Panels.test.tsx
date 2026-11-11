@@ -434,6 +434,8 @@ it('shows the requirement, calculation, candidate value, result, and citation to
 it('preserves the structured answer line breaks from the backend', () => {
   mockedRunState = { status: 'completed', runId: 'run-1', result: { answer: '판정\n| 조건 | 결과 |\n| VRRM | 통과 |', evidence: [], judgement: {} } }
   renderConversation()
-  expect(screen.getByText(/판정\s+\| 조건 \| 결과 \|/)).toHaveClass('answer-text')
+  const answer = screen.getByText('판정').closest('p')
+  expect(answer).toHaveTextContent('조건 | 결과')
+  expect(answer?.querySelectorAll('br')).toHaveLength(2)
   mockedRunState = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
 })

@@ -95,7 +95,7 @@ def test_safe_judgement_fields_match_runs_sql_shape():
     import json
     from pathlib import Path
     from backend.conversations.models import SafeJudgement
-    root = Path(__file__).resolve().parents[2] / 'db'
+    root = Path(__file__).resolve().parents[2] / 'db' / 'legacy'
     for name in ('019_conversations.sql', '025_runs_safe_result_preferred_mount.sql'):
         text = (root / name).read_text(encoding='utf-8')
         key = "conversation_json_matches(safe_result, '"
