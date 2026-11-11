@@ -144,7 +144,7 @@ CASES = [
     ('get', '/api/auth/me', None, {}, None, {'user_id', 'role'}),
     ('post', '/api/auth/logout', None, {'logout': lambda *a: None}, None, OK),
     ('patch', '/api/admin/users/8', {'is_active': False}, {'admin_set_active': lambda *a: None}, None, OK),
-    ('get', '/api/demo-circuits', None, {}, None, {'id', 'name'}),
+    ('get', '/api/demo-circuits', None, {}, None, {'id', 'name', 'schematic'}),
     ('post', '/api/messages/9/approvals', {'candidate_part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}, {},
      [('completed', JUDGED), (3, NOW), (4,)], APPROVAL),
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [(SNAPSHOT,), (5, NOW)], QUOTE),

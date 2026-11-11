@@ -1,6 +1,6 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
@@ -10,6 +10,7 @@ from backend.conversations.repository import InvalidRunState
 from backend.projects.models import Project, ProjectSummary
 from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
+from backend.projects.visuals import load_demo_visuals
 
 router = APIRouter(prefix="/api", tags=["projects"])
 
@@ -48,14 +49,34 @@ def repository():
         raise HTTPException(503, "프로젝트 서비스를 사용할 수 없습니다.") from None
 
 
-class DemoCircuit(BaseModel):
+class DemoSchematic(BaseModel):
+    image_url: str
+    original_url: str
+    source_repo: str
+    source_commit: str
+    license: str
+    license_evidence_url: str
+    attribution: str
+
+
+class DemoCircuitResponse(BaseModel):
     id: str
     name: str
+    schematic: DemoSchematic | None
 
 
-@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)], response_model=list[DemoCircuit])
-def demo_circuits():
-    return [{"id": demo_id, "name": name} for demo_id, name in DEMOS.items()]
+@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)], response_model=list[DemoCircuitResponse])
+def demo_circuits(response: Response, q: str | None = Query(default=None, min_length=1),
+                  offset: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100)):
+    visuals = load_demo_visuals()
+    items = [{"id": demo_id, "name": name,
+             "schematic": visuals[demo_id].model_dump(include=set(DemoSchematic.model_fields)) if demo_id in visuals else None}
+            for demo_id, name in DEMOS.items()]
+    if q is not None:
+        needle = q.casefold()
+        items = [item for item in items if needle in item["id"].casefold() or needle in item["name"].casefold()]
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return items[offset:offset + limit]
 
 
 @router.get("/projects", response_model=list[ProjectSummary])

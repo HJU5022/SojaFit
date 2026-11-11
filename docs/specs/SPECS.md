@@ -25,5 +25,6 @@
 - `supervisor-v0-langfuse-import.md` — 완료된 Supervisor V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오는 작업서
 - `d5-frontend-service.md` — React·Vite 화면과 D5 서비스 연결 기능 계약
 - `circuit-context-diagram.md` — 실제 프로젝트·분석 데이터에 기반한 대상 부품의 1·2단계 연결 개념도 기능 계약
+- `verified-circuit-and-datasheet-visuals.md` — 검증된 데모 원본 회로도와 공식 데이터시트·패키지 외형 근거 표시 계약
 - `dummy-full-flow.md` — 개발 전용 메모리 API로 로그인부터 승인·견적·사례 삭제까지 실행하는 기능 계약
 - `workbench-information-architecture.md` — D5 계약을 유지하는 4영역 작업대·정보 콘솔·접근 가능한 상세 dialog 기능 계약

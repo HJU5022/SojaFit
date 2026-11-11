@@ -7,6 +7,10 @@ afterEach(() => vi.unstubAllGlobals())
 function openCreator() {
   const trigger = screen.queryAllByRole('button', { name: '프로젝트 만들기' })[0]
   if (trigger) fireEvent.click(trigger)
+  else if (screen.queryByRole('button', { name: /^프로젝트$/ })) {
+    fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ }))
+    fireEvent.click(screen.getByRole('button', { name: '새 프로젝트 만들기' }))
+  }
   else {
     fireEvent.click(screen.getByRole('button', { name: 'D1을 SS34로 바꿔도 되나요?' }))
     fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))

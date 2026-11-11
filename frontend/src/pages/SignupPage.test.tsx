@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -67,8 +67,8 @@ it('logout from a project address leaves no project id in the address or cached 
     return signedIn ? Response.json(user) : failure()
   })
   const { client } = open('/app?projectId=12&targetRef=D1')
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
-  expect(client.getQueryData(['projects'])).toBeDefined()
+  expect(await screen.findByRole('list', { name: '분석 진행 단계' })).toBeInTheDocument()
+  await waitFor(() => expect(client.getQueryData(['projects'])).toBeDefined())
   fireEvent.click(screen.getByRole('button', { name: /사용자 \d+/ }))
   fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
   expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()

@@ -4,18 +4,53 @@ import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
 
 afterEach(() => vi.unstubAllGlobals())
+it('wires the selected demo original and removes it when an uploaded project is selected', async () => {
+  const proMicro = { ...demo, id: 'pro_micro', name: 'SparkFun Pro Micro v13', schematic: {
+    image_url: '/circuit-schematics/pro_micro.png', original_url: 'https://cdn.sparkfun.com/pro-micro.pdf',
+    source_repo: 'https://github.com/sparkfun/Pro_Micro', source_commit: 'a'.repeat(40),
+    license: 'CC BY-SA 4.0', license_evidence_url: 'https://github.com/sparkfun/Pro_Micro', attribution: 'SparkFun Electronics',
+  } }
+  const selected = { ...first, demo_id: 'pro_micro' }
+  network(path => Response.json(path === '/api/demo-circuits' ? [demo, proMicro] : path === '/api/projects' ? [summary(selected), summary(second)] : path === '/api/projects/11' ? selected : path === '/api/projects/12' ? second : []))
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  expect(await screen.findByRole('img', { name: 'SparkFun Pro Micro v13 원본 회로도' })).toHaveAttribute('src', '/circuit-schematics/pro_micro.png')
+  fireEvent.click(screen.getByRole('tab', { name: '연결 개념도' }))
+  expect(screen.getByRole('img', { name: 'D1 주변 연결 개념도' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ }))
+  fireEvent.click(await screen.findByRole('button', { name: second.name }))
+  expect(await screen.findByText('업로드한 넷리스트에는 원본 회로도 이미지와 부품 좌표가 포함되지 않습니다.')).toBeInTheDocument()
+  expect(screen.queryByRole('tab', { name: '원본 회로도' })).not.toBeInTheDocument()
+})
+it('프로젝트 선택 전에도 검증된 데모 원본 회로도를 보여준다', async () => {
+  const previewDemo = { ...demo, schematic: {
+    image_url: '/circuit-schematics/breadboard_supply.png', original_url: 'https://example.com/original.pdf',
+    source_repo: 'https://example.com/repository', source_commit: 'a'.repeat(40),
+    license: 'CC BY 4.0', license_evidence_url: 'https://example.com/license', attribution: 'Example Author',
+  } }
+  network(path => Response.json(path === '/api/demo-circuits' ? [previewDemo] : []))
+  openWorkbench()
+  expect(await screen.findByRole('img', { name: '시험 전원 회로 원본 회로도' })).toHaveAttribute('src', '/circuit-schematics/breadboard_supply.png')
+  expect(screen.getByRole('button', { name: '정보 패널 접기' })).toBeInTheDocument()
+})
 it('shows a focused analysis landing before a project is selected', async () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   expect(screen.getByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).toBeInTheDocument()
+  expect(screen.queryByText('빠른 시작', { selector: 'span' })).not.toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: '회로 작업대' })).not.toBeInTheDocument()
   expect(screen.queryByRole('list', { name: '분석 진행 단계' })).not.toBeInTheDocument()
   expect(screen.getByRole('textbox', { name: '질문' })).toBeEnabled()
-  expect(screen.getByRole('textbox', { name: '사용 조건 (선택)' })).toBeEnabled()
+  expect(screen.queryByRole('textbox', { name: '사용 조건 (선택)' })).not.toBeInTheDocument()
+  const conditionsToggle = screen.getByRole('button', { name: '사용 조건 추가(선택)' })
+  expect(conditionsToggle).toHaveAttribute('aria-expanded', 'false')
+  fireEvent.click(conditionsToggle)
+  const conditions = screen.getByRole('textbox', { name: '사용 조건 (선택)' })
+  expect(conditions).toBeEnabled()
+  expect(screen.getByText('사용 조건 (선택)', { selector: 'label' })).toHaveClass('sr-only')
   expect(screen.getByRole('button', { name: '기존 프로젝트 열기' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '분석 시작' })).toBeDisabled()
   expect(screen.queryByRole('button', { name: '가격·재고 조회' })).not.toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '정보 패널 펼치기' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '정보 패널 접기' })).toBeInTheDocument()
   const suggestion = screen.getByRole('button', { name: 'D1을 SS34로 바꿔도 되나요?' })
   fireEvent.click(suggestion)
   expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('D1을 SS34로 바꿔도 되나요?')
@@ -26,7 +61,7 @@ it('shows a focused analysis landing before a project is selected', async () => 
 it('introduces the implemented service flow and returns focus to the landing question', () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
-  const serviceHeadings = screen.getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
+  const serviceHeadings = within(screen.getByRole('main', { name: '분석 대화 작업면' })).getAllByRole('heading', { level: 2 }).map(heading => heading.textContent)
   expect(serviceHeadings).toEqual([
     '회로 안에서 역할을 먼저 봅니다',
     '후보와 근거를 한 화면에서 비교합니다',
@@ -40,7 +75,11 @@ it('introduces the implemented service flow and returns focus to the landing que
 it('keeps the service introduction out of a selected project workbench', async () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
   openWorkbench('/app?projectId=11')
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
+  expect(await screen.findByRole('list', { name: '분석 진행 단계' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: '회로 작업대' })).not.toBeInTheDocument()
+  expect(screen.queryByText('부품 대체 분석')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '결과 보기' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '프로젝트 만들기' })).not.toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: '회로 안에서 역할을 먼저 봅니다' })).not.toBeInTheDocument()
 })
 
@@ -54,6 +93,7 @@ it('keeps the landing draft through project creation and restores it in the work
   })
   openWorkbench()
   const question = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.click(screen.getByRole('button', { name: '사용 조건 추가(선택)' }))
   const conditions = screen.getByRole('textbox', { name: '사용 조건 (선택)' })
   fireEvent.change(question, { target: { value: 'D1을 SS34로 바꿔도 되나요?' } })
   fireEvent.change(conditions, { target: { value: '12V, 1A' } })
@@ -65,7 +105,7 @@ it('keeps the landing draft through project creation and restores it in the work
   await screen.findByRole('option', { name: demo.name })
   fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
   fireEvent.click(screen.getByRole('button', { name: '데모로 만들기' }))
-  expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
+  expect(await screen.findByRole('list', { name: '분석 진행 단계' })).toBeInTheDocument()
   await waitFor(() => expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue('D1을 SS34로 바꿔도 되나요?'))
   expect(screen.getByRole('textbox', { name: '사용 조건 (선택)' })).toHaveValue('12V, 1A')
 })
@@ -95,7 +135,8 @@ it('does not select delayed creation after the user switches projects', async ()
     return Response.json(path.endsWith('/11') ? first : second)
   })
   openWorkbench('/app?projectId=11')
-  fireEvent.click(screen.getAllByRole('button', { name: '프로젝트 만들기' })[0])
+  fireEvent.click(screen.getByRole('button', { name: '프로젝트 열기' }))
+  fireEvent.click(await screen.findByRole('button', { name: '새 프로젝트 만들기' }))
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '늦은 생성' } })
   await screen.findByRole('option', { name: demo.name })
   fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
@@ -125,7 +166,6 @@ it('exposes keyboard-operable result tabs and a labelled project drawer', async 
   expect(screen.getByRole('dialog', { name: '내 프로젝트' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '닫기' }))
   await waitFor(() => expect(toggle).toHaveFocus())
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
   const judgement = screen.getByRole('tab', { name: '후보 비교' })
   fireEvent.click(judgement)
   expect(judgement).toHaveAttribute('aria-selected', 'true')
@@ -184,7 +224,6 @@ it('resizes both desktop side panels by dragging their borders', () => {
   fireEvent.pointerUp(leftHandle, { pointerId: 1 })
   expect(leftHandle).toHaveAttribute('aria-valuenow', '280')
 
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
   const rightHandle = screen.getByRole('separator', { name: '회로 및 분석 정보 너비 조절' })
   fireEvent.pointerDown(rightHandle, { clientX: 900, pointerId: 2 })
   fireEvent.pointerMove(rightHandle, { clientX: 850, pointerId: 2 })
@@ -228,7 +267,6 @@ it('uses a single actions destination and accessible tab relationships', async (
   openWorkbench()
   expect(screen.getByRole('button', { name: '승인·견적' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '승인 사례·이력' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
   const tabs = screen.getAllByRole('tab')
   expect(tabs[0]).toHaveAttribute('aria-controls', 'panel-circuit')
   expect(screen.getByRole('tabpanel', { name: '회로' })).toHaveAttribute('aria-labelledby', tabs[0].id)
@@ -263,7 +301,10 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   const result = {
     answer: '판정 완료', status: 'completed', stage: '완료', question_type: 'judge', evidence: [], price_parts: [], refusal: '', interrupt: {}, request_id: 'req-run',
     judgement: { kind: 'judge', roles: ['R01'], role_evidence: ['D1.K → GND'], shown: [], unverified: [], capped: false,
-      results: [{ part: 'SS34', role: 'R01', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', value: 40, unit: 'V', condition: '입력 최대 전압', citation: { document: 'ss34.pdf', page: 3, table: 'Ratings', row: 'VRRM' } }] }] },
+      results: [
+        { part: 'SS34L', role: 'R01', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', value: 40, unit: 'V', condition: '입력 최대 전압', citation: { document: 'SS34L SERIES_C2103.pdf', page: 1, table: 'Ratings', row: 'VRRM', source_url: 'https://services.taiwansemi.com/storage/resources/datasheet/SS34L SERIES_C2103.pdf', outline_page: 4 } }] },
+        { part: 'OTHER', verdict: 'NOT_VERIFIED', checks: [{ code: 'VRRM', citation: { document: 'other.pdf', page: 1, source_url: 'https://services.taiwansemi.com/storage/resources/datasheet/other.pdf', outline_page: 2 } }] },
+      ] },
   }
   network((path, init) => {
     if (path === '/api/judge/roles') return Response.json([{ code: 'R01', name: '역극성 보호(직렬)' }])
@@ -281,13 +322,17 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   openWorkbench('/app?projectId=11&targetRef=D1')
   await screen.findByText('D1 / 1N4001')
   fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1을 SS34로 바꿔도 되나요?' } })
+  fireEvent.click(screen.getByRole('button', { name: '사용 조건 추가(선택)' }))
   fireEvent.change(screen.getByLabelText('사용 조건 (선택)'), { target: { value: '입력 최대 12 V' } })
   fireEvent.click(screen.getByRole('button', { name: '분석하기' }))
   expect(await screen.findByText('역극성 보호(직렬)')).toBeInTheDocument()
   expect(within(screen.getByLabelText('개념도 사용 조건')).getByText('입력 최대 12 V')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('tab', { name: '후보 비교' }))
-  fireEvent.click(await screen.findByRole('button', { name: 'SS34 후보 선택' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'SS34L 후보 선택' }))
   fireEvent.click(screen.getByRole('tab', { name: '근거' }))
-  expect(screen.getByText('SS34 데이터시트 근거')).toBeInTheDocument()
-  expect(screen.getByText('ss34.pdf')).toBeInTheDocument()
+  expect(screen.getByText('SS34L 데이터시트 근거')).toBeInTheDocument()
+  expect(screen.getByText('SS34L SERIES_C2103.pdf')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'SS34L 공식 데이터시트 열기' })).toHaveAttribute('href', 'https://services.taiwansemi.com/storage/resources/datasheet/SS34L SERIES_C2103.pdf#page=1')
+  expect(screen.getByRole('link', { name: '패키지 외형 4쪽 열기' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'OTHER 공식 데이터시트 열기' })).not.toBeInTheDocument()
 })

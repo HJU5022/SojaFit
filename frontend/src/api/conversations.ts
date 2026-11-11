@@ -1,9 +1,9 @@
 import { apiFetch, apiRequest } from './client'
 import type { ProfileHintDto } from './profile'
 
-export type EvidenceDto = { document: string; page: number | string | null; table: string; row: string; section: string; citation_number: string }
-export type CitationDto = { document?: string; page?: number | string | null; table?: string; row?: string; chunk_id?: string | number | null; chunk_index?: number | null }
-export type CheckDto = { code: string; basis?: string; value?: number | number[] | null; threshold?: number | number[] | null; unit?: string | null; condition?: string | null; result?: string; why?: string; citation?: CitationDto | null }
+export type EvidenceDto = { document: string; page: number | string | null; table: string; row: string; section: string; citation_number: string; source_url?: string; outline_page?: number | null }
+export type CitationDto = { document?: string; page?: number | string | null; table?: string; row?: string; chunk_id?: string | number | null; chunk_index?: number | null; source_url?: string; outline_page?: number | null }
+export type CheckDto = { code: string; tier?: string; op?: string; basis?: string; value?: number | number[] | null; threshold?: number | number[] | null; unit?: string | null; condition?: string | null; result?: string; why?: string; citation?: CitationDto | null }
 export type CandidateDto = { part: string; role?: string; verdict: 'IDENTICAL' | 'SPEC_EQUIVALENT' | 'ROLE_SUFFICIENT' | 'NOT_VERIFIED' | 'NOT_SUFFICIENT'; checks?: CheckDto[]; missing?: string[]; uncertain?: string[]; cautions?: string[]; board_change?: boolean | null; package_citation?: CitationDto | null }
 export type JudgementDto = { kind: 'judge' | 'find' | 'no_rule'; roles: string[]; role_evidence: string[]; results: CandidateDto[]; shown: CandidateDto[]; unverified: CandidateDto[]; capped: boolean }
 export type InterruptDto = { missing?: string[]; role_choices?: string[]; question?: string }

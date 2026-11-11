@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { CircuitContext } from './circuitContext'
 import CircuitContextDiagram from './CircuitContextDiagram'
@@ -31,16 +31,21 @@ describe('CircuitContextDiagram', () => {
     expect(screen.getByText('D1.K → RAW')).toBeInTheDocument()
     expect(screen.getByText('실제 회로도가 아닌 대상 부품 주변 연결 개념도입니다.')).toBeInTheDocument()
     expect(container.querySelector('.context-diagram')).toBeInTheDocument()
+    expect(container.querySelector('.context-diagram')).toHaveAttribute('data-layout', 'fallback')
+    expect(container.querySelector('.context-edge path')).toBeInTheDocument()
+    expect(container.querySelector('.context-edge line')).not.toBeInTheDocument()
+    expect(container.querySelector('[data-kind="net"]')).toBeInTheDocument()
     expect(container.querySelector('marker')).not.toBeInTheDocument()
     expect(container.querySelector('[marker-end]')).not.toBeInTheDocument()
   })
 
   it('shows known metadata when a node is selected and never guesses absent conditions', () => {
-    render(<CircuitContextDiagram context={context} analysisStatus="requires_input" />)
+    const { container } = render(<CircuitContextDiagram context={context} analysisStatus="requires_input" />)
     fireEvent.click(screen.getByRole('button', { name: 'U1 노드' }))
-    expect(screen.getByText('선택 노드 U1')).toBeInTheDocument()
-    expect(screen.getByText('LM317')).toBeInTheDocument()
-    expect(screen.getByText('import_input:TO220-ADJ')).toBeInTheDocument()
+    const details = within(container.querySelector('.context-details') as HTMLElement)
+    expect(details.getByText('선택 노드 U1')).toBeInTheDocument()
+    expect(details.getByText('LM317')).toBeInTheDocument()
+    expect(details.getByText('import_input:TO220-ADJ')).toBeInTheDocument()
     expect(screen.getByText('전압·전류 정보 필요')).toBeInTheDocument()
     expect(screen.getByText('사용 조건 부족')).toBeInTheDocument()
   })

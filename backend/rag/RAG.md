@@ -25,7 +25,8 @@
 - `card_specs.py` — 서비스 기본 판정 값(ADR 0016), 카드에서 읽음: `specs(part, codes)`가 품번의 사양 행(분류 · 코드 · 최소/대표/최대 SI 값 · 단위 · 원문 · 시험 조건 · 인용)을 돌려줌(PACKAGE · AEC_Q101 행 포함), 사실 확인용 `doc_rows`(LLM 없음). `DATABASE_URL`로 DB를 직접 읽음. 품번 → 문서 색인은 조립 때가 아니라 첫 찾기 때 한 번 읽음(코퍼스 없는 DB에서도 서버가 뜸)
 - `units.py` — `to_si(값, 단위)`: 표 단위(mA·µA·nA·ns·pF·kV·mW·°C 등)를 SI 기본 단위(V, A, W, s, F, degC) 값으로. 모르는 단위·비율 단위(°C/W)는 None
 - `storage.py` — 벡터 열 형식 `RAG_VECTOR_TYPE=vector|halfvec` 계약(서버와 적재 도구가 함께 씀), 읽기 전용 DB/표 용량 점검(`inspect`), 기존 vector에서 API 없이 표본 top-5 정밀도 비교(`compare`)
-- `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음, `specs.py` 공용 규칙만 카드 도구가 import). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 일곱 모듈과 `__init__.py`(패키지 표시)가 있습니다
+- `source_metadata.py` — `source_metadata(document)`가 경로의 URL-decoded basename을 case-fold하여 manifest와 `data/package-outline-pages.json`에서 정확히 찾는다. 공식 HTTPS URL·1-based 외형 페이지를 한 번만 읽어 캐시하며, 모르는 문서나 호출자가 준 URL은 받지 않는다. 브라우저 DTO만 이 출처를 붙이며 DB 저장 형식에는 넣지 않는다
+- `pipeline/` — 오프라인 데이터시트 도구(서버가 import하지 않음, `specs.py` 공용 규칙만 카드 도구가 import). `python -m backend.rag.pipeline.<모듈>`로 돌립니다. 아래 여덟 모듈과 `__init__.py`(패키지 표시)가 있습니다
   - `pipeline/collect.py` — TSC 분류별 Export xlsx를 PDF 목록 csv로 합치기(`list`), PDF 받기(`download`). 새 clone에서는 `data/manifest.jsonl`로 받는다(sha256 대조)
   - `pipeline/parse.py` — Docling 파싱과 두 방향 숫자 대조(`run`, `recall`). uv 그룹 `ingest`가 필요
   - `pipeline/chunk.py` — Docling 결과를 청크(품번 표지, 표 밖 글, 표 한 행)로 자르고 `data/manifest.jsonl`을 씀. uv 그룹 `ingest`가 필요
@@ -33,6 +34,7 @@
   - `pipeline/specs.py` — 표 행 청크 공용 규칙: 코드 17종의 SI 단위(`SI`), 기호 · 설명 낱말 → 코드(`SYMS` · `KEYWORDS`), 패키지 이름(`PKG` · `packages_of`), 분류 이름(`family`, `ingest.py`가 `source_documents.category`에 넣음), 양방향 · AEC-Q101 문장(`BOTH_DIRECTIONS` · `AEC_H` · `AEC_ALL`). `read_card`는 카드 한 장만 같은 해석기(`Doc`)로 읽어 후보 · 검토 표시 · 행 코드를 돌려준다(표 · 저장 없음, `card_read`가 질문 때 씀). 사양 표 만들기 · 대조표 · 적재(`build` · `sample` · `load`)는 11-10에 지웠다(ADR 0016). 해석기 `Doc`은 `read_card`가 써서 남았다
   - `pipeline/subset.py` — (보류) 손으로만 돌리는 도구. 제조사 분류 csv로 5개 다이오드 분류만 고른 manifest·청크 사본을 새 폴더에 만듦. 원본은 고치지 않고, 서비스·초기화·적재에서 부르지 않음
   - `pipeline/demo_snapshot.py` — 전체 v4h `manifest.jsonl`·`chunks.jsonl`에서 1N4148 · 1N4148로 시작하는 품번 · 1N4001G/1N4007G로 시작하는 품번 문서와 1N4148 문서의 같은 분류(`family`) 문서(이름 순 60건 상한)를 줄 그대로 골라 `data/demo/snapshot/`에 씀. 키 없는 compose의 `corpus-load`가 `ingest.py --chunks-only`로 적재한다([SNAPSHOT.md](../../data/demo/snapshot/SNAPSHOT.md))
+  - `pipeline/package_outlines.py` — `python -m backend.rag.pipeline.package_outlines <docling 폴더> data/manifest.jsonl data/package-outline-pages.json`. manifest URL basename과 Docling `origin.filename`을 정확히 대조하고, 지정 외형 제목과 그림이 함께 있는 가장 이른 1-based 페이지를 기록한다. 누락·중복·잘못된 URL·제목과 같은 페이지의 그림 부재는 실패한다. 정렬된 UTF-8 JSON에 공식 URL·페이지·제목만 쓰며 로컬 경로는 넣지 않는다. 현재 1,360문서 전부 색인됨
 
 작업서는 [rag-pipeline.md](../../docs/specs/rag-pipeline.md)입니다. 원본 PDF·파싱 결과·청크는 저장소 밖 로컬 `SojaFit/corpus/tsc/`에 둡니다(키 없는 데모용 42문서 청크만 `data/demo/snapshot/`).
 

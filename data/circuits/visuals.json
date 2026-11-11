@@ -1,0 +1,167 @@
+{
+  "breadboard_supply": {
+    "image_url": "/circuit-schematics/breadboard_supply.png",
+    "original_url": "https://cdn.sparkfun.com/datasheets/Kits/Breadboard%20Power%20Supply%20v10.pdf",
+    "source_repo": "https://github.com/sparkfun/Breadboard_Power_Supply_5V_3.3V",
+    "source_commit": "6e4b69f6b8ca4871a802177e6a615fdfc8e82f1b",
+    "license": "CC BY-SA 4.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/sparkfun/Breadboard_Power_Supply_5V_3.3V/6e4b69f6b8ca4871a802177e6a615fdfc8e82f1b/LICENSE.md",
+    "attribution": "SparkFun Electronics",
+    "sha256": "eefc0ccc14a2d27ef44db017bcf142e465881f24dae1ac79601fdb423037246b",
+    "source_sha256": "cf23c8b4ec504113d1da3e768962c7f765dde327673be038bbfdf306f36c77ed"
+  },
+  "mosfet_driver": {
+    "image_url": "/circuit-schematics/mosfet_driver.png",
+    "original_url": "https://cdn-learn.adafruit.com/assets/assets/000/117/028/large1024/adafruit_products_schem.png?1670851887",
+    "source_repo": "https://github.com/adafruit/Adafruit-MOSFET-Driver-STEMMA-PCB",
+    "source_commit": "ea11049753a79330cc2651df233909c0191a5af4",
+    "license": "CC BY-SA 3.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/adafruit/Adafruit-MOSFET-Driver-STEMMA-PCB/ea11049753a79330cc2651df233909c0191a5af4/license.txt",
+    "attribution": "Adafruit Industries",
+    "sha256": "11cb115d1edc56fe671319e0fb3e127c9c1cacdd030d71214ded6d168804c7a3",
+    "source_sha256": "11cb115d1edc56fe671319e0fb3e127c9c1cacdd030d71214ded6d168804c7a3"
+  },
+  "attiny85_dev": {
+    "image_url": "/circuit-schematics/attiny85_dev.png",
+    "original_url": "https://raw.githubusercontent.com/tomasr8/attiny85-dev-board/488b99063b6bdbafa0f367ecc25901b55c4c7144/assets/schematic.png",
+    "source_repo": "https://github.com/tomasr8/attiny85-dev-board",
+    "source_commit": "488b99063b6bdbafa0f367ecc25901b55c4c7144",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/tomasr8/attiny85-dev-board/488b99063b6bdbafa0f367ecc25901b55c4c7144/LICENSE",
+    "attribution": "tomasr8/attiny85-dev-board contributors",
+    "sha256": "271f58272aaf12bcbe4747a5878202c02081121c0bdc191611c41bfa013d1edc",
+    "source_sha256": "271f58272aaf12bcbe4747a5878202c02081121c0bdc191611c41bfa013d1edc"
+  },
+  "franzininho_diy": {
+    "image_url": "/circuit-schematics/franzininho_diy.png",
+    "original_url": "https://raw.githubusercontent.com/Franzininho/franzininho-diy-board/abdb4b48d867190d6b9794280be8b85b81aa1772/Franzininho.pdf",
+    "source_repo": "https://github.com/Franzininho/franzininho-diy-board",
+    "source_commit": "abdb4b48d867190d6b9794280be8b85b81aa1772",
+    "license": "CC BY-SA 4.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/Franzininho/franzininho-diy-board/abdb4b48d867190d6b9794280be8b85b81aa1772/LICENSE",
+    "attribution": "Franzininho DIY contributors",
+    "sha256": "cbb3a2c528eea06682a4a0aff71a390e43648484272b0e81836c20227fc54821",
+    "source_sha256": "c5fed3d1d04baa18ced2b9e8fcb6be12ceede041d3136ee8e186a33367ed2e31"
+  },
+  "pro_micro": {
+    "image_url": "/circuit-schematics/pro_micro.png",
+    "original_url": "https://cdn.sparkfun.com/datasheets/Dev/Arduino/Boards/Pro_Micro_v13b.pdf",
+    "source_repo": "https://github.com/sparkfun/Pro_Micro",
+    "source_commit": "df836f3bf2955c4f1199a852f618d2ac80866d47",
+    "license": "CC BY-SA 4.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/sparkfun/Pro_Micro/df836f3bf2955c4f1199a852f618d2ac80866d47/LICENSE.md",
+    "attribution": "SparkFun Electronics",
+    "sha256": "54351be09a60e0197ffd4853e4b3964920c25ff89e67a3489c635ddd65bcb7cd",
+    "source_sha256": "478a97a40e17fefaab436b5979f2e95cd231d5c2c2194a37c767d20dc2dc6cb1"
+  },
+  "attiny85_time_switch": {
+    "image_url": "/circuit-schematics/attiny85_time_switch.png",
+    "original_url": "https://raw.githubusercontent.com/UCSIG/attiny85_time_switch/3566a94ffc17471e3f0a592bacc63480a2898641/pcb/attiny85_time_switch_rev1/attiny85_time_switch_schematic.pdf",
+    "source_repo": "https://github.com/UCSIG/attiny85_time_switch",
+    "source_commit": "3566a94ffc17471e3f0a592bacc63480a2898641",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/UCSIG/attiny85_time_switch/3566a94ffc17471e3f0a592bacc63480a2898641/LICENSE",
+    "attribution": "UCSIG/attiny85_time_switch contributors",
+    "sha256": "a4433c20745ee419565416000f80bb5034df500c25dd96307a5e20a4115d08ba",
+    "source_sha256": "23eb21f20ad5567131076e71f02a53e907012c3c25aec677f7158555a2b42744"
+  },
+  "fc_rom_vomitter": {
+    "image_url": "/circuit-schematics/fc_rom_vomitter.png",
+    "original_url": "https://raw.githubusercontent.com/Keitark/fc-rom-vomitter/f64502c301ca5e11add76efdf7dd52b343f8baaf/docs/nescart-fc-schematic.pdf",
+    "source_repo": "https://github.com/Keitark/fc-rom-vomitter",
+    "source_commit": "f64502c301ca5e11add76efdf7dd52b343f8baaf",
+    "license": "CC BY-SA 4.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/Keitark/fc-rom-vomitter/f64502c301ca5e11add76efdf7dd52b343f8baaf/LICENSES/CC-BY-SA-4.0.txt",
+    "attribution": "Keitark contributors",
+    "sha256": "e4a314bbb76a0bd178cf43b1006841620ebbc6bde3e016d53e550eda7902cfa7",
+    "source_sha256": "1f87d07ac32d92ed8cc517d7ef450b7a4c542172f00e57d65075d3c7999b215a"
+  },
+  "attiny2313a_thermostat": {
+    "image_url": "/circuit-schematics/attiny2313a_thermostat.png",
+    "original_url": "https://raw.githubusercontent.com/sergeyyarkov/attiny2313a_thermostat/4e956f152368fc8a6f68e9e2e0d273ea25249840/hardware/hardware/hardware.kicad_sch",
+    "source_repo": "https://github.com/sergeyyarkov/attiny2313a_thermostat",
+    "source_commit": "4e956f152368fc8a6f68e9e2e0d273ea25249840",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/sergeyyarkov/attiny2313a_thermostat/4e956f152368fc8a6f68e9e2e0d273ea25249840/LICENSE",
+    "attribution": "Sergey Yarkov",
+    "sha256": "ace1a1c24238ca2a644b9dde3918e532a4a69dc33d6ecfcf31075fa05adfebbe",
+    "source_sha256": "7c1bcae07a542aa7d4009b4d55c2ef49c039af547c3d2415d4d4f393b26c787a"
+  },
+  "tiny85_fan_control": {
+    "image_url": "/circuit-schematics/tiny85_fan_control.png",
+    "original_url": "https://raw.githubusercontent.com/Colahall/tiny85fancontrol/66366bd10b66e4bc3e944902f9e6c93a44ddeac4/schematic/info/tiny85fancontrol.png",
+    "source_repo": "https://github.com/Colahall/tiny85fancontrol",
+    "source_commit": "66366bd10b66e4bc3e944902f9e6c93a44ddeac4",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/Colahall/tiny85fancontrol/66366bd10b66e4bc3e944902f9e6c93a44ddeac4/LICENSE",
+    "attribution": "Colahall, LLC",
+    "sha256": "1190859b91d4db33661b55fe2d81d27b0e279f4407cc163c82ee3dc70bb2147b",
+    "source_sha256": "1190859b91d4db33661b55fe2d81d27b0e279f4407cc163c82ee3dc70bb2147b"
+  },
+  "ug56_pwm_controller": {
+    "image_url": "/circuit-schematics/ug56_pwm_controller.png",
+    "original_url": "https://raw.githubusercontent.com/universalgeek56/UG56-attiny13a-pwm-controller/91f19385e76a92e9b58c681f22e9891ba1c8aebe/img/sch.png",
+    "source_repo": "https://github.com/universalgeek56/UG56-attiny13a-pwm-controller",
+    "source_commit": "91f19385e76a92e9b58c681f22e9891ba1c8aebe",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/universalgeek56/UG56-attiny13a-pwm-controller/91f19385e76a92e9b58c681f22e9891ba1c8aebe/LICENSE",
+    "attribution": "UG56 contributors",
+    "sha256": "6e0f26cfc6999c20b85b10fbe26a25c479fcf5dacc00f707f8522fb3c0335edf",
+    "source_sha256": "6e0f26cfc6999c20b85b10fbe26a25c479fcf5dacc00f707f8522fb3c0335edf"
+  },
+  "car_radio_acc_delay": {
+    "image_url": "/circuit-schematics/car_radio_acc_delay.png",
+    "original_url": "https://raw.githubusercontent.com/alexwarg/car-radio-acc-delay/5d5048f196ea539ae2464c6bc766384444ea8696/hardware/auto-acc-timer/auto-acc-timer.pdf",
+    "source_repo": "https://github.com/alexwarg/car-radio-acc-delay",
+    "source_commit": "5d5048f196ea539ae2464c6bc766384444ea8696",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/alexwarg/car-radio-acc-delay/5d5048f196ea539ae2464c6bc766384444ea8696/LICENSE",
+    "attribution": "Alexander Warg",
+    "sha256": "db4ee81a3908cfc93d2234baf29ddfbbb940f3d436856e9eae853879bb5df819",
+    "source_sha256": "22c18e38334be16e96b52b79a7e2b7d9c2c8654b32d8a4fef161d3e98202a8e9"
+  },
+  "overengineered_psu": {
+    "image_url": "/circuit-schematics/overengineered_psu.png",
+    "original_url": "https://raw.githubusercontent.com/MAATHES-THILAK-K/OverEngineered-PSU/5b8b7757e9742b4f97ddf61c434c7cf2e48b1867/Hardware/OverEngineered-PSU.pdf",
+    "source_repo": "https://github.com/MAATHES-THILAK-K/OverEngineered-PSU",
+    "source_commit": "5b8b7757e9742b4f97ddf61c434c7cf2e48b1867",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/MAATHES-THILAK-K/OverEngineered-PSU/5b8b7757e9742b4f97ddf61c434c7cf2e48b1867/LICENSE",
+    "attribution": "MAATHES-THILAK-K",
+    "sha256": "cf395fc726a0c9667debc0edc7aa2842759be855817694afaff1e33ab282b5ad",
+    "source_sha256": "d58c6c5a84ff52ca5fa20e4f7f3c6f4b0cd3f7a9ac31e5c9695e5a86c0e63b8f"
+  },
+  "tinydimmer": {
+    "image_url": "/circuit-schematics/tinydimmer.png",
+    "original_url": "https://raw.githubusercontent.com/virtual-machinist/tinydimmer/52ee6077344b044bf046e6c616cefe3675091b46/images/tinydimmer.sch.pdf",
+    "source_repo": "https://github.com/virtual-machinist/tinydimmer",
+    "source_commit": "52ee6077344b044bf046e6c616cefe3675091b46",
+    "license": "CC BY-SA 4.0",
+    "license_evidence_url": "https://raw.githubusercontent.com/virtual-machinist/tinydimmer/52ee6077344b044bf046e6c616cefe3675091b46/LICENSE",
+    "attribution": "virtual-machinist contributors",
+    "sha256": "79bee065fd14b4fc094e54b5c53dca40ecb31e0e3b0c8a30d75e18d249637f80",
+    "source_sha256": "a448024f4478bd2761353e9c12e2a3a22094f30a799b0ce9908cac7055bfa5a2"
+  },
+  "hrem": {
+    "image_url": "/circuit-schematics/hrem.png",
+    "original_url": "https://raw.githubusercontent.com/bazhenov/hrem/7d6d56d1a7d75231c0d7109d90839474f59f3f1d/hardware/hrem.sch",
+    "source_repo": "https://github.com/bazhenov/hrem",
+    "source_commit": "7d6d56d1a7d75231c0d7109d90839474f59f3f1d",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/bazhenov/hrem/7d6d56d1a7d75231c0d7109d90839474f59f3f1d/LICENSE",
+    "attribution": "Denis Bazhenov",
+    "sha256": "28e3a8ba30eb3b7413e725dfe41da81590df9aee7d7f5de9396d5ded61db0411",
+    "source_sha256": "ed586c1ffba038ac89405202091ff419efd6d477043d6e72d5638fd83f588a18"
+  },
+  "zr7_taillight": {
+    "image_url": "/circuit-schematics/zr7_taillight.png",
+    "original_url": "https://raw.githubusercontent.com/slabua/zr7-taillight/777c5d5f034361a6d143fedeb3de9a8bb81ca532/hardware/KiCad/zr7-taillight.kicad_sch",
+    "source_repo": "https://github.com/slabua/zr7-taillight",
+    "source_commit": "777c5d5f034361a6d143fedeb3de9a8bb81ca532",
+    "license": "MIT",
+    "license_evidence_url": "https://raw.githubusercontent.com/slabua/zr7-taillight/777c5d5f034361a6d143fedeb3de9a8bb81ca532/LICENSE",
+    "attribution": "Salvatore La Bua",
+    "sha256": "e72c77e13424f25bd891ab511b2521e896197ecfa502701cb199e410fff584a0",
+    "source_sha256": "9bea93de5eec7b7734690faca1638e1bee745d61f7df685735634aa19609eac5"
+  }
+}

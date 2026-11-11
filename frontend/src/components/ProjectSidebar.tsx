@@ -4,12 +4,13 @@ import { deleteProject, listProjects, renameProject } from '../api/projects'
 import type { Project } from '../api/projects'
 import { errorMessage } from '../api/client'
 
-export default function ProjectSidebar({ selectedId, project, onSelect, onDeleted }: {
-  selectedId: number | null; project?: Project; onSelect: (id: number) => void; onDeleted: (id: number) => void
+export default function ProjectSidebar({ selectedId, project, onSelect, onDeleted, onCreate }: {
+  selectedId: number | null; project?: Project; onSelect: (id: number) => void; onDeleted: (id: number) => void; onCreate: () => void
 }) {
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false, gcTime: 0 })
   return <aside className="panel project-sidebar" aria-label="내 프로젝트">
     <h2>내 프로젝트</h2>
+    <button className="secondary" onClick={onCreate}>새 프로젝트 만들기</button>
     {projects.isPending && <p role="status">프로젝트를 불러오는 중입니다.</p>}
     {projects.error ? <div><p role="alert">{errorMessage(projects.error)}</p><button className="secondary" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div> : <ul className="project-list">
       {projects.data?.map(project => <li key={project.id}><button aria-current={selectedId === project.id ? 'true' : undefined} onClick={() => onSelect(project.id)}>{project.name}</button></li>)}

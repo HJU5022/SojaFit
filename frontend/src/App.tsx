@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
 import SettingsPage from './pages/SettingsPage'
+import useOverlayScrollbar from './hooks/useOverlayScrollbar'
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>
@@ -24,6 +25,7 @@ function Shell() {
   const [error, setError] = useState<unknown>(null)
   const workbench = location.pathname === '/app'
   const ContentRoot = workbench ? 'div' : 'main'
+  useOverlayScrollbar()
   async function signOut() {
     if (busy) return
     setBusy(true); setError(null)
@@ -31,7 +33,7 @@ function Shell() {
     finally { setBusy(false) }
   }
   return (
-    <div className="shell">
+    <div className={`shell${workbench ? ' workbench-route' : ''}`}>
       {!workbench && <header className="topbar">
         <a className="brand" href="/app">
           <svg aria-hidden="true" viewBox="0 0 48 20"><path d="M5 10h15l8-6v12l-8-6h23" /><circle cx="5" cy="10" r="3" /><circle cx="43" cy="10" r="3" /></svg>

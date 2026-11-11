@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getProject, listProjects } from '../api/projects'
-import type { Project } from '../api/projects'
+import { getProject, listDemos, listProjects } from '../api/projects'
+import type { DemoCircuit, Project } from '../api/projects'
 import { listJudgeRoles } from '../api/conversations'
 import type { CandidateDto, JudgementDto } from '../api/conversations'
 import { errorMessage } from '../api/client'
 import ProjectSidebar from '../components/ProjectSidebar'
 import CircuitSetup from '../components/CircuitSetup'
 import CircuitSummary from '../components/CircuitSummary'
+import CircuitSchematic from '../components/CircuitSchematic'
 import ConversationPanel from '../components/ConversationPanel'
 import EvidencePanel from '../components/EvidencePanel'
 import JudgementTable from '../components/JudgementTable'
@@ -51,9 +52,24 @@ function EmptyConversationPanel({ onCreate, loading = false }: { onCreate: () =>
     <div className="conversation-stream" aria-live="polite"><article className="conversation-card input-card"><span className="card-kicker">시작 안내</span><h3>{loading ? '회로를 불러오는 중입니다.' : '프로젝트를 먼저 만드세요'}</h3><p>{loading ? '회로와 부품 정보를 확인한 뒤 질문 입력을 활성화합니다.' : '프로젝트가 없습니다. 데모 또는 파일로 시작하세요.'}</p>{!loading && <button className="secondary" onClick={onCreate}>프로젝트 만들기</button>}</article></div>
     <div className="composer composer-disabled"><div className="composer-context"><strong>대상 미선택</strong><span>프로젝트와 대상 부품을 먼저 선택하세요.</span></div>
       <label htmlFor="d5-question">질문</label><textarea id="d5-question" rows={3} disabled placeholder="프로젝트를 만들면 질문할 수 있습니다." />
-      <label htmlFor="d5-conditions">사용 조건 (선택)</label><textarea id="d5-conditions" rows={2} disabled />
       <div className="composer-actions"><button disabled>분석하기</button></div>
     </div>
+  </section>
+}
+
+function LandingCircuitPreview({ demos, loading }: { demos: DemoCircuit[]; loading: boolean }) {
+  const available = demos.filter(demo => Boolean(demo.schematic))
+  const [selectedId, setSelectedId] = useState('')
+  const selected = available.find(demo => demo.id === selectedId) ?? available[0]
+  return <section className="panel landing-circuit-preview" aria-labelledby="landing-circuit-preview-heading">
+    <h2 id="landing-circuit-preview-heading">검증된 데모 회로도</h2>
+    <p>프로젝트를 만들기 전에도 제공 가능한 원본 회로도를 미리 확인할 수 있습니다.</p>
+    <label htmlFor="landing-demo-circuit">미리보기 회로</label>
+    <select id="landing-demo-circuit" value={selected?.id ?? ''} disabled={!selected} onChange={event => setSelectedId(event.target.value)}>
+      {available.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}
+    </select>
+    {selected?.schematic ? <CircuitSchematic schematic={selected.schematic} circuitName={selected.name} targetRef="" />
+      : <p>{loading ? '회로도를 불러오는 중입니다.' : '표시할 수 있는 검증된 회로도가 없습니다.'}</p>}
   </section>
 }
 
@@ -106,6 +122,7 @@ function InitialLanding({ draft, onDraft, onCreate, onOpenProjects }: {
   onOpenProjects: () => void
 }) {
   const questionRef = useRef<HTMLTextAreaElement>(null)
+  const [conditionsOpen, setConditionsOpen] = useState(Boolean(draft.conditions))
   const suggestionLanes = useMemo(shuffledSuggestions, [])
   return <section className="initial-landing" aria-labelledby="landing-heading">
     <div className="landing-circuit" aria-hidden="true" />
@@ -116,12 +133,12 @@ function InitialLanding({ draft, onDraft, onCreate, onOpenProjects }: {
       <div className="landing-composer">
         <label htmlFor="landing-question">질문</label>
         <textarea ref={questionRef} id="landing-question" rows={3} maxLength={4000} value={draft.question} onChange={event => onDraft({ ...draft, question: event.target.value })} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
-        <label htmlFor="landing-conditions">사용 조건 (선택)</label>
-        <textarea id="landing-conditions" rows={2} maxLength={2000} value={draft.conditions} onChange={event => onDraft({ ...draft, conditions: event.target.value })} placeholder="예: 12V, 1A, 주변 온도 60°C" />
+        <button type="button" className="secondary conditions-toggle" aria-expanded={conditionsOpen} aria-controls="landing-conditions" onClick={() => setConditionsOpen(value => !value)}>{conditionsOpen ? '사용 조건 닫기' : draft.conditions ? '사용 조건 수정(입력됨)' : '사용 조건 추가(선택)'}</button>
+        {conditionsOpen && <div className="optional-conditions"><label className="sr-only" htmlFor="landing-conditions">사용 조건 (선택)</label>
+          <textarea id="landing-conditions" rows={2} maxLength={2000} value={draft.conditions} onChange={event => onDraft({ ...draft, conditions: event.target.value })} placeholder="예: 12V, 1A, 주변 온도 60°C" /></div>}
         <div className="landing-actions"><button type="button" className="secondary" onClick={onOpenProjects}>기존 프로젝트 열기</button><button type="button" disabled={!draft.question.trim()} onClick={onCreate}>분석 시작</button></div>
       </div>
       <div className="landing-suggestions" aria-label="빠른 시작 질문">
-        <span className="quick-start-label">빠른 시작</span>
         {suggestionLanes.map((lane, laneIndex) => <div className={`suggestion-lane direction-${laneIndex === 1 ? 'right' : 'left'}`} key={`lane-${laneIndex}`}>
           <div className="suggestion-track">
             {[false, true].map(copy => <div className={`suggestion-group${copy ? ' suggestion-copy' : ''}`} aria-hidden={copy || undefined} key={copy ? 'copy' : 'source'}>
@@ -154,7 +171,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
   const [railExpanded, setRailExpanded] = useState(true)
   const [railWidth, setRailWidth] = useState(220)
   const [resultTab, setResultTab] = useState<ResultTab>('circuit')
-  const [panelCollapsed, setPanelCollapsed] = useState(id === null)
+  const [panelCollapsed, setPanelCollapsed] = useState(false)
   const [panelWidth, setPanelWidth] = useState(430)
   const [search, setSearch] = useState('')
   const [runState, setRunState] = useState<RunState>({ status: 'idle' })
@@ -184,6 +201,8 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
   }, [client])
   const detail = useQuery({ queryKey: ['project', id], queryFn: ({ signal }) => getProject(id!, signal), enabled: id !== null, retry: false, gcTime: 0 })
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false, gcTime: 0 })
+  const demos = useQuery({ queryKey: ['demo-circuits'], queryFn: ({ signal }) => listDemos(signal), retry: false, gcTime: 0 })
+  const demosById = useMemo(() => new Map((Array.isArray(demos.data) ? demos.data : []).map(demo => [demo.id, demo])), [demos.data])
   const roles = useQuery({ queryKey: ['judge-roles'], queryFn: ({ signal }) => listJudgeRoles(signal), retry: false, gcTime: 0 })
   function selectProject(projectId: number) {
     selection.current.version++
@@ -199,7 +218,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
   function deleted(projectId: number) {
     if (!mounted.current) return
     const next = new URLSearchParams(selection.current.signature)
-    if (next.get('projectId') === String(projectId)) { next.delete('projectId'); next.delete('targetRef'); setParams(next, { replace: true }); setPanelCollapsed(true) }
+    if (next.get('projectId') === String(projectId)) { next.delete('projectId'); next.delete('targetRef'); setParams(next, { replace: true }); setPanelCollapsed(false) }
     setProjectDrawer(false); queueMicrotask(() => projectButton.current?.focus())
   }
   const receiveRun = useCallback((state: RunState) => {
@@ -274,7 +293,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
   return <div className={`workbench-shell${panelCollapsed ? ' console-collapsed' : ''}${reduceMotion ? ' motion-reduced' : ''}`} style={layoutStyle}>
     <header className="workbench-topbar">
       <a className="brand workbench-brand" href="/app"><svg aria-hidden="true" viewBox="0 0 48 20"><path d="M5 10h15l8-6v12l-8-6h23" /><circle cx="5" cy="10" r="3" /><circle cx="43" cy="10" r="3" /></svg>SOJAFIT</a>
-      <button type="button" className="workbench-context" aria-label={`프로젝트 선택: ${detail.data?.name ?? '프로젝트 없음'}`} onClick={() => setProjectDrawer(true)}><strong>{detail.data?.name ?? '프로젝트 없음'}</strong><span>{target ? `${target.ref} · ${target.value || '품번 확인 안 됨'}` : '대상 부품 미선택'}</span></button>
+      <button ref={projectButton} type="button" className="workbench-context" aria-label={`프로젝트 선택: ${detail.data?.name ?? '프로젝트 없음'}`} onClick={() => setProjectDrawer(true)}><strong>{detail.data?.name ?? '프로젝트 없음'}</strong><span>{target ? `${target.ref} · ${target.value || '품번 확인 안 됨'}` : '대상 부품 미선택'}</span></button>
       <div className="workbench-search"><label className="sr-only" htmlFor="workbench-search">프로젝트 또는 부품 찾기</label><input id="workbench-search" type="search" aria-haspopup="listbox" aria-controls="workbench-search-results" aria-expanded={Boolean(normalizedSearch)} value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); document.querySelector<HTMLElement>('#workbench-search-results [role="option"]')?.focus() } }} placeholder="프로젝트 또는 부품 찾기" />
         {normalizedSearch && <div id="workbench-search-results" className="search-results" role="listbox" aria-label="검색 결과">{searchProjects.map(item => <button role="option" tabIndex={0} key={`project-${item.id}`} onKeyDown={moveSearchOption} onClick={() => { selectProject(item.id); setSearch('') }}>프로젝트 · {item.name}</button>)}{searchParts.map(part => <button role="option" tabIndex={0} key={`part-${part.ref}`} onKeyDown={moveSearchOption} onClick={() => { selectTarget(part.ref); setResultTab('circuit'); setSearch('') }}>{part.ref} · {part.value || '확인 안 됨'}</button>)}{searchProjects.length + searchParts.length === 0 && <p>현재 불러온 항목에서 찾지 못했습니다.</p>}</div>}
       </div>
@@ -287,8 +306,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
       {railExpanded && <div className="panel-resizer rail-resizer" role="separator" aria-label="작업 메뉴 너비 조절" aria-orientation="vertical" aria-valuemin={160} aria-valuemax={320} aria-valuenow={railWidth} title="드래그하여 작업 메뉴 너비 조절" tabIndex={0} onPointerDown={event => startResize('rail', event)} onPointerMove={event => continueResize('rail', event)} onPointerUp={finishResize} onPointerCancel={finishResize} onKeyDown={event => resizeWithKeyboard('rail', event)} />}
     </nav>
     <div className={`analysis-surface${id === null ? ' landing-mode' : ''}`} role="main" aria-label="분석 대화 작업면">
-      {id !== null && <><div className="analysis-heading"><div><span className="eyebrow">부품 대체 분석</span><h1>회로 작업대</h1><p>{targetRef ? `${targetRef} 교체 조건과 데이터시트 근거를 검토합니다.` : '회로와 대상 부품을 선택해 분석을 시작하세요.'}</p></div><div className="analysis-heading-actions">{(runState.status === 'completed' || runState.status === 'refused') && <button className="result-link" onClick={() => { setResultTab('judgement'); setPanelCollapsed(false) }}>결과 보기</button>}<button ref={projectButton} className="secondary" onClick={() => setProjectDialog(true)}>프로젝트 만들기</button></div></div>
-      <ol className="workbench-steps" aria-label="분석 진행 단계"><li className="complete">프로젝트</li><li className={targetRef ? 'complete' : 'current'}>대상 선택</li><li className={targetRef ? 'current' : ''}>질문</li><li className={result ? 'complete' : ''}>결과 검토</li><li className={result ? 'current' : ''}>승인·견적</li></ol></>}
+      {id !== null && <ol className="workbench-steps" aria-label="분석 진행 단계"><li className="complete">프로젝트</li><li className={targetRef ? 'complete' : 'current'}>대상 선택</li><li className={targetRef ? 'current' : ''}>질문</li><li className={result ? 'complete' : ''}>결과 검토</li><li className={result ? 'current' : ''}>승인·견적</li></ol>}
       {id !== null && detail.isPending && <p role="status">회로를 불러오는 중입니다.</p>}
       {detail.error && <p role="alert">{errorMessage(detail.error)}</p>}
       {roles.error && <p role="alert">역할 정보를 불러오지 못했습니다. {errorMessage(roles.error)}</p>}
@@ -300,7 +318,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
       <div className="console-toolbar"><strong>회로 및 분석 정보</strong><button className="icon-button secondary" aria-label={panelCollapsed ? '정보 패널 펼치기' : '정보 패널 접기'} onClick={() => setPanelCollapsed(value => !value)}>{panelCollapsed ? '‹' : '›'}</button></div>
       {!panelCollapsed && <><div className="result-tabs" role="tablist" aria-label="정보 보기">{resultTabItems.map(([key, label], index) => <button id={`tab-${key}`} ref={node => { tabRefs.current[index] = node }} key={key} role="tab" tabIndex={resultTab === key ? 0 : -1} aria-selected={resultTab === key} aria-controls={`panel-${key}`} onKeyDown={event => { if (event.key === 'ArrowRight') moveTab(index, 1); if (event.key === 'ArrowLeft') moveTab(index, -1) }} onClick={() => setResultTab(key)}>{label}</button>)}</div>
         <div className="console-content">
-          <div id="panel-circuit" aria-labelledby="tab-circuit" className={`right-tab-panel ${resultTab === 'circuit' ? 'active' : ''}`} role="tabpanel" tabIndex={0}>{detail.data ? <CircuitSummary project={detail.data} targetRef={targetRef} judgement={judgement} roleLabels={Array.isArray(roles.data) ? roles.data : []} missing={runState.status === 'requires_input' ? runState.interrupt.missing ?? [] : []} providedConditions={providedConditions} analysisStatus={runState.status} onTarget={selectTarget} /> : <section className="panel"><h2>회로</h2><p>선택한 프로젝트가 없습니다.</p></section>}</div>
+          <div id="panel-circuit" aria-labelledby="tab-circuit" className={`right-tab-panel ${resultTab === 'circuit' ? 'active' : ''}`} role="tabpanel" tabIndex={0}>{detail.data ? <CircuitSummary project={detail.data} demo={demosById.get(detail.data.demo_id ?? '')} targetRef={targetRef} judgement={judgement} roleLabels={Array.isArray(roles.data) ? roles.data : []} missing={runState.status === 'requires_input' ? runState.interrupt.missing ?? [] : []} providedConditions={providedConditions} analysisStatus={runState.status} onTarget={selectTarget} /> : id === null ? <LandingCircuitPreview demos={Array.isArray(demos.data) ? demos.data : []} loading={demos.isPending} /> : <section className="panel"><h2>회로</h2><p>선택한 프로젝트를 불러오지 못했습니다.</p></section>}</div>
           <div id="panel-evidence" aria-labelledby="tab-evidence" className={`right-tab-panel ${resultTab === 'evidence' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><EvidencePanel evidence={result?.evidence ?? []} candidate={candidate} /></div>
           <div id="panel-judgement" aria-labelledby="tab-judgement" className={`right-tab-panel ${resultTab === 'judgement' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><JudgementTable judgement={result?.judgement} selectedIndex={selectedCandidateIndex} onSelectCandidate={(_item, index) => { setSelectedCandidateIndex(index); setResultTab('evidence') }} /></div>
           <div id="panel-activity" aria-labelledby="tab-activity" className={`right-tab-panel ${resultTab === 'activity' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><ActivityPanel states={activity} /></div>
@@ -308,7 +326,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
         </div></>}
     </aside>
     {projectDialog && <AccessibleDialog title="프로젝트 만들기" onClose={() => setProjectDialog(false)} className="project-dialog"><CircuitSetup key={version} onCreated={created} /></AccessibleDialog>}
-    {projectDrawer && <AccessibleDialog title="내 프로젝트" onClose={() => setProjectDrawer(false)} className="project-drawer"><ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={projectId => { selectProject(projectId); setProjectDrawer(false) }} onDeleted={deleted} /></AccessibleDialog>}
+    {projectDrawer && <AccessibleDialog title="내 프로젝트" onClose={() => setProjectDrawer(false)} className="project-drawer"><ProjectSidebar selectedId={id} project={detail.isError ? undefined : detail.data} onSelect={projectId => { selectProject(projectId); setProjectDrawer(false) }} onDeleted={deleted} onCreate={() => { setProjectDrawer(false); setProjectDialog(true) }} /></AccessibleDialog>}
     {personalSettingsOpen && <AccessibleDialog title="개인 설정" onClose={() => setPersonalSettingsOpen(false)}><div className="personal-settings"><p>이 화면 설정은 현재 브라우저에 저장됩니다.</p><label className="setting-toggle"><input type="checkbox" checked={reduceMotion} onChange={event => { const checked = event.target.checked; setReduceMotion(checked); window.localStorage?.setItem('sojafit-reduce-motion', String(checked)) }} />동작 효과 줄이기</label></div><div className="dialog-actions"><button onClick={() => setPersonalSettingsOpen(false)}>확인</button></div></AccessibleDialog>}
     <button className="mobile-project-toggle secondary" onClick={() => setProjectDrawer(true)}>프로젝트 열기</button>
   </div>

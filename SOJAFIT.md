@@ -43,25 +43,43 @@ SojaFit (proj3-b)
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
-│   ├── vite.config.ts      <- React·API 프록시·Vitest 설정
+│   ├── vite.config.ts      <- React·API 프록시·Vitest와 실제 데모 JSON 기반 dummy virtual module 설정
 │   ├── tsconfig.json       <- TypeScript 프로젝트 참조
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
 │   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
+│   │   ├── circuit-schematics/ <- 검증된 공개 원본에서 고정한 데모 회로도 PNG
+│   │   │   ├── breadboard_supply.png <- SparkFun Breadboard Power Supply 원본 회로도
+│   │   │   ├── mosfet_driver.png <- Adafruit MOSFET driver 원본 회로도
+│   │   │   ├── attiny85_dev.png <- ATtiny85 dev board 원본 회로도
+│   │   │   ├── franzininho_diy.png <- Franzininho DIY 원본 회로도
+│   │   │   ├── pro_micro.png <- SparkFun Pro Micro 원본 회로도
+│   │   │   ├── attiny85_time_switch.png <- ATtiny85 Time Switch 원본 회로도
+│   │   │   ├── fc_rom_vomitter.png <- FC ROM Vomitter 원본 회로도
+│   │   │   ├── attiny2313a_thermostat.png <- ATtiny2313A Thermostat 원본 회로도
+│   │   │   ├── tiny85_fan_control.png <- tiny85 Fan Control 원본 회로도
+│   │   │   ├── ug56_pwm_controller.png <- UG56 PWM Controller 원본 회로도
+│   │   │   ├── car_radio_acc_delay.png <- Car Radio ACC Delay 원본 회로도
+│   │   │   ├── overengineered_psu.png <- OverEngineered PSU 원본 회로도
+│   │   │   ├── tinydimmer.png <- tinydimmer 원본 회로도
+│   │   │   ├── hrem.png <- HRem 원본 회로도
+│   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── sojafit-circuit-hero.png <- 프로젝트 미선택 랜딩의 회로 배경 이미지
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
 │   │   ├── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
-│   │   └── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
+│   │   ├── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
+│   │   └── circuit-layout.spec.ts <- 연결 개념도의 Worker 배치·직교 배선 브라우저 시험
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
 │       ├── App.tsx         <- 로그인·가입·작업대·관리자 화면 셸
 │       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
 │       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
+│       ├── dummy-circuits.d.ts <- 실제 데모 JSON을 묶는 build-time virtual module 타입
 │       ├── api/            <- 기존 서버 API의 typed fetch 경계
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
 │       │   ├── auth.ts     <- 로그인·가입(동의)·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
@@ -80,7 +98,8 @@ SojaFit (proj3-b)
 │       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
 │       │   ├── useRunStream.ts <- D5 시작·재개·연결 복구 상태 머신
-│       │   └── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
+│       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
+│       │   └── useOverlayScrollbar.ts <- 콘텐츠 위에 겹치는 스크롤 손잡이와 포인터·키보드 스크롤 연결
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
@@ -101,10 +120,15 @@ SojaFit (proj3-b)
 │       │   ├── CircuitSetup.test.tsx <- 데모·업로드·오류·입력 폐기·비저장 테스트
 │       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택·연결 개념도 조합
 │       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
+│       │   ├── CircuitSchematic.tsx <- 검증된 데모 원본 회로도·출처·라이선스 표시
+│       │   ├── CircuitSchematic.test.tsx <- 원본 회로도·누락·이미지 오류·접근성 테스트
 │       │   ├── circuitContext.ts <- 프로젝트 연결·안전 판정 응답의 순수 화면 adapter
 │       │   ├── circuitContext.test.ts <- 직접·2단계 연결·누락값 adapter 테스트
 │       │   ├── CircuitContextDiagram.tsx <- 대상 중심 SVG 연결 개념도·노드 상세
 │       │   ├── CircuitContextDiagram.test.tsx <- SVG·상태·무방향 연결 렌더링 테스트
+│       │   ├── circuitLayout.ts <- 네트·부품 그래프의 페이지 분할과 안전한 fallback 배치
+│       │   ├── circuitLayout.test.ts <- 그래프 페이지·초과 연결·입력 순서 독립성 테스트
+│       │   ├── circuitLayoutClient.ts <- 연결 개념도 Worker 요청과 fallback 결과 경계
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
 │       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면, 키 없는 데모의 기록 질문 버튼(새 대화) · 기록한 답으로 재개
@@ -118,6 +142,8 @@ SojaFit (proj3-b)
 │       │   ├── ApprovedCasesPanel.tsx <- 사용자 승인 사례 목록·확인 삭제
 │       │   ├── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
 │       │   └── QuotePanels.test.tsx <- 승인·견적 비저장·사례 삭제 화면 테스트
+│       ├── workers/         <- 화면 밖에서 실행하는 계산 Worker
+│       │   └── circuitLayout.worker.ts <- elkjs layered·orthogonal 회로 배치 Worker
 │       └── test/           <- 화면 테스트 설정
 │           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리
@@ -146,7 +172,9 @@ SojaFit (proj3-b)
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
 │   │   ├── netlist.py      <- 원본을 남기지 않는 제한된 KiCad export 정규화
-│   │   └── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   │   ├── catalog.py      <- 단일 회로 catalog의 ID·이름·연결 경로 검증과 안전한 조회
+│   │   ├── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   │   └── visuals.py      <- 검증된 데모 회로도 catalog·원본/배포 해시 검증과 공개 metadata
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -208,6 +236,7 @@ SojaFit (proj3-b)
 │   │   ├── card_find.py    <- 서비스 기본 후보 찾기(ADR 0016): 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → 조건 거르기 · 찾기 순위
 │   │   ├── card_specs.py   <- 서비스 기본 판정 값을 카드에서 읽기, 사실 확인용 문서 행(ADR 0016)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
+│   │   ├── source_metadata.py <- manifest와 패키지 외형 색인의 exact document lookup
 │   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
 │   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함(specs.py 공용 규칙만 카드 도구가 import)
 │   │       ├── __init__.py <- 패키지 표시
@@ -215,6 +244,7 @@ SojaFit (proj3-b)
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       ├── package_outlines.py <- Docling 표제·그림에서 패키지 외형 페이지 색인 생성
 │   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 11-10에 지움(ADR 0016)
 │   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
@@ -239,6 +269,7 @@ SojaFit (proj3-b)
 ├── data/                   <- 서비스·평가가 읽는 고정 데이터. Dockerfile이 이미지에 복사 (고정)
 │   ├── DATA.md             <- 폴더 설명과 manifest 형식
 │   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
+│   ├── package-outline-pages.json <- 공식 PDF basename별 패키지 외형 페이지 색인 1,360건
 │   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
 │   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건 외부 작업 자료의 위치·준비 상태는 별도 확인
@@ -253,6 +284,8 @@ SojaFit (proj3-b)
 │   │       └── input_surfaces_v1.json  <- 다섯 입력 위치 정상·공격 10건
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
+│   │   ├── catalog.json    <- 데모 ID·이름·정규화 연결 JSON 경로의 단일 catalog
+│   │   ├── visuals.json    <- 데모 원본 회로도 URL·라이선스 근거·원본/배포 SHA-256 catalog
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 자료: 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
@@ -289,6 +322,7 @@ SojaFit (proj3-b)
 │   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
 │   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
+│   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
@@ -458,7 +492,9 @@ SojaFit (proj3-b)
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
-│   │   └── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
+│   │   ├── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
+│   │   ├── test_catalog.py <- 회로 catalog 15종·안전한 ID·연결 경로 검증
+│   │   └── test_visuals.py <- 회로도 catalog 15종·원본/배포 해시·경로·라이선스 검증
 │   ├── conversations/      <- 격리 DB 대화·체크포인트 시험
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── test_dto.py     <- 대화 공개 DTO 허용 목록 시험
@@ -503,6 +539,7 @@ SojaFit (proj3-b)
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
+│   │   ├── test_package_outlines.py <- 패키지 외형 페이지 생성·전수 색인·exact lookup 계약
 │   │   ├── test_rag_subset.py  <- 문서 일부 뽑기 계약
 │   │   └── test_demo_snapshot.py  <- 데모 코퍼스 스냅샷의 sha256·건수·ingest 모양, 고르기 규칙, 원본에서 다시 뽑기(DEMO_SNAPSHOT_SOURCE가 있을 때만)
 │   ├── services/           <- 외부 호출 입구
@@ -620,7 +657,12 @@ SojaFit (proj3-b)
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
 │   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+│   │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
 │   │   └── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
+│   ├── superpowers/        <- 승인된 구현 계획 원문
+│   │   ├── SUPERPOWERS.md  <- 폴더 설명
+│   │   └── plans/
+│   │       └── 2026-11-10-verified-circuit-and-datasheet-visuals.md <- 검증 회로도·데이터시트 시각화 실행 계획
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -751,6 +793,7 @@ SojaFit (proj3-b)
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
+| `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 기능의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |

@@ -9,4 +9,4 @@
 
 ## 파일
 - `WEB.md` — 이 폴더 설명
-- `app.py` — API 등록 뒤 assets를 연결하고 화면용 GET/HEAD 404에 빌드된 React index 제공. `/api`, `/health`, assets의 기존 응답과 미빌드 때의 404는 유지
+- `app.py` — API 등록 뒤 assets와 `circuit-schematics` PNG를 연결하고 화면용 GET/HEAD 404에 빌드된 React index 제공. `/api`, `/health`, assets·회로도 자산의 기존 응답과 미빌드 때의 404는 유지. 회로도 누락은 index로 대체하지 않는다.
