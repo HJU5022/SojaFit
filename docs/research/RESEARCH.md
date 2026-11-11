@@ -7,6 +7,8 @@
 - 담당: 쓴 사람
 
 ## 파일
+- `d9-outside-evidence-2026-11-11.md` — D9용 저장소 밖 증거 A~D 이관 목록(판정진단·v4h summary/manifest·#48+#49 원시)·아직 없는 216건 표주석 원시
+- Codex v3-50 비교 원본: `evals/samples/v3_50_codex_paste.md` · `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md` (EVAL_REPORT §10)
 - `injection-smoke-results.md` — T1~T7 스모크01~06·본실측110항목의 누적 결과·버전·예산·사례별 관찰·저장 결과 무료 재현·최신03 원시 링크·이전32개 외부 백업 인덱스와 후속 기록 양식. 무료 재생은 실측과 분리하며 앞으로 같은 문서에 추가한다
 - `injection-preregistration-proposal.md` — 조장 담당 preregister 새 절을 분리한 미반영 제안. 현재 개선본 기준이며 실제 사전 등록 커밋·유료 실행 승인이 아님
 - `thread-memory-operations-review.md` — 사용자 thread·승인 기억의 운영 실측, 이전 검증 스냅샷과 조장 정본 반영 제안

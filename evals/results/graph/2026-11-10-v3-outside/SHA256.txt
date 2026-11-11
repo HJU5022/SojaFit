@@ -1,0 +1,8 @@
+8fee9f265c3a80024ed76e1a7b9b130314c0854259a4a28205b3bca5d4ef5f83  evals/results/graph/2026-11-06-judge-diagnosis/judge_items.json
+7240f78dd060d68d713d9be8b9404254724d9d911139f7e80aa86109d236723b  evals/results/chunking/v4h-2026-11-08/summary.json
+426b44750dc6aae3634855da44b5a9de675fdc31fb9ee859fc55d772a8c0d786  evals/results/chunking/v4h-2026-11-08/manifest.jsonl
+29bfd52b0d40df34c81c9cc526292ca6df2ef55ad9f5af361d53aac5cda7fb95  evals/results/chunking/v4h-2026-11-08/table_suspects.jsonl
+f9686ef16a20cb7a5603871e7f8b233fda0a18028e4567b7312eadbb55acfdf9  evals/results/graph/2026-11-10-v3-outside/C-v3a/set1.json
+a68d1364c69dd68ca34f21b78ca45e9c75f76b4a81af84f67435575fd6bd9455  evals/results/graph/2026-11-10-v3-outside/C-v3b/set1.json
+8f00565ea353403cf4ceada5365a391f71037f721b7af86a30e02bb73b395103  evals/results/graph/2026-11-10-v3-outside/B-v3a/set1.json
+5f87e58dc4c823f8264ed1367696b39dc9eb62565cb7d6f9ef3cc715fff94ad5  evals/results/graph/2026-11-10-v3-outside/B-v3b/set1.json

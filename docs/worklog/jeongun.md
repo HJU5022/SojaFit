@@ -1,5 +1,15 @@
 # jeongun 작업 기록
 
+## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
+- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
+- EVAL_REPORT §10: Codex vs 우리 서비스 표본 5행(v3-01·05·10·26·45). Codex는 자동 채점 없음. 우리 쪽은 #52/`d9-improve2` 원시.
+- D9 묶음(증거 A~D · #52 · paste · Codex 답 · 문서) 커밋·PR. scratchpad·langfuse probe·synth·실패 스모크는 제외.
+
+## 2026-11-11 D9 저장소 밖 증거 A~D 이관
+- A 판정진단 `evals/results/graph/2026-11-06-judge-diagnosis/` · B·C v4h summary/manifest/suspects `evals/results/chunking/v4h-2026-11-08/` · D #47·#48+#49 원시 `evals/results/graph/2026-11-10-v3-outside/`.
+- 기록 [`docs/research/d9-outside-evidence-2026-11-11.md`](../research/d9-outside-evidence-2026-11-11.md). EVAL_REPORT §1·§3-C·§5 링크 갱신. **남음:** 표주석 216건 원시(원장만), chunks.jsonl 본문. §10은 11-12에 채움.
+- D9 #52 v3 재측정 `[실측]`: 코드 변경 없음(`FIND_N_DOCS` 기본 5, partial 재검색 유지). **50/50**, p50 4.9 · p95 10.0초. §8.1(50/50, p50 4.7 · p95 9.2) 대비 달라진 문항 0. KEEP(확인, 개선으로 쓰지 않음). 공급자 보고 LLM 0.035달러. 429 재시도 없음. 원시 `evals/results/graph/2026-11-12-d9-improve2/set1.json`. EVAL_REPORT 3-D 16행. 배포·푸시 없음.
+
 ## 2026-11-11 인젝션 HTTP 스모크 · D7 사람채점 사본 · 푸시
 - `injection_http.py`: T6 첫 턴 `requires_input` 재개, T4 `refused` 사유 코드, 극성(음극·양극) 기준 보강. 시험 10 passed.
 - 배포 실측 JSON 보관(T7 pass · T6 pass/한도 · T4 inconclusive 다수). D7 사람채점 사본 20/20 O → `evals/results/threads/…_human_jeongun.jsonl`. EVAL_REPORT 6장 문구 맞춤.
