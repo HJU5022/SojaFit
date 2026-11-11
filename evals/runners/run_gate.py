@@ -72,7 +72,12 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
     stamp = time.strftime('%m%d-%H%M')
     with ExitStack() as stack:
         stack.enter_context(voyage_timing())  # [왜] 검색 단계를 임베딩 · 리랭크 · 나머지로 나누려고 Voyage 호출 시간을 모은다
-        app = make_app(True, stack)
+        app, warm_eval = make_app(True, stack)
+        if os.getenv('GATE_WARMUP', '0') == '1':
+            # [왜] 첫 문항의 BM25·Voyage·MCP 품번확인 콜드가 p95에 섞이는 것을 빼 보려고 세트 앞에 데운다(기본 끔)
+            warm_t = time.perf_counter()
+            warm_eval()
+            print(f'gate_warmup_s\t{round(time.perf_counter() - warm_t, 2)}', flush=True)
         for s in range(1, sets + 1):
             rows, session = [], f'gate-{Path(dataset_path).stem}-{stamp}-set{s}'
             for it in items:

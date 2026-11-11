@@ -1,0 +1,1412 @@
+{
+ "summary": {
+  "set": 1,
+  "done": 7,
+  "total": 7,
+  "passed": 7,
+  "p95_s": 15.3,
+  "p50_s": 6.3,
+  "session": "gate-spec8-1111-2259-set1",
+  "stopped_at": null,
+  "model_env": {
+   "LAB_THINKING": "",
+   "LAB_THINKING_ON": "",
+   "LAB_NODE_MODELS": "",
+   "LAB_EFFORT": ""
+  },
+  "db": "postgres",
+  "llm_provider": "openrouter",
+  "claude_direct": true,
+  "git": "9634c5c+dirty"
+ },
+ "rows": [
+  {
+   "id": "v3-01",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/adfba422b514ff3f4c5189b28a530d05",
+   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (부하 쪽 전원 넷, 캐소드); D1.A → VIN (커넥터·퓨즈 쪽 입력); F1·J1 뒤 직렬 위치)\n\n**1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 2 (2.0) | 30 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n| VRRM >= | 15 (15.0) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 435
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 2524
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2621
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2626
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 516
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 518
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.588,
+     "input_tokens": 8062,
+     "output_tokens": 206,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00021413,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.582,
+     "input_tokens": 10046,
+     "output_tokens": 506,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0006897,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00090383,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-03",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "LL4148 L0G",
+     "IDENTICAL"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/4bb97991d5ac308f4f5b76a9dddd80d7",
+   "answer": "역할: R03 (근거: D5.K → +12V (coil supply side); D5.A → Net-(D5-A) (coil low side, Q7 collector); D5 parallel to K1 coil (K1.A1 +12V, K1.A2 Net-(D5-A)))\n\n**LL4148 L0G: 동일품**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| ORDER_CODE = | — (같은 기본 품번, 주문 코드만 다름) | —  | — | 통과 · 동일품 | LL4148 SERIES_K2301.pdf 2쪽 ORDERING INFORMATION LL4148 L0G |\n| VRRM >= | 15.75 (v_coil * kV) | 75 V | 표 기본 조건 | 통과 | LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IFSM >= | 0.035 (IFSM >= i_coil 또는 IF_AV >= i_coil) | 0.5 A | t = 1s | 통과 | LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Non-repetitive peak forward surge current |\n- 사람이 확인할 것: 감쇠 시간 · 반복 횟수(반복 펄스 허용량은 그래프라 표에 없음)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 368
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1740
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2561
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1092
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 1366
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 3931
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.736,
+     "input_tokens": 8064,
+     "output_tokens": 212,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00021733,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.558,
+     "input_tokens": 10090,
+     "output_tokens": 511,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0006966,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.285,
+     "tokens": 9
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.333,
+     "tokens": 3209
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.0009139300000000001,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-15",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 15.3,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SMAJ5.0AH",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "SMAJ5.0",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SMAJ5.0H",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/e7e782c3b5db3ba11ac76b7878de6139",
+   "answer": "역할: R06 (근거: D3.A1_1 → /Stop net (signal line to J2 pin 6); D3.A2_2 → GND; D3 across signal net to GND, TVS family SMAJ5.0A; /Stop net is connector-adjacent (J2 pin 6))\n\n사양 표에서 건 조건: VRWM ≥ 5, PPPM ≥ 400, PPPM ≤ 600, VC ≤ 10\n**SMAJ5.0AH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0AH |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.2 V | IPPM = 43.5 A | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0AH |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n**SMAJ5.0: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0 |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.6 V | IPPM = 41.7 A | 통과 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0 |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n**SMAJ5.0H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0H |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.6 V | IPPM = 41.7 A | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0H |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "7 candidates judged, 3 shown: SMAJ5.0AH, SMAJ5.0, SMAJ5.0H",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1856
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 3147
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 3154
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 9885
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 9892
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 7
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 7
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 7
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 7
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 10239
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 10245
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.847,
+     "input_tokens": 8138,
+     "output_tokens": 240,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00023873,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 3.139,
+     "input_tokens": 10342,
+     "output_tokens": 618,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0007753,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00101403,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-11",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.3,
+   "fake_citations": 0.0,
+   "uncited_sentences": 4.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "GS1G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "GS1J",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "S1G-K",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/f08877bf62f7decec7090ed361a99365",
+   "answer": "역할: R01 (근거: D1.C → Net-(F1-1) (fuse side, supply input); D1.A → Net-(S1-S) (switch side); D1 is in series between connector/supply and the switched net, cathode toward supply)\n\n사양 표에서 건 조건: VRRM ≥ 15, IF_AV ≥ 0.5, VRRM ≥ 400, VRRM ≤ 600, IF_AV ≥ 1, IF_AV ≤ 2\n**GS1G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**GS1J: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**S1G-K: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "9 candidates judged, 3 shown: GS1G, GS1J, S1G-K",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1660
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2374
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 5
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2387
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 645
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 690
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 2177
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 2182
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 4
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.654,
+     "input_tokens": 8074,
+     "output_tokens": 241,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00023283,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.354,
+     "input_tokens": 9801,
+     "output_tokens": 426,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0006252,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.0008580300000000001,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-12",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.4,
+   "fake_citations": 0.0,
+   "uncited_sentences": 4.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "HER105G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "HER105G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "HER105GH",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/701af22888c63e7a077fe085997ec6b4",
+   "answer": "역할: R22 (근거: D3.K → VIN (cathode on supply side); D3.A → /OUT (anode on switched load net); Q1.D = /OUT, Q1 switches to GND with PWM on /SIGNAL; X1 coil load across /OUT and VIN)\n\n사양 표에서 건 조건: VRRM ≥ 30, IF_AV ≥ 0.3571, VRRM ≥ 400, VRRM ≤ 600, IF_AV ≥ 1, IF_AV ≤ 1, TRR ≤ 7.5e-08\n**HER105G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G SERIES_L2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**HER105G-K: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G-K SERIES_B2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**HER105GH: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G SERIES_L2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "20 candidates judged, 3 shown: HER105G, HER105G-K, HER105GH",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1694
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2728
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2733
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 478
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 174
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 559
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 560
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 2952
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 2960
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 6
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 2
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 6
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.69,
+     "input_tokens": 8126,
+     "output_tokens": 209,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00022203,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.718,
+     "input_tokens": 10147,
+     "output_tokens": 444,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0006688,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00089083,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-13",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 3.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "BZT52B3V3",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "BZV55B3V3",
+     "SPEC_EQUIVALENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/13d85e30c3b963707c848b70648903f3",
+   "answer": "역할: R04 (근거: D1.K → Net-(D1-K) (PB3 net, R2 1.5k series); D1.A → GND; R2 1.5k in series with cathode net)\n\n사양 표에서 건 조건: VZ ≥ 3.3, VZ ≤ 3.3, VZ ≥ 3.184, VZ ≤ 3.284, VZ ≥ 3.316, VZ ≤ 3.416, PD ≥ 0.5\n**BZT52B3V3: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VZ >= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ >= | 3.184 (3.184) | 3.23 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.284 (3.284) | 3.23 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ >= | 3.316 (3.316) | 3.37 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.416 (3.416) | 3.37 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| PD >= | 0.5 (0.5) | 0.5 W | 표 기본 조건 | 통과 | BZT52B2V4 SERIES_F15.pdf 1쪽 MAXIMUM RATINGS AND ELECTRICAL CHARACTERISTICS (TA=25°C unless otherwise noted) Power dissipation |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인) / 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지 / 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음 / 온도 계수\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: BZT52B2V4 SERIES_F15.pdf 4쪽 ORDERING INFORMATION).\n\n**BZV55B3V3: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VZ >= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ >= | 3.184 (3.184) | 3.23 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.284 (3.284) | 3.23 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ >= | 3.316 (3.316) | 3.37 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.416 (3.416) | 3.37 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| PD >= | 0.5 (0.5) | 0.5 W | 표 기본 조건 | 통과 | BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) PD |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인) / 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지 / 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음 / 온도 계수\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "2 candidates judged, 2 shown: BZT52B3V3, BZV55B3V3",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1936
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2149
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2160
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 1128
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 1131
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 2
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 2
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 1772
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 1776
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 2
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 2
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.933,
+     "input_tokens": 8128,
+     "output_tokens": 207,
+     "cached_tokens": 0,
+     "cost_usd": 0.001109375,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.144,
+     "input_tokens": 10237,
+     "output_tokens": 390,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0006508,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.0017601749999999999,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-14",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SS14H",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SS15H",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SS16H",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/62ecf02ea90dafd8d0bf5942fb2705c2",
+   "answer": "역할: R12 (근거: D1.2 (anode) → Net-(D1-Pad2) with L1.2 (100uH) and U1.5 (HT7733A) — SW node + inductor; D1.1 (cathode) → VCC (3.3V boost output); Boost output rectifier; no external PWM control)\n\n사양 표에서 건 조건: VRRM ≥ 4.125, IF_AV ≥ 0.07143, VRRM ≥ 40, VRRM ≤ 60, IF_AV ≥ 1, IF_AV ≤ 1\n**SS14H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n**SS15H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n**SS16H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "9 candidates judged, 3 shown: SS14H, SS15H, SS16H",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1911
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2631
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2635
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 575
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 576
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "find",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 1947
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 1953
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 4
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 4
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.902,
+     "input_tokens": 8158,
+     "output_tokens": 246,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00024373,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.623,
+     "input_tokens": 10082,
+     "output_tokens": 560,
+     "cached_tokens": 6310,
+     "cost_usd": 0.0007203,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00096403,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  }
+ ]
+}

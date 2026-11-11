@@ -149,7 +149,10 @@ def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) ->
 
 
 def make_app(multi: bool, stack: ExitStack):
-    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다."""
+    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다.
+
+    반환: (app, warm_eval). warm_eval()은 BM25·첫 검색·MCP 품번확인을 한 번 데운다(GATE_WARMUP용, 안 불러도 됨).
+    """
     from backend.graph import mcp_retriever
     from backend.multi_agent.facts import make_lookup
     from backend.rag import card_find, card_specs
@@ -162,15 +165,24 @@ def make_app(multi: bool, stack: ExitStack):
     raw_specs, raw_find = specs, card_find.default_find()
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
     # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
-    tools = {"lookup": make_lookup(mcp.check, specs.doc_rows), "specs": update_wrapper(timed_tool("specs", raw_specs), raw_specs),
+    lookup = make_lookup(mcp.check, specs.doc_rows)
+    tools = {"lookup": lookup, "specs": update_wrapper(timed_tool("specs", raw_specs), raw_specs),
              "find": update_wrapper(timed_tool("find", raw_find), raw_find), "checkpointer": InMemorySaver()}
+
+    def warm_eval():
+        """BM25 색인 · Voyage 첫 검색 · MCP check_corpus를 프로세스 앞에서 한 번 불러 첫 문항 콜드를 줄인다."""
+        from backend.rag.retrieve import retrieve, warmup
+        warmup()
+        retrieve('1N4007G VRRM', k=5, parts=['1N4007G'])
+        lookup({'question': '1N4007G VRRM', 'target_part': {}})
+
     if not multi:
         from backend.graph.build import build_graph
-        return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
+        return build_graph(**tools), warm_eval  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
     from backend.multi_agent.build import build_graph as build_multi
     from backend.rag.retrieve import retrieve
     from backend.services import llm
-    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools)
+    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools), warm_eval
 
 
 def _git(*args):
@@ -218,7 +230,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
     llm.chat = lambda system, user, schema: calls.append(schema.__name__) or chat(system, user, schema)
 
     with ExitStack() as stack:  # [왜] 멀티는 MCP 서버를 전 문항 동안 한 번만 열어 두고 끝나면 닫는다
-        app = make_app(multi, stack)  # 그래프를 한 번 조립해 문항마다 재사용한다
+        app, _warm_eval = make_app(multi, stack)  # 그래프를 한 번 조립해 문항마다 재사용한다
         rows, failed = [], []  # 결과 파일에 남길 문항별 지표, 오류로 멈춘 문항
         for it in items:
             calls.clear()  # 이전 문항의 호출 기록을 비운다

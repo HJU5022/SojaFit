@@ -42,7 +42,7 @@ def main(path: str) -> None:
     items = [json.loads(line) for line in Path(path).read_text(encoding='utf-8').splitlines() if line.strip()]
     rows = []
     with ExitStack() as stack:
-        app = make_app(True, stack)
+        app, _warm_eval = make_app(True, stack)
         for it in items:
             config = {'configurable': {'thread_id': it['id']}}
             try:

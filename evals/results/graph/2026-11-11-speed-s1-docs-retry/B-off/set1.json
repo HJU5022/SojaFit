@@ -1,0 +1,941 @@
+{
+ "summary": {
+  "set": 1,
+  "done": 6,
+  "total": 6,
+  "passed": 6,
+  "p95_s": 10.1,
+  "p50_s": 6.8,
+  "session": "gate-docs6-1111-2145-set1",
+  "stopped_at": null,
+  "model_env": {
+   "LAB_THINKING": "",
+   "LAB_THINKING_ON": "",
+   "LAB_NODE_MODELS": "",
+   "LAB_EFFORT": ""
+  },
+  "db": "postgres",
+  "llm_provider": "openrouter",
+  "claude_direct": true,
+  "git": "9634c5c+dirty"
+ },
+ "rows": [
+  {
+   "id": "v3-16",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 2,
+   "docs_found": 4.0,
+   "passed_cards": 4.0,
+   "latency_s": 10.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    50672,
+    50658,
+    50659,
+    50669
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/f7e40b6cbc51e7fb0b580347a85aa3cf",
+   "answer": "UF4005, UF4006, UF4007의 trr 최댓값은 75 ns로 표기되어 있으며, 측정 조건은 Irr = 0.25A이고 TA = 25°C 기준입니다 [50672]. 다만 순방향 전류 IF 값과 역방향 전류 IR 값은 근거 카드에 명시되어 있지 않습니다 [50672].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing 순방향 시험 전류 IF 값, 역방향 시험 전류 IR 값",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "TSC UF4007 reverse recovery time trr maximum test conditions IF IR",
+       "parts": [
+        "UF4007"
+       ],
+       "top": [
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 2399
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 2712
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 3094
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 5007
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.779,
+     "input_tokens": 7924,
+     "output_tokens": 256,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00022533,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.906,
+     "input_tokens": 4059,
+     "output_tokens": 219,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00028824,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.3,
+     "tokens": 16
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.377,
+     "tokens": 3679
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.00051357,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-20",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 3,
+   "docs_found": 6.0,
+   "passed_cards": 6.0,
+   "latency_s": 9.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    36317,
+    36290,
+    36292,
+    36291,
+    36296,
+    36276
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/b03723a6ccff1bdff9b385578bd6829f",
+   "answer": "SS14H의 H는 SS14와 비교한 전류 정격이 아니라 제품 구분 표기로 쓰인 것으로 보이며, 문서의 주문 정보에서는 'SS1xH' 형식의 주문 코드로 표기되고 패키지는 DO-214AC(SMA), 포장은 7,500개 Tape & Reel로 제시됩니다 [36317]. 절대 최대 정격 표에서 SS 14H의 반복 피크 역전압은 40V, 역전압 rms 값은 28V로 나타납니다 [36291, 36292].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 3 evidence; removed unverified sentences; missing H 접미사가 무엇을 뜻하는지 직접 설명한 문장(예: 제품군 구분, 등급, 사양 차이), SS14와 SS14H의 전류 정격 차이 여부를 문서가 명시하는지 여부",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "SS14H ordering information suffix H package part number differences",
+       "parts": [
+        "SS14H",
+        "SS14"
+       ],
+       "top": [
+        [
+         "SS12H SERIES_B2305.pdf",
+         3
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 368
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1722
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1096
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1164
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 6849
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.715,
+     "input_tokens": 7882,
+     "output_tokens": 225,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00020563,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.103,
+     "input_tokens": 4348,
+     "output_tokens": 296,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00035564,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.478,
+     "input_tokens": 4482,
+     "output_tokens": 386,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00041404,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.286,
+     "tokens": 11
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.343,
+     "tokens": 5559
+    },
+    {
+     "kind": "embed",
+     "seconds": 0.294,
+     "tokens": 29
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.355,
+     "tokens": 7740
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.0009753100000000001,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-21",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 2,
+   "docs_found": 5.0,
+   "passed_cards": 5.0,
+   "latency_s": 6.2,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    1170,
+    1169,
+    1160,
+    1175,
+    1165
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/da571c0505a4d03933b59c7a816e75da",
+   "answer": "TSC 1N5408G의 절대최대정격 표에서 서지 피크 순방향 전류 IFSM은 125A로 명시되어 있으며, 조건은 8.3ms 단일 반파 사인파가 정격 부하에 중첩된 경우입니다[1170]. 이 값은 TA = 25°C 기준의 절대최대정격 표에 기재되어 있습니다[1170]. 또한 Maximum Non-Repetitive Forward Surge Current 곡선이 3쪽에 포함되어 있습니다[1165].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 2 evidence; missing 단발성(single-shot)인지 반복 인가 조건인지에 대한 명시적 문구, 접합 온도(junction temperature) 조건에 대한 명시적 값 (절대최대정격 표는 TA = 25°C 기준), 3쪽 Fig.5 곡선의 축 값과 세부 조건 (텍스트로 확인되지 않음)",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "1N5408G Peak forward surge current IFSM 8.3ms single half sine-wave superimposed on rated load TJ=25C",
+       "parts": [
+        "1N5408G"
+       ],
+       "top": [
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         3
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 369
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1807
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1144
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 3980
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.802,
+     "input_tokens": 7890,
+     "output_tokens": 272,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00022993,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.833,
+     "input_tokens": 3939,
+     "output_tokens": 379,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00035624,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.283,
+     "tokens": 34
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.334,
+     "tokens": 4245
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.00058617,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-24",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/8fac72f9c15bafe0f82d337aca547667",
+   "answer": "넷리스트에 따르면 D3(BZT52C3V6T-7)의 K 핀은 Net-(J1-D-) 노드에 연결되어 J1(USB_B_Micro)의 D- 신호선과 R10(66.5)의 한쪽 끝에 묶여 있고, A 핀은 GND에 연결되어 있습니다 [넷리스트]. 같은 방식으로 D2(BZT52C3V6T-7)는 Net-(J1-D+) 노드에서 J1의 D+ 신호선과 R8(1.5k), R9(66.5)에 연결되고 A 핀은 GND에 연결되어 있습니다 [넷리스트]. 따라서 D3는 전원 라인에 직렬로 들어가 있지 않고, J1의 D- 신호선과 GND 사이에 병렬로 연결된 구조입니다 [넷리스트]. 이 넷리스트만으로는 D3의 역할을 보호 또는 클램핑으로 단정하는 근거가 되는 전압 특성이나 동작 조건은 확인할 수 없으므로, 이는 넷 연결에서 읽히는 구조적 위치에 그칩니다 [넷리스트].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing D3의 보호·클램핑 기능을 확인할 데이터시트 수치(항복 전압, 클램핑 전압 등)",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1356
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 2722
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.352,
+     "input_tokens": 7885,
+     "output_tokens": 198,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00019243,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.72,
+     "input_tokens": 3852,
+     "output_tokens": 500,
+     "cached_tokens": 0,
+     "cost_usd": 0.0006983,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00089073,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-25",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 3,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/daab91925d059f6d7724f26add0cc29c",
+   "answer": "넷리스트상 D1(SS14-E3/61T)은 Vbat 쪽 L1.1 노드와 VCC 사이에 있으며, D1.1은 VCC 네트에, D1.2는 L1.2와 U1.5(HT7733A)가 연결된 Net-(D1-Pad2)에 연결되어 있습니다 [넷리스트]. 따라서 D1은 배터리 전원 경로에서 L1 뒤, VCC 앞에 놓여 전류를 한 방향으로 흐르게 하는 다이오드 역할을 하는 것으로 볼 수 있습니다 [넷리스트].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing D1이 역전압 보호, 역극성 방지, 또는 다른 목적으로 배치되었는지에 대한 회로 설계 의도, SS14 데이터시트 상의 순방향 전압, 정격 등 세부 특성(이 작업 범위 밖)",
+     "llm_calls": 2,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1339
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 5140
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.335,
+     "input_tokens": 7886,
+     "output_tokens": 190,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00018853,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.773,
+     "input_tokens": 3132,
+     "output_tokens": 419,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00029554,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.363,
+     "input_tokens": 3266,
+     "output_tokens": 350,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00027444,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.00075851,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  },
+  {
+   "id": "v3-41",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>거절",
+   "not_found": 1.0,
+   "tries": 2.0,
+   "llm_calls": 3,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.8,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/f19892040aa2ac0ca969dcff43a83ce1",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "fail",
+     "reason": "all_rejected",
+     "summary": "no evidence for this task in the documents (all_rejected)",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "LL4148 switching cycles life guarantee repetitive cycles failure",
+       "parts": [
+        "LL4148"
+       ],
+       "top": [
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ]
+       ]
+      },
+      {
+       "query": "LL4148 switching cycles lifetime reliability endurance guarantee",
+       "parts": [
+        "LL4148"
+       ],
+       "top": [
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         3
+        ],
+        [
+         "LL4148 SERIES_K2301.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 412
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 1804
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1092
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1461
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 4548
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "거절",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.799,
+     "input_tokens": 7988,
+     "output_tokens": 233,
+     "cached_tokens": 7723,
+     "cost_usd": 0.00022023,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 0.978,
+     "input_tokens": 3955,
+     "output_tokens": 100,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00021834,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.007,
+     "input_tokens": 3750,
+     "output_tokens": 85,
+     "cached_tokens": 2524,
+     "cost_usd": 0.00019034,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.306,
+     "tokens": 11
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.347,
+     "tokens": 3297
+    },
+    {
+     "kind": "embed",
+     "seconds": 0.661,
+     "tokens": 10
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.329,
+     "tokens": 3253
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.00062891,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  }
+ ]
+}

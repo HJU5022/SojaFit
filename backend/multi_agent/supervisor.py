@@ -14,6 +14,7 @@
   찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것뿐이다(사전 등록 #47, ADR 0017).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계, 11-07 실패 고리), ADR 0017, backend/prompts/supervisor.md · synth.md
 """
+import os
 import re
 from pathlib import Path
 
@@ -162,7 +163,10 @@ def collect_node(state: dict) -> dict:
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
                                                      or (r.status == 'partial' and r.reason in RETRY_REASONS))]
     if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (retry or plan.get('replan')):
-        return {**out, 'outcome': 'replan'}
+        if os.getenv('SUPERVISOR_REPLAN', '1') == '0':
+            pass  # [왜] 속도·정확도 A/B용. 기본(1)은 재계획 유지. 0이면 no_result 등에서도 docs 재시도 없이 아래 거절·답으로 간다
+        else:
+            return {**out, 'outcome': 'replan'}
     final_dump = {'final_reports': [r.model_dump(mode='json') for r in final]}
     good = [r for r in final if r.status != 'fail']
     if not good:

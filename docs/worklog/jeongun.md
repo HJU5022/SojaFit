@@ -1,5 +1,10 @@
 # jeongun 작업 기록
 
+## 2026-11-11 속도 p95 레버 실험 · 문서 마무리
+- A/B: `GATE_WARMUP` · `FIND_N_DOCS` · partial/cite-repair/rerank/bm25/replan/max_searches/near-find. 정확도+속도를 같이 봄. **채택**은 평가용 워밍업 플래그 + `FIND_N_DOCS` 기본 5뿐. 나머지 기본 유지(`.env.example`에 A/B 키만).
+- 기준선 `[실측]`: `GATE_WARMUP=1` · `FIND_N_DOCS=5`, v3 50×1 → **50/50**, p50 4.7 · **p95 9.2**초. Spec n_docs 10/5/3 모두 후보 15/15 cited_gold. 원시 `evals/results/graph/2026-11-11-speed-g-all/` · `2026-11-11-ndocs-acc/` 등.
+- 문서: [`docs/experiments/speed-p95-levers-2026-11-11.md`](../experiments/speed-p95-levers-2026-11-11.md) · EXPERIMENTS 목록 · EVAL_REPORT §8.1 · RUNNERS `run_gate` 한 줄. 푸시 안 함.
+
 ## 2026-11-11 D8 평가 전 Langfuse 트레이싱 대조·점수 연결
 - 1문항 실행 시도 결과: `--env-file` 명령이 PreToolUse 비밀 파일 접근 방지 훅에 실행 전 차단됨. 실제 모델 호출 0회/$0, Langfuse 인증·새 trace/점수/비용 수신도 미검증. 임시 실행기는 기존 SDK 5의 observations/scores 조회 인자와 문법을 오프라인 점검했으며, 자동 훅을 우회하지 않고 정운의 직접 실행으로 넘김. 시작 전 10:17 KST 부하 평균 8.50/8.30/8.02, CPU idle 51.54%(단일 top 표본). 전체 2세트는 보류 유지.
 - 1문항 수신 점검 계획(실행 전, 정운 승인): 현재 코드의 동결 v3-01 한 건을 `run_gate`로 1회만 호출한다. 예상 LLM 2~4회/$0.001~0.003, 강제 상한 4회/예약 $0.02/90초, 기존 누적 $0.15 안에서 집행. 먼저 Langfuse 인증과 프로젝트 이름 `SojaFit_v2`를 확인하고 다르면 호출 전 중단한다. DB 연결은 읽기 전용으로 강제하고 본문 없는 결과만 `evals/results/graph/2026-11-11-d8-trace-smoke/`에 보존한다. 명령: `UV_PROJECT_ENVIRONMENT=/Users/jeong-un/Documents/Projects/Team_Projects/SojaFit/SojaFit/.venv uv run --no-sync --env-file /Users/jeong-un/Documents/Projects/Team_Projects/SojaFit/SojaFit/.env python /tmp/sojafit_trace_smoke_1111.py`. 모델 재실행 없이 같은 trace의 점수·비용·시간 수신을 확인하며 50문항 2세트는 계속 보류한다.

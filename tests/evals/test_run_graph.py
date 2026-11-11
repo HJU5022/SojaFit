@@ -152,7 +152,7 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
 
     monkeypatch.setattr(langfuse, "get_client", lambda: FakeClient())
     monkeypatch.setattr(langfuse_prompts, "callback", lambda **kw: None)
-    monkeypatch.setattr(run_graph, "make_app", lambda multi, stack: FakeApp())
+    monkeypatch.setattr(run_graph, "make_app", lambda multi, stack: (FakeApp(), lambda: None))
     data = tmp_path / "set.jsonl"
     data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
         {"id": "i1", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: 주식 추천", "expected": "", "gold_chunks": []},
@@ -268,7 +268,7 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
     from evals.runners.run_graph import make_app
     mcp = fake_mcp(monkeypatch)
     with ExitStack() as stack:
-        app = make_app(True, stack)
+        app, _warm = make_app(True, stack)
         assert mcp.events == ["open"] and "Supervisor" in app.get_graph().nodes and "Spec 에이전트" in app.get_graph().nodes
     assert mcp.events == ["open", "close"]
 
@@ -281,7 +281,7 @@ def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
     mcp = fake_mcp(monkeypatch)
     monkeypatch.setattr(nodes.llm, "chat", lambda system, user, schema: schema(question_type="rating", reason="part_missing"))
     with ExitStack() as stack:
-        app = make_app(False, stack)
+        app, _warm = make_app(False, stack)
         assert {"사실 확인", "라우팅", "판정 읽기", "판정", "답 틀"} <= set(app.get_graph().nodes)
         state = app.invoke({"input": "질문: 1N4001 정격이 뭐야?"}, {"configurable": {"thread_id": "s1"}})  # 체크포인터가 있어 thread가 필요하다
         assert mcp.events == ["open"]
@@ -299,7 +299,7 @@ def test_make_app_uses_card_tools_for_find_and_specs(monkeypatch):
     seen = {}
     monkeypatch.setattr(build, "build_graph", lambda **tools: seen.update(tools))
     with ExitStack() as stack:
-        make_app(False, stack)
+        make_app(False, stack)  # 반환 (app, warm_eval); 이 테스트는 조립·감싸기만 본다
     # [왜] 서비스처럼 timed_tool로 감싸 단계 시간을 남긴다. 감싼 함수가 원래 도구를 가리키는지(__wrapped__)로 확인한다
     assert seen["specs"].__wrapped__ is fake_specs and seen["find"].__wrapped__ is fake_find
 

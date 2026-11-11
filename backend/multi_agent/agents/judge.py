@@ -7,6 +7,7 @@
 - 출처: docs/specs/judge-agent.md What · How
 """
 import contextvars
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -606,7 +607,11 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
                     # [왜] 원래 부품의 패키지 · 분류 순 50개만 보면, 조건이 느슨할 때(VRRM ≥ 15만) 같은 패키지 계열로 50개가 다 차서
                     #      같은 시험 조건으로 비교할 수 있는 다른 패키지 후보(SS14 SMA 등)를 보지 못하고 0개를 보였다(11-07 v2 n02 · n04 · n07).
                     #      기준에 가까운 순 50개를 더해 판정한다(값 비교는 판정 코드, 이 줄은 후보 모으기)
-                    for f in [*find(terms, category, pkg, 50, **near), *(find(terms, category, pkg, 50) if any(near.values()) else [])]:
+                    # [왜] near 순 + 기준 가까운 순 두 번 find가 기본. JUDGE_NEAR_FIND=0이면 near 한 번만(속도 A/B용)
+                    hits = list(find(terms, category, pkg, 50, **near))
+                    if os.getenv('JUDGE_NEAR_FIND', '1') != '0' and any(near.values()):
+                        hits += list(find(terms, category, pkg, 50))
+                    for f in hits:
                         merged.setdefault(f['part'].upper(), f)
                 return list(merged.values())[:100]
             found = search(read.category_wanted or None) if terms else []
