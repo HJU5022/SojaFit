@@ -70,7 +70,7 @@ def env_problems(mode: str, env) -> list[str]:
     if env.get('DEMO_MODE') != '1':
         out.append('DEMO_MODE=1이 아닙니다. 키 없는 데모와 같은 BM25 검색이어야 기록이 맞습니다')
     if [k for k, v in env.items() if k.startswith('LAB_') and v]:
-        # [왜] LAB_READ_VOTES 같은 실험 설정은 같은 호출을 여러 번 부르거나 프롬프트를 바꿔 서비스와 다른 길이 된다
+        # [왜] LAB_* 실험 설정은 모델 · 생각 설정을 바꿔 서비스와 다른 길이 된다
         out.append('LAB_* 실험 환경변수를 지우세요. 서비스와 같은 설정이어야 합니다')
     if mode == 'record':
         if not env.get('OPENROUTER_API_KEY'):

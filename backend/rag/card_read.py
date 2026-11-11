@@ -240,7 +240,7 @@ def llm_read(cards: list[dict], codes: list[str], doc_parts: dict[str, list[str]
         with _SLOTS:  # [주의] 상한을 넘는 호출은 자리가 날 때까지 기다린다(LLM 호출만 감싼다. 기다리는 스레드는 다른 자리를 쥐지 않아 서로 막히지 않는다)
             readings = chat('card_read', PROMPT, user, CardRead).readings
     except ValueError:
-        # [왜] 카드 묶음 하나가 형식을 끝내 어기면 문항 전체가 실패했다(v3-13). 판정 읽기 3번 중 하나를 빼는 것처럼 이 묶음만 빼고 사유를 남긴다.
+        # [왜] 카드 묶음 하나가 형식을 끝내 어기면 문항 전체가 실패했다(v3-13). 이 묶음만 빼고 사유를 남긴다.
         # [주의] 연결 오류(APIConnectionError)는 ValueError가 아니라 그대로 올라간다
         return [], [{'chunk_ids': list(by_id), 'reason': 'read_format_failed'}]
     for r in readings:

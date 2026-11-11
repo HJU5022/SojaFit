@@ -67,7 +67,7 @@ def fixture_documents(b, case):
 def load(dsn, b, case):
     docs = fixture_documents(b, case)
     with connect(dsn) as conn:
-        for filename in ('000_init.sql', '002_rag_corpus.sql', '011_part_specifications.sql', '012_document_category.sql'):
+        for filename in ('000_init.sql', '002_rag_corpus.sql', '012_document_category.sql'):
             conn.execute((ROOT / 'db' / filename).read_text(encoding='utf-8'))
         for doc in docs:
             text = '\n'.join(c[1] for c in doc['chunks'])

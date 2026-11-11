@@ -310,7 +310,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             return (bool(want) and not want & {_norm_package(x) for x in p['packages']},
                     original_category is not None and p['category'] != original_category, max(met[key].values()), key)
         return [found[k] for k in sorted(found, key=order)][:limit]
-    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # 대체 부품 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
+    find.also_read = lambda codes: EXTRA_CODES.set(tuple(codes))  # Spec 에이전트가 찾기 전에 부른다(사양 표 find에는 없음)
     return find
 
 
@@ -410,9 +410,14 @@ def overview_lines(category):
     return [{'key': k, 'file': unquote(os.path.basename(urlparse(u).path)), 'text': t} for k, u, t in rows]
 
 
-def default_find(n_docs=10, chat=None):
+def default_find(n_docs=None, chat=None):
     """실제 검색 · DB · 카드 읽기 · node_chat을 묶은 find. 분류가 있으면 개요 줄로 문서 고르기(코드가 못 고를 때만 LLM 1번), 없으면 검색 1번.
-    카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만. chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`)."""
+    카드 읽기 LLM은 코드가 못 읽은 카드가 있을 때만. chat을 주면 node_chat 대신 쓴다(데모 응답 기록 · 재생, `backend/services/demo.py`).
+
+    n_docs 기본 5. FIND_N_DOCS로 덮어쓴다(속도·정확도 A/B용).
+    """
+    if n_docs is None:
+        n_docs = int(os.getenv('FIND_N_DOCS', '5') or '5')  # [왜] Spec 7문항 A/B(11-11): n10·n5 모두 7/7 cited_gold, n5가 p95 10.4→9.9 · 평균 7.5→7.0
     from backend.rag.card_read import read_values
     from backend.rag.retrieve import retrieve
     from backend.services.llm import node_chat

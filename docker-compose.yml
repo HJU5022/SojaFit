@@ -55,14 +55,12 @@ services:
         condition: service_healthy
 
   db:
-    # pgvector 확장이 들어 있는 Postgres. 표는 db/의 SQL이 만들고, 데모 코퍼스 스냅샷은 위 corpus-load가 넣는다.
+    # pgvector 확장이 들어 있는 Postgres. 서비스 표는 db/020_service_baseline.sql(기준선)이 만들고 LangGraph 표는 thread-setup이 만들고, 데모 코퍼스 스냅샷은 위 corpus-load가 넣는다.
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: app
-      # db/007_demo_accounts.sql이 빈 DB 첫 기동 때 DEMO_MODE=1이면 비밀번호 없는 데모 사용자 A · B(버튼 로그인 전용)를 만든다.
-      DEMO_MODE: ${DEMO_MODE:-1}
     volumes:
       - pgdata:/var/lib/postgresql/data   # 컨테이너를 지워도 데이터 유지. 초기화하려면 docker compose down -v
       # initdb 폴더의 .sql은 데이터 폴더가 비어 있을 때 첫 기동에만 파일 이름순으로 실행된다.

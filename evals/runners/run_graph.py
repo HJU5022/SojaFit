@@ -120,6 +120,19 @@ def node_models() -> dict:
     return {node: llm.node_model(node) for node in langfuse_prompts.NODES}
 
 
+def evaluation_metadata(dataset_path: str) -> dict:
+    """그래프·반복 평가가 같은 실행 조건을 Langfuse에 기록한다(본문·비밀값 제외)."""
+    from backend.graph import nodes
+    from backend.services import llm
+    return {"provider": llm.LLM_PROVIDER,
+            "model": llm.LLM_MODEL if llm.LLM_PROVIDER == "openrouter" else f"claude-cli:{llm.LLM_CLI_MODEL}",
+            "demo_mode": llm.DEMO_MODE, "node_models": node_models(),
+            "retrieval": "bm25" if llm.DEMO_MODE else "hybrid", "dataset": dataset_path,
+            "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain", "--untracked-files=no") else ""),
+            "prompts": {p.stem: hashlib.sha1(p.read_bytes()).hexdigest()[:8]
+                        for p in sorted(nodes.PROMPTS.glob("*.md")) if p.stem != "PROMPTS"}}
+
+
 def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) -> dict:
     """그래프를 돌리고, 인터럽트로 멈추면 빈 답(= 모름)으로 최대 max_resumes번 재개한다."""
     from langgraph.types import Command
@@ -136,7 +149,10 @@ def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) ->
 
 
 def make_app(multi: bool, stack: ExitStack):
-    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다."""
+    """평가할 그래프를 조립한다. 단일 · 멀티 모두 MCP 서버를 stack에 열어(실행이 끝날 때 닫힘) 사실 확인에 쓰고, 찾기 · 판정 값은 카드 도구로 판정 길을 켠다.
+
+    반환: (app, warm_eval). warm_eval()은 BM25·첫 검색·MCP 품번확인을 한 번 데운다(GATE_WARMUP용, 안 불러도 됨).
+    """
     from backend.graph import mcp_retriever
     from backend.multi_agent.facts import make_lookup
     from backend.rag import card_find, card_specs
@@ -144,16 +160,29 @@ def make_app(multi: bool, stack: ExitStack):
     mcp = stack.enter_context(mcp_retriever.StdioMcpRetriever())
     # [왜] 사양 표는 11-09에 버렸다(ADR 0016). 서비스(memory_service.py)와 같은 조립: 찾기 · 판정 값은 카드 읽기, 사실 확인의 문서 행은 LLM 없는 doc_rows
     specs = card_specs.default_specs()
+    from functools import update_wrapper
+    from backend.services.langfuse_prompts import timed_tool  # [왜] 서비스와 같은 칸 이름(search · specs · find)으로 단계 시간을 남긴다. 기록기가 없으면 그대로 통과한다
+    raw_specs, raw_find = specs, card_find.default_find()
     # [왜] 판정 노드는 인터럽트로 멈췄다 같은 thread에서 재개하므로 체크포인터가 필요하다(메모리 안, 실행이 끝나면 사라짐)
     # [왜] 단일(D4 v2)과 멀티(D5)가 같은 사실 확인 · 같은 판정 도구를 써야 같은 평가셋 점수를 나란히 비교할 수 있다
-    tools = {"lookup": make_lookup(mcp.check, specs.doc_rows), "specs": specs, "find": card_find.default_find(), "checkpointer": InMemorySaver()}
+    lookup = make_lookup(mcp.check, specs.doc_rows)
+    tools = {"lookup": lookup, "specs": update_wrapper(timed_tool("specs", raw_specs), raw_specs),
+             "find": update_wrapper(timed_tool("find", raw_find), raw_find), "checkpointer": InMemorySaver()}
+
+    def warm_eval():
+        """BM25 색인 · Voyage 첫 검색 · MCP check_corpus를 프로세스 앞에서 한 번 불러 첫 문항 콜드를 줄인다."""
+        from backend.rag.retrieve import retrieve, warmup
+        warmup()
+        retrieve('1N4007G VRRM', k=5, parts=['1N4007G'])
+        lookup({'question': '1N4007G VRRM', 'target_part': {}})
+
     if not multi:
         from backend.graph.build import build_graph
-        return build_graph(**tools)  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
+        return build_graph(**tools), warm_eval  # 서비스와 같은 D4 v2 단일 그래프(SPEC 2절). 검색기는 기본값 retrieve
     from backend.multi_agent.build import build_graph as build_multi
     from backend.rag.retrieve import retrieve
     from backend.services import llm
-    return build_multi(chat=llm.node_chat, retriever=retrieve, judge_enabled=True, **tools)
+    return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools), warm_eval
 
 
 def _git(*args):
@@ -178,9 +207,8 @@ def main(dataset_path, ids=(), out=None, multi=False):
     # [왜] 다른 코드의 트레이스와 나눠 보려고 환경 이름을 둔다. Langfuse 클라이언트가 만들어지기 전에 정해야 한다
     os.environ.setdefault("LANGFUSE_TRACING_ENVIRONMENT", "eval")
     from langfuse import get_client
-    from langfuse.langchain import CallbackHandler
+    from backend.services.langfuse_prompts import callback
 
-    from backend.graph import nodes
     from backend.services import llm  # load_dotenv와 LANGFUSE_HOST → LANGFUSE_BASE_URL 맞추기가 여기서 일어난다
 
     if os.environ.get("LANGFUSE_BASE_URL", "").endswith("/"):
@@ -194,15 +222,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
     client = get_client()
     family = "multi" if multi else "graph"  # [왜] 같은 평가셋 · 같은 채점으로 멀티 에이전트도 재서 결과 모양을 같게 둔다
     session = f"{family}-{Path(dataset_path).stem}-{time.strftime('%m%d-%H%M')}-{llm.LLM_PROVIDER}"  # 이번 실행 문항들을 한 묶음으로
-    common = {"provider": llm.LLM_PROVIDER,
-              "model": llm.LLM_MODEL if llm.LLM_PROVIDER == "openrouter" else f"claude-cli:{llm.LLM_CLI_MODEL}",
-              "demo_mode": llm.DEMO_MODE, "node_models": node_models(),
-              "retrieval": "bm25" if llm.DEMO_MODE else "hybrid",  # DEMO_MODE=1이면 retrieve가 임베딩 없이 BM25만 쓴다
-              "dataset": dataset_path,
-              "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain") else ""),
-              # 프롬프트 파일 내용의 해시. 프롬프트를 고치면 바뀌어 실행끼리 비교할 때 구분된다
-              "prompts": {p.stem: hashlib.sha1(p.read_bytes()).hexdigest()[:8]
-                          for p in sorted(nodes.PROMPTS.glob("*.md")) if p.stem != "PROMPTS"}}  # PROMPTS.md는 폴더 설명이라 프롬프트 해시에서 뺀다
+    common = evaluation_metadata(dataset_path)
 
     calls = []  # 이번 문항의 LLM 호출(답안지 이름). 노드는 llm.chat을 모듈에서 찾으므로 감싼 함수가 모든 호출을 본다
     chat = llm.chat
@@ -210,7 +230,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
     llm.chat = lambda system, user, schema: calls.append(schema.__name__) or chat(system, user, schema)
 
     with ExitStack() as stack:  # [왜] 멀티는 MCP 서버를 전 문항 동안 한 번만 열어 두고 끝나면 닫는다
-        app = make_app(multi, stack)  # 그래프를 한 번 조립해 문항마다 재사용한다
+        app, _warm_eval = make_app(multi, stack)  # 그래프를 한 번 조립해 문항마다 재사용한다
         rows, failed = [], []  # 결과 파일에 남길 문항별 지표, 오류로 멈춘 문항
         for it in items:
             calls.clear()  # 이전 문항의 호출 기록을 비운다
@@ -222,7 +242,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
                 meta["irrelevant_type"] = it["irrelevant_type"]
             # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
             # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 · 멀티 모두 메모리 체크포인터를 쓴다)
-            config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
+            config = {"callbacks": [callback(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
                       "metadata": meta, "configurable": {"thread_id": it["id"]}}
             start = time.perf_counter()
             try:

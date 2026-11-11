@@ -1,6 +1,6 @@
 """사양 코드 목록과 찾기 순서 규칙(카드 찾기 · 판정이 함께 쓴다).
 
-- 역할: 사양 코드 목록 `CODES`(대체 부품 에이전트 import), 조건 자리 기본값 `DEFAULT_SLOT`, 삽입형 패키지 이름 `THT_PACKAGES`,
+- 역할: 사양 코드 목록 `CODES`(Spec 에이전트 import), 조건 자리 기본값 `DEFAULT_SLOT`, 삽입형 패키지 이름 `THT_PACKAGES`,
   패키지 이름 맞추기 `_norm_package`와 기준에서 먼 정도 `_ratio`(카드 찾기 `card_find.py` import).
 - 하지 않는 일: 판정 5종과 대체 가능 여부(`backend/judge/`, AGENTS 지킬 것 7), 단위 환산(값은 이미 SI), DB 조회, LLM 호출.
   부품 사양 표(part_specifications)와 그 SQL 조회(`part_specs` · `find_candidates`)는 11-09에 버리고 11-10에 지웠다(ADR 0016).

@@ -65,3 +65,17 @@ def test_foreign_and_invalid_resources_use_safe_errors(monkeypatch):
             response = web.post('/api/messages/9/approvals', json={'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}, headers={'origin': 'http://testserver'})
         assert response.status_code == status and response.json()['error']['code'] == code
         assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
+
+
+def test_approval_accepts_the_name_the_judgement_showed_but_not_control_characters(monkeypatch):
+    """판정 결과가 보여 준 이름('TSC 1N4007G')은 공백이 있어도 받는다(11-10 점검의 422). 제어 문자 · 빈 값은 422다."""
+    monkeypatch.setenv('AUTH_ORIGIN', 'http://testserver')
+    fake = FakeQuotes()
+    origin = {'origin': 'http://testserver'}
+    with client(fake) as web:
+        shown = web.post('/api/messages/9/approvals', json={'candidate_part': 'TSC 1N4007G', 'verdict': 'ROLE_SUFFICIENT'}, headers=origin)
+        control = web.post('/api/messages/9/approvals', json={'candidate_part': 'SS34\n', 'verdict': 'ROLE_SUFFICIENT'}, headers=origin)
+        blank = web.post('/api/messages/9/approvals', json={'candidate_part': '   ', 'verdict': 'ROLE_SUFFICIENT'}, headers=origin)
+    assert shown.status_code == 201 and control.status_code == blank.status_code == 422
+    assert fake.calls == [('approve', 7, 9, 'TSC 1N4007G', 'ROLE_SUFFICIENT')]
+
