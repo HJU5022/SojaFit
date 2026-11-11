@@ -6,6 +6,10 @@
 - 담당: 서비스·운영
 
 ## 파일
+- `test_external_circuit_search.py` — GitHub 저장소 URL 정제와 Exa 호출 상한
+- `test_external_schematic.py` — 라이선스·원본·전체 시트·cache·서명 token 경계
+- `test_schematic_discovery.py` — GitHub tree에서 완성 회로도 자산 판정
+- `test_schematic_render.py` — PDF/SVG/PNG 렌더링과 출력 크기 제한
 - `test_catalog.py` — 데모 15종의 단일 catalog, 연결 파일 존재, 중복 키와 안전하지 않은 ID 차단.
 - `PROJECTS.md` — 이 문서
 - `test_netlist.py` — 합성 입력의 크기·UTF-8·문법·깊이/token/부품/net 상한·정확한 불변 정규화와 hash

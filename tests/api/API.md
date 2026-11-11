@@ -9,6 +9,7 @@
 실행: `uv run pytest -q tests/api`(저장소 루트).
 
 ## 파일
+- test_external_circuits.py — 완성 회로도 manifest·PNG 응답, 인증·no-store·SCHEMATIC_NOT_FOUND 경계
 - `test_threads.py` — 격리 PostgreSQL에서 사용자 분석 서비스(`Conversations`)의 소유권·체크포인트 복구·재개·(HTTP 경로 없는) 승인 기록 멱등성 시험. 승인 사례는 새 분석에 넘기지 않고 Store에 쓰지 않음(승인 기록), 질문·재개 결과의 사용자 사실 참고(`profile_hints`)의 A/B 격리·고침·지움, `vector` 확장이 있는 DB에서 의미 순위·다시 임베딩도 본다. React 대화의 같은 UUID thread 연결(대상 고정·소유권·원문 미저장)과 React run·재개 HTTP가 실제 분석 서비스로 이어지는지, 하루 토큰 상한(사용자 · 서비스)의 원자적 차감 · 입장과 호출 직전 429 · 외부 호출 없음도 본다
 - 같은 파일에서 키 없는 데모 재생(`DEMO_REPLAY=1`, 가짜 그래프 · 가짜 기록)의 확인 자리: 기록한 회로 · 대상 · 질문만 새 대화의 첫 질문으로 받고(스트림 전 `ensure_thread`와 `message`), 재개는 기록한 답만 받고, 기록이 없으면 503인지, 내용 없는 단계 기록/trace 실패 격리, 시간 초과 결과의 승인 차단, 다른 DB 역할의 전용 스키마 접근 차단을 확인한다. React 이전 화면(`/workspace`) HTTP 경로 · 기억 정정/철회 · 재시도 시험은 11-10에 경로와 함께 지웠다.
 - 같은 파일에서 DB 없이 실제 분석 그래프 조립이 카드 도구(`card_find` · `card_specs`)를 넘기고, `timed_tool`로 감싼 뒤에도 `prefetch` · `also_read`가 남는지 본다(ADR 0016). 데모 재생 조립은 같은 재생 chat을 그래프 · 카드 도구에 넣고 Store를 넘기지 않으며, `DEMO_MODE=1`만으로는 재생하지 않는지도 본다.
