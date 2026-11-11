@@ -180,7 +180,7 @@ def rename_project(project_id: int, body: RenameProject, user_id: int = Depends(
 
 
 def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
-    """프로젝트와 딸린 것을 바로 지운다: public 업무 행(FK cascade)과 같은 UUID의 분석 thread · checkpoint · 메시지 · 승인 기록 · 분석 사건."""
+    """프로젝트와 딸린 것을 바로 지운다: public 업무 행(FK cascade)과 같은 UUID의 분석 thread · checkpoint · 메시지 · 분석 사건."""
     # run 생성·재개와 같은 project 행을 잠그고 한 트랜잭션에서 지운다. 분석 기록 삭제가 실패하면 프로젝트도 남는다(11-09 결정, SPEC 8.5)
     # checkpoint_delete(conn, thread_ids)는 시험이 지우는 함수를 바꿔 끼우는 자리다. 기본은 memory_service.delete_analysis_threads
     if checkpoint_delete is None:

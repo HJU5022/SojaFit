@@ -1,11 +1,11 @@
 import os
-from pathlib import Path
 from uuid import uuid4
 
 import psycopg
 import pytest
 from psycopg import sql
 from backend import auth
+from tests.db_schema import apply_service_schema
 
 
 def test_live_input_conditions_are_removed_before_storage_without_migration(storage):
@@ -117,8 +117,7 @@ def storage(monkeypatch):
         monkeypatch.setattr(auth, 'connection', connect)
         try:
             with connect() as conn:
-                for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '018_projects.sql', '019_conversations.sql'):
-                    conn.execute(Path('db', name).read_text(encoding='utf-8-sig'))
+                apply_service_schema(conn)  # [왜] SQL 파일 이름은 tests/db_schema.py 한 곳에만 둔다
                 users = [r[0] for r in conn.execute("INSERT INTO users(login_id,password_hash,role) VALUES ('owner@test','fake','user'),('other@test','fake','user') RETURNING id")]
                 project = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,'test','upload') RETURNING id", (users[0],)).fetchone()[0]
                 conn.execute("INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,'{}',%s,'test')", (project,'a'*64))
@@ -357,8 +356,9 @@ def test_project_and_checkpoint_cleanup_share_one_rollback(storage):
         assert conn.execute('SELECT name FROM projects WHERE id=%s', (project,)).fetchone() == ('test',)
 
 
-def test_database_rejects_nested_private_fields_and_bad_types(storage):
+def test_app_model_rejects_nested_private_fields_and_database_checks_required_keys(storage):
     from psycopg.types.json import Jsonb
+    from pydantic import ValidationError
     from backend.conversations.models import SafeResult
     repo, (owner, _), project, connect = storage
     thread = repo.create_thread(owner, project)
@@ -371,7 +371,12 @@ def test_database_rejects_nested_private_fields_and_bad_types(storage):
     bad2['judgement']['results'][0]['checks'][0]['citation']['page'] = {'path': '/private'}
     bad3 = copy.deepcopy(safe)
     bad3['price_parts'] = ['https://example.test/secret']
+    # [왜] D4: 중첩 모양은 DB CHECK가 아니라 앱 모델(SafeResult)이 정본이다. DB는 객체 + 필수 키 6개만 본다
     for value in (bad, bad2, bad3):
+        with pytest.raises(ValidationError):
+            SafeResult.model_validate(value)
+    missing = {k: v for k, v in safe.items() if k != 'evidence'}
+    for value in ([], 'text', missing):
         with pytest.raises(psycopg.errors.CheckViolation), connect() as conn:
             conn.execute('UPDATE runs SET safe_result=%s WHERE id=%s', (Jsonb(value), run))
 
