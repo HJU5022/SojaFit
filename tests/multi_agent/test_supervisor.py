@@ -154,11 +154,28 @@ def test_check_blocks_fake_citations_and_invented_numbers():
     assert 'refusal_reason' not in S.check_node({**one, 'answer': 'VRRM은 40 V이다 [7].'})
     assert S.check_node({**one, 'answer': 'VRRM은 40 V이다 [8].'})['refusal_reason'] == 'verify_failed'  # 받은 적 없는 근거
     assert S.check_node({**one, 'answer': 'VRRM은 40 V이다.'})['refusal_reason'] == 'verify_failed'      # 인용이 하나도 없음
-    two = {**one, 'reports': one['reports'] + [report(2, answer='D1은 역류를 막는다 [넷리스트].')]}
+    two = {**one, 'reports': one['reports'] + [report(2, answer='D1은 역류를 막는다 [넷리스트].', evidence_ids=['넷리스트'])]}
     ok = '40 V이다 [7]. 역류를 막는다 [넷리스트].'
     assert 'refusal_reason' not in S.check_node({**two, 'answer': ok, 'synth_text': ok})
     bad = '45 V이다 [7]. 역류를 막는다 [넷리스트].'  # 부분 답에 없던 숫자(45)를 종합이 지어냈다
     assert S.check_node({**two, 'answer': bad, 'synth_text': bad})['refusal_reason'] == 'verify_failed'
+
+
+@pytest.mark.parametrize('source', ['absent', 'failed', 'discarded', 'kept_earlier'])
+def test_final_netlist_permission_comes_only_from_selected_verified_reports(source):
+    rating = report(1, answer='VRRM은 40 V이다 [7].', evidence_ids=['7'])
+    role = report(2, answer='D1은 역류를 막는다 [넷리스트].', evidence_ids=['넷리스트'],
+                  status='fail' if source == 'failed' else 'ok', round=1)
+    state = {**STATE, 'reports': [rating] + ([] if source == 'absent' else [role]), 'passed': [7],
+             'answer': 'VRRM은 40 V이다 [7]. 역류를 막는다 [넷리스트].'}
+    if source == 'discarded':
+        state['final_reports'] = [rating]
+    if source == 'kept_earlier':
+        state.update(round=2, plan={'tasks': [task(1).model_dump()], 'keep_earlier': True},
+                     final_reports=[rating, role])
+    out = S.check_node(state)
+    assert bool(out.get('refusal_reason')) == (source != 'kept_earlier')
+    assert out['check']['fake_citations'] == ([] if source == 'kept_earlier' else ['넷리스트'])
 
 
 def test_prompts_keep_constraints_but_no_routing_table():

@@ -24,3 +24,7 @@ evals/results/threads/trust_boundary_*.json -text whitespace=cr-at-eol
 # 인젝션 본실측의 원시·메타·예산·승인 바이트와 기록된 SHA256을 보존한다.
 evals/results/threads/injection_baseline_live_*.json* -text whitespace=cr-at-eol
 evals/results/threads/injection_baseline_approval_*.json -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_smoke_live_*.json* -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_live_*.json* -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_approval_*.json -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_smoke_approval_*.json -text whitespace=cr-at-eol

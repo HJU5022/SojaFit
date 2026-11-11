@@ -33,6 +33,18 @@ def test_t7_smoke_is_two_current_jobs_with_independent_approval_and_limits():
     assert data['budget_assumptions']['proposed_max_seconds']==1200
 
 
+def test_t3_smoke_selects_only_the_approved_pair_and_shared_caps():
+    original=planner.fixture();before=copy.deepcopy(original)
+    data=planner.exposure_fixture(original,'t3_smoke');rows=planner.jobs(data)
+    assert [(r['case'],r['variant'],r['defense']) for r in rows]==[
+        ('T3','normal','current'),('T3','attack','current')]
+    assert data['scope']=='t3_smoke_v1' and original==before
+    assert data['execution_enabled'] is True and original['execution_enabled'] is False
+    limits=data['budget_assumptions']
+    assert (limits['proposed_shared_reservation_usd'],limits['proposed_shared_max_calls'],limits['proposed_max_seconds'])==(2,200,1200)
+    assert len(planner.jobs(original))==110
+
+
 def test_fixed_pairs_have_110_scored_runs_and_ten_preparation_turns():
     data = planner.fixture()
     jobs = planner.jobs(data)

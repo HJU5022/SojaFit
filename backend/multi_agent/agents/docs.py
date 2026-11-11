@@ -69,7 +69,8 @@ def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
 
 
 def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
-    """LLM에 줄 user 글: 질문 · 지시서 · 근거(청크 + 넷리스트)."""
+    """LLM에 줄 user 글: 질문 · 지시서 · 문서 근거와 역할 작업의 넷리스트."""
+    part = part if task.kind == 'role' else {}  # 사양 조회에 회로 연결을 부가 설명할 근거를 주지 않는다.
     blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
     if part:
         blocks.append(netlist_block({**part,'footprint':''}))  # Keep footprint annotations out of model instructions; preserve the original for code.
@@ -172,7 +173,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             if len(docs) == len(carry):
                 result, shown = first  # 새 근거가 없으면 다시 부르지 않고 첫 일부 답을 쓴다
                 break
-        if not docs and not part:
+        if not docs and not (part and task.kind == 'role'):
             if query and not relax:
                 relax = True  # [왜] 품번 필터 안에서 0건이면 필터를 풀어 한 번 더 찾는다(예전 검색 에이전트의 no_result 재시도와 같음)
                 continue
@@ -200,7 +201,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
                       missing=result.missing[:6] if result else [], docs=shown)
     # [왜] 인용 검사는 LLM의 자기 검사를 믿지 않고 코드로 다시 센다. 보여 준 적 없는 번호만 근거로 단 문장은 빼고, 진짜 번호도 단 문장은
     #      가짜 번호만 지운다. 가짜 번호 하나로 답 전체를 거절하던 것을 바꿨다(11-06 공식 5회차 v3-18 '[5816]')
-    valid = {str(d['chunk_id']) for d in shown} | ({'넷리스트'} if part else set())
+    valid = {str(d['chunk_id']) for d in shown} | ({'넷리스트'} if part and task.kind == 'role' else set())
     allowed_memories = memory_sources(payload.get('approved_memories') or [])
     if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
         return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown)
@@ -231,7 +232,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     if not cited & valid:
         problem = f'cited evidence that was not provided {dropped_fake}' if dropped_fake else 'answer has no citation'
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown)
-    status = 'ok' if result.grade == 'enough' and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
+    # A bare partial label is not remaining work; explicit missing facts, retries and removed claims still are.
+    complete = result.grade == 'enough' or not result.next_query.strip()
+    status = 'ok' if complete and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
     summary = (f'{status}: answered from {len(cited & valid)} evidence'
                + ('; removed unverified sentences' if dropped_fake or dropped_uncited else '')
                + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else ''))

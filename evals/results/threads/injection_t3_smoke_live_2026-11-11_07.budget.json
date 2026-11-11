@@ -1,0 +1,772 @@
+{
+  "calls": 34,
+  "reserved_usd": 0.5887420000000002,
+  "attempts": [
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 1,
+        "reserved_usd": 0.036495
+      },
+      "payload_sha256": "adb0d967af6d140f88acf1bc8d06d74b52d5f94dc3bcdbb883727e0fd4afac22",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.2339999999967404
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 2,
+        "reserved_usd": 0.032213
+      },
+      "payload_sha256": "49d85455e2ff46a06ef7dbd6dbd2924aa160f3dc88f8f85909c83280be5cf96d",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.2969999999913853
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 3,
+        "reserved_usd": 0.035343
+      },
+      "payload_sha256": "7353252f84a3fa728f1019c495f16d2772c3573be00e019d377d6cb6bfce0174",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.187000000005355
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 4,
+        "reserved_usd": 0.032574
+      },
+      "payload_sha256": "43da6092693f387327a5caa5d913ba5cbe4b2f6cafdebc6aa8f5c1b52ecc7d8b",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.7180000000080327
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 5,
+        "reserved_usd": 0.032943
+      },
+      "payload_sha256": "7889d25373c293be3ccd09b3b1733bbd9558d435203d13eb59a77a891fa73a63",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.25
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 6,
+        "reserved_usd": 0.034242999999999996
+      },
+      "payload_sha256": "170078404b73e518464b22a9bdeb99a6feeb6e225c4612c96f5256259c874972",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.187000000005355
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 7,
+        "reserved_usd": 0.031631
+      },
+      "payload_sha256": "7b4b272dc0d53033efa4a0798e9665064b16ae504e272ae7d835d5af5ccf239e",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.5939999999973224
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 8,
+        "reserved_usd": 0.035567
+      },
+      "payload_sha256": "94e6a6fbb8b1f1c1c1bb304c8665762102db8689dd088da19185a71ecea45a29",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.2339999999967404
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 9,
+        "reserved_usd": 0.032431999999999996
+      },
+      "payload_sha256": "d0fafc39325618b62990b62642e54fd49ada27918eadb7113cb2a15a221acd42",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.1560000000026776
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 10,
+        "reserved_usd": 0.033414
+      },
+      "payload_sha256": "bcaabd1a6cb35e6b94ab573cee8229879d05cd7d2dbfcaec67397d87a1c1e717",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.1720000000059372
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 11,
+        "reserved_usd": 0.033604999999999996
+      },
+      "payload_sha256": "ac5c78c67f2dee5f1280a3359e3891a1a2a953a7e2893f7df8c3246e8c30b40c",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.5470000000059372
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 12,
+        "reserved_usd": 0.03426
+      },
+      "payload_sha256": "4e0fdd50818a85bf6f30abdfab044c5b462bd1547c86dc99325bfdbbcab5326b",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.312000000005355
+    },
+    {
+      "provider": "voyage",
+      "node": null,
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "reservation": {
+        "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+        "node": null,
+        "reservation_id": 13,
+        "reserved_usd": 0.013137
+      },
+      "payload_sha256": "bcd4fe190de86d12859ca2ce5f8dd9851c31e4b8aba8ade9abf200b722ec9f73",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 1.125
+    },
+    {
+      "provider": "openrouter",
+      "node": "supervisor",
+      "call_id": "024978c1-0590-47f0-ac9f-5b9a673a325a",
+      "attempt": 1,
+      "user_sha256": "da48874926947a3db5f6920c091e141965cdb0d3ae87168a31540aa7380c9635",
+      "status": "returned",
+      "reservation": {
+        "call_id": "024978c1-0590-47f0-ac9f-5b9a673a325a",
+        "node": "supervisor",
+        "reservation_id": 14,
+        "reserved_usd": 0.003915125
+      },
+      "elapsed_s": 2.687999999994645
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+      "reservation": {
+        "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+        "node": "retrieve",
+        "reservation_id": 15,
+        "reserved_usd": 0.008369
+      },
+      "payload_sha256": "082ada4e1a2947780e54bc3f4774b9371fcaf7de018f2886b75591f75ebe16f1",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5939999999973224
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+      "reservation": {
+        "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+        "node": "retrieve",
+        "reservation_id": 16,
+        "reserved_usd": 0.008347
+      },
+      "payload_sha256": "c05ac1936b9d982e6b4f4c5f0ba1b39dc9df9deeef595744c7167756283ebbc3",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5939999999973224
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+      "reservation": {
+        "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+        "node": "retrieve",
+        "reservation_id": 17,
+        "reserved_usd": 0.01555
+      },
+      "payload_sha256": "947ea8203658f3243ab27957d5bb049553aa9c790b5e11a10920bd1a507d1bb0",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.6089999999967404
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+      "reservation": {
+        "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+        "node": "retrieve",
+        "reservation_id": 18,
+        "reserved_usd": 0.015528
+      },
+      "payload_sha256": "ce22cb60d336e5046156da571aeb967d0ae0810d9a112930e3555f6d8f69fe72",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.625
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "791d0e74-8e44-4965-9fe5-3d1cb6a329db",
+      "attempt": 1,
+      "user_sha256": "17e390c920f9c4e3f85b8f37231403b151ec98b32979a6dcfd647adbba75f47f",
+      "status": "returned",
+      "reservation": {
+        "call_id": "791d0e74-8e44-4965-9fe5-3d1cb6a329db",
+        "node": "docs_answer",
+        "reservation_id": 19,
+        "reserved_usd": 0.002635125
+      },
+      "elapsed_s": 2.8440000000118744
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "6a8568de-bbee-41a7-9014-b3b95101d4a4",
+      "attempt": 1,
+      "user_sha256": "b63820100dea96061e0d293e879420af65280eec65db23895f5ce52d95917bd4",
+      "status": "returned",
+      "reservation": {
+        "call_id": "6a8568de-bbee-41a7-9014-b3b95101d4a4",
+        "node": "docs_answer",
+        "reservation_id": 20,
+        "reserved_usd": 0.0026387499999999996
+      },
+      "elapsed_s": 1.6720000000059372
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "71870d83-eac0-480a-b05a-5401a3562eee",
+      "attempt": 1,
+      "user_sha256": "78c406ee4af9aebff168c6b70db3f985f5d42d0e2f7b3dbc263aca2672bd46e3",
+      "status": "returned",
+      "reservation": {
+        "call_id": "71870d83-eac0-480a-b05a-5401a3562eee",
+        "node": "docs_answer",
+        "reservation_id": 21,
+        "reserved_usd": 0.00269275
+      },
+      "elapsed_s": 2.125
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+      "reservation": {
+        "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+        "node": "retrieve",
+        "reservation_id": 22,
+        "reserved_usd": 0.008347
+      },
+      "payload_sha256": "c05ac1936b9d982e6b4f4c5f0ba1b39dc9df9deeef595744c7167756283ebbc3",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+      "reservation": {
+        "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+        "node": "retrieve",
+        "reservation_id": 23,
+        "reserved_usd": 0.015528
+      },
+      "payload_sha256": "ce22cb60d336e5046156da571aeb967d0ae0810d9a112930e3555f6d8f69fe72",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5160000000032596
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "340be1a6-6c6d-49b0-beea-5d5aad1b40fd",
+      "attempt": 1,
+      "user_sha256": "d0d084731ebc09c87e43c62f3d00b4bae6108e529e65de1977cf02caae9ff2ef",
+      "status": "returned",
+      "reservation": {
+        "call_id": "340be1a6-6c6d-49b0-beea-5d5aad1b40fd",
+        "node": "docs_answer",
+        "reservation_id": 24,
+        "reserved_usd": 0.00274
+      },
+      "elapsed_s": 5.25
+    },
+    {
+      "provider": "openrouter",
+      "node": "supervisor",
+      "call_id": "338aba89-d64c-43b4-a0fa-9e740e4c855e",
+      "attempt": 1,
+      "user_sha256": "da48874926947a3db5f6920c091e141965cdb0d3ae87168a31540aa7380c9635",
+      "status": "returned",
+      "reservation": {
+        "call_id": "338aba89-d64c-43b4-a0fa-9e740e4c855e",
+        "node": "supervisor",
+        "reservation_id": 25,
+        "reserved_usd": 0.003915125
+      },
+      "elapsed_s": 3.187999999994645
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+      "reservation": {
+        "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+        "node": "retrieve",
+        "reservation_id": 26,
+        "reserved_usd": 0.008347
+      },
+      "payload_sha256": "c05ac1936b9d982e6b4f4c5f0ba1b39dc9df9deeef595744c7167756283ebbc3",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5929999999934807
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+      "reservation": {
+        "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+        "node": "retrieve",
+        "reservation_id": 27,
+        "reserved_usd": 0.008369
+      },
+      "payload_sha256": "071d28af0c2efe65126a5dabc08bc74ff769efd05725778ac3fa6b01249aa266",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5779999999940628
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+      "reservation": {
+        "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+        "node": "retrieve",
+        "reservation_id": 28,
+        "reserved_usd": 0.015778
+      },
+      "payload_sha256": "f9a05155993935863380d0a52c7fa4ed49eb3b849af9f533ef60c84b7a8f23cf",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.6089999999967404
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+      "reservation": {
+        "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+        "node": "retrieve",
+        "reservation_id": 29,
+        "reserved_usd": 0.015799999999999998
+      },
+      "payload_sha256": "de4a88b993865f097c545d2692a9e4cc450e4f5e20809f21ce506a39c44f843f",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5939999999973224
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "a6e462c9-0955-4fd1-8cdf-34a608408c08",
+      "attempt": 1,
+      "user_sha256": "7884f8a0531606c44eddcb02aed1c15b83da144f08bbf1f6ebf1854dd1349037",
+      "status": "returned",
+      "reservation": {
+        "call_id": "a6e462c9-0955-4fd1-8cdf-34a608408c08",
+        "node": "docs_answer",
+        "reservation_id": 30,
+        "reserved_usd": 0.0026703749999999996
+      },
+      "elapsed_s": 1.9690000000118744
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "9db48323-f31c-43bd-bad5-72c9250a4202",
+      "attempt": 1,
+      "user_sha256": "a1a8ff35a575dcb5c086940070eadaaa046ade9d48ba18ee18d1c3aef892f06e",
+      "status": "returned",
+      "reservation": {
+        "call_id": "9db48323-f31c-43bd-bad5-72c9250a4202",
+        "node": "docs_answer",
+        "reservation_id": 31,
+        "reserved_usd": 0.002718375
+      },
+      "elapsed_s": 1.3910000000032596
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+      "reservation": {
+        "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+        "node": "retrieve",
+        "reservation_id": 32,
+        "reserved_usd": 0.008372
+      },
+      "payload_sha256": "86ad81fca318d0400a94b0b1e578d63ee391872bab42ec3d367981aaecf62f6b",
+      "operation": "embeddings",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5160000000032596
+    },
+    {
+      "provider": "voyage",
+      "node": "retrieve",
+      "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+      "reservation": {
+        "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+        "node": "retrieve",
+        "reservation_id": 33,
+        "reserved_usd": 0.015802999999999998
+      },
+      "payload_sha256": "b573a92cea742a9145579291bdc162e6c46b039c4bf6e5784f417dc256db9954",
+      "operation": "rerank",
+      "timeout": 45.0,
+      "status": "returned",
+      "http_status": 200,
+      "elapsed_s": 0.5460000000020955
+    },
+    {
+      "provider": "openrouter",
+      "node": "docs_answer",
+      "call_id": "aed3b143-5fdd-43e5-8ea7-44bc04f2ba28",
+      "attempt": 1,
+      "user_sha256": "5330d087d48bef7dcc4fa94775d7d7a01338154847dc00b0e3a31a372dc79c0f",
+      "status": "returned",
+      "reservation": {
+        "call_id": "aed3b143-5fdd-43e5-8ea7-44bc04f2ba28",
+        "node": "docs_answer",
+        "reservation_id": 34,
+        "reserved_usd": 0.0028213749999999997
+      },
+      "elapsed_s": 1.110000000000582
+    }
+  ],
+  "reservations": [
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 1,
+      "reserved_usd": 0.036495
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 2,
+      "reserved_usd": 0.032213
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 3,
+      "reserved_usd": 0.035343
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 4,
+      "reserved_usd": 0.032574
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 5,
+      "reserved_usd": 0.032943
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 6,
+      "reserved_usd": 0.034242999999999996
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 7,
+      "reserved_usd": 0.031631
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 8,
+      "reserved_usd": 0.035567
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 9,
+      "reserved_usd": 0.032431999999999996
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 10,
+      "reserved_usd": 0.033414
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 11,
+      "reserved_usd": 0.033604999999999996
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 12,
+      "reserved_usd": 0.03426
+    },
+    {
+      "call_id": "392e76ad-50f6-41a5-9748-6f961f34c76b",
+      "node": null,
+      "reservation_id": 13,
+      "reserved_usd": 0.013137
+    },
+    {
+      "call_id": "024978c1-0590-47f0-ac9f-5b9a673a325a",
+      "node": "supervisor",
+      "reservation_id": 14,
+      "reserved_usd": 0.003915125
+    },
+    {
+      "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+      "node": "retrieve",
+      "reservation_id": 15,
+      "reserved_usd": 0.008369
+    },
+    {
+      "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+      "node": "retrieve",
+      "reservation_id": 16,
+      "reserved_usd": 0.008347
+    },
+    {
+      "call_id": "63764516-3203-4ffd-9082-6d90958b6209",
+      "node": "retrieve",
+      "reservation_id": 17,
+      "reserved_usd": 0.01555
+    },
+    {
+      "call_id": "b035aba4-9833-47b3-a1bc-ed9ee7d30213",
+      "node": "retrieve",
+      "reservation_id": 18,
+      "reserved_usd": 0.015528
+    },
+    {
+      "call_id": "791d0e74-8e44-4965-9fe5-3d1cb6a329db",
+      "node": "docs_answer",
+      "reservation_id": 19,
+      "reserved_usd": 0.002635125
+    },
+    {
+      "call_id": "6a8568de-bbee-41a7-9014-b3b95101d4a4",
+      "node": "docs_answer",
+      "reservation_id": 20,
+      "reserved_usd": 0.0026387499999999996
+    },
+    {
+      "call_id": "71870d83-eac0-480a-b05a-5401a3562eee",
+      "node": "docs_answer",
+      "reservation_id": 21,
+      "reserved_usd": 0.00269275
+    },
+    {
+      "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+      "node": "retrieve",
+      "reservation_id": 22,
+      "reserved_usd": 0.008347
+    },
+    {
+      "call_id": "0f617a44-f04a-4be9-a6e7-f8afd945dd50",
+      "node": "retrieve",
+      "reservation_id": 23,
+      "reserved_usd": 0.015528
+    },
+    {
+      "call_id": "340be1a6-6c6d-49b0-beea-5d5aad1b40fd",
+      "node": "docs_answer",
+      "reservation_id": 24,
+      "reserved_usd": 0.00274
+    },
+    {
+      "call_id": "338aba89-d64c-43b4-a0fa-9e740e4c855e",
+      "node": "supervisor",
+      "reservation_id": 25,
+      "reserved_usd": 0.003915125
+    },
+    {
+      "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+      "node": "retrieve",
+      "reservation_id": 26,
+      "reserved_usd": 0.008347
+    },
+    {
+      "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+      "node": "retrieve",
+      "reservation_id": 27,
+      "reserved_usd": 0.008369
+    },
+    {
+      "call_id": "f6daf46b-b335-45ae-8fb6-92264f18af75",
+      "node": "retrieve",
+      "reservation_id": 28,
+      "reserved_usd": 0.015778
+    },
+    {
+      "call_id": "b9f917c0-3f62-4f29-92a4-d5fd516143c4",
+      "node": "retrieve",
+      "reservation_id": 29,
+      "reserved_usd": 0.015799999999999998
+    },
+    {
+      "call_id": "a6e462c9-0955-4fd1-8cdf-34a608408c08",
+      "node": "docs_answer",
+      "reservation_id": 30,
+      "reserved_usd": 0.0026703749999999996
+    },
+    {
+      "call_id": "9db48323-f31c-43bd-bad5-72c9250a4202",
+      "node": "docs_answer",
+      "reservation_id": 31,
+      "reserved_usd": 0.002718375
+    },
+    {
+      "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+      "node": "retrieve",
+      "reservation_id": 32,
+      "reserved_usd": 0.008372
+    },
+    {
+      "call_id": "0d6204a3-111a-4428-8522-00770e546c38",
+      "node": "retrieve",
+      "reservation_id": 33,
+      "reserved_usd": 0.015802999999999998
+    },
+    {
+      "call_id": "aed3b143-5fdd-43e5-8ea7-44bc04f2ba28",
+      "node": "docs_answer",
+      "reservation_id": 34,
+      "reserved_usd": 0.0028213749999999997
+    }
+  ]
+}

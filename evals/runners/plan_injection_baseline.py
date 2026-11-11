@@ -181,6 +181,7 @@ def main(argv=None):
     scope.add_argument('--exposure-only',action='store_true')
     scope.add_argument('--remaining-smoke',action='store_true')
     scope.add_argument('--t7-smoke',action='store_true')
+    scope.add_argument('--t3-smoke',action='store_true')
     args=parser.parse_args(argv)
     data=fixture()
     if args.exposure_only:
@@ -189,6 +190,8 @@ def main(argv=None):
         data=exposure_fixture(data,'remaining_smoke')
     elif args.t7_smoke:
         data=exposure_fixture(data,'t7_smoke')
+    elif args.t3_smoke:
+        data=exposure_fixture(data,'t3_smoke')
     rows=jobs(data)
     report=dict(status='awaiting_execution_approval',fixture_sha256=hashlib.sha256(CASES.read_bytes()).hexdigest(),
                 scope=data.get('scope','baseline'),scope_sha256=scope_sha256(data),

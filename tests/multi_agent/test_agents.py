@@ -54,13 +54,22 @@ def test_rating_task_searches_with_the_brief_query_and_answers_in_one_llm_call()
     assert r['status'] == 'ok' and r['evidence_ids'] == ['3'] and r['llm_calls'] == 1 and r['docs'][0]['chunk_id'] == 3
     assert r['searches'][0]['top'] == [['SS12 SERIES_K2301.pdf', 2]]
     node, user = chat.seen[0]
-    assert node == 'docs_answer' and 'goal: VRRM of SS14' in user and '[3] SS12 SERIES_K2301.pdf' in user and '[넷리스트] D1 SS14' in user
+    assert node == 'docs_answer' and 'goal: VRRM of SS14' in user and '[3] SS12 SERIES_K2301.pdf' in user
+    assert '[넷리스트]' not in user and 'D1.1' not in user
 
 
 def test_role_task_uses_only_the_netlist_without_searching():
     seen = []
-    r = run(task(kind='role', query=''), llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].')), seen=seen)
+    chat = llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].'))
+    r = run(task(kind='role', query=''), chat, seen=seen)
     assert seen == [] and r['status'] == 'ok' and r['evidence_ids'] == ['넷리스트'] and r['searches'] == []
+    assert '[넷리스트] D1 SS14' in chat.seen[0][1] and '+5V: D1.1, U1.3' in chat.seen[0][1]
+
+
+def test_rating_without_documents_does_not_fall_back_to_circuit_evidence():
+    seen = []
+    r = run(task(), lambda *a: pytest.fail('Rating must not call a model without document evidence'), seen=seen)
+    assert len(seen) == 2 and r['llm_calls'] == 0 and r['reason'] == 'no_result'
 
 
 def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason():
