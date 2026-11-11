@@ -134,7 +134,7 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
     """main을 Langfuse·LLM·DB 없이 가짜로 돌려 결과 파일 모양과 실패 문항 기록을 확인한다."""
     import json
     import langfuse
-    import langfuse.langchain
+    from backend.services import langfuse_prompts
     from evals.runners import run_graph
 
     class FakeClient:
@@ -151,7 +151,7 @@ def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
                     "passed": [], "answer": "이 질문은 SojaFit 범위 밖입니다.", "check": {}}
 
     monkeypatch.setattr(langfuse, "get_client", lambda: FakeClient())
-    monkeypatch.setattr(langfuse.langchain, "CallbackHandler", lambda **kw: None)
+    monkeypatch.setattr(langfuse_prompts, "callback", lambda **kw: None)
     monkeypatch.setattr(run_graph, "make_app", lambda multi, stack: FakeApp())
     data = tmp_path / "set.jsonl"
     data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [

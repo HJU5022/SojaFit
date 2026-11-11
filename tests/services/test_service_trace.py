@@ -94,6 +94,38 @@ def test_all_model_call_spans_share_the_given_trace_and_session(exported):
     assert {dict(s.attributes).get('session.id') for s in spans} >= {'thread-uuid-1'}
 
 
+@pytest.mark.parametrize('service', [True, False])
+@pytest.mark.parametrize('reported_cost', [0.00123, 0, None, -1, float('nan')])
+def test_reported_provider_cost_survives_export_without_a_model_price_table(exported, service, reported_cost, monkeypatch):
+    """서비스·평가 모두 공급자가 보고한 비용을 모델 가격표 없이 내보낸다."""
+    import json
+    from langchain_core.outputs import ChatGeneration, LLMResult
+    from backend.services import langfuse_prompts
+    exporter, client = exported
+    import importlib
+    handler_module = importlib.import_module('langfuse.langchain.CallbackHandler')
+    monkeypatch.setattr(handler_module, 'get_client', lambda **kwargs: client)
+    handler = trace.callbacks('a' * 32, 'thread-test', 'service')[0][0] if service else langfuse_prompts.callback()
+    run_id = uuid4()
+    handler.on_chat_model_start({'name': 'ChatOpenAI'}, [[AIMessage(content='PRIVATE_QUESTION_D1')]],
+        run_id=run_id, metadata={'ls_model_name': 'anthropic/claude-haiku-5.5'}, invocation_params={})
+    handler.on_llm_end(LLMResult(generations=[[ChatGeneration(message=AIMessage(content='PRIVATE_ANSWER_TEXT'))]],
+        llm_output={'model_name': 'anthropic/claude-haiku-5.5', 'token_usage': {
+            'prompt_tokens': 100, 'completion_tokens': 7, 'total_tokens': 107, 'cost': reported_cost,
+            'prompt_tokens_details': {'cached_tokens': 60}}}), run_id=run_id)
+    client.flush()
+    spans = exporter.get_finished_spans()
+    generation = next(dict(s.attributes) for s in spans if s.attributes.get('langfuse.observation.type') == 'generation')
+    if reported_cost in (0.00123, 0):
+        assert json.loads(generation['langfuse.observation.cost_details']) == {'total': reported_cost}
+    else:
+        assert 'langfuse.observation.cost_details' not in generation
+    usage = json.loads(generation['langfuse.observation.usage_details'])
+    assert usage['input_cached_tokens'] == 60 and usage['input'] == 40 and usage['output'] == 7
+    if service:
+        assert leaks(spans) == []
+
+
 def test_error_text_is_not_exported_but_error_level_is(exported):
     spans = run(*exported, fail=True)
     assert leaks(spans) == []

@@ -57,9 +57,9 @@ def ensure_client(**options):
 
 @functools.cache
 def _handler_class():
-    from langfuse.langchain import CallbackHandler
+    from backend.services.langfuse_prompts import CostCallbackHandler
 
-    class ServiceHandler(CallbackHandler):
+    class ServiceHandler(CostCallbackHandler):
         def _get_error_level_and_status_message(self, error):
             # [왜] 오류 문구(pydantic 검증 오류 등)에 모델 출력 글이 들어갈 수 있다. OTel 상태 설명은 위 훅이 못 고치므로 종류 이름만 남긴다
             level, _ = super()._get_error_level_and_status_message(error)

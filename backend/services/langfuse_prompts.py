@@ -1,6 +1,6 @@
 """Langfuse 프롬프트 등록·고정 버전 검증·선택적 노드 추적.
 
-역할: 로컬 소스(backend/prompts/*.md, backend/mcp_skill/skills/SKILL.md)를 `development` 라벨로 등록하고, 로컬과 원격이
+역할: 공급자 보고 비용을 보존하는 공통 callback을 제공하고, 로컬 소스(backend/prompts/*.md, backend/mcp_skill/skills/SKILL.md)를 `development` 라벨로 등록하고, 로컬과 원격이
 한 글자라도 다르면 LLM 호출 전에 ValueError로 멈춘다. `session()`을 명시적으로 켠 구간에서만 추적하고, 꺼져 있으면 no-op이거나 빈 값이다.
 호출자: backend/services/llm.py(`node_chat`·`_openrouter_call`), scripts/langfuse/langfuse_skill_check.py(등록·검증), evals/*, tests/services/test_langfuse_prompts.py.
 입력: Langfuse client(langfuse.get_client()). 읽는 환경변수는 없다(키는 langfuse SDK가 LANGFUSE_* 에서 읽는다).
@@ -10,11 +10,14 @@
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 import hashlib
+import logging
+import math
 from pathlib import Path
 import os
 import time
 from threading import Lock
 from langchain_core.callbacks import BaseCallbackHandler
+from langfuse.langchain import CallbackHandler
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
@@ -103,10 +106,25 @@ def publish_analysis_trace(user, thread, event):
     return 'queued'
 
 
-def callback():
+class CostCallbackHandler(CallbackHandler):
+    """SDK 기본 추적에 공급자 보고 비용을 더한다. 미보고 비용은 추정하지 않는다."""
+
+    def on_llm_end(self, response, *, run_id, **kwargs):
+        try:
+            cost = ((response.llm_output or {}).get('token_usage') or {}).get('cost')
+            # [주의] SDK 5의 실행별 generation 보관 칸이다. 종료하면 지워지므로 기본 콜백보다 먼저 갱신한다.
+            generation = self._runs.get(run_id)
+            if generation is not None and type(cost) in (int, float) and math.isfinite(cost) and cost >= 0:
+                generation.update(cost_details={'total': cost})
+        except Exception:
+            # [왜] 비용 계측 장애가 원래 결과나 기본 토큰·오류 기록을 막으면 안 된다. 예외 본문은 보내지 않는다.
+            logging.getLogger(__name__).warning('langfuse_reported_cost_unavailable')
+        return super().on_llm_end(response, run_id=run_id, **kwargs)
+
+
+def callback(**options):
     """노드 호출 하나를 추적하는 Langfuse LangChain CallbackHandler를 새로 만든다."""
-    from langfuse.langchain import CallbackHandler
-    return CallbackHandler()
+    return CostCallbackHandler(**options)
 
 
 def node_config(node):

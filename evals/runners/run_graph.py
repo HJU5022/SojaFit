@@ -120,6 +120,19 @@ def node_models() -> dict:
     return {node: llm.node_model(node) for node in langfuse_prompts.NODES}
 
 
+def evaluation_metadata(dataset_path: str) -> dict:
+    """그래프·반복 평가가 같은 실행 조건을 Langfuse에 기록한다(본문·비밀값 제외)."""
+    from backend.graph import nodes
+    from backend.services import llm
+    return {"provider": llm.LLM_PROVIDER,
+            "model": llm.LLM_MODEL if llm.LLM_PROVIDER == "openrouter" else f"claude-cli:{llm.LLM_CLI_MODEL}",
+            "demo_mode": llm.DEMO_MODE, "node_models": node_models(),
+            "retrieval": "bm25" if llm.DEMO_MODE else "hybrid", "dataset": dataset_path,
+            "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain", "--untracked-files=no") else ""),
+            "prompts": {p.stem: hashlib.sha1(p.read_bytes()).hexdigest()[:8]
+                        for p in sorted(nodes.PROMPTS.glob("*.md")) if p.stem != "PROMPTS"}}
+
+
 def invoke_with_resume(app, inputs: dict, config: dict, max_resumes: int = 1) -> dict:
     """그래프를 돌리고, 인터럽트로 멈추면 빈 답(= 모름)으로 최대 max_resumes번 재개한다."""
     from langgraph.types import Command
@@ -182,9 +195,8 @@ def main(dataset_path, ids=(), out=None, multi=False):
     # [왜] 다른 코드의 트레이스와 나눠 보려고 환경 이름을 둔다. Langfuse 클라이언트가 만들어지기 전에 정해야 한다
     os.environ.setdefault("LANGFUSE_TRACING_ENVIRONMENT", "eval")
     from langfuse import get_client
-    from langfuse.langchain import CallbackHandler
+    from backend.services.langfuse_prompts import callback
 
-    from backend.graph import nodes
     from backend.services import llm  # load_dotenv와 LANGFUSE_HOST → LANGFUSE_BASE_URL 맞추기가 여기서 일어난다
 
     if os.environ.get("LANGFUSE_BASE_URL", "").endswith("/"):
@@ -198,15 +210,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
     client = get_client()
     family = "multi" if multi else "graph"  # [왜] 같은 평가셋 · 같은 채점으로 멀티 에이전트도 재서 결과 모양을 같게 둔다
     session = f"{family}-{Path(dataset_path).stem}-{time.strftime('%m%d-%H%M')}-{llm.LLM_PROVIDER}"  # 이번 실행 문항들을 한 묶음으로
-    common = {"provider": llm.LLM_PROVIDER,
-              "model": llm.LLM_MODEL if llm.LLM_PROVIDER == "openrouter" else f"claude-cli:{llm.LLM_CLI_MODEL}",
-              "demo_mode": llm.DEMO_MODE, "node_models": node_models(),
-              "retrieval": "bm25" if llm.DEMO_MODE else "hybrid",  # DEMO_MODE=1이면 retrieve가 임베딩 없이 BM25만 쓴다
-              "dataset": dataset_path,
-              "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain") else ""),
-              # 프롬프트 파일 내용의 해시. 프롬프트를 고치면 바뀌어 실행끼리 비교할 때 구분된다
-              "prompts": {p.stem: hashlib.sha1(p.read_bytes()).hexdigest()[:8]
-                          for p in sorted(nodes.PROMPTS.glob("*.md")) if p.stem != "PROMPTS"}}  # PROMPTS.md는 폴더 설명이라 프롬프트 해시에서 뺀다
+    common = evaluation_metadata(dataset_path)
 
     calls = []  # 이번 문항의 LLM 호출(답안지 이름). 노드는 llm.chat을 모듈에서 찾으므로 감싼 함수가 모든 호출을 본다
     chat = llm.chat
@@ -226,7 +230,7 @@ def main(dataset_path, ids=(), out=None, multi=False):
                 meta["irrelevant_type"] = it["irrelevant_type"]
             # 입력은 평가셋의 input 하나뿐이다. expected(정답)는 그래프에 넘기지 않는다
             # [왜] thread_id: 판정 인터럽트를 같은 문항의 thread에서 재개한다(단일 · 멀티 모두 메모리 체크포인터를 쓴다)
-            config = {"callbacks": [CallbackHandler(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
+            config = {"callbacks": [callback(trace_context={"trace_id": trace_id})], "run_name": f"{family} {it['id']}",
                       "metadata": meta, "configurable": {"thread_id": it["id"]}}
             start = time.perf_counter()
             try:
