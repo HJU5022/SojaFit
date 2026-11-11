@@ -88,6 +88,8 @@ it('returns a completed SSE run with role evidence, candidate judgement, and dat
 
 it('provides realistic requirement and candidate values for the approval demo', async () => {
   const request = await freshDummy()
+  const thread = await json(await request('/api/projects/1/threads', { method: 'POST' }))
+  await request(`/api/threads/${thread.id}/runs`, { method: 'POST', body: JSON.stringify({ question: 'D1 대체 검토', target_ref: 'D1' }) })
   const run = await json(await request('/api/runs/dummy-run')) as unknown as RunDto
   expect(run.result.judgement).toMatchObject({ results: [{ checks: [
     { code: 'VRRM', op: '>=', threshold: 15, value: 40, unit: 'V', result: 'pass' },
@@ -163,4 +165,17 @@ it('creates uploaded projects through the same multipart contract as the real AP
   const response = await request('/api/projects/upload', { method: 'POST', body })
   expect(response.status).toBe(201)
   expect(await json(response)).toMatchObject({ name: '업로드 회로', source_kind: 'upload', demo_id: null, connections: expect.any(Object) })
+})
+
+it('deletes only one conversation and its runs without reusing surviving IDs', async () => {
+  const request = await freshDummy()
+  const first = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  const second = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  await request(`/api/threads/${first.id}/runs`, { method: 'POST', body: JSON.stringify({ question: '질문', target_ref: 'D1' }) })
+  expect((await request(`/api/threads/${first.id}`, { method: 'DELETE' })).status).toBe(204)
+  expect((await request('/api/runs/dummy-run')).status).toBe(404)
+  expect((await request(`/api/threads/${first.id}`)).status).toBe(404)
+  expect((await request(`/api/threads/${second.id}`)).status).toBe(200)
+  const third = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  expect(third.id).not.toBe(second.id)
 })

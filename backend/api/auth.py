@@ -47,6 +47,7 @@ class Enabled(BaseModel):
 class Me(BaseModel):
     user_id: int
     role: Literal["admin", "user"]
+    email: str
 
 
 class Ok(BaseModel):
@@ -252,9 +253,10 @@ def demo_login(body: DemoLogin, request: Request, response: Response):
 
 
 @router.get("/me", response_model=Me)
-def me(user: tuple[int, str] = Depends(auth.current_user)):
-    """현재 세션의 사용자 id와 역할(admin | user)을 돌려준다(세션이 없으면 401)."""
-    return {"user_id": user[0], "role": user[1]}
+def me(response: Response, user: tuple[int, str] = Depends(auth.current_user)):
+    """현재 세션 본인의 id·역할·로그인 이메일을 돌려준다(세션이 없으면 401)."""
+    response.headers['Cache-Control'] = 'no-store'
+    return {"user_id": user[0], "role": user[1], "email": auth.account_email(user[0])}
 
 
 @router.post("/logout", response_model=Ok)

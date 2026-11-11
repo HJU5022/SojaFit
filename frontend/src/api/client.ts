@@ -15,13 +15,21 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const response = await apiRequest(path, { ...init, credentials: 'same-origin', cache: 'no-store' })
   init.signal?.throwIfAborted()
   if (response.status === 204 && response.ok) return undefined as T
-  const body = await response.json()
+  if (!response.ok) throw await responseError(response)
+  const body = await response.json().catch(() => { throw { code: 'INVALID_RESPONSE', message: '서버 응답을 확인할 수 없습니다.', requestId: response.headers.get('X-Request-ID') ?? '' } satisfies ApiError })
   init.signal?.throwIfAborted()
-  if (!response.ok) {
-    if (response.status === 401) window.dispatchEvent(new Event('sojafit:session-expired'))
-    throw { code: body.error.code, message: body.error.message, requestId: body.error.request_id } satisfies ApiError
-  }
   return body as T
+}
+
+export async function responseError(response: Response): Promise<ApiError> {
+  if (response.status === 401) window.dispatchEvent(new Event('sojafit:session-expired'))
+  const body = await response.json().catch(() => null)
+  const error = body?.error
+  const codes: Record<number, string> = { 400: 'VALIDATION_ERROR', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT',
+    413: 'PAYLOAD_TOO_LARGE', 422: 'VALIDATION_ERROR', 429: 'RATE_LIMITED', 502: 'UPSTREAM_ERROR', 503: 'UNAVAILABLE', 504: 'TIMEOUT' }
+  return { code: typeof error?.code === 'string' && error.code.trim() ? error.code : codes[response.status] ?? 'HTTP_ERROR',
+    message: typeof error?.message === 'string' && error.message.trim() ? error.message : response.status === 401 ? '로그인이 필요합니다.' : '서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+    requestId: typeof error?.request_id === 'string' && error.request_id ? error.request_id : response.headers.get('X-Request-ID') ?? '' }
 }
 
 export function errorMessage(error: unknown): string {

@@ -24,6 +24,9 @@ dependencies = [
     "pyyaml>=6.0.3",
     "python-multipart>=0.0.33",
     "pdfplumber>=0.11.10,<0.12",
+    "pillow>=11",
+    "cairosvg>=2.7,<3",
+    "pypdfium2>=4.30",
 ]
 
 [dependency-groups]

@@ -41,7 +41,7 @@ it('redirects to login and removes account data when the session expires during 
   network((path, init) => path.endsWith('/me') ? Response.json(administrator) : path.endsWith('/status') ? Response.json({ enabled: false }) : init.method === 'PATCH' ? failure() : Response.json({ users: accounts }))
   open(); await screen.findByText('u***@example.test')
   fireEvent.click(screen.getByRole('button', { name: '비활성화' }))
-  expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'SojaFit에 로그인' })).toBeInTheDocument()
   expect(screen.queryByText('u***@example.test')).not.toBeInTheDocument()
 })
 it.each(['logout', 'navigation'])('cancels an outstanding update and skips its follow-up list after %s', async (exit) => {
@@ -67,7 +67,7 @@ it.each(['logout', 'navigation'])('cancels an outstanding update and skips its f
   const beforeExit = lists
   if (exit === 'logout') fireEvent.click(screen.getByRole('button', { name: '로그아웃' }))
   else fireEvent.click(screen.getByRole('link', { name: '작업대' }))
-  await screen.findByRole('heading', { name: exit === 'logout' ? '로그인' : '회로에 맞는 대체 부품을 찾아보세요' })
+  await screen.findByRole('heading', { name: exit === 'logout' ? 'SojaFit에 로그인' : 'SojaFit 에이전트' })
   await act(async () => { finish(Response.json({ ok: true })) })
   expect(lists).toBe(beforeExit)
   expect(patchSignal?.aborted).toBe(true)

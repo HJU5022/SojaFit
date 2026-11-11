@@ -7,6 +7,7 @@
 - 담당: 서비스·운영
 
 ## 파일
+- verify_external_schematics.py — 외부 공개 저장소에서 manifest와 PNG 시트를 확인하는 백엔드 smoke
 - `SMOKE.md` — 이 문서
 - `http_smoke.py` — 로그인 → 데모 회로 프로젝트 → 판정 질문(v3-01) · 조건 재개 → 승인(두 번째는 409) → 견적 → 다른 계정 404를 HTTP로 한 번 돌려, 요청마다 상태 · `error.code` · `X-Request-ID` · ms와 SSE 이벤트 순서, `/openapi.json` 경로 · 연산 수, 이 작업 트리 커밋을 `scripts/results/smoke/smoke_<호스트>_<KST 날짜>_<시각>.json`에 남긴다. 질문 글은 `scripts/demo/record_demo.py`의 `QUESTIONS`를 읽는다
 

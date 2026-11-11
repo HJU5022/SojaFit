@@ -188,3 +188,23 @@ def test_document_urls_never_gain_canonical_metadata_after_persistence(document,
         for value in values:
             assert value['source_url'] == ''
             assert value['outline_page'] is None
+def test_verified_input_conditions_are_live_only_and_storage_shape_is_unchanged():
+    from backend.conversations.dto import public_state, result_dto, safe_judgement
+    from backend.conversations.models import SafeResult
+    rows = [{'code': 'v_in_max', 'value': '20 V'}, {'code': 'i_max', 'value': '0.15 A'}]
+    public = public_state({'judgement': {'kind': 'judge', 'input_conditions': rows, 'analysis_inputs': {'raw': 'private'}}})
+    live = result_dto(public, request_id='req', input_conditions=rows)
+    assert live.judgement['input_conditions'] == rows
+    stored = SafeResult.model_validate({'judgement': safe_judgement(live.judgement)}).model_dump(mode='json')
+    assert 'input_conditions' not in stored['judgement']
+    assert result_dto(stored, request_id='req').judgement['input_conditions'] == []
+    assert 'private' not in str(stored)
+
+
+def test_input_condition_allowlist_ignores_private_or_malformed_items():
+    from backend.conversations.dto import result_dto
+    rows = [{'code': 'price', 'value': 'private'}, {'code': 'v_in_max', 'value': '20 V', 'raw': 'private'},
+            {'code': 'i_max', 'value': {'secret': 'private'}}]
+    result = result_dto({'judgement': {'kind': 'judge'}}, request_id='req', input_conditions=rows).judgement
+    assert result['input_conditions'] == [{'code': 'v_in_max', 'value': '20 V'}]
+    assert 'private' not in str(result)

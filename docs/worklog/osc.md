@@ -644,3 +644,9 @@
 - 실제 실행 `401eea2f-a13a-4cbf-8a76-167e4400795b`에서 일반 계정 로그인 200 → 첫 Exa 검색 1N4001 → requires_input → 분석 서비스 재생성 → 같은 run 재개 → 두 번째 Exa 검색 1N5819 → completed를 확인했다. 비로그인 조회 401 후 새 세션으로 로그인했고, 완료 응답·저장 답변·DB 근거 목록의 두 번호가 일치했다. 외부 PDF 다운로드 대상은 질문의 제조사 onsemi로 제한했다.
 - 두 PDF를 별도로 텍스트 추출해 2쪽 `MAXIMUM RATINGS` 표의 `Peak Repetitive Reverse Voltage`(VRRM) 행에서 머리글과 값의 열 위치를 대조했다. W1은 [1N4001의 50 V](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf#page=2), W2는 [1N5819의 40 V](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf#page=2)였다. Exa 2회, PDF GET 2회, OpenRouter 노드 응답 5회(Supervisor 2, 판정 조건 읽기 1, 문서 답변 2). DB에 기록된 분석 시간은 중단 전 9.952초, 재개 후 6.109초였다. 실제 청구 금액은 확인하지 않았다.
 - 관련 pytest 319 passed. 각각 새 PostgreSQL DB와 LF 체크아웃에서 `uv run --no-sync pytest -q --tb=no`로 비교했다. 수정 전 dd7fc3c는 1561 passed, 수정 후 1563 passed였다. 양쪽 모두 39 skipped이며 같은 테스트 3건(두 Google 관리자 세션, PostgreSQL 판정 재개 시 judge_read 횟수, 입력 표면 P3)이 실패했다. 동결 평가셋을 변경하거나 전체 실모델 평가를 실행하지 않았다.
+## 2026-11-11 원본 회로도 백엔드
+
+- 공개 GitHub 저장소에서 출처와 커밋, 라이선스, KiCad 원본을 확인한 뒤 전체 회로도를 시트별 PNG로 제공한다. 같은 설계의 PDF가 있으면 목표 300 DPI로 변환한다. 프런트와 일반 검색·LLM 답변 통합은 포함하지 않았다.
+- 검증: `uv run --no-sync pytest -q` 전체는 1,598 passed, 112 skipped, 1 failed(88.43초). 실패한 `tests/evals/test_input_surfaces.py::test_real_input_path_records_bad_raw_and_contains_final[P3]`는 변경 전 main(`14cf261`)의 별도 스냅샷에서도 단독 실행으로 재현됐다. 회로도 API·검색·변환·오류·OpenAPI·폴더 규칙 집중 검사 181 passed.
+- 실제 공급자 점검: `verify_external_schematics.py --query RP2040 --check-cache`에서 MIT 프로젝트 `calliah333/RP2040-designguide@a9afaa2`의 3509×2484 PNG 한 장을 받았다. 반복 요청에서 외부 검색·저장소 검사·변환은 각각 0회. Docker 이미지 빌드 후 KiCad 9.0.2 비루트 컨테이너에서 `--force-kicad-fallback`으로 ATtiny85 원본도 3508×2481 PNG 한 장으로 변환했다. 배포 서버와 실제 사용자 로그인은 이번 실조회 대상이 아니다.
+- 운영 요청: 팀 GitHub 조직 관리자가 공개 회로도 조회용 OAuth App을 등록한다. 앱 자격 증명은 배포용 Secret Manager에 보관하고, 앱 인증 연결과 요청 한도 확인은 등록 후 진행한다.
