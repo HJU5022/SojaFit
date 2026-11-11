@@ -116,6 +116,15 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                                'latency_s': (row['latency_s'], 'NUMERIC', None)})
                 if row['cost_usd'] is not None:
                     scores['cost_usd'] = (row['cost_usd'], 'NUMERIC', '공급자 보고 LLM 비용 합계(USD)')
+                # [왜] G6·강의 03강: 규칙 채점과 나란히 RAGAS Faithfulness·Context Precision을 같은 trace에 붙인다
+                if 'error' not in row:
+                    try:
+                        from evals.runners.score_ragas import score_ragas
+                        ragas_scores = score_ragas(it, state)
+                        scores.update(ragas_scores)
+                        row['ragas'] = {name: value for name, (value, _, _) in ragas_scores.items()} or 'skipped'
+                    except Exception as ragas_error:  # [왜] RAGAS 실패가 게이트 통과·규칙 점수를 덮지 않게 한다
+                        row['ragas'] = f'failed:{type(ragas_error).__name__}'
                 try:
                     for name, (value, kind, comment) in scores.items():
                         client.create_score(trace_id=trace_id, name=name, value=value, data_type=kind, comment=comment)
