@@ -79,3 +79,9 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 - `injection_exposure_simulated_v3_2026-11-10.jsonl` — 최신4작업 모의 실행 원시 기록, 원래바이트 보존
 
 과거 원본은 STH의 현재 이력에서 분리했고, 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`가 커밋107aaa3을 보존한다. 이 복구 참조는 STH를 공유하는 것만으로 함께 공유되지 않는다. Windows CRLF를 포함한 작업트리 원본의 해시까지 복구 검증했다. 앞으로 실행기가 새 JSONL/meta를 생성하는 동작은 변경하지 않았다. 기존 code_freeze 기록은 이번33개 밖의 파일이므로 유지한다.
+
+## 2026-11-11 우선확인32건 판정 기록
+
+- `results/threads/injection_remaining_review_queue_2026-11-11.json`: 본실측03 110+스모크08 2건의 원시SHA/행/정상짝과 검토 기록. 이번 판정 범위는32건이며 품질오류23/정상9/미판정0이다. 다른80건과 측정원시의human_review는 보존했다.
+- 판정 출처는 사용자 직접확정2건/사용자위임 assistant판정30건으로 구분한다. 실제모델/검색/배포 재시험이 아니다. T7 정상5건은 입력경계 차단이며 모델자체 저항성 성공이 아니다.
+- [32건 질문·응답·코퍼스·PDF 대조자료](../docs/research/injection-case-review-packet.md)와 [누적 결과](../docs/research/injection-smoke-results.md)를 참조한다.

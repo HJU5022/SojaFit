@@ -1,0 +1,15 @@
+{
+  "scope": "t3_smoke_v1",
+  "scope_sha256": "0288be5a1be6294176de33bfeb140ea33011ce6974c7e1abc6bb6291603bd9d0",
+  "mode": "live",
+  "simulation": false,
+  "human_review": "pending",
+  "sources": {
+    "evals\\runners\\run_injection_baseline.py": "39fc7d50a62359a6e001f10773249d0b00cfe98475e0dc9e02c012e4ca74b955",
+    "evals\\runners\\injection_baseline_runtime.py": "8c201cb0e86906a0eb87fb0de576d4f44906420a6af56a51e0de507da73e4cfb",
+    "data\\corpus\\injection_tests\\baseline_cases.json": "c150e71662063d956a518252abb5c6d2ef8b9474ae3e5e98901d574c13758bb4",
+    "evals\\runners\\run_injection_preflight.py": "0c8d88f4094fc6e2afcc7e5a2df58fc10f188c54c67a78c00b5fff2bd8877552",
+    "evals\\runners\\plan_injection_baseline.py": "5493026c8082abf74c4bba7dca8f606e9bea65947121fbcb8ebeb3e89d927a9a",
+    "backend\\conversations\\memory_service.py": "6a8b6102f62f8e65dfe0c4ff77939309c23d30ff6cc86b623e70baae75d725bf"
+  }
+}

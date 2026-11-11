@@ -7,6 +7,7 @@
 - 담당: 쓴 사람
 
 ## 파일
+- `injection-case-review-packet.md` — 사람 우선확인32건의 질문·최종응답 원문, 측정청크/회로/공격면, 해시일치 제조사PDF와페이지이미지·합성PDF부재를분리한대조자료.
 - `injection-smoke-results.md` — T1~T7 스모크01~06·본실측110항목의 누적 결과·버전·예산·사례별 관찰·저장 결과 무료 재현·최신03 원시 링크·이전32개 외부 백업 인덱스와 후속 기록 양식. 무료 재생은 실측과 분리하며 앞으로 같은 문서에 추가한다
 - `injection-preregistration-proposal.md` — 조장 담당 preregister 새 절을 분리한 미반영 제안. 현재 개선본 기준이며 실제 사전 등록 커밋·유료 실행 승인이 아님
 - `thread-memory-operations-review.md` — 사용자 thread·승인 기억의 운영 실측, 이전 검증 스냅샷과 조장 정본 반영 제안

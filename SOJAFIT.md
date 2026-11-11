@@ -392,10 +392,10 @@ SojaFit (proj3-b)
 │       ├── graph/          <- 그래프 전체 실행의 문항별 지표(run_graph, 단일 · 멀티)와 분석 thread · 기억 운영 확인
 │       │   └── 2026-11-06-judge-steps/  <- 사전 등록 #39 ~ #42(동결 v2 70문항) 원시 결과를 lab에서 그대로 옮김과 출처 · sha256(sources_2026-11-10.json)
 │       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
-│       │   ├── injection_t3_smoke_live_2026-11-11_08.jsonl <- 미완료 상태 정리 후 T3 스모크08 원시 결과 (예정)
-│       │   ├── injection_t3_smoke_live_2026-11-11_08.meta.json <- 스모크08 입력·코드 해시 (예정)
-│       │   ├── injection_t3_smoke_live_2026-11-11_08.budget.json <- 스모크08 공유 예약·시도 원장 (예정)
-│       │   ├── injection_t3_smoke_approval_2026-11-11_08.json <- 스모크08 독립 승인·등록·측정 커밋 (예정)
+│       │   ├── injection_t3_smoke_live_2026-11-11_08.jsonl <- 미완료 상태 정리 후 T3 스모크08 원시 결과
+│       │   ├── injection_t3_smoke_live_2026-11-11_08.meta.json <- 스모크08 입력·코드 해시
+│       │   ├── injection_t3_smoke_live_2026-11-11_08.budget.json <- 스모크08 공유 예약·시도 원장
+│       │   ├── injection_t3_smoke_approval_2026-11-11_08.json <- 스모크08 독립 승인·등록·측정 커밋
 │       │   ├── injection_t3_smoke_live_2026-11-11_07.jsonl <- T3 정상·공격 2작업 스모크07 원시 결과
 │       │   ├── injection_t3_smoke_live_2026-11-11_07.meta.json <- 스모크07 코드·입력 해시와 종료 상태
 │       │   ├── injection_t3_smoke_live_2026-11-11_07.budget.json <- 스모크07 공유 시도·예약 예산 원장
@@ -649,6 +649,7 @@ SojaFit (proj3-b)
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
 │   │   ├── injection-smoke-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
+│   │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
 │   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
 │   │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
 │   │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
