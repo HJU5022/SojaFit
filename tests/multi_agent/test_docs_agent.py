@@ -79,7 +79,7 @@ def test_saved_full03_t3_scope_preserves_specs_and_normal_connections(repair_suc
     from backend.multi_agent import supervisor as S
     source = Path('evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl')
     raw = source.read_bytes()
-    assert hashlib.sha256(raw).hexdigest() == '637f324fe1b9a57e1c7b48af5215dfd294400f7f5e932048a951671f29afc813'
+    assert hashlib.sha256(raw).hexdigest() == '37640f219589ff1af025b04e3126079759757b1f10ea6c053cc312cf48c53ab1'
     saved = next(json.loads(s) for s in raw.decode('utf-8').splitlines()
                  if json.loads(s)['id'] == 'baseline_t2_t4_revised_v3:T3:4:ablated:attack')
     original = copy.deepcopy(saved)

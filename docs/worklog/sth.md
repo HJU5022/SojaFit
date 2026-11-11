@@ -5,7 +5,7 @@
 - 사용자 승인: 미완료 상태 정리 후 T3 정상/공격 current2작업만 최대$2·200시도·1200초 재실행. 이전 명시 외부전송(OpenRouter/Voyage/팀Langfuse)·조장 예산 승인/사전등록 위임을 유지한다. 전체110회·푸시·자동추가실행은 제외한다.
 - 비교/환경: 스모크07에 비해 docs_agent 최종 상태 산출만 변경한다. 명시missing/partial추가검색/가짜·미인용 제거는partial로유지한다. 고정fixture/scope/두입력SHA와정답/질문/모델/검색/공격은동일하다. 새 injection_test_t3_smoke08_normal/attack DB만 사용하고 기존DB/원시는보존한다.
 - 기대/절차: 불필요미완료안내없이1000V·DO-41·음극띠·정확한인용이유지되고공격이실제노출돼도1200V사용·조립승인권고/DEMO1넷리스트혼용이없어야한다. 실제누락/제거가남으면안내를유지하고원인을기록한다. preregister에고정해시/명령/기대/공유예산·중단조건을먼저기록하고무료회귀·공식단가/키/잔액/새DB빈상태확인후코드·07회귀원시·새등록을로컬커밋한다. 승인08은그HEAD/runtime SHA에새로묶는다.
-- 실행 명령/중단: `uv run --offline --no-project .venv/Scripts/python.exe -m evals.runners.run_injection_baseline --t3-smoke --execute --approval evals/results/threads/injection_t3_smoke_approval_2026-11-11_08.json --out evals/results/threads/injection_t3_smoke_live_2026-11-11_08.jsonl`. 준비·검색·모델·재시도 전체합산$2/200/1200,오류·상한시즉시중단/후속not_run/부분원시보존,추가유료재시도없음. 실행후코드·입력·코퍼스버전/시간·비용·실패를추가기록한다.
+- 실행 명령/중단: `uv run --offline --no-project .venv/Scripts/python.exe -m evals.runners.run_injection_baseline --t3-smoke --execute --approval evals/results/threads/injection_t3_approval_2026-11-11_08.json --out evals/results/threads/injection_t3_live_2026-11-11_08.jsonl`. 준비·검색·모델·재시도 전체합산$2/200/1200,오류·상한시즉시중단/후속not_run/부분원시보존,추가유료재시도없음. 실행후코드·입력·코퍼스버전/시간·비용·실패를추가기록한다.
 
 ## 2026-11-11 스모크07 정상 미완료 안내 무료 회귀·수정
 - 사용자 요청/범위: 저장 스모크07의 불필요 안내를 무료 재현·수정하고 실제 누락 안내를 보존한다. STH에서 기존 미커밋 원시4개/트리/결과/작업기록을 보존했다. 새 유료·전체110회·DB·푸시·커밋 없음. 작업서의 Why/Goal/What/How/AC를 먼저 추가하고 관련 호출자 docs_agent/single_node/보고 계약·기존 T4/T1 부분답 회귀를 확인했다.
@@ -87,7 +87,7 @@
 - 사용자 요청: 최신03의원시/meta/budget/approval4개는저장소에남기고이전실측01/02·스모크01~06의32개를저장소밖원본백업후정리,해시목록/문서링크갱신. 커밋·푸시없음. 작업전대상36개전부미추적이고Git index에는스테이징변경이없었다.
 - 백업: E:/teamproject3/proj3-b-backup-20261110/injection-measurements-archive-20261111/evals/results/threads/ 에이전32개8250976바이트를Copy-Item으로복사했다. source/backup크기·SHA256전건일치후에만저장소안32개를Remove-Item -LiteralPath로정리했다. 경로는정확한저장소threads하위파일32개/백업루트하위로검증,재귀삭제·기존Git이력수정없음. 최신03의4개3678049바이트는전후해시동일하다.
 - 독립증거/인덱스: 백업루트manifest.json에32개외부보관+4개저장소유지의원래경로/크기/SHA/백업경로/원래수정시각을기록했다. 최초PowerShell manifest속성개수검사가컬렉션Count처리로실패했지만원본은남아있었고Python으로36개엔트리·32쌍해시를독립재검증한후정리했다. 기존injection_baseline_artifact_index_2026-11-10.json에measured_runs_archive절만추가하고예전33개통합/복구정보는보존했다. 이번32개는Git미추적이었으므로Git복구가능으로표시하지않는다.
-- 문서: injection-smoke-results.md의과거32파일Markdown링크를인덱스의개별JSONpointer로교체하고최신03의4링크는그대로유지했다. EVALS.md/RESEARCH.md/실험작업서에현재보관위치와복원방법을연결했다. 과거실행명령의옛출력경로는기록으로보존하고복원필요를안내했다. 백업은현재로컬전용/팀공유미업로드임을명시했다.
+- 문서: injection-results.md의과거32파일Markdown링크를인덱스의개별JSONpointer로교체하고최신03의4링크는그대로유지했다. EVALS.md/RESEARCH.md/실험작업서에현재보관위치와복원방법을연결했다. 과거실행명령의옛출력경로는기록으로보존하고복원필요를안내했다. 백업은현재로컬전용/팀공유미업로드임을명시했다.
 - 범위: 소스코드·평가정답·실험원시내용·사람판정·기존fixture잠금복원변경은건드리지않았다. 새파일은저장소밖backup manifest뿐이며저장소안에는기존인덱스/문서만수정했다. git add/commit/push·유료호출없음,최신4개는아직미추적상태로커밋대상경로에유지한다.
 - 최종검증: Python단언으로외부32/저장소4의bytes·SHA/외부manifest와인덱스동일/옛32경로부재/문서링크·JSONpointer대조통과. HEAD=e76c756불변·staged diff비어있음·유료flagfalse확인. uv run --offline --no-project .venv/Scripts/python.exe -m pytest tests/repo/test_repo_layout.py -q -p no:cacheprovider --tb=short →5passed/0.85초,git diff --check통과. threads전체파일수64→32,이번실측대상36→최신4개다.
 
@@ -218,7 +218,7 @@
 - 실행명령/조건/예산/중단은preregister.md스모크04절과동일,최종답VRRM1000V[16]/직접패키지/극성/모순없음·실제노출을검토한다. 기존원시삭제·덮어쓰기·자동증액/재실행없음.
 
 ## 2026-11-11 실측 누적 기록 문서 생성
-- 사용자요청: 지금까지실측을파일로정리하고앞으로같은파일에기록. docs/research/injection-smoke-results.md에스모크01~03총12작업/버전/원시링크/예약·시도·시간/사례별실패와최신무료수정의미측정범위를정리했다. 후속실행도같은문서에추가하고실측원시는각실행ID로별도보존한다.
+- 사용자요청: 지금까지실측을파일로정리하고앞으로같은파일에기록. docs/research/injection-results.md에스모크01~03총12작업/버전/원시링크/예약·시도·시간/사례별실패와최신무료수정의미측정범위를정리했다. 후속실행도같은문서에추가하고실측원시는각실행ID로별도보존한다.
 - 원시3회JSONL·승인·예산을직접읽어완료4×3/시도44+47+40=131/모델42·Voyage89/예약합계$2.1266235/사람review전건null을대조했다. 누적예약은각회별$2재승인예산과구분,실청구미확인. 02시간은파일시각의보수적범위이고정확프로세스시간이아님을명시했다.
 - 문서경로등록: SOJAFIT의새파일한줄예외만추가,RESEARCH목록·실험작업서의누적기록링크추가. 기존소스수정·작업기록·원시파일보존. 새유료실행/110회/커밋/푸시없음. 검증은링크·원시수치·해시·레이아웃대조로진행한다.
 - 검증결과: 새문서의로컬링크16개유효/원시3해시일치/실측12작업·공급자131시도·예약합계대조통과. uv run --offline --no-project .venv/Scripts/python.exe -m pytest -q tests/repo/test_repo_layout.py -p no:cacheprovider --tb=short →5passed/1.12초,git diff --check통과. 제품코드추가변경없어기능회귀는반복하지않았다.
@@ -1556,3 +1556,9 @@
 - 자료: 32건별 실제질문/응답전체·인용코퍼스·측정커밋fixture·원본PDF내용/해시를 대조한 참고문서,112건큐의범위/판정출처/원시연결. 스모크08 원시4개는판정근거의필수의존자료라함께보존했다. 새유료/배포검증이아니다.
 - 확인: 원시SHA/측정fixtureSHA/제조사PDFmanifestSHA 일치,32건입출력문자열·인용·짝/23·9집계/판정출처2·30·범위밖80건보존/상대링크·목록대조. 저장소구조검사5통과. 커밋후원격푸시는하지않음. 원본PNG는로컬보조링크이며공식PDF주소/본문발췌는공유가능.
 - 제외: 품질오류수정코드·새무료재생결과·실험계획/정본제안/화면재설계. 이커밋은과거관찰의판정기록만담는다.
+
+## 2026-11-11 판정자 정정·smoke 파일명5건 정리 커밋
+- 사용자요청대로판정대조자료의판정자32칸·사례별표시를팀장(하정운)으로정정.사용자가팀장전체승인을전달해112건의사후human_review/검토큐를품질오류23/정상89/보류0으로기록.기존32건은23/9를유지하고승인출처는사용자전달로명시.
+- a2a91e8에들어간smoke포함파일5개(누적문서+08원시4개)를정리하고트리/폴더목록/참조·테스트경로/해시를갱신.07등다른파일과scope/ID는제외.새이름에도-text속성을추가해바이트SHA를보존.
+- 검증:질문/답/노드/자동관찰을human_review제외payloadSHA로a2a91e8과비교해동일확인.승인메타만갱신한현재SHA·원래측정SHA·Git복구참조를분리.문서에이전트+구조106passed/3.18초,이름5쌍/판정자표32/사례표시32/112개최종결과대조및gitdiff--check확인.실제모델/DB/API/배포호출없음.
+- 제외:품질오류수정코드·새무료재생결과·화면재설계·기타실험준비변경.이커밋은기록/이름/참조정정만담으며원격푸시하지않음.

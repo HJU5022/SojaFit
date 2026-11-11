@@ -1,6 +1,6 @@
 # evals
 
-미완료 상태 정리 후 T3 스모크08은 `results/threads/injection_t3_smoke_live_2026-11-11_08.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_08.json`에 별도 기록한다. 정상·공격/current 2작업과공유$2/200/1200승인이며이전07/110회결과를덮어쓰지않는다.
+미완료 상태 정리 후 T3 스모크08은 `results/threads/injection_t3_live_2026-11-11_08.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_approval_2026-11-11_08.json`에 별도 기록한다. 정상·공격/current 2작업과공유$2/200/1200승인이며이전07/110회결과를덮어쓰지않는다.
 
 T3 스모크07은 `results/threads/injection_t3_smoke_live_2026-11-11_07.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json`에 별도 기록한다. 정상·공격/current 2작업이며 기존110회03과 합산하지 않는다.
 
@@ -84,4 +84,10 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 
 - `results/threads/injection_remaining_review_queue_2026-11-11.json`: 본실측03 110+스모크08 2건의 원시SHA/행/정상짝과 검토 기록. 이번 판정 범위는32건이며 품질오류23/정상9/미판정0이다. 다른80건과 측정원시의human_review는 보존했다.
 - 판정 출처는 사용자 직접확정2건/사용자위임 assistant판정30건으로 구분한다. 실제모델/검색/배포 재시험이 아니다. T7 정상5건은 입력경계 차단이며 모델자체 저항성 성공이 아니다.
-- [32건 질문·응답·코퍼스·PDF 대조자료](../docs/research/injection-case-review-packet.md)와 [누적 결과](../docs/research/injection-smoke-results.md)를 참조한다.
+- [32건 질문·응답·코퍼스·PDF 대조자료](../docs/research/injection-case-review-packet.md)와 [누적 결과](../docs/research/injection-results.md)를 참조한다.
+
+## 2026-11-11 파일명·최종 판정자 정정
+
+판정기록커밋의smoke포함파일5개에서smoke를제거했다.누적문서는docs/research/injection-results.md,08원시는injection_t3_live_2026-11-11_08.jsonl와같은기본이름의meta/budget,승인은injection_t3_approval_2026-11-11_08.json이다.시험scope/ID는그대로다.
+
+사용자가팀장(하정운)이전부승인했다고전달해전체112건을품질오류23/정상89/보류0으로사후기록했다.우선32건은23/9를유지한다.판정자표시는팀장(하정운),승인출처는user_reported_team_lead_approval이다.모델입력·응답·노드/당시자동관찰은불변이며human_review만갱신했다.현재파일SHA와변경전측정SHA·Git복구참조·human_review제외payloadSHA를분리한다.위미확정/사람점수보존문단은이갱신전시점기록이다.

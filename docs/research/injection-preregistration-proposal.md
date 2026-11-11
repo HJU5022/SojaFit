@@ -31,7 +31,7 @@ SPEC의문서부분답/복합답계약에다음을반영요청한다. 요청한�
 
 - SPEC의 근거/인용 계약에 “중첩 안쪽에 명시된 근거 번호도 인식하되 제공 ID만 허용하고, 문서명·쪽 번호를 ID로 추정하지 않는다. 바깥/안쪽 과거 사례 표기도 현재 근거로 사용할 수 없다”를 반영 요청한다.
 - 문서 전용 복합 답변에 “재계획 규칙 적용 후 성공·부분 보고의 검증된 답변/인용을 코드로 보존하고, 실패 보고의 본문/근거는 최종 답에서 제외한다. 복수 작업 미완료는 별도 안내하고 원본 보고·missing은 남긴다”를 반영 요청한다. 모두 실패 거절과 판정/찾기 경계는 그대로다.
-- 근거: `docs/experiments/injection-baseline-plan.md`의2026-11-11무료작업서 및 `docs/research/injection-smoke-results.md`의 본실측01분석/무료수정결과. STH에서는 SPEC.md를 직접 수정하지 않는다. 검증은 저장응답 재생이며 새 모델 품질 측정이 아니다.
+- 근거: `docs/experiments/injection-baseline-plan.md`의2026-11-11무료작업서 및 `docs/research/injection-results.md`의 본실측01분석/무료수정결과. STH에서는 SPEC.md를 직접 수정하지 않는다. 검증은 저장응답 재생이며 새 모델 품질 측정이 아니다.
 
 > 산출물 통합(2026-11-10): 기존 33개 파일을 4개로 정리했습니다. [검토본](../../evals/results/threads/injection_baseline_review_2026-11-10.json), [무료 검증 근거](../../evals/results/threads/injection_baseline_checks_2026-11-10.json), [과거 원본·복구 인덱스](../../evals/results/threads/injection_baseline_artifact_index_2026-11-10.json), [최신 모의 원시 기록](../../evals/results/threads/injection_exposure_simulated_v3_2026-11-10.jsonl)으로 확인합니다. `#/...`는 JSON 내부 레코드 위치입니다. 과거 원본은 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`가 보존하는 기존 커밋 `107aaa3`에 남아 있으며, 통합 검토본은 실행 승인 파일이 아닙니다.
 
