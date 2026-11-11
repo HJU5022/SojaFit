@@ -379,6 +379,8 @@ def test_analysis_trace_carries_user_and_thread_without_question(monkeypatch):
     monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-analysis-test")
     # [왜] client가 여럿이면 get_client()가 꺼진 client를 돌려준다. 이 client로 고정해 원격으로 보내지 않는다
     monkeypatch.setattr(langfuse, "get_client", lambda: client)
+    from backend.services import service_trace
+    monkeypatch.setattr(service_trace, "ensure_client", lambda: True)  # [왜] 이 시험은 위 client를 직접 쓴다(훅 적용은 test_service_trace.py)
     question = "PRIVATE_QUESTION D1 대체 user@example.com"
     # memory_service._record_event가 만드는 칸 그대로(질문은 thread 입력 기록에만 있고 여기 넣지 않는다)
     event = {"version": 2, "request_id": "req-1", "mode": "service", "status": "DONE", "elapsed_ms": 12,

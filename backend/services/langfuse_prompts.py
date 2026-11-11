@@ -1,6 +1,6 @@
 """Langfuse 프롬프트 등록·고정 버전 검증·선택적 노드 추적.
 
-역할: 로컬 소스(backend/prompts/*.md, backend/mcp_skill/skills/SKILL.md)를 `development` 라벨로 등록하고, 로컬과 원격이
+역할: 공급자 보고 비용을 보존하는 공통 callback을 제공하고, 로컬 소스(backend/prompts/*.md, backend/mcp_skill/skills/SKILL.md)를 `development` 라벨로 등록하고, 로컬과 원격이
 한 글자라도 다르면 LLM 호출 전에 ValueError로 멈춘다. `session()`을 명시적으로 켠 구간에서만 추적하고, 꺼져 있으면 no-op이거나 빈 값이다.
 호출자: backend/services/llm.py(`node_chat`·`_openrouter_call`), scripts/langfuse/langfuse_skill_check.py(등록·검증), evals/*, tests/services/test_langfuse_prompts.py.
 입력: Langfuse client(langfuse.get_client()). 읽는 환경변수는 없다(키는 langfuse SDK가 LANGFUSE_* 에서 읽는다).
@@ -10,18 +10,21 @@
 from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 import hashlib
+import logging
+import math
 from pathlib import Path
 import os
 import time
 from threading import Lock
 from langchain_core.callbacks import BaseCallbackHandler
+from langfuse.langchain import CallbackHandler
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
 HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 CONFIG = {"model": HAIKU, "temperature": 0, "max_tokens": 4096}
 NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read", "docs_answer", "synth", "card_read", "card_pick")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
-# [왜] judge_read는 대체 부품 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
+# [왜] judge_read는 Spec 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
 # [왜] card_read는 데이터시트 카드에서 사양 값을 읽는 노드(backend/rag/card_read.py, 사양 표 대신), 서브에이전트라 Haiku. card_pick은 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 노드(backend/rag/card_find.py)
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
 # [왜] Supervisor는 Haiku(ADR 0017, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
@@ -59,9 +62,8 @@ class AnalysisTimings(BaseCallbackHandler):
         self._end(run_id, 'interrupted' if type(error).__name__ == 'GraphInterrupt' else 'failed')
 
     def report(self):
-        observed = {s['stage'] for s in self.stages}
-        return self.stages + [{'stage':name,'status':'skipped','elapsed_ms':0}
-            for name in ('plan','search','judge_read','judge','synth','check') if name not in observed]
+        # [왜] 예전에는 옛 영어 노드 이름(plan · judge_read 등)이 안 돌았다며 0ms 'skipped' 행을 덧붙였지만, 지금 노드 이름은 한국어라 늘 거짓 행이 됐다(11-11)
+        return list(self.stages)
 
 
 @contextmanager
@@ -92,6 +94,10 @@ def publish_analysis_trace(user, thread, event):
     if not os.getenv('LANGFUSE_PUBLIC_KEY') or not os.getenv('LANGFUSE_SECRET_KEY'):
         return 'disabled'
     from langfuse import get_client, propagate_attributes
+    from backend.services import service_trace
+    # [왜] 이 프로세스의 첫 Langfuse client는 반드시 본문을 지우는 훅이 걸린 것이어야 한다(훅 없는 client가 먼저 만들어지면 재사용된다)
+    if not service_trace.ensure_client():
+        return 'disabled'
     client = get_client()
     with propagate_attributes(user_id=str(user), session_id=str(thread), tags=['analysis', event['mode']]):
         with client.start_as_current_observation(name='analysis-metadata', as_type='span',
@@ -100,10 +106,25 @@ def publish_analysis_trace(user, thread, event):
     return 'queued'
 
 
-def callback():
+class CostCallbackHandler(CallbackHandler):
+    """SDK 기본 추적에 공급자 보고 비용을 더한다. 미보고 비용은 추정하지 않는다."""
+
+    def on_llm_end(self, response, *, run_id, **kwargs):
+        try:
+            cost = ((response.llm_output or {}).get('token_usage') or {}).get('cost')
+            # [주의] SDK 5의 실행별 generation 보관 칸이다. 종료하면 지워지므로 기본 콜백보다 먼저 갱신한다.
+            generation = self._runs.get(run_id)
+            if generation is not None and type(cost) in (int, float) and math.isfinite(cost) and cost >= 0:
+                generation.update(cost_details={'total': cost})
+        except Exception:
+            # [왜] 비용 계측 장애가 원래 결과나 기본 토큰·오류 기록을 막으면 안 된다. 예외 본문은 보내지 않는다.
+            logging.getLogger(__name__).warning('langfuse_reported_cost_unavailable')
+        return super().on_llm_end(response, run_id=run_id, **kwargs)
+
+
+def callback(**options):
     """노드 호출 하나를 추적하는 Langfuse LangChain CallbackHandler를 새로 만든다."""
-    from langfuse.langchain import CallbackHandler
-    return CallbackHandler()
+    return CostCallbackHandler(**options)
 
 
 def node_config(node):
