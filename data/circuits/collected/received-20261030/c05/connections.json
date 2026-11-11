@@ -1,0 +1,422 @@
+{
+  "components": [
+    {
+      "ref": "C1",
+      "value": "100uF",
+      "footprint": "Capacitor_SMD:CP_Elec_6.3x7.7",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "C2",
+      "value": "0.1uF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C3",
+      "value": "100uF",
+      "footprint": "Capacitor_SMD:CP_Elec_4x4.5",
+      "description": "Polarized capacitor"
+    },
+    {
+      "ref": "C4",
+      "value": "0.1uF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C5",
+      "value": "0.1uF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C7",
+      "value": "0.1uF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "C8",
+      "value": "0.1uF",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder",
+      "description": "Unpolarized capacitor"
+    },
+    {
+      "ref": "D2",
+      "value": "SS34",
+      "footprint": "Diode_SMD:D_SMA",
+      "description": "40V 3A Schottky Diode, SMA"
+    },
+    {
+      "ref": "R1",
+      "value": "00",
+      "footprint": "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R3",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R4",
+      "value": "100K",
+      "footprint": "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R5*1",
+      "value": "10K(4.7K for 24V motor)",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "R6",
+      "value": "100K",
+      "footprint": "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder",
+      "description": "Resistor"
+    },
+    {
+      "ref": "RV1",
+      "value": "10K",
+      "footprint": "Potentiometer_THT:Potentiometer_Bourns_3296W_Vertical",
+      "description": "Potentiometer"
+    },
+    {
+      "ref": "TP1",
+      "value": "VCC",
+      "footprint": "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm",
+      "description": "test point"
+    },
+    {
+      "ref": "TP2",
+      "value": "Motor+",
+      "footprint": "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm",
+      "description": "test point"
+    },
+    {
+      "ref": "TP3",
+      "value": "Motor-",
+      "footprint": "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm",
+      "description": "test point"
+    },
+    {
+      "ref": "TP4",
+      "value": "GND",
+      "footprint": "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm",
+      "description": "test point"
+    },
+    {
+      "ref": "U1",
+      "value": "ATtiny13A-SS",
+      "footprint": "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
+      "description": "20MHz, 1kB Flash, 64B SRAM, 64B EEPROM, debugWIRE, SOIC-8 (150 mil)"
+    },
+    {
+      "ref": "U2",
+      "value": "L78L05_SOT89",
+      "footprint": "Package_TO_SOT_SMD:SOT-89-3",
+      "description": "Positive 100mA 30V Linear Regulator, Fixed Output 5V, SOT-89"
+    },
+    {
+      "ref": "V1",
+      "value": "IRLR2905PBF",
+      "footprint": "IRLR2905PBF:TO-252",
+      "description": "MOSFET, Power,N-Ch,VDSS 55V,RDS(ON) 0.027Ohm,ID 42A,D-Pak (TO-252AA),PD 110W | Infineon IRLR2905PBF"
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V",
+      "nodes": [
+        {
+          "ref": "C3",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV1",
+          "pin": "3",
+          "pinfunction": "3_3"
+        },
+        {
+          "ref": "U1",
+          "pin": "8",
+          "pinfunction": "VCC_8"
+        },
+        {
+          "ref": "U2",
+          "pin": "1",
+          "pinfunction": "OUT_1"
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C2",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C3",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C7",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "C8",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R5*1",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R6",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV1",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "TP4",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "U1",
+          "pin": "4",
+          "pinfunction": "GND_4"
+        },
+        {
+          "ref": "U2",
+          "pin": "2",
+          "pinfunction": "GND_2"
+        },
+        {
+          "ref": "V1",
+          "pin": "3",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(D2-A)",
+      "nodes": [
+        {
+          "ref": "C5",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "D2",
+          "pin": "2",
+          "pinfunction": "A_2"
+        },
+        {
+          "ref": "TP3",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "V1",
+          "pin": "4",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(R3-Pad2)",
+      "nodes": [
+        {
+          "ref": "R3",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R6",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "V1",
+          "pin": "1",
+          "pinfunction": null
+        }
+      ]
+    },
+    {
+      "name": "Net-(U1-PB0)",
+      "nodes": [
+        {
+          "ref": "R3",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "5",
+          "pinfunction": "PB0_5"
+        }
+      ]
+    },
+    {
+      "name": "Net-(U1-PB2)",
+      "nodes": [
+        {
+          "ref": "C7",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "R4",
+          "pin": "2",
+          "pinfunction": null
+        },
+        {
+          "ref": "R5*1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "U1",
+          "pin": "7",
+          "pinfunction": "PB2_7"
+        }
+      ]
+    },
+    {
+      "name": "Net-(U1-PB4)",
+      "nodes": [
+        {
+          "ref": "C8",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "RV1",
+          "pin": "2",
+          "pinfunction": "2_2"
+        },
+        {
+          "ref": "U1",
+          "pin": "3",
+          "pinfunction": "PB4_3"
+        }
+      ]
+    },
+    {
+      "name": "VCC",
+      "nodes": [
+        {
+          "ref": "C1",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C2",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "C5",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "D2",
+          "pin": "1",
+          "pinfunction": "K_1"
+        },
+        {
+          "ref": "R4",
+          "pin": "1",
+          "pinfunction": null
+        },
+        {
+          "ref": "TP1",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "TP2",
+          "pin": "1",
+          "pinfunction": "1_1"
+        },
+        {
+          "ref": "U2",
+          "pin": "3",
+          "pinfunction": "IN_3"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(U1-PB1-Pad6)",
+      "nodes": [
+        {
+          "ref": "U1",
+          "pin": "6",
+          "pinfunction": "PB1_6"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(U1-PB3-Pad2)",
+      "nodes": [
+        {
+          "ref": "U1",
+          "pin": "2",
+          "pinfunction": "PB3_2"
+        }
+      ]
+    },
+    {
+      "name": "unconnected-(U1-~{RESET}{slash}PB5-Pad1)",
+      "nodes": [
+        {
+          "ref": "U1",
+          "pin": "1",
+          "pinfunction": "~{RESET}/PB5_1"
+        }
+      ]
+    }
+  ]
+}

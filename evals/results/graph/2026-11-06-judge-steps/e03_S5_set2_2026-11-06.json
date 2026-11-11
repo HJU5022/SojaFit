@@ -1,0 +1,80 @@
+{
+ "meta": {
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-5.5",
+  "demo_mode": false,
+  "node_models": {
+   "route": "anthropic/claude-haiku-5.5",
+   "grade": "openai/gpt-6-luna",
+   "rewrite": "anthropic/claude-haiku-5.5",
+   "generate": "anthropic/claude-haiku-5.5",
+   "supervisor": "anthropic/claude-sonnet-5.5",
+   "judge_read": "anthropic/claude-haiku-5.5"
+  },
+  "retrieval": "hybrid",
+  "dataset": "evals/dataset_v2.jsonl",
+  "git": "",
+  "prompts": {
+   "generate": "f96512cc",
+   "grade": "d003481a",
+   "judge_read": "9d5d8941",
+   "rewrite": "6d6e6384",
+   "route": "d35a15b3",
+   "supervisor": "f6c2a4c3",
+   "tool_use": "7618dbf2"
+  },
+  "session": "graph-dataset_v2-1105-2116-openrouter",
+  "ran_at": "2026-11-05T21:16:48+0000",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "ids": [
+   "draft30-e03"
+  ]
+ },
+ "summary": {
+  "items": 1,
+  "finished": 1,
+  "failed": 0,
+  "metrics": {
+   "cited_gold": 1
+  },
+  "by_kind": {
+   "relevant": {
+    "cited_gold": 1
+   },
+   "irrelevant": {}
+  },
+  "by_type": {
+   "relevant/rating": {
+    "cited_gold": 1
+   }
+  },
+  "routing_match_relevant": 1,
+  "relevant": 1,
+  "latency_p50_s": 23.8,
+  "llm_calls_total": 4.0
+ },
+ "rows": [
+  {
+   "id": "draft30-e03",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>라우팅>재작성>검색>채점>생성",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 4.0,
+   "docs_found": 5.0,
+   "passed_cards": 1.0,
+   "latency_s": 23.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    1186
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b6221ab21267f12093b6ce3ef44d444a"
+  }
+ ],
+ "failed": []
+}

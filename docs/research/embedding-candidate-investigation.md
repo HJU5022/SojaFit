@@ -20,7 +20,7 @@
 
 ## 운영 전제와 결과 해석
 
-현재 서비스 적재·검색은 `text-embedding-3-small` API와 `vector(1536)`을 사용한다. 로컬 실행과 추가 API allowlist는 후보의 품질·입력 계약·오프라인 재현성을 확인하는 평가용이며 서비스 기본값을 바꾸지 않는다. 최종 모델 확정 뒤 외부 관리형 API를 쓸지, 팀이 별도 추론 서버에 모델을 배포한 자체 API를 쓸지 ADR로 결정한다. 외부 관리형이면 로컬 GPU·Docker·가중치 크기는 시험 정보이고, 자체 API이면 같은 항목이 추론 서버의 운영 비용과 용량 조건이 된다. 어느 방식이든 정확한 모델 ID·차원·query/document 형식으로 동결 평가셋을 다시 측정해야 한다.
+2026-11-02 조사 당시 서비스 적재·검색은 `text-embedding-3-small` API와 `vector(1536)`을 사용했다. 이 문서의 로컬 실행과 추가 API allowlist는 당시 후보의 품질·입력 계약·오프라인 재현성을 확인한 기록이며 현재 서비스 기본값을 정하지 않는다. 이후 사전 등록 #25와 ADR 0004 갱신으로 현재 서비스 코드는 `voyage-4-large` 1024차원·차원 없는 `halfvec`을 사용한다. 현재 계약과 선정 근거는 루트 `SPEC.md` 6절과 `EVAL_REPORT.md` 1-4절을 따른다.
 
 같은 계열 이름도 같은 모델로 간주하지 않는다. 현재 로컬 `multilingual-e5-large-instruct` 결과를 OpenRouter의 `intfloat/multilingual-e5-large`에 이전할 수 없고, 로컬 `voyage-4-nano` 결과도 API `voyage-4`의 결과가 아니다. API provider가 사용하는 revision·정밀도·양자화·정규화·입력 전처리를 공개하지 않거나 바꿀 수 있으므로 최종 결과에는 모델 ID, provider 정책, 실행일, 차원, 입력 형식, 비용과 지연을 함께 기록한다.
 

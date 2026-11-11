@@ -1,0 +1,33 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import type { ApprovalDto, QuoteDto } from '../api/quotes'
+import { createQuote } from '../api/quotes'
+import { errorMessage } from '../api/client'
+import { getProfile } from '../api/profile'
+import PricePanel from './PricePanel'
+import AccessibleDialog from './AccessibleDialog'
+
+export default function QuotePanel({ approval }: { approval: ApprovalDto | null }) {
+  const [open, setOpen] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+  const [saved, setSaved] = useState<QuoteDto | null>(null)
+  const [error, setError] = useState<unknown>(null)
+  const [busy, setBusy] = useState(false)
+  // 견적 머리의 소속은 내 설정에서 읽는다. 못 읽으면 소속 줄만 비운다
+  const profile = useQuery({ queryKey: ['profile-memory'], queryFn: ({ signal }) => getProfile(signal), enabled: open, retry: false, gcTime: 0 })
+  const affiliation = profile.data?.find(fact => fact.kind === 'affiliation')?.value
+  async function save() {
+    if (!approval || busy) return
+    setBusy(true); setError(null)
+    try { setSaved(await createQuote(approval.id, quantity)) } catch (error) { setError(error) } finally { setBusy(false) }
+  }
+  return <div className="quote-panel"><button className="secondary" disabled={!approval} onClick={() => setOpen(true)}>견적 열기</button>
+    {open && approval && <AccessibleDialog title="견적 만들기" onClose={() => setOpen(false)}><header className="quote-header"><h3>견적</h3>{affiliation && <p>소속: {affiliation}</p>}</header>
+      <p>{approval.candidate_part}의 현재 가격·재고를 새로 조회해 예상 상품금액을 계산합니다. 저장되는 값은 수량뿐입니다.</p><PricePanel parts={[approval.candidate_part]} quantity={quantity} />
+      <label htmlFor="quote-quantity">수량</label><input id="quote-quantity" type="number" min={1} max={100000} value={quantity} onChange={event => setQuantity(Number(event.target.value))} />
+      <button disabled={busy || quantity < 1 || quantity > 100000} onClick={() => void save()}>수량만 견적에 저장</button>
+      {saved && <p role="status">{saved.part_number} {saved.quantity}개 견적을 저장했습니다. 가격은 저장하지 않았습니다.</p>}
+      {error ? <p role="alert">{errorMessage(error)}</p> : null}
+    </AccessibleDialog>}
+  </div>
+}

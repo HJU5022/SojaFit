@@ -1,4 +1,4 @@
-"""가격·재고 API(`GET /api/prices`, backend/main.py) 시험: 가짜 transport로 Mouser 없이 확인한다.
+"""가격·재고 API(`GET /api/prices`, backend/api/prices.py) 시험: 가짜 transport로 Mouser 없이 확인한다.
 
 - 역할: 로그인 필요(401), `Cache-Control: no-store`, 데모 모드 · 키 없음 · 상한 · Mouser 실패의 "값 없음" 모양, 품번 개수 · 형식(422),
   응답이 화면 칸과 조회 시각만 담는지, 로그에 키 · 요청 주소 · Mouser 값이 남지 않는지 본다.
@@ -83,6 +83,13 @@ def test_demo_mode_and_missing_key_return_the_empty_shape_without_calling_mouser
 def test_bad_or_too_many_parts_are_422_without_calling_mouser(mouser_calls, parts):
     response = get(parts)
     assert response.status_code == 422 and response.headers["cache-control"] == "no-store"
+    assert response.json() == {
+        "error": {
+            "code": "VALIDATION_ERROR",
+            "message": response.json()["error"]["message"],
+            "request_id": response.headers["X-Request-ID"],
+        }
+    }
     assert mouser_calls.requests == []
 
 

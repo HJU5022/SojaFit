@@ -1,0 +1,670 @@
+{
+  "status": "complete",
+  "model_id": "anthropic/claude-haiku-5.5",
+  "rows": [
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-01",
+      "status": "complete",
+      "decision": {
+        "question_type": "out_of_scope",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "OUT_OF_SCOPE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 2.9862124000210315,
+      "response_id": "gen-1793891280-Nqma3zQ7nxZiojAFFfnA",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 212,
+        "prompt_tokens": 2156,
+        "total_tokens": 2368,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 158,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003216,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003216,
+          "upstream_inference_prompt_cost": 0.0002156,
+          "upstream_inference_completions_cost": 0.000106
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-02",
+      "status": "complete",
+      "decision": {
+        "question_type": "insufficient_information",
+        "required_evidence": [],
+        "next_action": "refuse",
+        "reason_code": "INSUFFICIENT_INFORMATION"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.680922199971974,
+      "response_id": "gen-1793891282-e9Rm2ATobipeROHXx0sP",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 250,
+        "prompt_tokens": 2146,
+        "total_tokens": 2396,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 192,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003396,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003396,
+          "upstream_inference_prompt_cost": 0.0002146,
+          "upstream_inference_completions_cost": 0.000125
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-03",
+      "status": "complete",
+      "decision": {
+        "question_type": "role",
+        "required_evidence": [
+          "circuit"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "ROLE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 0.9280267000431195,
+      "response_id": "gen-1793891284-6dQh8EXbfoRNp4ybDD3C",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 48,
+        "prompt_tokens": 2159,
+        "total_tokens": 2207,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002399,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002399,
+          "upstream_inference_prompt_cost": 0.0002159,
+          "upstream_inference_completions_cost": 2.4e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-04",
+      "status": "complete",
+      "decision": {
+        "question_type": "rating",
+        "required_evidence": [
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "RATING"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.174283199943602,
+      "response_id": "gen-1793891285-QKuhSRNxK2zpdCFmVpkq",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 132,
+        "prompt_tokens": 2164,
+        "total_tokens": 2296,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 85,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002824,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002824,
+          "upstream_inference_prompt_cost": 0.0002164,
+          "upstream_inference_completions_cost": 6.6e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-05",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.7316036999691278,
+      "response_id": "gen-1793891286-8ooAXKsg8mecI7oF3xt5",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 159,
+        "prompt_tokens": 2161,
+        "total_tokens": 2320,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 95,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002956,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002956,
+          "upstream_inference_prompt_cost": 0.0002161,
+          "upstream_inference_completions_cost": 7.95e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-06",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.2955006000120193,
+      "response_id": "gen-1793891288-D6YLLQVM6RscF2P6fHMO",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 150,
+        "prompt_tokens": 2211,
+        "total_tokens": 2361,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 88,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002961,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002961,
+          "upstream_inference_prompt_cost": 0.0002211,
+          "upstream_inference_completions_cost": 7.5e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-07",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_find",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "judge_answer_agent",
+        "reason_code": "CANDIDATE_FIND"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.5170975000364706,
+      "response_id": "gen-1793891289-Gy96JK1yzzrxhELpvR5s",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 187,
+        "prompt_tokens": 2254,
+        "total_tokens": 2441,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 121,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003189,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003189,
+          "upstream_inference_prompt_cost": 0.0002254,
+          "upstream_inference_completions_cost": 9.35e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-08",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "circuit_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.3956142000388354,
+      "response_id": "gen-1793891290-MUdeUJzmEVzgRtYwXfp7",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 161,
+        "prompt_tokens": 2151,
+        "total_tokens": 2312,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 94,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002956,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002956,
+          "upstream_inference_prompt_cost": 0.0002151,
+          "upstream_inference_completions_cost": 8.05e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-09",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.309148499974981,
+      "response_id": "gen-1793891292-4aNWruEkrbhECATgNzgl",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 145,
+        "prompt_tokens": 2201,
+        "total_tokens": 2346,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 76,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002926,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002926,
+          "upstream_inference_prompt_cost": 0.0002201,
+          "upstream_inference_completions_cost": 7.25e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-10",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "judge_answer_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 0.959946799906902,
+      "response_id": "gen-1793891293-1Y3zQbDHnGTJiBR0U02Z",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 69,
+        "prompt_tokens": 2246,
+        "total_tokens": 2315,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0002591,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0002591,
+          "upstream_inference_prompt_cost": 0.0002246,
+          "upstream_inference_completions_cost": 3.45e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-11",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "search_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.6353157999692485,
+      "response_id": "gen-1793891294-hbFcyHaqzJ0Vc6Pg55la",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 223,
+        "prompt_tokens": 2262,
+        "total_tokens": 2485,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 153,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003377,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003377,
+          "upstream_inference_prompt_cost": 0.0002262,
+          "upstream_inference_completions_cost": 0.0001115
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-12",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet",
+          "approved_case"
+        ],
+        "next_action": "judge_answer_agent",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.4498719000257552,
+      "response_id": "gen-1793891296-nWPr5cOntRgofN7S2kFv",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 162,
+        "prompt_tokens": 2274,
+        "total_tokens": 2436,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 88,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003084,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003084,
+          "upstream_inference_prompt_cost": 0.0002274,
+          "upstream_inference_completions_cost": 8.1e-05
+        }
+      }
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-13",
+      "status": "complete",
+      "decision": {
+        "question_type": "candidate_judge",
+        "required_evidence": [
+          "circuit",
+          "datasheet"
+        ],
+        "next_action": "refuse",
+        "reason_code": "CANDIDATE_JUDGE"
+      },
+      "semantic_errors": [],
+      "first_pass_valid": true,
+      "raw_attempts": 1,
+      "latency_seconds": 1.27947419998236,
+      "response_id": "gen-1793891297-eV6JEetBkADnGDyl11rU",
+      "actual_model": "anthropic/claude-haiku-5.5",
+      "provider": "Google",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 183,
+        "prompt_tokens": 2219,
+        "total_tokens": 2402,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 119,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0.0003134,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0.0003134,
+          "upstream_inference_prompt_cost": 0.0002219,
+          "upstream_inference_completions_cost": 9.15e-05
+        }
+      }
+    }
+  ],
+  "api_mode": "chat_completions",
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "budget": {
+    "max_calls": 39,
+    "max_usd": 0.06,
+    "max_seconds": 1800.0,
+    "raw_calls": 13,
+    "reserved_usd": 0.003900899999999999
+  },
+  "summary": {
+    "case_count": 13,
+    "completion_rate": 1.0,
+    "question_type_accuracy": 1.0,
+    "required_evidence_exact_match": 1.0,
+    "next_action_accuracy": 1.0,
+    "reason_code_accuracy": 1.0,
+    "semantic_valid_rate": 1.0,
+    "exact_decision_match": 1.0
+  }
+}

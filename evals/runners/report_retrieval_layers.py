@@ -1,4 +1,4 @@
-# 사전 등록 비교(C1~C11)와 강사 질문(C3)의 값을 out/layer1~4.json에서 뽑아 out/report.json에 남기고 20줄 이하로 찍는다.
+# 사전 등록 비교(C1~C11, C3은 BM25만 − dense만)의 값을 out/layer1~4.json에서 뽑아 out/report.json에 남기고 20줄 이하로 찍는다.
 # 하지 않는 일: 새 검색, API 호출. 판정 규칙은 run_retrieval_layers.py verdict()와 같다(순 차이 ±5 + 부트스트랩 95% 구간, seed 0).
 # 근거: docs/research/retrieval-layered-rerun-2026-11-03.md 판정 규칙 · 비교와 기대
 # 실행(저장소 루트): uv run python -m evals.runners.report_retrieval_layers   (LAYERS_WORK 폴더의 out/layer1~4.json을 읽음)

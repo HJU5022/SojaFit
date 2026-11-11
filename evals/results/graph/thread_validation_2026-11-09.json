@@ -1,0 +1,87 @@
+{
+ "meta": {
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-5.5",
+  "demo_mode": false,
+  "node_models": {
+   "route": "anthropic/claude-haiku-5.5",
+   "grade": "openai/gpt-6-luna",
+   "rewrite": "anthropic/claude-haiku-5.5",
+   "generate": "anthropic/claude-haiku-5.5",
+   "supervisor": "anthropic/claude-sonnet-5.5",
+   "judge_read": "anthropic/claude-haiku-5.5",
+   "docs_answer": "anthropic/claude-haiku-5.5",
+   "synth": "anthropic/claude-sonnet-5.5",
+   "card_read": "anthropic/claude-haiku-5.5",
+   "card_pick": "anthropic/claude-haiku-5.5"
+  },
+  "retrieval": "hybrid",
+  "dataset": "E:\\teamproject3\\proj3-b\\evals\\dataset_v2.jsonl",
+  "git": "9abcb1d+dirty",
+  "prompts": {
+   "card_pick": "d194cfdd",
+   "card_read": "885d92f7",
+   "docs_answer": "ae014746",
+   "generate": "7a5125fe",
+   "grade": "79644e63",
+   "judge_read": "70bb59ee",
+   "rewrite": "f76d85b1",
+   "route": "d3d981a8",
+   "supervisor": "12686dca",
+   "synth": "5fb93414",
+   "tool_use": "f4082193"
+  },
+  "session": "multi-dataset_v2-1109-1335-openrouter",
+  "ran_at": "2026-11-09T13:35:36+0900",
+  "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+  "ids": [
+   "draft30-e01"
+  ]
+ },
+ "summary": {
+  "items": 1,
+  "finished": 1,
+  "failed": 0,
+  "metrics": {
+   "cited_gold": 1
+  },
+  "by_kind": {
+   "relevant": {
+    "cited_gold": 1
+   },
+   "irrelevant": {}
+  },
+  "by_type": {
+   "relevant/role": {
+    "cited_gold": 1
+   }
+  },
+  "routing_match_relevant": 1,
+  "relevant": 1,
+  "latency_p50_s": 5.9,
+  "llm_calls_total": 2.0
+ },
+ "rows": [
+  {
+   "id": "draft30-e01",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/9154e7f5af3a92900ee36ff734014fc7"
+  }
+ ],
+ "failed": []
+}

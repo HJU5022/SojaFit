@@ -1,0 +1,151 @@
+{
+  "dataset": "evals\\samples\\supervisor_prompt_v0.jsonl",
+  "dataset_sha256": "70f7f001a0f9ac9d15aeeec16c22020110d6ddf809a04d618b590f1c1c44d330",
+  "dataset_count": 13,
+  "models": [
+    "openai/gpt-6-luna",
+    "anthropic/claude-haiku-5.5"
+  ],
+  "runs_per_case": 1,
+  "provider_policy": {
+    "zdr": true,
+    "data_collection": "deny",
+    "allow_fallbacks": false,
+    "require_parameters": true
+  },
+  "prompt_sha256": "be843de4a12d8b2c75bd47e894027aa6f009a2ee6af4ce2c6d33ac07f03efa4d",
+  "common_module_sha256": "ab81a133926f42b55eed9cddc5d93f999ce67efd175341bbe05b1ed03cb52618",
+  "contract_sha256": "488f8f0da221b0aeebaa5af7a0fba617ffff77d9161f30b1269c76eabd154b9c",
+  "jobs": [
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-01",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-02",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-03",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-04",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-05",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-06",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-07",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-08",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-09",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-10",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-11",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-12",
+      "run_index": 1
+    },
+    {
+      "model_id": "openai/gpt-6-luna",
+      "case_id": "sv0-13",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-01",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-02",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-03",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-04",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-05",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-06",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-07",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-08",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-09",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-10",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-11",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-12",
+      "run_index": 1
+    },
+    {
+      "model_id": "anthropic/claude-haiku-5.5",
+      "case_id": "sv0-13",
+      "run_index": 1
+    }
+  ]
+}

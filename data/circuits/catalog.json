@@ -1,0 +1,17 @@
+{
+  "breadboard_supply": {"name": "SparkFun Breadboard Power Supply 5V/3.3V", "connections_path": "data/circuits/collected/samples/breadboard_supply/converted/connections.json"},
+  "mosfet_driver": {"name": "Adafruit MOSFET Driver STEMMA", "connections_path": "data/circuits/collected/samples/mosfet_driver/converted/connections.json"},
+  "attiny85_dev": {"name": "ATtiny85 dev board", "connections_path": "data/circuits/collected/samples/attiny85_dev/converted/connections.json"},
+  "pro_micro": {"name": "SparkFun Pro Micro v13", "connections_path": "data/circuits/collected/samples/pro_micro/converted/connections.json"},
+  "franzininho_diy": {"name": "Franzininho DIY", "connections_path": "data/circuits/collected/received-20261030/c09/connections.json"},
+  "attiny85_time_switch": {"name": "ATtiny85 Time Switch", "connections_path": "data/circuits/collected/received-20261030/c01/connections.json"},
+  "fc_rom_vomitter": {"name": "FC ROM Vomitter", "connections_path": "data/circuits/collected/received-20261030/c02/connections.json"},
+  "attiny2313a_thermostat": {"name": "ATtiny2313A Thermostat", "connections_path": "data/circuits/collected/received-20261030/c03/connections.json"},
+  "tiny85_fan_control": {"name": "tiny85 Fan Control", "connections_path": "data/circuits/collected/received-20261030/c04/connections.json"},
+  "ug56_pwm_controller": {"name": "UG56 PWM Controller", "connections_path": "data/circuits/collected/received-20261030/c05/connections.json"},
+  "car_radio_acc_delay": {"name": "Car Radio ACC Delay", "connections_path": "data/circuits/collected/received-20261030/c07/connections.json"},
+  "overengineered_psu": {"name": "OverEngineered PSU", "connections_path": "data/circuits/collected/received-20261030/c08/connections.json"},
+  "tinydimmer": {"name": "tinydimmer", "connections_path": "data/circuits/collected/received-20261030/c10/connections.json"},
+  "hrem": {"name": "HRem", "connections_path": "data/circuits/collected/received-20261030/c11/connections.json"},
+  "zr7_taillight": {"name": "ZR7 Taillight", "connections_path": "data/circuits/collected/received-20261030/c12/connections.json"}
+}

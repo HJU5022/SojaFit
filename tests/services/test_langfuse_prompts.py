@@ -344,7 +344,8 @@ def test_node_config_gives_each_node_its_model():
     luna = managed.node_config("grade")
     assert luna["model"] == "openai/gpt-6-luna"
     assert "temperature" not in luna and luna["max_tokens"] == managed.CONFIG["max_tokens"]
-    sonnet = managed.node_config("supervisor")  # [왜] Sonnet은 Haiku와 같은 Anthropic 모델이라 temperature 0을 그대로 보낸다(11-05)
+    assert managed.node_config("supervisor") == managed.CONFIG  # Supervisor는 Haiku(사전 등록 #46)
+    sonnet = managed.node_config("synth")  # [왜] Sonnet은 Haiku와 같은 Anthropic 모델이라 temperature 0을 그대로 보낸다(11-05)
     assert sonnet == {**managed.CONFIG, "model": "anthropic/claude-sonnet-5.5"}
     assert "judge_read" in managed.NODES and managed.node_config("judge_read") == managed.CONFIG  # 판정 읽기는 서브에이전트라 Haiku(ADR 0014)
     assert set(managed.NODES) == set(managed.NODE_MODELS)
@@ -358,8 +359,38 @@ def test_publish_nodes_registers_each_prompt_with_its_node_config(monkeypatch):
 
 
 def test_prompt_scope_rejects_config_of_another_nodes_model():
-    prompt = SimpleNamespace(name="supervisor", version=1, config=managed.CONFIG)  # Sonnet 노드에 Haiku 설정이 등록됨
-    with managed.session(SimpleNamespace(), {"supervisor": prompt}, None):
+    prompt = SimpleNamespace(name="synth", version=1, config=managed.CONFIG)  # Sonnet 노드에 Haiku 설정이 등록됨
+    with managed.session(SimpleNamespace(), {"synth": prompt}, None):
         with pytest.raises(ValueError, match="모델 설정"):
-            with managed.prompt_scope("supervisor", "s", "u"):
+            with managed.prompt_scope("synth", "s", "u"):
                 pass
+
+
+def test_analysis_trace_carries_user_and_thread_without_question(monkeypatch):
+    # [왜] 서비스 분석 기록(`analysis-metadata`)이 Langfuse에서 사용자 · 대화별로 묶이는지 실제 SDK 내보내기로 본다(SPEC 7절)
+    import langfuse
+    from langfuse import Langfuse
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+
+    exported = InMemorySpanExporter()
+    key = "pk-lf-analysis-test"  # [주의] 다른 시험과 다른 키여야 이 내보내기 객체를 쓰는 새 client가 생긴다
+    client = Langfuse(public_key=key, secret_key="sk-lf-analysis-test", base_url="https://example.invalid", span_exporter=exported)
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", key)
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-analysis-test")
+    # [왜] client가 여럿이면 get_client()가 꺼진 client를 돌려준다. 이 client로 고정해 원격으로 보내지 않는다
+    monkeypatch.setattr(langfuse, "get_client", lambda: client)
+    question = "PRIVATE_QUESTION D1 대체 user@example.com"
+    # memory_service._record_event가 만드는 칸 그대로(질문은 thread 입력 기록에만 있고 여기 넣지 않는다)
+    event = {"version": 2, "request_id": "req-1", "mode": "service", "status": "DONE", "elapsed_ms": 12,
+             "stages": [{"stage": "plan", "status": "ok", "elapsed_ms": 3}], "trace_id": "a" * 32}
+    assert managed.publish_analysis_trace("user-uuid-1", "thread-uuid-1", event) == "queued"
+    client.flush()
+    spans = [s for s in exported.get_finished_spans() if s.name == "analysis-metadata"]
+    assert len(spans) == 1
+    attributes = dict(spans[0].attributes)
+    assert attributes["user.id"] == "user-uuid-1" and attributes["session.id"] == "thread-uuid-1"
+    assert format(spans[0].context.trace_id, "032x") == event["trace_id"]  # DB의 analysis_events.trace_id와 같은 trace
+    prefix = "langfuse.observation.metadata."
+    assert {name[len(prefix):] for name in attributes if name.startswith(prefix)} == set(event)  # 칸을 늘리면 여기서 걸린다
+    assert not any(question in str(value) or "PRIVATE_QUESTION" in str(value) for value in attributes.values())
+    client.shutdown()

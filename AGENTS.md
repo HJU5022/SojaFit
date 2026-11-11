@@ -1,6 +1,6 @@
 # AGENTS.md
 
-AI 코딩 에이전트(Claude Code, Codex, Cursor 등)가 이 저장소에서 작업할 때 따르는 공통 지침입니다. 어떤 도구를 쓰든 이 문서를 기준으로 합니다.
+AI 코딩 에이전트가 이 저장소에서 작업할 때 따르는 공통 지침입니다. 어떤 도구를 쓰든 이 문서를 기준으로 합니다.
 
 ## 프로젝트 개요
 
@@ -19,9 +19,9 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 ## 기술 스택
 
 - 확정: Python, uv, FastAPI, LangGraph, PostgreSQL + pgvector, Docker Compose, Langfuse, GCP Cloud Run. LLM은 조당 OpenRouter 키 하나를 씁니다.
-- 임베딩: `voyage-4-large`(1024차원, 사전 등록 #25, ADR 0004 갱신 2026-11-03). 리랭킹: Voyage `rerank-3`. LLM 모델: 노드별(Supervisor `anthropic/claude-sonnet-5.5`, 그 밖 `anthropic/claude-haiku-5.5`, 채점 `openai/gpt-6-luna`, OpenRouter, ADR 0014)
+- 임베딩: `voyage-4-large`(1024차원, 사전 등록 #25, ADR 0004 갱신 2026-11-03). 리랭킹: Voyage `rerank-3`. LLM 모델: 노드별(Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 채점 `openai/gpt-6-luna`, OpenRouter, ADR 0017)
 
-필수 구성은 Python, FastAPI, LangGraph(멀티에이전트 최소형), RAG, Docker, Langfuse입니다. 폴더 역할은 `SOJAFIT.md` 트리와 각 폴더의 `<대문자 폴더명>.md`를 따릅니다.
+필수 구성은 Python, FastAPI, LangGraph(멀티 에이전트 최소형), RAG, Docker, Langfuse입니다. 폴더 역할은 `SOJAFIT.md` 트리와 각 폴더의 `<대문자 폴더명>.md`를 따릅니다.
 
 ## Spec 먼저, 구현은 그다음
 
@@ -35,7 +35,7 @@ SojaFit은 회로를 읽고 대체 조건을 정해 후보 부품을 판정하�
 
 ## 이 저장소에서 에이전트가 지킬 것
 
-1. **동결한 평가셋은 수정하지 않습니다.** `evals/FROZEN.json`에 해시가 기록된 파일(v1, v2)은 정답을 바꾸거나 건을 지우지 않습니다. 결과가 안 나와도 정답을 고치는 것은 측정이 아니라 맞추기입니다.
+1. **동결한 평가셋은 수정하지 않습니다.** `evals/FROZEN.json`에 해시가 기록된 파일(v1, v2, v3)은 정답을 바꾸거나 건을 지우지 않습니다. 결과가 안 나와도 정답을 고치는 것은 측정이 아니라 맞추기입니다.
 2. **LLM·임베딩 호출은 `backend/services/llm.py`에서만** 합니다. 다른 곳에서 `openai` 등을 직접 import하지 않습니다.
 3. **실험은 사전 등록 후 한 번에 하나만** 바꿉니다. `evals/guides/preregister.md`에 기대를 먼저 적고 바꿉니다.
 4. **비밀값을 코드, 문서, 로그, 테스트 데이터에 적지 않습니다.** 키는 `.env`에만 둡니다.

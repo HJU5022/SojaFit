@@ -5,7 +5,7 @@
   사실 확인(`multi_agent/facts.py`)과 판정 읽기(`multi_agent/agents/judge.py`)는 멀티 그래프의 노드를 그대로 쓴다(build.py가 붙인다).
   `build.py`가 노드를 그래프에 붙이고, `evals/runners/run_skill_pair.py`는 `generate`를 직접 부르며, `evals/runners/run_graph.py`는 그래프 전체를 돌린다.
   입력은 `AgentState`(`state.py`), 출력은 바뀐 칸만 담은 dict. 프롬프트는 `backend/prompts/*.md`에서 읽는다.
-- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 판정 에이전트를 부르기만 한다),
+- 하지 않는 일: 노드를 잇는 갈림길과 조립(`build.py`), 숫자 비교 판정(`backend/judge/`, 판정 노드는 멀티 대체 부품 에이전트를 부르기만 한다),
   LLM 직접 호출(`backend/services/llm.py`의 `node_chat`만 쓴다), Mouser 가격 · 재고 조회(그래프 밖 `/api/prices`, ADR 0009).
 - 출처: SPEC.md 2절 "그래프"(노드 표), SPEC.md 3절(판정 이름), ADR 0006, 강의 2주 20강(노드는 State를 받아 바뀐 부분만 돌려준다),
   backend/multi_agent/contracts.py(질문 종류 · 거절 사유 코드), backend/multi_agent/messages.py(거절 문구 · 판정 답 틀).
@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.state import AgentState
+from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
 from backend.multi_agent.messages import price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
@@ -37,7 +38,7 @@ WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*[A-Za-z0-9]|[A-Za-z0-9]")  # 영�
 QUANTITY = re.compile(r"\d+(\.\d+)?[A-Za-z]{1,3}")  # 값과 단위(3.6V, 500mA, 100pF). 코퍼스 품번 9,589개 중 이 모양은 0개(11-02 실측)
 REVISION = re.compile(r"[A-Za-z]\d{4}")              # 개정 코드(K2611, G1804). 코퍼스 품번 중 이 모양은 0개(11-02 실측)
 LABEL = re.compile(r"^\[[^\]]*\] ")                    # 표 한 줄 청크 앞의 [파일 · 쪽 · 표 제목] 이름표. 파일 이름의 품번을 줄의 품번으로 보지 않게 뗀다
-CITE = re.compile(r"\[([^\]]*)\]")                     # 답 속 인용 괄호: [12] · [12, 15] · [넷리스트]
+CITE = re.compile(r"(?=\[([^\]]*)\])")                # 중첩 안쪽 번호와 바깥쪽 과거 사례 표기를 모두 검사한다
 NOT_FOUND = "문서로 확인 안 됨"                          # 근거로 답할 수 없을 때의 답(SPEC 3절 판정 이름과 같다)
 CLUES = "부품 윗면 글자, 사진, 데이터시트, 주문 코드"        # 근거가 없을 때 사용자에게 묻는 단서(SPEC 2절 "근거가 없을 때" 3번)
 
@@ -109,9 +110,13 @@ def read_input(state: AgentState) -> dict:
 
     입력: `input` 칸. 출력: 나눈 칸, `target_part`, 앞 턴 검색 칸을 비우는 값, `path`. 턴마다 비우는 이유는 아래 [왜] 참고.
     """
-    fields = parse_input(state["input"])
+    uploaded = state.get('connections')
+    fields = ({'circuit': state['circuit'], 'target': state['target'], 'conditions': state.get('conditions', ''),
+               'question': state['input']} if uploaded else parse_input(state["input"]))
     target_part = {}
-    if fields.get("netlist_path") and fields.get("target"):
+    if uploaded:
+        target_part = circuit_around(uploaded, fields['target'])
+    elif fields.get("netlist_path") and fields.get("target"):
         found = _connections_file(fields["netlist_path"])
         if found:
             target_part = circuit_around(json.loads(found.read_text(encoding="utf-8")), fields["target"])
@@ -239,6 +244,13 @@ def other_part_row(doc: dict, parts: list[str]) -> bool:
     # [왜] H 품번(AEC-Q101)도 값 표에는 기본 품번으로 적힌다('"H" means AEC-Q101 qualified'). SMAJ6.5CAH → SMAJ6.5CA · SMAJ6.5A
     bases = {p.lower() for p in parts} | {p.lower()[:-1] for p in parts if p.lower().endswith("h")}
     asked = bases | {re.sub(r"c(a?)$", r"\1", p) for p in bases}
+    order = re.search(r'\bORDERING CODE(?:\(\d+\))*\s*:\s*([^|\n]+)', body, re.I)
+    if order and re.search(r'''["']x["']\s+defines\b''', doc['content'], re.I):
+        # Only a documented numeric wildcard expands; retain suffixes so G never matches GH.
+        codes = [w.lower() for w in WORD.findall(order.group(1)) if re.search(r'\dx', w, re.I)]
+        if codes:
+            return not any(re.fullmatch(re.sub(r'(?<=\d)x+', lambda m: r'\d+', re.escape(code)), p)
+                           for code in codes for p in asked)
     return bool(named) and not named & asked
 
 
@@ -283,6 +295,7 @@ def rewrite(state: AgentState) -> dict:
 class Answer(BaseModel):
     """생성 노드가 LLM에게 받는 답안지."""
     answer: str = Field(description="문장마다 근거 번호를 붙인 답. 근거로 답할 수 없으면 '문서로 확인 안 됨'")
+    memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted, separate from answer evidence')
 
 
 def netlist_block(part: dict) -> str:
@@ -294,8 +307,9 @@ def netlist_block(part: dict) -> str:
 
 def citations(text: str) -> set[str]:
     """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
-    # [왜] 괄호 안을 먼저 꺼내 쉼표로 나눈다. [12]만 찾으면 [12, 15]처럼 한 괄호에 묶은 인용을 놓친다(강의 2주 20강)
-    return {c.strip() for br in CITE.findall(text) for c in br.split(",") if c.strip().isdigit() or c.strip() == "넷리스트"}
+    # 모든 여는 괄호에서 검사해 중첩 번호도 읽고, 바깥의 과거 사례 인용도 놓치지 않는다.
+    return {c.strip() for br in CITE.findall(text) for c in br.split(",")
+            if c.strip().isdigit() or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:
@@ -313,6 +327,7 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
         blocks.append(netlist_block(part))  # [왜] 역할 질문은 검색 없이 오므로 넷리스트가 유일한 근거다
     skill_info = {"enabled": use_skill, "applied": False, "sha256": None}
     answer = NOT_FOUND  # 근거가 하나도 없으면(넷리스트 없이 온 역할 질문) LLM을 부르지 않는다
+    memory_refs = []
     if blocks:
         system = (PROMPTS / "generate.md").read_text(encoding="utf-8")
         text = ""
@@ -324,8 +339,13 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
             system += f"\n\n<domain_skill>\n{text}\n</domain_skill>"
             skill_info = {"enabled": True, "applied": True, "sha256": hashlib.sha256(raw).hexdigest()}
         user = "근거:\n" + "\n\n".join(blocks) + f"\n\n질문: {state['question']}"  # 강의 20강처럼 근거 다음에 질문
-        answer = llm.node_chat("generate", system, user, Answer, skill_text=text).answer.strip()
+        user += memory_context(state.get('approved_memories') or [])
+        response = llm.node_chat("generate", system, user, Answer, skill_text=text)
+        answer, memory_refs = response.answer.strip(), response.memory_refs
     valid = {str(d["chunk_id"]) for d in cards} | ({"넷리스트"} if part else set())  # 실제로 넘긴 근거. 이 밖의 번호를 인용하면 없는 근거 인용이다
+    if (any(c.startswith('승인사례:') for c in citations(answer)) or
+            set(memory_refs) - memory_sources(state.get('approved_memories') or [])):
+        answer, memory_refs = NOT_FOUND, []
     cited = citations(answer)
     # 마침표 뒤 공백에서 문장을 자른다. "문서로 확인 안 됨"은 인용할 근거가 없는 답이라 세지 않는다
     sentences = [] if answer == NOT_FOUND else [s for s in re.split(r"(?<=[.。])\s+", answer) if s.strip()]
@@ -333,11 +353,11 @@ def generate(state: AgentState, *, use_skill: bool = False) -> dict:
              "uncited_sentences": sum(1 for s in sentences if not citations(s)),  # 근거 번호가 하나도 없는 문장 수
              "used": sorted(cited & valid)}                                    # 넘긴 근거 중 실제로 인용한 번호
     # shortcut: 검사에 걸려도 기록만 하고 답은 그대로 낸다(강의 2주 20강, 11-02 조장 결정). 실측으로 걸리는 비율을 본 뒤 다시 쓰기나 거절로 보낼지 정한다
-    return {"answer": answer, "check": check, "skill": skill_info, "path": ["생성"]}
+    return {"answer": answer, "memory_refs": list(dict.fromkeys(memory_refs)), "check": check, "skill": skill_info, "path": ["생성"]}
 
 
 def judge(state: AgentState, *, specs, find, retriever) -> dict:
-    """판정 노드: 멀티의 판정 에이전트(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
+    """판정 노드: 멀티 대체 부품 에이전트의 판정 노드(`judge_agent`)를 그대로 부른다(빠진 값 인터럽트 1번, 숫자 비교는 `backend/judge/`).
 
     입력: judge_read · question_type · conditions · target_part · facts. 출력: judgement, path(사양 표 도구 장애면 retrieval_error,
     코퍼스 밖 요구면 refusal 코드도).

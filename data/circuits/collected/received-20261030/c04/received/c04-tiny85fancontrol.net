@@ -1,0 +1,1330 @@
+(export
+	(version "E")
+	(design
+		(source "tiny85fancontrol.kicad_sch")
+		(date "2026-10-30T11:52:38")
+		(tool "Eeschema 10.0.7")
+		(sheet
+			(number "1")
+			(name "/")
+			(tstamps "/")
+			(title_block
+				(title "Tiny85FanContol")
+				(company "Colahall, LLC.")
+				(rev "1.0.0")
+				(date "2025-07-11")
+				(source "tiny85fancontrol.kicad_sch")
+				(comment
+					(number "1")
+					(value "Copyright (C) 2025 Colahall, LLC. All rights reserved.")
+				)
+				(comment
+					(number "2")
+					(value "")
+				)
+				(comment
+					(number "3")
+					(value "")
+				)
+				(comment
+					(number "4")
+					(value "")
+				)
+				(comment
+					(number "5")
+					(value "")
+				)
+				(comment
+					(number "6")
+					(value "")
+				)
+				(comment
+					(number "7")
+					(value "")
+				)
+				(comment
+					(number "8")
+					(value "")
+				)
+				(comment
+					(number "9")
+					(value "")
+				)
+			)
+		)
+	)
+	(components
+		(comp
+			(ref "C1")
+			(value "0.1u")
+			(footprint "Capacitor_THT:CP_Radial_D4.0mm_P2.00mm")
+			(description "Polarized capacitor")
+			(fields
+				(field
+					(name "Footprint") "Capacitor_THT:CP_Radial_D4.0mm_P2.00mm")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Polarized capacitor")
+			)
+			(libsource
+				(lib "Device")
+				(part "C_Polarized")
+				(description "Polarized capacitor")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "cap capacitor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "CP_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "1cf65f6e-0ff0-4a59-9b43-85501eb3517c")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "D1")
+			(value "1N4001")
+			(footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+			(datasheet "http://www.vishay.com/docs/88503/1n4001.pdf")
+			(description "50V 1A General Purpose Rectifier Diode, DO-41")
+			(fields
+				(field
+					(name "Sim.Device") "D")
+				(field
+					(name "Sim.Pins") "1=K 2=A")
+				(field
+					(name "Footprint") "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet") "http://www.vishay.com/docs/88503/1n4001.pdf")
+				(field
+					(name "Description") "50V 1A General Purpose Rectifier Diode, DO-41")
+			)
+			(libsource
+				(lib "Diode")
+				(part "1N4001")
+				(description "50V 1A General Purpose Rectifier Diode, DO-41")
+			)
+			(property
+				(name "Sim.Device")
+				(value "D")
+			)
+			(property
+				(name "Sim.Pins")
+				(value "1=K 2=A")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "diode")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "D*DO?41*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "faf3c831-0b72-4a31-ae4f-3fb30da04a1d")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J1")
+			(value "UART_DBG")
+			(footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+			(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(fields
+				(field
+					(name "Footprint") "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(libsource
+				(lib "Connector_Generic")
+				(part "Conn_01x02")
+				(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "607a8a07-d7f8-4a62-9885-783561813e40")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "J2")
+			(value "Molex")
+			(footprint "Connector_Molex:Molex_KK-254_AE-6410-04A_1x04_P2.54mm_Vertical")
+			(description "Generic connector, single row, 01x04, script generated")
+			(fields
+				(field
+					(name "Footprint") "Connector_Molex:Molex_KK-254_AE-6410-04A_1x04_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x04, script generated")
+			)
+			(libsource
+				(lib "Connector")
+				(part "Conn_01x04_Socket")
+				(description "Generic connector, single row, 01x04, script generated")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "connector")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "Connector*:*_1x??_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "673e3ed8-87e1-4f42-9cbc-776b6375828a")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "4")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "M1")
+			(value "Fan")
+			(footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+			(description "DC Motor")
+			(fields
+				(field
+					(name "Footprint") "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "DC Motor")
+			)
+			(libsource
+				(lib "Motor")
+				(part "Motor_DC")
+				(description "DC Motor")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "DC Motor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "PinHeader*P2.54mm* TerminalBlock*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "06fc2d14-9f04-437d-929c-965587d99eed")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "Q1")
+			(value "IRF3808")
+			(footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+			(datasheet "http://www.irf.com/product-info/datasheets/data/irf3205.pdf")
+			(description "110A Id, 55V Vds, Single N-Channel HEXFET Power MOSFET, 8mOhm Ron, TO-220AB")
+			(fields
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-220-3_Vertical")
+				(field
+					(name "Datasheet") "http://www.irf.com/product-info/datasheets/data/irf3205.pdf")
+				(field
+					(name "Description") "110A Id, 55V Vds, Single N-Channel HEXFET Power MOSFET, 8mOhm Ron, TO-220AB")
+			)
+			(libsource
+				(lib "Transistor_FET")
+				(part "IRF3205")
+				(description "110A Id, 55V Vds, Single N-Channel HEXFET Power MOSFET, 8mOhm Ron, TO-220AB")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "Single N-Channel HEXFET Power MOSFET")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TO?220*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ae0ff85b-4154-4f15-a267-92b37a2f9c93")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R1")
+			(value "10k")
+			(footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+			(description "Resistor")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "bab7f32f-6e12-41e9-bea4-ebd73d270bbf")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R2")
+			(value "100R")
+			(footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+			(description "Resistor")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "ea7eaedd-a71c-496d-a480-36024f3bdbcb")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "R3")
+			(value "4.7k")
+			(footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+			(description "Resistor")
+			(fields
+				(field
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical")
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(libsource
+				(lib "Device")
+				(part "R")
+				(description "Resistor")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "R res resistor")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "R_*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "9a337543-4a7c-41b6-879a-d80bce0f8fd7")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U1")
+			(value "ATtiny85-20P")
+			(footprint "Package_DIP:DIP-8_W7.62mm")
+			(datasheet "http://ww1.microchip.com/downloads/en/DeviceDoc/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf")
+			(description "20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-8")
+			(fields
+				(field
+					(name "Footprint") "Package_DIP:DIP-8_W7.62mm")
+				(field
+					(name "Datasheet") "http://ww1.microchip.com/downloads/en/DeviceDoc/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf")
+				(field
+					(name "Description") "20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-8")
+			)
+			(libsource
+				(lib "MCU_Microchip_ATtiny")
+				(part "ATtiny85-20P")
+				(description "20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-8")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "AVR 8bit Microcontroller tinyAVR")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "DIP*W7.62mm*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "eb530ed0-09a0-4a81-ab52-aaa98e507332")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "8")
+						)
+						(pin
+							(num "4")
+						)
+						(pin
+							(num "5")
+						)
+						(pin
+							(num "6")
+						)
+						(pin
+							(num "7")
+						)
+						(pin
+							(num "2")
+						)
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "1")
+						)
+					)
+				)
+			)
+		)
+		(comp
+			(ref "U2")
+			(value "DS18B20")
+			(footprint "Package_TO_SOT_THT:TO-92_Inline")
+			(datasheet "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf")
+			(description "Programmable Resolution 1-Wire Digital Thermometer TO-92")
+			(fields
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline")
+				(field
+					(name "Datasheet") "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf")
+				(field
+					(name "Description") "Programmable Resolution 1-Wire Digital Thermometer TO-92")
+			)
+			(libsource
+				(lib "Sensor_Temperature")
+				(part "DS18B20")
+				(description "Programmable Resolution 1-Wire Digital Thermometer TO-92")
+			)
+			(property
+				(name "Sheetname")
+				(value "tiny85fancontrol")
+			)
+			(property
+				(name "Sheetfile")
+				(value "tiny85fancontrol.kicad_sch")
+			)
+			(property
+				(name "ki_keywords")
+				(value "OneWire 1Wire Dallas Maxim")
+			)
+			(property
+				(name "ki_fp_filters")
+				(value "TO*92*")
+			)
+			(sheetpath
+				(names "/")
+				(tstamps "/")
+			)
+			(tstamps "31efe71e-11c4-4870-b9c6-56456865e2cd")
+			(units
+				(unit
+					(name "A")
+					(pins
+						(pin
+							(num "3")
+						)
+						(pin
+							(num "1")
+						)
+						(pin
+							(num "2")
+						)
+					)
+				)
+			)
+		)
+	)
+	(groups)
+	(variants)
+	(libparts
+		(libpart
+			(lib "Connector")
+			(part "Conn_01x04_Socket")
+			(description "Generic connector, single row, 01x04, script generated")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x04_Socket")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x04, script generated")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "Pin_3")
+					(type "passive")
+				)
+				(pin
+					(num "4")
+					(name "Pin_4")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Connector_Generic")
+			(part "Conn_01x02")
+			(description "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			(footprints
+				(fp "Connector*:*_1x??_*")
+			)
+			(fields
+				(field
+					(name "Reference") "J")
+				(field
+					(name "Value") "Conn_01x02")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "Pin_1")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "Pin_2")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "C_Polarized")
+			(description "Polarized capacitor")
+			(footprints
+				(fp "CP_*")
+			)
+			(fields
+				(field
+					(name "Reference") "C")
+				(field
+					(name "Value") "C_Polarized")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Polarized capacitor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Device")
+			(part "R")
+			(description "Resistor")
+			(footprints
+				(fp "R_*")
+			)
+			(fields
+				(field
+					(name "Reference") "R")
+				(field
+					(name "Value") "R")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "Resistor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Diode")
+			(part "1N4001")
+			(description "50V 1A General Purpose Rectifier Diode, DO-41")
+			(docs "http://www.vishay.com/docs/88503/1n4001.pdf")
+			(footprints
+				(fp "D*DO?41*")
+			)
+			(fields
+				(field
+					(name "Reference") "D")
+				(field
+					(name "Value") "1N4001")
+				(field
+					(name "Footprint") "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+				(field
+					(name "Datasheet") "http://www.vishay.com/docs/88503/1n4001.pdf")
+				(field
+					(name "Description") "50V 1A General Purpose Rectifier Diode, DO-41")
+				(field
+					(name "Sim.Device") "D")
+				(field
+					(name "Sim.Pins") "1=K 2=A")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "K")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "A")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "MCU_Microchip_ATtiny")
+			(part "ATtiny85-20P")
+			(description "20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-8")
+			(docs "http://ww1.microchip.com/downloads/en/DeviceDoc/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf")
+			(footprints
+				(fp "DIP*W7.62mm*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "ATtiny85-20P")
+				(field
+					(name "Footprint") "Package_DIP:DIP-8_W7.62mm")
+				(field
+					(name "Datasheet") "http://ww1.microchip.com/downloads/en/DeviceDoc/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf")
+				(field
+					(name "Description") "20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-8")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "~{RESET}/PB5")
+					(type "bidirectional")
+				)
+				(pin
+					(num "2")
+					(name "XTAL1/PB3")
+					(type "bidirectional")
+				)
+				(pin
+					(num "3")
+					(name "XTAL2/PB4")
+					(type "bidirectional")
+				)
+				(pin
+					(num "4")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "5")
+					(name "AREF/PB0")
+					(type "bidirectional")
+				)
+				(pin
+					(num "6")
+					(name "PB1")
+					(type "bidirectional")
+				)
+				(pin
+					(num "7")
+					(name "PB2")
+					(type "bidirectional")
+				)
+				(pin
+					(num "8")
+					(name "VCC")
+					(type "power_in")
+				)
+			)
+		)
+		(libpart
+			(lib "Motor")
+			(part "Motor_DC")
+			(description "DC Motor")
+			(footprints
+				(fp "PinHeader*P2.54mm*")
+				(fp "TerminalBlock*")
+			)
+			(fields
+				(field
+					(name "Reference") "M")
+				(field
+					(name "Value") "Motor_DC")
+				(field
+					(name "Footprint")
+				)
+				(field
+					(name "Datasheet")
+				)
+				(field
+					(name "Description") "DC Motor")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "+")
+					(type "passive")
+				)
+				(pin
+					(num "2")
+					(name "-")
+					(type "passive")
+				)
+			)
+		)
+		(libpart
+			(lib "Sensor_Temperature")
+			(part "DS18B20")
+			(description "Programmable Resolution 1-Wire Digital Thermometer TO-92")
+			(docs "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf")
+			(footprints
+				(fp "TO*92*")
+			)
+			(fields
+				(field
+					(name "Reference") "U")
+				(field
+					(name "Value") "DS18B20")
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-92_Inline")
+				(field
+					(name "Datasheet") "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf")
+				(field
+					(name "Description") "Programmable Resolution 1-Wire Digital Thermometer TO-92")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "GND")
+					(type "power_in")
+				)
+				(pin
+					(num "2")
+					(name "DQ")
+					(type "bidirectional")
+				)
+				(pin
+					(num "3")
+					(name "V_{DD}")
+					(type "power_in")
+				)
+			)
+		)
+		(libpart
+			(lib "Transistor_FET")
+			(part "IRF3205")
+			(description "110A Id, 55V Vds, Single N-Channel HEXFET Power MOSFET, 8mOhm Ron, TO-220AB")
+			(docs "http://www.irf.com/product-info/datasheets/data/irf3205.pdf")
+			(footprints
+				(fp "TO?220*")
+			)
+			(fields
+				(field
+					(name "Reference") "Q")
+				(field
+					(name "Value") "IRF3205")
+				(field
+					(name "Footprint") "Package_TO_SOT_THT:TO-220-3_Vertical")
+				(field
+					(name "Datasheet") "http://www.irf.com/product-info/datasheets/data/irf3205.pdf")
+				(field
+					(name "Description") "110A Id, 55V Vds, Single N-Channel HEXFET Power MOSFET, 8mOhm Ron, TO-220AB")
+			)
+			(pins
+				(pin
+					(num "1")
+					(name "G")
+					(type "input")
+				)
+				(pin
+					(num "2")
+					(name "D")
+					(type "passive")
+				)
+				(pin
+					(num "3")
+					(name "S")
+					(type "passive")
+				)
+			)
+		)
+	)
+	(libraries
+		(library
+			(logical "Connector")
+			(uri "${KICAD10_SYMBOL_DIR}/Connector.kicad_sym")
+		)
+		(library
+			(logical "Connector_Generic")
+			(uri "${KICAD10_SYMBOL_DIR}/Connector_Generic.kicad_sym")
+		)
+		(library
+			(logical "Device")
+			(uri "${KICAD10_SYMBOL_DIR}/Device.kicad_sym")
+		)
+		(library
+			(logical "Diode")
+			(uri "${KICAD10_SYMBOL_DIR}/Diode.kicad_sym")
+		)
+		(library
+			(logical "MCU_Microchip_ATtiny")
+			(uri "${KICAD10_SYMBOL_DIR}/MCU_Microchip_ATtiny.kicad_sym")
+		)
+		(library
+			(logical "Motor")
+			(uri "${KICAD10_SYMBOL_DIR}/Motor.kicad_sym")
+		)
+		(library
+			(logical "Sensor_Temperature")
+			(uri "${KICAD10_SYMBOL_DIR}/Sensor_Temperature.kicad_sym")
+		)
+		(library
+			(logical "Transistor_FET")
+			(uri "${KICAD10_SYMBOL_DIR}/Transistor_FET.kicad_sym")
+		)
+	)
+	(nets
+		(net
+			(code "1")
+			(name "+5V")
+			(class "Default")
+			(node
+				(ref "C1")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "4")
+				(pinfunction "Pin_4_4")
+				(pintype "passive")
+			)
+			(node
+				(ref "R3")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "8")
+				(pinfunction "VCC_8")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U2")
+				(pin "3")
+				(pinfunction "V_{DD}_3")
+				(pintype "power_in")
+			)
+		)
+		(net
+			(code "2")
+			(name "+12V")
+			(class "Default")
+			(node
+				(ref "D1")
+				(pin "1")
+				(pinfunction "K_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "M1")
+				(pin "1")
+				(pinfunction "+_1")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "3")
+			(name "/PWM_SIGNAL")
+			(class "Default")
+			(node
+				(ref "R2")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "5")
+				(pinfunction "AREF/PB0_5")
+				(pintype "bidirectional")
+			)
+		)
+		(net
+			(code "4")
+			(name "/TEMPERATURE_SIGNAL")
+			(class "Default")
+			(node
+				(ref "R3")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "6")
+				(pinfunction "PB1_6")
+				(pintype "bidirectional")
+			)
+			(node
+				(ref "U2")
+				(pin "2")
+				(pinfunction "DQ_2")
+				(pintype "bidirectional")
+			)
+		)
+		(net
+			(code "5")
+			(name "/UART_DEBUG_TX")
+			(class "Default")
+			(node
+				(ref "J1")
+				(pin "1")
+				(pinfunction "Pin_1_1")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "7")
+				(pinfunction "PB2_7")
+				(pintype "bidirectional")
+			)
+		)
+		(net
+			(code "6")
+			(name "GND")
+			(class "Default")
+			(node
+				(ref "C1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J1")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "2")
+				(pinfunction "Pin_2_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "J2")
+				(pin "3")
+				(pinfunction "Pin_3_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "Q1")
+				(pin "3")
+				(pinfunction "S_3")
+				(pintype "passive")
+			)
+			(node
+				(ref "R1")
+				(pin "2")
+				(pintype "passive")
+			)
+			(node
+				(ref "U1")
+				(pin "4")
+				(pinfunction "GND_4")
+				(pintype "power_in")
+			)
+			(node
+				(ref "U2")
+				(pin "1")
+				(pinfunction "GND_1")
+				(pintype "power_in")
+			)
+		)
+		(net
+			(code "7")
+			(name "Net-(D1-A)")
+			(class "Default")
+			(node
+				(ref "D1")
+				(pin "2")
+				(pinfunction "A_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "M1")
+				(pin "2")
+				(pinfunction "-_2")
+				(pintype "passive")
+			)
+			(node
+				(ref "Q1")
+				(pin "2")
+				(pinfunction "D_2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "8")
+			(name "Net-(Q1-G)")
+			(class "Default")
+			(node
+				(ref "Q1")
+				(pin "1")
+				(pinfunction "G_1")
+				(pintype "input")
+			)
+			(node
+				(ref "R1")
+				(pin "1")
+				(pintype "passive")
+			)
+			(node
+				(ref "R2")
+				(pin "2")
+				(pintype "passive")
+			)
+		)
+		(net
+			(code "9")
+			(name "unconnected-(U1-XTAL1{slash}PB3-Pad2)")
+			(class "Default")
+			(node
+				(ref "U1")
+				(pin "2")
+				(pinfunction "XTAL1/PB3_2")
+				(pintype "bidirectional+no_connect")
+			)
+		)
+		(net
+			(code "10")
+			(name "unconnected-(U1-XTAL2{slash}PB4-Pad3)")
+			(class "Default")
+			(node
+				(ref "U1")
+				(pin "3")
+				(pinfunction "XTAL2/PB4_3")
+				(pintype "bidirectional+no_connect")
+			)
+		)
+		(net
+			(code "11")
+			(name "unconnected-(U1-~{RESET}{slash}PB5-Pad1)")
+			(class "Default")
+			(node
+				(ref "U1")
+				(pin "1")
+				(pinfunction "~{RESET}/PB5_1")
+				(pintype "bidirectional+no_connect")
+			)
+		)
+	)
+)

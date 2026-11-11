@@ -13,14 +13,14 @@ from pathlib import Path
 import yaml
 
 RULES_FILE = Path(__file__).with_name('rules') / 'roles.yaml'
-MARGINS = {'kV': 1.25, 'kI': 1 / 0.7}  # [왜] 전압은 정격의 80%, 전류는 70% 안에서 쓴다(정답 판정 기준표 3절, 정운 10-30)
+MARGINS = {'kV': 1.25, 'kI': 1 / 0.7}  # [왜] 전압은 정격의 80%, 전류는 70% 안에서 쓴다(정답 판정 기준표 3절)
 ROLES = tuple(f'R{n:02d}' for n in range(1, 24))
 CODES = ('VRRM', 'IF_AV', 'IFSM', 'VF', 'IR', 'TRR', 'VZ', 'PD', 'CJ', 'TJ_MAX', 'VR', 'VRWM', 'VBR', 'VC', 'IPP', 'PPPM', 'VESD')
 KINDS = ('number', 'flag', 'condition')
 TIERS = ('required', 'conditional')
 OPS = ('>=', '<=', 'within')
 EXEMPTS = ('schottky', 'sic', 'none')  # TRR 면제 범위: 쇼트키 계열 모두(기본) · SiC 쇼트키만 · 면제 없음
-SLOTS = ('min', 'typ', 'max')  # 조건의 slot: 후보 행에서 그 칸 값만 본다(spec_lookup.SLOTS와 같은 이름)
+SLOTS = ('min', 'typ', 'max')  # 조건의 slot: 후보 행에서 그 칸 값만 본다(찾기 조건의 slot과 같은 이름)
 COMMON_INPUTS = {'temp': 'condition'}  # [왜] 사용 온도(TA 또는 TJ)는 모든 역할의 정격 비교에 걸린다
 _BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv}
 

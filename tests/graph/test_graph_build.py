@@ -192,7 +192,7 @@ def test_second_message_in_same_thread_starts_fresh(monkeypatch):
     assert out["tries"] == 1 and out["path"][-1] == "생성"
 
 
-# ── 판정 길: 판정 읽기 → 판정(빠진 값 인터럽트 1번) → 답 틀. 멀티의 판정 에이전트 코드를 그대로 쓴다 ──
+# ── 판정 길: 판정 읽기 → 판정(빠진 값 인터럽트 1번) → 답 틀. 멀티의 대체 부품 에이전트 코드를 그대로 쓴다 ──
 JUDGE_INPUT = ("회로: SparkFun Breadboard Supply\n"
                "넷리스트: data/circuits/collected/samples/breadboard_supply/converted/circuit.net\n"
                "대상: D1\n사용 조건: 입력 전압의 최댓값은 20V\n질문: D1을 TSC 1N5817로 바꿔도 돼?")

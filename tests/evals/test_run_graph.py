@@ -8,6 +8,62 @@ from evals.runners import run_graph as R
 from evals.runners.run_graph import run_scores
 
 
+def test_validation_usage_preserves_missing_cost_and_drops_text():
+    from types import SimpleNamespace
+    from evals.runners.run_thread_validation import usage_rows, cost_total
+    child = SimpleNamespace(run_type='llm', outputs={'llm_output': {'id':'gen-synthetic',
+        'model_name':'synthetic/model', 'token_usage':{'prompt_tokens':12,'completion_tokens':3,'cost':0.02}},
+        'generations':['PRIVATE_ANSWER']}, child_runs=[])
+    root = SimpleNamespace(run_type='chain', outputs={'input':'PRIVATE_QUESTION'}, child_runs=[child])
+    rows = usage_rows([root])
+    assert rows == [{'response_id':'gen-synthetic','model':'synthetic/model',
+                     'prompt_tokens':12,'completion_tokens':3,'reported_cost_usd':0.02}]
+    assert cost_total(rows) == 0.02
+    child.outputs['llm_output']['token_usage'].pop('cost')
+    assert cost_total(usage_rows([root])) is None and cost_total([]) is None
+
+
+def test_validation_dry_run_and_invalid_ids_never_invoke_graph(tmp_path, monkeypatch):
+    import json
+    import pytest
+    from evals.runners import run_thread_validation as V
+    monkeypatch.setattr(R, 'main', lambda *a, **k: pytest.fail('dry-run must not execute'))
+    out = tmp_path/'result.json'
+    assert V.main(['--ids','draft30-e01','--out',str(out)]) == 0
+    assert not out.exists()
+    for ids in (['missing'], ['draft30-e01']*2, ['draft30-e01']*5):
+        with pytest.raises(ValueError):
+            V.main(['--ids',*ids,'--out',str(out)])
+    out.write_text(json.dumps({}), encoding='utf-8')
+    with pytest.raises(FileExistsError):
+        V.main(['--ids','draft30-e01','--out',str(out)])
+
+
+def test_validation_execute_writes_usage_even_when_cost_is_missing(tmp_path, monkeypatch):
+    import json
+    from pathlib import Path
+    from backend.services import llm
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    from evals.runners import run_thread_validation as V
+    original = llm.chat
+    monkeypatch.setattr(llm, 'LLM_PROVIDER', 'openrouter')
+    def fake_main(dataset, ids, out, multi):
+        budget = llm._evaluation_budget.get()
+        assert multi and budget.max_usd == 0.50 and budget.on_reserve is not None
+        budget.reserve('synthetic', output_tokens=0)
+        FakeListChatModel(responses=['PRIVATE_ANSWER']).invoke('PRIVATE_QUESTION')
+        Path(out).write_text(json.dumps({'failed':[]}), encoding='utf-8')
+        llm.chat = lambda *a: None
+    monkeypatch.setattr(R, 'main', fake_main)
+    out = tmp_path/'result.json'
+    assert V.main(['--ids','draft30-e01','--out',str(out),'--execute']) == 2
+    report_text = out.with_suffix('.usage.json').read_text(encoding='utf-8')
+    report = json.loads(report_text)
+    assert llm.chat is original and report['reported_cost_total_usd'] is None
+    assert len(report['calls']) == report['reserved_calls'] == report['missing_response_ids'] == 1
+    assert not report['billing_reconciled'] and 'PRIVATE_' not in report_text
+
+
 def test_answer_path_scores_include_citation_check():
     state = {"path": ["입력 읽기", "라우팅", "검색", "채점", "생성"], "question_type": "rating", "tries": 1,
              "docs": [{"chunk_id": 7}, {"chunk_id": 8}], "passed": [7], "answer": "VRRM은 20 V다 [7]. 근거 없는 문장.",
@@ -128,7 +184,7 @@ def test_multi_not_found_matches_single_meaning():
     assert nf("revision_missing") == 1.0 and nf("part_missing") == 1.0 and nf("not_found") == 1.0
     assert nf("out_of_scope") == 0.0  # 단일도 범위 밖 거절은 not_found가 아니다
     assert nf("", "안녕하세요!") == 0.0  # 일상 대화 답
-    assert nf("", "문서로 확인 안 됨") == 1.0  # 작성 에이전트가 낸 '문서로 확인 안 됨' 답
+    assert nf("", "문서로 확인 안 됨") == 1.0  # 답 쓰기가 낸 '문서로 확인 안 됨' 답
 
 
 def test_single_state_has_no_multi_scores():
@@ -160,7 +216,7 @@ def test_node_models_records_model_of_every_node(monkeypatch):
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", None)
     models = node_models()
     assert set(models) == set(langfuse_prompts.NODES)
-    assert models["supervisor"] == langfuse_prompts.SONNET and models["grade"] == langfuse_prompts.LUNA and models["generate"] == langfuse_prompts.HAIKU
+    assert models["supervisor"] == langfuse_prompts.HAIKU and models["synth"] == langfuse_prompts.SONNET and models["grade"] == langfuse_prompts.LUNA and models["generate"] == langfuse_prompts.HAIKU
     monkeypatch.setattr(llm, "LLM_MODEL_OVERRIDE", "x/y")
     assert set(node_models().values()) == {"x/y"}
 
@@ -180,18 +236,30 @@ class FakeMcp:
         self.checked.append((parts, revisions))
         return {"parts": {p: False for p in parts}, "revisions": {r: False for r in revisions}}
 
-    def part_specs(self, part, codes=None):
-        return []
 
-    def find_parts(self, conditions, category=None, package=None, limit=50):
-        return []
+
+def fake_specs(part, codes=None):
+    """카드 판정 값 가짜(DB · LLM 없음)."""
+    return []
+
+
+fake_specs.doc_rows = lambda part, codes=None: []  # 사실 확인용 문서 행(카드 도구의 속성)
+
+
+def fake_find(conditions, category=None, package=None, limit=50, original_packages=None, original_category=None):
+    """카드 찾기 가짜(DB · LLM 없음)."""
+    return []
 
 
 def fake_mcp(monkeypatch):
+    """MCP 서버(사실 확인)와 카드 도구(찾기 · 판정 값)를 가짜로 바꾼다."""
     from backend.graph import mcp_retriever
+    from backend.rag import card_find, card_specs
     monkeypatch.setattr(FakeMcp, "events", [])
     monkeypatch.setattr(FakeMcp, "checked", [])
     monkeypatch.setattr(mcp_retriever, "StdioMcpRetriever", FakeMcp)
+    monkeypatch.setattr(card_specs, "default_specs", lambda: fake_specs)
+    monkeypatch.setattr(card_find, "default_find", lambda: fake_find)
     return FakeMcp
 
 
@@ -201,12 +269,12 @@ def test_make_app_multi_opens_mcp_for_whole_run_and_builds_multi_graph(monkeypat
     mcp = fake_mcp(monkeypatch)
     with ExitStack() as stack:
         app = make_app(True, stack)
-        assert mcp.events == ["open"] and "plan" in app.get_graph().nodes and "judge" in app.get_graph().nodes
+        assert mcp.events == ["open"] and "Supervisor" in app.get_graph().nodes and "대체 부품 에이전트" in app.get_graph().nodes
     assert mcp.events == ["open", "close"]
 
 
 def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
-    """단일도 멀티처럼 MCP 서버를 열어 사실 확인(check_corpus) · 사양 표 도구로 쓰고 판정 길을 잇는다(D4 v2, 11-06)."""
+    """단일도 멀티처럼 MCP 서버를 열어 사실 확인(check_corpus)에 쓰고, 카드 도구로 판정 길을 잇는다(D4 v2, 11-06)."""
     from contextlib import ExitStack
     from backend.graph import nodes
     from evals.runners.run_graph import make_app
@@ -220,6 +288,19 @@ def test_make_app_single_is_d4_v2_with_facts_and_judge_from_mcp(monkeypatch):
     assert mcp.checked == [(["1N4001"], [])]  # 사실 확인이 MCP check_corpus로 간다
     assert state["path"][-1] == "거절" and state["refusal"]["code"] == "part_missing"
     assert mcp.events == ["open", "close"]
+
+
+def test_make_app_uses_card_tools_for_find_and_specs(monkeypatch):
+    """찾기 · 판정 값은 서비스와 같은 카드 도구다(사양 표는 11-09에 버림, ADR 0016). MCP는 사실 확인에만 쓴다."""
+    from contextlib import ExitStack
+    from backend.graph import build
+    from evals.runners.run_graph import make_app
+    fake_mcp(monkeypatch)
+    seen = {}
+    monkeypatch.setattr(build, "build_graph", lambda **tools: seen.update(tools))
+    with ExitStack() as stack:
+        make_app(False, stack)
+    assert seen["specs"] is fake_specs and seen["find"] is fake_find
 
 
 

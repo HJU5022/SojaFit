@@ -2,7 +2,7 @@
 
 - 날짜: 2026-11-02
 - 상태: 채택
-- 근거: 조장 하정운 결정(11-02), Mouser Search API Terms of Service(최종 수정 2013-03-11, https://www.mouser.com/apiterms/) 1·2·4·5절 확인(11-02)
+- 근거: 조장 결정(11-02), Mouser Search API Terms of Service(최종 수정 2013-03-11, https://www.mouser.com/apiterms/) 1·2·4·5절 확인(11-02)
 
 ## 결정
 - Mouser API 응답(가격·재고·단종 여부 등)은 DB, 파일, 데모 응답, 대화 기록·체크포인트, Langfuse 트레이스 어디에도 남기지 않는다. 에이전트 답변 문장에도 Mouser 값을 넣지 않는다.

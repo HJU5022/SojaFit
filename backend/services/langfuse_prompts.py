@@ -11,24 +11,93 @@ from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 import hashlib
 from pathlib import Path
+import os
+import time
+from threading import Lock
+from langchain_core.callbacks import BaseCallbackHandler
 
 ROOT = Path(__file__).resolve().parents[2]
 # [왜] 등록한 프롬프트의 config와 실제 호출 설정이 어긋나면 안 되므로 모델·temperature·출력 상한을 여기 한 곳에 고정한다(SPEC 5절)
 HAIKU, LUNA, SONNET = "anthropic/claude-haiku-5.5", "openai/gpt-6-luna", "anthropic/claude-sonnet-5.5"
 CONFIG = {"model": HAIKU, "temperature": 0, "max_tokens": 4096}
 NODES = ("route", "grade", "rewrite", "generate", "supervisor", "judge_read", "docs_answer", "synth", "card_read", "card_pick")  # [왜] supervisor는 멀티 에이전트(D5)의 판단 노드, 영어 프롬프트(11-05)
-# [왜] judge_read는 판정 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
+# [왜] judge_read는 대체 부품 에이전트의 읽기 노드(역할 · 회로 값), 서브에이전트라 Haiku(ADR 0014)
 # [왜] card_read는 데이터시트 카드에서 사양 값을 읽는 노드(backend/rag/card_read.py, 사양 표 대신), 서브에이전트라 Haiku. card_pick은 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 노드(backend/rag/card_find.py)
 # [왜] 노드마다 쓸 모델을 한 표에 둔다. 같은 모델을 적으면 같고 다른 모델을 적으면 다르다. 아래는 시작값이며 최종 결정이 아니다(11-05, 측정 뒤 ADR로 정한다)
-# [왜] Supervisor는 Sonnet, 그 아래 서브에이전트가 쓰는 노드는 Haiku, 채점은 Luna(11-05 정운 결정)
-# [왜] docs_answer는 멀티 문서 에이전트의 근거 채점 + 답 쓰기(예전 grade Luna · generate Haiku를 한 호출로, 서브에이전트라 Haiku),
-#      synth는 Supervisor ②의 종합(할 일 2개 이상일 때만, Supervisor라 Sonnet). 11-06 멀티 재설계(참조/아티팩트 "SojaFit 멀티 에이전트 구조")
-NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": SONNET, "judge_read": HAIKU,
+# [왜] Supervisor는 Haiku(ADR 0017, 사전 등록 #47: Sonnet이 세트당 LLM 비용의 80%), 서브에이전트도 Haiku, 채점은 Luna
+# [왜] docs_answer는 멀티 RAG 에이전트의 근거 채점 + 답 쓰기(예전 grade Luna · generate Haiku를 한 호출로, 서브에이전트라 Haiku),
+#      synth는 `종합` 노드(할 일 2개 이상일 때만 불림, Haiku로 검증되지 않아 Sonnet 유지 #47). 11-06 멀티 재설계(backend/multi_agent/MULTI_AGENT.md)
+NODE_MODELS = {"route": HAIKU, "grade": LUNA, "rewrite": HAIKU, "generate": HAIKU, "supervisor": HAIKU, "judge_read": HAIKU,
                "docs_answer": HAIKU, "synth": SONNET, "card_read": HAIKU, "card_pick": HAIKU}
 SKILL_NAME = "skill-diode-evidence"  # [왜] 폴더(슬래시) 없이 이름 한 줄로 둔다. 프로젝트가 SojaFit 하나라 접두사가 필요 없다(11-05)
 # [왜] contextvar라 세션·노드 호출 상태가 동시 실행(스레드·async) 사이에 섞이지 않는다
 _session = ContextVar("langfuse_prompt_session", default=None)
 _invocation = ContextVar("langfuse_invocation", default=None)
+_analysis = ContextVar('analysis_timings', default=None)
+
+
+class AnalysisTimings(BaseCallbackHandler):
+    """그래프 노드 이름·시간·결과만 수집한다. 입력/출력/오류 본문은 보관하지 않는다."""
+    def __init__(self):
+        self.starts, self.stages, self.lock = {}, [], Lock()
+
+    def on_chain_start(self, serialized, inputs, *, run_id, name=None, metadata=None, **kwargs):
+        if name and (metadata or {}).get('langgraph_node') == name:
+            with self.lock:
+                self.starts[run_id] = (name, time.monotonic())
+
+    def _end(self, run_id, status):
+        with self.lock:
+            item = self.starts.pop(run_id, None)
+            if item:
+                self.stages.append({'stage': item[0], 'status': status, 'elapsed_ms': int((time.monotonic()-item[1])*1000)})
+
+    def on_chain_end(self, outputs, *, run_id, **kwargs):
+        self._end(run_id, 'ok')
+
+    def on_chain_error(self, error, *, run_id, **kwargs):
+        self._end(run_id, 'interrupted' if type(error).__name__ == 'GraphInterrupt' else 'failed')
+
+    def report(self):
+        observed = {s['stage'] for s in self.stages}
+        return self.stages + [{'stage':name,'status':'skipped','elapsed_ms':0}
+            for name in ('plan','search','judge_read','judge','synth','check') if name not in observed]
+
+
+@contextmanager
+def analysis_timings(timings):
+    token = _analysis.set(timings)
+    try:
+        yield
+    finally:
+        _analysis.reset(token)
+
+
+def timed_tool(name, tool):
+    def run(*args, **kwargs):
+        active = _analysis.get()
+        if active is None:
+            return tool(*args, **kwargs)
+        started, status = time.monotonic(), 'failed'
+        try:
+            result = tool(*args, **kwargs); status = 'ok'; return result
+        finally:
+            with active.lock:
+                active.stages.append({'stage':name,'status':status,'elapsed_ms':int((time.monotonic()-started)*1000)})
+    return run
+
+
+def publish_analysis_trace(user, thread, event):
+    """실측 메타데이터 요약만 큐에 넣는다. queued는 원격 수신 확인을 뜻하지 않는다."""
+    if not os.getenv('LANGFUSE_PUBLIC_KEY') or not os.getenv('LANGFUSE_SECRET_KEY'):
+        return 'disabled'
+    from langfuse import get_client, propagate_attributes
+    client = get_client()
+    with propagate_attributes(user_id=str(user), session_id=str(thread), tags=['analysis', event['mode']]):
+        with client.start_as_current_observation(name='analysis-metadata', as_type='span',
+                trace_context={'trace_id': event['trace_id']}, metadata=event):
+            pass
+    return 'queued'
 
 
 def callback():

@@ -5,7 +5,26 @@ data/corpus/tsc/*.pdf -text
 evals/results/supervisor/2026-11-05-stage3-five-v1/*.json -text whitespace=cr-at-eol
 evals/results/supervisor/2026-11-05-jev-stage3-v1/*.json -text whitespace=cr-at-eol
 evals/results/supervisor/2026-11-05-stage3-comparison-v1/*.json -text whitespace=cr-at-eol
+# Supervisor Prompt V0 실측 JSON과 기록한 출처 해시의 원시 바이트를 보존한다.
+evals/results/supervisor/2026-11-06-prompt-v0-v1/*.json -text whitespace=cr-at-eol
+evals/results/supervisor/2026-11-06-prompt-v0-v1/**/*.json -text whitespace=cr-at-eol
 # 동결 평가셋을 FROZEN.json에 기록한 LF 바이트 해시로 체크아웃한다.
 evals/dataset_v*.jsonl text eol=lf
+# 데모 코퍼스 스냅샷을 SNAPSHOT.md에 기록한 LF 바이트 해시로 체크아웃한다.
+data/demo/snapshot/*.jsonl text eol=lf
 # 제작자 원본은 고치지 않으므로 공백 검사에서 뺀다.
 data/circuits/collected/**/original/** -whitespace
+# 프롬프트 인젝션 시험 자료와 그 원시 결과는 시험(test_saved_defense_replay 등)·검토 기록이 바이트 해시를 고정한다.
+data/corpus/injection_tests/*.json -text whitespace=cr-at-eol
+evals/results/threads/claim_consistency_*.json -text whitespace=cr-at-eol
+evals/results/threads/input_surface_*.json -text whitespace=cr-at-eol
+evals/results/threads/judgement_bundle_*.json -text whitespace=cr-at-eol
+evals/results/threads/saved_defense_replay_*.json -text whitespace=cr-at-eol
+evals/results/threads/trust_boundary_*.json -text whitespace=cr-at-eol
+# 인젝션 본실측의 원시·메타·예산·승인 바이트와 기록된 SHA256을 보존한다.
+evals/results/threads/injection_baseline_live_*.json* -text whitespace=cr-at-eol
+evals/results/threads/injection_baseline_approval_*.json -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_smoke_live_*.json* -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_live_*.json* -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_approval_*.json -text whitespace=cr-at-eol
+evals/results/threads/injection_t3_smoke_approval_*.json -text whitespace=cr-at-eol

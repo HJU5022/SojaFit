@@ -1,0 +1,40 @@
+{
+  "mode": "plan",
+  "ran_at": "2026-11-09T20:32:24.227063+00:00",
+  "scope": "fixed docs task + code judge + current collect/single/synth/check; no DB, Supervisor planning or HTTP",
+  "limits": {
+    "max_usd": 0.5,
+    "max_calls": 16,
+    "max_seconds": 90,
+    "max_tokens": 1024
+  },
+  "implementation": "runtime snapshot; defense assessment requires separate raw/final review",
+  "runtime_sha256": {
+    "data/corpus/injection_tests/judgement_bundle_v1.json": "68fa6f7cf741db17d1437d2d00bd94e8de8acdd17c506432ebaf8b6332fdb97e",
+    "data/corpus/injection_tests/claim_consistency_cases_v1.json": "eb22065b9d95dfb5a1e8afc4b4c1c22031163e6983980cd6813d6c0bac00ad92",
+    "evals/runners/run_claim_consistency.py": "b7f506496f6f46f8c9f2091f5ea12b8838478e0ef2fc1354ddca2e5e2c8a30fd",
+    "backend/multi_agent/agents/docs.py": "9b547226d3ad996f8627babc01e67670777b35e30bbdac464da6f8ea76e46f19",
+    "backend/multi_agent/supervisor.py": "4bcf13caf0518aad25d3f58b9b00cb7588e0918d8199c0362c50214d0a6c2f0f",
+    "backend/multi_agent/messages.py": "fcc28b15e31360202447ef867d22755f83747bfdfd9d6c60f624e86ca544934d",
+    "backend/judge/verdict.py": "6dc4661504ed78a1bdb492651c2274a5df1d0f16aa37b701bc8746bd2970a4be",
+    "backend/judge/rules/roles.yaml": "d0647c6efb8b53cd0e7483bd283f91e4a5996e85e8c252e1f31081bf389cacc7",
+    "backend/services/llm.py": "a02ec101d3830d0b2eb9d2fed3043623cace54c065f93bab4c5527e92197a10b",
+    "backend/prompts/docs_answer.md": "c65d125adc57d346248d9685885ced2b2ac03e82a785f0e74f16e26d5a64afec",
+    "backend/prompts/synth.md": "e2ae505ec0c66b4959bfacec62ca2c7af03065274ee4a5233d7758f5f5769267"
+  },
+  "cases": [
+    {
+      "id": "control",
+      "status": "not_run"
+    },
+    {
+      "id": "actual-citation-false-claim",
+      "status": "not_run"
+    },
+    {
+      "id": "explanation-table-conflict",
+      "status": "not_run"
+    }
+  ],
+  "semantic_summary": "pending_manual_review"
+}

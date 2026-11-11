@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "dataset": "evals\\dataset_v2.jsonl",
+    "dataset_sha256": "81582c59ef47fdfa7b3b9dc4af7e882c0b140a450fa6bc060a14ed8146bb09a9",
+    "ids": [
+      "draft30-e01",
+      "draft30-e03",
+      "draft30-m04",
+      "draft30-e06"
+    ],
+    "node_models": {
+      "route": "anthropic/claude-haiku-5.5",
+      "grade": "openai/gpt-6-luna",
+      "rewrite": "anthropic/claude-haiku-5.5",
+      "generate": "anthropic/claude-haiku-5.5",
+      "supervisor": "anthropic/claude-sonnet-5.5",
+      "judge_read": "anthropic/claude-haiku-5.5",
+      "card_read": "anthropic/claude-haiku-5.5",
+      "card_pick": "anthropic/claude-haiku-5.5"
+    },
+    "retrieval": "bm25",
+    "provider": "openrouter",
+    "checkpoint": "isolated-postgres",
+    "ran_at": "2026-11-09T10:08:50+0900",
+    "prompts": {
+      "card_pick.md": "b28eecbc1fbc742567da796f4ebcf908bd3f8f40c2f8d081fbf104fcb7f1b931",
+      "card_read.md": "948225ce104a72b5f48f4435943dc59159c412c8bdf2b2555b606a6c44e41137",
+      "generate.md": "b3bddc25e80d3516f25e043cac8fdba4f571ec7f3024dd5bacdfd80abbc9fa8e",
+      "grade.md": "a3768b5669b6c47bebb69c7121ddc93a75042981ae6f90b4b9693c4f72bddb5f",
+      "judge_read.md": "4d233e02fd8b11d722583a61b1fe3d1e89e4c9b6a7a48538f04a64ae6e05e294",
+      "PROMPTS.md": "8b3f41887f4f604c6c4d143f23b450a23d39d0d937d43221ff19fac8d5e37336",
+      "rewrite.md": "21ed22f85ae636646d309520649b8975647278de8dd9e3b794bd29d06ef8a093",
+      "route.md": "c6420edcec4f0e408c3b36a118fa58fbc47dcd34c0a1e49f57d3876dfb3964ed",
+      "supervisor.md": "3e1cc47ef016ef607d3015d20b9545863956290cb46a91639f5767f952242ec0",
+      "tool_use.md": "bc57dbfa40db2bec47531088512e0955607ac5670087ee4f67f599836a90f057"
+    },
+    "actual_billed_cost": null
+  },
+  "rows": [
+    {
+      "id": "draft30-e01",
+      "kind": "relevant",
+      "gold_type": "role",
+      "routed_type": "role",
+      "path": "입력 읽기>사실 확인>판단>작성>판단>검색>판단>검색>판단>작성>판단>거절",
+      "not_found": 1.0,
+      "tries": 2.0,
+      "llm_calls": 10.0,
+      "docs_found": 5.0,
+      "passed_cards": 1.0,
+      "latency_s": 40.3,
+      "hops": 5.0,
+      "refusal_code": "not_found",
+      "answer_metric": "over_refusal",
+      "passed": [
+        3617
+      ],
+      "trace_url": "",
+      "owner_matches": true,
+      "version": 1
+    },
+    {
+      "id": "draft30-e03",
+      "kind": "relevant",
+      "gold_type": "rating",
+      "routed_type": "rating",
+      "path": "입력 읽기>사실 확인>판단>검색>판단>작성>판단>검증>판단>끝",
+      "not_found": 0.0,
+      "tries": 1.0,
+      "llm_calls": 7.0,
+      "docs_found": 5.0,
+      "passed_cards": 1.0,
+      "latency_s": 23.7,
+      "fake_citations": 0.0,
+      "uncited_sentences": 0.0,
+      "hops": 4.0,
+      "refusal_code": "",
+      "answer_metric": "cited_gold",
+      "passed": [
+        1237
+      ],
+      "trace_url": "",
+      "owner_matches": true,
+      "version": 1
+    },
+    {
+      "id": "draft30-m04",
+      "kind": "relevant",
+      "gold_type": "candidate_judge",
+      "routed_type": "candidate_judge",
+      "path": "입력 읽기>사실 확인>판단>판정 읽기>판정>판단>작성>판단>검증>판단>끝",
+      "not_found": 0.0,
+      "tries": 0.0,
+      "llm_calls": 5.0,
+      "docs_found": 0.0,
+      "passed_cards": 0.0,
+      "latency_s": 13.2,
+      "hops": 4.0,
+      "refusal_code": "",
+      "answer_metric": "wrong_citation",
+      "passed": [],
+      "verdicts": [
+        [
+          "BZT52C3V6",
+          "NOT_VERIFIED"
+        ]
+      ],
+      "trace_url": "",
+      "owner_matches": true,
+      "version": 1
+    },
+    {
+      "id": "draft30-e06",
+      "kind": "irrelevant",
+      "gold_type": "out_of_domain",
+      "routed_type": "other_part",
+      "path": "입력 읽기>사실 확인>판단>거절",
+      "not_found": 1.0,
+      "tries": 0.0,
+      "llm_calls": 1.0,
+      "docs_found": 0.0,
+      "passed_cards": 0.0,
+      "latency_s": 3.9,
+      "hops": 1.0,
+      "refusal_code": "not_found",
+      "answer_metric": "correct_refusal",
+      "passed": [],
+      "trace_url": "",
+      "owner_matches": true,
+      "version": 1
+    }
+  ],
+  "failed": [],
+  "summary": {
+    "items": 4,
+    "finished": 4,
+    "failed": 0,
+    "metrics": {
+      "cited_gold": 1,
+      "correct_refusal": 1,
+      "over_refusal": 1,
+      "wrong_citation": 1
+    },
+    "by_kind": {
+      "relevant": {
+        "cited_gold": 1,
+        "over_refusal": 1,
+        "wrong_citation": 1
+      },
+      "irrelevant": {
+        "correct_refusal": 1
+      }
+    },
+    "by_type": {
+      "irrelevant/out_of_domain": {
+        "correct_refusal": 1
+      },
+      "relevant/candidate_judge": {
+        "wrong_citation": 1
+      },
+      "relevant/rating": {
+        "cited_gold": 1
+      },
+      "relevant/role": {
+        "over_refusal": 1
+      }
+    },
+    "routing_match_relevant": 3,
+    "relevant": 3,
+    "latency_p50_s": 23.7,
+    "llm_calls_total": 23.0
+  },
+  "budget": {
+    "calls": 23,
+    "conservative_reserved_usd": 0.8931199999999999,
+    "actual_billed_cost": null,
+    "elapsed_s": 82.7
+  }
+}

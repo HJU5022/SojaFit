@@ -1,4 +1,5 @@
--- [초안] 업무 테이블 11개(회로·부품·판정 등)를 만드는 마이그레이션 1 초안. 자동 실행되지 않고 직접 검토한 뒤 db/의 다음 번호로 옮겨 적용한다.
+-- [대체됨] 이 초안은 적용하지 않는다. 업무 표는 db/018_projects.sql · 019_conversations.sql · 020_approvals_quotes.sql이 만들고, 이 초안의 circuits는 018과 충돌한다. 이력으로만 둔다.
+-- [초안] 업무 테이블 11개(회로·부품·판정 등)를 만드는 마이그레이션 1 초안.
 -- DRAFT ONLY: Migration 1 business schema, excluding corpus tables owned by PR #17.
 -- This file is intentionally named *.sql.draft and is not run by Docker init or a migration runner.
 -- Do not apply until db/schema/erd.md is approved and the migration runner/history convention is selected.

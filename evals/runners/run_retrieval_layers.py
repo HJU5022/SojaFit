@@ -31,7 +31,7 @@ OUT, INP, VEC = WORK / 'out', WORK / 'inputs', WORK / 'vectors'
 DATASET = 'evals/dataset_v1.jsonl'
 EN = WORK.parent / 'hnsw_exp/questions_19_en.jsonl'
 KS = (1, 3, 5, 10)
-CAP_OPENROUTER = 1.00  # 이번 실행 전체의 OpenRouter 상한(달러, 정운 승인)
+CAP_OPENROUTER = 1.00  # 이번 실행 전체의 OpenRouter 상한(달러, retrieval-layered-rerun-2026-11-03.md "비용과 중단 조건" 3층)
 N21_EN = ('I want to replace D1 on the Breadboard Supply with a 1N5819. '
           'How does the reverse leakage current change with temperature?')
 Q5_PROMPT = ("질문을 '품번 + 데이터시트 영어 용어' 검색어 한 줄로 바꾼다. 품번, 개정 코드, 주문 코드는 그대로 둔다. "
@@ -704,7 +704,7 @@ def layer3():
                     c['base'] = bn
                     cells.append(c)
                     seen.add(c['name'])
-    for bn in ('OLD', 'Q2none'):  # 강사 질문(C3)용 BM25만 칸
+    for bn in ('OLD', 'Q2none'):  # 비교 C3(BM25만 − dense만)용 BM25만 칸
         c = cell(dict(bases[bn], S='bm25'))
         c['base'] = bn
         cells.append(c)
@@ -733,7 +733,7 @@ def layer4():
                 continue
             try:
                 cells.append(cell(dict(s, rerank=rr)))
-            except SystemExit as e:  # [왜] Voyage 결제 신호·키 없음이면 그 리랭커만 미루고 나머지는 잰다(정운 결정 4)
+            except SystemExit as e:  # [왜] Voyage 결제 신호·키 없음이면 그 리랭커만 미루고 나머지는 잰다(조장 결정, 11-03)
                 print(f'{rr} 건너뜀: {e}')
                 RERANKERS.remove(rr)
     win, _ = choose(w, cells, 1)

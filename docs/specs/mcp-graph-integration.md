@@ -2,10 +2,12 @@
 
 > 2026-11-03 · B(LangGraph·통합) 담당 범위. MCP 서버와 도구 계약은 `backend/mcp_skill/mcp_server/server.py`의 현재 구현을 변경 없이 사용한다.
 
+> 현재 상태(2026-11-08 코드 기준): `backend/graph/mcp_retriever.py`의 `StdioMcpRetriever`와 검색 장애 구분이 구현됐고, `evals/runners/run_graph.py`가 MCP stdio 서버를 열어 그래프에 주입합니다. 이후 `check_corpus`, `get_part_specs`, `find_parts_by_specs` 연결도 같은 어댑터에 추가됐습니다. 아래 Why의 “경로가 없다”는 작업 시작 당시 상황입니다.
+
 ## Why
 
 - **페르소나**: SojaFit의 LangGraph와 통합 검증을 담당하는 개발자.
-- **상황**: 줄기 그래프는 동기 검색기 `retriever(query, *, parts=...)`를 직접 주입받지만, FastMCP stdio 서버의 `search_corpus`를 실제 MCP 클라이언트로 호출하는 경로는 없다.
+- **상황(작업 시작 당시)**: 줄기 그래프는 동기 검색기 `retriever(query, *, parts=...)`를 직접 주입받지만, FastMCP stdio 서버의 `search_corpus`를 실제 MCP 클라이언트로 호출하는 경로가 없었다.
 - **문제**:
   1. MCP 서버 단위 테스트가 통과해도 그래프에서 실제로 사용할 수 있는지 증명되지 않는다.
   2. 현재 그래프 계약은 빈 검색 결과와 검색기 장애를 구분하지 않아, MCP·DB 장애를 코퍼스에 문서가 없는 것으로 잘못 안내할 수 있다.

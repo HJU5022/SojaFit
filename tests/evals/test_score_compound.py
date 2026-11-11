@@ -1,6 +1,6 @@
 """여러 개를 묻는 질문 부분별 채점(evals/runners/score_compound.py) 시험: 답할 부분의 근거 · 판정, 답하면 안 되는 부분의 거절 말.
 
-- 출처: evals/runners/score_compound.py, B-지시서 4-5.3
+- 출처: evals/runners/score_compound.py
 """
 from evals.runners import score_compound as SC
 
