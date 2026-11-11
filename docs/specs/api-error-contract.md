@@ -44,7 +44,7 @@
 | 400 · 422 | `VALIDATION_ERROR` | |
 | 401 | `UNAUTHORIZED` | |
 | 403 | `FORBIDDEN` | `ORIGIN_MISMATCH`(요청 출처 불일치, `auth.check_origin`) |
-| 404 | `NOT_FOUND` | |
+| 404 | `NOT_FOUND` | `SCHEMATIC_NOT_FOUND` (검증된 완성 회로도 없음) |
 | 409 | `CONFLICT` | `CONDITION_PENDING`(조건 질문 대기), `ALREADY_APPROVED`(이미 승인 · 승인할 수 없는 판정) |
 | 413 | `PAYLOAD_TOO_LARGE` | |
 | 429 | `RATE_LIMITED`(가입 횟수 · 호출 간격) | `LIMIT_EXCEEDED`(하루 토큰 · USD 상한, 분석 한 번의 호출 · 예약 상한) |

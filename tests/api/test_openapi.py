@@ -69,14 +69,14 @@ def test_no_success_response_has_an_empty_schema():
         for method, op in item.items():
             for status, response in op['responses'].items():
                 content = response.get('content', {})
-                if not status.startswith('2') or status == '204' or 'text/event-stream' in content:
+                if not status.startswith('2') or status == '204' or 'text/event-stream' in content or 'image/png' in content:
                     continue
                 if not content.get('application/json', {}).get('schema'):
                     empty.append(f'{method.upper()} {path} {status}')
     assert empty == []
 
 
-# (메서드, 경로) 37개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 39개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
     ('GET', '/health'),
     ('POST', '/api/auth/login'), ('POST', '/api/auth/signup'), ('GET', '/api/auth/demo'), ('POST', '/api/auth/demo-login'),
@@ -92,6 +92,8 @@ ROUTES = {
     ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
     ('POST', '/api/runs/{run_id}/resume'),
+    ('GET', '/api/external-circuits/schematics'),
+    ('GET', '/api/external-circuits/schematics/{signed_token}/{sheet_index}'),
 }
 
 
