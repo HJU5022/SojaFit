@@ -7,4 +7,5 @@
 
 ## 파일
 - `PUBLIC.md` — 이 폴더 설명.
+- `circuit-schematics/` — 검증된 공개 원본에서 고정한 데모 회로도 PNG 15개.
 - `sojafit-circuit-hero.png` — 프로젝트 미선택 랜딩에서 사용하는 글자 없는 회로 배경 이미지.

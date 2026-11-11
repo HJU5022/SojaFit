@@ -36,3 +36,15 @@ def test_snapshot_uses_the_explicitly_confirmed_verdict_for_duplicate_part_numbe
     source['judgement']['shown'] = [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'checks': []}]
     snapshot = approval_snapshot(source, 'SS34', 'ROLE_SUFFICIENT')
     assert snapshot['candidate']['verdict'] == 'ROLE_SUFFICIENT'
+
+
+@pytest.mark.parametrize('candidate', [
+    {'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'missing': ['v_in_max'], 'checks': []},
+    {'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'missing': [],
+     'checks': [{'code': 'VRRM', 'tier': 'required', 'result': 'unverified'}]},
+])
+def test_rejects_positive_verdict_with_unverified_required_conditions(candidate):
+    source = result()
+    source['judgement']['results'] = [candidate]
+    with pytest.raises(InvalidApproval, match='필수 조건'):
+        approval_snapshot(source, 'SS34', 'ROLE_SUFFICIENT')

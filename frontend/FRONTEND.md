@@ -17,10 +17,10 @@
 
 ## 파일
 - `FRONTEND.md` — 이 문서
-- `package.json` — npm 의존성과 개발·빌드·테스트 명령
+- `package.json` — npm 의존성과 개발·빌드·테스트 명령. `elkjs`는 연결 개념도의 직교 배선과 겹침 없는 자동 배치를 브라우저 Web Worker에서 계산합니다.
 - `package-lock.json` — npm 의존성 고정
 - `index.html` — 한국어 React 진입 HTML
-- `vite.config.ts` — React 플러그인, API 개발 프록시, jsdom 테스트 설정
+- `vite.config.ts` — React 플러그인, API 개발 프록시, jsdom 테스트와 단일 catalog의 실제 15종 연결 JSON·visual metadata를 dummy mode에 묶는 virtual module 설정
 - `tsconfig.json` — TypeScript 프로젝트 참조
 - `tsconfig.app.json` — 화면 TypeScript 검사 설정
 - `tsconfig.node.json` — Vite 설정 TypeScript 검사 설정

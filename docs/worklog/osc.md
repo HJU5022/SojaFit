@@ -503,3 +503,97 @@
 - PR 전 저장소 구조 규칙 보완: `AGENTS.md`의 문서 위계·지킬 것 9·팀 규칙 3·10, `SOJAFIT.md`의 이름 규칙·파일 생성 절차, `tests/repo/test_repo_layout.py`를 확인했다. 새 랜딩 관련 설계·계획 5개, `LandingServiceIntroduction.tsx`, `frontend/public/sojafit-circuit-hero.png`를 `SOJAFIT.md` 트리에 설명과 함께 등록했다. 새 두 단계 폴더 `frontend/public/`에는 규칙대로 `PUBLIC.md`를 만들고 `frontend/FRONTEND.md`와 폴더 설명 표에도 연결했으며, `docs/superpowers/SUPERPOWERS.md`의 실제 설계·계획 목록을 동기화했다. 최초 전체 `uv run pytest -q`는 구조 문서 누락으로 `3 failed, 1071 passed, 113 skipped`였고, 보완 뒤 `uv run pytest -q tests/repo/test_repo_layout.py`는 `5 passed`, 최종 전체 `uv run pytest -q`는 `1074 passed, 113 skipped`였다. 프론트 Vitest `112 passed`, production build, Playwright `5 passed`, `git diff --check`도 통과했다. 읽기 전용 `git fetch origin main` 뒤 `git merge-tree`로 현재 변경을 시뮬레이션하니 `OSC` 기준 커밋이 최신 `origin/main`보다 99커밋 뒤였고 추적 파일 18개에서 충돌이 예상됐다. 실제 원격 push·PR 생성·병합은 하지 않았으며, 다음 단계는 최신 `main`을 반영해 충돌을 해결한 뒤 같은 검증을 다시 수행하는 것이다.
 - 최신 main 동기화·충돌 해결: 미커밋 UI 변경과 신규 파일을 `backup-before-main-sync-20261110-landing-ui` stash(`82e78f7`)로 백업한 뒤 `OSC`를 `origin/main` `b683d9e`까지 fast-forward하고 백업을 적용했다. 충돌 18개는 최신 main의 회원가입·내 설정·데모 질문 재생·프로필 힌트·역할명·후보 정규화 계약을 유지하면서 랜딩, 작업대, dialog, 반응형 UI를 통합했다. main에서 AI 도구 흔적 정리로 삭제된 `docs/superpowers/`는 되살리지 않았고 백업 stash에는 계속 보존했다. 동기화 뒤 `origin/main...HEAD`는 `0 0`, 미해결 충돌 파일은 0개다.
 - 동기화 후 검증: `uv run pytest -q`는 `1204 passed, 112 skipped`, `npm run test:run`은 `18 files / 133 tests passed`, `npm run build`는 TypeScript와 Vite production build 성공, `npm run e2e`는 랜딩·작업대·더미 전체 흐름을 포함해 `5 passed`였다. `uv lock --check`, staged whitespace 검사, Docker gitleaks stdin(`--redact --no-banner --log-level warn`)도 통과했다. 이 검증은 로컬 코드·fixture·더미/fake backend 범위이며 실제 배포, 외부 모델·MCP·Mouser, 공유 DB round-trip은 실행하지 않았다. 커밋·push·PR 생성은 하지 않았다.
+
+### 검증된 회로 원본과 데이터시트 패키지 근거
+
+- 목적·범위: 작업대에서 개념 연결도와 실제 회로 원본을 구분해 볼 수 있도록, 출처와 라이선스뿐 아니라 데모 회로와의 일치까지 확인한 4건에만 원본 회로 이미지를 연결했다. `breadboard_supply`는 수집한 PTH 회로와 공개 SMD 이미지가 달라 최종 검토에서 제외했고, `attiny85_time_switch`와 사용자 업로드도 원본 탭 없이 개념도만 유지한다.
+- 회로 자산 계약: `data/circuits/visuals.json`에 원본 URL·저장소·commit·라이선스 증거·귀속·원본/제공 파일 SHA-256을 기록하고, API에는 브라우저에 필요한 안전한 메타데이터만 노출한다. 정적 PNG 4개는 `/circuit-schematics/`에서 제공하며, Docker production build에도 포함한다. 원본과 개념도를 같은 것으로 표현하거나 물리적 핀 호환·배선 정답을 보장하지 않는다.
+- 데이터시트 근거: 1,360개 manifest와 외부 Docling JSON을 파일명 기준으로 결합해 `data/package-outline-pages.json`을 생성했다. URL 디코딩·casefold 일치를 사용하고 제어문자·위험 scheme을 거절하며, 페이지는 1-based다. 브라우저 응답에만 데이터시트 URL과 근거 페이지를 붙이고 안전 결과 저장 모델과 DB 스키마는 확장하지 않았다.
+- 더미·UI: 허구의 `SS34.pdf` 대신 실제 `SS34L SERIES_C2103.pdf`와 `SS34L` 후보를 사용한다. VRRM 근거는 1쪽, 패키지 외형 근거는 4쪽이다. 원본 회로 탭에는 귀속·라이선스·안전한 원문 링크를 표시하고, 데이터시트 근거 링크는 HTTPS 새 탭으로 연다. 판정 문구는 `동일 패키지 가능성`, `기판 변경 가능성 있음`, `패키지 변경 여부 확인 필요`로 제한한다.
+- 배포 경계 보완: `Dockerfile`이 `frontend/public/`을 Vite build 전에 복사하고, 런타임은 `frontend/dist`가 있으면 그 결과만 정본으로 사용한다. 따라서 production asset 누락을 개발용 public fallback이 숨기지 않는다. 최종 4종으로 로컬 image `sojafit-verified-visuals-check:local`을 다시 빌드했고 컨테이너에 `attiny85_dev`, `franzininho_diy`, `mosfet_driver`, `pro_micro` PNG만 있음을 확인했다.
+- 검증: 최종 작업 트리에서 backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 152 passed`, production build 성공, Playwright `7 passed`(검증 원본 PNG 브라우저 decode 포함), 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`를 확인했다. 생성 index는 1,360건이며 SHA-256 `EE961EC12D24227B1C6B2214B466D3D378922097BC9F59E46F7FF69413984B3A`로 재현됐다. 실제 외부 모델·MCP·Mouser·공유 DB·배포 환경 round-trip과 데이터시트 웹 원문의 장기 가용성은 이번 범위에서 검증하지 않았다. 커밋·push·PR은 만들지 않았다.
+- 직접 검수용 dummy 보완: 초기 dummy가 원본 미제공 `breadboard_supply` 한 건만 노출해 사용자가 작업대에서 원본 4종을 볼 수 없던 공백을 수정했다. Vite build-time virtual module이 저장소의 실제 6종 `connections.json`과 `visuals.json`을 읽어 프로젝트·데모 API를 구성하며, 검증된 4종은 작업대에서 원본/개념 탭을 모두 제공한다. 손으로 축약한 연결 fixture는 제거했고 Docker frontend build에도 같은 정본 파일을 명시적으로 전달한다.
+- 직접 검수용 dummy 검증: backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 152 passed`, production build, Playwright 전체 `8 passed`, 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`, Docker image build를 통과했다. 더미 서버 `http://127.0.0.1:5174/app`에서 6종 프로젝트를 선택할 수 있고, `mosfet_driver`, `attiny85_dev`, `franzininho_diy`, `pro_micro`는 원본/개념 탭을, `breadboard_supply`, `attiny85_time_switch`는 개념도만 제공한다.
+- 데모 6종 원본 완성: 기존 4종 제한을 제거했다. `breadboard_supply`는 공식 SparkFun 제품 페이지의 v10 PTH PDF와 canonical 20부품/13넷을 대조했고, `attiny85_time_switch`는 고정 commit `3566a94f`의 `attiny85_time_switch_schematic.pdf`를 canonical 연결과 대조했다. 두 PDF의 첫 페이지를 기존 규칙대로 160 DPI PNG로 고정하고 원본/배포 SHA-256, 고정 commit, 라이선스와 attribution을 catalog에 추가했다. 이제 등록된 6종 모두 원본/연결 개념도 탭을 제공하며 업로드만 개념도 전용이다. 계획서의 6종 범위와 모든 실행 체크를 완료 표시했고 commit·push·PR은 만들지 않았다.
+- 6종 완료 검증: backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 153 passed`, production build, 기본 `npm run e2e` `8 passed`, 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`, Docker image build를 통과했다. 최초 병렬 Playwright는 Windows trace 임시 파일 `ENOENT`로 3건이 인프라 실패했고 `--trace=off --workers=1`에서 8건이 통과했다. 기능 실패가 아닌 trace artifact 경합으로 확인해 기본 설정도 trace를 끈 뒤 병렬 기본 명령 8건 통과를 다시 확인했다. `127.0.0.1:5174`에서 6개 PNG 모두 HTTP 200 `image/png`를 반환한다.
+
+### 판정 설명·승인·예상 상품금액 보강
+
+- 근거 표시: 후보 상세에 필수 조건, 계산 근거, 요구 기준, 후보 데이터시트 값, 시험 조건, 판정 이유, 문서·쪽·표·행 및 안전한 HTTPS 원문 링크를 한 조건표로 표시한다. 백엔드의 구조화된 `checks`만 사용하고 원문이 없는 값은 만들지 않는다. 최종 답변의 줄바꿈도 보존한다.
+- 승인 경계: 긍정 verdict라도 `missing`이 있거나 `tier=required` check가 `unverified`이면 프런트 승인 버튼을 비활성화하고, 같은 검사를 backend `approval_snapshot`에도 적용해 직접 API 호출로 우회할 수 없게 했다. 주의 문구만 있는 후보는 차단하지 않는다.
+- 견적 설명: 조회된 가격 구간 중 입력 수량에 적용되는 단가를 골라 `수량 × 단가 = 예상 상품금액`을 화면에서 계산한다. 세금·배송비·환율 제외를 명시하고 기존 계약대로 서버에는 수량만 저장한다.
+- 더미 흐름: SS34L 예시는 입력 최대 전압 12 V와 최대 순방향 전류 1 A에 안전 여유를 적용해 VRRM `15 V ≤ 40 V`, IF(AV) `1.43 A ≤ 3 A`를 설명한다. 패키지·극성 확인은 별도 주의로 남겼다.
+- 검증: TDD RED 뒤 frontend 전체 `19 files / 152 tests passed`, 관련 backend `81 passed`, production build 성공, dummy Playwright `3 passed`를 확인했다. 최초 Playwright 재시도 한 번은 추적 파일 `ENOENT`로 실패해 trace를 끈 깨끗한 실행으로 기능 경로를 재검증했다. 실제 외부 가격 공급자·모델·MCP·공유 DB·배포 환경은 호출하지 않았다.
+
+### 회로 작업대 상단 간소화
+
+- 선택된 프로젝트의 중앙 작업면 상단에서 `부품 대체 분석`, `회로 작업대`, 설명, `결과 보기`, `프로젝트 만들기`를 제거하고 분석 진행 단계만 남겼다. 새 프로젝트 생성은 기능을 잃지 않도록 상단 현재 프로젝트 또는 왼쪽 프로젝트 메뉴로 여는 `내 프로젝트` 팝업의 `새 프로젝트 만들기`로 이동했다.
+- TDD RED에서 기존 제목이 남아 있음을 확인한 뒤 수정했다. 관련 작업대 시험 `19 passed`, 영향받은 화면·비동기 프로젝트 시험 `48 passed`, frontend 전체 `19 files / 152 tests passed`, production build 성공, dummy Playwright `3 passed`, `git diff --check`를 확인했다.
+
+### 선택형 사용 조건 입력
+
+- 질문 입력창은 기본으로 항상 표시하고, 별도 `사용 조건 (선택)` 입력창은 `사용 조건 추가(선택)` 버튼을 눌렀을 때만 펼친다. 조건이 있는 초안과 기록 데모는 자동으로 펼치며, 다시 접어도 값은 유지해 기존 `StartRun.conditions` 필드로 별도 전송한다. 랜딩과 선택된 프로젝트의 대화 입력에 같은 동작을 적용했다.
+- 기본 비노출과 펼치기 동작을 먼저 실패 시험으로 확인했다. 최종 frontend 전체 `19 files / 152 tests passed`, production build 성공, dummy Playwright `3 passed`, `git diff --check`를 확인했다. backend API와 저장 계약은 수정하지 않았다.
+
+### 원본 회로도 확대·이동
+
+- 우측 정보 패널의 검증된 원본 회로도에 50~300% 범위의 확대·축소, 현재 배율 표시, 화면 맞춤을 추가했다. 확대된 이미지는 마우스나 터치로 끌어 이동할 수 있고 기존 스크롤도 유지한다. 연결 개념도와 원본·출처 데이터 계약은 변경하지 않았다.
+- 확대, 드래그 이동, 화면 맞춤 동작을 기존 구현에서 실패하는 시험으로 먼저 확인한 뒤 구현했다. 집중 Vitest `5 passed`, frontend 전체 `19 files / 153 tests passed`, production build, Playwright `8 passed`, `git diff --check`를 통과했다. 최초 Playwright 전체 재실행은 Windows trace 임시 파일 `ENOENT` 2건으로 종료되어, trace를 끈 깨끗한 실행으로 기능 경로를 재검증했다.
+
+### 분석 입력 영역 간소화
+
+- 중앙 질문 입력 영역의 `대상 …` 표기와 `질문과 확인된 조건만 전송합니다.` 안내 행을 제거하고 질문 입력창을 3줄에서 2줄로 줄였다. 사용 조건 선택 입력과 전송 데이터 계약은 유지한다.
+- 행동 버튼은 상태별 하나만 표시한다. 분석 전·실패 후에는 `분석하기` 또는 `다시 분석하기`, 실제 실행 중에는 같은 위치에 `분석 취소`만 표시한다.
+- 기존 구현에서 두 요구가 실패하는 시험 2건을 먼저 확인했다. 수정 뒤 집중 Vitest `23 passed`, frontend 전체 `19 files / 154 tests passed`, production build, 관련 dummy Playwright `1 passed`를 확인했다.
+
+### 채팅형 분석 입력줄
+
+- 질문 입력을 기본 한 줄 높이로 낮추고 분석 실행·취소 버튼을 입력창 오른쪽 안에 배치했다. 대상 미선택 안내 문구는 제거하고 선택 사용 조건은 기존처럼 별도로 펼치도록 유지했다.
+- 입력 내용에 따라 최대 6줄까지 스크롤바 없이 늘어나고 그 이상에서만 내부 스크롤을 사용한다. Enter는 분석을 시작하고 Shift+Enter는 줄바꿈을 유지하며, 한글 IME 조합 중 Enter는 전송하지 않는다. 화면에는 별도 단축키 안내를 추가하지 않았다.
+- 입력 높이·버튼 위치·상태 전환·키보드·스크롤 동작을 기존 구현에서 실패하는 시험으로 확인한 뒤 수정했다. 집중 Vitest `25 passed`, production build, 관련 dummy Playwright `1 passed`를 통과했다. 전체 Vitest는 동시 작업 중 추가된 회로 원본 9건의 dummy fixture 기대값 불일치 1건으로 `155 passed, 1 failed`이며 이번 입력 영역과 무관해 수정하지 않았다.
+
+### 진행도 아래 초기 안내 제거
+
+- 선택된 프로젝트의 중앙 작업면에서 진행도 바 아래에 있던 `분석 대화`, `대체 가능성 분석 흐름`, 대상 배지와 회로 입력 확인 카드를 제거했다. 분석 전에는 빈 대화 작업면과 하단 입력줄만 보이며, 분석을 시작한 뒤 생성되는 실제 질문·상태·결과는 유지한다.
+- 기존 마크업에서 안내 문구가 남아 실패하는 시험을 먼저 확인했다. 수정 뒤 관련 Vitest `2 files / 44 tests passed`, production build, 관련 dummy Playwright `1 passed`, `git diff --check`를 확인했다.
+
+### 하단 입력줄 위치 고정 복구
+
+- 초기 제목 행을 제거한 뒤에도 대화 패널이 기존 3행 Grid를 유지해 입력 영역이 두 번째 `1fr` 행 전체로 529px까지 늘어나던 원인을 확인했다. 실제 자식 구조에 맞춰 `대화 내역 minmax(0, 1fr) + 입력줄 auto`의 2행 Grid로 수정했다.
+- 입력 영역 높이가 200px 미만이고 중앙 작업면 하단과 맞닿는 브라우저 회귀 시험을 RED부터 추가했다. 수정 뒤 관련 Vitest `2 files / 44 tests passed`, production build, Playwright 전체 `9 passed`, `git diff --check`를 통과했다.
+
+### 더미 모드 화면 내부 입력줄 보정
+
+- 이전 검증은 입력줄이 작업면 하단에 붙는지만 확인해, 더미 모드 안내 배너만큼 작업면 전체가 뷰포트 아래로 밀리는 문제를 놓쳤다. `1328×864`에서 입력줄 하단이 `906.4px`에 위치하는 것을 재현했다.
+- 바깥 셸은 안내 배너를 제외한 남은 높이를 작업대에 배분하고, 중앙 작업면은 자체 `100vh` 계산을 제거해 Grid 행 높이를 따르도록 수정했다. 모바일은 기존 문서 스크롤 방식을 유지한다.
+- 입력 영역 높이 200px 미만, 하단 좌표 864px 이하, 사용 조건 버튼의 viewport 노출을 자동 검증한다. 같은 크기의 실제 화면을 캡처해 입력창과 두 버튼이 모두 보이는 것도 확인했다. 최종 관련 Vitest `2 files / 44 tests passed`, production build, Playwright 전체 `9 passed`, `git diff --check`를 통과했다.
+
+### 추가 조건 배치와 오버레이 스크롤바
+
+- 질문 입력 바로 아래에 선택형 사용 조건 입력을 배치하고 `사용 조건 닫기` 버튼을 입력 영역의 마지막으로 옮겼다. 조건 입력은 200ms 동안 위에서 자연스럽게 펼쳐지며, 모션 최소화 환경에서는 즉시 완료된다.
+- 네이티브 스크롤바의 전용 폭을 0으로 만들어 화면을 자르지 않게 했다. 포인터가 실제 스크롤 가장자리에 접근할 때만 레이아웃 위에 겹치는 오버레이 손잡이가 나타나며, 세로·가로 드래그, 휠·트랙패드·키보드 스크롤을 유지한다.
+- `1328×864` 실제 화면에서 조건 입력과 닫기 버튼이 모두 viewport 안에 있고, 오버레이 막대가 별도 여백 없이 콘텐츠 위에 표시되는 것을 캡처해 확인했다. frontend Vitest `19 files / 157 passed`, production build, Playwright 전체 `10 passed`를 통과했다.
+
+### 랜딩 세부 문구 간소화
+
+- 중앙 설명 문장 `부품과 사용 조건을 자연어로 적으면…`은 유지했다. 랜딩 조건 입력의 화면상 `사용 조건 (선택)` 라벨과 예시 목록 위 `빠른 시작` 표기만 제거했다.
+- 조건 입력의 접근성 이름과 입력 기능, 빠른 시작 예시 버튼·애니메이션은 그대로 유지했다. 관련 Vitest `19 passed`, production build, 랜딩 Playwright `1 passed`를 확인했다.
+
+### 프로젝트 선택 전 원본 회로도 미리보기
+
+- 초기 랜딩에서 접혀 있던 우측 정보 패널을 기본으로 펼치고, `/api/demo-circuits`가 제공하는 검증된 데모 회로도를 프로젝트 생성 전에도 선택·확대·이동해 볼 수 있게 했다. 프로젝트를 선택하면 기존처럼 해당 demo id의 회로 요약으로 전환되며, 업로드 프로젝트에 원본 이미지를 추정하지 않는 경계는 유지했다.
+- RED는 초기 화면에 이미지가 없고 `console-collapsed`인 것을 확인했다. 구현 후 `WorkbenchPage.test.tsx` `20 passed`, 전체 Vitest `19 files / 158 tests passed`, production build 성공. 실제 dummy 브라우저에서 선택지 15종과 `breadboard_supply` 초기 이미지, `zr7_taillight` 전환 이미지의 정상 로드를 확인했다.
+
+### 연결 개념도 자동 배치
+
+- 고정 원형 좌표와 직선 연결을 제거하고, 부품과 net junction을 분리한 그래프를 `elkjs` Web Worker에서 layered/orthogonal 방식으로 배치한다. 한 페이지는 네트 6개, 네트당 이웃 5개로 제한하며 초과 연결은 `+N`, 나머지 네트는 페이지로 탐색한다. 회로 연결 데이터는 브라우저 밖으로 전송하지 않는다.
+- 배치 그래프·페이지·초과 묶음·입력 순서 독립성을 먼저 실패 시험으로 고정했다. 이후 SVG는 방향 화살표 없이 직교 `path`를 그리고, 실제 브라우저 시험에서 Worker 결과 전환, net junction 존재, 직선 `line` 부재, 표시 노드 간 겹침 0건을 확인했다.
+- 검증: frontend Vitest `20 files / 161 passed`, production build 성공, 신규 회로 배치 Playwright `1 passed`. 전체 Playwright는 `10 passed, 1 failed`이며 실패는 초기 정보 패널이 이미 펼쳐진 현재 UI에서 기존 시험이 `정보 패널 펼치기` 버튼을 기다리는 계약 불일치다. 연결 개념도 시험과 나머지 흐름은 통과했다.
+
+## 2026-11-10 데모 회로 15종 실서비스 catalog 확장
+
+- 바꾼 파일: `data/circuits/catalog.json`, `visuals.json`, 신규 회로도 PNG 9개, `backend/projects/catalog.py`, 프로젝트 repository·visual 검증·API, `db/026_projects_catalog_demo.sql`, Vite dummy catalog, Dockerfile, 관련 계약 테스트와 폴더 문서.
+- 실제 작업: 저장소에 수집된 공개 회로 15종을 단일 catalog로 묶고, 기존 Python·Vite·Docker의 6개 하드코딩을 제거했다. 누락 9종은 각 공식 저장소의 고정 commit에서 PNG·PDF·KiCad 원본을 받아 원본을 추정하거나 재배선하지 않고 배포 PNG를 만들었다. c02 하드웨어 라이선스는 원 저장소 근거에 따라 CC BY-SA 4.0으로 기록했다.
+- API: 기존 전체 목록 응답을 유지하면서 ID·이름 검색, offset/limit, 5분 public cache header를 추가했다. 원본/배포 hash와 로컬 경로는 공개 응답에 포함하지 않는다.
+- TDD: 6종만 반환하는 기존 구현과 6종 visual catalog에서 계약 테스트가 실패하는 것을 먼저 확인했다. 이후 catalog 기반 구현과 15종 자산을 추가했다.
+- 검증: backend 전체 pytest `1304 passed, 112 skipped`, frontend Vitest `19 files / 157 passed`, production build, catalog 대상 Playwright `1 passed`(15종 원본 이미지 natural width), repo layout `5 passed`, `uv lock --check`, Docker image build와 실행 smoke(`/health` 200, 신규 9개 PNG 9/9 HTTP 200)를 통과했다. 전체 Playwright는 catalog 흐름을 포함해 `9 passed`였으나, 동시에 추가된 별도 스크롤바 hover E2E 1건이 투명 상태로 남아 `1 failed`이며 이 catalog 작업 범위에서는 수정하지 않았다.
