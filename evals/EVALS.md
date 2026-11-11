@@ -28,6 +28,7 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 - `results/` — 평가 원시 결과. 아래 "결과 폴더"에서 설명하며 폴더 설명 파일은 두지 않음. 평가가 아닌 측정은 `scripts/results/`
 
 ## 실행기 동작 메모
+- `run_gate.py` — `run_graph`와 실행 조건을 공유하고 `run_scores` 점수·문항 통과(`pass`)·공급자 LLM 비용(`cost_usd`)을 각 trace에 붙인다. 호출 수는 단계 기록기에서 세고 미보고 비용은 점수로 만들지 않는다. 전송 상태 `score_delivery`는 원격 수신 확인과 구분한다. 서비스·평가 generation에는 공급자 보고 비용도 전달한다(가격표 추정 비용과 구분).
 - `run_retrieval.py` — 검색 방식(`hybrid` 기본·`dense`·`bm25`)은 summary의 `method`에 적음. 회로 근거만 있는 문항과 후보 찾기 문항(`question_type` `candidate_find`, 열린 정답)은 세지 않음. 문항에 `question` 키가 있으면 그것으로, 없으면 `input` 전체로 검색함. `dataset_v1.jsonl`에는 `question`이 없어 v1 기준선은 회로명·넷리스트 경로·조건이 붙은 `input` 전체로 검색하고, 11-01 실험(preregister #4~#8, `drafts/sets/draft_50.jsonl`)은 `question`만으로 검색했으므로 두 점수는 바로 비교할 수 없음. 질의 필드를 바꾸려면 먼저 [preregister.md](guides/preregister.md)에 등록
 - `run_graph.py` — 한 번 실행한 문항은 session 하나로 묶고 환경 이름은 `eval`. 문항별 결과 파일(`results/graph/`)에는 지표와 id만 남기고 답변 문장·청크 원문은 넣지 않음. 비용은 Langfuse 프로젝트에 등록한 OpenRouter 가격표(노드별 모델, ADR 0014)로 계산됨
 - `score_answer.py` — 평가셋 문항(`kind`, `expected`, `gold_chunks`, `question_type`)과 그래프 실행 상태(`state` 또는 `run_skill_pair.py` 출력)를 대조해 답변·거절 5지표를 결정적으로 채점함([작업서](../docs/experiments/answer-refusal-scorer.md)). `n01, n02`처럼 `relevant + NOT_VERIFIED`가 정답인 문항에서 정답 근거 청크를 인용해 조건 부족을 설명한 답은 과잉 거절로 세지 않음

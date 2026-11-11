@@ -225,7 +225,7 @@ SojaFit (proj3-b)
 │   │   ├── SERVICES.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── llm.py          <- LLM·임베딩 호출의 유일한 입구: 평가 예산, 재시도 상한(데모 응답 기록 · 재생은 demo.py)
-│   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
+│   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 공급자 보고 비용을 보존하는 공통 노드 추적
 │   │   ├── service_trace.py  <- 서비스 분석의 모델 호출별 Langfuse 추적(본문 제거 훅, 메타만 전송)
 │   │   ├── demo.py           <- 키 없는 데모의 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 재생 모드 판단, 기록한 데모 질문 목록 · 대조, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
@@ -387,7 +387,7 @@ SojaFit (proj3-b)
 │   │   ├── run_retrieval_service.py  <- 서비스 경로 재측정(실제 retrieve()로 R1 84·v2 19문항 지표, R1 1위 칸과 상위 5개 대조, 시간·비용; 사전 등록 #26)
 │   │   ├── run_retrieval_v3.py  <- v3 평가셋 검색 지표를 에이전트 검색 길(입력 읽기 → 재작성 → 품번 필터 검색) 그대로 잼(문서 · 쪽 Recall@5 · MRR)
 │   │   ├── run_graph.py    <- 평가셋 문항을 그래프(`--multi`면 멀티 에이전트)로 끝까지 돌려 Langfuse에 트레이스·실행 점수를 남김
-│   │   ├── run_gate.py     <- 감시 실행기: 평가셋을 멀티 에이전트로 여러 세트 연달아 돌리며 처음 실패한 문항이나 p95 초과에서 멈춤(v3 반복 측정) 문항 행에 단계 시간 · 모델 호출별 토큰 · 비용도 남김
+│   │   ├── run_gate.py     <- 감시 실행기: 여러 세트 순차 실행·실패/p95 중단, 단계 시간·호출별 토큰·비용, Langfuse 문항 점수·실행 조건 연결
 │   │   ├── stage_timing.py <- 단계 시간 기록기: 서비스와 같은 노드 단위 시간(AnalysisTimings) + LLM 호출별 {노드, 모델, 초, 토큰, 공급자 보고 비용} + Voyage 임베딩 · 리랭크 시간(D8)
 │   │   ├── gate_report.py  <- run_gate 결과 세트를 기준표(정답률 · 오탐 · 검색 Recall@5 · MRR · 응답 시간)로 집계
 │   │   ├── run_judge_dev.py  <- 판정 연습 문제를 멀티 그래프로 돌려 역할 정답률·판정 일치율을 results/judge/에 저장
@@ -573,13 +573,13 @@ SojaFit (proj3-b)
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
 │   │   ├── test_mouser.py  <- Mouser 클라이언트(가짜 transport): 요청 모양, 화면 칸만, 한 번만, 품번 조건 · 키 없음 · 상한, 로그에 키 · 주소 없음
 │   │   ├── test_langfuse_prompts.py  <- Langfuse 프롬프트 컴파일·버전·전달 경계
-│   │   └── test_service_trace.py  <- 서비스 분석 추적: 본문 미전송, 토큰·모델 유지, 같은 trace_id
+│   │   └── test_service_trace.py  <- 서비스 분석 추적: 본문 미전송, 토큰·모델·공급자 비용 유지, 같은 trace_id
 │   ├── evals/              <- 평가셋 동결과 평가 실행기
 │   │   ├── EVALS.md        <- 폴더 설명
 │   │   ├── test_frozen_evals.py  <- 동결 해시 보호, v2 앞 50건 = v1, 평가 문항 id 선택
 │   │   ├── test_retrieval_service.py  <- 서비스 경로 재측정 실행기의 지표·상위 5개 대조·백분위·오류 건너뛰기(가짜 retrieve)
 │   │   ├── test_retrieval_d3.py  <- D3 검색 측정의 gold 쪽 풀기·페이지 단위 지표·실패 유형·부호 검정·임계값(데이터 없이)
-│   │   ├── test_stage_timing.py  <- 단계 시간 기록기(노드 이름 · 토큰 · 보고 비용 · Voyage 종류별 · 옛 건너뜀 행 없음)와 단계 집계(p50 · p95 정의 · 행 대체)를 가짜로
+│   │   ├── test_stage_timing.py  <- 단계 기록·집계, 반복 평가의 trace별 점수·호출 수·실행 조건·전송 장애 시 결과 보존을 가짜로
 │   │   ├── test_approval_wait_report.py  <- 승인 대기 보고: 합성 이벤트로 재개 · 승인 대기와 서버 시간 분리 · 자동 호출 제외 · id 미출력, 일회용 DB로 읽기 전용 연결
 │   │   ├── test_run_graph.py  <- 그래프 평가 실행의 실행 점수 추출·멀티 실행 점수·노드별 모델 기록·그래프 조립·인터럽트 재개(가짜)
 │   │   ├── test_run_judge_dev.py  <- 판정 연습 문제 채점(역할·판정 일치, 찾기는 보여 준 후보 집합)

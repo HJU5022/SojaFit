@@ -1,5 +1,8 @@
 # jeongun 작업 기록
 
+## 2026-11-11 D8 평가 전 Langfuse 트레이싱 대조·점수 연결
+- [실측] `01b0d5b`의 `run_gate` 점수 전송 누락·모델 호출 수 0을 재현해 `run_scores` + `pass`/`cost_usd`를 같은 trace에 연결하고 `run_graph` 실행 조건을 공유했다. SDK 5.0.4의 공급자 비용 미전달도 서비스·평가 공통 콜백으로 보완했다(본문 제거 유지, 미보고 비용은 미확인). `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q -p no:cacheprovider tests/services tests/evals tests/repo` 493 passed · 2 skipped. `EVAL_REPORT.md` 7장에 항목별 대조·환경/태그 필터·확인 한계를 기록. 읽기 전용 배포 조회는 `sojafit-api-19bd964-rs` 100%, Langfuse 브라우저는 로그인 필요. 인증 명령은 비밀 파일 훅에 차단되어 프로젝트·점수 원격 수신 미확인, [결정] 정운의 평가 2세트 보류 선택을 따름. 실제 모델 0회/$0, 배포·운영 DB 변경·푸시 없음. 다음: 새 개발 계정 로그인 뒤 실제 수신/프로젝트를 확인하고 평가 재개 여부를 결정.
+
 ## 2026-11-11 서비스 DB 재설계 구현 · 새 Supabase 프로젝트로 전환 · 배포
 - 구현(범위 A, 서비스 표만): 승인 스냅샷을 `approvals` 한 곳으로 단일화, 분석 회로 사본과 죽은 표 삭제, FK와 체크포인트 삭제 트리거, DB CHECK 단순화, 구글 승인 대기 삭제, 데모 계정은 첫 로그인 때 생성(007 삭제), 만료 세션 청소. 서비스 표 23 → 21개, DB 전체 35 → 33개(코퍼스 4 · LangGraph 8 불변). 기준선 `db/020_service_baseline.sql`, 옛 증분 SQL은 `db/legacy`, 운영 이전 · 되돌리기 · precheck는 `db/migrations`. 표 정의서 · ERD는 `scripts/db/gen_schema_docs.py`가 DB에서 만든다(`db/schema/*.md`).
 - 시험: 통합 결과 PG16(pgvector) 1346 passed · 29 skipped · 1 failed, PG17 1343 · 32 · 1(실패 1건은 기존에 알려진 `test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases`). 독립 검증 3회(P1 · P2 · 인증 · 스키마, 회귀, 이전 · 되돌리기)와 변이 확인.
