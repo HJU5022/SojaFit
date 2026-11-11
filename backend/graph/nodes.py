@@ -309,7 +309,8 @@ def citations(text: str) -> set[str]:
     """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
     # 모든 여는 괄호에서 검사해 중첩 번호도 읽고, 바깥의 과거 사례 인용도 놓치지 않는다.
     return {c.strip() for br in CITE.findall(text) for c in br.split(",")
-            if c.strip().isdigit() or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
+            if c.strip().isdigit() or re.fullmatch(r'W[1-9][0-9]*', c.strip())
+            or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:

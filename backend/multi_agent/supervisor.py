@@ -20,6 +20,7 @@ from pathlib import Path
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from backend.graph.memory import memory_context, memory_sources
+from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
@@ -53,14 +54,15 @@ def render_facts(facts: Facts) -> list[str]:
     return lines
 
 
-def render_plan(state: dict, judge_enabled: bool) -> str:
+def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
     """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
     # Footprint annotations are untrusted metadata, not planning or role instructions.
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
     lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
-             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents)]
+             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),
+             f'External web fallback: {"enabled" if web_enabled else "disabled"}']
     if state.get('reports'):
         # [왜] 재계획: 앞 회차의 지시서와 보고 요약만 준다(청크 원문 · 판정 표는 주지 않는다, 컨텍스트 분리)
         tasks = {t['id']: t for t in (state.get('plan') or {}).get('tasks', [])}
@@ -73,14 +75,14 @@ def render_plan(state: dict, judge_enabled: bool) -> str:
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
-def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
+def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bool = False) -> dict:
     """그래프 노드 `Supervisor`(계획): 계획서를 받는다(재계획이면 앞 회차 보고도 읽는다). 형식이 끝내 틀리면 거절로 끝낸다."""
     replan = bool(state.get('reports'))
     old = state.get('counters') or {}
     c = {'hops': old.get('hops', 0) + 1, 'agents': old.get('agents', 0), 'searches': old.get('searches', 0),
          'replans': old.get('replans', 0) + (1 if replan else 0)}
     try:
-        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled), Plan)
+        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled, web_enabled), Plan)
     except ValueError:
         # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(MULTI_AGENT.md "구조 결정")
         if replan:  # 재계획만 틀렸으면 이미 받은 보고로 답한다
@@ -146,6 +148,8 @@ def collect_node(state: dict) -> dict:
     out = {'counters': c, 'path': ['모으기']}
     if len(reports) > MAX_AGENT_RUNS:
         return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.LIMIT_REACHED.value}
+    if not bind_run_citations(reports):
+        return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.VERIFY_FAILED.value}
     current = [r for r in reports if r.round == rnd]
     if plan.get('next') == 'answer':
         final = [r for r in current if r.status != 'fail'] or current  # 재계획이 '있는 답으로'라 했다: 이번 회차의 쓸 만한 보고
@@ -173,7 +177,8 @@ def collect_node(state: dict) -> dict:
     # 문서 답은 일부 실패해도 검증된 다른 보고를 그대로 보존한다. 종합이 이미 찾은 정격을 누락했던 T1 재발을 막는다.
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
-    joinable = len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
+    uses_pdf = any(cid.startswith('W') for r in good for cid in r.evidence_ids)
+    joinable = uses_pdf or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -297,6 +302,10 @@ def check_node(state: dict) -> dict:
     check = {'used': sorted(cited & valid), 'fake_citations': sorted(cited - valid),
              'uncited_sentences': sum(1 for s in sentences if not citations(s)), 'judgement': bool(state.get('judgement'))}
     problem = bool(check['fake_citations'] or invalid_memories) or (not judge_only and not check['used'])
+    expected_pdf = {cid for r in reports if r.status != 'fail' for cid in r.evidence_ids if cid.startswith('W')}
+    if expected_pdf or any(cid.startswith('W') for cid in cited):
+        if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:
+            problem = True
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}
