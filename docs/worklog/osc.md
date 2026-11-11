@@ -606,3 +606,19 @@
 - 브라우저 회귀 수정: 병합 직후 전체 Playwright에서 초기 정보 패널을 접힌 상태로 가정한 시험과, 모바일 가로 오버레이 스크롤바의 투명 track이 프로젝트 버튼 클릭을 가로막는 문제가 드러났다. 초기 패널의 현재 계약을 시험에 반영하고 track은 클릭을 통과시키되 thumb만 드래그 입력을 받도록 수정했다(`a4403b1`). 실패 시험을 재현한 뒤 집중 Playwright `1 passed`, 전체 Playwright `11 passed`를 확인했다.
 - 최종 검증: `uv run --no-sync pytest -q`는 `1445 passed, 112 skipped`, `npm run test:run`은 `20 files / 163 tests passed`, `npm run build`는 TypeScript·Vite production build 성공, `npm run e2e -- --reporter=line`은 `11 passed`, `uv lock --check`, `git diff origin/main...HEAD --check`와 repo layout `5 passed`를 확인했다. PR diff 593 KB를 Gitleaks stdin으로 검사해 `no leaks found`를 확인했다. worktree 전체 `dir` 검사는 Git 비추적 `.env`와 `.venv`까지 읽어 유효하지 않았으며 값은 출력하지 않았다.
 - 확인하지 않은 것: 실제 외부 모델·MCP·Mouser·공유 PostgreSQL·배포 환경 round-trip, 데이터시트 외부 URL의 장기 가용성은 이번 로컬 PR 검증 범위가 아니다. GitHub Actions의 전체 이력 Gitleaks와 CI는 push 후 확인한다.
+
+## 2026-11-11 제조사 데이터시트의 페이지·표 행 인용
+
+- 내부 문서가 부족할 때 제조사 공식 PDF에서 대상 품번의 값과 단위를 찾아 문서 에이전트에 전달한다. 체크포인트에는 인용 위치만 남긴다.
+- 실호출 검증 조건: 공개 질문 "Vishay SS34의 최대 반복 역전압은?"을 내부 검색 0건으로 입력한다. Exa 최대 1회, OpenRouter 문서 답변 최대 1회, 결과 형식 또는 공급자 실패 시 추가 유료 호출 없이 종료한다. 기준은 Vishay 문서 88751 1쪽의 SS34 열 40 V와 최종 인용 위치가 일치하는지다.
+- 실호출: 문서 에이전트에 내부 결과 0건을 주어 Vishay SS34를 조회했다. Exa 1회, 제조사 PDF GET 1회, OpenRouter 문서 모델 1회. 답은 40 V [W1], 출처는 ss32.pdf 1쪽 Maximum repetitive peak reverse voltage 행이었다.
+- 최종 검증: 기능·DTO·그래프·저장소 구조 94 passed. 전체 pytest 1482 passed, 112 skipped, 1 failed. 유일한 실패 tests/evals/test_input_surfaces.py의 P3는 변경 전 main(14cf261)에서도 재현됐다. uv lock --check와 git diff --check 통과. 실호출은 내부 검색 0건을 주입한 문서 에이전트에서 실시했으며 로그인부터 운영 DB까지의 실사용은 검증 범위 밖이다.
+- Windows의 core.autocrlf=true가 동결 JSONL의 바이트 해시를 바꾸므로, 전체 검사 때 해당 파일이 Git 원본 LF 및 동결 해시와 일치하는지 확인했다. 검증 뒤 로컬 기본 줄바꿈으로 복구했으며 평가셋 변경은 없다.
+
+### SS34 로그인 경로의 외부 근거 재채점
+
+- 이전 로그인 실행은 외부 검색에서 Vishay 원문을 찾고도 `all_rejected`로 끝났다. 재채점 입력에 이미 탈락한 내부 카드가 다시 들어가고, 제조사 URL이 누락되는 문제를 재현했다. 외부 재채점이 실패하면 이전 내부 채점의 누락 사유가 반환되는 문제도 확인했다.
+- 실호출 조건: 같은 공개 SS34 질문 1건, 격리 PostgreSQL과 42문서 스냅샷, 일반 계정 로그인, 데모 재생 끔. Exa 한 번과 서비스의 기존 모델·시간·비용 상한을 적용한다. 성공 기준은 실시간 completed, 저장 재조회 일치, 인용된 페이지의 같은 표 행에서 SS34 열 40 V 확인이다. 추가 유료 평가 없이 종료한다.
+- 수정: `backend/multi_agent/agents/docs.py`에서 탈락한 내부 카드를 제외하고, 부분 답에서 인용한 카드만 외부 표 행과 함께 재채점한다. 모델에 공식 PDF URL·페이지·표·행을 표시하며, 재채점도 실패하면 해당 누락 사유를 보고한다. `backend/prompts/docs_answer.md`에 제조사 출처와 같은 계열 안의 품번 열을 구분하는 기준을 명시했다.
+- 실제 결과: 로그인·세션 확인 200, 내부 SS34 검색 0건, Voyage 200, Exa 1회 200, Vishay PDF 다운로드 200. 문서 모델이 내부 근거에 none, 외부 표 행에 enough를 반환했다. 최종 SSE completed와 GET /api/runs 재조회에 같은 40 V [W1] 답변과 근거가 남았다. `ss32.pdf` 1쪽 MAXIMUM RATINGS 표의 Maximum repetitive peak reverse voltage 행에서 SS33=30, SS34=40, 단위 V를 원문과 대조했다.
+- 회귀 검사: 수정 전 재채점 입력과 실패 보고 관련 3건 실패를 확인했다. 수정 후 문서 에이전트·PDF 추출 79건, 대화 DTO·API·Supervisor 105건 통과. 격리된 로컬 백엔드에서 실제 공급자를 사용했으며 브라우저 렌더링·운영 배포·전체 동결 평가셋 재측정은 이번 검증 범위 밖이다.

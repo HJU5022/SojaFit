@@ -22,7 +22,7 @@ from starlette.concurrency import run_in_threadpool
 
 from backend import auth
 from backend.errors import code_for, log_error
-from backend.conversations.dto import BrowserResult, public_state, result_dto
+from backend.conversations.dto import BrowserResult, public_state, result_dto, stored_evidence
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
 from backend.judge import conditions as judge_conditions
 from backend.services import demo
@@ -212,7 +212,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
         try:
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
-            saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
+            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:

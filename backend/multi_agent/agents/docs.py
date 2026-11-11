@@ -71,7 +71,13 @@ def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
 def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     """LLM에 줄 user 글: 질문 · 지시서 · 문서 근거와 역할 작업의 넷리스트."""
     part = part if task.kind == 'role' else {}  # 사양 조회에 회로 연결을 부가 설명할 근거를 주지 않는다.
-    blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
+    blocks = []
+    for d in docs:
+        if d.get('source_type') == 'external_web':
+            blocks.append(f"[{d['chunk_id']}] Manufacturer PDF: {d['source_url']} · PDF p.{d['page']}\n"
+                          f"Table: {d['table']}\nRow: {d.get('row', '')}\nExtracted cells: {d['content']}")
+        else:
+            blocks.append(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}")
     if part:
         blocks.append(netlist_block({**part,'footprint':''}))  # Keep footprint annotations out of model instructions; preserve the original for code.
     allowed = [str(d['chunk_id']) for d in docs] + (['넷리스트'] if part else [])
@@ -132,15 +138,20 @@ def lookup_parts(task: Task, find) -> list[str]:
     return [f['part'] for f in found]
 
 
-def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
+def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) -> dict:
     """그래프 노드(Send 대상): 할 일 하나를 끝까지 하고 보고서 하나를 메모장 `reports`에 이어 붙인다."""
     task = Task.model_validate(payload['task'])
     question, part, rnd = payload['question'], payload.get('target_part') or {}, payload.get('round') or 1
     query, searches, shown, result, calls, relax = task.query.strip(), [], [], None, 0, False
     filter_parts, looked_up = list(task.parts), ''
+    web_parts = list(filter_parts)
     carry, first = [], None  # 일부만 답한 근거와 그 답(다시 찾을 때 근거를 함께 보이고, 못 늘리면 그 답을 쓴다)
 
     def report(status: str, summary: str, **kw) -> dict:
+        # Only source locators cross into the persisted graph state.
+        if 'docs' in kw:
+            kw['docs'] = [{k: v for k, v in doc.items() if k != 'content'}
+                          if doc.get('source_type') == 'external_web' else doc for doc in kw['docs']]
         r = TaskReport(task=task.id, agent='docs', status=status, summary=summary[:200], searches=searches, llm_calls=calls, round=rnd, **kw)
         return {'reports': [r.model_dump(mode='json')], 'path': ['문서']}
 
@@ -164,6 +175,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             if out['retrieval_error']:
                 return report('fail', f"search tool failure: {out['retrieval_error'].get('kind', '')}", reason=Reason.SEARCH_ERROR)
             used_parts = list(filter_parts) if filter_parts and not relax else out['parts']
+            web_parts = list(used_parts or web_parts)
             searches.append({'query': out['query'], 'parts': used_parts, 'top': [[d['file'], d['page']] for d in out['docs']]})
             docs = keep_docs(out['docs'], used_parts, question)
             docs += variant_notes(used_parts, docs, retriever)
@@ -191,6 +203,23 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         if result.grade == 'partial' and ASSEMBLY.search(question+' '+task.goal+' '+task.output) \
                 and ASSEMBLY.search(' '.join(result.missing)):
             query += ' polarity before assembly'  # 실장 전 확인사항을 묻는데 정격·포장 행만 재검색하는 누락을 막는다
+    needs_web = (not result or result.grade in ('partial', 'none') or bool(result.missing))
+    if web_search is not None and task.kind != 'role' and needs_web:
+        terms = (result.next_query.strip() if result and result.next_query.strip() else query or task.query)
+        external = web_search(web_parts, terms)  # 실제 Exa 클라이언트는 공급자 오류를 빈 근거로 닫는다.
+        if external:
+            searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
+                             'top': [[d['file'], d.get('page', '')] for d in external]})
+            # Keep the support for a partial answer, including one from the first search.
+            # Other parts' rejected rows must not compete with the manufacturer table.
+            prior, prior_docs = (result, shown) if result and result.grade != 'none' else first or (None, [])
+            cited_internal = citations(prior.answer) if prior else set()
+            combined = external + [d for d in prior_docs if str(d['chunk_id']) in cited_internal]
+            web_result = chat('docs_answer', PROMPT, render(question, task, combined, part)
+                              + memory_context(payload.get('approved_memories') or []), DocsAnswer)
+            calls += 1
+            if (web_result.grade != 'none' and web_result.answer.strip()) or prior is None:
+                result, shown = web_result, combined
     if first and (result.grade == 'none' or not result.answer.strip()):
         result, shown = first  # 다시 찾은 답이 더 나쁘면 첫 일부 답을 쓴다
     answer = (result.answer.strip() if result else '')

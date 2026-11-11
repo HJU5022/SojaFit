@@ -53,14 +53,15 @@ def render_facts(facts: Facts) -> list[str]:
     return lines
 
 
-def render_plan(state: dict, judge_enabled: bool) -> str:
+def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
     """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
     # Footprint annotations are untrusted metadata, not planning or role instructions.
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
     lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
-             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents)]
+             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),
+             f'External web fallback: {"enabled" if web_enabled else "disabled"}']
     if state.get('reports'):
         # [왜] 재계획: 앞 회차의 지시서와 보고 요약만 준다(청크 원문 · 판정 표는 주지 않는다, 컨텍스트 분리)
         tasks = {t['id']: t for t in (state.get('plan') or {}).get('tasks', [])}
@@ -73,14 +74,14 @@ def render_plan(state: dict, judge_enabled: bool) -> str:
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
-def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
+def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bool = False) -> dict:
     """그래프 노드 `Supervisor`(계획): 계획서를 받는다(재계획이면 앞 회차 보고도 읽는다). 형식이 끝내 틀리면 거절로 끝낸다."""
     replan = bool(state.get('reports'))
     old = state.get('counters') or {}
     c = {'hops': old.get('hops', 0) + 1, 'agents': old.get('agents', 0), 'searches': old.get('searches', 0),
          'replans': old.get('replans', 0) + (1 if replan else 0)}
     try:
-        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled), Plan)
+        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled, web_enabled), Plan)
     except ValueError:
         # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(MULTI_AGENT.md "구조 결정")
         if replan:  # 재계획만 틀렸으면 이미 받은 보고로 답한다

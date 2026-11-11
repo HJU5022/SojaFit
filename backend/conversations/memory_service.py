@@ -296,7 +296,7 @@ class Conversations:
         from backend.rag.card_find import default_find
         from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
-        from backend.services import demo, llm
+        from backend.services import demo, exa, llm
         from backend.services.langfuse_prompts import timed_tool
         # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
         #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
@@ -307,7 +307,9 @@ class Conversations:
         specs, find = default_specs(chat=chat), default_find(chat=chat)
         # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. 대체 부품 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
         # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
-        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
+        web_enabled = self.mode != 'demo' and exa.enabled()
+        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), web_enabled=web_enabled,
+            web_search=exa.search_evidence if web_enabled else None, judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
@@ -537,7 +539,8 @@ class Conversations:
         started = time.monotonic()
         try:
             user = conn.execute('SELECT user_id FROM threads WHERE id=%s', (thread,)).fetchone()['user_id']
-            with evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
+            from backend.services.exa import request_scope
+            with request_scope(), evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
                 self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings]})
                 budget.remaining()
