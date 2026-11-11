@@ -2,6 +2,7 @@
 import re
 from pydantic import BaseModel, ValidationError
 from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition
+from backend.rag.source_metadata import source_metadata
 
 
 class BrowserResult(BaseModel):
@@ -18,14 +19,32 @@ class BrowserResult(BaseModel):
     profile_hints: list = []  # 참고(내 설정): 이번 질문으로 찾은 사용자 사실. 판정 근거가 아니며 저장하지 않는다
 
 
+def _document_basename(document: str) -> str:
+    # URL을 basename으로 줄이면 호출자 URL이라는 정보가 사라져 공식 출처로 오인한다.
+    if any(ord(char) < 32 or ord(char) == 127 for char in document):
+        return ''
+    normalized = document.lstrip().replace('\\', '/')
+    if '://' in normalized or normalized.startswith('//') or (re.match(r'^[A-Za-z][A-Za-z0-9+.-]*:', normalized)
+            and not re.match(r'^[A-Za-z]:[\\/]', document)):
+        return ''
+    return document.replace('\\', '/').rsplit('/', 1)[-1]
+
+
 def _pick(value, keys):
     result = {key: value[key] for key in keys if key in value} if isinstance(value, dict) else {}
     if 'document' in result and isinstance(result['document'], str):
-        result['document'] = result['document'].replace('\\', '/').rsplit('/', 1)[-1]
+        result['document'] = _document_basename(result['document'])
     for key in ('document', 'table', 'row', 'section'):
         if key in result and not isinstance(result[key], str):
             result[key] = ''
     return result
+
+
+def _safe_citation(value) -> dict:
+    clean = _pick(value, ('document', 'page', 'table', 'row', 'chunk_index', 'chunk_id'))
+    metadata = source_metadata(clean.get('document', ''))
+    clean.update(metadata or {'source_url': '', 'outline_page': None})
+    return clean
 
 
 def _safe_judgement(value):
@@ -79,7 +98,7 @@ def public_state(state: dict) -> dict:
         document, page, table = doc.get('file'), doc.get('page'), doc.get('table')
         if not isinstance(document, str) or not isinstance(page, (int, str)) or not isinstance(table, (str, type(None))):
             continue
-        entry = {'document': document.replace('\\', '/').rsplit('/', 1)[-1], 'page': page,
+        entry = {'document': _document_basename(document), 'page': page,
                  'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
         if entry not in evidence:
             evidence.append(entry)
@@ -107,6 +126,14 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
     question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'}
     question_type = state.get('question_type')
     judgement = safe_judgement(state.get('judgement')) or {}
+    # 공식 출처는 브라우저 응답에만 붙인다. runs.safe_result의 고정 저장 형식에는 넣지 않는다.
+    for group in ('results', 'shown', 'unverified'):
+        for candidate in judgement.get(group, []):
+            if candidate.get('package_citation'):
+                candidate['package_citation'] = _safe_citation(candidate['package_citation'])
+            for check in candidate.get('checks', []):
+                if check.get('citation'):
+                    check['citation'] = _safe_citation(check['citation'])
     # shortcut: 표시 조건은 현재 응답에만 포함한다. 기록 복원이 필요할 때 저장 계약을 확장한다.
     if judgement:
         judgement['input_conditions'] = []
@@ -121,6 +148,7 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
         try:
             clean = _pick(item, ('document', 'page', 'table', 'row', 'section', 'citation_number'))
             entry = SafeEvidence.model_validate(clean).model_dump(mode='json')
+            entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
             if entry not in evidence:
                 evidence.append(entry)
         except (ValidationError, TypeError):
@@ -133,6 +161,7 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                     entry = SafeEvidence(document=citation.get('document', ''), page=citation.get('page'),
                                          table=citation.get('table', ''), row=citation.get('row', ''),
                                          citation_number=str(citation.get('chunk_id') or citation.get('chunk_index') or '')).model_dump(mode='json')
+                    entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
                     if entry not in evidence:
                         evidence.append(entry)
     return BrowserResult(answer=answer if isinstance(answer, str) else '', status=status, stage=stage,

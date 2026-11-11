@@ -50,7 +50,7 @@ describe('CircuitContextDiagram', () => {
     render(<CircuitContextDiagram context={context} analysisStatus="requires_input" />)
     fireEvent.click(screen.getByRole('button', { name: 'U1 노드' }))
     expect(screen.getByText('선택 노드 U1')).toBeInTheDocument()
-    expect(screen.getByText('LM317')).toBeInTheDocument()
+    expect(screen.getByText('LM317', { selector: 'dd' })).toBeInTheDocument()
     expect(screen.getByText('import_input:TO220-ADJ')).toBeInTheDocument()
     expect(screen.getByText('판정 결과에서 확인된 사용 조건이 없습니다.')).toBeInTheDocument()
     expect(screen.getByText('사용 조건 부족')).toBeInTheDocument()

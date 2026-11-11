@@ -1,7 +1,7 @@
 # data
 
 ## 역할
-- 이 폴더: 서비스·평가가 읽는 고정 데이터를 둡니다. 코퍼스 문서 목록(`manifest.jsonl`), 코퍼스 원본 표본, 평가·시연용 공개 회로, 키 없는 데모의 데모 코퍼스 스냅샷과 LLM 응답 기록 자리(`demo/`)가 있습니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
+- 이 폴더: 서비스·평가가 읽는 고정 데이터를 둡니다. 코퍼스 문서 목록(`manifest.jsonl`), 패키지 외형 페이지 색인, 코퍼스 원본 표본, 평가·시연용 공개 회로, 키 없는 데모의 데모 코퍼스 스냅샷과 LLM 응답 기록 자리(`demo/`)가 있습니다. Dockerfile이 이 폴더를 이미지에 복사합니다.
 - 넣는 것: `manifest.jsonl`(문서 단위 목록), 데이터시트 원본 표본(`corpus/tsc/` 3건), 공개 KiCad 회로(`circuits/`), 키 없는 데모 자료(`demo/`: compose가 로컬 DB에 넣는 코퍼스 스냅샷 42문서 `demo/snapshot/`, 재생할 LLM 응답 기록 `demo/recordings/`).
 - 넣지 않는 것: 데이터시트 PDF 전체 1,360건·파싱 결과(`docling` 산출물)·전체 청크(`chunks.jsonl`, 데모 스냅샷 `demo/snapshot/` 42문서만 예외)·임베딩 캐시(저장소 밖 작업 자료), 데이터를 만드는 코드(`backend/rag/`), 평가셋(`evals/`), 단위 테스트용 가공 회로(`tests/` 아래), 실제 API 응답 원본.
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
@@ -10,6 +10,7 @@
 
 ## 파일
 - `manifest.jsonl` — 2026-11-01 v1 청킹 당시 체크인한 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256, 쪽 수, 청크 수). 현재 `backend/rag/pipeline/chunk.py`도 같은 형식의 새 manifest를 만들고 `backend/rag/pipeline/ingest.py`·`collect.py`가 읽지만, v4h 실행 결과는 저장소 밖 산출물이며 이 파일을 자동으로 갱신하지 않습니다. 원래 PDF 파일 이름은 `source_url` 끝에 있습니다
+- `package-outline-pages.json` — manifest 1,360문서의 공식 URL과 Docling 표제·그림이 같은 최초 패키지 외형 페이지를 URL-decoded PDF basename으로 찾는 오프라인 색인.
 - `corpus/` — 코퍼스 원본 문서 표본(TSC PDF 3건). [CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로와 라이선스. [CIRCUITS.md](circuits/CIRCUITS.md)
 - `demo/` — compose가 로컬 DB에 넣는 코퍼스 스냅샷(`snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음)과 키 없는 데모가 재생할 LLM 응답 기록(`recordings/`, 아직 없음). [DEMO.md](demo/DEMO.md)

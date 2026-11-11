@@ -10,6 +10,7 @@ import WorkbenchPage from './pages/WorkbenchPage'
 import LandingPage from './pages/LandingPage'
 import SettingsPage from './pages/SettingsPage'
 import AccountMenu from './components/AccountMenu'
+import useOverlayScrollbar from './hooks/useOverlayScrollbar'
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>
@@ -28,6 +29,7 @@ function Shell() {
   const settings = location.pathname === '/settings'
   const publicPage = location.pathname === '/' || location.pathname === '/login'
   const ContentRoot = workbench ? 'div' : 'main'
+  useOverlayScrollbar()
   async function signOut() {
     if (busy) return
     setBusy(true); setError(null)

@@ -3,10 +3,12 @@
 ## 역할
 - 이 폴더: 평가와 시연에 쓰는 공개 KiCad 회로와 그 라이선스를 둡니다.
 - 넣는 것: MIT·CC BY-SA 등 라이선스가 확인된 공개 회로의 넷리스트·연결 목록(`connections.json`)·원본의 LICENSE와 README, 회로마다 원 저장소·커밋·라이선스를 적은 표(아래).
-- 넣지 않는 것: 단위 테스트용 가공 회로(`tests/` 아래), 라이선스를 확인하지 못한 회로, 원본 회로도·PCB 파일(필요하면 아래 표의 저장소·커밋에서 받음).
+- 넣지 않는 것: 단위 테스트용 가공 회로(`tests/` 아래), 라이선스를 확인하지 못한 회로, PCB 파일. 검증한 회로도 PNG는 `frontend/public/circuit-schematics/`에 둡니다.
 - 담당: 평가·문서
 
 ## 파일
+- `catalog.json` — 데모 15종의 ID·표시 이름·정규화 연결 JSON 경로 정본.
+- `visuals.json` — 검증된 원본 회로도 15종의 배포 경로·원본 URL·저장소 맥락 commit·라이선스 근거·저작자·원본 및 배포 SHA-256 정본.
 - `collected/` — 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종과 v3(`evals/dataset_v3.jsonl`)가 더 쓰는 받은 회로 10종. 설명 파일은 두지 않고 이 문서가 설명합니다.
   - `received-20261030/c09/` — 받은 회로 1종(Franzininho DIY): `received/`(받은 넷리스트), `connections.json`, `original/`(LICENSE·README)
   - `received-20261030/{c01,c02,c03,c04,c05,c07,c08,c10,c11,c12}/` — v3가 쓰는 받은 회로 10종(11-10 동결 때 lab에서 옮김): 같은 모양(`received/` · `connections.json` · `original/`)
@@ -34,5 +36,13 @@
 
 - Breadboard Supply·MOSFET Driver·Pro Micro는 Eagle 원본을 KiCad로 변환해 넷리스트를 뽑았고, ATtiny85 dev는 KiCad 원본에서 내보냈고, Franzininho는 원 저장소의 넷리스트를 그대로 썼다.
 - 받은 회로 10종(c01 ~ c05 · c07 · c08 · c10 ~ c12)은 lab `data/circuits`에 있던 받은 넷리스트 · `connections.json` · 원본 LICENSE · README를 그대로 옮겼다(11-10, v3 동결).
-- 원본 회로도·PCB 파일은 넣지 않는다. 필요하면 위 저장소의 해당 커밋에서 받는다.
+- PCB 파일은 넣지 않는다. 필요하면 위 저장소의 해당 커밋에서 받는다.
 - CC BY-SA 회로에서 만든 넷리스트는 원본과 같은 라이선스를 따른다.
+
+## 배포 회로도
+
+`catalog.json`과 `visuals.json`은 수집된 공개 회로 15종을 모두 등록한다. 공식 PNG·PDF가 있으면 그대로 사용하고, KiCad 원본만 있는 회로는 고정 커밋의 원본을 KiCad 9.0.5로 PDF export한 뒤 첫 페이지를 PNG로 변환했다. 넷리스트 업로드에서 원본 회로도를 추정하지 않는다.
+
+`original_url`은 실제 받은 원본, `source_sha256`은 그 원본 바이트, `sha256`은 배포 PNG 바이트를 식별한다. PNG 원본 2종은 그대로 복사하고 PDF 원본 4종은 `pdftoppm -f 1 -singlefile -png -r 160`으로 첫 페이지만 변환했다. 자르기·주석·재배선은 없다. SHA-256 둘 다 API에 노출하지 않는다. 서버는 실행 중 외부 다운로드 없이 배포 PNG 경로와 해시를 검증한다.
+
+`license_evidence_url`은 자산별 고정 commit의 라이선스 근거다. CDN 원본의 `source_commit`은 관련 저장소 맥락이며 CDN 바이트가 그 commit에서 생성되었다는 증거는 아니다. 정확한 URL과 두 해시는 `visuals.json`에 기록했다.

@@ -374,3 +374,66 @@ it('shows profile hints as reference apart from evidence and nothing when empty'
   rerender(<ProfileHints hints={[]} />)
   expect(screen.queryByRole('complementary', { name: '참고(내 설정)' })).not.toBeInTheDocument()
 })
+
+const officialCitation = { document: 'SS34L SERIES_C2103.pdf', page: 1, table: 'MAXIMUM RATINGS', row: 'VRRM',
+  source_url: 'https://services.taiwansemi.com/storage/resources/datasheet/SS34L SERIES_C2103.pdf', outline_page: 4 }
+
+it('opens deduplicated official datasheet and outline pages with a conservative package boundary', () => {
+  render(<EvidencePanel evidence={[]} candidate={{ part: 'SS34L', verdict: 'ROLE_SUFFICIENT', board_change: true,
+    checks: [{ code: 'VRRM', citation: officialCitation }, { code: 'IF', citation: { ...officialCitation, row: 'IF' } }],
+    package_citation: { ...officialCitation, page: 4 },
+  }} />)
+  const documentLink = screen.getByRole('link', { name: 'SS34L 공식 데이터시트 열기' })
+  expect(documentLink).toHaveAttribute('href', `${officialCitation.source_url}#page=1`)
+  expect(documentLink).toHaveAttribute('target', '_blank')
+  expect(documentLink).toHaveAttribute('rel', 'noreferrer noopener')
+  expect(screen.getByRole('link', { name: '패키지 외형 4쪽 열기' })).toHaveAttribute('href', `${officialCitation.source_url}#page=4`)
+  expect(screen.getByText('기판 변경 가능성 있음')).toBeInTheDocument()
+  expect(screen.getByText('패키지가 달라질 수 있다는 뜻이며 납땜·재배선 방법을 뜻하지 않습니다.')).toBeInTheDocument()
+})
+
+it.each([undefined, 'javascript:alert(1)', 'file:///tmp/SS34.pdf', 'http://example.com/SS34.pdf'])(
+  'keeps citation coordinates without a fake link for unsafe or missing source %s', source_url => {
+    render(<EvidencePanel evidence={[]} candidate={{ part: 'SS34L', verdict: 'NOT_VERIFIED',
+      checks: [{ code: 'VRRM', citation: { ...officialCitation, source_url } }],
+    }} />)
+    expect(screen.getByText('SS34L SERIES_C2103.pdf')).toBeInTheDocument()
+    expect(screen.getByText('1쪽 · MAXIMUM RATINGS · VRRM')).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.getByText('패키지 변경 여부 확인 필요')).toBeInTheDocument()
+  },
+)
+
+it('keeps the official document link when an outline page is missing and never promises direct replacement', () => {
+  render(<EvidencePanel evidence={[]} candidate={{ part: 'SS34L', verdict: 'ROLE_SUFFICIENT', board_change: false,
+    checks: [{ code: 'VRRM', citation: { ...officialCitation, outline_page: null } }],
+  }} />)
+  expect(screen.getByRole('link', { name: 'SS34L 공식 데이터시트 열기' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /패키지 외형/ })).not.toBeInTheDocument()
+  expect(screen.getByText('동일 패키지 가능성')).toBeInTheDocument()
+  expect(screen.getByText('데이터시트 패키지 기준이며 직접 교체 보증이 아닙니다.')).toBeInTheDocument()
+})
+
+
+it('shows the requirement, calculation, candidate value, result, and citation together', () => {
+  render(<JudgementTable judgement={{ kind: 'judge', roles: ['R01'], role_evidence: [], shown: [], unverified: [], capped: false,
+    results: [{ part: 'SS34L', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', tier: 'required', op: '>=',
+      basis: '입력 최대 전압 12 V × 안전 여유 1.25', threshold: 15, value: 40, unit: 'V', condition: 'TA=25°C',
+      result: 'pass', why: '후보 정격이 요구 기준 이상입니다.', citation: officialCitation }] }] }} />)
+  fireEvent.click(screen.getByRole('button', { name: 'SS34L 상세' }))
+  const dialog = screen.getByRole('dialog', { name: '후보 상세' })
+  expect(within(dialog).getByRole('table', { name: 'SS34L 판정 조건표' })).toBeInTheDocument()
+  expect(within(dialog).getByText('입력 최대 전압 12 V × 안전 여유 1.25')).toBeInTheDocument()
+  expect(within(dialog).getByText('≥ 15 V')).toBeInTheDocument()
+  expect(within(dialog).getByText('40 V')).toBeInTheDocument()
+  expect(within(dialog).getByText('통과')).toBeInTheDocument()
+  expect(within(dialog).getByRole('link', { name: 'VRRM 근거 열기' })).toHaveAttribute('href', `${officialCitation.source_url}#page=1`)
+})
+
+
+it('preserves the structured answer line breaks from the backend', () => {
+  mockedRunState = { status: 'completed', runId: 'run-1', result: { answer: '판정\n| 조건 | 결과 |\n| VRRM | 통과 |', evidence: [], judgement: {} } }
+  renderConversation()
+  expect(screen.getByText(/판정\s+\| 조건 \| 결과 \|/)).toHaveClass('answer-text')
+  mockedRunState = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
+})

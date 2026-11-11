@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getProject, listProjects } from '../api/projects'
+import { getProject, listDemos, listProjects } from '../api/projects'
 import type { Project } from '../api/projects'
 import { deleteThread, listJudgeRoles, listThreads } from '../api/conversations'
 import type { CandidateDto, JudgementDto, ThreadDto } from '../api/conversations'
@@ -146,6 +146,8 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
   }, [client])
   const detail = useQuery({ queryKey: ['project', id], queryFn: ({ signal }) => getProject(id!, signal), enabled: id !== null, retry: false, gcTime: 0 })
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false, gcTime: 0 })
+  const demos = useQuery({ queryKey: ['demo-circuits'], queryFn: ({ signal }) => listDemos(signal), retry: false })
+  const selectedDemo = Array.isArray(demos.data) ? demos.data.find(demo => demo.id === detail.data?.demo_id) : undefined
   const threads = useQuery({ queryKey: ['threads', id], queryFn: ({ signal }) => listThreads(id!, signal), enabled: id !== null, retry: false, gcTime: 0 })
   const roles = useQuery({ queryKey: ['judge-roles'], queryFn: ({ signal }) => listJudgeRoles(signal), retry: false, gcTime: 0 })
   const orderedThreads = [...(Array.isArray(threads.data) ? threads.data : [])].sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id)))
@@ -317,7 +319,7 @@ export default function WorkbenchPage({ user, onLogout, logoutBusy = false }: { 
       <div className="console-toolbar"><button className="icon-button secondary" aria-label={panelCollapsed ? '정보 패널 펼치기' : '정보 패널 접기'} onClick={() => setPanelCollapsed(value => !value)}>{panelCollapsed ? '‹' : '›'}</button></div>
       {!panelCollapsed && <><div className="result-tabs" role="tablist" aria-label="정보 보기">{resultTabItems.map(([key, label], index) => <button id={`tab-${key}`} ref={node => { tabRefs.current[index] = node }} key={key} role="tab" tabIndex={resultTab === key ? 0 : -1} aria-selected={resultTab === key} aria-controls={`panel-${key}`} onKeyDown={event => { if (event.key === 'ArrowRight') moveTab(index, 1); if (event.key === 'ArrowLeft') moveTab(index, -1) }} onClick={() => setResultTab(key)}>{label}</button>)}</div>
         <div className="console-content">
-          <div id="panel-circuit" aria-labelledby="tab-circuit" className={`right-tab-panel ${resultTab === 'circuit' ? 'active' : ''}`} role="tabpanel" tabIndex={0}>{detail.data ? <CircuitSummary project={detail.data} targetRef={displayedTarget} readOnly={!!historyId || conversationBusy} judgement={judgement} roleLabels={Array.isArray(roles.data) ? roles.data : []} missing={runState.status === 'requires_input' ? runState.interrupt.missing ?? [] : []} providedConditions={providedConditions} analysisStatus={runState.status} onTarget={selectTarget} /> : <section className="panel"><h2>회로</h2><p>선택한 프로젝트가 없습니다.</p></section>}</div>
+          <div id="panel-circuit" aria-labelledby="tab-circuit" className={`right-tab-panel ${resultTab === 'circuit' ? 'active' : ''}`} role="tabpanel" tabIndex={0}>{detail.data ? <CircuitSummary demo={selectedDemo} project={detail.data} targetRef={displayedTarget} readOnly={!!historyId || conversationBusy} judgement={judgement} roleLabels={Array.isArray(roles.data) ? roles.data : []} missing={runState.status === 'requires_input' ? runState.interrupt.missing ?? [] : []} providedConditions={providedConditions} analysisStatus={runState.status} onTarget={selectTarget} /> : <section className="panel"><h2>회로</h2><p>선택한 프로젝트가 없습니다.</p></section>}</div>
           <div id="panel-evidence" aria-labelledby="tab-evidence" className={`right-tab-panel ${resultTab === 'evidence' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><EvidencePanel evidence={result?.evidence ?? []} candidate={candidate} /></div>
           <div id="panel-judgement" aria-labelledby="tab-judgement" className={`right-tab-panel ${resultTab === 'judgement' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><JudgementTable judgement={result?.judgement} selectedIndex={selectedCandidateIndex} onSelectCandidate={(_item, index) => { setSelectedCandidateIndex(index); setResultTab('evidence') }} /></div>
           <div id="panel-activity" aria-labelledby="tab-activity" className={`right-tab-panel ${resultTab === 'activity' ? 'active' : ''}`} role="tabpanel" tabIndex={0}><ActivityPanel states={historyId ? runState.status === 'idle' ? [] : [runState] : activity} /></div>

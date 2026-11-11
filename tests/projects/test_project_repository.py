@@ -164,14 +164,7 @@ def test_schema_restricts_public_access_and_indexes_foreign_keys(storage):
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'invalid','unknown')", (owner,))
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'   ','upload')", (owner,))
-
-
-def test_demo_catalog_matches_db_allow_list():
-    # [왜] 11-10 DEMOS에 c01을 더하고 DB 허용 목록(ck_projects_demo)을 빠뜨려 빈 볼륨에서 데모 프로젝트 생성이 503이 됐다
-    import re
-    from pathlib import Path
-    from backend.projects.repository import DEMOS
-    root = Path(__file__).resolve().parents[2] / 'db'
-    for name in ('018_projects.sql', '024_projects_demo_c01.sql'):
-        allowed = set(re.findall(r"'([a-z0-9_]+)'", (root / name).read_text(encoding='utf-8').split('demo_id IN (')[1].split(')')[0]))
-        assert set(DEMOS) == allowed, name
+        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+            conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'demo without id','demo')", (owner,))
+        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+            conn.execute("INSERT INTO projects (user_id,name,source_kind,demo_id) VALUES (%s,'upload with id','upload','breadboard_supply')", (owner,))

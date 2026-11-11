@@ -51,6 +51,7 @@ run과 resume은 사용자 분석 서비스(`app.state.conversations`, `THREADS_
 
 `POST /messages/{message_id}/approvals`는 소유자의 완료된 성공 판정 후보를 품번과 사용자가 확인한 verdict의 쌍으로 한 번만 승인한다(두 번째 승인 · 승인할 수 없는 판정은 409 `ALREADY_APPROVED`). `POST /approvals/{approval_id}/quotes`는 수량만 받아 승인 snapshot을 복사하고 가격·재고는 저장하지 않는다. 프로젝트 견적 목록과 사용자 승인 사례 목록·확인 삭제를 제공하며 모든 변경 요청은 Origin을 확인한다.
 
+`GET /api/demo-circuits`는 단일 catalog의 15종을 `{id, name, schematic}`으로 반환한다. `q`(ID·이름 부분 검색), `offset`(0 이상), `limit`(1~100)을 선택적으로 받고 5분 public cache header를 보낸다. 모든 `schematic`은 `image_url`, `original_url`, `source_repo`, `source_commit`, `license`, `license_evidence_url`, `attribution`이다. 원본/배포 hash·로컬 파일 경로는 응답에서 제외한다. 로그인 세션이 없으면 401이다. CDN의 `source_commit`은 저장소 맥락이고 파일의 동일 바이트 출처를 증명하지 않는다.
 저장 기록 조회: `GET /api/threads/{thread_id}`는 기존 세션 소유권을 확인하고 메시지 최대 50개(선택 limit 1~100)를 id 오름차순으로 반환한다. `before_message_id`(양의 BIGINT)를 주면 이전 페이지이며 `next_before_message_id`로 이어 읽는다. 소유 프로젝트 id·첫 질문 제목·저장된 대상(null 가능)·최신 run/message 참조만 포함하고 그래프·checkpoint·Store·조건 원문은 노출하지 않는다. 목록 GET의 기존 배열에 title/created_at/last_activity_at/latest_run_id/status를 더하며 전체 목록 형태는 유지한다(목록 cursor는 후속). 목록·상세·run GET은 no-store다. 대화 repository는 SELECT만 수행하며 기존 인증의 last_seen_at 갱신은 유지한다. 없는 자원과 타 사용자 자원은 같은 404, 잘못된 페이지/UUID는 422, 저장소 오류는 503이다. 새 경로와 목록 DTO의 조장 SPEC 반영 요청은 프로젝트·이전 대화 탐색 작업서에 기록한다.
 
 ## 일반 Google 로그인 후속

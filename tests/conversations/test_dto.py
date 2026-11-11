@@ -1,5 +1,7 @@
 import importlib.util
 
+import pytest
+
 
 def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
@@ -95,6 +97,97 @@ def test_safe_judgement_fields_match_runs_sql_shape():
         assert set(SafeJudgement.model_fields) <= set(allowed), (name, set(SafeJudgement.model_fields) - set(allowed))
 
 
+@pytest.mark.parametrize('group', ['results', 'shown', 'unverified'])
+def test_citation_uses_canonical_manifest_url_not_model_url(group):
+    from backend.conversations.dto import result_dto
+    citation = {'document': '1N4148 SERIES_K2301.pdf', 'page': 2,
+                'source_url': 'javascript:alert(1)', 'outline_page': 999}
+    state = {'judgement': {'kind': 'judge', group: [{
+        'part': '1N4148', 'verdict': 'ROLE_SUFFICIENT', 'package_citation': citation,
+        'checks': [{'code': 'VRRM', 'citation': citation}],
+    }]}}
+    body = result_dto(state, request_id='req').model_dump()
+    candidate = body['judgement'][group][0]
+    for result in (candidate['checks'][0]['citation'], candidate['package_citation'], body['evidence'][0]):
+        assert result['source_url'] == 'https://services.taiwansemi.com/storage/resources/datasheet/1N4148 SERIES_K2301.pdf'
+        assert result['outline_page'] == 4
+    assert 'javascript:' not in str(body)
+
+
+def test_unknown_citation_discards_supplied_source_metadata():
+    from backend.conversations.dto import result_dto
+    state = {'judgement': {'kind': 'judge', 'results': [{'part': 'UNKNOWN', 'verdict': 'NOT_VERIFIED',
+        'checks': [{'code': 'VRRM', 'citation': {'document': 'unknown.pdf', 'source_url': 'https://evil.example/a.pdf', 'outline_page': 999}}]}]}}
+    body = result_dto(state, request_id='req').model_dump()
+    citation = body['judgement']['results'][0]['checks'][0]['citation']
+    assert citation['source_url'] == '' and citation['outline_page'] is None
+    assert body['evidence'][0]['source_url'] == '' and body['evidence'][0]['outline_page'] is None
+    assert 'evil.example' not in str(body)
+
+
+def test_existing_evidence_is_enriched_from_canonical_manifest_only():
+    from backend.conversations.dto import result_dto
+    state = {'evidence': [{'document': '/private/1N4148 SERIES_K2301.pdf', 'page': 2,
+                          'source_url': 'javascript:alert(1)', 'outline_page': 999}]}
+    evidence = result_dto(state, request_id='req').model_dump()['evidence'][0]
+    assert evidence['document'] == '1N4148 SERIES_K2301.pdf'
+    assert evidence['source_url'] == 'https://services.taiwansemi.com/storage/resources/datasheet/1N4148 SERIES_K2301.pdf'
+    assert evidence['outline_page'] == 4
+
+
+@pytest.mark.parametrize('document', ['1N4148 SERIES_K2301.pdf',
+    'C:\\private\\1N4148 SERIES_K2301.pdf', '/private/1N4148 SERIES_K2301.pdf'])
+def test_persisted_result_has_no_browser_source_metadata(document):
+    from backend.conversations.dto import public_state, result_dto
+    from backend.conversations.models import SafeResult
+    citation = {'document': document, 'page': 2,
+                'source_url': 'javascript:alert(1)', 'outline_page': 999}
+    state = {'judgement': {'kind': 'judge', 'results': [{
+        'part': '1N4148', 'verdict': 'ROLE_SUFFICIENT', 'package_citation': citation,
+        'checks': [{'code': 'VRRM', 'citation': citation}],
+    }]}, 'docs': [{'file': citation['document'], 'page': 2, 'chunk_id': 3}],
+        'final_reports': [{'evidence_ids': ['3']}]}
+    public = public_state(state)
+    persisted = SafeResult.model_validate(public).model_dump()
+    assert 'source_url' not in str(public) and 'outline_page' not in str(public)
+    assert 'source_url' not in str(persisted) and 'outline_page' not in str(persisted)
+    browser = result_dto(persisted, request_id='req').model_dump()
+    assert browser['evidence'][0]['outline_page'] == 4
+    assert browser['judgement']['results'][0]['package_citation']['outline_page'] == 4
+
+
+@pytest.mark.parametrize('document', [
+    'https://evil.example/1N4148 SERIES_K2301.pdf',
+    'javascript:folder/1N4148 SERIES_K2301.pdf',
+    'file:///private/1N4148 SERIES_K2301.pdf',
+    '//evil.example/1N4148 SERIES_K2301.pdf',
+    '\\\\evil.example\\1N4148 SERIES_K2301.pdf',
+    '  https://evil.example/1N4148 SERIES_K2301.pdf',
+    'x://evil.example/1N4148%20SERIES_K2301.pdf',
+    'ht\ttps://evil.example/1N4148%20SERIES_K2301.pdf',
+    'private\t/1N4148 SERIES_K2301.pdf',
+])
+@pytest.mark.parametrize('group', ['results', 'shown', 'unverified'])
+def test_document_urls_never_gain_canonical_metadata_after_persistence(document, group):
+    from backend.conversations.dto import public_state, result_dto
+    from backend.conversations.models import SafeResult
+    citation = {'document': document, 'page': 2}
+    state = {'judgement': {'kind': 'judge', group: [{
+        'part': '1N4148', 'verdict': 'ROLE_SUFFICIENT', 'package_citation': citation,
+        'checks': [{'code': 'VRRM', 'citation': citation}],
+    }]}, 'docs': [{'file': document, 'page': 2, 'chunk_id': 3}],
+        'final_reports': [{'evidence_ids': ['3']}]}
+    persisted = SafeResult.model_validate(public_state(state)).model_dump()
+    for payload in (persisted, {'evidence': [{'document': document, 'page': 2}]}):
+        browser = result_dto(payload, request_id='req').model_dump()
+        values = list(browser['evidence'])
+        if browser['judgement']:
+            candidate = browser['judgement'][group][0]
+            values += [candidate['package_citation'], candidate['checks'][0]['citation']]
+        assert values
+        for value in values:
+            assert value['source_url'] == ''
+            assert value['outline_page'] is None
 def test_verified_input_conditions_are_live_only_and_storage_shape_is_unchanged():
     from backend.conversations.dto import public_state, result_dto, safe_judgement
     from backend.conversations.models import SafeResult

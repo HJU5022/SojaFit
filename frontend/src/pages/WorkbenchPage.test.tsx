@@ -665,3 +665,23 @@ it('connects project, role, run, candidate, and citation API data without a fixt
   expect(screen.getByText('SS34 데이터시트 근거')).toBeInTheDocument()
   expect(screen.getByText('ss34.pdf')).toBeInTheDocument()
 })
+
+
+it('keeps the new workbench collapsed and opens the selected demo original in its result panel', async () => {
+  const visual = { ...demo, schematic: {
+    image_url: '/circuit-schematics/mosfet_driver.png', original_url: 'https://cdn-learn.adafruit.com/assets/assets/000/117/028/large1024/adafruit_products_schem.png?1670851887',
+    source_repo: 'https://github.com/adafruit/Adafruit-MOSFET-Driver-STEMMA-PCB', source_commit: 'a'.repeat(40),
+    license: 'CC BY-SA 3.0', license_evidence_url: 'https://raw.githubusercontent.com/adafruit/Adafruit-MOSFET-Driver-STEMMA-PCB/main/license.txt', attribution: 'Adafruit Industries',
+  } }
+  network(path => path === '/api/demo-circuits' ? Response.json([visual])
+    : path === '/api/projects' ? Response.json([summary(first)])
+    : path === '/api/projects/11' ? Response.json(first) : Response.json([]))
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: '질문 전송' })
+  expect(screen.queryByRole('tab', { name: '원본 회로도' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  expect(await screen.findByRole('tab', { name: '원본 회로도' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.getByRole('img', { name: `${demo.name} 원본 회로도` })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('tab', { name: '연결 개념도' }))
+  expect(screen.getByRole('img', { name: 'D1 주변 연결 개념도' })).toBeInTheDocument()
+})
