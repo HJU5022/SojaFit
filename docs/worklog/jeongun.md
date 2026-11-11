@@ -1,6 +1,7 @@
 # jeongun 작업 기록
 
 ## 2026-11-11 D8 평가 전 Langfuse 트레이싱 대조·점수 연결
+- [실측] 브라우저 확인 정정: 다른 Chrome 창을 본 로그인 필요 판단을 정정하고, 개발 계정의 `SojaFit_v2`에서 기존 `gate v3-01`(11-10 20:19)의 노드·모델·토큰·세션·환경을 확인했다. Supervisor 1.82초/8,294토큰, 비용 `no cost`, 해당 trace 점수 `No scores found`; 프로젝트 전체에는 예전 `answer_metric`/`latency_s` 등이 있다. 최근 1일 `analysis-metadata` 검색(root 필터 해제)은 0건. 로컬/배포 키 대상과 수정 후 수신은 여전히 미확인, 평가 2세트는 보류 유지. 모델 재실행·원격 변경 없이 화면만 읽고 EVAL_REPORT 7장을 보정했다.
 - [실측] `01b0d5b`의 `run_gate` 점수 전송 누락·모델 호출 수 0을 재현해 `run_scores` + `pass`/`cost_usd`를 같은 trace에 연결하고 `run_graph` 실행 조건을 공유했다. SDK 5.0.4의 공급자 비용 미전달도 서비스·평가 공통 콜백으로 보완했다(본문 제거 유지, 미보고 비용은 미확인). `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q -p no:cacheprovider tests/services tests/evals tests/repo` 493 passed · 2 skipped. `EVAL_REPORT.md` 7장에 항목별 대조·환경/태그 필터·확인 한계를 기록. 읽기 전용 배포 조회는 `sojafit-api-19bd964-rs` 100%, Langfuse 브라우저는 로그인 필요. 인증 명령은 비밀 파일 훅에 차단되어 프로젝트·점수 원격 수신 미확인, [결정] 정운의 평가 2세트 보류 선택을 따름. 실제 모델 0회/$0, 배포·운영 DB 변경·푸시 없음. 다음: 새 개발 계정 로그인 뒤 실제 수신/프로젝트를 확인하고 평가 재개 여부를 결정.
 
 ## 2026-11-11 서비스 DB 재설계 구현 · 새 Supabase 프로젝트로 전환 · 배포
