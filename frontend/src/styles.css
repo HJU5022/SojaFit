@@ -23,8 +23,8 @@
 * { box-sizing: border-box; scrollbar-width: none; }
 *::-webkit-scrollbar { width: 0; height: 0; }
 .overlay-scrollbar { position: fixed; z-index: 200; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 70%, transparent); opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
-.overlay-scrollbar.active { opacity: 1; pointer-events: auto; }
-.overlay-scrollbar-thumb { position: absolute; border-radius: 999px; background: var(--trace); cursor: grab; }
+.overlay-scrollbar.active { opacity: 1; pointer-events: none; }
+.overlay-scrollbar-thumb { position: absolute; border-radius: 999px; background: var(--trace); cursor: grab; pointer-events: auto; }
 .overlay-scrollbar-thumb:hover { background: var(--trace-strong); }
 .overlay-scrollbar-thumb:active { cursor: grabbing; }
 html { min-width: 320px; background: var(--canvas); }
