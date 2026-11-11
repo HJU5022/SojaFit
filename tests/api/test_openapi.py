@@ -3,7 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/api/*.ts의 타입)을 지우지 않는지 본다.
-  동작 40개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
+  동작 42개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -69,14 +69,14 @@ def test_no_success_response_has_an_empty_schema():
         for method, op in item.items():
             for status, response in op['responses'].items():
                 content = response.get('content', {})
-                if not status.startswith('2') or status == '204' or 'text/event-stream' in content:
+                if not status.startswith('2') or status == '204' or 'text/event-stream' in content or 'image/png' in content:
                     continue
                 if not content.get('application/json', {}).get('schema'):
                     empty.append(f'{method.upper()} {path} {status}')
     assert empty == []
 
 
-# (메서드, 경로) 40개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 42개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
     ('POST', '/api/runs/{run_id}/recover'),
     ('GET', '/health'),
@@ -93,11 +93,13 @@ ROUTES = {
     ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
     ('POST', '/api/runs/{run_id}/resume'), ('GET', '/api/threads/{thread_id}'), ('DELETE', '/api/threads/{thread_id}'),
+    ('GET', '/api/external-circuits/schematics'),
+    ('GET', '/api/external-circuits/schematics/{signed_token}/{sheet_index}'),
 }
 
 
 def test_routes_are_pinned_and_live_only_in_api_routers():
-    """동작(메서드, 경로) 40개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    """동작(메서드, 경로) 42개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
     # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
     assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
     # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다

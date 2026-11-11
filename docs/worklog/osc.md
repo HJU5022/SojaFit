@@ -606,3 +606,10 @@
 - 브라우저 회귀 수정: 병합 직후 전체 Playwright에서 초기 정보 패널을 접힌 상태로 가정한 시험과, 모바일 가로 오버레이 스크롤바의 투명 track이 프로젝트 버튼 클릭을 가로막는 문제가 드러났다. 초기 패널의 현재 계약을 시험에 반영하고 track은 클릭을 통과시키되 thumb만 드래그 입력을 받도록 수정했다(`a4403b1`). 실패 시험을 재현한 뒤 집중 Playwright `1 passed`, 전체 Playwright `11 passed`를 확인했다.
 - 최종 검증: `uv run --no-sync pytest -q`는 `1445 passed, 112 skipped`, `npm run test:run`은 `20 files / 163 tests passed`, `npm run build`는 TypeScript·Vite production build 성공, `npm run e2e -- --reporter=line`은 `11 passed`, `uv lock --check`, `git diff origin/main...HEAD --check`와 repo layout `5 passed`를 확인했다. PR diff 593 KB를 Gitleaks stdin으로 검사해 `no leaks found`를 확인했다. worktree 전체 `dir` 검사는 Git 비추적 `.env`와 `.venv`까지 읽어 유효하지 않았으며 값은 출력하지 않았다.
 - 확인하지 않은 것: 실제 외부 모델·MCP·Mouser·공유 PostgreSQL·배포 환경 round-trip, 데이터시트 외부 URL의 장기 가용성은 이번 로컬 PR 검증 범위가 아니다. GitHub Actions의 전체 이력 Gitleaks와 CI는 push 후 확인한다.
+
+## 2026-11-11 원본 회로도 백엔드
+
+- 공개 GitHub 저장소에서 출처와 커밋, 라이선스, KiCad 원본을 확인한 뒤 전체 회로도를 시트별 PNG로 제공한다. 같은 설계의 PDF가 있으면 목표 300 DPI로 변환한다. 프런트와 일반 검색·LLM 답변 통합은 포함하지 않았다.
+- 검증: `uv run --no-sync pytest -q` 전체는 1,598 passed, 112 skipped, 1 failed(88.43초). 실패한 `tests/evals/test_input_surfaces.py::test_real_input_path_records_bad_raw_and_contains_final[P3]`는 변경 전 main(`14cf261`)의 별도 스냅샷에서도 단독 실행으로 재현됐다. 회로도 API·검색·변환·오류·OpenAPI·폴더 규칙 집중 검사 181 passed.
+- 실제 공급자 점검: `verify_external_schematics.py --query RP2040 --check-cache`에서 MIT 프로젝트 `calliah333/RP2040-designguide@a9afaa2`의 3509×2484 PNG 한 장을 받았다. 반복 요청에서 외부 검색·저장소 검사·변환은 각각 0회. Docker 이미지 빌드 후 KiCad 9.0.2 비루트 컨테이너에서 `--force-kicad-fallback`으로 ATtiny85 원본도 3508×2481 PNG 한 장으로 변환했다. 배포 서버와 실제 사용자 로그인은 이번 실조회 대상이 아니다.
+- 운영 요청: 팀 GitHub 조직 관리자가 공개 회로도 조회용 OAuth App을 등록한다. 앱 자격 증명은 배포용 Secret Manager에 보관하고, 앱 인증 연결과 요청 한도 확인은 등록 후 진행한다.

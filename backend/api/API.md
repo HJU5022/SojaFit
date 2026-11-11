@@ -15,6 +15,7 @@
 - 담당: 서비스·운영
 
 ## 파일
+- external_circuits.py — 인증된 공개 저장소 완성 회로도 manifest와 PNG 시트 API
 - `API.md` — 이 문서
 - `__init__.py` — 패키지 표시
 - `admin.py` — 관리자 계정 목록(`GET /api/admin/users`, 이메일 사용자명 가림) · 일반 계정 활성 상태 변경(`PATCH /api/admin/users/{target_id}`)
