@@ -87,13 +87,14 @@ def test_internal_failure_uses_one_external_search_and_accepts_web_citations():
     def web_search(parts, terms):
         web_calls.append((parts, terms))
         return [{'chunk_id': 'W1', 'file': 'Maker data sheet', 'page': '', 'content': 'trr is 4 ns',
-                 'table': None, 'doc_parts': ['1N4148'], 'source_type': 'external_web',
+                 'table': 'Switching characteristics', 'row': 'Reverse recovery time',
+                 'cells': [('1N4148','4')], 'unit': 'ns', 'doc_parts': ['1N4148'], 'source_type': 'external_web',
                  'source_url': 'https://maker.example/1N4148.pdf', 'title': 'Maker data sheet',
                  'retrieved_at': '2026-11-11T00:00:00+00:00'}]
 
     chat = llm(D.DocsAnswer(grade='none', next_query='1N4148 reverse recovery time trr'),
                D.DocsAnswer(grade='none', next_query='1N4148 switching time'),
-               D.DocsAnswer(grade='enough', answer='역회복 시간은 4 ns이다 [W1].'))
+               D.PdfOnlyAnswer(grade='enough', pdf_rows=['W1']))
     result = D.docs_agent({'task': task(), 'question': 'SS14의 VRRM은?', 'target_part': PART},
                           retriever=lambda *args, **kwargs: [doc(3)], chat=chat,
                           web_search=web_search)['reports'][0]
@@ -110,7 +111,7 @@ def test_internal_failure_uses_one_external_search_and_accepts_web_citations():
 def test_external_recheck_preserves_only_cited_internal_facts_and_reports_rejected_rows(grade):
     prior = D.DocsAnswer(grade=grade, answer='조건은 25 °C이다 [3].' if grade == 'partial' else '',
                          missing=['정격'])
-    chat = llm(prior, D.DocsAnswer(grade='none', missing=['요청한 품번 열']))
+    chat = llm(prior, D.PdfAnswer(grade='none', pdf_rows=[], missing=['요청한 품번 열']))
     row = {'chunk_id': 'W1', 'file': 'ss32.pdf', 'source_type': 'external_web',
            'source_url': 'https://www.vishay.com/docs/88751/ss32.pdf', 'page': 1,
            'table': 'MAXIMUM RATINGS', 'row': 'Maximum RMS voltage', 'content': 'SS34 = 28 V'}

@@ -4,7 +4,8 @@ import pytest
 
 from backend.conversations.dto import public_state, result_dto, stored_evidence
 from backend.conversations.models import SafeResult
-from backend.multi_agent.agents.docs import DocsAnswer, docs_agent
+from backend.multi_agent.agents.docs import PdfAnswer, PdfOnlyAnswer, docs_agent
+from backend.multi_agent.supervisor import check_node
 from backend.services import exa
 from backend.services.datasheet_rows import official_pdf
 
@@ -64,7 +65,8 @@ def test_verified_row_drives_answer_and_survives_run_reload(transport):
         assert node == 'docs_answer'
         assert '[W1]' in prompt and 'PDF p.1' in prompt and 'SS34 = 40 V' in prompt
         assert '99 V' not in prompt and '30 V' not in prompt
-        return DocsAnswer(grade='enough', answer='SS34의 역전압은 40 V입니다 [W1].')
+        assert schema is PdfOnlyAnswer
+        return schema(grade='enough', pdf_rows=['W1'])
     task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
             'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
     with exa.request_scope():
@@ -73,6 +75,13 @@ def test_verified_row_drives_answer_and_survives_run_reload(transport):
         assert not exa.search_evidence(['SS34'], 'reverse voltage', transport=mock)
     assert calls == ['POST', 'GET'] and report['evidence_ids'] == ['W1']
     assert 'content' not in report['docs'][0]
+    assert report['answer'] == 'SS34의 Peak reverse voltage 값은 40 V입니다 [W1].'
+    state_for_check = {'final_reports': [report], 'passed': ['W1'], 'docs': report['docs'], 'answer': report['answer']}
+    assert 'refusal_reason' not in check_node(state_for_check)
+    for old, new in [('40 V', '400 V'), ('SS34', 'SS33'), ('40 V', '40 mV')]:
+        changed = report['answer'].replace(old, new)
+        assert check_node({**state_for_check, 'answer': changed})['refusal_reason'] == 'verify_failed'
+    assert check_node({**state_for_check, 'passed': ['W1', 3], 'answer': 'SS34 400 V [3].'})['refusal_reason'] == 'verify_failed'
     state = public_state({'answer': report['answer'], 'final_reports': [report], 'docs': report['docs']})
     browser = result_dto(state, request_id='test')
     saved = SafeResult(answer=browser.answer, evidence=stored_evidence(browser.evidence)).model_dump()
@@ -81,6 +90,22 @@ def test_verified_row_drives_answer_and_survives_run_reload(transport):
     assert cite['document'] == 'ss32.pdf'
     assert (cite['source_url'], cite['page'], cite['table'], cite['row']) == (
         URL + '#page=1', 1, 'Table 1. Maximum ratings', 'Peak reverse voltage')
+
+
+@pytest.mark.parametrize('claim', [
+    'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].',
+    'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].',
+    'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].',
+    'SS34는 400 V\n[W1]',
+])
+def test_docs_rejects_mismatched_claim_even_with_real_citation(transport, claim):
+    mock, _ = transport
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+            'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+    report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                        chat=lambda *a: PdfAnswer(grade='enough', answer=claim, pdf_rows=[]),
+                        web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+    assert report['reason'] == 'verify_failed' and not report['answer'] and not report['evidence_ids']
 
 
 def test_related_part_and_unrelated_spec_provide_no_evidence(transport):

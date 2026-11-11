@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
+from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
 from backend.graph.nodes import NOT_FOUND, REVISION, WORD, citations, netlist_block, other_part_row, search
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.rag.units import to_si
@@ -35,6 +36,16 @@ class DocsAnswer(BaseModel):
     memory_refs: list[str] = Field(default_factory=list, max_length=5, description='Historical source IDs consulted; never cite these in answer')
     missing: list[str] = Field(default_factory=list, description='Values or facts the task needs that the evidence does not give')
     next_query: str = Field(default='', max_length=200, description='When grade is none or partial: a different English search query to try once (for partial, aimed at what is missing)')
+
+
+class PdfAnswer(DocsAnswer):
+    pdf_rows: list[Literal['W1', 'W2', 'W3']] = Field(
+        description='Select only the PDF rows answering this task. The server renders their exact part, values and units.')
+    answer: str = Field(default='', description='Only sentences supported by internal numeric citations. Leave empty for PDF facts.')
+
+
+class PdfOnlyAnswer(PdfAnswer):
+    answer: Literal[''] = ''
 
 
 def keep_docs(docs: list[dict], parts: list[str], question: str) -> list[dict]:
@@ -150,7 +161,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) ->
     def report(status: str, summary: str, **kw) -> dict:
         # Only source locators cross into the persisted graph state.
         if 'docs' in kw:
-            kw['docs'] = [{k: v for k, v in doc.items() if k != 'content'}
+            kw['docs'] = [{**{k: v for k, v in doc.items() if k not in ('content', 'cells', 'unit', 'conditions')},
+                           'sentence_sha256': sentence_digest(row_sentence(doc))}
                           if doc.get('source_type') == 'external_web' else doc for doc in kw['docs']]
         r = TaskReport(task=task.id, agent='docs', status=status, summary=summary[:200], searches=searches, llm_calls=calls, round=rnd, **kw)
         return {'reports': [r.model_dump(mode='json')], 'path': ['문서']}
@@ -216,7 +228,11 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) ->
             cited_internal = citations(prior.answer) if prior else set()
             combined = external + [d for d in prior_docs if str(d['chunk_id']) in cited_internal]
             web_result = chat('docs_answer', PROMPT, render(question, task, combined, part)
-                              + memory_context(payload.get('approved_memories') or []), DocsAnswer)
+                              + memory_context(payload.get('approved_memories') or []),
+                              PdfAnswer if cited_internal else PdfOnlyAnswer)
+            selected = [f'[{cid}]' for cid in dict.fromkeys(web_result.pdf_rows)]
+            web_result = DocsAnswer(**{**web_result.model_dump(exclude={'pdf_rows'}),
+                                        'answer': '\n'.join(filter(None, [web_result.answer, *selected]))})
             calls += 1
             if (web_result.grade != 'none' and web_result.answer.strip()) or prior is None:
                 result, shown = web_result, combined
@@ -252,6 +268,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) ->
                           reason=Reason.VERIFY_FAILED, docs=shown)
         if repaired.grade != 'none' and repaired_cites & valid:
             result, answer = repaired, repaired_answer
+    if any(cid.startswith('W') for cid in citations(answer)) and any(
+        line.strip() and not citations(line) for line in answer.splitlines()
+    ):
+        return report('fail', 'unattributed line in PDF answer', reason=Reason.VERIFY_FAILED, docs=shown)
+    answer = check_pdf_lines(answer, shown, expand=True)
+    if answer is None:
+        return report('fail', 'answer disagrees with cited PDF row', reason=Reason.VERIFY_FAILED, docs=shown)
     answer, dropped_fake = drop_fake_citations(answer, valid)
     dropped_uncited = has_uncited_sentence(answer)
     if dropped_uncited:

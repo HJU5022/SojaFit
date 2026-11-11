@@ -20,6 +20,7 @@ from pathlib import Path
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from backend.graph.memory import memory_context, memory_sources
+from backend.judge.pdf_claims import check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
@@ -174,7 +175,8 @@ def collect_node(state: dict) -> dict:
     # 문서 답은 일부 실패해도 검증된 다른 보고를 그대로 보존한다. 종합이 이미 찾은 정격을 누락했던 T1 재발을 막는다.
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
-    joinable = len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
+    uses_pdf = any(cid.startswith('W') for r in good for cid in r.evidence_ids)
+    joinable = uses_pdf or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -298,6 +300,10 @@ def check_node(state: dict) -> dict:
     check = {'used': sorted(cited & valid), 'fake_citations': sorted(cited - valid),
              'uncited_sentences': sum(1 for s in sentences if not citations(s)), 'judgement': bool(state.get('judgement'))}
     problem = bool(check['fake_citations'] or invalid_memories) or (not judge_only and not check['used'])
+    expected_pdf = {cid for r in reports if r.status != 'fail' for cid in r.evidence_ids if cid.startswith('W')}
+    if expected_pdf or any(cid.startswith('W') for cid in cited):
+        if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:
+            problem = True
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}

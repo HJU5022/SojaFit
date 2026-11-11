@@ -210,6 +210,7 @@ SojaFit (proj3-b)
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
 │   │   ├── sheet_conditions.py  <- 시험 조건 글 읽기와 같은 조건인지 비교
+│   │   ├── pdf_claims.py   <- 공식 PDF 인용 문장의 품번·값·단위를 원문 셀과 대조
 │   │   ├── conditions.py   <- 역할 규칙 읽기와 대체 조건 기준값 계산
 │   │   ├── verdict.py      <- 조건별 비교·판정 5종·찾기 조건·후보 정렬
 │   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함

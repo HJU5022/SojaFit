@@ -98,12 +98,12 @@ def _read_table(page, table, parts, single, terms):
                 value = row[header.index(part)]
                 if not NUMBER.fullmatch(value):
                     continue
-                values = [f'{part} = {value} {unit}']
+                cells = [(part, value)]
             else:
                 # Some PDF tables have no vertical rules in their data rows. Use the
                 # actual header column bounds, never the order of two merged numbers.
                 y = table.rows[row_index].bbox
-                values = []
+                cells = []
                 for i, name in enumerate(header):
                     if name not in ('MIN', 'TYP', 'MAX', 'VALUE'):
                         continue
@@ -112,15 +112,17 @@ def _read_table(page, table, parts, single, terms):
                         continue
                     text = clean(page.crop((cell[0], y[1], cell[2], y[3])).extract_text(x_tolerance=1))
                     if text and not NUMBER.fullmatch(text):
-                        values = []
+                        cells = []
                         break
                     if text:
-                        values.append(f'{name} = {text} {unit}')
-                if not values:
+                        cells.append((name, text))
+                if not cells:
                     continue
+            values = [f'{name} = {value} {unit}' for name, value in cells]
             content = ' | '.join(filter(None, (part, caption, label, symbol, conditions, *values)))
             yield hits, {'page': page.page_number, 'table': caption, 'row': label,
-                         'doc_parts': [part], 'content': content}
+                         'doc_parts': [part], 'content': content, 'cells': cells,
+                         'unit': unit, 'conditions': conditions}
 
 
 def extract(raw, url, parts, terms):
