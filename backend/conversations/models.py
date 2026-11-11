@@ -1,6 +1,6 @@
 """대화 식별자와 안전한 실행 결과의 내부 형식."""
 from typing import Annotated, Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class SafeModel(BaseModel):
@@ -55,6 +55,20 @@ class SafeTerm(SafeModel):
     code: str
     gte: float | None = None
     lte: float | None = None
+
+
+class SafeInputCondition(SafeModel):
+    code: str = Field(min_length=1, max_length=64)
+    value: str = Field(min_length=1, max_length=200)
+
+    @field_validator('code')
+    @classmethod
+    def known_input(cls, value):
+        from backend.judge import conditions
+        known = {name for rule in conditions.load().values() for name in conditions.inputs(rule)} | {'VF', 'IR'}
+        if value not in known:
+            raise ValueError('unknown input condition')
+        return value
 
 
 class SafeJudgement(SafeModel):

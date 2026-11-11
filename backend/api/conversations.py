@@ -11,19 +11,22 @@ import asyncio
 import json
 import logging
 import re
+from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 import psycopg
 from psycopg_pool import PoolTimeout
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from backend import auth
 from backend.errors import code_for, log_error
-from backend.conversations.dto import BrowserResult, public_state, result_dto
+from backend.conversations.dto import BrowserResult, public_state, result_dto, safe_judgement
 from backend.conversations.repository import ConversationNotFound, ConversationRepository, InvalidRunState
+from backend.conversations.models import RunStatus
 from backend.judge import conditions as judge_conditions
 from backend.services import demo
 
@@ -83,6 +86,37 @@ class Thread(BaseModel):
     project_id: int
 
 
+class ThreadSummary(Thread):
+    title: str
+    created_at: datetime
+    last_activity_at: datetime
+    latest_run_id: str | None
+    status: RunStatus | None
+
+
+class SavedMessage(BaseModel):
+    id: int
+    run_id: str
+    role: Literal['user', 'assistant']
+    content: str
+    created_at: datetime
+
+
+class SavedRun(BaseModel):
+    id: str
+    status: RunStatus
+    message_id: int | None
+
+
+class ThreadDetail(Thread):
+    title: str
+    target_ref: str | None
+    target_locked: bool
+    latest_run: SavedRun | None
+    messages: list[SavedMessage]
+    next_before_message_id: int | None
+
+
 class Run(BaseModel):
     id: str
     thread_id: str
@@ -94,7 +128,7 @@ class Run(BaseModel):
 SSE_RESPONSE = {200: {'description': (
     'text/event-stream. 각 frame은 `event: 이름`과 `data: JSON` 한 줄이다. 순서: '
     '`run_started` `{run_id, request_id}` → `status` (공개 결과, status=running, stage=입력 확인) → 마지막 하나: '
-    '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`) · '
+    '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
     '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
     '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
     '공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
@@ -136,9 +170,17 @@ def list_demo_questions(user_id: int = Depends(auth.current_user_id), analysis=D
     return demo.questions()  # [주의] 응답 모델이 칸을 고른다. outcomes.json의 답 · 판정 · 넷리스트 경로는 나가지 않는다
 
 
-@router.get('/projects/{project_id}/threads', response_model=list[Thread])
-def list_threads(project_id: int, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+@router.get('/projects/{project_id}/threads', response_model=list[ThreadSummary])
+def list_threads(project_id: int, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    response.headers['Cache-Control'] = 'no-store'
     return repo.list_threads(user_id, project_id)
+
+
+@router.get('/threads/{thread_id}', response_model=ThreadDetail)
+def thread_detail(thread_id: UUID, response: Response, limit: int = Query(50, ge=1, le=100),
+                  before_message_id: int | None = Query(None, gt=0, le=9223372036854775807), user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    response.headers['Cache-Control'] = 'no-store'
+    return repo.thread_detail(user_id, str(thread_id), limit=limit, before_message_id=before_message_id)
 
 
 @router.post('/projects/{project_id}/threads', status_code=201, response_model=Thread, dependencies=[Depends(auth.check_origin)])
@@ -146,11 +188,24 @@ def create_thread(project_id: int, user_id: int = Depends(auth.current_user_id),
     return {'id': repo.create_thread(user_id, project_id), 'project_id': project_id}
 
 
+@router.delete('/threads/{thread_id}', status_code=204, dependencies=[Depends(auth.check_origin)])
+def delete_thread(thread_id: UUID, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    repo.delete_thread(user_id, str(thread_id))
+
+
 @router.get('/runs/{run_id}', response_model=Run)
-def get_run(run_id: UUID, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+def get_run(run_id: UUID, request: Request, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    response.headers['Cache-Control'] = 'no-store'
     run = repo.get_run(user_id, str(run_id))
     return {'id': run['id'], 'thread_id': run['thread_id'], 'message_id': run.get('message_id'),
             'result': result_dto(run['safe_result'], request_id=request.state.request_id, status=run['status']).model_dump()}
+
+
+@router.post('/runs/{run_id}/recover', response_model=Run, dependencies=[Depends(auth.check_origin)])
+def recover_run(run_id: UUID, request: Request, response: Response, user_id: int = Depends(auth.current_user_id), repo=Depends(repository)):
+    """소유 실행의 오래된 상태만 정리한다. 분석·모델 호출이나 질문 재전송은 하지 않는다."""
+    repo.recover_stale_run(user_id, str(run_id))
+    return get_run(run_id, request, response, user_id, repo)
 
 
 # [왜] failed는 시스템 오류다. 거절(refused, 답할 수 없는 질문)은 답이라 finished(완료)로 끝난다. 둘을 같은 말로 쓰지 않는다
@@ -185,7 +240,8 @@ def outcome(analysis, thread_id, detail, request_id):
     state = analysis.graph.get_state(analysis.config(thread_id)).values or {}
     kind = 'refused' if state.get('refusal') else 'completed'
     return kind, result_dto(public_state(state), request_id=request_id, status=kind, stage=STAGES['finished'],
-                            profile_hints=detail.get('profile_hints') or [])
+                            profile_hints=detail.get('profile_hints') or [],
+                            input_conditions=(state.get('judgement') or {}).get('input_conditions', []))
 
 
 def public_error(exc, request_id, run_id):
@@ -203,7 +259,7 @@ def public_error(exc, request_id, run_id):
     return error
 
 
-def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
+def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resuming=False):
     """분석 서비스 호출(call)을 스레드에서 돌리고, 결과를 저장한 뒤 마지막 상태 하나를 보낸다."""
     queue = asyncio.Queue()
     async def execute():
@@ -211,12 +267,23 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call):
         await queue.put(frame('status', result_dto({}, request_id=request_id, status='running', stage=STAGES['running']).model_dump()))
         try:
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
-            # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
-            saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
+            # [왜] profile_hints는 삭제한 사실을 남기지 않고, 표시 조건은 기존 DB 저장 계약을 유지하도록 제외한다
+            saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement)}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:
             error = public_error(exc, request_id, run_id)
+            if resuming and isinstance(exc, HTTPException) and exc.status_code in (400, 409, 422, 429):
+                try:
+                    detail = await run_in_threadpool(analysis.detail, user_id, thread_id)
+                    if detail.get('interrupt'):
+                        safe = result_dto({}, request_id=request_id, status='requires_input', stage=STAGES['judge'], interrupt=detail['interrupt'])
+                        await finish_with_retry(repo, user_id, thread_id, run_id, 'requires_input', {'interrupt': safe.interrupt})
+                        await queue.put(frame('requires_input', {**safe.model_dump(), 'error': error}))
+                        await queue.put(None)
+                        return
+                except Exception:
+                    LOGGER.exception('react_resume_restore_failed', extra={'request_id': request_id, 'run_id': run_id})
         if error:
             try:
                 await finish_with_retry(repo, user_id, thread_id, run_id, 'failed', None)
@@ -256,7 +323,10 @@ async def start_run(thread_id: UUID, body: StartRun, request: Request, user_id: 
 @router.post('/runs/{run_id}/resume', response_class=StreamingResponse, responses=SSE_RESPONSE, dependencies=[Depends(auth.check_origin)])
 async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: int = Depends(auth.current_user_id), repo=Depends(repository), analysis=Depends(analysis_service)):
     run = await run_in_threadpool(repo.get_run, user_id, str(run_id))
-    choices = (run.get('safe_result') or {}).get('interrupt', {}).get('role_choices', [])
+    interrupt = (run.get('safe_result') or {}).get('interrupt', {})
+    if 'missing' in interrupt and set(body.answers) - set(interrupt['missing']):
+        raise HTTPException(422, '요청한 조건의 답만 입력하세요.')
+    choices = interrupt.get('role_choices', [])
     if choices and body.role not in choices:
         raise HTTPException(422, '요청된 역할 중 하나를 선택해 주세요.')
     if not choices and body.role is not None:
@@ -266,4 +336,4 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
     call = lambda: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'], request_id=request_id)
-    return stream(repo, user_id, thread, str(run_id), request_id, analysis, call)
+    return stream(repo, user_id, thread, str(run_id), request_id, analysis, call, resuming=True)

@@ -10,6 +10,19 @@ async function json(response: Response) {
   return await response.json() as Record<string, unknown>
 }
 
+it('deletes only one conversation and its runs without reusing surviving IDs', async () => {
+  const request = await freshDummy()
+  const first = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  const second = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  await request(`/api/threads/${first.id}/runs`, { method: 'POST', body: JSON.stringify({ question: '질문', target_ref: 'D1' }) })
+  expect((await request(`/api/threads/${first.id}`, { method: 'DELETE' })).status).toBe(204)
+  expect((await request('/api/runs/dummy-run')).status).toBe(404)
+  expect((await request(`/api/threads/${first.id}`)).status).toBe(404)
+  expect((await request(`/api/threads/${second.id}`)).status).toBe(200)
+  const third = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
+  expect(third.id).not.toBe(second.id)
+})
+
 it('serves the breadboard project, D1 context, and role labels', async () => {
   const request = await freshDummy()
   const projects = await json(await request('/api/projects')) as unknown as { name: string; demo_id: string }[]
@@ -44,10 +57,17 @@ it('returns a completed SSE run with role evidence, candidate judgement, and dat
   expect(stream).toContain('D1.K → RAW')
   expect(stream).toContain('ROLE_SUFFICIENT')
   expect(stream).toContain('SS34.pdf')
+  const recovered = await request('/api/runs/dummy-run/recover', { method: 'POST' })
+  expect((await recovered.json()).result.status).toBe('completed')
 
   const run = await json(await request('/api/runs/dummy-run')) as { message_id: number; result: { price_parts: string[] } }
   expect(run.message_id).toBe(9)
   expect(run.result.price_parts).toEqual(['SS34'])
+  const saved = await json(await request(`/api/threads/${thread.id}`)) as { messages: { role: string; content: string }[]; latest_run: { id: string } }
+  expect(saved.messages.map(message => message.role)).toEqual(['user', 'assistant'])
+  expect(saved.messages[0].content).toBe('D1을 SS34로 바꿔도 되나요?')
+  expect(saved.latest_run.id).toBe('dummy-run')
+  expect(await json(await request('/api/projects/1/threads'))).toEqual([expect.objectContaining({ id: thread.id, title: 'D1을 SS34로 바꿔도 되나요?', status: 'completed' })])
 })
 
 it('keeps price data transient while approval, quote, and approved-case state changes', async () => {

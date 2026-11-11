@@ -7,4 +7,6 @@
 
 ## 파일
 - `PUBLIC.md` — 이 폴더 설명.
-- `sojafit-circuit-hero.png` — 프로젝트 미선택 랜딩에서 사용하는 글자 없는 회로 배경 이미지.
+- `assets/` — Vite 개발 화면과 FastAPI 배포 화면이 `/assets`로 제공하는 브랜드 이미지. [ASSETS.md](assets/ASSETS.md)
+
+현재 랜딩·로그인의 연결 예시는 LandingPage.tsx의 SVG로 렌더링한다. 구버전 랜딩 회로 배경 이미지는 제거했다.

@@ -1,7 +1,7 @@
 """브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
 from pydantic import BaseModel, ValidationError
-from backend.conversations.models import SafeEvidence, SafeJudgement
+from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition
 
 
 class BrowserResult(BaseModel):
@@ -91,7 +91,7 @@ def public_state(state: dict) -> dict:
 
 
 def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '', interrupt: dict | None = None,
-               profile_hints=()) -> BrowserResult:
+               profile_hints=(), input_conditions=()) -> BrowserResult:
     # 명시적으로 구조화한 공개 칸만 선택한다.
     answer = state.get('answer', '')
     safe_interrupt = {}
@@ -107,6 +107,15 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
     question_types = {'out_of_scope', 'chat', 'other_part', 'price', 'role', 'rating', 'candidate_judge', 'candidate_find'}
     question_type = state.get('question_type')
     judgement = safe_judgement(state.get('judgement')) or {}
+    # shortcut: 표시 조건은 현재 응답에만 포함한다. 기록 복원이 필요할 때 저장 계약을 확장한다.
+    if judgement:
+        judgement['input_conditions'] = []
+        rows = input_conditions
+        for item in rows[:60] if isinstance(rows, list) else []:
+            try:
+                judgement['input_conditions'].append(SafeInputCondition.model_validate(_pick(item, ('code', 'value'))).model_dump())
+            except (ValidationError, TypeError):
+                continue
     evidence = []
     for item in state.get('evidence', []):
         try:

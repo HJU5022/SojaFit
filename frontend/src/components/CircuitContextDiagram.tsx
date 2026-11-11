@@ -90,10 +90,10 @@ export default function CircuitContextDiagram({ context, analysisStatus = 'idle'
       </aside>
     </div>
     <div className="context-conditions" aria-label="개념도 사용 조건">
-      <h4>사용 조건</h4>
+      <h4>{context.conditions.some(item => item.code !== 'USER') ? '판정에 사용한 조건' : '사용 조건'}</h4>
       {context.conditions.length > 0 ? <ul>{context.conditions.map(item => <li key={`${item.code}-${item.value}`}>
         <strong>{item.label}</strong> {item.value}
-      </li>)}</ul> : <p>전압·전류 정보 필요</p>}
+      </li>)}</ul> : <p>판정 결과에서 확인된 사용 조건이 없습니다.</p>}
       {context.missing.length > 0 && <p>빠진 조건: {context.missing.join(', ')} · 정보 필요</p>}
       {context.candidates.length > 0 && <p>추천 후보 {context.candidates.length}개 · 판정과 데이터시트 근거 패널에서 확인</p>}
     </div>

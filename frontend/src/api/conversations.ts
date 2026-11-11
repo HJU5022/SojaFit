@@ -1,14 +1,17 @@
-import { apiFetch, apiRequest } from './client'
+import { apiFetch, apiRequest, responseError } from './client'
 import type { ProfileHintDto } from './profile'
 
 export type EvidenceDto = { document: string; page: number | string | null; table: string; row: string; section: string; citation_number: string }
 export type CitationDto = { document?: string; page?: number | string | null; table?: string; row?: string; chunk_id?: string | number | null; chunk_index?: number | null }
 export type CheckDto = { code: string; basis?: string; value?: number | number[] | null; threshold?: number | number[] | null; unit?: string | null; condition?: string | null; result?: string; why?: string; citation?: CitationDto | null }
 export type CandidateDto = { part: string; role?: string; verdict: 'IDENTICAL' | 'SPEC_EQUIVALENT' | 'ROLE_SUFFICIENT' | 'NOT_VERIFIED' | 'NOT_SUFFICIENT'; checks?: CheckDto[]; missing?: string[]; uncertain?: string[]; cautions?: string[]; board_change?: boolean | null; package_citation?: CitationDto | null }
-export type JudgementDto = { kind: 'judge' | 'find' | 'no_rule'; roles: string[]; role_evidence: string[]; results: CandidateDto[]; shown: CandidateDto[]; unverified: CandidateDto[]; capped: boolean }
+export type JudgementDto = { input_conditions?: { code: string; value: string }[]; kind: 'judge' | 'find' | 'no_rule'; roles: string[]; role_evidence: string[]; results: CandidateDto[]; shown: CandidateDto[]; unverified: CandidateDto[]; capped: boolean }
 export type InterruptDto = { missing?: string[]; role_choices?: string[]; question?: string }
 export type ResultDto = { answer: string; status: string; stage: string; question_type: string; evidence: EvidenceDto[]; judgement: JudgementDto | Record<string, never>; price_parts: string[]; refusal: string; interrupt: InterruptDto; request_id: string; profile_hints?: ProfileHintDto[] }
-export type ThreadDto = { id: string; project_id: number }
+export type ThreadDto = { id: string; project_id: number; title?: string; created_at?: string; last_activity_at?: string; latest_run_id?: string | null; status?: string | null }
+export type SavedMessageDto = { id: number; run_id: string; role: 'user' | 'assistant'; content: string; created_at: string }
+export type ThreadDetailDto = ThreadDto & { title: string; target_ref: string | null; target_locked: boolean;
+  latest_run: { id: string; status: string; message_id: number | null } | null; messages: SavedMessageDto[]; next_before_message_id: number | null }
 export type RunDto = { id: string; thread_id: string; message_id: number | null; result: ResultDto }
 export type StreamEvent = { event: 'run_started' | 'status' | 'requires_input' | 'completed' | 'refused' | 'failed'; data: Record<string, unknown> }
 export type RoleLabel = { code: string; name: string }
@@ -22,16 +25,14 @@ export const listDemoQuestions = (signal?: AbortSignal) => apiFetch<DemoQuestion
 export const listThreads = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto[]>(`/api/projects/${projectId}/threads`, { signal })
 export const createThread = (projectId: number, signal?: AbortSignal) => apiFetch<ThreadDto>(`/api/projects/${projectId}/threads`, { method: 'POST', signal })
 export const getRun = (runId: string, signal?: AbortSignal) => apiFetch<RunDto>(`/api/runs/${runId}`, { signal })
+export const recoverRun = (runId: string, signal?: AbortSignal) => apiFetch<RunDto>(`/api/runs/${runId}/recover`, { method: 'POST', signal })
+export const getThread = (threadId: string, signal?: AbortSignal, before?: number) => apiFetch<ThreadDetailDto>(`/api/threads/${encodeURIComponent(threadId)}${before === undefined ? '' : `?before_message_id=${before}`}`, { signal })
+export const deleteThread = (threadId: string) => apiFetch<void>(`/api/threads/${encodeURIComponent(threadId)}`, { method: 'DELETE' })
 
 export async function openRunStream(path: string, body: unknown, signal: AbortSignal): Promise<Response> {
   const response = await apiRequest(path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal,
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: { code?: string; message?: string; request_id?: string } } | null
-    if (response.status === 401) window.dispatchEvent(new Event('sojafit:session-expired'))
-    throw { code: payload?.error?.code ?? 'HTTP_ERROR', message: payload?.error?.message ?? '요청을 처리할 수 없습니다.',
-      requestId: payload?.error?.request_id ?? response.headers.get('X-Request-ID') ?? '' }
-  }
+  if (!response.ok) throw await responseError(response)
   if (!response.body) throw { code: 'STREAM_CLOSED', message: '실행 스트림을 열 수 없습니다.', requestId: response.headers.get('X-Request-ID') ?? '' }
   return response
 }

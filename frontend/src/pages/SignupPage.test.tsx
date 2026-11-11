@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import App from '../App'
@@ -42,7 +42,7 @@ it('signs up with consent, opens the workbench, and offers login from the signup
   expect(await screen.findByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login')
   fill(); fireEvent.click(screen.getByRole('checkbox', { name: /동의합니다/ }))
   fireEvent.click(screen.getByRole('button', { name: '가입' }))
-  expect(await screen.findByRole('heading', { name: '회로에 맞는 대체 부품을 찾아보세요' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
   expect(bodies).toEqual([JSON.stringify({ email: 'new@example.test', password: 'synthetic-8', consent: true })])
 })
 
@@ -68,10 +68,10 @@ it('logout from a project address leaves no project id in the address or cached 
   })
   const { client } = open('/app?projectId=12&targetRef=D1')
   expect(await screen.findByRole('heading', { name: '회로 작업대' })).toBeInTheDocument()
-  expect(client.getQueryData(['projects'])).toBeDefined()
-  fireEvent.click(screen.getByRole('button', { name: /사용자 \d+/ }))
+  await waitFor(() => expect(client.getQueryData(['projects'])).toBeDefined())
+  fireEvent.click(screen.getByRole('button', { name: /@example\.test$/ }))
   fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
-  expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'SojaFit에 로그인' })).toBeInTheDocument()
   expect(screen.getByLabelText('현재 주소')).toHaveTextContent(/^\/login$/)
   expect(client.getQueryData(['projects'])).toBeUndefined()
 })

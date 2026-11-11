@@ -387,3 +387,24 @@ def test_new_analysis_runs_cleanup_and_cleanup_failure_does_not_block(world, mon
     with caplog.at_level('WARNING', logger='backend.conversations.retention'):
         app._purge_expired()
     assert [r.message for r in caplog.records if r.name == 'backend.conversations.retention'] == ['retention_purge_failed']
+
+
+def test_single_thread_delete_removes_its_records_but_preserves_project_and_siblings(world):
+    from backend.conversations.repository import ConversationRepository
+    analysis, (owner, other, _), dsn = world
+    mine, theirs = seed(analysis, dsn, owner, projects=2), seed(analysis, dsn, other)
+    gone, sibling = mine['threads']
+    other_before = remaining(dsn, other, theirs['threads'] + [theirs['direct']])
+    before = remaining(dsn, owner, [gone])
+    assert before['checkpoints'] > 0 and before['quotes'] == 2
+    ConversationRepository().delete_thread(owner, gone)
+    after = remaining(dsn, owner, [gone])
+    for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages', 'analysis_approvals',
+                 'analysis_events', 'checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
+        assert after[name] == 0, name
+    assert after['projects'] == before['projects'] == 2
+    assert after['quotes'] == after['approvals'] == after['approved_cases'] == 1
+    assert after['store'] == before['store']
+    assert remaining(dsn, owner, [sibling])['checkpoints'] > 0
+    assert remaining(dsn, owner, [mine['direct']])['analysis_threads'] == 1
+    assert remaining(dsn, other, theirs['threads'] + [theirs['direct']]) == other_before
