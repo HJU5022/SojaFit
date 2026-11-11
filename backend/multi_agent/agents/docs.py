@@ -187,7 +187,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) ->
             if out['retrieval_error']:
                 return report('fail', f"search tool failure: {out['retrieval_error'].get('kind', '')}", reason=Reason.SEARCH_ERROR)
             used_parts = list(filter_parts) if filter_parts and not relax else out['parts']
-            web_parts = list(used_parts or web_parts)
+            if not web_parts:
+                # 내부 재검색이 품번 필터를 풀어도 외부 검색은 처음 맡은 품번을 유지한다.
+                task_words = {word.upper() for word in WORD.findall(task.query)}
+                web_parts = filter_parts or [p for p in out['parts'] if p.upper() in task_words] or out['parts']
             searches.append({'query': out['query'], 'parts': used_parts, 'top': [[d['file'], d['page']] for d in out['docs']]})
             docs = keep_docs(out['docs'], used_parts, question)
             docs += variant_notes(used_parts, docs, retriever)
@@ -218,7 +221,9 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) ->
     needs_web = (not result or result.grade in ('partial', 'none') or bool(result.missing))
     if web_search is not None and task.kind != 'role' and needs_web:
         terms = (result.next_query.strip() if result and result.next_query.strip() else query or task.query)
-        external = web_search(web_parts, terms)  # 실제 Exa 클라이언트는 공급자 오류를 빈 근거로 닫는다.
+        requested = {p.upper() for p in web_parts}
+        external = [d for d in web_search(web_parts, terms)
+                    if row_sentence(d) and d['doc_parts'][0].upper() in requested]
         if external:
             searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
                              'top': [[d['file'], d.get('page', '')] for d in external]})

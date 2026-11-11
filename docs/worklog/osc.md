@@ -636,3 +636,11 @@
 - 격리 PostgreSQL 16과 FastAPI TestClient에서 일반 계정 로그인 → 실행 → requires_input → 분석 서비스와 DB 풀 재생성 → 같은 run 재개 → completed → 새 클라이언트로 로그인 → GET /api/runs/{id} 순서로 확인했다. 인증·체크포인트·DB 저장은 실제 경로를 사용했다. 두 검색과 모델 응답은 고정했고 PDF는 테스트에서 생성했다. 외부 공급자 호출은 0회였다.
 - 두 PDF의 SS34 `Peak reverse voltage` 행이 모두 40 V인 조건에서 완료 응답과 재조회 결과가 일치했다. W1은 test-a.pdf 1쪽 Table 1, W2는 test-b.pdf 2쪽 Table 2였다. 로그아웃 상태의 GET은 401이었다. `tests/services/test_datasheet_rows.py`에 같은 표를 다시 찾은 경우, 변조된 400 V 거절, W4 재조회도 포함했다.
 - 관련 pytest는 317 passed. 격리 DB에서 `uv run --no-sync pytest -q --tb=line`으로 전체를 비교했다. 깨끗한 Windows 체크아웃에서 수정 전 `2d726e3`은 1548 passed, 수정 후 1550 passed였고, 양쪽 모두 같은 11 failed, 3 errors, 39 skipped였다. 이 중 평가 표본 해시 문제는 Git의 CRLF 변환으로 재현했다. 실제 작업 폴더의 첫 실행은 이전 frontend/dist에 회로도 이미지가 없어 데모 API도 실패했다. 동결 평가셋이나 다른 기능의 실패는 이번 수정에 포함하지 않았다.
+
+## 2026-11-11 재개 후 Exa 품번과 공식 PDF 행 검증
+
+- 수정 전 실제 재개 실행은 1N5819 작업에도 1N4001과 1N5819를 함께 검색해 1N4001의 50 V만 두 번 저장했다. 같은 공개 질문, 빈 코퍼스, 격리 DB 일반 계정, onsemi 원문으로 다시 실행한다. `Conversations` 기본 그래프와 실제 Exa·OpenRouter를 사용하고, 한 실행당 Exa 최대 2회, 각 호출 단계는 서비스 예산 상한을 적용한다. 재조회 결과의 W1·W2와 두 원문 2쪽 VRRM 행을 대조한 뒤 중단한다.
+- `backend/multi_agent/agents/docs.py`에서 외부 검색 품번을 작업 지시서 기준으로 유지한다. 지정 목록이 비어 있으면 전체 질문의 품번 중 Supervisor의 작업 검색어에 나온 품번을 우선한다. PDF의 대상 품번과 셀 열을 확인한 행만 모델에 전달한다. `tests/multi_agent/test_agents.py`는 다른 품번의 행과 다른 품번 열에 든 수치가 모델 입력에 들어가지 않는지 검증한다.
+- 실제 실행 `401eea2f-a13a-4cbf-8a76-167e4400795b`에서 일반 계정 로그인 200 → 첫 Exa 검색 1N4001 → requires_input → 분석 서비스 재생성 → 같은 run 재개 → 두 번째 Exa 검색 1N5819 → completed를 확인했다. 비로그인 조회 401 후 새 세션으로 로그인했고, 완료 응답·저장 답변·DB 근거 목록의 두 번호가 일치했다. 외부 PDF 다운로드 대상은 질문의 제조사 onsemi로 제한했다.
+- 두 PDF를 별도로 텍스트 추출해 2쪽 `MAXIMUM RATINGS` 표의 `Peak Repetitive Reverse Voltage`(VRRM) 행에서 머리글과 값의 열 위치를 대조했다. W1은 [1N4001의 50 V](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf#page=2), W2는 [1N5819의 40 V](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf#page=2)였다. Exa 2회, PDF GET 2회, OpenRouter 노드 응답 5회(Supervisor 2, 판정 조건 읽기 1, 문서 답변 2). DB에 기록된 분석 시간은 중단 전 9.952초, 재개 후 6.109초였다. 실제 청구 금액은 확인하지 않았다.
+- 관련 pytest 319 passed. 각각 새 PostgreSQL DB와 LF 체크아웃에서 `uv run --no-sync pytest -q --tb=no`로 비교했다. 수정 전 dd7fc3c는 1561 passed, 수정 후 1563 passed였다. 양쪽 모두 39 skipped이며 같은 테스트 3건(두 Google 관리자 세션, PostgreSQL 판정 재개 시 judge_read 횟수, 입력 표면 P3)이 실패했다. 동결 평가셋을 변경하거나 전체 실모델 평가를 실행하지 않았다.
