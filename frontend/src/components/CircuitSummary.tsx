@@ -5,9 +5,10 @@ import CircuitContextDiagram from './CircuitContextDiagram'
 import CircuitSchematic from './CircuitSchematic'
 import { buildCircuitContext } from './circuitContext'
 
-export default function CircuitSummary({ project, demo, targetRef, onTarget, judgement, roleLabels = [], missing = [], providedConditions = '', analysisStatus = 'idle' }: {
+export default function CircuitSummary({ project, demo, targetRef, onTarget, judgement, roleLabels = [], missing = [], providedConditions = '', analysisStatus = 'idle', readOnly = false }: {
   project: Project; targetRef: string; onTarget: (ref: string) => void
   demo?: DemoCircuit
+  readOnly?: boolean
   judgement?: JudgementDto
   roleLabels?: RoleLabel[]
   missing?: string[]
@@ -25,7 +26,7 @@ export default function CircuitSummary({ project, demo, targetRef, onTarget, jud
     <p>{project.source_kind === 'demo' ? '공개 데모 회로' : '업로드한 회로'} · 서버에서 확인한 연결 정보</p>
     <p>부품 {parts.length}개 · 넷 {project.connections.nets.length}개</p>
     <label htmlFor="target-ref">대상 부품</label>
-    <select id="target-ref" value={target} onChange={event => onTarget(event.target.value)}>
+    <select id="target-ref" value={target} disabled={readOnly} onChange={event => onTarget(event.target.value)}>
       <option value="">대상을 선택하세요</option>
       {parts.map(part => <option key={part.ref} value={part.ref}>{part.ref} · {part.value || '값 없음'}</option>)}
     </select>

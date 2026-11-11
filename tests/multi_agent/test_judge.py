@@ -388,3 +388,16 @@ def test_find_widens_to_sibling_categories_and_keeps_a_family_the_user_named(mon
     J.judge_agent(asked, specs=specs_of({}), find=find, retriever=None)
     # [왜] 같은 계열(쇼트키 소신호)로 먼저 넓히고, 사용자가 '쇼트키'를 말했으면 분류를 통째로 빼지 않는다(11-07 h4-14)
     assert seen[0] == 'schottky-rectifier' and 'schottky-diode' in seen and None not in seen
+
+
+def test_displayed_conditions_drop_ungrounded_reads_and_use_resume_values(monkeypatch):
+    read = {**READ, 'values': [v for v in READ['values'] if v['name'] != 'i_max'] +
+            [{'name': 'i_max', 'number': 999, 'unit': 'A', 'quote': '사용자가 적지 않은 999A'}]}
+    def reply(payload):
+        assert 'i_max' in payload['missing']
+        return {'answers': {'i_max': '250mA', 'v_drop_allowed': '0.8V'}}
+    monkeypatch.setattr(J, 'interrupt', reply)
+    result = J.judge_agent({**STATE, 'conditions': '', 'question': STATE['question'] + ' ' + STATE['conditions'], 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    rows = {x['code']: x['value'] for x in result['judgement']['input_conditions']}
+    assert rows['i_max'] == '0.25 A' and rows['v_drop_allowed'] == '0.8 V'
+    assert '999' not in str(rows)

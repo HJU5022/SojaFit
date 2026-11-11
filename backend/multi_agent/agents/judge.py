@@ -575,6 +575,24 @@ def _report(status: str, summary: str, missing=(), reason=None) -> dict:
     return AgentReport(agent='judge', status=status, summary=summary[:200], missing=list(missing), reason=reason).model_dump(mode='json')
 
 
+def display_inputs(values: dict, conds: dict) -> list[dict]:
+    """판정에 채택한 값만 표시한다. 원문·LLM 읽기 결과는 공개하지 않는다."""
+    rows = []
+    for name, value in values.items():
+        unit = ('V' if name.startswith(('v_', 'vz_')) else 'A' if name.startswith(('i_', 'ir_')) else
+                {'c_hold': 'F', 'droop_allowed': 'V/s', 'err_allowed': '(비율)'}.get(name, ''))
+        shown = ('예' if value else '아니오') if isinstance(value, bool) else f'{value:g} {unit}'.strip()
+        rows.append({'code': name, 'value': shown})
+    units = {'TA': '°C', 'TJ': '°C', 'TC': '°C', 'IF': 'A', 'IZ': 'A', 'IPP': 'A', 'VR': 'V', 'pulse': 's'}
+    for name, condition in conds.items():
+        shown = ', '.join(f'{key}={value:g} {units.get(key, "")}'.strip() if isinstance(value, (int, float))
+                          else f'{key}={value}' for key, value in condition.items())
+        if shown:
+            rows.append({'code': name, 'value': shown})
+    return rows[:60]
+
+
+
 def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
@@ -605,6 +623,9 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             roles = [reply['role']]
     base['analysis_inputs'] = {'roles': roles, 'values_si': dict(values), 'test_conditions': dict(conds),
                                'read_values': [v.model_dump(mode='json') for v in read.values]}
+    used_names = {name for role in roles for name in C.inputs(rules[role])}
+    base['input_conditions'] = display_inputs({n: v for n, v in values.items() if n in used_names},
+                                               {n: v for n, v in conds.items() if n in used_names})
     # [왜] 사용자가 숫자로 적은 규격('VRRM 400~600V', 'trr 최댓값 100ns 이하')을 역할 규칙 조건 뒤에 필수 조건으로 붙인다.
     #      판정과 찾기가 같은 규칙을 쓴다. 붙이지 않으면 규격 밖 후보를 보여 주거나 원래 부품 값과만 비교했다(11-06 v3-05 · 11 · 12)
     # [왜] 한계 값('전압강하 1.8V까지')을 읽기가 회차마다 요구 성질(VF)로도, 이 역할에 없는 회로 값 이름(v_drop_allowed)으로도 적었다.
@@ -623,6 +644,14 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             continue
         spec_words[x.code] = f'{spec_words[x.code]}, {x.words}' if x.code in spec_words else x.words
     extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text, code), text), code, text), code) for code, w in spec_words.items()] + limits)
+    for condition in extra:
+        code = condition.get('code')
+        if code in ('VF', 'IR') and isinstance(condition.get('basis'), str):
+            number = C.evaluate(condition['basis'], {})
+            if number is not None:
+                row = {'code': code, 'value': f'{condition["op"]} {number:g} {"V" if code == "VF" else "A"}'}
+                if row not in base['input_conditions']:
+                    base['input_conditions'].append(row)
     given = {c['code'] for c in extra}
 
     def keep(cond: dict) -> bool:

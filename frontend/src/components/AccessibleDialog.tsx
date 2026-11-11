@@ -22,6 +22,8 @@ export default function AccessibleDialog({ title, children, onClose, dismissible
     const focusables = () => Array.from(root?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
     ;(focusables()[0] ?? root)?.focus()
     function keydown(event: KeyboardEvent) {
+      const dialogs = document.querySelectorAll('[role="dialog"]')
+      if (dialogs[dialogs.length - 1] !== root) return
       if (event.key === 'Escape' && dismissible) { event.preventDefault(); close.current(); return }
       if (event.key !== 'Tab') return
       const items = focusables()

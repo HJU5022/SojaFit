@@ -3,7 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/api/*.ts의 타입)을 지우지 않는지 본다.
-  동작 37개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
+  동작 42개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -76,8 +76,9 @@ def test_no_success_response_has_an_empty_schema():
     assert empty == []
 
 
-# (메서드, 경로) 39개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 42개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
+    ('POST', '/api/runs/{run_id}/recover'),
     ('GET', '/health'),
     ('POST', '/api/auth/login'), ('POST', '/api/auth/signup'), ('GET', '/api/auth/demo'), ('POST', '/api/auth/demo-login'),
     ('GET', '/api/auth/me'), ('POST', '/api/auth/logout'), ('GET', '/api/auth/google/status'), ('GET', '/api/auth/google/start'),
@@ -91,14 +92,14 @@ ROUTES = {
     ('GET', '/api/projects/{project_id}/quotes'), ('GET', '/api/approved-cases'), ('DELETE', '/api/approved-cases/{case_id}'),
     ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
-    ('POST', '/api/runs/{run_id}/resume'),
+    ('POST', '/api/runs/{run_id}/resume'), ('GET', '/api/threads/{thread_id}'), ('DELETE', '/api/threads/{thread_id}'),
     ('GET', '/api/external-circuits/schematics'),
     ('GET', '/api/external-circuits/schematics/{signed_token}/{sheet_index}'),
 }
 
 
 def test_routes_are_pinned_and_live_only_in_api_routers():
-    """동작(메서드, 경로) 37개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    """동작(메서드, 경로) 42개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
     # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
     assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
     # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다
@@ -143,7 +144,7 @@ CASES = [
      {'signup': lambda *a: ('t', 7)}, None, USER_ID),
     ('get', '/api/auth/demo', None, {}, None, ENABLED),
     ('post', '/api/auth/demo-login', {'account': 'a'}, {'demo_session': lambda *a: ('t', 7)}, None, USER_ID),
-    ('get', '/api/auth/me', None, {}, None, {'user_id', 'role'}),
+    ('get', '/api/auth/me', None, {'account_email': lambda uid: 'user@example.test'}, None, {'user_id', 'role', 'email'}),
     ('post', '/api/auth/logout', None, {'logout': lambda *a: None}, None, OK),
     ('patch', '/api/admin/users/8', {'is_active': False}, {'admin_set_active': lambda *a: None}, None, OK),
     ('get', '/api/demo-circuits', None, {}, None, {'id', 'name', 'schematic'}),
@@ -152,7 +153,7 @@ CASES = [
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [(SNAPSHOT,), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW)]], QUOTE),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, SNAPSHOT, NOW)]], CASE),
-    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD,)]], {'id', 'project_id'}),
+    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status'}),
     ('post', '/api/projects/1/threads', None, {}, [(1,), (THREAD,)], {'id', 'project_id'}),
     ('get', f'/api/runs/{RUN}', None, {}, [(RUN, THREAD, 'completed', JUDGED, 12)], {'id', 'thread_id', 'message_id', 'result'}),
 ]

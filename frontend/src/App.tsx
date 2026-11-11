@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
@@ -7,7 +7,9 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
+import LandingPage from './pages/LandingPage'
 import SettingsPage from './pages/SettingsPage'
+import AccountMenu from './components/AccountMenu'
 import useOverlayScrollbar from './hooks/useOverlayScrollbar'
 
 export default function App() {
@@ -24,6 +26,8 @@ function Shell() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const workbench = location.pathname === '/app'
+  const settings = location.pathname === '/settings'
+  const publicPage = location.pathname === '/' || location.pathname === '/login'
   const ContentRoot = workbench ? 'div' : 'main'
   useOverlayScrollbar()
   async function signOut() {
@@ -33,11 +37,14 @@ function Shell() {
     finally { setBusy(false) }
   }
   return (
-    <div className={`shell${workbench ? ' workbench-route' : ''}`}>
-      {!workbench && <header className="topbar">
-        <a className="brand" href="/app">
-          <svg aria-hidden="true" viewBox="0 0 48 20"><path d="M5 10h15l8-6v12l-8-6h23" /><circle cx="5" cy="10" r="3" /><circle cx="43" cy="10" r="3" /></svg>
-          SOJAFIT
+    <div className={`shell${publicPage ? ' public-shell' : ''}${workbench ? ' workbench-host' : ''}${settings ? ' settings-host' : ''}`}>
+      {settings ? <header className="app-topbar settings-topbar">
+        <a className="brand workbench-brand" href="/app"><img className="brand-logo" src="/assets/sojafit-logo.svg" alt="SOJAFIT" width="142" height="40" /></a>
+        <nav className="settings-header-context" aria-label="현재 위치"><NavLink to="/app">작업대</NavLink><svg aria-hidden="true" viewBox="0 0 20 20"><path d="m8 5 5 5-5 5" /></svg><span aria-current="page">내 설정</span></nav>
+        <AccountMenu user={user ?? undefined} onLogout={signOut} logoutBusy={busy} />
+      </header> : !workbench && !publicPage && <header className="topbar">
+        <a className="brand" href="/">
+          <img className="brand-logo" src="/assets/sojafit-logo.svg" alt="SOJAFIT" width="142" height="40" />
         </a>
         <nav aria-label="주요 화면">
           <NavLink to="/app">작업대</NavLink>
@@ -49,10 +56,10 @@ function Shell() {
         </nav>
       </header>}
       <DummyModeNotice enabled={dummyFlowEnabled(import.meta.env)} />
-      <ContentRoot id="main" className={workbench ? 'workbench-page' : ''}>
+      <ContentRoot id="main" className={workbench ? 'workbench-page' : settings ? 'settings-main' : ''}>
         {error ? <p role="alert">{errorMessage(error)}</p> : null}
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/app" element={<RequireAuth><WorkbenchPage user={user ?? undefined} onLogout={signOut} logoutBusy={busy} /></RequireAuth>} />

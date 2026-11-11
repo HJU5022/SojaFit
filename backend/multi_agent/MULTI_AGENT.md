@@ -1,6 +1,7 @@
 # multi_agent
 
 ## 역할
+- 판정 표시 조건: 검증·재개 후 실제 역할 입력과 적용한 VF/IR 한계를 input_conditions로 공개한다. 현재 응답에만 사용하며 원시 읽기·보고를 복사하거나 판정 규칙을 변경하지 않는다.
 - 이 폴더: D5 멀티 에이전트(Supervisor 1개 + 서브에이전트 RAG 에이전트 · 대체 부품 에이전트)를 둡니다. Supervisor가 질문을 보고 할 일 목록을 한 번에 짜고(계획), 서브에이전트가 할 일을 동시에 하고, Supervisor가 보고를 모아 답을 정리하는 계획형 구조입니다(11-06 재설계).
 - 넣는 것: 계획서 · 할 일 · 보고서의 형식 · 이유 코드 · 상한(`contracts.py`), 멀티용 상태, Supervisor(계획 · 모으기 · 종합 · 답 검사), 서브에이전트(`agents/`), 조립.
 - 넣지 않는 것: D4 단일 에이전트 그래프(`backend/graph/`, D5 비교의 기준선. 11-06에 D4 v2로 고쳤고 지금도 단일 에이전트 기준선입니다), 숫자 · 단위 비교(`backend/judge/`), 검색 구현(`backend/rag/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 프롬프트 원문(`backend/prompts/`), 도구 정의(`backend/mcp_skill/`).

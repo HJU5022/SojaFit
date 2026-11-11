@@ -1,6 +1,6 @@
 import { apiFetch } from './client'
 
-export type User = { user_id: number; role: 'admin' | 'user' }
+export type User = { user_id: number; role: 'admin' | 'user'; email: string }
 // 탈퇴 응답: 지운 건수(분석 thread · 회로 · checkpoint · 내 설정 항목 · 프로젝트 · 견적 · 계정)
 export type DeletedCounts = Record<string, number>
 export const getMe = (signal?: AbortSignal) => apiFetch<User>('/api/auth/me', { signal })

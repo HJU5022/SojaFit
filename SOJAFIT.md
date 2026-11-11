@@ -66,7 +66,10 @@ SojaFit (proj3-b)
 │   │   │   ├── tinydimmer.png <- tinydimmer 원본 회로도
 │   │   │   ├── hrem.png <- HRem 원본 회로도
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
-│   │   └── sojafit-circuit-hero.png <- 프로젝트 미선택 랜딩의 회로 배경 이미지
+│   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
+│   │       ├── ASSETS.md   <- 폴더 설명
+│   │       ├── sojafit-logo.svg <- 승인된 Circuit S·SOJAFIT 가로형 헤더 로고
+│   │       └── sojafit-icon.svg <- 승인된 Circuit S 심볼의 파비콘
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
@@ -102,6 +105,7 @@ SojaFit (proj3-b)
 │       │   └── useOverlayScrollbar.ts <- 콘텐츠 위에 겹치는 스크롤 손잡이와 포인터·키보드 스크롤 연결
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
+│       │   ├── LandingPage.tsx <- 목업 기반 공개 랜딩·합성 기능 미리보기·인증 상태에 따른 시작 경로
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
 │       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
@@ -112,8 +116,8 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── AccountMenu.tsx <- 작업대·설정 공통 이메일 계정 메뉴·개인 화면 설정·로그아웃
 │       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
-│       │   ├── LandingServiceIntroduction.tsx <- 랜딩의 회로·근거·사람 승인 서비스 소개
 │       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
@@ -679,6 +683,8 @@ SojaFit (proj3-b)
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
 │   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
 │   │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
+│   │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
+│   │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
 │   │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
 │   │   └── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
 │   ├── superpowers/        <- 승인된 구현 계획 원문

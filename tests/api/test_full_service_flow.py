@@ -79,3 +79,36 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
         counts = {name: conn.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(name))).fetchone()[0]
                   for name in ('projects', 'circuits', 'threads', 'runs', 'messages', 'approvals', 'quotes', 'approved_cases')}
     assert not any(counts.values())
+
+
+def test_saved_history_http_reads_real_storage_and_preserves_owner_boundary(full_storage):
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.repository import ProjectRepository
+    owner, other = full_storage[0]
+    project = ProjectRepository().create_demo(owner, 'breadboard_supply', '저장 기록 시험')
+    repo = ConversationRepository()
+    thread = repo.create_thread(owner, project.id)
+    run, _ = repo.start(owner, thread, {'question': 'D1 저장 질문'})
+    repo.finish(owner, thread, run, 'completed', {'answer': '저장 답변', 'judgement': {'kind': 'judge', 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]}})
+    app.dependency_overrides[auth.current_user_id] = lambda: owner
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        listing = client.get(f'/api/projects/{project.id}/threads')
+        detail = client.get(f'/api/threads/{thread}')
+        result = client.get(f'/api/runs/{run}')
+        assert listing.status_code == detail.status_code == result.status_code == 200
+        assert listing.json()[0]['title'] == 'D1 저장 질문'
+        assert [m['content'] for m in detail.json()['messages']] == ['D1 저장 질문', '저장 답변']
+        assert result.json()['thread_id'] == thread
+        assert result.json()['message_id'] == detail.json()['latest_run']['message_id']
+        assert result.json()['result']['judgement']['results'][0]['part'] == 'SS34'
+        assert result.json()['result']['profile_hints'] == []
+        for response in (listing, detail, result): assert response.headers['cache-control'] == 'no-store'
+        app.dependency_overrides[auth.current_user_id] = lambda: other
+        for path in (f'/api/projects/{project.id}/threads', f'/api/threads/{thread}', f'/api/runs/{run}'):
+            response = client.get(path)
+            assert response.status_code == 404 and '저장 답변' not in response.text
+    finally:
+        app.dependency_overrides.clear()

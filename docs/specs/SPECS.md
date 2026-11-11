@@ -29,3 +29,5 @@
 - `verified-circuit-and-datasheet-visuals.md` — 검증된 데모 원본 회로도와 공식 데이터시트·패키지 외형 근거 표시 계약
 - `dummy-full-flow.md` — 개발 전용 메모리 API로 로그인부터 승인·견적·사례 삭제까지 실행하는 기능 계약
 - `workbench-information-architecture.md` — D5 계약을 유지하는 4영역 작업대·정보 콘솔·접근 가능한 상세 dialog 기능 계약
+- `frontend-screen-redesign.md` — 랜딩·로그인·대화 중심 작업대 적용 계약
+- `project-conversation-navigation.md` — DB 구조를 유지하는 프로젝트·이전 대화 탐색 API 계약
