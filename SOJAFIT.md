@@ -859,13 +859,12 @@ SojaFit (proj3-b)
     │   │   └── to-be-impact.md <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
     │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
     │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
-    │       ├── jobs2-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
-    │       ├── corpus/     <- 공개 문서 조각 수 실측
-    │       │   └── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
-    │       ├── corpus2/    <- 다이오드 데이터시트 41건·공개 문서 실측
+    │       ├── job-postings-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
+    │       ├── corpus/     <- 공개 문서·다이오드 데이터시트 조각 수 실측
+    │       │   ├── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
     │       │   ├── manifest_diode.json  <- 데이터시트 41건 627조각
     │       │   └── manifest_open_extra.json  <- KiCad 문서 등 조각 수
-    │       ├── jobs2/      <- 공고 수집 원자료(2026-10-29)
+    │       ├── job-postings/  <- 공고 수집 원자료(2026-10-29)
     │       │   ├── merged.json  <- 중복 제거 공고 237건 개별 행
     │       │   ├── wanted_jumpit.json  <- 원티드·점핏 89건
     │       │   ├── saramin_jobkorea.json  <- 사람인·잡코리아 136건
