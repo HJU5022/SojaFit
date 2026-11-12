@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-13 main c9d2c36 배포(Cloud Run)
+- 배포: `main` `c9d2c36`을 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-c9d2c36 --revision-suffix c9d2c36`(빌드 07:34~07:38 KST). 리비전 `sojafit-api-c9d2c36`, 이미지 `sha256:9c180b8255923b2087f5b47b1d135c1f7b7d95449bba407bf64ece4fd4dea474`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
+- 코드 차이 [실측]: `ea5797c`..`c9d2c36`에서 `backend`, `frontend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`의 `git diff --stat`이 비어 있다. 바뀐 것은 문서 · 증거 파일뿐이다.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 13.7초), `/login` 200, `/openapi.json` 200 · 동작 41 · 경로 34(공개 서비스와 같음), `/api/auth/me` 401, 오류 로그(ERROR 이상, 10분) 없음. 07:39 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`).
+- 이전 100% 리비전: `sojafit-api-ea5797c`(11-13 05:38 KST 전환).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `ea5797c` 리비전을 100% 지정(이름은 `sojafit-api-` 뒤에 `ea5797c`).
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복.
+
 ## 2026-11-13 main ea5797c 배포(Cloud Run)
 - 병합: PR #115 · #116이 2026-11-13 05:31 KST에 `main`에 병합(`0f831bc`, `ea5797c`). `main` 트리 `6452cdfc…` = 11-13 기동 · 재시작 · 계정 분리 측정 대상 `ad8612e`의 트리. PR #114는 병합 없이 닫힘.
 - 배포: `main` `ea5797c`를 `git archive`로 올려 `gcloud run deploy --source … --no-traffic --tag main-ea5797c --revision-suffix ea5797c`. 리비전 `sojafit-api-ea5797c`. 환경변수 30개는 이전 리비전과 같음(`DEMO_MODE=0`, `GOOGLE_AUTH_ENABLED=1`, `THREADS_ENABLED=1`, 비밀 `DATABASE_URL_NEW`). Exa 변수 없음 → `/api/external-circuits` 비활성.
