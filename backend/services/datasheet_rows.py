@@ -380,6 +380,7 @@ def verified_rows(raw, url, parts, terms, *, grade=None):
 if __name__ == '__main__':
     if os.name == 'posix':
         import resource
+        # [주의] RLIMIT_AS 제한은 Linux 전용이다. macOS에서는 ValueError로 이 하위 프로세스가 죽는다
         resource.setrlimit(resource.RLIMIT_AS, (768 * 1024**2,) * 2)
         resource.setrlimit(resource.RLIMIT_CPU, (10, 10))
     grade = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] else None

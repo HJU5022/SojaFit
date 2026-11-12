@@ -24,9 +24,9 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
 from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted
-from backend.graph.nodes import NOT_FOUND, REVISION, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search
+from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
-from backend.multi_agent.revisions import document_revision, requested_revisions, revision_matches, revisions_for_part
+from backend.multi_agent.revisions import requested_revisions, revision_matches, revisions_for_part
 from backend.rag.units import to_si
 from backend.rag.card_read import read_code_values
 from backend.rag.card_find import doc_packages, load_cards

@@ -43,9 +43,6 @@ LOGIN_IP_FAILURES = 30  # 클라이언트 IP당 15분 로그인 실패 상한. �
 DEMO_ACCOUNTS = {"a": "demo-a@example.test", "b": "demo-b@example.test"}
 # [왜] scrypt 형식이 아닌 표식이라 verify_password가 늘 False다(비밀번호 로그인 불가). 버튼 로그인은 이 표식을 가진 계정만 받는다
 DEMO_PASSWORD_HASH = "demo-button-login-only"
-# [왜] Google로 가입한 계정은 비밀번호가 없다. scrypt 형식이 아닌 표식이라 verify_password가 늘 False이고(비밀번호 로그인 401),
-#      DEMO_PASSWORD_HASH와 달라 데모 버튼 로그인(demo_session)에도 걸리지 않는다
-GOOGLE_PASSWORD_HASH = "google-login-only"
 
 
 def validate_auth_configuration() -> None:
