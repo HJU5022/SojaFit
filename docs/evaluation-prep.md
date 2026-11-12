@@ -14,7 +14,7 @@
 
 ## 추가로 준비할 근거
 
-- [ ] 목표 직무 채용 공고 50건을 분석해 반복 업무·필요 역량을 정리한다. 공고 분석 자료는 서비스 코퍼스와 구분한다. (2026-10-29 제조 산업 AI 공고 237건·LLM/RAG/에이전트 77건 집계 및 요구 역량↔SojaFit 구현 매핑은 [market-user-journey.md](research/market-user-journey.md#1-목표-직무산업-채용-공고-분석과-역량-연결)에 정리 완료. 조장 로컬 조사 폴더 `evidence/jobs2/집계.md`의 개별 50건 목록 대조만 남음)
+- [ ] 목표 직무 채용 공고 50건을 분석해 반복 업무·필요 역량을 정리한다. 공고 분석 자료는 서비스 코퍼스와 구분한다. (2026-10-29 제조 산업 AI 공고 237건·LLM/RAG/에이전트 77건 집계 및 요구 역량↔SojaFit 구현 매핑은 [market-user-journey.md](research/market-user-journey.md#1-목표-직무산업-채용-공고-분석과-역량-연결)에 정리 완료. 개별 공고 행은 저장소의 [evidence/jobs2/merged.json](research/evidence/jobs2/merged.json)(237건)에 있고, 그중 50건 목록 대조만 남음)
 - [x] 사용자·지불 주체는 확인 사실과 가설을 구분한다. 범용 챗봇과 동일 질문 5개를 비교한 결과는 기존 평가 리포트 10장에 기록한다. (사용자·지불 주체의 확인 사실 5건과 미검증 가설 4건, 페르소나 2종, 6단계 고객 여정 맵, 동일 질문 5개 비교표는 [market-user-journey.md](research/market-user-journey.md)에 정리 완료)
 - [ ] 외부 검토자 1명에게 서비스와 근거를 검토받고 피드백·반영 여부를 남긴다. (검토 시나리오와 기록 양식은 [market-user-journey.md 6장](research/market-user-journey.md#6-외부-검토-1명-점검-계획-및-기록-양식-e1-5)에 준비 완료, D10 전에 실시)
 - [x] 임베딩 시간·비용: 1,360건 전체의 서로 다른 본문 45,898개를 `text-embedding-3-small`로 12.6분, 5,391,648토큰에 임베딩했다(11-01, `EVAL_REPORT.md` 1장). 모델 선택의 품질·비용 절충과 한계는 본평가 뒤 평가 리포트에 기록한다.

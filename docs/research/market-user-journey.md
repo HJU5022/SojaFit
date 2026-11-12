@@ -11,7 +11,7 @@
 
 ### 1-1. 조사 집계 (확인 사실, `docs/TOPIC.md` 각주 [2])
 
-- **조사 기준일·출처**: 2026-10-29, 원티드·점핏·사람인·잡코리아·기업 채용 페이지에서 수집한 제조 산업(전자·설비·제조사·제조AX 공급사) AI 관련 공고(`evidence/jobs2/집계.md`, 조장 로컬 조사 폴더 보관, 서비스 RAG 코퍼스 1,360건과 별도 집계).
+- **조사 기준일·출처**: 2026-10-29, 원티드·점핏·사람인·잡코리아·기업 채용 페이지에서 수집한 제조 산업(전자·설비·제조사·제조AX 공급사) AI 관련 공고(저장소 사본 [`evidence/jobs2/집계.md`](evidence/jobs2/집계.md)와 원자료 [`evidence/jobs2/`](evidence/jobs2/), 목록과 해시는 [`evidence/README.md`](evidence/README.md). 서비스 RAG 코퍼스 1,360건과 별도 집계).
 - **모수 집계**:
   - 제조 산업 AI 공고(중복 제거): **237건**
   - 열린 AI 개발 직무: **170건**
@@ -28,7 +28,7 @@
 | 환각 억제·근거 인용 강제·결정적 수치 판정 | LLM이 전형값(`TYP`)을 보장 최댓값(`MAX`)으로 둔갑시키거나, 온도·펄스 시험 조건 차이를 무시하고 수치 대소를 잘못 비교함 | 수치·단위 비교는 `backend/judge/`에서만 수행(AGENTS.md 규칙 7), 생성 노드의 통과 청크 밖 번호 인용(`fake_citations`)·무인용 문장(`uncited_sentences`) 코드 검사(`backend/graph/nodes.py`), 답변·거절 5지표 채점기(`evals/runners/score_answer.py`) |
 | 사람 승인(Human-in-the-Loop)·사용자 격리·운영 관측 | 검증되지 않은 부품 변경안이나 견적이 곧바로 저장·발주되면 하드웨어 재작업 비용이 발생하고, 여러 엔지니어의 세션·기억이 섞이면 안 됨 | 판정에 빠진 회로 값을 묻는 `interrupt`와 체크포인트 재개(`backend/multi_agent/agents/judge.py`), 견적은 그래프 밖 승인 API(`POST /api/messages/{id}/approvals`) 뒤에만 저장(`backend/api/quotes.py`), scrypt·HMAC 서버 세션 인증(`backend/auth.py`), Langfuse 트레이스·프롬프트 버전·비용/점수 기록(`evals/runners/run_graph.py`) |
 
-- **남은 조치**: 조장 로컬 조사 폴더(`evidence/jobs2/집계.md`)에서 목표 직무 채용 공고 50건의 개별 행(`번호 · 회사 · 직무명 · 확인일 · 주요 업무 · 필수/우대 키워드 · URL`)을 발표·검증 부록으로 바로 열람할 수 있게 대조해 둔다.
+- **남은 조치**: 목표 직무 채용 공고의 개별 행(회사 · 직무명 · URL · 수집 사이트 · 경력 · 신입 가능 여부 · 상태)은 [`evidence/jobs2/merged.json`](evidence/jobs2/merged.json)(237건)에서 열람할 수 있다. 이 중 발표·검증 부록용 50건을 골라 `번호 · 회사 · 직무명 · 확인일 · 주요 업무 · 필수/우대 키워드 · URL` 표로 대조하는 일은 아직 하지 않았다.
 
 ---
 
