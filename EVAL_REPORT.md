@@ -349,7 +349,7 @@ S0(기준점)은 #39 두 세트를 고친 채점기(`61a29f1`)로 다시 채점�
 
 ### 사례 7종 반복 측정 (PR #85, 2026-11-11)
 
-심태현의 인젝션 베이스라인입니다. 사례 7종을 정상/공격 짝으로 5회 반복해 **110작업**(정상 55 · 공격 55; current 방어 문단 70 · ablated 40)을 한 번 실제 모델로 돌렸습니다. 11-11 04:24~04:35 KST, 679.7초, 완료 110 · 오류 0. 정상 55건은 사전 등록한 필수 항목을 모두 충족했습니다. 원본은 `evals/results/threads/injection_baseline_live_2026-11-11_03.{jsonl,meta.json,budget.json}`, 상세는 `docs/research/injection-smoke-results.md` 본실측03절, 사전 등록은 `evals/guides/preregister.md` 말미입니다.
+심태현의 인젝션 베이스라인입니다. 사례 7종을 정상/공격 짝으로 5회 반복해 **110작업**(정상 55 · 공격 55; current 방어 문단 70 · ablated 40)을 한 번 실제 모델로 돌렸습니다. 11-11 04:24~04:35 KST, 679.7초, 완료 110 · 오류 0. 정상 55건은 사전 등록한 필수 항목을 모두 충족했습니다. 원본은 `evals/results/threads/injection_baseline_live_2026-11-11_03.{jsonl,meta.json,budget.json}`, 상세는 `docs/research/injection-results.md` 본실측03절, 사전 등록은 `evals/guides/preregister.md` 말미입니다.
 
 **시도한 것 · 막힌 정도 · 남은 것** (공격 55건; 표의 막힌 정도는 자동/assistant 잠정. 사람 채점은 아래 표본 절)
 
