@@ -20,7 +20,7 @@
 | `PROMPTS.md` | 이 문서(프롬프트 해시에서 제외) | 없음 | 해당 없음 |
 | `supervisor.md` | 멀티 Supervisor(계획)의 시스템 프롬프트: 질문 종류, 할 일 목록과 지시서, 거절 사유, 검색어 쓰는 법. 영어 | `backend/multi_agent/supervisor.py:31` | 사용 |
 | `docs_answer.md` | 멀티 RAG 에이전트의 근거 채점 + 답 쓰기 프롬프트. 영어, 답은 한국어 | `backend/multi_agent/agents/docs.py:34` | 사용 |
-| `synth.md` | 멀티 종합 노드 프롬프트(할 일 2개 이상일 때만). 영어, 답은 한국어 | `backend/multi_agent/supervisor.py:32` | 사용 |
+| `synth.md` | 멀티 종합 노드 프롬프트(보고가 서로 다른 에이전트 2개 이상이고 일부 답·실패가 섞여 `답 정리`가 못 이을 때만, SPEC.md 2절). 영어, 답은 한국어 | `backend/multi_agent/supervisor.py:32` | 사용 |
 | `judge_read.md` | Spec 에이전트 읽기 노드 프롬프트: 역할·회로 값 읽기, 숫자 비교 없음. 영어 | `backend/multi_agent/agents/judge.py:35` | 사용 |
 | `card_read.md` | 카드 읽기 프롬프트: 카드에서 값·원문 인용 읽기. 영어 | `backend/rag/card_read.py:25` | 사용 |
 | `card_pick.md` | 카드 찾기가 분류 문서의 개요 줄을 보고 읽을 문서를 고르는 프롬프트(코드 고르기 `code_pick`이 못 줄 세울 때만). 영어 | `backend/rag/card_find.py:91` | 사용 |
