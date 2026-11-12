@@ -5,6 +5,10 @@
 - 정본 여부: 정본(이 폴더 파일의 목록과 sha256)
 - 관련 문서: [docs/TOPIC.md](../../TOPIC.md)(각주 [1]~[4]), [market-user-journey.md](../market-user-journey.md), [job-postings-summary.md](job-postings-summary.md)
 
+## 역할
+
+- 이 폴더: 시장 근거 원자료 복사본과 sha256 색인을 둔다. 넣지 않는 것은 해석(`../market-user-journey.md`)이다.
+
 ## 1. 범위
 
 `docs/TOPIC.md` 각주와 `market-user-journey.md`가 가리키는 조사 파일 중 저장소에 둘 수 있는 9개. 모두 조장 로컬 조사 폴더의 원본과 바이트가 같은 복사본이다(복사 시 `cmp` 일치 확인. 원본은 저장소에 없어 지금은 다시 확인할 수 없다). 파생·재작성 파일은 없다.
