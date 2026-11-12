@@ -12,7 +12,7 @@ APPROVABLE = {'IDENTICAL', 'SPEC_EQUIVALENT', 'ROLE_SUFFICIENT'}
 
 # [왜] 판정 결과의 품번은 모델이 읽은 이름을 질문에 쓴 대로 보여 준다('TSC 1N4007G', '1N4148 A0G', 판정 시험이 고정한 계약).
 #      견적의 part_number는 DB 규칙(공백 없는 영문 · 숫자 · . _ + / -)이라 둘이 어긋나면 승인 · 견적이 422 · 저장 실패였다(11-10 배포 점검).
-#      그래서 승인할 때 표시 이름은 그대로 두고 식별용 품번을 따로 만든다. 제조사 이름 규칙은 judge.py의 MAKER와 같게 둔다
+#      그래서 승인할 때 표시 이름은 그대로 두고 식별용 품번을 따로 만든다. 제조사 이름 규칙은 multi_agent/agents/part_names.py의 MAKER와 같게 둔다
 MAKER = re.compile(r'^\s*(?:TSC|Taiwan\s+Semiconductor)\s+', re.I)
 PART_NUMBER = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}')
 

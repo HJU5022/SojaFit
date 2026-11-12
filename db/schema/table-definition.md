@@ -254,7 +254,7 @@
 | `user_id` | bigint | NOT NULL |  | 소유자 |
 | `name` | text | NOT NULL |  | 이름(공백 제거 1~200자) |
 | `source_kind` | text | NOT NULL |  | demo \| upload |
-| `demo_id` | text | NULL |  | 데모 회로 이름(데모일 때만, DB가 6개 이름 목록으로 검사) |
+| `demo_id` | text | NULL |  | 데모 회로 이름(데모일 때만 값이 있다. 이름 목록은 앱이 검사) |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 만든 시각 |
 | `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 이름 변경 · 대화 활동 시각 |
 
@@ -328,7 +328,7 @@
 | `id` | uuid | NOT NULL |  | run UUID(URL에 노출) |
 | `thread_id` | uuid | NOT NULL |  | 소속 대화 |
 | `status` | text | NOT NULL |  | running \| requires_input \| completed \| refused \| failed |
-| `safe_result` | jsonb | NULL |  | 공개 결과 JSON(answer · question_type · price_parts · interrupt · judgement · evidence). 모양을 DB CHECK 함수가 재귀 검사 |
+| `safe_result` | jsonb | NULL |  | 공개 결과 JSON(answer · question_type · price_parts · interrupt · judgement · evidence). DB CHECK는 최상위 6칸이 있는지만 검사 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 시작 |
 | `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 마지막 변경 |
 
@@ -567,7 +567,7 @@
 | `reserved_usd` | numeric(16,10) | NOT NULL | 0 | 예약 비용(청구액 아님, 환불 안 함) |
 | `attempts` | integer | NOT NULL | 1 | 그날 시도 수 |
 | `next_allowed` | timestamp with time zone | NOT NULL |  | 다음 허용 시각(호출 간격) |
-| `reserved_tokens` | bigint | NOT NULL | 0 | 예약 토큰(상한 사용자 200,000 → 운영 1,000,000) |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 예약 토큰(사용자 하루 상한 5,000,000) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
@@ -587,7 +587,7 @@
 | 칸 | 타입 | NULL | 기본값 | 의미 |
 |---|---|---|---|---|
 | `day` | date | NOT NULL |  | UTC 날짜 |
-| `reserved_tokens` | bigint | NOT NULL | 0 | 서비스 전체 예약 토큰(상한 2,000,000) |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 서비스 전체 예약 토큰(하루 상한 10,000,000) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
