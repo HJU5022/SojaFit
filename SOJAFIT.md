@@ -381,36 +381,10 @@ SojaFit (proj3-b)
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
 │   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
-│   ├── schema/             <- 스키마 설명 문서
-│   │   ├── SCHEMA.md       <- 폴더 설명
-│   │   ├── erd.md          <- 서비스 표 ERD(DB에서 자동 생성)
-│   │   └── table-definition.md  <- 서비스 표 정의서(DB에서 자동 생성)
-│   └── redesign/           <- 서비스 DB 재설계(11-11) 설계 문서와 일회용 DB 검증 스크립트
-│       ├── REDESIGN.md     <- 폴더 설명 + 요약 · 결정 항목
-│       ├── as-is/          <- 현재 구조(운영 DB 기준) 문서
-│       │   ├── erd.md      <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
-│       │   └── tables.md   <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서(자동 생성 + 의미 · 소유 코드, 행 25개를 세어 확인). 지금 서비스 표 24개(기준선 21개 + 인증 SQL 029·030이 더한 표 3개)는 `db/schema/table-definition.md`
-│       ├── to-be/          <- 목표 설계안 문서
-│       │   ├── design.md   <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
-│       │   ├── erd.md      <- 목표 ERD(추천안과 보류안)
-│       │   ├── tables.md   <- 목표 표 정의서 + 현재와의 차이
-│       │   └── impact.md   <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
-│       └── verify/         <- 운영 이전 SQL(db/migrations/)과 기준선을 일회용 Postgres 16 · 17에서 검증(운영 DB 접속 없음)
-│           ├── run_all.sh  <- 16 · 17 전체 검증
-│           ├── old_chain.sh  <- 기준선 이전 옛 체인(db/legacy 포함) 파일 목록을 번호순으로 출력
-│           ├── rd_test.sh  <- 현재 구조 → 표본 데이터 → expand → contract → 기준선과 구조 비교
-│           ├── rd_test2.sh  <- 새 제약 · 삭제 연쇄 · 청소 함수 동작
-│           ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
-│           ├── rd_test4.sh  <- P1만 적용한 중간 상태에서 옛 삭제 경로 · 청소 함수
-│           ├── rd_test5.sh  <- expand만 적용 + 새 코드 행 + expand 되돌리기
-│           ├── rd_test7.sh  <- 백업 복원 왕복(pg_dump -Fc → 빈 DB pg_restore): 새 기준선 · 이전 SQL 뒤 · 되돌린 뒤 · 이전 전 옛 구조, 오류 0 · 행 수 동일
-│           ├── rd_test6.sh  <- 이전 SQL의 데이터 손실 가드: 정상 데이터는 통과, 위반 데이터(display_name 값 · 다른 snapshot · 승인 행 · 승인 대기 행)는 중단
-│           ├── lib/        <- 검증 보조 코드
-│           │   └── rd_struct.py  <- 서비스 표 구조를 정규화해 출력(비교용)
-│           └── sql/        <- 검증용 표본 데이터 · 체크포인트 대역 표
-│               ├── rd_sample.sql  <- 표본 데이터(옛 구조)
-│               ├── rd_sample_new.sql  <- 합성 데이터(새 기준선 구조, 백업 복원 시험용)
-│               └── rd_stub.sql  <- LangGraph 체크포인트 대역 표
+│   └── schema/             <- 스키마 설명 문서
+│       ├── SCHEMA.md       <- 폴더 설명
+│       ├── erd.md          <- 서비스 표 ERD(DB에서 자동 생성)
+│       └── table-definition.md  <- 서비스 표 정의서(DB에서 자동 생성)
 │
 ├── evals/                  <- 평가셋과 평가 실행. 루트에는 동결 평가셋만 둠 (고정: 루트의 평가셋·FROZEN.json)
 │   ├── EVALS.md            <- 폴더 설명
@@ -750,6 +724,22 @@ SojaFit (proj3-b)
 │   │   ├── verify_chain/   <- 새 DB 기준선이 옛 체인 + 운영 이전 SQL 결과와 같은 구조인지 일회용 컨테이너로 확인(운영 DB 접속 없음)
 │   │   │   ├── VERIFY_CHAIN.md  <- 폴더 설명
 │   │   │   └── verify_chain.sh  <- 옛 체인 + 이전 SQL 결과 대 새 기준선 구조 비교(0줄), 옛 증분 체인 000~029와 비교, 되돌리기 뒤 처음 구조 · RLS · 함수 권한 비교(Postgres 16 · 17)
+│   │   ├── verify_redesign/  <- 운영 이전 SQL(db/migrations/)과 기준선을 일회용 Postgres 16 · 17에서 검증(운영 DB 접속 없음)
+│   │   │   ├── run_all.sh  <- 16 · 17 전체 검증
+│   │   │   ├── old_chain.sh  <- 기준선 이전 옛 체인(db/legacy 포함) 파일 목록을 번호순으로 출력
+│   │   │   ├── rd_test.sh  <- 현재 구조 → 표본 데이터 → expand → contract → 기준선과 구조 비교
+│   │   │   ├── rd_test2.sh  <- 새 제약 · 삭제 연쇄 · 청소 함수 동작
+│   │   │   ├── rd_test3.sh  <- contract 되돌리기(B2 → B1 → A)와 처음 구조 비교
+│   │   │   ├── rd_test4.sh  <- P1만 적용한 중간 상태에서 옛 삭제 경로 · 청소 함수
+│   │   │   ├── rd_test5.sh  <- expand만 적용 + 새 코드 행 + expand 되돌리기
+│   │   │   ├── rd_test7.sh  <- 백업 복원 왕복(pg_dump -Fc → 빈 DB pg_restore): 새 기준선 · 이전 SQL 뒤 · 되돌린 뒤 · 이전 전 옛 구조, 오류 0 · 행 수 동일
+│   │   │   ├── rd_test6.sh  <- 이전 SQL의 데이터 손실 가드: 정상 데이터는 통과, 위반 데이터(display_name 값 · 다른 snapshot · 승인 행 · 승인 대기 행)는 중단
+│   │   │   ├── lib/        <- 검증 보조 코드
+│   │   │   │   └── rd_struct.py  <- 서비스 표 구조를 정규화해 출력(비교용)
+│   │   │   └── sql/        <- 검증용 표본 데이터 · 체크포인트 대역 표
+│   │   │       ├── rd_sample.sql  <- 표본 데이터(옛 구조)
+│   │   │       ├── rd_sample_new.sql  <- 합성 데이터(새 기준선 구조, 백업 복원 시험용)
+│   │   │       └── rd_stub.sql  <- LangGraph 체크포인트 대역 표
 │   │   └── voyage_rollout.py  <- voyage-4-large 적용 점검·마이그레이션(db/008)·적재 검증(DB 변경은 migrate만)
 │   └── results/            <- 측정 원시 결과(평가 지표가 아님). <무엇>_<날짜>.json을 주제 폴더에
 │       ├── auth/           <- 로그인 경계·동시 scrypt
@@ -859,6 +849,14 @@ SojaFit (proj3-b)
     │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
     │   ├── sojafit-domain-jobs-2026-11-12.md  <- 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹과 개별 출처
     │   ├── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
+    │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
+    │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REDESIGN.md)
+    │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
+    │   │   ├── as-is-tables.md <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서
+    │   │   ├── to-be-design.md <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
+    │   │   ├── to-be-erd.md    <- 목표 ERD(추천안과 보류안)
+    │   │   ├── to-be-tables.md <- 목표 표 정의서 + 현재와의 차이
+    │   │   └── to-be-impact.md <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
     │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
     │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
     │       ├── jobs2-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
@@ -922,7 +920,6 @@ SojaFit (proj3-b)
 | `db/migrations/` | [MIGRATIONS.md](db/migrations/MIGRATIONS.md) | 서비스·운영 |
 | `db/manual/` | [MANUAL.md](db/manual/MANUAL.md) | 서비스·운영 |
 | `db/schema/` | [SCHEMA.md](db/schema/SCHEMA.md) | 서비스·운영 |
-| `db/redesign/` | [REDESIGN.md](db/redesign/REDESIGN.md) | 서비스·운영 |
 | `evals/` | [EVALS.md](evals/EVALS.md) | 평가·문서 |
 | `evals/drafts/` | [DRAFTS.md](evals/drafts/DRAFTS.md) | 평가·문서 |
 | `evals/inputs/` | [INPUTS.md](evals/inputs/INPUTS.md) | 평가·데이터 |

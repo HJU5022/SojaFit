@@ -1,6 +1,6 @@
 #!/bin/bash
 # 이전 SQL의 데이터 손실 가드 시험: 가짜 운영 구조(옛 체인 000~026 + 표본 데이터)에서 정상 데이터는 통과하고 위반 데이터는 막히는지, 막힌 뒤 아무것도 지워지지 않았는지 확인한다.
-# 사용(레포 루트): bash db/redesign/verify/rd_test6.sh <이미지> <컨테이너 이름> <포트>   (일회용 도커 컨테이너만 쓴다. 운영 DB 접속 없음)
+# 사용(레포 루트): bash scripts/db/verify_redesign/rd_test6.sh <이미지> <컨테이너 이름> <포트>   (일회용 도커 컨테이너만 쓴다. 운영 DB 접속 없음)
 IMG=$1; NAME=$2; PORT=$3
 HERE="$(cd "$(dirname "$0")" && pwd)"; V="$HERE"; R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/migrations"
 docker rm -f $NAME >/dev/null 2>&1

@@ -1,6 +1,6 @@
 # 현재(as-is) ERD
 
-- 기준: 운영 DB 구조(11-10 밤). 표 정의서: [`tables.md`](tables.md).
+- 기준: 운영 DB 구조(11-10 밤). 표 정의서: [`as-is-tables.md`](as-is-tables.md).
 - **실선(`||--o{`)은 DB의 FK**, **점선(`||..||`)은 FK가 없고 같은 UUID로만 논리적으로 묶인 관계**다.
 - 범위 밖(그림에서 뺀 것): 코퍼스 4표(`source_documents` → `document_chunks` → `chunk_embeddings` · `chunk_embedding_bits`), LangGraph 체크포인트 표(`sojafit_agent.checkpoints` · `checkpoint_blobs` · `checkpoint_writes`, `thread_id`가 text라 FK 없음).
 

@@ -1,8 +1,8 @@
 # 목표(to-be) 서비스 표 정의서
 
-- 기준: [`db/020_service_baseline.sql`](../../020_service_baseline.sql)을 빈 Postgres(16 · 17)에 적용한 결과를 `pg_catalog`에서 자동 생성했다(칸 · 타입 · 키 · 인덱스). 의미 · 차이는 손으로 적었다.
-- 상태: **정운 확정 전 초안**. "필수 + 권장" 단계(P1 + P2)가 끝난 뒤의 구조다. 단계 구분은 [`../REDESIGN.md`](../REDESIGN.md), 근거와 선택지는 [`design.md`](design.md), 그림은 [`erd.md`](erd.md).
-- 현재 구조와의 비교는 [`../as-is/tables.md`](../as-is/tables.md). 범위 밖(코퍼스 4표 · LangGraph 표)은 그대로다.
+- 기준: [`db/020_service_baseline.sql`](../../../db/020_service_baseline.sql)을 빈 Postgres(16 · 17)에 적용한 결과를 `pg_catalog`에서 자동 생성했다(칸 · 타입 · 키 · 인덱스). 의미 · 차이는 손으로 적었다.
+- 상태: **정운 확정 전 초안**. "필수 + 권장" 단계(P1 + P2)가 끝난 뒤의 구조다. 단계 구분은 [`summary.md`](summary.md), 근거와 선택지는 [`to-be-design.md`](to-be-design.md), 그림은 [`to-be-erd.md`](to-be-erd.md).
+- 현재 구조와의 비교는 [`as-is-tables.md`](as-is-tables.md). 범위 밖(코퍼스 4표 · LangGraph 표)은 그대로다.
 
 | 스키마.표 | 목적 | as-is와의 차이 |
 |---|---|---|

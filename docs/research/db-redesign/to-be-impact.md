@@ -39,7 +39,7 @@
 | `tests/projects/test_project_repository.py::test_demo_catalog_matches_db_allow_list` | 데모 6개 목록 대조 시험 → "데모일 때만 `demo_id`" 검사 시험으로 교체 |
 | `tests/services/test_quote_service.py` | 스냅샷 · 품번 시험 2~3개 조정 |
 | `tests/api/test_full_service_flow.py` | 승인 → 견적 흐름 · 옛 승인 시험 2개 조정(snapshot 칸 없음) |
-| 새로 | 삭제 연쇄(프로젝트 → 분석 대화 · 체크포인트), 트리거, FK 거부, 새 CHECK 거부 · 허용, 만료 세션 청소 — 약 5개. 기준은 `db/redesign/verify/rd_test2.sh`가 이미 일회용 DB로 확인한 항목 |
+| 새로 | 삭제 연쇄(프로젝트 → 분석 대화 · 체크포인트), 트리거, FK 거부, 새 CHECK 거부 · 허용, 만료 세션 청소 — 약 5개. 기준은 `scripts/db/verify_redesign/rd_test2.sh`가 이미 일회용 DB로 확인한 항목 |
 
 ### SQL · 운영
 `migrate_prod_1_expand.sql` → P1 코드 배포 → 스모크 → `migrate_prod_2_contract_p1.sql`. 이전 규모는 서비스 데이터 사용자 5 · 프로젝트 11 · 승인 3.
@@ -119,7 +119,7 @@ OpenAPI 경로 · 모델 목록은 `tests/api/test_openapi.py`가 고정하고 �
 
 | 단계 | 확인 |
 |---|---|
-| 일회용 DB | `bash db/redesign/verify/run_all.sh`: Postgres 16 · 17에서 이전 · 되돌리기 · 동작을 반복(이미 통과) |
+| 일회용 DB | `bash scripts/db/verify_redesign/run_all.sh`: Postgres 16 · 17에서 이전 · 되돌리기 · 동작을 반복(이미 통과) |
 | 로컬 | 키 없는 전체 시험, DB 연결 시험(`TEST_AUTH_DATABASE_URL`, 스킵 0), `docker compose up` 한 줄 기동 + 스모크 `--demo --refusal` |
 | 배포 | 0% 점검 → 100% → 배포 주소 스모크 28단계(실제 모델) |
 | 평가 | 에이전트 코드가 바뀌지 않으므로 v3 재측정은 필수가 아니다(P3를 하면 필요) |

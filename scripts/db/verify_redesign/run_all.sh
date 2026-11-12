@@ -1,6 +1,6 @@
 #!/bin/bash
 # 이전 SQL 전체 검증을 Postgres 16(compose · CI)과 17(운영)에서 차례로 돌린다. 일회용 도커 컨테이너만 쓰고 운영 DB에는 접속하지 않는다.
-# 사용(레포 루트): PY=$(pwd)/.venv/bin/python bash db/redesign/verify/run_all.sh
+# 사용(레포 루트): PY=$(pwd)/.venv/bin/python bash scripts/db/verify_redesign/run_all.sh
 HERE="$(cd "$(dirname "$0")" && pwd)"
 for pair in "pgvector/pgvector:pg16 rd-pg16 55443" "pgvector/pgvector:pg17 rd-pg17 55444"; do
   set -- $pair

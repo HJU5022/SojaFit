@@ -7,6 +7,7 @@
 - 담당: 쓴 사람
 
 ## 파일
+- `db-redesign/` — 서비스 DB 재설계(11-11) 설계 문서 7개(`summary.md` 요약, `as-is-*` 현재 구조, `to-be-*` 목표 구조·영향 지도). 검증 스크립트는 `scripts/db/verify_redesign/`
 - `sojafit-domain-jobs-2026-11-12.md` — 11-12 기준 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹, 공고 링크와 분야별 한계
 - `d9-outside-evidence-2026-11-11.md` — D9용 저장소 밖 증거 A~D 이관 목록(판정진단·v4h summary/manifest·#48+#49 원시)·아직 없는 216건 표주석 원시
 - Codex v3-50 비교 원본: `evals/guides/v3_50_codex_paste.md` · `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md` (EVAL_REPORT §10)

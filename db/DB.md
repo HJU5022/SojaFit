@@ -32,7 +32,6 @@
 - `legacy/` — 기준선 이전 SQL 원본. 동일 내용이던 루트 중복은 초기화하지 않는다.
 - `migrations/` — 기존 운영 DB의 검토·이전·되돌리기 SQL.
 - `manual/` — 자동 실행하지 않는 수동 SQL.
-- `redesign/` — 서비스 기준선 설계와 검증 스크립트.
 - `schema/` — 실제 스키마에서 생성한 ERD·표 정의서.
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
 - `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
@@ -55,13 +54,12 @@
 - `026_revoke_public_grants_and_rls.sql` — 공개 역할(anon · authenticated)의 권한을 모두 회수하고(코퍼스 표 4개 · 시퀀스 · 우리 함수 · public 기본 권한) 앱 표(public · sojafit_agent)의 RLS를 켠다(11-10 운영 DB 점검). 소유자 · 슈퍼유저는 RLS를 우회해 서버 동작은 그대로다. 역할이 없는 DB(compose · CI)는 RLS만 켠다. 여러 번 돌려도 같다
 - `legacy/` — 기준선 이전의 옛 증분 서비스 SQL 21개(`003`~`025` · `027`~`029`)와 설명. 이력용이며 실행하지 않는다(운영 이전 되돌리기가 일부를 다시 읽는다). [LEGACY.md](legacy/LEGACY.md)
 - `migrations/` — 운영 DB 이전 SQL(expand · contract P1 · contract P2 · 선택 2b · 되돌리기). 새 DB가 아니라 이미 서비스 표가 있는 DB용. [MIGRATIONS.md](migrations/MIGRATIONS.md)
-- `redesign/` — 서비스 DB 재설계(11-11) 설계 문서(현재 · 목표 구조, 영향 지도)와 일회용 Postgres 16 · 17 검증 스크립트. 요약은 `redesign/REDESIGN.md`
 - `manual/` — 자동 실행하지 않는 SQL(옛 업무 표 초안 이력, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
 - `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`는 DB에서 자동 생성). [SCHEMA.md](schema/SCHEMA.md)
 
 
 ## 백업 복원 (새 DB · 새 Supabase 프로젝트로 옮길 때)
-- 순서는 **구조 → 데이터 → 제약 · 인덱스**다. 새 기준선 DB, 이전 SQL을 적용한 DB, 되돌린 DB의 백업(`pg_dump -Fc`)은 빈 DB에 한 번에 `pg_restore`해도 오류가 없다(`db/redesign/verify/rd_test7.sh`가 PG16 · 17에서 확인). 명령: `pg_restore -d <새 DB> --no-owner --no-privileges --exit-on-error 파일.dump`.
+- 순서는 **구조 → 데이터 → 제약 · 인덱스**다. 새 기준선 DB, 이전 SQL을 적용한 DB, 되돌린 DB의 백업(`pg_dump -Fc`)은 빈 DB에 한 번에 `pg_restore`해도 오류가 없다(`scripts/db/verify_redesign/rd_test7.sh`가 PG16 · 17에서 확인). 명령: `pg_restore -d <새 DB> --no-owner --no-privileges --exit-on-error 파일.dump`.
 - **이전 SQL을 적용하기 전의 옛 구조에서 받은 백업**은 한 번에 복원하면 `approvals` COPY가 `function quote_snapshot_has_forbidden_key does not exist`로 실패한다(재귀 함수에 `search_path`가 없고 `pg_restore`는 복원 중 `search_path`를 비움). 그때는 세 번에 나눠 복원한다:
   1. `pg_restore -d <새 DB> --no-owner --no-privileges --section=pre-data 파일.dump`
   2. `psql <새 DB> -c 'ALTER FUNCTION public.quote_snapshot_has_forbidden_key(jsonb) SET search_path = "$user", public' -c 'ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public'`
