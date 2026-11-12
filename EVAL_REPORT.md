@@ -7,7 +7,7 @@
 | 항목 | 내용 |
 |---|---|
 | 산업과 문서 종류 | 제조(전자부품). Taiwan Semiconductor 다이오드 데이터시트 PDF(분류 13개, 품번 9,589개) |
-| 현재 청킹 구현 | `backend/rag/pipeline/chunk.py`의 `tsc-v4h-2026-11-08`. pdfplumber 표 칸을 우선하고 Docling을 대체 근거로 쓰며, 병합 칸·아래첨자·머리행·표 주석을 카드에 보존합니다. v4h 요약·manifest(청크 본문 제외)는 `evals/results/chunking/v4h-2026-11-08/`(카드 51,967). 임베딩 벡터와 `chunks.jsonl` 본문은 여전히 lab에만 있습니다 |
+| 현재 청킹 구현 | `backend/rag/pipeline/chunk.py`의 `tsc-v4h-2026-11-08`. pdfplumber 표 칸을 우선하고 Docling을 대체 근거로 쓰며, 병합 칸·아래첨자·머리행·표 주석을 카드에 보존합니다. v4h 요약·manifest(청크 본문 제외)는 `evals/results/chunking/v4h-2026-11-08/`(카드 51,967 · `distinct_text` 51,967, `summary.json`). 임베딩 벡터와 `chunks.jsonl` 본문은 여전히 lab에만 있습니다 |
 | 저장소에 보존된 청킹 측정 스냅샷 | 2026-11-01 개선 2 기준 문서 1,360건(7,725쪽) / 서로 다른 청크 45,898개, 개선 전 10,723개. 아래 1-1절과 `evals/results/search_compare/`의 과거 재현 결과이며 현재 v4h 산출물 수가 아닙니다 |
 | 문서 파싱 방식 (PDF, 표, 스캔 중) | PDF·표. Docling 2.145.0(OCR 끔)으로 모든 쪽을 파싱하고 합친 칸을 채운 뒤, 표 숫자를 pdfplumber 글자와 두 방향으로 대조. Docling 숫자 중 원문에 있는 비율 99.993%(93,940/93,947), 표 영역 원문 숫자 중 Docling에 있는 비율 99.89%(93,493/93,600). 원시 결과 `scripts/results/parser/parse_gpu_*_2026-11-01.*` |
 | 2026-11-01 청킹 측정 방식 | 개선 2: PDF별 품번 표지 청크 + 표 한 행 = 청크 하나 + [파일·쪽·표 제목] 이름표, 표 밖 글은 Docling HybridChunker. 겹침 없음. 값 · 이름표 · 품번이 한 청크에 든 정답 값 41/41 (아래 "청킹 후보 대리 지표") |
