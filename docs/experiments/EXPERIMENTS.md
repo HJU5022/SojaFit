@@ -1,26 +1,29 @@
 # experiments
 
 ## 역할
-- 이 폴더: 실험·평가 작업서를 둡니다. 무엇을 어떤 조건으로 잴지 정한 계약입니다.
-- 넣는 것: `<english-kebab>.md` 작업서. 기능 작업서와 같은 다섯 섹션(Why, Goal, What, How, AC)으로 측정 대상, 조건, 지표, 성공 기준, Out of Scope를 적습니다. 문서 첫머리에 구현·원시 결과가 `main`에 있는지 상태 줄로 적습니다.
-- 넣지 않는 것: 기능 작업서(`../specs/`), 조사·실측 기록(`../research/`), 결정(`../adr/`), 결과 기대 수치(`../../evals/guides/preregister.md`), 원시 결과(`../../evals/results/`, `../../scripts/results/`).
+- 이 폴더: 실험·평가의 질문, 조건, 결과, 결정, 한계를 적은 실험 기록을 둡니다. 문서마다 첫머리 헤더(상태, 기준일, 기준 커밋, 정본 여부, 관련 문서)가 상태의 정본입니다.
+- 넣는 것: `<english-kebab>.md` 실험 기록(사전 등록 계약, 사후등록, 측정 계획, 측정 결과, 평가셋 초안 작업서, 채점기 계약).
+- 넣지 않는 것: 기능 작업서(`../specs/`), 선택지 비교·조사 보고(`../research/`), 결정(`../adr/`), 결과 기대 수치(`../../evals/guides/preregister.md`), 원시 결과(`../../evals/results/`, `../../scripts/results/`).
 - 담당: 그 실험의 담당
 
 ## 파일
-- `speed-p95-levers-2026-11-11.md` — D8 p95 레버 A/B. `GATE_WARMUP`(측정용) · `FIND_N_DOCS=5` 채택, 나머지 기본 유지. v3 50×1 기준선 50/50 · p95 9.2초. 상태: 측정 완료
-- `injection-baseline-preflight.md` — STH/main dbe7177 기준 네 준비 관문 구현·30개 준비 검사·실제 격리 합성 적재·386개 관련 회귀. 유료 실행 없음
-- `d8-stage-remeasure-plan.md` — D8 단계별 응답 시간 · 비용 재측정 준비. 8장 숫자의 원본 목록 · 재현 명령 · 서비스와 평가 실행기별 단계 시간 경로 · 승인 대기 계산 SQL 초안 · 후보 설계별 비용 견적 · 필요한 코드 변경. 모델 호출 없음, 측정은 미실행
-- `injection-baseline-plan.md` — T1~T7 고정 짝·사람 채점·110개 job와 준비10턴·공식 단가·예상/예약 예산·유료 승인 전제 T1/T3 독립4작업노출탐색계약·별도$2승인/예산포함.
-- `thread-memory-operations.md` — thread·기억 품질/병렬/복원/비용 검증 명령·합격 기준·실행 경계
-- `c2-defense-recheck.md` — 조장 수정 후 고정 정상군/C1/C2의 입력·모델·무료 호환성·유료 실행 명령·전후 의미 비교·중단/예산·증거 보관 절차. 수정 후 무료 재생(4 passed)까지 반영, 실제 모델 재측정은 미실행
-- `embedding-model-baseline.md` — 임베딩 모델 4종의 예비 기준선(30청크·18질의 프록시 표본)
-- `embedding-candidate-runner.md` — 임베딩 후보 확장 평가기 설계. 상태: 설계 계약만 있고 구현·테스트·2026-11-02 원시 결과는 `main`에 없음
-- `embedding-voyage-candidates.md` — Voyage 4 Nano·Voyage 4 후보 추가 계약. 상태: 설계 계약만 있고 구현·테스트·원시 JSON은 `main`에 없음
-- `corpus-storage-budget.md` — 원본 코퍼스 유지와 halfvec 저장·HNSW 제거 검증 작업서
-- `evaluation-draft-30.md` — 난이도별 평가 문항 30건 검수 초안의 범위·형식·확인 기준
-- `evaluation-draft-52.md` — 정보 부족 분류 기준과 현재 50건 초안 작업서(파일명의 52는 당시 이력)
-- `answer-refusal-scorer.md` — 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준. 상태: 구현(`evals/runners/score_answer.py`)과 회귀 테스트(`tests/evals/test_score_answer.py`) 반영
-- `supervisor-model-comparison.md` — 수퍼바이저 후보 5종의 70문항 1회 비교 방법·경량 집계·선정 규칙(결과 확인 전에 고정, 선정 결론은 없음)
-- `supervisor-model-comparison-postregistration.md` — 완료된 수퍼바이저 후보 5종 비교의 실제 조건·실행 중 변경·채점 범위·선정 기준·한계를 기록한 사후등록. 실험상 최종 선정은 `openai/gpt-6-luna`(10절), 서비스 적용은 조장 소유 정본 갱신 뒤 수행
-- `supervisor-stage2-six-models.md` — 기존 5종과 Jev의 2차 70문항 공동 평가 계약(#32). 실측은 `../research/supervisor-stage2-results.md`
-- `supervisor-stage3-six-models.md` — 같은 6종·동결 70문항의 3차 `run_index=3` 공동 평가 계약(#33). 실측은 `../research/supervisor-stage3-results.md`
+
+| 파일 | 유형 | 한 줄 설명 |
+|---|---|---|
+| `answer-refusal-scorer.md` | 실험 기록 | 답변·거절 5지표 규칙 기반 채점기의 분류 규칙과 수용 기준 |
+| `c2-defense-recheck.md` | 실험 기록 | C2 방어 수정 전후 정상군·C1·C2 재검증 조건과 결과 |
+| `corpus-storage-budget.md` | 실험 기록 | 원본 코퍼스 유지와 halfvec 저장·HNSW 제거 검증 |
+| `d8-stage-remeasure-plan.md` | 실험 기록 | D8 단계별 응답 시간·비용 측정의 원본 목록과 재현 명령 |
+| `embedding-candidate-runner.md` | 실험 기록 | 임베딩 후보 확장 평가기 설계 |
+| `embedding-model-baseline.md` | 실험 기록 | 임베딩 모델 4종의 프록시 표본 예비 기준선 |
+| `embedding-voyage-candidates.md` | 실험 기록 | Voyage 4 Nano·Voyage 4 후보 추가 계약 |
+| `evaluation-draft-30.md` | 실험 기록 | 난이도별 평가 문항 30건 검수 초안의 범위와 형식 |
+| `evaluation-draft-52.md` | 실험 기록 | 정보 부족 분류 기준과 본편 50건·예비 2건 구성 |
+| `injection-baseline-plan.md` | 실험 기록 | 인젝션 기준선 T1~T7 짝 측정 계약과 실행 현황 |
+| `injection-baseline-preflight.md` | 실험 기록 | 인젝션 기준선 실행 전 준비 관문과 점검 결과 |
+| `speed-p95-levers-2026-11-11.md` | 실험 기록 | D8 p95 레버 A/B와 채택·폐기 |
+| `supervisor-model-comparison.md` | 실험 기록 | 수퍼바이저 후보 5종 70문항 1차 비교의 사전 등록 계약 |
+| `supervisor-model-comparison-postregistration.md` | 실험 기록 | 1차 비교의 실제 조건, 결과, 사후등록 |
+| `supervisor-stage2-six-models.md` | 실험 기록 | 6종 70문항 2차 공동 평가 사전 등록(#32) |
+| `supervisor-stage3-six-models.md` | 실험 기록 | 6종 70문항 3차 공동 평가 사전 등록(#33) |
+| `thread-memory-operations.md` | 실험 기록 | thread·승인 기억 운영 검증 합격 기준과 절차 |
