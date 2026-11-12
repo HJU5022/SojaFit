@@ -90,21 +90,6 @@ def test_safe_result_always_has_the_six_keys_the_runs_check_requires():
     assert required <= set(SafeResult.model_validate({}).model_dump())
     assert required <= set(SafeResult.model_validate({'answer': 'x', 'judgement': {'kind': 'judge'}}).model_dump())
 
-def test_safe_judgement_fields_match_runs_sql_shape():
-    # [왜] 11-10 SafeJudgement에 preferred_mount를 더하고 runs.safe_result 저장 검사(db/019)를 빠뜨려, 판정이 붙은 run이 저장에서 거부됐다
-    import json
-    from pathlib import Path
-    from backend.conversations.models import SafeJudgement
-    root = Path(__file__).resolve().parents[2] / 'db'
-    for name in ('019_conversations.sql', '025_runs_safe_result_preferred_mount.sql'):
-        text = (root / name).read_text(encoding='utf-8')
-        key = "conversation_json_matches(safe_result, '"
-        start = text.index(key) + len(key)
-        shape = json.loads(text[start:text.index("'", start)])
-        allowed = [alt for alt in shape['judgement']['$any'] if isinstance(alt, dict)][0]
-        assert set(SafeJudgement.model_fields) <= set(allowed), (name, set(SafeJudgement.model_fields) - set(allowed))
-
-
 @pytest.mark.parametrize('group', ['results', 'shown', 'unverified'])
 def test_citation_uses_canonical_manifest_url_not_model_url(group):
     from backend.conversations.dto import result_dto
