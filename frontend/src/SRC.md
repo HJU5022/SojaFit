@@ -19,7 +19,7 @@
 - `main.tsx` — Router · QueryClient · 글꼴 · 스타일 진입점.
 - `App.tsx` — 경로 표: `/` 랜딩, `/login`, `/signup`, `/verify-email`, `/reset-password`, `/privacy`, `/app`, `/settings`, `/admin/users`.
 - `dummy-circuits.d.ts` — 실제 데모 JSON을 묶는 빌드 시점 가상 모듈 타입.
-- `api/` — 서버 API의 타입 있는 fetch 경계(`client` · `auth` · `admin` · `projects` · `conversations` · `quotes` · `prices` · `profile`)와 개발 전용 `dummy.ts`, 테스트.
+- `api/` — 서버 API의 타입 있는 fetch 경계(`client` · `auth` · `admin` · `projects` · `conversations` · `quotes` · `prices` · `profile` · `externalCircuits`)와 개발 전용 `dummy.ts`, 테스트.
 - `auth/` — `AuthProvider`(세션 복원·로그인·로그아웃·탈퇴) · `RequireAuth`(인증·관리자 경계)와 테스트.
 - `hooks/useRunStream.ts` — 분석 실행의 시작·재개·연결 복구 상태 머신과 테스트.
 - `hooks/useConversation.ts` — 검토 한 건의 화면 상태: 저장된 질문, 실행 중인 질문, 단계 이름, 첨부.
@@ -30,10 +30,11 @@
 - `pages/LoginPage.tsx` — 이메일 로그인, 서버가 켠 Google 로그인과 계정 연결, 데모 모드의 데모 사용자 버튼.
 - `pages/SignupPage.tsx` · `pages/EmailActionPage.tsx` — 가입 메일 요청, 메일 링크의 비밀번호 설정과 재설정.
 - `pages/PrivacyPage.tsx` — 개인정보처리방침(글은 이전과 같음).
-- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록, 새 프로젝트·원본 회로도·승인 사례 창.
+- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록, 새 프로젝트·원본 회로도·승인 사례 창. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트)에는 웹 검색을 보인다. 테스트 `WorkbenchPage.test.tsx`.
 - `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
 - `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
 - `components/Review.tsx` — 검토 문서: 판정, 회로, 조건 대조 표, 활동과 입력창, 속성 칸(승인·견적·가격·근거). 속성 칸 너비 조절.
+- `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 테스트 `Schematic.test.tsx`.
 - `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
 - `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고.
 - `components/ApprovedCases.tsx` — 승인 사례 목록과 확인 삭제.

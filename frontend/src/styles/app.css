@@ -553,3 +553,4 @@ textarea.input { height: auto; padding-block: 8px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+.sheets { flex: 1; min-height: 0; overflow: auto; background: var(--side); }

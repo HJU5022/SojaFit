@@ -87,6 +87,7 @@ SojaFit (proj3-b)
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
 │       │   ├── projects.ts <- 소유 프로젝트·데모·업로드·이름 변경·삭제 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
+│       │   ├── externalCircuits.ts <- 공개 원본 회로도 검색 API(GET /api/external-circuits/schematics)
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
 │       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API, 키 없는 데모의 기록 질문 목록
 │       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
@@ -113,12 +114,15 @@ SojaFit (proj3-b)
 │       │   ├── EmailActionPage.tsx <- 메일 링크의 비밀번호 설정·재설정
 │       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
 │       │   ├── WorkbenchPage.tsx <- 작업대 셸: 레일·프로젝트 목록·부품 목록·새 프로젝트·원본 회로도·승인 사례
+│       │   ├── WorkbenchPage.test.tsx <- 예제는 저장된 회로도, 올린 넷리스트는 웹 검색을 보이는지 테스트
 │       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
+│       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
+│       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
 │       │   ├── ApprovedCases.tsx <- 승인 사례 목록·확인 삭제
 │       │   ├── AuthCard.tsx <- 로그인 계열 화면의 공통 카드
 │       │   └── PageShell.tsx <- 설정·관리 화면의 공통 머리와 폭

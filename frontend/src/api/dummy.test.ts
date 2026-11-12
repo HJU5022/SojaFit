@@ -22,7 +22,7 @@ it('serves the breadboard project, D1 context, and role labels', async () => {
   expect(projects.map(item => item.demo_id)).toEqual([
     'breadboard_supply', 'mosfet_driver', 'attiny85_dev', 'pro_micro', 'franzininho_diy', 'attiny85_time_switch',
     'fc_rom_vomitter', 'attiny2313a_thermostat', 'tiny85_fan_control', 'ug56_pwm_controller',
-    'car_radio_acc_delay', 'overengineered_psu', 'tinydimmer', 'hrem', 'zr7_taillight',
+    'car_radio_acc_delay', 'overengineered_psu', 'tinydimmer', 'hrem', 'zr7_taillight', null,
   ])
 
   const project = await json(await request('/api/projects/1')) as unknown as {
