@@ -1,4 +1,8 @@
-"""추가 API 호출 없이 수퍼바이저 1~3차 원시 행을 대조하고 3차 집계를 만든다."""
+"""추가 API 호출 없이 수퍼바이저 1~3차 원시 행을 대조하고 3차 집계를 만든다.
+
+실행하면 docs/research/에 supervisor-stage3-results.md(저장소에 둔 보고서)와 supervisor-stage3-brief-report.md를 쓴다.
+간단 보고서는 결과 보고서와 내용이 겹쳐 저장소에서 뺐으므로, 다시 만들어도 커밋하지 않는다.
+"""
 
 import argparse
 import hashlib
