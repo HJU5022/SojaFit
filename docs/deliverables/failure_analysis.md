@@ -63,4 +63,4 @@ D12 마감(11/17)이 이 글에 요구하는 항목 중 아직 없는 것이다.
 | 코드로 되돌린 결정 1건과 이유 | 이 글에 없음 | 후보: Supervisor를 Sonnet에서 Haiku로만 바꾼 사전 등록 #46. 받지 않는 조건에 걸려 되돌림(통과 47·45/50, 무관 거절 23·24/25; `evals/guides/preregister.md:779-789`), `README.md` 3절 |
 | 미채택 실험 | 이 글에 없음 | 레버 A/B의 폐기·보류 항목: [speed-p95-levers-2026-11-11.md](../experiments/speed-p95-levers-2026-11-11.md), 임베딩 후보 확장 평가기(구현 없음): [embedding-candidate-investigation.md](../research/embedding-candidate-investigation.md) |
 | 막지 못한 것(인젝션) | 이 글에 부분적으로만 있음 | EVAL_REPORT 6장 "믿지 않기로 한 것"과 남은 한계 |
-| 판정자가 팀원뿐인 한계 | 이 글에 없음 | v1 평가셋 정답의 사람 판정은 팀원이다([draft_50_review.md](../../evals/drafts/reviews/draft_50_review.md): 하정운 1차, 김재훈 2차. v3의 정답 출처·판정자는 [EVAL_REPORT.md](../../EVAL_REPORT.md) 10장 첫 단락. 외부 검토자 1명의 검토는 미실시: [evaluation-prep.md](../reference/evaluation-prep.md)) |
+| 판정자가 팀원뿐인 한계 | 이 글에 없음 | v1 평가셋 정답의 사람 판정은 팀원이다([draft_50_review.md](../../evals/drafts/reviews/draft_50_review.md): 하정운 1차, 김재훈 2차. v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다: [EVAL_REPORT.md](../../EVAL_REPORT.md) 2절 평가셋 표. 외부 검토자 1명의 검토는 미실시: [evaluation-prep.md](../reference/evaluation-prep.md)) |
