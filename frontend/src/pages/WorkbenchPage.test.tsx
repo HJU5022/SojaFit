@@ -289,6 +289,7 @@ it('shows processing on the active session and clears it on completion despite a
   let finish!: () => void
   const result = { status: 'completed', answer: '확인했습니다.', judgement: {}, evidence: [], interrupt: {}, profile_hints: [] }
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
     if (path === '/api/projects/11/threads' && init.method === 'POST') { created = true; return Response.json({ id: 'working-thread', project_id: 11 }, { status: 201 }) }
@@ -315,6 +316,7 @@ it('shows processing on the active session and clears it on completion despite a
 })
 it('locks project creation and target navigation while the agent waits for more input', async () => {
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
     if (path === '/api/projects/11/threads' && init.method === 'POST') return Response.json({ id: 'waiting-thread', project_id: 11 }, { status: 201 })
@@ -383,6 +385,7 @@ it('creates a project without an automatic management dialog and allows manual t
   let created = false
   const writes: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (init.method === 'POST') { writes.push(path); created = true; return Response.json(first, { status: 201 }) }
     return Response.json(path === '/api/projects' ? created ? [summary(first)] : [] : path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : [])
   })
@@ -464,6 +467,7 @@ it('confirms deletion, keeps failed records, then clears only the selected conve
   let deleted = false, fail = true
   const deletes: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (init.method === 'DELETE') { deletes.push(path); if (fail) return failure('CONFLICT', '분석 중인 대화입니다.', 409); deleted = true; return new Response(null, { status: 204 }) }
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -497,6 +501,7 @@ it('shows two saved projects in server order and reveals the third without creat
   const third = { ...first, id: 13, name: '세 번째 프로젝트' }
   const methods: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     methods.push(init.method ?? 'GET')
     if (path === '/api/projects') return Response.json([summary(second), summary(first), summary(third)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -526,6 +531,7 @@ it('shows two saved projects in server order and reveals the third without creat
 it('loads saved conversation and its result with GET requests only, then returns to a fresh draft', async () => {
   const calls: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     calls.push(`${init.method ?? 'GET'} ${path}`)
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -570,6 +576,7 @@ it('loads saved conversation and its result with GET requests only, then returns
 it('rejects history belonging to a different project without loading its run', async () => {
   const calls: string[] = []
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     calls.push(path)
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -589,6 +596,7 @@ it('keeps the second conversation result when a previous run arrives late', asyn
   const result = (thread: string, run: string, part: string) => ({ id: run, thread_id: thread, message_id: 2, result: { status: 'completed', answer: part, evidence: [],
     judgement: { kind: 'judge', roles: [], results: [{ part, verdict: 'ROLE_SUFFICIENT' }], shown: [], unverified: [] }, interrupt: {} } })
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
     if (path === '/api/projects/11/threads') return Response.json([{ id: 'thread-a', project_id: 11 }, { id: 'thread-b', project_id: 11 }])
@@ -613,6 +621,7 @@ it('keeps the second conversation result when a previous run arrives late', asyn
 it('loads older messages and selects that message run while rejecting mismatched run ownership', async () => {
   const calls: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     calls.push(`${init.method ?? 'GET'} ${path}`)
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -639,6 +648,7 @@ it('starts a fresh thread rather than silently using the first history item', as
   const starts: string[] = []
   let created = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
     if (path === '/api/projects/11/threads' && init.method === 'POST') { created++; return Response.json({ id: 'fresh-thread', project_id: 11 }, { status: 201 }) }
@@ -662,7 +672,7 @@ it('starts a fresh thread rather than silently using the first history item', as
 })
 
 it('opens the new workspace without an entry modal before a project is selected', async () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   expect(screen.getByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
   expect(screen.getByRole('list', { name: '저장된 프로젝트' })).toBeEmptyDOMElement()
@@ -683,6 +693,7 @@ it('opens the new workspace without an entry modal before a project is selected'
 it('selects an existing project from the empty workspace sidebar without posting an analysis', async () => {
   const calls: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     calls.push(init.method ?? 'GET')
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     if (path === '/api/projects/12') return Response.json(second)
@@ -699,6 +710,7 @@ it('selects an existing project from the empty workspace sidebar without posting
 
 it('creates a project from the new workspace and starts with an empty analysis draft', async () => {
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects' && init.method === 'POST') return Response.json(first, { status: 201 })
     if (path === '/api/projects/11') return Response.json(first)
@@ -718,6 +730,7 @@ it('creates a project from the new workspace and starts with an empty analysis d
 it('does not let delayed detail overwrite a newly selected project', async () => {
   let finish!: (response: Response) => void
   network((path) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     if (path === '/api/projects/11') return new Promise(resolve => { finish = resolve })
@@ -735,6 +748,7 @@ it('does not let delayed detail overwrite a newly selected project', async () =>
 it('does not select delayed creation after the user switches projects', async () => {
   let finish!: (response: Response) => void
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects' && init.method === 'POST') return new Promise(resolve => { finish = resolve })
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
@@ -763,7 +777,7 @@ it.each(['missing', 'foreign'])('shows the common safe error for a %s project', 
 })
 
 it('exposes detail menu buttons and a labelled project drawer', async () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   const toggle = screen.getByRole('button', { name: '프로젝트 열기' })
   toggle.focus()
@@ -780,7 +794,7 @@ it('exposes detail menu buttons and a labelled project drawer', async () => {
 
 it('organizes the workbench as a functional rail, analysis surface, and adjustable information console', async () => {
   vi.stubGlobal('innerWidth', 1440)
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
   openWorkbench('/app?projectId=11')
   expect(screen.getByRole('navigation', { name: '작업 메뉴' })).toBeInTheDocument()
   expect(screen.getByRole('main', { name: '분석 대화 작업면' })).toBeInTheDocument()
@@ -806,7 +820,7 @@ it('organizes the workbench as a functional rail, analysis surface, and adjustab
 })
 
 it('shows the left rail as a named work menu by default', () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   const rail = screen.getByRole('navigation', { name: '작업 메뉴' })
   expect(rail).toHaveClass('expanded')
@@ -824,7 +838,7 @@ it('shows the left rail as a named work menu by default', () => {
 })
 
 it('opens the project picker from the sidebar project heading', async () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
   openWorkbench('/app?projectId=11')
   const projectName = await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
   fireEvent.click(projectName)
@@ -833,7 +847,7 @@ it('opens the project picker from the sidebar project heading', async () => {
 
 it('resizes both desktop side panels by dragging their borders', () => {
   vi.stubGlobal('innerWidth', 1440)
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   const leftHandle = screen.getByRole('separator', { name: '작업 메뉴 너비 조절' })
   fireEvent.pointerDown(leftHandle, { clientX: 220, pointerId: 1 })
@@ -859,6 +873,7 @@ it('resizes both desktop side panels by dragging their borders', () => {
 
 it('searches only loaded projects and current circuit parts', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -874,6 +889,7 @@ it('searches only loaded projects and current circuit parts', async () => {
 
 it('guides the user from project selection to approval and keeps target controls in the project dialog', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([summary(first)])
     if (path === '/api/projects/11') return Response.json(first)
@@ -894,7 +910,7 @@ it('guides the user from project selection to approval and keeps target controls
 })
 
 it('stacks only opened tabs, deduplicates them and closes active or inactive tabs', async () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   expect(screen.queryByRole('button', { name: '승인·견적' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '승인 사례·이력' })).not.toBeInTheDocument()
@@ -933,6 +949,7 @@ it('stacks only opened tabs, deduplicates them and closes active or inactive tab
 
 it('exposes search results as a keyboard-operable listbox', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     return Response.json(first)
@@ -961,6 +978,7 @@ it('connects project, role, run, candidate, and citation API data without a fixt
       results: [{ part: 'SS34', role: 'R01', verdict: 'ROLE_SUFFICIENT', checks: [{ code: 'VRRM', value: 40, unit: 'V', condition: '입력 최대 전압', citation: { document: 'ss34.pdf', page: 3, table: 'Ratings', row: 'VRRM' } }] }] },
   }
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/judge/roles') return Response.json([{ code: 'R01', name: '역극성 보호(직렬)' }])
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([summary(first)])

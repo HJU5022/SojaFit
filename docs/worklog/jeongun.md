@@ -1,5 +1,122 @@
 # jeongun 작업 기록
 
+## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
+- #3: `check_injection_result` 정상 종료 0 · 1행 답 비움 종료 1 출력을 `evals/results/d10/injection_check_{pass,fail}_2026-11-12.txt`에 남김(깨진 jsonl은 커밋 안 함, README에 재현).
+- #4: 멀티 현행 변이 3건(숫자 검사 끔 · `_judgement_reply` 무력화 · `MAX_AGENT_RUNS=99`) → 집중 pytest 실패 확인 후 `git checkout` 원복. GATES 변이 표 7~9행 · `mutation_2026-11-12.md`.
+- #5: 재현 한 줄 + v4h `distinct_text`/파일 sha256을 `evals/results/d10/README.md` · `corpus_v4h_fingerprint_2026-11-12.md`.
+- 안 함: #6 main 병합·재배포, #7 현 배포 재시작/격리 재스모크, gitleaks 전 이력 재스캔, 푸시.
+
+## 2026-11-12 제출물 초안(시연 스크립트·AI도구·포트폴리오·G5/G7, 커밋만)
+- `docs/deliverables/demo_script.md`: D10 촬영용 정상·실패 컷(스모크 28 · DEMO.md · §6 재료). README·G7·§11 링크.
+- `ai_tools_log.md`: 11-09~12 행 + 규칙·실패 사례 절 채움.
+- `portfolio-jeongun.md` 초안(EVAL/GATES 숫자만).
+- GATES G5: 3장 표 채움을 현재 증거로 명시. G7: 스크립트·문서 초안 있음 / 영상·캡처 없음.
+- 안 함: 푸시·PR, 영상 촬영, Langfuse PNG, T4 재측정, scratchpad.
+
+## 2026-11-12 재료 있는 문서 마무리(커밋만)
+- G1: README·GATES에 라이브 `sojafit-api-e0a5e30`(`limits5m`) 반영.
+- G3: v4h `summary.json`의 `distinct_text` 51,967을 GATES·EVAL 1장에 연결(운영 DB sha256 재집계는 아님).
+- EVAL §11 약점 표 · `docs/deliverables/failure_analysis.md` 초안 · D9 이관 기록 §10 완료 표시.
+- 안 함: 푸시·PR, 시연 영상, Langfuse 캡처, T4 재측정, scratchpad 커밋.
+
+## 2026-11-12 토큰 한도 사용자 5M · 서비스 10M + main pull 배포
+- 배경: 배포본이 서비스 전체 2M에 먼저 걸려 `LIMIT_EXCEEDED`가 났고, [결정 11-12] 사용자별 5M · 서비스 10M. `origin/main`(#106) pull 후 `jeongun`에 반영.
+- 코드: `USER_DAILY_TOKENS=5_000_000` · `SERVICE_DAILY_TOKENS=10_000_000`(메시지·시험은 상수 참조). SPEC 8.6 · `login-auth.md` · `injection_http` 안내 문구.
+- 배포 DB: Cloud Run `DATABASE_URL`→시크릿 `DATABASE_URL_NEW`(SojaFit_2, ref `oujmltzhbzmgitucgmeq`). 옛 `DATABASE_URL`(ref `owkklccwglcpfmmezcxj`)은 쓰지 않음.
+- 시험 [실측]: `test_token_cap_is_limit_exceeded` · `test_token_cap_refuses_run_and_resume…` 통과(DB 없는 단위).
+- 배포 [실측]: 리비전 `sojafit-api-e0a5e30`(태그 `limits5m`) 0% 점검 후 100% 전환. `/health` 200, signup·demo-login 404(`DEMO_MODE=0`). `DATABASE_URL`→`DATABASE_URL_NEW`(SojaFit_2). 푸시·PR 아직 없음(로컬 `jeongun` ahead).
+
+## 2026-11-12 로컬 측정·스모크 원시 이관 (PR #106)
+- 넣음: D9 judge-dev multi/single · langfuse-capture · v3-single · v3-16 warm-recheck · claim_consistency D9 재확인 · Langfuse probe v2 · RAGAS probe v3 · synth-01-repeat10 · synth-both-agents · 인젝션 HTTP `…_012039.json`(원장 인용) · 스모크 `…_230015` · `…_230534`.
+- 안 넣음: `scratchpad/`(임시·워크트리 잔여).
+- 확인: `git status`에 해당 경로 staged, scratchpad는 untracked 유지.
+
+## 2026-11-12 DEMO_MODE UI 분기
+- `CircuitSetup`: `/api/auth/demo`로 `DEMO_MODE`를 보고 1일 때만 「데모 회로로 시작」, 0이면 업로드만. `POST /api/projects`에 `Depends(demo_mode)`(404). Landing 문구·`.env.example` 주석.
+- 시험 [실측]: `CircuitSetup.test` 9 passed, `tests/api/test_projects.py` 47 passed · 1 skipped. Workbench/ProjectSidebar 통과. `App.test` 가입 헤딩 실패는 main에도 있는 기존 깨짐(제목 `SojaFit에 로그인`).
+- 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
+
+## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
+- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
+- EVAL_REPORT §10: Codex vs 우리 서비스 표본 5행(v3-01·05·10·26·45). Codex는 자동 채점 없음. 우리 쪽은 #52/`d9-improve2` 원시.
+- D9 묶음(증거 A~D · #52 · paste · Codex 답 · 문서) 커밋·PR. scratchpad·langfuse probe·synth·실패 스모크는 제외.
+
+## 2026-11-11 D9 저장소 밖 증거 A~D 이관
+- A 판정진단 `evals/results/graph/2026-11-06-judge-diagnosis/` · B·C v4h summary/manifest/suspects `evals/results/chunking/v4h-2026-11-08/` · D #47·#48+#49 원시 `evals/results/graph/2026-11-10-v3-outside/`.
+- 기록 [`docs/research/d9-outside-evidence-2026-11-11.md`](../research/d9-outside-evidence-2026-11-11.md). EVAL_REPORT §1·§3-C·§5 링크 갱신. **남음:** 표주석 216건 원시(원장만), chunks.jsonl 본문. §10은 11-12에 채움.
+- D9 #52 v3 재측정 `[실측]`: 코드 변경 없음(`FIND_N_DOCS` 기본 5, partial 재검색 유지). **50/50**, p50 4.9 · p95 10.0초. §8.1(50/50, p50 4.7 · p95 9.2) 대비 달라진 문항 0. KEEP(확인, 개선으로 쓰지 않음). 공급자 보고 LLM 0.035달러. 429 재시도 없음. 원시 `evals/results/graph/2026-11-12-d9-improve2/set1.json`. EVAL_REPORT 3-D 16행. 배포·푸시 없음.
+
+## 2026-11-11 인젝션 HTTP 스모크 · D7 사람채점 사본 · 푸시
+- `injection_http.py`: T6 첫 턴 `requires_input` 재개, T4 `refused` 사유 코드, 극성(음극·양극) 기준 보강. 시험 10 passed.
+- 배포 실측 JSON 보관(T7 pass · T6 pass/한도 · T4 inconclusive 다수). D7 사람채점 사본 20/20 O → `evals/results/threads/…_human_jeongun.jsonl`. EVAL_REPORT 6장 문구 맞춤.
+
+## 2026-11-11 속도 p95 레버 실험 · 문서 마무리
+- A/B: `GATE_WARMUP` · `FIND_N_DOCS` · partial/cite-repair/rerank/bm25/replan/max_searches/near-find. 정확도+속도를 같이 봄. **채택**은 평가용 워밍업 플래그 + `FIND_N_DOCS` 기본 5뿐. 나머지 기본 유지(`.env.example`에 A/B 키만).
+- 기준선 `[실측]`: `GATE_WARMUP=1` · `FIND_N_DOCS=5`, v3 50×1 → **50/50**, p50 4.7 · **p95 9.2**초. Spec n_docs 10/5/3 모두 후보 15/15 cited_gold. 원시 `evals/results/graph/2026-11-11-speed-g-all/` · `2026-11-11-ndocs-acc/` 등.
+- 문서: [`docs/experiments/speed-p95-levers-2026-11-11.md`](../experiments/speed-p95-levers-2026-11-11.md) · EXPERIMENTS 목록 · EVAL_REPORT §8.1 · RUNNERS `run_gate` 한 줄. 푸시 안 함.
+
+## 2026-11-11 D8 평가 전 Langfuse 트레이싱 대조·점수 연결
+- 1문항 실행 시도 결과: `--env-file` 명령이 PreToolUse 비밀 파일 접근 방지 훅에 실행 전 차단됨. 실제 모델 호출 0회/$0, Langfuse 인증·새 trace/점수/비용 수신도 미검증. 임시 실행기는 기존 SDK 5의 observations/scores 조회 인자와 문법을 오프라인 점검했으며, 자동 훅을 우회하지 않고 정운의 직접 실행으로 넘김. 시작 전 10:17 KST 부하 평균 8.50/8.30/8.02, CPU idle 51.54%(단일 top 표본). 전체 2세트는 보류 유지.
+- 1문항 수신 점검 계획(실행 전, 정운 승인): 현재 코드의 동결 v3-01 한 건을 `run_gate`로 1회만 호출한다. 예상 LLM 2~4회/$0.001~0.003, 강제 상한 4회/예약 $0.02/90초, 기존 누적 $0.15 안에서 집행. 먼저 Langfuse 인증과 프로젝트 이름 `SojaFit_v2`를 확인하고 다르면 호출 전 중단한다. DB 연결은 읽기 전용으로 강제하고 본문 없는 결과만 `evals/results/graph/2026-11-11-d8-trace-smoke/`에 보존한다. 명령: `UV_PROJECT_ENVIRONMENT=/Users/jeong-un/Documents/Projects/Team_Projects/SojaFit/SojaFit/.venv uv run --no-sync --env-file /Users/jeong-un/Documents/Projects/Team_Projects/SojaFit/SojaFit/.env python /tmp/sojafit_trace_smoke_1111.py`. 모델 재실행 없이 같은 trace의 점수·비용·시간 수신을 확인하며 50문항 2세트는 계속 보류한다.
+- [실측] 브라우저 확인 정정: 다른 Chrome 창을 본 로그인 필요 판단을 정정하고, 개발 계정의 `SojaFit_v2`에서 기존 `gate v3-01`(11-10 20:19)의 노드·모델·토큰·세션·환경을 확인했다. Supervisor 1.82초/8,294토큰, 비용 `no cost`, 해당 trace 점수 `No scores found`; 프로젝트 전체에는 예전 `answer_metric`/`latency_s` 등이 있다. 최근 1일 `analysis-metadata` 검색(root 필터 해제)은 0건. 로컬/배포 키 대상과 수정 후 수신은 여전히 미확인, 평가 2세트는 보류 유지. 모델 재실행·원격 변경 없이 화면만 읽고 EVAL_REPORT 7장을 보정했다.
+- [실측] `01b0d5b`의 `run_gate` 점수 전송 누락·모델 호출 수 0을 재현해 `run_scores` + `pass`/`cost_usd`를 같은 trace에 연결하고 `run_graph` 실행 조건을 공유했다. SDK 5.0.4의 공급자 비용 미전달도 서비스·평가 공통 콜백으로 보완했다(본문 제거 유지, 미보고 비용은 미확인). `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q -p no:cacheprovider tests/services tests/evals tests/repo` 493 passed · 2 skipped. `EVAL_REPORT.md` 7장에 항목별 대조·환경/태그 필터·확인 한계를 기록. 읽기 전용 배포 조회는 `sojafit-api-19bd964-rs` 100%, Langfuse 브라우저는 로그인 필요. 인증 명령은 비밀 파일 훅에 차단되어 프로젝트·점수 원격 수신 미확인, [결정] 정운의 평가 2세트 보류 선택을 따름. 실제 모델 0회/$0, 배포·운영 DB 변경·푸시 없음. 다음: 새 개발 계정 로그인 뒤 실제 수신/프로젝트를 확인하고 평가 재개 여부를 결정.
+
+## 2026-11-11 서비스 DB 재설계 구현 · 새 Supabase 프로젝트로 전환 · 배포
+- 구현(범위 A, 서비스 표만): 승인 스냅샷을 `approvals` 한 곳으로 단일화, 분석 회로 사본과 죽은 표 삭제, FK와 체크포인트 삭제 트리거, DB CHECK 단순화, 구글 승인 대기 삭제, 데모 계정은 첫 로그인 때 생성(007 삭제), 만료 세션 청소. 서비스 표 23 → 21개, DB 전체 35 → 33개(코퍼스 4 · LangGraph 8 불변). 기준선 `db/020_service_baseline.sql`, 옛 증분 SQL은 `db/legacy`, 운영 이전 · 되돌리기 · precheck는 `db/migrations`. 표 정의서 · ERD는 `scripts/db/gen_schema_docs.py`가 DB에서 만든다(`db/schema/*.md`).
+- 시험: 통합 결과 PG16(pgvector) 1346 passed · 29 skipped · 1 failed, PG17 1343 · 32 · 1(실패 1건은 기존에 알려진 `test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases`). 독립 검증 3회(P1 · P2 · 인증 · 스키마, 회귀, 이전 · 되돌리기)와 변이 확인.
+- 적용 방식(중요): 옛 운영 DB(다른 Supabase 조직, 서울)에는 이전 SQL을 적용하지 않았다. 대신 새 Supabase 프로젝트 `SojaFit_2`(hajeongun.dev 조직, 서울 ap-northeast-2, Postgres 17.11)에 기준선 SQL(000 · 002 · 008 · 009 · 012 · 020_service_baseline · 026)과 LangGraph 표 준비(`--setup`)를 적용하고, 옛 DB에서 코퍼스 4표만 `pg_dump`/`pg_restore`로 옮겼다(`source_documents` 1,360 · `document_chunks` 51,967 · `chunk_embeddings` 51,967 · `chunk_embedding_bits` 51,967행, 개인정보 표는 읽지 않음). 서비스 표(계정 · 프로젝트 · 대화 · 승인 · 견적)는 옮기지 않고 새로 시작했다. 옛 운영 DB는 백업으로 남김(현재 미사용), 옛 DB Egress 약 266MB. 그래서 운영 이전 SQL(`db/migrations`)은 시험 DB에서만 검증했고 실제 운영 DB에는 실행하지 않았다.
+- 검색 시험(새 DB, `retrieval_r1` 질문 10개, 읽기 전용): 정답 문서 상위 5 안 9/10(못 맞힌 r1-083은 이전 운영 기록에서도 실패), 지연 1.1~1.7초, 이전 기록과 문항별 같음.
+- 배포(11-11 약 04:00~04:25 KST): Secret Manager에 새 비밀 `DATABASE_URL_NEW` 생성(기존 `DATABASE_URL`은 그대로). 점검 리비전(`sojafit-api-27a410d` 계열, 태그 `newdb`)을 0%로 올려 0% 주소 스모크 28/0/0 통과(`scripts/results/smoke/smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json`). `DEMO_MODE=0` · `AUTH_ORIGIN`=운영 주소로 최종 리비전 `sojafit-api-27a410d-live`를 만들어 트래픽 100% 전환, 기본 주소 스모크 28/0/0 통과(`smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json`). 그 전에 같은 주소 스모크가 비밀번호 입력 문제(B 계정 401)로 두 번 실패했다(`*_042105.json` 2/4/22, `*_042119.json` 19/1/8, 서비스 문제 아님. 로그인 5회 실패 15분 잠금 주의). 구글 로그인 실제 왕복 확인(구글 계정으로 로그인해 `users`에 구글 로그인 전용 계정이 생김). 점검용 리비전 3개는 삭제, 옛 리비전(`716c6d6` 등)은 되돌리기용으로 유지.
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-716c6d6=100 --project sojafit --region asia-northeast3` (옛 리비전은 옛 DB 주소를 가진 `DATABASE_URL` 비밀을 쓴다).
+- 새 DB 계정: 데모 계정 `demo1@gmail.com` · `demo2@gmail.com`(비밀번호 계정 role user, 정운이 CLI로 생성. 비밀번호는 기록하지 않음)과 구글 계정 1개. 이전 안내의 `example.com` 이메일과 다르다. 점검 데이터(프로젝트 6개 안팎, 승인 · 견적 2개)가 새 DB에 남아 있다(지울지 미정).
+- 알려진 사항: 서버 로그의 Langfuse `Failed to export spans 403 Forbidden`은 옛 리비전(`716c6d6`, `b884849`)에서도 어제부터 나던 것이다(이번 변경 무관, 미해결). Supabase 무료 한도 주의(활성 프로젝트 2개, 약 1주 비활성 시 자동 중지 [문서 기억]).
+- 확인 못 한 것: 코퍼스 84문항 전체 점수 대조, 대용량 동시 요청, 서버 경유 `DELETE /api/me` 호출, 새 Supabase 풀러의 장시간 동작.
+- 코드 위치: 재설계 커밋 38개를 통합 브랜치 `rd-final-int`에서 `jeongun` 위로 cherry-pick했다(내용이 같은 `716c6d6` · `d23345e` · `ee3405d`는 `jeongun`에 이미 있어 건너뜀). push는 하지 않았다.
+- 문서 정정(11-11): README 배포본 줄(5631309 → `sojafit-api-27a410d-live`) · `/signup` 설명 · 로그인 줄, GATES G1(현재 상태 앞에, 11-11 스모크 JSON 4개 링크) · G3 · G4 · G5, SOJAFIT.md 옛 표 정의서 설명, EVAL_REPORT 7장 Langfuse 문장을 고쳤다. API 개수는 코드로 센 값(동작 36 = `/openapi.json` 33 + 숨긴 Google 3, 경로 30)으로 GATES의 37을 바로잡았다. 옛 코퍼스가 52,244에서 51,967로 바뀐 날짜 · 이유는 작업 기록에서 못 찾아 '확인 필요'로 남겼다.
+- 최종 답변 마크다운 표시(11-11, 브랜치 `fe-answer-1111`): 답이 평문 `<p>`로 나와 표·굵게가 한 덩어리로 보이던 것을 `SafeMarkdown.tsx`(의존성 없는 렌더러, HTML·이미지·링크 해석 안 함)로 고쳤다. 시험 3개 추가, 전체 140개 통과. 배포는 아직 안 했다.
+- PR #85 병합 반영(11-11): 팀원 심태현의 인젝션 베이스라인(origin/main `c96dbbe`, 110작업 실측03 포함)을 jeongun에 병합했다. 충돌 2건(`MULTI_AGENT.md`는 main의 무료 수정 기록 4건을 살리고 구조 결정 줄은 jeongun 표기 유지, `test_judge_read.py`는 main의 T7 시험을 살리고 다수결 제거로 불필요한 `one_read` 픽스처는 뺌). 전체 pytest 1509 passed · 31 skipped · 0 failed(jeongun 1366 + PR #85 시험 약 141 + 새 확인기 2), 프런트 test:run 137 passed. 푸시 안 함.
+- 평가 회귀 CI 연결(11-11): `ci.yml`에 키·네트워크·DB 없는 `eval-injection-replay` 잡 추가(저장한 실측03 결과를 `evals/runners/check_injection_result.py`로 사전 등록 기준 대조 + 인젝션 실행기·저장 방어 응답 재생 pytest 5파일), `push: main` 트리거 추가. 기존 `eval-replay`(데모 응답 재생)는 그대로. 진짜 모델 호출은 `eval-live.yml` 수동 버튼 그대로이고 인젝션 실측(`--execute`)은 승인 파일·전용 DB 14개가 필요해 CI에 넣지 않았다. 같은 명령을 로컬에서 실행해 94 passed 확인, 결과 파일 1행을 기준 미달로 바꾸면 종료 코드 1로 실패(되돌림), actionlint 통과. 한계: GitHub Actions는 결제 문제로 11-09부터 실행되지 않아 Actions에서 실제로 도는지는 확인하지 못했다.
+- EVAL_REPORT 6장(신뢰 경계) 갱신(11-11): 믿지 않기로 한 입력 5종과 코드 근거 경로, PR #85 110작업(공격 55 중 방어 성공 54 · 실패 0 · 보류 1)의 사례 T1~T7 시도 · 막힌 정도 · 남은 것 표를 넣고, '다회 반복은 재지 않았다'는 낡은 문장을 사례당 5회 반복 반영으로 고쳤다. 사람 채점 없음 · 배포 경로 미측정은 남은 것으로 유지. 문서만 바꿨고 모델 호출 없음.
+- 서비스 분석 Langfuse 모델 호출 추적(11-11): 키가 있으면 모든 모드에서 노드 이름 · 모델 · 토큰 · 시간 · 오류 수준을 `analysis-metadata`와 같은 trace_id(`analysis_events.trace_id`, 실행 시작에 정함)로 묶어 보낸다. `service_trace.py`의 내보내기 직전 훅이 남기는 목록 밖의 칸(입력 · 출력 · metadata · 오류 문구)을 지우고 입력 · 출력은 `[redacted]`로 바꾼다(평가 실행기는 이 경로를 쓰지 않음). 가입 안내 문구에 메타 전송을 더함. 인메모리 내보내기 시험 7개 추가, 마스킹을 끄면 3개 실패. 실제 Langfuse에서 본문이 비어 보이는지 · 토큰 비용이 채워지는지는 배포 뒤 확인 필요. 푸시 · 배포 안 함.
+- CI 대체 로컬 실행(11-11, Actions는 결제 제한으로 미시작): `frontend` 잡과 같은 순서(`npm ci` · `npm run test:run` · `npm run build`)를 깨끗한 작업 폴더에서 돌려 종료 코드 0. `gitleaks` 잡과 같은 명령(`docker run ghcr.io/gitleaks/gitleaks:latest detect --redact`, 커밋 668개)은 `generic-api-key` 64건이 나왔고 모두 키가 아니었다(인젝션 측정 원시 결과의 `document_key` 60건, 이 기록의 되돌리기 명령 리비전 이름 4건; 실제 키 형식 직접 검색 0건). `.gitleaks.toml`에 두 경로를 허용해 다시 돌려 0건(671 커밋). Actions에서의 실제 실행은 확인하지 못했다.
+- 인젝션 HTTP 시험: `scripts/smoke/injection_http.py` 추가(PR #85 T4 · T6 · T7을 배포 HTTP로 정상/공격 짝 1회씩, 5기준 자동 판정, 답 글 미저장). 가짜 서버 시험만 통과, 실제 배포 호출은 정운 실행 전이라 안 함.
+- D8 단계별 응답 시간 · 비용 재측정(11-11, 브랜치 `d8-measure-1111`): `run_gate`가 문항 행에 노드 단위 시간 · LLM 호출별 토큰 · 공급자 보고 비용 · Voyage 시간을 쓰게 하고(`evals/runners/stage_timing.py`), `AnalysisTimings.report()`의 옛 영어 이름 0ms '건너뜀' 행을 없앴다. v3 50문항 1세트(첫 실행 42 통과 + 공급자 429로 실패한 8문항 재실행 8/8)와 검색 단계 20문항을 재고 EVAL_REPORT 8장을 새 값으로 바꿨다: 판정 읽기 3번→1번으로 호출 112→85 · LLM 비용 0.047→0.032달러, 정확도 유지, 응답 시간은 개선 확인 못 함(p95 10.7초). 승인 대기는 측정 방법 확정 + 읽기 전용 `scripts/eval/approval_wait_report.py`만 만들고 값은 실사용 3회 뒤. 실제 지출 약 0.05달러(상한 0.15). 푸시 안 함.
+
+## 2026-11-10 23:18 승인 422(표시 이름 `TSC 1N4007G`) 원인 수정 · 사용자당 하루 한도 상향 배포
+- 발견: 배포 주소 실제 계정 스모크(demo2가 A)에서 6단계 승인이 422였다. 운영 DB에서 그 실행의 후보 품번을 읽기 전용으로 조회하니 `TSC 1N4007G`(제조사 이름 + 공백)였다. demo1의 22:53 실행은 같은 질문에서 승인 201이었다(모델이 매번 다르게 적음). 한도 초과(`LIMIT_EXCEEDED`)는 별개로 demo1이 22:53 점검 한 번에 하루 200,000 예약 토큰을 다 쓴 것이다(예약 토큰은 돌려주지 않음).
+- 원인: 판정 결과의 `results[].part`는 모델이 읽은 이름을 질문에 쓴 대로 보여 주는 계약이다(`tests/multi_agent/test_judge.py`가 `res['part'] == name`으로 고정, 11-06 B1). 승인 요청 검증(`ApproveBody`, 공백 불가)과 견적 DB(`quotes.part_number` CHECK, 공백 불가)는 그것을 깨끗한 식별 품번으로 가정했다. 에이전트 쪽이 아니라 승인 · 견적 경계의 계약 어긋남이다.
+- 고친 것: 승인 요청은 표시 이름을 그대로 받고(제어 문자 · 빈 값만 거름, 저장된 판정 결과의 후보와 정확히 같아야 쓰임), 승인 때 `snapshot.candidate.part_number`(제조사 이름 `TSC `를 떼고 남은 공백은 `-`)를 만들어 견적이 쓴다. 규칙에 안 맞는 이름은 승인 단계에서 409. 식별 품번이 없는 옛 승인은 견적에서 같은 규칙으로 만든다. 판정 에이전트 · 평가는 안 건드렸다. 사용자당 하루 토큰 한도 200,000 → 1,000,000(서비스 전체 2,000,000 그대로).
+- 시험: 일회용 PostgreSQL로 실제 CHECK 규칙까지(승인 → 견적 `TSC 1N4007G` → `1N4007G`, `1N4148 A0G` → `1N4148-A0G`, 옛 승인). 수정 전 코드로 되돌리면 새 API · DB 시험 3개가 실패함을 확인(변이 확인). DB 연결 `tests/api`+`services`+`conversations` 425 passed 1 failed(`test_planned_judge_subgraph_resumes...` 판정 읽기 호출 수 3 ≠ 1, 수정 전 b884849에서도 같은 실패), 키 · DB 없는 전체 1254 passed.
+- 배포: revision `sojafit-api-716c6d6`(b884849 + 커밋 2개, 태그 `qfix`)를 0%로 올려 점검 뒤 100% 전환. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-b884849=100 --project sojafit --region asia-northeast3`. 메인 `jeongun`에는 `980f7a1` · `0eb34b3`으로 반영했다.
+- 배포 서버 재점검(23:26, 조장 실행): 스모크 28단계 **통과 28 · 실패 0**(결과 `smoke_..._232639.json`). 승인 201 · 견적 201, 새로 넣은 격리 확인 5개 통과, 한도 초과 없음. **한계**: 이 실행의 후보는 일반 이름 `1N4007G`(운영 DB 조회로 확인, 견적 part_number `1N4007G`)라 `TSC 1N4007G` 경우는 배포 서버에서 직접 못 봤다(모델이 3회 중 1회만 그렇게 씀). 그 경우는 실제 PostgreSQL 시험 + 수정 전 코드에서 시험이 실패함을 확인한 변이 확인으로만 검증했다. 앞의 실패한 점검 결과 파일 2개(23:00 한도 초과, 23:05 승인 422)는 저장소에 올리지 않았다.
+- 재실행(23:28, 조장 실행, 결과 `smoke_..._232814.json`): 통과 28 · 실패 0이고, 이번에는 후보 표시 이름이 **`TSC 1N4007G`**로 나왔다. 승인 201, 견적 저장 201, 운영 DB 조회로 저장된 견적 `part_number='1N4007G'` · 승인 후보 표시 이름 `TSC 1N4007G` · 식별 품번 `1N4007G`를 확인했다(수정 전에는 이 경우가 승인 422였다). 수정이 배포 서버에서 직접 검증됐다.
+- 확인 못 한 것: 구글 실제 로그인 왕복. 한도 상향 뒤 실제 청구액. 다른 세션의 품번 바로잡기(`f8d6274`)는 여전히 미배포 · 미측정이다.
+- 다음 할 일: 배포 주소 스모크 28단계 재실행, 구글 로그인 확인, 체크포인트 코멘트 대조표.
+
+## 2026-11-10 22:53 배포 주소 실제 계정 점검 · 운영 DB 계정 정리
+- 한 일: 운영 DB에 운영자 명령(`python -m backend.auth --role user`)으로 일반 계정 2개(데모 계정, 조장이 직접 입력)를 만들고, 그 계정으로 배포 주소(`sojafit-api-b884849`)에서 `http_smoke.py --confirm-live --refusal`을 돌렸다. 통과 23 · 실패 0 · 건너뜀 0, 총 31.0초(실제 LLM). 계정 격리(B가 A의 프로젝트 · thread · run 읽기 404), 같은 승인 409, 범위 밖 질문 거절 확인. 첫 run 시작이 15.8초로 가장 길었다(원인 미확인, 이후 재개 1.8초 · 거절 2.6초).
+- 운영 DB 계정 정리: 읽기 전용 조회로 5개(관리자 3 + 일반 2, 모두 11-05 생성, 프로젝트 0건)를 확인했고, 일반 2개(id 1 · 2)는 조장이 삭제하기로 했다(삭제 스크립트 `delete_users.py`는 세션 임시 폴더, 조장이 터미널에서 실행). 관리자 3개는 그대로(정리 여부는 조장 결정). 점검 중 운영 DB에 만든 시험 계정 `probe@example.test`(id 20)는 탈퇴 API로 바로 지웠다. 이 점검으로 demo1 계정에 프로젝트 2개 · 승인 1건 · 견적 1건이 생겼다.
+- 스모크 보강(커밋 `0ccc7f3`): 위 23단계는 계정 격리를 프로젝트 · thread 목록 · run 읽기 셋만 봤다(404가 "숨김"인지 의심을 받음). 8단계에 B의 A 견적 목록 읽기 · A 메시지 승인(POST) · A 승인으로 견적 저장(POST) 404와 A · B 승인 사례 목록(A에는 A 사례가 있고 B에는 없음)을 더해 **28단계**(`--refusal`)로 늘렸다. B의 POST는 A가 승인 · 견적을 만든 뒤에만 보내고, 격리가 깨져도 DB 제약(메시지당 승인 1 · 승인당 견적 1)으로 새로 만들지 못하고 409로 끝난다. 승인 사례 DELETE는 자료를 바꾸므로 보내지 않는다. 시험: `tests/api/test_http_smoke.py` 9 passed(격리가 깨진 가짜 서버에서 새 확인이 실패하는 시험 포함). 실제 서버: 깨끗한 작업 폴더에서 `.env` 없이 compose 기동 뒤 `--demo --refusal` **28 통과 · 실패 0**. 배포 주소 재점검(28단계)은 아직이다(조장이 같은 명령으로).
+- 확인 못 한 것: 구글 실제 로그인 왕복(테스트 사용자 등록 · 브라우저 클릭은 조장), 브라우저 화면 눈으로 확인(로그인 뒤 작업대), 점검 중 실제 청구액.
+- 다음 할 일: 구글 로그인 확인, 체크포인트 코멘트 대조표(11-11 재채점 전), 로그인 전 첫 화면(랜딩)을 바꿀지 결정.
+
+## 2026-11-10 밤 Google 일반 로그인 · 세션 유휴 2시간 · 세창 작업대 화면(#84) 포함 배포
+- 한 일: 일반 사용자 Google 가입 · 로그인(`google_session` · `google_signup`, 이메일이 이미 있으면 자동 연결 없이 승인 대기, 처리방침 동의 쿠키가 있어야 새 계정), 이메일 가입은 `DEMO_MODE=1`에서만(공개 배포는 404), 세션 유휴 만료 30분 → 2시간(절대 8시간 그대로)을 구현해 배포했다. 배포 화면이 오세창 PR #84(작업대 UI · 랜딩, 11-10 16:13 main 머지) 이전이라 `origin/main`을 합친 뒤 다시 배포했다. 합치기 충돌은 `LoginPage.tsx`(두 상태 변수 모두 유지) · `SPEC.md`(양쪽 문장 합침), `App.test.tsx`의 가입 링크 시험은 새 동작(가입 링크 없음)에 맞게 고쳤다.
+- 코드 위치: 메인 `jeongun` 작업 폴더가 아니라 별도 `git worktree`(세션 임시 폴더 `gl-wt`)의 커밋 `3067342` · `3a7813f` · `5f27d33` · `6d5880e` · 합치기 `b884849`다. 다른 세션이 메인 폴더에서 작업 중이라 건드리지 않았다. **메인 `jeongun`에는 아직 없다**(배포본과 브랜치가 다름).
+- 배포: revision `sojafit-api-b884849`(태그 `osc84`)를 `--no-traffic`으로 올려 0% 주소 점검 뒤 100% 전환. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-6d5880e=100 --project sojafit --region asia-northeast3`(그 전 `5f27d33` · `07c6629` · `5631309`도 0%로 남아 있음). 점검: `/health` · `/login` · `/app` 200, `/api/auth/me` 401, `POST /api/auth/signup` 404, 구글 시작 303, 새 번들에만 세창 작업대 문구 있음.
+- 시험: 인증 `tests/api/test_auth.py` 74 passed(일회용 Postgres, 스킵 0), 프런트 135 passed + 빌드 성공, 키 · DB 없는 전체 1211 passed · 118 skipped(`tests/repo` 통과).
+- 사고: 점검 중 옛 주소에 가입 요청을 보내 운영 DB에 시험 계정(`probe@example.test`, user_id 20)이 만들어졌고 탈퇴 API로 바로 지웠다(삭제 뒤 로그인 401).
+- 확인 못 한 것: 구글 실제 왕복(테스트 사용자 등록 · 브라우저 클릭은 조장), 브라우저 화면 눈으로 확인, 평가자 계정 생성(조장이 직접).
+- 다음 할 일: 위 커밋을 메인 `jeongun`으로 옮기기(`SPEC.md` 충돌 예상) 또는 `origin/main`을 합친 브랜치 정리, ADR(이메일 인증 없는 자기 가입 결정 뒤집기), 평가자 계정 2개 생성, Google 테스트 사용자 등록.
+
+## 2026-11-10 D6 · D7 · D8 남은 항목 마무리 (브랜치 `jeongun`, 커밋 전)
+- 한 일: ① `/api/` 아래 POST · PATCH · PUT · DELETE 본문 128 KiB 한도를 재개 · 승인 · 로그인까지 넓혔다(넷리스트 업로드는 자기 5 MiB 한도). ② 모든 응답에 보안 헤더 4개(`X-Content-Type-Options` · `X-Frame-Options` · `Referrer-Policy` · `Strict-Transport-Security`). ③ `hide_query`와 겹치던 `GoogleCallbackLogFilter`를 지웠다. ④ 컨테이너를 일반 계정(`USER nobody`)으로 실행. ⑤ 견적 금지 키가 코드(`quote.FORBIDDEN`)와 DB 검사(`db/020`)에서 같은지 보는 시험. ⑥ `EVAL_REPORT.md` 7장 빈칸 2개(사용자 · 세션 연결, 느림 원인 사례)와 8장 LLM 단계별 시간 · 비용, `docs/GATES.md` G1 · G6 줄.
+- 바꾼 파일: `backend/main.py`, `Dockerfile`, `tests/api/test_conversations.py`, `tests/services/test_quote_service.py`, `SPEC.md`, `backend/BACKEND.md`, `EVAL_REPORT.md`, `docs/GATES.md`.
+- 실행한 명령과 결과: `env -u DATABASE_URL PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q` 1210 passed, 111 skipped(추가한 시험 5개 포함). `docker build` 성공 뒤 `docker run --rm <이미지> sh -c 'id; python -c "import backend.main"'` → uid 65534(nobody), 불러오기 성공, `/app` 쓰기 거부. 단계별 집계는 저장소 밖 `exp-haiku-1109/stage_costs.py`(Langfuse 읽기만)로 v3 3세트(`gate-v3_draft-1110-0040-set1`) 50트레이스를 읽었다: LLM 호출 112번, 합계 $0.047(#50 결과 줄과 같음), Supervisor p50 1.36 · p95 1.93초, 판정 읽기 16문항 · 48번, 문서 답 쓰기 10문항 · 13번. 원본 `exp-haiku-1109/results/stage-costs-R-v3a.json`.
+- 배포(11-10 저녁): 같은 `jeongun`에 다른 세션의 커밋(`f8d6274`)과 수정 중 파일 19개가 있어 이들을 뺐다. 별도 `git worktree`에서 `5631309` + 이 작업의 코드 커밋 2개(`918869c` · `17bcd8a`, `SPEC.md` 충돌은 이미지에 안 들어가 현재 내용 유지)만 만들고, `git archive`한 소스를 `gcloud run deploy sojafit-api --source . --project sojafit --region asia-northeast3 --no-traffic --tag sec1110 --revision-suffix 07c6629`로 올렸다. 0% 주소에서 점검(`/health` · `/` · `/login` 200, `/api/auth/me` 401, 데모 로그인 404, 보안 헤더 4개, 128 KiB 초과 413, 로그에 서버 오류 없음) 뒤 `update-traffic --to-revisions=sojafit-api-07c6629=100`으로 전환하고 기본 주소에서 같은 점검을 다시 했다. 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-5631309=100 --project sojafit --region asia-northeast3`. 같은 코드로 빈 볼륨 · `.env` 없이 compose 기동(서버 uid 65534) 뒤 `http_smoke.py --demo --refusal` 통과 23 · 실패 0. 처음 이 폴더의 `.env`로 띄웠을 때는 `demo-login` 404로 실패했다(`.env`가 데모 모드가 아님).
+- 확인 못 한 것: CI 재생(`record_demo.py replay`)을 돌리지 않았다. 배포 주소에서 실제 계정 로그인 · 분석 · 승인 · 견적은 안 했다(조장 실행). 다른 세션 커밋 `f8d6274`와 `915e48b` · `593397a` 등은 이 배포에 없다. 보안 헤더는 시험(TestClient)으로만 봤다. LLM이 아닌 단계(검색 · 판정 코드)는 트레이스에 단계 이름이 없어 집계에서 빠졌다. `SojaFit/.env`의 Langfuse 키는 새 프로젝트 `SojaFit_v2`이고 11-09 ~ 10 측정 트레이스는 옛 프로젝트 `SojaFit`에 있다(`lab/repo/.env` 키로 읽음). Langfuse 옛 조회 API(`/api/public/traces` · `observations`)는 11-16에 없어진다고 응답했다.
+- 다음 할 일: 배포 주소 실제 계정 2개 점검(`http_smoke.py --confirm-live`), Langfuse 캡처 3장을 저장소 어디에 둘지, 서버 시작 직후 일반 글 로그 2줄, `/health`의 DB 확인 여부, CI에서 일부러 실패시킨 기록(GitHub Actions 결제 한도가 풀린 뒤).
+
 ## 2026-11-10 레포 점검과 정리(묶음 A ~ F)
 - 한 일: 레포 전체 점검(문서 · 구조 · 표현 · 코드 · 앱 5갈래, 읽기 전용) 뒤 묶음별로 고쳤다. E 실행 환경(a9f6fdb), B 화면 문구(5de4c7c), A AI 도구 작업 흔적(4ebfc34), C 문서 현행화(00a036a), D 버린 사양 표 코드 정리(6673b42), F 용어 통일(359916e).
 - 실행한 명령과 결과: 오프라인 전체 시험 1059 passed, 117 skipped(사양 표 · MCP 사양 도구 시험 39개 삭제, 2개 추가). 프런트 `npm run test:run` 107 passed, `npm run build` 성공, 운영 번들에 목업 문자열 0. `docker compose config -q` 0. `specs.py`에서 남긴 정의 47개는 정리 전과 같음(지운 21개는 표 만들기 · 적재 명령과 그것만 쓰던 도우미).
@@ -32,7 +149,7 @@
 - 다음 할 일: 판정 읽기 값 흔들림(v3-13 `vz_min`, v3-14)과 느린 문항(v3-06 · v3-01 · v3-41)의 구간 시간을 본다.
 
 ## 2026-11-09 멀티 그래프를 원래 구조로 되돌리고 노드 이름을 한국어로
-- 한 일: 조장 요청으로 11-09 구조 재구성(0279930 · 419205d · cdf7db3, Supervisor가 에이전트 하나를 고르는 구조)을 `git revert`로 되돌려 원래 계획형 구조(Supervisor 계획 → Send 동시 실행 → 모으기 → 답 정리 · 종합 → 답 검사, 재계획 1번)로 돌아왔다. 카드 값 읽기 코드 먼저(#43)는 그대로 둔다. 이어서 강사 피드백(손그림이 코드뿐인 모으기를 "Supervisor ②"로 적어 Supervisor가 둘로 보임)에 따라 노드 이름을 강의처럼 한국어로 바꿨다: `입력 읽기` · `품번·판 확인` · `Supervisor` · `RAG 에이전트` · `대체 부품 에이전트`(`회로 역할 읽기` → `대체 부품 판정`) · `답 모으기` · `답 정리` · `종합` · `답 검사` · `끝내기` · `거절` · `가격 안내`. 갈림 함수는 노드 이름을 돌려주고, `답 모으기` → `Supervisor` 되돌림만 키를 `모두 실패 · 다시 계획(최대 1번)`으로 두어 그림에 라벨이 붙는다. 노드 함수 · `path` 값 · 프롬프트 이름 · 인터럽트 재개는 그대로다.
+- 한 일: 조장 요청으로 11-09 구조 재구성(0279930 · 419205d · cdf7db3, Supervisor가 에이전트 하나를 고르는 구조)을 `git revert`로 되돌려 원래 계획형 구조(Supervisor 계획 → Send 동시 실행 → 모으기 → 답 정리 · 종합 → 답 검사, 재계획 1번)로 돌아왔다. 카드 값 읽기 코드 먼저(#43)는 그대로 둔다. 이어서 강사 피드백(손그림이 코드뿐인 모으기를 "Supervisor ②"로 적어 Supervisor가 둘로 보임)에 따라 노드 이름을 강의처럼 한국어로 바꿨다: `입력 읽기` · `품번·판 확인` · `Supervisor` · `RAG 에이전트` · `Spec 에이전트`(`회로 역할 읽기` → `대체 부품 판정`) · `답 모으기` · `답 정리` · `종합` · `답 검사` · `끝내기` · `거절` · `가격 안내`. 갈림 함수는 노드 이름을 돌려주고, `답 모으기` → `Supervisor` 되돌림만 키를 `모두 실패 · 다시 계획(최대 1번)`으로 두어 그림에 라벨이 붙는다. 노드 함수 · `path` 값 · 프롬프트 이름 · 인터럽트 재개는 그대로다.
 - 바꾼 파일: 되돌림 커밋 1b9eac9(`backend/multi_agent/` · `backend/prompts/` · `langfuse_prompts.py` · `evals/runners/run_gate.py` · `tests/multi_agent/` · `tests/evals/test_run_graph.py`가 main과 같아짐, `SOJAFIT.md` · `SPEC.md`는 main + 카드 줄). 이름 커밋 d2640cc(`backend/multi_agent/build.py` · `supervisor.py` · `MULTI_AGENT.md`, `tests/multi_agent/test_build.py` · `test_supervisor.py` · `MULTI_AGENT.md`, `tests/evals/test_run_graph.py`, `SPEC.md` 2절 구성 · 8.3 판정 길, `SOJAFIT.md` 트리 두 줄), 이 파일.
 - 실행한 명령과 결과: 키를 비운 오프라인 전체 시험 `.venv/bin/python -m pytest -q -p no:cacheprovider` 시작 890 passed → 되돌린 뒤 899 passed → 이름 뒤 900 passed(그림 시험 1개 추가), 모두 57 skipped. 가짜 도구(LLM 없음, 판정 켬)로 그래프를 만들어 `get_graph(xray=True).draw_mermaid()`를 뽑았다(세션 임시 폴더 `multi_v5.mmd`). 라벨 붙은 간선은 `답 모으기 → Supervisor` 하나다. 실제 LLM · 검색 · DB · Langfuse 호출 없음.
 - 확인 못 한 것: 그림 PNG 렌더(`draw_mermaid_png`는 mermaid.ink 네트워크 호출이라 하지 않음). Langfuse 트레이스의 노드 줄 이름이 한국어로 바뀐다(실제 실행으로 보지 않음). RAG 에이전트 안 다시 검색 고리를 하위 그래프 간선으로 드러내는 것은 동작이 같다는 보장이 어려워 하지 않았다.
@@ -688,7 +805,7 @@
 - 확인 못 한 것: 캐시 없는 새 clone 기동 시간, 실제 Voyage 임베딩으로 기억 의미 순위, 배포 주소.
 
 ## 2026-11-10 G4 Store 기억을 에이전트에 연결 — 선호 실장 방식으로 찾기 후보 순서 (브랜치 `jeongun-1`)
-- 한 일: 저장만 되고 그래프가 읽지 않던 사용자 사실(Store) 중 선호 실장 방식을 대체 부품 에이전트에 연결했다. 멀티 그래프에 `기억 읽기` 노드(`입력 읽기` → `기억 읽기` → `품번·판 확인`)를 넣었다. 노드는 LangGraph가 넣어 주는 Store(`store: BaseStore`)에서 `(user_id, 'profile')`의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→`''`로 `mount_preference`에 둔다. Supervisor는 판정 할 일의 Send 꾸러미에만 이 값을 넣고, 판정 에이전트는 찾기에서 질문이 실장 방식을 말하지 않았을 때만 `verdict.rank(..., preferred=)`로 같은 판정·같은 기판 수정 여부 안의 순서를 바꾼다. 판정·거르기·답 글·프롬프트·화면은 그대로이고, 쓴 값은 판정 결과 `preferred_mount`(트레이스, 공개 DTO)에 남긴다. 늘 빈 `approved_memories`·`memory_refs` 길은 손대지 않았다.
+- 한 일: 저장만 되고 그래프가 읽지 않던 사용자 사실(Store) 중 선호 실장 방식을 Spec 에이전트에 연결했다. 멀티 그래프에 `기억 읽기` 노드(`입력 읽기` → `기억 읽기` → `품번·판 확인`)를 넣었다. 노드는 LangGraph가 넣어 주는 Store(`store: BaseStore`)에서 `(user_id, 'profile')`의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→`''`로 `mount_preference`에 둔다. Supervisor는 판정 할 일의 Send 꾸러미에만 이 값을 넣고, 판정 에이전트는 찾기에서 질문이 실장 방식을 말하지 않았을 때만 `verdict.rank(..., preferred=)`로 같은 판정·같은 기판 수정 여부 안의 순서를 바꾼다. 판정·거르기·답 글·프롬프트·화면은 그대로이고, 쓴 값은 판정 결과 `preferred_mount`(트레이스, 공개 DTO)에 남긴다. 늘 빈 `approved_memories`·`memory_refs` 길은 손대지 않았다.
 - 바꾼 파일: `backend/graph/memory.py`(노드 `read_profile`), `backend/multi_agent/build.py`, `state.py`, `supervisor.py`(판정 꾸러미), `agents/judge.py`(선호 후보 집합 · `preferred_mount`), `backend/judge/verdict.py`(`rank`의 `preferred`), `backend/conversations/dto.py` · `models.py`(공개 판정에 `preferred_mount`), `profile.py` · `memory_service.py` 머리 설명, `SPEC.md` 8.5(에이전트 활용 줄, 수용 기준 3줄), `backend/graph/GRAPH.md`, `backend/multi_agent/MULTI_AGENT.md`, `docs/specs/user-thread-memory.md`, 시험 4개 파일(`tests/multi_agent/test_build.py` · `test_judge.py`, `tests/judge/test_judge_verdict.py`, `tests/conversations/test_dto.py`)과 그 폴더 설명 3개, 이 파일
 - 실행한 명령과 결과: `uv sync`(worktree 안 `.venv`) 뒤 `uv run python -c "import backend; print(backend.__file__)"`가 `jeongun-1/backend/__init__.py`. 바꾸기 전 `uv run pytest -q`는 1095 passed · 118 skipped, 바꾼 뒤 1102 passed · 118 skipped(새 시험 7개, DB 시험은 `TEST_DATABASE_URL`이 없어 건너뜀). `tests/repo/test_repo_layout.py` 5 passed, `git diff --check` 통과. 그래프 시험에서 Store 없이 찾기는 예전 순서(1N5817 → SS14), 사용자 SMD 선호면 SS14 → 1N5817이고 두 후보의 판정(역할상 충분)·기판 수정 여부는 같았다.
 - 확인 못 한 것: 실제 PostgresStore · 로그인 사용자로 서비스 경로(`memory_service.message`)를 끝까지 돌리지 않았다(InMemoryStore 시험만). 실제 LLM 평가셋 재측정은 하지 않았다(평가 실행기는 Store 없이 compile해 `mount_preference`가 늘 빈 값이고, 시험으로 순서가 같음을 확인). 프론트 타입 `JudgementDto`에는 `preferred_mount`가 없다(화면은 바꾸지 않음). `preferred_mount`는 체크포인트 밖에도 저장 결과(run·메시지)와 승인 기록 snapshot에 남는다(SPEC 8.5에 적음, 내 설정을 지워도 옛 결과에는 남음). 멀티 그래프의 `path`에 `기억 읽기`가 늘 들어가 평가 트레이스의 path 문자열은 예전 실행과 다르다. `SOJAFIT.md` 155 · 164줄(`memory.py` 설명, `build.py` 흐름)과 `SPEC.md` 2절 "그래프" 구성 줄의 멀티 흐름에는 `기억 읽기`가 아직 없다(주요 문서라 이번에 8.5만 고침).

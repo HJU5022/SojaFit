@@ -10,6 +10,7 @@
 `login-auth.md`의 수용 기준은 루트 `SPEC.md` 8.6(로그인)과 겹칩니다. 내용이 다르면 `SPEC.md`를 따릅니다.
 
 ## 파일
+- `official-datasheet-evidence.md` — 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
 - external-complete-schematics.md — 공개 저장소에서 검증한 완성 회로도 전체 시트의 백엔드 제공 계약
 - `google-user-login.md` — 승인 없는 일반 Google 가입, 비밀번호 재확인 계정 연결, 관리자 최초 승인 유지와 검증 계획
 
@@ -24,7 +25,7 @@
 - `mcp-tool-prompt.md` — MCP 도구 선택·결과 해석 프롬프트(Langfuse `sojafit/tool-use`)와 모의 검증 범위 작업서
 - mcp-search-tools.md — MCP 검색·문서 조회·외부 후보·로컬 점검 도구의 1차 계약
 - `mcp-graph-integration.md` — PR #44의 `search_corpus`를 LangGraph 검색 주입 계약에 연결하고 빈 결과와 장애를 구분하는 작업서
-- `judge-agent.md` — 대체 부품 에이전트와 대체품 찾기 작업서(역할 23개, 조건 세 층, 인터럽트로 빠진 값 묻기, 후보 정렬)
+- `judge-agent.md` — Spec 에이전트와 대체품 찾기 작업서(역할 23개, 조건 세 층, 인터럽트로 빠진 값 묻기, 후보 정렬)
 - `supervisor-v0-langfuse-import.md` — 완료된 Supervisor V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오는 작업서
 - `d5-frontend-service.md` — React·Vite 화면과 D5 서비스 연결 기능 계약
 - `circuit-context-diagram.md` — 실제 프로젝트·분석 데이터에 기반한 대상 부품의 1·2단계 연결 개념도 기능 계약

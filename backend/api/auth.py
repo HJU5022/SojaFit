@@ -1,7 +1,7 @@
 """로그인 · 가입 · 데모 버튼 로그인 · 로그아웃 · 내 계정 HTTP 경계(`/api/auth/*`)와 숨긴 Google 관리자 로그인 경로.
 
-- 경로: `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(둘 다 `DEMO_MODE=1`에서만, 아니면 404) ·
-  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback|pending`.
+- 경로: `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(데모 두 경로만 `DEMO_MODE=1`에서 제공) ·
+  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback`(Google 가입 · 로그인, 명시적 가입·비밀번호 재확인 연결).
 - 화면 쪽 짝: `frontend/src/api/auth.ts`.
 하지 않는 일: 비밀번호 · 세션 · 잠금 · 가입 한도 · Google 신원 확인(`backend/auth.py`), 탈퇴(`backend/api/profile.py`),
   관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 Google 콜백 쿼리 지우기(`backend/main.py`).
@@ -301,7 +301,7 @@ def google_link(body: Login, request: Request, response: Response):
 
 
 def demo_mode() -> None:
-    """데모 버튼 로그인 경로는 DEMO_MODE=1일 때만 있다. 아니면 본문을 읽기 전에 공통 404."""
+    """데모 로그인 경로만 DEMO_MODE=1에서 제공한다."""
     if os.getenv("DEMO_MODE", "1") != "1":
         raise HTTPException(status_code=404, detail="Not Found")
 
@@ -321,15 +321,15 @@ class DemoLogin(BaseModel):
 
 @router.post("/demo-login", dependencies=[Depends(demo_mode)], response_model=UserId)
 def demo_login(body: DemoLogin, request: Request, response: Response):
-    """데모 모드에서 시드한 데모 사용자 A · B로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
-    # [주의] 404 데모 모드 아님 · 데모 계정 없음(새 볼륨에서만 시드), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
+    """데모 모드의 데모 사용자 A · B(없으면 만든다)로 비밀번호 없이 로그인과 같은 세션 쿠키를 심고 {"user_id"}를 돌려준다."""
+    # [주의] 404 데모 모드 아님(데모 계정은 첫 로그인 때 만든다), 403 Origin, 422 a · b 밖의 값, 503 DB 사용 불가
     auth.check_origin(request)
     try:
         result = auth.demo_session(body.account)
     except psycopg.Error:
         raise HTTPException(status_code=503, detail="로그인 서비스를 사용할 수 없습니다.") from None
     if result is None:
-        raise HTTPException(status_code=404, detail="데모 계정이 없습니다. 데모 모드로 새 DB 볼륨을 만들어 다시 시작하세요.")
+        raise HTTPException(status_code=404, detail="데모 계정을 사용할 수 없습니다.")
     token, user_id = result
     set_session_cookie(response, token)
     return {"user_id": user_id}

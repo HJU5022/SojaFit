@@ -164,6 +164,48 @@ def test_chat_retries_connection_error_within_the_same_limit(monkeypatch):
     assert len(calls) == 3
 
 
+def test_node_chat_retries_model_timeout_within_the_same_limit(monkeypatch):
+    """그래프의 실제 node_chat 입구도 SDK 시간 초과를 3회 상한으로 재시도한다."""
+    import httpx
+    from openai import APITimeoutError
+
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    monkeypatch.setattr(llm.time, "sleep", lambda *_: None)
+    calls = []
+
+    def timeout(*_args):
+        calls.append(1)
+        raise APITimeoutError(request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat"))
+
+    monkeypatch.setattr(llm, "_openrouter_call", timeout)
+    with pytest.raises(APITimeoutError):
+        llm.node_chat("route", "system", "user", Route)
+    assert len(calls) == 3
+
+
+def test_node_chat_does_not_retry_model_rate_limit(monkeypatch):
+    """공급자 429는 형식 재시도로 소모하지 않고 상위 오류 변환 경로로 넘긴다."""
+    import httpx
+    from openai import RateLimitError
+
+    monkeypatch.setattr(llm, "LLM_PROVIDER", "openrouter")
+    calls = []
+    error = RateLimitError(
+        message="synthetic provider rate limit",
+        response=httpx.Response(429, request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat")),
+        body={"error": {"code": "rate_limit"}},
+    )
+
+    def rate_limited(*_args):
+        calls.append(1)
+        raise error
+
+    monkeypatch.setattr(llm, "_openrouter_call", rate_limited)
+    with pytest.raises(RateLimitError):
+        llm.node_chat("route", "system", "user", Route)
+    assert len(calls) == 1
+
+
 def test_cli_call_disables_tools_and_puts_schema_in_system_prompt(monkeypatch):
     seen = {}
 
@@ -438,6 +480,36 @@ def test_node_chat_calls_the_model_of_that_node(monkeypatch):
     assert used[-1] == llm.LLM_MODEL
 
 
+def test_node_image_is_bounded_scoped_and_sent_only_to_provider(monkeypatch):
+    monkeypatch.setattr(llm, 'LLM_PROVIDER', 'openrouter')
+    messages = []
+    monkeypatch.setattr(llm, '_chat_model', lambda model: SimpleNamespace(
+        with_structured_output=lambda schema: SimpleNamespace(
+            invoke=lambda body, **options: messages.append(body) or schema(kind='role'))))
+    image = b'\x89PNG\r\n\x1a\nexample-image'
+    llm.node_chat('docs_answer', 'sys', 'source caption', Route, image=image)
+    assert messages[0][1]['content'][0] == {'type':'text', 'text':'source caption'}
+    assert messages[0][1]['content'][1]['image_url']['url'].startswith('data:image/png;base64,')
+    assert llm._figure_image.get() is None
+    llm.node_chat('docs_answer', 'sys', 'text only', Route)
+    assert messages[1][1]['content'] == 'text only'
+    for bad in (b'not-png', image * 30000):
+        with pytest.raises(ValueError, match='bounded PNG'):
+            llm.node_chat('docs_answer', 'sys', 'source caption', Route, image=bad)
+    assert len(messages) == 2
+
+
+def test_node_image_resets_after_provider_failure(monkeypatch):
+    monkeypatch.setattr(llm, 'LLM_PROVIDER', 'openrouter')
+    def fail(*args):
+        assert llm._figure_image.get() is not None
+        raise RuntimeError('provider failed')
+    monkeypatch.setattr(llm, 'chat', fail)
+    with pytest.raises(RuntimeError, match='provider failed'):
+        llm.node_chat('docs_answer', 'sys', 'caption', Route, image=b'\x89PNG\r\n\x1a\nexample')
+    assert llm._figure_image.get() is None
+
+
 def test_model_rates_keys_match_node_models():
     from backend.services import langfuse_prompts, llm
     # [왜] 서비스 노드 모델(Haiku · Sonnet)이 단가표에 없으면 예약이 Sonnet 이상 기본 단가로 돌아가 판정 질문이 상한에 걸린다
@@ -446,7 +518,7 @@ def test_model_rates_keys_match_node_models():
 
 
 def test_service_budget_fits_supervisor_and_three_judge_reads():
-    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 3번(다수결), 지시문 약 15KB씩
+    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 등 큰 호출 3번(예전 다수결 때 재현), 지시문 약 15KB씩
     from backend.conversations.memory_service import Conversations
     from backend.services import langfuse_prompts, llm
     prompt = 'x' * 15000

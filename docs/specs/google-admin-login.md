@@ -2,13 +2,16 @@
 
 > 2026-11-11 후속: [Google 일반 사용자 로그인](google-user-login.md)으로 일반 가입·로그인을 추가한다. 관리자 최초 연결 승인·철회는 아래 계약을 유지하며, 이 문서의 관리자 전용 설명은 기존 설계 이력이다. 운영 반영 전이다.
 
+> main의 자동 연결 설명은 병합 전 이력이다. 현재 통합 계약은 명시적 일반 가입·비밀번호 재확인 연결·관리자 최초 승인 유지이며 google-user-login.md를 따른다.
+
+> 2026-11-10 변경: 연결 안 된 계정도 이메일이 같으면 승인 없이 자동 연결(아래 11-10 확장). 이 문서의 승인 대기 · 승인 CLI 절은 그 이전(11-08) 기준이다. 11-11 재설계로 승인 대기 코드(`request_google_link` · `approve_google_link` · `google_pending_email` · `GET /api/auth/google/pending` · `--approve-google`)와 `auth_google_pending` 표가 **삭제**됐다(`db/migrations/migrate_prod_2b_optional_drop_dead_auth.sql`, 새 DB는 기준선에 표가 없다).
 > 2026-11-08 저장소 기준: 기존 비밀번호 인증을 유지한 Google 관리자 로그인, 승인 대기, 운영자 승인·철회·비활성화 CLI, 공통 세션 사용, 콜백 접속 로그 보호, SQL과 합성 테스트가 구현되어 있다. 아래 날짜별 기록의 Cloud Run·Secret Manager·팀 DB 작업은 당시 확인한 운영 이력이며 현재 외부 상태를 뜻하지 않는다. 실제 운영 설정·계정·DB 적용 상태는 대상 환경에서 다시 확인한다.
 
 ## 현재 확인된 상태
 
 | 항목 | 확인 결과 |
 |---|---|
-| 저장소 구현 | `db/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, React 로그인 화면 `frontend/src/pages/LoginPage.tsx`(옛 `backend/web/templates/login.html`은 11-10에 지움)와 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
+| 저장소 구현 | `db/legacy/010_google_auth.sql`, `backend/auth.py`, `backend/main.py`, React 로그인 화면 `frontend/src/pages/LoginPage.tsx`(옛 `backend/web/templates/login.html`은 11-10에 지움)와 `tests/api/test_auth.py`에 스키마·OIDC 흐름·승인/회수·화면·합성 검사가 있다. |
 | Google Cloud 프로젝트 | 2026-11-05 작업 기록에는 `sojafit`의 Google 인증 플랫폼과 웹 OAuth 클라이언트 생성이 기록돼 있다. 현재 설정은 이번 문서 정합성 점검에서 재조회하지 않았다. |
 | 앱 대상·게시 상태 | 2026-11-05 확인 당시 `외부`, `테스트 중`이었다. 현재 팀원 접근 가능 여부와 게시 상태는 별도로 확인한다. |
 | 연락처 | 사용자 지원 이메일은 팀장 계정, Google의 개발자 알림 이메일은 사용자가 지정한 별도 계정으로 입력했다. 주소 원문은 이 문서에 기록하지 않는다. |
@@ -28,7 +31,8 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 
 - 승인된 관리자 Gmail 2개 이상을 각기 다른 관리자 계정에 안전하게 연결하고 로그인·세션 폐기를 확인한다.
 - 미승인 Google 계정은 관리자 세션을 발급받지 못한다. 기존 평가자 로그인·로그아웃과 권한 제한을 유지한다.
-- 범위 밖: 일반 사용자 Google 로그인, 회원가입, 업무 데이터 소유권 연결, Supabase Auth 전환, 운영 배포 자동화.
+- 범위 밖: 업무 데이터 소유권 연결, Supabase Auth 전환, 운영 배포 자동화.
+- **11-10 확장(일반 사용자 Google 가입 · 로그인)**: 11-09의 이메일 자기 가입은 이메일 인증이 없어 공개 배포에서 닫고(`DEMO_MODE=0`이면 `POST /api/auth/signup` 404), Google이 확인한 이메일(`email_verified`)로 가입한다. 연결된 신원이면 role과 상관없이 로그인하고(`auth.google_session`), 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작해야(`/api/auth/google/start?consent=1` → 동의 쿠키) 비밀번호 없는 `user` 계정이 만들어진다(`auth.google_signup`, `password_hash = google-login-only`). **이메일이 이미 `users`에 있는 신원도 Google이 확인한 이메일이 활성 계정(관리자 포함)의 로그인 이메일과 정확히 같으면 운영자 승인 없이 그 계정에 연결해 로그인한다**(`auth.google_signup`, 동의 불필요, 기존 비밀번호 로그인 유지, 비활성 · 이미 다른 Google 신원에 연결된 계정은 `/login?google=error`). 11-10 정운 결정으로 11-09~10의 "이메일이 이미 있으면 자동 연결하지 않고 운영자 승인"을 뒤집었다(근거: Google이 이메일 소유를 확인(`email_verified`), 이메일 가입을 닫음, Google 콘솔 테스트 사용자 허용 목록, Marvia에서도 같은 방식). 승인 대기 코드(`request_google_link` · `/api/auth/google/pending` · `--approve-google` CLI · `auth_google_pending` 표)는 콜백이 더 이상 쓰지 않지만 되돌림 · 호환용으로 남겨 둔다. 연결 철회 CLI는 그대로다. 평가자는 Google 계정 대신 운영 DB에 미리 만든 이메일 · 비밀번호 계정으로 로그인한다.
 
 ## Approaches
 
@@ -48,7 +52,7 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 - 인증: FastAPI 서버 측 Google OpenID Connect 인가 코드 흐름. DB의 공유 일시 상태 테이블에 state 해시, PKCE verifier, nonce, 브라우저 비밀값 해시와 10분 만료를 저장하고, 해당 브라우저의 HttpOnly·SameSite=Lax 임시 쿠키와 연결한다. HTTPS 배포에서는 Secure를 적용하며 로컬 HTTP에서는 기존 세션과 같이 Secure를 생략한다. state·쿠키를 검증한 뒤 DB 행을 원자적으로 1회 소비해 만료·재사용·불일치를 거부한다. 민감 상태는 서버 역할로만 접근하며 만료·소비 후 삭제한다. Google에서 돌아오는 콜백은 일반 상태 변경 API의 Origin 검사와 구분하고 OAuth 전용 state·nonce 검증을 적용한다. 서버는 ID 토큰의 서명, 발급자, 대상 client ID, 만료, nonce 및 검증된 이메일을 검사한다. `(issuer, sub)`는 대소문자를 보존한 고유 키로 취급한다.
 - 권한: Google의 인증 성공은 신원 확인만 뜻한다. 서버는 승인된 `sub`와 활성 `admin` 역할을 DB에서 확인한다. 이메일 도메인·클라이언트가 전달한 역할·임의 이메일 일치만으로 권한을 부여하지 않는다.
 - 계정 연결: 기존 `users.password_hash NOT NULL`을 유지하고 사전 생성된 기존 관리자에 Google 식별자를 별도 연결 테이블로 관리한다. 더미 비밀번호로 Google 전용 계정을 만들지 않는다. 사용자의 선택에 따라 연결된 관리자는 기존 SojaFit 비밀번호와 Google 계정 두 방법을 모두 사용할 수 있다. 복구 담당자와 최종 관리자 잠금 방지 절차는 팀이 확정한다. 연결 테이블의 `(issuer, sub)`와 관리자 ID에 각각 유일 제약을 둔다. 승인 대기 테이블은 무작위 요청 ID, 검증된 issuer·sub·이메일, 생성·15분 만료를 저장하고 승인 시 원자적으로 소비하며 만료 후 삭제한다. 대기·연결 표는 신뢰된 서버·운영자에게만 접근을 허용한다. 실제 Gmail과 `sub`는 문서·로그·테스트 데이터에 넣지 않고 테스트에는 합성 값을 사용한다.
-- 세션: 검증 및 권한 확인 후 기존 난수 세션과 HttpOnly·Secure·SameSite 쿠키, 8시간 절대·30분 유휴 기준을 사용한다. Google 액세스·ID·리프레시 토큰은 영구 저장하지 않는다. 앱 로그아웃과 Google 계정 로그아웃은 별개다.
+- 세션: 검증 및 권한 확인 후 기존 난수 세션과 HttpOnly·Secure·SameSite 쿠키, 8시간 절대·2시간 유휴 기준(11-10 30분에서 늘림)을 사용한다. Google 액세스·ID·리프레시 토큰은 영구 저장하지 않는다. 앱 로그아웃과 Google 계정 로그아웃은 별개다.
 - 운영 설정: 현재는 로컬·배포 콜백을 하나의 웹 클라이언트에 등록했다. 환경별 클라이언트 분리 필요성은 팀이 검토한다. 클라이언트 ID·비밀은 실행 환경에 안전하게 설정하며 비밀은 Secret Manager 등으로 주입하고 로그·저장소에 기록하지 않는다. 현재 비밀의 안전한 확보·교체 방법과 접근 권한은 미확인이다. 개인 Gmail의 실제 로그인 및 테스트 사용자 설정은 시험으로 검증한다.
 - 개인정보: 최소 `openid`·`email` 범위만 검토하며 항목·목적·보관·삭제·사업자·국외 처리 여부를 별도로 확정한다. Cloud Logging의 30일/400일은 버킷별 관찰값이며 실제 라우팅·사본·계약은 추가 검토한다.
 - 서버 접속 로그: 앱 시작 시 Uvicorn 접속 로그에서 Google 콜백 경로의 쿼리만 제거하고 요청 경로와 응답 코드는 남긴다. 다른 경로는 변경하지 않는다. 앱 수명주기(lifespan)를 비활성화하면 이 필터가 등록되지 않으며, Cloud Run 요청 로그·다른 로거의 보호는 별도다.
@@ -119,7 +123,7 @@ Google OAuth 테스트 설정과 우리 서비스의 관리자 권한은 별개�
 ### 2. 격리 DB와 저장 구조
 
 - [x] 전용 PostgreSQL DB를 사용하는 인증 통합 검사 경로를 두고 기존 볼륨을 삭제하지 않는 절차로 시험했다.
-- [x] `db/010_google_auth.sql`에 OAuth 상태, 승인 대기 요청, Google 식별자 연결 표와 UNIQUE·FK·만료·접근 제한을 정의했다.
+- [x] `db/legacy/010_google_auth.sql`에 OAuth 상태, 승인 대기 요청, Google 식별자 연결 표와 UNIQUE·FK·만료·접근 제한을 정의했다.
 - [x] 새 표에 RLS를 켜고 PUBLIC·`anon`·`authenticated` 권한을 제한했다.
 - [x] 격리 DB에서 생성·중복·만료·승인·회수와 기존 인증 회귀를 검사하는 테스트를 구현했다.
 - [ ] 현재 운영 DB의 마이그레이션 적용 상태와 실제 백엔드 DB 역할·검색 회귀를 다시 검증한다.

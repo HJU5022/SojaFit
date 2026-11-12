@@ -83,9 +83,8 @@ def db(monkeypatch):
     configured(monkeypatch)
     try:
         with psycopg.connect(scoped) as conn:
-            for name in ('003_auth.sql', '005_auth_attempt_window.sql', '006_user_roles.sql', '010_google_auth.sql', '021_auth_ip_limits.sql', '027_google_user_login.sql'):
-                conn.execute(Path('db', name).read_text(encoding='utf-8'))
-            conn.execute('ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMPTZ')
+            from tests.db_schema import apply_service_schema
+            apply_service_schema(conn)
         yield scoped
     finally:
         with psycopg.connect(url, autocommit=True) as conn:

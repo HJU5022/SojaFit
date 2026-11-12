@@ -1,5 +1,4 @@
 """사람 승인 뒤의 견적·승인 사례 API. 가격·재고는 받지 않는다."""
-import re
 from datetime import datetime
 from typing import Literal
 
@@ -25,7 +24,9 @@ class ApproveBody(BaseModel):
     @field_validator('candidate_part')
     @classmethod
     def valid_part(cls, value):
-        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', value):
+        # [왜] 후보 이름은 판정 결과가 보여 준 그대로('TSC 1N4007G')라 공백이 들어온다. 이 값은 저장된 판정 결과의 후보와 정확히 같아야만
+        #      쓰이고(approval_snapshot), 견적용 식별 품번은 서버가 따로 만든다(quote.part_number). 여기서는 제어 문자와 빈 값만 거른다
+        if not value.strip() or any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
             raise ValueError('invalid part')
         return value
 

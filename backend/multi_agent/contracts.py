@@ -2,9 +2,9 @@
 
 - 역할: Supervisor(계획)가 내는 계획서(`Plan`, 할 일 `Task` 최대 3개)와 서브에이전트가 올리는 보고서(`TaskReport`),
   이유 코드(`Reason`), 질문당 상한을 한 곳에 둔다. 모든 에이전트가 같은 규격을 쓰게 하려는 것이다.
-  대체 부품 에이전트 코드가 쓰는 짧은 보고(`AgentReport`)는 단일 그래프(D4 v2)도 같이 쓰므로 그대로 둔다.
+  Spec 에이전트 코드가 쓰는 짧은 보고(`AgentReport`)는 단일 그래프(D4 v2)도 같이 쓰므로 그대로 둔다.
 - 하지 않는 일: LLM · 검색 · DB 호출, 사용자에게 보일 문구 만들기(내부 코드와 사용자 문구는 따로 둔다), 상태 저장.
-- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계: Supervisor 계획 1번 + RAG 에이전트 · 대체 부품 에이전트, 각자 LLM 1번, 계획 형식 검사 · 상한),
+- 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"(11-06 재설계: Supervisor 계획 1번 + RAG 에이전트 · Spec 에이전트, 각자 LLM 1번, 계획 형식 검사 · 상한),
   AGENTS.md 규칙 6(재시도와 루프에는 상한)
 """
 from enum import Enum
@@ -140,6 +140,7 @@ class TaskReport(BaseModel):
     memory_refs: list[str] = Field(default_factory=list, max_length=5)  # 본문 근거와 분리한 과거 사례 ID
     evidence_ids: list[str] = Field(default_factory=list)   # 인용한 근거 번호
     docs: list[dict] = Field(default_factory=list)          # 문서 할 일이 LLM에 보여 준 청크(인용 검사 · 채점이 쓴다)
+    references: list[dict] = Field(default_factory=list)    # 3등급 참고 링크. 판정 근거와 분리한다.
     judgement: dict = Field(default_factory=dict)           # 판정 할 일의 판정 · 찾기 결과(답 틀의 입력)
     searches: list[dict] = Field(default_factory=list)      # 검색마다 {query, parts, top: [[파일, 쪽], ...]}(검색 지표 계산용)
     llm_calls: int = 0
@@ -147,7 +148,7 @@ class TaskReport(BaseModel):
 
 
 class AgentReport(BaseModel):
-    """대체 부품 에이전트 코드(`agents/judge.py`)의 짧은 보고. 단일 그래프도 같은 함수를 써서 남겨 둔다."""
+    """Spec 에이전트 코드(`agents/judge.py`)의 짧은 보고. 단일 그래프도 같은 함수를 써서 남겨 둔다."""
     agent: Literal['search', 'judge', 'writer', 'verifier']
     status: Literal['ok', 'partial', 'fail']
     summary: str = Field(max_length=MAX_SUMMARY)

@@ -1,5 +1,10 @@
 # Google 일반 사용자 로그인
 
+## 2026-11-12 최신 main 통합 계약
+- 최신 main의 서비스 기준선·공개 권한/RLS·만료 세션 청소·지연 데모 생성은 유지한다. Google 자동 가입/이메일만으로 연결 대신 명시적 가입·비밀번호 재확인 연결·관리자 최초 승인 정책을 적용한다.
+- 새 기준선에는 pending 표가 없으므로 030_google_onboarding.sql을 추가한다. 027/029/030은 기존 사용자·신원 연결·업무 데이터를 보존하는 추가 인증 SQL이다. 운영 적용·배포는 이 통합 작업의 범위 밖이다.
+- AC: 기준선+추가 인증 SQL에서 신규 Google 가입·기존 비밀번호 재확인 연결·관리자 승인·메일 인증/재설정·세션 만료 청소가 함께 통과한다. main의 SafeMarkdown은 숫자 인용 버튼과 결합하되 외부 링크/이미지/HTML은 실행하지 않는다.
+
 ## 2026-11-12 로컬 OAuth·신규 계정 완료 UI와 시계 오차 보완
 - Why/Goal: 로컬에서 검증된 Google 신원은 google=finish로 돌아왔으나 화면에 가입/기존 계정 연결 완료 동작이 없었다. 빠른 반복 로그인은 ID 토큰 iat 시각차로 거절됐다. 기존 API/본인확인 경계를 재사용해 두 경로를 끝까지 제공한다.
 - What/How: LoginPage는 finish일 때 onboarding의마스킹이메일을조회하고명시적Google가입/기존일반계정이메일·비밀번호연결을제공한다. 기존AuthProvider.googleSignup/googleLink와서버세션후me확인을사용한다. 만료/실패는완료버튼차단과재인증경로,지연조회는current플래그로폐기한다. 일반Google버튼/비밀번호로그인은유지. auth.verify_google_id_token의시간claim만leeway30초로처리하고서명/issuer/aud/nonce/email_verified검증은유지한다. 발급미래30초허용/31초거절·만료31초거절을고정시간서명토큰으로검증한다.

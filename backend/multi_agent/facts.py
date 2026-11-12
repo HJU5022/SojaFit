@@ -8,6 +8,7 @@ import re
 
 from backend.graph.nodes import REVISION, WORD, find_parts
 from backend.multi_agent.supervisor import Facts
+from backend.multi_agent.revisions import requested_revisions
 
 
 def refs_of(target_part: dict) -> set[str]:
@@ -41,7 +42,13 @@ FILE_REVISION = re.compile(r'_([A-Za-z]\d{4})\.pdf', re.I)
 
 def revisions_in(question: str) -> list[str]:
     """질문의 개정 코드: 낱말(K2611)과 파일 이름 끝(…_N2602.pdf)."""
-    found = [w.upper() for w in WORD.findall(question) if REVISION.fullmatch(w)] + [m.upper() for m in FILE_REVISION.findall(question)]
+    # Keep the historical source order for TSC codes (the MCP contract and
+    # tests expose a list), then append normalized generic forms deterministically.
+    found = [w.upper() for w in WORD.findall(question) if REVISION.fullmatch(w)]
+    found.extend(m.upper() for m in FILE_REVISION.findall(question))
+    for revision in sorted(requested_revisions(question)):
+        if revision not in found:
+            found.append(revision)
     return list(dict.fromkeys(found))
 
 

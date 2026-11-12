@@ -1,9 +1,11 @@
 import json
+import base64
 from pathlib import Path
 
 import pytest
 
 from backend.multi_agent.agents import docs as D
+from backend.multi_agent.revisions import revision_matches, revisions_for_part
 
 
 @pytest.fixture(autouse=True)
@@ -19,6 +21,248 @@ def smoke_cards():
     rows=[json.loads(s) for s in Path('data/demo/snapshot/chunks.jsonl').read_text(encoding='utf-8').splitlines()]
     return [dict(chunk_id=r['idx']+1,file=r['doc'],page=r['page'],table=r['table'],content=r['text'],doc_parts=r['parts'])
             for r in rows if r['doc']=='1N4001G SERIES_P2104.pdf' and r['idx'] in (15,4)]
+
+
+def test_docs_prompt_requires_complete_requested_checklist_and_bounded_role_interpretation():
+    assert 'every separate item requested' in D.PROMPT
+    assert 'conventional circuit-mechanism explanation' in D.PROMPT
+    assert 'never omit a supported item' in D.PROMPT
+
+
+@pytest.mark.parametrize(
+    ('question', 'needles'),
+    [
+        ('UF4007 trr 최댓값과 측정 기준, 파형을 알려 줘', ('reverse recovery time test circuit', 'waveform')),
+        ('1N5408G IFSM의 파형과 온도 조건을 알려 줘', ('absolute maximum ratings TA', 'single half sine wave')),
+        ('SS14H와 SS14의 VF, IR, 전류 차이를 비교해 줘', ('electrical characteristics VF IR', 'package')),
+    ],
+)
+def test_rating_query_adds_requested_datasheet_detail_terms_without_changing_part(question, needles):
+    task = D.Task(id=1, agent='docs', kind='rating', goal='rating', query='part datasheet')
+    query = D.enrich_rating_query(task.query, question, task)
+    assert 'part datasheet' in query
+    assert all(needle.casefold() in query.casefold() for needle in needles)
+
+
+def test_trr_condition_gap_only_opens_verified_row_fallback_for_measurement_questions():
+    cards = [{'content': 'Reverse recovery time trr MAX 75 ns; Irr = 0.25A'}]
+    assert D.trr_condition_gap('UF4007 trr 최댓값과 측정 조건을 알려 줘', cards)
+    assert not D.trr_condition_gap('UF4007 trr 최댓값은?', cards)
+    complete = [{'content': 'trr MAX 75 ns; IF = 0.5A, IR = 1.0A, Irr = 0.25A'}]
+    assert not D.trr_condition_gap('UF4007 trr 측정 조건을 알려 줘', complete)
+
+
+def test_suffix_rating_task_keeps_explicit_base_and_h_parts_in_retrieval_filter():
+    cards = [
+        {'chunk_id': 1, 'file': 'SS12H SERIES_B2305.pdf', 'page': 1,
+         'table': 'ratings', 'doc_parts': ['SS14H'], 'content': 'SS14H IF 1A VF 0.50V IR 200uA VRRM 40V'},
+        {'chunk_id': 2, 'file': 'SS12 SERIES_R2305.pdf', 'page': 1,
+         'table': 'ratings', 'doc_parts': ['SS14'], 'content': 'SS14 IF 1A VF 0.50V IR 200uA VRRM 40V'},
+    ]
+    calls = []
+    def retrieve(query, *, parts=None, k=5):
+        calls.append((parts, k))
+        return cards
+    def chat(node, system, user, schema):
+        return schema(grade='enough', answer='SS14H와 SS14의 IF는 각각 1A입니다 [1, 2].')
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS14H'],
+            'goal': 'Compare SS14H and SS14 ratings', 'query': 'SS14H SS14 electrical characteristics'}
+    report = D.docs_agent({'question': 'SS14H와 SS14의 VF와 IR 차이를 문서 기준으로 알려 줘.', 'task': task},
+                          retriever=retrieve, chat=chat)['reports'][0]
+    assert calls and any(parts == ['SS14', 'SS14H'] for parts, _ in calls)
+    assert {d['chunk_id'] for d in report['docs']} == {1, 2}
+
+
+@pytest.mark.parametrize('parts', [['SS14H'], []])
+def test_suffix_rating_search_keeps_h_and_base_when_task_parts_are_partial(parts):
+    """An H/base comparison must not lose SS14 when the planner omits one side."""
+    calls = []
+    cards = [
+        {'chunk_id': 11, 'file': 'SS14H.pdf', 'page': 1, 'table': 'ratings',
+         'doc_parts': ['SS14H'], 'content': 'SS14H IF 1A VF 0.50V IR 200uA'},
+        {'chunk_id': 12, 'file': 'SS14.pdf', 'page': 1, 'table': 'ratings',
+         'doc_parts': ['SS14'], 'content': 'SS14 IF 1A VF 0.50V IR 200uA'},
+    ]
+
+    def retrieve(query, *, parts=None, k=5):
+        calls.append(parts)
+        return cards
+
+    def chat(node, system, user, schema):
+        return schema(grade='enough', answer='SS14H와 SS14의 정격을 비교합니다 [11, 12].')
+
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': parts,
+            'goal': 'Compare SS14H and SS14 ratings',
+            'query': 'SS14H SS14 electrical characteristics'}
+    report = D.docs_agent(
+        {'question': 'SS14H 품번과 SS14의 VF와 IR 차이를 비교해 줘.', 'task': task},
+        retriever=retrieve, chat=chat,
+    )['reports'][0]
+    assert any(seen == ['SS14', 'SS14H'] for seen in calls)
+    assert {d['chunk_id'] for d in report['docs']} == {11, 12}
+
+
+def test_suffix_comparison_facts_reads_h_base_values_only_from_selected_document(monkeypatch):
+    """Fallback card loading may enrich the selected PDF, but never another revision."""
+    file = '1N4001G SERIES_P2104.pdf'
+    parts = ['1N4007G', '1N4007GH']
+    cards = [{'chunk_id': 100 + i, 'file': file, 'document_key': 'selected',
+              'page': 1, 'table': 'ratings', 'row': symbol, 'doc_parts': parts,
+              'content': (f'[{file} · 1쪽 · ratings] PARAMETER: {label} | '
+                          f'SYMBOL: {symbol} | 1N 4007G: {value} | '
+                          f'1N 4007GH: {value} | UNIT: {unit}')}
+             for i, (symbol, label, value, unit) in enumerate([
+                 ('IF', 'Forward current', '1', 'A'),
+                 ('VRRM', 'Repetitive peak reverse voltage', '1000', 'V'),
+                 ('IFSM', 'Surge current', '30', 'A'),
+                 ('VF', 'Forward voltage', '1.1', 'V'),
+                 ('IR', 'Reverse current', '10', 'µA'),
+             ])]
+    feature = {'chunk_id': 99, 'file': file, 'document_key': 'selected',
+               'page': 1, 'table': 'FEATURES', 'row': None, 'doc_parts': parts,
+               'content': f'[{file} · 1쪽 · FEATURES] AEC-Q101 qualified available'}
+    other = {'chunk_id': 901, 'file': '1N4001G-OTHER-REV.pdf', 'page': 1,
+             'table': 'ratings', 'row': 'IF', 'content': 'IF VALUE: 99 UNIT: A',
+             'parts': ['1N4007G', '1N4007GH']}
+    monkeypatch.setattr(D, 'load_cards', lambda keys: {
+        'selected': {'file': '1N4001G SERIES_P2104.pdf',
+                     'parts': parts, 'cards': cards + [feature]},
+        'other': {'file': other['file'], 'parts': other['parts'], 'cards': [other]},
+    })
+    docs = [feature]
+    facts, covered = D.suffix_comparison_facts(['1N4007GH', '1N4007G'], docs)
+    assert '1N4007G · IF_AV: 1 A' in facts
+    assert '1N4007GH · IF_AV: 1 A' in facts
+    assert '99 A' not in facts
+    assert covered
+    assert all(d['file'] == '1N4001G SERIES_P2104.pdf' for d in docs)
+
+
+def test_detail_rating_retrieval_requests_wider_candidate_window_and_keeps_old_fakes_compatible():
+    task = D.Task(id=1, agent='docs', kind='rating', goal='rating', query='part datasheet')
+    assert D.rating_search_k('UF4007 trr 시험 파형을 알려 줘', task) == 20
+    assert D.rating_search_k('UF4007의 VRRM은?', task) == 5
+    calls = []
+    def modern(query, *, parts=None, k=5):
+        calls.append(k)
+        return []
+    assert D.retrieve_with_k(modern, 'q', parts=['UF4007'], k=20) == []
+    assert calls == [20]
+    assert D.retrieve_with_k(lambda query, parts=None: [], 'q', parts=['UF4007'], k=20) == []
+
+
+@pytest.mark.parametrize('bad_reads', [0, 1, 2])
+@pytest.mark.parametrize('stale_gap', [False, True])
+def test_official_recovery_figure_has_bounded_recheck_and_is_not_persisted(bad_reads, stale_gap):
+    image = base64.b64encode(b'official-raster').decode('ascii')
+    figure_row = {
+        'chunk_id': 'W1', 'file': 'UF4001 SERIES_P2104.pdf',
+        'source_type': 'external_web', 'source_url': 'https://maker.example/uf4001.pdf',
+        'source_sha256': 'a' * 64, 'retrieved_at': '2026-11-12T00:00:00+00:00',
+        'evidence_grade': 2, 'page': 2, 'table': 'Reverse recovery test circuit',
+        'row': 'Reverse recovery time trr', 'content': 'UF4007 trr MAX 75 ns',
+        'doc_parts': ['UF4007'], 'cells': [('UF4007', '75')], 'unit': 'ns',
+        'conditions': 'IF = 0.5 A, IR = 1.0 A, Irr = 0.25 A',
+        'figure': {'page': 4, 'caption': 'Reverse recovery characteristic test circuit',
+                   'image_base64': image},
+    }
+    calls = []
+
+    def chat(node, system, user, schema, **kwargs):
+        calls.append((schema, kwargs.get('image')))
+        if schema is D.PdfOnlyAnswer:
+            return schema(grade='partial' if stale_gap else 'enough', pdf_rows=['W1'],
+                          missing=['순방향 전류 IF 및 역방향 IR의 측정 기준(test circuit) 설명이 없음'] if stale_gap else [])
+        assert schema is D.RecoveryFigure
+        assert kwargs['image'] == b'official-raster'
+        attempts = sum(image is not None for _, image in calls)
+        return schema(labels=['+0.5 A', '-1.0 A', '-0.25 A'], forward_current=0.5,
+                      reverse_peak=-1.0, recovery_end=-0.25, arrow_start=0.0,
+                      arrow_end=0.0 if attempts <= bad_reads else -0.25, unit='A', start_on_zero_crossing=True,
+                      end_on_recovery=True, readable=True)
+
+    result = D.docs_agent(
+        {'question': 'UF4007의 trr 시험 파형과 측정 조건을 알려 줘.',
+         'task': {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['UF4007'],
+                  'goal': 'reverse recovery waveform', 'query': 'UF4007 trr'},
+         'target_part': {}},
+        retriever=lambda *args, **kwargs: [], chat=chat,
+        web_search=lambda *args: [figure_row],
+    )['reports'][0]
+    assert result['status'] == ('partial' if bad_reads == 2 else 'ok')
+    assert ('W4' in result['answer']) == (bad_reads < 2)
+    assert '75 ns' in result['answer']
+    assert len([image for _, image in calls if image is not None]) == min(bad_reads + 1, 2)
+    assert all('figure' not in doc for doc in result['docs'])
+    assert all('image_base64' not in str(doc) for doc in result['docs'])
+    if bad_reads < 2:
+        from backend.multi_agent.supervisor import single_node
+        assert not result['missing'] and D.citations(result['answer']) == {'W1', 'W4'}
+        assert '일부 문서 작업은 완료되지 않았습니다' not in single_node({'reports':[result]})['answer']
+
+
+def test_exact_part_guard_rejects_siblings_but_keeps_the_named_member():
+    cards = [
+        {'chunk_id': 1, 'file': '1N5408G.pdf', 'content': '1N5408G VRRM 1000 V', 'doc_parts': ['1N5408G'], 'table': 'ratings'},
+        {'chunk_id': 2, 'file': 'SS14J.pdf', 'content': 'SS14J IF 1 A', 'doc_parts': ['SS14J'], 'table': 'ratings'},
+    ]
+    assert D.requested_parts('D1 후보로 TSC 1N5408X를 받았어. 이 정확한 품번의 정격') == {'1N5408X'}
+    assert D.keep_docs(cards, ['1N5408X'], '정확한 품번', {'1N5408X'}) == []
+    assert D.keep_docs(cards, ['SS14J'], 'TSC SS14J 정격', {'SS14J'}) == [cards[1]]
+
+
+def test_keep_docs_applies_part_specific_revision_mapping_before_llm():
+    question = 'SS34는 F16 판본, SS34H는 F20 판본 비교'
+    cards = [
+        {'chunk_id': 101, 'file': 'SS34_F16.pdf', 'content': 'SS34 VF 0.5 V',
+         'doc_parts': ['SS34'], 'table': 'ratings'},
+        {'chunk_id': 102, 'file': 'SS34_F20.pdf', 'content': 'SS34 VF 0.6 V',
+         'doc_parts': ['SS34'], 'table': 'ratings'},
+        {'chunk_id': 103, 'file': 'SS34H_F16.pdf', 'content': 'SS34H VF 0.7 V',
+         'doc_parts': ['SS34H'], 'table': 'ratings'},
+        {'chunk_id': 104, 'file': 'SS34H_F20.pdf', 'content': 'SS34H VF 0.8 V',
+         'doc_parts': ['SS34H'], 'table': 'ratings'},
+    ]
+    kept = D.keep_docs(cards, ['SS34', 'SS34H'], question, {'SS34', 'SS34H'})
+    assert [card['chunk_id'] for card in kept] == [101, 104]
+
+
+def test_keep_docs_keeps_legacy_single_edition_locator_without_doc_parts():
+    question = 'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 알려 주세요.'
+    cards = [
+        {'chunk_id': 201, 'file': 'S1A SERIES_S2202.pdf', 'content': 'S1J VRRM 600 V',
+         'table': 'ratings'},
+        {'chunk_id': 202, 'file': 'S1A SERIES_S2102.pdf', 'content': 'S1J VRRM 600 V',
+         'table': 'ratings'},
+    ]
+    kept = D.keep_docs(cards, ['S1J'], question, {'S1J'})
+    assert [card['chunk_id'] for card in kept] == [201]
+
+
+@pytest.mark.parametrize('with_history', [False, True])
+def test_api_question_filters_task_sibling_after_relaxed_search(with_history):
+    conditions = '원래 부품은 1N4007RLG이고 VIN은 12V입니다.'
+    text = f'사용 조건: {conditions}\nD1 후보는 TSC 1N5408X입니다. 이 정확한 품번의 역전압은?'
+    if with_history:
+        text = '이전 사용자 입력:\nSS34의 정격은?\n현재 질문:\n' + text
+    sibling = dict(chunk_id=7, file='1N5400G SERIES.pdf', page=1, table='ratings',
+                   content='1N5408G VRRM 1000 V', doc_parts=['1n5408g'])
+    calls = []
+    def retrieve(query, parts=None):
+        calls.append(parts)
+        return [sibling]
+    response = D.docs_agent(dict(question=text, conditions=conditions,
+                         task=dict(id=1, agent='docs', kind='rating', goal='VRRM',
+                                   query='1N5408G reverse voltage', parts=['1N5408G'])),
+                         retriever=retrieve, chat=lambda *a: pytest.fail('형제 품번이 모델에 전달됨'))
+    assert calls[0] == ['1N5408X'] and None in calls
+    assert response['reports'][0]['docs'] == []
+
+
+def test_series_request_is_not_treated_as_exact_part():
+    assert D.requested_parts('TSC SS14H 시리즈의 공통 정격을 알려 줘') == set()
+    assert D.requested_parts('BAT54와 SS34의 정격을 비교해 줘') == {'BAT54', 'SS34'}
+    assert D.requested_parts('사용 조건 12V, 1A에서 BAT54를 검토해 줘') == {'BAT54'}
 
 
 @pytest.mark.parametrize('condition', ['saved', 'missing_partial', 'missing_enough', 'removed', 'next_query'])
@@ -196,6 +440,38 @@ def test_saved_t4_retry_targets_assembly_and_preserves_supported_answer():
     assert '75 V' not in result['answer']
 
 
+def test_enough_without_polarity_forces_assembly_retry():
+    """enough로 끝냈지만 극성 표지가 없으면 partial+#49처럼 polarity before assembly 재검색을 한다(배포 T4 11-11)."""
+    from evals.runners import plan_injection_baseline as P,run_injection_baseline as R
+    data=P.fixture();case=next(c for c in data['cases'] if c['id']=='T4')
+    cards={c['chunk_id']+1557:{**c,'chunk_id':c['chunk_id']+1557}
+           for c in R.synthetic_docs(data,P.materialize(data,case,'normal'))}
+    searches=[];calls=[]
+    enough_no_polarity=D.DocsAnswer(grade='enough',
+        answer='DEMO2의 반복 최대 역전압 VRRM 정격은 60 V입니다[1558]. 패키지는 DO-41입니다[1562].',
+        missing=[],next_query='')
+    def retrieve(query,parts=None):
+        searches.append((query,parts))
+        ids=([1563,1562,1558,1560,1561] if 'polarity before assembly' in query
+             else [1558,1559,1562,1561,1560])
+        return [cards[i] for i in ids]
+    def chat(node,system,user,schema):
+        calls.append(user)
+        if 'Citation correction' in user:
+            return SAVED_T4_SUPPORTED[1].model_copy(deep=True)
+        if '[1563]' in user:
+            return SAVED_T4_SUPPORTED[0].model_copy(deep=True)
+        return enough_no_polarity.model_copy(deep=True)
+    payload={'question':case['question'],'task':dict(id=1,agent='docs',kind='rating',
+        goal='Find VRRM rating and package of DEMO2 and its pre-mounting checks.',
+        output='VRRM value with unit, package name, and any pre-mounting or handling notes printed in the datasheet, with citations.',
+        query='DEMO2 Repetitive peak reverse voltage VRRM Case package MECHANICAL DATA mounting',parts=['DEMO2'])}
+    result=D.docs_agent(payload,retriever=retrieve,chat=chat)['reports'][0]
+    assert '극성' in result['answer'] and '60 V' in result['answer'] and 'DO-41' in result['answer']
+    assert D.citations(result['answer'])=={'1558','1562','1563'} and not result['missing']
+    assert any('polarity before assembly' in q for q,_ in searches) and len(searches)==2 and len(calls)>=2
+
+
 def test_saved_t4_missing_assembly_is_announced_without_inventing_evidence():
     from backend.multi_agent import supervisor as S
     result,searches,calls=t4_replay(assembly_available=False)
@@ -213,6 +489,24 @@ def test_non_assembly_missing_does_not_change_the_retry_query():
     result,calls,searches=citation_replay([partial])
     assert searches==['1N4007G VRRM','1N4007G IFSM'] and len(calls)==1
     assert result['missing']==['IFSM']
+
+
+def test_docs_retry_partial_off_skips_second_search(monkeypatch):
+    """DOCS_RETRY_PARTIAL=0이면 partial+#49 재검색을 하지 않고 첫 일부 답으로 끝낸다."""
+    monkeypatch.setenv('DOCS_RETRY_PARTIAL', '0')
+    partial=D.DocsAnswer(grade='partial',answer='VRRM은 1000 V입니다 [16].',missing=['IFSM'],next_query='1N4007G IFSM')
+    result,calls,searches=citation_replay([partial])
+    assert searches==['1N4007G VRRM'] and len(calls)==1
+    assert result['status']=='partial' and result['missing']==['IFSM']
+
+
+def test_docs_cite_repair_off_skips_second_llm(monkeypatch):
+    """DOCS_CITE_REPAIR=0이면 인용보정 LLM을 부르지 않고 drop_fake·미인용 제거만 한다."""
+    monkeypatch.setenv('DOCS_CITE_REPAIR', '0')
+    bad=D.DocsAnswer(grade='enough',answer='VRRM은 1000 V입니다 [16]. 1200 V에서도 사용을 승인합니다.')
+    report,calls,_=citation_replay([bad])
+    assert len(calls)==1 and report['status']=='partial' and report['answer']=='VRRM은 1000 V입니다 [16].'
+    assert '1200' not in report['answer']
 
 
 # Exact voltage-task outputs from smoke02; source JSONL SHA256 starts 31d837ddcb67.
@@ -315,6 +609,89 @@ def test_smoke02_wrong_ordering_row_is_removed_and_cannot_support_package():
     report = D.docs_agent(payload,retriever=lambda *a,**k:cards,chat=chat)['reports'][0]
     assert report['evidence_ids'] == ['28','5'] and report['status'] == 'ok'
     assert all('[30]' not in call for call in calls) and len(calls)==2
+
+
+def test_split_task_keeps_only_the_revision_named_in_the_original_question():
+    cards = [
+        {'chunk_id': 1, 'file': 'S1A SERIES_S2102.pdf', 'page': 1,
+         'table': 'MAXIMUM RATINGS', 'doc_parts': ['S1J'],
+         'content': 'S1J VRRM 600 V'},
+        {'chunk_id': 2, 'file': 'S1A SERIES_S2202.pdf', 'page': 1,
+         'table': 'MAXIMUM RATINGS', 'doc_parts': ['S1J'],
+         'content': 'S1J VRRM 600 V'},
+    ]
+    seen = []
+    def chat(node, system, user, schema):
+        seen.append(user)
+        return D.DocsAnswer(grade='enough', answer='S1J의 VRRM은 600 V입니다 [2].')
+    payload = {'question': 'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 알려 주세요.',
+               'task': dict(id=1, agent='docs', kind='rating', goal='VRRM',
+                            query='S1J VRRM', parts=['S1J'])}
+    report = D.docs_agent(payload, retriever=lambda *a, **k: cards, chat=chat)['reports'][0]
+    assert report['evidence_ids'] == ['2']
+    assert all('[1]' not in prompt for prompt in seen)
+
+
+def test_part_specific_editions_do_not_cross_allow_documents():
+    question = 'SS34는 F16 판본, SS34H는 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') == {'F16'}
+    assert revisions_for_part(question, 'SS34H') == {'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34', 'SS34H'])
+    assert revision_matches(question, 'SS34H_F20.pdf', ['SS34H'], ['SS34', 'SS34H'])
+    assert not revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34', 'SS34H'])
+    assert not revision_matches(question, 'SS34H_F16.pdf', ['SS34H'], ['SS34', 'SS34H'])
+
+
+@pytest.mark.parametrize(
+    ('question', 'part_a', 'edition_a', 'part_b', 'edition_b'),
+    [
+        ('1N4148은 F16 판본, 1N4001은 F20 판본 비교', '1N4148', 'F16', '1N4001', 'F20'),
+        ('BAT54-02LRH는 F16 판본, BAS16은 F20 판본 비교', 'BAT54-02LRH', 'F16', 'BAS16', 'F20'),
+    ],
+)
+def test_common_part_number_shapes_keep_their_edition_association(
+    question, part_a, edition_a, part_b, edition_b,
+):
+    assert revisions_for_part(question, part_a) == {edition_a}
+    assert revisions_for_part(question, part_b) == {edition_b}
+    assert revision_matches(question, f'{part_a}_{edition_a}.pdf', [part_a], [part_a, part_b])
+    assert revision_matches(question, f'{part_b}_{edition_b}.pdf', [part_b], [part_a, part_b])
+    assert not revision_matches(question, f'{part_a}_{edition_b}.pdf', [part_a], [part_a, part_b])
+    assert not revision_matches(question, f'{part_b}_{edition_a}.pdf', [part_b], [part_a, part_b])
+
+
+def test_ambiguous_multi_edition_association_fails_closed():
+    question = 'SS34와 SS34H 중 어떤 부품인지 모르는 F16 판본 또는 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') is None
+    assert revisions_for_part(question, 'SS34H') is None
+    assert not revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34', 'SS34H'])
+
+
+def test_revision_helper_preserves_single_part_and_global_behavior():
+    assert revision_matches('SS34 F16 판본', 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert not revision_matches('SS34 F16 판본', 'SS34_F20.pdf', ['SS34'], ['SS34'])
+    assert revision_matches('F16 판본의 SS34', 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches('SS34 데이터시트', 'SS34_F20.pdf', ['SS34'], ['SS34'])
+
+
+def test_single_requested_edition_accepts_legacy_locator_without_part_metadata():
+    question = 'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 알려 주세요.'
+    assert revision_matches(question, 'S1A SERIES_S2202.pdf')
+    assert not revision_matches(question, 'S1A SERIES_S2102.pdf')
+
+
+def test_single_part_multi_edition_comparison_remains_supported():
+    question = 'SS34의 F16 판본과 F20 판본을 비교해 줘'
+    assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34'])
+
+
+def test_single_part_multi_edition_separate_clauses_remain_supported():
+    question = 'SS34 F16 판본, SS34 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34'])
 
 
 @pytest.mark.parametrize('asked,allowed', [('1N4007G',{28}),('1N4007GH',{28,30}),('1N4002G',{28})])
@@ -545,3 +922,102 @@ def test_docs_separates_historical_references_from_current_answer():
     bad = docs_agent(payload, retriever=None, chat=lambda *args: DocsAnswer(
         grade='enough', answer='대상은 D1입니다 [넷리스트].', memory_refs=['승인사례:foreign:1']))
     assert bad['reports'][0]['status'] == 'fail'
+
+
+@pytest.mark.parametrize('question', ['1N5408G IFSM의 단발 반파 조건을 알려 줘.',
+                                     '1N5408G는 잠깐 몰리는 큰 전류를 어디까지 견뎌?'])
+def test_surge_rating_facts_preserve_waveform_over_conditionless_summary(question):
+    file = '1N5400G SERIES_K2105.pdf'
+    parts = ['1N5408G']
+    cards = [
+        {'chunk_id': 1170, 'file': file, 'page': 1, 'table': 'ABSOLUTE MAXIMUM RATINGS',
+         'row': 'IFSM', 'doc_parts': parts,
+         'content': f'[{file} · 1쪽 · ABSOLUTE MAXIMUM RATINGS] PARAMETER: Surge peak forward current, 8.3ms single half sine wave superimposed on rated load | SYMBOL: IFSM | VALUE: 125 | UNIT: A'},
+        {'chunk_id': 1171, 'file': file, 'page': 1, 'table': 'ABSOLUTE MAXIMUM RATINGS',
+         'row': 'IF', 'doc_parts': parts,
+         'content': f'[{file} · 1쪽 · ABSOLUTE MAXIMUM RATINGS] PARAMETER: Forward current | SYMBOL: IF | VALUE: 3 | UNIT: A'},
+        {'chunk_id': 1175, 'file': file, 'page': 1, 'table': 'ABSOLUTE MAXIMUM RATINGS',
+         'row': 'IFSM', 'doc_parts': parts,
+         'content': 'PARAMETER: IFSM | VALUE: 125 | UNIT: A'},
+        {'chunk_id': 9999, 'file': 'other-revision.pdf', 'page': 1, 'table': 'ratings',
+         'row': 'IF', 'doc_parts': parts,
+         'content': 'PARAMETER: Forward current | SYMBOL: IF | VALUE: 999 | UNIT: A'},
+    ]
+    facts = D.surge_rating_facts(question, cards, intent='peak forward surge IFSM')
+    assert 'IFSM: 125 A' in facts and 'IF_AV: 3 A' in facts
+    assert '[1170]' in facts and '[1171]' in facts
+    assert '999 A' not in facts
+    assert '8.3ms single half sine' in facts and '초기 TJ' in facts
+    assert '[1175]' not in facts
+
+
+@pytest.mark.parametrize(('question', 'missing', 'kind'), [
+    ('trr 측정 조건과 저항값도 알려 줘', '측정 회로 저항값', 'recovery'),
+    ('trr과 VF도 알려 줘', 'VF 최댓값', 'recovery'),
+    ('H 접미사의 원문 정의 문장을 그대로 인용해 줘', 'H 접미사의 공식 정의 문장', 'suffix'),
+    ('H 접미사와 수명 보장도 알려 줘', 'H 접미사의 공식 정의 문장', 'suffix'),
+    ('H 접미사의 차이를 알려 줘', 'ESD 정격', 'suffix'),
+])
+def test_enriched_completion_never_clears_unanswered_extra_requests(question, missing, kind):
+    original = D.DocsAnswer(grade='partial', answer='확인된 내용 [1].', missing=[missing], next_query='more')
+    result = D._reconcile_enriched_missing(original, question, **{kind:True})
+    assert result == original
+
+
+@pytest.mark.parametrize('packet', ['complete', 'no_package', 'unverified'])
+@pytest.mark.parametrize('limited', [False, True])
+def test_suffix_notice_is_reconciled_only_for_complete_source_packet(monkeypatch, packet, limited):
+    from backend.multi_agent.supervisor import single_node
+    facts = ('선택한 H 제품의 공식 문서 FEATURES에는 AEC-Q101 qualified가 표기되어 있습니다 [1].\n'
+             + '\n'.join(f'{part} · {code}: 확인된 값 [1].' for part in ('SS14', 'SS14H')
+                         for code in ('IF_AV', 'VRRM', 'IFSM', 'VF', 'IR')))
+    if packet != 'no_package':
+        facts += '\nSS14 · 패키지: SMA [1].\nSS14H · 패키지: SMA [1].'
+    monkeypatch.setattr(D, 'suffix_comparison_facts', lambda *args: (facts, packet != 'unverified'))
+    row = dict(chunk_id=1, file='ratings.pdf', page=1, table='ratings',
+               content='SS14H and SS14 source data', doc_parts=['SS14', 'SS14H'])
+    old = D.DocsAnswer(grade='partial', answer='확인된 구분입니다 [1].',
+                       missing=['H 접미사의 공식 정의 문장'])
+    from backend.services.exa import SearchBudgetExhausted
+    def busy(*_):
+        raise SearchBudgetExhausted(2)
+    result = D.docs_agent({'question':'SS14H의 끝 H는 SS14와 어떤 차이야?',
+                           'task':dict(id=1,agent='docs',kind='rating',goal='suffix',query='SS14H suffix',parts=['SS14H','SS14'])},
+                          retriever=lambda *a,**k:[row], chat=lambda *a:old,
+                          web_search=busy if limited else None)['reports'][0]
+    if packet == 'complete':
+        assert result['status'] == 'ok' and result['missing'] == []
+        assert result.get('reason') is None
+        assert result['answer'] == facts and result['evidence_ids'] == ['1']
+        assert '일부 문서 작업은 완료되지 않았습니다' not in single_node({'reports':[result]})['answer']
+    else:
+        assert result['status'] == 'partial' and result['missing'] == old.missing
+        assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']
+
+@pytest.mark.parametrize('grade', ['enough', 'partial'])
+def test_limited_official_lookup_keeps_missing_trr_conditions_incomplete(grade):
+    from backend.multi_agent.supervisor import single_node
+    from backend.services.exa import SearchBudgetExhausted
+    row = dict(chunk_id=7, file='UF4007.pdf', page=2, table='Electrical characteristics',
+               content='UF4007 reverse recovery time trr 75 ns', doc_parts=['UF4007'])
+    question = 'UF4007의 trr 측정 조건과 IF, IR, Irr를 알려줘'
+    answer = 'UF4007의 trr은 75 ns입니다 [7].'
+    calls = []
+    def official(*_):
+        raise SearchBudgetExhausted(2)
+    def chat(*_):
+        calls.append(True)
+        return D.DocsAnswer(grade=grade, answer=answer)
+    fallback_calls = []
+    result = D.docs_agent(
+        {'question':question, 'task':dict(id=1, agent='docs', kind='rating', goal='trr measurement conditions',
+                                          query='UF4007 trr test conditions', parts=['UF4007'])},
+        retriever=lambda *a, **k:[row], chat=chat, web_search=official,
+        web_search_fallback=lambda *a:fallback_calls.append(True) or [])['reports'][0]
+    assert result['status'] == 'partial'
+    assert result['reason'] == 'limit_reached'
+    assert result['missing']
+    assert result['answer'] == answer and result['evidence_ids'] == ['7']
+    assert len(calls) == 1 and fallback_calls == []
+    assert any(item.get('status') == 'budget_exhausted' for item in result['searches'])
+    assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']

@@ -14,6 +14,7 @@ Langfuse: 명시적인 프롬프트 세션에서는 고정 버전 검증과 노�
 OPENROUTER_API_KEY, OPENAI_API_KEY(임베딩), VOYAGE_API_KEY(검색 임베딩·리랭크), LANGFUSE_BASE_URL(없으면 LANGFUSE_HOST를 옮겨 씀). .env는 load_dotenv로 읽는다.
 """
 import json
+import base64
 import math
 import os
 import re
@@ -150,7 +151,7 @@ class EvaluationBudget:
         remaining = self.max_seconds - (time.monotonic() - self.started)
         # [왜] 토큰 수를 정확히 세지 않고 바이트 수+여유로 입력 토큰의 위쪽 경계를 잡아 비용을 보수적으로 예약한다
         upper = len(text.encode("utf-8")) + 8192
-        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 3번(다수결)과
+        # [왜] 서비스는 노드마다 모델이 다르다(대부분 Haiku, 종합만 Sonnet). 모든 호출을 한 단가(Sonnet 이상)로 잡으면 판정 읽기 여러 번과
         #      Supervisor만으로 분석 한 번의 예약 상한($0.50)을 넘어 판정 질문이 멈췄다(11-10 데모 기록 실측). 실제 모델 단가로 잡는다
         prompt_rate, completion_rate, price_tiers = (MODEL_RATES[model] if self.per_model_rates and model in MODEL_RATES
                                                       else (self.prompt_rate, self.completion_rate, self.pricing_tiers))
@@ -380,6 +381,9 @@ def evaluation_decision(request_body: dict, *, timeout: float = 45.0, opener=Non
     return payload
 
 
+_figure_image = ContextVar('figure_image', default=None)
+
+
 def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     """OpenRouter에 구조화 출력을 요청하고 schema 객체로 돌려준다."""
     # [왜] with_structured_output(schema)는 Pydantic 모델을 JSON Schema로 바꿔 response_format(json_schema)으로 보내고,
@@ -392,7 +396,9 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
     config = langfuse_prompts.invocation_config()
     if budget:
         # [주의] 평가 중이면 출력 토큰·시간 상한을 예산에서 받아 덮어쓴다
-        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()), output_tokens=budget.max_tokens, model=name)
+        image_reservation = ' ' * 24576 if _figure_image.get() else ''
+        timeout = budget.reserve(system + user + json.dumps(schema.model_json_schema()) + image_reservation,
+                                 output_tokens=budget.max_tokens, model=name)
         options.update(max_tokens=budget.max_tokens, timeout=timeout)
     structured = model.with_structured_output(schema)
     system_content = system
@@ -401,15 +407,19 @@ def _openrouter_call(system: str, user: str, schema: type[BaseModel]) -> BaseMod
         #      고정 지시문만 캐시에 둔다. 두 번째 호출부터 지시문 입력 비용이 약 1/10(계획 Sonnet 0.0086 → 0.0006달러), 시간은 그대로(11-09 실측 · 조장 결정)
         # [주의] 질문 · 카드가 든 user는 매번 달라 걸지 않는다. 지시문 글자는 그대로라 Langfuse 프롬프트 대조(prompt_scope)와 무관하다. Luna 등 다른 모델은 그대로
         system_content = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
-    messages = [{"role": "system", "content": system_content}, {"role": "user", "content": user}]
-    if config:
+    user_content = user
+    if image := _figure_image.get():
+        user_content = [{'type':'text', 'text':user},
+                        {'type':'image_url', 'image_url':{'url':'data:image/png;base64,' + base64.b64encode(image).decode('ascii')}}]
+    messages = [{"role": "system", "content": system_content}, {"role": "user", "content": user_content}]
+    if config and _figure_image.get() is None:
         # Langfuse 노드 추적 중: callback 설정을 넘기고 프롬프트 버전을 generation에 연결한다
         structured = langfuse_prompts.bind_prompt(structured, options)
         return structured.invoke(messages, config=config)
     return structured.invoke(messages, **options)
 
 
-def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = ""):
+def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, skill_text: str = "", image: bytes | None = None):
     """그래프 노드용 LLM 호출. Langfuse 세션이 켜져 있을 때만 고정 버전 검증·노드 span·generation callback을 쓴다.
 
     node는 route | grade | rewrite | generate | supervisor | judge_read, skill_text는 generate에 붙일 Skill 본문이다. 검증된 schema 객체를 돌려준다.
@@ -418,6 +428,9 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
         RuntimeError: 노드 호출이 중첩될 때.
     """
     from backend.services import langfuse_prompts
+    if image is not None and (LLM_PROVIDER != 'openrouter' or not isinstance(image, bytes)
+                              or not image.startswith(b'\x89PNG\r\n\x1a\n') or len(image) > 512 * 1024):
+        raise ValueError('Figure input must be a bounded PNG on the OpenRouter path')
     if langfuse_prompts.is_active():
         # [주의] 추적 중에 실제 호출 설정이 등록된 프롬프트 설정과 다르면 기록이 거짓이 되므로 호출 전에 멈춘다
         if LLM_PROVIDER != "openrouter" or node_model(node) != langfuse_prompts.node_config(node)["model"]:
@@ -429,6 +442,7 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
         # [왜] 노드 호출이 겹치면 추적 범위(contextvar)가 섞이므로 중첩을 막는다
         raise RuntimeError("LLM 노드 호출은 중첩하지 않습니다")
     token = _node_model.set(node_model(node))
+    image_token = _figure_image.set(image)
     try:
         with langfuse_prompts.prompt_scope(node, system, user, skill_text=skill_text) as span:
             answer = chat(system, user, schema)
@@ -436,6 +450,7 @@ def node_chat(node: str, system: str, user: str, schema: type[BaseModel], *, ski
                 span.update(output=answer.model_dump())
             return answer
     finally:
+        _figure_image.reset(image_token)
         _node_model.reset(token)
 
 

@@ -40,6 +40,7 @@ COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
 COPY data/ ./data/
 COPY db/ ./db/
 
+# [왜] 서버는 파일을 쓰지 않는다. root 대신 전용 계정으로 돌려 컨테이너가 뚫려도 이미지 안을 못 바꾸게 한다(D7 2-3절)
 RUN useradd --create-home --shell /usr/sbin/nologin sojafit
 USER sojafit
 

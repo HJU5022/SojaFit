@@ -34,7 +34,6 @@ for (const kind of ['credentials', 'validation', 'origin', 'limited', 'server', 
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/login')
   // The initial session lookup is anonymous, regardless of the submitted login failure.
-  await page.getByRole('checkbox').check()
   await expect(page.getByRole('button', { name: 'Google 로그인', exact: true })).toBeEnabled()
   await page.getByLabel('이메일', { exact: true }).fill('synthetic@example.test')
   await page.getByLabel('비밀번호', { exact: true }).fill('synthetic-only-password')
@@ -79,7 +78,6 @@ test('shows self deletion completion only in the current session and guides a fa
   await page.screenshot({ path: testInfo.outputPath('deleted-account-login.png'), fullPage: true, animations: 'disabled' })
   expect(writes).toEqual(['DELETE /api/me', 'POST /api/auth/login'])
   await page.reload()
-  await page.getByRole('checkbox').check()
   await expect(page.getByRole('button', { name: 'Google 로그인', exact: true })).toBeEnabled()
   await expect(page.getByText(/계정 삭제가 완료되었습니다/)).toHaveCount(0)
 })
@@ -283,21 +281,19 @@ test('creates a chat from sidebar plus and reopens the empty session before its 
 })
 
 test('uses the Google entry without demo access in a production build', async ({ page }, testInfo) => {
-  test.skip(process.env.SOJA_E2E_MODE !== 'production', 'Run against the built Vite preview')
+  test.skip(testInfo.project.name !== 'http-mocks', 'Run against the built Vite preview')
   const paths: string[] = []
   await page.route(/^https?:\/\/[^/]+\/api\//, route => {
     const path = new URL(route.request().url()).pathname
     paths.push(path)
     if (path === '/api/auth/google/status' || path === '/api/auth/demo') return route.fulfill({ json: { enabled: true } })
-    if (path === '/api/auth/google/start') { expect(new URL(route.request().url()).searchParams.get('consent')).toBe('1'); return route.fulfill({ status: 303, headers: { location: '/login?google=error' }, body: '' }) }
+    if (path === '/api/auth/google/start') { expect(new URL(route.request().url()).searchParams.get('consent')).toBeNull(); return route.fulfill({ status: 303, headers: { location: '/login?google=error' }, body: '' }) }
     return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', request_id: 'req-production-login' } } })
   })
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/login')
   const google = page.getByRole('button', { name: 'Google 로그인', exact: true })
   await expect(google).toBeVisible()
-  await expect(google).toBeDisabled()
-  await page.getByRole('checkbox').check()
   await expect(page.getByRole('link', { name: 'Google 관리자 로그인' })).toHaveCount(0)
   await expect(google).toBeEnabled()
   await expect(page.getByRole('group', { name: '데모 로그인' })).toHaveCount(0)
@@ -312,22 +308,35 @@ test('uses the Google entry without demo access in a production build', async ({
   expect(paths).not.toContain('/api/auth/demo-login')
 })
 
-test('redirects unsupported mail signup and reset URLs without issuing mail requests', async ({ page }) => {
-  test.skip(process.env.SOJA_E2E_MODE !== 'production', 'Run against the built Vite preview')
-  const calls: string[] = []
+test('supports verified email signup and reset without automatic login', async ({ page }) => {
+  const posts: string[] = []
   await page.route(/^https?:\/\/[^/]+\/api\//, route => {
     const path = new URL(route.request().url()).pathname
-    calls.push(`${route.request().method()} ${path}`)
-    if (path === '/api/auth/google/status') return route.fulfill({ json: { enabled: true } })
-    return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', request_id: 'offline-signup' } } })
+    if (path === '/api/auth/me') return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHORIZED', message: 'anonymous' } } })
+    if (path.endsWith('/status')) return route.fulfill({ json: { enabled: false } })
+    if (route.request().method() === 'POST') posts.push(path)
+    return route.fulfill({ json: { ok: true } })
   })
-  for (const path of ['/signup', '/verify-email#token=offline-example', '/reset-password']) {
-    await page.goto(path)
-    await expect(page).toHaveURL(/\/login$/)
-    await expect(page.getByRole('heading', { name: 'SojaFit에 로그인' })).toBeVisible()
-    await expect(page.getByRole('link', { name: '회원가입', exact: true })).toHaveCount(0)
-  }
-  expect(calls.every(value => ['GET /api/auth/me', 'GET /api/auth/google/status'].includes(value))).toBe(true)
+  await page.goto('/signup')
+  await page.getByLabel('이메일', { exact: true }).fill('synthetic@example.test')
+  await page.getByRole('button', { name: '인증 메일 요청', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('메일')
+  await page.goto('/verify-email#token=' + 'x'.repeat(43))
+  await page.getByLabel('새 비밀번호(12자 이상)', { exact: true }).fill('synthetic-only-password')
+  await page.getByLabel('새 비밀번호 확인', { exact: true }).fill('synthetic-only-password')
+  await page.getByRole('button', { name: '인증하고 가입 완료', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('가입이 완료되었습니다')
+  await expect(page).not.toHaveURL(/token=/)
+  await page.goto('/reset-password')
+  await page.getByLabel('이메일', { exact: true }).fill('synthetic@example.test')
+  await page.getByRole('button', { name: '재설정 메일 요청', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('메일')
+  await page.goto('/reset-password#token=' + 'y'.repeat(43))
+  await page.getByLabel('새 비밀번호(12자 이상)', { exact: true }).fill('synthetic-only-new-password')
+  await page.getByLabel('새 비밀번호 확인', { exact: true }).fill('synthetic-only-new-password')
+  await page.getByRole('button', { name: '비밀번호 변경', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('기존 로그인은 해제')
+  expect(posts).toEqual(['/api/auth/signup', '/api/auth/signup/confirm', '/api/auth/password-reset', '/api/auth/password-reset/confirm'])
 })
 
 test.describe('recovery mock', () => {

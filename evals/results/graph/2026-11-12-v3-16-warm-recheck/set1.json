@@ -1,0 +1,235 @@
+{
+ "summary": {
+  "set": 1,
+  "done": 1,
+  "total": 1,
+  "passed": 1,
+  "p95_s": 11.8,
+  "p50_s": 11.8,
+  "session": "gate-v3-16-1112-0934-set1",
+  "stopped_at": null,
+  "model_env": {
+   "LAB_THINKING": "",
+   "LAB_THINKING_ON": "",
+   "LAB_NODE_MODELS": "",
+   "LAB_EFFORT": ""
+  },
+  "db": "postgres",
+  "llm_provider": "openrouter",
+  "claude_direct": true,
+  "git": "11dc216+dirty"
+ },
+ "rows": [
+  {
+   "id": "v3-16",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 2.0,
+   "llm_calls": 3,
+   "docs_found": 5.0,
+   "passed_cards": 5.0,
+   "latency_s": 11.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    50672,
+    50658,
+    50659,
+    50669,
+    50668
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/222c353a0b562c746d48f7cbc234e351",
+   "answer": "TSC UF4007의 역회복 시간(trr) 최댓값은 75ns이며, 측정 조건은 Irr = 0.25A이고 TA = 25°C 기준입니다 [50672]. 다만 해당 데이터시트 행에는 순방향 전류(IF) 값이 명시되어 있지 않아 순방향 전류 조건은 확인되지 않습니다 [50672].\n\n일부 문서 작업은 완료되지 않았습니다. 위 내용은 확인된 답변만 포함합니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing trr 측정 시의 순방향 전류(IF) 값",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "TSC UF4007 maximum reverse recovery time trr test conditions IF IR",
+       "parts": [
+        "UF4007"
+       ],
+       "top": [
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ]
+       ]
+      },
+      {
+       "query": "UF4007 reverse recovery time trr test circuit IF IR Irr condition",
+       "parts": [
+        "UF4007"
+       ],
+       "top": [
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 3
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 417
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 4232
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1610
+    },
+    {
+     "stage": "search",
+     "status": "ok",
+     "elapsed_ms": 1209
+    },
+    {
+     "stage": "RAG 에이전트",
+     "status": "ok",
+     "elapsed_ms": 7118
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.041,
+     "input_tokens": 8053,
+     "output_tokens": 231,
+     "cached_tokens": 0,
+     "cost_usd": 0.00111685,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.747,
+     "input_tokens": 3828,
+     "output_tokens": 233,
+     "cached_tokens": 0,
+     "cost_usd": 0.00056975,
+     "ok": true
+    },
+    {
+     "node": "RAG 에이전트",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.532,
+     "input_tokens": 4012,
+     "output_tokens": 220,
+     "cached_tokens": 0,
+     "cost_usd": 0.00058165,
+     "ok": true
+    }
+   ],
+   "voyage": [
+    {
+     "kind": "embed",
+     "seconds": 0.651,
+     "tokens": 16
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.364,
+     "tokens": 3679
+    },
+    {
+     "kind": "embed",
+     "seconds": 0.383,
+     "tokens": 15
+    },
+    {
+     "kind": "rerank",
+     "seconds": 0.348,
+     "tokens": 3643
+    }
+   ],
+   "pass": true,
+   "cost_usd": 0.00226825,
+   "ragas": "skipped",
+   "score_delivery": "queued"
+  }
+ ]
+}

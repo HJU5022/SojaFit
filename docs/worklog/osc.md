@@ -607,9 +607,92 @@
 - 최종 검증: `uv run --no-sync pytest -q`는 `1445 passed, 112 skipped`, `npm run test:run`은 `20 files / 163 tests passed`, `npm run build`는 TypeScript·Vite production build 성공, `npm run e2e -- --reporter=line`은 `11 passed`, `uv lock --check`, `git diff origin/main...HEAD --check`와 repo layout `5 passed`를 확인했다. PR diff 593 KB를 Gitleaks stdin으로 검사해 `no leaks found`를 확인했다. worktree 전체 `dir` 검사는 Git 비추적 `.env`와 `.venv`까지 읽어 유효하지 않았으며 값은 출력하지 않았다.
 - 확인하지 않은 것: 실제 외부 모델·MCP·Mouser·공유 PostgreSQL·배포 환경 round-trip, 데이터시트 외부 URL의 장기 가용성은 이번 로컬 PR 검증 범위가 아니다. GitHub Actions의 전체 이력 Gitleaks와 CI는 push 후 확인한다.
 
+## 2026-11-11 제조사 데이터시트의 페이지·표 행 인용
+
+- 내부 문서가 부족할 때 제조사 공식 PDF에서 대상 품번의 값과 단위를 찾아 문서 에이전트에 전달한다. 체크포인트에는 인용 위치만 남긴다.
+- 실호출 검증 조건: 공개 질문 "Vishay SS34의 최대 반복 역전압은?"을 내부 검색 0건으로 입력한다. Exa 최대 1회, OpenRouter 문서 답변 최대 1회, 결과 형식 또는 공급자 실패 시 추가 유료 호출 없이 종료한다. 기준은 Vishay 문서 88751 1쪽의 SS34 열 40 V와 최종 인용 위치가 일치하는지다.
+- 실호출: 문서 에이전트에 내부 결과 0건을 주어 Vishay SS34를 조회했다. Exa 1회, 제조사 PDF GET 1회, OpenRouter 문서 모델 1회. 답은 40 V [W1], 출처는 ss32.pdf 1쪽 Maximum repetitive peak reverse voltage 행이었다.
+- 최종 검증: 기능·DTO·그래프·저장소 구조 94 passed. 전체 pytest 1482 passed, 112 skipped, 1 failed. 유일한 실패 tests/evals/test_input_surfaces.py의 P3는 변경 전 main(14cf261)에서도 재현됐다. uv lock --check와 git diff --check 통과. 실호출은 내부 검색 0건을 주입한 문서 에이전트에서 실시했으며 로그인부터 운영 DB까지의 실사용은 검증 범위 밖이다.
+- Windows의 core.autocrlf=true가 동결 JSONL의 바이트 해시를 바꾸므로, 전체 검사 때 해당 파일이 Git 원본 LF 및 동결 해시와 일치하는지 확인했다. 검증 뒤 로컬 기본 줄바꿈으로 복구했으며 평가셋 변경은 없다.
+
+### SS34 로그인 경로의 외부 근거 재채점
+
+- 이전 로그인 실행은 외부 검색에서 Vishay 원문을 찾고도 `all_rejected`로 끝났다. 재채점 입력에 이미 탈락한 내부 카드가 다시 들어가고, 제조사 URL이 누락되는 문제를 재현했다. 외부 재채점이 실패하면 이전 내부 채점의 누락 사유가 반환되는 문제도 확인했다.
+- 실호출 조건: 같은 공개 SS34 질문 1건, 격리 PostgreSQL과 42문서 스냅샷, 일반 계정 로그인, 데모 재생 끔. Exa 한 번과 서비스의 기존 모델·시간·비용 상한을 적용한다. 성공 기준은 실시간 completed, 저장 재조회 일치, 인용된 페이지의 같은 표 행에서 SS34 열 40 V 확인이다. 추가 유료 평가 없이 종료한다.
+- 수정: `backend/multi_agent/agents/docs.py`에서 탈락한 내부 카드를 제외하고, 부분 답에서 인용한 카드만 외부 표 행과 함께 재채점한다. 모델에 공식 PDF URL·페이지·표·행을 표시하며, 재채점도 실패하면 해당 누락 사유를 보고한다. `backend/prompts/docs_answer.md`에 제조사 출처와 같은 계열 안의 품번 열을 구분하는 기준을 명시했다.
+- 실제 결과: 로그인·세션 확인 200, 내부 SS34 검색 0건, Voyage 200, Exa 1회 200, Vishay PDF 다운로드 200. 문서 모델이 내부 근거에 none, 외부 표 행에 enough를 반환했다. 최종 SSE completed와 GET /api/runs 재조회에 같은 40 V [W1] 답변과 근거가 남았다. `ss32.pdf` 1쪽 MAXIMUM RATINGS 표의 Maximum repetitive peak reverse voltage 행에서 SS33=30, SS34=40, 단위 V를 원문과 대조했다.
+- 회귀 검사: 수정 전 재채점 입력과 실패 보고 관련 3건 실패를 확인했다. 수정 후 문서 에이전트·PDF 추출 79건, 대화 DTO·API·Supervisor 105건 통과. 격리된 로컬 백엔드에서 실제 공급자를 사용했으며 브라우저 렌더링·운영 배포·전체 동결 평가셋 재측정은 이번 검증 범위 밖이다.
+
+### 공식 PDF 원문 셀과 최종 답변 대조
+
+- 기존 구현은 PDF가 SS34 40 V여도 모델이 쓴 400 V [W1]을 문서 노드와 최종 검사에서 통과시켰다. 공개 예제 1건을 격리 DB(42문서)에서 일반 계정으로 실행한다. Exa 1회와 기존 서비스 호출 예산을 사용한다. 통과 조건은 잘못된 품번·수치·단위를 회귀 검사에서 거절하고, 로그인 질문의 답변·저장 재조회·공식 PDF 1쪽 SS34 열이 일치하는 것이다.
+- 1차 로그인 실행은 텍스트로 W행을 선택하는 방식에서 verify_failed로 거절됐다. 선택을 모델의 구조화 필드 `pdf_rows`로 옮겼다. 외부 근거만 있으면 모델의 자유 답변 필드는 빈 문자열이어야 한다. 서버가 PDF 셀의 품번·행·수치·단위로 문장을 만들며 최종 검사에서 인용 번호와 문장 해시를 다시 확인한다.
+- 수정 후 같은 질문을 새 로그인 세션에서 재검증했다. 각 실행에서 Exa 1회, 최종 실행에서 공식 PDF 200, 외부 문서 모델 enough·W1, SSE completed, GET 재조회 일치. 원문 1쪽 MAXIMUM RATINGS의 Maximum repetitive peak reverse voltage 행은 SS33=30, SS34=40, 단위 V였다. 테스트는 400 V, 다른 품번, 다른 단위, 최종 인용 변경을 거절했다. 관련 pytest 193건 통과. 전체 동결 평가셋 재측정·운영 배포 검증은 미실시.
+- 멀티 에이전트 전체와 관련 서비스·대화·레이아웃으로 넓힌 회귀 검사: 315 passed.
+
+## 2026-11-11 중단·재개 후 저장 답변의 PDF 인용 유지
+
+- 수정 전에는 독립 검색이 모두 W1부터 시작해 두 공식 PDF의 표 행이 같은 문장을 만들면 마지막 URL만 남았다. `backend/judge/pdf_claims.py`와 `backend/multi_agent/supervisor.py`에서 체크포인트 보고를 회차·작업 순으로 읽고 기존 문장 해시를 검증한 뒤 실행 전체 번호를 부여한다. 같은 위치의 같은 주장은 번호를 재사용한다. `backend/graph/nodes.py`와 `backend/conversations/dto.py`에서도 W4 이후 번호를 읽는다.
+- 격리 PostgreSQL 16과 FastAPI TestClient에서 일반 계정 로그인 → 실행 → requires_input → 분석 서비스와 DB 풀 재생성 → 같은 run 재개 → completed → 새 클라이언트로 로그인 → GET /api/runs/{id} 순서로 확인했다. 인증·체크포인트·DB 저장은 실제 경로를 사용했다. 두 검색과 모델 응답은 고정했고 PDF는 테스트에서 생성했다. 외부 공급자 호출은 0회였다.
+- 두 PDF의 SS34 `Peak reverse voltage` 행이 모두 40 V인 조건에서 완료 응답과 재조회 결과가 일치했다. W1은 test-a.pdf 1쪽 Table 1, W2는 test-b.pdf 2쪽 Table 2였다. 로그아웃 상태의 GET은 401이었다. `tests/services/test_datasheet_rows.py`에 같은 표를 다시 찾은 경우, 변조된 400 V 거절, W4 재조회도 포함했다.
+- 관련 pytest는 317 passed. 격리 DB에서 `uv run --no-sync pytest -q --tb=line`으로 전체를 비교했다. 깨끗한 Windows 체크아웃에서 수정 전 `2d726e3`은 1548 passed, 수정 후 1550 passed였고, 양쪽 모두 같은 11 failed, 3 errors, 39 skipped였다. 이 중 평가 표본 해시 문제는 Git의 CRLF 변환으로 재현했다. 실제 작업 폴더의 첫 실행은 이전 frontend/dist에 회로도 이미지가 없어 데모 API도 실패했다. 동결 평가셋이나 다른 기능의 실패는 이번 수정에 포함하지 않았다.
+
+## 2026-11-11 재개 후 Exa 품번과 공식 PDF 행 검증
+
+- 수정 전 실제 재개 실행은 1N5819 작업에도 1N4001과 1N5819를 함께 검색해 1N4001의 50 V만 두 번 저장했다. 같은 공개 질문, 빈 코퍼스, 격리 DB 일반 계정, onsemi 원문으로 다시 실행한다. `Conversations` 기본 그래프와 실제 Exa·OpenRouter를 사용하고, 한 실행당 Exa 최대 2회, 각 호출 단계는 서비스 예산 상한을 적용한다. 재조회 결과의 W1·W2와 두 원문 2쪽 VRRM 행을 대조한 뒤 중단한다.
+- `backend/multi_agent/agents/docs.py`에서 외부 검색 품번을 작업 지시서 기준으로 유지한다. 지정 목록이 비어 있으면 전체 질문의 품번 중 Supervisor의 작업 검색어에 나온 품번을 우선한다. PDF의 대상 품번과 셀 열을 확인한 행만 모델에 전달한다. `tests/multi_agent/test_agents.py`는 다른 품번의 행과 다른 품번 열에 든 수치가 모델 입력에 들어가지 않는지 검증한다.
+- 실제 실행 `401eea2f-a13a-4cbf-8a76-167e4400795b`에서 일반 계정 로그인 200 → 첫 Exa 검색 1N4001 → requires_input → 분석 서비스 재생성 → 같은 run 재개 → 두 번째 Exa 검색 1N5819 → completed를 확인했다. 비로그인 조회 401 후 새 세션으로 로그인했고, 완료 응답·저장 답변·DB 근거 목록의 두 번호가 일치했다. 외부 PDF 다운로드 대상은 질문의 제조사 onsemi로 제한했다.
+- 두 PDF를 별도로 텍스트 추출해 2쪽 `MAXIMUM RATINGS` 표의 `Peak Repetitive Reverse Voltage`(VRRM) 행에서 머리글과 값의 열 위치를 대조했다. W1은 [1N4001의 50 V](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf#page=2), W2는 [1N5819의 40 V](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf#page=2)였다. Exa 2회, PDF GET 2회, OpenRouter 노드 응답 5회(Supervisor 2, 판정 조건 읽기 1, 문서 답변 2). DB에 기록된 분석 시간은 중단 전 9.952초, 재개 후 6.109초였다. 실제 청구 금액은 확인하지 않았다.
+- 관련 pytest 319 passed. 각각 새 PostgreSQL DB와 LF 체크아웃에서 `uv run --no-sync pytest -q --tb=no`로 비교했다. 수정 전 dd7fc3c는 1561 passed, 수정 후 1563 passed였다. 양쪽 모두 39 skipped이며 같은 테스트 3건(두 Google 관리자 세션, PostgreSQL 판정 재개 시 judge_read 횟수, 입력 표면 P3)이 실패했다. 동결 평가셋을 변경하거나 전체 실모델 평가를 실행하지 않았다.
 ## 2026-11-11 원본 회로도 백엔드
 
 - 공개 GitHub 저장소에서 출처와 커밋, 라이선스, KiCad 원본을 확인한 뒤 전체 회로도를 시트별 PNG로 제공한다. 같은 설계의 PDF가 있으면 목표 300 DPI로 변환한다. 프런트와 일반 검색·LLM 답변 통합은 포함하지 않았다.
 - 검증: `uv run --no-sync pytest -q` 전체는 1,598 passed, 112 skipped, 1 failed(88.43초). 실패한 `tests/evals/test_input_surfaces.py::test_real_input_path_records_bad_raw_and_contains_final[P3]`는 변경 전 main(`14cf261`)의 별도 스냅샷에서도 단독 실행으로 재현됐다. 회로도 API·검색·변환·오류·OpenAPI·폴더 규칙 집중 검사 181 passed.
 - 실제 공급자 점검: `verify_external_schematics.py --query RP2040 --check-cache`에서 MIT 프로젝트 `calliah333/RP2040-designguide@a9afaa2`의 3509×2484 PNG 한 장을 받았다. 반복 요청에서 외부 검색·저장소 검사·변환은 각각 0회. Docker 이미지 빌드 후 KiCad 9.0.2 비루트 컨테이너에서 `--force-kicad-fallback`으로 ATtiny85 원본도 3508×2481 PNG 한 장으로 변환했다. 배포 서버와 실제 사용자 로그인은 이번 실조회 대상이 아니다.
 - 운영 요청: 팀 GitHub 조직 관리자가 공개 회로도 조회용 OAuth App을 등록한다. 앱 자격 증명은 배포용 Secret Manager에 보관하고, 앱 인증 연결과 요청 한도 확인은 등록 후 진행한다.
+
+## 2026-11-12 · 1→2→3등급 PR 준비
+
+공식 근거/참고 폴백과 정확 품번·판본·인용 검증, 관련 품질 보완을 분리한다. 검증 정리는 docs/research/grade-evidence-validation.md. 전체 pytest 1764 passed,112 skipped,실패0(64.59초). 운영 부하는 보류. 포화 재확인은 공급자 제한으로 중단돼 안정 포화점 미확정. 상세 사전등록 원문은 작성자 기존 작업공간에 보존하며 게시 전 필요한 등급 관련 사전등록 절을 검토한다.
+
+
+## 2026-11-12 OSC에 최신 main 통합 후 최종 상태
+
+- 브랜치는 OSC. 최신 main `11dc216`을 fast-forward로 반영했다. 원래 OSC의 회로도/프런트 미커밋 작업은 stash `fc262a301cf7f47d133bdbdc587716380403f5f1`에 보존했다. 기존 검증 원본 작업공간도 유지했다.
+- main 기능을 보존하며 등급 변경을 3-way 통합했다. Spec 에이전트/회로 읽기 명칭, FIND_N_DOCS 기본5와 환경변수, SUPERVISOR_REPLAN 설정, 응답·보안 경계를 보존했다. 프런트/DB 추가변경은 없다. 통합 후 유료 답변 평가·포화 재측정은 수행하지 않았다. 위 실측 수치는 통합 전 코드의 이력이며 새 코드의 새 실측으로 주장하지 않는다.
+- 충돌 마커 제거/문법 검사/diff check 통과. HEAD=origin/main인 상태에서 전체 통합 변경(신규 파일 포함)을 별도 임시 index의 패치로 만들어 최신 main에 적용 검사 통과. 실제 index·commit·push·PR은 변경하지 않았다. 원격 main이 이후 변경되면 다시 검사해야 한다.
+- 전체 pytest는 변경하지 않은 main의 tests/api/test_openapi.py:154 `SNAPSHOT` 미정의로 수집 오류1건. 이 파일을 제외하고 .env 영향을 차단한 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q --ignore=tests/api/test_openapi.py` 결과는 **1818 passed,158 skipped,9 failed**,69.62초다. 실패9건은 인증 사전검증2, stage_timing2, 저장소구조5이며 동일 main 기준선에서 재현됐다. 기준선 export의 추가 sample-hash 관련 실패는 이9건의 근거와 섞지 않는다.
+- 통합 중 os/display_inputs 등 누락은 수정하고 관련173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
+- 판단: 내용상 최신 main 통합/무충돌 검사는 완료. 테스트 전체 통과 기준의 PR 준비 완료는 보류. 위 기존 main 오류의 처리/팀 판단이 남았다.
+- 자료는 PR-준비/OSC-final-verification.json, OSC-main-integrated.patch, OSC-final-included-files.txt, OSC-main-full-pytest.log, OSC-main-final-pytest.log, OSC-main-baseline-repo-layout.log에 보존했다. 패치 적용 가능은 실제 GitHub PR 생성/CI 성공/병합 승인과 구분한다.
+
+### 2026-11-12 · PR103 계약 감사 보완 시작
+
+- 사용자 승인 범위: 품번별 판본 연결, 공식 검색 슬롯 소진과 근거 부재 구분, 웹 연결/SSE·GET 예외 계약 문서. 기존커밋d15331e가복구기준이며추가작업없이복구가능. 제품·문서·시험파일은각담당으로나눠병렬수정,공유호출부는담당완료후순차통합한다.
+- 새유료평가/포화실측/운영부하없음. 단위회귀와최종pytest/main병합검사후기존OSC PR103에추가커밋을반영한다. 기존main오류는이번범위와구분해남긴다.
+
+
+## PR103 계약 감사 수정 반영 — 2026-11-12
+
+- 품번별 판본 연결을 추가했다. SS34/F16·SS34H/F20의 교차 판본은 문서 입력/공식 행/후보 판정/최종 인용 검사에서 배제한다. 1N 계열·하이픈 품번, 단일 판본의 기존 locator와 단일 품번의 복수 판본 비교도 회귀 시험에 포함했다. 관계가 모호한 다품번·다판본 자료는 추정하지 않고 거부한다. 지원되는 명시적 절 연결을 검증한 것으로 모든 자연어 문장을 해석한다고 주장하지 않는다.
+- 공식/참고 검색 슬롯은 요청당 각각1회로 유지한다. 사용 중이거나 소진된 슬롯은 SearchBudgetExhausted로 실제 검색0건과 구분한다. 공식 슬롯 소진만으로3등급으로 이동하지 않는다. 실제0건/공급자 실패의 기존 폴백과 유효 내부 답변은 보존한다. 다른 에이전트의 검색 결과 공유·추가 호출 기능은 넣지 않았다.
+- MULTI_AGENT의 낡은 웹 거부 설명, 공식 검색 계약, API의 SSE/GET 공통 결과 설명을 갱신했다. profile_hints/input_conditions가 SSE 전용인 기존 동작과 DB 계약은 바꾸지 않았다.
+- 최종 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q`는 기존 main의 tests/api/test_openapi.py SNAPSHOT 미정의 수집오류1건이다. 해당 파일 제외 최종 전체 결과는 **1836 passed,158 skipped,9 failed**,71.92초. 남은9건의테스트ID는수정전과동일(인증사전검증2/단계타이밍2/저장소구조5). 기대치를 바꾸거나 이9건을비용실패로제외하지않았다.
+- 독립검토에서 판본필터가 문서·판정·최종인용 경계까지 연결되고 상한1+1이 유지됨을 확인했다. 초기focused1건실패는병렬작업중부모테스트와helper갱신시점이겹친실행으로보존했고,산출물고정후관련506pass1skip 및 마지막복수절호환추가후전체검증으로확인했다.
+- 가짜 검색·모델·사양과 실제 코드 경로를 이용한 회귀 검증이다. 이번 수정 후 실Exa/PDF/LLM 호출·포화/운영부하 실측은 하지 않았다. 통합 전 실측을 새 코드의 새 실측으로 바꾸지 않는다.
+- 근거: PR-준비/PR103-contract-focused.log, PR103-contract-final-targeted.log, PR103-contract-full.log, PR103-contract-full-excluding-known-main-error.log. 동결v3/정답/해시는유지했다.
+
+### 2026-11-12 · 조회 제한 후 문서 완료 상태 보완
+
+- 사용자승인: 공식보강이필요한데슬롯소진시기존내부답을ok로보고하는문제. c0c453e가복구기준이다. docs.py의최종상태계산만고쳐최종보강후남은요구와제한을함께보며답변/인용은유지한다. 충족된내부보강packet은정상완료로보존한다.
+- Red2회귀에서ok오류재현, Green8경계시험통과. 관련테스트와전체검사후기존PR103추가커밋/본문갱신예정.새유료평가나운영부하없음.
+
+
+## PR103 공식 조회 제한 후 미완료 상태 보완 — 2026-11-12
+
+- 공식 조회 슬롯 소진 후에도 필수 trr 측정조건이 부족한데 문서 보고가ok/missing[]로 남는 문제를 수정했다. 최종 내부 보강이 끝난 다음 남은 조건·누락·재검색 요구와 조회 제한 여부를 함께 검사한다.
+- 확인된 내부 답변/인용은 유지하면서 미완료 상태partial, 사유limit_reached, 미확인 항목을 남긴다. Supervisor의부분답변안내도실제로출력됨을시험했다. 내부의검증된보강packet만으로요구가충족되면정상완료를유지하며불필요partial을추가하지않는다. DB/프런트/모델설정/검색횟수는변경없음.
+- Red: enough/partial 두입력에서잘못된ok재현2건. Green: 해당두경계와내부완결packet의조회제한유무포함8건통과. 최종관련190passed(7.33초).
+- 최종전체pytest는기존main SNAPSHOT수집오류1건으로중단. 그파일제외및.env영향차단후 **1841 passed,158 skipped,9 failed**(71.16초). 실패테스트ID는이전과동일하고이번수정으로늘어난실패는없다. 비용문제나기존실패를성공으로바꾸지않았다.
+- 검증은가짜조회·가짜모델과실제문서에이전트/최종안내경로다. 실Exa/LLM유료요청이나동결v3의새품질·포화평가는하지않았다. 실제모델오답률이개선됐다고주장하지않는다.
+- 로그: PR-준비/PR103-completion-focused.log, PR103-completion-full.log, PR103-completion-full-excluding-known-main-error.log. 계약은docs/specs/official-datasheet-evidence.md에추가했고기존PR103본문과추가커밋으로반영한다.

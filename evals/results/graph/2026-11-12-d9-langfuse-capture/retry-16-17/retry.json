@@ -1,0 +1,116 @@
+{
+ "meta": {
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-5.5",
+  "demo_mode": false,
+  "node_models": {
+   "route": "anthropic/claude-haiku-5.5",
+   "grade": "openai/gpt-6-luna",
+   "rewrite": "anthropic/claude-haiku-5.5",
+   "generate": "anthropic/claude-haiku-5.5",
+   "supervisor": "anthropic/claude-haiku-5.5",
+   "judge_read": "anthropic/claude-haiku-5.5",
+   "docs_answer": "anthropic/claude-haiku-5.5",
+   "synth": "anthropic/claude-sonnet-5.5",
+   "card_read": "anthropic/claude-haiku-5.5",
+   "card_pick": "anthropic/claude-haiku-5.5"
+  },
+  "retrieval": "hybrid",
+  "dataset": "evals/dataset_v3.jsonl",
+  "git": "11dc216+dirty",
+  "prompts": {
+   "card_pick": "ed75174f",
+   "card_read": "d5ca1fb7",
+   "docs_answer": "db56b999",
+   "generate": "3b9861f1",
+   "grade": "d003481a",
+   "judge_read": "db24bc10",
+   "rewrite": "6d6e6384",
+   "route": "d35a15b3",
+   "supervisor": "6adc5fb6",
+   "supervisor_v0": "52d7e2c9",
+   "synth": "4d6d9787"
+  },
+  "session": "multi-dataset_v3-1112-0919-openrouter",
+  "ran_at": "2026-11-12T09:19:56+0900",
+  "dataset_sha256": "2b99b2125d98db6f127d4364e2940acaf4a27aeb9ee60ef1667d5e0e3e6e5e91",
+  "ids": [
+   "v3-16",
+   "v3-17"
+  ]
+ },
+ "summary": {
+  "items": 2,
+  "finished": 2,
+  "failed": 0,
+  "metrics": {
+   "cited_gold": 2
+  },
+  "by_kind": {
+   "relevant": {
+    "cited_gold": 2
+   },
+   "irrelevant": {}
+  },
+  "by_type": {
+   "relevant/rating": {
+    "cited_gold": 2
+   }
+  },
+  "routing_match_relevant": 2,
+  "relevant": 2,
+  "latency_p50_s": 17.7,
+  "llm_calls_total": 6.0
+ },
+ "rows": [
+  {
+   "id": "v3-16",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 2.0,
+   "llm_calls": 4.0,
+   "docs_found": 5.0,
+   "passed_cards": 5.0,
+   "latency_s": 17.7,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    50672,
+    50658,
+    50659,
+    50669,
+    50668
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/6ef06d7272ffe1f9180249cd44788287"
+  },
+  {
+   "id": "v3-17",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 2.0,
+   "docs_found": 1.0,
+   "passed_cards": 1.0,
+   "latency_s": 4.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    5308
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/89ec5e26c86a755b30dcc9b19cb0ea93"
+  }
+ ],
+ "failed": []
+}

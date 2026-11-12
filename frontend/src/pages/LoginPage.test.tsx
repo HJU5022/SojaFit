@@ -171,6 +171,22 @@ it('shows login error and request id, clears password, and offers configured Goo
   expect(screen.getByLabelText('비밀번호')).toHaveValue('')
   expect(await screen.findByRole('button', { name: 'Google 로그인' })).toBeEnabled()
 })
+it('starts Google authentication without fabricating a consent flag', async () => {
+  network(path => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
+  open()
+  const start = await screen.findByRole('button', { name: 'Google 로그인' })
+  expect(start).toBeEnabled()
+  expect(start.closest('form')).toHaveAttribute('action', '/api/auth/google/start')
+  expect(new FormData(start.closest('form')!).get('consent')).toBeNull()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+})
+it('keeps email login available for a legacy consent redirect', async () => {
+  network(path => path.endsWith('/status') ? Response.json({ enabled: false }) : failure())
+  render(<MemoryRouter initialEntries={['/login?google=consent']}><App /></MemoryRouter>)
+  expect(await screen.findByLabelText('이메일')).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Google 로그인' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+})
 it('explains the existing Google callback failure redirect', async () => {
   network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
   render(<MemoryRouter initialEntries={['/login?google=error']}><App /></MemoryRouter>)
@@ -203,6 +219,7 @@ it('shows demo A/B buttons above the password form only in demo mode and logs in
   open()
   const buttons = await screen.findByRole('group', { name: '데모 로그인' })
   expect(buttons).toHaveTextContent('평가 계정 아님')
+  expect(screen.getByRole('link', { name: '회원가입' })).toHaveAttribute('href', '/signup')
   expect(buttons.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: '데모 사용자 B로 들어가기' }))
   expect(await screen.findByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
@@ -239,6 +256,7 @@ it('hides the demo buttons when the server is not in demo mode', async () => {
   await new Promise(resolve => setTimeout(resolve, 0))
   expect(screen.queryByRole('group', { name: '데모 로그인' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '데모 사용자 A로 들어가기' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: '가입' })).not.toBeInTheDocument()  // 상단 내비에도 로그인 화면에도 이메일 가입 링크가 없다
 })
 
 

@@ -1,24 +1,41 @@
 # db
 
 ## 역할
-- 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL만 바로 아래에 둡니다. 스키마 문서는 `schema/`, 자동 실행하지 않는 SQL은 `manual/`에 둡니다. Compose가 `./db`를 Postgres 초기화 폴더로 마운트해 최상위 `.sql`만 실행하므로 SQL을 하위 폴더로 옮기지 않습니다.
-- 넣는 것: 확장·스키마·인덱스 생성 SQL. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/pipeline/ingest.py`가 합니다. 로컬 Compose 데모 계정(데모 사용자 A · B, 비밀번호 없음)은 `007_demo_accounts.sql`이 데모 모드에서 만들고, 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 넣지 않습니다.
+- 이 폴더: Compose가 DB 컨테이너를 처음 만들 때 이름순으로 실행하는 초기화 SQL만 바로 아래에 둡니다. Compose가 `./db`를 Postgres 초기화 폴더로 마운트해 **최상위 `.sql`만** 실행하므로 `legacy/` · `migrations/` · `manual/`의 SQL은 자동 실행되지 않습니다.
+- 넣는 것: 새 DB 첫 기동용 SQL(확장 · 코퍼스 · 서비스 표 기준선 · 공개 권한 회수). 운영 DB를 옮기는 SQL은 `migrations/`, 기준선 이전의 옛 증분 SQL(이력)은 `legacy/`. 코퍼스 데이터 적재는 SQL이 아니라 `backend/rag/pipeline/ingest.py`가 합니다. 데모 계정(A · B, 비밀번호 없음)은 SQL 시드가 아니라 `DEMO_MODE=1`에서 첫 데모 로그인 때 앱이 만듭니다. 그 밖의 계정은 `/signup` 가입이나 `python -m backend.auth`로 만듭니다. 실제 비밀번호는 저장소에 두지 않습니다.
 - 넣지 않는 것: 표 설계 문서(`db/schema/`), 평가용 계정 비밀번호(강사에게 따로 제출), 원본 문서(`data/corpus/`), 자동 실행하면 안 되는 SQL(`db/manual/`).
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
 ## 실행과 주의
-- 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 만들던 `011_part_specifications.sql`을 지웠고, 운영 DB의 표는 11-09에 지웠다. 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다(이 폴더에 `DROP` SQL은 두지 않았다). 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣은 기록이 있다(`docs/worklog/sth.md`).
-- 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`·`004`·`011`은 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`, 018~020으로 대체돼 적용하지 않음)이며, `011`(부품 사양 표)은 11-09에 지웠습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql` → `022_token_limits.sql` → `023_retention.sql` → `024_projects_demo_c01.sql` → `025_runs_safe_result_preferred_mount.sql` → `026_projects_catalog_demo.sql` → `027_google_user_login.sql` → `029_email_account_security.sql`입니다. 데모 모드(`DEMO_MODE=1`)면 데모 사용자 A · B를 만들고, 아니면 계정을 만들지 않습니다.
-- Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행한다. 013~017 · 022 · 023을 멱등 적용하고 PostgresSaver/PostgresStore의 내부 표를 준비한 뒤 API가 시작된다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만든다(확장은 설치하지 않음, SPEC 8.5). 이 서비스는 Compose 로컬 `db`에 연결하며 앱 일반 기동에는 DDL을 넣지 않는다. 기존 DB에 명령을 수동 실행할 때는 대상·권한·적용 이력을 먼저 확인한다.
-- Compose의 `corpus-load`는 같은 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`(`RAG_VECTOR_TYPE=halfvec`)로 데모 코퍼스 스냅샷(42문서 · 청크 1,556개)을 `source_documents` · `document_chunks`에 넣는다. 임베딩은 넣지 않는다. thread-setup과 함께 돌고, api는 두 서비스가 모두 성공한 뒤 시작한다. 이미 있는 문서 · 청크는 건너뛰므로 다시 떠도 행이 늘지 않는다.
-- Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 018~020이 업무 표(프로젝트 · 회로 · 대화 · 실행 · 메시지 · 승인 · 견적 · 승인 사례)를 만들면서 대체됐습니다. 초안의 `circuits`가 018과 충돌하므로 적용하지 않고 이력으로만 둡니다.
-- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행됩니다(기존 로컬 볼륨에는 데모 사용자 A · B가 없어 버튼 로그인이 404입니다). 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
-- `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
+- 2026-11-12 인증 통합: 새 DB는 기준선/026 뒤 027·029·030 인증 SQL을 적용한다. 기준선의 자동 연결/pending 없음 설명은 이전 상태다. 기존 DB에는 초기화나 legacy SQL을 재실행하지 않고 추가 인증 SQL의 적용을 별도 검토한다. 기존 데이터·해시·연결을 삭제하거나 재작성하지 않는다.
+- 구조(11-11 재설계 M 단계, [결정]): 서비스 표는 증분 파일 20여 개가 아니라 **기준선 한 파일**(`020_service_baseline.sql`)이 만든다. 옛 `003`~`025` · `027`~`029`는 `legacy/`로 옮겨 이력만 남겼고 **어디에서도 실행하지 않는다**. 기준선은 옛 체인 + 운영 이전 SQL을 적용한 결과와 구조가 같다(`scripts/db/verify_chain/verify_chain.sh`가 차이 0줄을 확인한다).
+- 빈 DB 볼륨을 처음 만들 때 실행 순서: `000_init.sql` → `002_rag_corpus.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `012_document_category.sql` → `020_service_baseline.sql` → `026_revoke_public_grants_and_rls.sql`. 번호 `001`·`003`~`007`·`010`·`011`·`013`~`019`·`021`~`025`는 `db/` 바로 아래에 일부러 없습니다(서비스 표는 기준선이 대체, `007` 데모 시드는 앱으로 이동, `011` 사양 표는 ADR 0016으로 폐기).
+- Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행해 **LangGraph 표(PostgresSaver/PostgresStore 내부 표)만** 만듭니다. 서비스 표는 만들지 않으며 SQL 파일을 적용하지도 않습니다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만듭니다.
+- Compose의 `corpus-load`는 같은 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`(`RAG_VECTOR_TYPE=halfvec`)로 데모 코퍼스 스냅샷(42문서 · 청크 1,556개)을 `source_documents` · `document_chunks`에 넣습니다. 임베딩은 넣지 않습니다.
+- **볼륨 주의**: 이미 초기화된 DB 볼륨에는 초기화 SQL이 다시 적용되지 않습니다. **028 이전(옛 구조) 로컬 볼륨은 새 코드와 맞지 않으므로 `docker compose down -v`로 지우고 다시 만들어야 합니다**(`down -v`는 DB 볼륨의 데이터를 지웁니다. 보존할 데이터가 있는 환경에서는 실행하지 않습니다).
+- 기존 DB(운영)는 기준선을 쓰지 않고 `migrations/`의 이전 SQL을 순서대로 적용합니다(expand → 새 코드 배포 → contract). 각 파일 끝이 이력 표 `public.app_migrations`에 한 줄을 남깁니다. 새 DB의 기준선은 `2026-11-service-baseline` 한 줄을 남깁니다([결정] D6: 우리 이력 표를 쓰고 Supabase `supabase_migrations`는 건드리지 않음).
+- 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다. 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣었다.
 
 ## 파일
-- `029_email_account_security.sql` — 기존 users에 nullable email_verified_at, 인증 토큰·메일 요청 한도 비공개 표 추가. 기존 사용자/암호/역할 보존; 운영에는 검토 후 별도 적용.
-- `027_google_user_login.sql` — 일반 Google 계정의 password_hash=NULL 허용, 관리자 비밀번호 필수 제약. 기존 해시/연결 보존, 재실행 가능. 기존 운영 DB에는 배포 전 별도 승인·적용 필요
+- `DB.md` — 폴더 설명과 초기화/기존 DB 적용 경계.
+- `000_init.sql` — PostgreSQL 확장 초기화.
+- `002_rag_corpus.sql` — 문서·청크·임베딩 코퍼스 표.
+- `008_multi_dim_embeddings.sql` — 차원 없는 임베딩과 모델별 색인.
+- `009_chunk_embedding_bits.sql` — 검색 후보용 1비트 코드.
+- `012_document_category.sql` — 문서 범주.
+- `020_service_baseline.sql` — 새 DB 서비스 표 기준선.
+- `026_projects_catalog_demo.sql` — 기존 catalog 호환 제약 갱신.
+- `026_revoke_public_grants_and_rls.sql` — 공개 역할 권한 회수·RLS.
+- `027_google_user_login.sql` — 일반 Google 계정 NULL 비밀번호·관리자 비밀번호 필수.
+- `029_email_account_security.sql` — 이메일 인증 시각·일회용 challenge·발송 한도.
+- `030_google_onboarding.sql` — 명시적 Google 가입·재확인 연결·관리자 승인 대기.
+- `legacy/` — 기준선 이전 SQL 원본. 동일 내용이던 루트 중복은 초기화하지 않는다.
+- `migrations/` — 기존 운영 DB의 검토·이전·되돌리기 SQL.
+- `manual/` — 자동 실행하지 않는 수동 SQL.
+- `redesign/` — 서비스 기준선 설계와 검증 스크립트.
+- `schema/` — 실제 스키마에서 생성한 ERD·표 정의서.
+
+## 파일
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모
 - `017_analysis_events.sql` — 요청·thread·trace 연결, 처리 결과와 단계 지연 (내용 제외)
 - `021_auth_ip_limits.sql` — 클라이언트 IP 한도 표 2개(IP 원문 없이 키 해시만). `auth_signup_attempts`는 IP별 UTC 하루 가입 요청 수, `auth_login_ip_attempts`는 IP별 15분 로그인 실패 수·잠금(열은 `auth_login_attempts`와 같음). RLS를 켜고 공개 역할 권한을 회수한다. 다시 실행해도 아무것도 바꾸지 않는다. 기존 DB에는 자동 적용되지 않는다. [주의] 이 표가 없으면 비밀번호 로그인과 가입이 모두 503이 되므로, 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다
@@ -33,19 +50,33 @@
 - `013_agent_memory.sql` — 비공개 sojafit_agent 스키마의 업로드·thread·대화 이력·승인 원본. 라이브러리 내부 표는 별도 setup CLI가 생성
 - `000_init.sql` — pgvector 확장 생성
 - `002_rag_corpus.sql` — 코퍼스 문서·청크·임베딩 테이블과 관련 인덱스
-- `003_auth.sql` — 사용자·인증 세션·로그인 시도 테이블
-- `005_auth_attempt_window.sql` — 로그인 실패 집계 시간 컬럼 추가
-- `006_user_roles.sql` — 계정 역할 추가. 기존 계정은 일반 사용자로 유지하며 관리자는 `python -m backend.auth --role admin`으로 따로 만든다
-- `007_demo_accounts.sql` — 데모 모드(`DEMO_MODE=1`)에서만 로컬 데모 전용 일반 사용자 2개(`demo-a@example.test` · `demo-b@example.test`, 평가 계정 아님)를 만든다. 비밀번호 해시 칸에는 scrypt 형식이 아닌 표식(`backend/auth.py` `DEMO_PASSWORD_HASH`)을 넣어 비밀번호 로그인은 늘 실패하고, 데모 모드의 버튼 로그인(`POST /api/auth/demo-login`)만 이 표식을 가진 계정에 세션을 준다. 저장소에 비밀번호 · 해시를 두지 않는다(11-09). 새 볼륨 초기화 때 한 번 실행
-- `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용. 열이 halfvec(n)이면 `USING` 없이 차원 표시만 떼 표를 다시 쓰지 않는다(`scripts/db/voyage_rollout.py migrate`가 filenode 전후로 확인)
-- `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용하며, 다시 실행해도 있는 행은 그대로
-- `010_google_auth.sql` — Google 관리자 로그인용 일시 상태·승인 대기·계정 연결 테이블 및 공개 권한 제한. 기존 DB에는 자동 적용되지 않으며, 적용 전 마이그레이션·복구를 별도로 검토한다.
-- `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 분류 이름(예: `schottky-rectifier`, `pipeline/specs.py`의 `family`)이고 `ingest.py`가 문서를 넣을 때 채운다. 다시 실행해도 아무것도 바꾸지 않는다. 빈 Compose 볼륨에서만 자동 실행되므로 이미 있는 DB에는 따로 적용하고 기존 행은 청크 파일에서 채운다.
-- `019_conversations.sql` — 프로젝트 소유 대화·메시지·실행 및 접근 제한, 공개 결과 중첩 키·타입과 품번 검증. 체크포인트는 같은 UUID의 사용자 분석 thread로 `sojafit_agent` 스키마에 둔다(`013_agent_memory.sql`과 setup CLI). 기존·공유 DB에는 자동 적용하지 않는다.
-- `020_approvals_quotes.sql` — 사람 승인·가격 없는 견적·승인 사례, 소유자 인덱스·삭제 cascade·공개 권한 제한과 중첩 가격·재고 키 거절. 기존·공유 DB에는 자동 적용하지 않는다.
-- `018_projects.sql` — 사용자 소유 프로젝트와 정규화 회로 1:1 저장. 사용자·프로젝트 삭제 cascade, 소유자별 목록 인덱스, 명시적 CHECK, 공개 역할 및 sequence 권한 회수, RLS(공개 정책 없음). 새 빈 볼륨에서 017 다음 실행하며 기존 볼륨·공유 DB에는 자동 적용하지 않는다. `manual/004_create_business_tables.sql.draft`의 옛 `circuits`와 충돌하므로 초안을 적용하지 않는다. 서버는 데모 회로 생성(`POST /api/projects`)과 KiCad 넷리스트 업로드(`POST /api/projects/upload`)를 제공한다(`source_kind` demo · upload).
+- `008_multi_dim_embeddings.sql` — 임베딩 열을 차원 없는 halfvec으로 바꿔 3-small(1536)·voyage-4-large(1024) 행을 함께 둠. HNSW 인덱스를 지움. 기존 DB에는 자동 적용되지 않으므로 용량을 확인한 뒤 별도로 적용(`scripts/db/voyage_rollout.py migrate`)
+- `009_chunk_embedding_bits.sql` — voyage-4-large 임베딩의 1비트 코드 표(`chunk_embedding_bits`)를 만들고 기존 행에서 채움. dense 1단계 Hamming 후보 거르기용(사전 등록 #27). 인덱스 없음. 기존 DB에는 008 뒤에 별도로 적용
+- `012_document_category.sql` — `source_documents`에 문서 분류 열(`category`, NULL 허용)을 더함. 값은 분류 이름(예: `schottky-rectifier`)이고 `ingest.py`가 채운다. 기존 DB에는 따로 적용
+- `020_service_baseline.sql` — **서비스 표 기준선**: `public` 16표(users · auth_* 5 · projects · circuits · threads · runs · messages · approvals · quotes · approved_cases · app_migrations)와 `sojafit_agent` 5표(threads · messages · analysis_events · analysis_usage · analysis_service_usage), 체크포인트 삭제 트리거, 보관 기간 청소 함수 2개, 모든 서비스 표 RLS ON(정책 0). `-- @@AGENT@@` 줄 앞은 public 표만(시험이 격리 스키마에 적용). 코퍼스 · LangGraph 표는 포함하지 않음
+- `026_revoke_public_grants_and_rls.sql` — 공개 역할(anon · authenticated)의 권한을 모두 회수하고(코퍼스 표 4개 · 시퀀스 · 우리 함수 · public 기본 권한) 앱 표(public · sojafit_agent)의 RLS를 켠다(11-10 운영 DB 점검). 소유자 · 슈퍼유저는 RLS를 우회해 서버 동작은 그대로다. 역할이 없는 DB(compose · CI)는 RLS만 켠다. 여러 번 돌려도 같다
+- `legacy/` — 기준선 이전의 옛 증분 서비스 SQL 20개(`003`~`025` · `027`~`029`)와 설명. 이력용이며 실행하지 않는다(운영 이전 되돌리기가 일부를 다시 읽는다). [LEGACY.md](legacy/LEGACY.md)
+- `migrations/` — 운영 DB 이전 SQL(expand · contract P1 · contract P2 · 선택 2b · 되돌리기). 새 DB가 아니라 이미 서비스 표가 있는 DB용. [MIGRATIONS.md](migrations/MIGRATIONS.md)
+- `redesign/` — 서비스 DB 재설계(11-11) 설계 문서(현재 · 목표 구조, 영향 지도)와 일회용 Postgres 16 · 17 검증 스크립트. 요약은 `redesign/REDESIGN.md`
 - `manual/` — 자동 실행하지 않는 SQL(옛 업무 표 초안 이력, halfvec 수동 전환). [MANUAL.md](manual/MANUAL.md)
-- `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`). [SCHEMA.md](schema/SCHEMA.md)
+- `schema/` — 표 설계 문서(`erd.md`, `table-definition.md`는 DB에서 자동 생성). [SCHEMA.md](schema/SCHEMA.md)
+
+
+## 백업 복원 (새 DB · 새 Supabase 프로젝트로 옮길 때)
+- 순서는 **구조 → 데이터 → 제약 · 인덱스**다. 새 기준선 DB, 이전 SQL을 적용한 DB, 되돌린 DB의 백업(`pg_dump -Fc`)은 빈 DB에 한 번에 `pg_restore`해도 오류가 없다(`db/redesign/verify/rd_test7.sh`가 PG16 · 17에서 확인). 명령: `pg_restore -d <새 DB> --no-owner --no-privileges --exit-on-error 파일.dump`.
+- **이전 SQL을 적용하기 전의 옛 구조에서 받은 백업**은 한 번에 복원하면 `approvals` COPY가 `function quote_snapshot_has_forbidden_key does not exist`로 실패한다(재귀 함수에 `search_path`가 없고 `pg_restore`는 복원 중 `search_path`를 비움). 그때는 세 번에 나눠 복원한다:
+  1. `pg_restore -d <새 DB> --no-owner --no-privileges --section=pre-data 파일.dump`
+  2. `psql <새 DB> -c 'ALTER FUNCTION public.quote_snapshot_has_forbidden_key(jsonb) SET search_path = "$user", public' -c 'ALTER FUNCTION public.conversation_json_matches(jsonb, jsonb) SET search_path = "$user", public'`
+  3. `pg_restore ... --section=data 파일.dump`, 이어서 `pg_restore ... --section=post-data 파일.dump`
+- 운영에서 `migrate_prod_1_expand.sql`(E0)을 적용한 뒤 받은 백업은 위 2번이 이미 들어 있어 한 번에 복원된다. 새 프로젝트에서는 `vector` 확장이 필요하다(덤프에 `CREATE EXTENSION`이 들어 있고, Supabase는 `extensions` 스키마에 설치된다).
+- **복원 뒤 권한 복구(필수)**: `--no-privileges` 복원은 함수의 `REVOKE ... FROM PUBLIC`을 되살리지 않아, 복원한 함수(`sojafit_agent.purge_inactive_projects` · `purge_log_records` · `purge_thread_checkpoints`, `public.quote_snapshot_has_forbidden_key` 등)가 PUBLIC 실행 가능이 된다. 복원 직후 **`db/026`을 다시 실행하고 `db/migrations/post_restore_privileges.sql`을 실행**한다: `psql <새 DB> -v ON_ERROR_STOP=1 -f db/026_revoke_public_grants_and_rls.sql -f db/migrations/post_restore_privileges.sql`. 이 파일이 우리 함수 전부의 PUBLIC(과 `anon` · `authenticated`) 실행 권한을 회수하고, PUBLIC 실행 가능 함수 0 · 공개 역할 표 권한 0 · RLS 꺼진 표 0이 아니면 `EXCEPTION`으로 멈춘다. `rd_test7.sh`가 복원 → 이 절차 뒤 권한 지문(함수 PUBLIC 실행 · 표 RLS · PUBLIC 표 권한)이 원본과 같아지는 것을 확인한다.
+- **이전 전 백업은 3단계 `--section` 순서를 어기기 쉽다**(`pre-data` 뒤 함수 설정을 건너뛰고 바로 `data`로 가면 `approvals` COPY가 실패). 순서 요약:
+  ```
+  1) pg_restore --section=pre-data   2) ALTER FUNCTION ... SET search_path (위 2번 두 문장)
+  3) pg_restore --section=data       4) pg_restore --section=post-data
+  5) psql -f db/026_revoke_public_grants_and_rls.sql -f db/migrations/post_restore_privileges.sql
+  ```
+- 백업 파일은 질문 · 답 · 이메일을 담으므로 저장소에 두지 않는다.
 
 ## 팀 Supabase 적재 현황 스냅샷 (2026-11-05 기록)
 
@@ -87,33 +118,8 @@
 - LangGraph가 만드는 `checkpoints`·`checkpoint_blobs`·`checkpoint_writes`·`checkpoint_migrations`와 Store의 `store`·`store_vectors`·마이그레이션 표는 아직 생성·적재되지 않았습니다.
 - 위 미생성 판정은 조회 당시 팀 DB의 `public` 스키마 기준입니다. 다른 스키마나 외부 저장소의 데이터 존재 여부를 뜻하지 않습니다.
 
-## 기존 DB 인증 스키마 적용 전 점검
+## 기존 DB(운영) 적용 전 점검
 
-1. 대상이 공유·운영 DB인지 확인하고, 현재 적용 이력과 백업·복구 경로를 담당자와 확인합니다. 비밀번호·접속 문자열은 기록하지 않습니다.
-2. 읽기 전용으로 현재 스키마와 필요한 컬럼·제약을 확인합니다. 예시:
-
-```sql
-SELECT table_schema, table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_name IN ('users', 'auth_sessions', 'auth_login_attempts');
-
-SELECT table_name, column_name, data_type, is_nullable, column_default
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name IN ('users', 'auth_sessions', 'auth_login_attempts')
-ORDER BY table_name, ordinal_position;
-
-SELECT conrelid::regclass AS table_name, conname, pg_get_constraintdef(oid) AS definition
-FROM pg_constraint
-WHERE conrelid IN (SELECT oid FROM pg_class WHERE relnamespace = 'public'::regnamespace
-  AND relname IN ('users', 'auth_sessions', 'auth_login_attempts'))
-ORDER BY conrelid::regclass::text, conname;
-```
-
-3. 테이블이 모두 없는 경우, 별도 빈 테스트 DB에서 `003_auth.sql`, `005_auth_attempt_window.sql`, `006_user_roles.sql` 순서로 적용하고 로그인 테스트를 먼저 확인합니다. 이미 일부 또는 전체가 있으면 해당 정의·데이터·이력을 비교해 필요한 후속 마이그레이션을 별도로 작성합니다. `CREATE TABLE IF NOT EXISTS`만으로 기존 구조의 일치를 보장하지 않습니다.
-4. 적용 경로와 이력 관리 방식은 팀 검토 후 확정합니다. 운영·공유 DB에 자동 적용하거나 볼륨을 삭제하지 않습니다.
-
-- 이미 `auth_login_attempts`가 있으면 `window_started_at` 존재 여부와 적용 이력을 확인합니다. 컬럼이 없고 다른 구조가 인증 코드와 일치하는 경우에만 검토된 `005_auth_attempt_window.sql` 적용을 계획합니다. 존재한다면 무조건 다시 실행하지 않습니다. 기존 데이터를 지우지 않고 테스트 DB에서 먼저 확인합니다. 애플리케이션 갱신 전 DB 마이그레이션이 선행돼야 합니다.
-- `006_user_roles.sql`도 기존 `users.role` 유무와 이력을 확인한 뒤 한 번만 적용합니다. 기존 계정은 `user`로 유지합니다. 새 API 코드보다 먼저 반영해야 합니다.
-- `007_demo_accounts.sql`은 새 Compose 볼륨에서만 자동 실행되며 서비스 DB에는 적용하지 않습니다. 시드 SQL은 이미 있는 계정의 비밀번호나 역할을 덮어쓰지 않습니다(같은 이메일로 가입한 계정은 표식이 없어 버튼으로 들어갈 수 없음).
+1. 대상이 공유·운영 DB인지 확인하고 백업과 복구 경로를 확인합니다(`migrations/migrate_prod_1_expand.sql` 머리의 `pg_dump` 명령). 비밀번호·접속 문자열은 기록하지 않습니다.
+2. 이전 순서와 되돌리기는 [`migrations/MIGRATIONS.md`](migrations/MIGRATIONS.md)를 따릅니다. 운영·공유 DB에 기준선 · 초기화 SQL을 자동 적용하거나 볼륨을 삭제하지 않습니다.
+3. `008` · `009`(임베딩 열 전환, 비트 표)는 용량을 확인한 뒤 `scripts/db/voyage_rollout.py`로 따로 적용합니다.

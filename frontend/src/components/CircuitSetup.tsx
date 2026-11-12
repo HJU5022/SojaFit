@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createDemo, listDemos, uploadProject } from '../api/projects'
 import { getDemoStatus } from '../api/auth'
+import { createDemo, listDemos, uploadProject } from '../api/projects'
 import type { Project } from '../api/projects'
 import { errorMessage } from '../api/client'
 

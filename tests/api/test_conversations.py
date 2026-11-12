@@ -12,7 +12,8 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 
 
-def test_thread_delete_requires_login():
+def test_thread_delete_requires_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     with TestClient(app, raise_server_exceptions=False) as client:
         assert client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN).status_code == 401
 
@@ -104,7 +105,8 @@ def test_recover_is_owned_origin_checked_and_never_calls_analysis(web):
     assert repo.calls == ['recover']
 
 
-def test_recover_requires_login():
+def test_recover_requires_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     with TestClient(app, raise_server_exceptions=False) as client:
         assert client.post(f'/api/runs/{uuid4()}/recover', headers=ORIGIN).status_code == 401
 
@@ -458,14 +460,15 @@ def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
 def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
     """하루 토큰 상한(admission 429)은 스트림 · run 행 · 재개 전이 전에 공통 오류로 끝나고 분석을 부르지 않는다."""
     thread, run = str(uuid4()), str(uuid4())
-    analysis = FakeAnalysis(refuse=ApiError(429, '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
+    from backend.conversations.memory_service import USER_DAILY_TOKENS
+    analysis = FakeAnalysis(refuse=ApiError(429, f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
     repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': {'missing': ['VIN_MAX'], 'role_choices': [], 'question': '?'}})
     with web(analysis, repo) as client:
         start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
     for response in (start, resume):
         assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
-        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and '200,000 토큰' in response.json()['error']['message']
+        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and f'{USER_DAILY_TOKENS:,} 토큰' in response.json()['error']['message']
     assert analysis.calls == [] and repo.calls == []
 
 
@@ -505,7 +508,7 @@ def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
 
 
 def test_project_delete_with_threads_deletes_analysis_records_before_project(monkeypatch):
-    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread · 회로를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
+    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
     thread, executed = str(uuid4()), []
     class Conn:
         def __enter__(self): return self
@@ -528,7 +531,7 @@ def test_project_delete_with_threads_deletes_analysis_records_before_project(mon
     assert response.status_code == 204
     deletes = [(text, params) for text, params in executed if text.startswith('DELETE')]
     assert [text.split()[2] for text, _ in deletes] == ['sojafit_agent."checkpoint_writes"', 'sojafit_agent."checkpoint_blobs"', 'sojafit_agent."checkpoints"',
-                                                       'sojafit_agent.threads', 'sojafit_agent.circuits', 'projects']
+                                                       'sojafit_agent.threads', 'projects']
     assert all(params[:2] == (1, [thread]) for _, params in deletes[:-1])  # 사용자 조건과 그 프로젝트의 대화 UUID만
 
 
@@ -656,3 +659,21 @@ def test_demo_questions_only_in_replay_mode_and_without_recorded_results(web, mo
         unavailable = client.get('/api/demo-questions')
     assert listed == [{k: recorded[k] for k in ('id', 'kind', 'circuit', 'demo_id', 'target', 'question', 'conditions', 'resume')}]
     assert unavailable.status_code == 503 and unavailable.json()['error']['code'] == 'UNAVAILABLE'
+
+
+@pytest.mark.parametrize('path', ['/api/runs/{id}/resume', '/api/messages/1/approvals', '/api/auth/login'])
+def test_other_api_json_bodies_over_128_kib_are_413(path):
+    """재개 · 승인 · 로그인 등 `/api/` 아래 본문도 128 KiB까지다. 넷리스트 업로드(5 MiB)만 이 한도 밖이다."""
+    response = TestClient(app).post(path.format(id=uuid4()), content=b'x' * (128 * 1024 + 1))
+    assert response.status_code == 413 and response.json()['error']['code'] == 'PAYLOAD_TOO_LARGE'
+    upload = TestClient(app).post('/api/projects/upload', content=b'x' * (128 * 1024 + 1))
+    assert upload.status_code != 413
+
+
+def test_every_response_has_security_headers():
+    """보안 응답 헤더는 가장 바깥 미들웨어가 모든 응답(오류 포함)에 붙인다(`backend/main.py`의 `SECURITY_HEADERS`)."""
+    for path in ('/health', '/api/auth/me'):
+        headers = TestClient(app).get(path).headers
+        assert headers['x-content-type-options'] == 'nosniff' and headers['x-frame-options'] == 'DENY'
+        assert headers['referrer-policy'] == 'strict-origin-when-cross-origin' and 'max-age' in headers['strict-transport-security']
+

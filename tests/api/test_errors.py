@@ -90,8 +90,8 @@ def test_google_callback_without_database_url_still_redirects_to_login(monkeypat
 def test_signup_daily_ip_limit_is_rate_limited(web, monkeypatch):
     def limited(*args):  # auth.signup이 IP 하루 3회를 넘기면 내는 오류와 같다
         raise HTTPException(status_code=429, detail='오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.')
-    monkeypatch.setattr('backend.auth.signup', limited)
-    response = web().post('/api/auth/signup', json={'email': 'a@example.test', 'password': 'synthetic-pass-123', 'consent': True}, headers=ORIGIN)
+    monkeypatch.setattr('backend.auth_email.complete', limited)
+    response = web().post('/api/auth/signup/confirm', json={'token': 'x' * 43, 'password': 'synthetic-pass-123'}, headers=ORIGIN)
     assert response.status_code == 429 and response.json()['error']['code'] == 'RATE_LIMITED'
 
 
@@ -115,9 +115,10 @@ def service(**attrs):
 
 
 def test_token_cap_is_limit_exceeded():
+    from backend.conversations.memory_service import USER_DAILY_TOKENS
     with pytest.raises(ApiError) as error:
-        Conversations._token_room(Conn({'mine': 200_000, 'service': 0}), 1)
-    assert error.value.code == 'LIMIT_EXCEEDED' and '200,000 토큰' in error.value.detail
+        Conversations._token_room(Conn({'mine': USER_DAILY_TOKENS, 'service': 0}), 1)
+    assert error.value.code == 'LIMIT_EXCEEDED' and f'{USER_DAILY_TOKENS:,} 토큰' in error.value.detail
 
 
 @pytest.mark.parametrize('spent, code', [(False, 'RATE_LIMITED'), (True, 'LIMIT_EXCEEDED')])

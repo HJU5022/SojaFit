@@ -10,6 +10,7 @@ from psycopg import sql
 
 from backend import auth
 from backend.main import app
+from tests.db_schema import apply_service_schema
 
 
 @pytest.fixture
@@ -57,6 +58,19 @@ def test_demo_catalog_and_invalid_creation(client):
         result = client.post("/api/projects", json=body, headers={"origin": "http://testserver"})
         assert result.status_code == 422
         assert result.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_demo_project_create_is_404_outside_demo_mode(client, monkeypatch):
+    """실서비스(DEMO_MODE=0)에서는 데모 회로로 프로젝트 만들기가 없다(업로드만)."""
+    monkeypatch.setenv("DEMO_MODE", "0")
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    response = client.post(
+        "/api/projects",
+        json={"demo_id": "breadboard_supply", "name": "전원 회로"},
+        headers={"origin": "http://testserver"},
+    )
+    assert response.status_code == 404
+    assert client.get("/api/demo-circuits").status_code == 200  # 목록·기존 데모 프로젝트 회로도용은 유지
 
 
 def test_demo_catalog_exposes_only_verified_public_schematic_metadata(client):
@@ -153,7 +167,7 @@ def test_upload_persists_only_normalized_payload_and_closes(upload_boundary):
     assert set(payload) == {"connections", "source_sha256", "parser_version"}
     assert set(payload["connections"]) == {"parts", "nets"}
     assert payload["source_sha256"] == hashlib.sha256(raw).hexdigest()
-    assert payload["parser_version"] == "kicad-export-v1"
+    assert payload["parser_version"] == "kicad-export-v2"
     assert "RAW_UPLOAD_MARKER" not in repr(payload) + response.text
     assert all(not isinstance(value, (bytes, Path)) and not hasattr(value, "read") for value in payload.values())
     assert reads == [5 * 1024 * 1024 + 1]
@@ -291,8 +305,7 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
         monkeypatch.setattr(auth, "connection", connect)
         try:
             with connect() as conn:
-                for name in ("003_auth.sql", "005_auth_attempt_window.sql", "006_user_roles.sql", "018_projects.sql", "019_conversations.sql"):
-                    conn.execute(Path("db", name).read_text(encoding="utf-8-sig"))
+                apply_service_schema(conn)
                 users = [row[0] for row in conn.execute("INSERT INTO users (login_id,password_hash,role) VALUES ('a@example.test','fake','user'),('b@example.test','fake','admin') RETURNING id").fetchall()]
                 for token, user_id in zip(("owner-token", "admin-token"), users):
                     conn.execute("INSERT INTO auth_sessions (token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))

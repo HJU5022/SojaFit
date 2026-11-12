@@ -7,6 +7,7 @@ import { useRunStream } from '../hooks/useRunStream'
 import RunStatus, { ProcessingIcon } from './RunStatus'
 import InterruptForm from './InterruptForm'
 import ProfileHints from './ProfileHints'
+import SafeMarkdown from './SafeMarkdown'
 import type { RunState } from '../hooks/useRunStream'
 import { approvableCandidatesOf, candidatesOf } from './circuitContext'
 
@@ -51,9 +52,10 @@ export function ConversationComposer({ draft, onDraftChange, onSend, sendDisable
 
 function AnswerText({ text, evidence = [], onShowEvidence }: { text: string; evidence?: EvidenceDto[]; onShowEvidence?: () => void }) {
   const citations = new Set(evidence.map(item => `[${item.citation_number}]`))
-  return text.split(/(\[\d+\])/g).map((part, index) => citations.has(part) && onShowEvidence
+  const renderCitations = (value: string) => value.split(/(\[\d+\])/g).map((part, index) => citations.has(part) && onShowEvidence
     ? <button key={index} type="button" className="answer-citation-link" aria-label={`문서 근거 ${part} 보기`} onClick={onShowEvidence}>{part}</button>
     : part)
+  return <SafeMarkdown text={text} renderText={renderCitations} />
 }
 
 function ResultMenu({ result, onShowActivity, onShowJudgement, onShowEvidence, onShowActions }: {
@@ -144,7 +146,7 @@ export function SavedConversationPanel({ projectId, threadId, onRestore, onEmpty
       {history.hasNextPage && <button className="secondary" disabled={history.isFetchingNextPage} onClick={loadEarlier}>이전 메시지 더 보기</button>}
       {first && messages.length === 0 && <p>저장된 메시지가 없습니다.</p>}
       {messages.map(message => <article key={message.id} aria-label={`${message.id}번 ${message.role === 'user' ? '사용자' : '에이전트'} 메시지`} className={`conversation-card ${message.role === 'user' ? 'user-card' : 'final-card'}`}>
-        <span className="card-kicker">{message.role === 'user' ? '사용자 질문' : '에이전트 답변'}</span><p className="answer-text"><AnswerText text={message.content} evidence={message.role === 'assistant' && message.run_id === runId && !run.error && run.data?.message_id === message.id ? run.data.result.evidence : undefined} onShowEvidence={onShowEvidence} /></p>
+        <span className="card-kicker">{message.role === 'user' ? '사용자 질문' : '에이전트 답변'}</span><div className="answer-text"><AnswerText text={message.content} evidence={message.role === 'assistant' && message.run_id === runId && !run.error && run.data?.message_id === message.id ? run.data.result.evidence : undefined} onShowEvidence={onShowEvidence} /></div>
         {message.role === 'assistant' && (message.run_id === runId
           ? <ResultMenu result={!run.error && run.data?.message_id === message.id ? run.data.result : undefined}
             onShowActivity={onShowActivity} onShowJudgement={onShowJudgement} onShowEvidence={onShowEvidence} onShowActions={onShowActions} />
@@ -275,7 +277,7 @@ export default function ConversationPanel({ projectId, demoId = null, targetRef,
     <div ref={stream} className="conversation-stream" aria-live="polite" onScroll={event => { const node = event.currentTarget; followLatest.current = node.scrollHeight - node.scrollTop - node.clientHeight <= 64 }}>
       {transcript.map((turn, index) => <Fragment key={index}>
         <article className="conversation-card user-card"><span className="card-kicker">사용자 질문</span><h3>{turn.submitted.question}</h3>{turn.submitted.files.length > 0 && <p>첨부: {turn.submitted.files.join(', ')}</p>}{turn.submitted.conditions && <p>{turn.submitted.conditions}</p>}{turn.stopped && <p>응답 수신 중단</p>}</article>
-        {(turn.answer || turn.error) && <article className="conversation-card final-card"><span className="card-kicker">에이전트 답변</span><p className="answer-text">{turn.answer || turn.error}</p></article>}
+        {(turn.answer || turn.error) && <article className="conversation-card final-card"><span className="card-kicker">에이전트 답변</span><SafeMarkdown text={turn.answer || turn.error || ""} /></article>}
       </Fragment>)}
       {receivingStopped && <p role="status">응답 수신을 중단했습니다. 서버 분석은 계속될 수 있으며 다음 질문은 새 대화에서 시작합니다.</p>}
       {recorded.length > 0 && <div className="demo-questions" role="group" aria-label="데모 질문"><p>키 없는 데모는 기록한 질문만 재생합니다. 누르면 새 대화로 보냅니다.</p>
@@ -285,7 +287,7 @@ export default function ConversationPanel({ projectId, demoId = null, targetRef,
       {interruptState && <article className="conversation-card interrupt-card"><span className="card-kicker">추가 정보 요청</span>{interruptState.error && <p role="alert">{errorMessage(interruptState.error)}</p>}{resume
         ? <div className="interrupt-form"><h3>추가 정보</h3><p>{interruptState.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</p><p>기록한 답: {Object.entries(resume.answers).map(([key, value]) => `${key}=${value}`).join(', ') || '모름'} · 역할: {resume.role || '없음'}</p><button onClick={() => void run.resume(interruptState.runId, { answers: resume.answers, role: resume.role || undefined })}>기록한 답으로 계속하기</button></div>
         : <InterruptForm interrupt={interruptState.interrupt} roleLabels={roleLabels} busy={false} onSubmit={(answers, role) => void run.resume(interruptState.runId, { answers, role })} />}</article>}
-      {(run.state.status === 'completed' || run.state.status === 'refused') && <article className={`conversation-card final-card status-${run.state.status}`}><span className="card-kicker">{run.state.status === 'completed' ? '최종 답변' : '거절 또는 확인 불가'}</span><p className="answer-text"><AnswerText text={run.state.result.answer || run.state.result.refusal || '표시할 답변이 없습니다.'} evidence={run.state.result.evidence} onShowEvidence={onShowEvidence} /></p><ProfileHints hints={run.state.result.profile_hints ?? []} /><ResultMenu result={run.state.result} onShowActivity={onShowActivity} onShowJudgement={onShowJudgement} onShowEvidence={onShowEvidence} onShowActions={onShowActions} /></article>}
+      {(run.state.status === 'completed' || run.state.status === 'refused') && <article className={`conversation-card final-card status-${run.state.status}`}><span className="card-kicker">{run.state.status === 'completed' ? '최종 답변' : '거절 또는 확인 불가'}</span><div className="answer-text"><AnswerText text={run.state.result.answer || run.state.result.refusal || '표시할 답변이 없습니다.'} evidence={run.state.result.evidence} onShowEvidence={onShowEvidence} /></div><ProfileHints hints={run.state.result.profile_hints ?? []} /><ResultMenu result={run.state.result} onShowActivity={onShowActivity} onShowJudgement={onShowJudgement} onShowEvidence={onShowEvidence} onShowActions={onShowActions} /></article>}
       {failure && <div><p ref={errorSummary} role="alert" tabIndex={-1}>{errorMessage(failure)}</p>{!creationError && run.state.status === 'failed' && run.state.runId && <button className="secondary" onClick={() => { if (run.state.status === 'failed' && run.state.runId) void run.refresh(run.state.runId) }}>실행 상태 확인</button>}</div>}
     </div>
     <ConversationComposer draft={currentDraft} onDraftChange={setDraft} receiving={receiving} processing={processing}

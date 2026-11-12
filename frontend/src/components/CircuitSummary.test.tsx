@@ -6,7 +6,7 @@ import { demo, first, second, summary, openWorkbench, showDetail } from '../test
 
 afterEach(() => vi.unstubAllGlobals())
 it('selects a server reference in the URL and clears it on project switching', async () => {
-  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second))
+  network((path) => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second))
   openWorkbench('/app?projectId=11')
   fireEvent.click(await screen.findByRole('button', { name: /^프로젝트 선택:/ }))
   const select = within(screen.getByRole('dialog', { name: '내 프로젝트' })).getByLabelText('분석할 부품')
@@ -29,7 +29,7 @@ it('selects a server reference in the URL and clears it on project switching', a
   expect(screen.queryByRole('option', { name: 'D1 · 1N4001' })).not.toBeInTheDocument()
 })
 it('does not treat a URL reference absent from the server DTO as a target', async () => {
-  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first)] : first))
+  network((path) => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first)] : first))
   openWorkbench('/app?projectId=11&targetRef=FOREIGN')
   showDetail('회로')
   expect(await screen.findByText('대상 부품을 찾을 수 없음')).toBeInTheDocument()

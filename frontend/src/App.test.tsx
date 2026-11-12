@@ -66,6 +66,7 @@ it('uses the shared brand and signed-in email on the redesigned settings route',
 it('shares account actions and preserves logout errors and retry from settings', async () => {
   let failed = true, signedIn = true
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return signedIn ? Response.json(user) : failure()
     if (path === '/api/auth/logout' && init.method === 'POST') {
       if (failed) return failure('UNAVAILABLE', '로그아웃을 완료하지 못했습니다.', 503)
@@ -185,6 +186,7 @@ it('links landing menus to separate sections beyond the hero', async () => {
 
 it('keeps one main landmark on login and workbench routes', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return failure()
     if (path === '/api/auth/google/status') return Response.json({ enabled: false })
     return Response.json([])
@@ -193,6 +195,7 @@ it('keeps one main landmark on login and workbench routes', async () => {
   expect(await screen.findByRole('main')).toBeInTheDocument()
   view.unmount()
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(user)
     if (path === '/api/projects' || path === '/api/demo-circuits' || path === '/api/judge/roles') return Response.json([])
     return Response.json([])
@@ -202,10 +205,12 @@ it('keeps one main landmark on login and workbench routes', async () => {
   expect(screen.getAllByRole('main')).toHaveLength(1)
 })
 
-it('links anonymous users to the public signup page', async () => {
-  network(path => Response.json(path === '/api/auth/google/status' ? { enabled: false } : {}, { status: path === '/api/auth/me' ? 401 : 200 }))
+it('offers verified email signup and recovery outside demo mode', async () => {
+  network(path => path === '/api/auth/me' ? failure() : Response.json({ enabled: false }))
   render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
-  expect(await screen.findByRole('link', { name: '회원가입' })).toHaveAttribute('href', '/signup')
+  expect(await screen.findByRole('heading', { name: 'SojaFit에 로그인' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '회원가입' })).toHaveAttribute('href', '/signup')
+  expect(screen.getByRole('link', { name: '비밀번호를 잊으셨나요?' })).toHaveAttribute('href', '/reset-password')
 })
 it('restores a session before showing the workbench and admin navigation', async () => {
   network(path => Response.json(path === '/api/auth/me' ? administrator : []))
@@ -225,6 +230,7 @@ it('shows restore failures instead of granting access', async () => {
 
 it('removes owned project cache immediately on logout before another session can mount', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(administrator)
     if (path === '/api/auth/logout') return Response.json({ ok: true })
     if (path === '/api/auth/google/status') return Response.json({ enabled: false })

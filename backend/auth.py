@@ -2,15 +2,16 @@
 
 역할: 비밀번호는 scrypt로 해시해 users에 두고, 로그인하면 무작위 토큰을 만들어 그 해시(HMAC 또는 SHA-256)만
 auth_sessions에 저장한다. 계정당 실패 5회는 15분 잠금(auth_login_attempts), 클라이언트 IP당 실패 30회도 15분 잠금
-(auth_login_ip_attempts), 세션은 절대 8시간·유휴 30분이다.
-자기 가입은 승인 없이 user 계정을 만들고 바로 세션을 발급하며, 클라이언트 IP당 UTC 하루 3회(auth_signup_attempts)로 제한한다.
+(auth_login_ip_attempts), 세션은 절대 8시간·유휴 2시간이다.
+이메일 가입은 소유 확인 뒤 user 계정만 만들며, 인증 완료 시 IP당 UTC 하루 3회 한도를 적용한다(auth_email.py). 직접 signup 헬퍼는 내부/기존 회귀용이다.
+Google 신원 확인 뒤 사용자가 명시적으로 일반 가입하거나 기존 계정의 비밀번호를 재확인한다. 관리자 최초 연결은 승인 CLI를 거친다.
 호출자: backend/api/*.py(API 라우트, 로그인 경로는 backend/api/auth.py), tests/api/test_auth.py, 계정 생성 CLI(`python -m backend.auth`, `--hash-only`는 해시만 출력).
-하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 이메일 인증,
+하지 않는 일: HTTP 라우트·쿠키 설정(backend/api/auth.py 등 backend/api/), 테이블 생성(db/*.sql), 메일 전송(services/mail.py)·이메일 토큰 처리(auth_email.py),
 회로·대화·기억·견적의 사용자별 권한 검증(해당 기능 구현 후 추가).
 출처: SPEC.md 4절(인증·가입·관리자 계약)·8.6절(로그인 AC), docs/specs/login-auth.md, backend/BACKEND.md.
 읽는 환경변수: DATABASE_URL(필수), AUTH_SECRET(세션 토큰 HMAC 키, 32바이트 이상, DEMO_MODE!=1이면 필수),
 DEMO_MODE(기본 1), AUTH_ORIGIN(허용 Origin, 기본 http://localhost:8000), K_SERVICE(Cloud Run이 넣음, 있으면 X-Forwarded-For로 IP 판단).
-테이블 정의는 db/003_auth.sql·005·006·021.
+테이블 정의는 db/020_service_baseline.sql과 추가 인증 SQL 027·029·030을 따른다. 옛 서비스 증분 SQL은 db/legacy/ 이력이다.
 """
 import getpass
 import argparse
@@ -38,10 +39,13 @@ EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 N, R, P = 2**17, 8, 1
 SIGNUP_IP_DAILY = 3  # 클라이언트 IP당 UTC 하루 가입 요청 상한(11-09 결정)
 LOGIN_IP_FAILURES = 30  # 클라이언트 IP당 15분 로그인 실패 상한. 닿으면 그 IP를 15분 잠근다(11-09 결정)
-# 데모 모드 버튼 로그인 계정(db/007_demo_accounts.sql이 새 볼륨에 만듦). 로컬 데모 전용 일반 사용자이고 평가 계정이 아니다
+# 데모 모드 버튼 로그인 계정(첫 데모 로그인 때 demo_session이 만든다). 로컬 데모 전용 일반 사용자이고 평가 계정이 아니다
 DEMO_ACCOUNTS = {"a": "demo-a@example.test", "b": "demo-b@example.test"}
 # [왜] scrypt 형식이 아닌 표식이라 verify_password가 늘 False다(비밀번호 로그인 불가). 버튼 로그인은 이 표식을 가진 계정만 받는다
 DEMO_PASSWORD_HASH = "demo-button-login-only"
+# [왜] Google로 가입한 계정은 비밀번호가 없다. scrypt 형식이 아닌 표식이라 verify_password가 늘 False이고(비밀번호 로그인 401),
+#      DEMO_PASSWORD_HASH와 달라 데모 버튼 로그인(demo_session)에도 걸리지 않는다
+GOOGLE_PASSWORD_HASH = "google-login-only"
 
 
 def validate_auth_configuration() -> None:
@@ -93,6 +97,11 @@ def verify_password(password: str, encoded: str | None) -> bool:
         return hmac.compare_digest(actual, bytes.fromhex(expected))
     except (ValueError, TypeError):
         return False
+
+
+def purge_expired_sessions(conn) -> None:
+    """만료된 auth_sessions 행을 지운다. [왜] 세션을 발급하는 모든 경로가 부르므로 만료 행이 쌓이지 않는다(인덱스 ix_auth_sessions_expires)."""
+    conn.execute("DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP")
 
 
 def connection():
@@ -213,6 +222,7 @@ def google_session(issuer: str, subject: str, *, admin_only: bool = False) -> tu
         if not user or not user[1] or (admin_only and user[0] != "admin") or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
             return None
         token = secrets.token_urlsafe(32)
+        purge_expired_sessions(conn)
         conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
         return token, user_id
 
@@ -250,6 +260,7 @@ def complete_google_user(request_id: str, ip: str, *, user_id: int | None = None
             conn.execute('INSERT INTO auth_google_identities(issuer,subject,user_id) VALUES (%s,%s,%s)', (issuer,subject,user_id))
             conn.execute('DELETE FROM auth_google_pending WHERE request_id=%s', (request_id,))
             token = secrets.token_urlsafe(32)
+            purge_expired_sessions(conn)
             conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP+INTERVAL '8 hours')",
                          (session_token_hash(token),user_id))
             return token, user_id
@@ -331,7 +342,7 @@ def authenticate(email: str, password: str, ip: str, *, issue_session: bool = Tr
         # [왜] 무작위 이메일로 시도 행이 끝없이 쌓이지 않게, 창·잠금이 끝난 행(지워도 같은 결과)과 만료 세션을 함께 지운다
         cur.execute("DELETE FROM auth_login_attempts WHERE (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP) AND (window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes')")
         cur.execute("DELETE FROM auth_login_ip_attempts WHERE (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP) AND (window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes')")
-        cur.execute("DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP")
+        purge_expired_sessions(cur)
         # [왜] 이메일 원문 대신 sha256(key)로 시도 기록을 남기고, 행이 없으면 만들어 아래 FOR UPDATE로 잠글 대상을 확보한다
         cur.execute("INSERT INTO auth_login_attempts (login_hash) VALUES (%s) ON CONFLICT DO NOTHING", (key,))
         cur.execute("SELECT failed_count, locked_until > CURRENT_TIMESTAMP, window_started_at IS NULL OR window_started_at <= CURRENT_TIMESTAMP - INTERVAL '15 minutes' FROM auth_login_attempts WHERE login_hash = %s FOR UPDATE", (key,))
@@ -420,25 +431,35 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
         user = cur.fetchone()
         if not user:
             return None  # [주의] 예외 없이 끝내야 위 가입 횟수가 커밋된다
+        purge_expired_sessions(cur)
         token = secrets.token_urlsafe(32)
         cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]
 
 
 def demo_session(account: str) -> tuple[str, int] | None:
-    """데모 버튼 로그인: 시드한 데모 계정(A · B)에 새 세션을 발급한다(데모 모드 확인은 호출자 backend/api/auth.py가 한다).
+    """데모 버튼 로그인: 데모 계정(A · B)에 새 세션을 발급한다. 계정이 없으면 이 때 만든다(11-11 결정: 007 시드 대신).
 
-    [주의] 정해진 이메일이고, 비밀번호 표식(DEMO_PASSWORD_HASH)을 가진 활성 일반 사용자일 때만 받는다.
+    [주의] DEMO_MODE=1이 아니면 계정을 만들지 않고 None이다(호출자 backend/api/auth.py도 먼저 404로 막는다).
+    정해진 이메일이고, 비밀번호 표식(DEMO_PASSWORD_HASH)을 가진 활성 일반 사용자일 때만 세션을 준다.
     같은 이메일로 가입한 계정(비밀번호 해시가 있음) · 관리자 · 비활성 계정에는 세션을 주지 않는다.
     Returns:
-        (세션 토큰, user_id). 그런 데모 계정이 없으면 None(호출자가 404).
+        (세션 토큰, user_id). 세션을 줄 수 없으면 None(호출자가 404).
     """
+    if os.getenv("DEMO_MODE", "1") != "1":
+        return None
+    find = "SELECT id FROM users WHERE login_id=%s AND password_hash=%s AND role='user' AND is_active FOR UPDATE"
+    args = (DEMO_ACCOUNTS[account], DEMO_PASSWORD_HASH)
     with connection() as conn:
         # [왜] 로그인 · 비활성화와 같이 사용자 행을 FOR UPDATE로 잠가 비활성화와 세션 발급이 엇갈리지 않게 한다
-        user = conn.execute("SELECT id FROM users WHERE login_id=%s AND password_hash=%s AND role='user' AND is_active FOR UPDATE",
-                            (DEMO_ACCOUNTS[account], DEMO_PASSWORD_HASH)).fetchone()
+        user = conn.execute(find, args).fetchone()
+        if not user:
+            # [왜] 없을 때만 넣는다(DO NOTHING은 id 번호만 소모). 동시 첫 로그인이 겹쳐도 login_id UNIQUE로 한 행만 남고, 다시 찾는다
+            conn.execute("INSERT INTO users (login_id, password_hash, role) VALUES (%s, %s, 'user') ON CONFLICT (login_id) DO NOTHING", args[:2])
+            user = conn.execute(find, args).fetchone()
         if not user:
             return None
+        purge_expired_sessions(conn)
         token = secrets.token_urlsafe(32)
         conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]
@@ -448,7 +469,7 @@ def current_user(request: Request) -> tuple[int, str]:
     """세션 쿠키로 로그인한 사용자를 찾고 마지막 접속 시각을 갱신한다(FastAPI 의존성).
 
     Returns:
-        (user_id, role). 비활성 계정·만료(절대 8시간)·유휴 30분 초과 세션은 인정하지 않는다.
+        (user_id, role). 비활성 계정·만료(절대 8시간)·유휴 2시간 초과 세션은 인정하지 않는다.
     Raises:
         HTTPException: 401, 쿠키가 없거나 세션이 유효하지 않을 때.
     """
@@ -458,8 +479,8 @@ def current_user(request: Request) -> tuple[int, str]:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
     digest = session_token_hash(token)
     with connection() as conn, conn.cursor() as cur:
-        # [왜] 유효성 검사(활성·절대 만료·유휴 30분)와 last_seen_at 갱신을 UPDATE 한 문장으로 해 검사와 갱신 사이 틈을 없앤다
-        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '30 minutes' RETURNING s.user_id, u.role", (digest,))
+        # [왜] 유효성 검사(활성·절대 만료·유휴 2시간)와 last_seen_at 갱신을 UPDATE 한 문장으로 해 검사와 갱신 사이 틈을 없앤다
+        cur.execute("UPDATE auth_sessions s SET last_seen_at = CURRENT_TIMESTAMP FROM users u WHERE s.token_hash = %s AND s.user_id = u.id AND u.is_active AND s.expires_at > CURRENT_TIMESTAMP AND s.last_seen_at > CURRENT_TIMESTAMP - INTERVAL '2 hours' RETURNING s.user_id, u.role", (digest,))
         row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
@@ -586,9 +607,9 @@ def provision() -> None:
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--hash-only", action="store_true", help="print a scrypt hash without creating an account")
     action.add_argument("--delete-user-id", type=int, help="delete a disabled user account by ID")
-    action.add_argument("--approve-google", action="store_true", help="approve a verified Google link request")
     action.add_argument("--revoke-google-user-id", type=int, help="revoke a Google link and its existing sessions")
     action.add_argument("--disable-admin-id", type=int, help="disable an administrator and revoke all sessions")
+    action.add_argument("--approve-google", action="store_true", help="approve a verified Google link request")
     args = parser.parse_args()
     if args.approve_google:
         request_id = input("Google request ID: ").strip()

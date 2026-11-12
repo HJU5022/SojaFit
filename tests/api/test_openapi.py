@@ -127,7 +127,6 @@ NOW = datetime(2026, 11, 10, 9, 0, tzinfo=timezone.utc)
 THREAD, RUN = str(uuid4()), str(uuid4())
 JUDGED = {'answer': '대체할 수 있습니다.', 'question_type': 'candidate_judge',
           'judgement': {'kind': 'judge', 'results': [{'part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}]}}
-SNAPSHOT = {'candidate': {'part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}}
 # 화면이 읽는 칸(frontend/src/api/*.ts의 타입). 응답 모델이 칸을 지우면 아래 시험이 깨진다
 USER_ID, ENABLED, OK = {'user_id'}, {'enabled'}, {'ok'}
 ACCOUNT = {'id', 'email', 'role', 'is_active'}
@@ -151,9 +150,9 @@ CASES = [
     ('get', '/api/demo-circuits', None, {}, None, {'id', 'name', 'schematic'}),
     ('post', '/api/messages/9/approvals', {'candidate_part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}, {},
      [('completed', JUDGED), (3, NOW), (4,)], APPROVAL),
-    ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [(SNAPSHOT,), (5, NOW)], QUOTE),
+    ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW)]], QUOTE),
-    ('get', '/api/approved-cases', None, {}, [[(4, 3, SNAPSHOT, NOW)]], CASE),
+    ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
     ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status'}),
     ('post', '/api/projects/1/threads', None, {}, [(1,), (THREAD,)], {'id', 'project_id'}),
     ('get', f'/api/runs/{RUN}', None, {}, [(RUN, THREAD, 'completed', JUDGED, 12)], {'id', 'thread_id', 'message_id', 'result'}),

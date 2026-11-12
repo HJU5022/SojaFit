@@ -12,6 +12,7 @@
 실행: `uv run pytest -q tests/evals`(저장소 루트).
 
 ## 파일
+- `test_score_ragas.py` — Ragas 채점 실행기 회귀
 
 - T2고정근거무료준비: `test_injection_baseline.py`는실제서비스/문서입력조립+가짜모델에서정상/공격×current/ablated4작업의보호전체본문/4사실/공격문/바이트상한과원본110계획불변을검사한다. 문서미반환·한사실누락·질문에만본문존재·검색후필터제외의음성대조는노출조건미충족이어야한다. 공급자/DB/네트워크는차단하고실제방어성공은채점하지않는다.
 - T7재스모크계약: 계획/실행기검사는--t7-smoke의current정상·공격2작업·준비0·독립scope/상한·원본전체잠금유지/가짜실행과승인없음차단을확인한다.
@@ -20,11 +21,15 @@
 - `test_injection_baseline.py` — 기본 계획110행·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단·T1~T7 실제 그래프+가짜 공급자·T6 실제 message/가짜 SQL·사양 오염 자동채점·인용 위치·공급자 전 바이트 한도·Windows 저장 재시도 검사 탐색4작업·다른scope승인거부·4DB선택·검색/입력조립/응답노출구분도검사한다.
 - `test_injection_baseline_plan.py` — 110개 짝·변경 위치 하나·정답 필드 제외·T2 보호 사실 비노출 전제·T5 양쪽 native fallback·T7 정규화/연결 보존·예산식·오프라인 명령/덮어쓰기 거부 검사 탐색4작업/고유작업ID/1558본문/독립잠금과$2예산도확인한다.
 - `test_injection_preflight.py` — 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, Voyage 포함 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점을 확인한다
+- `test_import_human_review.py` — 사람 채점 시트 변환(O/X/보류 파싱 · 미채점 건너뜀 · human_review 채움 · 일치율 · 원본 덮어쓰기 거부), 합성 시트만(DB 없음)
+- `test_check_injection_result.py` — 저장한 실측03이 기준을 통과하고, 작업 수 · 상태 · 판정 기준 · 노출 전제를 깬 변이는 실패로 바뀜(키 없음)
 - `test_run_graph.py`의 운영 준비 검사 — run_thread_validation의 dry-run/ID·덮어쓰기 거부, 공급자 보고 비용 누락/null·본문 제외 확인
 - `EVALS.md` — 이 문서
 - `test_frozen_evals.py` — `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지 확인. `FROZEN.json`이 없으면 검사하지 않고 통과합니다
 - `test_retrieval_d3.py` — D3 검색 측정 실행기: gold 줄의 모든 쪽 풀기(이어 적은 쪽·범위), Page Hit·회수율·Full Recall·회수 가능만·중복 제거 nDCG, 실패 유형 4종, 정확 부호 검정, no_result 임계값을 가짜 청크로 확인(데이터·API 없이)
 - `test_retrieval_service.py` — 서비스 경로 재측정 실행기: 지표 정의, R1 1위 칸과 상위 5개 대조, 백분위·상한, 파일 이름 대응, 오류 문항 건너뛰기를 가짜 retrieve로 확인(DB·API 없이)
+- `test_stage_timing.py` — 단계 시간 기록기: LLM 호출마다 노드 이름 · 토큰 · 보고 비용 · 캐시 토큰, 옛 영어 이름 '건너뜀' 행 없음, Voyage 호출 종류별 기록과 복원, 집계의 p50(진짜 중앙값) · p95(가까운 순위) 정의, 오류 행 대체. `run_gate.main`의 trace별 점수·실제 호출 수·실행 조건·오류 문항과 점수 전송 장애 시 결과 보존도 가짜 클라이언트로 확인
+- `test_approval_wait_report.py` — 승인 대기 보고: 합성 이벤트로 재개 · 승인 대기를 서버 시간과 떼어 계산하고 3초 이내 자동 호출을 사람 대기에서 빼며 대화 id를 출력하지 않는지, 일회용 DB(`TEST_THREAD_DATABASE_URL`)에서 읽기 전용 연결 · 제외 사용자
 - `test_run_graph.py` — 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑는지, 거절이면 점수를 빼는지, 단일 · 멀티 거절 사유 코드를 같은 이름으로 세는지, 단일 · 멀티 모두 MCP 서버를 열어 사실 확인에 쓰고 찾기 · 판정 값은 카드 도구로 잇는지(가짜 MCP · 가짜 카드 도구), 판정 인터럽트를 빈 답으로 한 번만 재개하는지 확인(Langfuse·LLM 없이)
 - `test_run_judge_dev.py` — 판정 연습 문제 채점: 판정 문항의 역할 · 판정 일치, 찾기 문항의 보여 준 후보 · 판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기. 실제 그래프는 돌리지 않음
 - `test_supervisor_models.py` — 동결 입력·schema 재시도·provider 중단·예산·집계·증거 hash를 API 호출 없이 검증

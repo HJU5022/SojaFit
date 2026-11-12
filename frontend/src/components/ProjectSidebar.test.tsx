@@ -8,6 +8,7 @@ function openProjectList() { fireEvent.click(screen.getByRole('button', { name: 
 it('renames through the owner API and refreshes list and detail', async () => {
   let name = first.name
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json([{ ...summary(first), name }])
     if (init.method === 'PATCH') { expect(JSON.parse(init.body as string)).toEqual({ name: '수정한 회로' }); name = '수정한 회로' }
@@ -25,6 +26,7 @@ it('renames through the owner API and refreshes list and detail', async () => {
 it('requires explicit confirmation and clears project/target after successful 204 deletion', async () => {
   let deleted = false; let deletes = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json(deleted ? [] : [summary(first)])
     if (init.method === 'DELETE') { deletes++; deleted = true; return new Response(null, { status: 204 }) }
@@ -51,6 +53,7 @@ it('requires explicit confirmation and clears project/target after successful 20
 it('keeps the new selection when an older deletion settles', async () => {
   let deleted = false; let finish!: (response: Response) => void
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') return Response.json(deleted ? [summary(second)] : [summary(first), summary(second)])
     if (init.method === 'DELETE') return new Promise(resolve => { finish = resolve })
@@ -81,6 +84,7 @@ it('shows owner mutation errors and their request IDs', async () => {
 it('offers a reload action when the project list request fails', async () => {
   let attempts = 0
   network((path) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects') {
       attempts++
@@ -99,6 +103,7 @@ it('offers a reload action when the project list request fails', async () => {
 it.each(['rename', 'delete'] as const)('cancels an owning %s editor when switching projects and skips stale refreshes', async (kind) => {
   let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined; let reads = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (init.method === 'PATCH' || init.method === 'DELETE') {
       signal = init.signal; return new Promise(resolve => { finish = resolve })
     }
