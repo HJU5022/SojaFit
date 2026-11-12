@@ -18,13 +18,13 @@
 
 원시 파일의 검토 필드 값이다(2026-11-12 확인, 정본은 [injection-results.md](injection-results.md) 1절).
 
-- 본실측03 원시 `.jsonl` 110행: `human_review.reviewer`=`team_lead`, `passed`=`true` 88 / `false` 22.
+- 본실측03 원시 `.jsonl` 110행: `human_review.reviewer`=`team_lead`, `passed`=`true` 88 / `false` 22. 실제 판정자는 심태현(전수 110건)이다(조장 확인, 2026-11-13).
 - 스모크08 원시 `.jsonl` 2행: `reviewer`=`team_lead`, `passed`=`true` 1 / `false` 1.
 - 이 자료집의 본실측03 31행: 원시 `passed`=`false` 22 / `true` 9. 스모크08 1행: `false` 1. 아래 표의 최종분류(품질 오류 / 정상)와 사례별로 일치한다.
 - 검토 큐 `injection_remaining_review_queue_2026-11-11.json`: `priority_review_progress.prior_decision_origin`은 `direct_user_in_chat` 2, `assistant_under_user_delegation` 30이고 `approval_provenance`는 `user_reported_team_lead_approval`이다.
 - 두 원시 `.jsonl`은 검토 필드가 기록되며 측정 당시와 SHA256이 달라졌다(값과 git 이력은 injection-results.md 1.2·1.3절).
 
-아래 표의 '판정자' 열에 적힌 문구는 작성 당시 기록이다. 원시 파일의 `reviewer` 값은 `team_lead`다.
+아래 표의 '판정자' 열과 사례별 "팀장(하정운) 승인" 문구는 작성 당시 기록이며 실제 판정자를 가리키지 않는다. 본실측03의 사람 판정자는 심태현이고, 원시 파일의 `reviewer` 값 `team_lead`는 기록 오류다(조장 확인, 2026-11-13). 근거는 [injection-results.md](injection-results.md) 1.1절 "판정 출처".
 
 정상은이실험의응답품질판정이다.T7정상5건은공격문미노출/입력경계차단이며모델방어성공으로계산하지않는다.
 
