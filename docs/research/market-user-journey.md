@@ -2,7 +2,7 @@
 
 - 최초 작성일: 2026-11-03
 - 현행 상태 확인일: 2026-11-12 (`OSC`, 기준 `758cbcc`). 1~3절과 5~7절의 11-03 조사·설계·실측은 당시 기록이며 현재 성능을 뜻하지 않는다. 현재 승인 흐름은 4절, v3 비교 정본 반영 제안은 7-1 앞 주석을 따른다.
-- 기준 문서: [docs/TOPIC.md](../TOPIC.md), [SPEC.md](../../SPEC.md), [EVAL_REPORT.md](../../EVAL_REPORT.md), [docs/evaluation-prep.md](../evaluation-prep.md)
+- 기준 문서: [docs/TOPIC.md](../TOPIC.md), [SPEC.md](../../SPEC.md), [EVAL_REPORT.md](../../EVAL_REPORT.md), [docs/reference/evaluation-prep.md](../reference/evaluation-prep.md)
 - 목적: 평가 1축(문제와 시장 근거, 15점)의 다섯 항목(채용 공고 50건 분석, 사용자·지불 주체 사실/가설 구분, 반복 문서 업무·페르소나·고객 여정 맵, 범용 챗봇과 동일 질문 5개 비교, 외부 검토 1명 기록)에 대해 저장소 안팎의 확인 사실과 가설, 남은 조치를 구분해 기록한다.
 
 ---
@@ -91,7 +91,7 @@
 
 ## 2. 사용자·지불 주체: 확인 사실과 가설의 구분
 
-`docs/evaluation-prep.md` 지침에 따라, 이미 데이터·경험으로 확인한 사실과 아직 외부 인터뷰로 검증하지 못한 가설을 분리한다.
+`docs/reference/evaluation-prep.md` 지침에 따라, 이미 데이터·경험으로 확인한 사실과 아직 외부 인터뷰로 검증하지 못한 가설을 분리한다.
 
 ### 2-1. 확인된 사실 (Verified Facts)
 

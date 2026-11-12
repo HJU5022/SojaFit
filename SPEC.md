@@ -1,6 +1,6 @@
 # SojaFit SPEC
 
-이 문서는 SojaFit 기능의 정본입니다. 다른 문서와 내용이 다르면 이 문서를 따릅니다. 코드나 기준을 바꾸면 해당 절을 같은 PR에서 고칩니다. 바뀐 결정의 이유는 `docs/adr/`에 두고, 여기에는 현재 값만 둡니다. 날짜는 README 일정 표에, 담당과 수정 경로는 `docs/조원-계약서.md`에 둡니다.
+이 문서는 SojaFit 기능의 정본입니다. 다른 문서와 내용이 다르면 이 문서를 따릅니다. 코드나 기준을 바꾸면 해당 절을 같은 PR에서 고칩니다. 바뀐 결정의 이유는 `docs/adr/`에 두고, 여기에는 현재 값만 둡니다. 날짜는 README 일정 표에, 담당과 수정 경로는 `docs/reference/team-contract.md`에 둡니다.
 
 아직 정하지 않은 칸은 `(정할 것)`으로 둡니다.
 
@@ -103,11 +103,11 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 답 조립의 출력 경계(11-10, STH 제안 · 조장 반영): `Spec 에이전트`의 판정(kind=judge) 보고가 하나라도 있으면(판정 성공 · 실패와 관계없이) `답 정리` · `종합` 모두 코드 판정 답 틀(`render_judgement`: 판정 · 조건 표 · 인용 · 빠진 값 · 불확실 조건)만 냅니다. RAG 에이전트 답과 종합 LLM 글은 판정 답에 붙이지 않고, 이때 종합 LLM은 부르지 않습니다. 판정과 함께 물은 별도 문서 설명은 "별도로 요청한 문서 설명은 이 답변에 포함하지 않았습니다"로 알리고, 일부 판정이 실패 · 미완료면 "일부 부품의 판정은 완료하지 못했습니다", 모두 실패면 "판정을 완료하지 못했습니다"를 냅니다. 원래 보고(`reports`)는 그대로 두고 `답 검사`는 답에 쓴 판정 보고(`final_reports`)만 봅니다. 문서만 묻는 질문, 찾기(find), 규칙 밖 역할(no_rule)은 예전처럼 문서 답 · 종합을 씁니다.
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py`의 `_chat_model`). 11-09 조장 결정에 사용한 저장소 밖 lab v3 50문항 실행에서는 정확도가 유지되고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었습니다. 그 측정은 동결 전 lab v3 초안으로 했고 원시 결과는 저장소 밖에 있어, 이 수치는 구현 결정 근거이며 G5 공식 점수로 세지 않습니다(v3는 11-10에 `evals/dataset_v3.jsonl`로 동결).
-- `docs/조원-계약서.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
+- `docs/reference/team-contract.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
 
 ### 설계 질문
 
-`docs/조원-계약서.md`의 "조가 채울 것" 8문항에 답이 정해지면 이 절로 옮깁니다.
+`docs/reference/team-contract.md`의 "조가 채울 것" 8문항에 답이 정해지면 이 절로 옮깁니다.
 
 ## 3. 대체 판정 5종
 

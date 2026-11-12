@@ -1,6 +1,6 @@
 # 아키텍처와 조원 계약서
 
-조의 설계를 그림과 글로 남기는 자리입니다. 발표와 `EVAL_REPORT.md`가 이 문서를 가리킵니다. 아래 요청 흐름은 프로젝트를 시작할 때의 초기 안입니다. 지금 그래프 구조는 `SPEC.md` 2절 "그래프"와 [MULTI_AGENT.md](../backend/multi_agent/MULTI_AGENT.md)를 따르고, 초기 안의 검색 · 작성 · 검증 에이전트는 RAG 에이전트 · Spec 에이전트로 바뀌었습니다.
+조의 설계를 그림과 글로 남기는 자리입니다. 발표와 `EVAL_REPORT.md`가 이 문서를 가리킵니다. 아래 요청 흐름은 프로젝트를 시작할 때의 초기 안입니다. 지금 그래프 구조는 `SPEC.md` 2절 "그래프"와 [MULTI_AGENT.md](../../backend/multi_agent/MULTI_AGENT.md)를 따르고, 초기 안의 검색 · 작성 · 검증 에이전트는 RAG 에이전트 · Spec 에이전트로 바뀌었습니다.
 
 ## 요청 흐름 (초기 안)
 

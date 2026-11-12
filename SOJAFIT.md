@@ -763,9 +763,11 @@ SojaFit (proj3-b)
 │   ├── DOCS.md             <- 폴더 설명
 │   ├── TOPIC.md            <- 통과한 주제서 (고정: 과제 가이드 경로)
 │   ├── GATES.md            <- 필수 게이트 G1~G7 자기 점검과 증거 (고정: 과제 가이드 경로)
-│   ├── evaluation-prep.md  <- 배점·가산 항목별 준비 점검
-│   ├── 조원-계약서.md      <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
-│   ├── glossary.md         <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
+│   ├── reference/          <- 여러 문서가 가리키는 참조 문서: 계약서, 용어집, 평가 준비 점검표
+│   │   ├── REFERENCE.md    <- 폴더 설명
+│   │   ├── team-contract.md <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
+│   │   ├── glossary.md     <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
+│   │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
 │   ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
 │   │   ├── ASSETS.md       <- 폴더 설명
 │   │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
@@ -962,6 +964,7 @@ SojaFit (proj3-b)
 | `scripts/eval/` | [EVAL.md](scripts/eval/EVAL.md) | 에이전트·평가 |
 | `docs/` | [DOCS.md](docs/DOCS.md) | 평가·문서 |
 | `docs/assets/` | [ASSETS.md](docs/assets/ASSETS.md) | 평가·문서 |
+| `docs/reference/` | [REFERENCE.md](docs/reference/REFERENCE.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
 | `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 기능의 담당 |
