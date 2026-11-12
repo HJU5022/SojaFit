@@ -216,3 +216,57 @@ def test_input_condition_allowlist_ignores_private_or_malformed_items():
     result = result_dto({'judgement': {'kind': 'judge'}}, request_id='req', input_conditions=rows).judgement
     assert result['input_conditions'] == [{'code': 'v_in_max', 'value': '20 V'}]
     assert 'private' not in str(result)
+
+
+def test_verified_grade2_row_survives_storage_and_reopen_with_exact_pdf_hash():
+    from backend.conversations.dto import public_state, result_dto, stored_evidence
+    from backend.conversations.models import SafeResult
+    url = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_K2301.pdf'
+    row = {'page': 2, 'row': 'Reverse voltage', 'table': 'Maximum ratings',
+           'file': 'SS34_K2301.pdf', 'chunk_id': 'W1', 'source_type': 'external_web',
+           'evidence_grade': 2, 'source_sha256': 'a' * 64, 'source_url': url}
+    state = public_state({'docs': [row], 'final_reports': [{'evidence_ids': ['W1']}]})
+    live = result_dto(state, request_id='live').evidence
+    saved = SafeResult(evidence=stored_evidence(live)).model_dump()
+    reopened = result_dto(saved, request_id='reload').evidence
+    assert live == reopened
+    assert len(live) == 1
+    assert (live[0]['source_url'], live[0]['source_sha256'], live[0]['evidence_grade']) == (
+        url + '#page=2', 'a' * 64, 2)
+    assert 'cells' not in saved['evidence'][0]
+
+
+def test_judge_grade2_citation_and_evidence_keep_provenance_on_reload():
+    from backend.conversations.dto import result_dto, safe_judgement, stored_evidence
+    from backend.conversations.models import SafeResult
+    url = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34_K2301.pdf'
+    cite = {'document': 'SS34_K2301.pdf', 'page': 1, 'table': 'Maximum ratings',
+            'row': 'Reverse voltage', 'source_url': url, 'source_sha256': 'b' * 64, 'evidence_grade': 2}
+    state = {'judgement': {'kind': 'judge', 'results': [{'part': 'SS34', 'verdict': 'NOT_VERIFIED',
+            'checks': [{'code': 'VRRM', 'citation': cite}]}]}}
+    live = result_dto(state, request_id='live')
+    saved = SafeResult(evidence=stored_evidence(live.evidence), judgement=safe_judgement(live.judgement)).model_dump()
+    reopened = result_dto(saved, request_id='reload')
+    assert live.evidence == reopened.evidence
+    assert live.judgement == reopened.judgement
+    for item in (live.evidence[0], live.judgement['results'][0]['checks'][0]['citation']):
+        assert item['source_url'] == url + '#page=1'
+        assert item['source_sha256'] == 'b' * 64
+        assert item['evidence_grade'] == 2
+
+
+def test_web_references_survive_refusal_and_reload_without_becoming_rating_evidence():
+    from backend.conversations.dto import public_state, result_dto, stored_evidence
+    from backend.conversations.models import SafeResult
+    url = 'https://www.diodes.com/datasheet/download/BAT54.pdf'
+    report = {'references': [{'source_url': url}, {'source_url': url}, {'source_url': 'file:///secret'}]}
+    public = public_state({'answer': '지정한 정격을 확인할 수 없습니다.', 'final_reports': [report]})
+    live = result_dto(public, request_id='test', status='refused')
+    saved = SafeResult(answer=live.answer, evidence=stored_evidence(live.evidence)).model_dump()
+    reopened = result_dto(saved, request_id='test', status='refused')
+    assert live == reopened
+    assert live.answer.count(url) == 1 and '미검증 참고 정보' in live.answer
+    assert len(live.evidence) == 1 and not live.judgement
+    item = live.evidence[0]
+    assert (item['evidence_grade'], item['citation_number'], item['source_url']) == (3, 'R1', url)
+    assert not item['row'] and not item['page']
