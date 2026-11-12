@@ -12,7 +12,8 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 
 
-def test_thread_delete_requires_login():
+def test_thread_delete_requires_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     with TestClient(app, raise_server_exceptions=False) as client:
         assert client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN).status_code == 401
 
@@ -104,7 +105,8 @@ def test_recover_is_owned_origin_checked_and_never_calls_analysis(web):
     assert repo.calls == ['recover']
 
 
-def test_recover_requires_login():
+def test_recover_requires_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     with TestClient(app, raise_server_exceptions=False) as client:
         assert client.post(f'/api/runs/{uuid4()}/recover', headers=ORIGIN).status_code == 401
 

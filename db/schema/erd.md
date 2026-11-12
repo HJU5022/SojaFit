@@ -18,6 +18,7 @@ erDiagram
     threads ||--o{ messages : "thread_id (CASCADE)"
     threads ||--o{ runs : "thread_id (CASCADE)"
     threads ||--o| agent_threads : "id (CASCADE)"
+    users |o--o{ auth_email_challenges : "user_id (CASCADE)"
     users ||--o{ agent_analysis_usage : "user_id (CASCADE)"
     users ||--o{ agent_threads : "user_id (CASCADE)"
     users ||--o{ approvals : "user_id (CASCADE)"
@@ -35,6 +36,7 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
         text role
+        timestamptz email_verified_at
     }
     auth_sessions {
         char(64) token_hash PK
@@ -70,6 +72,26 @@ erDiagram
         text issuer PK
         text subject PK
         bigint user_id FK, UK
+    }
+    auth_google_pending {
+        text request_id PK
+        text issuer
+        text subject
+        text email
+        timestamptz expires_at
+    }
+    auth_email_challenges {
+        varchar(100) email PK
+        text purpose PK
+        char(64) token_hash UK
+        bigint user_id FK
+        timestamptz created_at
+        timestamptz expires_at
+    }
+    auth_email_send_limits {
+        char(64) key_hash PK
+        timestamptz window_start
+        int request_count
     }
     projects {
         bigint id PK
@@ -184,7 +206,7 @@ erDiagram
 
 ## 선이 없는 표
 
-- 다른 표와 FK가 없다(해시 키 · 날짜 키로만 식별): `public.auth_login_attempts` · `public.auth_login_ip_attempts` · `public.auth_signup_attempts` · `public.auth_google_states` · `public.app_migrations` · `sojafit_agent.analysis_service_usage`
+- 다른 표와 FK가 없다(해시 키 · 날짜 키로만 식별): `public.auth_login_attempts` · `public.auth_login_ip_attempts` · `public.auth_signup_attempts` · `public.auth_google_states` · `public.auth_google_pending` · `public.auth_email_send_limits` · `public.app_migrations` · `sojafit_agent.analysis_service_usage`
 
 ## 코퍼스 · LangGraph 표(이 문서 범위 밖)
 

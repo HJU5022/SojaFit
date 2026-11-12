@@ -32,3 +32,12 @@ it('keeps a pipe table with hostile cells safe', () => {
   expect(container.querySelectorAll('td')).toHaveLength(2)
   expect(container.querySelector('img, a, [onerror]')).toBeNull()
 })
+
+it('preserves safe formatting when a caller renders citation text', () => {
+  const { container } = render(<SafeMarkdown text={'**근거** [1]\n\n| 값 | 문서 |\n|---|---|\n| 40 V | [1] |\n\n[외부](https://evil.invalid) <img src=x>'}
+    renderText={text => text.split(/(\[1\])/).map((part, index) => part === '[1]' ? <button key={index}>문서 근거 [1] 보기</button> : part)} />)
+  expect(screen.getAllByRole('button', { name: '문서 근거 [1] 보기' })).toHaveLength(2)
+  expect(container.querySelector('strong')).toHaveTextContent('근거')
+  expect(screen.getByRole('table')).toBeInTheDocument()
+  expect(container.querySelector('a, img, script')).toBeNull()
+})

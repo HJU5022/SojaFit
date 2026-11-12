@@ -1,5 +1,9 @@
 # backend
 
+- 2026-11-12 이메일 인증 구현: auth_email.py는 Gmail 인증 가입·암호 재설정·메일 한도를 담당한다. 기존 auth.signup은 내부/기존 회귀용이며 공개 가입 API는 검증된 토큰 없이 계정을 생성하지 않는다. 운영 적용에는029 추가 SQL이 먼저 필요하다.
+
+- 2026-11-12 auth.validate_new_password는 신규 설정 비밀번호만 검사한다(12~1024자·공백뿐/숫자만/단순반복 차단). verify_password와 기존 로그인·해시는 그대로다.
+
 ## 역할
 - 이 폴더: 서비스 코드 전부를 둡니다. Dockerfile이 이 폴더를 이미지에 복사합니다. FastAPI 진입점(앱 조립)과 로그인 · 세션 처리가 직접 들어 있고, HTTP 경로와 나머지는 하위 폴더에 나뉩니다.
 - 넣는 것: API 진입점(`main.py`)과 진입점에서 나눈 공통 오류 코드(`errors.py`) · JSON 로그(`logs.py`), 로그인·세션·계정 관리(`auth.py`), 하위 모듈 폴더. 공통 오류 · 로그는 라우터 · 서비스도 import해 `main.py`에 두면 순환 import가 된다. 사용자별 장기 기억 규칙(`memory.py`)은 `graph/`에 있습니다.
@@ -25,3 +29,7 @@
 - `judge/` — 회로 역할·대체 조건·판정의 결정적 코드: 역할 규칙 파일(`rules/roles.yaml`), 기준식 계산, 시험 조건 비교, 판정 5종 · 찾기 조건 · 후보 정렬. [JUDGE.md](judge/JUDGE.md)
 - `web/` — API 등록 뒤 빌드한 React 화면을 같은 출처로 연결(미빌드면 화면 주소도 공통 404). [WEB.md](web/WEB.md)
 - `mcp_skill/` — 가산: MCP 서버와 도메인 Skill. [MCP_SKILL.md](mcp_skill/MCP_SKILL.md)
+
+Google 일반 사용자 가입·연결은 `auth.complete_google_user`가 pending 소비·기존 id 연결·세션 생성을 원자적으로 처리한다. 비밀번호 없는 일반 계정은 NULL이며, 기존 비밀번호 재확인은 authenticate(issue_session=False)를 사용한다. 관리자 최초 연결 승인은 유지한다. 배포 전 027 SQL 적용이 필요하다.
+
+- `auth_email.py` — 이메일 인증 가입·재설정의 일회성 토큰/발송 한도/계정 행 잠금·세션 해제.

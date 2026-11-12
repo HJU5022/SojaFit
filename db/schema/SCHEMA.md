@@ -8,8 +8,8 @@
 
 ## 파일
 - `SCHEMA.md` — 이 문서
-- `erd.md` — 서비스 표 21개의 ERD(mermaid)와 표마다 하는 일. 자동 생성물
-- `table-definition.md` — 서비스 표 21개의 칸 · 제약 · 인덱스 · 트리거 정의서. 자동 생성물
+- `erd.md` — 서비스 표 24개의 ERD(mermaid)와 표마다 하는 일. 자동 생성물
+- `table-definition.md` — 서비스 표 24개의 칸 · 제약 · 인덱스 · 트리거 정의서. 자동 생성물
 - 둘 다 `uv run python scripts/db/gen_schema_docs.py`가 새 기준선 DB의 `pg_catalog`에서 만든다. 직접 고치지 않고, SQL을 바꾸면 다시 생성한다(`tests/db/test_schema_docs.py`가 어긋남을 실패로 잡는다).
 
 ## 보안 · 권한 (11-10 운영 DB 점검, `db/026_revoke_public_grants_and_rls.sql` · `db/020_service_baseline.sql`)

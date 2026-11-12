@@ -1,13 +1,15 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useState } from 'react'
 import { expect, it, vi } from 'vitest'
 import EvidencePanel from './EvidencePanel'
 import InterruptForm from './InterruptForm'
 import JudgementTable from './JudgementTable'
 import RunStatus from './RunStatus'
 import ProfileHints from './ProfileHints'
-import ConversationPanel, { SavedConversationPanel } from './ConversationPanel'
-import { createThread } from '../api/conversations'
+import ConversationPanel, { ConversationComposer, SavedConversationPanel } from './ConversationPanel'
+import type { ComposerDraft } from './ConversationPanel'
+import { createThread, listDemoQuestions } from '../api/conversations'
 
 const startRun = vi.fn()
 const resetRun = vi.fn()
@@ -15,7 +17,7 @@ const refreshRun = vi.fn()
 let mockedRunState: any = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
 vi.mock('../api/conversations', async () => {
   const actual = await vi.importActual<typeof import('../api/conversations')>('../api/conversations')
-  return { ...actual, listThreads: vi.fn().mockResolvedValue([]), createThread: vi.fn().mockResolvedValue({ id: 'thread-1' }) }
+  return { ...actual, listThreads: vi.fn().mockResolvedValue([]), createThread: vi.fn().mockResolvedValue({ id: 'thread-1' }), listDemoQuestions: vi.fn().mockResolvedValue([]) }
 })
 vi.mock('../hooks/useRunStream', () => ({
   useRunStream: () => ({
@@ -28,6 +30,229 @@ function renderConversation(props: Partial<React.ComponentProps<typeof Conversat
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(<QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" onResult={vi.fn()} {...props} /></QueryClientProvider>)
 }
+
+function ComposerHarness() {
+  const [draft, setDraft] = useState<ComposerDraft>({ question: '', files: [] })
+  return <ConversationComposer draft={draft} onDraftChange={setDraft} sendDisabled={false} onSend={startRun} />
+}
+
+it('keeps both question-answer pairs in one live thread without repeating the previous answer', async () => {
+  const previous = mockedRunState
+  mockedRunState = { status: 'idle' }
+  resetRun.mockImplementation(() => { mockedRunState = { status: 'idle' } })
+  startRun.mockClear(); vi.mocked(createThread).mockClear()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const ui = () => <QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" initialQuestion="첫 질문" onResult={vi.fn()} /></QueryClientProvider>
+  try {
+    const view = render(ui())
+    fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+    await waitFor(() => expect(startRun).toHaveBeenCalledTimes(1))
+    mockedRunState = { status: 'completed', runId: 'first-run', result: { answer: '첫 답변', evidence: [] } }
+    view.rerender(ui())
+    expect(screen.getByText('첫 답변')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('질문'), { target: { value: '두 번째 질문' } })
+    fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+    await waitFor(() => expect(startRun).toHaveBeenCalledTimes(2))
+    expect(screen.getByRole('heading', { name: '첫 질문' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '두 번째 질문' })).toBeInTheDocument()
+    expect(screen.getAllByText('첫 답변')).toHaveLength(1)
+    mockedRunState = { status: 'refused', runId: 'second-run', result: { answer: '두 번째 응답', evidence: [] } }
+    view.rerender(ui())
+    expect(screen.getByText('첫 답변')).toBeInTheDocument()
+    expect(screen.getByText('두 번째 응답')).toBeInTheDocument()
+    expect(vi.mocked(createThread)).toHaveBeenCalledTimes(1)
+  } finally { mockedRunState = previous; resetRun.mockReset() }
+})
+
+it('keeps saved messages on a failed older-page read and preserves the scroll anchor on retry', async () => {
+  let requests = 0
+  let finish!: (response: Response) => void
+  const fetcher = vi.fn((path: string) => {
+    if (path.includes('before_message_id')) {
+      requests++
+      if (requests === 1) return Promise.resolve(Response.json({ error: { code: 'UNAVAILABLE', message: '이전 기록 읽기 실패', request_id: 'older-page' } }, { status: 503 }))
+      return new Promise<Response>(resolve => { finish = resolve })
+    }
+    return Promise.resolve(Response.json({ id: 'saved-thread', project_id: 1, target_ref: 'D1', target_locked: true, latest_run: null,
+      messages: [{ id: 3, run_id: 'r', role: 'user', content: '최근 질문' }, { id: 4, run_id: 'r', role: 'assistant', content: '최근 답변' }], next_before_message_id: 3 }))
+  })
+  vi.stubGlobal('fetch', fetcher)
+  try {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<QueryClientProvider client={client}><SavedConversationPanel projectId={1} threadId="saved-thread" onRestore={vi.fn()}
+      onShowActivity={vi.fn()} onShowEvidence={vi.fn()} onShowJudgement={vi.fn()} onShowActions={vi.fn()} /></QueryClientProvider>)
+    await screen.findByText('최근 답변')
+    const stream = document.querySelector<HTMLDivElement>('.saved-conversation .conversation-stream')!
+    let height = 1000
+    Object.defineProperty(stream, 'scrollHeight', { get: () => height })
+    fireEvent.scroll(stream, { target: { scrollTop: 20 } })
+    await screen.findByRole('alert')
+    expect(screen.getByText('최근 질문')).toBeInTheDocument()
+    expect(screen.getByText('최근 답변')).toBeInTheDocument()
+    fireEvent.scroll(stream, { target: { scrollTop: 10 } })
+    expect(requests).toBe(1)
+    fireEvent.click(screen.getByRole('button', { name: '이전 메시지 더 보기' }))
+    await waitFor(() => expect(requests).toBe(2))
+    height = 1800
+    await act(async () => finish(Response.json({ id: 'saved-thread', project_id: 1, target_ref: 'D1', target_locked: true, latest_run: null,
+      messages: [{ id: 1, run_id: 'old', role: 'user', content: '처음 질문' }, { id: 2, run_id: 'old', role: 'assistant', content: '처음 답변' }], next_before_message_id: null })))
+    await screen.findByText('처음 답변')
+    expect(stream.scrollTop).toBe(810)
+    expect(screen.getByText('최근 답변')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '이전 메시지 더 보기' })).not.toBeInTheDocument()
+    expect(fetcher.mock.calls.every(([, init]: any[]) => !init?.method || init.method === 'GET')).toBe(true)
+  } finally { vi.unstubAllGlobals() }
+})
+
+it.each([false, true])('clears an accepted question once without clearing the next draft (shared=%s)', async shared => {
+  const previous = mockedRunState
+  mockedRunState = { status: 'idle' }
+  startRun.mockClear()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  function Panel() {
+    const [draft, setDraft] = useState<ComposerDraft>({ question: 'D1 설명해줘', files: [] })
+    return <ConversationPanel projectId={1} targetRef="D1" initialQuestion="D1 설명해줘" onResult={vi.fn()}
+      draft={shared ? draft : undefined} onDraftChange={shared ? setDraft : undefined} />
+  }
+  const ui = () => <QueryClientProvider client={client}><Panel /></QueryClientProvider>
+  try {
+    const view = render(ui())
+    fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+    await waitFor(() => expect(startRun).toHaveBeenCalledTimes(1))
+    expect(screen.getByLabelText('질문')).toHaveValue('D1 설명해줘')
+    mockedRunState = { status: 'running', runId: 'accepted-run', stage: '입력 확인' }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('')
+    expect(screen.getByRole('heading', { name: 'D1 설명해줘' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('질문'), { target: { value: '다음 질문' } })
+    mockedRunState = { status: 'completed', runId: 'accepted-run', result: { answer: '회로 설명입니다.', evidence: [] } }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('다음 질문')
+    fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1 설명해줘' } })
+    expect(screen.getByLabelText('질문')).toHaveValue('D1 설명해줘')
+    fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+    await waitFor(() => expect(startRun).toHaveBeenCalledTimes(2))
+    mockedRunState = { status: 'failed', error: { code: 'UNAVAILABLE', message: '접수 실패', requestId: '' } }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('D1 설명해줘')
+  } finally { mockedRunState = previous }
+})
+
+it('preserves a changed question and new attachment while thread creation and the reply are pending', async () => {
+  const previous = mockedRunState
+  mockedRunState = { status: 'idle' }
+  let finish!: (value: { id: string; project_id: number }) => void
+  vi.mocked(createThread).mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+  startRun.mockClear()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const ui = () => <QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" initialQuestion="전송할 질문" onResult={vi.fn()} /></QueryClientProvider>
+  try {
+    const view = render(ui())
+    fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+    fireEvent.change(screen.getByLabelText('질문'), { target: { value: '다음 질문 초안' } })
+    fireEvent.change(screen.getByLabelText('첨부 파일 선택'), { target: { files: [new File(['synthetic'], 'next.txt')] } })
+    await act(async () => finish({ id: 'created-thread', project_id: 1 }))
+    expect(startRun).toHaveBeenCalledExactlyOnceWith('created-thread', { question: '전송할 질문', target_ref: 'D1', conditions: '' })
+    mockedRunState = { status: 'running', runId: 'accepted-run', stage: '입력 확인' }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('다음 질문 초안')
+    expect(screen.getByText('next.txt')).toBeInTheDocument()
+    mockedRunState = { status: 'completed', runId: 'accepted-run', result: { answer: '확인했습니다.', evidence: [] } }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('다음 질문 초안')
+    expect(screen.getByText('next.txt')).toBeInTheDocument()
+  } finally { mockedRunState = previous }
+})
+
+it('clears the recorded question through the same submission path on an immediate result', async () => {
+  const previous = mockedRunState
+  mockedRunState = { status: 'idle' }
+  startRun.mockClear()
+  vi.mocked(listDemoQuestions).mockResolvedValueOnce([{ id: 'recorded', kind: 'judge', circuit: 'test', demo_id: 'test', target: 'D1', question: '기록한 질문', conditions: '12 V', resume: null }])
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const ui = () => <QueryClientProvider client={client}><ConversationPanel projectId={1} targetRef="D1" demoId="test" onResult={vi.fn()} /></QueryClientProvider>
+  try {
+    const view = render(ui())
+    fireEvent.click(await screen.findByRole('button', { name: '기록한 질문' }))
+    await waitFor(() => expect(startRun).toHaveBeenCalledExactlyOnceWith('thread-1', { question: '기록한 질문', target_ref: 'D1', conditions: '12 V' }))
+    expect(screen.getByLabelText('질문')).toHaveValue('기록한 질문')
+    mockedRunState = { status: 'completed', runId: 'recorded-run', result: { answer: '기록한 답변', evidence: [] } }
+    view.rerender(ui())
+    expect(screen.getByLabelText('질문')).toHaveValue('')
+    expect(screen.getByRole('heading', { name: '기록한 질문' })).toBeInTheDocument()
+  } finally { mockedRunState = previous }
+})
+
+it('stages NET/TXT files and allows a question to be sent with them', () => {
+  startRun.mockClear()
+  render(<ComposerHarness />)
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '이 부품 확인' } })
+  const file = new File(['test-only'], 'notes.txt', { type: 'text/plain', lastModified: 1 })
+  const input = screen.getByLabelText('첨부 파일 선택')
+  fireEvent.change(input, { target: { files: [file] } })
+  fireEvent.change(input, { target: { files: [file] } })
+  expect(screen.getAllByText('notes.txt')).toHaveLength(1)
+  expect(screen.getByRole('status')).toHaveTextContent('질문과 함께 서버에서 읽습니다')
+  expect(screen.getByLabelText('질문')).toBeEnabled()
+  expect(screen.getByRole('button', { name: '질문 전송' })).toBeEnabled()
+  fireEvent.keyDown(screen.getByLabelText('질문'), { key: 'Enter' })
+  expect(startRun).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: 'notes.txt 첨부 제거' }))
+  expect(screen.getByRole('button', { name: '질문 전송' })).toBeEnabled()
+  fireEvent.keyDown(screen.getByLabelText('질문'), { key: 'Enter' })
+  expect(startRun).toHaveBeenCalledTimes(2)
+})
+
+it('preserves files and question when attachment limits or types are rejected', () => {
+  render(<ComposerHarness />)
+  const input = screen.getByLabelText('첨부 파일 선택')
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '작성 중' } })
+  const file = new File(['test'], 'circuit.net')
+  fireEvent.change(input, { target: { files: [file] } })
+  for (const invalid of [new File(['bad'], 'script.svg'), new File([], 'empty.txt'), new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.txt')]) {
+    fireEvent.change(input, { target: { files: [invalid] } })
+    expect(screen.getByRole('alert')).toHaveTextContent('5 MiB 이하')
+    expect(screen.getByText('circuit.net')).toBeInTheDocument()
+  }
+  fireEvent.change(input, { target: { files: Array.from({ length: 5 }, (_, index) => new File(['test'], `extra${index}.txt`)) } })
+  expect(screen.getByRole('alert')).toHaveTextContent('최대 5개')
+  fireEvent.change(input, { target: { files: Array.from({ length: 4 }, (_, index) => new File([new Uint8Array(5 * 1024 * 1024)], `total${index}.txt`)) } })
+  expect(screen.getByRole('alert')).toHaveTextContent('합계 20 MiB')
+  expect(screen.getByRole('list', { name: '선택한 첨부 파일' }).children).toHaveLength(1)
+  expect(screen.getByLabelText('질문')).toHaveValue('작성 중')
+})
+
+it('rejects PDF and images without changing the draft or creating an image preview', () => {
+  const create = vi.spyOn(URL, 'createObjectURL')
+  try {
+    render(<ComposerHarness />)
+    fireEvent.change(screen.getByLabelText('질문'), { target: { value: '작성한 질문' } })
+    for (const name of ['sheet.pdf', 'circuit.png']) {
+      fireEvent.change(screen.getByLabelText('첨부 파일 선택'), { target: { files: [new File(['test'], name)] } })
+      expect(screen.getByRole('alert')).toHaveTextContent('PDF·이미지는 아직 지원하지 않으며')
+      expect(screen.queryByRole('list', { name: '선택한 첨부 파일' })).not.toBeInTheDocument()
+      expect(screen.getByLabelText('질문')).toHaveValue('작성한 질문')
+    }
+    expect(create).not.toHaveBeenCalled()
+  } finally { create.mockRestore() }
+})
+
+it.each(['idle', 'running', 'requires_input', 'failed'])('keeps typing enabled without a target in %s and never sends or stops with Enter', status => {
+  const previous = mockedRunState
+  mockedRunState = { status, runId: 'r', interrupt: {}, error: { code: 'FAIL', message: '실패', requestId: '' } }
+  startRun.mockClear(); resetRun.mockClear()
+  try {
+    renderConversation({ targetRef: '', disabled: true })
+    const question = screen.getByLabelText('질문')
+    expect(question).toBeEnabled()
+    expect(question).not.toHaveAttribute('readonly')
+    fireEvent.change(question, { target: { value: '분석 중에도 작성' } })
+    fireEvent.keyDown(question, { key: 'Enter' })
+    expect(question).toHaveValue('분석 중에도 작성')
+    expect(startRun).not.toHaveBeenCalled()
+    expect(resetRun).not.toHaveBeenCalled()
+  } finally { mockedRunState = previous }
+})
 
 it.each(['idle', 'running', 'requires_input', 'failed'])('hides result actions before an answer in %s', status => {
   const previous = mockedRunState
@@ -69,26 +294,42 @@ it('does not offer approval for find candidates that were not shown in the answe
   } finally { mockedRunState = previous }
 })
 
+it('links only citation numbers present in the current answer evidence', () => {
+  const previous = mockedRunState
+  const showEvidence = vi.fn()
+  mockedRunState = { status: 'completed', runId: 'run-1', result: { status: 'completed', answer: '확인된 근거 [7], 미확인 번호 [99]',
+    evidence: [{ document: 'sheet.pdf', citation_number: '7' }], judgement: {} } }
+  try {
+    renderConversation({ onShowEvidence: showEvidence })
+    fireEvent.click(screen.getByRole('button', { name: '문서 근거 [7] 보기' }))
+    expect(showEvidence).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: '문서 근거 [99] 보기' })).not.toBeInTheDocument()
+  } finally { mockedRunState = previous }
+})
+
 it('waits for a saved answer result before revealing only its available actions', async () => {
   let finish!: (response: Response) => void
   const showEvidence = vi.fn()
   vi.stubGlobal('fetch', vi.fn((path: string) => path.startsWith('/api/threads/')
     ? Promise.resolve(Response.json({ id: 'saved-thread', project_id: 1, target_ref: 'D1', latest_run: { id: 'saved-run', status: 'completed', message_id: 2 },
-      messages: [{ id: 2, run_id: 'saved-run', role: 'assistant', content: '저장 답변' }], next_before_message_id: null }))
+      messages: [{ id: 2, run_id: 'saved-run', role: 'assistant', content: '저장 답변 [1]' }], next_before_message_id: null }))
     : new Promise<Response>(resolve => { finish = resolve })))
   try {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(<QueryClientProvider client={client}><SavedConversationPanel projectId={1} threadId="saved-thread" onRestore={vi.fn()}
       onShowActivity={vi.fn()} onShowJudgement={vi.fn()} onShowEvidence={showEvidence} onShowActions={vi.fn()} /></QueryClientProvider>)
-    await screen.findByText('저장 답변')
+    await screen.findByText('저장 답변 [1]')
+    expect(screen.queryByRole('button', { name: '문서 근거 [1] 보기' })).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: '분석 결과 메뉴' })).not.toBeInTheDocument()
     await waitFor(() => expect(finish).toBeDefined())
     await act(async () => finish(Response.json({ id: 'saved-run', thread_id: 'saved-thread', message_id: 2,
-      result: { status: 'completed', evidence: [{ document: 'sheet.pdf' }], judgement: {} } })))
+      result: { status: 'completed', evidence: [{ document: 'sheet.pdf', citation_number: '1' }], judgement: {} } })))
     const menu = await screen.findByRole('group', { name: '분석 결과 메뉴' })
     expect(within(menu).getAllByRole('button').map(button => button.textContent)).toEqual(['분석 현황', '문서 근거'])
-    fireEvent.click(within(menu).getByRole('button', { name: '문서 근거' }))
+    fireEvent.click(screen.getByRole('button', { name: '문서 근거 [1] 보기' }))
     expect(showEvidence).toHaveBeenCalledTimes(1)
+    fireEvent.click(within(menu).getByRole('button', { name: '문서 근거' }))
+    expect(showEvidence).toHaveBeenCalledTimes(2)
   } finally { vi.unstubAllGlobals() }
 })
 
@@ -139,7 +380,7 @@ it.each(['running', 'requires_input'])('uses a stop icon during %s without claim
   try {
     const busy = vi.fn()
     renderConversation({ onBusyChange: busy })
-    expect(screen.getByLabelText('질문')).toBeDisabled()
+    expect(screen.getByLabelText('질문')).toBeEnabled()
     expect(screen.queryByRole('button', { name: '질문 전송' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '응답 수신 중단' })).toBeEnabled()
     const stop = screen.getByRole('button', { name: '응답 수신 중단' })
@@ -434,6 +675,9 @@ it('shows the requirement, calculation, candidate value, result, and citation to
 it('preserves the structured answer line breaks from the backend', () => {
   mockedRunState = { status: 'completed', runId: 'run-1', result: { answer: '판정\n| 조건 | 결과 |\n| VRRM | 통과 |', evidence: [], judgement: {} } }
   renderConversation()
-  expect(screen.getByText(/판정\s+\| 조건 \| 결과 \|/)).toHaveClass('answer-text')
+  const answer = screen.getByText('판정').closest('.answer-text')
+  expect(answer).toHaveTextContent('| 조건 | 결과 |')
+  expect(answer).toHaveTextContent('| VRRM | 통과 |')
+  expect(answer?.querySelectorAll('br')).toHaveLength(2)
   mockedRunState = { status: 'failed', runId: 'run-1', error: { code: 'FAIL', message: '분석 연결 오류', requestId: '' } }
 })

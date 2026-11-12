@@ -51,13 +51,12 @@ export default function SettingsPage() {
     <option value="">선택 안 함</option>{Object.entries(options).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
   </select>
   return <div className="settings-page"><div className="settings-heading"><h1>내 설정</h1></div>
-    <div className="settings-layout">
-    <aside className="settings-sidebar"><nav aria-label="설정 항목">
-      <a href="#profile-heading">개인 설정</a>
-      {auth.user?.role === 'user' && <a href="#leave-heading">계정 관리</a>}
-    </nav></aside>
+    <div className={auth.user?.role === 'user' ? 'settings-layout' : 'settings-layout settings-layout-single'}>
+    {auth.user?.role === 'user' && <aside className="settings-sidebar"><nav aria-label="설정 항목">
+      <a href="#leave-heading">계정 관리</a>
+    </nav></aside>}
     <div className="settings-content">
-    <section className="settings-section" aria-labelledby="profile-heading"><h2 id="profile-heading">개인 설정</h2>
+    <section className="settings-section" aria-labelledby="profile-heading"><h2 id="profile-heading">프로필 정보</h2>
       {facts.isPending && <p role="status">설정을 불러오는 중입니다.</p>}
       {facts.error ? <p role="alert">{errorMessage(facts.error)}</p> : null}
       <form className="settings-form" onSubmit={event => { event.preventDefault(); save() }}>

@@ -1,5 +1,7 @@
 # db/migrations
 
+- 2026-11-12 인증 통합: 030_google_onboarding.sql 사용 버전에서는 `migrate_prod_2b_optional_drop_dead_auth.sql`을 실행하지 않는다. pending은 명시적 가입·비밀번호 재확인 연결·관리자 승인에 쓰이는 활성 표다. 운영 적용은 이 로컬 통합에서 수행하지 않았다.
+
 ## 역할
 - 이 폴더: **이미 서비스 표가 있는 DB(운영)** 를 재설계 구조로 옮기는 SQL을 둡니다. 새 DB는 이 폴더를 쓰지 않고 `db/020_service_baseline.sql`로 한 번에 만듭니다. Postgres 이미지는 `db/` 바로 아래만 실행하므로 여기 SQL은 자동 실행되지 않습니다.
 - 넣는 것: 운영 이전 단계별 SQL(expand → 새 코드 배포 → contract), 선택 단계, 되돌리기. 단계마다 파일 끝에서 이력 표 `public.app_migrations`에 한 줄을 남깁니다([결정] D6: Supabase의 `supabase_migrations`를 이어 쓰지 않음).

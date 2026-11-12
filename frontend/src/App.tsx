@@ -5,9 +5,11 @@ import RequireAuth from './auth/RequireAuth'
 import { dummyFlowEnabled, errorMessage } from './api/client'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import EmailActionPage from './pages/EmailActionPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
 import LandingPage from './pages/LandingPage'
+import PrivacyPage from './pages/PrivacyPage'
 import SettingsPage from './pages/SettingsPage'
 import AccountMenu from './components/AccountMenu'
 import useOverlayScrollbar from './hooks/useOverlayScrollbar'
@@ -27,7 +29,7 @@ function Shell() {
   const [error, setError] = useState<unknown>(null)
   const workbench = location.pathname === '/app'
   const settings = location.pathname === '/settings'
-  const publicPage = location.pathname === '/' || location.pathname === '/login'
+  const publicPage = ['/', '/login', '/signup', '/privacy', '/verify-email', '/reset-password'].includes(location.pathname)
   const ContentRoot = workbench ? 'div' : 'main'
   useOverlayScrollbar()
   async function signOut() {
@@ -60,7 +62,10 @@ function Shell() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<EmailActionPage key="verify" purpose="signup" />} />
+          <Route path="/reset-password" element={<EmailActionPage key="reset" purpose="reset" />} />
           <Route path="/app" element={<RequireAuth><WorkbenchPage user={user ?? undefined} onLogout={signOut} logoutBusy={busy} /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
