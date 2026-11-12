@@ -25,7 +25,7 @@ from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
-from backend.multi_agent.revisions import document_revision, requested_revisions, revision_matches
+from backend.multi_agent.revisions import requested_revisions, revision_matches
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -360,6 +360,3 @@ def _requested_revisions(state: dict) -> set[str]:
     text = ' '.join((state.get('question', ''), state.get('conditions', '')))
     return requested_revisions(text)
 
-
-def _document_revision(document: object) -> str:
-    return document_revision(document)

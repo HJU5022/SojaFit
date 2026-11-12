@@ -11,7 +11,6 @@
 THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os
-import logging
 from http import HTTPStatus
 from contextlib import asynccontextmanager
 from pathlib import Path
