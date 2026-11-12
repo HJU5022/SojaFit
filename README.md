@@ -4,7 +4,7 @@
 
 | | 주소 | 지금 상태 |
 |---|---|---|
-| API(배포) | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상(2026-11-11 확인). Cloud Run이라 첫 요청은 몇 초 걸린다. 라이브 리비전은 `sojafit-api-27a410d-live`(11-11 04:25, 새 Supabase 서울 DB)이고 코드 근거는 `jeongun`의 서비스 DB 재설계 커밋들이다(아직 push 전). 같은 주소의 `/login`이 React 화면이다 |
+| API(배포) | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. **현재(11-12)**: 라이브 리비전 `sojafit-api-e0a5e30`(태그 `limits5m`, 사용자 하루 예약 토큰 5M · 서비스 10M). DB는 Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울). 직전 라이브는 `sojafit-api-27a410d-live`(11-11 새 DB 전환). 같은 주소의 `/login`이 React 화면이다. 배포 실측은 `docs/worklog/jeongun.md` 11-12 항목 |
 | 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 `DEMO_MODE=1`인 로컬 데모에서만 열린다. 공개 배포는 이메일 가입 API가 404이고 Google 로그인으로 들어온다), 회로 작업대(`/app`: 프로젝트 · 데모 회로나 KiCad 넷리스트 업로드 · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
 | 시연 영상 | 아직 없음 | 정상 경로 1개 + 실패 경로 1개, 3분 이내 |
 
