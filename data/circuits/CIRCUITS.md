@@ -17,6 +17,11 @@
 | `collected/received-20261030/{c01,c02,c03,c04,c05,c07,c08,c10,c11,c12}/` | 받은 회로 | v3가 쓰는 10종. 같은 모양(`received/`, `connections.json`, `original/`) |
 | `collected/samples/{attiny85_dev,breadboard_supply,mosfet_driver,pro_micro}/` | 공개 표본 | 4종: `converted/`(`circuit.net`, `connections.json`), `original/`(LICENSE·README) |
 
+## 원본 README의 참조 자료
+
+- c09의 원본 README가 참조하는 `OSHW_mark_BR000003.png`는 저장소에 넣지 않았다. [원본 저장소의 이미지](https://github.com/Franzininho/franzininho-diy-board/blob/abdb4b48d867190d6b9794280be8b85b81aa1772/OSHW_mark_BR000003.png)와 [OSHWA 인증 페이지](https://certification.oshwa.org/br000003.html)를 참고한다.
+- `attiny85_dev`의 원본 README가 참조하는 조립 사진·커넥터·회로도·PCB·렌더 이미지와 `assets/digispark-schematic.pdf`는 저장소에 넣지 않았다. [원본 저장소의 PDF](https://github.com/tomasr8/attiny85-dev-board/blob/488b99063b6bdbafa0f367ecc25901b55c4c7144/assets/digispark-schematic.pdf)를 참고한다.
+
 ## 회로 출처
 
 | 회로 | 넷리스트 | 원 저장소 | 커밋 | 라이선스 |
