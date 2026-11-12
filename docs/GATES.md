@@ -4,7 +4,7 @@
 - 기준일: 2026-11-13
 - 기준 커밋: `6707002`
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
-- 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md)
+- 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md)
 
 게이트는 점수가 아니라 못 지키면 고정으로 깎이는 조건이다. 가산점은 7개를 모두 충족한 조만 받는다. 이 문서는 게이트마다 상태, 증거 경로, 확인 못 한 것을 적는다. 외부 DB · 배포 · 대시보드의 날짜가 적힌 결과는 그 시점의 스냅샷이다.
 
@@ -98,7 +98,8 @@
 | 배포 주소 스모크(2026-11-10~11) | 조건 질문 정지 `requires_input` → 재개 `completed` → 승인 201 · 같은 승인 409 → 견적 저장. 계정 B가 A의 프로젝트 · thread · run · 견적 · 승인을 읽거나 쓰면 404 | G1 증거의 28단계 JSON |
 | 로컬 compose 재시작 복원(2026-11-09, `jeongun-8` `f6b6d7e`) | 조건 질문에서 멈춘 대화가 `docker compose restart api` 뒤에도 WAITING, 답하고 재개하면 DONE. 같은 승인 요청 두 번은 둘 다 200이고 DB 승인 원본은 1건. 데모 사용자 B는 A의 대화 조회 · 승인이 404. 시험 14개 통과 | [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json), `tests/api/test_http_restart.py` |
 | 사용자 사실 기억 | 사용자 사실 3칸을 Store `(user_id, "profile")`에 두고 문장 임베딩 색인으로 찾는다(`backend/conversations/profile.py`). 순위 · 사용자 격리 · 수정 뒤 재임베딩 · 삭제는 결정적 가짜 임베딩으로 DB 시험 통과. 키 없는 로컬 compose에서 저장 · 사용자 격리 · 남의 id 거절(422) 확인 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |
-| 변이 확인 | 아래 표 9건 | [mutation_2026-11-12.md](../evals/results/d10/mutation_2026-11-12.md) |
+| 변이 확인 | 변이 28건 중 25건을 시험이 잡는다(2026-11-13, `9c32d12`). 못 잡는 3건은 아래 "확인 못 한 것". 아래 "변이 확인" 표는 9건과 대표 6건 | [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) |
+| 기준 미달 시 pytest 실패 | 인젝션 결과 검사: 충족 시 종료 0, 깨뜨린 사본 3개는 위반 1건 · 종료 1. 종료 코드 1과 빈 최종 답 위반을 고정하는 시험 2개(`tests/evals/test_check_injection_result.py:31`, `:37`)가 있고, 해당 코드 줄을 깨뜨리면 실패한다 | [threshold_pass_2026-11-13.txt](../evals/results/d10/threshold_pass_2026-11-13.txt), [threshold_fail_2026-11-13.txt](../evals/results/d10/threshold_fail_2026-11-13.txt), 변이 N10 · N11([mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)) |
 
 확인 못 한 것:
 
@@ -107,6 +108,8 @@
 | 배포 서버 재시작 뒤 복원 | 로컬 compose에서만 확인했다 |
 | 현재 코드에서 재시작 뒤 재개와 계정 분리 재기록 | 위 로컬 기록(11-09) 뒤 `backend/conversations/memory_service.py`가 바뀌었다(최근 변경 `e0a5e30`, `280df84`, `c42273f`) |
 | 배포 DB에서 실제 Voyage 임베딩으로 한 사용자 기억 의미 검색 | 확인하지 않았다. 키 없는 로컬 compose의 검색은 순위 없는 목록이다 |
+| 시험이 잡지 못하는 가드 `supervisor.py:357`(답 검사 실패 시 거절 노드로 가는 길, 변이 N15) | 시험이 없다. 변이 시 검사에 실패한 답이 거절 없이 끝난다 |
+| 한 줄 변이로는 드러나지 않는 가드 `revisions.py:196`(변이 N3b), `backend/auth.py:72`(변이 N7) | 같은 조건을 다른 곳에서 한 번 더 검사한다(`docs.py:90`, `backend/api/auth.py:207`). 둘째 가드가 없는 경로는 시험되지 않는다. 상세: [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) 4절 |
 
 ### G5 평가
 
@@ -152,6 +155,7 @@
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
+| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/) |
 
 확인 못 한 것(없는 것):
 
@@ -159,26 +163,33 @@
 |---|---|
 | 시연 영상 파일 | 없음 |
 | Langfuse PNG | 없음 |
-| 최종 비밀값 검사 | 없음 |
+| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. 로컬 gitleaks 결과만 있다 |
+| 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
 | 다른 조원 포트폴리오(오세창 · 심태현) | 없음 |
 
 ## 변이 확인
 
-핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).
+핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 28건 전체 표와 재현 명령은 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)(정본)에 있고, 여기에는 기존 9건과 영역이 다른 대표 6건을 적는다. 28건 중 25건을 시험이 잡고 3건(N3b · N7 · N15)은 못 잡는다. 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).
 
-| # | 깨뜨린 곳 (파일, 한 줄) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 |
+| # | 깨뜨린 곳 (파일:줄, 변이) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 · 커밋 |
 |---|---|---|---|---|
-| 1 | `backend/graph/build.py` 24행 `MAX_TRIES = 2` → `MAX_TRIES = 99` (재검색 횟수 상한 무력화) | `tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses`, `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (`AssertionError: assert '재작성' == '거절'`, `StopIteration`, 원복 후 통과) | 2026-11-03 |
-| 2 | `backend/graph/nodes.py` 270행 `other_part_row` 반환식을 `return False`로 변경 (같은 문서 내 다른 품번 행 결정적 필터 제거) | `tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm` | 실패 (`AssertionError: {'passed': [1, 2, 3, 4]} != {'passed': [2, 3, 4]}`, 1N5817 행 `1`번 통과로 실패, 원복 후 통과) | 2026-11-03 |
-| 3 | `backend/graph/nodes.py` 460행 `generate`의 `"fake_citations": sorted(cited - valid)` → `[]` (없는 근거 번호 인용 검출 무력화) | `tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited` | 실패 (`AssertionError: {'fake_citations': []} != {'fake_citations': ['999']}`, 원복 후 통과) | 2026-11-03 |
-| 4 | `backend/graph/build.py`: 검색 상한을 2회에서 3회로 변경 | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패(세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-03 |
-| 5 | `backend/graph/nodes.py`: MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(`None != {"kind": "timeout"}`), 원복 후 통과 | 2026-11-03 |
-| 6 | `backend/graph/build.py`: MCP 장애도 채점으로 분기 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-03 |
-| 7 | `backend/multi_agent/supervisor.py` `check_node`: 종합 숫자 검사 `problem = bool(…)` → `problem = False` | `tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check` | 실패(`KeyError: 'refusal_reason'`), 원복 후 깨끗 | 2026-11-12 |
-| 8 | `backend/multi_agent/supervisor.py` `_judgement_reply` 첫 줄 `return None` | `tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose` (single · synth) | 실패(문서 사용 권고가 최종 답에 남음 / synth fallback), 원복 후 깨끗 | 2026-11-12 |
-| 9 | `backend/multi_agent/contracts.py` `MAX_AGENT_RUNS = 6` → `99` | `tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers` | 실패(`99 != 6`), 원복 후 깨끗. (같은 변경으로 `test_collect_refuses_over_the_agent_limit`는 상수를 쓰므로 통과) | 2026-11-12 |
+| 1 | `backend/graph/build.py:24` `MAX_TRIES = 2` → `MAX_TRIES = 99` (재검색 횟수 상한 무력화) | `tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses`, `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (`AssertionError: assert '재작성' == '거절'`, 2 failed), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 2 | `backend/graph/nodes.py:270` `other_part_row` 반환식을 `return False`로 변경 (같은 문서 내 다른 품번 행 결정적 필터 제거) | `tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm` | 실패 (1 failed, 다른 품번 행이 통과해 `passed` 목록이 달라짐), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 3 | `backend/graph/nodes.py:460` `generate`의 `"fake_citations": sorted(cited - valid)` → `[]` (없는 근거 번호 인용 검출 무력화) | `tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited` | 실패 (1 failed, `fake_citations`가 빈 목록), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 4 | `backend/graph/build.py:24` `MAX_TRIES = 2` → `3` (검색 상한 2회 → 3회) | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 5 | `backend/graph/nodes.py:237` MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패 (`assert None == {'kind': 'timeout'}`), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 6 | `backend/graph/build.py:49` MCP 장애도 채점으로 분기 (`return "채점"`) | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패 (path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 7 | `backend/multi_agent/supervisor.py:351` `check_node`: 종합 숫자 검사 `problem = bool(…)` → `problem = False` | `tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check` | 실패 (`KeyError: 'refusal_reason'`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| 8 | `backend/multi_agent/supervisor.py:241` `_judgement_reply` 첫 줄 `return None` | `tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose` (single · synth) | 실패 (2 failed, 문서 사용 권고가 최종 답에 남음 / synth fallback), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| 9 | `backend/multi_agent/contracts.py:18` `MAX_AGENT_RUNS = 6` → `99` | `tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers`, `tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit` | 첫째 시험 실패 (`99 != 6`), 둘째는 상수를 쓰므로 통과 (1 failed, 1 passed). 원복 후 깨끗. 상한 가드 자체는 변이 N13이 잡는다 | 2026-11-13 · `9c32d12` |
+| N1 | `backend/multi_agent/agents/docs.py:230` RAG 가짜 인용 번호 목록 `fake = sorted(…)` → `[]` | `tests/multi_agent/test_docs_agent.py::test_nested_fake_id_is_removed_without_losing_the_provided_id` | 실패 (2 failed), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N4 | `backend/judge/verdict.py:405` 필수 조건 실패 시 불충분 판정 `elif any(… == 'fail' …)` → `elif False` | `tests/judge/test_judge_conditions.py::test_tolerance_class_excludes_tighter_grades_too` | 실패 (`'ROLE_SUFFICIENT' == 'NOT_SUFFICIENT'`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N6 | `backend/conversations/memory_service.py:192` 하루 토큰 한도 조건에서 사용량 항 제거 | `tests/api/test_errors.py::test_token_cap_is_limit_exceeded` | 실패 (`DID NOT RAISE ApiError`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N8 | `backend/auth.py:310` Origin 검사 `if request.headers.get("origin") != origin:` → `if False:` | `tests/api/test_health.py::test_forbidden_uses_error_contract` | 실패 (`assert 200 == 403`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N10 | `evals/runners/check_injection_result.py:45` 위반 시 종료 코드 `return 1 if found else 0` → `return 0` | `tests/evals/test_check_injection_result.py::test_main_exits_1_on_violation_and_0_otherwise` | 실패 (`assert 0 == 1`), 원복 후 깨끗. 시험 추가 전에는 못 잡았다 | 2026-11-13 · `9c32d12` |
+| N12 | `evals/dataset_v1.jsonl` 끝에 공백 1바이트 추가 (동결 해시) | `tests/evals/test_frozen_evals.py::test_frozen_files_unchanged` | 실패 (`dataset_v1.jsonl: 동결 후 바뀌었습니다`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
 
-원시 로그: [mutation_2026-11-12.md](../evals/results/d10/mutation_2026-11-12.md). D10 재현 · 기준 미달 출력 · 코퍼스 지문: [evals/results/d10/README.md](../evals/results/d10/README.md).
+나머지 변이(N2 · N3 · N3c · N5 · N9 · N11 · N13 · N14 등)의 줄 · 시험 id · 첫 실패 메시지는 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) 3절에 있다. 원시 pytest 출력: [mutation/raw/](../evals/results/d10/mutation/raw/). 이전 기록: [mutation_2026-11-12.md](../evals/results/d10/mutation_2026-11-12.md)(대체됨). D10 재현 · 기준 미달 출력 · 코퍼스 지문: [evals/results/d10/README.md](../evals/results/d10/README.md).
 
 ## G4 추가 확인
 
