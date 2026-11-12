@@ -137,4 +137,4 @@
 - 계정별 잠금 악용(남이 일부러 실패를 쌓아 계정을 잠그는 일)은 방어하지 않는다.
 - IP 한도: 같은 NAT·통신사 뒤 사용자는 한 IP 한도를 나눠 쓰고, 여러 IP에서 나눠 보내는 요청은 IP 한도로 막지 못한다. Cloud Run 앞에 외부 부하분산기를 두면 IP 판단 규칙을 다시 정해야 한다.
 - 기존 DB에 로그인 실패 제한을 적용하려면 `db/legacy/005_auth_attempt_window.sql`, `db/legacy/006_user_roles.sql`, `db/legacy/021_auth_ip_limits.sql`을 앱 배포 전에 적용해야 한다(표가 없으면 로그인이 503).
-- `auth.signup`(직접 가입 헬퍼), `GOOGLE_PASSWORD_HASH`, `google_admin_session`은 HTTP 경로가 쓰지 않는 코드다(`backend/auth.py`). 시험은 `signup` 헬퍼를 호출한다.
+- `auth.signup`(직접 가입 헬퍼)과 `google_admin_session`은 HTTP 경로가 쓰지 않는 코드다(`backend/auth.py`). 시험은 `signup` 헬퍼를 호출한다.

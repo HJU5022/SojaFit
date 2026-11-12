@@ -11,7 +11,7 @@
 | 파일 | 분류 | 분류 근거 | 설명과 명령 |
 |---|---|---|---|
 | `BIT_SEARCH.md` | | | 이 문서 |
-| `bit_search_exp.py` | 일회성 | 운영 DB가 `voyage-4-large`만 가져 모델 이름·차원을 바꾸지 않으면 돌지 않음(아래 한계). 호출처는 `tests/evals/test_bit_search.py`·문서 | `embed`(질문 벡터 50개) → `setup`(`exp_bq` 만들기) → `measure`(정확 검색과 비트 N=400·800·1,600·3,200 시간·recall) → `warm`(비트 검색만 이어서) → `final`(v1 관련 19문항 최종 점수 확인) → `report` → `drop`. 입출력 폴더는 `BIT_SEARCH_WORK`(기본 `../전자_데이터시트/evidence/bq_exp`) |
+| `bit_search_exp.py` | 재현용 | `scripts/results/bit_search/`의 원시 결과 3건을 만든 스크립트. 운영 DB가 `voyage-4-large`만 가져 모델 이름·차원을 바꾸지 않으면 지금은 돌지 않음(아래 한계). 호출처는 `tests/evals/test_bit_search.py`·문서 | `embed`(질문 벡터 50개) → `setup`(`exp_bq` 만들기) → `measure`(정확 검색과 비트 N=400·800·1,600·3,200 시간·recall) → `warm`(비트 검색만 이어서) → `final`(v1 관련 19문항 최종 점수 확인) → `report` → `drop`. 입출력 폴더는 `BIT_SEARCH_WORK`(기본 `../전자_데이터시트/evidence/bq_exp`) |
 
 ## 한계
 

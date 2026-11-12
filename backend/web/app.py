@@ -1,7 +1,7 @@
 """API 등록 뒤 같은 출처의 React 정적 화면을 연결한다.
 
 역할: 빌드한 React(`frontend/dist`)의 assets를 연결하고, 화면 주소의 GET/HEAD 404를 `index.html`로 바꾼다.
-하지 않는 일: API·인증·판정 로직. 빌드가 없을 때 대신 보일 화면(예전 로그인 템플릿은 11-10에 지움).
+하지 않는 일: API·인증·판정 로직, 빌드가 없을 때 대신 보일 화면.
   빌드가 없으면 화면 주소도 원래 404(공통 오류)를 그대로 돌려준다. Docker 이미지는 늘 React를 빌드해 넣는다(Dockerfile).
 출처: backend/web/WEB.md, frontend/FRONTEND.md.
 """

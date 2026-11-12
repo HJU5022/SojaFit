@@ -30,7 +30,7 @@ def test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls(tmp_path, 
     client, configs = Client(), []
     monkeypatch.setattr(langfuse, 'get_client', lambda: client)
     monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
-    monkeypatch.setattr(run_gate, 'make_app', lambda *args: object())
+    monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
 
     def invoke(app, inputs, config):
         configs.append(config)
@@ -75,7 +75,7 @@ def test_gate_score_failure_does_not_erase_result_or_invent_missing_cost(tmp_pat
 
     monkeypatch.setattr(langfuse, 'get_client', lambda: Client())
     monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
-    monkeypatch.setattr(run_gate, 'make_app', lambda *args: object())
+    monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
     monkeypatch.setattr(run_gate, 'invoke_with_resume', lambda *args: {'path': ['거절'], 'question_type': 'out_of_scope', 'answer': 'SojaFit 범위 밖입니다.'})
     data = tmp_path / 'synthetic.jsonl'
     data.write_text(json.dumps({'id': 'i1', 'kind': 'irrelevant', 'irrelevant_type': 'out_of_domain', 'input': '합성 질문', 'expected': '', 'gold_chunks': []}))

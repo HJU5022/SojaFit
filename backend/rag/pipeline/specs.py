@@ -6,9 +6,6 @@
   계열 범위·여러 값(range_unsplittable), 같은 자리·같은 조건의 다른 값(conflict), 모르는 단위(unknown_unit),
   원문 청크에 없는 숫자(value_not_in_source), 음수·무한(implausible), 파서가 머리를 밀거나 행을 합친 표(garbled_table),
   일부 품번 전용인데 대상 품번을 알 수 없는 행(scope_unclear), 최소·대표·최대 표시가 없는 항복·제너 전압(slot_unclear).
-  문서 전체를 읽을 때(`Doc.run`)는 표 단서(주문표의 품번별 패키지, 'Package' 행의 열별 패키지, 첫 행에 붙은 Min·Nom·Max)를 먼저 모으고,
-  이어지는 행(이름 없이 TYP·MAX만), 세로로 합친 품번·조건 칸은 같은 파라미터 행 묶음 안에서 채운다(11-05 PDF 대조 뒤).
-  문서가 'Electrical characteristics apply in both directions'라고 밝힐 때만 양방향(C·CA) 품번에 단방향 행 값을 붙인다.
   2차 대조 뒤: IF_AV는 평균·연속 전류만(첨두·서지·반복·IFRM·IF,MAX 행은 IFSM이거나 제외), 머리 끝 숫자는 첫 행이 빨려 든 것이라
   떼고 읽음, 조건 주기로 품번 묶음 구간을 정함, 병합 칸 값은 가운데 열에서 대칭으로 펼침, 붙은 열 이름 칸을 나눔.
 - 하지 않는 일: LLM·임베딩 호출, 값 비교·판정(`backend/judge/`), 파서가 밀어 놓은 표 바로잡기, 평가셋 정답 읽기, 파일 · DB 쓰기.
@@ -74,7 +71,6 @@ PKG = re.compile(r'\b(SOD-?\d+\w*|SOT-?\d+\w*|(?-i:(?:Thin|Micro|Sub) SM[ABCFP]\
                  r'PDI\w*|SOP-?\d+)', re.I)
 SLOT_KO = {'minimum_value': '최소', 'typical_value': '대표', 'maximum_value': '최대'}
 # 11-05 PDF 대조 뒤 더한 규칙의 글 모양들
-BOTH_NOTE = 'Electrical characteristics apply in both directions'
 BOTH_DIRECTIONS = re.compile(r'characteristics apply in both directions', re.I)  # TVS 문서 17건의 1쪽 주석(실측)
 # 시험 조건 한 토막: 'IF = 7.5A', 'TJ = 125°C', 'VR = 4.0V'. 'TA'(표 전체 기본 온도)는 cond_sets에서 뺀다
 ATOM = re.compile(r'\b(I[A-Z]{1,3}|V[A-Z]{1,3}|T[A-Z])\s*=\s*([-+]?\d+(?:\.\d+)?)\s*([mµμun]?A|[mk]?V|°C)?(?!\w)')
@@ -296,32 +292,20 @@ def split_glued(F):
 
 
 class Doc:
-    """문서 하나: 표 단위 단서를 먼저 모으고(learn), 행을 읽고(describe), 행 묶음 규칙을 적용한 뒤(run) 후보를 낸다(emit_row)."""
+    """문서 하나의 행을 읽는다(describe → emit_row). 서비스는 `read_card`로 카드 한 장씩만 쓴다."""
 
     def __init__(self, doc, parts, fam):
         self.doc, self.parts, self.family = doc, parts, fam
         self.upper = {norm_part(p): p for p in parts}
         self.cands, self.review = [], []
         self.checked = Counter()
+        # [주의] 아래 표 단서 칸(part_pkg · col_pkg · slot_hint · part_cols · pkg_universe)을 채우던 문서 전체 읽기는 지웠다. 지금은 늘 비어 있다
         self.part_pkg = defaultdict(set)  # 품번 → 패키지 열쇠(주문표 PACKAGE 칸). TS4148 RBG → {'0805'}
         self.col_pkg = {}  # (쪽, 표) → {열 머리: [패키지 열쇠, ...]}: 'Package' 행이 열마다 패키지를 적은 표
         self.slot_hint = {}  # ((쪽, 표), 칸 순서, 열 머리) → 'Min'·'Nom'·'Max': 첫 데이터 행에 붙어 들어온 머리 행
         self.split_head = {}  # ((쪽, 표), 잘린 열 머리) → (코드, 기호, 원래 머리): 앞 행에서 'AND / V / Nom'이 이어받은 코드
         self.part_cols = {}  # (쪽, 표) → 품번 열 머리 목록(순서대로). 품번 열이 가장 많은 행에서 배운다
         self.pkg_universe = set()
-
-    def run(self, chunks):
-        rows = [c for c in chunks if c['kind'] == 'table_row']
-        self.learn(rows)
-        infos = [i for i in (self.describe(c) for c in rows) if i]
-        self.continue_rows(infos)
-        for run in self.runs(infos):
-            self.spread_groups(run)
-            self.spread_conditions(run)
-        for info in infos:
-            self.emit_row(info)
-        if any(c['kind'] in ('text', 'note') and BOTH_DIRECTIONS.search(c['text']) for c in chunks):  # v3는 표 주석을 note로 둔다
-            self.copy_bidirectional()
 
     def flag(self, reason, parts, base, code, text, detail=''):
         self.review.append({'reason': reason, 'parts': list(parts), 'doc': self.doc, 'family': self.family,
@@ -375,32 +359,6 @@ class Doc:
                                    'typical_value': si.get('typical_value'), 'maximum_value': si.get('maximum_value'),
                                    'source_value_text': text, 'source_unit': written, 'normalized_unit': SI[code],
                                    'source_level': level, 'checks': checks})
-
-    def learn(self, rows):
-        """표 단위 단서: 주문표의 품번별 패키지, 'Package' 행의 열별 패키지, 첫 데이터 행에 붙어 들어온 Min·Nom·Max."""
-        for c in rows:
-            F = fields(c['text'])
-            key = (c['page'], c['table'])
-            pkg = [v for _, col, v in F if col.strip().upper() == 'PACKAGE']
-            if pkg:  # ORDERING INFORMATION: 'TS4148 RBG | PACKAGE: 0805 (Ceramics)'
-                for p in self.row_parts(c['row'], F)[0]:
-                    self.part_pkg[p] |= pkg_keys(pkg[0])
-            if any(KEY_COL.search(col.upper()) and v.strip().lower() == 'package' for _, col, v in F):
-                heads = defaultdict(list)
-                for h, col, v in F:
-                    C = col.upper().rstrip('.')
-                    if not KEY_COL.search(C) and not VALUE_COL.search(C) and pkg_keys(v):
-                        heads[h].append(pkg_keys(v))
-                if sum(map(len, heads.values())) > 1:
-                    self.col_pkg[key] = dict(heads)
-            for pos, (h, _, v) in enumerate(F):
-                m = GLUED_SLOT.fullmatch(v) or re.fullmatch(r'(min|typ|nom|max)\.?', v.strip(), re.I)
-                if m and parse_cell(v)[0] is None:  # 'SPECIFICATIONS Min 2.35'(첫 행에 붙음) 또는 'Min'(따로 된 머리 행, BZW06)
-                    self.slot_hint[(key, pos, h)] = m.group(1)
-            pc = [h for h, _, _ in F if self.col_parts(h)]
-            if len(pc) > len(self.part_cols.get(key, [])):
-                self.part_cols[key] = pc  # 이 표의 품번 열 전체(병합 칸 펼치기에 씀)
-        self.pkg_universe = set().union(*self.part_pkg.values()) if self.part_pkg else set()
 
     def describe(self, c):
         """표 행 하나를 읽는다. 품번 한 줄(TVS·제너) 행은 바로 per_part로 내고 None, 파라미터 행은 정보 사전을 돌려준다."""
@@ -463,113 +421,6 @@ class Doc:
         return {'c': c, 'F': F, 'base': base, 'label': label, 'params': params, 'code': code, 'tok': tok,
                 'symbol': ' '.join(cols['SYMBOL']) or tok, 'unit': cols['UNIT'][:1], 'group': group, 'pkgs': pkgs,
                 'unknown': unknown, 'conds': conds, 'scan': scan, 'bare': bare, 'garbled': garbled}
-
-    def continue_rows(self, infos):
-        """이름 없는 이어지는 행(TYP·MAX·품번 칸만)은 바로 위 파라미터 행의 이름·코드·조건을 이어받는다.
-        첫 행에 품번 묶음이 있는데 이어지는 행에 묶음이 없으면, 묶음 여럿이 첫 행 한 칸에 합쳐진 것이라 모두 검토로 보낸다."""
-        head, run, prev = None, [], None
-
-        def close():
-            if head and head['group'] and any(not r['group'] for r in run[1:]):
-                for r in run:
-                    r['garbled'] = '품번 묶음 여럿이 첫 행 한 칸에 합쳐져 값과 짝을 지을 수 없음'
-        for info in infos:
-            c = info['c']
-            numeric = any(VALUE_COL.search(col.upper().rstrip('.')) and parse_cell(v)[0] for _, col, v in info['F'])
-            if (info['code'] is None and info['bare'] and numeric and head and run[-1] is prev
-                    and (c['page'], c['table']) == (head['c']['page'], head['c']['table'])):
-                own = [x for x in info['conds'][1:] if x]
-                # 자기 조건 칸이 있으면 그것을, 없으면 위 행의 조건(세로로 합친 조건 칸)을 쓴다
-                conds = head['conds'][:1] + own if any(ATOM.search(x) for x in own) else head['conds'] + own
-                info.update(code=head['code'], tok=head['tok'], symbol=head['symbol'], params=head['params'], conds=conds,
-                            scan=info['scan'] + [x for x in head['conds'] if ATOM.search(x)])  # 묶음 조건 찾기에도 쓴다
-                run.append(info)
-            else:
-                close()
-                head, run = (info, [info]) if info['code'] else (None, [])
-            prev = info
-        close()
-
-    @staticmethod
-    def runs(infos):
-        """같은 쪽·표·코드·파라미터 이름이 이어지는 행 묶음."""
-        out = []
-        for info in infos:
-            k = (info['c']['page'], info['c']['table'], info['code'], info['params'][0])
-            if info['code'] and out and out[-1][0] == k:
-                out[-1][1].append(info)
-            elif info['code']:
-                out.append((k, [info]))
-        return [rows for _, rows in out]
-
-    @staticmethod
-    def spread_groups(run):
-        """세로로 합친 품번 칸.
-        1) 행마다 조건이 p행 주기로 되풀이되면 p행이 한 묶음이다. 그 구간에 적힌 품번을 모두 합쳐 구간 모든 행에 붙인다
-           (TUAU6D: 조건 4개 × 묶음 3개인데 가운데 묶음 이름 'TUAU6G'·'TUAU6J'가 두 행에 나뉨).
-        2) 주기가 없으면: 행 n개에 품번 묶음 k개가 한 번씩, 크기 n/k 구간마다 하나씩 있으면 그 구간 행에 그 묶음을 붙인다
-           (BAT42W: 'IF = 10mA'·'BAT42W IF = 50mA'·'IF = 200mA'가 BAT42W 행 셋)"""
-        if all(r['group'] for r in run) or not any(r['group'] for r in run):
-            return
-        n = len(run)
-        keys = [tuple(map(tuple, cond_sets(' '.join(r['conds'])))) for r in run]
-        period = next((p for p in range(2, n // 2 + 1) if n % p == 0 and all(keys) and len(set(keys[:p])) == p
-                       and all(keys[i] == keys[i % p] for i in range(n))), None)
-        if period:
-            segs = [run[i:i + period] for i in range(0, n, period)]
-            unions = [list(dict.fromkeys(x for r in seg for x in r['group'])) for seg in segs]
-            if all(unions) and len({x for u in unions for x in u}) == sum(map(len, unions)):
-                for seg, u in zip(segs, unions):
-                    for r in seg:
-                        r['group'] = list(u)
-            return  # [주의] 주기가 있는데 구간이 맞지 않으면 짐작하지 않는다
-        grouped = [i for i, r in enumerate(run) if r['group']]
-        keys = [tuple(run[i]['group']) for i in grouped]
-        k = len(keys)
-        if k < 2 or len(set(keys)) != k or len(run) % k or len(grouped) == len(run):
-            return
-        size = len(run) // k
-        if [i // size for i in grouped] != list(range(k)):
-            return
-        for i, r in enumerate(run):
-            if not r['group']:
-                r['group'] = list(run[grouped[i // size]]['group'])
-
-    @staticmethod
-    def spread_conditions(run):
-        """세로로 합친 조건 칸: 같은 품번 묶음이 되풀이되면 되풀이마다 조건 묶음 하나다. 묶음 안 어느 행에서든 찾은 조건을
-        그 묶음 모든 행에 붙인다. 한 칸에 조건 k개가 있고 그 칸이 이어진 묶음 k개에 똑같이 나오면 순서대로 나눈다(MBRS1035CT)."""
-        if any(r['group'] for r in run):
-            blocks, seen = [[]], set()
-            for r in run:
-                g = frozenset(r['group'])
-                if g and g in seen:
-                    blocks.append([])
-                    seen = set()
-                blocks[-1].append(r)
-                if g:
-                    seen.add(g)
-        else:
-            blocks = [[r] for r in run]  # 품번 묶음이 없는 표: 한 행이 한 묶음
-        sets = [cond_sets(' '.join(x for r in b for x in r['scan'])) for b in blocks]
-        own = lambda r: cond_sets(' '.join(x for x in r['conds'] if ATOM.search(x)))  # noqa: E731
-        if len(blocks) == 1:
-            # 묶음이 하나: 조건이 한 가지뿐이고 두 행 이상에 적혀 있으면 조건 칸이 빠진 행도 그 조건이다(SK35BH)
-            if len(sets[0]) == 1 and sum(own(r) == sets[0] for r in run) >= 2:
-                for r in run:
-                    if not own(r):
-                        r['conds'] = r['conds'] + [', '.join(sets[0][0])]
-            return
-        chosen = [s[0] if len(s) == 1 else None for s in sets]
-        for i, s in enumerate(sets):
-            # 한 칸에 조건 k개: 뒤 k-1개 묶음이 같은 칸이거나 조건이 비어 있으면 순서대로 나눈다(MBRS1035CT, MBRF1635)
-            k = len(s)
-            if k > 1 and i + k <= len(blocks) and all(sets[j] in (s, []) for j in range(i + 1, i + k)):
-                chosen[i:i + k] = s
-        for b, s in zip(blocks, chosen):
-            for r in b if s else []:
-                if own(r) != [s]:  # 자기 조건이 이미 이 조건 하나면 원문 글 그대로 둔다
-                    r['conds'] = [x for x in r['conds'] if not ATOM.search(x)] + [', '.join(s)]
 
     def emit_row(self, info):
         """파라미터 행 하나의 값 칸을 후보로: 품번 열 > 패키지 열 > MIN·TYP·MAX·VALUE 칸."""
@@ -673,23 +524,6 @@ class Doc:
                 if (r['part'], r['parameter_code'], r['test_condition']) in bad:
                     self.flag('garbled_table', [r['part']], r, r['parameter_code'], r['source_value_text'],
                               '최소 ≤ 대표 ≤ 최대가 어긋남(옆 행과 값이 바뀐 것으로 보임)')
-
-    def copy_bidirectional(self):
-        """문서가 '특성은 양방향 모두 적용'이라고 적었을 때만, 자기 행이 없는 양방향 품번(…C·…CA·…CH·…CAH)에
-        단방향 품번(C를 뺀 이름) 행의 값을 붙인다. 출처 청크·행 이름은 단방향 행 그대로 두고 각주에 그 문장을 적는다."""
-        own = defaultdict(set)
-        for r in self.cands:
-            if r['source_level'] == 'part':
-                own[r['part']].add(r['parameter_code'])
-        names = set(self.parts)
-        new = []
-        for p in self.parts:
-            u = re.sub(r'C(A?H?)$', r'\1', p)
-            if u == p or u not in names:
-                continue
-            new += [{**r, 'part': p, 'footnote_text': BOTH_NOTE} for r in self.cands
-                    if r['part'] == u and r['source_level'] == 'part' and r['parameter_code'] not in own[p]]
-        self.cands += new
 
     def merged_spans(self, c, F):
         """품번 열 표에서 이 행에 빠진 품번 열이 있으면, 병합 칸 값은 그 칸 가운데 열에만 적힌다(DBLS101G: 101G~105G 칸의 40이 103G에).
@@ -795,7 +629,7 @@ def read_card(file, parts, card):
     """카드 한 장(card_read 모양: chunk_id · page · table · row · content) → (후보 행, 검토 표시, 행 코드). 표를 만들거나 저장하지 않는다.
 
     행 코드: 파라미터 행이면 그 코드, 품번 한 줄 행이면 'per_part', 읽을 행이 아니면 None. `card_read`가 질문 때 LLM보다 먼저 부른다.
-    [왜] 문서 전체(Doc.run)로 읽으면 이웃 행 규칙이 SSA1H60H VRRM에 RMS 행 값(42 V)을 붙였다(11-09 조사). 카드 하나만 보고 표 단서(learn)도 쓰지 않는다
+    [왜] 문서 전체로 읽으면 이웃 행 규칙이 SSA1H60H VRRM에 RMS 행 값(42 V)을 붙였다(11-09 조사). 카드 하나만 보고 표 단서도 쓰지 않는다
     """
     D = Doc(file, parts, '')
     info = D.describe({'kind': 'table_row', 'text': card['content'], 'idx': card['chunk_id'], 'page': card['page'],

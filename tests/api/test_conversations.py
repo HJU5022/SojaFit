@@ -304,7 +304,6 @@ def native_input_path(monkeypatch):
         monkeypatch.setattr(llm,name,deny)
     monkeypatch.setattr('psycopg.connect',deny)
     monkeypatch.setattr('httpx.post',deny)
-    monkeypatch.setenv('JUDGE_READ_VOTES','1')
     def build(case_id,name,missing_current=False):
         data=plan.fixture(); job=next(j for j in plan.jobs(data) if j['case']==case_id and j['variant']=='normal')
         case=next(c for c in data['cases'] if c['id']==case_id)

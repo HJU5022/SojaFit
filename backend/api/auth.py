@@ -4,7 +4,7 @@
   `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback|pending|onboarding` · `POST /api/auth/google/signup|link`(Google 가입 · 로그인, 명시적 가입·비밀번호 재확인 연결).
 - 화면 쪽 짝: `frontend/src/api/auth.ts`.
 하지 않는 일: 비밀번호 · 세션 · 잠금 · 가입 한도 · Google 신원 확인(`backend/auth.py`), 탈퇴(`backend/api/profile.py`),
-  관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 Google 콜백 쿼리 지우기(`backend/main.py`).
+  관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 쿼리 지우기(`backend/logs.py`의 `hide_query`).
 출처: SPEC.md 4절 · 8.6절, docs/specs/login-auth.md, docs/specs/google-admin-login.md.
 읽는 환경변수: AUTH_ORIGIN(쿠키 Secure 여부 · Google 콜백 주소, 기본 http://localhost:8000), DEMO_MODE(기본 1),
   GOOGLE_AUTH_ENABLED · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET(셋 다 있어야 Google 경로가 열림).
