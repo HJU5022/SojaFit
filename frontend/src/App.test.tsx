@@ -28,6 +28,7 @@ it('uses the shared brand and signed-in email on the redesigned settings route',
 it('shares account actions and preserves logout errors and retry from settings', async () => {
   let failed = true, signedIn = true
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return signedIn ? Response.json(user) : failure()
     if (path === '/api/auth/logout' && init.method === 'POST') {
       if (failed) return failure('UNAVAILABLE', '로그아웃을 완료하지 못했습니다.', 503)
@@ -115,6 +116,7 @@ it('shows the approved public landing without requesting protected project data'
 
 it('keeps one main landmark on login and workbench routes', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return failure()
     if (path === '/api/auth/google/status') return Response.json({ enabled: false })
     return Response.json([])
@@ -123,6 +125,7 @@ it('keeps one main landmark on login and workbench routes', async () => {
   expect(await screen.findByRole('main')).toBeInTheDocument()
   view.unmount()
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(user)
     if (path === '/api/projects' || path === '/api/demo-circuits' || path === '/api/judge/roles') return Response.json([])
     return Response.json([])
@@ -157,6 +160,7 @@ it('shows restore failures instead of granting access', async () => {
 
 it('removes owned project cache immediately on logout before another session can mount', async () => {
   network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(administrator)
     if (path === '/api/auth/logout') return Response.json({ ok: true })
     if (path === '/api/auth/google/status') return Response.json({ enabled: false })
@@ -185,6 +189,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
   let session = 0; let finish!: (response: Response) => void
   let signal: AbortSignal | null | undefined; let reads = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(session ? user : administrator)
     if (path === '/api/auth/logout') return Response.json({ ok: true })
     if (path === '/api/auth/login') { session++; return Response.json({ user_id: 7 }) }
@@ -245,6 +250,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
 it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount invalidation and selection for an old successful %s request', async (kind) => {
   let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined; let reads = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (['POST', 'PATCH', 'DELETE'].includes(init.method ?? '')) {
       signal = init.signal; return new Promise(resolve => { finish = resolve })
     }

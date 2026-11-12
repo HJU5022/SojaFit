@@ -20,6 +20,7 @@ function openProjectList() { fireEvent.click(screen.getByRole('button', { name: 
 it('creates a demo, selects its server summary and keeps data out of browser storage', async () => {
   let created = false
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects' && init.method === 'POST') {
       expect(JSON.parse(init.body as string)).toEqual({ demo_id: demo.id, name: '나의 회로' })
@@ -51,6 +52,7 @@ it('creates a demo, selects its server summary and keeps data out of browser sto
 it('uploads .net multipart without parsing and clears the input on success', async () => {
   let uploaded = false
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (path === '/api/projects/upload') {
       const form = init.body as FormData
@@ -99,6 +101,7 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
   let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined
   const projectReads: string[] = []
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/demo-circuits') return Response.json([demo])
     if (init.method === 'POST') { signal = init.signal; return new Promise(resolve => { finish = resolve }) }
     projectReads.push(path)
@@ -143,7 +146,7 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
 })
 
 it('keeps file creation disabled until a file is selected', async () => {
-  network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
+  network(path => path === '/api/auth/demo' ? Response.json({ enabled: true }) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench(); openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '파일 회로' } })
   const input = screen.getByLabelText('KiCad 넷리스트') as HTMLInputElement
@@ -154,13 +157,32 @@ it('keeps file creation disabled until a file is selected', async () => {
 })
 
 it('offers retry when demo loading fails', async () => {
+  // Workbench가 먼저 demo-circuits를 치고, demoEnabled 후 refetch도 돈다. 수동 재시도 전까지만 실패시킨다.
+  let allowSuccess = false
   let attempts = 0
-  network(path => path === '/api/demo-circuits'
-    ? (++attempts === 1 ? failure('HTTP_ERROR', '데모를 불러오지 못했습니다.', 503) : Response.json([demo]))
-    : Response.json([]))
+  network(path => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
+    if (path === '/api/demo-circuits') {
+      attempts += 1
+      return allowSuccess ? Response.json([demo]) : failure('HTTP_ERROR', '데모를 불러오지 못했습니다.', 503)
+    }
+    return Response.json([])
+  })
   openWorkbench(); openCreator()
   expect(await screen.findByRole('button', { name: '다시 불러오기' })).toBeInTheDocument()
+  allowSuccess = true
   fireEvent.click(screen.getByRole('button', { name: '다시 불러오기' }))
   expect(await screen.findByRole('option', { name: demo.name })).toBeInTheDocument()
-  expect(attempts).toBe(2)
+  expect(attempts).toBeGreaterThanOrEqual(2)
+})
+
+it('hides demo circuit creation when the server is not in demo mode', async () => {
+  network(path => path === '/api/auth/demo' ? failure('NOT_FOUND', 'Not Found', 404)
+    : path === '/api/demo-circuits' ? Response.json([demo])
+    : Response.json([]))
+  openWorkbench(); openCreator()
+  expect(await screen.findByLabelText('KiCad 넷리스트')).toBeInTheDocument()
+  expect(screen.getByText(/UTF-8 KiCad 넷리스트/)).toBeInTheDocument()
+  expect(screen.queryByRole('form', { name: '데모 회로로 시작' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('데모 회로')).not.toBeInTheDocument()
 })
