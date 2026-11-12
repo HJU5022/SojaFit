@@ -12,7 +12,7 @@
 
 | 항목 | 값 | 근거 |
 |---|---|---|
-| 기준 칸(text-embedding-3-small, 하이브리드, `input` 전체, 리랭커 없음) | 문서 Recall@5 0.737, MRR 0.649, 쪽 적중@5 0.368 | `evals/results/embedding/grid_2026-11-02.json` `cells` |
+| 기준 칸(text-embedding-3-small, 하이브리드, `input` 전체, 리랭커 없음) | 문서 Recall@5 0.737, MRR 0.649, Page Hit@5 0.368 | `evals/results/embedding/grid_2026-11-02.json` `cells` |
 | 하이브리드, 리랭커 없음, `input` 전체에서 MRR 최고 | Qwen3-Embedding-0.6B 0.675 | 같은 파일, 3절 표 |
 | 리랭커 효과 | 리랭커 52칸 중 37칸에서 리랭커 없음 대비 MRR이 +0.15 초과(최대 +0.591), 감소한 칸 0 | 같은 파일에서 계산 |
 | 사전 등록 #16 기대 대조 | 5절 | |
@@ -31,7 +31,7 @@
 | BM25 | 저장소 `tokens()`와 BM25Okapi 기본값, 상위 50장, 점수 0 제외 | 같은 파일 |
 | 하이브리드 | RRF k=60 | |
 | 리랭커 | Voyage `rerank-3`, `rerank-3-lite`. 후보 전부를 넣고 상위 5장. 리랭크 988회 호출, 13,831,602토큰, 무료 토큰 안 | `meta.rerank_new_calls`, `meta.rerank_new_tokens` |
-| 지표 | `evals/runners/run_retrieval.py`와 같은 기준(문서 순위, 쪽 적중). 다중 근거 Recall@5 = 문항의 모든 gold 쪽이 상위 5에 함께 든 비율 | |
+| 지표 | `evals/runners/run_retrieval.py`와 같은 기준(문서 순위, Page Hit). 다중 근거 Recall@5 = 문항의 모든 gold 쪽이 상위 5에 함께 든 비율 | |
 | 원시 결과 | [grid_2026-11-02.json](../../evals/results/embedding/grid_2026-11-02.json)(78칸 요약, 문항별 순위, 상위 5, 단계별 시간), `evals/results/embedding/grid_embed_<모델>_2026-11-02.json` 6개, 리랭크 응답 캐시 `grid_rerank_cache_2026-11-02.jsonl`(988행) | |
 | 실행 코드 | `evals/runners/embed_cards.py`(카드 적재, 카드 임베딩), `evals/runners/run_embedding_grid.py`(78칸 측정), `evals/docker/Dockerfile.embedding_grid`, 실행 순서 [DOCKER.md](../../evals/docker/DOCKER.md). 11-02 실행 뒤 저장소 경로에 맞게 import만 고쳤고 다시 돌리지 않았다 | |
 
@@ -54,7 +54,7 @@
 
 ### 3.2 하이브리드, 리랭커 없음
 
-| 모델 | 질의 글 | 문서 Recall@5 | 문서 MRR | 쪽 적중@5 | 다중 근거 Recall@5 |
+| 모델 | 질의 글 | 문서 Recall@5 | 문서 MRR | Page Hit@5 | 다중 근거 Recall@5 |
 |---|---|---:|---:|---:|---:|
 | text-embedding-3-small | `input` 전체 | 0.737 | 0.649 | 0.368 | 0.211 |
 | KURE-v1 | `input` 전체 | 0.368 | 0.225 | 0.211 | 0.053 |
@@ -75,7 +75,7 @@
 
 78행이 `grid_2026-11-02.json` `cells`의 `summary`와 일치한다.
 
-| 모델 | 검색 | 리랭커 | 질의 글 | 문서 Recall@5 | 문서 MRR | 쪽 적중@5 | 다중 근거 Recall@5 |
+| 모델 | 검색 | 리랭커 | 질의 글 | 문서 Recall@5 | 문서 MRR | Page Hit@5 | 다중 근거 Recall@5 |
 |---|---|---|---|---:|---:|---:|---:|
 | (모델 없음) | BM25만 | 없음 | `input` 전체 | 0.263 | 0.195 | 0.211 | 0.053 |
 | (모델 없음) | BM25만 | rerank-3 | `input` 전체 | 0.579 | 0.526 | 0.421 | 0.211 |
@@ -196,7 +196,7 @@
 
 | 기대 | 측정 | 맞음/틀림 |
 |---|---|---|
-| 기준 칸: Recall@5 0.84~1.00, MRR 0.70~0.92, 쪽 적중@5 0.50~0.80 | 0.737, 0.649, 0.368 | 셋 다 틀림 |
+| 기준 칸: Recall@5 0.84~1.00, MRR 0.70~0.92, Page Hit@5 0.50~0.80 | 0.737, 0.649, 0.368 | 셋 다 틀림 |
 | 하이브리드 - dense만 MRR +0.00~+0.15 | `input` 전체 6종 +0.051~+0.129, "질문:" 줄 6종 +0.236~+0.557 | `input` 전체 맞음, "질문:" 줄 틀림 |
 | BM25만(`input` 전체) Recall@5 0.55~0.95, MRR 0.40~0.85 | 0.263, 0.195 | 틀림 |
 | "질문:" 줄 - `input` 전체: BM25만 MRR +0.00~+0.20, 하이브리드 MRR -0.02~+0.10 | BM25만 +0.744, 하이브리드 6종 +0.220~+0.643 | 틀림 |

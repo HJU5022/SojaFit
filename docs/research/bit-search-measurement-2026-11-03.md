@@ -14,7 +14,7 @@
 |---|---|---|
 | 정확 검색 질문당 시간(50문항) | p50 9,353 ms, p95 11,932 ms | `scripts/results/bit_search/bit_search_2026-11-03.json` `exact_ms` 집계 |
 | 비트 N=3,200 recall@50 | 0.980, 상위 5 일치 49/50 | 같은 파일 `bq3200` 대 `exact` 집계 |
-| 비트 N=3,200 최종 점수(관련 19문항) | 문서 Recall@5 0.737, MRR 0.649, 쪽 적중@5 0.368. 정확 검색과 같음 | `scripts/results/bit_search/bit_search_final_2026-11-03.json` `summary` |
+| 비트 N=3,200 최종 점수(관련 19문항) | 문서 Recall@5 0.737, MRR 0.649, Page Hit@5 0.368. 정확 검색과 같음 | `scripts/results/bit_search/bit_search_final_2026-11-03.json` `summary` |
 | `retrieve()` 질문당 시간 중앙값 | 6.22초에서 0.89초 | 같은 파일 `summary.exact.sec_p50`, `summary.bit3200.sec_p50` |
 | 서비스 반영 | `N_BIT = 3200`. 허용 청크가 N_BIT장을 넘으면 1비트 Hamming 거리로 거른다 | `backend/rag/retrieve.py:26,123-140`, `db/009_chunk_embedding_bits.sql` |
 
@@ -82,9 +82,9 @@ N=3,200은 판정 규칙에 없던 칸이다. 결과를 본 뒤 선택한 값(�
 
 ### 3.4 최종 점수 확인(N=3,200)
 
-사후 선택한 값이므로 위 판정 규칙과 별개의 확인이다. 지표는 `evals/runners/run_retrieval.py`의 문서 Recall@5, MRR, 쪽 적중@5이며 같은 채점 코드를 쓴다. 같은 실행 안에서 운영 Supabase에 붙어 `retrieve(..., method='hybrid')`를 두 번 부른다. 하나는 dense가 정확 검색(인덱스 끔), 하나는 dense만 비트 N=3,200 + 재정렬이다. BM25, RRF, k=5는 같다. 질문 벡터는 `q_vectors.npy`를 쓰고 임베딩 API는 부르지 않는다. 채택 규칙: 비트 쪽 문서 Recall@5가 정확 쪽과 같고 MRR 차이가 0.01 이하.
+사후 선택한 값이므로 위 판정 규칙과 별개의 확인이다. 지표는 `evals/runners/run_retrieval.py`의 문서 Recall@5, MRR, Page Hit@5이며 같은 채점 코드를 쓴다. 같은 실행 안에서 운영 Supabase에 붙어 `retrieve(..., method='hybrid')`를 두 번 부른다. 하나는 dense가 정확 검색(인덱스 끔), 하나는 dense만 비트 N=3,200 + 재정렬이다. BM25, RRF, k=5는 같다. 질문 벡터는 `q_vectors.npy`를 쓰고 임베딩 API는 부르지 않는다. 채택 규칙: 비트 쪽 문서 Recall@5가 정확 쪽과 같고 MRR 차이가 0.01 이하.
 
-| dense 방식 | 관련 문항 | 문서 Recall@5 | 문서 MRR | 쪽 적중@5 | 질문당 시간 중앙값 |
+| dense 방식 | 관련 문항 | 문서 Recall@5 | 문서 MRR | Page Hit@5 | 질문당 시간 중앙값 |
 |---|---|---|---|---|---|
 | 정확 검색 | 19 | 0.737 | 0.649 | 0.368 | 6.22초 |
 | 비트 N=3,200 + 재정렬 | 19 | 0.737 | 0.649 | 0.368 | 0.89초 |

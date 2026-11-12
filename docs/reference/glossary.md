@@ -79,4 +79,4 @@
 | 표지 청크 | "표지 청크" 11, "표지 카드" 2 |
 | 쿼리 재작성 | "재작성"으로만 쓰이고 "질의 재작성", "쿼리 재작성", "질문 재작성"은 0 |
 
-- `EVAL_REPORT.md`는 "쪽 회수율@5", "모든 근거@5"를 쓴다(100~102행). 이 용어집의 "Page Recall@k", "Full Recall@k"와 표기가 다르다.
+- 지표 이름은 "Page Recall@k", "Page Hit@k", "Full Recall@k", "Page MRR"로 쓴다. `EVAL_REPORT.md`와 `docs/research/`의 측정 문서가 같은 이름을 쓴다. 표의 "같은 뜻의 다른 표기"는 이전 문서에 남은 이름이며, 실행기 주석(`evals/runners/run_embedding_grid.py`)에는 한국어 표기가 남아 있다.
