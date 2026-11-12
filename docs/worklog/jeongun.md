@@ -1,5 +1,11 @@
 # jeongun 작업 기록
 
+## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
+- #3: `check_injection_result` 정상 종료 0 · 1행 답 비움 종료 1 출력을 `evals/results/d10/injection_check_{pass,fail}_2026-11-12.txt`에 남김(깨진 jsonl은 커밋 안 함, README에 재현).
+- #4: 멀티 현행 변이 3건(숫자 검사 끔 · `_judgement_reply` 무력화 · `MAX_AGENT_RUNS=99`) → 집중 pytest 실패 확인 후 `git checkout` 원복. GATES 변이 표 7~9행 · `mutation_2026-11-12.md`.
+- #5: 재현 한 줄 + v4h `distinct_text`/파일 sha256을 `evals/results/d10/README.md` · `corpus_v4h_fingerprint_2026-11-12.md`.
+- 안 함: #6 main 병합·재배포, #7 현 배포 재시작/격리 재스모크, gitleaks 전 이력 재스캔, 푸시.
+
 ## 2026-11-12 제출물 초안(시연 스크립트·AI도구·포트폴리오·G5/G7, 커밋만)
 - `docs/deliverables/demo_script.md`: D10 촬영용 정상·실패 컷(스모크 28 · DEMO.md · §6 재료). README·G7·§11 링크.
 - `ai_tools_log.md`: 11-09~12 행 + 규칙·실패 사례 절 채움.
