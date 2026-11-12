@@ -798,14 +798,10 @@ SojaFit (proj3-b)
 │   │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
 │   │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
 │   │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
-│   │   └── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
-│   ├── superpowers/        <- 승인된 구현 계획 원문
-│   │   ├── SUPERPOWERS.md  <- 폴더 설명
-│   │   ├── plans/
-│   │   │   ├── 2026-11-10-verified-circuit-and-datasheet-visuals.md <- 검증 회로도·데이터시트 시각화 실행 계획
-│   │   │   └── 2026-11-11-complete-schematic-delivery.md <- 외부 완성 회로도 전달 계획
-│   │   └── specs/          <- 외부 완성 회로도 설계
-│   │       └── 2026-11-11-complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계
+│   │   ├── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
+│   │   ├── verified-circuit-and-datasheet-visuals-plan.md <- 검증 회로도·데이터시트 시각화 실행 계획(승인된 원문)
+│   │   ├── complete-schematic-delivery-plan.md <- 외부 완성 회로도 전달 계획(승인된 원문)
+│   │   └── complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계(승인된 원문)
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── speed-p95-levers-2026-11-11.md <- 검색 지연 p95 개선 비교 계획
@@ -967,7 +963,6 @@ SojaFit (proj3-b)
 | `docs/reference/` | [REFERENCE.md](docs/reference/REFERENCE.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
-| `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 기능의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |

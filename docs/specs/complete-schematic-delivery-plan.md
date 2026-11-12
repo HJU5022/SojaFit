@@ -1,6 +1,5 @@
 # 완성 회로도 외부 전달 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 사용자가 부품명이나 회로 용도를 입력하면, 백엔드가 공개 GitHub 프로젝트에서 라이선스와 고정 commit이 검증된 완성 회로도 전체 시트를 찾아 PNG로 전달한다.
 
