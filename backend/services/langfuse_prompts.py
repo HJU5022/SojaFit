@@ -62,7 +62,7 @@ class AnalysisTimings(BaseCallbackHandler):
         self._end(run_id, 'interrupted' if type(error).__name__ == 'GraphInterrupt' else 'failed')
 
     def report(self):
-        # [왜] 예전에는 옛 영어 노드 이름(plan · judge_read 등)이 안 돌았다며 0ms 'skipped' 행을 덧붙였지만, 지금 노드 이름은 한국어라 늘 거짓 행이 됐다(11-11)
+        # [왜] 안 돈 단계를 0ms 'skipped' 행으로 덧붙이지 않는다. 노드 이름이 한국어라 영어 이름 목록으로 가리면 늘 거짓 행이 된다
         return list(self.stages)
 
 
