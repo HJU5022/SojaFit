@@ -196,7 +196,7 @@ SPEC 반영은 `SPEC.md`에 아직 없다(대응 제안은 [injection-preregistr
 
 본실측 03·스모크 07·08의 원시 `human_review` 값, 별도 사본 `..._03_human_jeongun.jsonl`의 값, 원시 파일 해시와 git 이력은 [injection-results.md](../research/injection-results.md) 1절이 정본이다. 이 문서는 건수를 적지 않는다.
 
-판정 출처: 원시 파일의 `human_review.reviewer`는 `team_lead`, 사본의 `reviewer`는 `정운`(20행), 자동 대조 `automatic.status`는 `pending_review`다(값은 injection-results.md 1.1절).
+판정 출처: 본실측03 110건의 사람 판정자는 심태현(전수)이고 결과는 통과 88·품질 오류 22다(조장 확인, 2026-11-13). 원시 파일의 `human_review.reviewer`=`team_lead`는 기록 오류이며 실제 판정자를 가리키지 않는다. 사본의 `reviewer`=`정운`(20행)은 하정운의 별도 표본 채점이다. 자동 대조 `automatic.status`는 `pending_review`다. 근거와 필드 값은 [injection-results.md](../research/injection-results.md) 1.1절 "판정 출처".
 
 ## 8. 증거 파일
 
@@ -227,7 +227,7 @@ SPEC 반영은 `SPEC.md`에 아직 없다(대응 제안은 [injection-preregistr
 
 | # | 내용 | 근거 |
 |---|---|---|
-| 1 | 본실측 03 검토 필드의 단일 기준값이 정해지지 않았다. injection-results.md 1절은 원시 파일 값만 적는다. 미결 | [injection-results.md](../research/injection-results.md) 1절, 8절 |
+| 1 | 본실측 03의 판정자 본인(심태현)의 서명 기록은 저장소에 없다. 판정자는 조장 확인(2026-11-13)에 근거한다 | [injection-results.md](../research/injection-results.md) 1.1절, 8절 |
 | 2 | 03 원시 파일의 SHA256이 측정 당시 기록값과 다르다(원시 파일에 `human_review`가 기록된 뒤 바이트가 바뀜). 값과 git 이력은 injection-results.md 1.2·1.3절 | `shasum -a 256`, `git log --follow` |
 | 3 | 현재 `baseline_cases.json` SHA256(`c150e716…`)은 스모크 07·08 `meta.json`의 fixture 해시와 같고 03 `fixture_sha256`(`af9c600b…`)과 다르다. 03 입력 파일은 저장소의 현재 파일이 아니라 측정 커밋 `e76c756`의 파일이다 | `shasum -a 256`, `meta.json` |
 | 4 | `injection_baseline_review_2026-11-10.json#/plans/baseline/record`의 `fixture_sha256`(`5be83eec…`)은 03 이전 입력이다. 03 입력의 plan 기록은 없다 | 위 json |

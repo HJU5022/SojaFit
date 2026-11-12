@@ -7,14 +7,14 @@
 - 담당: 검색·데이터 (`circuits/`는 평가·문서, `demo/`는 서비스·운영)
 - 정본: 코퍼스 문서·쪽·청크 수는 이 문서의 "코퍼스 수치" 표.
 
-전체 PDF·파싱·청크·임베딩 산출물은 저장소에 없다. 저장소에서 확인할 수 있는 것은 `manifest.jsonl`, PDF 표본 3건, 데모 스냅샷, `evals/results/chunking/v4h-2026-11-08/`의 요약·manifest다.
+전체 PDF·파싱·청크·임베딩 산출물은 저장소에 없다. 저장소에서 확인할 수 있는 것은 `manifest.jsonl`, PDF 표본 3건, 데모 스냅샷, `evals/results/chunking/v4h-2026-11-08/`의 요약·manifest·청크별 sha256 목록이다.
 
 ## 파일
 
 | 파일·폴더 | 유형 | 설명 |
 |---|---|---|
 | `DATA.md` | 폴더 설명 | 이 문서 |
-| `manifest.jsonl` | 데이터 | v1 청킹 당시의 코퍼스 문서 목록. 문서 단위(id, 판본, 출처, sha256, 쪽 수, 청크 수) 1,360줄. 원래 PDF 파일 이름은 `source_url` 끝 |
+| `manifest.jsonl` | 데이터 | 이전 버전(v1) 청킹 당시의 코퍼스 문서 목록. 현재 코퍼스는 v4h(아래 "코퍼스 수치"). 문서 단위(id, 판본, 출처, sha256, 쪽 수, 청크 수) 1,360줄. 원래 PDF 파일 이름은 `source_url` 끝 |
 | `package-outline-pages.json` | 데이터 | manifest 1,360문서의 공식 URL과 Docling 표제·그림이 같은 최초 패키지 외형 페이지를 URL-decoded PDF basename으로 찾는 오프라인 색인 |
 | `corpus/` | 폴더 | 코퍼스 원본 문서 표본(TSC PDF 3건)과 시험용 합성 자료. [CORPUS.md](corpus/CORPUS.md) |
 | `circuits/` | 폴더 | 평가·시연용 공개 KiCad 회로와 라이선스. [CIRCUITS.md](circuits/CIRCUITS.md) |
@@ -22,9 +22,9 @@
 
 ## 코퍼스 수치
 
-문서·쪽·청크 수의 정본이다. 다른 문서는 이 표를 링크한다. 청킹 버전마다 따로 적고, 어느 manifest가 기준인지는 정해지지 않았다.
+문서·쪽·청크 수의 정본이다. 다른 문서는 이 표를 링크한다. 현재 코퍼스는 v4h 청킹(청크 51,967)이다. `data/manifest.jsonl`(청크 52,244)은 이전 버전(v1) 청킹의 문서 목록이다.
 
-| 항목 | v1 청킹: `data/manifest.jsonl` | v4h 청킹: `evals/results/chunking/v4h-2026-11-08/` | 데모 스냅샷: `data/demo/snapshot/manifest.jsonl` |
+| 항목 | 이전 버전(v1) 청킹: `data/manifest.jsonl` | 현재 코퍼스, v4h 청킹: `evals/results/chunking/v4h-2026-11-08/` | 데모 스냅샷: `data/demo/snapshot/manifest.jsonl` |
 |---|---:|---:|---:|
 | 문서 | 1,360 | 1,360 | 42 |
 | 쪽 | 7,725 | 7,725 | 211 |
@@ -32,10 +32,11 @@
 | 서로 다른 본문 | 45,898 | 51,967 | 1,556 |
 | 청커 버전 | manifest에 없음 | `tsc-v4h-2026-11-08` | `tsc-v4h-2026-11-08` |
 | 계산 방법 | manifest 각 줄의 `pages`·`chunks` 합 | `manifest.jsonl` 각 줄의 합. `summary.json`의 `cards`·`distinct_text`도 51,967 | `manifest.jsonl` 각 줄의 합 |
-| 서로 다른 본문의 근거 | 저장소에서 재계산 불가. 값의 출처는 [GATES.md](../docs/GATES.md) G3 | `summary.json`의 `distinct_text` | [SNAPSHOT.md](demo/snapshot/SNAPSHOT.md) |
+| 서로 다른 본문의 근거 | 저장소에서 재계산 불가. 값의 출처는 [GATES.md](../docs/GATES.md) G3 | `summary.json`의 `distinct_text`, 청크별 sha256 목록의 서로 다른 해시 51,967 | [SNAPSHOT.md](demo/snapshot/SNAPSHOT.md) |
 
 - 두 manifest의 `bytes` 합은 같다: 626,919,120 (PDF 1,360건).
 - v4h 청크 본문은 저장소에 없다(약 36MB, `evals/results/chunking/v4h-2026-11-08/README.md`). 파일별 sha256은 같은 폴더의 `SHA256.txt`와 [corpus_v4h_fingerprint_2026-11-12.md](../evals/results/d10/corpus_v4h_fingerprint_2026-11-12.md).
+- v4h 청크별 sha256 목록(51,967행, 본문 없음): [chunk_sha256.tsv](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv). 해시 대상·줄바꿈(LF)·확인 및 재생성 명령·`chunks.jsonl` 입수는 [chunk_sha256.md](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md).
 - 데모 스냅샷 manifest 42줄은 v4h `manifest.jsonl`의 같은 줄과 일치한다. 스냅샷이 적어 둔 원본 manifest sha256(`426b4475…`)은 `evals/results/chunking/v4h-2026-11-08/manifest.jsonl`의 sha256과 같다 [실측].
 
 서비스가 쓰는 코퍼스:

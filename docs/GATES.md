@@ -1,7 +1,7 @@
 # 필수 게이트 자기 점검
 
 - 상태: 현행
-- 기준일: 2026-11-12
+- 기준일: 2026-11-13
 - 기준 커밋: `6707002`
 - 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
 - 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md)
@@ -75,6 +75,7 @@
 | 문서 수 | 1,360건 | `data/manifest.jsonl` 1,360행, `evals/results/chunking/v4h-2026-11-08/manifest.jsonl` 1,360행 |
 | v4h 청크 | `cards` 51,967, `distinct_text` 51,967(청커 `tsc-v4h-2026-11-08`). 게이트 1만 개 기준 초과 | [summary.json](../evals/results/chunking/v4h-2026-11-08/summary.json), [corpus_v4h_fingerprint_2026-11-12.md](../evals/results/d10/corpus_v4h_fingerprint_2026-11-12.md) |
 | 결과 파일 sha256 | `manifest.jsonl` · `summary.json` · `table_suspects.jsonl` | `evals/results/chunking/v4h-2026-11-08/SHA256.txt` |
+| 청크별 sha256 목록 | 51,967행, 서로 다른 해시 51,967, 문서 1,360. 해시는 `chunks.jsonl`의 `text`(UTF-8, LF) 51,967건 전부 재계산과 일치. 청크 본문 없음 | [chunk_sha256.tsv](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv), 형식·확인·재생성 명령 [chunk_sha256.md](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md) |
 | 새 Supabase 프로젝트 | 문서 1,360 · 청크 51,967 · 임베딩 51,967(옛 운영 DB에서 복사할 때 센 값, 2026-11-11) | `docs/worklog/jeongun.md` 11-11 항목 |
 | v1 manifest | 문서 1,360행, 청크 합 52,244, 서로 다른 본문 45,898(외부 스냅샷). v4h와 서로 다른 버전이라 섞어 세지 않는다 | `data/manifest.jsonl` |
 | 파싱 | Docling 2.145.0 + pdfplumber 대조 | [EVAL_REPORT.md](../EVAL_REPORT.md) 1-1절 |
@@ -83,10 +84,10 @@
 
 | 항목 | 이유 |
 |---|---|
-| 청크별 sha256 목록 또는 DB 행 수 조회 결과와 열람 방법 | 저장소에 없다. `chunks.jsonl` 본문은 lab에만 있다 |
-| 운영 DB에서 `sha256(본문)`을 다시 센 값 | `distinct_text`는 청킹 산출물의 서로 다른 본문 수다 |
+| DB 행 수 조회 결과 | 저장소에 조회 기록이 없다(새 Supabase 행의 값은 복사 때 센 값). 청크별 sha256 목록은 위 표에 있다 |
+| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. 운영 DB 내용과 같은지는 대조하지 않았다 |
 | 옛 운영 DB가 52,244에서 51,967로 바뀐 날짜와 이유 | 작업 기록에서 찾지 못했다 |
-| 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가 |
+| 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가. 해시 목록과의 대조에도 필요하다 |
 
 ### G4 에이전트
 
