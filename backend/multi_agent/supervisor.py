@@ -25,6 +25,7 @@ from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.revisions import document_revision, requested_revisions
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -113,7 +114,8 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
 
 def payload(state: dict, task: dict) -> dict:
     """Send 꾸러미: 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받는다(컨텍스트 분리)."""
-    base = {'task': task, 'question': state['question'], 'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
+    base = {'task': task, 'question': state['question'], 'conditions': state.get('conditions', ''),
+            'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
     if task['agent'] == 'judge':
@@ -166,11 +168,21 @@ def collect_node(state: dict) -> dict:
     tried = lambda r: r.reason == Reason.ALL_REJECTED and len(r.searches) >= MAX_SEARCHES
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
                                                      or (r.status == 'partial' and r.reason in RETRY_REASONS))]
-    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (retry or plan.get('replan')):
-        if os.getenv('SUPERVISOR_REPLAN', '1') == '0':
-            pass  # [왜] 속도·정확도 A/B용. 기본(1)은 재계획 유지. 0이면 no_result 등에서도 docs 재시도 없이 아래 거절·답으로 간다
-        else:
-            return {**out, 'outcome': 'replan'}
+    # A candidate-find report with an actual table is already a usable answer.
+    # Haiku can leave ``replan`` set after that report, which used to send the
+    # same candidate search back through Supervisor and consume the remaining
+    # evaluation budget.  Keep retrying independent failed tasks, but do not
+    # repeat a plan-only replan when the candidate table is present.
+    has_candidate_table = any(
+        r.agent == 'judge'
+        and r.status == 'ok'
+        and r.judgement.get('kind') == 'find'
+        and (r.judgement.get('shown') or r.judgement.get('results'))
+        for r in current
+    )
+    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (
+            retry or (plan.get('replan') and not has_candidate_table)) and os.getenv('SUPERVISOR_REPLAN', '1') != '0':
+        return {**out, 'outcome': 'replan'}
     final_dump = {'final_reports': [r.model_dump(mode='json') for r in final]}
     good = [r for r in final if r.status != 'fail']
     if not good:
@@ -182,7 +194,11 @@ def collect_node(state: dict) -> dict:
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
     uses_pdf = any(cid.startswith('W') for r in good for cid in r.evidence_ids)
-    joinable = uses_pdf or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
+    # A verified candidate table remains authoritative even when an auxiliary
+    # document task has a partial answer. Joining avoids a second model
+    # rewriting either its numeric conditions or the candidate list.
+    has_candidate_table = any(r.agent == 'judge' and r.judgement.get('kind') == 'find' for r in good)
+    joinable = uses_pdf or has_candidate_table or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -267,6 +283,10 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
                      + (f" (reason {r.reason.value})" if r.reason else ''))
         if r.status != 'fail':
             lines.append('answer:\n' + part_text(r))
+            if r.missing:
+                # 종합 모델이 부분 답을 한 예시로 축약하지 않도록, 답변에 포함해야 할
+                # 미충족 체크리스트를 원문 보고와 함께 전달한다.
+                lines.append('missing checklist: ' + '; '.join(r.missing))
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
@@ -310,6 +330,17 @@ def check_node(state: dict) -> dict:
     if expected_pdf or any(cid.startswith('W') for cid in cited):
         if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:
             problem = True
+    requested_revisions = _requested_revisions(state)
+    if requested_revisions:
+        # The final answer may only cite a document whose filename carries one
+        # of the revisions explicitly requested by the user. This closes the
+        # supervisor merge boundary after individual task filtering.
+        cited_docs = [d for d in state.get('docs') or [] if str(d.get('chunk_id')) in cited]
+        mismatched = [d for d in cited_docs
+                      if _document_revision(d.get('file') or d.get('document')) not in requested_revisions]
+        if mismatched:
+            check['revision_mismatch'] = [d.get('file') or d.get('document') for d in mismatched]
+            problem = True
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}
@@ -322,3 +353,11 @@ def check_node(state: dict) -> dict:
 
 def after_check(state: dict) -> str:
     return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']
+def _requested_revisions(state: dict) -> set[str]:
+    """Extract only revision codes explicitly present in the user's request."""
+    text = ' '.join((state.get('question', ''), state.get('conditions', '')))
+    return requested_revisions(text)
+
+
+def _document_revision(document: object) -> str:
+    return document_revision(document)
