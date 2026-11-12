@@ -2,7 +2,7 @@
 
 - 기준: **운영 DB(Supabase) 구조를 11-10 밤에 읽기 전용으로 뽑은 것**(칸 · 타입 · 키 · 인덱스는 `pg_catalog`에서 자동 생성, 의미 · 소유 코드는 손으로 적음). 행 내용은 읽지 않았다.
 - 범위: 서비스 표 25개(`public` 16 + `sojafit_agent` 9). 코퍼스 4표(`source_documents` · `document_chunks` · `chunk_embeddings` · `chunk_embedding_bits`)와 LangGraph 체크포인트 표(`checkpoints` · `checkpoint_blobs` · `checkpoint_writes` · `*_migrations`)는 범위 밖이다.
-- 새 구조와의 비교는 [`../to-be/tables.md`](../to-be/tables.md), 그림은 [`erd.md`](erd.md).
+- 새 구조와의 비교는 [`to-be-tables.md`](to-be-tables.md), 그림은 [`as-is-erd.md`](as-is-erd.md).
 
 | 스키마.표 | 행 | 크기 | 목적 |
 |---|---|---|---|

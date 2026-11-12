@@ -8,5 +8,5 @@
 
 ## 파일
 - `AUTH.md` — 이 문서
-- `auth_boundary_after_merge.py` — 잠금 해제(15분)·유휴 만료(30분)·절대 만료(8시간) 경계 시각 실측. `TEST_AUTH_DATABASE_URL=... uv run python scripts/auth/auth_boundary_after_merge.py` → `scripts/results/auth/auth_boundary_<KST 날짜>.json`
+- `auth_boundary_after_merge.py` — 잠금 해제(15분)·유휴 만료(2시간)·절대 만료(8시간) 경계 시각 실측. `TEST_AUTH_DATABASE_URL=... uv run python scripts/auth/auth_boundary_after_merge.py` → `scripts/results/auth/auth_boundary_<KST 날짜>.json`
 - `measure_scrypt_concurrent.py` — 동시 scrypt 상한(2건)과 프로세스 메모리 실측. **Windows 전용**(`ctypes.windll`). `uv run python scripts/auth/measure_scrypt_concurrent.py` → `scripts/results/auth/scrypt_concurrent_<KST 날짜>.json`

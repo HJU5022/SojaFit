@@ -1,6 +1,6 @@
 # 목표(to-be) ERD
 
-- 기준: [`db/020_service_baseline.sql`](../../020_service_baseline.sql). 표 정의서는 [`tables.md`](tables.md), 현재 구조는 [`../as-is/erd.md`](../as-is/erd.md).
+- 기준: [`db/020_service_baseline.sql`](../../../db/020_service_baseline.sql). 표 정의서는 [`to-be-tables.md`](to-be-tables.md), 현재 구조는 [`as-is-erd.md`](as-is-erd.md).
 - **모든 선이 DB의 FK다.** 현재 구조의 점선(같은 UUID로만 묶임)이 사라졌고, `sojafit_agent.*`의 FK는 전부 `CASCADE`다.
 - `agent_*`는 `sojafit_agent.*` 스키마의 표를 그림 이름 규칙 때문에 줄여 쓴 것이다.
 
@@ -148,4 +148,4 @@ erDiagram
     }
 ```
 
-`sojafit_agent.threads` · `messages`를 `public`으로 합쳐 분석 서비스에 "대화 상태" 표가 하나만 남는 모양이다. 효과는 가장 크지만 분석 서비스 전체(`memory_service.py` 약 15개 함수)와 시험 60여 개를 다시 써야 하고, 분석 입력 문자열이 조금이라도 달라지면 키 없는 데모의 기록 재생이 깨진다([`impact.md`](impact.md) 4절). 추천안(그림 1)은 이 합치기의 **전제(FK, 단일 회로 사본)**까지만 만든다.
+`sojafit_agent.threads` · `messages`를 `public`으로 합쳐 분석 서비스에 "대화 상태" 표가 하나만 남는 모양이다. 효과는 가장 크지만 분석 서비스 전체(`memory_service.py` 약 15개 함수)와 시험 60여 개를 다시 써야 하고, 분석 입력 문자열이 조금이라도 달라지면 키 없는 데모의 기록 재생이 깨진다([`to-be-impact.md`](to-be-impact.md) 4절). 추천안(그림 1)은 이 합치기의 **전제(FK, 단일 회로 사본)**까지만 만든다.

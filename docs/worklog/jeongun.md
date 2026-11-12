@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-12 강사 1축 코멘트 반영(커밋만, 푸시·PR 없음)
+- 여정 맵 현행화(`da5816a`), 지불 주체 행(`bd05259`), 비교표 판정 기준 열·Codex 서술(`e4e986e`)은 PR #108이 같은 파일(`market-user-journey.md`, `EVAL_REPORT.md` 10장, `evaluation-prep.md`)을 다시 써서 병합 때 버리고 #108 쪽을 따랐다(조장 결정). 원래 커밋은 `backup/jeongun-pre-108` 브랜치에 남아 있다.
+- 우리 쪽에 남은 것: 아래 근거 폴더 복사, `TOPIC.md` 5행 안내, 그 안내에 맞춘 237건 원자료 위치 문장(`market-user-journey.md` 18행, `TOPIC.md` 7행).
+- `443a32a` 각주 [1][2][4] 원자료 9개를 `docs/research/evidence/`로 복사(바이트 동일, 약 2.0MB, `EVIDENCE.md`에 sha256), `TOPIC.md` 5행 안내 문장 갱신.
+- 후속 A: 근거 폴더를 레포 구조 시험에 맞춤(`README.md` → `EVIDENCE.md`, `집계.md` → `jobs2-summary.md`, SOJAFIT.md 트리·RESEARCH.md 목록 추가). `tests/repo` 위반 목록은 f13860f 기준과 같고 `docs/research/evidence`는 없음.
+- 후속 B: 각주 [3] 두 파일을 넣지 않음. OpsMate 등 다른 후보 주제와 로컬 작업 메모가 들어 있고 조장 PC 절대 경로가 있음. 조장 판단 대기.
+- 안 함: 각주 [3] 파일 복사(조장 PC 절대 경로 포함), 외부 검토자 기록, 푸시·PR·병합, 서버·LLM 호출.
+
 ## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
 - #3: `check_injection_result` 정상 종료 0 · 1행 답 비움 종료 1 출력을 `evals/results/d10/injection_check_{pass,fail}_2026-11-12.txt`에 남김(깨진 jsonl은 커밋 안 함, README에 재현).
 - #4: 멀티 현행 변이 3건(숫자 검사 끔 · `_judgement_reply` 무력화 · `MAX_AGENT_RUNS=99`) → 집중 pytest 실패 확인 후 `git checkout` 원복. GATES 변이 표 7~9행 · `mutation_2026-11-12.md`.
@@ -37,7 +45,7 @@
 - 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
 
 ## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
-- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
+- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/guides/v3_50_codex_paste.md`](../../evals/guides/v3_50_codex_paste.md).
 - EVAL_REPORT §10: Codex vs 우리 서비스 표본 5행(v3-01·05·10·26·45). Codex는 자동 채점 없음. 우리 쪽은 #52/`d9-improve2` 원시.
 - D9 묶음(증거 A~D · #52 · paste · Codex 답 · 문서) 커밋·PR. scratchpad·langfuse probe·synth·실패 스모크는 제외.
 

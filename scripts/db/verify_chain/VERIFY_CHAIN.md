@@ -2,7 +2,7 @@
 
 ## 역할
 - 이 폴더: 새 DB 기준선(`db/*.sql`: 코퍼스 + `020_service_baseline.sql` + `026`)이 옛 체인(`db/legacy/` 포함)에 운영 이전 SQL을 적용한 결과와 같은 구조를 만드는지 일회용 도커 컨테이너로 확인하는 스크립트를 둡니다. 운영 DB에는 접속하지 않습니다.
-- 넣는 것: 구조 비교 스크립트. 비교 도구(`db/redesign/verify/lib/rd_struct.py`)와 표본 데이터는 `db/redesign/verify/`의 것을 씁니다.
+- 넣는 것: 구조 비교 스크립트. 비교 도구(`scripts/db/verify_redesign/lib/rd_struct.py`)와 표본 데이터는 `scripts/db/verify_redesign/`의 것을 씁니다.
 - 넣지 않는 것: 초기화 SQL(`db/`), 운영 이전 SQL(`db/migrations/`), 시험(`tests/`).
 - 담당: 서비스·운영
 

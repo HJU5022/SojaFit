@@ -1,10 +1,10 @@
 # SojaFit SPEC
 
-이 문서는 SojaFit 기능의 정본입니다. 다른 문서와 내용이 다르면 이 문서를 따릅니다. 코드나 기준을 바꾸면 해당 절을 같은 PR에서 고칩니다. 바뀐 결정의 이유는 `docs/adr/`에 두고, 여기에는 현재 값만 둡니다. 날짜는 README 일정 표에, 담당과 수정 경로는 `docs/조원-계약서.md`에 둡니다.
+이 문서는 SojaFit 기능의 정본입니다. 다른 문서와 내용이 다르면 이 문서를 따릅니다. 코드나 기준을 바꾸면 해당 절을 같은 PR에서 고칩니다. 바뀐 결정의 이유는 `docs/adr/`에 두고, 여기에는 현재 값만 둡니다. 날짜는 README 일정 표에, 담당과 수정 경로는 `docs/reference/team-contract.md`에 둡니다.
 
 아직 정하지 않은 칸은 `(정할 것)`으로 둡니다.
 
-**현재 구현 경계(2026-11-10 `jeongun` 코드 기준):** 서비스 API는 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 데모 모드 이메일 가입 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기. 장기 기억은 멀티 그래프의 `기억 읽기` 노드가 선호 실장 방식으로 후보 순서만 바꾸는 데 씁니다(8.5). 운영 Cloud Run은 11-10 저녁에 Google 가입 · 로그인, 보안 보강, 세창 작업대 화면(#84)을 더해 배포했다(`docs/GATES.md` G1). 키 없는 데모(`DEMO_REPLAY=1`)의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생하며(7절), 기록은 데모 질문 5개(`data/demo/recordings/`)뿐이라 기록에 없는 질문은 받지 않습니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
+**현재 구현 경계(2026-11-10 `jeongun` 코드 기준):** 서비스 API는 로그인 · Google 가입 · 로그인(일반 사용자 · 관리자) · 이메일 인증 가입 · 비밀번호 재설정 · 데모 모드 버튼 로그인 · 관리자 계정 · 가격 조회 · 공통 오류 응답, 사용자별 분석 thread(PostgreSQL 체크포인트, 빠진 조건을 묻는 interrupt와 재개, 판정 승인), 사용자 사실 3칸 장기 기억(Store, 의미 검색 색인, `/api/me/memory`), React 작업대(프로젝트 · 회로 업로드 · 대상 선택 · 분석 실행 · 후보 승인 · 견적), 탈퇴 · 프로젝트 삭제, 보관 기간 청소를 제공합니다. 아직 없는 것: 회로 없이 바로 질문하는 입구, 승인 사례를 다음 판정에 함께 보이기. 장기 기억은 멀티 그래프의 `기억 읽기` 노드가 선호 실장 방식으로 후보 순서만 바꾸는 데 씁니다(8.5). 운영 Cloud Run은 11-10 저녁에 Google 가입 · 로그인, 보안 보강, 세창 작업대 화면(#84)을 더해 배포했다(`docs/GATES.md` G1). 키 없는 데모(`DEMO_REPLAY=1`)의 React 분석은 같은 멀티 에이전트 그래프를 돌리고 LLM 응답만 기록에서 재생하며(7절), 기록은 데모 질문 5개(`data/demo/recordings/`)뿐이라 기록에 없는 질문은 받지 않습니다. 아래 사용자 흐름 중 미구현 단계는 목표 계약이며 현재 서비스 완료를 뜻하지 않습니다.
 
 ## 1. Why·Goal
 
@@ -103,11 +103,11 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 답 조립의 출력 경계(11-10, STH 제안 · 조장 반영): `Spec 에이전트`의 판정(kind=judge) 보고가 하나라도 있으면(판정 성공 · 실패와 관계없이) `답 정리` · `종합` 모두 코드 판정 답 틀(`render_judgement`: 판정 · 조건 표 · 인용 · 빠진 값 · 불확실 조건)만 냅니다. RAG 에이전트 답과 종합 LLM 글은 판정 답에 붙이지 않고, 이때 종합 LLM은 부르지 않습니다. 판정과 함께 물은 별도 문서 설명은 "별도로 요청한 문서 설명은 이 답변에 포함하지 않았습니다"로 알리고, 일부 판정이 실패 · 미완료면 "일부 부품의 판정은 완료하지 못했습니다", 모두 실패면 "판정을 완료하지 못했습니다"를 냅니다. 원래 보고(`reports`)는 그대로 두고 `답 검사`는 답에 쓴 판정 보고(`final_reports`)만 봅니다. 문서만 묻는 질문, 찾기(find), 규칙 밖 역할(no_rule)은 예전처럼 문서 답 · 종합을 씁니다.
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py`의 `_chat_model`). 11-09 조장 결정에 사용한 저장소 밖 lab v3 50문항 실행에서는 정확도가 유지되고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었습니다. 그 측정은 동결 전 lab v3 초안으로 했고 원시 결과는 저장소 밖에 있어, 이 수치는 구현 결정 근거이며 G5 공식 점수로 세지 않습니다(v3는 11-10에 `evals/dataset_v3.jsonl`로 동결).
-- `docs/조원-계약서.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
+- `docs/reference/team-contract.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
 
 ### 설계 질문
 
-`docs/조원-계약서.md`의 "조가 채울 것" 8문항에 답이 정해지면 이 절로 옮깁니다.
+`docs/reference/team-contract.md`의 "조가 채울 것" 8문항에 답이 정해지면 이 절로 옮깁니다.
 
 ## 3. 대체 판정 5종
 
@@ -133,23 +133,26 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처: (정할 것)
-- HTTP API: 동작(메서드 + 경로) 36개, 경로 30개입니다. `/openapi.json`(`/docs`)에 동작 33개(경로 27개)가 보이고, Google 관리자 로그인 3개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 11개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 3개, Google 이동 · HTML 3개를 뺀 29개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
-  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 18개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
+- HTTP API: 동작(메서드 + 경로) 48개, 경로 41개입니다. `/openapi.json`(`/docs`)에 동작 41개(경로 34개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 38개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+  - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 25개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
     |---|---|---|---|---|---|
     | `GET /health` | 없음 | - | 200 `Health` `{status: "ok"}` | | 배포 주소 · 새 clone 기동의 생존 확인(G1 · G2, G2 실측이 이 응답 시각을 잼) |
     | `POST /api/auth/login` | 없음 | `Login` `{email, password}` | 200 `UserId` `{user_id}` + 세션 쿠키 | 401 · 422 | 평가 계정으로 접속(G1), 계정마다 대화 · 기억을 가르는 세션(G4, 8.6) |
-    | `GET /api/auth/me` | 로그인 | - | 200 `Me` `{user_id, role}` | 401 | 화면이 로그인 상태와 관리자 메뉴를 고름(8.6) |
+    | `GET /api/auth/me` | 로그인 | - | 200 `Me` `{user_id, role, email}` | 401 | 화면이 로그인 상태와 관리자 메뉴를 고름(8.6) |
     | `POST /api/auth/logout` | 없음(쿠키의 세션을 지움) | - | 200 `Ok` `{ok}` | | 세션을 끝내고 다른 계정으로 바꿈(8.6 로그아웃, G4 두 계정 확인) |
     | `GET /api/auth/demo` | 데모 모드 | - | 200 `Enabled` `{enabled}` | 404 | 키 없는 데모에서 로그인 화면이 데모 버튼을 보일지 정함(G2, 7절 · 8.6) |
     | `POST /api/auth/demo-login` | 데모 모드 | `DemoLogin` `{account: a \| b}` | 200 `UserId` + 세션 쿠키 | 404(계정 없음) · 422 | 평가자가 비밀번호 없이 데모 사용자 A · B로 들어가 격리를 봄(G2 · G4, 8.6) |
     | `GET /api/demo-questions` | 로그인 | - | 200 `list[DemoQuestion]` `[{id, kind, circuit, demo_id, target, question, conditions, resume: {answers, role} \| null}]` | 404(재생 모드 아님) · 503(기록 파일 · 분석 서비스 없음) | 키 없는 데모에서 화면이 기록한 질문을 데모 회로 · 대상별 버튼으로 보이고 같은 글자로 보냄(G2, 7절). 기록한 답 · 판정은 싣지 않음 |
-    | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[Thread]` `[{id, project_id}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
+    | `GET /api/projects/{id}/threads` | 로그인 | - | 200 `list[ThreadSummary]` `[{id, project_id, title, created_at, last_activity_at, latest_run_id, status}]` | 404 | 프로젝트의 사용자 대화를 다시 엶(G4 사용자별 thread) |
     | `POST /api/projects/{id}/threads` | 로그인 | - | 201 `Thread` | 404 | 새 대화 = 같은 UUID의 분석 thread(G4, 8.5 삭제 범위) |
+    | `GET /api/threads/{id}` | 로그인 | 선택 쿼리 `limit` 1~100(기본 50) · `before_message_id` | 200 `ThreadDetail` `{id, project_id, title, target_ref, target_locked, latest_run, messages, next_before_message_id}` | 404 · 422 · 503 | 대화의 저장한 메시지를 최근 쪽부터 쪽 단위로 다시 읽음(G4 사용자별 thread) |
+    | `DELETE /api/threads/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 대화 하나와 같은 UUID 분석 기록을 지움(8.5 삭제) |
     | `POST /api/threads/{id}/runs` | 로그인 | `StartRun` `{question 1~4000자, target_ref ≤100자, conditions ≤2000자}` | 200 SSE(아래 이벤트 표) | 스트림 전 503(분석 서비스 없음 · 키 없는 데모의 기록 없음) · 429 `LIMIT_EXCEEDED`(하루 토큰 상한) · 422(회로에 없는 부품, 키 없는 데모에서 기록하지 않은 회로 · 대상 · 질문 · 조건이면 데모 질문 목록을 문구에 담음) · 409(대상 부품 바꿈 · 실행 중 run) · 413 · 404. 스트림 뒤는 `failed`의 `error.code` | 질문 하나를 멀티 에이전트 그래프로 분석하고 진행을 보냄(G4, 2절 흐름 3~6단계) |
     | `GET /api/runs/{id}` | 로그인 | - | 200 `Run` `{id, thread_id, message_id, result}` | 404 | 연결이 끊겨도 저장한 마지막 상태를 다시 읽음(다시 실행하지 않음) |
+    | `POST /api/runs/{id}/recover` | 로그인 | - | 200 `Run` | 404 | 소유한 run의 오래된 상태만 정리하고 `Run`을 돌려줌(분석 · 모델 호출 · 질문 재전송 없음) |
     | `POST /api/runs/{id}/resume` | 로그인 | `ResumeRun` `{answers: {값 이름: 답} ≤30개, role: R01~R23(역할을 물었을 때만)}` | 200 SSE | 422 · 429 · 409 · 404. 키 없는 데모에서 기록과 다른 답 · 역할은 스트림 뒤 `failed` 422 | 빠진 회로 값 · 역할을 묻는 interrupt를 같은 thread에서 재개(G4 체크포인트, 2절 사람 확인) |
     | `POST /api/messages/{id}/approvals` | 로그인 | `ApproveBody` `{candidate_part, verdict: IDENTICAL \| SPEC_EQUIVALENT \| ROLE_SUFFICIENT}` | 201 `Approval` `{id, message_id, candidate_part, verdict, case_id, created_at}` | 404 · 409 `ALREADY_APPROVED`(완료 판정이 아니거나 이미 승인) · 422 | 견적서는 사람이 승인한 뒤에만 저장(1절 하는 일, 8.4, G4 견적서 승인 지점) |
     | `GET /api/me/memory` | 로그인 | 선택 쿼리 `q` 1~500자 | 200 `list[ProfileFact]` `[{kind, value, text, version, updated_at, source}]` | 422 · 503 | 사용자 사실 장기 기억 조회 · 의미 검색(G4 기억 격리, 8.5) |
@@ -162,7 +165,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     |---|---|---|---|---|---|
     | `GET /api/demo-circuits` | 로그인 | - | 200 `list[DemoCircuit]` `[{id, name}]` | | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계) |
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
-    | `POST /api/projects` | 로그인 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
+    | `POST /api/projects` | 로그인 · 데모 모드 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
     | `GET /api/projects/{id}` | 로그인 | - | 200 `Project` | 404 | 회로 연결을 읽어 바꿀 부품을 고름(2단계) |
     | `PATCH /api/projects/{id}` | 로그인 | `RenameProject` `{name 1~200자}` | 200 `Project` | 404 · 422 | 프로젝트 이름 바꾸기 |
@@ -176,21 +179,30 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
     |---|---|---|---|---|---|
     | `GET /api/auth/google/status` | 없음(문서에서 숨김) | - | 200 `Enabled` | | 로그인 화면이 Google 진입을 보일지 정함(8.6, `docs/specs/google-admin-login.md`) |
-    | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | Google 가입 · 로그인 시작. 쿼리 `consent=1`이면 처리방침 동의 쿠키를 함께 심는다(8.6) |
-    | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(세션) · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급(연결된 신원 · 이메일이 같은 활성 계정에 자동 연결 · 동의한 새 이메일). 연결할 수 없으면(비활성 · 이미 다른 Google 신원에 연결됨) `/login?google=error`. 동의 없는 새 이메일은 `/login?google=consent`(8.6) |
+    | `GET /api/auth/google/start` | 없음(설정이 켜졌을 때만, 숨김) | - | 303 Google 인증 화면 | 404 · 503 | Google 가입 · 로그인 시작(8.6) |
+    | `GET /api/auth/google/callback` | 없음(숨김) | 쿼리 `state` · `code` | 303 `/login`(연결된 활성 계정이면 세션) · 연결이 없으면 15분 유효 연결 요청을 만들고 303 `/login?google=finish` · 실패는 `/login?google=error` | 404 | Google 확인 결과로 세션 발급 또는 가입 · 연결 요청 생성(8.6). 계정은 이 단계에서 만들지 않는다 |
+    | `GET /api/auth/google/pending` | 없음(숨김, 연결 요청 쿠키) | - | 200 HTML(확인된 이메일 · 요청 번호를 운영자에게 전달하라는 안내) | 400(요청 만료) · 404 · 503 | 관리자 계정 연결을 운영자 CLI(`--approve-google`)로 승인받을 때 쓰는 안내(8.6) |
+    | `GET /api/auth/google/onboarding` | 없음(숨김, 연결 요청 쿠키) | - | 200 `GoogleOnboarding` `{email(가림)}` | 400(요청 만료) · 404 | 가입 · 연결 화면이 Google이 확인한 이메일을 가려서 보임(8.6) |
+    | `POST /api/auth/google/signup` | 없음(숨김, 연결 요청 쿠키) | `GoogleSignup` `{consent?}` | 200 `UserId` + 세션 쿠키 | 400(요청 만료) · 404 · 409(이미 있는 이메일 · 이미 연결된 Google 계정) · 429 | 새 이메일의 비밀번호 없는 `user` 계정을 만들고 로그인(8.6) |
+    | `POST /api/auth/google/link` | 없음(숨김, 연결 요청 쿠키) | `Login` `{email, password}` | 200 `UserId` + 세션 쿠키 | 400 · 401 · 404 · 409 | 기존 계정의 이메일 · 비밀번호를 다시 확인한 뒤 Google 신원을 그 활성 일반 계정에 연결하고 로그인(8.6) |
     | `GET /api/admin/users` | 관리자 | - | 200 `Accounts` `{users: [{id, email(가림), role, is_active}]}` | 403 | 계정 상태 확인(8.6 관리자) |
     | `PATCH /api/admin/users/{id}` | 관리자 | `AccountState` `{is_active}` | 200 `Ok` | 403 · 404 · 422 | 일반 계정 비활성화와 세션 폐기(8.6) |
-    | `POST /api/auth/signup` | 없음 | `Signup` `{email, password ≥8자, consent: true}` | 200 `UserId` + 세션 쿠키 | 404(`DEMO_MODE`≠1) · 409 · 422 · 429 `RATE_LIMITED` | 로컬 데모 전용 이메일 가입. 공개 배포는 닫혀 있고 Google로 가입한다(11-10 결정이 11-09 결정을 대체, 8.6) |
+    | `POST /api/auth/signup` | 없음 | `Signup` `{email, consent?}` | 200 `Ok` `{ok}`(계정 · 세션을 만들지 않음) | 422 · 429 · 503(메일 설정 없음) | 가입 확인 메일(60분 유효 링크)을 보냄. 이미 계정이 있어도 같은 응답이라 계정 존재를 드러내지 않는다(8.6) |
+    | `POST /api/auth/signup/confirm` | 없음 | `PasswordAction` `{token 43자, password 12~1024자}` | 200 `Ok` | 400(링크 만료 · 사용 불가) · 422 · 429 `RATE_LIMITED`(IP당 하루 가입 한도) · 503 | 메일 링크의 토큰과 비밀번호로 이메일 확인 시각이 찍힌 `user` 계정을 만듦. 세션은 로그인에서 받는다(8.6) |
+    | `POST /api/auth/password-reset` | 없음 | `Signup` `{email, consent?}` | 200 `Ok` | 422 · 429 · 503 | 비밀번호 재설정 메일(15분 유효 링크)을 보냄. 활성 비밀번호 계정이 아니면 메일을 보내지 않고 같은 응답 |
+    | `POST /api/auth/password-reset/confirm` | 없음 | `PasswordAction` | 200 `Ok` | 400 · 422 · 503 | 새 비밀번호로 바꾸고 그 계정의 세션과 로그인 실패 횟수를 지움 |
     | `DELETE /api/me` | 로그인(일반 계정) | - | 200 `Deleted` `{deleted: {이름: 건수}}` | 409(관리자 · 진행 중 분석) · 503 | 동의 철회 · 탈퇴(8.5 삭제, 개인정보 보호법 37조) |
     | `GET /api/approved-cases` | 로그인 | - | 200 `list[ApprovedCase]` `[{id, approval_id, candidate_part, verdict, created_at}]` | | 내가 승인한 사례 확인(`docs/specs/d5-frontend-service.md` How, 장기 기억이 아님 8.5) |
     | `DELETE /api/approved-cases/{id}` | 로그인 | - | 204 | 404 | 승인 사례를 확인 뒤 지움(같은 작업서) |
     | `GET /api/prices` | 로그인 | 쿼리 `parts` 품번 1~10개 | 200 `PricesAvailable \| PricesUnavailable` | 422 | 후보의 가격 · 재고를 근거와 따로 보임, 저장하지 않음(1절 하는 일, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
+    | `GET /api/external-circuits/schematics` | 로그인 | 쿼리 `q` 2~200자 | 200 `ExternalSchematicResponse` `{project, commit, license, attribution, repository_url, source_url, source_file, images: [{sheet, url}]}` | 404 `SCHEMATIC_NOT_FOUND` · 422 · 502 · 503 | 검증된 외부 원본 완성 회로도를 찾아 출처 · 라이선스와 시트 이미지 주소를 보임, 저장하지 않음(`Cache-Control: no-store`) |
+    | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 로그인 | - | 200 `image/png` | 404 `SCHEMATIC_NOT_FOUND` · 502 · 503 | 위 응답의 서명된 주소로 시트 이미지 한 장을 받음 |
 
-  - 인증 · 가입: 사전 생성된 이메일 계정 · Google 계정 · (데모 모드) 이메일 가입 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). **11-10 결정: 공개 배포(`DEMO_MODE=0`)는 이메일 인증이 없는 이메일 자기 가입(11-09 결정)을 닫고, 이메일은 Google이 확인한 것만 받습니다.** 이메일 가입(`DEMO_MODE=1`)은 비밀번호 8자 이상, `consent`는 가입 화면의 처리방침 고지 동의로 없거나 true가 아니면 422이고, 관리자 승인 · 이메일 인증 없이 `user` 계정을 만들어 로그인과 같은 세션 쿠키를 심습니다. 중복 이메일 409, 입력 오류 422(입력값 미노출), 클라이언트 IP당 UTC 하루 3회를 넘으면 429입니다(11-09 결정).
+  - 인증 · 가입: 사전 생성된 이메일 계정 · Google 계정 · 이메일 인증으로 가입한 계정과 DB 세션을 씁니다(상세 `docs/specs/login-auth.md`). **11-12 인증 통합(#109): 이메일 가입은 메일 링크로 이메일을 확인한 뒤에만 계정을 만듭니다(`DEMO_MODE`와 상관없이 열림).** `POST /api/auth/signup`은 이메일만 받아 가입 메일(60분 유효 링크)을 보내고 이 단계에서는 계정 · 세션을 만들지 않습니다. 링크의 토큰과 비밀번호(12~1024자, 공백뿐 · 숫자만 · 단순 반복 불가)를 `POST /api/auth/signup/confirm`으로 보내면 `user` 계정이 만들어지고, 세션은 로그인에서 받습니다. `consent`는 있어도 되는 선택 칸이며 동의 증거로 저장하지 않습니다. 메일 설정이 없으면 503, 같은 이메일(5회/시간) · IP(10회/시간) · 서비스 전체(200회/일) 메일 요청 한도를 넘으면 429, 클라이언트 IP당 UTC 하루 3회를 넘는 가입 확정도 429입니다(11-09 결정). 입력 오류는 422(입력값 미노출)입니다.
   - 관리자: 일반 사용자는 관리자 API를 부를 수 없고, 비활성화하면 그 계정의 기존 세션을 지웁니다. 관리자 계정의 상태는 이 API로 바꾸지 않습니다.
-  - Google 가입 · 로그인: `GOOGLE_AUTH_ENABLED=1`과 클라이언트 설정이 있을 때만 켜집니다. 연결된 활성 계정(관리자 · 일반 사용자)은 기존 서버 세션을 받고, 처음 오는 이메일은 로그인 화면에서 처리방침에 동의하고 시작했을 때만(`consent=1` 쿠키) 비밀번호 없는 `user` 계정이 만들어집니다. Google이 확인한 이메일(소문자 · 공백 제거)이 활성 계정(관리자 포함)의 로그인 이메일과 정확히 같으면 운영자 승인 없이 그 계정에 신원을 연결하고 로그인합니다(비밀번호 로그인도 그대로 됩니다). 비활성 계정이나 이미 다른 Google 신원에 연결된 계정은 연결하지 않고 로그인 오류입니다. 11-10 정운 결정으로 11-09~10의 "이메일이 이미 있으면 자동 연결하지 않고 운영자 승인"을 뒤집었다(근거: Google이 이메일 소유를 확인(`email_verified`), 이메일 가입을 닫음, Google 콘솔 테스트 사용자 허용 목록, Marvia에서도 같은 방식). 연결 철회는 `python -m backend.auth`의 운영자 CLI를 씁니다(상세 `docs/specs/google-admin-login.md`).
+  - Google 가입 · 로그인: `GOOGLE_AUTH_ENABLED=1`과 클라이언트 설정이 있을 때만 켜집니다. 연결된 활성 계정(관리자 · 일반 사용자)은 기존 서버 세션을 받습니다. 연결이 없는 Google 신원은 콜백에서 15분 유효 연결 요청만 만들고 `/login?google=finish`로 보내며, 계정은 사용자가 고른 뒤에 만들어집니다. 새 이메일이면 `POST /api/auth/google/signup`이 비밀번호 없는 `user` 계정을 만들고 로그인합니다(동의 칸은 필요 없고 저장하지 않음). Google이 확인한 이메일(소문자 · 공백 제거)이 이미 있는 계정의 로그인 이메일이면 가입은 409이고, `POST /api/auth/google/link`로 그 계정의 이메일 · 비밀번호를 다시 확인해야 활성 일반 계정에 연결됩니다. 관리자 계정은 이 경로로 연결할 수 없고(409) 운영자 CLI `python -m backend.auth --approve-google`로 승인합니다. 비활성 계정이거나 이미 다른 Google 신원에 연결된 경우도 연결하지 않습니다. 11-10의 "이메일이 같으면 자동 연결"은 코드에 더 이상 없습니다(11-12 #109). 연결 철회는 `python -m backend.auth`의 운영자 CLI를 씁니다(상세 `docs/specs/google-admin-login.md`).
   - 가격 · 재고: 품번마다 3~40자, `|` 금지입니다. 요청마다 `backend/services/mouser.py`가 Mouser Search API(`POST https://api.mouser.com/api/v1/search/partnumber`, 키는 `apiKey` 쿼리)를 한 번 부릅니다(재시도 없음, 제한 시간 10초, 프로세스당 누적 300회 상한). 응답은 `{available: true, source: "Mouser Electronics", fetched_at: 조회 시각(UTC ISO 8601), parts: [{part_number, manufacturer, price_breaks: [{quantity, price, currency}], availability, product_url}]}`이고 헤더는 `Cache-Control: no-store`입니다. 키가 없거나 `DEMO_MODE=1`이거나 상한에 닿았거나 Mouser 호출이 실패하면 Mouser 값 없이 `{available: false, source, reason, message, parts: []}`를 돌려줍니다. 그래프는 이 API를 부르지 않습니다(6절).
-- 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. `error.code`는 화면이 다르게 반응해야 할 때만 나눈 아래 15개 중 하나이고(ADR 0019, `backend/errors.py`), 분석 SSE의 마지막 이벤트 `failed`의 `error.code`도 같은 표입니다. `message`는 사람이 읽는 한국어 문장입니다. 상세는 `docs/specs/api-error-contract.md`입니다.
+- 공통 오류: 서버가 요청마다 UUID를 만들고 모든 응답의 `X-Request-ID`에 넣습니다. JSON 오류는 `{"error":{"code","message","request_id"}}` 구조이며 검증 입력과 내부 예외 문자열을 노출하지 않습니다. `error.code`는 화면이 다르게 반응해야 할 때만 나눈 아래 16개 중 하나이고(ADR 0019, `backend/errors.py`), 분석 SSE의 마지막 이벤트 `failed`의 `error.code`도 같은 표입니다. `message`는 사람이 읽는 한국어 문장입니다. 상세는 `docs/specs/api-error-contract.md`입니다.
 
   | code | HTTP | 뜻 |
   |---|---|---|
@@ -207,6 +219,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
   | `LIMIT_EXCEEDED` | 429 | 하루 토큰 · USD 상한, 분석 한 번의 호출 수 · 예약 USD 상한 |
   | `UPSTREAM_ERROR` | 502 | LLM · 임베딩 바깥 서비스 장애(분석 실패 중 공급자 오류 · 연결 끊김) |
   | `UNAVAILABLE` | 503 | DB · 저장소 · 서버 설정을 쓸 수 없음 |
+  | `SCHEMATIC_NOT_FOUND` | 404 | 외부 원본 회로도를 찾지 못함(검색 결과 없음 · 잘못되거나 만료된 시트 주소) |
   | `TIMEOUT` | 504 | 분석 시간 상한 초과 |
   | `INTERNAL_ERROR` | 500 | 예상 못 한 오류, 내용은 로그에만. 표에 없는 5xx도 이 코드 |
 
@@ -385,7 +398,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 보관 기간(11-09 결정): 프로젝트와 딸린 것(대화·checkpoint·승인·견적, 같은 UUID 분석 기록)과 프로젝트 없는 분석 대화는 마지막 활동 뒤 60일, 기록(분석 사건·하루 사용량·로그인·가입 시도)은 30일 뒤에 지웁니다. 사용자 사실은 자동 만료가 없습니다. 스케줄러 없이 새 분석(질문)을 시작할 때 규칙마다 SQL 함수 하나(`sojafit_agent.purge_inactive_projects`·`purge_log_records`, `db/legacy/023_retention.sql`)를 작은 묶음으로 부르고, 청소가 실패해도 분석은 계속합니다. 아직 걸린 로그인 잠금은 지우지 않습니다.
 - 활용(지금): 분석 서비스가 질문을 분석할 때 그 질문 글로 사실을 찾아 결과의 `profile_hints`(칸·값·문장, 최대 3개)로 돌려줍니다(React run · 재개 결과 frame). React는 "참고(내 설정)"로 보이고 견적 패널 머리에 소속을 보입니다.
 - 에이전트 활용(선호 실장 방식만): 멀티 그래프의 `기억 읽기` 노드(`입력 읽기` 다음, `backend/graph/memory.py`)가 compile에 넘긴 Store에서 세션 사용자(`user_id`)의 `mounting_preference`만 읽어 `smd`→`smd`, `through_hole`→`tht`, `any`·없음·Store 없음·읽기 실패→빈 값으로 상태 `mount_preference`에 둡니다. Spec 에이전트는 후보 찾기에서 질문이 실장 방식을 말하지 않았을 때만 이 값으로 같은 판정·같은 기판 수정 여부 안에서 그 방식의 패키지가 있는 후보를 앞에 둡니다(`verdict.rank`). 판정·거르기·답 글·프롬프트는 바꾸지 않고, 질문이 실장 방식을 말하면 질문이 이깁니다. 판정마다 3개·전체 5개로 자르므로 같은 판정 후보가 많으면 보여 줄 후보가 바뀔 수 있습니다. 쓴 값은 판정 결과의 `preferred_mount`(트레이스·API)에 남습니다. 소속·직무는 모델 프롬프트·판정 입력에 넣지 않습니다. 저장되는 것은 선호 코드뿐입니다: 체크포인트의 `mount_preference`와, 판정 결과의 `preferred_mount`가 실린 저장 결과(run·메시지 결과, 승인 기록 snapshot)입니다. 이들은 분석 thread·프로젝트와 같은 보관 기간(60일)·삭제를 따릅니다(내 설정을 지우면 다음 질문부터 빈 값이고, 이미 저장된 코드는 그 thread·프로젝트·계정을 지울 때 함께 지워집니다). 평가 실행기는 Store 없이 compile해 순서가 예전과 같습니다.
-- 승인 기록: 옛 승인 원본(`sojafit_agent.approvals`)은 승인 기록으로 남아 삭제 · 보관 기간 규칙만 따릅니다. 새로 쓰는 HTTP 경로는 없습니다(11-10, 승인은 React의 `POST /api/messages/{id}/approvals`, 4절). 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
+- 승인 기록: 승인 원본은 `public.approvals`이고 React의 `POST /api/messages/{id}/approvals`(4절)가 저장하며 삭제 · 보관 기간 규칙을 따릅니다. 옛 `sojafit_agent.approvals`는 11-11 서비스 DB 재설계(P2)에서 지웠습니다(`db/legacy/028_service_redesign_agent.sql`). 새 분석에 승인 사례를 넘기지 않고(`approved_memories`는 빈 목록) 승인 때 Store에 쓰지 않습니다.
 - 한계:
   - Voyage 키가 없거나 `DEMO_MODE=1`이거나 색인 표가 없으면 색인 없이 쓰고, 검색은 순위 없이 사실(최근에 고친 순)을 돌려줍니다. 검색 중 임베딩 장애도 같습니다. 색인이 켜진 채 임베딩이 실패하면 고치기는 503이고 아무 칸도 바뀌지 않습니다.
   - 색인 없이 쓴 칸은 벡터가 없어 순위 뒤에 붙습니다. 색인 없이 고친 칸의 예전 벡터는 남아 다시 색인을 켜면 옛 문장으로 순위를 매깁니다.
@@ -406,9 +419,9 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ### 8.6 로그인
 
 - GIVEN 사전 생성된 활성 계정, WHEN 올바른 이메일·비밀번호를 제출하면, THEN 서버 세션을 발급하고 사용자 ID를 확인할 수 있다.
-- GIVEN `DEMO_MODE=1`(로컬 데모), 새 이메일과 8자 이상 비밀번호와 처리방침 고지 동의, WHEN 같은 출처에서 가입하면, THEN 승인 없이 `user` 계정을 만들고 바로 세션을 발급한다. 중복 이메일은 409, 입력 오류·동의 없음은 422(입력값 미노출), Origin 없음·불일치는 403이다. React `/signup`은 저장 항목·목적·보관 기간·삭제·Langfuse·외부 서비스·거부 권리를 고지하고 동의 체크 전에는 보내지 않는다.
+- GIVEN 새 이메일과 같은 출처의 `POST /api/auth/signup`, WHEN 메일 설정이 있으면, THEN 계정 · 세션 없이 가입 확인 메일(60분 유효 링크)만 보내고 200 `{ok}`를 돌려준다(이미 계정이 있어도 같은 응답). 링크의 토큰과 12자 이상 비밀번호를 `POST /api/auth/signup/confirm`으로 보내면 이메일 확인 시각이 찍힌 `user` 계정이 만들어진다. 만료 · 사용 불가 링크는 400, 입력 오류는 422(입력값 미노출), Origin 없음·불일치는 403이다. React `/signup`은 이메일만 받아 인증 메일을 요청하고, 메일 링크에서 비밀번호를 설정해야 가입이 끝난다고 안내한다.
 - GIVEN 로그아웃·탈퇴·세션 만료, WHEN React 화면이 로그인 상태를 잃으면, THEN 화면 메모리(React Query 캐시)와 sessionStorage를 비우고 보호 화면은 `/login`으로 바꿔(replace) 주소의 프로젝트 id를 남기지 않는다.
-- GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 요청 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
+- GIVEN 같은 클라이언트 IP에서 같은 UTC 날짜에 가입 확정(`signup/confirm` · Google 가입) 3회, WHEN 4번째로 가입하면, THEN 429로 거부한다. 다른 IP는 막지 않는다. Cloud Run에서는 `X-Forwarded-For`의 마지막 값(Google 프런트엔드가 덧붙인 값)만 IP로 쓴다.
 - GIVEN 같은 클라이언트 IP에서 15분 집계 구간에 로그인 실패 30회(서로 다른 계정 포함), WHEN 31번째로 로그인하면, THEN 비밀번호가 맞아도 30번째 실패 시점부터 15분 동안 일반 실패와 같은 401로 거부한다(계정당 5회 잠금에 더해). 다른 IP는 막지 않고, 로그인 성공은 IP 횟수를 지우지 않는다. 집계 구간을 넘긴 실패는 다음 집계에서 제외한다.
 - GIVEN 공개 가입, WHEN LLM 호출이 몰리면, THEN LLM 토큰 사용자당 UTC 하루 5,000,000(11-12: 사용자별 한도가 실사용 기준. 11-10 1,000,000·그전 200,000에서 올림: 예약 토큰은 돌려주지 않아 점검·스모크에 하루치가 찼다)·서비스 전체 하루 10,000,000(다계정 합산 안전선)에서 외부 호출 전에 429(`LIMIT_EXCEEDED`)로 거부한다. 토큰은 공급자 청구량이 아니라 USD 예약과 같은 위쪽 경계(입력 바이트 + 여유 8192 + 출력 상한)의 예약 합이고(임베딩 호출 포함), 기존 USD 한도는 유지한다(11-09 결정, `db/legacy/022_token_limits.sql`).
 - GIVEN 로그인한 일반 사용자, WHEN 같은 출처에서 `DELETE /api/me`, THEN 그 사용자의 프로젝트·대화·분석 기록·checkpoint·Store·세션·계정을 지우고 지운 건수를 돌려준다. 다른 사용자 행은 남고, 관리자 계정과 그 사용자의 분석이 도는 중이면 409다.
@@ -421,10 +434,10 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - GIVEN 새 Compose DB와 `DEMO_MODE=1`, WHEN 데모 사용자 A 또는 B 버튼으로 처음 로그인하면, THEN 앱이 로컬 데모 전용 일반 사용자(데모 사용자 A · B, 평가 계정 아님)를 비밀번호 없이(scrypt가 아닌 표식) 그 자리에서 만들고 기존 계정을 덮어쓰지 않는다(SQL 시드 없음, 11-11 D8). `DEMO_MODE`가 1이 아니면 계정을 만들지 않는다. 저장소에는 비밀번호 · 해시가 없다(11-09).
 - GIVEN 데모 모드, WHEN 로그인 화면의 "데모 사용자 A · B로 들어가기"를 누르면(`POST /api/auth/demo-login` `{"account": "a"|"b"}`, 같은 출처), THEN 그 시드 계정에 로그인과 같은 세션을 발급하고 A · B는 서로 다른 사용자다. 두 계정의 비밀번호 로그인은 늘 실패하고, 표식이 없는 계정(같은 이메일로 가입한 계정) · 관리자 · 비활성 계정에는 세션을 주지 않는다(404). 데모 모드가 아니면 `GET /api/auth/demo`와 `POST /api/auth/demo-login`은 공통 404다.
 - GIVEN Google 로그인이 설정되지 않음, WHEN 로그인 화면과 Google 상태 API를 사용하면, THEN 기존 비밀번호 로그인을 유지하고 Google 진입은 비활성으로 표시한다.
-- GIVEN `DEMO_MODE=0`, WHEN `POST /api/auth/signup`을 보내면, THEN 본문을 읽기 전에 공통 404다.
+- GIVEN 메일 설정이 없음, WHEN `POST /api/auth/signup`을 보내면, THEN 503이다.
 - GIVEN Google이 확인한 계정이 이미 연결된 활성 계정(관리자 · 일반 사용자), WHEN Google 콜백 검증이 끝나면, THEN 같은 계정의 기존 서버 세션을 발급하고 계정 행을 늘리지 않는다.
-- GIVEN 처음 오는 Google 신원과 이메일, WHEN 처리방침 동의(`consent=1`) 없이 콜백이 오면, THEN 사용자 행을 만들지 않고 `/login?google=consent`로 보낸다. 동의가 있으면 비밀번호 없는(`google-login-only` 표식) `user` 계정을 만들고 세션을 발급한다. 그 계정은 비밀번호 · 데모 버튼으로 로그인할 수 없다(401 · 404).
-- GIVEN Google이 확인한 이메일이 활성 `users` 계정(관리자 · 비밀번호 계정)의 로그인 이메일과 같음(대소문자 · 공백 무시), WHEN 콜백이 오면, THEN 운영자 승인 없이 그 계정에 신원을 연결하고 세션을 준다(역할 불문, 사용자 행은 늘지 않고 동의 불필요). 이메일이 한 글자라도 다르면 새 계정 경로(동의 필요)다. 비활성 계정 · 이미 다른 Google 신원에 연결된 계정은 연결 · 로그인 없이 `/login?google=error`다.
+- GIVEN 연결이 없는 Google 신원과 이메일, WHEN 콜백이 오면, THEN 사용자 행을 만들지 않고 15분 유효 연결 요청을 만들어 `/login?google=finish`로 보낸다. 새 이메일이면 `POST /api/auth/google/signup`이 비밀번호 없는 `user` 계정을 만들고 세션을 발급한다(동의 불필요). 그 계정은 비밀번호 · 데모 버튼으로 로그인할 수 없다(401 · 404).
+- GIVEN Google이 확인한 이메일이 이미 있는 계정의 로그인 이메일과 같음, WHEN `POST /api/auth/google/signup`을 보내면, THEN 409이고 계정은 늘지 않는다. `POST /api/auth/google/link`로 그 계정의 이메일 · 비밀번호를 다시 확인하면 신원을 연결하고 세션을 준다. 관리자 계정(운영자 CLI `--approve-google`로만 연결) · 비활성 계정 · 이미 다른 Google 신원에 연결된 계정은 연결 · 로그인 없이 거절한다.
 
 ### 8.7 MCP 검색 도구 1차
 

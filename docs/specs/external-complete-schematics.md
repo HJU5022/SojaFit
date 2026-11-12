@@ -19,7 +19,7 @@
 - 회로 설계 파일에 대응하는 전체 회로도 PDF가 있으면 먼저 사용한다. 사용자에게 제공하는 PNG는 PDF에서 목표 300 DPI로 렌더링하며, 큰 도면은 시트당 4,000만 픽셀 이내로 해상도를 조정한다. PDF가 없거나 원본 검증에 실패하면 다른 회로도 자료를 확인한다.
 - 원본과 PNG는 요청 중 메모리 또는 변환용 임시 디렉터리에서 처리한다. 이미지 응답은 `private, no-store`이고 서버 내부 캐시는 15분이다.
 - 현대 KiCad 원본은 PDF로 내보내 모든 시트를 PNG로 변환할 수 있다. 구형 `.sch`는 해당 프로젝트가 제공한 전체 PNG·SVG·PDF를 확인할 수 있을 때 지원한다. 검증에 사용한 KiCad 9.0.2가 구형 원본을 직접 내보낼 때 배치된 심볼을 누락한 사례가 있었다.
-- 설정과 자원 상한은 [승인 설계](../superpowers/specs/2026-11-11-complete-schematic-delivery-design.md)를 따른다.
+- 설정과 자원 상한은 [승인 설계](complete-schematic-delivery-design.md)를 따른다.
 
 ### 운영 준비 · 팀 GitHub 조직의 OAuth App 등록
 

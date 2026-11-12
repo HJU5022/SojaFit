@@ -13,13 +13,13 @@
 - `package-outline-pages.json` — manifest 1,360문서의 공식 URL과 Docling 표제·그림이 같은 최초 패키지 외형 페이지를 URL-decoded PDF basename으로 찾는 오프라인 색인.
 - `corpus/` — 코퍼스 원본 문서 표본(TSC PDF 3건). [CORPUS.md](corpus/CORPUS.md)
 - `circuits/` — 평가·시연용 공개 KiCad 회로와 라이선스. [CIRCUITS.md](circuits/CIRCUITS.md)
-- `demo/` — compose가 로컬 DB에 넣는 코퍼스 스냅샷(`snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음)과 키 없는 데모가 재생할 LLM 응답 기록(`recordings/`, 아직 없음). [DEMO.md](demo/DEMO.md)
+- `demo/` — compose가 로컬 DB에 넣는 코퍼스 스냅샷(`snapshot/`, TSC 42문서 · 청크 1,556개, 임베딩 없음)과 키 없는 데모가 재생할 LLM 응답 기록(`recordings/`: `calls.jsonl` · `outcomes.json`). [DEMO.md](demo/DEMO.md)
 
 ## 기준
 
 G3: **서로 다른 청크 1만 개 이상, 서로 다른 문서 50건 이상**(복제와 변형 제외), 문서 파싱 1종 이상. 정본은 [docs/GATES.md](../docs/GATES.md)입니다.
 
-수집일은 `backend/rag/pipeline/chunk.py`의 `DOC_DEFAULTS`(`collected_at`), 출처 주소는 manifest의 `source_url`에 있습니다. 평가자는 `python -m backend.rag.pipeline.collect download data/manifest.jsonl <pdf 폴더>`로 같은 PDF를 받습니다. 파일 합계가 수십 MB를 넘으면 강사에게 먼저 물어보세요.
+수집일은 `backend/rag/pipeline/chunk.py`의 `DOC_DEFAULTS`(`collected_at`), 출처 주소는 manifest의 `source_url`에 있습니다. 평가자는 `python -m backend.rag.pipeline.collect download data/manifest.jsonl <pdf 폴더>`로 같은 PDF를 받습니다. PDF 1,360건의 합계는 manifest의 `bytes` 합계로 626,919,120바이트(약 627 MB)이고 수십 MB를 크게 넘으니, 받기 전에 강사에게 먼저 물어보세요.
 
 ## manifest 형식 (한 줄에 하나)
 

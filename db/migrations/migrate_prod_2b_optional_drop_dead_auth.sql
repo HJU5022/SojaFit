@@ -1,3 +1,6 @@
+-- [경고] 2026-11-12(#109) 기준 이 파일을 실행하지 않는다. auth_google_pending은 다시 쓰이는 활성 표다
+--   (db/030_google_onboarding.sql이 만들고, backend/auth.py의 request_google_link · complete_google_user 등이 읽고 쓴다).
+--   이 파일은 DROP TABLE public.auth_google_pending을 실행하므로 운영 중인 표를 지운다. 아래 전제(승인 대기 코드 제거 배포)는 더 이상 맞지 않는다.
 -- 선택 이전(2b): 승인 대기 흐름의 코드를 지운 **뒤에만** 실행한다. 운영에는 아직 실행하지 않았다.
 -- 전제: backend/auth.py의 request_google_link · approve_google_link · google_pending_email, backend/api/auth.py의 /google/pending, CLI --approve-google을
 --       지운 코드가 배포됐다(11-10 구글 자동 연결 결정으로 콜백이 더 이상 부르지 않는다). 되돌리기는 migrate_prod_4_rollback.sql의 B2b 절(빈 표를 RLS ON으로 다시 만든다).

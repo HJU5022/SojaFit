@@ -34,3 +34,6 @@
 - `workbench-information-architecture.md` — D5 계약을 유지하는 4영역 작업대·정보 콘솔·접근 가능한 상세 dialog 기능 계약
 - `frontend-screen-redesign.md` — 랜딩·로그인·대화 중심 작업대 적용 계약
 - `project-conversation-navigation.md` — DB 구조를 유지하는 프로젝트·이전 대화 탐색 API 계약
+- `verified-circuit-and-datasheet-visuals-plan.md` — 검증 회로도·데이터시트 시각화 실행 계획(승인된 원문)
+- `complete-schematic-delivery-plan.md` — 외부 완성 회로도 전달 실행 계획(승인된 원문)
+- `complete-schematic-delivery-design.md` — 외부 완성 회로도 전달 설계(승인된 원문)

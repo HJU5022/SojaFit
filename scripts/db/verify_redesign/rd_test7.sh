@@ -1,7 +1,7 @@
 #!/bin/bash
 # 백업 복원 왕복 시험: 합성 데이터가 든 DB를 pg_dump -Fc → 빈 새 DB에 pg_restore 했을 때 오류 0, 행 수 동일인지 본다(새 Supabase 프로젝트로 옮기는 경로).
 # 대상 4가지: ① 새 기준선 ② 옛 구조 + 이전 SQL 전부 ③ 그 뒤 되돌린 결과 ④ 이전 전의 옛 구조(백업 복원 절차의 구조→데이터 순서가 필요함을 같이 보인다)
-# 사용(레포 루트): bash db/redesign/verify/rd_test7.sh <이미지> <컨테이너 이름> <포트>   (일회용 도커 컨테이너만. 운영 접속 없음)
+# 사용(레포 루트): bash scripts/db/verify_redesign/rd_test7.sh <이미지> <컨테이너 이름> <포트>   (일회용 도커 컨테이너만. 운영 접속 없음)
 IMG=$1; NAME=$2; PORT=$3
 HERE="$(cd "$(dirname "$0")" && pwd)"; V="$HERE"; R="$(cd "$HERE/../../.." && pwd)"; TB="$R/db/migrations"
 docker rm -f $NAME >/dev/null 2>&1

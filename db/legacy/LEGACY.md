@@ -5,7 +5,7 @@
 - 넣는 것: 기준선이 대체한 옛 증분 SQL(번호 `003`~`025` · `027`~`029`). 파일은 옛 이름 그대로 두어 기록(작업 기록 · ADR · 운영 적용 이력)의 번호와 맞춥니다.
 - 넣지 않는 것: 새 DB에서 실행할 SQL(`db/`), 운영 이전 SQL(`db/migrations/`). 이 폴더 파일은 고치지 않습니다(고치면 "옛 체인 + 이전 SQL = 기준선" 증명이 흔들립니다).
 - 담당: 서비스·운영
-- 쓰는 곳: `scripts/db/verify_chain/verify_chain.sh`(옛 체인 000~026을 만들어 운영 이전 SQL을 적용한 결과와 기준선을 비교), 운영 이전 되돌리기(`db/migrations/migrate_prod_4_rollback.sql`이 `019` · `023` · `024` · `025`의 옛 정의를 다시 읽음), `db/redesign/verify/`.
+- 쓰는 곳: `scripts/db/verify_chain/verify_chain.sh`(옛 체인 000~026을 만들어 운영 이전 SQL을 적용한 결과와 기준선을 비교), 운영 이전 되돌리기(`db/migrations/migrate_prod_4_rollback.sql`이 `019` · `023` · `024` · `025`의 옛 정의를 다시 읽음), `scripts/db/verify_redesign/`.
 
 ## 파일
 - `007_demo_accounts.sql` — 옛 데모 계정 시드 원본. 현재 앱의 지연 데모 생성을 사용하므로 초기화에서 실행하지 않는다.

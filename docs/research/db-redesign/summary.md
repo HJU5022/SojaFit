@@ -1,15 +1,17 @@
+> 상태(11-12 확인): 목표(to-be) 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose·CI)에 적용된다. 아래 "적용하지 않은 확정 전 초안"과 현재(as-is)가 가리키는 재설계 전 운영 DB 구조는 작성 당시(11-10~11-11) 기준이고, 이 파일은 기록으로 보존한다.
+
 # redesign
 
 ## 역할
-- 이 폴더: 서비스 DB 재설계(11-11) 설계 문서. 현재 구조 문서(`as-is/`), 목표 설계안(`to-be/`), 일회용 Postgres 검증 스크립트(`verify/`).
+- 이 폴더: 서비스 DB 재설계(11-11) 설계 문서. 현재 구조 문서(`as-is-*.md`), 목표 설계안(`to-be-*.md`). 일회용 Postgres 검증 스크립트는 `scripts/db/verify_redesign/`.
 - 넣는 것: 설계 문서 · 검증 스크립트. 확정 · 구현된 SQL은 `db/` 바로 아래(기준선 `020_service_baseline.sql`)와 `db/migrations/`(운영 이전)에 있다. 이 폴더에는 SQL을 두지 않는다.
 - 넣지 않는 것: 실제로 자동 실행되는 SQL(`db/*.sql`), 운영 DB 접속 · 백업 파일, 정본 문서(SPEC · ADR).
 - 상태(통합): 기준선은 새 DB(compose · CI · 시험)에 적용되고, 운영 이전 SQL은 일회용 DB에서만 확인했다(**운영에는 아직 실행하지 않았다**).
 
 ## 파일
-- `as-is/` — 현재 구조 문서: `erd.md`(그림), `tables.md`(운영 DB에서 자동 생성한 표 25개 정의서 + 의미 · 소유 코드)
-- `to-be/` — 목표 설계안: `design.md`(원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과), `erd.md`, `tables.md`, `impact.md`(영향 지도 · 단계별 비용 · ADR 후보)
-- `verify/` — 위 SQL을 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`), 보조 코드(`lib/`), 표본 데이터(`sql/`). 운영 DB에는 접속하지 않는다
+- `as-is-erd.md`(그림), `as-is-tables.md`(운영 DB에서 자동 생성한 표 25개 정의서 + 의미 · 소유 코드)
+- `to-be-design.md`(원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과), `to-be-erd.md`, `to-be-tables.md`, `to-be-impact.md`(영향 지도 · 단계별 비용 · ADR 후보)
+- `scripts/db/verify_redesign/` — 위 SQL을 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`), 보조 코드(`lib/`), 표본 데이터(`sql/`). 운영 DB에는 접속하지 않는다
 
 # 서비스 DB 재설계 — 검토용 요약 (정운 확정 전 초안, 11-11)
 
@@ -19,7 +21,7 @@
 
 | # | 문제 | 근거 |
 |---|---|---|
-| 1 | **같은 대화 · 회로가 두 스키마에 있고 DB가 연결을 보장하지 않는다**(같은 UUID, FK 없음). 회로 연결은 2벌, 한 요청이 연결 3개 · 트랜잭션 3개로 씀 | `as-is/erd.md` ① |
+| 1 | **같은 대화 · 회로가 두 스키마에 있고 DB가 연결을 보장하지 않는다**(같은 UUID, FK 없음). 회로 연결은 2벌, 한 요청이 연결 3개 · 트랜잭션 3개로 씀 | `as-is-erd.md` ① |
 | 2 | 승인 스냅샷(답 · 근거 JSON)이 3곳에 **100% 동일**하게 저장되고 그중 `quotes.snapshot`은 아무도 안 읽는다 | 조사 §4 |
 | 3 | 삭제가 코드 순서에 의존한다: `sojafit_agent.*`는 RESTRICT, 체크포인트(질문 · 답 JSON)는 FK 불가라 운영자가 직접 지우면 고아로 남는다 | 조사 §5 |
 | 4 | DB CHECK가 앱의 JSON 모양 · 데모 목록을 복제해 모양이 바뀔 때마다 서비스가 깨졌다(11-10 024 · 025) | `019` · `025` |
@@ -46,7 +48,7 @@ flowchart LR
     지금 --> 추천안
 ```
 
-상세 ERD: [`to-be/erd.md`](to-be/erd.md), 표 정의서: [`to-be/tables.md`](to-be/tables.md), 근거 · 선택지: [`to-be/design.md`](to-be/design.md).
+상세 ERD: [`to-be-erd.md`](to-be-erd.md), 표 정의서: [`to-be-tables.md`](to-be-tables.md), 근거 · 선택지: [`to-be-design.md`](to-be-design.md).
 
 ## 3. 선택지 비교(이중 저장, 가장 큰 결정)
 
@@ -67,7 +69,7 @@ flowchart LR
 | M 권장 | 기준선 교체(`db/020_service_baseline.sql` 하나) | 1 | 파일 7개 | 8~10h | 중간(P2 이후에만) |
 | P3 · D10 보류 | 완전 통합 · 비노출 스키마 | 22 · 다수 | 60+ | 3~4일 · 1일 | 높음 |
 
-자세한 `파일:함수` 목록은 [`to-be/impact.md`](to-be/impact.md).
+자세한 `파일:함수` 목록은 [`to-be-impact.md`](to-be-impact.md).
 
 ## 5. 위험과 되돌리기
 
@@ -96,14 +98,14 @@ flowchart LR
 
 | # | 사실 | 반영한 곳 |
 |---|---|---|
-| 1 | Data API 켜짐 · `public`에 anon USAGE | RLS ON + 정책 0 + 권한 0(`026`). 기준선이 RLS 명시(`db/020_service_baseline.sql` 끝). `design.md` §1 · D7 · D10 |
+| 1 | Data API 켜짐 · `public`에 anon USAGE | RLS ON + 정책 0 + 권한 0(`026`). 기준선이 RLS 명시(`db/020_service_baseline.sql` 끝). `to-be-design.md` §1 · D7 · D10 |
 | 2 | `ensure_rls` 트리거(운영 `public`만), compose · CI 없음 | 기준선 RLS 명시(D7). 기준선 + 026 적용 뒤 "공개 권한 0 · RLS OFF 표 0" 시험 |
 | 3 | `supabase_migrations.schema_migrations` 5건, 나머지 수동 | 우리 `app_migrations` 신설, 첫 행에 `legacy-sql-000-025` 기록(D6, expand E6) |
-| 4 | 프런트가 표에 묶인 3곳 | `impact.md` §6: 3곳의 응답 값 불변, 프런트 수정 0 |
+| 4 | 프런트가 표에 묶인 3곳 | `to-be-impact.md` §6: 3곳의 응답 값 불변, 프런트 수정 0 |
 | 5 | 삭제 RESTRICT · 고아 · CLI 제한 | `sojafit_agent.threads → users` CASCADE, 회로 사본 삭제, `auth_google_pending` 삭제(2b), **삭제 트리거**(D9), CLI 제한은 유지(D12) |
-| 6 | 운영 PG 17.11 / compose · CI 16.15 | 모든 SQL을 **16.15와 17.11 양쪽에서 실행** 확인(`verify/`) |
+| 6 | 운영 PG 17.11 / compose · CI 16.15 | 모든 SQL을 **16.15와 17.11 양쪽에서 실행** 확인(`scripts/db/verify_redesign/`) |
 | 7 | 007 시드 psql 전용 | D8 선택지 3개 비교, 지연 생성 추천 |
-| 8 | postgres 역할 BYPASSRLS · Supavisor · FORCE RLS 0 | FORCE 미사용, 세션 advisory lock의 풀러 session 모드 의존을 가정으로 명시(`design.md` §6) |
+| 8 | postgres 역할 BYPASSRLS · Supavisor · FORCE RLS 0 | FORCE 미사용, 세션 advisory lock의 풀러 session 모드 의존을 가정으로 명시(`to-be-design.md` §6) |
 
 ## 8. 정정할 것 (이번 작업에서 발견)
 
@@ -113,10 +115,10 @@ flowchart LR
 
 | 경로 | 내용 |
 |---|---|
-| `as-is/tables.md` · `erd.md` | 현재 구조(운영 DB에서 자동 생성 + 의미 · 소유 코드) |
-| `to-be/design.md` | 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과 |
-| `to-be/erd.md` · `tables.md` | 목표 구조(추천안 + 보류안), 표 정의서 + as-is 차이 |
-| `../020_service_baseline.sql` | 새 DB 기준선(16 · 17에서 실행 확인, 026 위에서도 확인). 옛 체인 + 이전 SQL 결과와 구조 차이 0 |
-| `../migrations/migrate_prod_*.sql` (`1_expand` · `2_contract_p1` · `3_contract_p2` · `2b_optional_drop_dead_auth` · `4_rollback`) | 운영 이전 SQL(운영에는 실행하지 않음) |
-| `to-be/impact.md` | 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보 |
-| `verify/` | 위를 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`). 운영 DB 접속 없음 |
+| `as-is-tables.md` · `as-is-erd.md` | 현재 구조(운영 DB에서 자동 생성 + 의미 · 소유 코드) |
+| `to-be-design.md` | 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과 |
+| `to-be-erd.md` · `to-be-tables.md` | 목표 구조(추천안 + 보류안), 표 정의서 + as-is 차이 |
+| `db/020_service_baseline.sql` | 새 DB 기준선(16 · 17에서 실행 확인, 026 위에서도 확인). 옛 체인 + 이전 SQL 결과와 구조 차이 0 |
+| `db/migrations/migrate_prod_*.sql` (`1_expand` · `2_contract_p1` · `3_contract_p2` · `2b_optional_drop_dead_auth` · `4_rollback`) | 운영 이전 SQL(운영에는 실행하지 않음) |
+| `to-be-impact.md` | 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보 |
+| `scripts/db/verify_redesign/` | 위를 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`). 운영 DB 접속 없음 |

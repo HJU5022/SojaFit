@@ -1,7 +1,7 @@
-"""로그인 · 가입 · 데모 버튼 로그인 · 로그아웃 · 내 계정 HTTP 경계(`/api/auth/*`)와 숨긴 Google 관리자 로그인 경로.
+"""로그인 · 가입 · 데모 버튼 로그인 · 로그아웃 · 내 계정 HTTP 경계(`/api/auth/*`)와 숨긴 Google 가입 · 로그인 경로.
 
-- 경로: `POST /api/auth/login` · `POST /api/auth/signup` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(데모 두 경로만 `DEMO_MODE=1`에서 제공) ·
-  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback`(Google 가입 · 로그인, 명시적 가입·비밀번호 재확인 연결).
+- 경로: `POST /api/auth/login` · `POST /api/auth/signup`(가입 메일 요청) · `POST /api/auth/signup/confirm` · `POST /api/auth/password-reset` · `POST /api/auth/password-reset/confirm` · `GET /api/auth/demo` · `POST /api/auth/demo-login`(데모 두 경로만 `DEMO_MODE=1`에서 제공) ·
+  `GET /api/auth/me` · `POST /api/auth/logout`, `/docs`에 싣지 않는 `GET /api/auth/google/status|start|callback|pending|onboarding` · `POST /api/auth/google/signup|link`(Google 가입 · 로그인, 명시적 가입·비밀번호 재확인 연결).
 - 화면 쪽 짝: `frontend/src/api/auth.ts`.
 하지 않는 일: 비밀번호 · 세션 · 잠금 · 가입 한도 · Google 신원 확인(`backend/auth.py`), 탈퇴(`backend/api/profile.py`),
   관리자 계정 관리(`backend/api/admin.py`), Uvicorn 접속 로그의 Google 콜백 쿼리 지우기(`backend/main.py`).

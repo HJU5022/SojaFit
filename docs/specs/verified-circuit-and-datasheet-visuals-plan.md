@@ -1,6 +1,5 @@
 # Verified Circuit and Datasheet Visuals Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Status:** 구현 완료. 명시적 승인 없이 commit·push·PR은 만들지 않았다.
 

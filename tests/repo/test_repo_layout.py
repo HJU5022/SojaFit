@@ -145,7 +145,7 @@ def test_one_kind_of_file_per_folder():
         # backend/web은 기존 화면 설계와 정적 제공 어댑터만 함께 둔다(별도 사용자 승인 예외).
         if d in {"frontend", "backend/web"}:
             continue
-        kind = "데이터" if f == "evals/samples/v3_50_codex_paste.md" else KINDS.get(p.suffix, "기타")
+        kind = KINDS.get(p.suffix, "기타")
         by_dir.setdefault(d, set()).add(kind)
     mixed = {d: sorted(k) for d, k in by_dir.items() if len(k) > 1}
     assert not mixed, f"한 폴더에 종류가 섞였다(하위 폴더로 나눈다): {mixed}"
