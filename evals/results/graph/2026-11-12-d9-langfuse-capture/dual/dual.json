@@ -1,0 +1,93 @@
+{
+ "meta": {
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-5.5",
+  "demo_mode": false,
+  "node_models": {
+   "route": "anthropic/claude-haiku-5.5",
+   "grade": "openai/gpt-6-luna",
+   "rewrite": "anthropic/claude-haiku-5.5",
+   "generate": "anthropic/claude-haiku-5.5",
+   "supervisor": "anthropic/claude-haiku-5.5",
+   "judge_read": "anthropic/claude-haiku-5.5",
+   "docs_answer": "anthropic/claude-haiku-5.5",
+   "synth": "anthropic/claude-sonnet-5.5",
+   "card_read": "anthropic/claude-haiku-5.5",
+   "card_pick": "anthropic/claude-haiku-5.5"
+  },
+  "retrieval": "hybrid",
+  "dataset": "evals/results/graph/2026-11-12-d9-langfuse-capture/dual.jsonl",
+  "git": "11dc216+dirty",
+  "prompts": {
+   "card_pick": "ed75174f",
+   "card_read": "d5ca1fb7",
+   "docs_answer": "db56b999",
+   "generate": "3b9861f1",
+   "grade": "d003481a",
+   "judge_read": "db24bc10",
+   "rewrite": "6d6e6384",
+   "route": "d35a15b3",
+   "supervisor": "6adc5fb6",
+   "supervisor_v0": "52d7e2c9",
+   "synth": "4d6d9787"
+  },
+  "session": "multi-dual-1112-0920-openrouter",
+  "ran_at": "2026-11-12T09:20:23+0900",
+  "dataset_sha256": "a6191446792265bcd8980d279bafd90c11b15aca466ed3960616638c1ccb41c0",
+  "ids": [
+   "d9-dual-01"
+  ]
+ },
+ "summary": {
+  "items": 1,
+  "finished": 1,
+  "failed": 0,
+  "metrics": {
+   "cited_gold": 1
+  },
+  "by_kind": {
+   "relevant": {
+    "cited_gold": 1
+   },
+   "irrelevant": {}
+  },
+  "by_type": {
+   "relevant/candidate_judge": {
+    "cited_gold": 1
+   }
+  },
+  "routing_match_relevant": 1,
+  "relevant": 1,
+  "latency_p50_s": 10.0,
+  "llm_calls_total": 2.0
+ },
+ "rows": [
+  {
+   "id": "d9-dual-01",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 10.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/eda70d1ee9cadb81e7b32d2b7adcecbd"
+  }
+ ],
+ "failed": []
+}

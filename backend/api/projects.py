@@ -6,6 +6,7 @@ from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
 
 from backend import auth
+from backend.api.auth import demo_mode
 from backend.conversations.repository import InvalidRunState
 from backend.projects.models import Project, ProjectSummary
 from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
@@ -84,8 +85,9 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
     return repo.list_owned(user_id)
 
 
-@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
+@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin), Depends(demo_mode)])
 def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """데모 회로로 프로젝트 만들기. DEMO_MODE=1에서만(공개 서비스는 업로드만)."""
     return repo.create_demo(user_id, body.demo_id, body.name)
 
 

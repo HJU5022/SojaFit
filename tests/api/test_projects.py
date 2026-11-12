@@ -60,6 +60,19 @@ def test_demo_catalog_and_invalid_creation(client):
         assert result.json()["error"]["code"] == "VALIDATION_ERROR"
 
 
+def test_demo_project_create_is_404_outside_demo_mode(client, monkeypatch):
+    """실서비스(DEMO_MODE=0)에서는 데모 회로로 프로젝트 만들기가 없다(업로드만)."""
+    monkeypatch.setenv("DEMO_MODE", "0")
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    response = client.post(
+        "/api/projects",
+        json={"demo_id": "breadboard_supply", "name": "전원 회로"},
+        headers={"origin": "http://testserver"},
+    )
+    assert response.status_code == 404
+    assert client.get("/api/demo-circuits").status_code == 200  # 목록·기존 데모 프로젝트 회로도용은 유지
+
+
 def test_demo_catalog_exposes_only_verified_public_schematic_metadata(client):
     app.dependency_overrides[auth.current_user_id] = lambda: 1
     response = client.get("/api/demo-circuits")

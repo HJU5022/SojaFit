@@ -37,7 +37,7 @@ export default function LandingPage() {
         </button>)}
       </div>
       <Link className="public-primary public-start" to={start}>회로 검토 시작</Link>
-      <p className="public-caption">데모 회로 또는 KiCad 넷리스트로 시작<br />첫 대상은 다이오드 · 같은 동작은 보장하지 않습니다.</p>
+      <p className="public-caption">KiCad 넷리스트로 시작(로컬 데모 모드에서는 샘플 회로도 가능)<br />첫 대상은 다이오드 · 같은 동작은 보장하지 않습니다.</p>
       <div className="public-product" id="workflow" data-feature={feature.id}>
         <div className="public-product-heading"><span aria-live="polite">{feature.scene}</span><span>합성 예시 화면</span></div>
         <div className="public-product-content">
