@@ -14,6 +14,7 @@ import { CHECK_LABELS, VERDICT_LABELS, VERDICT_TONE, candidatesOf, citationHref,
 import { INPUT_LABELS } from '../lib/inputLabels'
 import ContextDiagram from './ContextDiagram'
 import PriceLookup from './PriceLookup'
+import SafeMarkdown from './SafeMarkdown'
 
 const PROPS_KEY = 'sojafit:props-width'
 const PROPS_DEFAULT = 280, PROPS_MIN = 240, PROPS_MAX = 480
@@ -119,7 +120,9 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   const initial = reviewer.trim().charAt(0).toUpperCase()
   const response = result && <div className="activity-reply"><span className="actor-avatar actor-agent" aria-hidden="true"><img src="/assets/sojafit-icon.svg" alt="" /></span>
     <div className="activity-body"><p className="activity-by"><strong>SojaFit</strong><span>검토 결과</span></p>
-      <p>{candidate ? <>{candidate.part}<span className={`result tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span></> : result.refusal || result.answer.split('\n')[0] || (result.status === 'failed' ? '실행에 실패했습니다.' : '결과에 판정이 없습니다.')}</p></div></div>
+      {candidate && <p>{candidate.part}<span className={`result tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span></p>}
+      {result.refusal ? <p>{result.refusal}</p> : result.answer ? <SafeMarkdown text={result.answer} />
+        : !candidate && <p>{result.status === 'failed' ? '실행에 실패했습니다.' : '결과에 판정이 없습니다.'}</p>}</div></div>
   useEffect(() => { input.current?.focus() }, [target.ref, threadId])
   function onKey(event: KeyboardEvent<HTMLTextAreaElement>) {
     // 한글 조합 중의 Enter는 글자 확정이다. 전송하지 않는다.

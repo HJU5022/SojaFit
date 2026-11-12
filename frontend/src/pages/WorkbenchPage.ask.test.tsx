@@ -12,10 +12,11 @@ afterEach(() => vi.unstubAllGlobals())
 const project = { id: 1, name: '보드', source_kind: 'upload', demo_id: null, created_at: '2026-11-09T00:00:00Z', updated_at: '2026-11-09T00:00:00Z',
   connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
 const runs: unknown[] = []
-const api = () => { runs.length = 0; vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); network((path, init) => {
+let reply = ''
+const api = (body = '') => { runs.length = 0; reply = body; vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); network((path, init) => {
   if (path === '/api/projects/1') return Response.json(project)
   if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1', title: '', status: null, latest_run_id: null, target_ref: 'D1' })
-  if (path === '/api/threads/t1/runs') { runs.push(JSON.parse(String(init.body))); return new Response('', { headers: { 'Content-Type': 'text/event-stream' } }) }
+  if (path === '/api/threads/t1/runs') { runs.push(JSON.parse(String(init.body))); return new Response(reply, { headers: { 'Content-Type': 'text/event-stream' } }) }
   return Response.json([])
 }) }
 const ask = async (text: string) => { renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
@@ -44,4 +45,12 @@ it('says a part outside the scope cannot be judged', async () => {
   await ask('R1을 바꿔도 되나요?')
   expect(await screen.findByRole('alert')).toHaveTextContent('R1은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.')
   expect(runs).toHaveLength(0)
+})
+
+it('shows every line of a completed answer, including a markdown list', async () => {
+  const done = { answer: '첫 줄 요약\n\n- 첫째 근거\n- 둘째 근거', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
+  api(`event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: completed\ndata: ${JSON.stringify(done)}\n\n`)
+  await ask('D1을 SS34로 바꿔도 되나요?')
+  expect(await screen.findByText('둘째 근거')).toBeInTheDocument()
+  expect(screen.getByText('첫째 근거').tagName).toBe('LI')
 })

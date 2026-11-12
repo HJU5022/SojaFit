@@ -124,6 +124,8 @@ SojaFit (proj3-b)
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
 │       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
+│       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)
+│       │   ├── SafeMarkdown.test.tsx <- 표·굵게·목록 렌더와 악성 마크다운(이미지·링크·HTML) 차단 시험
 │       │   ├── ApprovedCases.tsx <- 승인 사례 목록·확인 삭제
 │       │   ├── AuthCard.tsx <- 로그인 계열 화면의 공통 카드
 │       │   └── PageShell.tsx <- 설정·관리 화면의 공통 머리와 폭
