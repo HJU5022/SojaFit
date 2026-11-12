@@ -40,6 +40,7 @@ SojaFit (proj3-b)
 │
 ├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
 │   ├── FRONTEND.md         <- 폴더 설명
+│   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
