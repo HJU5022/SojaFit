@@ -5,7 +5,7 @@ import { ArrowRight, ArrowUp, Check, CircleDashed, ExternalLink, FileText, Loade
 import { getRun, listDemoQuestions, listJudgeRoles } from '../api/conversations'
 import type { CandidateDto, ResultDto } from '../api/conversations'
 import type { CircuitPart } from '../api/projects'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import { approveMessage, createQuote } from '../api/quotes'
 import type { ApprovalDto, QuoteDto } from '../api/quotes'
 import { useConversation } from '../hooks/useConversation'
@@ -42,7 +42,7 @@ export function Checks({ candidate, resolved }: { candidate: CandidateDto | unde
           <td className="basis" data-label="기준">{check.basis}</td>
           <td className="num" data-label="요구">{check.threshold != null && check.op ? `${check.op === '>=' ? '≥' : check.op === '<=' ? '≤' : check.op} ` : ''}{formatValue(check.threshold, check.unit) || '값 없음'}</td>
           <td className="num strong" data-label="후보 값" title={check.condition ?? undefined}>{formatValue(check.value, check.unit) || '값 없음'}</td>
-          <td data-label="결과"><span className={`result tone-${state === 'pass' ? 'identical' : state === 'fail' ? 'insufficient' : 'unverified'}`}>{CHECK_LABELS[state] ?? state}</span></td>
+          <td data-label="결과"><span className={`result tone-${state === 'pass' ? 'identical' : state === 'fail' ? 'insufficient' : 'unverified'}`}>{CHECK_LABELS[state] ?? '확인 안 됨'}</span></td>
           <td data-label="근거" title={check.citation?.document ?? undefined}>{href ? <a className="citation-fields" href={href} target="_blank" rel="noreferrer">{where}<ExternalLink aria-hidden="true" /><span className="sr-only"> (새 탭)</span></a> : <span className="citation-fields">{where}</span>}</td>
         </tr>
       })}</tbody>
@@ -66,7 +66,7 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
     {quote && <p className="property-note">견적 {quote.part_number} × {quote.quantity}</p>}
     {!approval && <button className="btn btn-primary" disabled={busy || messageId === null} onClick={() => void act(async () => setApproval(await approveMessage(messageId!, candidate.part, candidate.verdict)))}>{busy ? '저장 중' : '검토하고 승인'}</button>}
     {approval && !quote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor="quantity">수량</label><input id="quantity" name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
-    {error ? <p className="notice" role="alert">{approval ? '견적을 저장하지 못했습니다. 견적 열기로 다시 시도해 주세요.' : '승인을 저장하지 못했습니다. 검토하고 승인으로 다시 시도해 주세요.'} {errorMessage(error)}</p> : null}
+    {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{approval ? '견적을 저장하지 못했습니다. 견적 열기로 다시 시도해 주세요.' : '승인을 저장하지 못했습니다. 검토하고 승인으로 다시 시도해 주세요.'} {errorMessage(error)}</p> : null}
   </div>
 }
 
@@ -163,7 +163,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
         {resultLoading ? <div className="skeleton" role="status"><span className="sr-only">검토 결과를 기다리는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div> : !run.error && !chat.error && state.status !== 'failed' ? <Checks candidate={candidate} resolved={Boolean(result)} /> : null}
         {candidate && [...(candidate.cautions ?? []), ...(candidate.missing ?? []).map(item => `문서에 없는 값: ${item}`), ...(candidate.uncertain ?? []).map(item => `확실하지 않은 값: ${item}`)].map(note => <p className="caution" key={note}>{note}</p>)}
         {result && <p className="fine">같은 동작은 보장하지 않습니다. 판정은 데이터시트 값과 입력한 조건으로 계산한 결과입니다.</p>}
-        {run.error && <div className="notice" role="alert"><p>검토 결과를 불러오지 못했습니다. {errorMessage(run.error)}</p><button className="btn" onClick={() => void run.refetch()}>결과 다시 불러오기</button></div>}
+        {run.error && <div className="notice" role="alert"><p {...requestIdProps(run.error)}>검토 결과를 불러오지 못했습니다. {errorMessage(run.error)}</p><button className="btn" onClick={() => void run.refetch()}>결과 다시 불러오기</button></div>}
       </section>
 
       <section className="talk" aria-labelledby="activity-title"><h2 id="activity-title">활동</h2>
@@ -186,17 +186,17 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
           {!history.length && !live && !chat.loading && <li className="activity-stage"><CircleDashed aria-hidden="true" /><span>아직 질문이 없습니다. 아래 예시로 시작할 수 있습니다.</span></li>}
         </ol>
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{live && (running ? `SojaFit: ${stages[stages.length - 1] || '검토 시작'}` : state.status === 'completed' ? '검토 결과를 받았습니다.' : state.status === 'requires_input' ? '추가 입력이 필요합니다.' : state.status === 'failed' ? '실행에 실패했습니다.' : state.status === 'refused' ? '답변이 거절되었습니다.' : '')}</div>
-        {state.status === 'failed' && <div className="notice" role="alert"><p>검토 실행에 실패했습니다. {errorMessage(state.error)}{!state.runId && ' 아래 질문을 입력해 다시 보내 주세요.'}</p>{state.runId && <button className="btn" onClick={() => void chat.stream.refresh(state.runId!)}><RotateCw aria-hidden="true" />실행 상태 다시 확인</button>}</div>}
+        {state.status === 'failed' && <div className="notice" role="alert"><p {...requestIdProps(state.error)}>검토 실행에 실패했습니다. {errorMessage(state.error)}{!state.runId && ' 아래 질문을 입력해 다시 보내 주세요.'}</p>{state.runId && <button className="btn" onClick={() => void chat.stream.refresh(state.runId!)}><RotateCw aria-hidden="true" />실행 상태 다시 확인</button>}</div>}
         {state.status === 'requires_input' && <form className="ask" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget)
           void chat.stream.resume(state.runId, { answers: Object.fromEntries((state.interrupt.missing ?? []).map(code => [code, String(data.get(code) ?? '').trim()]).filter(([, value]) => value)), role: String(data.get('role') ?? '') || undefined }) }}>
           <h3>{state.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</h3>
           <p className="fine">모르는 값은 비워 두세요. 빈 칸은 '모름'으로 검토합니다.</p>
-          {(state.interrupt.role_choices ?? []).map((code, index) => <label key={code} className="choice"><input type="radio" name="role" value={code} defaultChecked={index === 0} />{(Array.isArray(roles.data) ? roles.data.find(item => item.code === code)?.name : '') || code}</label>)}
-          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? code}</span><input className="input" name={code} autoComplete="off" placeholder="단위까지 적어 주세요. 예: 12 V" /></label>)}
+          {(state.interrupt.role_choices ?? []).map((code, index) => <label key={code} className="choice"><input type="radio" name="role" value={code} defaultChecked={index === 0} />{(Array.isArray(roles.data) ? roles.data.find(item => item.code === code)?.name : '') || '역할'}</label>)}
+          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? '추가 조건'}</span><input className="input" name={code} autoComplete="off" placeholder="단위까지 적어 주세요. 예: 12 V" /></label>)}
           <div className="form-actions"><button className="btn btn-primary">이 값으로 계속 검토</button>
             <button type="button" className="btn" onClick={event => void chat.stream.resume(state.runId, { answers: {}, role: String(new FormData(event.currentTarget.form!).get('role') ?? '') || undefined })}>모두 모름으로 계속</button>
             {recordedResume && <button type="button" className="btn" onClick={() => void chat.stream.resume(state.runId, { answers: recordedResume.answers, role: recordedResume.role || undefined })}>기록한 답으로 계속하기</button>}</div></form>}
-        {chat.error ? <div className="notice" role="alert"><p>검토 기록을 불러오거나 질문을 보내지 못했습니다. {errorMessage(chat.error)} 새로고침하면 작성 중인 질문은 지워집니다.</p><button className="btn" onClick={() => window.location.reload()}>페이지 새로고침</button></div> : null}
+        {chat.error ? <div className="notice" role="alert"><p {...requestIdProps(chat.error)}>검토 기록을 불러오거나 질문을 보내지 못했습니다. {errorMessage(chat.error)} 새로고침하면 작성 중인 질문은 지워집니다.</p><button className="btn" onClick={() => window.location.reload()}>페이지 새로고침</button></div> : null}
         {!history.length && !live && recorded.length > 0 && <div className="demo-questions"><p className="composer-hint">키 없는 데모는 기록한 질문만 재생합니다.{recordedHere.length === 0 && ` 이 회로에서 기록한 질문이 있는 부품은 ${[...new Set(recorded.map(item => item.target))].join(', ')}입니다.`}</p>
           {recordedHere.length > 0 && <ul className="examples">{recordedHere.map(item => <li key={item.id}><button title={item.conditions} onClick={() => void chat.send({ question: item.question, conditions: item.conditions })}>{item.question}</button></li>)}</ul>}</div>}
         {!history.length && !live && recorded.length === 0 && <ul className="examples">{examples.map(example => <li key={example}><button onClick={() => { chat.setText(example); input.current?.focus() }}>{example}</button></li>)}</ul>}
@@ -229,7 +229,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       <section className="property-group" aria-labelledby="verdict-heading"><h2 id="verdict-heading">판정</h2><dl>
         <div><dt>결과</dt><dd>{candidate ? <span className={`dot tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span> : running ? '검토 중' : result ? '판정 없음' : '결과 대기'}</dd></div>
         {candidate && <div><dt>기판 수정</dt><dd>{candidate.board_change === true ? '필요' : candidate.board_change === false ? '필요 없음' : '확인 안 됨'}</dd></div>}
-        {(judgement?.input_conditions ?? []).map(item => <div key={item.code}><dt>{INPUT_LABELS[item.code] ?? item.code}</dt><dd>{item.value}</dd></div>)}
+        {(judgement?.input_conditions ?? []).map(item => <div key={item.code}><dt>{INPUT_LABELS[item.code] ?? '추가 조건'}</dt><dd>{item.value}</dd></div>)}
       </dl></section>
       <section className="property-group" aria-labelledby="circuit-heading"><h2 id="circuit-heading">회로</h2><dl>
         {roles.isFetching && !roles.data && <div><dt>역할</dt><dd role="status"><span className="sr-only">역할 이름을 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /></dd></div>}

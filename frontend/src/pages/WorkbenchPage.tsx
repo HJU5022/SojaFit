@@ -7,7 +7,7 @@ import { createDemo, deleteProject, getProject, listDemos, listProjects, renameP
 import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
@@ -164,9 +164,9 @@ export default function WorkbenchPage() {
           {target && <li><ChevronRight aria-hidden="true" /><span className="ref">{target.ref}</span><span className="crumb-value">{target.value}</span></li>}</ol>
         {project.data && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => sheet.current?.showModal()}><Maximize2 aria-hidden="true" />원본 회로도</button>}
       </header>
-      {projects.error && projectId === null && <div className="notice inset" role="alert"><p>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
-      {project.error && <div className="notice inset" role="alert"><p>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
-      {!creator.current?.open && !renaming && error ? <p className="notice inset" role="alert">삭제하지 못했습니다. {errorMessage(error)} 같은 삭제 버튼으로 다시 시도해 주세요.</p> : null}
+      {projects.error && projectId === null && <div className="notice inset" role="alert"><p {...requestIdProps(projects.error)}>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
+      {project.error && <div className="notice inset" role="alert"><p {...requestIdProps(project.error)}>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
+      {!creator.current?.open && !renaming && error ? <p className="notice inset" role="alert" {...requestIdProps(error)}>삭제하지 못했습니다. {errorMessage(error)} 같은 삭제 버튼으로 다시 시도해 주세요.</p> : null}
       {projectId !== null && threadId && project.isPending && <div className="skeleton inset" role="status"><span className="sr-only">검토할 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
 
       {projectId === null && <section className="list">
@@ -216,7 +216,7 @@ export default function WorkbenchPage() {
       {renaming && <form onSubmit={rename}>
         <h2 id="renamer-title">프로젝트 이름 바꾸기</h2>
         <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus defaultValue={renaming.name} /></label>
-        {error ? <p className="notice" role="alert">이름을 바꾸지 못했습니다. {errorMessage(error)}</p> : null}
+        {error ? <p className="notice" role="alert" {...requestIdProps(error)}>이름을 바꾸지 못했습니다. {errorMessage(error)}</p> : null}
         <div className="dialog-foot"><button type="button" className="btn" onClick={() => renamer.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '저장 중' : '이름 저장'}</button></div>
       </form>}
     </dialog>
@@ -232,7 +232,7 @@ export default function WorkbenchPage() {
       {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
       {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. KiCad 넷리스트 파일을 선택해 주세요.</p>}
       {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue={demoList[0].id}>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
-      {error ? <p className="notice" role="alert">프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
+      {error ? <p className="notice" role="alert" {...requestIdProps(error)}>프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
       <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '만드는 중' : '만들기'}</button></div>
     </form></dialog>
 

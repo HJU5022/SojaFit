@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import AuthCard from '../components/AuthCard'
 
@@ -24,7 +24,7 @@ export default function SignupPage() {
     <form onSubmit={submit}>
       <label className="field"><span>이메일</span><input className="input" name="email" type="email" autoComplete="username" required maxLength={100} autoFocus /></label>
       {sent && <p className="notice" role="status">가입 가능한 이메일이라면 인증 메일을 보냈습니다. 스팸함도 확인해 주세요. 메일 링크에서 비밀번호를 설정해야 가입이 완료됩니다. 재요청은 60초 뒤 가능합니다.</p>}
-      {error ? <p className="notice" role="alert">{errorMessage(error)}</p> : null}
+      {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{errorMessage(error)}</p> : null}
       <button className="btn btn-primary btn-large" disabled={busy}>{busy ? '요청 중' : '인증 메일 요청'}</button>
     </form>
   </AuthCard>
