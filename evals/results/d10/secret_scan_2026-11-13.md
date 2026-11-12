@@ -52,7 +52,7 @@
 | 검사 | 결과 |
 |---|---|
 | 알려진 키 형식(`sk-or-`·`sk-ant-`·`pa-`·`AIza`·`ghp_`·`github_pat_`·`xox`·JWT·`BEGIN PRIVATE KEY`·`AKIA`·`GOCSPX`·`sk-`·`Bearer`·`*_SECRET/TOKEN/KEY=` 긴 값) | 파일·이력 모두 0건 |
-| `.env.example` | 값 줄 43개 중 빈 값 15, 나머지 28은 스위치·숫자 한도·공개 URL·로컬 자리표시 값. 실제 비밀 형태 0 |
+| `.env.example` | `KEY=` 형태 줄 42개(주석·빈 줄 제외, `grep -E '^\s*[A-Za-z_]+='`로 셈. `556384b`와 `b5f050d` 모두 42) 중 빈 값 15, 나머지 27은 스위치·숫자 한도·공개 URL·로컬 자리표시 값. 실제 비밀 형태 0. 이 문서의 이전 판에 적힌 43은 잘못 센 값이다 |
 | 위험 파일(`.env`, `*.pem`, `*.key`, `credentials*.json`, 서비스 계정 JSON, `id_rsa`, `.npmrc`, `*.sqlite`, 덤프) | 현재 추적 파일과 전 이력 추가 파일 0개. `.env*`는 `.env.example`뿐 |
 | `postgres://user:pw@` 형태 | 파일 12건, 이력 15건. 모두 자리표시·로컬 도커·CI 서비스 DB 값 |
 | `pk-lf-`·`sk-lf-` | 시험용 가짜 키(`tests/services/test_service_trace.py`, `tests/services/test_langfuse_prompts.py`) |
@@ -83,7 +83,7 @@
 |---|---|---|
 | 시험 값 10건(`test_auth.py` 7, `test_errors.py` 2, `test_deletion.py` 1) | `.gitleaks.toml` 허용 항목(경로 `^tests/` + 접두어 정규식) | `.gitleaksignore` fingerprint 10줄(5개 커밋 `36be8bf`·`d6b0b04`·`f3918c3`·`ee8808f`·`799b325`, 줄당 1건) |
 | `.gitleaks.toml` 허용 항목 | 5개 | 4개(리랭크 캐시, SQL 파일 이름, 인젝션 document_key, worklog 리비전 이름) |
-| `.gitleaksignore` 줄 | 1줄 | 11줄(+ 파일별 설명 주석) |
+| `.gitleaksignore` 지문 줄(주석·빈 줄 제외, `grep -vcE '^\s*(#\|$)'`로 셈) | 1줄 | 11줄(+ 파일별 설명 주석). `c020389` 시점의 값이며 현재 값은 7절 |
 
 - 그 항목이 가리던 다른 것: 없다. 항목만 뺀 설정으로 `jeongun` 이력을 돌리면 12건이 나오고, 시험 값 10건과 아래 a의 2건이다. 나머지 2건은 이 항목과 관계없다.
 - 앞으로: `tests/` 아래 새 가짜 비밀번호는 `.gitleaksignore`에 지문을 넣기 전까지 CI에서 걸린다. 등록 절차는 [SOJAFIT.md](../../../SOJAFIT.md) `.gitleaksignore` 설명에 있다.
@@ -99,3 +99,14 @@
 
 - a의 1건: `evals/results/d10/secrets/extra_checks.md` 10줄(커밋 `d5138a7`). SQL 파일 이름 2개를 인용한 줄이다. 옮기기 전에도 같은 1건이 나왔다(옮기기 전 `jeongun` 이력 검사 1건). 이 건은 `b5f050d` 이후 `jeongun`에 추가됐고 허용되어 있지 않다. 이 변경이 만든 것이 아니다.
 - 옮기기 전후 비교: 이력 검사(저장소 설정 적용) 1건 → 1건, 같은 건이다. 시험 값 10건은 두 경우 모두 가려진다.
+
+## 7. 현재 상태 (2026-11-13, `556384b`)
+
+현재 HEAD(`556384b`) 이력 재검사: 전체 이력 828 커밋 · `db77a11..HEAD` 234 커밋, 등록 뒤 발견 0건, 종료 코드 0. 명령, 설정 상태, 첫 검사의 1건(`docs/GATES.md` 40줄의 Cloud Run 리비전 이름)과 그 지문 등록은 [secrets/after_2026-11-13_556384b.md](secrets/after_2026-11-13_556384b.md).
+
+| 항목 | 값 | 센 방법 |
+|---|---|---|
+| `.gitleaksignore` 지문 줄 | 13개(`c020389` 11 → `74b4290` 12 → `556384b` 재검사에서 13) | 주석·빈 줄 제외 줄 수 |
+| `.gitleaks.toml` 허용 항목 | 4개 | `[[allowlists]]` 개수 |
+
+6절 a의 1건(`extra_checks.md:10`)은 `74b4290`에서 지문으로 등록되어 더는 나오지 않는다.

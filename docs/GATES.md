@@ -115,7 +115,7 @@
 | 배포 서버 재시작 뒤 복원 | 로컬 compose에서만 확인했다(11-09, 11-13) |
 | 평가용 계정 2개로 배포 주소에서 한 대화 · 기억 분리 점검(게이트 기준) | 하지 않았다. 11-13 측정은 `main` `ea5797c`과 같은 트리(`6452cdfc…`)의 로컬 compose에서 데모 계정 A · B로 했다 |
 | 실제 모델 · 실제 임베딩에서의 재시작 뒤 재개 | 11-13 측정의 모델 응답은 기록 재생이다. 실제 호출로는 확인하지 않았다 |
-| 합성 시험 `tests/api/test_http_restart.py` | `ad8612e`에서 2회 모두 429 `RATE_LIMITED`로 실패했다(호출 간격 2초 안에 재개). 간격 0 진단은 통과. 시험 쪽 수정은 로컬 커밋 `a944c34`에 있고 실행하지 않았다(`main`에 없음). 상세: 측정 문서 한계 |
+| 합성 시험 `tests/api/test_http_restart.py` | `ad8612e`에서 2회 모두 429 `RATE_LIMITED`로 실패했다(호출 간격 2초 안에 재개). 간격 0 진단은 통과. 시험 쪽 수정(간격 0 지정)은 `main`에 있다(`a944c34`). 수정 뒤에는 실행하지 않았다. 상세: 측정 문서 한계 |
 | 배포 DB에서 실제 Voyage 임베딩으로 한 사용자 기억 의미 검색 | 확인하지 않았다. 키 없는 로컬 compose의 검색은 순위 없는 목록이다 |
 | 시험이 잡지 못하는 가드 `supervisor.py:357`(답 검사 실패 시 거절 노드로 가는 길, 변이 N15) | 시험이 없다. 변이 시 검사에 실패한 답이 거절 없이 끝난다 |
 | 시험되지 않은 가드 `revisions.py:196`(겹치지 않는 품번 문서, 변이 N3b) | 같은 조건을 되풀이하는 가드를 찾지 못했다. 변이 시 해당 문서가 개정판 검사를 통과한다. 상세: [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) 4절 |
@@ -165,7 +165,7 @@
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
-| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/) |
+| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
 
 확인 못 한 것(없는 것):
 
