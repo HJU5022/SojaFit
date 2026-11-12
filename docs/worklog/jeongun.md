@@ -45,7 +45,7 @@
 - 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
 
 ## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
-- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
+- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/guides/v3_50_codex_paste.md`](../../evals/guides/v3_50_codex_paste.md).
 - EVAL_REPORT §10: Codex vs 우리 서비스 표본 5행(v3-01·05·10·26·45). Codex는 자동 채점 없음. 우리 쪽은 #52/`d9-improve2` 원시.
 - D9 묶음(증거 A~D · #52 · paste · Codex 답 · 문서) 커밋·PR. scratchpad·langfuse probe·synth·실패 스모크는 제외.
 
