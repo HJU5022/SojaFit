@@ -514,7 +514,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 
 ## 10. 대체재와의 비교
 
-동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안도 Codex 세션에서 작성됐으며, 출제와 정답 초안은 분리해 작성하고 심태현이 1차·하정운이 2차 판정했다. 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 사용된 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/samples/v3_50_codex_paste.md`](evals/samples/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, Codex 쪽은 자동 채점하지 않았다.
+동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안도 Codex 세션에서 작성됐으며, 출제와 정답 초안은 분리해 작성하고 심태현이 1차·하정운이 2차 판정했다. 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 사용된 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/guides/v3_50_codex_paste.md`](evals/guides/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, Codex 쪽은 자동 채점하지 않았다.
 
 | # | 질문(요약) | 판정 기준 | Codex | 우리 서비스 | 차이 |
 |---|---|---|---|---|---|

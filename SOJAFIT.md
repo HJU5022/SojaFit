@@ -434,6 +434,7 @@ SojaFit (proj3-b)
 │   │   ├── GUIDES.md       <- 폴더 설명
 │   │   ├── dataset-guide.md  <- 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
 │   │   ├── preregister.md  <- 실험 사전 등록: 바꾸기 전에 바꿀 것과 기대 지표를 적음
+│   │   ├── v3_50_codex_paste.md <- v3 50문항의 붙여넣기용 평가 입력 원문(Codex 비교용)
 │   │   └── supervisor-prompt-v0.md  <- Supervisor Prompt V0의 API 없는 plan·smoke·본 실행·집계 절차
 │   ├── runners/            <- 평가 실행기. python -m evals.runners.<이름>으로 실행
 │   │   ├── RUNNERS.md      <- 폴더 설명과 실행 명령
@@ -483,7 +484,6 @@ SojaFit (proj3-b)
 │   │   └── Dockerfile.embedding_grid  <- 임베딩 격자 본평가 실행 이미지(gpu_embed에 DB·BM25·Voyage 패키지를 더함)
 │   ├── samples/            <- 동결하지 않은 프록시 표본
 │   │   ├── SAMPLES.md      <- 폴더 설명
-│   │   ├── v3_50_codex_paste.md <- v3 50문항의 붙여넣기용 평가 입력 원문
 │   │   ├── embedding_sample_v0.jsonl  <- 임베딩 후보를 거르는 표본(30청크·18질의)
 │   │   ├── retrieval_r1.jsonl  <- 문서 구조로 정답 페이지를 정한 검색 표본 84문항(dev 세트 46·test 세트 38, 사전 등록 #25)
 │   │   ├── retrieval_r1_rewrite_q3.json  <- 같은 84문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)

@@ -10,4 +10,5 @@
 - `GUIDES.md` — 이 문서
 - `dataset-guide.md` — 평가셋 필드·관련/비관련 분류·동결·판정 방식의 정본
 - `preregister.md` — 바꾸기 전에 무엇을 바꾸고 어떤 지표를 기대하는지 먼저 적는 곳
+- `v3_50_codex_paste.md` — v3 50문항을 Codex에 붙여넣는 평가 입력 원문(정답·채점 없음)
 - `supervisor-prompt-v0.md` — Supervisor Prompt V0 세 후보의 오프라인 준비, live 승인 gate, 실행·집계 순서

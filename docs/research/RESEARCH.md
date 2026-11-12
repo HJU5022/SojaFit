@@ -9,7 +9,7 @@
 ## 파일
 - `sojafit-domain-jobs-2026-11-12.md` — 11-12 기준 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹, 공고 링크와 분야별 한계
 - `d9-outside-evidence-2026-11-11.md` — D9용 저장소 밖 증거 A~D 이관 목록(판정진단·v4h summary/manifest·#48+#49 원시)·아직 없는 216건 표주석 원시
-- Codex v3-50 비교 원본: `evals/samples/v3_50_codex_paste.md` · `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md` (EVAL_REPORT §10)
+- Codex v3-50 비교 원본: `evals/guides/v3_50_codex_paste.md` · `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md` (EVAL_REPORT §10)
 - `injection-case-review-packet.md` — 본실측03 우선 31건과 별도 스모크08 우선 1건의 질문·최종응답 원문, 측정 청크/회로/공격면, 제조사 PDF 대조자료. 응답 품질 분류는 어시스턴트 잠정 검토이며 사람 채점은 대기.
 - `injection-results.md` — T1~T7 스모크01~06·본실측110항목의 누적 결과·버전·예산·사례별 관찰·저장 결과 무료 재현·최신03 원시 링크·이전32개 외부 백업 인덱스와 후속 기록 양식. 무료 재생은 실측과 분리하며 앞으로 같은 문서에 추가한다. (옛 이름 `injection-smoke-results.md`는 이 파일로 옮김)
 

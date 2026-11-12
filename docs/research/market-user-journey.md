@@ -191,7 +191,7 @@ D10 최종 정리 전 외부 시선 1명(전자·하드웨어 또는 타 조/현
 
 ### 7-1. 대체재와의 비교 (`EVAL_REPORT.md` 10장 반영안)
 
-**2026-11-12 정본:** `EVAL_REPORT.md` 10장의 실제 비교 대상 Codex는 범용 코딩 에이전트다. 비교에 사용한 Codex 응답은 [입력](../../evals/samples/v3_50_codex_paste.md)과 [답변](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md)을 참고하며 자동 채점하지 않았다. v3 정답은 출제와 분리된 자동 정답 세션의 초안이며, 1차 판정자 심태현·2차 판정자 하정운으로 2026-11-12 정정한다.([평가셋 안내](../../evals/guides/dataset-guide.md)). 평가 리포트와 ADR 0015의 기존 단독 판정 서술도 같은 내용으로 정정한다. v3 정답 초안이 Codex 세션에서 작성됐다고 확인했다. 작업 원본은 저장소 밖에 있으며, 비교 대상도 Codex이므로 결과 해석에서 이를 고려한다. v1은 [작업 기록](../worklog/jeongun.md)에 Codex 세션 사용이 명시돼 있다.
+**2026-11-12 정본:** `EVAL_REPORT.md` 10장의 실제 비교 대상 Codex는 범용 코딩 에이전트다. 비교에 사용한 Codex 응답은 [입력](../../evals/guides/v3_50_codex_paste.md)과 [답변](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md)을 참고하며 자동 채점하지 않았다. v3 정답은 출제와 분리된 자동 정답 세션의 초안이며, 1차 판정자 심태현·2차 판정자 하정운으로 2026-11-12 정정한다.([평가셋 안내](../../evals/guides/dataset-guide.md)). 평가 리포트와 ADR 0015의 기존 단독 판정 서술도 같은 내용으로 정정한다. v3 정답 초안이 Codex 세션에서 작성됐다고 확인했다. 작업 원본은 저장소 밖에 있으며, 비교 대상도 Codex이므로 결과 해석에서 이를 고려한다. v1은 [작업 기록](../worklog/jeongun.md)에 Codex 세션 사용이 명시돼 있다.
 
 정본의 5행에 추가한 **판정 기준**은 [동결 v3 정답](../../evals/dataset_v3.jsonl)의 `expected`를 기준으로 한다. 이 기준은 두 답변의 자동 채점 결과가 아니다.
 
