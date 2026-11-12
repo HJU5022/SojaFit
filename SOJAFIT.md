@@ -484,6 +484,10 @@ SojaFit (proj3-b)
 │       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
+│       ├── chunking/       <- 청킹 산출물의 요약·manifest·해시 목록
+│       │   └── v4h-2026-11-08/  <- 현재 코퍼스(청커 tsc-v4h-2026-11-08)의 요약·manifest·파서 불일치와 청크별 sha256 목록
+│       │       ├── chunk_sha256.tsv  <- 청크 51,967개의 doc·idx·본문 sha256(LF, 본문 없음)
+│       │       └── chunk_sha256.md  <- 위 목록의 해시 대상·확인 명령·재생성 명령·chunks.jsonl 입수 방법
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       ├── skill/          <- Skill·도구 개발 검증 요약
 │       ├── grader/         <- 채점기 기준선(eval_grader)

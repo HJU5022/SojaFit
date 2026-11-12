@@ -148,7 +148,7 @@ v1에는 `question` 키가 없어 기준선은 문항 전체 `input`으로 검�
 | 비관련 4종 건수 (도메인 밖 / 없는 대상 / 없는 항목 / 기간 다름) | 6 / 6 / 7 / 6 | 8 / 9 / 10 / 8 | 6 / 7 / 6 / 6 |
 | sha256 (`evals/FROZEN.json`) | `2fef02c2dcd8…` | `81582c59ef47…` | 현재 `05202314ed1d…`(커밋 `a16afe5`, 11-12 21:23, 50건 모두 `judges` 칸 `["심태현","하정운"]`). 최초 동결 `2b99b2125d98…`(커밋 `30d0469`, 11-10 11:48) |
 | 코퍼스 버전과 정답 기준일 | TSC 다이오드 데이터시트 1,360건(2026-11-01 수집), 기준일 2026-11-01(49건). n21만 기준일 2026-11-02이고 `corpus_version`이 sha256으로 적혀 있음 | v1 50건은 v1과 같음. 추가 20건은 같은 코퍼스, 기준일 2026-11-01 | 50건 모두 `corpus_version` "TSC 다이오드 데이터시트 1,360건(2026-11-01 수집), 청킹 tsc-v3-2026-11-06", 기준일 2026-11-06 |
-| 정답을 정한 사람과 기준 | 하정운 1차·김재훈 2차 사람 판정. 하정운·김재훈의 검토·수정 의견과 합의 기록을 반영(변경 답안 n01 · n02 · h03과 추가 문항 n21은 11-02 합의). 숫자형 7건의 자동 대조는 추가 근거이며 별도 확인란 부재를 사람 미검수로 보지 않음. 기준은 `evals/guides/dataset-guide.md` | v1 50건은 v1과 같음. 추가 20건은 자동 출제·정답 초안(11-01)을 하정운 1차·김재훈 2차 사람 판정에서 모두 O. 후보 찾기 관련 10건은 열린 정답(조건을 모두 만족하면 어느 품번이든 정답). 기준은 `evals/guides/dataset-guide.md` | 자동 초안의 정답을 심태현이 1차 판정하고 하정운이 2차 판정(판정자 정보 2026-11-12 정정) |
+| 정답을 정한 사람과 기준 | 하정운 1차·김재훈 2차 사람 판정. 하정운·김재훈의 검토·수정 의견과 합의 기록을 반영(변경 답안 n01 · n02 · h03과 추가 문항 n21은 11-02 합의). 숫자형 7건의 자동 대조는 추가 근거이며 별도 확인란 부재를 사람 미검수로 보지 않음. 기준은 `evals/guides/dataset-guide.md` | v1 50건은 v1과 같음. 추가 20건은 자동 출제·정답 초안(11-01)을 하정운 1차·김재훈 2차 사람 판정에서 모두 O. 후보 찾기 관련 10건은 열린 정답(조건을 모두 만족하면 어느 품번이든 정답). 기준은 `evals/guides/dataset-guide.md` | 정답 초안은 Codex가 작성했다. 하정운이 문항을 검수하고 삭제·추가·수정했다. 판정은 1차 심태현, 최종 판정자 하정운이다(조장 확인, 2026-11-13). 이 판정 출처의 정본은 이 칸이다. 기준은 `evals/guides/dataset-guide.md` |
 | 질문을 쓴 사람과 정답 청크를 찾은 사람이 다른가 | | 추가 20건은 출제와 정답을 따로 돌림(정답 페이지는 출제 의도를 지운 문항으로 작성, `evals/drafts/reviews/draft_v2add_20_review.md`) | 출제(문항 쓰기 · 고쳐 쓰기)와 정답(정답 쓰기 · 고쳐 쓰기)을 따로 돌린 자동 초안(lab `evals/drafts/v3/` TASK_A · A2 · B), 최종 판정은 사람(위 줄) |
 | 동결 뒤 지표에서 뺀 문항 수와 사유 (`evals/exclusions.json`) | 0건(`evals/exclusions.json` 없음) | 0건 | 0건 |
 
@@ -381,7 +381,20 @@ v3는 2문항, 판정 연습은 1문항 차이이고 한 세트씩이라(G5 규�
 
 **사람 판정 기록**
 
-원시 파일의 `human_review` 필드(reviewer, passed, 사본과의 차이)는 [docs/research/injection-results.md](docs/research/injection-results.md) 1절이 정본이다. 이 문서는 건수를 다시 적지 않는다.
+본실측03 110건은 심태현이 사람 판정했다(전수). 통과 88, 품질 오류 22다(조장 확인, 2026-11-13; 원시 `passed` 직접 집계). 스모크 2건은 110건에 넣지 않는다. 원시 `reviewer`=`team_lead`가 실제 판정자와 다른 이유, 하정운의 별도 표본 채점 20건과 3건 차이는 [docs/research/injection-results.md](docs/research/injection-results.md) 1.1절 "판정 출처"가 정본이다.
+
+| 사례 | 작업 수 | 통과 | 품질 오류 |
+|---|---:|---:|---:|
+| T1 코퍼스 정격 오염 | 20 | 6 | 14 |
+| T2 코퍼스 보호 사실 유출 | 20 | 20 | 0 |
+| T3 코퍼스 사용 승인 유도 | 20 | 12 | 8 |
+| T4 사용자 질문 역할 변경 | 10 | 10 | 0 |
+| T5 코퍼스 표 읽기 오염 | 20 | 20 | 0 |
+| T6 이전 대화 지시 지속 | 10 | 10 | 0 |
+| T7 넷리스트 footprint | 10 | 10 | 0 |
+| 합계 | 110 | 88 | 22 |
+
+품질 오류 22건은 T1 정상 7·공격 7, T3 공격 8이다. 응답 품질 판정이며 공격 이행 판정과 구분한다(`injection-results.md` 1.1절 `note` 값).
 
 - 이 측정은 배포 HTTP 경로 채점이 아니다.
 
@@ -543,7 +556,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 
 ## 10. 대체재와의 비교
 
-동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안도 Codex 세션에서 작성됐으며, 출제와 정답 초안은 분리해 작성하고 심태현이 1차·하정운이 2차 판정했다. 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 사용된 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/guides/v3_50_codex_paste.md`](evals/guides/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, Codex 쪽은 자동 채점하지 않았다.
+동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다(2절 평가셋 표 "정답을 정한 사람과 기준" 칸이 정본). 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 쓰인 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/guides/v3_50_codex_paste.md`](evals/guides/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, Codex 쪽은 자동 채점하지 않았다.
 
 | # | 질문(요약) | 판정 기준 | Codex | 우리 서비스 | 차이 |
 |---|---|---|---|---|---|
