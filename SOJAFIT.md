@@ -1,5 +1,11 @@
 # SojaFit
 
+- 상태: 현행
+- 기준일: 2026-11-12
+- 기준 커밋: `6707002`
+- 정본 여부: 정본(폴더와 파일 위치)
+- 관련 문서: [README.md](README.md), [AGENTS.md](AGENTS.md), [SPEC.md](SPEC.md)
+
 회로를 읽고 대체 조건을 정해 후보 부품을 판정하는 RAG 에이전트입니다. 첫 범위는 소형 MCU 회로의 다이오드입니다.
 
 사용자가 KiCad 넷리스트와 바꿀 부품을 주면, 부품이 회로에서 맡은 역할을 설명하고, 역할에서 대체 조건을 정하고, 후보 부품마다 데이터시트 근거로 판정한 뒤, 사람이 승인하면 견적서를 저장합니다. 같은 동작은 보장하지 않습니다.
@@ -171,7 +177,7 @@ SojaFit (proj3-b)
 │   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·대화 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
 │   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
-│   ├── errors.py           <- 오류 응답 error.code 15개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
+│   ├── errors.py           <- 오류 응답 error.code 16개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
 │   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). <이름>.py가 frontend/src/api/<이름>.ts와 짝
 │   │   ├── API.md          <- 폴더 설명
@@ -548,7 +554,7 @@ SojaFit (proj3-b)
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
-│   │   ├── test_errors.py  <- 오류 코드 15개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
+│   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
 │   │   ├── test_email_auth.py <- 가짜 SMTP·격리 DB의 인증 가입·암호 재설정·토큰 경합·한도 시험
