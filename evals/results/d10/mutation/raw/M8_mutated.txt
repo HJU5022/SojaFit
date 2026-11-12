@@ -1,7 +1,7 @@
 FF                                                                       [100%]
 =================================== FAILURES ===================================
 ____ test_partial_judgement_does_not_fall_back_to_unsafe_prose[single_node] ____
-tests/multi_agent/test_supervisor.py:336: in test_partial_judgement_does_not_fall_back_to_unsafe_prose
+tests/multi_agent/test_supervisor.py:341: in test_partial_judgement_does_not_fall_back_to_unsafe_prose
     assert '사용해도 됩니다' not in out['answer']
 E   AssertionError: assert '사용해도 됩니다' not in '사용해도 됩니다 [7...은 보장하지 않습니다.'
 E     
@@ -12,17 +12,17 @@ E       역할: R01 (근거: —)
 E       
 E       같은 동작은 보장하지 않습니다.
 ____ test_partial_judgement_does_not_fall_back_to_unsafe_prose[synth_node] _____
-tests/multi_agent/test_supervisor.py:335: in test_partial_judgement_does_not_fall_back_to_unsafe_prose
+tests/multi_agent/test_supervisor.py:340: in test_partial_judgement_does_not_fall_back_to_unsafe_prose
     out = node(state, **kw)
           ^^^^^^^^^^^^^^^^^
 backend/multi_agent/supervisor.py:304: in synth_node
     response = chat('synth', SYNTH_PROMPT, render_synth(state, reports), Synth)
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-tests/multi_agent/test_supervisor.py:334: in <lambda>
+tests/multi_agent/test_supervisor.py:339: in <lambda>
     kw = {'chat': lambda *_: pytest.fail('No fallback model call')} if node is S.synth_node else {}
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 E   Failed: No fallback model call
 =========================== short test summary info ============================
 FAILED tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose[single_node]
 FAILED tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose[synth_node]
-2 failed in 0.23s
+2 failed in 0.50s

@@ -7,4 +7,4 @@ tests/multi_agent/test_build.py:129: in test_synth_that_invents_a_number_is_refu
 E   KeyError: 'refusal_reason'
 =========================== short test summary info ============================
 FAILED tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check
-1 failed in 0.62s
+1 failed in 1.85s

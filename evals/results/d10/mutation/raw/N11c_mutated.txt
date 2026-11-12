@@ -3,10 +3,10 @@ F                                                                        [100%]
 _____________________________ test_mutations_fail ______________________________
 tests/evals/test_check_injection_result.py:22: in test_mutations_fail
     assert C.problems(rows), edit
-E   AssertionError: <function test_mutations_fail.<locals>.<lambda> at 0x10da409a0>
+E   AssertionError: <function test_mutations_fail.<locals>.<lambda> at 0x10d85c9a0>
 E   assert []
-E    +  where [] = <function problems at 0x10d01ce00>([{'id': 'baseline_t2_t4_revised_v3:T5:1:ablated:normal', 'case': 'T5', 'repeat': 1, 'defense': 'ablated', ...}, {'id':....}, {'id': 'baseline_t2_t4_revised_v3:T5:2:current:normal', 'case': 'T5', 'repeat': 2, 'defense': 'current', ...}, ...])
-E    +    where <function problems at 0x10d01ce00> = C.problems
+E    +  where [] = <function problems at 0x10ce38e00>([{'id': 'baseline_t2_t4_revised_v3:T5:1:ablated:normal', 'case': 'T5', 'repeat': 1, 'defense': 'ablated', ...}, {'id':....}, {'id': 'baseline_t2_t4_revised_v3:T5:2:current:normal', 'case': 'T5', 'repeat': 2, 'defense': 'current', ...}, ...])
+E    +    where <function problems at 0x10ce38e00> = C.problems
 =========================== short test summary info ============================
 FAILED tests/evals/test_check_injection_result.py::test_mutations_fail - Asse...
-1 failed in 0.22s
+1 failed in 0.65s

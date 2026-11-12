@@ -12,7 +12,7 @@ tests/graph/test_graph_build.py:35: in fake_chat
     return schema(passed_ids=next(grades))
                              ^^^^^^^^^^^^
 E   StopIteration
-E   During task with name '채점' and id '0f5de8a0-e579-eb71-64e6-9f56942cd8d7'
+E   During task with name '채점' and id 'f41474a7-3312-c8d5-9c93-fc47a0a016bc'
 
 The above exception was the direct cause of the following exception:
 tests/graph/test_graph_build.py:71: in test_still_no_pass_refuses_after_two_searches
@@ -29,4 +29,4 @@ E   RuntimeError: generator raised StopIteration
 =========================== short test summary info ============================
 FAILED tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses
 FAILED tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches
-2 failed in 1.48s
+2 failed in 2.38s

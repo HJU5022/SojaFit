@@ -1,14 +1,14 @@
 FF                                                                       [100%]
 =================================== FAILURES ===================================
 _ test_nested_fake_id_is_removed_without_losing_the_provided_id[[\ubb38\uc11c \uadfc\uac70 [16, 999]]] _
-tests/multi_agent/test_docs_agent.py:793: in test_nested_fake_id_is_removed_without_losing_the_provided_id
+tests/multi_agent/test_docs_agent.py:799: in test_nested_fake_id_is_removed_without_losing_the_provided_id
     assert result['status']=='partial' and '1000 V' in result['answer']
 E   AssertionError: assert ('ok' == 'partial'
 E     
 E     - partial
 E     + ok)
 __ test_nested_fake_id_is_removed_without_losing_the_provided_id[[999, [16]]] __
-tests/multi_agent/test_docs_agent.py:793: in test_nested_fake_id_is_removed_without_losing_the_provided_id
+tests/multi_agent/test_docs_agent.py:799: in test_nested_fake_id_is_removed_without_losing_the_provided_id
     assert result['status']=='partial' and '1000 V' in result['answer']
 E   AssertionError: assert ('ok' == 'partial'
 E     
@@ -17,4 +17,4 @@ E     + ok)
 =========================== short test summary info ============================
 FAILED tests/multi_agent/test_docs_agent.py::test_nested_fake_id_is_removed_without_losing_the_provided_id[[\ubb38\uc11c \uadfc\uac70 [16, 999]]]
 FAILED tests/multi_agent/test_docs_agent.py::test_nested_fake_id_is_removed_without_losing_the_provided_id[[999, [16]]]
-2 failed in 0.68s
+2 failed in 1.60s

@@ -161,6 +161,11 @@ def test_check_blocks_fake_citations_and_invented_numbers():
     assert S.check_node({**two, 'answer': bad, 'synth_text': bad})['refusal_reason'] == 'verify_failed'
 
 
+def test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish():
+    assert S.after_check({'refusal_reason': Reason.VERIFY_FAILED.value}) == S.NODE['refuse']
+    assert S.after_check({}) == S.NODE['finish']
+
+
 @pytest.mark.parametrize('source', ['absent', 'failed', 'discarded', 'kept_earlier'])
 def test_final_netlist_permission_comes_only_from_selected_verified_reports(source):
     rating = report(1, answer='VRRM은 40 V이다 [7].', evidence_ids=['7'])

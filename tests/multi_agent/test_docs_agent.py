@@ -685,6 +685,12 @@ def test_document_without_edition_is_rejected_when_an_edition_is_requested():
     assert revision_matches('SS34 데이터시트', 'SS34.pdf', ['SS34'], ['SS34'])
 
 
+def test_document_of_another_part_is_rejected_when_an_edition_is_requested():
+    question = 'SS34 F16 판본'
+    assert not revision_matches(question, 'SS14_F16.pdf', ['SS14'], ['SS34'])
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34'])
+
+
 def test_single_part_multi_edition_comparison_remains_supported():
     question = 'SS34의 F16 판본과 F20 판본을 비교해 줘'
     assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}

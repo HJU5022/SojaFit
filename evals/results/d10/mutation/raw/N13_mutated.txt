@@ -9,4 +9,4 @@ E     - refuse
 E     + single)
 =========================== short test summary info ============================
 FAILED tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit
-1 failed in 0.42s
+1 failed in 0.49s

@@ -1,6 +1,24 @@
-........................................................................ [ 21%]
+.............................F.......................................... [ 21%]
 ........................................................................ [ 43%]
 ........................................................................ [ 65%]
-........................................................................ [ 87%]
-.........................................                                [100%]
-329 passed in 2.89s
+........................................................................ [ 86%]
+...............F............................                             [100%]
+=================================== FAILURES ===================================
+___ test_answer_that_fails_the_check_ends_in_refusal_not_as_the_final_answer ___
+tests/multi_agent/test_build.py:139: in test_answer_that_fails_the_check_ends_in_refusal_not_as_the_final_answer
+    assert out['path'][-2:] == ['답 검사', '거절'] and '끝' not in out['path']
+E   AssertionError: assert (['답 검사', '끝'] == ['답 검사', '거절']
+E     
+E     At index 1 diff: '끝' != '거절'
+E     Use -v to get more diff)
+_ test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish _
+tests/multi_agent/test_supervisor.py:165: in test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish
+    assert S.after_check({'refusal_reason': Reason.VERIFY_FAILED.value}) == S.NODE['refuse']
+E   AssertionError: assert '끝내기' == '거절'
+E     
+E     - 거절
+E     + 끝내기
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_build.py::test_answer_that_fails_the_check_ends_in_refusal_not_as_the_final_answer
+FAILED tests/multi_agent/test_supervisor.py::test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish
+2 failed, 330 passed in 4.33s
