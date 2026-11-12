@@ -5,6 +5,8 @@
 - `bd05259` 페르소나 표에 지불 주체 행(가설, 외부 검증 전).
 - `e4e986e` `EVAL_REPORT.md` 10장: 판정 기준 열, Codex가 코딩 에이전트라는 점, 답을 얻은 방법, 정답·판정은 하정운이 했다는 조장 확인(11-12), 한계.
 - `443a32a` 각주 [1][2][4] 원자료 9개를 `docs/research/evidence/`로 복사(바이트 동일, 약 2.0MB, `EVIDENCE.md`에 sha256), `TOPIC.md` 5행 안내 문장 갱신.
+- 후속 A: 근거 폴더를 레포 구조 시험에 맞춤(`README.md` → `EVIDENCE.md`, `집계.md` → `jobs2-summary.md`, SOJAFIT.md 트리·RESEARCH.md 목록 추가). `tests/repo` 위반 목록은 f13860f 기준과 같고 `docs/research/evidence`는 없음.
+- 후속 B: 각주 [3] 두 파일을 넣지 않음. OpsMate 등 다른 후보 주제와 로컬 작업 메모가 들어 있고 조장 PC 절대 경로가 있음. 조장 판단 대기.
 - 안 함: 각주 [3] 파일 복사(조장 PC 절대 경로 포함), 외부 검토자 기록, 푸시·PR·병합, 서버·LLM 호출.
 
 ## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
