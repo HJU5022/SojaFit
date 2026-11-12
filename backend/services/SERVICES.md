@@ -28,3 +28,4 @@
 Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.
 - `mouser.py` — Mouser Search API 품번 검색(`POST /api/v1/search/partnumber`, 키는 `apiKey` 쿼리) 클라이언트. `check_parts`(1~10개, 3~40자, `|` 금지), `search_parts(parts, transport=None)`가 한 번만 보내고(재시도 없음, 제한 시간 10초, 프로세스당 누적 `MAX_CALLS` 300회) 품번 · 제조사 · 수량별 가격과 통화 · 재고 표시 · 상품 주소와 조회 시각만 돌려줌. 실패는 `MouserError(kind)`로만 알리고 요청 주소 · 키 · Mouser 문구를 담지 않음. httpx 요청 로그에서 Mouser 주소 줄을 버리는 필터. 읽는 환경변수 `MOUSER_API_KEY`
 - `langfuse_prompts.py` — 노드별 모델 표(`NODE_MODELS`, 노드 `route` · `grade` · `rewrite` · `generate` · `supervisor` · `judge_read`), development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 상세 계약은 [SPEC](../../SPEC.md)
+- `mail.py` — Gmail SMTP465/587 TLS 인증 링크 발송. SMTP_USERNAME/SMTP_PASSWORD/SMTP_PORT 및 AUTH_ORIGIN; 로그·재시도·비밀값 저장 없음.

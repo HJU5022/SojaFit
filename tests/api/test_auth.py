@@ -5,9 +5,11 @@
 - 출처: SPEC 8.6(로그인 AC), docs/specs/login-auth.md, docs/research/auth-login-verification.md
 """
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from starlette.requests import Request
 
-from backend import auth
+from backend import auth, auth_email
 from backend.main import app
 
 
@@ -197,8 +199,11 @@ def test_admin_deactivation_revokes_sessions(monkeypatch):
             conn.execute("DELETE FROM users WHERE id = ANY(%s)", (ids,))
 
 
-def test_google_id_token_verifies_signature_and_identity_claims():
+def test_google_id_token_verifies_signature_and_identity_claims(monkeypatch):
     import time
+
+    now = int(time.time())
+    monkeypatch.setattr(time, 'time', lambda: now)
 
     from joserfc import jwt
     from joserfc.jwk import RSAKey
@@ -211,6 +216,9 @@ def test_google_id_token_verifies_signature_and_identity_claims():
         return jwt.encode({"alg": "RS256", "kid": "test-key"}, values, signing_key)
 
     assert auth.verify_google_id_token(token(claims), jwks, "test-client", "expected-nonce") == ("https://accounts.google.com", "synthetic-subject", "admin@example.test")
+    assert auth.verify_google_id_token(token({**claims, 'iat': now + 30}), jwks, 'test-client', 'expected-nonce') is not None
+    assert auth.verify_google_id_token(token({**claims, 'iat': now + 31}), jwks, 'test-client', 'expected-nonce') is None
+    assert auth.verify_google_id_token(token({**claims, 'exp': now - 31}), jwks, 'test-client', 'expected-nonce') is None
     for field, value in (("iss", "https://evil.example"), ("aud", "other-client"), ("nonce", "wrong"), ("email_verified", False), ("exp", int(time.time()) - 60)):
         assert auth.verify_google_id_token(token({**claims, field: value}), jwks, "test-client", "expected-nonce") is None
     other_key = RSAKey.generate_key(2048, {"kid": "test-key"})
@@ -256,7 +264,7 @@ def test_google_callback_requires_state_and_never_grants_unapproved_session(monk
     monkeypatch.setattr(auth, "create_google_state", lambda: ("state-value", "browser-value", "verifier-value", "nonce-value"))
     monkeypatch.setattr(auth, "consume_google_state", lambda state, browser: ("verifier-value", "nonce-value") if (state, browser) == ("state-value", "browser-value") else None)
     monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", "synthetic-subject", "admin@example.test"))
-    monkeypatch.setattr(auth, "google_admin_session", lambda issuer, subject: None)
+    monkeypatch.setattr(auth, "google_session", lambda issuer, subject: None)
     monkeypatch.setattr(auth, "request_google_link", lambda issuer, subject, email: "pending-request")
     monkeypatch.setattr(auth, "google_pending_email", lambda request_id: "admin@example.test" if request_id == "pending-request" else None)
     client = TestClient(app)
@@ -268,12 +276,14 @@ def test_google_callback_requires_state_and_never_grants_unapproved_session(monk
     assert failed.status_code == 303
     assert failed.headers["location"] == "/login?google=error"
     client.get("/api/auth/google/start", follow_redirects=False)
-    pending = client.get("/api/auth/google/callback?code=synthetic-code&state=state-value")
-    assert pending.status_code == 200
-    assert "pending-request" in pending.text
-    assert str(pending.url).endswith("/api/auth/google/pending")
+    pending = client.get("/api/auth/google/callback?code=synthetic-code&state=state-value", follow_redirects=False)
+    assert pending.status_code == 303
+    assert pending.headers["location"] == "/login?google=finish"
     assert auth.COOKIE not in pending.cookies
     assert pending.headers["cache-control"] == "no-store"
+    # 최초 관리자 연결은 기존 대기 화면·운영자 CLI가 계속 담당한다.
+    waiting = client.get("/api/auth/google/pending")
+    assert waiting.status_code == 200 and "pending-request" in waiting.text
 
 
 
@@ -950,7 +960,7 @@ def test_question_endpoint_is_not_exposed(monkeypatch):
 def test_signup_rejects_missing_or_cross_origin(monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
     client = TestClient(app)
-    body = {"email": "new-person@example.test", "password": "synthetic-pass-123", "consent": True}
+    body = {"email": "new-person@example.test", "consent": True}
     assert client.post("/api/auth/signup", json=body).status_code == 403
     assert client.post("/api/auth/signup", json=body, headers={"origin": "https://evil.example"}).status_code == 403
 
@@ -964,22 +974,32 @@ def test_signup_validation_errors_do_not_echo_input(email, password, monkeypatch
     assert email not in response.text and password not in response.text
 
 
-@pytest.mark.parametrize("consent", ["missing", False, None, "true", 1])
-def test_signup_requires_explicit_consent_before_touching_the_database(consent, monkeypatch):
-    """처리방침 고지 동의(consent)가 정확히 true가 아니면 공통 422이고 가입 처리(DB)를 부르지 않는다."""
+@pytest.mark.parametrize("consent", ["missing", False, None, True])
+def test_signup_does_not_require_or_record_consent(consent, monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
-    monkeypatch.setattr(auth, "signup", lambda *args: pytest.fail("signup must not run without consent"))
-    body = {"email": "new-person@example.test", "password": "synthetic-pass-123"}
+    monkeypatch.setenv("DEMO_MODE", "0")
+    calls = []
+    monkeypatch.setattr(auth_email, "request_email", lambda *args: calls.append(args))
+    body = {"email": "new-person@example.test"}
     if consent != "missing":
         body["consent"] = consent
     response = TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json=body)
-    assert response.status_code == 422 and response.json()["error"]["code"] == "VALIDATION_ERROR"
-    assert "synthetic-pass-123" not in response.text
+    assert response.status_code == 200 and response.json() == {"ok": True}
+    assert len(calls) == 1 and len(calls[0]) == 3
+    assert "set-cookie" not in response.headers
+
+
+@pytest.mark.parametrize("consent", ["true", 1])
+def test_signup_rejects_invalid_legacy_consent_types(consent, monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    monkeypatch.setattr(auth, "signup", lambda *args: pytest.fail("validate before DB"))
+    body = {"email": "new-person@example.test", "consent": consent}
+    assert TestClient(app).post("/api/auth/signup", headers={"origin": "http://testserver"}, json=body).status_code == 422
 
 
 @pytest.mark.parametrize("method, path, body, handler", [
     ("post", "/api/auth/login", {"email": "user@example.test", "password": "synthetic-pass-123"}, "authenticate"),
-    ("post", "/api/auth/signup", {"email": "user@example.test", "password": "synthetic-pass-123", "consent": True}, "signup"),
+    ("post", "/api/auth/signup", {"email": "user@example.test", "consent": True}, "signup"),
     ("patch", "/api/admin/users/2", {"is_active": False}, "admin_set_active"),
 ])
 def test_unknown_body_field_is_422_before_touching_the_database(method, path, body, handler, monkeypatch):
@@ -1031,7 +1051,7 @@ def test_ip_limit_schema_is_idempotent_and_not_public():
     assert rows == [("auth_login_ip_attempts", True, False), ("auth_signup_attempts", True, False)]
 
 
-def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch):
+def test_database_legacy_signup_helper_creates_session_and_rejects_duplicate(monkeypatch):
     import os
     import secrets
 
@@ -1047,15 +1067,10 @@ def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch)
     email, password = f"signup-{secrets.token_hex(6)}@example.test", "synthetic-pass-123"
     client = TestClient(app)
     try:
-        response = client.post("/api/auth/signup", headers=headers, json={"email": email, "password": password, "consent": True})
-        assert response.status_code == 200
-        user_id = response.json()["user_id"]
-        assert "httponly" in response.headers["set-cookie"].lower()
-        assert client.get("/api/auth/me").json() == {"user_id": user_id, "role": "user", "email": email}
+        token, user_id = auth.signup(email, password, headers["x-forwarded-for"])
+        assert token and user_id
         assert TestClient(app).post("/api/auth/login", headers=headers, json={"email": email, "password": password}).json() == {"user_id": user_id}
-        duplicate = TestClient(app).post("/api/auth/signup", headers=headers, json={"email": f"  {email.upper()} ", "password": "another-pass-456", "consent": True})
-        assert duplicate.status_code == 409
-        assert duplicate.json()["error"]["code"] == "CONFLICT"
+        assert auth.signup(f"  {email.upper()} ", "another-pass-456", headers["x-forwarded-for"]) is None
         with psycopg.connect(database_url) as conn:
             assert conn.execute("SELECT role, is_active FROM users WHERE login_id=%s", (email,)).fetchall() == [("user", True)]
     finally:
@@ -1063,7 +1078,7 @@ def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch)
             conn.execute("DELETE FROM users WHERE login_id=%s", (email,))
 
 
-def test_database_signup_limits_each_client_ip_to_three_per_day(monkeypatch):
+def test_database_legacy_signup_helper_limits_each_client_ip_to_three_per_day(monkeypatch):
     import os
     import secrets
 
@@ -1082,7 +1097,11 @@ def test_database_signup_limits_each_client_ip_to_three_per_day(monkeypatch):
     def signup(email: str, ip: str, spoofed: str):
         # [왜] 클라이언트가 앞에 넣은 값(spoofed)이 매번 달라도 마지막 값(Google 프런트엔드가 덧붙인 IP)으로 센다
         headers = {"origin": "http://testserver", "x-forwarded-for": f"{spoofed}, {ip}"}
-        return TestClient(app).post("/api/auth/signup", headers=headers, json={"email": email, "password": "synthetic-pass-123", "consent": True}).status_code
+        request = Request({"type": "http", "headers": [(k.encode(), v.encode()) for k, v in headers.items()], "client": ("testclient", 1)})
+        try:
+            return 200 if auth.signup(email, "synthetic-pass-123", auth.client_ip(request)) else 409
+        except HTTPException as error:
+            return error.status_code
 
     try:
         assert signup(emails[0], ip_a, "192.0.2.1") == 200
@@ -1149,3 +1168,33 @@ def test_database_login_ip_limit_blocks_after_thirty_failures_and_window_expires
             conn.execute("DELETE FROM users WHERE login_id=%s", (email,))
             conn.execute("DELETE FROM auth_login_attempts WHERE login_hash = ANY(%s)", ([hashlib.sha256(e.encode()).hexdigest() for e in sprayed + [email]],))
             conn.execute("DELETE FROM auth_login_ip_attempts WHERE ip_hash = ANY(%s)", ([auth.session_token_hash(ip) for ip in (ip_a, ip_b)],))
+
+
+@pytest.mark.parametrize("password", ["12345678", " " * 8, "short-pass1", " " * 15, "1" * 15, "a" * 15, "123456789012345", "abcabcabcabcabc", "abcdabcdabcdabcd", "12345 12345 12345"])
+def test_signup_rejects_weak_password_before_database(password, monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    calls = []
+    monkeypatch.setattr(auth_email, "complete", lambda *args: calls.append(args))
+    response = TestClient(app).post("/api/auth/signup/confirm", headers={"origin": "http://testserver"}, json={"token": "x" * 43, "password": password})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert not calls and "set-cookie" not in response.headers
+    assert password not in response.text
+
+
+@pytest.mark.parametrize("password", ["correct horse battery staple", "synthetic-pass-123", "가나다라마바사아자차카타파하한", "word " + "x" * 1019])
+def test_signup_accepts_long_passphrases_without_trimming(password, monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    calls = []
+    monkeypatch.setattr(auth_email, "complete", lambda *args: calls.append(args))
+    response = TestClient(app).post("/api/auth/signup/confirm", headers={"origin": "http://testserver"}, json={"token": "x" * 43, "password": password})
+    assert response.status_code == 200
+    assert calls[0][1] == password
+
+
+def test_new_signup_policy_does_not_block_existing_short_password_login(monkeypatch):
+    monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")
+    calls = []
+    monkeypatch.setattr(auth, "authenticate", lambda *args: calls.append(args) or ("synthetic-token", 23))
+    response = TestClient(app).post("/api/auth/login", headers={"origin": "http://testserver"}, json={"email": "old@example.test", "password": "old-pass"})
+    assert response.status_code == 200 and calls[0][1] == "old-pass"

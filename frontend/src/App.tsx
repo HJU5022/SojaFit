@@ -1,10 +1,11 @@
-import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
 import { dummyFlowEnabled, errorMessage } from './api/client'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import EmailActionPage from './pages/EmailActionPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
 import LandingPage from './pages/LandingPage'
@@ -64,8 +65,8 @@ function Shell() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/verify-email" element={<Navigate to="/login" replace />} />
-          <Route path="/reset-password" element={<Navigate to="/login" replace />} />
+          <Route path="/verify-email" element={<EmailActionPage key="verify" purpose="signup" />} />
+          <Route path="/reset-password" element={<EmailActionPage key="reset" purpose="reset" />} />
           <Route path="/app" element={<RequireAuth><WorkbenchPage user={user ?? undefined} onLogout={signOut} logoutBusy={busy} /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/admin/users" element={<AdminUsersPage />} />

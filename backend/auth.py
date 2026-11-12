@@ -63,6 +63,15 @@ def session_token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def validate_new_password(password: str) -> None:
+    """새로 설정하는 암호만 검사한다. 기존 암호 검증·해시 형식은 바꾸지 않는다."""
+    compact = re.sub(r'[\s\ufeff]', '', password)
+    repeated = any(all(char == password[index % width] for index, char in enumerate(password))
+                   for width in range(1, min(4, len(password)) + 1))
+    if not 12 <= len(password) <= 1024 or not compact or compact.isdecimal() or repeated:
+        raise ValueError('비밀번호는 12~1024자로, 공백뿐인 값·숫자만·단순 반복을 사용할 수 없습니다.')
+
+
 def hash_password(password: str) -> str:
     """비밀번호를 salt와 scrypt로 해시해 `scrypt$<salt hex>$<digest hex>` 문자열로 돌려준다."""
     # [왜] 사용자마다 무작위 salt 16바이트를 써서 같은 비밀번호도 다른 해시가 되게 한다
@@ -71,8 +80,10 @@ def hash_password(password: str) -> str:
     return f"scrypt${salt.hex()}${digest.hex()}"
 
 
-def verify_password(password: str, encoded: str) -> bool:
+def verify_password(password: str, encoded: str | None) -> bool:
     """비밀번호가 저장 해시와 같은지 확인한다(형식이 깨진 해시는 예외 없이 False)."""
+    if not isinstance(encoded, str):
+        return False
     try:
         kind, salt, expected = encoded.split("$")
         if kind != "scrypt" or len(salt) != 32 or len(expected) != 64:
@@ -130,7 +141,7 @@ def verify_google_id_token(token: str, jwks: dict, client_id: str, nonce: str) -
             options={"iss": {"essential": True, "values": ["accounts.google.com", "https://accounts.google.com"]}, "aud": {"essential": True, "value": client_id}},
             params={"nonce": nonce, "client_id": client_id},
         )
-        claims.validate()
+        claims.validate(leeway=30)  # Google과 서버의 작은 시계 오차만 허용한다.
         subject, email = claims.get("sub"), claims.get("email")
         if not isinstance(subject, str) or not subject or len(subject) > 255 or not isinstance(email, str) or not valid_email(email) or claims.get("email_verified") is not True:
             return None
@@ -192,18 +203,58 @@ def approve_google_link(request_id: str, user_id: int, email: str) -> bool:
         return True
 
 
-def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
+def google_session(issuer: str, subject: str, *, admin_only: bool = False) -> tuple[str, int] | None:
     with connection() as conn:
         identity = conn.execute("SELECT user_id FROM auth_google_identities WHERE issuer=%s AND subject=%s", (issuer, subject)).fetchone()
         if not identity:
             return None
         user_id = identity[0]
         user = conn.execute("SELECT role, is_active FROM users WHERE id=%s FOR UPDATE", (user_id,)).fetchone()
-        if user != ("admin", True) or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
+        if not user or not user[1] or (admin_only and user[0] != "admin") or not conn.execute("SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s AND user_id=%s", (issuer, subject, user_id)).fetchone():
             return None
         token = secrets.token_urlsafe(32)
         conn.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user_id))
         return token, user_id
+
+
+def google_admin_session(issuer: str, subject: str) -> tuple[str, int] | None:
+    return google_session(issuer, subject, admin_only=True)
+
+
+def complete_google_user(request_id: str, ip: str, *, user_id: int | None = None) -> tuple[str, int]:
+    """검증된 pending을 일반 계정에만 연결하고 같은 트랜잭션에서 소비·세션 발급한다.
+
+    user_id는 HTTP 호출자가 비밀번호를 재검증한 계정 ID만 넘긴다. 관리자 연결은 기존 운영자 CLI만 담당한다.
+    """
+    if not request_id or len(request_id) > 128:
+        raise HTTPException(400, 'Google 인증이 만료되었습니다. 다시 시작해 주세요.')
+    try:
+        with connection() as conn:
+            pending = conn.execute('SELECT issuer,subject,email FROM auth_google_pending WHERE request_id=%s '
+                'AND expires_at>CURRENT_TIMESTAMP FOR UPDATE', (request_id,)).fetchone()
+            if not pending:
+                raise HTTPException(400, 'Google 인증이 만료되었습니다. 다시 시작해 주세요.')
+            issuer, subject, email = pending
+            if conn.execute('SELECT 1 FROM auth_google_identities WHERE issuer=%s AND subject=%s', (issuer, subject)).fetchone():
+                raise HTTPException(409, '이미 연결된 Google 계정입니다. Google 로그인을 다시 시작해 주세요.')
+            if user_id is None:
+                if conn.execute('SELECT 1 FROM users WHERE login_id=%s', (email.strip().lower(),)).fetchone():
+                    raise HTTPException(409, '기존 계정의 이메일과 비밀번호로 본인 확인 후 연결해 주세요.')
+                _signup_slot(conn, ip)
+                user_id = conn.execute("INSERT INTO users(login_id,password_hash,role,email_verified_at) VALUES (%s,NULL,'user',CURRENT_TIMESTAMP) RETURNING id",
+                                       (email.strip().lower(),)).fetchone()[0]
+            else:
+                account = conn.execute('SELECT role,is_active FROM users WHERE id=%s FOR UPDATE', (user_id,)).fetchone()
+                if account != ('user', True):
+                    raise HTTPException(409, '활성 일반 계정만 직접 연결할 수 있습니다. 관리자는 운영자 연결 승인이 필요합니다.')
+            conn.execute('INSERT INTO auth_google_identities(issuer,subject,user_id) VALUES (%s,%s,%s)', (issuer,subject,user_id))
+            conn.execute('DELETE FROM auth_google_pending WHERE request_id=%s', (request_id,))
+            token = secrets.token_urlsafe(32)
+            conn.execute("INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP+INTERVAL '8 hours')",
+                         (session_token_hash(token),user_id))
+            return token, user_id
+    except psycopg.errors.UniqueViolation:
+        raise HTTPException(409, '이미 가입되었거나 다른 Google 계정이 연결되어 있습니다. 기존 로그인으로 확인해 주세요.') from None
 
 
 def revoke_google_link(user_id: int) -> bool:
@@ -253,7 +304,7 @@ def check_origin(request: Request) -> None:
         raise ApiError(403, "요청 출처를 확인할 수 없습니다.", code="ORIGIN_MISMATCH")
 
 
-def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:
+def authenticate(email: str, password: str, ip: str, *, issue_session: bool = True) -> tuple[str, int] | None:
     """이메일·비밀번호를 검증하고 성공하면 새 세션을 만든다.
 
     scrypt 동시 검증은 DB advisory lock 2칸으로 제한한다(메모리 보호). 계정당 실패 5회(15분 창)면 15분 잠금,
@@ -265,7 +316,7 @@ def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:
         password: 평문 비밀번호.
         ip: client_ip()가 돌려준 값. 원문 대신 키 해시만 저장한다.
     Returns:
-        (세션 토큰, user_id). 실패·계정 잠금·IP 잠금·비활성 계정이면 None(호출자가 같은 401로 돌려 잠금을 드러내지 않는다).
+        (세션 토큰, user_id). issue_session=False는 본인 확인만 하고 빈 토큰을 돌려준다. 실패·계정 잠금·IP 잠금·비활성 계정이면 None(호출자가 같은 401로 돌려 잠금을 드러내지 않는다).
     Raises:
         HTTPException: 503, 동시 검증 슬롯이 모두 찼을 때.
     """
@@ -296,9 +347,9 @@ def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:
         if locked or ip_locked:
             return None
         # [주의] 없는 계정도 더미 해시로 같은 scrypt 비용을 치러 응답 시간으로 계정 존재를 알 수 없게 한다
-        encoded = user[1] if user else "scrypt$" + "00" * 16 + "$" + "00" * 32
+        encoded = user[1] if user and user[1] else "scrypt$" + "00" * 16 + "$" + "00" * 32
         valid = verify_password(password, encoded)
-        if not user or not user[2] or not valid:
+        if not user or not user[1] or not user[2] or not valid:
             # 창이 끝났으면 1부터 다시 세고, 아니면 누적한다. 5회째에 locked_until을 15분 뒤로 건다
             count = 1 if window_expired else count + 1
             cur.execute("UPDATE auth_login_attempts SET failed_count = %s, window_started_at = CASE WHEN %s THEN CURRENT_TIMESTAMP ELSE window_started_at END, locked_until = CASE WHEN %s >= 5 THEN CURRENT_TIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE login_hash = %s", (count, window_expired, count, key))
@@ -308,6 +359,8 @@ def authenticate(email: str, password: str, ip: str) -> tuple[str, int] | None:
             return None
         cur.execute("DELETE FROM auth_login_attempts WHERE login_hash = %s", (key,))  # 성공하면 그 계정의 실패 기록을 지운다
         # [주의] IP 실패 기록은 성공해도 지우지 않는다. 지우면 공격자가 자기 계정 로그인을 끼워 넣어 IP 횟수를 계속 되돌릴 수 있다
+        if not issue_session:
+            return '', user[0]  # 연결 성공 전에는 로그인 세션을 만들지 않는다.
         token = secrets.token_urlsafe(32)
         cur.execute("INSERT INTO auth_sessions (token_hash, user_id, expires_at) VALUES (%s, %s, CURRENT_TIMESTAMP + INTERVAL '8 hours')", (session_token_hash(token), user[0]))
         return token, user[0]
@@ -328,6 +381,19 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else ""
 
 
+def _signup_slot(conn, ip):
+    conn.execute("DELETE FROM auth_signup_attempts WHERE day < (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date")  # 지난 날짜 행은 결과에 영향이 없어 지운다
+    # [왜] 행을 만들거나 1 올리는 문장 하나로 같은 IP의 동시 요청을 직렬화하고, 상한에 닿았으면 행을 돌려주지 않는다
+    result = conn.execute(
+        "INSERT INTO auth_signup_attempts (ip_hash, day) VALUES (%s, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) "
+        "ON CONFLICT (ip_hash, day) DO UPDATE SET signup_count = auth_signup_attempts.signup_count + 1 "
+        "WHERE auth_signup_attempts.signup_count < %s RETURNING signup_count",
+        (session_token_hash(ip), SIGNUP_IP_DAILY),
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=429, detail="오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.")
+
+
 def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
     """승인 없이 일반 사용자(role=user) 계정을 만들고 바로 새 세션을 발급한다.
 
@@ -345,16 +411,7 @@ def signup(email: str, password: str, ip: str) -> tuple[str, int] | None:
     """
     email = email.strip().lower()
     with connection() as conn, conn.cursor() as cur:
-        cur.execute("DELETE FROM auth_signup_attempts WHERE day < (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date")  # 지난 날짜 행은 결과에 영향이 없어 지운다
-        # [왜] 행을 만들거나 1 올리는 문장 하나로 같은 IP의 동시 요청을 직렬화하고, 상한에 닿았으면 행을 돌려주지 않는다
-        cur.execute(
-            "INSERT INTO auth_signup_attempts (ip_hash, day) VALUES (%s, (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date) "
-            "ON CONFLICT (ip_hash, day) DO UPDATE SET signup_count = auth_signup_attempts.signup_count + 1 "
-            "WHERE auth_signup_attempts.signup_count < %s RETURNING signup_count",
-            (session_token_hash(ip), SIGNUP_IP_DAILY),
-        )
-        if not cur.fetchone():
-            raise HTTPException(status_code=429, detail="오늘 이 네트워크에서 가입할 수 있는 횟수를 넘었습니다.")
+        _signup_slot(conn, ip)
         # [왜] scrypt 한 번에 128MiB를 쓰므로 로그인(authenticate)과 같은 advisory lock 2칸을 나눠 써 동시 계산을 2개로 묶는다
         cur.execute("SELECT pg_try_advisory_xact_lock(736125, 1) OR pg_try_advisory_xact_lock(736125, 2)")
         if not cur.fetchone()[0]:
@@ -421,7 +478,6 @@ def account_email(user_id: int) -> str:
     if row is None:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
     return row[0]
-
 
 
 def logout(request: Request) -> None:

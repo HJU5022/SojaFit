@@ -115,6 +115,8 @@ SojaFit (proj3-b)
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
 │       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
+│       │   ├── EmailActionPage.tsx <- 메일 링크의 인증 가입·비밀번호 설정 및 재설정 화면
+│       │   ├── EmailActionPage.test.tsx <- 토큰 주소 제거·일회 제출·비밀번호 확인·재설정 화면 시험
 │       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
 │       │   ├── AdminUsersPage.test.tsx <- 권한 차단·목록 변경·세션 만료 테스트
 │       │   ├── SettingsPage.tsx <- 내 설정: 소속·직무·선호 실장 방식 저장·칸별 지우기·확인 후 모두 지우기, 확인 후 계정 삭제
@@ -166,6 +168,7 @@ SojaFit (proj3-b)
 │   ├── __init__.py         <- 패키지 표시
 │   ├── main.py             <- FastAPI 진입점: 앱 조립만(수명·공통 오류 처리기·요청 ID·대화 본문 한도 미들웨어·api/ 라우터 등록·React 연결). 경로 함수는 api/에 (고정: Dockerfile이 실행)
 │   ├── auth.py             <- scrypt 비밀번호, DB 세션, 로그인 잠금, Google 관리자 연결·철회, 관리자 계정 관리, 계정 생성 CLI
+│   ├── auth_email.py       <- 이메일 소유 확인 가입·암호 재설정 토큰·발송 한도·세션 폐기
 │   ├── errors.py           <- 오류 응답 error.code 15개(ADR 0019): 상태별 기본 코드, 상황 코드를 붙이는 ApiError, 오류 한 줄 로그
 │   ├── logs.py             <- stdout JSON 한 줄 로그(severity · request_id · code), 메시지 뺀 traceback, 서버 시작 때 설정
 │   ├── api/                <- 서비스 HTTP 라우터 전부(세션·Origin·공통 오류 사용). <이름>.py가 frontend/src/api/<이름>.ts와 짝
@@ -274,6 +277,7 @@ SojaFit (proj3-b)
 │   │   ├── langfuse_prompts.py  <- Langfuse 프롬프트 등록, 고정 버전 검증, 노드 추적
 │   │   ├── demo.py           <- 키 없는 데모의 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 재생 모드 판단, 기록한 데모 질문 목록 · 대조, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
+│   │   ├── mail.py         <- Gmail SMTP TLS 인증·재설정 메일 전송(로그·저장·재시도 없음)
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
@@ -341,8 +345,11 @@ SojaFit (proj3-b)
 │   ├── 023_retention.sql <- 보관 기간 청소 함수(프로젝트 · 분석 대화 60일, 기록 30일, 작은 묶음)
 │   ├── 024_projects_demo_c01.sql <- 기존 DB의 데모 프로젝트 허용 목록에 c01(attiny85_time_switch)을 더함(여러 번 돌려도 같음)
 │   ├── 025_runs_safe_result_preferred_mount.sql <- 기존 DB의 분석 결과 저장 형식(runs.safe_result)에 판정 preferred_mount 칸을 더함(여러 번 돌려도 같음)
+│   ├── 027_google_user_login.sql <- Google 일반 계정의 비밀번호 NULL 허용, 관리자 비밀번호 필수 유지
+│   ├── 029_email_account_security.sql <- 인증 시각·일회성 메일 토큰·발송 한도 표 추가(기존 계정 보존)
 │   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
+│   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
 │   │   ├── 004_create_business_tables.sql.draft  <- 옛 업무 표 초안. 018~020이 업무 표를 만들어 대체됐고 적용하지 않음(이력)
 │   │   └── halfvec.sql.manual  <- 복제 DB에서 vector→halfvec 전환
@@ -508,6 +515,8 @@ SojaFit (proj3-b)
 │   │   ├── test_errors.py  <- 오류 코드 15개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
 │   │   ├── test_logs.py    <- JSON 한 줄 로그 칸, request_id, 메시지 없는 traceback, setup이 기존 로그 설정을 건드리지 않음
 │   │   ├── test_auth.py    <- 로그인·세션·잠금·관리자 API(DB 시험은 TEST_AUTH_DATABASE_URL이 있을 때만)
+│   │   ├── test_email_auth.py <- 가짜 SMTP·격리 DB의 인증 가입·암호 재설정·토큰 경합·한도 시험
+│   │   ├── test_google_users.py <- 일반 Google 가입·비밀번호 재확인 연결·관리자 승인·충돌·한도·마이그레이션 시험
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험, 데모 질문 목록(재생 모드에서만, 기록한 답 · 판정 비노출)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
@@ -678,6 +687,7 @@ SojaFit (proj3-b)
 │   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
 │   │   ├── login-auth.md   <- 로그인과 사용자 식별
 │   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
+│   │   ├── google-user-login.md <- 일반 Google 가입·본인 확인 연결·관리자 승인 유지 작업서
 │   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
 │   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지

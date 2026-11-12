@@ -13,6 +13,7 @@ import os
 import base64
 import hashlib
 from html import escape
+from email.utils import parseaddr
 from typing import Literal
 from urllib.parse import urlencode
 
@@ -96,16 +97,17 @@ def google_callback(request: Request):
         identity = auth.fetch_google_identity(code, *stored)
         if not identity:
             return google_failure()
-        session = auth.google_admin_session(identity[0], identity[1])
+        session = auth.google_session(identity[0], identity[1])
         if session:
             response = RedirectResponse("/login", status_code=303)
+            response.delete_cookie(GOOGLE_PENDING_COOKIE, path="/api/auth/google")
             secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
             response.set_cookie(auth.COOKIE, session[0], httponly=True, secure=secure, samesite="lax", max_age=8 * 3600, path="/")
         else:
             request_id = auth.request_google_link(*identity)
-            response = RedirectResponse("/api/auth/google/pending", status_code=303)
+            response = RedirectResponse("/login?google=finish", status_code=303)
             secure = os.environ.get("AUTH_ORIGIN", "http://localhost:8000").startswith("https://")
-            response.set_cookie(GOOGLE_PENDING_COOKIE, request_id, max_age=900, httponly=True, secure=secure, samesite="lax", path="/api/auth/google/pending")
+            response.set_cookie(GOOGLE_PENDING_COOKIE, request_id, max_age=900, httponly=True, secure=secure, samesite="lax", path="/api/auth/google")
     # [왜] 콜백은 브라우저 이동이라 DB 설정 누락(auth.connection의 503)도 JSON 대신 로그인 화면 오류로 돌려보낸다
     except (psycopg.Error, HTTPException, KeyError, httpx.HTTPError, AuthlibBaseError, ValueError, TypeError):
         return google_failure()
@@ -118,6 +120,7 @@ def google_callback(request: Request):
 def google_failure():
     response = RedirectResponse("/login?google=error", status_code=303)
     response.delete_cookie(GOOGLE_COOKIE, path="/api/auth/google/callback")
+    response.delete_cookie(GOOGLE_PENDING_COOKIE, path="/api/auth/google")
     response.headers["Cache-Control"] = "no-store"
     response.headers["Referrer-Policy"] = "no-referrer"
     return response
@@ -183,38 +186,118 @@ def login(body: Login, request: Request, response: Response):
     return {"user_id": user_id}
 
 
-class Signup(Login):
-    """가입 요청 본문. 이메일 검증은 로그인과 같고 비밀번호는 8자 이상, 처리방침 고지 동의(consent)는 true여야 한다(11-09 결정)."""
+class Signup(BaseModel):
+    """메일 발송 요청만 받으며 인증 전에 계정·세션을 만들지 않는다."""
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"email": "new-user@example.com"}]})
+    email: str = Field(min_length=3, max_length=100)
+    consent: StrictBool | None = None  # 구버전 표시 호환; 동의 증거로 저장하지 않는다.
 
-    # [주의] 로그인의 예시를 물려받으면 consent가 빠져 422가 된다. 모르는 칸 금지(extra)는 Login에서 물려받는다
-    model_config = ConfigDict(json_schema_extra={"examples": [{"email": "new-user@example.com", "password": "example-password-123", "consent": True}]})
-    password: str = Field(min_length=8, max_length=1024)
-    # [왜] 가입 화면의 처리방침 고지(개인정보 보호법 15조 2항)를 읽고 동의했다는 표시. 없거나 true가 아니면 공통 422다
-    consent: StrictBool
-
-    @field_validator("consent")
+    @field_validator("email")
     @classmethod
-    def agreed(cls, consent: bool) -> bool:
-        if consent is not True:
-            raise ValueError("개인정보 수집 · 이용 동의가 필요합니다.")
-        return consent
+    def check_email(cls, email: str) -> str:
+        email = Login.check_email(email)
+        if parseaddr(email)[1] != email:
+            raise ValueError("유효한 이메일 주소를 입력해 주세요.")
+        return email
 
 
-@router.post("/signup", response_model=UserId)
-def signup(body: Signup, request: Request, response: Response):
-    """승인 없이 user 계정을 만들고 로그인과 같은 세션 쿠키를 심은 뒤 {"user_id": 정수}를 돌려준다."""
-    # [주의] 403 Origin 없음·불일치, 409 이미 있는 이메일, 422 입력 검증 실패·동의(consent) 없음(입력값 미노출, main.py의 validation_error가 냄),
-    # 429 IP 하루 한도, 503 DB 사용 불가 또는 동시 scrypt 슬롯 부족(auth.signup이 냄)
+class PasswordAction(BaseModel):
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{"token": "x" * 43, "password": "example-password-123"}]})
+    token: str = Field(min_length=43, max_length=43, pattern=r"^[A-Za-z0-9_-]+$")
+    password: str = Field(min_length=12, max_length=1024)
+
+    @field_validator("password")
+    @classmethod
+    def check_new_password(cls, password: str) -> str:
+        auth.validate_new_password(password)
+        return password
+
+
+def email_request(body: Signup, request: Request, response: Response, purpose: str):
+    from backend import auth_email
     auth.check_origin(request)
+    response.headers["Cache-Control"] = "no-store"
     try:
-        result = auth.signup(body.email, body.password, auth.client_ip(request))
+        auth_email.request_email(body.email, auth.client_ip(request), purpose)
     except psycopg.Error:
-        raise HTTPException(status_code=503, detail="가입 서비스를 사용할 수 없습니다.") from None
-    if result is None:
-        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
-    token, user_id = result
+        raise HTTPException(503, "메일 인증 서비스를 사용할 수 없습니다.") from None
+    return {"ok": True}
+
+
+def email_complete(body: PasswordAction, request: Request, response: Response, purpose: str):
+    from backend import auth_email
+    auth.check_origin(request)
+    response.headers["Cache-Control"] = "no-store"
+    try:
+        auth_email.complete(body.token, body.password, purpose, auth.client_ip(request))
+    except psycopg.Error:
+        raise HTTPException(503, "메일 인증 서비스를 사용할 수 없습니다.") from None
+    return {"ok": True}
+
+
+@router.post("/signup", response_model=Ok)
+def signup(body: Signup, request: Request, response: Response):
+    return email_request(body, request, response, 'signup')
+
+
+@router.post("/signup/confirm", response_model=Ok)
+def signup_confirm(body: PasswordAction, request: Request, response: Response):
+    return email_complete(body, request, response, 'signup')
+
+
+@router.post("/password-reset", response_model=Ok)
+def password_reset(body: Signup, request: Request, response: Response):
+    return email_request(body, request, response, 'reset')
+
+
+@router.post("/password-reset/confirm", response_model=Ok)
+def password_reset_confirm(body: PasswordAction, request: Request, response: Response):
+    return email_complete(body, request, response, 'reset')
+
+
+class GoogleSignup(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    consent: StrictBool | None = None  # 구버전 요청 호환, 동의 증거로 사용하지 않음
+
+
+class GoogleOnboarding(BaseModel):
+    email: str
+
+
+def require_google():
+    if not google_enabled():
+        raise HTTPException(404, 'Google 로그인을 사용할 수 없습니다.')
+
+
+@router.get('/google/onboarding', include_in_schema=False, response_model=GoogleOnboarding, dependencies=[Depends(require_google)])
+def google_onboarding(request: Request, response: Response):
+    email = auth.google_pending_email(request.cookies.get(GOOGLE_PENDING_COOKIE, ''))
+    if not email:
+        raise HTTPException(400, 'Google 인증이 만료되었습니다. 다시 시작해 주세요.')
+    response.headers['Cache-Control'] = 'no-store'
+    return {'email': auth.mask_email(email)}
+
+
+def complete_google_response(request: Request, response: Response, *, user_id=None):
+    token, user_id = auth.complete_google_user(request.cookies.get(GOOGLE_PENDING_COOKIE, ''), auth.client_ip(request), user_id=user_id)
     set_session_cookie(response, token)
-    return {"user_id": user_id}
+    response.delete_cookie(GOOGLE_PENDING_COOKIE, path='/api/auth/google')
+    response.headers['Cache-Control'] = 'no-store'
+    return {'user_id': user_id}
+
+
+@router.post('/google/signup', include_in_schema=False, response_model=UserId, dependencies=[Depends(require_google), Depends(auth.check_origin)])
+def google_signup(body: GoogleSignup, request: Request, response: Response):
+    return complete_google_response(request, response)
+
+
+@router.post('/google/link', include_in_schema=False, response_model=UserId, dependencies=[Depends(require_google), Depends(auth.check_origin)])
+def google_link(body: Login, request: Request, response: Response):
+    # 비밀번호를 다시 확인하며, 연결이 완료되기 전에는 세션을 발급하지 않는다.
+    proof = auth.authenticate(body.email, body.password, auth.client_ip(request), issue_session=False)
+    if proof is None:
+        raise HTTPException(401, '이메일 또는 비밀번호를 확인해 주세요.')
+    return complete_google_response(request, response, user_id=proof[1])
 
 
 def demo_mode() -> None:

@@ -1,4 +1,6 @@
 # api
+- 2026-11-12 test_auth.py: 신규 약한 비밀번호의 DB 전422/쿠키0/입력 미노출, 긴 문장·Unicode·1024자 허용과 기존 짧은 암호 로그인 유지. test_openapi.py의 가입 성공 예시는 강화 정책에 맞춘다.
+
 
 - Postgres 재개 후 읽기 재호출 방지 검사는 JUDGE_READ_VOTES=1을 명시해 처음 읽기1회/재개 후 증가0을 확인한다. 운영의 기본3회 다수결 설정은 바꾸지 않는다.
 
@@ -36,3 +38,4 @@
 - `test_http_smoke.py` — HTTP 점검 스크립트(`scripts/smoke/http_smoke.py`)를 쿠키 · Origin · 소유권을 지키는 가짜 서버(`httpx.MockTransport`)로: 1~9단계 전체 통과(두 번째 승인 409 `ALREADY_APPROVED`를 통과로 셈), `requires_input`이 없거나 스트림 전 503이면 그 단계 실패 · 5~7단계 건너뜀 · 8단계 격리는 계속 · 종료 코드 1, 결과 파일 · 화면에 비밀번호 · 쿠키 값 · 이메일 · 답 글 없음, `--confirm-live` 없으면 요청 없이 멈춤, 재개 값 규칙, 데모 질문 회로가 데모 카탈로그에 있음
 
 저장 대화 후속 검증: test_conversations.py는 GET 상세 인증·페이지 검증·응답 allow-list·분석 호출 없음·404/503/no-store를 확인한다. test_full_service_flow.py는 격리 PostgreSQL에 저장한 질문·답변·판정을 실제 TestClient GET으로 읽고 소유자만 조회하며 message_id가 일치하는지 확인한다. 기존 로그인 세션 검증을 재사용하고 운영 DB는 사용하지 않는다.
+- `test_email_auth.py` — 가짜 SMTP·격리 DB의 인증 전 계정 없음, 토큰 만료/재발급/재사용/경합·한도·재설정 세션 폐기·TLS 검증.

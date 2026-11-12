@@ -7,7 +7,9 @@ import type { ApiError } from '../api/client'
 type Auth = {
   user: auth.User | null; loading: boolean; error: unknown; accountDeleted: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string) => Promise<void>
+  signup: (email: string) => Promise<void>
+  googleSignup: () => Promise<void>
+  googleLink: (email: string, password: string) => Promise<void>
   demoLogin: (account: auth.DemoAccount) => Promise<void>
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
@@ -59,10 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null)
     setAccountDeleted(false)
   }
-  async function signup(email: string, password: string) {
-    if (dummy) { setUser(DUMMY_USER); setError(null); setAccountDeleted(false); return }
-    await auth.signup(email, password)
-    setUser(await auth.getMe())
+  async function signup(email: string) {
+    // 메일 발송 요청만으로 로그인 상태를 만들지 않는다.
+    await auth.signup(email)
     setError(null)
     setAccountDeleted(false)
   }
@@ -72,6 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await auth.getMe())
     setError(null)
     setAccountDeleted(false)
+  }
+  async function googleSignup() {
+    await auth.googleSignup()
+    endSession()
+    setUser(await auth.getMe())
+    setError(null)
+  }
+  async function googleLink(email: string, password: string) {
+    await auth.googleLink(email, password)
+    endSession()
+    setUser(await auth.getMe())
+    setError(null)
   }
   async function logout() {
     if (dummy) { endSession(); return }
@@ -84,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     endSession()
     setAccountDeleted(true)
   }
-  return <AuthContext.Provider value={{ user, loading, error, accountDeleted, login, signup, demoLogin, logout, deleteAccount }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, error, accountDeleted, login, signup, googleSignup, googleLink, demoLogin, logout, deleteAccount }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

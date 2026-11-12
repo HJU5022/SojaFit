@@ -563,8 +563,6 @@ select:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 .public-auth-content > p { color: #aab3c2; font-size: 14px; }
 .public-auth-content form { margin-top: 26px; }
 .public-auth-content input { min-height: 46px; }
-.public-auth-content .consent { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.6; }
-.public-auth-content .consent input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 0; padding: 0; margin-top: 2px; }
 .public-auth-content .auth-password-help { margin: 8px 0 20px; color: #aab3c2; font-size: 13px; line-height: 1.6; letter-spacing: normal; word-break: keep-all; overflow-wrap: anywhere; }
 .auth-password-help span { display: block; }
 .public-auth-content form button { display: block; width: 100%; min-height: 46px; margin: 24px 0 0; background: var(--trace); color: #1e2229; border-radius: 24px; }
@@ -577,6 +575,10 @@ select:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 .public-google { width: 100%; margin-top: 18px; }
 .public-auth-content .public-auth-note, .public-auth-content .panel-note { margin-top: 22px; font-size: 13px; }
 .public-auth-note a { color: var(--trace-strong); }
+.google-onboarding { margin-top: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.google-onboarding h2 { font-size: 18px; }
+.google-onboarding p { margin-top: 8px; font-size: 13px; line-height: 1.8; }
+.google-onboarding button { width: 100%; min-height: 46px; margin-top: 16px; border-radius: 8px; }
 
 .email-action-page { font-family: 'Noto Sans KR Variable', 'Malgun Gothic', sans-serif; }
 .email-action-page .public-auth-content { max-width: 400px; }
@@ -586,7 +588,7 @@ select:focus-visible { outline: 3px solid var(--trace); outline-offset: 3px; }
 .email-action-page .public-auth-content label { margin: 24px 0 10px; font-size: 14px; }
 .email-action-page .public-auth-content form > label:first-child { margin-top: 0; }
 .email-action-page .public-auth-content input { min-height: 48px; padding: 12px 14px; border-radius: 8px; font-size: 16px; }
-.email-action-page .public-auth-content .auth-password-help { margin: 12px 0 24px; font-size: 12px; line-height: 1.9; }
+.email-action-page .email-action-password-issue { min-height: 21px; margin: 8px 0 0; color: var(--danger); font-size: 12px; line-height: 21px; }
 .email-action-page .public-auth-content form button { min-height: 48px; margin: 28px 0 0; border-radius: 8px; font-size: 15px; }
 .email-action-page .public-auth-content form button:disabled { color: #aab3c2; background: var(--surface-raised); border-color: var(--line); opacity: 1; }
 .email-action-page .public-auth-content .email-action-mismatch { margin-top: 10px; color: var(--danger); font-size: 13px; }

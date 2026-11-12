@@ -8,6 +8,41 @@ import '../styles.css'
 
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 function open() { render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>) }
+
+it.each(['signup', 'link'])('finishes Google %s only after an explicit action', async action => {
+  let signedIn = false
+  const posts: { path: string; body: unknown }[] = []
+  network((path, init) => {
+    if (path === '/api/auth/me') return signedIn ? Response.json(user) : failure()
+    if (path === '/api/auth/google/status') return Response.json({ enabled: true })
+    if (path === '/api/auth/google/onboarding') return Response.json({ email: 'u***@example.test' })
+    if (init.method === 'POST') { posts.push({ path, body: JSON.parse(String(init.body)) }); signedIn = true; return Response.json({ user_id: user.user_id }) }
+    return Response.json([])
+  })
+  render(<MemoryRouter initialEntries={['/login?google=finish']}><App /></MemoryRouter>)
+  expect(await screen.findByText('u***@example.test')).toBeInTheDocument()
+  expect(posts).toHaveLength(0)
+  if (action === 'link') {
+    fireEvent.change(screen.getByLabelText('이메일'), { target: { value: user.email } })
+    fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'existing password' } })
+    fireEvent.click(screen.getByRole('button', { name: '기존 계정에 연결' }))
+  } else fireEvent.click(screen.getByRole('button', { name: 'Google 계정으로 가입' }))
+  await waitFor(() => expect(posts).toEqual([{ path: '/api/auth/google/' + action, body: action === 'link' ? { email: user.email, password: 'existing password' } : {} }]))
+  await waitFor(() => expect(screen.queryByText('u***@example.test')).not.toBeInTheDocument())
+})
+
+it('blocks Google completion when the pending identity has expired', async () => {
+  const posts: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    return path.endsWith('/status') ? Response.json({ enabled: true }) : failure('VALIDATION_ERROR', 'Google 인증이 만료되었습니다.', 400)
+  })
+  render(<MemoryRouter initialEntries={['/login?google=finish']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('link', { name: 'Google 인증 다시 시작' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '기존 계정에 연결' })).toBeDisabled()
+  expect(screen.queryByRole('button', { name: 'Google 계정으로 가입' })).not.toBeInTheDocument()
+  expect(posts).toEqual([])
+})
 function fill() {
   fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'user@example.test' } })
   fireEvent.change(screen.getByLabelText('비밀번호'), { target: { value: 'test-only' } })
@@ -90,7 +125,7 @@ it('clears deletion feedback after signup and logout without persisting it in br
   network((path, init) => {
     if (path === '/api/auth/me') return signedIn ? Response.json(user) : failure()
     if (path === '/api/me' && init.method === 'DELETE') { signedIn = false; return Response.json({ deleted: {} }) }
-    if (path === '/api/auth/signup') { signedIn = true; return Response.json({ user_id: 7 }) }
+    if (path === '/api/auth/signup') return Response.json({ ok: true })
     if (path === '/api/auth/logout') { signedIn = false; return new Response(null, { status: 204 }) }
     if (path.endsWith('/status')) return Response.json({ enabled: true })
     return Response.json([])
@@ -103,12 +138,9 @@ it('clears deletion feedback after signup and logout without persisting it in br
     await screen.findByText(/계정 삭제가 완료되었습니다/)
     fireEvent.click(screen.getByRole('link', { name: '회원가입' }))
     fireEvent.change(screen.getByLabelText('이메일'), { target: { value: 'new@example.test' } })
-    fireEvent.change(screen.getByLabelText('비밀번호(8자 이상)'), { target: { value: 'synthetic-8' } })
-    fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: '가입' }))
-    await screen.findByRole('heading', { name: 'SojaFit 에이전트' })
-    fireEvent.click(screen.getByRole('button', { name: user.email }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
+    fireEvent.click(screen.getByRole('button', { name: '인증 메일 요청' }))
+    await screen.findByRole('status')
+    fireEvent.click(screen.getByRole('link', { name: '로그인' }))
     await screen.findByRole('heading', { name: 'SojaFit에 로그인' })
     await waitFor(() => expect(screen.queryByText(/계정 삭제가 완료되었습니다/)).not.toBeInTheDocument())
     expect(storage).not.toHaveBeenCalled()
@@ -137,10 +169,7 @@ it('shows login error and request id, clears password, and offers configured Goo
   expect(await screen.findByRole('alert')).toHaveTextContent('이메일과 비밀번호 또는 가입 방법을 확인해 주세요.')
   expect(screen.getByRole('alert')).toHaveTextContent('req-test')
   expect(screen.getByLabelText('비밀번호')).toHaveValue('')
-  const google = await screen.findByRole('button', { name: 'Google 로그인' })
-  expect(google).toBeDisabled()
-  fireEvent.click(screen.getByRole('checkbox'))
-  expect(google).toBeEnabled()
+  expect(await screen.findByRole('button', { name: 'Google 로그인' })).toBeEnabled()
 })
 it('explains the existing Google callback failure redirect', async () => {
   network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
@@ -191,15 +220,13 @@ it('uses Google without demo access in production even when the server advertise
   const google = await screen.findByRole('button', { name: 'Google 로그인' })
   expect(google.closest('form')).toHaveAttribute('action', '/api/auth/google/start')
   expect(google.closest('form')).toHaveAttribute('method', 'get')
-  expect(google).toBeDisabled()
-  expect(new FormData(google.closest('form')!).get('consent')).toBeNull()
-  fireEvent.click(screen.getByRole('checkbox'))
   expect(google).toBeEnabled()
-  expect(new FormData(google.closest('form')!).get('consent')).toBe('1')
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  expect(new FormData(google.closest('form')!).get('consent')).toBeNull()
   expect(screen.getAllByRole('button', { name: 'Google 로그인' })).toHaveLength(1)
   expect(screen.queryByRole('link', { name: 'Google 관리자 로그인' })).not.toBeInTheDocument()
   expect(screen.queryByRole('region', { name: 'Google로 시작하기' })).not.toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '개인정보처리방침' })).toHaveAttribute('href', '/privacy')
+  expect(screen.queryByRole('region', { name: '개인정보 처리 안내' })).not.toBeInTheDocument()
   expect(google.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(screen.queryByRole('group', { name: '데모 로그인' })).not.toBeInTheDocument()
   expect(paths).not.toContain('/api/auth/demo')
@@ -215,15 +242,16 @@ it('hides the demo buttons when the server is not in demo mode', async () => {
 })
 
 
-it('uses Google registration and hides unsupported mail signup/reset in production', async () => {
+it('provides email signup in production without a consent gate', async () => {
   vi.stubEnv('DEV', false)
-  const calls: string[] = []
-  network(path => { calls.push(path); return path === '/api/auth/me' ? failure() : Response.json({ enabled: true }) })
+  network(path => path === '/api/auth/me' ? failure() : Response.json({ enabled: true }))
   open()
-  expect(await screen.findByRole('button', { name: 'Google 로그인' })).toBeDisabled()
-  expect(screen.queryByRole('link', { name: '회원가입' })).not.toBeInTheDocument()
-  expect(screen.queryByRole('link', { name: '비밀번호를 잊으셨나요?' })).not.toBeInTheDocument()
+  const signup = await screen.findByRole('link', { name: '회원가입' })
+  expect(signup).toHaveAttribute('href', '/signup')
+  fireEvent.click(signup)
+  expect(await screen.findByRole('heading', { name: 'SojaFit 회원가입' })).toBeVisible()
+  expect(screen.getByLabelText('이메일')).toBeVisible()
+  expect(screen.queryByLabelText(/비밀번호/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: '개인정보처리방침' })).toHaveAttribute('href', '/privacy')
-  expect(calls).toEqual(expect.arrayContaining(['/api/auth/me', '/api/auth/google/status']))
-  expect(calls.some(path => path.includes('password-reset') || path.includes('signup'))).toBe(false)
 })

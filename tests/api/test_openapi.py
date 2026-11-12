@@ -3,7 +3,7 @@
 - 역할: 요청 본문 모델마다 예시가 있고 그 예시가 실제로 통과하는지, 모르는 칸 금지, 업로드의 multipart 칸 문서,
   SSE 두 경로의 `text/event-stream` 설명, 204 · SSE가 아닌 성공 응답의 스키마가 비지 않았는지,
   응답 모델(`response_model`)이 화면이 읽는 칸(frontend/src/api/*.ts의 타입)을 지우지 않는지 본다.
-  동작 42개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
+  동작 48개(메서드, 경로)를 고정하고, 모두 `backend/api/` 라우터에 태그와 함께 있는지(`backend/main.py`에 경로 함수가 없는지) 본다.
 - 하지 않는 일: 오류 응답 모양(test_health.py · test_errors.py), 가격 응답의 실제 칸(test_prices.py),
   업로드 수신 상한 · 오류 코드(test_projects.py), Swagger 화면 자체(서버를 띄우지 않는다).
 - 출처: SPEC.md 4절 엔드포인트 표, backend/api/API.md.
@@ -18,7 +18,7 @@ from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 from langgraph.store.memory import InMemoryStore
 
-from backend import auth
+from backend import auth, auth_email
 from backend.api import admin, conversations, profile, projects, quotes
 from backend.api import auth as auth_api  # [주의] 위 auth는 세션 로직(backend/auth.py), 이것은 로그인 경로 라우터다
 from backend.conversations.profile import ProfileMemory
@@ -26,7 +26,7 @@ from backend.main import app
 
 ORIGIN = {'origin': 'http://testserver'}
 # 요청 본문 모델 전부. 새 본문 모델을 만들면 여기에 넣어야 아래 시험이 예시 · 모르는 칸 금지를 본다
-BODY_MODELS = [auth_api.Login, auth_api.Signup, auth_api.DemoLogin, admin.AccountState, projects.CreateProject, projects.RenameProject,
+BODY_MODELS = [auth_api.Login, auth_api.Signup, auth_api.PasswordAction, auth_api.DemoLogin, admin.AccountState, projects.CreateProject, projects.RenameProject,
                quotes.ApproveBody, quotes.QuoteBody, conversations.StartRun, conversations.ResumeRun, profile.ProfileUpdate]
 
 
@@ -76,8 +76,10 @@ def test_no_success_response_has_an_empty_schema():
     assert empty == []
 
 
-# (메서드, 경로) 42개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
+# (메서드, 경로) 48개. `/docs`에 싣지 않는 Google 관리자 로그인 4개도 센다. 경로를 더하거나 빼면 SPEC 4절 표와 함께 고친다
 ROUTES = {
+    ('POST', '/api/auth/signup/confirm'), ('POST', '/api/auth/password-reset'), ('POST', '/api/auth/password-reset/confirm'),
+    ('GET', '/api/auth/google/onboarding'), ('POST', '/api/auth/google/signup'), ('POST', '/api/auth/google/link'),
     ('POST', '/api/runs/{run_id}/recover'),
     ('GET', '/health'),
     ('POST', '/api/auth/login'), ('POST', '/api/auth/signup'), ('GET', '/api/auth/demo'), ('POST', '/api/auth/demo-login'),
@@ -99,7 +101,7 @@ ROUTES = {
 
 
 def test_routes_are_pinned_and_live_only_in_api_routers():
-    """동작(메서드, 경로) 42개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
+    """동작(메서드, 경로) 48개가 그대로 있고, 모두 backend/api/ 라우터에 태그와 함께 있다(main.py는 경로 함수 없이 앱을 조립만 한다)."""
     # [왜] main.py에 @app.get 같은 경로를 두면 app.routes에 APIRoute로 바로 들어온다
     assert [r.path for r in app.routes if isinstance(r, APIRoute)] == []
     # [주의] FastAPI 0.162는 include_router한 라우터를 `original_router`를 가진 묶음 하나로 app.routes에 둔다
@@ -140,8 +142,7 @@ FACT = {'kind', 'value', 'text', 'version', 'updated_at', 'source'}
 CASES = [
     ('get', '/health', None, {}, None, {'status'}),
     ('post', '/api/auth/login', {'email': 'user@example.com', 'password': 'x'}, {'authenticate': lambda *a: ('t', 7)}, None, USER_ID),
-    ('post', '/api/auth/signup', {'email': 'user@example.com', 'password': 'example-pass', 'consent': True},
-     {'signup': lambda *a: ('t', 7)}, None, USER_ID),
+    ('post', '/api/auth/signup', {'email': 'user@example.com'}, {'email.request_email': lambda *a: None}, None, OK),
     ('get', '/api/auth/demo', None, {}, None, ENABLED),
     ('post', '/api/auth/demo-login', {'account': 'a'}, {'demo_session': lambda *a: ('t', 7)}, None, USER_ID),
     ('get', '/api/auth/me', None, {'account_email': lambda uid: 'user@example.test'}, None, {'user_id', 'role', 'email'}),
@@ -175,7 +176,7 @@ def web(monkeypatch):
 @pytest.mark.parametrize('method, path, body, patches, rows, fields', CASES, ids=[f'{c[0]} {c[1]}' for c in CASES])
 def test_response_model_keeps_every_field_the_screen_reads(web, monkeypatch, method, path, body, patches, rows, fields):
     for name, fake in patches.items():
-        monkeypatch.setattr(auth, name, fake)
+        monkeypatch.setattr(auth_email if name.startswith('email.') else auth, name.removeprefix('email.'), fake)
     if rows is not None:  # [왜] 저장소 · 서비스는 진짜를 쓰고 연결만 바꿔, 실제 코드가 만든 dict가 응답 모델을 지나게 한다
         monkeypatch.setattr(auth, 'connection', lambda: Conn(*rows))
     response = web.request(method, path, json=body, headers=ORIGIN)
