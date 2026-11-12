@@ -481,6 +481,7 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
+│       ├── d10/            <- Checkpoint D10 점검 증거: 인젝션 기준 검사 출력, 변이 28건 결과와 재현 스크립트, 비밀값 검사(원시 파일은 폴더 README.md가 설명)
 │       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)

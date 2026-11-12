@@ -48,7 +48,7 @@
 
 | 폴더 | 내용 | 만든 실행기 | 해석 |
 |---|---|---|---|
-| `results/d10/` | Checkpoint D10 제출물 점검 증거: 인젝션 기준 검사 통과·실패 출력, 멀티 그래프 변이 기록, v4h 지문, 재현 명령(`README.md`) | `check_injection_result.py` 외 | `results/d10/README.md` |
+| `results/d10/` | Checkpoint D10 제출물 점검 증거: 인젝션 기준 검사 통과·실패 출력, 코드 변이 결과와 재현 스크립트(`mutation/`), 비밀값 검사 결과와 원시 증거(`secrets/`), v4h 지문, 재현 명령(`README.md`) | `check_injection_result.py`, `d10/mutation/reproduce.sh` 외 | `results/d10/README.md` |
 | `results/retrieval/` | 검색 지표: `retrieval_{baseline,dense,bm25}_*`(v1), `d3_*`(#24), `r1_*`(#25·#28), `retrieval_layer*`·`retrieval_layers_*`(층별 재측정), `service_r1_*`·`service_stages_*`(서비스 경로) | `run_retrieval*.py`, `report_retrieval_layers.py` | [retrieval-layered-rerun-2026-11-03.md](../docs/research/retrieval-layered-rerun-2026-11-03.md), 사전 등록 #24~#28 |
 | `results/embedding/` | 임베딩 격자 본평가(`grid_*`, 모델별 카드 임베딩 기록, 리랭크 캐시)와 프록시 측정(`embedding_<모델>_proxy_*`) | `run_embedding_grid.py`, `benchmark_embeddings.py` | [embedding-grid-eval-2026-11-02.md](../docs/research/embedding-grid-eval-2026-11-02.md) |
 | `results/search_compare/` | 청킹 개선 전후, dense·BM25·하이브리드 비교(11-01) | — | 사전 등록 #4~#8 |

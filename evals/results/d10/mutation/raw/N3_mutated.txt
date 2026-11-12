@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_document_without_edition_is_rejected_when_an_edition_is_requested ____
+tests/multi_agent/test_docs_agent.py:684: in test_document_without_edition_is_rejected_when_an_edition_is_requested
+    assert not revision_matches('SS34 F16 판본', 'SS34.pdf', ['SS34'], ['SS34'])
+E   AssertionError: assert not True
+E    +  where True = revision_matches('SS34 F16 판본', 'SS34.pdf', ['SS34'], ['SS34'])
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_docs_agent.py::test_document_without_edition_is_rejected_when_an_edition_is_requested
+1 failed in 0.70s
