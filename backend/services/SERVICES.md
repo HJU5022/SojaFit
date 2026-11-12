@@ -22,6 +22,7 @@
 ## 파일
 - `exa.py` — 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
 - `datasheet_rows.py` — 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
+- 상세 역회복 질문의 공식 원문 그림은 같은 PDF의 캡션 아래 raster 1장만 메모리로 추출한다. `llm.node_chat(..., image=png)`는 제한된 PNG를 같은 노드 모델에 전달하며 이미지 입력을 호출 범위 밖으로 유지하지 않는다. 모델 판독과 표 전류의 대조는 `backend/judge/pdf_claims.py`가 수행한다.
 - `demo.py` — 키 없는 데모의 LLM 응답 기록(`recorder`) · 재생(`replayer`, 기록에 없으면 노드 이름을 담은 `ReplayMiss`), 재생 모드 판단(`enabled`, `DEMO_REPLAY=1` · `DEMO_MODE=1`), 서비스 재생 chat(`service_chat`, 기록 파일이 없으면 부를 때 503), 기록한 데모 질문 목록 · 대조(`questions` · `match`, `data/demo/recordings/outcomes.json`)와 질문 목록을 붙인 422(`refusal`). 유료 모델을 부르지 않는다.
 - `__init__.py` — 패키지 표시
 - `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 `approvals`에만 저장하고(후보 · verdict · 식별 품번은 칸 3개로도 저장, 견적 · 승인 사례에는 복사하지 않는다) 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
