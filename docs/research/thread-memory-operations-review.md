@@ -1,61 +1,62 @@
-# Thread·승인 기억 운영 검증 결과와 정본 반영 제안
+# Thread·승인 기억 운영 검증 결과
 
-기록일: 2026-11-09. 검증 대상은 STH의 `717c93a`·`245be70`·`ccadd3f`와 시험 image `cdc9ed1d2b5881a2792ed1f46d5ae808d3bac99c406caa055d38155fe79056f4`다. 아래 수치는 해당 실행의 스냅샷이며 이후 배포·DB 상태를 보증하지 않는다. 조장 합의 전 제안은 정본 기능 계약이 아니다.
+- 상태: 이력 (2026-11-09~11-12 검증 실행의 스냅샷. 이후 배포·DB 상태를 보증하지 않는다)
+- 기준일: 2026-11-12
+- 기준 커밋: 검증 실행별 대상 커밋은 1절 표. 현재 기준 커밋 67e08b1
+- 정본 여부: 정본(Thread·승인 기억 운영 검증의 실행 결과). 기능 계약의 정본은 [user-thread-memory.md](../specs/user-thread-memory.md)와 [evaluator-demo-readiness.md](../specs/evaluator-demo-readiness.md), 측정 절차의 정본은 [thread-memory-operations.md](../experiments/thread-memory-operations.md)
+- 관련 문서: [SPEC](../../SPEC.md) 8.5, [GATES](../GATES.md)
 
-## 2026-11-12 HTTP 서버 재시작·두 계정 재검증
+## 1. 검증 실행 요약
 
-- 대상: OSC `0d6592f` 및 당시 미커밋 작업 트리. `backend/conversations/memory_service.py` SHA-256 `9ff69d2e93d59f3c51fd397278996f4f9b9a847e6aaa48122e172427899d5a2c`, `backend/api/conversations.py` SHA-256 `387cb480b2d29578141bea3bb91da65581950b8a872e726507453c5a21720c7d`.
-- 재현: Docker와 로컬 `pgvector/pgvector:pg16` 이미지가 준비된 환경에서 저장소 루트에서 `uv run --no-sync python tests/api/test_http_restart.py`를 실행한다. 임시 DB·서버와 임시 계정만 사용하며 종료 후 정리한다. 기본 pytest에서는 자동 실행하지 않는다.
-- 결과: HTTP 사용자 A와 B가 서로 다른 계정임을 확인하고 A의 분석을 `requires_input`으로 중단했다. B의 A run 조회와 재개는 각각 404였다. HTTP 서버 프로세스를 종료하고 동일 DB로 재기동하자 A의 run이 `requires_input`으로 유지됐고 재개는 SSE `completed`였다. 재현 명령 종료 코드 0. 테스트 파일 SHA-256 `4554767cba9293b6f9d2eda950f6b72d48426eb5d19c0586802a9d3487f781e5`.
-- 범위: 실제 FastAPI 라우터·인증·대화 서비스·PostgresSaver/PostgresStore를 사용한다. LLM 그래프는 입력 대기 후 완료하는 합성 그래프로 대체하며 외부 LLM·임베딩·Langfuse 호출은 하지 않는다. 실제 모델 답변·검색 품질·배포 서버 재시작·모든 API의 계정 분리는 검증하지 않았다.
+| 날짜 | 대상 | 환경 | 결과 | 확인하지 않은 것 |
+|---|---|---|---|---|
+| 2026-11-09 | STH `717c93a`·`245be70`·`ccadd3f`, 시험 image digest `cdc9ed1d…056f4` | 로컬 전체 pytest + 시험 Cloud Run revision `sojafit-api-00020-miv`(운영 00008-2h5가 100% 유지, 시험 트래픽 0%), 키 없는 소스 Compose(포트 8773) | 972 passed, 36 skipped, 57.86초. 합성 HTTP 17항목 통과. 실제 HTTP 흐름 통과(1.2절) | 원격 GitHub CI 실행, 전체 동결셋 before/after, 실제 청구 대조, 운영 RTO/RPO |
+| 2026-11-09 | 위와 같은 날 원격 CI | head `7ff0d4a` | 일반 test CI 성공. Secret Scan이 검증 요약의 소스 SHA-256 한 건을 generic-api-key로 오탐 → `.gitleaksignore`의 커밋·파일·규칙·줄 fingerprint 한 건으로 처리(파일·규칙 전체 제외 아님). 같은 이미지 로컬 전체 이력 검사 453 commits/35.04MB: 실패 1 → 탐지 0, 다른 입력 위치의 검출 대조군은 여전히 탐지 | 변경 커밋의 원격 완료 결과 |
+| 2026-11-12 | OSC `0d6592f`(이 저장소에 없는 커밋) + 당시 미커밋 작업 트리 | Docker + 로컬 `pgvector/pgvector:pg16`, 임시 DB·서버·계정 | 사용자 A·B 분리 확인. A 분석을 `requires_input`으로 중단. B의 A run 조회·재개 각각 404. HTTP 서버 종료·같은 DB로 재기동 후 A의 run이 `requires_input` 유지, 재개는 SSE `completed`. 종료 코드 0 | 실제 모델 답변·검색 품질, 배포 서버 재시작, 모든 API의 계정 분리 |
+| 2026-11-12 | 코드 `758cbcc` | 로컬 `pgvector/pgvector:pg16` 임시 PostgreSQL | 별도 OS 프로세스 2개로 체크포인트 저장→종료→같은 DB·thread/run 읽기 확인. `WAITING` 확인 후 재개해 `DONE`과 답변 확인. 다른 계정의 `detail()` 조회는 `HTTPException`으로 차단. `tests/conversations/test_repository.py`, `tests/api/test_full_service_flow.py` 30 passed | 실제 LLM·검색 품질, HTTP 서버 재시작, 배포 환경, 전체 사용자 경계 |
 
-## 2026-11-12 현재 코드 격리 재검증
+원시: 2026-11-09 행은 `evals/results/graph/memory_operations_2026-11-09.json`(`tests.passed`=972, `skipped`=36, `seconds`=57.86, `synthetic_demo.http_checks` 17개 모두 true, `trial.revision`, `live_workflow.additional_reservation_usd`=0.426852) [실측] 값이 위 표와 일치한다. 2026-11-12 두 행의 원시 로그는 저장소에 없다(한계 1).
 
-- 대상: 코드 `758cbcc2f63f97d50caf2657e21120915d4b4220`, 로컬 `pgvector/pgvector:pg16` 임시 PostgreSQL. 운영 DB·기존 서비스는 사용하지 않았다.
-- `tests.db_schema.apply_service_schema(..., agent=True)`와 `backend.conversations.memory_service.initialize()`로 격리 DB를 준비하고 실제 `Conversations`, `PostgresSaver`, `PostgresStore`를 사용했다. 그래프는 외부 모델 호출이 없는 합성 LangGraph 노드를 주입했다.
-- 별도 OS 프로세스 1에서 추가 입력 대기 체크포인트를 저장하고 종료한 뒤, 프로세스 2에서 같은 DB·thread/run을 읽었다. `WAITING` 상태 확인 후 재개해 `DONE`과 답변을 확인했다. 다른 계정이 소유 thread의 `detail()` 조회를 시도하면 `HTTPException`으로 차단됐다. 이는 서비스 계층의 소유권 확인이며 모든 API·데이터 경로의 분리 검증은 아니다.
-- 격리 DB를 사용하는 `tests/conversations/test_repository.py`, `tests/api/test_full_service_flow.py`는 30 passed. 두 프로세스 검증은 각각 `uv run --no-sync python -`의 임시 inline 스크립트로 실행했고 저장소에 스크립트나 원시 로그를 보존하지 않았다. 따라서 이 기록만으로 실행을 그대로 재현할 수 없다. 임시 컨테이너와 프로세스 사이 ID 파일은 실행 후 삭제했다.
-- 실제 LLM·검색 품질, HTTP 서버 프로세스 재시작, 배포 환경과 전체 사용자 경계는 검증하지 않았다. 두 프로세스 검증에서 Langfuse 키는 비워 외부 호출을 끊었다. 앞선 동일 프로세스 인스턴스 재생성 검사에서는 Langfuse 401 경고가 관찰됐다.
-- 한계: 재시작 뒤 재개를 위한 현재 코드 경로는 격리 DB와 합성 그래프에서 관찰했지만, 재실행 가능한 스크립트·원시 로그가 없어 G4 증거로 충분한지 별도 검토가 필요하다. 11/13까지 실제 HTTP 서버 재시작과 재현 가능한 증거를 확보해야 한다.
+### 1.1 2026-11-12 HTTP 서버 재시작 재현
 
-기능 계약: [사용자별 thread·기억](../specs/user-thread-memory.md), [평가자·데모·관측](../specs/evaluator-demo-readiness.md). 측정 절차: [운영 검증 계약](../experiments/thread-memory-operations.md).
+- 명령: Docker와 로컬 `pgvector/pgvector:pg16` 이미지가 준비된 환경에서 저장소 루트에서 `uv run --no-sync python tests/api/test_http_restart.py`. 임시 DB·서버와 임시 계정만 쓰고 종료 후 정리한다. 기본 pytest에서는 자동 실행하지 않는다.
+- 범위: 실제 FastAPI 라우터·인증·대화 서비스·PostgresSaver/PostgresStore를 쓴다. LLM 그래프는 입력 대기 후 완료하는 합성 그래프로 대체한다. 외부 LLM·임베딩·Langfuse 호출은 없다.
+- 이 저장소에 `tests/api/test_http_restart.py`가 있다. 파일 SHA-256은 현재 `2e66c690…a71a`이고 기록 당시 `4554767c…1e5`와 다르다(그 뒤 수정됨). 이 변환에서 실행하지 않았다.
 
-## 2026-11-09 원격 CI 후속 확인
-- head 7ff0d4a에서 [일반 test CI](https://github.com/aihuman-7th/proj3-b/actions/runs/42574594948)는 성공했고 [Secret Scan](https://github.com/aihuman-7th/proj3-b/actions/runs/42574594978)은 검증 요약의 소스 SHA-256 한 건을 generic-api-key로 오탐했다. 아래 초기 결과의 원격 CI 미확인은 당시 상태이며 이 실행 결과와 구분한다.
-- 해당 값은 실제 backend/auth.py 파일 해시와 대조했다. [.gitleaksignore](../../.gitleaksignore)는 커밋·파일·규칙·줄 fingerprint 한 건에만 적용되며 파일/규칙 전체를 제외하지 않는다. [공식 fingerprint 문서](https://github.com/gitleaks/gitleaks#-gitleaksignore)를 따랐다.
-- CI와 같은 이미지의 로컬 전체 이력 검사453 commits/35.04MB를 실패1→탐지0으로 재검증했고, 다른 입력 위치의 검출 대조군은 여전히 탐지됐다. 변경 커밋의 원격 완료 결과는 PR #73의 최신 Checks를 따른다.
+### 1.2 2026-11-09 실제 HTTP 흐름과 UI
 
-## 최종 실행 결과
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| 실제 HTTP | 시험용 사용자 2명. 조건 보충 → `SPEC_EQUIVALENT` → 승인·Store → 같은 사용자의 새 thread 전달, B는 404와 빈 기억 | 원시 JSON `live_workflow.checks` |
+| 추가 예약 | $0.426852(상한 $0.5). 사전 예약 $2.5는 시험 예산 장벽이며 실제 사용·청구가 아니다. 공급자 실제 청구 대조는 하지 않았다 | `live_workflow.additional_reservation_usd`, `reservation_cap_usd`, `test_prefill_not_actual_usage_usd`, `billing_reconciled`=false |
+| 모델의 사례 선택 | 실제 모델은 새 thread의 자기 승인 사례를 입력받았지만 이번 답의 `memory_refs`는 비어 있었다. 전달 성공과 명시 선택 성공은 다르다. 이 사례만으로 회상률·답변 품질 향상을 주장하지 않는다 | `live_workflow.model_selected_case`=false |
+| 실제 UI | 시험 URL에서 비밀번호 로그인, 승인 당시 최종 입력, 정정 메모 저장, 철회 후 기억 목록 제외, 복구 후 재표시를 관찰. API 삭제·재승인 차단과 중단 checkpoint 재개 차단은 격리 DB·합성 HTTP에서 검증 | 스크린샷은 저장소에 없음(한계 1) |
+| Langfuse | `received`, `same_user`, `same_thread`, `trace_ids_match` 모두 true. 요약 span은 전송 시각, 처리 시간은 실측 metadata이며 중첩·병렬 시간을 합산하지 않는다. generation 원문, 비밀번호, 쿠키, DSN은 내보내지 않는다 | 원시 JSON `trace_checks` |
+| 정리 | 시험 계정 비활성화, 세션 제거, 공유 DB의 시험 사용자 원본·승인은 보존 | 원시 JSON `live_workflow.cleanup` |
+| 시험 설정 | 시험 revision만 출력 상한 2048. 기본 코드 4096·일일 $3·실행 $0.50 유지. Secret Manager 참조, TLS verify-full, CA, 동시성 4, timeout 120, max 인스턴스 1 유지 | 원시 JSON `trial.test_max_tokens`, 나머지는 기록 당시 문서 |
 
-- 시험 tag: thread-memory-test → sojafit-api-00020-miv, 운영0%. 운영 00008-2h5는100% 유지. 시험만 출력 상한2048이고 기본 코드4096/일일$3/실행$0.50은 유지한다. Secret Manager 참조/TLS verify-full/CA/동시성4/timeout120/max인스턴스1 유지.
-- 최종 전체: 인증·thread 격리 DB와 TEST_THREAD_BACKUP_CONTAINER를 설정한 pytest →972 passed,36 skipped,57.86초. Docling 경고1. 동결 해시 검사 통과. 원격 GitHub CI는 미실행이며 DB 설정+JUnit 업로드를 준비했다.
-- 키 없는 최종 소스 Compose: 별도 sojafit-memory-verified DB/앱, 8773, 합성 HTTP17항목 통과. 처음 준비 명령은 작업 경로/포트 충돌로 실패했고 경로·8773을 명시해 동일 검사를 통과했다. 기존 볼륨 삭제 없음. source/lock을 포함한 최초 비캐시 빌드 및 이후 검증 모두10분 이내였으며 CPU/모델 성능 평가가 아니다.
-- 실제 HTTP: disposable user16/17, 승인 thread3609152d-6c49-4874-93fb-a5ebf87d4fa0, 새 thread0bb0592d-bd4b-4532-8317-5e1b56ed8c57. 조건 보충→SPEC_EQUIVALENT→승인/Store→같은 사용자의 새 thread 전달과 B404/빈 기억 통과. 합산 추가 예약$0.426852, 사전 예약2.50은 시험 예산 장벽이며 실제 사용/청구가 아니다. 공급자 실제 청구 대조는 미실행.
-- 실제 모델은 새 thread의 자기 승인 사례를 입력받았지만 이번 답의 memory_refs는 비어 있었다. 전달 성공과 명시 선택 성공을 혼동하지 않는다. 합성 데모에서는 별도 참조 선택 표시까지 검증했다. 이 사례만으로 회상률/답변 품질 향상을 주장하지 않는다.
-- 실제 UI: 시험 URL에서 비밀번호 로그인, 승인 당시 최종 입력, 정정 메모 저장, 철회 후 기억 목록 제외, 복구 후 재표시를 관찰했다. API 삭제/재승인 차단 및 중단 checkpoint 재개 차단은 격리 DB/합성 HTTP에서 검증했다. 실제 공유 DB의 시험 사용자 원본/승인은 보존하고 계정 비활성화·세션 제거를 완료했다.
-- Langfuse: CLI observations list의 실제 응답 봉투(body)로 조회, user16/session=승인 thread와 trace3건 일치 확인. 첫 수신 검사는 CLI 봉투를 잘못 파싱해0건으로 보였으며 봉투 처리 수정 후 received/same_user/same_thread/trace_ids_match 모두true. 요약 span은 전송 시각, 처리 시간은 실측 metadata이며 중첩/병렬 시간을 합산하지 않는다. generation 원문/비밀번호/쿠키/DSN은 내보내지 않는다.
-- [실제 재개 trace](https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/1194f9b06476492aaba9256f703280c1): 프로젝트 권한 필요. 로그의 queued와 별개로 API 수신을 확인한 증거다.
-- 증거: evals/results/graph/memory_operations_2026-11-09.json(내용 없는 요약), 로컬 작업 산출물의 memory-trial-restored.jpg / memory-trial-revoked.jpg / memory-demo-new-thread.jpg. 스크린샷은 합성 시험 사례만 포함하며 공개 첨부는 SPEC6절 검토 절차를 따른다.
+## 2. 기능·정본 문서에 반영할 사항 (제안)
 
-### 정본 문서 수정 요청 (STH에서 직접 수정하지 않음)
-1. SPEC8.5: 장기기억=사용자별 관련 승인 사례 참조. 정정은 별도 메모, 철회는 복구 가능, 기억 삭제는 Store 사본/향후 참조 제거·원본 유지, 자동 만료 없음. 전체 대화 자동 기억/자유 과거 질의는 범위 밖이라고 명시한다.
-2. SPEC7절/README 데모: DEMO_MODE 단독의 기존 BM25 실제 모델 평가와 DEMO_SCENARIOS+DEMO_MODE 앱 합성 시연을 구분한다. Docker setup과 data/demo/DEMO.md의 시연 순서를 연결한다.
-3. SOJAFIT data/demo 부모 설명의 '현재 설명 파일만 있고 재생 코드는 없음'을 '명시적 앱 합성 시나리오 데이터'로 갱신한다. STH에서는 신규 파일 줄 추가/분기 표시만 반영한다.
-4. GATES G2/G4/G5/G6: 위 실행 범위/모드/샘플 수/증거를 적고, 원격 CI 실행·전체 동결셋 before/after·실제 청구 대조·운영 RTO/RPO는 미검증으로 유지한다. app 추적은 내용 없는 메타데이터이며 모든 generation 원문/비용 추적을 완성했다고 쓰지 않는다.
-5. 판정 사례 승인은 견적서 승인/저장이 아니다. 실제 판정 답변의 패키지/기판수정 문구는 footprint 문자열 비교 수준이며 치수 검증을 하지 못한다. None 표기와 오판 가능성은 별도 judge 보완 과제다.
+| # | 대상 | 내용 | 반영 여부 |
+|---|---|---|---|
+| 1 | SPEC 8.5 | 장기 기억 = 사용자별 관련 승인 사례 참조. 정정은 별도 메모, 철회는 복구 가능, 기억 삭제는 Store 사본·향후 참조 제거·원본 유지, 자동 만료 없음. 전체 대화 자동 기억·자유 과거 질의는 범위 밖 | 미확인 |
+| 2 | SPEC 7절 / README 데모 | `DEMO_MODE` 단독의 기존 BM25 실제 모델 평가와 `DEMO_SCENARIOS`+`DEMO_MODE` 앱 합성 시연을 구분 | 미확인 (`SPEC.md`에서 `DEMO_SCENARIOS`를 찾지 못했다) |
+| 3 | SOJAFIT.md `data/demo` | "현재 설명 파일만 있고 재생 코드는 없음"을 "명시적 앱 합성 시나리오 데이터"로 갱신 | 미확인 |
+| 4 | GATES G2·G4·G5·G6 | 위 실행의 범위·모드·샘플 수·증거를 적고, 원격 CI 실행·전체 동결셋 before/after·실제 청구 대조·운영 RTO/RPO는 미검증으로 유지. app 추적은 내용 없는 메타데이터 | 미확인 |
+| 5 | 판정 사례 승인 | 판정 사례 승인은 견적서 승인·저장이 아니다. 판정 답변의 패키지·기판수정 문구는 footprint 문자열 비교 수준이며 치수 검증을 하지 못한다. `None` 표기와 오판 가능성은 judge 보완 과제 | 미확인 |
 
-### 팀 반영·리뷰 범위
-- 이번 마무리는 앞서 미커밋으로 누적된 인용 검증/최종 입력/예산 경계와 기억 lifecycle/데모/관측을 함께 정리한다. 400줄을 넘는 핵심 변경은 공유 실행·승인·저장 경로와 실패 복구를 API/DB 통합 시험으로 함께 검증해야 하기 때문이다. 인용/호출 경계, API·기억 관리, 데모·검증 자료를 논리 단위 로컬 커밋으로 구분한다.
-- 독립 리뷰의 시간 초과 P2는 RED→GREEN으로 수정했다. 조장 리뷰/정본 문서 반영/PR 병합은 남는다. AGENTS 팀 규칙1·3에 따라 이번 작업에서 원격 push/PR 생성/merge는 실행하지 않는다. 조장에게 보낼 제안 본문이며 실제 PR 코멘트 전송은 하지 않았다.
+## 3. 2026-11-09 이전 스냅샷에서 해소된 것
 
-## 이전 검증 스냅샷 — 최종 결과와 구분
-다음은 운영 보완 전 기록이다. 실패 수치·미구현 설명을 현재 상태로 해석하지 않는다. 당시 기록의 문구와 수치는 보존한다.
+| 이전 기록 | 현재 |
+|---|---|
+| 전체 pytest 837 passed, 43 skipped, 1 failed: `SOJAFIT.md`가 가리키는 `db/012_document_category.sql` 부재 | `db/012_document_category.sql` 존재 [실측] 2026-11-12 |
+| 운영 전 보완 7건: ① 사례 인용만으로 현재 사양 주장이 검증을 통과하는 의미 검증 공백 ② interrupt 최종 조건의 승인 snapshot 보존·문맥 잘림 ③ 사용자별 비용·빈도·시간 제한 ④ 이전 승인 version 화면 복구 ⑤ 비밀값 없는 오류코드·요청 ID ⑥ 실제 모델 전달 사례와 사후 관련 사례 구분 ⑦ 기억 조회 순서·페이지·철회·보관·백업 복원 절차 | 2026-11-09 최종 실행에서 일부(④ 정정·철회·복구, ⑦ 철회·복구)를 관찰했다. 나머지는 이 변환에서 확인하지 않았다 |
+| 합성 문장 "SS34의 허용 전압은 999V입니다"에 승인 사례 출처만 붙여 `verifier_agent`에 넣으면 `status=ok`. 검증은 출처 존재·인용 형식 범위 | 재확인하지 않았다 |
 
+## 4. 한계
 
-- 후속 운영 검증 준비·명령·합격 기준은 [thread-memory-operations](../experiments/thread-memory-operations.md)를 따른다. 기능 변경 없이 로컬 병렬·백업 복원과 호출 없는 품질 dry-run/보고 비용 기록 도구를 추가한다.
-- 구현 범위: 기존 로그인 세션의 사용자 ID를 재사용해 넷리스트 업로드, 분석별 UUID thread, 목록/소유권 검사, DB 체크포인트/조건 재개/제한 재시도, 버전별 승인 원본/사용자 Store, 기본 workspace 화면을 연결했다. 새 질문 뒤 이전 승인 기억 재저장과 새 thread 모델 입력의 같은 품번 사례 조회를 추가했다.
-- 최신 로컬 검증: 전체 pytest는 837 passed, 43 skipped, 1 failed(22.34초). 실패는 기존 SOJAFIT.md가 가리키는 db/012_document_category.sql 부재이며 HEAD 트리/파일 조회로 기존 불일치를 확인했다. 신규 기능 관련 API/graph/multi_agent/Langfuse 계약 검사 결과는 297 passed, 22 skipped. 두 결과는 실행 범위가 다르다. 동결 평가셋 답안은 수정하지 않았다.
-- 실제 모델 확인 범위: 합성 A 사례 한 건의 generate 답변 회상 성공, Supervisor는 고정 경로였다. A/B 양방향 입력·응답 격리는 실제 DB/가짜 모델 테스트다. 전체 답변 품질 향상이나 운영 준비 완료를 의미하지 않는다.
-- 운영 전 우선 보완: (1) 사례 인용만으로 현재 사양 주장이 검증을 통과하는 의미 검증 공백, (2) interrupt 최종 조건의 승인 snapshot 명시적 보존과 문맥 잘림, (3) 일반 서비스 요청의 사용자별 비용/빈도/시간 제한, (4) 이전 승인 version의 화면 복구, (5) 비밀값 없는 오류코드/요청 ID, (6) 실제 모델 전달 사례와 사후 관련 사례 구분, (7) 기억 조회 순서/페이지·철회·보관·백업 복원 절차.
-- 확인한 검증 공백: 합성 문장 'SS34의 허용 전압은 999V입니다'에 제공된 승인사례 출처만 붙여 verifier_agent에 넣으면 status=ok가 된다. 실제 모델이 해당 문장을 생성한 결과는 아니며, 현재 검증은 출처 존재/인용 형식 범위다. 이 문제의 수정은 이번 커밋 범위에 포함하지 않았다.
-- 적용 경계: 이 커밋은 로컬 기능 코드와 문서·테스트·기존 원시 결과를 보관한다. 실행 중 서버 재시작, 공유 DB 설정 활성화, 원격 프롬프트 등록, 배포, Git push는 하지 않는다. 별도 Supabase 작업의 적용 기록은 이 커밋의 검증 근거와 분리한다.
+1. 2026-11-12 두 실행(1절 표 3·4행)의 원시 로그·스크립트는 저장소에 없다. 두 번째 실행은 inline 스크립트라 그대로 재현할 수 없고 G4 증거로 충분한지 별도 검토가 필요하다. 첫 번째 실행의 대상 커밋 `0d6592f`는 이 저장소에 없다. 스크린샷 3장(`memory-trial-restored.jpg`, `memory-trial-revoked.jpg`, `memory-demo-new-thread.jpg`)은 로컬 작업 산출물이며 저장소에 없다.
+2. 두 번째 11-12 실행에서 Langfuse 키는 비워 외부 호출을 끊었다. 같은 프로세스 인스턴스 재생성 검사에서는 Langfuse 401 경고가 관찰됐다.
+3. 11-09 실행의 실제 Langfuse trace는 프로젝트 권한이 있어야 열린다. 링크는 싣지 않았다.
+4. 2절의 반영 여부는 SPEC·GATES·SOJAFIT를 모두 대조하지 않았다. 재현 가능한 HTTP 서버 재시작 증거는 `tests/api/test_http_restart.py`가 있으나 이 변환에서 실행하지 않았다.
+5. 1절 표 1행의 시험 revision과 URL은 기록 시점의 배포 상태이며 현재 존재하는지 확인하지 않았다.
