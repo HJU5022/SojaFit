@@ -1,5 +1,10 @@
 # jeongun 작업 기록
 
+## 2026-11-12 로컬 측정·스모크 원시 이관 (PR #106)
+- 넣음: D9 judge-dev multi/single · langfuse-capture · v3-single · v3-16 warm-recheck · claim_consistency D9 재확인 · Langfuse probe v2 · RAGAS probe v3 · synth-01-repeat10 · synth-both-agents · 인젝션 HTTP `…_012039.json`(원장 인용) · 스모크 `…_230015` · `…_230534`.
+- 안 넣음: `scratchpad/`(임시·워크트리 잔여).
+- 확인: `git status`에 해당 경로 staged, scratchpad는 untracked 유지.
+
 ## 2026-11-12 DEMO_MODE UI 분기(로컬 검증용, 미커밋·미배포)
 - `CircuitSetup`: `/api/auth/demo`로 `DEMO_MODE`를 보고 1일 때만 「데모 회로로 시작」, 0이면 업로드만. `POST /api/projects`에 `Depends(demo_mode)`(404). Landing 문구·`.env.example` 주석.
 - 시험 [실측]: `CircuitSetup.test` 9 passed, `tests/api/test_projects.py` 47 passed · 1 skipped. Workbench/ProjectSidebar 통과. `App.test` 가입 헤딩 실패는 main에도 있는 기존 깨짐(제목 `SojaFit에 로그인`).
