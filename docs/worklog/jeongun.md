@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-13 main ea5797c 배포(Cloud Run)
+- 병합: PR #115 · #116이 2026-11-13 05:31 KST에 `main`에 병합(`0f831bc`, `ea5797c`). `main` 트리 `6452cdfc…` = 11-13 기동 · 재시작 · 계정 분리 측정 대상 `ad8612e`의 트리. PR #114는 병합 없이 닫힘.
+- 배포: `main` `ea5797c`를 `git archive`로 올려 `gcloud run deploy --source … --no-traffic --tag main-ea5797c --revision-suffix ea5797c`. 리비전 `sojafit-api-ea5797c`. 환경변수 30개는 이전 리비전과 같음(`DEMO_MODE=0`, `GOOGLE_AUTH_ENABLED=1`, `THREADS_ENABLED=1`, 비밀 `DATABASE_URL_NEW`). Exa 변수 없음 → `/api/external-circuits` 비활성.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 12.1초), `/login` 200, `/openapi.json` 동작 41 · 경로 34, `/api/demo-circuits` · `/api/auth/me` 401, 오류 로그 없음. 05:38 KST 100% 전환. 공개 주소 `/health` 200(0.15초), `/login` 200, `/api/auth/me` 401, 헤더 `nosniff` · `DENY` · HSTS.
+- 이전 100% 리비전: `sojafit-api-main0035-proof-1112`(11-12 14:57, `main` `0035a43`). 11-12 항목과 README가 적은 `e0a5e30`이 아니었음.
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-main0035-proof-1112=100 --project sojafit --region asia-northeast3`
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복. 로컬 `jeongun` 4커밋(D10 증거, GATES, 데모 문서, 시험 수정)은 푸시 전.
+
 ## 2026-11-12 강사 1축 코멘트 반영(커밋만, 푸시·PR 없음)
 - 여정 맵 현행화(`da5816a`), 지불 주체 행(`bd05259`), 비교표 판정 기준 열·Codex 서술(`e4e986e`)은 PR #108이 같은 파일(`market-user-journey.md`, `EVAL_REPORT.md` 10장, `evaluation-prep.md`)을 다시 써서 병합 때 버리고 #108 쪽을 따랐다(조장 결정). 원래 커밋은 `backup/jeongun-pre-108` 브랜치에 남아 있다.
 - 우리 쪽에 남은 것: 아래 근거 폴더 복사, `TOPIC.md` 5행 안내, 그 안내에 맞춘 237건 원자료 위치 문장(`market-user-journey.md` 18행, `TOPIC.md` 7행).
