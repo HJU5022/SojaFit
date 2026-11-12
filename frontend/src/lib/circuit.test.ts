@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import type { Project } from '../api/projects'
 import type { ResultDto } from '../api/conversations'
-import { contextOf, isDiode } from './circuit'
+import { contextOf, isDiode, partIn } from './circuit'
 import { candidatesOf, citationHref, formatValue } from './judgement'
 
 const project = { id: 1, name: 'p', source_kind: 'upload', demo_id: null, created_at: '', updated_at: '', connections: {
@@ -22,3 +22,10 @@ test('판정이 없는 결과와 위험한 출처 주소를 걸러 낸다', () =
   expect(citationHref({ source_url: 'https://a.test/d.pdf', page: 1, outline_page: 4 })).toBe('https://a.test/d.pdf#page=4')
   expect(formatValue(40, 'V')).toBe('40 V')
 })
+
+const names = ['D1', 'D10', 'LED1', 'D2'].map(ref => ({ ref, value: '', footprint: '' }))
+const refIn = (text: string) => partIn(text, names)?.ref
+test('partIn matches whole tokens only', () => { expect(refIn('D10을 바꿔도 되나요?')).toBe('D10'); expect(refIn('LED1을 바꿔도 되나요?')).toBe('LED1'); expect(refIn('D100')).toBeUndefined() })
+test('partIn is case-insensitive and accepts Korean particles', () => { expect(refIn('d1 대체품')).toBe('D1'); expect(refIn('D1을 SS34로')).toBe('D1'); expect(refIn('D1의 대체품')).toBe('D1') })
+test('partIn takes the first ref that appears in the text', () => expect(refIn('D2 대신 D1')).toBe('D2'))
+test('partIn returns undefined without a ref', () => expect(refIn('다이오드 바꿔도 되나요?')).toBeUndefined())

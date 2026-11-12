@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
+import { ArrowUp, ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
 import { createDemo, deleteProject, getProject, listDemos, listProjects, renameProject, uploadProject } from '../api/projects'
 import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
-import { contextOf, isDiode, partsOf } from '../lib/circuit'
+import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
 import Review from '../components/Review'
@@ -53,6 +53,9 @@ export default function WorkbenchPage() {
   const casesDialog = useRef<HTMLDialogElement>(null)
   const [renaming, setRenaming] = useState<ProjectSummary | null>(null)
   const [casesOpen, setCasesOpen] = useState(false)
+  const [question, setQuestion] = useState('')
+  const [askError, setAskError] = useState('')
+  const [pending, setPending] = useState<{ ref: string; question: string } | null>(null) // 부품 목록에서 쓴 질문: 그 부품의 검토 화면이 열릴 때 한 번 보낸다
 
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false })
   const project = useQuery({ queryKey: ['project', projectId], queryFn: ({ signal }) => getProject(projectId!, signal), enabled: projectId !== null, retry: false })
@@ -79,8 +82,17 @@ export default function WorkbenchPage() {
   }, [navOpen])
   if (!user) return null
 
-  const go = (next: Record<string, string>) => { setFilter(''); setNavOpen(false); setParams(next) }
+  const go = (next: Record<string, string>) => { setFilter(''); setPending(null); setNavOpen(false); setParams(next) }
   const onThread = (id: string, ref?: string) => go({ projectId: String(projectId), ...((ref ?? targetRef) ? { targetRef: ref ?? targetRef } : {}), ...(id ? { threadId: id } : {}) })
+  function ask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const text = question.trim()
+    if (!text) return
+    const hit = partIn(text, parts.filter(isDiode))
+    if (hit) { go({ projectId: String(projectId), targetRef: hit.ref }); setPending({ ref: hit.ref, question: text }); setQuestion(''); setAskError(''); return }
+    const other = partIn(text, parts)
+    setAskError(other ? `${other.ref}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.` : '어느 부품에 대한 질문인지 알 수 없습니다. 부품 번호(예: D1)를 넣어 주세요.')
+  }
   async function removeThread(id: string) {
     if (confirming !== id) { setConfirming(id); return }
     try { await deleteThread(id); await client.invalidateQueries({ queryKey: ['threads', projectId] }); if (id === threadId) onThread('') }
@@ -152,9 +164,9 @@ export default function WorkbenchPage() {
           {target && <li><ChevronRight aria-hidden="true" /><span className="ref">{target.ref}</span><span className="crumb-value">{target.value}</span></li>}</ol>
         {project.data && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => sheet.current?.showModal()}><Maximize2 aria-hidden="true" />원본 회로도</button>}
       </header>
-      {projects.error && projectId === null && <div className="notice inset" role="alert"><p>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
-      {project.error && <div className="notice inset" role="alert"><p>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
-      {!creator.current?.open && !renaming && error ? <p className="notice inset" role="alert">삭제하지 못했습니다. {errorMessage(error)} 같은 삭제 버튼으로 다시 시도해 주세요.</p> : null}
+      {projects.error && projectId === null && <div className="notice inset" role="alert"><p {...requestIdProps(projects.error)}>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
+      {project.error && <div className="notice inset" role="alert"><p {...requestIdProps(project.error)}>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
+      {!creator.current?.open && !renaming && error ? <p className="notice inset" role="alert" {...requestIdProps(error)}>삭제하지 못했습니다. {errorMessage(error)} 같은 삭제 버튼으로 다시 시도해 주세요.</p> : null}
       {projectId !== null && threadId && project.isPending && <div className="skeleton inset" role="status"><span className="sr-only">검토할 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
 
       {projectId === null && <section className="list">
@@ -173,6 +185,13 @@ export default function WorkbenchPage() {
       </section>}
 
       {projectId !== null && !target && !threadId && <section className="list">
+        <form className="composer" onSubmit={ask}>
+          <label className="sr-only" htmlFor="part-question">질문</label>
+          <input id="part-question" className="input" style={{ flex: 1 }} autoComplete="off" aria-describedby="part-question-hint" value={question} onChange={event => { setQuestion(event.target.value); setAskError('') }} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
+          <button className="btn btn-icon" disabled={!question.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>
+        </form>
+        <p id="part-question-hint" className="composer-hint">부품 번호(예: D1)를 넣어 질문하거나, 아래 목록에서 부품을 고르세요.</p>
+        {askError && <p className="notice" role="alert">{askError}</p>}
         <div className="list-head"><h1 className="sr-only">교체할 부품</h1><label className="filter"><Search aria-hidden="true" /><span className="sr-only">부품 찾기</span><input value={filter} onChange={event => setFilter(event.target.value)} placeholder="참조 번호나 값으로 찾기" /></label></div>
         {partGroups.map(group => {
           const items = filteredParts.filter(part => isDiode(part) === group.eligible)
@@ -189,7 +208,7 @@ export default function WorkbenchPage() {
       </section>}
 
       {projectId !== null && target && <Review key={projectId} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
-        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} onThread={onThread} />}
+        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} initialQuestion={pending?.ref === target.ref ? pending.question : undefined} onThread={onThread} />}
       {projectId !== null && !target && threadId && project.data && <p className="empty inset">이 검토의 대상 부품을 회로에서 찾지 못했습니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
     </main>
 
@@ -197,7 +216,7 @@ export default function WorkbenchPage() {
       {renaming && <form onSubmit={rename}>
         <h2 id="renamer-title">프로젝트 이름 바꾸기</h2>
         <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus defaultValue={renaming.name} /></label>
-        {error ? <p className="notice" role="alert">이름을 바꾸지 못했습니다. {errorMessage(error)}</p> : null}
+        {error ? <p className="notice" role="alert" {...requestIdProps(error)}>이름을 바꾸지 못했습니다. {errorMessage(error)}</p> : null}
         <div className="dialog-foot"><button type="button" className="btn" onClick={() => renamer.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '저장 중' : '이름 저장'}</button></div>
       </form>}
     </dialog>
@@ -213,7 +232,7 @@ export default function WorkbenchPage() {
       {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
       {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. KiCad 넷리스트 파일을 선택해 주세요.</p>}
       {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue={demoList[0].id}>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
-      {error ? <p className="notice" role="alert">프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
+      {error ? <p className="notice" role="alert" {...requestIdProps(error)}>프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
       <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '만드는 중' : '만들기'}</button></div>
     </form></dialog>
 

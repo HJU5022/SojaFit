@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getUsers, setUserActive } from '../api/admin'
 import type { Account } from '../api/admin'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import PageShell from '../components/PageShell'
 
 // 이메일은 서버가 가려서 보낸다(auth.mask_email). 화면은 받은 값을 그대로 보인다.
@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
     finally { if (!controller.signal.aborted) setBusy(false) }
   }
   return <PageShell wide title="사용자 관리" lead="일반 계정의 접근을 정지하거나 다시 엽니다. 관리자 계정은 여기서 바꿀 수 없습니다.">
-    {error ? <p className="notice" role="alert">계정 정보를 처리하지 못했습니다. {errorMessage(error)}</p> : null}
+    {error ? <p className="notice" role="alert" {...requestIdProps(error)}>계정 정보를 처리하지 못했습니다. {errorMessage(error)}</p> : null}
     {busy && users.length === 0 ? <div className="skeleton" role="status"><span className="sr-only">계정 정보를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>
       : users.length === 0 ? (!error && <p className="empty">등록된 계정이 없습니다.</p>)
         : <div className="table-scroll"><table className="rows rows-static">

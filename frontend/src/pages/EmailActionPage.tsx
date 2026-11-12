@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { completePasswordReset, completeSignup, newPasswordIssue, requestPasswordReset } from '../api/auth'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import AuthCard from '../components/AuthCard'
 
 // 메일 링크(#token=)로 들어와 비밀번호를 정한다. 가입 완료와 비밀번호 재설정이 같은 흐름이다.
@@ -78,6 +78,6 @@ export default function EmailActionPage({ purpose }: { purpose: 'signup' | 'rese
             {sent && <p className="notice" role="status">재설정 가능한 계정이라면 안내 메일을 보냈습니다. 스팸함도 확인해 주세요. 재요청은 60초 뒤 가능합니다.</p>}
             <button className="btn btn-primary btn-large" disabled={busy}>{busy ? '요청 중' : '재설정 메일 요청'}</button>
           </form>}
-    {error ? <p className="notice" role="alert">{errorMessage(error)}</p> : null}
+    {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{errorMessage(error)}</p> : null}
   </AuthCard>
 }

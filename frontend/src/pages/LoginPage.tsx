@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { getDemoStatus, getGoogleOnboarding, getGoogleStatus } from '../api/auth'
 import type { DemoAccount } from '../api/auth'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import AuthCard from '../components/AuthCard'
@@ -24,7 +24,7 @@ function loginErrorMessage(error: unknown) {
   const api = error as Partial<ApiError> | null
   const message = error instanceof TypeError ? '서비스에 연결하지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.'
     : MESSAGES[api?.code ?? ''] ?? '로그인 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'
-  return api?.requestId ? `${message} (요청 ID: ${api.requestId})` : message
+  return message
 }
 
 // 폼 제출이라 Enter로 로그인된다.
@@ -79,14 +79,14 @@ export default function LoginPage() {
     {finishingGoogle && <section className="login-google" aria-label="Google 계정 확인">
       {googleEmail ? <><p className="login-lead"><strong>{googleEmail}</strong> 처음 이용한다면 Google 계정으로 가입하세요. 기존 일반 계정이 있다면 아래에서 이메일과 비밀번호를 확인해 연결하세요. 관리자 연결은 운영자 승인이 필요합니다.</p>
         <button type="button" className="btn btn-large" disabled={busy} onClick={() => void run(() => auth.googleSignup())}>{busy ? '처리 중' : 'Google 계정으로 가입'}</button></>
-        : onboardingError ? <div className="notice" role="alert"><p>{errorMessage(onboardingError)}</p><a className="btn" href="/api/auth/google/start">Google 인증 다시 시작</a></div>
+        : onboardingError ? <div className="notice" role="alert"><p {...requestIdProps(onboardingError)}>{errorMessage(onboardingError)}</p><a className="btn" href="/api/auth/google/start">Google 인증 다시 시작</a></div>
           : <p className="login-lead" role="status">Google 계정 확인 중입니다.</p>}
     </section>}
     {google && !finishingGoogle && <><form method="get" action="/api/auth/google/start"><button className="btn btn-large" disabled={busy}>Google 계정으로 계속</button></form><p className="login-or">또는</p></>}
     <form onSubmit={submit}>
       <label className="field"><span>이메일</span><input className="input" name="email" type="email" autoComplete="username" required maxLength={100} autoFocus /></label>
       <label className="field"><span>비밀번호</span><input className="input" name="password" type="password" autoComplete="current-password" required maxLength={1024} aria-describedby={failure ? 'login-error' : undefined} /></label>
-      {failure ? <div className="notice" role="alert" id="login-error"><p>{loginErrorMessage(failure)}</p>
+      {failure ? <div className="notice" role="alert" id="login-error"><p {...requestIdProps(failure)}>{loginErrorMessage(failure)}</p>
         {credentialsFailed && <ul className="login-tips"><li>탈퇴했거나 아직 가입하지 않았다면 회원가입이 필요합니다.</li>{google && <li>Google로 가입했다면 Google 로그인을 이용하세요.</li>}<li>반복해서 실패했다면 15분 뒤 다시 시도해 주세요.</li></ul>}</div>
         : params.get('google') === 'error' ? <p className="notice" role="alert">Google 로그인을 확인할 수 없습니다. 계정 선택이나 동의를 취소했다면 Google 로그인을 다시 시작하세요.</p> : null}
       <button className="btn btn-primary btn-large" disabled={busy || (finishingGoogle && !googleEmail)}>{busy ? '로그인 확인 중' : finishingGoogle ? '기존 계정에 연결' : '로그인'}</button>

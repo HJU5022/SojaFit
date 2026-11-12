@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { findSchematic } from '../api/externalCircuits'
-import { errorMessage } from '../api/client'
+import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
 import type { DemoSchematic } from '../api/projects'
 
@@ -49,7 +49,7 @@ export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }
       <div className="dialog-foot"><button className="btn btn-primary" disabled={!valid || result.isFetching}>{result.isFetching ? '찾는 중' : '원본 회로도 찾기'}</button></div>
     </form>}
     {result.isFetching && <div className="skeleton inset" role="status"><span className="sr-only">원본 회로도를 찾는 중입니다. 몇 초 걸릴 수 있습니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
-    {result.error && !result.isFetching && <p className="notice inset" role="alert">{searchMessage(result.error as unknown as ApiError)}</p>}
+    {result.error && !result.isFetching && <p className="notice inset" role="alert" {...requestIdProps(result.error)}>{searchMessage(result.error as unknown as ApiError)}</p>}
     {data && data.images.map(image => <SchematicImage key={image.url} schematic={{ image_url: image.url, original_url: data.source_url, attribution: data.attribution, license: data.license }}
       name={`${data.project} 시트 ${image.sheet + 1}`} zoom={zoom} reload={() => void result.refetch()} />)}
   </div>

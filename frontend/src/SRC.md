@@ -30,13 +30,14 @@
 - `pages/LoginPage.tsx` — 이메일 로그인, 서버가 켠 Google 로그인과 계정 연결, 데모 모드의 데모 사용자 버튼.
 - `pages/SignupPage.tsx` · `pages/EmailActionPage.tsx` — 가입 메일 요청, 메일 링크의 비밀번호 설정과 재설정.
 - `pages/PrivacyPage.tsx` — 개인정보처리방침(글은 이전과 같음).
-- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록, 새 프로젝트·원본 회로도·승인 사례 창. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
+- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록(맨 위 질문 칸이 질문 속 부품 번호의 검토를 열고 질문을 한 번 보낸다. 테스트 `WorkbenchPage.ask.test.tsx`), 새 프로젝트·원본 회로도·승인 사례 창. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
 - `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
 - `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
 - `components/Review.tsx` — 검토 문서: 판정, 회로, 조건 대조 표, 활동과 입력창, 속성 칸(승인·견적·가격·근거). 속성 칸 너비 조절.
 - `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 테스트 `Schematic.test.tsx`.
 - `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
 - `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고.
+- `components/SafeMarkdown.tsx` — 서버 답 전체를 보이는 최소 마크다운 렌더러(표·굵게·목록·인용, HTML·이미지·링크는 글자로만). 테스트 `SafeMarkdown.test.tsx`.
 - `components/ApprovedCases.tsx` — 승인 사례 목록과 확인 삭제.
 - `components/AuthCard.tsx` · `components/PageShell.tsx` — 로그인 계열 화면과 설정·관리 화면의 공통 틀.
 - `styles/app.css` — 전체 스타일.
