@@ -28,3 +28,5 @@ evals/results/threads/injection_t3_smoke_live_*.json* -text whitespace=cr-at-eol
 evals/results/threads/injection_t3_live_*.json* -text whitespace=cr-at-eol
 evals/results/threads/injection_t3_approval_*.json -text whitespace=cr-at-eol
 evals/results/threads/injection_t3_smoke_approval_*.json -text whitespace=cr-at-eol
+# 청크별 sha256 목록은 줄바꿈 변환 없이 LF 바이트 그대로 받는다.
+evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv -text
