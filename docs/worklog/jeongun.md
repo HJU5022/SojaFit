@@ -1,5 +1,12 @@
 # jeongun 작업 기록
 
+## 2026-11-12 제출물 초안(시연 스크립트·AI도구·포트폴리오·G5/G7, 커밋만)
+- `docs/deliverables/demo_script.md`: D10 촬영용 정상·실패 컷(스모크 28 · DEMO.md · §6 재료). README·G7·§11 링크.
+- `ai_tools_log.md`: 11-09~12 행 + 규칙·실패 사례 절 채움.
+- `portfolio-jeongun.md` 초안(EVAL/GATES 숫자만).
+- GATES G5: 3장 표 채움을 현재 증거로 명시. G7: 스크립트·문서 초안 있음 / 영상·캡처 없음.
+- 안 함: 푸시·PR, 영상 촬영, Langfuse PNG, T4 재측정, scratchpad.
+
 ## 2026-11-12 재료 있는 문서 마무리(커밋만)
 - G1: README·GATES에 라이브 `sojafit-api-e0a5e30`(`limits5m`) 반영.
 - G3: v4h `summary.json`의 `distinct_text` 51,967을 GATES·EVAL 1장에 연결(운영 DB sha256 재집계는 아님).
