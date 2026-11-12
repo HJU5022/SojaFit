@@ -1,4 +1,11 @@
-# MCP 검색 도구 1차 작업서
+# MCP 검색 도구
+
+- 상태: 현행
+- 기준일: 2026-11-12
+- 기준 커밋: 6707002
+- 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 8.7 MCP 검색 도구 1차)
+- 관련 문서: [mcp-graph-integration.md](mcp-graph-integration.md), `backend/mcp_skill/MCP_SKILL.md`, [mcp-tool-implementation-plan.md](../research/mcp-tool-implementation-plan.md)
+
 
 ## Why
 
@@ -6,13 +13,14 @@ SojaFit 에이전트는 기존 코퍼스 검색과 코퍼스에 없는 TSC 문�
 
 ## Goal
 
-- MCP stdio 서버에서 코퍼스 검색과 Exa 기반 공식 TSC 문서 후보 검색 도구 2개를 노출한다.
+- MCP stdio 서버(`backend/mcp_skill/mcp_server/server.py`)가 도구 6개를 노출한다: `search_corpus`, `check_corpus`, `search_tsc_web`, `verify_tsc_pdf`, `get_circuit_info`, `get_corpus_document`.
 - 외부 호출은 기본 0회, 명시적인 허용과 키가 있는 경우 도구 요청당 최대 1회이며 재시도하지 않는다.
-- Out of Scope: LangGraph 실제 연결, 외부 문서 다운로드·파싱·검증·적재, 자동 재검색, 사용자용 HTTP 배포, 가산점 충족 주장, 실제 서비스 부하 평가.
+- Out of Scope: LangGraph 연결(→ [mcp-graph-integration.md](mcp-graph-integration.md)), 외부 문서 다운로드·파싱·검증·적재, 자동 재검색, 사용자용 HTTP 배포, 가산점 충족 주장, 실제 서비스 부하 평가.
 
 ## What
 
 - 코퍼스 검색은 기존 retrieve(question, k, parts, method) 계약을 사용한다.
+- `check_corpus(parts, revisions)`는 품번(소문자 비교)과 데이터시트 개정 코드(대문자 비교)가 코퍼스에 있는지 `{"parts": {품번: bool}, "revisions": {개정: bool}}`로만 돌려준다. 목록은 각각 최대 20개, 항목은 1~100자이며, 어긴 입력은 거부한다. 판단은 하지 않는다. 서비스의 사실 확인 노드가 이 도구를 쓴다(`StdioMcpRetriever.check`).
 - 공식 문서 후보 검색은 Exa 검색 API 결과에서 HTTPS TSC 공식 도메인 URL만 후보로 반환하며 미검증 상태를 표시한다.
 - verify_tsc_pdf(doc_id)는 저장소의 TSC 표본 3건에 대해서만 PDF 서명·바이트 크기·SHA-256을 manifest와 대조한다. 내용 파싱 검증은 아니다.
 - get_circuit_info(circuit_id, target)는 고정된 공개 회로 ID 카탈로그에서 connections.json을 읽고 기존 circuit_around를 호출한다. 임의 경로 입력은 허용하지 않는다.
@@ -22,7 +30,7 @@ SojaFit 에이전트는 기존 코퍼스 검색과 코퍼스에 없는 TSC 문�
 ## How
 
 - MCP Python SDK 1.x FastMCP와 stdio를 사용한다.
-- 도구 search_corpus(query, k=5, parts=None)는 backend.rag.retrieve.retrieve를 호출한다.
+- 도구 search_corpus(query, k=5, parts=None)는 backend.rag.retrieve.retrieve(method='hybrid')를 호출한다. query는 1~500자, k는 1~10이다.
 - 도구 search_tsc_web(doc_id)는 DEMO_MODE=0 및 EXA_WEB_SEARCH_ENABLED=1, EXA_API_KEY가 모두 갖춰진 경우에만 Exa Search API 호출 1회, 결과 최대 5개, 타임아웃 15초, 리디렉션 금지를 적용한다.
 - Exa에는 공개 목록에서 확인한 문서명·개정으로 구성한 질의와 TSC 도메인 필터만 보낸다. 답변 본문이나 공급자 오류는 저장하지 않는다.
 - 반환된 링크는 URL 후보일 뿐이다. 실제 PDF·품번·개정판·본문의 검증과 적재는 후속 작업이다.
@@ -30,13 +38,16 @@ SojaFit 에이전트는 기존 코퍼스 검색과 코퍼스에 없는 TSC 문�
 
 ## AC
 
+시험은 모두 `tests/mcp_skill/test_mcp_server.py`다.
+
 - GIVEN 기존 검색기 대역 WHEN 코퍼스 도구 호출 THEN query, k, parts가 기존 검색 계약에 전달되고 결과가 그대로 반환된다.
 - GIVEN 데모 또는 외부 검색 미허용 WHEN 문서 후보 도구 호출 THEN 외부 요청 없이 disabled를 반환한다.
 - GIVEN 외부 검색 허용과 키 누락 WHEN 호출 THEN 외부 요청 없이 missing_key를 반환한다.
 - GIVEN 정상 Exa 응답 WHEN 호출 THEN 안전한 HTTPS TSC URL만 최대 5개 미검증 후보로 반환한다.
 - GIVEN Exa HTTP 오류 또는 비정상 응답 WHEN 호출 THEN 비밀값과 오류 본문 없이 unavailable을 반환하고 재시도하지 않는다.
 - GIVEN 빈 질의 또는 범위 밖 결과 수 WHEN 호출 THEN 잘못된 입력을 거부한다.
-- GIVEN stdio MCP 클라이언트 WHEN 도구 목록을 조회 THEN 두 도구가 보인다.
+- GIVEN stdio MCP 클라이언트 WHEN 도구 목록을 조회 THEN 도구 6개가 보인다(`test_stdio_tool_list_has_all_tools`).
+- GIVEN 품번·개정 목록 WHEN `check_corpus` 호출 THEN 항목마다 있음/없음을 돌려주고 빈 목록도 받으며 잘못된 입력은 거부한다(`test_check_corpus_*`).
 
 ## 문서 메타데이터 조회 1차
 
@@ -54,9 +65,21 @@ SojaFit 에이전트는 기존 코퍼스 검색과 코퍼스에 없는 TSC 문�
 - How: TSC 공식 데이터시트 경로의 파일명이 목록의 문서명·개정과 일치하고 안전한 형식일 때만 고정 문구와 해당 문서명·개정으로 질의를 구성한다. 사용자 원문은 전송하지 않는다. 목록은 공개 출처의 과거 기록이며 실시간 공개 여부나 최신성을 보장하지 않는다.
 - AC: GIVEN 내부 정보가 포함된 ID, 없는 ID, 출처나 파일명이 불일치하는 기록 WHEN 검색 THEN 외부 요청 없이 unverified. GIVEN 목록 읽기 실패 WHEN 검색 THEN 외부 요청 없이 unavailable. GIVEN 허용된 문서 WHEN 검색 THEN 고정 문구와 목록의 문서명·개정만 전송한다.
 
-## 우선순위 2 도구 1차 기능
+## 로컬 확인 도구
 
 - Goal: 저장소에 포함된 표본과 공개 회로 카탈로그에서 안전한 로컬 확인을 제공한다.
 - What: PDF 도구는 세 표본만 서명·크기·해시를 대조하며 `content_verified=false`를 유지한다. 회로 도구는 허용 ID와 부품 기호로 연결 정보를 조회한다.
 - How: 외부 다운로드·DB 쓰기·임의 경로 접근은 하지 않는다. 전체 PDF 파싱 관문과 사용자별 회로 권한은 후속 계약이다.
 - AC: GIVEN 표본 PDF WHEN 검증 THEN manifest 해시·크기 일치와 내용 미검증을 표시한다. GIVEN 허용 회로 ID와 존재하는 ref WHEN 조회 THEN 연결 정보를 반환한다. 알 수 없는 ID/ref는 not_found이며 경로 형식 주입은 거부한다.
+
+## 구현 상태
+
+| 항목 | 상태 | 근거 |
+|---|---|---|
+| 도구 6개 | 구현 | `backend/mcp_skill/mcp_server/server.py:33,48,58,86,105,146` |
+| 사양 도구 `get_part_specs`·`find_parts_by_specs` | 삭제 | ADR 0016, `backend/mcp_skill/MCP_SKILL.md` |
+| 서비스가 쓰는 도구 | `check_corpus` 하나 | `backend/graph/mcp_retriever.py` `check` |
+
+## 한계
+
+- `search_tsc_web`의 Exa 실호출 결과(실제 후보 URL)는 시험이 가짜 응답만 쓰므로 실측하지 않았다.
