@@ -14,7 +14,7 @@
     "frozen_at": "2026-11-03"
   },
   "dataset_v3.jsonl": {
-    "sha256": "2b99b2125d98db6f127d4364e2940acaf4a27aeb9ee60ef1667d5e0e3e6e5e91",
+    "sha256": "05202314ed1d009593ab14bc5d44e3d7ab7dd4a9f7e726f98282198c7999b4fd",
     "count": 50,
     "relevant": 25,
     "irrelevant": 25,

@@ -914,37 +914,5 @@
       "external_local_backup 항목의 archive_relative_path를 저장소 루트 아래 original_path로 복사한다. 기존 파일이 있으면 덮어쓰지 않고 해시를 먼저 대조한다.",
       "저장소 밖 백업은 아직 팀 공유 저장소에 업로드하지 않았다. 최신03의4개는 저장소 안에 원래 이름으로 남는다."
     ]
-  },
-  "team_lead_review_update_2026_11_11": {
-    "note": "Archive hashes above describe measurement-time bytes. Current copies include post-hoc team-lead review metadata; original blobs remain in Git.",
-    "approval_provenance": "user_reported_team_lead_approval",
-    "current_reviewed_artifacts": [
-      {
-        "path": "evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl",
-        "previous_path": "evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl",
-        "measurement_snapshot_git_ref": "a2a91e8:evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl",
-        "measurement_artifact_sha256_before_review": "637f324fe1b9a57e1c7b48af5215dfd294400f7f5e932048a951671f29afc813",
-        "sha256": "37640f219589ff1af025b04e3126079759757b1f10ea6c053cc312cf48c53ab1",
-        "measurement_payload_sha256_excluding_human_review": "6068f27533add478759b6b43ef648bc029fc8df8df661541e6a59464ab468148",
-        "row_count": 110,
-        "human_review_counts": {
-          "quality_error": 22,
-          "normal": 88
-        }
-      },
-      {
-        "path": "evals/results/threads/injection_t3_live_2026-11-11_08.jsonl",
-        "previous_path": "evals/results/threads/injection_t3_smoke_live_2026-11-11_08.jsonl",
-        "measurement_snapshot_git_ref": "a2a91e8:evals/results/threads/injection_t3_smoke_live_2026-11-11_08.jsonl",
-        "measurement_artifact_sha256_before_review": "7e217c47e34f82bc5e4b3728d7c7a865b9231ce9c54762a1eab161d2ae51d347",
-        "sha256": "7d1b1bc0223acb47d79df06a44be64f574a5381856e258b0d09024466a72a668",
-        "measurement_payload_sha256_excluding_human_review": "cf30ceeaa9183cdb648883b53349c7e34b0e1e10b1322309d41553848cb93a6b",
-        "row_count": 2,
-        "human_review_counts": {
-          "quality_error": 1,
-          "normal": 1
-        }
-      }
-    ]
   }
 }

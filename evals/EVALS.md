@@ -20,7 +20,7 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 - `EVALS.md` — 이 문서
 - `dataset_v1.jsonl` — 동결 평가셋 v1. 50건(관련 25·비관련 25), 2026-11-02 동결. `drafts/sets/draft_50.jsonl`의 고정 키만 옮김
 - `dataset_v2.jsonl` — 동결 평가셋 v2. 70건(관련 35·비관련 35), 2026-11-03 동결. v1 50건 줄에 `question_type`만 더하고 후보 찾기 20건(`drafts/sets/draft_v2add_20.jsonl`의 고정 키)을 더함
-- `dataset_v3.jsonl` — 동결 평가셋 v3(기준 평가셋, ADR 0015). 50건(관련 25 · 비관련 25), 2026-11-10 동결. lab `evals/drafts/v3/v3_draft.jsonl`을 그대로 옮김(#43 ~ #50 측정에 쓴 파일). 쓰는 회로 넷리스트는 `data/circuits/collected/`에 모두 있음
+- `dataset_v3.jsonl` — 동결 평가셋 v3(기준 평가셋, ADR 0015). 50건(관련 25 · 비관련 25), 2026-11-10 동결. lab `evals/drafts/v3/v3_draft.jsonl`에서 옮긴 최초 동결본을 #43 ~ #50 측정에 사용했고, 2026-11-12 각 문항에 `judges`를 추가해 해시가 바뀜(최초·현재 해시는 `guides/dataset-guide.md` 참조). 쓰는 회로 넷리스트는 `data/circuits/collected/`에 모두 있음
 - `FROZEN.json` — 동결한 파일별 sha256·건수·관련/비관련 건수·동결일. 현재 `dataset_v1.jsonl`, `dataset_v2.jsonl`, `dataset_v3.jsonl` 셋. 동결 여부는 이 파일이 정함
 - 기준 평가셋은 v3입니다(2026-11-06 결정, 2026-11-10 동결, [ADR 0015](../docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)). v1 · v2는 지금까지의 측정 기록으로 둡니다
 - `runners/` — 평가 실행기와 동결 스크립트. 실행은 `uv run python -m evals.runners.<이름>`. [RUNNERS.md](runners/RUNNERS.md)
@@ -84,14 +84,14 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 
 과거 원본은 STH의 현재 이력에서 분리했고, 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`가 커밋107aaa3을 보존한다. 이 복구 참조는 STH를 공유하는 것만으로 함께 공유되지 않는다. Windows CRLF를 포함한 작업트리 원본의 해시까지 복구 검증했다. 앞으로 실행기가 새 JSONL/meta를 생성하는 동작은 변경하지 않았다. 기존 code_freeze 기록은 이번33개 밖의 파일이므로 유지한다.
 
-## 2026-11-11 우선확인32건 판정 기록
+## 2026-11-11 저장 응답 품질 검토
 
-- `results/threads/injection_remaining_review_queue_2026-11-11.json`: 본실측03 110+스모크08 2건의 원시SHA/행/정상짝과 검토 기록. 이번 판정 범위는32건이며 품질오류23/정상9/미판정0이다. 다른80건과 측정원시의human_review는 보존했다.
-- 판정 출처는 사용자 직접확정2건/사용자위임 assistant판정30건으로 구분한다. 실제모델/검색/배포 재시험이 아니다. T7 정상5건은 입력경계 차단이며 모델자체 저항성 성공이 아니다.
+- `results/threads/injection_remaining_review_queue_2026-11-11.json`: 본실측03과 스모크08을 실행별로 구분한 원시 SHA·행·정상짝·어시스턴트 잠정 검토. 본실측03 우선 31건은 품질 오류 후보 22건·정상 후보 9건이며, 스모크08 우선 1건은 품질 오류 후보다. 사람 응답 품질 채점은 두 실행 모두 대기다.
+- 본실측03의 별도 사람 채점 사본 `results/threads/injection_baseline_live_2026-11-11_03_human_jeongun.jsonl`은 하정운이 표본 20건을 인젝션·핵심 답변 기준으로 판정한 정본이다. 나머지 본실측 90건은 그 기준의 사람 채점 대기다. 실제모델/검색/배포 재시험이 아니다. T7 공격 5건은 입력경계 차단이며 모델 자체 저항성 성공이 아니다.
 - [32건 질문·응답·코퍼스·PDF 대조자료](../docs/research/injection-case-review-packet.md)와 [누적 결과](../docs/research/injection-results.md)를 참조한다.
 
-## 2026-11-11 파일명·최종 판정자 정정
+## 2026-11-11 스모크08 파일 위치와 판정 범위
 
-판정기록커밋의smoke포함파일5개에서smoke를제거했다.누적문서는docs/research/injection-results.md,08원시는injection_t3_live_2026-11-11_08.jsonl와같은기본이름의meta/budget,승인은injection_t3_approval_2026-11-11_08.json이다.시험scope/ID는그대로다.
+스모크08 원시는 `injection_t3_live_2026-11-11_08.jsonl`이며 동명 메타·예산 파일과 `injection_t3_approval_2026-11-11_08.json`을 별도로 둔다. 실행 scope·ID는 `t3_smoke_v1`이고, 본실측03과 분리해 [실측 기록](../docs/research/injection-results.md)에서 해석한다.
 
-사용자가팀장(하정운)이전부승인했다고전달해전체112건을품질오류23/정상89/보류0으로사후기록했다.우선32건은23/9를유지한다.판정자표시는팀장(하정운),승인출처는user_reported_team_lead_approval이다.모델입력·응답·노드/당시자동관찰은불변이며human_review만갱신했다.현재파일SHA와변경전측정SHA·Git복구참조·human_review제외payloadSHA를분리한다.위미확정/사람점수보존문단은이갱신전시점기록이다.
+하정운의 승인은 본실측03과 스모크08의 비용·진행 허가이며 각 응답의 판정 승인이 아니다. 두 원시 JSONL의 `human_review`는 측정 당시 미채점 상태이고, 하정운의 본실측03 표본 20건 판정은 위의 별도 사본에 있다. 스모크08 2건은 본실측03 110건에 합산하지 않는다.

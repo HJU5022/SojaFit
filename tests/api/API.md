@@ -14,6 +14,7 @@
 실행: `uv run pytest -q tests/api`(저장소 루트).
 
 ## 파일
+- `test_http_restart.py` — 격리 PostgreSQL·합성 그래프로 실제 HTTP 서버 종료·재기동, 소유자 재개와 다른 계정의 run 조회·재개 404를 확인한다. 기본 pytest에서는 skip하며 명시적으로만 실행한다.
 - `test_google_users.py` — Google 가입·동의/Origin·비밀번호 재확인·관리자 최초 승인 유지·만료/중복/동시 연결·공유 IP 한도·마이그레이션. TEST_GOOGLE_DATABASE_URL 또는 CI TEST_AUTH_DATABASE_URL의 새 schema만 사용하며 loopback oauth_test_* / ci_auth DB만 허용
 - test_external_circuits.py — 완성 회로도 manifest·PNG 응답, 인증·no-store·SCHEMATIC_NOT_FOUND 경계
 - `test_threads.py` — 격리 PostgreSQL에서 사용자 분석 서비스(`Conversations`)의 소유권·체크포인트 복구·재개·(HTTP 경로 없는) 승인 기록 멱등성 시험. 승인 사례는 새 분석에 넘기지 않고 Store에 쓰지 않음(승인 기록), 질문·재개 결과의 사용자 사실 참고(`profile_hints`)의 A/B 격리·고침·지움, `vector` 확장이 있는 DB에서 의미 순위·다시 임베딩도 본다. React 대화의 같은 UUID thread 연결(대상 고정·소유권·원문 미저장)과 React run·재개 HTTP가 실제 분석 서비스로 이어지는지, 하루 토큰 상한(사용자 · 서비스)의 원자적 차감 · 입장과 호출 직전 429 · 외부 호출 없음도 본다

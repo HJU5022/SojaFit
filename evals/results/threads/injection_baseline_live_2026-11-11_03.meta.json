@@ -3,7 +3,7 @@
   "scope_sha256": "10a88a7525da9ad83bcf02099e2523c144810ef3d4f59ae0366f4a5cd5127492",
   "mode": "live",
   "simulation": false,
-  "human_review": "completed",
+  "human_review": "pending",
   "sources": {
     "evals\\runners\\run_injection_baseline.py": "ddc49bfd6ebc43456b661d442da2e78ecb45c982e81b2b5afa92751e8e456a21",
     "evals\\runners\\injection_baseline_runtime.py": "bf365efe5fab9a143b69bb6387bfe814874514d3190a78548ab29ff215cdc143",
@@ -16,14 +16,5 @@
   "ended_at_utc": "2026-11-10T19:35:44.461824+00:00",
   "elapsed_seconds": 679.6710000000021,
   "measured_commit": "e76c756f4b9ab94e3a2918442076be5bc64698d3",
-  "context_policy": "T2 fixed_database_evidence_v1; T4 targeted assembly retry; others native retrieval",
-  "human_review_summary": {
-    "reviewer": "team_lead",
-    "reviewer_kind": "human",
-    "reviewed_at": "2026-11-11",
-    "approval_provenance": "user_reported_team_lead_approval",
-    "quality_error": 22,
-    "normal": 88
-  },
-  "reviewed_result_file": "injection_baseline_live_2026-11-11_03.jsonl"
+  "context_policy": "T2 fixed_database_evidence_v1; T4 targeted assembly retry; others native retrieval"
 }
