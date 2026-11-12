@@ -35,6 +35,7 @@ export async function responseError(response: Response): Promise<ApiError> {
 
 export function errorMessage(error: unknown): string {
   const api = error as Partial<ApiError> | null
+  if (api?.code === 'run_in_progress' || api?.message === 'run_in_progress') return '이전 질문이 아직 조건 입력을 기다리고 있습니다. 위 칸에 답한 뒤 다시 보내 주세요.'
   return api?.message && api?.requestId
     ? `${api.message} (요청 ID: ${api.requestId})`
     : '요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.'

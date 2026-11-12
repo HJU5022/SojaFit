@@ -92,7 +92,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   // 부품 목록의 질문 칸에서 넘어온 질문을 한 번만 보낸다. ref는 StrictMode의 effect 재실행에도 남는다.
   const sentInitial = useRef(false)
   useEffect(() => { if (initialQuestion && !sentInitial.current) { sentInitial.current = true; void chat.send({ question: initialQuestion }) } }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 열릴 때만
-  const { history, live, stages, state, running, picked } = chat
+  const { history, live, stages, state, running, waiting, picked } = chat
   const input = useRef<HTMLTextAreaElement>(null)
   const picker = useRef<HTMLInputElement>(null)
   const root = useRef<HTMLDivElement>(null)
@@ -138,7 +138,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   useEffect(() => { input.current?.focus() }, [target.ref, threadId])
   function onKey(event: KeyboardEvent<HTMLTextAreaElement>) {
     // 한글 조합 중의 Enter는 글자 확정이다. 전송하지 않는다.
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void chat.send() }
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); if (!waiting) void chat.send() }
   }
 
   // 질문을 보내기 전에는 제목과 입력창만 보인다. 회로 · 조건 대조 · 속성은 검토가 시작되면 나타난다.
@@ -188,11 +188,13 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{live && (running ? `SojaFit: ${stages[stages.length - 1] || '검토 시작'}` : state.status === 'completed' ? '검토 결과를 받았습니다.' : state.status === 'requires_input' ? '추가 입력이 필요합니다.' : state.status === 'failed' ? '실행에 실패했습니다.' : state.status === 'refused' ? '답변이 거절되었습니다.' : '')}</div>
         {state.status === 'failed' && <div className="notice" role="alert"><p>검토 실행에 실패했습니다. {errorMessage(state.error)}{!state.runId && ' 아래 질문을 입력해 다시 보내 주세요.'}</p>{state.runId && <button className="btn" onClick={() => void chat.stream.refresh(state.runId!)}><RotateCw aria-hidden="true" />실행 상태 다시 확인</button>}</div>}
         {state.status === 'requires_input' && <form className="ask" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget)
-          void chat.stream.resume(state.runId, { answers: Object.fromEntries((state.interrupt.missing ?? []).map(code => [code, String(data.get(code) ?? '').trim()])), role: String(data.get('role') ?? '') || undefined }) }}>
+          void chat.stream.resume(state.runId, { answers: Object.fromEntries((state.interrupt.missing ?? []).map(code => [code, String(data.get(code) ?? '').trim()]).filter(([, value]) => value)), role: String(data.get('role') ?? '') || undefined }) }}>
           <h3>{state.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</h3>
+          <p className="fine">모르는 값은 비워 두세요. 빈 칸은 '모름'으로 검토합니다.</p>
           {(state.interrupt.role_choices ?? []).map((code, index) => <label key={code} className="choice"><input type="radio" name="role" value={code} defaultChecked={index === 0} />{(Array.isArray(roles.data) ? roles.data.find(item => item.code === code)?.name : '') || code}</label>)}
-          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? code}</span><input className="input" name={code} required autoComplete="off" placeholder="단위까지 적어 주세요. 예: 12 V" /></label>)}
+          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? code}</span><input className="input" name={code} autoComplete="off" placeholder="단위까지 적어 주세요. 예: 12 V" /></label>)}
           <div className="form-actions"><button className="btn btn-primary">이 값으로 계속 검토</button>
+            <button type="button" className="btn" onClick={event => void chat.stream.resume(state.runId, { answers: {}, role: String(new FormData(event.currentTarget.form!).get('role') ?? '') || undefined })}>모두 모름으로 계속</button>
             {recordedResume && <button type="button" className="btn" onClick={() => void chat.stream.resume(state.runId, { answers: recordedResume.answers, role: recordedResume.role || undefined })}>기록한 답으로 계속하기</button>}</div></form>}
         {chat.error ? <div className="notice" role="alert"><p>검토 기록을 불러오거나 질문을 보내지 못했습니다. {errorMessage(chat.error)} 새로고침하면 작성 중인 질문은 지워집니다.</p><button className="btn" onClick={() => window.location.reload()}>페이지 새로고침</button></div> : null}
         {!history.length && !live && recorded.length > 0 && <div className="demo-questions"><p className="composer-hint">키 없는 데모는 기록한 질문만 재생합니다.{recordedHere.length === 0 && ` 이 회로에서 기록한 질문이 있는 부품은 ${[...new Set(recorded.map(item => item.target))].join(', ')}입니다.`}</p>
@@ -200,12 +202,12 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
         {!history.length && !live && recorded.length === 0 && <ul className="examples">{examples.map(example => <li key={example}><button onClick={() => { chat.setText(example); input.current?.focus() }}>{example}</button></li>)}</ul>}
         <form className="composer" onSubmit={(event) => { event.preventDefault(); void chat.send() }}>
           <label className="sr-only" htmlFor="question">질문</label>
-          <textarea id="question" ref={input} rows={2} aria-describedby="composer-hint" value={chat.text} onChange={event => chat.setText(event.target.value)} onKeyDown={onKey} placeholder="후보 품번과 사용 조건을 적어 주세요." />
+          <textarea id="question" ref={input} rows={2} aria-describedby="composer-hint" value={chat.text} onChange={event => chat.setText(event.target.value)} onKeyDown={onKey} placeholder={waiting ? "위 조건 질문에 먼저 답하거나 '모두 모름으로 계속'을 눌러 주세요." : "후보 품번과 사용 조건을 적어 주세요."} />
           {/* 서버가 개발 환경에서만 첨부를 받는다. 운영에서는 버튼을 두지 않는다. */}
           {import.meta.env.DEV && <><input ref={picker} type="file" accept=".net,.txt" multiple hidden onChange={event => { chat.setFiles([...chat.files, ...Array.from(event.target.files ?? [])]); event.target.value = '' }} />
             <button type="button" className="btn btn-icon" disabled={running} onClick={() => picker.current?.click()} aria-label="파일 첨부 (.net, .txt)" title="파일 첨부 (.net, .txt)"><Paperclip aria-hidden="true" /></button></>}
           {running ? <button type="button" className="btn btn-icon" onClick={chat.stream.cancel} aria-label="응답 받기 중단"><Square aria-hidden="true" /></button>
-            : <button className="btn btn-icon" disabled={!chat.text.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
+            : <button className="btn btn-icon" disabled={waiting || !chat.text.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
         </form>
         {chat.files.length > 0 && <ul className="chips" aria-label="첨부한 파일">{chat.files.map((file, index) => <li key={`${file.name}-${index}`}><FileText aria-hidden="true" /><span>{file.name}</span>
           <button type="button" className="icon-btn" aria-label={`${file.name} 첨부 취소`} onClick={() => chat.setFiles(chat.files.filter((_, at) => at !== index))}><X aria-hidden="true" /></button></li>)}</ul>}

@@ -12,11 +12,13 @@ afterEach(() => vi.unstubAllGlobals())
 const project = { id: 1, name: '보드', source_kind: 'upload', demo_id: null, created_at: '2026-11-09T00:00:00Z', updated_at: '2026-11-09T00:00:00Z',
   connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
 const runs: unknown[] = []
+const resumes: unknown[] = []
 let reply = ''
-const api = (body = '') => { runs.length = 0; reply = body; vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); network((path, init) => {
+const api = (body = '') => { runs.length = 0; resumes.length = 0; reply = body; vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); network((path, init) => {
   if (path === '/api/projects/1') return Response.json(project)
   if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1', title: '', status: null, latest_run_id: null, target_ref: 'D1' })
   if (path === '/api/threads/t1/runs') { runs.push(JSON.parse(String(init.body))); return new Response(reply, { headers: { 'Content-Type': 'text/event-stream' } }) }
+  if (path === '/api/runs/r1/resume') { resumes.push(JSON.parse(String(init.body))); return new Response('', { headers: { 'Content-Type': 'text/event-stream' } }) }
   return Response.json([])
 }) }
 const ask = async (text: string) => { renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
@@ -70,4 +72,34 @@ it('keeps the answer of an earlier question visible next to the selected one, re
   expect(await screen.findByText('r1의 본문')).toBeInTheDocument()
   expect(await screen.findByText('r2의 본문')).toBeInTheDocument()
   expect([...reads].sort()).toEqual(['r1', 'r2'])
+})
+
+const waiting = `event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: requires_input\ndata: ${JSON.stringify({ status: 'requires_input', interrupt: { question: '값을 알려 주세요.', missing: ['VF', 'IR'] }, request_id: 'req-2' })}\n\n`
+
+it('resumes with only the filled condition when the other is left blank', async () => {
+  api(waiting)
+  await ask('D1을 SS34로 바꿔도 되나요?')
+  fireEvent.change(await screen.findByLabelText('허용 전압 강하'), { target: { value: ' 0.4 V ' } })
+  fireEvent.click(screen.getByRole('button', { name: '이 값으로 계속 검토' }))
+  await waitFor(() => expect(resumes).toHaveLength(1))
+  expect(resumes[0]).toEqual({ answers: { VF: '0.4 V' } })
+})
+
+it('resumes with no answers when the user does not know any value', async () => {
+  api(waiting)
+  await ask('D1을 SS34로 바꿔도 되나요?')
+  fireEvent.click(await screen.findByRole('button', { name: '모두 모름으로 계속' }))
+  await waitFor(() => expect(resumes).toHaveLength(1))
+  expect(resumes[0]).toEqual({ answers: {} })
+})
+
+it('blocks the composer while the run waits for conditions', async () => {
+  api(waiting)
+  await ask('D1을 SS34로 바꿔도 되나요?')
+  const box = await screen.findByPlaceholderText("위 조건 질문에 먼저 답하거나 '모두 모름으로 계속'을 눌러 주세요.")
+  fireEvent.change(box, { target: { value: '또 질문' } })
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeDisabled()
+  fireEvent.keyDown(box, { key: 'Enter' })
+  await new Promise(resolve => setTimeout(resolve, 100))
+  expect(runs).toHaveLength(1)
 })

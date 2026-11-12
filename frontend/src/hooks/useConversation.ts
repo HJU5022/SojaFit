@@ -20,6 +20,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const liveThread = useRef('')
   const state = stream.state
   const running = state.status === 'running'
+  const waiting = state.status === 'requires_input'
 
   useEffect(() => {
     if (threadId === liveThread.current) return
@@ -44,7 +45,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
   async function send(recorded?: { question: string; conditions?: string }) {
     const question = recorded?.question ?? text.trim()
-    if (!question || running || !targetRef) return
+    if (!question || running || waiting || !targetRef) return
     setError(null)
     try {
       let id = threadId
@@ -56,5 +57,5 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
     } catch (reason) { setError(reason) }
   }
 
-  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, state, running, send, stream }
+  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, state, running, waiting, send, stream }
 }
