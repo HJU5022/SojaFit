@@ -1,0 +1,10 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+compose_down_v_start None {'command': 'docker compose down -v (removes containers+volumes, keeps images and build cache)'}
+compose_down_v_end None {'tail': ' Container proj3-b-thread-setup-1 Stopping \n Container proj3-b-corpus-load-1 Stopped \n Container proj3-b-corpus-load-1 Removing \n Container proj3-b-thread-setup-1 Stopped \n Container proj3-b-thread-setup-1 Removing \n Container proj3-b-thread-setup-1 Removed \n Container proj3-b-corpus-load-1 Removed \n Container proj3-b-db-1 Stopping \n Container proj3-b-db-1 Stopped \n Container proj3-b-db-1 Removing \n Container proj3-b-db-1 Removed \n Network proj3-b_default Removing \n Volume proj3-b_pgdata Removing \n Volume proj3-b_pgdata Removed \n Network proj3-b_default Removed \n'}
+host_load_at_up 0.057 {'load1_5_15': [4.38, 5.36, 5.71]}
+compose_up_issued 0.057 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 11.737 {'rx_bytes': 51191}
+demo_login_A_done 11.875 {'status': '200', 'seconds': 0.137}
+smoke_start 11.875 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 19.102 {'exit_code': 0, 'rx_bytes': 51191}
+host_load_end 21.273 {'load1_5_15': [4.25, 5.27, 5.67]}

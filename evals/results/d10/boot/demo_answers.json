@@ -1,0 +1,559 @@
+{
+ "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+ "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+ "branch": "jeongun-2 (code under test is NOT main)",
+ "baseline_measurement": "b5f050d",
+ "measured_at_kst": "2026-11-13T05:23:11.041+09:00",
+ "how": "GET /api/demo-questions -> POST /api/projects {demo_id} -> POST /api/projects/{id}/threads -> POST /api/threads/{id}/runs (recorded question/conditions/target) -> SSE to the end; interrupt questions resumed with POST /api/runs/{id}/resume {answers[, role]} = what \"기록한 답으로 계속하기\" sends; compared with data/demo/recordings/outcomes.json",
+ "questions": [
+  {
+   "id": "demo-rating",
+   "question_type": "rating",
+   "project_id": 1,
+   "thread_id": "addec80e-eb5a-4a68-84eb-ffa24fc12e46",
+   "run_id": "67872a34-27cd-425d-8423-180f47ee3c99",
+   "start_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "demo-notsuff",
+   "question_type": "candidate_judge",
+   "project_id": 2,
+   "thread_id": "945967af-5f04-4bb2-bdc5-303bbe660684",
+   "run_id": "07f15d8f-91f0-4601-8ab7-a148f8fe45eb",
+   "start_events": [
+    "run_started",
+    "status",
+    "requires_input"
+   ],
+   "interrupt_missing": [
+    "v_drop_allowed"
+   ],
+   "expected_interrupt_missing": [
+    "v_drop_allowed"
+   ],
+   "resume_body": {
+    "answers": {}
+   },
+   "resume_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [
+    [
+     "1N4148",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "expected_verdicts": [
+    [
+     "1N4148",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "v3-30",
+   "question_type": "other_part",
+   "project_id": 3,
+   "thread_id": "62248111-238c-45f8-b400-de9294a3661d",
+   "run_id": "32ef95f3-5aec-4069-86d4-b926da579f73",
+   "start_events": [
+    "run_started",
+    "status",
+    "refused"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "refused",
+   "expected_final_status": "refused",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "expected_refusal_code_in_outcomes_json": "not_found",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "v3-36",
+   "question_type": "rating",
+   "project_id": 4,
+   "thread_id": "dd1b92ac-54c5-4fc5-a4d8-46671987be81",
+   "run_id": "468fca70-2b85-402e-b816-b867828c9eaf",
+   "start_events": [
+    "run_started",
+    "status",
+    "refused"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "refused",
+   "expected_final_status": "refused",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "LL4149의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "expected_refusal_code_in_outcomes_json": "part_missing",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "demo-edition",
+   "question_type": "rating",
+   "project_id": 5,
+   "thread_id": "d1c5dfc8-d3b2-4f64-bc47-b8f246d0e204",
+   "run_id": "bb18c2ba-e63d-4f04-9d90-f372821d1522",
+   "start_events": [
+    "run_started",
+    "status",
+    "refused"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "refused",
+   "expected_final_status": "refused",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "요청하신 판(N2112)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "expected_refusal_code_in_outcomes_json": "revision_missing",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "demo-leak",
+   "question_type": "rating",
+   "project_id": 6,
+   "thread_id": "57140164-f930-4902-a77f-4b98b2b02e7e",
+   "run_id": "12f80667-d73f-46bd-b87a-5fee2551fd48",
+   "start_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "v3-03",
+   "question_type": "candidate_judge",
+   "project_id": 7,
+   "thread_id": "4a092151-ebb3-4c85-8b9a-166a8735f7be",
+   "run_id": "d61ec393-069f-44b3-9a78-dbe9bb00ecda",
+   "start_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [
+    [
+     "LL4148 L0G",
+     "IDENTICAL"
+    ]
+   ],
+   "expected_verdicts": [
+    [
+     "LL4148 L0G",
+     "IDENTICAL"
+    ]
+   ],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "demo-find",
+   "question_type": "candidate_find",
+   "project_id": 8,
+   "thread_id": "fc1523cc-0f43-44cc-9ed7-3a6ea0e908d3",
+   "run_id": "72ee5d0c-9c03-4a83-9f14-f193c4c9bf8d",
+   "start_events": [
+    "run_started",
+    "status",
+    "requires_input"
+   ],
+   "interrupt_missing": [
+    "v_cc",
+    "i_fault",
+    "orig_schottky",
+    "high_impedance",
+    "fast_signal"
+   ],
+   "expected_interrupt_missing": [
+    "v_cc",
+    "i_fault",
+    "orig_schottky",
+    "high_impedance",
+    "fast_signal"
+   ],
+   "resume_body": {
+    "answers": {}
+   },
+   "resume_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [
+    [
+     "1N4148W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N914BW",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "BAS16",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL4148",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL4448",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL914B",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "expected_verdicts": [
+    [
+     "1N4148W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N4448W",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "1N914BW",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "BAS16",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL4148",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL4448",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "LL914B",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "v3-01",
+   "question_type": "candidate_judge",
+   "project_id": 9,
+   "thread_id": "554ff115-3240-4009-9c68-d629d90355c0",
+   "run_id": "4f979e20-fcda-4481-8df6-fbdf124c3007",
+   "start_events": [
+    "run_started",
+    "status",
+    "requires_input"
+   ],
+   "interrupt_missing": [
+    "v_drop_allowed"
+   ],
+   "expected_interrupt_missing": [
+    "v_drop_allowed"
+   ],
+   "resume_body": {
+    "answers": {}
+   },
+   "resume_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "expected_verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true
+  },
+  {
+   "id": "demo-rating",
+   "question_type": "rating",
+   "project_id": 12,
+   "thread_id": "fed09184-4871-402d-be05-b1d3bdd574a1",
+   "run_id": "29a6561d-4b3e-4406-9b68-0e4d337803a5",
+   "start_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true,
+   "account": "B",
+   "profile_hints": [],
+   "phase": "pre-restart, after A stored facts"
+  },
+  {
+   "id": "demo-rating",
+   "question_type": "rating",
+   "project_id": 13,
+   "thread_id": "891779f7-ff23-4d5a-b9f0-2c9e2af5e6c0",
+   "run_id": "f50845e3-1f13-42a7-a546-dcc1050dce7f",
+   "start_events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "completed",
+   "expected_final_status": "completed",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "",
+   "expected_refusal_code_in_outcomes_json": "",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true,
+   "account": "A",
+   "profile_hints": [
+    {
+     "kind": "affiliation",
+     "value": "G4Team-b8d3",
+     "text": "이 사용자의 소속은 G4Team-b8d3이다."
+    },
+    {
+     "kind": "job_role",
+     "value": "design",
+     "text": "이 사용자의 직무는 설계이다."
+    },
+    {
+     "kind": "mounting_preference",
+     "value": "smd",
+     "text": "이 사용자는 SMD 실장을 선호한다."
+    }
+   ],
+   "phase": "pre-restart, after A stored facts"
+  },
+  {
+   "id": "v3-30",
+   "question_type": "other_part",
+   "project_id": 19,
+   "thread_id": "4d907ebc-569e-4d93-a556-fba13f98f229",
+   "run_id": "a7f08acf-0ad8-4401-bfb2-b43653d2581c",
+   "start_events": [
+    "run_started",
+    "status",
+    "refused"
+   ],
+   "interrupt_missing": null,
+   "expected_interrupt_missing": null,
+   "resume_body": null,
+   "resume_events": null,
+   "final_status": "refused",
+   "expected_final_status": "refused",
+   "verdicts": [],
+   "expected_verdicts": [],
+   "refusal_text_in_public_result": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "expected_refusal_code_in_outcomes_json": "not_found",
+   "note_refusal": "public result carries the refusal message text, not the code; match = status refused + answer text identical to the recording",
+   "answer_equals_recording": true,
+   "error_code": null,
+   "matches_outcomes_json": true,
+   "account": "B",
+   "phase": "post-restart",
+   "profile_hints": []
+  }
+ ],
+ "resume_after_restart": {
+  "demo-ask": {
+   "resume_issued_kst": "2026-11-13T05:22:42.665+09:00",
+   "body": {
+    "answers": {
+     "v_drop_allowed": "1.5V"
+    }
+   },
+   "http": 200,
+   "error_code": null,
+   "events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "final": "completed",
+   "verdicts": [
+    [
+     "1N4004G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "vf_row": "| VF <= | 1.5 (v_drop_allowed) | 1 V | IF = 1A, TJ = 25°C | 통과 | 1N4001G SERIES_P2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Forward voltage(1) |",
+   "answer_equals_recording": true,
+   "failed_error": null,
+   "rows_after_resume": {
+    "sojafit_agent.checkpoints total": "158",
+    "sojafit_agent.checkpoint_writes total": "964",
+    "sojafit_agent.checkpoint_blobs total": "524",
+    "sojafit_agent.store total": "3",
+    "checkpoints for thread": "15",
+    "checkpoint_writes for thread (count, channels)": "86 answer,approved_memories,branch:to:끝내기,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:답 검사,branch:to:답 정리,branch:to:답 모으기,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,__resume__,round,run_version,synth_text,target,target_part,task,user_id",
+    "checkpoint_blobs for thread": "47",
+    "public.runs status for thread": "completed"
+   },
+   "get_run_after": {
+    "http": 200,
+    "status": "completed"
+   }
+  },
+  "v3-01": {
+   "resume_issued_kst": "2026-11-13T05:22:46.814+09:00",
+   "body": {
+    "answers": {}
+   },
+   "http": 200,
+   "error_code": null,
+   "events": [
+    "run_started",
+    "status",
+    "completed"
+   ],
+   "final": "completed",
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "vf_row": null,
+   "answer_equals_recording": true,
+   "failed_error": null,
+   "rows_after_resume": {
+    "sojafit_agent.checkpoints total": "164",
+    "sojafit_agent.checkpoint_writes total": "989",
+    "sojafit_agent.checkpoint_blobs total": "541",
+    "sojafit_agent.store total": "3",
+    "checkpoints for thread": "15",
+    "checkpoint_writes for thread (count, channels)": "86 answer,approved_memories,branch:to:끝내기,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:답 검사,branch:to:답 정리,branch:to:답 모으기,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,__resume__,round,run_version,synth_text,target,target_part,task,user_id",
+    "checkpoint_blobs for thread": "47",
+    "public.runs status for thread": "completed"
+   },
+   "get_run_after": {
+    "http": 200,
+    "status": "completed"
+   }
+  }
+ },
+ "evidence_meta": {
+  "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+  "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+  "branch": "jeongun-2 (PR #116 head; NOT main)",
+  "baseline_measurement": "b5f050d",
+  "note": "Code under test is branch jeongun-2 @ ad8612e, not main. Tie to main by tree hash after merge.",
+  "measured_at_kst": "2026-11-13T05:23:11.041+09:00"
+ }
+}

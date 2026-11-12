@@ -1,0 +1,16 @@
+# D10 re-measurement (boot2): exact steps (2026-11-13 KST)
+
+Code under test: **branch `jeongun-2` @ `ad8612e61c86be4376af5cca454843bb35cdc44d`** (PR #116 head), tree `6452cdfc4188942e62b1be7e2eb73c55094c3b97`. **Not `main`.** Baseline measurement: `b5f050d` (../boot/). Same method and scripts as the baseline (boot.py, login.py, analyze.py, g4.py rewritten for the new recordings).
+Host: Apple M2, Docker 29.7.2. `$GH_TOKEN` = `gh auth token`, passed only as an env var of `docker exec` (never in a file or log).
+
+1. `docker run -d --privileged --name d10b-dind-1113 -e DOCKER_TLS_CERTDIR= docker:dind` (no published ports; image pulled for this run).
+2. `python3 scripts/boot.py prep` (empty_before.txt; `apk add git python3 py3-httpx tzdata` before T0; `docker events`), `docker cp scripts/login.py ...:/tools/login.py`.
+3. `python3 scripts/boot.py cold`: host 1-min load > 6 -> wait (waited 80 s, load 5.62); T0 = `git clone -b jeongun-2` (token via env, remote URL reset), `docker compose up --build` (README command, no .env), poll `/health` every 0.4 s, demo login A, `python3 scripts/smoke/http_smoke.py --base-url http://localhost:8000 --demo --refusal` inside dind (same flags as the baseline).
+4. Test E (synthetic): `docker exec d10b-dind-1113 sh /tools/restart_test.sh` (scripts/restart_test.sh) x2 -> http_restart_test_run{1,2}_original.txt (both FAIL), then `scripts/restart_test_interval0.sh` (same + `-e ANALYSIS_MIN_INTERVAL_SECONDS=0`, repo untouched) -> PASS. `scripts/test_http_restart_DIAG.py` was a diagnostic copy (printing the resume response; mounted over the test file, never written into the repo) that showed 429 RATE_LIMITED.
+5. `python3 scripts/boot.py warm`: `docker compose down -v` then `docker compose up --build` (images + build cache kept), same polls and smoke.
+6. g4: `docker cp scripts/g4.py ...:/tools/g4.py; docker exec -w /work/proj3-b d10b-dind-1113 python3 /tools/g4.py` (restart = `docker compose restart api`). Run 1 (run1_discarded/, on the cold stack) and run 2 (run2_discarded/, on the warm stack) are kept but DISCARDED: bugs in my comparison rule (run 1: `judgement.results` and `shown` both counted; run 2: for `kind=find` the repo compares `shown`, `evals/runners/score_answer.py:47`). Final run 3 (g4_restart_isolation.*, demo_answers.json, checkpoint_rows.txt) on a freshly created DB: `docker compose down -v; docker compose up -d`, then g4.py. Not part of the timing.
+7. `python3 scripts/analyze.py` merges docker events + BuildKit timings into timeline_*.json (derived_seconds).
+8. Cleanup: dind container removed with `-v`; `docker:dind` image removed (it was pulled for this run).
+
+Differences from the baseline run: T0 clone uses `-b jeongun-2`; load wait rule added; g4.py now (A) runs all recorded questions, (B) keeps `demo-ask` and `v3-01` waiting across `docker compose restart api` and resumes them afterwards, (C) probes both directions incl. DELETE on sacrificial objects, approval/quote/approved-cases; replay_check (repo CI eval-replay) was not run again (smoke + g4 replay the recordings through the service instead).
+Not done by script: reading the repo docs; nothing was edited, committed or pushed in any repository; no .env; no API keys.
