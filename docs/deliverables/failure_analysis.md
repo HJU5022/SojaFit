@@ -48,7 +48,7 @@
 |---|---|---|
 | 품번 없는 질의의 후보 50 밖 | 남음(R1 test G4 Page Recall@5 0.625) | EVAL_REPORT 11장 1행 |
 | 표 주석 미부착 약 216표 | 남음. 동결셋 검색 지표로 재측정하지 않음 | EVAL_REPORT 11장 2행 |
-| 배포 HTTP 인젝션 T4 흔들림 | 토큰 한도 5M/10M 배포 뒤 재측정 전 | EVAL_REPORT 11장 3행 |
+| 배포 HTTP 인젝션 T4 흔들림 | 토큰 한도 상향 배포 뒤 재측정 전 | EVAL_REPORT 11장 3행 |
 | 승인 대기 시간 | 값 없음 | EVAL_REPORT 11장 4행 |
 | Langfuse 캡처, 시연 영상 파일 | 없음 | [DELIVERABLES.md](DELIVERABLES.md) |
 

@@ -11,7 +11,7 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
-| 배포 리비전 | `sojafit-api-e0a5e30`(태그 `limits5m`), 기록일 2026-11-12. 사용자 하루 예약 토큰 5M · 서비스 10M | `docs/worklog/jeongun.md` 11-12 항목. 커밋 `e0a5e30`(11-12 14:32)은 인증 통합(#109, 커밋 `3152ffc`, 11-12 20:28)보다 앞이라 이 리비전에는 #109 코드가 없다. `e0a5e30`부터 기준 커밋까지 54커밋 [실측 `git log e0a5e30..6707002`] |
+| 배포 리비전 | `sojafit-api-e0a5e30`(태그 `limits5m`), 기록일 2026-11-12. 하루 토큰 한도 상향(값은 [SPEC.md](SPEC.md) 8.6절) | `docs/worklog/jeongun.md` 11-12 항목. 커밋 `e0a5e30`(11-12 14:32)은 인증 통합(#109, 커밋 `3152ffc`, 11-12 20:28)보다 앞이라 이 리비전에는 #109 코드가 없다. `e0a5e30`부터 기준 커밋까지 54커밋 [실측 `git log e0a5e30..6707002`] |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
 | 기준 커밋 | `6707002` | 이 문서가 기술하는 코드. 동결 커밋(11-16 24:00)은 아직 정해지지 않았고, 동결 뒤 배포 리비전과 같은 코드인지 확인한다 |
 | 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
