@@ -7,8 +7,6 @@
 | [본실측03](../../evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl) | 실제 실행 110건 | [하정운 채점 사본](../../evals/results/threads/injection_baseline_live_2026-11-11_03_human_jeongun.jsonl)에 표본 20건 O, 같은 기준의 나머지 90건 대기 | 우선 31건에서 어시스턴트 품질 오류 후보 22건·정상 후보 9건. 사람 응답 품질 채점 대기 |
 | [스모크08](../../evals/results/threads/injection_t3_live_2026-11-11_08.jsonl) | 별도 실제 실행 2건 | 위 표본에 포함되지 않으며 사람 채점 기록 없음 | 우선 1건에서 어시스턴트 품질 오류 후보 1건. 사람 응답 품질 채점 대기 |
 
-하정운의 승인은 [본실측03 비용·실행 한도](../../evals/results/threads/injection_baseline_approval_2026-11-11_03.json)와 [스모크08 비용·실행 한도](../../evals/results/threads/injection_t3_approval_2026-11-11_08.json)에 대한 허가이며 개별 응답의 판정 승인이 아니다. 관련 AI 대화의 `사용자`는 그 AI를 사용한 심태현을 가리킨다. 두 실행의 지표와 분모는 합산하지 않는다. 원시 JSONL의 `human_review`는 측정 당시 상태이며, 본실측03의 사람 채점 정본은 위 20건 사본이다.
-
 ## 원시 파일 보관 위치 — 2026-11-11 정리
 
 최신 실측03의 원시 JSONL·meta·budget·approval 4개만 저장소에 남긴다. 이전 실측01·02와 스모크01~06의 32개는 원본 바이트 그대로 저장소 밖에 백업했고, 파일별 크기·SHA256을 대조했다. 아래 **백업 링크는 원문 파일 대신 [보관·해시 인덱스](../../evals/results/threads/injection_baseline_artifact_index_2026-11-10.json#/measured_runs_archive)**의 해당 항목을 가리킨다. 인덱스에 원래 경로·백업 절대/상대 경로·SHA256·복원 방법이 있다.
