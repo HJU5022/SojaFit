@@ -45,7 +45,7 @@ from psycopg_pool import ConnectionPool
 
 from backend.conversations import profile
 from backend.errors import ApiError
-from backend.graph.memory import namespace
+from backend.graph.memory import namespace, memory_policy
 
 LOGGER = logging.getLogger('backend.conversations')
 RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
@@ -288,7 +288,7 @@ class Conversations:
         from backend.rag.card_find import default_find
         from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
-        from backend.services import demo, llm
+        from backend.services import demo, exa, llm
         from backend.services.langfuse_prompts import timed_tool
         # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
         #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
@@ -299,7 +299,12 @@ class Conversations:
         specs, find = default_specs(chat=chat), default_find(chat=chat)
         # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. Spec 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
         # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
-        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
+        web_enabled = self.mode != 'demo' and exa.enabled()
+        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), web_enabled=web_enabled,
+            web_search=timed_tool('grade2_datasheet', exa.search_grade2_evidence) if web_enabled else None,
+            web_search_fallback=timed_tool('grade3_reference', exa.search_grade3_reference) if web_enabled else None,
+            judge_web_search_fallback=timed_tool('grade3_reference_judge', exa.search_grade3_reference) if web_enabled else None,
+            judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
@@ -491,7 +496,9 @@ class Conversations:
         trace_id = uuid4().hex
         traces, trace_metadata = service_trace.callbacks(trace_id, thread, self.mode)
         try:
-            with evaluation_limits(budget), langfuse_prompts.analysis_timings(timings):
+            user = conn.execute('SELECT user_id FROM threads WHERE id=%s', (thread,)).fetchone()['user_id']
+            from backend.services.exa import request_scope
+            with request_scope(), evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
                 self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings, *traces], 'metadata': trace_metadata})
                 budget.remaining()
@@ -559,6 +566,16 @@ class Conversations:
         pending = [i for task in snapshot.tasks for i in task.interrupts]
         if (snapshot.values or {}).get('run_version') == row['version'] and (not snapshot.next or pending):
             self._finish(conn, row['id'], snapshot)
+
+
+
+    def _current_memories(self, user, items):
+        if not items:
+            return []
+        # checkpoint의 과거 사본 대신 현재 승인 원본/상태/정정 메모를 다시 읽는다.
+        active = {(m['thread_id'],m['version']):m for m in self.memories(user)}
+        return [active[(m['thread_id'],m['version'])] for m in items
+                if (m['thread_id'],m['version']) in active]
 
 
 if __name__ == '__main__':

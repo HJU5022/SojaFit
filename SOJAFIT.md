@@ -43,25 +43,46 @@ SojaFit (proj3-b)
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
 │   ├── index.html          <- React 진입 HTML
-│   ├── vite.config.ts      <- React·API 프록시·Vitest 설정
+│   ├── vite.config.ts      <- React·API 프록시·Vitest와 실제 데모 JSON 기반 dummy virtual module 설정
 │   ├── tsconfig.json       <- TypeScript 프로젝트 참조
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
 │   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
-│   │   └── sojafit-circuit-hero.png <- 프로젝트 미선택 랜딩의 회로 배경 이미지
+│   │   ├── circuit-schematics/ <- 검증된 공개 원본에서 고정한 데모 회로도 PNG
+│   │   │   ├── breadboard_supply.png <- SparkFun Breadboard Power Supply 원본 회로도
+│   │   │   ├── mosfet_driver.png <- Adafruit MOSFET driver 원본 회로도
+│   │   │   ├── attiny85_dev.png <- ATtiny85 dev board 원본 회로도
+│   │   │   ├── franzininho_diy.png <- Franzininho DIY 원본 회로도
+│   │   │   ├── pro_micro.png <- SparkFun Pro Micro 원본 회로도
+│   │   │   ├── attiny85_time_switch.png <- ATtiny85 Time Switch 원본 회로도
+│   │   │   ├── fc_rom_vomitter.png <- FC ROM Vomitter 원본 회로도
+│   │   │   ├── attiny2313a_thermostat.png <- ATtiny2313A Thermostat 원본 회로도
+│   │   │   ├── tiny85_fan_control.png <- tiny85 Fan Control 원본 회로도
+│   │   │   ├── ug56_pwm_controller.png <- UG56 PWM Controller 원본 회로도
+│   │   │   ├── car_radio_acc_delay.png <- Car Radio ACC Delay 원본 회로도
+│   │   │   ├── overengineered_psu.png <- OverEngineered PSU 원본 회로도
+│   │   │   ├── tinydimmer.png <- tinydimmer 원본 회로도
+│   │   │   ├── hrem.png <- HRem 원본 회로도
+│   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
+│   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
+│   │       ├── ASSETS.md   <- 폴더 설명
+│   │       ├── sojafit-logo.svg <- 승인된 Circuit S·SOJAFIT 가로형 헤더 로고
+│   │       └── sojafit-icon.svg <- 승인된 Circuit S 심볼의 파비콘
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
 │   │   ├── E2E.md          <- 폴더 설명
 │   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
 │   │   ├── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
-│   │   └── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
+│   │   ├── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
+│   │   └── circuit-layout.spec.ts <- 연결 개념도의 Worker 배치·직교 배선 브라우저 시험
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
 │       ├── main.tsx        <- Router·QueryClient·React 진입점
 │       ├── App.tsx         <- 로그인·가입·작업대·관리자 화면 셸
 │       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
 │       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
+│       ├── dummy-circuits.d.ts <- 실제 데모 JSON을 묶는 build-time virtual module 타입
 │       ├── api/            <- 기존 서버 API의 typed fetch 경계
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
 │       │   ├── auth.ts     <- 로그인·가입(동의)·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
@@ -80,9 +101,11 @@ SojaFit (proj3-b)
 │       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
 │       │   ├── useRunStream.ts <- D5 시작·재개·연결 복구 상태 머신
-│       │   └── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
+│       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
+│       │   └── useOverlayScrollbar.ts <- 콘텐츠 위에 겹치는 스크롤 손잡이와 포인터·키보드 스크롤 연결
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
+│       │   ├── LandingPage.tsx <- 목업 기반 공개 랜딩·합성 기능 미리보기·인증 상태에 따른 시작 경로
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
 │       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
@@ -93,18 +116,23 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
 │       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
+│       │   ├── AccountMenu.tsx <- 작업대·설정 공통 이메일 계정 메뉴·개인 화면 설정·로그아웃
 │       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
-│       │   ├── LandingServiceIntroduction.tsx <- 랜딩의 회로·근거·사람 승인 서비스 소개
 │       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
 │       │   ├── CircuitSetup.test.tsx <- 데모·업로드·오류·입력 폐기·비저장 테스트
 │       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택·연결 개념도 조합
 │       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
+│       │   ├── CircuitSchematic.tsx <- 검증된 데모 원본 회로도·출처·라이선스 표시
+│       │   ├── CircuitSchematic.test.tsx <- 원본 회로도·누락·이미지 오류·접근성 테스트
 │       │   ├── circuitContext.ts <- 프로젝트 연결·안전 판정 응답의 순수 화면 adapter
 │       │   ├── circuitContext.test.ts <- 직접·2단계 연결·누락값 adapter 테스트
 │       │   ├── CircuitContextDiagram.tsx <- 대상 중심 SVG 연결 개념도·노드 상세
 │       │   ├── CircuitContextDiagram.test.tsx <- SVG·상태·무방향 연결 렌더링 테스트
+│       │   ├── circuitLayout.ts <- 네트·부품 그래프의 페이지 분할과 안전한 fallback 배치
+│       │   ├── circuitLayout.test.ts <- 그래프 페이지·초과 연결·입력 순서 독립성 테스트
+│       │   ├── circuitLayoutClient.ts <- 연결 개념도 Worker 요청과 fallback 결과 경계
 │       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
 │       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
 │       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면, 키 없는 데모의 기록 질문 버튼(새 대화) · 기록한 답으로 재개
@@ -120,6 +148,8 @@ SojaFit (proj3-b)
 │       │   ├── ApprovedCasesPanel.tsx <- 사용자 승인 사례 목록·확인 삭제
 │       │   ├── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
 │       │   └── QuotePanels.test.tsx <- 승인·견적 비저장·사례 삭제 화면 테스트
+│       ├── workers/         <- 화면 밖에서 실행하는 계산 Worker
+│       │   └── circuitLayout.worker.ts <- elkjs layered·orthogonal 회로 배치 Worker
 │       └── test/           <- 화면 테스트 설정
 │           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리
@@ -142,13 +172,22 @@ SojaFit (proj3-b)
 │   │   ├── prices.py       <- 가격·재고 API(GET /api/prices, 요청 때 Mouser 한 번, 저장 안 함)
 │   │   ├── profile.py      <- 내 설정(사용자 사실 기억) GET·PATCH·DELETE /api/me/memory, 탈퇴 DELETE /api/me
 │   │   ├── quotes.py       <- 사람 승인·견적·승인 사례 API
+│   │   ├── external_circuits.py <- 공개 저장소 완성 회로도 manifest·PNG 시트 API
 │   │   └── projects.py     <- 사용자 프로젝트 CRUD(삭제는 같은 UUID 분석 기록까지)·공개 데모 카탈로그 API
 │   ├── projects/           <- 사용자 소유 데모 프로젝트·정규화 회로 저장 경계
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── models.py       <- 프로젝트 목록·상세 공개 DTO
 │   │   ├── netlist.py      <- 원본을 남기지 않는 제한된 KiCad export 정규화
-│   │   └── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   │   ├── catalog.py      <- 단일 회로 catalog의 ID·이름·연결 경로 검증과 안전한 조회
+│   │   ├── repository.py   <- 데모 회로 카탈로그(DEMOS)와 파일 경로(demo_path), 소유자 필터·원자적 생성·이름 변경·cascade 삭제 SQL
+│   │   ├── visuals.py      <- 검증된 데모 회로도 catalog·원본/배포 해시 검증과 공개 metadata
+│   │   ├── external_circuit_search.py <- Exa 결과에서 안전한 GitHub 저장소 루트 후보만 정제
+│   │   ├── schematic_source.py <- 검증된 외부 회로도 source DTO
+│   │   ├── external_schematic.py <- 공개 저장소 출처·라이선스·commit 검증과 bounded cache
+│   │   ├── schematic.py <- shell 없는 KiCad PDF export 경계
+│   │   ├── schematic_render.py <- PDF/SVG/PNG를 제한된 해상도 PNG로 변환
+│   │   └── schematic_discovery.py <- EDA 원본에 대응하는 전체 회로도 자산 판정
 │   ├── conversations/      <- 소유 대화·메시지·실행 저장
 │   │   ├── CONVERSATIONS.md  <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시
@@ -171,6 +210,7 @@ SojaFit (proj3-b)
 │   │   ├── MULTI_AGENT.md  <- 폴더 설명: 왜 graph/와 분리했는지, 의존 방향, 구조 결정, 구현 상태
 │   │   ├── __init__.py     <- 패키지 표시
 │   │   ├── contracts.py    <- 결정서·보고서의 모양, 이유 코드, 루프 한도와 한도 검사
+│   │   ├── revisions.py    <- 질문과 사용 조건의 지정 판본을 문서 파일명의 판본과 대조
 │   │   ├── supervisor.py   <- Supervisor: 질문·사실·보고·한도 현황을 글로 만들어 LLM에 주고 결정서를 받음. 한도·꺼진 웹이면 거절로 바꿈
 │   │   ├── state.py        <- 멀티용 공용 메모장(MultiState): 보고서·결정서·횟수는 dict, path는 단일 그래프와 같은 말
 │   │   ├── facts.py        <- 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 Facts를 만듦
@@ -185,6 +225,7 @@ SojaFit (proj3-b)
 │   │   ├── JUDGE.md        <- 폴더 설명
 │   │   ├── __init__.py     <- 패키지 표시(빈 파일)
 │   │   ├── sheet_conditions.py  <- 시험 조건 글 읽기와 같은 조건인지 비교
+│   │   ├── pdf_claims.py   <- 공식 PDF 인용 문장의 품번·값·단위를 원문 셀과 대조
 │   │   ├── conditions.py   <- 역할 규칙 읽기와 대체 조건 기준값 계산
 │   │   ├── verdict.py      <- 조건별 비교·판정 5종·찾기 조건·후보 정렬
 │   │   └── rules/          <- 판정 규칙 파일. 형식은 SPEC 5절에서 정함
@@ -211,6 +252,7 @@ SojaFit (proj3-b)
 │   │   ├── card_find.py    <- 서비스 기본 후보 찾기(ADR 0016): 개요 줄로 문서 고르기(코드 먼저, 못 하면 LLM) → 카드 읽기 → 조건 거르기 · 찾기 순위
 │   │   ├── card_specs.py   <- 서비스 기본 판정 값을 카드에서 읽기, 사실 확인용 문서 행(ADR 0016)
 │   │   ├── storage.py      <- 벡터 열 형식(vector/halfvec) 결정과 DB 용량·형식 비교 CLI
+│   │   ├── source_metadata.py <- manifest와 패키지 외형 색인의 exact document lookup
 │   │   ├── units.py        <- 표 값의 단위 환산. judge가 읽기만 함(SPEC 3절)
 │   │   └── pipeline/       <- 오프라인 데이터 도구. python -m backend.rag.pipeline.<모듈>로 실행, 서버는 import 안 함(specs.py 공용 규칙만 카드 도구가 import)
 │   │       ├── __init__.py <- 패키지 표시
@@ -218,6 +260,7 @@ SojaFit (proj3-b)
 │   │       ├── parse.py    <- PDF를 Docling으로 파싱하고 표 숫자를 pdfplumber로 대조
 │   │       ├── chunk.py    <- 파싱 결과를 검색 청크(표지·글·표 행)와 manifest로 만듦
 │   │       ├── ingest.py   <- manifest·청크·임베딩을 DB에 적재, 벡터 캐시 지원
+│   │       ├── package_outlines.py <- Docling 표제·그림에서 패키지 외형 페이지 색인 생성
 │   │       ├── specs.py    <- 표 행 청크 공용 규칙(코드 · SI 단위 · 기호 · 낱말 표, 패키지 · 분류 이름, 양방향 · AEC-Q101 문장)과 해석기: 카드 한 장 읽기(read_card, card_read가 씀). 사양 표 만들기 · 적재 명령은 11-10에 지움(ADR 0016)
 │   │       ├── subset.py   <- 용량 예산에 맞춰 일부 분류 문서만 뽑음
 │   │       └── demo_snapshot.py  <- 키 없는 compose가 적재할 데모 코퍼스 스냅샷(data/demo/snapshot/)을 전체 청크에서 규칙대로 뽑음
@@ -229,6 +272,8 @@ SojaFit (proj3-b)
 │   │   ├── service_trace.py  <- 서비스 분석의 모델 호출별 Langfuse 추적(본문 제거 훅, 메타만 전송)
 │   │   ├── demo.py           <- 키 없는 데모의 LLM 응답 기록(recorder) · 재생(replayer, 기록에 없으면 노드 이름을 담은 ReplayMiss), 재생 모드 판단, 기록한 데모 질문 목록 · 대조, 외부 호출 없음
 │   │   ├── quote.py        <- 사람 승인·가격 없는 견적·승인 사례 저장
+│   │   ├── exa.py <- 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
+│   │   ├── datasheet_rows.py <- 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
 │   │   └── mouser.py       <- Mouser 가격·재고 조회(요청 때 한 번, 화면 칸만 고름, 프로세스 호출 상한), 응답은 저장·로그하지 않음(ADR 0009)
 │   ├── web/                <- 빌드한 React 화면(frontend/dist)을 같은 출처로 연결하는 어댑터
 │   │   ├── WEB.md          <- 폴더 설명
@@ -243,6 +288,7 @@ SojaFit (proj3-b)
 ├── data/                   <- 서비스·평가가 읽는 고정 데이터. Dockerfile이 이미지에 복사 (고정)
 │   ├── DATA.md             <- 폴더 설명과 manifest 형식
 │   ├── manifest.jsonl      <- 코퍼스 문서 목록 1,360줄(문서 단위: id, 판본, 출처, sha256)
+│   ├── package-outline-pages.json <- 공식 PDF basename별 패키지 외형 페이지 색인 1,360건
 │   ├── corpus/             <- 코퍼스 원본 문서. 출처별 하위 폴더, 원본은 고치지 않음
 │   │   ├── CORPUS.md       <- 폴더 설명, 출처별 폴더와 재배포 조건
 │   │   ├── tsc/            <- TSC 다이오드 데이터시트 원본 표본 3건(PDF). 전체 1,360건 외부 작업 자료의 위치·준비 상태는 별도 확인
@@ -257,6 +303,8 @@ SojaFit (proj3-b)
 │   │       └── input_surfaces_v1.json  <- 다섯 입력 위치 정상·공격 10건
 │   ├── circuits/           <- 평가·시연용 공개 KiCad 회로와 라이선스
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
+│   │   ├── catalog.json    <- 데모 ID·이름·정규화 연결 JSON 경로의 단일 catalog
+│   │   ├── visuals.json    <- 데모 원본 회로도 URL·라이선스 근거·원본/배포 SHA-256 catalog
 │   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 자료: 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
@@ -277,6 +325,7 @@ SojaFit (proj3-b)
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 020_service_baseline.sql  <- 서비스 표 기준선(11-11 M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
+│   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈(main 회로 catalog; 새 기준선 DB에서는 catalog 계약이 baseline에 흡수됐는지 적용 순서를 DB.md로 확인)
 │   ├── legacy/             <- 기준선 이전의 옛 증분 서비스 SQL(이력용, 실행하지 않음)
 │   │   ├── LEGACY.md       <- 폴더 설명
 │   │   ├── 003_auth.sql  <- 사용자·세션·로그인 시도 표
@@ -445,6 +494,14 @@ SojaFit (proj3-b)
 │       │   ├── 2026-11-11-d8-stages/  <- D8 현재 코드 v3 50문항 1세트(문항별 단계 시간 · 모델 호출별 비용)와 집계(stage_summary.json)
 │       │   └── 2026-11-11-d8-stages-rerun/  <- 같은 측정에서 공급자 429로 실패한 8문항 재실행
 │       ├── threads/        <- 사용자 분석 thread 확인: 키 없는 compose의 체크포인트 재개 · 사용자 격리(G4), 입력 회귀, 실제 호출 smoke
+│       │   ├── injection_t3_live_2026-11-11_08.jsonl <- 미완료 상태 정리 후 T3 스모크08 원시 결과
+│       │   ├── injection_t3_live_2026-11-11_08.meta.json <- 스모크08 입력·코드 해시
+│       │   ├── injection_t3_live_2026-11-11_08.budget.json <- 스모크08 공유 예약·시도 원장
+│       │   ├── injection_t3_approval_2026-11-11_08.json <- 스모크08 독립 승인·등록·측정 커밋
+│       │   ├── injection_t3_smoke_live_2026-11-11_07.jsonl <- T3 정상·공격 2작업 스모크07 원시 결과
+│       │   ├── injection_t3_smoke_live_2026-11-11_07.meta.json <- 스모크07 코드·입력 해시와 종료 상태
+│       │   ├── injection_t3_smoke_live_2026-11-11_07.budget.json <- 스모크07 공유 시도·예약 예산 원장
+│       │   └── injection_t3_smoke_approval_2026-11-11_07.json <- 스모크07 정확한 등록·측정 커밋과 승인 상한
 │       └── supervisor/     <- 수퍼바이저 모델 비교의 계획·문항별 결과·집계·provider 근거
 │           ├── 2026-11-04-preflight-v5/  <- 초기 provider 호출 증거(manifest·DeepSeek row·smoke)
 │           ├── 2026-11-04-routing-fix-smoke-v1/  <- Haiku·Luna 수정 후 smoke 증거
@@ -510,12 +567,19 @@ SojaFit (proj3-b)
 │   │   ├── test_threads.py <- 업로드·분석 소유권·DB 상태 복구·승인 기억, React 대화 연결 통합 시험, 데모 재생의 확인 자리(기록한 첫 질문 · 재개 답만)와 그래프 조립
 │   │   ├── test_injection_http.py  <- 배포 HTTP 인젝션 시험 스크립트를 가짜 서버로: 정상 통과, 공격에서 판정이 바뀌면 실패 · 정상 실패는 결론 못 냄 · 하루 한도에서 멈춤, 결과 파일에 비밀번호 · 답 글 · 공격문 없음
 │   │   ├── test_http_smoke.py  <- HTTP 점검 스크립트(scripts/smoke/)를 가짜 서버로: 전체 통과 · 두 번째 승인 409 통과, requires_input 없으면 실패 · 뒤 단계 건너뜀, 결과 파일에 비밀번호 · 쿠키 · 이메일 없음
-│   │   └── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
+│   │   ├── test_prices.py  <- 가격·재고 API(가짜 Mouser): 로그인 필요, no-store, 데모·키 없음·상한·실패의 값 없음, 품번 422, 로그에 키·값 없음
+│   │   └── test_external_circuits.py <- 완성 회로도 manifest·PNG API
 │   ├── projects/           <- 프로젝트 저장소의 소유권·원자성·실제 DB 제약 시험
 │   │   ├── PROJECTS.md     <- 폴더 설명
 │   │   ├── test_netlist.py  <- KiCad 크기·문법·자원 상한·불변 정규화 시험
 │   │   ├── test_project_repository.py  <- 소유자 필터·cascade·롤백·공개 권한·인덱스 검증, 받은 회로 데모(c01) 경로
-│   │   └── test_service_schema.py  <- 서비스 표 재설계 규칙 시험: 삭제 연쇄 · 승인 칸 · 단순 CHECK · 견적 제약(일회용 DB, 기준선 적용)
+│   │   ├── test_service_schema.py  <- 서비스 표 재설계 규칙 시험: 삭제 연쇄 · 승인 칸 · 단순 CHECK · 견적 제약(일회용 DB, 기준선 적용)
+│   │   ├── test_catalog.py <- 회로 catalog 15종·안전한 ID·연결 경로 검증
+│   │   ├── test_visuals.py <- 회로도 catalog 15종·원본/배포 해시·경로·라이선스 검증
+│   │   ├── test_external_circuit_search.py <- GitHub 저장소 URL·Exa 호출 상한
+│   │   ├── test_external_schematic.py <- 출처·전체 시트·cache·서명 token 경계
+│   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
+│   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
 │   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)
 │   │   ├── DB.md           <- 폴더 설명
 │   │   └── test_schema_docs.py  <- 표 정의서 · ERD 생성기 시험과 커밋된 db/schema 문서가 기준선 DB와 같은지 확인하는 어긋남 시험
@@ -564,10 +628,12 @@ SojaFit (proj3-b)
 │   │   ├── test_voyage_rollout.py  <- voyage 적용 스크립트의 STOP 규칙·db/008 분기 글(가짜 연결, DB 없이)
 │   │   ├── test_rag_retrieve.py  <- 검색 규칙(DB 시험은 TEST_DATABASE_URL이 있을 때만)
 │   │   ├── test_rag_storage.py  <- halfvec 전환·재적재·정확 검색 계약
+│   │   ├── test_package_outlines.py <- 패키지 외형 페이지 생성·전수 색인·exact lookup 계약
 │   │   ├── test_rag_subset.py  <- 문서 일부 뽑기 계약
 │   │   └── test_demo_snapshot.py  <- 데모 코퍼스 스냅샷의 sha256·건수·ingest 모양, 고르기 규칙, 원본에서 다시 뽑기(DEMO_SNAPSHOT_SOURCE가 있을 때만)
 │   ├── services/           <- 외부 호출 입구
 │   │   ├── SERVICES.md     <- 폴더 설명
+│   │   ├── test_datasheet_rows.py <- 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
 │   │   ├── test_quote_service.py <- 승인 판정·가격 키 재귀 거절 시험
 │   │   ├── test_demo_replay.py  <- 데모 응답 기록 → 재생이 같은 결과(서비스 조립 · 조건 인터럽트 · 기록한 답 재개 포함), 기록에 없는 호출은 노드 이름 오류로 멈춤, 기록 없음 503, 기록 질문 대조, 기록 줄 칸, 기록 스크립트 멈춤 조건(가짜 LLM)
 │   │   ├── test_llm.py     <- LLM 호출 입구: 데모 모드, 재시도 상한, 평가 예산
@@ -646,7 +712,8 @@ SojaFit (proj3-b)
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   ├── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
-│   │   └── injection_http.py <- 배포 HTTP로 인젝션 T4 · T6 · T7을 정상/공격 짝으로 한 번씩 보내 PR #85 자동 기준으로 판정(답 글 미저장)
+│   │   ├── injection_http.py <- 배포 HTTP로 인젝션 T4 · T6 · T7을 정상/공격 짝으로 한 번씩 보내 PR #85 자동 기준으로 판정(답 글 미저장)
+│   │   └── verify_external_schematics.py <- 외부 완성 회로도 manifest·PNG smoke
 │   ├── bit_search/         <- 비트 후보 + 정확 재정렬 검색 속도·recall 실측
 │   │   ├── BIT_SEARCH.md   <- 폴더 설명
 │   │   └── bit_search_exp.py  <- 실험 표 exp_bq를 만들어 시간·recall@50을 재고 지움(측정 당시 DB용)
@@ -693,6 +760,7 @@ SojaFit (proj3-b)
 │   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
 │   │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
 │   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+│   │   ├── official-datasheet-evidence.md <- 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
 │   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
 │   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
 │   │   ├── judge-agent.md  <- Spec 에이전트와 대체품 찾기
@@ -700,7 +768,18 @@ SojaFit (proj3-b)
 │   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
 │   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
 │   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
-│   │   └── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
+│   │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
+│   │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
+│   │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
+│   │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
+│   │   └── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
+│   ├── superpowers/        <- 승인된 구현 계획 원문
+│   │   ├── SUPERPOWERS.md  <- 폴더 설명
+│   │   ├── plans/
+│   │   │   ├── 2026-11-10-verified-circuit-and-datasheet-visuals.md <- 검증 회로도·데이터시트 시각화 실행 계획
+│   │   │   └── 2026-11-11-complete-schematic-delivery.md <- 외부 완성 회로도 전달 계획
+│   │   └── specs/          <- 외부 완성 회로도 설계
+│   │       └── 2026-11-11-complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계
 │   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
 │   │   ├── EXPERIMENTS.md  <- 폴더 설명
 │   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
@@ -721,7 +800,9 @@ SojaFit (proj3-b)
 │   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
 │   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
 │   │   ├── RESEARCH.md     <- 폴더 설명
-│   │   ├── injection-smoke-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
+│   │   ├── grade-evidence-validation.md <- 1→2→3등급 검증·실측 결과와 PR 범위
+│   │   ├── injection-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
+│   │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
 │   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
 │   │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
 │   │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
@@ -839,6 +920,7 @@ SojaFit (proj3-b)
 | `docs/assets/` | [ASSETS.md](docs/assets/ASSETS.md) | 평가·문서 |
 | `docs/adr/` | [ADR.md](docs/adr/ADR.md) | 결정을 낸 담당 |
 | `docs/specs/` | [SPECS.md](docs/specs/SPECS.md) | 그 기능의 담당 |
+| `docs/superpowers/` | [SUPERPOWERS.md](docs/superpowers/SUPERPOWERS.md) | 그 기능의 담당 |
 | `docs/experiments/` | [EXPERIMENTS.md](docs/experiments/EXPERIMENTS.md) | 그 실험의 담당 |
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |

@@ -10,6 +10,8 @@
 `login-auth.md`의 수용 기준은 루트 `SPEC.md` 8.6(로그인)과 겹칩니다. 내용이 다르면 `SPEC.md`를 따릅니다.
 
 ## 파일
+- `official-datasheet-evidence.md` — 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
+- external-complete-schematics.md — 공개 저장소에서 검증한 완성 회로도 전체 시트의 백엔드 제공 계약
 - `evaluator-demo-readiness.md` — 평가자 HTTP·키 없는 Compose 데모·서비스 관측·CI 회귀와 제출 증거 수정 준비
 - `_example.md` — 강사 스캐폴드의 작업서 형식 예시(AGENTS.md가 가리킴)
 - `login-auth.md` — 로그인과 사용자 식별 작업서(이메일·비밀번호 로그인·자기 가입, 서버 세션, 가입·로그인·토큰 한도)
@@ -25,5 +27,8 @@
 - `supervisor-v0-langfuse-import.md` — 완료된 Supervisor V0 결과를 모델 재호출 없이 Langfuse Dataset·Experiment로 가져오는 작업서
 - `d5-frontend-service.md` — React·Vite 화면과 D5 서비스 연결 기능 계약
 - `circuit-context-diagram.md` — 실제 프로젝트·분석 데이터에 기반한 대상 부품의 1·2단계 연결 개념도 기능 계약
+- `verified-circuit-and-datasheet-visuals.md` — 검증된 데모 원본 회로도와 공식 데이터시트·패키지 외형 근거 표시 계약
 - `dummy-full-flow.md` — 개발 전용 메모리 API로 로그인부터 승인·견적·사례 삭제까지 실행하는 기능 계약
 - `workbench-information-architecture.md` — D5 계약을 유지하는 4영역 작업대·정보 콘솔·접근 가능한 상세 dialog 기능 계약
+- `frontend-screen-redesign.md` — 랜딩·로그인·대화 중심 작업대 적용 계약
+- `project-conversation-navigation.md` — DB 구조를 유지하는 프로젝트·이전 대화 탐색 API 계약

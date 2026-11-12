@@ -21,9 +21,11 @@ from pathlib import Path
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from backend.graph.memory import memory_context, memory_sources
+from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.revisions import document_revision, requested_revisions, revision_matches
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -54,14 +56,15 @@ def render_facts(facts: Facts) -> list[str]:
     return lines
 
 
-def render_plan(state: dict, judge_enabled: bool) -> str:
+def render_plan(state: dict, judge_enabled: bool, web_enabled: bool = False) -> str:
     """계획 LLM에 줄 user 글(영어 라벨). 청크 원문은 없다: 질문 · 대상 · 사용 조건 · 확인된 사실 · 쓸 수 있는 에이전트."""
     part = state.get('target_part') or {}
     # Footprint annotations are untrusted metadata, not planning or role instructions.
     target = f"{part.get('ref', state.get('target', ''))} {part.get('value', '')}".strip() or state.get('target', '')
     agents = ['docs'] + (['judge'] if judge_enabled else [])
     lines = [f"Question: {state['question']}", f'Target part: {target or "(none)"}', f"Conditions: {state.get('conditions', '')}",
-             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents)]
+             *render_facts(Facts(**(state.get('facts') or {}))), 'Agents you may use: ' + ', '.join(agents),
+             f'External web fallback: {"enabled" if web_enabled else "disabled"}']
     if state.get('reports'):
         # [왜] 재계획: 앞 회차의 지시서와 보고 요약만 준다(청크 원문 · 판정 표는 주지 않는다, 컨텍스트 분리)
         tasks = {t['id']: t for t in (state.get('plan') or {}).get('tasks', [])}
@@ -74,14 +77,14 @@ def render_plan(state: dict, judge_enabled: bool) -> str:
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
-def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
+def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bool = False) -> dict:
     """그래프 노드 `Supervisor`(계획): 계획서를 받는다(재계획이면 앞 회차 보고도 읽는다). 형식이 끝내 틀리면 거절로 끝낸다."""
     replan = bool(state.get('reports'))
     old = state.get('counters') or {}
     c = {'hops': old.get('hops', 0) + 1, 'agents': old.get('agents', 0), 'searches': old.get('searches', 0),
          'replans': old.get('replans', 0) + (1 if replan else 0)}
     try:
-        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled), Plan)
+        plan = chat('supervisor', PROMPT, render_plan(state, judge_enabled, web_enabled), Plan)
     except ValueError:
         # [왜] llm.chat이 형식을 다시 맞춰 보고도(MAX_FORMAT_RETRIES) 틀리면 ValueError를 낸다. 틀린 계획으로 서브에이전트를 부르지 않는다(MULTI_AGENT.md "구조 결정")
         if replan:  # 재계획만 틀렸으면 이미 받은 보고로 답한다
@@ -111,7 +114,8 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False) -> dict:
 
 def payload(state: dict, task: dict) -> dict:
     """Send 꾸러미: 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받는다(컨텍스트 분리)."""
-    base = {'task': task, 'question': state['question'], 'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
+    base = {'task': task, 'question': state['question'], 'conditions': state.get('conditions', ''),
+            'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
     if task['agent'] == 'judge':
@@ -147,6 +151,8 @@ def collect_node(state: dict) -> dict:
     out = {'counters': c, 'path': ['모으기']}
     if len(reports) > MAX_AGENT_RUNS:
         return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.LIMIT_REACHED.value}
+    if not bind_run_citations(reports):
+        return {**out, 'outcome': 'refuse', 'refusal_reason': Reason.VERIFY_FAILED.value}
     current = [r for r in reports if r.round == rnd]
     if plan.get('next') == 'answer':
         final = [r for r in current if r.status != 'fail'] or current  # 재계획이 '있는 답으로'라 했다: 이번 회차의 쓸 만한 보고
@@ -162,11 +168,21 @@ def collect_node(state: dict) -> dict:
     tried = lambda r: r.reason == Reason.ALL_REJECTED and len(r.searches) >= MAX_SEARCHES
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
                                                      or (r.status == 'partial' and r.reason in RETRY_REASONS))]
-    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (retry or plan.get('replan')):
-        if os.getenv('SUPERVISOR_REPLAN', '1') == '0':
-            pass  # [왜] 속도·정확도 A/B용. 기본(1)은 재계획 유지. 0이면 no_result 등에서도 docs 재시도 없이 아래 거절·답으로 간다
-        else:
-            return {**out, 'outcome': 'replan'}
+    # A candidate-find report with an actual table is already a usable answer.
+    # Haiku can leave ``replan`` set after that report, which used to send the
+    # same candidate search back through Supervisor and consume the remaining
+    # evaluation budget.  Keep retrying independent failed tasks, but do not
+    # repeat a plan-only replan when the candidate table is present.
+    has_candidate_table = any(
+        r.agent == 'judge'
+        and r.status == 'ok'
+        and r.judgement.get('kind') == 'find'
+        and (r.judgement.get('shown') or r.judgement.get('results'))
+        for r in current
+    )
+    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (
+            retry or (plan.get('replan') and not has_candidate_table)) and os.getenv('SUPERVISOR_REPLAN', '1') != '0':
+        return {**out, 'outcome': 'replan'}
     final_dump = {'final_reports': [r.model_dump(mode='json') for r in final]}
     good = [r for r in final if r.status != 'fail']
     if not good:
@@ -177,7 +193,12 @@ def collect_node(state: dict) -> dict:
     # 문서 답은 일부 실패해도 검증된 다른 보고를 그대로 보존한다. 종합이 이미 찾은 정격을 누락했던 T1 재발을 막는다.
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
-    joinable = len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
+    uses_pdf = any(cid.startswith('W') for r in good for cid in r.evidence_ids)
+    # A verified candidate table remains authoritative even when an auxiliary
+    # document task has a partial answer. Joining avoids a second model
+    # rewriting either its numeric conditions or the candidate list.
+    has_candidate_table = any(r.agent == 'judge' and r.judgement.get('kind') == 'find' for r in good)
+    joinable = uses_pdf or has_candidate_table or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -262,6 +283,10 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
                      + (f" (reason {r.reason.value})" if r.reason else ''))
         if r.status != 'fail':
             lines.append('answer:\n' + part_text(r))
+            if r.missing:
+                # 종합 모델이 부분 답을 한 예시로 축약하지 않도록, 답변에 포함해야 할
+                # 미충족 체크리스트를 원문 보고와 함께 전달한다.
+                lines.append('missing checklist: ' + '; '.join(r.missing))
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
@@ -291,7 +316,9 @@ def check_node(state: dict) -> dict:
         return {'path': ['답 검사']}  # 종합이 상한으로 멈췄다
     answer = state.get('answer') or ''
     reports = final_reports(state)
-    valid = {str(i) for i in state.get('passed') or []} | ({'넷리스트'} if state.get('target_part') else set())
+    valid = {str(i) for i in state.get('passed') or []}
+    if state.get('target_part') and any(r.agent == 'docs' and r.status != 'fail' and '넷리스트' in r.evidence_ids for r in reports):
+        valid.add('넷리스트')  # 재계획에서 버린 보고나 실패한 역할 작업은 최종 답에 근거 권한을 주지 않는다.
     invalid_memories = set(state.get('memory_refs') or []) - memory_sources(state.get('approved_memories') or [])
     judge_only = all(r.agent == 'judge' for r in reports if r.status != 'fail')
     cited = citations(answer)
@@ -299,6 +326,23 @@ def check_node(state: dict) -> dict:
     check = {'used': sorted(cited & valid), 'fake_citations': sorted(cited - valid),
              'uncited_sentences': sum(1 for s in sentences if not citations(s)), 'judgement': bool(state.get('judgement'))}
     problem = bool(check['fake_citations'] or invalid_memories) or (not judge_only and not check['used'])
+    expected_pdf = {cid for r in reports if r.status != 'fail' for cid in r.evidence_ids if cid.startswith('W')}
+    if expected_pdf or any(cid.startswith('W') for cid in cited):
+        if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:
+            problem = True
+    requested_revisions = _requested_revisions(state)
+    if requested_revisions:
+        # The final answer may only cite a document whose filename carries one
+        # of the revisions explicitly requested by the user. This closes the
+        # supervisor merge boundary after individual task filtering.
+        cited_docs = [d for d in state.get('docs') or [] if str(d.get('chunk_id')) in cited]
+        mismatched = [d for d in cited_docs
+                      if not revision_matches(' '.join((state.get('question', ''), state.get('conditions', ''))),
+                                              d.get('file') or d.get('document'),
+                                              d.get('doc_parts') or d.get('parts'))]
+        if mismatched:
+            check['revision_mismatch'] = [d.get('file') or d.get('document') for d in mismatched]
+            problem = True
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}
@@ -311,3 +355,11 @@ def check_node(state: dict) -> dict:
 
 def after_check(state: dict) -> str:
     return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']
+def _requested_revisions(state: dict) -> set[str]:
+    """Extract only revision codes explicitly present in the user's request."""
+    text = ' '.join((state.get('question', ''), state.get('conditions', '')))
+    return requested_revisions(text)
+
+
+def _document_revision(document: object) -> str:
+    return document_revision(document)

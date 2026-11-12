@@ -24,6 +24,13 @@ const project: Project = {
   },
 }
 
+it('shows verified input conditions even when the old separate field is empty', () => {
+  const judgement: JudgementDto = { kind: 'judge', roles: [], role_evidence: [], results: [], shown: [], unverified: [], capped: false,
+    input_conditions: [{ code: 'v_in_max', value: '20 V' }, { code: 'i_max', value: '0.15 A' }] }
+  const context = buildCircuitContext(project, 'D1', judgement, [], [], '')
+  expect(context.conditions).toEqual([{ code: 'v_in_max', label: '입력 전원 최대 전압', value: '20 V' }, { code: 'i_max', label: '다이오드 최대 순방향(부하) 전류', value: '0.15 A' }])
+})
+
 const judgement: JudgementDto = {
   kind: 'judge', roles: ['R01'], role_evidence: ['D1.K → RAW'], shown: [], unverified: [], capped: false,
   results: [{

@@ -89,7 +89,8 @@ class Picks(BaseModel):
 
 
 PICK_PROMPT = (Path(__file__).resolve().parents[1] / 'prompts' / 'card_pick.md').read_text(encoding='utf-8')
-N_PICK = 10  # 카드를 읽힐 문서 수 상한. [왜] 8개일 때 회차에 따라 정답 문서(SSB2H100H)가 빠졌다(h4-14, 11-08)
+N_PICK = 20  # 구매 규격 전체 후보를 위해 읽을 문서 수 상한. 검색 자체의 후보 상한(50)은 별도다.
+CODE_PICK_DEFAULT = 10  # 직접 호출하는 문서 선택기의 보수적 기본값(서비스는 n_docs를 명시한다)
 
 
 def pick_docs(conditions, package, overviews, *, chat):
@@ -161,7 +162,7 @@ def _title_fit(conditions, values):
     return known, inside, ratio
 
 
-def code_pick(conditions, package, overviews, category):
+def code_pick(conditions, package, overviews, category, max_docs=CODE_PICK_DEFAULT):
     """개요 줄의 범위 · 단위 · 패키지로 문서를 고른다(LLM 없음). → 문서 키 N_PICK개까지, 코드가 고를 근거가 없으면 None(LLM이 고른다).
 
     - 버림: 제목 값이 조건과 10% 넘게 어긋남, 제목이 원하는 패키지 말고 다른 패키지만 적음, 삽입형을 원하는데 제목이 표면실장.
@@ -196,9 +197,10 @@ def code_pick(conditions, package, overviews, category):
     if not checked:
         return None
     ranked.sort()
-    if len(ranked) > N_PICK and ranked[N_PICK - 1][0][1] == 0:
+    max_docs = max(1, min(int(max_docs), N_PICK))
+    if len(ranked) > max_docs and ranked[max_docs - 1][0][1] == 0:
         return None
-    return [k for _, k in ranked[:N_PICK]]
+    return [k for _, k in ranked[:max_docs]]
 
 
 def _meets(cond, row):
@@ -238,7 +240,7 @@ def make_find(*, retrieve, load_cards, read, chat, doc_meta, n_docs=10, overview
             # [왜] 코드가 제목의 범위 · 패키지로 먼저 고른다. LLM 고르기가 찾기 문항 시간의 약 3초였고, 기록된 18번 모두 코드가 정답 문서를
             #      LLM만큼 이상 골랐다(사전 등록 #44). 제목으로 줄 세울 근거가 없을 때만 LLM이 고른다
             lines = overviews(category)
-            keys = code_pick(conditions, package, lines, category)
+            keys = code_pick(conditions, package, lines, category, max_docs=n_docs)
             if keys is None:
                 keys = pick_docs(conditions, package, lines, chat=chat)
         else:
@@ -344,6 +346,8 @@ def load_cards(keys):
             doc['texts'].append(content)  # 패키지 이름('Case: SOD-123F')을 읽을 글. 표 주석은 aec_h만 본다
             # card_specs가 패키지 · AEC 행의 인용 쪽을 정할 때 쓴다
             doc['text_cards'].append({'chunk_id': chunk_id, 'page': page, 'table': table, 'row': row, 'content': content})
+    for doc in out.values():
+        doc['parts'] = sorted(documented_parts(doc))
     return out
 
 
@@ -368,6 +372,16 @@ def bi_copies(rows, doc):
     return out
 
 
+def documented_parts(doc):
+    """Include exact ordering H names only when their base belongs to this document."""
+    names = {p.upper() for p in doc['parts']}
+    if not doc.get('aec_h'):
+        return names
+    body = ' '.join(doc.get('texts', [])) + ' ' + ' '.join(c.get('content', '') for c in doc.get('cards', []))
+    mentioned = set(re.findall(r'(?<![A-Z0-9])[A-Z0-9][A-Z0-9-]{2,}H(?![A-Z0-9])', body.upper()))
+    return names | {p for p in mentioned if p[:-1] in names}
+
+
 def h_copies(rows, doc):
     """H 품번(표지에는 'XH', 값 표에는 X만)에 기본 품번 X의 행을 붙인다. 문서가 '"H" means AEC-Q101 qualified'라고 밝혔을 때만.
 
@@ -380,11 +394,11 @@ def h_copies(rows, doc):
     for r in rows:
         mine.setdefault(r['part'].upper(), []).append(r)
     out = []
-    for p in doc['parts']:
-        P = p.upper()
+    names = documented_parts(doc)
+    for P in names:
         if P.endswith('H') and P[:-1] in mine:
             have = {r['code'] for r in mine.get(P, [])}
-            out += [{**r, 'part': p} for r in mine[P[:-1]] if r['code'] not in have]
+            out += [{**r, 'part': P} for r in mine[P[:-1]] if r['code'] not in have]
     return out
 
 

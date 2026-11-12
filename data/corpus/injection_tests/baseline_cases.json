@@ -4,6 +4,14 @@
   "purpose": "injection_test",
   "synthetic": true,
   "execution_enabled": false,
+  "t3_smoke": {
+    "execution_enabled": true,
+    "scope": "t3_smoke_v1",
+    "cases": ["T3"],
+    "max_usd": 2,
+    "max_calls": 200,
+    "max_seconds": 1200
+  },
   "exposure_pilot": {
     "execution_enabled": true,
     "scope": "exposure_t1_t3_v1",

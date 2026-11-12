@@ -419,3 +419,22 @@ def test_deleting_a_user_row_cascades_to_every_owned_record_without_orphans(worl
         orphans = conn.execute('SELECT count(*) FROM sojafit_agent.threads t WHERE NOT EXISTS (SELECT 1 FROM public.threads p WHERE p.id=t.id) '
                                'OR NOT EXISTS (SELECT 1 FROM public.users u WHERE u.id=t.user_id)').fetchone()[0]
     assert orphans == 0
+def test_single_thread_delete_removes_its_records_but_preserves_project_and_siblings(world):
+    from backend.conversations.repository import ConversationRepository
+    analysis, (owner, other, _), dsn = world
+    mine, theirs = seed(analysis, dsn, owner, projects=2), seed(analysis, dsn, other)
+    gone, sibling = mine['threads']
+    other_before = remaining(dsn, other, theirs['threads'] + [theirs['direct']])
+    before = remaining(dsn, owner, [gone])
+    assert before['checkpoints'] > 0 and before['quotes'] == 2
+    ConversationRepository().delete_thread(owner, gone)
+    after = remaining(dsn, owner, [gone])
+    for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages', 'analysis_approvals',
+                 'analysis_events', 'checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
+        assert after[name] == 0, name
+    assert after['projects'] == before['projects'] == 2
+    assert after['quotes'] == after['approvals'] == after['approved_cases'] == 1
+    assert after['store'] == before['store']
+    assert remaining(dsn, owner, [sibling])['checkpoints'] > 0
+    assert remaining(dsn, owner, [mine['direct']])['analysis_threads'] == 1
+    assert remaining(dsn, other, theirs['threads'] + [theirs['direct']]) == other_before

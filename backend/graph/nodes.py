@@ -76,10 +76,13 @@ def circuit_around(connections: dict, target: str) -> dict:
     parts = {c["ref"]: c for c in connections["components"]}
     if target not in parts:
         return {}
+    pins_of = {}
     nets_of = {}  # 부품 기호 → 그 부품이 붙은 넷 이름 목록
     for net in connections["nets"]:
         for node in net["nodes"]:
             nets_of.setdefault(node["ref"], []).append(net["name"])
+            pins_of.setdefault(node["ref"], []).append({"net": net["name"], "pin": node["pin"],
+                                                        "function": node.get("pinfunction") or ""})
     net_by_name = {net["name"]: net for net in connections["nets"]}
 
     # 1단계: 대상이 붙은 넷. 2단계: 그 넷의 이웃 부품 중 핀이 적은 부품이 붙은 다른 넷
@@ -102,7 +105,20 @@ def circuit_around(connections: dict, target: str) -> dict:
         shown = (mine + [n for n in nodes if n["ref"] != target])[:MAX_NET_NODES]
         nets.append({"name": name, "nodes": [show(n) for n in shown], "more": max(0, len(nodes) - MAX_NET_NODES)})
     target_part = parts[target]
-    return {"ref": target, "value": target_part.get("value", ""), "footprint": target_part.get("footprint", ""), "nets": nets}
+    # Expand the context after pass-through nets too. This keeps the actual
+    # source/load endpoints (for example a battery beyond an inductor) without
+    # dumping the complete netlist into the prompt.
+    context_refs = {n["ref"] for name in names for n in net_by_name[name]["nodes"]} - {target}
+    context = [{"ref": ref, "value": parts.get(ref, {}).get("value", ""),
+                "symbol": parts.get(ref, {}).get("symbol", ""),
+                "libsource": parts.get(ref, {}).get("libsource", ""),
+                "pins": pins_of.get(ref, [])[:16]}
+               for ref in sorted(context_refs)[:24]]
+    return {"ref": target, "value": target_part.get("value", ""),
+            "symbol": target_part.get("symbol", ""),
+            "libsource": target_part.get("libsource", ""),
+            "footprint": target_part.get("footprint", ""), "nets": nets,
+            "context_components": context, "pins": pins_of.get(target, [])}
 
 
 def read_input(state: AgentState) -> dict:
@@ -302,14 +318,106 @@ def netlist_block(part: dict) -> str:
     """대상 부품과 주변 넷을 생성 노드의 근거 한 덩어리([넷리스트])로 쓴다."""
     # [주의] part는 read_input이 만든 target_part이고 비어 있으면 안 된다(part["nets"]를 바로 읽는다)
     nets = "\n".join(f"- {n['name']}: {', '.join(n['nodes'])}" + (f" 외 {n['more']}개" if n["more"] else "") for n in part["nets"])
-    return f"[넷리스트] {part['ref']} {part['value']} ({part['footprint']})\n{nets}"
+    context = []
+    for component in part.get("context_components", []):
+        pins = ", ".join(f"{p['pin']}" + (f" ({p['function']})" if p.get('function') else "") +
+                         f" = {p['net']}" for p in component['pins'])
+        source = component.get('libsource') or ''
+        context.append(f"- {component['ref']} {component['value']} symbol={component.get('symbol') or '(not supplied)'}"
+                       + (f" libsource={source}" if source else '') + f": {pins}")
+    detail = "\nNearby component pin connections (declared functions only):\n" + "\n".join(context) if context else ""
+    symbol = f" symbol={part['symbol']}" if part.get('symbol') else ""
+    return f"[넷리스트] {part['ref']} {part['value']} ({part['footprint']}){symbol}\n{nets}{detail}"
+
+
+def circuit_mechanism(part: dict) -> str:
+    """Explain two established diode topologies only from explicitly named source pins."""
+    def pin_net(component, names):
+        return next((pin['net'] for pin in component.get('pins', [])
+                     if re.sub(r'_\d+$', '', pin.get('function', '')).upper() in names), None)
+    anode, cathode = pin_net(part, {'A'}), pin_net(part, {'K'})
+    if not anode or not cathode or anode == cathode:
+        return ''
+    nearby = part.get('context_components', [])
+    def pins_on(component, net):
+        return [p for p in component.get('pins', []) if p.get('net') == net]
+
+    def pin_text(component):
+        return ', '.join(f"{component['ref']}.{p.get('pin')}={p.get('net')}"
+                         + (f" ({p.get('function')})" if p.get('function') else '')
+                         for p in component.get('pins', []))
+
+    def identity(component):
+        return component.get('libsource') or component.get('symbol') or component.get('value') or ''
+    for inductor in nearby:
+        if not (inductor['ref'].startswith('L') or 'INDUCTOR' in inductor.get('symbol', '').upper()):
+            continue
+        nets = {p['net'] for p in inductor['pins']}
+        if len(nets) != 2 or anode not in nets:
+            continue
+        controller = next((c for c in nearby
+                           if pin_net(c, {'LX', 'SW'}) == anode and pin_net(c, {'VOUT', 'OUT'}) == cathode), None)
+        capacitors = [c for c in nearby if c['ref'].startswith('C') and
+                      cathode in {p['net'] for p in c['pins']}]
+        if not controller or not capacitors:
+            continue
+        input_net = next(n for n in nets if n != anode)
+        cap = capacitors[0]
+        source = next((c for c in nearby if input_net in {p.get('net') for p in c.get('pins', [])}
+                       and (c['ref'].startswith('BT') or 'BATTERY' in identity(c).upper())), None)
+        source_detail = f" 전원 {pin_text(source)}" if source else ''
+        diode_detail = f"{part['ref']} 핀은 {pin_text(part)}"
+        inductor_detail = f" {inductor['ref']} 핀 연결은 {pin_text(inductor)}이다."
+        controller_detail = f" {controller['ref']} 핀 연결은 {pin_text(controller)}이다."
+        capacitor_detail = f" {cap['ref']}({cap['value']}) 핀 연결은 {pin_text(cap)}이다."
+        return (
+            f"{diode_detail}이다. {inductor['ref']}({inductor.get('value', '')})는 입력 넷 {input_net}와 스위칭 넷 {anode} 사이에 있고,{inductor_detail}"
+            f"{source_detail} "
+            f"{anode}에는 {controller['ref']}의 LX/SW와 {part['ref']}의 A가 연결됩니다 [넷리스트].{controller_detail} "
+            f"{part['ref']}의 K는 출력 넷 {cathode}에 연결되며, 이 넷에는 "
+            f"{controller['ref']}의 VOUT/OUT과 출력 커패시터 {cap['ref']}({cap['value']})가 연결됩니다 [넷리스트].{capacitor_detail} "
+            f"이 명시적 연결은 부스트 출력 정류 구조로 해석됩니다. 스위치가 켜진 동안 "
+            f"인덕터에 에너지가 저장되고, 꺼질 때 인덕터에서 {part['ref']}의 A→K를 거쳐 "
+            f"{cathode}로 에너지가 전달됩니다. 다이오드는 출력 커패시터가 스위칭 넷으로 "
+            f"역방향 방전되는 경로를 제한합니다 [넷리스트]. "
+            f"이는 연결에 근거한 동작 해석이며 실제 출력 전압·효율·허용 전류를 보장하지 않습니다 [넷리스트].")
+    for load in nearby:
+        if not (load['ref'].startswith('LS') or 'BUZZER' in load.get('symbol', '').upper()):
+            continue
+        if {p['net'] for p in load['pins']} != {anode, cathode}:
+            continue
+        switch = next((c for c in nearby if pin_net(c, {'C', 'D'}) == anode
+                       and pin_net(c, {'E', 'S'}) in ('GND', '0')), None)
+        if not switch:
+            continue
+        switch_pin = next(p for p in switch['pins'] if p['net'] == anode and
+                          re.sub(r'_\d+$', '', p.get('function', '')).upper() in ('C', 'D'))
+        switch_label = f"{switch['ref']}.{switch_pin['function']} (핀 {switch_pin['pin']})"
+        source_pins = ', '.join(f"{load['ref']}.{p['pin']}={p['net']}" for p in load['pins'])
+        rail = next((c for c in nearby if c['ref'] not in {part['ref'], load['ref'], switch['ref']}
+                     and cathode in {p.get('net') for p in c.get('pins', [])}
+                     and len(c.get('pins', [])) >= 2), None)
+        rail_detail = f" {rail['ref']}({rail.get('value', '')}) 핀 연결은 {pin_text(rail)}이다." if rail else ''
+        return (
+            f"{part['ref']} 핀 연결은 {pin_text(part)}이다. {part['ref']}의 A는 {anode}에서 {switch_label}와 연결되고, "
+            f"K는 {cathode}에 연결됩니다. 부하 핀은 {source_pins}이므로 "
+            f"다이오드는 {load['ref']}와 병렬입니다 [넷리스트]. "
+            f"이 연결은 코일형 부하의 플라이백 경로로 해석됩니다. {switch['ref']}가 켜져 있을 때 "
+            f"다이오드는 역바이어스되어 주 전류 경로가 아닙니다 [넷리스트]. "
+            f"{switch['ref']}를 끄면 {load['ref']}의 스위치 쪽 단자({anode}) → "
+            f"{part['ref']}.A → {part['ref']}.K → 부하의 반대 단자({cathode}) → "
+            f"{load['ref']} → {anode}의 국소 순환 경로가 생깁니다 [넷리스트].{rail_detail} "
+            f"이 연결만으로 전류가 상위 전원으로 반드시 반환된다거나 정격·감쇠 시간·보호 전압을 "
+            f"확정할 수는 없습니다 [넷리스트].")
+    return ''
 
 
 def citations(text: str) -> set[str]:
     """글에서 인용한 근거 번호를 모은다. [0.60 V]처럼 번호가 아닌 괄호는 인용으로 보지 않는다."""
     # 모든 여는 괄호에서 검사해 중첩 번호도 읽고, 바깥의 과거 사례 인용도 놓치지 않는다.
     return {c.strip() for br in CITE.findall(text) for c in br.split(",")
-            if c.strip().isdigit() or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
+            if c.strip().isdigit() or re.fullmatch(r'W[1-9][0-9]*', c.strip())
+            or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:

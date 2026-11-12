@@ -1,9 +1,11 @@
 """110-job baseline runner: offline plan by default, explicit simulation, gated live execution."""
 import argparse
 from contextlib import contextmanager, nullcontext
+from contextvars import ContextVar
 import copy
 import hashlib
 import json
+import logging
 import math
 import os
 import re
@@ -16,6 +18,61 @@ from urllib.parse import quote
 
 from evals.runners import plan_injection_baseline as plan
 from evals.runners import run_injection_preflight as pre
+
+_TRACE_CONFIG = ContextVar('injection_trace_config', default=None)
+LOGGER = logging.getLogger(__name__)
+
+
+@contextmanager
+def trace_session(mode):
+    """Only live runs export; telemetry failures must not replace evaluation results."""
+    client = None
+    status = 'disabled'
+    if (mode == 'live' and os.getenv('LANGFUSE_PUBLIC_KEY') and os.getenv('LANGFUSE_SECRET_KEY')
+            and os.getenv('LANGFUSE_TRACING_ENABLED', 'true').lower() != 'false'):
+        try:
+            from langfuse import get_client
+            client = get_client()
+            status = 'queued'
+        except Exception as error:
+            status = 'unavailable'
+            LOGGER.warning('langfuse_init_failed:%s', type(error).__name__)
+    try:
+        yield client, status
+    finally:
+        if client is not None:
+            try:
+                client.flush()
+            except Exception as error:
+                LOGGER.warning('langfuse_flush_failed:%s', type(error).__name__)
+
+
+@contextmanager
+def trace_job(client, status, session, row):
+    config = None
+    row['trace_status'] = status
+    if client is not None:
+        try:
+            from langfuse.langchain import CallbackHandler
+            trace_id = client.create_trace_id()
+            callback = CallbackHandler(trace_context={'trace_id': trace_id})
+            metadata = {k: row[k] for k in ('id', 'case', 'repeat', 'variant', 'defense', 'scope', 'input_sha256')}
+            config = {'callbacks': [callback], 'run_name': 'injection-baseline',
+                'metadata': {**metadata, 'trace_origin': 'live', 'langfuse_session_id': session,
+                    'langfuse_tags': ['injection-baseline', row['case'], row['variant'], row['defense']]}}
+            row.update(trace_id=trace_id, trace_url=None, trace_session=session)
+            try:
+                row['trace_url'] = client.get_trace_url(trace_id=trace_id)
+            except Exception as error:
+                LOGGER.warning('langfuse_trace_url_failed:%s', type(error).__name__)
+        except Exception as error:
+            row['trace_status'] = 'unavailable'
+            LOGGER.warning('langfuse_callback_failed:%s', type(error).__name__)
+    token = _TRACE_CONFIG.set(config)
+    try:
+        yield
+    finally:
+        _TRACE_CONFIG.reset(token)
 
 CARD_LOCATIONS={'rating':(1,'Ratings','VRRM'),'original_rating':(1,'Ratings','VRRM'),
                 'current':(1,'Ratings','IF_AV'),'forward':(2,'Electrical characteristics','VF'),
@@ -75,6 +132,8 @@ def database_map(data,mapping):
             raise ValueError('Remaining smoke requires separate databases')
         if data.get('scope')=='t7_smoke_v1' and not info['dbname'].startswith('injection_test_t7_'):
             raise ValueError('T7 smoke requires separate databases')
+        if data.get('scope')=='t3_smoke_v1' and not info['dbname'].startswith('injection_test_t3_'):
+            raise ValueError('T3 smoke requires separate databases')
         if set(info)-{'host','port','dbname','user','password','sslmode'}:
             raise ValueError('Unexpected database connection option')
         names.append(info['dbname'])
@@ -169,17 +228,20 @@ def run(data,out,mode,trial=None):
                                 for p in sources}),f,indent=2)
     if trial is None:
         return 0
-    for row in rows:
-        row['status']='attempted'
-        checkpoint(out,rows)
-        try:
-            row.update(trial(row))
-        except Exception as error:
-            row.update(getattr(error,'record',{}))
-            row.update(status='error',error_type=type(error).__name__)
+    session = 'injection-baseline-' + uuid4().hex
+    with trace_session(mode) as (client, trace_status):
+        for row in rows:
+            row['status']='attempted'
             checkpoint(out,rows)
-            return 1
-        checkpoint(out,rows)
+            try:
+                with trace_job(client, trace_status, session, row) if mode == 'live' else nullcontext():
+                    row.update(trial(row))
+            except Exception as error:
+                row.update(getattr(error,'record',{}))
+                row.update(status='error',error_type=type(error).__name__)
+                checkpoint(out,rows)
+                return 1
+            checkpoint(out,rows)
     return 0
 
 
@@ -228,7 +290,8 @@ def service_turns(graph,inputs,budget,conn,preparation):
         yield conn,dict(version=version,connections=connections,filename='synthetic.net',target='D1')
     def invoke(connection,tid,payload,cap,request_id=''):
         state.clear()
-        state.update(graph.invoke(payload,Conversations.config(thread)))
+        config = {**Conversations.config(thread), **(_TRACE_CONFIG.get() or {})}
+        state.update(graph.invoke(payload,config))
     service.locked=locked
     service._invoke=invoke
     service._budget=lambda user:budget
@@ -455,6 +518,7 @@ def main(argv=None):
     scope.add_argument('--exposure-only',action='store_true')
     scope.add_argument('--remaining-smoke',action='store_true')
     scope.add_argument('--t7-smoke',action='store_true')
+    scope.add_argument('--t3-smoke',action='store_true')
     args=parser.parse_args(argv)
     data=plan.fixture()
     if args.exposure_only:
@@ -463,6 +527,8 @@ def main(argv=None):
         data=plan.exposure_fixture(data,'remaining_smoke')
     elif args.t7_smoke:
         data=plan.exposure_fixture(data,'t7_smoke')
+    elif args.t3_smoke:
+        data=plan.exposure_fixture(data,'t3_smoke')
     if args.execute:
         if not args.approval:
             raise ValueError('Explicit user and team budget approval required')

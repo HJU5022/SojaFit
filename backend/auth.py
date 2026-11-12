@@ -434,6 +434,16 @@ def current_user_id(request: Request) -> int:
     return current_user(request)[0]
 
 
+def account_email(user_id: int) -> str:
+    """이미 인증된 본인 계정의 로그인 이메일을 읽는다."""
+    with connection() as conn:
+        row = conn.execute('SELECT login_id FROM users WHERE id=%s AND is_active', (user_id,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
+    return row[0]
+
+
+
 def logout(request: Request) -> None:
     """요청 쿠키의 세션을 DB에서 지운다(쿠키가 없거나 너무 길면 무시)."""
     token = request.cookies.get(COOKIE)

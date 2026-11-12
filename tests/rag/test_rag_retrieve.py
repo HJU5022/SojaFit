@@ -209,3 +209,34 @@ def test_no_part_filter_excludes_cover_in_sql_without_id_list(monkeypatch):
     assert not any(isinstance(a, list) for a in q[0][1]) and q[1][1][1] == [7, 8]  # 1단계에 목록 인자 없음, 2단계는 후보 아이디만
     _, q = _dense_with(monkeypatch, set(range(1, 51)), n_bit=100, nocover_all=True)  # 허용 <= N_BIT: 정확 검색 한 번이지만 표지는 SQL로 뺀다
     assert len(q) == 1 and 'page_number IS NOT NULL' in q[0][0] and 'chunk_embedding_bits' not in q[0][0]
+
+
+def test_concurrent_first_reads_publish_all_indexes_together(monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from contextlib import contextmanager
+    import threading
+    import time
+    rows = [(1, 1, '[sample.pdf] 이 데이터시트의 품번: UF4007', None),
+            (2, 1, '[sample.pdf · 1쪽] reverse voltage 1000 V', 1)]
+    reads = []
+    class Connection:
+        def execute(self, *_):
+            reads.append(1)
+            time.sleep(.02)
+            return self
+        def fetchall(self):
+            return rows
+    @contextmanager
+    def connect():
+        yield Connection()
+    monkeypatch.setattr(R, '_connect', connect)
+    for key in ('_bm25', '_parts', '_nocover'):
+        monkeypatch.setattr(R, key, None)
+    start = threading.Barrier(4)
+    def first_read(_):
+        start.wait()
+        R.warmup()
+        assert R._bm25 is not None and R._parts is not None and R._nocover == {2}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(first_read, range(4)))
+    assert len(reads) == 1

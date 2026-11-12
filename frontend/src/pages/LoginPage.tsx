@@ -21,8 +21,7 @@ export default function LoginPage() {
   useEffect(() => {
     let current = true
     getGoogleStatus().then(({ enabled }) => { if (current) setGoogle(enabled) }).catch(() => { if (current) setGoogleUnavailable(true) })
-    // 데모 모드가 아니면 404라 버튼을 숨긴 그대로 둔다
-    getDemoStatus().then(({ enabled }) => { if (current) setDemo(enabled) }).catch(() => {})
+    if (import.meta.env.DEV) getDemoStatus().then(({ enabled }) => { if (current) setDemo(enabled) }).catch(() => {})
     return () => { current = false }
   }, [])
   async function submit(event: FormEvent) {
@@ -40,9 +39,13 @@ export default function LoginPage() {
   }
   if (auth.loading) return <p role="status">로그인 상태 확인 중입니다.</p>
   if (auth.user) return <Navigate to="/app" replace />
-  return <section className="panel login-panel">
-    <h1>로그인</h1><p>회로 검토를 시작하는 곳입니다.</p>
-    {demo && <div role="group" aria-label="데모 로그인"><p>데모 모드: 비밀번호 없이 로컬 데모 전용 계정으로 들어갑니다(평가 계정 아님). A · B는 서로 다른 사용자입니다.</p>
+  return <div className="public-site login-page">
+    <header className="public-header"><Link className="public-brand" to="/"><img className="brand-logo" src="/assets/sojafit-logo.svg" alt="SOJAFIT" width="174" height="48" /></Link><Link className="public-secondary" to="/">서비스 소개</Link></header>
+    <div className="public-auth-grid">
+    <aside className="public-auth-story"><h2>회로를 이해하고,<br />근거로 검토하세요.</h2><p>교체할 부품과 사용 조건을 확인하고, 대체 후보의 판정 근거를 함께 살펴보세요.</p><img className="public-auth-logo" src="/assets/sojafit-logo.svg" alt="SOJAFIT 브랜드 로고" width="920" height="256" /><p className="public-auth-caption">회로 맥락 / 후보 비교 / 문서 근거 / 사람 승인</p></aside>
+    <section className="public-auth-form"><div className="public-auth-content">
+    <h1>SojaFit에 로그인</h1><p>내 회로 프로젝트와 분석을 시작하세요.</p>
+    {import.meta.env.DEV && demo && <div role="group" aria-label="데모 로그인"><p>데모 모드: 비밀번호 없이 로컬 데모 전용 계정으로 들어갑니다(평가 계정 아님). A · B는 서로 다른 사용자입니다.</p>
       <button type="button" disabled={busy} onClick={() => void enterDemo('a')}>데모 사용자 A로 들어가기</button>{' '}
       <button type="button" disabled={busy} onClick={() => void enterDemo('b')}>데모 사용자 B로 들어가기</button></div>}
     {google && <section className="google-start" aria-label="Google로 시작하기">
@@ -71,5 +74,6 @@ export default function LoginPage() {
     {demo && <p>처음이면 <Link to="/signup">가입</Link>(로컬 데모 전용)</p>}
     {google && <p><a href="/api/auth/google/start">Google 관리자 로그인</a></p>}
     {googleUnavailable && <p className="panel-note">Google 로그인을 사용할 수 없습니다. 이메일 로그인으로 진행해 주세요.</p>}
-  </section>
+    </div></section></div>
+  </div>
 }

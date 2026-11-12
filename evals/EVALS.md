@@ -1,5 +1,9 @@
 # evals
 
+미완료 상태 정리 후 T3 스모크08은 `results/threads/injection_t3_live_2026-11-11_08.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_approval_2026-11-11_08.json`에 별도 기록한다. 정상·공격/current 2작업과공유$2/200/1200승인이며이전07/110회결과를덮어쓰지않는다.
+
+T3 스모크07은 `results/threads/injection_t3_smoke_live_2026-11-11_07.jsonl`과 동명 `.meta.json`/`.budget.json`, `injection_t3_smoke_approval_2026-11-11_07.json`에 별도 기록한다. 정상·공격/current 2작업이며 기존110회03과 합산하지 않는다.
+
 T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-11-11_03.jsonl·동명.meta.json·동명.budget.json, 승인은injection_baseline_approval_2026-11-11_03.json에별도보존한다. baseline_t2_t4_revised_v3는02와같은짝구성에서T4재검색/미완료안내수정을측정하며이전원시와합산하지않는다.
 
 실측01·02와 스모크01~06의 원시·메타·예산·승인 32개는 저장소 밖 원본 백업으로 옮겼다(2026-11-11). 최신03의4개만저장소에남기고, [보관·해시 인덱스](results/threads/injection_baseline_artifact_index_2026-11-10.json#/measured_runs_archive)에36개전체의크기/SHA256·보관위치·복원방법을기록한다. 이전32개는Git미추적파일이었으므로Git이력복구를대체수단으로가정하지않는다. 백업은현재로컬전용이며이전실측의내용/판정을변경하지않았다.
@@ -78,3 +82,15 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 - `injection_exposure_simulated_v3_2026-11-10.jsonl` — 최신4작업 모의 실행 원시 기록, 원래바이트 보존
 
 과거 원본은 STH의 현재 이력에서 분리했고, 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`가 커밋107aaa3을 보존한다. 이 복구 참조는 STH를 공유하는 것만으로 함께 공유되지 않는다. Windows CRLF를 포함한 작업트리 원본의 해시까지 복구 검증했다. 앞으로 실행기가 새 JSONL/meta를 생성하는 동작은 변경하지 않았다. 기존 code_freeze 기록은 이번33개 밖의 파일이므로 유지한다.
+
+## 2026-11-11 우선확인32건 판정 기록
+
+- `results/threads/injection_remaining_review_queue_2026-11-11.json`: 본실측03 110+스모크08 2건의 원시SHA/행/정상짝과 검토 기록. 이번 판정 범위는32건이며 품질오류23/정상9/미판정0이다. 다른80건과 측정원시의human_review는 보존했다.
+- 판정 출처는 사용자 직접확정2건/사용자위임 assistant판정30건으로 구분한다. 실제모델/검색/배포 재시험이 아니다. T7 정상5건은 입력경계 차단이며 모델자체 저항성 성공이 아니다.
+- [32건 질문·응답·코퍼스·PDF 대조자료](../docs/research/injection-case-review-packet.md)와 [누적 결과](../docs/research/injection-results.md)를 참조한다.
+
+## 2026-11-11 파일명·최종 판정자 정정
+
+판정기록커밋의smoke포함파일5개에서smoke를제거했다.누적문서는docs/research/injection-results.md,08원시는injection_t3_live_2026-11-11_08.jsonl와같은기본이름의meta/budget,승인은injection_t3_approval_2026-11-11_08.json이다.시험scope/ID는그대로다.
+
+사용자가팀장(하정운)이전부승인했다고전달해전체112건을품질오류23/정상89/보류0으로사후기록했다.우선32건은23/9를유지한다.판정자표시는팀장(하정운),승인출처는user_reported_team_lead_approval이다.모델입력·응답·노드/당시자동관찰은불변이며human_review만갱신했다.현재파일SHA와변경전측정SHA·Git복구참조·human_review제외payloadSHA를분리한다.위미확정/사람점수보존문단은이갱신전시점기록이다.

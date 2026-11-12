@@ -54,13 +54,22 @@ def test_rating_task_searches_with_the_brief_query_and_answers_in_one_llm_call()
     assert r['status'] == 'ok' and r['evidence_ids'] == ['3'] and r['llm_calls'] == 1 and r['docs'][0]['chunk_id'] == 3
     assert r['searches'][0]['top'] == [['SS12 SERIES_K2301.pdf', 2]]
     node, user = chat.seen[0]
-    assert node == 'docs_answer' and 'goal: VRRM of SS14' in user and '[3] SS12 SERIES_K2301.pdf' in user and '[넷리스트] D1 SS14' in user
+    assert node == 'docs_answer' and 'goal: VRRM of SS14' in user and '[3] SS12 SERIES_K2301.pdf' in user
+    assert '[넷리스트]' not in user and 'D1.1' not in user
 
 
 def test_role_task_uses_only_the_netlist_without_searching():
     seen = []
-    r = run(task(kind='role', query=''), llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].')), seen=seen)
+    chat = llm(D.DocsAnswer(grade='enough', answer='D1은 +5V에 연결된다 [넷리스트].'))
+    r = run(task(kind='role', query=''), chat, seen=seen)
     assert seen == [] and r['status'] == 'ok' and r['evidence_ids'] == ['넷리스트'] and r['searches'] == []
+    assert '[넷리스트] D1 SS14' in chat.seen[0][1] and '+5V: D1.1, U1.3' in chat.seen[0][1]
+
+
+def test_rating_without_documents_does_not_fall_back_to_circuit_evidence():
+    seen = []
+    r = run(task(), lambda *a: pytest.fail('Rating must not call a model without document evidence'), seen=seen)
+    assert len(seen) == 2 and r['llm_calls'] == 0 and r['reason'] == 'no_result'
 
 
 def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason():
@@ -70,6 +79,85 @@ def test_no_evidence_retries_once_with_the_llm_query_then_reports_a_retry_reason
     assert [q for q, _ in seen] == ['SS14 Repetitive peak reverse voltage VRRM', 'SS14 Peak reverse voltage']  # 검색은 2번까지
     # [왜] 설계 v2: RAG 에이전트는 거절을 정하지 않고 다시 찾을 사유를 올린다(청크는 봤지만 근거가 아님 → all_rejected)
     assert r['status'] == 'fail' and r['reason'] == Reason.ALL_REJECTED.value and r['llm_calls'] == 2
+
+
+def test_internal_failure_uses_one_external_search_and_accepts_web_citations():
+    web_calls = []
+
+    def web_search(parts, terms):
+        web_calls.append((parts, terms))
+        return [{'chunk_id': 'W1', 'file': 'Maker data sheet', 'page': '', 'content': 'trr is 4 ns',
+                 'table': 'Switching characteristics', 'row': 'Reverse recovery time',
+                 'cells': [('1N4148','4')], 'unit': 'ns', 'doc_parts': ['1N4148'], 'source_type': 'external_web',
+                 'source_url': 'https://maker.example/1N4148.pdf', 'title': 'Maker data sheet',
+                 'retrieved_at': '2026-11-11T00:00:00+00:00'}]
+
+    chat = llm(D.DocsAnswer(grade='none', next_query='1N4148 reverse recovery time trr'),
+               D.DocsAnswer(grade='none', next_query='1N4148 switching time'),
+               D.PdfOnlyAnswer(grade='enough', pdf_rows=['W1']))
+    result = D.docs_agent({'task': task(parts=['1N4148']), 'question': '1N4148의 역회복 시간은?', 'target_part': PART},
+                          retriever=lambda *args, **kwargs: [doc(3)], chat=chat,
+                          web_search=web_search)['reports'][0]
+
+    assert len(web_calls) == 1
+    assert result['status'] == 'ok' and result['evidence_ids'] == ['W1']
+    assert next(d for d in result['docs'] if d['chunk_id'] == 'W1')['source_url'] == 'https://maker.example/1N4148.pdf'
+    external_prompt = chat.seen[-1][1]
+    assert 'https://maker.example/1N4148.pdf' in external_prompt
+    assert '[3]' not in external_prompt
+
+
+@pytest.mark.parametrize('grade', ['none', 'partial'])
+def test_external_recheck_preserves_only_cited_internal_facts_and_reports_rejected_rows(grade):
+    prior = D.DocsAnswer(grade=grade, answer='조건은 25 °C이다 [3].' if grade == 'partial' else '',
+                         missing=['정격'])
+    chat = llm(prior, D.PdfAnswer(grade='none', pdf_rows=[], missing=['요청한 품번 열']))
+    row = {'chunk_id': 'W1', 'file': 'ss32.pdf', 'source_type': 'external_web',
+           'source_url': 'https://www.vishay.com/docs/88751/ss32.pdf', 'page': 1,
+           'table': 'MAXIMUM RATINGS', 'row': 'Maximum RMS voltage', 'content': 'SS14 = 28 V',
+           'doc_parts': ['SS14'], 'cells': [('SS14', '28')], 'unit': 'V'}
+    report = D.docs_agent({'task': task(), 'question': 'SS14의 VRRM은?', 'target_part': PART},
+                          retriever=lambda *a, **kw: [doc(3), doc(4)], chat=chat,
+                          web_search=lambda *a: [row])['reports'][0]
+    prompt = chat.seen[-1][1]
+    assert '[4]' not in prompt and ('[3]' in prompt) == (grade == 'partial')
+    if grade == 'none':
+        assert report['reason'] == 'all_rejected' and report['missing'] == ['요청한 품번 열']
+        assert [d['chunk_id'] for d in report['docs']] == ['W1']
+        assert 'content' not in report['docs'][0]
+    else:
+        assert report['evidence_ids'] == ['3'] and report['status'] == 'partial'
+
+
+@pytest.mark.parametrize('assigned', [[], ['1n5819']])
+def test_external_lookup_keeps_task_part_after_relaxed_internal_retry(assigned):
+    query = 'onsemi 1N5819 peak repetitive reverse voltage'
+    requested = []
+    base = {'file': 'ratings.pdf', 'source_type': 'external_web', 'page': 2, 'table': 'MAXIMUM RATINGS',
+            'row': 'Peak Repetitive Reverse Voltage', 'unit': 'V', 'source_url': 'https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf'}
+
+    def lookup(parts, terms):
+        requested.append((parts, terms))
+        return [{**base, 'chunk_id': cid, 'doc_parts': [part], 'cells': [(column, value)], 'content': value}
+                for cid, part, column, value in [('W1', '1N4001', '1N4001', '50'),
+                                                 ('W2', '1N5819', '1N4001', '50'),
+                                                 ('W3', '1N5819', '1N5819', '40')]]
+
+    chat = llm(D.PdfOnlyAnswer(grade='enough', pdf_rows=['W3']))
+    report = D.docs_agent({'task': task(parts=assigned, query=query), 'round': 2,
+                           'question': '1N4001과 1N5819의 VRRM은?'},
+                          retriever=lambda *args, **kwargs: [], chat=chat, web_search=lookup)['reports'][0]
+    assert requested == [(assigned or ['1N5819'], query)]
+    assert '[W1]' not in chat.seen[0][1] and '[W2]' not in chat.seen[0][1]
+    assert report['evidence_ids'] == ['W3'] and '40 V' in report['answer']
+
+
+def test_internal_answer_never_calls_external_search():
+    chat = llm(D.DocsAnswer(grade='enough', answer='VRRM은 40 V이다 [3].'))
+    result = D.docs_agent({'task': task(), 'question': 'SS14의 VRRM은?', 'target_part': PART},
+                          retriever=lambda *args, **kwargs: [doc(3)], chat=chat,
+                          web_search=lambda *args: pytest.fail('sufficient internal evidence must not call Exa'))['reports'][0]
+    assert result['status'] == 'ok' and result['evidence_ids'] == ['3']
 
 
 def test_fake_or_missing_citation_is_blocked_by_code():
@@ -199,3 +287,20 @@ def test_partial_answer_searches_once_more_for_what_is_missing_and_keeps_the_fir
     worse = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', next_query='more'), D.DocsAnswer(grade='none')),
                 docs=lambda q, parts: [doc(3)] if 'VRRM' in q else [doc(5)])
     assert worse['status'] == 'partial' and worse['answer'] == 'VRRM은 40 V이다 [3].' and worse['llm_calls'] == 2
+
+
+def test_grade2_search_preserves_explicit_manufacturer_in_user_question():
+    queries = []
+    task_input = task(parts=['BAT54'], query='BAT54 diode reverse voltage')
+    def official(parts, terms):
+        queries.append((parts, terms))
+        return []
+    report = D.docs_agent({'task': task_input, 'question': '인피니언 BAT54의 역전압은?'},
+                          retriever=lambda *args, **kwargs: [doc(1, parts=['BAT54'])], chat=llm(),
+                          web_search=official)['reports'][0]
+    assert queries == [(['BAT54'], 'BAT54 diode reverse voltage Infineon')]
+    assert report['evidence_ids'] == []
+    report = D.docs_agent({'task': task_input, 'question': 'Vishay BAT54의 역전압은?'},
+                          retriever=lambda *a, **k: [doc(1, parts=['BAT54'])], chat=llm(),
+                          web_search=lambda *a: pytest.fail('wrong manufacturer'))['reports'][0]
+    assert report['evidence_ids'] == []

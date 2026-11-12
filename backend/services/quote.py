@@ -57,6 +57,12 @@ def approval_snapshot(result: dict, candidate_part: str, verdict: str) -> dict:
                       if item.get('part') == candidate_part and item.get('verdict') == verdict), None)
     if candidate is None or verdict not in APPROVABLE:
         raise InvalidApproval('승인 가능한 후보 판정이 아닙니다.')
+    missing = candidate.get('missing') or []
+    checks = candidate.get('checks') or []
+    has_unverified_required = any(isinstance(check, dict) and check.get('tier') == 'required'
+                                  and check.get('result') == 'unverified' for check in checks)
+    if missing or has_unverified_required:
+        raise InvalidApproval('필수 조건을 확인하지 않아 승인할 수 없습니다.')
     snapshot = {'answer': result.get('answer', ''), 'question_type': result.get('question_type', ''),
                 'candidate': {**deepcopy(candidate), 'part_number': part_number(candidate_part)},  # 승인할 때 만들어 견적이 못 쓰는 품번의 승인을 막는다
                 'evidence': deepcopy(result.get('evidence') or [])}

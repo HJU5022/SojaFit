@@ -13,7 +13,7 @@ type Auth = {
   deleteAccount: () => Promise<void>
 }
 const AuthContext = createContext<Auth | null>(null)
-const DUMMY_USER: auth.User = { user_id: 0, role: 'user' }
+const DUMMY_USER: auth.User = { user_id: 0, role: 'user', email: 'demo@example.test' }
 
 export function dummyAuthEnabled(env: { DEV: boolean; MODE?: string; VITE_DUMMY_AUTH?: string }) {
   return env.DEV && (env.MODE === 'dummy' || env.VITE_DUMMY_AUTH === '1')

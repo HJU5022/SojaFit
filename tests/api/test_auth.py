@@ -425,6 +425,7 @@ def test_email_signup_is_closed_unless_demo_mode(monkeypatch):
     assert response.status_code == 404 and response.json()["error"]["code"] == "NOT_FOUND"
 
 
+
 def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
     import os
     from pathlib import Path
@@ -454,7 +455,7 @@ def test_two_approved_google_admins_get_isolated_sessions(monkeypatch):
             start = client.get("/api/auth/google/start", follow_redirects=False)
             state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
             assert client.get(f"/api/auth/google/callback?code=google-{index}&state={state}").status_code == 200
-            assert client.get("/api/auth/me").json() == {"user_id": ids[index - 1], "role": "admin"}
+            assert client.get("/api/auth/me").json() == {"user_id": ids[index - 1], "role": "admin", "email": f"google-{index}@example.test"}
         assert clients[0].post("/api/auth/logout", headers={"origin": "http://testserver"}).status_code == 200
         assert clients[0].get("/api/auth/me").status_code == 401
         assert clients[1].get("/api/auth/me").json()["user_id"] == ids[1]
@@ -513,6 +514,20 @@ def test_password_hash_is_salted_and_rejects_bad_password():
 def test_protected_endpoint_requires_authentication():
     response = TestClient(app).get("/api/auth/me")
     assert response.status_code == 401
+
+
+def test_me_exposes_only_the_authenticated_accounts_email(monkeypatch):
+    calls = []
+    app.dependency_overrides[auth.current_user] = lambda: (7, 'user')
+    monkeypatch.setattr(auth, 'account_email', lambda user_id: calls.append(user_id) or 'signed-in@example.test')
+    try:
+        response = TestClient(app).get('/api/auth/me?user_id=8')
+        assert response.status_code == 200
+        assert response.json() == {'user_id': 7, 'role': 'user', 'email': 'signed-in@example.test'}
+        assert response.headers['cache-control'] == 'no-store'
+        assert calls == [7]
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_login_rejects_cross_origin():
@@ -619,10 +634,10 @@ def test_database_sessions_are_isolated_and_revoked(monkeypatch):
         assert response.status_code == 200
         assert response.json() == {"user_id": uid}
         assert "httponly" in response.headers["set-cookie"].lower()
-        assert client.get("/api/auth/me").json() == {"user_id": uid, "role": "user"}
+        assert client.get("/api/auth/me").json() == {"user_id": uid, "role": "user", "email": email}
     assert a.post("/api/auth/logout", headers=headers).status_code == 200
     assert a.get("/api/auth/me").status_code == 401
-    assert b.get("/api/auth/me").json() == {"user_id": id_b, "role": "user"}
+    assert b.get("/api/auth/me").json() == {"user_id": id_b, "role": "user", "email": email_b}
     with psycopg.connect(database_url) as conn, conn.cursor() as cur:
         cur.execute("UPDATE auth_sessions SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 minute' WHERE user_id = %s", (id_b,))
     assert b.get("/api/auth/me").status_code == 401
@@ -831,11 +846,11 @@ def test_admin_account_management_and_session_revocation(monkeypatch):
     assert anonymous.get("/api/admin/users").status_code == 401
     for client, email in ((admin, admin_email), (user, user_email)):
         assert client.post("/api/auth/login", headers=headers, json={"email": email, "password": password}).status_code == 200
-    assert admin.get("/api/auth/me").json() == {"user_id": admin_id, "role": "admin"}
-    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
+    assert admin.get("/api/auth/me").json() == {"user_id": admin_id, "role": "admin", "email": admin_email}
+    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "user", "email": user_email}
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE users SET role='admin' WHERE id=%s", (user_id,))
-    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "admin"}
+    assert user.get("/api/auth/me").json() == {"user_id": user_id, "role": "admin", "email": user_email}
     with psycopg.connect(database_url) as conn:
         conn.execute("UPDATE users SET role='user' WHERE id=%s", (user_id,))
     assert user.get("/api/admin/users").status_code == 403
@@ -971,7 +986,7 @@ def test_database_demo_buttons_create_and_log_into_separate_users_only(monkeypat
             response = client.post("/api/auth/demo-login", headers=headers, json={"account": account})
             assert response.status_code == 200 and "httponly" in response.headers["set-cookie"].lower()
             ids[account] = response.json()["user_id"]
-            assert client.get("/api/auth/me").json() == {"user_id": ids[account], "role": "user"}
+            assert client.get("/api/auth/me").json() == {"user_id": ids[account], "role": "user", "email": auth.DEMO_ACCOUNTS[account]}
         assert ids["a"] != ids["b"]  # 두 창(쿠키가 따로)에서 서로 다른 사용자다
         for password in ("", "demo-button-login-only", auth.DEMO_PASSWORD_HASH):  # 비밀번호 로그인은 늘 실패
             response = TestClient(app).post("/api/auth/login", headers=headers, json={"email": emails[0], "password": password or "x"})
@@ -1258,7 +1273,7 @@ def test_database_signup_creates_user_session_and_rejects_duplicate(monkeypatch)
         assert response.status_code == 200
         user_id = response.json()["user_id"]
         assert "httponly" in response.headers["set-cookie"].lower()
-        assert client.get("/api/auth/me").json() == {"user_id": user_id, "role": "user"}
+        assert client.get("/api/auth/me").json() == {"user_id": user_id, "role": "user", "email": email}
         assert TestClient(app).post("/api/auth/login", headers=headers, json={"email": email, "password": password}).json() == {"user_id": user_id}
         duplicate = TestClient(app).post("/api/auth/signup", headers=headers, json={"email": f"  {email.upper()} ", "password": "another-pass-456", "consent": True})
         assert duplicate.status_code == 409

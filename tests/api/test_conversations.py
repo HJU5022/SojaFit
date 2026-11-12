@@ -12,6 +12,40 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 
 
+def test_thread_delete_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN).status_code == 401
+
+
+def test_thread_delete_checks_origin_and_returns_empty_204(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls, thread = [], str(uuid4())
+    monkeypatch.setattr(ConversationRepository, 'delete_thread', lambda self, user, key: calls.append((user, key)))
+    with web(None, None) as client:
+        assert client.delete(f'/api/threads/{thread}').status_code == 403
+        assert client.delete(f'/api/threads/{thread}', headers={'origin': 'https://other.invalid'}).status_code == 403
+        assert client.delete('/api/threads/not-a-uuid', headers=ORIGIN).status_code == 422
+        assert calls == []
+        response = client.delete(f'/api/threads/{thread}', headers=ORIGIN)
+    assert response.status_code == 204 and response.content == b''
+    assert calls == [(1, thread)]
+
+
+@pytest.mark.parametrize('failure_kind, status', [('missing', 404), ('busy', 409), ('database', 503)])
+def test_thread_delete_uses_safe_errors(web, monkeypatch, failure_kind, status):
+    import psycopg
+    from backend.conversations.repository import ConversationRepository, ConversationNotFound, InvalidRunState
+    def fail(*args):
+        raise {'missing': ConversationNotFound, 'busy': InvalidRunState,
+               'database': psycopg.OperationalError}[failure_kind]('private database detail')
+    monkeypatch.setattr(ConversationRepository, 'delete_thread', fail)
+    with web(None, None) as client:
+        response = client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN)
+    assert response.status_code == status
+    assert 'private database detail' not in response.text
+    assert response.json()['error']['request_id']
+
+
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
@@ -53,6 +87,77 @@ class FakeRepo:
         return {'id': self.run, 'thread_id': self.thread, 'status': self.status, 'safe_result': self.result}
 
 
+def test_recover_is_owned_origin_checked_and_never_calls_analysis(web):
+    thread, run = str(uuid4()), str(uuid4())
+    repo = FakeRepo(thread, run)
+    def recover(user, key):
+        assert (user, key) == (1, run)
+        repo.calls.append('recover')
+        repo.status = 'failed'
+    repo.recover_stale_run = recover
+    with web(None, repo) as client:
+        assert client.post(f'/api/runs/{run}/recover').status_code == 403
+        response = client.post(f'/api/runs/{run}/recover', headers=ORIGIN)
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.json()['result']['status'] == 'failed'
+    assert repo.calls == ['recover']
+
+
+def test_recover_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.post(f'/api/runs/{uuid4()}/recover', headers=ORIGIN).status_code == 401
+
+
+def test_recover_does_not_expose_another_users_run(web, monkeypatch):
+    from backend.conversations.repository import ConversationNotFound
+    repo = FakeRepo(str(uuid4()), str(uuid4()))
+    def recover(*args): raise ConversationNotFound
+    repo.recover_stale_run = recover
+    monkeypatch.setattr('backend.api.conversations.ConversationRepository', lambda: repo)
+    with web(None, None) as client:
+        response = client.post(f'/api/runs/{repo.run}/recover', headers=ORIGIN)
+    assert response.status_code == 404 and repo.status == 'running'
+
+
+def test_resume_unrequested_answers_leave_interrupt_unchanged(web):
+    thread, run = str(uuid4()), str(uuid4())
+    pause = {'interrupt': {'missing': ['v_in_max'], 'role_choices': []}}
+    repo = FakeRepo(thread, run, status='requires_input', result=pause)
+    analysis = FakeAnalysis()
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json={'answers': {'other': '12'}}, headers=ORIGIN)
+    assert response.status_code == 422
+    assert repo.status == 'requires_input' and repo.result == pause
+    assert repo.calls == [] and analysis.calls == []
+
+
+def test_resume_system_error_does_not_restore_an_old_form(web):
+    thread, run = str(uuid4()), str(uuid4())
+    interrupt = {'missing': ['v_in_max'], 'role_choices': []}
+    repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': interrupt})
+    analysis = FakeAnalysis(error=HTTPException(503, '분석을 완료하지 못했습니다.'))
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': '12'}}, headers=ORIGIN)
+    assert 'event: failed' in response.text and repo.status == 'failed'
+
+
+@pytest.mark.parametrize('status', [400, 409, 422, 429])
+def test_resume_recoverable_error_keeps_form_and_can_resume_same_run(web, status):
+    thread, run = str(uuid4()), str(uuid4())
+    interrupt = {'missing': ['v_in_max'], 'role_choices': []}
+    repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': interrupt})
+    analysis = FakeAnalysis(interrupt=interrupt, error=HTTPException(status, '입력을 확인하세요.'))
+    analysis.detail = lambda *args: {'version': 1, 'interrupt': analysis.interrupt}
+    with web(analysis, repo) as client:
+        first = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': 'wrong'}}, headers=ORIGIN)
+        assert 'event: requires_input' in first.text and '입력을 확인하세요.' in first.text
+        assert repo.status == 'requires_input' and repo.result['interrupt']['missing'] == ['v_in_max']
+        analysis.error, analysis.interrupt = None, None
+        second = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': '12'}}, headers=ORIGIN)
+    assert 'event: completed' in second.text and repo.status == 'completed'
+
+
 @pytest.fixture
 def web(monkeypatch):
     """로그인·Origin을 통과시키고, 넘긴 가짜 분석 서비스·저장소로 TestClient를 연다."""
@@ -92,6 +197,77 @@ def test_thread_endpoint_requires_login():
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.get('/api/projects/1/threads')
     assert response.status_code == 401
+
+
+def test_saved_thread_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get(f'/api/threads/{uuid4()}').status_code == 401
+
+
+def test_saved_thread_uses_read_only_repository_and_safe_response(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    thread, run = str(uuid4()), str(uuid4())
+    calls = []
+    def detail(self, user, thread_id, limit=50, before_message_id=None):
+        calls.append((user, thread_id, limit, before_message_id))
+        return {'id': thread, 'project_id': 1, 'title': '저장 질문', 'target_ref': 'D1', 'target_locked': True,
+                'latest_run': {'id': run, 'status': 'completed', 'message_id': 2},
+                'messages': [{'id': 2, 'run_id': run, 'role': 'assistant', 'content': '<img src=x>', 'created_at': '2026-11-11T00:00:00Z', 'raw_chunk': 'hidden'}],
+                'next_before_message_id': None, 'checkpoint': 'hidden'}
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', detail)
+    analysis = FakeAnalysis()
+    with web(analysis, None) as client:
+        response = client.get(f'/api/threads/{thread}?limit=2&before_message_id=4')
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.headers['x-request-id']
+    assert calls == [(1, thread, 2, 4)]
+    assert response.json()['messages'][0]['content'] == '<img src=x>'
+    assert 'hidden' not in response.text
+    assert analysis.calls == []
+
+
+@pytest.mark.parametrize('query', ['limit=0', 'limit=101', 'before_message_id=0', 'before_message_id=no', 'before_message_id=9223372036854775808'])
+def test_saved_thread_rejects_invalid_page_before_repository(web, monkeypatch, query):
+    from backend.conversations.repository import ConversationRepository
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', lambda *a, **k: pytest.fail('invalid page reached SQL'))
+    with web(None, None) as client:
+        assert client.get(f'/api/threads/{uuid4()}?{query}').status_code == 422
+        assert client.get('/api/threads/not-a-uuid').status_code == 422
+
+
+def test_saved_thread_not_found_and_database_error_use_existing_boundary(web, monkeypatch):
+    import psycopg
+    from backend.conversations.repository import ConversationNotFound, ConversationRepository
+    def missing(*args, **kwargs): raise ConversationNotFound
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', missing)
+    with web(None, None) as client:
+        response = client.get(f'/api/threads/{uuid4()}')
+        assert response.status_code == 404
+    def unavailable(*args, **kwargs): raise psycopg.OperationalError('private connection detail')
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', unavailable)
+    with web(None, None) as client:
+        response = client.get(f'/api/threads/{uuid4()}')
+        assert response.status_code == 503
+        assert 'private connection detail' not in response.text
+
+
+def test_live_conditions_are_shown_without_changing_saved_result(web):
+    from backend.conversations.models import SafeResult
+    thread, run = str(uuid4()), str(uuid4())
+    rows = [{'code': 'v_in_max', 'value': '20 V'}, {'code': 'i_max', 'value': '0.15 A'}]
+    analysis = FakeAnalysis(state={'answer': 'ok', 'judgement': {'kind': 'judge', 'input_conditions': rows}})
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/threads/{thread}/runs', json={'question': '20V 150mA', 'target_ref': 'D1'}, headers=ORIGIN)
+        frames = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
+        assert frames[-1]['status'] == 'completed'
+        assert frames[-1]['judgement']['input_conditions'] == rows
+        SafeResult.model_validate(repo.result)
+        assert 'input_conditions' not in repo.result['judgement']
+        recovered = client.get(f'/api/runs/{run}')
+    assert recovered.json()['result']['judgement']['input_conditions'] == []
+    assert len([call for call in analysis.calls if call[0] == 'message']) == 1
 
 
 def test_first_run_creates_analysis_thread_and_saves_before_completed(web):

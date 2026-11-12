@@ -303,6 +303,9 @@ def test_react_run_and_resume_go_through_analysis_service(runtime, monkeypatch):
         with TestClient(api) as client:
             first = client.post(f'/api/threads/{thread}/runs', headers=origin, json={'question': '조건 질문', 'target_ref': 'D1'})
             assert 'event: requires_input' in first.text and saved['result']['interrupt']['missing'] == ['VIN_MAX']
+            rejected = client.post(f'/api/runs/{run}/resume', headers=origin, json={'answers': {'WRONG_KEY': '12'}})
+            assert rejected.status_code == 422 and saved['status'] == 'requires_input'
+            assert app.detail(a, thread)['interrupt']['missing'] == ['VIN_MAX']
             done = client.post(f'/api/runs/{run}/resume', headers=origin, json={'answers': {'VIN_MAX': '12'}})
             assert 'event: completed' in done.text and saved['result']['answer'] == '역할상 충분 [1]'
     finally:
@@ -578,9 +581,11 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
     assert 'PRIVATE_CONDITION' not in str(vars(record))
 
 
-def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime):
+def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime, monkeypatch):
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
+    # 재개 시 재호출 여부를 검증하므로 운영의 3회 다수결과 분리해 첫 읽기를 1회로 고정한다.
+    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
     app, (a, _), dsn = runtime
     source = make_thread(app, a)
     app.message(a, source, '판정')

@@ -32,6 +32,7 @@ from backend.api.auth import router as auth_router
 from backend.api.health import router as health_router
 from backend.api.prices import router as prices_router
 from backend.api.projects import router as projects_router
+from backend.api.external_circuits import router as external_circuits_router
 from backend.api.quotes import router as quotes_router
 from backend.web.app import mount_frontend
 
@@ -107,6 +108,8 @@ def error_response(
     #      요청 ID 미들웨어보다 먼저 난 오류(request_id_for가 새로 만든 ID)에서도 응답과 로그의 ID가 같다
     log_error(status_code, code, error, request_id=request_id)
     response_headers = dict(headers or {})
+    if request.url.path.startswith("/api/external-circuits/schematics"):
+        response_headers["Cache-Control"] = "private, no-store"
     response_headers["X-Request-ID"] = request_id
     return JSONResponse(
         status_code=status_code,
@@ -187,6 +190,7 @@ async def internal_error(request: Request, exc: Exception):
 async def conversation_boundary(request: Request, call_next):
     """대화 run(`/api/threads/...`)과 내 설정(`/api/me/memory`) 응답에 no-store를 붙이고, `/api/` 아래 본문 있는 요청을 128 KiB로 막는다."""
     private = request.url.path.startswith(('/api/threads', '/api/me/memory'))
+    schematic = request.url.path.startswith('/api/external-circuits/schematics')
     # [왜] 재개(`/api/runs/{id}/resume`) · 승인 · 로그인 등 JSON 경로도 같은 한도를 쓴다(D6 1-2절).
     #      넷리스트 업로드만 뺀다: 그 경로는 5 MiB 한도를 스스로 센다(backend/api/projects.py)
     limited = (request.url.path.startswith('/api/') and request.url.path != '/api/projects/upload'
@@ -203,6 +207,8 @@ async def conversation_boundary(request: Request, call_next):
     response = await call_next(request)
     if private:
         response.headers['Cache-Control'] = 'no-store'
+    if schematic:
+        response.headers['Cache-Control'] = 'private, no-store'
     return response
 
 
@@ -224,6 +230,7 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(prices_router)
 app.include_router(projects_router)
+app.include_router(external_circuits_router)
 app.include_router(quotes_router)
 app.include_router(conversations_router)
 app.include_router(profile_router)

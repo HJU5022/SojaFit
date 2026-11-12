@@ -10,7 +10,16 @@ export type CircuitNet = { code?: string; name: string; nodes: CircuitNode[] }
 export type Project = ProjectSummary & { connections: {
   parts?: CircuitPart[]; components?: CircuitPart[]; nets: CircuitNet[]; sample_id?: string; status?: string
 } }
-export type DemoCircuit = { id: string; name: string }
+export type DemoSchematic = {
+  image_url: string
+  original_url: string
+  source_repo: string
+  source_commit: string
+  license: string
+  license_evidence_url: string
+  attribution: string
+}
+export type DemoCircuit = { id: string; name: string; schematic: DemoSchematic | null }
 export const listProjects = (signal?: AbortSignal) => apiFetch<ProjectSummary[]>('/api/projects', { signal })
 export const getProject = (id: number, signal?: AbortSignal) => apiFetch<Project>(`/api/projects/${id}`, { signal })
 export const listDemos = (signal?: AbortSignal) => apiFetch<DemoCircuit[]>('/api/demo-circuits', { signal })

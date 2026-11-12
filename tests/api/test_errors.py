@@ -32,7 +32,7 @@ QUESTION = 'PRIVATE_QUESTION_TEXT 회로의 D1을 바꿔도 되나요'
 
 
 def test_table_has_fifteen_codes_and_defaults():
-    assert len(set(DEFAULT_CODES.values()) | set(SPECIAL_CODES)) == 15
+    assert len(set(DEFAULT_CODES.values()) | set(SPECIAL_CODES)) == 16
     assert [code_for(s) for s in (400, 422, 429, 502, 503, 504)] == ['VALIDATION_ERROR', 'VALIDATION_ERROR', 'RATE_LIMITED',
                                                                    'UPSTREAM_ERROR', 'UNAVAILABLE', 'TIMEOUT']
     assert code_for(405) == 'VALIDATION_ERROR' and code_for(501) == 'INTERNAL_ERROR'  # 표에 없는 상태도 15개 안에서

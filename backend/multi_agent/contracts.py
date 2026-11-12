@@ -140,6 +140,7 @@ class TaskReport(BaseModel):
     memory_refs: list[str] = Field(default_factory=list, max_length=5)  # 본문 근거와 분리한 과거 사례 ID
     evidence_ids: list[str] = Field(default_factory=list)   # 인용한 근거 번호
     docs: list[dict] = Field(default_factory=list)          # 문서 할 일이 LLM에 보여 준 청크(인용 검사 · 채점이 쓴다)
+    references: list[dict] = Field(default_factory=list)    # 3등급 참고 링크. 판정 근거와 분리한다.
     judgement: dict = Field(default_factory=dict)           # 판정 할 일의 판정 · 찾기 결과(답 틀의 입력)
     searches: list[dict] = Field(default_factory=list)      # 검색마다 {query, parts, top: [[파일, 쪽], ...]}(검색 지표 계산용)
     llm_calls: int = 0

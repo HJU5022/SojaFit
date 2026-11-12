@@ -503,3 +503,196 @@
 - PR 전 저장소 구조 규칙 보완: `AGENTS.md`의 문서 위계·지킬 것 9·팀 규칙 3·10, `SOJAFIT.md`의 이름 규칙·파일 생성 절차, `tests/repo/test_repo_layout.py`를 확인했다. 새 랜딩 관련 설계·계획 5개, `LandingServiceIntroduction.tsx`, `frontend/public/sojafit-circuit-hero.png`를 `SOJAFIT.md` 트리에 설명과 함께 등록했다. 새 두 단계 폴더 `frontend/public/`에는 규칙대로 `PUBLIC.md`를 만들고 `frontend/FRONTEND.md`와 폴더 설명 표에도 연결했으며, `docs/superpowers/SUPERPOWERS.md`의 실제 설계·계획 목록을 동기화했다. 최초 전체 `uv run pytest -q`는 구조 문서 누락으로 `3 failed, 1071 passed, 113 skipped`였고, 보완 뒤 `uv run pytest -q tests/repo/test_repo_layout.py`는 `5 passed`, 최종 전체 `uv run pytest -q`는 `1074 passed, 113 skipped`였다. 프론트 Vitest `112 passed`, production build, Playwright `5 passed`, `git diff --check`도 통과했다. 읽기 전용 `git fetch origin main` 뒤 `git merge-tree`로 현재 변경을 시뮬레이션하니 `OSC` 기준 커밋이 최신 `origin/main`보다 99커밋 뒤였고 추적 파일 18개에서 충돌이 예상됐다. 실제 원격 push·PR 생성·병합은 하지 않았으며, 다음 단계는 최신 `main`을 반영해 충돌을 해결한 뒤 같은 검증을 다시 수행하는 것이다.
 - 최신 main 동기화·충돌 해결: 미커밋 UI 변경과 신규 파일을 `backup-before-main-sync-20261110-landing-ui` stash(`82e78f7`)로 백업한 뒤 `OSC`를 `origin/main` `b683d9e`까지 fast-forward하고 백업을 적용했다. 충돌 18개는 최신 main의 회원가입·내 설정·데모 질문 재생·프로필 힌트·역할명·후보 정규화 계약을 유지하면서 랜딩, 작업대, dialog, 반응형 UI를 통합했다. main에서 AI 도구 흔적 정리로 삭제된 `docs/superpowers/`는 되살리지 않았고 백업 stash에는 계속 보존했다. 동기화 뒤 `origin/main...HEAD`는 `0 0`, 미해결 충돌 파일은 0개다.
 - 동기화 후 검증: `uv run pytest -q`는 `1204 passed, 112 skipped`, `npm run test:run`은 `18 files / 133 tests passed`, `npm run build`는 TypeScript와 Vite production build 성공, `npm run e2e`는 랜딩·작업대·더미 전체 흐름을 포함해 `5 passed`였다. `uv lock --check`, staged whitespace 검사, Docker gitleaks stdin(`--redact --no-banner --log-level warn`)도 통과했다. 이 검증은 로컬 코드·fixture·더미/fake backend 범위이며 실제 배포, 외부 모델·MCP·Mouser, 공유 DB round-trip은 실행하지 않았다. 커밋·push·PR 생성은 하지 않았다.
+
+### 검증된 회로 원본과 데이터시트 패키지 근거
+
+- 목적·범위: 작업대에서 개념 연결도와 실제 회로 원본을 구분해 볼 수 있도록, 출처와 라이선스뿐 아니라 데모 회로와의 일치까지 확인한 4건에만 원본 회로 이미지를 연결했다. `breadboard_supply`는 수집한 PTH 회로와 공개 SMD 이미지가 달라 최종 검토에서 제외했고, `attiny85_time_switch`와 사용자 업로드도 원본 탭 없이 개념도만 유지한다.
+- 회로 자산 계약: `data/circuits/visuals.json`에 원본 URL·저장소·commit·라이선스 증거·귀속·원본/제공 파일 SHA-256을 기록하고, API에는 브라우저에 필요한 안전한 메타데이터만 노출한다. 정적 PNG 4개는 `/circuit-schematics/`에서 제공하며, Docker production build에도 포함한다. 원본과 개념도를 같은 것으로 표현하거나 물리적 핀 호환·배선 정답을 보장하지 않는다.
+- 데이터시트 근거: 1,360개 manifest와 외부 Docling JSON을 파일명 기준으로 결합해 `data/package-outline-pages.json`을 생성했다. URL 디코딩·casefold 일치를 사용하고 제어문자·위험 scheme을 거절하며, 페이지는 1-based다. 브라우저 응답에만 데이터시트 URL과 근거 페이지를 붙이고 안전 결과 저장 모델과 DB 스키마는 확장하지 않았다.
+- 더미·UI: 허구의 `SS34.pdf` 대신 실제 `SS34L SERIES_C2103.pdf`와 `SS34L` 후보를 사용한다. VRRM 근거는 1쪽, 패키지 외형 근거는 4쪽이다. 원본 회로 탭에는 귀속·라이선스·안전한 원문 링크를 표시하고, 데이터시트 근거 링크는 HTTPS 새 탭으로 연다. 판정 문구는 `동일 패키지 가능성`, `기판 변경 가능성 있음`, `패키지 변경 여부 확인 필요`로 제한한다.
+- 배포 경계 보완: `Dockerfile`이 `frontend/public/`을 Vite build 전에 복사하고, 런타임은 `frontend/dist`가 있으면 그 결과만 정본으로 사용한다. 따라서 production asset 누락을 개발용 public fallback이 숨기지 않는다. 최종 4종으로 로컬 image `sojafit-verified-visuals-check:local`을 다시 빌드했고 컨테이너에 `attiny85_dev`, `franzininho_diy`, `mosfet_driver`, `pro_micro` PNG만 있음을 확인했다.
+- 검증: 최종 작업 트리에서 backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 152 passed`, production build 성공, Playwright `7 passed`(검증 원본 PNG 브라우저 decode 포함), 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`를 확인했다. 생성 index는 1,360건이며 SHA-256 `EE961EC12D24227B1C6B2214B466D3D378922097BC9F59E46F7FF69413984B3A`로 재현됐다. 실제 외부 모델·MCP·Mouser·공유 DB·배포 환경 round-trip과 데이터시트 웹 원문의 장기 가용성은 이번 범위에서 검증하지 않았다. 커밋·push·PR은 만들지 않았다.
+- 직접 검수용 dummy 보완: 초기 dummy가 원본 미제공 `breadboard_supply` 한 건만 노출해 사용자가 작업대에서 원본 4종을 볼 수 없던 공백을 수정했다. Vite build-time virtual module이 저장소의 실제 6종 `connections.json`과 `visuals.json`을 읽어 프로젝트·데모 API를 구성하며, 검증된 4종은 작업대에서 원본/개념 탭을 모두 제공한다. 손으로 축약한 연결 fixture는 제거했고 Docker frontend build에도 같은 정본 파일을 명시적으로 전달한다.
+- 직접 검수용 dummy 검증: backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 152 passed`, production build, Playwright 전체 `8 passed`, 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`, Docker image build를 통과했다. 더미 서버 `http://127.0.0.1:5174/app`에서 6종 프로젝트를 선택할 수 있고, `mosfet_driver`, `attiny85_dev`, `franzininho_diy`, `pro_micro`는 원본/개념 탭을, `breadboard_supply`, `attiny85_time_switch`는 개념도만 제공한다.
+- 데모 6종 원본 완성: 기존 4종 제한을 제거했다. `breadboard_supply`는 공식 SparkFun 제품 페이지의 v10 PTH PDF와 canonical 20부품/13넷을 대조했고, `attiny85_time_switch`는 고정 commit `3566a94f`의 `attiny85_time_switch_schematic.pdf`를 canonical 연결과 대조했다. 두 PDF의 첫 페이지를 기존 규칙대로 160 DPI PNG로 고정하고 원본/배포 SHA-256, 고정 commit, 라이선스와 attribution을 catalog에 추가했다. 이제 등록된 6종 모두 원본/연결 개념도 탭을 제공하며 업로드만 개념도 전용이다. 계획서의 6종 범위와 모든 실행 체크를 완료 표시했고 commit·push·PR은 만들지 않았다.
+- 6종 완료 검증: backend 전체 `1295 passed, 112 skipped`, frontend Vitest `19 files / 153 passed`, production build, 기본 `npm run e2e` `8 passed`, 저장소 구조 `5 passed`, `uv lock --check`, `git diff --check`, Docker image build를 통과했다. 최초 병렬 Playwright는 Windows trace 임시 파일 `ENOENT`로 3건이 인프라 실패했고 `--trace=off --workers=1`에서 8건이 통과했다. 기능 실패가 아닌 trace artifact 경합으로 확인해 기본 설정도 trace를 끈 뒤 병렬 기본 명령 8건 통과를 다시 확인했다. `127.0.0.1:5174`에서 6개 PNG 모두 HTTP 200 `image/png`를 반환한다.
+
+### 판정 설명·승인·예상 상품금액 보강
+
+- 근거 표시: 후보 상세에 필수 조건, 계산 근거, 요구 기준, 후보 데이터시트 값, 시험 조건, 판정 이유, 문서·쪽·표·행 및 안전한 HTTPS 원문 링크를 한 조건표로 표시한다. 백엔드의 구조화된 `checks`만 사용하고 원문이 없는 값은 만들지 않는다. 최종 답변의 줄바꿈도 보존한다.
+- 승인 경계: 긍정 verdict라도 `missing`이 있거나 `tier=required` check가 `unverified`이면 프런트 승인 버튼을 비활성화하고, 같은 검사를 backend `approval_snapshot`에도 적용해 직접 API 호출로 우회할 수 없게 했다. 주의 문구만 있는 후보는 차단하지 않는다.
+- 견적 설명: 조회된 가격 구간 중 입력 수량에 적용되는 단가를 골라 `수량 × 단가 = 예상 상품금액`을 화면에서 계산한다. 세금·배송비·환율 제외를 명시하고 기존 계약대로 서버에는 수량만 저장한다.
+- 더미 흐름: SS34L 예시는 입력 최대 전압 12 V와 최대 순방향 전류 1 A에 안전 여유를 적용해 VRRM `15 V ≤ 40 V`, IF(AV) `1.43 A ≤ 3 A`를 설명한다. 패키지·극성 확인은 별도 주의로 남겼다.
+- 검증: TDD RED 뒤 frontend 전체 `19 files / 152 tests passed`, 관련 backend `81 passed`, production build 성공, dummy Playwright `3 passed`를 확인했다. 최초 Playwright 재시도 한 번은 추적 파일 `ENOENT`로 실패해 trace를 끈 깨끗한 실행으로 기능 경로를 재검증했다. 실제 외부 가격 공급자·모델·MCP·공유 DB·배포 환경은 호출하지 않았다.
+
+### 회로 작업대 상단 간소화
+
+- 선택된 프로젝트의 중앙 작업면 상단에서 `부품 대체 분석`, `회로 작업대`, 설명, `결과 보기`, `프로젝트 만들기`를 제거하고 분석 진행 단계만 남겼다. 새 프로젝트 생성은 기능을 잃지 않도록 상단 현재 프로젝트 또는 왼쪽 프로젝트 메뉴로 여는 `내 프로젝트` 팝업의 `새 프로젝트 만들기`로 이동했다.
+- TDD RED에서 기존 제목이 남아 있음을 확인한 뒤 수정했다. 관련 작업대 시험 `19 passed`, 영향받은 화면·비동기 프로젝트 시험 `48 passed`, frontend 전체 `19 files / 152 tests passed`, production build 성공, dummy Playwright `3 passed`, `git diff --check`를 확인했다.
+
+### 선택형 사용 조건 입력
+
+- 질문 입력창은 기본으로 항상 표시하고, 별도 `사용 조건 (선택)` 입력창은 `사용 조건 추가(선택)` 버튼을 눌렀을 때만 펼친다. 조건이 있는 초안과 기록 데모는 자동으로 펼치며, 다시 접어도 값은 유지해 기존 `StartRun.conditions` 필드로 별도 전송한다. 랜딩과 선택된 프로젝트의 대화 입력에 같은 동작을 적용했다.
+- 기본 비노출과 펼치기 동작을 먼저 실패 시험으로 확인했다. 최종 frontend 전체 `19 files / 152 tests passed`, production build 성공, dummy Playwright `3 passed`, `git diff --check`를 확인했다. backend API와 저장 계약은 수정하지 않았다.
+
+### 원본 회로도 확대·이동
+
+- 우측 정보 패널의 검증된 원본 회로도에 50~300% 범위의 확대·축소, 현재 배율 표시, 화면 맞춤을 추가했다. 확대된 이미지는 마우스나 터치로 끌어 이동할 수 있고 기존 스크롤도 유지한다. 연결 개념도와 원본·출처 데이터 계약은 변경하지 않았다.
+- 확대, 드래그 이동, 화면 맞춤 동작을 기존 구현에서 실패하는 시험으로 먼저 확인한 뒤 구현했다. 집중 Vitest `5 passed`, frontend 전체 `19 files / 153 tests passed`, production build, Playwright `8 passed`, `git diff --check`를 통과했다. 최초 Playwright 전체 재실행은 Windows trace 임시 파일 `ENOENT` 2건으로 종료되어, trace를 끈 깨끗한 실행으로 기능 경로를 재검증했다.
+
+### 분석 입력 영역 간소화
+
+- 중앙 질문 입력 영역의 `대상 …` 표기와 `질문과 확인된 조건만 전송합니다.` 안내 행을 제거하고 질문 입력창을 3줄에서 2줄로 줄였다. 사용 조건 선택 입력과 전송 데이터 계약은 유지한다.
+- 행동 버튼은 상태별 하나만 표시한다. 분석 전·실패 후에는 `분석하기` 또는 `다시 분석하기`, 실제 실행 중에는 같은 위치에 `분석 취소`만 표시한다.
+- 기존 구현에서 두 요구가 실패하는 시험 2건을 먼저 확인했다. 수정 뒤 집중 Vitest `23 passed`, frontend 전체 `19 files / 154 tests passed`, production build, 관련 dummy Playwright `1 passed`를 확인했다.
+
+### 채팅형 분석 입력줄
+
+- 질문 입력을 기본 한 줄 높이로 낮추고 분석 실행·취소 버튼을 입력창 오른쪽 안에 배치했다. 대상 미선택 안내 문구는 제거하고 선택 사용 조건은 기존처럼 별도로 펼치도록 유지했다.
+- 입력 내용에 따라 최대 6줄까지 스크롤바 없이 늘어나고 그 이상에서만 내부 스크롤을 사용한다. Enter는 분석을 시작하고 Shift+Enter는 줄바꿈을 유지하며, 한글 IME 조합 중 Enter는 전송하지 않는다. 화면에는 별도 단축키 안내를 추가하지 않았다.
+- 입력 높이·버튼 위치·상태 전환·키보드·스크롤 동작을 기존 구현에서 실패하는 시험으로 확인한 뒤 수정했다. 집중 Vitest `25 passed`, production build, 관련 dummy Playwright `1 passed`를 통과했다. 전체 Vitest는 동시 작업 중 추가된 회로 원본 9건의 dummy fixture 기대값 불일치 1건으로 `155 passed, 1 failed`이며 이번 입력 영역과 무관해 수정하지 않았다.
+
+### 진행도 아래 초기 안내 제거
+
+- 선택된 프로젝트의 중앙 작업면에서 진행도 바 아래에 있던 `분석 대화`, `대체 가능성 분석 흐름`, 대상 배지와 회로 입력 확인 카드를 제거했다. 분석 전에는 빈 대화 작업면과 하단 입력줄만 보이며, 분석을 시작한 뒤 생성되는 실제 질문·상태·결과는 유지한다.
+- 기존 마크업에서 안내 문구가 남아 실패하는 시험을 먼저 확인했다. 수정 뒤 관련 Vitest `2 files / 44 tests passed`, production build, 관련 dummy Playwright `1 passed`, `git diff --check`를 확인했다.
+
+### 하단 입력줄 위치 고정 복구
+
+- 초기 제목 행을 제거한 뒤에도 대화 패널이 기존 3행 Grid를 유지해 입력 영역이 두 번째 `1fr` 행 전체로 529px까지 늘어나던 원인을 확인했다. 실제 자식 구조에 맞춰 `대화 내역 minmax(0, 1fr) + 입력줄 auto`의 2행 Grid로 수정했다.
+- 입력 영역 높이가 200px 미만이고 중앙 작업면 하단과 맞닿는 브라우저 회귀 시험을 RED부터 추가했다. 수정 뒤 관련 Vitest `2 files / 44 tests passed`, production build, Playwright 전체 `9 passed`, `git diff --check`를 통과했다.
+
+### 더미 모드 화면 내부 입력줄 보정
+
+- 이전 검증은 입력줄이 작업면 하단에 붙는지만 확인해, 더미 모드 안내 배너만큼 작업면 전체가 뷰포트 아래로 밀리는 문제를 놓쳤다. `1328×864`에서 입력줄 하단이 `906.4px`에 위치하는 것을 재현했다.
+- 바깥 셸은 안내 배너를 제외한 남은 높이를 작업대에 배분하고, 중앙 작업면은 자체 `100vh` 계산을 제거해 Grid 행 높이를 따르도록 수정했다. 모바일은 기존 문서 스크롤 방식을 유지한다.
+- 입력 영역 높이 200px 미만, 하단 좌표 864px 이하, 사용 조건 버튼의 viewport 노출을 자동 검증한다. 같은 크기의 실제 화면을 캡처해 입력창과 두 버튼이 모두 보이는 것도 확인했다. 최종 관련 Vitest `2 files / 44 tests passed`, production build, Playwright 전체 `9 passed`, `git diff --check`를 통과했다.
+
+### 추가 조건 배치와 오버레이 스크롤바
+
+- 질문 입력 바로 아래에 선택형 사용 조건 입력을 배치하고 `사용 조건 닫기` 버튼을 입력 영역의 마지막으로 옮겼다. 조건 입력은 200ms 동안 위에서 자연스럽게 펼쳐지며, 모션 최소화 환경에서는 즉시 완료된다.
+- 네이티브 스크롤바의 전용 폭을 0으로 만들어 화면을 자르지 않게 했다. 포인터가 실제 스크롤 가장자리에 접근할 때만 레이아웃 위에 겹치는 오버레이 손잡이가 나타나며, 세로·가로 드래그, 휠·트랙패드·키보드 스크롤을 유지한다.
+- `1328×864` 실제 화면에서 조건 입력과 닫기 버튼이 모두 viewport 안에 있고, 오버레이 막대가 별도 여백 없이 콘텐츠 위에 표시되는 것을 캡처해 확인했다. frontend Vitest `19 files / 157 passed`, production build, Playwright 전체 `10 passed`를 통과했다.
+
+### 랜딩 세부 문구 간소화
+
+- 중앙 설명 문장 `부품과 사용 조건을 자연어로 적으면…`은 유지했다. 랜딩 조건 입력의 화면상 `사용 조건 (선택)` 라벨과 예시 목록 위 `빠른 시작` 표기만 제거했다.
+- 조건 입력의 접근성 이름과 입력 기능, 빠른 시작 예시 버튼·애니메이션은 그대로 유지했다. 관련 Vitest `19 passed`, production build, 랜딩 Playwright `1 passed`를 확인했다.
+
+### 프로젝트 선택 전 원본 회로도 미리보기
+
+- 초기 랜딩에서 접혀 있던 우측 정보 패널을 기본으로 펼치고, `/api/demo-circuits`가 제공하는 검증된 데모 회로도를 프로젝트 생성 전에도 선택·확대·이동해 볼 수 있게 했다. 프로젝트를 선택하면 기존처럼 해당 demo id의 회로 요약으로 전환되며, 업로드 프로젝트에 원본 이미지를 추정하지 않는 경계는 유지했다.
+- RED는 초기 화면에 이미지가 없고 `console-collapsed`인 것을 확인했다. 구현 후 `WorkbenchPage.test.tsx` `20 passed`, 전체 Vitest `19 files / 158 tests passed`, production build 성공. 실제 dummy 브라우저에서 선택지 15종과 `breadboard_supply` 초기 이미지, `zr7_taillight` 전환 이미지의 정상 로드를 확인했다.
+
+### 연결 개념도 자동 배치
+
+- 고정 원형 좌표와 직선 연결을 제거하고, 부품과 net junction을 분리한 그래프를 `elkjs` Web Worker에서 layered/orthogonal 방식으로 배치한다. 한 페이지는 네트 6개, 네트당 이웃 5개로 제한하며 초과 연결은 `+N`, 나머지 네트는 페이지로 탐색한다. 회로 연결 데이터는 브라우저 밖으로 전송하지 않는다.
+- 배치 그래프·페이지·초과 묶음·입력 순서 독립성을 먼저 실패 시험으로 고정했다. 이후 SVG는 방향 화살표 없이 직교 `path`를 그리고, 실제 브라우저 시험에서 Worker 결과 전환, net junction 존재, 직선 `line` 부재, 표시 노드 간 겹침 0건을 확인했다.
+- 검증: frontend Vitest `20 files / 161 passed`, production build 성공, 신규 회로 배치 Playwright `1 passed`. 전체 Playwright는 `10 passed, 1 failed`이며 실패는 초기 정보 패널이 이미 펼쳐진 현재 UI에서 기존 시험이 `정보 패널 펼치기` 버튼을 기다리는 계약 불일치다. 연결 개념도 시험과 나머지 흐름은 통과했다.
+
+## 2026-11-10 데모 회로 15종 실서비스 catalog 확장
+
+- 바꾼 파일: `data/circuits/catalog.json`, `visuals.json`, 신규 회로도 PNG 9개, `backend/projects/catalog.py`, 프로젝트 repository·visual 검증·API, `db/026_projects_catalog_demo.sql`, Vite dummy catalog, Dockerfile, 관련 계약 테스트와 폴더 문서.
+- 실제 작업: 저장소에 수집된 공개 회로 15종을 단일 catalog로 묶고, 기존 Python·Vite·Docker의 6개 하드코딩을 제거했다. 누락 9종은 각 공식 저장소의 고정 commit에서 PNG·PDF·KiCad 원본을 받아 원본을 추정하거나 재배선하지 않고 배포 PNG를 만들었다. c02 하드웨어 라이선스는 원 저장소 근거에 따라 CC BY-SA 4.0으로 기록했다.
+- API: 기존 전체 목록 응답을 유지하면서 ID·이름 검색, offset/limit, 5분 public cache header를 추가했다. 원본/배포 hash와 로컬 경로는 공개 응답에 포함하지 않는다.
+- TDD: 6종만 반환하는 기존 구현과 6종 visual catalog에서 계약 테스트가 실패하는 것을 먼저 확인했다. 이후 catalog 기반 구현과 15종 자산을 추가했다.
+- 검증: backend 전체 pytest `1304 passed, 112 skipped`, frontend Vitest `19 files / 157 passed`, production build, catalog 대상 Playwright `1 passed`(15종 원본 이미지 natural width), repo layout `5 passed`, `uv lock --check`, Docker image build와 실행 smoke(`/health` 200, 신규 9개 PNG 9/9 HTTP 200)를 통과했다. 전체 Playwright는 catalog 흐름을 포함해 `9 passed`였으나, 동시에 추가된 별도 스크롤바 hover E2E 1건이 투명 상태로 남아 `1 failed`이며 이 catalog 작업 범위에서는 수정하지 않았다.
+
+## 2026-11-11 PR 준비와 최신 main 통합
+
+- 범위 정리: 작업대 랜딩·대화 입력·근거·승인/견적 흐름과 15종 회로 catalog·원본 회로도·연결 개념도 자동 배치를 하나의 사용자 흐름으로 검토했다. API DTO, catalog, Vite dummy, Docker 정적 자산, 화면과 검증이 함께 바뀌어 분리하면 통합 계약을 중복 수정해야 하므로 한 PR로 유지하며, 400줄 초과 이유와 리뷰 지점을 PR 본문에 명시한다.
+- 저장소 구조: `SOJAFIT.md`에서 누락됐던 회로 배치 Worker·client·test·E2E와 오버레이 스크롤 hook 6개를 실제 트리에 맞게 등록했다. `uv run --no-sync pytest -q tests/repo/test_repo_layout.py`는 `5 passed`다.
+- main 통합: 기능 커밋 `f551b87`을 만든 뒤 `origin/main` `c96dbbe`를 merge commit `e50c657`로 충돌 없이 반영했다. 동결 평가셋은 수정하지 않았고 PR 기준 변경은 100개 파일이다.
+- 브라우저 회귀 수정: 병합 직후 전체 Playwright에서 초기 정보 패널을 접힌 상태로 가정한 시험과, 모바일 가로 오버레이 스크롤바의 투명 track이 프로젝트 버튼 클릭을 가로막는 문제가 드러났다. 초기 패널의 현재 계약을 시험에 반영하고 track은 클릭을 통과시키되 thumb만 드래그 입력을 받도록 수정했다(`a4403b1`). 실패 시험을 재현한 뒤 집중 Playwright `1 passed`, 전체 Playwright `11 passed`를 확인했다.
+- 최종 검증: `uv run --no-sync pytest -q`는 `1445 passed, 112 skipped`, `npm run test:run`은 `20 files / 163 tests passed`, `npm run build`는 TypeScript·Vite production build 성공, `npm run e2e -- --reporter=line`은 `11 passed`, `uv lock --check`, `git diff origin/main...HEAD --check`와 repo layout `5 passed`를 확인했다. PR diff 593 KB를 Gitleaks stdin으로 검사해 `no leaks found`를 확인했다. worktree 전체 `dir` 검사는 Git 비추적 `.env`와 `.venv`까지 읽어 유효하지 않았으며 값은 출력하지 않았다.
+- 확인하지 않은 것: 실제 외부 모델·MCP·Mouser·공유 PostgreSQL·배포 환경 round-trip, 데이터시트 외부 URL의 장기 가용성은 이번 로컬 PR 검증 범위가 아니다. GitHub Actions의 전체 이력 Gitleaks와 CI는 push 후 확인한다.
+
+## 2026-11-11 제조사 데이터시트의 페이지·표 행 인용
+
+- 내부 문서가 부족할 때 제조사 공식 PDF에서 대상 품번의 값과 단위를 찾아 문서 에이전트에 전달한다. 체크포인트에는 인용 위치만 남긴다.
+- 실호출 검증 조건: 공개 질문 "Vishay SS34의 최대 반복 역전압은?"을 내부 검색 0건으로 입력한다. Exa 최대 1회, OpenRouter 문서 답변 최대 1회, 결과 형식 또는 공급자 실패 시 추가 유료 호출 없이 종료한다. 기준은 Vishay 문서 88751 1쪽의 SS34 열 40 V와 최종 인용 위치가 일치하는지다.
+- 실호출: 문서 에이전트에 내부 결과 0건을 주어 Vishay SS34를 조회했다. Exa 1회, 제조사 PDF GET 1회, OpenRouter 문서 모델 1회. 답은 40 V [W1], 출처는 ss32.pdf 1쪽 Maximum repetitive peak reverse voltage 행이었다.
+- 최종 검증: 기능·DTO·그래프·저장소 구조 94 passed. 전체 pytest 1482 passed, 112 skipped, 1 failed. 유일한 실패 tests/evals/test_input_surfaces.py의 P3는 변경 전 main(14cf261)에서도 재현됐다. uv lock --check와 git diff --check 통과. 실호출은 내부 검색 0건을 주입한 문서 에이전트에서 실시했으며 로그인부터 운영 DB까지의 실사용은 검증 범위 밖이다.
+- Windows의 core.autocrlf=true가 동결 JSONL의 바이트 해시를 바꾸므로, 전체 검사 때 해당 파일이 Git 원본 LF 및 동결 해시와 일치하는지 확인했다. 검증 뒤 로컬 기본 줄바꿈으로 복구했으며 평가셋 변경은 없다.
+
+### SS34 로그인 경로의 외부 근거 재채점
+
+- 이전 로그인 실행은 외부 검색에서 Vishay 원문을 찾고도 `all_rejected`로 끝났다. 재채점 입력에 이미 탈락한 내부 카드가 다시 들어가고, 제조사 URL이 누락되는 문제를 재현했다. 외부 재채점이 실패하면 이전 내부 채점의 누락 사유가 반환되는 문제도 확인했다.
+- 실호출 조건: 같은 공개 SS34 질문 1건, 격리 PostgreSQL과 42문서 스냅샷, 일반 계정 로그인, 데모 재생 끔. Exa 한 번과 서비스의 기존 모델·시간·비용 상한을 적용한다. 성공 기준은 실시간 completed, 저장 재조회 일치, 인용된 페이지의 같은 표 행에서 SS34 열 40 V 확인이다. 추가 유료 평가 없이 종료한다.
+- 수정: `backend/multi_agent/agents/docs.py`에서 탈락한 내부 카드를 제외하고, 부분 답에서 인용한 카드만 외부 표 행과 함께 재채점한다. 모델에 공식 PDF URL·페이지·표·행을 표시하며, 재채점도 실패하면 해당 누락 사유를 보고한다. `backend/prompts/docs_answer.md`에 제조사 출처와 같은 계열 안의 품번 열을 구분하는 기준을 명시했다.
+- 실제 결과: 로그인·세션 확인 200, 내부 SS34 검색 0건, Voyage 200, Exa 1회 200, Vishay PDF 다운로드 200. 문서 모델이 내부 근거에 none, 외부 표 행에 enough를 반환했다. 최종 SSE completed와 GET /api/runs 재조회에 같은 40 V [W1] 답변과 근거가 남았다. `ss32.pdf` 1쪽 MAXIMUM RATINGS 표의 Maximum repetitive peak reverse voltage 행에서 SS33=30, SS34=40, 단위 V를 원문과 대조했다.
+- 회귀 검사: 수정 전 재채점 입력과 실패 보고 관련 3건 실패를 확인했다. 수정 후 문서 에이전트·PDF 추출 79건, 대화 DTO·API·Supervisor 105건 통과. 격리된 로컬 백엔드에서 실제 공급자를 사용했으며 브라우저 렌더링·운영 배포·전체 동결 평가셋 재측정은 이번 검증 범위 밖이다.
+
+### 공식 PDF 원문 셀과 최종 답변 대조
+
+- 기존 구현은 PDF가 SS34 40 V여도 모델이 쓴 400 V [W1]을 문서 노드와 최종 검사에서 통과시켰다. 공개 예제 1건을 격리 DB(42문서)에서 일반 계정으로 실행한다. Exa 1회와 기존 서비스 호출 예산을 사용한다. 통과 조건은 잘못된 품번·수치·단위를 회귀 검사에서 거절하고, 로그인 질문의 답변·저장 재조회·공식 PDF 1쪽 SS34 열이 일치하는 것이다.
+- 1차 로그인 실행은 텍스트로 W행을 선택하는 방식에서 verify_failed로 거절됐다. 선택을 모델의 구조화 필드 `pdf_rows`로 옮겼다. 외부 근거만 있으면 모델의 자유 답변 필드는 빈 문자열이어야 한다. 서버가 PDF 셀의 품번·행·수치·단위로 문장을 만들며 최종 검사에서 인용 번호와 문장 해시를 다시 확인한다.
+- 수정 후 같은 질문을 새 로그인 세션에서 재검증했다. 각 실행에서 Exa 1회, 최종 실행에서 공식 PDF 200, 외부 문서 모델 enough·W1, SSE completed, GET 재조회 일치. 원문 1쪽 MAXIMUM RATINGS의 Maximum repetitive peak reverse voltage 행은 SS33=30, SS34=40, 단위 V였다. 테스트는 400 V, 다른 품번, 다른 단위, 최종 인용 변경을 거절했다. 관련 pytest 193건 통과. 전체 동결 평가셋 재측정·운영 배포 검증은 미실시.
+- 멀티 에이전트 전체와 관련 서비스·대화·레이아웃으로 넓힌 회귀 검사: 315 passed.
+
+## 2026-11-11 중단·재개 후 저장 답변의 PDF 인용 유지
+
+- 수정 전에는 독립 검색이 모두 W1부터 시작해 두 공식 PDF의 표 행이 같은 문장을 만들면 마지막 URL만 남았다. `backend/judge/pdf_claims.py`와 `backend/multi_agent/supervisor.py`에서 체크포인트 보고를 회차·작업 순으로 읽고 기존 문장 해시를 검증한 뒤 실행 전체 번호를 부여한다. 같은 위치의 같은 주장은 번호를 재사용한다. `backend/graph/nodes.py`와 `backend/conversations/dto.py`에서도 W4 이후 번호를 읽는다.
+- 격리 PostgreSQL 16과 FastAPI TestClient에서 일반 계정 로그인 → 실행 → requires_input → 분석 서비스와 DB 풀 재생성 → 같은 run 재개 → completed → 새 클라이언트로 로그인 → GET /api/runs/{id} 순서로 확인했다. 인증·체크포인트·DB 저장은 실제 경로를 사용했다. 두 검색과 모델 응답은 고정했고 PDF는 테스트에서 생성했다. 외부 공급자 호출은 0회였다.
+- 두 PDF의 SS34 `Peak reverse voltage` 행이 모두 40 V인 조건에서 완료 응답과 재조회 결과가 일치했다. W1은 test-a.pdf 1쪽 Table 1, W2는 test-b.pdf 2쪽 Table 2였다. 로그아웃 상태의 GET은 401이었다. `tests/services/test_datasheet_rows.py`에 같은 표를 다시 찾은 경우, 변조된 400 V 거절, W4 재조회도 포함했다.
+- 관련 pytest는 317 passed. 격리 DB에서 `uv run --no-sync pytest -q --tb=line`으로 전체를 비교했다. 깨끗한 Windows 체크아웃에서 수정 전 `2d726e3`은 1548 passed, 수정 후 1550 passed였고, 양쪽 모두 같은 11 failed, 3 errors, 39 skipped였다. 이 중 평가 표본 해시 문제는 Git의 CRLF 변환으로 재현했다. 실제 작업 폴더의 첫 실행은 이전 frontend/dist에 회로도 이미지가 없어 데모 API도 실패했다. 동결 평가셋이나 다른 기능의 실패는 이번 수정에 포함하지 않았다.
+
+## 2026-11-11 재개 후 Exa 품번과 공식 PDF 행 검증
+
+- 수정 전 실제 재개 실행은 1N5819 작업에도 1N4001과 1N5819를 함께 검색해 1N4001의 50 V만 두 번 저장했다. 같은 공개 질문, 빈 코퍼스, 격리 DB 일반 계정, onsemi 원문으로 다시 실행한다. `Conversations` 기본 그래프와 실제 Exa·OpenRouter를 사용하고, 한 실행당 Exa 최대 2회, 각 호출 단계는 서비스 예산 상한을 적용한다. 재조회 결과의 W1·W2와 두 원문 2쪽 VRRM 행을 대조한 뒤 중단한다.
+- `backend/multi_agent/agents/docs.py`에서 외부 검색 품번을 작업 지시서 기준으로 유지한다. 지정 목록이 비어 있으면 전체 질문의 품번 중 Supervisor의 작업 검색어에 나온 품번을 우선한다. PDF의 대상 품번과 셀 열을 확인한 행만 모델에 전달한다. `tests/multi_agent/test_agents.py`는 다른 품번의 행과 다른 품번 열에 든 수치가 모델 입력에 들어가지 않는지 검증한다.
+- 실제 실행 `401eea2f-a13a-4cbf-8a76-167e4400795b`에서 일반 계정 로그인 200 → 첫 Exa 검색 1N4001 → requires_input → 분석 서비스 재생성 → 같은 run 재개 → 두 번째 Exa 검색 1N5819 → completed를 확인했다. 비로그인 조회 401 후 새 세션으로 로그인했고, 완료 응답·저장 답변·DB 근거 목록의 두 번호가 일치했다. 외부 PDF 다운로드 대상은 질문의 제조사 onsemi로 제한했다.
+- 두 PDF를 별도로 텍스트 추출해 2쪽 `MAXIMUM RATINGS` 표의 `Peak Repetitive Reverse Voltage`(VRRM) 행에서 머리글과 값의 열 위치를 대조했다. W1은 [1N4001의 50 V](https://www.onsemi.com/pdf/datasheet/1n4001-d.pdf#page=2), W2는 [1N5819의 40 V](https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf#page=2)였다. Exa 2회, PDF GET 2회, OpenRouter 노드 응답 5회(Supervisor 2, 판정 조건 읽기 1, 문서 답변 2). DB에 기록된 분석 시간은 중단 전 9.952초, 재개 후 6.109초였다. 실제 청구 금액은 확인하지 않았다.
+- 관련 pytest 319 passed. 각각 새 PostgreSQL DB와 LF 체크아웃에서 `uv run --no-sync pytest -q --tb=no`로 비교했다. 수정 전 dd7fc3c는 1561 passed, 수정 후 1563 passed였다. 양쪽 모두 39 skipped이며 같은 테스트 3건(두 Google 관리자 세션, PostgreSQL 판정 재개 시 judge_read 횟수, 입력 표면 P3)이 실패했다. 동결 평가셋을 변경하거나 전체 실모델 평가를 실행하지 않았다.
+## 2026-11-11 원본 회로도 백엔드
+
+- 공개 GitHub 저장소에서 출처와 커밋, 라이선스, KiCad 원본을 확인한 뒤 전체 회로도를 시트별 PNG로 제공한다. 같은 설계의 PDF가 있으면 목표 300 DPI로 변환한다. 프런트와 일반 검색·LLM 답변 통합은 포함하지 않았다.
+- 검증: `uv run --no-sync pytest -q` 전체는 1,598 passed, 112 skipped, 1 failed(88.43초). 실패한 `tests/evals/test_input_surfaces.py::test_real_input_path_records_bad_raw_and_contains_final[P3]`는 변경 전 main(`14cf261`)의 별도 스냅샷에서도 단독 실행으로 재현됐다. 회로도 API·검색·변환·오류·OpenAPI·폴더 규칙 집중 검사 181 passed.
+- 실제 공급자 점검: `verify_external_schematics.py --query RP2040 --check-cache`에서 MIT 프로젝트 `calliah333/RP2040-designguide@a9afaa2`의 3509×2484 PNG 한 장을 받았다. 반복 요청에서 외부 검색·저장소 검사·변환은 각각 0회. Docker 이미지 빌드 후 KiCad 9.0.2 비루트 컨테이너에서 `--force-kicad-fallback`으로 ATtiny85 원본도 3508×2481 PNG 한 장으로 변환했다. 배포 서버와 실제 사용자 로그인은 이번 실조회 대상이 아니다.
+- 운영 요청: 팀 GitHub 조직 관리자가 공개 회로도 조회용 OAuth App을 등록한다. 앱 자격 증명은 배포용 Secret Manager에 보관하고, 앱 인증 연결과 요청 한도 확인은 등록 후 진행한다.
+
+## 2026-11-12 · 1→2→3등급 PR 준비
+
+공식 근거/참고 폴백과 정확 품번·판본·인용 검증, 관련 품질 보완을 분리한다. 검증 정리는 docs/research/grade-evidence-validation.md. 전체 pytest 1764 passed,112 skipped,실패0(64.59초). 운영 부하는 보류. 포화 재확인은 공급자 제한으로 중단돼 안정 포화점 미확정. 상세 사전등록 원문은 작성자 기존 작업공간에 보존하며 게시 전 필요한 등급 관련 사전등록 절을 검토한다.
+
+
+## 2026-11-12 OSC에 최신 main 통합 후 최종 상태
+
+- 브랜치는 OSC. 최신 main `11dc216`을 fast-forward로 반영했다. 원래 OSC의 회로도/프런트 미커밋 작업은 stash `fc262a301cf7f47d133bdbdc587716380403f5f1`에 보존했다. 기존 검증 원본 작업공간도 유지했다.
+- main 기능을 보존하며 등급 변경을 3-way 통합했다. Spec 에이전트/회로 읽기 명칭, FIND_N_DOCS 기본5와 환경변수, SUPERVISOR_REPLAN 설정, 응답·보안 경계를 보존했다. 프런트/DB 추가변경은 없다. 통합 후 유료 답변 평가·포화 재측정은 수행하지 않았다. 위 실측 수치는 통합 전 코드의 이력이며 새 코드의 새 실측으로 주장하지 않는다.
+- 충돌 마커 제거/문법 검사/diff check 통과. HEAD=origin/main인 상태에서 전체 통합 변경(신규 파일 포함)을 별도 임시 index의 패치로 만들어 최신 main에 적용 검사 통과. 실제 index·commit·push·PR은 변경하지 않았다. 원격 main이 이후 변경되면 다시 검사해야 한다.
+- 전체 pytest는 변경하지 않은 main의 tests/api/test_openapi.py:154 `SNAPSHOT` 미정의로 수집 오류1건. 이 파일을 제외하고 .env 영향을 차단한 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q --ignore=tests/api/test_openapi.py` 결과는 **1818 passed,158 skipped,9 failed**,69.62초다. 실패9건은 인증 사전검증2, stage_timing2, 저장소구조5이며 동일 main 기준선에서 재현됐다. 기준선 export의 추가 sample-hash 관련 실패는 이9건의 근거와 섞지 않는다.
+- 통합 중 os/display_inputs 등 누락은 수정하고 관련173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
+- 판단: 내용상 최신 main 통합/무충돌 검사는 완료. 테스트 전체 통과 기준의 PR 준비 완료는 보류. 위 기존 main 오류의 처리/팀 판단이 남았다.
+- 자료는 PR-준비/OSC-final-verification.json, OSC-main-integrated.patch, OSC-final-included-files.txt, OSC-main-full-pytest.log, OSC-main-final-pytest.log, OSC-main-baseline-repo-layout.log에 보존했다. 패치 적용 가능은 실제 GitHub PR 생성/CI 성공/병합 승인과 구분한다.
+
+### 2026-11-12 · PR103 계약 감사 보완 시작
+
+- 사용자 승인 범위: 품번별 판본 연결, 공식 검색 슬롯 소진과 근거 부재 구분, 웹 연결/SSE·GET 예외 계약 문서. 기존커밋d15331e가복구기준이며추가작업없이복구가능. 제품·문서·시험파일은각담당으로나눠병렬수정,공유호출부는담당완료후순차통합한다.
+- 새유료평가/포화실측/운영부하없음. 단위회귀와최종pytest/main병합검사후기존OSC PR103에추가커밋을반영한다. 기존main오류는이번범위와구분해남긴다.
+
+
+## PR103 계약 감사 수정 반영 — 2026-11-12
+
+- 품번별 판본 연결을 추가했다. SS34/F16·SS34H/F20의 교차 판본은 문서 입력/공식 행/후보 판정/최종 인용 검사에서 배제한다. 1N 계열·하이픈 품번, 단일 판본의 기존 locator와 단일 품번의 복수 판본 비교도 회귀 시험에 포함했다. 관계가 모호한 다품번·다판본 자료는 추정하지 않고 거부한다. 지원되는 명시적 절 연결을 검증한 것으로 모든 자연어 문장을 해석한다고 주장하지 않는다.
+- 공식/참고 검색 슬롯은 요청당 각각1회로 유지한다. 사용 중이거나 소진된 슬롯은 SearchBudgetExhausted로 실제 검색0건과 구분한다. 공식 슬롯 소진만으로3등급으로 이동하지 않는다. 실제0건/공급자 실패의 기존 폴백과 유효 내부 답변은 보존한다. 다른 에이전트의 검색 결과 공유·추가 호출 기능은 넣지 않았다.
+- MULTI_AGENT의 낡은 웹 거부 설명, 공식 검색 계약, API의 SSE/GET 공통 결과 설명을 갱신했다. profile_hints/input_conditions가 SSE 전용인 기존 동작과 DB 계약은 바꾸지 않았다.
+- 최종 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q`는 기존 main의 tests/api/test_openapi.py SNAPSHOT 미정의 수집오류1건이다. 해당 파일 제외 최종 전체 결과는 **1836 passed,158 skipped,9 failed**,71.92초. 남은9건의테스트ID는수정전과동일(인증사전검증2/단계타이밍2/저장소구조5). 기대치를 바꾸거나 이9건을비용실패로제외하지않았다.
+- 독립검토에서 판본필터가 문서·판정·최종인용 경계까지 연결되고 상한1+1이 유지됨을 확인했다. 초기focused1건실패는병렬작업중부모테스트와helper갱신시점이겹친실행으로보존했고,산출물고정후관련506pass1skip 및 마지막복수절호환추가후전체검증으로확인했다.
+- 가짜 검색·모델·사양과 실제 코드 경로를 이용한 회귀 검증이다. 이번 수정 후 실Exa/PDF/LLM 호출·포화/운영부하 실측은 하지 않았다. 통합 전 실측을 새 코드의 새 실측으로 바꾸지 않는다.
+- 근거: PR-준비/PR103-contract-focused.log, PR103-contract-final-targeted.log, PR103-contract-full.log, PR103-contract-full-excluding-known-main-error.log. 동결v3/정답/해시는유지했다.
+
+### 2026-11-12 · 조회 제한 후 문서 완료 상태 보완
+
+- 사용자승인: 공식보강이필요한데슬롯소진시기존내부답을ok로보고하는문제. c0c453e가복구기준이다. docs.py의최종상태계산만고쳐최종보강후남은요구와제한을함께보며답변/인용은유지한다. 충족된내부보강packet은정상완료로보존한다.
+- Red2회귀에서ok오류재현, Green8경계시험통과. 관련테스트와전체검사후기존PR103추가커밋/본문갱신예정.새유료평가나운영부하없음.
+
+
+## PR103 공식 조회 제한 후 미완료 상태 보완 — 2026-11-12
+
+- 공식 조회 슬롯 소진 후에도 필수 trr 측정조건이 부족한데 문서 보고가ok/missing[]로 남는 문제를 수정했다. 최종 내부 보강이 끝난 다음 남은 조건·누락·재검색 요구와 조회 제한 여부를 함께 검사한다.
+- 확인된 내부 답변/인용은 유지하면서 미완료 상태partial, 사유limit_reached, 미확인 항목을 남긴다. Supervisor의부분답변안내도실제로출력됨을시험했다. 내부의검증된보강packet만으로요구가충족되면정상완료를유지하며불필요partial을추가하지않는다. DB/프런트/모델설정/검색횟수는변경없음.
+- Red: enough/partial 두입력에서잘못된ok재현2건. Green: 해당두경계와내부완결packet의조회제한유무포함8건통과. 최종관련190passed(7.33초).
+- 최종전체pytest는기존main SNAPSHOT수집오류1건으로중단. 그파일제외및.env영향차단후 **1841 passed,158 skipped,9 failed**(71.16초). 실패테스트ID는이전과동일하고이번수정으로늘어난실패는없다. 비용문제나기존실패를성공으로바꾸지않았다.
+- 검증은가짜조회·가짜모델과실제문서에이전트/최종안내경로다. 실Exa/LLM유료요청이나동결v3의새품질·포화평가는하지않았다. 실제모델오답률이개선됐다고주장하지않는다.
+- 로그: PR-준비/PR103-completion-focused.log, PR103-completion-full.log, PR103-completion-full-excluding-known-main-error.log. 계약은docs/specs/official-datasheet-evidence.md에추가했고기존PR103본문과추가커밋으로반영한다.

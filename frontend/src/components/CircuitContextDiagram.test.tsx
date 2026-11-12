@@ -23,6 +23,17 @@ const context: CircuitContext = {
 }
 
 describe('CircuitContextDiagram', () => {
+  it('shows accepted voltage/current and temperature instead of asking for missing information', () => {
+    render(<CircuitContextDiagram context={{ ...context, missing: [], conditions: [
+      { code: 'v_in_max', label: '입력 전원 최대 전압', value: '20 V' },
+      { code: 'i_max', label: '다이오드 최대 순방향(부하) 전류', value: '0.15 A' },
+      { code: 'temp', label: '사용 온도', value: 'TA=25 °C' }] }} analysisStatus="completed" />)
+    expect(screen.getByText('판정에 사용한 조건')).toBeInTheDocument()
+    expect(screen.getByText('20 V')).toBeInTheDocument()
+    expect(screen.getByText('0.15 A')).toBeInTheDocument()
+    expect(screen.getByText('TA=25 °C')).toBeInTheDocument()
+    expect(screen.queryByText('판정 결과에서 확인된 사용 조건이 없습니다.')).not.toBeInTheDocument()
+  })
   it('renders the central target, direct and two-hop nodes without direction markers', () => {
     const { container } = render(<CircuitContextDiagram context={context} analysisStatus="completed" />)
     expect(screen.getByText('D1 / 1N4001')).toBeInTheDocument()
@@ -39,9 +50,9 @@ describe('CircuitContextDiagram', () => {
     render(<CircuitContextDiagram context={context} analysisStatus="requires_input" />)
     fireEvent.click(screen.getByRole('button', { name: 'U1 노드' }))
     expect(screen.getByText('선택 노드 U1')).toBeInTheDocument()
-    expect(screen.getByText('LM317')).toBeInTheDocument()
+    expect(screen.getByText('LM317', { selector: 'dd' })).toBeInTheDocument()
     expect(screen.getByText('import_input:TO220-ADJ')).toBeInTheDocument()
-    expect(screen.getByText('전압·전류 정보 필요')).toBeInTheDocument()
+    expect(screen.getByText('판정 결과에서 확인된 사용 조건이 없습니다.')).toBeInTheDocument()
     expect(screen.getByText('사용 조건 부족')).toBeInTheDocument()
   })
 

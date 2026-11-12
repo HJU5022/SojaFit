@@ -49,6 +49,8 @@ def test_demo_catalog_and_invalid_creation(client):
     assert response.status_code == 200
     assert {item["id"] for item in response.json()} == {
         "breadboard_supply", "mosfet_driver", "attiny85_dev", "pro_micro", "franzininho_diy", "attiny85_time_switch",
+        "fc_rom_vomitter", "attiny2313a_thermostat", "tiny85_fan_control", "ug56_pwm_controller",
+        "car_radio_acc_delay", "overengineered_psu", "tinydimmer", "hrem", "zr7_taillight",
     }
     for body in ({"demo_id": "../../secret", "name": "회로"}, {"demo_id": "breadboard_supply", "name": " "},
                  {"demo_id": "breadboard_supply", "name": "x" * 201},
@@ -56,6 +58,43 @@ def test_demo_catalog_and_invalid_creation(client):
         result = client.post("/api/projects", json=body, headers={"origin": "http://testserver"})
         assert result.status_code == 422
         assert result.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_demo_catalog_exposes_only_verified_public_schematic_metadata(client):
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    response = client.get("/api/demo-circuits")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 15
+    for item in body:
+        assert set(item) == {"id", "name", "schematic"}
+        schematic = item["schematic"]
+        assert set(schematic) == {
+            "image_url", "original_url", "source_repo", "source_commit", "license", "license_evidence_url", "attribution",
+        }
+        assert schematic["image_url"] == f"/circuit-schematics/{item['id']}.png"
+        for field in ("original_url", "source_repo", "license_evidence_url"):
+            assert schematic[field].startswith("https://")
+    for private in ("sha256", "local_path", "checkout_path", "C:\\", "file://"):
+        assert private not in response.text
+
+
+def test_demo_catalog_requires_session(client):
+    assert client.get("/api/demo-circuits").status_code == 401
+
+
+def test_demo_catalog_filters_pages_and_sets_cache_header(client):
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    response = client.get("/api/demo-circuits", params={"q": "attiny", "offset": 2, "limit": 1})
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == ["attiny2313a_thermostat"]
+    assert response.headers["Cache-Control"] == "public, max-age=300"
+
+
+@pytest.mark.parametrize("params", [{"offset": -1}, {"limit": 0}, {"limit": 101}, {"q": ""}])
+def test_demo_catalog_rejects_invalid_page_parameters(client, params):
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    assert client.get("/api/demo-circuits", params=params).status_code == 422
 
 
 def test_database_errors_use_safe_common_response(client, monkeypatch):
@@ -115,7 +154,7 @@ def test_upload_persists_only_normalized_payload_and_closes(upload_boundary):
     assert set(payload) == {"connections", "source_sha256", "parser_version"}
     assert set(payload["connections"]) == {"parts", "nets"}
     assert payload["source_sha256"] == hashlib.sha256(raw).hexdigest()
-    assert payload["parser_version"] == "kicad-export-v1"
+    assert payload["parser_version"] == "kicad-export-v2"
     assert "RAW_UPLOAD_MARKER" not in repr(payload) + response.text
     assert all(not isinstance(value, (bytes, Path)) and not hasattr(value, "read") for value in payload.values())
     assert reads == [5 * 1024 * 1024 + 1]

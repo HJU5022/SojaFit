@@ -17,6 +17,9 @@ def mount_frontend(app: FastAPI, dist: Path) -> None:
     assets = dist / "assets"
     if assets.is_dir():
         app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
+    schematics = dist / "circuit-schematics"
+    if schematics.is_dir():
+        app.mount("/circuit-schematics", StaticFiles(directory=schematics), name="circuit-schematics")
 
     @app.middleware("http")
     async def frontend(request: Request, call_next):
@@ -30,6 +33,8 @@ def mount_frontend(app: FastAPI, dist: Path) -> None:
             or path.rstrip("/") == "/health"
             or path == "/assets"
             or path.startswith("/assets/")
+            or path == "/circuit-schematics"
+            or path.startswith("/circuit-schematics/")
         ):
             return response
         index = dist / "index.html"

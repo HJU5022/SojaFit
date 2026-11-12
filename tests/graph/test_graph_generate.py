@@ -77,7 +77,8 @@ def test_memory_sources_are_separate_bounded_and_checked(monkeypatch):
     out = nodes.generate(state)
     assert out['check']['fake_citations'] == [] and out['check']['uncited_sentences'] == 0
     assert out['memory_refs'] == ['승인사례:0:1']
-    report = TaskReport(task=1, agent='docs', status='ok', summary='case').model_dump(mode='json')
+    report = TaskReport(task=1, agent='docs', status='ok', summary='case', answer=out['answer'],
+                        evidence_ids=['넷리스트']).model_dump(mode='json')
     assert 'refusal_reason' not in check_node({**state, **out, 'reports': [report]})
     assert check_node({**state, 'answer': '없는 사례 [승인사례:foreign:1].', 'reports': [report]})['refusal_reason'] == 'verify_failed'
     assert nodes.generate({'question': '사양 알려줘', 'approved_memories': memories})['answer'] == '문서로 확인 안 됨'

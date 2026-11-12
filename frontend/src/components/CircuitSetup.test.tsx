@@ -1,18 +1,22 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { failure, network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
 
 afterEach(() => vi.unstubAllGlobals())
 function openCreator() {
-  const trigger = screen.queryAllByRole('button', { name: '프로젝트 만들기' })[0]
+  const trigger = screen.queryAllByRole('button', { name: '프로젝트 추가' })[0]
   if (trigger) fireEvent.click(trigger)
+  else if (screen.queryByRole('button', { name: /^프로젝트$/ })) {
+    fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ }))
+    fireEvent.click(screen.getByRole('button', { name: '새 프로젝트 만들기' }))
+  }
   else {
     fireEvent.click(screen.getByRole('button', { name: 'D1을 SS34로 바꿔도 되나요?' }))
     fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
   }
 }
-function openProjectList() { fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ })) }
+function openProjectList() { fireEvent.click(screen.getByRole('button', { name: /^프로젝트 선택:/ })) }
 it('creates a demo, selects its server summary and keeps data out of browser storage', async () => {
   let created = false
   network((path, init) => {
@@ -37,7 +41,7 @@ it('creates a demo, selects its server summary and keeps data out of browser sto
   expect(screen.getByText('부품 2개 · 넷 1개')).toBeInTheDocument()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11')
   openProjectList()
-  expect(await screen.findByRole('button', { name: first.name })).toBeInTheDocument()
+  expect(await within(screen.getByRole('dialog', { name: '내 프로젝트' })).findByRole('button', { name: first.name })).toBeInTheDocument()
   expect(client.getQueryData(['projects'])).toEqual([summary(first)])
   expect(client.getQueryData(['project', 11])).toEqual(first)
   expect(client.getQueryData(['demo-circuits'])).toEqual([demo])
@@ -101,6 +105,7 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
     return Response.json(path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
   })
   openWorkbench('/app?projectId=11&targetRef=D1')
+  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
   await screen.findByRole('heading', { name: first.name })
   openCreator()
   fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
@@ -117,7 +122,7 @@ it.each(['demo', 'upload'] as const)('cancels pending %s on project switching wi
   await waitFor(() => expect(finish).toBeTypeOf('function'))
   fireEvent.click(screen.getByRole('button', { name: /^닫기$/ }))
   openProjectList()
-  fireEvent.click(screen.getByRole('button', { name: second.name }))
+  fireEvent.click(within(screen.getByRole('dialog', { name: '내 프로젝트' })).getByRole('button', { name: second.name }))
   await screen.findByRole('heading', { name: second.name })
   expect(signal?.aborted).toBe(true)
   fireEvent.change(screen.getByLabelText('대상 부품'), { target: { value: 'D2' } })

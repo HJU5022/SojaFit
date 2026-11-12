@@ -7,6 +7,7 @@
 - 담당: 서비스·운영
 
 ## 파일
+- verify_external_schematics.py — 외부 공개 저장소에서 manifest와 PNG 시트를 확인하는 백엔드 smoke
 - `SMOKE.md` — 이 문서
 - `http_smoke.py` — 로그인 → 데모 회로 프로젝트 → 판정 질문(v3-01) · 조건 재개 → 승인(두 번째는 409) → 견적 → 다른 계정은 프로젝트 · run · 견적 · 승인 · 승인 사례를 404로만 봄을 HTTP로 한 번 돌려, 요청마다 상태 · `error.code` · `X-Request-ID` · ms와 SSE 이벤트 순서, `/openapi.json` 경로 · 연산 수, 이 작업 트리 커밋을 `scripts/results/smoke/smoke_<호스트>_<KST 날짜>_<시각>.json`에 남긴다. 질문 글은 `scripts/demo/record_demo.py`의 `QUESTIONS`를 읽는다
 - `injection_http.py` — 인젝션 시험 T4(질문 역할 변경) · T6(이전 대화 지시 지속) · T7(넷리스트 footprint)을 정상/공격 짝으로 배포 HTTP에 한 번씩 보내 PR #85의 자동 기준으로 판정한다. 결과는 `scripts/results/smoke/injection_http_<호스트>_<KST 날짜>_<시각>.json`(판정 · 걸린 시간 · run 상태만, 답 글 · 질문 글 없음). 입력 글은 `data/corpus/injection_tests/baseline_cases.json`을 읽는다

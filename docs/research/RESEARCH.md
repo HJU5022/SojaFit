@@ -10,6 +10,8 @@
 - `d9-outside-evidence-2026-11-11.md` — D9용 저장소 밖 증거 A~D 이관 목록(판정진단·v4h summary/manifest·#48+#49 원시)·아직 없는 216건 표주석 원시
 - Codex v3-50 비교 원본: `evals/samples/v3_50_codex_paste.md` · `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md` (EVAL_REPORT §10)
 - `injection-smoke-results.md` — T1~T7 스모크01~06·본실측110항목의 누적 결과·버전·예산·사례별 관찰·저장 결과 무료 재현·최신03 원시 링크·이전32개 외부 백업 인덱스와 후속 기록 양식. 무료 재생은 실측과 분리하며 앞으로 같은 문서에 추가한다
+- `injection-case-review-packet.md` — 사람 우선확인32건의 질문·최종응답 원문, 측정청크/회로/공격면, 해시일치 제조사PDF와페이지이미지·합성PDF부재를분리한대조자료.
+- `injection-results.md` — T1~T7 스모크01~06·본실측110항목의 누적 결과·버전·예산·사례별 관찰·저장 결과 무료 재현·최신03 원시 링크·이전32개 외부 백업 인덱스와 후속 기록 양식. 무료 재생은 실측과 분리하며 앞으로 같은 문서에 추가한다
 - `injection-preregistration-proposal.md` — 조장 담당 preregister 새 절을 분리한 미반영 제안. 현재 개선본 기준이며 실제 사전 등록 커밋·유료 실행 승인이 아님
 - `thread-memory-operations-review.md` — 사용자 thread·승인 기억의 운영 실측, 이전 검증 스냅샷과 조장 정본 반영 제안
 - `thread-memory-work-summary.md` — 프롬프트 인젝션 관련 절만 뽑은 발췌(STH): D6·D7 검증 경계, 판정 출력 변경 제안, C1/C2 실제 모델 기준선과 조장 전달용 C2 재현·원인·수정 위치·재검증 기준
@@ -41,3 +43,5 @@
 - `bit-search-measurement-2026-11-03.md` — 비트 후보 + pgvector 재정렬의 시간·recall@50·최종 점수 확인
 - `retrieval-baseline-analysis.md` — 동결 v1(`dataset_v1.jsonl`) 검색 베이스라인 3방식(`dense`·`bm25`·`hybrid`) 19문항 대조, 회귀 문항 및 실패 유형 4가지 분석, 채점 산식·한계 기록
 - `market-user-journey.md` — 문제·시장 근거(채용 공고 237건 중 LLM/RAG 77건 역량 매핑, 사용자·지불 주체 사실/가설 구분, 페르소나 2종, 6단계 고객 여정 맵, 범용 챗봇 5문항 비교, 현재 서비스 약점, 외부 검토 양식)
+
+- `grade-evidence-validation.md` — 1→2→3등급 코드·품질·실측 검증 기록

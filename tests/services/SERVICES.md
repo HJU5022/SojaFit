@@ -9,6 +9,7 @@
 실행: `uv run pytest -q tests/services`(저장소 루트).
 
 ## 파일
+- `test_datasheet_rows.py` — 실제 형식의 PDF에서 답변·재조회까지 인용 위치와 검색 상한 검증
 - `SERVICES.md` — 이 문서
 - `test_langfuse_prompts.py` — 프롬프트·Skill 버전/본문 대조, 일반 호출의 로컬 경계, 예산·계측 실패 시 결과 보존, 타임라인 확인, 내보내기 자격증명 제외, 서비스 분석 기록(`analysis-metadata`)의 user · session id와 질문 글 미포함을 API 없이 확인
 - `test_service_trace.py` — 서비스 분석 추적(`service_trace.py`): 인메모리 내보내기로 질문 · 답 · 넷리스트 값 · 내 설정이 어떤 칸에도 없고 모델 · 토큰 · 노드 이름 · 오류 수준은 남음, 오류 문구 제거, 같은 trace_id · session, 키 없음 · 실패 삼킴. 서비스·평가 공통 콜백의 공급자 비용과 캐시 토큰 유지, 0/미보고/음수/NaN 비용도 확인

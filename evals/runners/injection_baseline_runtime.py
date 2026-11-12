@@ -113,6 +113,7 @@ def execute_approved(data,out):
     from backend.multi_agent.facts import make_lookup
     from backend.services import llm
     variable={'exposure_t1_t3_v1':'INJECTION_EXPOSURE_DATABASES',
+              't3_smoke_v1':'INJECTION_T3_SMOKE_DATABASES',
               't7_smoke_v1':'INJECTION_T7_SMOKE_DATABASES',
               'remaining_smoke_v1':'INJECTION_REMAINING_SMOKE_DATABASES'}.get(data.get('scope'),'INJECTION_BASELINE_DATABASES')
     mapping=runner.database_map(data,json.loads(os.environ[variable]))
