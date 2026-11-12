@@ -73,4 +73,5 @@
 
 - 실행별 파일은 서로 덮어쓰지 않고 합산하지 않는다.
 - 실측01·02와 스모크01~06의 원시는 저장소 밖 백업에 있다. 크기·SHA256·복원 방법은 `injection_baseline_artifact_index_2026-11-10.json`의 `measured_runs_archive`.
+- 통합 전 준비 산출물 33개의 원본은 로컬 복구 참조 `refs/archive/injection-pre-consolidation-20261110`(커밋 107aaa3)에 있다. 이 참조는 저장소를 공유해도 함께 공유되지 않는다. 경로·해시는 `injection_baseline_artifact_index_2026-11-10.json`.
 - 사람 검토 건수와 판정 결과: [injection-results.md](../docs/research/injection-results.md).
