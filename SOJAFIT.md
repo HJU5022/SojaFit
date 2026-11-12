@@ -561,6 +561,7 @@ SojaFit (proj3-b)
 │   │   ├── test_conversations.py <- 대화 API·SSE 및 삭제 경계 시험, 데모 질문 목록(재생 모드에서만, 기록한 답 · 판정 비노출)
 │   │   ├── test_quotes.py  <- 승인·견적·사례 API 인증·입력 경계 시험
 │   │   ├── test_full_service_flow.py <- 격리 DB 전체 사용자 흐름·cascade 시험
+│   │   ├── test_http_restart.py <- 격리 DB·합성 그래프의 HTTP 서버 재시작 후 재개·두 계정 차단 재현 시험
 │   │   ├── test_public_grants.py <- 026 SQL 시험(공개 권한 0 · RLS ON · 두 번 실행 · 역할 없는 DB · 소유자 동작 · LangGraph 표)
 │   │   ├── test_deletion.py <- 프로젝트 삭제 · 탈퇴의 삭제 범위 · 멱등 · 잠금 409, 보관 기간 청소(60일 · 30일 · 묶음) 시험
 │   │   ├── test_projects.py  <- 프로젝트 세션·Origin·실제 DB CRUD·타 사용자 비공개 404
@@ -833,6 +834,7 @@ SojaFit (proj3-b)
 │   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
 │   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
 │   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
+│   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹과 개별 출처
 │   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명

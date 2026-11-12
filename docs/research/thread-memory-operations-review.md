@@ -2,6 +2,22 @@
 
 기록일: 2026-11-09. 검증 대상은 STH의 `717c93a`·`245be70`·`ccadd3f`와 시험 image `cdc9ed1d2b5881a2792ed1f46d5ae808d3bac99c406caa055d38155fe79056f4`다. 아래 수치는 해당 실행의 스냅샷이며 이후 배포·DB 상태를 보증하지 않는다. 조장 합의 전 제안은 정본 기능 계약이 아니다.
 
+## 2026-11-12 HTTP 서버 재시작·두 계정 재검증
+
+- 대상: OSC `0d6592f` 및 당시 미커밋 작업 트리. `backend/conversations/memory_service.py` SHA-256 `9ff69d2e93d59f3c51fd397278996f4f9b9a847e6aaa48122e172427899d5a2c`, `backend/api/conversations.py` SHA-256 `387cb480b2d29578141bea3bb91da65581950b8a872e726507453c5a21720c7d`.
+- 재현: Docker와 로컬 `pgvector/pgvector:pg16` 이미지가 준비된 환경에서 저장소 루트에서 `uv run --no-sync python tests/api/test_http_restart.py`를 실행한다. 임시 DB·서버와 임시 계정만 사용하며 종료 후 정리한다. 기본 pytest에서는 자동 실행하지 않는다.
+- 결과: HTTP 사용자 A와 B가 서로 다른 계정임을 확인하고 A의 분석을 `requires_input`으로 중단했다. B의 A run 조회와 재개는 각각 404였다. HTTP 서버 프로세스를 종료하고 동일 DB로 재기동하자 A의 run이 `requires_input`으로 유지됐고 재개는 SSE `completed`였다. 재현 명령 종료 코드 0. 테스트 파일 SHA-256 `4554767cba9293b6f9d2eda950f6b72d48426eb5d19c0586802a9d3487f781e5`.
+- 범위: 실제 FastAPI 라우터·인증·대화 서비스·PostgresSaver/PostgresStore를 사용한다. LLM 그래프는 입력 대기 후 완료하는 합성 그래프로 대체하며 외부 LLM·임베딩·Langfuse 호출은 하지 않는다. 실제 모델 답변·검색 품질·배포 서버 재시작·모든 API의 계정 분리는 검증하지 않았다.
+
+## 2026-11-12 현재 코드 격리 재검증
+
+- 대상: 코드 `758cbcc2f63f97d50caf2657e21120915d4b4220`, 로컬 `pgvector/pgvector:pg16` 임시 PostgreSQL. 운영 DB·기존 서비스는 사용하지 않았다.
+- `tests.db_schema.apply_service_schema(..., agent=True)`와 `backend.conversations.memory_service.initialize()`로 격리 DB를 준비하고 실제 `Conversations`, `PostgresSaver`, `PostgresStore`를 사용했다. 그래프는 외부 모델 호출이 없는 합성 LangGraph 노드를 주입했다.
+- 별도 OS 프로세스 1에서 추가 입력 대기 체크포인트를 저장하고 종료한 뒤, 프로세스 2에서 같은 DB·thread/run을 읽었다. `WAITING` 상태 확인 후 재개해 `DONE`과 답변을 확인했다. 다른 계정이 소유 thread의 `detail()` 조회를 시도하면 `HTTPException`으로 차단됐다. 이는 서비스 계층의 소유권 확인이며 모든 API·데이터 경로의 분리 검증은 아니다.
+- 격리 DB를 사용하는 `tests/conversations/test_repository.py`, `tests/api/test_full_service_flow.py`는 30 passed. 두 프로세스 검증은 각각 `uv run --no-sync python -`의 임시 inline 스크립트로 실행했고 저장소에 스크립트나 원시 로그를 보존하지 않았다. 따라서 이 기록만으로 실행을 그대로 재현할 수 없다. 임시 컨테이너와 프로세스 사이 ID 파일은 실행 후 삭제했다.
+- 실제 LLM·검색 품질, HTTP 서버 프로세스 재시작, 배포 환경과 전체 사용자 경계는 검증하지 않았다. 두 프로세스 검증에서 Langfuse 키는 비워 외부 호출을 끊었다. 앞선 동일 프로세스 인스턴스 재생성 검사에서는 Langfuse 401 경고가 관찰됐다.
+- 한계: 재시작 뒤 재개를 위한 현재 코드 경로는 격리 DB와 합성 그래프에서 관찰했지만, 재실행 가능한 스크립트·원시 로그가 없어 G4 증거로 충분한지 별도 검토가 필요하다. 11/13까지 실제 HTTP 서버 재시작과 재현 가능한 증거를 확보해야 한다.
+
 기능 계약: [사용자별 thread·기억](../specs/user-thread-memory.md), [평가자·데모·관측](../specs/evaluator-demo-readiness.md). 측정 절차: [운영 검증 계약](../experiments/thread-memory-operations.md).
 
 ## 2026-11-09 원격 CI 후속 확인

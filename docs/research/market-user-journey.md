@@ -1,6 +1,7 @@
 # 문제와 시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 비교 설계
 
-- 작성일: 2026-11-03
+- 최초 작성일: 2026-11-03
+- 현행 상태 확인일: 2026-11-12 (`OSC`, 기준 `758cbcc`). 1~3절과 5~7절의 11-03 조사·설계·실측은 당시 기록이며 현재 성능을 뜻하지 않는다. 현재 승인 흐름은 4절, v3 비교 정본 반영 제안은 7-1 앞 주석을 따른다.
 - 기준 문서: [docs/TOPIC.md](../TOPIC.md), [SPEC.md](../../SPEC.md), [EVAL_REPORT.md](../../EVAL_REPORT.md), [docs/evaluation-prep.md](../evaluation-prep.md)
 - 목적: 평가 1축(문제와 시장 근거, 15점)의 다섯 항목(채용 공고 50건 분석, 사용자·지불 주체 사실/가설 구분, 반복 문서 업무·페르소나·고객 여정 맵, 범용 챗봇과 동일 질문 5개 비교, 외부 검토 1명 기록)에 대해 저장소 안팎의 확인 사실과 가설, 남은 조치를 구분해 기록한다.
 
@@ -8,26 +9,83 @@
 
 ## 1. 목표 직무·산업 채용 공고 분석과 역량 연결
 
-### 1-1. 조사 집계 (확인 사실, `docs/TOPIC.md` 각주 [2])
+### 1-1. 현재 시장·직무 근거
 
-- **조사 기준일·출처**: 2026-10-29, 원티드·점핏·사람인·잡코리아·기업 채용 페이지에서 수집한 제조 산업(전자·설비·제조사·제조AX 공급사) AI 관련 공고(`evidence/jobs2/집계.md`, 조장 로컬 조사 폴더 보관, 서비스 RAG 코퍼스 1,360건과 별도 집계).
-- **모수 집계**:
-  - 제조 산업 AI 공고(중복 제거): **237건**
-  - 열린 AI 개발 직무: **170건**
-  - 그중 **LLM·RAG·에이전트**를 명시한 공고: **77건**
-  - 그중 **신입 지원 가능** 공고: **44건**
+현재 평가와 발표에서는 [전자부품·제조 기술문서 인접 채용 공고 조사서](sojafit-domain-jobs-2026-11-12.md)에서 선정한 **50개 역할·후보 그룹**을 사용한다. 공고별 URL, 업무·요건과 확인 한계는 조사서와 아래 50개 링크 표에서 확인할 수 있다. 사용자는 2026-11-12에 선정된 50건을 수동 검증하고 모두 이상 없다고 확인했다.
 
-### 1-2. 공고 요구 역량과 SojaFit 구현·증거 매핑
+조사서의 원자료 확인 기준은 2026-11-12 KST다. 전자부품 직접 분야와 제조·기술문서 등 인접 분야, 마감된 공고가 포함되고, 동일 역할의 여러 게시처는 한 그룹으로 묶은 경우가 있다. 따라서 이 50개를 모두 전자부품 RAG 개발 공고로 표현하거나 시장 규모·고객 수로 해석하지 않는다. 공고는 이후 변경·마감되거나 접근이 제한될 수 있다.
 
-| 공고에서 반복 요구하는 업무·역량 | 제조·하드웨어 현장의 구체적 문제 | SojaFit에서 구현·증명하는 곳 |
-|---|---|---|
-| 기술 문서·표·도면 PDF 정밀 파싱 및 전처리 | 데이터시트마다 다중 열·병합 셀·단위 기호(`µ` 등)·표 밖 각주가 섞여 일반 텍스트 추출기에서 숫자와 조건이 어긋남 | Docling 2.145.0 전 페이지 파싱 + 병합 칸 복원 + pdfplumber 양방향 숫자 대조(원문 일치율 99.993%, `backend/rag/pipeline/parse.py`, `EVAL_REPORT.md` 1장) |
-| 도메인 특화 청킹 및 하이브리드 검색·필터링 | 한 PDF가 수십 개 형제 품번을 묶어 표 행이 섞이거나, 한국어 질문과 영문 표 항목(`VRRM`, `trr`, `ZZT`)이 어긋남 | 표지 품번 청크 + 표 한 행=청크 1개 + `[파일·쪽·표 제목]` 이름표(`backend/rag/pipeline/chunk.py`), BM25+벡터 RRF 하이브리드 및 표지 품번 정확 필터(`backend/rag/retrieve.py`) |
-| 멀티에이전트 워크플로(LangGraph)와 조건부 분기·재검색 | 단일 프롬프트 호출로는 질문 라우팅, 검색 실패 시 영문 파라미터 재작성, 형제 품번 제거, 근거 부족 시 즉시 거절을 통제하기 어려움 | 줄기 그래프 7노드(`read_input → route → search → grade → rewrite → generate / refuse`, `backend/graph/`) 및 D5 Supervisor + 서브에이전트 분리 |
-| 환각 억제·근거 인용 강제·결정적 수치 판정 | LLM이 전형값(`TYP`)을 보장 최댓값(`MAX`)으로 둔갑시키거나, 온도·펄스 시험 조건 차이를 무시하고 수치 대소를 잘못 비교함 | 수치·단위 비교는 `backend/judge/`에서만 수행(AGENTS.md 규칙 7), 생성 노드의 통과 청크 밖 번호 인용(`fake_citations`)·무인용 문장(`uncited_sentences`) 코드 검사(`backend/graph/nodes.py`), 답변·거절 5지표 채점기(`evals/runners/score_answer.py`) |
-| 사람 승인(Human-in-the-Loop)·사용자 격리·운영 관측 | 검증되지 않은 부품 변경안이나 견적이 곧바로 저장·발주되면 하드웨어 재작업 비용이 발생하고, 여러 엔지니어의 세션·기억이 섞이면 안 됨 | 견적서 저장 전 `interrupt` 승인 대기·체크포인트 재개(D5), scrypt·HMAC 서버 세션 인증(`backend/auth.py`), Langfuse 트레이스·프롬프트 버전·비용/점수 기록(`evals/runners/run_graph.py`) |
+과거 2026-10-29의 237건 집계는 당시 제출한 [주제서](../TOPIC.md)에 남아 있는 이력이다. 개별 원자료가 저장소에 없으므로 현재 평가·발표의 채용 근거로 사용하지 않으며, 아래 50개와 같은 모집단이라고 보거나 합산하지 않는다.
 
-- **남은 조치**: 조장 로컬 조사 폴더(`evidence/jobs2/집계.md`)에서 목표 직무 채용 공고 50건의 개별 행(`번호 · 회사 · 직무명 · 확인일 · 주요 업무 · 필수/우대 키워드 · URL`)을 발표·검증 부록으로 바로 열람할 수 있게 대조해 둔다.
+### 1-2. 50개 채용 역할 분석: 반복 업무와 요구 역량 (2026-11-12 자료)
+
+**분석 범위:** 아래에 열거한 50개 역할·후보 그룹을 사용했다. 도메인·AI 개발 28개(001~028), 산업 SW·임베디드 4개(032·034·036·038), 회로·부품·하드웨어 13개(039·040·043~047·050·052·055·057~059), 기술지원·기술영업 4개(060·064~066), 부품 구매·공급망 1개(070)다. SojaFit의 기술문서 검색·에이전트뿐 아니라 부품 선정 업무와 접하는 역할을 포함한다. 서로 다른 게시처의 같은 역할은 조사서에서 한 그룹으로 묶었고, 일부는 접근·상세 확인에 한계가 있다. 공고 50건의 모집단은 과거 주제서의 237건 조사와 다르다. 2026-11-12 사용자가 선정된 50건을 수동으로 검증하고 모두 이상 없다고 확인했다. 아래 해석은 각 공고의 업무 요약을 바탕으로 했다.
+
+| 반복 업무 | 확인되는 요구 역량·도구 | 조사서 예시 | SojaFit과의 연결 |
+|---|---|---|---|
+| 기술문서·도면·데이터시트·BOM을 읽고 구조화 | PDF·문서 파싱, OCR, 데이터 구조화, 원문 위치·단위·조건 보존 | [001](sojafit-domain-jobs-2026-11-12.md#job-001), [004](sojafit-domain-jobs-2026-11-12.md#job-004), [018](sojafit-domain-jobs-2026-11-12.md#job-018), [026](sojafit-domain-jobs-2026-11-12.md#job-026) | 데이터시트 표·조건·출처를 검색 가능한 근거로 다룬다. |
+| 문서 근거 검색과 평가 | 청킹·임베딩, 키워드·벡터 검색, 리랭킹, 평가셋과 검색 품질 측정 | [007](sojafit-domain-jobs-2026-11-12.md#job-007), [017](sojafit-domain-jobs-2026-11-12.md#job-017), [018](sojafit-domain-jobs-2026-11-12.md#job-018), [025](sojafit-domain-jobs-2026-11-12.md#job-025) | 문서 검색·리랭킹과 평가셋을 연결한다. 개별 채용 공고와 서비스 성능은 별개의 근거다. |
+| 에이전트·API·서비스 구현 | Python, Tool Calling, LangGraph, FastAPI, DB·비동기 처리, 상태 관리와 테스트 | [002](sojafit-domain-jobs-2026-11-12.md#job-002), [003](sojafit-domain-jobs-2026-11-12.md#job-003), [005](sojafit-domain-jobs-2026-11-12.md#job-005), [011](sojafit-domain-jobs-2026-11-12.md#job-011) | 에이전트 흐름과 API를 구성한다. 공고에 나온 모든 도구를 서비스가 구현한 것은 아니다. |
+| 회로·부품 검토와 보드 검증 | 회로·PCB 이해, 부품 선정·BOM, Bring-up, 시험·신뢰성 및 변경 관리 | [040](sojafit-domain-jobs-2026-11-12.md#job-040), [044](sojafit-domain-jobs-2026-11-12.md#job-044), [045](sojafit-domain-jobs-2026-11-12.md#job-045), [050](sojafit-domain-jobs-2026-11-12.md#job-050) | 회로 역할을 바탕으로 대체 부품을 검토하는 문제와 맞닿는다. 실제 보드 시험이나 동작을 보장하지 않는다. |
+| 고객 요구·기술지원과 공급 조율 | 제품·데이터시트 이해, 기술문의·가이드 작성, 고객·공급사 소통, 부품 구매·재고 관리 | [060](sojafit-domain-jobs-2026-11-12.md#job-060), [065](sojafit-domain-jobs-2026-11-12.md#job-065), [066](sojafit-domain-jobs-2026-11-12.md#job-066), [070](sojafit-domain-jobs-2026-11-12.md#job-070) | 근거를 검토자에게 전달하고 승인 후 견적을 기록하는 사용 맥락과 연결된다. 구매·주문을 자동 처리한다는 뜻은 아니다. |
+
+#### 분석에 사용한 공고 50개 링크
+
+표의 번호는 [원 조사서](sojafit-domain-jobs-2026-11-12.md)의 개별 업무·요건·확인 한계로 연결된다. 공고 원문은 외부 게시처로 연결되며, 마감·삭제·로그인·접근 제한 여부를 보장하지 않는다.
+
+| 번호 | 역할·후보 그룹 | 개별 공고 |
+|---:|---|---|
+| [001](sojafit-domain-jobs-2026-11-12.md#job-001) | SECA · Forward Deployed AI Engineer | [공고 원문](https://secalabs.com/kr/careers) |
+| [002](sojafit-domain-jobs-2026-11-12.md#job-002) | 알세미 · AI Agent Engineer | [공고 원문](https://alsemy.career.greetinghr.com/ko/o/241359) |
+| [003](sojafit-domain-jobs-2026-11-12.md#job-003) | 딥오토 · [신입/경력] AI Platform Engineer | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50002221) |
+| [004](sojafit-domain-jobs-2026-11-12.md#job-004) | 딥오토 · [전환형 인턴] AI Engineer | [공고 원문](https://deepauto-ai.career.greetinghr.com/ko/o/232237) |
+| [005](sojafit-domain-jobs-2026-11-12.md#job-005) | 디밀리언 · AI Agent Engineer(경력/신입) | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50127329) |
+| [006](sojafit-domain-jobs-2026-11-12.md#job-006) | 마키나락스 · [FDE] Forward Deployed Engineer - LLM (창원) | [공고 원문](https://makinarocks.career.greetinghr.com/ko/o/207418) |
+| [007](sojafit-domain-jobs-2026-11-12.md#job-007) | 인터엑스 · [창원] AI Agent Engineer | [공고 원문](https://interxlab.career.greetinghr.com/ko/o/238769) |
+| [008](sojafit-domain-jobs-2026-11-12.md#job-008) | 엣지크로스 · AI SW Engineer (Agentic AI) | [공고 원문](https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=55275909) |
+| [009](sojafit-domain-jobs-2026-11-12.md#job-009) | 럭스로보 · ML/AI 엔지니어 (LLM 기반 PCB 자동배치) | [공고 원문](https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=55417933) |
+| [010](sojafit-domain-jobs-2026-11-12.md#job-010) | 디노티시아 · [Business] AI Engineer (FDE, Forward Deployed Engineer) (채용연계형 인턴) | [공고 원문](https://dno.career.greetinghr.com/ko/o/242431) |
+| [011](sojafit-domain-jobs-2026-11-12.md#job-011) | 디노티시아 · [Product] AI Agent Development Engineer | [공고 원문](https://dno.career.greetinghr.com/ko/o/226945) |
+| [012](sojafit-domain-jobs-2026-11-12.md#job-012) | 디노티시아 · [Product] Vector Database Engineer | [공고 원문](https://dno.career.greetinghr.com/ko/o/200913) |
+| [013](sojafit-domain-jobs-2026-11-12.md#job-013) | 엑시나 · [SW] Software Engineer, Vector Search | [공고 원문](https://xcena.career.greetinghr.com/ko/o/167324) |
+| [014](sojafit-domain-jobs-2026-11-12.md#job-014) | 원프레딕트 · Backend Developer(백엔드 개발자) | [공고 원문](https://onepredict.career.greetinghr.com/ko/o/200859) |
+| [015](sojafit-domain-jobs-2026-11-12.md#job-015) | 제론 · AI Agent SW 개발자/K-디지털트레이닝 | [공고 원문](https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=55313202) |
+| [016](sojafit-domain-jobs-2026-11-12.md#job-016) | 콘센트릭스서비스코리아 · LLM/Agent Engineer(과장·차장) | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50077245) |
+| [017](sojafit-domain-jobs-2026-11-12.md#job-017) | 팀워크 · AI 엔지니어(AI Engineer), 2년 이상 | [공고 원문](https://www.wanted.co.kr/wd/366126) |
+| [018](sojafit-domain-jobs-2026-11-12.md#job-018) | 에이아이스타 · LLM·RAG 엔지니어(NLP·AI 검색·Vector DB) - 신소재 R&D AI 스타트업 | [공고 원문](https://zighang.com/recruitment/45fb791f-ec4e-406e-a125-5b813d010d73) |
+| [019](sojafit-domain-jobs-2026-11-12.md#job-019) | HDC랩스 · AI LAB팀 AI 에이전트(AX) 개발 경력 | [공고 원문](https://www.zighang.com/recruitment/bbaf98a9-a6f2-4bc3-83c5-3cf341f38f93) |
+| [020](sojafit-domain-jobs-2026-11-12.md#job-020) | 로자이크(ROSAIC) · 제조 AX Physical AI 엔지니어 | [공고 원문](https://www.zighang.com/recruitment/67451657-a562-4b30-bf93-e504affc4d73) |
+| [021](sojafit-domain-jobs-2026-11-12.md#job-021) | 반석써치(의뢰기업 비공개) · AI 엔지니어 / 아키텍쳐 설계 / 거버넌스 [연구소] | [공고 원문](https://zighang.com/recruitment/936e931f-918c-4d91-b463-f06a12bc5d19) |
+| [022](sojafit-domain-jobs-2026-11-12.md#job-022) | 한화시스템 · VLM Project Manager 경력사원 | [공고 원문](https://gwona.com/jobs/18334) |
+| [023](sojafit-domain-jobs-2026-11-12.md#job-023) | SECA · Design Automation Engineer | [공고 원문](https://secalabs.com/kr/careers) |
+| [024](sojafit-domain-jobs-2026-11-12.md#job-024) | 뉴로코어 · AI Engineer(LLM·Knowledge) | [공고 원문](https://career.rememberapp.co.kr/job/posting/338920) |
+| [025](sojafit-domain-jobs-2026-11-12.md#job-025) | 리빈에이아이 · AI 엔지니어 (신입) — RAG / 검색 시스템 개발 | [공고 원문](https://www.wanted.co.kr/wd/366428) |
+| [026](sojafit-domain-jobs-2026-11-12.md#job-026) | 럭스로보 · AI개발자 (부품 데이터시트 분석/OCR) | [공고 원문](https://jumpit.saramin.co.kr/position/48265516) |
+| [027](sojafit-domain-jobs-2026-11-12.md#job-027) | 갓테크 · AI 엔지니어 (ML/LLM/RAG) | [공고 원문](https://www.saramin.co.kr/zf_user/jobs/view?rec_idx=54224412) |
+| [028](sojafit-domain-jobs-2026-11-12.md#job-028) | 넥스트랩 · LLM RAG 시스템 개발자 채용 | [공고 원문](https://jumpit.saramin.co.kr/position/53527987) |
+| [032](sojafit-domain-jobs-2026-11-12.md#job-032) | 대원씨티에스 · B2B업무시스템 기반 풀스택개발자 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50349614) |
+| [034](sojafit-domain-jobs-2026-11-12.md#job-034) | 에너비스 · 전기·전자·통신 제품 개발 연구원 (HW/SW) | [공고 원문](https://www.jinhakpro.com/recruit/49347) |
+| [036](sojafit-domain-jobs-2026-11-12.md#job-036) | 엣지크로스 · 임베디드 소프트웨어 개발자(신입) | [공고 원문](https://www.wanted.co.kr/wd/383980) |
+| [038](sojafit-domain-jobs-2026-11-12.md#job-038) | 에이아이오 · Storage Product Engineer | [공고 원문](https://www.wanted.co.kr/wd/386113) |
+| [039](sojafit-domain-jobs-2026-11-12.md#job-039) | 닷 · 하드웨어 엔지니어(회로설계) | [공고 원문](https://www.wanted.co.kr/wd/124026) |
+| [040](sojafit-domain-jobs-2026-11-12.md#job-040) | 메타파머스 · 로봇 하드웨어 엔지니어 | [공고 원문](https://www.wanted.co.kr/wd/396200) |
+| [043](sojafit-domain-jobs-2026-11-12.md#job-043) | 옵티코어 · H/W, 데이터센터 개발팀 [경력 및 신입] | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50199257) |
+| [044](sojafit-domain-jobs-2026-11-12.md#job-044) | 웨어러블에이아이 · 임베디드 하드웨어 설계 엔지니어 (3년~) | [공고 원문](https://jumpit.saramin.co.kr/position/55405027) |
+| [045](sojafit-domain-jobs-2026-11-12.md#job-045) | 큐쓰리모션랩 · 하드웨어(HW) 회로설계 및 PCB 개발 담당자 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50102164) |
+| [046](sojafit-domain-jobs-2026-11-12.md#job-046) | 피닉슨컨트롤스 · 연구개발본부 HW팀 신입/경력사원 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50216279) |
+| [047](sojafit-domain-jobs-2026-11-12.md#job-047) | 유니솔렉 · 전자공학(하드웨어) 엔지니어 | [공고 원문](https://www.jinhakpro.com/recruit/48531) |
+| [050](sojafit-domain-jobs-2026-11-12.md#job-050) | NEXTLAB · 회로개발자 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50148927) |
+| [052](sojafit-domain-jobs-2026-11-12.md#job-052) | 모빌린트 · [AI반도체] H/W System Design Engineer (Senior) | [공고 원문](https://www.wanted.co.kr/wd/285749) |
+| [055](sojafit-domain-jobs-2026-11-12.md#job-055) | 에이스 디바이스 · 하드웨어 회로 설계 및 개발 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/49945440) |
+| [057](sojafit-domain-jobs-2026-11-12.md#job-057) | 코넥티브 · 수술로봇 회로 설계 및 개발자 | [공고 원문](https://www.wanted.co.kr/wd/326917) |
+| [058](sojafit-domain-jobs-2026-11-12.md#job-058) | 퀀텀에어로 · 시니어 임베디드 하드웨어 개발자 | [공고 원문](https://www.wanted.co.kr/wd/382361) |
+| [059](sojafit-domain-jobs-2026-11-12.md#job-059) | 티와이모듈코리아 · 하드웨어/펌웨어 개발 (신입/경력) | [공고 원문](https://www.jinhakpro.com/recruit/45325) |
+| [060](sojafit-domain-jobs-2026-11-12.md#job-060) | 로아스 · FAE 엔지니어 (Field Application Engineer) | [공고 원문](https://www.wanted.co.kr/wd/396400) |
+| [064](sojafit-domain-jobs-2026-11-12.md#job-064) | 유니퀘스트 · 반도체 기술영업(FSE) - Infineon 제품 | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50198937) |
+| [065](sojafit-domain-jobs-2026-11-12.md#job-065) | 유니퀘스트 · 반도체 기술영업(FSE) - Renesas | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50265165) |
+| [066](sojafit-domain-jobs-2026-11-12.md#job-066) | 유니퀘스트 · Clock 및 Timing 기술지원(FAE) | [공고 원문](https://www.jobkorea.co.kr/Recruit/GI_Read/50220300) |
+| [070](sojafit-domain-jobs-2026-11-12.md#job-070) | 와이제이컴 · 반도체 전자부품 구매 및 자재 관리 전문가 | [공고 원문](https://lab.incruit.com/jobs/2610140001244) |
+
 
 ---
 
@@ -71,7 +129,7 @@
 | 반복 문서 업무 | 기존 KiCad 보드의 다이오드가 단종·재고 부족·패키지 변경·원가 절감 대상이 될 때마다, 회로도/넷리스트에서 역할을 확인하고 후보 데이터시트 PDF 3~10개의 정격표·특성곡선·각주·패키지 치수를 대조해 대체 가능 품번을 추린다 | 개발자가 올린 대체 부품 후보와 견적서를 보고, ① 원래 회로 역할에 비춰 전압·전류·속도 여유율이 충분한지, ② 데이터시트 시험 조건이 실제 보드 조건과 맞는지, ③ 패드(풋프린트) 수정이 필요한지 확인한 뒤 발주·견적 저장을 승인한다 |
 | 현재 해결 방법 | 유통사(Mouser/DigiKey) 필터에서 원래 부품과 전압·전류가 같거나 높은 부품을 검색한 뒤, PDF를 하나씩 열어 `Ctrl+F`로 `VRRM`, `VF`, `trr`, `VZ`를 찾고 엑셀/메모장에 수기로 비교표를 만든다 | 개발자가 구두나 메신저로 가져온 품번의 데이터시트 PDF를 다시 열어 1~2쪽 정격표와 패키지 도면을 눈으로 재확인한다 |
 | 핵심 불편 (Pain Point) | ① 원래 부품이 과사양(`5V` 회로에 `1000V 1N4007`)이면 사양 필터만으로는 더 작고 적합한 후보를 못 찾음<br>② 한 PDF에 `1N5817/1N5818/1N5819`나 `BZT52C2V4~C39`가 함께 들어 있어 행·열을 잘못 읽거나 `TYP` 값을 `MAX` 보장값으로 착각하기 쉬움<br>③ 범용 챗봇에 물어보면 없는 품번을 지어내거나 데이터시트 출처(쪽·표·행) 없이 그럴듯하게 단정함 | ① 개발자가 어떤 데이터시트 몇 쪽·어느 표 행을 근거로 판정했는지 추적하기 어려움<br>② 온도 조건(`TA=25°C` 대 `TJ=25°C`)이나 미확인 조건(`USB D+/D-` 정전용량 등)이 빠진 채 "대체 가능"으로 올라오면 시제품 불량으로 이어짐 |
-| SojaFit에 기대하는 것 | 넷리스트와 대상 부품(`D1`)만 지정하면 회로 연결에서 역할과 필수 조건을 도출하고, 코퍼스 데이터시트의 정확한 쪽·표·행을 인용해 후보별 판정 5종을 내주며, 조건이 부족하면 억지 추천 대신 무엇이 부족한지 알려 주는 것 | 판정마다 인용된 데이터시트 쪽·표·행과 결정적 수치 비교 결과를 한눈에 검수하고, 내가 승인(`interrupt` 통과)한 견적안만 DB에 저장·이력화되는 것 |
+| SojaFit에 기대하는 것 | 넷리스트와 대상 부품(`D1`)만 지정하면 회로 연결에서 역할과 필수 조건을 도출하고, 코퍼스 데이터시트의 정확한 쪽·표·행을 인용해 후보별 판정 5종을 내주며, 조건이 부족하면 억지 추천 대신 무엇이 부족한지 알려 주는 것 | 판정마다 인용된 데이터시트 쪽·표·행과 결정적 수치 비교 결과를 한눈에 검수하고, 내가 판정 결과를 승인한 뒤 견적을 DB에 저장·이력화하는 것 |
 
 ---
 
@@ -85,7 +143,7 @@
 | **접점 (Touchpoint)** | BOM 시트, 유통사 재고 알림 | KiCad 회로도, `.net` 넷리스트, `connections.json` | 설계 가이드, 엔지니어 경험, 이전 프로젝트 메모 | 제조사(TSC 등) 데이터시트 PDF, 유통사 검색창, 범용 챗봇 | 엑셀 비교표, 데이터시트 각주·특성 곡선 | 팀 메신저/리뷰 회의, 견적서 양식 |
 | **현재 방식의 Pain Point** | 당장 대체 가능한 후보가 사내에 있는지, 어디서부터 찾아야 할지 막막함 | 오픈소스·외부 레퍼런스 보드는 왜 그 다이오드를 썼는지 주석이 없어, 원래 품번(`1N4007` 1000V 등)의 사양을 무조건 따라가게 됨 | 역할에 맞는 여유율 기준이 사람마다 다르고, 주변 온도(`TA`)·펄스 폭·신호선 정전용량 같은 숨은 조건을 빠뜨림 | ① 한 PDF 안의 형제 품번 행(`1N5817` 대 `1N5819`) 혼동<br>② `TYP` 값과 `MAX` 보장값 혼동<br>③ 개정판(`G1804` 대 `G2611`)·주문코드(`H` = AEC-Q101) 차이 누락 | 범용 챗봇은 없는 품번을 추천하거나 조건이 부족해도 "가능하다"고 단정함. 반대로 유통사 사양 필터는 5V 회로의 1000V 다이오드 대체품으로 또 1000V만 찾아줌 | 근거 페이지·표가 기록되지 않아 승인자가 데이터시트를 처음부터 다시 읽어야 하고, 승인 전 초안이 확정본과 섞임 |
 | **실패 시 위험** | 일정 지연 | 역할 오판(제너 클램프를 일반 정류기로 오인 등) | 과사양 고착 또는 정격 부족으로 인한 소자 소손 | 잘못된 표 행·전형값 인용으로 인한 시제품 동작 불량 | 스루홀(`DO-35`)과 표면실장(`SOD-123F`) 패키지 차이를 놓쳐 보드 조립 불가 | 미승인 견적·오판정 사례가 다음 보드 설계에 그대로 재사용됨 |
-| **SojaFit의 개입 (해결 방식)** | 로그인 후 회로 넷리스트와 대상 부품(`D1`) 및 질문 입력(`POST /api/auth/login`, 그래프 `read_input`) | `read_input`이 `connections.json`에서 대상 부품과 2단계 이웃 넷 경로(예: `J1 → S1 → D1 → F1 → RAW`)를 결정적으로 추출해 `[넷리스트]` 근거로 제공 | 회로 역할 설명과 역할별 필수 조건 규칙(`SPEC.md` 2·5절)을 분리하고, 부족한 사용자 동작 조건(`TA`, 차단 전류·펄스 폭 등)은 임의 가정 없이 되묻거나 `NOT_VERIFIED`로 분류 | 표지 품번 색인(`parts`) + 하이브리드 검색(`retrieve`) + 형제 품번 행·타 개정판 결정적 제거(`grade`의 `other_part_row`·`wrong_revision`) + 영문 파라미터 재작성(`rewrite`, 최대 2회 검색) | 수치·단위 비교는 `backend/judge/` 코드로만 수행하고, 생성 노드는 통과 청크만 인용해 판정 5종(`IDENTICAL` / `SPEC_EQUIVALENT` / `ROLE_SUFFICIENT` / `NOT_SUFFICIENT` / `NOT_VERIFIED`)과 기판 수정 필요 여부 및 `"같은 동작은 보장하지 않는다"` 고지를 출력 | 견적서 저장 직전 `interrupt`로 사람 승인을 기다리고(체크포인트 영속화), 승인된 사례만 사용자별 DB `Store` namespace에 저장해 다음 유사 판정 때 참조 |
+| **SojaFit의 개입 (해결 방식)** | 로그인 후 회로 넷리스트와 대상 부품(`D1`) 및 질문 입력(`POST /api/auth/login`, 그래프 `read_input`) | `read_input`이 `connections.json`에서 대상 부품과 2단계 이웃 넷 경로(예: `J1 → S1 → D1 → F1 → RAW`)를 결정적으로 추출해 `[넷리스트]` 근거로 제공 | 회로 역할 설명과 역할별 필수 조건 규칙(`SPEC.md` 2·5절)을 분리하고, 부족한 사용자 동작 조건(`TA`, 차단 전류·펄스 폭 등)은 임의 가정 없이 되묻거나 `NOT_VERIFIED`로 분류 | 표지 품번 색인(`parts`) + 하이브리드 검색(`retrieve`) + 형제 품번 행·타 개정판 결정적 제거(`grade`의 `other_part_row`·`wrong_revision`) + 영문 파라미터 재작성(`rewrite`, 최대 2회 검색) | 수치·단위 비교는 `backend/judge/` 코드로만 수행하고, 생성 노드는 통과 청크만 인용해 판정 5종(`IDENTICAL` / `SPEC_EQUIVALENT` / `ROLE_SUFFICIENT` / `NOT_SUFFICIENT` / `NOT_VERIFIED`)과 기판 수정 필요 여부 및 `"같은 동작은 보장하지 않는다"` 고지를 출력 | 완료 판정에서 승인 가능한 후보를 별도 승인 API로 승인하면 사용자별 승인 사례를 저장하고, 승인 ID로 가격 없는 견적을 저장한다. 견적 승인 `interrupt`와 다음 분석에서 승인 사례 재참조는 현재 미구현이다. |
 
 ---
 
@@ -133,6 +191,20 @@ D10 최종 정리 전 외부 시선 1명(전자·하드웨어 또는 타 조/현
 
 ### 7-1. 대체재와의 비교 (`EVAL_REPORT.md` 10장 반영안)
 
+**2026-11-12 정본:** `EVAL_REPORT.md` 10장의 실제 비교 대상 Codex는 범용 코딩 에이전트다. 비교에 사용한 Codex 응답은 [입력](../../evals/samples/v3_50_codex_paste.md)과 [답변](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md)을 참고하며 자동 채점하지 않았다. v3 정답은 출제와 분리된 자동 정답 세션의 초안이며, 1차 판정자 심태현·2차 판정자 하정운으로 2026-11-12 정정한다.([평가셋 안내](../../evals/guides/dataset-guide.md)). 평가 리포트와 ADR 0015의 기존 단독 판정 서술도 같은 내용으로 정정한다. v3 정답 초안이 Codex 세션에서 작성됐다고 확인했다. 작업 원본은 저장소 밖에 있으며, 비교 대상도 Codex이므로 결과 해석에서 이를 고려한다. v1은 [작업 기록](../worklog/jeongun.md)에 Codex 세션 사용이 명시돼 있다.
+
+정본의 5행에 추가한 **판정 기준**은 [동결 v3 정답](../../evals/dataset_v3.jsonl)의 `expected`를 기준으로 한다. 이 기준은 두 답변의 자동 채점 결과가 아니다.
+
+| 문항 | 판정 기준 |
+|---|---|
+| v3-01 | 사용 조건에 필요한 전압·전류·서지 조건을 대조하고 역할상 충분 여부와 기판 수정 필요를 구분한다. |
+| v3-05 | 25kHz PWM의 요구 역회복 조건을 만족하는지 확인하고 불충족으로 판정한다. |
+| v3-10 | 단방향 보호 조건과 허용 클램프 전압을 확인해 양방향 후보를 불충족으로 판정한다. |
+| v3-26 | 릴레이 선정은 다이오드 코퍼스 범위 밖이므로 후보를 제시하지 않는다. |
+| v3-45 | 지정 판본이 코퍼스에 없으면 다른 개정판의 수치로 대체하지 않는다. |
+
+아래 표는 **11-03 v1/v2 비교 설계·당시 기록**이다.
+
 같은 질문 5개를 범용 챗봇(코퍼스·넷리스트 검증 경계 없이 질문 텍스트만 입력한 일반 LLM 응답)과 우리 서비스(`build_graph`, `anthropic/claude-haiku-5.5` + 하이브리드 검색 + 결정적 필터·인용 검사)에 나란히 넣습니다.
 
 | # | 질문 | 범용 챗봇 | 우리 서비스 | 차이 |
@@ -143,7 +215,7 @@ D10 최종 정리 전 외부 시선 1명(전자·하드웨어 또는 타 조/현
 | 4 | **`n14` (보장 최댓값 부재·곡선 추정 금지)**: `TSC BZT52C3V6(G1804)`의 `1MHz, VR=1V` 접합 정전용량 **보장 최댓값(MAX)**은 몇 pF야? | 타사 `BZT52` 데이터시트 기억이나 3쪽 `Fig.5 Typical Junction Capacitance` 그래프 눈금(수십~수백 pF)을 끌어와 보장 최댓값인 것처럼 숫자를 답함(환각 위험) | `G1804` 1~2쪽 표에 접합 정전용량 `MAX` 보장값 행이 없고 3쪽 `Fig.5`는 전형(`Typical`) 곡선뿐이므로, 전형값·곡선을 보장 최댓값으로 확대 해석하지 않고(`SKILL.md` S1·`generate.md`) `문서로 확인 안 됨`으로 거절함 | 표의 보장 최댓값(`MAX`)과 그래프 전형값(`Typical`)을 엄격히 구분해 근거 없는 정량 보장을 차단함 |
 | 5 | **`e07` / `n09` (코퍼스 미수록 품번 거절)**: `SS1P3L`(`e07`) 또는 `BAT85`(`n09`)로 바꾸려는데 역전압·순방향 전류 정격이 얼마야? | 코퍼스 유무와 무관하게 사전 학습 기억으로 Vishay `SS1P3L(30V, 1A)`·Nexperia `BAT85(30V, 200mA)` 정격을 단정해 답하고, 때로 존재하지 않는 접미사 품번을 대체품으로 제시함 | `search` 노드가 표지 품번 색인에서 `parts=['SS1P3L']`/`['BAT85']`를 조회해 0장을 받고, `after_grade`가 재작성이나 생성 LLM 호출 없이 곧바로 `refuse` 노드로 보내 `"코퍼스에서 데이터시트를 찾지 못했습니다"`와 함께 부품 마킹·데이터시트·주문 코드 단서를 요청함(11-03 `e07` 실측 확인) | 검증된 코퍼스에 없는 타사·미수록 품번에 대해 사전 학습 기억으로 답하는 것을 코드 경로에서 원천 차단함 |
 
-### 7-2. 지금 이 서비스의 가장 큰 약점 (`EVAL_REPORT.md` 11장 반영안)
+### 7-2. 2026-11-03 당시 서비스의 약점 (과거 기록)
 
 1. **생성 프롬프트(`generate.md` v1)의 과도한 축자 제약으로 인한 회로 역할(`role`) 과잉 거절 (`jeongun.md` 11-03 실측)**:
    - `e01`처럼 `read_input`이 넷리스트 연결 경로(`J1 → S1 → D1 → F1 → RAW`)를 정확히 뽑아 넘겨도, `generate.md`의 `"근거에 적힌 내용만 쓴다"` 지시 때문에 모델이 넷리스트에 `"역극성 보호"`라는 글자가 직접 적혀 있지 않다며 `문서로 확인 안 됨`으로 과잉 거절했다. 수치·조건 판정(`backend/judge/`)과 회로 연결 해석 지침(`SKILL.md` S2)을 역할 질문 경로에 연결해야 한다.
