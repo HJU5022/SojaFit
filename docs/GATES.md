@@ -42,6 +42,11 @@
 | 4 | `backend/graph/build.py`: 검색 상한을 2회에서 3회로 변경 | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패(세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-03 |
 | 5 | `backend/graph/nodes.py`: MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(`None != {"kind": "timeout"}`), 원복 후 통과 | 2026-11-03 |
 | 6 | `backend/graph/build.py`: MCP 장애도 채점으로 분기 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-03 |
+| 7 | `backend/multi_agent/supervisor.py` `check_node`: 종합 숫자 검사 `problem = bool(…)` → `problem = False` | `tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check` | 실패(`KeyError: 'refusal_reason'`), 원복 후 깨끗 | 2026-11-12 |
+| 8 | `backend/multi_agent/supervisor.py` `_judgement_reply` 첫 줄 `return None` | `tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose` (single·synth) | 실패(문서 사용 권고가 최종 답에 남음 / synth fallback), 원복 후 깨끗 | 2026-11-12 |
+| 9 | `backend/multi_agent/contracts.py` `MAX_AGENT_RUNS = 6` → `99` | `tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers` | 실패(`99 != 6`), 원복 후 깨끗. (같은 변경으로 `test_collect_refuses_over_the_agent_limit`는 상수를 쓰므로 통과) | 2026-11-12 |
+
+원시 로그: [`evals/results/d10/mutation_2026-11-12.md`](../evals/results/d10/mutation_2026-11-12.md). D10 재현·기준 미달 출력·코퍼스 지문: [`evals/results/d10/README.md`](../evals/results/d10/README.md).
 
 ## G4 추가 확인
 
