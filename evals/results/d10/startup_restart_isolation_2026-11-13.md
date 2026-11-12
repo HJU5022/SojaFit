@@ -12,8 +12,8 @@
 |---|---|---|
 | 브랜치 · 커밋 | `jeongun-2` @ `ad8612e61c86be4376af5cca454843bb35cdc44d`(PR #116 머리) | [boot/environment.json](boot/environment.json) `clone` · `evidence_meta` |
 | 트리 | `6452cdfc4188942e62b1be7e2eb73c55094c3b97` | [boot/timeline_cold.json](boot/timeline_cold.json) `tree` |
-| `main`과의 관계 | 측정 시점에 `main`이 아니다. `main`에는 아직 들어가지 않았다 | [boot/HOW.md](boot/HOW.md) 첫 단락 |
-| `main`에 대한 적용 | PR이 `main`에 들어간 뒤 `git rev-parse origin/main^{tree}`가 위 트리와 같으면 이 기록은 `main`의 기록이다. 다르면 이 기록은 그 커밋의 기록일 뿐이고 `main`에서 다시 잰다 | 트리 해시는 커밋 해시와 달리 병합 방식(병합 커밋 · squash)에 따라 바뀌지 않는다 |
+| `main`과의 관계 | 측정 시점에 `main`이 아니었다. PR #115 · #116이 2026-11-13 05:31 KST에 `main`에 병합됐고(`main` = `ea5797c`) `git rev-parse origin/main^{tree}`가 위 트리와 같다 | [boot/HOW.md](boot/HOW.md) 첫 단락 |
+| `main`에 대한 적용 | 트리가 같으므로 이 기록은 `main`의 파일에 대한 기록이다 | 트리 해시는 커밋 해시와 달리 병합 방식(병합 커밋 · squash)에 따라 바뀌지 않는다 |
 | 측정일 · 시각 | 2026-11-13 05:04~05:25 KST | [boot/environment.json](boot/environment.json) `date_kst` |
 | 측정 방법 | 스크립트로 자동 측정. 시각은 `docker events` · compose 로그 · 요청 시각에서 얻었다 | [boot/scripts/](boot/scripts/) |
 
