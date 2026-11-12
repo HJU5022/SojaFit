@@ -4,7 +4,7 @@
 - 기준일: 2026-11-02
 - 기준 커밋: 없음(로컬 탐색 실험. 2026-10-30 프록시 원시 파일만 레포에 있음)
 - 정본 여부: 비정본. 후보 선정 근거의 정본은 [embedding-grid-eval-2026-11-02.md](embedding-grid-eval-2026-11-02.md), [EVAL_REPORT.md](../../EVAL_REPORT.md) 1-4절, [ADR 0004](../adr/0004-임베딩-1536차원은-임시-결정.md). 서비스 임베딩은 `voyage-4-large` 1024차원이다(`backend/rag/retrieve.py:29`)
-- 관련 문서: [model-licenses.md](model-licenses.md)(고정 revision, 라이선스), [embedding-candidate-runner.md](../experiments/embedding-candidate-runner.md)
+- 관련 문서: [model-licenses.md](model-licenses.md)(고정 revision, 라이선스), [embedding-model-baseline.md](../experiments/embedding-model-baseline.md)
 
 ## 1. 질문과 결론
 

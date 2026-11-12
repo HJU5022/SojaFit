@@ -235,7 +235,7 @@ def _with_declined(state: dict, answer: str) -> str:
 def _judgement_reply(state: dict, reports: list[TaskReport]) -> dict | None:
     """판정(kind=judge)이 끝난 답의 출력 경계: 코드 판정 답 틀만 쓰고 문서 · 종합의 자유 글은 붙이지 않는다. 판정이 없으면 None."""
     # [왜] 판정표가 '불충족'인데 문서 에이전트 글이 옆에 사용 권고(C2 공격)나 '부하 0.1 A 미제공' 같은 오서술(P4 정상군)을 붙여
-    #      최종 답까지 나갔다(docs/research/thread-memory-work-summary.md). 문서 글을 검증할 계약이 없어 판정 답에는 넣지 않는다
+    #      최종 답까지 나갔다(docs/research/injection-results.md 6절). 문서 글을 검증할 계약이 없어 판정 답에는 넣지 않는다
     # [왜] 판정한 후보가 없으면 판정 보고는 fail이 된다(judge_task_node). 성공한 판정만 보면 '실패한 판정 + 문서 답'에서
     #      문서 글("사용해도 됩니다")이 그대로 나가므로, 판정(kind=judge) 보고가 하나라도 있으면 성공 · 실패와 관계없이 이 경계를 쓴다(11-10 조장 결정)
     asked = [r for r in reports if r.agent == 'judge' and r.judgement.get('kind') == 'judge']

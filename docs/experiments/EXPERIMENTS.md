@@ -14,9 +14,7 @@
 | `c2-defense-recheck.md` | 실험 기록 | C2 방어 수정 전후 정상군·C1·C2 재검증 조건과 결과 |
 | `corpus-storage-budget.md` | 실험 기록 | 원본 코퍼스 유지와 halfvec 저장·HNSW 제거 검증 |
 | `d8-stage-remeasure-plan.md` | 실험 기록 | D8 단계별 응답 시간·비용 측정의 원본 목록과 재현 명령 |
-| `embedding-candidate-runner.md` | 실험 기록 | 임베딩 후보 확장 평가기 설계 |
 | `embedding-model-baseline.md` | 실험 기록 | 임베딩 모델 4종의 프록시 표본 예비 기준선 |
-| `embedding-voyage-candidates.md` | 실험 기록 | Voyage 4 Nano·Voyage 4 후보 추가 계약 |
 | `evaluation-draft-30.md` | 실험 기록 | 난이도별 평가 문항 30건 검수 초안의 범위와 형식 |
 | `evaluation-draft-52.md` | 실험 기록 | 정보 부족 분류 기준과 본편 50건·예비 2건 구성 |
 | `injection-baseline-plan.md` | 실험 기록 | 인젝션 기준선 T1~T7 짝 측정 계약과 실행 현황 |

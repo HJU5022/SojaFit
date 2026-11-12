@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12 (측정 2026-10-30)
 - 기준 커밋: 6707002
 - 정본 여부: 비정본. 임베딩 선택의 정본은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 1장(1-3 격자 본평가, 1-4 서비스 설정 선정)과 [ADR 0004](../adr/0004-임베딩-1536차원은-임시-결정.md)
-- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [embedding-candidate-runner.md](embedding-candidate-runner.md), [embedding-voyage-candidates.md](embedding-voyage-candidates.md), [evals/samples/SAMPLES.md](../../evals/samples/SAMPLES.md)
+- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [embedding-candidate-investigation.md](../research/embedding-candidate-investigation.md), [evals/samples/SAMPLES.md](../../evals/samples/SAMPLES.md)
 
 ## 1. 질문과 결론
 

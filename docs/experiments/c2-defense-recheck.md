@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002 (수정 반영 커밋 `dca50c6`, 4단계 실측 코드 기준 `b8576f8`)
 - 정본 여부: 정본(재검증 설계와 절차). 결과의 정본은 아래 7.1절의 원시 파일, 요약은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 6장
-- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [thread-memory-work-summary.md](../research/thread-memory-work-summary.md), 사전 등록 #51 [preregister.md](../../evals/guides/preregister.md)
+- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [injection-results.md](../research/injection-results.md) 6절, 사전 등록 #51 [preregister.md](../../evals/guides/preregister.md)
 
 ## 1. 요약
 

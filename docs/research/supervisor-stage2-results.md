@@ -112,6 +112,9 @@
 - Jev 오분류 2건(`draft30-e04`, `draft30-m05`)은 1차와 같은 문항이다. 둘 다 gold `rating`을 `candidate_judge`로 분류했다(1차 confidence 0.53, 0.40).
 - 1차 Jev(2026-11-04): p50 0.422초, p95 0.593초, 비용 US$0.002689092, 입력 64,026·출력 14,926 토큰, 재시도 0. 1차 Luna의 reported cost US$0.0109729 대비 Jev는 약 75.5% 낮다(1차 Luna 값은 `stage1_summary.json`의 `reported_cost_sum`에서 읽음).
 - 1차에서 `question_type confidence < 0.60`인 gold 문항은 2건이고 두 오분류가 모두 포함됐다. 이 값은 결과를 본 뒤 찾은 기준이라 운영 임계값의 근거가 아니다. 사전 등록한 반복 측정은 아직 없다.
+- 1차 오분류 2건의 `question_type` 확률(`evals/results/supervisor/2026-11-04-jev-stage1-ready-v1/rows.json`): `draft30-e04`는 candidate_judge 0.61, rating 0.35, `draft30-m05`는 candidate_judge 0.50, rating 0.48. 확률이 정답일 확률로 검증된 것은 아니다.
+- Jev 호출은 모델 카탈로그를 `output_modalities=decisions`로 조회한다(`backend/services/llm.py:346-348`). 응답 snapshot `typesafe/jev-1.14-20261014`처럼 1.14의 8자리 날짜 snapshot만 허용한다(`tests/evals/test_supervisor_jev.py:515`).
+- 확인하지 않은 후속(Jev 기본 분류 + 낮은 confidence만 Luna 재판정): 사전 등록한 임계값으로 escalation 비율, 오류 포착률, Jev 단독 대비 정확도, 비용·p50·p95, fallback 실패·timeout 처리를 재야 한다. 측정 기록 없음.
 
 ## 4. 결정에 미치는 영향
 

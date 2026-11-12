@@ -801,8 +801,6 @@ SojaFit (proj3-b)
     │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
     │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
     │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
-    │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
-    │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
     │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
     │   ├── evaluation-draft-30.md  <- 난이도별 평가 문항 30건 초안 작성
     │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
@@ -819,27 +817,20 @@ SojaFit (proj3-b)
     │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
     │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
     │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
-    │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
     │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
     │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
     │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
     │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
-    │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
     │   ├── email-encryption-options.md  <- 로그인 이메일 암호화 정책 선택지(팀 결정 전)
     │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
     │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
-    │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
-    │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
     │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
-    │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
     │   ├── supervisor-stage3-results.md  <- 6종 3차 전체 수치·1~3차 안정성·PR 근거
-    │   ├── supervisor-stage3-brief-report.md  <- 6종 3차 핵심 수치·2차 대비 변화
     │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
     │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
     │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
     │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
     │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
-    │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
     │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
     │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
     │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
