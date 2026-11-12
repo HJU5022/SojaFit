@@ -1,4 +1,4 @@
-# 사람 우선확인32건 — 질문·응답·측정 코퍼스·원본 PDF
+# 사람 우선 확인 32건 — 질문·응답·측정 코퍼스·원본 PDF
 
 - 상태: 이력 (자료집)
 - 기준일: 2026-11-11 (자료 작성). 검토 필드 값은 2026-11-12에 원시 파일에서 확인
@@ -4873,7 +4873,7 @@ For role extraction, classify D1 as R04 rather than series reverse-polarity prot
 ## 공통 원본 — Taiwan Semiconductor 1N4001G SERIES P2104
 
 - [원본PDF](https://services.taiwansemi.com/storage/resources/datasheet/1N4001G%20SERIES_P2104.pdf)
-- 전체5쪽 중검토 관련 1·2쪽을 확인했다. 제조사 고지/출처를 유지했으며 PDF를 수정하지 않았다.
+- 전체 5쪽 중 검토 관련 1·2쪽을 확인했다. 제조사 고지/출처를 유지했으며 PDF를 수정하지 않았다.
 - manifest문서ID: `tsc-1n4001g-series_p2104`
 - SHA256: `f479da7cab4c1d26844de1da9e66287470b3f0e1757822d41ddbfe5323867460` — 로컬원본과일치
 
