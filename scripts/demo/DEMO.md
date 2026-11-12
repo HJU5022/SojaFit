@@ -7,8 +7,11 @@
 - 담당: 서비스·운영
 
 ## 파일
-- `DEMO.md` — 이 문서
-- `record_demo.py` — 서비스와 같은 멀티 그래프 조립(MCP 사실 확인 · 카드 도구 · BM25 검색, 메모리 체크포인터, Store 없음)으로 데모 질문 5개를 새 대화의 첫 질문처럼 돌린다. `record`는 실제 LLM 응답을 `data/demo/recordings/calls.jsonl`에, 질문별 결과와 DB 지문을 `outcomes.json`에 남기고, `replay`는 키를 지운 채 기록 응답만으로 다시 돌려 경로 · 답 · 판정 · 거절 · 인터럽트가 같은지 본다. `DEMO_MODE=1`이 아니거나, 기록인데 `OPENROUTER_API_KEY`가 없거나, `LAB_*` · `LLM_MODEL`이 있거나, DB 문서 · 청크 수가 스냅샷과 다르면 멈춘다. `record`는 `--confirm-live`가 없으면 예상 호출 수만 찍는다
+
+| 파일 | 분류 | 분류 근거 | 설명과 명령 |
+|---|---|---|---|
+| `DEMO.md` | | | 이 문서 |
+| `record_demo.py` | 운영 | `.github/workflows/ci.yml`이 `replay`를 실행하고, `tests/services/test_demo_replay.py`·`backend/services/demo.py`가 기록 형식을 맞춤 | 서비스와 같은 멀티 그래프 조립(MCP 사실 확인·카드 도구·BM25 검색, 메모리 체크포인터, Store 없음)으로 데모 질문 5개를 새 대화의 첫 질문처럼 돌린다. `record`는 실제 LLM 응답을 `data/demo/recordings/calls.jsonl`에, 질문별 결과와 DB 지문을 `outcomes.json`에 남기고(유료), `replay`는 키를 지운 채 기록 응답만으로 다시 돌려 경로·답·판정·거절·인터럽트가 같은지 본다(무료). `DEMO_MODE=1`이 아니거나, 기록인데 `OPENROUTER_API_KEY`가 없거나, `LAB_*`·`LLM_MODEL`이 있거나, DB 문서·청크 수가 스냅샷과 다르면 멈춘다. `record`는 `--confirm-live`가 없으면 예상 호출 수만 찍는다 |
 
 ## 데모 질문
 
@@ -20,7 +23,7 @@
 | `v3-36` | 코퍼스에 없는 품번 거절(LL4148은 있고 LL4149는 없음) | Franzininho DIY · D3 | 동결 v3 그대로 |
 | `v3-30` | 범위 밖 거절 | Franzininho DIY · D3 | 동결 v3 그대로 |
 
-- React 데모 회로(`backend/projects/repository.py`의 `DEMOS`): ATtiny85 Time Switch = `attiny85_time_switch`(`received-20261030/c01`, 11-10 추가), Franzininho DIY = `franzininho_diy`(`c09`), SparkFun Breadboard Supply = `breadboard_supply`. 서비스는 프로젝트의 연결 정보가 기록 질문의 넷리스트 옆 `connections.json`과 같을 때만 그 질문을 받는다(`tests/services/test_demo_replay.py`가 다섯 질문 모두 확인).
+- React 데모 회로(`backend/projects/repository.py`의 `DEMOS`): ATtiny85 Time Switch = `attiny85_time_switch`(`received-20261030/c01`), Franzininho DIY = `franzininho_diy`(`c09`), SparkFun Breadboard Supply = `breadboard_supply`. 서비스는 프로젝트의 연결 정보가 기록 질문의 넷리스트 옆 `connections.json`과 같을 때만 그 질문을 받는다(`tests/services/test_demo_replay.py`가 다섯 질문 모두 확인).
 - 화면은 이 표의 질문을 버튼으로 보이고 글자 그대로 새 대화의 첫 질문으로 보낸다. `v3-01`의 조건 질문에는 기록한 재개 값(`outcomes.json`의 `resume`)을 그대로 보낸다.
 
 ## 실행

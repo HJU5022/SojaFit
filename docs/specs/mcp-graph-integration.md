@@ -1,18 +1,20 @@
-# MCP `search_corpus` LangGraph 통합 작업서
+# MCP `search_corpus` LangGraph 통합
 
-> 2026-11-03 · B(LangGraph·통합) 담당 범위. MCP 서버와 도구 계약은 `backend/mcp_skill/mcp_server/server.py`의 현재 구현을 변경 없이 사용한다.
-
-> 현재 상태(2026-11-08 코드 기준): `backend/graph/mcp_retriever.py`의 `StdioMcpRetriever`와 검색 장애 구분이 구현됐고, `evals/runners/run_graph.py`가 MCP stdio 서버를 열어 그래프에 주입합니다. 이후 `check_corpus`, `get_part_specs`, `find_parts_by_specs` 연결도 같은 어댑터에 추가됐습니다. 아래 Why의 “경로가 없다”는 작업 시작 당시 상황입니다.
+- 상태: 현행
+- 기준일: 2026-11-12
+- 기준 커밋: 6707002
+- 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 8.7 MCP 검색 도구, 도구 계약은 [mcp-search-tools.md](mcp-search-tools.md))
+- 관련 문서: [mcp-search-tools.md](mcp-search-tools.md), `backend/graph/GRAPH.md`, `backend/mcp_skill/MCP_SKILL.md`
 
 ## Why
 
-- **페르소나**: SojaFit의 LangGraph와 통합 검증을 담당하는 개발자.
-- **상황(작업 시작 당시)**: 줄기 그래프는 동기 검색기 `retriever(query, *, parts=...)`를 직접 주입받지만, FastMCP stdio 서버의 `search_corpus`를 실제 MCP 클라이언트로 호출하는 경로가 없었다.
-- **문제**:
+- 페르소나: SojaFit의 LangGraph와 통합 검증을 담당하는 개발자.
+- 상황: 그래프는 동기 검색기 `retriever(query, *, parts=...)`를 주입받는다. FastMCP stdio 서버의 `search_corpus`를 실제 MCP 클라이언트로 호출하는 어댑터가 필요하다.
+- 문제:
   1. MCP 서버 단위 테스트가 통과해도 그래프에서 실제로 사용할 수 있는지 증명되지 않는다.
   2. 현재 그래프 계약은 빈 검색 결과와 검색기 장애를 구분하지 않아, MCP·DB 장애를 코퍼스에 문서가 없는 것으로 잘못 안내할 수 있다.
   3. 동기 LangGraph 호출과 비동기 MCP 세션의 시작·재사용·종료 기준이 없다.
-- **측정 지표**: 가짜 MCP 정상·빈 결과·장애 경로 통과, 검색 호출 최대 2회, 격리 합성 DB의 그래프→stdio MCP→검색→출처 경로 1회 이상 재현.
+- 측정 지표: 가짜 MCP 정상·빈 결과·장애 경로 통과, 검색 호출 최대 2회, 격리 합성 DB의 그래프→stdio MCP→검색→출처 경로 1회 이상 재현.
 
 ## Goal
 
@@ -21,13 +23,13 @@
 - 정상 빈 결과와 MCP 세션·프로토콜·응답 형식 장애를 서로 다른 그래프 상태와 사용자 응답으로 처리한다.
 - 첫 검색과 재작성 뒤 검색을 합쳐 MCP 검색 호출을 최대 2회로 유지한다.
 - 가짜 클라이언트 단위 테스트와 실제 stdio 서버 통합 테스트를 분리한다. 실제 DB 검사는 격리 합성 DB와 `TEST_DATABASE_URL`이 있을 때만 실행한다.
-- **Out of Scope**:
+- Out of Scope:
   - `backend/mcp_skill/` 서버 구현, 도구 이름·인자·반환 형식 변경.
-  - `get_corpus_document`, `search_tsc_web`, `verify_tsc_pdf`, `get_circuit_info`의 사용자 그래프 연결.
+  - `get_corpus_document`, `search_tsc_web`, `verify_tsc_pdf`, `get_circuit_info`의 사용자 그래프 연결. 어댑터가 연결한 도구는 `search_corpus`와 `check_corpus`(`StdioMcpRetriever.check`, 품번·판 확인)뿐이다.
   - Exa·LLM 실호출, 웹 후보 PDF 다운로드·검증·적재.
   - 운영·공유 DB 사용, 기존 DB나 Docker 볼륨 초기화.
-  - Supervisor·서브에이전트·체크포인트·승인 interrupt 구현과 G4 완료 주장.
-  - 동결 평가셋 점수 또는 전체 앱 연결 완료 주장.
+  - Supervisor·서브에이전트·체크포인트(이 문서의 어댑터와 별개로 `backend/multi_agent/`가 가진다).
+  - 동결 평가셋 점수.
 
 ## What
 
@@ -58,13 +60,12 @@
 
 ## How
 
-### 소유권과 변경 파일
+### 파일
 
-- B 담당 코드: `backend/graph/mcp_retriever.py`, `backend/graph/state.py`, `backend/graph/nodes.py`, `backend/graph/build.py`.
-- B 담당 테스트: 신규 `tests/graph/test_graph_mcp_retriever.py`, 기존 `tests/graph/test_graph_build.py`의 그래프 장애 경로.
-- 통합 문서: 이 작업서, `backend/graph/GRAPH.md`, `tests/TESTS.md`, `docs/worklog/sth.md`.
-- A 담당으로 수정하지 않는 파일: `backend/mcp_skill/mcp_server/server.py`, `docs/specs/mcp-search-tools.md`. PR #44에서 MCP 독립 테스트·측정 자료는 저장소 밖에 보관한다.
-- 공통 `SPEC.md`의 그래프 장애 분기는 구현과 같은 변경에서 최소 갱신하고, 서버 계약 부분은 바꾸지 않는다. 원격 PR 전 A가 계약 인용 부분을 리뷰한다.
+- 어댑터·분기: `backend/graph/mcp_retriever.py`, `backend/graph/state.py`, `backend/graph/nodes.py`, `backend/graph/build.py`.
+- 시험: `tests/graph/test_graph_mcp_retriever.py`, `tests/graph/test_graph_mcp_stdio.py`, `tests/graph/test_graph_build.py`.
+- MCP 서버와 도구 계약(`backend/mcp_skill/mcp_server/server.py`)은 이 문서의 범위 밖이다([mcp-search-tools.md](mcp-search-tools.md)).
+- 서비스 분석 경로는 어댑터의 `check`(`check_corpus`)만 쓴다. `search_corpus` 어댑터 호출은 단일 그래프 기준선(`backend/graph/`)과 평가 실행기(`evals/runners/run_graph.py`)가 쓴다.
 
 ### 어댑터 계약
 
@@ -78,7 +79,7 @@ StdioMcpRetriever(command, args, env, timeout_seconds)
 - 외부 동작은 기존 검색기와 같은 동기 호출이다. 내부 비동기 stdio·`ClientSession`은 전용 실행 루프에서 관리한다.
 - 컨텍스트 진입 때 서버와 세션을 초기화하고, 호출마다 새 서버를 띄우지 않는다.
 - 도구 호출 인자는 `{"query": query, "k": 5, "parts": parts}`이며 `parts=None`도 기존 계약대로 전달한다.
-- `CallToolResult`가 오류가 아니고, PR #44에서 확인한 `structuredContent.result`가 목록일 때 성공으로 본다. 이전 단일 JSON 텍스트 응답은 호환 경로로만 허용한다.
+- `CallToolResult`가 오류가 아니고, `structuredContent.result`가 목록일 때 성공으로 본다. 이전 단일 JSON 텍스트 응답은 호환 경로로만 허용한다.
 - 각 청크는 최소한 `chunk_id`, `file`, `page`, `content`, `table`, `doc_parts`를 가진다. `chunk_id`는 정수, `file`·`content`는 문자열, `page`는 정수, `table`은 문자열 또는 null, `doc_parts`는 문자열 목록이어야 한다.
 - 오류 본문·환경변수·명령 전체를 예외 메시지나 State에 복사하지 않는다.
 
@@ -101,7 +102,6 @@ retrieval_error = null
 2. 가짜 retriever 그래프로 정상·빈 결과·장애·재작성·두 번 상한 경로를 검사한다.
 3. 실제 stdio 서버 테스트는 외부 검색을 비활성화하고 서버 초기화·호출·종료를 검사한다.
 4. 격리 합성 PostgreSQL 검사는 `TEST_DATABASE_URL`이 명시된 경우에만 실행한다. 기존 DB·볼륨 삭제 명령은 사용하지 않는다.
-5. `docs/GATES.md`의 변이 확인에는 검색 상한 2→3, 장애를 빈 결과로 변환, 장애 뒤 재호출 중 최소 3건이 실제 테스트를 실패시키는지 기록한다.
 
 ## AC (Given-When-Then)
 
@@ -139,3 +139,17 @@ retrieval_error = null
 - GIVEN: MCP retriever를 주입하지 않은 기존 그래프 테스트와 평가 실행.
 - WHEN: 전체 테스트를 실행한다.
 - THEN: 직접 검색 기본 경로와 기존 라우팅·최대 2회 검색 동작이 유지된다.
+
+## 구현 상태
+
+| 항목 | 상태 | 근거 |
+|---|---|---|
+| `StdioMcpRetriever`(`search_corpus`, `check`) | 구현 | `backend/graph/mcp_retriever.py` |
+| 검색 장애 분기(`retrieval_error`) | 구현 | `backend/graph/nodes.py`, `tests/graph/test_graph_mcp_retriever.py` |
+| AC-01·AC-02·AC-03·AC-04·AC-05 | 시험 있음 | `tests/graph/test_graph_mcp_retriever.py`(`test_stdio_retriever_reuses_one_session_and_sends_contract`, `test_graph_uses_mcp_retriever_for_one_search`, `test_graph_reuses_mcp_session_for_rewritten_search`, `test_stdio_retriever_turns_timeout_into_safe_kind`) |
+| AC-06 | 시험 있음 | `tests/graph/test_graph_mcp_stdio.py` |
+| AC-07 | 시험 있음 | `tests/graph/test_graph_build.py` |
+
+## 한계
+
+- 변이 확인(검색 상한 2→3 등)을 `docs/GATES.md`에 기록했는지는 대조하지 않았다.

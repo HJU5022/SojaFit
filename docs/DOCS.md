@@ -12,7 +12,7 @@
 - `assets/` — 문서에 넣는 구조도 이미지와 원본. [ASSETS.md](assets/ASSETS.md)
 - `reference/` — 계약서·용어집·평가 준비 점검표. [REFERENCE.md](reference/REFERENCE.md)
 - `adr/` — 조 결정 기록. [ADR.md](adr/ADR.md)
-- `specs/` — 기능 작업서. [SPECS.md](specs/SPECS.md)
+- `specs/` — 기능 작업서와 승인된 실행 계획 · 설계 원문. [SPECS.md](specs/SPECS.md)
 - `experiments/` — 실험·평가 작업서. [EXPERIMENTS.md](experiments/EXPERIMENTS.md)
 - `research/` — 조사·실측 기록과 합의 전 제안. [RESEARCH.md](research/RESEARCH.md)
 - `deliverables/` — 최종 제출 문서 양식. [DELIVERABLES.md](deliverables/DELIVERABLES.md)

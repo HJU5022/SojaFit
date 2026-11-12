@@ -1,174 +1,81 @@
-# SojaFit MCP 도구 범위와 초기 구현 계획
+# MCP 서버 도구 6종: 계약, 사용처, 구현 상태
 
-> 2026-11-03 · STH 작업 초안 · 현재 기능과 후속 제안을 구분
+- 상태: 현행
+- 기준일: 2026-11-12
+- 기준 커밋: 6707002 (코드는 `backend/mcp_skill/mcp_server/server.py`, `backend/graph/mcp_retriever.py` 기준)
+- 정본 여부: 정본(MCP 도구 표). 도구 계약의 시험 정본은 [SPEC 8.7](../../SPEC.md)과 [mcp-search-tools.md](../specs/mcp-search-tools.md)
+- 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [검색기 연결 계약](mcp-tool-contract-review.md), [오프라인 점검](mcp-offline-verification-2026-11-03.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [공개 품번 확인 방안](tsc-public-part-verification-options.md), [웹 검색 공급자 비교](mcp-tool-candidates-draft.md)
 
-## 프로젝트 흐름과 도구
+이 문서의 도구 표가 MCP 도구 목록의 유일한 표다. 다른 문서는 이 표를 링크한다.
 
-| 우선 | 도구·기능 | 목적 | 현재 상태 | 다음 조건과 범위 |
-|---|---|---|---|---|
-| 1 | 코퍼스 검색 search_corpus | 질문과 품번으로 보유한 데이터시트 청크를 찾는다. | **1차 구현**: 기존 retrieve 호출. | 적재된 실제 DB와 MCP 클라이언트의 end-to-end 확인 필요. 검색 결과의 출처·쪽 정보 계약을 유지한다. |
-| 1 | TSC 웹 문서 후보 search_tsc_web | 공개 TSC 목록에 기록된 문서의 공식 URL 후보를 찾는다. 목록 밖 문서는 공개 여부 확인 전 차단한다. | **1차 구현**: Exa Search API, 기본 비활성, 반환 링크 미검증. | 유료 전환·무료 한도 확인 후 실호출 확인. 필터 유무 실측과 정합을 살펴본다. 결과만으로 판정하지 않는다. |
-| 1 | 코퍼스 문서 정보 get_corpus_document | 문서 ID로 기존 manifest의 출처·개정판·해시 기록을 확인한다. | **이번 초기 구현**: manifest를 읽는 도구. | 실제 PDF를 읽거나 해시를 다시 검증하지 않는다. 실제 MCP 호출 및 패키징 경로를 확인한다. |
-| 2 | 공식 PDF 검증 | TSC 후보의 공식 원본, PDF 유효성, 해시, 파싱·대조를 확인한다. | **1차 로컬 기능**: `verify_tsc_pdf`가 저장소 표본 3건의 서명·바이트 크기·SHA-256을 대조한다. 내용 파싱 검증·다운로드·적재는 없음. | 실시간 후보와 코퍼스 밖 PDF의 HTTPS 다운로드, 크기·시간 상한, Docling·pdfplumber 검증·격리 계약이 필요하다. |
-| 2 | 회로 정보 확인 | 허용된 회로에서 대상 부품과 연결 관계를 조회한다. | **1차 로컬 기능**: `get_circuit_info`가 고정 공개 회로 ID를 `connections.json` 및 기존 `circuit_around`에 연결한다. 임의 경로와 사용자 업로드는 허용하지 않는다. | 인증된 사용자별 회로 카탈로그, 업로드·크기 제한 및 MCP/그래프 책임 경계를 정한다. |
-| 3 | 수치·요구 조건 비교 | 데이터시트 정격과 역할별 조건을 비교한다. | **MCP 미구현**. 판정 로직과 규칙은 backend/judge에서 완성해야 한다. | 숫자·단위 비교는 judge에만 두고 출처·시험 조건·부족 정보와 5종 판정을 검증해야 한다. |
-| 3 | 견적 생성·승인·저장 | 검증된 후보로 데모 견적을 만들고 사람 승인 뒤 저장한다. | **MCP 미구현**, 그래프 승인과 사용자별 권한 연결도 미완성이다. | 인증된 사용자·소유권·승인 이력·멱등성·재개 계약이 선행되어야 한다. 승인 없는 저장 도구는 제공하지 않는다. |
-| 확장 | 가격·재고 | 외부 공급처의 현재 가격과 재고를 확인한다. | **MVP 범위 밖**, Mouser 연동 미구현. | 약관과 응답의 저장·대화·체크포인트·트레이스 금지 경계를 먼저 확정한다. |
-| 선택 | 사용자별 사례 기억 | 승인된 사례를 재사용하고 잘못된 기록은 사람 승인 후 고친다. | 실제 사용자별 API 및 접근 검증이 미구현이다. | 사용자 인증·소유권·변경 승인, 데이터 삭제 및 접근 제어를 먼저 구현한다. |
+## 1. 요약
 
-## 도구 사용처 점검 (2026-11-03, PR 피드백)
+| 항목 | 값 | 근거 |
+|---|---|---|
+| 서버 | FastMCP stdio 서버 `sojafit-search`, 도구 6종 | `backend/mcp_skill/mcp_server/server.py:16-150`의 `@mcp.tool()` 6개 |
+| 서비스가 부르는 도구 | `check_corpus`만(사실 확인). 서비스·평가 실행기·데모 녹화가 `StdioMcpRetriever`로 호출 | `backend/conversations/memory_service.py:286-297`, `evals/runners/run_graph.py:156-160`, `scripts/demo/record_demo.py:105-112`, `backend/multi_agent/facts.py:72` |
+| MCP 클라이언트 | `StdioMcpRetriever`(동기 그래프용 stdio 클라이언트, 기본 시간 제한 30초) | `backend/graph/mcp_retriever.py:91-97` |
+| `search_corpus`를 MCP로 부르는 경로 | 시험에서만. 서비스 검색은 `retrieve()`를 직접 호출 | `backend/mcp_skill/MCP_SKILL.md` 안내 1항 |
+| 시험 | `tests/mcp_skill/test_mcp_server.py` 56 passed, `tests/graph/test_graph_mcp_retriever.py` 18 passed, `tests/graph/test_graph_mcp_stdio.py` 1 skipped (합계 74 passed, 1 skipped) | [실측] 2026-11-12 `pytest` 실행 |
+| 지운 도구 | 사양 도구 2종 `get_part_specs`·`find_parts_by_specs`(ADR 0016, 11-10) | `backend/mcp_skill/MCP_SKILL.md`, `SPEC.md` 8.7 |
 
-현재 MCP 호출은 테스트에서 확인된다. 실제 앱·그래프가 MCP 클라이언트로 호출하는 경로는 아직 없으며 `build_graph()`는 미구현이다. 아래 서비스 사용처는 팀 검토를 위한 제안이다.
+## 2. 도구 표
 
-| 도구 | 현재 확인된 사용처 | 제안 사용처 | 결정·검증 필요 사항 |
+입력 검증과 출력은 `server.py`의 코드 값이다. "현재 호출처"는 저장소에서 찾은 호출 위치이고 "제안 사용처"는 호출처가 아직 없는 도구의 후보다.
+
+| 도구 | 입력 | 출력·실패 | 호출 조건·데이터 경계 | 현재 호출처 | 제안 사용처 |
+|---|---|---|---|---|---|
+| `search_corpus` | `query` 1~500자, `k` 1~10(기본 5), `parts` 문자열 목록 또는 null. `parts` 길이·항목은 검증하지 않음 | `retrieve(method='hybrid')`의 카드 목록. 결과 없음은 `[]`, 검색기 예외는 MCP `isError`로 전파 | 적재된 DB 필요 | `StdioMcpRetriever.__call__`(시험 `tests/graph/test_graph_mcp_retriever.py`) | 그래프의 근거 검색 단계 |
+| `check_corpus` | `parts`·`revisions` 각각 문자열 20개 이하, 항목 1~100자 | `{"parts": {이름: bool}, "revisions": {이름: bool}}`. 있음/없음만 반환하고 판단하지 않음. 품번은 대소문자 무시, 개정 코드는 대문자로 비교 | `corpus_known()`이 읽는 코퍼스 목록 | 사실 확인 노드(`StdioMcpRetriever.check`, `backend/multi_agent/facts.py`), 서비스·평가·데모 녹화 | - |
+| `get_corpus_document` | `doc_id` 1~200자 | `found`·`not_found`·`unavailable`. `found`면 `doc_id`·`title`·`revision`·`source_url`·`sha256`·`bytes`·`pages`와 `pdf_verified=false` | `data/manifest.jsonl`(1,360행)을 읽기만 함. 반환 해시·출처는 기록값이며 PDF를 다시 검증하지 않음 | `verify_tsc_pdf`·`search_tsc_web` 내부 호출, 시험 | 검색 청크에 없는 출처 정보가 필요할 때 |
+| `search_tsc_web` | `doc_id` 1~200자 | `disabled`·`missing_key`·`unavailable`·`unverified`, 또는 `ok`와 후보 `[{url, verified:false}]`(HTTPS `taiwansemi.com` 계열 URL만, 최대 5개) | `DEMO_MODE=0`, `EXA_WEB_SEARCH_ENABLED=1`, `EXA_API_KEY`가 모두 있어야 호출. manifest의 출처·문서명·개정이 `services.taiwansemi.com` 형식과 일치할 때만 검색어를 만들고 사용자 문장은 보내지 않음. 호출당 HTTP 1회, timeout 15초, 리디렉션 따라가지 않음 | 시험 | 공개 확인된 TSC 문서의 미검증 후보 조회 |
+| `verify_tsc_pdf` | `doc_id` 1~200자 | `integrity_verified`·`integrity_mismatch`·`not_found`·`unavailable`·`not_available_locally`, `content_verified=false` | `data/corpus/tsc/`의 PDF 3건(`1N4148-SERIES_K2301`, `1N5817-SERIES_H2104`, `BZT52C2V4-SERIES_G1804`)의 서명·바이트 크기·SHA-256만 manifest와 대조 | 시험 | 저장소 표본 무결성 점검(서비스 근거 검증과 분리) |
+| `get_circuit_info` | `circuit_id` 소문자·숫자·밑줄 1~50자, `target` 1~100자 | `found`·`not_found`·`unavailable`과 `circuit_around` 결과 | 고정 공개 회로 5개 ID(`CIRCUITS`)만. 임의 경로·사용자 업로드 회로는 받지 않음 | 시험. 그래프 `read_input`은 같은 `circuit_around`를 직접 호출 | 공개 예제 회로 조회 전용 |
+
+## 3. 구현 범위 밖
+
+| 기능 | 상태 | 근거 |
+|---|---|---|
+| 수치·요구 조건 비교 | MCP 도구 없음. 판정은 `backend/judge/` | `SPEC.md` 8.7 |
+| 견적 생성·승인·저장 | MCP 도구 없음 | 도구 표에 없음 |
+| 가격·재고(Mouser) | MCP 도구 없음. Mouser는 그래프·MCP 밖 `/api/prices`만 호출한다. 응답 저장 금지 정책 | `backend/multi_agent/build.py:94`, [ADR 0009](../adr/0009-mouser-응답은-저장하지-않는다.md) |
+| 공식 PDF 다운로드·파싱·적재 | MCP 도구에 없음. Exa 검색과 공식 PDF 행 읽기는 `backend/services/exa.py`·`backend/services/datasheet_rows.py`가 맡음 | `backend/services/exa.py:1-25` |
+| 코퍼스 밖 신규 TSC 품번 조회 | 지원하지 않음. 목록 밖 문서는 `unverified`로 차단 | `server.py`의 `search_tsc_web`, [공개 품번 확인 방안](tsc-public-part-verification-options.md) |
+
+## 4. 측정 기록
+
+| 측정 | 결과 | 환경 | 원시 |
 |---|---|---|---|
-| search_corpus | 도구 테스트. 기존 `retrieve` 호출 | 그래프의 근거 검색 | 기존 검색 노드의 retriever 계약과 MCP 결과·빈 결과·오류 연결 |
-| get_corpus_document | 도구 테스트 및 verify_tsc_pdf·search_tsc_web 내부 조회 | 검색 결과의 문서 출처·개정 확인 | 에이전트에 별도 노출할 필요와 manifest·DB 문서 ID 정합 |
-| search_tsc_web | 도구 테스트. 실제 MCP 도구 실호출 미검증 | 공개 확인된 TSC 문서 웹 후보 | 목록 밖 품번 차단과 기존 SPEC 실시간 조회 요구의 관계; 미검증 URL 처리 |
-| verify_tsc_pdf | 도구 테스트. 저장소 표본 3건만 대조 | 표본 무결성 점검 | 운영 도구인지 개발 점검 기능인지; PDF 내용 검증은 미구현 |
-| get_circuit_info | 도구 테스트. 그래프 read_input은 기존 circuit_around를 별도 호출 | 회로 부품·연결 확인 | 공개 예제 전용 도구의 필요와 사용자별 회로 접근 계약 |
+| 격리 PostgreSQL 합성 문서 검색(2026-11-03): 알려진 1N4148 질의 | 2건, 120.68ms, `document_key`와 manifest 일치, 문서 조회 found·`pdf_verified=false` 1.86ms | 임시 PostgreSQL 16.15, 합성 문서 4건·청크 8건, 데모 BM25 | 저장소에 없음 |
+| 같은 환경: 없는 품번 `NOPE123` | 0건, 3.13ms | 위와 같음 | 저장소에 없음 |
+| 같은 환경: `SS34` 필터 + 1N4148 질의 | 0건, 15.47ms (다른 부품 결과가 섞이지 않음. SS34 정상 검색 성공은 확인하지 않음) | 위와 같음 | 저장소에 없음 |
+| 같은 환경: 데모 웹 검색 | `disabled` 1.38ms | 위와 같음 | 저장소에 없음 |
 
-- 연결 근거: `backend/graph/nodes.py`의 `search(state, retriever)`는 검색기를 주입받고 `read_input`은 `circuit_around`를 직접 사용한다. `backend/graph/build.py`의 그래프 조립은 아직 구현되지 않았다.
-- 판단 보류: 도구를 삭제하거나 옮기기 전에 그래프·검색 담당자와 사용 단계, 도구 노출 여부 및 서버 내부 기능의 경계를 결정한다.
+각 1회 관찰이며 성능 벤치마크가 아니다. 합성 데이터는 정격 근거가 아니다. 이 측정에서 일반 서버 진입점은 첫 검색 응답이 지연됐고, NumPy를 서버 시작 전에 import한 진단 조건에서만 완료됐다(원인 미확정).
 
-## A 담당 1차 도구 계약 점검
+DB 없는 저장소 표본 점검은 [오프라인 점검](mcp-offline-verification-2026-11-03.md), 표 숫자 대조는 [Docling 표본 대조](mcp-docling-verification-2026-11-03.md)에 있다.
 
-도구별 입출력과 검색기 연결 초안은 [별도 점검 문서](mcp-tool-contract-review.md)에 정리했다.
+## 5. 외부 검색 데이터 경계
 
-## 이번에 추가한 문서 조회 도구
+- 사용자 자유 문장을 Exa에 보내지 않는다. 공개 TSC manifest의 문서 ID로 조회하고, 출처·문서명·개정 형식이 일치할 때만 검색어를 만든다(`server.py`의 `search_tsc_web`).
+- 목록 밖 또는 확인되지 않은 항목은 `unverified`다. manifest는 과거 수집 기록이라 현재 공개 상태를 보장하지 않는다. 검색한 공개 품번과 호출 사실은 검색 공급자에 노출된다.
+- 반환된 URL은 후보다. PDF 본문·품번·개정을 검증하기 전에는 판정 근거로 쓰지 않는다.
+- 실제 외부 호출은 사전 등록, 무료 한도·자동 과금 차단 확인, 실제 지출 $0 조건 확인 뒤에만 한다(`evals/guides/preregister.md`).
 
-- 입력: 코퍼스 manifest의 정확한 doc_id 한 개. 빈 값 또는 200자 초과는 거부한다.
-- 출력: found / not_found / unavailable, 해당 문서의 doc_id·title·revision·source_url·sha256·pages, 그리고 pdf_verified=false.
-- 실행 범위: 저장소의 data/manifest.jsonl을 읽기만 한다. 사용자 ID를 파일 경로로 쓰지 않으며 외부 요청·DB 변경을 하지 않는다.
-- 해석: 반환된 해시와 출처는 **기존 기록**이다. 현재 PDF의 존재, 파일 내용, 요청한 품번·개정판의 실제 일치를 확인한 결과가 아니다.
+## 6. 남은 일
 
-## 팀에서 결정할 항목
+| 항목 | 내용 |
+|---|---|
+| 실제 코퍼스 DB 검색 | MCP `search_corpus`로 실제 코퍼스의 관련·무관 품번 결과와 문서 연결을 확인하지 않았다 |
+| MCP를 통한 Exa 실호출 | 서버 도구 경유 실호출을 확인하지 않았다(모의 응답 시험만) |
+| 서버 첫 검색 지연 | 일반 진입점의 NumPy 로딩 지연을 독립 재현·진단하지 않았다 |
+| 공개 품번 정책 | 공개 확인 목록의 출처·갱신 책임·목록 밖 처리 방식 미결([선택지](tsc-public-part-verification-options.md)) |
+| 외부 검색 상한 | 도구 호출당 HTTP 1회, timeout 15초만 있고 반복 호출·전체 시간 상한은 도구에 없다 |
+| 사용자별 회로 접근 | 인증된 사용자 회로 카탈로그·업로드 제한은 없다. `get_circuit_info`는 고정 공개 회로만 읽는다 |
+| 도구 노출 범위 | `get_corpus_document`·`verify_tsc_pdf`·`get_circuit_info`를 에이전트에 노출할지, 서버 내부·점검용으로 둘지 미결 |
 
-1. PDF 검증 도구를 담당할 사람과 기존 수집·파싱 파이프라인의 호출 경계.
-2. 외부 검색과 PDF 수집의 요청 상한, G5 오프라인 평가 및 키 없는 Compose 데모 동작.
-3. 검색 결과를 LangGraph에서 MCP 클라이언트로 연결할 시점과 실패 시 처리. 현재 그래프 build_graph는 미구현이다.
-4. 회로·견적·기억 도구의 사용자 인증 및 승인 계약.
-5. Exa 실서비스 키의 사용 한도와 과금 설정, 외부 검색에 공개 가능한 질의 범위.
+## 7. 한계
 
-## 우선순위 1~2: 도구별 실행 준비와 순서
-
-> 준비 상태 기록: 2026-11-03. 아래 체크박스는 앞으로 할 작업이다. 기능·도구 이름과 팀에 제안하는 처리 방식은 최종 결정이 아니다. 이번 준비에서는 서버 코드나 DB 데이터를 변경하지 않았다.
-
-### 대상 목록과 현재 상태
-
-| 순서 | 우선순위 | 도구·기능 | 현재 상태 | 다음 단계에서 확인할 핵심 |
-|---:|---:|---|---|---|
-| 1 | 1 | search_corpus | 1차 코드·모의 테스트 있음 | 코퍼스가 적재된 격리 테스트 DB에서 MCP를 거쳐 실제 문서·쪽을 반환하는지 |
-| 2 | 1 | get_corpus_document | 1차 코드·실제 manifest를 이용한 stdio 호출 테스트 있음 | 검색의 document_key와 manifest doc_id 연결, 없는 문서·증분 문서 처리 |
-| 3 | 1 | search_tsc_web | 1차 코드·모의 테스트 있음. 기본 비활성 | 서버 도구를 통한 Exa 실제 호출, 사용량·오류·미검증 표시 |
-| 4 | 2 | verify_tsc_pdf / 공식 PDF 수집·검증 | 저장소 표본 3건의 서명·크기·SHA-256 대조 도구 구현. 다운로드·파싱·격리는 미구현 | 공식 출처 확인부터 외부 PDF 확인·파싱 대조·격리까지의 책임과 계약 |
-| 5 | 2 | get_circuit_info / 사용자 회로 정보 확인 | 고정 공개 회로 카탈로그 조회 도구 구현. 사용자 업로드·권한 확인은 미구현 | 인증된 사용자의 회로 선택과 파일 경로·크기 제한 |
-
-이 순서는 먼저 기존 도구의 근거 연결을 확인한 다음 신규 기능을 작게 나눠 개발하기 위한 제안이다. 4와 5는 독립적으로 설계할 수 있으나 아래 순서로 진행한다.
-
-### 공통 준비 및 출발 기준
-
-- [ ] 기존 STH 미커밋 변경을 보존하고 최신 main 반영 여부를 확인한다. 동결 평가셋·기존 DB 볼륨·.env 비밀값은 수정하지 않는다.
-- [ ] API 키·요금 설정의 값은 출력하지 않는다. 외부 호출 전 프로젝트 사전등록, 무료 한도·자동 과금 차단 확인, 실제 지출 $0 조건을 확인한다. 잔여 한도나 비용을 확인할 수 없으면 해당 외부 호출을 중단한다.
-- [ ] 데모에서는 키 없이 시작하고 웹 조회를 차단한다. G5 본평가는 기존 코퍼스와 실시간 조회 비활성 조건을 따른다.
-- [ ] 기존 테스트를 실행한다: 프로젝트 루트 PowerShell에서 .\.venv\Scripts\uv.exe run --no-sync pytest -q -rs tests/test_mcp_manifest.py tests/test_mcp_search.py tests/test_rag_retrieve.py tests/test_graph_search.py
-- [ ] 준비 시점 확인: 위 테스트는 36개 통과, 1개 생략. 생략은 코퍼스가 적재된 TEST_DATABASE_URL이 필요한 실제 DB 검사다. Docker Desktop 엔진은 접근되지 않았으므로 Compose·DB 상태는 확인되지 않았다.
-
-### 1단계 — 코퍼스 검색 search_corpus 실제 DB 확인
-
-- 준비: 운영·공유 DB가 아닌 격리 테스트 PostgreSQL과 코퍼스 표본을 준비한다. 현재 Compose는 db 서비스를 제공하지만 스키마 초기화와 코퍼스 적재는 별개이므로 데이터 유무를 먼저 확인한다.
-- [ ] 테스트 DB 연결 정보는 로컬 환경변수로만 설정하고 이름·자격증명을 문서나 로그에 기록하지 않는다. 테스트 DB가 없거나 코퍼스가 비어 있으면 구축·적재 조건을 확인한 뒤 진행한다.
-- [ ] MCP 클라이언트 → search_corpus → 실제 DB의 결과에서 document_key, 파일, 쪽·표·본문을 확인한다. 알려진 품번과 없는 품번을 각각 시험한다.
-- [ ] 다른 품번 결과가 섞이지 않는지, 없는 품번에서 빈 결과를 반환하는지, 데모 모드에서 임베딩 API를 호출하지 않는지 확인한다.
-- 완료 기준: 성공·빈 결과·오류가 구분되고 테스트 환경·실제 결과·생략 사유가 기록된다. 현재 모의 테스트 통과만으로 실제 DB 연동 완료라고 하지 않는다.
-
-### 2단계 — 문서 메타데이터 get_corpus_document 연결 확인
-
-- 준비: 1단계 결과의 document_key와 manifest의 doc_id가 같은 문서를 가리키는지 검증한다. 현재 ingest.py는 manifest doc_id를 DB document_key로 저장한다.
-- [ ] 검색 결과의 document_key로 MCP 문서 조회를 호출하고 출처·개정·해시·쪽 수와 manifest의 기록을 대조한다.
-- [ ] 없는 ID, 손상·부재 manifest, 빈 입력을 확인한다. 반환의 pdf_verified=false가 유지되는지 확인한다.
-- [ ] 현재 도구는 저장소의 기존 manifest만 읽으므로 신규 증분 문서를 어떻게 조회할지 담당자와 정한다.
-- 완료 기준: 기존 문서의 검색 → 메타데이터 조회 경로가 실제 또는 지정된 테스트 DB로 확인된다. 이 단계는 PDF를 다시 검증하지 않는다.
-
-### 3단계 — Exa 웹 후보 search_tsc_web 확인
-
-- 준비: Exa API 키 설정 여부만 확인하고, 공개 테스트 질의·무료 잔액·자동 과금 설정·요청 수 상한을 사전등록한다. 지금까지 Exa API 자체의 검색 실험은 했지만, MCP 서버 도구를 통한 실호출은 검증하지 않았다.
-- [ ] 비용 설정을 확인한 경우에만 격리 테스트에서 명시적으로 활성화해 MCP 클라이언트 → 도구 → Exa Search API의 공개 질의 성공·빈 결과·키 누락·한도·오류를 확인한다.
-- [ ] 데모 또는 기능 비활성화 시 외부 호출 0회인지, 반환된 URL이 HTTPS TSC 도메인 후보이며 verified=false인지 확인한다. 로컬 테스트에서는 가짜 응답으로 오류를 재현한다.
-- [ ] 동일 질문의 필터 유무 실측 결과와 비교한다. 기존 30문항에서는 Exa의 과거 주소 일치가 23→24건이었으나 실제 PDF 내용 정확도는 별도 검증이 필요하다.
-- 완료 기준: 비용·응답·오류·키 비노출·후보 표시를 기록한다. 검증된 PDF 근거 반환이나 그래프 통합으로 간주하지 않는다.
-
-### 4단계 — 공식 PDF 수집·검증 계약과 1차 구현
-
-- 준비: 별도 작업서에서 팀 담당자, 도구로 공개할 기능과 내부 파이프라인 경계, 저장·격리 위치, 크기·시간·재시도 상한, 공개·보관 조건을 정한다. 값이 정해지기 전 임의로 실서비스 기본값으로 확정하지 않는다.
-- [ ] 검색 후보와 원본 문서를 구분한다. 허용된 HTTPS TSC 주소 및 리디렉션·내부 주소 차단, 응답 크기·시간 제한을 명세하고 테스트한다.
-- [ ] 정상 PDF, HTML 오류, 손상된 파일, 타임아웃, 크기 초과, 차단 주소를 가짜 응답으로 시험한다. 초기 단계는 네트워크·DB 변경 없이 진행할 수 있다.
-- [ ] 신규 PDF는 신뢰할 기존 해시가 없을 수 있다. SHA-256을 계산해 기록하는 것과 독립적으로 알려진 해시와 일치하는 검증을 구분한다.
-- [ ] TSC 출처, PDF 유효성, Docling 파싱 오류 0 및 pdfplumber 대조 등 SPEC의 검증 관문을 확인하고, 실패는 격리한다. 기존 collect.py는 일괄 수집 스크립트이므로 호출 제한과 안전 경계를 추가 검토한 뒤 재사용 여부를 정한다.
-- [ ] 품번·개정판·쪽·표 대조 절차와 증분 문서의 DB 반영·실패 복구를 담당자와 정한다. 검색 URL이나 PDF 서명 하나만으로 검증 완료라고 표시하지 않는다.
-- 완료 기준: 가짜 입력으로 성공·거부·실패 흐름이 재현되고, 실물 PDF 확인은 별도 사전등록·비용 확인 후 결과를 기록한다.
-
-### 5단계 — 회로 정보 확인 계약과 1차 구현
-
-- 준비: MCP에 노출할지 기존 그래프 내부 기능으로 유지할지 팀과 정한다. 현재 graph/nodes.py의 read_input과 circuit_around는 일부 기능이 있으나 사용자별 권한을 확인하는 독립 MCP 계약은 아니다.
-- [ ] 공개 예제 회로로 입력·출력 예시를 고정한다: 승인된 회로 식별자와 대상 부품 → 부품 정보·연결된 넷. 없는 부품·손상 데이터는 구분한다.
-- [ ] 임의 파일 경로 대신 인증된 사용자가 접근 가능한 회로 식별자를 쓰는 방안을 검토한다. 경로 이탈, 타 사용자 회로, 대용량·손상 입력 차단을 테스트한다.
-- [ ] 기존 graph/nodes.py를 재사용할 수 있는지 확인한다. 현재 파일 경로 처리에 사용자 소유권과 경로 제한이 자동으로 보장된다고 가정하지 않는다.
-- 완료 기준: 허용 예제와 거부 사례를 오프라인에서 검증하고, 실제 사용자별 데이터 연동은 인증·소유권 계약을 충족한 뒤 별도로 확인한다.
-
-### 확인이 필요한 팀 결정
-
-1. 테스트 DB의 책임자·코퍼스 표본 준비 방식과 데이터 삭제 범위.
-2. PDF 검증 작업의 담당자, 허용 출처·크기·시간·격리·증분 적재 계약 및 공개/보관 조건.
-3. 회로 정보의 식별자와 사용자 소유권 확인 방식, 독립 MCP 도구로 노출할 필요.
-4. LangGraph에서 MCP를 호출하는 연결 방식과 실패 시 동작. build_graph는 현재 미구현이므로 도구 테스트와 별개로 다룬다.
-
-
-## 참고
-
-- [MCP 검색 도구 1차 작업서](../specs/mcp-search-tools.md)
-- [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md)
-- [TSC 필터 유무 실측](web-search-filter-comparison.md)
-- [프로젝트 SPEC](../../SPEC.md)
-
-- 2026-11-03 후속 확인: [DB 없는 저장소 표본 점검](mcp-offline-verification-2026-11-03.md). 실제 DB 검색·PDF 표 검증 완료와 구분한다.
-
-- 2026-11-03 후속 확인: [Docling·pdfplumber 표본 대조](mcp-docling-verification-2026-11-03.md). 표 숫자 대조 결과이며 실시간 PDF 검증 도구 구현이나 전체 판정 정확도 확인과는 구분한다.
-
-## 외부 검색 개인정보 경계 (2026-11-03)
-
-- 사용자 자유 문장을 Exa에 전송하지 않는다. 공개 TSC manifest의 문서 ID로 조회하고 공식 데이터시트 출처·문서명·개정이 일치할 때만 검색어를 만든다.
-- 목록 밖 신규 품번과 출처 확인이 안 되는 항목은 unverified로 차단한다. 이 제약 때문에 기존에 계획한 코퍼스 외 신규 문서 탐색은 아직 지원하지 않는다.
-- 과거 수집 목록은 현재 공개 상태 검증이 아니며, 검색한 공개 품번과 호출 사실은 검색 공급자에 노출된다. 향후 공개 목록 검증과 갱신 절차를 팀에서 정해야 한다.
-
-## 현재 상태와 바로 시작할 작업 (2026-11-03 재확인)
-
-### 완료 범위와 검증 경계
-
-- FastMCP stdio 서버에 search_corpus, get_corpus_document, search_tsc_web, verify_tsc_pdf, get_circuit_info 5개 도구가 있다. 서버 기동·목록, 문서 조회와 데모의 외부 검색 비활성은 stdio 클라이언트 테스트로 확인했다.
-- search_corpus는 기존 retrieve에 위임한다. 가짜 검색기 테스트는 있으나 MCP를 통한 실제 DB 흐름은 아직 확인하지 않았다.
-- search_tsc_web은 기본 비활성, 자유 문장 직접 전송 차단, 목록 밖 문서 차단, TSC HTTPS 후보 필터와 미검증 표시가 있다. Exa 실호출과 검색된 원격 PDF의 원문·내용 검증은 확인하지 않았다. 코퍼스 밖 신규 품번은 현 방식으로 조회할 수 없다.
-- 저장소 PDF 3건은 별도 오프라인 파싱·대조 기록이 있다. 이는 신규 PDF의 서비스 검증·적재 기능 구현을 뜻하지 않는다. Skill 문서는 아직 양식 수준이며 Skill 유무에 따른 평가도 없다.
-- 재실행: `uv run --no-sync pytest -q -rs tests/test_mcp_search.py tests/test_mcp_manifest.py tests/test_rag_retrieve.py tests/test_graph_search.py` → 44 passed, 1 skipped (테스트 DB 미설정). `docker compose ps`는 Docker 엔진 소켓 부재로 연결 실패했다. 이 결과만으로 Docker 설치 여부나 기존 데이터 상태는 알 수 없다.
-
-### 바로 진행할 순서
-
-1. **오프라인 MCP 계약 점검** — 기존 테스트를 기준으로 실제 stdio 호출의 인자·응답과 오류를 확인한다. 특히 search_corpus는 가짜 검색기로 성공·빈 결과·오류를 확인하고 get_corpus_document의 found/not_found/unavailable과 외부 검색 disabled/unverified를 구분한다. 외부 API와 DB는 호출하지 않는다. 완료 기준: 요청·응답과 결과를 기록하고 개인정보가 외부 요청에 들어가지 않는 기존 모의 테스트가 유지된다.
-2. **공개 품번 정책 팀 논의** — [선택지 문서](tsc-public-part-verification-options.md)로 목록의 출처·갱신 책임·미확인 품번 처리와 외부 전송 허용을 결정한다. 결정 전 기존의 차단 경계를 유지한다.
-3. **격리 DB 준비 상태 점검** — Docker 엔진 접근이 가능해지면 컨테이너·DB 이름과 코퍼스 표본 여부를 읽기 전용으로 확인한다. 기존 볼륨을 삭제하거나 초기화하지 않는다. 격리 대상과 적재 범위를 정한 뒤 MCP → search_corpus → DB → get_corpus_document의 정상·빈 결과를 검증한다.
-4. **PDF 검증과 그래프 연동 계약** — 2번의 전송 정책과 담당자 결정을 반영해 공식 PDF의 출처·용량·시간·격리·파싱 조건을 정한다. LangGraph build_graph는 미구현이므로 담당자와 연결 경계·장애 처리를 합의한 뒤 작업한다.
-5. **실제 외부 검색과 평가** — 공개 테스트 입력, 사용자 승인된 $0 예산, 무료 잔여량·자동 과금 차단, 사전등록과 요청 상한을 확인한 후 별도 실행한다. 키 없는 데모와 G5의 실시간 조회 비활성 조건을 지킨다.
-
-### 별도로 결정할 사항
-
-- 공개 확인 목록의 범위와 갱신, 사용자 검색 사실 자체의 노출, 목록 밖 품번의 검토자와 절차.
-- 외부 검색의 전체 요청 횟수 상한과 전체 경과 시간 제한: 현재 도구 호출당 HTTP 1회이며 반복 호출 상한은 이 도구 자체에서 보장하지 않는다. HTTP timeout=15는 전체 처리 시간의 보장이 아니다.
-- Skill 작성·사용 및 같은 평가셋 비교, 사용자별 권한·회로 접근, 견적 승인·저장. 각각 현재 서버 도구만으로 완료한 것이 아니다.
-
-### 격리 DB 검색 검증 결과 (2026-11-03)
-
-- 환경: Windows, 기존 로컬 pgvector/pgvector:pg16 이미지의 임시 PostgreSQL 16.15, 데이터는 합성 문서 4건·청크 8건, 데모 BM25. 기존 DB·볼륨은 사용하지 않았다. 검색 및 문서 메타데이터 조회는 실제 MCP stdio 클라이언트를 경유했다. 외부 API 호출 없음.
-- 일반 서버 진입점에서 첫 검색 응답이 지연되어 중단했다. 진단 추적에서 검색 첫 warmup 중 작업 스레드의 NumPy import에 머무는 것을 관찰했다. 원인은 아직 확정하지 않았다. 임시 진단 실행에서 NumPy를 서버 시작 전에 미리 import한 조건으로만 아래 흐름이 완료됐다. 제품 코드 수정이나 일반 진입점 해결을 뜻하지 않는다.
-- 알려진 1N4148 합성 검색: 2건, 120.68ms. 결과의 document_key와 기존 manifest 일치, 실제 문서 조회 found·pdf_verified=false: 1.86ms.
-- 없는 NOPE123: 0건, 3.13ms. SS34 필터를 주고 1N4148 질의: 0건, 15.47ms (다른 부품 결과가 섞이지 않은 사례이나 SS34 정상 검색 성공은 확인하지 않음). 데모 웹 검색 disabled: 1.38ms. 각 1회이며 성능 벤치마크가 아니다. 합성 데이터는 실제 정격 근거가 아니다.
-- 남은 작업: 일반 진입점 NumPy 로딩 지연을 독립적으로 재현·진단하고 해결 후 동일 시험을 재실행한다. 실제 코퍼스 표본으로 관련/무관 품번, 검색 결과 품질과 문서 연결을 확인한다. 격리된 합성 DB 테스트만으로 전체 코퍼스나 실서비스의 성능·정확도를 판단하지 않는다.
+- 4절의 측정은 원시 파일이 저장소에 없다. 값은 기록 당시 문서의 것이다.
+- 도구 표의 "현재 호출처"는 `backend/`·`evals/`·`scripts/`·`tests/` 전체 검색(`grep`) 결과이며, 외부 클라이언트의 호출은 알 수 없다.
+- `tests/graph/test_graph_mcp_stdio.py`는 이 실행에서 skipped였다(실제 검색 환경 필요). 실제 stdio 경유 검색 경로는 이 실행에서 확인하지 않았다(`TEST_DATABASE_URL`에 격리 코퍼스가 없어 건너뜀).
