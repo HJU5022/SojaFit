@@ -20,3 +20,6 @@ f3918c3523b7cd2c724abf3d112ffe09472cc0f7:tests/api/test_auth.py:generic-api-key:
 # tests/api/test_errors.py: 오류 시험의 가짜 비밀번호(synthetic- 접두어, 실제 계정 값 아님) 2건
 ee8808ff9b3336106407703ae55f42ee4aa11852:tests/api/test_errors.py:generic-api-key:226
 ee8808ff9b3336106407703ae55f42ee4aa11852:tests/api/test_errors.py:generic-api-key:73
+
+# evals/results/d10/secrets/extra_checks.md: 검사 증거 표가 인용한 SQL 파일 이름(비밀 아님) 1건
+d5138a76c2bb7aa784a62b8ede3dc19e62ac3f7d:evals/results/d10/secrets/extra_checks.md:generic-api-key:10
