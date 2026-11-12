@@ -526,7 +526,7 @@ uv run python -m scripts.eval.stage_report evals/results/graph/2026-11-11-d8-sta
 |---|---|
 | 정확도 | 50/50 (관련 25 cited_gold · 무관 25 correct_refusal) |
 | Spec 후보 15 | n_docs 10 · 5 · 3 모두 15/15 cited_gold |
-| n_docs 10 전체 | 37/50은 무효 측정이다: 무관 13문항(v3-38 ~ v3-50)이 OpenRouter 429(`OpenAIRateLimitError`)로 실패해 점수가 없는 행이다(`ndocs-acc/N10/set1.json`의 오류 행 13, 13개 모두 429). 정확도 비교에 쓰지 않는다 |
+| n_docs 10 전체 | 37/50은 무효 측정이다: 무관 13문항(v3-38 ~ v3-50)이 OpenRouter 429(`OpenAIRateLimitError`)로 실패해 점수가 없는 행이다(`evals/results/graph/2026-11-11-ndocs-acc/N10/set1.json`의 오류 행 13, 13개 모두 429). 정확도 비교에 쓰지 않는다 |
 | mean · p50 · p95 · max | 4.25 · 4.7 · 9.2 · 15.5초 |
 | 원시 | `evals/results/graph/2026-11-11-speed-g-all/E-v3-50-warm-n5/` · 대비 `2026-11-11-ndocs-acc/` |
 
