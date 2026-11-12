@@ -1,5 +1,13 @@
 # jeongun 작업 기록
 
+## 2026-11-13 main ae3de0b 배포(Cloud Run)
+- 배포: `main` `ae3de0b`를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-ae3de0b --revision-suffix ae3de0b`(빌드 08:02~08:07 KST). 리비전 `sojafit-api-ae3de0b`, 이미지 `sha256:618ad9a5a0950849e506e32088c073f1668ec8bea5f8a97d6792f6ce2574eb8d`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다.
+- 코드 차이 [실측]: `c9d2c36`..`ae3de0b`에서 `backend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`이 비어 있다. 바뀐 것은 `frontend/src`와 문서다: 질문 바로 시작 · 답변 전체 마크다운 표시 · 이전 답 유지 · 조건 질문 '모름' 처리 · 사용자 화면의 오류 코드 · 요청 ID 숨김.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 12.3초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(공개 서비스와 같음), `/api/auth/me` 401, 주 JS 번들 `/assets/index-BvxFKySW.js`에 `모두 모름으로 계속` 문구 있음, 오류 로그(ERROR 이상, 10분) 없음. 08:07 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 있음, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`). 전환 뒤 100% 리비전은 `sojafit-api-ae3de0b` 하나.
+- 이전 100% 리비전: `sojafit-api-c9d2c36`(11-13 07:39 KST 전환).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `c9d2c36` 리비전을 100% 지정(이름은 `sojafit-api-` 뒤에 `c9d2c36`).
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복.
+
 ## 2026-11-13 main c9d2c36 배포(Cloud Run)
 - 배포: `main` `c9d2c36`을 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-c9d2c36 --revision-suffix c9d2c36`(빌드 07:34~07:38 KST). 리비전 `sojafit-api-c9d2c36`, 이미지 `sha256:9c180b8255923b2087f5b47b1d135c1f7b7d95449bba407bf64ece4fd4dea474`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
 - 코드 차이 [실측]: `ea5797c`..`c9d2c36`에서 `backend`, `frontend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`의 `git diff --stat`이 비어 있다. 바뀐 것은 문서 · 증거 파일뿐이다.
