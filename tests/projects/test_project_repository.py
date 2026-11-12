@@ -8,6 +8,7 @@ import pytest
 from psycopg import sql
 
 from backend import auth
+from tests.db_schema import apply_service_schema
 
 
 @pytest.fixture
@@ -22,8 +23,7 @@ def storage(monkeypatch):
         monkeypatch.setattr(auth, "connection", connect)
         try:
             with connect() as conn:
-                for name in ("003_auth.sql", "005_auth_attempt_window.sql", "006_user_roles.sql", "018_projects.sql"):
-                    conn.execute(Path("db", name).read_text(encoding="utf-8-sig"))
+                apply_service_schema(conn)
                 users = [row[0] for row in conn.execute(
                     "INSERT INTO users (login_id, password_hash, role) VALUES "
                     "('owner@example.test', 'fake', 'user'), ('other@example.test', 'fake', 'admin') RETURNING id"
@@ -164,6 +164,20 @@ def test_schema_restricts_public_access_and_indexes_foreign_keys(storage):
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'invalid','unknown')", (owner,))
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'   ','upload')", (owner,))
+
+
+def test_demo_check_requires_demo_id_only_for_demo_projects(storage):
+    # [왜] 11-10 DEMOS에 c01을 더하고 DB 허용 목록을 빠뜨려 데모 생성이 503이 됐다. 새 CHECK(ck_projects_demo)는 목록 없이 "데모일 때만 demo_id"만 보므로
+    #      목록 대조 시험 대신 (1) 카탈로그의 모든 데모가 실제로 저장되고 (2) 규칙 위반을 DB가 거부하는지 본다
+    from backend.projects.repository import DEMOS
+    repo, (owner, _), connect = storage
+    for demo_id in DEMOS:
+        assert repo.create_demo(owner, demo_id, f"데모 {demo_id}").demo_id == demo_id
+    with connect() as conn:
+        assert conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'업로드','upload') RETURNING demo_id", (owner,)).fetchone() == (None,)
+        for kind, demo_id in (("demo", None), ("upload", "breadboard_supply")):
+            with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+                conn.execute("INSERT INTO projects (user_id,name,source_kind,demo_id) VALUES (%s,'위반',%s,%s)", (owner, kind, demo_id))
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'demo without id','demo')", (owner,))
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():

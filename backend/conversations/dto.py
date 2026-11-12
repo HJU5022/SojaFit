@@ -1,8 +1,9 @@
 """브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
 from pydantic import BaseModel, ValidationError
-from backend.conversations.models import SafeEvidence, SafeJudgement
+from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition
 from backend.rag.source_metadata import source_metadata
+from backend.services.datasheet_rows import official_pdf
 
 
 class BrowserResult(BaseModel):
@@ -100,6 +101,12 @@ def public_state(state: dict) -> dict:
             continue
         entry = {'document': _document_basename(document), 'page': page,
                  'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
+        if doc.get('source_type') == 'external_web':
+            url = official_pdf(doc.get('source_url'))
+            if not (url and re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']) and
+                    type(page) is int and page > 0 and table and isinstance(doc.get('row'), str) and doc['row']):
+                continue
+            entry.update(document=url, row=doc['row'])
         if entry not in evidence:
             evidence.append(entry)
     if evidence:
@@ -109,8 +116,21 @@ def public_state(state: dict) -> dict:
     return result
 
 
+def stored_evidence(entries):
+    """Keep the existing runs JSON schema; the canonical PDF URL identifies a W document."""
+    result = []
+    for entry in entries:
+        fields = {k: entry[k] for k in SafeEvidence.model_fields if k in entry}
+        if entry.get('source_type') == 'external_web':
+            fields['document'] = official_pdf(entry.get('source_url'))
+            if not fields['document']:
+                continue
+        result.append(fields)
+    return result
+
+
 def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '', interrupt: dict | None = None,
-               profile_hints=()) -> BrowserResult:
+               profile_hints=(), input_conditions=()) -> BrowserResult:
     # 명시적으로 구조화한 공개 칸만 선택한다.
     answer = state.get('answer', '')
     safe_interrupt = {}
@@ -134,12 +154,28 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
             for check in candidate.get('checks', []):
                 if check.get('citation'):
                     check['citation'] = _safe_citation(check['citation'])
+    # shortcut: 표시 조건은 현재 응답에만 포함한다. 기록 복원이 필요할 때 저장 계약을 확장한다.
+    if judgement:
+        judgement['input_conditions'] = []
+        rows = input_conditions
+        for item in rows[:60] if isinstance(rows, list) else []:
+            try:
+                judgement['input_conditions'].append(SafeInputCondition.model_validate(_pick(item, ('code', 'value'))).model_dump())
+            except (ValidationError, TypeError):
+                continue
     evidence = []
     for item in state.get('evidence', []):
         try:
             clean = _pick(item, ('document', 'page', 'table', 'row', 'section', 'citation_number'))
             entry = SafeEvidence.model_validate(clean).model_dump(mode='json')
-            entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
+            if re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']):
+                url = official_pdf(item.get('document'))
+                if not url or type(entry['page']) is not int or entry['page'] < 1 or not entry['table'] or not entry['row']:
+                    continue
+                entry.update(document=url.rsplit('/', 1)[-1], source_type='external_web',
+                             source_url=f"{url}#page={entry['page']}", outline_page=None)
+            else:
+                entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
             if entry not in evidence:
                 evidence.append(entry)
         except (ValidationError, TypeError):

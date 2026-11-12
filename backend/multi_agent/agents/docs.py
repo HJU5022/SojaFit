@@ -7,11 +7,12 @@
   찾기 도구(find, 카드 찾기)로 그 정격과 같은 값의 품번을 먼저 찾고 그 문서 안에서 찾는다(11-07 R1 dev G4).
   근거를 끝내 못 찾으면 거절을 정하지 않고 다시 찾을 사유(no_result · all_rejected)로 보고한다.
   역할 할 일처럼 검색어가 없으면 검색 없이 넷리스트만으로 답한다.
-- 하지 않는 일: 할 일 정하기(Supervisor), 숫자 비교 · 대체 판정(대체 부품 에이전트와 `backend/judge/`), 여러 할 일 합치기(종합),
+- 하지 않는 일: 할 일 정하기(Supervisor), 숫자 비교 · 대체 판정(Spec 에이전트와 `backend/judge/`), 여러 할 일 합치기(종합),
   LLM 직접 호출(`chat`을 받아 쓴다. 실제 연결은 `llm.node_chat`).
 - 출처: backend/multi_agent/MULTI_AGENT.md "구조 결정"의 RAG 에이전트(예전 채점 Luna · 생성 Haiku를 한 호출로 합침, 채점은 질문 맥락을
   가진 쪽이 한다), backend/graph/nodes.py(검색 · 다른 품번 줄 거르기 · 인용 함수를 그대로 쓴다)
 """
+import os
 import re
 from pathlib import Path
 from typing import Literal
@@ -20,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
+from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
 from backend.graph.nodes import NOT_FOUND, REVISION, WORD, citations, netlist_block, other_part_row, search
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.rag.units import to_si
@@ -37,6 +39,16 @@ class DocsAnswer(BaseModel):
     next_query: str = Field(default='', max_length=200, description='When grade is none or partial: a different English search query to try once (for partial, aimed at what is missing)')
 
 
+class PdfAnswer(DocsAnswer):
+    pdf_rows: list[Literal['W1', 'W2', 'W3']] = Field(
+        description='Select only the PDF rows answering this task. The server renders their exact part, values and units.')
+    answer: str = Field(default='', description='Only sentences supported by internal numeric citations. Leave empty for PDF facts.')
+
+
+class PdfOnlyAnswer(PdfAnswer):
+    answer: Literal[''] = ''
+
+
 def keep_docs(docs: list[dict], parts: list[str], question: str) -> list[dict]:
     """LLM에 보여 주기 전에 코드로 거른다: 물은 품번이 아닌 다른 품번만 적힌 표 줄, 질문이 요청한 개정판이 아닌 문서."""
     # [왜] 단일 그래프 채점 노드의 결정적 검사와 같다. 인용한 청크에 대상 품번이 있게 하는 첫 관문이다(설계 그림 인용 검사)
@@ -50,6 +62,14 @@ VARIANT_QUERY = ('bidirectional bi-directional C CA suffix electrical characteri
                  ' "H" means AEC-Q101 qualified ordering information')
 NOTE_WORDS = re.compile(r'bi-?directional|both directions|AEC-?Q101', re.I)
 ASSEMBLY = re.compile(r'실장|조립|\b(?:pre[- ]?)?(?:assembl|mount)', re.I)
+# [왜] 스모크 T4·데이터시트 한국어가 극성/캐소드뿐 아니라 음극·양극·띠로만 적는 경우도 있다(배포 11-11 polarity_present=False 진단)
+POLARITY = re.compile(r'극성|캐소드|cathode|polarity|띠|band|음극|양극', re.I)
+
+
+def assembly_polarity_gap(question: str, task, answer: str) -> bool:
+    """실장·조립 확인을 묻는데 답에 극성 표지가 없으면 True(재검색·partial 처리용)."""
+    brief = f'{question} {task.goal} {task.output}'
+    return bool(ASSEMBLY.search(brief)) and not POLARITY.search(answer or '')
 
 
 def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
@@ -71,7 +91,13 @@ def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
 def render(question: str, task: Task, docs: list[dict], part: dict) -> str:
     """LLM에 줄 user 글: 질문 · 지시서 · 문서 근거와 역할 작업의 넷리스트."""
     part = part if task.kind == 'role' else {}  # 사양 조회에 회로 연결을 부가 설명할 근거를 주지 않는다.
-    blocks = [f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}" for d in docs]
+    blocks = []
+    for d in docs:
+        if d.get('source_type') == 'external_web':
+            blocks.append(f"[{d['chunk_id']}] Manufacturer PDF: {d['source_url']} · PDF p.{d['page']}\n"
+                          f"Table: {d['table']}\nRow: {d.get('row', '')}\nExtracted cells: {d['content']}")
+        else:
+            blocks.append(f"[{d['chunk_id']}] {d['file']} · {d['page']}쪽\n{d['content']}")
     if part:
         blocks.append(netlist_block({**part,'footprint':''}))  # Keep footprint annotations out of model instructions; preserve the original for code.
     allowed = [str(d['chunk_id']) for d in docs] + (['넷리스트'] if part else [])
@@ -132,15 +158,21 @@ def lookup_parts(task: Task, find) -> list[str]:
     return [f['part'] for f in found]
 
 
-def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
+def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None) -> dict:
     """그래프 노드(Send 대상): 할 일 하나를 끝까지 하고 보고서 하나를 메모장 `reports`에 이어 붙인다."""
     task = Task.model_validate(payload['task'])
     question, part, rnd = payload['question'], payload.get('target_part') or {}, payload.get('round') or 1
     query, searches, shown, result, calls, relax = task.query.strip(), [], [], None, 0, False
     filter_parts, looked_up = list(task.parts), ''
+    web_parts = list(filter_parts)
     carry, first = [], None  # 일부만 답한 근거와 그 답(다시 찾을 때 근거를 함께 보이고, 못 늘리면 그 답을 쓴다)
 
     def report(status: str, summary: str, **kw) -> dict:
+        # Only source locators cross into the persisted graph state.
+        if 'docs' in kw:
+            kw['docs'] = [{**{k: v for k, v in doc.items() if k not in ('content', 'cells', 'unit', 'conditions')},
+                           'sentence_sha256': sentence_digest(row_sentence(doc))}
+                          if doc.get('source_type') == 'external_web' else doc for doc in kw['docs']]
         r = TaskReport(task=task.id, agent='docs', status=status, summary=summary[:200], searches=searches, llm_calls=calls, round=rnd, **kw)
         return {'reports': [r.model_dump(mode='json')], 'path': ['문서']}
 
@@ -153,7 +185,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             # [왜] 그 정격의 품번이 표에 없다. 거절을 정하지 않고 다시 찾을 사유로 올린다(재계획이 조건을 고쳐 볼 수 있다)
             return report('fail', 'no part in the spec table has the described ratings', reason=Reason.NO_RESULT)
         looked_up = f"; parts with the described ratings: {', '.join(filter_parts)}"
-    for _ in range(MAX_SEARCHES):  # [왜] 검색은 할 일마다 2번까지(AGENTS 6, MULTI_AGENT.md "구조 결정"의 상한)
+    max_searches = int(os.getenv('DOCS_MAX_SEARCHES', str(MAX_SEARCHES)) or MAX_SEARCHES)  # [왜] A/B용. 기본은 MAX_SEARCHES(2)
+    for _ in range(max(1, max_searches)):  # [왜] 검색은 할 일마다 2번까지(AGENTS 6, MULTI_AGENT.md "구조 결정"의 상한)
         docs = []
         if query:
             find = (lambda q, parts=None: retriever(q, parts=None)) if relax else retriever
@@ -164,6 +197,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
             if out['retrieval_error']:
                 return report('fail', f"search tool failure: {out['retrieval_error'].get('kind', '')}", reason=Reason.SEARCH_ERROR)
             used_parts = list(filter_parts) if filter_parts and not relax else out['parts']
+            if not web_parts:
+                # 내부 재검색이 품번 필터를 풀어도 외부 검색은 처음 맡은 품번을 유지한다.
+                task_words = {word.upper() for word in WORD.findall(task.query)}
+                web_parts = filter_parts or [p for p in out['parts'] if p.upper() in task_words] or out['parts']
             searches.append({'query': out['query'], 'parts': used_parts, 'top': [[d['file'], d['page']] for d in out['docs']]})
             docs = keep_docs(out['docs'], used_parts, question)
             docs += variant_notes(used_parts, docs, retriever)
@@ -181,19 +218,56 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
         user = render(question, task, docs, part) + memory_context(payload.get('approved_memories') or [])
         result, shown = chat('docs_answer', PROMPT, user, DocsAnswer), docs
         calls += 1
+        # [왜] enough여도 실장 전 확인을 물었는데 극성 표지가 없으면 정격·포장만 답하고 끝낸 경우다
+        #      (배포 HTTP T4 2026-11-11_230956: normal polarity_present=False, attack은 True). partial+#49와 같이 한 번 더 찾는다.
+        if (result.grade == 'enough' and assembly_polarity_gap(question, task, result.answer)
+                and os.getenv('DOCS_RETRY_PARTIAL', '1') != '0'):
+            carry, first = shown, (result, shown)
+            base = result.next_query.strip() or query
+            query = base if 'polarity before assembly' in base else f'{base} polarity before assembly'.strip()
+            continue
         if result.grade == 'enough' or not result.next_query.strip():
             break
         if result.grade == 'partial':
             # [왜] 일부만 답하고 끝내면, 검색어가 질문의 한쪽만 겨눈 경우 정답 근거 없이 답했다(v3-20: 'H 접미사 뜻'만 찾아 SS14H · SS14 정격표를 못 봄,
             #      사전 등록 #49). 빠진 부분을 다른 검색어로 한 번 더 찾고, 앞 근거와 함께 다시 답한다(검색 2번 상한 안)
+            if os.getenv('DOCS_RETRY_PARTIAL', '1') == '0':
+                break  # [왜] 속도 A/B용. 기본(1)은 #49 유지. 0이면 partial 재검색만 끄고 첫 일부 답으로 끝낸다(none 재검색은 그대로)
             carry, first = shown, (result, shown)
         query = result.next_query.strip()  # 근거가 없거나 모자라다고 채점했으면 LLM이 준 다른 검색어로 한 번만 다시
         if result.grade == 'partial' and ASSEMBLY.search(question+' '+task.goal+' '+task.output) \
                 and ASSEMBLY.search(' '.join(result.missing)):
             query += ' polarity before assembly'  # 실장 전 확인사항을 묻는데 정격·포장 행만 재검색하는 누락을 막는다
+    needs_web = (not result or result.grade in ('partial', 'none') or bool(result.missing))
+    if web_search is not None and task.kind != 'role' and needs_web:
+        terms = (result.next_query.strip() if result and result.next_query.strip() else query or task.query)
+        requested = {p.upper() for p in web_parts}
+        external = [d for d in web_search(web_parts, terms)
+                    if row_sentence(d) and d['doc_parts'][0].upper() in requested]
+        if external:
+            searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
+                             'top': [[d['file'], d.get('page', '')] for d in external]})
+            # Keep the support for a partial answer, including one from the first search.
+            # Other parts' rejected rows must not compete with the manufacturer table.
+            prior, prior_docs = (result, shown) if result and result.grade != 'none' else first or (None, [])
+            cited_internal = citations(prior.answer) if prior else set()
+            combined = external + [d for d in prior_docs if str(d['chunk_id']) in cited_internal]
+            web_result = chat('docs_answer', PROMPT, render(question, task, combined, part)
+                              + memory_context(payload.get('approved_memories') or []),
+                              PdfAnswer if cited_internal else PdfOnlyAnswer)
+            selected = [f'[{cid}]' for cid in dict.fromkeys(web_result.pdf_rows)]
+            web_result = DocsAnswer(**{**web_result.model_dump(exclude={'pdf_rows'}),
+                                        'answer': '\n'.join(filter(None, [web_result.answer, *selected]))})
+            calls += 1
+            if (web_result.grade != 'none' and web_result.answer.strip()) or prior is None:
+                result, shown = web_result, combined
     if first and (result.grade == 'none' or not result.answer.strip()):
         result, shown = first  # 다시 찾은 답이 더 나쁘면 첫 일부 답을 쓴다
     answer = (result.answer.strip() if result else '')
+    if result and result.grade != 'none' and assembly_polarity_gap(question, task, answer):
+        # [왜] 재검색 한도 안에서도 극성 표지가 없으면 enough로 통과시키지 않는다(missing이 비어 status=ok가 되던 구멍)
+        if not any(ASSEMBLY.search(m) for m in result.missing):
+            result.missing = list(result.missing) + ['실장 전 극성·취급 확인사항']
     if not result or result.grade == 'none' or not answer or answer.startswith(NOT_FOUND):
         # [왜] 설계 v2: 못 찾았다고 거절을 정하지 않고 다시 찾을 사유로 보고한다(0건 no_result, 근거가 아님 all_rejected). 거절은 Supervisor가 정한다
         why = Reason.ALL_REJECTED if shown else Reason.NO_RESULT
@@ -208,21 +282,31 @@ def docs_agent(payload: dict, *, retriever, chat, find=None) -> dict:
     cited = citations(answer)
     if cited - valid or not cited & valid or has_uncited_sentence(answer):
         # A single bounded regeneration uses the same evidence; never guess a citation for the model.
-        correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
-        correction += ('\nCitation correction: the previous output had unsupported IDs or sentences without evidence citations. '
-                       'Answer only the assigned task in the Supervisor brief, not the other tasks in the full question. '
-                       'Re-answer only from the evidence above, copying its allowed IDs exactly for every sentence. '
-                       'Put missing facts for this task in missing, not unsupported absence claims in answer. '
-                       'Do not invent support; use grade none if it is absent.')
-        repaired = chat('docs_answer', PROMPT, correction, DocsAnswer)
-        calls += 1
-        repaired_answer = repaired.answer.strip()
-        repaired_cites = citations(repaired_answer)
-        if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
-            return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
-                          reason=Reason.VERIFY_FAILED, docs=shown)
-        if repaired.grade != 'none' and repaired_cites & valid:
-            result, answer = repaired, repaired_answer
+        if os.getenv('DOCS_CITE_REPAIR', '1') == '0':
+            pass  # [왜] 속도 A/B용. 기본(1)은 인용보정 LLM 1회. 0이면 보정 없이 아래 drop_fake·미인용 문장 제거만 한다
+        else:
+            correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
+            correction += ('\nCitation correction: the previous output had unsupported IDs or sentences without evidence citations. '
+                           'Answer only the assigned task in the Supervisor brief, not the other tasks in the full question. '
+                           'Re-answer only from the evidence above, copying its allowed IDs exactly for every sentence. '
+                           'Put missing facts for this task in missing, not unsupported absence claims in answer. '
+                           'Do not invent support; use grade none if it is absent.')
+            repaired = chat('docs_answer', PROMPT, correction, DocsAnswer)
+            calls += 1
+            repaired_answer = repaired.answer.strip()
+            repaired_cites = citations(repaired_answer)
+            if any(c.startswith('승인사례:') for c in repaired_cites) or set(repaired.memory_refs) - allowed_memories:
+                return report('fail', 'historical memory cannot support current claims or reference an unprovided case',
+                              reason=Reason.VERIFY_FAILED, docs=shown)
+            if repaired.grade != 'none' and repaired_cites & valid:
+                result, answer = repaired, repaired_answer
+    if any(cid.startswith('W') for cid in citations(answer)) and any(
+        line.strip() and not citations(line) for line in answer.splitlines()
+    ):
+        return report('fail', 'unattributed line in PDF answer', reason=Reason.VERIFY_FAILED, docs=shown)
+    answer = check_pdf_lines(answer, shown, expand=True)
+    if answer is None:
+        return report('fail', 'answer disagrees with cited PDF row', reason=Reason.VERIFY_FAILED, docs=shown)
     answer, dropped_fake = drop_fake_citations(answer, valid)
     dropped_uncited = has_uncited_sentence(answer)
     if dropped_uncited:

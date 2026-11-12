@@ -10,6 +10,7 @@ from psycopg import sql
 
 from backend import auth
 from backend.main import app
+from tests.db_schema import apply_service_schema
 
 
 @pytest.fixture
@@ -291,8 +292,7 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
         monkeypatch.setattr(auth, "connection", connect)
         try:
             with connect() as conn:
-                for name in ("003_auth.sql", "005_auth_attempt_window.sql", "006_user_roles.sql", "018_projects.sql", "019_conversations.sql"):
-                    conn.execute(Path("db", name).read_text(encoding="utf-8-sig"))
+                apply_service_schema(conn)
                 users = [row[0] for row in conn.execute("INSERT INTO users (login_id,password_hash,role) VALUES ('a@example.test','fake','user'),('b@example.test','fake','admin') RETURNING id").fetchall()]
                 for token, user_id in zip(("owner-token", "admin-token"), users):
                     conn.execute("INSERT INTO auth_sessions (token_hash,user_id,expires_at) VALUES (%s,%s,CURRENT_TIMESTAMP + INTERVAL '1 hour')", (auth.session_token_hash(token), user_id))

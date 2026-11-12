@@ -1,7 +1,7 @@
-import type { ResultDto } from './conversations'
+import type { ResultDto, RunDto, ThreadDetailDto } from './conversations'
 import type { Project } from './projects'
-import type { ApprovalDto, ApprovedCaseDto } from './quotes'
 import { dummyDemos, dummyProjects } from 'virtual:sojafit-dummy-circuits'
+import type { ApprovalDto, ApprovedCaseDto } from './quotes'
 
 const REQUEST_ID = 'dummy-request'
 const NOW = '2026-11-09T00:00:00Z'
@@ -51,6 +51,10 @@ const result: ResultDto = {
 let approval: ApprovalDto | null = null
 let approvedCase: ApprovedCaseDto | null = null
 let projects: Project[] = structuredClone(dummyProjects)
+let threads: ThreadDetailDto[] = []
+let runs: RunDto[] = []
+let threadSequence = 0
+let runSequence = 0
 
 function json(data: unknown, status = 200) {
   return Response.json(data, { status })
@@ -106,16 +110,68 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   if (method === 'GET' && pathname === '/api/judge/roles') return json([{ code: 'R01', name: '역극성 보호(직렬)' }])
   const projectThreadsMatch = pathname.match(/^\/api\/projects\/(\d+)\/threads$/)
   if (method === 'GET' && projectThreadsMatch) {
-    return projects.some(item => item.id === Number(projectThreadsMatch[1])) ? json([]) : notFound()
+    const projectId = Number(projectThreadsMatch[1])
+    return projects.some(item => item.id === projectId) ? json(threads.filter(item => item.project_id === projectId).map(item => ({
+      id: item.id, project_id: item.project_id, title: item.title, created_at: NOW, last_activity_at: NOW,
+      latest_run_id: item.latest_run?.id ?? null, status: item.latest_run?.status ?? null,
+    })).reverse()) : notFound()
   }
-  if (method === 'POST' && pathname === '/api/projects/1/threads') return json({ id: 'dummy-thread', project_id: 1 }, 201)
+  if (method === 'POST' && projectThreadsMatch) {
+    const projectId = Number(projectThreadsMatch[1])
+    if (!projects.some(item => item.id === projectId)) return notFound()
+    const sequence = threadSequence++
+    const id = sequence ? `dummy-thread-${sequence + 1}` : 'dummy-thread'
+    threads.push({ id, project_id: projectId, title: '새 대화', target_ref: null, target_locked: false, latest_run: null, messages: [], next_before_message_id: null })
+    return json({ id, project_id: projectId }, 201)
+  }
+  const threadMatch = pathname.match(/^\/api\/threads\/([^/]+)$/)
+  if (method === 'DELETE' && threadMatch) {
+    const thread = threads.find(item => item.id === threadMatch[1])
+    if (!thread) return notFound()
+    threads = threads.filter(item => item.id !== thread.id)
+    if (approval && thread.messages.some(message => message.id === approval?.message_id)) { approval = null; approvedCase = null }
+    runs = runs.filter(item => item.thread_id !== thread.id)
+    return new Response(null, { status: 204 })
+  }
+  if (method === 'GET' && threadMatch) {
+    const thread = threads.find(item => item.id === threadMatch[1])
+    if (!thread) return notFound()
+    const before = Number(url.searchParams.get('before_message_id') ?? Infinity)
+    const limit = Number(url.searchParams.get('limit') ?? 50)
+    const eligible = thread.messages.filter(message => message.id < before)
+    const messages = eligible.slice(-limit)
+    return json({ ...thread, messages, next_before_message_id: eligible.length > limit ? messages[0].id : null })
+  }
 
-  if (method === 'POST' && pathname === '/api/threads/dummy-thread/runs') {
-    const body = `${sse('run_started', { run_id: 'dummy-run' })}${sse('status', { stage: '근거와 후보 판정' })}${sse('completed', result)}`
+  const startMatch = pathname.match(/^\/api\/threads\/([^/]+)\/runs$/)
+  if (method === 'POST' && startMatch) {
+    const thread = threads.find(item => item.id === startMatch[1])
+    if (!thread) return notFound()
+    const input = JSON.parse(String(init.body ?? '{}')) as { question: string; target_ref: string }
+    const sequence = runSequence++
+    const id = sequence ? `dummy-run-${sequence + 1}` : 'dummy-run'
+    const messageId = 9 + sequence * 2
+    runs.push({ id, thread_id: thread.id, message_id: messageId, result })
+    if (!thread.messages.length) {
+      const title = input.question.trim().replace(/\s+/g, ' ')
+      thread.title = Array.from(title).slice(0, 60).join('') + (Array.from(title).length > 60 ? '…' : '')
+    }
+    thread.target_ref = input.target_ref; thread.target_locked = true
+    thread.latest_run = { id, status: 'completed', message_id: messageId }
+    thread.messages.push({ id: messageId - 1, run_id: id, role: 'user', content: input.question, created_at: NOW },
+      { id: messageId, run_id: id, role: 'assistant', content: result.answer, created_at: NOW })
+    const body = `${sse('run_started', { run_id: id })}${sse('status', { stage: '근거와 후보 판정' })}${sse('completed', result)}`
     return new Response(body, { headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store' } })
   }
-  if (method === 'GET' && pathname === '/api/runs/dummy-run') {
-    return json({ id: 'dummy-run', thread_id: 'dummy-thread', message_id: 9, result })
+  const runMatch = pathname.match(/^\/api\/runs\/([^/]+)$/)
+  const recoverMatch = pathname.match(/^\/api\/runs\/([^/]+)\/recover$/)
+  if (method === 'POST' && recoverMatch) {
+    const run = runs.find(item => item.id === recoverMatch[1])
+    return run ? json(run) : notFound()
+  }
+  if (method === 'GET' && runMatch) {
+    const run = runs.find(item => item.id === runMatch[1])
+    return run ? json(run) : notFound()
   }
 
   if (method === 'POST' && pathname === '/api/messages/9/approvals') {

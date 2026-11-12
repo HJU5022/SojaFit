@@ -1,0 +1,403 @@
+{
+ "draft50-n04": {
+  "graph#1": {
+   "part": "TSC BZT52C5V1",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VZ",
+     "op": ">=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "VZ",
+     "op": "<=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "PD",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_z * orig.VZ * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    }
+   ],
+   "missing": [],
+   "uncertain": [
+    "CJ: data_line 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "data_line"
+   ],
+   "dropped": [
+    "v_clamp",
+    "pulse_test"
+   ]
+  },
+  "graph#2": {
+   "part": "BZT52C5V1",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VZ",
+     "op": ">=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "VZ",
+     "op": "<=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "PD",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_z * orig.VZ * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    }
+   ],
+   "missing": [],
+   "uncertain": [
+    "CJ: data_line 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "data_line"
+   ],
+   "dropped": [
+    "v_clamp",
+    "v_clamp",
+    "pulse_test"
+   ]
+  },
+  "multi#1": {
+   "part": "BZT52C5V1",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VZ",
+     "op": ">=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "VZ",
+     "op": "<=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "PD",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_z * orig.VZ * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    }
+   ],
+   "missing": [],
+   "uncertain": [
+    "CJ: data_line 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "data_line"
+   ],
+   "dropped": [
+    "v_clamp",
+    "pulse_test"
+   ]
+  },
+  "multi#2": {
+   "part": "TSC BZT52C5V1",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VZ",
+     "op": ">=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "VZ",
+     "op": "<=",
+     "threshold": null,
+     "basis": "orig.VZ",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    },
+    {
+     "code": "PD",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_z * orig.VZ * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "원래 부품 값 없음",
+     "cite": null
+    }
+   ],
+   "missing": [],
+   "uncertain": [
+    "CJ: data_line 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "data_line"
+   ],
+   "dropped": [
+    "v_clamp",
+    "pulse_test"
+   ]
+  }
+ },
+ "draft50-n08": {
+  "graph#1": {
+   "part": "1N4148",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VRRM",
+     "op": ">=",
+     "threshold": 15.0,
+     "basis": "v_in_max * kV",
+     "value": 100.0,
+     "unit": "V",
+     "condition": null,
+     "result": "pass",
+     "why": "",
+     "cite": [
+      "1N4148 SERIES_K2301.pdf",
+      1,
+      "ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)"
+     ]
+    },
+    {
+     "code": "IF_AV",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_max * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "빠진 값: i_max",
+     "cite": null
+    }
+   ],
+   "missing": [
+    "i_max"
+   ],
+   "uncertain": [
+    "VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "i_max",
+    "v_drop_allowed"
+   ],
+   "dropped": [
+    "i_d"
+   ]
+  },
+  "graph#2": {
+   "part": "1N4148",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VRRM",
+     "op": ">=",
+     "threshold": 15.0,
+     "basis": "v_in_max * kV",
+     "value": 100.0,
+     "unit": "V",
+     "condition": null,
+     "result": "pass",
+     "why": "",
+     "cite": [
+      "1N4148 SERIES_K2301.pdf",
+      1,
+      "ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)"
+     ]
+    },
+    {
+     "code": "IF_AV",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_max * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "빠진 값: i_max",
+     "cite": null
+    }
+   ],
+   "missing": [
+    "i_max"
+   ],
+   "uncertain": [
+    "VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "i_max",
+    "v_drop_allowed"
+   ],
+   "dropped": [
+    "i_d"
+   ]
+  },
+  "multi#1": {
+   "part": "TSC 1N4148",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VRRM",
+     "op": ">=",
+     "threshold": 15.0,
+     "basis": "v_in_max * kV",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "사양 표에 값 없음",
+     "cite": null
+    },
+    {
+     "code": "IF_AV",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_max * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "빠진 값: i_max",
+     "cite": null
+    }
+   ],
+   "missing": [
+    "i_max"
+   ],
+   "uncertain": [
+    "VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "i_max",
+    "v_drop_allowed"
+   ],
+   "dropped": [
+    "i_d"
+   ]
+  },
+  "multi#2": {
+   "part": "1N4148",
+   "verdict": "NOT_VERIFIED",
+   "checks": [
+    {
+     "code": "VRRM",
+     "op": ">=",
+     "threshold": 15.0,
+     "basis": "v_in_max * kV",
+     "value": 100.0,
+     "unit": "V",
+     "condition": null,
+     "result": "pass",
+     "why": "",
+     "cite": [
+      "1N4148 SERIES_K2301.pdf",
+      1,
+      "ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)"
+     ]
+    },
+    {
+     "code": "IF_AV",
+     "op": ">=",
+     "threshold": null,
+     "basis": "i_max * kI",
+     "value": null,
+     "unit": null,
+     "condition": null,
+     "result": "unverified",
+     "why": "빠진 값: i_max",
+     "cite": null
+    }
+   ],
+   "missing": [
+    "i_max"
+   ],
+   "uncertain": [
+    "VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정"
+   ],
+   "asked": [
+    "i_max",
+    "v_drop_allowed"
+   ],
+   "dropped": [
+    "i_d"
+   ]
+  }
+ }
+}

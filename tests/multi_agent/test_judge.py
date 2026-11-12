@@ -1,4 +1,4 @@
-"""대체 부품 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
+"""Spec 에이전트(backend/multi_agent/agents/judge.py) 시험: 가짜 LLM · 가짜 사양 표로 읽기 · 숫자 확인 · 인터럽트 · 판정을 본다.
 
 - 역할: AC-02(질문에 없는 숫자는 버림) · AC-07(other) · AC-08(인터럽트 1번) · AC-09(비교는 verdict에서만), 찾기 흐름.
 - 하지 않는 일: 실제 LLM · MCP · DB 호출.
@@ -16,13 +16,6 @@ STATE = {'question': 'D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 �
                                          'nets': [{'name': 'RAW', 'nodes': ['D1.K(1N4001)', 'F1.1(500mA)'], 'more': 0}]},
          'question_type': 'candidate_judge'}
 
-@pytest.fixture(autouse=True)
-def one_read(monkeypatch):
-    """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
-    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
-
-
-
 def test_judge_read_calls_llm_once_with_roles_and_circuit():
     seen = []
 
@@ -33,6 +26,41 @@ def test_judge_read_calls_llm_once_with_roles_and_circuit():
     assert len(seen) == 1 and seen[0][0] == 'judge_read'
     assert 'R01' in seen[0][1] and 'D1.K(1N4001)' in seen[0][1] and '150mA' in seen[0][1]
     assert out['judge_read']['role'] == 'R01' and out['path'] == ['판정 읽기']
+
+
+def test_read_is_single_and_env_votes_change_nothing(monkeypatch):
+    """[왜] 3번 다수결을 없앴다(단일 읽기 + 품번 바로잡기가 정확도 같음, v3 50문항 50/50). 옛 환경값을 줘도 읽기는 한 번이다."""
+    monkeypatch.setenv('JUDGE_READ_VOTES', '3')
+    monkeypatch.setenv('LAB_READ_VOTES', '3')
+    calls = []
+
+    def chat(node, system, user, schema):
+        calls.append(node)
+        return J.JudgeRead(role='R01')
+    J.judge_read_agent(STATE, chat=chat)
+    assert calls == ['judge_read']
+
+
+def test_read_format_error_propagates_after_one_call():
+    calls = []
+
+    def chat(node, system, user, schema):
+        calls.append(node)
+        raise ValueError('형식 위반')
+    with pytest.raises(ValueError):
+        J.judge_read_agent(STATE, chat=chat)
+    assert calls == ['judge_read']
+
+
+def test_part_names_are_grounded_after_the_read(monkeypatch):
+    order = []
+    monkeypatch.setattr(J, 'ground_part_names', lambda o, c, st: (order.append('ground'), ('SS26', ['SS26H']))[1])
+
+    def chat(node, system, user, schema):
+        order.append('read')
+        return J.JudgeRead(role='R01', original_part='SS34', candidates=['SS26H'])
+    out = J.judge_read_agent(STATE, chat=chat)
+    assert order == ['read', 'ground'] and out['judge_read']['original_part'] == 'SS26'
 
 
 RATINGS = 'ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)'
@@ -388,3 +416,16 @@ def test_find_widens_to_sibling_categories_and_keeps_a_family_the_user_named(mon
     J.judge_agent(asked, specs=specs_of({}), find=find, retriever=None)
     # [왜] 같은 계열(쇼트키 소신호)로 먼저 넓히고, 사용자가 '쇼트키'를 말했으면 분류를 통째로 빼지 않는다(11-07 h4-14)
     assert seen[0] == 'schottky-rectifier' and 'schottky-diode' in seen and None not in seen
+
+
+def test_displayed_conditions_drop_ungrounded_reads_and_use_resume_values(monkeypatch):
+    read = {**READ, 'values': [v for v in READ['values'] if v['name'] != 'i_max'] +
+            [{'name': 'i_max', 'number': 999, 'unit': 'A', 'quote': '사용자가 적지 않은 999A'}]}
+    def reply(payload):
+        assert 'i_max' in payload['missing']
+        return {'answers': {'i_max': '250mA', 'v_drop_allowed': '0.8V'}}
+    monkeypatch.setattr(J, 'interrupt', reply)
+    result = J.judge_agent({**STATE, 'conditions': '', 'question': STATE['question'] + ' ' + STATE['conditions'], 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    rows = {x['code']: x['value'] for x in result['judgement']['input_conditions']}
+    assert rows['i_max'] == '0.25 A' and rows['v_drop_allowed'] == '0.8 V'
+    assert '999' not in str(rows)

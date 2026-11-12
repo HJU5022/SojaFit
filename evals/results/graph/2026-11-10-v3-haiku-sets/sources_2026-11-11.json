@@ -1,0 +1,73 @@
+{
+ "what": "EVAL_REPORT.md 8장이 인용하는 v3 50문항 Haiku 구성 측정(사전 등록 #50, 11-10)의 원시 결과를 저장소 밖 실험 폴더 exp-haiku-1109에서 그대로 복사한 기록",
+ "copied_at": "2026-11-11",
+ "filter": "없음. 원본과 sha256이 같다(복사 때 대조)",
+ "secret_check": "비밀 · 이메일 · 경로 · 접속 문자열 패턴 검색에 걸린 것 없음. trace_url의 Langfuse 프로젝트 번호는 results/graph/thread_validation_2026-11-09.json에도 이미 있다",
+ "not_copied": "세트별 .log(화면 출력), B · C · H · S 계열(이전 구성 측정), 실행 스크립트(run_d50.sh · run_r50.sh · run_gate_traced.py)",
+ "p50_note": "세트 파일의 summary.p50_s는 실행기 정의 sorted(latency)[n//2]다. summary_*.json의 p50은 진짜 중앙값이라 세트 1은 3.5와 2.6으로 다르다(무관 25 · 관련 25의 시간이 갈려 가운데가 벌어져 있다). p95는 같다",
+ "files": [
+  {
+   "file": "gate-v3_draft-1110-0033-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/D-v3a/set1.json",
+   "sha256": "bb914c77cecd368e1d9ea4def67c5e283a040d7c3e73e0a7d5834fd0b1eefad0",
+   "bytes": 91054,
+   "what": "4세트 중 1세트(00:33 시작, 93a497c)"
+  },
+  {
+   "file": "gate-v3_draft-1110-0034-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/D-v3b/set1.json",
+   "sha256": "9f746229511a43f382e2f801620618a3ce0df87ef98413db424d4b155034ef16",
+   "bytes": 91723,
+   "what": "4세트 중 2세트(00:34)"
+  },
+  {
+   "file": "gate-v3_draft-1110-0040-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/R-v3a/set1.json",
+   "sha256": "826fd4225bdf9394165f97cd3138a3c72df34ac180449c2f0fab1abe32c215ec",
+   "bytes": 91303,
+   "what": "4세트 중 3세트(재현 00:40). 8장 LLM 단계별 집계의 대상 세션"
+  },
+  {
+   "file": "gate-v3_draft-1110-0041-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/R-v3b/set1.json",
+   "sha256": "f9657b7e2ccd478cda6c90fe6c82ca3ffb9c6934e6400d100e2db2fdf28f5a56",
+   "bytes": 92165,
+   "what": "4세트 중 4세트(재현 00:41)"
+  },
+  {
+   "file": "gate-dataset_v3-1110-0111-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/M-v3a/set1.json",
+   "sha256": "42c462bfad9583d7a9faf9ea50ba6ef4839e509d07b75e6b7abfc2eefcbe9e98",
+   "bytes": 94224,
+   "what": "병합 뒤 확인 1세트(01:11, f2b914e, 동결 dataset_v3)"
+  },
+  {
+   "file": "gate-dataset_v3-1110-0112-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/M-v3b/set1.json",
+   "sha256": "9052e3e5466de50f88f292eb1b8721dc89a4f41150d577a699bbb304dec0c7d0",
+   "bytes": 90285,
+   "what": "병합 뒤 확인 2세트(01:12)"
+  },
+  {
+   "file": "stage_costs_gate-v3_draft-1110-0040-set1.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/stage-costs-R-v3a.json",
+   "sha256": "039283696975d31f7bfd6bd55ac60b697b0f41e02e7913da3277354dc2fe55c3",
+   "bytes": 10999,
+   "what": "3세트의 Langfuse 기록을 11-10 20:05에 집계한 단계별 시간 · 비용(문항별 행 포함). 집계 스크립트는 남아 있지 않다"
+  },
+  {
+   "file": "summary_4sets_93a497c.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/최종-트레이스-링크-summary.json",
+   "sha256": "e92ba464dff6db8bd59b957392279ebb0c7b991642f5e8b06f1413087e8b4f19",
+   "bytes": 3687,
+   "what": "4세트의 Langfuse 집계(통과 · 시간 · 비용 · 호출 수). 안의 p50은 진짜 중앙값(두 가운데 값 평균)이라 실행기 p50과 다르다"
+  },
+  {
+   "file": "summary_merged_2sets_f2b914e.json",
+   "original": "(저장소 밖 팀 프로젝트 폴더) exp-haiku-1109/results/병합후-트레이스-링크-summary.json",
+   "sha256": "78bed4e751e4055393dda14b93fe1fc0c5289f03064b69651e3df16f743f3385",
+   "bytes": 1869,
+   "what": "병합 뒤 2세트의 같은 집계"
+  }
+ ]
+}

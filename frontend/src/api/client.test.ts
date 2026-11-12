@@ -1,8 +1,34 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { apiFetch, apiRequest, dummyFlowEnabled } from './client'
 import { fetchPrices } from './prices'
+import { openRunStream } from './conversations'
 
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+it('expires sessions for HTML 401 errors and keeps the header request id', async () => {
+  const expired = vi.fn()
+  window.addEventListener('sojafit:session-expired', expired)
+  try {
+    vi.stubGlobal('fetch', async () => new Response('<html>private proxy text</html>', { status: 401, headers: { 'X-Request-ID': 'proxy-1' } }))
+    await expect(apiFetch('/api/auth/me')).rejects.toEqual({ code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', requestId: 'proxy-1' })
+    expect(expired).toHaveBeenCalledOnce()
+  } finally { window.removeEventListener('sojafit:session-expired', expired) }
+})
+
+it.each(['', 'not-json', 'null', '{"error":null}', '{"detail":"private"}', '{"error":{"code":9,"message":{},"request_id":[]}}', '{"error":{"code":"","message":"","request_id":""}}'])('normalizes invalid error body %s', async body => {
+  vi.stubGlobal('fetch', async () => new Response(body, { status: 503, headers: { 'X-Request-ID': 'proxy-2' } }))
+  await expect(apiFetch('/api/projects')).rejects.toEqual({ code: 'UNAVAILABLE', message: '서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.', requestId: 'proxy-2' })
+})
+
+it('rejects an HTML success response as a safe API error', async () => {
+  vi.stubGlobal('fetch', async () => new Response('<html>wrong server</html>', { headers: { 'X-Request-ID': 'proxy-3' } }))
+  await expect(apiFetch('/api/projects')).rejects.toMatchObject({ code: 'INVALID_RESPONSE', requestId: 'proxy-3' })
+})
+
+it('normalizes gateway errors for SSE start with the same request id', async () => {
+  vi.stubGlobal('fetch', async () => new Response('private gateway response', { status: 503, headers: { 'X-Request-ID': 'sse-proxy' } }))
+  await expect(openRunStream('/api/threads/t/runs', {}, new AbortController().signal)).rejects.toMatchObject({ code: 'UNAVAILABLE', requestId: 'sse-proxy' })
+})
 it('enables the full dummy flow only for the explicit Vite development mode', () => {
   expect(dummyFlowEnabled({ DEV: true, MODE: 'dummy' })).toBe(true)
   expect(dummyFlowEnabled({ DEV: false, MODE: 'dummy' })).toBe(false)

@@ -23,9 +23,9 @@ export const summary = ({ connections: _connections, ...project }: typeof first 
 export function renderWithQueries(element: ReactNode, client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })) {
   return { ...render(<QueryClientProvider client={client}>{element}</QueryClientProvider>), client }
 }
-export function openWorkbench(path = '/app') {
+export function openWorkbench(path = '/app', user?: { user_id: number; role: 'user' | 'admin'; email?: string }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   function Location() { return <output aria-label="현재 경로">{useLocation().search}</output> }
-  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><WorkbenchPage /><Location /></MemoryRouter></QueryClientProvider>)
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><WorkbenchPage user={user} /><Location /></MemoryRouter></QueryClientProvider>)
   return client
 }

@@ -196,6 +196,38 @@ def test_saved_t4_retry_targets_assembly_and_preserves_supported_answer():
     assert '75 V' not in result['answer']
 
 
+def test_enough_without_polarity_forces_assembly_retry():
+    """enough로 끝냈지만 극성 표지가 없으면 partial+#49처럼 polarity before assembly 재검색을 한다(배포 T4 11-11)."""
+    from evals.runners import plan_injection_baseline as P,run_injection_baseline as R
+    data=P.fixture();case=next(c for c in data['cases'] if c['id']=='T4')
+    cards={c['chunk_id']+1557:{**c,'chunk_id':c['chunk_id']+1557}
+           for c in R.synthetic_docs(data,P.materialize(data,case,'normal'))}
+    searches=[];calls=[]
+    enough_no_polarity=D.DocsAnswer(grade='enough',
+        answer='DEMO2의 반복 최대 역전압 VRRM 정격은 60 V입니다[1558]. 패키지는 DO-41입니다[1562].',
+        missing=[],next_query='')
+    def retrieve(query,parts=None):
+        searches.append((query,parts))
+        ids=([1563,1562,1558,1560,1561] if 'polarity before assembly' in query
+             else [1558,1559,1562,1561,1560])
+        return [cards[i] for i in ids]
+    def chat(node,system,user,schema):
+        calls.append(user)
+        if 'Citation correction' in user:
+            return SAVED_T4_SUPPORTED[1].model_copy(deep=True)
+        if '[1563]' in user:
+            return SAVED_T4_SUPPORTED[0].model_copy(deep=True)
+        return enough_no_polarity.model_copy(deep=True)
+    payload={'question':case['question'],'task':dict(id=1,agent='docs',kind='rating',
+        goal='Find VRRM rating and package of DEMO2 and its pre-mounting checks.',
+        output='VRRM value with unit, package name, and any pre-mounting or handling notes printed in the datasheet, with citations.',
+        query='DEMO2 Repetitive peak reverse voltage VRRM Case package MECHANICAL DATA mounting',parts=['DEMO2'])}
+    result=D.docs_agent(payload,retriever=retrieve,chat=chat)['reports'][0]
+    assert '극성' in result['answer'] and '60 V' in result['answer'] and 'DO-41' in result['answer']
+    assert D.citations(result['answer'])=={'1558','1562','1563'} and not result['missing']
+    assert any('polarity before assembly' in q for q,_ in searches) and len(searches)==2 and len(calls)>=2
+
+
 def test_saved_t4_missing_assembly_is_announced_without_inventing_evidence():
     from backend.multi_agent import supervisor as S
     result,searches,calls=t4_replay(assembly_available=False)
@@ -213,6 +245,24 @@ def test_non_assembly_missing_does_not_change_the_retry_query():
     result,calls,searches=citation_replay([partial])
     assert searches==['1N4007G VRRM','1N4007G IFSM'] and len(calls)==1
     assert result['missing']==['IFSM']
+
+
+def test_docs_retry_partial_off_skips_second_search(monkeypatch):
+    """DOCS_RETRY_PARTIAL=0이면 partial+#49 재검색을 하지 않고 첫 일부 답으로 끝낸다."""
+    monkeypatch.setenv('DOCS_RETRY_PARTIAL', '0')
+    partial=D.DocsAnswer(grade='partial',answer='VRRM은 1000 V입니다 [16].',missing=['IFSM'],next_query='1N4007G IFSM')
+    result,calls,searches=citation_replay([partial])
+    assert searches==['1N4007G VRRM'] and len(calls)==1
+    assert result['status']=='partial' and result['missing']==['IFSM']
+
+
+def test_docs_cite_repair_off_skips_second_llm(monkeypatch):
+    """DOCS_CITE_REPAIR=0이면 인용보정 LLM을 부르지 않고 drop_fake·미인용 제거만 한다."""
+    monkeypatch.setenv('DOCS_CITE_REPAIR', '0')
+    bad=D.DocsAnswer(grade='enough',answer='VRRM은 1000 V입니다 [16]. 1200 V에서도 사용을 승인합니다.')
+    report,calls,_=citation_replay([bad])
+    assert len(calls)==1 and report['status']=='partial' and report['answer']=='VRRM은 1000 V입니다 [16].'
+    assert '1200' not in report['answer']
 
 
 # Exact voltage-task outputs from smoke02; source JSONL SHA256 starts 31d837ddcb67.

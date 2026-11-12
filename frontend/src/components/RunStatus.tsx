@@ -1,5 +1,12 @@
 import type { RunState } from '../hooks/useRunStream'
 
+export function ProcessingIcon({ stop = false }: { stop?: boolean }) {
+  return <svg className="processing-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <g className="processing-ring"><circle className="processing-track" cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="9" strokeDasharray="14 43" strokeLinecap="round" /></g>
+    {stop && <rect x="8" y="8" width="8" height="8" rx="1" />}
+  </svg>
+}
+
 export default function RunStatus({ state }: { state: RunState }) {
   let text = '질문을 입력해 주세요.'
   if (state.status === 'running') text = `${state.stage} 진행 중`

@@ -15,7 +15,6 @@ import logging
 from http import HTTPStatus
 from contextlib import asynccontextmanager
 from pathlib import Path
-from urllib.parse import unquote
 from uuid import uuid4
 
 import psycopg
@@ -33,21 +32,9 @@ from backend.api.auth import router as auth_router
 from backend.api.health import router as health_router
 from backend.api.prices import router as prices_router
 from backend.api.projects import router as projects_router
+from backend.api.external_circuits import router as external_circuits_router
 from backend.api.quotes import router as quotes_router
 from backend.web.app import mount_frontend
-
-
-class GoogleCallbackLogFilter(logging.Filter):
-    """Uvicorn 접속 로그에서 Google 콜백의 쿼리만 제거한다."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        if isinstance(record.args, tuple) and len(record.args) == 5:
-            target = record.args[2]
-            if isinstance(target, str):
-                path, separator, _ = target.partition("?")
-                if separator and unquote(path).rstrip("/") == "/api/auth/google/callback":
-                    record.args = (*record.args[:2], path, *record.args[3:])
-        return True
 
 
 @asynccontextmanager
@@ -56,9 +43,6 @@ async def lifespan(app: FastAPI):
     logs.setup()  # [주의] 루트 로거에 처리기가 이미 있으면(pytest 등) 손대지 않는다
     # [왜] 잘못된 AUTH_SECRET으로 뜬 서버가 약한 세션 해시를 쓰지 않도록 RuntimeError로 기동 자체를 막는다
     auth.validate_auth_configuration()
-    logger = logging.getLogger("uvicorn.access")
-    log_filter = GoogleCallbackLogFilter()
-    logger.addFilter(log_filter)
     conversations = None
     try:
         if os.getenv('THREADS_ENABLED') == '1':
@@ -70,7 +54,6 @@ async def lifespan(app: FastAPI):
         if conversations:
             conversations.close()
             del app.state.conversations
-        logger.removeFilter(log_filter)
 
 
 class ErrorPayload(BaseModel):
@@ -125,6 +108,8 @@ def error_response(
     #      요청 ID 미들웨어보다 먼저 난 오류(request_id_for가 새로 만든 ID)에서도 응답과 로그의 ID가 같다
     log_error(status_code, code, error, request_id=request_id)
     response_headers = dict(headers or {})
+    if request.url.path.startswith("/api/external-circuits/schematics"):
+        response_headers["Cache-Control"] = "private, no-store"
     response_headers["X-Request-ID"] = request_id
     return JSONResponse(
         status_code=status_code,
@@ -139,6 +124,14 @@ def error_response(
     )
 
 
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Strict-Transport-Security": "max-age=31536000",
+}
+
+
 async def add_request_id(request: Request, call_next):
     """클라이언트 값 대신 서버 UUID를 모든 응답에 넣고, 이 요청에서 남기는 로그 줄에도 같은 값을 붙인다(등록은 파일 끝)."""
     request.state.request_id = str(uuid4())
@@ -147,6 +140,11 @@ async def add_request_id(request: Request, call_next):
     logs.REQUEST_ID.set(request.state.request_id)
     response = await call_next(request)
     response.headers["X-Request-ID"] = request.state.request_id
+    # [왜] 보안 응답 헤더(D7 2-3절): 형식 추측 금지, 다른 사이트의 iframe 금지, HTTPS 고정(http에서는 브라우저가 무시한다).
+    #      setdefault라 Google 로그인 경로가 직접 넣은 Referrer-Policy: no-referrer는 그대로 남는다
+    # shortcut: Content-Security-Policy는 없다(React 번들의 스타일 · 스크립트 출처를 확인해야 함), 화면이 굳으면 더한다
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
     return response
 
 
@@ -190,9 +188,14 @@ async def internal_error(request: Request, exc: Exception):
 
 @app.middleware('http')
 async def conversation_boundary(request: Request, call_next):
-    """대화 run(`/api/threads/...`)과 내 설정(`/api/me/memory`) 응답에 no-store를 붙이고, 그 경로의 POST 본문을 128 KiB로 막는다."""
+    """대화 run(`/api/threads/...`)과 내 설정(`/api/me/memory`) 응답에 no-store를 붙이고, `/api/` 아래 본문 있는 요청을 128 KiB로 막는다."""
     private = request.url.path.startswith(('/api/threads', '/api/me/memory'))
-    if private and request.method == 'POST':
+    schematic = request.url.path.startswith('/api/external-circuits/schematics')
+    # [왜] 재개(`/api/runs/{id}/resume`) · 승인 · 로그인 등 JSON 경로도 같은 한도를 쓴다(D6 1-2절).
+    #      넷리스트 업로드만 뺀다: 그 경로는 5 MiB 한도를 스스로 센다(backend/api/projects.py)
+    limited = (request.url.path.startswith('/api/') and request.url.path != '/api/projects/upload'
+               and request.method in ('POST', 'PATCH', 'PUT', 'DELETE'))
+    if limited:
         limit = 128 * 1024
         data = bytearray()
         async for chunk in request.stream():
@@ -204,6 +207,8 @@ async def conversation_boundary(request: Request, call_next):
     response = await call_next(request)
     if private:
         response.headers['Cache-Control'] = 'no-store'
+    if schematic:
+        response.headers['Cache-Control'] = 'private, no-store'
     return response
 
 
@@ -225,6 +230,7 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(prices_router)
 app.include_router(projects_router)
+app.include_router(external_circuits_router)
 app.include_router(quotes_router)
 app.include_router(conversations_router)
 app.include_router(profile_router)

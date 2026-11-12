@@ -2,18 +2,19 @@
 
 React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
 HTTP 입구는 React 작업대의 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
-React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 남은 `upload` · `create` · `threads` · `approve`는 HTTP 경로가 없고,
-DB 시험이 옛 직접 thread · 승인 기록 행을 만드는 데만 쓴다(tests/api/test_threads.py · test_deletion.py).
+React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 11-11 서비스 DB 재설계(P2)로 회로 사본(`sojafit_agent.circuits`) · 승인 표(`approvals`) · 시험 전용 `upload` · `create` ·
+옛 승인 경로(`approve` · `memories`)도 지웠다. 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
+회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned` · `threads`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
-새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다.
+새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다. 승인 기록은 `public.approvals`(견적 승인, 이 서비스 밖)뿐이다.
 분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
-DB로 원자적으로 차감한다(`_budget`, db/022). 공급자가 청구한 토큰이 아니라 예약이다.
+DB로 원자적으로 차감한다(`_budget`, db/020_service_baseline.sql). 공급자가 청구한 토큰이 아니라 예약이다.
 삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
 분석 · 기록을 만드는 쓰기는 같은 잠금을 공유로 잡아(`_hold_account`) 탈퇴 중이면 409, 쓰는 중이면 탈퇴가 409다.
-보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/023)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
+보관 기간: 새 분석(질문)을 시작할 때 프로젝트 60일 · 기록 30일 청소 함수(db/020_service_baseline.sql)를 작은 묶음으로 부른다(`_purge_expired`, 스케줄러 없음).
 오류 코드(ADR 0019, backend/errors.py): 하루 토큰 · USD 상한과 실행 한 번의 호출 · 예약 상한은 429 `LIMIT_EXCEEDED`, 호출 간격은 429 `RATE_LIMITED`,
 조건 질문 대기는 409 `CONDITION_PENDING`, 분석 실패는 LLM · 임베딩 공급자 장애면 502 `UPSTREAM_ERROR`, 시간 예산 초과는 504, 그 밖은 503이다.
 키 없는 데모(`DEMO_REPLAY=1` · `DEMO_MODE=1`, SPEC 7절): 같은 그래프를 돌리고 LLM 응답만 기록에서 꺼낸다(`backend/services/demo.py`).
@@ -28,7 +29,6 @@ import logging
 from decimal import Decimal
 from contextlib import ExitStack, contextmanager
 from functools import lru_cache
-from pathlib import Path
 from uuid import uuid4
 
 import psycopg
@@ -46,16 +46,15 @@ from psycopg_pool import ConnectionPool
 from backend.conversations import profile
 from backend.errors import ApiError
 from backend.graph.memory import namespace, memory_policy
-from backend.graph.netlist import parse_netlist
 
 LOGGER = logging.getLogger('backend.conversations')
 RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
-USER_DAILY_TOKENS = 200_000
+USER_DAILY_TOKENS = 1_000_000  # 11-10: 예약 토큰은 실제 사용보다 크게 잡혀(돌려주지 않음) 20만으로는 점검 한 번에 한 계정의 하루치가 찼다
 SERVICE_DAILY_TOKENS = 2_000_000
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
-USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 
@@ -75,9 +74,9 @@ def _token_budget_class():
 
 
 def delete_analysis_threads(conn, user, ids=None):
-    """사용자의 분석 thread(ids가 없으면 전부)와 딸린 checkpoint · 메시지 · 승인 기록 · 분석 사건 · 회로를 conn의 트랜잭션에서 지운다.
+    """사용자의 분석 thread(ids가 없으면 전부)와 딸린 checkpoint · 메시지 · 분석 사건을 conn의 트랜잭션에서 지운다.
 
-    프로젝트 삭제(ids = 그 프로젝트의 React 대화 UUID)와 탈퇴(ids 없음)가 쓴다. 지운 건수를 돌려주고, 분석 서비스 표가 없는 DB면 모두 0이다.
+    프로젝트 삭제(ids = 그 프로젝트의 React 대화 UUID)와 탈퇴(ids 없음)가 쓴다. 지운 건수를 돌려주고, 분석 서비스 표가 없는 DB면 모두 0이다. `analysis_circuits`는 응답 모양을 지키려는 상수 0이다(회로 사본 표가 없다, P2).
     [주의] 사용자 조건(user_id)으로 고른 thread만 지운다. 호출자가 ids의 소유권을 따로 확인했어도 다른 사용자 행은 건드리지 않는다.
     """
     counts = {'analysis_threads': 0, 'analysis_circuits': 0, 'checkpoints': 0}
@@ -95,13 +94,8 @@ def delete_analysis_threads(conn, user, ids=None):
             deleted = cur.execute(sql.SQL('DELETE FROM sojafit_agent.{} WHERE thread_id IN (SELECT id::text FROM ({}) o)').format(
                 sql.Identifier(table), sql.SQL(owned)), params).rowcount
         counts['checkpoints'] = deleted
-    # 메시지 · 승인 기록 · 분석 사건은 thread FK cascade로 함께 지워진다
+    # 메시지 · 분석 사건은 thread FK cascade로 함께 지워진다. 화면 대화(public.threads)를 지우면 DB가 분석 thread와 checkpoint도 지우므로(db/028) 이 호출은 건수를 세고 먼저 지우는 용도다
     counts['analysis_threads'] = cur.execute(sql.SQL('DELETE FROM sojafit_agent.threads WHERE id IN ({})').format(sql.SQL(owned)), params).rowcount
-    # 회로: 탈퇴면 사용자 회로 전부, 프로젝트 삭제면 같은 UUID 회로 중 남은 thread가 없는 것(React 대화 하나 = 회로 하나)
-    circuits = 'DELETE FROM sojafit_agent.circuits c WHERE c.user_id=%s'
-    if ids is not None:
-        circuits += ' AND c.id = ANY(%s::uuid[]) AND NOT EXISTS (SELECT 1 FROM sojafit_agent.threads t WHERE t.circuit_id=c.id)'
-    counts['analysis_circuits'] = cur.execute(circuits, params).rowcount
     return counts
 
 
@@ -112,11 +106,9 @@ def _vector_schema(conn):
 
 
 def initialize(dsn):
-    """인증 DB에 전용 스키마를 준비한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
+    """분석 DB의 LangGraph 표(Checkpointer · Store)를 만든다. sojafit_agent 서비스 표는 이미 있어야 한다. 기존 코퍼스·인증 행은 변경하지 않는다."""
     with psycopg.connect(dsn, autocommit=True, row_factory=dict_row, connect_timeout=5) as conn:
-        for script in ('013_agent_memory.sql', '014_thread_inputs.sql', '015_analysis_limits.sql', '016_memory_controls.sql', '017_analysis_events.sql',
-                       '022_token_limits.sql', '023_retention.sql'):
-            conn.execute((Path(__file__).parents[2] / 'db' / script).read_text(encoding='utf-8'))
+        # [주의] SQL 파일(013~017 · 022 · 023 · 028)은 적용하지 않는다. 다시 적용하면 028이 지운 회로 사본 · 승인 표가 되살아난다. 표는 initdb(db/*.sql) 몫이고 여기서는 LangGraph 표만 만든다
         vector = _vector_schema(conn)
         # [왜] 의미 색인 표(store_vectors)의 vector 형은 확장이 설치된 스키마에 있다. sojafit_agent만 보면 형을 못 찾는다.
         #      표는 search_path 첫 스키마(sojafit_agent)에 만들어진다
@@ -135,14 +127,14 @@ class Conversations:
         try:
             with self.connection() as conn:
                 if not all(conn.execute("SELECT to_regclass(%s) AS name", (name,)).fetchone()['name']
-                           for name in ('threads', 'approvals', 'checkpoints', 'store', 'analysis_usage', 'analysis_service_usage')):
+                           for name in ('threads', 'checkpoints', 'store', 'analysis_usage', 'analysis_service_usage')):
                     raise RuntimeError('분석 DB 준비 명령을 먼저 실행하세요.')
-                # [왜] 청소 함수가 없으면 보관 기간 규칙이 조용히 꺼진다. 표와 같이 시작 때 확인한다(db/023)
+                # [왜] 청소 함수가 없으면 보관 기간 규칙이 조용히 꺼진다. 표와 같이 시작 때 확인한다(db/020_service_baseline.sql)
                 if not all(conn.execute('SELECT to_regprocedure(%s) AS name', (name,)).fetchone()['name']
                            for name in ('purge_inactive_projects(integer,integer)', 'purge_log_records(integer,integer)')):
-                    raise RuntimeError('분석 DB 준비 명령으로 보관 기간 청소 함수(db/023)를 만드세요.')
+                    raise RuntimeError('보관 기간 청소 함수가 없습니다. 서비스 표 기준선(db/020_service_baseline.sql)을 먼저 적용하세요.')
                 if not conn.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='input_record'").fetchone():
-                    raise RuntimeError('분석 DB 준비 명령으로 입력 기록 마이그레이션을 적용하세요.')
+                    raise RuntimeError('thread 입력 기록 칸이 없습니다. 서비스 표 기준선(db/020_service_baseline.sql)을 먼저 적용하세요.')
                 vector = _vector_schema(conn) if conn.execute("SELECT to_regclass('store_vectors') AS name").fetchone()['name'] else None
             indexed = bool(vector) and profile.embedding_enabled()
             if indexed:
@@ -171,7 +163,7 @@ class Conversations:
     def readiness(self):
         """모델 호출·사용자 행 읽기 없이 현재 분석 저장소의 연결과 스키마를 확인한다."""
         with self.connection() as conn:
-            conn.execute('SELECT t.input_record,a.memory_status,a.correction,u.reserved_tokens,s.reserved_tokens FROM threads t, circuits c, messages m, approvals a, '
+            conn.execute('SELECT t.input_record,u.reserved_tokens,s.reserved_tokens FROM threads t, messages m, '
                          'analysis_usage u, analysis_events e, analysis_service_usage s LIMIT 0')
             conn.execute('SELECT 1 FROM checkpoints, checkpoint_blobs, checkpoint_writes, store LIMIT 0')
 
@@ -182,7 +174,7 @@ class Conversations:
             max_tokens=int(os.getenv('ANALYSIS_MAX_TOKENS', '4096')),
             prompt_rate=float(os.getenv('ANALYSIS_PROMPT_RATE', '0.000003')),
             completion_rate=float(os.getenv('ANALYSIS_COMPLETION_RATE', '0.000015')),
-            # [왜] 판정 읽기 3번(다수결)이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
+            # [왜] 판정 읽기 여러 번이 Sonnet 이상 단가로 예약돼 분석 한 번의 상한을 넘었다(11-10). 호출 모델 단가로 예약하고, 표에 없는 모델만 위 단가를 쓴다
             per_model_rates=True)
         daily = float(os.getenv('ANALYSIS_DAILY_USD', '3'))
         interval = float(os.getenv('ANALYSIS_MIN_INTERVAL_SECONDS', '2'))
@@ -296,7 +288,7 @@ class Conversations:
         from backend.rag.card_find import default_find
         from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
-        from backend.services import demo, llm
+        from backend.services import demo, exa, llm
         from backend.services.langfuse_prompts import timed_tool
         # [왜] 키 없는 데모는 실제 그래프를 그대로 돌리고 LLM 응답만 기록에서 꺼낸다(조장 결정 11-10). 카드 도구의 카드 읽기 LLM도
         #      같은 chat을 받아야 프롬프트가 기록(scripts/demo/record_demo.py의 build_app)과 같아진다
@@ -305,9 +297,11 @@ class Conversations:
         # [왜] 사양 표(part_specifications)를 11-09에 버리고 후보 찾기 · 판정 값은 카드 읽기가 기본이다(ADR 0016, 평가 실행기 run_graph.py와 같은 조립)
         # [주의] 카드 도구는 MCP를 거치지 않고 DATABASE_URL로 DB를 직접 읽는다. 표지 품번 색인은 조립 때가 아니라 첫 판정 때 한 번 읽는다
         specs, find = default_specs(chat=chat), default_find(chat=chat)
-        # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. 대체 부품 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
+        # [주의] timed_tool은 함수만 감싸 prefetch · doc_rows · also_read 속성을 잃는다. Spec 에이전트가 getattr로 찾으므로 update_wrapper로 옮긴다
         # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
-        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), judge_enabled=True,
+        web_enabled = self.mode != 'demo' and exa.enabled()
+        return build_graph(chat=chat, retriever=timed_tool('search',retrieve), web_enabled=web_enabled,
+            web_search=exa.search_evidence if web_enabled else None, judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
@@ -317,10 +311,15 @@ class Conversations:
 
     @staticmethod
     def _owned(conn, user, thread):
-        row = conn.execute('SELECT t.*,c.filename,c.connections FROM threads t JOIN circuits c ON c.id=t.circuit_id '
-                           'WHERE t.id=%s AND t.user_id=%s AND c.user_id=%s', (thread, user, user)).fetchone()
+        # [왜] 회로 이름 · 연결 정보는 화면 쪽 정본(public)에서 읽는다. 이 연결의 search_path는 sojafit_agent뿐이라 public을 이름으로 부른다
+        row = conn.execute('SELECT t.*,p.name AS filename,c.connections FROM threads t JOIN public.threads pt ON pt.id=t.id '
+                           'JOIN public.projects p ON p.id=pt.project_id JOIN public.circuits c ON c.project_id=p.id '
+                           'WHERE t.id=%s AND t.user_id=%s AND p.user_id=%s', (thread, user, user)).fetchone()
         if not row:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
+        # [왜] public.circuits는 React 정규화 모양({parts, nets})이고 그래프 · 데모 확인은 {components, nets}를 읽는다(옛 ensure_thread가 저장 때 바꾸던 것)
+        c = row['connections']
+        row['connections'] = {'components': c.get('components', c.get('parts', [])), 'nets': c.get('nets', [])}
         return row
 
     @contextmanager
@@ -335,37 +334,10 @@ class Conversations:
             finally:
                 conn.execute('SELECT pg_advisory_unlock(hashtextextended(%s,0))', (str(thread),))
 
-    def upload(self, user, filename, netlist):
-        if not filename or '/' in filename or '\\' in filename or len(filename) > 200 or not filename.lower().endswith('.net'):
-            raise HTTPException(422, 'KiCad .net 파일을 선택하세요.')
-        try:
-            connections = parse_netlist(netlist)
-        except ValueError:
-            raise HTTPException(422, '넷리스트 형식·크기·부품 참조를 확인하세요.') from None
-        # 데모 모드의 회로 · 질문 확인은 HTTP 입구가 거치는 ensure_thread · message가 한다(이 메서드는 DB 시험 전용)
-        with self.connection() as conn:
-            self._hold_account(conn, user)
-            if conn.execute('SELECT count(*) AS n FROM circuits WHERE user_id=%s', (user,)).fetchone()['n'] >= 100:
-                raise HTTPException(409, '회로 저장 한도(100건)에 도달했습니다.')
-            circuit = str(uuid4())
-            conn.execute('INSERT INTO circuits(id,user_id,filename,netlist,connections) VALUES (%s,%s,%s,%s,%s)',
-                         (circuit, user, filename, netlist, Jsonb(connections)))
-        return {'id': circuit, 'filename': filename, 'components': connections['components']}
-
-    def create(self, user, circuit, target):
-        with self.connection() as conn:
-            self._hold_account(conn, user)
-            row = conn.execute('SELECT connections FROM circuits WHERE id=%s AND user_id=%s', (circuit, user)).fetchone()
-            if not row:
-                raise HTTPException(404, '회로를 찾을 수 없습니다.')
-            if target not in {p['ref'] for p in row['connections']['components']}:
-                raise HTTPException(422, '회로에 없는 대상 부품입니다.')
-            thread = str(uuid4())
-            conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s)', (thread, user, circuit, target))
-        return {'id': thread}
-
     def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
-        """React 대화 하나를 같은 UUID의 분석 회로·thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
+        """React 대화(public.threads) 하나를 같은 UUID의 분석 thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
+
+        [주의] 호출 전에 public.projects · circuits · threads 행이 있어야 한다(분석 thread의 FK, 없으면 404). filename · connections는 데모 확인에만 쓰고 저장하지 않는다.
 
         키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
         # React 정규화 회로는 부품 목록이 parts, 데모 회로는 components다. 넷리스트 원문은 다시 읽지 않는다
@@ -381,25 +353,22 @@ class Conversations:
                 raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
         with self.connection() as conn:
             self._hold_account(conn, user)  # 탈퇴 중이면 409(지운 분석 기록을 다시 만들지 않게)
-            # [왜] React 대화 하나 = 분석 회로 하나 + thread 하나라 회로 id도 thread UUID를 쓴다. 동시 첫 실행에도 행이 하나만 생긴다
-            # [주의] React 업로드는 원본을 저장하지 않으므로 netlist 칸은 빈 글자로 둔다
-            with conn.transaction():
-                conn.execute('INSERT INTO circuits(id,user_id,filename,netlist,connections) VALUES (%s,%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
-                             (thread, user, filename, '', Jsonb(connections)))
-                conn.execute('INSERT INTO threads(id,user_id,circuit_id,target) VALUES (%s,%s,%s,%s) ON CONFLICT (id) DO NOTHING',
-                             (thread, user, thread, target))
+            # [왜] 분석 thread id = 화면 대화 UUID라 동시 첫 실행에도 행이 하나만 생긴다. 회로는 public.circuits가 정본이라 사본을 만들지 않는다
+            # [주의] 화면 대화가 없거나 남의 것이면 _owned가 404다(INSERT ... SELECT가 0행). FK 위반으로 500이 되지 않는다
+            conn.execute('INSERT INTO threads(id,user_id,target) SELECT pt.id,p.user_id,%s FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
+                         'WHERE pt.id=%s AND p.user_id=%s ON CONFLICT (id) DO NOTHING', (target, thread, user))
             row = self._owned(conn, user, thread)
         if row['target'] != target:
             raise HTTPException(409, '대상 부품을 바꾸려면 새 대화를 시작하세요.')
 
     def threads(self, user):
         with self.connection() as conn:
-            rows = conn.execute('SELECT t.id,t.target,t.status,t.version,c.filename FROM threads t JOIN circuits c ON c.id=t.circuit_id '
-                                'WHERE t.user_id=%s ORDER BY t.created_at DESC LIMIT 100', (user,)).fetchall()
+            rows = conn.execute('SELECT t.id,t.target,t.status,t.version,p.name AS filename FROM threads t JOIN public.threads pt ON pt.id=t.id '
+                                'JOIN public.projects p ON p.id=pt.project_id WHERE t.user_id=%s AND p.user_id=%s ORDER BY t.created_at DESC LIMIT 100', (user, user)).fetchall()
         return [{**r, 'id': str(r['id'])} for r in rows]
 
     def detail(self, user, thread, hints=()):
-        """thread 상태 · 결과 · 승인 기록. hints는 이번 질문으로 찾은 사용자 사실(message · resume만 넘기고 GET은 빈 목록)."""
+        """thread 상태 · 결과. 승인 · 기억 칸은 응답 모양을 지키려 빈 값으로 둔다(P2). hints는 이번 질문으로 찾은 사용자 사실(message · resume만 넘기고 GET은 빈 목록)."""
         with self.connection() as conn:
             row = self._owned(conn, user, thread)
             # 실행 중인 연결이 잠금을 가진 동안에는 중간 체크포인트를 완료로 바꾸지 않는다.
@@ -410,35 +379,20 @@ class Conversations:
                 finally:
                     conn.execute('SELECT pg_advisory_unlock(hashtextextended(%s,0))', (str(thread),))
             messages = conn.execute('SELECT role,content FROM messages WHERE thread_id=%s ORDER BY id LIMIT 200', (thread,)).fetchall()
-            approvals = conn.execute('SELECT version,snapshot,approved_at,memory_status,correction FROM approvals WHERE thread_id=%s ORDER BY version DESC LIMIT 50', (thread,)).fetchall()
             events = conn.execute('SELECT version,request_id,mode,status,elapsed_ms,stages,trace_id,trace_delivery FROM analysis_events WHERE thread_id=%s ORDER BY created_at DESC LIMIT 20', (thread,)).fetchall()
-        approval_rows = []
-        for approval in approvals:
-            # [왜] 승인 사례는 이제 Store 기억이 아니라 승인 기록이다. 상태는 승인 원본 옆 표식(active · revoked · deleted) 그대로다
-            approval_rows.append({'version': approval['version'], 'approved_at': approval['approved_at'].isoformat(),
-                                  'memory_state': approval['memory_status'], 'summary': approval['snapshot']['answer'][:2000],
-                                  'correction': approval['correction'],
-                                  'input_record': (approval['snapshot'].get('context') or {}).get('input_record')})
         snapshot = self.graph.get_state(self.config(thread))
         state = snapshot.values or {}
         pending = [i.value for task in snapshot.tasks for i in task.interrupts]
         judgement = state.get('judgement') or {}
-        visible_memories = self._current_memories(user, state.get('approved_memories') or [])
-        can_approve = (row['status'] == 'DONE' and state.get('run_version') == row['version'] and not snapshot.next
-                       and not state.get('refusal') and bool(judgement.get('shown') or judgement.get('results')))
-        related = self.memories(user, roles=judgement.get('roles'), part=(state.get('target_part') or {}).get('value')) if judgement else []
         return {'id': str(row['id']), 'mode': self.mode, 'filename': row['filename'], 'target': row['target'], 'version': row['version'],
                 'status': row['status'], 'messages': messages, 'answer': '' if pending or (row.get('input_record') or {}).get('execution_limit_reached') else state.get('answer', ''),
-                'interrupt': pending[0] if pending else None, 'can_approve': bool(can_approve),
+                'interrupt': pending[0] if pending else None, 'can_approve': False,
                 'can_retry': bool(snapshot.next and not pending and row['retries'] < 2 and state.get('run_version') == row['version']),
-                'related_memories': related[:5], 'approvals': approval_rows, 'events': events,
-                'profile_hints': list(hints), 'consulted_memories': visible_memories,
-                'referenced_memories': [m for m in visible_memories
-                                        if f"승인사례:{m['thread_id']}:{m['version']}" in (state.get('memory_refs') or [])
-                                        and not pending and not state.get('refusal')]}
+                'related_memories': [], 'approvals': [], 'events': events,
+                'profile_hints': list(hints), 'consulted_memories': [], 'referenced_memories': []}
 
     def _purge_expired(self):
-        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/023). 실패해도 분석은 계속한다."""
+        """보관 기간이 지난 프로젝트(60일) · 기록(30일)을 작은 묶음으로 지운다(db/020_service_baseline.sql). 실패해도 분석은 계속한다."""
         try:
             with self.connection() as conn:
                 conn.execute('SELECT purge_inactive_projects(), purge_log_records()')
@@ -531,15 +485,19 @@ class Conversations:
 
     def _invoke(self, conn, thread, inputs, budget, request_id=''):
         from backend.services.llm import evaluation_limits, EvaluationLimitError, is_upstream_error
-        from backend.services import langfuse_prompts
+        from backend.services import langfuse_prompts, service_trace
         from backend.services.demo import ReplayMiss
         timings = langfuse_prompts.AnalysisTimings()
         started = time.monotonic()
+        # [왜] 모델 호출별 추적을 analysis-metadata와 같은 trace_id로 묶으려고 실행 시작에 trace_id를 정한다(키가 없으면 빈 값)
+        trace_id = uuid4().hex
+        traces, trace_metadata = service_trace.callbacks(trace_id, thread, self.mode)
         try:
             user = conn.execute('SELECT user_id FROM threads WHERE id=%s', (thread,)).fetchone()['user_id']
-            with evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
+            from backend.services.exa import request_scope
+            with request_scope(), evaluation_limits(budget), memory_policy(lambda items: self._current_memories(user, items)), langfuse_prompts.analysis_timings(timings):
                 budget.remaining()
-                self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings]})
+                self.graph.invoke(inputs, {**self.config(thread), 'callbacks': [timings, *traces], 'metadata': trace_metadata})
                 budget.remaining()
             saved = time.monotonic()
             self._finish(conn, thread, self.graph.get_state(self.config(thread)))
@@ -568,16 +526,16 @@ class Conversations:
                 raise HTTPException(502, 'LLM · 검색 서비스가 응답하지 않습니다. 잠시 후 다시 시도하세요.') from error
             raise HTTPException(503, '분석을 완료하지 못했습니다. 잠시 후 상태를 확인하세요.') from error
         finally:
-            self._record_event(conn,thread,started,timings.report(),request_id)
+            self._record_event(conn,thread,started,timings.report(),request_id,trace_id=trace_id)
 
-    def _record_event(self, conn, thread, started, stages, request_id, status=None, version=None):
+    def _record_event(self, conn, thread, started, stages, request_id, status=None, version=None, trace_id=None):
         from backend.services import langfuse_prompts
         # 관측 장애가 이미 저장한 checkpoint/답변/승인의 성공 여부를 바꾸지 않는다.
         try:
             row = conn.execute('SELECT user_id,version,status FROM threads WHERE id=%s', (thread,)).fetchone()
             event = {'version': version if version is not None else row['version'], 'request_id': request_id,
                      'mode': self.mode, 'status': status or row['status'], 'elapsed_ms': int((time.monotonic()-started)*1000),
-                     'stages': stages, 'trace_id': uuid4().hex}
+                     'stages': stages, 'trace_id': trace_id or uuid4().hex}
             try:
                 delivery = langfuse_prompts.publish_analysis_trace(row['user_id'], thread, event)
             except Exception:
@@ -606,69 +564,7 @@ class Conversations:
         if (snapshot.values or {}).get('run_version') == row['version'] and (not snapshot.next or pending):
             self._finish(conn, row['id'], snapshot)
 
-    def approve(self, user, thread, version, request_id=''):
-        with self.connection() as conn:
-            self._owned(conn,user,thread)
-            started, status = time.monotonic(), 'failed'
-            try:
-                result = self._approve(user,thread,version); status = 'ok'; return result
-            finally:
-                stages = [{'stage':'approval_and_store','status':status,'elapsed_ms':int((time.monotonic()-started)*1000)}]
-                self._record_event(conn,thread,started,stages,request_id,'APPROVED' if status=='ok' else 'APPROVAL_FAILED',version)
 
-    def _approve(self, user, thread, version):
-        with self.locked(user, thread) as (conn, row):
-            approved = conn.execute('SELECT snapshot,approved_at,memory_status FROM approvals WHERE thread_id=%s AND version=%s', (thread, version)).fetchone()
-            if approved and approved['memory_status'] != 'active':
-                raise HTTPException(409, '철회·삭제한 기억은 재승인으로 복구할 수 없습니다. 철회 복구 기능을 사용하세요.')
-            # 이미 승인한 버전은 현재 그래프 상태와 무관하게 원본을 그대로 두고 성공으로 답한다(멱등).
-            if not approved:
-                self._reconcile(conn, row)
-                detail = self.detail(user, thread)
-                if version != row['version'] or not detail['can_approve']:
-                    raise HTTPException(409, '현재 완료된 판정 결과만 승인할 수 있습니다.')
-                state = self.graph.get_state(self.config(thread)).values
-                resolved = [{'task': r.get('task'), 'inputs': r['judgement']['analysis_inputs']}
-                            for r in state.get('final_reports') or state.get('reports') or []
-                            if (r.get('judgement') or {}).get('analysis_inputs')]
-                if not resolved and state['judgement'].get('analysis_inputs'):
-                    resolved = [{'task': None, 'inputs': state['judgement']['analysis_inputs']}]
-                conn.execute('INSERT INTO approvals(thread_id,version,snapshot) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING',
-                             (thread, version, Jsonb({'answer': detail['answer'], 'judgement': state['judgement'],
-                                                      'part': (state.get('target_part') or {}).get('value', ''),
-                                                      'context': {'question': state.get('question', ''),
-                                                                  'input_record': row.get('input_record'),
-                                                                  'resolved_inputs': resolved,
-                                                                  'conditions': state.get('conditions', ''),
-                                                                  'target_part': state.get('target_part') or {},
-                                                                  'judge_read': state.get('judge_read') or {}}})))
-            # [왜] 승인 사례는 장기 기억이 아니라 승인 기록이다(11-09 결정). Store에 쓰지 않는다
-        return {'ok': True, 'version': version}
-
-    def memories(self, user, roles=None, part=None):
-        """자기 승인 기록(철회 · 삭제 안 한 것, 최근 승인 순 최대 100건). roles · part를 주면 역할이나 품번이 같은 것만."""
-        with self.connection() as conn:
-            rows = conn.execute('SELECT a.thread_id,a.version,a.snapshot,a.approved_at,a.correction,c.connections,t.target FROM approvals a '
-                                'JOIN threads t ON t.id=a.thread_id JOIN circuits c ON c.id=t.circuit_id '
-                                "WHERE t.user_id=%s AND c.user_id=%s AND a.memory_status='active' ORDER BY a.approved_at DESC LIMIT 100",
-                                (user, user)).fetchall()
-        results = []
-        for row in rows:
-            snapshot = row['snapshot']
-            # 이전 스냅샷에는 part가 없다. 변경 불가인 업로드 회로의 고정 대상에서 읽는다.
-            original_part = snapshot.get('part')
-            if original_part is None:
-                original_part = next((p.get('value', '') for p in row['connections']['components'] if p['ref'] == row['target']), '')
-            original_roles = snapshot['judgement'].get('roles') or []
-            if (roles or part) and not (set(roles or []) & set(original_roles) or
-                                       (part and part.casefold() == original_part.casefold())):
-                continue
-            results.append({'thread_id': str(row['thread_id']), 'version': row['version'],
-                            'approved_at': row['approved_at'].isoformat(), 'part': original_part,
-                            'roles': original_roles, 'summary': snapshot['answer'][:2000],
-                            'correction': row['correction'],
-                            'context': snapshot.get('context'), 'judgement': snapshot['judgement']})
-        return results
 
     def _current_memories(self, user, items):
         if not items:

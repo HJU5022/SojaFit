@@ -1,8 +1,35 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import CircuitSummary from './CircuitSummary'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { network } from '../test/network'
 import { demo, first, second, summary, openWorkbench } from '../test/projects'
-import CircuitSummary from './CircuitSummary'
+
+afterEach(() => vi.unstubAllGlobals())
+it('selects a server reference in the URL and clears it on project switching', async () => {
+  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second))
+  openWorkbench('/app?projectId=11')
+  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  const select = await screen.findByLabelText('대상 부품')
+  expect(within(select).getByRole('option', { name: 'D1 · 1N4001' })).toBeInTheDocument()
+  fireEvent.change(select, { target: { value: 'D1' } })
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
+  expect(screen.getByText('선택한 대상: D1')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /^프로젝트 선택:/ }))
+  fireEvent.click(within(screen.getByRole('dialog', { name: '내 프로젝트' })).getByRole('button', { name: second.name }))
+  expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByLabelText('대상 부품')).toHaveValue('')
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
+  expect(screen.getByLabelText('현재 경로')).not.toHaveTextContent('targetRef')
+  expect(screen.queryByRole('option', { name: 'D1 · 1N4001' })).not.toBeInTheDocument()
+})
+it('does not treat a URL reference absent from the server DTO as a target', async () => {
+  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first)] : first))
+  openWorkbench('/app?projectId=11&targetRef=FOREIGN')
+  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  expect(await screen.findByLabelText('대상 부품')).toHaveValue('')
+  expect(screen.queryByText('선택한 대상: FOREIGN')).not.toBeInTheDocument()
+})
+
 
 const visualDemo = { ...demo, schematic: {
   image_url: '/circuit-schematics/mosfet_driver.png', original_url: 'https://cdn-learn.adafruit.com/assets/assets/000/117/028/large1024/adafruit_products_schem.png?1670851887',
@@ -52,26 +79,11 @@ it('uses the concept only when a demo has no verified visual metadata', () => {
   expect(screen.getByRole('img', { name: 'D1 주변 연결 개념도' })).toBeInTheDocument()
 })
 
-afterEach(() => vi.unstubAllGlobals())
-it('selects a server reference in the URL and clears it on project switching', async () => {
-  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second))
-  openWorkbench('/app?projectId=11')
-  const select = await screen.findByLabelText('대상 부품')
-  expect(screen.getByRole('option', { name: 'D1 · 1N4001' })).toBeInTheDocument()
-  fireEvent.change(select, { target: { value: 'D1' } })
-  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
-  expect(screen.getByText('선택한 대상: D1')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: /^프로젝트$/ }))
-  fireEvent.click(screen.getByRole('button', { name: second.name }))
-  expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
-  expect(screen.getByLabelText('대상 부품')).toHaveValue('')
-  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
-  expect(screen.getByLabelText('현재 경로')).not.toHaveTextContent('targetRef')
-  expect(screen.queryByRole('option', { name: 'D1 · 1N4001' })).not.toBeInTheDocument()
-})
-it('does not treat a URL reference absent from the server DTO as a target', async () => {
-  network((path) => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first)] : first))
-  openWorkbench('/app?projectId=11&targetRef=FOREIGN')
-  expect(await screen.findByLabelText('대상 부품')).toHaveValue('')
-  expect(screen.queryByText('선택한 대상: FOREIGN')).not.toBeInTheDocument()
+it('keeps a saved target locked while providing original and concept views', () => {
+  render(<CircuitSummary project={first} demo={visualDemo} targetRef="D1" onTarget={vi.fn()} readOnly />)
+  expect(screen.getByLabelText('대상 부품')).toBeDisabled()
+  expect(screen.getByRole('tab', { name: '원본 회로도' })).toHaveAttribute('aria-selected', 'true')
+  fireEvent.click(screen.getByRole('tab', { name: '연결 개념도' }))
+  expect(screen.getByLabelText('대상 부품')).toHaveValue('D1')
+  expect(screen.getByLabelText('대상 부품')).toBeDisabled()
 })

@@ -446,7 +446,7 @@ def test_model_rates_keys_match_node_models():
 
 
 def test_service_budget_fits_supervisor_and_three_judge_reads():
-    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 3번(다수결), 지시문 약 15KB씩
+    # 11-10 데모 기록이 판정 읽기 두 번째 예약에서 멈춘 일을 재현한다: Supervisor 1번 + 판정 읽기 등 큰 호출 3번(예전 다수결 때 재현), 지시문 약 15KB씩
     from backend.conversations.memory_service import Conversations
     from backend.services import langfuse_prompts, llm
     prompt = 'x' * 15000

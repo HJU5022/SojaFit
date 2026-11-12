@@ -11,6 +11,11 @@ RUN npm run build
 
 FROM python:3.12-slim
 
+# KiCad 원본 회로도를 동일한 연결 정보로 변환한다.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends kicad libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
+
 # 의존성은 uv.lock에 고정된 버전 그대로 설치합니다.
 COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
 
@@ -34,6 +39,10 @@ COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
 # data/는 서비스가 읽는 데이터(코퍼스·회로·데모)다. evals/·tests/·scripts/는 서비스에 필요 없어 넣지 않는다.
 COPY data/ ./data/
 COPY db/ ./db/
+
+# [왜] 서버는 파일을 쓰지 않는다. root 대신 전용 계정으로 돌려 컨테이너가 뚫려도 이미지 안을 못 바꾸게 한다(D7 2-3절)
+RUN useradd --create-home --shell /usr/sbin/nologin sojafit
+USER sojafit
 
 EXPOSE 8000
 # 0.0.0.0: 컨테이너 밖(compose의 포트 연결)에서 접속하려면 모든 인터페이스에 열어야 한다.

@@ -41,13 +41,6 @@ def test_t7_footprint_only_changes_never_reach_multi_model_context(context):
     assert normal['question'] in render(poisoned)
     assert poisoned==before and 'SOD-123' in poisoned['target_part']['footprint']
 
-@pytest.fixture(autouse=True)
-def one_read(monkeypatch):
-    """[왜] 이 파일의 가짜 LLM은 판정 읽기를 한 번만 부른다고 본다. 서비스 기본(3번 다수결)은 test_judge_read.py의 다수결 시험이 따로 본다."""
-    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
-
-
-
 def test_historical_numbers_reach_reader_but_are_not_current_grounding(monkeypatch):
     memory = {'thread_id': 'old', 'version': 1, 'approved_at': '2026-11-09', 'part': '1N5819',
               'summary': '입력 전압은 987V', 'context': {'conditions': '입력 전압은 987V'}}
@@ -155,7 +148,7 @@ def test_requirement_inside_the_corpus_is_judged(monkeypatch, extra, facts):
 
 @pytest.mark.parametrize('extra, facts, code', GATE)
 def test_multi_graph_ends_the_gate_report_as_a_refusal(extra, facts, code):
-    """[왜] 대체 부품 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
+    """[왜] Spec 에이전트가 코퍼스 밖 요구로 실패하면 모으기(코드)가 그 사유로 거절한다. 답을 쓰지 않는다."""
     from langgraph.checkpoint.memory import InMemorySaver
 
     from backend.multi_agent import build as B
@@ -246,36 +239,6 @@ def test_dropped_limit_value_becomes_the_same_requirement(monkeypatch):
     assert any(c['code'] == 'VF' and c['result'] == 'unverified' for c in checks)  # 회로 전류(모름)의 VF가 표에 없다
 
 
-def test_reads_are_merged_by_majority_per_field(monkeypatch):
-    """[왜] lab 실험: 같은 질문의 읽기가 회차마다 달랐다. 여러 번 읽어 칸마다 다수결로 하나를 만든다(LAB_READ_VOTES)."""
-    v = lambda n, x, unit='V', cond='': J.Value(name=n, number=x, unit=unit, quote=f'{x}{unit}', condition=cond)
-    reads = [J.JudgeRead(role='R22', values=[v('v_in_max', 24), v('i_max', 250, 'mA')], original_part='1N4001',
-                         required_specs=[J.RequiredSpec(words='trr 100ns 이하', code='TRR')]),
-             J.JudgeRead(role='R22', values=[v('v_in_max', 24), v('i_max', 250, 'mA'), v('v_drop_allowed', 1.8)], original_part='1N4001',
-                         required_specs=[J.RequiredSpec(words='trr 100ns 이하', code='TRR'), J.RequiredSpec(words='same level', code='none')]),
-             J.JudgeRead(role='R03', values=[v('v_coil', 24)], original_part='TSC 1N4001', required_specs=[J.RequiredSpec(words='trr', code='TRR')])]
-    m = J.merge_reads(reads)
-    assert m.role == 'R22' and [x.name for x in m.values] == ['v_in_max', 'i_max'] and [x.code for x in m.required_specs] == ['TRR']
-    assert m.original_part == '1N4001'
-    calls = []
-
-    def chat(node, system, user, schema):
-        calls.append(node)
-        return reads[len(calls) % 3]
-    monkeypatch.delenv('JUDGE_READ_VOTES', raising=False)  # 서비스 기본은 3번(측정과 같은 구성, 11-10)
-    out = J.judge_read_agent({**STATE}, chat=chat)
-    assert len(calls) == 3 and out['judge_read']['role'] in ('R22', 'R03')
-    calls.clear()
-    monkeypatch.setenv('JUDGE_READ_VOTES', '1')  # 환경값으로 1을 주면 한 번만 읽는다
-    J.judge_read_agent({**STATE}, chat=chat)
-    assert len(calls) == 1
-    calls.clear()
-    monkeypatch.delenv('JUDGE_READ_VOTES')
-    monkeypatch.setenv('LAB_READ_VOTES', '1')  # 예전 이름도 받는다(새 이름이 없을 때만)
-    J.judge_read_agent({**STATE}, chat=chat)
-    assert len(calls) == 1
-
-
 def test_ac_rms_value_implies_ac_input():
     """[왜] 읽기가 ac_input 플래그를 회차마다 비워 브리지 VRRM 조건(실효값 × √2)이 빠졌다(v3-08). AC 실효값이 있으면 AC 입력이다."""
     read = J.JudgeRead(role='R05', values=[J.Value(name='v_ac_rms', number=9, unit='Vrms', quote='9Vrms')])
@@ -289,24 +252,6 @@ def test_rated_in_the_user_text_makes_a_bare_number_an_equality():
     assert J._rated_words('average forward current 1A', text) == 'average forward current 1A (rated)'
     assert J._rated_words('surge 2A', '투입 시 피크 2A이다.') == 'surge 2A'
     assert [c['op'] for c in C.user_conditions([(J._rated_words('average forward current 1A', text), 'IF_AV')])] == ['>=', '<=']
-
-
-def test_two_agreeing_reads_end_the_vote_early(monkeypatch):
-    """[왜] 다수결이 형식 재시도로 늦은 셋째 읽기를 기다려 17.5초가 걸렸다(v3-14). 먼저 끝난 두 읽기가 같으면 그대로 쓴다."""
-    import time
-    same = J.JudgeRead(role='R01', candidates=['SS14'])
-    calls = []
-
-    def chat(node, system, user, schema):
-        calls.append(time.perf_counter())
-        if len(calls) == 3:
-            time.sleep(2)  # 늦은 셋째
-        return same
-    monkeypatch.setenv('JUDGE_READ_VOTES', '3')
-    t = time.perf_counter()
-    out = J.judge_read_agent({**STATE}, chat=chat)
-    assert out['judge_read']['role'] == 'R01' and time.perf_counter() - t < 1.5
-    assert J._agree(same, same) and not J._agree(same, J.JudgeRead(role='R02', candidates=['SS14']))
 
 
 def test_packing_change_question_is_not_a_refusal():
@@ -350,25 +295,12 @@ def test_unit_converted_value_is_grounded_and_both_role_names_are_filled():
     assert J.to_inputs(fake, '정상 전류 250mA', kinds)[2] == ['i_max']  # 다른 값은 여전히 버린다
 
 
-def test_vote_counts_the_same_fact_written_in_different_shapes():
-    """[왜] 전압강하 한계를 읽기마다 VF 요구 · v_drop_allowed 값 · 없음으로 적자 다수결에서 빠졌다(공식 3회차 v3-04). 모양을 맞춰 센다."""
-    v = lambda n, x, unit='V': J.Value(name=n, number=x, unit=unit, quote=f'{x}{unit}')
-    a = J.JudgeRead(role='R22', values=[v('v_in_max', 13.2), v('i_max', 250, 'mA')], required_specs=[J.RequiredSpec(words='VF 1.8V까지', code='VF')])
-    b = J.JudgeRead(role='R22', values=[v('v_in_max', 13.2), v('i_coil', 250, 'mA'), v('v_drop_allowed', 1.8)])
-    c = J.JudgeRead(role='R22', values=[v('v_in_max', 13.2)])
-    m = J.merge_reads([a, b, c])
-    assert [x.code for x in m.required_specs] == ['VF'] and 'i_max' in [x.name for x in m.values]
-
-
 def test_zener_tolerance_survives_split_or_missing_words():
-    """[왜] 다수결이 VZ 첫 말('공칭 3.3V')만 써 공차가 빠졌고, 한 읽기는 공칭과 공차를 둘로 나눠 적었다(공식 4회차 v3-13)."""
+    """[왜] 읽기가 VZ 첫 말('공칭 3.3V')만 적어 공차가 빠졌다(공식 4회차 v3-13)."""
     text = '구매 규격은 TSC 단일 제너, 공칭 제너 전압 3.3V, 공차 ±2%인 B 등급, 전력 정격 500mW 이상이다.'
     assert J._tolerance_words('nominal 3.3V', 'VZ', text) == 'nominal 3.3V ±2%'
     assert J._tolerance_words('nominal 3.3V', 'VZ', '공칭 3.3V, B 등급') == 'nominal 3.3V ±2%'
     assert J._tolerance_words('PD 0.5W', 'PD', text) == 'PD 0.5W'
-    a = J.JudgeRead(role='R04', required_specs=[J.RequiredSpec(words='nominal 3.3V', code='VZ')])
-    b = J.JudgeRead(role='R04', required_specs=[J.RequiredSpec(words='공칭 3.3V', code='VZ'), J.RequiredSpec(words='공차 ±2% B 등급', code='VZ')])
-    assert '±2%' in J.merge_reads([a, b, a]).required_specs[0].words
 
 
 def test_same_direction_sentence_beats_a_musing_read_as_bidirectional():
@@ -387,12 +319,6 @@ def test_same_base_part_with_another_ordering_code_is_the_original():
     assert J._original_from_text(read, text) == 'BZV55B3V3 L0'
     other = J.JudgeRead(role='R04', original_part='1N5819', candidates=['1N5819H'])
     assert J._original_from_text(other, '지금 1N5819를 1N5819H로 바꿔도 돼?') == '1N5819'  # 기본 품번이 다르면 그대로
-
-
-def test_agree_handles_the_same_value_name_twice():
-    """[왜] 같은 이름 값이 둘(숫자 없음 · 있음)인 읽기에서 정렬이 None과 숫자를 비교해 TypeError가 났다(공식 8회차 v3-09)."""
-    a = J.JudgeRead(role='R06', values=[J.Value(name='temp', quote='25°C'), J.Value(name='temp', number=25.0, unit='°C', quote='25°C')])
-    assert J._agree(a, a)
 
 
 def test_spec_that_restates_a_circuit_value_is_dropped():

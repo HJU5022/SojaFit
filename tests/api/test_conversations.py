@@ -12,6 +12,40 @@ from backend.main import app
 ORIGIN = {'origin': 'http://testserver'}
 
 
+def test_thread_delete_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN).status_code == 401
+
+
+def test_thread_delete_checks_origin_and_returns_empty_204(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    calls, thread = [], str(uuid4())
+    monkeypatch.setattr(ConversationRepository, 'delete_thread', lambda self, user, key: calls.append((user, key)))
+    with web(None, None) as client:
+        assert client.delete(f'/api/threads/{thread}').status_code == 403
+        assert client.delete(f'/api/threads/{thread}', headers={'origin': 'https://other.invalid'}).status_code == 403
+        assert client.delete('/api/threads/not-a-uuid', headers=ORIGIN).status_code == 422
+        assert calls == []
+        response = client.delete(f'/api/threads/{thread}', headers=ORIGIN)
+    assert response.status_code == 204 and response.content == b''
+    assert calls == [(1, thread)]
+
+
+@pytest.mark.parametrize('failure_kind, status', [('missing', 404), ('busy', 409), ('database', 503)])
+def test_thread_delete_uses_safe_errors(web, monkeypatch, failure_kind, status):
+    import psycopg
+    from backend.conversations.repository import ConversationRepository, ConversationNotFound, InvalidRunState
+    def fail(*args):
+        raise {'missing': ConversationNotFound, 'busy': InvalidRunState,
+               'database': psycopg.OperationalError}[failure_kind]('private database detail')
+    monkeypatch.setattr(ConversationRepository, 'delete_thread', fail)
+    with web(None, None) as client:
+        response = client.delete(f'/api/threads/{uuid4()}', headers=ORIGIN)
+    assert response.status_code == status
+    assert 'private database detail' not in response.text
+    assert response.json()['error']['request_id']
+
+
 class FakeAnalysis:
     """DB 없는 사용자 분석 서비스. 실제 서비스처럼 thread마다 대상 부품을 처음 값으로 고정한다."""
     def __init__(self, state=None, interrupt=None, error=None, refuse=None):
@@ -53,6 +87,77 @@ class FakeRepo:
         return {'id': self.run, 'thread_id': self.thread, 'status': self.status, 'safe_result': self.result}
 
 
+def test_recover_is_owned_origin_checked_and_never_calls_analysis(web):
+    thread, run = str(uuid4()), str(uuid4())
+    repo = FakeRepo(thread, run)
+    def recover(user, key):
+        assert (user, key) == (1, run)
+        repo.calls.append('recover')
+        repo.status = 'failed'
+    repo.recover_stale_run = recover
+    with web(None, repo) as client:
+        assert client.post(f'/api/runs/{run}/recover').status_code == 403
+        response = client.post(f'/api/runs/{run}/recover', headers=ORIGIN)
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.json()['result']['status'] == 'failed'
+    assert repo.calls == ['recover']
+
+
+def test_recover_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.post(f'/api/runs/{uuid4()}/recover', headers=ORIGIN).status_code == 401
+
+
+def test_recover_does_not_expose_another_users_run(web, monkeypatch):
+    from backend.conversations.repository import ConversationNotFound
+    repo = FakeRepo(str(uuid4()), str(uuid4()))
+    def recover(*args): raise ConversationNotFound
+    repo.recover_stale_run = recover
+    monkeypatch.setattr('backend.api.conversations.ConversationRepository', lambda: repo)
+    with web(None, None) as client:
+        response = client.post(f'/api/runs/{repo.run}/recover', headers=ORIGIN)
+    assert response.status_code == 404 and repo.status == 'running'
+
+
+def test_resume_unrequested_answers_leave_interrupt_unchanged(web):
+    thread, run = str(uuid4()), str(uuid4())
+    pause = {'interrupt': {'missing': ['v_in_max'], 'role_choices': []}}
+    repo = FakeRepo(thread, run, status='requires_input', result=pause)
+    analysis = FakeAnalysis()
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json={'answers': {'other': '12'}}, headers=ORIGIN)
+    assert response.status_code == 422
+    assert repo.status == 'requires_input' and repo.result == pause
+    assert repo.calls == [] and analysis.calls == []
+
+
+def test_resume_system_error_does_not_restore_an_old_form(web):
+    thread, run = str(uuid4()), str(uuid4())
+    interrupt = {'missing': ['v_in_max'], 'role_choices': []}
+    repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': interrupt})
+    analysis = FakeAnalysis(error=HTTPException(503, '분석을 완료하지 못했습니다.'))
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': '12'}}, headers=ORIGIN)
+    assert 'event: failed' in response.text and repo.status == 'failed'
+
+
+@pytest.mark.parametrize('status', [400, 409, 422, 429])
+def test_resume_recoverable_error_keeps_form_and_can_resume_same_run(web, status):
+    thread, run = str(uuid4()), str(uuid4())
+    interrupt = {'missing': ['v_in_max'], 'role_choices': []}
+    repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': interrupt})
+    analysis = FakeAnalysis(interrupt=interrupt, error=HTTPException(status, '입력을 확인하세요.'))
+    analysis.detail = lambda *args: {'version': 1, 'interrupt': analysis.interrupt}
+    with web(analysis, repo) as client:
+        first = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': 'wrong'}}, headers=ORIGIN)
+        assert 'event: requires_input' in first.text and '입력을 확인하세요.' in first.text
+        assert repo.status == 'requires_input' and repo.result['interrupt']['missing'] == ['v_in_max']
+        analysis.error, analysis.interrupt = None, None
+        second = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': '12'}}, headers=ORIGIN)
+    assert 'event: completed' in second.text and repo.status == 'completed'
+
+
 @pytest.fixture
 def web(monkeypatch):
     """로그인·Origin을 통과시키고, 넘긴 가짜 분석 서비스·저장소로 TestClient를 연다."""
@@ -92,6 +197,77 @@ def test_thread_endpoint_requires_login():
     with TestClient(app, raise_server_exceptions=False) as client:
         response = client.get('/api/projects/1/threads')
     assert response.status_code == 401
+
+
+def test_saved_thread_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get(f'/api/threads/{uuid4()}').status_code == 401
+
+
+def test_saved_thread_uses_read_only_repository_and_safe_response(web, monkeypatch):
+    from backend.conversations.repository import ConversationRepository
+    thread, run = str(uuid4()), str(uuid4())
+    calls = []
+    def detail(self, user, thread_id, limit=50, before_message_id=None):
+        calls.append((user, thread_id, limit, before_message_id))
+        return {'id': thread, 'project_id': 1, 'title': '저장 질문', 'target_ref': 'D1', 'target_locked': True,
+                'latest_run': {'id': run, 'status': 'completed', 'message_id': 2},
+                'messages': [{'id': 2, 'run_id': run, 'role': 'assistant', 'content': '<img src=x>', 'created_at': '2026-11-11T00:00:00Z', 'raw_chunk': 'hidden'}],
+                'next_before_message_id': None, 'checkpoint': 'hidden'}
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', detail)
+    analysis = FakeAnalysis()
+    with web(analysis, None) as client:
+        response = client.get(f'/api/threads/{thread}?limit=2&before_message_id=4')
+    assert response.status_code == 200
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.headers['x-request-id']
+    assert calls == [(1, thread, 2, 4)]
+    assert response.json()['messages'][0]['content'] == '<img src=x>'
+    assert 'hidden' not in response.text
+    assert analysis.calls == []
+
+
+@pytest.mark.parametrize('query', ['limit=0', 'limit=101', 'before_message_id=0', 'before_message_id=no', 'before_message_id=9223372036854775808'])
+def test_saved_thread_rejects_invalid_page_before_repository(web, monkeypatch, query):
+    from backend.conversations.repository import ConversationRepository
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', lambda *a, **k: pytest.fail('invalid page reached SQL'))
+    with web(None, None) as client:
+        assert client.get(f'/api/threads/{uuid4()}?{query}').status_code == 422
+        assert client.get('/api/threads/not-a-uuid').status_code == 422
+
+
+def test_saved_thread_not_found_and_database_error_use_existing_boundary(web, monkeypatch):
+    import psycopg
+    from backend.conversations.repository import ConversationNotFound, ConversationRepository
+    def missing(*args, **kwargs): raise ConversationNotFound
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', missing)
+    with web(None, None) as client:
+        response = client.get(f'/api/threads/{uuid4()}')
+        assert response.status_code == 404
+    def unavailable(*args, **kwargs): raise psycopg.OperationalError('private connection detail')
+    monkeypatch.setattr(ConversationRepository, 'thread_detail', unavailable)
+    with web(None, None) as client:
+        response = client.get(f'/api/threads/{uuid4()}')
+        assert response.status_code == 503
+        assert 'private connection detail' not in response.text
+
+
+def test_live_conditions_are_shown_without_changing_saved_result(web):
+    from backend.conversations.models import SafeResult
+    thread, run = str(uuid4()), str(uuid4())
+    rows = [{'code': 'v_in_max', 'value': '20 V'}, {'code': 'i_max', 'value': '0.15 A'}]
+    analysis = FakeAnalysis(state={'answer': 'ok', 'judgement': {'kind': 'judge', 'input_conditions': rows}})
+    repo = FakeRepo(thread, run)
+    with web(analysis, repo) as client:
+        response = client.post(f'/api/threads/{thread}/runs', json={'question': '20V 150mA', 'target_ref': 'D1'}, headers=ORIGIN)
+        frames = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
+        assert frames[-1]['status'] == 'completed'
+        assert frames[-1]['judgement']['input_conditions'] == rows
+        SafeResult.model_validate(repo.result)
+        assert 'input_conditions' not in repo.result['judgement']
+        recovered = client.get(f'/api/runs/{run}')
+    assert recovered.json()['result']['judgement']['input_conditions'] == []
+    assert len([call for call in analysis.calls if call[0] == 'message']) == 1
 
 
 def test_first_run_creates_analysis_thread_and_saves_before_completed(web):
@@ -282,14 +458,14 @@ def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
 def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
     """하루 토큰 상한(admission 429)은 스트림 · run 행 · 재개 전이 전에 공통 오류로 끝나고 분석을 부르지 않는다."""
     thread, run = str(uuid4()), str(uuid4())
-    analysis = FakeAnalysis(refuse=ApiError(429, '오늘 쓸 수 있는 분석 사용량(하루 200,000 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
+    analysis = FakeAnalysis(refuse=ApiError(429, '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
     repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': {'missing': ['VIN_MAX'], 'role_choices': [], 'question': '?'}})
     with web(analysis, repo) as client:
         start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
     for response in (start, resume):
         assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
-        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and '200,000 토큰' in response.json()['error']['message']
+        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and '1,000,000 토큰' in response.json()['error']['message']
     assert analysis.calls == [] and repo.calls == []
 
 
@@ -329,7 +505,7 @@ def test_foreign_and_active_runs_return_safe_errors(web, monkeypatch):
 
 
 def test_project_delete_with_threads_deletes_analysis_records_before_project(monkeypatch):
-    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread · 회로를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
+    """프로젝트 삭제는 같은 UUID의 분석 checkpoint · thread를 사용자 조건으로 같은 트랜잭션에서 지우고 프로젝트 행을 마지막에 지운다."""
     thread, executed = str(uuid4()), []
     class Conn:
         def __enter__(self): return self
@@ -352,7 +528,7 @@ def test_project_delete_with_threads_deletes_analysis_records_before_project(mon
     assert response.status_code == 204
     deletes = [(text, params) for text, params in executed if text.startswith('DELETE')]
     assert [text.split()[2] for text, _ in deletes] == ['sojafit_agent."checkpoint_writes"', 'sojafit_agent."checkpoint_blobs"', 'sojafit_agent."checkpoints"',
-                                                       'sojafit_agent.threads', 'sojafit_agent.circuits', 'projects']
+                                                       'sojafit_agent.threads', 'projects']
     assert all(params[:2] == (1, [thread]) for _, params in deletes[:-1])  # 사용자 조건과 그 프로젝트의 대화 UUID만
 
 
@@ -480,3 +656,21 @@ def test_demo_questions_only_in_replay_mode_and_without_recorded_results(web, mo
         unavailable = client.get('/api/demo-questions')
     assert listed == [{k: recorded[k] for k in ('id', 'kind', 'circuit', 'demo_id', 'target', 'question', 'conditions', 'resume')}]
     assert unavailable.status_code == 503 and unavailable.json()['error']['code'] == 'UNAVAILABLE'
+
+
+@pytest.mark.parametrize('path', ['/api/runs/{id}/resume', '/api/messages/1/approvals', '/api/auth/login'])
+def test_other_api_json_bodies_over_128_kib_are_413(path):
+    """재개 · 승인 · 로그인 등 `/api/` 아래 본문도 128 KiB까지다. 넷리스트 업로드(5 MiB)만 이 한도 밖이다."""
+    response = TestClient(app).post(path.format(id=uuid4()), content=b'x' * (128 * 1024 + 1))
+    assert response.status_code == 413 and response.json()['error']['code'] == 'PAYLOAD_TOO_LARGE'
+    upload = TestClient(app).post('/api/projects/upload', content=b'x' * (128 * 1024 + 1))
+    assert upload.status_code != 413
+
+
+def test_every_response_has_security_headers():
+    """보안 응답 헤더는 가장 바깥 미들웨어가 모든 응답(오류 포함)에 붙인다(`backend/main.py`의 `SECURITY_HEADERS`)."""
+    for path in ('/health', '/api/auth/me'):
+        headers = TestClient(app).get(path).headers
+        assert headers['x-content-type-options'] == 'nosniff' and headers['x-frame-options'] == 'DENY'
+        assert headers['referrer-policy'] == 'strict-origin-when-cross-origin' and 'max-age' in headers['strict-transport-security']
+

@@ -1,0 +1,248 @@
+{
+  "common": {
+    "GATE_WARMUP": 1,
+    "set": "mixed.jsonl",
+    "n": 9
+  },
+  "runs": {
+    "E0_hybrid_rerank": {
+      "n": 9,
+      "pass": 8,
+      "mean": 10.89,
+      "p50": 9.6,
+      "p95": 28.4,
+      "fails": [
+        "v3-15"
+      ]
+    },
+    "E1_no_rerank": {
+      "n": 9,
+      "pass": 8,
+      "mean": 8.08,
+      "p50": 8.6,
+      "p95": 11.5,
+      "fails": [
+        "v3-01"
+      ]
+    },
+    "E2_bm25": {
+      "n": 9,
+      "pass": 8,
+      "mean": 8.24,
+      "p50": 7.3,
+      "p95": 14.8,
+      "fails": [
+        "v3-15"
+      ]
+    }
+  },
+  "per_item": {
+    "v3-01": {
+      "E0_hybrid_rerank": {
+        "lat": 6.3,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      },
+      "E1_no_rerank": {
+        "lat": 8.6,
+        "pass": false,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      },
+      "E2_bm25": {
+        "lat": 6.6,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      }
+    },
+    "v3-03": {
+      "E0_hybrid_rerank": {
+        "lat": 6.0,
+        "pass": true,
+        "search_sum": 1186,
+        "search_n": 1,
+        "voyage_n": 2
+      },
+      "E1_no_rerank": {
+        "lat": 5.6,
+        "pass": true,
+        "search_sum": 908,
+        "search_n": 1,
+        "voyage_n": 1
+      },
+      "E2_bm25": {
+        "lat": 5.5,
+        "pass": true,
+        "search_sum": 395,
+        "search_n": 1,
+        "voyage_n": 0
+      }
+    },
+    "v3-16": {
+      "E0_hybrid_rerank": {
+        "lat": 10.9,
+        "pass": true,
+        "search_sum": 2652,
+        "search_n": 2,
+        "voyage_n": 4
+      },
+      "E1_no_rerank": {
+        "lat": 4.8,
+        "pass": true,
+        "search_sum": 734,
+        "search_n": 1,
+        "voyage_n": 1
+      },
+      "E2_bm25": {
+        "lat": 6.4,
+        "pass": true,
+        "search_sum": 762,
+        "search_n": 2,
+        "voyage_n": 0
+      }
+    },
+    "v3-20": {
+      "E0_hybrid_rerank": {
+        "lat": 16.3,
+        "pass": true,
+        "search_sum": 5399,
+        "search_n": 4,
+        "voyage_n": 8
+      },
+      "E1_no_rerank": {
+        "lat": 11.5,
+        "pass": true,
+        "search_sum": 3395,
+        "search_n": 4,
+        "voyage_n": 4
+      },
+      "E2_bm25": {
+        "lat": 9.4,
+        "pass": true,
+        "search_sum": 1719,
+        "search_n": 4,
+        "voyage_n": 0
+      }
+    },
+    "v3-21": {
+      "E0_hybrid_rerank": {
+        "lat": 9.6,
+        "pass": true,
+        "search_sum": 2276,
+        "search_n": 2,
+        "voyage_n": 4
+      },
+      "E1_no_rerank": {
+        "lat": 8.9,
+        "pass": true,
+        "search_sum": 2002,
+        "search_n": 2,
+        "voyage_n": 2
+      },
+      "E2_bm25": {
+        "lat": 7.3,
+        "pass": true,
+        "search_sum": 863,
+        "search_n": 2,
+        "voyage_n": 0
+      }
+    },
+    "v3-24": {
+      "E0_hybrid_rerank": {
+        "lat": 4.2,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      },
+      "E1_no_rerank": {
+        "lat": 9.0,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 1,
+        "voyage_n": 0
+      },
+      "E2_bm25": {
+        "lat": 8.1,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 1,
+        "voyage_n": 0
+      }
+    },
+    "v3-25": {
+      "E0_hybrid_rerank": {
+        "lat": 10.2,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 1,
+        "voyage_n": 0
+      },
+      "E1_no_rerank": {
+        "lat": 7.5,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 1,
+        "voyage_n": 0
+      },
+      "E2_bm25": {
+        "lat": 10.1,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 1,
+        "voyage_n": 0
+      }
+    },
+    "v3-41": {
+      "E0_hybrid_rerank": {
+        "lat": 6.1,
+        "pass": true,
+        "search_sum": 1134,
+        "search_n": 1,
+        "voyage_n": 2
+      },
+      "E1_no_rerank": {
+        "lat": 5.9,
+        "pass": true,
+        "search_sum": 1113,
+        "search_n": 1,
+        "voyage_n": 1
+      },
+      "E2_bm25": {
+        "lat": 6.0,
+        "pass": true,
+        "search_sum": 523,
+        "search_n": 1,
+        "voyage_n": 0
+      }
+    },
+    "v3-15": {
+      "E0_hybrid_rerank": {
+        "lat": 28.4,
+        "pass": false,
+        "search_sum": 5236,
+        "search_n": 4,
+        "voyage_n": 8
+      },
+      "E1_no_rerank": {
+        "lat": 10.9,
+        "pass": true,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      },
+      "E2_bm25": {
+        "lat": 14.8,
+        "pass": false,
+        "search_sum": 0,
+        "search_n": 0,
+        "voyage_n": 0
+      }
+    }
+  }
+}

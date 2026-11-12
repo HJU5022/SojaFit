@@ -1,0 +1,1816 @@
+{
+ "summary": {
+  "set": 1,
+  "done": 50,
+  "total": 50,
+  "passed": 49,
+  "p95_s": 9.9,
+  "p50_s": 4.7,
+  "session": "gate-v3_draft-1110-0023-set1",
+  "stopped_at": "v3-09",
+  "model_env": {
+   "LAB_THINKING": "off",
+   "LAB_THINKING_ON": "",
+   "LAB_NODE_MODELS": "",
+   "LAB_EFFORT": "",
+   "LAB_READ_VOTES": "3"
+  },
+  "db": "postgres",
+  "llm_provider": "openrouter",
+  "claude_direct": false,
+  "git": "5d37cd0"
+ },
+ "rows": [
+  {
+   "id": "v3-01",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC 1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/6420e5cf81c4f37309b376e91ab7414e",
+   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (load side, cathode to power net); D1.A → VIN (series with input connector); D1 is series reverse-polarity protection between input and regulator)\n\n**TSC 1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 2 (2.0) | 30 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-02",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.4,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SS24",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/43aae39a1c66eb9404a76b8b65313347",
+   "answer": "역할: R02 (근거: D2.K_1 → +5V; D2.A_2 → NES_5V; D1.K_1 → +5V; D1.A_2 → VBUS)\n\n**SS24: 문서로 확인 안 됨**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_reverse_max * kV) | 40 V | 표 기본 조건 | 통과 | SS22 SERIES_N2306.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (i_max * kI) | 2 A | 표 기본 조건 | 통과 | SS22 SERIES_N2306.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IR <= | 0.0001 (ir_allowed) | 0.0004 A | @ rated VR; TJ = 25°C | 확인 안 됨 · 시험 역전압이 실제 역전압보다 높아(또는 실제 역전압을 몰라) 불충족을 단정할 수 없음 | SS22 SERIES_N2306.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse current @ rated VR(2) |\n- 불확실한 조건: VF: vf_selects_source 정보가 없어 이 조건을 빼고 판정 / IR: hot_test 정보가 없어 이 조건을 빼고 판정\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: SS22 SERIES_N2306.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-03",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "LL4148 L0G",
+     "IDENTICAL"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/bf56ed313a7f330fdfab417ed0c42c29",
+   "answer": "역할: R03 (근거: D5 parallel to K1 coil; D5.K_1 → +12V; D5.A_2 → Net-(D5-A))\n\n**LL4148 L0G: 동일품**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| ORDER_CODE = | — (같은 기본 품번, 주문 코드만 다름) | —  | — | 통과 · 동일품 | LL4148 SERIES_K2301.pdf 2쪽 ORDERING INFORMATION LL4148 L0G |\n| VRRM >= | 15.75 (v_coil * kV) | 75 V | 표 기본 조건 | 통과 | LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) VRRM |\n| IF_AV >= | 0.035 (IFSM >= i_coil 또는 IF_AV >= i_coil) | 0.15 A | 표 기본 조건 | 통과 | LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 사람이 확인할 것: 감쇠 시간 · 반복 횟수(반복 펄스 허용량은 그래프라 표에 없음)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: LL4148 SERIES_K2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-04",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC UF4007",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e7ec9efa7b583873c8d52dfd5427b277",
+   "answer": "역할: R22 (근거: D1.K → +12V; D1.A → Net-(D1-A) (M1.- and Q1.D); D1 parallel to M1 fan load, cathode on supply side; Q1 IRF3808 switches the fan low side via PWM)\n\n**TSC UF4007: 문서로 확인 안 됨**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 16.5 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | UF4001 SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | UF4001 SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 1e-07 (1.0000000000000001e-07) | 7.5e-08 s | Irr = 0.25A | 통과 | UF4001 SERIES_P2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n| VF <= | 1.8 (1.8) | —  | 표 기본 조건 | 확인 안 됨 · 시험 조건이 다르거나 적혀 있지 않음 | — |\n- 불확실한 조건: IFSM: high_stall 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-05",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC S1M",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/d91b8debdd762c66d7bef3e2819905e6",
+   "answer": "역할: R22 (근거: D2.K_1 → VCC; D2.A_2 → Net-(D2-A) (motor-side node, V1 drain via Motor-); D2 parallel to motor load (TP2 Motor+ / TP3 Motor-); V1 IRLR2905PBF is the PWM-driven switch)\n\n**TSC S1M: 불충족**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | S1A SERIES_S2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | S1A SERIES_S2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 1e-07 (1.0000000000000001e-07) | 1.5e-06 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 실패 | S1A SERIES_S2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n| VF <= | 1.5 (1.5) | —  | 표 기본 조건 | 확인 안 됨 · 시험 조건이 다르거나 적혀 있지 않음 | — |\n- 불확실한 조건: IFSM: high_stall 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-06",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 9.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "BZV55B3V3 L0G",
+     "IDENTICAL"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/178606aa7b97c489fea589af32ee220d",
+   "answer": "역할: R04 (근거: D1.K → Net-(D1-K) (R2 1.5k, R5 20k, U1 PB3); D1.A → GND; D1 Zener-type clamp with series resistor R2 from ACC IN)\n\n**BZV55B3V3 L0G: 동일품**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| ORDER_CODE = | — (같은 기본 품번, 주문 코드만 다름) | —  | — | 통과 · 동일품 | BZV55B2V4 SERIES_G2301.pdf 3쪽 ORDERING INFORMATION BZV55B3V3 |\n| VZ >= | 3.2 (vz_min) | 3.23 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.4 (vz_max) | 3.37 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| PD >= | 0.02429 (i_z * vz_max * kI) | 0.5 W | 표 기본 조건 | 통과 | BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) PD |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인) / 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지 / 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음 / 온도 계수\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-07",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC SS16",
+     "NOT_VERIFIED"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/84fbdb95f7dcaf238eb1733f013a5da3",
+   "answer": "역할: R02, R01 (근거: D1.A_2 → Net-(D1-A) ← J1.VBUS_1 (USB_B_Micro VBUS); D1.K_1 → 5V net (other supply side); D1 is a Schottky between USB input and 5V net, cathode toward 5V)\n\n**TSC SS16: 문서로 확인 안 됨**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 6.562 (v_reverse_max * kV) | 60 V | 표 기본 조건 | 통과 | SS12 SERIES_R2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | SS12 SERIES_R2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IR <= | 0.0001 (ir_allowed) | 0.0002 A | @ rated VR; TJ = 25°C | 확인 안 됨 · 시험 역전압이 실제 역전압보다 높아(또는 실제 역전압을 몰라) 불충족을 단정할 수 없음 | SS12 SERIES_R2305.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse current @ rated VR(2) |\n- 불확실한 조건: VF: vf_selects_source 정보가 없어 이 조건을 빼고 판정 / IR: hot_test 정보가 없어 이 조건을 빼고 판정\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: SS12 SERIES_R2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-08",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.3,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "TSC SS14H",
+     "SPEC_EQUIVALENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/71859163e076853b305ad39ce7447f7b",
+   "answer": "역할: R05 (근거: D2.A_2 → Net-(D2-A) (T1.SB_7, D4.K_1); D2.K_1 → Net-(D1-K) (C1.1, C2.1, U1.VI_1); D2 is one leg of a bridge fed from transformer secondary T1.SA_9/SB_7 with bulk capacitor C1 (820uF) on the DC side)\n\n**TSC SS14H: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15.91 (v_ac_rms * 1.41421356 * kV) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1071 (i_max * 0.5 * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IFSM >= | 3 (3.0) | 40 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IFSM |\n- 사람이 확인할 것: 충전 펄스 RMS / 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-09",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.6,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SMBJ14AH",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/d748bc3f0f67c122214dc739cc9f1ec6",
+   "answer": "역할: R06 (근거: D2.A1 → 12V net, D2.A2 → GND; D2 is a TVS (SMBJ14A) between the 12V supply net and GND; 12V net connects to J1 connector pins (external port))\n\n**SMBJ14AH: 불충족**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 13 (v_line_max) | 14 V | 표 기본 조건 | 통과 | SMBJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMBJ14AH |\n| PPPM >= | 600 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 600 W | 10/1000µs waveform | 통과 | SMBJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Non-repetitive peak impulse power dissipation with 10/1000µs waveform(1) |\n| VC <= | 23.2 (23.1999999768) | 23.2 V | IPP = 27.0 A | 실패 | SMBJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMBJ14AH |\n| DIRECTION = | — (단방향(원래 부품과 같음)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": false
+  },
+  {
+   "id": "v3-10",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 6.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SMAJ6.0CA",
+     "NOT_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/32b2be293485452cb10a9ef86c5fefa2",
+   "answer": "역할: R06 (근거: D4.A1_1 → /Left; D4.A2_2 → GND; J2.Pin_7_7 on /Left (connector side); D4 is TVS SMAJ5.0A between signal net and GND)\n\n**SMAJ6.0CA: 불충족**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 6 V | 표 기본 조건 | 통과 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ6.0A |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 9.2 (9.2) | 10.3 V | IPPM = 38.8 A | 실패 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ6.0A |\n| DIRECTION = | — (단방향(원래 부품과 같음)) | —  | 양방향 | 실패 · 후보는 양방향(품번 끝 글자) | — |\n- 불확실한 조건: CJ: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정 / VESD: 원래 부품 문서에 값이 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-11",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.0,
+   "fake_citations": 0.0,
+   "uncited_sentences": 4.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "GS1G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "GS1J",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "S1G-K",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c99f6e15edc9e354ba59e69404baba72",
+   "answer": "역할: R01 (근거: D1.C → Net-(F1-1) (fuse side, cathode toward load side of series protection); D1.A → Net-(S1-S) (anode toward switch/input connector side); D1 in series between J1 input and the switched supply net)\n\n사양 표에서 건 조건: VRRM ≥ 15, IF_AV ≥ 0.5, VRRM ≥ 400, VRRM ≤ 600, IF_AV ≥ 1, IF_AV ≤ 2\n**GS1G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**GS1J: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 600 V | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: GS1D SERIES_A2509.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**S1G-K: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 15 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.5 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 2 (1.999999998) | 1 A | 표 기본 조건 | 통과 | S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: S1D-K SERIES_E2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "14 candidates judged, 3 shown: GS1G, GS1J, S1G-K",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-12",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.2,
+   "fake_citations": 0.0,
+   "uncited_sentences": 4.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "HER105G",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "HER105G-K",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "HER105GH",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b551246d8baf8b1b3dc105c576ba452b",
+   "answer": "역할: R22, R03 (근거: D3.C → VIN; D3.A → /OUT, Q1.D (MOSFET drain); D3 parallel to X1 load (coil) across /OUT and VIN; PWM drives Q1.G via /SIGNAL)\n\n사양 표에서 건 조건: VRRM ≥ 30, IF_AV ≥ 0.3571, VRRM ≥ 400, VRRM ≤ 600, IF_AV ≥ 1, IF_AV ≤ 1, TRR ≤ 7.5e-08\n**HER105G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G SERIES_L2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**HER105G-K: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G-K SERIES_B2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G-K SERIES_B2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n**HER105GH: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 30 (v_in_max * kV) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.3571 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 400 (400.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 600 (600.0) | 400 V | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| TRR <= | 7.5e-08 (7.500000000000001e-08) | 5e-08 s | IF = 0.5A, IR = 1.0A, Irr = 0.25A | 통과 | HER101G SERIES_L2104.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) Reverse recovery time |\n- 사람이 확인할 것: PWM 듀티 D를 알면 평균 전류 기준을 부하 전류 × (1 − D_min) × kI까지 낮출 수 있음(지금은 부하 전류 × kI로 판정) / standard-rectifier 계열은 PWM 회로에 쓰지 않음 / 피크 전류 · 역회복 · 발열\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: HER101G SERIES_L2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "24 candidates judged, 3 shown: HER105G, HER105G-K, HER105GH",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-13",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.6,
+   "fake_citations": 0.0,
+   "uncited_sentences": 3.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "BZT52B3V3",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "BZV55B3V3",
+     "SPEC_EQUIVALENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e1dd21178855574c4492a3c573138c5e",
+   "answer": "역할: R04 (근거: D1.K → Net-(D1-K) (PB3 net, cathode on signal net); D1.A → GND; R2 (1.5k) in series on the signal path; D1 value BZX84C3V3 is a zener-family part)\n\n사양 표에서 건 조건: VZ ≥ 3.3, VZ ≤ 3.3, VZ ≥ 3.184, VZ ≤ 3.284, VZ ≥ 3.316, VZ ≤ 3.416, PD ≥ 0.5\n**BZT52B3V3: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VZ >= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ >= | 3.184 (3.184) | 3.23 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.284 (3.284) | 3.23 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ >= | 3.316 (3.316) | 3.37 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| VZ <= | 3.416 (3.416) | 3.37 V | IZT = 5 mA | 통과 | BZT52B2V4 SERIES_F15.pdf 2쪽 ELECTRICAL CHARACTERISTICS (Ratings at TA=25°C ambient temperature unless otherwise specified, and VF Forward Voltage = 1V Maximum @ IF = 10 mA for all part numbers) BZT52B3V3 |\n| PD >= | 0.5 (0.5) | 0.5 W | 표 기본 조건 | 통과 | BZT52B2V4 SERIES_F15.pdf 1쪽 MAXIMUM RATINGS AND ELECTRICAL CHARACTERISTICS (TA=25°C unless otherwise noted) Power dissipation |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / 사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정\n- 사람이 확인할 것: 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인) / 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지 / 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음 / 온도 계수\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: BZT52B2V4 SERIES_F15.pdf 4쪽 ORDERING INFORMATION).\n\n**BZV55B3V3: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VZ >= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.3 (3.3) | 3.3 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ >= | 3.184 (3.184) | 3.23 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.284 (3.284) | 3.23 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ >= | 3.316 (3.316) | 3.37 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| VZ <= | 3.416 (3.416) | 3.37 V | IZT = 5 mA | 통과 | BZV55B2V4 SERIES_G2301.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) BZV55B3V3 |\n| PD >= | 0.5 (0.5) | 0.5 W | 표 기본 조건 | 통과 | BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) PD |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / 사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정\n- 사람이 확인할 것: 시험 전류 IZT와 실제 제너 전류가 2배 이상 다르면 VZ가 달라짐(사양 표 VZ 행의 시험 조건으로 사람이 확인) / 전압 기준 용도면 VZ 최소 · 최대로 계산한 허용 오차가 원래 이하인지 / 허용 오차가 원래보다 좁은 부품은 최대 VZ가 달라 불충족으로 나올 수 있음 / 온도 계수\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: BZV55B2V4 SERIES_G2301.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "2 candidates judged, 2 shown: BZT52B3V3, BZV55B3V3",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-14",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 5.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SS14H",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SS15H",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SS16H",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/cc59f535b73e05f33176ef9c80922a43",
+   "answer": "역할: R12 (근거: D1.2 → Net-(D1-Pad2), shared with L1.2 (100uH) and U1.5 (HT7733A) SW pin; D1.1 → VCC (3.3V output net); D1 anode at SW node with inductor, cathode at output net — boost output rectifier)\n\n사양 표에서 건 조건: VRRM ≥ 4.125, IF_AV ≥ 0.07143, VRRM ≥ 40, VRRM ≤ 60, IF_AV ≥ 1, IF_AV ≤ 1\n**SS14H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 40 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 불확실한 조건: 사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n**SS15H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 50 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 불확실한 조건: 사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n**SS16H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 4.125 (v_out * kV) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.07143 (i_out * kI) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| VRRM >= | 40 (40.0) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| VRRM <= | 60 (60.0) | 60 V | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| IF_AV <= | 1 (1.0) | 1 A | 표 기본 조건 | 통과 | SS12H SERIES_B2305.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n| AEC_Q101 = | — (AEC-Q101 적합(사용자 요구)) | —  | AEC-Q101 qualified | 통과 | SS12H SERIES_B2305.pdf 1쪽 None None |\n- 불확실한 조건: 사용 온도를 몰라 표의 기본 온도(대부분 25°C) 값으로 판정\n- 사람이 확인할 것: 인덕터 피크 전류(IFRM 거의 없음) / 역회복 · 발열\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "9 candidates judged, 3 shown: SS14H, SS15H, SS16H",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-15",
+   "kind": "relevant",
+   "gold_type": "candidate_find",
+   "routed_type": "candidate_find",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 12.1,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "SMAJ5.0AH",
+     "SPEC_EQUIVALENT"
+    ],
+    [
+     "SMAJ5.0",
+     "ROLE_SUFFICIENT"
+    ],
+    [
+     "SMAJ5.0H",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/12ccc5cdd2cdd8a24334d66410c97b42",
+   "answer": "역할: R06 (근거: D3.A1_1 → /Stop; D3.A2_2 → GND; J2.Pin_6_6 connector on /Stop net, TVS sits right behind connector)\n\n사양 표에서 건 조건: VRWM ≥ 5, PPPM ≥ 400, PPPM ≤ 600, VC ≤ 10\n**SMAJ5.0AH: 사양 동등**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0AH |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.2 V | IPPM = 43.5 A | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0AH |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: external_port 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n**SMAJ5.0: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0 |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJ SERIES_U2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.6 V | IPPM = 41.7 A | 통과 | SMAJ SERIES_U2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0 |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: external_port 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n**SMAJ5.0H: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRWM >= | 5 (v_line_max) | 5 V | 표 기본 조건 | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0H |\n| PPPM >= | 400 (PPPM >= orig.PPPM 또는 IPP >= orig.IPP) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM >= | 400 (400.0) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| PPPM <= | 600 (599.9999994) | 400 W | at TA = 25°C, tp = 1ms | 통과 | SMAJH SERIES_A2102.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Peak power dissipation at TA = 25°C, tp = 1ms (Note 1) |\n| VC <= | 10 (10.0) | 9.6 V | IPPM = 41.7 A | 통과 | SMAJH SERIES_A2102.pdf 2쪽 ELECTRICAL SPECIFICATIONS (TA = 25°C unless otherwise noted) SMAJ5.0H |\n| DIRECTION = | — (단방향(사용자 요구)) | —  | 단방향 | 통과 | — |\n- 불확실한 조건: CJ: data_line 정보가 없어 이 조건을 빼고 판정 / VESD: external_port 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 단방향 · 양방향: 품번 끝 글자와 데이터시트로 사람이 확인 / 보호 대상 IC의 허용 전압(코퍼스 밖, 되물음)\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "7 candidates judged, 3 shown: SMAJ5.0AH, SMAJ5.0, SMAJ5.0H",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-16",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 2.0,
+   "llm_calls": 0.0,
+   "docs_found": 5.0,
+   "passed_cards": 5.0,
+   "latency_s": 7.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    50672,
+    50658,
+    50659,
+    50669,
+    50668
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/e7950ce6aef70385126c3ebd498460e0",
+   "answer": "UF4005, UF4006, UF4007이 함께 적힌 Reverse recovery time 행의 최댓값은 75 ns이고, 조건은 Irr = 0.25A이며 기호는 trr입니다 [50672]. 그러나 이 근거에는 IF와 IR 시험 조건이 나타나 있지 않아 최댓값과 조건 전체를 확인할 수 없습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing IF(순방향 전류) 시험 조건, IR(역방향 전류) 시험 조건, UF4007 전용 행으로 구분되는지 여부(UF4005·4006과 공통 행)",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "UF4007 Reverse recovery time trr maximum IF IR test conditions",
+       "parts": [
+        "UF4007"
+       ],
+       "top": [
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ]
+       ]
+      },
+      {
+       "query": "UF4007 reverse recovery time test condition IF IR IRR",
+       "parts": [
+        "UF4007"
+       ],
+       "top": [
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         2
+        ],
+        [
+         "UF4001 SERIES_P2104.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-17",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 1.0,
+   "passed_cards": 1.0,
+   "latency_s": 4.7,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    5308
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/99a2dec8aabf67cacba7abeaef8413c9",
+   "answer": "BZT52B4V7의 제너 전압 VZ는 IZT 5 mA에서 최소 4.61 V, 공칭 4.70 V, 최대 4.79 V로 규정되어 있습니다 [5308]. 이 제너 전압은 펄스 조건 10 ms에서 시험된다고 명시되어 있습니다 [5308].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "ok",
+     "reason": null,
+     "summary": "ok: answered from 1 evidence",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "BZT52B4V7 Zener voltage VZ test current IZT pulse width",
+       "parts": [
+        "BZT52B4V7"
+       ],
+       "top": [
+        [
+         "BZT52B2V4 SERIES_F15.pdf",
+         2
+        ],
+        [
+         "BZT52B2V4 SERIES_F15.pdf",
+         2
+        ],
+        [
+         "BZT52B2V4 SERIES_F15.pdf",
+         2
+        ],
+        [
+         "BZT52B2V4 SERIES_F15.pdf",
+         2
+        ],
+        [
+         "BZT52B2V4 SERIES_F15.pdf",
+         2
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-18",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 4.0,
+   "passed_cards": 4.0,
+   "latency_s": 5.4,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    5803,
+    5834,
+    5833,
+    5835
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/f3665836c888d2129ff2118f5ccee476",
+   "answer": "TSC 문서의 주문 정보에서 L0와 L0G는 같은 물리적 부품을 가리키며 두 코드 사이에 차이가 없다고 명시되어 있습니다 [5833, 5834, 5835]. 두 코드 모두 MMELF 패키지, 10,000개 / 13인치 테이프 앤 릴 포장으로 동일하게 기재되어 있습니다 [5833, 5834]. 전기 규격에 대해서는 문서에 BZV55B5V1의 제너 전압 Min 5.00V, Nom 5.10V, Max 5.20V, 테스트 전류 IZT 5mA, ZZT 최대 35Ω, ZZK 최대 550Ω, IR 최대 0.1µA(VR 1.0V) 등이 제시되어 있으며 이 값은 L0/L0G 구분과 무관하게 적용됩니다 [5803].\n\n- 답하지 않은 부분 'L0 와 L0G 코드의 의미 구분': L0, L0G의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "ok",
+     "reason": null,
+     "summary": "ok: answered from 4 evidence",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "BZV55B5V1 ordering information L0 L0G packing suffix Zener diode",
+       "parts": [
+        "BZV55B5V1"
+       ],
+       "top": [
+        [
+         "BZV55B2V4 SERIES_G2301.pdf",
+         2
+        ],
+        [
+         "BZV55B2V4 SERIES_G2301.pdf",
+         3
+        ],
+        [
+         "BZV55B2V4 SERIES_G2301.pdf",
+         3
+        ],
+        [
+         "BZV55B2V4 SERIES_G2301.pdf",
+         3
+        ],
+        [
+         "BZV55B2V4 SERIES_G2301.pdf",
+         2
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-19",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 3.0,
+   "passed_cards": 3.0,
+   "latency_s": 7.2,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    33578,
+    33566,
+    33667
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c00ed5a5b8ece140e7e7543893745992",
+   "answer": "SMAJ6.5CA는 양방향 품번이며, 전기 특성 표에 SMAJ6.5A 행이 있고 이 행의 역방향 누설전류 최대값 IR@VWM은 500 µA입니다 [33578]. 이 행은 TA = 25°C 기준이며, 측정 조건은 작동 역전압 VWM 6.5 V에서의 IR입니다 [33578]. 양방향 사용 시 C 또는 CA 접미사 품번은 전기 특성이 양방향 모두에 적용된다고 명시되어 있어 SMAJ6.5A의 행을 그대로 읽으면 됩니다 [33566]. 다만 양방향 소자에서 VR이 10V 이하인 경우 IR 한계가 두 배가 된다는 주석이 있으므로, SMAJ6.5CA는 VR 6.5 V로 이 조건에 해당하여 IR 상한은 1000 µA로 적용됩니다 [33667].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "ok",
+     "reason": null,
+     "summary": "ok: answered from 3 evidence",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "SMAJ6.5CA reverse leakage current IR maximum electrical characteristics bidirectional note",
+       "parts": [
+        "SMAJ6.5CA"
+       ],
+       "top": [
+        [
+         "SMAJ SERIES_U2102.pdf",
+         2
+        ],
+        [
+         "SMAJ SERIES_U2102.pdf",
+         2
+        ],
+        [
+         "SMAJ SERIES_U2102.pdf",
+         2
+        ],
+        [
+         "SMAJ SERIES_U2102.pdf",
+         3
+        ],
+        [
+         "SMAJ SERIES_U2102.pdf",
+         3
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-20",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 6.0,
+   "passed_cards": 6.0,
+   "latency_s": 6.8,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    36290,
+    36317,
+    36292,
+    36296,
+    36291,
+    36276
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/ab4e03a01741026ab5872cf285d0d13b",
+   "answer": "문서의 주문 코드는 SS1xH 형식이며, 'x'는 SS12H(20V)부터 SS115H(150V)까지의 전압을 나타낸다고 정의되어 있습니다 [36317]. 또한 SS14H의 마킹 코드는 SS14로 표기되어 있어 SS14H와 SS14는 같은 마킹으로 표시됩니다 [36292, 36296, 36290]. 따라서 문서에서 H는 전류 등급 차이가 아니라 SS12H 시리즈 제품 구분 표기로 보이나, 문서가 H의 의미를 명시적으로 설명하지는 않습니다 [36317].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 4 evidence; missing H suffix의 명시적 정의 (문서가 제품 구분 표기라고 직접 설명하지 않음), SS14와 SS14H의 전류 정격 비교 (문서가 H에 따른 전류 차이를 명시하지 않음)",
+     "llm_calls": 1,
+     "searches": [
+      {
+       "query": "SS14H ordering information suffix H part number SS14 difference",
+       "parts": [
+        "SS14H",
+        "SS14"
+       ],
+       "top": [
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         3
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ],
+        [
+         "SS12H SERIES_B2305.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-21",
+   "kind": "relevant",
+   "gold_type": "rating",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 2.0,
+   "llm_calls": 0.0,
+   "docs_found": 7.0,
+   "passed_cards": 7.0,
+   "latency_s": 9.9,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [
+    1170,
+    1169,
+    1160,
+    1171,
+    1175,
+    1165,
+    1182
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/1a269f337d99eff82c9cf371954be295",
+   "answer": "1N5408G의 서지 피크 순방향 전류(IFSM)는 125A로 표기되어 있으며, 조건은 8.3ms 단일 반파 사인파를 정격 부하에 중첩한 것입니다 [1170]. 접합 온도(TJ)는 -55에서 +150°C 범위로 제시되며 [1171], 측정 조건은 TA = 25°C입니다 [1170, 1171]. 다만 이 자료는 한 번만 흘리는 경우인지 반복 인가인지에 대한 직접적인 문구는 없고, 최대 비반복 순방향 서지 전류 그래프 [1165]의 세부 수치는 확인되지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 3 evidence; missing 단발성(비반복) 인가 여부를 명시한 문구, 그래프(Fig.5)에서 읽을 수 있는 지속 시간별 상세 전류 값, 접합 온도 조건별 서지 전류 변화",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "1N5408G Peak forward surge current IFSM 8.3ms single half sine-wave TJ conditions",
+       "parts": [
+        "1N5408G"
+       ],
+       "top": [
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ]
+       ]
+      },
+      {
+       "query": "1N5408G peak forward surge current non-repetitive junction temperature test condition",
+       "parts": [
+        "1N5408G"
+       ],
+       "top": [
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         3
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         2
+        ],
+        [
+         "1N5400G SERIES_K2105.pdf",
+         1
+        ]
+       ]
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-22",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.7,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/fdb4242aa18c2e6bba84f3c08cadfb78",
+   "answer": "D1의 K 핀(1번)은 +5V 넷에 연결되고, A 핀(2번)은 VBUS 넷에 연결되어 있어 USB-C 커넥터의 VBUS에서 +5V 쪽으로 흐르는 방향으로 놓여 있습니다 [넷리스트]. 즉 D1은 VBUS와 +5V 사이에 직렬로 들어간 SS34 쇼트키 다이오드입니다. D2는 K 핀이 같은 +5V 넷에 연결되고 A 핀은 NES_5V 넷에 연결되어 있어 +5V와 NES_5V 사이에 놓인 구조입니다 [넷리스트]. 따라서 두 다이오드는 같은 +5V 노드에 함께 모이지만 각각 VBUS 쪽과 NES_5V 쪽에서 들어오는 전원 경로를 나누어 맡고 있는 것으로 보입니다. 다만 이 넷리스트만으로는 두 다이오드를 따로 둔 설계 의도(전원 우선순위나 역전류 차단 목적 등)는 확인할 수 없습니다 [넷리스트].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing D1과 D2를 따로 둔 설계 의도(전원 우선순위, 역전류 차단 등)는 회로 연결만으로는 확인할 수 없음, SS34 데이터시트에 적힌 순방향 전압 등 동작 특성 수치는 근거에 없음",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-23",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.2,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/3142955b79dbac8f55e58501f10ce920",
+   "answer": "D1은 넷리스트상 A 쪽이 Net-(D1-A)에 연결되어 LS1.N과 Q1.C_1에 묶이고, K 쪽은 Net-(D1-K)에서 LS1.P와 R22.2에 연결되어 있습니다 [넷리스트]. 따라서 D1은 부저 LS1과 병렬로 연결된 구조이며, Q1 컬렉터 노드와 LS1 양단 사이에 놓여 있습니다. 넷리스트만으로는 평소 상태에서 D1이 역방향 바이어스로 차단되는지 등의 동작 상태는 확정할 수 없으나, 연결 구조는 확인됩니다 [넷리스트].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing 평소 상태에서 D1의 동작(도통 여부)을 확정할 데이터시트 값 또는 회로 조건, Q1이 꺼질 때 LS1 전류가 흐르는 경로를 확인할 근거(동작 설명)",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-24",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.5,
+   "fake_citations": 0.0,
+   "uncited_sentences": 1.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/bcf91ec91c62a94e6b361f3e67f50ae6",
+   "answer": "J1의 D- 핀(J1.D-_2)은 Net-(J1-D-) 네트에 연결되며, 이 네트에는 D3의 캐소드(K), R10.1(66.5), 그리고 J1이 함께 묶여 있습니다 [넷리스트]. D3의 애노드(A)는 GND에 연결되어 있으므로, D3는 Net-(J1-D-) 네트와 GND 사이에 캐소드를 네트 쪽으로, 애노드를 GND 쪽으로 둔 다이오드로 연결되어 있습니다 [넷리스트]. 한편 D-는 R10.2를 거쳐 /D- 네트로 이어져 ATtiny85V-10S의 XTAL1/PB3 핀에 연결됩니다 [넷리스트]. 따라서 J1 D- 신호는 R10을 통해 MCU 쪽 /D- 라인으로 전달되는 구조임을 넷리스트 연결로 확인할 수 있습니다 [넷리스트]. 다만 D3가 어떤 보호 목적(예: ESD 클램프, 과전압 제한)으로 필요한지는 넷리스트만으로는 확정할 수 없고, 데이터시트 카드에서도 그 역할이나 설계 의도를 확인할 수 없습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing D3가 ESD 보호, 전압 클램프 등 어떤 목적으로 필요한지에 대한 근거, BZT52C3V6T-7 데이터시트의 제너 전압 및 클램핑 특성 카드",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "BZT52C3V6T-7 Zener voltage VZ reverse leakage IR breakdown voltage",
+       "parts": [
+        "BZT52C3V6T-7"
+       ],
+       "top": []
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-25",
+   "kind": "relevant",
+   "gold_type": "role",
+   "routed_type": "role",
+   "path": "입력 읽기>사실 확인>계획>문서>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 1.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 7.3,
+   "fake_citations": 0.0,
+   "uncited_sentences": 0.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/695c2771115435fbde12643eefa5f090",
+   "answer": "넷리스트에서 D1의 두 핀은 한쪽이 VCC 네트에, 다른 쪽이 L1 및 U1.5(HT7733A)와 연결된 Net-(D1-Pad2)에 연결되어 있다 [넷리스트]. 배터리 쪽 /Vbat는 L1.1에 연결되고 L1.2가 Net-(D1-Pad2)로 이어지므로, 전류는 배터리에서 L1을 지나 D1을 거쳐 VCC로 흐르는 구조로 보인다 [넷리스트]. 따라서 D1은 L1 뒤에 위치해 전류가 한 방향으로만 흐르도록 하는 정류 소자의 역할을 하는 것으로 해석된다 [넷리스트].",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "docs",
+     "status": "partial",
+     "reason": null,
+     "summary": "partial: answered from 1 evidence; missing SS14의 순방향 전압 VF, 역방향 전압 VRRM 등 정격값과 이 회로에서의 동작 조건, D1이 역전류 차단 목적인지 다른 보호 목적인지에 대한 설계 의도 (넷리스트만으로는 확정 불가)",
+     "llm_calls": 2,
+     "searches": [
+      {
+       "query": "SS14-E3/61T Schottky rectifier forward voltage VF repetitive peak reverse voltage VRRM",
+       "parts": [
+        "SS14-E3"
+       ],
+       "top": []
+      }
+     ],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-26",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 0.8,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/8118f96ace5ae9030407f70cc125a38e",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-27",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 0.8,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/5fc8e2c7ab47ad920f01748da0494a59",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-28",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.4,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/1fa199a6b260939a1a1b208dfe214c5e",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-29",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.0,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/bbaec2895b791d1c2867077176041b07",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-30",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.3,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/5d6096aa6d83216a07e585a86c8f7d88",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-31",
+   "kind": "irrelevant",
+   "gold_type": "out_of_domain",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.1,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/18869593eaed64ef4e576aa21f5096fc",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-32",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.6,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/4c3e215fe46616227a731ea5af723ef3",
+   "answer": "1N5408X의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-33",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.3,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/a8bfc6e293ebfa6c96d9c84cd3789786",
+   "answer": "SS14J의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-34",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.6,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c5cd43874b2a2f26d0454d040267bead",
+   "answer": "UF4007X의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-35",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.6,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/6a39dc69cbbe21e2b940987716ed231d",
+   "answer": "BZV55B3V4의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-36",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.3,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/601e5d8aad0f5f6d0ee310fba5d53543",
+   "answer": "LL4149의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-37",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>사실 확인>계획>판정 읽기>판정>모으기>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 4.7,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/2751bf48f4ecdfce0ca3385329daeef5",
+   "answer": "US1MX의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "fail",
+     "reason": "part_missing",
+     "summary": "cannot judge from the corpus: candidate not in the corpus: US1MX",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "pass": true
+  },
+  {
+   "id": "v3-38",
+   "kind": "irrelevant",
+   "gold_type": "unknown_entity",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.3,
+   "hops": 1.0,
+   "refusal_code": "part_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/24dc2037bcfb6dfc7acfb5f1f177cb7a",
+   "answer": "SMBJ14AZ의 데이터시트를 찾을 수 없어요. 품번이 맞는지 확인해 주시거나 데이터시트 파일을 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-39",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.2,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/b42122f7b16ccadef3403ebee26f15c7",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-40",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "out_of_scope",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.6,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/cb64205ea9fa01a4055ef685592f0840",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-41",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/641de730f791182487a109f3860fa4a8",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-42",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "out_of_scope",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.0,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/c573fdba7622408a89b1ef2045a7bd82",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-43",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "out_of_scope",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.5,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/d8b004b04ae05e63e1bd254b0dfbbdf0",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-44",
+   "kind": "irrelevant",
+   "gold_type": "missing_attribute",
+   "routed_type": "other_part",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.4,
+   "hops": 1.0,
+   "refusal_code": "not_found",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/34b5cd0140fb3dde837601fa82a6711e",
+   "answer": "요청하신 내용을 데이터시트에서 확인하지 못했어요. 정확한 품번이나 부품 윗면의 글자, 주문 코드, 데이터시트 파일을 알려 주시면 다시 찾아볼게요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-45",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/1b6bf0d90478bb309136ba47d4985dcc",
+   "answer": "요청하신 판(S2202)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-46",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 2.0,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/ffc2bda06e9097b43e385bdaeda5647d",
+   "answer": "요청하신 판(P2204)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-47",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.4,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/0b72a20a92736283074f43fbf04d9bf9",
+   "answer": "요청하신 판(개정판)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-48",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/565f7bb76e9969598bace36ec10958ba",
+   "answer": "요청하신 판(N2406)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-49",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.8,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/84ed0af4dab32d8701cafacb0be04f3c",
+   "answer": "요청하신 판(B2405)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  },
+  {
+   "id": "v3-50",
+   "kind": "irrelevant",
+   "gold_type": "wrong_period",
+   "routed_type": "rating",
+   "path": "입력 읽기>사실 확인>계획>거절",
+   "not_found": 1.0,
+   "tries": 0.0,
+   "llm_calls": 0.0,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 1.7,
+   "hops": 1.0,
+   "refusal_code": "revision_missing",
+   "answer_metric": "correct_refusal",
+   "passed": [],
+   "trace_url": "https://cloud.langfuse.com/project/cmvucheif009rad0k6qfg5h55/traces/93a80fb1e64ea039e915a6ffffa1d8e4",
+   "answer": "요청하신 판(A2202)의 데이터시트가 없어요. 가지고 계신 판의 데이터시트를 알려 주세요.",
+   "tasks": [],
+   "pass": true
+  }
+ ]
+}

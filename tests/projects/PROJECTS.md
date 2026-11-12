@@ -6,9 +6,15 @@
 - 담당: 서비스·운영
 
 ## 파일
+- `test_external_circuit_search.py` — GitHub 저장소 URL 정제와 Exa 호출 상한
+- `test_external_schematic.py` — 라이선스·원본·전체 시트·cache·서명 token 경계
+- `test_schematic_discovery.py` — GitHub tree에서 완성 회로도 자산 판정
+- `test_schematic_render.py` — PDF/SVG/PNG 렌더링과 출력 크기 제한
 - `test_catalog.py` — 데모 15종의 단일 catalog, 연결 파일 존재, 중복 키와 안전하지 않은 ID 차단.
 - `PROJECTS.md` — 이 문서
 - `test_netlist.py` — 합성 입력의 크기·UTF-8·문법·깊이/token/부품/net 상한·정확한 불변 정규화와 hash
+- `test_project_repository.py` — 전 경계 소유자 필터, 관리자 접근 차단, 이름 변경, 생성 실패 롤백, 사용자·프로젝트 삭제 cascade, RLS·공개 역할 권한·FK 인덱스·CHECK, 업로드 정규화 전용 저장·rollback, 받은 회로 데모(c01 `attiny85_time_switch`)를 `received-20261030/c01`에서 읽어 저장, 데모 CHECK(데모일 때만 `demo_id`)
+- `test_service_schema.py` — 일회용 데이터베이스(sojafit_agent 포함)에서 서비스 표 재설계 규칙: 프로젝트 · 계정 삭제 연쇄(분석 대화 · 체크포인트), 체크포인트 삭제 트리거, 분석 대화 FK 거부, 죽은 표 · 칸 삭제, `runs.safe_result` 필수 키 6개 CHECK, 승인 칸 3개 NOT NULL · 형식, 승인당 견적 중복 허용
 - `test_visuals.py` — 데모 15종 exact match·PNG hash, HTTPS·고정 경로·원본 hash 필수·추가 metadata 거절, 누락 자산·변조·잘못된 catalog 차단
 - `test_project_repository.py` — 전 경계 소유자 필터, 관리자 접근 차단, 이름 변경, 생성 실패 롤백, 사용자·프로젝트 삭제 cascade, RLS·공개 역할 권한·FK 인덱스·CHECK, 업로드 정규화 전용 저장·rollback, 받은 회로 데모(c01 `attiny85_time_switch`)를 `received-20261030/c01`에서 읽어 저장
 

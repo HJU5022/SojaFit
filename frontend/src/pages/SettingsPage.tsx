@@ -50,37 +50,45 @@ export default function SettingsPage() {
     onChange={event => setForm(current => ({ ...current, [kind]: event.target.value }))}>
     <option value="">선택 안 함</option>{Object.entries(options).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
   </select>
-  return <><h1>내 설정</h1>
-    <p>여기 적은 사실은 다음 대화에서도 답 옆에 참고(내 설정)로 보입니다. 판정 근거로 쓰지 않으며, 전압 · 전류 같은 회로 값과 승인한 판정은 저장하지 않습니다.</p>
-    <section className="panel" aria-labelledby="profile-heading"><h2 id="profile-heading">사실 3칸</h2>
+  return <div className="settings-page"><div className="settings-heading"><h1>내 설정</h1></div>
+    <div className="settings-layout">
+    <aside className="settings-sidebar"><nav aria-label="설정 항목">
+      <a href="#profile-heading">개인 설정</a>
+      {auth.user?.role === 'user' && <a href="#leave-heading">계정 관리</a>}
+    </nav></aside>
+    <div className="settings-content">
+    <section className="settings-section" aria-labelledby="profile-heading"><h2 id="profile-heading">개인 설정</h2>
       {facts.isPending && <p role="status">설정을 불러오는 중입니다.</p>}
       {facts.error ? <p role="alert">{errorMessage(facts.error)}</p> : null}
-      <form onSubmit={event => { event.preventDefault(); save() }}>
+      <form className="settings-form" onSubmit={event => { event.preventDefault(); save() }}>
+        <div className="settings-field">
         <label htmlFor="profile-affiliation">{LABELS.affiliation}</label>
         <input id="profile-affiliation" maxLength={100} value={form.affiliation} disabled={busy} placeholder="예: 한빛전자 회로팀"
           onChange={event => setForm(current => ({ ...current, affiliation: event.target.value }))} />
-        <label htmlFor="profile-job_role">{LABELS.job_role}</label>{select('job_role', JOB_ROLES)}
-        <label htmlFor="profile-mounting_preference">{LABELS.mounting_preference}</label>{select('mounting_preference', MOUNTING)}
-        <button type="submit" disabled={busy || facts.isPending}>저장</button>
+        </div>
+        <div className="settings-field"><label htmlFor="profile-job_role">{LABELS.job_role}</label>{select('job_role', JOB_ROLES)}</div>
+        <div className="settings-field"><label htmlFor="profile-mounting_preference">{LABELS.mounting_preference}</label>{select('mounting_preference', MOUNTING)}</div>
+        <div className="settings-form-actions"><button type="submit" disabled={busy || facts.isPending}>저장</button></div>
       </form>
-      {(facts.data ?? []).length > 0 && <ul className="profile-facts">{facts.data!.map(fact => <li key={fact.kind}>
+      {(facts.data ?? []).length > 0 && <div className="settings-saved"><h3>저장된 설정</h3><ul className="profile-facts settings-saved-facts">{facts.data!.map(fact => <li key={fact.kind}>
         <span>{fact.text}</span> <button type="button" className="secondary" disabled={busy}
           onClick={() => void act(() => deleteProfile(fact.kind), `${LABELS[fact.kind]}을(를) 지웠습니다.`)}>{LABELS[fact.kind]} 지우기</button>
-      </li>)}</ul>}
-      {(facts.data ?? []).length > 0 && !confirmAll && <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmAll(true)}>모두 지우기</button>}
-      {confirmAll && <div role="group" aria-label="모두 지우기 확인"><p>저장한 사실 3칸을 모두 지울까요? 되돌릴 수 없습니다.</p>
+      </li>)}</ul>
+      {!confirmAll && <button type="button" className="secondary settings-clear" disabled={busy} onClick={() => setConfirmAll(true)}>모두 지우기</button>}</div>}
+      {confirmAll && <div className="settings-confirmation" role="group" aria-label="모두 지우기 확인"><p>저장한 사실 3칸을 모두 지울까요? 되돌릴 수 없습니다.</p>
         <button type="button" disabled={busy} onClick={() => void act(async () => { await deleteProfile(); setConfirmAll(false) }, '모두 지웠습니다.')}>지우기 확인</button>
         <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmAll(false)}>취소</button></div>}
       {notice && <p role="status">{notice}</p>}
       {error ? <p role="alert">{errorMessage(error)}</p> : null}
     </section>
-    {auth.user?.role === 'user' && <section className="panel" aria-labelledby="leave-heading"><h2 id="leave-heading">계정 삭제</h2>
+    {auth.user?.role === 'user' && <section className="settings-section settings-delete-section" aria-labelledby="leave-heading"><h2 id="leave-heading">계정 삭제</h2>
       <p>프로젝트 · 대화 · 분석 기록 · 내 설정과 계정을 숨기지 않고 바로 지웁니다. 되돌릴 수 없습니다. 분석이 진행 중이면 끝난 뒤 다시 시도하세요.</p>
-      {!confirmLeave && <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmLeave(true)}>계정 삭제</button>}
-      {confirmLeave && <div role="group" aria-label="계정 삭제 확인"><p>계정과 모든 기록을 지울까요?</p>
-        <button type="button" disabled={busy} onClick={() => void leave()}>계정 삭제 확인</button>
+      {!confirmLeave && <button type="button" className="secondary settings-delete-button" disabled={busy} onClick={() => setConfirmLeave(true)}>계정 삭제</button>}
+      {confirmLeave && <div className="settings-confirmation" role="group" aria-label="계정 삭제 확인"><p>계정과 모든 기록을 지울까요?</p>
+        <button type="button" className="danger" disabled={busy} onClick={() => void leave()}>계정 삭제 확인</button>
         <button type="button" className="secondary" disabled={busy} onClick={() => setConfirmLeave(false)}>취소</button></div>}
       {leaveError ? <p role="alert">{errorMessage(leaveError)}</p> : null}
     </section>}
-  </>
+    </div></div>
+  </div>
 }
