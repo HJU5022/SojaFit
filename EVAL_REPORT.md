@@ -535,7 +535,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 2 | 표 주석이 행에 안 붙는 표 ≈216 | 5장 유형 6 · 위키 원장(원시는 미이관) | THERMAL·두 쪽 표 등. `table_suspects` 89건과 집합이 다르다. 동결셋 검색 지표로 재측정하지 않음 |
 | 3 | 배포 인젝션 T4가 흔들림 | 인젝션 HTTP 스모크 · 한도·극성·거절·429 | 11-12에 토큰 한도 5M/10M 배포. 한도 올린 뒤 T4 재측정은 아직 |
 | 4 | 승인 대기(사람 기다린 시간) 값 없음 | 8장 · `scripts/eval/approval_wait_report.py` | 실사용 3회 뒤 채우기로 미룸 |
-| 5 | G6 캡처 · G7 시연 영상 없음 | `docs/deliverables/langfuse/` · README | 자리만 있음. D10 제출물 점검 대상 |
+| 5 | G6 캡처 · G7 시연 **영상 파일** 없음 | `docs/deliverables/langfuse/` · [`demo_script.md`](docs/deliverables/demo_script.md) | 스크립트 초안만 있음. 캡처·촬영은 D10 |
 | 6 | 대체재 거절 문구가 범용보다 덜 구체 | §10 v3-26 행 | Codex는 범위 밖·부족 스펙을 말하고, 우리는 품번 부족형 일반 거절에 가깝다 |
 
 **고친 뒤에도 “없다”고 쓰지 않는 것:** 판정표와 설명 글이 충돌하던 위험 실패(§6 C2)는 코드 판정표만 내게 막았고, D9 재확인에서 사용 권고 0건이었다. 남은 약점은 위 표다.
