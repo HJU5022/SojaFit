@@ -6,4 +6,4 @@ tests/graph/test_graph_build.py:100: in test_retrieval_failure_is_not_reported_a
 E   AssertionError: assert None == {'kind': 'timeout'}
 =========================== short test summary info ============================
 FAILED tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus
-1 failed in 0.56s
+1 failed in 2.59s

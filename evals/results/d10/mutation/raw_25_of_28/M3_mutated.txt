@@ -1,0 +1,14 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________________ test_generate_counts_fake_and_uncited _____________________
+tests/graph/test_graph_generate.py:32: in test_generate_counts_fake_and_uncited
+    assert out["check"] == {"fake_citations": ["999"], "uncited_sentences": 1, "used": ["2", "넷리스트"]}
+E   AssertionError: assert {'fake_citati...['2', '넷리스트']} == {'fake_citati...['2', '넷리스트']}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'fake_citations': []} != {'fake_citations': ['999']}
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited
+1 failed in 0.71s

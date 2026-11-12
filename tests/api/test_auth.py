@@ -359,6 +359,18 @@ def test_password_hash_is_salted_and_rejects_bad_password():
     assert not auth.verify_password("sample password 123", "broken")
 
 
+def test_new_password_minimum_length_is_twelve_when_called_directly():
+    """요청 모델을 거치지 않고 validate_new_password만 불러도 11자는 거절, 12자는 통과한다."""
+    with pytest.raises(ValueError):
+        auth.validate_new_password("safe-word-1")  # 11자, 반복 아님
+    auth.validate_new_password("safe-word-12")
+
+
+def test_new_password_rejects_simple_repetition_even_at_twelve_characters():
+    with pytest.raises(ValueError):
+        auth.validate_new_password("ab" * 6)
+
+
 def test_protected_endpoint_requires_authentication():
     response = TestClient(app).get("/api/auth/me")
     assert response.status_code == 401

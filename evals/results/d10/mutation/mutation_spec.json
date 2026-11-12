@@ -183,9 +183,10 @@
   "before": "    if not 12 <= len(password) <= 1024",
   "after": "    if not 1 <= len(password) <= 1024",
   "tests": [
-   "tests/api/test_email_auth.py::test_password_length_boundary_is_twelve_on_both_completion_routes"
+   "tests/api/test_email_auth.py::test_password_length_boundary_is_twelve_on_both_completion_routes",
+   "tests/api/test_auth.py::test_new_password_minimum_length_is_twelve_when_called_directly"
   ],
-  "expect": "NOT_CAUGHT"
+  "expect": "CAUGHT"
  },
  {
   "id": "N8",
@@ -250,9 +251,10 @@
   "after": "    if asked_keys and doc_keys and not (asked_keys & doc_keys):\n        return True",
   "tests": [
    "tests/multi_agent",
-   "tests/graph"
+   "tests/graph",
+   "tests/multi_agent/test_docs_agent.py::test_document_of_another_part_is_rejected_when_an_edition_is_requested"
   ],
-  "expect": "NOT_CAUGHT"
+  "expect": "CAUGHT"
  },
  {
   "id": "N3c",
@@ -316,8 +318,10 @@
   "before": "    return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']",
   "after": "    return NODE['finish']",
   "tests": [
-   "tests/multi_agent"
+   "tests/multi_agent",
+   "tests/multi_agent/test_build.py::test_answer_that_fails_the_check_ends_in_refusal_not_as_the_final_answer",
+   "tests/multi_agent/test_supervisor.py::test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish"
   ],
-  "expect": "NOT_CAUGHT"
+  "expect": "CAUGHT"
  }
 ]

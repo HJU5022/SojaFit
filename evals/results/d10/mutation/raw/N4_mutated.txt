@@ -11,4 +11,4 @@ E     + ROLE_SUFFICIENT
 E     ? ^ ^^
 =========================== short test summary info ============================
 FAILED tests/judge/test_judge_conditions.py::test_tolerance_class_excludes_tighter_grades_too
-1 failed in 0.12s
+1 failed in 0.19s

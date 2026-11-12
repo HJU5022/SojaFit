@@ -10,4 +10,4 @@ E     - 2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b
 E     + 495c2af027fb466342e7aa755b39a1d4247e883e21e61d0dc1adfc7d8ae7177d
 =========================== short test summary info ============================
 FAILED tests/evals/test_frozen_evals.py::test_frozen_files_unchanged - Assert...
-1 failed in 0.04s
+1 failed in 0.11s

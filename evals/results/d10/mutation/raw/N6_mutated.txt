@@ -7,4 +7,4 @@ tests/api/test_errors.py:119: in test_token_cap_is_limit_exceeded
 E   Failed: DID NOT RAISE ApiError
 =========================== short test summary info ============================
 FAILED tests/api/test_errors.py::test_token_cap_is_limit_exceeded - Failed: D...
-1 failed in 1.07s
+1 failed in 2.37s

@@ -105,7 +105,7 @@
 | 로컬 compose 재시작 복원(2026-11-09, `jeongun-8` `f6b6d7e`) | 조건 질문에서 멈춘 대화가 `docker compose restart api` 뒤에도 WAITING, 답하고 재개하면 DONE. 같은 승인 요청 두 번은 둘 다 200이고 DB 승인 원본은 1건. 데모 사용자 B는 A의 대화 조회 · 승인이 404. 시험 14개 통과 | [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json), `tests/api/test_http_restart.py` |
 | 재시작 뒤 재개 · 계정 분리, 현재 코드(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리, 로컬 compose, 키 없는 재생) | 실제 멀티 에이전트 그래프 + PostgreSQL 체크포인터로 52개 점검 52 통과. `demo-ask` · `v3-01`이 `requires_input`에서 멈춘 채 `docker compose restart api`(api PID 25205 → 29452, db 그대로) → 같은 세션 쿠키로 같은 정지 내용 → 재개하면 `completed`, 기록과 같은 판정(`ROLE_SUFFICIENT`). 체크포인트 행(thread별 `checkpoints` 9 · `checkpoint_writes` 61 · `checkpoint_blobs` 30)은 재시작 전후 같음. 계정 B ↔ A의 프로젝트 · thread · run · 메시지에 GET · PATCH · POST · DELETE · resume · recover가 양방향 · 재시작 전후 모두 404 `NOT_FOUND`, 목록에 상대 객체 없음, A의 사실 기억 3칸은 B에게 보이지 않고 재시작 뒤에도 A에게 남음. 승인 201 · 같은 승인 409 `ALREADY_APPROVED`(행 1), 견적 저장 201, 재시작 뒤에도 같음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [g4_restart_isolation.json](../evals/results/d10/boot/g4_restart_isolation.json), [checkpoint_rows.txt](../evals/results/d10/boot/checkpoint_rows.txt) |
 | 사용자 사실 기억 | 사용자 사실 3칸을 Store `(user_id, "profile")`에 두고 문장 임베딩 색인으로 찾는다(`backend/conversations/profile.py`). 순위 · 사용자 격리 · 수정 뒤 재임베딩 · 삭제는 결정적 가짜 임베딩으로 DB 시험 통과. 키 없는 로컬 compose에서 저장 · 사용자 격리 · 남의 id 거절(422) 확인 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |
-| 변이 확인 | 변이 28건 중 25건을 시험이 잡는다(2026-11-13, `9c32d12`). 못 잡는 3건은 아래 "확인 못 한 것". 아래 "변이 확인" 표는 9건과 대표 6건 | [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) |
+| 변이 확인 | 변이 28건 모두 시험이 잡는다(2026-11-13, 2차 시험 추가 전 25건 잡음 · 3건 못 잡음, 추가 후 28건 · 0건). 아래 "변이 확인" 표는 9건과 대표 6건 | [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) |
 | 기준 미달 시 pytest 실패 | 인젝션 결과 검사: 충족 시 종료 0, 깨뜨린 사본 3개는 위반 1건 · 종료 1. 종료 코드 1과 빈 최종 답 위반을 고정하는 시험 2개(`tests/evals/test_check_injection_result.py:31`, `:37`)가 있고, 해당 코드 줄을 깨뜨리면 실패한다 | [threshold_pass_2026-11-13.txt](../evals/results/d10/threshold_pass_2026-11-13.txt), [threshold_fail_2026-11-13.txt](../evals/results/d10/threshold_fail_2026-11-13.txt), 변이 N10 · N11([mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)) |
 
 확인 못 한 것:
@@ -117,9 +117,6 @@
 | 실제 모델 · 실제 임베딩에서의 재시작 뒤 재개 | 11-13 측정의 모델 응답은 기록 재생이다. 실제 호출로는 확인하지 않았다 |
 | 합성 시험 `tests/api/test_http_restart.py` | `ad8612e`에서 2회 모두 429 `RATE_LIMITED`로 실패했다(호출 간격 2초 안에 재개). 간격 0 진단은 통과. 시험 쪽 수정(간격 0 지정)은 `main`에 있다(`a944c34`). 수정 뒤에는 실행하지 않았다. 상세: 측정 문서 한계 |
 | 배포 DB에서 실제 Voyage 임베딩으로 한 사용자 기억 의미 검색 | 확인하지 않았다. 키 없는 로컬 compose의 검색은 순위 없는 목록이다 |
-| 시험이 잡지 못하는 가드 `supervisor.py:357`(답 검사 실패 시 거절 노드로 가는 길, 변이 N15) | 시험이 없다. 변이 시 검사에 실패한 답이 거절 없이 끝난다 |
-| 시험되지 않은 가드 `revisions.py:196`(겹치지 않는 품번 문서, 변이 N3b) | 같은 조건을 되풀이하는 가드를 찾지 못했다. 변이 시 해당 문서가 개정판 검사를 통과한다. 상세: [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) 4절 |
-| 한 줄 변이로는 드러나지 않는 가드 `backend/auth.py:72`(비밀번호 최소 길이, 변이 N7) | 같은 조건을 요청 모델이 한 번 더 검사한다(`backend/api/auth.py:207` `min_length=12`). 요청 모델을 거치지 않는 호출 경로가 생기면 시험되지 않는다 |
 
 ### G5 평가
 
@@ -179,7 +176,7 @@
 
 ## 변이 확인
 
-핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 28건 전체 표와 재현 명령은 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)(정본)에 있고, 여기에는 기존 9건과 영역이 다른 대표 6건을 적는다. 28건 중 25건을 시험이 잡고 3건(N3b · N7 · N15)은 못 잡는다. 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).
+핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 28건 전체 표와 재현 명령은 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)(정본)에 있고, 여기에는 기존 9건과 영역이 다른 대표 6건을 적는다. 28건을 모두 시험이 잡는다(N3b · N7 · N15는 처음에 못 잡았고 시험을 더해 잡게 됐다. 1차 기록은 `mutation/raw_25_of_28/`). 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).
 
 | # | 깨뜨린 곳 (파일:줄, 변이) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 · 커밋 |
 |---|---|---|---|---|

@@ -13,4 +13,4 @@ E     + ROLE_SUFFICIENT
 E     ? ^ ^^)
 =========================== short test summary info ============================
 FAILED tests/judge/test_judge_conditions.py::test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots
-1 failed in 0.07s
+1 failed in 0.17s

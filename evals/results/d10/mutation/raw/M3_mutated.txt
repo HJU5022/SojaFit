@@ -11,4 +11,4 @@ E     {'fake_citations': []} != {'fake_citations': ['999']}
 E     Use -v to get more diff
 =========================== short test summary info ============================
 FAILED tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited
-1 failed in 0.71s
+1 failed in 1.61s

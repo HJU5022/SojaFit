@@ -1,0 +1,13 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_frozen_files_unchanged __________________________
+tests/evals/test_frozen_evals.py:25: in test_frozen_files_unchanged
+    assert actual == meta["sha256"], f"{name}: 동결 후 바뀌었습니다"
+E   AssertionError: dataset_v1.jsonl: 동결 후 바뀌었습니다
+E   assert '495c2af027fb...dfc7d8ae7177d' == '2fef02c2dcd8...19c9a3db7e42b'
+E     
+E     - 2fef02c2dcd8b49e6edb620e23cbf3860ec95912e1a345ed2b719c9a3db7e42b
+E     + 495c2af027fb466342e7aa755b39a1d4247e883e21e61d0dc1adfc7d8ae7177d
+=========================== short test summary info ============================
+FAILED tests/evals/test_frozen_evals.py::test_frozen_files_unchanged - Assert...
+1 failed in 0.04s

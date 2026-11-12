@@ -11,4 +11,4 @@ E     {'passed': [1, 2, 3, 4]} != {'passed': [2, 3, 4]}
 E     Use -v to get more diff
 =========================== short test summary info ============================
 FAILED tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm
-1 failed in 0.51s
+1 failed in 2.24s

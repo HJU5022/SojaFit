@@ -1,0 +1,13 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_collect_picks_single_synth_or_refuse_from_report_status _________
+tests/multi_agent/test_supervisor.py:106: in test_collect_picks_single_synth_or_refuse_from_report_status
+    assert out['outcome'] == 'refuse' and out['refusal_reason'] == 'part_missing'  # 모두 실패면 첫 실패의 사유
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert ('synth' == 'refuse'
+E     
+E     - refuse
+E     + synth)
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_supervisor.py::test_collect_picks_single_synth_or_refuse_from_report_status
+1 failed in 0.69s

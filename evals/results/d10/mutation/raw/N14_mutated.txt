@@ -10,4 +10,4 @@ E     - refuse
 E     + synth)
 =========================== short test summary info ============================
 FAILED tests/multi_agent/test_supervisor.py::test_collect_picks_single_synth_or_refuse_from_report_status
-1 failed in 0.69s
+1 failed in 0.46s
