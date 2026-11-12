@@ -44,8 +44,9 @@ SojaFit (proj3-b)
 │       ├── eval-live.yml   <- 버튼으로 돌리는 진짜 모델 v3 평가와 기준 검사(Secrets 키 사용, 유료)
 │       └── secret-scan.yml <- gitleaks 키 노출 검사
 │
-├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정
+├── frontend/               <- React·Vite 같은 출처 화면과 도구 설정 (2026-11-13 화면 전면 재작성)
 │   ├── FRONTEND.md         <- 폴더 설명
+│   ├── design.md           <- 화면 모양의 기준: 색·글자·간격·상태·움직임·금지 목록
 │   ├── Dockerfile.recovery <- 운영 이미지 digest를 상속해 화면만 빌드·교체하는 복구용 이미지
 │   ├── package.json        <- npm 의존성과 실행 명령
 │   ├── package-lock.json   <- npm 의존성 고정
@@ -54,7 +55,6 @@ SojaFit (proj3-b)
 │   ├── tsconfig.json       <- TypeScript 프로젝트 참조
 │   ├── tsconfig.app.json   <- 화면 TypeScript 설정
 │   ├── tsconfig.node.json  <- Vite TypeScript 설정
-│   ├── playwright.config.ts <- 로컬 가짜 API Playwright 설정
 │   ├── public/             <- Vite가 루트 경로로 제공하는 화면 전용 정적 이미지
 │   │   ├── PUBLIC.md       <- 폴더 설명
 │   │   ├── circuit-schematics/ <- 검증된 공개 원본에서 고정한 데모 회로도 PNG
@@ -75,31 +75,19 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
-│   │       ├── landing-circuit-background.png <- 사용자가 선택한 기판 스타일의 장식용 랜딩 배경
-│   │       ├── landing-guide-project.png <- 프로젝트 생성 설명용 로컬 예시 화면
-│   │       ├── landing-guide-question.png <- 질문·사용 조건 설명용 로컬 예시 화면
-│   │       ├── landing-guide-evidence.png <- 판정·문서 근거 설명용 로컬 예시 화면
-│   │       ├── sojafit-logo.svg <- 승인된 Circuit S·SOJAFIT 가로형 헤더 로고
-│   │       └── sojafit-icon.svg <- 승인된 Circuit S 심볼의 파비콘
-│   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
-│   │   ├── E2E.md          <- 폴더 설명
-│   │   ├── workbench.spec.ts <- D5 완료·근거·판정 브라우저 흐름
-│   │   ├── full-flow.spec.ts <- 승인·가격 없는 견적·사례 삭제 브라우저 흐름
-│   │   ├── dummy-mode.spec.ts <- 개발 전용 메모리 API의 직접 조작 전체 흐름
-│   │   └── circuit-layout.spec.ts <- 연결 개념도의 Worker 배치·직교 배선 브라우저 시험
+│   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
-│       ├── main.tsx        <- Router·QueryClient·React 진입점
-│       ├── App.tsx         <- 로그인·가입·작업대·관리자 화면 셸
-│       ├── styles.css      <- 공통 색·글꼴·반응형 스타일
-│       ├── App.test.tsx    <- 화면 경로·탐색 동작 테스트
+│       ├── main.tsx        <- Router·QueryClient·글꼴·스타일 진입점
+│       ├── App.tsx         <- 경로 표(랜딩·로그인 계열·작업대·설정·관리자)
 │       ├── dummy-circuits.d.ts <- 실제 데모 JSON을 묶는 build-time virtual module 타입
 │       ├── api/            <- 기존 서버 API의 typed fetch 경계
 │       │   ├── client.ts   <- 공통 오류·same-origin 자격 증명·401 세션 만료 알림
-│       │   ├── auth.ts     <- 로그인·가입(동의)·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
+│       │   ├── auth.ts     <- 로그인·가입·데모 버튼 로그인·세션 복원·로그아웃·탈퇴·Google 상태 API
 │       │   ├── admin.ts    <- 관리자 계정 목록·활성 상태 변경 API
-│       │   ├── projects.ts <- 소유 프로젝트·데모·업로드 DTO와 같은 출처 API
+│       │   ├── projects.ts <- 소유 프로젝트·데모·업로드·이름 변경·삭제 API
 │       │   ├── prices.ts   <- 화면 전용 nullable 가격 DTO·no-store 조회
+│       │   ├── externalCircuits.ts <- 공개 원본 회로도 검색 API(GET /api/external-circuits/schematics)
 │       │   ├── client.test.ts <- 공통 오류·자격 증명·가격 요청 경계 테스트
 │       │   ├── conversations.ts <- thread·run·안전 DTO·SSE 읽기 API, 키 없는 데모의 기록 질문 목록
 │       │   ├── quotes.ts    <- 승인·가격 없는 견적·승인 사례 API
@@ -111,65 +99,39 @@ SojaFit (proj3-b)
 │       │   ├── RequireAuth.tsx <- 인증·관리자 역할별 렌더링 경계
 │       │   └── AuthProvider.test.tsx <- 실제 인증 상태 변화 테스트
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
-│       │   ├── useRunStream.ts <- D5 시작·재개·연결 복구 상태 머신
+│       │   ├── useRunStream.ts <- 분석 시작·재개·연결 복구 상태 머신
 │       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
-│       │   └── useOverlayScrollbar.ts <- 콘텐츠 위에 겹치는 스크롤 손잡이와 포인터·키보드 스크롤 연결
-│       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
-│       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
-│       │   ├── LandingPage.tsx <- 목업 기반 공개 랜딩·합성 기능 미리보기·인증 상태에 따른 시작 경로
+│       │   └── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
+│       ├── lib/            <- 화면이 쓰는 순수 함수
+│       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
+│       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
+│       │   ├── circuit.test.ts <- 넷·이웃·다이오드 판별·인용 링크·값 표시 테스트
+│       │   └── inputLabels.ts <- 판정 입력 코드의 화면 이름
+│       ├── pages/          <- 경로마다 하나인 화면
+│       │   ├── LandingPage.tsx <- 공개 랜딩: 예시 검토 문서·쓰는 법·판정 5종·신뢰 수치·한계
+│       │   ├── LoginPage.tsx <- 이메일 로그인·Google 로그인과 계정 연결·데모 모드의 데모 사용자 버튼
+│       │   ├── SignupPage.tsx <- 가입 인증 메일 요청
+│       │   ├── EmailActionPage.tsx <- 메일 링크의 비밀번호 설정·재설정
 │       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
-│       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
-│       │   ├── SignupPage.tsx <- 가입(이메일·12자 이상 비밀번호·동의 필수)과 처리방침 고지
-│       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
-│       │   ├── EmailActionPage.tsx <- 메일 링크의 인증 가입·비밀번호 설정 및 재설정 화면
-│       │   ├── EmailActionPage.test.tsx <- 토큰 주소 제거·일회 제출·비밀번호 확인·재설정 화면 시험
-│       │   ├── AdminUsersPage.tsx <- 관리자 전용 계정 목록·활성 상태 변경
-│       │   ├── AdminUsersPage.test.tsx <- 권한 차단·목록 변경·세션 만료 테스트
-│       │   ├── SettingsPage.tsx <- 내 설정: 소속·직무·선호 실장 방식 저장·칸별 지우기·확인 후 모두 지우기, 확인 후 계정 삭제
-│       │   ├── SettingsPage.test.tsx <- 바뀐 칸만 전송·칸별 삭제·모두 지우기 확인·오류 표시·계정 삭제 확인과 화면 정리 테스트
-│       │   ├── WorkbenchPage.tsx <- 인증 작업대·후보 없는 가격 패널
-│       │   └── WorkbenchPage.test.tsx <- 실제 후보 없는 작업대의 빈 상태 테스트
-│       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
-│       │   ├── AccountMenu.tsx <- 작업대·설정 공통 이메일 계정 메뉴·개인 화면 설정·로그아웃
-│       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
-│       │   ├── LandingGuide.tsx <- 랜딩 수평 사용 흐름과 영역 안 비모달 과정 설명창
-│       │   ├── LandingGuide.test.tsx <- 스텝 전환·닫기·초점·이미지 확대 경계 테스트
-│       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
-│       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
-│       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성
-│       │   ├── CircuitSetup.test.tsx <- 데모·업로드·오류·입력 폐기·비저장 테스트
-│       │   ├── CircuitSummary.tsx <- 서버 회로 요약·대상 부품 선택·연결 개념도 조합
-│       │   ├── CircuitSummary.test.tsx <- 대상 참조 URL·프로젝트 전환 테스트
-│       │   ├── CircuitSchematic.tsx <- 검증된 데모 원본 회로도·출처·라이선스 표시
-│       │   ├── CircuitSchematic.test.tsx <- 원본 회로도·누락·이미지 오류·접근성 테스트
-│       │   ├── circuitContext.ts <- 프로젝트 연결·안전 판정 응답의 순수 화면 adapter
-│       │   ├── circuitContext.test.ts <- 직접·2단계 연결·누락값 adapter 테스트
-│       │   ├── CircuitContextDiagram.tsx <- 대상 중심 SVG 연결 개념도·노드 상세
-│       │   ├── CircuitContextDiagram.test.tsx <- SVG·상태·무방향 연결 렌더링 테스트
-│       │   ├── circuitLayout.ts <- 네트·부품 그래프의 페이지 분할과 안전한 fallback 배치
-│       │   ├── circuitLayout.test.ts <- 그래프 페이지·초과 연결·입력 순서 독립성 테스트
-│       │   ├── circuitLayoutClient.ts <- 연결 개념도 Worker 요청과 fallback 결과 경계
-│       │   ├── PricePanel.tsx <- 화면 메모리 전용 가격·재고 조회 패널
-│       │   ├── PricePanel.test.tsx <- 조회·폐기·오류·nullable 응답 테스트
-│       │   ├── ConversationPanel.tsx <- 질문·thread·run·추가 입력 화면, 키 없는 데모의 기록 질문 버튼(새 대화) · 기록한 답으로 재개
-│       │   ├── RunStatus.tsx <- 접근 가능한 D5 진행 상태
-│       │   ├── ProfileHints.tsx <- 결과 옆 참고(내 설정): 질문으로 찾은 내 사실, 판정 근거와 분리
-│       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)
-│       │   ├── SafeMarkdown.test.tsx <- 표·굵게·목록 렌더와 악성 마크다운(이미지·링크·HTML) 차단 시험
-│       │   ├── InterruptForm.tsx <- 값·역할 선택 재개 폼
-│       │   ├── EvidencePanel.tsx <- 문서 위치 근거 목록
-│       │   ├── JudgementTable.tsx <- 5종 후보 판정 표
-│       │   ├── ApprovalPanel.tsx <- 후보 판정 사람 승인 확인
-│       │   ├── QuotePanel.tsx <- 승인 뒤 가격 없는 견적 저장·실시간 가격 조회
-│       │   ├── ApprovedCasesPanel.tsx <- 사용자 승인 사례 목록·확인 삭제
-│       │   ├── D5Panels.test.tsx <- 근거·판정·추가 입력·상태 접근성 테스트
-│       │   └── QuotePanels.test.tsx <- 승인·견적 비저장·사례 삭제 화면 테스트
-│       ├── workers/         <- 화면 밖에서 실행하는 계산 Worker
-│       │   └── circuitLayout.worker.ts <- elkjs layered·orthogonal 회로 배치 Worker
+│       │   ├── WorkbenchPage.tsx <- 작업대 셸: 레일·프로젝트 목록·부품 목록·새 프로젝트·원본 회로도·승인 사례
+│       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
+│       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
+│       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
+│       ├── components/     <- 화면 조각
+│       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
+│       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
+│       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
+│       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
+│       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
+│       │   ├── ApprovedCases.tsx <- 승인 사례 목록·확인 삭제
+│       │   ├── AuthCard.tsx <- 로그인 계열 화면의 공통 카드
+│       │   └── PageShell.tsx <- 설정·관리 화면의 공통 머리와 폭
+│       ├── styles/         <- 스타일
+│       │   └── app.css     <- 전체 스타일(design.md의 토큰과 눈금)
 │       └── test/           <- 화면 테스트 설정
-│           ├── projects.tsx <- 완전한 프로젝트 DTO·QueryClient·Router 화면 테스트 도구
+│           ├── projects.tsx <- QueryClient 화면 테스트 도구
 │           ├── setup.ts    <- jest-dom matcher와 화면 정리
-│           └── network.ts  <- 손작성 완전한 API 응답·fetch 경계 테스트 대역
+│           └── network.ts  <- 손작성 API 응답·fetch 경계 테스트 대역
 │
 ├── backend/                <- 서비스 코드 전부. Dockerfile이 이미지에 복사 (고정)
 │   ├── BACKEND.md          <- 폴더 설명
@@ -712,7 +674,7 @@ SojaFit (proj3-b)
 │   │   └── langfuse_skill_check.py  <- Langfuse 프롬프트·Skill 연결을 합성 요청으로 점검
 │   ├── demo/               <- 키 없는 데모가 재생할 LLM 응답 기록과 키 없는 재생 대조
 │   │   ├── DEMO.md         <- 폴더 설명
-│   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 5개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
+│   │   └── record_demo.py  <- 서비스와 같은 멀티 그래프로 데모 질문 10개를 돌려 LLM 응답을 기록(record), 키 없이 재생해 대조(replay)
 │   ├── eval/               <- 사람 채점 시트를 평가 JSONL로 되돌리는 변환과, 평가 결과 파일 · 서비스 DB 시각에서 단계별 시간 · 비용 · 승인 대기를 모으는 집계 스크립트(D8)
 │   │   ├── EVAL.md         <- 폴더 설명
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
@@ -847,7 +809,7 @@ SojaFit (proj3-b)
     │   ├── sojafit-domain-jobs-2026-11-12.md  <- 도메인 유사 분야 채용 공고 72건
     │   ├── market-user-journey.md  <- 문제와 시장 근거
     │   ├── db-redesign/    <- 서비스 DB 재설계(11-11) 설계 문서(현재·목표 구조, 영향 지도). 검증 스크립트는 scripts/db/verify_redesign/
-    │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REDESIGN.md)
+    │   │   ├── summary.md      <- 검토용 요약 · 결정 항목(옛 REdesign.md)
     │   │   ├── as-is-erd.md    <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
     │   │   ├── as-is-tables.md <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서
     │   │   ├── to-be-design.md <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
@@ -893,7 +855,6 @@ SojaFit (proj3-b)
 |---|---|---|
 | `frontend/` | [FRONTEND.md](frontend/FRONTEND.md) | 서비스·운영 |
 | `frontend/public/` | [PUBLIC.md](frontend/public/PUBLIC.md) | 서비스·운영 |
-| `frontend/e2e/` | [E2E.md](frontend/e2e/E2E.md) | 서비스·운영 |
 | `frontend/src/` | [SRC.md](frontend/src/SRC.md) | 서비스·운영 |
 | `backend/` | [BACKEND.md](backend/BACKEND.md) | 서비스·운영 |
 | `backend/api/` | [API.md](backend/api/API.md) | 서비스·운영 |

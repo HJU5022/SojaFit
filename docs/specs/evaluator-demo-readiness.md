@@ -28,7 +28,7 @@ Out of Scope: 기록하지 않은 질문의 답, 데모 성공률을 실제 모�
 
 1. 데모 사용자 A 또는 B로 로그인한다(`DEMO_MODE=1`, 비밀번호 없음).
 2. 데모 회로로 프로젝트를 만들고 기록 질문이 있는 부품을 고른다. 화면이 `GET /api/demo-questions`로 질문 버튼을 보인다.
-3. 버튼이 기록한 질문·사용 조건을 새 대화의 첫 질문으로 보낸다. 조건 질문(`v3-01`)에는 기록한 답으로 재개한다.
+3. 버튼이 기록한 질문·사용 조건을 새 대화의 첫 질문으로 보낸다. 조건 질문(`v3-01` · `demo-ask` · `demo-find` · `demo-notsuff`)에는 기록한 답으로 재개한다.
 4. 서비스가 실제와 같은 멀티 에이전트 그래프를 돌리고, LLM 호출만 기록에서 꺼낸다.
 
 ### Edge Case
@@ -80,12 +80,13 @@ Out of Scope: 기록하지 않은 질문의 답, 데모 성공률을 실제 모�
 | 항목 | 상태 | 근거 |
 |---|---|---|
 | 기록 응답 재생, 질문 대조, `GET /api/demo-questions` | 구현 | `backend/services/demo.py`, `backend/api/conversations.py:165` |
-| 기록 5개 질문 | 구현 | `data/demo/recordings/outcomes.json`, [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md) |
+| 기록 10개 질문(회로 6곳, 호출 18줄, 기록일 2026-11-12) | 구현 | `data/demo/recordings/outcomes.json`, [scripts/demo/DEMO.md](../../scripts/demo/DEMO.md) |
 | 대화 DB 시험 CI 연결 | 구현 | `.github/workflows/ci.yml:30` |
 | 데모·실제 모델 구분을 화면에 표시 | 미구현 | SPEC 7절 |
 
 ## 한계
 
+- 기록에 없는 질문은 키 없는 모드에서 재생되지 않는다: 기록 질문과 다른 회로 · 대상 · 질문 · 조건은 422(데모 질문 목록), 확인을 통과했는데 프롬프트나 DB가 기록 때와 달라 기록에 없는 호출이 나오면 503 `UNAVAILABLE`(노드 이름 포함). 2026-11-13 main에서 기록 질문 5개가 모두 이 503으로 멈췄고(코드가 기록 뒤에 바뀜), 11-12 재기록으로 풀었다.
 - 재생은 기록한 질문에 같은 답을 내는 것만 보인다. 새 질문의 품질, 실제 모델 정확도, 운영 성능은 측정하지 않는다.
 - 배포 환경에서 평가용 계정으로 한 HTTP·화면 전체 흐름의 실행 결과는 이 문서가 근거로 갖고 있지 않다. 단계 지연 표와 Langfuse 화면 증거는 [thread-memory-operations-review.md](../research/thread-memory-operations-review.md)와 [docs/GATES.md](../GATES.md)가 다룬다.
 - CI에서 외부 transport를 차단해 호출 0건을 검증하는 시험은 확인하지 못했다.

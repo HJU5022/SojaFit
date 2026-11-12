@@ -17,7 +17,7 @@
 | `auth.py` | `/api/auth/*`: 로그인, 이메일 가입(요청·확인), 비밀번호 재설정(요청·확인), `me`, `logout`. `DEMO_MODE=1`에서만 `demo`·`demo-login`. `/docs`에 안 싣는 `google/*` 7개 경로(`status`, `start`, `callback`, `pending`, `onboarding`, `signup`, `link`) |
 | `admin.py` | `GET /api/admin/users`, `PATCH /api/admin/users/{target_id}`(일반 계정 활성 상태 변경) |
 | `prices.py` | `GET /api/prices`(로그인 필요, 요청 때 Mouser 조회, `Cache-Control: no-store`, ADR 0009) |
-| `projects.py` | `GET /api/demo-circuits`, `GET`·`POST /api/projects`, `POST /api/projects/upload`, `GET`·`PATCH`·`DELETE /api/projects/{project_id}` |
+| `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`, `POST /api/projects/upload`, `GET`·`PATCH`·`DELETE /api/projects/{project_id}` |
 | `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
 | `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, `GET`·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
 | `quotes.py` | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |

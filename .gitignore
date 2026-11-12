@@ -20,7 +20,6 @@ dist/
 build/
 .next/
 .turbo/
-playwright-report/
 test-results/
 
 # OS / IDE

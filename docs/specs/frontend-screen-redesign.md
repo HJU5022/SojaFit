@@ -65,7 +65,7 @@
 
 작업대 동작:
 
-- 프로젝트 생성: 파일 업로드(`.net`, 5 MiB 이하는 [d5-frontend-service.md](d5-frontend-service.md))가 기본이다. 데모 회로 생성은 서버 `GET /api/auth/demo`가 `enabled: true`일 때만 보인다. 생성 성공 시 새 프로젝트를 선택하고 생성 창을 닫으며 관리 창을 자동으로 열지 않는다.
+- 프로젝트 생성: 파일 업로드(`.net`, 5 MiB 이하는 [d5-frontend-service.md](d5-frontend-service.md))가 기본이다. 데모 회로 생성은 서버 `GET /api/demo-circuits`가 목록을 줄 때(`DEMO_MODE=1`)만 보인다. 운영(`DEMO_MODE=0`)에서는 404이고 화면은 알림 없이 업로드 칸만 둔다. 생성 성공 시 새 프로젝트를 선택하고 생성 창을 닫으며 관리 창을 자동으로 열지 않는다.
 - 부품 선택: `현재 프로젝트` 관리 창의 `분석할 부품` 선택창. 선택 값은 주소 `targetRef`, 프로젝트는 `projectId`, 저장 대화는 `threadId`로 유지한다. 저장 대화를 열면 대상은 고정되고 분석을 다시 실행하지 않는다([project-conversation-navigation.md](project-conversation-navigation.md)).
 - 자료 열기: 가운데 `자료 열기` 선택창이나 답변 아래 결과 링크, 답변의 `[숫자]` 인용(현재 응답 근거의 `citation_number`와 일치하는 것만)으로 연다. 같은 자료를 다시 열면 기존 탭을 활성화하고, 탭을 닫으면 가까운 탭으로 이동하며 마지막 탭을 닫으면 영역이 사라진다. 탭은 좌우·Home·End·Delete 키로 조작한다. 프로젝트·대화를 바꾸면 탭을 모두 닫는다. 프로젝트 생성 직후 넷리스트 연결 개념도는 자동으로 연다.
 - 연결 개념도: 배율 50~300%, 휠·`+`/`-` 키 25% 단위, 포인터 기준 확대, 왼쪽 드래그 이동(4px 미만 이동은 노드 클릭), 우상단 맞춤 아이콘(100%·스크롤 원점). 표시 영역·격자 크기는 고정이고 그래프만 확대된다. 대상·회로·페이지가 바뀌면 100%로 돌아간다([circuit-context-diagram.md](circuit-context-diagram.md)).
