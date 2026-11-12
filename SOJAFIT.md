@@ -323,7 +323,7 @@ SojaFit (proj3-b)
 │   │   ├── CIRCUITS.md     <- 폴더 설명, 회로별 원 저장소·커밋·라이선스 표
 │   │   ├── catalog.json    <- 데모 ID·이름·정규화 연결 JSON 경로의 단일 catalog
 │   │   ├── visuals.json    <- 데모 원본 회로도 URL·라이선스 근거·원본/배포 SHA-256 catalog
-│   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(원본), converted/(넷리스트·connections.json)
+│   │   └── collected/      <- 받은 회로(received-*/)와 공개 표본(samples/*/): original/(README·라이선스·참조 이미지/PDF), converted/(넷리스트·connections.json)
 │   └── demo/               <- 키 없는 데모 자료: 코퍼스 스냅샷, LLM 응답 기록
 │       ├── DEMO.md         <- 폴더 설명
 │       ├── recordings/     <- 멀티 그래프의 LLM 응답 기록(calls.jsonl)과 질문별 결과 · DB 지문(outcomes.json). scripts/demo/record_demo.py가 만듦

@@ -21,6 +21,7 @@
 | 2026-11-09~10 | Cursor, Claude Code | Supervisor Haiku, 찾기 코드 고르기(#44), 판정 읽기(#45), v3 실패 문항(#47~#50), ADR 0017 | 사전 등록 후 v3 50문항 세트(통과 50/50; p95·비용은 `preregister.md` #47~#50). 오프라인 pytest. 채택 판정 하정운 | #46 Haiku Supervisor만 바꾼 측정은 사전 등록의 받지 않는 조건에 걸려 되돌림(무관 거절 실패). 구조 재구성 커밋은 되돌림(revert) | `evals/guides/preregister.md:779-789` |
 | 2026-11-11 | Cursor | 서비스 DB 재설계, 새 Supabase `SojaFit_2`, Cloud Run 전환, 인젝션 HTTP, EVAL 6·8장 | 통합 pytest, 스모크 28단계 통과 28·실패 0, 구글 로그인 왕복. 코퍼스 4표만 이전. 채택 판정 하정운 | 스모크 실패 두 번은 B 계정 비밀번호 입력이었고 서비스 문제로 오인하기 쉬움. Langfuse export 403은 옛 리비전부터라 이번 변경과 무관 | `docs/worklog/jeongun.md:99` |
 | 2026-11-12 | Cursor | D9 증거 이관, Codex §10, 토큰 한도 5M/10M 배포, 제출 문서(EVAL_REPORT §11, 실패 분석, 시연 스크립트) | 단위 시험, 배포 `/health`, 기존 원시 JSON 링크. 영상·Langfuse 캡처·T4 재측정은 하지 않았다 | 기록 없음 | `backend/conversations/memory_service.py:55`, `docs/worklog/jeongun.md:47` |
+| 2026-11-12 | Codex | 동결 v3 50문항 비교 답변 작성 | 답변 50건을 문서화하고 서비스 답변과 5문항을 비교했다. Codex 답변 자동 채점은 하지 않았다 | 기록 없음 | [평가 리포트 10절](../../EVAL_REPORT.md), `docs/worklog/jeongun.md:47-49` |
 
 Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 표시(`Co-authored-by: Cursor`)가 있다 [실측: `git log --grep`].
 
@@ -43,7 +44,7 @@ Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 �
 ## 4. 남은 일
 
 - 팀 전체 사용 기록이 아니다. 위 표는 하정운의 사용만 담는다. 심태현·오세창·김재훈의 도구 사용 기록(맡긴 일, 검증 방법, 틀린 곳)은 각자 써야 한다. 작업 기록에 도구 언급은 있으나(`docs/worklog/sth.md:791,799`, `docs/worklog/jaehun.md:169`에 Codex) 사용 내용은 적혀 있지 않다. `docs/worklog/osc.md`에는 도구 이름이 없다.
-- Codex 사용 행이 없다. 저장소에 있는 근거: 평가셋 v3 정답 초안은 Codex가 작성했다([EVAL_REPORT.md](../../EVAL_REPORT.md) 2절 평가셋 표 "정답을 정한 사람과 기준" 칸이 정본). 동결 v3에 대한 Codex 답 50문항 문서화는 `docs/worklog/jeongun.md:47-49`와 `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`. 작성 일자·범위·검증 방법은 작성자가 행으로 적어야 한다.
+- 위 Codex 행에는 v3 50문항 비교만 기록했다. 평가셋 v3 정답 초안도 Codex가 작성했다([EVAL_REPORT.md](../../EVAL_REPORT.md) 2절 평가셋 표 "정답을 정한 사람과 기준" 칸이 정본). 동결 v3에 대한 Codex 답 50문항 문서화는 `docs/worklog/jeongun.md:47-49`와 `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`. 작성 일자·범위·검증 방법은 작성자가 행으로 적어야 한다.
 - 2026-11-12 행의 "AI가 틀린 곳"이 비어 있고 채택 판정자 기록이 없다.
 - 2026-11-09~10 Cursor 행은 `Co-authored-by: Cursor` 표시가 없다. 이 표시가 있는 29건은 모두 11-11과 11-12 커밋이다.
 - 11-06 판정 에이전트 행은 구현 4건을 한 행에 묶었다. 검증 문구를 일 단위로 나눌 근거가 작업 기록에 없어 나누지 않았다.
