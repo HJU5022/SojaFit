@@ -64,11 +64,78 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 
 ## 3. 에이전트 구조
 
-서비스 분석과 기준 평가셋 v3는 아래 멀티 그래프(`backend/multi_agent/build.py`)로 돈다. 이름은 `get_graph().draw_mermaid()` 그림의 노드 이름 그대로다.
+서비스 분석과 기준 평가셋 v3는 아래 멀티 그래프(`backend/multi_agent/build.py`)로 돈다. 아래 mermaid 글은 조립한 그래프에서 뽑은 것(`get_graph(xray=True).draw_mermaid()`, Spec 에이전트 하위 그래프를 펼친 모양)이라 노드 이름과 화살표가 코드와 같다. 실선은 고정 간선, 점선은 조건 간선이다. 다시 만드는 법과 달라졌는지 보는 시험은 [tests/multi_agent/test_readme_graph.py](tests/multi_agent/test_readme_graph.py)이고, 글을 GitHub에서 읽히게 하려고 두 곳만 고친다(노드 id의 이스케이프 풀기, 조건 간선 라벨 따옴표).
 
-![SojaFit 멀티 에이전트 구조: Supervisor가 Spec 에이전트와 RAG 에이전트에 동시에 일을 맡기고, 거절은 같은 줄의 끝 단계](docs/assets/agent-flow.png)
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	입력_읽기(입력 읽기)
+	기억_읽기(기억 읽기)
+	품번_판_확인(품번·판 확인)
+	Supervisor(Supervisor)
+	RAG_에이전트(RAG 에이전트)
+	답_모으기(답 모으기)
+	답_정리(답 정리)
+	종합(종합)
+	답_검사(답 검사)
+	끝내기(끝내기)
+	거절(거절)
+	가격_안내(가격 안내)
+	__end__([<p>__end__</p>]):::last
+	RAG_에이전트 --> 답_모으기;
+	Spec_에이전트_대체_부품_판정 --> 답_모으기;
+	Supervisor -.-> RAG_에이전트;
+	Supervisor -.-> Spec_에이전트_회로_읽기;
+	Supervisor -.-> 가격_안내;
+	Supervisor -.-> 거절;
+	Supervisor -.-> 끝내기;
+	Supervisor -.-> 답_모으기;
+	__start__ --> 입력_읽기;
+	기억_읽기 --> 품번_판_확인;
+	답_검사 -.-> 거절;
+	답_검사 -.-> 끝내기;
+	답_모으기 -.->|"&nbsp;다시 해 볼 실패 · 다시 계획(최대 1번)&nbsp;"| Supervisor;
+	답_모으기 -.-> 거절;
+	답_모으기 -.-> 답_정리;
+	답_모으기 -.-> 종합;
+	답_정리 --> 답_검사;
+	입력_읽기 --> 기억_읽기;
+	종합 --> 답_검사;
+	품번_판_확인 --> Supervisor;
+	가격_안내 --> __end__;
+	거절 --> __end__;
+	끝내기 --> __end__;
+	subgraph Spec 에이전트
+	Spec_에이전트_회로_읽기(회로 읽기)
+	Spec_에이전트_대체_부품_판정(대체 부품 판정)
+	Spec_에이전트_회로_읽기 --> Spec_에이전트_대체_부품_판정;
+	end
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+```
 
-파란 칸은 LLM 단계, 베이지 칸은 코드 단계다. 원본은 [agent-flow.svg](docs/assets/agent-flow.svg).
+LLM을 부르는 노드와 코드만 도는 노드(모델의 정본은 `backend/services/langfuse_prompts.py`의 `NODE_MODELS`):
+
+| 구분 | 노드 | 모델 | 근거 |
+|---|---|---|---|
+| LLM | `Supervisor` | `anthropic/claude-haiku-5.5` (`supervisor`) | `supervisor.py:87` |
+| LLM | `RAG 에이전트` | Haiku (`docs_answer`, 근거 채점 + 답 쓰기) | `agents/docs.py:560` |
+| LLM | `회로 읽기` (Spec 에이전트 안) | Haiku (`judge_read`) | `agents/judge.py:125` |
+| LLM | `종합` | `anthropic/claude-sonnet-5.5` (`synth`). 쓰는 조건은 SPEC 2절 | `supervisor.py:303` |
+| 코드, 드물게 LLM | `대체 부품 판정` | 코드가 못 읽은 카드가 있을 때만 Haiku (`card_read`). 비교와 판정은 코드 | `rag/card_read.py:251`, `rag/card_specs.py:93` |
+| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` | 없음 | `build.py:26-50`, `supervisor.py:146 · 257 · 312`, `facts.py:107`, `graph/nodes.py:124 · 209`, `graph/memory.py:26` |
+
+**개념도(손으로 그린 요약, 노드 이름과 화살표는 위 그래프가 기준)**
+
+![개념도: Supervisor가 Spec 에이전트와 RAG 에이전트에 동시에 일을 맡기고, 거절은 같은 줄의 끝 단계](docs/assets/agent-flow.png)
+
+원본은 [agent-flow.svg](docs/assets/agent-flow.svg).
 
 ```
 KiCad 넷리스트 + 질문
@@ -83,7 +150,7 @@ KiCad 넷리스트 + 질문
   │         ├─ RAG 에이전트        검색 → 근거 채점 + 답 쓰기(LLM 1번) → 근거가 없거나 일부면 다른 검색어로 1번 더 → 인용 검사(코드)
   │         └─ Spec 에이전트  회로 읽기(LLM 1번, 읽은 뒤 코드가 부품 이름을 질문 글과 대조해 정리) → 대체 부품 판정(코퍼스 밖 관문 · 빠진 값 한 번 묻기 · 카드 값을 코드로 비교, ADR 0016)
   ├─ 답 모으기       보고 상태와 상한만 본다 (코드). 다시 해 볼 실패면 Supervisor로 한 번 되돌린다
-  ├─ 답 정리 · 종합  후보 판정 보고가 있으면 코드 판정 답 틀만 낸다(출력 경계). 그 밖에 할 일이 2개 이상이면 종합 LLM 1번
+  ├─ 답 정리 · 종합  후보 판정 보고가 있으면 코드 판정 답 틀만 낸다(출력 경계). 그 밖에 할 일이 2개 이상이고 코드로 이을 수 없을 때만 종합 LLM 1번(조건은 SPEC 2절)
   └─ 답 검사         인용 번호와 종합 글 숫자의 출처를 코드로 본다 → 끝내기 | 거절
 ```
 
@@ -131,7 +198,7 @@ Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT
 | 구성 | 지금 |
 |---|---|
 | 그래프 | 서비스(`backend/conversations/memory_service.py`)는 위 D5 멀티 그래프. D4 v2 단일 그래프(`backend/graph/`, 노드 표는 SPEC 2절)는 비교 기준선이고, 같은 코드의 동결 v2 점수는 단일과 멀티가 같았다(EVAL_REPORT 4절) |
-| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 채점 `openai/gpt-6-luna` (OpenRouter, ADR 0017) |
+| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5` (OpenRouter, ADR 0017). 채점 `openai/gpt-6-luna`는 D4 v2 단일 그래프(`backend/graph/nodes.py`의 `grade`)만 쓰고, 멀티 그래프는 근거 채점을 RAG 에이전트의 `docs_answer`(Haiku)가 답 쓰기와 한 번에 한다 |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3`, 첫 검색 전 쿼리 재작성, 표지 청크 제외(사전 등록 #25, ADR 0004 갱신 2026-11-03) |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수. 서비스 분석은 질문 · 답 글 없이 단계별 시간만 보낸다(SPEC 7절) |
 | 로그인 | 이메일·비밀번호(scrypt), 이메일 인증 가입(메일 링크, 비밀번호 12자 이상, 가입 확정 IP당 하루 3회), Google 로그인(같은 이메일의 기존 계정은 비밀번호를 다시 확인해야 연결), DB 세션, 계정당 5회 · IP당 30회 실패 시 15분 잠금, 데모 모드 버튼 로그인, 관리자 계정 관리 API |
