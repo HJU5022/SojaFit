@@ -458,14 +458,15 @@ def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
 def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
     """하루 토큰 상한(admission 429)은 스트림 · run 행 · 재개 전이 전에 공통 오류로 끝나고 분석을 부르지 않는다."""
     thread, run = str(uuid4()), str(uuid4())
-    analysis = FakeAnalysis(refuse=ApiError(429, '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
+    from backend.conversations.memory_service import USER_DAILY_TOKENS
+    analysis = FakeAnalysis(refuse=ApiError(429, f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다.', code='LIMIT_EXCEEDED'))
     repo = FakeRepo(thread, run, status='requires_input', result={'interrupt': {'missing': ['VIN_MAX'], 'role_choices': [], 'question': '?'}})
     with web(analysis, repo) as client:
         start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
     for response in (start, resume):
         assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
-        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and '1,000,000 토큰' in response.json()['error']['message']
+        assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and f'{USER_DAILY_TOKENS:,} 토큰' in response.json()['error']['message']
     assert analysis.calls == [] and repo.calls == []
 
 

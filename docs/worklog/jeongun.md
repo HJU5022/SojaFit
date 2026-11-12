@@ -1,5 +1,11 @@
 # jeongun 작업 기록
 
+## 2026-11-12 토큰 한도 사용자 5M · 서비스 10M + main pull 배포
+- 배경: 배포본이 서비스 전체 2M에 먼저 걸려 `LIMIT_EXCEEDED`가 났고, [결정 11-12] 사용자별 5M · 서비스 10M. `origin/main`(#106) pull 후 `jeongun`에 반영.
+- 코드: `USER_DAILY_TOKENS=5_000_000` · `SERVICE_DAILY_TOKENS=10_000_000`(메시지·시험은 상수 참조). SPEC 8.6 · `login-auth.md` · `injection_http` 안내 문구.
+- 배포 DB: Cloud Run `DATABASE_URL`→시크릿 `DATABASE_URL_NEW`(SojaFit_2, ref `oujmltzhbzmgitucgmeq`). 옛 `DATABASE_URL`(ref `owkklccwglcpfmmezcxj`)은 쓰지 않음.
+- 확인: (배포·시험 결과는 이 절에 이어서 적음)
+
 ## 2026-11-12 로컬 측정·스모크 원시 이관 (PR #106)
 - 넣음: D9 judge-dev multi/single · langfuse-capture · v3-single · v3-16 warm-recheck · claim_consistency D9 재확인 · Langfuse probe v2 · RAGAS probe v3 · synth-01-repeat10 · synth-both-agents · 인젝션 HTTP `…_012039.json`(원장 인용) · 스모크 `…_230015` · `…_230534`.
 - 안 넣음: `scratchpad/`(임시·워크트리 잔여).
