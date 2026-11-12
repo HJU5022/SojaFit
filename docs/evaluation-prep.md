@@ -18,7 +18,7 @@
 - [x] 사용자·지불 주체는 확인 사실과 가설을 구분한다. 범용 챗봇과 동일 질문 5개를 비교한 결과는 기존 평가 리포트 10장에 기록한다. (사용자·지불 주체의 확인 사실 5건과 미검증 가설 4건, 페르소나 2종, 6단계 고객 여정 맵, 동일 질문 5개 비교표는 [market-user-journey.md](research/market-user-journey.md)에 정리 완료)
 - [ ] 외부 검토자 1명에게 서비스와 근거를 검토받고 피드백·반영 여부를 남긴다. (검토 시나리오와 기록 양식은 [market-user-journey.md 6장](research/market-user-journey.md#6-외부-검토-1명-점검-계획-및-기록-양식-e1-5)에 준비 완료, D10 전에 실시)
 - [x] 임베딩 시간·비용: 1,360건 전체의 서로 다른 본문 45,898개를 `text-embedding-3-small`로 12.6분, 5,391,648토큰에 임베딩했다(11-01, `EVAL_REPORT.md` 1장). 모델 선택의 품질·비용 절충과 한계는 본평가 뒤 평가 리포트에 기록한다.
-- [ ] 검색/생성·승인 대기의 컨텍스트 경계와 근거 부족 시 재검색·종료 조건을 설명한다. 답변 인용이 실제 검색 문서에 존재하는지 코드로 검증한다. (재검색 최대 2회·0장 즉시 거절 종료 조건 `backend/graph/build.py`, 통과 청크 밖 번호 인용 `fake_citations`·무인용 문장 `uncited_sentences` 코드 검증 `backend/graph/nodes.py`, 정답 근거 일치 채점 `evals/runners/score_answer.py` 구현 완료. D5 Supervisor 컨텍스트 경계와 `interrupt` 승인 대기만 남음)
+- [ ] 검색/생성·승인 대기의 컨텍스트 경계와 근거 부족 시 재검색·종료 조건을 설명한다. 답변 인용이 실제 검색 문서에 존재하는지 코드로 검증한다. (재검색 최대 2회·0장 즉시 거절 종료 조건 단일 기준선 `backend/graph/build.py`, 통과 청크 밖 번호 인용 `fake_citations`·무인용 문장 `uncited_sentences` 코드 검증 `backend/graph/nodes.py`, 정답 근거 일치 채점 `evals/runners/score_answer.py` 구현 완료. 서비스 그래프(멀티)의 Supervisor 컨텍스트 경계(`backend/multi_agent/supervisor.py`의 `payload`)와 빠진 조건을 묻는 `interrupt`(`backend/multi_agent/agents/judge.py`)는 구현돼 있고 견적 승인은 그래프 밖 API(`backend/api/quotes.py`)다. 남은 것은 설명 준비)
 - [ ] 전원 발표 파트를 맡고 모든 코드의 설계 이유를 설명한다. 현장 입력은 정상·경계·방어 3종으로 연습한다.
 
 공식 정확도·Recall·응답 시간 합격 수치는 공개되지 않았습니다. 팀 목표와 지표 분모·오류 처리 기준은 확정 후 기능 정본과 평가 리포트에 기록합니다.
