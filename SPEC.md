@@ -88,7 +88,7 @@ KiCad 넷리스트와 바꿀 부품을 받아 회로 역할을 설명하고, 역
 | 등급 | 출처 | 쓰임 |
 |---|---|---|
 | 1 | 코퍼스(TSC 다이오드 13분류 데이터시트) | 판정 근거 |
-| 2 | TSC·Infineon 공식 사이트에서 받아 검증 관문을 통과한 데이터시트(목표 계약, 현재 다운로드·검증·검색 편입 미구현) | 판정 근거 |
+| 2 | TSC·Infineon 공식 PDF에서 검증 관문을 통과한 표 행(구현: `backend/services/exa.py`, `backend/services/datasheet_rows.py`. 계약: [official-datasheet-evidence.md](docs/specs/official-datasheet-evidence.md)) | 판정 근거 |
 | 3 | 그 밖의 웹 자료와 다른 제조사 정보 | 출처 링크와 함께 "미검증 참고 정보"로만 보여 주고 판정 근거로 쓰지 않습니다 |
 
 LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니다.
@@ -118,7 +118,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 - 답 조립의 출력 경계: `Spec 에이전트`의 판정(kind=judge) 보고가 하나라도 있으면(판정 성공 · 실패와 관계없이) `답 정리` · `종합` 모두 코드 판정 답 틀(`render_judgement`: 판정 · 조건 표 · 인용 · 빠진 값 · 불확실 조건)만 냅니다. RAG 에이전트 답과 종합 LLM 글은 판정 답에 붙이지 않고, 이때 종합 LLM은 부르지 않습니다. 판정과 함께 물은 별도 문서 설명은 "별도로 요청한 문서 설명은 이 답변에 포함하지 않았습니다"로 알리고, 일부 판정이 실패 · 미완료면 "일부 부품의 판정은 완료하지 못했습니다", 모두 실패면 "판정을 완료하지 못했습니다"를 냅니다. 원래 보고(`reports`)는 그대로 두고 `답 검사`는 답에 쓴 판정 보고(`final_reports`)만 봅니다. 문서만 묻는 질문, 찾기(find), 규칙 밖 역할(no_rule)은 예전처럼 문서 답 · 종합을 씁니다.
 - LLM: 노드별로 나눕니다(`backend/services/langfuse_prompts.py`의 `NODE_MODELS`). Supervisor와 그 밖의 LLM 노드는 `anthropic/claude-haiku-5.5`, 종합(`synth`, 할 일 2개 이상일 때만)은 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`입니다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 처음 노드별 모델은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), Haiku로 시작한 이유는 [ADR 0010](docs/adr/0010-그래프-llm은-haiku로-시작한다.md)).
 - 생각(추론): 기본으로 끕니다. Haiku는 `reasoning.enabled=false`, Sonnet은 끄면 OpenRouter가 400을 내서 `reasoning.effort=low`, Luna에는 보내지 않습니다(`backend/services/llm.py`의 `_chat_model`). 끄는 근거는 저장소 밖 lab v3 50문항 실행(원시 저장소 밖)입니다. 정확도가 유지되고 응답 시간 p50 8.8 → 5.9초, p95 45.1 → 33.9초, 판정 질문 25 → 13초로 줄었습니다. 그 측정은 동결 전 lab v3 초안으로 했으므로 G5 공식 점수로 세지 않습니다.
-- `docs/reference/team-contract.md`의 "요청 흐름" 그림은 초기 안(검색 · 작성 · 검증 에이전트)입니다. 지금 구조는 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)를 따릅니다.
+- `docs/reference/team-contract.md` 1절의 구조 그림([agent-flow.png](docs/assets/agent-flow.png))은 현재 구조(Supervisor 1개와 서브에이전트 2개)이며 위 "구성"과 [MULTI_AGENT.md](backend/multi_agent/MULTI_AGENT.md)와 같은 내용입니다.
 
 ## 3. 대체 판정 5종
 
@@ -469,7 +469,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 | 항목 | 위치 | 상태 |
 |---|---|---|
 | 판정 5종이 정답과 같은 비율의 목표 수치 | 1절 숫자 성공 기준 | 정하지 않음 |
-| 모듈 사이 함수 이름과 시그니처 | 4절 | `docs/reference/team-contract.md`의 "조가 채울 것" 8문항 미응답 |
+| 모듈 사이 함수 이름과 시그니처 | 4절 | `docs/reference/team-contract.md` 2절의 설계 질문 8개에는 답이 있으나 함수 이름과 시그니처 목록은 정하지 않음 |
 | 질문 · 넷리스트에서 품번을 뽑는 규칙의 명세 | 6절 검색 | 정하지 않음 |
 | 키 없이 쓰는 모델과 파일의 전체 목록 | 7절 | 정하지 않음 |
 | 8.1 회로 역할 설명, 8.2 대체 조건 도출의 수용 기준 | 8절 | 정하지 않음 |

@@ -68,6 +68,8 @@
 
 ### G3 코퍼스
 
+문서·쪽·청크 수의 정본은 [data/DATA.md](../data/DATA.md#코퍼스-수치)다. 아래 표는 게이트 증거로 측정 시점의 값과 원시 경로를 적는다.
+
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
 | 문서 수 | 1,360건 | `data/manifest.jsonl` 1,360행, `evals/results/chunking/v4h-2026-11-08/manifest.jsonl` 1,360행 |
