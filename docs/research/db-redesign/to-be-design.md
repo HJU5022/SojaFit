@@ -1,12 +1,15 @@
-# 목표 설계: 원칙 · 선택지 비교 · 결정 근거
+# 서비스 DB 목표 설계: 원칙, 선택지 비교, 결정 근거
 
-- 상태: **정운 확정 전 초안**(11-11). 구현 전에 이 문서의 "결정 항목"(README)을 확정한다.
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [summary.md](summary.md), [to-be-tables.md](to-be-tables.md), [to-be-erd.md](to-be-erd.md), [to-be-impact.md](to-be-impact.md)
 - 범위: 서비스 표만. 코퍼스 4표와 LangGraph 표는 그대로.
 - 고정 조건: HTTP API 응답 모양 불변(프런트 수정 0), 새 DB 첫 기동(compose, G2) · 키 없는 데모 · CI 계속 동작, 동결(11-16 24:00)까지 남은 시간.
 
-## 1. 11-10 밤 추가 조사에서 나온 사실을 어떻게 반영했나
+## 1. 추가 조사 사실과 설계 반영
 
-| # | 사실(출처: `db-unknowns-1110.md`) | 반영 |
+| # | 사실(출처: 저장소에 없는 조사 노트 `db-unknowns-1110.md`) | 반영 |
 |---|---|---|
 | 1 | Supabase **Data API(PostgREST)가 켜져 있고 `public`에 `anon` USAGE가 있다**. `sojafit_agent`는 노출 안 됨 | 모든 서비스 표를 **RLS ON + 정책 0**, 공개 역할 권한 0으로 만든다(`026`). 새 기준선이 RLS를 **직접 명시**한다(§3 D7). `public`을 비노출 스키마로 옮기는 안은 보류(D10) |
 | 2 | 운영에 `ensure_rls` **이벤트 트리거**: `public`의 새 표는 자동 RLS ON. `sojafit_agent` · compose · CI에는 없음 | 기준선 마지막에 21개 표의 `ENABLE ROW LEVEL SECURITY`를 전부 적는다 → 환경마다 같은 결과. 시험: 기준선 + 026 적용 뒤 "공개 권한 0 · RLS OFF 표 0"(§5) |
@@ -158,6 +161,6 @@ as-is 대비: 질문 · 답 사본이 2곳(`quotes` · `approved_cases` 스냅�
 ## 6. 가정과 확인 못 한 것
 
 - 풀러가 **session 모드(5432)**라는 가정: 분석 서비스가 세션 단위 advisory lock을 쓴다. transaction 모드(6543)면 안전하지 않다. 이 설계는 이 부분을 바꾸지 않았다.
-- 운영 DB에서 직접 **이전 SQL을 실행해 보지는 않았다**(승인 전 · 일회용 DB에서만 확인). 운영 적용은 백업 후 정운이 한다.
+- 운영 DB에서 직접 **이전 SQL을 실행해 보지는 않았다**(승인 전 · 일회용 DB에서만 확인).
 - `detail()`이 돌려주는 사전의 `approvals` · `related_memories` · `consulted_memories` 키를 API 계층이 어디까지 읽는지는 P2 구현 때 코드로 확인해야 한다(IMPACT §3). 응답 모양이 바뀌면 안 되므로 필요하면 빈 값으로 유지한다.
 - 성능(쿼리 계획)은 표가 작아 조사하지 않았다.

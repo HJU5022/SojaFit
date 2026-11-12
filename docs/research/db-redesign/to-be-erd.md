@@ -1,4 +1,9 @@
-# 목표(to-be) ERD
+# 서비스 DB 목표 ERD (to-be)
+
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [summary.md](summary.md), [to-be-tables.md](to-be-tables.md), [as-is-erd.md](as-is-erd.md)
 
 - 기준: [`db/020_service_baseline.sql`](../../../db/020_service_baseline.sql). 표 정의서는 [`to-be-tables.md`](to-be-tables.md), 현재 구조는 [`as-is-erd.md`](as-is-erd.md).
 - **모든 선이 DB의 FK다.** 현재 구조의 점선(같은 UUID로만 묶임)이 사라졌고, `sojafit_agent.*`의 FK는 전부 `CASCADE`다.
