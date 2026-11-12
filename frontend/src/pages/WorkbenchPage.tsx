@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
+import { ArrowUp, ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
 import { createDemo, deleteProject, getProject, listDemos, listProjects, renameProject, uploadProject } from '../api/projects'
 import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, listThreads } from '../api/conversations'
@@ -10,7 +10,7 @@ import type { ThreadDto } from '../api/conversations'
 import { errorMessage } from '../api/client'
 import type { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
-import { contextOf, isDiode, partsOf } from '../lib/circuit'
+import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
 import Review from '../components/Review'
@@ -53,6 +53,9 @@ export default function WorkbenchPage() {
   const casesDialog = useRef<HTMLDialogElement>(null)
   const [renaming, setRenaming] = useState<ProjectSummary | null>(null)
   const [casesOpen, setCasesOpen] = useState(false)
+  const [question, setQuestion] = useState('')
+  const [askError, setAskError] = useState('')
+  const [pending, setPending] = useState<{ ref: string; question: string } | null>(null) // 부품 목록에서 쓴 질문: 그 부품의 검토 화면이 열릴 때 한 번 보낸다
 
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false })
   const project = useQuery({ queryKey: ['project', projectId], queryFn: ({ signal }) => getProject(projectId!, signal), enabled: projectId !== null, retry: false })
@@ -79,8 +82,17 @@ export default function WorkbenchPage() {
   }, [navOpen])
   if (!user) return null
 
-  const go = (next: Record<string, string>) => { setFilter(''); setNavOpen(false); setParams(next) }
+  const go = (next: Record<string, string>) => { setFilter(''); setPending(null); setNavOpen(false); setParams(next) }
   const onThread = (id: string, ref?: string) => go({ projectId: String(projectId), ...((ref ?? targetRef) ? { targetRef: ref ?? targetRef } : {}), ...(id ? { threadId: id } : {}) })
+  function ask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const text = question.trim()
+    if (!text) return
+    const hit = partIn(text, parts.filter(isDiode))
+    if (hit) { go({ projectId: String(projectId), targetRef: hit.ref }); setPending({ ref: hit.ref, question: text }); setQuestion(''); setAskError(''); return }
+    const other = partIn(text, parts)
+    setAskError(other ? `${other.ref}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.` : '어느 부품에 대한 질문인지 알 수 없습니다. 부품 번호(예: D1)를 넣어 주세요.')
+  }
   async function removeThread(id: string) {
     if (confirming !== id) { setConfirming(id); return }
     try { await deleteThread(id); await client.invalidateQueries({ queryKey: ['threads', projectId] }); if (id === threadId) onThread('') }
@@ -173,6 +185,13 @@ export default function WorkbenchPage() {
       </section>}
 
       {projectId !== null && !target && !threadId && <section className="list">
+        <form className="composer" onSubmit={ask}>
+          <label className="sr-only" htmlFor="part-question">질문</label>
+          <input id="part-question" className="input" style={{ flex: 1 }} autoComplete="off" aria-describedby="part-question-hint" value={question} onChange={event => { setQuestion(event.target.value); setAskError('') }} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
+          <button className="btn btn-icon" disabled={!question.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>
+        </form>
+        <p id="part-question-hint" className="composer-hint">부품 번호(예: D1)를 넣어 질문하거나, 아래 목록에서 부품을 고르세요.</p>
+        {askError && <p className="notice" role="alert">{askError}</p>}
         <div className="list-head"><h1 className="sr-only">교체할 부품</h1><label className="filter"><Search aria-hidden="true" /><span className="sr-only">부품 찾기</span><input value={filter} onChange={event => setFilter(event.target.value)} placeholder="참조 번호나 값으로 찾기" /></label></div>
         {partGroups.map(group => {
           const items = filteredParts.filter(part => isDiode(part) === group.eligible)
@@ -189,7 +208,7 @@ export default function WorkbenchPage() {
       </section>}
 
       {projectId !== null && target && <Review key={projectId} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
-        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} onThread={onThread} />}
+        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} initialQuestion={pending?.ref === target.ref ? pending.question : undefined} onThread={onThread} />}
       {projectId !== null && !target && threadId && project.data && <p className="empty inset">이 검토의 대상 부품을 회로에서 찾지 못했습니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
     </main>
 

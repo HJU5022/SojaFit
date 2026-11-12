@@ -18,7 +18,7 @@ import PriceLookup from './PriceLookup'
 const PROPS_KEY = 'sojafit:props-width'
 const PROPS_DEFAULT = 280, PROPS_MIN = 240, PROPS_MAX = 480
 
-type Props = { projectId: number; demoId: string | null; target: CircuitPart; nets: ContextNet[]; counts: { parts: number; nets: number }; threadId: string; reviewer: string
+type Props = { projectId: number; demoId: string | null; target: CircuitPart; nets: ContextNet[]; counts: { parts: number; nets: number }; threadId: string; reviewer: string; initialQuestion?: string
   onThread: (threadId: string, targetRef?: string) => void }
 
 export function Checks({ candidate, resolved }: { candidate: CandidateDto | undefined; resolved: boolean }) {
@@ -70,8 +70,11 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
 }
 
 // 검토 한 건을 문서처럼 보인다: 왼쪽은 회로 · 조건 대조 · 활동, 오른쪽은 속성.
-export default function Review({ projectId, demoId, target, nets, counts, threadId, reviewer, onThread }: Props) {
+export default function Review({ projectId, demoId, target, nets, counts, threadId, reviewer, initialQuestion, onThread }: Props) {
   const chat = useConversation({ projectId, targetRef: target.ref, threadId, onThread })
+  // 부품 목록의 질문 칸에서 넘어온 질문을 한 번만 보낸다. ref는 StrictMode의 effect 재실행에도 남는다.
+  const sentInitial = useRef(false)
+  useEffect(() => { if (initialQuestion && !sentInitial.current) { sentInitial.current = true; void chat.send({ question: initialQuestion }) } }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 열릴 때만
   const { history, live, stages, state, running, picked } = chat
   const input = useRef<HTMLTextAreaElement>(null)
   const picker = useRef<HTMLInputElement>(null)

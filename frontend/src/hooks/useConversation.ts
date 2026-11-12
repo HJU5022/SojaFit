@@ -42,7 +42,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   }, [state, client, projectId])
 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
-  async function send(recorded?: { question: string; conditions: string }) {
+  async function send(recorded?: { question: string; conditions?: string }) {
     const question = recorded?.question ?? text.trim()
     if (!question || running || !targetRef) return
     setError(null)
@@ -52,7 +52,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
       if (live && 'runId' in state && state.runId && state.status !== 'failed') setHistory(current => [...current, { runId: state.runId!, question: live.question }])
       const attachments = recorded ? [] : files
       setLive({ question }); setStages([]); setText(''); setFiles([]); setPicked(null)
-      await stream.start(id, { question, target_ref: targetRef, ...(recorded ? { conditions: recorded.conditions } : {}), ...(attachments.length ? { attachments } : {}) })
+      await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}), ...(attachments.length ? { attachments } : {}) })
     } catch (reason) { setError(reason) }
   }
 

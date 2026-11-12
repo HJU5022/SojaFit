@@ -115,6 +115,7 @@ SojaFit (proj3-b)
 │       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
 │       │   ├── WorkbenchPage.tsx <- 작업대 셸: 레일·프로젝트 목록·부품 목록·새 프로젝트·원본 회로도·승인 사례
 │       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
+│       │   ├── WorkbenchPage.ask.test.tsx <- 부품 목록의 질문 칸이 질문 속 부품 번호로 검토를 열고 질문을 한 번 보내는지, 번호가 없거나 범위 밖이면 안내만 하는지 테스트
 │       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
