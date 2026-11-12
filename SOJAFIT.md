@@ -771,8 +771,8 @@ SojaFit (proj3-b)
     │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
     ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
     │   ├── ASSETS.md       <- 폴더 설명
-    │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
-    │   └── agent-flow.svg  <- 위 그림의 원본
+    │   ├── agent-flow.png  <- 멀티 에이전트 개념도(손으로 그린 요약, 정본 그래프는 README 3절 mermaid)
+    │   └── agent-flow.svg  <- 위 개념도의 원본
     ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
     │   └── ADR.md          <- 폴더 설명과 결정 목록
     ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
