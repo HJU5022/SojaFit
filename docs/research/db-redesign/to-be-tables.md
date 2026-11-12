@@ -1,7 +1,12 @@
-# 목표(to-be) 서비스 표 정의서
+# 서비스 DB 목표 표 정의서 (to-be)
+
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [summary.md](summary.md), [to-be-design.md](to-be-design.md), [to-be-erd.md](to-be-erd.md), [as-is-tables.md](as-is-tables.md)
 
 - 기준: [`db/020_service_baseline.sql`](../../../db/020_service_baseline.sql)을 빈 Postgres(16 · 17)에 적용한 결과를 `pg_catalog`에서 자동 생성했다(칸 · 타입 · 키 · 인덱스). 의미 · 차이는 손으로 적었다.
-- 상태: **정운 확정 전 초안**. "필수 + 권장" 단계(P1 + P2)가 끝난 뒤의 구조다. 단계 구분은 [`summary.md`](summary.md), 근거와 선택지는 [`to-be-design.md`](to-be-design.md), 그림은 [`to-be-erd.md`](to-be-erd.md).
+- 범위: "필수 + 권장" 단계(P1 + P2)가 끝난 뒤의 구조다. 단계 구분은 [`summary.md`](summary.md), 근거와 선택지는 [`to-be-design.md`](to-be-design.md), 그림은 [`to-be-erd.md`](to-be-erd.md).
 - 현재 구조와의 비교는 [`as-is-tables.md`](as-is-tables.md). 범위 밖(코퍼스 4표 · LangGraph 표)은 그대로다.
 
 | 스키마.표 | 목적 | as-is와의 차이 |

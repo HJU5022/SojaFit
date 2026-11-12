@@ -1,6 +1,11 @@
-# 현재(as-is) ERD
+# 재설계 전 서비스 DB ERD (as-is)
 
-- 기준: 운영 DB 구조(11-10 밤). 표 정의서: [`as-is-tables.md`](as-is-tables.md).
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [summary.md](summary.md), [as-is-tables.md](as-is-tables.md), [to-be-erd.md](to-be-erd.md)
+
+- 기준: 운영 DB 구조(11-10). 표 정의서: [`as-is-tables.md`](as-is-tables.md).
 - **실선(`||--o{`)은 DB의 FK**, **점선(`||..||`)은 FK가 없고 같은 UUID로만 논리적으로 묶인 관계**다.
 - 범위 밖(그림에서 뺀 것): 코퍼스 4표(`source_documents` → `document_chunks` → `chunk_embeddings` · `chunk_embedding_bits`), LangGraph 체크포인트 표(`sojafit_agent.checkpoints` · `checkpoint_blobs` · `checkpoint_writes`, `thread_id`가 text라 FK 없음).
 

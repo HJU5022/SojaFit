@@ -1,6 +1,11 @@
-# 현재(as-is) 서비스 표 정의서
+# 재설계 전 서비스 표 정의서 (as-is)
 
-- 기준: **운영 DB(Supabase) 구조를 11-10 밤에 읽기 전용으로 뽑은 것**(칸 · 타입 · 키 · 인덱스는 `pg_catalog`에서 자동 생성, 의미 · 소유 코드는 손으로 적음). 행 내용은 읽지 않았다.
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [summary.md](summary.md), [as-is-erd.md](as-is-erd.md), [to-be-tables.md](to-be-tables.md)
+
+- 기준: **운영 DB(Supabase) 구조를 11-10에 읽기 전용으로 뽑은 것**(칸 · 타입 · 키 · 인덱스는 `pg_catalog`에서 자동 생성, 의미 · 소유 코드는 손으로 적음). 행 내용은 읽지 않았다.
 - 범위: 서비스 표 25개(`public` 16 + `sojafit_agent` 9). 코퍼스 4표(`source_documents` · `document_chunks` · `chunk_embeddings` · `chunk_embedding_bits`)와 LangGraph 체크포인트 표(`checkpoints` · `checkpoint_blobs` · `checkpoint_writes` · `*_migrations`)는 범위 밖이다.
 - 새 구조와의 비교는 [`to-be-tables.md`](to-be-tables.md), 그림은 [`as-is-erd.md`](as-is-erd.md).
 

@@ -1,23 +1,13 @@
-> 상태(11-12 확인): 목표(to-be) 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose·CI)에 적용된다. 아래 "적용하지 않은 확정 전 초안"과 현재(as-is)가 가리키는 재설계 전 운영 DB 구조는 작성 당시(11-10~11-11) 기준이고, 이 파일은 기록으로 보존한다.
+# 서비스 DB 재설계 요약
 
-# redesign
+- 상태: 이력
+- 기준일: 2026-11-11 (재설계 전 운영 DB와 추천안을 기록한 날)
+- 정본 여부: 비정본. 목표 설계는 `db/020_service_baseline.sql`로 구현되어 새 DB(compose, CI)에 적용된다. 현재 구조의 참조는 [db/schema/](../../../db/schema/SCHEMA.md)
+- 관련 문서: [to-be-design.md](to-be-design.md), [to-be-tables.md](to-be-tables.md), [to-be-impact.md](to-be-impact.md), [as-is-tables.md](as-is-tables.md), 검증 스크립트 `scripts/db/verify_redesign/`
 
-## 역할
-- 이 폴더: 서비스 DB 재설계(11-11) 설계 문서. 현재 구조 문서(`as-is-*.md`), 목표 설계안(`to-be-*.md`). 일회용 Postgres 검증 스크립트는 `scripts/db/verify_redesign/`.
-- 넣는 것: 설계 문서 · 검증 스크립트. 확정 · 구현된 SQL은 `db/` 바로 아래(기준선 `020_service_baseline.sql`)와 `db/migrations/`(운영 이전)에 있다. 이 폴더에는 SQL을 두지 않는다.
-- 넣지 않는 것: 실제로 자동 실행되는 SQL(`db/*.sql`), 운영 DB 접속 · 백업 파일, 정본 문서(SPEC · ADR).
-- 상태(통합): 기준선은 새 DB(compose · CI · 시험)에 적용되고, 운영 이전 SQL은 일회용 DB에서만 확인했다(**운영에는 아직 실행하지 않았다**).
+범위는 서비스 표(`public` 16 + `sojafit_agent` 9)이고 코퍼스 4표 · LangGraph 표는 그대로다. 근거 열의 `조사 §N`은 저장소에 없는 조사 노트 `db-unknowns-1110.md`의 절을 가리킨다.
 
-## 파일
-- `as-is-erd.md`(그림), `as-is-tables.md`(운영 DB에서 자동 생성한 표 25개 정의서 + 의미 · 소유 코드)
-- `to-be-design.md`(원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과), `to-be-erd.md`, `to-be-tables.md`, `to-be-impact.md`(영향 지도 · 단계별 비용 · ADR 후보)
-- `scripts/db/verify_redesign/` — 위 SQL을 일회용 Postgres 16 · 17에서 검증하는 스크립트(`run_all.sh`), 보조 코드(`lib/`), 표본 데이터(`sql/`). 운영 DB에는 접속하지 않는다
-
-# 서비스 DB 재설계 — 검토용 요약 (정운 확정 전 초안, 11-11)
-
-설계와 문서만 만들었다. **앱 코드 · 운영 DB는 바꾸지 않았고 어디에도 적용하지 않았다.** 범위는 서비스 표(`public` 16 + `sojafit_agent` 9)이고 코퍼스 4표 · LangGraph 표는 그대로다.
-
-## 1. 지금 무엇이 문제인가
+## 1. 재설계 전의 문제
 
 | # | 문제 | 근거 |
 |---|---|---|
@@ -33,7 +23,7 @@
 
 ```mermaid
 flowchart LR
-    subgraph 지금
+    subgraph 재설계 전
         A1[public.threads] -. 같은 UUID, FK 없음 .- B1[agent.threads]
         A2[public.circuits] -. connections 복사 .- B2[agent.circuits]
         C1[approvals.snapshot] --- C2[quotes.snapshot] --- C3[approved_cases.snapshot]
@@ -45,7 +35,7 @@ flowchart LR
         C1n[approvals.snapshot 유일한 사본 + 칸 3개]
         T[삭제 트리거 → LangGraph 체크포인트]
     end
-    지금 --> 추천안
+    재설계 전 --> 추천안
 ```
 
 상세 ERD: [`to-be-erd.md`](to-be-erd.md), 표 정의서: [`to-be-tables.md`](to-be-tables.md), 근거 · 선택지: [`to-be-design.md`](to-be-design.md).
@@ -58,7 +48,7 @@ flowchart LR
 | **B. 최소안(추천)** | 복사본 0, 고아 불가, 삭제를 DB가 보장. **에이전트 동작 불변** | 대화 상태는 아직 두 표(FK로 묶임) | 11 / 약 25 (P2) + SQL만으로 가능한 P1 |
 | C. FK만 | 코드 변경 0 | 회로 복사본 · 죽은 표 남음 | 0 / 3 |
 
-## 4. 단계와 비용 (일정은 정운이 정한다)
+## 4. 단계와 비용
 
 | 단계 | 내용 | 코드 함수 | 시험 | 시간 [추정] | 위험 |
 |---|---|---|---|---|---|
@@ -75,9 +65,9 @@ flowchart LR
 
 - 운영 이전은 **expand → 새 코드 배포 → contract** 순서이고 expand · contract P1 · contract P2가 별도 파일이다(`db/migrations/migrate_prod_*.sql`). P2 코드가 늦으면 P1까지만 하고 멈출 수 있다.
 - 되돌리기: `migrate_prod_4_rollback.sql`(B2 → B1 → A, **적용의 반대 순서**). contract가 지운 것은 전부 다른 표의 복사본이거나 0행이라 **무손실로 다시 만든다**. contract 뒤에는 **코드보다 DB를 먼저** 되돌린다(옛 코드가 지운 칸을 읽음).
-- 실행 전 백업 명령이 expand 파일 머리에 있다. 운영 DB에는 아직 아무것도 실행하지 않았다.
+- 실행 전 백업 명령이 expand 파일 머리에 있다. 운영 이전 SQL은 일회용 Postgres 16, 17에서만 실행했고 운영 DB에는 실행하지 않았다.
 
-## 6. 정운이 결정할 항목 (항목마다 추천 하나)
+## 6. 결정 항목과 추천
 
 | # | 결정 | 추천 |
 |---|---|---|
@@ -94,7 +84,7 @@ flowchart LR
 | D11 | 단계 범위 | **P1 + P2**(+ D8). 기준선(M)과 2b는 시간이 남으면 |
 | D12 | 데모 계정 `demo1 · demo2@example.com`을 CLI로 지울 수 있게 `--delete-user-id`의 허용 범위(`@example.test`)를 넓힐지 | 지금은 **유지**(필요하면 SQL로 지운다) |
 
-## 7. 11-10 밤 추가 조사 사실을 어디에 어떻게 반영했나
+## 7. 추가 조사 사실과 설계 반영
 
 | # | 사실 | 반영한 곳 |
 |---|---|---|
@@ -107,11 +97,7 @@ flowchart LR
 | 7 | 007 시드 psql 전용 | D8 선택지 3개 비교, 지연 생성 추천 |
 | 8 | postgres 역할 BYPASSRLS · Supavisor · FORCE RLS 0 | FORCE 미사용, 세션 advisory lock의 풀러 session 모드 의존을 가정으로 명시(`to-be-design.md` §6) |
 
-## 8. 정정할 것 (이번 작업에서 발견)
-
-- 11-10에 스모크 보강을 하면서 "B의 승인 · **견적 저장** POST는 승인당 견적 1개 DB 제약으로 격리가 깨져도 새로 만들지 못하고 409"라고 설명했는데 **견적은 UNIQUE가 없다**(승인당 여러 건 허용: `ix_quotes_approval`은 일반 인덱스). 승인(`message_id` UNIQUE)은 맞다. 즉 격리가 깨지면 B의 견적 POST는 A의 승인에 **견적을 실제로 만들 수 있다**(스모크는 404 기대로 실패 처리되지만 데이터는 바뀐다). `scripts/smoke/http_smoke.py`의 8-2 주석 · `SMOKE.md` 문장을 고치거나, 견적 POST를 빼야 한다. 지금 코드는 격리가 맞아 404(실제 서버 28단계 통과)라 현재 데이터 피해는 없다.
-
-## 9. 산출물
+## 8. 산출물
 
 | 경로 | 내용 |
 |---|---|
