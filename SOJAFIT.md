@@ -119,7 +119,7 @@ SojaFit (proj3-b)
 │       │   ├── LandingPage.tsx <- 목업 기반 공개 랜딩·합성 기능 미리보기·인증 상태에 따른 시작 경로
 │       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
-│       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
+│       │   ├── SignupPage.tsx <- 가입(이메일·12자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트
 │       │   ├── EmailActionPage.tsx <- 메일 링크의 인증 가입·비밀번호 설정 및 재설정 화면
 │       │   ├── EmailActionPage.test.tsx <- 토큰 주소 제거·일회 제출·비밀번호 확인·재설정 화면 시험
