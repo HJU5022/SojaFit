@@ -301,7 +301,10 @@ class Conversations:
         # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
         web_enabled = self.mode != 'demo' and exa.enabled()
         return build_graph(chat=chat, retriever=timed_tool('search',retrieve), web_enabled=web_enabled,
-            web_search=exa.search_evidence if web_enabled else None, judge_enabled=True,
+            web_search=timed_tool('grade2_datasheet', exa.search_grade2_evidence) if web_enabled else None,
+            web_search_fallback=timed_tool('grade3_reference', exa.search_grade3_reference) if web_enabled else None,
+            judge_web_search_fallback=timed_tool('grade3_reference_judge', exa.search_grade3_reference) if web_enabled else None,
+            judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 

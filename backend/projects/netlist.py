@@ -1,5 +1,6 @@
 """KiCad export의 연결 정보만 제한된 메모리에서 읽는다. 원본은 결과에 남기지 않는다."""
 import hashlib
+import re
 from dataclasses import dataclass
 from types import MappingProxyType
 from collections.abc import Mapping
@@ -9,7 +10,7 @@ MAX_DEPTH = 64
 MAX_TOKENS = 500_000
 MAX_COMPONENTS = 100_000
 MAX_NETS = 100_000
-PARSER_VERSION = "kicad-export-v1"
+PARSER_VERSION = "kicad-export-v2"
 
 
 class InvalidNetlist(ValueError):
@@ -76,11 +77,20 @@ def _read_export(text):
         ("export",), ("export", "components"), ("export", "components", "comp"),
         ("export", "nets"), ("export", "nets", "net"), ("export", "nets", "net", "node"),
     }
-    for name in ("ref", "value", "footprint"):
+    keep.update({("export", "libparts"), ("export", "libparts", "libpart")})
+    for name in ("lib", "part", "aliases", "pins"):
+        keep.add(("export", "libparts", "libpart", name))
+    keep.add(("export", "libparts", "libpart", "aliases", "alias"))
+    keep.add(("export", "libparts", "libpart", "pins", "pin"))
+    for name in ("num", "name"):
+        keep.add(("export", "libparts", "libpart", "pins", "pin", name))
+    for name in ("ref", "value", "footprint", "libsource"):
         keep.add(("export", "components", "comp", name))
+    for name in ("lib", "part"):
+        keep.add(("export", "components", "comp", "libsource", name))
     for name in ("code", "name"):
         keep.add(("export", "nets", "net", name))
-    for name in ("ref", "pin"):
+    for name in ("ref", "pin", "pinfunction"):
         keep.add(("export", "nets", "net", "node", name))
 
     def node(parent):
@@ -130,6 +140,32 @@ def _field(node, tag, required=False):
     return values[0]
 
 
+def _declared_symbol_pins(root):
+    """Read pin names from this export's embedded library, including explicit aliases."""
+    symbols = {}
+    for library in _children(root, "libparts"):
+        for symbol in _children(library, "libpart"):
+            lib, part = _field(symbol, "lib"), _field(symbol, "part")
+            aliases = [part]
+            for group in _children(symbol, "aliases"):
+                for alias in _children(group, "alias"):
+                    if len(alias[1]) == 1 and isinstance(alias[1][0], str):
+                        aliases.append(alias[1][0])
+            pins = {}
+            for group in _children(symbol, "pins"):
+                for pin in _children(group, "pin"):
+                    number, name = _field(pin, "num"), _field(pin, "name")
+                    if number and name and re.fullmatch(r"[A-Za-z0-9_~{}.+/-]{1,64}", name):
+                        pins[number] = name
+            for alias in aliases:
+                key = f"{lib}:{alias}"
+                if key in symbols and symbols[key] != pins:
+                    symbols[key] = {}
+                else:
+                    symbols[key] = pins
+    return symbols
+
+
 def normalize_netlist(raw: bytes) -> NormalizedCircuit:
     if len(raw) > MAX_BYTES:
         raise NetlistTooLarge("byte limit exceeded")
@@ -144,12 +180,22 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
     components, net_sections = _children(root, "components"), _children(root, "nets")
     if len(components) != 1 or len(net_sections) != 1:
         raise InvalidNetlist("missing or duplicate components/nets")
-    parts = tuple(MappingProxyType({name: _field(comp, name, name == "ref") for name in ("ref", "value", "footprint")})
-                  for comp in _children(components[0], "comp"))
+    parts = []
+    for comp in _children(components[0], "comp"):
+        fields = {name: _field(comp, name, name == "ref") for name in ("ref", "value", "footprint")}
+        source = _children(comp, "libsource")
+        if len(source) == 1:
+            lib, symbol = _field(source[0], "lib"), _field(source[0], "part")
+            if lib and symbol and all(re.fullmatch(r"[A-Za-z0-9_.+/-]{1,100}", x) for x in (lib, symbol)):
+                fields["symbol"] = f"{lib}:{symbol}"
+        parts.append(MappingProxyType(fields))
+    parts = tuple(parts)
     refs = tuple(part["ref"] for part in parts)
     if not refs or len(set(refs)) != len(refs):
         raise InvalidNetlist("missing or duplicate components")
     known_refs = set(refs)
+    part_symbols = {part["ref"]: part.get("symbol", "") for part in parts}
+    library_pins = _declared_symbol_pins(root)
     nets = []
     codes = set()
     for net in _children(net_sections[0], "net"):
@@ -157,8 +203,14 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
         if not code.isascii() or not code.isdecimal() or code.startswith("0") or code in codes:
             raise InvalidNetlist("expected unique positive integer net code")
         codes.add(code)
-        nodes = tuple(MappingProxyType({name: _field(item, name, True) for name in ("ref", "pin")})
-                      for item in _children(net, "node"))
+        nodes = []
+        for item in _children(net, "node"):
+            fields = {name: _field(item, name, True) for name in ("ref", "pin")}
+            function = _field(item, "pinfunction") or library_pins.get(part_symbols.get(fields["ref"]), {}).get(fields["pin"], "")
+            if function and re.fullmatch(r"[A-Za-z0-9_~{}.+/-]{1,64}", function):
+                fields["pinfunction"] = function
+            nodes.append(MappingProxyType(fields))
+        nodes = tuple(nodes)
         if not nodes or any(item["ref"] not in known_refs for item in nodes):
             raise InvalidNetlist("missing or unknown nodes")
         nets.append(MappingProxyType({"code": code, "name": _field(net, "name", True), "nodes": nodes}))

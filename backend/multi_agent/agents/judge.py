@@ -7,6 +7,7 @@
 - 출처: docs/specs/judge-agent.md What · How
 """
 import contextvars
+import math
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
@@ -24,9 +25,12 @@ from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
 from backend.multi_agent.agents.part_names import MAKER, ground_part_names
 from backend.multi_agent.facts import ORDER_CODE
+from backend.multi_agent.revisions import document_revision, requested_revisions, revisions_for_part
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
 from backend.rag.units import to_si
+from backend.services.datasheet_rows import grade2_pdf
+from backend.services.exa import SearchBudgetExhausted
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'judge_read.md').read_text(encoding='utf-8')
 LEAK = re.compile(r"[{}]|['\"]\s*:|\]\(|['\"]\s*,\s*['\"]")  # 구조화 출력의 JSON 조각('…','condition':) · 마크다운 조각('…](condition)')이 칸 값으로 새어 든 모양
@@ -207,6 +211,115 @@ def _ask_text(missing: list[str], roles: list[str], rules: dict) -> str:
     return head + ', '.join(missing) + (f" / 역할이 {' 또는 '.join(rules[r]['name'] for r in roles)} 중 어느 쪽인지도 알려 주세요." if len(roles) > 1 else '')
 
 
+def _required_missing(rule: dict, present: set[str]) -> list[str]:
+    """역할의 필수 조건만 보고 아직 필요한 회로 값을 돌려준다.
+
+    `when`으로 켜지는 조건은 선택 조건이다. 역할을 고르는 단계에서는 그것을
+    필수 입력으로 세지 않아, 회로 값이 충분히 특정한 역할까지 불필요하게
+    사용자 입력을 요구하지 않도록 한다. 실제 판정에서는 기존 규칙대로
+    조건이 켜지지 않았음을 `uncertain`으로 남긴다.
+    """
+    missing = []
+    for cond in rule.get('conditions') or []:
+        if cond.get('tier') != 'required':
+            continue
+        if 'any' in cond:
+            alternatives = [C._asks(member, present) for member in cond['any']]
+            if alternatives and all(alternatives):
+                missing.extend(alternatives[0])
+        else:
+            missing.extend(C._asks(cond, present))
+    return list(dict.fromkeys(missing))
+
+
+def _collapse_float_boundary_conditions(conditions: list[dict]) -> list[dict]:
+    """같은 항목의 상·하한이 부동소수점 여유만큼만 벌어진 중복을 제거한다.
+
+    `최대 23.2V`가 읽기 결과에서 `<= 23.2`와 `>= 23.2000000232`로
+    동시에 만들어진 경우처럼, 엄격한 하한을 뜻하는 원문이 없는 조건만
+    접는다. 사용자가 명시한 `이상/초과/at least/above/>`는 보존한다.
+    """
+    out = list(conditions)
+    lower_words = re.compile(r'이상|최소|초과|at\s+least|above|over|more\s+than|(?<!<)>', re.I)
+    for upper in conditions:
+        if upper.get('op') != '<=' or upper.get('basis') is None:
+            continue
+        try:
+            hi = float(upper['basis'])
+        except (TypeError, ValueError):
+            continue
+        for lower in conditions:
+            if lower.get('code') != upper.get('code') or lower.get('op') != '>=' or lower.get('basis') is None:
+                continue
+            try:
+                lo = float(lower['basis'])
+            except (TypeError, ValueError):
+                continue
+            if lo >= hi and lo - hi <= 1e-8 * max(1.0, abs(hi)) and not lower_words.search(str(lower.get('words') or '')):
+                if lower in out:
+                    out.remove(lower)
+    return out
+
+
+def _text_flags(values: dict, text: str, kinds: dict[str, str]) -> dict:
+    """판정 읽기가 놓친 명시적 플래그를 원문에서 보완한다.
+
+    숫자·역할을 LLM 출력으로 새로 추정하지 않고, 질문에 명시된 PWM 유무처럼
+    단순한 불리언 사실만 보완한다. 이 값은 역할 선택과 선택 조건 발동 여부에
+    쓰이며, 원문에 근거가 없으면 기존처럼 비워 둔다.
+    """
+    out = dict(values)
+    if kinds.get('pwm') == 'flag' and 'pwm' not in out:
+        no_pwm = re.search(r'(?:PWM|펄스\s*폭\s*변조)[^。.\n]{0,20}(?:없|아니|사용하지)', text, re.I)
+        has_pwm = re.search(r'(?:PWM|펄스\s*폭\s*변조)[^。.\n]{0,30}(?:\d|사용|구동|제어|있)', text, re.I)
+        if no_pwm:
+            out['pwm'] = False
+        elif has_pwm:
+            out['pwm'] = True
+    return out
+
+
+def _role_present(role: str, rule: dict, values: dict, conds: dict, text: str) -> set[str]:
+    """역할 판별용 입력 집합을 만든다.
+
+    여러 역할을 동시에 읽을 때 LLM이 같은 물리량을 `v_in_max/i_max`로
+    통일해 적을 수 있다. 질문이 코일을 명시하고 코일 역할만 그 이름을
+    받는다면, 역할 선택 단계에서만 `v_coil/i_coil`로 대응시킨다. 실제
+    판정 재실행은 선택된 역할의 입력 목록으로 `to_inputs`가 같은 변환을
+    수행한다.
+    """
+    present = set(values) | set(conds)
+    names = C.inputs(rule)
+    if '코일' in text and 'v_coil' in names and 'v_coil' not in present and 'v_in_max' in values:
+        present.add('v_coil')
+    if '코일' in text and 'i_coil' in names and 'i_coil' not in present and 'i_max' in values:
+        present.add('i_coil')
+    return present
+
+
+def _prefer_role_from_load(roles: list[str], rules: dict, text: str) -> list[str]:
+    """질문이 명시한 부하 종류와 충돌하는 역할만 제거한다.
+
+    코일 플라이백과 PWM 모터 프리휠링처럼 회로 모양이 비슷한 역할은
+    숫자 입력이 양쪽에 모두 들어와도 역할이 유일해지지 않는다. 사용자가
+    `코일 부하`라고 명시했으면 모터 역할을 후보에서 제외하고, 모터라고
+    명시했으면 코일 전용 역할을 제외한다. 둘 다 언급되거나 어느 쪽도
+    언급되지 않으면 원래의 역할 모호성 처리를 유지한다.
+    """
+    lowered = text.casefold()
+    has_coil = bool(re.search(r'코일|릴레이\s*(?:부하|플라이백)', lowered))
+    has_motor = bool(re.search(r'모터|motor', lowered))
+    if has_coil and not has_motor:
+        preferred = [r for r, rule in rules.items() if '코일' in str(rule.get('recognize', ''))]
+        if preferred:
+            return [r for r in preferred if r in roles] or preferred[:1]
+    if has_motor and not has_coil:
+        preferred = [r for r, rule in rules.items() if '모터' in str(rule.get('recognize', ''))]
+        if preferred:
+            return [r for r in preferred if r in roles] or preferred[:1]
+    return roles
+
+
 # [왜] 읽기가 품번을 'TSC 1N5817'처럼 제조사 이름과 함께 낸다. 사양 표 품번에는 제조사 이름이 없어 0행이 된다(11-06 평가 7건)
 EDITION = re.compile(r'[A-Z]\d{4}|(?:19|20)\d{2}|판|EDITION|VERSION|\bREV', re.I)  # 데이터시트 판으로 보이는 글
 
@@ -251,6 +364,97 @@ def _rows(specs, name: str) -> list[dict]:
     """품번의 사양 표 행. 제조사 이름을 떼고 찾고, 없으면 첫 낱말(주문 코드를 뗀 기본 품번, 1N4148 R0G → 1N4148)로 다시 찾는다."""
     name = _part(name)
     return (specs(name) or specs(name.split()[0])) if name else []
+
+
+_EXTERNAL_NUMBER = re.compile(r'^[+−-]?(?:\d+(?:\.\d+)?|\.\d+)$')
+_SHA256 = re.compile(r'^[0-9a-f]{64}$', re.I)
+_VRRM_ROW = re.compile(r'^(?:v\s*rrm|repetitive\s+)?peak\s+reverse\s+voltage$|^v\s*rrm$', re.I)
+def _row_revision(row: dict) -> str:
+    """Extract the revision suffix from a persisted datasheet citation filename."""
+    document = str((row.get('citation') or {}).get('document') or '')
+    return document_revision(document)
+
+
+def _grade2_rows(web_search, part: str, codes: set[str], maker: str = '') -> list[dict]:
+    """공식 PDF 표 행을 판정기의 기존 사양 행 모양으로 변환한다.
+
+    외부 검색 결과는 검증된 grade-2 행만 받는다. 품번 열이 정확히 요청 품번과
+    일치하고, 코드·단위·숫자 셀이 모두 명확한 행만 통과시킨다. 일반 웹 자료와
+    typical 값은 이 경로에서 절대 행으로 만들지 않는다.
+    """
+    if web_search is None or not part or not codes or 'VRRM' not in {str(code).upper() for code in codes}:
+        return []
+    hosts = {'tsc': 'services.taiwansemi.com', 'taiwansemiconductor': 'services.taiwansemi.com',
+             'infineon': 'www.infineon.com'}
+    maker_key = re.sub(r'[^a-z]', '', maker.casefold())
+    if maker and maker_key not in hosts:
+        return []
+    try:
+        terms = f'{maker} repetitive peak reverse voltage VRRM'.strip()
+        documents = web_search([part], terms) or []
+    except SearchBudgetExhausted:
+        # Contention is a request-level budget boundary, not an empty result.
+        # Let the caller suppress grade-3 fallback while preserving local rows.
+        raise
+    except Exception:  # 외부 검색 장애는 내부 판정을 중단시키지 않는다
+        return []
+    rows = []
+    for document in documents:
+        if document.get('evidence_grade') != 2 or not _SHA256.fullmatch(str(document.get('source_sha256') or '')):
+            continue
+        source_url = str(document.get('source_url') or '')
+        page = document.get('page')
+        if (not source_url or grade2_pdf(source_url) != source_url or not document.get('file')
+                or type(page) is not int or page <= 0
+                or not document.get('table') or len(document.get('doc_parts') or []) != 1):
+            continue
+        host = source_url.split('/')[2].casefold()
+        if maker and hosts[maker_key] != host:
+            continue
+        if document['doc_parts'][0].casefold() != part.casefold():
+            continue
+        raw_row = str(document.get('row') or '').strip()
+        code = 'VRRM' if raw_row.upper() == 'VRRM' or _VRRM_ROW.fullmatch(raw_row) else ''
+        if not code or str(document.get('unit') or '').strip().upper() != 'V':
+            continue
+        content = str(document.get('content') or '')
+        caption = str(document.get('table') or '')
+        if not re.search(r'\bV\s*RRM\b', content, re.I) or not re.search(r'\bMAX(?:IMUM)?\s+RATINGS?\b', caption, re.I):
+            continue
+        if document.get('conditions'):
+            continue
+        cells = document.get('cells') or []
+        if len(cells) != 1:
+            continue
+        column, raw = cells[0]
+        if str(column).upper() not in {'MAX', part.upper()}:
+            continue
+        value = str(raw).strip()
+        if not _EXTERNAL_NUMBER.fullmatch(value):
+            continue
+        maximum = float(value)
+        if not math.isfinite(maximum) or maximum <= 0:
+            continue
+        normalized = to_si(maximum, 'V')
+        if normalized is None:
+            continue
+        citation = {
+            'document': document.get('file', ''), 'page': document.get('page'),
+            'table': document.get('table', ''), 'row': document.get('row', ''),
+            'source_url': source_url, 'source_sha256': document['source_sha256'],
+            'evidence_grade': 2,
+        }
+        if re.fullmatch(r'W[1-9][0-9]*', str(document.get('chunk_id', ''))):
+            citation['chunk_id'] = document['chunk_id']
+        rows.append({'part': part, 'category': '', 'code': code,
+                     'min': None, 'typ': None, 'max': normalized[0],
+                     'text': None, 'unit': normalized[1],
+                     'source_value_text': content,
+                     'test_condition': document.get('conditions') or None, 'citation': citation})
+    # 같은 품번·행에 서로 다른 공식 PDF 값이 섞이면 어느 쪽도 판정 근거로 선택하지 않는다.
+    if len({(row['max'], row['unit']) for row in rows}) > 1 or len({row['citation']['source_url'].split('/')[2] for row in rows}) > 1:
+        return []
+    return rows[:1]
 
 
 def _ordering_row(retriever, code: str, base: str) -> dict | None:
@@ -470,8 +674,8 @@ def _original_from_text(read: JudgeRead, text: str) -> str:
 def outside_corpus(read: JudgeRead, facts: dict, text: str = '') -> tuple[Reason, str] | None:
     """사용자가 꼭 요구한 것이 코퍼스 밖이면 (거절 사유, 요약). 이름 · 항목만 대조한다(숫자 판단 없음, SPEC 8.3)."""
     maker = re.sub(r'[^A-Z]', '', read.maker_wanted.upper())  # 'Taiwan Semiconductor Co.' → 'TAIWANSEMICONDUCTORCO'
-    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI'):
-        return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not TSC'
+    if maker and maker != 'TSC' and not maker.startswith('TAIWANSEMI') and not maker.startswith('INFINEON'):
+        return Reason.PART_MISSING, f'required maker {read.maker_wanted} is not a supported Grade 2 manufacturer'
     # [왜] 사실 확인이 코퍼스 목록에 없다고 확인한 품번을 후보로 판정하면, 비슷한 다른 품번 문서로 판정 답이 나갔다(#46 Haiku Supervisor v3-32 · 34:
     #      1N5408X · UF4007X). 원래 부품은 다른 제조사 품번일 수 있어 후보만 본다. 이름이 그대로 같을 때만 거절한다(접두어로 넓히지 않는다)
     missing = {name.upper() for name, ok in (facts.get('parts') or {}).items() if not ok}
@@ -515,11 +719,15 @@ def display_inputs(values: dict, conds: dict) -> list[dict]:
     return rows[:60]
 
 
-
-def judge_agent(state: dict, *, specs, find, retriever) -> dict:
+def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
     read = JudgeRead.model_validate(state['judge_read'])
+    revision_text = ' '.join([state.get('conditions', ''), state.get('question', '')])
+    editions = requested_revisions(revision_text)
+    references = []
+    grade2_budget_exhausted = False
+    grade3_budget_exhausted = False
     # [왜] 코퍼스 밖 요구(사양 표에 없는 성질 · TSC 아닌 제조사 · 확인 안 된 개정판)는 규칙 · 조건을 만들기 전에 거절한다.
     #      묻거나 판정하면 그 요구와 상관없는 판정 답이 나간다(11-06 동결 평가: 비관련 35건 중 8~10건)
     if refused := outside_corpus(read, state.get('facts') or {}, ' '.join([state.get('conditions', ''), state.get('question', '')])):
@@ -534,9 +742,26 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     if not roles:
         return {'judgement': {**base, 'kind': 'no_rule'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('partial', 'role outside the 23 roles: no judging rule')]}
+    roles = _prefer_role_from_load(roles, rules, text)
     kinds = {k: v for r in roles for k, v in C.inputs(rules[r]).items()}
     values, conds, dropped = to_inputs(read, text, kinds)
-    asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
+    values = _text_flags(values, text, kinds)
+    auto_selected = False
+    if len(roles) > 1 and read.role_evidence:
+        complete = [r for r in roles if not _required_missing(rules[r], _role_present(r, rules[r], values, conds, text))]
+        # 읽기가 회로 연결 근거를 함께 냈고 한 역할만 필수 입력을 모두 갖추면
+        # 그 역할을 선택한다. 두 역할 모두/어느 쪽도 충분하지 않으면 기존처럼
+        # 사용자에게 한 번만 확인해 모호성을 보존한다(특정 문항 분기 없음).
+        if len(complete) == 1:
+            roles = complete
+            auto_selected = True
+            kinds = {k: v for k, v in C.inputs(rules[roles[0]]).items()}
+            values, conds, dropped = to_inputs(read, text, kinds)
+            values = _text_flags(values, text, kinds)
+    if auto_selected:
+        asked = list(dict.fromkeys(_required_missing(rules[roles[0]], set(values) | set(conds))))
+    else:
+        asked = list(dict.fromkeys(n for r in roles for n in C.needed(rules[r], set(values) | set(conds))))
     if asked or len(roles) > 1:
         # [주의] 인터럽트는 문항당 한 번이다(AC-08). 재개하면 이 노드가 처음부터 다시 돌지만, 읽기는 앞 노드에 남아 있어 LLM을 다시 부르지 않는다
         # [주의] 재개 값은 {'answers': {...}, 'role': ...} 모양이다. 빈 dict({})로 재개하면 LangGraph가 재개로 보지 않고 다시 멈춘다(11-06 실측)
@@ -567,14 +792,7 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             continue
         spec_words[x.code] = f'{spec_words[x.code]}, {x.words}' if x.code in spec_words else x.words
     extra = C.user_conditions([(_tolerance_words(_rated_words(_ground_ops(w, text, code), text), code, text), code) for code, w in spec_words.items()] + limits)
-    for condition in extra:
-        code = condition.get('code')
-        if code in ('VF', 'IR') and isinstance(condition.get('basis'), str):
-            number = C.evaluate(condition['basis'], {})
-            if number is not None:
-                row = {'code': code, 'value': f'{condition["op"]} {number:g} {"V" if code == "VF" else "A"}'}
-                if row not in base['input_conditions']:
-                    base['input_conditions'].append(row)
+    extra = _collapse_float_boundary_conditions(extra)
     given = {c['code'] for c in extra}
 
     def keep(cond: dict) -> bool:
@@ -612,6 +830,9 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
         if prefetch and read.original_part and not original_not_tsc(read.original_part, text):
             prefetch([_part(read.original_part), _part(read.original_part).split(' ')[0]], need)
         original_rows = [] if original_not_tsc(read.original_part, text) else _rows(specs, read.original_part)  # 후보 조회와 같은 규칙(제조사 이름 · 주문 코드)
+        original_editions = revisions_for_part(revision_text, _part(read.original_part)) if editions else set()
+        if editions:
+            original_rows = [row for row in original_rows if _row_revision(row) in (original_editions or set())]
         if state.get('question_type') == 'candidate_find' and not original_rows and extra:
             # [왜] 원래 부품 문서가 아예 없는데(제조사 미상 1N5231) 사용자가 구매 규격을 숫자로 줬으면, 원래 값과 비교하는 역할 조건은
             #      모든 후보를 '확인 안 됨'으로 만들 뿐이다. 그 조건은 빼고 구매 규격과 회로 값 조건으로 찾는다(11-06 h3-13)
@@ -655,9 +876,10 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
                     found = [f for fu in futures for f in fu.result()]
                 if not found and not NAMED_FAMILY.search(text):
                     found = search(None)
-            # [왜] 찾기는 대체 후보를 찾는 일이다. 원래 부품(같은 기본 품번)이 '동일품'으로 끼면 사용자 요구(양방향 등)를 어겨도 동일품이 나왔다(h3-15)
-            orig_base = _part(read.original_part).split(' ')[0].upper()
-            candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found if not orig_base or f['part'].upper() != orig_base]
+            # 구매 규격 전체 목록을 요청한 찾기에서는 현재 부품도 조건을 만족하면
+            # 결과에 포함한다. 원래 부품이 요구 제조사·패키지·정격을 만족하지
+            # 않으면 아래의 일반 조건 판정에서 자연스럽게 제외된다.
+            candidates = [(f['part'], f.get('category', ''), f.get('packages', [])) for f in found]
             if mount:
                 candidates = [c for c in candidates if mount in mount_of(c[2])]  # 요구한 실장 방식의 패키지가 있는 후보만
             # [왜] 내 설정의 선호 실장 방식(기억 읽기, SPEC 8.5)은 질문이 실장 방식을 말하지 않았을 때만 쓴다. 질문의 요구가 이긴다.
@@ -672,10 +894,57 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
             # 후보들을 문서별로 묶어 한 번에 읽어 둔다(후보마다 차례로 읽으면 LLM 호출이 후보 수만큼 이어진다)
             prefetch([n for c in candidates for n in (_part(c[0]), _part(c[0]).split(' ')[0])], need)
         for name, category, packages in candidates:
+            part_editions = revisions_for_part(revision_text, _part(name)) if editions else set()
+            if editions and not part_editions:
+                continue  # An ambiguous part/edition association must not borrow another part's edition.
             rows = _rows(specs, name)
+            if editions:
+                rows = [row for row in rows if _row_revision(row) in part_editions]
+                packages = None  # 패키지도 지정 판본에서 다시 읽는다.
+            existing = {row.get('code') for row in rows}
+            missing_codes = set(need) - existing
+            grade2_rows = []
+            if web_search and missing_codes:
+                # 기존 품번 표와 find 결과는 TSC 코퍼스에서 왔다. 다른 제조사의 동명 부품과 합치지 않는다.
+                tsc_candidate = bool(rows) or state.get('question_type') == 'candidate_find'
+                maker = read.maker_wanted or ('TSC' if tsc_candidate else '')
+                if not tsc_candidate or maker.upper() in ('TSC', 'TAIWAN SEMICONDUCTOR'):
+                    try:
+                        grade2_rows = _grade2_rows(web_search, _part(name), missing_codes, maker)
+                    except SearchBudgetExhausted as error:
+                        grade2_budget_exhausted = error.grade == 2
+                        grade2_rows = []
+                    if editions:
+                        grade2_rows = [row for row in grade2_rows
+                                       if _row_revision(row) in part_editions]
+                    rows = [*rows, *grade2_rows]
+            if (web_search_fallback and web_search and not grade2_budget_exhausted
+                    and 'VRRM' in {str(code).upper() for code in missing_codes}
+                    and not grade2_rows):
+                reference_terms = f"{read.maker_wanted or 'TSC'} {_part(name)} repetitive peak reverse voltage VRRM"
+                reference_terms += ' ' + ' '.join(sorted(part_editions))
+                try:
+                    fallback_rows = web_search_fallback([_part(name)], reference_terms) or []
+                except SearchBudgetExhausted as error:
+                    grade3_budget_exhausted = error.grade == 3
+                    fallback_rows = []
+                for ref in fallback_rows:
+                    filename = str(ref.get('file') or '')
+                    if ref.get('source_type') != 'external_web_reference' or not ref.get('source_url'):
+                        continue
+                    if editions and not any(re.search(r'(?<![A-Z0-9])' + code + r'(?![A-Z0-9])',
+                                                      (filename + ' ' + ref['source_url']).upper()) for code in part_editions):
+                        continue
+                    references.append({k: ref[k] for k in
+                                       ('source_url', 'file', 'doc_parts', 'retrieved_at') if k in ref})
+            if editions and not rows:
+                continue
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
             same, same_cite = _identical(retriever, read.original_part, name)
+            if editions and same_cite and (document_revision(same_cite.get('document')) not in part_editions
+                                           or document_revision(same_cite.get('document')) not in (original_editions or set())):
+                same, same_cite = False, None
             judged = [_schottky_exempt(V.judge_part(rules[r], r, name, values, conds, rows,
                                                     original_rows=original_rows or None, identical=same, identical_citation=same_cite,
                                                     footprint=footprint, packages=packages), category) for r in roles]
@@ -684,7 +953,14 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     except RetrievalUnavailableError as error:
         return {'judgement': {**base, 'kind': 'judge'}, 'path': ['판정'],
                 'reports': (state.get('reports') or []) + [_report('fail', f'spec table tool failed: {error.kind}', reason=Reason.SEARCH_ERROR)]}
-    shown, unverified = V.rank(results, preferred=preferred) if state.get('question_type') == 'candidate_find' else (results, [])
+    if state.get('question_type') == 'candidate_find':
+        # 후보 찾기 질문은 상위 몇 개를 고르는 판정 질문과 달리, 사용자가
+        # 명시한 구매 규격을 만족하는 전체 목록을 요구한다. 불충족 후보는
+        # 여전히 제외하고, 통과 후보만 모두 보이도록 순위 함수의 표시 상한을
+        # 현재 결과 수로 넓힌다(도구의 50개 검색 상한은 그대로 유지).
+        shown, unverified = V.rank(results, per_verdict=max(1, len(results)), total=len(results), preferred=preferred)
+    else:
+        shown, unverified = results, []
     judgement = {**base, 'kind': 'find' if state.get('question_type') == 'candidate_find' else 'judge', 'roles': roles,
                  'results': [j.model_dump(mode='json') for j in results], 'shown': [j.model_dump(mode='json') for j in shown],
                  'unverified': [j.model_dump(mode='json') for j in unverified], 'terms': terms, 'capped': len(found) >= 50,
@@ -692,13 +968,16 @@ def judge_agent(state: dict, *, specs, find, retriever) -> dict:
     missing = sorted({m for j in results for m in j.missing})
     status = 'ok' if results else 'partial'
     summary = f'{len(results)} candidates judged' + (f', {len(shown)} shown' if judgement['kind'] == 'find' else '')
-    return {'judgement': judgement, 'path': ['판정'], 'reports': (state.get('reports') or []) + [_report(status, summary, missing)]}
+    report_reason = Reason.LIMIT_REACHED if grade2_budget_exhausted or grade3_budget_exhausted else None
+    return {'judgement': judgement, 'references': references, 'path': ['판정'],
+            'reports': (state.get('reports') or []) + [_report(status, summary, missing, reason=report_reason)]}
 
 
-def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
+def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:
     """멀티 하위 그래프 노드: 판정 노드(`judge_agent`)를 그대로 돌리고, 그 보고를 할 일 보고서(`TaskReport`)로 바꾼다."""
     # [왜] 판정 코드는 단일 그래프(D4 v2)와 같이 쓴다. 멀티만의 칸(할 일 번호 · 판정 결과)은 여기서 붙인다
-    out = judge_agent(state, specs=specs, find=find, retriever=retriever)
+    out = judge_agent(state, specs=specs, find=find, retriever=retriever, web_search=web_search,
+                      web_search_fallback=web_search_fallback)
     r, judgement = out['reports'][-1], out.get('judgement') or {}
     summary, reason = r['summary'], r.get('reason')
     if judgement.get('kind') == 'find':
@@ -713,5 +992,6 @@ def judge_task_node(state: dict, *, specs, find, retriever) -> dict:
         status = 'fail'
         reason = reason or (Reason.NOT_FOUND.value if judgement.get('kind') == 'no_rule' else Reason.NO_RESULT.value)
     report = TaskReport(task=state['task']['id'], agent='judge', status=status, summary=summary[:200], reason=reason,
-                        missing=r.get('missing') or [], judgement=judgement, llm_calls=1, round=state.get('round') or 1)
+                        missing=r.get('missing') or [], judgement=judgement,
+                        references=out.get('references') or [], llm_calls=1, round=state.get('round') or 1)
     return {'reports': [report.model_dump(mode='json')], 'path': out['path']}

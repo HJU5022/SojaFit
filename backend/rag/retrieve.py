@@ -14,6 +14,7 @@
 """
 import os
 import re
+from threading import Lock
 from urllib.parse import unquote, urlparse
 
 # [왜] FastMCP 요청 worker에서 처음 import하면 첫 search_corpus가 멈출 수 있어 서버 시작 스레드에서 미리 읽는다.
@@ -27,6 +28,7 @@ N_BIT = 3200  # [왜] 3-small 1536차원 운영 DB 실측(전자_데이터시트
 RRF_K = 60   # [왜] RRF 원 논문(Cormack 외 2009)의 기본값
 EMBED_MODEL = 'voyage-4-large'  # chunk_embeddings.embedding_model과 같아야 한다
 DIM = 1024  # voyage-4-large의 출력 차원(llm.voyage_embed가 output_dimension 1024로 부른다)
+_warmup_lock = Lock()
 _bm25 = None  # (BM25Okapi, 청크 id 목록). warmup()이 한 번 만든다
 _parts = None  # (품번 소문자 → 문서 id 집합, 문서 id → 청크 id 목록). warmup()이 같이 만든다
 _nocover = None  # 표지 청크가 아닌 청크 id 집합. warmup()이 같이 만든다
@@ -85,14 +87,18 @@ def warmup():
     """document_chunks 본문으로 BM25 색인과 품번 → 문서 색인을 메모리에 만든다."""
     # [주의] 첫 retrieve() 때 한 번 불린다. 서버 기동 때 미리 부르는 연결은 아직 없어 첫 질문이 느리다
     global _bm25, _parts, _nocover
-    from rank_bm25 import BM25Okapi
-    with _connect() as conn:
-        rows = conn.execute('SELECT id, document_id, content, page_number FROM document_chunks ORDER BY id').fetchall()
-    # BM25Okapi: 질문 토큰이 청크에 몇 번 나오는지(tf)와 그 토큰이 드문 정도(idf)로 점수를 매기고 청크 길이로 보정한다
-    # [주의] 적재 전 빈 DB에서는 BM25Okapi가 0으로 나눈다. 청크가 없으면 키워드 후보 없이 dense만 쓴다
-    _bm25 = (BM25Okapi([tokens(r[2]) for r in rows]) if rows else None, [r[0] for r in rows])
-    _parts = part_index([r[:3] for r in rows])
-    _nocover = {r[0] for r in rows if r[3] is not None}  # [왜] 표지 청크는 품번 목록뿐이라 품번 질문에 BM25로 1위가 되고 근거 페이지가 없다(page_number가 없는 청크)
+    with _warmup_lock:
+        if _bm25 is not None and _parts is not None and _nocover is not None:
+            return
+        from rank_bm25 import BM25Okapi
+        with _connect() as conn:
+            rows = conn.execute('SELECT id, document_id, content, page_number FROM document_chunks ORDER BY id').fetchall()
+        # BM25Okapi: 질문 토큰이 청크에 몇 번 나오는지(tf)와 그 토큰이 드문 정도(idf)로 점수를 매기고 청크 길이로 보정한다
+        # [주의] 적재 전 빈 DB에서는 BM25Okapi가 0으로 나눈다. 청크가 없으면 키워드 후보 없이 dense만 쓴다
+        index = (BM25Okapi([tokens(r[2]) for r in rows]) if rows else None, [r[0] for r in rows])
+        _parts = part_index([r[:3] for r in rows])
+        _nocover = {r[0] for r in rows if r[3] is not None}  # [왜] 표지 청크는 품번 목록뿐이라 품번 질문에 BM25로 1위가 되고 근거 페이지가 없다(page_number가 없는 청크)
+        _bm25 = index  # Publish readiness only after the part and page indexes are ready.
 
 
 def corpus_known():

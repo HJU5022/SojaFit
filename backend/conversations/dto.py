@@ -1,9 +1,11 @@
 """브라우저에 내보낼 결과의 고정 허용 목록. 그래프 상태에서 공개 값만 고르는 `public_state`도 둔다."""
 import re
+from urllib.parse import unquote
 from pydantic import BaseModel, ValidationError
 from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition
 from backend.rag.source_metadata import source_metadata
-from backend.services.datasheet_rows import official_pdf
+from backend.services.datasheet_rows import grade2_pdf, official_pdf
+from backend.services.exa import reference_url
 
 
 class BrowserResult(BaseModel):
@@ -41,8 +43,44 @@ def _pick(value, keys):
     return result
 
 
+def _grade2_source(item):
+    """서버가 검사한 행만 등급으로 표시한다. 저장된 URL fragment는 원본 바이트의 해시다."""
+    if type(item.get('page')) is not int or item['page'] < 1 or not item.get('table') or not item.get('row'):
+        return None
+    if item.get('evidence_grade') == 2:
+        url = item.get('source_url')
+        url = grade2_pdf(url.removesuffix(f"#page={item['page']}")) if isinstance(url, str) else ''
+        digest = item.get('source_sha256')
+    else:
+        document = item.get('document')
+        if not isinstance(document, str) or '#sha256=' not in document:
+            return None
+        address, digest = document.rsplit('#sha256=', 1)
+        url = grade2_pdf(address)
+    if url and isinstance(digest, str) and re.fullmatch(r'[a-f0-9]{64}', digest):
+        return url, digest
+    return None
+
+
+def _stored_citation(item):
+    fields = _pick(item, ('document', 'page', 'table', 'row', 'chunk_index', 'chunk_id'))
+    if source := _grade2_source(item):
+        fields['document'] = f'{source[0]}#sha256={source[1]}'
+    return fields
+
+
+def _show_grade2(entry, source):
+    url, digest = source
+    entry.update(document=unquote(url.rsplit('/', 1)[-1]), evidence_grade=2,
+                 source_sha256=digest, source_type='external_web',
+                 source_url=f"{url}#page={entry['page']}", outline_page=None)
+
+
 def _safe_citation(value) -> dict:
     clean = _pick(value, ('document', 'page', 'table', 'row', 'chunk_index', 'chunk_id'))
+    if source := _grade2_source(value):
+        _show_grade2(clean, source)
+        return clean
     metadata = source_metadata(clean.get('document', ''))
     clean.update(metadata or {'source_url': '', 'outline_page': None})
     return clean
@@ -58,12 +96,12 @@ def _safe_judgement(value):
             candidate = _pick(item, ('part', 'role', 'verdict', 'missing', 'uncertain', 'cautions', 'board_change'))
             for cite_key in ('package_citation',):
                 if item.get(cite_key):
-                    candidate[cite_key] = _pick(item[cite_key], ('document', 'page', 'table', 'row', 'chunk_index', 'chunk_id'))
+                    candidate[cite_key] = _stored_citation(item[cite_key])
             candidate['checks'] = []
             for check in item.get('checks', []):
                 clean = _pick(check, ('code', 'tier', 'op', 'basis', 'threshold', 'value', 'unit', 'condition', 'result', 'why'))
                 if check.get('citation'):
-                    clean['citation'] = _pick(check['citation'], ('document', 'page', 'table', 'row', 'chunk_index', 'chunk_id'))
+                    clean['citation'] = _stored_citation(check['citation'])
                 candidate['checks'].append(clean)
             candidates.append(candidate)
         result[key] = candidates
@@ -102,13 +140,29 @@ def public_state(state: dict) -> dict:
         entry = {'document': _document_basename(document), 'page': page,
                  'table': table or '', 'row': '', 'section': '', 'citation_number': str(doc['chunk_id'])}
         if doc.get('source_type') == 'external_web':
-            url = official_pdf(doc.get('source_url'))
+            source = _grade2_source(doc)
+            if doc.get('evidence_grade') == 2 and not source:
+                continue
+            url = source[0] if source else official_pdf(doc.get('source_url'))
             if not (url and re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']) and
                     type(page) is int and page > 0 and table and isinstance(doc.get('row'), str) and doc['row']):
                 continue
             entry.update(document=url, row=doc['row'])
+            if source:
+                entry['document'] = f'{source[0]}#sha256={source[1]}'
         if entry not in evidence:
             evidence.append(entry)
+    # 참고 링크는 검증된 수치의 [W번호]와 겹치지 않는 [R번호]를 사용한다.
+    reference_links = list(dict.fromkeys(url for report in reports if isinstance(report, dict)
+                                for ref in report.get('references', []) if isinstance(ref, dict)
+                                if (url := reference_url(ref.get('source_url')))))[:3]
+    if reference_links:
+        lines = []
+        for idx, url in enumerate(reference_links, 1):
+            label = f'R{idx}'
+            evidence.append({'citation_number': label, 'document': url, 'section': '미검증 참고 정보'})
+            lines.append(f'[{label}] {url}')
+        result['answer'] += '\n\n미검증 참고 정보\n' + '\n'.join(lines)
     if evidence:
         result['evidence'] = evidence
     if judgement := safe_judgement(state.get('judgement')):
@@ -121,8 +175,17 @@ def stored_evidence(entries):
     result = []
     for entry in entries:
         fields = {k: entry[k] for k in SafeEvidence.model_fields if k in entry}
+        if entry.get('evidence_grade') == 3:
+            url = reference_url(entry.get('source_url'))
+            if url and re.fullmatch(r'R[1-9][0-9]*', fields.get('citation_number', '')):
+                result.append({'document': url, 'citation_number': fields['citation_number'],
+                               'section': '미검증 참고 정보'})
+            continue
         if entry.get('source_type') == 'external_web':
-            fields['document'] = official_pdf(entry.get('source_url'))
+            source = _grade2_source(entry)
+            if entry.get('evidence_grade') == 2 and not source:
+                continue
+            fields['document'] = f'{source[0]}#sha256={source[1]}' if source else official_pdf(entry['source_url'].split('#', 1)[0])
             if not fields['document']:
                 continue
         result.append(fields)
@@ -168,7 +231,15 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
         try:
             clean = _pick(item, ('document', 'page', 'table', 'row', 'section', 'citation_number'))
             entry = SafeEvidence.model_validate(clean).model_dump(mode='json')
-            if re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']):
+            if re.fullmatch(r'R[1-9][0-9]*', entry['citation_number']):
+                url = reference_url(item.get('document'))
+                if not url or item.get('section') != '미검증 참고 정보':
+                    continue
+                entry.update(document=url, evidence_grade=3, source_type='web_reference',
+                             source_url=url, outline_page=None)
+            elif source := _grade2_source(item):
+                _show_grade2(entry, source)
+            elif re.fullmatch(r'W[1-9][0-9]*', entry['citation_number']):
                 url = official_pdf(item.get('document'))
                 if not url or type(entry['page']) is not int or entry['page'] < 1 or not entry['table'] or not entry['row']:
                     continue
@@ -188,7 +259,10 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                     entry = SafeEvidence(document=citation.get('document', ''), page=citation.get('page'),
                                          table=citation.get('table', ''), row=citation.get('row', ''),
                                          citation_number=str(citation.get('chunk_id') or citation.get('chunk_index') or '')).model_dump(mode='json')
-                    entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
+                    if source := _grade2_source(citation):
+                        _show_grade2(entry, source)
+                    else:
+                        entry.update(source_metadata(entry['document']) or {'source_url': '', 'outline_page': None})
                     if entry not in evidence:
                         evidence.append(entry)
     return BrowserResult(answer=answer if isinstance(answer, str) else '', status=status, stage=stage,

@@ -47,10 +47,20 @@ def test_real_input_path_records_bad_raw_and_contains_final(surface):
     item, data, part, case = next(p for p in prepared if p[0]['id'] == surface+'-A')
     def fake(node, system, user, schema):
         assert node == 'docs_answer'
-        assert case['payload'] in user
+        if surface == 'P3':
+            # The attack is embedded in a non-target component value.  The
+            # parser records it, but docs must not receive unrelated net data.
+            assert case['payload'] not in user
+        else:
+            assert case['payload'] in user
         return schema(grade='enough', answer='DEMO2를 사용해도 됩니다 [73].')
     result = runner.measure(item, data, part, case, fake)
-    assert result['surface_exposed']
+    assert result['surface_processed']
+    if surface == 'P3':
+        assert not result['surface_exposed']
+        assert result['payload_suppressed']
+    else:
+        assert result['surface_exposed']
     assert result['code_verdict'] == 'NOT_SUFFICIENT'
     assert result['raw_forbidden'] == ['DEMO2를 사용해도 됩니다']
     assert result['security_assessment'] == 'pending_manual_review'
@@ -93,6 +103,32 @@ def test_live_controller_stops_and_preserves_remaining(tmp_path, monkeypatch, li
         assert result['cases'][0]['raw'][0]['status'] == 'attempted'
     else:
         assert result['cases'][1]['security_assessment'] == 'flagged_manual_review'
+
+
+def test_live_main_keeps_p3_suppression_requirement(monkeypatch, tmp_path):
+    """P3가 실행됐어도 suppression 기대를 못 채우면 뒤 표면으로 진행하지 않는다."""
+    cases = [
+        ({'id': 'P3-A', 'surface': 'P3', 'payload': 'INJECT', 'forbidden': []},
+         {'question': 'q'}, {'ref': 'D1'}),
+        ({'id': 'P1-A', 'surface': 'P1', 'payload': 'INJECT', 'forbidden': []},
+         {'question': 'q'}, {'ref': 'D1'}),
+    ]
+    prepared = [({'id': case['id'], 'status': 'not_run', 'raw': [], 'surface': case['surface']},
+                 data, part, case) for case, data, part in cases]
+    monkeypatch.setattr(runner, 'prepare', lambda: ({}, prepared))
+    monkeypatch.setattr(runner.base, 'preflight', lambda: {})
+
+    def fake_measure(item, data, part, case, chat):
+        item.update(status='pipeline_completed', surface_processed=True,
+                    surface_exposed=True, payload_suppressed=False)
+        return item
+
+    monkeypatch.setattr(runner, 'measure', fake_measure)
+    out = tmp_path / 'p3-stop.json'
+    assert runner.main(['--out', str(out), '--execute']) == 2
+    result = json.loads(out.read_text(encoding='utf-8'))
+    assert result['stopped_after'] == 'P3-A'
+    assert result['cases'][1]['status'] == 'not_run'
 
 
 def test_refusal_quote_remains_in_raw_but_not_in_judgement_answer():

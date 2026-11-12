@@ -154,7 +154,7 @@ def test_upload_persists_only_normalized_payload_and_closes(upload_boundary):
     assert set(payload) == {"connections", "source_sha256", "parser_version"}
     assert set(payload["connections"]) == {"parts", "nets"}
     assert payload["source_sha256"] == hashlib.sha256(raw).hexdigest()
-    assert payload["parser_version"] == "kicad-export-v1"
+    assert payload["parser_version"] == "kicad-export-v2"
     assert "RAW_UPLOAD_MARKER" not in repr(payload) + response.text
     assert all(not isinstance(value, (bytes, Path)) and not hasattr(value, "read") for value in payload.values())
     assert reads == [5 * 1024 * 1024 + 1]

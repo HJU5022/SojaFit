@@ -1,9 +1,54 @@
 """제조사 표에서 인용 문장을 만들고 답변에 그대로 쓰였는지 검사한다."""
 from hashlib import sha256
+import math
 import re
 
 
+def _recovery_values(doc, reading):
+    if not isinstance(reading, dict) or not all(reading.get(k) is True for k in
+            ('readable', 'start_on_zero_crossing', 'end_on_recovery')) or reading.get('unit') != 'A':
+        return None
+    values = {}
+    for key in ('IF', 'IR', 'Irr'):
+        match = re.search(r'\b' + key + r'\s*=\s*(\d+(?:\.\d+)?)\s*A\b', doc.get('conditions', ''))
+        if not match:
+            return None
+        values[key] = float(match[1])
+    expected = {'forward_current': values['IF'], 'reverse_peak': -values['IR'],
+                'recovery_end': -values['Irr'], 'arrow_start': 0, 'arrow_end': -values['Irr']}
+    for key, number in expected.items():
+        observed = reading.get(key)
+        if not isinstance(observed, (int, float)) or not math.isfinite(observed) or not math.isclose(observed, number, abs_tol=1e-9):
+            return None
+    return values
+
+
+def recovery_figure_doc(parent, reading, chunk_id):
+    """Accept an observed recovery diagram only when its currents match the same PDF table."""
+    figure = parent.get('figure') or {}
+    if (not _recovery_values(parent, reading) or not re.search(r'reverse recovery', parent.get('row', ''), re.I)
+            or not re.search(r'reverse recovery.*(?:test circuit|characteristic)', figure.get('caption', ''), re.I)
+            or not isinstance(figure.get('page'), int) or figure['page'] <= 0
+            or not parent.get('source_sha256') or parent.get('evidence_grade') != 2):
+        return None
+    doc = {k: parent[k] for k in ('file', 'source_url', 'source_sha256', 'source_type',
+                               'evidence_grade', 'retrieved_at', 'doc_parts', 'conditions') if k in parent}
+    doc.update(chunk_id=chunk_id, page=figure['page'], table=figure['caption'], row='Reverse recovery waveform',
+               figure_reading=reading, figure_reading_method='haiku-vision/table-current-crosscheck')
+    doc['content'] = row_sentence(doc)
+    return doc
+
+
 def row_sentence(doc):
+    if reading := doc.get('figure_reading'):
+        values = _recovery_values(doc, reading)
+        if not values or len(doc.get('doc_parts') or []) != 1:
+            return ''
+        forward, peak, end = (f'{values[key]:g}' for key in ('IF', 'IR', 'Irr'))
+        return (f"{doc['doc_parts'][0]}의 {doc['table']} 파형은 +{forward} A에서 0 A를 지나 "
+                f"−{peak} A에 도달한 뒤 −{end} A로 회복하며, trr은 0 A 하강 교차점부터 "
+                f"회복 중 −{end} A 끝점까지 표시된 구간으로, 이는 해당 시험의 측정 기준이며 "
+                f"실제 코일의 실측값이나 교체 적합성을 보장하지 않습니다 [{doc['chunk_id']}].")
     parts, cells, unit = doc.get('doc_parts'), doc.get('cells'), doc.get('unit')
     if not parts or len(parts) != 1 or not cells or not unit or not doc.get('row'):
         return ''
@@ -16,7 +61,12 @@ def row_sentence(doc):
             values.append(f'{column} {value} {unit}')
         else:
             return ''
-    condition = f" ({doc['conditions']})" if doc.get('conditions') else ''
+    conditions = doc.get('conditions', '')
+    if re.search(r'reverse recovery', doc.get('row', ''), re.I):
+        ambient = re.search(r'TA\s*=\s*[+−-]?\d+(?:\.\d+)?\s*°C', doc.get('table', ''))
+        if ambient and ambient[0] not in conditions:
+            conditions = '; '.join(filter(None, (conditions, ambient[0])))
+    condition = f" ({conditions})" if conditions else ''
     return f"{part}의 {doc['row']}{condition} 값은 {', '.join(values)}입니다 [{doc['chunk_id']}]."
 
 

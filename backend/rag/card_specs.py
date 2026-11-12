@@ -157,11 +157,29 @@ def part_docs_index():
         from backend.rag.retrieve import COVER
         built = {}
         with psycopg.connect(os.environ['DATABASE_URL']) as conn:
-            for key, content in conn.execute('SELECT d.document_key, c.content FROM document_chunks c JOIN source_documents d'
-                                             ' ON d.id = c.document_id WHERE c.chunk_index = 0'):
-                m = COVER.match(content)
-                for p in (m.group(1).split(', ') if m else []):
-                    built.setdefault(p.strip().upper(), []).append(key)
+            result = conn.execute('SELECT d.document_key, c.chunk_index, c.table_name, c.content FROM document_chunks c JOIN source_documents d'
+                                  " ON d.id = c.document_id WHERE c.chunk_index = 0 OR c.table_name ILIKE '%ORDER%'"
+                                  ' ORDER BY d.document_key, c.chunk_index')
+            rows = result.fetchall() if hasattr(result, 'fetchall') else result
+        rows = [r if len(r) == 4 else (r[0], 0, None, r[1]) for r in rows]
+        for key, index, table, content in rows:
+            m = COVER.match(content) if index == 0 else None
+            for p in (m.group(1).split(', ') if m else []):
+                built.setdefault(p.strip().upper(), []).append(key)
+        # H 품번이 표지에 없고 주문 정보 표에만 있는 문서를 기본 품번의
+        # 문서로 연결한다. 실제 본문에 언급된 H 토큰과 표지 기본 품번이
+        # 함께 있을 때만 추가해 임의의 접미사를 만들지 않는다.
+        by_doc = {}
+        for part, keys in built.items():
+            for key in keys:
+                by_doc.setdefault(key, set()).add(part)
+        for key, index, table, content in rows:
+            bases = by_doc.get(key, set())
+            for token in re.findall(r'(?<![A-Z0-9])[A-Z0-9][A-Z0-9-]{2,}H(?![A-Z0-9])', content.upper()):
+                if token[:-1] in bases:
+                    built.setdefault(token, []).append(key)
+        for part, keys in built.items():
+            built[part] = list(dict.fromkeys(keys))
         return built
 
     def lookup(part):
