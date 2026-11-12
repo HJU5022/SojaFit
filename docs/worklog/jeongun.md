@@ -1,5 +1,11 @@
 # jeongun 작업 기록
 
+## 2026-11-12 재료 있는 문서 마무리(커밋만)
+- G1: README·GATES에 라이브 `sojafit-api-e0a5e30`(`limits5m`) 반영.
+- G3: v4h `summary.json`의 `distinct_text` 51,967을 GATES·EVAL 1장에 연결(운영 DB sha256 재집계는 아님).
+- EVAL §11 약점 표 · `docs/deliverables/failure_analysis.md` 초안 · D9 이관 기록 §10 완료 표시.
+- 안 함: 푸시·PR, 시연 영상, Langfuse 캡처, T4 재측정, scratchpad 커밋.
+
 ## 2026-11-12 토큰 한도 사용자 5M · 서비스 10M + main pull 배포
 - 배경: 배포본이 서비스 전체 2M에 먼저 걸려 `LIMIT_EXCEEDED`가 났고, [결정 11-12] 사용자별 5M · 서비스 10M. `origin/main`(#106) pull 후 `jeongun`에 반영.
 - 코드: `USER_DAILY_TOKENS=5_000_000` · `SERVICE_DAILY_TOKENS=10_000_000`(메시지·시험은 상수 참조). SPEC 8.6 · `login-auth.md` · `injection_http` 안내 문구.
@@ -12,10 +18,10 @@
 - 안 넣음: `scratchpad/`(임시·워크트리 잔여).
 - 확인: `git status`에 해당 경로 staged, scratchpad는 untracked 유지.
 
-## 2026-11-12 DEMO_MODE UI 분기(로컬 검증용, 미커밋·미배포)
+## 2026-11-12 DEMO_MODE UI 분기
 - `CircuitSetup`: `/api/auth/demo`로 `DEMO_MODE`를 보고 1일 때만 「데모 회로로 시작」, 0이면 업로드만. `POST /api/projects`에 `Depends(demo_mode)`(404). Landing 문구·`.env.example` 주석.
 - 시험 [실측]: `CircuitSetup.test` 9 passed, `tests/api/test_projects.py` 47 passed · 1 skipped. Workbench/ProjectSidebar 통과. `App.test` 가입 헤딩 실패는 main에도 있는 기존 깨짐(제목 `SojaFit에 로그인`).
-- 로컬: `.env`에서 `DEMO_MODE=0|1` 바꿔 확인. 배포·커밋 요청 전.
+- 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
 
 ## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
 - Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
