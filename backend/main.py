@@ -6,8 +6,8 @@
 하지 않는 일: 경로 처리(`backend/api/`), 인증·세션·계정 처리(`backend/auth.py`), Mouser 호출 자체, 저장소 SQL과 그래프 실행 자체.
 출처: SPEC.md 4절(공통 오류, 대화 본문 한도)·8.6절(로그인 AC), docs/specs/api-error-contract.md, ADR 0019, backend/BACKEND.md.
 읽는 환경변수: THREADS_ENABLED · DATABASE_URL(분석 저장소). 경로가 읽는 AUTH_ORIGIN · DEMO_MODE 등은 각 라우터 머리말에 적는다.
-시작할 때 JSON 로그를 켜고(`backend/logs.py`), auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사하고 Uvicorn 접속 로그 필터를 등록한다.
-오류 응답의 `error.code`는 `backend/errors.py`의 표(ADR 0019, 15개)에서 고르고, 오류 응답마다 code · status · request_id 로그 한 줄을 남긴다.
+시작할 때 JSON 로그를 켜고(`backend/logs.py`), auth.validate_auth_configuration()이 AUTH_SECRET·DEMO_MODE 조합을 검사한다.
+오류 응답의 `error.code`는 `backend/errors.py`의 표(ADR 0019, 16개)에서 고르고, 오류 응답마다 code · status · request_id 로그 한 줄을 남긴다.
 THREADS_ENABLED=1이면 명시적으로 준비한 DATABASE_URL의 분석 저장소·MCP 세션을 앱 수명 동안 관리한다.
 """
 import os

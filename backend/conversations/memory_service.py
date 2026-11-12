@@ -1,10 +1,9 @@
 """세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
-React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
-HTTP 입구는 React 작업대의 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
-React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 11-11 서비스 DB 재설계(P2)로 회로 사본(`sojafit_agent.circuits`) · 승인 표(`approvals`) · 시험 전용 `upload` · `create` ·
-옛 승인 경로(`approve` · `memories`)도 지웠다. 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
-회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned` · `threads`).
+React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
+회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
@@ -573,7 +572,7 @@ class Conversations:
     def _current_memories(self, user, items):
         if not items:
             return []
-        # checkpoint의 과거 사본 대신 현재 승인 원본/상태/정정 메모를 다시 읽는다.
+        # [주의] `self.memories`는 없다. 승인 사례가 비활성이라 items는 늘 비어 위에서 끝난다. 비어 있지 않으면 AttributeError다
         active = {(m['thread_id'],m['version']):m for m in self.memories(user)}
         return [active[(m['thread_id'],m['version'])] for m in items
                 if (m['thread_id'],m['version']) in active]
