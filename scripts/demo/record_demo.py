@@ -50,7 +50,7 @@ QUESTIONS = [
     {'id': 'demo-rating', 'kind': '정격 확인(데모 회로 D3의 1N4148, 스냅샷 문서)', 'circuit': 'Franzininho DIY', 'netlist': FRANZ,
      'target': 'D3', 'conditions': '',
      # [왜] 11-10 첫 기록의 1N4001G 서지 전류 질문은 답 검사에서 거절(verify_failed)돼 데모로 쓸 수 없었다. 스냅샷에 표가 있는 1N4148 정격으로 바꾼다
-     'question': 'TSC 1N4148의 반복 피크 역전압(VRRM)과 평균 순방향 전류 정격은 얼마야? 데이터시트의 표를 근거로 알려 줘.',
+     'question': 'TSC 1N4148의 반복 피크 역전압(VRRM)과 순방향 전류(IF) 정격은 얼마야? 데이터시트의 표를 근거로 알려 줘.',
      'answers': {}, 'interrupt': False, 'calls': (2, 5)},
     {'id': 'v3-36', 'kind': '거절(코퍼스에 없는 품번)', 'circuit': 'Franzininho DIY', 'netlist': FRANZ, 'target': 'D3',
      'conditions': 'USB 전원은 최대 5.25V, D3 경로 전류는 최대 40mA, 주변 온도는 25°C이며 PWM은 없다. 현재 1N4148이고 MiniMELF용 기판 수정은 가능하다.',
@@ -60,6 +60,35 @@ QUESTIONS = [
      'conditions': 'USB 전원 5V로 동작하고 D3는 유지한다. IC1은 넷리스트의 ATtiny85이며 펌웨어는 수정할 수 있다.',
      'question': 'D3 교체 대신 펌웨어 쪽을 먼저 보려고 해. 이 ATtiny85가 USB 소프트웨어 통신에 맞는 클록으로 뜨도록 퓨즈 바이트 설정 후보를 골라 줘.',
      'answers': {}, 'interrupt': False, 'calls': (1, 2)},
+    {'id': 'v3-03', 'kind': '판정(동일품: 주문 코드 L0 → L0G)', 'circuit': 'ATtiny2313A Thermostat',
+     'netlist': 'data/circuits/collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net', 'target': 'D5',
+     'conditions': '릴레이 코일 전원은 최대 12.6V, 정상 코일 전류와 차단 직후 D5 초기 전류는 최대 35mA이다. PWM 없이 1초 이상 간격으로 켜고 끈다. 주변 온도는 25°C이다. '
+                   '넷리스트의 D5 표기는 D지만, 현재 개조 보드에는 TSC LL4148 L0가 달려 있다. 이미 MiniMELF용으로 실장부를 바꿨으며 추가 기판 수정도 가능하다.',
+     'question': '주문서에 LL4148 L0G라고 왔는데, D5에 쓰는 LL4148 L0 대신 이걸 받아도 같은 부품으로 취급할 수 있어?',
+     'answers': {}, 'interrupt': False, 'calls': (2, 5)},
+    {'id': 'demo-leak', 'kind': '정격 확인(역방향 누설전류와 시험 조건, v3-16 모양, 데모 회로 · 스냅샷 문서)', 'circuit': 'Adafruit MOSFET Driver STEMMA',
+     'netlist': 'data/circuits/collected/samples/mosfet_driver/converted/circuit.net', 'target': 'D3', 'conditions': '',
+     'question': 'TSC 1N4007G의 역방향 누설전류 상한은 얼마야? 그 값이 어떤 접합온도와 전압 조건에서 나온 건지도 같이 알려 줘.',
+     'answers': {}, 'interrupt': False, 'calls': (2, 5)},
+    # 아래 셋은 데모 전용 변형. 스냅샷에는 1N4001G~1N4007G · 1N4148 계열 · LL4148 등만 있어 동결 v3의 불충족 · 개정판 문항(S1M · SMAJ · 없는 PDF)을 쓸 수 없다
+    {'id': 'demo-notsuff', 'kind': '판정(불충족: 평균 전류 정격 초과, v3-11 회로 · 조건 모양)', 'circuit': 'SparkFun Breadboard Power Supply 5V/3.3V',
+     'netlist': BREAD, 'target': 'D1',
+     'conditions': 'J1로만 최대 12V를 공급하고 S1은 켠다. D1 연속 전류는 최대 350mA, 주변 온도는 25°C이며 PWM은 없다. 현재 부품은 넷리스트의 1N4001이고 기판은 수정할 수 있다. '
+                   '이번 부품 승인에서 순방향 전압강하는 제한 항목으로 삼지 않는다.',
+     'question': 'D1을 TSC 1N4148로 바꿔도 될까? 전기 조건과 실장 변경 여부를 같이 봐 줘.',
+     'answers': {}, 'interrupt': False, 'calls': (2, 5)},
+    {'id': 'demo-ask', 'kind': '판정 + 조건 인터럽트 + 값을 준 재개(v3-01에서 전압강하 제한 문장을 뺌)', 'circuit': 'ATtiny85 Time Switch',
+     'netlist': 'data/circuits/collected/received-20261030/c01/received/c01-attiny85-time-switch.net', 'target': 'D1',
+     'conditions': 'VIN은 최대 15V, D1의 연속 전류는 최대 120mA이며 주변 온도는 25°C이다. PWM 없이 직류로 쓴다. '
+                   '현재 부품은 넷리스트의 onsemi 1N4007RLG이고 제조사를 바꿔도 된다. 기판의 리드 간격은 수정할 수 있다. '
+                   '투입 시 D1 전류는 초기 접합온도 25°C에서 피크 2A·폭 8.3ms의 단발 반정현파이다. 순방향 전압강하는 IF=1A, TJ=25°C 시험 조건으로 비교한다.',
+     'question': '전원 입력의 D1을 TSC 1N4004G로 바꿔도 될까? 전기 조건과 실장 변경 여부를 같이 봐 줘.',
+     # [왜] 허용 전압강하를 사용자가 답한다(v3-01은 '모름'). 숫자 칸(v_drop_allowed)은 '1.5V' 같은 값을 읽는다(judge.merge_reply)
+     'answers': {'v_drop_allowed': '1.5V'}, 'interrupt': True, 'calls': (3, 6)},
+    {'id': 'demo-edition', 'kind': '거절(개정판 불일치: 스냅샷은 N2212, 요청은 N2112)', 'circuit': 'SparkFun Pro Micro v13',
+     'netlist': 'data/circuits/collected/samples/pro_micro/converted/circuit.net', 'target': 'D2', 'conditions': '',
+     'question': 'D2 후보 TSC 1N4148WS의 반복 역전압과 평균 전류를 1N4148WS SERIES_N2112.pdf 판본에서 확인해 줘. 다른 개정판 수치로 대신하지 말아 줘.',
+     'answers': {}, 'interrupt': False, 'calls': (1, 3)},
 ]
 COMPARED = ('interrupt', 'resume', 'path', 'question_type', 'answer', 'verdicts', 'refusal')  # 재생 확인이 기록과 대조하는 칸
 
