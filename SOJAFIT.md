@@ -337,7 +337,7 @@ SojaFit (proj3-b)
 │   ├── 012_document_category.sql  <- source_documents에 문서 분류 열(category). 기존 DB · Supabase에는 따로 적용
 │   ├── 020_service_baseline.sql  <- 서비스 표 기준선(11-11 M 단계): 인증·프로젝트·대화·승인·견적·분석 서비스 표 21개, 삭제 트리거, 청소 함수, RLS 명시를 한 파일로. 옛 증분 003~029를 대체
 │   ├── 026_revoke_public_grants_and_rls.sql <- 공개 역할(anon · authenticated)의 표 · 시퀀스 · 함수 권한을 회수하고 앱 표 RLS를 켬(여러 번 돌려도 같음, 역할이 없는 DB는 RLS만)
-│   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈(main 회로 catalog; 새 기준선 DB에서는 catalog 계약이 baseline에 흡수됐는지 적용 순서를 DB.md로 확인)
+│   ├── 026_projects_catalog_demo.sql <- 기존 DB의 6개 데모 ID 고정 CHECK를 데이터 catalog 확장형 제약으로 바꿈(main 회로 catalog; 새 DB에서는 기준선 뒤에 실행되어 `ck_projects_demo`를 같은 이름으로 다시 만든다. 실행 순서는 DB.md)
 │   ├── legacy/             <- 기준선 이전의 옛 증분 서비스 SQL(이력용, 실행하지 않음)
 │   │   ├── LEGACY.md       <- 폴더 설명
 │   │   ├── 003_auth.sql  <- 사용자·세션·로그인 시도 표
@@ -389,7 +389,7 @@ SojaFit (proj3-b)
 │       ├── REDESIGN.md     <- 폴더 설명 + 요약 · 결정 항목
 │       ├── as-is/          <- 현재 구조(운영 DB 기준) 문서
 │       │   ├── erd.md      <- 현재 ERD(두 스키마의 이중 저장이 보이는 그림)
-│       │   └── tables.md   <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서(자동 생성 + 의미 · 소유 코드, 행 25개를 세어 확인). 지금 기준선의 서비스 표 21개는 `db/schema/table-definition.md`
+│       │   └── tables.md   <- 재설계 전(11-10 밤 옛 운영 DB) 서비스 표 25개의 정의서(자동 생성 + 의미 · 소유 코드, 행 25개를 세어 확인). 지금 서비스 표 24개(기준선 21개 + 인증 SQL 029·030이 더한 표 3개)는 `db/schema/table-definition.md`
 │       ├── to-be/          <- 목표 설계안 문서
 │       │   ├── design.md   <- 설계 원칙 · 선택지 비교 · 추가 조사 반영 · 시험 결과
 │       │   ├── erd.md      <- 목표 ERD(추천안과 보류안)
@@ -756,7 +756,7 @@ SojaFit (proj3-b)
 │       ├── storage/        <- DB 저장 형식·용량
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
 │       ├── hnsw/           <- HNSW 대 정확 검색
-│       ├── smoke/          <- (예정) HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
+│       ├── smoke/          <- HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
 │       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 ├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
