@@ -175,7 +175,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
     |---|---|---|---|---|---|
-    | `GET /api/demo-circuits` | 로그인 | - | 200 `list[DemoCircuit]` `[{id, name}]` | | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계) |
+    | `GET /api/demo-circuits` | 로그인 · 데모 모드 | - | 200 `list[DemoCircuit]` `[{id, name, schematic}]` | 404(데모 모드 아님) | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계) |
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
     | `POST /api/projects` | 로그인 · 데모 모드 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
@@ -321,7 +321,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 ## 7. 데모 모드·오프라인 규칙
 
 - 새 clone에서 `docker compose up` 한 줄로, API 키 없이 뜹니다.
-- [주의] `DEMO_MODE` 기본값: 코드는 `DEMO_MODE`가 설정되지 않으면 `'1'`(데모)로 읽습니다(`backend/auth.py` · `backend/api/auth.py` · `backend/services/llm.py` 등). 그래서 운영 같은 실제 배포는 **반드시 `DEMO_MODE=0`을 명시**해야 합니다(빠지면 데모 버튼 로그인 · 데모 회로 프로젝트 생성이 열립니다). 운영 Cloud Run에는 `DEMO_MODE=0`이 명시돼 있는 것을 gcloud로 확인했습니다 [실측, 11-11]. 새 환경을 만들 때도 이 변수를 확인합니다.
+- [주의] `DEMO_MODE` 기본값: 코드는 `DEMO_MODE`가 설정되지 않으면 `'1'`(데모)로 읽습니다(`backend/auth.py` · `backend/api/auth.py` · `backend/services/llm.py` 등). 그래서 운영 같은 실제 배포는 **반드시 `DEMO_MODE=0`을 명시**해야 합니다(빠지면 데모 버튼 로그인 · 데모 회로 목록 · 데모 회로 프로젝트 생성이 열립니다). 운영 Cloud Run에는 `DEMO_MODE=0`이 명시돼 있는 것을 gcloud로 확인했습니다 [실측, 11-11]. 새 환경을 만들 때도 이 변수를 확인합니다.
 - `data/demo/`에는 데모 코퍼스 스냅샷(`snapshot/`)과 LLM 응답 기록(`recordings/`: `calls.jsonl` · `outcomes.json`, 질문 5개, 기록일 2026-11-09)을 둡니다. 실제 API 응답 원본(HTTP 본문 · 헤더 · 사용량 · 비용)과 키는 넣지 않고, 기록은 그래프 노드가 schema로 검증한 응답 칸만 담습니다.
 - 분석 재생(`DEMO_REPLAY=1`, `DEMO_MODE=1`과 함께여야 함. compose 기본은 `DEMO_MODE`와 같은 값): 서비스(`backend/conversations/memory_service.py`)가 실제 분석과 같은 멀티 에이전트 그래프 · 카드 도구 · BM25 검색 · MCP 사실 확인을 쓰고, LLM 호출만 `backend/services/demo.py`의 재생 chat으로 바꿉니다. 호출마다 (노드, system, user, schema 이름)의 sha256으로 기록 응답을 찾고, 없으면 실제 LLM이나 비슷한 기록으로 넘기지 않고 멈춥니다(`ReplayMiss` → 503, 노드 이름을 문구에 담음). 기록과 같게 Store(선호 실장 방식)는 그래프에 넘기지 않고, 질문마다 카드 읽기 공유 칸을 비웁니다. `DEMO_MODE=1`만 켜면 실제 LLM을 그대로 씁니다(평가 · 실제 모델 확인).
 - 재생은 기록한 데모 질문(`scripts/demo/record_demo.py`의 5개: `v3-01` 판정 + 조건 질문, `demo-find` 후보 찾기, `demo-rating` 정격, `v3-36` · `v3-30` 거절)만 받습니다. 회로 연결 정보 · 대상 부품 · 질문 · 사용 조건이 기록과 글자까지 같고 새 대화의 첫 질문이어야 하며, 아니면 422로 데모 질문 목록을 문구에 담아 거절합니다(회로 · 대상 · 질문은 run 스트림 전, 같은 대화의 두 번째 질문은 스트림 뒤 `failed`). 조건 질문의 재개는 기록한 답 · 역할만 받습니다. 기록 파일이 없으면 서버는 뜨고 분석 요청만 503입니다. React 작업대는 `GET /api/demo-questions`로 목록을 받아, 같은 데모 회로(`demo_id`) · 대상 부품의 질문을 버튼으로 보이고 누르면 새 대화로 같은 글자를 보내며, 조건 질문에는 "기록한 답으로 계속하기" 버튼으로 기록한 답을 보냅니다. 데모 회로 카탈로그에 `v3-01`의 회로(`attiny85_time_switch`, `data/circuits/collected/received-20261030/c01`)가 있습니다.

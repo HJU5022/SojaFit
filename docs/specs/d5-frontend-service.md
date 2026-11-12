@@ -51,7 +51,7 @@
 | 개발 서버 | Vite가 `/api`를 `http://localhost:8000`으로 프록시 | `frontend/vite.config.ts` |
 | 배포 | `Dockerfile` 다단계: `frontend-build`(Node)에서 빌드한 `dist`를 FastAPI 이미지에 복사. FastAPI는 `/api/*`, `/health`, Google 콜백을 먼저 처리하고 나머지 화면 경로는 React 진입 파일로 보낸다 | `Dockerfile`, `backend/web/app.py` |
 | 인증 | HttpOnly 서버 세션 쿠키와 같은 출처 정책. 상세 [login-auth.md](login-auth.md) | `backend/auth.py` |
-| 프로젝트 API | 목록·생성(데모 모드만)·업로드·상세·이름 변경·삭제, `GET /api/demo-circuits`. 업로드는 multipart `.net`이며 사용자 파일명·경로를 서버 경로로 쓰지 않는다 | `backend/api/projects.py` |
+| 프로젝트 API | 목록·생성(데모 모드만)·업로드·상세·이름 변경·삭제, `GET /api/demo-circuits`(데모 모드만). 업로드는 multipart `.net`이며 사용자 파일명·경로를 서버 경로로 쓰지 않는다 | `backend/api/projects.py` |
 | 대화 API | thread 생성·목록·상세·삭제, `POST /api/threads/{id}/runs`, `GET /api/runs/{id}`, `POST /api/runs/{id}/recover`, `POST /api/runs/{id}/resume`, `GET /api/judge/roles`(역할 이름), `GET /api/demo-questions`(키 없는 데모 재생 모드만). 한 thread에 동시 run 하나. run·재개는 `THREADS_ENABLED=1`의 분석 서비스(`backend/conversations/memory_service.py`)를 같은 UUID thread로 거치고, 대상 부품은 고정되며 서비스가 없으면 503. 표·요청 모델·오류는 SPEC 4절이 정본 | `backend/api/conversations.py` |
 | SSE 이벤트 | `run_started`, `status`, `requires_input`, `completed`, `refused`, `failed`. 토큰 단위 출력은 보내지 않는다. 이벤트별 칸은 SPEC 4절 표 | `backend/api/conversations.py` |
 | 진행 단계 | 서버가 보내는 값은 `입력 확인`(시작), `판정`(추가 정보 대기), `완료`(완료·거절, 거절은 상태 `refused`), `오류`(상태 `failed`) | `backend/api/conversations.py` `STAGES` |

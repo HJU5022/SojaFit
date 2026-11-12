@@ -8,6 +8,7 @@ import type { DemoSchematic, ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
 import { errorMessage } from '../api/client'
+import type { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import { contextOf, isDiode, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
@@ -71,6 +72,7 @@ export default function WorkbenchPage() {
   const projectList = Array.isArray(projects.data) ? projects.data : []
   const threadList = Array.isArray(threads.data) ? threads.data : []
   const demoList = Array.isArray(demos.data) ? demos.data : []
+  const demoOff = (demos.error as ApiError | null)?.code === 'NOT_FOUND' // 데모 모드가 아니면 404: 오류가 아니라 예제 없음
   const parts = partsOf(project.data)
   const target = parts.find(part => part.ref === targetRef)
   const schematic = demoList.find(demo => demo.id === project.data?.demo_id)?.schematic ?? null
@@ -219,7 +221,7 @@ export default function WorkbenchPage() {
       <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus /></label>
       <label className="field"><span>KiCad 넷리스트 (.net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" /></label>
       {demos.isPending && <div className="skeleton" role="status"><span className="sr-only">예제 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
-      {demos.error && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
+      {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
       {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. KiCad 넷리스트 파일을 선택해 주세요.</p>}
       {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue={demoList[0].id}>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
       {error ? <p className="notice" role="alert">프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
