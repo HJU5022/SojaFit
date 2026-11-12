@@ -7,6 +7,7 @@
 - 담당: 서비스·운영 (RAG 스키마·스냅샷·인덱스 SQL은 검색·데이터)
 
 ## 실행과 주의
+- 2026-11-12 인증 통합: 새 DB는 기준선/026 뒤 027·029·030 인증 SQL을 적용한다. 기준선의 자동 연결/pending 없음 설명은 이전 상태다. 기존 DB에는 초기화나 legacy SQL을 재실행하지 않고 추가 인증 SQL의 적용을 별도 검토한다. 기존 데이터·해시·연결을 삭제하거나 재작성하지 않는다.
 - 구조(11-11 재설계 M 단계, [결정]): 서비스 표는 증분 파일 20여 개가 아니라 **기준선 한 파일**(`020_service_baseline.sql`)이 만든다. 옛 `003`~`025` · `027`~`029`는 `legacy/`로 옮겨 이력만 남겼고 **어디에서도 실행하지 않는다**. 기준선은 옛 체인 + 운영 이전 SQL을 적용한 결과와 구조가 같다(`scripts/db/verify_chain/verify_chain.sh`가 차이 0줄을 확인한다).
 - 빈 DB 볼륨을 처음 만들 때 실행 순서: `000_init.sql` → `002_rag_corpus.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `012_document_category.sql` → `020_service_baseline.sql` → `026_revoke_public_grants_and_rls.sql`. 번호 `001`·`003`~`007`·`010`·`011`·`013`~`019`·`021`~`025`는 `db/` 바로 아래에 일부러 없습니다(서비스 표는 기준선이 대체, `007` 데모 시드는 앱으로 이동, `011` 사양 표는 ADR 0016으로 폐기).
 - Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행해 **LangGraph 표(PostgresSaver/PostgresStore 내부 표)만** 만듭니다. 서비스 표는 만들지 않으며 SQL 파일을 적용하지도 않습니다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만듭니다.
@@ -16,15 +17,23 @@
 - 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다. 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣었다.
 
 ## 파일
-
-- 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 만들던 `011_part_specifications.sql`을 지웠고, 운영 DB의 표는 11-09에 지웠다. 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다(이 폴더에 `DROP` SQL은 두지 않았다). 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣은 기록이 있다(`docs/worklog/sth.md`).
-- 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`·`004`·`011`은 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`, 018~020으로 대체돼 적용하지 않음)이며, `011`(부품 사양 표)은 11-09에 지웠습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql` → `022_token_limits.sql` → `023_retention.sql` → `024_projects_demo_c01.sql` → `025_runs_safe_result_preferred_mount.sql` → `026_projects_catalog_demo.sql`입니다. 데모 모드(`DEMO_MODE=1`)면 데모 사용자 A · B를 만들고, 아니면 계정을 만들지 않습니다.
-- Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행한다. 013~017 · 022 · 023을 멱등 적용하고 PostgresSaver/PostgresStore의 내부 표를 준비한 뒤 API가 시작된다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만든다(확장은 설치하지 않음, SPEC 8.5). 이 서비스는 Compose 로컬 `db`에 연결하며 앱 일반 기동에는 DDL을 넣지 않는다. 기존 DB에 명령을 수동 실행할 때는 대상·권한·적용 이력을 먼저 확인한다.
-- Compose의 `corpus-load`는 같은 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`(`RAG_VECTOR_TYPE=halfvec`)로 데모 코퍼스 스냅샷(42문서 · 청크 1,556개)을 `source_documents` · `document_chunks`에 넣는다. 임베딩은 넣지 않는다. thread-setup과 함께 돌고, api는 두 서비스가 모두 성공한 뒤 시작한다. 이미 있는 문서 · 청크는 건너뛰므로 다시 떠도 행이 늘지 않는다.
-- Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 018~020이 업무 표(프로젝트 · 회로 · 대화 · 실행 · 메시지 · 승인 · 견적 · 승인 사례)를 만들면서 대체됐습니다. 초안의 `circuits`가 018과 충돌하므로 적용하지 않고 이력으로만 둡니다.
-- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행됩니다(기존 로컬 볼륨에는 데모 사용자 A · B가 없어 버튼 로그인이 404입니다). 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
-- `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
+- `DB.md` — 폴더 설명과 초기화/기존 DB 적용 경계.
+- `000_init.sql` — PostgreSQL 확장 초기화.
+- `002_rag_corpus.sql` — 문서·청크·임베딩 코퍼스 표.
+- `008_multi_dim_embeddings.sql` — 차원 없는 임베딩과 모델별 색인.
+- `009_chunk_embedding_bits.sql` — 검색 후보용 1비트 코드.
+- `012_document_category.sql` — 문서 범주.
+- `020_service_baseline.sql` — 새 DB 서비스 표 기준선.
+- `026_projects_catalog_demo.sql` — 기존 catalog 호환 제약 갱신.
+- `026_revoke_public_grants_and_rls.sql` — 공개 역할 권한 회수·RLS.
+- `027_google_user_login.sql` — 일반 Google 계정 NULL 비밀번호·관리자 비밀번호 필수.
+- `029_email_account_security.sql` — 이메일 인증 시각·일회용 challenge·발송 한도.
+- `030_google_onboarding.sql` — 명시적 Google 가입·재확인 연결·관리자 승인 대기.
+- `legacy/` — 기준선 이전 SQL 원본. 동일 내용이던 루트 중복은 초기화하지 않는다.
+- `migrations/` — 기존 운영 DB의 검토·이전·되돌리기 SQL.
+- `manual/` — 자동 실행하지 않는 수동 SQL.
+- `redesign/` — 서비스 기준선 설계와 검증 스크립트.
+- `schema/` — 실제 스키마에서 생성한 ERD·표 정의서.
 
 ## 파일
 - `016_memory_controls.sql` — 승인 원본과 분리된 기억 참조 상태·사용자 정정 메모

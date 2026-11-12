@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import WorkbenchPage from '../pages/WorkbenchPage'
 
@@ -20,6 +20,11 @@ export const second = {
     nets: [{ code: '1', name: 'GND', nodes: [{ ref: 'D2', pin: '2' }] }] },
 }
 export const summary = ({ connections: _connections, ...project }: typeof first | typeof second) => project
+export function showDetail(label: string) {
+  const picker = screen.getByRole('combobox', { name: '자료 열기' })
+  const option = within(picker).getByRole('option', { name: `${label} 보기` }) as HTMLOptionElement
+  fireEvent.change(picker, { target: { value: option.value } })
+}
 export function renderWithQueries(element: ReactNode, client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })) {
   return { ...render(<QueryClientProvider client={client}>{element}</QueryClientProvider>), client }
 }

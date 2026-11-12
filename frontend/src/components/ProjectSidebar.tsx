@@ -41,22 +41,25 @@ export default function ProjectSidebar({ selectedId, project, onSelect, onDelete
     </section>
   </aside>
 }
-function ProjectActions({ project, onDeleted }: { project: Project; onDeleted: (id: number) => void }) {
+export function ProjectActions({ project, onDeleted, deleteOnly = false, onCancel, onBusyChange }: {
+  project: Pick<Project, 'id' | 'name'>; onDeleted: (id: number) => void
+  deleteOnly?: boolean; onCancel?: () => void; onBusyChange?: (busy: boolean) => void
+}) {
   const client = useQueryClient()
   const [name, setName] = useState(project.name)
-  const [confirm, setConfirm] = useState(false)
+  const [confirm, setConfirm] = useState(deleteOnly)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const requests = useRef<AbortController | null>(null)
   useEffect(() => {
     const controller = new AbortController()
     requests.current = controller
-    return () => { controller.abort() }
-  }, [])
+    return () => { controller.abort(); onBusyChange?.(false) }
+  }, [onBusyChange])
   async function change(remove = false) {
     const controller = requests.current
     if (busy || !controller || controller.signal.aborted || (!remove && !name.trim())) return
-    setBusy(true); setError(null)
+    setBusy(true); setError(null); onBusyChange?.(true)
     try {
       if (remove) {
         await deleteProject(project.id, controller.signal)
@@ -70,23 +73,23 @@ function ProjectActions({ project, onDeleted }: { project: Project; onDeleted: (
       void client.invalidateQueries({ queryKey: ['project', project.id], exact: true, refetchType: remove ? 'none' : 'active' })
       if (remove) onDeleted(project.id)
     } catch (error) { if (!controller.signal.aborted) setError(error) }
-    finally { if (!controller.signal.aborted) setBusy(false) }
+    finally { if (!controller.signal.aborted) { setBusy(false); onBusyChange?.(false) } }
   }
-  return <div className="project-actions">
-    <form onSubmit={event => { event.preventDefault(); void change() }}>
+  return <div className={deleteOnly ? 'project-delete-dialog' : 'project-actions'}>
+    {!deleteOnly && <form onSubmit={event => { event.preventDefault(); void change() }}>
       <label htmlFor="rename-project">프로젝트 이름 변경</label>
       <div className="project-rename-row">
       <input id="rename-project" maxLength={200} value={name} onChange={event => setName(event.target.value)} disabled={busy} />
       <button className="secondary" disabled={busy || !name.trim()}>이름 저장</button>
       </div>
-    </form>
+    </form>}
     {error ? <p role="alert">{errorMessage(error)}</p> : null}
     <div className="project-delete-area">
-    <button className="secondary project-delete-button" disabled={busy} onClick={() => setConfirm(true)}>프로젝트 삭제</button>
+    {!deleteOnly && <button className="secondary project-delete-button" disabled={busy} onClick={() => setConfirm(true)}>프로젝트 삭제</button>}
     {confirm && <div role="group" aria-label="프로젝트 삭제 확인" className="delete-confirmation">
-      <p>“{project.name}” 프로젝트를 삭제할까요? 이 작업은 되돌릴 수 없습니다.</p>
+      <p>“{project.name}” 프로젝트와 연결된 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.</p>
       <button className="danger" disabled={busy} onClick={() => void change(true)}>삭제 확인</button>
-      <button className="secondary" disabled={busy} onClick={() => setConfirm(false)}>취소</button>
+      <button className="secondary" disabled={busy} onClick={() => { setConfirm(false); onCancel?.() }}>취소</button>
     </div>}
     </div>
   </div>

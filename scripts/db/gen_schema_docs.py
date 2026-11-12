@@ -32,7 +32,8 @@ TABLES = {
     'public.users': ('계정', {
         'id': '계정 번호(내부 키)',
         'login_id': '로그인 이메일(소문자). 구글 가입도 같은 칸에 이메일 저장',
-        'password_hash': "scrypt 해시. Google 전용은 'google-login-only', 로컬 데모 버튼은 'demo-button-login-only' 표식(비밀번호 로그인 불가)",
+        'password_hash': "scrypt 해시. 신규 Google 전용 일반 계정은 NULL, 기존 Google/데모 전용 표식은 비밀번호 로그인 불가",
+        'email_verified_at': '이메일 소유 확인 시각. 기존 계정은 NULL을 허용하며 로그인 차단 근거로 사용하지 않음',
         'is_active': '비활성이면 로그인 · 세션 불가',
         'created_at': '가입 시각',
         'updated_at': '수정 시각',
@@ -72,6 +73,21 @@ TABLES = {
         'issuer': 'https://accounts.google.com',
         'subject': 'Google 계정 식별자(sub)',
         'user_id': '연결된 계정(사용자당 1개)',
+    }),
+    'public.auth_google_pending': ('명시적 Google 가입·연결과 관리자 최초 승인 대기', {
+        'request_id': '브라우저 HttpOnly 쿠키에 연결되는 일회용 요청 식별자',
+        'issuer': '검증된 Google 발급자', 'subject': '검증된 Google 계정 식별자',
+        'email': 'Google이 소유 확인한 이메일', 'expires_at': '15분 후 만료 시각',
+    }),
+    'public.auth_email_challenges': ('이메일 가입·비밀번호 재설정 일회용 확인', {
+        'email': '정규화한 수신 이메일', 'purpose': 'signup 또는 reset',
+        'token_hash': '인증 토큰의 단방향 해시. 원문은 저장하지 않음',
+        'user_id': '재설정 대상 사용자. 가입 요청은 NULL',
+        'created_at': '요청 생성 시각', 'expires_at': '가입 60분·재설정 15분 만료 시각',
+    }),
+    'public.auth_email_send_limits': ('원문 이메일·IP 없는 메일 발송 요청 한도', {
+        'key_hash': '서비스/IP/이메일·목적 한도 키의 단방향 해시',
+        'window_start': 'UTC 한도 집계 창 시작 시각', 'request_count': '집계 창의 요청 횟수',
     }),
     'public.projects': ('프로젝트', {
         'id': '프로젝트 번호',

@@ -15,7 +15,7 @@ it('limits dummy authentication to explicit development-only settings', () => {
 function Session() {
   const { user, loading, login, signup, logout, deleteAccount } = useAuth()
   return <><span>{loading ? '복원 중' : user ? `사용자 ${user.user_id}` : '비로그인'}</span><button onClick={() => void login('user@example.test', 'test-only')}>접속</button><button onClick={() => void logout()}>종료</button>
-    <button onClick={() => void signup('new@example.test', 'synthetic-8')}>가입</button><button onClick={() => void deleteAccount()}>탈퇴</button></>
+    <button onClick={() => void signup('new@example.test')}>가입</button><button onClick={() => void deleteAccount()}>탈퇴</button></>
 }
 it('exposes login and logout using the server session and refreshes role after login', async () => {
   let signedIn = false
@@ -106,18 +106,30 @@ it('clears cached data when the server reports an expired session', async () => 
   expect(await screen.findByText('비로그인')).toBeInTheDocument()
   expect(client.getQueryData(['projects'])).toBeUndefined()
 })
-it('signs up with the required consent flag and restores the new session', async () => {
+it('requests signup email without a fabricated consent flag or a new session', async () => {
   let signedIn = false
   const requests: { path: string; init: RequestInit }[] = []
   network((path, init) => {
     requests.push({ path, init })
-    if (path === '/api/auth/signup') { signedIn = true; return Response.json({ user_id: 7 }) }
+    if (path === '/api/auth/signup') return Response.json({ ok: true })
     return signedIn ? Response.json(user) : failure()
   })
   render(<AuthProvider><Session /></AuthProvider>)
   expect(await screen.findByText('비로그인')).toBeInTheDocument()
   fireEvent.click(screen.getByText('가입'))
-  expect(await screen.findByText('사용자 7')).toBeInTheDocument()
+  await waitFor(() => expect(requests.some(x => x.path === '/api/auth/signup')).toBe(true))
+  expect(screen.getByText('비로그인')).toBeInTheDocument()
   expect(requests.find(({ path }) => path === '/api/auth/signup')?.init).toMatchObject({
-    method: 'POST', body: JSON.stringify({ email: 'new@example.test', password: 'synthetic-8', consent: true }) })
+    method: 'POST', body: JSON.stringify({ email: 'new@example.test' }) })
+})
+
+it('does not restore an old session response after password reset expires the session', async () => {
+  let finish: ((response: Response) => void) | undefined
+  network(() => new Promise<Response>(resolve => { finish = resolve }))
+  render(<AuthProvider><Session /></AuthProvider>)
+  expect(screen.getByText('복원 중')).toBeInTheDocument()
+  fireEvent(window, new Event('sojafit:session-expired'))
+  await act(async () => { finish!(Response.json(user)) })
+  expect(screen.getByText('비로그인')).toBeInTheDocument()
+  expect(screen.queryByText('사용자 7')).not.toBeInTheDocument()
 })

@@ -74,6 +74,8 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   const method = (init.method ?? 'GET').toUpperCase()
   const pathname = url.pathname
 
+  if (method === 'GET' && pathname === '/api/auth/demo') return json({ enabled: true })
+
   if (method === 'GET' && pathname === '/api/projects') {
     return json(projects.map(({ connections: _connections, ...summary }) => summary))
   }
@@ -93,12 +95,9 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     return json(created, 201)
   }
   if (method === 'POST' && pathname === '/api/projects/upload') {
-    const body = init.body instanceof FormData ? init.body : null
-    const created: Project = { ...structuredClone(dummyProjects[0]), id: Math.max(...projects.map(item => item.id), 0) + 1,
-      name: String(body?.get('name') || '업로드 회로'), demo_id: null, source_kind: 'upload',
-      created_at: NOW, updated_at: NOW }
-    projects = [...projects, created]
-    return json(created, 201)
+    return json({ error: { code: 'UNAVAILABLE',
+      message: '넷리스트 첨부는 실제 API 서버에 연결한 화면에서 사용할 수 있습니다. 더미 모드에서는 파일을 해석하지 않습니다.',
+      request_id: REQUEST_ID } }, 503)
   }
   if (method === 'GET' && pathname === '/api/demo-circuits') {
     const query = (url.searchParams.get('q') ?? '').trim().toLocaleLowerCase()

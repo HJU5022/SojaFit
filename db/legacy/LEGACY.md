@@ -8,6 +8,7 @@
 - 쓰는 곳: `scripts/db/verify_chain/verify_chain.sh`(옛 체인 000~026을 만들어 운영 이전 SQL을 적용한 결과와 기준선을 비교), 운영 이전 되돌리기(`db/migrations/migrate_prod_4_rollback.sql`이 `019` · `023` · `024` · `025`의 옛 정의를 다시 읽음), `db/redesign/verify/`.
 
 ## 파일
+- `007_demo_accounts.sql` — 옛 데모 계정 시드 원본. 현재 앱의 지연 데모 생성을 사용하므로 초기화에서 실행하지 않는다.
 - `003_auth.sql` · `005_auth_attempt_window.sql` · `006_user_roles.sql` · `021_auth_ip_limits.sql` — 사용자 · 세션 · 로그인 시도 · 역할 · IP 한도 표
 - `010_google_auth.sql` — Google 로그인 상태 · 승인 대기(`029`가 삭제) · 계정 연결 표
 - `013_agent_memory.sql` · `014_thread_inputs.sql` · `015_analysis_limits.sql` · `016_memory_controls.sql` · `017_analysis_events.sql` · `022_token_limits.sql` · `023_retention.sql` — `sojafit_agent` 분석 서비스 표 · 사용량 · 청소 함수

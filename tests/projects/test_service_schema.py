@@ -105,7 +105,7 @@ def test_dropped_tables_and_columns_are_gone(conn):
     gone = conn.execute("""SELECT to_regclass('sojafit_agent.circuits'), to_regclass('sojafit_agent.approvals'), to_regclass('public.auth_google_pending'),
                                   (SELECT count(*) FROM information_schema.columns WHERE table_schema='sojafit_agent' AND table_name='threads' AND column_name='circuit_id'),
                                   (SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='users' AND column_name='display_name')""").fetchone()
-    assert gone == (None, None, None, 0, 0)
+    assert gone == (None, None, "auth_google_pending", 0, 0)  # 030 adds active onboarding; dead business copies remain absent
 
 
 def full_result(**extra):

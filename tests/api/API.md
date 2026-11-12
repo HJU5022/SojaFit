@@ -1,4 +1,6 @@
 # api
+- 2026-11-12 test_auth.py: 신규 약한 비밀번호의 DB 전422/쿠키0/입력 미노출, 긴 문장·Unicode·1024자 허용과 기존 짧은 암호 로그인 유지. test_openapi.py의 가입 성공 예시는 강화 정책에 맞춘다.
+
 
 - Postgres 재개 후 읽기 재호출 방지 검사는 JUDGE_READ_VOTES=1을 명시해 처음 읽기1회/재개 후 증가0을 확인한다. 운영의 기본3회 다수결 설정은 바꾸지 않는다.
 
@@ -14,6 +16,7 @@
 실행: `uv run pytest -q tests/api`(저장소 루트).
 
 ## 파일
+- `test_http_restart.py` — 격리 PostgreSQL·합성 그래프로 실제 HTTP 서버 종료·재기동, 소유자 재개와 다른 계정의 run 조회·재개 404를 확인한다. 기본 pytest에서는 skip하며 명시적으로만 실행한다.
 - `test_google_users.py` — Google 가입·동의/Origin·비밀번호 재확인·관리자 최초 승인 유지·만료/중복/동시 연결·공유 IP 한도·마이그레이션. TEST_GOOGLE_DATABASE_URL 또는 CI TEST_AUTH_DATABASE_URL의 새 schema만 사용하며 loopback oauth_test_* / ci_auth DB만 허용
 - test_external_circuits.py — 완성 회로도 manifest·PNG 응답, 인증·no-store·SCHEMATIC_NOT_FOUND 경계
 - `test_threads.py` — 격리 PostgreSQL에서 사용자 분석 서비스(`Conversations`)의 소유권·체크포인트 복구·재개·(HTTP 경로 없는) 승인 기록 멱등성 시험. 승인 사례는 새 분석에 넘기지 않고 Store에 쓰지 않음(승인 기록), 질문·재개 결과의 사용자 사실 참고(`profile_hints`)의 A/B 격리·고침·지움, `vector` 확장이 있는 DB에서 의미 순위·다시 임베딩도 본다. React 대화의 같은 UUID thread 연결(대상 고정·소유권·원문 미저장)과 React run·재개 HTTP가 실제 분석 서비스로 이어지는지, 하루 토큰 상한(사용자 · 서비스)의 원자적 차감 · 입장과 호출 직전 429 · 외부 호출 없음도 본다
@@ -38,3 +41,4 @@
 - `test_http_smoke.py` — HTTP 점검 스크립트(`scripts/smoke/http_smoke.py`)를 쿠키 · Origin · 소유권을 지키는 가짜 서버(`httpx.MockTransport`)로: 1~9단계 전체 통과(두 번째 승인 409 `ALREADY_APPROVED`를 통과로 셈), `requires_input`이 없거나 스트림 전 503이면 그 단계 실패 · 5~7단계 건너뜀 · 8단계 격리는 계속 · 종료 코드 1, 결과 파일 · 화면에 비밀번호 · 쿠키 값 · 이메일 · 답 글 없음, `--confirm-live` 없으면 요청 없이 멈춤, 재개 값 규칙, 데모 질문 회로가 데모 카탈로그에 있음
 
 저장 대화 후속 검증: test_conversations.py는 GET 상세 인증·페이지 검증·응답 allow-list·분석 호출 없음·404/503/no-store를 확인한다. test_full_service_flow.py는 격리 PostgreSQL에 저장한 질문·답변·판정을 실제 TestClient GET으로 읽고 소유자만 조회하며 message_id가 일치하는지 확인한다. 기존 로그인 세션 검증을 재사용하고 운영 DB는 사용하지 않는다.
+- `test_email_auth.py` — 가짜 SMTP·격리 DB의 인증 전 계정 없음, 토큰 만료/재발급/재사용/경합·한도·재설정 세션 폐기·TLS 검증.

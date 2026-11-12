@@ -39,7 +39,7 @@ test('completes judgement, transient price, approval, price-free quote, and case
   await page.getByLabel('질문', { exact: true }).fill('D1을 SS34로 바꿔도 되나요?')
   await page.getByRole('button', { name: '질문 전송' }).click()
   await page.getByRole('group', { name: '분석 결과 메뉴' }).getByRole('button', { name: '후보 비교' }).click()
-  await page.getByRole('tab', { name: '후보 비교' }).click()
+  await page.getByRole('combobox', { name: '자료 열기' }).selectOption('judgement')
   await expect(page.getByText('같은 동작은 보장하지 않습니다.')).toBeVisible()
   await page.getByRole('group', { name: '분석 결과 메뉴' }).getByRole('button', { name: '승인·견적' }).click()
   await page.getByLabel('승인할 후보').selectOption('0')

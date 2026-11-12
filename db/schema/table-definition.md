@@ -3,7 +3,7 @@
 <!-- 자동 생성: scripts/db/gen_schema_docs.py. 직접 고치지 않는다(표 설명은 그 파일의 TABLES, 구조는 DB). -->
 
 - 구조(타입 · NULL · 기본값 · 제약 · 인덱스)는 실제 DB에서 읽은 값이고, 목적 · 칸 의미는 `scripts/db/gen_schema_docs.py`의 `TABLES`에 있다. 그림은 [erd.md](erd.md).
-- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 21개.
+- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 24개.
 
 | 스키마.표 | 목적 |
 |---|---|
@@ -14,6 +14,9 @@
 | `public.auth_signup_attempts` | IP별 하루 가입 요청 수(데모 모드 전용) |
 | `public.auth_google_states` | Google OAuth 일회용 상태 |
 | `public.auth_google_identities` | Google 신원 ↔ 사용자 연결 |
+| `public.auth_google_pending` | 명시적 Google 가입·연결과 관리자 최초 승인 대기 |
+| `public.auth_email_challenges` | 이메일 가입·비밀번호 재설정 일회용 확인 |
+| `public.auth_email_send_limits` | 원문 이메일·IP 없는 메일 발송 요청 한도 |
 | `public.projects` | 프로젝트 |
 | `public.circuits` | 프로젝트의 정규화 회로(1:1) |
 | `public.threads` | 프로젝트 안의 대화 |
@@ -37,16 +40,18 @@
 |---|---|---|---|---|
 | `id` | bigint | NOT NULL |  | 계정 번호(내부 키) |
 | `login_id` | character varying(100) | NOT NULL |  | 로그인 이메일(소문자). 구글 가입도 같은 칸에 이메일 저장 |
-| `password_hash` | character varying(255) | NOT NULL |  | scrypt 해시. Google 전용은 'google-login-only', 로컬 데모 버튼은 'demo-button-login-only' 표식(비밀번호 로그인 불가) |
+| `password_hash` | character varying(255) | NULL |  | scrypt 해시. 신규 Google 전용 일반 계정은 NULL, 기존 Google/데모 전용 표식은 비밀번호 로그인 불가 |
 | `is_active` | boolean | NOT NULL | true | 비활성이면 로그인 · 세션 불가 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 가입 시각 |
 | `updated_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 수정 시각 |
 | `role` | text | NOT NULL | 'user'::text | admin \| user |
+| `email_verified_at` | timestamp with time zone | NULL |  | 이메일 소유 확인 시각. 기존 계정은 NULL을 허용하며 로그인 차단 근거로 사용하지 않음 |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
 | `users_pkey` | PK | `PRIMARY KEY (id)` |
 | `users_login_id_key` | UNIQUE | `UNIQUE (login_id)` |
+| `users_admin_password_required` | CHECK | `CHECK (((password_hash IS NOT NULL) OR (role = 'user'::text)))` |
 | `users_role_check` | CHECK | `CHECK ((role = ANY (ARRAY['admin'::text, 'user'::text])))` |
 
 | 인덱스 | 정의 |
@@ -174,6 +179,71 @@
 | `auth_google_identities_pkey` | `UNIQUE btree (issuer, subject)` |
 | `auth_google_identities_user_id_key` | `UNIQUE btree (user_id)` |
 
+## `public.auth_google_pending`
+
+- **목적**: 명시적 Google 가입·연결과 관리자 최초 승인 대기
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `request_id` | text | NOT NULL |  | 브라우저 HttpOnly 쿠키에 연결되는 일회용 요청 식별자 |
+| `issuer` | text | NOT NULL |  | 검증된 Google 발급자 |
+| `subject` | text | NOT NULL |  | 검증된 Google 계정 식별자 |
+| `email` | text | NOT NULL |  | Google이 소유 확인한 이메일 |
+| `expires_at` | timestamp with time zone | NOT NULL |  | 15분 후 만료 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_google_pending_pkey` | PK | `PRIMARY KEY (request_id)` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_google_pending_pkey` | `UNIQUE btree (request_id)` |
+
+## `public.auth_email_challenges`
+
+- **목적**: 이메일 가입·비밀번호 재설정 일회용 확인
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `email` | character varying(100) | NOT NULL |  | 정규화한 수신 이메일 |
+| `purpose` | text | NOT NULL |  | signup 또는 reset |
+| `token_hash` | character(64) | NOT NULL |  | 인증 토큰의 단방향 해시. 원문은 저장하지 않음 |
+| `user_id` | bigint | NULL |  | 재설정 대상 사용자. 가입 요청은 NULL |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 요청 생성 시각 |
+| `expires_at` | timestamp with time zone | NOT NULL |  | 가입 60분·재설정 15분 만료 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_email_challenges_pkey` | PK | `PRIMARY KEY (email, purpose)` |
+| `auth_email_challenges_token_hash_key` | UNIQUE | `UNIQUE (token_hash)` |
+| `auth_email_challenges_user_id_fkey` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
+| `auth_email_challenges_check` | CHECK | `CHECK ((((purpose = 'signup'::text) AND (user_id IS NULL)) OR ((purpose = 'reset'::text) AND (user_id IS NOT NULL))))` |
+| `auth_email_challenges_purpose_check` | CHECK | `CHECK ((purpose = ANY (ARRAY['signup'::text, 'reset'::text])))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_email_challenges_pkey` | `UNIQUE btree (email, purpose)` |
+| `auth_email_challenges_token_hash_key` | `UNIQUE btree (token_hash)` |
+
+## `public.auth_email_send_limits`
+
+- **목적**: 원문 이메일·IP 없는 메일 발송 요청 한도
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `key_hash` | character(64) | NOT NULL |  | 서비스/IP/이메일·목적 한도 키의 단방향 해시 |
+| `window_start` | timestamp with time zone | NOT NULL |  | UTC 한도 집계 창 시작 시각 |
+| `request_count` | integer | NOT NULL |  | 집계 창의 요청 횟수 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `auth_email_send_limits_pkey` | PK | `PRIMARY KEY (key_hash)` |
+| `auth_email_send_limits_request_count_check` | CHECK | `CHECK (((request_count >= 1) AND (request_count <= 200)))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `auth_email_send_limits_pkey` | `UNIQUE btree (key_hash)` |
+
 ## `public.projects`
 
 - **목적**: 프로젝트
@@ -192,7 +262,7 @@
 |---|---|---|
 | `pk_projects` | PK | `PRIMARY KEY (id)` |
 | `fk_projects_user` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
-| `ck_projects_demo` | CHECK | `CHECK (((source_kind = 'demo'::text) = (demo_id IS NOT NULL)))` |
+| `ck_projects_demo` | CHECK | `CHECK ((((source_kind = 'demo'::text) AND (demo_id IS NOT NULL) AND (btrim(demo_id) <> ''::text)) OR ((source_kind = 'upload'::text) AND (demo_id IS NULL))))` |
 | `ck_projects_name` | CHECK | `CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 200))))` |
 | `ck_projects_source_kind` | CHECK | `CHECK ((source_kind = ANY (ARRAY['demo'::text, 'upload'::text])))` |
 
