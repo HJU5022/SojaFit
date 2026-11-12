@@ -1,0 +1,9 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_retrieval_failure_is_not_reported_as_empty_corpus ____________
+tests/graph/test_graph_build.py:100: in test_retrieval_failure_is_not_reported_as_empty_corpus
+    assert out["retrieval_error"] == {"kind": "timeout"}
+E   AssertionError: assert None == {'kind': 'timeout'}
+=========================== short test summary info ============================
+FAILED tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus
+1 failed in 0.56s

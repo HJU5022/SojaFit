@@ -1,4 +1,4 @@
-"""Supervisor(계획, LLM 1번) · 배분(Send)과 답 모으기(코드) · 종합(할 일 2개 이상일 때만 LLM 1번), 그리고 마무리 답 검사(코드).
+"""Supervisor(계획, LLM 1번) · 배분(Send)과 답 모으기(코드) · 종합(`답 정리`가 못 이을 때만 LLM 1번), 그리고 마무리 답 검사(코드).
 
 - 역할:
   - 계획 `plan_node`: 질문 · 대상 회로 · 확인된 사실을 글로 만들어 LLM에 주고 계획서(`Plan`: 범위 판정 · 질문 종류 · 할 일 최대 3개와
@@ -6,7 +6,7 @@
   - 답 모으기 `collect_node`: 돌아온 보고의 상태 · 사유만 보고 상한을 검사해 다음 길(답 정리 · 종합 · 거절 · 재계획)을 정한다.
     재계획(설계 v2, 11-07): 이번 회차에 다시 해 볼 만한 실패(사유가 no_result · all_rejected · partial이거나 없음)가 있거나
     계획이 '앞 결과가 필요하다(replan)'고 표시했으면, 아직 재계획 전일 때만 Supervisor(계획)로 되돌린다. 무엇을 할지는 계획(LLM)이 정한다.
-    `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 할 일 2개 이상일 때만 부분 답을 한 답으로 합친다.
+    `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 서로 다른 에이전트의 보고가 2개 이상이고 일부가 일부 답이거나 실패일 때만 부분 답을 한 답으로 합친다.
     판정(kind=judge)이 끝난 답은 둘 다 코드 판정 답 틀만 쓴다(출력 경계 `_judgement_reply`, 문서 · 종합 자유 글을 붙이지 않음).
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
@@ -291,7 +291,7 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
 
 
 def synth_node(state: dict, *, chat) -> dict:
-    """그래프 노드 `종합`(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다.
+    """그래프 노드 `종합`(LLM 1번): 서로 다른 에이전트의 보고가 2개 이상이고 일부가 일부 답이거나 실패일 때만 불려, 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다.
     판정(kind=judge)이 끝났으면 LLM을 부르지 않고 판정 답 틀만 쓴다(`_judgement_reply`)."""
     reports = final_reports(state)
     judged = _judgement_reply(state, sorted(reports, key=lambda r: (r.round, r.task)))

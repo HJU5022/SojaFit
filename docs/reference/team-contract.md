@@ -10,9 +10,9 @@
 
 ## 1. 구조
 
-현재 구조는 Supervisor 1개와 서브에이전트 2개(RAG 에이전트, Spec 에이전트)의 계획형 멀티 그래프다. 노드와 흐름은 [README.md](../../README.md) 3절의 그림 [agent-flow.png](../assets/agent-flow.png)(원본 [agent-flow.svg](../assets/agent-flow.svg))과 [SPEC.md](../../SPEC.md) 2절이 정본이다.
+현재 구조는 Supervisor 1개와 서브에이전트 2개(RAG 에이전트, Spec 에이전트)의 계획형 멀티 그래프다. 노드와 흐름의 정본은 코드가 만든 [README.md](../../README.md) 3절의 mermaid 그래프와 [SPEC.md](../../SPEC.md) 2절이다. 아래 그림은 손으로 그린 개념도([agent-flow.svg](../assets/agent-flow.svg))라 노드 이름과 화살표는 README 그래프가 기준이다.
 
-![SojaFit 멀티 에이전트 구조](../assets/agent-flow.png)
+![개념도(손으로 그린 요약): SojaFit 멀티 에이전트 구조](../assets/agent-flow.png)
 
 ## 2. 설계 질문 8개
 

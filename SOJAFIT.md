@@ -27,8 +27,8 @@ SojaFit (proj3-b)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
-├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 시험용 가짜 값, SQL 파일 이름 제외
-├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
+├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 인젝션 측정 결과의 document_key, 작업 기록의 `--to-revisions=` 리비전 이름, SQL 파일 이름 제외(시험용 가짜 값은 `.gitleaksignore`)
+├── .gitleaksignore         <- 제외할 오탐의 커밋·파일·규칙·줄 fingerprint: 시험용 가짜 값 10건과 소스 SHA-256 한 건. 새 시험 값은 커밋 뒤 `gitleaks git --redact -v` 출력의 `Fingerprint:` 줄을 붙여 등록
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
 ├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
@@ -481,6 +481,7 @@ SojaFit (proj3-b)
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
 │   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
+│       ├── d10/            <- Checkpoint D10 점검 증거: 인젝션 기준 검사 출력, 변이 28건 결과와 재현 스크립트, 비밀값 검사(원시 파일은 폴더 README.md가 설명)
 │       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
@@ -614,6 +615,7 @@ SojaFit (proj3-b)
 │   │   ├── test_contracts.py  <- 계획서·보고서 형식 검사, 이유 코드, 상한
 │   │   ├── test_supervisor.py  <- Supervisor 입력 글·결정 처리·횟수 세기·프롬프트 점검(가짜 LLM)
 │   │   ├── test_facts_lookup.py  <- 사실 확인이 MCP 도구 응답으로 Facts를 만드는 길(가짜 도구)
+│   │   ├── test_readme_graph.py  <- README 3절 mermaid 블록 = 코드가 조립한 그래프인지 비교
 │   │   ├── test_agents.py  <- RAG 에이전트(검색 · 근거 채점+답 쓰기 · 다시 찾기 · 인용 검사), 사실 확인, 거절 문구, 판정 답 틀
 │   │   ├── test_docs_agent.py  <- RAG 에이전트: 변형 품번(양방향 · H)이면 품번 규칙 주석을 더 찾아 붙이기, 표 주석 카드는 다른 품번 줄로 거르지 않기
 │   │   ├── test_judge.py   <- Spec 에이전트: 읽기·숫자 확인·인터럽트·판정·찾기(가짜 LLM·사양 표)
@@ -770,8 +772,8 @@ SojaFit (proj3-b)
     │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
     ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
     │   ├── ASSETS.md       <- 폴더 설명
-    │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
-    │   └── agent-flow.svg  <- 위 그림의 원본
+    │   ├── agent-flow.png  <- 멀티 에이전트 개념도(손으로 그린 요약, 정본 그래프는 README 3절 mermaid)
+    │   └── agent-flow.svg  <- 위 개념도의 원본
     ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
     │   └── ADR.md          <- 폴더 설명과 결정 목록
     ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀

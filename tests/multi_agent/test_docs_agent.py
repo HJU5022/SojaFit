@@ -680,6 +680,11 @@ def test_single_requested_edition_accepts_legacy_locator_without_part_metadata()
     assert not revision_matches(question, 'S1A SERIES_S2102.pdf')
 
 
+def test_document_without_edition_is_rejected_when_an_edition_is_requested():
+    assert not revision_matches('SS34 F16 판본', 'SS34.pdf', ['SS34'], ['SS34'])
+    assert revision_matches('SS34 데이터시트', 'SS34.pdf', ['SS34'], ['SS34'])
+
+
 def test_single_part_multi_edition_comparison_remains_supported():
     question = 'SS34의 F16 판본과 F20 판본을 비교해 줘'
     assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}

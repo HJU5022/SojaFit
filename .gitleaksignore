@@ -1,4 +1,25 @@
-# 검증 요약의 backend/auth.py SHA-256 오탐 1건만 제외한다.
-# 해당 값은 파일 바이트의 SHA-256과 대조했다. 새 커밋/다른 위치/다른 규칙은 제외하지 않는다.
+# gitleaks가 의심하지만 비밀값이 아닌 항목을 지문(커밋:파일:규칙:줄) 단위로 제외한다. 해시 · 측정 id 등 대량 오탐은 .gitleaks.toml이 경로로 제외한다.
+# 새 시험용 가짜 값 등록: 커밋 뒤 `gitleaks git --redact -v` 출력의 Fingerprint 줄을 아래에 붙인다(SOJAFIT.md 참고). 새 커밋/다른 위치/다른 규칙은 제외하지 않는다.
 # https://github.com/gitleaks/gitleaks#-gitleaksignore
+
+# backend/auth.py의 SHA-256 오탐 1건. 값은 파일 바이트의 SHA-256과 대조했다.
 ccadd3f2601e56478aefb09d37ec1d3d10af166a:evals/results/graph/memory_operations_2026-11-09.json:generic-api-key:121
+
+# tests/api/test_auth.py: 인증 시험의 가짜 비밀번호(synthetic- 접두어, 실제 계정 값 아님) 7건
+36be8bffc0a8eb3149c99d46313f87e14276861b:tests/api/test_auth.py:generic-api-key:1017
+36be8bffc0a8eb3149c99d46313f87e14276861b:tests/api/test_auth.py:generic-api-key:903
+36be8bffc0a8eb3149c99d46313f87e14276861b:tests/api/test_auth.py:generic-api-key:922
+d6b0b04f5cb56da08a08d075db2c77b58dab2dfe:tests/api/test_auth.py:generic-api-key:964
+d6b0b04f5cb56da08a08d075db2c77b58dab2dfe:tests/api/test_auth.py:generic-api-key:965
+f3918c3523b7cd2c724abf3d112ffe09472cc0f7:tests/api/test_auth.py:generic-api-key:1004
+f3918c3523b7cd2c724abf3d112ffe09472cc0f7:tests/api/test_auth.py:generic-api-key:903
+
+# tests/api/test_deletion.py: 탈퇴 시험의 격리용 가짜 AUTH_SECRET(isolated- 접두어, 실제 서명 키 아님) 1건
+799b325f6b13579b10d657a01ac35d00233729e1:tests/api/test_deletion.py:generic-api-key:53
+
+# tests/api/test_errors.py: 오류 시험의 가짜 비밀번호(synthetic- 접두어, 실제 계정 값 아님) 2건
+ee8808ff9b3336106407703ae55f42ee4aa11852:tests/api/test_errors.py:generic-api-key:226
+ee8808ff9b3336106407703ae55f42ee4aa11852:tests/api/test_errors.py:generic-api-key:73
+
+# evals/results/d10/secrets/extra_checks.md: 검사 증거 표가 인용한 SQL 파일 이름(비밀 아님) 1건
+d5138a76c2bb7aa784a62b8ede3dc19e62ac3f7d:evals/results/d10/secrets/extra_checks.md:generic-api-key:10

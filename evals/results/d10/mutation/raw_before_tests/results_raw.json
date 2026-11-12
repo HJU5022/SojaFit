@@ -1,0 +1,556 @@
+[
+ {
+  "id": "M1",
+  "area": "단일 그래프 재검색 상한",
+  "old_row": 1,
+  "file": "backend/graph/build.py",
+  "before": "MAX_TRIES = 2",
+  "after": "MAX_TRIES = 99",
+  "tests": [
+   "tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses",
+   "tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches"
+  ],
+  "expect": "CAUGHT",
+  "line": 24,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:34 KST",
+  "mutated_summary": "2 failed in 1.22s",
+  "restored_summary": "2 passed in 1.00s"
+ },
+ {
+  "id": "M2",
+  "area": "단일 그래프 품번 필터",
+  "old_row": 2,
+  "file": "backend/graph/nodes.py",
+  "before": "    return bool(named) and not named & asked",
+  "after": "    return False",
+  "tests": [
+   "tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm"
+  ],
+  "expect": "CAUGHT",
+  "line": 270,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:39 KST",
+  "mutated_summary": "1 failed in 0.80s",
+  "restored_summary": "1 passed in 0.75s"
+ },
+ {
+  "id": "M3",
+  "area": "단일 그래프 가짜 인용 검출",
+  "old_row": 3,
+  "file": "backend/graph/nodes.py",
+  "before": "\"fake_citations\": sorted(cited - valid),",
+  "after": "\"fake_citations\": [],",
+  "tests": [
+   "tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited"
+  ],
+  "expect": "CAUGHT",
+  "line": 460,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:44 KST",
+  "mutated_summary": "1 failed in 1.19s",
+  "restored_summary": "1 passed in 0.68s"
+ },
+ {
+  "id": "M4",
+  "area": "단일 그래프 재검색 상한(2→3)",
+  "old_row": 4,
+  "file": "backend/graph/build.py",
+  "before": "MAX_TRIES = 2",
+  "after": "MAX_TRIES = 3",
+  "tests": [
+   "tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches"
+  ],
+  "expect": "CAUGHT",
+  "line": 24,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:48 KST",
+  "mutated_summary": "1 failed in 1.42s",
+  "restored_summary": "1 passed in 1.31s"
+ },
+ {
+  "id": "M5",
+  "area": "단일 그래프 MCP 장애 표시",
+  "old_row": 5,
+  "file": "backend/graph/nodes.py",
+  "before": "\"retrieval_error\": {\"kind\": error.kind}",
+  "after": "\"retrieval_error\": None",
+  "tests": [
+   "tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus"
+  ],
+  "expect": "CAUGHT",
+  "line": 237,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:53 KST",
+  "mutated_summary": "1 failed in 1.37s",
+  "restored_summary": "1 passed in 1.13s"
+ },
+ {
+  "id": "M6",
+  "area": "단일 그래프 MCP 장애 분기",
+  "old_row": 6,
+  "file": "backend/graph/build.py",
+  "before": "    return \"거절\" if state.get(\"retrieval_error\") else \"채점\"",
+  "after": "    return \"채점\"",
+  "tests": [
+   "tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus"
+  ],
+  "expect": "CAUGHT",
+  "line": 49,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:07:59 KST",
+  "mutated_summary": "1 failed in 1.88s",
+  "restored_summary": "1 passed in 1.04s"
+ },
+ {
+  "id": "M7",
+  "area": "멀티 그래프 종합 숫자 검사",
+  "old_row": 7,
+  "file": "backend/multi_agent/supervisor.py",
+  "before": "        problem = bool(set(NUMBER.findall(state.get('synth_text', ''))) - known)",
+  "after": "        problem = False",
+  "tests": [
+   "tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check"
+  ],
+  "expect": "CAUGHT",
+  "line": 351,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:04 KST",
+  "mutated_summary": "1 failed in 1.13s",
+  "restored_summary": "1 passed in 1.00s"
+ },
+ {
+  "id": "M8",
+  "area": "멀티 그래프 판정 답 출력 경계",
+  "old_row": 8,
+  "file": "backend/multi_agent/supervisor.py",
+  "before": "    asked = [r for r in reports if r.agent == 'judge' and r.judgement.get('kind') == 'judge']",
+  "after": "    return None\n    asked = [r for r in reports if r.agent == 'judge' and r.judgement.get('kind') == 'judge']",
+  "tests": [
+   "tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose"
+  ],
+  "expect": "CAUGHT",
+  "line": 241,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:09 KST",
+  "mutated_summary": "2 failed in 0.46s",
+  "restored_summary": "2 passed in 0.55s"
+ },
+ {
+  "id": "M9",
+  "area": "멀티 그래프 에이전트 실행 상한",
+  "old_row": 9,
+  "file": "backend/multi_agent/contracts.py",
+  "before": "MAX_AGENT_RUNS = 6 ",
+  "after": "MAX_AGENT_RUNS = 99 ",
+  "tests": [
+   "tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers",
+   "tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit"
+  ],
+  "expect": "CAUGHT",
+  "line": 18,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:12 KST",
+  "mutated_summary": "1 failed, 1 passed in 0.48s",
+  "restored_summary": "2 passed in 0.41s"
+ },
+ {
+  "id": "N1",
+  "area": "RAG 인용 검사(가짜 번호 제거)",
+  "file": "backend/multi_agent/agents/docs.py",
+  "before": "    fake = sorted(citations(answer) - valid)",
+  "after": "    fake = []",
+  "tests": [
+   "tests/multi_agent/test_docs_agent.py::test_nested_fake_id_is_removed_without_losing_the_provided_id"
+  ],
+  "expect": "CAUGHT",
+  "line": 230,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:15 KST",
+  "mutated_summary": "2 failed in 1.40s",
+  "restored_summary": "2 passed in 0.96s"
+ },
+ {
+  "id": "N2",
+  "area": "RAG 인용 검사(근거 없는 문장)",
+  "file": "backend/multi_agent/agents/docs.py",
+  "before": "    return any(s.strip() and not citations(s) for s in re.split(r'(?<=[.。])\\s+', answer))",
+  "after": "    return False",
+  "tests": [
+   "tests/multi_agent/test_docs_agent.py::test_smoke02_persisting_uncited_claim_is_removed_while_cited_fact_survives",
+   "tests/multi_agent/test_docs_agent.py::test_citation_does_not_transfer_to_an_adjacent_uncited_claim"
+  ],
+  "expect": "CAUGHT",
+  "line": 252,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:20 KST",
+  "mutated_summary": "2 failed in 1.34s",
+  "restored_summary": "2 passed in 0.92s"
+ },
+ {
+  "id": "N3",
+  "area": "개정판 필터",
+  "file": "backend/multi_agent/revisions.py",
+  "before": "    if not document:\n        return False",
+  "after": "    if not document:\n        return True",
+  "tests": [
+   "tests/multi_agent",
+   "tests/graph"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 192,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:25 KST",
+  "mutated_summary": "445 passed, 1 skipped in 4.31s",
+  "restored_summary": "445 passed, 1 skipped in 3.91s"
+ },
+ {
+  "id": "N4",
+  "area": "코드 판정(필수 조건 실패 강제)",
+  "file": "backend/judge/verdict.py",
+  "before": "    elif any(c.result == 'fail' for c in checks):",
+  "after": "    elif False:",
+  "tests": [
+   "tests/judge/test_judge_conditions.py::test_tolerance_class_excludes_tighter_grades_too"
+  ],
+  "expect": "CAUGHT",
+  "line": 405,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:36 KST",
+  "mutated_summary": "1 failed in 0.11s",
+  "restored_summary": "1 passed in 0.07s"
+ },
+ {
+  "id": "N5",
+  "area": "코드 판정(여유 비교)",
+  "file": "backend/judge/verdict.py",
+  "before": "if _margin(cond['op'], value, t) >= 0 else ('fail', '')",
+  "after": "if _margin(cond['op'], value, t) >= -1e9 else ('fail', '')",
+  "tests": [
+   "tests/judge/test_judge_conditions.py::test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots"
+  ],
+  "expect": "CAUGHT",
+  "line": 240,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:39 KST",
+  "mutated_summary": "1 failed in 0.10s",
+  "restored_summary": "1 passed in 0.06s"
+ },
+ {
+  "id": "N6",
+  "area": "하루 토큰 상한",
+  "file": "backend/conversations/memory_service.py",
+  "before": "        if (used['mine'] or 0) + TOKEN_MARGIN > USER_DAILY_TOKENS:",
+  "after": "        if TOKEN_MARGIN > USER_DAILY_TOKENS:",
+  "tests": [
+   "tests/api/test_errors.py::test_token_cap_is_limit_exceeded"
+  ],
+  "expect": "CAUGHT",
+  "line": 192,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:41 KST",
+  "mutated_summary": "1 failed in 1.75s",
+  "restored_summary": "1 passed in 1.40s"
+ },
+ {
+  "id": "N7",
+  "area": "비밀번호 최소 길이",
+  "file": "backend/auth.py",
+  "before": "    if not 12 <= len(password) <= 1024",
+  "after": "    if not 1 <= len(password) <= 1024",
+  "tests": [
+   "tests/api/test_email_auth.py::test_password_length_boundary_is_twelve_on_both_completion_routes"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 72,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:47 KST",
+  "mutated_summary": "2 passed in 0.62s",
+  "restored_summary": "2 passed in 0.67s"
+ },
+ {
+  "id": "N8",
+  "area": "Origin 검사(CSRF)",
+  "file": "backend/auth.py",
+  "before": "    if request.headers.get(\"origin\") != origin:",
+  "after": "    if False:",
+  "tests": [
+   "tests/api/test_health.py::test_forbidden_uses_error_contract"
+  ],
+  "expect": "CAUGHT",
+  "line": 310,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:51 KST",
+  "mutated_summary": "1 failed in 0.62s",
+  "restored_summary": "1 passed in 0.51s"
+ },
+ {
+  "id": "N9",
+  "area": "알 수 없는 필드 422",
+  "file": "backend/api/conversations.py",
+  "before": "class StartRun(BaseModel):\n    model_config = ConfigDict(extra='forbid',",
+  "after": "class StartRun(BaseModel):\n    model_config = ConfigDict(extra='ignore',",
+  "tests": [
+   "tests/api/test_conversations.py::test_run_rejects_injected_fields_and_foreign_origin_before_service"
+  ],
+  "expect": "CAUGHT",
+  "line": 43,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:54 KST",
+  "mutated_summary": "1 failed in 1.08s",
+  "restored_summary": "1 passed in 0.68s"
+ },
+ {
+  "id": "N10",
+  "area": "인젝션 기준 검사 종료 코드",
+  "file": "evals/runners/check_injection_result.py",
+  "before": "    return 1 if found else 0",
+  "after": "    return 0",
+  "tests": [
+   "tests/evals/test_check_injection_result.py",
+   "tests/evals/test_injection_baseline.py",
+   "tests/evals/test_injection_baseline_plan.py",
+   "tests/evals/test_injection_preflight.py",
+   "tests/evals/test_saved_defense_replay.py"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 45,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:08:58 KST",
+  "mutated_summary": "108 passed in 21.11s",
+  "restored_summary": "108 passed in 25.82s"
+ },
+ {
+  "id": "N11",
+  "area": "인젝션 기준 검사 위반 수집",
+  "file": "evals/runners/check_injection_result.py",
+  "before": "    out += [f'{r[\"id\"]}: 최종 답 비어 있음' for r in rows if not (r.get('answer') or '').strip()]",
+  "after": "    pass",
+  "tests": [
+   "tests/evals/test_check_injection_result.py",
+   "tests/evals/test_injection_baseline.py",
+   "tests/evals/test_injection_baseline_plan.py",
+   "tests/evals/test_injection_preflight.py",
+   "tests/evals/test_saved_defense_replay.py"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 26,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:09:49 KST",
+  "mutated_summary": "108 passed in 34.12s",
+  "restored_summary": "108 passed in 26.10s"
+ },
+ {
+  "id": "N12",
+  "area": "동결 평가셋 해시",
+  "file": "evals/dataset_v1.jsonl",
+  "before": "__APPEND_BYTE__",
+  "after": "",
+  "tests": [
+   "tests/evals/test_frozen_evals.py::test_frozen_files_unchanged"
+  ],
+  "expect": "CAUGHT",
+  "line": 50,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:10:55 KST",
+  "mutated_summary": "1 failed in 0.06s",
+  "restored_summary": "1 passed in 0.02s"
+ },
+ {
+  "id": "N3b",
+  "area": "개정판 필터(다른 품번 문서)",
+  "file": "backend/multi_agent/revisions.py",
+  "before": "    if asked_keys and doc_keys and not (asked_keys & doc_keys):\n        return False",
+  "after": "    if asked_keys and doc_keys and not (asked_keys & doc_keys):\n        return True",
+  "tests": [
+   "tests/multi_agent",
+   "tests/graph"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 196,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:10:57 KST",
+  "mutated_summary": "445 passed, 1 skipped in 5.01s",
+  "restored_summary": "445 passed, 1 skipped in 4.11s"
+ },
+ {
+  "id": "N3c",
+  "area": "개정판 필터(품번별 판본 대조)",
+  "file": "backend/multi_agent/revisions.py",
+  "before": "            if any(part in ambiguous or document not in mapped.get(part, set()) for part in known):\n                return False",
+  "after": "            if any(part in ambiguous or document not in mapped.get(part, set()) for part in known):\n                return True",
+  "tests": [
+   "tests/multi_agent/test_docs_agent.py::test_part_specific_editions_do_not_cross_allow_documents"
+  ],
+  "expect": "CAUGHT",
+  "line": 204,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:08 KST",
+  "mutated_summary": "1 failed in 1.16s",
+  "restored_summary": "1 passed in 0.91s"
+ },
+ {
+  "id": "N11b",
+  "area": "인젝션 기준 검사(작업 수 110)",
+  "file": "evals/runners/check_injection_result.py",
+  "before": "    if (len(rows), len(normal), len(attack)) != (110, 55, 55):",
+  "after": "    if False:",
+  "tests": [
+   "tests/evals/test_check_injection_result.py::test_mutations_fail"
+  ],
+  "expect": "CAUGHT",
+  "line": 22,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:13 KST",
+  "mutated_summary": "1 failed in 0.28s",
+  "restored_summary": "1 passed in 0.44s"
+ },
+ {
+  "id": "N11c",
+  "area": "인젝션 기준 검사(판정 5기준)",
+  "file": "evals/runners/check_injection_result.py",
+  "before": "            out += [f'{r[\"id\"]}: {k} != true' for k in CRITERIA if auto.get(k) is not True]",
+  "after": "            pass",
+  "tests": [
+   "tests/evals/test_check_injection_result.py::test_mutations_fail"
+  ],
+  "expect": "CAUGHT",
+  "line": 30,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:16 KST",
+  "mutated_summary": "1 failed in 0.41s",
+  "restored_summary": "1 passed in 0.35s"
+ },
+ {
+  "id": "N13",
+  "area": "멀티 그래프 실행 상한 가드",
+  "file": "backend/multi_agent/supervisor.py",
+  "before": "    if len(reports) > MAX_AGENT_RUNS:",
+  "after": "    if False:",
+  "tests": [
+   "tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit"
+  ],
+  "expect": "CAUGHT",
+  "line": 152,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:19 KST",
+  "mutated_summary": "1 failed in 0.39s",
+  "restored_summary": "1 passed in 0.33s"
+ },
+ {
+  "id": "N14",
+  "area": "거절 경로(모든 할 일이 실패하면 거절)",
+  "file": "backend/multi_agent/supervisor.py",
+  "before": "    if not good:",
+  "after": "    if False:",
+  "tests": [
+   "tests/multi_agent/test_supervisor.py::test_collect_picks_single_synth_or_refuse_from_report_status"
+  ],
+  "expect": "CAUGHT",
+  "line": 188,
+  "verdict": "CAUGHT",
+  "mutated_rc": 1,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:22 KST",
+  "mutated_summary": "1 failed in 0.36s",
+  "restored_summary": "1 passed in 0.30s"
+ },
+ {
+  "id": "N15",
+  "area": "거절 경로(refusal_reason이 있으면 거절 노드로 간다)",
+  "file": "backend/multi_agent/supervisor.py",
+  "before": "    return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']",
+  "after": "    return NODE['finish']",
+  "tests": [
+   "tests/multi_agent"
+  ],
+  "expect": "NOT_CAUGHT",
+  "line": 357,
+  "verdict": "NOT_CAUGHT",
+  "mutated_rc": 0,
+  "restored_rc": 0,
+  "clean": true,
+  "at": "2026-11-13 02:11:25 KST",
+  "mutated_summary": "327 passed in 2.61s",
+  "restored_summary": "327 passed in 3.21s"
+ }
+]
