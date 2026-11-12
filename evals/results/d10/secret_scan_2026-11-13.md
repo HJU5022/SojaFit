@@ -26,7 +26,7 @@
 | 2c | `git archive origin/main` 내보내기(이력 없음) | 저장소 설정 적용. 경로를 `^`로 고정한 허용 규칙이 맞지 않아 허용 항목 9건이 보인다 |
 | 2d | 설정·`.gitleaksignore`가 없는 빈 bare 저장소에 `origin/main`을 받아 이력 전체 | 허용 규칙 없음 |
 
-명령은 [secrets/commands.md](secrets/commands.md)에 있다. 컨테이너는 읽기 전용으로 마운트했고 `--rm`으로 종료 시 삭제된다. 라이브 `.env`와 `scratchpad/`는 읽지 않았다.
+명령은 [secrets/commands.md](secrets/commands.md)에 있다. `secrets/`를 `scripts/results/`가 아니라 `d10/`에 둔 이유: `d10/`은 GATES가 링크하는 점검 증거 폴더이고 평가 지표가 아닌 변이·지문 증거도 이미 담는다. 컨테이너는 읽기 전용으로 마운트했고 `--rm`으로 종료 시 삭제된다. 라이브 `.env`와 `scratchpad/`는 읽지 않았다.
 
 ## 3. 허용 목록이 가린 항목의 분류
 
@@ -73,4 +73,4 @@
 | 패턴 검사 스크립트 | 4절의 검사에 쓴 스크립트와 건별 목록(앞 4자만 기록)은 저장소에 없다. 결과 요약만 `extra_checks.md`에 있다 |
 | 데모 계정 | 작업 기록의 데모 계정이 평가용 계정과 같은지 확인하지 못했다 |
 | 작업 트리 | 검사 대상은 `origin/main`이다. 커밋하지 않은 작업 트리와 `.env`는 검사하지 않았다 |
-| 개인정보 가림 | `secrets/extra_checks.md`에서 이메일 앞부분·Supabase ref 앞 4자·데모 계정 표기를 일반 표현으로 바꿨다. 같은 파일의 `.gitleaks.toml` 항목은 원시 Match(`document_key`)에 맞춰 `pair_key` 표기를 `document_key`로 고쳤다 |
+| 개인정보 가림 | `secrets/extra_checks.md`에서 이메일 앞부분·Supabase ref 앞 4자·데모 계정 표기를 일반 표현으로 바꿨다. 가린 것은 이 값뿐이다. 같은 파일 2d 표의 360건 행은 필드를 `pair_key`로 적지만 2d 원시 Match는 `document_key`이다(3절이 정정 값). |

@@ -4,7 +4,7 @@
 | 건수 | 파일:줄 (커밋) | 무엇 | 분류 |
 |---|---|---|---|
 | 986 | evals/results/embedding/grid_rerank_cache_2026-11-02.jsonl (key 필드) | 64자리 16진 sha256 해시 | 문서 예시 아님·비밀 아님(해시) |
-| 360 | evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl 240 + ..._human_jeongun.jsonl 120 (document_key, 원시 Match `document_key": "REDACTED"`) | 코퍼스 문서 식별 값 | 비밀 아님. .gitleaks.toml 주석의 "60건"은 낡은 수 |
+| 360 | evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl 240 + ..._human_jeongun.jsonl 120 (pair_key) | "baseline_t#_..:ablated" 식별자 | 비밀 아님(측정 ID). toml 주석은 "document_key 60건"이라 낡음 |
 | 8 | docs/worklog/jeongun.md 줄 34,54,70,80 (현재) / 커밋 6a0015f 외 | `--to-revisions=sojafit-api-<커밋해시>` Cloud Run 리비전 이름 | 문서 예시 |
 | 1 | evals/results/graph/memory_operations_2026-11-09.json:121 (ccadd3f) | "backend/auth.py": 64자리 SHA-256 | 파일 해시(.gitleaksignore 유일 항목) |
 | 1 | backend/conversations/memory_service.py:109 (aeff44e) | '022_token_limits.sql','023_retention.sql' | 문서/코드 상수(파일명) |
