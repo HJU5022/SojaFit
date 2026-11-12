@@ -23,3 +23,6 @@ ee8808ff9b3336106407703ae55f42ee4aa11852:tests/api/test_errors.py:generic-api-ke
 
 # evals/results/d10/secrets/extra_checks.md: 검사 증거 표가 인용한 SQL 파일 이름(비밀 아님) 1건
 d5138a76c2bb7aa784a62b8ede3dc19e62ac3f7d:evals/results/d10/secrets/extra_checks.md:generic-api-key:10
+
+# docs/GATES.md: 되돌리기 리비전 표의 Cloud Run 리비전 이름 `--to-revisions=sojafit-api-...`(비밀 아님) 1건
+ce0df254dec0974c2629ad9e7b67765eba527bfe:docs/GATES.md:generic-api-key:40

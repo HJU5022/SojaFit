@@ -135,9 +135,11 @@
 | 기록 질문 실행 | 6~14 | 9개 질문이 기록과 같은 결과(2절) |
 | 정지 run 저장 · 체크포인트 행 | 15~20 | 3절 |
 | 사용자 사실 기억 | 21~26 | A가 3칸(`affiliation` · `job_role` · `mounting_preference`) 저장 200. 다른 user id를 담은 요청 본문은 422 `VALIDATION_ERROR`. B 조회는 0칸. B의 질문 결과에 `profile_hints` 없음, A의 같은 질문에는 3칸이 붙음. 임베딩 키가 없어 검색은 순위 없는 목록 |
-| 승인 · 견적 | 27~29, 43 | A가 승인 201, 같은 승인 다시 409 `ALREADY_APPROVED`, DB 승인 행 1, 견적 저장 201. B가 A의 승인 · 견적 · 견적 목록 접근은 404. 승인 사례 목록은 A 1건, B 0건 |
+| 승인 · 견적 | 27~29 | A가 승인 201, 같은 승인 다시 409 `ALREADY_APPROVED`, DB 승인 행 1, 견적 저장 201. B가 A의 승인 · 견적 · 견적 목록 접근은 404. 승인 사례 목록은 A 1건, B 0건 |
 | 재시작 전 B → A, A → B | 30~34 | 상대 계정의 프로젝트 · thread · run · 견적에 GET · PATCH · POST · DELETE · resume · recover 모두 404 `NOT_FOUND`. 서로의 목록에 상대 객체 없음. B의 접근 뒤에도 A의 프로젝트 · thread · run · 희생용 프로젝트는 200 |
+| api 재시작 · 재시작 직후 | 35~40 | api 프로세스만 재시작(PID 25205 → 29452, db 그대로), 체크포인트 행은 재시작 전후 같음, A의 세션 쿠키가 다시 로그인 없이 유효. A의 정지 run 2개(`demo-ask` · `v3-01`)는 같은 정지 내용 그대로이고 thread 목록의 최신 run이 같다 |
 | 재시작 뒤 사실 · 승인 | 41~43 | A의 사실 3칸은 저장한 값과 같고, B는 여전히 0칸. 승인은 409, B → A 승인은 404 |
+| 재시작 뒤 A의 재개 | 44~46 | A의 `demo-ask` · `v3-01`을 재개하면 `completed`, 기록과 같은 판정. 이미 끝난 run을 다시 재개하면 422 `VALIDATION_ERROR` |
 | 재시작 뒤 B → A, A → B | 47~51 | B의 정지 run(`demo-notsuff`)을 재개하면 `completed`, 1N4148 `NOT_SUFFICIENT`, `profile_hints` 없음. 양방향 접근은 모두 404, 목록에 상대 객체 없음 |
 | 재시작 뒤 B의 기록 질문 | 52 | 거절 질문(`v3-30`)이 기록과 같은 결과, `profile_hints` 없음 |
 
