@@ -68,6 +68,10 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
+│   │       ├── landing-circuit-background.png <- 사용자가 선택한 기판 스타일의 장식용 랜딩 배경
+│   │       ├── landing-guide-project.png <- 프로젝트 생성 설명용 로컬 예시 화면
+│   │       ├── landing-guide-question.png <- 질문·사용 조건 설명용 로컬 예시 화면
+│   │       ├── landing-guide-evidence.png <- 판정·문서 근거 설명용 로컬 예시 화면
 │   │       ├── sojafit-logo.svg <- 승인된 Circuit S·SOJAFIT 가로형 헤더 로고
 │   │       └── sojafit-icon.svg <- 승인된 Circuit S 심볼의 파비콘
 │   ├── e2e/                <- 외부 호출 없는 브라우저 smoke
@@ -106,6 +110,7 @@ SojaFit (proj3-b)
 │       ├── pages/          <- 로그인·관리자·작업대 화면과 동작 테스트
 │       │   ├── LoginPage.tsx <- 데모 모드의 데모 사용자 A · B 버튼·비밀번호 로그인·가입 링크·설정된 Google 링크
 │       │   ├── LandingPage.tsx <- 목업 기반 공개 랜딩·합성 기능 미리보기·인증 상태에 따른 시작 경로
+│       │   ├── PrivacyPage.tsx <- 로그인 없이 읽는 개인정보처리방침과 목차
 │       │   ├── LoginPage.test.tsx <- 로그인·로그아웃·오류·브라우저 비저장·데모 버튼 표시와 로그인 테스트
 │       │   ├── SignupPage.tsx <- 가입(이메일·8자 이상 비밀번호·동의 필수)과 처리방침 고지
 │       │   ├── SignupPage.test.tsx <- 고지 항목·동의 전 미전송·가입 뒤 작업대·중복 오류·로그아웃 뒤 주소·캐시 정리 테스트

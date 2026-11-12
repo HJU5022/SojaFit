@@ -1,4 +1,4 @@
-import { renderWithQueries as render, demo, first, second, summary } from './test/projects'
+import { renderWithQueries as render, demo, first, second, summary, showDetail } from './test/projects'
 import { StrictMode } from 'react'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -8,6 +8,43 @@ import WorkbenchPage from './pages/WorkbenchPage'
 import { administrator, failure, network, user } from './test/network'
 
 afterEach(() => vi.unstubAllGlobals())
+it.each(['/', '/login', '/signup'])('opens the public privacy notice from %s without protected requests or consent submission', async (path) => {
+  const calls: string[] = []
+  network(url => { calls.push(url); return url === '/api/auth/me' ? failure() : Response.json({ enabled: false }) })
+  render(<MemoryRouter initialEntries={[path]}><App /></MemoryRouter>)
+  const link = await screen.findByRole('link', { name: /^개인정보처리방침/ })
+  expect(link).toHaveAttribute('href', '/privacy')
+  document.documentElement.scrollTop = 500
+  fireEvent.click(link)
+  expect(await screen.findByRole('heading', { name: '개인정보처리방침', level: 1 })).toBeVisible()
+  expect(screen.getAllByRole('region', { name: '개인정보 처리 안내' })).toHaveLength(1)
+  expect(screen.getByText(/운영자명·문의 연락처/)).toBeVisible()
+  expect(document.documentElement.scrollTop).toBe(0)
+  expect(calls).not.toContain('/api/projects')
+  expect(calls).not.toContain('/api/auth/signup')
+})
+it.each([null, user])('allows direct privacy entry regardless of login state: %j', async (account) => {
+  network(() => account ? Response.json(account) : failure())
+  render(<MemoryRouter initialEntries={['/privacy']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('heading', { name: '개인정보처리방침', level: 1 })).toBeVisible()
+  expect(screen.getByText('안내 초안')).toBeVisible()
+  expect(screen.getByRole('link', { name: '서비스 소개로 돌아가기' })).toHaveAttribute('href', '/')
+})
+it('shows factual privacy sections, cleanup limits, browser storage and unresolved operator details', async () => {
+  network(() => failure())
+  render(<MemoryRouter initialEntries={['/privacy']}><App /></MemoryRouter>)
+  await screen.findByRole('heading', { name: '개인정보처리방침', level: 1 })
+  const contents = screen.getByRole('navigation', { name: '개인정보처리방침 목차' })
+  for (const link of within(contents).getAllByRole('link'))
+    expect(document.querySelector(link.getAttribute('href')!)).toBeInTheDocument()
+  expect(screen.getByRole('table', { name: '개인정보 보유 기준' })).toHaveTextContent('60일')
+  expect(screen.getByRole('table', { name: '개인정보 보유 기준' })).toHaveTextContent('30일')
+  expect(screen.getByText(/새 분석 요청 때 작은 묶음으로/)).toBeVisible()
+  expect(screen.getByRole('table', { name: '쿠키와 브라우저 저장 정보' })).toHaveTextContent('sojafit_session')
+  expect(screen.getByRole('table', { name: '외부 서비스 처리 현황' })).toHaveTextContent('OpenRouter')
+  expect(screen.getByRole('region', { name: '공개 전 확정할 항목' })).toBeVisible()
+  expect(document.querySelectorAll('a[href^="mailto:"]')).toHaveLength(0)
+})
 it('uses the shared brand and signed-in email on the redesigned settings route', async () => {
   network(path => Response.json(path === '/api/auth/me' ? user : []))
   render(<MemoryRouter initialEntries={['/settings']}><App /></MemoryRouter>)
@@ -18,7 +55,8 @@ it('uses the shared brand and signed-in email on the redesigned settings route',
   expect(screen.getByRole('banner')).toHaveClass('app-topbar')
   expect(within(screen.getByRole('banner')).queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument()
   const navigation = screen.getByRole('navigation', { name: '설정 항목' })
-  expect(within(navigation).getByRole('link', { name: '개인 설정' })).toHaveAttribute('href', '#profile-heading')
+  expect(screen.queryByText('개인 설정')).not.toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: '프로필 정보' })).toBeInTheDocument()
   expect(within(navigation).getByRole('link', { name: '계정 관리' })).toHaveAttribute('href', '#leave-heading')
   expect(screen.getByLabelText('소속')).toBeInTheDocument()
   expect(screen.getByLabelText('직무')).toBeInTheDocument()
@@ -47,25 +85,24 @@ it('shares account actions and preserves logout errors and retry from settings',
   fireEvent.click(screen.getByRole('menuitem', { name: '로그아웃' }))
   expect(await screen.findByRole('heading', { name: 'SojaFit에 로그인' })).toBeInTheDocument()
 })
-it('shares the saved motion preference and updates the workbench immediately', async () => {
+it('removes personal settings from both account menus while preserving saved reduced motion', async () => {
   const previous = localStorage.getItem('sojafit-reduce-motion')
-  localStorage.setItem('sojafit-reduce-motion', 'false')
+  localStorage.setItem('sojafit-reduce-motion', 'true')
   network(path => Response.json(path === '/api/auth/me' ? user : []))
   try {
     render(<MemoryRouter initialEntries={['/settings']}><App /></MemoryRouter>)
     fireEvent.click(await screen.findByRole('button', { name: user.email }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '개인 설정' }))
-    fireEvent.click(screen.getByRole('checkbox', { name: '동작 효과 줄이기' }))
-    fireEvent.click(screen.getByRole('button', { name: /^확인$/ }))
+    expect(screen.queryByRole('menuitem', { name: '개인 설정' })).not.toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '내 설정 관리' })).toHaveAttribute('href', '/settings')
     fireEvent.click(screen.getByRole('link', { name: /^작업대$/ }))
     expect(await screen.findByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
     expect(document.querySelector('.workbench-shell')).toHaveClass('motion-reduced')
     expect(screen.getByRole('banner')).toHaveClass('app-topbar')
     openAccountMenu()
-    fireEvent.click(screen.getByRole('menuitem', { name: '개인 설정' }))
-    expect(screen.getByRole('checkbox', { name: '동작 효과 줄이기' })).toBeChecked()
-    fireEvent.click(screen.getByRole('checkbox', { name: '동작 효과 줄이기' }))
-    expect(document.querySelector('.workbench-shell')).not.toHaveClass('motion-reduced')
+    expect(screen.queryByRole('menuitem', { name: '개인 설정' })).not.toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '내 설정 관리' })).toHaveAttribute('href', '/settings')
+    expect(screen.queryByRole('dialog', { name: '개인 설정' })).not.toBeInTheDocument()
+    expect(localStorage.getItem('sojafit-reduce-motion')).toBe('true')
   } finally {
     if (previous === null) localStorage.removeItem('sojafit-reduce-motion')
     else localStorage.setItem('sojafit-reduce-motion', previous)
@@ -105,12 +142,45 @@ it('shows the approved public landing without requesting protected project data'
   const calls: string[] = []
   network(path => { calls.push(path); return failure() })
   render(<MemoryRouter initialEntries={['/']}><App /></MemoryRouter>)
-  expect(await screen.findByRole('heading', { name: /부품을 바꾸기 전에/ })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '회로 검토 시작' })).toHaveAttribute('href', '/login')
-  fireEvent.click(screen.getByRole('button', { name: /문서 근거/ }))
-  expect(screen.getByRole('button', { name: /문서 근거/ })).toHaveAttribute('aria-pressed', 'true')
-  expect(screen.getByText('합성 예시 화면')).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: /회로를 읽고/ })).toBeInTheDocument()
+  for (const link of screen.getAllByRole('link', { name: '회로 검토 시작' })) expect(link).toHaveAttribute('href', '/login')
+  const guides = screen.getByRole('list', { name: '사용 단계' })
+  expect(document.querySelector('.public-hero img')).not.toBeInTheDocument()
+  expect(screen.getAllByRole('img', { name: /현재.*(프로젝트|작업대)/ })).toHaveLength(3)
+  expect(within(guides).getAllByRole('img')).toHaveLength(3)
+  expect(within(guides).getAllByRole('heading', { level: 3 }).map(node => node.textContent)).toEqual(['회로와 부품 선택', '질문에 조건 입력', '판정과 근거 확인'])
+  expect(document.querySelector('[data-metric="recall"]')).toHaveTextContent('93.42%')
+  expect(document.querySelector('[data-metric="all-evidence"]')).toHaveTextContent('92.11%')
+  expect(document.querySelector('[data-metric="latency"]')).toHaveTextContent('1.18초')
+  expect(screen.queryByText('57.89%')).not.toBeInTheDocument()
+  expect(screen.getByRole('img', { name: '현재 작업대의 답변과 데이터시트 문서 근거 패널' })).toBeInTheDocument()
+  const enlarge = screen.getByRole('button', { name: '판정과 근거 확인 화면 크게 보기' })
+  enlarge.focus()
+  fireEvent.click(enlarge)
+  expect(screen.getByRole('dialog', { name: '판정과 근거 확인' })).toBeInTheDocument()
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(enlarge).toHaveFocus()
+  expect(screen.getAllByText('예시 데이터 · 실제 분석 결과가 아닙니다.')).toHaveLength(3)
+  expect(screen.getByText(/과거 검색 실험이며 현재 운영 답변 정확도를 뜻하지 않습니다/)).toBeInTheDocument()
   expect(calls.some(path => path.startsWith('/api/projects'))).toBe(false)
+})
+
+it('links landing menus to separate sections beyond the hero', async () => {
+  network(() => failure())
+  render(<MemoryRouter initialEntries={['/']}><App /></MemoryRouter>)
+  await screen.findByRole('heading', { name: /회로를 읽고/ })
+  const nav = screen.getByRole('navigation', { name: '서비스 안내' })
+  expect(within(nav).getByRole('link', { name: '서비스 소개' })).toHaveAttribute('href', '#service')
+  expect(within(nav).getByRole('link', { name: '사용 방법' })).toHaveAttribute('href', '#how-it-works')
+  const hero = document.querySelector('.public-hero')!
+  for (const id of ['service', 'how-it-works']) {
+    const section = document.getElementById(id)!
+    expect(section.tagName).toBe('SECTION')
+    expect(hero.contains(section)).toBe(false)
+    expect(section).toHaveAttribute('tabindex', '-1')
+  }
+  expect(screen.getByRole('region', { name: '사용 방법' })).toHaveTextContent('부족한 값')
 })
 
 it('keeps one main landmark on login and workbench routes', async () => {
@@ -164,8 +234,8 @@ it('removes owned project cache immediately on logout before another session can
     throw new Error(`Unexpected request: ${path}`)
   })
   const { client } = render(<StrictMode><MemoryRouter initialEntries={['/app?projectId=11']}><App /></MemoryRouter></StrictMode>)
-  fireEvent.click(await screen.findByRole('button', { name: '정보 패널 펼치기' }))
-  await screen.findByRole('heading', { name: first.name })
+  await screen.findByLabelText('자료 열기'); showDetail('회로')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
   expect(client.getQueryData(['projects'])).toEqual([summary(first)])
   vi.useFakeTimers()
   try {
@@ -183,6 +253,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
   let session = 0; let finish!: (response: Response) => void
   let signal: AbortSignal | null | undefined; let reads = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (path === '/api/auth/me') return Response.json(session ? user : administrator)
     if (path === '/api/auth/logout') return Response.json({ ok: true })
     if (path === '/api/auth/login') { session++; return Response.json({ user_id: 7 }) }
@@ -198,8 +269,8 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
     throw new Error(`Unexpected request: ${path}`)
   })
   render(<StrictMode><MemoryRouter initialEntries={['/app?projectId=11']}><App /></MemoryRouter></StrictMode>)
-  fireEvent.click(await screen.findByRole('button', { name: '정보 패널 펼치기' }))
-  await screen.findByRole('heading', { name: first.name })
+  await screen.findByLabelText('자료 열기'); showDetail('회로')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
   if (kind === 'demo' || kind === 'upload') {
     openProjectCreator()
     fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
@@ -228,12 +299,13 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
   fireEvent.click(screen.getByRole('button', { name: '로그인' }))
   fireEvent.click(await screen.findByRole('button', { name: '프로젝트 열기' }))
   fireEvent.click(await within(screen.getByRole('dialog', { name: '내 프로젝트' })).findByRole('button', { name: second.name }))
-  await screen.findByRole('heading', { name: second.name })
-  fireEvent.change(screen.getByLabelText('대상 부품'), { target: { value: 'D2' } })
+  await screen.findByRole('button', { name: `프로젝트 선택: ${second.name}` })
+  fireEvent.change(await within(screen.getByRole('dialog', { name: '내 프로젝트' })).findByLabelText('분석할 부품'), { target: { value: 'D2' } })
+  showDetail('회로')
   const before = reads
   await act(async () => { finish(failure()) })
-  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
-  expect(screen.getByText('선택한 대상: D2')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
+  expect(screen.getByRole('img', { name: 'D2 주변 연결 개념도' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /@example\.test$/ })).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'SojaFit에 로그인' })).not.toBeInTheDocument()
   expect(reads).toBe(before)
@@ -243,6 +315,7 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('keeps the relogged-in 
 it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount invalidation and selection for an old successful %s request', async (kind) => {
   let finish!: (response: Response) => void; let signal: AbortSignal | null | undefined; let reads = 0
   network((path, init) => {
+    if (path === '/api/auth/demo') return Response.json({ enabled: true })
     if (['POST', 'PATCH', 'DELETE'].includes(init.method ?? '')) {
       signal = init.signal; return new Promise(resolve => { finish = resolve })
     }
@@ -250,8 +323,8 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount inv
     return Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects' ? [summary(first), summary(second)] : path.endsWith('/11') ? first : second)
   })
   const { unmount, client } = render(<MemoryRouter initialEntries={['/app?projectId=11']}><WorkbenchPage /></MemoryRouter>)
-  fireEvent.click(await screen.findByRole('button', { name: '정보 패널 펼치기' }))
-  await screen.findByRole('heading', { name: first.name })
+  await screen.findByLabelText('자료 열기'); showDetail('회로')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
   if (kind === 'demo' || kind === 'upload') {
     openProjectCreator()
     fireEvent.change(screen.getByLabelText('새 프로젝트 이름'), { target: { value: '진행 중 회로' } })
@@ -273,11 +346,11 @@ it.each(['demo', 'upload', 'rename', 'delete'] as const)('skips post-unmount inv
   unmount()
   // Keep another Workbench active on the same QueryClient so stale invalidation is observable as GETs.
   render(<MemoryRouter initialEntries={['/app?projectId=12']}><WorkbenchPage /></MemoryRouter>, client)
-  fireEvent.click(await screen.findByRole('button', { name: '정보 패널 펼치기' }))
-  await screen.findByRole('heading', { name: second.name })
+  await screen.findByLabelText('자료 열기'); showDetail('회로')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${second.name}` })
   const before = reads
   await act(async () => finish(kind === 'delete' ? new Response(null, { status: 204 }) : Response.json(first)))
-  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
   expect(reads).toBe(before)
   expect(signal?.aborted).toBe(true)
 })

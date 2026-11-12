@@ -31,7 +31,7 @@ export const deleteThread = (threadId: string) => apiFetch<void>(`/api/threads/$
 
 export async function openRunStream(path: string, body: unknown, signal: AbortSignal): Promise<Response> {
   const response = await apiRequest(path, { method: 'POST', credentials: 'same-origin', cache: 'no-store', signal,
-    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) })
   if (!response.ok) throw await responseError(response)
   if (!response.body) throw { code: 'STREAM_CLOSED', message: '실행 스트림을 열 수 없습니다.', requestId: response.headers.get('X-Request-ID') ?? '' }
   return response

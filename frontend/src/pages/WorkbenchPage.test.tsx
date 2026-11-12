@@ -1,9 +1,289 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { failure, network } from '../test/network'
-import { demo, first, second, summary, openWorkbench } from '../test/projects'
+import { failure, network as mockNetwork } from '../test/network'
+import { demo, first, second, summary, openWorkbench, showDetail } from '../test/projects'
+
+function network(handler: Parameters<typeof mockNetwork>[0]) {
+  mockNetwork((path, init) => path === '/api/auth/demo' ? Response.json({ enabled: true }) : handler(path, init))
+}
 
 afterEach(() => vi.unstubAllGlobals())
+it('keeps the half-width cap in sync with rail collapse and keyboard resizing', () => {
+  vi.stubGlobal('innerWidth', 1440)
+  network(() => Response.json([]))
+  openWorkbench()
+  showDetail('회로')
+  const handle = screen.getByRole('separator', { name: '회로 및 분석 정보 너비 조절' })
+  expect(handle).toHaveAttribute('aria-valuemax', '616')
+  fireEvent.click(screen.getByRole('button', { name: '작업 메뉴 접기' }))
+  expect(handle).toHaveAttribute('aria-valuemax', '691')
+  for (let i = 0; i < 50; i++) fireEvent.keyDown(handle, { key: 'ArrowLeft' })
+  expect(handle).toHaveAttribute('aria-valuenow', '691')
+  fireEvent.click(screen.getByRole('button', { name: '작업 메뉴 펼치기' }))
+  expect(handle).toHaveAttribute('aria-valuenow', '616')
+  fireEvent.keyDown(handle, { key: 'ArrowRight' })
+  expect(handle).toHaveAttribute('aria-valuenow', '606')
+})
+it('opens basic help without writes or losing the draft and restores focus on close', async () => {
+  const writes: string[] = []
+  network((_, init) => { if (init.method && init.method !== 'GET') writes.push(init.method); return Response.json([]) })
+  openWorkbench()
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '도움말 뒤에도 유지할 질문' } })
+  const help = screen.getByRole('button', { name: '도움말' })
+  help.focus(); fireEvent.click(help)
+  const dialog = await screen.findByRole('dialog', { name: '기본 사용방법' })
+  for (const title of ['프로젝트 등록', '분석할 부품 선택', '새 대화 시작', '질문 보내기', '결과 확인', '응답이 지연될 때']) expect(within(dialog).getByRole('heading', { name: title })).toBeInTheDocument()
+  expect(dialog).toHaveTextContent('Shift+Enter')
+  expect(dialog).toHaveTextContent('질문과 함께 읽어 설명·비교에 사용합니다')
+  const close = within(dialog).getByRole('button', { name: '닫기' })
+  expect(close).toHaveFocus()
+  fireEvent.keyDown(close, { key: 'Tab' })
+  expect(close).toHaveFocus()
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(help).toHaveFocus()
+  fireEvent.click(help)
+  fireEvent.click(within(screen.getByRole('dialog', { name: '기본 사용방법' })).getByRole('button', { name: '닫기' }))
+  expect(help).toHaveFocus()
+  expect(screen.getByLabelText('질문')).toHaveValue('도움말 뒤에도 유지할 질문')
+  expect(writes).toEqual([])
+})
+it('keeps a question typed before project selection through project and target preparation', async () => {
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    return Response.json(path === '/api/projects' ? [summary(first)] : path === '/api/projects/11' ? first : [])
+  })
+  openWorkbench()
+  const question = screen.getByLabelText('질문')
+  expect(question).toBeEnabled()
+  fireEvent.change(question, { target: { value: '먼저 작성한 질문' } })
+  fireEvent.keyDown(question, { key: 'Enter' })
+  expect(writes).toEqual([])
+  fireEvent.click(await screen.findByRole('button', { name: first.name }))
+  await waitFor(() => expect(screen.getByRole('button', { name: `프로젝트 선택: ${first.name}` })).toBeEnabled())
+  expect(screen.getByLabelText('질문')).toHaveValue('먼저 작성한 질문')
+  fireEvent.click(screen.getByRole('button', { name: `프로젝트 선택: ${first.name}` }))
+  fireEvent.change(await screen.findByLabelText('분석할 부품'), { target: { value: 'D1' } })
+  expect(screen.getByLabelText('질문')).toHaveValue('먼저 작성한 질문')
+  expect(screen.getByRole('button', { name: '질문 전송' })).toBeEnabled()
+  expect(writes).toEqual([])
+})
+it('creates a session on plus, focuses the composer and reuses it for the first question', async () => {
+  let creates = 0
+  const runs: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads') {
+      if (init.method === 'POST') { creates++; return Response.json({ id: 'plus-thread', project_id: 11 }, { status: 201 }) }
+      return Response.json(creates ? [{ id: 'plus-thread', project_id: 11, title: '새 대화', latest_run_id: null, status: null }] : [])
+    }
+    if (path.endsWith('/runs')) { runs.push(path); return new Response('event: completed\ndata: {"status":"completed","answer":"새 세션 응답","judgement":{},"evidence":[],"interrupt":{}}\n\n') }
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: first.name })
+  fireEvent.click(screen.getByRole('button', { name: '새 대화' }))
+  await waitFor(() => expect(screen.getByLabelText('질문')).toHaveFocus())
+  const sessions = screen.getByRole('list', { name: '이전 대화' })
+  expect(await within(sessions).findByRole('button', { name: /새 대화.*현재 대화/ })).toHaveAttribute('aria-current', 'true')
+  expect(creates).toBe(1)
+  expect(runs).toEqual([])
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1 분석' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+  await screen.findByText('새 세션 응답')
+  expect(creates).toBe(1)
+  expect(runs).toEqual(['/api/threads/plus-thread/runs'])
+})
+
+it('locks navigation during session creation and preserves the draft on failure before retry', async () => {
+  let finish!: (response: Response) => void
+  let creates = 0
+  network((path, init) => {
+    if (path === '/api/projects') return Response.json([summary(first), summary(second)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads' && init.method === 'POST') {
+      creates++
+      return creates === 1 ? new Promise<Response>(resolve => { finish = resolve }) : Response.json({ id: 'retried', project_id: 11 })
+    }
+    return Response.json([])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: first.name })
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '보존할 초안' } })
+  const plus = screen.getByRole('button', { name: '새 대화' })
+  fireEvent.click(plus); fireEvent.click(plus)
+  await waitFor(() => expect(creates).toBe(1))
+  expect(plus).toBeDisabled()
+  expect(screen.getByRole('button', { name: second.name })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '질문 전송' })).toBeDisabled()
+  await act(async () => finish(failure('SERVICE_UNAVAILABLE', '대화를 생성하지 못했습니다.', 503)))
+  expect(await screen.findByRole('alert')).toHaveTextContent('대화를 생성하지 못했습니다.')
+  expect(screen.getByLabelText('질문')).toHaveValue('보존할 초안')
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
+  fireEvent.click(plus)
+  await waitFor(() => expect(screen.getByLabelText('질문')).toHaveValue(''))
+  expect(creates).toBe(2)
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+it.each([true, false])('reopens a verified empty saved session and selects its target without another thread (selected=%s)', async selected => {
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads') return Response.json([{ id: 'empty-thread', project_id: 11, title: '새 대화', status: null, latest_run_id: null }])
+    if (path === '/api/threads/empty-thread') return Response.json({ id: 'empty-thread', project_id: 11, target_ref: null, target_locked: false, latest_run: null, messages: [], next_before_message_id: null })
+    if (path.endsWith('/runs')) return new Response('event: completed\ndata: {"status":"completed","answer":"빈 세션 응답","judgement":{},"evidence":[],"interrupt":{}}\n\n')
+    return Response.json([])
+  })
+  openWorkbench(`/app?projectId=11${selected ? '&targetRef=D1' : ''}&threadId=empty-thread`)
+  await waitFor(() => expect(screen.getByLabelText('현재 경로')).not.toHaveTextContent('threadId='))
+  if (!selected) {
+    fireEvent.click(screen.getByRole('button', { name: `프로젝트 선택: ${first.name}` }))
+    fireEvent.change(await screen.findByLabelText('분석할 부품'), { target: { value: 'D1' } })
+  }
+  await waitFor(() => expect(screen.getByLabelText('질문')).toBeEnabled())
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: 'D1 분석' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
+  await screen.findByText('빈 세션 응답')
+  expect(writes).toEqual(['/api/threads/empty-thread/runs'])
+})
+
+it('aborts plus creation on unmount and ignores a late response', async () => {
+  let finish!: (response: Response) => void
+  let signal: AbortSignal | undefined
+  network((path, init) => {
+    if (path === '/api/projects') return Response.json([summary(first)])
+    if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads' && init.method === 'POST') { signal = init.signal as AbortSignal; return new Promise<Response>(resolve => { finish = resolve }) }
+    return Response.json([])
+  })
+  const client = openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: first.name })
+  fireEvent.click(screen.getByRole('button', { name: '새 대화' }))
+  await waitFor(() => expect(signal).toBeDefined())
+  const write = vi.spyOn(client, 'setQueryData')
+  cleanup()
+  expect(signal?.aborted).toBe(true)
+  await act(async () => finish(Response.json({ id: 'late', project_id: 11 })))
+  expect(write).not.toHaveBeenCalled()
+})
+
+it.each([true, false])('confirms row project deletion without changing selection first (current=%s)', async current => {
+  const victim = current ? first : second
+  let removed = false
+  const writes: string[] = []
+  network((path, init) => {
+    if (init.method === 'DELETE') { writes.push(path); removed = true; return new Response(null, { status: 204 }) }
+    if (path === '/api/projects') return Response.json([first, second].filter(p => !removed || p.id !== victim.id).map(summary))
+    return Response.json(path === '/api/projects/11' ? first : path === '/api/projects/12' ? second : [])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '보존할 초안' } })
+  const remove = screen.getByRole('button', { name: `${victim.name} 프로젝트 삭제` })
+  fireEvent.click(remove)
+  const dialog = screen.getByRole('dialog', { name: '프로젝트 삭제' })
+  expect(dialog).toHaveTextContent(victim.name)
+  expect(dialog).toHaveTextContent('되돌릴 수 없습니다')
+  expect(writes).toEqual([])
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
+  fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(writes).toEqual([])
+  fireEvent.click(remove)
+  fireEvent.click(within(screen.getByRole('dialog', { name: '프로젝트 삭제' })).getByRole('button', { name: '삭제 확인' }))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(writes).toEqual([`/api/projects/${victim.id}`])
+  await waitFor(() => expect(within(screen.getByRole('list', { name: '저장된 프로젝트' })).queryByRole('button', { name: victim.name })).not.toBeInTheDocument())
+  if (current) expect(screen.getByLabelText('현재 경로')).toBeEmptyDOMElement()
+  else {
+    expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
+    expect(screen.getByLabelText('질문')).toHaveValue('보존할 초안')
+  }
+})
+
+it('keeps the project and draft on row deletion errors and allows retry', async () => {
+  let attempts = 0
+  network((path, init) => {
+    if (init.method === 'DELETE') return ++attempts === 1 ? failure('CONFLICT', '진행 중인 분석이 있습니다.', 409) : new Response(null, { status: 204 })
+    return Response.json(path === '/api/projects' ? attempts > 1 ? [] : [summary(first)] : path === '/api/projects/11' ? first : [])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
+  fireEvent.change(screen.getByLabelText('질문'), { target: { value: '오류 후에도 보존' } })
+  fireEvent.click(screen.getByRole('button', { name: `${first.name} 프로젝트 삭제` }))
+  const dialog = screen.getByRole('dialog', { name: '프로젝트 삭제' })
+  fireEvent.click(within(dialog).getByRole('button', { name: '삭제 확인' }))
+  expect(await within(dialog).findByRole('alert')).toHaveTextContent('진행 중인 분석이 있습니다. (요청 ID: req-test)')
+  expect(within(dialog).getAllByRole('alert')).toHaveLength(1)
+  expect(screen.getByLabelText('질문')).toHaveValue('오류 후에도 보존')
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=11&targetRef=D1')
+  expect(within(screen.getByRole('list', { name: '저장된 프로젝트' })).getByRole('button', { name: first.name })).toBeInTheDocument()
+  fireEvent.click(within(dialog).getByRole('button', { name: '삭제 확인' }))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(attempts).toBe(2)
+})
+
+it('locks navigation and prevents duplicate confirmation while a row deletion is pending', async () => {
+  let finish!: (response: Response) => void
+  let deletes = 0
+  network((path, init) => {
+    if (init.method === 'DELETE') { deletes++; return new Promise(resolve => { finish = resolve }) }
+    return Response.json(path === '/api/projects' ? [summary(first), summary(second)] : path === '/api/projects/11' ? first : [])
+  })
+  openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
+  fireEvent.click(screen.getByRole('button', { name: `${second.name} 프로젝트 삭제` }))
+  const dialog = screen.getByRole('dialog', { name: '프로젝트 삭제' })
+  const confirm = within(dialog).getByRole('button', { name: '삭제 확인' })
+  fireEvent.click(confirm); fireEvent.click(confirm)
+  expect(deletes).toBe(1)
+  expect(within(dialog).getByRole('button', { name: '취소' })).toBeDisabled()
+  expect(within(dialog).queryByRole('button', { name: '닫기' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '프로젝트 추가' })).toBeDisabled()
+  expect(within(screen.getByRole('list', { name: '저장된 프로젝트' })).getByRole('button', { name: second.name })).toBeDisabled()
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(dialog).toBeInTheDocument()
+  await act(async () => finish(new Response(null, { status: 204 })))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+})
+
+it('aborts a row deletion on unmount without invalidating a later screen', async () => {
+  let finish!: (response: Response) => void
+  let signal: AbortSignal | null | undefined
+  network((path, init) => {
+    if (init.method === 'DELETE') { signal = init.signal; return new Promise(resolve => { finish = resolve }) }
+    return Response.json(path === '/api/projects' ? [summary(first)] : path === '/api/projects/11' ? first : [])
+  })
+  const client = openWorkbench('/app?projectId=11&targetRef=D1')
+  await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
+  fireEvent.click(screen.getByRole('button', { name: `${first.name} 프로젝트 삭제` }))
+  fireEvent.click(within(screen.getByRole('dialog', { name: '프로젝트 삭제' })).getByRole('button', { name: '삭제 확인' }))
+  const invalidations = vi.spyOn(client, 'invalidateQueries')
+  cleanup()
+  expect(signal?.aborted).toBe(true)
+  await act(async () => finish(new Response(null, { status: 204 })))
+  expect(invalidations).not.toHaveBeenCalled()
+})
+it('removes the header project summary and opens management from the sidebar heading', async () => {
+  network(path => Response.json(path === '/api/projects' ? [summary(first)] : []))
+  openWorkbench()
+  const header = document.querySelector('.workbench-topbar')!
+  expect(header.querySelector('.workbench-context')).toBeNull()
+  expect(within(header as HTMLElement).queryByRole('button', { name: /^프로젝트 선택:/ })).not.toBeInTheDocument()
+  expect(screen.queryByText('프로젝트 없음')).not.toBeInTheDocument()
+  expect(screen.queryByText('대상 부품 미선택')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('질문')).toHaveAttribute('placeholder', '메시지를 입력하세요. Shift+Enter로 줄바꿈')
+  const manage = screen.getByRole('button', { name: '프로젝트 선택: 프로젝트 없음' })
+  expect(manage.closest('.workspace-project-navigation')).not.toBeNull()
+  expect(manage).toHaveTextContent('현재 프로젝트')
+  fireEvent.click(manage)
+  expect(await screen.findByRole('dialog', { name: '내 프로젝트' })).toBeVisible()
+})
 it('shows processing on the active session and clears it on completion despite a stale running list', async () => {
   let created = false
   let finish!: () => void
@@ -77,7 +357,7 @@ it('does not offer a target when the selected project has no server-provided par
   expect(within(dialog).getByText('선택할 수 있는 부품이 없습니다.')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '질문 전송' })).toBeDisabled()
 })
-it('selects the target in the project header dialog without setup controls or copy in the conversation', async () => {
+it('selects the target in the sidebar project dialog without setup controls or copy in the conversation', async () => {
   const calls: string[] = []
   network((path, init) => { calls.push(init.method ?? 'GET'); return Response.json(path === '/api/projects' ? [summary(first)] : path === '/api/projects/11' ? first : []) })
   openWorkbench('/app?projectId=11')
@@ -86,20 +366,20 @@ it('selects the target in the project header dialog without setup controls or co
   expect(screen.queryByText('대체 가능성 분석 흐름')).not.toBeInTheDocument()
   expect(screen.queryByText('회로 입력 확인')).not.toBeInTheDocument()
   expect(screen.queryByText('대상 부품을 선택하세요')).not.toBeInTheDocument()
-  expect(screen.getByLabelText('질문')).toBeDisabled()
+  expect(screen.getByLabelText('질문')).toBeEnabled()
   fireEvent.click(trigger)
   const dialog = screen.getByRole('dialog', { name: '내 프로젝트' })
   const select = await within(dialog).findByLabelText('분석할 부품')
   expect(within(select).getByRole('option', { name: 'D1 · 1N4001' })).toBeInTheDocument()
   fireEvent.change(select, { target: { value: 'D1' } })
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  expect(trigger).toHaveTextContent('D1 · 1N4001')
+  expect(document.querySelector('.target-badge')).toBeNull()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('targetRef=D1')
   expect(screen.getByLabelText('질문')).toBeEnabled()
   expect(calls.every(method => method === 'GET')).toBe(true)
 })
 
-it('continues from project creation to selecting its server-provided target without starting analysis', async () => {
+it('creates a project without an automatic management dialog and allows manual target selection', async () => {
   let created = false
   const writes: string[] = []
   network((path, init) => {
@@ -112,20 +392,24 @@ it('continues from project creation to selecting its server-provided target with
   await screen.findByRole('option', { name: demo.name })
   fireEvent.change(screen.getByLabelText('데모 회로'), { target: { value: demo.id } })
   fireEvent.click(screen.getByRole('button', { name: '데모로 만들기' }))
+  const manage = await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('질문')).toBeEnabled()
+  expect(writes).toEqual(['/api/projects'])
+  fireEvent.click(manage)
   const dialog = await screen.findByRole('dialog', { name: '내 프로젝트' })
   fireEvent.change(await within(dialog).findByLabelText('분석할 부품'), { target: { value: 'C1' } })
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  expect(screen.getByRole('button', { name: `프로젝트 선택: ${first.name}` })).toHaveTextContent('C1 · 100uF')
+  expect(document.querySelector('.target-badge')).toBeNull()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('targetRef=C1')
   expect(writes).toEqual(['/api/projects'])
 })
-it('shows the selected part above the conversation without a duplicate badge inside it', async () => {
+it('keeps the selected target without a badge above or inside the conversation', async () => {
   network(path => Response.json(path === '/api/projects' ? [summary(first)] : path === '/api/projects/11' ? first : []))
   openWorkbench('/app?projectId=11&targetRef=C1')
   await screen.findByLabelText('질문')
-  const badge = screen.getByTitle('선택한 부품')
-  expect(badge).toHaveTextContent('C1')
-  expect(badge.parentElement).toHaveClass('analysis-heading-actions')
+  expect(screen.queryByTitle('선택한 부품')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('targetRef=C1')
   expect(document.querySelector('.conversation-panel .target-badge')).toBeNull()
 })
 it('shows the signed-in email in the header and account menu without a global run badge', () => {
@@ -222,20 +506,19 @@ it('shows two saved projects in server order and reveals the third without creat
   openWorkbench('/app?projectId=11')
   const list = screen.getByRole('list', { name: '저장된 프로젝트' })
   await within(list).findByRole('button', { name: first.name })
-  expect(within(list).getAllByRole('button').map(button => button.textContent)).toEqual([second.name, first.name])
+  expect(Array.from(list.querySelectorAll('.workspace-project-select')).map(button => button.textContent)).toEqual([second.name, first.name])
   expect(within(list).queryByRole('button', { name: third.name })).not.toBeInTheDocument()
   const more = screen.getByRole('button', { name: '더보기 (1)' })
   expect(more).toHaveAttribute('aria-expanded', 'false')
   fireEvent.click(more)
-  expect(within(list).getAllByRole('button').map(button => button.textContent)).toEqual([second.name, first.name, third.name])
+  expect(Array.from(list.querySelectorAll('.workspace-project-select')).map(button => button.textContent)).toEqual([second.name, first.name, third.name])
   fireEvent.click(within(list).getByRole('button', { name: third.name }))
-  expect(await screen.findByRole('heading', { name: third.name })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: `프로젝트 선택: ${third.name}` })).toBeInTheDocument()
   expect(within(list).getByRole('button', { name: third.name })).toHaveAttribute('aria-current', 'true')
   fireEvent.click(screen.getByRole('button', { name: '접기' }))
   expect(within(list).queryByRole('button', { name: third.name })).not.toBeInTheDocument()
   const newChat = screen.getByRole('button', { name: '새 대화' })
   expect(newChat.textContent).toBe('')
-  fireEvent.click(newChat)
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=13')
   expect(methods.every(method => method === 'GET')).toBe(true)
 })
@@ -246,6 +529,7 @@ it('loads saved conversation and its result with GET requests only, then returns
     calls.push(`${init.method ?? 'GET'} ${path}`)
     if (path === '/api/projects') return Response.json([summary(first), summary(second)])
     if (path === '/api/projects/11') return Response.json(first)
+    if (path === '/api/projects/11/threads' && init.method === 'POST') return Response.json({ id: 'fresh-from-history', project_id: 11 })
     if (path === '/api/projects/11/threads') return Response.json([{ id: 'history-thread', project_id: 11 }])
     if (path === '/api/threads/history-thread') return Response.json({ id: 'history-thread', project_id: 11, title: '저장된 질문', target_ref: 'D1', target_locked: true,
       latest_run: { id: 'saved-run', status: 'completed', message_id: 2 }, messages: [{ id: 1, run_id: 'saved-run', role: 'user', content: '저장된 질문', created_at: '' }, { id: 2, run_id: 'saved-run', role: 'assistant', content: '저장된 답변', created_at: '' }], next_before_message_id: null })
@@ -260,9 +544,9 @@ it('loads saved conversation and its result with GET requests only, then returns
   expect(await screen.findByText('저장된 답변')).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: '저장된 대화' })).not.toBeInTheDocument()
   expect(screen.getByRole('region', { name: '저장된 대화' })).toBeInTheDocument()
-  const target = await screen.findByTitle('선택한 부품')
-  expect(target).toHaveTextContent('D1')
-  await waitFor(() => expect(target.nextElementSibling).toBe(screen.getByRole('button', { name: '결과 보기' })))
+  expect(screen.queryByTitle('선택한 부품')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '결과 보기' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('complementary', { name: '회로와 분석 정보' })).not.toBeInTheDocument()
   expect(within(screen.getByRole('region', { name: '저장된 대화' })).queryByText('D1', { exact: true })).not.toBeInTheDocument()
   const current = screen.getByRole('button', { name: /대화 history-/ })
   expect(current).toHaveAttribute('aria-current', 'true')
@@ -271,15 +555,16 @@ it('loads saved conversation and its result with GET requests only, then returns
   fireEvent.click(screen.getByRole('button', { name: first.name }))
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('threadId=history-thread')
   expect(screen.getByText('저장된 답변')).toBeInTheDocument()
-  expect(screen.queryByLabelText('질문')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('질문')).toBeEnabled()
   fireEvent.click(within(screen.getByRole('group', { name: '분석 결과 메뉴' })).getByRole('button', { name: '문서 근거' }))
   expect(await screen.findByText('saved.pdf')).toBeInTheDocument()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('threadId=history-thread')
   fireEvent.click(screen.getByRole('button', { name: /대화 history-/ }))
   expect(screen.getByText('saved.pdf')).toBeInTheDocument()
+  expect(calls.every(path => path.startsWith('GET '))).toBe(true)
   fireEvent.click(screen.getByRole('button', { name: '새 대화' }))
   expect(await screen.findByLabelText('질문')).toHaveValue('')
-  expect(calls.every(path => path.startsWith('GET '))).toBe(true)
+  expect(calls.filter(path => path.startsWith('POST '))).toEqual(['POST /api/projects/11/threads'])
 })
 
 it('rejects history belonging to a different project without loading its run', async () => {
@@ -317,6 +602,7 @@ it('keeps the second conversation result when a previous run arrives late', asyn
   await waitFor(() => expect(requestedA).toBe(true))
   fireEvent.click(await screen.findByRole('button', { name: /대화 thread-b/ }))
   await screen.findByText('현재 답변')
+  showDetail('후보 비교')
   expect(await screen.findByRole('cell', { name: 'SS34' })).toBeInTheDocument()
   await act(async () => finishA(Response.json(result('thread-a', 'run-a', '1N5819'))))
   expect(screen.getByRole('cell', { name: 'SS34' })).toBeInTheDocument()
@@ -372,7 +658,7 @@ it('starts a fresh thread rather than silently using the first history item', as
   expect(screen.getByRole('tab', { name: '진행 기록' })).toHaveAttribute('aria-selected', 'true')
   fireEvent.click(screen.getByRole('button', { name: '새 대화' }))
   await waitFor(() => expect(screen.queryByText('확인 완료')).not.toBeInTheDocument())
-  expect(created).toBe(1)
+  expect(created).toBe(2)
 })
 
 it('opens the new workspace without an entry modal before a project is selected', async () => {
@@ -381,9 +667,9 @@ it('opens the new workspace without an entry modal before a project is selected'
   expect(screen.getByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
   expect(screen.getByRole('list', { name: '저장된 프로젝트' })).toBeEmptyDOMElement()
   expect(screen.getByRole('button', { name: '새 대화' })).toBeDisabled()
-  expect(screen.getByLabelText('질문')).toBeDisabled()
+  expect(screen.getByLabelText('질문')).toBeEnabled()
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: /부품을 바꾸기 전에/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: /회로를 읽고/ })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '프로젝트 만들기' })).not.toBeInTheDocument()
   const projectHeading = screen.getByRole('heading', { name: '현재 프로젝트' }).parentElement!
   const addProject = within(projectHeading).getByRole('button', { name: '프로젝트 추가' })
@@ -406,7 +692,7 @@ it('selects an existing project from the empty workspace sidebar without posting
   expect(await screen.findByRole('button', { name: second.name })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /더보기/ })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: second.name }))
-  expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
   expect(calls.every(method => method === 'GET')).toBe(true)
 })
@@ -441,7 +727,7 @@ it('does not let delayed detail overwrite a newly selected project', async () =>
   await waitFor(() => expect(finish).toBeDefined())
   fireEvent.click(screen.getByRole('button', { name: '프로젝트 열기' }))
   fireEvent.click(await within(screen.getByRole('dialog', { name: '내 프로젝트' })).findByRole('button', { name: second.name }))
-  expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
   await act(async () => finish(Response.json(first)))
   expect(screen.queryByRole('heading', { name: first.name })).not.toBeInTheDocument()
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
@@ -464,10 +750,10 @@ it('does not select delayed creation after the user switches projects', async ()
   fireEvent.click(screen.getByRole('button', { name: '닫기' }))
   fireEvent.click(screen.getByRole('button', { name: '프로젝트 열기' }))
   fireEvent.click(within(screen.getByRole('dialog', { name: '내 프로젝트' })).getByRole('button', { name: second.name }))
-  expect(await screen.findByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
   await act(async () => finish(Response.json(first, { status: 201 })))
   expect(screen.getByLabelText('현재 경로')).toHaveTextContent('projectId=12')
-  expect(screen.getByRole('heading', { name: second.name })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: `프로젝트 선택: ${second.name}` })).toBeInTheDocument()
 })
 it.each(['missing', 'foreign'])('shows the common safe error for a %s project', async () => {
   network(path => path === '/api/projects/99' ? failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404) : Response.json(path === '/api/demo-circuits' ? [demo] : []))
@@ -476,7 +762,7 @@ it.each(['missing', 'foreign'])('shows the common safe error for a %s project', 
   expect(screen.queryByLabelText('대상 부품')).not.toBeInTheDocument()
 })
 
-it('exposes keyboard-operable result tabs and a labelled project drawer', async () => {
+it('exposes detail menu buttons and a labelled project drawer', async () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   const toggle = screen.getByRole('button', { name: '프로젝트 열기' })
@@ -485,7 +771,8 @@ it('exposes keyboard-operable result tabs and a labelled project drawer', async 
   expect(screen.getByRole('dialog', { name: '내 프로젝트' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '닫기' }))
   await waitFor(() => expect(toggle).toHaveFocus())
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  showDetail('회로')
+  showDetail('후보 비교')
   const judgement = screen.getByRole('tab', { name: '후보 비교' })
   fireEvent.click(judgement)
   expect(judgement).toHaveAttribute('aria-selected', 'true')
@@ -497,22 +784,25 @@ it('organizes the workbench as a functional rail, analysis surface, and adjustab
   openWorkbench('/app?projectId=11')
   expect(screen.getByRole('navigation', { name: '작업 메뉴' })).toBeInTheDocument()
   expect(screen.getByRole('main', { name: '분석 대화 작업면' })).toBeInTheDocument()
-  expect(screen.getByRole('complementary', { name: '회로와 분석 정보' })).toBeInTheDocument()
+  expect(screen.queryByRole('complementary', { name: '회로와 분석 정보' })).not.toBeInTheDocument()
   expect(screen.queryByText('회로 및 분석 정보', { exact: true })).not.toBeInTheDocument()
-  expect(screen.queryByRole('tab', { name: '회로' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  expect(screen.queryByRole('group', { name: '작업 정보 메뉴' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('tablist', { name: '열린 자료' })).not.toBeInTheDocument()
+  showDetail('회로')
   expect(screen.getByRole('tab', { name: '회로' })).toHaveAttribute('aria-selected', 'true')
-  expect(screen.getByRole('tab', { name: '진행 기록' })).toBeInTheDocument()
+  expect(within(screen.getByRole('tablist', { name: '열린 자료' })).getAllByRole('tab')).toHaveLength(1)
+  expect(screen.queryByRole('tab', { name: '진행 기록' })).not.toBeInTheDocument()
   expect(screen.queryByText('회로 및 분석 정보', { exact: true })).not.toBeInTheDocument()
   expect(screen.queryByRole('slider', { name: '정보 패널 너비' })).not.toBeInTheDocument()
   const handle = screen.getByRole('separator', { name: '회로 및 분석 정보 너비 조절' })
-  expect(handle).toHaveAttribute('aria-valuemax', '480')
+  expect(handle).toHaveAttribute('aria-valuemax', '616')
   fireEvent.pointerDown(handle, { clientX: 900, pointerId: 3 })
   fireEvent.pointerMove(handle, { clientX: 500, pointerId: 3 })
   fireEvent.pointerUp(handle, { pointerId: 3 })
-  expect(handle).toHaveAttribute('aria-valuenow', '480')
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 접기' }))
-  expect(screen.getByRole('button', { name: '정보 패널 펼치기' })).toBeInTheDocument()
+  expect(handle).toHaveAttribute('aria-valuenow', '616')
+  fireEvent.click(screen.getByRole('button', { name: '회로 탭 닫기' }))
+  expect(screen.queryByRole('tab', { name: '회로' })).not.toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: '자료 열기' })).toBeInTheDocument()
 })
 
 it('shows the left rail as a named work menu by default', () => {
@@ -533,7 +823,7 @@ it('shows the left rail as a named work menu by default', () => {
   expect(screen.getByRole('menuitem', { name: '로그인' })).toBeInTheDocument()
 })
 
-it('opens the project picker from the current project name', async () => {
+it('opens the project picker from the sidebar project heading', async () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : path === '/api/projects/11' ? first : path === '/api/projects' ? [summary(first)] : []))
   openWorkbench('/app?projectId=11')
   const projectName = await screen.findByRole('button', { name: `프로젝트 선택: ${first.name}` })
@@ -551,16 +841,20 @@ it('resizes both desktop side panels by dragging their borders', () => {
   fireEvent.pointerUp(leftHandle, { pointerId: 1 })
   expect(leftHandle).toHaveAttribute('aria-valuenow', '268')
 
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  showDetail('회로')
   const rightHandle = screen.getByRole('separator', { name: '회로 및 분석 정보 너비 조절' })
   fireEvent.pointerDown(rightHandle, { clientX: 900, pointerId: 2 })
   fireEvent.pointerMove(rightHandle, { clientX: 850, pointerId: 2 })
   fireEvent.pointerUp(rightHandle, { pointerId: 2 })
   expect(rightHandle).toHaveAttribute('aria-valuenow', '410')
+  fireEvent.pointerDown(rightHandle, { clientX: 850, pointerId: 3 })
+  fireEvent.pointerMove(rightHandle, { clientX: 0, pointerId: 3 })
+  fireEvent.pointerUp(rightHandle, { pointerId: 3 })
+  expect(rightHandle).toHaveAttribute('aria-valuenow', '586')
   vi.stubGlobal('innerWidth', 1200)
   fireEvent(window, new Event('resize'))
-  expect(rightHandle).toHaveAttribute('aria-valuemax', '372')
-  expect(rightHandle).toHaveAttribute('aria-valuenow', '372')
+  expect(rightHandle).toHaveAttribute('aria-valuemax', '466')
+  expect(rightHandle).toHaveAttribute('aria-valuenow', '466')
 })
 
 it('searches only loaded projects and current circuit parts', async () => {
@@ -574,7 +868,8 @@ it('searches only loaded projects and current circuit parts', async () => {
   const search = await screen.findByRole('searchbox', { name: '프로젝트 또는 부품 찾기' })
   fireEvent.change(search, { target: { value: 'D1' } })
   fireEvent.click(within(screen.getByRole('listbox', { name: '검색 결과' })).getByRole('option', { name: /D1.*1N4001/ }))
-  expect(screen.getByTitle('선택한 부품')).toHaveTextContent('D1')
+  expect(screen.queryByTitle('선택한 부품')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('현재 경로')).toHaveTextContent('targetRef=D1')
 })
 
 it('guides the user from project selection to approval and keeps target controls in the project dialog', async () => {
@@ -590,24 +885,50 @@ it('guides the user from project selection to approval and keeps target controls
   expect(screen.getByLabelText('질문')).toBeInTheDocument()
   expect(screen.getByText('결과 검토')).toBeInTheDocument()
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  showDetail('회로')
+  showDetail('승인·견적')
   expect(screen.getByRole('tab', { name: '승인·견적' })).toBeInTheDocument()
   expect(screen.queryByLabelText('질문 영역의 대상 부품')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: `프로젝트 선택: ${first.name}` }))
   expect(within(screen.getByRole('dialog', { name: '내 프로젝트' })).getByLabelText('분석할 부품')).toBeInTheDocument()
 })
 
-it('uses a single actions destination and accessible tab relationships', async () => {
+it('stacks only opened tabs, deduplicates them and closes active or inactive tabs', async () => {
   network(path => Response.json(path === '/api/demo-circuits' ? [demo] : []))
   openWorkbench()
   expect(screen.queryByRole('button', { name: '승인·견적' })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '승인 사례·이력' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
-  const tabs = screen.getAllByRole('tab')
-  expect(tabs[0]).toHaveAttribute('aria-controls', 'panel-circuit')
-  expect(screen.getByRole('tabpanel', { name: '회로' })).toHaveAttribute('aria-labelledby', tabs[0].id)
-  fireEvent.keyDown(tabs[0], { key: 'ArrowRight' })
-  expect(tabs[1]).toHaveFocus()
+  showDetail('회로')
+  showDetail('회로')
+  expect(screen.getAllByRole('tab')).toHaveLength(1)
+  const circuit = screen.getByRole('tab', { name: '회로' })
+  expect(circuit).toHaveAttribute('aria-controls', 'panel-circuit')
+  expect(screen.getByRole('tabpanel', { name: '회로' })).toHaveAttribute('id', 'panel-circuit')
+  showDetail('문서 근거')
+  showDetail('문서 근거')
+  const evidence = screen.getByRole('tab', { name: '문서 근거' })
+  expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['회로', '문서 근거'])
+  expect(evidence).toHaveAttribute('aria-selected', 'true')
+  expect(circuit).toHaveAttribute('aria-selected', 'false')
+  fireEvent.keyDown(evidence, { key: 'ArrowRight' })
+  expect(circuit).toHaveFocus()
+  fireEvent.keyDown(circuit, { key: 'ArrowLeft' })
+  expect(evidence).toHaveFocus()
+  fireEvent.click(screen.getByRole('button', { name: '회로 탭 닫기' }))
+  expect(screen.getAllByRole('tab')).toHaveLength(1)
+  expect(evidence).toHaveAttribute('aria-selected', 'true')
+  showDetail('회로')
+  fireEvent.keyDown(screen.getByRole('tab', { name: '회로' }), { key: 'Home' })
+  expect(evidence).toHaveFocus()
+  fireEvent.keyDown(evidence, { key: 'End' })
+  fireEvent.keyDown(screen.getByRole('tab', { name: '회로' }), { key: 'Delete' })
+  await waitFor(() => expect(evidence).toHaveFocus())
+  fireEvent.keyDown(evidence, { key: 'Delete' })
+  await waitFor(() => expect(screen.getByRole('combobox', { name: '자료 열기' })).toHaveFocus())
+  expect(screen.queryByRole('complementary', { name: '회로와 분석 정보' })).not.toBeInTheDocument()
+  showDetail('문서 근거')
+  expect(screen.getAllByRole('tab')).toHaveLength(1)
+  expect(screen.queryByRole('tab', { name: '회로' })).not.toBeInTheDocument()
 })
 
 it('exposes search results as a keyboard-operable listbox', async () => {
@@ -653,15 +974,16 @@ it('connects project, role, run, candidate, and citation API data without a fixt
     return Response.json([])
   })
   openWorkbench('/app?projectId=11&targetRef=D1')
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  showDetail('회로')
   await screen.findByText('D1 / 1N4001')
   fireEvent.change(screen.getByLabelText('질문'), { target: { value: '입력 최대 12 V에서 D1을 SS34로 바꿔도 되나요?' } })
   fireEvent.click(screen.getByRole('button', { name: '질문 전송' }))
   expect(await screen.findByText('역극성 보호(직렬)')).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: '회로' })).toHaveAttribute('aria-selected', 'true')
   expect(within(screen.getByLabelText('개념도 사용 조건')).getByText('판정 결과에서 확인된 사용 조건이 없습니다.')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('tab', { name: '후보 비교' }))
+  showDetail('후보 비교')
   fireEvent.click(await screen.findByRole('button', { name: 'SS34 후보 선택' }))
-  fireEvent.click(screen.getByRole('tab', { name: '근거' }))
+  showDetail('문서 근거')
   expect(screen.getByText('SS34 데이터시트 근거')).toBeInTheDocument()
   expect(screen.getByText('ss34.pdf')).toBeInTheDocument()
 })
@@ -679,7 +1001,7 @@ it('keeps the new workbench collapsed and opens the selected demo original in it
   openWorkbench('/app?projectId=11&targetRef=D1')
   await screen.findByRole('button', { name: '질문 전송' })
   expect(screen.queryByRole('tab', { name: '원본 회로도' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: '정보 패널 펼치기' }))
+  showDetail('회로')
   expect(await screen.findByRole('tab', { name: '원본 회로도' })).toHaveAttribute('aria-selected', 'true')
   expect(screen.getByRole('img', { name: `${demo.name} 원본 회로도` })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('tab', { name: '연결 개념도' }))

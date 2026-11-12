@@ -8,7 +8,7 @@ test('lays out the circuit concept with net junctions and non-overlapping compon
   const manager = page.getByRole('dialog', { name: '내 프로젝트' })
   await manager.getByRole('button', { name: 'breadboard_supply', exact: true }).click()
   await manager.getByLabel('분석할 부품', { exact: true }).selectOption('C1')
-  if (await page.getByRole('button', { name: '정보 패널 펼치기' }).isVisible()) await page.getByRole('button', { name: '정보 패널 펼치기' }).click()
+  if (await page.getByRole('combobox', { name: '자료 열기' }).isVisible()) await page.getByRole('combobox', { name: '자료 열기' }).selectOption('circuit')
   await expect(page.getByRole('tab', { name: '원본 회로도' })).toHaveAttribute('aria-selected', 'true')
   const original = page.getByRole('img', { name: /원본 회로도/ })
   await expect.poll(() => original.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0)

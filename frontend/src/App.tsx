@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import WorkbenchPage from './pages/WorkbenchPage'
 import LandingPage from './pages/LandingPage'
+import PrivacyPage from './pages/PrivacyPage'
 import SettingsPage from './pages/SettingsPage'
 import AccountMenu from './components/AccountMenu'
 import useOverlayScrollbar from './hooks/useOverlayScrollbar'
@@ -27,7 +28,7 @@ function Shell() {
   const [error, setError] = useState<unknown>(null)
   const workbench = location.pathname === '/app'
   const settings = location.pathname === '/settings'
-  const publicPage = location.pathname === '/' || location.pathname === '/login'
+  const publicPage = ['/', '/login', '/signup', '/privacy', '/verify-email', '/reset-password'].includes(location.pathname)
   const ContentRoot = workbench ? 'div' : 'main'
   useOverlayScrollbar()
   async function signOut() {
@@ -61,7 +62,10 @@ function Shell() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<Navigate to="/login" replace />} />
+          <Route path="/reset-password" element={<Navigate to="/login" replace />} />
           <Route path="/app" element={<RequireAuth><WorkbenchPage user={user ?? undefined} onLogout={signOut} logoutBusy={busy} /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
