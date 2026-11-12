@@ -759,141 +759,136 @@ SojaFit (proj3-b)
 │       ├── smoke/          <- HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
 │       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
-├── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
-│   ├── DOCS.md             <- 폴더 설명
-│   ├── TOPIC.md            <- 통과한 주제서 (고정: 과제 가이드 경로)
-│   ├── GATES.md            <- 필수 게이트 G1~G7 자기 점검과 증거 (고정: 과제 가이드 경로)
-│   ├── reference/          <- 여러 문서가 가리키는 참조 문서: 계약서, 용어집, 평가 준비 점검표
-│   │   ├── REFERENCE.md    <- 폴더 설명
-│   │   ├── team-contract.md <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
-│   │   ├── glossary.md     <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
-│   │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
-│   ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
-│   │   ├── ASSETS.md       <- 폴더 설명
-│   │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
-│   │   └── agent-flow.svg  <- 위 그림의 원본
-│   ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
-│   │   └── ADR.md          <- 폴더 설명과 결정 목록
-│   ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
-│   │   ├── SPECS.md        <- 폴더 설명
-│   │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
-│   │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
-│   │   ├── login-auth.md   <- 로그인과 사용자 식별
-│   │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
-│   │   ├── google-user-login.md <- 일반 Google 가입·본인 확인 연결·관리자 승인 유지 작업서
-│   │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
-│   │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
-│   │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
-│   │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
-│   │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
-│   │   ├── official-datasheet-evidence.md <- 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
-│   │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
-│   │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
-│   │   ├── judge-agent.md  <- Spec 에이전트와 대체품 찾기
-│   │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
-│   │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
-│   │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
-│   │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
-│   │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
-│   │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
-│   │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
-│   │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
-│   │   ├── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
-│   │   ├── verified-circuit-and-datasheet-visuals-plan.md <- 검증 회로도·데이터시트 시각화 실행 계획(승인된 원문)
-│   │   ├── complete-schematic-delivery-plan.md <- 외부 완성 회로도 전달 계획(승인된 원문)
-│   │   └── complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계(승인된 원문)
-│   ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
-│   │   ├── EXPERIMENTS.md  <- 폴더 설명
-│   │   ├── speed-p95-levers-2026-11-11.md <- 검색 지연 p95 개선 비교 계획
-│   │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
-│   │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
-│   │   ├── injection-baseline-preflight.md <- 인젝션 기준선의 격리 적재·호출 관찰·예산·캐시·채점 준비 작업서
-│   │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
-│   │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
-│   │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
-│   │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
-│   │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
-│   │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
-│   │   ├── evaluation-draft-30.md  <- 난이도별 평가 문항 30건 초안 작성
-│   │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
-│   │   ├── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
-│   │   ├── supervisor-model-comparison.md  <- 수퍼바이저 후보 5종 70문항 1회 비교와 Luna 최종 선정 근거
-│   │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
-│   │   ├── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
-│   │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
-│   ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
-│   │   ├── RESEARCH.md     <- 폴더 설명
-│   │   ├── d9-outside-evidence-2026-11-11.md <- 외부 근거 탐색 검토 기록
-│   │   ├── grade-evidence-validation.md <- 1→2→3등급 검증·실측 결과와 PR 범위
-│   │   ├── injection-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
-│   │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
-│   │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
-│   │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
-│   │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
-│   │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
-│   │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
-│   │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
-│   │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
-│   │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
-│   │   ├── email-encryption-options.md  <- 로그인 이메일 암호화 정책 선택지(팀 결정 전)
-│   │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
-│   │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
-│   │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
-│   │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
-│   │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
-│   │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
-│   │   ├── supervisor-stage3-results.md  <- 6종 3차 전체 수치·1~3차 안정성·PR 근거
-│   │   ├── supervisor-stage3-brief-report.md  <- 6종 3차 핵심 수치·2차 대비 변화
-│   │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
-│   │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
-│   │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
-│   │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
-│   │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
-│   │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
-│   │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
-│   │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
-│   │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
-│   │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 기준선 3방식 문항별 대조·실패 유형 분석
-│   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
-│   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
-│   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
-│   │   ├── sojafit-domain-jobs-2026-11-12.md  <- 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹과 개별 출처
-│   │   ├── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
-│   │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
-│   │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
-│   │       ├── jobs2-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
-│   │       ├── corpus/     <- 공개 문서 조각 수 실측
-│   │       │   └── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
-│   │       ├── corpus2/    <- 다이오드 데이터시트 41건·공개 문서 실측
-│   │       │   ├── manifest_diode.json  <- 데이터시트 41건 627조각
-│   │       │   └── manifest_open_extra.json  <- KiCad 문서 등 조각 수
-│   │       ├── jobs2/      <- 공고 수집 원자료(2026-10-29)
-│   │       │   ├── merged.json  <- 중복 제거 공고 237건 개별 행
-│   │       │   ├── wanted_jumpit.json  <- 원티드·점핏 89건
-│   │       │   ├── saramin_jobkorea.json  <- 사람인·잡코리아 136건
-│   │       │   └── company_pages.json  <- 회사 채용 페이지 24건
-│   │       └── netlist/    <- 공개 KiCad 회로 다이오드 실측
-│   │           └── manifest_diodes.json  <- 151개 저장소 다이오드 554개
-│   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
-│   │   ├── DELIVERABLES.md <- 폴더 설명
-│   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
-│   │   ├── failure_analysis.md  <- 실패 사례 분석 글
-│   │   ├── demo_script.md  <- 시연 영상 초안 스크립트(D10, 영상 파일은 별도)
-│   │   ├── portfolio.md    <- 포트폴리오 1장 양식
-│   │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
-│   │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
-│   │   └── langfuse/       <- Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 1장 포함, 지금은 .gitkeep)
-│   └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
-│       ├── WORKLOG.md      <- 폴더 설명과 기록 형식
-│       ├── jeongun.md      <- 하정운(조장·오케스트레이터)
-│       ├── jaehun.md       <- 김재훈(2026-11-06 팀 탈퇴, 기록 보존)
-│       ├── osc.md          <- 오세창
-│       └── sth.md          <- 심태현
-│
-└── extras/                 <- 가산 중 이미지에 들어가지 않는 작업. Dockerfile이 복사하지 않음
-    ├── EXTRAS.md           <- 폴더 설명
-    └── finetune/           <- 가산: 파인튜닝 학습 코드와 비교 결과. 아직 설명 파일만 있음
-        └── FINETUNE.md     <- 폴더 설명
+└── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
+    ├── DOCS.md             <- 폴더 설명
+    ├── TOPIC.md            <- 통과한 주제서 (고정: 과제 가이드 경로)
+    ├── GATES.md            <- 필수 게이트 G1~G7 자기 점검과 증거 (고정: 과제 가이드 경로)
+    ├── reference/          <- 여러 문서가 가리키는 참조 문서: 계약서, 용어집, 평가 준비 점검표
+    │   ├── REFERENCE.md    <- 폴더 설명
+    │   ├── team-contract.md <- 요청 흐름, 담당별 수정 경로, 모듈 사이 함수 계약
+    │   ├── glossary.md     <- 용어집: 문서에서 쓰는 말과 예전에 쓴 말
+    │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
+    ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
+    │   ├── ASSETS.md       <- 폴더 설명
+    │   ├── agent-flow.png  <- 멀티 에이전트 구조도 (README 3절이 보여 줌)
+    │   └── agent-flow.svg  <- 위 그림의 원본
+    ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
+    │   └── ADR.md          <- 폴더 설명과 결정 목록
+    ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
+    │   ├── SPECS.md        <- 폴더 설명
+    │   ├── evaluator-demo-readiness.md <- 평가자 HTTP·키 없는 데모·관측·CI 수정 준비
+    │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
+    │   ├── login-auth.md   <- 로그인과 사용자 식별
+    │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
+    │   ├── google-user-login.md <- 일반 Google 가입·본인 확인 연결·관리자 승인 유지 작업서
+    │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
+    │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
+    │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
+    │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
+    │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
+    │   ├── official-datasheet-evidence.md <- 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
+    │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
+    │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
+    │   ├── judge-agent.md  <- Spec 에이전트와 대체품 찾기
+    │   ├── supervisor-v0-langfuse-import.md  <- 완료된 V0 결과의 Langfuse Dataset·Experiment 가져오기 작업서
+    │   ├── d5-frontend-service.md  <- React·Vite 화면과 D5 서비스 연결 기능 계약
+    │   ├── circuit-context-diagram.md  <- 대상 부품의 1·2단계 연결 개념도 기능 계약
+    │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 사용자 흐름 기능 계약
+    │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
+    │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
+    │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
+    │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
+    │   ├── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
+    │   ├── verified-circuit-and-datasheet-visuals-plan.md <- 검증 회로도·데이터시트 시각화 실행 계획(승인된 원문)
+    │   ├── complete-schematic-delivery-plan.md <- 외부 완성 회로도 전달 계획(승인된 원문)
+    │   └── complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계(승인된 원문)
+    ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
+    │   ├── EXPERIMENTS.md  <- 폴더 설명
+    │   ├── speed-p95-levers-2026-11-11.md <- 검색 지연 p95 개선 비교 계획
+    │   ├── thread-memory-operations.md <- thread·기억 품질·부하·복원·비용 검증 계약
+    │   ├── c2-defense-recheck.md <- 조장 수정 후 정상군·C1·C2 전후 비교와 무료/유료 재검증 절차
+    │   ├── injection-baseline-preflight.md <- 인젝션 기준선의 격리 적재·호출 관찰·예산·캐시·채점 준비 작업서
+    │   ├── d8-stage-remeasure-plan.md <- D8 단계별 응답 시간 · 비용 재측정 준비(원본 목록 · 재현 명령 · 비용 견적 · 코드 변경 목록)와 11-11 실측 결과 연결
+    │   ├── injection-baseline-plan.md <- T1~T7 고정 입력·사람 채점·110회 비용과 승인 전제
+    │   ├── embedding-model-baseline.md  <- 임베딩 모델 예비 기준선
+    │   ├── embedding-candidate-runner.md  <- 임베딩 후보 확장 평가기 설계
+    │   ├── embedding-voyage-candidates.md  <- Voyage 임베딩 후보 추가
+    │   ├── corpus-storage-budget.md  <- 원본 코퍼스 유지와 halfvec 저장 검증
+    │   ├── evaluation-draft-30.md  <- 난이도별 평가 문항 30건 초안 작성
+    │   ├── evaluation-draft-52.md  <- 정보 부족 기준과 50건 초안 작성(파일명의 52는 당시 이력)
+    │   ├── answer-refusal-scorer.md  <- 답변·거절 5지표 규칙 기반 채점기 설계와 수용 기준
+    │   ├── supervisor-model-comparison.md  <- 수퍼바이저 후보 5종 70문항 1회 비교와 Luna 최종 선정 근거
+    │   ├── supervisor-model-comparison-postregistration.md  <- 수퍼바이저 5종 비교의 실제 조건·변경·한계 사후등록
+    │   ├── supervisor-stage2-six-models.md  <- 6종 2차 공동 평가 계약
+    │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
+    ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
+    │   ├── RESEARCH.md     <- 폴더 설명
+    │   ├── d9-outside-evidence-2026-11-11.md <- 외부 근거 탐색 검토 기록
+    │   ├── grade-evidence-validation.md <- 1→2→3등급 검증·실측 결과와 PR 범위
+    │   ├── injection-results.md <- T1·T3 실제 스모크 누적 결과·원시 근거·무료 검증 구분과 후속 기록 양식
+    │   ├── injection-case-review-packet.md <- 사람 우선확인32건의 실제 질문·응답·측정코퍼스·원본PDF 대조 자료
+    │   ├── thread-memory-operations-review.md <- thread·승인 기억 운영 실측과 정본 반영 제안
+    │   ├── injection-preregistration-proposal.md <- 조장 담당 사전 등록의 미반영 제안, 유료 승인 아님
+    │   ├── thread-memory-work-summary.md <- 프롬프트 인젝션 대응·측정 기록(발췌): C1/C2·P4 기준선, 판정 출력 경계 제안·수정 상태
+    │   ├── embedding-candidate-investigation.md  <- 임베딩 후보 13종 조사·실행·중단 사유
+    │   ├── model-licenses.md  <- 임베딩 후보 라이선스와 공개 범위
+    │   ├── skill-feasibility.md  <- 도메인 Skill 후보 조사
+    │   ├── auth-login-verification.md  <- 로그인·세션·scrypt 실측 기록
+    │   ├── auth-feedback-key-verification.md  <- 로그인 피드백·AUTH_SECRET 검증 실측
+    │   ├── email-encryption-options.md  <- 로그인 이메일 암호화 정책 선택지(팀 결정 전)
+    │   ├── supabase-auth-test-runbook.md  <- 격리 Supabase 인증 테스트 프로젝트·보안 점검·재개 절차
+    │   ├── ci-proposal.md  <- CI 사용량 절감 제안(합의 전)
+    │   ├── mcp-collaboration-handoff.md  <- MCP·LangGraph 공동작업 인수인계 스냅샷
+    │   ├── jev-supervisor-evaluation-handoff.md  <- Jev 1차 실측·2차 인수인계
+    │   ├── supervisor-stage2-results.md  <- 수퍼바이저 6종 2차 실측·비교·집계 한계
+    │   ├── supervisor-stage2-brief-report.md  <- 2차 핵심 수치·1차 대비 간단 보고서
+    │   ├── supervisor-stage3-results.md  <- 6종 3차 전체 수치·1~3차 안정성·PR 근거
+    │   ├── supervisor-stage3-brief-report.md  <- 6종 3차 핵심 수치·2차 대비 변화
+    │   ├── mcp-docling-verification-2026-11-03.md  <- 저장소 PDF 표본 대조 기록
+    │   ├── mcp-offline-verification-2026-11-03.md  <- DB 없는 MCP·PDF 표본 점검 기록
+    │   ├── mcp-tool-candidates-draft.md  <- MCP·웹 검색 도구 후보 조사·실측
+    │   ├── mcp-tool-contract-review.md  <- MCP 도구 입출력·호출처 검토
+    │   ├── mcp-tool-implementation-plan.md  <- MCP 구현 범위·우선순위 제안
+    │   ├── mcp-two-person-work-plan.md  <- MCP·LangGraph 역할 분담 제안
+    │   ├── tsc-public-part-verification-options.md  <- 공개 품번 확인 정책 선택지
+    │   ├── web-search-filter-comparison.md  <- 웹 검색 필터 비교 실측
+    │   ├── web-search-results-interpretation.md  <- 웹 검색 결과 해석과 한계
+    │   ├── retrieval-baseline-analysis.md  <- 동결 v1 검색 기준선 3방식 문항별 대조·실패 유형 분석
+    │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
+    │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
+    │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
+    │   ├── sojafit-domain-jobs-2026-11-12.md  <- 전자부품·제조 기술문서 인접 채용 72개 역할·후보 그룹과 개별 출처
+    │   ├── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
+    │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
+    │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
+    │       ├── jobs2-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
+    │       ├── corpus/     <- 공개 문서 조각 수 실측
+    │       │   └── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
+    │       ├── corpus2/    <- 다이오드 데이터시트 41건·공개 문서 실측
+    │       │   ├── manifest_diode.json  <- 데이터시트 41건 627조각
+    │       │   └── manifest_open_extra.json  <- KiCad 문서 등 조각 수
+    │       ├── jobs2/      <- 공고 수집 원자료(2026-10-29)
+    │       │   ├── merged.json  <- 중복 제거 공고 237건 개별 행
+    │       │   ├── wanted_jumpit.json  <- 원티드·점핏 89건
+    │       │   ├── saramin_jobkorea.json  <- 사람인·잡코리아 136건
+    │       │   └── company_pages.json  <- 회사 채용 페이지 24건
+    │       └── netlist/    <- 공개 KiCad 회로 다이오드 실측
+    │           └── manifest_diodes.json  <- 151개 저장소 다이오드 554개
+    ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
+    │   ├── DELIVERABLES.md <- 폴더 설명
+    │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
+    │   ├── failure_analysis.md  <- 실패 사례 분석 글
+    │   ├── demo_script.md  <- 시연 영상 초안 스크립트(D10, 영상 파일은 별도)
+    │   ├── portfolio.md    <- 포트폴리오 1장 양식
+    │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
+    │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
+    │   └── langfuse/       <- Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 1장 포함, 지금은 .gitkeep)
+    └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
+        ├── WORKLOG.md      <- 폴더 설명과 기록 형식
+        ├── jeongun.md      <- 하정운(조장·오케스트레이터)
+        ├── jaehun.md       <- 김재훈(2026-11-06 팀 탈퇴, 기록 보존)
+        ├── osc.md          <- 오세창
+        └── sth.md          <- 심태현
 ```
 
 저장소 밖 같은 상위 폴더(`../`)에는 코퍼스 전체(`../corpus/`), 실험 자료(`../전자_데이터시트/`), 회의록이 있습니다. 저장소 파일이 아니므로 위 트리에 넣지 않습니다.
@@ -967,8 +962,6 @@ SojaFit (proj3-b)
 | `docs/research/` | [RESEARCH.md](docs/research/RESEARCH.md) | 쓴 사람 |
 | `docs/deliverables/` | [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md) | 평가·문서 |
 | `docs/worklog/` | [WORKLOG.md](docs/worklog/WORKLOG.md) | 각자 자기 파일 |
-| `extras/` | [EXTRAS.md](extras/EXTRAS.md) | 가산을 시작할 때 정함 |
-| `extras/finetune/` | [FINETUNE.md](extras/finetune/FINETUNE.md) | 가산을 시작할 때 정함 |
 
 담당은 가이드의 역할 4개(검색·데이터, 에이전트, 서비스·운영, 평가·문서)입니다. 사람 배정은 [README.md](README.md) 조원 표에 있습니다.
 
