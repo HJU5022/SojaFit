@@ -47,7 +47,7 @@ MODELS = {
     'v4lite': {'kind': 'voyage', 'name': 'voyage-4-lite', 'dim': 1024, 'max_tokens': 1_000_000},
     'v4': {'kind': 'voyage', 'name': 'voyage-4', 'dim': 1024, 'max_tokens': 320_000},
     'v4large': {'kind': 'voyage', 'name': 'voyage-4-large', 'dim': 1024, 'max_tokens': 120_000},
-    # GPU 모델: HF Jobs에서 만든 벡터를 scripts/hf_jobs/scripts/hf_jobs/hf_data.py fetch로 받아 vectors/·inputs/qvec_<키>.npz에서 읽기만 한다
+    # GPU 모델: HF Jobs에서 만든 벡터를 scripts/hf_jobs/hf_data.py fetch로 받아 vectors/·inputs/qvec_<키>.npz에서 읽기만 한다
     'kure': {'kind': 'pre', 'dim': 1024}, 'qwen06': {'kind': 'pre', 'dim': 1024}, 'bgem3': {'kind': 'pre', 'dim': 1024},
     'qwen4b': {'kind': 'pre', 'dim': 2560}, 'qwen8b': {'kind': 'pre', 'dim': 4096},
 }
