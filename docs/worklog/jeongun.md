@@ -1,14 +1,40 @@
 # jeongun 작업 기록
 
+## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
+- #3: `check_injection_result` 정상 종료 0 · 1행 답 비움 종료 1 출력을 `evals/results/d10/injection_check_{pass,fail}_2026-11-12.txt`에 남김(깨진 jsonl은 커밋 안 함, README에 재현).
+- #4: 멀티 현행 변이 3건(숫자 검사 끔 · `_judgement_reply` 무력화 · `MAX_AGENT_RUNS=99`) → 집중 pytest 실패 확인 후 `git checkout` 원복. GATES 변이 표 7~9행 · `mutation_2026-11-12.md`.
+- #5: 재현 한 줄 + v4h `distinct_text`/파일 sha256을 `evals/results/d10/README.md` · `corpus_v4h_fingerprint_2026-11-12.md`.
+- 안 함: #6 main 병합·재배포, #7 현 배포 재시작/격리 재스모크, gitleaks 전 이력 재스캔, 푸시.
+
+## 2026-11-12 제출물 초안(시연 스크립트·AI도구·포트폴리오·G5/G7, 커밋만)
+- `docs/deliverables/demo_script.md`: D10 촬영용 정상·실패 컷(스모크 28 · DEMO.md · §6 재료). README·G7·§11 링크.
+- `ai_tools_log.md`: 11-09~12 행 + 규칙·실패 사례 절 채움.
+- `portfolio-jeongun.md` 초안(EVAL/GATES 숫자만).
+- GATES G5: 3장 표 채움을 현재 증거로 명시. G7: 스크립트·문서 초안 있음 / 영상·캡처 없음.
+- 안 함: 푸시·PR, 영상 촬영, Langfuse PNG, T4 재측정, scratchpad.
+
+## 2026-11-12 재료 있는 문서 마무리(커밋만)
+- G1: README·GATES에 라이브 `sojafit-api-e0a5e30`(`limits5m`) 반영.
+- G3: v4h `summary.json`의 `distinct_text` 51,967을 GATES·EVAL 1장에 연결(운영 DB sha256 재집계는 아님).
+- EVAL §11 약점 표 · `docs/deliverables/failure_analysis.md` 초안 · D9 이관 기록 §10 완료 표시.
+- 안 함: 푸시·PR, 시연 영상, Langfuse 캡처, T4 재측정, scratchpad 커밋.
+
+## 2026-11-12 토큰 한도 사용자 5M · 서비스 10M + main pull 배포
+- 배경: 배포본이 서비스 전체 2M에 먼저 걸려 `LIMIT_EXCEEDED`가 났고, [결정 11-12] 사용자별 5M · 서비스 10M. `origin/main`(#106) pull 후 `jeongun`에 반영.
+- 코드: `USER_DAILY_TOKENS=5_000_000` · `SERVICE_DAILY_TOKENS=10_000_000`(메시지·시험은 상수 참조). SPEC 8.6 · `login-auth.md` · `injection_http` 안내 문구.
+- 배포 DB: Cloud Run `DATABASE_URL`→시크릿 `DATABASE_URL_NEW`(SojaFit_2, ref `oujmltzhbzmgitucgmeq`). 옛 `DATABASE_URL`(ref `owkklccwglcpfmmezcxj`)은 쓰지 않음.
+- 시험 [실측]: `test_token_cap_is_limit_exceeded` · `test_token_cap_refuses_run_and_resume…` 통과(DB 없는 단위).
+- 배포 [실측]: 리비전 `sojafit-api-e0a5e30`(태그 `limits5m`) 0% 점검 후 100% 전환. `/health` 200, signup·demo-login 404(`DEMO_MODE=0`). `DATABASE_URL`→`DATABASE_URL_NEW`(SojaFit_2). 푸시·PR 아직 없음(로컬 `jeongun` ahead).
+
 ## 2026-11-12 로컬 측정·스모크 원시 이관 (PR #106)
 - 넣음: D9 judge-dev multi/single · langfuse-capture · v3-single · v3-16 warm-recheck · claim_consistency D9 재확인 · Langfuse probe v2 · RAGAS probe v3 · synth-01-repeat10 · synth-both-agents · 인젝션 HTTP `…_012039.json`(원장 인용) · 스모크 `…_230015` · `…_230534`.
 - 안 넣음: `scratchpad/`(임시·워크트리 잔여).
 - 확인: `git status`에 해당 경로 staged, scratchpad는 untracked 유지.
 
-## 2026-11-12 DEMO_MODE UI 분기(로컬 검증용, 미커밋·미배포)
+## 2026-11-12 DEMO_MODE UI 분기
 - `CircuitSetup`: `/api/auth/demo`로 `DEMO_MODE`를 보고 1일 때만 「데모 회로로 시작」, 0이면 업로드만. `POST /api/projects`에 `Depends(demo_mode)`(404). Landing 문구·`.env.example` 주석.
 - 시험 [실측]: `CircuitSetup.test` 9 passed, `tests/api/test_projects.py` 47 passed · 1 skipped. Workbench/ProjectSidebar 통과. `App.test` 가입 헤딩 실패는 main에도 있는 기존 깨짐(제목 `SojaFit에 로그인`).
-- 로컬: `.env`에서 `DEMO_MODE=0|1` 바꿔 확인. 배포·커밋 요청 전.
+- 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
 
 ## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
 - Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).

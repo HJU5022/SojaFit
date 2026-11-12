@@ -9,7 +9,7 @@ React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 11-11 서비�
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다. 승인 기록은 `public.approvals`(견적 승인, 이 서비스 밖)뿐이다.
-분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
+분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(5,000,000 · 10,000,000, SPEC 8.6)에서
 DB로 원자적으로 차감한다(`_budget`, db/020_service_baseline.sql). 공급자가 청구한 토큰이 아니라 예약이다.
 삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
@@ -51,11 +51,12 @@ LOGGER = logging.getLogger('backend.conversations')
 RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
-USER_DAILY_TOKENS = 1_000_000  # 11-10: 예약 토큰은 실제 사용보다 크게 잡혀(돌려주지 않음) 20만으로는 점검 한 번에 한 계정의 하루치가 찼다
-SERVICE_DAILY_TOKENS = 2_000_000
+# [왜] 11-12: 사용자별 5M이 실사용 한도. 서비스 10M은 다계정 합산 안전선(이전 1M/2M은 스모크·점검에 서비스 전체부터 먼저 찼다)
+USER_DAILY_TOKENS = 5_000_000
+SERVICE_DAILY_TOKENS = 10_000_000
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
-USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
-SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 
 @lru_cache(maxsize=1)

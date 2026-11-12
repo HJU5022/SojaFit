@@ -383,7 +383,7 @@ def test_daily_reservations_are_atomic_across_requests_and_users(runtime, monkey
 
 
 def test_daily_token_caps_per_user_and_service_reject_before_external_call(runtime, monkeypatch):
-    """하루 토큰 상한(사용자 1,000,000 · 서비스 2,000,000): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
+    """하루 토큰 상한(사용자 · 서비스 상수): USD 예약과 같은 위쪽 경계 토큰을 두 행에 원자적으로 더하고, 넘으면 호출 전 429다."""
     from fastapi.testclient import TestClient
     from backend import auth
     from backend.api.conversations import repository
@@ -431,19 +431,21 @@ def test_daily_token_caps_per_user_and_service_reject_before_external_call(runti
         conn.execute(f"INSERT INTO sojafit_agent.analysis_usage(user_id,day,next_allowed,reserved_tokens) VALUES (%s,{today},CURRENT_TIMESTAMP,%s)",
                      (a, ms.USER_DAILY_TOKENS - per_call))
     before, external[:] = service(), []
-    refused(a, '사용자 상한 도중', '1,000,000 토큰')
+    user_cap = f'{ms.USER_DAILY_TOKENS:,} 토큰'
+    service_cap = f'{ms.SERVICE_DAILY_TOKENS:,} 토큰'
+    refused(a, '사용자 상한 도중', user_cap)
     assert external == ['사용자 상한 도중'] and usage(a)[0] == ms.USER_DAILY_TOKENS and service() == before + per_call
-    refused(a, '사용자 상한 입장', '1,000,000 토큰')  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
+    refused(a, '사용자 상한 입장', user_cap)  # 다 찬 뒤에는 입장에서 막아 질문 버전도 오르지 않는다
     assert external == ['사용자 상한 도중'] and app.threads(a)[0]['version'] == 0
     app.admission(b)  # 다른 사용자는 막지 않는다
 
     # 서비스 상한: 사용자 자리는 있어도 서비스 행이 넘치면 429이고, 그 호출의 사용자 행 차감도 되돌린다
     service(ms.SERVICE_DAILY_TOKENS - per_call - 100)
     mine = usage(b)[0]
-    refused(b, '서비스 상한 도중', '2,000,000 토큰')
+    refused(b, '서비스 상한 도중', service_cap)
     assert external[-1] == '서비스 상한 도중' and external.count('서비스 상한 도중') == 1
     assert usage(b)[0] == mine + per_call and service() == ms.SERVICE_DAILY_TOKENS - 100
-    refused(b, '서비스 상한 입장', '2,000,000 토큰')
+    refused(b, '서비스 상한 입장', service_cap)
     assert '서비스 상한 입장' not in external
 
     # React run은 스트림 · run 행 전에 공통 오류 429로 끝난다
@@ -462,7 +464,7 @@ def test_daily_token_caps_per_user_and_service_reject_before_external_call(runti
         api.dependency_overrides.clear()
         del api.state.conversations
     assert response.status_code == 429 and response.json()['error']['code'] == 'LIMIT_EXCEEDED'
-    assert '2,000,000 토큰' in response.json()['error']['message']
+    assert service_cap in response.json()['error']['message']
 
 
 def test_rate_limit_rejects_before_changing_thread_version(runtime, monkeypatch):

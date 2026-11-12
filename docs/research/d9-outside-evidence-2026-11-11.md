@@ -38,7 +38,7 @@ sha256은 각 폴더 `SHA256.txt`.
 
 - **표 주석 216건(THERMAL 122 + 두 쪽 표 61 + 기타 32 + 오탐 1) 원시 점검 파일** — 위키 원장 「표 주석 붙기 점검 (11-09)」에 숫자만 있고 「원본 미이관」. `table_suspects.jsonl`은 **파서 불일치 89건**이라 216건과 다름 `[문서]`.
 - `judge_items_full.json`(판정 노드 전문) · `chunks-v4h/chunks.jsonl`(~36MB) — 용량·본문 때문에 이번 이관에서 뺌.
-- 범용 챗봇 대체재 5문항(EVAL_REPORT §10) — 이관 다음 작업.
+- 범용 챗봇 대체재 5문항(EVAL_REPORT §10) — **11-12에 채움**(Codex 답 [`evals/results/graph/2026-11-12-codex-v3-50/`](../../evals/results/graph/2026-11-12-codex-v3-50/) · 표본 5행은 EVAL_REPORT §10).
 
 ## Out of Scope
 

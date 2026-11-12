@@ -838,8 +838,10 @@ SojaFit (proj3-b)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
 │   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
 │   │   ├── failure_analysis.md  <- 실패 사례 분석 글
+│   │   ├── demo_script.md  <- 시연 영상 초안 스크립트(D10, 영상 파일은 별도)
 │   │   ├── portfolio.md    <- 포트폴리오 1장 양식
-│   │   ├── portfolio-<이름>.md  <- 조원별 포트폴리오, portfolio.md를 복사해 작성 (예정)
+│   │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
+│   │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
 │   │   └── langfuse/       <- Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 1장 포함, 지금은 .gitkeep)
 │   └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
 │       ├── WORKLOG.md      <- 폴더 설명과 기록 형식

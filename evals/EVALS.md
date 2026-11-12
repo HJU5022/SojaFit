@@ -39,7 +39,8 @@ T4 수정 포함110회03 원시는 results/threads/injection_baseline_live_2026-
 - `run_skill_pair.py` — 그림의 노드 순서로 준비 상태를 저장한 뒤 동일 상태에서 Skill 유무 답변을 비교. 생성 거절 경로·부분 결과·해시·예약비용을 기록하며 expected 충족률은 검토 전 null. 서비스 그래프·MCP 통합 검증은 아님
 
 ## 결과 폴더
-`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더 아홉 개로 묶습니다.
+`results/`의 파일은 `<무엇>_<YYYY-MM-DD>.json`이고 하위 폴더로 묶습니다.
+- `results/d10/` — Checkpoint D10 제출물 점검 증거(2026-11-12): 기준 미달 실패 출력, 멀티 변이 3건 로그, 재현 한 줄·v4h 지문(`README.md`)
 - `results/retrieval/` — `retrieval_baseline_2026-11-03.json`·`retrieval_dense_2026-11-03.json`·`retrieval_bm25_2026-11-03.json`: v1 데이터시트 근거 19문항의 검색 지표(`run_retrieval.py`, k=5). 각각 하이브리드·dense만·BM25만. 하이브리드 파일은 `method` 인자가 생기기 전에 만들어 summary에 `method`가 없음
   - `d3_official_2026-11-03.json`·`d3_official_gpu_2026-11-03.json`: 사전 등록 #24 D3 공식 측정(동결 v2 채점 19문항, 조건 E1~E8을 하나씩 바꾼 칸과 칸별 비교, GPU 칸은 로컬 리랭커·late chunking). `d3_noresult_2026-11-03.json`: 관련 19·비관련 35문항의 1위 점수 분포와 no_result 임계값. `d3_explore_2026-11-03.json`: 탐색 격자 276칸(판정에 쓰지 않음)
   - `r1_2026-11-03.json`: 사전 등록 #25 R1 검색 평가셋 84문항, dev 세트 264개 조합·답안지 검사·test 세트 확인 4칸(줄인 판). `r1_steps_2026-11-04.json`: 사전 등록 #28 단계별 재측정(S0 → S4, 앞 단계와 짝 비교·실패 유형)

@@ -115,9 +115,10 @@ def service(**attrs):
 
 
 def test_token_cap_is_limit_exceeded():
+    from backend.conversations.memory_service import USER_DAILY_TOKENS
     with pytest.raises(ApiError) as error:
-        Conversations._token_room(Conn({'mine': 1_000_000, 'service': 0}), 1)
-    assert error.value.code == 'LIMIT_EXCEEDED' and '1,000,000 토큰' in error.value.detail
+        Conversations._token_room(Conn({'mine': USER_DAILY_TOKENS, 'service': 0}), 1)
+    assert error.value.code == 'LIMIT_EXCEEDED' and f'{USER_DAILY_TOKENS:,} 토큰' in error.value.detail
 
 
 @pytest.mark.parametrize('spent, code', [(False, 'RATE_LIMITED'), (True, 'LIMIT_EXCEEDED')])
