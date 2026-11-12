@@ -32,18 +32,18 @@
 
 설정 없이 돌린 2d의 1,366건이다. 값은 모두 앞 4자까지만 확인했다. 분류 상세는 [secrets/extra_checks.md](secrets/extra_checks.md) 2d.
 
-| 건수 | 위치 | 값의 정체 | 분류 | 허용 방식 |
+| 건수 | 위치 | 값의 정체 | 분류 | 허용 방식(`c020389` 이후) |
 |---|---|---|---|---|
 | 986 | `evals/results/embedding/grid_rerank_cache_2026-11-02.jsonl` `key` 필드 | 64자리 16진 sha256 해시 | 비밀 아님 | `.gitleaks.toml` 파일 경로 허용(모든 규칙) |
 | 360 | `evals/results/threads/injection_baseline_live_2026-11-11_03.jsonl` 240, `..._03_human_jeongun.jsonl` 120 | `document_key`(코퍼스 문서 식별 값). 원시 Match는 `document_key": "REDACTED"` | 비밀 아님 | `.gitleaks.toml` 파일 경로 허용(`generic-api-key` 규칙만) |
 | 8 | `docs/worklog/jeongun.md` | `--to-revisions=sojafit-api-<커밋 해시>` 배포 리비전 이름 | 비밀 아님 | `.gitleaks.toml` 경로 + 정규식 허용 |
-| 7 | `tests/api/test_auth.py` | 시험용 비밀번호(`synt…`) | 시험 값 | `.gitleaks.toml` `tests/` 경로 + 접두어 허용 |
-| 2 | `tests/api/test_errors.py` | 시험용 비밀번호(`synt…`) | 시험 값 | 같음 |
-| 1 | `tests/api/test_deletion.py:53` | 시험용 `AUTH_SECRET`(`isol…`) | 시험 값 | 같음 |
+| 7 | `tests/api/test_auth.py` | 시험용 비밀번호(`synt…`) | 시험 값 | `.gitleaksignore` fingerprint 7줄 |
+| 2 | `tests/api/test_errors.py` | 시험용 비밀번호(`synt…`) | 시험 값 | `.gitleaksignore` fingerprint 2줄 |
+| 1 | `tests/api/test_deletion.py:53` | 시험용 `AUTH_SECRET`(`isol…`) | 시험 값 | `.gitleaksignore` fingerprint 1줄 |
 | 1 | `backend/conversations/memory_service.py:109` | SQL 파일 이름 상수(`022_token_limits.sql` 등) | 비밀 아님 | `.gitleaks.toml` 경로 + 정규식 허용 |
-| 1 | `evals/results/graph/memory_operations_2026-11-09.json:121`(커밋 `ccadd3f`) | `backend/auth.py`의 64자리 SHA-256 | 파일 해시 | `.gitleaksignore` fingerprint(무시 목록이 이 1건만 가려 1,366 → 1,365, 나머지는 위 허용 규칙이 가려 0) |
+| 1 | `evals/results/graph/memory_operations_2026-11-09.json:121`(커밋 `ccadd3f`) | `backend/auth.py`의 64자리 SHA-256 | 파일 해시 | `.gitleaksignore` fingerprint 1줄 |
 
-합계 986 + 360 + 8 + 7 + 2 + 1 + 1 + 1 = 1,366.
+합계 986 + 360 + 8 + 7 + 2 + 1 + 1 + 1 = 1,366. `.gitleaks.toml` 경로 허용이 가리는 것은 986 + 360 + 8 + 1(SQL 파일 이름) = 1,355건이고, `.gitleaksignore` 지문이 가리는 것은 시험 값 10건 + 파일 해시 1건 = 11건이다. 이 분류는 b5f050d 기준 2d 결과이며 허용 방식만 6절로 바뀌었다.
 
 ## 4. 추가 검사
 
@@ -74,3 +74,28 @@
 | 데모 계정 | 작업 기록의 데모 계정이 평가용 계정과 같은지 확인하지 못했다 |
 | 작업 트리 | 검사 대상은 `origin/main`이다. 커밋하지 않은 작업 트리와 `.env`는 검사하지 않았다 |
 | 개인정보 가림 | `secrets/extra_checks.md`에서 이메일 앞부분·Supabase ref 앞 4자·데모 계정 표기를 일반 표현으로 바꿨다. 가린 것은 이 값뿐이다. 같은 파일 2d 표의 360건 행은 필드를 `pair_key`로 적지만 2d 원시 Match는 `document_key`이다(3절이 정정 값). |
+
+## 6. 허용 방식 변경 (2026-11-13, `c020389`)
+
+시험 값 10건을 `.gitleaks.toml`의 `tests/` 경로 + 접두어 허용에서 `.gitleaksignore` fingerprint로 옮겼다. 체크포인트 문장("gitleaks가 의심하는 시험용 값은 .gitleaksignore에 등록")에 맞추기 위해서다.
+
+| 항목 | 전 | 후 |
+|---|---|---|
+| 시험 값 10건(`test_auth.py` 7, `test_errors.py` 2, `test_deletion.py` 1) | `.gitleaks.toml` 허용 항목(경로 `^tests/` + 접두어 정규식) | `.gitleaksignore` fingerprint 10줄(5개 커밋 `36be8bf`·`d6b0b04`·`f3918c3`·`ee8808f`·`799b325`, 줄당 1건) |
+| `.gitleaks.toml` 허용 항목 | 5개 | 4개(리랭크 캐시, SQL 파일 이름, 인젝션 document_key, worklog 리비전 이름) |
+| `.gitleaksignore` 줄 | 1줄 | 11줄(+ 파일별 설명 주석) |
+
+- 그 항목이 가리던 다른 것: 없다. 항목만 뺀 설정으로 `jeongun` 이력을 돌리면 12건이 나오고, 시험 값 10건과 아래 a의 2건이다. 나머지 2건은 이 항목과 관계없다.
+- 앞으로: `tests/` 아래 새 가짜 비밀번호는 `.gitleaksignore`에 지문을 넣기 전까지 CI에서 걸린다. 등록 절차는 [SOJAFIT.md](../../../SOJAFIT.md) `.gitleaksignore` 설명에 있다.
+- 병합: fingerprint는 `커밋 해시:파일:규칙:줄`이다. 병합 커밋으로 `main`에 합치면 원래 커밋 해시가 그대로 남아 지문이 유효하다. 스쿼시·리베이스로 커밋 해시가 바뀌면 지문이 맞지 않아 다시 만들어야 한다.
+
+검사는 `b5f050d`와 같은 방식(gitleaks `v8.30.1` digest 고정, `--redact`, 읽기 전용 마운트)이다. 대상은 `jeongun`(`c020389`, 이력은 `b5f050d`보다 11개 커밋이 많다). 명령과 건수는 [secrets/after_2026-11-13_c020389.md](secrets/after_2026-11-13_c020389.md).
+
+| 검사 | 설정 | 건수 |
+|---|---|---|
+| a. 저장소 그대로(CI와 같은 방식) 이력 | 커밋된 `.gitleaks.toml` + `.gitleaksignore` | 1건 |
+| b. `.gitleaksignore`가 없는 bare 복제본 이력 | 커밋된 `.gitleaks.toml` | 12건 = 시험 값 10건 + a의 1건 + `ccadd3f`의 파일 해시 1건 |
+| c. `git archive` 내보내기 디렉터리 모드 | 커밋된 `.gitleaks.toml` | 10건(경로 앵커 때문에 보이는 허용 항목과 시험 값) |
+
+- a의 1건: `evals/results/d10/secrets/extra_checks.md` 10줄(커밋 `d5138a7`). SQL 파일 이름 2개를 인용한 줄이다. 옮기기 전에도 같은 1건이 나왔다(옮기기 전 `jeongun` 이력 검사 1건). 이 건은 `b5f050d` 이후 `jeongun`에 추가됐고 허용되어 있지 않다. 이 변경이 만든 것이 아니다.
+- 옮기기 전후 비교: 이력 검사(저장소 설정 적용) 1건 → 1건, 같은 건이다. 시험 값 10건은 두 경우 모두 가려진다.

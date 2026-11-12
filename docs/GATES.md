@@ -156,7 +156,7 @@
 | 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
 | AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
 | 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
-| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/) |
+| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/) |
 
 확인 못 한 것(없는 것):
 
