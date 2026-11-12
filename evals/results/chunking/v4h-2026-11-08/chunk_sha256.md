@@ -4,7 +4,7 @@
 - 기준일: 2026-11-13
 - 기준 커밋: 이 파일을 추가한 커밋
 - 정본 여부: 정본(청크별 본문 해시). 청크 수의 정본은 [data/DATA.md](../../../../data/DATA.md#코퍼스-수치), 게이트 증거는 [docs/GATES.md](../../../../docs/GATES.md) G3
-- 관련 문서: [README.md](README.md)(이 폴더 설명, 이 목록은 아직 적혀 있지 않다), [summary.json](summary.json), [SHA256.txt](SHA256.txt)
+- 관련 문서: [README.md](README.md)(이 폴더 설명), [summary.json](summary.json), [SHA256.txt](SHA256.txt)
 
 [chunk_sha256.tsv](chunk_sha256.tsv)는 현재 코퍼스(청커 `tsc-v4h-2026-11-08`)의 청크마다 본문 해시 한 줄을 담는다. 청크 본문은 담지 않는다. 청크 본문은 저장소에 두지 않고 DB에만 둔다(SPEC 6절, ADR 0005).
 

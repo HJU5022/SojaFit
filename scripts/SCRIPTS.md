@@ -13,8 +13,8 @@
 | 분류 | 기준 | 스크립트 |
 |---|---|---|
 | 운영 | 시험·CI·서비스 코드·운영 절차 문서가 호출하거나 지정하고, 지금 코드에서 돈다 | `db/gen_schema_docs.py`, `db/voyage_rollout.py`, `demo/record_demo.py`, `langfuse/langfuse_skill_check.py`, `smoke/http_smoke.py` |
-| 재현용 | 저장소에 원시 결과가 있고, 결과를 다시 만들거나 구조를 증명하는 데 쓴다. 호출처는 문서·시험 | `auth/auth_boundary_after_merge.py`, `db/verify_chain/verify_chain.sh`, `db/verify_redesign/*.sh`, `eval/stage_report.py`, `eval/approval_wait_report.py`, `smoke/injection_http.py` |
-| 일회성 | 한 번 쓴 실험·변환이거나 전제(OS, 모델·차원, 외부 작업 폴더)가 지금 맞지 않아 그대로 돌지 않는다 | `auth/measure_scrypt_concurrent.py`, `bit_search/bit_search_exp.py`, `eval/import_human_review.py`, `hf_jobs/hf_job.py`, `hf_jobs/hf_data.py`, `smoke/verify_external_schematics.py` |
+| 재현용 | 저장소에 원시 결과가 있고, 결과를 다시 만들거나 구조를 증명하는 데 쓴다. 호출처는 문서·시험 | `auth/auth_boundary_after_merge.py`, `db/verify_chain/verify_chain.sh`, `db/verify_redesign/*.sh`, `eval/stage_report.py`, `eval/approval_wait_report.py`, `smoke/injection_http.py`, `bit_search/bit_search_exp.py` |
+| 일회성 | 한 번 쓴 실험·변환이거나 전제(OS, 모델·차원, 외부 작업 폴더)가 지금 맞지 않아 그대로 돌지 않는다 | `auth/measure_scrypt_concurrent.py`, `eval/import_human_review.py`, `hf_jobs/hf_job.py`, `hf_jobs/hf_data.py`, `smoke/verify_external_schematics.py` |
 
 호출 근거: `db/gen_schema_docs.py`는 `tests/db/test_schema_docs.py`가, `demo/record_demo.py replay`는 `.github/workflows/ci.yml`이, `langfuse/langfuse_skill_check.py`의 함수는 `tests/services/test_langfuse_prompts.py`가, `smoke/http_smoke.py`는 `tests/api/test_http_smoke.py`와 `docs/GATES.md`가 부른다. 나머지 근거는 하위 폴더 설명 파일의 "분류 근거" 열.
 

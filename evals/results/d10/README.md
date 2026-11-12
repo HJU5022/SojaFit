@@ -36,4 +36,4 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 
 ## 청크 본문
 
-저장소에 `chunks.jsonl` 본문은 없다(용량). 대신 v4h `summary.json`의 `cards`=`distinct_text`=51967과 결과 파일 sha256 목록을 `corpus_v4h_fingerprint_2026-11-12.md`에 둔다. 운영 DB 행 조회는 배포/DB 접근이 필요할 때 따로 남긴다.
+저장소에 `chunks.jsonl` 본문은 없다(용량). 대신 v4h `summary.json`의 `cards`=`distinct_text`=51967과 결과 파일 sha256 목록을 `corpus_v4h_fingerprint_2026-11-12.md`에 둔다. 운영 DB 행 조회는 배포/DB 접근이 필요할 때 따로 남긴다. 청크별 본문 sha256 목록은 `../chunking/v4h-2026-11-08/chunk_sha256.tsv`에 있다.
