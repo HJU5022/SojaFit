@@ -38,6 +38,8 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `threshold_fail_2026-11-13.txt` | 3 | 깨뜨린 사본 3개(답 비움·판정 값 틀림·1행 삭제) → 위반 1건 · 종료 1 |
 | `secret_scan_2026-11-13.md` | - | gitleaks 이력 검사와 추가 패턴 검사 결과 |
 | `secrets/` | - | 비밀값 검사 원시 증거: 실행 기록, 요약, 이력 검사 보고서 2개, 추가 검사 노트 |
+| `startup_restart_isolation_2026-11-13.md` | - | 한 줄 기동 시간(냉 · 온), 키 없는 데모 응답, 재시작 뒤 재개, 계정 분리 52개 점검의 결과와 재현법 |
+| `boot/` | - | 위 측정의 원시 출력: 시각표, 스모크 28단계, 52개 점검, 체크포인트 행 수, 합성 시험 출력, 측정 스크립트(`.log` 파일은 `.txt`를 덧붙여 둠) |
 | `corpus_v4h_fingerprint_2026-11-12.md` | 5 | v4h 카드·distinct_text·파일 sha256 |
 
 ## 청크 본문

@@ -1,0 +1,16 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+ Container proj3-b-thread-setup-1 Stopping 
+ Container proj3-b-corpus-load-1 Stopped 
+ Container proj3-b-corpus-load-1 Removing 
+ Container proj3-b-thread-setup-1 Stopped 
+ Container proj3-b-thread-setup-1 Removing 
+ Container proj3-b-thread-setup-1 Removed 
+ Container proj3-b-corpus-load-1 Removed 
+ Container proj3-b-db-1 Stopping 
+ Container proj3-b-db-1 Stopped 
+ Container proj3-b-db-1 Removing 
+ Container proj3-b-db-1 Removed 
+ Network proj3-b_default Removing 
+ Volume proj3-b_pgdata Removing 
+ Volume proj3-b_pgdata Removed 
+ Network proj3-b_default Removed 

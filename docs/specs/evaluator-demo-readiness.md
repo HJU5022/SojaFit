@@ -20,7 +20,7 @@
 | 오매칭 | 기록과 한 글자라도 다른 질문·회로·대상·조건은 다른 고정 답으로 처리하지 않고 거절 | `backend/services/demo.py` `match` |
 | CI | 대화 DB 시험이 DB 미설정으로 건너뛰지 않음 | `.github/workflows/ci.yml:30` `TEST_THREAD_DATABASE_URL` |
 
-Out of Scope: 기록하지 않은 질문의 답, 데모 성공률을 실제 모델 품질로 집계하는 일, 견적 저장, 전체 코퍼스 재배포, 실제 주문.
+Out of Scope: 기록하지 않은 질문의 답, 데모 성공률을 실제 모델 품질로 집계하는 일, 전체 코퍼스 재배포, 실제 주문.
 
 ## What
 
@@ -30,6 +30,7 @@ Out of Scope: 기록하지 않은 질문의 답, 데모 성공률을 실제 모�
 2. 데모 회로로 프로젝트를 만들고 기록 질문이 있는 부품을 고른다. 화면이 `GET /api/demo-questions`로 질문 버튼을 보인다.
 3. 버튼이 기록한 질문·사용 조건을 새 대화의 첫 질문으로 보낸다. 조건 질문(`v3-01` · `demo-ask` · `demo-find` · `demo-notsuff`)에는 기록한 답으로 재개한다.
 4. 서비스가 실제와 같은 멀티 에이전트 그래프를 돌리고, LLM 호출만 기록에서 꺼낸다.
+5. 완료된 판정의 후보를 승인하고(201, 같은 승인은 409) 견적을 저장한다. 승인 · 견적은 재생이 아니라 서비스의 승인 API가 처리한다([scripts/demo/DEMO.md](../../scripts/demo/DEMO.md)).
 
 ### Edge Case
 

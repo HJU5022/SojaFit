@@ -21,7 +21,9 @@ def _server_env():
     env.update({"DATABASE_URL": DB, "AUTH_SECRET": "restart-test-secret-32-bytes-minimum", "AUTH_ORIGIN": BASE,
                 "DEMO_MODE": "1", "DEMO_REPLAY": "0", "THREADS_ENABLED": "1", "GOOGLE_AUTH_ENABLED": "0",
                 "PYTHONPATH": ".", "LANGFUSE_PUBLIC_KEY": "", "LANGFUSE_SECRET_KEY": "",
-                "SOJAFIT_HTTP_RESTART_CHILD": "1"})
+                "SOJAFIT_HTTP_RESTART_CHILD": "1",
+                # 재시작 직후 재개가 분석 호출 최소 간격(기본 2초)에 걸려 429가 되지 않게 한다. 간격 제한 자체는 test_errors.py · test_threads.py가 본다
+                "ANALYSIS_MIN_INTERVAL_SECONDS": "0"})
     return env
 
 
