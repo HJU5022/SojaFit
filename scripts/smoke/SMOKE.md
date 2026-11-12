@@ -13,7 +13,7 @@
 | `SMOKE.md` | | | 이 문서 |
 | `http_smoke.py` | 운영 | `tests/api/test_http_smoke.py`가 오프라인 시험, `docs/GATES.md`·`EVAL_REPORT.md`가 배포 점검 증거로 인용 | 로그인 → 데모 회로 프로젝트 → 판정 질문(v3-01)·조건 재개 → 승인(두 번째는 409) → 견적 → 다른 계정은 프로젝트·run·견적·승인·승인 사례를 404로만 봄을 HTTP로 한 번 돌려, 요청마다 상태·`error.code`·`X-Request-ID`·ms와 SSE 이벤트 순서, `/openapi.json` 경로·연산 수, 이 작업 트리 커밋을 `scripts/results/smoke/smoke_<호스트>_<KST 날짜>_<시각>.json`에 남긴다. 질문 글은 `scripts/demo/record_demo.py`의 `QUESTIONS`를 읽는다 |
 | `injection_http.py` | 재현용 | 결과 7개가 `scripts/results/smoke/`에 있고 `tests/api/test_injection_http.py`가 오프라인 시험 | 인젝션 시험 T4(질문 역할 변경)·T6(이전 대화 지시 지속)·T7(넷리스트 footprint)을 정상/공격 짝으로 배포 HTTP에 한 번씩 보내 PR #85의 자동 기준으로 판정한다. 결과는 `scripts/results/smoke/injection_http_<호스트>_<KST 날짜>_<시각>.json`(판정·걸린 시간·run 상태만, 답 글·질문 글 없음). 입력 글은 `data/corpus/injection_tests/baseline_cases.json`을 읽는다 |
-| `verify_external_schematics.py` | 일회성 | 호출처는 `docs/specs/complete-schematic-delivery-plan.md`·이 문서뿐이고 시험·결과 파일이 없음. Exa·인증 키가 있거나 `--force-kicad-fallback`이 필요 | 인증된 완성 회로도 HTTP 경계와 모든 PNG 시트를 외부 공개 저장소에서 점검하는 백엔드 smoke. 이미지는 메모리에서만 검사하고 key·signed token·외부 응답 본문은 출력하지 않는다. 옵션 `--query`, `--check-cache`, `--force-kicad-fallback`(Exa와 인증 키 없이 고정 commit을 직접 렌더링) |
+| `verify_external_schematics.py` | 일회성 | 호출처는 이 문서와 `scripts/SCRIPTS.md`뿐이고 시험·결과 파일이 없음. Exa·인증 키가 있거나 `--force-kicad-fallback`이 필요 | 인증된 완성 회로도 HTTP 경계와 모든 PNG 시트를 외부 공개 저장소에서 점검하는 백엔드 smoke. 이미지는 메모리에서만 검사하고 key·signed token·외부 응답 본문은 출력하지 않는다. 옵션 `--query`, `--check-cache`, `--force-kicad-fallback`(Exa와 인증 키 없이 고정 commit을 직접 렌더링) |
 
 결과 파일 목록: [SCRIPTS.md](../SCRIPTS.md)의 "`results/smoke/` 파일".
 

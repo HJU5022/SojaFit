@@ -283,7 +283,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 ### MCP 도구 선택 프롬프트
 
-- [도구 선택·결과 해석 작업서](docs/specs/mcp-tool-prompt.md)의 PR #36 계약으로 Langfuse `sojafit/tool-use` chat prompt(등록 번호 1)를 만들었습니다. 읽는 코드가 없어 로컬 원본 `backend/prompts/tool_use.md`는 없고, 그래프에 연결하지 않습니다.
+- [PROMPTS.md 변경표](backend/prompts/PROMPTS.md)의 PR #36 계약(도구 5종, 현재 도구는 6종이며 계약은 [mcp-search-tools.md](docs/specs/mcp-search-tools.md))으로 Langfuse `sojafit/tool-use` chat prompt(등록 번호 1)를 만들었습니다. 읽는 코드가 없어 로컬 원본 `backend/prompts/tool_use.md`는 없고, 그래프에 연결하지 않습니다.
 - 모의 입력으로 도구 이름·인자·결과 해석을 개발 확인하며 도구 실행 성공, 웹/PDF 내용 검증, 동결 평가 점수로 보고하지 않습니다.
 
 ### Skill 비교용 순차 실행기

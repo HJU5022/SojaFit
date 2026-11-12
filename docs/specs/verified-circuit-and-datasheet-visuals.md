@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 정본(데모 회로 원본 회로도 카탈로그, 데이터시트·패키지 외형 링크 규칙)
-- 관련 문서: [verified-circuit-and-datasheet-visuals-plan.md](verified-circuit-and-datasheet-visuals-plan.md)(구현 계획, 실행 완료), [circuit-context-diagram.md](circuit-context-diagram.md), [official-datasheet-evidence.md](official-datasheet-evidence.md), [data/circuits/CIRCUITS.md](../../data/circuits/CIRCUITS.md)
+- 관련 문서: [circuit-context-diagram.md](circuit-context-diagram.md), [official-datasheet-evidence.md](official-datasheet-evidence.md), [data/circuits/CIRCUITS.md](../../data/circuits/CIRCUITS.md)
 
 ## Why
 

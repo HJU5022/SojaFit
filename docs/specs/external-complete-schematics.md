@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 정본(공개 프로젝트 완성 회로도 API). 경로·오류 코드의 제품 수준 목록은 [SPEC.md](../../SPEC.md)
-- 관련 문서: [complete-schematic-delivery-design.md](complete-schematic-delivery-design.md)(승인 설계 원문, 이 문서에 합침), [complete-schematic-delivery-plan.md](complete-schematic-delivery-plan.md)(구현 계획, 실행 완료), [backend/projects/PROJECTS.md](../../backend/projects/PROJECTS.md)
+- 관련 문서: [backend/projects/PROJECTS.md](../../backend/projects/PROJECTS.md)
 
 ## Why
 

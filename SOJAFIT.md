@@ -778,10 +778,8 @@ SojaFit (proj3-b)
     │   ├── google-admin-login.md <- Google 관리자 로그인 설계·구현 상태와 남은 운영 검증
     │   ├── google-user-login.md <- 일반 Google 가입·본인 확인 연결·관리자 승인 유지 작업서
     │   ├── user-thread-memory.md <- 사용자별 분석 thread·DB 체크포인트·승인 기록·사용자 사실 기억 설계, 보관 기간 결정과 수용 기준
-    │   ├── login-completion-plan.md  <- 암호 처리·개인정보·인증 DB 적재의 마무리 작업 목록
     │   ├── rag-pipeline.md <- 데이터시트 수집부터 하이브리드 검색까지
     │   ├── api-error-contract.md <- FastAPI 공통 오류 응답과 서버 생성 요청 식별자
-    │   ├── mcp-tool-prompt.md  <- MCP 도구 선택·결과 해석 프롬프트
     │   ├── official-datasheet-evidence.md <- 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약
     │   ├── mcp-search-tools.md  <- MCP 도구 API·입출력·수용 기준
     │   ├── mcp-graph-integration.md  <- search_corpus와 LangGraph 검색 주입 계약
@@ -793,11 +791,7 @@ SojaFit (proj3-b)
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 원본 회로도·공식 데이터시트 근거 기능 계약
     │   ├── frontend-screen-redesign.md <- 랜딩·로그인·대화 중심 작업대 적용 계약
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
-    │   ├── workbench-information-architecture.md  <- D5 계약을 유지하는 4영역 작업대 정보 구조
-    │   ├── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
-    │   ├── verified-circuit-and-datasheet-visuals-plan.md <- 검증 회로도·데이터시트 시각화 실행 계획(승인된 원문)
-    │   ├── complete-schematic-delivery-plan.md <- 외부 완성 회로도 전달 계획(승인된 원문)
-    │   └── complete-schematic-delivery-design.md <- 외부 완성 회로도 전달 설계(승인된 원문)
+    │   └── external-complete-schematics.md <- 외부 완성 회로도 제공 계약
     ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약
     │   ├── EXPERIMENTS.md  <- 폴더 설명
     │   ├── speed-p95-levers-2026-11-11.md <- 검색 지연 p95 개선 비교 계획

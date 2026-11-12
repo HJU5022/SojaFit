@@ -4,7 +4,7 @@
 - 기준일: 2026-11-12
 - 기준 커밋: 6707002
 - 정본 여부: 비정본(정본: [SPEC.md](../../SPEC.md) 2절 목표 사용자 흐름, 4절 계약). 화면 구성·경로·화면별 동작의 상세
-- 관련 문서: [d5-frontend-service.md](d5-frontend-service.md)(기능 계약), [project-conversation-navigation.md](project-conversation-navigation.md)(프로젝트·대화 탐색), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md), [google-user-login.md](google-user-login.md), [workbench-information-architecture.md](workbench-information-architecture.md)(폐기, 이 문서로 합침), [frontend/src/SRC.md](../../frontend/src/SRC.md)
+- 관련 문서: [d5-frontend-service.md](d5-frontend-service.md)(기능 계약), [project-conversation-navigation.md](project-conversation-navigation.md)(프로젝트·대화 탐색), [circuit-context-diagram.md](circuit-context-diagram.md), [login-auth.md](login-auth.md), [google-user-login.md](google-user-login.md), [frontend/src/SRC.md](../../frontend/src/SRC.md)
 
 ## Why
 
