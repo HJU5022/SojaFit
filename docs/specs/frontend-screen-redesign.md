@@ -117,7 +117,7 @@
 ## 한계
 
 - AC와 테스트의 대응은 파일 단위로만 맞췄다. 줄 단위 일치와 현재 통과 여부(프론트 단위·e2e)는 이 문서 작성 중 실행하지 않았다(미측정).
-- 랜딩 실측 3칸 값과 원시 파일의 대조는 `service_r1_bits_2026-11-04.json`의 `r1.test.page_recall@5`·`all_evidence@5`·`latency.retrieve.p50`에서 확인했다. "38문항" 표기는 이 파일에서 직접 세지 않았다(`r1.rows`는 84행, `v2.rows`는 19행이며 합 103은 `latency.retrieve.n`과 같다).
+- 랜딩 실측 3칸 값은 `service_r1_bits_2026-11-04.json`의 `r1.test.page_recall@5`·`all_evidence@5`·`latency.retrieve.p50`과 일치한다. "38문항" 표기는 이 파일에서 직접 세지 않았다(`r1.rows`는 84행, `v2.rows`는 19행이며 합 103은 `latency.retrieve.n`과 같다).
 - 개인정보처리방침의 운영자·연락처·법적 근거·국외 이전 상세·시행일은 미확정 항목으로 표시되어 있고 최종 고지가 아니다(`frontend/src/pages/PrivacyPage.tsx`).
 - 질문창 파일 첨부는 개발 빌드에만 있어 운영 기능이 아니다.
 - 저장 대화는 읽기 전용이며 추가 질문은 새 대화에서 시작한다. 상단 단계 표시의 현재/완료는 같은 색이다.
