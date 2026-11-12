@@ -130,7 +130,8 @@ def test_verified_row_drives_answer_and_survives_run_reload(transport):
     with exa.request_scope():
         report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
                             chat=chat, web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
-        assert not exa.search_evidence(['SS34'], 'reverse voltage', transport=mock)
+        with pytest.raises(exa.SearchBudgetExhausted):
+            exa.search_evidence(['SS34'], 'reverse voltage', transport=mock)
     assert calls == ['POST', 'GET'] and report['evidence_ids'] == ['W1']
     assert 'content' not in report['docs'][0]
     assert report['answer'] == 'SS34의 Peak reverse voltage 값은 40 V입니다 [W1].'
@@ -204,6 +205,57 @@ def test_grade2_then_grade3_are_separate_request_scope_slots(monkeypatch):
         assert exa.search_evidence(['SS34'], 'reverse voltage', grade=2, transport=transport) == []
         assert exa.search_grade3_reference(['SS34'], 'reverse voltage', transport=transport) == []
     assert calls == ['POST', 'POST']
+
+
+def test_grade2_slot_is_single_use_and_contention_is_typed(monkeypatch):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'unit-test')
+    calls = []
+
+    def handler(req):
+        calls.append(req.method)
+        return httpx.Response(200, json={'results': []})
+
+    with exa.request_scope():
+        transport = httpx.MockTransport(handler)
+        assert exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=transport) == []
+        with pytest.raises(exa.SearchBudgetExhausted) as error:
+            exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=transport)
+        assert error.value.grade == 2
+    assert calls == ['POST']
+
+
+def test_grade3_slot_is_single_use(monkeypatch):
+    monkeypatch.setenv('DEMO_MODE', '0')
+    monkeypatch.setenv('EXA_WEB_SEARCH_ENABLED', '1')
+    monkeypatch.setenv('EXA_API_KEY', 'unit-test')
+    transport = httpx.MockTransport(lambda req: httpx.Response(200, json={'results': []}))
+    with exa.request_scope():
+        assert exa.search_grade3_reference(['SS34'], 'reverse voltage', transport=transport) == []
+        with pytest.raises(exa.SearchBudgetExhausted) as error:
+            exa.search_grade3_reference(['SS34'], 'reverse voltage', transport=transport)
+        assert error.value.grade == 3
+
+
+def test_docs_does_not_spend_grade3_when_grade2_slot_is_busy():
+    task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+            'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+    fallback_calls = []
+
+    def busy(*_args):
+        raise exa.SearchBudgetExhausted(2)
+
+    def fallback(*_args):
+        fallback_calls.append(True)
+        return []
+
+    report = docs_agent(
+        {'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+        chat=lambda *a: pytest.fail('budget exhaustion must not call the LLM'),
+        web_search=busy, web_search_fallback=fallback)['reports'][0]
+    assert fallback_calls == []
+    assert report['reason'] == 'limit_reached'
 
 
 @pytest.mark.parametrize('failure', ['429', 'timeout'])
@@ -387,7 +439,8 @@ def test_unreadable_pdf_never_substitutes_search_summary(transport, pdf_status):
         return httpx.Response(pdf_status, content=b'not a PDF', headers={'Location': 'https://example.org'})
     with exa.request_scope():
         assert not exa.search_evidence(['SS34'], 'reverse voltage', transport=httpx.MockTransport(handle))
-        assert not exa.search_evidence(['SS34'], 'reverse voltage', transport=httpx.MockTransport(handle))
+        with pytest.raises(exa.SearchBudgetExhausted):
+            exa.search_evidence(['SS34'], 'reverse voltage', transport=httpx.MockTransport(handle))
     assert visited == ['https://api.exa.ai/search', URL]
 
 

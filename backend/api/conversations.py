@@ -121,7 +121,7 @@ class Run(BaseModel):
     id: str
     thread_id: str
     message_id: int | None  # 완료 · 거절 결과의 assistant 메시지. 승인(POST /api/messages/{id}/approvals)에 쓴다
-    result: BrowserResult  # SSE 마지막 이벤트와 같은 공개 결과(profile_hints는 저장하지 않아 빈 목록)
+    result: BrowserResult  # 저장·재조회 가능한 공개 결과는 SSE와 동일하다. profile_hints와 judgement.input_conditions는 요청/표시용 SSE 전용 칸이라 저장하지 않아 GET에서 비어 있거나 생략될 수 있다
 
 
 # [왜] run · 재개는 SSE라 response_model로 적을 수 없다. /docs에는 이벤트 이름과 data 모양을 설명으로 적는다(SPEC 4절과 같은 내용)
@@ -131,7 +131,8 @@ SSE_RESPONSE = {200: {'description': (
     '`requires_input` (stage=판정, interrupt `{missing, role_choices, question}`, 수정 가능한 재개 오류면 선택 error `{code, message}`) · '
     '`completed` · `refused` (stage=완료, answer · evidence · judgement · refusal · profile_hints) · '
     '`failed` (stage=오류, 공개 결과에 `error: {code, message}`, code는 공통 오류 표). '
-    '공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
+    '저장 가능한 공개 결과 칸은 GET /api/runs/{run_id}의 result와 같다(BrowserResult). '
+    '`profile_hints`와 `judgement.input_conditions`는 각각 사용자 설정 참고와 판정 입력 표시를 위한 SSE 전용 칸이라 저장·재조회에 포함되지 않을 수 있다. '
     '실패 상태를 저장하지 못하면 마지막 frame 없이 끝난다.'),
     'content': {'text/event-stream': {'schema': {'type': 'string'}}}}}
 

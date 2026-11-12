@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from backend.multi_agent.agents import docs as D
+from backend.multi_agent.revisions import revision_matches, revisions_for_part
 
 
 @pytest.fixture(autouse=True)
@@ -208,6 +209,34 @@ def test_exact_part_guard_rejects_siblings_but_keeps_the_named_member():
     assert D.requested_parts('D1 후보로 TSC 1N5408X를 받았어. 이 정확한 품번의 정격') == {'1N5408X'}
     assert D.keep_docs(cards, ['1N5408X'], '정확한 품번', {'1N5408X'}) == []
     assert D.keep_docs(cards, ['SS14J'], 'TSC SS14J 정격', {'SS14J'}) == [cards[1]]
+
+
+def test_keep_docs_applies_part_specific_revision_mapping_before_llm():
+    question = 'SS34는 F16 판본, SS34H는 F20 판본 비교'
+    cards = [
+        {'chunk_id': 101, 'file': 'SS34_F16.pdf', 'content': 'SS34 VF 0.5 V',
+         'doc_parts': ['SS34'], 'table': 'ratings'},
+        {'chunk_id': 102, 'file': 'SS34_F20.pdf', 'content': 'SS34 VF 0.6 V',
+         'doc_parts': ['SS34'], 'table': 'ratings'},
+        {'chunk_id': 103, 'file': 'SS34H_F16.pdf', 'content': 'SS34H VF 0.7 V',
+         'doc_parts': ['SS34H'], 'table': 'ratings'},
+        {'chunk_id': 104, 'file': 'SS34H_F20.pdf', 'content': 'SS34H VF 0.8 V',
+         'doc_parts': ['SS34H'], 'table': 'ratings'},
+    ]
+    kept = D.keep_docs(cards, ['SS34', 'SS34H'], question, {'SS34', 'SS34H'})
+    assert [card['chunk_id'] for card in kept] == [101, 104]
+
+
+def test_keep_docs_keeps_legacy_single_edition_locator_without_doc_parts():
+    question = 'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 알려 주세요.'
+    cards = [
+        {'chunk_id': 201, 'file': 'S1A SERIES_S2202.pdf', 'content': 'S1J VRRM 600 V',
+         'table': 'ratings'},
+        {'chunk_id': 202, 'file': 'S1A SERIES_S2102.pdf', 'content': 'S1J VRRM 600 V',
+         'table': 'ratings'},
+    ]
+    kept = D.keep_docs(cards, ['S1J'], question, {'S1J'})
+    assert [card['chunk_id'] for card in kept] == [201]
 
 
 @pytest.mark.parametrize('with_history', [False, True])
@@ -601,6 +630,68 @@ def test_split_task_keeps_only_the_revision_named_in_the_original_question():
     report = D.docs_agent(payload, retriever=lambda *a, **k: cards, chat=chat)['reports'][0]
     assert report['evidence_ids'] == ['2']
     assert all('[1]' not in prompt for prompt in seen)
+
+
+def test_part_specific_editions_do_not_cross_allow_documents():
+    question = 'SS34는 F16 판본, SS34H는 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') == {'F16'}
+    assert revisions_for_part(question, 'SS34H') == {'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34', 'SS34H'])
+    assert revision_matches(question, 'SS34H_F20.pdf', ['SS34H'], ['SS34', 'SS34H'])
+    assert not revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34', 'SS34H'])
+    assert not revision_matches(question, 'SS34H_F16.pdf', ['SS34H'], ['SS34', 'SS34H'])
+
+
+@pytest.mark.parametrize(
+    ('question', 'part_a', 'edition_a', 'part_b', 'edition_b'),
+    [
+        ('1N4148은 F16 판본, 1N4001은 F20 판본 비교', '1N4148', 'F16', '1N4001', 'F20'),
+        ('BAT54-02LRH는 F16 판본, BAS16은 F20 판본 비교', 'BAT54-02LRH', 'F16', 'BAS16', 'F20'),
+    ],
+)
+def test_common_part_number_shapes_keep_their_edition_association(
+    question, part_a, edition_a, part_b, edition_b,
+):
+    assert revisions_for_part(question, part_a) == {edition_a}
+    assert revisions_for_part(question, part_b) == {edition_b}
+    assert revision_matches(question, f'{part_a}_{edition_a}.pdf', [part_a], [part_a, part_b])
+    assert revision_matches(question, f'{part_b}_{edition_b}.pdf', [part_b], [part_a, part_b])
+    assert not revision_matches(question, f'{part_a}_{edition_b}.pdf', [part_a], [part_a, part_b])
+    assert not revision_matches(question, f'{part_b}_{edition_a}.pdf', [part_b], [part_a, part_b])
+
+
+def test_ambiguous_multi_edition_association_fails_closed():
+    question = 'SS34와 SS34H 중 어떤 부품인지 모르는 F16 판본 또는 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') is None
+    assert revisions_for_part(question, 'SS34H') is None
+    assert not revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34', 'SS34H'])
+
+
+def test_revision_helper_preserves_single_part_and_global_behavior():
+    assert revision_matches('SS34 F16 판본', 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert not revision_matches('SS34 F16 판본', 'SS34_F20.pdf', ['SS34'], ['SS34'])
+    assert revision_matches('F16 판본의 SS34', 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches('SS34 데이터시트', 'SS34_F20.pdf', ['SS34'], ['SS34'])
+
+
+def test_single_requested_edition_accepts_legacy_locator_without_part_metadata():
+    question = 'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 알려 주세요.'
+    assert revision_matches(question, 'S1A SERIES_S2202.pdf')
+    assert not revision_matches(question, 'S1A SERIES_S2102.pdf')
+
+
+def test_single_part_multi_edition_comparison_remains_supported():
+    question = 'SS34의 F16 판본과 F20 판본을 비교해 줘'
+    assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34'])
+
+
+def test_single_part_multi_edition_separate_clauses_remain_supported():
+    question = 'SS34 F16 판본, SS34 F20 판본 비교'
+    assert revisions_for_part(question, 'SS34') == {'F16', 'F20'}
+    assert revision_matches(question, 'SS34_F16.pdf', ['SS34'], ['SS34'])
+    assert revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34'])
 
 
 @pytest.mark.parametrize('asked,allowed', [('1N4007G',{28}),('1N4007GH',{28,30}),('1N4002G',{28})])

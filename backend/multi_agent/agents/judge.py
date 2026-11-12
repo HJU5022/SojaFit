@@ -25,11 +25,12 @@ from backend.judge import verdict as V
 from backend.multi_agent.contracts import AgentReport, Reason, TaskReport
 from backend.multi_agent.agents.part_names import MAKER, ground_part_names
 from backend.multi_agent.facts import ORDER_CODE
-from backend.multi_agent.revisions import document_revision, requested_revisions
+from backend.multi_agent.revisions import document_revision, requested_revisions, revisions_for_part
 from backend.rag.spec_lookup import CODES as SPEC_CODES
 from backend.rag.spec_lookup import THT_PACKAGES
 from backend.rag.units import to_si
 from backend.services.datasheet_rows import grade2_pdf
+from backend.services.exa import SearchBudgetExhausted
 
 PROMPT = (Path(__file__).resolve().parents[2] / 'prompts' / 'judge_read.md').read_text(encoding='utf-8')
 LEAK = re.compile(r"[{}]|['\"]\s*:|\]\(|['\"]\s*,\s*['\"]")  # 구조화 출력의 JSON 조각('…','condition':) · 마크다운 조각('…](condition)')이 칸 값으로 새어 든 모양
@@ -391,6 +392,10 @@ def _grade2_rows(web_search, part: str, codes: set[str], maker: str = '') -> lis
     try:
         terms = f'{maker} repetitive peak reverse voltage VRRM'.strip()
         documents = web_search([part], terms) or []
+    except SearchBudgetExhausted:
+        # Contention is a request-level budget boundary, not an empty result.
+        # Let the caller suppress grade-3 fallback while preserving local rows.
+        raise
     except Exception:  # 외부 검색 장애는 내부 판정을 중단시키지 않는다
         return []
     rows = []
@@ -718,8 +723,11 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     """그래프 노드: 코퍼스 밖 요구면 거절 사유로 보고하고, 아니면 빠진 값을 한 번 묻고 사양 표 값으로 후보를 판정한다(찾기면 거르고 판정하고 줄 세운다)."""
     rules = C.load()
     read = JudgeRead.model_validate(state['judge_read'])
-    editions = requested_revisions(' '.join([state.get('conditions', ''), state.get('question', '')]))
+    revision_text = ' '.join([state.get('conditions', ''), state.get('question', '')])
+    editions = requested_revisions(revision_text)
     references = []
+    grade2_budget_exhausted = False
+    grade3_budget_exhausted = False
     # [왜] 코퍼스 밖 요구(사양 표에 없는 성질 · TSC 아닌 제조사 · 확인 안 된 개정판)는 규칙 · 조건을 만들기 전에 거절한다.
     #      묻거나 판정하면 그 요구와 상관없는 판정 답이 나간다(11-06 동결 평가: 비관련 35건 중 8~10건)
     if refused := outside_corpus(read, state.get('facts') or {}, ' '.join([state.get('conditions', ''), state.get('question', '')])):
@@ -822,8 +830,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
         if prefetch and read.original_part and not original_not_tsc(read.original_part, text):
             prefetch([_part(read.original_part), _part(read.original_part).split(' ')[0]], need)
         original_rows = [] if original_not_tsc(read.original_part, text) else _rows(specs, read.original_part)  # 후보 조회와 같은 규칙(제조사 이름 · 주문 코드)
+        original_editions = revisions_for_part(revision_text, _part(read.original_part)) if editions else set()
         if editions:
-            original_rows = [row for row in original_rows if _row_revision(row) in editions]
+            original_rows = [row for row in original_rows if _row_revision(row) in (original_editions or set())]
         if state.get('question_type') == 'candidate_find' and not original_rows and extra:
             # [왜] 원래 부품 문서가 아예 없는데(제조사 미상 1N5231) 사용자가 구매 규격을 숫자로 줬으면, 원래 값과 비교하는 역할 조건은
             #      모든 후보를 '확인 안 됨'으로 만들 뿐이다. 그 조건은 빼고 구매 규격과 회로 값 조건으로 찾는다(11-06 h3-13)
@@ -885,9 +894,12 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             # 후보들을 문서별로 묶어 한 번에 읽어 둔다(후보마다 차례로 읽으면 LLM 호출이 후보 수만큼 이어진다)
             prefetch([n for c in candidates for n in (_part(c[0]), _part(c[0]).split(' ')[0])], need)
         for name, category, packages in candidates:
+            part_editions = revisions_for_part(revision_text, _part(name)) if editions else set()
+            if editions and not part_editions:
+                continue  # An ambiguous part/edition association must not borrow another part's edition.
             rows = _rows(specs, name)
             if editions:
-                rows = [row for row in rows if _row_revision(row) in editions]
+                rows = [row for row in rows if _row_revision(row) in part_editions]
                 packages = None  # 패키지도 지정 판본에서 다시 읽는다.
             existing = {row.get('code') for row in rows}
             missing_codes = set(need) - existing
@@ -897,21 +909,31 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
                 tsc_candidate = bool(rows) or state.get('question_type') == 'candidate_find'
                 maker = read.maker_wanted or ('TSC' if tsc_candidate else '')
                 if not tsc_candidate or maker.upper() in ('TSC', 'TAIWAN SEMICONDUCTOR'):
-                    grade2_rows = _grade2_rows(web_search, _part(name), missing_codes, maker)
+                    try:
+                        grade2_rows = _grade2_rows(web_search, _part(name), missing_codes, maker)
+                    except SearchBudgetExhausted as error:
+                        grade2_budget_exhausted = error.grade == 2
+                        grade2_rows = []
                     if editions:
                         grade2_rows = [row for row in grade2_rows
-                                       if _row_revision(row) in editions]
+                                       if _row_revision(row) in part_editions]
                     rows = [*rows, *grade2_rows]
-            if (web_search_fallback and web_search and 'VRRM' in {str(code).upper() for code in missing_codes}
+            if (web_search_fallback and web_search and not grade2_budget_exhausted
+                    and 'VRRM' in {str(code).upper() for code in missing_codes}
                     and not grade2_rows):
                 reference_terms = f"{read.maker_wanted or 'TSC'} {_part(name)} repetitive peak reverse voltage VRRM"
-                reference_terms += ' ' + ' '.join(sorted(editions))
-                for ref in web_search_fallback([_part(name)], reference_terms) or []:
+                reference_terms += ' ' + ' '.join(sorted(part_editions))
+                try:
+                    fallback_rows = web_search_fallback([_part(name)], reference_terms) or []
+                except SearchBudgetExhausted as error:
+                    grade3_budget_exhausted = error.grade == 3
+                    fallback_rows = []
+                for ref in fallback_rows:
                     filename = str(ref.get('file') or '')
                     if ref.get('source_type') != 'external_web_reference' or not ref.get('source_url'):
                         continue
                     if editions and not any(re.search(r'(?<![A-Z0-9])' + code + r'(?![A-Z0-9])',
-                                                      (filename + ' ' + ref['source_url']).upper()) for code in editions):
+                                                      (filename + ' ' + ref['source_url']).upper()) for code in part_editions):
                         continue
                     references.append({k: ref[k] for k in
                                        ('source_url', 'file', 'doc_parts', 'retrieved_at') if k in ref})
@@ -920,7 +942,8 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
             packages = packages if packages is not None else [x['text'] for x in rows if x['code'] == 'PACKAGE' and x.get('text')]
             category = category or next((x['category'] for x in rows if x.get('category')), '')  # 판정 질문은 행의 분류로
             same, same_cite = _identical(retriever, read.original_part, name)
-            if editions and same_cite and document_revision(same_cite.get('document')) not in editions:
+            if editions and same_cite and (document_revision(same_cite.get('document')) not in part_editions
+                                           or document_revision(same_cite.get('document')) not in (original_editions or set())):
                 same, same_cite = False, None
             judged = [_schottky_exempt(V.judge_part(rules[r], r, name, values, conds, rows,
                                                     original_rows=original_rows or None, identical=same, identical_citation=same_cite,
@@ -945,8 +968,9 @@ def judge_agent(state: dict, *, specs, find, retriever, web_search=None, web_sea
     missing = sorted({m for j in results for m in j.missing})
     status = 'ok' if results else 'partial'
     summary = f'{len(results)} candidates judged' + (f', {len(shown)} shown' if judgement['kind'] == 'find' else '')
+    report_reason = Reason.LIMIT_REACHED if grade2_budget_exhausted or grade3_budget_exhausted else None
     return {'judgement': judgement, 'references': references, 'path': ['판정'],
-            'reports': (state.get('reports') or []) + [_report(status, summary, missing)]}
+            'reports': (state.get('reports') or []) + [_report(status, summary, missing, reason=report_reason)]}
 
 
 def judge_task_node(state: dict, *, specs, find, retriever, web_search=None, web_search_fallback=None) -> dict:

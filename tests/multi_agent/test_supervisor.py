@@ -382,3 +382,19 @@ def test_partial_doc_and_verified_candidate_table_join_without_rewriting():
     assert collected['outcome'] == 'single'
     joined = S.single_node({**state, **collected})
     assert '30 ms입니다 [7]' in joined['answer'] and joined['synth_text'] == ''
+
+@pytest.mark.parametrize(('files', 'blocked'), [
+    (('SS34_F16.pdf', 'SS34H_F20.pdf'), False),
+    (('SS34_F20.pdf', 'SS34H_F16.pdf'), True),
+    (('SS34_F16.pdf', 'SS34H_F16.pdf'), True),
+])
+def test_final_check_keeps_each_part_bound_to_its_requested_edition(files, blocked):
+    question = 'SS34는 F16 판본, SS34H는 F20 판본으로 비교해 줘.'
+    docs = [dict(chunk_id=7, file=files[0], doc_parts=['SS34'], page=1, content='SS34 40 V'),
+            dict(chunk_id=8, file=files[1], doc_parts=['SS34H'], page=1, content='SS34H 40 V')]
+    answer = 'SS34는 40 V입니다 [7]. SS34H는 40 V입니다 [8].'
+    state = {**STATE, 'question':question, 'conditions':'', 'reports':[report(1, answer=answer, docs=docs)],
+             'docs':docs, 'passed':[7,8], 'answer':answer}
+    result = S.check_node(state)
+    assert (result.get('refusal_reason') == 'verify_failed') is blocked
+    assert bool(result['check'].get('revision_mismatch')) is blocked

@@ -25,7 +25,7 @@ from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
-from backend.multi_agent.revisions import document_revision, requested_revisions
+from backend.multi_agent.revisions import document_revision, requested_revisions, revision_matches
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -337,7 +337,9 @@ def check_node(state: dict) -> dict:
         # supervisor merge boundary after individual task filtering.
         cited_docs = [d for d in state.get('docs') or [] if str(d.get('chunk_id')) in cited]
         mismatched = [d for d in cited_docs
-                      if _document_revision(d.get('file') or d.get('document')) not in requested_revisions]
+                      if not revision_matches(' '.join((state.get('question', ''), state.get('conditions', ''))),
+                                              d.get('file') or d.get('document'),
+                                              d.get('doc_parts') or d.get('parts'))]
         if mismatched:
             check['revision_mismatch'] = [d.get('file') or d.get('document') for d in mismatched]
             problem = True

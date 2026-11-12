@@ -23,10 +23,10 @@ from pydantic import BaseModel, Field
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
-from backend.services.exa import OTHER_MANUFACTURER
+from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted
 from backend.graph.nodes import NOT_FOUND, REVISION, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
-from backend.multi_agent.revisions import document_revision, requested_revisions
+from backend.multi_agent.revisions import document_revision, requested_revisions, revision_matches, revisions_for_part
 from backend.rag.units import to_si
 from backend.rag.card_read import read_code_values
 from backend.rag.card_find import doc_packages, load_cards
@@ -109,7 +109,7 @@ def keep_docs(docs: list[dict], parts: list[str], question: str, exact_parts: se
     revisions = requested_revisions(question)
     return [d for d in docs if _mentions_exact_part(d, exact_parts or set())
             and not other_part_row(d, parts)
-            and not (revisions and document_revision(d.get('file')) not in revisions)]
+            and revision_matches(question, d.get('file'), d.get('doc_parts') or d.get('parts'), parts)]
 
 
 VARIANT = re.compile(r'C(A?H?)$|(?<=\d)H$', re.I)  # 양방향(…C · …CA · …CAH) · AEC-Q101(…H) 품번: 값 표에는 기본 품번으로만 적힌다
@@ -443,6 +443,8 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
     revision_text = ' '.join((question, payload.get('conditions', '')))
     query, searches, shown, result, calls, relax = task.query.strip(), [], [], None, 0, False
     references = []
+    grade2_budget_exhausted = False
+    grade3_budget_exhausted = False
     filter_parts, looked_up = list(task.parts), ''
     web_parts = list(filter_parts)
     # 발주 품번을 명시한 질문에서는 모델이 추정한 형제 품번으로 재검색해도 그 값을 인용하지 않는다.
@@ -595,9 +597,19 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
         for revision in revisions:
             if revision not in terms.upper().split():
                 terms += ' ' + revision
-        external = [d for d in (web_search(web_parts, terms) if web_search is not None else [])
+        try:
+            external_raw = web_search(web_parts, terms) if web_search is not None else []
+        except SearchBudgetExhausted as error:
+            # A concurrent official lookup is a request-budget boundary, not a
+            # genuine empty search.  In particular, do not spend grade 3 to
+            # compensate for another agent using the shared grade-2 slot.
+            grade2_budget_exhausted = error.grade == 2
+            searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
+                             'grade': error.grade, 'status': 'budget_exhausted'})
+            external_raw = []
+        external = [d for d in external_raw
                     if row_sentence(d) and d['doc_parts'][0].upper() in requested and
-                    (not revisions or document_revision(d.get('file')) in revisions)]
+                    revision_matches(revision_text, d.get('file'), d.get('doc_parts'), web_parts)]
         def reference_candidates(items):
             found = []
             for item in items:
@@ -605,9 +617,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 if not item.get('source_url') or not set(item.get('doc_parts') or ()) & requested:
                     continue
                 haystack = f'{title} {item["source_url"]}'.upper()
-                if revisions and not all(re.search(r'(?<![A-Z0-9])' + re.escape(revision) + r'(?![A-Z0-9])', haystack)
-                                         for revision in revisions):
-                    continue
+                if revisions:
+                    reference_parts = {str(p).upper() for p in item.get('doc_parts') or []} & requested
+                    allowed = [revisions_for_part(revision_text, p) for p in reference_parts]
+                    if not allowed or any(not editions or not any(
+                            re.search(r'(?<![A-Z0-9])' + re.escape(edition) + r'(?![A-Z0-9])', haystack)
+                            for edition in editions) for editions in allowed):
+                        continue
                 found.append(item)
             return found
         official_used = False
@@ -689,8 +705,15 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             official_used = bool(selected) and web_result.grade != 'none'
             if prior is None or (official_used and web_result.answer.strip()):
                 result, shown = web_result, combined
-        if not official_used and web_search_fallback is not None:
-            references_found = reference_candidates(web_search_fallback(web_parts, terms))
+        if not official_used and not grade2_budget_exhausted and web_search_fallback is not None:
+            try:
+                fallback_raw = web_search_fallback(web_parts, terms)
+            except SearchBudgetExhausted as error:
+                grade3_budget_exhausted = error.grade == 3
+                searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',
+                                 'grade': error.grade, 'status': 'budget_exhausted'})
+                fallback_raw = []
+            references_found = reference_candidates(fallback_raw)
             references.extend({k: d[k] for k in ('source_url', 'file', 'doc_parts', 'retrieved_at') if k in d}
                               for d in references_found)
     if first and (result.grade == 'none' or not result.answer.strip()):
@@ -702,8 +725,13 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
             result.missing = list(result.missing) + ['실장 전 극성·취급 확인사항']
     if not result or result.grade == 'none' or not answer or answer.startswith(NOT_FOUND):
         # [왜] 설계 v2: 못 찾았다고 거절을 정하지 않고 다시 찾을 사유로 보고한다(0건 no_result, 근거가 아님 all_rejected). 거절은 Supervisor가 정한다
-        why = Reason.NOT_FOUND if references else (Reason.ALL_REJECTED if shown else Reason.NO_RESULT)
-        return report('fail', f'no evidence for this task in the documents ({why.value})', reason=why,
+        if grade2_budget_exhausted or grade3_budget_exhausted:
+            why = Reason.LIMIT_REACHED
+            summary = 'external lookup budget exhausted; evidence lookup was not completed for this task'
+        else:
+            why = Reason.NOT_FOUND if references else (Reason.ALL_REJECTED if shown else Reason.NO_RESULT)
+            summary = f'no evidence for this task in the documents ({why.value})'
+        return report('fail', summary, reason=why,
                       missing=result.missing[:6] if result else [], docs=shown, references=references)
     # [왜] 인용 검사는 LLM의 자기 검사를 믿지 않고 코드로 다시 센다. 보여 준 적 없는 번호만 근거로 단 문장은 빼고, 진짜 번호도 단 문장은
     #      가짜 번호만 지운다. 가짜 번호 하나로 답 전체를 거절하던 것을 바꿨다(11-06 공식 5회차 v3-18 '[5816]')

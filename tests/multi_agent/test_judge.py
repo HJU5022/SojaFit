@@ -9,6 +9,7 @@ import pytest
 from backend.judge import conditions as C
 from backend.judge import verdict as V
 from backend.multi_agent.agents import judge as J
+from backend.services.exa import SearchBudgetExhausted
 
 STATE = {'question': 'D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?',
          'conditions': '입력 전압의 최댓값은 20V, D1의 최대 순방향 전류는 150mA이다. 주변 온도는 25°C이다.',
@@ -120,6 +121,12 @@ def test_grade2_official_pdf_row_is_converted_with_provenance():
     }
 
 
+def test_grade2_budget_boundary_is_not_swallowed_by_row_adapter():
+    with pytest.raises(SearchBudgetExhausted) as error:
+        J._grade2_rows(lambda *_args: (_ for _ in ()).throw(SearchBudgetExhausted(2)), 'SS14', {'VRRM'})
+    assert error.value.grade == 2
+
+
 def test_explicit_revision_is_extracted_and_row_revision_is_exact():
     """지정 판본은 접두어가 비슷한 다른 개정 코드와 섞이지 않아야 한다."""
     read = J.JudgeRead(role='R01', revision_wanted='S2202판')
@@ -127,6 +134,36 @@ def test_explicit_revision_is_extracted_and_row_revision_is_exact():
     assert J._row_revision({'citation': {'document': 'S1A SERIES_S2202.pdf'}}) == 'S2202'
     assert J._row_revision({'citation': {'document': 'S1A SERIES_S2102.pdf'}}) == 'S2102'
     assert J._row_revision({'citation': {'document': 'S1A SERIES.pdf'}}) == ''
+
+
+def test_judge_agent_keeps_part_specific_revision_rows_separate(monkeypatch):
+    """품번별 판본을 실제 판정 경로에서 교차 사용하지 않는다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {
+        'SS34': [r('SS34', 'VRRM', 30.0), r('SS34', 'IF_AV', 1.0, 'A'),
+                 r('SS34', 'PACKAGE', None, None, text='SMA')],
+        'SS34H': [r('SS34H', 'VRRM', 40.0), r('SS34H', 'IF_AV', 1.0, 'A'),
+                  r('SS34H', 'PACKAGE', None, None, text='SMA')],
+    }
+    table['SS34'][0]['citation']['document'] = 'SS34_F16.pdf'
+    table['SS34H'][0]['citation']['document'] = 'SS34H_F20.pdf'
+    read = dict(READ, original_part='SS34', candidates=['SS34', 'SS34H'])
+    state = {**STATE,
+             'question': 'SS34 F16 판본; SS34H F20 판본을 비교해줘',
+             'judge_read': read}
+    out = J.judge_agent(state, specs=specs_of(table), find=None, retriever=None)
+    results = {item['part']: item for item in out['judgement']['results']}
+    assert set(results) == {'SS34', 'SS34H'}
+    assert results['SS34']['checks'][0]['citation']['document'] == 'SS34_F16.pdf'
+    assert results['SS34H']['checks'][0]['citation']['document'] == 'SS34H_F20.pdf'
+
+    # 각 품번에 반대 판본 행만 남기면 해당 후보는 판정에서 제외된다.
+    crossed = {
+        'SS34': [dict(table['SS34'][0], citation={**table['SS34'][0]['citation'], 'document': 'SS34_F20.pdf'})],
+        'SS34H': [dict(table['SS34H'][0], citation={**table['SS34H'][0]['citation'], 'document': 'SS34H_F16.pdf'})],
+    }
+    rejected = J.judge_agent(state, specs=specs_of(crossed), find=None, retriever=None)
+    assert rejected['judgement']['results'] == []
 
 
 def test_grade3_references_are_reported_separately_from_judgement(monkeypatch):

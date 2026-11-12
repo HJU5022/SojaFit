@@ -99,3 +99,14 @@ Haiku5.5 고정, 코퍼스1360문서/51967청크. 단계별 최대250건(v3×5),
 - 통합 중 os/display_inputs 등 누락은 수정하고 관련173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
 - 판단: 내용상 최신 main 통합/무충돌 검사는 완료. 테스트 전체 통과 기준의 PR 준비 완료는 보류. 위 기존 main 오류의 처리/팀 판단이 남았다.
 - 자료는 PR-준비/OSC-final-verification.json, OSC-main-integrated.patch, OSC-final-included-files.txt, OSC-main-full-pytest.log, OSC-main-final-pytest.log, OSC-main-baseline-repo-layout.log에 보존했다. 패치 적용 가능은 실제 GitHub PR 생성/CI 성공/병합 승인과 구분한다.
+
+
+## PR103 계약 감사 수정 반영 — 2026-11-12
+
+- 품번별 판본 연결을 추가했다. SS34/F16·SS34H/F20의 교차 판본은 문서 입력/공식 행/후보 판정/최종 인용 검사에서 배제한다. 1N 계열·하이픈 품번, 단일 판본의 기존 locator와 단일 품번의 복수 판본 비교도 회귀 시험에 포함했다. 관계가 모호한 다품번·다판본 자료는 추정하지 않고 거부한다. 지원되는 명시적 절 연결을 검증한 것으로 모든 자연어 문장을 해석한다고 주장하지 않는다.
+- 공식/참고 검색 슬롯은 요청당 각각1회로 유지한다. 사용 중이거나 소진된 슬롯은 SearchBudgetExhausted로 실제 검색0건과 구분한다. 공식 슬롯 소진만으로3등급으로 이동하지 않는다. 실제0건/공급자 실패의 기존 폴백과 유효 내부 답변은 보존한다. 다른 에이전트의 검색 결과 공유·추가 호출 기능은 넣지 않았다.
+- MULTI_AGENT의 낡은 웹 거부 설명, 공식 검색 계약, API의 SSE/GET 공통 결과 설명을 갱신했다. profile_hints/input_conditions가 SSE 전용인 기존 동작과 DB 계약은 바꾸지 않았다.
+- 최종 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q`는 기존 main의 tests/api/test_openapi.py SNAPSHOT 미정의 수집오류1건이다. 해당 파일 제외 최종 전체 결과는 **1836 passed,158 skipped,9 failed**,71.92초. 남은9건의테스트ID는수정전과동일(인증사전검증2/단계타이밍2/저장소구조5). 기대치를 바꾸거나 이9건을비용실패로제외하지않았다.
+- 독립검토에서 판본필터가 문서·판정·최종인용 경계까지 연결되고 상한1+1이 유지됨을 확인했다. 초기focused1건실패는병렬작업중부모테스트와helper갱신시점이겹친실행으로보존했고,산출물고정후관련506pass1skip 및 마지막복수절호환추가후전체검증으로확인했다.
+- 가짜 검색·모델·사양과 실제 코드 경로를 이용한 회귀 검증이다. 이번 수정 후 실Exa/PDF/LLM 호출·포화/운영부하 실측은 하지 않았다. 통합 전 실측을 새 코드의 새 실측으로 바꾸지 않는다.
+- 근거: PR-준비/PR103-contract-focused.log, PR103-contract-final-targeted.log, PR103-contract-full.log, PR103-contract-full-excluding-known-main-error.log. 동결v3/정답/해시는유지했다.

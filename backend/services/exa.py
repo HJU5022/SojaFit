@@ -103,6 +103,27 @@ def _candidate_score(hit: dict, parts: list[str]) -> int:
 _budget = ContextVar('datasheet_search_slot', default=None)
 
 
+class SearchBudgetExhausted(RuntimeError):
+    """The request's single slot for an external search is already in use."""
+
+    def __init__(self, grade: int):
+        self.grade = grade
+        super().__init__(f'grade {grade} external search budget is already in use')
+
+
+@contextmanager
+def _claim_slot(grade):
+    slots = _budget.get()
+    slot = slots.get('grade2' if grade == 2 else 'grade3') if isinstance(slots, dict) else slots
+    if slot is not None:
+        if not slot.acquire(blocking=False):
+            raise SearchBudgetExhausted(grade)
+    # Deliberately keep the lock until request_scope() resets the ContextVar.
+    # This is a per-request one-call budget, not merely a concurrent-call guard;
+    # releasing here would allow a second sequential provider call.
+    yield
+
+
 @contextmanager
 def request_scope():
     # Permit one official lookup and one grade-3 fallback in the same request,
@@ -139,15 +160,11 @@ def _body(client, method, url, limit, *, redirect_validator=None, **kwargs):
     raise ValueError('too many redirects')
 
 
-def search_evidence(parts: list[str], terms: str, *, grade=None, transport=None) -> list[dict]:
+def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None) -> list[dict]:
     query = _query(parts, terms)
     words = sorted({t.lower() for t in TOKEN.findall(terms or '') if t.lower() in SAFE_TERMS}
                    - {'datasheet', 'official', 'circuit', 'diode', 'replacement'})
     if not enabled() or not query or not words:
-        return []
-    slots = _budget.get()
-    slot = slots.get('grade2' if grade == 2 else 'grade3') if isinstance(slots, dict) else slots
-    if slot is not None and not slot.acquire(blocking=False):
         return []
     parts = list(dict.fromkeys(p for p in parts if isinstance(p, str) and PART.fullmatch(p)))[:8]
     paths = GRADE2_PDF_PATHS if grade == 2 else PDF_PATHS
@@ -212,6 +229,16 @@ def search_evidence(parts: list[str], terms: str, *, grade=None, transport=None)
     return docs
 
 
+def search_evidence(parts: list[str], terms: str, *, grade=None, transport=None) -> list[dict]:
+    query = _query(parts, terms)
+    words = sorted({t.lower() for t in TOKEN.findall(terms or '') if t.lower() in SAFE_TERMS}
+                   - {'datasheet', 'official', 'circuit', 'diode', 'replacement'})
+    if not enabled() or not query or not words:
+        return []
+    with _claim_slot(2 if grade == 2 else 3):
+        return _search_evidence(parts, terms, grade=grade, transport=transport)
+
+
 def search_grade2_evidence(parts: list[str], terms: str, *, transport=None) -> list[dict]:
     """Search only validated manufacturer PDFs for evidence grade 2."""
     if OTHER_MANUFACTURER.search(terms or ''):
@@ -219,18 +246,13 @@ def search_grade2_evidence(parts: list[str], terms: str, *, transport=None) -> l
     return search_evidence(parts, terms, grade=2, transport=transport)
 
 
-def search_grade3_reference(parts: list[str], terms: str, *, transport=None) -> list[dict]:
+def _search_grade3_reference(parts: list[str], terms: str, *, transport=None) -> list[dict]:
     """Search public web references without downloading or injecting page text."""
     if not enabled():
         return []
     wanted = list(dict.fromkeys(p.upper() for p in parts if isinstance(p, str) and PART.fullmatch(p)))[:8]
     query = _query(parts, terms)
     if not wanted or not query:
-        return []
-    slot = _budget.get()
-    if isinstance(slot, dict):
-        slot = slot.get('grade3')
-    if slot is not None and not slot.acquire(blocking=False):
         return []
     try:
         with httpx.Client(transport=transport, timeout=10, trust_env=False, follow_redirects=False) as client:
@@ -260,3 +282,13 @@ def search_grade3_reference(parts: list[str], terms: str, *, transport=None) -> 
         if len(found) >= MAX_RESULTS:
             break
     return found
+
+
+def search_grade3_reference(parts: list[str], terms: str, *, transport=None) -> list[dict]:
+    if not enabled() or not _query(parts, terms):
+        return []
+    wanted = [p for p in parts if isinstance(p, str) and PART.fullmatch(p)]
+    if not wanted:
+        return []
+    with _claim_slot(3):
+        return _search_grade3_reference(parts, terms, transport=transport)
