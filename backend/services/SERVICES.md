@@ -19,11 +19,11 @@
 |---|---|
 | `SERVICES.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `llm.py` | LLM·임베딩 호출의 유일한 입구. 노드 호출 `node_chat`·`chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`, 노드별 모델 `node_model`), 임베딩 `embed_texts`, 검색용 Voyage 호출 `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_chat`·`evaluation_limits`·`evaluation_decisions_catalog`·`evaluation_decision`(ZDR 요청 정책). `check_langfuse_connection()`은 정의만 있고 이 저장소에서 부르는 곳이 없음 |
-| `langfuse_prompts.py` | 노드별 모델 표 `NODE_MODELS`, development 프롬프트·Skill 등록/조회(`publish_nodes`, `publish_skill`), 고정 버전·본문 대조, 명시적 세션 추적, 공급자 보고 비용을 보존하는 `CostCallbackHandler`, 분석 단계 시간 기록 `timed_tool`·`AnalysisTimings`. 계약은 SPEC.md |
+| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*`. `check_langfuse_connection()`은 부르는 곳 없음 |
+| `langfuse_prompts.py` | 노드별 모델 표 `NODE_MODELS`, 프롬프트·Skill 등록(`publish_nodes`, `publish_skill`)과 고정 버전 대조, 세션 추적, `CostCallbackHandler`, `timed_tool`·`AnalysisTimings` |
 | `service_trace.py` | 서비스 분석의 모델 호출별 Langfuse 추적. 키가 있으면 켜지고, 내보내기 직전 훅 `mask_otel_spans`가 허용 목록 밖의 칸을 지우고 입력·출력은 `[redacted]`로 바꿈. 평가(`evals/`)는 이 파일을 쓰지 않음 |
-| `demo.py` | 키 없는 데모의 LLM 응답 기록 `recorder`·재생 `replayer`(기록에 없으면 `ReplayMiss`), 재생 모드 판단 `enabled`, 서비스 재생 chat `service_chat`, 기록한 데모 질문 목록·대조 `questions`·`match`·`refusal`. 유료 모델을 부르지 않음 |
-| `mouser.py` | Mouser Search API 품번 검색 클라이언트: `check_parts`, `search_parts`. 한 번만 보내고(재시도 없음) 프로세스당 호출 상한 `MAX_CALLS`가 있으며 실패는 `MouserError(kind)`로만 알림. `/api/prices`(`backend/api/prices.py`)만 부르고 그래프는 부르지 않음 |
+| `demo.py` | 키 없는 데모의 LLM 응답 기록 `recorder`·재생 `replayer`(없으면 `ReplayMiss`), `enabled`, `service_chat`, 데모 질문 목록·대조 `questions`·`match`·`refusal`. 유료 모델 호출 없음 |
+| `mouser.py` | Mouser 품번 검색 클라이언트 `check_parts`·`search_parts`: 한 번만 보내고 프로세스당 호출 상한 `MAX_CALLS`. 실패는 `MouserError(kind)`. `/api/prices`만 부름 |
 | `exa.py` | 내부 근거가 부족할 때만 쓰는 Exa 외부 근거 검색(공식 제조사 PDF, 공개 참고 링크). 요청당 호출 예산 `SearchBudgetExhausted` |
 | `datasheet_rows.py` | 공식 데이터시트 PDF 표에서 품번 열·페이지·행·단위를 확인해 인용 후보를 만듦. PDF 파서는 별도 프로세스 |
 | `quote.py` | 완료된 성공 판정의 품번·verdict 쌍을 승인 snapshot으로 `approvals`에 저장하고 가격 없는 견적·사용자 승인 사례를 관리. 가격·재고 키는 거절(`assert_no_price_data`) |

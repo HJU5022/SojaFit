@@ -14,13 +14,13 @@
 | `API.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
 | `health.py` | `GET /health` |
-| `auth.py` | `POST /api/auth/login`, `POST /api/auth/signup`(가입 메일 요청), `POST /api/auth/signup/confirm`, `POST /api/auth/password-reset`, `POST /api/auth/password-reset/confirm`, `GET /api/auth/me`, `POST /api/auth/logout`. `DEMO_MODE=1`에서만: `GET /api/auth/demo`, `POST /api/auth/demo-login`. `/docs`에 싣지 않는 Google 가입·로그인: `GET /api/auth/google/status`·`start`·`callback`·`pending`·`onboarding`, `POST /api/auth/google/signup`·`link` |
+| `auth.py` | `/api/auth/*`: 로그인, 이메일 가입(요청·확인), 비밀번호 재설정(요청·확인), `me`, `logout`. `DEMO_MODE=1`에서만 `demo`·`demo-login`. `/docs`에 안 싣는 `google/*` 7개 경로(`status`, `start`, `callback`, `pending`, `onboarding`, `signup`, `link`) |
 | `admin.py` | `GET /api/admin/users`, `PATCH /api/admin/users/{target_id}`(일반 계정 활성 상태 변경) |
 | `prices.py` | `GET /api/prices`(로그인 필요, 요청 때 Mouser 조회, `Cache-Control: no-store`, ADR 0009) |
 | `projects.py` | `GET /api/demo-circuits`, `GET`·`POST /api/projects`, `POST /api/projects/upload`, `GET`·`PATCH`·`DELETE /api/projects/{project_id}` |
 | `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
-| `conversations.py` | `GET /api/judge/roles`, `GET /api/demo-questions`, `GET`·`POST /api/projects/{project_id}/threads`, `GET`·`DELETE /api/threads/{thread_id}`, `POST /api/threads/{thread_id}/runs`(SSE), `GET /api/runs/{run_id}`, `POST /api/runs/{run_id}/recover`, `POST /api/runs/{run_id}/resume`(SSE) |
-| `quotes.py` | `POST /api/messages/{message_id}/approvals`, `POST /api/approvals/{approval_id}/quotes`, `GET /api/projects/{project_id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{case_id}` |
+| `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, `GET`·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
+| `quotes.py` | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |
 | `profile.py` | `GET`·`PATCH`·`DELETE /api/me/memory`(사용자 사실 기억), `DELETE /api/me`(탈퇴) |
 
 변경 요청(POST·PATCH·DELETE)은 `auth.check_origin`을 적용한다. run·재개는 `app.state.conversations`(분석 서비스, `THREADS_ENABLED=1`)가 없으면 스트림을 열기 전에 공통 503으로 끝난다. 승인 사례(`quotes.py`의 `approved-cases`)는 새 분석에 넘기지 않는다([CONVERSATIONS.md](../conversations/CONVERSATIONS.md)).

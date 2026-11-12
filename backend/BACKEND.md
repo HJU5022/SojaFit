@@ -23,9 +23,9 @@
 | `BACKEND.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
 | `main.py` | FastAPI 진입점. 수명(JSON 로그 켜기, 인증 설정 검사, `THREADS_ENABLED=1`이면 분석 서비스 생성), 공통 JSON 오류 처리기, 요청 ID·보안 헤더·본문 한도·`no-store` 미들웨어, `api/` 라우터 등록, React 화면 연결 |
-| `errors.py` | 오류 응답 `error.code` 표(`DEFAULT_CODES`, 상황 코드 `SPECIAL_CODES`), 상황 코드를 붙이는 `ApiError`, 코드 고르기 `code_for`, 오류 한 줄 로그 `log_error`. 코드 목록은 [SPEC.md](../SPEC.md)와 ADR 0019 |
+| `errors.py` | 오류 응답 `error.code` 표(`DEFAULT_CODES`, `SPECIAL_CODES`), `ApiError`, `code_for`, 오류 한 줄 로그 `log_error`. 코드 목록은 SPEC.md·ADR 0019 |
 | `logs.py` | stdout JSON 한 줄 로그: 요청 ID 문맥 변수, `JsonFormatter`, 예외 메시지를 뺀 traceback, 서버 시작 때 로거에 붙이는 `setup`, 접속 줄의 쿼리 글 가리기 `hide_query` |
-| `auth.py` | scrypt 비밀번호, DB 세션, 로그인 잠금과 가입 한도, 데모 버튼 로그인 `demo_session`, Google 가입·로그인과 관리자 연결, 탈퇴의 계정 행 삭제 `delete_account`, 관리자 계정 관리 명령(`python -m backend.auth`). 직접 가입 `signup`은 내부·회귀 시험용이고 공개 가입은 `auth_email.py`를 거친다 |
+| `auth.py` | scrypt 비밀번호, DB 세션, 로그인 잠금·가입 한도, 데모 로그인, Google 가입·로그인, 탈퇴의 계정 행 삭제, 관리자 CLI(`python -m backend.auth`). 직접 `signup`은 내부·시험용 |
 | `auth_email.py` | 이메일 인증 가입·비밀번호 재설정의 일회용 토큰, 발송 한도, 계정 행 잠금. 메일 발송은 `services/mail.py` |
 | `api/` | HTTP 경로 전부. [API.md](api/API.md) |
 | `conversations/` | 프로젝트 소유 대화 저장소와 React run·재개가 거치는 사용자 분석 서비스. [CONVERSATIONS.md](conversations/CONVERSATIONS.md) |

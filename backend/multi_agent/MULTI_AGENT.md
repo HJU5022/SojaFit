@@ -47,4 +47,4 @@
 | `messages.py` | 거절 사유를 사용자 문구로 바꾸는 `refusal_message`·`refusal_for`, 가격 안내 `price_message`, 판정 결과를 코드 틀 답으로 만드는 `render_judgement` |
 | `revisions.py` | 사용자가 지정한 판본 추출, 검색 결과·판정 행 파일명에서 판본 확인 |
 | `supervisor.py` | 계획 `plan_node`, 배분 `after_plan`(Send), 답 모으기 `collect_node`, 답 정리 `single_node`, 종합 `synth_node`, 답 검사 `check_node`, 사실 글 `render_facts` |
-| `agents/` | 서브에이전트 폴더(설명 파일은 이 문서): `docs.py` RAG 에이전트, `judge.py` Spec 에이전트(읽기 노드 `judge_read_agent`, 판정 노드 `judge_agent`), `part_names.py` 읽은 품번을 사용자 글의 품번으로 맞춤(LLM 없음), `__init__.py` 패키지 표시 |
+| `agents/` | 서브에이전트(설명 파일은 이 문서): `docs.py` RAG 에이전트, `judge.py` Spec 에이전트, `part_names.py` 품번 바로잡기(LLM 없음), `__init__.py` |

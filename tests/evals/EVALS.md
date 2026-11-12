@@ -14,7 +14,7 @@
 |---|---|
 | `EVALS.md` | 이 문서 |
 | `test_frozen_evals.py` | `evals/FROZEN.json`에 기록된 파일의 해시가 바뀌지 않았는지. `FROZEN.json`이 없으면 검사하지 않고 통과 |
-| `test_run_graph.py` | 그래프 평가 실행: 최종 메모장에서 경로·검색 횟수·청크 수·인용 검사 점수를 뽑음, 거절이면 점수를 뺌, 단일·멀티 거절 사유 코드를 같은 이름으로 셈, 단일·멀티 모두 MCP 서버를 열어 사실 확인에 쓰고 찾기·판정 값은 카드 도구로 이음, 판정 인터럽트를 빈 답으로 한 번만 재개, 스레드 검증(`run_thread_validation`)의 dry-run·ID·덮어쓰기 거부, 공급자 보고 비용 누락/null |
+| `test_run_graph.py` | 그래프 평가 실행: 최종 메모장에서 점수 뽑기, 거절 시 점수 제외, 단일·멀티 거절 사유 코드, MCP 사실 확인 + 카드 도구 연결, 판정 인터럽트 한 번 재개, 스레드 검증의 dry-run·덮어쓰기 거부 |
 | `test_run_judge_dev.py` | 판정 연습 문제 채점: 판정 문항의 역할·판정 일치, 찾기 문항의 보여 준 후보·판정 집합, 판정 결과가 없을 때 틀림 처리, 비율 모으기 |
 | `test_skill_pair.py` | Skill 쌍 순차 실행의 경로·검색 상한, 사본 격리·실행 순서 교차, 예외 시 부분 결과·덮어쓰기 금지, 평가 호출·예약비용 상한 |
 | `test_retrieval_d3.py` | D3 검색 측정 실행기: gold 줄의 쪽 풀기, Page Hit·회수율·Full Recall·nDCG, 실패 유형, 정확 부호 검정, no_result 임계값(가짜 청크) |
@@ -51,11 +51,11 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `test_injection_baseline_plan.py` | 짝 구성(정상/공격 짝, 변경 위치 하나), 정답 필드 제외, 보호 사실 비노출 전제, T5 양쪽 fallback, T7 정규화·연결 보존, 예산식, 오프라인 명령·덮어쓰기 거부, 독립 잠금과 예산 |
-| `test_injection_baseline.py` | 기본 계획(110행)·덮어쓰기/미실행 보존·승인 부재/버전 불일치 차단, T1~T7 실제 그래프 + 가짜 공급자, T6 실제 message + 가짜 SQL, 사양 오염 자동채점, 인용 위치, 공급자 전 바이트 한도, 스모크 계획(T2 고정 근거, T3, T7, 남은 경로)의 작업 수·원본 잠금·독립 scope·승인 없는 실행 차단, Langfuse 기록(항목별 ID·세션·예산 횟수·실패 행 보존). 공급자·DB·소켓은 차단 |
+| `test_injection_baseline.py` | 기본 계획(110행)·덮어쓰기/미실행 보존·승인 없는 실행 차단, T1~T7 실제 그래프 + 가짜 공급자, 사양 오염 자동채점, 스모크 계획의 원본 잠금·독립 scope, Langfuse 기록. 공급자·DB·소켓 차단 |
 | `test_injection_preflight.py` | 공급자·DB·socket 연결을 기본 차단하고 원격/기존 DB 거부, 본문 해시, 여섯 노드·형식 재시도 관찰, 공유 예산, 스레드 전달, 캐시 격리, 사양 오염/누락/미도달/사람 미검토 채점 |
 | `test_check_injection_result.py` | 저장한 실측 결과가 기준을 통과하고, 작업 수·상태·판정 기준·노출 전제를 깬 변이는 실패로 바뀜 |
 | `test_input_surfaces.py` | 무료 계획, 덮어쓰기 거부, 이름 필드 무시/ref 거부, 청크·값·질문의 모델 입력 노출, 위험 응답 기록과 최종 차단(가짜 모델) |
 | `test_claim_consistency.py` | 유료 기준선 실행기의 호출 없는 계획, 결과 덮어쓰기 거부, 상한 뒤 후속 미실행/부분 raw 보존, 거짓 가짜 응답의 원시 보존/최종 차단 |
 | `test_trust_boundary.py` | D7 실행기의 dry-run 외부 호출 0, 기존 결과 보존, 정상 대조군, 공격 노출·canary 유출 탐지, 타 사용자 참조의 코드 차단, 오류 후 not_run 보존 |
-| `test_judgement_bundle.py` | 원격/서비스 DB·덮어쓰기 거부, 단일 예산 호출/시간 차단, 실제 모델 CLI 부재, 실제 번호를 단 위험 문서 답이 판정 답에서 차단됨. 전용 loopback DB 왕복 시험은 `TEST_INJECTION_DATABASE_URL`이 없으면 건너뛰며, 사양 표 제거(ADR 0016) 뒤 현재 코드와 맞는지는 확인되지 않았다 |
-| `test_saved_defense_replay.py` | 저장된 실제 C2/P4-N 응답과 원시 SHA256을 고정해 기존 에이전트·판정·최종 조립에 재생(모델·네트워크·DB 차단). 기준선 보존과 수정 후 차단을 확인. `roles.yaml`은 source를 뺀 규칙 내용을 측정 커밋 `190cf89` 값에 고정. xfail/skip으로 숨기지 않음 |
+| `test_judgement_bundle.py` | 원격/서비스 DB·덮어쓰기 거부, 단일 예산 차단, 위험 문서 답이 판정 답에서 차단됨. loopback DB 왕복 시험은 `TEST_INJECTION_DATABASE_URL`이 없으면 건너뛰며 사양 표 제거(ADR 0016) 뒤 현재 코드와의 일치는 확인되지 않음 |
+| `test_saved_defense_replay.py` | 저장된 실제 C2/P4-N 응답과 원시 SHA256을 기존 에이전트·판정·최종 조립에 재생(모델·네트워크·DB 차단). 기준선 보존과 수정 후 차단 확인, `roles.yaml` 내용은 측정 커밋 `190cf89` 값에 고정 |

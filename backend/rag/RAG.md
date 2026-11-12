@@ -13,7 +13,7 @@
 |---|---|
 | `RAG.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `retrieve.py` | `retrieve(question, *, k=5, parts=None, method='hybrid')`: dense(voyage-4-large 1024차원, `chunk_embedding_bits` 1비트 거르기 포함) + BM25를 RRF로 합치고 후보를 `rerank-3`로 다시 세워 상위 k개를 돌려줌. 표지 청크는 뺌. `parts`를 주면 그 품번 문서 안에서만 찾고 코퍼스에 없는 품번뿐이면 `[]`. `corpus_known`이 품번 존재를 확인. `DEMO_MODE=1`(기본)이면 임베딩·리랭크 API 없이 BM25만 씀. `DATABASE_URL` 필요 |
+| `retrieve.py` | `retrieve(question, *, k=5, parts=None, method='hybrid')`: dense + BM25를 RRF로 합치고 `rerank-3`로 다시 세움. 표지 청크 제외, `parts` 필터, `corpus_known`. `DEMO_MODE=1`이면 BM25만 |
 | `spec_lookup.py` | 사양 코드 목록 `CODES`, 조건 자리 기본값 `DEFAULT_SLOT`, 삽입형 패키지 이름 `THT_PACKAGES`. DB를 읽지 않음 |
 | `card_read.py` | 카드 → 값·원문 인용. `pipeline/specs.py` 규칙(`read_card`)으로 먼저 읽고, 원하는 코드 값을 못 받았거나 검토 표시가 난 카드만 LLM(`card_read` 프롬프트)으로 읽음. 두 길 모두 같은 코드 확인(카드 번호·인용·숫자·단위 차원·품번)을 거침 |
 | `card_find.py` | 후보 찾기 `make_find`·`default_find`: 분류 문서의 개요 줄로 읽을 문서를 고르고(`code_pick`, 못 줄 세울 때만 LLM `card_pick`) 문서별 카드 읽기를 동시에 불러 조건에 맞는 품번을 거른 뒤 정렬. 계약은 SPEC.md 8.7 |

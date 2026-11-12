@@ -25,7 +25,7 @@
 |---|---|
 | `CONVERSATIONS.md` | 이 문서 |
 | `__init__.py` | 패키지 표시 |
-| `memory_service.py` | 분석 서비스 `Conversations`: thread 소유권, DB 체크포인트, 조건 재개, 하루 토큰·USD 예산(`admission`), 사용자 사실 찾기(`profile_hints`), 프로젝트·탈퇴 삭제 `delete_analysis_threads`. `initialize`(`--setup` CLI)가 LangGraph 표를 만든다. `DEMO_REPLAY=1`이면 재생 chat(`backend/services/demo.py`)을 그래프에 넣는다 |
+| `memory_service.py` | 분석 서비스 `Conversations`: thread 소유권, DB 체크포인트, 조건 재개, 하루 토큰·USD 예산(`admission`), `profile_hints`, 삭제 `delete_analysis_threads`, `--setup` CLI `initialize`, `DEMO_REPLAY=1` 재생 chat 주입 |
 | `profile.py` | 사용자 사실 3칸 장기 기억: 칸 검사, 틀 문장, Store 덮어쓰기(version)·지우기, Voyage 의미 검색(키가 없거나 데모 모드면 순위 없이) |
 | `dto.py` | 브라우저 결과 허용 목록 `BrowserResult`, 그래프 상태에서 공개 값만 고르는 `public_state`, 저장 결과 변환 `result_dto` |
 | `models.py` | 실행 상태와 저장 허용 결과 형식(`SafeResult` 등) |

@@ -12,7 +12,7 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `RAG.md` | 이 문서 |
-| `test_rag_retrieve.py` | RRF 순서, BM25 토큰, 품번 색인·필터, `method` 분기와 임베딩 API 호출 여부, 표지 청크 제외, 리랭크 뒤 상위 k개, 데모 모드의 리랭크 생략, 문서 표지 품번, dense 비트 1단계 사용 조건(가짜 연결). 실제 DB 시험은 `TEST_DATABASE_URL` 필요 |
+| `test_rag_retrieve.py` | RRF 순서, BM25 토큰, 품번 색인·필터, `method` 분기, 표지 청크 제외, 리랭크 뒤 상위 k, 데모 모드 리랭크 생략, dense 비트 1단계 조건. 실제 DB 시험은 `TEST_DATABASE_URL` |
 | `test_rag_storage.py` | 형식 설정 검증, halfvec 전환·재실행·이진 재적재·정확 검색, 시간/표본 부족 표시. DB 시험은 `TEST_DATABASE_URL` 필요 |
 | `test_rag_ingest.py` | 벡터 캐시 다시 열기와 끊긴 쓰기 복구, 없는 본문만 임베딩, DB 재실행(전용 DB 필요), `load_voyage`가 비트 코드 표를 채움(가짜 연결) |
 | `test_rag_chunk.py` | 표 청크 규칙(합친 칸 채우기, 머리 행 잇기, 빈 표)과 문서 키, `data/manifest.jsonl` 크기 상한 |

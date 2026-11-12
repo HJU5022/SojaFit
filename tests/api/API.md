@@ -12,19 +12,19 @@
 | 파일 | 확인하는 것 |
 |---|---|
 | `API.md` | 이 문서 |
-| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시와 신규 비밀번호 강도 검사, 세션 HMAC·만료, 로그인 잠금, 데모 버튼 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, scrypt 동시 검증 상한, HTTPS 쿠키·출처, 본문의 모르는 칸 422. DB 시험은 `TEST_AUTH_DATABASE_URL`이 있을 때만 |
+| `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처. DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
 | `test_email_auth.py` | 메일 인증 가입·비밀번호 재설정: 가짜 SMTP와 격리 DB로 인증 전 계정 없음, 토큰 만료·재발급·재사용·경합, 발송 한도, 재설정 뒤 세션 폐기, TLS 검증 |
 | `test_google_users.py` | Google 일반 가입·기존 계정 연결: 합성 신원, 비밀번호 재확인, 관리자 최초 승인 유지, 만료·중복·동시 연결, 공유 IP 한도. 새 로컬 시험 DB만 허용 |
 | `test_health.py` | `/health`, 서버 생성 요청 ID, 공통 오류 구조(401·403·404·422·500), 민감한 입력·내부 예외 비노출, OpenAPI 오류 스키마 |
 | `test_errors.py` | `backend/errors.py` 오류 코드 표(기본 코드·상황 코드), DB 설정 없음 503, 남의 run 404, 한도 오류 코드, SSE `failed` frame의 코드, 오류 로그 줄(severity·request_id·5xx traceback, 질문 글·이메일 비노출) |
 | `test_logs.py` | `backend/logs.py`: JSON 한 줄 칸, 요청 ID, 메시지 없는 traceback, `setup`의 처리기 부착, 접속 줄의 쿼리 글 가리기 |
-| `test_openapi.py` | `/openapi.json`·`/docs` 계약: JSON 본문 모델 예시와 모르는 칸 거부, 업로드 multipart 칸, SSE 경로의 `text/event-stream` 설명, 경로 목록(메서드, 경로) 고정과 모두 `backend/api/` 라우터에 태그와 함께 있음(`main.py`에 경로 함수 없음), 응답 모델이 화면이 읽는 칸(`frontend/src/api/*.ts`)을 지우지 않음 |
+| `test_openapi.py` | `/openapi.json`·`/docs` 계약: 본문 모델 예시와 모르는 칸 거부, 업로드 multipart 칸, SSE 설명, 경로 목록 고정(모두 `backend/api/` 라우터), 응답 모델이 화면 칸을 지우지 않음 |
 | `test_frontend.py` | SPA 직접 진입, assets, 미빌드 때 화면 주소도 공통 404, API JSON 404와 기존 라우트 우선 |
 | `test_prices.py` | `GET /api/prices`를 가짜 Mouser transport로: 로그인 필요, `no-store`, 화면 칸만 반환, 데모 모드·키 없음·호출 상한·Mouser 실패의 값 없음 모양, 품번 형식 오류 422, 로그에 키·요청 주소 없음 |
 | `test_projects.py` | 프로젝트 HTTP 계약: 세션·Origin·입력 검증·안전한 DB 오류·실제 DB CRUD와 관리자 포함 타 사용자 비공개 404, 업로드의 제한 수신·원본 즉시 close·오류 request ID. DB 시험은 `TEST_AUTH_DATABASE_URL`이 있을 때만 |
 | `test_external_circuits.py` | 완성 회로도 manifest·PNG 응답, 인증·`no-store`·`SCHEMATIC_NOT_FOUND` 경계 |
-| `test_conversations.py` | 대화 인증·스트림·삭제 경계(가짜 분석 서비스): 첫 run의 thread 연결, 대상 변경 409, 재개 버전, 완료 frame의 참고(내 설정)와 run 기록 미저장, 실패 frame의 `error.code`, 서비스 없음 503, 토큰 상한 429가 스트림 전에 끝남, 본문 한도·모르는 칸·다른 Origin·DB 오류, 오래된 running의 recover(로그인·Origin·타 사용자 404·분석 호출 없음), 재개 입력 오류 뒤 interrupt 보존, 저장 기록 GET(인증·페이지 검증·allow-list·`no-store`), 데모 질문 목록 |
-| `test_threads.py` | 격리 PostgreSQL에서 분석 서비스 `Conversations`: 소유권, 체크포인트 복구·재개, 승인 기록 멱등성, 승인 사례를 새 분석에 넘기지 않고 Store에 쓰지 않음, 사용자 사실 참고(`profile_hints`)의 사용자 격리·고침·지움, 하루 토큰 상한의 원자적 차감과 호출 직전 429, 키 없는 데모 재생(`DEMO_REPLAY=1`) 조립, 카드 도구 연결(`prefetch`·`also_read` 유지), 병렬 thread와 백업 복원. `TEST_THREAD_DATABASE_URL`이 있을 때만 |
+| `test_conversations.py` | 대화 인증·스트림·삭제 경계(가짜 분석 서비스): thread 연결, 대상 변경 409, 재개, `failed` frame의 `error.code`, 서비스 없음 503, 토큰 상한 429, recover, 저장 기록 GET, 데모 질문 목록 |
+| `test_threads.py` | 격리 PostgreSQL에서 `Conversations`: 소유권, 체크포인트 복구·재개, 승인 사례를 새 분석에 안 넘김, `profile_hints` 격리, 토큰 상한 429, 데모 재생 조립. `TEST_THREAD_DATABASE_URL`일 때만 |
 | `test_deletion.py` | 격리 DB의 삭제 범위: 프로젝트 삭제와 단일 대화 삭제가 해당 React 행과 같은 UUID 분석 기록만 지움, 탈퇴가 그 사용자의 기록·Store namespace·계정을 지우고 다른 사용자는 남김, 진행 중 분석과 탈퇴의 409, 보관 기간 청소 |
 | `test_quotes.py` | 승인·견적·사례 API의 Origin·입력 allow-list·안전 오류(같은 메시지 두 번 승인은 409 `ALREADY_APPROVED`) |
 | `test_full_service_flow.py` | 격리 PostgreSQL의 업로드 → interrupt 재개 → 승인 → 가격 없는 견적 → 소유권 → cascade 전체 흐름, 저장 대화 GET이 소유자에게만 보임 |
