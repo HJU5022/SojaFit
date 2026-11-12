@@ -130,7 +130,9 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   const candidate = candidatesOf(result)[0]
   const judgement = judgementOf(result)
   const roleName = (Array.isArray(roles.data) ? roles.data.find(item => item.code === judgement?.roles?.[0])?.name : '') || judgement?.roles?.[0] || ''
-  const examples = [`입력 12V, 1A에서 ${target.ref}을 SS34로 바꿔도 되나요?`, `${target.ref}과 같은 조건으로 쓸 수 있는 대체품을 찾아 주세요.`]
+  // [왜] 대체품 찾기는 사용 조건과 원하는 정격이 있어야 비교할 기준이 생긴다. 예시도 조건을 함께 적는다
+  const examples = [`${target.ref}을 SS34로 바꿔도 되나요? 입력 최대 12V, ${target.ref} 전류 최대 1A, 주변 온도 25°C예요.`,
+    `${target.ref}의 대체 후보를 찾아 주세요. 입력 최대 12V, 전류 최대 1A, 주변 온도 25°C예요. 역전압 정격 20V 이상, 평균 전류 정격 1A 이상이면 됩니다.`]
   const documents = [...new Map((result?.evidence ?? []).map(item => [item.document, item])).values()]
   const resultLoading = (running && !candidate) || chat.loading || (run.isFetching && !result)
   const initial = reviewer.trim().charAt(0).toUpperCase()

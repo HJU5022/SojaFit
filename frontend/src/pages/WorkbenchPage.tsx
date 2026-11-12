@@ -187,10 +187,10 @@ export default function WorkbenchPage() {
       {projectId !== null && !target && !threadId && <section className="list">
         <form className="composer" onSubmit={ask}>
           <label className="sr-only" htmlFor="part-question">질문</label>
-          <input id="part-question" className="input" style={{ flex: 1 }} autoComplete="off" aria-describedby="part-question-hint" value={question} onChange={event => { setQuestion(event.target.value); setAskError('') }} placeholder="예: D1을 SS34로 바꿔도 되나요?" />
+          <input id="part-question" className="input" style={{ flex: 1 }} autoComplete="off" aria-describedby="part-question-hint" value={question} onChange={event => { setQuestion(event.target.value); setAskError('') }} placeholder="예: D1을 SS34로 바꿔도 되나요? 입력 최대 12V, 전류 최대 1A" />
           <button className="btn btn-icon" disabled={!question.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>
         </form>
-        <p id="part-question-hint" className="composer-hint">부품 번호(예: D1)를 넣어 질문하거나, 아래 목록에서 부품을 고르세요.</p>
+        <p id="part-question-hint" className="composer-hint">부품 번호(예: D1)와 사용 조건(전압 · 전류 · 온도)을 함께 적어 주세요. 대체품을 찾을 때는 원하는 정격도 적어 주세요. 아래 목록에서 부품을 골라도 됩니다.</p>
         {askError && <p className="notice" role="alert">{askError}</p>}
         <div className="list-head"><h1 className="sr-only">교체할 부품</h1><label className="filter"><Search aria-hidden="true" /><span className="sr-only">부품 찾기</span><input value={filter} onChange={event => setFilter(event.target.value)} placeholder="참조 번호나 값으로 찾기" /></label></div>
         {partGroups.map(group => {
