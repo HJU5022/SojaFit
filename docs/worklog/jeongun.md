@@ -4,7 +4,7 @@
 - `da5816a` 여정 맵(`market-user-journey.md`): "SojaFit의 개입" 칸을 현재 구현에 맞춤(승인 사례 재참조 없음, 견적 승인은 그래프 밖 `POST /api/messages/{id}/approvals`, `wrong_revision` → `revision_matches`·`other_part_row`, 멀티 그래프 노드명), 7-2 약점 4번 갱신, 갱신일 줄 추가. `evaluation-prep.md` 21행 같은 낡은 문장 수정.
 - `bd05259` 페르소나 표에 지불 주체 행(가설, 외부 검증 전).
 - `e4e986e` `EVAL_REPORT.md` 10장: 판정 기준 열, Codex가 코딩 에이전트라는 점, 답을 얻은 방법, 정답·판정은 하정운이 했다는 조장 확인(11-12), 한계.
-- `443a32a` 각주 [1][2][4] 원자료 9개를 `docs/research/evidence/`로 복사(바이트 동일, 약 2.0MB, README에 sha256), `TOPIC.md` 5행 안내 문장 갱신.
+- `443a32a` 각주 [1][2][4] 원자료 9개를 `docs/research/evidence/`로 복사(바이트 동일, 약 2.0MB, `EVIDENCE.md`에 sha256), `TOPIC.md` 5행 안내 문장 갱신.
 - 안 함: 각주 [3] 파일 복사(조장 PC 절대 경로 포함), 외부 검토자 기록, 푸시·PR·병합, 서버·LLM 호출.
 
 ## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)

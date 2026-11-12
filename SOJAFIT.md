@@ -833,7 +833,22 @@ SojaFit (proj3-b)
 │   │   ├── embedding-grid-eval-2026-11-02.md  <- 임베딩 6종 × 검색 방식 격자 본평가 78칸 전체 표·시간·사전 등록 대조
 │   │   ├── retrieval-layered-rerun-2026-11-03.md  <- 검색 조합 층별 재측정(질의·토큰화·임베딩·리랭커) 사전 등록과 결과
 │   │   ├── bit-search-measurement-2026-11-03.md  <- 비트 후보 + pgvector 재정렬 속도·recall 실측
-│   │   └── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
+│   │   ├── market-user-journey.md  <- 문제·시장 근거: 사실·가설 구분, 페르소나, 고객 여정 맵, 대체재 5문항 비교 설계
+│   │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
+│   │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
+│   │       ├── jobs2-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
+│   │       ├── corpus/     <- 공개 문서 조각 수 실측
+│   │       │   └── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
+│   │       ├── corpus2/    <- 다이오드 데이터시트 41건·공개 문서 실측
+│   │       │   ├── manifest_diode.json  <- 데이터시트 41건 627조각
+│   │       │   └── manifest_open_extra.json  <- KiCad 문서 등 조각 수
+│   │       ├── jobs2/      <- 공고 수집 원자료(2026-10-29)
+│   │       │   ├── merged.json  <- 중복 제거 공고 237건 개별 행
+│   │       │   ├── wanted_jumpit.json  <- 원티드·점핏 89건
+│   │       │   ├── saramin_jobkorea.json  <- 사람인·잡코리아 136건
+│   │       │   └── company_pages.json  <- 회사 채용 페이지 24건
+│   │       └── netlist/    <- 공개 KiCad 회로 다이오드 실측
+│   │           └── manifest_diodes.json  <- 151개 저장소 다이오드 554개
 │   ├── deliverables/       <- 최종 제출 문서 양식 (고정: 과제 가이드 G7)
 │   │   ├── DELIVERABLES.md <- 폴더 설명
 │   │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록

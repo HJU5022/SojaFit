@@ -11,7 +11,7 @@
 
 ### 1-1. 조사 집계 (확인 사실, `docs/TOPIC.md` 각주 [2])
 
-- **조사 기준일·출처**: 2026-10-29, 원티드·점핏·사람인·잡코리아·기업 채용 페이지에서 수집한 제조 산업(전자·설비·제조사·제조AX 공급사) AI 관련 공고(저장소 사본 [`evidence/jobs2/집계.md`](evidence/jobs2/집계.md)와 원자료 [`evidence/jobs2/`](evidence/jobs2/), 목록과 해시는 [`evidence/README.md`](evidence/README.md). 서비스 RAG 코퍼스 1,360건과 별도 집계).
+- **조사 기준일·출처**: 2026-10-29, 원티드·점핏·사람인·잡코리아·기업 채용 페이지에서 수집한 제조 산업(전자·설비·제조사·제조AX 공급사) AI 관련 공고(저장소 사본 [`evidence/jobs2-summary.md`](evidence/jobs2-summary.md)와 원자료 [`evidence/jobs2/`](evidence/jobs2/), 목록과 해시는 [`evidence/EVIDENCE.md`](evidence/EVIDENCE.md). 서비스 RAG 코퍼스 1,360건과 별도 집계).
 - **모수 집계**:
   - 제조 산업 AI 공고(중복 제거): **237건**
   - 열린 AI 개발 직무: **170건**
