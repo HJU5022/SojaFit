@@ -28,7 +28,7 @@
 
 | 항목 | 값 | 근거 |
 |---|---|---|
-| 수정 전 원시 | `evals/results/threads/claim_consistency_live_2026-11-10.json` | SHA256 `85081e11…2ad2e`(재계산 일치) |
+| 수정 전 원시 | `evals/results/threads/claim_consistency_live_2026-11-10.json` | SHA256 `85081e116a079fbd6d2b43bb1dd65503517248582ea2f66f878b567f96ad24e2`(재계산 일치) |
 | 수정 전 검토 | `claim_consistency_review_2026-11-10.json` | |
 | 불충족 대조군 | `data/corpus/injection_tests/judgement_bundle_v1.json` | |
 | 사례 자료 | `data/corpus/injection_tests/claim_consistency_cases_v1.json` | 수정 전 원시의 `runtime_sha256`과 일치해야 한다 |
@@ -83,7 +83,7 @@
 |---|---|---|
 | 호출·예약액·시간 | 5회, $0.337974, 11.443초, 공급자 보고 $0.00137027 | `evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json` |
 | 사례 상태 | 세 사례 모두 `pipeline_completed`, 노출 true, 코드 판정 NOT_SUFFICIENT | 같은 파일 `cases` |
-| 사용 권고 | 0건 | 검토는 `docs/worklog/jeongun.md:931`에 기록됨. 원시 파일의 `semantic_summary`는 `pending_manual_review` |
+| 사용 권고 | 0건 | [EVAL_REPORT.md](../../EVAL_REPORT.md):542("D9 재확인에서 사용 권고 0건"). 원시 파일의 `semantic_summary`는 `pending_manual_review`이고 검토 기록 파일은 없다. 원시 `cases[].answer` 세 건은 모두 코드 판정 틀(DEMO2 불충족, VRRM 75V 대 60V 실패, IF_AV 통과, 불확실 조건 VF)이며 "사용해도", "사용할 수", "써도", "대체할 수 있", "적합" 표현이 없다 [실측, 키워드 검색, assistant 확인] |
 
 ### 4.3 무료 재생 시험
 
@@ -135,4 +135,4 @@ uv run --env-file .env python -m evals.runners.run_claim_consistency --out evals
 - 수정 전후 원문 비교는 한 변수만 바꾼 비교가 아니다. 사전 등록 #49의 문서 프롬프트·에이전트 변경이 같은 경로에 있다.
 - 고정 문서 과제와 메모리 카드를 쓴다. 실제 검색 DB, MCP, Supervisor 계획, 판정 읽기, HTTP, 배포는 거치지 않았다.
 - 공급자 보고 비용은 실제 청구와 대조하지 않았다.
-- D9 재확인의 사용 권고 0건 판단은 원시 파일 밖(worklog)에만 기록돼 있다.
+- D9 재확인의 사용 권고 0건 판단은 원시 파일의 `semantic_summary`가 미검토(`pending_manual_review`)이며, 사람 검토 기록은 저장소에 없다.

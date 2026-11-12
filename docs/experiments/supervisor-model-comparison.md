@@ -1,9 +1,9 @@
-# 수퍼바이저 모델 5종 비교 사전등록 (1차)
+# 수퍼바이저 모델 5종 비교 사전 등록 (1차)
 
 - 상태: 이력
 - 기준일: 2026-11-12 (등록 2026-11-04)
 - 기준 커밋: 6707002
-- 정본 여부: 정본(1차 실험의 입력·조건·지표·선정 규칙. 결과 확인 전에 고정한 기록이라 고치지 않는다). 실제 조건·결과는 [supervisor-model-comparison-postregistration.md](supervisor-model-comparison-postregistration.md)
+- 정본 여부: 정본(1차 실험의 입력·조건·지표·선정 규칙. 결과 확인 전에 고정한 기록). 실제 조건·결과는 [supervisor-model-comparison-postregistration.md](supervisor-model-comparison-postregistration.md)
 - 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [supervisor-stage2-six-models.md](supervisor-stage2-six-models.md), [supervisor-stage3-six-models.md](supervisor-stage3-six-models.md), [preregister.md](../../evals/guides/preregister.md), [ADR 0014](../adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md), [ADR 0017](../adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md)
 
 서비스가 지금 쓰는 모델: Supervisor는 `anthropic/claude-haiku-5.5`(ADR 0017), 종합 `synth`는 `anthropic/claude-sonnet-5.5`, 채점은 `openai/gpt-6-luna`다(`backend/services/langfuse_prompts.py:33` `NODE_MODELS`, [SPEC.md](../../SPEC.md) 2절). 이 실험이 고른 모델과 서비스 모델은 다르다.

@@ -15,7 +15,7 @@
 | 8장의 숫자 | 원본 | 비고 |
 |---|---|---|
 | 질문 임베딩, DB+BM25+RRF, 리랭킹 시간, `retrieve()` 전체, rerank 호출당 토큰 | `evals/results/retrieval/service_stages_2026-11-04.json`(이전 값), `service_stages_2026-11-11.json`(현재 코드) | 20문항 |
-| 현재 코드 50문항 단계별 p50·p95·호출 수·비용 | `evals/results/graph/2026-11-11-d8-stages/set1.json`, `stage_summary.json`, 재실행 `evals/results/graph/2026-11-11-d8-stages-rerun/set1.json` | `stage_summary.json`: 50/50 통과, p50 4.9초, p95 10.7초, Supervisor p50 1.525초·p95 2.488초, 그래프 안 검색 n=15 p50 1.396초·p95 5.192초 |
+| 현재 코드 50문항 단계별 p50·p95·호출 수·비용 | `evals/results/graph/2026-11-11-d8-stages/set1.json`, `stage_summary.json`, 재실행 `evals/results/graph/2026-11-11-d8-stages-rerun/set1.json` | `stage_summary.json`: 50/50 통과, p50 4.9초, p95 10.7초, Supervisor 노드 p50 1.525초·p95 2.488초(`stages_s`), Supervisor LLM 호출 p50 1.519초·p95 1.943초(`llm_by_node`, EVAL_REPORT 8장 표의 값), 그래프 안 검색 n=15 p50 1.396초·p95 5.192초 |
 | 이전 값(3번 다수결, `93a497c`) 4세트 | `evals/results/graph/2026-11-10-v3-haiku-sets/gate-v3_draft-1110-{0033,0034,0040,0041}-set1.json`, `summary_4sets_93a497c.json` | 비용(`usd`)은 Langfuse 토큰 집계라 세트 파일에는 없고 summary에만 있다 |
 | 이전 값 병합 뒤 2세트 | `gate-dataset_v3-1110-{0111,0112}-set1.json`, `summary_merged_2sets_f2b914e.json` | |
 | 이전 값 LLM 단계별 | `stage_costs_gate-v3_draft-1110-0040-set1.json` | 만든 스크립트가 저장소에 없어 재생성 명령 없음 |

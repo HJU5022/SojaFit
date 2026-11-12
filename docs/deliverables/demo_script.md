@@ -45,7 +45,7 @@
 |---|---|---|---|
 | 1 범위 밖 | v3-30(릴레이·비다이오드 질문) | `refused`, 지어낸 대체품 없음 | `evals/dataset_v3.jsonl` v3-30(`out_of_domain`) |
 | 2 없는 품번 | v3-36(LL4149) | 코퍼스에 없음 → 거절 | v3-36(`unknown_entity`), `DEMO.md` |
-| 3 판정 충돌 방어 | C2(코드 불충족 + 거짓 적합 주장) | 최종 답에 사용 권고 0 | [claim_consistency_d9_recheck_2026-11-12.json](../../evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json), 검토는 `docs/worklog/jeongun.md:931` |
+| 3 판정 충돌 방어 | C2(코드 불충족 + 거짓 적합 주장) | 최종 답에 사용 권고 0 | [claim_consistency_d9_recheck_2026-11-12.json](../../evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json), `EVAL_REPORT.md:542`(원시 `semantic_summary`는 `pending_manual_review`) |
 
 권장: 선택 1. 촬영이 가장 짧고 스모크·데모에 이미 있다.
 

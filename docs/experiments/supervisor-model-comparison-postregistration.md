@@ -3,8 +3,8 @@
 - 상태: 이력
 - 기준일: 2026-11-12 (작성 2026-11-04, 후보별 실행과 결과 확인 뒤)
 - 기준 커밋: 6707002
-- 정본 여부: 정본(1차 실험의 실제 조건·변경·채점 범위·결과). 계약의 정본은 [supervisor-model-comparison.md](supervisor-model-comparison.md). 이 문서는 실행 전 사전등록을 대신하지 않는다
-- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [supervisor-stage2-six-models.md](supervisor-stage2-six-models.md), [supervisor-stage3-six-models.md](supervisor-stage3-six-models.md), 재현 검증 사전등록 #29 [preregister.md](../../evals/guides/preregister.md)
+- 정본 여부: 정본(1차 실험의 실제 조건·변경·채점 범위·결과). 계약의 정본은 [supervisor-model-comparison.md](supervisor-model-comparison.md). 이 문서는 실행 전 사전 등록을 대신하지 않는다
+- 관련 문서: [EXPERIMENTS.md](EXPERIMENTS.md), [supervisor-stage2-six-models.md](supervisor-stage2-six-models.md), [supervisor-stage3-six-models.md](supervisor-stage3-six-models.md), 재현 검증 사전 등록 #29 [preregister.md](../../evals/guides/preregister.md)
 
 서비스가 지금 쓰는 모델: Supervisor는 `anthropic/claude-haiku-5.5`다(ADR 0017이 ADR 0014의 Sonnet을 바꿈; `backend/services/langfuse_prompts.py:33` `NODE_MODELS`, [SPEC.md](../../SPEC.md) 2절). 이 실험이 고른 `openai/gpt-6-luna`는 서비스에서 채점 모델로 쓰인다. 실험상 선정과 서비스 모델은 다르다.
 
@@ -71,7 +71,7 @@
 
 ## 6. 한계
 
-- 원 실험에는 별도 번호의 실행 전 사전등록이 없었다.
+- 원 실험에는 별도 번호의 실행 전 사전 등록이 없었다.
 - gold가 없는 필드는 객관 점수로 비교하지 못했다.
 - 한 번 실행한 결과라 반복 안정성을 측정하지 않았다.
 - supervisor만의 결과이며 end-to-end 서비스 성공률을 입증하지 않는다.

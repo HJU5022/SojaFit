@@ -10,16 +10,16 @@
 
 ## 1. 사용 기록
 
-판정자(채택 판정)는 하정운이다. 시험 통과 수는 작업 기록의 값이며 이번에 재실행하지 않았다.
+시험 통과 수는 작업 기록의 값이며 이번에 재실행하지 않았다.
 
 | 날짜 | 도구 | 맡긴 일 | 결과를 어떻게 검증했나 | AI가 틀린 곳 | 근거 |
 |---|---|---|---|---|---|
-| 2026-11-05 | Claude Code | 부품 사양 표 변환 규칙(`backend/rag/pipeline/specs.py`), DB 적재, 조회 도구 구현 | 시험 567개 통과, 표본 PDF 대조 3회(다음 행), 운영 DB에서 공개 API 역할(anon, authenticated) 차단과 MCP 도구 실제 호출 | 첫 규칙이 `IF_AV`에 첨두·서지 전류를 넣음(seed 1에서 X 4줄). `db/011` SQL에 RLS 누락(운영 적용 전 확인에서 발견). 동작을 바꾼 뒤 도구 설명을 고치지 않음(실제 호출 확인에서 발견) | `docs/worklog/jeongun.md:315,328` |
+| 2026-11-05 | Claude Code | 부품 사양 표 변환 규칙(`backend/rag/pipeline/specs.py`), DB 적재, 조회 도구 구현 | 시험 567개 통과, 표본 PDF 대조 3회(다음 행), 운영 DB에서 공개 API 역할(anon, authenticated) 차단과 MCP 도구 실제 호출. 채택 판정 하정운 | 첫 규칙이 `IF_AV`에 첨두·서지 전류를 넣음(seed 1에서 X 4줄). `db/011` SQL에 RLS 누락(운영 적용 전 확인에서 발견). 동작을 바꾼 뒤 도구 설명을 고치지 않음(실제 호출 확인에서 발견) | `docs/worklog/jeongun.md:315,328` |
 | 2026-11-05 | Claude Code(서브에이전트) | 사양 표 표본 150개(seed 0, 1, 2)를 원본 PDF 쪽 그림과 대조해 O/X 초안 작성 | 표본은 13종에서 고르게 고정 seed로 뽑고 통과 기준을 "거르는 값 X 0"으로 미리 정함(ADR 0013). O/X 초안을 보고 최종 판정은 하정운 | 대조 결과 변환 규칙의 X: seed 0 4줄(VF), seed 1 7줄, seed 2 1줄 | [ADR 0013](../adr/0013-부품-사양-표는-13종을-규칙으로-만들고-애매한-값은-뺀다.md) |
-| 2026-11-06 | Claude Code(서브에이전트) | 다이오드 역할 23개 후보 조사(제조사 앱노트, 교재), 판정 연습 문제 24개 초안, 보류 역할 R13 설계 규칙 조사 | 역할마다 출처 원문·검색 요약·추정을 나눠 표시하게 했다. 판정 규칙은 하정운이 23개를 하나씩 판정(고쳐서 채택 18, 보류 뒤 채택 5). 제안 규칙을 사양 표로 대조해 통과 부품 수를 셌다 | R17 첫 규칙(VF 0.2~0.3 V 쇼트키, IR ≤ 1 µA, CJ ≤ 5 pF)은 사양 표 쇼트키 79, 스위칭 73개 중 통과 0개. 일부 출처는 검색 요약만 보고 원문을 열지 못했다 | `docs/worklog/jeongun.md` 2026-11-06 항목 |
-| 2026-11-06 | Claude Code(서브에이전트) | 판정 에이전트·대체품 찾기 구현(`backend/judge/`, `backend/multi_agent/agents/judge.py`), D4 단일 그래프 v2(사실 확인, 7가지 라우팅, 판정 길), 문서 맞추기 | 작업서([judge-agent.md](../specs/judge-agent.md))와 테스트 우선 구현 계획을 먼저 쓰고 시켰다. Task마다 전체 시험 통과 뒤 커밋(최종 680 passed, 43 skipped). LangGraph 인터럽트 동작은 작은 그래프로 직접 돌려 확인. 실제 LLM 측정은 하지 않았다 | 계획서의 인터럽트 재개 값(빈 dict)이면 LangGraph가 재개로 보지 않고 다시 멈췄다(실측으로 발견해 `{"answers": {}}`로 바꿈). 규칙을 옮기며 "A 또는 B"를 "둘 다"로 더 엄격하게 옮겼고, 사용 온도를 전압 정격까지 맞춰 거의 모든 질문을 확인 안 됨으로 만들 뻔했다(둘 다 고침) | `docs/worklog/jeongun.md:277` |
-| 2026-11-09~10 | Cursor, Claude Code | Supervisor Haiku, 찾기 코드 고르기(#44), 판정 읽기(#45), v3 실패 문항(#47~#50), ADR 0017 | 사전 등록 후 v3 50문항 세트(통과 50/50; p95·비용은 `preregister.md` #47~#50). 오프라인 pytest | #46 Haiku Supervisor만 바꾼 측정은 사전 등록의 받지 않는 조건에 걸려 되돌림(무관 거절 실패). 구조 재구성 커밋은 되돌림(revert) | `evals/guides/preregister.md:779-789` |
-| 2026-11-11 | Cursor | 서비스 DB 재설계, 새 Supabase `SojaFit_2`, Cloud Run 전환, 인젝션 HTTP, EVAL 6·8장 | 통합 pytest, 스모크 28단계 통과 28·실패 0, 구글 로그인 왕복. 코퍼스 4표만 이전 | 스모크 실패 두 번은 B 계정 비밀번호 입력이었고 서비스 문제로 오인하기 쉬움. Langfuse export 403은 옛 리비전부터라 이번 변경과 무관 | `docs/worklog/jeongun.md:99` |
+| 2026-11-06 | Claude Code(서브에이전트) | 다이오드 역할 23개 후보 조사(제조사 앱노트, 교재), 판정 연습 문제 24개 초안, 보류 역할 R13 설계 규칙 조사 | 역할마다 출처 원문·검색 요약·추정을 나눠 표시하게 했다. 판정 규칙은 하정운이 23개를 하나씩 판정(고쳐서 채택 18, 보류 뒤 채택 5). 제안 규칙을 사양 표로 대조해 통과 부품 수를 셌다. 최종 판정 하정운 | R17 첫 규칙(VF 0.2~0.3 V 쇼트키, IR ≤ 1 µA, CJ ≤ 5 pF)은 사양 표 쇼트키 79, 스위칭 73개 중 통과 0개. 일부 출처는 검색 요약만 보고 원문을 열지 못했다 | `docs/worklog/jeongun.md` 2026-11-06 항목 |
+| 2026-11-06 | Claude Code(서브에이전트) | 판정 에이전트·대체품 찾기 구현(`backend/judge/`, `backend/multi_agent/agents/judge.py`), D4 단일 그래프 v2(사실 확인, 7가지 라우팅, 판정 길), 문서 맞추기 | 작업서([judge-agent.md](../specs/judge-agent.md))와 테스트 우선 구현 계획을 먼저 쓰고 시켰다. Task마다 전체 시험 통과 뒤 커밋(최종 680 passed, 43 skipped). LangGraph 인터럽트 동작은 작은 그래프로 직접 돌려 확인. 실제 LLM 측정은 하지 않았다. 채택 판정 하정운 | 계획서의 인터럽트 재개 값(빈 dict)이면 LangGraph가 재개로 보지 않고 다시 멈췄다(실측으로 발견해 `{"answers": {}}`로 바꿈). 규칙을 옮기며 "A 또는 B"를 "둘 다"로 더 엄격하게 옮겼고, 사용 온도를 전압 정격까지 맞춰 거의 모든 질문을 확인 안 됨으로 만들 뻔했다(둘 다 고침) | `docs/worklog/jeongun.md:277` |
+| 2026-11-09~10 | Cursor, Claude Code | Supervisor Haiku, 찾기 코드 고르기(#44), 판정 읽기(#45), v3 실패 문항(#47~#50), ADR 0017 | 사전 등록 후 v3 50문항 세트(통과 50/50; p95·비용은 `preregister.md` #47~#50). 오프라인 pytest. 채택 판정 하정운 | #46 Haiku Supervisor만 바꾼 측정은 사전 등록의 받지 않는 조건에 걸려 되돌림(무관 거절 실패). 구조 재구성 커밋은 되돌림(revert) | `evals/guides/preregister.md:779-789` |
+| 2026-11-11 | Cursor | 서비스 DB 재설계, 새 Supabase `SojaFit_2`, Cloud Run 전환, 인젝션 HTTP, EVAL 6·8장 | 통합 pytest, 스모크 28단계 통과 28·실패 0, 구글 로그인 왕복. 코퍼스 4표만 이전. 채택 판정 하정운 | 스모크 실패 두 번은 B 계정 비밀번호 입력이었고 서비스 문제로 오인하기 쉬움. Langfuse export 403은 옛 리비전부터라 이번 변경과 무관 | `docs/worklog/jeongun.md:99` |
 | 2026-11-12 | Cursor | D9 증거 이관, Codex §10, 토큰 한도 5M/10M 배포, 제출 문서(EVAL_REPORT §11, 실패 분석, 시연 스크립트) | 단위 시험, 배포 `/health`, 기존 원시 JSON 링크. 영상·Langfuse 캡처·T4 재측정은 하지 않았다 | 기록 없음 | `backend/conversations/memory_service.py:55`, `docs/worklog/jeongun.md:47` |
 
 Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 표시(`Co-authored-by: Cursor`)가 있다 [실측: `git log --grep`].
@@ -44,5 +44,7 @@ Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 �
 
 - 팀 전체 사용 기록이 아니다. 위 표는 하정운의 사용만 담는다. 심태현·오세창·김재훈의 도구 사용 기록(맡긴 일, 검증 방법, 틀린 곳)은 각자 써야 한다. 작업 기록에 도구 언급은 있으나(`docs/worklog/sth.md:791,799`, `docs/worklog/jaehun.md:169`에 Codex) 사용 내용은 적혀 있지 않다. `docs/worklog/osc.md`에는 도구 이름이 없다.
 - Codex 사용 행이 없다. 저장소에 있는 근거: 평가셋 v3 정답 초안은 Codex 세션에서 작성됐다([EVAL_REPORT.md](../../EVAL_REPORT.md) 10장 첫 단락). 동결 v3에 대한 Codex 답 50문항 문서화는 `docs/worklog/jeongun.md:47-49`와 `evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`. 작성 일자·범위·검증 방법은 작성자가 행으로 적어야 한다.
-- 2026-11-12 행의 "AI가 틀린 곳"이 비어 있다.
+- 2026-11-12 행의 "AI가 틀린 곳"이 비어 있고 채택 판정자 기록이 없다.
+- 2026-11-09~10 Cursor 행은 `Co-authored-by: Cursor` 표시가 없다. 이 표시가 있는 29건은 모두 11-11과 11-12 커밋이다.
+- 11-06 판정 에이전트 행은 구현 4건을 한 행에 묶었다. 검증 문구를 일 단위로 나눌 근거가 작업 기록에 없어 나누지 않았다.
 - 표의 시험 통과 수(567, 680), 표본 수, 부품 수는 작업 기록의 값을 옮긴 것으로 재실행하지 않았다.

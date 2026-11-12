@@ -12,7 +12,7 @@
 |---|---|---|
 | `ai_tools_log.md` | 제출물 | AI 코딩 도구 사용 기록과 검증 방법, 도구가 틀린 곳 |
 | `failure_analysis.md` | 제출물 | 실패 사례 분석: 증상, 원인, 확인 방법, 조치, 못 고친 것 |
-| `demo_script.md` | 제출물 | 시연 영상 촬영 스크립트(D10, 영상 파일 없음) |
+| `demo_script.md` | 제출물 | 시연 영상 촬영 스크립트 |
 | `portfolio.md` | 제출물 양식 | 포트폴리오 1장 양식. 조원마다 `portfolio-{이름}.md`로 복사 |
 | `portfolio-jeongun.md` | 제출물 | 하정운 포트폴리오 |
 | `langfuse/` | 제출물 | Langfuse 대시보드 스크린샷 자리(트레이스 상세 1장 이상 포함, 3장 이상) |

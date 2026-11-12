@@ -22,7 +22,7 @@
 
 | 항목 | 상태 | 근거 | 남은 일 |
 |---|---|---|---|
-| 채용 역할·후보 그룹 분석 | 충족 | 반복 업무와 요구 역량 표: [market-user-journey.md 1-2절](../research/market-user-journey.md)(50개 역할·후보 그룹, 2026-11-12 자료). 원문 모음: [sojafit-domain-jobs-2026-11-12.md](../research/sojafit-domain-jobs-2026-11-12.md)(총 72개 역할·후보 그룹, 확인 기준 2026-11-12) | 과거 주제서의 237건 집계는 [TOPIC.md](../TOPIC.md) 7행이 당시 제출 이력으로 보존한다고 적었고, 원자료 사본은 [evidence/EVIDENCE.md](../research/evidence/EVIDENCE.md)에 있다 |
+| 채용 역할·후보 그룹 분석 | 충족 | 반복 업무와 요구 역량 표: [market-user-journey.md 1-2절](../research/market-user-journey.md)(50개 역할·후보 그룹, 2026-11-12 자료). 선정 50건은 2026-11-12 사용자가 수동 검증하고 모두 이상 없다고 확인했다. 현재 평가에는 이 50건을 사용한다(이전 문서 `evaluation-prep.md:17`의 서술). 원문 모음: [sojafit-domain-jobs-2026-11-12.md](../research/sojafit-domain-jobs-2026-11-12.md)(총 72개 역할·후보 그룹, 확인 기준 2026-11-12) | 과거 주제서의 10-29 237건 집계: 개별 행 `docs/research/evidence/job-postings/merged.json`(237행 [실측]), 집계 [job-postings-summary.md](../research/evidence/job-postings-summary.md)([EVIDENCE.md](../research/evidence/EVIDENCE.md) 14~15행). [TOPIC.md](../TOPIC.md) 7행은 당시 제출 이력으로 보존한다고 적는다 |
 | 사용자·지불 주체의 사실과 가설 구분 | 충족 | 확인 사실 5건(2-1절), 미검증 가설 4건(2-2절), 페르소나 2종(3-1절), 6단계 고객 여정 맵(4절), 범용 챗봇과 동일 질문 5개 비교 설계(5절), 비교 결과는 [EVAL_REPORT.md](../../EVAL_REPORT.md) 10장 | |
 | 외부 검토자 1명의 서비스·근거 검토 | 미충족 | 검토 시나리오와 기록 양식만 [market-user-journey.md 6절](../research/market-user-journey.md)에 있고 기록 칸이 비어 있다 | D10 전에 실시하고 피드백·반영 여부를 기록 |
 | 임베딩 시간·비용 | 충족 | 코퍼스 문서 1,360건의 서로 다른 본문 45,898개를 `text-embedding-3-small`로 5,391,648토큰, 12.6분에 임베딩([jeongun.md:747](../worklog/jeongun.md), 2026-11-01). 같은 본문·토큰 수의 2026-11-02 재실행은 773.6초([grid_2026-11-02.json](../../evals/results/embedding/grid_2026-11-02.json) `meta.embed_logs.te3s`). 서비스의 현재 임베딩은 `voyage-4-large`([SPEC.md](../../SPEC.md) 6절) | 현재 임베딩의 시간·비용은 이 표에 없다 |
@@ -46,4 +46,5 @@
 
 - 배점과 가산 값은 과제 가이드 기준이다. 저장소 안에서는 `docs/research/market-user-journey.md:6`이 1축 15점을 인용할 뿐이며 나머지는 대조하지 못했다.
 - 가산 항목 4개 중 어느 것을 선택했는지, 선택 결과는 이 저장소 문서에 기록돼 있지 않다.
-- 237건과 50개 분석, 72개 모음의 관계는 각 문서가 적은 값만 위에 옮겼고 이 문서는 해석하지 않는다.
+- 237건, 50개 분석, 72개 모음의 관계는 각 문서가 적은 값만 위에 옮겼고 이 문서는 해석하지 않는다.
+- "선정 50건 수동 검증" 문장은 사람의 확인을 서술한 것이며 저장소에 검증 기록 파일은 없다.
