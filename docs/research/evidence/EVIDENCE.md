@@ -46,7 +46,7 @@
 - `corpus/`의 측정 스크립트(`measure_*.py`, `parse_kicad_diodes.py`)와 회로 본문은 저장소에 없다.
 - `netlist/manifest_diodes.json`의 저장소 이름·URL은 공개 GitHub 저장소(MIT, CC BY-SA)의 것이다.
 
-## 5. 파일
+## 파일
 - `corpus/` — 공개 문서·다이오드 데이터시트 조각 수 실측 3개(`manifest_open_docs.json`, `manifest_diode.json`, `manifest_open_extra.json`)
 - `job-postings/` — 공고 수집 원자료 4개(`merged.json`, `wanted_jumpit.json`, `saramin_jobkorea.json`, `company_pages.json`)
 - `job-postings-summary.md` — 공고 237건 집계(`job-postings/`에 마크다운을 섞을 수 없어 밖에 둠)

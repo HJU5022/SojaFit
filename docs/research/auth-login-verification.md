@@ -1,14 +1,14 @@
-# 로그인·세션·scrypt 로컬 실측
+# 로그인·세션·scrypt·AUTH_SECRET 로컬 실측
 
 - 상태: 이력
 - 기준일: 2026-11-02
 - 기준 커밋: 8dc9630 (측정 대상 코드). 현재 코드와 다른 점은 5절
 - 정본 여부: 비정본(측정 기록). 인증 동작의 정본은 `backend/auth.py`와 [SPEC.md](../../SPEC.md)
-- 관련 문서: [auth-feedback-key-verification.md](auth-feedback-key-verification.md), [scripts/auth/AUTH.md](../../scripts/auth/AUTH.md), [login-auth 스펙](../specs/login-auth.md)
+- 관련 문서: [scripts/auth/AUTH.md](../../scripts/auth/AUTH.md), [login-auth 스펙](../specs/login-auth.md)
 
 ## 1. 질문과 결론
 
-질문: 두 계정의 세션이 분리되는가, 잠금·만료 경계가 설정대로인가, 동시 비밀번호 검증의 메모리가 얼마인가.
+질문: 두 계정의 세션이 분리되는가, 잠금·만료 경계가 설정대로인가, 동시 비밀번호 검증의 메모리가 얼마인가, 역할 반환과 `AUTH_SECRET` 키 사용이 설계대로인가.
 
 | 항목 | 값 | 근거 |
 |---|---|---|
@@ -18,6 +18,9 @@
 | scrypt 1건 메모리 증가 | working set 129.32 MiB, private bytes 129.66 MiB | `scrypt_concurrent_2026-11-02.json` `single` |
 | scrypt 2건 동시 메모리 증가 | working set 256.74 MiB, private bytes 257.36 MiB | 같은 파일 `two_concurrent` |
 | 3번째 동시 로그인 | 503, 10.52 ms | 같은 파일 `third_status_during_both_scrypt_calls`, `third_request_ms` |
+| 역할·관리자 API | `/api/auth/me`가 `role`을 반환하고 관리자 API는 비관리자에게 403 | `SPEC.md:144,188`, `backend/auth.py:513-535`, `tests/api/test_auth.py::test_admin_account_management_and_session_revocation` |
+| 세션 토큰 해시 | `AUTH_SECRET`이 있으면 HMAC-SHA256, 없으면(데모) SHA-256 | `backend/auth.py:62-66`, `tests/api/test_auth.py::test_session_token_hash_uses_key_when_provided` |
+| `AUTH_SECRET` 시작 조건 | 데모 외에는 필수, 32바이트 이상 | `backend/auth.py:52-57`, `tests/api/test_auth.py::test_production_requires_valid_auth_secret`, `test_app_startup_requires_key_outside_demo` |
 
 ## 2. 방법과 환경
 
@@ -29,7 +32,6 @@
 | 경계 시험 | PostgreSQL 한 트랜잭션의 `CURRENT_TIMESTAMP`를 고정하고 롤백. 15분·30분·8시간을 실제로 기다리지 않음 |
 | 메모리 시험 | `scrypt(n=131072, r=8, p=1)` 실제 실행. Windows `GetProcessMemoryInfo`로 API와 TestClient가 함께 도는 Python 프로세스를 2 ms 간격 목표로 표본 추출 |
 | 측정 시각(KST) | 경계 시험 2026-11-02 15:53:30, 메모리 시험 15:55:15 |
-| 같은 날 전체 회귀 | 테스트 전용 PostgreSQL과 임시 pgvector DB, UTF-8 모드의 `pytest -q`: 73 passed, 1 skipped. GitHub Actions 결과가 아님. 원시 파일 없음 |
 
 ## 3. 결과
 
@@ -68,6 +70,10 @@
 
 동시 2건은 모두 200이고 scrypt 실행 구간이 343.11 ms 겹쳤다. 두 건이 실행되는 동안 세 번째 로그인은 503으로 거부됐다. 두 건을 동시에 시작하려고 잠금 획득 후 검증 직전에 동기화 대기를 넣었으므로 전체 응답 시간(약 376 ms)은 서비스 지연으로 해석하지 않는다.
 
+### 3.4 역할과 `AUTH_SECRET`
+
+레포의 코드와 시험으로 확인되는 항목은 1절 표의 뒤 세 행이다. 2026-11-02 19:59 KST의 실제 키 사용 측정(6.2절)은 원시 파일이 레포에 없다.
+
 ## 4. 결정에 미치는 영향
 
 로그인 경로의 동시 scrypt 검증은 PostgreSQL 트랜잭션 advisory lock 2칸(`backend/auth.py:339`)으로 2건까지 허용한다. scrypt 한 건당 128 MiB 근거는 `backend/auth.py:37`의 주석이다. 이 제한은 같은 DB와 로그인 경로를 공유할 때만 적용된다. 계정 생성 명령의 scrypt는 범위 밖이다.
@@ -78,15 +84,40 @@
 |---|---|---|
 | 비활동 세션 만료 | 30분 | 2시간(`backend/auth.py:483`, `last_seen_at > CURRENT_TIMESTAMP - INTERVAL '2 hours'`). 3.2절의 30분 행은 현재 코드에 맞지 않는다 |
 | 로그인 실패 한도 | 계정당 5회 | 계정당 5회(`backend/auth.py:366`)에 IP당 30회(`LOGIN_IP_FAILURES`, `:41`) 한도가 추가됨 |
+| 데모 계정 | `DEMO_MODE=1` 초기화에서 관리자 1, 일반 1 생성(6.2절 측정) | 첫 데모 버튼 로그인 때 일반 사용자 `demo-a`, `demo-b`를 만든다(`backend/auth.py:43,440`) |
 
-## 6. 한계
+## 6. 레포에 원시가 없는 측정 (미확인)
+
+### 6.1 같은 날 전체 회귀
+
+테스트 전용 PostgreSQL과 임시 pgvector DB, UTF-8 모드의 `pytest -q`: 73 passed, 1 skipped. GitHub Actions 결과가 아니다.
+
+### 6.2 역할·`AUTH_SECRET` 키 사용 (2026-11-02 19:59 KST)
+
+대상은 STH 작업 트리의 미커밋 인증 변경이다. 환경은 Windows, Python 3.12.10, FastAPI `TestClient`, Docker PostgreSQL 16.15(임시 Compose DB 2개). 계정별 3회 순차 호출한 단일 측정이다. 6회 실측만 로컬 `.env`의 실제 `AUTH_SECRET`을 썼고 키, 세션 토큰, DB 접속 정보는 기록하지 않았다.
+
+| 확인 항목 | 결과 |
+|---|---|
+| `/api/auth/me` 역할 반환 | 관리자 3/3 `admin`, 일반 사용자 3/3 `user`, 모두 HTTP 200 |
+| 관리자 계정 목록 API | 관리자 3/3 HTTP 200, 일반 사용자 3/3 HTTP 403 |
+| 키 없는 새 데모 DB | `DEMO_MODE=1` 초기화에서 관리자 1, 일반 1 생성 |
+| 비데모 기본 계정 | `DEMO_MODE=0`에서 계정 환경변수가 비어 있으면 기본 계정 0 |
+| 실제 키의 세션 해시 | 6/6 세션에서 DB 저장값이 로컬 키로 계산한 HMAC-SHA256과 일치하고 SHA-256 단독값과 다름 |
+| 키 변경 | 일반 사용자 세션 중 임시 키로 바꾸자 `/api/auth/me` 401. 키를 복원한 뒤 로그아웃 성공 |
+| 로그아웃 | 6/6 HTTP 200, 로그아웃 후 `/api/auth/me` 6/6 401 |
+| 로그인 응답 시간 중앙값(각 3회) | 관리자 425.76 ms, 일반 사용자 398.81 ms. 분포나 성능 차이의 근거로 쓰지 않는다 |
+| 자동 회귀 | `TEST_AUTH_DATABASE_URL`을 지정하고 `PYTHONUTF8=1`로 `pytest -q -rs`: 75 passed, 10 skipped, 18.39초. skipped 10건은 별도 RAG 테스트 DB나 코퍼스가 필요한 검사 |
+
+범위 밖: 실제 브라우저의 운영자 메뉴 표시, 로컬 API 컨테이너의 `.env` 전달, 클라우드 비밀값 설정, 배포 서비스의 HTTPS·다중 인스턴스·동시 부하, 기존 볼륨 적용. 이 측정에 쓴 시드 5조건 시험 `test_demo_seed_configuration`은 현재 레포에 없다.
+
+## 7. 한계
 
 - 단일 PC의 단일 실행이다. 서비스 전체 메모리, Cloud Run 성능, 공식 평가 결과가 아니다.
 - 메모리 표본은 2 ms 목표 간격이며 실제 최고점을 놓칠 수 있다. PostgreSQL 컨테이너와 OS 전체 메모리는 포함하지 않는다. 증가량에는 Python·요청 처리의 다른 메모리 변화가 섞여 있다.
 - DB 연결이 검증 중 끊겨 잠금이 먼저 풀리는 경우의 프로세스 메모리 상한은 확인하지 않았다.
 - 미측정: Cloud Run 실제 메모리 설정·인스턴스 수·지연·오류, 반복 부하, GitHub Actions의 인증 DB 테스트 실행 여부, 실제 서비스 데이터의 계정 간 접근 차단.
 
-## 7. 재현
+## 8. 재현
 
 ```powershell
 uv run python scripts/auth/auth_boundary_after_merge.py

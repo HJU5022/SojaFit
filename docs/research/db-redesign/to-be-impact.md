@@ -13,7 +13,7 @@
 
 | 단계 | 하는 일 | 코드 함수 | 시험 | SQL 파일 | 시간 [추정] | 위험 |
 |---|---|---|---|---|---|---|
-| **P1 필수** | 승인 스냅샷 단일화 + 승인 칸 3개, 검사 단순화, FK(대화) · 삭제 트리거, 세션 인덱스 · 만료 세션 청소, `display_name` 삭제, 이력 표 | **3~4** (`services/quote.py`) | 고침 약 6 + 새로 약 5 | `expand` + `contract_p1` | 5~6시간 | 낮음. 에이전트 · 화면 불변 |
+| **P1 필수** | 승인 스냅샷 단일화 + 승인 칸 3개, 검사 단순화, FK(대화) · 삭제 트리거, 세션 인덱스 · 만료 세션 청소, `display_name` 삭제, 이력 표 | **3~4** (`backend/services/quote.py`) | 고침 약 6 + 새로 약 5 | `expand` + `contract_p1` | 5~6시간 | 낮음. 에이전트 · 화면 불변 |
 | **P2 권장** | 분석 회로 사본 삭제, 죽은 승인 경로 삭제, 소유자 FK CASCADE, 청소 함수 교체 | **11** (`memory_service.py`) | 약 25 | `contract_p2` | 12~16시간 | 중간. 시험이 많이 얽힘, `detail()` 응답 키 확인 필요 |
 | **D8 권장** | 데모 계정을 첫 데모 로그인 때 만든다(007 제거) | 1 (`auth.py demo_session`) | 2~3 | 007 삭제 | 2~3시간 | 낮음 |
 | **2b 선택** | `auth_google_pending` 삭제와 승인 대기 코드 제거 | 3 + 라우트 1 + CLI 분기 1 | 약 5 | `2b` | 3~4시간 | 낮음 |
@@ -101,7 +101,7 @@
 | CI | `.github/workflows/ci.yml` | `003 · 005 · 006 · 021` 4개 로드 → `db/020_service_baseline.sql` 1개 |
 | compose | `docker-compose.yml`, `Dockerfile` | initdb 마운트는 그대로(`db/` 폴더). `thread-setup`은 LangGraph 표만 |
 | 코드 | `backend/conversations/memory_service.py initialize`(013~017 · 022 · 023을 런타임에 적용), `backend/auth.py`(003 · 007 참조 주석), `evals/runners/run_judgement_bundle.py` | `initialize`의 SQL 파일 적용 제거(앱은 DDL을 안 돌린다) |
-| 시험 | `tests/api/test_auth.py`(8) · `test_full_service_flow.py`(6) · `conversations/test_repository.py`(5) · `projects/test_project_repository.py`(5) · `api/test_projects.py`(5) · `conversations/test_dto.py`(2) · `services/test_quote_service.py`(1) | 파일 이름 하드코딩 → 헬퍼 `apply_baseline(conn)` 하나 |
+| 시험 | `tests/api/test_auth.py`(8) · `test_full_service_flow.py`(6) · `tests/conversations/test_repository.py`(5) · `tests/projects/test_project_repository.py`(5) · `tests/api/test_projects.py`(5) · `tests/conversations/test_dto.py`(2) · `tests/services/test_quote_service.py`(1) | 파일 이름 하드코딩 → 헬퍼 `apply_baseline(conn)` 하나 |
 | 문서 | 문서 18개 + 작업 기록 4개 | `db/DB.md` · `db/schema/*` · `SOJAFIT.md` · `SPEC.md` 등 필요한 것만 |
 
 기준선은 P1 + P2 완료 상태다. **P2 코드가 끝나기 전에 교체하면 코드와 구조가 안 맞는다.** 그 전까지 새 DB는 `000 ~ 025` + `026`(보안) + `027`(expand + contract P1 이어 붙임) + `028`(contract P2)로 만든다(빈 DB에서는 expand · contract 구분이 필요 없다 — 위 시험의 순서로 이미 통과).

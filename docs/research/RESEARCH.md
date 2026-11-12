@@ -20,8 +20,8 @@
 - `embedding-candidate-investigation.md` — 임베딩 후보 13종을 넣은 이유, 후보별 실행 범위, 중단·제외 사유(이력)
 - `model-licenses.md` — 임베딩 후보별 고정 revision, 라이선스·약관, 운영/연구 분류와 GitHub 포함 여부
 - `skill-feasibility.md` — 도메인 Skill 후보와 기존 기능과의 경계, 선행 조건, 작업 순서 조사
-- `auth-login-verification.md` — 로그인 잠금·세션 만료 경계, 세션 분리, scrypt 동시 실행 메모리의 로컬 실측(이력). 스크립트는 `scripts/auth/`, 원시 JSON은 `scripts/results/auth/`
-- `auth-feedback-key-verification.md` — 역할(admin/user) 반환, 관리자 API 권한, `AUTH_SECRET` 키 사용의 로컬 실측(이력, 원시 없음)
+- `auth-login-verification.md` — 로그인 잠금·세션 만료 경계, 세션 분리, scrypt 동시 실행 메모리, 역할·`AUTH_SECRET` 키 사용의 로컬 실측(이력). 스크립트는 `scripts/auth/`, 원시 JSON은 `scripts/results/auth/`
+- `auth-feedback-key-verification.md` — 로그인 피드백·`AUTH_SECRET` 실제 키 사용과 역할별 실측 기록
 - `email-encryption-options.md` — 로그인 이메일 저장 보호 선택지 A~D, 현재 `users.login_id` 구조, 미결 질문(제안)
 - `supabase-auth-test-runbook.md` — Supabase 인증 테스트 프로젝트 생성, 스키마 점검, RLS 차단 사유와 재개 절차
 - `ci-proposal.md` — CI 사용량 절감 제안과 현재 workflow 설정(제안)

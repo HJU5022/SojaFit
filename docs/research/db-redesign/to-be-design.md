@@ -9,7 +9,7 @@
 
 ## 1. 추가 조사 사실과 설계 반영
 
-| # | 사실(출처: `db-unknowns-1110.md`) | 반영 |
+| # | 사실(출처: 저장소에 없는 조사 노트 `db-unknowns-1110.md`) | 반영 |
 |---|---|---|
 | 1 | Supabase **Data API(PostgREST)가 켜져 있고 `public`에 `anon` USAGE가 있다**. `sojafit_agent`는 노출 안 됨 | 모든 서비스 표를 **RLS ON + 정책 0**, 공개 역할 권한 0으로 만든다(`026`). 새 기준선이 RLS를 **직접 명시**한다(§3 D7). `public`을 비노출 스키마로 옮기는 안은 보류(D10) |
 | 2 | 운영에 `ensure_rls` **이벤트 트리거**: `public`의 새 표는 자동 RLS ON. `sojafit_agent` · compose · CI에는 없음 | 기준선 마지막에 21개 표의 `ENABLE ROW LEVEL SECURITY`를 전부 적는다 → 환경마다 같은 결과. 시험: 기준선 + 026 적용 뒤 "공개 권한 0 · RLS OFF 표 0"(§5) |
