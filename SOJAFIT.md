@@ -27,7 +27,7 @@ SojaFit (proj3-b)
 ├── .env.example            <- 필요한 환경변수 이름과 가짜 값(실제 키는 .env에만)
 ├── .gitignore              <- 커밋하지 않을 파일(.env, 캐시, graphify-out/ 등)
 ├── .gitattributes          <- 해시를 기록한 회로·PDF를 줄바꿈 변환 없이 받게 함
-├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 시험용 가짜 값, SQL 파일 이름 제외
+├── .gitleaks.toml          <- gitleaks 설정: 기본 규칙 + 리랭크 캐시(sha256 해시 key) 파일, 인젝션 측정 결과의 document_key, 작업 기록의 `--to-revisions=` 리비전 이름, 시험용 가짜 값, SQL 파일 이름 제외
 ├── .gitleaksignore         <- 검증된 소스 SHA-256 오탐 한 건의 커밋·파일·규칙·줄 fingerprint
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)

@@ -26,7 +26,7 @@ paths = ['''^backend/conversations/memory_service\.py$''']
 regexes = ['''^\d{3}_[a-z_]+\.sql$''']
 
 # [왜] 11-11 PR #85 병합 뒤 로컬 검사에서 generic-api-key 64건이 나왔고 모두 키가 아니었다(실제 키 형식 직접 검색은 0건).
-#      인젝션 측정 원시 결과의 document_key는 코퍼스 문서 식별 값이다(60건).
+#      인젝션 측정 원시 결과의 document_key는 코퍼스 문서 식별 값이다(이력 검사 기준 2개 파일 360건: ..._03.jsonl 240, ..._03_human_jeongun.jsonl 120, 2026-11-13 `b5f050d`).
 [[allowlists]]
 description = "인젝션 측정 원시 결과의 document_key(코퍼스 문서 식별 값, 비밀값 아님)"
 targetRules = ["generic-api-key"]
