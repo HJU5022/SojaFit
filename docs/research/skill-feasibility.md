@@ -1,33 +1,40 @@
 # 도메인 Skill 적용 가능 범위 조사
 
-## 조사 기준
+- 상태: 이력 (2026-11-03 구현 전 조사. Skill S1·S2는 이후 작성·적용되었다)
+- 기준일: 2026-11-03 (조사), 현재 상태 확인 2026-11-12
+- 기준 커밋: `6700050` (조사 당시 `jaehun` HEAD). 조사한 소스는 기준 커밋의 코드·SPEC·폴더 설명 파일·ADR
+- 정본 여부: 비정본(정본: Skill 적용 계약 [SPEC](../../SPEC.md) Skill 절, 본문 [SKILL.md](../../backend/mcp_skill/skills/SKILL.md), 검증 상태 [EVAL_REPORT](../../EVAL_REPORT.md) 4장 "도메인 Skill 개발 검증")
+- 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [MCP 서버 도구 6종](mcp-tool-implementation-plan.md)
 
-- 조사일: 2026-11-03.
-- 기준 커밋: `6700050763b28d7e43a4841c1aab93075954f3d4`(작업 시작 당시 `jaehun` HEAD).
-- 범위: 기준 커밋의 코드·SPEC·폴더 설명 파일·ADR.
+## 1. 질문과 결론
 
-이 문서의 구현 유무와 입력 계약은 모두 위 커밋 기준이다. Skill 후보는 적용 가능성 조사 결과이며 팀의 구현 범위 확정이나 모델 효과 검증을 뜻하지 않는다.
+질문: 도메인 Skill로 분리할 만한 판단 절차는 무엇이고, 코드·프롬프트·도구에 남겨야 하는 책임은 무엇인가.
 
-## 작업 전 구현 상태
-
-| 항목 | 기준 커밋에서 확인한 사실 | 근거 파일 |
+| 항목 | 값 | 근거 |
 |---|---|---|
-| Skill 문서 | 도메인·용어·판단 기준·예외를 채우는 빈 틀. 실제 판단 지침은 없음 | `backend/mcp_skill/skills/SKILL.md` |
-| Skill 적용 | 생성은 `generate(state)`이며 `generate.md`만 읽음. Skill 로더·적용 옵션·버전 연결은 없음 | `backend/graph/nodes.py`, `backend/graph/state.py` |
-| 노드 프롬프트 | route/grade/rewrite/generate 각각 Markdown 1개. 노드가 로컬 파일을 읽어 시스템 프롬프트로 전달 | `backend/prompts/`, `backend/graph/nodes.py` |
-| 그래프 | 노드 함수 7개와 채점 뒤 분기는 있으나 `build_graph()`는 NotImplementedError | `backend/graph/nodes.py`, `backend/graph/build.py` |
-| MCP | `example_tool()`만 있는 틀이며 도구 본문은 NotImplementedError. 실제 검색 도구 연결은 없음 | `backend/mcp_skill/mcp_server/server.py` |
-| 숫자 판정 | 폴더 설명 파일에 역할·조건·판정 책임을 설명하지만 judge의 추적 파일은 그 설명 파일 하나 | `backend/judge/JUDGE.md`, `SPEC.md` 3·5절 |
-| 모델 설정 | 코드 기본 공급자는 OpenRouter, 기본 모델은 `anthropic/claude-haiku-5.5`. 실제 환경변수 값과 호출 성공 여부는 이 조사에서 확인하지 않음 | `backend/services/llm.py`, ADR 0010 |
-| Langfuse | 인증 확인 함수만 있음. 프롬프트 등록·조회·실행 연결과 span/generation 추적 코드는 없음 | `backend/services/llm.py`, `backend/services/SERVICES.md` |
+| Skill 후보 | S1~S5 다섯 개 | 3절 |
+| 현재 작성된 Skill | S1 정격·시험 조건 해석, S2 회로 연결 설명, 복합 질문 처리. S3~S5는 작성하지 않음 | `backend/mcp_skill/skills/SKILL.md`(48줄, 절 제목 S1·S2·복합 질문), `SPEC.md` Skill 절 |
+| 적용 | 생성 노드에서 선택 적용, 기본은 꺼짐 | `backend/graph/nodes.py:31,451`(`skill_text`), EVAL_REPORT 4장 |
+| 검증 상태 | 개발 시나리오 13상황 중 12/13 충족(자동 원문 대조). 동결 평가셋의 Skill 유무 품질 비교와 사람 검수는 하지 않음 | EVAL_REPORT 4장 `도메인 Skill 개발 검증`, `evals/results/skill/skill_tool_summary_2026-11-03.json` |
+| 효과 측정 | 비교 실행기 `evals/runners/run_skill_pair.py`가 있다. 결과는 EVAL_REPORT를 따른다 | `backend/mcp_skill/MCP_SKILL.md` |
 
-기준 소스: [노드](https://github.com/aihuman-7th/proj3-b/blob/6700050763b28d7e43a4841c1aab93075954f3d4/backend/graph/nodes.py), [Skill 틀](https://github.com/aihuman-7th/proj3-b/blob/6700050763b28d7e43a4841c1aab93075954f3d4/backend/mcp_skill/skills/SKILL.md), [LLM 서비스](https://github.com/aihuman-7th/proj3-b/blob/6700050763b28d7e43a4841c1aab93075954f3d4/backend/services/llm.py), [SPEC](https://github.com/aihuman-7th/proj3-b/blob/6700050763b28d7e43a4841c1aab93075954f3d4/SPEC.md).
+## 2. 조사 당시 구현 상태와 현재
 
-## Skill 후보 선정 기준
+| 항목 | 기준 커밋(2026-11-03)의 사실 | 현재(2026-11-12) | 근거 |
+|---|---|---|---|
+| Skill 문서 | 도메인·용어·판단 기준·예외를 채우는 빈 틀 | S1·S2·복합 질문 지침 있음 | `backend/mcp_skill/skills/SKILL.md` |
+| Skill 적용 | `generate.md`만 읽음. Skill 로더·적용 옵션 없음 | 생성 노드가 Skill 본문을 `skill_text`로 전달 | `backend/graph/nodes.py:31,451` |
+| 그래프 | `build_graph()`는 NotImplementedError | 구현됨(단일 `backend/graph/build.py:69`, 멀티 `backend/multi_agent/build.py:67`) | 코드 |
+| MCP | `example_tool()`만 있는 틀 | 도구 6종 | [MCP 서버 도구 6종](mcp-tool-implementation-plan.md) |
+| 모델 설정 | 기본 공급자 OpenRouter, 기본 모델 `anthropic/claude-haiku-5.5` | 노드별 모델 표 `NODE_MODELS` | `backend/services/langfuse_prompts.py:33-34`, [ADR 0014](../adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) |
+| Langfuse | 인증 확인 함수만 있음 | 프롬프트·Skill 본문(sha256 포함)을 Langfuse에 등록하는 코드 있음 | `backend/services/langfuse_prompts.py:169-186` |
+| 숫자 판정 | 폴더 설명 파일만 있음 | 조사 당시 값 그대로 재확인하지 않음 | 한계 2 |
+
+## 3. Skill 후보 선정 기준과 후보
 
 반복되는 도메인 작업 중 상황에 따라 확인 순서·해석·예외·추가 질문이 달라지는 절차를 후보로 분류한다. 실제 사양값은 검색 근거에서 가져오고, 수치 비교와 실행 상한은 코드에 둔다. 이미 작성된 프롬프트를 파일 이름만 바꾸는 일은 별도 Skill의 필요성이 확인된 것으로 보지 않는다.
 
-| 후보 | Skill로 작성할 판단 절차 | 입력 → 결과 | 예상 적용 위치 | 선행 조건 |
+| 후보 | Skill로 작성할 판단 절차 | 입력 → 결과 | 예상 적용 위치 | 조사 당시 선행 조건 |
 |---|---|---|---|---|
 | S1 정격·시험 조건 해석 | 정격 조회와 회로 적합성 요청을 구분하고 MAX/TYP/MIN·시험 조건·보장 범위를 확인 | 질문·통과 청크 → 문서로 확인한 값·조건과 설명 한계 | 생성 | 필요한 청크·질문 입력은 존재. 기본 생성 프롬프트와 중복을 정리하고 Skill 전달 방식을 새로 정해야 함 |
 | S2 회로 연결 설명 | 직접 확인한 연결과 역할 해석을 구분하고 부분 넷리스트의 확인 한계를 설명 | 질문·대상 주변 넷 → 연결 근거·역할 설명 범위 | 역할 경로의 생성 | 대상 주변 넷 입력은 존재. 역할 추론과 결정적 역할 판정의 경계를 정해야 함 |
@@ -39,7 +46,7 @@ S1·S2에는 재사용할 생성 입력이 있지만 Skill 적용 기능은 없�
 
 라우팅과 검색어 재작성도 검토했다. 다섯 질문 종류 분류는 route.md, 영어 검색 용어 변환과 품번·시험 조건 보존은 rewrite.md에 이미 있다. 별도 Skill로 분리해야 할 추가 상황 판단은 아직 특정하지 않았다.
 
-## 코드·프롬프트·도구에 남길 책임
+## 4. 코드·프롬프트·도구에 남길 책임
 
 | 책임 | 유지할 위치 | Skill과의 경계 |
 |---|---|---|
@@ -50,31 +57,13 @@ S1·S2에는 재사용할 생성 입력이 있지만 Skill 적용 기능은 없�
 | 재검색/재시도 상한·체크포인트·승인·저장·권한 | 그래프·서비스 | 모델에게 부탁하는 지침으로 대체하지 않음 |
 | 프롬프트 버전·실행 노드·모델·사용량·시간 추적 | Langfuse와 서비스 계측 | Skill 자체의 판단 절차와 구분 |
 
-## 기준 코드에서 확인한 선행 조건
+## 5. 결정에 미치는 영향
 
-1. `read_input()`은 `conditions`를 추출하지만 route/grade/generate의 모델 메시지에는 별도로 전달하지 않는다. S4·S5가 사용자 조건을 모두 전달받는다고 가정할 수 없다.
-2. generate.md는 답할 수 없으면 정확히 "문서로 확인 안 됨"만 출력하도록 한다. 한편 SPEC 2·3절은 부족한 조건과 다음 확인 안내를 요구한다. S4를 작성하기 전에 정격 조회·적합성 판단·근거 부재 각각의 응답 범위를 정해야 한다. 이는 작업 전 프롬프트와 SPEC 사이의 계약 검토 사항이다.
-3. `refuse()`는 LLM 없이 범위 밖·품번 문서 없음·찾은 문서에 답 없음으로 나눈 고정 응답을 낸다. 이 응답 경로에 Skill을 작성하는 것만으로 되묻기 동작이 바뀌지는 않는다.
-4. 채점에서 청크가 모두 탈락하면 생성으로 가지 않는 흐름이 SPEC과 `after_grade()`에 정의되어 있다. 생성에만 Skill을 추가하는 설계를 선택한다면, 앞선 채점 오류는 그 Skill의 개선 대상으로 셀 수 없다.
-5. 그림의 전체 연결은 SPEC의 계획이며 서비스 그래프 조립은 미구현이다. 후보 조사와 문서 작성은 가능하지만 전체 흐름의 실제 통합 완료를 전제로 삼지 않는다.
+정해진 것: S1·S2만 Skill로 작성·적용했다(적용 범위와 제외 범위는 SPEC Skill 절: S3 채점 지침 확장, S4 되묻기, S5 judge 판정 설명은 포함하지 않음). 정해지지 않은 것: S3~S5의 작성 여부, Skill 유무에 따른 동결 평가셋 품질 비교 결과.
 
-## 작성 후 확인할 개발 시나리오
+## 6. 한계
 
-아래는 검증 계획이며 실행 결과가 아니다. 동결 평가셋 정답은 Skill 본문에 포함하지 않는다.
-
-| 후보 | 개발 상황 | 확인할 행동 |
-|---|---|---|
-| S1 | 전형값만 있는 청크로 보장 최댓값을 질문 | 전형값을 보장값으로 바꾸지 않음 |
-| S1 | 문서 정격은 확인되지만 사용자 동작 조건이 없음 | 정격 조회와 실제 회로 적합성 결론을 구분 |
-| S2 | 주변 연결 일부만 제공하고 전체 보호 동작을 질문 | 직접 확인한 연결과 확인 못 한 범위를 구분 |
-| S3 | 다른 품번 전용 행 또는 다른 판본만 검색 | 기존 결정적 필터와 함께 잘못된 근거를 통과시키지 않음 |
-| S4 | 사용자 조건 부족과 문서 속성 부재를 각각 제시 | 원인에 맞는 추가 질문 또는 근거 부족 응답 |
-| S5 | 원래 부품 문서는 없고 후보 문서만 제공 | 동일품·사양 동등을 단정하지 않고 judge의 확인 범위와 후보 근거를 구분 |
-
-## 후속 작업과 확인 기준
-
-1. 후보별 적용 범위·입력/출력·노드 책임을 확정하고 SPEC에 반영한다.
-2. Langfuse에 노드 프롬프트의 이름·버전과 Haiku 5.5 설정을 등록하고 실제 실행에서 사용한 버전을 연결한다.
-3. 선정한 상황별 절차를 Skill로 작성하고 기본 프롬프트와 중복 없이 적용한다.
-4. 대표 요청마다 Langfuse 타임라인에서 부모 요청·노드 순서·generation·모델·프롬프트 버전·오류를 확인한다. 웹 화면 확인과 API 확인은 구분한다.
-5. 개발 시나리오 확인 뒤 같은 동결 평가셋으로 Skill 유무 비교를 사전 등록하고 실행한다.
+1. 후보 선정은 조사 당시 코드 읽기 결과이며 모델 효과를 검증한 것이 아니다.
+2. 조사 당시 선행 조건 다섯 건(`read_input()`의 `conditions`가 모델 메시지에 전달되지 않음, `generate.md`의 "문서로 확인 안 됨" 단일 출력과 SPEC 2·3절의 안내 요구 사이 계약 검토, `refuse()`가 LLM 없는 고정 응답이라 Skill만으로 되묻기가 바뀌지 않음, 채점에서 청크가 모두 탈락하면 생성으로 가지 않는 흐름, 서비스 그래프 조립 미구현)은 현재 코드와 대조하지 않았다. 마지막 건은 그래프가 구현되어 해소됐다(2절).
+3. 조사 당시 소스 링크(`github.com/aihuman-7th/proj3-b`)는 이 변환에서 열어 보지 않았다.
+4. 조사 당시의 개발 시나리오 6행과 후속 작업 5단계는 EVAL_REPORT 4장의 검증 기록으로 대체되어 싣지 않았다.
