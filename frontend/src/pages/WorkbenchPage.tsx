@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
 import { createDemo, deleteProject, getProject, listDemos, listProjects, renameProject, uploadProject } from '../api/projects'
-import type { DemoSchematic, ProjectSummary } from '../api/projects'
+import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
 import { errorMessage } from '../api/client'
@@ -14,6 +14,7 @@ import { contextOf, isDiode, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
 import Review from '../components/Review'
+import { ExternalSchematic, SchematicImage } from '../components/Schematic'
 import '../styles/app.css'
 
 // 이미 읽은 서버 판정만 색으로 표시해 실행 완료와 동일품을 혼동하지 않게 한다.
@@ -28,18 +29,6 @@ function closeOutside(event: MouseEvent<HTMLDialogElement>) {
   if (event.target !== event.currentTarget) return
   const rect = event.currentTarget.getBoundingClientRect()
   if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) event.currentTarget.close()
-}
-
-// 이미지 주소가 바뀌면 대기 상태도 초기화해 이전 회로의 오류를 남기지 않는다.
-function SchematicImage({ schematic, name, zoom }: { schematic: DemoSchematic; name: string; zoom: number }) {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [attempt, setAttempt] = useState(0)
-  return <figure tabIndex={0} aria-label="원본 회로도 보기">
-    {status === 'loading' && <div className="skeleton sheet-status" role="status"><span className="sr-only">원본 회로도를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
-    {status === 'error' && <div className="notice sheet-status" role="alert"><p>원본 회로도를 불러오지 못했습니다.</p><button className="btn" onClick={() => { setStatus('loading'); setAttempt(value => value + 1) }}>회로도 다시 불러오기</button></div>}
-    <img key={attempt} src={schematic.image_url} alt={`${name} 원본 회로도`} hidden={status !== 'ready'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} style={{ width: `${zoom}%` }} />
-    <figcaption className="meta-fields"><span>출처: {schematic.attribution}</span><span>라이선스: {schematic.license}</span><a href={schematic.original_url} target="_blank" rel="noreferrer">원본 자료<span className="sr-only"> (새 탭)</span></a></figcaption>
-  </figure>
 }
 
 export default function WorkbenchPage() {
@@ -161,7 +150,7 @@ export default function WorkbenchPage() {
         <ol className="crumbs"><li><button onClick={() => go({})}>프로젝트</button></li>
           {project.data && <li><ChevronRight aria-hidden="true" /><button onClick={() => go({ projectId: String(projectId) })}>{project.data.name}</button></li>}
           {target && <li><ChevronRight aria-hidden="true" /><span className="ref">{target.ref}</span><span className="crumb-value">{target.value}</span></li>}</ol>
-        {target && schematic && <button className="btn" onClick={() => sheet.current?.showModal()}><Maximize2 aria-hidden="true" />원본 회로도</button>}
+        {project.data && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => sheet.current?.showModal()}><Maximize2 aria-hidden="true" />원본 회로도</button>}
       </header>
       {projects.error && projectId === null && <div className="notice inset" role="alert"><p>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
       {project.error && <div className="notice inset" role="alert"><p>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
@@ -233,7 +222,7 @@ export default function WorkbenchPage() {
         <div className="zoom" role="group" aria-label="확대와 축소"><button className="btn btn-icon" disabled={zoom <= 50} onClick={() => setZoom(value => Math.max(50, value - 25))} aria-label="축소"><Minus aria-hidden="true" /></button><output>{zoom}%</output>
           <button className="btn btn-icon" disabled={zoom >= 400} onClick={() => setZoom(value => Math.min(400, value + 25))} aria-label="확대"><Plus aria-hidden="true" /></button><button className="btn" onClick={() => setZoom(100)}>맞춤</button></div>
         <button className="icon-btn" onClick={() => sheet.current?.close()} aria-label="닫기"><X aria-hidden="true" /></button></header>
-      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} zoom={zoom} /> : <p className="empty">등록된 원본 회로도가 없습니다. 창을 닫고 연결 개념도를 확인해 주세요.</p>}
+      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} zoom={zoom} /> : <ExternalSchematic key={project.data?.id} name={project.data?.name ?? ''} zoom={zoom} />}
     </dialog>
   </div>
 }

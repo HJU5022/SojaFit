@@ -175,7 +175,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
     | 경로 | 인증 | 요청 모델 | 응답 모델 | 주요 오류 | 왜 필요한가 |
     |---|---|---|---|---|---|
-    | `GET /api/demo-circuits` | 로그인 · 데모 모드 | - | 200 `list[DemoCircuit]` `[{id, name, schematic}]` | 404(데모 모드 아님) | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계) |
+    | `GET /api/demo-circuits` | 로그인 · 데모 모드 | - | 200 `list[DemoCircuit]` `[{id, name, schematic}]` | 404(데모 모드 아님) | 넷리스트 없이 공개 데모 회로 5종으로 시작(2단계). 404이면 화면은 오류 안내 없이 업로드만 두고, 원본 회로도 창은 모든 프로젝트에 웹 검색을 보인다 |
     | `GET /api/projects` | 로그인 | - | 200 `list[ProjectSummary]` | | 내 프로젝트(회로) 목록(2단계) |
     | `POST /api/projects` | 로그인 · 데모 모드 | `CreateProject` `{demo_id, name}` | 201 `Project`(`connections` 포함) | 422 | 데모 회로로 프로젝트를 만듦(2단계) |
     | `POST /api/projects/upload` | 로그인 | multipart `file`(`.net`, UTF-8, 5 MiB 이하) + `name` | 201 `Project` | 400 형식 · 413 크기 · 422 | KiCad 넷리스트를 올림(2단계, 1절 하는 일) |
