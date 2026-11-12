@@ -39,7 +39,7 @@
 | 원본 회로도 정본 | `data/circuits/visuals.json`. 항목은 `image_url`, `original_url`, `source_repo`, `source_commit`(40자리), `license`, `license_evidence_url`, `attribution`, `sha256`(배포 PNG), `source_sha256`(원본). 키 집합은 `data/circuits/catalog.json`과 정확히 같아야 한다 | `backend/projects/visuals.py:18-37,43` |
 | 정적 PNG | `frontend/public/circuit-schematics/<데모 ID>.png` 15개. 로딩 시 SHA-256 일치를 검사한다. 빌드된 `frontend/dist`가 있으면 그쪽을 검사한다 | `backend/projects/visuals.py:40-58` |
 | 출처 의미 | 저장소 커밋은 저장소 맥락이다. CDN 바이트의 출처 증명은 `original_url`과 `source_sha256`이다 | `backend/projects/visuals.py:18-30` |
-| 카탈로그 API | `GET /api/demo-circuits`. 로그인 필요. 쿼리 `q`(ID·이름 부분 일치), `offset`(0 이상), `limit`(1~100, 기본 100). 응답 `Cache-Control: public, max-age=300`. 각 항목은 `id`, `name`, `schematic` | `backend/api/projects.py:69-80` |
+| 카탈로그 API | `GET /api/demo-circuits`. 로그인 필요, `DEMO_MODE=1`에서만(아니면 404). 쿼리 `q`(ID·이름 부분 일치), `offset`(0 이상), `limit`(1~100, 기본 100). 응답 `Cache-Control: private, max-age=300`. 각 항목은 `id`, `name`, `schematic` | `backend/api/projects.py:69-80` |
 | 업로드 프로젝트 | 원본 회로도 탭은 `project.source_kind === 'demo'`이고 `schematic`이 있을 때만 | `frontend/src/components/CircuitSummary.tsx:19` |
 | 데이터시트 URL | `data/manifest.jsonl`의 `source_url`에서 URL-decode한 PDF 파일명을 소문자로 바꿔 정확히 일치할 때만 사용한다. 호출자가 준 URL은 출처로 받지 않는다 | `backend/rag/source_metadata.py:18-60` |
 | 패키지 외형 페이지 | `data/package-outline-pages.json`(문서 1,360개)을 오프라인 도구가 Docling JSON에서 만든다. 허용된 표제와 같은 페이지에 그림이 있는 최초 페이지. 없으면 도구가 실패한다 | `backend/rag/pipeline/package_outlines.py:40-70`, 문서 수는 JSON 키 수를 직접 셈 |
