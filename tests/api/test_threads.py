@@ -586,8 +586,6 @@ def test_deadline_rejects_result_and_logs_only_safe_metadata(runtime, caplog):
 def test_planned_judge_subgraph_resumes_from_postgres_without_approved_cases(runtime, monkeypatch):
     from backend.multi_agent.build import build_graph
     from backend.multi_agent.contracts import Plan, Task
-    # 재개 시 재호출 여부를 검증하므로 운영의 3회 다수결과 분리해 첫 읽기를 1회로 고정한다.
-    monkeypatch.setenv('JUDGE_READ_VOTES', '1')
     app, (a, _), dsn = runtime
     source = make_thread(app, a)
     app.message(a, source, '판정')
