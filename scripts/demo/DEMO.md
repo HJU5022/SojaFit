@@ -33,7 +33,7 @@
 - 기록은 18줄이다(`supervisor` 10 · `judge_read` 5 · `docs_answer` 3) [실측: `calls.jsonl`]. 기록 응답은 질문 10개, 회로 6곳이다.
 - 인터럽트는 4개 질문에서 났고(`v3-01` · `demo-ask` · `demo-find` · `demo-notsuff`) 모두 같은 대화의 두 번째 단계로 재개해 끝났다. 재개 값은 `outcomes.json`의 `resume`이고 화면의 "기록한 답으로 계속하기"가 그대로 보낸다. 값을 주고 재개하는 질문은 `demo-ask`뿐이다(나머지는 모름).
 - 이 기록 방식은 한 프로세스 안(`InMemorySaver`)에서 질문 → 인터럽트 → 재개를 돌린다. 서비스를 다시 띄운 뒤 재개하는 것은 서비스의 Postgres 체크포인트가 맡는 길이고 이 스크립트는 보지 않는다.
-- 견적 승인 경로는 재생에 없다(재생 모드의 `can_approve`는 항상 `False`, `memory_service.py`).
+- 승인 · 견적은 재생이 아니라 서비스의 승인 API(`backend/api/quotes.py`, `backend/services/quote.py`)가 맡고 재생 모드에서도 동작한다. 완료된 run의 후보 판정(동일품 · 사양 동등 · 역할상 충분)에 `POST /api/messages/{id}/approvals`가 201이고 같은 승인을 다시 보내면 409 `ALREADY_APPROVED`, 이어서 견적 저장이 201이다(키 없는 compose, `v3-01` 재개 뒤, [smoke_cold.json](../../evals/results/d10/boot/smoke_cold.json) 6 · 7단계). 거절 · 불충족 run이나 필수 조건을 확인하지 못한 후보는 승인할 수 없다(`approval_snapshot`). 분석 응답의 `can_approve`는 재생 여부와 관계없이 항상 `False`인 자리 채움 값이라 승인 가능 여부의 신호가 아니다(`memory_service.py` 392줄).
 - 한계: 기록에 있는 (회로 · 대상 · 질문 · 사용 조건) 조합과 새 대화의 첫 질문만 재생한다. 그 밖의 입력은 422(데모 질문 목록)이고, 프롬프트나 DB가 기록 때와 달라져 기록에 없는 호출이 나오면 503 `UNAVAILABLE`로 멈춘다.
 - React 데모 회로(`backend/projects/repository.py`의 `DEMOS`)의 연결 정보가 기록 질문의 넷리스트 옆 `connections.json`과 같을 때만 서비스가 그 질문을 받는다(`tests/services/test_demo_replay.py`가 열 질문 모두 확인).
 - 화면은 `GET /api/demo-questions`가 돌려주는 이 목록을 버튼으로 보이고 글자 그대로 새 대화의 첫 질문으로 보낸다. 화면에 질문 글을 따로 적어 두지 않는다.
