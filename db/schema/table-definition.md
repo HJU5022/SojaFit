@@ -567,7 +567,7 @@
 | `reserved_usd` | numeric(16,10) | NOT NULL | 0 | 예약 비용(청구액 아님, 환불 안 함) |
 | `attempts` | integer | NOT NULL | 1 | 그날 시도 수 |
 | `next_allowed` | timestamp with time zone | NOT NULL |  | 다음 허용 시각(호출 간격) |
-| `reserved_tokens` | bigint | NOT NULL | 0 | 예약 토큰(상한은 [SPEC.md](../../SPEC.md) 8.6절) |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 예약 토큰(상한 사용자 200,000 → 운영 1,000,000) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
@@ -587,7 +587,7 @@
 | 칸 | 타입 | NULL | 기본값 | 의미 |
 |---|---|---|---|---|
 | `day` | date | NOT NULL |  | UTC 날짜 |
-| `reserved_tokens` | bigint | NOT NULL | 0 | 서비스 전체 예약 토큰(상한은 [SPEC.md](../../SPEC.md) 8.6절) |
+| `reserved_tokens` | bigint | NOT NULL | 0 | 서비스 전체 예약 토큰(상한 2,000,000) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
