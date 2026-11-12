@@ -10,11 +10,8 @@ const contents = [
 
 export default function PrivacyPage() {
   useEffect(() => { document.documentElement.scrollTop = 0 }, [])
-  return <div className="public-site privacy-page">
-    <header className="public-header">
-      <Link className="public-brand" to="/"><img className="brand-logo" src="/assets/sojafit-logo.svg" alt="SOJAFIT" width="174" height="48" /></Link>
-      <Link to="/">서비스 소개</Link>
-    </header>
+  return <div className="landing privacy-page">
+    <header className="land-nav"><Link className="brand" to="/"><img src="/assets/sojafit-icon.svg" alt="" width="24" height="24" />SojaFit</Link><Link className="btn" to="/">서비스 소개</Link></header>
     <article className="privacy-content" aria-labelledby="privacy-title">
       <h1 id="privacy-title">개인정보처리방침</h1>
       <p className="privacy-draft"><strong>안내 초안</strong> · 운영 정보 확인 중</p>

@@ -1,45 +1,43 @@
 # frontend
 
-- 사용 방법은 본문 전체 폭의 수평9스텝 지도다. 초기 설명창은 숨기고 노드 클릭 시 지도 안에서 최대460×380px의 비모달 설명창1개를 연다. 아래/위/옆 배치와 좌표 제한·본문 스크롤로 지도 높이를 늘리지 않는다. 닫기/Escape/바깥 클릭·초점 복귀·명시적 이미지 확대를 지원하며 추가 캡처가 없는 단계는 설명으로 안내한다.
-
-## 운영 API를 보존하는 최신 화면 복구
-- 최신 랜딩의 실측 3칸·스크롤 사용 방법/확대와 작업대의 누적 대화·저장 기록·자료 탭·서버 연결 개념도를 제공한다. 배경 격자와 표시 영역을 고정하고 내부 그래프만 확대/축소하며 맞춤 아이콘은 우상단에 둔다.
-- 현재 운영 이미지에는 메일 인증/재설정·질문 첨부 API가 없다. 운영 빌드에서는 해당 화면/첨부를 노출하지 않고 Google 동의(consent=1)와 기존 비밀번호 로그인을 사용한다. 프로젝트 .net 업로드는 유지한다. 개발용 모의 첨부와 데모 가입은 실제 운영 지원을 뜻하지 않는다.
-- `docker build -f frontend/Dockerfile.recovery -t sojafit:ui-recovery-local .`은 고정 운영 이미지를 상속해 화면만 교체한다. 루트 Dockerfile의 전체 서버 빌드와 구분하며, 반영 전에 실제 운영 리비전·이미지가 고정 기준과 같은지 다시 확인해야 한다. 이 명령은 로컬 빌드이며 원격 게시·배포·트래픽 전환은 별도 승인이 필요하다.
-- 사용 방법 이미지는 로컬 예시 데이터이며 현재 운영 캡처로 검증된 이미지가 아니다. 실측 숫자는 2026.11.04 검색 실험 결과이며 현재 답변 정확도가 아니다.
-
 ## 역할
 - 넣는 것: React + Vite + TypeScript 도구 설정과 같은 출처 화면 소스. 운영에서는 빌드 산출물만 FastAPI 이미지로 전달합니다.
-- 넣지 않는 것: API·인증·판정 로직(`backend/`), D5 내부 상태와 비밀값. 화면은 서버의 안전 DTO만 표시하고 판정을 새로 계산하지 않습니다.
-- 개발: `npm ci`, `npm run dev`. `/api`는 `http://localhost:8000`으로 프록시합니다. 인증 DB 없이 UI만 확인할 때는 명시적으로 `VITE_DUMMY_AUTH=1`을 설정할 수 있으며 production build에서는 이 값이 무시됩니다. 로그인부터 승인·견적까지 비영속 전체 흐름은 `npm run dev:dummy`에서만 사용할 수 있습니다.
-- 확인: `npm run test:run`, `npm run build`, `npm run e2e`. e2e는 로컬 Vite와 가짜 API만 사용합니다.
+- 넣지 않는 것: API·인증·판정 로직(`backend/`), 비밀값. 화면은 서버의 안전 DTO만 표시하고 판정을 새로 계산하지 않습니다.
+- 담당: 서비스·운영.
 - `frontend/` 도구 루트는 표준 Vite가 package.json·index.html·vite.config.ts를 함께 요구하므로 사용자 승인으로 한 종류 규칙의 좁은 예외입니다. `src/` 등은 예외가 아닙니다.
 
-## 화면 원칙
-- 2026-11-12 후속 승인: 운영 회원가입을 공개 `/signup`과 기존 API로 제공한다. Google 로그인·이메일 가입의 별도 동의 체크는 제거하고 개인정보처리방침 링크는 유지한다. 가입 API 검증·Origin·세션·기존 한도를 유지한다.
+## 2026-11-13 화면 전면 재작성
+- 화면(`src/pages`, `src/components`, `src/styles`)을 처음부터 다시 만들었습니다. 이전 화면의 컴포넌트·스타일·e2e 스펙·랜딩 이미지는 모두 지웠고, 이 문서와 [SRC.md](src/SRC.md)의 이전 설명도 함께 지웠습니다.
+- 서버 통신과 인증(`src/api`, `src/auth`, `src/hooks/useRunStream.ts`)은 그대로입니다. 더미 응답(`src/api/dummy.ts`)에 프로젝트 이름 변경·삭제만 더했습니다.
+- 모양의 기준은 [design.md](design.md) 하나입니다. 색·글자·간격·상태·금지 목록이 거기 있고, 벗어나려면 그 문서를 먼저 고칩니다.
 
-- 운영 빌드의 로그인은 서버에서 활성화한 Google 진입과 기존 이메일·비밀번호를 제공한다. 데모 계정 버튼·status 조회는 개발 환경에서만 사용한다. 서버 데모 접속 차단에는 별도로 DEMO_MODE=0을 설정한다.
-- 프로젝트/부품 준비는 상단 프로젝트 버튼의 모달에서 한다. 새 프로젝트 생성 후에도 서버 부품 목록을 고르는 단계로 이어지며 대화 영역에는 별도 부품 선택 박스나 분석 준비 안내 카드를 두지 않는다. 선택 자체는 분석을 시작하지 않는다.
-옛 `backend/web/design.md`(11-10에 지움)에서 지금도 맞는 것만 옮겼습니다. 900px 이하 배치 · 401 처리 · 자동 재전송 금지는 [SRC.md](src/SRC.md)에 있습니다.
-- 대체 판정 5종은 SPEC 3절의 화면 표기를 그대로 씁니다.
-- 판정마다 근거(데이터시트의 쪽·표·행이나 공개 문서의 절)를 판정 바로 옆에 보입니다.
+## 실행과 확인
+- 개발: `npm ci`, `npm run dev`. `/api`는 `http://localhost:8000`으로 프록시합니다.
+- 서버 없이 화면만: `npm run dev:dummy`. 로그인 없이 가짜 응답으로 뜹니다(개발 빌드에서만).
+- 확인: `npm run test:run`, `npm run build`. 브라우저 e2e는 지금 없습니다.
+- `docker build -f frontend/Dockerfile.recovery ...`은 고정 운영 이미지를 상속해 화면만 교체하는 복구용입니다. 루트 Dockerfile의 전체 서버 빌드와 구분합니다.
+
+## 화면 원칙
+- 대체 판정 5종은 SPEC 3절의 화면 표기를 그대로 씁니다. 판정 색은 판정에만 씁니다.
+- 판정마다 근거(데이터시트의 쪽·표·행)를 판정 바로 옆에 보입니다.
 - 결과 화면마다 "같은 동작은 보장하지 않습니다"를 보입니다.
-- 패키지가 달라 기판 수정이 필요한 후보는 판정과 따로(기판 수정 칸) 표시합니다.
-- 데스크톱은 프로젝트·대화·결과의 3열입니다. 모든 입력에 label을 두고, 진행 상태는 `aria-live`, 키보드 초점은 3px 윤곽선으로 보입니다.
-- `/` 공개 랜딩과 `/login` 소개·입력 2열 로그인은 승인된 목업의 Deep Gray·Silver Slate·Orange를 사용합니다. 로그인·데모/Google·가입 기능은 기존 API를 사용합니다. `/app`은 프로젝트 유무와 무관하게 왼쪽 프로젝트·대화 목록, 중앙 대화, 오른쪽 상세 패널의 새 작업대를 표시하며 자동 진입 모달은 없습니다.
-- 대화 목록의 제목을 누르면 기존 로그인으로 저장된 메시지와 분석 결과를 읽습니다. 메시지별 결과 메뉴는 해당 run의 근거·판정·승인에 연결되고 과거 조건 원문은 복원하지 않습니다. 기록은 읽기 전용이며 새 분석은 새 대화의 첫 전송에서 기존 POST로 생성합니다. 목록 페이지와 기록에서의 추가 입력 재개는 [프로젝트·이전 대화 탐색](../docs/specs/project-conversation-navigation.md)의 후속 범위입니다.
+- 데모 로그인 버튼은 서버가 데모 모드라고 답할 때(`GET /api/auth/demo` 200)만 보입니다. 서비스(`DEMO_MODE=0`)에서는 404라 보이지 않습니다(조장 결정 11-13).
+- 질문 파일 첨부(.net · .txt) 버튼은 개발 빌드에서만 보입니다. 운영에서는 `useRunStream`이 첨부를 막습니다.
+
+## 서버가 생긴 뒤에 붙일 것
+- 관리자의 이메일 가림 해제(사유 기록)와 강제 탈퇴. 서버 API가 없어 화면에 두지 않았습니다(`docs/worklog/jeongun.md` 11-12 · 11-13).
+- 랜딩 신뢰 구역의 판정 일치 수치. 재측정 뒤에 넣습니다.
 
 ## 파일
-- `FRONTEND.md` — 이 문서
-- `Dockerfile.recovery` — 고정 운영 백엔드 이미지 위에 최신 화면만 빌드해 교체하는 로컬 복구 이미지 설정
-- `package.json` — npm 의존성과 개발·빌드·테스트 명령. `elkjs`는 연결 개념도의 직교 배선과 겹침 없는 자동 배치를 브라우저 Web Worker에서 계산합니다.
-- `package-lock.json` — npm 의존성 고정
-- `index.html` — 한국어 React 진입 HTML
-- `vite.config.ts` — React 플러그인, API 개발 프록시, jsdom 테스트와 단일 catalog의 실제 15종 연결 JSON·visual metadata를 dummy mode에 묶는 virtual module 설정
-- `tsconfig.json` — TypeScript 프로젝트 참조
-- `tsconfig.app.json` — 화면 TypeScript 검사 설정
-- `tsconfig.node.json` — Vite 설정 TypeScript 검사 설정
-- `playwright.config.ts` — 로컬 Vite Playwright 설정
-- `public/` — Vite가 루트 경로로 제공하는 화면 전용 정적 이미지. [PUBLIC.md](public/PUBLIC.md)
-- `e2e/` — 외부 호출 없는 브라우저 smoke. [E2E.md](e2e/E2E.md)
+- `FRONTEND.md` — 이 폴더 설명.
+- `design.md` — 화면 모양의 기준(색·글자·간격·상태·움직임·금지 목록).
+- `Dockerfile.recovery` — 운영 이미지를 상속해 화면만 빌드·교체하는 복구용 이미지.
+- `package.json` — npm 의존성과 실행 명령.
+- `package-lock.json` — npm 의존성 고정.
+- `index.html` — React 진입 HTML.
+- `vite.config.ts` — React·API 프록시·Vitest와 더미 회로 가상 모듈 설정.
+- `tsconfig.json` — TypeScript 프로젝트 참조.
+- `tsconfig.app.json` — 화면 TypeScript 설정.
+- `tsconfig.node.json` — Vite TypeScript 설정.
+- `public/` — 정적 이미지. [PUBLIC.md](public/PUBLIC.md)
 - `src/` — 화면 소스와 단위 테스트. [SRC.md](src/SRC.md)

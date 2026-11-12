@@ -84,6 +84,17 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     const found = projects.find(item => item.id === Number(projectMatch[1]))
     return found ? json(found) : notFound()
   }
+  if (method === 'PATCH' && projectMatch) {
+    const name = String((JSON.parse(String(init.body ?? '{}')) as { name?: string }).name ?? '').trim()
+    const found = projects.find(item => item.id === Number(projectMatch[1]))
+    if (!found || !name) return found ? json({ error: { code: 'VALIDATION_ERROR', message: '프로젝트 이름을 입력해 주세요.', request_id: REQUEST_ID } }, 422) : notFound()
+    projects = projects.map(item => item === found ? { ...item, name, updated_at: NOW } : item)
+    return json({ ...found, name, updated_at: NOW })
+  }
+  if (method === 'DELETE' && projectMatch) {
+    projects = projects.filter(item => item.id !== Number(projectMatch[1]))
+    return new Response(null, { status: 204 })
+  }
   if (method === 'POST' && pathname === '/api/projects') {
     const body = JSON.parse(String(init.body ?? '{}')) as { demo_id?: string; name?: string }
     const source = dummyProjects.find(item => item.demo_id === body.demo_id)

@@ -801,8 +801,8 @@
 - 다음 할 일: 조 회의에서 가산 담당과 Neo4j·스케줄러 위치를 정한다.
 
 ## 2026-10-30 문서 뼈대 추가
-- 한 일: 기능 정본 `SPEC.md` 뼈대(8절), DB 관계도 `db/ERD.md`, 프롬프트 폴더 `backend/prompts/`와 버전 기록 표, 화면 디자인 규칙 `backend/web/DESIGN.md`를 만들었다. 정해진 내용은 주제서·AGENTS·ADR 0001에서 옮기고, 정하지 않은 칸은 `(정할 것)`으로 두었다.
-- 바꾼 파일: `SPEC.md`, `SOJAFIT.md`, `db/ERD.md`, `db/DB.md`, `backend/prompts/PROMPTS.md`, `backend/BACKEND.md`, `backend/web/DESIGN.md`, `backend/web/WEB.md`, 이 파일
+- 한 일: 기능 정본 `SPEC.md` 뼈대(8절), DB 관계도 `db/ERD.md`, 프롬프트 폴더 `backend/prompts/`와 버전 기록 표, 화면 디자인 규칙 `backend/web/design.md`를 만들었다. 정해진 내용은 주제서·AGENTS·ADR 0001에서 옮기고, 정하지 않은 칸은 `(정할 것)`으로 두었다.
+- 바꾼 파일: `SPEC.md`, `SOJAFIT.md`, `db/ERD.md`, `db/DB.md`, `backend/prompts/PROMPTS.md`, `backend/BACKEND.md`, `backend/web/design.md`, `backend/web/WEB.md`, 이 파일
 - 실행한 명령과 결과: 바뀐 문서 8개의 상대 링크 30개를 대조해 깨진 링크 0개. 커밋마다 `git diff --cached --check` 통과. ERD의 라이브러리 표 이름은 `.venv`의 `langgraph-checkpoint-postgres` 3.2.0 소스에서 확인했다.
 - 확인 못 한 것: 백로그 보드(GitHub Projects)는 파일이 아니라 만들지 않았다. 데이터시트를 검색 색인용으로 나누는 것이 약관의 "비수정"에 맞는지는 SPEC 6절에 확인할 것으로 남겼다.
 - 다음 할 일: 조 회의에서 SPEC의 숫자 성공 기준, 대체 판정 5종의 코드 값과 채점 처리, 그래프 노드를 정한다. 화면 방식(FastAPI 직접 또는 별도 프론트)을 정해 ADR로 남긴다.
@@ -982,3 +982,14 @@
 - 확인: CI와 같은 gitleaks 이미지로 깨끗한 복제본 전체 이력 검사 20건 → 0건. 워크플로 YAML 읽기 확인. 재생 명령은 11-10 새 compose 프로젝트에서 성공한 명령과 같다.
 - 확인 못 한 것: GitHub Actions가 조직 결제 한도로 시작되지 않아(11-09 #73부터 main도 같음) 세 잡 모두 실제 실행을 못 봤다. `eval-live`는 Secrets 등록 전이라 돌리지 않았다. 일부러 기준 미달로 만든 변경에서 실패하는 기록은 Actions가 풀린 뒤에 남긴다.
 
+
+## 2026-11-13 프론트 화면 전면 재작성 반영 (브랜치 `jeongun`, 미커밋)
+
+- 왜: 기존 화면의 기능·모양·배치를 전부 버리고 처음부터 다시 만들기로 했다(조장 결정 11-12). 별도 클론에서 만든 뒤 11-13에 이 저장소로 옮겼다.
+- 바꾼 것: `frontend/src`의 `pages/` · `components/` · `styles/` · `lib/` · `hooks/useConversation.ts`를 새로 썼다. 이전 컴포넌트 · `styles.css` · `workers/` · e2e 스펙 4개 · `playwright.config.ts` · 랜딩 이미지 4장 · 가로 로고를 지웠다. 의존성에서 `elkjs` · `@fontsource-variable/noto-sans-kr` · `@playwright/test`를 빼고 `pretendard` · `lucide-react` · `motion`을 넣었다. 모양의 기준 `frontend/design.md`를 새로 두었다.
+- 그대로 둔 것: `src/api` · `src/auth` · `hooks/useRunStream.ts`. `api/dummy.ts`에 프로젝트 이름 변경 · 삭제 응답만 더했다.
+- 정한 것: 데모 로그인 버튼은 서버가 데모 모드라고 답할 때만 보인다(조장 결정 11-13). 서비스 화면에는 없다.
+- 서버가 필요해 화면에 두지 않은 것: 관리자 이메일 가림 해제(사유 기록) · 강제 탈퇴. 관리자 목록의 이메일은 서버가 이미 가려서 보낸다(`backend/api/admin.py`). 위 11-12 항목의 "나중에 붙일 것"은 그대로다.
+- 확인: `npm run test:run` 51 passed, `tsc -b`, `vite build`. 키 없는 compose(8010 포트, 별도 프로젝트)에서 데모 버튼 로그인 · 프로젝트 만들기 · 이름 변경 · 삭제 · 부품 목록 · 내 설정 · 관리자 차단을 눌러 봤다.
+- 확인 못 한 것: 키 없는 데모의 질문 재생은 서버가 `ReplayMiss`로 실패해 판정 · 승인 · 견적 · 가격 화면을 실제 서버로 보지 못했다(기록은 11-10, Supervisor · 프롬프트는 11-12에 바뀜). 실제 모드(`DEMO_MODE=0`) 연결, Google 로그인, 새 화면의 자동 테스트.
+- 남은 것: 작업서(`docs/specs/`) · `SPEC.md`의 화면 서술 · `README.md`의 화면 설명 갱신, 랜딩의 판정 일치 수치(재측정 뒤).

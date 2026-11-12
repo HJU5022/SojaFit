@@ -46,7 +46,7 @@ jobs:
           name: test-results
           path: test-results.xml
 
-  # 프런트 단위 테스트와 빌드. e2e(playwright)는 서버가 필요해 넣지 않는다.
+  # 프런트 단위 테스트와 빌드.
   frontend:
     runs-on: ubuntu-latest
     defaults:
