@@ -124,6 +124,8 @@ SojaFit (proj3-b)
 │       ├── components/     <- 재사용 화면 컴포넌트와 동작 테스트
 │       │   ├── AccountMenu.tsx <- 작업대·설정 공통 이메일 계정 메뉴·개인 화면 설정·로그아웃
 │       │   ├── AccessibleDialog.tsx <- focus trap·Esc·focus 복귀 공통 dialog
+│       │   ├── LandingGuide.tsx <- 랜딩 수평 사용 흐름과 영역 안 비모달 과정 설명창
+│       │   ├── LandingGuide.test.tsx <- 스텝 전환·닫기·초점·이미지 확대 경계 테스트
 │       │   ├── ProjectSidebar.tsx <- 소유 프로젝트 선택·이름 변경·명시적 삭제 확인
 │       │   ├── ProjectSidebar.test.tsx <- 이름 변경·삭제 확인·늦은 삭제 응답 테스트
 │       │   ├── CircuitSetup.tsx <- 공개 데모·KiCad .net 업로드 프로젝트 생성

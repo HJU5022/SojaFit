@@ -1313,8 +1313,10 @@ test('opens saved messages, selects their results and restores history after rel
 
 for (const width of [1440, 1200, 1024, 820, 768, 700, 390, 320]) test(`landing sections scroll at ${width}px`, async ({ page }, testInfo) => {
   await page.setViewportSize({ width, height: 900 })
+  const pageErrors: string[] = []
+  page.on('pageerror', error => pageErrors.push(error.message))
   const calls: string[] = []
-  await page.route('**/api/**', route => {
+  await page.route(/^https?:\/\/[^/]+\/api\//, route => {
     calls.push(new URL(route.request().url()).pathname)
     return route.fulfill({ status: 401, json: { error: { code: 'UNAUTHORIZED', message: '로그인이 필요합니다.', request_id: 'landing-check' } } })
   })
@@ -1335,29 +1337,64 @@ for (const width of [1440, 1200, 1024, 820, 768, 700, 390, 320]) test(`landing s
   await expect(page.locator('[data-metric="recall"]')).toContainText('93.42%')
   await expect(page.locator('[data-metric="all-evidence"]')).toContainText('92.11%')
   await expect(page.locator('[data-metric="latency"]')).toContainText('1.18초')
-  const guides = page.locator('.landing-guide-step')
-  await expect(guides).toHaveCount(3)
-  const stepTops = await guides.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().top))
-  expect(stepTops[1]).toBeGreaterThan(stepTops[0])
-  expect(stepTops[2]).toBeGreaterThan(stepTops[1])
-  for (const [index, image] of ['project', 'question', 'evidence'].entries()) {
-    const guide = guides.nth(index)
-    const screenshot = guide.locator('img')
-    await expect(screenshot).toHaveAttribute('src', `/assets/landing-guide-${image}.png`)
-    await screenshot.scrollIntoViewIfNeeded()
-    await expect.poll(() => screenshot.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(1440)
-    const copy = (await guide.locator('.landing-guide-copy').boundingBox())!
-    const picture = (await screenshot.boundingBox())!
-    if (width < 900) expect(picture.y).toBeGreaterThan(copy.y + copy.height)
-    else expect(picture.x).toBeGreaterThan(copy.x + copy.width)
+  const map = page.locator('.landing-guide-map')
+  const nodes = page.getByRole('group', { name: '회로 검토 사용 흐름' }).getByRole('button')
+  await expect(nodes).toHaveCount(9)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const mapHeight = (await map.boundingBox())!.height
+  if (width >= 900) {
+    const x = await nodes.evaluateAll(items => [0, 1, 3, 5].map(index => items[index].getBoundingClientRect().x))
+    expect(x.every((value, index) => index === 0 || value > x[index - 1])).toBe(true)
   }
-  const enlarge = page.getByRole('button', { name: '판정과 근거 확인 화면 크게 보기', exact: true })
+  async function checkGuideBounds(expectedHeight = mapHeight) {
+    await expect.poll(() => map.evaluate(area => {
+      const a = area.getBoundingClientRect(), p = area.querySelector('.landing-guide-popup')!.getBoundingClientRect()
+      return p.width <= 461 && p.height <= 381 && p.left >= a.left + 10 && p.right <= a.right - 10 && p.top >= a.top + 10 && p.bottom <= a.bottom - 10
+    })).toBe(true)
+    expect(Math.abs((await map.boundingBox())!.height - expectedHeight)).toBeLessThan(2)
+  }
+  for (let index = 0; index < 9; index++) {
+    const node = nodes.nth(index), title = await node.innerText()
+    await node.click()
+    await expect(page.getByRole('dialog', { name: title, exact: true })).toBeVisible()
+    await checkGuideBounds()
+    const sceneButtons = page.getByRole('group', { name: '세부 과정' }).getByRole('button')
+    for (let scene = 0; scene < await sceneButtons.count(); scene++) {
+      await sceneButtons.nth(scene).click()
+      await expect(page.locator('.landing-guide-scenes [aria-pressed="true"]')).toHaveCount(1)
+      await checkGuideBounds()
+    }
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(node).toBeFocused()
+  }
+  await map.screenshot({ path: testInfo.outputPath(`landing-steps-${width}.png`) })
+  await nodes.getByText('문서 근거', { exact: true }).click()
+  await checkGuideBounds()
+  if (width === 1440) {
+    await page.setViewportSize({ width: 1024, height: 720 })
+    await checkGuideBounds(480)
+    await page.setViewportSize({ width, height: 900 })
+    await checkGuideBounds()
+    const body = page.locator('.landing-guide-body'), scrollY = await page.evaluate(() => window.scrollY)
+    expect(await body.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true)
+    await body.hover(); await page.mouse.wheel(0, 600)
+    await expect.poll(() => body.evaluate(node => node.scrollTop)).toBeGreaterThan(0)
+    expect(Math.abs(await page.evaluate(() => window.scrollY) - scrollY)).toBeLessThan(2)
+    await expect(page.getByRole('button', { name: '과정 설명 닫기' })).toBeInViewport()
+    await map.screenshot({ path: testInfo.outputPath('bounded-popup-1440.png') })
+  }
+  const enlarge = page.getByRole('button', { name: '예시 화면 크게 보기', exact: true })
   await enlarge.click()
-  await expect(page.getByRole('dialog', { name: '판정과 근거 확인', exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: '문서 근거 예시 화면', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByRole('dialog', { name: '문서 근거 예시 화면', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('dialog', { name: '문서 근거', exact: true })).toBeVisible()
   await expect(enlarge).toBeFocused()
+  await enlarge.hover()
+  expect(await enlarge.evaluate(node => getComputedStyle(node).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
+  await page.getByRole('button', { name: '과정 설명 닫기' }).click()
   if (width === 1440) {
     const raw = JSON.parse(readFileSync(resolve('../evals/results/retrieval/service_r1_bits_2026-11-04.json'), 'utf8'))
     const questions = readFileSync(resolve('../evals/samples/retrieval_r1.jsonl'), 'utf8').trim().split(/\r?\n/).map(line => JSON.parse(line))
@@ -1379,7 +1416,7 @@ for (const width of [1440, 1200, 1024, 820, 768, 700, 390, 320]) test(`landing s
   await expect(page.locator('.landing-measurement-details')).toContainText('35/38')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await conditions.click()
-  await expect(page.getByText('예시 데이터 · 실제 분석 결과가 아닙니다.', { exact: true })).toHaveCount(3)
+  await expect(page.getByText(/예시 데이터 · 실제 분석 결과가 아닙니다/)).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.evaluate(() => window.scrollTo(0, 0))
@@ -1411,6 +1448,7 @@ for (const width of [1440, 1200, 1024, 820, 768, 700, 390, 320]) test(`landing s
   await expect(page).toHaveURL(/#service$/)
   await expect(page.locator('#service')).toBeFocused()
   expect(calls.some(path => path.startsWith('/api/projects') || path.includes('/runs'))).toBe(false)
+  expect(pageErrors).toEqual([])
   expect(await page.locator('.brand-logo').evaluate((node: HTMLImageElement) => node.naturalWidth)).toBeGreaterThan(0)
   if (width === 1440) {
     await page.getByRole('link', { name: '로그인', exact: true }).click()
