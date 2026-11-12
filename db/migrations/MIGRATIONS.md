@@ -12,7 +12,7 @@
 1. `migrate_prod_1_expand.sql` — 옛 코드가 돌고 있어도 안전한 "더하기"만(새 칸 · 검사 · 인덱스 · FK · 이력 표). 머리에 `pg_dump` 백업 명령(세 파일: sojafit_agent 전체 · public 서비스 표 · public 구조 + 함수).
 2. P1 새 코드 배포(0% → 점검 → 100%) → 스모크.
 3. `migrate_prod_2_contract_p1.sql` — 되돌릴 수 없는 삭제(스냅샷 복사본 · `display_name`).
-4. P2 새 코드 배포 → `migrate_prod_3_contract_p2.sql`. 선택: `migrate_prod_2b_optional_drop_dead_auth.sql`(구글 승인 대기 표 삭제, 코드 제거 배포 뒤에만).
+4. P2 새 코드 배포 → `migrate_prod_3_contract_p2.sql`. 선택: `migrate_prod_2b_optional_drop_dead_auth.sql`(구글 승인 대기 표 삭제, 코드 제거 배포 뒤에만) **[주의] 2026-11-12(#109)부터 `auth_google_pending`이 다시 쓰이므로 실행하지 않는다.**
 5. 되돌리기: `migrate_prod_4_rollback.sql`을 **적용의 반대 순서**(B2b → B2 → B1 → A)로 한 절씩. contract 뒤에는 **코드보다 DB를 먼저** 되돌린다(옛 코드가 지운 칸을 읽는다). 되돌린 회로 사본은 옛 코드가 읽는 `{components, nets}` 모양으로 복사된다. B1 끝의 셸 단계(`db/legacy/`의 옛 검사 · 청소 함수 재생성 + `REVOKE`)도 실행한다. 다시 만든 표는 RLS ON, 함수는 PUBLIC 실행 권한 없음으로 돌아온다.
 - 검증: `scripts/db/verify_chain/verify_chain.sh`가 일회용 Postgres 16 · 17에서 "옛 구조 + 이 SQL들 = 새 기준선", "되돌리기 뒤 = 처음 구조(RLS · 함수 권한 포함)"를 확인한다. 운영 DB에는 실행한 적이 없다.
 
@@ -45,7 +45,7 @@ expand의 `DO` 사전점검(값 형식)과 contract의 데이터 손실 가드�
 ## 파일
 - `migrate_prod_1_expand.sql` — 1단계 expand
 - `migrate_prod_2_contract_p1.sql` — 2단계 contract P1(승인 칸 NOT NULL, 스냅샷 복사본 · 미사용 칸 제거, 단순 검사)
-- `migrate_prod_2b_optional_drop_dead_auth.sql` — 선택 2b(`auth_google_pending` 삭제)
+- `migrate_prod_2b_optional_drop_dead_auth.sql` — 선택 2b(`auth_google_pending` 삭제) **[경고] 2026-11-12(#109)부터 이 표는 사용 중이다. 실행하면 운영 표가 삭제되므로 실행하지 않는다.**
 - `migrate_prod_3_contract_p2.sql` — 3단계 contract P2(분석 회로 사본 · 죽은 승인 표 제거, 삭제 CASCADE, 체크포인트 삭제 트리거, 청소 함수 교체)
 - `migrate_prod_4_rollback.sql` — 되돌리기(B2b · B2 · B1 · A 절)
 - `precheck_1_before_expand.sql` · `precheck_2_before_p1.sql` · `precheck_3_before_p2.sql` · `precheck_4_before_2b.sql` — 단계 직전 읽기 전용 점검(개수만 출력)
