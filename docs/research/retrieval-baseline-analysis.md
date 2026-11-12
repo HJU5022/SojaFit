@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-03
-- 기준 커밋: 67e08b1 (원시 결과 3개 파일 재계산 기준)
+- 기준 커밋: 6707002 (원시 결과 3개 파일 재계산 기준)
 - 정본 여부: 정본(방식별 문항 대조와 실패 유형 4종). 최종 수치의 정본은 [EVAL_REPORT.md](../../EVAL_REPORT.md) 2·3-1·5장
 - 관련 문서: [EVAL_REPORT.md](../../EVAL_REPORT.md), [검색 층별 재측정](retrieval-layered-rerun-2026-11-03.md), [ADR 0008](../adr/0008-평가-정보부족-구분과-52건-초안.md), [답변·거절 채점기](../experiments/answer-refusal-scorer.md), [30건 검수 초안](../experiments/evaluation-draft-30.md)
 

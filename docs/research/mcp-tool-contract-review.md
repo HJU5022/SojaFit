@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-12
-- 기준 커밋: 67e08b1 (코드: `backend/graph/mcp_retriever.py`, `backend/mcp_skill/mcp_server/server.py`)
+- 기준 커밋: 6707002 (코드: `backend/graph/mcp_retriever.py`, `backend/mcp_skill/mcp_server/server.py`)
 - 정본 여부: 정본(검색기 연결 계약과 stdio 응답 형식). 도구 표의 정본은 [mcp-tool-implementation-plan.md](mcp-tool-implementation-plan.md)
 - 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [RAG 작업서](../specs/rag-pipeline.md), [MCP 검색 도구 작업서](../specs/mcp-search-tools.md)
 

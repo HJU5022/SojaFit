@@ -2,7 +2,7 @@
 
 - 상태: 이력 (2026-11-09~11-12 검증 실행의 스냅샷. 이후 배포·DB 상태를 보증하지 않는다)
 - 기준일: 2026-11-12
-- 기준 커밋: 검증 실행별 대상 커밋은 1절 표. 현재 기준 커밋 67e08b1
+- 기준 커밋: 검증 실행별 대상 커밋은 1절 표. 현재 기준 커밋 6707002
 - 정본 여부: 정본(Thread·승인 기억 운영 검증의 실행 결과). 기능 계약의 정본은 [user-thread-memory.md](../specs/user-thread-memory.md)와 [evaluator-demo-readiness.md](../specs/evaluator-demo-readiness.md), 측정 절차의 정본은 [thread-memory-operations.md](../experiments/thread-memory-operations.md)
 - 관련 문서: [SPEC](../../SPEC.md) 8.5, [GATES](../GATES.md)
 

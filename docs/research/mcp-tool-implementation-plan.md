@@ -2,7 +2,7 @@
 
 - 상태: 현행
 - 기준일: 2026-11-12
-- 기준 커밋: 67e08b1 (코드는 `backend/mcp_skill/mcp_server/server.py`, `backend/graph/mcp_retriever.py` 기준)
+- 기준 커밋: 6707002 (코드는 `backend/mcp_skill/mcp_server/server.py`, `backend/graph/mcp_retriever.py` 기준)
 - 정본 여부: 정본(MCP 도구 표). 도구 계약의 시험 정본은 [SPEC 8.7](../../SPEC.md)과 [mcp-search-tools.md](../specs/mcp-search-tools.md)
 - 관련 문서: [MCP 서버 안내](../../backend/mcp_skill/MCP_SKILL.md), [검색기 연결 계약](mcp-tool-contract-review.md), [오프라인 점검](mcp-offline-verification-2026-11-03.md), [Docling 표본 대조](mcp-docling-verification-2026-11-03.md), [공개 품번 확인 방안](tsc-public-part-verification-options.md), [웹 검색 공급자 비교](mcp-tool-candidates-draft.md)
 
