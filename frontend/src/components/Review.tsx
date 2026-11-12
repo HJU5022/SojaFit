@@ -70,6 +70,22 @@ function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto;
   </div>
 }
 
+function reply(result: ResultDto) {
+  const candidate = candidatesOf(result)[0]
+  return <div className="activity-reply"><span className="actor-avatar actor-agent" aria-hidden="true"><img src="/assets/sojafit-icon.svg" alt="" /></span>
+    <div className="activity-body"><p className="activity-by"><strong>SojaFit</strong><span>검토 결과</span></p>
+      {candidate && <p>{candidate.part}<span className={`result tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span></p>}
+      {result.refusal ? <p>{result.refusal}</p> : result.answer ? <SafeMarkdown text={result.answer} />
+        : !candidate && <p>{result.status === 'failed' ? '실행에 실패했습니다.' : '결과에 판정이 없습니다.'}</p>}</div></div>
+}
+
+// 선택하지 않은 지난 질문의 답. 선택된 질문과 같은 ['run', id] 캐시를 써서 실행마다 한 번만 읽는다.
+function PastReply({ runId }: { runId: string }) {
+  const run = useQuery({ queryKey: ['run', runId], queryFn: ({ signal }) => getRun(runId, signal), retry: false, staleTime: Infinity })
+  if (run.data) return reply(run.data.result)
+  return <p className="fine">{run.isError ? '답변을 불러오지 못했습니다.' : '답변을 불러오는 중입니다.'}</p>
+}
+
 // 검토 한 건을 문서처럼 보인다: 왼쪽은 회로 · 조건 대조 · 활동, 오른쪽은 속성.
 export default function Review({ projectId, demoId, target, nets, counts, threadId, reviewer, initialQuestion, onThread }: Props) {
   const chat = useConversation({ projectId, targetRef: target.ref, threadId, onThread })
@@ -118,11 +134,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   const documents = [...new Map((result?.evidence ?? []).map(item => [item.document, item])).values()]
   const resultLoading = (running && !candidate) || chat.loading || (run.isFetching && !result)
   const initial = reviewer.trim().charAt(0).toUpperCase()
-  const response = result && <div className="activity-reply"><span className="actor-avatar actor-agent" aria-hidden="true"><img src="/assets/sojafit-icon.svg" alt="" /></span>
-    <div className="activity-body"><p className="activity-by"><strong>SojaFit</strong><span>검토 결과</span></p>
-      {candidate && <p>{candidate.part}<span className={`result tone-${VERDICT_TONE[candidate.verdict]}`}>{VERDICT_LABELS[candidate.verdict]}</span></p>}
-      {result.refusal ? <p>{result.refusal}</p> : result.answer ? <SafeMarkdown text={result.answer} />
-        : !candidate && <p>{result.status === 'failed' ? '실행에 실패했습니다.' : '결과에 판정이 없습니다.'}</p>}</div></div>
+  const response = result && reply(result)
   useEffect(() => { input.current?.focus() }, [target.ref, threadId])
   function onKey(event: KeyboardEvent<HTMLTextAreaElement>) {
     // 한글 조합 중의 Enter는 글자 확정이다. 전송하지 않는다.
@@ -161,7 +173,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
             <div className="activity-message"><span className="actor-avatar" aria-hidden="true">{initial}</span><div className="activity-body">
               <p className="activity-by"><strong title={reviewer}>{reviewer}</strong><span>질문 {index + 1}</span>{turn === item && <span>선택됨</span>}</p>
               <button className="activity-turn" aria-current={turn === item ? 'true' : undefined} onClick={() => chat.setPicked(index)}>{item.question}</button>
-            </div></div>{turn === item && response}
+            </div></div>{turn === item ? response : <PastReply runId={item.runId} />}
           </li>)}
           {live && <li className="activity-entry"><div className="activity-message"><span className="actor-avatar" aria-hidden="true">{initial}</span><div className="activity-body">
             <p className="activity-by"><strong title={reviewer}>{reviewer}</strong><span>질문 {history.length + 1}</span>{picked === null && <span>선택됨</span>}</p>

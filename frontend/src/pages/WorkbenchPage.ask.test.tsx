@@ -54,3 +54,20 @@ it('shows every line of a completed answer, including a markdown list', async ()
   expect(await screen.findByText('둘째 근거')).toBeInTheDocument()
   expect(screen.getByText('첫째 근거').tagName).toBe('LI')
 })
+
+it('keeps the answer of an earlier question visible next to the selected one, reading each run once', async () => {
+  const run = (id: string, answer: string) => ({ id, thread_id: 't1', message_id: null, result: { answer, status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: id } })
+  const reads: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path) => {
+    if (path === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json({ id: 't1', project_id: 1, title: '', status: null, target_ref: 'D1', target_locked: true, latest_run: null, next_before_message_id: null,
+      messages: [{ id: 1, run_id: 'r1', role: 'user', content: '첫 질문', created_at: '' }, { id: 2, run_id: 'r2', role: 'user', content: '둘째 질문', created_at: '' }] })
+    if (path.startsWith('/api/runs/')) { const id = path.split('/').pop()!; reads.push(id); return Response.json(run(id, `${id}의 요약\n\n${id}의 본문`)) }
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByText('r1의 본문')).toBeInTheDocument()
+  expect(await screen.findByText('r2의 본문')).toBeInTheDocument()
+  expect([...reads].sort()).toEqual(['r1', 'r2'])
+})
