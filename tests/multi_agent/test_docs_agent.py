@@ -965,7 +965,8 @@ def test_enriched_completion_never_clears_unanswered_extra_requests(question, mi
 
 
 @pytest.mark.parametrize('packet', ['complete', 'no_package', 'unverified'])
-def test_suffix_notice_is_reconciled_only_for_complete_source_packet(monkeypatch, packet):
+@pytest.mark.parametrize('limited', [False, True])
+def test_suffix_notice_is_reconciled_only_for_complete_source_packet(monkeypatch, packet, limited):
     from backend.multi_agent.supervisor import single_node
     facts = ('선택한 H 제품의 공식 문서 FEATURES에는 AEC-Q101 qualified가 표기되어 있습니다 [1].\n'
              + '\n'.join(f'{part} · {code}: 확인된 값 [1].' for part in ('SS14', 'SS14H')
@@ -977,13 +978,46 @@ def test_suffix_notice_is_reconciled_only_for_complete_source_packet(monkeypatch
                content='SS14H and SS14 source data', doc_parts=['SS14', 'SS14H'])
     old = D.DocsAnswer(grade='partial', answer='확인된 구분입니다 [1].',
                        missing=['H 접미사의 공식 정의 문장'])
+    from backend.services.exa import SearchBudgetExhausted
+    def busy(*_):
+        raise SearchBudgetExhausted(2)
     result = D.docs_agent({'question':'SS14H의 끝 H는 SS14와 어떤 차이야?',
                            'task':dict(id=1,agent='docs',kind='rating',goal='suffix',query='SS14H suffix',parts=['SS14H','SS14'])},
-                          retriever=lambda *a,**k:[row], chat=lambda *a:old)['reports'][0]
+                          retriever=lambda *a,**k:[row], chat=lambda *a:old,
+                          web_search=busy if limited else None)['reports'][0]
     if packet == 'complete':
         assert result['status'] == 'ok' and result['missing'] == []
+        assert result.get('reason') is None
         assert result['answer'] == facts and result['evidence_ids'] == ['1']
         assert '일부 문서 작업은 완료되지 않았습니다' not in single_node({'reports':[result]})['answer']
     else:
         assert result['status'] == 'partial' and result['missing'] == old.missing
         assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']
+
+@pytest.mark.parametrize('grade', ['enough', 'partial'])
+def test_limited_official_lookup_keeps_missing_trr_conditions_incomplete(grade):
+    from backend.multi_agent.supervisor import single_node
+    from backend.services.exa import SearchBudgetExhausted
+    row = dict(chunk_id=7, file='UF4007.pdf', page=2, table='Electrical characteristics',
+               content='UF4007 reverse recovery time trr 75 ns', doc_parts=['UF4007'])
+    question = 'UF4007의 trr 측정 조건과 IF, IR, Irr를 알려줘'
+    answer = 'UF4007의 trr은 75 ns입니다 [7].'
+    calls = []
+    def official(*_):
+        raise SearchBudgetExhausted(2)
+    def chat(*_):
+        calls.append(True)
+        return D.DocsAnswer(grade=grade, answer=answer)
+    fallback_calls = []
+    result = D.docs_agent(
+        {'question':question, 'task':dict(id=1, agent='docs', kind='rating', goal='trr measurement conditions',
+                                          query='UF4007 trr test conditions', parts=['UF4007'])},
+        retriever=lambda *a, **k:[row], chat=chat, web_search=official,
+        web_search_fallback=lambda *a:fallback_calls.append(True) or [])['reports'][0]
+    assert result['status'] == 'partial'
+    assert result['reason'] == 'limit_reached'
+    assert result['missing']
+    assert result['answer'] == answer and result['evidence_ids'] == ['7']
+    assert len(calls) == 1 and fallback_calls == []
+    assert any(item.get('status') == 'budget_exhausted' for item in result['searches'])
+    assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']

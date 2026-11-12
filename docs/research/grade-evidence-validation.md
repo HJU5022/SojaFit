@@ -110,3 +110,13 @@ Haiku5.5 고정, 코퍼스1360문서/51967청크. 단계별 최대250건(v3×5),
 - 독립검토에서 판본필터가 문서·판정·최종인용 경계까지 연결되고 상한1+1이 유지됨을 확인했다. 초기focused1건실패는병렬작업중부모테스트와helper갱신시점이겹친실행으로보존했고,산출물고정후관련506pass1skip 및 마지막복수절호환추가후전체검증으로확인했다.
 - 가짜 검색·모델·사양과 실제 코드 경로를 이용한 회귀 검증이다. 이번 수정 후 실Exa/PDF/LLM 호출·포화/운영부하 실측은 하지 않았다. 통합 전 실측을 새 코드의 새 실측으로 바꾸지 않는다.
 - 근거: PR-준비/PR103-contract-focused.log, PR103-contract-final-targeted.log, PR103-contract-full.log, PR103-contract-full-excluding-known-main-error.log. 동결v3/정답/해시는유지했다.
+
+
+## PR103 공식 조회 제한 후 미완료 상태 보완 — 2026-11-12
+
+- 공식 조회 슬롯 소진 후에도 필수 trr 측정조건이 부족한데 문서 보고가ok/missing[]로 남는 문제를 수정했다. 최종 내부 보강이 끝난 다음 남은 조건·누락·재검색 요구와 조회 제한 여부를 함께 검사한다.
+- 확인된 내부 답변/인용은 유지하면서 미완료 상태partial, 사유limit_reached, 미확인 항목을 남긴다. Supervisor의부분답변안내도실제로출력됨을시험했다. 내부의검증된보강packet만으로요구가충족되면정상완료를유지하며불필요partial을추가하지않는다. DB/프런트/모델설정/검색횟수는변경없음.
+- Red: enough/partial 두입력에서잘못된ok재현2건. Green: 해당두경계와내부완결packet의조회제한유무포함8건통과. 최종관련190passed(7.33초).
+- 최종전체pytest는기존main SNAPSHOT수집오류1건으로중단. 그파일제외및.env영향차단후 **1841 passed,158 skipped,9 failed**(71.16초). 실패테스트ID는이전과동일하고이번수정으로늘어난실패는없다. 비용문제나기존실패를성공으로바꾸지않았다.
+- 검증은가짜조회·가짜모델과실제문서에이전트/최종안내경로다. 실Exa/LLM유료요청이나동결v3의새품질·포화평가는하지않았다. 실제모델오답률이개선됐다고주장하지않는다.
+- 로그: PR-준비/PR103-completion-focused.log, PR103-completion-full.log, PR103-completion-full-excluding-known-main-error.log. 계약은docs/specs/official-datasheet-evidence.md에추가했고기존PR103본문과추가커밋으로반영한다.

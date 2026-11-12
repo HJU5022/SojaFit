@@ -806,9 +806,17 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
         return report('fail', problem, reason=Reason.VERIFY_FAILED, docs=shown, references=references)
     # A bare partial label is not remaining work; explicit missing facts, retries and removed claims still are.
     complete = result.grade == 'enough' or not result.next_query.strip()
-    status = 'ok' if complete and not result.missing and not dropped_fake and not dropped_uncited else 'partial'
+    missing = list(result.missing)
+    recovery_gap = trr_condition_gap(current_question, shown) and not recovery_complete
+    limited_incomplete = (grade2_budget_exhausted or grade3_budget_exhausted) and (
+        recovery_gap or bool(missing) or not complete)
+    if limited_incomplete and not missing:
+        missing.append('공식 조회 허용 횟수 소진으로 trr 측정 조건(IF/IR/Irr) 확인 미완료'
+                       if recovery_gap else '외부 조회 허용 횟수 소진으로 근거 보강 미완료')
+    status = 'ok' if complete and not missing and not dropped_fake and not dropped_uncited else 'partial'
     summary = (f'{status}: answered from {len(cited & valid)} evidence'
                + ('; removed unverified sentences' if dropped_fake or dropped_uncited else '')
-               + looked_up + (f'; missing {", ".join(result.missing)}' if result.missing else ''))
+               + looked_up + (f'; missing {", ".join(missing)}' if missing else ''))
     return report(status, summary, answer=answer, memory_refs=list(dict.fromkeys(result.memory_refs)),
-                  evidence_ids=sorted(cited & valid), missing=result.missing[:6], docs=shown, references=references)
+                  evidence_ids=sorted(cited & valid), missing=missing[:6], docs=shown, references=references,
+                  reason=Reason.LIMIT_REACHED if limited_incomplete else None)
