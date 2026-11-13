@@ -1,5 +1,15 @@
 # jeongun 작업 기록
 
+## 2026-11-13 Checkpoint 11/13 코멘트 보강(①~④)
+- 목적: 강사 11/13 전체 채점 코멘트의 부족한 점을 증거로 채운다. 코드 변경은 인용 숫자 검사 1건이고 나머지는 기록 · 문서다.
+- ①: TOPIC 각주 [1]~[4]를 저장소 안 파일로 고쳤고 [3] 원자료 2개를 `docs/research/evidence/candidate-*.md`로 옮겼다(로컬 절대 경로 4곳만 파일 이름으로 바꿈). 여정 맵 4·5단계의 단일 그래프 용어(`retrieve`, `답 틀`)를 멀티 그래프 용어로 바꿨다. Codex v3 50건 규칙 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`)와 사람 판정 5건(하정운, `human_judgments.jsonl`)으로 Codex 45/50, 실행 환경(Codex 웹, 웹 접근 켬, 저장소 미연결)을 적었다.
+- ②: 운영 DB `SojaFit_2` 행 수 읽기 조회(문서 1,360 · 청크 51,967, `evals/results/d10/index_row_count_2026-11-13.md`)와 52,244 → 51,967 교체 날짜(11-09 05:12) · 원본 로그. 표·수치 청크 123개 원본 PDF 대조 0불일치(`chunk_source_check/`, 검사기가 같은 쪽 다른 행 값을 못 잡는 한계 83~86% 포함). v3 판정 역할 사후 기록(`evals/drafts/reviews/v3_judging_record.md`, 동결 뒤 바뀐 키는 `judges`뿐).
+- ③: 인젝션 본실측03 판정자 심태현 본인 확인(11-13 10:06)을 `injection-results.md`와 `sth.md` 정정 줄에 넣었다(원시 파일은 그대로). 인용 검사에 숫자+단위 대조를 더했다(`bfdb77a`, SPEC 6절 신뢰 경계 줄).
+- 실험(사후 등록): 인용 숫자 검사 전후를 v3 50×1로 비교했다. 명령 `GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-13-citecheck-v3 --sets 1 --keep-going --p95 120`, 예산 상한 0.20달러, 실제 0.034달러 · 191초. 결과 50/50, 과잉 거절 0, p95 8.1초(전 `d9-improve2` 50/50 · p95 10.0초). 문항별 통과 · 판정 변화 0건. 측정 전에 `preregister.md`에 적지 못해 사후 등록이다.
+- ④: Langfuse 캡처 3장(`docs/deliverables/langfuse/`, 배포본 `fadde2a` 트레이스), 403 원인(옛 프로젝트 키, 11-12 03:29 UTC 키 교체 뒤 실패 로그 0, `langfuse_403_2026-11-13.md`), v3 게이트 기준 미달 실패 출력(`v3_gate_fail_2026-11-13.txt`), 전체 pytest 로그(macOS, 1887 통과 · 24 실패 · 173 건너뜀, 실패는 cairo 없음 16 · macOS `RLIMIT_AS` 8).
+- 확인 방법: `tests/repo` 5 통과, `tests/multi_agent` · `tests/graph` 통과. OpenRouter 배포 키 잔액 25.37/40달러(조회 API).
+- 확인 못 한 것: 재시작 뒤 재개(배포 · 실제 모델), 현재 코드 배포 로그인 시나리오, 시연 영상, 키 없는 기동 재측정, Linux에서 전체 pytest, v1 대 v4h 청킹 비교. 모두 main 병합 · 배포 뒤 할 일이다.
+
 ## 2026-11-13 main fadde2a 배포(Cloud Run)
 - 배포: `main` `fadde2a`를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-fadde2a --revision-suffix fadde2a`(빌드 08:12~08:17 KST). 리비전 `sojafit-api-fadde2a`, 이미지 `sha256:95d6f57173a2714127d103cda0b5d5213246f6df712e754db46c61e5374062e5`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
 - 코드 차이 [실측]: `ad8612e`..`fadde2a`에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`이 비어 있다. `ae3de0b`..`fadde2a`에서 바뀐 것은 `frontend/src` 2개 파일(`Review.tsx`, `WorkbenchPage.tsx`)과 문서다: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다.
