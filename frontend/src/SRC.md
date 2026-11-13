@@ -51,7 +51,7 @@
 - `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
 - `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
 - `components/Review.tsx` — 검토 대화·회로와 첨부/조건 입력의 조립. ChatPane에 채팅과 입력창을 넣고 ReviewDetails에 질문·품번별 상세 탭을 연결한다. 속성 칸 너비 조절과 문맥별 초기화. 회귀 `WorkbenchPage.ask.test.tsx`.
-- `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 테스트 `Schematic.test.tsx`.
+- `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 포커스·재연결·재마운트 자동 재조회는 끄고 성공5분 캐시는 유지하며 만료/실패 재조회는 버튼으로만 시작한다. 테스트 `Schematic.test.tsx`.
 - `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
 - `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고.
 - `components/SafeMarkdown.tsx` — 최소 마크다운 렌더러(표·굵게·목록·인용, HTML·이미지·링크는 글자로만). 표시 콜백은 본문·굵은 글씨에 적용하고 코드 구간은 보존한다. 테스트 `SafeMarkdown.test.tsx`.

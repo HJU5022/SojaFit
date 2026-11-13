@@ -48,12 +48,13 @@ export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }
   const [searched, setSearched] = useState('')
   const term = text.trim()
   const valid = term.length >= 2 && term.length <= 200
-  const result = useQuery({ queryKey: ['external-schematic', searched], queryFn: ({ signal }) => findSchematic(searched, signal), enabled: searched !== '', retry: false, staleTime: 5 * 60_000 })
+  const result = useQuery({ queryKey: ['external-schematic', searched], queryFn: ({ signal }) => findSchematic(searched, signal), enabled: searched !== '', retry: false, staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false, refetchOnReconnect: false, refetchOnMount: false })
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!valid || result.isFetching) return
     if (term !== searched) setSearched(term)
-    else if (result.isError) void result.refetch()
+    else if (result.isError || result.isStale) void result.refetch()
   }
   const data = searched ? result.data : undefined
   return <div className="sheets">
