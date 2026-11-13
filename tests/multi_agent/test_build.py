@@ -164,7 +164,7 @@ def test_replan_runs_a_second_round_with_parts_and_answers_from_it():
     second = Plan(question_type='rating', next='tasks',
                   tasks=[Task(id=1, agent='docs', kind='rating', goal='TJ', query='TS40P05G TJ', parts=['TS40P05G'])])
     chat = scripted(supervisor=[first, second], docs_answer=[DocsAnswer(grade='none'), DocsAnswer(grade='enough', answer='TJ는 150°C이다 [7].')])
-    out = app(chat, docs=[doc(7)], searched=searched).invoke({'input': '1000 V 40 A 브리지 접합부 온도?'})
+    out = app(chat, docs=[{**doc(7), 'content': 'TJ 150 °C'}], searched=searched).invoke({'input': '1000 V 40 A 브리지 접합부 온도?'})
     assert out['path'][-7:] == ['모으기', '계획', '문서', '모으기', '답 정리', '답 검사', '끝'] and out['answer'] == 'TJ는 150°C이다 [7].'
     assert out['counters']['replans'] == 1 and out['counters']['hops'] == 2
 

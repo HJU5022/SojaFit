@@ -311,7 +311,7 @@ def synth_node(state: dict, *, chat) -> dict:
 
 def check_node(state: dict) -> dict:
     """그래프 노드 마무리 답 검사(코드): 인용 번호가 받은 근거 안인지, 종합 글이 부분 답에 없는 숫자를 지어내지 않았는지 본다."""
-    from backend.graph.nodes import citations  # [왜] 여기서 불러온다. graph.nodes가 이 모듈의 Facts를 불러 맨 위에서 부르면 순환 import다
+    from backend.graph.nodes import citations, unsupported_numbers  # [왜] 여기서 불러온다. graph.nodes가 이 모듈의 Facts를 불러 맨 위에서 부르면 순환 import다
     if state.get('refusal_reason'):
         return {'path': ['답 검사']}  # 종합이 상한으로 멈췄다
     answer = state.get('answer') or ''
@@ -325,7 +325,9 @@ def check_node(state: dict) -> dict:
     sentences = [s for s in re.split(r'(?<=[.。])\s+', answer) if s.strip()]
     check = {'used': sorted(cited & valid), 'fake_citations': sorted(cited - valid),
              'uncited_sentences': sum(1 for s in sentences if not citations(s)), 'judgement': bool(state.get('judgement'))}
-    problem = bool(check['fake_citations'] or invalid_memories) or (not judge_only and not check['used'])
+    # 종합 글(LLM이 쓴 부분만; 판정 표는 코드가 옮긴 글이라 뺀다)의 숫자는 그 문장이 인용한 근거 청크에 있어야 한다
+    check['unsupported_numbers'] = [n for s in re.split(r'(?<=[.。])\s+', state.get('synth_text') or '') for n in unsupported_numbers(s, state.get('docs') or [])]
+    problem = bool(check['fake_citations'] or invalid_memories or check['unsupported_numbers']) or (not judge_only and not check['used'])
     expected_pdf = {cid for r in reports if r.status != 'fail' for cid in r.evidence_ids if cid.startswith('W')}
     if expected_pdf or any(cid.startswith('W') for cid in cited):
         if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:

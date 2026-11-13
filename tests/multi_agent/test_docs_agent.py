@@ -1032,3 +1032,29 @@ def test_limited_official_lookup_keeps_missing_trr_conditions_incomplete(grade):
     assert len(calls) == 1 and fallback_calls == []
     assert any(item.get('status') == 'budget_exhausted' for item in result['searches'])
     assert '일부 문서 작업은 완료되지 않았습니다' in single_node({'reports':[result]})['answer']
+
+
+# --- 인용 내용 검사: 번호 포함 여부뿐 아니라 숫자+단위가 인용한 근거 글에 있는지 본다 ---
+NUM_DOCS = [{'chunk_id': 7, 'content': 'VRRM | 1,000 | V ; IF 250 mA ; trr 75 ns'}]
+
+
+def test_numeric_check_dangling_citation_is_dropped_by_existing_gate_not_numeric_check():
+    # 없는 번호 [9]는 숫자 검사 대상이 아니고(근거가 없다), 기존 drop_fake_citations가 문장을 뺀다
+    assert D.unsupported_numbers('VRRM은 1000 V입니다 [9].', NUM_DOCS) == []
+    assert D.drop_fake_citations('VRRM은 1000 V입니다 [9].', {'7'}) == ('', ['9'])
+
+
+def test_numeric_check_wrong_number_fails():
+    assert D.unsupported_numbers('VRRM은 1200 V입니다 [7].', NUM_DOCS) == ['1200 V']
+    assert D.has_uncited_sentence('VRRM은 1200 V입니다 [7].', NUM_DOCS)
+
+
+@pytest.mark.parametrize('sentence', ['VRRM은 1000 V입니다 [7].', 'VRRM은 1,000V입니다 [7].',
+                                      'IF는 0.25 A입니다 [7].', 'trr은 0.075 µs 이하입니다 [7].'])
+def test_numeric_check_correct_number_passes_across_separator_and_unit_spelling(sentence):
+    assert D.unsupported_numbers(sentence, NUM_DOCS) == [] and not D.has_uncited_sentence(sentence, NUM_DOCS)
+
+
+def test_numeric_check_non_numeric_sentence_and_part_number_unchanged():
+    assert not D.has_uncited_sentence('패키지는 DO-41입니다 [7]. BZT52B4V7은 제너입니다 [7].', NUM_DOCS)
+    assert D.has_uncited_sentence('패키지는 DO-41입니다.', NUM_DOCS)  # 인용 없음 규칙은 그대로
