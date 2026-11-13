@@ -151,7 +151,7 @@ CASES = [
      [('completed', JUDGED), (3, NOW), (4,)], APPROVAL),
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW)]], QUOTE),
-    ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
+    ('get', '/api/approved-cases', None, {}, [[(4, 3, SNAPSHOT, NOW)]], CASE),
     ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status'}),
     ('post', '/api/projects/1/threads', None, {}, [(1,), (THREAD,)], {'id', 'project_id'}),
     ('get', f'/api/runs/{RUN}', None, {}, [(RUN, THREAD, 'completed', JUDGED, 12)], {'id', 'thread_id', 'message_id', 'result'}),

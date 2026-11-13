@@ -269,8 +269,9 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
         try:
             kind, safe = await run_in_threadpool(lambda: outcome(analysis, thread_id, call(), request_id))
             # [왜] profile_hints는 저장하지 않는다. 사용자가 사실을 지우면 지난 run 조회에도 남지 않게 한다
-            # 공개 응답에만 붙이는 출처 URL과 표시 조건은 DB의 고정 저장 형식에서 제외한다.
-            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement)}
+            saved = {'answer': safe.answer, 'evidence': stored_evidence(safe.evidence), 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe.judgement or None}
+            # [왜] profile_hints는 삭제한 사실을 남기지 않고, 표시 조건은 기존 DB 저장 계약을 유지하도록 제외한다
+            saved = {'answer': safe.answer, 'evidence': safe.evidence, 'question_type': safe.question_type, 'price_parts': safe.price_parts, 'interrupt': safe.interrupt, 'judgement': safe_judgement(safe.judgement)}
             await finish_with_retry(repo, user_id, thread_id, run_id, kind, saved)
             await queue.put(frame(kind, safe.model_dump()))
         except Exception as exc:

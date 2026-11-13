@@ -9,11 +9,9 @@
 
 ## 파일
 - `003_auth.sql` · `005_auth_attempt_window.sql` · `006_user_roles.sql` · `021_auth_ip_limits.sql` — 사용자 · 세션 · 로그인 시도 · 역할 · IP 한도 표
-- `007_demo_accounts.sql` — 이전 Compose의 데모 계정 시드 이력
 - `010_google_auth.sql` — Google 로그인 상태 · 승인 대기(`029`가 삭제) · 계정 연결 표
 - `013_agent_memory.sql` · `014_thread_inputs.sql` · `015_analysis_limits.sql` · `016_memory_controls.sql` · `017_analysis_events.sql` · `022_token_limits.sql` · `023_retention.sql` — `sojafit_agent` 분석 서비스 표 · 사용량 · 청소 함수
 - `018_projects.sql` · `019_conversations.sql` · `020_approvals_quotes.sql` — 프로젝트 · 회로 · 대화 · 실행 · 메시지 · 승인 · 견적 · 승인 사례
 - `024_projects_demo_c01.sql` · `025_runs_safe_result_preferred_mount.sql` — 11-10 긴급 수정(데모 목록 · 결과 형식 CHECK, 기준선은 단순 CHECK로 대체)
-- `026_projects_catalog_demo.sql` — 이전 데모 회로 ID 제약 이력
 - `027_service_redesign_p1.sql` · `028_service_redesign_agent.sql` · `029_drop_google_pending.sql` — 재설계 1/3 · 2/3 · 3/3(기준선이 최종 결과를 한 파일로 만든다)
 - `LEGACY.md` — 이 문서

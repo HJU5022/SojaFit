@@ -36,7 +36,7 @@ it('shows login error and request id, clears password, and offers configured Goo
   expect(await screen.findByRole('alert')).toHaveTextContent('로그인이 필요합니다.')
   expect(screen.getByRole('alert')).toHaveTextContent('req-test')
   expect(screen.getByLabelText('비밀번호')).toHaveValue('')
-  expect(await screen.findByRole('button', { name: 'Google로 시작하기' })).toBeDisabled()
+  expect(await screen.findByRole('link', { name: 'Google로 계속하기' })).toHaveAttribute('href', '/api/auth/google/start')
 })
 it('starts Google sign-up only after the privacy consent is checked and sends consent=1', async () => {
   network((path) => path.endsWith('/status') ? Response.json({ enabled: true }) : failure())
@@ -94,7 +94,7 @@ it('shows demo A/B buttons above the password form only in demo mode and logs in
   expect(await screen.findByRole('heading', { name: 'SojaFit 에이전트' })).toBeInTheDocument()
   expect(bodies).toEqual([JSON.stringify({ account: 'b' })])
 })
-it('shows demo access in a production build when the server enables demo mode', async () => {
+it('uses Google without demo access in production even when the server advertises demo mode', async () => {
   vi.stubEnv('DEV', false)
   const paths: string[] = []
   network(path => {
@@ -103,11 +103,11 @@ it('shows demo access in a production build when the server enables demo mode', 
     return failure()
   })
   open()
-  const google = await screen.findByRole('button', { name: 'Google로 시작하기' })
-  expect(google.closest('form')).toHaveAttribute('action', '/api/auth/google/start')
+  const google = await screen.findByRole('link', { name: 'Google로 계속하기' })
+  expect(google).toHaveAttribute('href', '/api/auth/google/start')
   expect(google.compareDocumentPosition(screen.getByLabelText('이메일')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-  expect(await screen.findByRole('group', { name: '데모 로그인' })).toBeInTheDocument()
-  expect(paths).toContain('/api/auth/demo')
+  expect(screen.queryByRole('group', { name: '데모 로그인' })).not.toBeInTheDocument()
+  expect(paths).not.toContain('/api/auth/demo')
 })
 it('hides the demo buttons when the server is not in demo mode', async () => {
   network((path) => path === '/api/auth/demo' ? failure('NOT_FOUND', 'Not Found', 404)

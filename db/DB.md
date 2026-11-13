@@ -15,15 +15,15 @@
 - 기존 DB(운영)는 기준선을 쓰지 않고 `migrations/`의 이전 SQL을 순서대로 적용합니다(expand → 새 코드 배포 → contract). 각 파일 끝이 이력 표 `public.app_migrations`에 한 줄을 남깁니다. 새 DB의 기준선은 `2026-11-service-baseline` 한 줄을 남깁니다([결정] D6: 우리 이력 표를 쓰고 Supabase `supabase_migrations`는 건드리지 않음).
 - 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다. 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣었다.
 
-### 실행 기록
+## 파일
 
 - 2026-11-09 사양 표(`part_specifications`)를 버렸다(ADR 0016). 만들던 `011_part_specifications.sql`을 지웠고, 운영 DB의 표는 11-09에 지웠다. 이미 만든 로컬 볼륨에는 표가 남으므로 필요하면 따로 지운다(이 폴더에 `DROP` SQL은 두지 않았다). 같은 날 운영 DB에는 코퍼스 교체 뒤 0행에서 한 문서(document_id=8, B2104) 70행을 다시 넣은 기록이 있다(`docs/worklog/sth.md`).
 - 실행 SQL과 초안은 세 자리 접두사를 사용합니다. 번호는 파일 실행 순서이며 기존 문서의 논리적 Migration 1·2 명칭과는 별개입니다. `001`·`004`·`011`은 `db/`에 일부러 없습니다. `001`은 비워 두었고, `004`는 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`, 018~020으로 대체돼 적용하지 않음)이며, `011`(부품 사양 표)은 11-09에 지웠습니다. 빈 번호를 채우거나 번호를 당기지 마세요. 이미 적용한 파일의 이름과 번호는 바꾸지 않습니다.
-- 빈 DB 볼륨은 위의 7개 SQL을 파일명 순서로 적용합니다. 데모 계정 A · B는 `DEMO_MODE=1`에서 첫 데모 로그인 때 앱이 만듭니다.
+- 빈 DB 볼륨을 처음 만들 때 실행 SQL은 파일명 순서로 적용됩니다. 현재 순서는 `000_init.sql` → `002_rag_corpus.sql` → `003_auth.sql` → `005_auth_attempt_window.sql` → `006_user_roles.sql` → `007_demo_accounts.sql` → `008_multi_dim_embeddings.sql` → `009_chunk_embedding_bits.sql` → `010_google_auth.sql` → `012_document_category.sql` → `013_agent_memory.sql` → `014_thread_inputs.sql` → `015_analysis_limits.sql` → `016_memory_controls.sql` → `017_analysis_events.sql` → `018_projects.sql` → `019_conversations.sql` → `020_approvals_quotes.sql` → `021_auth_ip_limits.sql` → `022_token_limits.sql` → `023_retention.sql` → `024_projects_demo_c01.sql` → `025_runs_safe_result_preferred_mount.sql` → `026_projects_catalog_demo.sql`입니다. 데모 모드(`DEMO_MODE=1`)면 데모 사용자 A · B를 만들고, 아니면 계정을 만들지 않습니다.
 - Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행한다. 013~017 · 022 · 023을 멱등 적용하고 PostgresSaver/PostgresStore의 내부 표를 준비한 뒤 API가 시작된다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors`·`vector_migrations`)도 `sojafit_agent`에 만든다(확장은 설치하지 않음, SPEC 8.5). 이 서비스는 Compose 로컬 `db`에 연결하며 앱 일반 기동에는 DDL을 넣지 않는다. 기존 DB에 명령을 수동 실행할 때는 대상·권한·적용 이력을 먼저 확인한다.
 - Compose의 `corpus-load`는 같은 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`(`RAG_VECTOR_TYPE=halfvec`)로 데모 코퍼스 스냅샷(42문서 · 청크 1,556개)을 `source_documents` · `document_chunks`에 넣는다. 임베딩은 넣지 않는다. thread-setup과 함께 돌고, api는 두 서비스가 모두 성공한 뒤 시작한다. 이미 있는 문서 · 청크는 건너뛰므로 다시 떠도 행이 늘지 않는다.
 - Compose 초기화는 이 폴더 바로 아래 파일만 실행하므로 `manual/`의 SQL은 자동 실행되지 않습니다. 옛 업무 표 초안(`manual/004_create_business_tables.sql.draft`)은 018~020이 업무 표(프로젝트 · 회로 · 대화 · 실행 · 메시지 · 승인 · 견적 · 승인 사례)를 만들면서 대체됐습니다. 초안의 `circuits`가 018과 충돌하므로 적용하지 않고 이력으로만 둡니다.
-- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
+- 이미 초기화된 DB 볼륨에는 추가·변경한 초기화 SQL이 자동으로 적용되지 않습니다. `007_demo_accounts.sql`도 새 볼륨 생성 때만 자동 실행됩니다(기존 로컬 볼륨에는 데모 사용자 A · B가 없어 버튼 로그인이 404입니다). 기존 DB의 구조와 적용 이력을 확인하고 별도 마이그레이션 방식을 정합니다(아래 "기존 DB 인증 스키마 적용 전 점검").
 - `docker compose down -v`는 DB 볼륨의 데이터를 삭제합니다. 기존 데이터를 보존해야 하는 환경에서는 실행하지 않습니다.
 
 ## 파일
@@ -34,7 +34,7 @@
 - `023_retention.sql` — 보관 기간 청소 함수 2개(11-09 결정, SPEC 8.5). `sojafit_agent.purge_inactive_projects(keep_days DEFAULT 60, batch_size DEFAULT 20)`: 마지막 활동(이름 변경 · 대화 · run · 승인 · 견적) 뒤 60일 지난 React 프로젝트와 같은 UUID 분석 기록 · checkpoint, React 대화에 딸리지 않은 분석 thread(자기 활동 기준), thread 없는 분석 회로(올린 뒤 60일)를 단계마다 최대 batch_size개 지운다. `sojafit_agent.purge_log_records(keep_days DEFAULT 30, batch_size DEFAULT 200)`: 분석 사건 · 하루 사용량(사용자 · 서비스) · 가입 시도(날짜 기준)와 창 · 잠금이 끝난 로그인 시도(계정 · IP)를 표마다 최대 batch_size개 지운다. 둘 다 트랜잭션 advisory lock으로 한 곳만 청소하고, 공개 역할의 EXECUTE를 회수한다. 앱은 새 분석(질문)을 시작할 때 부르고, Supabase pg_cron으로 하루 한 번 부를 수도 있다(켜지 않음). React 표가 없는 DB에서 프로젝트 함수는 아무것도 지우지 않는다. [주의] 기존 DB에는 자동 적용되지 않고, 함수가 없으면 분석 서비스가 시작하지 않는다(준비 명령 안내 오류). 이 코드를 배포하기 전에 022 다음에 적용한다
 - `024_projects_demo_c01.sql` — 데모 프로젝트 허용 목록(`ck_projects_demo`)에 c01(`attiny85_time_switch`)을 더한다(11-10). 빈 볼륨은 018이 이미 새 목록이라 결과가 같고, 018을 먼저 적용한 기존 DB(운영 Supabase · 조원 로컬)에 이 파일을 적용한다.
 - `025_runs_safe_result_preferred_mount.sql` — 분석 결과 저장 검사(`runs_safe_result_check`)의 판정 형식에 `preferred_mount`를 더한다(11-10). 판정이 붙은 run이 모르는 칸으로 거부돼 503이던 문제. 빈 볼륨은 019가 이미 새 형식이고, 기존 DB에 이 파일을 적용한다.
-- `legacy/026_projects_catalog_demo.sql` — 과거 회로 카탈로그 제약 변경 이력. 새 DB에는 기준선의 `ck_projects_demo`를 적용한다. 실제 허용 ID는 `data/circuits/catalog.json`을 읽는 서버가 검증한다.
+- `026_projects_catalog_demo.sql` — 기존 DB의 6개 데모 ID 고정 CHECK를 제거하고, demo/upload와 `demo_id` 관계만 DB에서 검사한다. 실제 허용 ID는 `data/circuits/catalog.json`을 읽는 서버가 검증한다.
 - `022_token_limits.sql` — 하루 LLM 토큰 상한(사용자 200,000 · 서비스 전체 2,000,000, UTC)의 예약 토큰 카운터. `sojafit_agent.analysis_usage`에 `reserved_tokens` 열, 날짜별 한 행 `sojafit_agent.analysis_service_usage`(공개 역할 권한 회수). 공급자 청구 토큰이 아니라 USD 예약과 같은 위쪽 경계의 합이다. 다시 실행해도 아무것도 바꾸지 않고 준비 명령이 015 뒤에 적용한다. [주의] 기존 DB에는 자동 적용되지 않는다. 이 열 · 표가 없으면 분석 서비스가 시작하지 않으므로(준비 명령 안내 오류) 이 코드를 배포하기 전에 대상 DB에 먼저 적용한다
 - `015_analysis_limits.sql` — 비공개 사용자별 UTC 일일 예약액·빈도 제한 표. 실패도 예약액은 보존하며 실제 청구액과 구분
 - `014_thread_inputs.sql` — threads.input_record nullable JSONB 추가. 기존 원본·행을 수정하지 않고 setup 명령에서 013 뒤 적용

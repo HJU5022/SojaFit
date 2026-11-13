@@ -136,7 +136,7 @@ it('does not offer the closed email signup to anonymous users outside demo mode'
   // [왜] 11-10 이메일 가입은 데모 모드에서만 열린다(공개 배포는 Google 로그인). 로그인 화면이 뜬 뒤에도 가입 링크는 없어야 한다
   network(path => Response.json(path === '/api/auth/google/status' ? { enabled: false } : {}, { status: path === '/api/auth/me' ? 401 : 200 }))
   render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
-  expect(await screen.findByRole('heading', { name: 'SojaFit에 로그인' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument()
   expect(screen.queryByRole('link', { name: '가입' })).not.toBeInTheDocument()
 })
 it('restores a session before showing the workbench and admin navigation', async () => {

@@ -30,7 +30,7 @@ def test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls(tmp_path, 
     client, configs = Client(), []
     monkeypatch.setattr(langfuse, 'get_client', lambda: client)
     monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
-    monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
+    monkeypatch.setattr(run_gate, 'make_app', lambda *args: object())
 
     def invoke(app, inputs, config):
         configs.append(config)
@@ -46,7 +46,7 @@ def test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls(tmp_path, 
         'input': text, 'expected': '', 'gold_chunks': []}) for i, text in enumerate(['합성 질문', '합성 오류'], 1)))
     out = tmp_path / 'out'
     assert run_gate.main(str(data), str(out), sets=1, keep_going=True) == 0
-    rows = json.loads((out / 'set1.json').read_text(encoding='utf-8'))['rows']
+    rows = json.loads((out / 'set1.json').read_text())['rows']
     scores = {(s['trace_id'], s['name']): s for s in client.scores}
     assert scores[('1' * 32, 'answer_metric')]['value'] == 'correct_refusal'
     assert scores[('1' * 32, 'llm_calls')]['value'] == 1.0
@@ -75,16 +75,16 @@ def test_gate_score_failure_does_not_erase_result_or_invent_missing_cost(tmp_pat
 
     monkeypatch.setattr(langfuse, 'get_client', lambda: Client())
     monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
-    monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
+    monkeypatch.setattr(run_gate, 'make_app', lambda *args: object())
     monkeypatch.setattr(run_gate, 'invoke_with_resume', lambda *args: {'path': ['거절'], 'question_type': 'out_of_scope', 'answer': 'SojaFit 범위 밖입니다.'})
     data = tmp_path / 'synthetic.jsonl'
     data.write_text(json.dumps({'id': 'i1', 'kind': 'irrelevant', 'irrelevant_type': 'out_of_domain', 'input': '합성 질문', 'expected': '', 'gold_chunks': []}))
     out = tmp_path / 'out'
     assert run_gate.main(str(data), str(out), sets=1, keep_going=True) == 0
-    row = json.loads((out / 'set1.json').read_text(encoding='utf-8'))['rows'][0]
+    row = json.loads((out / 'set1.json').read_text())['rows'][0]
     assert row['pass'] is True and 'error' not in row
     assert row['score_delivery'] == 'failed' and row['cost_usd'] is None
-    assert 'PRIVATE_ERROR' not in (out / 'set1.json').read_text(encoding='utf-8')
+    assert 'PRIVATE_ERROR' not in (out / 'set1.json').read_text()
 
 
 def test_recorder_names_node_and_keeps_reported_cost_and_report_has_no_stale_rows():

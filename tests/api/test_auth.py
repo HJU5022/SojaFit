@@ -369,7 +369,7 @@ def test_google_signup_links_the_active_account_with_the_same_email_without_appr
     assert _count(google_db, "SELECT password_hash FROM users WHERE id = %s", account) == "fake"  # 기존 비밀번호 해시는 그대로
     client = TestClient(app)
     client.cookies.set(auth.COOKIE, token)
-    assert client.get("/api/auth/me").json() == {"user_id": account, "role": role, "email": "gt-taken@example.test"}  # 관리자는 관리자 세션을 받는다
+    assert client.get("/api/auth/me").json() == {"user_id": account, "role": role}  # 관리자는 관리자 세션을 받는다
     again = auth.google_session(ISSUER, "gt-sub-4")  # 두 번째 로그인: 같은 계정, 행은 그대로
     assert again and again[1] == account
     assert _count(google_db, "SELECT count(*) FROM auth_google_identities WHERE user_id = %s", account) == 1
@@ -493,7 +493,7 @@ def test_unlinked_google_admin_with_the_same_email_signs_in_through_the_callback
         monkeypatch.setattr(auth, "fetch_google_identity", lambda code, verifier, nonce: ("https://accounts.google.com", "gt-auto-subject", "gt-auto-admin@example.test"))
         callback = client.get(f"/api/auth/google/callback?code=c&state={state}", follow_redirects=False)
         assert callback.status_code == 303 and callback.headers["location"] == "/login"
-        assert client.get("/api/auth/me").json() == {"user_id": admin, "role": "admin", "email": "gt-auto-admin@example.test"}
+        assert client.get("/api/auth/me").json() == {"user_id": admin, "role": "admin"}
         with psycopg.connect(url) as conn:
             assert conn.execute("SELECT count(*) FROM auth_google_identities WHERE user_id = %s", (admin,)).fetchone()[0] == 1
             assert conn.execute("SELECT to_regclass('auth_google_pending')").fetchone()[0] is None  # 승인 대기 표가 없다(029)
