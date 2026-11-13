@@ -142,6 +142,35 @@ def test_demo_id_only_for_demo_projects(conn):
             insert(kind, demo_id)
 
 
+def test_circuit_version_migration_backfills_existing_data_and_repeats_safely(conn):
+    from psycopg import sql
+    from tests.db_schema import baseline_sql, DB_DIR
+    schema = 'versions_' + uuid4().hex
+    conn.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(schema)))
+    conn.execute(sql.SQL('SET LOCAL search_path TO {}').format(sql.Identifier(schema)))
+    conn.execute(baseline_sql())
+    owner = conn.execute("INSERT INTO users(login_id,password_hash) VALUES ('version@example.test','fake') RETURNING id").fetchone()[0]
+    project = conn.execute("INSERT INTO projects(user_id,name,source_kind,demo_id) VALUES (%s,'old demo','demo','breadboard_supply') RETURNING id", (owner,)).fetchone()[0]
+    conn.execute("INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,'{\"parts\":[{\"ref\":\"D1\"}]}',%s,'old')", (project, 'a' * 64))
+    thread, run = uuid4(), uuid4()
+    conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread, project))
+    conn.execute("INSERT INTO runs(id,thread_id,status) VALUES (%s,%s,'requires_input')", (run, thread))
+    before = conn.execute('SELECT row_to_json(runs) FROM runs WHERE id=%s', (run,)).fetchone()[0]
+    migration = (DB_DIR / '031_circuit_versions.sql').read_text(encoding='utf-8')
+    conn.execute(migration)
+    conn.execute(migration)
+    assert conn.execute('SELECT circuit_version FROM threads WHERE id=%s', (thread,)).fetchone()[0] == 1
+    assert conn.execute('SELECT row_to_json(runs) FROM runs WHERE id=%s', (run,)).fetchone()[0] == before
+    assert conn.execute('SELECT version,source_kind,demo_id,source_sha256 FROM project_circuit_versions WHERE project_id=%s', (project,)).fetchone() == (1,'demo','breadboard_supply','a' * 64)
+    assert conn.execute("SELECT relrowsecurity FROM pg_class WHERE oid='project_circuit_versions'::regclass").fetchone()[0]
+    assert conn.execute("SELECT count(*) FROM pg_class c,LATERAL aclexplode(c.relacl) a WHERE c.oid='project_circuit_versions'::regclass AND a.grantee=0").fetchone()[0] == 0
+    assert conn.execute("SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace,LATERAL aclexplode(p.proacl) a WHERE n.nspname=%s AND p.proname LIKE '%%circuit_version%%' AND a.grantee=0", (schema,)).fetchone()[0] == 0
+    with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+        conn.execute("UPDATE project_circuit_versions SET connections='{}' WHERE project_id=%s", (project,))
+    with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+        conn.execute('UPDATE threads SET circuit_version=0 WHERE id=%s', (thread,))
+
+
 def test_approval_columns_are_required_and_checked(conn):
     # approvals의 승인 칸 3개는 NOT NULL + 형식 CHECK, quotes · approved_cases에는 snapshot 칸이 없다
     user = make_user(conn)

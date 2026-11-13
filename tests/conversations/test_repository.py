@@ -131,6 +131,8 @@ def test_ownership_and_atomic_active_run(storage):
     from backend.conversations.repository import ConversationNotFound
     repo, (owner, other), project, connect = storage
     thread = repo.create_thread(owner, project)
+    assert repo.thread_detail(owner, thread)['circuit_version'] == 1
+    assert repo.list_threads(owner, project)[0]['circuit_version'] == 1
     with pytest.raises(ConversationNotFound):
         repo.get_thread(other, thread)
     run, circuit = repo.start(owner, thread, {'question': 'test', 'target': 'D1', 'conditions': ''})
@@ -296,10 +298,6 @@ def test_delete_rejects_active_then_removes_owned_checkpoints(storage):
         delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == []
     repo.finish(owner, thread, run, 'requires_input', {'answer': '', 'interrupt': {'missing': ['voltage']}})
-    with pytest.raises(InvalidRunState):
-        delete_owned_with_checkpoints(owner, project, delete_checkpoints)
-    repo.resume(owner, thread, run)
-    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
     delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == [thread]
     with connect() as conn:

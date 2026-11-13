@@ -347,6 +347,7 @@ SojaFit (proj3-b)
 │   ├── 027_google_user_login.sql <- Google 일반 계정의 비밀번호 NULL 허용, 관리자 비밀번호 필수 유지
 │   ├── 029_email_account_security.sql <- 인증 시각·일회성 메일 토큰·발송 한도 표 추가(기존 계정 보존)
 │   ├── 030_google_onboarding.sql <- 새 기준선의 명시적 Google 가입·재확인 연결과 관리자 승인 대기 표
+│   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -767,6 +768,7 @@ SojaFit (proj3-b)
     │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
     │   ├── frontend-screen-redesign.md <- 프론트엔드 화면 구성
+    │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도
     ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약

@@ -212,7 +212,7 @@ def test_saved_thread_uses_read_only_repository_and_safe_response(web, monkeypat
     calls = []
     def detail(self, user, thread_id, limit=50, before_message_id=None):
         calls.append((user, thread_id, limit, before_message_id))
-        return {'id': thread, 'project_id': 1, 'title': '저장 질문', 'target_ref': 'D1', 'target_locked': True,
+        return {'id': thread, 'project_id': 1, 'circuit_version': 1, 'title': '저장 질문', 'target_ref': 'D1', 'target_locked': True,
                 'latest_run': {'id': run, 'status': 'completed', 'message_id': 2},
                 'messages': [{'id': 2, 'run_id': run, 'role': 'assistant', 'content': '<img src=x>', 'created_at': '2026-11-11T00:00:00Z', 'raw_chunk': 'hidden'}],
                 'next_before_message_id': None, 'checkpoint': 'hidden'}

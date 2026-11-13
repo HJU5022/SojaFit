@@ -24,6 +24,7 @@ def client(monkeypatch):
     ("GET", "/api/projects", None), ("POST", "/api/projects", {"demo_id": "breadboard_supply", "name": "회로"}),
     ("GET", "/api/projects/1", None), ("PATCH", "/api/projects/1", {"name": "수정"}),
     ("DELETE", "/api/projects/1", None), ("GET", "/api/demo-circuits", None),
+    ("POST", "/api/projects/1/netlist", None),
 ])
 def test_projects_require_session(client, method, path, body):
     response = client.request(method, path, json=body, headers={"origin": "http://testserver"})
@@ -35,6 +36,7 @@ def test_projects_require_session(client, method, path, body):
 @pytest.mark.parametrize("method,path,body", [
     ("POST", "/api/projects", {"demo_id": "breadboard_supply", "name": "회로"}),
     ("PATCH", "/api/projects/1", {"name": "수정"}), ("DELETE", "/api/projects/1", None),
+    ("POST", "/api/projects/1/netlist", None),
 ])
 def test_project_mutations_check_origin(client, origin, method, path, body):
     app.dependency_overrides[auth.current_user_id] = lambda: 1
@@ -70,6 +72,58 @@ def test_demo_project_create_is_404_outside_demo_mode(client, monkeypatch):
         headers={"origin": "http://testserver"},
     )
     assert response.status_code == 404
+
+
+def test_empty_creation_works_outside_demo_mode(client, monkeypatch):
+    from backend.api.projects import repository
+    monkeypatch.setenv("DEMO_MODE", "0")
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    class EmptyRepository:
+        def create_empty(self, user_id, name):
+            return {"id": 1, "name": name, "source_kind": "upload", "demo_id": None,
+                    "created_at": "2026-11-13T00:00:00Z", "updated_at": "2026-11-13T00:00:00Z",
+                    "circuit_version": 0, "connections": {"parts": [], "nets": []}}
+    app.dependency_overrides[repository] = lambda: EmptyRepository()
+    response = client.post("/api/projects", json={"name": "빈 프로젝트"}, headers={"origin": "http://testserver"})
+    assert response.status_code == 201, response.text
+    assert response.json()["circuit_version"] == 0 and response.json()["connections"]["parts"] == []
+
+
+@pytest.mark.parametrize("filename,raw,status", [
+    ("test.net", None, 201), ("test.txt", None, 201), ("test.pdf", None, 400),
+    ("test.net", b"", 400), ("test.net", b"\xff", 400), ("test.net", b"x" * (5 * 1024 * 1024 + 1), 413),
+])
+def test_chat_netlist_uses_bounded_parser_and_creates_new_thread(upload_boundary, filename, raw, status):
+    from backend.api.projects import repository
+    client, payloads, uploads, _ = upload_boundary
+    base = app.dependency_overrides[repository]()
+    class ImportRepository:
+        def import_netlist(self, user_id, project_id, **payload):
+            assert project_id == 5
+            return base.create_upload(user_id, "회로", **payload), str(uuid4())
+    app.dependency_overrides[repository] = lambda: ImportRepository()
+    response = client.post("/api/projects/5/netlist", files={"file": (filename, raw if raw is not None else Path("tests/fixtures/netlists/minimal.net").read_bytes())},
+                           headers={"origin": "http://testserver"})
+    assert response.status_code == status, response.text
+    if status == 201:
+        assert set(response.json()) == {"project", "thread_id"}
+        assert len(payloads) == 1
+    else:
+        assert payloads == []
+    assert uploads and all(upload.file.closed for upload in uploads)
+
+
+def test_chat_netlist_accepts_more_than_json_limit(upload_boundary):
+    from backend.api.projects import repository
+    client, _, _, _ = upload_boundary
+    base = app.dependency_overrides[repository]()
+    class ImportRepository:
+        def import_netlist(self, user_id, project_id, **payload):
+            return base.create_upload(user_id, "회로", **payload), str(uuid4())
+    app.dependency_overrides[repository] = lambda: ImportRepository()
+    raw = Path("tests/fixtures/netlists/minimal.net").read_bytes() + b" " * (1024 * 1024)
+    response = client.post("/api/projects/5/netlist", files={"file": ("circuit.net", raw)}, headers={"origin": "http://testserver"})
+    assert response.status_code == 201, response.text
 
 
 def test_demo_catalog_follows_demo_mode(client, monkeypatch):
@@ -336,8 +390,18 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
             assert uploaded.status_code == 201
             uploaded_id = uploaded.json()["id"]
             assert "RAW_UPLOAD_MARKER" not in uploaded.text
+            raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
+            imported = client.post(f"/api/projects/{project_id}/netlist", files={"file": ("circuit.txt", raw)}, headers={"origin": "http://testserver"})
+            assert imported.status_code == 201, imported.text
+            thread_id = imported.json()["thread_id"]
+            assert imported.json()["project"]["id"] == project_id and imported.json()["project"]["circuit_version"] == 2
+            assert client.get(f"/api/projects/{project_id}?thread_id={thread_id}").json() == imported.json()["project"]
+            assert client.get(f"/api/projects/{uploaded_id}?thread_id={thread_id}").status_code == 404
+            assert client.get(f"/api/projects/{project_id}?thread_id=invalid").status_code == 422
             client.cookies.set(auth.COOKIE, "admin-token")
             assert client.get("/api/projects").json() == []
+            assert client.post(f"/api/projects/{project_id}/netlist", files={"file": ("circuit.net", raw)}, headers={"origin": "http://testserver"}).status_code == 404
+            assert client.get(f"/api/projects/{project_id}?thread_id={thread_id}").status_code == 404
             for method, body in (("GET", None), ("PATCH", {"name": "stolen"}), ("DELETE", None)):
                 errors = []
                 for target in (project_id, uploaded_id, project_id + 10000):

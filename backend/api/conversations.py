@@ -87,6 +87,7 @@ class Thread(BaseModel):
 
 
 class ThreadSummary(Thread):
+    circuit_version: int
     title: str
     created_at: datetime
     last_activity_at: datetime
@@ -109,6 +110,7 @@ class SavedRun(BaseModel):
 
 
 class ThreadDetail(Thread):
+    circuit_version: int
     title: str
     target_ref: str | None
     target_locked: bool

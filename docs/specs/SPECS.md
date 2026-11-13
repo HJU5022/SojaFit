@@ -19,6 +19,7 @@
 - `evaluator-demo-readiness.md` — 키 없는 Compose 데모: DEMO_REPLAY 기록 응답 재생
 - `external-complete-schematics.md` — 공개 저장소 완성 회로도 시트의 백엔드 제공 계약과 자원 상한
 - `frontend-screen-redesign.md` — 랜딩·로그인·대화 중심 작업대의 경로와 화면 계약
+- `netlist-conversation-versions.md` — 빈 프로젝트 생성, 채팅 넷리스트 접수와 대화별 회로 버전 고정
 - `google-admin-login.md` — Google 관리자 최초 연결·운영자 승인과 OIDC 검증
 - `google-user-login.md` — 일반 사용자 Google 가입, 비밀번호 재확인 연결
 - `judge-agent.md` — Spec 에이전트와 대체품 찾기(역할 23개, 조건 판정, 후보 정렬)

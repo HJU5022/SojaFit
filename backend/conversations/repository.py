@@ -64,7 +64,7 @@ class ConversationRepository:
 
     def get_thread(self, user_id, thread_id):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN circuits c ON c.project_id=p.id WHERE t.id=%s AND p.user_id=%s',
+            row = conn.execute('SELECT t.id, t.project_id, c.connections, p.name FROM threads t JOIN projects p ON p.id=t.project_id JOIN project_circuit_versions c ON c.project_id=p.id AND c.version=t.circuit_version WHERE t.id=%s AND p.user_id=%s',
                                (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
@@ -79,7 +79,7 @@ class ConversationRepository:
             if row is None:
                 raise ConversationNotFound
             conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'user',%s)", (thread_id, run_id, data['question']))
-            circuit = conn.execute('SELECT c.connections FROM circuits c JOIN threads t ON t.project_id=c.project_id WHERE t.id=%s', (thread_id,)).fetchone()[0]
+            circuit = conn.execute('SELECT c.connections FROM project_circuit_versions c JOIN threads t ON t.project_id=c.project_id AND t.circuit_version=c.version WHERE t.id=%s', (thread_id,)).fetchone()[0]
         return str(run_id), circuit
 
     def finish(self, user_id, thread_id, run_id, status, result=None):
@@ -111,18 +111,18 @@ class ConversationRepository:
             if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise ConversationNotFound
             rows = conn.execute("""SELECT t.id,t.created_at,q.content,r.id,r.status,
-                greatest(t.created_at,m.last_at,r.last_at) AS activity
+                greatest(t.created_at,m.last_at,r.last_at) AS activity,t.circuit_version
                 FROM threads t JOIN projects p ON p.id=t.project_id
                 LEFT JOIN LATERAL (SELECT content FROM messages WHERE thread_id=t.id AND role='user' ORDER BY id LIMIT 1) q ON true
                 LEFT JOIN LATERAL (SELECT max(created_at) AS last_at FROM messages WHERE thread_id=t.id) m ON true
                 LEFT JOIN LATERAL (SELECT id,status,max(updated_at) OVER () AS last_at FROM runs WHERE thread_id=t.id ORDER BY created_at DESC,id DESC LIMIT 1) r ON true
                 WHERE t.project_id=%s AND p.user_id=%s ORDER BY activity DESC,t.id DESC""", (project_id, user_id))
             return [{'id': str(row[0]), 'project_id': project_id, 'created_at': row[1], 'title': thread_title(row[2]),
-                     'latest_run_id': str(row[3]) if row[3] else None, 'status': row[4], 'last_activity_at': row[5]} for row in rows]
+                     'latest_run_id': str(row[3]) if row[3] else None, 'status': row[4], 'last_activity_at': row[5], 'circuit_version': row[6]} for row in rows]
 
     def thread_detail(self, user_id, thread_id, limit=50, before_message_id=None):
         with auth.connection() as conn:
-            row = conn.execute('SELECT t.id,t.project_id FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s', (thread_id, user_id)).fetchone()
+            row = conn.execute('SELECT t.id,t.project_id,t.circuit_version FROM threads t JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s', (thread_id, user_id)).fetchone()
             if row is None:
                 raise ConversationNotFound
             title = conn.execute("SELECT m.content FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND m.role='user' ORDER BY m.id LIMIT 1", (thread_id, user_id)).fetchone()
@@ -137,7 +137,7 @@ class ConversationRepository:
             if conn.execute("SELECT to_regclass('sojafit_agent.threads')").fetchone()[0] is not None:
                 target = conn.execute('SELECT a.target FROM sojafit_agent.threads a JOIN threads t ON t.id=a.id JOIN projects p ON p.id=t.project_id WHERE t.id=%s AND p.user_id=%s AND a.user_id=%s', (thread_id, user_id, user_id)).fetchone()
         page = rows[:limit]
-        return {'id': str(row[0]), 'project_id': row[1], 'title': thread_title(title[0] if title else ''),
+        return {'id': str(row[0]), 'project_id': row[1], 'circuit_version': row[2], 'title': thread_title(title[0] if title else ''),
                 'target_ref': target[0] if target else None, 'target_locked': latest is not None,
                 'latest_run': {'id': str(latest[0]), 'status': latest[1], 'message_id': latest[2]} if latest else None,
                 'messages': [{'id': r[0], 'run_id': str(r[1]), 'role': r[2], 'content': r[3], 'created_at': r[4]} for r in reversed(page)],
