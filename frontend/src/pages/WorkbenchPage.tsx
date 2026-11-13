@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
@@ -79,7 +79,7 @@ export default function WorkbenchPage() {
   const filteredProjects = projectList.filter(item => item.name.toLowerCase().includes(query))
   const filteredParts = parts.filter(part => `${part.ref} ${part.value}`.toLowerCase().includes(query))
   const partGroups = [{ title: '판정 가능', eligible: true }, { title: '판정 범위 밖', eligible: false }]
-  function clearError() { errorVersion.current += 1; setError(null) }
+  const clearError = useCallback(() => { errorVersion.current += 1; setError(null) }, [])
   useEffect(() => { errorVersion.current += 1; setError(null); return () => { errorVersion.current += 1 } }, [location.key])
   useEffect(() => {
     if (!navOpen) return
@@ -89,9 +89,36 @@ export default function WorkbenchPage() {
     document.addEventListener('keydown', escape)
     return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape) }
   }, [navOpen])
-  if (!user) return null
-
-  const go = (next: Record<string, string>) => { clearError(); setFilter(''); setPending(null); setNavOpen(false); setParams(next) }
+  const go = useCallback((next: Record<string, string>, projectMissing = false) => {
+    clearError(); setFilter(''); setPending(null); setNavOpen(false)
+    setParams(next, { state: projectMissing ? { projectMissing: true } : null, replace: projectMissing })
+  }, [clearError, setParams])
+  const forgetProject = useCallback(async (id: number) => {
+    await Promise.all([['projects'], ['project', id], ['threads', id]].map(queryKey => client.cancelQueries({ queryKey })))
+    client.setQueryData<ProjectSummary[]>(['projects'], current => current?.filter(item => item.id !== id))
+    client.removeQueries({ queryKey: ['project', id] }); client.removeQueries({ queryKey: ['threads', id] })
+    void client.invalidateQueries({ queryKey: ['projects'] })
+  }, [client])
+  const missingProject = useCallback(async (id: number, version: number) => {
+    await forgetProject(id)
+    if (version !== errorVersion.current) return
+    if (renamer.current?.open) renamer.current.close()
+    setRenaming(null); setConfirming('')
+    go({}, true)
+  }, [forgetProject, go])
+  useEffect(() => {
+    if (projectId === null || (project.error as ApiError | null)?.code !== 'NOT_FOUND') return
+    const controller = new AbortController(), version = errorVersion.current
+    async function check() {
+      if (threadId) {
+        try { await getProject(projectId!, controller.signal); return }
+        catch (reason) { if (controller.signal.aborted || (reason as ApiError).code !== 'NOT_FOUND') return }
+      }
+      if (!controller.signal.aborted) await missingProject(projectId!, version)
+    }
+    void check()
+    return () => controller.abort()
+  }, [project.error, projectId, threadId, missingProject])
   const onThread = (id: string, ref = target?.ref ?? targetRef) => go({ projectId: String(projectId), ...(ref ? { targetRef: ref } : {}), ...(id ? { threadId: id } : {}) })
   const onReviewThread = (id: string, ref = target?.ref ?? targetRef) => {
     if (id && project.data) client.setQueryData(['project', projectId, id], project.data)
@@ -142,15 +169,21 @@ export default function WorkbenchPage() {
     setBusy(true); clearError()
     const version = errorVersion.current
     try { await renameProject(renaming.id, name); await client.invalidateQueries({ queryKey: ['projects'] }); await client.invalidateQueries({ queryKey: ['project', renaming.id] }); if (version === errorVersion.current) renamer.current?.close() }
-    catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setBusy(false) }
+    catch (reason) {
+      if ((reason as ApiError).code === 'NOT_FOUND') await missingProject(renaming.id, version)
+      else if (version === errorVersion.current) setError(reason)
+    } finally { setBusy(false) }
   }
   async function removeProject(id: number) {
     const key = `project-${id}`
     if (confirming !== key) { setConfirming(key); return }
     clearError()
     const version = errorVersion.current
-    try { await deleteProject(id); client.removeQueries({ queryKey: ['project', id] }); client.removeQueries({ queryKey: ['threads', id] }); await client.invalidateQueries({ queryKey: ['projects'] }) }
-    catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setConfirming('') }
+    try { await deleteProject(id); await forgetProject(id) }
+    catch (reason) {
+      if ((reason as ApiError).code === 'NOT_FOUND') await missingProject(id, version)
+      else if (version === errorVersion.current) setError(reason)
+    } finally { setConfirming('') }
   }
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -166,6 +199,7 @@ export default function WorkbenchPage() {
     } catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setBusy(false) }
   }
 
+  if (!user) return null
   return <div className="app">
     <nav ref={navigation} className={`rail${navOpen ? ' rail-open' : ''}`} aria-label="프로젝트와 검토">
       <div className="rail-top"><a className="brand" href="/app"><img src="/assets/sojafit-icon.svg" alt="" width={22} height={22} />SojaFit</a>
@@ -205,6 +239,7 @@ export default function WorkbenchPage() {
         {project.data && parts.length > 0 && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => { clearError(); sheet.current?.showModal() }}><Maximize2 aria-hidden="true" />원본 회로도</button>}
       </header>
       {projects.error && projectId === null && <div className="notice inset" role="alert"><p {...requestIdProps(projects.error)}>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
+      {location.state?.projectMissing === true && <div className="notice notice-dismissible inset" role="status"><p>삭제되었거나 더 이상 접근할 수 없는 프로젝트입니다. 최신 목록을 확인해 주세요.</p><button type="button" className="icon-btn" aria-label="프로젝트 안내 닫기" onClick={() => setParams(params, { replace: true, state: null })}><X aria-hidden="true" /></button></div>}
       {project.error && <div className="notice inset" role="alert"><p {...requestIdProps(project.error)}>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
       {!creator.current?.open && !renaming && error ? <div className="notice notice-dismissible inset" role="alert" {...requestIdProps(error)}><p>삭제하지 못했습니다. {errorMessage(error)} 같은 삭제 버튼으로 다시 시도해 주세요.</p><button type="button" className="icon-btn" aria-label="오류 알림 닫기" onClick={clearError}><X aria-hidden="true" /></button></div> : null}
       {projectId !== null && threadId && (project.isPending || (!target && thread.isPending)) && <div className="skeleton inset" role="status"><span className="sr-only">검토할 회로와 대화 기록을 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}

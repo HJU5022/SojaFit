@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
 import { renderWithQueries } from '../test/projects'
+import { QueryClient } from '@tanstack/react-query'
 
 vi.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user, logout: vi.fn() }) }))
 vi.mock('../components/Review', () => ({ default: () => null }))
@@ -115,7 +116,7 @@ async function confirmDelete(label: string) {
 }
 
 it.each(deletions)('dismisses the error for $label and shows a new failure on another attempt', async ({ query, label }) => {
-  const remove = mutationApi(() => failure('NOT_FOUND', '대상을 찾을 수 없습니다.', 404))
+  const remove = mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
   open(query)
   await confirmDelete(label)
   expect(await screen.findByRole('alert')).toHaveTextContent('삭제하지 못했습니다.')
@@ -123,7 +124,7 @@ it.each(deletions)('dismisses the error for $label and shows a new failure on an
   expect(screen.queryByRole('alert')).toBeNull()
   expect(remove).toHaveBeenCalledTimes(1)
   await confirmDelete(label)
-  expect(await screen.findByRole('alert')).toHaveTextContent('대상을 찾을 수 없습니다.')
+  expect(await screen.findByRole('alert')).toHaveTextContent('잠시 후 다시 시도해 주세요.')
   expect(remove).toHaveBeenCalledTimes(2)
 })
 
@@ -144,7 +145,7 @@ function HistoryControls() {
 }
 
 it('clears a stale error on browser history navigation and does not bring it back on return', async () => {
-  mutationApi(() => failure('NOT_FOUND', '대상을 찾을 수 없습니다.', 404))
+  mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1', '/app']}><HistoryControls /><WorkbenchPage /></MemoryRouter>)
   await confirmDelete('삭제 시험 삭제')
   await screen.findByRole('alert')
@@ -190,6 +191,118 @@ function mockDialogs() {
     dialog.close = function () { this.open = false; this.dispatchEvent(new Event('close')) }
   }
 }
+
+it.each(['rename', 'delete', 'refresh-fails'])('removes a disappeared project after %s without retrying its mutation', async mode => {
+  const other = { ...made(null, '남은 프로젝트'), id: 2 }
+  let removed = false, listReads = 0
+  const mutations: string[] = []
+  network((path, init) => {
+    if (path === '/api/projects') {
+      listReads++
+      return removed && mode === 'refresh-fails' ? failure('UNAVAILABLE', '목록 조회가 늦습니다.', 503) : Response.json(removed ? [other] : [made(null, '사라진 프로젝트'), other])
+    }
+    if (path === '/api/projects/1' && init.method) { mutations.push(init.method); removed = true; return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404) }
+    return Response.json([])
+  })
+  const { client } = open('')
+  await screen.findByRole('button', { name: '사라진 프로젝트' })
+  client.setQueryData(['project', 1, 'old-thread'], made(null, '사라진 프로젝트'))
+  client.setQueryData(['threads', 1], [{ id: 'old-thread' }])
+  if (mode === 'delete') await confirmDelete('사라진 프로젝트 삭제')
+  else {
+    mockDialogs(); fireEvent.click(screen.getByRole('button', { name: '사라진 프로젝트 이름 바꾸기' }))
+    const dialog = await screen.findByRole('dialog', { name: '프로젝트 이름 바꾸기' })
+    fireEvent.submit(within(dialog).getByRole('button', { name: '이름 저장' }).closest('form')!)
+  }
+  expect(await screen.findByRole('status')).toHaveTextContent('삭제되었거나 더 이상 접근할 수 없는 프로젝트')
+  expect(screen.queryByRole('dialog', { name: '프로젝트 이름 바꾸기' })).toBeNull()
+  expect(screen.queryByRole('button', { name: '사라진 프로젝트' })).toBeNull()
+  expect(screen.getByRole('button', { name: '남은 프로젝트' })).toBeInTheDocument()
+  expect(client.getQueryData(['project', 1, 'old-thread'])).toBeUndefined()
+  expect(client.getQueryData(['threads', 1])).toBeUndefined()
+  expect(mutations).toEqual([mode === 'delete' ? 'DELETE' : 'PATCH'])
+  await waitFor(() => expect(listReads).toBe(2))
+  if (mode === 'refresh-fails') expect(await screen.findByRole('alert')).toHaveTextContent('프로젝트 목록을 불러오지 못했습니다.')
+})
+
+it.each(['', '&threadId=old-thread'])('leaves a cached project when its canonical lookup is missing %s', async suffix => {
+  const client = new QueryClient()
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  client.setQueryData(['project', 1, suffix ? 'old-thread' : ''], made(null, '삭제된 캐시'))
+  network((path) => {
+    if (path === '/api/projects') return Response.json([other])
+    if (path.split('?')[0] === '/api/projects/1') return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1${suffix}`]}><WorkbenchPage /></MemoryRouter>, client)
+  expect(await screen.findByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeInTheDocument()
+  expect(await screen.findByRole('button', { name: '다른 프로젝트' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '삭제된 캐시' })).toBeNull()
+  expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toBeUndefined()
+})
+
+it('keeps the project when only the selected conversation version returns 404', async () => {
+  let canonicalReads = 0
+  network(path => {
+    if (path === '/api/projects') return Response.json([made(null, '유효한 프로젝트')])
+    if (path === '/api/projects/1') { canonicalReads++; return Response.json(made(null, '유효한 프로젝트')) }
+    if (path.startsWith('/api/projects/1?')) return failure('NOT_FOUND', '대화를 찾을 수 없습니다.', 404)
+    return Response.json([])
+  })
+  const { client } = open('projectId=1&threadId=missing')
+  expect(await screen.findByText(/회로를 불러오지 못했습니다/)).toBeInTheDocument()
+  await waitFor(() => expect(canonicalReads).toBe(1))
+  expect(screen.queryByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeNull()
+  expect(client.getQueryData(['projects'])).toEqual([made(null, '유효한 프로젝트')])
+})
+
+it('does not close another rename dialog when an earlier project returns 404 late', async () => {
+  let finish!: (value: Response) => void
+  let missing = false
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  network((path, init) => {
+    if (path === '/api/projects') return Response.json(missing ? [other] : [made(null, '첫 프로젝트'), other])
+    if (path === '/api/projects/1' && init.method === 'PATCH') return new Promise<Response>(resolve => { finish = resolve })
+    return Response.json([])
+  })
+  open(''); await screen.findByRole('button', { name: '첫 프로젝트' }); mockDialogs()
+  fireEvent.click(screen.getByRole('button', { name: '첫 프로젝트 이름 바꾸기' }))
+  let dialog = await screen.findByRole('dialog', { name: '프로젝트 이름 바꾸기' })
+  fireEvent.submit(within(dialog).getByRole('button', { name: '이름 저장' }).closest('form')!)
+  await waitFor(() => expect(finish).toBeDefined())
+  fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
+  fireEvent.click(screen.getByRole('button', { name: '다른 프로젝트 이름 바꾸기' }))
+  dialog = await screen.findByRole('dialog', { name: '프로젝트 이름 바꾸기' })
+  fireEvent.change(within(dialog).getByRole('textbox', { name: '프로젝트 이름' }), { target: { value: '작성 중인 이름' } })
+  await act(async () => { missing = true; finish(failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)) })
+  expect(within(dialog).getByRole('textbox', { name: '프로젝트 이름' })).toHaveValue('작성 중인 이름')
+  expect(screen.queryByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeNull()
+})
+
+it('does not resurrect a missing project from an older in-flight list response', async () => {
+  let finish!: (value: Response) => void
+  let reads = 0
+  const old = made(null, '이전 목록의 프로젝트'), other = { ...made(null, '남은 프로젝트'), id: 2 }
+  network((path, init) => {
+    if (path === '/api/projects') {
+      if (++reads === 2) return new Promise<Response>(resolve => { finish = resolve })
+      return Response.json(reads >= 3 ? [other] : [old, other])
+    }
+    if (path === '/api/projects/1' && init.method === 'PATCH') return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)
+    return Response.json([])
+  })
+  const { client } = open('')
+  await screen.findByRole('button', { name: '이전 목록의 프로젝트' }); mockDialogs()
+  void client.refetchQueries({ queryKey: ['projects'] })
+  await waitFor(() => expect(finish).toBeDefined())
+  fireEvent.click(screen.getByRole('button', { name: '이전 목록의 프로젝트 이름 바꾸기' }))
+  const dialog = await screen.findByRole('dialog', { name: '프로젝트 이름 바꾸기' })
+  fireEvent.submit(within(dialog).getByRole('button', { name: '이름 저장' }).closest('form')!)
+  await screen.findByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)
+  await act(async () => { finish(Response.json([old, other])) })
+  expect(screen.queryByRole('button', { name: '이전 목록의 프로젝트' })).toBeNull()
+  expect(client.getQueryData(['projects'])).toEqual([other])
+})
 
 it.each([
   { openButton: '새 프로젝트', title: '새 프로젝트', submit: '만들기', message: '프로젝트를 만들지 못했습니다.' },
