@@ -1,8 +1,10 @@
 """저장소·계층 구조·이미지 연결·네트워크 상한을 격리된 HTTP 응답으로 검사한다."""
 import httpx
 import pytest
+import socket
 
 from backend.projects.external_circuit_search import GitHubRepositoryRef
+from backend.projects import schematic_discovery as discovery
 from backend.projects.schematic_discovery import download_bounded, inspect_github_candidates, inspect_github_repository
 from backend.projects.schematic_source import ALLOWED_LICENSES, ExternalSchematicInvalidSource, ExternalSchematicRateLimited
 
@@ -117,10 +119,47 @@ def test_bounded_download(mode):
         return httpx.Response(302, headers={"Location": target})
     with httpx.Client(transport=httpx.MockTransport(handle)) as client:
         with pytest.raises(ExternalSchematicRateLimited if mode == "rate" else ExternalSchematicInvalidSource) as error:
-            download_bounded(url, max_bytes=100, allowed_hosts=frozenset({"raw.githubusercontent.com"}), client=client)
+            download_bounded(url, max_bytes=100, allowed_hosts=frozenset({"raw.githubusercontent.com"}),
+                             client=client, phase="github_raw")
     assert len(requests) == 1
     if mode == "rate":
         assert error.value.retry_after == 3600
+        assert error.value.host == "raw.githubusercontent.com"
+        assert error.value.phase == "github_raw"
+        assert error.value.status_code == 403
+
+
+def test_public_download_connects_to_checked_ip_with_original_tls_name(monkeypatch):
+    monkeypatch.setattr(discovery.socket, "getaddrinfo", lambda host, port, **kwargs:
+                        [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))])
+    seen = []
+
+    class Transport(httpx.BaseTransport):
+        def handle_request(self, request):
+            seen.append(request)
+            return httpx.Response(200, content=b"asset", headers={"content-type": "image/png"})
+
+    with httpx.Client(transport=Transport(), trust_env=False) as client:
+        data, _ = download_bounded("https://example.org/schematic.png", max_bytes=20,
+                                   allowed_hosts=frozenset({"example.org"}), client=client)
+    assert data == b"asset"
+    assert str(seen[0].url) == "https://93.184.216.34/schematic.png"
+    assert seen[0].headers["host"] == "example.org"
+    assert seen[0].extensions["sni_hostname"] == "example.org"
+
+
+def test_public_download_rejects_private_dns_before_connection(monkeypatch):
+    monkeypatch.setattr(discovery.socket, "getaddrinfo", lambda host, port, **kwargs:
+                        [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.1", 443))])
+
+    class Transport(httpx.BaseTransport):
+        def handle_request(self, request):
+            pytest.fail("private address must never be contacted")
+
+    with httpx.Client(transport=Transport(), trust_env=False) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            download_bounded("https://example.org/schematic.png", max_bytes=20,
+                             allowed_hosts=frozenset({"example.org"}), client=client)
 
 def test_generic_photo_and_model_name_without_circuit_evidence():
     repo = Repo({"board.kicad_sch": BOARD, "board.png": b"",

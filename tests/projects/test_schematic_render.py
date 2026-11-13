@@ -26,6 +26,12 @@ def picture(kind, colors):
     return stream.getvalue()
 
 
+def schematic_picture():
+    stream = io.BytesIO()
+    Image.new("RGB", (128, 128), "red").save(stream, format="PNG")
+    return stream.getvalue()
+
+
 def fetch(data, mime, kind="png", **kwargs):
     source = replace(SOURCE, asset_kind=kind, asset_paths=(f"board.{kind}",) if kind != "kicad" else ())
     if "expected_sheets" in kwargs:
@@ -207,3 +213,146 @@ def test_kicad_pdf_timeout_is_a_service_error(monkeypatch, tmp_path):
     monkeypatch.setattr(schematic.subprocess, "run", timeout)
     with pytest.raises(schematic.KicadServiceUnavailable):
         schematic.run_kicad_pdf(tmp_path / "board.kicad_sch", tmp_path)
+
+
+def public_source(url, kind, digest, count=1):
+    return VerifiedSchematicSource(
+        "", "", "미확인", "공개 출처", url, url, f"schematic.{kind}", kind, (),
+        f"schematic.{kind}", count, "public_web", 3, None, None, None, digest, None,
+    )
+
+
+def test_public_png_fingerprint_and_render_recheck_hash(monkeypatch):
+    png = picture("PNG", ["red"])
+    url = "https://assets.example.test/schematic.png"
+
+    def respond(request):
+        return httpx.Response(200, headers={"Content-Type": "image/png"}, content=png)
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        digest, count = render.fingerprint_public_schematic(url, "png", client=client)
+        assert count == 1
+        monkeypatch.setattr(render, "_sheets", lambda kind, path, output, **kwargs: (png,))
+        source = public_source(url, "png", digest)
+        assert render.render_public_schematic(source, client=client) == (png,)
+
+        bad = public_source(url, "png", "0" * 64)
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.render_public_schematic(bad, client=client)
+
+
+def test_public_rejects_private_host_and_wrong_mime():
+    png = picture("PNG", ["red"])
+    private = "https://127.0.0.1/schematic.png"
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={"Content-Type": "image/png"}, content=png))) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.fingerprint_public_schematic(private, "png", client=client)
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.fingerprint_public_schematic("https://assets.example.test/schematic.png", "pdf", client=client)
+
+
+def test_public_pdf_fingerprint_is_single_page_only():
+    pdf = picture("PDF", ["red"])
+    url = "https://assets.example.test/schematic.pdf"
+
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={"Content-Type": "application/pdf"}, content=pdf))) as client:
+        digest, count = render.fingerprint_public_schematic(url, "pdf", client=client)
+    assert len(digest) == 64 and count == 1
+
+
+def test_public_identity_rejects_wrong_board_variant_from_pdf_text(monkeypatch):
+    pdf = picture("PDF", ["red"])
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (pdf, "application/pdf"))
+    monkeypatch.setattr(render, "_pdf_identity_text", lambda data: "SparkFun RedBoard Artemis schematic")
+    monkeypatch.setattr(render, "_bounded_pdf_schematic_pages", lambda data: (0,))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(
+            "https://cdn.sparkfun.com/RedBoardArtemisSchematic.pdf", "pdf",
+            "SparkFun RedBoard Artemis ATP", title="SparkFun RedBoard Artemis ATP",
+        )
+
+
+def test_atp_request_rejects_generic_redboard_file_even_if_pdf_mentions_atp(monkeypatch):
+    pdf = picture("PDF", ["red"])
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (pdf, "application/pdf"))
+    monkeypatch.setattr(render, "_pdf_identity_text", lambda data: "RedBoard Artemis ATP schematic")
+    monkeypatch.setattr(render, "_bounded_pdf_schematic_pages", lambda data: (0,))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(
+            "https://cdn.sparkfun.com/RedBoardArtemisSchematic.pdf", "pdf",
+            "SparkFun RedBoard Artemis ATP schematic", title="RedBoard Artemis ATP",
+        )
+
+
+@pytest.mark.parametrize(("query", "url", "title"), [
+    ("SparkFun TMP102 Breakout", "https://cdn.sparkfun.com/SparkFun_TMP102_Qwiic-Schematic.pdf", "TMP102 Qwiic"),
+    ("Teensy 4.0", "https://download.example/click-shield-for-teensy-4-schematic.pdf", "Click shield for Teensy 4.0"),
+    ("SparkFun Qwiic OLED Display", "https://cdn.sparkfun.com/zio_qwiic_oled_schematic.pdf", "Zio Qwiic OLED Display"),
+    ("Raspberry Pi Zero 2 W", "https://example.org/raspberry-pi-zero-2-w-reduced-schematics.pdf", "Raspberry Pi Zero 2 W reduced schematics"),
+    ("Teensy LC", "https://www.pjrc.com/teensy/schematic41.png", "Teensy schematic"),
+    ("SparkFun TMP102", "https://cdn.sparkfun.com/TMP102-Qwiic-Schematic.pdf", "SparkFun TMP102"),
+    ("Arduino Nano", "https://docs.arduino.cc/resources/schematics/Nano-Every-schematics.pdf", "Arduino Nano"),
+])
+def test_public_identity_rejects_observed_mismatches(monkeypatch, query, url, title):
+    png = picture("PNG", ["red"])
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(url, "png", query, title=title)
+
+
+def test_public_identity_accepts_matching_official_png(monkeypatch):
+    png = schematic_picture()
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    digest, count = render.inspect_public_schematic(
+        "https://cdn-learn.adafruit.com/assets/adafruit_products_schem.png",
+        "png", "Adafruit MOSFET Driver STEMMA", title="Adafruit MOSFET Driver STEMMA",
+    )
+    assert len(digest) == 64 and count == 1
+
+
+@pytest.mark.parametrize(("query", "url", "title"), [
+    ("Raspberry Pi Pico schematic", "https://example.org/raspberry-pico-w-schematics.pdf", "Raspberry Pi Pico W schematic"),
+    ("Pololu DRV8833 Dual Motor Driver schematic", "https://example.org/DRB8833-schematic.png", "DRV8833 dual motor driver"),
+    ("SparkFun RedBoard Artemis ATP schematic", "https://example.org/RedBoard-Artemis-Whitesheet.pdf", "SparkFun RedBoard Artemis ATP"),
+])
+def test_public_identity_rejects_live_false_positive_variants(monkeypatch, query, url, title):
+    png = picture("PNG", ["red"])
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(url, "png", query, title=title)
+
+
+def test_public_identity_allows_qt_py_rp2040_filename_with_title_model(monkeypatch):
+    png = schematic_picture()
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    digest, count = render.inspect_public_schematic(
+        "https://cdn-learn.adafruit.com/assets/adafruit_products_QTRP_sch.png",
+        "png", "Adafruit QT Py RP2040 schematic", title="Adafruit QT Py RP2040 Schematic and Fab Print",
+    )
+    assert len(digest) == 64 and count == 1
+
+
+@pytest.mark.parametrize(("query", "url", "title"), [
+    ("Adafruit ItsyBitsy RP2040", "https://cdn.adafruit.com/itsybitsy/adafruit_products_QTRP_sch.png", "Adafruit ItsyBitsy RP2040"),
+    ("SparkFun RedBoard Artemis ATP", "https://cdn.sparkfun.com/assets/RedBoardArtemisSchematic.pdf", "RedBoard Artemis schematic"),
+    ("SparkFun OpenLog Artemis", "https://cdn.sparkfun.com/assets/OpenLog_Artemis_9DoF_IMU_Schematic.pdf", "SparkFun OpenLog Artemis 9DoF IMU"),
+    ("SparkFun TMP102 Breakout", "https://cdn.sparkfun.com/assets/TMP102_Hookup_Guide_Web.pdf", "TMP102 Hookup Guide"),
+])
+def test_public_identity_rejects_artifact_variant_mismatch(monkeypatch, query, url, title):
+    png = picture("PNG", ["red"])
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(url, "png", query, title=title)
+
+
+def test_public_identity_rejects_tiny_png(monkeypatch):
+    tiny = io.BytesIO()
+    Image.new("RGB", (32, 32), "red").save(tiny, format="PNG")
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (tiny.getvalue(), "image/png"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(
+            "https://files.seeedstudio.com/assets/optimized.png", "png",
+            "Seeed XIAO ESP32C3", title="Seeed XIAO ESP32C3 schematic",
+        )
