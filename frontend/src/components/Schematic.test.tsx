@@ -6,6 +6,7 @@ import { ExternalSchematic } from './Schematic'
 
 afterEach(() => vi.unstubAllGlobals())
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
+  source_type: 'manufacturer_official' as const, evidence_grade: 2 as const, manufacturer: 'Maker', model: 'Board', revision: 'v1', source_sha256: 'b'.repeat(64), license_evidence_url: 'https://example.test/r/LICENSE',
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
@@ -22,6 +23,8 @@ it('searches the project name only when asked, and shows every sheet in order wi
   expect(images.map(image => image.getAttribute('alt'))).toEqual(['Board 시트 1 원본 회로도', 'Board 시트 2 원본 회로도'])
   expect(screen.getAllByText('출처: Maker')).toHaveLength(2)
   expect(screen.getAllByText('라이선스: MIT')).toHaveLength(2)
+  expect(screen.getAllByText('제조사 공식 원본 · 2등급')).toHaveLength(2)
+  expect(screen.getAllByText('Maker · Board · v1')).toHaveLength(2)
   expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', found.source_url)
 })
 

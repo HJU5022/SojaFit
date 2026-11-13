@@ -7,14 +7,28 @@ import type { ApiError } from '../api/client'
 import type { DemoSchematic } from '../api/projects'
 
 // 이미지 주소가 바뀌면 대기 상태도 초기화해 이전 회로의 오류를 남기지 않는다. reload가 있으면 같은 주소 대신 그 동작으로 다시 받는다(서명 주소 만료).
-export function SchematicImage({ schematic, name, zoom, reload }: { schematic: Pick<DemoSchematic, 'image_url' | 'original_url' | 'attribution' | 'license'>; name: string; zoom: number; reload?: () => void }) {
+type SchematicEvidence = Pick<DemoSchematic, 'image_url' | 'original_url' | 'attribution' | 'license'> & {
+  evidence_grade?: 2 | 3
+  manufacturer?: string | null
+  model?: string | null
+  revision?: string | null
+}
+
+export function SchematicImage({ schematic, name, zoom, reload }: { schematic: SchematicEvidence; name: string; zoom: number; reload?: () => void }) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
   return <figure tabIndex={0} aria-label="원본 회로도 보기">
     {status === 'loading' && <div className="skeleton sheet-status" role="status"><span className="sr-only">원본 회로도를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {status === 'error' && <div className="notice sheet-status" role="alert"><p>원본 회로도를 불러오지 못했습니다.</p><button className="btn" onClick={() => { if (reload) return reload(); setStatus('loading'); setAttempt(value => value + 1) }}>{reload ? '다시 검색하기' : '회로도 다시 불러오기'}</button></div>}
     <img key={attempt} src={schematic.image_url} alt={`${name} 원본 회로도`} hidden={status !== 'ready'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} style={{ width: `${zoom}%` }} />
-    <figcaption className="meta-fields"><span>출처: {schematic.attribution}</span><span>라이선스: {schematic.license}</span><a href={schematic.original_url} target="_blank" rel="noreferrer">원본 자료<span className="sr-only"> (새 탭)</span></a></figcaption>
+    <figcaption className="meta-fields">
+      {schematic.evidence_grade === 2 && <span>제조사 공식 원본 · 2등급</span>}
+      {schematic.evidence_grade === 3 && <span>커뮤니티 참고 · 3등급</span>}
+      {[schematic.manufacturer, schematic.model, schematic.revision].filter(Boolean).length > 0 &&
+        <span>{[schematic.manufacturer, schematic.model, schematic.revision].filter(Boolean).join(' · ')}</span>}
+      <span>출처: {schematic.attribution}</span><span>라이선스: {schematic.license}</span>
+      <a href={schematic.original_url} target="_blank" rel="noreferrer">원본 자료<span className="sr-only"> (새 탭)</span></a>
+    </figcaption>
   </figure>
 }
 
@@ -50,7 +64,8 @@ export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }
     </form>}
     {result.isFetching && <div className="skeleton inset" role="status"><span className="sr-only">원본 회로도를 찾는 중입니다. 몇 초 걸릴 수 있습니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {result.error && !result.isFetching && <p className="notice inset" role="alert" {...requestIdProps(result.error)}>{searchMessage(result.error as unknown as ApiError)}</p>}
-    {data && data.images.map(image => <SchematicImage key={image.url} schematic={{ image_url: image.url, original_url: data.source_url, attribution: data.attribution, license: data.license }}
+    {data && data.images.map(image => <SchematicImage key={image.url} schematic={{ image_url: image.url, original_url: data.source_url, attribution: data.attribution, license: data.license,
+      evidence_grade: data.evidence_grade, manufacturer: data.manufacturer, model: data.model, revision: data.revision }}
       name={`${data.project} 시트 ${image.sheet + 1}`} zoom={zoom} reload={() => void result.refetch()} />)}
   </div>
 }

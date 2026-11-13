@@ -733,3 +733,10 @@
 - 최종 전체 pytest는 기존 main의 SNAPSHOT 수집 오류 1건으로 중단됐다. 해당 파일을 제외하고 .env 영향을 차단한 뒤의 결과는 **1841 passed, 158 skipped, 9 failed**(71.16초)였다. 실패 테스트 ID는 이전과 같고 이번 수정으로 늘어난 실패는 없었다. 비용 문제나 기존 실패를 성공으로 바꾸지 않았다.
 - 가짜 조회·모델을 실제 문서 에이전트와 최종 안내 코드에 연결한 검증이다. 실제 Exa·LLM 유료 호출이나 동결 v3의 새 품질·포화 평가는 하지 않았다. 실제 모델 오답률 개선을 주장하지 않는다.
 - 로그: PR-준비/PR103-completion-focused.log, PR103-completion-full.log, PR103-completion-full-excluding-known-main-error.log. 계약은 docs/specs/official-datasheet-evidence.md에 추가했고 기존 PR103 본문과 추가 커밋으로 반영한다.
+
+## 2026-11-13 · 제조사 공식 회로도 2등급 PR 준비
+
+- `backend/projects/` 검색·출처 DTO·렌더링, `backend/api/external_circuits.py`, 프런트 원본 회로도 표시와 관련 테스트를 PR 범위로 선별했다. 기존 GitHub 커뮤니티 3등급 경로는 유지한다. 제조사 원본은 등록 카탈로그 URL과 Exa 결과의 일치, 다운로드 바이트 SHA-256 검증을 거쳐 PNG로 제공한다.
+- 로컬 실조회에서 `SparkFun Pro Micro v13`, `SparkFun Breadboard Power Supply 5V/3.3V`는 2등급으로 반환됐다. `Adafruit MOSFET Driver STEMMA`는 Exa가 등록 PNG가 아닌 안내 PDF를 반환해 404였다. 세 모델 모두 검색된다고 주장하지 않는다.
+- 관련 pytest 실행: 기능 138 passed, 저장소 구조 2 failed. 하나는 새 테스트 파일의 트리·폴더 목록 누락으로 이 PR에서 보완했다. 다른 하나는 이번 PR 밖의 미커밋 `tests/ops/` 목록 누락이다. 프런트 `Schematic.test.tsx`는 5 passed였다. 수정 뒤의 격리 구조 재검증 결과는 PR 본문에 기록한다.
+- `SPEC.md:210`의 API 응답 필드와 `docs/specs/external-complete-schematics.md:41`은 현재 코드의 등급·제조사·해시 필드를 설명하지 않는다. 주요 문서 권한에 따라 `SPEC.md`는 직접 수정하지 않고 PR에서 조장에게 갱신 위치를 전달한다.
