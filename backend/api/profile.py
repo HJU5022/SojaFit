@@ -17,9 +17,14 @@ from psycopg_pool import PoolTimeout
 from pydantic import BaseModel, ConfigDict, ValidationInfo, field_validator
 
 from backend import auth
-from backend.conversations import profile
 
 router = APIRouter(prefix='/api/me', tags=['profile'])
+
+
+def _profile_module():
+    """기억 기능을 실제로 사용할 때만 LangGraph 기반 모듈을 불러온다."""
+    from backend.conversations import profile
+    return profile
 
 
 class ProfileUpdate(BaseModel):
@@ -33,7 +38,7 @@ class ProfileUpdate(BaseModel):
     @field_validator('affiliation', 'job_role', 'mounting_preference')
     @classmethod
     def allowed(cls, value, info: ValidationInfo):
-        return value if value is None else profile.clean(info.field_name, value)
+        return value if value is None else _profile_module().clean(info.field_name, value)
 
 
 Kind = Literal['affiliation', 'job_role', 'mounting_preference']
