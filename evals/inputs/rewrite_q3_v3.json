@@ -1,0 +1,74 @@
+{
+ "meta": {
+  "source": "레포 backend/graph/nodes.py rewrite()를 v3 관련 문항 중 쪽 정답이 있는 21건에 한 번씩 돌린 출력(2026-11-13, 레포 2f8298e, 기본 모델 표). 고친 것 없음. 청킹 v1·v4h 비교(results/chunking/v1-vs-v4h-2026-11-13/)에서 두 DB가 같은 질의를 쓰게 고정함",
+  "dataset": "evals/dataset_v3.jsonl",
+  "prompt_file": "backend/prompts/rewrite.md",
+  "prompt_sha256_now": "44ce166b5d18801487ec95fe67aa929a7db6f24be9687f1994d64b819c784b53",
+  "flags_rule": "자동 확인(품번 빠짐·없던 숫자)은 돌리지 않았다"
+ },
+ "queries": {
+  "v3-01": {
+   "Q3": "TSC 1N4007G datasheet repetitive peak reverse voltage VRRM forward voltage VF peak forward surge current IFSM package"
+  },
+  "v3-02": {
+   "Q3": "TSC SS24 datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Reverse current IR Peak forward surge current IFSM SMA package"
+  },
+  "v3-03": {
+   "Q3": "LL4148 L0G LL4148 L0 diode datasheet package equivalence"
+  },
+  "v3-04": {
+   "Q3": "TSC UF4007 datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Reverse recovery time trr Peak forward surge current IFSM"
+  },
+  "v3-05": {
+   "Q3": "TSC S1M vs D2 repetitive peak reverse voltage VRRM forward current IF surge current IFSM reverse recovery time trr datasheet"
+  },
+  "v3-06": {
+   "Q3": "TSC BZV55B3V3 L0G datasheet BZV55B3V3 L0 Zener diode package RoHS suffix G"
+  },
+  "v3-07": {
+   "Q3": "TSC SS16 Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package"
+  },
+  "v3-08": {
+   "Q3": "TSC SS14H Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package"
+  },
+  "v3-09": {
+   "Q3": "TSC SMBJ14AH vs SMBJ14A datasheet clamping voltage VC peak pulse current IPPM reverse standoff voltage VRWM ordering part number"
+  },
+  "v3-10": {
+   "Q3": "TSC SMAJ6.0CA datasheet bidirectional TVS diode breakdown voltage VBR clamping voltage VC peak pulse current IPPM standoff voltage VWM"
+  },
+  "v3-11": {
+   "Q3": "D1 reverse polarity protection diode replacement candidates Repetitive peak reverse voltage VRRM Average forward current IF(AV) Package TSC datasheet"
+  },
+  "v3-12": {
+   "Q3": "D3 PWM flyback replacement diode reverse recovery time trr maximum value specified VRRM VF IFSM package datasheet TSC"
+  },
+  "v3-13": {
+   "Q3": "TSC zener diode clamp PB3 D1 nominal zener voltage VZ tolerance power dissipation PD package datasheet"
+  },
+  "v3-14": {
+   "Q3": "D1 boost output rectifier diode SMA package AEC-Q101 qualified repetitive peak reverse voltage VRRM forward voltage VF peak forward surge current IFSM reverse recovery time trr datasheet TSC"
+  },
+  "v3-15": {
+   "Q3": "TSC diode replacement alternative D3 unidirectional larger package excluded datasheet"
+  },
+  "v3-16": {
+   "Q3": "TSC UF4007 Maximum reverse recovery time trr IF IR test conditions datasheet"
+  },
+  "v3-17": {
+   "Q3": "TSC BZT52B4V7 Zener voltage VZ range test current IZT pulse width datasheet"
+  },
+  "v3-18": {
+   "Q3": "TSC BZV55B5V1 L0 L0G ordering code suffix difference datasheet Zener diode"
+  },
+  "v3-19": {
+   "Q3": "TSC SMAJ6.5CA reverse leakage current IR maximum electrical characteristics table bidirectional"
+  },
+  "v3-20": {
+   "Q3": "TSC SS14H datasheet suffix H meaning part number designation difference from SS14 current rating"
+  },
+  "v3-21": {
+   "Q3": "TSC 1N5408G Peak forward surge current IFSM 8.3ms single half sine-wave superimposed on rated load TJ=25°C non-repetitive"
+  }
+ }
+}

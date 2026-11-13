@@ -55,6 +55,7 @@
 | `results/drafts/` | 초안 50건·52건의 보조 검증 원시 기록 | — | `drafts/reviews/second_pass_50_review.md` |
 | `results/graph/` | 그래프 실행 문항별 지표(`graph_*`, `multi_*`)와 실험별 하위 폴더 `<날짜>-<이름>/`(판정 단계, v3 Haiku 세트, D8 단계 시간, 속도 A/B, D9, Langfuse 점검 등). 답변 문장·청크 원문은 넣지 않음. 일부 하위 폴더는 `sources_*.json`에 원본 경로·sha256을 기록 | `run_graph.py`, `run_gate.py`, `scripts/eval/stage_report.py` | `EVAL_REPORT.md`, [d8-stage-remeasure-plan.md](../docs/experiments/d8-stage-remeasure-plan.md), [speed-p95-levers-2026-11-11.md](../docs/experiments/speed-p95-levers-2026-11-11.md) |
 | `results/chunking/v4h-2026-11-08/` | v4h 청킹의 `summary.json`·`manifest.jsonl`·`table_suspects.jsonl`·`SHA256.txt`. 청크 본문은 없음 | 저장소 밖 청킹 | `results/chunking/v4h-2026-11-08/README.md`, 문서·청크 수는 [DATA.md](../data/DATA.md) |
+| `results/chunking/v1-vs-v4h-2026-11-13/` | 청킹 v1 대 v4h 검색 비교: 같은 동결 v3(쪽 정답 21건)·고정 질의·같은 임베딩과 검색 코드로 잰 `retrieval_v1_*`·`retrieval_v4h_*` json, 설정·지표·한계(`README.md`), `SHA256.txt` | `run_retrieval_v3.py` | `results/chunking/v1-vs-v4h-2026-11-13/README.md` |
 | `results/grader/` | 채점기 기준선(`grader_baseline_*`) | `eval_grader.py` | 사전 등록 #34·#36 |
 | `results/skill/` | Skill·도구 판단 검증 요약 | `run_skill_pair.py` | 사전 등록 #17 |
 | `results/supervisor/` | Supervisor 후보 비교 단계별 `<날짜>-<이름>/`(manifest, 문항별 행, summary, 호출 증거). V0 프롬프트 비교와 Langfuse 가져오기 영수증 포함 | `run_supervisor_*.py`, `report_supervisor_stage3.py`, `import_supervisor_prompt_v0_langfuse.py` | 각 하위 폴더 `*summary*.json`, [supervisor-prompt-v0.md](guides/supervisor-prompt-v0.md) |
