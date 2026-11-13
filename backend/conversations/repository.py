@@ -3,7 +3,7 @@ import os
 from uuid import uuid4
 from psycopg.types.json import Jsonb
 from backend import auth
-from backend.conversations.models import SafeResult
+from backend.conversations.models import SafeResult, SafeRunError
 
 
 def thread_title(content):
@@ -94,6 +94,19 @@ class ConversationRepository:
                 raise InvalidRunState
             if safe is not None and status in ('completed', 'refused'):
                 conn.execute("INSERT INTO messages(thread_id,run_id,role,content) VALUES (%s,%s,'assistant',%s)", (thread_id, run_id, safe['answer']))
+
+    def record_resume_error(self, user_id, run_id, error):
+        safe = SafeRunError.model_validate(error).model_dump()
+        with auth.connection() as conn:
+            # 다른 요청이 이미 재개/완료한 실행에는 뒤늦은 입구 오류를 덮어쓰지 않는다.
+            row = conn.execute("UPDATE runs r SET safe_result=COALESCE(r.safe_result,%s)||%s,updated_at=CURRENT_TIMESTAMP "
+                               "FROM threads t JOIN projects p ON p.id=t.project_id "
+                               "WHERE r.id=%s AND r.thread_id=t.id AND p.user_id=%s AND r.status='requires_input' RETURNING r.id",
+                               (Jsonb(SafeResult().model_dump()), Jsonb({'error': safe}), run_id, user_id)).fetchone()
+            if row is None and conn.execute('SELECT r.id FROM runs r JOIN threads t ON t.id=r.thread_id '
+                                            'JOIN projects p ON p.id=t.project_id WHERE r.id=%s AND p.user_id=%s',
+                                            (run_id, user_id)).fetchone() is None:
+                raise ConversationNotFound
 
     def resume(self, user_id, thread_id, run_id):
         with auth.connection() as conn:

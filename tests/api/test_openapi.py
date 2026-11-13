@@ -136,7 +136,7 @@ APPROVAL = {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created
 QUOTE = {'id', 'approval_id', 'part_number', 'quantity', 'created_at'}
 CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
 RESULT = {'answer', 'status', 'stage', 'question_type', 'evidence', 'judgement', 'price_parts', 'refusal', 'interrupt',
-          'request_id', 'profile_hints'}
+          'request_id', 'profile_hints', 'error'}
 FACT = {'kind', 'value', 'text', 'version', 'updated_at', 'source'}
 
 # (메서드, 경로, 본문, auth를 바꿀 함수 이름 → 값, 가짜 연결이 돌려줄 결과, 화면이 읽는 칸)

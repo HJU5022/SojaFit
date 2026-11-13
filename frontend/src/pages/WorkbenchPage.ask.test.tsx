@@ -269,6 +269,59 @@ function savedApi(detail: (id: string) => Response | Promise<Response> = id => R
   return writes
 }
 
+it.each(['requires_input', 'limited', 'failed'])('restores an attached circuit run as %s instead of an empty judgement', async mode => {
+  const writes: string[] = []
+  let status = mode === 'failed' ? 'failed' : 'requires_input'
+  const error = mode === 'requires_input' ? null : { code: 'LIMIT_EXCEEDED', message: '이번 분석의 실행 한도에 도달했습니다.' }
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json({ ...project, circuit_version: 1 })
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), latest_run: { id: 'run-t1', status, message_id: null } })
+    if (path.endsWith('/resume')) {
+      expect(JSON.parse(String(init.body))).toEqual({ answers: { v_in_max: '12 V' } })
+      if (mode === 'limited' && writes.length === 1) return new Response(`event: run_started\ndata: {"run_id":"run-t1"}\n\nevent: requires_input\ndata: ${JSON.stringify({ status, interrupt: { missing: ['v_in_max'] }, error })}\n\n`)
+      status = 'completed'
+      return new Response(`event: run_started\ndata: {"run_id":"run-t1"}\n\nevent: completed\ndata: ${JSON.stringify(savedRun('run-t1').result)}\n\n`)
+    }
+    if (path === '/api/runs/run-t1') return Response.json({ ...savedRun('run-t1'), message_id: null,
+      result: { ...savedRun('run-t1').result, answer: status === 'completed' ? '검토를 마쳤습니다.' : '', status,
+        interrupt: { missing: ['v_in_max'], question: '입력 전압을 알려 주세요.' }, error: status === 'completed' ? null : error } })
+    return Response.json([])
+  })
+  const mount = () => renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  mount()
+  if (mode !== 'failed') expect(await screen.findByLabelText('입력 전원 최대 전압')).toBeInTheDocument()
+  if (error) expect(await screen.findByRole('alert')).toHaveTextContent(error.message)
+  expect(screen.queryByText('결과에 판정이 없습니다.')).toBeNull()
+  expect(writes).toEqual([])
+  cleanup(); mount()
+  if (mode !== 'failed') expect(await screen.findByLabelText('입력 전원 최대 전압')).toBeInTheDocument()
+  if (error) expect(await screen.findByRole('alert')).toHaveTextContent(error.message)
+  expect(writes).toEqual([])
+  if (mode !== 'failed') {
+    fireEvent.change(screen.getByLabelText('입력 전원 최대 전압'), { target: { value: '12 V' } })
+    fireEvent.click(screen.getByRole('button', { name: '이 값으로 계속 검토' }))
+    if (mode === 'limited') {
+      expect(await screen.findByRole('alert')).toHaveTextContent(error!.message)
+      expect(screen.getByLabelText('입력 전원 최대 전압')).toHaveValue('12 V')
+      expect(writes).toEqual(['/api/runs/run-t1/resume'])
+      fireEvent.click(screen.getByRole('button', { name: '이 값으로 계속 검토' }))
+    }
+    await waitFor(() => expect(screen.queryByLabelText('입력 전원 최대 전압')).toBeNull())
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(writes).toEqual(Array(mode === 'limited' ? 2 : 1).fill('/api/runs/run-t1/resume'))
+  }
+})
+
+it('shows the public resume error while retaining the live input form', async () => {
+  api(waiting.replace(/"request_id":"req-2"/, '"error":{"code":"LIMIT_EXCEEDED","message":"실행 한도에 도달했습니다."},"request_id":"req-2"'))
+  await ask('D1을 SS34로 바꿔도 되나요?')
+  expect(await screen.findByRole('alert')).toHaveTextContent('실행 한도에 도달했습니다.')
+  expect(screen.getByRole('button', { name: '이 값으로 계속 검토' })).toBeInTheDocument()
+  expect(resumes).toHaveLength(0)
+})
+
 it.each(['', '&targetRef=D1', '&targetRef=R1'])('restores saved messages on a fresh mount in StrictMode with target query %s', async (target) => {
   const writes = savedApi()
   renderWithQueries(<StrictMode><MemoryRouter initialEntries={[`/app?projectId=1&threadId=t1${target}`]}><WorkbenchPage /></MemoryRouter></StrictMode>)

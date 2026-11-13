@@ -6,6 +6,37 @@ afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(
 const dto = { answer: '완료 답', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
 const sse = (...frames: [string, object][]) => new Response(frames.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''), { headers: { 'Content-Type': 'text/event-stream' } })
 
+it('restores a saved input error and bounds running restoration to GETs only', async () => {
+  vi.useFakeTimers()
+  let status = 'requires_input'
+  const error = { code: 'LIMIT_EXCEEDED', message: '이번 분석 한도에 도달했습니다.' }
+  const fetcher = vi.fn((_path: string, _init: RequestInit = {}) => Promise.resolve(Response.json({ id: 'saved', result: { ...dto, status, error, interrupt: { missing: ['v_in_max'] } } })))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  await act(async () => { await result.current.restore('saved') })
+  expect(result.current.state).toMatchObject({ status, runId: 'saved', error })
+  status = 'running'; fetcher.mockClear()
+  let done!: Promise<void>
+  act(() => { done = result.current.restore('saved') })
+  await act(async () => { await vi.advanceTimersByTimeAsync(35_000); await done })
+  expect(result.current.state).toMatchObject({ status: 'failed', runId: 'saved', error: { code: 'RUN_STATUS_PENDING' } })
+  expect(fetcher).toHaveBeenCalledTimes(30)
+  expect(fetcher.mock.calls.every(([path, init]) => path === '/api/runs/saved' && !init?.method)).toBe(true)
+})
+
+it('ignores a late saved-run response after leaving its conversation', async () => {
+  let finish!: (value: Response) => void
+  const fetcher = vi.fn(() => new Promise<Response>(resolve => { finish = resolve }))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  let done!: Promise<void>
+  act(() => { done = result.current.restore('old-run') })
+  act(() => { result.current.reset() })
+  await act(async () => { finish(Response.json({ result: { ...dto, status: 'requires_input', interrupt: { missing: ['v_in_max'] } } })); await done })
+  expect(result.current.state).toEqual({ status: 'idle' })
+  expect(fetcher).toHaveBeenCalledTimes(1)
+})
+
 it('rejects files at the analysis boundary so netlists must be imported first', async () => {
   const fetcher = vi.fn()
   vi.stubGlobal('fetch', fetcher)

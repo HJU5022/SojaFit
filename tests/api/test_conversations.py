@@ -86,6 +86,8 @@ class FakeRepo:
         self.status, self.result = status, result
     def get_run(self, user, run_id):
         return {'id': self.run, 'thread_id': self.thread, 'status': self.status, 'safe_result': self.result}
+    def record_resume_error(self, user, run_id, error):
+        self.result = {**self.result, 'error': error}
 
 
 def test_recover_is_owned_origin_checked_and_never_calls_analysis(web):
@@ -155,9 +157,12 @@ def test_resume_recoverable_error_keeps_form_and_can_resume_same_run(web, status
         first = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': 'wrong'}}, headers=ORIGIN)
         assert 'event: requires_input' in first.text and '입력을 확인하세요.' in first.text
         assert repo.status == 'requires_input' and repo.result['interrupt']['missing'] == ['v_in_max']
+        saved = client.get(f'/api/runs/{run}').json()['result']
+        assert saved['error'] == {'code': 'RATE_LIMITED' if status == 429 else 'VALIDATION_ERROR' if status in (400, 422) else 'CONFLICT', 'message': '입력을 확인하세요.'}
         analysis.error, analysis.interrupt = None, None
         second = client.post(f'/api/runs/{run}/resume', json={'answers': {'v_in_max': '12'}}, headers=ORIGIN)
     assert 'event: completed' in second.text and repo.status == 'completed'
+    assert 'error' not in repo.result
 
 
 @pytest.fixture
@@ -447,11 +452,15 @@ def test_failed_frame_carries_public_error_code_and_logs_unexpected_exception(we
 
 
 def test_budget_refusal_maps_to_common_code_without_traceback(web, caplog):
-    thread = str(uuid4())
+    thread, run = str(uuid4()), str(uuid4())
     analysis = FakeAnalysis(error=ApiError(429, '하루 분석 예약 예산에 도달했습니다.', code='LIMIT_EXCEEDED'))
-    with caplog.at_level('INFO', logger='backend.errors'), web(analysis, FakeRepo(thread, str(uuid4()))) as client:
+    repo = FakeRepo(thread, run)
+    with caplog.at_level('INFO', logger='backend.errors'), web(analysis, repo) as client:
         response = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
     assert '"error": {"code": "LIMIT_EXCEEDED", "message": "하루 분석 예약 예산에 도달했습니다."}' in response.text
+    assert repo.result['error']['code'] == 'LIMIT_EXCEEDED'
+    with web(analysis, repo) as client:
+        assert client.get(f'/api/runs/{run}').json()['result']['error'] == repo.result['error']
     # [왜] 4xx는 traceback 없는 INFO 한 줄(code · status)만 남긴다
     assert [(r.levelname, r.code, r.status, r.exc_info) for r in caplog.records] == [('INFO', 'LIMIT_EXCEEDED', 429, None)]
 
@@ -465,10 +474,13 @@ def test_token_cap_refuses_run_and_resume_before_stream_or_run_change(web):
     with web(analysis, repo) as client:
         start = client.post(f'/api/threads/{thread}/runs', json={'question': 'hi', 'target_ref': 'D1'}, headers=ORIGIN)
         resume = client.post(f'/api/runs/{run}/resume', json={'answers': {'VIN_MAX': '12'}}, headers=ORIGIN)
+        restored = client.get(f'/api/runs/{run}').json()['result']
     for response in (start, resume):
         assert response.status_code == 429 and response.headers['content-type'].startswith('application/json')
         assert response.json()['error']['code'] == 'LIMIT_EXCEEDED' and f'{USER_DAILY_TOKENS:,} 토큰' in response.json()['error']['message']
     assert analysis.calls == [] and repo.calls == []
+    assert restored['status'] == 'requires_input' and restored['interrupt']['missing'] == ['VIN_MAX']
+    assert restored['error']['code'] == 'LIMIT_EXCEEDED'
 
 
 def test_project_delete_rejects_active_run_before_checkpoint_deletion(monkeypatch):

@@ -21,7 +21,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [picked, setPicked] = useState<number | null>(null)
   const liveThread = useRef<string | null>(null)
   const state = stream.state
-  const running = state.status === 'running' || sending
+  const running = state.status === 'running' || sending || (state.status === 'failed' && state.error.code === 'RUN_STATUS_PENDING')
   const waiting = state.status === 'requires_input'
 
   useEffect(() => {
@@ -34,7 +34,11 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
     setLoading(true)
     client.fetchQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), retry: false }).then((thread) => {
       if (controller.signal.aborted || thread.project_id !== projectId) return
-      setHistory(thread.messages.filter(message => message.role === 'user').map(message => ({ runId: message.run_id, question: message.content })))
+      const turns = thread.messages.filter(message => message.role === 'user').map(message => ({ runId: message.run_id, question: message.content }))
+      const active = thread.latest_run && ['running', 'requires_input', 'failed'].includes(thread.latest_run.status)
+        ? turns.find(item => item.runId === thread.latest_run!.id) : undefined
+      setHistory(active ? turns.filter(item => item !== active) : turns)
+      if (active) { setLive({ question: active.question }); void stream.restore(active.runId) }
       if (thread.target_ref && thread.target_ref !== targetRef) onThread(threadId, thread.target_ref)
     }).catch((reason) => { if (!controller.signal.aborted) setError(reason) }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => { controller.abort(); liveThread.current = null }
@@ -44,7 +48,10 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
 
   useEffect(() => {
     if (state.status === 'running' && state.stage) setStages(current => current.includes(state.stage) ? current : [...current, state.stage])
-    if (state.status === 'completed' || state.status === 'refused') void client.invalidateQueries({ queryKey: ['threads', projectId] })
+    if (state.status === 'completed' || state.status === 'refused' || state.status === 'failed') {
+      void client.invalidateQueries({ queryKey: ['threads', projectId] })
+      if (state.runId) void client.invalidateQueries({ queryKey: ['run', state.runId] })
+    }
   }, [state, client, projectId])
 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
@@ -61,7 +68,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
         liveThread.current = id; onThread(id)
       }
       active.signal.throwIfAborted()
-      if (live && 'runId' in state && state.runId && state.status !== 'failed') setHistory(current => [...current, { runId: state.runId!, question: live.question }])
+      if (live && 'runId' in state && state.runId) setHistory(current => [...current, { runId: state.runId!, question: live.question }])
       setLive({ question }); setStages([]); setText(''); setFiles([]); setPicked(null)
       await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}) })
     } catch (reason) { if (!active.signal.aborted) setError(reason) }

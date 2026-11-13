@@ -281,7 +281,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
                     detail = await run_in_threadpool(analysis.detail, user_id, thread_id)
                     if detail.get('interrupt'):
                         safe = result_dto({}, request_id=request_id, status='requires_input', stage=STAGES['judge'], interrupt=detail['interrupt'])
-                        await finish_with_retry(repo, user_id, thread_id, run_id, 'requires_input', {'interrupt': safe.interrupt})
+                        await finish_with_retry(repo, user_id, thread_id, run_id, 'requires_input', {'interrupt': safe.interrupt, 'error': error})
                         await queue.put(frame('requires_input', {**safe.model_dump(), 'error': error}))
                         await queue.put(None)
                         return
@@ -289,7 +289,7 @@ def stream(repo, user_id, thread_id, run_id, request_id, analysis, call, *, resu
                     LOGGER.exception('react_resume_restore_failed', extra={'request_id': request_id, 'run_id': run_id})
         if error:
             try:
-                await finish_with_retry(repo, user_id, thread_id, run_id, 'failed', None)
+                await finish_with_retry(repo, user_id, thread_id, run_id, 'failed', {'error': error})
                 payload = result_dto({}, request_id=request_id, status='failed', stage=STAGES['failed']).model_dump()
                 await queue.put(frame('failed', {**payload, 'error': error}))
             except Exception:
@@ -335,7 +335,13 @@ async def resume_run(run_id: UUID, body: ResumeRun, request: Request, user_id: i
     if not choices and body.role is not None:
         raise HTTPException(422, '이 run에는 역할 선택이 필요하지 않습니다.')
     thread, request_id = run['thread_id'], request.state.request_id
-    await run_in_threadpool(analysis.admission, user_id)  # 스트림 전에 공통 오류 429로 거절한다(run 상태를 바꾸지 않음)
+    try:
+        await run_in_threadpool(analysis.admission, user_id)
+    except HTTPException as exc:
+        if exc.status_code == 429:
+            await run_in_threadpool(repo.record_resume_error, user_id, str(run_id),
+                                    {'code': code_for(exc.status_code, exc), 'message': str(exc.detail)})
+        raise
     await run_in_threadpool(repo.resume, user_id, thread, str(run_id))
     # [왜] 분석 서비스는 현재 결과 버전의 조건 질문만 재개한다. React run은 버전을 모르므로 지금 버전을 읽어 넘긴다
     call = lambda: analysis.resume(user_id, thread, body.answers, body.role or '', analysis.detail(user_id, thread)['version'], request_id=request_id)

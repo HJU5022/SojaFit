@@ -24,6 +24,10 @@ type Props = { projectId: number; demoId: string | null; target: CircuitPart; ne
   onThread: (threadId: string, targetRef?: string) => void; onAttach: (file: File, question: string, signal: AbortSignal) => Promise<void> }
 
 function Reply({ result, selectedPart, onSelect, onEvidence }: { result: ResultDto; selectedPart?: string; onSelect: (part: string) => void; onEvidence: () => void }) {
+  if (result.status === 'running' || result.status === 'requires_input' || result.status === 'failed') return <div className="activity-reply" role="group" aria-label="AI 답변"><div className="activity-body">
+    <p>{result.status === 'requires_input' ? '추가 조건 입력을 기다리고 있습니다.' : result.status === 'running' ? '검토가 진행 중입니다.' : '검토를 완료하지 못했습니다.'}</p>
+    {result.error && <p className="notice" role="alert">{errorMessage(result.error)}</p>}
+  </div></div>
   const candidates = candidatesOf(result)
   const uncertain = candidates.some(item => item.missing?.length || item.uncertain?.length)
   // shortcut: 서버 render_judgement의 고정 경계만 제거한다. 답변 형식이 바뀌면 별도 설명 필드를 계약에 추가한다.
@@ -64,6 +68,10 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
     return () => { active = false }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- 처음 열릴 때만
   const { history, live, stages, state, running, waiting, picked } = chat
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [role, setRole] = useState('')
+  const activeRunId = 'runId' in state ? state.runId : ''
+  useEffect(() => { setAnswers({}); setRole('') }, [activeRunId])
   const attachmentPending = chat.files.length > 0
   const input = useRef<HTMLTextAreaElement>(null)
   const picker = useRef<HTMLInputElement>(null)
@@ -199,12 +207,13 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{live && (running ? `AI: ${stages[stages.length - 1] || '검토 시작'}` : state.status === 'completed' ? '검토 결과를 받았습니다.' : state.status === 'requires_input' ? '추가 입력이 필요합니다.' : state.status === 'failed' ? '실행에 실패했습니다.' : state.status === 'refused' ? '답변이 거절되었습니다.' : '')}</div>
         {state.status === 'failed' && <div className="notice" role="alert"><p {...requestIdProps(state.error)}>검토 실행에 실패했습니다. {errorMessage(state.error)}{!state.runId && ' 아래 질문을 입력해 다시 보내 주세요.'}</p>{state.runId && <button className="btn" onClick={() => void chat.stream.refresh(state.runId!)}><RotateCw aria-hidden="true" />실행 상태 다시 확인</button>}</div>}
         {run.error && <div className="notice" role="alert"><p {...requestIdProps(run.error)}>검토 결과를 불러오지 못했습니다. {errorMessage(run.error)}</p><button className="btn" onClick={() => void run.refetch()}>결과 다시 불러오기</button></div>}
+        {state.status === 'requires_input' && state.error && <div className="notice" role="alert"><p {...requestIdProps(state.error)}>검토를 계속하지 못했습니다. {errorMessage(state.error)}</p><p className="fine">분석은 자동으로 다시 실행하지 않습니다.</p></div>}
         {state.status === 'requires_input' && <form className="ask" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget)
           void chat.stream.resume(state.runId, { answers: Object.fromEntries((state.interrupt.missing ?? []).map(code => [code, String(data.get(code) ?? '').trim()]).filter(([, value]) => value)), role: String(data.get('role') ?? '') || undefined }) }}>
           <h3>{state.interrupt.question || '판정에 필요한 값을 알려 주세요.'}</h3>
           <p className="fine">모르는 값은 비워 두세요. 빈 칸은 '모름'으로 검토합니다.</p>
-          {(state.interrupt.role_choices ?? []).map((code, index) => <label key={code} className="choice"><input type="radio" name="role" value={code} defaultChecked={index === 0} />{(Array.isArray(roles.data) ? roles.data.find(item => item.code === code)?.name : '') || '역할'}</label>)}
-          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? '추가 조건'}</span><input className="input" name={code} autoComplete="off" placeholder={inputPlaceholder(code)} /></label>)}
+          {(state.interrupt.role_choices ?? []).map((code, index) => <label key={code} className="choice"><input type="radio" name="role" value={code} checked={role ? role === code : index === 0} onChange={() => setRole(code)} />{(Array.isArray(roles.data) ? roles.data.find(item => item.code === code)?.name : '') || '역할'}</label>)}
+          {(state.interrupt.missing ?? []).map(code => <label className="field" key={code}><span>{INPUT_LABELS[code] ?? '추가 조건'}</span><input className="input" name={code} autoComplete="off" placeholder={inputPlaceholder(code)} value={answers[code] ?? ''} onChange={event => { const value = event.currentTarget.value; setAnswers(current => ({ ...current, [code]: value })) }} /></label>)}
           <div className="form-actions"><button className="btn btn-primary">이 값으로 계속 검토</button>
             <button type="button" className="btn" onClick={event => void chat.stream.resume(state.runId, { answers: {}, role: String(new FormData(event.currentTarget.form!).get('role') ?? '') || undefined })}>모두 모름으로 계속</button>
             {recordedResume && <button type="button" className="btn" onClick={() => void chat.stream.resume(state.runId, { answers: recordedResume.answers, role: recordedResume.role || undefined })}>기록한 답으로 계속하기</button>}</div></form>}

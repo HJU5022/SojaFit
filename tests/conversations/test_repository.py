@@ -315,6 +315,25 @@ def test_resume_result_survives_repository_reconstruction(storage):
     assert saved['safe_result']['interrupt']['missing'] == ['voltage']
 
 
+def test_saved_resume_error_is_owned_and_cannot_overwrite_a_running_or_finished_run(storage):
+    from backend.conversations.repository import ConversationNotFound
+    repo, (owner, other), project, _ = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    error = {'code': 'LIMIT_EXCEEDED', 'message': '분석 한도에 도달했습니다.'}
+    repo.finish(owner, thread, run, 'requires_input', {'interrupt': {'missing': ['v_in_max']}})
+    with pytest.raises(ConversationNotFound):
+        repo.record_resume_error(other, run, error)
+    repo.record_resume_error(owner, run, error)
+    assert repo.get_run(owner, run)['safe_result']['error'] == error
+    repo.resume(owner, thread, run)
+    repo.record_resume_error(owner, run, {**error, 'message': 'late error'})
+    assert repo.get_run(owner, run)['safe_result']['error'] == error
+    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
+    repo.record_resume_error(owner, run, error)
+    assert repo.get_run(owner, run)['safe_result'].get('error') is None
+
+
 def test_project_deletion_serializes_new_run(storage):
     import threading
     from concurrent.futures import ThreadPoolExecutor

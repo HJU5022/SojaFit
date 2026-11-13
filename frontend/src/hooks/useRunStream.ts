@@ -18,9 +18,10 @@ const wait = (ms: number, signal: AbortSignal) => new Promise<void>((resolve, re
 })
 
 function restored(runId: string, result: ResultDto, error?: ApiError): RunState {
+  error ??= result.error ? { ...result.error, requestId: result.request_id } : undefined
   if (result.status === 'requires_input') return { status: 'requires_input', runId, interrupt: result.interrupt, error }
   if (result.status === 'completed' || result.status === 'refused') return { status: result.status, runId, result }
-  return { status: 'failed', runId, error: { code: 'RUN_FAILED', message: '실행을 완료하지 못했습니다. 새 대화에서 시작해 주세요.', requestId: result.request_id } }
+  return { status: 'failed', runId, error: error ?? { code: 'RUN_FAILED', message: '실행을 완료하지 못했습니다. 새 대화에서 시작해 주세요.', requestId: result.request_id } }
 }
 
 function pending(requestId = ''): ApiError {
@@ -29,13 +30,14 @@ function pending(requestId = ''): ApiError {
 
 const requestSignal = (signal: AbortSignal) => AbortSignal.any([signal, AbortSignal.timeout(10_000)])
 
-async function recover(runId: string, signal: AbortSignal, error?: ApiError): Promise<RunState> {
+async function recover(runId: string, signal: AbortSignal, error?: ApiError, allowRepair = true): Promise<RunState> {
   for (let attempt = 0; attempt < 30; attempt++) {
     const run = await getRun(runId, requestSignal(signal))
     signal.throwIfAborted()
     if (run.result.status !== 'running') return restored(runId, run.result, error)
     if (attempt < 29) await wait(1000, signal)
   }
+  if (!allowRepair) throw pending()
   const run = await recoverRun(runId, requestSignal(signal))
   signal.throwIfAborted()
   if (run.result.status !== 'running') return restored(runId, run.result, error)
@@ -60,6 +62,7 @@ export function useRunStream() {
     let runId = existingRunId
     let terminal = false
     let failure: unknown
+    setState({ status: 'running', runId, stage: '실행 상태 확인' })
     try {
       const signal = AbortSignal.any([active.signal, AbortSignal.timeout(120_000)])
       const response = await openRunStream(path, body, signal)
@@ -106,6 +109,18 @@ export function useRunStream() {
     }
   }, [])
   const cancel = useCallback(() => controller.current?.abort(), [])
+  const restore = useCallback(async (runId: string) => {
+    controller.current?.abort()
+    const active = new AbortController()
+    controller.current = active
+    setState({ status: 'running', runId, stage: '실행 상태 확인' })
+    try {
+      const next = await recover(runId, active.signal, undefined, false)
+      if (!active.signal.aborted) setState(next)
+    } catch (error) {
+      if (!active.signal.aborted) setState({ status: 'failed', runId, error: publicError(error) })
+    }
+  }, [])
   const reset = useCallback(() => { controller.current?.abort(); setState({ status: 'idle' }) }, [])
   return {
     state,
@@ -118,6 +133,7 @@ export function useRunStream() {
     },
     resume: (runId: string, body: { answers: Record<string, string>; role?: string }) => run(`/api/runs/${runId}/resume`, body, runId),
     refresh,
+    restore,
     cancel,
     reset,
   }
