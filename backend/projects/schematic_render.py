@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import hashlib
 import math
 import os
 import re
@@ -12,7 +13,7 @@ import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Callable
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -324,6 +325,40 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
         if len(result) != source.expected_sheets:
             raise _invalid()
         return tuple(result)
+
+
+def render_official_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None) -> tuple[bytes, ...]:
+    """등록된 제조사 원본을 한 번 받아 해시를 확인한 뒤 임시로 rasterize한다."""
+    from backend.projects.schematic_discovery import download_bounded
+
+    if (source.source_type != "manufacturer_official" or source.evidence_grade != 2
+            or not source.source_sha256 or not re.fullmatch(r"[0-9a-f]{64}", source.source_sha256)
+            or not isinstance(source.source_url, str)):
+        raise _invalid()
+    parsed = urlsplit(source.source_url)
+    host = parsed.hostname
+    if host not in {"cdn.sparkfun.com", "www.sparkfun.com", "learn.sparkfun.com",
+                    "cdn-learn.adafruit.com", "learn.adafruit.com", "www.adafruit.com"}:
+        raise _invalid()
+    kind = source.asset_kind
+    if kind not in {"pdf", "png", "svg"}:
+        raise _invalid()
+    limit = MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES
+    data, mime = download_bounded(source.source_url, max_bytes=limit,
+                                  allowed_hosts=frozenset({host}), client=client)
+    if hashlib.sha256(data).hexdigest() != source.source_sha256:
+        raise _invalid()
+    generic = {"application/octet-stream"} | ({"text/plain"} if kind == "svg" else set())
+    if mime not in MIME[kind] | generic:
+        raise _invalid()
+    with tempfile.TemporaryDirectory(prefix="sojafit-official-render-") as temporary:
+        work = Path(temporary)
+        path = work / source.source_file
+        path.write_bytes(data)
+        sheets = _sheets(kind, path, work / "pages")
+    if len(sheets) != source.expected_sheets:
+        raise _invalid()
+    return sheets
 
 
 if __name__ == "__main__":

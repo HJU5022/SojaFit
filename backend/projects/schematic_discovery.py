@@ -48,7 +48,7 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
     original = urlsplit(url)
     try:
         for _ in range(4):
-            if not safe_public_https_url(url, allowed_hosts=allowed_hosts & _DOWNLOAD_HOSTS):
+            if not safe_public_https_url(url, allowed_hosts=allowed_hosts):
                 raise ExternalSchematicInvalidSource()
             parsed = urlsplit(url)
             # MockTransport does not connect to a peer. Real requests validate DNS before each hop.

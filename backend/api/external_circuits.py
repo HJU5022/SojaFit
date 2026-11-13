@@ -3,10 +3,11 @@
 검색 공급자 호출과 결과 정제는 backend/projects/external_circuit_search.py에 맡긴다.
 검색 결과는 저장하지 않으며 성공과 오류 응답 모두 no-store로 전달한다.
 """
-from typing import Annotated
+import re
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 from backend import auth
 from backend.errors import ApiError
@@ -32,14 +33,32 @@ class ExternalSchematicImage(BaseModel):
 
 class ExternalSchematicResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    project: str
-    commit: str
+    project: str | None
+    commit: str | None
     license: str
     attribution: str
-    repository_url: str
+    repository_url: str | None
     source_url: str
     source_file: str
+    source_type: Literal["manufacturer_official", "community"]
+    evidence_grade: Literal[2, 3]
+    manufacturer: str | None
+    model: str | None
+    revision: str | None
+    source_sha256: str | None
+    license_evidence_url: str | None
     images: list[ExternalSchematicImage]
+
+    @model_validator(mode="after")
+    def validate_provenance(self):
+        if self.evidence_grade == 2:
+            if self.source_type != "manufacturer_official" or not isinstance(self.source_sha256, str):
+                raise ValueError("2등급 공식 회로도는 제조사 출처와 원본 SHA-256이 필요합니다.")
+            if not re.fullmatch(r"[0-9a-f]{64}", self.source_sha256):
+                raise ValueError("2등급 원본 SHA-256 형식이 올바르지 않습니다.")
+        elif self.source_type != "community":
+            raise ValueError("3등급 회로도는 커뮤니티 출처로만 표시할 수 있습니다.")
+        return self
 
 
 def _schematic_call(function, *args):
@@ -67,6 +86,9 @@ def external_schematic_manifest(
         project=manifest.project, commit=manifest.commit, license=manifest.license,
         attribution=manifest.attribution, repository_url=manifest.repository_url,
         source_url=manifest.source_url, source_file=manifest.source_file,
+        source_type=manifest.source_type, evidence_grade=manifest.evidence_grade,
+        manufacturer=manifest.manufacturer, model=manifest.model, revision=manifest.revision,
+        source_sha256=manifest.source_sha256, license_evidence_url=manifest.license_evidence_url,
         images=[ExternalSchematicImage(sheet=i, url=f"/api/external-circuits/schematics/{manifest.token}/{i}")
                 for i in range(manifest.sheet_count)],
     )

@@ -551,6 +551,7 @@ SojaFit (proj3-b)
 │   │   ├── test_visuals.py <- 회로도 catalog 15종·원본/배포 해시·경로·라이선스 검증
 │   │   ├── test_external_circuit_search.py <- GitHub 저장소 URL·Exa 호출 상한
 │   │   ├── test_external_schematic.py <- 출처·전체 시트·cache·서명 token 경계
+│   │   ├── test_official_schematic.py <- 등록 제조사 원본 URL·출처 등급·SHA-256 렌더 검증
 │   │   ├── test_schematic_discovery.py <- 완성 회로도 자산 판정
 │   │   └── test_schematic_render.py <- PDF/SVG/PNG 렌더링·픽셀 제한
 │   ├── db/                 <- DB 문서 · 스키마 도구 시험(일회용 PostgreSQL)

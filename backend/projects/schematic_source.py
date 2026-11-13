@@ -24,6 +24,13 @@ class VerifiedSchematicSource:
     asset_paths: tuple[str, ...]
     root_schematic: str
     expected_sheets: int = 1
+    source_type: Literal["manufacturer_official", "community"] = "community"
+    evidence_grade: Literal[2, 3] = 3
+    manufacturer: str | None = None
+    model: str | None = None
+    revision: str | None = None
+    source_sha256: str | None = None
+    license_evidence_url: str | None = None
 
 
 class ExternalSchematicError(RuntimeError):

@@ -21,7 +21,9 @@ def schematic_boundary(monkeypatch):
         manifest=SimpleNamespace(project="owner/repo", commit="a" * 40, license="MIT",
             attribution="owner/repo contributors", repository_url="https://github.com/owner/repo",
             source_url=f"https://github.com/owner/repo/tree/{'a' * 40}",
-            source_file="hardware/board.kicad_sch", token="signed-token", sheet_count=2),
+            source_file="hardware/board.kicad_sch", token="signed-token", sheet_count=2,
+            source_type="community", evidence_grade=3, manufacturer=None, model=None,
+            revision=None, source_sha256=None, license_evidence_url=None),
         queries=[], sheet_calls=[], png=b"\x89PNG\r\n\x1a\nfixture", error=None,
     )
 
@@ -140,3 +142,31 @@ def test_external_schematic_access_log_redacts_signed_token_without_query(suffix
     assert "private-signed-token" not in record.getMessage()
     assert "private-query" not in record.getMessage()
     assert "/schematics/<redacted>/0" in record.getMessage()
+
+
+def test_manifest_rejects_grade_two_without_a_sha256():
+    from backend.api.external_circuits import ExternalSchematicResponse
+    payload = {
+        "project": None, "commit": None, "license": "CC-BY-4.0", "attribution": "SparkFun Electronics",
+        "repository_url": "https://cdn.sparkfun.com/test.pdf", "source_url": "https://cdn.sparkfun.com/test.pdf", "source_file": "test.pdf",
+        "source_type": "manufacturer_official", "evidence_grade": 2,
+        "manufacturer": "SparkFun Electronics", "model": "Pro Micro", "revision": "v13b",
+        "source_sha256": "short", "license_evidence_url": "https://github.com/sparkfun/Pro_Micro/blob/main/LICENSE.md",
+        "images": [{"sheet": 0, "url": "/api/external-circuits/schematics/token/0"}],
+    }
+    with pytest.raises(ValueError):
+        ExternalSchematicResponse.model_validate(payload)
+
+
+def test_manifest_rejects_unknown_provenance_literal():
+    from backend.api.external_circuits import ExternalSchematicResponse
+    payload = {
+        "project": "owner/repo", "commit": "a" * 40, "license": "MIT", "attribution": "owner/repo contributors",
+        "repository_url": "https://github.com/owner/repo", "source_url": "https://github.com/owner/repo/tree/" + "a" * 40,
+        "source_file": "hardware/board.kicad_sch", "source_type": "official", "evidence_grade": 2,
+        "manufacturer": "Unknown", "model": "Board", "revision": None, "source_sha256": "a" * 64,
+        "license_evidence_url": "https://github.com/owner/repo/blob/main/LICENSE",
+        "images": [{"sheet": 0, "url": "/api/external-circuits/schematics/token/0"}],
+    }
+    with pytest.raises(ValueError):
+        ExternalSchematicResponse.model_validate(payload)
