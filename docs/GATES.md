@@ -16,10 +16,10 @@
 
 | 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
 |---|---|---|---|
-| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 진행 중 |
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79` 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md)) |
 | G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
 | G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
-| G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 진행 중 |
+| G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
 | G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 진행 중 |
 | G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중 |
 | G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중 |
@@ -96,9 +96,7 @@
 
 | 항목 | 이유 |
 |---|---|
-| DB 행 수 조회 결과 | 저장소에 조회 기록이 없다(새 Supabase 행의 값은 복사 때 센 값). 청크별 sha256 목록은 위 표에 있다 |
-| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. 운영 DB 내용과 같은지는 대조하지 않았다 |
-| 옛 운영 DB가 52,244에서 51,967로 바뀐 날짜와 이유 | 작업 기록에서 찾지 못했다 |
+| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. DB의 `chunk_sha256` 열 서로 다른 값은 51,967이지만([조회 기록](../evals/results/d10/index_row_count_2026-11-13.md)), 본문에서 다시 계산해 대조하지는 않았다 |
 | 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가. 해시 목록과의 대조에도 필요하다 |
 
 ### G4 에이전트

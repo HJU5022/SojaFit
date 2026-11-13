@@ -1,5 +1,29 @@
 # jeongun 작업 기록
 
+## 2026-11-13 main 574de79 배포(Cloud Run)
+- 배포: `main` `574de79`(PR #127 병합, 인용 숫자 검사 포함)를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-574de79 --revision-suffix 574de79`(빌드 ~10:50 KST 끝). 리비전 `sojafit-api-574de79`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
+- 이전 100% 리비전은 `fadde2a`가 아니라 `sojafit-api-00086-zn6`(11-13 10:28 KST 생성, 이미지는 `fadde2a`와 같은 `sha256:95d6f571…`)였다. `fadde2a` 대비 환경변수 2개(`EXA_WEB_SEARCH_ENABLED=1`, 비밀 `EXA_API_KEY:1`)가 더해진 설정 변경이다. `574de79`도 이 32개 설정을 그대로 이었다(이름 · 값 · 비밀 참조 비교 [실측]).
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 14.9초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/api/demo-circuits` 401(로그인 없음), `/openapi.json` 동작 41 · 경로 34(공개 서비스와 같음), 오류 로그(ERROR 이상, 15분) 없음. 10:51:53 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `sojafit-api-00086-zn6`을 100% 지정.
+- 안 함(이 항목에서): 로그인 뒤 점검 · 배포 서버 재시작 뒤 재개. 별도 기록 `evals/results/d10/deploy_574de79/`.
+
+## 2026-11-13 배포 574de79 실측 · 청킹 비교 · 지불 주체 근거
+- 재시작 뒤 재개(G4) · 평가용 로그인(G1) [실측]: `scripts/smoke/http_smoke.py`에 `--pause-before-resume`(4단계 뒤 멈춤)과 `--upload`(DEMO_MODE=0 배포본은 데모 회로가 404라 넷리스트 업로드로 프로젝트 생성)를 더했다. 하정운 터미널에서 평가용 계정 A · B로 실행, 4단계 멈춤 중 같은 이미지로 `sojafit-api-574de79-rs`를 만들어 100% 전환(12:07:08 KST, 냉 기동 7.8초), 재개 요청은 새 리비전이 처리. 25단계 통과 · 실패 0(`evals/results/d10/deploy_574de79/README.md`). 지금 100%는 `sojafit-api-574de79-rs`.
+- 키 없는 첫 기동 · Linux pytest [실측]: 574de79 새 사본, `.env` 없이 compose 빌드 89.6초 · `/health` 11.0초 · 데모 스모크 28/28. 저장소 Dockerfile 이미지에서 전체 pytest 1919 통과 · 0 실패(이미지에 git이 없으면 8 실패, 코드 결함 아님). `keyless_boot_574de79.md`, `pytest_full_linux_2026-11-13.txt`.
+- 청킹 v1 대 v4h(②) [실측]: 로컬 백업 DB 두 개(`sojafit_prod_backup_1109` 52,244 · `sojafit_v4` 51,967)로 동결 v3 쪽 정답 21건, 고정 질의 `evals/inputs/rewrite_q3_v3.json`. Recall@5 · MRR 같음(0.8095), page_frac@5 0.6111 → 0.6349. 비용 0.1달러 미만 [추정]. 컨테이너는 다시 멈춤.
+- 지불 주체(①): 웹 · SNS 조사 원문 `docs/research/evidence/payer-research-2026-11-13.md`, 핵심 6개는 원문 대조. 시장 문서 2-3절에 정리.
+- 보안: 스모크 준비 중 평가용 계정 비밀번호가 하정운 터미널 화면과 셸 기록에 찍혔다. 두 계정 비밀번호를 바꾼다(남은 일).
+
+## 2026-11-13 Checkpoint 11/13 코멘트 보강(①~④)
+- 목적: 강사 11/13 전체 채점 코멘트의 부족한 점을 증거로 채운다. 코드 변경은 인용 숫자 검사 1건이고 나머지는 기록 · 문서다.
+- ①: TOPIC 각주 [1]~[4]를 저장소 안 파일로 고쳤고 [3] 원자료 2개를 `docs/research/evidence/candidate-*.md`로 옮겼다(로컬 절대 경로 4곳만 파일 이름으로 바꿈). 여정 맵 4·5단계의 단일 그래프 용어(`retrieve`, `답 틀`)를 멀티 그래프 용어로 바꿨다. Codex v3 50건 규칙 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`)와 사람 판정 5건(하정운, `human_judgments.jsonl`)으로 Codex 45/50, 실행 환경(Codex 웹, 웹 접근 켬, 저장소 미연결)을 적었다.
+- ②: 운영 DB `SojaFit_2` 행 수 읽기 조회(문서 1,360 · 청크 51,967, `evals/results/d10/index_row_count_2026-11-13.md`)와 52,244 → 51,967 교체 날짜(11-09 05:12) · 원본 로그. 표·수치 청크 123개 원본 PDF 대조 0불일치(`chunk_source_check/`, 검사기가 같은 쪽 다른 행 값을 못 잡는 한계 83~86% 포함). v3 판정 역할 사후 기록(`evals/drafts/reviews/v3_judging_record.md`, 동결 뒤 바뀐 키는 `judges`뿐).
+- ③: 인젝션 본실측03 판정자 심태현 본인 확인(11-13 10:06)을 `injection-results.md`와 `sth.md` 정정 줄에 넣었다(원시 파일은 그대로). 인용 검사에 숫자+단위 대조를 더했다(`bfdb77a`, SPEC 6절 신뢰 경계 줄).
+- 실험(사후 등록): 인용 숫자 검사 전후를 v3 50×1로 비교했다. 명령 `GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-13-citecheck-v3 --sets 1 --keep-going --p95 120`, 예산 상한 0.20달러, 실제 0.034달러 · 191초. 결과 50/50, 과잉 거절 0, p95 8.1초(전 `d9-improve2` 50/50 · p95 10.0초). 문항별 통과 · 판정 변화 0건. 측정 전에 `preregister.md`에 적지 못해 사후 등록이다.
+- ④: Langfuse 캡처 3장(`docs/deliverables/langfuse/`, 배포본 `fadde2a` 트레이스), 403 원인(옛 프로젝트 키, 11-12 03:29 UTC 키 교체 뒤 실패 로그 0, `langfuse_403_2026-11-13.md`), v3 게이트 기준 미달 실패 출력(`v3_gate_fail_2026-11-13.txt`), 전체 pytest 로그(macOS, 1887 통과 · 24 실패 · 173 건너뜀, 실패는 cairo 없음 16 · macOS `RLIMIT_AS` 8).
+- 확인 방법: `tests/repo` 5 통과, `tests/multi_agent` · `tests/graph` 통과. OpenRouter 배포 키 잔액 25.37/40달러(조회 API).
+- 확인 못 한 것: 재시작 뒤 재개(배포 · 실제 모델), 현재 코드 배포 로그인 시나리오, 시연 영상, 키 없는 기동 재측정, Linux에서 전체 pytest, v1 대 v4h 청킹 비교. 모두 main 병합 · 배포 뒤 할 일이다.
+
 ## 2026-11-13 main fadde2a 배포(Cloud Run)
 - 배포: `main` `fadde2a`를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-fadde2a --revision-suffix fadde2a`(빌드 08:12~08:17 KST). 리비전 `sojafit-api-fadde2a`, 이미지 `sha256:95d6f57173a2714127d103cda0b5d5213246f6df712e754db46c61e5374062e5`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
 - 코드 차이 [실측]: `ad8612e`..`fadde2a`에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`이 비어 있다. `ae3de0b`..`fadde2a`에서 바뀐 것은 `frontend/src` 2개 파일(`Review.tsx`, `WorkbenchPage.tsx`)과 문서다: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다.

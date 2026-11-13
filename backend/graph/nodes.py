@@ -12,6 +12,7 @@
 """
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from typing import Literal
@@ -24,6 +25,7 @@ from backend.graph.memory import memory_context, memory_sources
 from backend.multi_agent.contracts import QuestionType, Reason
 from backend.multi_agent.messages import price_message, refusal_for, render_judgement
 from backend.multi_agent.supervisor import Facts, render_facts
+from backend.rag.units import PREFIX, to_si
 from backend.services import llm
 
 REPO = Path(__file__).resolve().parents[2]  # 저장소 루트. 입력의 넷리스트 경로는 여기서부터의 상대 경로다
@@ -418,6 +420,31 @@ def citations(text: str) -> set[str]:
     return {c.strip() for br in CITE.findall(text) for c in br.split(",")
             if c.strip().isdigit() or re.fullmatch(r'W[1-9][0-9]*', c.strip())
             or c.strip() == "넷리스트" or c.strip().startswith('승인사례:')}
+
+
+NUM_TOKEN = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?")  # 천 단위 쉼표 숫자를 한 덩어리로 읽는다
+QUANTITY_CLAIM = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*([munpµμkK]?[VAWsF]|°C|℃)(?![A-Za-z0-9])")  # 품번 속 4V7 · 단어 속 숫자는 제외
+
+
+def unsupported_numbers(sentence: str, docs: list[dict]) -> list[str]:
+    """인용한 근거 글에 없는 숫자+단위를 돌려준다. 근거를 못 찾는 인용(넷리스트 · W · 없는 번호)이 있으면 이 검사 대상이 아니라 []다.
+
+    mA↔A 같은 접두어 차이와 천 단위 쉼표는 같은 값으로 본다. 단위가 표 머리칸에 따로 있어도 숫자만 있으면 받아들인다(과거절 방지).
+    """
+    ids = citations(sentence)
+    by_id = {str(d.get("chunk_id")): d for d in docs}
+    if not ids or any(i not in by_id or not i.isdigit() for i in ids):  # W · 넷리스트 인용은 다른 검사 몫
+        return []
+    # shortcut: 숫자+단위 주장만 내용을 본다(문장 뜻이 근거와 맞는지는 안 본다). 올리려면 함의(entailment) 검사를 붙인다
+    tokens = [float(t.replace(",", "")) for i in ids for t in NUM_TOKEN.findall(str(by_id[i].get("content") or ""))]
+    missing = []
+    for number, unit in QUANTITY_CLAIM.findall(sentence):
+        value = float(number.replace(",", ""))
+        si = to_si(value, unit)
+        wanted = {value} | ({si[0] / f for f in PREFIX.values()} if si else set())
+        if not any(math.isclose(t, w, rel_tol=1e-6, abs_tol=1e-12) for t in tokens for w in wanted):
+            missing.append(f"{number} {unit}")
+    return missing
 
 
 def generate(state: AgentState, *, use_skill: bool = False) -> dict:

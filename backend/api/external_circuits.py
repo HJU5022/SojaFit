@@ -3,10 +3,11 @@
 검색 공급자 호출과 결과 정제는 backend/projects/external_circuit_search.py에 맡긴다.
 검색 결과는 저장하지 않으며 성공과 오류 응답 모두 no-store로 전달한다.
 """
-from typing import Annotated
+import re
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 from backend import auth
 from backend.errors import ApiError
@@ -30,16 +31,45 @@ class ExternalSchematicImage(BaseModel):
     url: str
 
 
+class ExternalSchematicChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str
+    source_url: str
+    source_type: Literal["manufacturer_official", "public_web"]
+    revision: str | None
+
+
 class ExternalSchematicResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    project: str
-    commit: str
+    project: str | None
+    commit: str | None
     license: str
     attribution: str
-    repository_url: str
+    repository_url: str | None
     source_url: str
     source_file: str
+    source_type: Literal["manufacturer_official", "community", "public_web"]
+    evidence_grade: Literal[2, 3] | None
+    manufacturer: str | None
+    model: str | None
+    revision: str | None
+    source_sha256: str | None
+    license_evidence_url: str | None
     images: list[ExternalSchematicImage]
+    choices: list[ExternalSchematicChoice] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_provenance(self):
+        if self.evidence_grade == 2:
+            if self.source_type != "manufacturer_official" or not isinstance(self.source_sha256, str):
+                raise ValueError("2등급 공식 회로도는 제조사 출처와 원본 SHA-256이 필요합니다.")
+            if not re.fullmatch(r"[0-9a-f]{64}", self.source_sha256):
+                raise ValueError("2등급 원본 SHA-256 형식이 올바르지 않습니다.")
+        elif self.evidence_grade == 3 and self.source_type != "community":
+            raise ValueError("3등급 회로도는 커뮤니티 출처로만 표시할 수 있습니다.")
+        elif self.evidence_grade is None and self.source_type != "public_web":
+            raise ValueError("출처 미확인 회로도는 등급을 지정할 수 없습니다.")
+        return self
 
 
 def _schematic_call(function, *args):
@@ -60,15 +90,22 @@ def _schematic_call(function, *args):
 def external_schematic_manifest(
     response: Response,
     q: Annotated[str, Query(min_length=2, max_length=200), BeforeValidator(str.strip)],
+    source_url: Annotated[str | None, Query(max_length=2048)] = None,
 ):
     response.headers["Cache-Control"] = "private, no-store"
-    manifest = _schematic_call(find_external_schematic, q)
+    manifest = (_schematic_call(find_external_schematic, q, source_url) if source_url is not None
+                else _schematic_call(find_external_schematic, q))
     return ExternalSchematicResponse(
         project=manifest.project, commit=manifest.commit, license=manifest.license,
         attribution=manifest.attribution, repository_url=manifest.repository_url,
         source_url=manifest.source_url, source_file=manifest.source_file,
+        source_type=manifest.source_type, evidence_grade=manifest.evidence_grade,
+        manufacturer=manifest.manufacturer, model=manifest.model, revision=manifest.revision,
+        source_sha256=manifest.source_sha256, license_evidence_url=manifest.license_evidence_url,
         images=[ExternalSchematicImage(sheet=i, url=f"/api/external-circuits/schematics/{manifest.token}/{i}")
                 for i in range(manifest.sheet_count)],
+        choices=[ExternalSchematicChoice.model_validate(choice.__dict__)
+                 for choice in manifest.choices],
     )
 
 

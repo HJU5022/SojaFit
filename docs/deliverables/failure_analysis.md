@@ -54,13 +54,47 @@
 
 순위와 한계 표의 정본은 EVAL_REPORT 11장이다.
 
-## 6. 남은 일
+## 6. 코드로 되돌린 결정 (2026-11-13 추가)
+
+Supervisor 모델을 Sonnet 5.5에서 Haiku 5.5로 바꾸는 시도(사전 등록 #46, 2026-11-09)를 측정 뒤 되돌렸다.
+
+| 항목 | 내용 | 근거 |
+|---|---|---|
+| 왜 바꾸려 했나 | Sonnet Supervisor가 v3 세트당 LLM 비용의 약 80%였다(세트당 약 $0.17) | `evals/guides/preregister.md` #46 "왜" |
+| 받지 않는 조건(측정 전 기록) | 질문 종류 불일치 2개 이상, 무관 거절 실패 1개 이상, 통과 48/50 이하면 되돌린다 | `evals/guides/preregister.md` #46 |
+| 결과 | 통과 47 · 45/50, 무관 거절 23 · 24/25(v3-31 · v3-34 · v3-32에 답함). 조건에 걸려 커밋 `077f6e4`로 되돌림 | `evals/guides/preregister.md` #46 측정 결과, `README.md` 3절 |
+| 원인 | 사실 확인이 "코퍼스에 없음"이라 했는데 판정을 시킴, 질문 종류는 맞혔는데 찾기를 RAG 에이전트로 보냄 | [ADR 0017](../adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md) 이유 |
+| 그 뒤 | 같은 Haiku를 프롬프트 판단 순서와 "찾기면 Spec 에이전트" 코드 규칙을 더해 다시 채택(#47 ~ #50, ADR 0017). v3 4세트 50/50이나 이 세트는 고친 문항을 담아 독립 확인이 아니다 | [ADR 0017](../adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md) 결과 |
+
+교훈으로 모델만 바꾸면 비용은 줄어도 거절 경계가 깨졌고, 경계를 코드가 지키게 한 뒤에야 같은 모델이 통과했다. 이 해석은 위 ADR의 서술을 요약한 것이다.
+
+## 7. 채택하지 않은 실험
+
+| 실험 | 결과 | 근거 |
+|---|---|---|
+| Supervisor 재계획 끄기(`SUPERVISOR_REPLAN` off, 9문항) | 9/9 유지, 평균 8.32 → 9.48초로 느려져 폐기 | [speed-p95-levers-2026-11-11.md](../experiments/speed-p95-levers-2026-11-11.md) 3절 |
+| 검색 방식을 bm25만으로(`RETRIEVE_METHOD`, 9문항) | 8/9 유지, 평균 10.89 → 8.24초, 폐기(기본 hybrid 유지) | 같은 문서 |
+| 문서 후보 수 3(`FIND_N_DOCS=3`, 7문항) | 7/7 유지, p95 15.3 → 10.9초, 보류(5 유지) | 같은 문서 |
+| RAG partial 재검색 끄기(`DOCS_RETRY_PARTIAL`, 6문항) | 6/6 유지, p95 11.1 → 10.1초, 기본 유지(끄기 폐기) | 같은 문서 |
+| 임베딩 후보 확장 평가기 | 구현 없음(조사만) | [embedding-candidate-investigation.md](../research/embedding-candidate-investigation.md) |
+
+폐기한 레버는 코드 기본값을 바꾸지 않고 실험용 환경변수로만 남았다(같은 문서 3.1절).
+
+## 8. 판정자와 채점 도구의 한계 (2026-11-13 추가)
+
+| 한계 | 내용 | 근거 |
+|---|---|---|
+| 판정자가 팀원뿐 | v3 판정자는 심태현 · 하정운이고 외부 검토자는 없다. 외부 검토자 1명의 검토는 미실시 | [v3_judging_record.md](../../evals/drafts/reviews/v3_judging_record.md), [evaluation-prep.md](../reference/evaluation-prep.md) |
+| 판정 기록이 사후 작성 | v3 판정 당시 기록(노션, 시트, 메시지)이 없다. 문항별 수정 이력과 초안-최종 차이를 되살릴 수 없다 | [v3_judging_record.md](../../evals/drafts/reviews/v3_judging_record.md) 머리말, 남은 한계 |
+| 비교 대상이 정답 초안과 같은 도구 | Codex가 정답 초안(하정운 검수, 1차 심태현·최종 하정운 판정)과 비교 대상 양쪽에 쓰여 Codex 점수에 유리할 수 있다 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 5절 |
+| Codex 집계는 규칙 기반 | 결론 방향과 핵심 값까지만 보고 쪽 인용은 보지 않는다. 사람 판정 필요 5건은 대기 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 1~3절 |
+| 청크-원본 대조 검사기가 놓치는 오류 | 숫자 끝자리를 바꾼 가짜 청크 110개 중 쪽 수준 91개(83%)만 잡았다. 같은 쪽 다른 행 값으로 바뀐 오류는 배제하지 못한다 | [chunk_source_check/README.md](../../evals/results/d10/chunk_source_check/README.md) "검사기의 한계" |
+
+## 9. 남은 일
 
 D12 마감(11/17)이 이 글에 요구하는 항목 중 아직 없는 것이다.
 
-| 항목 | 현재 | 쓸 수 있는 저장소 근거 |
+| 항목 | 현재 | 이유 |
 |---|---|---|
-| 코드로 되돌린 결정 1건과 이유 | 이 글에 없음 | 후보: Supervisor를 Sonnet에서 Haiku로만 바꾼 사전 등록 #46. 받지 않는 조건에 걸려 되돌림(통과 47·45/50, 무관 거절 23·24/25; `evals/guides/preregister.md:779-789`), `README.md` 3절 |
-| 미채택 실험 | 이 글에 없음 | 레버 A/B의 폐기·보류 항목: [speed-p95-levers-2026-11-11.md](../experiments/speed-p95-levers-2026-11-11.md), 임베딩 후보 확장 평가기(구현 없음): [embedding-candidate-investigation.md](../research/embedding-candidate-investigation.md) |
-| 막지 못한 것(인젝션) | 이 글에 부분적으로만 있음 | EVAL_REPORT 6장 "믿지 않기로 한 것"과 남은 한계 |
-| 판정자가 팀원뿐인 한계 | 이 글에 없음 | v1 평가셋 정답의 사람 판정은 팀원이다([draft_50_review.md](../../evals/drafts/reviews/draft_50_review.md): 하정운 1차, 김재훈 2차. v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다: [EVAL_REPORT.md](../../EVAL_REPORT.md) 2절 평가셋 표. 외부 검토자 1명의 검토는 미실시: [evaluation-prep.md](../reference/evaluation-prep.md)) |
+| 막지 못한 것(인젝션) | 5절 표와 EVAL_REPORT 6장 참조만 있고 이 글에 사례를 따로 쓰지 않았다 | 저장소 근거는 있으나(EVAL_REPORT 6장 "믿지 않기로 한 것", 11장 3행) 이번에 대조하지 않았다 |
+| 점수 판정에 쓴 LLM 판정자(Luna)의 한계 | 이 글에 없음 | 저장소에서 Luna의 판정 오류를 측정한 기록을 찾지 못했다 |

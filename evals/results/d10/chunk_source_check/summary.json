@@ -1,0 +1,20 @@
+{
+ "seed": 1116,
+ "per_cell": 3,
+ "n": 123,
+ "match": 123,
+ "mismatch": 0,
+ "match_but_window_fail": 0,
+ "by_type": {
+  "electrical": 42,
+  "ratings": 42,
+  "thermal": 39
+ },
+ "n_categories": 14,
+ "n_docs": 116,
+ "negative_control": {
+  "tried": 110,
+  "page_caught": 91,
+  "window_caught": 95
+ }
+}

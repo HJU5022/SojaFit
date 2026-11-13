@@ -24,7 +24,7 @@ from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
 from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted
-from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search
+from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search, unsupported_numbers
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.multi_agent.revisions import requested_revisions, revision_matches, revisions_for_part
 from backend.rag.units import to_si
@@ -247,9 +247,9 @@ def _clean_group(m, valid: set[str]) -> str:
     return f"[{', '.join(left)}]" if left else ''
 
 
-def has_uncited_sentence(answer: str) -> bool:
-    """A cited fact must not let an unsupported sentence ride into a joined answer."""
-    return any(s.strip() and not citations(s) for s in re.split(r'(?<=[.。])\s+', answer))
+def has_uncited_sentence(answer: str, docs: list[dict] = ()) -> bool:
+    """A cited fact must not let an unsupported sentence ride into a joined answer. With docs, a number the cited chunk lacks counts as unsupported."""
+    return any(s.strip() and (not citations(s) or unsupported_numbers(s, docs)) for s in re.split(r'(?<=[.。])\s+', answer))
 
 
 def lookup_parts(task: Task, find) -> list[str]:
@@ -740,11 +740,11 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
     if any(c.startswith('승인사례:') for c in citations(answer)) or set(result.memory_refs) - allowed_memories:
         return report('fail', 'historical memory cannot support current claims or reference an unprovided case', reason=Reason.VERIFY_FAILED, docs=shown, references=references)
     cited = citations(answer)
-    if cited - valid or not cited & valid or has_uncited_sentence(answer):
+    if cited - valid or not cited & valid or has_uncited_sentence(answer, shown):
         # A single bounded regeneration uses the same evidence; never guess a citation for the model.
         if os.getenv('DOCS_CITE_REPAIR', '1') != '0':
             correction = render(question, task, shown, part) + memory_context(payload.get('approved_memories') or [])
-            correction += ('\nCitation correction: the previous output had unsupported IDs or sentences without evidence citations. '
+            correction += ('\nCitation correction: the previous output had unsupported IDs, sentences without evidence citations, or numbers absent from the cited evidence. '
                            'Answer only the assigned task in the Supervisor brief, not the other tasks in the full question. '
                            'Re-answer only from the evidence above, copying its allowed IDs exactly for every sentence. '
                            'Put missing facts for this task in missing, not unsupported absence claims in answer. '
@@ -766,10 +766,10 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
     if answer is None:
         return report('fail', 'answer disagrees with cited PDF row', reason=Reason.VERIFY_FAILED, docs=shown, references=references)
     answer, dropped_fake = drop_fake_citations(answer, valid)
-    dropped_uncited = has_uncited_sentence(answer)
+    dropped_uncited = has_uncited_sentence(answer, shown)
     if dropped_uncited:
         # Keep only already-cited sentences; never attach a neighbour's citation to an unsupported claim.
-        answer = ' '.join(s for s in re.split(r'(?<=[.。])\s+', answer) if citations(s) & valid).strip()
+        answer = ' '.join(s for s in re.split(r'(?<=[.。])\s+', answer) if citations(s) & valid and not unsupported_numbers(s, shown)).strip()
     recovery_complete = any(
         figure.get('figure_reading') and figure.get('evidence_grade') == 2
         and row_sentence(figure) and row_sentence(figure) in answer

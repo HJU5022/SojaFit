@@ -149,7 +149,7 @@ def test_synth_respects_the_supervisor_call_limit():
 
 
 def test_check_blocks_fake_citations_and_invented_numbers():
-    docs = [{'chunk_id': 7, 'file': 'a.pdf', 'page': 1, 'content': 'x'}]
+    docs = [{'chunk_id': 7, 'file': 'a.pdf', 'page': 1, 'content': 'VRRM 40 V'}]
     one = {**STATE, 'reports': [report(1, answer='VRRM은 40 V이다 [7].', docs=docs)], 'docs': docs, 'passed': [7]}
     assert 'refusal_reason' not in S.check_node({**one, 'answer': 'VRRM은 40 V이다 [7].'})
     assert S.check_node({**one, 'answer': 'VRRM은 40 V이다 [8].'})['refusal_reason'] == 'verify_failed'  # 받은 적 없는 근거
@@ -403,3 +403,12 @@ def test_final_check_keeps_each_part_bound_to_its_requested_edition(files, block
     result = S.check_node(state)
     assert (result.get('refusal_reason') == 'verify_failed') is blocked
     assert bool(result['check'].get('revision_mismatch')) is blocked
+
+
+def test_check_blocks_a_number_missing_from_the_cited_chunk():
+    docs = [{'chunk_id': 7, 'file': 'a.pdf', 'page': 1, 'content': 'VRRM 40 V'}]
+    base = {**STATE, 'reports': [report(1, answer='VRRM은 40 V이다 [7].', docs=docs)], 'docs': docs, 'passed': [7]}
+    good = 'VRRM은 40 V이다 [7].'
+    assert 'refusal_reason' not in S.check_node({**base, 'answer': good, 'synth_text': good})
+    wrong = 'VRRM은 45 V이다 [7].'  # 번호는 진짜인데 근거 글에 없는 값
+    assert S.check_node({**base, 'answer': wrong, 'synth_text': wrong})['refusal_reason'] == 'verify_failed'

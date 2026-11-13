@@ -117,7 +117,7 @@ def test_external_recheck_preserves_only_cited_internal_facts_and_reports_reject
            'table': 'MAXIMUM RATINGS', 'row': 'Maximum RMS voltage', 'content': 'SS14 = 28 V',
            'doc_parts': ['SS14'], 'cells': [('SS14', '28')], 'unit': 'V'}
     report = D.docs_agent({'task': task(), 'question': 'SS14의 VRRM은?', 'target_part': PART},
-                          retriever=lambda *a, **kw: [doc(3), doc(4)], chat=chat,
+                          retriever=lambda *a, **kw: [doc(3, 'VRRM 40 V, TA = 25 °C'), doc(4)], chat=chat,
                           web_search=lambda *a: [row])['reports'][0]
     prompt = chat.seen[-1][1]
     assert '[4]' not in prompt and ('[3]' in prompt) == (grade == 'partial')
@@ -229,7 +229,7 @@ def test_render_find_with_no_candidates_says_so_and_shows_terms():
 
 def test_parts_in_the_brief_filter_the_search_to_those_part_numbers():
     seen = []
-    r = run(task(parts=['TS40P05G']), llm(D.DocsAnswer(grade='enough', answer='TJ는 150°C이다 [3].')), docs=[doc(3)], seen=seen,
+    r = run(task(parts=['TS40P05G']), llm(D.DocsAnswer(grade='enough', answer='TJ는 150°C이다 [3].')), docs=[doc(3, 'TJ 150 °C')], seen=seen,
             question='반복 역전압 1000 V, 평균 40 A 브리지 정류기의 접합부 온도 한계는?', part={})
     # [왜] 재계획이 앞 회차 찾기의 품번을 지시서에 넣었다. 질문에 품번이 없어도 그 품번 문서 안에서만 찾는다(설계 v2)
     assert seen[0][1] == ['TS40P05G'] and r['searches'][0]['parts'] == ['TS40P05G'] and r['status'] == 'ok'
@@ -248,7 +248,7 @@ def test_described_ratings_find_parts_with_those_exact_values_then_search_only_t
 
     def docs(q, parts):
         retriever_seen.append(parts)
-        return [doc(3)]
+        return [doc(3, 'PD 200 mW')]
     r = D.docs_agent({'task': t, 'question': '반복 역전압 70 V 평균 70 mA 쇼트키의 소모 전력은?', 'target_part': {}},
                      retriever=lambda q, parts=None: docs(q, parts), chat=chat, find=find)['reports'][0]
     conds, category, _, package = calls[0]

@@ -6,6 +6,8 @@ import { ExternalSchematic } from './Schematic'
 
 afterEach(() => vi.unstubAllGlobals())
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
+  source_type: 'manufacturer_official' as const, evidence_grade: 2 as const, manufacturer: 'Maker', model: 'Board', revision: 'v1', source_sha256: 'b'.repeat(64), license_evidence_url: 'https://example.test/r/LICENSE',
+  choices: [],
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
@@ -22,6 +24,8 @@ it('searches the project name only when asked, and shows every sheet in order wi
   expect(images.map(image => image.getAttribute('alt'))).toEqual(['Board 시트 1 원본 회로도', 'Board 시트 2 원본 회로도'])
   expect(screen.getAllByText('출처: Maker')).toHaveLength(2)
   expect(screen.getAllByText('라이선스: MIT')).toHaveLength(2)
+  expect(screen.getAllByText('제조사 공식 원본 · 2등급')).toHaveLength(2)
+  expect(screen.getAllByText('Maker · Board · v1')).toHaveLength(2)
   expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', found.source_url)
 })
 
@@ -33,6 +37,38 @@ it('blocks queries outside 2-200 characters without calling the API', () => {
   expect(screen.getByText('2자 이상 200자 이하로 입력해 주세요.')).toBeInTheDocument()
   fireEvent.submit(screen.getByRole('textbox').closest('form')!)
   expect(handler).not.toHaveBeenCalled()
+})
+
+it('shows an unverified public schematic with its publishing page', async () => {
+  network(() => Response.json({
+    ...found, project: null, commit: null, source_type: 'public_web', evidence_grade: null,
+    model: 'Tiny85 Fan Control', manufacturer: null, license: '미확인',
+    repository_url: 'https://example.org/tiny85', source_url: 'https://example.org/tiny85-schematic.png',
+    images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }],
+  }))
+  renderWithQueries(<ExternalSchematic name="Tiny85 Fan Control" zoom={100} />)
+  search()
+  expect(await screen.findByAltText('Tiny85 Fan Control 시트 1 원본 회로도')).toHaveAttribute('src', '/api/external-circuits/schematics/t/0')
+  expect(screen.getByText('공개 웹 자료 · 출처 확인 필요')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /게시 페이지/ })).toHaveAttribute('href', 'https://example.org/tiny85')
+})
+
+it('lets the user choose another matching circuit source', async () => {
+  const other = 'https://example.org/board-v2-schematic.png'
+  const paths: string[] = []
+  network(path => {
+    paths.push(path)
+    return Response.json({ ...found, source_url: path.includes('source_url=') ? other : found.source_url,
+      choices: [
+        { title: 'Board v1', source_url: found.source_url, source_type: 'manufacturer_official', revision: 'v1' },
+        { title: 'Board v2', source_url: other, source_type: 'public_web', revision: 'v2' },
+      ] })
+  })
+  renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  search()
+  const choice = await screen.findByRole('button', { name: 'Board v2 · 출처 확인 필요' })
+  fireEvent.click(choice)
+  await waitFor(() => expect(paths).toContain(`/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}`))
 })
 
 it.each([

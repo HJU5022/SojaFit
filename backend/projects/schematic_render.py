@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import hashlib
 import math
 import os
 import re
@@ -12,13 +13,14 @@ import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Callable
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from xml.etree import ElementTree as ET
 
 import httpx
 from PIL import Image
 
 from backend.graph.netlist import _sexpr
+from backend.projects.external_circuit_search import canonical_product_query
 from backend.projects.schematic import (
     COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
 )
@@ -28,12 +30,14 @@ from backend.projects.schematic_source import (
 
 MIB = 1024 * 1024
 MAX_IMAGE_BYTES = 10 * MIB
+MIN_SCHEMATIC_IMAGE_DIMENSION = 128
 MAX_PDF_BYTES = 20 * MIB
 MAX_ARCHIVE_BYTES = 25 * MIB
 MAX_ARCHIVE_UNCOMPRESSED_BYTES = 100 * MIB
 MAX_TREE_ITEMS = 5000
 MAX_SHEETS = 20
 MAX_PIXELS = 40_000_000
+MAX_PDF_TEXT_BYTES = 256 * 1024
 PDF_DPI = 300
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 MIME = {
@@ -120,7 +124,7 @@ def _pdf_creator_is_pcbnew(document) -> bool:
     return isinstance(creator, str) and creator.strip().casefold() == "pcbnew-pdf"
 
 
-def _rasterize(kind: str, path: Path, output: Path):
+def _rasterize(kind: str, path: Path, output: Path, page_indices: str | None = None):
     """별도 프로세스에서 실행한다. 전체 변환 성공 후 부모가 결과를 읽는다."""
     if os.name == "posix":
         import resource
@@ -141,7 +145,15 @@ def _rasterize(kind: str, path: Path, output: Path):
             raise _invalid()
         if not 1 <= len(document) <= MAX_SHEETS:
             raise _invalid()
-        for index in range(len(document)):
+        selected = list(range(len(document)))
+        if page_indices is not None:
+            try:
+                selected = [int(value) for value in page_indices.split(",")]
+            except ValueError:
+                raise _invalid() from None
+            if not selected or len(selected) > MAX_SHEETS or any(index < 0 or index >= len(document) for index in selected):
+                raise _invalid()
+        for output_index, index in enumerate(selected):
             page = document[index]
             try:
                 width, height = page.get_size()
@@ -157,7 +169,7 @@ def _rasterize(kind: str, path: Path, output: Path):
                     raise _invalid()
                 bitmap = page.render(scale=scale)
                 try:
-                    out = output / f"{index + 1:02}.png"
+                    out = output / f"{output_index + 1:02}.png"
                     bitmap.to_pil().save(out, format="PNG")
                     _valid_png(out.read_bytes())
                 finally:
@@ -168,13 +180,16 @@ def _rasterize(kind: str, path: Path, output: Path):
         document.close()
 
 
-def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+def _sheets(kind: str, path: Path, output: Path, *, pdf_pages: tuple[int, ...] | None = None) -> tuple[bytes, ...]:
     output.mkdir()
     if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
         raise _invalid()
     try:
+        command = [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)]
+        if pdf_pages is not None:
+            command.append(",".join(str(index) for index in pdf_pages))
         subprocess.run(
-            [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+            command,
             cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
@@ -326,5 +341,298 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
         return tuple(result)
 
 
+def _public_asset(url: str, kind: str, *, client: httpx.Client | None = None) -> tuple[bytes, str]:
+    """Download one discovered public asset with the same SSRF and size guards."""
+    from backend.projects.schematic_discovery import download_bounded
+
+    if kind not in {"png", "svg", "pdf"} or not isinstance(url, str):
+        raise _invalid()
+    parsed = urlsplit(url)
+    host = parsed.hostname
+    if not host or parsed.scheme != "https":
+        raise _invalid()
+    limit = MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES
+    data, mime = download_bounded(url, max_bytes=limit, allowed_hosts=frozenset({host}),
+                                  client=client, phase="public_asset")
+    generic = {"application/octet-stream"} | ({"text/plain"} if kind == "svg" else set())
+    if mime not in MIME[kind] | generic:
+        raise _invalid()
+    return data, mime
+
+
+def _pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
+    """Find pages explicitly labelled schematic, excluding a table of contents."""
+    if not data.startswith(b"%PDF-") or len(data) > MAX_PDF_BYTES:
+        raise _invalid()
+    import pypdfium2 as pdfium
+
+    document = pdfium.PdfDocument(data)
+    try:
+        count = len(document)
+        if not 1 <= count <= MAX_SHEETS or _pdf_creator_is_pcbnew(document):
+            raise _invalid()
+        if count == 1:
+            return (0,)
+        selected = []
+        for index in range(count):
+            page = document[index]
+            try:
+                text = page.get_textpage().get_text_range().casefold()
+                if "table of contents" not in text and re.search(r"\bschematic\b", text):
+                    selected.append(index)
+            finally:
+                page.close()
+        if not selected:
+            raise _invalid()
+        return tuple(selected)
+    finally:
+        document.close()
+
+
+def _bounded_pdf_schematic_pages(data: bytes) -> tuple[int, ...]:
+    """Inspect untrusted PDF bytes in the bounded worker process."""
+    if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
+        raise _invalid()
+    with tempfile.TemporaryDirectory(prefix="sojafit-public-pdf-inspect-") as temporary:
+        path = Path(temporary) / "input.pdf"
+        path.write_bytes(data)
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", "inspect-pdf", str(path)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                capture_output=True, text=True,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+            raise _invalid() from None
+        except (subprocess.TimeoutExpired, OSError):
+            raise ExternalSchematicUpstreamError("회로도 변환기를 사용할 수 없습니다.") from None
+    raw = result.stdout.strip()
+    try:
+        pages = tuple(int(value) for value in raw.split(",") if value != "")
+    except ValueError:
+        raise _invalid() from None
+    if not pages or len(pages) > MAX_SHEETS or any(index < 0 for index in pages):
+        raise _invalid()
+    return pages
+
+
+def _pdf_identity_text(data: bytes) -> str:
+    """Extract a bounded amount of PDF text in the same worker boundary as page inspection."""
+    if not isinstance(data, bytes) or len(data) > MAX_PDF_BYTES:
+        raise _invalid()
+    with tempfile.TemporaryDirectory(prefix="sojafit-public-pdf-text-") as temporary:
+        path = Path(temporary) / "input.pdf"
+        path.write_bytes(data)
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", "inspect-pdf-text", str(path)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                capture_output=True, text=True, encoding="utf-8",
+                env={**{key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+                     "PYTHONIOENCODING": "utf-8"},
+            )
+        except subprocess.CalledProcessError:
+            raise _invalid() from None
+        except (subprocess.TimeoutExpired, OSError):
+            raise ExternalSchematicUpstreamError("회로도 변환기를 사용할 수 없습니다.") from None
+    return result.stdout[:MAX_PDF_TEXT_BYTES]
+
+
+_IDENTITY_STOPWORDS = {
+    "schematic", "schematics", "circuit", "diagram", "drawing", "original", "board",
+    "development", "dev", "module", "electronics", "official", "pdf", "png",
+    "svg", "and", "the", "for", "with", "회로도", "원본",
+}
+_ACCESSORY_MARKERS = {"clickshield", "add-onboard", "addonboard", "motorcarrier", "carriershield"}
+_PARTIAL_MARKERS = {"reducedschematics", "reducedschematic", "partialschematic", "excerpt", "summary"}
+_NON_SCHEMATIC_DOCUMENT_MARKERS = {"whitesheet", "datasheet", "productbrief", "productsheet", "flyer"}
+
+
+def _identity_compact(value: str) -> str:
+    return re.sub(r"[^a-z0-9가-힣]+", "", value.casefold())
+
+
+def _identity_terms(query: str) -> tuple[str, ...]:
+    return tuple(
+        _identity_compact(token) for token in re.findall(r"[a-z0-9]+(?:\.[a-z0-9]+)*|[가-힣]+", query, re.I)
+        if len(token) > 1 and token.casefold() not in _IDENTITY_STOPWORDS
+    )
+
+
+def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
+                            source_url: str, kind: str, pdf_text: str = "") -> None:
+    """Reject a valid image/PDF whose board variant is not the requested one."""
+    query = canonical_product_query(query)
+    terms = _identity_terms(query)
+    if not terms:
+        return
+    metadata = _identity_compact(" ".join((title, page_url, source_file, source_url)))
+    source_identity = _identity_compact(" ".join((page_url, source_file, source_url)))
+    artifact_identity = _identity_compact(" ".join((source_file, source_url)))
+    text = _identity_compact(pdf_text)
+    haystack = metadata + text
+    # Numeric/model tokens and explicit variants must occur in the source identity.
+    # This blocks e.g. ATP -> the general Artemis and LC -> Teensy 4.1.
+    for term in terms:
+        if any(char.isdigit() for char in term) or term in {
+            "atp", "qwiic", "breakout", "lc", "nano", "every", "rp2040", "esp32c3", "esp32s2",
+            "zero", "core2",
+        }:
+            if term not in haystack or (kind == "pdf" and term not in text and term not in source_identity):
+                raise _invalid()
+    query_identity = _identity_compact(query)
+    if any(marker in source_identity for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS) and not any(
+            marker in query_identity for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS):
+        raise _invalid()
+    if any(marker in haystack for marker in _ACCESSORY_MARKERS) and "shield" not in query_identity:
+        raise _invalid()
+    if "qwiic" in artifact_identity and "qwiic" not in query_identity:
+        raise _invalid()
+    if "atp" in artifact_identity and "atp" not in query_identity:
+        raise _invalid()
+    if "atp" in query_identity and "atp" not in artifact_identity:
+        raise _invalid()
+    if "shield" in artifact_identity and "shield" not in query_identity:
+        raise _invalid()
+    if "every" in artifact_identity and "every" not in query_identity and "nano" in query_identity:
+        raise _invalid()
+    if any(marker in haystack for marker in _PARTIAL_MARKERS) and not any(
+            marker in _identity_compact(query) for marker in _PARTIAL_MARKERS):
+        raise _invalid()
+    if "zio" in artifact_identity and "zio" not in terms:
+        raise _invalid()
+    # Product-page titles can be broad; the downloaded artifact must not name
+    # a different board or accessory variant.
+    artifact_conflicts = {
+        "qtrp": "qtpy",
+        "itsybitsy": "itsybitsy",
+        "9dof": "9dof",
+        "imu": "9dof",
+        "hookupguide": "hookup",
+        "hookup": "hookup",
+    }
+    for marker, requested in artifact_conflicts.items():
+        if marker in artifact_identity and requested not in query_identity:
+            raise _invalid()
+    # A product page may mention Pico W while linking a plain Pico drawing.
+    # The artifact filename and PDF text must not contradict the requested variant.
+    query_picow = "picow" in query_identity
+    file_identity = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
+    file_picow = "picow" in file_identity
+    text_picow = "picow" in text
+    if query_picow:
+        if (("pico" in file_identity and not file_picow)
+                or ("pico" in text and not text_picow)
+                or not (file_picow or "picow" in _identity_compact(urlsplit(source_url).path)
+                        or text_picow)):
+            raise _invalid()
+    elif "picow" in source_identity or text_picow:
+        raise _invalid()
+    numeric_terms = [term for term in terms if any(char.isdigit() for char in term)]
+    source_tokens = re.findall(r"[a-z]+[0-9][a-z0-9]*", " ".join(
+        (page_url, source_file, source_url)).casefold())
+    for term in numeric_terms:
+        match = re.fullmatch(r"([a-z]+)(\d[0-9a-z]*)", term)
+        if not match:
+            continue
+        prefix, digits = match.groups()
+        for candidate in re.findall(r"([a-z]+)(" + re.escape(digits) + r")", " ".join(source_tokens)):
+            if candidate[0] != prefix and candidate[0] not in {"qtpy", "py"}:
+                raise _invalid()
+
+
+def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = "",
+                             page_url: str = "", source_file: str = "",
+                             client: httpx.Client | None = None) -> tuple[str, int]:
+    """Download, identify, and fingerprint one public schematic in one pass."""
+    data, _ = _public_asset(url, kind, client=client)
+    pdf_text = _pdf_identity_text(data) if kind == "pdf" else ""
+    _verify_public_identity(query, title=title, page_url=page_url, source_file=source_file,
+                            source_url=url, kind=kind, pdf_text=pdf_text)
+    if kind == "png":
+        _valid_png(data)
+        with Image.open(io.BytesIO(data), formats=["PNG"]) as png:
+            if (png.width < MIN_SCHEMATIC_IMAGE_DIMENSION
+                    or png.height < MIN_SCHEMATIC_IMAGE_DIMENSION):
+                raise _invalid()
+        count = 1
+    elif kind == "svg":
+        _svg(data)
+        count = 1
+    else:
+        count = len(_bounded_pdf_schematic_pages(data))
+    return hashlib.sha256(data).hexdigest(), count
+
+
+def fingerprint_public_schematic(url: str, kind: str, *, client: httpx.Client | None = None) -> tuple[str, int]:
+    """Fetch and validate a discovered public PDF/PNG/SVG, returning hash and sheets."""
+    data, _ = _public_asset(url, kind, client=client)
+    if kind == "png":
+        _valid_png(data)
+        count = 1
+    elif kind == "svg":
+        _svg(data)
+        count = 1
+    else:
+        count = len(_bounded_pdf_schematic_pages(data))
+    return hashlib.sha256(data).hexdigest(), count
+
+
+def render_public_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None) -> tuple[bytes, ...]:
+    """Re-fetch a discovered public asset, verify its fingerprint, and rasterize it."""
+    if (source.source_type not in {"manufacturer_official", "public_web"}
+            or not isinstance(source.source_url, str)
+            or not isinstance(source.source_sha256, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", source.source_sha256)
+            or source.asset_kind not in {"png", "svg", "pdf"}
+            or type(source.expected_sheets) is not int or not 1 <= source.expected_sheets <= MAX_SHEETS):
+        raise _invalid()
+    data, _ = _public_asset(source.source_url, source.asset_kind, client=client)
+    if hashlib.sha256(data).hexdigest() != source.source_sha256:
+        raise _invalid()
+    pages = None
+    if source.asset_kind == "png":
+        _valid_png(data)
+    elif source.asset_kind == "svg":
+        _svg(data)
+    else:
+        pages = _bounded_pdf_schematic_pages(data)
+        if len(pages) != source.expected_sheets:
+            raise _invalid()
+    with tempfile.TemporaryDirectory(prefix="sojafit-public-render-") as temporary:
+        work = Path(temporary)
+        path = work / (source.source_file or f"schematic.{source.asset_kind}")
+        path.write_bytes(data)
+        sheets = _sheets(source.asset_kind, path, work / "pages", pdf_pages=pages if source.asset_kind == "pdf" else None)
+    if len(sheets) != source.expected_sheets:
+        raise _invalid()
+    return sheets
+
+
 if __name__ == "__main__":
-    _rasterize(sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]))
+    if len(sys.argv) >= 3 and sys.argv[1] == "inspect-pdf":
+        try:
+            pages = _pdf_schematic_pages(Path(sys.argv[2]).read_bytes())
+            print(",".join(str(index) for index in pages))
+        except (ExternalSchematicInvalidSource, OSError, ValueError):
+            raise SystemExit(1)
+    elif len(sys.argv) >= 3 and sys.argv[1] == "inspect-pdf-text":
+        try:
+            import pypdfium2 as pdfium
+            document = pdfium.PdfDocument(Path(sys.argv[2]).read_bytes())
+            try:
+                chunks = []
+                for index in range(min(len(document), MAX_SHEETS)):
+                    page = document[index]
+                    try:
+                        chunks.append(page.get_textpage().get_text_range())
+                    finally:
+                        page.close()
+                print(" ".join(chunks)[:MAX_PDF_TEXT_BYTES])
+            finally:
+                document.close()
+        except (ExternalSchematicInvalidSource, OSError, ValueError, RuntimeError):
+            raise SystemExit(1)
+    else:
+        _rasterize(sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4] if len(sys.argv) > 4 else None)
