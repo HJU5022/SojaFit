@@ -33,6 +33,7 @@ SojaFit (proj3-b)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
 ├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
 ├── docker-compose.yml      <- 서비스 4개(api · thread-setup · corpus-load · db) 한 줄 실행, 키 없는 데모 모드 (고정)
+├── docker-compose.local.yml <- 별도 DB·볼륨의 로컬 실제 API, localhost:8010, 데모·운영 설정과 분리
 ├── pyproject.toml          <- uv 의존성 (고정)
 ├── uv.lock                 <- 의존성 고정 버전. pyproject.toml과 같은 커밋에 넣음
 ├── pytest.ini              <- 테스트 경로(tests/)와 설정
@@ -526,6 +527,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
+│   │   ├── test_local_live_config.py <- 로컬 실제 API의 DB·Origin·볼륨·포트 격리 계약 검사
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
@@ -749,6 +751,7 @@ SojaFit (proj3-b)
     ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
     │   └── ADR.md          <- 폴더 설명과 결정 목록
     ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
+    │   ├── local-live-api.md <- 운영 DB를 사용하지 않는 로컬 실제 API 실행·수용 기준
     │   ├── SPECS.md        <- 폴더 설명
     │   ├── evaluator-demo-readiness.md <- 평가자 데모: 기록 응답 재생과 확인 경로
     │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)

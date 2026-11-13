@@ -7,7 +7,8 @@ COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
 COPY frontend/src/ ./src/
 COPY frontend/public/ ./public/
 COPY data/circuits/ /data/circuits/
-RUN npm run build
+ARG VITE_LOCAL_ATTACHMENT_UI=0
+RUN VITE_LOCAL_ATTACHMENT_UI=$VITE_LOCAL_ATTACHMENT_UI npm run build
 
 FROM python:3.12-slim
 

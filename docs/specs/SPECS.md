@@ -24,6 +24,7 @@
 - `google-user-login.md` — 일반 사용자 Google 가입, 비밀번호 재확인 연결
 - `judge-agent.md` — Spec 에이전트와 대체품 찾기(역할 23개, 조건 판정, 후보 정렬)
 - `login-auth.md` — 이메일 가입·로그인, 서버 세션, 가입·로그인 한도
+- `local-live-api.md` — 운영 DB와 분리한 로컬 실제 API·화면·분석 저장소 실행
 - `mcp-graph-integration.md` — MCP 검색 도구를 LangGraph 검색 주입에 연결하는 계약
 - `mcp-search-tools.md` — MCP 서버 도구 6개의 입출력 계약
 - `official-datasheet-evidence.md` — 내부 근거가 부족할 때 제조사 PDF 페이지·표 행 인용 계약

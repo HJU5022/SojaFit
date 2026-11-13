@@ -1,0 +1,69 @@
+# 실제 API용 로컬 환경. 기본 데모 Compose와 합치지 않고 이 파일만 지정한다.
+# docker compose --env-file .env.local -f docker-compose.local.yml up -d --build
+name: sojafit-sth-local
+
+services:
+  api:
+    build:
+      context: .
+      args:
+        VITE_LOCAL_ATTACHMENT_UI: "1"
+    image: sojafit:sth-local
+    ports:
+      - "127.0.0.1:8010:8000"
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://local_app@db:5432/local_app
+      PGPASSWORD: ${LOCAL_DB_PASSWORD:?set LOCAL_DB_PASSWORD in .env.local}
+      AUTH_SECRET: ${LOCAL_AUTH_SECRET:?set LOCAL_AUTH_SECRET in .env.local}
+      AUTH_ORIGIN: http://localhost:8010
+      DEMO_MODE: "0"
+      DEMO_REPLAY: "0"
+      THREADS_ENABLED: "1"
+      RAG_VECTOR_TYPE: halfvec
+      GOOGLE_AUTH_ENABLED: "0"
+      PYTHON_DOTENV_DISABLED: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+      thread-setup:
+        condition: service_completed_successfully
+
+  thread-setup:
+    build:
+      context: .
+      args:
+        VITE_LOCAL_ATTACHMENT_UI: "1"
+    image: sojafit:sth-local
+    environment:
+      DATABASE_URL: postgresql://local_app@db:5432/local_app
+      PGPASSWORD: ${LOCAL_DB_PASSWORD:?set LOCAL_DB_PASSWORD in .env.local}
+      PYTHON_DOTENV_DISABLED: "1"
+    command: ["python", "-m", "backend.conversations.memory_service", "--setup"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: local_app
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:?set LOCAL_DB_PASSWORD in .env.local}
+      POSTGRES_DB: local_app
+    volumes:
+      - local-pgdata:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U local_app -d local_app"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  local-pgdata:
