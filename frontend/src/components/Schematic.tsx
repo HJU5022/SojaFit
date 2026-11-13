@@ -8,7 +8,9 @@ import type { DemoSchematic } from '../api/projects'
 
 // 이미지 주소가 바뀌면 대기 상태도 초기화해 이전 회로의 오류를 남기지 않는다. reload가 있으면 같은 주소 대신 그 동작으로 다시 받는다(서명 주소 만료).
 type SchematicEvidence = Pick<DemoSchematic, 'image_url' | 'original_url' | 'attribution' | 'license'> & {
-  evidence_grade?: 2 | 3
+  evidence_grade?: 2 | 3 | null
+  source_type?: 'manufacturer_official' | 'community' | 'public_web'
+  source_page_url?: string | null
   manufacturer?: string | null
   model?: string | null
   revision?: string | null
@@ -24,10 +26,12 @@ export function SchematicImage({ schematic, name, zoom, reload }: { schematic: S
     <figcaption className="meta-fields">
       {schematic.evidence_grade === 2 && <span>제조사 공식 원본 · 2등급</span>}
       {schematic.evidence_grade === 3 && <span>커뮤니티 참고 · 3등급</span>}
+      {schematic.source_type === 'public_web' && <span>공개 웹 자료 · 출처 확인 필요</span>}
       {[schematic.manufacturer, schematic.model, schematic.revision].filter(Boolean).length > 0 &&
         <span>{[schematic.manufacturer, schematic.model, schematic.revision].filter(Boolean).join(' · ')}</span>}
       <span>출처: {schematic.attribution}</span><span>라이선스: {schematic.license}</span>
       <a href={schematic.original_url} target="_blank" rel="noreferrer">원본 자료<span className="sr-only"> (새 탭)</span></a>
+      {schematic.source_page_url && schematic.source_page_url !== schematic.original_url && <a href={schematic.source_page_url} target="_blank" rel="noreferrer">게시 페이지<span className="sr-only"> (새 탭)</span></a>}
     </figcaption>
   </figure>
 }
@@ -46,13 +50,14 @@ function searchMessage(error: ApiError) {
 export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }) {
   const [text, setText] = useState(name)
   const [searched, setSearched] = useState('')
+  const [selectedSource, setSelectedSource] = useState('')
   const term = text.trim()
   const valid = term.length >= 2 && term.length <= 200
-  const result = useQuery({ queryKey: ['external-schematic', searched], queryFn: ({ signal }) => findSchematic(searched, signal), enabled: searched !== '', retry: false, staleTime: 5 * 60_000 })
+  const result = useQuery({ queryKey: ['external-schematic', searched, selectedSource], queryFn: ({ signal }) => findSchematic(searched, signal, selectedSource), enabled: searched !== '', retry: false, staleTime: 5 * 60_000 })
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!valid || result.isFetching) return
-    if (term !== searched) setSearched(term)
+    if (term !== searched || selectedSource) { setSelectedSource(''); setSearched(term) }
     else if (result.isError) void result.refetch()
   }
   const data = searched ? result.data : undefined
@@ -64,8 +69,19 @@ export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }
     </form>}
     {result.isFetching && <div className="skeleton inset" role="status"><span className="sr-only">원본 회로도를 찾는 중입니다. 몇 초 걸릴 수 있습니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {result.error && !result.isFetching && <p className="notice inset" role="alert" {...requestIdProps(result.error)}>{searchMessage(result.error as unknown as ApiError)}</p>}
+    {data && data.choices.length > 1 && <div className="inset" aria-label="검색된 회로도 후보">
+      <p>검색된 회로도 후보를 확인해 선택하세요.</p>
+      {data.choices.map(choice => <button className="btn" key={choice.source_url}
+        aria-pressed={choice.source_url === data.source_url}
+        onClick={() => setSelectedSource(choice.source_url)}
+        disabled={result.isFetching}>
+        {choice.title} · {choice.source_type === 'manufacturer_official' ? '제조사 공식' : '출처 확인 필요'}
+      </button>)}
+    </div>}
     {data && data.images.map(image => <SchematicImage key={image.url} schematic={{ image_url: image.url, original_url: data.source_url, attribution: data.attribution, license: data.license,
-      evidence_grade: data.evidence_grade, manufacturer: data.manufacturer, model: data.model, revision: data.revision }}
-      name={`${data.project} 시트 ${image.sheet + 1}`} zoom={zoom} reload={() => void result.refetch()} />)}
+      evidence_grade: data.evidence_grade, source_type: data.source_type,
+      manufacturer: data.manufacturer, model: data.model, revision: data.revision,
+      source_page_url: data.repository_url }}
+      name={`${data.model || data.project || searched} 시트 ${image.sheet + 1}`} zoom={zoom} reload={() => void result.refetch()} />)}
   </div>
 }

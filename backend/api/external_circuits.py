@@ -31,6 +31,14 @@ class ExternalSchematicImage(BaseModel):
     url: str
 
 
+class ExternalSchematicChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str
+    source_url: str
+    source_type: Literal["manufacturer_official", "public_web"]
+    revision: str | None
+
+
 class ExternalSchematicResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     project: str | None
@@ -40,14 +48,15 @@ class ExternalSchematicResponse(BaseModel):
     repository_url: str | None
     source_url: str
     source_file: str
-    source_type: Literal["manufacturer_official", "community"]
-    evidence_grade: Literal[2, 3]
+    source_type: Literal["manufacturer_official", "community", "public_web"]
+    evidence_grade: Literal[2, 3] | None
     manufacturer: str | None
     model: str | None
     revision: str | None
     source_sha256: str | None
     license_evidence_url: str | None
     images: list[ExternalSchematicImage]
+    choices: list[ExternalSchematicChoice] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_provenance(self):
@@ -56,8 +65,10 @@ class ExternalSchematicResponse(BaseModel):
                 raise ValueError("2등급 공식 회로도는 제조사 출처와 원본 SHA-256이 필요합니다.")
             if not re.fullmatch(r"[0-9a-f]{64}", self.source_sha256):
                 raise ValueError("2등급 원본 SHA-256 형식이 올바르지 않습니다.")
-        elif self.source_type != "community":
+        elif self.evidence_grade == 3 and self.source_type != "community":
             raise ValueError("3등급 회로도는 커뮤니티 출처로만 표시할 수 있습니다.")
+        elif self.evidence_grade is None and self.source_type != "public_web":
+            raise ValueError("출처 미확인 회로도는 등급을 지정할 수 없습니다.")
         return self
 
 
@@ -79,9 +90,11 @@ def _schematic_call(function, *args):
 def external_schematic_manifest(
     response: Response,
     q: Annotated[str, Query(min_length=2, max_length=200), BeforeValidator(str.strip)],
+    source_url: Annotated[str | None, Query(max_length=2048)] = None,
 ):
     response.headers["Cache-Control"] = "private, no-store"
-    manifest = _schematic_call(find_external_schematic, q)
+    manifest = (_schematic_call(find_external_schematic, q, source_url) if source_url is not None
+                else _schematic_call(find_external_schematic, q))
     return ExternalSchematicResponse(
         project=manifest.project, commit=manifest.commit, license=manifest.license,
         attribution=manifest.attribution, repository_url=manifest.repository_url,
@@ -91,6 +104,8 @@ def external_schematic_manifest(
         source_sha256=manifest.source_sha256, license_evidence_url=manifest.license_evidence_url,
         images=[ExternalSchematicImage(sheet=i, url=f"/api/external-circuits/schematics/{manifest.token}/{i}")
                 for i in range(manifest.sheet_count)],
+        choices=[ExternalSchematicChoice.model_validate(choice.__dict__)
+                 for choice in manifest.choices],
     )
 
 
