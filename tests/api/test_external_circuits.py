@@ -23,7 +23,7 @@ def schematic_boundary(monkeypatch):
             source_url=f"https://github.com/owner/repo/tree/{'a' * 40}",
             source_file="hardware/board.kicad_sch", token="signed-token", sheet_count=2,
             source_type="community", evidence_grade=3, manufacturer=None, model=None,
-            revision=None, source_sha256=None, license_evidence_url=None),
+            revision=None, source_sha256=None, license_evidence_url=None, choices=()),
         queries=[], sheet_calls=[], png=b"\x89PNG\r\n\x1a\nfixture", error=None,
     )
 
@@ -64,6 +64,7 @@ def test_external_schematic_manifest_returns_all_sheet_urls(client, schematic_bo
         **{key: value for key, value in vars(schematic_boundary.manifest).items()
            if key not in {"token", "sheet_count"}},
         "images": [{"sheet": i, "url": f"/api/external-circuits/schematics/signed-token/{i}"} for i in range(2)],
+        "choices": [],
     }
     assert response.headers["cache-control"] == "private, no-store"
 
@@ -168,5 +169,23 @@ def test_manifest_rejects_unknown_provenance_literal():
         "license_evidence_url": "https://github.com/owner/repo/blob/main/LICENSE",
         "images": [{"sheet": 0, "url": "/api/external-circuits/schematics/token/0"}],
     }
+    with pytest.raises(ValueError):
+        ExternalSchematicResponse.model_validate(payload)
+
+
+def test_manifest_allows_public_web_without_claiming_verified_grade():
+    from backend.api.external_circuits import ExternalSchematicResponse
+
+    payload = {
+        "project": None, "commit": None, "license": "미확인", "attribution": "Publisher",
+        "repository_url": "https://example.org/board",
+        "source_url": "https://example.org/schematic.png", "source_file": "schematic.png",
+        "source_type": "public_web", "evidence_grade": None, "manufacturer": None,
+        "model": "Board", "revision": None, "source_sha256": "a" * 64,
+        "license_evidence_url": None,
+        "images": [{"sheet": 0, "url": "/api/external-circuits/schematics/token/0"}],
+    }
+    assert ExternalSchematicResponse.model_validate(payload).evidence_grade is None
+    payload["evidence_grade"] = 2
     with pytest.raises(ValueError):
         ExternalSchematicResponse.model_validate(payload)
