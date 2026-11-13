@@ -115,6 +115,9 @@ error (`role="alert"`, what failed plus retry), and the real content.
 - Focus: 2px `--accent` outline, offset 3px, always visible for keyboard.
 - Icons: `lucide-react`, 15px at stroke 1.75 (13-14px inside dense rows). An icon set is all or
   nothing within one list: either every row has one or none does.
+- Brand: the approved grid S symbol from `new_logo.png`, with transparent ground and the
+  existing accent/ink-2/ink-3 neutrals. Show it at 22-24px beside the `SojaFit` link text;
+  do not clip its cells with a rounded image container.
 - Tables <= 820px become stacked cards with `data-label`; no horizontal page scroll at 390px.
 - Before the first question a review shows only its title and composer (`review-idle`); circuit,
   checks and properties appear once a review starts.
