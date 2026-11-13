@@ -1,0 +1,26 @@
+# v3 gate below-threshold demo (offline, no LLM/DB/server)
+# date: 2026-11-13  commit: 39a57f0
+# command: .venv/bin/python evals/results/d10/mutation/v3_gate_demo.py . evals/results/d10/v3_gate_fail_2026-11-13.txt .venv/bin/python
+# each case runs: python -m evals.runners.gate_report evals/dataset_v3.jsonl <temp folder with mutated set1.json>   (thresholds: --min 0.95 --max-error 0.05 --p95 10)
+# base: evals/results/graph/2026-11-12-d9-improve2/set1.json (50 rows, unmodified in repo; mutations are applied to temp copies only)
+
+## unmodified stored result (expect pass, EXIT:0)
+set1	정답 1.0	거절 1.0	지어냄 0.0	틀린답 0.0	과잉거절 0.0	검색 문서 1.0/1.0 쪽 1.0/0.9524	p50 4.9 p95 10.0	미달 없음	실패 []
+EXIT:0
+
+## 3 irrelevant rows answered instead of refused (answer_metric=cited_gold)
+set1	정답 1.0	거절 0.88	지어냄 0.12	틀린답 0.0	과잉거절 0.0	검색 문서 1.0/1.0 쪽 1.0/0.9524	p50 4.9 p95 10.0	미달 ['irrelevant_refused', 'made_up_answer']	실패 ['v3-26', 'v3-27', 'v3-28']
+EXIT:1
+
+## 3 relevant rows over_refusal (answer_metric=over_refusal)
+set1	정답 0.88	거절 1.0	지어냄 0.0	틀린답 0.0	과잉거절 0.12	검색 문서 1.0/1.0 쪽 1.0/0.9524	p50 4.9 p95 10.0	미달 ['relevant_correct', 'over_refusal']	실패 ['v3-01', 'v3-02', 'v3-03']
+EXIT:1
+
+## latency_s=30 on 5 rows (p95 over 10s)
+set1	정답 1.0	거절 1.0	지어냄 0.0	틀린답 0.0	과잉거절 0.0	검색 문서 1.0/1.0 쪽 1.0/0.9524	p50 5.2 p95 30.0	미달 ['p95_s']	실패 []
+EXIT:1
+
+## 4 relevant rows lose retrieval evidence (tasks=[] and answer empty)
+set1	정답 1.0	거절 1.0	지어냄 0.0	틀린답 0.0	과잉거절 0.0	검색 문서 0.8095/0.8095 쪽 0.8095/0.7619	p50 4.9 p95 10.0	미달 ['doc_recall@5', 'doc_mrr', 'page_recall@5', 'page_mrr']	실패 []
+EXIT:1
+

@@ -444,7 +444,8 @@ SojaFit (proj3-b)
 │   │       ├── draft_30_review.md  <- 30건 초안의 질문·가정·예상 답 검수 목록
 │   │       ├── draft_50_review.md  <- 50건 검토표와 합의 기록
 │   │       ├── draft_v2add_20_review.md  <- 20건 검토표와 1·2차 사람 판정 기록
-│   │       └── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
+│   │       ├── second_pass_50_review.md  <- 11-02 동결 전 보조 검증 기록
+│   │       └── v3_judging_record.md  <- v3 50건 판정 역할(초안 Codex·하정운, 1차 심태현, 최종 하정운) 사후 기록
 │   └── results/            <- 평가 원시 결과. <무엇>_<날짜>.json을 주제 폴더에
 │       ├── d10/            <- Checkpoint D10 점검 증거: 인젝션 기준 검사 출력, 변이 28건 결과와 재현 스크립트, 비밀값 검사(원시 파일은 폴더 README.md가 설명)
 │       ├── retrieval/      <- 검색 지표: v1 기준선(run_retrieval), D3·R1·서비스 경로 측정, 층별 재측정(11-03)
@@ -682,7 +683,9 @@ SojaFit (proj3-b)
 │   │   ├── EVAL.md         <- 폴더 설명
 │   │   ├── import_human_review.py  <- 채점 시트의 O/X 표를 실측 JSONL 새 사본의 human_review로 옮기고 assistant 잠정과의 일치율 출력
 │   │   ├── stage_report.py  <- run_gate 결과의 단계별 p50 · p95 · 호출당 · 문항당 비용 집계(진짜 중앙값 · 가장 가까운 순위 p95)
-│   │   └── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
+│   │   ├── approval_wait_report.py  <- 사람 대기(재개 · 승인)를 서버 처리 시간과 떼어 DB 시각에서 읽는 읽기 전용 보고
+│   │   ├── chunk_source_check.py  <- 표·수치 청크 표본을 원본 PDF 같은 쪽과 대조(D10 증거)
+│   │   └── tally_codex_v3.py  <- Codex v3 50건 답을 정답과 규칙으로 대조한 집계
 │   ├── smoke/              <- 로컬 compose · 배포 주소의 정상 사용자 흐름을 HTTP로 한 번 돌려 보는 점검
 │   │   ├── SMOKE.md        <- 폴더 설명
 │   │   ├── http_smoke.py   <- 로그인 → 데모 회로 프로젝트 → 판정 질문 · 조건 재개 → 승인 · 견적 → 다른 계정 404를 요청마다 상태 · error.code · request_id · ms로 기록
@@ -819,9 +822,11 @@ SojaFit (proj3-b)
     │   │   ├── to-be-erd.md    <- 목표 ERD(추천안과 보류안)
     │   │   ├── to-be-tables.md <- 목표 표 정의서 + 현재와의 차이
     │   │   └── to-be-impact.md <- 파일:함수 단위 영향 지도 · 단계별 비용 · ADR 후보
-    │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]·[2]·[4])
+    │   └── evidence/       <- 시장 근거 원자료 복사본(docs/TOPIC.md 각주 [1]~[4])
     │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
     │       ├── job-postings-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
+    │       ├── candidate-g-market-saturation.md  <- 후보 G 시장 포화 비교(원본 이름 후보 G 시장 포화 비교.md)
+    │       ├── candidate-circuit-role-substitution.md  <- 1차 관문 회로 역할 대체 조사(원본 이름 1차관문-회로역할대체.md)
     │       ├── corpus/     <- 공개 문서·다이오드 데이터시트 조각 수 실측
     │       │   ├── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
     │       │   ├── manifest_diode.json  <- 데이터시트 41건 627조각
@@ -838,10 +843,14 @@ SojaFit (proj3-b)
     │   ├── ai_tools_log.md <- AI 코딩 도구 사용 기록
     │   ├── failure_analysis.md  <- 실패 사례 분석 글
     │   ├── demo_script.md  <- 시연 영상 초안 스크립트(D10, 영상 파일은 별도)
+    │   ├── submission_checklist.md  <- 제출 체크리스트(항목별 증거 경로·상태)
     │   ├── portfolio.md    <- 포트폴리오 1장 양식
     │   ├── portfolio-jeongun.md  <- 하정운 포트폴리오 초안
     │   ├── portfolio-<이름>.md  <- 다른 조원 포트폴리오(예정)
-    │   └── langfuse/       <- Langfuse 대시보드 스크린샷 3장 이상(트레이스 상세 1장 포함, 지금은 .gitkeep)
+    │   └── langfuse/       <- Langfuse 스크린샷 3장(11-13 배포본). 설명은 DELIVERABLES.md "Langfuse 스크린샷" 절
+    │       ├── 01-trace-list.jpg  <- 배포본 루트 트레이스 목록(환경 default, 입출력 마스킹)
+    │       ├── 02-model-call-detail.jpg  <- Spec · RAG 에이전트가 함께 나온 트레이스 타임라인과 RAG 모델 호출 상세
+    │       └── 03-cost-dashboard.jpg  <- Langfuse 비용 대시보드(최근 1일)
     └── worklog/            <- 조원별 작업 기록. 한 사람에 파일 하나, 소문자 이름
         ├── WORKLOG.md      <- 폴더 설명과 기록 형식
         ├── jeongun.md      <- 하정운(조장·오케스트레이터)

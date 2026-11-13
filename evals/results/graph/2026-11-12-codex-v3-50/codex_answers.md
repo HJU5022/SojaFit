@@ -1,6 +1,6 @@
 # Codex 답 — 동결 v3 50문항 (2026-11-12)
 
-입력: [`evals/samples/v3_50_codex_paste.md`](../../../samples/v3_50_codex_paste.md) (정답·채점 없음).  
+입력: [`evals/guides/v3_50_codex_paste.md`](../../../guides/v3_50_codex_paste.md) (정답·채점 없음).  
 모델: Codex(사용자 실행). 우리 서비스 원시: `../2026-11-12-d9-improve2/set1.json`(같은 날 HEAD 확인 세트).
 
 아래는 사용자가 받은 Codex 답을 문항 id 순으로 옮긴 것이다. 자동 채점하지 않았고, EVAL_REPORT 10장의 사람 요약용이다.

@@ -1,0 +1,38 @@
+[
+ {
+  "n": 50,
+  "relevant": 25,
+  "irrelevant": 25,
+  "relevant_correct": 1.0,
+  "irrelevant_refused": 1.0,
+  "made_up_answer": 0.0,
+  "wrong_answer": 0.0,
+  "over_refusal": 0.0,
+  "errors": 0,
+  "parts_correct": null,
+  "retrieval_n": 21,
+  "doc_recall@5": 1.0,
+  "doc_mrr": 1.0,
+  "page_recall@5": 1.0,
+  "page_mrr": 0.9762,
+  "page_any@5": 1.0,
+  "p50_s": 3.7,
+  "p95_s": 8.1,
+  "failed": [],
+  "below": [],
+  "set": "set1",
+  "meta": {
+   "git": "a3ad51e",
+   "model_env": {
+    "LAB_THINKING": "",
+    "LAB_THINKING_ON": "",
+    "LAB_NODE_MODELS": "",
+    "LAB_EFFORT": ""
+   },
+   "db": "postgres",
+   "llm_provider": "openrouter",
+   "claude_direct": true,
+   "session": "gate-dataset_v3-1113-1028-set1"
+  }
+ }
+]

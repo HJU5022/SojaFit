@@ -22,6 +22,7 @@
 | 2026-11-11 | Cursor | 서비스 DB 재설계, 새 Supabase `SojaFit_2`, Cloud Run 전환, 인젝션 HTTP, EVAL 6·8장 | 통합 pytest, 스모크 28단계 통과 28·실패 0, 구글 로그인 왕복. 코퍼스 4표만 이전. 채택 판정 하정운 | 스모크 실패 두 번은 B 계정 비밀번호 입력이었고 서비스 문제로 오인하기 쉬움. Langfuse export 403은 옛 리비전부터라 이번 변경과 무관 | `docs/worklog/jeongun.md:99` |
 | 2026-11-12 | Cursor | D9 증거 이관, Codex §10, 토큰 한도 5M/10M 배포, 제출 문서(EVAL_REPORT §11, 실패 분석, 시연 스크립트) | 단위 시험, 배포 `/health`, 기존 원시 JSON 링크. 영상·Langfuse 캡처·T4 재측정은 하지 않았다 | 기록 없음 | `backend/conversations/memory_service.py:55`, `docs/worklog/jeongun.md:47` |
 | 2026-11-12 | Codex | 동결 v3 50문항 비교 답변 작성 | 답변 50건을 문서화하고 서비스 답변과 5문항을 비교했다. Codex 답변 자동 채점은 하지 않았다 | 기록 없음 | [평가 리포트 10절](../../EVAL_REPORT.md), `docs/worklog/jeongun.md:47-49` |
+| 2026-11-13 | Claude(서브에이전트, Sonnet; 사용 사실은 하정운 진술, 사후 기록) | 증거 스크립트 3개 작성: 표·수치 청크 123개와 원본 PDF 대조(`chunk_source_check.py`), Codex v3 50문항 규칙 집계(`tally_codex_v3.py`), v3 게이트 기준 미달 사본 실패 시연(`v3_gate_demo.py`) | 스크립트와 결과 파일이 저장소에 있다. 청크 대조는 첫 실행 불일치 8건이 전부 검사기 오탐이었음을 확인해 검사기를 고쳤고, 숫자를 바꾼 가짜 청크 110개로 검사기가 83~86%만 잡는 한계를 측정했다. 집계는 규칙이 못 가린 5건을 사람 판정으로 남겼고, 하정운이 2026-11-13에 판정했다(`human_judgments.jsonl`). 스크립트 채택 판정자는 기록 없음 | 청크 대조 검사기 첫 버전이 PDF 머리글의 품번 분리와 긴 라벨을 불일치로 오판(8건, 수정 후 0건) | [chunk_source_check/README.md](../../evals/results/d10/chunk_source_check/README.md), [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md), [v3_gate_fail_2026-11-13.txt](../../evals/results/d10/v3_gate_fail_2026-11-13.txt) |
 
 Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 표시(`Co-authored-by: Cursor`)가 있다 [실측: `git log --grep`].
 
@@ -49,3 +50,6 @@ Cursor는 2026-11-11~12의 하정운(HJU5022) 커밋 29건에 공동 작성자 �
 - 2026-11-09~10 Cursor 행은 `Co-authored-by: Cursor` 표시가 없다. 이 표시가 있는 29건은 모두 11-11과 11-12 커밋이다.
 - 11-06 판정 에이전트 행은 구현 4건을 한 행에 묶었다. 검증 문구를 일 단위로 나눌 근거가 작업 기록에 없어 나누지 않았다.
 - 표의 시험 통과 수(567, 680), 표본 수, 부품 수는 작업 기록의 값을 옮긴 것으로 재실행하지 않았다.
+- 2026-11-13 Claude 행: 도구가 Sonnet 서브에이전트였다는 것은 하정운 진술이며 저장소 파일로는 증명되지 않는다. 같은 날 인용 검사(citation-check) 브랜치에도 썼다고 들었으나 저장소에서 그 브랜치나 커밋을 찾지 못해 행에 넣지 않았다. 브랜치 이름과 커밋을 확인한 뒤 행을 더해야 한다.
+- 2026-11-13 Claude 행의 채택 판정자와 검증 범위(스크립트 재실행 여부)는 기록이 없다.
+- Codex 실행 환경은 [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 6절에 적었다(Codex 웹, 웹 접근 켬, 저장소 미연결, 실행 하정운, 하정운 진술 사후 기록). Codex 버전·모델명·추론 설정은 미기록이다.

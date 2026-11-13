@@ -22,5 +22,6 @@
 | `reviews/draft_50_review.md` | 검수 기록 | 50건 검토표와 합의 기록 |
 | `reviews/draft_v2add_20_review.md` | 검수 기록 | v2 추가 20건 검토표와 1·2차 사람 판정 기록 |
 | `reviews/second_pass_50_review.md` | 검수 기록 | 동결 전 보조 검증. 원시 기록은 `../results/drafts/draft50_second_pass_2026-11-02.json` |
+| `reviews/v3_judging_record.md` | 검수 기록 | v3 50건의 판정 역할(초안 Codex·하정운, 1차 심태현, 최종 하정운). 11-13 사후 작성 |
 
 판정 출처: `sets/draft_v2add_20.jsonl`은 Codex가 출제하고 정답 초안을 썼다. 사람 판정은 1차 하정운, 2차 김재훈이며 `review` 필드에 있다.
