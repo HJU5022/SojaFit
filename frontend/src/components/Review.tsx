@@ -165,8 +165,8 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
         <textarea id="question" ref={input} rows={2} readOnly={attachments.busy} aria-describedby="composer-hint" value={chat.text} onChange={event => chat.setText(event.target.value)} onKeyDown={onKey} placeholder={waiting ? "위 조건 질문에 먼저 답하거나 '모두 모름으로 계속'을 눌러 주세요." : "후보 품번과 사용 조건을 적어 주세요."} />
         <input ref={picker} type="file" accept=".net,.txt" multiple hidden onChange={event => { attachments.attach(Array.from(event.target.files ?? [])); event.target.value = '' }} />
           <button type="button" className="btn btn-icon" disabled={running || chat.loading || attachments.busy} onClick={() => picker.current?.click()} aria-label="파일 첨부 (.net, .txt)" title="파일 첨부 (.net, .txt)"><Paperclip aria-hidden="true" /></button>
-        {running ? <button type="button" className="btn btn-icon" onClick={chat.stream.cancel} aria-label="응답 받기 중단"><Square aria-hidden="true" /></button>
-          : <button className="btn btn-icon" disabled={chat.loading || attachments.busy || (!attachmentPending && (waiting || !chat.text.trim()))} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
+        {running && state.status !== 'stopped' && state.status !== 'failed' ? <button type="button" className="btn btn-icon" onClick={chat.stream.cancel} aria-label="응답 받기 중단"><Square aria-hidden="true" /></button>
+          : <button className="btn btn-icon" disabled={running || chat.loading || attachments.busy || (!attachmentPending && (waiting || !chat.text.trim()))} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
       </form>
       {chat.files.length > 0 && <ul className="chips" aria-label="첨부한 파일">{chat.files.map((file, index) => <li key={`${file.name}-${index}`}><FileText aria-hidden="true" /><span>{file.name}</span>
         <button type="button" className="icon-btn" disabled={attachments.busy} aria-label={`${file.name} 첨부 취소`} onClick={() => chat.setFiles(chat.files.filter((_, at) => at !== index))}><X aria-hidden="true" /></button></li>)}</ul>}
@@ -178,7 +178,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       <header className="doc-head">
         <h1><span className="ref">{target.ref}</span><span>{target.value}</span></h1>
       </header>
-      <p className="doc-lead">{running ? '검토 중입니다. 결과를 받으면 대화에서 확인할 수 있습니다.' : `${target.ref}을 다른 부품으로 바꿔도 되는지 검토합니다. 후보 품번과 사용 조건을 적어 보내세요.`}</p>
+      <p className="doc-lead">{state.status === 'stopped' ? '응답 수신을 중단했습니다. 실행 상태를 확인해 주세요.' : running ? '검토 중입니다. 결과를 받으면 대화에서 확인할 수 있습니다.' : `${target.ref}을 다른 부품으로 바꿔도 되는지 검토합니다. 후보 품번과 사용 조건을 적어 보내세요.`}</p>
       {result && <p className="fine">같은 동작은 보장하지 않습니다. 판정은 데이터시트 값과 입력한 조건으로 계산한 결과입니다.</p>}
 
       <section aria-labelledby="circuit-title"><div className="section-head"><h2 id="circuit-title">회로</h2><span>선택 부품의 연결</span></div>
@@ -199,12 +199,18 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
             <button className="activity-turn" aria-current={picked === null ? 'true' : undefined} onClick={() => chat.setPicked(null)}>{live.question}</button>
           </div></div>
             {stages.length > 0 && <ol className="activity-steps" aria-label="AI 진행 상태">{stages.map((stage, index) => <li className="activity-stage" key={stage}>
-              {index === stages.length - 1 && running ? <LoaderCircle className="spin" aria-hidden="true" /> : index === stages.length - 1 && state.status !== 'completed' ? <CircleDashed aria-hidden="true" /> : <Check aria-hidden="true" />}<span>{stage}</span>
+              {index === stages.length - 1 && state.status === 'running' ? <LoaderCircle className="spin" aria-hidden="true" /> : index === stages.length - 1 && state.status !== 'completed' ? <CircleDashed aria-hidden="true" /> : <Check aria-hidden="true" />}<span>{stage}</span>
             </li>)}</ol>}
             {!turn && response}</li>}
           {!history.length && !live && !chat.loading && <li className="activity-stage"><CircleDashed aria-hidden="true" /><span>아직 질문이 없습니다. 아래 예시로 시작할 수 있습니다.</span></li>}
         </ol>
-        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{live && (running ? `AI: ${stages[stages.length - 1] || '검토 시작'}` : state.status === 'completed' ? '검토 결과를 받았습니다.' : state.status === 'requires_input' ? '추가 입력이 필요합니다.' : state.status === 'failed' ? '실행에 실패했습니다.' : state.status === 'refused' ? '답변이 거절되었습니다.' : '')}</div>
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">{live && (state.status === 'stopped' ? '응답 수신 중단' : running ? `AI: ${stages[stages.length - 1] || '검토 시작'}` : state.status === 'completed' ? '검토 결과를 받았습니다.' : state.status === 'requires_input' ? '추가 입력이 필요합니다.' : state.status === 'failed' ? '실행에 실패했습니다.' : state.status === 'refused' ? '답변이 거절되었습니다.' : '')}</div>
+        {state.status === 'stopped' && <div className="notice"><p>응답 수신 중단. 서버의 검토는 계속될 수 있습니다. 상태를 확인한 뒤 다음 질문을 보내 주세요.</p>
+          {state.checking === false && !state.error && <p>서버에서 아직 검토 중입니다. 잠시 후 실행 상태를 다시 확인해 주세요.</p>}
+          {state.error && <p role="alert" {...requestIdProps(state.error)}>실행 상태를 확인하지 못했습니다. {errorMessage(state.error)}</p>}
+          {state.runId ? <button className="btn" disabled={state.checking} onClick={() => void chat.stream.refresh(state.runId, true)}><RotateCw aria-hidden="true" />{state.checking ? '실행 상태 확인 중' : '실행 상태 다시 확인'}</button>
+            : <><p>실행 번호를 받기 전에 중단했습니다. 대화를 새로고침해 저장된 상태를 확인해 주세요. 작성 중인 질문은 지워집니다.</p><button className="btn" onClick={() => window.location.reload()}>대화 새로고침</button></>}
+        </div>}
         {state.status === 'failed' && <div className="notice" role="alert"><p {...requestIdProps(state.error)}>검토 실행에 실패했습니다. {errorMessage(state.error)}{!state.runId && ' 아래 질문을 입력해 다시 보내 주세요.'}</p>{state.runId && <button className="btn" onClick={() => void chat.stream.refresh(state.runId!)}><RotateCw aria-hidden="true" />실행 상태 다시 확인</button>}</div>}
         {run.error && <div className="notice" role="alert"><p {...requestIdProps(run.error)}>검토 결과를 불러오지 못했습니다. {errorMessage(run.error)}</p><button className="btn" onClick={() => void run.refetch()}>결과 다시 불러오기</button></div>}
         {state.status === 'requires_input' && state.error && <div className="notice" role="alert"><p {...requestIdProps(state.error)}>검토를 계속하지 못했습니다. {errorMessage(state.error)}</p><p className="fine">분석은 자동으로 다시 실행하지 않습니다.</p></div>}

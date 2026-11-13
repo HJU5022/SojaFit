@@ -6,6 +6,7 @@ import type { InterruptDto, ResultDto, StreamEvent } from '../api/conversations'
 export type RunState =
   | { status: 'idle' }
   | { status: 'running'; runId: string; stage: string }
+  | { status: 'stopped'; runId: string; checking?: boolean; error?: ApiError }
   | { status: 'requires_input'; runId: string; interrupt: InterruptDto; error?: ApiError }
   | { status: 'completed' | 'refused'; runId: string; result: ResultDto }
   | { status: 'failed'; runId?: string; error: ApiError }
@@ -96,19 +97,25 @@ export function useRunStream() {
     }
     if (!active.signal.aborted) setState({ status: 'failed', runId: runId || undefined, error: publicError(failure) })
   }, [])
-  const refresh = useCallback(async (runId: string) => {
+  const refresh = useCallback(async (runId: string, readOnly = false) => {
     controller.current?.abort()
     const active = new AbortController()
     controller.current = active
+    if (readOnly) setState({ status: 'stopped', runId, checking: true })
     try {
-      const run = await recoverRun(runId, requestSignal(active.signal))
+      const run = await (readOnly ? getRun : recoverRun)(runId, requestSignal(active.signal))
       if (!active.signal.aborted) setState(run.result.status === 'running'
-        ? { status: 'failed', runId, error: pending(run.result.request_id) } : restored(runId, run.result))
+        ? readOnly ? { status: 'stopped', runId, checking: false } : { status: 'failed', runId, error: pending(run.result.request_id) }
+        : restored(runId, run.result))
     } catch (error) {
-      if (!active.signal.aborted) setState({ status: 'failed', runId, error: publicError(error) })
+      if (!active.signal.aborted) setState(readOnly ? { status: 'stopped', runId, checking: false, error: publicError(error) }
+        : { status: 'failed', runId, error: publicError(error) })
     }
   }, [])
-  const cancel = useCallback(() => controller.current?.abort(), [])
+  const cancel = useCallback(() => {
+    controller.current?.abort()
+    setState(current => current.status === 'running' ? { status: 'stopped', runId: current.runId } : current)
+  }, [])
   const restore = useCallback(async (runId: string) => {
     controller.current?.abort()
     const active = new AbortController()

@@ -252,6 +252,50 @@ const savedThread = (id = 't1', projectId = 1, ref = 'D1') => ({ id, project_id:
   messages: [{ id: 1, run_id: `run-${id}`, role: 'user', content: `${id} 저장된 질문`, created_at: '' }] })
 const savedRun = (id: string) => ({ id, thread_id: id.replace('run-', ''), message_id: 2,
   result: { answer: `${id} 저장된 답변`, status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: '' } })
+
+it('shows reception stopped, blocks duplicate analysis, and restores the result with GET while preserving the draft', async () => {
+  const posts: string[] = []
+  let finish!: (response: Response) => void
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
+    if (path === '/api/threads/t1/runs') return new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode('event: run_started\ndata: {"run_id":"stopped-run"}\n\n'))
+      init.signal?.addEventListener('abort', () => controller.error(init.signal?.reason), { once: true })
+    } }))
+    if (path === '/api/runs/stopped-run') return new Promise<Response>(resolve => { finish = resolve })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('D1'))
+  fireEvent.change(input, { target: { value: 'D1 질문' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  await screen.findByText('AI: 입력 확인')
+  fireEvent.click(screen.getByRole('button', { name: '응답 받기 중단' }))
+  expect(screen.getByText(/응답 수신 중단\. 서버의 검토/)).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '응답 받기 중단' })).not.toBeInTheDocument()
+  expect(document.querySelector('.activity-steps .spin')).toBeNull()
+  expect(screen.queryByText('검토 중입니다. 결과를 받으면 대화에서 확인할 수 있습니다.')).not.toBeInTheDocument()
+  fireEvent.change(input, { target: { value: '다음 질문 초안' } })
+  fireEvent.keyDown(input, { key: 'Enter' })
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeDisabled()
+  expect(posts).toEqual(['/api/threads/t1/runs'])
+  fireEvent.click(screen.getByRole('button', { name: '실행 상태 다시 확인' }))
+  expect(screen.getByRole('button', { name: '실행 상태 확인 중' })).toBeDisabled()
+  finish(Response.json({ ...savedRun('stopped-run'), result: { ...savedRun('stopped-run').result, status: 'running' } }))
+  expect(await screen.findByText('서버에서 아직 검토 중입니다. 잠시 후 실행 상태를 다시 확인해 주세요.')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: '실행 상태 다시 확인' }))
+  finish(Response.json(savedRun('stopped-run')))
+  expect(await screen.findByText('stopped-run 저장된 답변')).toBeInTheDocument()
+  expect(input).toHaveValue('다음 질문 초안')
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
+  expect(posts).toEqual(['/api/threads/t1/runs'])
+})
+
 function savedApi(detail: (id: string) => Response | Promise<Response> = id => Response.json(savedThread(id, id === 't2' ? 2 : 1))) {
   const writes: string[] = []
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })

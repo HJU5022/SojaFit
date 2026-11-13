@@ -21,7 +21,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [picked, setPicked] = useState<number | null>(null)
   const liveThread = useRef<string | null>(null)
   const state = stream.state
-  const running = state.status === 'running' || sending || (state.status === 'failed' && state.error.code === 'RUN_STATUS_PENDING')
+  const running = state.status === 'running' || state.status === 'stopped' || sending || (state.status === 'failed' && state.error.code === 'RUN_STATUS_PENDING')
   const waiting = state.status === 'requires_input'
 
   useEffect(() => {
