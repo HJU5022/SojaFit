@@ -28,6 +28,7 @@ read -rs SMOKE_A_PASSWORD && export SMOKE_A_PASSWORD
 read -rs SMOKE_B_PASSWORD && export SMOKE_B_PASSWORD
 uv run python scripts/smoke/http_smoke.py --base-url https://<배포 주소>            # 어림 호출 수만 찍고 멈춤(종료 코드 2)
 uv run python scripts/smoke/http_smoke.py --base-url https://<배포 주소> --confirm-live
+uv run python scripts/smoke/http_smoke.py --base-url https://<배포 주소> --confirm-live --pause-before-resume --upload   # 4단계 뒤 멈춤 → 서버 재시작 → Enter로 재개(G4). --upload: DEMO_MODE=0 배포본은 데모 회로가 404라 넷리스트를 올려 프로젝트를 만든다
 ```
 
 종료 코드: 모두 통과 0, 통과 못 한 단계가 있으면 1, 요청 전에 멈추면 2.
