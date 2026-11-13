@@ -556,7 +556,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 
 ## 10. 대체재와의 비교
 
-동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다(2절 평가셋 표 "정답을 정한 사람과 기준" 칸이 정본). 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 쓰인 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/guides/v3_50_codex_paste.md`](evals/guides/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, Codex 쪽은 자동 채점하지 않았다.
+동결 v3 50문항을 범용 코딩 에이전트 Codex와 우리 서비스에 같은 날 넣었다. v3 정답 초안은 Codex가 작성했고 판정자는 1차 심태현·최종 하정운이다(2절 평가셋 표 "정답을 정한 사람과 기준" 칸이 정본). 정답 초안 작성 세션의 원본은 저장소 밖에 있다. Codex가 정답 초안 작성과 비교 대상 양쪽에 쓰인 점은 비교 결과를 해석할 때 고려해야 한다. Codex 입력은 [`evals/guides/v3_50_codex_paste.md`](evals/guides/v3_50_codex_paste.md)(정답·채점 없음), Codex 답 전문은 [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md), 우리 서비스 원시는 [`evals/results/graph/2026-11-12-d9-improve2/set1.json`](evals/results/graph/2026-11-12-d9-improve2/set1.json)(50/50, cited_gold 25 · correct_refusal 25). 아래 5행은 품질·거절·근거 차이를 보이기 위한 표본이며, 이 표의 Codex 칸은 채점이 아니라 답의 요약이다. 50문항 집계는 표 아래에 있다.
 
 | # | 질문(요약) | 판정 기준 | Codex | 우리 서비스 | 차이 |
 |---|---|---|---|---|---|
@@ -565,6 +565,10 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 3 | v3-10 · D4를 SMAJ6.0CA로 바꿔도 되나 | 불충족: 기존 단방향과 후보 양방향이 다르고 정격 IPP 기준 VC MAX 10.3V가 허용 9.2V를 초과. | 보호 조건 유지 불가. CA는 양방향이라 음의 과도 동작이 달라지고 클램프 10.3V는 허용 9.2V도 미보장 | `SMAJ6.0CA: 불충족`. VRWM·클램프·방향 기준을 표로 판정. `cited_gold` | 결론은 같음. 방향(단방향/양방향) 차이를 핵심으로 봄 |
 | 4 | v3-26 · 릴레이 K1 대체 후보를 골라 달라 | 다이오드 코퍼스 범위 밖인 릴레이 후보를 제시하지 않는다. | 다이오드 검토 범위 밖. 접점 AC/DC·부하·구성·절연이 없어 후보를 승인하지 않음 | 거절. “데이터시트에서 확인하지 못했어요… 품번·주문 코드를 알려 주세요”. `correct_refusal` | 둘 다 거절. Codex는 범위 밖·부족 스펙을 말하고, 우리는 품번 부족형 일반 거절에 가깝다 |
 | 5 | v3-45 · S1A SERIES_S2202.pdf만으로 S1J 정격을 확인 | 요청 판본이 코퍼스에 없으면 다른 판본의 수치로 대신하지 않는다. | 지정 판본을 못 확인해 수치를 답하지 않음. S2102를 S2202 값으로 대신 쓰지 않음 | 거절. “요청하신 판(S2202)의 데이터시트가 없어요”. `correct_refusal` | 결론은 같음. 잘못된 개정판 수치 대체를 막는 거절 |
+
+50문항 전체에 대한 Codex 집계는 [`TALLY.md`](evals/results/graph/2026-11-12-codex-v3-50/TALLY.md)(문항별 [`tally.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/tally.jsonl), 재현 `scripts/eval/tally_codex_v3.py`)에 있다. 규칙 기반이며 LLM 판정은 쓰지 않았다. 규칙으로 정답·올바른 거절이 확정된 것은 43건, 오답 1건(v3-04), 과잉 거절 1건(v3-24), 사람 판정 필요 5건(v3-22·23·25·29·34)이다. 사람 판정 5건은 조장(하정운)이 2026-11-13에 판정했다([`human_judgments.jsonl`](evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)): v3-22·23·25 오답(넷리스트 확인 없이 연결을 추정), v3-29·34 올바른 거절. 최종 Codex 45/50(관련 정답 20 · 오답 4 · 과잉 거절 1, 비관련 올바른 거절 25), 우리 서비스는 50/50(`d9-improve2`)이다.
+
+두 쪽의 채점 기준은 같지 않다. 우리 서비스는 답이 인용한 (PDF, 쪽)이 정답 근거와 일치하는지까지 채점기가 보고, Codex는 쪽 인용이 없어 결론의 방향과 핵심 값만 규칙으로 봤다. Codex는 정답 초안 작성에도 쓰였다. 후보 찾기 5건은 열린 정답 규칙에서 모두 정답이지만 재현율이 낮다(v3-11 2/16, v3-12 2/25, v3-13 2/2, v3-14 3/6, v3-15 2/4). Codex는 한 번만 실행했고 원본 대화 로그는 저장소에 없다. Codex 실행 환경은 TALLY.md 6절(Codex 웹, 웹 접근 켬, 저장소 미연결, 실행 하정운)이다.
 
 ## 11. 지금 이 서비스의 가장 큰 약점
 
