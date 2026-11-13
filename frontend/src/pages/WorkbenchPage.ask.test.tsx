@@ -253,6 +253,112 @@ const savedThread = (id = 't1', projectId = 1, ref = 'D1') => ({ id, project_id:
 const savedRun = (id: string) => ({ id, thread_id: id.replace('run-', ''), message_id: 2,
   result: { answer: `${id} 저장된 답변`, status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: '' } })
 
+it('loads earlier messages after a failed page request without losing selection, draft, or existing replies', async () => {
+  const paths: string[] = []
+  const writes: string[] = []
+  let finish!: (response: Response) => void
+  let resize!: () => void
+  vi.stubGlobal('ResizeObserver', class {
+    callback: () => void
+    constructor(callback: () => void) { this.callback = callback }
+    observe(element: Element) { if (element.classList.contains('chat-content')) resize = this.callback }
+    disconnect() {}
+  })
+  const messages = Array.from({ length: 100 }, (_, index) => ({ id: index + 1, run_id: `run-${Math.floor(index / 2) + 1}`,
+    role: index % 2 ? 'assistant' : 'user', content: index % 2 ? '보관된 답변' : `질문 ${Math.floor(index / 2) + 1}`, created_at: '' }))
+  network((path, init) => {
+    paths.push(path)
+    if (init.method === 'POST') writes.push(path)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: messages.slice(50), next_before_message_id: 51 })
+    if (path === '/api/threads/t1?before_message_id=51') return new Promise<Response>(resolve => { finish = resolve })
+    if (path.startsWith('/api/runs/')) return Response.json(path.endsWith('/run-26') ? candidateRun('run-26') : savedRun(path.split('/').pop()!))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  const selected = await screen.findByRole('button', { name: '질문 26' })
+  fireEvent.click(selected)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const sidebar = screen.getByRole('tabpanel', { name: 'SS34L · 질문 1' })
+  sidebar.scrollTop = 55
+  const area = screen.getByRole('article', { name: '대화 기록' })
+  let scrollTop = 80
+  let extraHeight = 0
+  Object.defineProperty(area, 'scrollTop', { get: () => scrollTop, set: value => { scrollTop = value } })
+  Object.defineProperty(area, 'getBoundingClientRect', { value: () => ({ top: 0 }) })
+  Object.defineProperty(selected.closest('li'), 'getBoundingClientRect', { value: () => ({
+    top: (screen.queryByRole('button', { name: '질문 1' }) ? 1200 : 200) + extraHeight - scrollTop, bottom: 300,
+  }) })
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '작성 중인 질문' } })
+  expect(screen.queryByRole('button', { name: '질문 1' })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: '이전 대화 불러오기' }))
+  expect(screen.getByRole('button', { name: '이전 대화 불러오는 중' })).toBeDisabled()
+  finish(failure('UNAVAILABLE', '일시적 조회 실패', 503))
+  expect(await screen.findByRole('alert')).toHaveTextContent('이전 대화를 불러오지 못했습니다.')
+  expect(selected).toHaveAttribute('aria-current', 'true')
+  expect(screen.getByRole('button', { name: '질문 26' })).toBe(selected)
+  expect(input).toHaveValue('작성 중인 질문')
+  fireEvent.click(screen.getByRole('button', { name: '이전 대화 다시 불러오기' }))
+  // Include the boundary run twice to verify it is not rendered twice.
+  finish(Response.json({ ...savedThread(), messages: [...messages.slice(0, 50), messages[50]], next_before_message_id: null }))
+  await screen.findByRole('button', { name: '질문 1' })
+  expect(screen.queryByRole('button', { name: /이전 대화.*불러/ })).toBeNull()
+  expect(screen.queryByRole('alert')).toBeNull()
+  expect(selected).toHaveAttribute('aria-current', 'true')
+  expect(screen.getAllByRole('button', { name: '질문 26' })).toHaveLength(1)
+  expect(screen.getByRole('button', { name: '질문 50' })).toBeInTheDocument()
+  expect(input).toHaveValue('작성 중인 질문')
+  expect(await screen.findByText('run-1 저장된 답변')).toBeInTheDocument()
+  expect(scrollTop).toBe(1080)
+  extraHeight = 80
+  act(() => resize())
+  expect(scrollTop).toBe(1160)
+  fireEvent.wheel(area)
+  extraHeight = 160
+  act(() => resize())
+  expect(scrollTop).toBe(1160)
+  expect(screen.getByRole('tabpanel', { name: 'SS34L · 질문 26' })).toBe(sidebar)
+  expect(sidebar.scrollTop).toBe(55)
+  expect(writes).toEqual([])
+  expect(paths.filter(path => path.includes('before_message_id'))).toEqual(['/api/threads/t1?before_message_id=51', '/api/threads/t1?before_message_id=51'])
+})
+
+it('keeps paging through an assistant-only boundary until the older question is available', async () => {
+  const reads: string[] = []
+  savedApi(id => {
+    reads.push(id)
+    if (id === 't1?before_message_id=51') return Response.json({ ...savedThread(),
+      messages: [{ id: 50, run_id: 'old', role: 'assistant', content: '오래된 답변', created_at: '' }], next_before_message_id: 50 })
+    if (id === 't1?before_message_id=50') return Response.json({ ...savedThread(),
+      messages: [{ id: 49, run_id: 'old', role: 'user', content: '오래된 질문', created_at: '' }], next_before_message_id: null })
+    return Response.json({ ...savedThread(), next_before_message_id: 51 })
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '이전 대화 불러오기' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: '이전 대화 불러오기' })).toBeEnabled())
+  fireEvent.click(screen.getByRole('button', { name: '이전 대화 불러오기' }))
+  expect(await screen.findByText('오래된 질문')).toBeInTheDocument()
+  expect(await screen.findByText('old 저장된 답변')).toBeInTheDocument()
+  expect(screen.getByText('t1 저장된 질문')).toBeInTheDocument()
+  expect(reads.filter(id => id.includes('?'))).toEqual(['t1?before_message_id=51', 't1?before_message_id=50'])
+})
+
+it('ignores an old page that arrives after switching conversations', async () => {
+  let finish!: (response: Response) => void
+  const writes = savedApi(id => id === 't1?before_message_id=51' ? new Promise<Response>(resolve => { finish = resolve })
+    : Response.json({ ...savedThread(id), next_before_message_id: id === 't1' ? 51 : null }))
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '이전 대화 불러오기' }))
+  fireEvent.click(await screen.findByRole('button', { name: /t3 검토$/ }))
+  await screen.findByText('t3 저장된 질문')
+  await act(async () => { finish(Response.json({ ...savedThread(), next_before_message_id: null })); await Promise.resolve() })
+  expect(screen.queryByText('t1 저장된 질문')).toBeNull()
+  expect(screen.queryByRole('button', { name: /이전 대화.*불러/ })).toBeNull()
+  expect(screen.getByText('t3 저장된 질문')).toBeInTheDocument()
+  expect(writes).toEqual([])
+})
+
 it('shows reception stopped, blocks duplicate analysis, and restores the result with GET while preserving the draft', async () => {
   const posts: string[] = []
   let finish!: (response: Response) => void

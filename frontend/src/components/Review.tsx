@@ -79,6 +79,14 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
   const attachments = useNetlistFiles(chat.files, chat.setFiles, input, running || chat.loading, `${threadId}:${target.ref}`, chat.text, onAttach)
   const [selected, setSelected] = useState<DetailTab | null>(null)
   const [detailTabs, setDetailTabs] = useState<DetailTab[]>([])
+  useEffect(() => {
+    setDetailTabs(current => current.map(tab => {
+      const index = history.findIndex(item => item.runId === tab.runId)
+      if (index < 0) return tab
+      const label = `${tab.part ?? '문서 근거'} · 질문 ${index + 1}`
+      return label === tab.label ? tab : { ...tab, label }
+    }))
+  }, [history])
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [focusDetails, setFocusDetails] = useState(false)
   const detailTrigger = useRef<HTMLElement | null>(null)
@@ -103,7 +111,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
     observer.observe(element)
     return () => observer.disconnect()
   }, [nets])
-  const turn = picked !== null ? history[picked] : live ? null : history[history.length - 1]
+  const turn = picked !== null ? history.find(item => item.runId === picked) : live ? null : history[history.length - 1]
   const liveResult = !turn && (state.status === 'completed' || state.status === 'refused') ? state.result : undefined
   const runId = turn?.runId ?? (liveResult && 'runId' in state ? state.runId : '')
   const run = useQuery({ queryKey: ['run', runId], queryFn: ({ signal }) => getRun(runId!, signal), enabled: Boolean(runId), retry: false, staleTime: Infinity })
@@ -158,7 +166,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
     {attachments.dragging && <div className="attachment-drop-guide" role="status" aria-label="파일 놓기"><Paperclip aria-hidden="true" /><p>.net·.txt 파일을 놓으면 채팅에 첨부됩니다.</p><p className="fine">파일당 5 MiB 이하 · 전송 전에 확인할 수 있습니다.</p></div>}
     <div className="review-body" role="region" aria-label="검토 내용">
     <div className="review-main">
-    <ChatPane context={`${threadId}:${target.ref}`} input={input} composer={<>
+    <ChatPane context={`${threadId}:${target.ref}`} input={input} older={{ before: chat.before, loading: chat.loadingOlder, error: chat.olderError, load: chat.loadOlder }} composer={<>
       {attachments.error ? <div className="notice notice-dismissible" role="alert"><p>{errorMessage(attachments.error)}</p><button type="button" className="icon-btn" aria-label="첨부 안내 닫기" onClick={() => attachments.setError(null)}><X aria-hidden="true" /></button></div> : null}
       <form className="composer" onSubmit={(event) => { event.preventDefault(); void send() }}>
         <label className="sr-only" htmlFor="question">질문</label>
@@ -190,9 +198,9 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
       <section className="talk" aria-labelledby="activity-title"><h2 id="activity-title">활동</h2>
         <ol className="activity">
           {chat.loading && <li className="skeleton" role="status"><span className="sr-only">검토 기록을 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></li>}
-          {history.map((item, index) => <li className="activity-entry" key={`${item.runId}-${index}`}>
+          {history.map((item, index) => <li className="activity-entry" key={item.runId} data-turn={item.runId}>
             <div className="activity-message" role="group" aria-label={`내 메시지 ${index + 1}`}><div className="activity-body">
-              <button className="activity-turn" aria-current={turn === item ? 'true' : undefined} onClick={() => chat.setPicked(index)}>{item.question}</button>
+              <button className="activity-turn" aria-current={turn === item ? 'true' : undefined} onClick={() => chat.setPicked(item.runId)}>{item.question}</button>
             </div></div>{turn === item ? response : <PastReply runId={item.runId} selectedPart={selected?.runId === item.runId ? selected.part ?? undefined : undefined} onSelect={part => selectPart(item.runId, part, index)} onEvidence={() => selectPart(item.runId, null, index)} />}
           </li>)}
           {live && <li className="activity-entry"><div className="activity-message" role="group" aria-label={`내 메시지 ${history.length + 1}`}><div className="activity-body">
