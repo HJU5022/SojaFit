@@ -11,7 +11,12 @@ lives in `SPEC.md` at the repository root; this file only fixes the visual syste
   and card softness follow Claude Code's desktop app; table and divider crispness follow Codex.
 - What we take from it: density, the two-level ground, hairlines, quiet neutral controls.
 - What we do not take: its brand purple, its marketing gradients, its issue-tracker vocabulary.
-- The screen is a **review document**, not a chat app. The verdict leads; evidence follows.
+- The workbench uses a **conversation with selectable part details**: concise summaries and
+  part links in the conversation; the selected part's verdict, checks and evidence in the
+  properties panel. The landing page retains its review-document example.
+- Conversation messages use neutral bubbles: user on the right, AI on the left, with no
+  avatars, names or question headers. Keep long text left-aligned inside each bubble;
+  user bubbles use `--surface`, AI bubbles use `--hover` and a hairline border.
 - Owner's words: orderly, efficient, readable, premium, not flashy. Layout and emphasis matter most.
 
 ## 2. Colour
@@ -94,7 +99,7 @@ the workbench sizes. At <= 820px display drops to 28 / 36.
   Verdict colours are never used in charts.
 - Row height: `--row` 28px for rail rows, buttons, property rows; 40px for table body rows; 32px
   for text inputs; 44px minimum touch target <= 820px.
-- Radius: 4 (chips), 6 (controls, tables, cards), 8 (composer, menus), 10 (app panel, dialogs).
+- Radius: 4 (chips), 6 (controls, tables, cards), 8 (composer, menus), 10 (messages, app panel, dialogs).
 - Borders 1px. Elevation only on things that float (menu, dialog): one soft shadow, no glow.
 - Layout: rail 224px, document max 880px centred, properties column 280px, lists max 960px.
 - SVG diagrams render at natural size, 1px strokes on half-pixel coordinates with
@@ -114,6 +119,12 @@ error (`role="alert"`, what failed plus retry), and the real content.
 - Before the first question a review shows only its title and composer (`review-idle`); circuit,
   checks and properties appear once a review starts.
 - Every result shows "같은 동작은 보장하지 않습니다".
+- Keep the review composer in a separate bottom row while the conversation scrolls.
+  Show a down-arrow button above it when the conversation end is below the visible area;
+  jump only when requested, preserving the draft and attachments.
+- File dragging uses a neutral dashed overlay with no pointer capture or animation.
+  Keep attachment chips below the composer, scroll the list above 120px, and show pending
+  transfer availability beside the files.
 
 ## 6. Motion
 
