@@ -1,4 +1,6 @@
 """공개 웹 회로도 검색과 출처 분류를 검증한다."""
+import json
+
 import httpx
 import pytest
 
@@ -51,6 +53,52 @@ def test_public_search_discovers_unregistered_official_pdf(monkeypatch):
     assert source.source_type == "manufacturer_official"
     assert source.evidence_grade == 2
     assert source.manufacturer == "Adafruit Industries"
+
+
+@pytest.mark.parametrize("query", ["Raspberry Pi Pico", "라즈베리파이 피코"])
+def test_public_search_matches_korean_pico_name_to_english_candidate(monkeypatch, query):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_public_schematics
+
+    source_url = "https://www.raspberrypi.com/documentation/microcontrollers/pico-schematic.pdf"
+
+    def handle(request):
+        assert request.method == "POST"
+        assert "Raspberry Pi Pico" in json.loads(request.content)["query"]
+        return httpx.Response(200, json={"results": [{
+            "title": "Raspberry Pi Pico schematic",
+            "url": source_url,
+        }]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_public_schematics(query, client=client)
+
+    assert len(result) == 1
+    assert result[0].source_url == source_url
+    assert result[0].source_type == "manufacturer_official"
+
+
+def test_manufacturer_search_matches_korean_pico_name(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_manufacturer_schematics
+
+    source_url = "https://www.raspberrypi.com/documentation/microcontrollers/pico-schematic.pdf"
+
+    def handle(request):
+        body = json.loads(request.content)
+        assert body["includeDomains"] == ["raspberrypi.com"]
+        assert "Raspberry Pi Pico" in body["query"]
+        return httpx.Response(200, json={"results": [{
+            "title": "Raspberry Pi Pico schematic",
+            "url": source_url,
+        }]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_manufacturer_schematics("라즈베리파이 피코", client=client)
+
+    assert len(result) == 1
+    assert result[0].source_url == source_url
+    assert result[0].evidence_grade == 2
 
 
 def test_public_search_does_not_replace_requested_revision(monkeypatch):

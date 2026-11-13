@@ -163,6 +163,18 @@ _MANUFACTURER_ALIASES = {
     "raspberrypi.com": ("raspberry pi", "raspberrypi"),
     "pjrc.com": ("teensy", "pjrc"),
 }
+_KOREAN_PRODUCT_ALIASES = {
+    "라즈베리파이": "Raspberry Pi",
+    "피코": "Pico",
+}
+
+
+def canonical_product_query(query: str) -> str:
+    """Recognize supported Korean product names in English source metadata."""
+    return re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
+        match.group(), match.group()), query)
+
+
 _OFFICIAL_GITHUB_OWNERS = {
     "olimex.com": frozenset({"olimex"}),
 }
@@ -355,7 +367,7 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         with httpx.Client(trust_env=False) as owned:
             return _search_public_schematics(query, limit, client=owned,
                                              include_domains=include_domains, search_text=search_text)
-    query_text = query.strip()
+    query_text = canonical_product_query(query.strip())
     query_tokens = {token.casefold() for token in re.findall(r"[A-Za-z0-9]+|[가-힣]+", query_text) if len(token) > 1}
     model_tokens = {token for token in query_tokens if any(char.isdigit() for char in token)}
     try:
@@ -476,7 +488,7 @@ def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.
     if client is None:
         with httpx.Client(trust_env=False) as owned:
             return search_manufacturer_schematics(query, limit, client=owned)
-    query_lower = query.casefold()
+    query_lower = canonical_product_query(query).casefold()
     domains = tuple(domain for domain in _OFFICIAL_MANUFACTURERS
                     if any(alias in query_lower for alias in _MANUFACTURER_ALIASES[domain]))
     if not domains:
@@ -484,7 +496,7 @@ def search_manufacturer_schematics(query: str, limit: int = 5, *, client: httpx.
     found: list[WebSchematicRef] = []
     seen: set[str] = set()
     for domain in domains:
-        board_name = re.sub(r"\s+(?:schematics?|회로도)\s*$", "", query.strip(), flags=re.I)
+        board_name = re.sub(r"\s+(?:schematics?|회로도)\s*$", "", canonical_product_query(query.strip()), flags=re.I)
         search_host = "learn.adafruit.com" if domain == "adafruit.com" else domain
         try:
             candidates = _search_public_schematics(query, limit, client=client,

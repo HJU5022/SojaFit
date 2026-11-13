@@ -20,6 +20,7 @@ import httpx
 from PIL import Image
 
 from backend.graph.netlist import _sexpr
+from backend.projects.external_circuit_search import canonical_product_query
 from backend.projects.schematic import (
     COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
 )
@@ -462,6 +463,7 @@ def _identity_terms(query: str) -> tuple[str, ...]:
 def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
                             source_url: str, kind: str, pdf_text: str = "") -> None:
     """Reject a valid image/PDF whose board variant is not the requested one."""
+    query = canonical_product_query(query)
     terms = _identity_terms(query)
     if not terms:
         return
@@ -518,7 +520,7 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
     # satisfy a DRV8833 request merely because its page title says DRV8833.
     query_picow = "picow" in query_identity
     source_picow = "picow" in source_identity
-    if source_picow and not query_picow:
+    if source_picow != query_picow:
         raise _invalid()
     numeric_terms = [term for term in terms if any(char.isdigit() for char in term)]
     source_tokens = re.findall(r"[a-z]+[0-9][a-z0-9]*", " ".join(

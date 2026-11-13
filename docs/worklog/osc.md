@@ -747,3 +747,9 @@
 - `STH` 작업 트리에서 회로도 검색·출처 검증·PDF/이미지 변환·API·화면·관련 테스트·기능 스펙 16개 파일만 옮겼다. D7, Exa 데이터시트, MCP, 로그인 작업은 제외했고, 승인 후 루트 `SPEC.md`의 해당 API 계약만 별도 반영했다. 이 PR 후보의 목적은 사용자가 입력한 회로도 이름으로 공개 웹의 원본을 찾고, 검증된 제조사 자료와 출처 미확인 공개 자료를 구분해 이미지로 제공하는 것이다.
 - 확인: `uv run --no-project --python <STH .venv Python> pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py`는 185 passed, 같은 실행 방식의 `tests/repo/test_repo_layout.py`는 5 passed. `npm run test:run -- --run src/components/Schematic.test.tsx`는 7 passed. `npm ci --prefer-offline --no-audit --no-fund` 뒤 `npm run build` 통과. `git diff --check` 통과. 이 작업 트리의 `.venv\lib64` 접근 거부 때문에 일반 `uv run --no-sync pytest`는 시작하지 못했고, 같은 Python 버전의 기존 STH 가상환경으로 검증했다.
 - 남은 확인: 옮긴 코드에 대한 새 실시간 Exa 15건 측정과 로그인 브라우저 검증은 하지 않았다. `STH`에서 앞서 기록한 15건 결과를 이 브랜치의 새 측정으로 취급하지 않는다. 이후 사용자에게 주요 문서 수정과 PR 게시 허가를 받아 `SPEC.md:210`의 응답 계약을 같은 PR에서 갱신했다. 핵심 변경이 400줄을 넘는 이유는 PR 본문에 기록했다.
+
+## 2026-11-14 · PR #131 모델 식별과 한글 Pico 검색 피드백
+
+- 변경: `backend/projects/schematic_render.py`에서 Pico/Pico W 변형을 양방향으로 검사하고, `backend/projects/external_circuit_search.py`에서 `라즈베리파이 피코`를 영문 검색·후보 검사용 이름에 연결했다. `tests/projects/test_schematic_render.py`와 `tests/projects/test_official_schematic.py`에 양방향 불일치·정상 원본·한글 검색·제조사 재검색 사례를 추가했다.
+- 재현: 수정 전 집중 검사에서 정상 크기 PNG를 쓰는 Pico W 요청에 일반 Pico 파일이 통과했고, 한글 Pico 검색은 영문 후보를 0개 반환했다. 한글 Pico W의 정상 파일도 거부됐다.
+- 확인: Pico 집중 검사는 12 passed, 관련 회로도와 저장소 구조 검사 6개 파일은 201 passed(최종 재실행 28.32초). 실제 Exa 조회와 운영 배포 검증은 수행하지 않았다.
