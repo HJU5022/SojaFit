@@ -753,3 +753,10 @@
 - 변경: `backend/projects/schematic_render.py`에서 Pico/Pico W 변형을 양방향으로 검사하고, `backend/projects/external_circuit_search.py`에서 `라즈베리파이 피코`를 영문 검색·후보 검사용 이름에 연결했다. `tests/projects/test_schematic_render.py`와 `tests/projects/test_official_schematic.py`에 양방향 불일치·정상 원본·한글 검색·제조사 재검색 사례를 추가했다.
 - 재현: 수정 전 집중 검사에서 정상 크기 PNG를 쓰는 Pico W 요청에 일반 Pico 파일이 통과했고, 한글 Pico 검색은 영문 후보를 0개 반환했다. 한글 Pico W의 정상 파일도 거부됐다.
 - 확인: Pico 집중 검사는 12 passed, 관련 회로도와 저장소 구조 검사 6개 파일은 201 passed(최종 재실행 28.32초). 실제 Exa 조회와 운영 배포 검증은 수행하지 않았다.
+
+## 2026-11-14 · PR #131 도면 모델 충돌과 한글 띄어쓰기 후속 수정
+
+- 변경: `backend/projects/schematic_render.py`에서 Pico W 게시 페이지가 일반 Pico 파일·PDF 본문의 모델 충돌을 덮지 못하게 했다. `backend/projects/external_circuit_search.py`는 `라즈베리 파이 피코`도 영문 제품명으로 변환한다. `tests/projects/test_schematic_render.py`, `tests/projects/test_official_schematic.py`에 충돌·정상 원본·두 한글 표기 검사를 추가했다.
+- 수정 전: `uv run --no-sync pytest -q tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py -k "pico_conflict or pico_w_confirmed or pico_page_only or korean_pico" --tb=short`에서 8 failed, 3 passed였다. 페이지 URL이 `pico-w`인 일반 Pico PDF/PNG가 통과하고, 띄어 쓴 한글 검색은 영문 후보를 남기지 못했다.
+- 수정 후: 같은 집중 검사 11 passed. `uv run --no-sync pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/repo/test_repo_layout.py --tb=short`는 211 passed(26.58초). `git diff --check` 통과.
+- 확인하지 못한 것: 실제 Exa 검색과 운영 배포. GitHub CI는 이전 실행에서 계정 결제·지출 한도 문제로 작업이 시작되지 않았다. 다음 할 일은 PR의 원격 CI가 실행 가능한 상태가 되면 재확인하는 것이다.

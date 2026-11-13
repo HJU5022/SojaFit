@@ -171,6 +171,7 @@ _KOREAN_PRODUCT_ALIASES = {
 
 def canonical_product_query(query: str) -> str:
     """Recognize supported Korean product names in English source metadata."""
+    query = re.sub(r"라즈베리\s+파이", "Raspberry Pi", query)
     return re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
         match.group(), match.group()), query)
 

@@ -55,7 +55,7 @@ def test_public_search_discovers_unregistered_official_pdf(monkeypatch):
     assert source.manufacturer == "Adafruit Industries"
 
 
-@pytest.mark.parametrize("query", ["Raspberry Pi Pico", "라즈베리파이 피코"])
+@pytest.mark.parametrize("query", ["Raspberry Pi Pico", "라즈베리파이 피코", "라즈베리 파이 피코"])
 def test_public_search_matches_korean_pico_name_to_english_candidate(monkeypatch, query):
     _enabled(monkeypatch)
     from backend.projects.external_circuit_search import search_public_schematics
@@ -78,7 +78,8 @@ def test_public_search_matches_korean_pico_name_to_english_candidate(monkeypatch
     assert result[0].source_type == "manufacturer_official"
 
 
-def test_manufacturer_search_matches_korean_pico_name(monkeypatch):
+@pytest.mark.parametrize("query", ["라즈베리파이 피코", "라즈베리 파이 피코"])
+def test_manufacturer_search_matches_korean_pico_name(monkeypatch, query):
     _enabled(monkeypatch)
     from backend.projects.external_circuit_search import search_manufacturer_schematics
 
@@ -94,7 +95,7 @@ def test_manufacturer_search_matches_korean_pico_name(monkeypatch):
         }]})
 
     with httpx.Client(transport=httpx.MockTransport(handle)) as client:
-        result = search_manufacturer_schematics("라즈베리파이 피코", client=client)
+        result = search_manufacturer_schematics(query, client=client)
 
     assert len(result) == 1
     assert result[0].source_url == source_url

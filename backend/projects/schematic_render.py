@@ -515,12 +515,19 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
     for marker, requested in artifact_conflicts.items():
         if marker in artifact_identity and requested not in query_identity:
             raise _invalid()
-    # Keep board variants separate even when a search title is overly broad.
-    # Pico W must not satisfy a plain Pico request; a DRB8833 file must not
-    # satisfy a DRV8833 request merely because its page title says DRV8833.
+    # A product page may mention Pico W while linking a plain Pico drawing.
+    # The artifact filename and PDF text must not contradict the requested variant.
     query_picow = "picow" in query_identity
-    source_picow = "picow" in source_identity
-    if source_picow != query_picow:
+    file_identity = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
+    file_picow = "picow" in file_identity
+    text_picow = "picow" in text
+    if query_picow:
+        if (("pico" in file_identity and not file_picow)
+                or ("pico" in text and not text_picow)
+                or not (file_picow or "picow" in _identity_compact(urlsplit(source_url).path)
+                        or text_picow)):
+            raise _invalid()
+    elif "picow" in source_identity or text_picow:
         raise _invalid()
     numeric_terms = [term for term in terms if any(char.isdigit() for char in term)]
     source_tokens = re.findall(r"[a-z]+[0-9][a-z0-9]*", " ".join(

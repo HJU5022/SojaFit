@@ -328,6 +328,7 @@ def test_public_identity_rejects_live_false_positive_variants(monkeypatch, query
     ("Raspberry Pi Pico W", "https://example.org/raspberry-pi-pico-schematic.png", "Raspberry Pi Pico schematic"),
     ("Raspberry Pi Pico", "https://example.org/raspberry-pi-pico-w-schematic.png", "Raspberry Pi Pico W schematic"),
     ("라즈베리파이 피코 W", "https://example.org/raspberry-pi-pico-schematic.png", "Raspberry Pi Pico schematic"),
+    ("라즈베리 파이 피코 W", "https://example.org/raspberry-pi-pico-schematic.png", "Raspberry Pi Pico schematic"),
     ("라즈베리파이 피코", "https://example.org/raspberry-pi-pico-w-schematic.png", "Raspberry Pi Pico W schematic"),
 ])
 def test_public_identity_rejects_opposite_pico_variant(monkeypatch, query, url, title):
@@ -343,12 +344,52 @@ def test_public_identity_rejects_opposite_pico_variant(monkeypatch, query, url, 
     ("Raspberry Pi Pico W", "https://example.org/raspberry-pi-pico-w-schematic.png"),
     ("라즈베리파이 피코", "https://example.org/raspberry-pi-pico-schematic.png"),
     ("라즈베리파이 피코 W", "https://example.org/raspberry-pi-pico-w-schematic.png"),
+    ("라즈베리 파이 피코 W", "https://example.org/raspberry-pi-pico-w-schematic.png"),
 ])
 def test_public_identity_accepts_matching_pico_variant(monkeypatch, query, url):
     png = schematic_picture()
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     digest, count = render.inspect_public_schematic(url, "png", query)
     assert len(digest) == 64 and count == 1
+
+
+@pytest.mark.parametrize(("query", "page_url", "source_file", "source_url", "pdf_text"), [
+    ("Raspberry Pi Pico W", "https://example.org/pico-w/", "pico-schematic.pdf",
+     "https://example.org/files/pico-schematic.pdf", "Raspberry Pi Pico schematic"),
+    ("Raspberry Pi Pico W", "https://example.org/pico-w/", "schematic.pdf",
+     "https://example.org/files/schematic.pdf", "Raspberry Pi Pico schematic"),
+    ("Raspberry Pi Pico W", "https://example.org/pico-w/", "pico-w-schematic.pdf",
+     "https://example.org/files/pico-w-schematic.pdf", "Raspberry Pi Pico schematic"),
+    ("Raspberry Pi Pico", "https://example.org/pico/", "pico-schematic.pdf",
+     "https://example.org/files/pico-schematic.pdf", "Raspberry Pi Pico W schematic"),
+])
+def test_public_identity_rejects_pico_conflict_with_pdf_artifact(
+        query, page_url, source_file, source_url, pdf_text):
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity(
+            query, title=query, page_url=page_url, source_file=source_file,
+            source_url=source_url, kind="pdf", pdf_text=pdf_text,
+        )
+
+
+def test_public_identity_accepts_pico_w_confirmed_by_pdf_body():
+    render._verify_public_identity(
+        "Raspberry Pi Pico W", title="Raspberry Pi Pico W schematic",
+        page_url="https://example.org/pico/", source_file="schematic.pdf",
+        source_url="https://example.org/files/schematic.pdf", kind="pdf",
+        pdf_text="Raspberry Pi Pico W schematic",
+    )
+
+
+def test_public_identity_rejects_pico_page_only_variant(monkeypatch):
+    png = schematic_picture()
+    monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(
+            "https://example.org/files/pico-schematic.png", "png", "Raspberry Pi Pico W",
+            title="Raspberry Pi Pico W", page_url="https://example.org/pico-w/",
+            source_file="pico-schematic.png",
+        )
 
 
 def test_public_identity_allows_qt_py_rp2040_filename_with_title_model(monkeypatch):
