@@ -12,6 +12,8 @@
 - `api/` · `auth/` · `hooks/useRunStream.ts`는 서버 계약입니다. 화면을 고칠 때 시그니처를 바꾸지 않습니다.
 - 스타일은 `styles/app.css` 한 파일의 일반 CSS입니다. 값은 [design.md](../design.md)의 토큰과 눈금만 씁니다.
 - 401을 받으면 `api/client.ts`가 `sojafit:session-expired`를 알리고 `AuthProvider`가 화면 캐시와 탭 저장소를 비웁니다. 실패한 요청을 자동으로 다시 보내지 않습니다.
+- 작업대의 삭제·생성·이름 변경 오류는 닫기 버튼, 재시도 시작, 화면 이동과 창 닫기에서 해제한다. 이전 화면·닫힌 창의 요청이 늦게 끝나도 이전 오류나 화면 이동을 다시 적용하지 않는다.
+- 새 프로젝트 창은 어느 생성 버튼으로 열어도 이름·첨부 파일을 기본값으로 초기화한다. 생성 실패 시에는 창과 입력값을 유지해 같은 내용으로 재시도할 수 있다.
 - 820px 이하에서는 표가 카드로 쌓이고 레일이 접힙니다. 1180px 이하에서는 검토 문서의 속성 칸이 본문 아래로 내려갑니다.
 
 ## 파일
@@ -22,7 +24,7 @@
 - `api/` — 서버 API의 타입 있는 fetch 경계(`client` · `auth` · `admin` · `projects` · `conversations` · `quotes` · `prices` · `profile` · `externalCircuits`)와 개발 전용 `dummy.ts`, 테스트.
 - `auth/` — `AuthProvider`(세션 복원·로그인·로그아웃·탈퇴) · `RequireAuth`(인증·관리자 경계)와 테스트.
 - `hooks/useRunStream.ts` — 분석 실행의 시작·재개·연결 복구 상태 머신과 테스트.
-- `hooks/useConversation.ts` — 검토 한 건의 화면 상태: 저장된 질문, 실행 중인 질문, 단계 이름, 첨부.
+- `hooks/useConversation.ts` — 검토 한 건의 화면 상태: 저장된 질문, 실행 중인 질문, 단계 이름, 첨부. 작업대와 대화 상세 조회 캐시를 공유하며 대화 전환 후 늦게 도착한 응답은 무시하고, 기록 복원 중에는 질문을 보내지 않는다.
 - `lib/judgement.ts` — 판정 표기·색 이름·값과 인용 위치 표시.
 - `lib/circuit.ts` — 프로젝트 연결에서 부품 목록과 대상 부품의 넷·이웃을 뽑는 순수 함수. 테스트 `circuit.test.ts`.
 - `lib/inputLabels.ts` — 판정 입력 코드의 화면 이름.
@@ -30,7 +32,7 @@
 - `pages/LoginPage.tsx` — 이메일 로그인, 서버가 켠 Google 로그인과 계정 연결, 데모 모드의 데모 사용자 버튼.
 - `pages/SignupPage.tsx` · `pages/EmailActionPage.tsx` — 가입 메일 요청, 메일 링크의 비밀번호 설정과 재설정.
 - `pages/PrivacyPage.tsx` — 개인정보처리방침(글은 이전과 같음).
-- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록(맨 위 질문 칸이 질문 속 부품 번호의 검토를 열고 질문을 한 번 보낸다. 테스트 `WorkbenchPage.ask.test.tsx`), 새 프로젝트·원본 회로도·승인 사례 창. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
+- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록(맨 위 질문 칸이 질문 속 부품 번호의 검토를 열고 질문을 한 번 보낸다. 테스트 `WorkbenchPage.ask.test.tsx`), 새 프로젝트·원본 회로도·승인 사례 창. 대화 상세의 대상 부품을 주소의 선택값보다 우선해 복원하고, 프로젝트 불일치·조회 대기·오류·재시도를 구분한다. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
 - `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
 - `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
 - `components/Review.tsx` — 검토 문서: 판정, 회로, 조건 대조 표, 활동과 입력창, 속성 칸(승인·견적·가격·근거). 속성 칸 너비 조절.

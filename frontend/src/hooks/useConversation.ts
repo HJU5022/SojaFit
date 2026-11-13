@@ -17,7 +17,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
   const [picked, setPicked] = useState<number | null>(null)
-  const liveThread = useRef('')
+  const liveThread = useRef<string | null>(null)
   const state = stream.state
   const running = state.status === 'running'
   const waiting = state.status === 'requires_input'
@@ -25,15 +25,16 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   useEffect(() => {
     if (threadId === liveThread.current) return
     liveThread.current = threadId
-    stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null)
+    stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null); setLoading(false)
     if (!threadId) return
     const controller = new AbortController()
     setLoading(true)
-    getThread(threadId, controller.signal).then((thread) => {
+    client.fetchQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), retry: false }).then((thread) => {
+      if (controller.signal.aborted || thread.project_id !== projectId) return
       setHistory(thread.messages.filter(message => message.role === 'user').map(message => ({ runId: message.run_id, question: message.content })))
       if (thread.target_ref && thread.target_ref !== targetRef) onThread(threadId, thread.target_ref)
     }).catch((reason) => { if (!controller.signal.aborted) setError(reason) }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
+    return () => { controller.abort(); liveThread.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 대화가 바뀔 때만 다시 읽는다
   }, [threadId])
 
@@ -45,7 +46,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
   async function send(recorded?: { question: string; conditions?: string }) {
     const question = recorded?.question ?? text.trim()
-    if (!question || running || waiting || !targetRef) return
+    if (!question || loading || running || waiting || !targetRef) return
     setError(null)
     try {
       let id = threadId

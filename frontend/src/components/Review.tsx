@@ -209,7 +209,7 @@ export default function Review({ projectId, demoId, target, nets, counts, thread
           {import.meta.env.DEV && <><input ref={picker} type="file" accept=".net,.txt" multiple hidden onChange={event => { chat.setFiles([...chat.files, ...Array.from(event.target.files ?? [])]); event.target.value = '' }} />
             <button type="button" className="btn btn-icon" disabled={running} onClick={() => picker.current?.click()} aria-label="파일 첨부 (.net, .txt)" title="파일 첨부 (.net, .txt)"><Paperclip aria-hidden="true" /></button></>}
           {running ? <button type="button" className="btn btn-icon" onClick={chat.stream.cancel} aria-label="응답 받기 중단"><Square aria-hidden="true" /></button>
-            : <button className="btn btn-icon" disabled={waiting || !chat.text.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
+            : <button className="btn btn-icon" disabled={chat.loading || waiting || !chat.text.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>}
         </form>
         {chat.files.length > 0 && <ul className="chips" aria-label="첨부한 파일">{chat.files.map((file, index) => <li key={`${file.name}-${index}`}><FileText aria-hidden="true" /><span>{file.name}</span>
           <button type="button" className="icon-btn" aria-label={`${file.name} 첨부 취소`} onClick={() => chat.setFiles(chat.files.filter((_, at) => at !== index))}><X aria-hidden="true" /></button></li>)}</ul>}
