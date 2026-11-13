@@ -1,0 +1,1259 @@
+# pytest full run log
+date: 2026-11-13 09:45:27 KST
+commit: 39a57f0e9e86aa77e1045702ac8630912073116b (branch jeongun)
+python: Python 3.12.14
+command: .venv/bin/python -m pytest
+------------------------------------------------------------
+============================= test session starts ==============================
+platform darwin -- Python 3.12.14, pytest-9.2.0, pluggy-1.7.0
+rootdir: <repo>
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1, langsmith-0.14.14
+collected 2084 items
+
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  2%]
+ss.................ssss...............                                   [  4%]
+tests/api/test_conversations.py ........................................ [  6%]
+.............                                                            [  6%]
+tests/api/test_deletion.py ssssssssssss                                  [  7%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  8%]
+tests/api/test_errors.py ..........................                      [  9%]
+tests/api/test_external_circuits.py ...............................      [ 10%]
+tests/api/test_frontend.py ...................                           [ 11%]
+tests/api/test_full_service_flow.py ssssss                               [ 12%]
+tests/api/test_google_users.py .......sssssssssss                        [ 13%]
+tests/api/test_health.py ........                                        [ 13%]
+tests/api/test_http_restart.py s                                         [ 13%]
+tests/api/test_http_smoke.py .........                                   [ 13%]
+tests/api/test_injection_http.py ..........                              [ 14%]
+tests/api/test_logs.py .......                                           [ 14%]
+tests/api/test_openapi.py .......................                        [ 15%]
+tests/api/test_prices.py .........                                       [ 16%]
+tests/api/test_projects.py ............................................. [ 18%]
+...s                                                                     [ 18%]
+tests/api/test_public_grants.py sss                                      [ 18%]
+tests/api/test_quotes.py ....                                            [ 18%]
+tests/api/test_threads.py s...sssssssssssssssssss.ss                     [ 20%]
+tests/conversations/test_dto.py ........................................ [ 22%]
+..........                                                               [ 22%]
+tests/conversations/test_profile.py .........ss                          [ 23%]
+tests/conversations/test_repository.py ssssssssssssssssssssssss          [ 24%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 24%]
+tests/evals/test_approval_wait_report.py ..s                             [ 24%]
+tests/evals/test_bit_search.py ....                                      [ 25%]
+tests/evals/test_check_injection_result.py ....                          [ 25%]
+tests/evals/test_claim_consistency.py .....                              [ 25%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 25%]
+tests/evals/test_embedding_grid.py ......                                [ 26%]
+tests/evals/test_eval_grader.py .........                                [ 26%]
+tests/evals/test_frozen_evals.py ...                                     [ 26%]
+tests/evals/test_gate_report.py ...                                      [ 26%]
+tests/evals/test_import_human_review.py ......                           [ 27%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 27%]
+tests/evals/test_injection_baseline.py ................................. [ 28%]
+..................                                                       [ 29%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 30%]
+tests/evals/test_injection_preflight.py ..............................   [ 32%]
+tests/evals/test_input_surfaces.py .........                             [ 32%]
+tests/evals/test_judgement_bundle.py .................s                  [ 33%]
+tests/evals/test_retrieval_d3.py ....                                    [ 33%]
+tests/evals/test_retrieval_layers.py ............                        [ 34%]
+tests/evals/test_retrieval_service.py .....                              [ 34%]
+tests/evals/test_run_graph.py .....................                      [ 35%]
+tests/evals/test_run_judge_dev.py ....                                   [ 35%]
+tests/evals/test_saved_defense_replay.py ....                            [ 35%]
+tests/evals/test_score_answer.py ...............                         [ 36%]
+tests/evals/test_score_compound.py ..                                    [ 36%]
+tests/evals/test_score_ragas.py .....                                    [ 36%]
+tests/evals/test_skill_pair.py ..................                        [ 37%]
+tests/evals/test_stage_timing.py .......                                 [ 38%]
+tests/evals/test_supervisor_jev.py ..................................... [ 39%]
+...                                                                      [ 40%]
+tests/evals/test_supervisor_models.py .....................              [ 41%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 41%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 41%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 41%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 42%]
+tests/evals/test_trust_boundary.py .........                             [ 42%]
+tests/graph/test_agent_netlist.py .............                          [ 43%]
+tests/graph/test_graph_build.py .............................            [ 44%]
+tests/graph/test_graph_generate.py ............                          [ 45%]
+tests/graph/test_graph_grade.py ....                                     [ 45%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 46%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 46%]
+tests/graph/test_graph_read_input.py .............                       [ 47%]
+tests/graph/test_graph_refuse.py ........                                [ 47%]
+tests/graph/test_graph_rewrite.py ....                                   [ 47%]
+tests/graph/test_graph_route.py ......                                   [ 48%]
+tests/graph/test_graph_search.py .....                                   [ 48%]
+tests/graph/test_graph_state.py .                                        [ 48%]
+tests/graph/test_graph_supervisor.py .....                               [ 48%]
+tests/judge/test_judge_conditions.py ........................            [ 49%]
+tests/judge/test_judge_rules_file.py .......                             [ 50%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 50%]
+tests/judge/test_judge_verdict.py ...................................... [ 52%]
+......                                                                   [ 52%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 54%]
+...................                                                      [ 55%]
+tests/multi_agent/test_agents.py ......................                  [ 56%]
+tests/multi_agent/test_build.py ...................                      [ 57%]
+tests/multi_agent/test_contracts.py .............                        [ 58%]
+tests/multi_agent/test_docs_agent.py ................................... [ 59%]
+...................................................................      [ 63%]
+tests/multi_agent/test_facts_lookup.py ............                      [ 63%]
+tests/multi_agent/test_judge.py ........................................ [ 65%]
+...............                                                          [ 66%]
+tests/multi_agent/test_judge_read.py ................................... [ 68%]
+........                                                                 [ 68%]
+tests/multi_agent/test_part_names.py ......................              [ 69%]
+tests/multi_agent/test_readme_graph.py .                                 [ 69%]
+tests/multi_agent/test_supervisor.py ................................... [ 71%]
+........                                                                 [ 71%]
+tests/projects/test_catalog.py .....                                     [ 71%]
+tests/projects/test_external_circuit_search.py ..                        [ 71%]
+tests/projects/test_external_schematic.py ........                       [ 72%]
+tests/projects/test_netlist.py ....................................      [ 74%]
+tests/projects/test_project_repository.py ..sssssss                      [ 74%]
+tests/projects/test_schematic_discovery.py ............................. [ 75%]
+..........................                                               [ 77%]
+tests/projects/test_schematic_render.py F.FFFFFFFFFFFF..FFF............  [ 78%]
+tests/projects/test_service_schema.py ssssssss                           [ 78%]
+tests/projects/test_visuals.py .....................                     [ 79%]
+tests/rag/test_card_find.py .....................                        [ 80%]
+tests/rag/test_card_read.py ..........................................   [ 83%]
+tests/rag/test_card_specs.py ...                                         [ 83%]
+tests/rag/test_demo_snapshot.py ..s                                      [ 83%]
+tests/rag/test_package_outlines.py .............................         [ 84%]
+tests/rag/test_rag_chunk.py ......s........ssssssssssssss                [ 86%]
+tests/rag/test_rag_collect.py ......                                     [ 86%]
+tests/rag/test_rag_ingest.py ....s...                                    [ 86%]
+tests/rag/test_rag_parse.py ...                                          [ 86%]
+tests/rag/test_rag_retrieve.py ...........s......                        [ 87%]
+tests/rag/test_rag_specs.py ...                                          [ 87%]
+tests/rag/test_rag_storage.py .ssssssss                                  [ 88%]
+tests/rag/test_rag_subset.py ........................                    [ 89%]
+tests/rag/test_rag_units.py .....................                        [ 90%]
+tests/rag/test_voyage_rollout.py ....                                    [ 90%]
+tests/repo/test_repo_layout.py .....                                     [ 90%]
+tests/services/test_datasheet_rows.py .......FFFFF...........F.......... [ 92%]
+.......FF.....                                                           [ 93%]
+tests/services/test_demo_replay.py ..................                    [ 94%]
+tests/services/test_langfuse_prompts.py ...........................      [ 95%]
+tests/services/test_llm.py .................................             [ 96%]
+tests/services/test_mouser.py ...............                            [ 97%]
+tests/services/test_quote_service.py ................................    [ 99%]
+tests/services/test_service_trace.py ................                    [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_png_returns_exact_bytes _________________________
+
+    def test_png_returns_exact_bytes():
+        png = picture("PNG", ["red"])
+>       assert fetch(png, "image/png") == (png,)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:321: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'png'
+path = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-fp4_mpud/asset-0')
+output = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-fp4_mpud/pages-0')
+
+    def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:183: ExternalSchematicInvalidSource
+_____________________ test_svg_rasterizes_visible_geometry _____________________
+
+    def test_svg_rasterizes_visible_geometry():
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><rect width="20" height="10" fill="red"/></svg>'
+>       png, = fetch(svg, "text/plain", "svg")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:321: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'svg'
+path = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-zggyan3d/asset-0')
+output = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-zggyan3d/pages-0')
+
+    def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:183: ExternalSchematicInvalidSource
+__________ test_svg_rejects_active_content_and_node_limit[<script/>] ___________
+
+body = b'<script/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_______ test_svg_rejects_active_content_and_node_limit[<foreignObject/>] _______
+
+body = b'<foreignObject/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_______ test_svg_rejects_active_content_and_node_limit[<g onclick="a"/>] _______
+
+body = b'<g onclick="a"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<use href="https://unsafe.example"/>] _
+
+body = b'<use href="https://unsafe.example"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<g style="fill:url(file:///tmp/x)"/>] _
+
+body = b'<g style="fill:url(file:///tmp/x)"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<style>@import "https://unsafe.example";</style>] _
+
+body = b'<style>@import "https://unsafe.example";</style>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_active_content_and_node_limit[<use xml:base="file:///tmp/x" href="#x"/>] _
+
+body = b'<use xml:base="file:///tmp/x" href="#x"/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+____________ test_svg_rejects_active_content_and_node_limit[body7] _____________
+
+body = b'<g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>.../><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/><g/>'
+
+    @pytest.mark.parametrize("body", [
+        b"<script/>", b"<foreignObject/>", b'<g onclick="a"/>', b'<use href="https://unsafe.example"/>',
+        b'<g style="fill:url(file:///tmp/x)"/>', b'<style>@import "https://unsafe.example";</style>',
+        b'<use xml:base="file:///tmp/x" href="#x"/>', b"<g/>" * 50_000,
+    ])
+    def test_svg_rejects_active_content_and_node_limit(body):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(b'<svg width="10" height="10">' + body + b"</svg>")
+
+tests/projects/test_schematic_render.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_entity_and_pixel_overflow[<!DOCTYPE svg [<!ENTITY e "d">]><svg/>] _
+
+data = b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>'
+
+    @pytest.mark.parametrize("data", [
+        b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>', b'<svg width="999999" height="999999"/>',
+    ])
+    def test_svg_rejects_entity_and_pixel_overflow(data):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(data)
+
+tests/projects/test_schematic_render.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+_ test_svg_rejects_entity_and_pixel_overflow[<svg width="999999" height="999999"/>] _
+
+data = b'<svg width="999999" height="999999"/>'
+
+    @pytest.mark.parametrize("data", [
+        b'<!DOCTYPE svg [<!ENTITY e "d">]><svg/>', b'<svg width="999999" height="999999"/>',
+    ])
+    def test_svg_rejects_entity_and_pixel_overflow(data):
+        with pytest.raises(ExternalSchematicInvalidSource):
+>           render._svg(data)
+
+tests/projects/test_schematic_render.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/projects/schematic_render.py:79: in _svg
+    from cairosvg.surface import PNGSurface
+.venv/lib/python3.12/site-packages/cairosvg/__init__.py:25: in <module>
+    from . import surface  # noqa isort:skip
+    ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/cairosvg/surface.py:9: in <module>
+    import cairocffi as cairo
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:60: in <module>
+    cairo = dlopen(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ffi = <cffi.api.FFI object at 0x11d4b19a0>
+library_names = ('cairo-2', 'cairo', 'libcairo-2')
+filenames = ('libcairo.so.2', 'libcairo.2.dylib', 'libcairo-2.dll')
+
+    def dlopen(ffi, library_names, filenames):
+        """Try various names for the same library, for different platforms."""
+        exceptions = []
+    
+        for library_name in library_names:
+            library_filename = find_library(library_name)
+            if library_filename:
+                filenames = (library_filename, *filenames)
+            else:
+                exceptions.append(
+                    'no library called "{}" was found'.format(library_name))
+    
+        for filename in filenames:
+            try:
+                return ffi.dlopen(filename)
+            except OSError as exception:  # pragma: no cover
+                exceptions.append(exception)
+    
+        error_message = '\n'.join(  # pragma: no cover
+            str(exception) for exception in exceptions)
+>       raise OSError(error_message)  # pragma: no cover
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: no library called "cairo-2" was found
+E       no library called "cairo" was found
+E       no library called "libcairo-2" was found
+E       cannot load library 'libcairo.so.2': dlopen(libcairo.so.2, 0x0002): tried: 'libcairo.so.2' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.so.2' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.so.2' (no such file), '/usr/lib/libcairo.so.2' (no such file, not in dyld cache), 'libcairo.so.2' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.so.2'
+E       cannot load library 'libcairo.2.dylib': dlopen(libcairo.2.dylib, 0x0002): tried: 'libcairo.2.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo.2.dylib' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo.2.dylib' (no such file), '/usr/lib/libcairo.2.dylib' (no such file, not in dyld cache), 'libcairo.2.dylib' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo.2.dylib'
+E       cannot load library 'libcairo-2.dll': dlopen(libcairo-2.dll, 0x0002): tried: 'libcairo-2.dll' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibcairo-2.dll' (no such file), '~/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/libcairo-2.dll' (no such file), '/usr/lib/libcairo-2.dll' (no such file, not in dyld cache), 'libcairo-2.dll' (no such file).  Additionally, ctypes.util.find_library() did not manage to locate a library called 'libcairo-2.dll'
+
+.venv/lib/python3.12/site-packages/cairocffi/__init__.py:57: OSError
+________ test_pdf_renders_every_page_in_order_and_rejects_partial_pair _________
+
+    def test_pdf_renders_every_page_in_order_and_rejects_partial_pair():
+        pdf = picture("PDF", ["red", "blue"])
+>       pages = fetch(pdf, "application/pdf", "pdf", expected_sheets=2)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:321: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'pdf'
+path = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-kq4arb6e/asset-0')
+output = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-kq4arb6e/pages-0')
+
+    def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:183: ExternalSchematicInvalidSource
+________ test_pdf_creator_identifies_pcbnew_exports[Eeschema-PDF-False] ________
+
+creator = 'Eeschema-PDF', rejected = False
+
+    @pytest.mark.parametrize(("creator", "rejected"), [("Pcbnew-PDF", True), ("Eeschema-PDF", False), ("", False)])
+    def test_pdf_creator_identifies_pcbnew_exports(creator, rejected):
+        stream = io.BytesIO()
+        Image.new("RGB", (20, 10), "red").save(stream, format="PDF", creator=creator)
+        data = stream.getvalue()
+        if rejected:
+            with pytest.raises(ExternalSchematicInvalidSource):
+                fetch(data, "application/pdf", "pdf")
+        else:
+>           assert len(fetch(data, "application/pdf", "pdf")) == 1
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:321: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'pdf'
+path = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-btp6kf21/asset-0')
+output = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-btp6kf21/pages-0')
+
+    def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:183: ExternalSchematicInvalidSource
+______________ test_pdf_creator_identifies_pcbnew_exports[-False] ______________
+
+creator = '', rejected = False
+
+    @pytest.mark.parametrize(("creator", "rejected"), [("Pcbnew-PDF", True), ("Eeschema-PDF", False), ("", False)])
+    def test_pdf_creator_identifies_pcbnew_exports(creator, rejected):
+        stream = io.BytesIO()
+        Image.new("RGB", (20, 10), "red").save(stream, format="PDF", creator=creator)
+        data = stream.getvalue()
+        if rejected:
+            with pytest.raises(ExternalSchematicInvalidSource):
+                fetch(data, "application/pdf", "pdf")
+        else:
+>           assert len(fetch(data, "application/pdf", "pdf")) == 1
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/projects/schematic_render.py:321: in render_external_schematic
+    result.extend(_sheets(kind, path, work / f"pages-{index}"))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'pdf'
+path = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-cap_9o77/asset-0')
+output = PosixPath('/var/folders/vd/sh869hzd64zgspg87dw678n40000gn/T/sojafit-render-cap_9o77/pages-0')
+
+    def _sheets(kind: str, path: Path, output: Path) -> tuple[bytes, ...]:
+        output.mkdir()
+        if path.stat().st_size > (MAX_PDF_BYTES if kind == "pdf" else MAX_IMAGE_BYTES):
+            raise _invalid()
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "backend.projects.schematic_render", kind, str(path), str(output)],
+                cwd=Path(__file__).resolve().parents[2], check=True, timeout=COMMAND_TIMEOUT_SECONDS,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                env={key: os.environ[key] for key in ("PATH", "SystemRoot", "TEMP", "TMP") if key in os.environ},
+            )
+        except subprocess.CalledProcessError:
+>           raise _invalid() from None
+E           backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:183: ExternalSchematicInvalidSource
+______ test_kicad_archive_renders_whole_hierarchy_and_rejects_partial_pdf ______
+
+    def test_kicad_archive_renders_whole_hierarchy_and_rejects_partial_pdf():
+        archive = bundle({"board.kicad_sch": '(kicad_sch (sheet (property "Sheetfile" "child.kicad_sch")))',
+                          "child.kicad_sch": "(kicad_sch)", "sym-lib-table": "not supplied to KiCad"})
+    
+        def exporter(root, output):
+            assert root.name == "board.kicad_sch"
+            assert sorted(p.name for p in root.parent.iterdir()) == ["board.kicad_sch", "child.kicad_sch"]
+            path = output / "out.pdf"
+            path.write_bytes(picture("PDF", colors))
+            return "fixture", path
+    
+        colors = ["blue", "red"]
+>       assert len(fetch(archive, "application/zip", "kicad", kicad_export=exporter, expected_sheets=2)) == 2
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/projects/test_schematic_render.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/projects/test_schematic_render.py:40: in fetch
+    return render.render_external_schematic(source, client=client, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+source = VerifiedSchematicSource(repository='a/b', commit='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', license='MIT', attributio...source_file='board.kicad_sch', asset_kind='kicad', asset_paths=(), root_schematic='board.kicad_sch', expected_sheets=2)
+client = <httpx.Client object at 0x11d61fce0>
+kicad_export = <function test_kicad_archive_renders_whole_hierarchy_and_rejects_partial_pdf.<locals>.exporter at 0x11d9082c0>
+
+    def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None,
+                                  kicad_export: Callable = run_kicad_pdf) -> tuple[bytes, ...]:
+        from backend.projects.schematic_discovery import download_bounded
+    
+        if (not re.fullmatch(r"[\w.-]+/[\w.-]+", source.repository, re.ASCII)
+                or not re.fullmatch(r"[0-9a-f]{40}", source.commit)):
+            raise _invalid()
+        _path(source.repository)
+        kind = source.asset_kind
+        if kind not in MIME:
+            raise _invalid()
+        with tempfile.TemporaryDirectory(prefix="sojafit-render-") as temporary:
+            work = Path(temporary)
+            if kind == "kicad":
+                host = "codeload.github.com"
+                urls = [f"https://{host}/{source.repository}/zip/{source.commit}"]
+            else:
+                host = "raw.githubusercontent.com"
+                if not 1 <= len(source.asset_paths) <= MAX_SHEETS:
+                    raise _invalid()
+                urls = [f"https://{host}/{source.repository}/{source.commit}/{quote(str(_path(p)))}"
+                        for p in source.asset_paths]
+            result = []
+            for index, url in enumerate(urls):
+                limit = {"pdf": MAX_PDF_BYTES, "kicad": MAX_ARCHIVE_BYTES}.get(kind, MAX_IMAGE_BYTES)
+                data, mime = download_bounded(url, max_bytes=limit, allowed_hosts=frozenset({host}), client=client)
+                # GitHub raw에서는 PDF와 SVG에도 generic media type을 사용한다.
+                generic = {"application/octet-stream"} | ({"text/plain"} if kind == "svg" else set())
+                if len(data) > limit or mime not in MIME[kind] | generic:
+                    raise _invalid()
+                if kind == "kicad":
+                    try:
+                        root, count = _archive(source, data, work / "source")
+                        output = work / "export"
+                        output.mkdir()
+                        _, pdf = kicad_export(root, output)
+                        if not pdf.is_file():
+                            raise _invalid()
+                        sheets = _sheets("pdf", pdf, work / "pages")
+                        if len(sheets) != count or count != source.expected_sheets:
+                            raise _invalid()
+                        return sheets
+                    except KicadServiceUnavailable:
+                        raise ExternalSchematicUpstreamError("KiCad를 사용할 수 없습니다.") from None
+                    except (ValueError, OSError, RuntimeError, zipfile.BadZipFile) as exc:
+                        if isinstance(exc, ExternalSchematicUpstreamError):
+                            raise
+>                       raise _invalid() from None
+E                       backend.projects.schematic_source.ExternalSchematicInvalidSource: 전체 회로도 원본을 안전하게 변환할 수 없습니다.
+
+backend/projects/schematic_render.py:318: ExternalSchematicInvalidSource
+___________ test_verified_row_drives_answer_and_survives_run_reload ____________
+
+transport = (<httpx.MockTransport object at 0x11d86be30>, ['POST', 'GET'])
+
+    def test_verified_row_drives_answer_and_survives_run_reload(transport):
+        mock, calls = transport
+        def chat(node, system, prompt, schema):
+            assert node == 'docs_answer'
+            assert '[W1]' in prompt and 'PDF p.1' in prompt and 'SS34 = 40 V' in prompt
+            assert '99 V' not in prompt and '30 V' not in prompt
+            assert schema is PdfOnlyAnswer
+            return schema(grade='enough', pdf_rows=['W1'])
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        with exa.request_scope():
+            report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                                chat=chat, web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+            with pytest.raises(exa.SearchBudgetExhausted):
+                exa.search_evidence(['SS34'], 'reverse voltage', transport=mock)
+>       assert calls == ['POST', 'GET'] and report['evidence_ids'] == ['W1']
+E       AssertionError: assert (['POST', 'GET'] == ['POST', 'GET']
+E         
+E         Use -v to get more diff and [] == ['W1']
+E         
+E         Right contains one more item: 'W1'
+E         Use -v to get more diff)
+
+tests/services/test_datasheet_rows.py:135: AssertionError
+_ test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\uc758 Peak reverse voltage \uac12\uc740 400 V\uc785\ub2c8\ub2e4 [W1].] _
+
+transport = (<httpx.MockTransport object at 0x1155b77d0>, ['POST', 'GET'])
+claim = 'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].'
+
+    @pytest.mark.parametrize('claim', [
+        'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].',
+        'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].',
+        'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].',
+        'SS34는 400 V\n[W1]',
+    ])
+    def test_docs_rejects_mismatched_claim_even_with_real_citation(transport, claim):
+        mock, _ = transport
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                            chat=lambda *a: PdfAnswer(grade='enough', answer=claim, pdf_rows=[]),
+                            web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+>       assert report['reason'] == 'verify_failed' and not report['answer'] and not report['evidence_ids']
+E       AssertionError: assert ('no_result' == 'verify_failed'
+E         
+E         - verify_failed
+E         + no_result)
+
+tests/services/test_datasheet_rows.py:167: AssertionError
+_ test_docs_rejects_mismatched_claim_even_with_real_citation[SS33\uc758 Peak reverse voltage \uac12\uc740 40 V\uc785\ub2c8\ub2e4 [W1].] _
+
+transport = (<httpx.MockTransport object at 0x11d86b620>, ['POST', 'GET'])
+claim = 'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].'
+
+    @pytest.mark.parametrize('claim', [
+        'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].',
+        'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].',
+        'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].',
+        'SS34는 400 V\n[W1]',
+    ])
+    def test_docs_rejects_mismatched_claim_even_with_real_citation(transport, claim):
+        mock, _ = transport
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                            chat=lambda *a: PdfAnswer(grade='enough', answer=claim, pdf_rows=[]),
+                            web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+>       assert report['reason'] == 'verify_failed' and not report['answer'] and not report['evidence_ids']
+E       AssertionError: assert ('no_result' == 'verify_failed'
+E         
+E         - verify_failed
+E         + no_result)
+
+tests/services/test_datasheet_rows.py:167: AssertionError
+_ test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\uc758 Peak reverse voltage \uac12\uc740 40 mV\uc785\ub2c8\ub2e4 [W1].] _
+
+transport = (<httpx.MockTransport object at 0x11d86e360>, ['POST', 'GET'])
+claim = 'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].'
+
+    @pytest.mark.parametrize('claim', [
+        'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].',
+        'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].',
+        'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].',
+        'SS34는 400 V\n[W1]',
+    ])
+    def test_docs_rejects_mismatched_claim_even_with_real_citation(transport, claim):
+        mock, _ = transport
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                            chat=lambda *a: PdfAnswer(grade='enough', answer=claim, pdf_rows=[]),
+                            web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+>       assert report['reason'] == 'verify_failed' and not report['answer'] and not report['evidence_ids']
+E       AssertionError: assert ('no_result' == 'verify_failed'
+E         
+E         - verify_failed
+E         + no_result)
+
+tests/services/test_datasheet_rows.py:167: AssertionError
+_ test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\ub294 400 V\n[W1]] _
+
+transport = (<httpx.MockTransport object at 0x11d86f320>, ['POST', 'GET'])
+claim = 'SS34는 400 V\n[W1]'
+
+    @pytest.mark.parametrize('claim', [
+        'SS34의 Peak reverse voltage 값은 400 V입니다 [W1].',
+        'SS33의 Peak reverse voltage 값은 40 V입니다 [W1].',
+        'SS34의 Peak reverse voltage 값은 40 mV입니다 [W1].',
+        'SS34는 400 V\n[W1]',
+    ])
+    def test_docs_rejects_mismatched_claim_even_with_real_citation(transport, claim):
+        mock, _ = transport
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        report = docs_agent({'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+                            chat=lambda *a: PdfAnswer(grade='enough', answer=claim, pdf_rows=[]),
+                            web_search=lambda p,t: exa.search_evidence(p,t,transport=mock))['reports'][0]
+>       assert report['reason'] == 'verify_failed' and not report['answer'] and not report['evidence_ids']
+E       AssertionError: assert ('no_result' == 'verify_failed'
+E         
+E         - verify_failed
+E         + no_result)
+
+tests/services/test_datasheet_rows.py:167: AssertionError
+____________ test_replanned_reports_keep_their_pdf_cells_on_reload _____________
+
+transport = (<httpx.MockTransport object at 0x11d8706e0>, ['POST', 'GET'])
+
+    def test_replanned_reports_keep_their_pdf_cells_on_reload(transport):
+        from backend.multi_agent.supervisor import collect_node, single_node
+    
+        mock, _ = transport
+        task = {'id': 1, 'agent': 'docs', 'kind': 'rating', 'parts': ['SS34'],
+                'goal': 'SS34 VRRM', 'query': 'SS34 peak reverse voltage'}
+        def lookup(transport):
+            return docs_agent({'question': 'SS34?', 'task': task}, retriever=lambda *a, **kw: [],
+                              chat=lambda *a: PdfOnlyAnswer(grade='enough', pdf_rows=['W1']),
+                              web_search=lambda p,t: exa.search_evidence(p,t,transport=transport))['reports'][0]
+    
+        second_url = 'https://www.onsemi.com/pdf/datasheet/other.pdf'
+        def second_source(req):
+            if req.method == 'POST':
+                return httpx.Response(200, json={'results': [{'url': second_url}]})
+            return httpx.Response(200, content=family_pdf(cover=True).replace(b'Table 1.', b'Table 2.'))
+    
+        report, later = lookup(mock), lookup(httpx.MockTransport(second_source))
+>       old = report['docs'][0]
+              ^^^^^^^^^^^^^^^^^
+E       IndexError: list index out of range
+
+tests/services/test_datasheet_rows.py:356: IndexError
+_________ test_grade2_search_returns_only_verified_tsc_rows_and_sha256 _________
+
+transport = (<httpx.MockTransport object at 0x11d870d40>, [])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d870e60>
+
+    def test_grade2_search_returns_only_verified_tsc_rows_and_sha256(transport, monkeypatch):
+        target = 'https://services.taiwansemi.com/storage/resources/datasheet/SS34%20SERIES.pdf'
+        calls = []
+    
+        def handle(req):
+            calls.append((req.method, str(req.url)))
+            if req.method == 'POST':
+                payload = json.loads(req.content)
+                assert payload['includeDomains'] == [
+                    'services.taiwansemi.com/storage/resources/datasheet/',
+                    'www.infineon.com/assets/row/public/documents/',
+                ]
+                return httpx.Response(200, json={'results': [{'url': target}]})
+            assert str(req.url) == target
+            return httpx.Response(200, content=family_pdf())
+    
+        import json
+        rows = exa.search_grade2_evidence(['SS34'], 'reverse voltage', transport=httpx.MockTransport(handle))
+>       assert rows and rows[0]['evidence_grade'] == 2
+E       assert ([])
+
+tests/services/test_datasheet_rows.py:465: AssertionError
+_______ test_grade2_cites_redirect_destination_and_exact_family_members ________
+
+transport = (<httpx.MockTransport object at 0x11d86e600>, [])
+
+    def test_grade2_cites_redirect_destination_and_exact_family_members(transport):
+        url = 'https://services.taiwansemi.com/storage/resources/datasheet/family.pdf'
+        final = url.replace('family.pdf', 'SS34LW_SERIES.pdf')
+        def respond(request):
+            if request.method == 'POST':
+                return httpx.Response(200, json={'results': [{'url': url}]})
+            if str(request.url) == url:
+                return httpx.Response(301, headers={'Location': final})
+            assert str(request.url) == final
+            return httpx.Response(200, content=family_pdf(suffix='LW'))
+    
+        rows = exa.search_grade2_evidence(['SS34', 'SS33LW', 'SS34LW'], 'TSC reverse voltage',
+                                          transport=httpx.MockTransport(respond))
+>       assert [(r['doc_parts'][0], r['cells'][0][1], r['source_url']) for r in rows] == [
+            ('SS33LW', '30', final), ('SS34LW', '40', final)]
+E       AssertionError: assert [] == [('SS33LW', '..._SERIES.pdf')]
+E         
+E         Right contains 2 more items, first extra item: ('SS33LW', '30', 'https://services.taiwansemi.com/storage/resources/datasheet/SS34LW_SERIES.pdf')
+E         Use -v to get more diff
+
+tests/services/test_datasheet_rows.py:484: AssertionError
+=========================== short test summary info ============================
+FAILED tests/projects/test_schematic_render.py::test_png_returns_exact_bytes
+FAILED tests/projects/test_schematic_render.py::test_svg_rasterizes_visible_geometry
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<script/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<foreignObject/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<g onclick="a"/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<use href="https://unsafe.example"/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<g style="fill:url(file:///tmp/x)"/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<style>@import "https://unsafe.example";</style>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[<use xml:base="file:///tmp/x" href="#x"/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_active_content_and_node_limit[body7]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_entity_and_pixel_overflow[<!DOCTYPE svg [<!ENTITY e "d">]><svg/>]
+FAILED tests/projects/test_schematic_render.py::test_svg_rejects_entity_and_pixel_overflow[<svg width="999999" height="999999"/>]
+FAILED tests/projects/test_schematic_render.py::test_pdf_renders_every_page_in_order_and_rejects_partial_pair
+FAILED tests/projects/test_schematic_render.py::test_pdf_creator_identifies_pcbnew_exports[Eeschema-PDF-False]
+FAILED tests/projects/test_schematic_render.py::test_pdf_creator_identifies_pcbnew_exports[-False]
+FAILED tests/projects/test_schematic_render.py::test_kicad_archive_renders_whole_hierarchy_and_rejects_partial_pdf
+FAILED tests/services/test_datasheet_rows.py::test_verified_row_drives_answer_and_survives_run_reload
+FAILED tests/services/test_datasheet_rows.py::test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\uc758 Peak reverse voltage \uac12\uc740 400 V\uc785\ub2c8\ub2e4 [W1].]
+FAILED tests/services/test_datasheet_rows.py::test_docs_rejects_mismatched_claim_even_with_real_citation[SS33\uc758 Peak reverse voltage \uac12\uc740 40 V\uc785\ub2c8\ub2e4 [W1].]
+FAILED tests/services/test_datasheet_rows.py::test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\uc758 Peak reverse voltage \uac12\uc740 40 mV\uc785\ub2c8\ub2e4 [W1].]
+FAILED tests/services/test_datasheet_rows.py::test_docs_rejects_mismatched_claim_even_with_real_citation[SS34\ub294 400 V\n[W1]]
+FAILED tests/services/test_datasheet_rows.py::test_replanned_reports_keep_their_pdf_cells_on_reload
+FAILED tests/services/test_datasheet_rows.py::test_grade2_search_returns_only_verified_tsc_rows_and_sha256
+FAILED tests/services/test_datasheet_rows.py::test_grade2_cites_redirect_destination_and_exact_family_members
+================ 24 failed, 1887 passed, 173 skipped in 36.62s =================
