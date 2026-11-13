@@ -16,7 +16,7 @@
 | `EVALS.md` | 폴더 설명 | 이 문서 |
 | `dataset_v1.jsonl` | 동결 평가셋 | v1. `drafts/sets/draft_50.jsonl`의 고정 키만 옮김 |
 | `dataset_v2.jsonl` | 동결 평가셋 | v2. v1 줄에 `question_type`을 더하고 후보 찾기 20건(`drafts/sets/draft_v2add_20.jsonl`의 고정 키)을 더함 |
-| `dataset_v3.jsonl` | 동결 평가셋 | v3(기준 평가셋). 문항에 판정자 필드 `judges`가 있음. 키 목록은 [dataset-guide.md](guides/dataset-guide.md) |
+| `dataset_v3.jsonl` | 동결 평가셋 | v3(기준 평가셋). 문항에 판정자 필드 `judges`가 있음(역할은 [v3_judging_record.md](drafts/reviews/v3_judging_record.md)). 키 목록은 [dataset-guide.md](guides/dataset-guide.md) |
 | `FROZEN.json` | 동결 기록 | 파일별 sha256·건수·관련/비관련 건수·동결일. 동결 여부는 이 파일이 정함 |
 | `runners/` | 실행 코드 | 평가 실행기·동결 스크립트. [RUNNERS.md](runners/RUNNERS.md) |
 | `docker/` | 컨테이너 정의 | 임베딩 실험용 이미지. [DOCKER.md](docker/DOCKER.md) |
