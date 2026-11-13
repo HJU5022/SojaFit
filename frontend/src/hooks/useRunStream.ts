@@ -110,17 +110,8 @@ export function useRunStream() {
   return {
     state,
     start: (threadId: string, body: { question: string; target_ref: string; conditions?: string; attachments?: File[] }) => {
-      if (import.meta.env.DEV && body.attachments?.length) {
-        const form = new FormData()
-        form.append('question', body.question)
-        form.append('target_ref', body.target_ref)
-        form.append('conditions', body.conditions ?? '')
-        body.attachments.forEach(file => form.append('files', file, file.name))
-        setState({ status: 'running', runId: '', stage: '첨부 파일 업로드' })
-        return run(`/api/threads/${threadId}/runs/attachments`, form)
-      }
       if (body.attachments?.length) {
-        setState({ status: 'failed', error: { code: 'UNSUPPORTED_ATTACHMENT', message: '현재 운영에서는 질문 파일 첨부를 지원하지 않습니다. 질문에 내용을 적어 주세요.', requestId: '' } })
+        setState({ status: 'failed', error: { code: 'UNSUPPORTED_ATTACHMENT', message: '넷리스트를 프로젝트에 먼저 반영한 뒤 질문을 보내 주세요.', requestId: '' } })
         return Promise.resolve()
       }
       return run(`/api/threads/${threadId}/runs`, body)

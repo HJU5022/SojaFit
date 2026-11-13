@@ -5,10 +5,170 @@ import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
 import { renderWithQueries } from '../test/projects'
+import type { ApprovalDto } from '../api/quotes'
 
 vi.mock('../auth/AuthProvider', () => ({ useAuth: () => ({ user, logout: vi.fn() }) }))
 vi.mock('../components/ApprovedCases', () => ({ default: () => null }))
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+
+it('creates an empty project without calling the demo API, then asks for a netlist in chat', async () => {
+  const writes: unknown[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const empty = { id: 9, name: '빈 보드', source_kind: 'upload', demo_id: null, circuit_version: 0, created_at: '', updated_at: '', connections: { parts: [], nets: [] } }
+  network((path, init) => {
+    if (path === '/api/demo-circuits') return failure('NOT_FOUND', '없음', 404)
+    if (path === '/api/projects' && init.method === 'POST') { writes.push(JSON.parse(String(init.body))); return Response.json(empty, { status: 201 }) }
+    if (path === '/api/projects/9') return Response.json(empty)
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app']}><WorkbenchPage /></MemoryRouter>)
+  const dialog = document.getElementById('creator-title')!.closest('dialog')!
+  dialog.showModal = function () { this.open = true }
+  dialog.close = function () { this.open = false; this.dispatchEvent(new Event('close')) }
+  fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+  fireEvent.change(screen.getByLabelText('프로젝트 이름'), { target: { value: '빈 보드' } })
+  fireEvent.click(screen.getByRole('button', { name: '만들기' }))
+  expect(await screen.findByText(/넷리스트를 첨부해 주세요/)).toBeInTheDocument()
+  expect(writes).toEqual([{ name: '빈 보드' }])
+  expect(screen.getByRole('button', { name: '파일 첨부 (.net, .txt)' })).toBeEnabled()
+})
+
+it('imports a chat attachment into the same project and starts exactly one run in the new version thread', async () => {
+  const imports: FormData[] = [], starts: unknown[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const v2 = { ...project, circuit_version: 2, connections: { parts: [{ ref: 'D7', value: 'NEW-DIODE', footprint: '' }], nets: [] } }
+  network((path, init) => {
+    if (path === '/api/projects/1/netlist') { imports.push(init.body as FormData); return Response.json({ project: v2, thread_id: 'new-version' }, { status: 201 }) }
+    if (path.startsWith('/api/projects/1?thread_id=new-version')) return Response.json(v2)
+    if (path.startsWith('/api/projects/1?') || path === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json(savedThread())
+    if (path === '/api/threads/new-version') return Response.json({ ...savedThread('new-version', 1, ''), target_ref: null, target_locked: false, messages: [], latest_run: null })
+    if (path === '/api/threads/new-version/runs') { starts.push(JSON.parse(String(init.body))); return new Response('') }
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    return Response.json([])
+  })
+  renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
+  await screen.findByText('run-t1 저장된 답변')
+  fireEvent.change(screen.getByRole('textbox', { name: '질문' }), { target: { value: 'D7을 SS34로 바꿔도 돼?' } })
+  const file = new File(['(export)'], 'next.net')
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [file] } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  await waitFor(() => expect(starts).toHaveLength(1))
+  expect(imports).toHaveLength(1)
+  expect(imports[0].get('file')).toEqual(file)
+  expect(starts[0]).toEqual({ question: 'D7을 SS34로 바꿔도 돼?', target_ref: 'D7' })
+  expect(await screen.findByRole('heading', { level: 1, name: /D7.*NEW-DIODE/ })).toBeInTheDocument()
+})
+
+it('keeps the text and file when netlist parsing fails, without starting an analysis', async () => {
+  const starts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (path === '/api/projects/1/netlist') return failure('INVALID_NETLIST', '올바른 KiCad 넷리스트를 올려 주세요.', 400)
+    if (path.startsWith('/api/projects/1?') || path === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/t1') return Response.json(savedThread())
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    if (init.method === 'POST') starts.push(path)
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  await screen.findByText('run-t1 저장된 답변')
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'D1 질문 초안' } })
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['bad'], 'broken.net')] } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('올바른 KiCad')
+  expect(input).toHaveValue('D1 질문 초안')
+  expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('broken.net')
+  expect(starts).toEqual([])
+})
+
+it.each(['', '다이오드를 검토해 줘'])('imports a file with question %j and waits for explicit part selection without an analysis', async (text) => {
+  const posts: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const empty = { ...project, circuit_version: 0, connections: { parts: [], nets: [] } }
+  network((path, init) => {
+    if (init.method === 'POST') posts.push(path)
+    if (path === '/api/projects/1/netlist') return Response.json({ project: { ...project, circuit_version: 1 }, thread_id: 'fresh' })
+    if (path === '/api/projects/1') return Response.json(empty)
+    if (path === '/api/projects/1?thread_id=fresh') return Response.json({ ...project, circuit_version: 1 })
+    if (path === '/api/threads/fresh') return Response.json({ ...savedThread('fresh', 1, ''), target_ref: null, target_locked: false, messages: [], latest_run: null })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: text } })
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'first.net')] } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('button', { name: 'D1 1N4148 선택' })).toBeInTheDocument()
+  expect(screen.getByRole('textbox', { name: '질문' })).toHaveValue(text)
+  expect(posts).toEqual(['/api/projects/1/netlist'])
+  expect(screen.queryByText(/대상 부품을 회로에서 찾지 못했습니다/)).toBeNull()
+})
+
+it('keeps a single import in flight and preserves the draft after a delayed failure', async () => {
+  let reject!: (value: Response) => void
+  const writes: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path === '/api/projects/1/netlist') return new Promise<Response>(resolve => { reject = resolve })
+    if (path === '/api/projects/1') return Response.json({ ...project, connections: { parts: [], nets: [] } })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '유지할 질문' } })
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'first.net')] } })
+  fireEvent.submit(input.closest('form')!); fireEvent.submit(input.closest('form')!)
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeDisabled()
+  expect(input).toHaveAttribute('readonly')
+  await act(async () => { reject(failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503)) })
+  expect(await screen.findByRole('alert')).toHaveTextContent('잠시 후')
+  expect(input).toHaveValue('유지할 질문')
+  expect(writes).toEqual(['/api/projects/1/netlist'])
+})
+
+it('restores the old thread circuit instead of the latest project circuit after a newer upload', async () => {
+  const reads: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network(path => {
+    reads.push(path)
+    if (path === '/api/projects/1') return Response.json({ ...project, circuit_version: 2, connections: { parts: [{ ref: 'D7', value: 'NEW-DIODE', footprint: '' }], nets: [] } })
+    if (path === '/api/projects/1?thread_id=t1') return Response.json({ ...project, circuit_version: 1 })
+    if (path === '/api/threads/t1') return Response.json(savedThread())
+    if (path === '/api/runs/run-t1') return Response.json(savedRun('run-t1'))
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  expect(await screen.findByRole('heading', { level: 1, name: /D1.*1N4148/ })).toBeInTheDocument()
+  expect(screen.getByText('회로 v1')).toBeInTheDocument()
+  expect(reads).toContain('/api/projects/1?thread_id=t1')
+  expect(screen.queryByText('NEW-DIODE')).toBeNull()
+})
+
+it.each([false, true])('guards a delayed thread creation from double submit and abandoned navigation (leave=%s)', async (leave) => {
+  let finish!: (value: Response) => void
+  const writes: string[] = []
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  network((path, init) => {
+    if (init.method === 'POST') writes.push(path)
+    if (path === '/api/projects/1/threads' && init.method === 'POST') return new Promise<Response>(resolve => { finish = resolve })
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path === '/api/threads/new-thread/runs') return new Response('')
+    if (path === '/api/threads/new-thread') return Response.json({ ...savedThread('new-thread'), messages: [], latest_run: null })
+    return Response.json([])
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: 'D1 질문' } })
+  fireEvent.submit(input.closest('form')!); fireEvent.submit(input.closest('form')!)
+  expect(writes).toEqual(['/api/projects/1/threads'])
+  if (leave) fireEvent.click(within(screen.getByRole('navigation', { name: '프로젝트와 검토' })).getByRole('button', { name: /^프로젝트$/ }))
+  await act(async () => { finish(Response.json({ id: 'new-thread' })) })
+  if (leave) expect(writes).toEqual(['/api/projects/1/threads'])
+  else await waitFor(() => expect(writes).toEqual(['/api/projects/1/threads', '/api/threads/new-thread/runs']))
+})
 
 const project = { id: 1, name: '보드', source_kind: 'upload', demo_id: null, created_at: '2026-11-09T00:00:00Z', updated_at: '2026-11-09T00:00:00Z',
   connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
@@ -16,14 +176,14 @@ const runs: unknown[] = []
 const resumes: unknown[] = []
 let reply = ''
 const api = (body = '') => { runs.length = 0; resumes.length = 0; reply = body; vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); network((path, init) => {
-  if (path === '/api/projects/1') return Response.json(project)
+  if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
   if (path === '/api/projects/1/threads' && init.method === 'POST') return Response.json({ id: 't1', title: '', status: null, latest_run_id: null, target_ref: 'D1' })
   if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [], latest_run: null })
   if (path === '/api/threads/t1/runs') { runs.push(JSON.parse(String(init.body))); return new Response(reply, { headers: { 'Content-Type': 'text/event-stream' } }) }
   if (path === '/api/runs/r1/resume') { resumes.push(JSON.parse(String(init.body))); return new Response('', { headers: { 'Content-Type': 'text/event-stream' } }) }
   return Response.json([])
 }) }
-const ask = async (text: string) => { renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+const ask = async (text: string) => { renderWithQueries(<StrictMode><MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter></StrictMode>)
   fireEvent.change(await screen.findByRole('textbox', { name: '질문' }), { target: { value: text } }); fireEvent.click(screen.getByRole('button', { name: '질문 보내기' })) }
 
 it('opens the review of the part named in the question and sends it once as the first run', async () => {
@@ -59,12 +219,23 @@ it('shows every line of a completed answer, including a markdown list', async ()
   expect(screen.getByText('첫째 근거').tagName).toBe('LI')
 })
 
+it('shows a refused answer once in the same chat as the selected circuit', async () => {
+  const answer = '요청하신 내용을 데이터시트에서 확인하지 못했어요.'
+  const done = { answer, refusal: answer, status: 'refused', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], interrupt: {}, request_id: 'req-1' }
+  api(`event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: refused\ndata: ${JSON.stringify(done)}\n\n`)
+  await ask('D1의 대체 후보를 찾아 주세요.')
+  expect(await screen.findAllByText(answer)).toHaveLength(1)
+  const history = screen.getByRole('article', { name: '대화 기록' })
+  expect(history).toContainElement(screen.getByText(answer))
+  expect(history).toContainElement(screen.getByRole('heading', { level: 1, name: /D1/ }))
+})
+
 it('keeps the answer of an earlier question visible next to the selected one, reading each run once', async () => {
   const run = (id: string, answer: string) => ({ id, thread_id: 't1', message_id: null, result: { answer, status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: id } })
   const reads: string[] = []
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
   network((path) => {
-    if (path === '/api/projects/1') return Response.json(project)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
     if (path === '/api/threads/t1') return Response.json({ id: 't1', project_id: 1, title: '', status: null, target_ref: 'D1', target_locked: true, latest_run: null, next_before_message_id: null,
       messages: [{ id: 1, run_id: 'r1', role: 'user', content: '첫 질문', created_at: '' }, { id: 2, run_id: 'r2', role: 'user', content: '둘째 질문', created_at: '' }] })
     if (path.startsWith('/api/runs/')) { const id = path.split('/').pop()!; reads.push(id); return Response.json(run(id, `${id}의 요약\n\n${id}의 본문`)) }
@@ -87,8 +258,8 @@ function savedApi(detail: (id: string) => Response | Promise<Response> = id => R
   network((path, init) => {
     if (init.method === 'POST') writes.push(path)
     if (path === '/api/projects') return Response.json([project, { ...project, id: 2, name: '다른 보드' }])
-    if (path === '/api/projects/1') return Response.json(project)
-    if (path === '/api/projects/2') return Response.json({ ...project, id: 2, name: '다른 보드' })
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path.split('?')[0] === '/api/projects/2') return Response.json({ ...project, id: 2, name: '다른 보드' })
     if (path === '/api/projects/1/threads') return Response.json([savedThread(), savedThread('t3')])
     if (path === '/api/projects/2/threads') return Response.json([savedThread('t2', 2)])
     if (path.startsWith('/api/threads/')) return detail(path.split('/').pop()!)
@@ -169,7 +340,7 @@ it('clears the saved conversation when starting a new review of the same part', 
   fireEvent.click(screen.getByRole('button', { name: '새 검토' }))
   await waitFor(() => expect(screen.queryByText('t1 저장된 질문')).toBeNull())
   expect(screen.queryByText('run-t1 저장된 답변')).toBeNull()
-  const question = screen.getByRole('textbox', { name: '질문' })
+  const question = await screen.findByRole('textbox', { name: '질문' })
   fireEvent.change(question, { target: { value: '새 검토 질문' } })
   expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
 })
@@ -180,7 +351,7 @@ it('clears pending restoration when starting a new review without waiting for th
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   await waitFor(() => expect(finish).toBeDefined())
   fireEvent.click(await screen.findByRole('button', { name: '새 검토' }))
-  fireEvent.change(screen.getByRole('textbox', { name: '질문' }), { target: { value: '새 검토 질문' } })
+  fireEvent.change(await screen.findByRole('textbox', { name: '질문' }), { target: { value: '새 검토 질문' } })
   expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
   await act(async () => { finish(Response.json(savedThread())); await new Promise(resolve => setTimeout(resolve, 0)) })
   expect(screen.queryByText('t1 저장된 질문')).toBeNull()
@@ -188,30 +359,46 @@ it('clears pending restoration when starting a new review without waiting for th
 
 const waiting = `event: run_started\ndata: ${JSON.stringify({ run_id: 'r1' })}\n\nevent: requires_input\ndata: ${JSON.stringify({ status: 'requires_input', interrupt: { question: '값을 알려 주세요.', missing: ['VF', 'IR'] }, request_id: 'req-2' })}\n\n`
 
-it.each(['대화 기록', '검토 내용'])('jumps to the conversation end from %s without losing the draft or making a request', async scrollArea => {
+it('scrolls the circuit and conversation together while preserving the sidebar, composer, draft and files', async () => {
   candidateApi()
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /SS34L.*상세 보기/ })
+  const chat = screen.getByRole('region', { name: '채팅' })
   const input = screen.getByRole('textbox', { name: '질문' })
+  expect(chat).toContainElement(input)
+  const history = within(chat).getByRole('article', { name: '대화 기록' })
+  expect(history).toContainElement(within(chat).getByRole('heading', { name: /^회로$/ }))
+  expect(history).toContainElement(screen.getByRole('heading', { level: 1, name: /D1/ }))
+  expect(history).not.toContainElement(input)
   fireEvent.change(input, { target: { value: '작성 중인 질문' } })
   fireEvent.change(input.closest('form')!.querySelector('input[type=file]')!, { target: { files: [new File(['test'], 'draft.net')] } })
   const end = screen.getByText('대화 끝').parentElement!
-  const area = screen.getByRole('region', { name: '검토 내용' })
-  const scroller = scrollArea === '대화 기록' ? screen.getByRole('article', { name: scrollArea }) : area
+  const area = screen.getByRole('article', { name: '대화 기록' })
+  const outside = screen.getByRole('region', { name: '검토 내용' })
+  const sidebar = screen.getByRole('tabpanel')
+  outside.scrollTop = 37
+  sidebar.scrollTop = 55
   let bottom = 400
+  let position = 0
   Object.defineProperty(area, 'getBoundingClientRect', { value: () => ({ bottom: 500 }) })
+  Object.defineProperty(area, 'scrollHeight', { value: 900 })
+  Object.defineProperty(area, 'scrollTop', { get: () => position, set: value => { position = value; bottom = 490 } })
   Object.defineProperty(end, 'getBoundingClientRect', { value: () => ({ bottom }) })
-  const scroll = vi.fn(() => { bottom = 490; fireEvent.scroll(scroller) })
-  Object.defineProperty(end, 'scrollIntoView', { value: scroll })
-  fireEvent.scroll(scroller)
+  const ancestorScroll = vi.fn()
+  Object.defineProperty(end, 'scrollIntoView', { value: ancestorScroll })
+  fireEvent.scroll(area)
   expect(screen.queryByRole('button', { name: '대화 맨 아래로 이동' })).toBeNull()
   bottom = 900
-  fireEvent.scroll(scroller)
-  const jump = screen.getByRole('button', { name: '대화 맨 아래로 이동' })
+  fireEvent.scroll(outside)
+  expect(screen.queryByRole('button', { name: '대화 맨 아래로 이동' })).toBeNull()
+  fireEvent.scroll(area)
   const requests = vi.fn(fetch)
   vi.stubGlobal('fetch', requests)
-  fireEvent.click(jump)
-  expect(scroll).toHaveBeenCalledWith({ block: 'end' })
+  fireEvent.click(screen.getByRole('button', { name: '대화 맨 아래로 이동' }))
+  expect(position).toBe(900)
+  expect(outside.scrollTop).toBe(37)
+  expect(sidebar.scrollTop).toBe(55)
+  expect(ancestorScroll).not.toHaveBeenCalled()
   expect(input).toHaveValue('작성 중인 질문')
   expect(input).toHaveFocus()
   expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('draft.net')
@@ -226,7 +413,7 @@ it('updates the jump button when content or viewport size changes without forcin
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /SS34L.*상세 보기/ })
   const end = screen.getByText('대화 끝').parentElement!
-  const area = screen.getByRole('region', { name: '검토 내용' })
+  const area = screen.getByRole('article', { name: '대화 기록' })
   let bottom = 900
   Object.defineProperty(area, 'getBoundingClientRect', { value: () => ({ bottom: 500 }) })
   Object.defineProperty(end, 'getBoundingClientRect', { value: () => ({ bottom }) })
@@ -251,21 +438,95 @@ function candidateRun(id: string, value = 40) {
       { part: '1N5819', verdict: 'NOT_VERIFIED', missing: ['VF'], checks: [{ ...candidate.checks[0], value: 20, result: 'unverified', citation: { ...citation, document: `${id}-1N5819.pdf`, source_url: 'https://example.test/1n5819.pdf' } }] }], unverified: [], capped: true },
     evidence: [{ ...citation, section: '', citation_number: '7' }] } }
 }
-function candidateApi(twoQuestions = false, readRun: (id: string) => unknown = id => candidateRun(id, id === 'r1' ? 40 : 100)) {
+function candidateApi(twoQuestions = false, readRun: (id: string) => unknown = id => candidateRun(id, id === 'r1' ? 40 : 100), stored: ApprovalDto[] = []) {
   const approvals: { path: string; body: unknown }[] = []
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
   network((path, init) => {
-    if (path === '/api/projects/1') return Response.json(project)
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
     if (path === '/api/threads/t1') return Response.json({ ...savedThread(), messages: [
       { id: 1, run_id: 'r1', role: 'user', content: '첫 후보 질문', created_at: '' },
       ...(twoQuestions ? [{ id: 3, run_id: 'r2', role: 'user', content: '둘째 후보 질문', created_at: '' }] : []),
     ] })
     if (path === '/api/runs/r1' || path === '/api/runs/r2') return Response.json(readRun(path.endsWith('r1') ? 'r1' : 'r2'))
-    if (path.endsWith('/approvals')) { approvals.push({ path, body: JSON.parse(String(init.body)) }); return Response.json({ id: 1, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }) }
+    const message = path.match(/^\/api\/messages\/(\d+)\/approvals$/)
+    if (message && init.method !== 'POST') return Response.json(stored.filter(item => item.message_id === Number(message[1])))
+    if (message) {
+      const body = JSON.parse(String(init.body))
+      approvals.push({ path, body })
+      const saved = { id: stored.length + 1, message_id: Number(message[1]), candidate_part: body.candidate_part, verdict: body.verdict, case_id: 1 }
+      stored.push(saved)
+      return Response.json(saved, { status: 201 })
+    }
     return Response.json([])
   })
   return approvals
 }
+
+it('restores saved approval after closing and reopening a tab and after a fresh page mount', async () => {
+  const stored: ApprovalDto[] = []
+  const writes = candidateApi(false, id => candidateRun(id), stored)
+  let view = renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  fireEvent.click(screen.getByRole('button', { name: '검토하고 승인' }))
+  expect(await screen.findByText('승인됨')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'SS34L · 질문 1 닫기' }))
+  fireEvent.click(screen.getByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await screen.findByText('승인됨')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '검토하고 승인' })).toBeNull()
+  view.unmount()
+  view = renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await screen.findByText('승인됨')).toBeInTheDocument()
+  expect(writes).toHaveLength(1)
+})
+
+it('matches a persisted approval to its message instead of another question with the same part', async () => {
+  candidateApi(true, id => candidateRun(id), [{ id: 1, message_id: 101, candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: 1 }])
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  const first = (await screen.findByText('첫 후보 질문')).closest('li')!
+  fireEvent.click(await within(first).findByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(await within(screen.getByRole('tabpanel')).findByText('승인됨')).toBeInTheDocument()
+  const second = screen.getByText('둘째 후보 질문').closest('li')!
+  fireEvent.click(within(second).getByRole('button', { name: /SS34L.*상세 보기/ }))
+  await waitFor(() => expect(within(screen.getByRole('tabpanel')).getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  expect(within(screen.getByRole('tabpanel')).queryByText('승인됨')).toBeNull()
+})
+
+it.each(['other', 'error', 'conflict'])('handles approval lookup state %s without a duplicate approval', async mode => {
+  candidateApi()
+  const base = fetch
+  const record: ApprovalDto = { id: 1, message_id: 101, candidate_part: mode === 'other' ? '다른 후보' : 'SS34L', verdict: 'ROLE_SUFFICIENT', case_id: null }
+  let reads = 0, posts = 0
+  network((path, init) => {
+    if (path === '/api/messages/101/approvals') {
+      if (init.method === 'POST') { posts++; return failure('ALREADY_APPROVED', '이미 승인되었습니다.', 409) }
+      reads++
+      if (mode === 'error' && reads === 1) return failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503)
+      return Response.json(mode === 'other' || posts ? [record] : [])
+    }
+    return base(path, init)
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  if (mode === 'other') {
+    expect(await screen.findByText('다른 후보가 승인됨')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '검토하고 승인' })).toBeNull()
+  } else {
+    if (mode === 'error') {
+      expect(await screen.findByRole('alert')).toHaveTextContent('승인 상태를 불러오지 못했습니다.')
+      expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+      fireEvent.click(screen.getByRole('button', { name: '승인 상태 다시 확인' }))
+    }
+    await waitFor(() => expect(screen.getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+    if (mode === 'conflict') {
+      fireEvent.click(screen.getByRole('button', { name: '검토하고 승인' }))
+      expect(await screen.findByText('승인됨')).toBeInTheDocument()
+      expect(screen.queryByRole('alert')).toBeNull()
+    }
+  }
+  expect(posts).toBe(mode === 'conflict' ? 1 : 0)
+})
 
 it('distinguishes saved message senders without exposing profile details and preserves question selection', async () => {
   candidateApi(true)
@@ -312,9 +573,7 @@ it('attaches a dropped netlist anywhere on the active workbench without sending 
   expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('board.NET')
   expect(input).toHaveValue('작성 중인 질문')
   expect(input).toHaveFocus()
-  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeDisabled()
-  fireEvent.keyDown(input, { key: 'Enter' })
-  fireEvent.submit(input.closest('form')!)
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
   expect(input).toHaveValue('작성 중인 질문')
   expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('board.NET')
   expect(requests).not.toHaveBeenCalled()
@@ -357,16 +616,38 @@ it('shows and clears the drag guide and leaves text dragging alone', async () =>
   expect(fireEvent.drop(window, { dataTransfer: transfer })).toBe(true)
 })
 
-it('keeps unsupported production attachments blocked without making a request', async () => {
+it('previews local built attachments without sending until the user submits', async () => {
   vi.stubEnv('DEV', false)
+  vi.stubEnv('VITE_LOCAL_ATTACHMENT_UI', '1')
+  candidateApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  await screen.findByRole('button', { name: /SS34L.*상세 보기/ })
+  const input = screen.getByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '첨부와 함께 작성한 질문' } })
+  const requests = vi.fn(fetch)
+  vi.stubGlobal('fetch', requests)
+  expect(screen.getByRole('button', { name: '파일 첨부 (.net, .txt)' })).toBeEnabled()
+  fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'local.net')] } })
+  expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('local.net')
+  expect(screen.getByText(/전송하면 같은 프로젝트의 새 회로 버전/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
+  expect(requests).not.toHaveBeenCalled()
+  expect(input).toHaveValue('첨부와 함께 작성한 질문')
+  fireEvent.click(screen.getByRole('button', { name: 'local.net 첨부 취소' }))
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
+})
+
+it('accepts production attachments without sending before explicit submit', async () => {
+  vi.stubEnv('DEV', false)
+  vi.stubEnv('VITE_LOCAL_ATTACHMENT_UI', '0')
   candidateApi()
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   await screen.findByRole('button', { name: /SS34L.*상세 보기/ })
   const requests = vi.fn(fetch)
   vi.stubGlobal('fetch', requests)
   expect(fireEvent.drop(window, { dataTransfer: { types: ['Files'], files: [new File(['(export)'], 'board.net')] } })).toBe(false)
-  expect(screen.queryByRole('list', { name: '첨부한 파일' })).toBeNull()
-  expect(screen.getByRole('alert')).toHaveTextContent('현재 운영에서는 질문 파일 첨부를 지원하지 않습니다.')
+  expect(screen.getByRole('list', { name: '첨부한 파일' })).toHaveTextContent('board.net')
+  expect(screen.getByRole('button', { name: '질문 보내기' })).toBeEnabled()
   expect(requests).not.toHaveBeenCalled()
 })
 
@@ -391,30 +672,58 @@ it('does not attach to the conversation behind an open dialog', async () => {
   } finally { dialog.remove() }
 })
 
+it('keeps multiple detail tabs with the correct question and preserves approval when switching back', async () => {
+  const approvals = candidateApi(true)
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  const first = (await screen.findByText('첫 후보 질문')).closest('li')!
+  const second = (await screen.findByText('둘째 후보 질문')).closest('li')!
+  fireEvent.click(await within(first).findByRole('button', { name: /SS34L.*상세 보기/ }))
+  let panel = screen.getByRole('tabpanel')
+  await waitFor(() => expect(within(panel).getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  fireEvent.click(within(panel).getByRole('button', { name: '검토하고 승인' }))
+  await waitFor(() => expect(approvals).toHaveLength(1))
+  fireEvent.click(within(second).getByRole('button', { name: /SS34L.*상세 보기/ }))
+  panel = screen.getByRole('tabpanel')
+  expect(within(panel).getByText('100 V')).toBeVisible()
+  fireEvent.click(screen.getByRole('tab', { name: 'SS34L · 질문 1' }))
+  panel = screen.getByRole('tabpanel')
+  expect(within(panel).getByText('40 V')).toBeVisible()
+  expect(within(panel).getByText('승인됨')).toBeVisible()
+  expect(approvals).toHaveLength(1)
+  expect(screen.getAllByRole('tab')).toHaveLength(3)
+  fireEvent.click(within(first).getByRole('button', { name: /SS34L.*상세 보기/ }))
+  expect(screen.getAllByRole('tab')).toHaveLength(3)
+  fireEvent.keyDown(screen.getByRole('tab', { name: 'SS34L · 질문 1' }), { key: 'Delete' })
+  expect(screen.queryByRole('tab', { name: 'SS34L · 질문 1' })).toBeNull()
+  expect(screen.getByRole('tab', { name: 'SS34L · 질문 2' })).toHaveFocus()
+  fireEvent.click(screen.getByRole('tab', { name: '회로 정보' }))
+  expect(screen.getByRole('tabpanel', { name: '회로 정보' })).toBeVisible()
+  expect(screen.getByRole('complementary', { name: '부품 상세' })).toHaveClass('props-open')
+})
+
 it('shows concise part links and opens the chosen candidate checks and evidence only in the sidebar', async () => {
   const approvals = candidateApi()
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   const second = await screen.findByRole('button', { name: /1N5819.*상세 보기/ })
   expect(screen.getByText('후보 2개의 검토 결과를 정리했어요.')).toBeInTheDocument()
   expect(screen.getByText(/검색이 후보 수 상한/)).toBeInTheDocument()
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByText(/상세 보기를 선택/)).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByText(/상세 보기를 선택/)).toBeInTheDocument()
   expect(screen.queryByText('반복 표 본문')).toBeNull()
   expect(within(screen.getByRole('article')).queryByRole('table')).toBeNull()
   fireEvent.click(second)
-  expect(await within(sidebar).findByRole('heading', { name: '1N5819' })).toHaveFocus()
-  expect(within(sidebar).getByText('20 V')).toBeInTheDocument()
-  expect(within(sidebar).getByText('문서에 없는 값: VF')).toBeInTheDocument()
-  expect(within(sidebar).getByText('r1-1N5819.pdf')).toBeInTheDocument()
-  expect(within(sidebar).queryByText('r1-SS34L.pdf')).toBeNull()
-  expect(within(sidebar).queryByRole('heading', { name: '근거' })).toBeNull()
-  expect(within(sidebar).getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
+  expect(await within(screen.getByRole('tabpanel')).findByRole('heading', { name: '1N5819' })).toHaveFocus()
+  expect(within(screen.getByRole('tabpanel')).getByText('20 V')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByText('문서에 없는 값: VF')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByText('r1-1N5819.pdf')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).queryByText('r1-SS34L.pdf')).toBeNull()
+  expect(within(screen.getByRole('tabpanel')).queryByRole('heading', { name: '근거' })).toBeNull()
+  expect(within(screen.getByRole('tabpanel')).getByRole('button', { name: '검토하고 승인' })).toBeDisabled()
   expect(approvals).toEqual([])
   fireEvent.click(screen.getByRole('button', { name: /SS34L.*상세 보기/ }))
-  expect(await within(sidebar).findByText('40 V')).toBeInTheDocument()
-  expect(within(sidebar).getByText('극성을 확인해 주세요.')).toBeInTheDocument()
-  expect(within(sidebar).getByRole('link', { name: /r1-SS34L.pdf/ })).toHaveAttribute('href', 'https://example.test/ss34l.pdf#page=2')
-  expect(within(sidebar).queryByText('r1-1N5819.pdf')).toBeNull()
+  expect(await within(screen.getByRole('tabpanel')).findByText('40 V')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByText('극성을 확인해 주세요.')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /r1-SS34L.pdf/ })).toHaveAttribute('href', 'https://example.test/ss34l.pdf#page=2')
+  expect(within(screen.getByRole('tabpanel')).queryByText('r1-1N5819.pdf')).toBeNull()
 })
 
 it('keeps a past question candidate, its values and approval message together', async () => {
@@ -423,15 +732,16 @@ it('keeps a past question candidate, its values and approval message together', 
   const first = (await screen.findByText('첫 후보 질문')).closest('li')!
   const second = (await screen.findByText('둘째 후보 질문')).closest('li')!
   fireEvent.click(await within(second).findByRole('button', { name: /SS34L.*상세 보기/ }))
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(await within(sidebar).findByText('100 V')).toBeInTheDocument()
+  expect(await within(screen.getByRole('tabpanel')).findByText('100 V')).toBeInTheDocument()
   fireEvent.click(within(first).getByRole('button', { name: /SS34L.*상세 보기/ }))
-  expect(await within(sidebar).findByText('40 V')).toBeInTheDocument()
-  fireEvent.click(within(sidebar).getByRole('button', { name: '검토하고 승인' }))
+  expect(await within(screen.getByRole('tabpanel')).findByText('40 V')).toBeInTheDocument()
+  await waitFor(() => expect(within(screen.getByRole('tabpanel')).getByRole('button', { name: '검토하고 승인' })).toBeEnabled())
+  fireEvent.click(within(screen.getByRole('tabpanel')).getByRole('button', { name: '검토하고 승인' }))
   await waitFor(() => expect(approvals).toHaveLength(1))
   expect(approvals[0]).toEqual({ path: '/api/messages/101/approvals', body: { candidate_part: 'SS34L', verdict: 'ROLE_SUFFICIENT' } })
   fireEvent.click(screen.getByRole('button', { name: '새 검토' }))
-  expect(within(sidebar).queryByRole('heading', { name: 'SS34L' })).toBeNull()
+  expect(screen.queryByRole('heading', { name: 'SS34L' })).toBeNull()
+  expect(screen.queryByRole('tab', { name: 'SS34L · 질문 1' })).toBeNull()
 })
 
 it('preserves the full answer and document list for questions without candidate judgements', async () => {
@@ -443,8 +753,7 @@ it('preserves the full answer and document list for questions without candidate 
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   expect(await screen.findByText('문서 질문 설명')).toBeInTheDocument()
   expect(screen.getByRole('cell', { name: 'ABC123' })).toBeInTheDocument()
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByRole('link', { name: /document-answer.pdf/ })).toHaveAttribute('href', 'https://example.test/document-answer.pdf#page=1')
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /document-answer.pdf/ })).toHaveAttribute('href', 'https://example.test/document-answer.pdf#page=1')
   expect(screen.queryByRole('button', { name: /SS34L.*상세 보기/ })).toBeNull()
 })
 
@@ -452,9 +761,8 @@ it('opens a candidate from a live completed response without starting another ru
   api(`event: run_started\ndata: {"run_id":"r1"}\n\nevent: completed\ndata: ${JSON.stringify(candidateRun('r1').result)}\n\n`)
   await ask('D1의 후보를 찾아 주세요.')
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(await within(sidebar).findByText('40 V')).toBeInTheDocument()
-  expect(within(sidebar).getByRole('heading', { name: 'SS34L' })).toHaveFocus()
+  expect(await within(screen.getByRole('tabpanel')).findByText('40 V')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByRole('heading', { name: 'SS34L' })).toHaveFocus()
   expect(runs).toHaveLength(1)
 })
 
@@ -466,9 +774,8 @@ it('preserves package evidence separately from the condition evidence', async ()
   })
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByRole('link', { name: /package.pdf/ })).toHaveAttribute('href', 'https://example.test/package.pdf#page=4')
-  expect(within(sidebar).getByRole('link', { name: /r1-SS34L.pdf/ })).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /package.pdf/ })).toHaveAttribute('href', 'https://example.test/package.pdf#page=4')
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /r1-SS34L.pdf/ })).toBeInTheDocument()
 })
 
 it.each(['before', 'after'])('preserves document explanations %s a judgement and their additional sources', async position => {
@@ -482,12 +789,11 @@ it.each(['before', 'after'])('preserves document explanations %s a judgement and
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   expect(await screen.findByText('마킹은 ABC123입니다.')).toBeInTheDocument()
   expect(within(screen.getByRole('article')).queryByRole('table')).toBeNull()
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByRole('link', { name: /marking.pdf/ })).toBeInTheDocument()
-  expect(within(sidebar).queryByText('r1-SS34L.pdf')).toBeNull()
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /marking.pdf/ })).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).queryByText('r1-SS34L.pdf')).toBeNull()
 })
 
-it('shows test conditions, the reason for an uncertain check and role evidence in the details', async () => {
+it('keeps comparison values and uncertainty visible while revealing the condition evidence on demand', async () => {
   candidateApi(false, id => {
     const run = candidateRun(id)
     Object.assign(run.result.judgement.shown[1].checks[0], { condition: 'VR=100V, TJ=25°C', why: '시험 역전압이 실제 역전압보다 높아 불충족을 단정할 수 없음' })
@@ -495,10 +801,40 @@ it('shows test conditions, the reason for an uncertain check and role evidence i
   })
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /1N5819.*상세 보기/ }))
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByText('시험 조건: VR=100V, TJ=25°C')).toBeVisible()
-  expect(within(sidebar).getByText('시험 역전압이 실제 역전압보다 높아 불충족을 단정할 수 없음')).toBeVisible()
-  expect(within(sidebar).getByText('역할 근거: 직렬 연결')).toBeVisible()
+  const panel = screen.getByRole('tabpanel')
+  expect(within(panel).getByText('20 V')).toBeVisible()
+  expect(within(panel).getByText('≥ 15 V')).toBeVisible()
+  const detail = within(panel).getByText('VRRM', { selector: 'strong' }).closest('details')!
+  expect(detail).not.toHaveAttribute('open')
+  expect(within(panel).getByText('VR=100V, TJ=25°C')).not.toBeVisible()
+  expect(within(screen.getByRole('tabpanel')).getByText('시험 역전압이 실제 역전압보다 높아 불충족을 단정할 수 없음')).toBeVisible()
+  fireEvent.click(detail.querySelector('summary')!)
+  expect(detail).toHaveAttribute('open')
+  expect(within(panel).getByText('VR=100V, TJ=25°C')).toBeVisible()
+  expect(within(panel).getByRole('link', { name: /r1-1N5819.pdf/ })).toHaveAttribute('href', 'https://example.test/1n5819.pdf#page=2')
+  fireEvent.click(screen.getByRole('button', { name: /SS34L.*상세 보기/ }))
+  fireEvent.click(screen.getByRole('tab', { name: '1N5819 · 질문 1' }))
+  expect(detail).toHaveAttribute('open')
+  expect(within(screen.getByRole('tabpanel')).getByText('역할 근거: 직렬 연결')).toBeVisible()
+})
+
+it('keeps repeated condition codes as separate disclosures with their own criteria', async () => {
+  candidateApi(false, id => {
+    const run = candidateRun(id)
+    const checks = run.result.judgement.shown[0].checks
+    checks.push({ ...checks[0], basis: '추가 역전압 조건', threshold: 20 })
+    return run
+  })
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: /SS34L.*상세 보기/ }))
+  const panel = screen.getByRole('tabpanel')
+  const conditions = within(panel).getAllByText('VRRM', { selector: 'strong' }).map(item => item.closest('details')!)
+  expect(conditions).toHaveLength(2)
+  expect(within(panel).getByText('≥ 15 V')).toBeVisible()
+  expect(within(panel).getByText('≥ 20 V')).toBeVisible()
+  fireEvent.click(conditions[0].querySelector('summary')!)
+  expect(conditions[0]).toHaveAttribute('open')
+  expect(conditions[1]).not.toHaveAttribute('open')
 })
 
 function citedDocumentRun(id: string) {
@@ -520,13 +856,12 @@ it('hides corpus citations and opens the selected past answer sources including 
   expect(within(first).getByText('array[2171]')).toBeInTheDocument()
   expect(within(first).getByText('array[2172]')).toBeInTheDocument()
   fireEvent.click(open)
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(await within(sidebar).findByRole('heading', { name: '근거' })).toHaveFocus()
-  const links = within(sidebar).getAllByRole('link', { name: /r1-datasheet.pdf/ })
+  expect(await within(screen.getByRole('tabpanel')).findByRole('heading', { name: '근거' })).toHaveFocus()
+  const links = within(screen.getByRole('tabpanel')).getAllByRole('link', { name: /r1-datasheet.pdf/ })
   expect(links.map(link => link.getAttribute('href'))).toEqual(['https://example.test/r1.pdf#page=1', 'https://example.test/r1.pdf#page=2'])
-  expect(within(sidebar).getByText('1쪽 · ELECTRICAL CHARACTERISTICS · VRRM')).toBeInTheDocument()
-  expect(within(sidebar).getByText('2쪽 · ELECTRICAL CHARACTERISTICS · IR')).toBeInTheDocument()
-  expect(within(sidebar).queryByText('r2-datasheet.pdf')).toBeNull()
+  expect(within(screen.getByRole('tabpanel')).getByText('1쪽 · ELECTRICAL CHARACTERISTICS · VRRM')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByText('2쪽 · ELECTRICAL CHARACTERISTICS · IR')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).queryByText('r2-datasheet.pdf')).toBeNull()
 })
 
 it('hides citations and opens sidebar evidence directly from a live document answer without a new run', async () => {
@@ -550,10 +885,9 @@ it('keeps additional document pages when a candidate cites another page of the s
   })
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&threadId=t1']}><WorkbenchPage /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: '문서 근거 보기' }))
-  const sidebar = screen.getByRole('complementary', { name: '부품 상세' })
-  expect(within(sidebar).getByRole('heading', { name: '추가 문서 근거' })).toHaveFocus()
-  expect(within(sidebar).getByRole('link', { name: /r1-SS34L.pdf/ })).toHaveAttribute('href', 'https://example.test/ss34l.pdf#page=5')
-  expect(within(sidebar).getByText('5쪽 · MAXIMUM RATINGS · MARKING')).toBeInTheDocument()
+  expect(within(screen.getByRole('tabpanel')).getByRole('heading', { name: '추가 문서 근거' })).toHaveFocus()
+  expect(within(screen.getByRole('tabpanel')).getByRole('link', { name: /r1-SS34L.pdf/ })).toHaveAttribute('href', 'https://example.test/ss34l.pdf#page=5')
+  expect(within(screen.getByRole('tabpanel')).getByText('5쪽 · MAXIMUM RATINGS · MARKING')).toBeInTheDocument()
   expect(screen.getByText('마킹 설명입니다.')).toBeInTheDocument()
 })
 

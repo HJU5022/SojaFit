@@ -125,6 +125,10 @@ error (`role="alert"`, what failed plus retry), and the real content.
 - Keep the review composer in a separate bottom row while the conversation scrolls.
   Show a down-arrow button above it when the conversation end is below the visible area;
   jump only when requested, preserving the draft and attachments.
+- In the properties panel, compare each condition's required and candidate values side by side.
+  Keep the condition code and result visible; reveal basis, test conditions and citation under
+  a native disclosure. Keep failure/uncertainty reasons and candidate cautions visible when collapsed.
+  Use hairline row separators and the existing type/spacing scale instead of tall stacked cards.
 - File dragging uses a neutral dashed overlay with no pointer capture or animation.
   Keep attachment chips below the composer, scroll the list above 120px, and show pending
   transfer availability beside the files.

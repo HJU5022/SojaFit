@@ -102,7 +102,8 @@ SojaFit (proj3-b)
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
 │       │   ├── useRunStream.ts <- 분석 시작·재개·연결 복구 상태 머신
 │       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
-│       │   └── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
+│       │   ├── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
+│       │   └── useNetlistFiles.ts <- 선택·드롭 공통 검증과 취소 가능한 회로 버전 첨부 전송
 │       ├── lib/            <- 화면이 쓰는 순수 함수
 │       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
 │       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
@@ -121,6 +122,9 @@ SojaFit (proj3-b)
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
+│       │   ├── ChatPane.tsx <- 채팅 전용 스크롤·고정 입력창·대화 끝 이동
+│       │   ├── NetlistIntake.tsx <- 빈 프로젝트·대상 선택 전의 채팅 입력과 넷리스트 접수
+│       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색

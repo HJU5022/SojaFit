@@ -16,6 +16,10 @@ class FakeQuotes:
     def list_quotes(self, user, project): return []
     def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
+    def list_approvals(self, user, message):
+        self.calls.append(('approvals', user, message))
+        return [{'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
+                 'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'}}]
 
 
 def client(fake):
@@ -25,6 +29,33 @@ def client(fake):
 
 
 def teardown_function(): app.dependency_overrides.clear()
+
+
+def test_persisted_approval_read_is_owned_metadata_without_origin_or_snapshot():
+    fake = FakeQuotes()
+    with client(fake) as web:
+        response = web.get('/api/messages/9/approvals')
+    assert response.status_code == 200, response.text
+    assert response.headers['cache-control'] == 'no-store'
+    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
+                                'case_id': None, 'created_at': '2026-11-10T09:00:00Z'}]
+    assert 'PRIVATE_SNAPSHOT' not in response.text
+    assert fake.calls == [('approvals', 7, 9)]
+
+
+def test_approval_read_requires_login():
+    with TestClient(app, raise_server_exceptions=False) as web:
+        assert web.get('/api/messages/9/approvals').status_code == 401
+
+
+def test_approval_read_uses_safe_not_found_error(monkeypatch):
+    class Missing(FakeQuotes):
+        def list_approvals(self, *args): raise QuoteNotFound
+    app.dependency_overrides[auth.current_user_id] = lambda: 7
+    monkeypatch.setattr('backend.api.quotes.QuoteService', Missing)
+    with TestClient(app, raise_server_exceptions=False) as web:
+        response = web.get('/api/messages/9/approvals')
+    assert response.status_code == 404 and response.json()['error']['code'] == 'NOT_FOUND'
 
 
 def test_approval_and_quote_accept_only_minimal_inputs(monkeypatch):

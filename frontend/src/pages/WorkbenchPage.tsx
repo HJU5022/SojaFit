@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { ArrowUp, ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
-import { createDemo, deleteProject, getProject, listDemos, listProjects, renameProject, uploadProject } from '../api/projects'
+import { ChevronRight, CircleUserRound, FilePlus2, Folders, LogOut, Maximize2, Pencil, Settings, ShieldCheck, Users, Menu, Minus, Plus, Search, SquarePen, Trash2, X } from 'lucide-react'
+import { attachNetlist, createEmptyProject, createDemo, deleteProject, getProject, listDemos, listProjects, renameProject, uploadProject } from '../api/projects'
 import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, getThread, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
@@ -14,6 +14,7 @@ import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
 import Review from '../components/Review'
+import NetlistIntake from '../components/NetlistIntake'
 import { ExternalSchematic, SchematicImage } from '../components/Schematic'
 import '../styles/app.css'
 
@@ -61,7 +62,7 @@ export default function WorkbenchPage() {
   const [pending, setPending] = useState<{ ref: string; question: string } | null>(null) // 부품 목록에서 쓴 질문: 그 부품의 검토 화면이 열릴 때 한 번 보낸다
 
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false })
-  const project = useQuery({ queryKey: ['project', projectId], queryFn: ({ signal }) => getProject(projectId!, signal), enabled: projectId !== null, retry: false })
+  const project = useQuery({ queryKey: ['project', projectId, threadId], queryFn: ({ signal }) => getProject(projectId!, signal, threadId), enabled: projectId !== null, retry: false })
   const threads = useQuery({ queryKey: ['threads', projectId], queryFn: ({ signal }) => listThreads(projectId!, signal), enabled: projectId !== null, retry: false })
   const thread = useQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), enabled: projectId !== null && Boolean(threadId), retry: false })
   const demos = useQuery({ queryKey: ['demo-circuits'], queryFn: ({ signal }) => listDemos(signal), retry: false })
@@ -92,19 +93,38 @@ export default function WorkbenchPage() {
 
   const go = (next: Record<string, string>) => { clearError(); setFilter(''); setPending(null); setNavOpen(false); setParams(next) }
   const onThread = (id: string, ref = target?.ref ?? targetRef) => go({ projectId: String(projectId), ...(ref ? { targetRef: ref } : {}), ...(id ? { threadId: id } : {}) })
+  const onReviewThread = (id: string, ref = target?.ref ?? targetRef) => {
+    if (id && project.data) client.setQueryData(['project', projectId, id], project.data)
+    onThread(id, ref)
+  }
   function openCreator() {
     clearError()
     creator.current?.querySelector('form')?.reset()
     creator.current?.showModal()
   }
-  function ask(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const text = question.trim()
+  function ask(value: string) {
+    const text = value.trim()
     if (!text) return
     const hit = partIn(text, parts.filter(isDiode))
-    if (hit) { go({ projectId: String(projectId), targetRef: hit.ref }); setPending({ ref: hit.ref, question: text }); setQuestion(''); setAskError(''); return }
+    if (hit) { go({ projectId: String(projectId), targetRef: hit.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); setPending({ ref: hit.ref, question: text }); setQuestion(''); setAskError(''); return }
     const other = partIn(text, parts)
     setAskError(other ? `${other.ref}은(는) 현재 판정 범위 밖입니다. 지금은 다이오드만 판정합니다.` : '어느 부품에 대한 질문인지 알 수 없습니다. 부품 번호(예: D1)를 넣어 주세요.')
+  }
+  async function importNetlist(file: File, text: string, signal: AbortSignal) {
+    if (projectId === null) return
+    const version = errorVersion.current
+    const attached = await attachNetlist(projectId, file, signal)
+    signal.throwIfAborted()
+    if (version !== errorVersion.current) return
+    const nextParts = partsOf(attached.project)
+    const hit = partIn(text, nextParts.filter(isDiode))
+    client.setQueryData(['project', projectId, attached.thread_id], attached.project)
+    await Promise.all([client.invalidateQueries({ queryKey: ['projects'] }), client.invalidateQueries({ queryKey: ['threads', projectId] })])
+    signal.throwIfAborted()
+    if (version !== errorVersion.current) return
+    go({ projectId: String(projectId), threadId: attached.thread_id, ...(hit ? { targetRef: hit.ref } : {}) })
+    setQuestion(text); setAskError('')
+    if (hit && text) setPending({ ref: hit.ref, question: text })
   }
   async function removeThread(id: string) {
     if (confirming !== id) { setConfirming(id); return }
@@ -140,7 +160,7 @@ export default function WorkbenchPage() {
     setBusy(true); clearError()
     const version = errorVersion.current
     try {
-      const made = file instanceof File && file.size > 0 ? await uploadProject(String(data.get('name') ?? '').trim(), file) : await createDemo(String(data.get('demo') ?? ''), String(data.get('name') ?? '').trim())
+      const made = file instanceof File && file.size > 0 ? await uploadProject(String(data.get('name') ?? '').trim(), file) : data.get('demo') ? await createDemo(String(data.get('demo')), String(data.get('name') ?? '').trim()) : await createEmptyProject(String(data.get('name') ?? '').trim())
       await client.invalidateQueries({ queryKey: ['projects'] })
       if (version === errorVersion.current) { creator.current?.close(); go({ projectId: String(made.id) }) }
     } catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setBusy(false) }
@@ -181,7 +201,8 @@ export default function WorkbenchPage() {
         <ol className="crumbs"><li><button onClick={() => go({})}>프로젝트</button></li>
           {project.data && <li><ChevronRight aria-hidden="true" /><button onClick={() => go({ projectId: String(projectId) })}>{project.data.name}</button></li>}
           {target && <li><ChevronRight aria-hidden="true" /><span className="ref">{target.ref}</span><span className="crumb-value">{target.value}</span></li>}</ol>
-        {project.data && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => { clearError(); sheet.current?.showModal() }}><Maximize2 aria-hidden="true" />원본 회로도</button>}
+        {project.data && <span className="fine">{project.data.circuit_version === 0 ? '넷리스트 없음' : `회로 v${project.data.circuit_version ?? 1}`}</span>}
+        {project.data && parts.length > 0 && !demos.isPending && (target || !schematic) && <button className="btn" onClick={() => { clearError(); sheet.current?.showModal() }}><Maximize2 aria-hidden="true" />원본 회로도</button>}
       </header>
       {projects.error && projectId === null && <div className="notice inset" role="alert"><p {...requestIdProps(projects.error)}>프로젝트 목록을 불러오지 못했습니다. {errorMessage(projects.error)}</p><button className="btn" onClick={() => void projects.refetch()}>프로젝트 다시 불러오기</button></div>}
       {project.error && <div className="notice inset" role="alert"><p {...requestIdProps(project.error)}>회로를 불러오지 못했습니다. {errorMessage(project.error)}</p><button className="btn" onClick={() => void project.refetch()}>회로 다시 불러오기</button></div>}
@@ -193,24 +214,19 @@ export default function WorkbenchPage() {
           <button className="btn btn-primary" onClick={openCreator}><FilePlus2 aria-hidden="true" />새 프로젝트</button></div>
         <table className="rows"><thead><tr><th scope="col">이름</th><th scope="col">종류</th><th scope="col">마지막 수정</th><th scope="col"><span className="sr-only">조작</span></th></tr></thead>
           <tbody>{filteredProjects.map(item => <tr key={item.id} onClick={() => go({ projectId: String(item.id) })} onMouseLeave={() => setConfirming('')}>
-            <th scope="row"><button>{item.name}</button></th><td data-label="종류">{item.source_kind === 'demo' ? '예제 회로' : '올린 넷리스트'}</td><td data-label="마지막 수정">{item.updated_at.slice(0, 10)}</td>
+            <th scope="row"><button>{item.name}</button></th><td data-label="종류">{item.circuit_version === 0 ? '넷리스트 없음' : item.source_kind === 'demo' ? '예제 회로' : '올린 넷리스트'}</td><td data-label="마지막 수정">{item.updated_at.slice(0, 10)}</td>
             <td data-label="조작" onClick={event => event.stopPropagation()}><span className="row-actions row-actions-end">
               <button className="icon-btn" aria-label={`${item.name} 이름 바꾸기`} title="이름 바꾸기" onClick={() => { clearError(); setRenaming(item) }}><Pencil aria-hidden="true" /></button>
               <button className={confirming === `project-${item.id}` ? 'btn' : 'icon-btn'} aria-label={`${item.name} ${confirming === `project-${item.id}` ? '삭제 확인' : '삭제'}`} title="프로젝트 삭제" onClick={() => void removeProject(item.id)} onBlur={() => setConfirming('')}>{confirming === `project-${item.id}` ? '삭제 확인' : <Trash2 aria-hidden="true" />}</button>
             </span></td></tr>)}</tbody></table>
         {projects.isPending && <div className="skeleton" role="status"><span className="sr-only">프로젝트를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
-        {!projects.isPending && !projects.error && projectList.length === 0 && <p className="empty">아직 프로젝트가 없습니다. KiCad 넷리스트를 올려 첫 프로젝트를 만드세요.</p>}
+        {!projects.isPending && !projects.error && projectList.length === 0 && <p className="empty">아직 프로젝트가 없습니다. 이름으로 프로젝트를 만들고 넷리스트는 나중에 첨부해도 됩니다.</p>}
         {!projects.isPending && projectList.length > 0 && !filteredProjects.length && <p className="empty">이름이 일치하는 프로젝트가 없습니다. 검색어를 바꾸거나 지워 주세요.</p>}
       </section>}
 
-      {projectId !== null && !target && !threadId && <section className="list">
-        <form className="composer" onSubmit={ask}>
-          <label className="sr-only" htmlFor="part-question">질문</label>
-          <input id="part-question" className="input" style={{ flex: 1 }} autoComplete="off" aria-describedby="part-question-hint" value={question} onChange={event => { setQuestion(event.target.value); setAskError('') }} placeholder="예: D1을 SS34로 바꿔도 되나요? 입력 최대 12V, 전류 최대 1A" />
-          <button className="btn btn-icon" disabled={!question.trim()} aria-label="질문 보내기"><ArrowUp aria-hidden="true" /></button>
-        </form>
-        <p id="part-question-hint" className="composer-hint">부품 번호(예: D1)와 사용 조건(전압 · 전류 · 온도)을 함께 적어 주세요. 대체품을 찾을 때는 원하는 정격도 적어 주세요. 아래 목록에서 부품을 골라도 됩니다.</p>
+      {projectId !== null && project.data && !target && !threadMismatch && (!threadId || (thread.isSuccess && !thread.data.target_locked)) && <NetlistIntake key={`${projectId}:${threadId}`} question={question} setQuestion={text => { setQuestion(text); setAskError('') }} hasCircuit={parts.length > 0} onAsk={ask} onAttach={importNetlist}>
         {askError && <p className="notice" role="alert">{askError}</p>}
+        {parts.length > 0 && <>
         <div className="list-head"><h1 className="sr-only">교체할 부품</h1><label className="filter"><Search aria-hidden="true" /><span className="sr-only">부품 찾기</span><input value={filter} onChange={event => setFilter(event.target.value)} placeholder="참조 번호나 값으로 찾기" /></label></div>
         {partGroups.map(group => {
           const items = filteredParts.filter(part => isDiode(part) === group.eligible)
@@ -218,19 +234,20 @@ export default function WorkbenchPage() {
           return <section className={`part-group${group.eligible ? '' : ' part-group-secondary'}`} key={group.title} aria-label={group.title}>
             <div className="section-head"><h2>{group.title}<span className="group-count">{items.length}</span></h2><span>{group.eligible ? '다이오드' : '현재 다이오드만 판정합니다.'}</span></div>
             <table className="rows"><thead><tr><th scope="col">참조</th><th scope="col">값</th><th scope="col">풋프린트</th></tr></thead>
-              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={() => go({ projectId: String(projectId), targetRef: part.ref })}>
+              <tbody>{items.map(part => <tr key={part.ref} className={group.eligible ? undefined : 'dim-row'} onClick={() => { go({ projectId: String(projectId), targetRef: part.ref, ...(threadId && !thread.data?.target_locked ? { threadId } : {}) }); if (question.trim()) setPending({ ref: part.ref, question: question.trim() }) }}>
                 <th scope="row"><button>{part.ref}<span className="sr-only"> {part.value} 선택</span></button></th><td data-label="값">{part.value}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
           </section>
         })}
         {project.isPending && <div className="skeleton" role="status"><span className="sr-only">회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
         {!project.isPending && !project.error && !filteredParts.length && <p className="empty">{parts.length ? '참조 번호나 값이 일치하는 부품이 없습니다. 검색어를 바꾸거나 지워 주세요.' : '넷리스트에 부품이 없습니다. 새 프로젝트에서 부품이 있는 파일을 올려 주세요.'}</p>}
-      </section>}
+        </>}
+      </NetlistIntake>}
 
-      {projectId !== null && target && !threadMismatch && <Review key={projectId} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
-        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} initialQuestion={pending?.ref === target.ref ? pending.question : undefined} onThread={onThread} />}
+      {projectId !== null && target && !threadMismatch && <Review key={`${projectId}:${project.data?.circuit_version ?? 1}`} projectId={projectId} demoId={project.data?.demo_id ?? null} target={target} nets={contextOf(project.data, target.ref)}
+        counts={{ parts: parts.length, nets: project.data?.connections.nets.length ?? 0 }} threadId={threadId} reviewer={user.email} initialQuestion={pending?.ref === target.ref ? pending.question : undefined} onThread={onReviewThread} onAttach={importNetlist} />}
       {projectId !== null && threadId && !target && thread.error && <div className="notice inset" role="alert"><p {...requestIdProps(thread.error)}>대화 기록을 불러오지 못했습니다. {errorMessage(thread.error)}</p><button className="btn" onClick={() => void thread.refetch()}>대화 다시 불러오기</button></div>}
       {threadId && threadMismatch && <p className="notice inset" role="alert">이 프로젝트의 검토 기록이 아닙니다. 왼쪽 검토 기록에서 다시 선택해 주세요.</p>}
-      {projectId !== null && !target && threadId && project.data && thread.isSuccess && !threadMismatch && <p className="empty inset">이 검토의 대상 부품을 회로에서 찾지 못했습니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
+      {projectId !== null && !target && threadId && project.data && thread.isSuccess && thread.data.target_locked && !threadMismatch && <p className="empty inset">이 검토의 대상 부품을 회로에서 찾지 못했습니다. <button className="btn" onClick={() => go({ projectId: String(projectId) })}>부품 고르기</button></p>}
     </main>
 
     <dialog ref={renamer} className="dialog" aria-labelledby="renamer-title" onClick={closeOutside} onClose={() => { clearError(); setRenaming(null) }}>
@@ -248,11 +265,12 @@ export default function WorkbenchPage() {
     <dialog ref={creator} className="dialog" aria-labelledby="creator-title" onClick={closeOutside} onClose={clearError}><form onSubmit={create}>
       <h2 id="creator-title">새 프로젝트</h2>
       <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus /></label>
-      <label className="field"><span>KiCad 넷리스트 (.net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" /></label>
+      <label className="field"><span>KiCad 넷리스트 (선택, .net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" /></label>
+      <p className="property-note">파일 없이 먼저 만들고 채팅에서 넷리스트를 첨부할 수 있습니다.</p>
       {demos.isPending && <div className="skeleton" role="status"><span className="sr-only">예제 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
       {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
-      {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. KiCad 넷리스트 파일을 선택해 주세요.</p>}
-      {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue={demoList[0].id}>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
+      {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. 파일 없이 먼저 시작할 수 있습니다.</p>}
+      {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue=""><option value="">파일 없이 시작</option>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
       {error ? <div className="notice notice-dismissible" role="alert" {...requestIdProps(error)}><p>프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p><button type="button" className="icon-btn" aria-label="오류 알림 닫기" onClick={clearError}><X aria-hidden="true" /></button></div> : null}
       <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '만드는 중' : '만들기'}</button></div>
     </form></dialog>

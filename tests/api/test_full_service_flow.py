@@ -54,7 +54,14 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
         'judgement': {'kind': 'judge', 'roles': ['R01'], 'results': [{'part': 'SS34', 'verdict': 'ROLE_SUFFICIENT'}]},
     })
     saved = conversations.get_run(owner, run)
+    assert quotes.list_approvals(owner, saved['message_id']) == []
+    with connect() as conn:
+        user_message = conn.execute("SELECT id FROM messages WHERE run_id=%s AND role='user'", (run,)).fetchone()[0]
+    for user, message in ((other, saved['message_id']), (owner, saved['message_id'] + 100000), (owner, user_message)):
+        with pytest.raises(QuoteNotFound): quotes.list_approvals(user, message)
     approval = quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
+    assert quotes.list_approvals(owner, saved['message_id']) == [approval]
+    assert set(quotes.list_approvals(owner, saved['message_id'])[0]) == {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created_at'}
     # [왜] 같은 메시지를 다시 승인하면 UNIQUE(message_id)가 막아 승인 · 사례가 한 건으로 남는다(API는 409, db/020)
     with pytest.raises(psycopg.errors.UniqueViolation): quotes.approve(owner, saved['message_id'], 'SS34', 'ROLE_SUFFICIENT')
     assert len(quotes.list_cases(owner)) == 1
@@ -81,6 +88,7 @@ def test_full_owned_flow_and_price_free_cascade(full_storage):
 
     quotes.delete_case(owner, approval['case_id'])
     assert quotes.list_cases(owner) == []
+    assert quotes.list_approvals(owner, saved['message_id']) == [{**approval, 'case_id': None}]
     projects.delete_owned(owner, project.id)
     with connect() as conn:
         counts = {name: conn.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(name))).fetchone()[0]

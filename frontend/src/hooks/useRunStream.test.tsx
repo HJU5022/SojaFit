@@ -6,19 +6,13 @@ afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(
 const dto = { answer: '완료 답', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
 const sse = (...frames: [string, object][]) => new Response(frames.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''), { headers: { 'Content-Type': 'text/event-stream' } })
 
-it('uploads actual files as multipart and leaves the boundary header to the browser', async () => {
-  const fetcher = vi.fn().mockResolvedValue(sse(['run_started', { run_id: 'attachment-run' }], ['completed', dto]))
+it('rejects files at the analysis boundary so netlists must be imported first', async () => {
+  const fetcher = vi.fn()
   vi.stubGlobal('fetch', fetcher)
   const { result } = renderHook(() => useRunStream())
   await act(async () => { await result.current.start('thread-1', { question: '첨부 확인', target_ref: 'D1', attachments: [new File(['memo'], 'notes.txt')] }) })
-  const [path, init] = fetcher.mock.calls[0]
-  expect(path).toBe('/api/threads/thread-1/runs/attachments')
-  expect(init.body).toBeInstanceOf(FormData)
-  expect(init.body.get('question')).toBe('첨부 확인')
-  expect(init.body.get('files').name).toBe('notes.txt')
-  expect(init.headers).toBeUndefined()
-  expect(init.credentials).toBe('same-origin')
-  expect(result.current.state.status).toBe('completed')
+  expect(fetcher).not.toHaveBeenCalled()
+  expect(result.current.state).toMatchObject({ status: 'failed', error: { code: 'UNSUPPORTED_ATTACHMENT' } })
 })
 
 it('uses the 120 second stream deadline and restores via GET when it aborts', async () => {

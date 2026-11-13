@@ -8,7 +8,7 @@ export type CandidateDto = { part: string; role?: string; verdict: 'IDENTICAL' |
 export type JudgementDto = { input_conditions?: { code: string; value: string }[]; kind: 'judge' | 'find' | 'no_rule'; roles: string[]; role_evidence: string[]; results: CandidateDto[]; shown: CandidateDto[]; unverified: CandidateDto[]; capped: boolean }
 export type InterruptDto = { missing?: string[]; role_choices?: string[]; question?: string }
 export type ResultDto = { answer: string; status: string; stage: string; question_type: string; evidence: EvidenceDto[]; judgement: JudgementDto | Record<string, never>; price_parts: string[]; refusal: string; interrupt: InterruptDto; request_id: string; profile_hints?: ProfileHintDto[] }
-export type ThreadDto = { id: string; project_id: number; title?: string; created_at?: string; last_activity_at?: string; latest_run_id?: string | null; status?: string | null }
+export type ThreadDto = { id: string; project_id: number; circuit_version?: number; title?: string; created_at?: string; last_activity_at?: string; latest_run_id?: string | null; status?: string | null }
 export type SavedMessageDto = { id: number; run_id: string; role: 'user' | 'assistant'; content: string; created_at: string }
 export type ThreadDetailDto = ThreadDto & { title: string; target_ref: string | null; target_locked: boolean;
   latest_run: { id: string; status: string; message_id: number | null } | null; messages: SavedMessageDto[]; next_before_message_id: number | null }

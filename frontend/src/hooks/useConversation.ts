@@ -16,14 +16,17 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [files, setFiles] = useState<File[]>([])
   const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
+  const [sending, setSending] = useState(false)
+  const activeSend = useRef<AbortController | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const liveThread = useRef<string | null>(null)
   const state = stream.state
-  const running = state.status === 'running'
+  const running = state.status === 'running' || sending
   const waiting = state.status === 'requires_input'
 
   useEffect(() => {
     if (threadId === liveThread.current) return
+    activeSend.current?.abort(); activeSend.current = null; setSending(false)
     liveThread.current = threadId
     stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null); setLoading(false)
     if (!threadId) return
@@ -37,6 +40,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
     return () => { controller.abort(); liveThread.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 대화가 바뀔 때만 다시 읽는다
   }, [threadId])
+  useEffect(() => () => activeSend.current?.abort(), [])
 
   useEffect(() => {
     if (state.status === 'running' && state.stage) setStages(current => current.includes(state.stage) ? current : [...current, state.stage])
@@ -46,17 +50,23 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
   async function send(recorded?: { question: string; conditions?: string }) {
     const question = recorded?.question ?? text.trim()
-    if (!question || loading || running || waiting || !targetRef) return
-    setError(null)
+    if (activeSend.current || !question || files.length || loading || running || waiting || !targetRef) return
+    const active = new AbortController()
+    activeSend.current = active; setSending(true); setError(null)
     try {
       let id = threadId
-      if (!id) { id = (await createThread(projectId)).id; liveThread.current = id; onThread(id) }
+      if (!id) {
+        id = (await createThread(projectId, AbortSignal.any([active.signal, AbortSignal.timeout(10_000)]))).id
+        active.signal.throwIfAborted()
+        liveThread.current = id; onThread(id)
+      }
+      active.signal.throwIfAborted()
       if (live && 'runId' in state && state.runId && state.status !== 'failed') setHistory(current => [...current, { runId: state.runId!, question: live.question }])
-      const attachments = recorded ? [] : files
       setLive({ question }); setStages([]); setText(''); setFiles([]); setPicked(null)
-      await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}), ...(attachments.length ? { attachments } : {}) })
-    } catch (reason) { setError(reason) }
+      await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}) })
+    } catch (reason) { if (!active.signal.aborted) setError(reason) }
+    finally { if (!active.signal.aborted) setSending(false); if (activeSend.current === active) activeSend.current = null }
   }
 
-  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, state, running, waiting, send, stream }
+  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, state, running, waiting, send, stream: { ...stream, cancel: () => { activeSend.current?.abort(); activeSend.current = null; setSending(false); stream.cancel() } } }
 }

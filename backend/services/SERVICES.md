@@ -26,5 +26,5 @@
 | `mouser.py` | Mouser 품번 검색 클라이언트 `check_parts`·`search_parts`: 한 번만 보내고 프로세스당 호출 상한 `MAX_CALLS`. 실패는 `MouserError(kind)`. `/api/prices`만 부름 |
 | `exa.py` | 내부 근거가 부족할 때만 쓰는 Exa 외부 근거 검색(공식 제조사 PDF, 공개 참고 링크). 요청당 호출 예산 `SearchBudgetExhausted` |
 | `datasheet_rows.py` | 공식 데이터시트 PDF 표에서 품번 열·페이지·행·단위를 확인해 인용 후보를 만듦. PDF 파서는 별도 프로세스 |
-| `quote.py` | 완료된 성공 판정의 품번·verdict 쌍을 승인 snapshot으로 `approvals`에 저장하고 가격 없는 견적·사용자 승인 사례를 관리. 가격·재고 키는 거절(`assert_no_price_data`) |
+| `quote.py` | 완료된 성공 판정의 품번·verdict 쌍을 승인 snapshot으로 `approvals`에 저장하고 가격 없는 견적·사용자 승인 사례를 관리. `list_approvals`는 소유 assistant 메시지의 승인 메타데이터만 조회하며 사례 삭제 후에도 승인·nullable case_id를 반환. 가격·재고 키는 거절(`assert_no_price_data`) |
 | `mail.py` | Gmail SMTP TLS 인증 링크 발송 `send_link`. 설정은 `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_PORT`, `AUTH_ORIGIN`이고 미설정이면 발송하지 않음. 토큰·수신자·오류를 로그하지 않음 |
