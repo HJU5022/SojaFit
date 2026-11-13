@@ -25,9 +25,11 @@ _SHA = re.compile(r"[a-fA-F0-9]{40}")
 _EXCLUDED = re.compile(r"datasheet|application[-_ ]?note|block[-_ ]?diagram|(?:^|[/_. -])(?:pcb|layout|renders?|rendering|3d|photo|preview|partial|detail|pinout|old|deprecated|obsolete|draft|backup|archive|archived|stage|excerpt|subsystem|section|fragment)(?:$|[/_. -])", re.I)
 
 
-def _public_addresses(host: str) -> bool:
+def _public_addresses(host: str) -> tuple[str, ...]:
     addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
-    return bool(addresses) and all(ipaddress.ip_address(a[4][0]).is_global for a in addresses)
+    if not addresses or not all(ipaddress.ip_address(a[4][0]).is_global for a in addresses):
+        return ()
+    return tuple(dict.fromkeys(a[4][0] for a in addresses))
 
 
 def _retry_after(headers: httpx.Headers) -> int:
@@ -40,28 +42,42 @@ def _retry_after(headers: httpx.Headers) -> int:
 
 
 def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
-                     client: httpx.Client | None = None) -> tuple[bytes, str]:
+                     client: httpx.Client | None = None,
+                     phase: str = "download") -> tuple[bytes, str]:
     """Only the API receives credentials. Never follow redirects to a different resource."""
     if client is None:
         with httpx.Client(trust_env=False) as owned:
-            return download_bounded(url, max_bytes=max_bytes, allowed_hosts=allowed_hosts, client=owned)
+            return download_bounded(url, max_bytes=max_bytes, allowed_hosts=allowed_hosts, client=owned,
+                                    phase=phase)
     original = urlsplit(url)
     try:
         for _ in range(4):
             if not safe_public_https_url(url, allowed_hosts=allowed_hosts):
                 raise ExternalSchematicInvalidSource()
             parsed = urlsplit(url)
-            # MockTransport does not connect to a peer. Real requests validate DNS before each hop.
-            if not isinstance(client._transport, httpx.MockTransport) and not _public_addresses(parsed.hostname):
-                raise ExternalSchematicInvalidSource()
+            # Resolve once and connect to that inspected public address. Host and
+            # TLS SNI retain the original hostname for certificate verification.
+            mock = isinstance(client._transport, httpx.MockTransport)
+            request_url = url
+            extensions = None
+            if not mock:
+                addresses = _public_addresses(parsed.hostname)
+                if not addresses:
+                    raise ExternalSchematicInvalidSource()
+                address = next((ip for ip in addresses if ":" not in ip), addresses[0])
+                request_url = parsed._replace(netloc=f"[{address}]" if ":" in address else address).geturl()
+                extensions = {"sni_hostname": parsed.hostname}
             if (parsed.path, parsed.query) != (original.path, original.query) or parsed.fragment:
                 raise ExternalSchematicInvalidSource()
             headers = {"Accept-Encoding": "identity"}
+            if not mock:
+                headers["Host"] = parsed.hostname
             if parsed.hostname in _API:
                 headers.update({"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"})
                 if token := os.getenv("GITHUB_TOKEN", "").strip():
                     headers["Authorization"] = f"Bearer {token}"
-            with client.stream("GET", url, headers=headers, timeout=15, follow_redirects=False) as response:
+            with client.stream("GET", request_url, headers=headers, extensions=extensions,
+                               timeout=15, follow_redirects=False) as response:
                 if response.status_code in {301, 302, 303, 307, 308}:
                     location = response.headers.get("location")
                     if not location:
@@ -73,7 +89,10 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
                         response.headers.get("x-ratelimit-remaining") == "0" or "retry-after" in response.headers
                     )
                 ):
-                    raise ExternalSchematicRateLimited(_retry_after(response.headers))
+                    raise ExternalSchematicRateLimited(
+                        _retry_after(response.headers), host=parsed.hostname,
+                        phase=phase, status_code=response.status_code,
+                    )
                 if response.status_code == 401 and parsed.hostname in _API:
                     raise ExternalSchematicConfigurationError()
                 if response.status_code in {404, 410, 451}:
@@ -90,7 +109,8 @@ def download_bounded(url: str, *, max_bytes: int, allowed_hosts: frozenset[str],
 
 
 def _api(url, cap, client):
-    data, _ = download_bounded(url, max_bytes=cap, allowed_hosts=_API, client=client)
+    data, _ = download_bounded(url, max_bytes=cap, allowed_hosts=_API, client=client,
+                                phase="github_api")
     try:
         value = json.loads(data)
         if not isinstance(value, dict):
@@ -372,7 +392,8 @@ def _inspect(ref, query, client):
     raw = f"https://raw.githubusercontent.com/{slug}/{commit}/"
 
     def fetch(path, limit):
-        data, _ = download_bounded(raw + quote(path), max_bytes=limit, allowed_hosts=_RAW, client=client)
+        data, _ = download_bounded(raw + quote(path), max_bytes=limit, allowed_hosts=_RAW,
+                                    client=client, phase="github_raw")
         try:
             return data.decode("utf-8-sig"), len(data)
         except UnicodeError:
