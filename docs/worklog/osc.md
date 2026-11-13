@@ -740,3 +740,10 @@
 - 로컬 실조회에서 `SparkFun Pro Micro v13`, `SparkFun Breadboard Power Supply 5V/3.3V`는 2등급으로 반환됐다. `Adafruit MOSFET Driver STEMMA`는 Exa가 등록 PNG가 아닌 안내 PDF를 반환해 404였다. 세 모델 모두 검색된다고 주장하지 않는다.
 - 관련 pytest 실행: 기능 138 passed, 저장소 구조 2 failed. 하나는 새 테스트 파일의 트리·폴더 목록 누락으로 이 PR에서 보완했다. 다른 하나는 이번 PR 밖의 미커밋 `tests/ops/` 목록 누락이다. 프런트 `Schematic.test.tsx`는 5 passed였다. 수정 뒤의 격리 구조 재검증 결과는 PR 본문에 기록한다.
 - `SPEC.md:210`의 API 응답 필드와 `docs/specs/external-complete-schematics.md:41`은 현재 코드의 등급·제조사·해시 필드를 설명하지 않는다. 주요 문서 권한에 따라 `SPEC.md`는 직접 수정하지 않고 PR에서 조장에게 갱신 위치를 전달한다.
+
+## 2026-11-13 · 이름 기반 공개 회로도 검색을 OSC-chunk에 분리
+
+- `OSC-chunk`의 미커밋 작업은 사용자 지시에 따라 정리했다. 기존 원격 커밋 `6115078`은 이력을 다시 쓰지 않고 `23334ce`로 되돌렸고, 최신 `origin/main`을 병합했다. 회로도 변경 전의 브랜치 파일 내용은 `origin/main`과 같음을 `git diff --quiet origin/main HEAD`로 확인했다. 원격 push는 하지 않았다.
+- `STH` 작업 트리에서 회로도 검색·출처 검증·PDF/이미지 변환·API·화면·관련 테스트·기능 스펙 16개 파일만 옮겼다. D7, Exa 데이터시트, MCP, 로그인, 루트 주요 문서는 제외했다. 이 PR 후보의 목적은 사용자가 입력한 회로도 이름으로 공개 웹의 원본을 찾고, 검증된 제조사 자료와 출처 미확인 공개 자료를 구분해 이미지로 제공하는 것이다.
+- 확인: `uv run --no-project --python <STH .venv Python> pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py`는 185 passed, 같은 실행 방식의 `tests/repo/test_repo_layout.py`는 5 passed. `npm run test:run -- --run src/components/Schematic.test.tsx`는 7 passed. `npm ci --prefer-offline --no-audit --no-fund` 뒤 `npm run build` 통과. `git diff --check` 통과. 이 작업 트리의 `.venv\lib64` 접근 거부 때문에 일반 `uv run --no-sync pytest`는 시작하지 못했고, 같은 Python 버전의 기존 STH 가상환경으로 검증했다.
+- 남은 확인: 옮긴 코드에 대한 새 실시간 Exa 15건 측정과 로그인 브라우저 검증은 하지 않았다. `STH`에서 앞서 기록한 15건 결과를 이 브랜치의 새 측정으로 취급하지 않는다. `SPEC.md:210`의 응답 필드 정본은 조장만 수정할 수 있으므로 PR에서 해당 줄의 갱신을 요청해야 한다. 핵심 변경이 400줄을 넘으므로 PR 본문에 규모와 분리하지 않은 이유를 적어야 한다. 원격 push와 PR 생성에는 조장 허락이 필요하다.
