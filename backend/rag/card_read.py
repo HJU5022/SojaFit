@@ -189,6 +189,16 @@ def _by_code(card: dict, codes: list[str], doc_parts: dict) -> tuple[list[dict],
     return (rows, rejected) if rows else None
 
 
+def read_code_values(cards: list[dict], codes: list[str], doc_parts: dict) -> list[dict]:
+    """Read only mechanically verified values, without adding a model call."""
+    rows = []
+    for card in cards:
+        parsed = _by_code(card, codes, doc_parts)
+        if parsed is not None:
+            rows.extend(parsed[0])
+    return rows
+
+
 def read_values(cards: list[dict], codes: list[str], doc_parts: dict[str, list[str]], *, chat) -> tuple[list[dict], list[dict]]:
     """카드마다 코드가 먼저 읽고, 코드가 못 읽은 카드만 LLM에 읽혀(`llm_read`) (받은 사양 행, 버린 읽기)를 돌려준다.
 

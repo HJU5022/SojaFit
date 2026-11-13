@@ -2,7 +2,9 @@
 
 강사에게 제출해 2026-10-29에 통과한 주제서를 그대로 옮겨 둔 것입니다. 고치지 않습니다.
 
-※ 2026-11-06: 김재훈은 개인 사정으로 팀을 탈퇴했습니다. 아래 본문의 구성원은 제출 당시 그대로입니다. 기능의 기준은 루트 `SPEC.md`입니다. 각주의 파일은 조장의 로컬 조사 폴더에 있고 이 저장소에는 없습니다.
+※ 2026-11-06: 김재훈은 개인 사정으로 팀을 탈퇴했습니다. 아래 본문의 구성원은 제출 당시 그대로입니다. 기능의 기준은 루트 `SPEC.md`입니다. 각주 [1]·[2]·[4]의 파일 사본은 2026-11-12부터 `docs/research/evidence/`에 있습니다(목록과 해시는 그 폴더의 EVIDENCE.md). 각주 [3]의 파일 사본은 2026-11-13부터 같은 폴더에 있습니다.
+
+※ 2026-11-12: 아래 237건 채용 공고 집계는 당시 제출 이력으로 보존하며(원자료 사본은 [research/evidence/](research/evidence/EVIDENCE.md)에 있음), 현재 평가·발표의 채용 근거로는 사용하지 않습니다. 검증한 [관련 채용 역할 50건의 분석과 공고 링크](research/market-user-journey.md#1-2-50개-채용-역할-분석-반복-업무와-요구-역량-2026-11-12-자료)를 사용합니다.
 
 **회로를 읽고 대체 조건을 정해 후보 부품을 판정하는 RAG 에이전트 (첫 범위: 소형 MCU 회로의 다이오드)**
 
@@ -20,7 +22,7 @@
 | 범위 | MVP는 판정과 승인 후 견적서 저장까지다. 로그인한 사용자별로 승인된 판정·견적 사례를 쌓고, 다음 판정 때 비슷한 사례를 함께 보여 준다. 틀린 사례는 승인 절차를 거쳐 고친다. 가격·재고는 키 없이 도는 데모 모드에서 기록해 둔 응답을 쓰고, 확장 단계에서 Mouser API로 실시간 가격·재고를 조회한다. 실제 주문·결제는 확장 가능성으로만 둔다. |
 | 2차를 이어가는 경우 | 해당 없음(신규 주제). |
 
-[1] 코퍼스 실측: `evidence/corpus2/manifest_diode.json`(다이오드 데이터시트 41건, 627조각), `evidence/corpus2/manifest_open_extra.json`, `evidence/corpus/manifest_open_docs.json`. 데이터시트 수는 TSC 공개 제품 API와 Infineon 제품 사이트맵으로 셌다(2026-10-29).
-[2] 제조 산업 AI 공고 집계: `evidence/jobs2/집계.md`(원티드·점핏·사람인·잡코리아·회사 채용 페이지, 2026-10-29).
-[3] 대체재·시장 조사: `reports/후보 G 시장 포화 비교.md`, `1차관문-회로역할대체.md`(2026-10-29).
-[4] 넷리스트 실측: `evidence/netlist/manifest_diodes.json`(공개 저장소 151개, 다이오드 554개, 2026-10-29).
+[1] 코퍼스 실측: [`research/evidence/corpus/manifest_diode.json`](research/evidence/corpus/manifest_diode.json)(다이오드 데이터시트 41건, 627조각), [`research/evidence/corpus/manifest_open_extra.json`](research/evidence/corpus/manifest_open_extra.json), [`research/evidence/corpus/manifest_open_docs.json`](research/evidence/corpus/manifest_open_docs.json). 데이터시트 수는 TSC 공개 제품 API와 Infineon 제품 사이트맵으로 셌다(2026-10-29).
+[2] 제조 산업 AI 공고 집계: [`research/evidence/job-postings-summary.md`](research/evidence/job-postings-summary.md)(원티드·점핏·사람인·잡코리아·회사 채용 페이지, 2026-10-29).
+[3] 대체재·시장 조사: [후보 G 시장 포화 비교](research/evidence/candidate-g-market-saturation.md)(원본 이름 `reports/후보 G 시장 포화 비교.md`), [1차 관문 회로 역할 대체](research/evidence/candidate-circuit-role-substitution.md)(원본 이름 `1차관문-회로역할대체.md`). 2026-10-29 작성, 2026-11-13 저장소로 옮김. 목록과 해시는 [research/evidence/EVIDENCE.md](research/evidence/EVIDENCE.md).
+[4] 넷리스트 실측: [`research/evidence/netlist/manifest_diodes.json`](research/evidence/netlist/manifest_diodes.json)(공개 저장소 151개, 다이오드 554개, 2026-10-29).

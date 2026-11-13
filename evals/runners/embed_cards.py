@@ -1,4 +1,4 @@
-"""임베딩 격자 본평가(evals/PREREGISTER.md #16)의 카드 적재와 모델별 카드 임베딩(실험용).
+"""임베딩 격자 본평가(evals/guides/preregister.md #16)의 카드 적재와 모델별 카드 임베딩(실험용).
 
 - 하는 일
   - load: chunks.jsonl 카드 52,244장을 실험 DB(앱 DB와 별개)의 cards 표에 넣는다. 본문 sha256을 다시 계산해 맞춰 본다.
@@ -6,7 +6,7 @@
     끊기면 다시 돌려 이어서 한다(이미 들어간 카드는 건너뜀). 시간·토큰·revision을 logs/embed_<키>.json에 남긴다.
   - embed(key, texts, kind): run_embedding_grid.py가 질문을 같은 방식으로 임베딩할 때 쓴다(kind='query' 또는 'document').
 - 하지 않는 일: 검색·채점(run_embedding_grid.py)
-- 출처: evals/PREREGISTER.md #16, backend/services/llm.py(embed_texts), evals/runners/benchmark_embeddings.py(QWEN_QUERY_PROMPT)
+- 출처: evals/guides/preregister.md #16, backend/services/llm.py(embed_texts), evals/runners/benchmark_embeddings.py(QWEN_QUERY_PROMPT)
 
 실행(`evals/docker/Dockerfile.embedding_grid` 컨테이너, 저장소를 /work/repo에 두고 /work/data·/work/logs를 마운트, EMBED_DB에 실험 DB 주소):
   cd /work/repo && python -m evals.runners.embed_cards load /work/data/chunks.jsonl  |  python -m evals.runners.embed_cards <모델 키>

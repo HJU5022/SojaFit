@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { apiFetch, apiRequest, dummyFlowEnabled } from './client'
+import { apiFetch, apiRequest, dummyFlowEnabled, errorMessage, requestIdProps } from './client'
 import { fetchPrices } from './prices'
 import { openRunStream } from './conversations'
 
@@ -65,4 +65,20 @@ it('encodes part names and disables browser price caching', async () => {
 it('accepts empty successful 204 responses for owner deletion', async () => {
   vi.stubGlobal('fetch', async () => new Response(null, { status: 204 }))
   await expect(apiFetch('/api/projects/11', { method: 'DELETE' })).resolves.toBeUndefined()
+})
+
+it.each([
+  [{ code: 'RATE_LIMITED', message: 'RATE_LIMITED', requestId: 'req-9' }, '요청이 많습니다. 잠시 기다린 후 다시 시도해 주세요.'],
+  [{ code: 'CONFLICT', message: 'run_in_progress', requestId: 'req-9' }, '이전 질문이 아직 조건 입력을 기다리고 있습니다. 위 칸에 답한 뒤 다시 보내 주세요.'],
+  [{ code: 'WEIRD_CODE', message: 'boom', requestId: 'req-9' }, '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'],
+  [{ code: 'NOT_FOUND', message: '대화를 찾을 수 없습니다.', requestId: 'req-9' }, '대화를 찾을 수 없습니다.'],
+  [new TypeError('Failed to fetch'), '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'],
+])('shows a Korean sentence without codes, status or request id: %j', (error, text) => {
+  expect(errorMessage(error)).toBe(text)
+  expect(errorMessage(error)).not.toMatch(/req-9|[A-Z_]{5,}|run_in_progress|\b[45]\d\d\b|요청 ID/)
+})
+
+it('keeps the request id only as a data attribute', () => {
+  expect(requestIdProps({ requestId: 'req-9' })).toEqual({ 'data-request-id': 'req-9' })
+  expect(requestIdProps(null)).toEqual({})
 })

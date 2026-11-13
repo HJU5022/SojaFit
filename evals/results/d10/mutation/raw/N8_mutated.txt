@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_forbidden_uses_error_contract ______________________
+tests/api/test_health.py:58: in test_forbidden_uses_error_contract
+    assert response.status_code == 403
+E   assert 200 == 403
+E    +  where 200 = <Response [200 OK]>.status_code
+=========================== short test summary info ============================
+FAILED tests/api/test_health.py::test_forbidden_uses_error_contract - assert ...
+1 failed in 0.93s

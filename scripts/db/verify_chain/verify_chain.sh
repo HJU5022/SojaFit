@@ -7,7 +7,7 @@
 set -u
 RC=0   # 비교에서 차이(허용 목록 밖)가 나오면 1로 끝낸다
 IMG=$1; NAME=$2; PORT=$3
-R="$(cd "$(dirname "$0")/../../.." && pwd)"; V="$R/db/redesign/verify"; TB="$R/db/migrations"
+R="$(cd "$(dirname "$0")/../../.." && pwd)"; V="$R/scripts/db/verify_redesign"; TB="$R/db/migrations"
 S="${OUT:-/tmp/rd_chain_out}"; mkdir -p "$S"; PY="${PY:-uv run --no-sync python}"
 q() { docker exec -i $NAME psql -v ON_ERROR_STOP=1 -q -At -U app -d "$1"; }
 mk() { docker exec $NAME psql -U app -d app -qc "DROP DATABASE IF EXISTS $1" -c "CREATE DATABASE $1" >/dev/null; }

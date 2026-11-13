@@ -1,51 +1,208 @@
 # 필수 게이트 자기 점검
 
-게이트는 점수가 아니라 **못 지키면 고정으로 깎이는 조건**입니다. 가산점은 7개를 모두 충족한 조만 받습니다. 정의의 정본은 3차 프로젝트 가이드이고, 이 표는 "이 저장소 어디에서 채우는가"를 적은 것입니다.
+- 상태: 현행
+- 기준일: 2026-11-13
+- 기준 커밋: `ea5797c`(`main`, 트리 `6452cdfc…`. G2 · G4의 11-13 측정 대상 `ad8612e`와 같은 트리). 나머지 게이트의 증거 커밋은 각 행에 적었다
+- 정본 여부: 정본(게이트 증거). 배포 리비전은 비정본(정본: [README.md](../README.md) 맨 위 표). 게이트 정의의 정본은 3차 프로젝트 가이드
+- 관련 문서: [README.md](../README.md), [SPEC.md](../SPEC.md), [EVAL_REPORT.md](../EVAL_REPORT.md), [evals/results/d10/README.md](../evals/results/d10/README.md), [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md), [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md)
 
-팀에서 매주 금요일에 아래 표를 갱신하세요. 아래 상태는 2026-11-09 저장소 코드와 문서에 근거하고(G1은 11-11까지 갱신, G3 · G4 · G5는 11-11에 현재 상태를 앞에 두고 이전 문장을 이력으로 표시), 외부 DB·배포·대시보드의 날짜가 적힌 결과는 당시 스냅샷입니다.
-
-| 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 지금 상태 |
-|---|---|---|---|
-| G1 배포 주소 | README 팀 정보의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 진행 중. **현재(11-11 확인)**: 라이브 리비전 `sojafit-api-27a410d-live`(11-11 04:25, 트래픽 100%)가 새 Supabase 프로젝트 `SojaFit_2`(서울, Postgres 17.11)에 붙어 있다. 기본 주소 스모크 **28/0/0**(통과/실패/건너뜀)과 구글 로그인 실제 왕복을 확인했고, 되돌리기는 `sojafit-api-716c6d6`(옛 DB 비밀 사용)이다. **증거(정본)**: 0% 점검 주소 [smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json](../scripts/results/smoke/smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json) 28/0/0, 100% 전환 뒤 기본 주소 [smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json) 28/0/0. 같은 기본 주소의 앞선 두 실행([_042105.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042105.json) 2/4/22 · [_042119.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042119.json) 19/1/8)은 B 계정 비밀번호 입력 문제로 실패한 것이며 서비스 문제가 아니다. **데모 계정 안내 변경**: 새 DB의 데모 계정 이메일은 `demo1@gmail.com` · `demo2@gmail.com`이다(11-10 이전 안내의 `example.com`과 다름). **새 DB 전환 내용**: 서비스 DB 재설계 코드를 새 DB에 연결해 배포했다. 기준선 SQL과 코퍼스 4표(청크 51,967행)만 옮기고 서비스 표는 새로 시작했다. Secret `DATABASE_URL_NEW`(기존 `DATABASE_URL` 유지). 세부는 `docs/worklog/jeongun.md` 11-11 항목. **알려진 문제**: 서버 로그의 Langfuse `Failed to export spans 403 Forbidden`(옛 리비전에서도 11-10부터, 미해결). **옛 DB 기준 이력(11-10, 새 DB 전환 전)**: 11-10 `jeongun` 커밋 `5631309`를 Cloud Run revision `sojafit-api-5631309`로 배포해 트래픽 100%로 바꿨다(이전 `sojafit-api-oauth-login-1109073330`은 되돌리기용으로 0%에 남김). 배포 주소에서 React 작업대(`/` · `/login` · 번들 JS 200), API 동작 33개 · 경로 27개(로컬 `app.openapi()`와 같음. 당시에는 문서에서 숨긴 Google 4개를 더해 동작 37개였고, 11-11 구글 승인 대기 경로가 삭제돼 지금은 숨긴 3개를 더해 동작 36개 · 경로 30개다. 코드로 센 값은 SPEC 4절), 로그인 전 401 · Origin 없는 POST 403 · 가짜 계정 로그인 401(DB 도달, 503 아님)을 확인했다. 운영 DB에는 018~020 · 022 · 023 · 024 · 025와 분석 준비 명령을 적용했다. 평가용 계정으로 핵심 시나리오를 끝까지 보는 점검은 11-10 밤에 했다(아래). 배포에 Mouser 키가 없어 가격 조회는 값 없음(`available:false`)이다. 11-10 저녁: `5631309`에 보안 커밋 2개(보안 헤더 4개, `/api/` 본문 128 KiB 한도 확대, 컨테이너 일반 계정 `nobody`)만 더해 revision `sojafit-api-07c6629`로 배포했다(0%에서 점검 뒤 100% 전환, 이전 `sojafit-api-5631309`는 0%로 남김). 같은 코드로 빈 볼륨 · `.env` 없이 compose를 띄워 `http_smoke.py --demo --refusal` 23단계 통과, 배포 주소에서 `/health` · `/` · `/login` 200, `/api/auth/me` 401, 데모 로그인 404, 보안 헤더 4개, 128 KiB 초과 413을 확인했다. **11-10 22:53 배포 주소 실제 계정 점검**: 운영 DB에 운영자 명령으로 만든 일반 계정 2개(데모 계정)로 `scripts/smoke/http_smoke.py --confirm-live --refusal`을 돌려 **23단계 통과 · 실패 0 · 건너뜀 0**(31.0초, 실제 LLM): 로그인 → 데모 회로 프로젝트(v3-01) → 판정 질문이 조건 질문에서 멈춤(`requires_input`) → 재개 `completed` → 승인 201 · 같은 승인 다시 409 `ALREADY_APPROVED` → 견적 저장 · 목록 → 계정 B가 A의 프로젝트 · thread 목록 · run을 읽으면 모두 404 → 범위 밖 질문(v3-30) `refused`. 첫 run 시작이 15.8초로 가장 길었다(첫 호출, 원인은 안 가름). 결과 `scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_225316.json`(비밀번호 · 이메일 · 쿠키 없음 확인). 점검한 배포는 revision `sojafit-api-b884849`이고 결과 파일의 `commit`(`6c38775`)은 스크립트를 돌린 로컬 작업 트리다. **11-10 23:26 재점검**(승인 422 수정 · 한도 상향 뒤 revision `sojafit-api-716c6d6`, 계정 격리를 승인 · 견적 · 승인 사례까지 넓힌 28단계): **통과 28 · 실패 0 · 건너뜀 0**(`..._2026-11-10_232639.json`). 승인 201 · 같은 승인 409 · 견적 201, B가 A의 견적 목록 · 메시지 승인(POST) · 승인으로 견적 저장(POST)이 모두 404, A 승인 사례 목록에는 A 사례가 있고 B에는 없음. 그 실행의 후보 이름은 일반 이름 `1N4007G`였고, **23:28 재실행**(`..._232814.json`)은 후보 표시 이름이 **`TSC 1N4007G`**로 나온 경우로 28단계 통과 · 승인 201 · 견적 part_number `1N4007G` 저장을 배포 서버에서 직접 확인했다(운영 DB 조회). 구글 로그인 실제 왕복은 이 시점에는 안 봤다(11-11에 확인, 위 현재 상태). **11-11 새 DB 전환 기록(위 현재 상태의 원문)**: 서비스 DB 재설계 코드(`sojafit-api-27a410d-live`)를 새 Supabase 프로젝트 `SojaFit_2`(서울, Postgres 17.11)에 연결해 배포했다. 기준선 SQL과 코퍼스 4표(청크 51,967행)만 옮기고 서비스 표는 새로 시작했다. Secret `DATABASE_URL_NEW`(기존 `DATABASE_URL` 유지)로 0% 주소 스모크 **28/0/0**(`smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json`), 100% 전환 뒤 기본 주소 스모크 **28/0/0**(`..._2026-11-11_042439.json`, 앞선 두 번은 B 계정 비밀번호 입력 문제로 실패 `*_042105.json` · `*_042119.json`). 구글 로그인 실제 왕복 확인. 되돌리기는 `sojafit-api-716c6d6`(옛 DB 비밀 사용). 새 DB 데모 계정은 `demo1@gmail.com` · `demo2@gmail.com`이다(이전 안내의 example.com과 다름). 세부는 `docs/worklog/jeongun.md` 11-11 항목 |
-| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 로컬 실측(가이드 조건, 11-10 재측정): 이미지 0개 · 볼륨 0개인 빈 Docker 엔진(`docker:dind` 29.9.3, overlayfs)에 `jeongun` 5631309를 번들에서 clone하고 `.env` 없이 `docker compose up -d` 한 줄로 띄웠다(pgvector는 새로 받고, api · thread-setup · corpus-load는 python · node · uv 이미지를 새로 받아 빌드). clone부터 맥(Apple M2, arm64): `/health` 200 55.6초, 데모 A 로그인 200 55.7초, `scripts/smoke/http_smoke.py --demo --refusal` 23단계 모두 통과(기록 응답 재생으로 판정 질문 `requires_input` → 재개 `completed` → 승인 201 · 다시 409 → 견적 → B 격리 404 → 범위 밖 질문 `refused`)까지 62.9초. WSL2(`desktop-gpu`, i9-12900KF, x86_64, WSL 안 Docker 29.1.3 위의 dind): `/health` 59.8초, 로그인 59.9초, 스모크 23단계 통과 67.5초(Tailscale 주소의 포트가 응답하지 않아 맥에서 SSH 터널로 `localhost`를 불렀다). 두 컴퓨터 모두 db · thread-setup · corpus-load(42문서 · 청크 1,556개) · api 정상. GitHub에서 main clone 3.6초(맥, 저장소가 비공개라 맥에 저장된 자격 증명으로 받음. WSL은 자격 증명이 없어 재지 않음). 결과 `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥) · `_055423.json`(WSL). 이전 측정(`jeongun-8` 93d29c7, 합성 시나리오): `/health` 70.6초, 승인까지 72.9초. Windows의 Docker Desktop은 확인하지 않았고, 제출 직전 최종 main으로 다시 잰다 |
-| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요. **현재(11-11)**: 새 Supabase DB(`SojaFit_2`)의 코퍼스는 문서 1,360 · 청크 51,967 · 임베딩 51,967이다(11-11 새 DB로 복사할 때 옛 운영 DB에서 센 값, `docs/worklog/jeongun.md` 11-11 항목). 이 수는 11-08 저장소 밖 v4h 전체 실행의 카드 수와 같지만, 옛 운영 DB가 52,244에서 51,967로 바뀐 날짜와 이유는 작업 기록에서 찾지 못했다(확인 필요). 서로 다른 본문(sha256) 수도 아직 세지 않았다. **이전 기록(11-09 이전)**: 저장소에는 v1 기준 1,360행 manifest(청크 수 합계 52,244)와 PDF 표본 3건만 있다. v1의 서로 다른 본문 45,898개는 11-01~02 외부 산출물·DB 스냅샷 이력이다. 최신 `main`은 v4h 청킹 코드와 저장소 밖 전체 실행 51,967카드·검색 103질의 기록을 포함하지만, 전체 입력·v4h 청크·요약 해시는 저장소에 없어 새 clone 재현과 에이전트 길 재측정 증거를 더 보강해야 한다 |
-| G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 진행 중. **현재(11-11)**: 서비스 그래프는 D5 멀티 그래프이고, 사용자별 분석 thread(PostgreSQL 체크포인트, 조건 질문 interrupt · 재개, 판정 승인)와 승인 · 견적이 서비스에 들어 있다(PR #73 이후, 11-09~11). 배포 주소에서는 11-10~11 실제 계정 스모크가 조건 질문 정지(`requires_input`) → 재개 `completed` → 승인 201 · 같은 승인 409 → 견적 저장, 계정 B가 A의 프로젝트 · thread · run · 견적 · 승인을 읽거나 쓰면 404인 것까지 보였다(G1 증거의 28단계 JSON). 확인 못 한 것: 배포 서버 재시작 뒤 복원(로컬 compose에서만 확인), 배포 DB에서의 사용자 기억 의미 검색. **이전 기록(문장별 시점)**: 로그인·서버 세션은 `main`에 있다(`backend/auth.py`, 11-02). 그래프는 D4 v2 단일 그래프([build.py](../backend/graph/build.py), 11-06: 사실 확인 → 7가지 라우팅 → 질문 종류별 길)와 D5 멀티 그래프([multi_agent/build.py](../backend/multi_agent/build.py), 11-06 재설계: Supervisor + RAG 에이전트 · Spec 에이전트) 둘이다. Spec 에이전트([agents/judge.py](../backend/multi_agent/agents/judge.py))는 빠진 회로 값을 인터럽트로 한 번 묻고 같은 thread에서 재개하며, 체크포인터는 평가 실행기가 넘기는 메모리 체크포인터(`InMemorySaver`, [run_graph.py](../evals/runners/run_graph.py))뿐이다. 멀티는 Spec 에이전트 없이 #38(11-05, 동결 v2 70문항)에서 쟀고, 판정 길과 D4 v2는 가짜 LLM·도구 시험만 했다([test_graph_build.py](../tests/graph/test_graph_build.py), [test_build.py](../tests/multi_agent/test_build.py)). (11-06 기준 이력) 그때는 영속 체크포인트 DB, 견적서 승인 지점, 사용자별 thread·기억이 아직 없었다(`backend/graph/memory.py`는 부르는 곳 없음). 2026-11-09 갱신: PR #73으로 사용자별 분석 thread(PostgreSQL 체크포인트, 조건 질문 interrupt · 재개, 판정 승인)가 main에 들어갔다. `jeongun-8`에서 React 실행 · 재개를 이 서비스로 연결했고, 장기 기억을 사용자 사실 3칸(Store `(user_id, "profile")`, 의미 검색 색인)으로 바꿨다. 키 없는 로컬 compose에서 시험 14개 통과([local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json)). (11-09 기준) 배포 주소 확인은 아직이었다. 위 현재 상태에서 11-10~11 스모크로 확인했다 |
-| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 진행 중. **현재(11-11)**: 기준 평가셋은 v3 50건(관련 25 · 비관련 25, 11-10 동결, [ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md), `evals/dataset_v3.jsonl`)이고 그 뒤 비교는 v3로 잰다. v3 4세트(#50)는 통과 50/50 · 무관 거절 25/25 · 지어낸 답 0이었고, 동결 파일 병합 뒤 다시 잰 2세트도 50/50이다(README 4절, [EVAL_REPORT.md](../EVAL_REPORT.md) 2장). v3 기준 개선 전후 두 번 이상과 달라진 문항 목록이 이 표의 증거로 충분한지는 확인 필요(EVAL_REPORT 3장 · 5장 대조 전). **이력 — v1 · v2 시기(11-06 이전, v3가 아님)**: 평가셋 v1 50건(11-02)과 v2 70건(11-03)을 동결했다(`evals/FROZEN.json`). 검색 기준선 3가지(`dense`·`bm25`·`hybrid`, `evals/results/retrieval/retrieval_{dense,bm25,baseline}_2026-11-03.json`)의 문항별 차이·실패 유형을 [retrieval-baseline-analysis.md](research/retrieval-baseline-analysis.md)에 정리했다(11-03). 그래프 답 5지표는 동결 v2 70문항으로 #31(D4 기준) → #35(프롬프트 영어) → #37(채점 Luna) → #38(멀티)을 한 번에 하나씩 바꿔 쟀다([preregister.md](../evals/guides/preregister.md), `evals/results/graph/`). D4 v2와 판정 길을 켠 측정은 #39 · #40 · #41 · #42에서 했다. 11-06: 기준 평가셋을 v3로 새로 만들고 청킹 결함을 고친 코퍼스부터 다시 재기로 했다([ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md)) |
-| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중: 그래프 평가 실행(`evals/runners/run_graph.py`)은 단계·토큰·비용과 실행 점수, 답 5지표(`answer_metric`)를 트레이스 점수로 기록한다. #31(11-04) 동결 v2 70문항에서 트레이스 70개와 `answer_metric` 70건이 결과 파일과 맞는 것을 확인했다([preregister.md](../evals/guides/preregister.md) #31 결과). #20 Skill 대표 4건·직접 생성 13건의 generation 23개를 API 확인했고 상황별 기준 12/13 충족(충돌 1건 실패). 현재 Skill 실행 UI는 미확인. 기존 사용자 UI6장은 이전 등록 본문에만 해당. 11-10: v3 50문항 4세트(#50)는 세트마다 Langfuse 세션 하나에 트레이스 50개와 문항 점수를 남겼고, 서비스 분석 트레이스는 `user_id`(사용자) · `session_id`(대화)를 붙인다(시험으로 확인, 배포본 수신은 미확인). 느림 원인 사례 2건과 LLM 단계별 시간 · 비용을 `EVAL_REPORT.md` 7 · 8장에 적었다. 대시보드 캡처 3장은 저장소에 아직 없다 |
-| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중: 제출 문서 자리와 환경변수 예시는 있으나 현재 코드 기준 3분 시연 영상과 최종 비밀값 검사는 확인되지 않았다 |
+게이트는 점수가 아니라 못 지키면 고정으로 깎이는 조건이다. 가산점은 7개를 모두 충족한 조만 받는다. 이 문서는 게이트마다 상태, 증거 경로, 확인 못 한 것을 적는다. 외부 DB · 배포 · 대시보드의 날짜가 적힌 결과는 그 시점의 스냅샷이다. G2 · G4의 2026-11-13 측정은 `jeongun-2` @ `ad8612e`(트리 `6452cdfc4188942e62b1be7e2eb73c55094c3b97`)에서 했다. `main` `ea5797c`(PR #115 · #116 병합, 2026-11-13 05:31 KST)의 트리가 같으므로 그 측정은 `main` 파일의 기록이다.
 
 ## 상태 표기
 
-`미착수` / `진행 중` / `충족` / `증거 보강 필요` 중 하나로 적고, 충족이면 **증거 링크**(파일, PR, 대시보드)를 같이 적으세요. 링크 없는 "충족"은 평가에서 인정되지 않습니다.
+`미착수` / `진행 중` / `충족` / `증거 보강 필요` 중 하나로 적고, 충족이면 증거 링크(파일, PR, 대시보드)를 같이 적는다. 링크 없는 충족은 인정되지 않는다.
 
-## 자주 놓치는 것
+## 게이트 표
 
-- G2: 평가자에게는 API 키가 없습니다. 키가 없으면 죽는 서비스는 G2를 못 넘습니다.
-- G2: 로컬 모델(임베딩, 리랭커)을 쓰면 평가자 컴퓨터에서 내려받기가 막히거나 오래 걸립니다. `HF_HUB_OFFLINE=1`과 `local_files_only=True`를 쓰고, 모델 캐시 크기(예: KURE-v1 약 2.1GB, bge-reranker-v2-m3 약 2.1GB)를 README에 적으세요. 서버 기동 시 모델을 미리 올려(`warmup()`) 첫 질문이 느려지지 않게 합니다.
-- G3: "청크 1만 개"는 서로 다른 청크입니다. 같은 문서를 복제하거나 약간 바꾼 것은 세지 않습니다. 본문이 같은 청크가 여러 문서에 있으면 한 개로 칩니다. v1 수치(52,244개 중 서로 다른 본문 45,898개)와 v4h 카드 51,967개(11-11 새 DB 코퍼스 청크 수와 같은 수)는 서로 다른 버전이므로 섞지 않습니다. v4h의 서로 다른 본문 수와 재현 해시는 해당 전체 산출물의 `summary.json`·본문 sha256으로 다시 확인합니다.
-- G4: 단일 에이전트로 되돌리는 것은 허용되지 않습니다. 11/6 중간 점검에서 분리를 확인합니다.
-- G5: 한 번 재고 끝내면 미충족입니다. 어느 문항이 회귀했는지가 보여야 합니다. 차이가 1~4문항이면 "개선"이라 쓰지 말고 달라진 문항 목록을 적으세요.
-- G5: 검색 결과를 후처리로 걸러 0~2개로 줄이면 "우연한 거절"이 생겨 점수가 실제보다 좋게 나올 수 있습니다. 검색 단계에서 필터를 걸거나, 후처리를 쓴다면 이 효과를 따로 보고하세요.
-- G7: 시연 영상에는 잘 되는 경로만이 아니라 실패하는 경로도 들어가야 합니다.
+| 게이트 | 증명하는 곳 | 평가자가 확인하는 방법 | 상태 |
+|---|---|---|---|
+| G1 배포 주소 | README 맨 위 표의 배포 주소 | 평가용 계정으로 접속해 핵심 시나리오를 끝까지 본다 | 충족 (11-13 배포 `574de79` 평가용 계정 A · B 25단계 통과, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md)) |
+| G2 한 줄 기동 | `docker-compose.yml`, `.env.example`, 데모 모드 | 새 clone에서 `docker compose up`, 10분 안에 뜨는지 실측 | 충족 (기준 600초: clone 시작 → `/health` 200 243.9초, 스모크 28/28. 한계는 G2 절) |
+| G3 코퍼스 | `data/manifest.jsonl`, `data/corpus/` | 서로 다른 청크(본문 sha256 기준) 1만 개 이상, 문서 50건 이상, 파싱 1종 이상 | 증거 보강 필요 |
+| G4 에이전트 | `backend/graph/`, `backend/multi_agent/`, `backend/auth.py`, `backend/graph/memory.py` | 코드와 시연. 평가용 계정 2개로 대화와 기억이 섞이지 않는지 | 충족 (11-13 배포 서버 · 실제 모델로 재시작 뒤 재개 · 409 · 계정 B 404, [deploy_574de79](../evals/results/d10/deploy_574de79/README.md). 시연 영상은 G7) |
+| G5 평가 | `evals/`, `EVAL_REPORT.md` 2장, 3장 | 평가셋 50건 이상(동결 시점 기준, 관련과 비관련 각각 절반), 개선 전후 두 번 이상, 차이는 문항 목록과 함께 | 진행 중 |
+| G6 트레이스 | Langfuse 프로젝트, `EVAL_REPORT.md` 7장 | 대시보드에서 트레이스와 평가 점수가 연결되어 있는지 | 진행 중 |
+| G7 제출물 | README, `.env.example`, `docs/deliverables/` | 비밀값 커밋 없음, 3분 이내 시연 영상(정상 경로와 실패 경로) | 진행 중 |
 
-## G4와 G5의 "통과"는 증거가 아닙니다: 변이 확인
+## 게이트별 증거
 
-테스트가 초록이라는 것은 아무것도 단언하지 않는 테스트도 초록이라는 뜻입니다. 핵심 코드를 **한 줄 깨뜨렸을 때 그 테스트가 실제로 실패하는지** 확인하고 기록하세요. 사례: 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과합니다. 리터럴과 비교해야(`assert n == 2`) 상한 변경을 잡습니다. AI 에이전트가 "변이를 잡았다"고 보고해도 직접 확인하세요.
+### G1 배포 주소
 
-3건 이상을 적습니다.
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
+| 리비전 `sojafit-api-fadde2a`(소스 `main` `fadde2a`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-fadde2a --revision-suffix fadde2a`로 만든 뒤(빌드 08:12~08:17 KST, 이미지 `sha256:95d6f571…`) 0% 점검 주소에서: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), `/app`이 가리키는 주 JS 번들(`/assets/index-BFnytjKy.js`)에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구가 둘 다 있음(새 화면이 이미지에 들어갔다), 오류 로그(심각도 ERROR 이상, 10분) 없음. 08:17 KST에 100% 전환. 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. 측정 커밋 `ad8612e`와 `fadde2a` 사이에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`은 비어 있다. `ae3de0b`와 `fadde2a` 사이에는 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 이전 100% 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환)가 되돌릴 대상이다 | `docs/worklog/jeongun.md` 11-13 항목 |
+| 리비전 `sojafit-api-ae3de0b`(소스 `main` `ae3de0b`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-ae3de0b --revision-suffix ae3de0b`로 만든 뒤(빌드 08:02~08:07 KST, 이미지 `sha256:618ad9a5…`) 0% 점검 주소에서: `/health` 200(냉 기동 12.3초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), `/app`이 가리키는 주 JS 번들(`/assets/index-BvxFKySW.js`)에 `모두 모름으로 계속` 문구 있음(새 화면이 이미지에 들어갔다), 오류 로그(심각도 ERROR 이상, 10분) 없음. 08:07 KST에 100% 전환. 공개 주소: `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. `c9d2c36`과 `ae3de0b` 사이에서 `backend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`은 비어 있고 `frontend/src`(와 문서)만 바뀌었다: 질문 바로 시작 · 답변 전체 마크다운 표시 · 이전 답 유지 · 조건 질문 '모름' 처리 · 사용자 화면의 오류 코드 · 요청 ID 숨김 | `docs/worklog/jeongun.md` 11-13 항목 |
+| 이전 리비전 `sojafit-api-c9d2c36`(소스 `main` `c9d2c36`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive origin/main`으로 올려 `--no-traffic --tag main-c9d2c36 --revision-suffix c9d2c36`로 만든 뒤(빌드 07:34~07:38 KST, 이미지 `sha256:9c180b82…`) 0% 점검 주소에서: `/health` 200(냉 기동 13.7초), `/login` 200, `/openapi.json` 200 · 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), 오류 로그(심각도 ERROR 이상, 10분) 없음. 07:39 KST에 100% 전환. 공개 주소: `/health` 200(0.09초), `/login` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security: max-age=31536000`. 환경변수는 지정하지 않아 서비스의 기존 설정을 그대로 이었다. `ea5797c`와 `c9d2c36` 사이 서비스 코드(`backend`, `frontend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`)의 `git diff --stat`은 비어 있다 | `docs/worklog/jeongun.md` 11-13 항목 |
+| 이전 리비전 `sojafit-api-ea5797c`(소스 `main` `ea5797c`, 2026-11-13) 인증 없는 점검 | 소스를 `git archive`로 올려 `--no-traffic --tag main-ea5797c`로 만든 뒤 0% 점검 주소에서: `/health` 200(냉 기동 12.1초), `/login` 200, `/openapi.json` 동작 41 · 경로 34, `/api/demo-circuits` · `/api/auth/me` 401(로그인 없음), 오류 로그 없음. 05:38 KST에 100% 전환. 공개 주소: `/health` 200(0.15초), `/login` 200, `/api/auth/me` 401, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security`. 환경변수 30개는 이전 리비전과 같다(`DEMO_MODE=0`, `GOOGLE_AUTH_ENABLED=1`, `THREADS_ENABLED=1`, DB 비밀 `DATABASE_URL_NEW`). Exa 변수가 없어 `/api/external-circuits`는 비활성이다(`EXA_WEB_SEARCH_ENABLED=1`과 `EXA_API_KEY`가 없으면 설정 오류, `backend/projects/external_schematic.py:213`) | `docs/worklog/jeongun.md` 11-13 항목 |
+| 이전 리비전 `sojafit-api-e0a5e30`(2026-11-12)에서 측정 | `/health` 200, 가입 · 데모 로그인 404(`DEMO_MODE=0`). 인증 통합 PR #109(커밋 `3152ffc`)는 이 리비전보다 뒤라, 이후 코드는 `POST /api/auth/signup`을 `DEMO_MODE`로 막지 않는다([SPEC.md](../SPEC.md) 4절) | `docs/worklog/jeongun.md` 11-12 항목 |
+| 새 DB 전환 후 스모크(2026-11-11, 리비전 `sojafit-api-27a410d-live`) | 0% 점검 주소 28/0/0(통과/실패/건너뜀), 100% 전환 뒤 기본 주소 28/0/0. 구글 로그인 실제 왕복 확인. DB는 새 Supabase 프로젝트(서울, Postgres 17.11), 기준선 SQL과 코퍼스 4표(청크 51,967행)만 이전 | [smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json](../scripts/results/smoke/smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json), [smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json) |
+| 같은 날 앞선 두 실행 | 2/4/22, 19/1/8. B 계정 비밀번호 입력 문제로 실패(서비스 문제 아님) | [_042105.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042105.json), [_042119.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042119.json) |
+| 옛 DB 기준(2026-11-10) 배포 주소 점검 | 리비전 `sojafit-api-b884849` 23단계 통과 · 실패 0 · 건너뜀 0(31.0초, 실제 LLM): 로그인 → 데모 회로 프로젝트(v3-01) → 조건 질문 정지 → 재개 → 승인 201 · 같은 승인 409 → 견적 → 계정 B의 A 자료 404 → 범위 밖 질문 거절 | [..._2026-11-10_225316.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_225316.json) |
+| 같은 날 28단계 재점검 | 리비전 `sojafit-api-716c6d6`, 28/0/0. 승인 · 견적 · 승인 사례까지 계정 격리 확인 | [..._232639.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_232639.json), [..._232814.json](../scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-10_232814.json) |
+| 되돌리기 리비전 | `sojafit-api-c9d2c36`(소스 `main` `c9d2c36`, 2026-11-13 07:39 KST 전환부터 08:07 KST 전환 전까지 100%). 명령: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 이 리비전을 100% 지정한다(이름은 `sojafit-api-` 뒤에 `c9d2c36`) | `docs/worklog/jeongun.md` 11-13 항목 |
+| 그 앞의 되돌리기 리비전 | `sojafit-api-ea5797c`(2026-11-13 05:38~07:39 KST 100%) | `docs/worklog/jeongun.md` 11-13 항목 |
+| 11-11 시점의 되돌리기 리비전 | `sojafit-api-716c6d6`(옛 DB 비밀 사용) | `docs/worklog/jeongun.md` 11-11 항목 |
+| 배포 Mouser 키 | 없음. 가격 조회는 `available:false` | 11-10 점검 기록. 11-13 리비전 설정에도 `MOUSER` 변수가 없다 |
 
-| # | 깨뜨린 곳 (파일, 한 줄) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 |
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| 평가용 계정 2개로 한 로그인 뒤 시나리오(스모크 28단계, 업로드, 실제 분석, 승인) | 리비전 `ea5797c` · `c9d2c36` · `ae3de0b` · `fadde2a`에서 하지 않았다. 최신 일반 스모크가 2026-11-11 042439(리비전 `27a410d-live`)이고 `aa14abc`(11-12 12:44, `DEMO_MODE=0`에서 데모 회로 생성 API 차단) 이전 코드의 값이다. 스모크 시나리오가 데모 회로 프로젝트(v3-01)로 시작해 `DEMO_MODE=0` 배포에서 그대로 재현되는지는 스크립트로 확인하지 않았다. 평가용 계정은 레포에 두지 않는다 |
+| 배포 서버 재시작 뒤 재개 | 리비전 `ea5797c` · `c9d2c36` · `ae3de0b` · `fadde2a`에서 하지 않았다(G4) |
+| Google 로그인 왕복 · 이메일 가입 왕복 | 리비전 `ea5797c` · `c9d2c36` · `ae3de0b` · `fadde2a`에서 하지 않았다. Google 왕복은 11-11 리비전 `27a410d-live`에서만 확인했다 |
+| 서버 로그의 Langfuse `Failed to export spans 403 Forbidden` | 옛 리비전에서도 11-10부터 났고 원인을 찾지 못했다 |
+
+### G2 한 줄 기동
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 현행 측정(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리 `6452cdfc…`) | 빈 `docker:dind`(29.9.3)에서 새 clone, `.env` 없음 · 키 없음, `docker compose up --build`. 냉: clone 시작 → `/health` 200 243.9초, `up` → `/health` 200 235.5초, `up` → 스모크 종료 243.1초, clone 시작 → 스모크 종료 251.6초(clone 8.4초). 온(`down -v` 뒤): `up` → `/health` 200 11.7초, → 스모크 종료 19.0초. 스모크 `--demo --refusal` 28 통과 · 0 실패 · 0 건너뜀(냉 · 온). 내려받은 양 852 MB(냉) | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json), [timeline_warm.json](../evals/results/d10/boot/timeline_warm.json), [smoke_cold.json](../evals/results/d10/boot/smoke_cold.json), [smoke_warm.json](../evals/results/d10/boot/smoke_warm.json) |
+| 시간이 늘어난 이유 | 시간은 이미지 빌드가 정한다(빌드 202.2초: `apt-get install kicad libcairo2` 70.0초, 이미지 내보내기 65.9초, `uv sync` 48.6초, `npm ci` 45.4초, 일부 겹침). `kicad libcairo2` 설치는 커밋 `e928d59`(11-11)가 `Dockerfile`에 넣었고 아래 11-10 측정은 그 전이다. 11-10과의 차이를 단계별로 나누어 재지는 않았다. 이미지 2.51 GB | [timeline_cold.json](../evals/results/d10/boot/timeline_cold.json) `build_steps_seconds`, [Dockerfile](../Dockerfile) |
+| 이전 측정(2026-11-10, 커밋 `5631309`, kicad 설치 전) | 이미지 0개 · 볼륨 0개인 빈 Docker 엔진(`docker:dind` 29.9.3), 번들에서 clone, `.env` 없이 `docker compose up -d` 한 줄 | `scripts/results/smoke/smoke_localhost-18000_2026-11-10_055128.json`(맥), `_055423.json`(WSL) |
+| 이전 측정: 맥(Apple M2, arm64) | `/health` 200 55.6초, 데모 A 로그인 200 55.7초, `scripts/smoke/http_smoke.py --demo --refusal` 23단계 통과 62.9초 | 위와 같음 |
+| 이전 측정: WSL2(i9-12900KF, x86_64, WSL 안 Docker 29.1.3 위의 dind) | `/health` 59.8초, 로그인 59.9초, 스모크 23단계 통과 67.5초 | 위와 같음 |
+| 기동되는 서비스 | db · thread-setup · corpus-load(42문서 · 청크 1,556개) · api가 정상(11-10: 맥 · WSL, 11-13: 맥) | 위와 같음 |
+| 임베딩 · 리랭커 | API 호출(Voyage)이라 로컬 모델 내려받기가 없다. 데모 모드의 검색은 BM25만 쓴다 | [SPEC.md](../SPEC.md) 6 · 7절 |
+
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| 평가자 환경에서의 기동 | 발표 때 평가자가 하는 실행은 이 측정과 별개다. 이 측정은 Mac 호스트의 docker-in-docker 1회(냉)다 |
+| WSL에서 11-13 측정 | 하지 않았다. WSL 값은 11-10 측정뿐이다 |
+| 11-13 측정의 반복 · 회선 속도 | 냉 1회 · 온 1회, 호스트 부하 5.62 → 8.21, 회선 속도 미측정([측정 문서](../evals/results/d10/startup_restart_isolation_2026-11-13.md) 한계) |
+| Windows Docker Desktop | 확인하지 않았다 |
+| WSL의 GitHub clone 시간 | 자격 증명이 없어 재지 않았다. 맥은 main clone 3.6초(저장소가 비공개라 저장된 자격 증명으로 받음) |
+
+### G3 코퍼스
+
+문서·쪽·청크 수의 정본은 [data/DATA.md](../data/DATA.md#코퍼스-수치)다. 아래 표는 게이트 증거로 측정 시점의 값과 원시 경로를 적는다.
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 문서 수 | 1,360건 | `data/manifest.jsonl` 1,360행, `evals/results/chunking/v4h-2026-11-08/manifest.jsonl` 1,360행 |
+| v4h 청크 | `cards` 51,967, `distinct_text` 51,967(청커 `tsc-v4h-2026-11-08`). 게이트 1만 개 기준 초과 | [summary.json](../evals/results/chunking/v4h-2026-11-08/summary.json), [corpus_v4h_fingerprint_2026-11-12.md](../evals/results/d10/corpus_v4h_fingerprint_2026-11-12.md) |
+| 결과 파일 sha256 | `manifest.jsonl` · `summary.json` · `table_suspects.jsonl` | `evals/results/chunking/v4h-2026-11-08/SHA256.txt` |
+| 청크별 sha256 목록 | 51,967행, 서로 다른 해시 51,967, 문서 1,360. 해시는 `chunks.jsonl`의 `text`(UTF-8, LF) 51,967건 전부 재계산과 일치. 청크 본문 없음 | [chunk_sha256.tsv](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.tsv), 형식·확인·재생성 명령 [chunk_sha256.md](../evals/results/chunking/v4h-2026-11-08/chunk_sha256.md) |
+| 새 Supabase 프로젝트 | 문서 1,360 · 청크 51,967 · 임베딩 51,967(옛 운영 DB에서 복사할 때 센 값, 2026-11-11) | `docs/worklog/jeongun.md` 11-11 항목 |
+| v1 manifest | 문서 1,360행, 청크 합 52,244, 서로 다른 본문 45,898(외부 스냅샷). v4h와 서로 다른 버전이라 섞어 세지 않는다 | `data/manifest.jsonl` |
+| 파싱 | Docling 2.145.0 + pdfplumber 대조 | [EVAL_REPORT.md](../EVAL_REPORT.md) 1-1절 |
+
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| 운영 DB에서 `sha256(본문)`을 다시 센 값 | 청크별 sha256 목록과 `distinct_text`는 청킹 산출물의 값이다. DB의 `chunk_sha256` 열 서로 다른 값은 51,967이지만([조회 기록](../evals/results/d10/index_row_count_2026-11-13.md)), 본문에서 다시 계산해 대조하지는 않았다 |
+| 새 clone에서 청킹 전체 재실행 | `chunks.jsonl`이 저장소에 없어 불가. 해시 목록과의 대조에도 필요하다 |
+
+### G4 에이전트
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 서비스 그래프 | D5 멀티 그래프(Supervisor + RAG 에이전트 · Spec 에이전트). D4 v2 단일 그래프는 비교 기준선 | `backend/multi_agent/build.py`, `backend/graph/build.py` |
+| 영속 체크포인트 · 승인 · 견적 | 사용자별 분석 thread(PostgreSQL 체크포인트, 조건 질문 interrupt · 재개, 판정 승인)가 서비스에 있다(PR #73 이후) | `backend/conversations/memory_service.py` |
+| 배포 주소 스모크(2026-11-10~11) | 조건 질문 정지 `requires_input` → 재개 `completed` → 승인 201 · 같은 승인 409 → 견적 저장. 계정 B가 A의 프로젝트 · thread · run · 견적 · 승인을 읽거나 쓰면 404 | G1 증거의 28단계 JSON |
+| 로컬 compose 재시작 복원(2026-11-09, `jeongun-8` `f6b6d7e`) | 조건 질문에서 멈춘 대화가 `docker compose restart api` 뒤에도 WAITING, 답하고 재개하면 DONE. 같은 승인 요청 두 번은 둘 다 200이고 DB 승인 원본은 1건. 데모 사용자 B는 A의 대화 조회 · 승인이 404. 시험 14개 통과 | [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json), `tests/api/test_http_restart.py` |
+| 재시작 뒤 재개 · 계정 분리, 현재 코드(2026-11-13, `jeongun-2` @ `ad8612e` = `main` `ea5797c`과 같은 트리, 로컬 compose, 키 없는 재생) | 실제 멀티 에이전트 그래프 + PostgreSQL 체크포인터로 52개 점검 52 통과. `demo-ask` · `v3-01`이 `requires_input`에서 멈춘 채 `docker compose restart api`(api PID 25205 → 29452, db 그대로) → 같은 세션 쿠키로 같은 정지 내용 → 재개하면 `completed`, 기록과 같은 판정(`ROLE_SUFFICIENT`). 체크포인트 행(thread별 `checkpoints` 9 · `checkpoint_writes` 61 · `checkpoint_blobs` 30)은 재시작 전후 같음. 계정 B ↔ A의 프로젝트 · thread · run · 메시지에 GET · PATCH · POST · DELETE · resume · recover가 양방향 · 재시작 전후 모두 404 `NOT_FOUND`, 목록에 상대 객체 없음, A의 사실 기억 3칸은 B에게 보이지 않고 재시작 뒤에도 A에게 남음. 승인 201 · 같은 승인 409 `ALREADY_APPROVED`(행 1), 견적 저장 201, 재시작 뒤에도 같음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [g4_restart_isolation.json](../evals/results/d10/boot/g4_restart_isolation.json), [checkpoint_rows.txt](../evals/results/d10/boot/checkpoint_rows.txt) |
+| 사용자 사실 기억 | 사용자 사실 3칸을 Store `(user_id, "profile")`에 두고 문장 임베딩 색인으로 찾는다(`backend/conversations/profile.py`). 순위 · 사용자 격리 · 수정 뒤 재임베딩 · 삭제는 결정적 가짜 임베딩으로 DB 시험 통과. 키 없는 로컬 compose에서 저장 · 사용자 격리 · 남의 id 거절(422) 확인 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |
+| 변이 확인 | 변이 28건 모두 시험이 잡는다(2026-11-13, 2차 시험 추가 전 25건 잡음 · 3건 못 잡음, 추가 후 28건 · 0건). 아래 "변이 확인" 표는 9건과 대표 6건 | [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) |
+| 기준 미달 시 pytest 실패 | 인젝션 결과 검사: 충족 시 종료 0, 깨뜨린 사본 3개는 위반 1건 · 종료 1. 종료 코드 1과 빈 최종 답 위반을 고정하는 시험 2개(`tests/evals/test_check_injection_result.py:31`, `:37`)가 있고, 해당 코드 줄을 깨뜨리면 실패한다 | [threshold_pass_2026-11-13.txt](../evals/results/d10/threshold_pass_2026-11-13.txt), [threshold_fail_2026-11-13.txt](../evals/results/d10/threshold_fail_2026-11-13.txt), 변이 N10 · N11([mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)) |
+
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| 배포 서버 재시작 뒤 복원 | 로컬 compose에서만 확인했다(11-09, 11-13) |
+| 평가용 계정 2개로 배포 주소에서 한 대화 · 기억 분리 점검(게이트 기준) | 하지 않았다. 11-13 측정은 `main` `ea5797c`과 같은 트리(`6452cdfc…`)의 로컬 compose에서 데모 계정 A · B로 했다 |
+| 실제 모델 · 실제 임베딩에서의 재시작 뒤 재개 | 11-13 측정의 모델 응답은 기록 재생이다. 실제 호출로는 확인하지 않았다 |
+| 합성 시험 `tests/api/test_http_restart.py` | `ad8612e`에서 2회 모두 429 `RATE_LIMITED`로 실패했다(호출 간격 2초 안에 재개). 간격 0 진단은 통과. 시험 쪽 수정(간격 0 지정)은 `main`에 있다(`a944c34`). 수정 뒤에는 실행하지 않았다. 상세: 측정 문서 한계 |
+| 배포 DB에서 실제 Voyage 임베딩으로 한 사용자 기억 의미 검색 | 확인하지 않았다. 키 없는 로컬 compose의 검색은 순위 없는 목록이다 |
+
+### G5 평가
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 기준 평가셋 | v3 50건(관련 25 · 비관련 25, 2026-11-10 동결). v1 50건(11-02), v2 70건(11-03)도 동결 | `evals/FROZEN.json`, [ADR 0015](adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md) |
+| 개선 전후 비교 | 3-A 검색 5단계, 3-B 판정 길 8단계, 3-C v3 검색 길 2단계, 3-D 현재 스택 확인. 달라진 문항 목록과 회귀 문항 포함 | [EVAL_REPORT.md](../EVAL_REPORT.md) 3절 |
+| v3 현재 값 | 50/50 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| 검색 기준선(v1) | 하이브리드 Recall@5 0.737 · MRR 0.649 | `evals/results/retrieval/retrieval_baseline_2026-11-03.json` |
+| 사전 등록 | 바꾸기 전 기대를 기록 | `evals/guides/preregister.md` |
+
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| v3 문항의 검색 Recall@5 · MRR | 측정하지 않았다(EVAL_REPORT 12절) |
+| 3-C 14행의 원시 결과 | 원시 미보관(EVAL_REPORT 12절) |
+| 3-A 5행(비트 후보)에서 기대 중 두 항목 | 합계 ±0.02와 시간 3배 이상은 기대와 달랐다. 유지를 정한 기록이 없다(EVAL_REPORT 3절 5행) |
+
+### G6 트레이스
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 평가 실행의 점수 연결 | 그래프 평가 실행기(`evals/runners/run_graph.py`)가 단계 · 토큰 · 비용 · 실행 점수 · 답 5지표(`answer_metric`)를 트레이스 점수로 기록. 동결 v2 70문항 실행(#31, 11-04)에서 트레이스 70개와 `answer_metric` 70건이 결과 파일과 맞음 | `evals/guides/preregister.md` #31 결과, `evals/results/graph/` |
+| 반복 평가 | v3 50문항 4세트(#50)가 세트마다 Langfuse 세션 하나에 트레이스 50개와 문항 점수를 남김 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7장 |
+| 서비스 분석 트레이스 | `user_id`(사용자) · `session_id`(대화)를 붙이고 질문 · 답 글은 보내지 않음(시험으로 확인) | `tests/services/test_langfuse_prompts.py` |
+| Skill 대표 흐름 | 대표 4건 · 직접 생성 13건의 generation 23개를 API로 확인, 상황별 기준 12/13 충족 | `evals/results/skill/skill_tool_summary_2026-11-03.json` |
+| 느림 원인 사례 | 2건과 LLM 단계별 시간 · 비용 | [EVAL_REPORT.md](../EVAL_REPORT.md) 7 · 8장 |
+
+확인 못 한 것:
+
+| 항목 | 이유 |
+|---|---|
+| 대시보드 스크린샷 3장(트레이스 상세 1장 포함) | `docs/deliverables/langfuse/`에 `.gitkeep`만 있다. 작업 원시는 `evals/results/graph/2026-11-12-d9-langfuse-capture/` |
+| 배포본 서비스 분석 트레이스의 Langfuse 수신 | 확인하지 못했다(G1의 403 오류) |
+| 현재 Skill 실행 UI | 확인하지 않았다 |
+
+### G7 제출물
+
+| 항목 | 값 | 증거 경로 |
+|---|---|---|
+| 시연 스크립트 | 초안(정상 · 실패 컷) | [demo_script.md](deliverables/demo_script.md) |
+| 실패 분석 | 있음 | [failure_analysis.md](deliverables/failure_analysis.md) |
+| AI 도구 사용 기록 | 있음 | [ai_tools_log.md](deliverables/ai_tools_log.md) |
+| 포트폴리오 | 하정운 1건 | [portfolio-jeongun.md](deliverables/portfolio-jeongun.md) |
+| 비밀값 검사 | 2026-11-13, `b5f050d`(`origin/main`), gitleaks `v8.30.1`, 이력 전체 801 커밋, 발견 0건. 최근 207 커밋도 0건. 허용 목록이 가리는 항목 1,366건은 모두 비밀이 아니다(해시 · 식별 값 · 시험 값). 시험 값 10건은 `.gitleaksignore` 지문으로, 해시 · 식별 값 · 파일 이름은 `.gitleaks.toml` 경로로 가린다. 시험 값 이전 뒤 `jeongun`(`c020389`) 이력 검사는 1건(`extra_checks.md:10`, SQL 파일 이름 인용 줄, 이전 전에도 있음)이다. 알려진 키 형식 정규식 검사도 파일 · 이력 0건 | [secret_scan_2026-11-13.md](../evals/results/d10/secret_scan_2026-11-13.md), [secrets/](../evals/results/d10/secrets/), 현재 HEAD 재검사: [secrets/after_2026-11-13_556384b.md](../evals/results/d10/secrets/after_2026-11-13_556384b.md) |
+
+확인 못 한 것(없는 것):
+
+| 항목 | 상태 |
+|---|---|
+| 시연 영상 파일 | 없음 |
+| Langfuse PNG | 없음 |
+| GitHub Actions 비밀값 검사 실행 결과 | 확인하지 못했다. 로컬 gitleaks 결과만 있다 |
+| 허용 목록이 gitleaks 검사에서 빼는 파일 3개(리랭크 캐시 · 인젝션 결과 2개) | gitleaks는 이 파일을 보지 않는다(캐시는 모든 규칙, 인젝션 결과는 `generic-api-key`). 정규식 검사로 0건을 확인했고 건별 목록은 없다 |
+| 다른 조원 포트폴리오(오세창 · 심태현) | 없음 |
+
+## 변이 확인
+
+핵심 코드를 한 줄 깨뜨렸을 때 테스트가 실제로 실패하는지 확인한 기록이다(G4 · G5). 28건 전체 표와 재현 명령은 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md)(정본)에 있고, 여기에는 기존 9건과 영역이 다른 대표 6건을 적는다. 28건을 모두 시험이 잡는다(N3b · N7 · N15는 처음에 못 잡았고 시험을 더해 잡게 됐다. 1차 기록은 `mutation/raw_25_of_28/`). 재작성 횟수 상한 테스트가 상수끼리 비교하면(`assert n == MAX_REWRITES`) 상한을 99로 올려도 통과하므로 리터럴과 비교한다(`assert n == 2`).
+
+| # | 깨뜨린 곳 (파일:줄, 변이) | 실패해야 하는 테스트 | 실제로 실패했는가 | 확인한 날 · 커밋 |
 |---|---|---|---|---|
-| 1 | `backend/graph/build.py` 24행 `MAX_TRIES = 2` → `MAX_TRIES = 99` (재검색 횟수 상한 무력화) | `tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses`, `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (`AssertionError: assert '재작성' == '거절'`, `StopIteration`, 원복 후 통과) | 2026-11-03 |
-| 2 | `backend/graph/nodes.py` 157행 `other_part_row` 반환식을 `return False`로 변경 (같은 문서 내 다른 품번 행 결정적 필터 제거) | `tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm` | 실패 (`AssertionError: {'passed': [1, 2, 3, 4]} != {'passed': [2, 3, 4]}`, 1N5817 행 `1`번 통과로 실패, 원복 후 통과) | 2026-11-03 |
-| 3 | `backend/graph/nodes.py` 236행 `generate`의 `"fake_citations": sorted(cited - valid)` → `[]` (없는 근거 번호 인용 검출 무력화) | `tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited` | 실패 (`AssertionError: {'fake_citations': []} != {'fake_citations': ['999']}`, 원복 후 통과) | 2026-11-03 |
-| 4 | `backend/graph/build.py`: 검색 상한을 2회에서 3회로 변경 | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패(세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-03 |
-| 5 | `backend/graph/nodes.py`: MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(`None != {"kind": "timeout"}`), 원복 후 통과 | 2026-11-03 |
-| 6 | `backend/graph/build.py`: MCP 장애도 채점으로 분기 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패(path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-03 |
+| 1 | `backend/graph/build.py:24` `MAX_TRIES = 2` → `MAX_TRIES = 99` (재검색 횟수 상한 무력화) | `tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses`, `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (`AssertionError: assert '재작성' == '거절'`, 2 failed), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 2 | `backend/graph/nodes.py:270` `other_part_row` 반환식을 `return False`로 변경 (같은 문서 내 다른 품번 행 결정적 필터 제거) | `tests/graph/test_graph_grade.py::test_other_part_row_dropped_before_llm` | 실패 (1 failed, 다른 품번 행이 통과해 `passed` 목록이 달라짐), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 3 | `backend/graph/nodes.py:460` `generate`의 `"fake_citations": sorted(cited - valid)` → `[]` (없는 근거 번호 인용 검출 무력화) | `tests/graph/test_graph_generate.py::test_generate_counts_fake_and_uncited` | 실패 (1 failed, `fake_citations`가 빈 목록), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 4 | `backend/graph/build.py:24` `MAX_TRIES = 2` → `3` (검색 상한 2회 → 3회) | `tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches` | 실패 (세 번째 채점에서 `StopIteration`), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 5 | `backend/graph/nodes.py:237` MCP 장애의 `retrieval_error`를 `None`으로 변경 | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패 (`assert None == {'kind': 'timeout'}`), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 6 | `backend/graph/build.py:49` MCP 장애도 채점으로 분기 (`return "채점"`) | `tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus` | 실패 (path에 불필요한 `채점` 추가), 원복 후 통과 | 2026-11-13 · `9c32d12` |
+| 7 | `backend/multi_agent/supervisor.py:351` `check_node`: 종합 숫자 검사 `problem = bool(…)` → `problem = False` | `tests/multi_agent/test_build.py::test_synth_that_invents_a_number_is_refused_by_the_check` | 실패 (`KeyError: 'refusal_reason'`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| 8 | `backend/multi_agent/supervisor.py:241` `_judgement_reply` 첫 줄 `return None` | `tests/multi_agent/test_supervisor.py::test_partial_judgement_does_not_fall_back_to_unsafe_prose` (single · synth) | 실패 (2 failed, 문서 사용 권고가 최종 답에 남음 / synth fallback), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| 9 | `backend/multi_agent/contracts.py:18` `MAX_AGENT_RUNS = 6` → `99` | `tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers`, `tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit` | 첫째 시험 실패 (`99 != 6`), 둘째는 상수를 쓰므로 통과 (1 failed, 1 passed). 원복 후 깨끗. 상한 가드 자체는 변이 N13이 잡는다 | 2026-11-13 · `9c32d12` |
+| N1 | `backend/multi_agent/agents/docs.py:230` RAG 가짜 인용 번호 목록 `fake = sorted(…)` → `[]` | `tests/multi_agent/test_docs_agent.py::test_nested_fake_id_is_removed_without_losing_the_provided_id` | 실패 (2 failed), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N4 | `backend/judge/verdict.py:405` 필수 조건 실패 시 불충분 판정 `elif any(… == 'fail' …)` → `elif False` | `tests/judge/test_judge_conditions.py::test_tolerance_class_excludes_tighter_grades_too` | 실패 (`'ROLE_SUFFICIENT' == 'NOT_SUFFICIENT'`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N6 | `backend/conversations/memory_service.py:192` 하루 토큰 한도 조건에서 사용량 항 제거 | `tests/api/test_errors.py::test_token_cap_is_limit_exceeded` | 실패 (`DID NOT RAISE ApiError`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N8 | `backend/auth.py:310` Origin 검사 `if request.headers.get("origin") != origin:` → `if False:` | `tests/api/test_health.py::test_forbidden_uses_error_contract` | 실패 (`assert 200 == 403`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+| N10 | `evals/runners/check_injection_result.py:45` 위반 시 종료 코드 `return 1 if found else 0` → `return 0` | `tests/evals/test_check_injection_result.py::test_main_exits_1_on_violation_and_0_otherwise` | 실패 (`assert 0 == 1`), 원복 후 깨끗. 시험 추가 전에는 못 잡았다 | 2026-11-13 · `9c32d12` |
+| N12 | `evals/dataset_v1.jsonl` 끝에 공백 1바이트 추가 (동결 해시) | `tests/evals/test_frozen_evals.py::test_frozen_files_unchanged` | 실패 (`dataset_v1.jsonl: 동결 후 바뀌었습니다`), 원복 후 깨끗 | 2026-11-13 · `9c32d12` |
+
+나머지 변이(N2 · N3 · N3c · N5 · N9 · N11 · N13 · N14 등)의 줄 · 시험 id · 첫 실패 메시지는 [mutation_2026-11-13.md](../evals/results/d10/mutation_2026-11-13.md) 3절에 있다. 원시 pytest 출력: [mutation/raw/](../evals/results/d10/mutation/raw/). 이전 기록: [mutation_2026-11-12.md](../evals/results/d10/mutation_2026-11-12.md)(대체됨). D10 재현 · 기준 미달 출력 · 코퍼스 지문: [evals/results/d10/README.md](../evals/results/d10/README.md).
 
 ## G4 추가 확인
 
-- [x] 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원·재개한다. 승인 전 부작용이 없고, 같은 승인 요청이 반복돼도 실행이 중복되지 않는지 확인한다.
-  - 2026-11-09 키 없는 로컬 compose(`jeongun-8` f6b6d7e): 조건 질문에서 멈춘 대화가 `docker compose restart api` 뒤에도 WAITING이고, 답하고 재개하면 DONE이 됐다. 같은 승인 요청 두 번은 둘 다 200이고 DB 승인 원본은 1건이었다. 데모 사용자 B는 A의 대화 조회 · 승인이 404였다([local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json)). 배포 주소에서는 아직 확인하지 않았다.
-- [ ] 사용자별 DB Store에 기억을 저장하고 의미 검색·활용·잘못된 기억 수정을 확인한다. thread 체크포인트나 코퍼스 벡터만 저장한 것으로 사용자 장기 기억을 대신하지 않는다.
-  - 2026-11-09 진행: 사용자 사실 3칸(소속 · 직무 · 선호 실장 방식)을 Store `(user_id, "profile")`에 두고 문장 임베딩 색인으로 찾는다(`backend/conversations/profile.py`). 분석 결과에 `profile_hints`로 쓰고, `/api/me/memory`로 고치고 지운다. 의미 순위 · 사용자 격리 · 수정 뒤 재임베딩 · 삭제는 결정적 가짜 임베딩으로 DB 시험을 통과했다([test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py)). 키 없는 로컬 compose에서는 저장 · 사용자 격리 · 남의 id 거절(422)을 확인했고, 검색은 순위 없는 목록이었다. 실제 Voyage 임베딩과 배포 DB에서의 의미 검색은 아직 확인하지 않았다.
+| 항목 | 상태 | 증거 |
+|---|---|---|
+| 승인 대기 상태를 영속 체크포인트에 저장하고 서버 재시작 뒤 복원 · 재개. 승인 전 부작용 없음, 같은 승인 요청 반복 시 실행 중복 없음 | 로컬 compose에서 확인(2026-11-13, `jeongun-2` `ad8612e` = `main` `ea5797c`과 같은 트리; 2026-11-09, `jeongun-8` `f6b6d7e`). 배포 주소에서는 확인하지 않음 | [startup_restart_isolation_2026-11-13.md](../evals/results/d10/startup_restart_isolation_2026-11-13.md), [local_g4_isolation_2026-11-09.json](../evals/results/threads/local_g4_isolation_2026-11-09.json) |
+| 사용자별 DB Store에 기억 저장, 의미 검색 · 활용 · 잘못된 기억 수정. thread 체크포인트나 코퍼스 벡터만으로 사용자 장기 기억을 대신하지 않음 | 일부 확인. 저장 · 격리 · 수정 · 삭제는 가짜 임베딩 DB 시험과 로컬 compose에서 확인. 실제 Voyage 임베딩과 배포 DB에서의 의미 검색은 확인하지 않음 | [test_profile.py](../tests/conversations/test_profile.py), [test_threads.py](../tests/api/test_threads.py) |

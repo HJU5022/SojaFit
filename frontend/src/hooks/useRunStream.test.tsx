@@ -2,9 +2,24 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { useRunStream } from './useRunStream'
 
-afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.useRealTimers() })
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); vi.useRealTimers() })
 const dto = { answer: '완료 답', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
 const sse = (...frames: [string, object][]) => new Response(frames.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''), { headers: { 'Content-Type': 'text/event-stream' } })
+
+it('uploads actual files as multipart and leaves the boundary header to the browser', async () => {
+  const fetcher = vi.fn().mockResolvedValue(sse(['run_started', { run_id: 'attachment-run' }], ['completed', dto]))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  await act(async () => { await result.current.start('thread-1', { question: '첨부 확인', target_ref: 'D1', attachments: [new File(['memo'], 'notes.txt')] }) })
+  const [path, init] = fetcher.mock.calls[0]
+  expect(path).toBe('/api/threads/thread-1/runs/attachments')
+  expect(init.body).toBeInstanceOf(FormData)
+  expect(init.body.get('question')).toBe('첨부 확인')
+  expect(init.body.get('files').name).toBe('notes.txt')
+  expect(init.headers).toBeUndefined()
+  expect(init.credentials).toBe('same-origin')
+  expect(result.current.state.status).toBe('completed')
+})
 
 it('uses the 120 second stream deadline and restores via GET when it aborts', async () => {
   const deadline = new AbortController()
@@ -127,4 +142,14 @@ it('shows the server message of a failed frame', async () => {
   const { result } = renderHook(() => useRunStream())
   await act(async () => { await result.current.start('thread-1', { question: '질문', target_ref: 'D1' }) })
   expect(result.current.state).toMatchObject({ status: 'failed', runId: 'run-3', error: { ...error, requestId: 'req-1' } })
+})
+
+it('rejects unsupported production attachments without a request or a paid run', async () => {
+  vi.stubEnv('DEV', false)
+  const fetcher = vi.fn()
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  await act(async () => { await result.current.start('thread-1', { question: '첨부 확인', target_ref: 'D1', attachments: [new File(['memo'], 'notes.txt')] }) })
+  expect(fetcher).not.toHaveBeenCalled()
+  expect(result.current.state).toMatchObject({ status: 'failed', error: { code: 'UNSUPPORTED_ATTACHMENT' } })
 })

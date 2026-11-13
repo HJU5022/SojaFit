@@ -1,12 +1,21 @@
 # SojaFit
 
+- 상태: 현행
+- 기준일: 2026-11-13
+- 기준 커밋: `ea5797c`
+- 정본 여부: 정본(배포 주소 · 배포 리비전 · 실행 방법). 기능은 [SPEC.md](SPEC.md), 평가 수치는 [EVAL_REPORT.md](EVAL_REPORT.md), 게이트 증거는 [docs/GATES.md](docs/GATES.md)가 정본
+- 관련 문서: [SPEC.md](SPEC.md), [EVAL_REPORT.md](EVAL_REPORT.md), [docs/GATES.md](docs/GATES.md), [SOJAFIT.md](SOJAFIT.md), [AGENTS.md](AGENTS.md)
+
 **소형 MCU 회로의 다이오드를 바꿔야 할 때, KiCad 넷리스트에서 그 부품의 역할과 대체 조건을 정하고 후보마다 데이터시트의 쪽·표·행을 근거로 판정하는 RAG 에이전트.**
 
-| | 주소 | 지금 상태 |
+| 항목 | 값 | 근거 |
 |---|---|---|
-| API(배포) | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상(2026-11-11 확인). Cloud Run이라 첫 요청은 몇 초 걸린다. 라이브 리비전은 `sojafit-api-27a410d-live`(11-11 04:25, 새 Supabase 서울 DB)이고 코드 근거는 `jeongun`의 서비스 DB 재설계 커밋들이다(아직 push 전). 같은 주소의 `/login`이 React 화면이다 |
-| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 `DEMO_MODE=1`인 로컬 데모에서만 열린다. 공개 배포는 이메일 가입 API가 404이고 Google 로그인으로 들어온다), 회로 작업대(`/app`: 프로젝트 · 데모 회로나 KiCad 넷리스트 업로드 · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
-| 시연 영상 | 아직 없음 | 정상 경로 1개 + 실패 경로 1개, 3분 이내 |
+| API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
+| 배포 리비전 | `sojafit-api-fadde2a`(태그 `main-fadde2a`). 소스: `main` `fadde2a`. 100% 전환 2026-11-13 08:17 KST | 인증 없는 점검만 했다. 0% 점검 주소: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), 새 화면 번들에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구 있음, 오류 로그 없음. 전환 뒤 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security`. `ae3de0b`부터 `fadde2a`까지 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 측정 커밋 `ad8612e`와 비교하면 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package*.json`은 바뀌지 않았다. 바뀐 화면: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다. 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복은 하지 않았다. 이전 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환). 증거 · 되돌리기: [docs/GATES.md](docs/GATES.md) G1, `docs/worklog/jeongun.md` 11-13 항목 |
+| 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
+| 기준 커밋 | `ea5797c` | 이 문서가 기술하는 코드이며, 배포 리비전의 소스 `main` `fadde2a`와는 `frontend/src`가 다르다(`ea5797c`에는 위 화면 변경이 없다). 동결 커밋(11-16 24:00)은 아직 정해지지 않았고, 동결 뒤 배포 리비전과 같은 코드인지 확인한다 |
+| 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
+| 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
 ```bash
 curl -s -w " %{http_code}\n" https://sojafit-api-559369539072.asia-northeast3.run.app/health
@@ -37,7 +46,7 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 ## 2. 핵심 기능
 
 - **회로에서 부품의 역할을 읽는다**: KiCad 넷리스트에서 대상 부품과 연결된 넷·부품을 뽑아 근거로 넘긴다.
-- **데이터시트 근거로만 답한다**: Taiwan Semiconductor 다이오드 데이터시트 1,360건(7,725쪽)을 표 한 행이 청크 하나가 되게 자른다. 저장소 manifest와 11-05 운영 DB 스냅샷은 v1 청크 52,244개(서로 다른 본문 45,898개)를 가리키고, 최신 v4h 외부 전체 실행은 카드 51,967개를 기록했다. 11-11 새 DB로 옮길 때 옛 운영 DB에서 센 코퍼스는 문서 1,360 · 청크 51,967 · 임베딩 51,967이었다. BM25와 벡터 검색을 RRF로 합치고 품번으로 거른다.
+- **데이터시트 근거로만 답한다**: Taiwan Semiconductor 다이오드 데이터시트 1,360건(7,725쪽)을 표 한 행이 청크 하나가 되게 자른다. 청크 수와 버전별 차이(v1 · v4h)는 [`data/DATA.md`](data/DATA.md#코퍼스-수치)와 [`docs/GATES.md`](docs/GATES.md) G3를 본다. BM25와 벡터 검색을 RRF로 합치고 품번으로 거른다.
 - **근거가 없으면 지어내지 않는다**: 채점을 통과한 청크만 근거로 쓰고, 근거가 없으면 이유와 필요한 단서를 묻는다. 답의 인용이 실제 청크인지 검사한다.
 - **후보마다 판정 5종 중 하나를 낸다**: 기준의 정본은 [`SPEC.md`](SPEC.md) 3절이다.
 
@@ -55,11 +64,78 @@ D1 1N4007(1000V), 5V 회로의 역극성 보호  →  더 작고 싼 다이오�
 
 ## 3. 에이전트 구조
 
-서비스 분석과 기준 평가셋 v3는 아래 멀티 그래프(`backend/multi_agent/build.py`)로 돈다. 이름은 `get_graph().draw_mermaid()` 그림의 노드 이름 그대로다.
+서비스 분석과 기준 평가셋 v3는 아래 멀티 그래프(`backend/multi_agent/build.py`)로 돈다. 아래 mermaid 글은 조립한 그래프에서 뽑은 것(`get_graph(xray=True).draw_mermaid()`, Spec 에이전트 하위 그래프를 펼친 모양)이라 노드 이름과 화살표가 코드와 같다. 실선은 고정 간선, 점선은 조건 간선이다. 다시 만드는 법과 달라졌는지 보는 시험은 [tests/multi_agent/test_readme_graph.py](tests/multi_agent/test_readme_graph.py)이고, 글을 GitHub에서 읽히게 하려고 두 곳만 고친다(노드 id의 이스케이프 풀기, 조건 간선 라벨 따옴표).
 
-![SojaFit 멀티 에이전트 구조: Supervisor가 Spec 에이전트와 RAG 에이전트에 동시에 일을 맡기고, 거절은 같은 줄의 끝 단계](docs/assets/agent-flow.png)
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	입력_읽기(입력 읽기)
+	기억_읽기(기억 읽기)
+	품번_판_확인(품번·판 확인)
+	Supervisor(Supervisor)
+	RAG_에이전트(RAG 에이전트)
+	답_모으기(답 모으기)
+	답_정리(답 정리)
+	종합(종합)
+	답_검사(답 검사)
+	끝내기(끝내기)
+	거절(거절)
+	가격_안내(가격 안내)
+	__end__([<p>__end__</p>]):::last
+	RAG_에이전트 --> 답_모으기;
+	Spec_에이전트_대체_부품_판정 --> 답_모으기;
+	Supervisor -.-> RAG_에이전트;
+	Supervisor -.-> Spec_에이전트_회로_읽기;
+	Supervisor -.-> 가격_안내;
+	Supervisor -.-> 거절;
+	Supervisor -.-> 끝내기;
+	Supervisor -.-> 답_모으기;
+	__start__ --> 입력_읽기;
+	기억_읽기 --> 품번_판_확인;
+	답_검사 -.-> 거절;
+	답_검사 -.-> 끝내기;
+	답_모으기 -.->|"&nbsp;다시 해 볼 실패 · 다시 계획(최대 1번)&nbsp;"| Supervisor;
+	답_모으기 -.-> 거절;
+	답_모으기 -.-> 답_정리;
+	답_모으기 -.-> 종합;
+	답_정리 --> 답_검사;
+	입력_읽기 --> 기억_읽기;
+	종합 --> 답_검사;
+	품번_판_확인 --> Supervisor;
+	가격_안내 --> __end__;
+	거절 --> __end__;
+	끝내기 --> __end__;
+	subgraph Spec 에이전트
+	Spec_에이전트_회로_읽기(회로 읽기)
+	Spec_에이전트_대체_부품_판정(대체 부품 판정)
+	Spec_에이전트_회로_읽기 --> Spec_에이전트_대체_부품_판정;
+	end
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+```
 
-파란 칸은 LLM 단계, 베이지 칸은 코드 단계다. 원본은 [agent-flow.svg](docs/assets/agent-flow.svg).
+LLM을 부르는 노드와 코드만 도는 노드(모델의 정본은 `backend/services/langfuse_prompts.py`의 `NODE_MODELS`):
+
+| 구분 | 노드 | 모델 | 근거 |
+|---|---|---|---|
+| LLM | `Supervisor` | `anthropic/claude-haiku-5.5` (`supervisor`) | `supervisor.py:87` |
+| LLM | `RAG 에이전트` | Haiku (`docs_answer`, 근거 채점 + 답 쓰기) | `agents/docs.py:560` |
+| LLM | `회로 읽기` (Spec 에이전트 안) | Haiku (`judge_read`) | `agents/judge.py:125` |
+| LLM | `종합` | `anthropic/claude-sonnet-5.5` (`synth`). 쓰는 조건은 SPEC 2절 | `supervisor.py:303` |
+| 코드, 드물게 LLM | `대체 부품 판정` | 코드가 못 읽은 카드가 있을 때만 Haiku (`card_read`). 비교와 판정은 코드 | `rag/card_read.py:251`, `rag/card_specs.py:93` |
+| 코드 | `입력 읽기` `기억 읽기` `품번·판 확인` `답 모으기` `답 정리` `답 검사` `끝내기` `거절` `가격 안내` | 없음 | `build.py:26-50`, `supervisor.py:146 · 257 · 312`, `facts.py:107`, `graph/nodes.py:124 · 209`, `graph/memory.py:26` |
+
+**개념도(손으로 그린 요약, 노드 이름과 화살표는 위 그래프가 기준)**
+
+![개념도: Supervisor가 Spec 에이전트와 RAG 에이전트에 동시에 일을 맡기고, 거절은 같은 줄의 끝 단계](docs/assets/agent-flow.png)
+
+원본은 [agent-flow.svg](docs/assets/agent-flow.svg).
 
 ```
 KiCad 넷리스트 + 질문
@@ -74,7 +150,7 @@ KiCad 넷리스트 + 질문
   │         ├─ RAG 에이전트        검색 → 근거 채점 + 답 쓰기(LLM 1번) → 근거가 없거나 일부면 다른 검색어로 1번 더 → 인용 검사(코드)
   │         └─ Spec 에이전트  회로 읽기(LLM 1번, 읽은 뒤 코드가 부품 이름을 질문 글과 대조해 정리) → 대체 부품 판정(코퍼스 밖 관문 · 빠진 값 한 번 묻기 · 카드 값을 코드로 비교, ADR 0016)
   ├─ 답 모으기       보고 상태와 상한만 본다 (코드). 다시 해 볼 실패면 Supervisor로 한 번 되돌린다
-  ├─ 답 정리 · 종합  후보 판정 보고가 있으면 코드 판정 답 틀만 낸다(출력 경계). 그 밖에 할 일이 2개 이상이면 종합 LLM 1번
+  ├─ 답 정리 · 종합  후보 판정 보고가 있으면 코드 판정 답 틀만 낸다(출력 경계). 그 밖에 할 일이 2개 이상이고 코드로 이을 수 없을 때만 종합 LLM 1번(조건은 SPEC 2절)
   └─ 답 검사         인용 번호와 종합 글 숫자의 출처를 코드로 본다 → 끝내기 | 거절
 ```
 
@@ -92,11 +168,21 @@ KiCad 넷리스트 + 질문
 | 코드, 계획 전 | 품번 · 개정판이 코퍼스에 있는지 확인해 사실로 넘긴다. LLM은 짐작하지 않고 이 값을 받는다 | SPEC 2절, `supervisor.py`의 `Facts` |
 | 코드, 계획 뒤 | 첫 계획이 후보 찾기인데 판정 찾기 할 일이 없으면 Spec 에이전트 할 일로 바꾼다 | ADR 0017, 사전 등록 #47 |
 | 코드, Spec 에이전트 | 숫자 · 단위 비교와 판정 5종(`backend/judge/`). 사실 확인이 코퍼스에 없다고 한 후보는 판정하지 않고 `part_missing`으로 거절 | AGENTS.md 지킬 것 7, ADR 0017 |
-| 코드, 답 정리 · 종합 | 후보 판정 보고가 하나라도 있으면 코드 판정 답 틀만 내고 문서 · 종합 글을 붙이지 않는다(찾기 · 규칙 밖 역할은 예전대로) | SPEC 2절 "출력 경계", EVAL_REPORT 6절 5행(C2, 고친 뒤 실제 모델 재측정 없음) |
+| 코드, 답 정리 · 종합 | 후보 판정 보고가 하나라도 있으면 코드 판정 답 틀만 내고 문서 · 종합 글을 붙이지 않는다(찾기 · 규칙 밖 역할은 예전대로) | SPEC 2절 "출력 경계", EVAL_REPORT 6절 5행(C2, 고친 뒤 실제 모델 재측정은 사례당 1회) |
 | 코드, 답 모으기 · 답 검사 | 상한과 재계획 여부, 인용 번호와 숫자의 출처 | MULTI_AGENT.md "구조 결정" |
 
-- 처음 Supervisor는 Sonnet이었다. Haiku는 사전 등록 #33(동결 v2 70문항, 그때 프롬프트, 사실 확인 코드 전)에서 형식에 맞는 결정 46~50/70, 질문 종류 21~23/35였다. 같은 조건의 Luna(65~66/70 · 33~35/35)는 채점 모델이라 다른 회사 모델에서 골랐다([ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md)).
-- Sonnet Supervisor가 v3 세트당 LLM 비용의 80%였다(세트 비용 $0.174 · $0.320). Haiku만 바꾼 #46은 통과 47 · 45/50, 무관 거절 23 · 24/25라 되돌렸다. 프롬프트 판단 순서 3단계 · 찾기 코드 라우팅 · 판정 쪽 안전장치 둘(판정 후보 없음은 실패, 코퍼스 밖 후보는 판정 안 함)을 더한 #47은 v3 50 · 48/50으로 받지 않는 조건에 걸렸고, 판정 읽기 · 문서 다시 찾기를 고친 #48 ~ #50 뒤 v3 4세트 통과 50/50, 무관 거절 25/25, 질문 종류 25/25, p95 8.6 ~ 8.9초, 50문항 LLM $0.044 ~ $0.052(Sonnet 구성 $0.17 ~ $0.32)로 채택했다. 이 4세트는 고친 실패 문항을 담아 독립 확인이 아니고, 튜닝에 쓰지 않은 c20(20문항, 저장소 밖)은 #47 구성에서 통과 12/20 · 질문 종류 16/20이었다([ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md), 사전 등록 #46 · #47 · #50).
+Supervisor 모델 선택 근거(수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 8장, 결정은 [ADR 0014](docs/adr/0014-supervisor는-sonnet-서브에이전트는-haiku-채점은-luna.md) · [ADR 0017](docs/adr/0017-supervisor를-haiku로-바꾸고-찾기-질문은-코드가-판정-에이전트로-맞춘다.md)):
+
+| 비교 | 결과 | 근거 |
+|---|---|---|
+| Haiku vs Luna, Supervisor 후보(동결 v2 70문항, 사실 확인 코드 전) | Haiku 형식에 맞는 결정 46~50/70 · 질문 종류 21~23/35. Luna 65~66/70 · 33~35/35. Luna는 채점 모델이라 다른 회사 모델에서 골랐다 | 사전 등록 #33, ADR 0014 |
+| Sonnet Supervisor의 비용 비중 | v3 세트당 LLM 비용의 80%(세트 비용 $0.174 · $0.320). 원시 미보관([EVAL_REPORT.md](EVAL_REPORT.md) 12절) | 사전 등록 #46 |
+| Haiku만 교체(#46) | 통과 47 · 45/50, 무관 거절 23 · 24/25라 되돌림 | 사전 등록 #46 |
+| 판단 순서 3단계 · 찾기 코드 라우팅 · 판정 안전장치 둘 추가(#47) | v3 50 · 48/50으로 받지 않는 조건에 걸림 | 사전 등록 #47 |
+| 판정 읽기 · 문서 다시 찾기 수정(#48 ~ #50) 뒤 Haiku 구성 v3 4세트(`93a497c`) | 통과 50/50, 무관 거절 25/25, 질문 종류 25/25, p95 8.6 ~ 8.9초, 50문항 LLM 비용 $0.044 ~ 0.052 | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
+| 튜닝에 쓰지 않은 c20(20문항, 저장소 밖) | #47 구성에서 통과 12/20 · 질문 종류 16/20 | 사전 등록 #47 |
+
+위 4세트는 고친 실패 문항을 담아 독립 확인이 아니다.
 
 **잘못 나뉘는 입력(오분류)**: 기록(사전 등록 결과 줄 · EVAL_REPORT 5절 · 코드 주석과 시험)에 문항 id가 남은 것만 적는다. h4는 저장소 밖 실험 세트다.
 
@@ -112,10 +198,10 @@ KiCad 넷리스트 + 질문
 | 구성 | 지금 |
 |---|---|
 | 그래프 | 서비스(`backend/conversations/memory_service.py`)는 위 D5 멀티 그래프. D4 v2 단일 그래프(`backend/graph/`, 노드 표는 SPEC 2절)는 비교 기준선이고, 같은 코드의 동결 v2 점수는 단일과 멀티가 같았다(EVAL_REPORT 4절) |
-| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5`, 채점 `openai/gpt-6-luna` (OpenRouter, ADR 0017) |
+| LLM | Supervisor · 서브에이전트 `anthropic/claude-haiku-5.5`, 종합 `anthropic/claude-sonnet-5.5` (OpenRouter, ADR 0017). 채점 `openai/gpt-6-luna`는 D4 v2 단일 그래프(`backend/graph/nodes.py`의 `grade`)만 쓰고, 멀티 그래프는 근거 채점을 RAG 에이전트의 `docs_answer`(Haiku)가 답 쓰기와 한 번에 한다 |
 | 임베딩 · 리랭크 | `voyage-4-large` 1024차원 + Voyage `rerank-3`, 첫 검색 전 쿼리 재작성, 표지 청크 제외(사전 등록 #25, ADR 0004 갱신 2026-11-03) |
 | 관측 | Langfuse: 평가 실행마다 단계별 입력·출력, 토큰·비용, 실행 점수. 서비스 분석은 질문 · 답 글 없이 단계별 시간만 보낸다(SPEC 7절) |
-| 로그인 | 이메일·비밀번호(scrypt), 자기 가입(IP당 하루 3회, `DEMO_MODE=1`에서만), Google 로그인(공개 배포의 가입 경로. 같은 이메일의 기존 계정이면 승인 없이 연결), DB 세션, 계정당 5회 · IP당 30회 실패 시 15분 잠금, 데모 모드 버튼 로그인, 관리자 계정 관리 API |
+| 로그인 | 이메일·비밀번호(scrypt), 이메일 인증 가입(메일 링크, 비밀번호 12자 이상, 가입 확정 IP당 하루 3회), Google 로그인(같은 이메일의 기존 계정은 비밀번호를 다시 확인해야 연결), DB 세션, 계정당 5회 · IP당 30회 실패 시 15분 잠금, 데모 모드 버튼 로그인, 관리자 계정 관리 API |
 | 업무 API | 프로젝트(데모 회로 · 넷리스트 업로드), 대화와 실행(SSE), 빠진 조건 묻기(interrupt)와 재개, 후보 승인, 가격 없는 견적, 내 설정(사실 3칸). 경로 · 본문 · 상태 코드는 `SPEC.md` 4절 |
 | 기억 | 대화 상태는 PostgreSQL 체크포인트, 다음 대화에도 쓰는 사용자 사실 3칸은 LangGraph Store(SPEC 8.5). 그래프는 `기억 읽기`에서 선호 실장 방식만 읽어, 질문이 실장 방식을 말하지 않은 후보 찾기에서 같은 판정 안의 순서에만 쓴다(판정 · 프롬프트는 그대로). 평가 실행기는 Store 없이 돌아 v3 수치는 이 노드를 재지 않았다 |
 | 가격·재고 | `GET /api/prices`: 로그인한 사용자에게 Mouser 조회 시점 값만 돌려준다(저장·로그 안 함, ADR 0009). 작업대의 가격·재고 패널과 견적 패널이 조회 버튼을 누를 때 부른다. 데모 모드·키 없음이면 값 없음 |
@@ -126,17 +212,18 @@ KiCad 넷리스트 + 질문
 
 ## 4. 지표
 
-검색 기준선이다. 동결 평가셋 v1(50건: 관련 25 · 비관련 25) 중 데이터시트 근거가 있는 관련 문항 19건, 상위 5개 기준(2026-11-03).
+기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 현재 값이다. 수치의 정본은 [EVAL_REPORT.md](EVAL_REPORT.md) 3-C · 3-D · 8장이다.
 
-| 검색 방식 | 문서 Recall@5 | 문서 MRR | Page Hit@5 | 응답 p50 |
-|---|---:|---:|---:|---:|
-| 하이브리드 (기본) | 0.737 | 0.649 | 0.368 | 1.49초 |
-| 벡터만 | 0.684 | 0.589 | 0.263 | 1.39초 |
-| BM25만 | 0.263 | 0.195 | 0.211 | 0.20초 |
+| 지표 | 값 | 조건 | 원시 결과 |
+|---|---|---|---|
+| 통과(정답 근거 인용 + 올바른 거절) | 50/50 (cited_gold 25 · correct_refusal 25) | 1세트, 커밋 `520988c`+작업 트리 변경, 11-12 | `evals/results/graph/2026-11-12-d9-improve2/set1.json` |
+| 응답 시간 | p50 4.9초 · p95 10.0초 | 위와 같음 | 위와 같음 |
+| 통과 · 무관 거절 · 지어낸 답 | 4세트 모두 50/50 · 25/25 · 0 | 사전 등록 #50, 커밋 `93a497c` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_4sets_93a497c.json` |
+| 응답 시간 p95 · 50문항 LLM 비용 | 8.6 ~ 8.9초 · $0.044 ~ 0.052 | 위와 같음 | 위와 같음 |
+| 동결 파일로 병합 뒤 2세트 | 50/50, p95 10.4 · 7.8초 | 커밋 `f2b914e` | `evals/results/graph/2026-11-10-v3-haiku-sets/summary_merged_2sets_f2b914e.json` |
+| 단일 그래프 대비 | 48/50 | 단일 1세트, 커밋 `11dc216`+작업 트리 변경 | `evals/results/graph/2026-11-12-d9-v3-single/set1.json` |
 
-원시 결과는 `evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`, 개선 전후 비교와 실패 분석은 [`EVAL_REPORT.md`](EVAL_REPORT.md)에 있다.
-
-기준 평가셋 v3(50건: 관련 25 · 비관련 25, 2026-11-10 동결)로 멀티 그래프 전체를 잰 값(사전 등록 #50, 커밋 `93a497c`, 4세트): 통과 50/50 · 무관 거절 25/25 · 지어낸 답 0, 응답 시간 p95 8.6~8.9초, 50문항 LLM 비용 $0.044~0.052. 동결 파일로 병합 뒤 다시 잰 2세트(커밋 `f2b914e`)는 50/50, p95 10.4 · 7.8초였다. 원시 결과는 저장소 밖(Langfuse 세션, `evals/guides/preregister.md` #50)에 있다.
+검색 기준선(v1, 폐기한 설정): 관련 19문항, `text-embedding-3-small` 하이브리드(RRF) 문서 Recall@5 0.737 · MRR 0.649 · Page Hit@5 0.368, 벡터만 0.684 · 0.589 · 0.263, BM25만 0.263 · 0.195 · 0.211(`evals/results/retrieval/retrieval_{baseline,dense,bm25}_2026-11-03.json`). 현재 설정(`voyage-4-large` + `rerank-3`)의 R1 test 38문항 Page Recall@5는 0.579 → 0.908이다(EVAL_REPORT 1-4절). 개선 전후 비교와 실패 분석은 [EVAL_REPORT.md](EVAL_REPORT.md)에 있다.
 
 ---
 
@@ -151,19 +238,19 @@ curl http://localhost:8000/health   # {"status":"ok"}
 
 `.env`가 없으면 compose가 `DEMO_MODE=1` · `DEMO_REPLAY=1`로 띄운다. db(pgvector) → thread-setup(LangGraph 표 준비. 서비스 표는 db가 첫 기동 때 `db/020_service_baseline.sql`로 만든다) · corpus-load(데모 코퍼스 스냅샷 적재) → api(FastAPI + React 화면) 순서로 뜨고, 외부 LLM · 임베딩을 부르지 않는다. corpus-load는 데모 코퍼스 스냅샷(`data/demo/snapshot/`, TSC 데이터시트 42문서 · 청크 1,556개, 임베딩 없음)을 로컬 DB에 넣어, 키 없이도 검색 도구가 BM25로 데모 회로의 1N4148과 그 대체 후보(같은 분류의 스위칭 다이오드), 1N4001G 계열 데이터시트를 찾게 한다. 키 없는 분석은 이 스냅샷 DB에서 실제 멀티 에이전트 그래프를 돌리고, LLM 응답만 미리 기록한 것(`data/demo/recordings/`)을 재생한다. 이미 들어간 문서 · 청크는 건너뛰어 다시 띄워도 늘지 않는다. `.env`가 있다면 그 안의 `DEMO_MODE`와 `DEMO_REPLAY`를 1로 바꾼다. 이미 있는 볼륨을 다시 쓰려면 `docker compose down -v`로 지운 뒤 띄운다(계정 시드는 빈 볼륨에서만 실행된다).
 
-**배포 노트(DB 재설계, 11-11)**: DB 구조가 바뀌었다. 이전 버전으로 만든 로컬 DB 볼륨(재설계 `028` 이전)은 새 코드와 맞지 않으므로 **`docker compose down -v`로 볼륨을 지우고 다시 `docker compose up`** 해야 한다(`down -v`는 로컬 DB 데이터를 지운다). 새 볼륨은 initdb가 `db/` 바로 아래 SQL(코퍼스 → `020_service_baseline.sql` → `026`)을 이름순으로 한 번만 실행한다. 이미 서비스 표가 있는 운영 DB는 `db/migrations/`의 이전 SQL을 쓴다([db/DB.md](db/DB.md)).
+로컬 DB 볼륨 주의: DB 재설계(`028`) 이전 코드로 만든 볼륨은 새 코드와 맞지 않으므로 `docker compose down -v`(로컬 DB 데이터를 지움)로 볼륨을 지우고 다시 `docker compose up` 한다. 새 볼륨은 initdb가 `db/` 바로 아래 SQL(코퍼스 → `020_service_baseline.sql` → `026`)을 이름순으로 한 번만 실행한다. 이미 서비스 표가 있는 운영 DB는 `db/migrations/`의 이전 SQL을 쓴다([db/DB.md](db/DB.md)).
 
-키 없는 모드의 화면은 React 작업대 하나다(React 이전 화면 `/workspace`는 11-10에 지웠다). 키 없이 되는 것과 안 되는 것:
+키 없는 모드의 화면은 React 작업대 하나다. 키 없이 되는 것과 안 되는 것:
 
-1. `http://localhost:8000`을 열고 **"데모 사용자 A로 들어가기"**를 누른다(작업대 `/app`이 열린다).
-2. 데모 회로로 프로젝트를 만들고 바꿀 부품을 고른다(연결 개념도가 보인다). 기록한 데모 질문이 있는 회로 · 부품은 "ATtiny85 Time Switch" D1, "Franzininho DIY" D3, "SparkFun Breadboard Power Supply 5V/3.3V" D1이다. 부품을 고르면 대화 패널에 **데모 질문 버튼**이 보인다(다른 부품을 고르면 질문이 있는 부품 이름을 알려 준다).
-3. 버튼을 누르면 새 대화로 그 질문과 사용 조건을 기록 그대로 보내고 결과(판정 · 근거 · 거절)가 나온다. ATtiny85 Time Switch D1의 교체 질문(`v3-01`)은 조건 질문에서 멈추고, **"기록한 답으로 계속하기"**를 누르면 같은 대화에서 판정까지 이어진다.
+1. `http://localhost:8000`을 열고 "데모 사용자 A로 들어가기"를 누른다(작업대 `/app`이 열린다).
+2. 데모 회로로 프로젝트를 만들고 바꿀 부품을 고른다(연결 개념도가 보인다). 기록한 데모 질문이 있는 회로 · 부품은 "ATtiny85 Time Switch" D1, "ATtiny2313A Thermostat" D5, "SparkFun Breadboard Power Supply 5V/3.3V" D1, "Franzininho DIY" D3, "Adafruit MOSFET Driver STEMMA" D3, "SparkFun Pro Micro v13" D2이다. 부품을 고르면 대화 패널에 데모 질문 버튼이 보인다(다른 부품을 고르면 질문이 있는 부품 이름을 알려 준다).
+3. 버튼을 누르면 새 대화로 그 질문과 사용 조건을 기록 그대로 보내고 결과(판정 · 근거 · 거절)가 나온다. ATtiny85 Time Switch D1의 교체 질문(`v3-01`)은 조건 질문에서 멈추고, "기록한 답으로 계속하기"를 누르면 같은 대화에서 판정까지 이어진다.
 4. 내 설정(`/settings`)에서 소속 · 직무 · 선호 실장 방식을 저장하고 지운다.
-5. 다른 창(시크릿 창)에서 **"데모 사용자 B로 들어가기"**를 누르면 A의 프로젝트와 내 설정이 보이지 않는다.
+5. 다른 창(시크릿 창)에서 "데모 사용자 B로 들어가기"를 누르면 A의 프로젝트와 내 설정이 보이지 않는다.
 
-키 없는 데모는 기록한 질문 5개(`scripts/demo/DEMO.md`의 데모 질문 표)만 재생한다. 질문 · 사용 조건이 글자 하나라도 다르거나, 같은 대화의 두 번째 질문이거나, 조건 질문에 기록과 다른 답을 보내면 422로 데모 질문 목록을 보여 준다. 답은 실제 그래프 · 데이터시트 스냅샷에서 실제 모델이 기록 때 낸 응답이라, 같은 질문에 같은 답을 내는 것만 보여 주고 새 질문에 대한 품질은 보여 주지 않는다. **[주의] 기록 파일(`data/demo/recordings/`)이 저장소에 들어오기 전에는 키 없는 분석이 503(LLM 응답 기록이 없다는 안내)이다.** 기록 · 재생 확인 방법은 [`scripts/demo/DEMO.md`](scripts/demo/DEMO.md)에 있다. 11-09의 키 없는 조건 질문 · 재개 · 승인 확인 기록(확인 14개 모두 통과, [`evals/results/threads/local_g4_isolation_2026-11-09.json`](evals/results/threads/local_g4_isolation_2026-11-09.json))은 지금은 지운 합성 시나리오와 `/workspace` 화면에서 잰 것이다.
+키 없는 데모는 기록한 질문 10개(`scripts/demo/DEMO.md`의 데모 질문 표: 판정 · 불충족 · 동일품 · 조건 질문 · 후보 찾기 · 정격 · 거절 3종)만 재생한다. 기록한 회로 · 대상 · 질문 · 사용 조건의 조합 밖은 재생하지 않는다. 질문 · 사용 조건이 글자 하나라도 다르거나, 같은 대화의 두 번째 질문이거나, 조건 질문에 기록과 다른 답을 보내면 422로 데모 질문 목록을 보여 준다. 답은 실제 그래프 · 데이터시트 스냅샷에서 실제 모델이 기록 때 낸 응답이라, 같은 질문에 같은 답을 내는 것만 보여 주고 새 질문에 대한 품질은 보여 주지 않는다. 기록 파일(`data/demo/recordings/`)이 없으면 서버는 뜨고 분석 요청만 503(LLM 응답 기록이 없다는 안내)이다. 기록 · 재생 확인 방법은 [`scripts/demo/DEMO.md`](scripts/demo/DEMO.md)에 있다.
 
-데모 모드(`DEMO_MODE=1`)면 로그인 화면에 **"데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼**이 생긴다. 비밀번호 없이 버튼으로 들어가고(계정은 SQL 시드가 아니라 버튼을 처음 누를 때 앱이 만든다), 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다(데모 모드에서만).
+데모 모드(`DEMO_MODE=1`)면 로그인 화면에 "데모 사용자 A로 들어가기" · "데모 사용자 B로 들어가기" 버튼이 생긴다. 비밀번호 없이 버튼으로 들어가고(계정은 SQL 시드가 아니라 버튼을 처음 누를 때 앱이 만든다), 비밀번호 로그인으로는 들어갈 수 없다. A · B는 로컬 데모 전용 일반 사용자(`demo-a@example.test` · `demo-b@example.test`)이며 평가용으로 제출한 계정과 다른 계정이다. 사용자별 격리를 보려면 창 두 개(쿠키가 따로인 시크릿 창이나 다른 브라우저)에서 A와 B로 각각 들어간다. `/signup`에서 새로 가입해도 된다(메일 인증 설정이 있어야 한다).
 
 ### 키를 넣고 실제 모드
 
@@ -219,8 +306,7 @@ SojaFit/
 ├── evals/          동결 평가셋, 평가 실행기, 평가 결과
 ├── tests/          PR마다 CI가 돌리는 회귀 테스트
 ├── scripts/        손으로 돌리는 측정·점검 스크립트와 측정 결과
-├── docs/           주제서 · 게이트 · 결정(ADR) · 작업서 · 조사 · 제출물 · 작업 기록
-└── extras/         이미지에 들어가지 않는 가산 작업
+└── docs/           주제서 · 게이트 · 결정(ADR) · 작업서 · 조사 · 제출물 · 작업 기록
 ```
 
 ---

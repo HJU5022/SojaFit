@@ -1,6 +1,6 @@
 """사용자별 장기 기억(G4)의 Store namespace 이름 규칙과, 멀티 그래프의 기억 읽기 노드.
 
-역할: 서버가 인증한 사용자 id로 기억 공간 이름을 만들고, 선별된 승인 사례를 크기가 제한된 모델 입력으로 만든다.
+역할: 서버가 인증한 사용자 id로 기억 공간 이름을 만들고, 승인 사례 목록을 크기가 제한된 모델 입력으로 만든다(서비스는 승인 사례를 비활성으로 두어 항상 빈 목록을 넘기므로 빈 글이 된다).
   기억 읽기 노드(`read_profile`): 그래프에 넣은 Store에서 사용자 사실 중 선호 실장 방식 한 칸만 읽어 판정 코드의 말로 남긴다.
 하지 않는 일: 접근 권한 검사와 실제 저장(conversations.py · conversations/profile.py). namespace 자체는 인증 수단이 아니다.
   소속 · 직무는 그래프 상태에 옮기지 않는다(체크포인터가 상태를 저장하므로 옮기는 값을 최소로 둔다).
@@ -40,7 +40,7 @@ def read_profile(state: dict, *, store: BaseStore) -> dict:
 
 @contextmanager
 def memory_policy(resolve):
-    """서비스 요청에만 현재 소유권·철회 상태 재검사를 적용한다. 하위 그래프에도 전파된다."""
+    """서비스 요청에서 승인 사례 목록을 현재 상태로 다시 거를 함수를 건다. 하위 그래프에도 전파된다(승인 사례가 비활성인 지금은 늘 빈 목록이 들어온다)."""
     token = _policy.set(resolve)
     try:
         yield
@@ -49,6 +49,7 @@ def memory_policy(resolve):
 
 
 def current_memories(memories):
+    """앞 5건만 남기고, memory_policy가 걸려 있으면 그 함수로 현재 상태에 맞게 거른다."""
     resolve = _policy.get()
     return resolve(memories[:5]) if resolve else memories[:5]
 

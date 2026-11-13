@@ -1,16 +1,21 @@
 # eval
 
 ## 역할
-- 이 폴더: 평가 결과 파일을 사람 손 작업 · 서비스 DB 시각과 이어 주는 변환 · 집계 스크립트를 둡니다. 저장소 루트에서 실행합니다(집계 스크립트는 `python -m scripts.eval.<이름>`).
-- 넣는 것: 사람 채점 시트 같은 외부 입력을 평가 JSONL로 되돌리는 스크립트, 평가 결과 파일과 읽기 전용 DB 연결에서 단계별 응답 시간 · 비용 · 사람 대기 시간(D8, EVAL_REPORT 8장)을 숫자만 모으는 집계 스크립트.
-- 넣지 않는 것: 모델 · 검색을 불러 재는 평가 실행 · 채점 · 동결 스크립트와 결과(`evals/`), 시험(`tests/evals/`).
+- 이 폴더: 평가 결과 파일을 사람 손 작업·서비스 DB 시각과 이어 주는 변환·집계 스크립트를 둔다. 저장소 루트에서 실행한다(집계 스크립트는 `python -m scripts.eval.<이름>`).
+- 넣는 것: 사람 채점 시트 같은 외부 입력을 평가 JSONL로 되돌리는 스크립트, 평가 결과 파일과 읽기 전용 DB 연결에서 단계별 응답 시간·비용·사람 대기 시간(D8, EVAL_REPORT 8장)을 숫자만 모으는 집계 스크립트.
+- 넣지 않는 것: 모델·검색을 불러 재는 평가 실행·채점·동결 스크립트와 결과(`evals/`), 시험(`tests/evals/`).
 - 담당: 에이전트(변환), 평가(집계)
 
 ## 파일
-- `EVAL.md` — 이 문서
-- `import_human_review.py` — 사람 채점 시트(마크다운 O/X 표)를 인젝션 실측 JSONL의 `human_review` 칸으로 옮긴 새 사본을 쓰고, assistant 잠정 분류와 사람 판정의 일치율을 출력한다(원본 수정 없음)
-- `stage_report.py` — `run_gate` 결과 파일의 문항 행(`stages` · `llm_call_log` · `voyage`)을 단계별 p50 · p95 · 호출당 비용 · 문항당 비용으로 모은다. p50은 진짜 중앙값, p95는 가장 가까운 순위. 같은 문항 id가 여러 파일에 있으면 뒤 파일 행을 쓴다. `--retrieval`로 `run_retrieval_service --stages` 결과를 같은 정의로 다시 센다
-- `approval_wait_report.py` — 사람이 기다린 시간(조건 질문 → 재개, 완료 → 승인)을 서버 처리 시간과 떼어 `analysis_events` · `approvals` 시각에서 읽는다. 읽기 전용 연결, 출력은 건수와 초뿐(사용자 id · 대화 id · 본문 없음), 스모크 계정의 즉시 자동 호출은 사람 대기에서 뺀다
+
+| 파일 | 분류 | 분류 근거 | 설명 |
+|---|---|---|---|
+| `EVAL.md` | | | 이 문서 |
+| `import_human_review.py` | 일회성 | 호출처는 `tests/evals/test_import_human_review.py`뿐. `--jsonl` 기본값이 인젝션 실측03 파일 | 사람 채점 시트(마크다운 O/X 표)를 인젝션 실측 JSONL의 `human_review` 칸으로 옮긴 새 사본을 쓰고, assistant 잠정 분류와 사람 판정의 일치율을 출력한다(원본 수정 없음) |
+| `stage_report.py` | 재현용 | `evals/EVALS.md`·`EVAL_REPORT.md`가 D8 집계로 인용, `tests/evals/test_stage_timing.py`가 시험. 입력 결과 파일이 저장소에 있음 | `run_gate` 결과 파일의 문항 행(`stages`·`llm_call_log`·`voyage`)을 단계별 p50·p95·호출당 비용·문항당 비용으로 모은다. p50은 중앙값, p95는 가장 가까운 순위. 같은 문항 id가 여러 파일에 있으면 뒤 파일 행을 쓴다. `--retrieval`로 `run_retrieval_service --stages` 결과를 같은 정의로 다시 센다 |
+| `approval_wait_report.py` | 재현용 | `EVAL_REPORT.md`가 인용, `tests/evals/test_approval_wait_report.py`가 시험. 읽기 전용 DB 연결이 필요 | 사람이 기다린 시간(조건 질문 → 재개, 완료 → 승인)을 서버 처리 시간과 떼어 `analysis_events`·`approvals` 시각에서 읽는다. 읽기 전용 연결, 출력은 건수와 초뿐(사용자 id·대화 id·본문 없음), 스모크 계정의 즉시 자동 호출은 사람 대기에서 뺀다 |
+| `chunk_source_check.py` | 재현용 | `evals/results/d10/chunk_source_check/`를 만든다. 로컬 `../corpus/tsc/`의 v4h 청크와 PDF가 필요 | 표·수치 청크 표본(시드 고정)의 숫자와 단위가 원본 PDF 같은 쪽에 있는지 대조한다. DB·네트워크 없음 |
+| `tally_codex_v3.py` | 재현용 | `evals/results/graph/2026-11-12-codex-v3-50/`의 `tally.jsonl`·`TALLY.md` 집계를 만든다 | Codex 답 50건을 v3 정답과 규칙으로 대조한다. 규칙으로 못 가리는 문항은 사람 판정 필요로 둔다. LLM·네트워크 없음 |
 
 ## 실행
 

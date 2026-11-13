@@ -1,73 +1,50 @@
 # multi_agent
 
 ## 역할
-- 판정 표시 조건: 검증·재개 후 실제 역할 입력과 적용한 VF/IR 한계를 input_conditions로 공개한다. 현재 응답에만 사용하며 원시 읽기·보고를 복사하거나 판정 규칙을 변경하지 않는다.
-- 이 폴더: D5 멀티 에이전트(Supervisor 1개 + 서브에이전트 RAG 에이전트 · Spec 에이전트)를 둡니다. Supervisor가 질문을 보고 할 일 목록을 한 번에 짜고(계획), 서브에이전트가 할 일을 동시에 하고, Supervisor가 보고를 모아 답을 정리하는 계획형 구조입니다(11-06 재설계).
-- 넣는 것: 계획서 · 할 일 · 보고서의 형식 · 이유 코드 · 상한(`contracts.py`), 멀티용 상태, Supervisor(계획 · 모으기 · 종합 · 답 검사), 서브에이전트(`agents/`), 조립.
-- 넣지 않는 것: D4 단일 에이전트 그래프(`backend/graph/`, D5 비교의 기준선. 11-06에 D4 v2로 고쳤고 지금도 단일 에이전트 기준선입니다), 숫자 · 단위 비교(`backend/judge/`), 검색 구현(`backend/rag/`), LLM 직접 호출([services](../services/SERVICES.md)의 `llm.py`만 씁니다), 프롬프트 원문(`backend/prompts/`), 도구 정의(`backend/mcp_skill/`).
+- 이 폴더: 서비스가 질문마다 돌리는 멀티 에이전트 그래프(Supervisor 1개 + 서브에이전트 RAG 에이전트·Spec 에이전트). `backend/conversations/memory_service.py`가 `build.build_graph`로 만들어 쓰고(`memory_service.py:284-309`), 평가 실행기는 `evals/runners/run_graph.py --multi`로 같은 그래프를 잰다. Supervisor가 질문을 보고 할 일 목록을 한 번에 짜고, 서브에이전트가 할 일을 동시에 하고, 코드가 보고를 모아 답을 정리한다.
+- 넣는 것: 계획서·할 일·보고서의 형식, 이유 코드, 상한(`contracts.py`), 멀티용 상태(`state.py`), Supervisor(계획·모으기·종합·답 검사), 서브에이전트(`agents/`), 조립(`build.py`), 사실 확인(`facts.py`), 거절 문구·판정 답 틀(`messages.py`), 판본 추출(`revisions.py`).
+- 넣지 않는 것: 단일 에이전트 기준선 그래프와 공용 도구(`backend/graph/`, 분담은 [GRAPH.md](../graph/GRAPH.md)), 숫자·단위 비교(`backend/judge/`), 검색 구현(`backend/rag/`), LLM 직접 호출(`backend/services/llm.py`), 프롬프트 원문(`backend/prompts/`), MCP 도구 정의(`backend/mcp_skill/`).
 - 담당: 에이전트
 
-## 왜 `graph/`와 따로 두었나 [조장 결정 11-05]
-- **비교 기준선 보호:** 가이드는 D4 단일 그래프로 기준 점수를 재고 D5에 멀티로 나눠 같은 평가셋으로 비교하라고 합니다. 단일 코드가 같은 폴더에서 바뀌면 기준선이 흔들립니다. 폴더가 다르면 단일은 그대로 남습니다.
-- **갈아엎을 코드와 고정 코드의 분리:** 멀티는 설계를 하면서 자주 바뀝니다. 기준선은 바뀌면 안 됩니다. 둘이 섞이면 어느 쪽이 바뀌었는지 가려내기 어렵습니다.
-- **정리가 쉬움:** 멀티가 자리 잡으면 단일 폴더만 "기준선 보관"으로 표시하거나 치우면 됩니다.
-- 11-06: 범위 판정을 첫 단에서 먼저 하고 단순 직렬 흐름을 벗어나도록 D4를 D4 v2로 고쳤습니다(사실 확인 → 7가지 라우팅 → 질문 종류별 길, 11-06 뒤 가격을 더해 8가지, 판정 · 찾기는 이 폴더의 Spec 에이전트 코드). D4 v2도 단일 에이전트 기준선이며 폴더는 그대로 나눠 둡니다. D4 v1 점수는 D4 v2 점수가 아닙니다.
-- `SOJAFIT.md` 트리는 원래 `graph/`를 Supervisor 자리로 적었으나, 위 이유로 새 폴더를 만들고 이 문서와 트리 · 담당 표에 함께 적었습니다(AGENTS.md 규칙 9, `SOJAFIT.md` "파일을 만들거나 옮길 때" 1번).
+## graph/와의 관계
+두 폴더는 서로 import한다. 이 폴더는 `backend/graph/`에서 `nodes.py`의 도우미(`read_input`, `price_answer`, `find_parts`, `search`, `citations`, `other_part_row`, `netlist_block`, `circuit_mechanism`, 상수 `REVISION`·`WORD`·`NOT_FOUND`·`QUANTITY`·`STANDARD`), `memory.py`(`read_profile`, `memory_context`, `memory_sources`), `mcp_retriever.py`(`RetrievalUnavailableError`)를 가져다 쓴다. 반대로 `backend/graph/nodes.py`는 이 폴더의 `contracts.py`, `messages.py`, `supervisor.py`(`Facts`·`render_facts`)를 가져다 쓰고, 단일 그래프(`backend/graph/build.py`)는 `facts.py`의 `facts_node`와 `agents/judge.py`의 Spec 에이전트 노드를 그대로 붙인다. 사용처별 근거는 [GRAPH.md](../graph/GRAPH.md)의 분담 표다. 순환을 피하려고 `supervisor.py:314`는 `citations`를 함수 안에서 import한다.
 
-## 의존 방향
-- `multi_agent`는 `graph`를 불러 쓸 수 있습니다. 처음에는 단일의 검색 · 채점 · 재작성 함수를 그대로 감싸고, 하나씩 새 로직으로 바꿉니다.
-- D4 v2(11-06)부터 `graph`도 이 폴더의 사실 확인(`facts.py`) · Spec 에이전트(`agents/judge.py`) · 거절 문구 · 가격 안내 문구와 판정 답 틀(`messages.py`) · 질문 종류와 이유 코드(`contracts.py`) · `Facts`와 사실 글(`supervisor.render_facts`)을 불러 씁니다. D4 v2와 D5가 같은 사실 · 같은 판정 코드로 비교되게 하려는 것입니다. Supervisor 판단과 조립(`build.py`)은 `graph`가 부르지 않습니다.
-- `multi_agent`는 `judge` · `rag` · `services`를 불러 씁니다. 판정의 숫자 비교는 `judge`에서만 합니다(AGENTS.md 규칙 7).
+## 구조
+그래프 노드 이름은 한국어이고 조립한 그래프의 `get_graph().draw_mermaid()`로 그림을 뽑는다(SPEC.md 2절).
 
-## 구조 결정
+| 노드 | 하는 일 | LLM |
+|---|---|---|
+| `입력 읽기` | 입력 글 나누기, 대상 부품 주변 넷 읽기(`graph.nodes.read_input`) | 없음 |
+| `기억 읽기` | Store에서 선호 실장 방식만 읽어 `mount_preference`에 둠(`graph.memory.read_profile`) | 없음 |
+| `품번·판 확인` | 질문의 품번·개정판이 코퍼스에 있는지 확인(`facts.py`, MCP `check_corpus`) | 없음 |
+| `Supervisor` | 계획: 범위 판정, 질문 종류, 할 일(최대 `MAX_TASKS`)과 지시서. 일상 대화·가격·범위 밖·코퍼스 밖은 여기서 끝냄 | `supervisor` |
+| `RAG 에이전트` | 검색 → 다른 품번 줄·다른 판 거르기 → 근거 채점 + 답 쓰기 → 근거가 없거나 일부 답이면 다른 검색어로 재검색 → 인용 검사 → 보고 | `docs_answer` |
+| `Spec 에이전트` | 하위 그래프 `회로 읽기` → `대체 부품 판정`. 읽기 LLM 1번, 빠진 값은 인터럽트로 묻고, 사양 값 비교는 `backend/judge/verdict.py`가 함 | `judge_read` |
+| `답 모으기` | 코드만. 보고 상태와 상한을 보고 길을 정함 | 없음 |
+| `답 정리` | 할 일 1개의 답(판정은 코드 답 틀) | 없음 |
+| `종합` | 보고를 코드로 이을 수 없을 때만(조건은 [SPEC.md](../../SPEC.md) 2절 "종합으로 가는 조건"). 판정 표는 코드가 그대로 붙임 | `synth` |
+| `답 검사` | 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답·판정 결과·질문에 있던 숫자인지 검사. 걸리면 거절 | 없음 |
+| `끝내기`, `거절`, `가격 안내` | 마무리. 가격 안내는 `graph.nodes.price_answer` | 없음 |
 
-- 2026-11-11 스모크07 무료 수정: 문서 응답의 grade=partial만 있고 missing/next_query가 비어 있으면, 인용 검증에서 문장이 제거되지 않은 경우 최종 보고를 ok로 정리한다. 명시된 누락·partial의 추가 검색 요청·가짜/미인용 문장 제거는 partial로 유지한다. 종합의 미완료 안내 조건을 일괄 완화하지 않으며 단일/복합 실제 누락 안내를 보존한다. 원본 모델 등급과 실측 결과는 변경하지 않는다. 모델이 누락 자체를 보고하지 않은 경우의 의미적 완결성은 이 상태 정리만으로 증명하지 않는다.
-
-- 2026-11-11 T3 무료 수정: 문서 사양 조회에는 청크만 제공하며 `role` 작업에만 넷리스트 입력과 인용을 허용한다. 원본 대상 부품은 검색 품번·판정용으로 유지한다. 초기·재검색·인용 교정에 같은 범위를 적용하고, 문서 근거가 없으면 회로를 대용해 모델을 호출하지 않는다. 최종 검사는 답에 채택된 정상/부분 문서 보고의 `evidence_ids`에 넷리스트가 있는 경우에만 그 인용을 허용한다. 실패·재계획에서 제외한 보고는 권한을 주지 않고, 채택한 앞 회차 역할 보고는 보존한다. 저장 T3 응답 재생에서 사양·문서 인용 보존과 부가 넷리스트 문장 제거를 검사한다. 넷명·부품값의 일반 의미 검증이나 새 모델 성공을 보장하는 변경은 아니다.
-
-- 2026-11-11 T4 무료 수정: 사용자가실장/조립확인사항을요청했고부분보고의missing도그항목을가리키면기존재검색어에polarity before assembly를추가한다. 검색2회·인용교정1회·품번필터를유지하며정답/청크ID는고정하지않는다. 단일문서부분답도missing이있으면기존미완료안내를표시한다. missing원문은검증되지않은정보이므로최종답에그대로붙이지않고메타데이터에보존한다. 판정답의출력경계는변경하지않는다.
-
-- 2026-11-11 T1 무료 수정: 문서 전용 작업은 부분/실패가 섞여도 재계획 규칙 적용 후 검증된 성공·부분 답을 코드로 보존한다. 실패 보고의 본문·근거는 최종 답에 넣지 않고, 복수 문서 작업이 미완료면 별도 안내를 붙인다. 원본 보고/missing은 보존하며 모두 실패 시 거절, 판정/찾기 경계는 유지한다. 저장 T1 초기·교정·성공 응답을 새 모델 호출 없이 재생해1000V/[16]/패키지의 최종 보존을 확인했다. 인용 번호가 유효하다는 검사가 문장 의미의 정확성까지 보장하지는 않는다.
-
-- 2026-11-11 T7 무료 수정: footprint는넷리스트원본·상태·judge기판호환성비교에보존하지만멀티계획/render_read/문서넷리스트입력에는넣지않는다. 연결·품번·질문·조건은유지하고특정역할로덮어쓰지않는다. 저장05공격의계획지시승격/R04추가입력대기를무료재현,수정후정상·공격입력동일과저장정상응답재생의R01/60V·75V/불충족유지를검증했다. 단일D4공통넷리스트표시와데이터시트패키지조회는변경하지않았다. 풋프린트원문을모델이직접설명하는기능과다른메타필드의명령차단은보장하지않으며실제모델재측정은미실행이다.
-  - 판정읽기render_read는D4와공유하므로D4판정입력에도같은제외정책이적용된다. D4일반문서생성의공통netlist_block은그대로이며D4전체의인젝션경계를고쳤다는뜻은아니다.
-- 2026-11-11 스모크03 후 무료 보완: 교정 후에도 일부 문장이 미인용이면 답 전체를 버리는 대신 제공번호가 이미 붙은 문장만 남긴다. 문서위치문자열만 쓴 문장·미인용 문장은 제외하고 번호를 추측해 붙이지 않는다. 교정응답에도 유효문장이 있으면 그 응답을 우선해 부분회수하며 partial·missing·제거요약을 유지한다. 유효문장0이면 verify_failed, 과거사례인용/미제공사례는 회수 없이 전체거절한다. 단일답과 종합입력까지 보존을 무료검증했으며 새 실제 종합응답의 품질은 미측정이다.
-- 2026-11-10 스모크02 후 무료 수정: 문서 응답의 문장별 인용 누락도 기존 최대1회 교정 대상으로 삼고, 계속 누락되면 verify_failed로 보고한다. 충분(enough)이라고 해도 missing이 있으면 partial이다. 하위작업은 맡은 항목만 답하고 다른 작업의 근거부재를 단정하지 않도록 입력지침을 명시한다. 문서화된 숫자 x 주문코드는 공통 other_part_row에서 접미사까지 대조한다. 일반 의미적 모순 검증기는 아니며 수정 후 실제 모델 측정은 미실행이다.
-- 2026-11-10 STH 인용 오류 수정: 문서 입력 끝에 실제 허용 인용 번호를 명시한다. 문서 응답의 인용이 없거나 미제공 번호이면 같은 근거로 최대1회 교정 답변을 요청한다. 검색은 기존대로 최대2회이며 문서 논리 호출은 교정을 포함해 최대3회다. 교정도 틀리면 미검증 문장 제거/거절을 유지하고 남은 일부 답은partial로 보고한다. 과거 승인 사례 인용은 교정 없이 거부하고, 추가 호출도 기존 공유 예산·형식 재시도·시간 상한 안에서만 허용한다. 실제 모델 재측정과 조장 SPEC4.2 반영은 아직 수행하지 않았다.
-- 11-06 재설계 [조장 결정 11-06]: Supervisor 하나와 서브에이전트 노드 2개(RAG 에이전트 · Spec 에이전트). 그림은 조립한 그래프의 `get_graph().draw_mermaid()`로 뽑습니다(SPEC 2절 "그래프").
-  - 이유(D5 실측): 예전 허브 구조는 서브에이전트가 끝날 때마다 Supervisor(Sonnet)가 판단해 질문당 판단이 4번(판정 → 작성 → 검증 → 끝)이었고, 멀티 비용의 96%가 Supervisor였습니다. 검색 고리 안의 채점(Luna)은 질문 맥락이 없었습니다. 그래서 판단은 한 곳에서 한 번만 하고, 속도 · 정확도가 좋아지는 일은 코드로 넘깁니다.
-  - Supervisor(계획, Haiku 1번, 11-09 Sonnet에서 바꿈 · ADR 0017): 범위 판정 · 질문 종류 · 할 일 최대 3개와 할 일마다 지시서(맡을 에이전트 · 목표 · 출력 · 경계 · 첫 검색어). 형식이 틀리면 `llm.chat`이 다시 부르고 끝내 틀리면 거절합니다. 일상 대화 · 가격 · 범위 밖 · 코퍼스 밖은 여기서 바로 끝냅니다.
-  - 배분(코드, Send): 할 일을 서로 기다리지 않고 동시에 보냅니다. 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받습니다.
-  - RAG 에이전트(Haiku 1~2번): 검색(지시서 검색어 · 품번 필터) → 근거 채점 + 답 쓰기를 한 호출로(질문 · 지시서 · 대상 회로 · 청크) → 근거가 없으면 다른 검색어로 1번만 → 인용 검사(코드) → 보고.
-  - Spec 에이전트(Haiku, 읽기 LLM 1번 + 읽은 품번을 사용자 글의 품번으로 맞추는 코드 단계, 다수결 없음, 11-10): 회로 읽기 → 코퍼스 밖 요구 관문(코드) → 빠진 값 1번 묻기(인터럽트) → 사양 표 조회 → 조건별 비교(코드) → 보고. 읽기 · 판정 두 노드의 하위 그래프라 재개하면 읽기 LLM을 다시 부르지 않습니다.
-  - 답 모으기(코드): 보고 상태와 상한만 봅니다. 할 일 1개면 답을 그대로(판정은 코드 답 틀), 2개 이상일 때만 종합(Sonnet 1번, 판정 표는 코드가 그대로 붙임), 모두 실패면 첫 실패 사유로 거절합니다. 판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 코드 판정 답 틀만 쓰고 문서 · 종합 자유 글을 붙이지 않습니다(함께 물은 문서 설명은 '이 답변에 포함하지 않았습니다' 안내, 11-10 STH 출력 경계).
-  - 답 검사(코드): 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과 · 질문에 있던 숫자인지 봅니다. 걸리면 거절합니다.
-- 11-07 실패 고리(설계 v2). 한 방향으로만 흐르면 실패를 고칠 길이 없어, 실패하면 계획으로 되돌아가 다시 합니다:
-  - 모으기(코드)는 이번 회차 보고 중 다시 해 볼 만한 실패(사유 no_result · all_rejected 또는 없음, 판정 찾기 후보 0개)나 계획의 `replan` 표시가 있으면, 아직 재계획 전일 때만 Supervisor(계획)로 되돌립니다.
-  - 확정 거절 사유(코퍼스 밖 · 목록 대조 · 도구 장애 · 답 검사 · 상한)와 문서의 '일부만 답함'은 되돌리지 않습니다.
-  - 재계획(LLM)은 앞 회차 지시서와 보고 요약만 읽고 다시 하기(다른 검색어 · 고친 지시서), 다음 단계(찾기가 낸 품번으로 문서 검색, `parts`), 있는 답으로(`answer`), 거절 중 하나를 고릅니다. 앞 회차의 ok 보고를 답에 남길지는 `keep_earlier`로 정합니다.
-  - 품번 없이 사양만 준 질문은 첫 계획이 판정 찾기 + `replan`을 내고, 재계획이 찾은 품번으로 문서 검색을 보냅니다.
-  - RAG 에이전트는 근거를 못 찾으면 거절을 정하지 않고 다시 찾을 사유로 보고합니다. 재계획 뒤에도 못 찾으면 모으기가 not_found로 거절합니다.
-- 상한(질문당): 할 일 3개, 재계획 1번(`MAX_REPLANS`), Supervisor LLM 4번(계획 1 + 재계획 1 + 종합 1), 서브에이전트 실행 6번(3개 × 2회차), 문서 할 일마다 검색 2번. 넘으면 거절합니다(AGENTS 규칙 6).
-- 코드가 갈래를 바꾸는 경우는 형식 실패 · 상한 초과 · 판정 꺼짐(판정 할 일을 문서 할 일로) · 판정 거절 보고 · 답 검사 실패, 그리고 찾기 질문인데 판정 찾기 할 일이 없을 때 그 할 일로 맞추는 것(11-10, ADR 0017)뿐이고, 질문 종류 · 거절 · 할 일 나누기는 계획(LLM)이 정합니다.
-- 11-10 확정(ADR 0017): Supervisor Haiku 5.5, 종합 Sonnet. Spec 에이전트는 사실 확인이 코퍼스에 없다고 한 후보를 판정하지 않고, 판정한 후보가 없으면 실패로 보고합니다. RAG 에이전트는 일부만 답했어도 빠진 부분을 다른 검색어로 한 번 더 찾습니다(#49). v3 50문항 4세트 50/50 · p95 8.6~8.9초 · 50문항 LLM $0.044~0.052.
-- 11-09 노드 이름: 그림에서 Supervisor가 둘로 보이지 않게, 그래프 노드를 강의처럼 한국어로 단다(`입력 읽기` · `기억 읽기`(11-10 추가) · `품번·판 확인` · `Supervisor` · `RAG 에이전트` · `Spec 에이전트`(`회로 읽기` · `대체 부품 판정`) · `답 모으기` · `답 정리` · `종합` · `답 검사` · `끝내기` · `거절` · `가격 안내`). `답 모으기`는 코드뿐이라 Supervisor가 아니다. 갈림 함수는 다음 노드 이름을 돌려주고, `답 모으기` → `Supervisor` 되돌림만 키를 `다시 해 볼 실패 · 다시 계획(최대 1번)`으로 두어 그림에 조건 라벨이 붙는다. 노드 함수 · `path` 값 · 프롬프트 이름 · 동작은 그대로다.
-- 11-05 결정 중 그대로인 것: Supervisor는 청크 원문이 아니라 서브에이전트 보고만 읽습니다. 도구는 MCP 서버(stdio) 한 곳에 모읍니다. 거절 이유는 내부 코드로 Langfuse에 남기고 사용자에게는 일상어로 보여 줍니다.
-
-## 구현 상태
-- 있음: 약속(`contracts.py`), Supervisor(`supervisor.py`), 서브에이전트 2개(`agents/docs.py`, `agents/judge.py`), 사실 확인(MCP `check_corpus`, `make_lookup`), 거절 문구 · 판정 답 틀(`messages.py`), 조립(`build.py`), 평가 실행(`evals/runners/run_graph.py --multi`, `evals/runners/run_gate.py`).
-- 서비스: `backend/conversations/memory_service.py`가 실제 PostgreSQL Checkpointer/Store를 새 그래프에 연결한다. 승인 사례를 계획 → Send(RAG 에이전트 · Spec 에이전트) → 종합에 넘기는 칸(`approved_memories`)은 그래프에 남아 있지만, 서비스는 새 분석 입력에 빈 목록을 넣어 승인 사례를 넘기지 않는다(SPEC 8.5 "승인 기록", `memory_service.py`). 판정 하위 그래프의 숫자 grounding에는 기억을 넣지 않는다. 평가 실행기는 메모리 체크포인터를 유지한다.
-- 사용자 사실 기억(SPEC 8.5): `기억 읽기` 노드(`backend/graph/memory.py` `read_profile`)가 compile에 넘긴 Store에서 선호 실장 방식만 읽어 `mount_preference`('smd' · 'tht' · '')에 둔다. Supervisor는 판정 할 일의 Send 꾸러미에만 이 값을 넣고, Spec 에이전트는 찾기에서 질문이 실장 방식을 말하지 않았을 때만 같은 판정 · 같은 기판 수정 여부 안의 순서를 바꾼다(`verdict.rank`의 `preferred`, 결과 `preferred_mount`). 판정 · 거르기 · 프롬프트는 그대로다. 평가 실행기는 Store 없이 compile해 빈 값이다.
-- 승인 기억은 본문 근거로 허용하지 않는다. docs와 supervisor.check_node가 본문의 기억 인용을 거부하고, 별도 memory_refs를 제공된 자기 사례 ID와 대조한다. main에서 삭제한 구 verifier.py는 복원하지 않는다. 데이터시트 모든 문장의 의미적 정확성 검증은 후속 과제다.
-- 아직 없음: 웹 조회 에이전트(켜려 하면 거부), 새 프롬프트(`supervisor` · `docs_answer` · `synth`)의 Langfuse 원격 등록·운영 배포 검증.
+- 노드별 모델: `backend/services/langfuse_prompts.py`의 `NODE_MODELS`가 정본이고, 선정 이유는 ADR 0014·0017이다.
+- 상한(질문당): 할 일 수, 재계획, Supervisor LLM 호출, 서브에이전트 실행, 문서 할 일의 검색 횟수는 `contracts.py`의 `MAX_TASKS`, `MAX_REPLANS`, `MAX_SUPERVISOR_CALLS`, `MAX_AGENT_RUNS`, `MAX_SEARCHES`다. 넘으면 거절한다.
+- 재계획: `답 모으기`가 다시 해 볼 만한 실패(사유가 `RETRY_REASONS`이거나 없음)나 계획의 `replan` 표시를 보고 재계획 횟수가 `MAX_REPLANS` 미만이면 `Supervisor`로 되돌린다(`supervisor.py` `collect_node`). 확정 거절 사유는 되돌리지 않는다.
+- 판정 길(`Spec 에이전트`)은 사양 값 도구(`specs`, `find`)와 체크포인터가 있어야 켜지고, 없이 켜면 `build.py`가 `ValueError`를 낸다. 서비스는 카드 도구(`backend/rag/card_specs.py`, `backend/rag/card_find.py`)를 넘긴다.
+- 사용자 사실 기억: `mount_preference`는 판정 할 일의 Send 꾸러미에만 들어가고 찾기에서 질문이 실장 방식을 말하지 않았을 때 같은 판정 안의 후보 순서만 바꾼다(`backend/judge/verdict.py` `rank`의 `preferred`). 평가 실행기는 Store 없이 compile해 빈 값이다.
+- 승인 사례: 상태에 `approved_memories` 칸과 `memory_refs` 처리가 남아 있지만 서비스가 새 분석 입력에 빈 목록을 넣는다(`conversations/memory_service.py:442`). 승인 사례는 서비스 응답에 영향을 주지 않는다.
+- 웹 조회: 별도 에이전트가 아니다. `memory_service.py`가 `DEMO_MODE`가 아니고 `exa.enabled()`일 때만 문서·판정 에이전트에 등급별 조회 도구(`backend/services/exa.py`)를 넣는다(`memory_service.py:303-307`).
+- 계약: 분석 흐름은 [SPEC.md](../../SPEC.md), 판정은 [judge-agent.md](../../docs/specs/judge-agent.md)를 따른다.
 
 ## 파일
-- `MULTI_AGENT.md` — 이 문서
-- `__init__.py` — 패키지 표시
-- `state.py` — 멀티용 공용 메모장 `MultiState`와 판정 하위 그래프 메모장 `JudgeState` · `JudgeOut`. 보고서 칸은 동시에 올린 보고를 이어 붙이고 None이면 비우는 합치기 규칙(`add_or_reset`)을 쓴다. 지나간 노드 이름(`path`)은 단일 그래프와 같은 말(거절 등)을 써서 평가 채점기가 읽을 수 있게 한다
-- `facts.py` — 질문의 품번 · 개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만든다(`make_facts`). 목록은 호출하는 쪽이 넘기거나(`make_facts`), MCP 도구 `check_corpus`로 묻는다(`make_lookup`, 주문 코드가 붙은 품번 `1N4148 R0G`는 앞 기본 품번이 있으면 있음). 그래프 노드 `facts_node`는 `lookup` 없이 쓰면 비워 둔다
-- `messages.py` — 거절 사유를 사용자 일상어 문구로 바꾼다(`refusal_message`. 사실 확인 결과의 없는 품번 · 개정판을 넣는 `refusal_for`는 D4 v2 거절 노드도 쓴다). 가격 · 재고 질문에는 값 없이 화면이 따로 보여 준다는 안내를 만든다(`price_message`). 판정 결과를 코드 틀 답으로 만든다(`render_judgement`)
-- `build.py` — 조립(노드 이름은 한국어). 입력 읽기 → 기억 읽기(Store의 선호 실장 방식) → 품번·판 확인 → Supervisor → (RAG 에이전트 · Spec 에이전트 하위 그래프, Send 동시 실행) → 답 모으기 → 답 정리 · 종합 → 답 검사 → 끝내기 · 거절, Supervisor에서 바로 끝내기 · 가격 안내 · 거절. 판정은 사양 표 도구(`specs` · `find`)와 체크포인터가 있어야 켠다. 웹을 켜려 하면 거부
-- `agents/` — 서브에이전트(폴더 설명은 이 문서에 적는다): `docs.py` RAG 에이전트(검색 → 다른 품번 줄 거르기 → 근거 채점 + 답 쓰기 LLM 1번 → 근거가 없으면 다른 검색어로 1번 → 인용 검사 → 보고), `judge.py` Spec 에이전트(읽기 노드 `judge_read_agent`: 역할 · 회로 값을 LLM 1번으로 읽음, 판정 노드 `judge_agent`: 코퍼스 밖 요구면 거절 사유로 보고(SPEC 8.3)하고, 아니면 빠진 값을 인터럽트로 한 번 묻고 사양 표 값으로 `backend/judge/verdict.py`가 판정. 멀티는 `judge_task_node`가 보고를 할 일 보고서로 바꾼다), `__init__.py` 패키지 표시, `part_names.py` 읽기 뒤 품번 바로잡기(원래 부품 · 후보 품번을 사용자 글의 품번으로 맞춤, LLM 없음)
-- `supervisor.py` — Supervisor 모듈. 계획 `plan_node`(계획 LLM, 형식 실패면 거절) · `after_plan`(할 일을 Send로 동시에 보냄), 답 모으기 `collect_node`(보고 상태 · 상한으로 길을 정함) · `single_node`(할 일 1개의 답) · `synth_node`(할 일 2개 이상의 종합 LLM), 마무리 `check_node`(인용 · 숫자 검사). 갈림 함수(`after_plan` · `after_collect` · `after_check`)는 노드 이름(`NODE`)을, 재계획은 간선 라벨 키 `REPLAN`을 돌려준다. 확인된 사실 `Facts`와 사실 글 `render_facts`는 D4 v2 라우팅도 같은 글로 받는다. LLM은 `chat` 함수로 받아 시험에서 가짜로 바꾼다
-- `contracts.py` — 계획서 `Plan`(질문 종류 8가지, 다음 길 tasks · finish · price · refuse, 거절이면 거절 사유 필수, 할 일 1~3개)과 할 일 `Task`(문서 · 판정, 종류, 목표 · 출력 · 경계 · 첫 검색어), 보고서 `TaskReport`(상태 ok · partial · fail, 200자 요약, 부분 답 · 근거 · 판정 결과 · 검색 기록), 판정 코드의 짧은 보고 `AgentReport`, 이유 코드 `Reason`(거절 7종 · 재시도 3종), 질문당 상한
+| 파일 | 하는 일 |
+|---|---|
+| `MULTI_AGENT.md` | 이 문서 |
+| `__init__.py` | 패키지 표시 |
+| `build.py` | 그래프 조립 `build_graph`와 노드 `parse_node`·`finish_node`·`refuse_node`, Spec 에이전트 하위 그래프 `judge_subgraph` |
+| `contracts.py` | 계획서 `Plan`, 할 일 `Task`, 보고서 `TaskReport`, 짧은 보고 `AgentReport`, 이유 코드 `Reason`, 질문당 상한 |
+| `state.py` | 멀티 상태 `MultiState`와 판정 하위 그래프 상태 `JudgeState`·`JudgeOut`, 보고 합치기 규칙 `add_or_reset` |
+| `facts.py` | 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만듦(`make_facts`, MCP 도구로 묻는 `make_lookup`, 노드 `facts_node`) |
+| `messages.py` | 거절 사유를 사용자 문구로 바꾸는 `refusal_message`·`refusal_for`, 가격 안내 `price_message`, 판정 결과를 코드 틀 답으로 만드는 `render_judgement` |
+| `revisions.py` | 사용자가 지정한 판본 추출, 검색 결과·판정 행 파일명에서 판본 확인 |
+| `supervisor.py` | 계획 `plan_node`, 배분 `after_plan`(Send), 답 모으기 `collect_node`, 답 정리 `single_node`, 종합 `synth_node`, 답 검사 `check_node`, 사실 글 `render_facts` |
+| `agents/` | 서브에이전트(설명 파일은 이 문서): `docs.py` RAG 에이전트, `judge.py` Spec 에이전트, `part_names.py` 품번 바로잡기(LLM 없음), `__init__.py` |

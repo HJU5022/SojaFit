@@ -1,0 +1,1537 @@
+{
+ "summary": {
+  "dataset": "/private/tmp/claude-501/-Users-jeong-un--claude-spares-spare-O1pA4H/63462d0d-e2c8-499c-aeed-76da58c8c2d6/scratchpad/v3_fixedq.jsonl",
+  "questions": 21,
+  "doc_recall@5": 0.8095,
+  "doc_mrr": 0.8095,
+  "page_recall@5": 0.8095,
+  "page_mrr": 0.8095,
+  "page_frac@5": 0.6349,
+  "top5_s_p50": 0.85,
+  "top5_s_p95": 1.49,
+  "by_type": {
+   "candidate_find": {
+    "doc_recall@5": 0.2,
+    "doc_mrr": 0.2,
+    "page_recall@5": 0.2,
+    "page_mrr": 0.2,
+    "page_frac@5": 0.1
+   },
+   "candidate_judge": {
+    "doc_recall@5": 1.0,
+    "doc_mrr": 1.0,
+    "page_recall@5": 1.0,
+    "page_mrr": 1.0,
+    "page_frac@5": 0.8417
+   },
+   "rating": {
+    "doc_recall@5": 1.0,
+    "doc_mrr": 1.0,
+    "page_recall@5": 1.0,
+    "page_mrr": 1.0,
+    "page_frac@5": 0.7361
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "v3-01",
+   "type": "candidate_judge",
+   "query": "TSC 1N4007G datasheet repetitive peak reverse voltage VRRM forward voltage VF peak forward surge current IFSM package",
+   "parts": [
+    "1N4007G"
+   ],
+   "gold": [
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ]
+   ],
+   "top": [
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "1N4001G SERIES_P2104.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.85,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-02",
+   "type": "candidate_judge",
+   "query": "TSC SS24 datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Reverse current IR Peak forward surge current IFSM SMA package",
+   "parts": [
+    "SS34",
+    "SS24"
+   ],
+   "gold": [
+    [
+     "SS22 SERIES_N2306.pdf",
+     1
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     2
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     3
+    ]
+   ],
+   "top": [
+    [
+     "SS22 SERIES_N2306.pdf",
+     1
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     1
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     2
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     2
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     2
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     2
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     1
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     1
+    ],
+    [
+     "SS22 SERIES_N2306.pdf",
+     3
+    ],
+    [
+     "SS32 SERIES_Q2412.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.86,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.6666666666666666
+  },
+  {
+   "id": "v3-03",
+   "type": "candidate_judge",
+   "query": "LL4148 L0G LL4148 L0 diode datasheet package equivalence",
+   "parts": [
+    "LL4148",
+    "L0G",
+    "L0"
+   ],
+   "gold": [
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     2
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     1
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     1
+    ],
+    [
+     "LL4148 SERIES_K2301.pdf",
+     5
+    ]
+   ],
+   "top5_s": 0.79,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-04",
+   "type": "candidate_judge",
+   "query": "TSC UF4007 datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Reverse recovery time trr Peak forward surge current IFSM",
+   "parts": [
+    "UF4007"
+   ],
+   "gold": [
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     3
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.81,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-05",
+   "type": "candidate_judge",
+   "query": "TSC S1M vs D2 repetitive peak reverse voltage VRRM forward current IF surge current IFSM reverse recovery time trr datasheet",
+   "parts": [
+    "S1M"
+   ],
+   "gold": [
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     2
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     3
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ]
+   ],
+   "top5_s": 1.49,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-06",
+   "type": "candidate_judge",
+   "query": "TSC BZV55B3V3 L0G datasheet BZV55B3V3 L0 Zener diode package RoHS suffix G",
+   "parts": [
+    "BZV55B3V3",
+    "L0",
+    "L0G"
+   ],
+   "gold": [
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     1
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.82,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-07",
+   "type": "candidate_judge",
+   "query": "TSC SS16 Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package",
+   "parts": [
+    "SS16"
+   ],
+   "gold": [
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     5
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.87,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-08",
+   "type": "candidate_judge",
+   "query": "TSC SS14H Schottky diode datasheet Repetitive peak reverse voltage VRRM Forward voltage VF Peak forward surge current IFSM Package",
+   "parts": [
+    "SS14H",
+    "SS14"
+   ],
+   "gold": [
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.89,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.75
+  },
+  {
+   "id": "v3-09",
+   "type": "candidate_judge",
+   "query": "TSC SMBJ14AH vs SMBJ14A datasheet clamping voltage VC peak pulse current IPPM reverse standoff voltage VRWM ordering part number",
+   "parts": [
+    "SMBJ14A",
+    "SMBJ14AH"
+   ],
+   "gold": [
+    [
+     "SMBJH SERIES_A2102.pdf",
+     1
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     1
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     4
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     4
+    ]
+   ],
+   "top": [
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     2
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     3
+    ],
+    [
+     "SMBJ SERIES_R2104.pdf",
+     2
+    ],
+    [
+     "SMBJH SERIES_A2102.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.95,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.3333333333333333
+  },
+  {
+   "id": "v3-10",
+   "type": "candidate_judge",
+   "query": "TSC SMAJ6.0CA datasheet bidirectional TVS diode breakdown voltage VBR clamping voltage VC peak pulse current IPPM standoff voltage VWM",
+   "parts": [
+    "SMAJ6.0CA"
+   ],
+   "gold": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     1
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ]
+   ],
+   "top": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ]
+   ],
+   "top5_s": 1.51,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.6666666666666666
+  },
+  {
+   "id": "v3-11",
+   "type": "candidate_find",
+   "query": "D1 reverse polarity protection diode replacement candidates Repetitive peak reverse voltage VRRM Average forward current IF(AV) Package TSC datasheet",
+   "parts": [
+    "1N4001"
+   ],
+   "gold": [
+    [
+     "GS1D SERIES_A2509.pdf",
+     1
+    ],
+    [
+     "GS1D SERIES_A2509.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1D-K SERIES_E2102.pdf",
+     1
+    ],
+    [
+     "S1D-T SERIES_E2102.pdf",
+     1
+    ],
+    [
+     "S1AH SERIES_A2102.pdf",
+     1
+    ],
+    [
+     "S1A SERIES_S2102.pdf",
+     1
+    ],
+    [
+     "S1D-K SERIES_E2102.pdf",
+     1
+    ],
+    [
+     "S1D-T SERIES_E2102.pdf",
+     1
+    ],
+    [
+     "S1AH SERIES_A2102.pdf",
+     1
+    ],
+    [
+     "S2AA SERIES_K2102.pdf",
+     1
+    ],
+    [
+     "S2AAH SERIES_A2102.pdf",
+     1
+    ],
+    [
+     "S2AA SERIES_K2102.pdf",
+     1
+    ],
+    [
+     "S2AAH SERIES_A2102.pdf",
+     1
+    ],
+    [
+     "TSD1G_E2102.pdf",
+     1
+    ],
+    [
+     "TSD1GH_A2102.pdf",
+     1
+    ]
+   ],
+   "top": [],
+   "top5_s": 0.0,
+   "doc_rank": null,
+   "page_rank": null,
+   "doc_recall@5": 0.0,
+   "page_recall@5": 0.0,
+   "doc_mrr": 0.0,
+   "page_mrr": 0.0,
+   "page_frac@5": 0.0
+  },
+  {
+   "id": "v3-12",
+   "type": "candidate_find",
+   "query": "D3 PWM flyback replacement diode reverse recovery time trr maximum value specified VRRM VF IFSM package datasheet TSC",
+   "parts": [
+    "1N400x",
+    "SM4002"
+   ],
+   "gold": [
+    [
+     "HER101G SERIES_L2104.pdf",
+     2
+    ],
+    [
+     "HER101G-K SERIES_B2104.pdf",
+     2
+    ],
+    [
+     "HER101G SERIES_L2104.pdf",
+     2
+    ],
+    [
+     "HER101G SERIES_L2104.pdf",
+     2
+    ],
+    [
+     "HER101G-K SERIES_B2104.pdf",
+     2
+    ],
+    [
+     "HER101G SERIES_L2104.pdf",
+     2
+    ],
+    [
+     "MUR160A SERIES_I2302.pdf",
+     2
+    ],
+    [
+     "MUR160A SERIES_I2302.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "SF11G-K SERIES_B2104.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "SF11G-K SERIES_B2104.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "SF11G-K SERIES_B2104.pdf",
+     2
+    ],
+    [
+     "SF11G SERIES_H2104.pdf",
+     2
+    ],
+    [
+     "UF1A SERIES_G2104.pdf",
+     2
+    ],
+    [
+     "UF1A SERIES_G2104.pdf",
+     2
+    ],
+    [
+     "UF1A SERIES_G2104.pdf",
+     2
+    ],
+    [
+     "UF1A SERIES_G2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ]
+   ],
+   "top": [],
+   "top5_s": 0.0,
+   "doc_rank": null,
+   "page_rank": null,
+   "doc_recall@5": 0.0,
+   "page_recall@5": 0.0,
+   "doc_mrr": 0.0,
+   "page_mrr": 0.0,
+   "page_frac@5": 0.0
+  },
+  {
+   "id": "v3-13",
+   "type": "candidate_find",
+   "query": "TSC zener diode clamp PB3 D1 nominal zener voltage VZ tolerance power dissipation PD package datasheet",
+   "parts": [
+    "PB3"
+   ],
+   "gold": [
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     1
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     1
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ]
+   ],
+   "top": [],
+   "top5_s": 0.0,
+   "doc_rank": null,
+   "page_rank": null,
+   "doc_recall@5": 0.0,
+   "page_recall@5": 0.0,
+   "doc_mrr": 0.0,
+   "page_mrr": 0.0,
+   "page_frac@5": 0.0
+  },
+  {
+   "id": "v3-14",
+   "type": "candidate_find",
+   "query": "D1 boost output rectifier diode SMA package AEC-Q101 qualified repetitive peak reverse voltage VRRM forward voltage VF peak forward surge current IFSM reverse recovery time trr datasheet TSC",
+   "parts": [
+    "SS14-E3"
+   ],
+   "gold": [
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SSA1H40H_A2504.pdf",
+     1
+    ],
+    [
+     "SSA1H60H_A2504.pdf",
+     1
+    ],
+    [
+     "SSL12H SERIES_B2304.pdf",
+     1
+    ]
+   ],
+   "top": [],
+   "top5_s": 0.0,
+   "doc_rank": null,
+   "page_rank": null,
+   "doc_recall@5": 0.0,
+   "page_recall@5": 0.0,
+   "doc_mrr": 0.0,
+   "page_mrr": 0.0,
+   "page_frac@5": 0.0
+  },
+  {
+   "id": "v3-15",
+   "type": "candidate_find",
+   "query": "TSC diode replacement alternative D3 unidirectional larger package excluded datasheet",
+   "parts": [
+    "SMAJ5.0A"
+   ],
+   "gold": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMAJH SERIES_A2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     1
+    ],
+    [
+     "SMAJH SERIES_A2102.pdf",
+     1
+    ]
+   ],
+   "top": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     1
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     1
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.84,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.5
+  },
+  {
+   "id": "v3-16",
+   "type": "rating",
+   "query": "TSC UF4007 Maximum reverse recovery time trr IF IR test conditions datasheet",
+   "parts": [
+    "UF4007"
+   ],
+   "gold": [
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     4
+    ]
+   ],
+   "top": [
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     2
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ],
+    [
+     "UF4001 SERIES_P2104.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.95,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.5
+  },
+  {
+   "id": "v3-17",
+   "type": "rating",
+   "query": "TSC BZT52B4V7 Zener voltage VZ range test current IZT pulse width datasheet",
+   "parts": [
+    "BZT52B4V7"
+   ],
+   "gold": [
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ],
+    [
+     "BZT52B2V4 SERIES_F15.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.85,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-18",
+   "type": "rating",
+   "query": "TSC BZV55B5V1 L0 L0G ordering code suffix difference datasheet Zener diode",
+   "parts": [
+    "BZV55B5V1",
+    "L0",
+    "L0G"
+   ],
+   "gold": [
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     3
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ],
+    [
+     "BZV55B2V4 SERIES_G2301.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.8,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  },
+  {
+   "id": "v3-19",
+   "type": "rating",
+   "query": "TSC SMAJ6.5CA reverse leakage current IR maximum electrical characteristics table bidirectional",
+   "parts": [
+    "SMAJ6.5CA"
+   ],
+   "gold": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     1
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ]
+   ],
+   "top": [
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     3
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ],
+    [
+     "SMAJ SERIES_U2102.pdf",
+     2
+    ]
+   ],
+   "top5_s": 1.42,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.6666666666666666
+  },
+  {
+   "id": "v3-20",
+   "type": "rating",
+   "query": "TSC SS14H datasheet suffix H meaning part number designation difference from SS14 current rating",
+   "parts": [
+    "SS14H",
+    "SS14"
+   ],
+   "gold": [
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ],
+    [
+     "SS12 SERIES_R2305.pdf",
+     2
+    ]
+   ],
+   "top": [
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     1
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ],
+    [
+     "SS12H SERIES_B2305.pdf",
+     2
+    ]
+   ],
+   "top5_s": 0.85,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 0.25
+  },
+  {
+   "id": "v3-21",
+   "type": "rating",
+   "query": "TSC 1N5408G Peak forward surge current IFSM 8.3ms single half sine-wave superimposed on rated load TJ=25°C non-repetitive",
+   "parts": [
+    "1N5408G"
+   ],
+   "gold": [
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ]
+   ],
+   "top": [
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     3
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     2
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ],
+    [
+     "1N5400G SERIES_K2105.pdf",
+     1
+    ]
+   ],
+   "top5_s": 0.83,
+   "doc_rank": 1,
+   "page_rank": 1,
+   "doc_recall@5": 1.0,
+   "page_recall@5": 1.0,
+   "doc_mrr": 1.0,
+   "page_mrr": 1.0,
+   "page_frac@5": 1.0
+  }
+ ]
+}

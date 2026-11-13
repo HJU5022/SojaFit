@@ -1,15 +1,14 @@
 """세션 사용자별 업로드·분석 thread·승인 기록·사용자 사실 기억(profile). 공유 DB setup은 명시적 CLI만 수행한다.
 
-React 작업대의 run·재개도 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
-HTTP 입구는 React 작업대의 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
-React 이전 화면(`/workspace`)의 경로는 11-10에 지웠다. 11-11 서비스 DB 재설계(P2)로 회로 사본(`sojafit_agent.circuits`) · 승인 표(`approvals`) · 시험 전용 `upload` · `create` ·
-옛 승인 경로(`approve` · `memories`)도 지웠다. 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
-회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned` · `threads`).
+React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
+HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
+분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
+회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
 새 분석에 넘기지 않고(`approved_memories`는 빈 목록) Store에도 쓰지 않는다. 승인 기록은 `public.approvals`(견적 승인, 이 서비스 밖)뿐이다.
-분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(200,000 · 2,000,000, SPEC 8.6)에서
+분석 예산: 호출마다 USD 예약과 같은 위쪽 경계 토큰을 사용자 · 서비스 전체의 UTC 하루 상한(5,000,000 · 10,000,000, SPEC 8.6)에서
 DB로 원자적으로 차감한다(`_budget`, db/020_service_baseline.sql). 공급자가 청구한 토큰이 아니라 예약이다.
 삭제(SPEC 8.5): 프로젝트 삭제는 같은 UUID의 분석 thread · checkpoint를 같은 트랜잭션에서 지우고(`delete_analysis_threads`),
 탈퇴는 계정 단위 잠금을 잡고 분석 기록 → Store namespace 순서로 지운다(`account_deletion`, 계정은 호출자가 마지막에 지움).
@@ -51,11 +50,12 @@ LOGGER = logging.getLogger('backend.conversations')
 RETENTION_LOGGER = logging.getLogger('backend.conversations.retention')
 
 # 하루 LLM 토큰 상한(11-09 결정, UTC 날짜). 공급자 청구 토큰이 아니라 호출 전에 잡는 예약 토큰의 합이다
-USER_DAILY_TOKENS = 1_000_000  # 11-10: 예약 토큰은 실제 사용보다 크게 잡혀(돌려주지 않음) 20만으로는 점검 한 번에 한 계정의 하루치가 찼다
-SERVICE_DAILY_TOKENS = 2_000_000
+# [왜] 11-12: 사용자별 5M이 실사용 한도. 서비스 10M은 다계정 합산 안전선(이전 1M/2M은 스모크·점검에 서비스 전체부터 먼저 찼다)
+USER_DAILY_TOKENS = 5_000_000
+SERVICE_DAILY_TOKENS = 10_000_000
 TOKEN_MARGIN = 8192  # [주의] llm.EvaluationBudget._reserve가 입력 바이트에 더하는 여유와 같아야 한다(시험이 USD 예약과 맞춰 본다)
-USER_TOKENS_FULL = '오늘 쓸 수 있는 분석 사용량(하루 1,000,000 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
-SERVICE_TOKENS_FULL = '오늘 서비스 전체 분석 사용량(하루 2,000,000 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+USER_TOKENS_FULL = f'오늘 쓸 수 있는 분석 사용량(하루 {USER_DAILY_TOKENS:,} 토큰)을 다 썼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
+SERVICE_TOKENS_FULL = f'오늘 서비스 전체 분석 사용량(하루 {SERVICE_DAILY_TOKENS:,} 토큰)이 다 찼습니다. 한국 시각 오전 9시(UTC 0시) 뒤에 다시 시도하세요.'
 
 
 @lru_cache(maxsize=1)
@@ -301,7 +301,10 @@ class Conversations:
         # [왜] 데모는 Store를 넘기지 않는다. 기록은 Store 없이 돌았고, 사용자가 저장한 선호 실장 방식이 찾기 후보 순서를 바꾸면 기록과 다른 답이 된다
         web_enabled = self.mode != 'demo' and exa.enabled()
         return build_graph(chat=chat, retriever=timed_tool('search',retrieve), web_enabled=web_enabled,
-            web_search=exa.search_evidence if web_enabled else None, judge_enabled=True,
+            web_search=timed_tool('grade2_datasheet', exa.search_grade2_evidence) if web_enabled else None,
+            web_search_fallback=timed_tool('grade3_reference', exa.search_grade3_reference) if web_enabled else None,
+            judge_web_search_fallback=timed_tool('grade3_reference_judge', exa.search_grade3_reference) if web_enabled else None,
+            judge_enabled=True,
             lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
@@ -569,7 +572,7 @@ class Conversations:
     def _current_memories(self, user, items):
         if not items:
             return []
-        # checkpoint의 과거 사본 대신 현재 승인 원본/상태/정정 메모를 다시 읽는다.
+        # [주의] `self.memories`는 없다. 승인 사례가 비활성이라 items는 늘 비어 위에서 끝난다. 비어 있지 않으면 AttributeError다
         active = {(m['thread_id'],m['version']):m for m in self.memories(user)}
         return [active[(m['thread_id'],m['version'])] for m in items
                 if (m['thread_id'],m['version']) in active]

@@ -1,0 +1,421 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+2026-11-13T05:16:32.034+09:00  Image proj3-b-corpus-load Building 
+2026-11-13T05:16:32.034+09:00  Image proj3-b-api Building 
+2026-11-13T05:16:32.034+09:00  Image proj3-b-thread-setup Building 
+2026-11-13T05:16:32.034+09:00 #1 [internal] load local bake definitions
+2026-11-13T05:16:32.034+09:00 #1 reading from stdin 1.29kB done
+2026-11-13T05:16:32.034+09:00 #1 DONE 0.0s
+2026-11-13T05:16:32.034+09:00 
+2026-11-13T05:16:32.034+09:00 #2 [corpus-load internal] load build definition from Dockerfile
+2026-11-13T05:16:32.034+09:00 #2 transferring dockerfile: 2.23kB done
+2026-11-13T05:16:32.034+09:00 #2 DONE 0.0s
+2026-11-13T05:16:32.034+09:00 
+2026-11-13T05:16:32.034+09:00 #3 [thread-setup internal] load metadata for docker.io/library/python:3.12-slim
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #4 [corpus-load internal] load metadata for ghcr.io/astral-sh/uv:0.12.9
+2026-11-13T05:16:33.035+09:00 #4 DONE 0.6s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #5 [api internal] load metadata for docker.io/library/node:24-slim
+2026-11-13T05:16:33.035+09:00 #5 DONE 1.1s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #3 [thread-setup internal] load metadata for docker.io/library/python:3.12-slim
+2026-11-13T05:16:33.035+09:00 #3 DONE 1.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #6 [corpus-load internal] load .dockerignore
+2026-11-13T05:16:33.035+09:00 #6 transferring context: 454B done
+2026-11-13T05:16:33.035+09:00 #6 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #7 [thread-setup] FROM ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff
+2026-11-13T05:16:33.035+09:00 #7 resolve ghcr.io/astral-sh/uv:0.12.9@sha256:8b940d3a9d65bed080436972241af2e21c84b5e8c9193f7014ed71479ee795ff 0.0s done
+2026-11-13T05:16:33.035+09:00 #7 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #8 [thread-setup frontend-build 1/9] FROM docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+2026-11-13T05:16:33.035+09:00 #8 resolve docker.io/library/node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 0.0s done
+2026-11-13T05:16:33.035+09:00 #8 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #9 [corpus-load stage-1  1/11] FROM docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+2026-11-13T05:16:33.035+09:00 #9 resolve docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b 0.0s done
+2026-11-13T05:16:33.035+09:00 #9 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #10 [thread-setup internal] load build context
+2026-11-13T05:16:33.035+09:00 #10 transferring context: 24.02kB 0.1s done
+2026-11-13T05:16:33.035+09:00 #10 transferring context: 24.02kB 0.1s done
+2026-11-13T05:16:33.035+09:00 #10 DONE 0.1s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #11 [api stage-1  8/11] COPY --from=frontend-build /frontend/dist/ ./frontend/dist/
+2026-11-13T05:16:33.035+09:00 #11 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #12 [api stage-1 10/11] COPY db/ ./db/
+2026-11-13T05:16:33.035+09:00 #12 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #13 [api stage-1  3/11] COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+2026-11-13T05:16:33.035+09:00 #13 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #14 [api stage-1  6/11] RUN uv sync --locked --no-dev --no-cache
+2026-11-13T05:16:33.035+09:00 #14 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #15 [api frontend-build 5/9] COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
+2026-11-13T05:16:33.035+09:00 #15 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #16 [api frontend-build 8/9] COPY data/circuits/ /data/circuits/
+2026-11-13T05:16:33.035+09:00 #16 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #17 [api stage-1  2/11] RUN apt-get update     && apt-get install -y --no-install-recommends kicad libcairo2     && rm -rf /var/lib/apt/lists/*
+2026-11-13T05:16:33.035+09:00 #17 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #18 [api frontend-build 3/9] COPY frontend/package.json frontend/package-lock.json ./
+2026-11-13T05:16:33.035+09:00 #18 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #19 [api frontend-build 2/9] WORKDIR /frontend
+2026-11-13T05:16:33.035+09:00 #19 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #20 [api stage-1  4/11] WORKDIR /app
+2026-11-13T05:16:33.035+09:00 #20 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #21 [api stage-1  7/11] COPY backend/ ./backend/
+2026-11-13T05:16:33.035+09:00 #21 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #22 [api frontend-build 4/9] RUN npm ci
+2026-11-13T05:16:33.035+09:00 #22 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #23 [api frontend-build 9/9] RUN npm run build
+2026-11-13T05:16:33.035+09:00 #23 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #24 [api frontend-build 7/9] COPY frontend/public/ ./public/
+2026-11-13T05:16:33.035+09:00 #24 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #25 [api stage-1  5/11] COPY pyproject.toml uv.lock .python-version ./
+2026-11-13T05:16:33.035+09:00 #25 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #26 [api frontend-build 6/9] COPY frontend/src/ ./src/
+2026-11-13T05:16:33.035+09:00 #26 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #27 [api stage-1  9/11] COPY data/ ./data/
+2026-11-13T05:16:33.035+09:00 #27 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #28 [corpus-load stage-1 11/11] RUN useradd --create-home --shell /usr/sbin/nologin sojafit
+2026-11-13T05:16:33.035+09:00 #28 CACHED
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #29 [api] exporting to image
+2026-11-13T05:16:33.035+09:00 #29 exporting layers done
+2026-11-13T05:16:33.035+09:00 #29 exporting manifest sha256:4febcc01572db0d3ca5358181408de9f8fa89a3ac60f276818a2d213d9e56865 done
+2026-11-13T05:16:33.035+09:00 #29 exporting config sha256:4fd2a61fec9b0393a8b2d2f0630d691f9042258beca30fd17864657a4524193c done
+2026-11-13T05:16:33.035+09:00 #29 exporting attestation manifest sha256:bc6e6ef821a5891e65748f50bc8bbb9b10e3bb0f12220543f32f901043a6f60f 0.0s done
+2026-11-13T05:16:33.035+09:00 #29 exporting manifest list sha256:254b26b9fe5cf8c3ef91e24af81dd8b1d9b0a651364f9ebf11b16440a9f47794 done
+2026-11-13T05:16:33.035+09:00 #29 naming to docker.io/library/proj3-b-api:latest done
+2026-11-13T05:16:33.035+09:00 #29 unpacking to docker.io/library/proj3-b-api:latest done
+2026-11-13T05:16:33.035+09:00 #29 DONE 0.1s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #30 [thread-setup] exporting to image
+2026-11-13T05:16:33.035+09:00 #30 exporting layers done
+2026-11-13T05:16:33.035+09:00 #30 exporting manifest sha256:20d219dd91ba7ccc6bdeb9e7c05fa56c0b871ae9ea11692a8e8601569c2aa419 done
+2026-11-13T05:16:33.035+09:00 #30 exporting config sha256:e60c5901b3debf97cc43ae2fa9df90c81ac2276bcdd0bd3b4cba568684e0c53a done
+2026-11-13T05:16:33.035+09:00 #30 exporting attestation manifest sha256:bf84388d02cd185dcdfddd9e8819fb674be5daf6bc91a1c134a53cafc1b99c25 0.0s done
+2026-11-13T05:16:33.035+09:00 #30 exporting manifest list sha256:82fbe094f343bb05dbd30fbb8636a8dfda96398deb7c62c16f5bf352342b5c31 0.0s done
+2026-11-13T05:16:33.035+09:00 #30 naming to docker.io/library/proj3-b-thread-setup:latest done
+2026-11-13T05:16:33.035+09:00 #30 unpacking to docker.io/library/proj3-b-thread-setup:latest done
+2026-11-13T05:16:33.035+09:00 #30 DONE 0.1s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #31 [corpus-load] exporting to image
+2026-11-13T05:16:33.035+09:00 #31 exporting layers done
+2026-11-13T05:16:33.035+09:00 #31 exporting manifest sha256:32dbc932289e218813e966d04a13e70727c8dcdacdad1d089ed402fb1e38d5f4 done
+2026-11-13T05:16:33.035+09:00 #31 exporting config sha256:18bce92726e09838cc610717d1848820754a1a8d4dfdd7f3333f7b2aa0bf882f done
+2026-11-13T05:16:33.035+09:00 #31 exporting attestation manifest sha256:eb916c6c97d0b2e7c050f483e8766ed759a99ead4f32c75381115269d62a4c58 0.0s done
+2026-11-13T05:16:33.035+09:00 #31 exporting manifest list sha256:4061d68590ea24ff1b1cad6b494a054e9c1619b25ee1474b8e563eb5e7c5ee25 0.0s done
+2026-11-13T05:16:33.035+09:00 #31 naming to docker.io/library/proj3-b-corpus-load:latest done
+2026-11-13T05:16:33.035+09:00 #31 unpacking to docker.io/library/proj3-b-corpus-load:latest done
+2026-11-13T05:16:33.035+09:00 #31 DONE 0.1s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #32 [api] resolving provenance for metadata file
+2026-11-13T05:16:33.035+09:00 #32 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #33 [corpus-load] resolving provenance for metadata file
+2026-11-13T05:16:33.035+09:00 #33 DONE 0.0s
+2026-11-13T05:16:33.035+09:00 
+2026-11-13T05:16:33.035+09:00 #34 [thread-setup] resolving provenance for metadata file
+2026-11-13T05:16:33.035+09:00 #34 DONE 0.0s
+2026-11-13T05:16:33.035+09:00  Image proj3-b-corpus-load Built 
+2026-11-13T05:16:33.035+09:00  Image proj3-b-thread-setup Built 
+2026-11-13T05:16:33.035+09:00  Image proj3-b-api Built 
+2026-11-13T05:16:33.035+09:00  Network proj3-b_default Creating 
+2026-11-13T05:16:33.035+09:00  Volume proj3-b_pgdata Creating 
+2026-11-13T05:16:33.035+09:00  Volume proj3-b_pgdata Creating 
+2026-11-13T05:16:33.035+09:00  Network proj3-b_default Creating 
+2026-11-13T05:16:33.035+09:00  Volume proj3-b_pgdata Created 
+2026-11-13T05:16:33.035+09:00  Volume proj3-b_pgdata Created 
+2026-11-13T05:16:33.035+09:00  Network proj3-b_default Created 
+2026-11-13T05:16:33.035+09:00  Network proj3-b_default Created 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-db-1 Creating 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-db-1 Created 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-corpus-load-1 Creating 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-thread-setup-1 Creating 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-corpus-load-1 Created 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-thread-setup-1 Created 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-api-1 Creating 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-api-1 Created 
+2026-11-13T05:16:33.035+09:00 Attaching to api-1, corpus-load-1, db-1, thread-setup-1
+2026-11-13T05:16:33.035+09:00  Container proj3-b-db-1 Starting 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-db-1 Started 
+2026-11-13T05:16:33.035+09:00  Container proj3-b-db-1 Waiting 
+2026-11-13T05:16:34.035+09:00 db-1  | The files belonging to this database system will be owned by user "postgres".
+2026-11-13T05:16:34.035+09:00 db-1  | This user must also own the server process.
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | The database cluster will be initialized with locale "en_US.utf8".
+2026-11-13T05:16:34.035+09:00 db-1  | The default database encoding has accordingly been set to "UTF8".
+2026-11-13T05:16:34.035+09:00 db-1  | The default text search configuration will be set to "english".
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | Data page checksums are disabled.
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | creating subdirectories ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | selecting dynamic shared memory implementation ... posix
+2026-11-13T05:16:34.035+09:00 db-1  | selecting default max_connections ... 100
+2026-11-13T05:16:34.035+09:00 db-1  | selecting default shared_buffers ... 128MB
+2026-11-13T05:16:34.035+09:00 db-1  | selecting default time zone ... Etc/UTC
+2026-11-13T05:16:34.035+09:00 db-1  | creating configuration files ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | running bootstrap script ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | performing post-bootstrap initialization ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | initdb: warning: enabling "trust" authentication for local connections
+2026-11-13T05:16:34.035+09:00 db-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-11-13T05:16:34.035+09:00 db-1  | syncing data to disk ... ok
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | Success. You can now start the database server using:
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | waiting for server to start....2026-11-12 20:16:33.532 UTC [47] LOG:  starting PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-11-13T05:16:34.035+09:00 db-1  | 2026-11-12 20:16:33.533 UTC [47] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-13T05:16:34.035+09:00 db-1  | 2026-11-12 20:16:33.535 UTC [50] LOG:  database system was shut down at 2026-11-12 20:16:33 UTC
+2026-11-13T05:16:34.035+09:00 db-1  | 2026-11-12 20:16:33.540 UTC [47] LOG:  database system is ready to accept connections
+2026-11-13T05:16:34.035+09:00 db-1  |  done
+2026-11-13T05:16:34.035+09:00 db-1  | server started
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE DATABASE
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/000_init.sql
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE EXTENSION
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/002_rag_corpus.sql
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/008_multi_dim_embeddings.sql
+2026-11-13T05:16:34.035+09:00 db-1  | DROP INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | DO
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/009_chunk_embedding_bits.sql
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | INSERT 0 0
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/012_document_category.sql
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/020_service_baseline.sql
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE FUNCTION
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE SCHEMA
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE INDEX
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE FUNCTION
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TRIGGER
+2026-11-13T05:16:34.035+09:00 db-1  | REVOKE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE FUNCTION
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE FUNCTION
+2026-11-13T05:16:34.035+09:00 db-1  | REVOKE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | INSERT 0 1
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/026_projects_catalog_demo.sql
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/026_revoke_public_grants_and_rls.sql
+2026-11-13T05:16:34.035+09:00 db-1  | DO
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/027_google_user_login.sql
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | DO
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/029_email_account_security.sql
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:34.035+09:00 db-1  | REVOKE
+2026-11-13T05:16:34.035+09:00 db-1  | DO
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | 
+2026-11-13T05:16:34.035+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/030_google_onboarding.sql
+2026-11-13T05:16:35.041+09:00 db-1  | CREATE TABLE
+2026-11-13T05:16:35.041+09:00 db-1  | ALTER TABLE
+2026-11-13T05:16:35.041+09:00 db-1  | REVOKE
+2026-11-13T05:16:35.041+09:00 db-1  | DO
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/DB.md
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/legacy
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/manual
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/migrations
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/schema
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | waiting for server to shut down....2026-11-12 20:16:34.049 UTC [47] LOG:  received fast shutdown request
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.050 UTC [47] LOG:  aborting any active transactions
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.051 UTC [47] LOG:  background worker "logical replication launcher" (PID 53) exited with exit code 1
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.051 UTC [48] LOG:  shutting down
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.052 UTC [48] LOG:  checkpoint starting: shutdown immediate
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.095 UTC [48] LOG:  checkpoint complete: wrote 1020 buffers (6.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.017 s, sync=0.025 s, total=0.045 s; sync files=435, longest=0.008 s, average=0.001 s; distance=5398 kB, estimate=5398 kB; lsn=0/1A2FB58, redo lsn=0/1A2FB58
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.101 UTC [47] LOG:  database system is shut down
+2026-11-13T05:16:35.041+09:00 db-1  |  done
+2026-11-13T05:16:35.041+09:00 db-1  | server stopped
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | PostgreSQL init process complete; ready for start up.
+2026-11-13T05:16:35.041+09:00 db-1  | 
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.165 UTC [1] LOG:  starting PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.166 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.166 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.167 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.173 UTC [85] LOG:  database system was shut down at 2026-11-12 20:16:34 UTC
+2026-11-13T05:16:35.041+09:00 db-1  | 2026-11-12 20:16:34.176 UTC [1] LOG:  database system is ready to accept connections
+2026-11-13T05:16:37.045+09:00  Container proj3-b-db-1 Healthy 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-corpus-load-1 Starting 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-thread-setup-1 Starting 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-corpus-load-1 Started 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-corpus-load-1 Waiting 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-thread-setup-1 Started 
+2026-11-13T05:16:37.045+09:00  Container proj3-b-thread-setup-1 Waiting 
+2026-11-13T05:16:38.047+09:00 corpus-load-1  | source_documents 42
+2026-11-13T05:16:38.047+09:00 corpus-load-1  | document_chunks 1556
+2026-11-13T05:16:38.047+09:00 
+2026-11-13T05:16:38.047+09:00 [Kcorpus-load-1 exited with code 0
+2026-11-13T05:16:39.050+09:00  Container proj3-b-corpus-load-1 Exited 
+2026-11-13T05:16:39.051+09:00 thread-setup-1  | 분석 저장소 준비 완료
+2026-11-13T05:16:39.051+09:00 
+2026-11-13T05:16:39.051+09:00 [Kthread-setup-1 exited with code 0
+2026-11-13T05:16:39.051+09:00  Container proj3-b-thread-setup-1 Exited 
+2026-11-13T05:16:39.051+09:00  Container proj3-b-api-1 Starting 
+2026-11-13T05:16:39.051+09:00  Container proj3-b-api-1 Started 
+2026-11-13T05:16:41.051+09:00 api-1           | INFO:     Started server process [1]
+2026-11-13T05:16:41.051+09:00 api-1           | INFO:     Waiting for application startup.
+2026-11-13T05:16:43.051+09:00 api-1           | {"severity": "INFO", "time": "2026-11-12T20:16:42.419+00:00", "logger": "uvicorn.error", "message": "Application startup complete."}
+2026-11-13T05:16:43.052+09:00 api-1           | {"color_message": "Uvicorn running on \u001b[1m%s://%s:%d\u001b[0m (Press CTRL+C to quit)", "severity": "INFO", "time": "2026-11-12T20:16:42.420+00:00", "logger": "uvicorn.error", "message": "Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "45db6742-029c-4ccd-8c6a-3fcbf896a25a", "severity": "INFO", "time": "2026-11-12T20:16:42.515+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39088 - \"GET /health HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "3813f784-ff10-4b5b-9932-6dfc149488ba", "severity": "INFO", "time": "2026-11-12T20:16:42.689+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39092 - \"POST /api/auth/demo-login HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "a04b3a89-8322-4714-abda-b097acc36c84", "severity": "INFO", "time": "2026-11-12T20:16:42.872+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"GET /health HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "7ca82425-fe12-4ea7-b6b4-329786a02550", "severity": "INFO", "time": "2026-11-12T20:16:42.974+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"GET /openapi.json HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "afb85ab9-8df8-4e3a-bc7e-2d9af5ef40a7", "severity": "INFO", "time": "2026-11-12T20:16:42.989+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"POST /api/auth/demo-login HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "8ba48259-67a7-4908-9330-b44c28080e9e", "severity": "INFO", "time": "2026-11-12T20:16:43.003+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"GET /api/auth/me HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "8f82a68f-36f3-4b51-b383-0770ca2d0ade", "severity": "INFO", "time": "2026-11-12T20:16:43.022+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"GET /api/demo-circuits HTTP/1.1\" 200"}
+2026-11-13T05:16:43.052+09:00 api-1           | {"request_id": "6090116f-5762-4df4-ab40-2c53a525cfbf", "severity": "INFO", "time": "2026-11-12T20:16:43.040+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"POST /api/projects HTTP/1.1\" 201"}
+2026-11-13T05:16:44.057+09:00 api-1           | {"request_id": "445965af-05a5-4274-91a9-a47a04dec4e7", "severity": "INFO", "time": "2026-11-12T20:16:43.056+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"GET /api/projects/1 HTTP/1.1\" 200"}
+2026-11-13T05:16:44.057+09:00 api-1           | {"request_id": "17554b43-6a33-49e7-ac9c-8d7ff9047655", "severity": "INFO", "time": "2026-11-12T20:16:43.072+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"POST /api/projects/1/threads HTTP/1.1\" 201"}
+2026-11-13T05:16:44.057+09:00 api-1           | {"request_id": "c029515b-36cd-4ab0-ac9f-d53b73b7d06d", "severity": "INFO", "time": "2026-11-12T20:16:43.110+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:39096 - \"POST /api/threads/8970c553-4971-4dc7-90c1-0d82fa5847b8/runs HTTP/1.1\" 200"}
+2026-11-13T05:16:44.057+09:00 api-1           | [11/12/26 20:16:43] INFO     Processing request of type            server.py:733
+2026-11-13T05:16:44.057+09:00 api-1           |                              CallToolRequest                                    
+2026-11-13T05:16:44.057+09:00 api-1           |                     INFO     Processing request of type            server.py:733
+2026-11-13T05:16:44.057+09:00 api-1           |                              ListToolsRequest                                   
+2026-11-13T05:16:44.057+09:00 api-1           | {"request_id": "c029515b-36cd-4ab0-ac9f-d53b73b7d06d", "user_id": 1, "thread_id": "8970c553-4971-4dc7-90c1-0d82fa5847b8", "version": 1, "mode": "demo", "status": "WAITING", "elapsed_ms": 155, "stages": [{"stage": "입력 읽기", "status": "ok", "elapsed_ms": 0}, {"stage": "기억 읽기", "status": "ok", "elapsed_ms": 0}, {"stage": "품번·판 확인", "status": "ok", "elapsed_ms": 96}, {"stage": "Supervisor", "status": "ok", "elapsed_ms": 0}, {"stage": "회로 읽기", "status": "ok", "elapsed_ms": 40}, {"stage": "대체 부품 판정", "status": "interrupted", "elapsed_ms": 0}, {"stage": "Spec 에이전트", "status": "interrupted", "elapsed_ms": 48}, {"stage": "save_result", "status": "ok", "elapsed_ms": 2}], "trace_id": "4773f2d6cd97405fa7b63ab5a2571df5", "trace_delivery": "disabled", "severity": "INFO", "time": "2026-11-12T20:16:43.294+00:00", "logger": "backend.conversations", "message": "analysis_finished"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "947cab97-23ab-4df7-86f0-c49e563275a3", "severity": "INFO", "time": "2026-11-12T20:16:46.369+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52422 - \"POST /api/runs/2ae93bbf-b639-4ab2-a265-3e7801a649c3/resume HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "947cab97-23ab-4df7-86f0-c49e563275a3", "user_id": 1, "thread_id": "8970c553-4971-4dc7-90c1-0d82fa5847b8", "version": 1, "mode": "demo", "status": "DONE", "elapsed_ms": 52, "stages": [{"stage": "specs", "status": "ok", "elapsed_ms": 0}, {"stage": "specs", "status": "ok", "elapsed_ms": 0}, {"stage": "specs", "status": "ok", "elapsed_ms": 0}, {"stage": "대체 부품 판정", "status": "ok", "elapsed_ms": 37}, {"stage": "Spec 에이전트", "status": "ok", "elapsed_ms": 40}, {"stage": "답 모으기", "status": "ok", "elapsed_ms": 0}, {"stage": "답 정리", "status": "ok", "elapsed_ms": 0}, {"stage": "답 검사", "status": "ok", "elapsed_ms": 0}, {"stage": "끝내기", "status": "ok", "elapsed_ms": 0}, {"stage": "save_result", "status": "ok", "elapsed_ms": 1}], "trace_id": "91073aed506e4b2fa986c17d7406a596", "trace_delivery": "disabled", "severity": "INFO", "time": "2026-11-12T20:16:46.450+00:00", "logger": "backend.conversations", "message": "analysis_finished"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "f5cf9dbd-ad35-4097-b9c2-db67feacf2fc", "severity": "INFO", "time": "2026-11-12T20:16:46.504+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"GET /api/runs/2ae93bbf-b639-4ab2-a265-3e7801a649c3 HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "4f9db191-628e-4760-a2f6-509ea81100f3", "severity": "INFO", "time": "2026-11-12T20:16:46.524+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/messages/2/approvals HTTP/1.1\" 201"}
+2026-11-13T05:16:47.067+09:00 db-1            | 2026-11-12 20:16:46.541 UTC [166] ERROR:  duplicate key value violates unique constraint "approvals_message_id_key"
+2026-11-13T05:16:47.067+09:00 db-1            | 2026-11-12 20:16:46.541 UTC [166] DETAIL:  Key (message_id)=(2) already exists.
+2026-11-13T05:16:47.067+09:00 db-1            | 2026-11-12 20:16:46.541 UTC [166] STATEMENT:  INSERT INTO approvals(user_id,message_id,snapshot,candidate_part,verdict,part_number) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,created_at
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "a5e5e2e6-26eb-49cc-aadf-6a06d369a0a8", "code": "ALREADY_APPROVED", "status": 409, "severity": "INFO", "time": "2026-11-12T20:16:46.542+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "a5e5e2e6-26eb-49cc-aadf-6a06d369a0a8", "severity": "INFO", "time": "2026-11-12T20:16:46.542+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/messages/2/approvals HTTP/1.1\" 409"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "a27c32d0-b9b0-4d6b-b72f-5ba3bea6c312", "severity": "INFO", "time": "2026-11-12T20:16:46.557+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/approvals/1/quotes HTTP/1.1\" 201"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "62bf8f8c-3887-4971-9bac-1a5f844bdeae", "severity": "INFO", "time": "2026-11-12T20:16:46.570+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"GET /api/projects/1/quotes HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "bb034a79-0afc-4c37-a396-16f8feef278c", "severity": "INFO", "time": "2026-11-12T20:16:46.585+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"POST /api/auth/demo-login HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "3315bdab-b645-4a05-9d79-d2ed92249380", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.597+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "3315bdab-b645-4a05-9d79-d2ed92249380", "severity": "INFO", "time": "2026-11-12T20:16:46.598+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/projects/1 HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "19be18db-a486-4d6d-b02a-09b990f70a8c", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.609+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "19be18db-a486-4d6d-b02a-09b990f70a8c", "severity": "INFO", "time": "2026-11-12T20:16:46.609+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/projects/1/threads HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "65ae3217-8756-4f3a-b2dc-5efdcf2e1cc2", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.622+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "65ae3217-8756-4f3a-b2dc-5efdcf2e1cc2", "severity": "INFO", "time": "2026-11-12T20:16:46.623+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/runs/2ae93bbf-b639-4ab2-a265-3e7801a649c3 HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "b73bb92b-b65d-4718-8e58-6fb084d61360", "severity": "INFO", "time": "2026-11-12T20:16:46.635+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/projects HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "05b8e710-635c-47e0-b391-dc2e762890c1", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.648+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "05b8e710-635c-47e0-b391-dc2e762890c1", "severity": "INFO", "time": "2026-11-12T20:16:46.648+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/projects/1/quotes HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "b409d7e6-cc5f-4e52-a50e-e6c6c8bd5164", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.661+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "b409d7e6-cc5f-4e52-a50e-e6c6c8bd5164", "severity": "INFO", "time": "2026-11-12T20:16:46.661+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"POST /api/messages/2/approvals HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "35f0bccb-721f-47eb-a25a-bd35088e9636", "code": "NOT_FOUND", "status": 404, "severity": "INFO", "time": "2026-11-12T20:16:46.673+00:00", "logger": "backend.errors", "message": "request_failed"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "35f0bccb-721f-47eb-a25a-bd35088e9636", "severity": "INFO", "time": "2026-11-12T20:16:46.673+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"POST /api/approvals/1/quotes HTTP/1.1\" 404"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "7a999f8d-954f-4b07-b82b-e44c9912d881", "severity": "INFO", "time": "2026-11-12T20:16:46.686+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"GET /api/approved-cases HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "6b16bf97-6f33-44f6-9b39-edb0d6d2d790", "severity": "INFO", "time": "2026-11-12T20:16:46.698+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52434 - \"GET /api/approved-cases HTTP/1.1\" 200"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "75d4b9b8-abc9-448c-90e5-fcb0030684bb", "severity": "INFO", "time": "2026-11-12T20:16:46.720+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/projects HTTP/1.1\" 201"}
+2026-11-13T05:16:47.067+09:00 api-1           | {"request_id": "b4375594-632f-446f-bbe6-fc6645830fcc", "severity": "INFO", "time": "2026-11-12T20:16:46.733+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/projects/2/threads HTTP/1.1\" 201"}
+2026-11-13T05:16:50.073+09:00 api-1           | {"request_id": "caf3cb2f-c156-4793-b4d3-d9a6dce68322", "severity": "INFO", "time": "2026-11-12T20:16:49.782+00:00", "logger": "uvicorn.access", "message": "172.19.0.1:52432 - \"POST /api/threads/45b739b2-805a-431e-a4ef-21ac0a03bb79/runs HTTP/1.1\" 200"}
+2026-11-13T05:16:50.073+09:00 api-1           | [11/12/26 20:16:49] INFO     Processing request of type            server.py:733
+2026-11-13T05:16:50.073+09:00 api-1           |                              CallToolRequest                                    
+2026-11-13T05:16:50.073+09:00 api-1           | {"request_id": "caf3cb2f-c156-4793-b4d3-d9a6dce68322", "user_id": 1, "thread_id": "45b739b2-805a-431e-a4ef-21ac0a03bb79", "version": 1, "mode": "demo", "status": "DONE", "elapsed_ms": 21, "stages": [{"stage": "입력 읽기", "status": "ok", "elapsed_ms": 0}, {"stage": "기억 읽기", "status": "ok", "elapsed_ms": 0}, {"stage": "품번·판 확인", "status": "ok", "elapsed_ms": 11}, {"stage": "Supervisor", "status": "ok", "elapsed_ms": 0}, {"stage": "거절", "status": "ok", "elapsed_ms": 0}, {"stage": "save_result", "status": "ok", "elapsed_ms": 1}], "trace_id": "d38b82b6adf248dbb92ebe9ad7056658", "trace_delivery": "disabled", "severity": "INFO", "time": "2026-11-12T20:16:49.828+00:00", "logger": "backend.conversations", "message": "analysis_finished"}

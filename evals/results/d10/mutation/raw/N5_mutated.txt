@@ -1,0 +1,16 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots _______
+tests/judge/test_judge_conditions.py:153: in test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots
+    assert b_grade.verdict == 'ROLE_SUFFICIENT' and c_grade.verdict == 'NOT_SUFFICIENT'
+E   AssertionError: assert ('ROLE_SUFFICIENT' == 'ROLE_SUFFICIENT'
+E     
+E       ROLE_SUFFICIENT and 'ROLE_SUFFICIENT' == 'NOT_SUFFICIENT'
+E     
+E     - NOT_SUFFICIENT
+E     ? ^ ^
+E     + ROLE_SUFFICIENT
+E     ? ^ ^^)
+=========================== short test summary info ============================
+FAILED tests/judge/test_judge_conditions.py::test_zener_nominal_and_tolerance_class_use_the_typ_min_max_slots
+1 failed in 0.17s

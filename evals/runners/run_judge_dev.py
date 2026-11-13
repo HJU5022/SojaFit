@@ -3,6 +3,7 @@
 - 역할: 문항마다 그래프를 돌리고(인터럽트는 빈 값으로 한 번 재개), 판정 결과를 기대 역할 · 판정과 비교해 결과 파일을 쓴다.
 - 하지 않는 일: 동결 평가셋 채점(run_graph.py), 정답 고치기.
 - 출처: docs/specs/judge-agent.md Goal · How "연습 문제와 측정"
+- 입력 evals/samples/judge_dev.jsonl은 저장소에 없다(이 실행기로 낸 결과 파일도 저장소에 없음).
 - 실행(조장 승인 뒤, lab 컨테이너): uv run python -m evals.runners.run_judge_dev evals/samples/judge_dev.jsonl
 """
 import json

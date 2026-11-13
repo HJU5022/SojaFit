@@ -51,12 +51,13 @@ def refuse_node(state: dict) -> dict:
     return {'answer': message, 'check': {}, 'refusal': {'code': reason.value, 'message': message}, 'path': ['거절']}
 
 
-def judge_subgraph(*, chat, specs, find, retriever):
+def judge_subgraph(*, chat, specs, find, retriever, web_search=None, web_search_fallback=None):
     """Spec 에이전트: 회로 읽기(LLM 1번) → 대체 부품 판정(코드 관문 · 인터럽트 · 사양 표 · 비교). 하위 그래프라 재개하면 멈춘 판정 노드부터 다시 돈다."""
     from backend.multi_agent.agents.judge import judge_read_agent, judge_task_node
     g = StateGraph(JudgeState, output_schema=JudgeOut)  # [왜] 바깥 메모장에는 보고와 지나간 노드만 돌려준다. 다른 칸은 동시 실행 중 덮어쓰기 충돌이 난다
     g.add_node('회로 읽기', partial(judge_read_agent, chat=chat))
-    g.add_node('대체 부품 판정', partial(judge_task_node, specs=specs, find=find, retriever=retriever))
+    g.add_node('대체 부품 판정', partial(judge_task_node, specs=specs, find=find, retriever=retriever,
+                                          web_search=web_search, web_search_fallback=web_search_fallback))
     g.add_edge(START, '회로 읽기')
     g.add_edge('회로 읽기', '대체 부품 판정')
     g.add_edge('대체 부품 판정', END)
@@ -64,6 +65,7 @@ def judge_subgraph(*, chat, specs, find, retriever):
 
 
 def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool = False, web_search=None,
+                web_search_fallback=None, judge_web_search_fallback=None,
                 judge_enabled: bool = False, specs=None, find=None, checkpointer=None, store=None):
     """멀티 에이전트 그래프를 만들어 compile한다. chat은 `(node, system, user, schema)` 모양의 LLM 호출이다.
 
@@ -81,7 +83,8 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_node('품번·판 확인', partial(facts_mod.facts_node, lookup=lookup))
     g.add_node('Supervisor', partial(sup.plan_node, chat=chat, judge_enabled=judge_enabled, web_enabled=web_enabled))  # 계획(LLM 1번)
     g.add_node('RAG 에이전트', partial(docs_agent, retriever=retriever, chat=chat, find=find,
-                                       web_search=web_search if web_enabled else None))  # find: 품번 없이 정격만 준 질문의 품번 찾기
+                                       web_search=web_search if web_enabled else None,
+                                       web_search_fallback=web_search_fallback if web_enabled else None))  # find: 품번 없이 정격만 준 질문의 품번 찾기
     g.add_node('답 모으기', sup.collect_node)  # 코드만(LLM 없음). 두 번째 Supervisor가 아니다
     g.add_node('답 정리', sup.single_node)
     g.add_node('종합', partial(sup.synth_node, chat=chat))
@@ -96,7 +99,9 @@ def build_graph(*, chat, retriever, parse=None, lookup=None, web_enabled: bool =
     g.add_edge('품번·판 확인', 'Supervisor')
     agents = ['RAG 에이전트']
     if judge_enabled:
-        g.add_node('Spec 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever))
+        g.add_node('Spec 에이전트', judge_subgraph(chat=chat, specs=specs, find=find, retriever=retriever,
+                                                       web_search=web_search if web_enabled else None,
+                                                       web_search_fallback=judge_web_search_fallback if web_enabled else None))
         agents.append('Spec 에이전트')
     # [왜] 목록(path_map)의 이름 = 노드 이름이라 그림에 라벨이 붙지 않는다. 할 일이 둘이면 두 에이전트에 동시에 Send
     g.add_conditional_edges('Supervisor', sup.after_plan, ['끝내기', '가격 안내', '거절', '답 모으기', *agents])  # 답 모으기: 재계획이 '있는 답으로'

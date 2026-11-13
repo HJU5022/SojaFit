@@ -7,7 +7,5 @@
 
 ## 파일
 - `PUBLIC.md` — 이 폴더 설명.
-- `circuit-schematics/` — 검증된 공개 원본에서 고정한 데모 회로도 PNG 15개.
+- `circuit-schematics/` — 검증된 공개 원본에서 고정한 데모 회로도 PNG 15개. 작업대의 원본 회로도 창이 씁니다.
 - `assets/` — Vite 개발 화면과 FastAPI 배포 화면이 `/assets`로 제공하는 브랜드 이미지. [ASSETS.md](assets/ASSETS.md)
-
-현재 랜딩·로그인의 연결 예시는 LandingPage.tsx의 SVG로 렌더링한다. 구버전 랜딩 회로 배경 이미지는 제거했다.

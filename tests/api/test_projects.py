@@ -60,6 +60,28 @@ def test_demo_catalog_and_invalid_creation(client):
         assert result.json()["error"]["code"] == "VALIDATION_ERROR"
 
 
+def test_demo_project_create_is_404_outside_demo_mode(client, monkeypatch):
+    """실서비스(DEMO_MODE=0)에서는 데모 회로로 프로젝트 만들기가 없다(업로드만)."""
+    monkeypatch.setenv("DEMO_MODE", "0")
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    response = client.post(
+        "/api/projects",
+        json={"demo_id": "breadboard_supply", "name": "전원 회로"},
+        headers={"origin": "http://testserver"},
+    )
+    assert response.status_code == 404
+
+
+def test_demo_catalog_follows_demo_mode(client, monkeypatch):
+    """데모 회로 목록도 데모 모드에서만 있다(생성과 같은 규칙). 로그인은 모드와 무관하게 먼저 확인한다."""
+    monkeypatch.setenv("DEMO_MODE", "0")
+    assert client.get("/api/demo-circuits").status_code == 401
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    assert client.get("/api/demo-circuits").status_code == 404
+    monkeypatch.setenv("DEMO_MODE", "1")
+    assert len(client.get("/api/demo-circuits").json()) == 15
+
+
 def test_demo_catalog_exposes_only_verified_public_schematic_metadata(client):
     app.dependency_overrides[auth.current_user_id] = lambda: 1
     response = client.get("/api/demo-circuits")
@@ -88,7 +110,7 @@ def test_demo_catalog_filters_pages_and_sets_cache_header(client):
     response = client.get("/api/demo-circuits", params={"q": "attiny", "offset": 2, "limit": 1})
     assert response.status_code == 200
     assert [item["id"] for item in response.json()] == ["attiny2313a_thermostat"]
-    assert response.headers["Cache-Control"] == "public, max-age=300"
+    assert response.headers["Cache-Control"] == "private, max-age=300"  # 로그인 경로라 공유 캐시에 두지 않는다
 
 
 @pytest.mark.parametrize("params", [{"offset": -1}, {"limit": 0}, {"limit": 101}, {"q": ""}])
@@ -154,7 +176,7 @@ def test_upload_persists_only_normalized_payload_and_closes(upload_boundary):
     assert set(payload) == {"connections", "source_sha256", "parser_version"}
     assert set(payload["connections"]) == {"parts", "nets"}
     assert payload["source_sha256"] == hashlib.sha256(raw).hexdigest()
-    assert payload["parser_version"] == "kicad-export-v1"
+    assert payload["parser_version"] == "kicad-export-v2"
     assert "RAW_UPLOAD_MARKER" not in repr(payload) + response.text
     assert all(not isinstance(value, (bytes, Path)) and not hasattr(value, "read") for value in payload.values())
     assert reads == [5 * 1024 * 1024 + 1]

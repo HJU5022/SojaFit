@@ -50,7 +50,9 @@ const result: ResultDto = {
 
 let approval: ApprovalDto | null = null
 let approvedCase: ApprovedCaseDto | null = null
-let projects: Project[] = structuredClone(dummyProjects)
+// 올린 넷리스트(demo_id 없음) 프로젝트 하나를 더해 외부 원본 회로도 검색 화면을 볼 수 있게 한다.
+let projects: Project[] = [...structuredClone(dummyProjects), { ...structuredClone(dummyProjects[0]), id: Math.max(...dummyProjects.map(item => item.id)) + 1,
+  name: 'ATtiny85 보드 (올린 넷리스트)', source_kind: 'upload', demo_id: null }]
 let threads: ThreadDetailDto[] = []
 let runs: RunDto[] = []
 let threadSequence = 0
@@ -74,6 +76,8 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   const method = (init.method ?? 'GET').toUpperCase()
   const pathname = url.pathname
 
+  if (method === 'GET' && pathname === '/api/auth/demo') return json({ enabled: true })
+
   if (method === 'GET' && pathname === '/api/projects') {
     return json(projects.map(({ connections: _connections, ...summary }) => summary))
   }
@@ -81,6 +85,17 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   if (method === 'GET' && projectMatch) {
     const found = projects.find(item => item.id === Number(projectMatch[1]))
     return found ? json(found) : notFound()
+  }
+  if (method === 'PATCH' && projectMatch) {
+    const name = String((JSON.parse(String(init.body ?? '{}')) as { name?: string }).name ?? '').trim()
+    const found = projects.find(item => item.id === Number(projectMatch[1]))
+    if (!found || !name) return found ? json({ error: { code: 'VALIDATION_ERROR', message: '프로젝트 이름을 입력해 주세요.', request_id: REQUEST_ID } }, 422) : notFound()
+    projects = projects.map(item => item === found ? { ...item, name, updated_at: NOW } : item)
+    return json({ ...found, name, updated_at: NOW })
+  }
+  if (method === 'DELETE' && projectMatch) {
+    projects = projects.filter(item => item.id !== Number(projectMatch[1]))
+    return new Response(null, { status: 204 })
   }
   if (method === 'POST' && pathname === '/api/projects') {
     const body = JSON.parse(String(init.body ?? '{}')) as { demo_id?: string; name?: string }
@@ -93,12 +108,9 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     return json(created, 201)
   }
   if (method === 'POST' && pathname === '/api/projects/upload') {
-    const body = init.body instanceof FormData ? init.body : null
-    const created: Project = { ...structuredClone(dummyProjects[0]), id: Math.max(...projects.map(item => item.id), 0) + 1,
-      name: String(body?.get('name') || '업로드 회로'), demo_id: null, source_kind: 'upload',
-      created_at: NOW, updated_at: NOW }
-    projects = [...projects, created]
-    return json(created, 201)
+    return json({ error: { code: 'UNAVAILABLE',
+      message: '넷리스트 첨부는 실제 API 서버에 연결한 화면에서 사용할 수 있습니다. 더미 모드에서는 파일을 해석하지 않습니다.',
+      request_id: REQUEST_ID } }, 503)
   }
   if (method === 'GET' && pathname === '/api/demo-circuits') {
     const query = (url.searchParams.get('q') ?? '').trim().toLocaleLowerCase()
@@ -106,6 +118,12 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') ?? 100) || 100))
     const demos = query ? dummyDemos.filter(item => `${item.id} ${item.name}`.toLocaleLowerCase().includes(query)) : dummyDemos
     return json(demos.slice(offset, offset + limit))
+  }
+  if (method === 'GET' && pathname === '/api/external-circuits/schematics') {
+    if (!/attiny85/i.test(url.searchParams.get('q') ?? '')) return json({ error: { code: 'SCHEMATIC_NOT_FOUND', message: '검증된 완성 회로도를 찾지 못했습니다.', request_id: REQUEST_ID } }, 404)
+    return json({ project: 'attiny85_dev', commit: '0'.repeat(40), license: 'CC-BY-4.0', attribution: '더미 저작자', repository_url: 'https://example.test/repo',
+      source_url: 'https://example.test/repo/blob/main/board.kicad_sch', source_file: 'board.kicad_sch',
+      images: [{ sheet: 0, url: '/circuit-schematics/attiny85_dev.png' }, { sheet: 1, url: '/circuit-schematics/pro_micro.png' }] })
   }
   if (method === 'GET' && pathname === '/api/judge/roles') return json([{ code: 'R01', name: '역극성 보호(직렬)' }])
   const projectThreadsMatch = pathname.match(/^\/api\/projects\/(\d+)\/threads$/)

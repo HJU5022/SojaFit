@@ -1,0 +1,116 @@
+# Postgres checkpoint rows (docker compose exec db psql, isolated DB). Code: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (NOT main), tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97
+# measured 2026-11-13T05:23:11.041+09:00 KST; baseline b5f050d
+
+restart issued 2026-11-13T05:22:33.255+09:00; api before ['25205', '2026-11-12T20:20:28.636218044Z', '0'] after ['29452', '2026-11-12T20:22:34.069190671Z', '0'] (pid|StartedAt|RestartCount); db before==after: True
+
+## demo-ask: after run stopped at interrupt (before restart)
+  sojafit_agent.checkpoints total: 112
+  sojafit_agent.checkpoint_writes total: 685
+  sojafit_agent.checkpoint_blobs total: 371
+  sojafit_agent.store total: 0
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## v3-01: after run stopped at interrupt (before restart)
+  sojafit_agent.checkpoints total: 121
+  sojafit_agent.checkpoint_writes total: 746
+  sojafit_agent.checkpoint_blobs total: 401
+  sojafit_agent.store total: 0
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## B demo-notsuff: after run stopped at interrupt (before restart)
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## demo-ask: just before restart
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## v3-01: just before restart
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## B demo-notsuff: just before restart
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## demo-ask: just after restart (before resume)
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## v3-01: just after restart (before resume)
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## B demo-notsuff: just after restart (before resume)
+  sojafit_agent.checkpoints total: 152
+  sojafit_agent.checkpoint_writes total: 939
+  sojafit_agent.checkpoint_blobs total: 507
+  sojafit_agent.store total: 3
+  checkpoints for thread: 9
+  checkpoint_writes for thread (count, channels): 61 answer,approved_memories,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 30
+  public.runs status for thread: requires_input
+
+## demo-ask: after resume completed
+  sojafit_agent.checkpoints total: 158
+  sojafit_agent.checkpoint_writes total: 964
+  sojafit_agent.checkpoint_blobs total: 524
+  sojafit_agent.store total: 3
+  checkpoints for thread: 15
+  checkpoint_writes for thread (count, channels): 86 answer,approved_memories,branch:to:끝내기,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:답 검사,branch:to:답 정리,branch:to:답 모으기,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,__resume__,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 47
+  public.runs status for thread: completed
+
+## v3-01: after resume completed
+  sojafit_agent.checkpoints total: 164
+  sojafit_agent.checkpoint_writes total: 989
+  sojafit_agent.checkpoint_blobs total: 541
+  sojafit_agent.store total: 3
+  checkpoints for thread: 15
+  checkpoint_writes for thread (count, channels): 86 answer,approved_memories,branch:to:끝내기,branch:to:기억 읽기,branch:to:입력 읽기,branch:to:회로 읽기,branch:to:대체 부품 판정,branch:to:품번·판 확인,branch:to:답 검사,branch:to:답 정리,branch:to:답 모으기,branch:to:Supervisor,check,circuit,conditions,connections,counters,docs,facts,final_reports,input,__interrupt__,judgement,judge_read,memory_refs,mount_preference,outcome,passed,path,plan,__pregel_tasks,price_parts,question,question_type,refusal,refusal_reason,reports,__resume__,round,run_version,synth_text,target,target_part,task,user_id
+  checkpoint_blobs for thread: 47
+  public.runs status for thread: completed
+
+approvals/quotes tables before restart: 1 approvals, 1 quotes ; after restart: 1 approvals, 1 quotes

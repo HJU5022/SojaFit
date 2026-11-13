@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________ test_collect_refuses_over_the_agent_limit ___________________
+tests/multi_agent/test_supervisor.py:113: in test_collect_refuses_over_the_agent_limit
+    assert out['outcome'] == 'refuse' and out['refusal_reason'] == Reason.LIMIT_REACHED.value
+E   AssertionError: assert ('single' == 'refuse'
+E     
+E     - refuse
+E     + single)
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_supervisor.py::test_collect_refuses_over_the_agent_limit
+1 failed in 0.49s

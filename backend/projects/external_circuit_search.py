@@ -72,6 +72,24 @@ class GitHubRepositoryRef:
     repository_url: str
 
 
+@dataclass(frozen=True)
+class OfficialSchematicRef:
+    """카탈로그가 이미 검증한 제조사 원본 후보."""
+    demo_id: str
+    manufacturer: str
+    model: str
+    revision: str | None
+    source_url: str
+    source_file: str
+    asset_kind: str
+    source_sha256: str
+    license: str
+    license_evidence_url: str
+    attribution: str
+    source_type: str = "manufacturer_official"
+    evidence_grade: int = 2
+
+
 def safe_public_https_url(value: object, *, allowed_hosts: frozenset[str]) -> str | None:
     url = _safe_url(value)
     if url is None:
@@ -138,3 +156,89 @@ def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Clie
         if len(found) == limit:
             break
     return tuple(found.values())
+
+
+_OFFICIAL_HOSTS = frozenset({
+    "cdn.sparkfun.com", "www.sparkfun.com", "learn.sparkfun.com",
+    "cdn-learn.adafruit.com", "learn.adafruit.com", "www.adafruit.com",
+})
+_OFFICIAL_GITHUB_ORGS = frozenset({"sparkfun", "adafruit"})
+_ASSET_KIND_BY_SUFFIX = {".pdf": "pdf", ".png": "png", ".svg": "svg"}
+
+
+def _official_catalog_matches(query: str):
+    # Import lazily so ordinary GitHub search and its unit tests do not load the
+    # frontend asset catalog.
+    from backend.projects.catalog import catalog_by_id
+    from backend.projects.visuals import load_demo_visuals
+
+    needle = " ".join(query.split()).casefold()
+    query_tokens = set(re.findall(r"[a-z0-9]+", needle))
+    records = load_demo_visuals()
+    matches = []
+    for item in catalog_by_id().values():
+        visual = records.get(item.id)
+        if visual is None:
+            continue
+        name_tokens = set(re.findall(r"[a-z0-9]+", item.name.casefold()))
+        if not name_tokens.issubset(query_tokens):
+            continue
+        parsed = urlsplit(visual.original_url)
+        host = parsed.hostname or ""
+        if host not in _OFFICIAL_HOSTS:
+            continue
+        repo_parts = urlsplit(visual.source_repo).path.strip("/").split("/")
+        if len(repo_parts) < 2 or repo_parts[0].casefold() not in _OFFICIAL_GITHUB_ORGS:
+            continue
+        suffix = next((suffix for suffix in _ASSET_KIND_BY_SUFFIX if parsed.path.casefold().endswith(suffix)), None)
+        if suffix is None:
+            continue
+        revision_match = re.search(r"(?:^|[_-])(v\d+(?:\.\d+)?[a-z]?)(?:\.[^.]+)$", parsed.path, re.IGNORECASE)
+        matches.append(OfficialSchematicRef(
+            demo_id=item.id, manufacturer=visual.attribution, model=item.name,
+            revision=revision_match.group(1) if revision_match else None,
+            source_url=visual.original_url, source_file=parsed.path.rsplit("/", 1)[-1],
+            asset_kind=_ASSET_KIND_BY_SUFFIX[suffix], source_sha256=visual.source_sha256,
+            license=visual.license, license_evidence_url=visual.license_evidence_url,
+            attribution=visual.attribution,
+        ))
+    return matches
+
+
+def search_official_schematics(query: str, limit: int = 5, *, client: httpx.Client | None = None) -> tuple[OfficialSchematicRef, ...]:
+    """Exa에서 찾은 URL이 신뢰 카탈로그의 제조사 원본과 정확히 일치할 때만 반환한다."""
+    if not isinstance(query, str) or not query.strip() or type(limit) is not int or not 1 <= limit <= 5:
+        raise ValueError("검색어 또는 결과 수가 유효하지 않습니다.")
+    key = _require_external_search_configuration()
+    candidates = _official_catalog_matches(query)
+    if not candidates:
+        return ()
+    by_url = {candidate.source_url: candidate for candidate in candidates}
+    domains = sorted({urlsplit(candidate.source_url).hostname for candidate in candidates})
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return search_official_schematics(query, limit, client=owned)
+    try:
+        with client.stream(
+            "POST", "https://api.exa.ai/search", timeout=20, follow_redirects=False,
+            headers={"x-api-key": key, "Accept-Encoding": "identity"},
+            json={"query": f"{query.strip()} official schematic", "numResults": limit,
+                  "includeDomains": domains},
+        ) as response:
+            response.raise_for_status()
+            rows = json.loads(read_bounded_body(response, 256 * 1024))["results"]
+        if not isinstance(rows, list) or any(not isinstance(item, dict) for item in rows):
+            raise ValueError()
+    except (httpx.HTTPError, KeyError, ValueError, TypeError, RecursionError):
+        raise ExternalCircuitSearchError("외부 회로 검색 요청 또는 응답 처리에 실패했습니다.") from None
+    found = []
+    for item in rows:
+        url = item.get("url")
+        parsed = urlsplit(url) if isinstance(url, str) else None
+        if parsed is None or parsed.hostname not in domains:
+            continue
+        if url in by_url and url not in {candidate.source_url for candidate in found}:
+            found.append(by_url[url])
+        if len(found) == limit:
+            break
+    return tuple(found)

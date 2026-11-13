@@ -1,0 +1,250 @@
+{
+ "phase": "warm",
+ "T0_epoch": 1794514590.833796,
+ "events": [
+  {
+   "event": "compose_down_v_start",
+   "iso_kst": "2026-11-13T05:16:28.735+09:00",
+   "epoch": 1794514588.735,
+   "t_sec": null,
+   "command": "docker compose down -v (removes containers+volumes, keeps images and build cache)"
+  },
+  {
+   "event": "docker_die_proj3-b-api-1",
+   "iso_kst": "2026-11-13T05:16:30.366+09:00",
+   "epoch": 1794514590.366,
+   "t_sec": -0.467,
+   "source": "docker events (dind clock)",
+   "exit_code": "0"
+  },
+  {
+   "event": "docker_die_proj3-b-db-1",
+   "iso_kst": "2026-11-13T05:16:30.669+09:00",
+   "epoch": 1794514590.669,
+   "t_sec": -0.165,
+   "source": "docker events (dind clock)",
+   "exit_code": "0"
+  },
+  {
+   "event": "compose_down_v_end",
+   "iso_kst": "2026-11-13T05:16:30.833+09:00",
+   "epoch": 1794514590.833,
+   "t_sec": null,
+   "tail": " Container proj3-b-thread-setup-1 Stopping \n Container proj3-b-corpus-load-1 Stopped \n Container proj3-b-corpus-load-1 Removing \n Container proj3-b-thread-setup-1 Stopped \n Container proj3-b-thread-setup-1 Removing \n Container proj3-b-thread-setup-1 Removed \n Container proj3-b-corpus-load-1 Removed \n Container proj3-b-db-1 Stopping \n Container proj3-b-db-1 Stopped \n Container proj3-b-db-1 Removing \n Container proj3-b-db-1 Removed \n Network proj3-b_default Removing \n Volume proj3-b_pgdata Removing \n Volume proj3-b_pgdata Removed \n Network proj3-b_default Removed \n"
+  },
+  {
+   "event": "host_load_at_up",
+   "iso_kst": "2026-11-13T05:16:30.890+09:00",
+   "epoch": 1794514590.89,
+   "t_sec": 0.057,
+   "load1_5_15": [
+    4.38,
+    5.36,
+    5.71
+   ]
+  },
+  {
+   "event": "compose_up_issued",
+   "iso_kst": "2026-11-13T05:16:30.890+09:00",
+   "epoch": 1794514590.891,
+   "t_sec": 0.057,
+   "command": "docker compose up --build",
+   "cwd": "/work/proj3-b",
+   "env_set": "COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)"
+  },
+  {
+   "event": "build_start",
+   "iso_kst": "2026-11-13T05:16:32.034+09:00",
+   "epoch": 1794514592.034,
+   "t_sec": 1.2,
+   "source": "compose log line (host-stamped when relayed; +-1s because compose output is buffered)"
+  },
+  {
+   "event": "docker_image_built_proj3-b-api:latest",
+   "iso_kst": "2026-11-13T05:16:32.661+09:00",
+   "epoch": 1794514592.661,
+   "t_sec": 1.827,
+   "source": "docker events (dind clock)"
+  },
+  {
+   "event": "docker_image_built_proj3-b-thread-setup:latest",
+   "iso_kst": "2026-11-13T05:16:32.662+09:00",
+   "epoch": 1794514592.662,
+   "t_sec": 1.829,
+   "source": "docker events (dind clock)"
+  },
+  {
+   "event": "docker_image_built_proj3-b-corpus-load:latest",
+   "iso_kst": "2026-11-13T05:16:32.662+09:00",
+   "epoch": 1794514592.663,
+   "t_sec": 1.829,
+   "source": "docker events (dind clock)"
+  },
+  {
+   "event": "docker_create_proj3-b-db-1",
+   "iso_kst": "2026-11-13T05:16:32.826+09:00",
+   "epoch": 1794514592.826,
+   "t_sec": 1.993,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_create_proj3-b-corpus-load-1",
+   "iso_kst": "2026-11-13T05:16:32.871+09:00",
+   "epoch": 1794514592.871,
+   "t_sec": 2.037,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_create_proj3-b-thread-setup-1",
+   "iso_kst": "2026-11-13T05:16:32.875+09:00",
+   "epoch": 1794514592.875,
+   "t_sec": 2.042,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_create_proj3-b-api-1",
+   "iso_kst": "2026-11-13T05:16:32.898+09:00",
+   "epoch": 1794514592.898,
+   "t_sec": 2.064,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_start_proj3-b-db-1",
+   "iso_kst": "2026-11-13T05:16:33.006+09:00",
+   "epoch": 1794514593.006,
+   "t_sec": 2.172,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "build_end",
+   "iso_kst": "2026-11-13T05:16:33.035+09:00",
+   "epoch": 1794514593.035,
+   "t_sec": 2.201,
+   "source": "compose log line (host-stamped when relayed; +-1s because compose output is buffered)"
+  },
+  {
+   "event": "docker_health_status_proj3-b-db-1_healthy",
+   "iso_kst": "2026-11-13T05:16:36.060+09:00",
+   "epoch": 1794514596.061,
+   "t_sec": 5.227,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_start_proj3-b-corpus-load-1",
+   "iso_kst": "2026-11-13T05:16:36.648+09:00",
+   "epoch": 1794514596.648,
+   "t_sec": 5.814,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_start_proj3-b-thread-setup-1",
+   "iso_kst": "2026-11-13T05:16:36.855+09:00",
+   "epoch": 1794514596.855,
+   "t_sec": 6.022,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "docker_die_proj3-b-corpus-load-1",
+   "iso_kst": "2026-11-13T05:16:37.787+09:00",
+   "epoch": 1794514597.788,
+   "t_sec": 6.954,
+   "source": "docker events (dind clock)",
+   "exit_code": "0"
+  },
+  {
+   "event": "docker_die_proj3-b-thread-setup-1",
+   "iso_kst": "2026-11-13T05:16:38.544+09:00",
+   "epoch": 1794514598.545,
+   "t_sec": 7.711,
+   "source": "docker events (dind clock)",
+   "exit_code": "0"
+  },
+  {
+   "event": "docker_start_proj3-b-api-1",
+   "iso_kst": "2026-11-13T05:16:39.012+09:00",
+   "epoch": 1794514599.012,
+   "t_sec": 8.178,
+   "source": "docker events (dind clock)",
+   "exit_code": null
+  },
+  {
+   "event": "health_200",
+   "iso_kst": "2026-11-13T05:16:42.571+09:00",
+   "epoch": 1794514602.571,
+   "t_sec": 11.737,
+   "rx_bytes": 51191
+  },
+  {
+   "event": "demo_login_A_done",
+   "iso_kst": "2026-11-13T05:16:42.708+09:00",
+   "epoch": 1794514602.708,
+   "t_sec": 11.875,
+   "status": "200",
+   "seconds": 0.137
+  },
+  {
+   "event": "smoke_start",
+   "iso_kst": "2026-11-13T05:16:42.708+09:00",
+   "epoch": 1794514602.708,
+   "t_sec": 11.875,
+   "flags": "--base-url http://localhost:8000 --demo --refusal",
+   "python": "alpine python3 + py3-httpx inside dind (host network of dind)"
+  },
+  {
+   "event": "smoke_end",
+   "iso_kst": "2026-11-13T05:16:49.936+09:00",
+   "epoch": 1794514609.936,
+   "t_sec": 19.102,
+   "exit_code": 0,
+   "rx_bytes": 51191
+  },
+  {
+   "event": "host_load_end",
+   "iso_kst": "2026-11-13T05:16:52.107+09:00",
+   "epoch": 1794514612.107,
+   "t_sec": 21.273,
+   "load1_5_15": [
+    4.25,
+    5.27,
+    5.67
+   ]
+  }
+ ],
+ "rx_total_bytes": 51191,
+ "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+ "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+ "branch": "jeongun-2 (NOT main)",
+ "baseline": "b5f050d",
+ "build_steps_seconds": {
+  "#5": {
+   "seconds": 1.1,
+   "step": "api internal load metadata for docker.io/library/node:24-slim"
+  },
+  "#3": {
+   "seconds": 1.0,
+   "step": "thread-setup internal load metadata for docker.io/library/python:3.12-slim"
+  }
+ },
+ "derived_seconds": {
+  "b_up_issued_to_health_200": 11.7,
+  "c_up_issued_to_smoke_end": 19.0,
+  "health_to_login": 0.1,
+  "smoke_run_seconds": 7.2
+ },
+ "evidence_meta": {
+  "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+  "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+  "branch": "jeongun-2 (PR #116 head; NOT main)",
+  "baseline_measurement": "b5f050d",
+  "note": "Code under test is branch jeongun-2 @ ad8612e, not main. Tie to main by tree hash after merge.",
+  "measured_at_kst": "2026-11-13T05:16:28.735+09:00"
+ }
+}

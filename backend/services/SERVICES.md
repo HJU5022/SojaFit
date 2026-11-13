@@ -1,33 +1,30 @@
 # services
 
 ## 역할
-- 이 폴더: 외부 호출을 모으는 한 곳입니다. LLM·임베딩 호출(`llm.py`), Langfuse 프롬프트 관리·추적(`langfuse_prompts.py`), Mouser 가격·재고 조회(`mouser.py`)가 있습니다.
-- 넣는 것: LLM·임베딩 호출의 유일한 입구, 평가 예산·재시도 상한, Langfuse 프롬프트 등록·고정 버전 검증·노드 추적, Mouser Search API 호출(응답은 저장·로그하지 않음, ADR 0009).
-- 넣지 않는 것: 데모 응답 파일(`data/demo/`), 그래프 노드(`backend/graph/`), 프롬프트 원문(`backend/prompts/`), 검색(`backend/rag/`).
+- 이 폴더: 외부 호출과 서비스 보조 기능을 모은 곳. LLM·임베딩 호출(`llm.py`), Langfuse 프롬프트 관리와 추적(`langfuse_prompts.py`, `service_trace.py`), Mouser 가격·재고(`mouser.py`), Exa 외부 근거 검색(`exa.py`, `datasheet_rows.py`), 메일 발송(`mail.py`), 키 없는 데모 재생(`demo.py`), 견적 저장(`quote.py`)이 있다.
+- 넣는 것: LLM·임베딩 호출의 유일한 입구와 재시도·예산 상한, Langfuse 프롬프트 등록·고정 버전 검증·노드 추적, Mouser Search API 호출(응답은 저장·로그하지 않음, ADR 0009).
+- 넣지 않는 것: 데모 응답 파일(`data/demo/`), 그래프 노드(`backend/graph/`, `backend/multi_agent/`), 프롬프트 원문(`backend/prompts/`), 검색(`backend/rag/`).
 - 담당: 서비스·운영
 
-## 구현 상태
-- 사용자 분석은 기존 `EvaluationBudget`을 재사용해 실행당 예약 $0.50/16회/90초, 출력 4096토큰, 사용자별 UTC 하루 예약 $3와 2초 간격을 적용한다. DB 원자 갱신으로 여러 thread/인스턴스의 사용자 한도를 공유한다. Voyage·MCP도 남은 시간을 적용한다. 실패 예약은 환불하지 않으며 실제 청구액은 아니다. 이미 진행 중인 작업을 강제 종료하는 방식은 아니다. `ANALYSIS_*` 설정은 `.env.example`을 따른다.
-- 없는 파일: 견적서 저장(`quote.py`)은 아직 만들지 않았습니다. 만들면 이 목록과 SOJAFIT.md 트리에 같이 적습니다.
-- Mouser: `mouser.py`는 `/api/prices`(backend/api/prices.py)만 부릅니다. 그래프는 부르지 않고 물은 품번(`price_parts`)만 남깁니다. 키 없음 · `DEMO_MODE=1`이면 Mouser를 부르지 않습니다(SPEC 4절 · 7절).
-- 키 없는 데모의 분석 재생은 `DEMO_REPLAY=1`과 `DEMO_MODE=1`에서만 켜진다(`demo.enabled()`). `DEMO_MODE=1`만 켠 실행(평가 · 실제 모델 확인)은 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
-- `check_langfuse_connection()`(Cloud 인증만 확인)은 `llm.py`에 있지만 이 저장소의 코드 중 부르는 곳이 없습니다.
-
 ## llm.py가 한 곳이어야 하는 이유
-라우터나 그래프 노드가 `openai`를 직접 import하지 않고 전부 `llm.py`를 거칩니다. 여기서 세 가지를 처리합니다.
-1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록합니다. 일반 호출은 추적을 켜지 않습니다. 서비스 분석은 이와 별개로 키가 있으면 `service_trace.py`가 모델 호출 메타만 보냅니다(본문 제거).
-2. 키 없는 데모는 서비스 조립에서 `llm.node_chat` 대신 `demo.py`의 재생 chat을 그래프 · 카드 도구에 주입해 `llm.py`를 부르지 않는다. 그래프 · 검색(BM25) · MCP 사실 확인은 실제 경로와 같다.
-3. 비용 상한: 키는 조당 하나이고 한도가 있어서 재시도와 루프의 상한을 여기에 둡니다. LLM 출력 형식 재시도 상한은 `llm.py`의 `MAX_FORMAT_RETRIES`(2회)이고, 임베딩 재시도 상한은 호출하는 쪽(`backend/rag/pipeline/ingest.py`의 `MAX_RETRY`)에 있습니다.
+그래프 노드와 라우터는 `openai`를 직접 import하지 않고 전부 `llm.py`를 거친다. 여기서 세 가지를 처리한다.
+1. Langfuse: `langfuse_prompts.session()`을 명시적으로 켠 호출은 고정 버전 프롬프트와 Skill을 검증하고 노드·generation·모델·usage·오류를 기록한다. 일반 호출은 추적을 켜지 않는다. 서비스 분석은 이와 별개로 키가 있으면 `service_trace.py`가 모델 호출 메타만 보낸다(본문 제거).
+2. 키 없는 데모: 서비스 조립이 `llm.node_chat` 대신 `demo.py`의 재생 chat을 그래프와 카드 도구에 주입한다. 그래프·BM25 검색·MCP 사실 확인은 실제 경로와 같다. 재생은 `DEMO_REPLAY=1`과 `DEMO_MODE=1`일 때만 켜지고(`demo.enabled()`), `DEMO_MODE=1`만 켠 실행은 임베딩·리랭크만 끄고 실제 LLM/BM25 경로를 유지한다.
+3. 비용 상한: 재시도와 루프의 상한을 여기에 둔다. LLM 출력 형식 재시도는 `MAX_FORMAT_RETRIES`(`llm.py:48`), 임베딩 재시도는 호출하는 쪽(`backend/rag/pipeline/ingest.py`의 `MAX_RETRY`)이다. 사용자 분석은 `EvaluationBudget`을 재사용해 실행당 예약 비용·호출 수·시간·출력 토큰과 사용자별 하루 예약 비용·호출 간격을 적용하고 DB 원자 갱신으로 여러 thread·인스턴스가 한도를 공유한다. 값은 [.env.example](../../.env.example)의 `ANALYSIS_*`이고 계약은 [SPEC.md](../../SPEC.md)다.
+
+노드별 모델 표 `NODE_MODELS`는 `langfuse_prompts.py`에 있다.
 
 ## 파일
-- `exa.py` — 내부 근거가 부족할 때 공식 제조사 PDF를 찾는 요청당 1회 검색
-- `datasheet_rows.py` — 공식 데이터시트 표에서 품번 열·페이지·행·단위를 확인
-- `demo.py` — 키 없는 데모의 LLM 응답 기록(`recorder`) · 재생(`replayer`, 기록에 없으면 노드 이름을 담은 `ReplayMiss`), 재생 모드 판단(`enabled`, `DEMO_REPLAY=1` · `DEMO_MODE=1`), 서비스 재생 chat(`service_chat`, 기록 파일이 없으면 부를 때 503), 기록한 데모 질문 목록 · 대조(`questions` · `match`, `data/demo/recordings/outcomes.json`)와 질문 목록을 붙인 422(`refusal`). 유료 모델을 부르지 않는다.
-- `__init__.py` — 패키지 표시
-- `quote.py` — 완료된 성공 판정의 품번·verdict 쌍을 immutable 승인 snapshot으로 `approvals`에만 저장하고(후보 · verdict · 식별 품번은 칸 3개로도 저장, 견적 · 승인 사례에는 복사하지 않는다) 가격 없는 견적·사용자 승인 사례를 관리한다. 모든 중첩 값에서 가격·재고 키를 거절한다.
-- `llm.py` — LLM·임베딩 호출의 유일한 입구. 그래프 노드가 쓰는 `chat(system, user, schema)`·`node_chat`(Pydantic 형식 검증, 공급자 `LLM_PROVIDER`: openrouter는 LangChain `ChatOpenAI.with_structured_output`, claude_cli는 개발용, 모델은 노드별 `langfuse_prompts.NODE_MODELS`를 `node_model(node)`로 고르고 `LLM_MODEL`을 정하면 모든 노드가 그 모델 하나, ADR 0014), 임베딩 `embed_texts()`(적재 도구용), 검색용 Voyage 호출 `voyage_embed(texts, input_type)`(voyage-4-large 1024차원)·`voyage_rerank(query, docs)`(rerank-3, 정렬된 위치 번호 목록. `VOYAGE_API_KEY`, 429·5xx는 5번까지 다시, 결제 신호는 바로 멈춤), 평가 전용 `evaluation_chat()`·예약비용 상한 `evaluation_limits()`(계약은 [SPEC](../../SPEC.md)), 호출하는 곳 없는 `check_langfuse_connection()`
-
-Jev 평가용 `evaluation_decisions_catalog()`·`evaluation_decision()`도 `llm.py`에 둔다. ZDR·data collection 거부·fallback 금지 요청을 이 서비스 경계에서 한 번만 보낸다.
-- `mouser.py` — Mouser Search API 품번 검색(`POST /api/v1/search/partnumber`, 키는 `apiKey` 쿼리) 클라이언트. `check_parts`(1~10개, 3~40자, `|` 금지), `search_parts(parts, transport=None)`가 한 번만 보내고(재시도 없음, 제한 시간 10초, 프로세스당 누적 `MAX_CALLS` 300회) 품번 · 제조사 · 수량별 가격과 통화 · 재고 표시 · 상품 주소와 조회 시각만 돌려줌. 실패는 `MouserError(kind)`로만 알리고 요청 주소 · 키 · Mouser 문구를 담지 않음. httpx 요청 로그에서 Mouser 주소 줄을 버리는 필터. 읽는 환경변수 `MOUSER_API_KEY`
-- `service_trace.py` — 서비스 분석(memory_service `_invoke`)의 모델 호출별 Langfuse 추적. 키가 있으면 모든 모드에서 켜지고, 내보내기 직전 훅(`mask_otel_spans`)이 남기는 목록 밖의 칸(입력 · 출력 · metadata · 오류 문구 · 모델 매개변수)을 지우고 입력 · 출력은 `[redacted]`로 바꾼다. 같은 요청은 `analysis_events.trace_id`로 `analysis-metadata`와 한 trace에 묶인다. 평가(`evals/`)는 이 파일을 쓰지 않는다(별도 프로세스, 입력 · 출력을 남김)
-- `langfuse_prompts.py` — 노드별 모델 표(`NODE_MODELS`, 노드 `route` · `grade` · `rewrite` · `generate` · `supervisor` · `judge_read`), development 프롬프트·Skill 등록/조회, 고정 버전·본문 대조, 명시적 세션 추적. 공통 `CostCallbackHandler`가 공급자 보고 `token_usage.cost`를 `cost_details.total`로 보내며 미보고 비용은 추정하지 않는다. 서비스는 이 콜백에 본문 제거를 더한다. 상세 계약은 [SPEC](../../SPEC.md)
+| 파일 | 하는 일 |
+|---|---|
+| `SERVICES.md` | 이 문서 |
+| `__init__.py` | 패키지 표시 |
+| `llm.py` | LLM·임베딩 호출의 유일한 입구: `node_chat`·`chat`·`node_model`, `embed_texts`, `voyage_embed`·`voyage_rerank`, 평가 전용 `evaluation_*`. `check_langfuse_connection()`은 부르는 곳 없음 |
+| `langfuse_prompts.py` | 노드별 모델 표 `NODE_MODELS`, 프롬프트·Skill 등록(`publish_nodes`, `publish_skill`)과 고정 버전 대조, 세션 추적, `CostCallbackHandler`, `timed_tool`·`AnalysisTimings` |
+| `service_trace.py` | 서비스 분석의 모델 호출별 Langfuse 추적. 키가 있으면 켜지고, 내보내기 직전 훅 `mask_otel_spans`가 허용 목록 밖의 칸을 지우고 입력·출력은 `[redacted]`로 바꿈. 평가(`evals/`)는 이 파일을 쓰지 않음 |
+| `demo.py` | 키 없는 데모의 LLM 응답 기록 `recorder`·재생 `replayer`(없으면 `ReplayMiss`), `enabled`, `service_chat`, 데모 질문 목록·대조 `questions`·`match`·`refusal`. 유료 모델 호출 없음 |
+| `mouser.py` | Mouser 품번 검색 클라이언트 `check_parts`·`search_parts`: 한 번만 보내고 프로세스당 호출 상한 `MAX_CALLS`. 실패는 `MouserError(kind)`. `/api/prices`만 부름 |
+| `exa.py` | 내부 근거가 부족할 때만 쓰는 Exa 외부 근거 검색(공식 제조사 PDF, 공개 참고 링크). 요청당 호출 예산 `SearchBudgetExhausted` |
+| `datasheet_rows.py` | 공식 데이터시트 PDF 표에서 품번 열·페이지·행·단위를 확인해 인용 후보를 만듦. PDF 파서는 별도 프로세스 |
+| `quote.py` | 완료된 성공 판정의 품번·verdict 쌍을 승인 snapshot으로 `approvals`에 저장하고 가격 없는 견적·사용자 승인 사례를 관리. 가격·재고 키는 거절(`assert_no_price_data`) |
+| `mail.py` | Gmail SMTP TLS 인증 링크 발송 `send_link`. 설정은 `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_PORT`, `AUTH_ORIGIN`이고 미설정이면 발송하지 않음. 토큰·수신자·오류를 로그하지 않음 |

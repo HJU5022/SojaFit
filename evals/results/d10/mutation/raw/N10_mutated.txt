@@ -1,0 +1,15 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_main_exits_1_on_violation_and_0_otherwise ________________
+tests/evals/test_check_injection_result.py:41: in test_main_exits_1_on_violation_and_0_otherwise
+    assert C.main([str(_write(tmp_path, broken))]) == 1
+E   AssertionError: assert 0 == 1
+E    +  where 0 = <function main at 0x10c734c20>(['<tmp>/pytest-of-<user>/pytest-720/test_main_exits_1_on_violation0/rows.jsonl'])
+E    +    where <function main at 0x10c734c20> = C.main
+----------------------------- Captured stdout call -----------------------------
+rows.jsonl: 110행, 위반 0건
+rows.jsonl: 110행, 위반 1건
+ - baseline_t2_t4_revised_v3:T5:1:ablated:normal: 최종 답 비어 있음
+=========================== short test summary info ============================
+FAILED tests/evals/test_check_injection_result.py::test_main_exits_1_on_violation_and_0_otherwise
+1 failed in 0.84s

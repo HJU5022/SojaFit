@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_run_rejects_injected_fields_and_foreign_origin_before_service ______
+tests/api/test_conversations.py:580: in test_run_rejects_injected_fields_and_foreign_origin_before_service
+    assert injected.status_code == 422 and foreign.status_code == 403
+E   assert (200 == 422)
+E    +  where 200 = <Response [200 OK]>.status_code
+=========================== short test summary info ============================
+FAILED tests/api/test_conversations.py::test_run_rejects_injected_fields_and_foreign_origin_before_service
+1 failed in 1.11s

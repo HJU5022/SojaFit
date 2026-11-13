@@ -32,7 +32,8 @@ TABLES = {
     'public.users': ('계정', {
         'id': '계정 번호(내부 키)',
         'login_id': '로그인 이메일(소문자). 구글 가입도 같은 칸에 이메일 저장',
-        'password_hash': "scrypt 해시. Google 전용은 'google-login-only', 로컬 데모 버튼은 'demo-button-login-only' 표식(비밀번호 로그인 불가)",
+        'password_hash': "scrypt 해시. 신규 Google 전용 일반 계정은 NULL, 기존 Google/데모 전용 표식은 비밀번호 로그인 불가",
+        'email_verified_at': '이메일 소유 확인 시각. 기존 계정은 NULL을 허용하며 로그인 차단 근거로 사용하지 않음',
         'is_active': '비활성이면 로그인 · 세션 불가',
         'created_at': '가입 시각',
         'updated_at': '수정 시각',
@@ -73,12 +74,27 @@ TABLES = {
         'subject': 'Google 계정 식별자(sub)',
         'user_id': '연결된 계정(사용자당 1개)',
     }),
+    'public.auth_google_pending': ('명시적 Google 가입·연결과 관리자 최초 승인 대기', {
+        'request_id': '브라우저 HttpOnly 쿠키에 연결되는 일회용 요청 식별자',
+        'issuer': '검증된 Google 발급자', 'subject': '검증된 Google 계정 식별자',
+        'email': 'Google이 소유 확인한 이메일', 'expires_at': '15분 후 만료 시각',
+    }),
+    'public.auth_email_challenges': ('이메일 가입·비밀번호 재설정 일회용 확인', {
+        'email': '정규화한 수신 이메일', 'purpose': 'signup 또는 reset',
+        'token_hash': '인증 토큰의 단방향 해시. 원문은 저장하지 않음',
+        'user_id': '재설정 대상 사용자. 가입 요청은 NULL',
+        'created_at': '요청 생성 시각', 'expires_at': '가입 60분·재설정 15분 만료 시각',
+    }),
+    'public.auth_email_send_limits': ('원문 이메일·IP 없는 메일 발송 요청 한도', {
+        'key_hash': '서비스/IP/이메일·목적 한도 키의 단방향 해시',
+        'window_start': 'UTC 한도 집계 창 시작 시각', 'request_count': '집계 창의 요청 횟수',
+    }),
     'public.projects': ('프로젝트', {
         'id': '프로젝트 번호',
         'user_id': '소유자',
         'name': '이름(공백 제거 1~200자)',
         'source_kind': 'demo | upload',
-        'demo_id': '데모 회로 이름(데모일 때만, DB가 6개 이름 목록으로 검사)',
+        'demo_id': '데모 회로 이름(데모일 때만 값이 있다. 이름 목록은 앱이 검사)',
         'created_at': '만든 시각',
         'updated_at': '이름 변경 · 대화 활동 시각',
     }),
@@ -98,7 +114,7 @@ TABLES = {
         'id': 'run UUID(URL에 노출)',
         'thread_id': '소속 대화',
         'status': 'running | requires_input | completed | refused | failed',
-        'safe_result': '공개 결과 JSON(answer · question_type · price_parts · interrupt · judgement · evidence). 모양을 DB CHECK 함수가 재귀 검사',
+        'safe_result': '공개 결과 JSON(answer · question_type · price_parts · interrupt · judgement · evidence). DB CHECK는 최상위 6칸이 있는지만 검사',
         'created_at': '시작',
         'updated_at': '마지막 변경',
     }),
@@ -176,11 +192,11 @@ TABLES = {
         'reserved_usd': '예약 비용(청구액 아님, 환불 안 함)',
         'attempts': '그날 시도 수',
         'next_allowed': '다음 허용 시각(호출 간격)',
-        'reserved_tokens': '예약 토큰(상한 사용자 200,000 → 운영 1,000,000)',
+        'reserved_tokens': '예약 토큰(사용자 하루 상한 5,000,000)',
     }),
     'sojafit_agent.analysis_service_usage': ('서비스 전체 날짜별 예약 토큰', {
         'day': 'UTC 날짜',
-        'reserved_tokens': '서비스 전체 예약 토큰(상한 2,000,000)',
+        'reserved_tokens': '서비스 전체 예약 토큰(하루 상한 10,000,000)',
     }),
 }
 

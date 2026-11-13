@@ -1,7 +1,107 @@
 # jeongun 작업 기록
 
+## 2026-11-13 main 574de79 배포(Cloud Run)
+- 배포: `main` `574de79`(PR #127 병합, 인용 숫자 검사 포함)를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-574de79 --revision-suffix 574de79`(빌드 ~10:50 KST 끝). 리비전 `sojafit-api-574de79`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
+- 이전 100% 리비전은 `fadde2a`가 아니라 `sojafit-api-00086-zn6`(11-13 10:28 KST 생성, 이미지는 `fadde2a`와 같은 `sha256:95d6f571…`)였다. `fadde2a` 대비 환경변수 2개(`EXA_WEB_SEARCH_ENABLED=1`, 비밀 `EXA_API_KEY:1`)가 더해진 설정 변경이다. `574de79`도 이 32개 설정을 그대로 이었다(이름 · 값 · 비밀 참조 비교 [실측]).
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 14.9초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/api/demo-circuits` 401(로그인 없음), `/openapi.json` 동작 41 · 경로 34(공개 서비스와 같음), 오류 로그(ERROR 이상, 15분) 없음. 10:51:53 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `sojafit-api-00086-zn6`을 100% 지정.
+- 안 함(이 항목에서): 로그인 뒤 점검 · 배포 서버 재시작 뒤 재개. 별도 기록 `evals/results/d10/deploy_574de79/`.
+
+## 2026-11-13 배포 574de79 실측 · 청킹 비교 · 지불 주체 근거
+- 재시작 뒤 재개(G4) · 평가용 로그인(G1) [실측]: `scripts/smoke/http_smoke.py`에 `--pause-before-resume`(4단계 뒤 멈춤)과 `--upload`(DEMO_MODE=0 배포본은 데모 회로가 404라 넷리스트 업로드로 프로젝트 생성)를 더했다. 하정운 터미널에서 평가용 계정 A · B로 실행, 4단계 멈춤 중 같은 이미지로 `sojafit-api-574de79-rs`를 만들어 100% 전환(12:07:08 KST, 냉 기동 7.8초), 재개 요청은 새 리비전이 처리. 25단계 통과 · 실패 0(`evals/results/d10/deploy_574de79/README.md`). 지금 100%는 `sojafit-api-574de79-rs`.
+- 키 없는 첫 기동 · Linux pytest [실측]: 574de79 새 사본, `.env` 없이 compose 빌드 89.6초 · `/health` 11.0초 · 데모 스모크 28/28. 저장소 Dockerfile 이미지에서 전체 pytest 1919 통과 · 0 실패(이미지에 git이 없으면 8 실패, 코드 결함 아님). `keyless_boot_574de79.md`, `pytest_full_linux_2026-11-13.txt`.
+- 청킹 v1 대 v4h(②) [실측]: 로컬 백업 DB 두 개(`sojafit_prod_backup_1109` 52,244 · `sojafit_v4` 51,967)로 동결 v3 쪽 정답 21건, 고정 질의 `evals/inputs/rewrite_q3_v3.json`. Recall@5 · MRR 같음(0.8095), page_frac@5 0.6111 → 0.6349. 비용 0.1달러 미만 [추정]. 컨테이너는 다시 멈춤.
+- 지불 주체(①): 웹 · SNS 조사 원문 `docs/research/evidence/payer-research-2026-11-13.md`, 핵심 6개는 원문 대조. 시장 문서 2-3절에 정리.
+- 보안: 스모크 준비 중 평가용 계정 비밀번호가 하정운 터미널 화면과 셸 기록에 찍혔다. 두 계정 비밀번호를 바꾼다(남은 일).
+
+## 2026-11-13 Checkpoint 11/13 코멘트 보강(①~④)
+- 목적: 강사 11/13 전체 채점 코멘트의 부족한 점을 증거로 채운다. 코드 변경은 인용 숫자 검사 1건이고 나머지는 기록 · 문서다.
+- ①: TOPIC 각주 [1]~[4]를 저장소 안 파일로 고쳤고 [3] 원자료 2개를 `docs/research/evidence/candidate-*.md`로 옮겼다(로컬 절대 경로 4곳만 파일 이름으로 바꿈). 여정 맵 4·5단계의 단일 그래프 용어(`retrieve`, `답 틀`)를 멀티 그래프 용어로 바꿨다. Codex v3 50건 규칙 집계(`TALLY.md`, `scripts/eval/tally_codex_v3.py`)와 사람 판정 5건(하정운, `human_judgments.jsonl`)으로 Codex 45/50, 실행 환경(Codex 웹, 웹 접근 켬, 저장소 미연결)을 적었다.
+- ②: 운영 DB `SojaFit_2` 행 수 읽기 조회(문서 1,360 · 청크 51,967, `evals/results/d10/index_row_count_2026-11-13.md`)와 52,244 → 51,967 교체 날짜(11-09 05:12) · 원본 로그. 표·수치 청크 123개 원본 PDF 대조 0불일치(`chunk_source_check/`, 검사기가 같은 쪽 다른 행 값을 못 잡는 한계 83~86% 포함). v3 판정 역할 사후 기록(`evals/drafts/reviews/v3_judging_record.md`, 동결 뒤 바뀐 키는 `judges`뿐).
+- ③: 인젝션 본실측03 판정자 심태현 본인 확인(11-13 10:06)을 `injection-results.md`와 `sth.md` 정정 줄에 넣었다(원시 파일은 그대로). 인용 검사에 숫자+단위 대조를 더했다(`bfdb77a`, SPEC 6절 신뢰 경계 줄).
+- 실험(사후 등록): 인용 숫자 검사 전후를 v3 50×1로 비교했다. 명령 `GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-13-citecheck-v3 --sets 1 --keep-going --p95 120`, 예산 상한 0.20달러, 실제 0.034달러 · 191초. 결과 50/50, 과잉 거절 0, p95 8.1초(전 `d9-improve2` 50/50 · p95 10.0초). 문항별 통과 · 판정 변화 0건. 측정 전에 `preregister.md`에 적지 못해 사후 등록이다.
+- ④: Langfuse 캡처 3장(`docs/deliverables/langfuse/`, 배포본 `fadde2a` 트레이스), 403 원인(옛 프로젝트 키, 11-12 03:29 UTC 키 교체 뒤 실패 로그 0, `langfuse_403_2026-11-13.md`), v3 게이트 기준 미달 실패 출력(`v3_gate_fail_2026-11-13.txt`), 전체 pytest 로그(macOS, 1887 통과 · 24 실패 · 173 건너뜀, 실패는 cairo 없음 16 · macOS `RLIMIT_AS` 8).
+- 확인 방법: `tests/repo` 5 통과, `tests/multi_agent` · `tests/graph` 통과. OpenRouter 배포 키 잔액 25.37/40달러(조회 API).
+- 확인 못 한 것: 재시작 뒤 재개(배포 · 실제 모델), 현재 코드 배포 로그인 시나리오, 시연 영상, 키 없는 기동 재측정, Linux에서 전체 pytest, v1 대 v4h 청킹 비교. 모두 main 병합 · 배포 뒤 할 일이다.
+
+## 2026-11-13 main fadde2a 배포(Cloud Run)
+- 배포: `main` `fadde2a`를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-fadde2a --revision-suffix fadde2a`(빌드 08:12~08:17 KST). 리비전 `sojafit-api-fadde2a`, 이미지 `sha256:95d6f57173a2714127d103cda0b5d5213246f6df712e754db46c61e5374062e5`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
+- 코드 차이 [실측]: `ad8612e`..`fadde2a`에서 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`이 비어 있다. `ae3de0b`..`fadde2a`에서 바뀐 것은 `frontend/src` 2개 파일(`Review.tsx`, `WorkbenchPage.tsx`)과 문서다: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(공개 서비스와 같음), `/api/auth/me` 401, 주 JS 번들 `/assets/index-BFnytjKy.js`에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구 둘 다 있음, 오류 로그(ERROR 이상, 10분) 없음. 08:17 KST 100% 전환. 공개 주소 `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 둘 다 있음, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`). 전환 뒤 100% 리비전은 `sojafit-api-fadde2a` 하나.
+- 이전 100% 리비전: `sojafit-api-ae3de0b`(11-13 08:07 KST 전환).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `ae3de0b` 리비전을 100% 지정(이름은 `sojafit-api-` 뒤에 `ae3de0b`).
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복.
+
+## 2026-11-13 main ae3de0b 배포(Cloud Run)
+- 배포: `main` `ae3de0b`를 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-ae3de0b --revision-suffix ae3de0b`(빌드 08:02~08:07 KST). 리비전 `sojafit-api-ae3de0b`, 이미지 `sha256:618ad9a5a0950849e506e32088c073f1668ec8bea5f8a97d6792f6ce2574eb8d`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다.
+- 코드 차이 [실측]: `c9d2c36`..`ae3de0b`에서 `backend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`, `frontend/package.json`, `frontend/package-lock.json`의 `git diff --stat`이 비어 있다. 바뀐 것은 `frontend/src`와 문서다: 질문 바로 시작 · 답변 전체 마크다운 표시 · 이전 답 유지 · 조건 질문 '모름' 처리 · 사용자 화면의 오류 코드 · 요청 ID 숨김.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 12.3초), `/login` 200, `/app` 200, `/openapi.json` 200 · 동작 41 · 경로 34(공개 서비스와 같음), `/api/auth/me` 401, 주 JS 번들 `/assets/index-BvxFKySW.js`에 `모두 모름으로 계속` 문구 있음, 오류 로그(ERROR 이상, 10분) 없음. 08:07 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 같은 번들 문구 있음, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`). 전환 뒤 100% 리비전은 `sojafit-api-ae3de0b` 하나.
+- 이전 100% 리비전: `sojafit-api-c9d2c36`(11-13 07:39 KST 전환).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `c9d2c36` 리비전을 100% 지정(이름은 `sojafit-api-` 뒤에 `c9d2c36`).
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복.
+
+## 2026-11-13 main c9d2c36 배포(Cloud Run)
+- 배포: `main` `c9d2c36`을 `git archive origin/main`으로 올려 `gcloud run deploy sojafit-api --source … --no-traffic --tag main-c9d2c36 --revision-suffix c9d2c36`(빌드 07:34~07:38 KST). 리비전 `sojafit-api-c9d2c36`, 이미지 `sha256:9c180b8255923b2087f5b47b1d135c1f7b7d95449bba407bf64ece4fd4dea474`. 환경변수 · 비밀 옵션은 주지 않아 서비스의 기존 설정을 이었다. 조장 지시로 한 재배포.
+- 코드 차이 [실측]: `ea5797c`..`c9d2c36`에서 `backend`, `frontend`, `Dockerfile`, `docker-compose.yml`, `db`, `pyproject.toml`, `uv.lock`의 `git diff --stat`이 비어 있다. 바뀐 것은 문서 · 증거 파일뿐이다.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 13.7초), `/login` 200, `/openapi.json` 200 · 동작 41 · 경로 34(공개 서비스와 같음), `/api/auth/me` 401, 오류 로그(ERROR 이상, 10분) 없음. 07:39 KST 100% 전환. 공개 주소 `/health` 200(0.09초), `/login` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 헤더 `nosniff` · `DENY` · HSTS(`max-age=31536000`).
+- 이전 100% 리비전: `sojafit-api-ea5797c`(11-13 05:38 KST 전환).
+- 되돌리기: `gcloud run services update-traffic sojafit-api --project sojafit --region asia-northeast3`에 `--to-revisions` 옵션으로 `ea5797c` 리비전을 100% 지정(이름은 `sojafit-api-` 뒤에 `ea5797c`).
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복.
+
+## 2026-11-13 main ea5797c 배포(Cloud Run)
+- 병합: PR #115 · #116이 2026-11-13 05:31 KST에 `main`에 병합(`0f831bc`, `ea5797c`). `main` 트리 `6452cdfc…` = 11-13 기동 · 재시작 · 계정 분리 측정 대상 `ad8612e`의 트리. PR #114는 병합 없이 닫힘.
+- 배포: `main` `ea5797c`를 `git archive`로 올려 `gcloud run deploy --source … --no-traffic --tag main-ea5797c --revision-suffix ea5797c`. 리비전 `sojafit-api-ea5797c`. 환경변수 30개는 이전 리비전과 같음(`DEMO_MODE=0`, `GOOGLE_AUTH_ENABLED=1`, `THREADS_ENABLED=1`, 비밀 `DATABASE_URL_NEW`). Exa 변수 없음 → `/api/external-circuits` 비활성.
+- 점검 [실측]: 0% 주소에서 `/health` 200(냉 기동 12.1초), `/login` 200, `/openapi.json` 동작 41 · 경로 34, `/api/demo-circuits` · `/api/auth/me` 401, 오류 로그 없음. 05:38 KST 100% 전환. 공개 주소 `/health` 200(0.15초), `/login` 200, `/api/auth/me` 401, 헤더 `nosniff` · `DENY` · HSTS.
+- 이전 100% 리비전: `sojafit-api-main0035-proof-1112`(11-12 14:57, `main` `0035a43`). 11-12 항목과 README가 적은 `e0a5e30`이 아니었음.
+- 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-main0035-proof-1112=100 --project sojafit --region asia-northeast3`
+- 안 함: 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복. 로컬 `jeongun` 4커밋(D10 증거, GATES, 데모 문서, 시험 수정)은 푸시 전.
+
+## 2026-11-12 강사 1축 코멘트 반영(커밋만, 푸시·PR 없음)
+- 여정 맵 현행화(`da5816a`), 지불 주체 행(`bd05259`), 비교표 판정 기준 열·Codex 서술(`e4e986e`)은 PR #108이 같은 파일(`market-user-journey.md`, `EVAL_REPORT.md` 10장, `evaluation-prep.md`)을 다시 써서 병합 때 버리고 #108 쪽을 따랐다(조장 결정). 원래 커밋은 `backup/jeongun-pre-108` 브랜치에 남아 있다.
+- 우리 쪽에 남은 것: 아래 근거 폴더 복사, `TOPIC.md` 5행 안내, 그 안내에 맞춘 237건 원자료 위치 문장(`market-user-journey.md` 18행, `TOPIC.md` 7행).
+- `443a32a` 각주 [1][2][4] 원자료 9개를 `docs/research/evidence/`로 복사(바이트 동일, 약 2.0MB, `EVIDENCE.md`에 sha256), `TOPIC.md` 5행 안내 문장 갱신.
+- 후속 A: 근거 폴더를 레포 구조 시험에 맞춤(`README.md` → `EVIDENCE.md`, `집계.md` → `jobs2-summary.md`, SOJAFIT.md 트리·RESEARCH.md 목록 추가). `tests/repo` 위반 목록은 f13860f 기준과 같고 `docs/research/evidence`는 없음.
+- 후속 B: 각주 [3] 두 파일을 넣지 않음. OpsMate 등 다른 후보 주제와 로컬 작업 메모가 들어 있고 조장 PC 절대 경로가 있음. 조장 판단 대기.
+- 안 함: 각주 [3] 파일 복사(조장 PC 절대 경로 포함), 외부 검토자 기록, 푸시·PR·병합, 서버·LLM 호출.
+
+## 2026-11-12 D10 카드 증거 자동화(커밋만, 푸시·배포 없음)
+- #3: `check_injection_result` 정상 종료 0 · 1행 답 비움 종료 1 출력을 `evals/results/d10/injection_check_{pass,fail}_2026-11-12.txt`에 남김(깨진 jsonl은 커밋 안 함, README에 재현).
+- #4: 멀티 현행 변이 3건(숫자 검사 끔 · `_judgement_reply` 무력화 · `MAX_AGENT_RUNS=99`) → 집중 pytest 실패 확인 후 `git checkout` 원복. GATES 변이 표 7~9행 · `mutation_2026-11-12.md`.
+- #5: 재현 한 줄 + v4h `distinct_text`/파일 sha256을 `evals/results/d10/README.md` · `corpus_v4h_fingerprint_2026-11-12.md`.
+- 안 함: #6 main 병합·재배포, #7 현 배포 재시작/격리 재스모크, gitleaks 전 이력 재스캔, 푸시.
+
+## 2026-11-12 제출물 초안(시연 스크립트·AI도구·포트폴리오·G5/G7, 커밋만)
+- `docs/deliverables/demo_script.md`: D10 촬영용 정상·실패 컷(스모크 28 · DEMO.md · §6 재료). README·G7·§11 링크.
+- `ai_tools_log.md`: 11-09~12 행 + 규칙·실패 사례 절 채움.
+- `portfolio-jeongun.md` 초안(EVAL/GATES 숫자만).
+- GATES G5: 3장 표 채움을 현재 증거로 명시. G7: 스크립트·문서 초안 있음 / 영상·캡처 없음.
+- 안 함: 푸시·PR, 영상 촬영, Langfuse PNG, T4 재측정, scratchpad.
+
+## 2026-11-12 재료 있는 문서 마무리(커밋만)
+- G1: README·GATES에 라이브 `sojafit-api-e0a5e30`(`limits5m`) 반영.
+- G3: v4h `summary.json`의 `distinct_text` 51,967을 GATES·EVAL 1장에 연결(운영 DB sha256 재집계는 아님).
+- EVAL §11 약점 표 · `docs/deliverables/failure_analysis.md` 초안 · D9 이관 기록 §10 완료 표시.
+- 안 함: 푸시·PR, 시연 영상, Langfuse 캡처, T4 재측정, scratchpad 커밋.
+
+## 2026-11-12 토큰 한도 사용자 5M · 서비스 10M + main pull 배포
+- 배경: 배포본이 서비스 전체 2M에 먼저 걸려 `LIMIT_EXCEEDED`가 났고, [결정 11-12] 사용자별 5M · 서비스 10M. `origin/main`(#106) pull 후 `jeongun`에 반영.
+- 코드: `USER_DAILY_TOKENS=5_000_000` · `SERVICE_DAILY_TOKENS=10_000_000`(메시지·시험은 상수 참조). SPEC 8.6 · `login-auth.md` · `injection_http` 안내 문구.
+- 배포 DB: Cloud Run `DATABASE_URL`→시크릿 `DATABASE_URL_NEW`(SojaFit_2, ref `oujmltzhbzmgitucgmeq`). 옛 `DATABASE_URL`(ref `owkklccwglcpfmmezcxj`)은 쓰지 않음.
+- 시험 [실측]: `test_token_cap_is_limit_exceeded` · `test_token_cap_refuses_run_and_resume…` 통과(DB 없는 단위).
+- 배포 [실측]: 리비전 `sojafit-api-e0a5e30`(태그 `limits5m`) 0% 점검 후 100% 전환. `/health` 200, signup·demo-login 404(`DEMO_MODE=0`). `DATABASE_URL`→`DATABASE_URL_NEW`(SojaFit_2). 푸시·PR 아직 없음(로컬 `jeongun` ahead).
+
+## 2026-11-12 로컬 측정·스모크 원시 이관 (PR #106)
+- 넣음: D9 judge-dev multi/single · langfuse-capture · v3-single · v3-16 warm-recheck · claim_consistency D9 재확인 · Langfuse probe v2 · RAGAS probe v3 · synth-01-repeat10 · synth-both-agents · 인젝션 HTTP `…_012039.json`(원장 인용) · 스모크 `…_230015` · `…_230534`.
+- 안 넣음: `scratchpad/`(임시·워크트리 잔여).
+- 확인: `git status`에 해당 경로 staged, scratchpad는 untracked 유지.
+
+## 2026-11-12 DEMO_MODE UI 분기
+- `CircuitSetup`: `/api/auth/demo`로 `DEMO_MODE`를 보고 1일 때만 「데모 회로로 시작」, 0이면 업로드만. `POST /api/projects`에 `Depends(demo_mode)`(404). Landing 문구·`.env.example` 주석.
+- 시험 [실측]: `CircuitSetup.test` 9 passed, `tests/api/test_projects.py` 47 passed · 1 skipped. Workbench/ProjectSidebar 통과. `App.test` 가입 헤딩 실패는 main에도 있는 기존 깨짐(제목 `SojaFit에 로그인`).
+- 커밋 `aa14abc`(PR #106 경로). 배포본은 `DEMO_MODE=0`이라 데모 회로 UI·API 숨김.
+
 ## 2026-11-12 Codex v3-50 · §10 · D9 묶음 PR
-- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/samples/v3_50_codex_paste.md`](../../evals/samples/v3_50_codex_paste.md).
+- Codex 답 50문항 문서화: [`evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md`](../../evals/results/graph/2026-11-12-codex-v3-50/codex_answers.md). 입력 paste [`evals/guides/v3_50_codex_paste.md`](../../evals/guides/v3_50_codex_paste.md).
 - EVAL_REPORT §10: Codex vs 우리 서비스 표본 5행(v3-01·05·10·26·45). Codex는 자동 채점 없음. 우리 쪽은 #52/`d9-improve2` 원시.
 - D9 묶음(증거 A~D · #52 · paste · Codex 답 · 문서) 커밋·PR. scratchpad·langfuse probe·synth·실패 스모크는 제외.
 
@@ -32,7 +132,7 @@
 - 검색 시험(새 DB, `retrieval_r1` 질문 10개, 읽기 전용): 정답 문서 상위 5 안 9/10(못 맞힌 r1-083은 이전 운영 기록에서도 실패), 지연 1.1~1.7초, 이전 기록과 문항별 같음.
 - 배포(11-11 약 04:00~04:25 KST): Secret Manager에 새 비밀 `DATABASE_URL_NEW` 생성(기존 `DATABASE_URL`은 그대로). 점검 리비전(`sojafit-api-27a410d` 계열, 태그 `newdb`)을 0%로 올려 0% 주소 스모크 28/0/0 통과(`scripts/results/smoke/smoke_newdb---sojafit-api-q5lzmlc4wq-du.a.run.app_2026-11-11_041537.json`). `DEMO_MODE=0` · `AUTH_ORIGIN`=운영 주소로 최종 리비전 `sojafit-api-27a410d-live`를 만들어 트래픽 100% 전환, 기본 주소 스모크 28/0/0 통과(`smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json`). 그 전에 같은 주소 스모크가 비밀번호 입력 문제(B 계정 401)로 두 번 실패했다(`*_042105.json` 2/4/22, `*_042119.json` 19/1/8, 서비스 문제 아님. 로그인 5회 실패 15분 잠금 주의). 구글 로그인 실제 왕복 확인(구글 계정으로 로그인해 `users`에 구글 로그인 전용 계정이 생김). 점검용 리비전 3개는 삭제, 옛 리비전(`716c6d6` 등)은 되돌리기용으로 유지.
 - 되돌리기: `gcloud run services update-traffic sojafit-api --to-revisions=sojafit-api-716c6d6=100 --project sojafit --region asia-northeast3` (옛 리비전은 옛 DB 주소를 가진 `DATABASE_URL` 비밀을 쓴다).
-- 새 DB 계정: 데모 계정 `demo1@gmail.com` · `demo2@gmail.com`(비밀번호 계정 role user, 정운이 CLI로 생성. 비밀번호는 기록하지 않음)과 구글 계정 1개. 이전 안내의 `example.com` 이메일과 다르다. 점검 데이터(프로젝트 6개 안팎, 승인 · 견적 2개)가 새 DB에 남아 있다(지울지 미정).
+- 새 DB 계정: 데모 계정 2개(비밀번호 계정 role user, 정운이 CLI로 생성. 비밀번호는 기록하지 않음)과 구글 계정 1개. 이전 안내의 `example.com` 이메일과 다르다. 점검 데이터(프로젝트 6개 안팎, 승인 · 견적 2개)가 새 DB에 남아 있다(지울지 미정).
 - 알려진 사항: 서버 로그의 Langfuse `Failed to export spans 403 Forbidden`은 옛 리비전(`716c6d6`, `b884849`)에서도 어제부터 나던 것이다(이번 변경 무관, 미해결). Supabase 무료 한도 주의(활성 프로젝트 2개, 약 1주 비활성 시 자동 중지 [문서 기억]).
 - 확인 못 한 것: 코퍼스 84문항 전체 점수 대조, 대용량 동시 요청, 서버 경유 `DELETE /api/me` 호출, 새 Supabase 풀러의 장시간 동작.
 - 코드 위치: 재설계 커밋 38개를 통합 브랜치 `rd-final-int`에서 `jeongun` 위로 cherry-pick했다(내용이 같은 `716c6d6` · `d23345e` · `ee3405d`는 `jeongun`에 이미 있어 건너뜀). push는 하지 않았다.
@@ -757,8 +857,8 @@
 - 다음 할 일: 조 회의에서 가산 담당과 Neo4j·스케줄러 위치를 정한다.
 
 ## 2026-10-30 문서 뼈대 추가
-- 한 일: 기능 정본 `SPEC.md` 뼈대(8절), DB 관계도 `db/ERD.md`, 프롬프트 폴더 `backend/prompts/`와 버전 기록 표, 화면 디자인 규칙 `backend/web/DESIGN.md`를 만들었다. 정해진 내용은 주제서·AGENTS·ADR 0001에서 옮기고, 정하지 않은 칸은 `(정할 것)`으로 두었다.
-- 바꾼 파일: `SPEC.md`, `SOJAFIT.md`, `db/ERD.md`, `db/DB.md`, `backend/prompts/PROMPTS.md`, `backend/BACKEND.md`, `backend/web/DESIGN.md`, `backend/web/WEB.md`, 이 파일
+- 한 일: 기능 정본 `SPEC.md` 뼈대(8절), DB 관계도 `db/ERD.md`, 프롬프트 폴더 `backend/prompts/`와 버전 기록 표, 화면 디자인 규칙 `backend/web/design.md`를 만들었다. 정해진 내용은 주제서·AGENTS·ADR 0001에서 옮기고, 정하지 않은 칸은 `(정할 것)`으로 두었다.
+- 바꾼 파일: `SPEC.md`, `SOJAFIT.md`, `db/ERD.md`, `db/DB.md`, `backend/prompts/PROMPTS.md`, `backend/BACKEND.md`, `backend/web/design.md`, `backend/web/WEB.md`, 이 파일
 - 실행한 명령과 결과: 바뀐 문서 8개의 상대 링크 30개를 대조해 깨진 링크 0개. 커밋마다 `git diff --cached --check` 통과. ERD의 라이브러리 표 이름은 `.venv`의 `langgraph-checkpoint-postgres` 3.2.0 소스에서 확인했다.
 - 확인 못 한 것: 백로그 보드(GitHub Projects)는 파일이 아니라 만들지 않았다. 데이터시트를 검색 색인용으로 나누는 것이 약관의 "비수정"에 맞는지는 SPEC 6절에 확인할 것으로 남겼다.
 - 다음 할 일: 조 회의에서 SPEC의 숫자 성공 기준, 대체 판정 5종의 코드 값과 채점 처리, 그래프 노드를 정한다. 화면 방식(FastAPI 직접 또는 별도 프론트)을 정해 ADR로 남긴다.
@@ -938,3 +1038,14 @@
 - 확인: CI와 같은 gitleaks 이미지로 깨끗한 복제본 전체 이력 검사 20건 → 0건. 워크플로 YAML 읽기 확인. 재생 명령은 11-10 새 compose 프로젝트에서 성공한 명령과 같다.
 - 확인 못 한 것: GitHub Actions가 조직 결제 한도로 시작되지 않아(11-09 #73부터 main도 같음) 세 잡 모두 실제 실행을 못 봤다. `eval-live`는 Secrets 등록 전이라 돌리지 않았다. 일부러 기준 미달로 만든 변경에서 실패하는 기록은 Actions가 풀린 뒤에 남긴다.
 
+
+## 2026-11-13 프론트 화면 전면 재작성 반영 (브랜치 `jeongun`, 미커밋)
+
+- 왜: 기존 화면의 기능·모양·배치를 전부 버리고 처음부터 다시 만들기로 했다(조장 결정 11-12). 별도 클론에서 만든 뒤 11-13에 이 저장소로 옮겼다.
+- 바꾼 것: `frontend/src`의 `pages/` · `components/` · `styles/` · `lib/` · `hooks/useConversation.ts`를 새로 썼다. 이전 컴포넌트 · `styles.css` · `workers/` · e2e 스펙 4개 · `playwright.config.ts` · 랜딩 이미지 4장 · 가로 로고를 지웠다. 의존성에서 `elkjs` · `@fontsource-variable/noto-sans-kr` · `@playwright/test`를 빼고 `pretendard` · `lucide-react` · `motion`을 넣었다. 모양의 기준 `frontend/design.md`를 새로 두었다.
+- 그대로 둔 것: `src/api` · `src/auth` · `hooks/useRunStream.ts`. `api/dummy.ts`에 프로젝트 이름 변경 · 삭제 응답만 더했다.
+- 정한 것: 데모 로그인 버튼은 서버가 데모 모드라고 답할 때만 보인다(조장 결정 11-13). 서비스 화면에는 없다.
+- 서버가 필요해 화면에 두지 않은 것: 관리자 이메일 가림 해제(사유 기록) · 강제 탈퇴. 관리자 목록의 이메일은 서버가 이미 가려서 보낸다(`backend/api/admin.py`). 위 11-12 항목의 "나중에 붙일 것"은 그대로다.
+- 확인: `npm run test:run` 51 passed, `tsc -b`, `vite build`. 키 없는 compose(8010 포트, 별도 프로젝트)에서 데모 버튼 로그인 · 프로젝트 만들기 · 이름 변경 · 삭제 · 부품 목록 · 내 설정 · 관리자 차단을 눌러 봤다.
+- 확인 못 한 것: 키 없는 데모의 질문 재생은 서버가 `ReplayMiss`로 실패해 판정 · 승인 · 견적 · 가격 화면을 실제 서버로 보지 못했다(기록은 11-10, Supervisor · 프롬프트는 11-12에 바뀜). 실제 모드(`DEMO_MODE=0`) 연결, Google 로그인, 새 화면의 자동 테스트.
+- 남은 것: 작업서(`docs/specs/`) · `SPEC.md`의 화면 서술 · `README.md`의 화면 설명 갱신, 랜딩의 판정 일치 수치(재측정 뒤).

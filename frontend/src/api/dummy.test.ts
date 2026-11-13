@@ -11,13 +11,18 @@ async function json(response: Response) {
   return await response.json() as Record<string, unknown>
 }
 
+it('reports demo mode for the explicit offline dummy API', async () => {
+  const request = await freshDummy()
+  expect(await json(await request('/api/auth/demo'))).toEqual({ enabled: true })
+})
+
 it('serves the breadboard project, D1 context, and role labels', async () => {
   const request = await freshDummy()
   const projects = await json(await request('/api/projects')) as unknown as { name: string; demo_id: string }[]
   expect(projects.map(item => item.demo_id)).toEqual([
     'breadboard_supply', 'mosfet_driver', 'attiny85_dev', 'pro_micro', 'franzininho_diy', 'attiny85_time_switch',
     'fc_rom_vomitter', 'attiny2313a_thermostat', 'tiny85_fan_control', 'ug56_pwm_controller',
-    'car_radio_acc_delay', 'overengineered_psu', 'tinydimmer', 'hrem', 'zr7_taillight',
+    'car_radio_acc_delay', 'overengineered_psu', 'tinydimmer', 'hrem', 'zr7_taillight', null,
   ])
 
   const project = await json(await request('/api/projects/1')) as unknown as {
@@ -159,12 +164,14 @@ it('creates demo projects through the same POST contract as the real API', async
   expect(await json(threads)).toEqual([])
 })
 
-it('creates uploaded projects through the same multipart contract as the real API', async () => {
+it('never substitutes demo components for an uploaded netlist', async () => {
   const request = await freshDummy()
+  const before = await json(await request('/api/projects'))
   const body = new FormData(); body.append('name', '업로드 회로'); body.append('file', new File(['(export (components))'], 'board.net'))
   const response = await request('/api/projects/upload', { method: 'POST', body })
-  expect(response.status).toBe(201)
-  expect(await json(response)).toMatchObject({ name: '업로드 회로', source_kind: 'upload', demo_id: null, connections: expect.any(Object) })
+  expect(response.status).toBe(503)
+  expect(await json(response)).toMatchObject({ error: { code: 'UNAVAILABLE', message: expect.stringContaining('실제 API 서버') } })
+  expect(await json(await request('/api/projects'))).toEqual(before)
 })
 
 it('deletes only one conversation and its runs without reusing surviving IDs', async () => {

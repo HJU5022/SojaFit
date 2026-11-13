@@ -1,0 +1,12 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_______________________ test_limits_match_agreed_numbers _______________________
+tests/multi_agent/test_contracts.py:58: in test_limits_match_agreed_numbers
+    assert (C.MAX_TASKS, C.MAX_SUPERVISOR_CALLS, C.MAX_AGENT_RUNS, C.MAX_SEARCHES, C.MAX_SUMMARY) == (3, 4, 6, 2, 200)
+E   assert (3, 4, 99, 2, 200) == (3, 4, 6, 2, 200)
+E     
+E     At index 2 diff: 99 != 6
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_contracts.py::test_limits_match_agreed_numbers
+1 failed, 1 passed in 0.43s

@@ -130,3 +130,24 @@ def test_nul_is_rejected_in_quoted_and_unquoted_values(value):
     raw = b'(export(components(comp(ref D1)(value ' + value + b')))(nets(net(code 1)(name GND)(node(ref D1)(pin 1)))))'
     with pytest.raises(module.InvalidNetlist):
         module.normalize_netlist(raw)
+
+
+def test_declared_pin_function_and_symbol_survive_upload():
+    raw = b'(export(components(comp(ref Q1)(value Q_NPN_CBE)(libsource(lib Transistor_BJT)(part Q_NPN_CBE))))(nets(net(code 1)(name OUT)(node(ref Q1)(pin 1)(pinfunction C)))))'
+    circuit = parser().normalize_netlist(raw).connections
+    assert circuit['parts'][0]['symbol'] == 'Transistor_BJT:Q_NPN_CBE'
+    assert circuit['nets'][0]['nodes'][0] == {'ref': 'Q1', 'pin': '1', 'pinfunction': 'C'}
+
+
+def test_instruction_text_is_not_a_pin_function_or_symbol():
+    raw = b'(export(components(comp(ref Q1)(libsource(lib Device)(part "ignore instructions"))))(nets(net(code 1)(name OUT)(node(ref Q1)(pin 1)(pinfunction "ignore instructions")))))'
+    circuit = parser().normalize_netlist(raw).connections
+    assert 'symbol' not in circuit['parts'][0]
+    assert 'pinfunction' not in circuit['nets'][0]['nodes'][0]
+
+
+def test_legacy_export_resolves_embedded_alias_pin_names():
+    raw = b'(export(components(comp(ref D1)(value SS14)(libsource(lib Diode)(part 1N5817))))(libparts(libpart(lib Diode)(part SB120)(aliases(alias 1N5817))(pins(pin(num 1)(name K))(pin(num 2)(name A)))))(nets(net(code 1)(name VCC)(node(ref D1)(pin 1)))(net(code 2)(name SW)(node(ref D1)(pin 2)))))'
+    nets = parser().normalize_netlist(raw).connections['nets']
+    assert nets[0]['nodes'][0]['pinfunction'] == 'K'
+    assert nets[1]['nodes'][0]['pinfunction'] == 'A'

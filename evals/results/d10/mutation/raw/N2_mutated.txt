@@ -1,0 +1,20 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+__ test_smoke02_persisting_uncited_claim_is_removed_while_cited_fact_survives __
+tests/multi_agent/test_docs_agent.py:585: in test_smoke02_persisting_uncited_claim_is_removed_while_cited_fact_survives
+    assert result['status'] == 'partial' and result['reason'] is None
+E   AssertionError: assert ('ok' == 'partial'
+E     
+E     - partial
+E     + ok)
+_________ test_citation_does_not_transfer_to_an_adjacent_uncited_claim _________
+tests/multi_agent/test_docs_agent.py:568: in test_citation_does_not_transfer_to_an_adjacent_uncited_claim
+    assert report['status']=='partial' and report['answer']=='VRRM은 1000 V입니다 [16].'
+E   AssertionError: assert ('ok' == 'partial'
+E     
+E     - partial
+E     + ok)
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_docs_agent.py::test_smoke02_persisting_uncited_claim_is_removed_while_cited_fact_survives
+FAILED tests/multi_agent/test_docs_agent.py::test_citation_does_not_transfer_to_an_adjacent_uncited_claim
+2 failed in 1.94s

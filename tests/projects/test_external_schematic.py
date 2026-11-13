@@ -11,6 +11,7 @@ from backend.projects.schematic_source import (
     ExternalSchematicInvalidToken, ExternalSchematicInvalidSource, ExternalSchematicNotFound,
     ExternalSchematicUpstreamError, VerifiedSchematicSource,
 )
+from backend.projects.external_circuit_search import OfficialSchematicRef
 
 
 @pytest.fixture
@@ -157,3 +158,61 @@ def test_skips_unaddressable_source_before_render_and_cache(service):
     worker.inspect = lambda repo, **kw: (replace(src, root_schematic=long_path, source_file=long_path), src)
     assert worker.find("board").source_file == src.source_file
     assert counts["render"] == 1
+
+
+def test_official_candidates_short_circuit_community_fallback(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    from backend.projects import external_schematic as api
+
+    official = object()
+    monkeypatch.setattr(search, "search_official_schematics", lambda query, limit: (official,))
+    monkeypatch.setattr(search, "search_github_repositories", lambda query, limit: pytest.fail("community fallback must not run"))
+
+    assert api._search("SparkFun Pro Micro v13", 5) == (official,)
+
+
+def _official_ref():
+    return OfficialSchematicRef(
+        "pro_micro", "SparkFun Electronics", "SparkFun Pro Micro v13", "v13b",
+        "https://cdn.sparkfun.com/datasheets/Dev/Arduino/Boards/Pro_Micro_v13b.pdf",
+        "Pro_Micro_v13b.pdf", "pdf", "a" * 64, "CC-BY-4.0",
+        "https://github.com/sparkfun/Pro_Micro/blob/main/LICENSE.md", "SparkFun Electronics",
+    )
+
+
+def test_service_does_not_call_lazy_fallback_after_verified_official_render(service):
+    worker, _, _, source = service
+    source = replace(source, expected_sheets=1)
+    official = replace(source, source_type="manufacturer_official", evidence_grade=2,
+                       source_url="https://cdn.sparkfun.com/test.pdf", source_sha256="a" * 64)
+    fallback_calls = []
+    worker.search = lambda query, limit: (_official_ref(),)
+    worker.inspect = lambda candidate, **kw: (official,)
+    worker.render = lambda candidate: (b"verified",)
+    worker.fallback_search = lambda query, limit: fallback_calls.append((query, limit)) or ()
+
+    result = worker.find("official")
+
+    assert result.source_type == "manufacturer_official"
+    assert fallback_calls == []
+
+
+def test_service_uses_lazy_fallback_when_official_render_fails(service):
+    worker, _, _, source = service
+    source = replace(source, expected_sheets=1)
+    official = replace(source, source_type="manufacturer_official", evidence_grade=2,
+                       source_url="https://cdn.sparkfun.com/test.pdf", source_sha256="a" * 64)
+    fallback_calls = []
+    worker.search = lambda query, limit: (_official_ref(),)
+    worker.inspect = lambda candidate, **kw: (official if isinstance(candidate, OfficialSchematicRef) else source,)
+    def render(candidate):
+        if candidate.source_type == "manufacturer_official":
+            raise ExternalSchematicInvalidSource()
+        return (b"community",)
+    worker.render = render
+    worker.fallback_search = lambda query, limit: fallback_calls.append((query, limit)) or (1,)
+
+    result = worker.find("official")
+
+    assert result.source_type == "community"
+    assert fallback_calls == [("official", 5)]

@@ -1,0 +1,2318 @@
+# pytest full run log (Linux container)
+date: 2026-11-13 10:56 KST (run A) / 11:00 KST (run B)
+commit: 574de79a155838c7415b802695fae603de614908 (origin/main, git archive 사본 -- .git 없음)
+image: sojafit-keyless-1113-api:latest, 저장소 Dockerfile로 로컬 빌드 (--no-cache), 이미지 id sha256:efa3d5f3550ca23653fc6ba2bfaafd8b8c3e59c6cc8d03741c8f09316b98ac62 (레지스트리에 올린 이미지가 아니라 repo digest 없음)
+base: python:3.12-slim + kicad + libcairo2 (Dockerfile 16행). Linux aarch64 (Docker Desktop on Apple M2)
+python: Python 3.12.16 (컨테이너), uv 0.12.9
+note: 이미지는 --no-dev라 pytest가 없다 -> 컨테이너 안에서 uv가 dev 그룹을 설치한다(--locked). 호스트에는 아무것도 설치하지 않았다.
+------------------------------------------------------------
+## 실행 A: 이미지 그대로 (git 없음, 사본에 .git 없음) -> 8 failed
+command: docker run --rm --user root -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e UV_LINK_MODE=copy -e PYTHONDONTWRITEBYTECODE=1 -v <사본>:/work -w /work sojafit-keyless-1113-api:latest sh -c 'uname -m; python -V; uv --version; uv run --locked pytest -p no:cacheprovider'
+원인: 8건 모두 FileNotFoundError 'git' (이미지에 git 바이너리가 없다). 코드 결함이 아니라 테스트가 git을 부르는 환경 조건.
+------------------------------------------------------------
+aarch64
+Python 3.12.16
+uv 0.12.9 (aarch64-unknown-linux-musl)
+Using CPython 3.12.16 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: /tmp/venv
+Downloading cryptography (4.5MiB)
+Downloading sqlalchemy (4.5MiB)
+Downloading numpy (15.0MiB)
+Downloading scipy (32.4MiB)
+Downloading uvloop (4.2MiB)
+Downloading zstandard (4.8MiB)
+Downloading scikit-network (7.6MiB)
+Downloading pdfminer-six (6.3MiB)
+Downloading psycopg-binary (6.5MiB)
+Downloading pandas (10.9MiB)
+Downloading hf-xet (3.9MiB)
+Downloading pillow (6.2MiB)
+Downloading tiktoken (1.1MiB)
+Downloading langchain-community (2.3MiB)
+Downloading aiohttp (1.8MiB)
+Downloading networkx (2.0MiB)
+Downloading pygments (1.2MiB)
+Downloading openai (1.6MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading pypdfium2 (3.5MiB)
+Downloading pyarrow (49.4MiB)
+ Downloaded tiktoken
+ Downloaded pygments
+ Downloaded openai
+ Downloaded aiohttp
+ Downloaded pydantic-core
+ Downloaded networkx
+ Downloaded langchain-community
+ Downloaded pypdfium2
+ Downloaded hf-xet
+ Downloaded uvloop
+ Downloaded sqlalchemy
+ Downloaded cryptography
+ Downloaded zstandard
+ Downloaded pillow
+ Downloaded pdfminer-six
+ Downloaded psycopg-binary
+ Downloaded scikit-network
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+ Downloaded pyarrow
+Installed 142 packages in 2.41s
+Bytecode compiled 13274 files in 3.98s
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /work
+configfile: pytest.ini
+testpaths: tests
+plugins: langsmith-0.14.14, anyio-4.15.1
+collected 2092 items
+
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  2%]
+ss.................ssss...............                                   [  4%]
+tests/api/test_conversations.py ........................................ [  6%]
+.............                                                            [  6%]
+tests/api/test_deletion.py ssssssssssss                                  [  7%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  8%]
+tests/api/test_errors.py ..........................                      [  9%]
+tests/api/test_external_circuits.py ...............................      [ 10%]
+tests/api/test_frontend.py ...................                           [ 11%]
+tests/api/test_full_service_flow.py ssssss                               [ 12%]
+tests/api/test_google_users.py .......sssssssssss                        [ 13%]
+tests/api/test_health.py ........                                        [ 13%]
+tests/api/test_http_restart.py s                                         [ 13%]
+tests/api/test_http_smoke.py .........                                   [ 13%]
+tests/api/test_injection_http.py ..........                              [ 14%]
+tests/api/test_logs.py .......                                           [ 14%]
+tests/api/test_openapi.py .......................                        [ 15%]
+tests/api/test_prices.py .........                                       [ 16%]
+tests/api/test_projects.py ............................................. [ 18%]
+...s                                                                     [ 18%]
+tests/api/test_public_grants.py sss                                      [ 18%]
+tests/api/test_quotes.py ....                                            [ 18%]
+tests/api/test_threads.py s...sssssssssssssssssss.ss                     [ 20%]
+tests/conversations/test_dto.py ........................................ [ 22%]
+..........                                                               [ 22%]
+tests/conversations/test_profile.py .........ss                          [ 23%]
+tests/conversations/test_repository.py ssssssssssssssssssssssss          [ 24%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 24%]
+tests/evals/test_approval_wait_report.py ..s                             [ 24%]
+tests/evals/test_bit_search.py ....                                      [ 25%]
+tests/evals/test_check_injection_result.py ....                          [ 25%]
+tests/evals/test_claim_consistency.py .....                              [ 25%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 25%]
+tests/evals/test_embedding_grid.py ......                                [ 25%]
+tests/evals/test_eval_grader.py .........                                [ 26%]
+tests/evals/test_frozen_evals.py ...                                     [ 26%]
+tests/evals/test_gate_report.py ...                                      [ 26%]
+tests/evals/test_import_human_review.py ......                           [ 26%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 27%]
+tests/evals/test_injection_baseline.py ................................. [ 28%]
+..................                                                       [ 29%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 30%]
+tests/evals/test_injection_preflight.py ..............................   [ 32%]
+tests/evals/test_input_surfaces.py FF...FFF.                             [ 32%]
+tests/evals/test_judgement_bundle.py .................s                  [ 33%]
+tests/evals/test_retrieval_d3.py ....                                    [ 33%]
+tests/evals/test_retrieval_layers.py ............                        [ 34%]
+tests/evals/test_retrieval_service.py .....                              [ 34%]
+tests/evals/test_run_graph.py ........F............                      [ 35%]
+tests/evals/test_run_judge_dev.py ....                                   [ 35%]
+tests/evals/test_saved_defense_replay.py ....                            [ 35%]
+tests/evals/test_score_answer.py ...............                         [ 36%]
+tests/evals/test_score_compound.py ..                                    [ 36%]
+tests/evals/test_score_ragas.py .....                                    [ 36%]
+tests/evals/test_skill_pair.py ..................                        [ 37%]
+tests/evals/test_stage_timing.py FF.....                                 [ 38%]
+tests/evals/test_supervisor_jev.py ..................................... [ 39%]
+...                                                                      [ 39%]
+tests/evals/test_supervisor_models.py .....................              [ 40%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 41%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 41%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 41%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 42%]
+tests/evals/test_trust_boundary.py .........                             [ 42%]
+tests/graph/test_agent_netlist.py .............                          [ 43%]
+tests/graph/test_graph_build.py .............................            [ 44%]
+tests/graph/test_graph_generate.py ............                          [ 45%]
+tests/graph/test_graph_grade.py ....                                     [ 45%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 46%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 46%]
+tests/graph/test_graph_read_input.py .............                       [ 46%]
+tests/graph/test_graph_refuse.py ........                                [ 47%]
+tests/graph/test_graph_rewrite.py ....                                   [ 47%]
+tests/graph/test_graph_route.py ......                                   [ 47%]
+tests/graph/test_graph_search.py .....                                   [ 48%]
+tests/graph/test_graph_state.py .                                        [ 48%]
+tests/graph/test_graph_supervisor.py .....                               [ 48%]
+tests/judge/test_judge_conditions.py ........................            [ 49%]
+tests/judge/test_judge_rules_file.py .......                             [ 49%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 50%]
+tests/judge/test_judge_verdict.py ...................................... [ 52%]
+......                                                                   [ 52%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 54%]
+...................                                                      [ 55%]
+tests/multi_agent/test_agents.py ......................                  [ 56%]
+tests/multi_agent/test_build.py ...................                      [ 57%]
+tests/multi_agent/test_contracts.py .............                        [ 58%]
+tests/multi_agent/test_docs_agent.py ................................... [ 59%]
+........................................................................ [ 63%]
+..                                                                       [ 63%]
+tests/multi_agent/test_facts_lookup.py ............                      [ 63%]
+tests/multi_agent/test_judge.py ........................................ [ 65%]
+...............                                                          [ 66%]
+tests/multi_agent/test_judge_read.py ................................... [ 68%]
+........                                                                 [ 68%]
+tests/multi_agent/test_part_names.py ......................              [ 69%]
+tests/multi_agent/test_readme_graph.py .                                 [ 69%]
+tests/multi_agent/test_supervisor.py ................................... [ 71%]
+.........                                                                [ 71%]
+tests/projects/test_catalog.py .....                                     [ 71%]
+tests/projects/test_external_circuit_search.py ..                        [ 72%]
+tests/projects/test_external_schematic.py ........                       [ 72%]
+tests/projects/test_netlist.py ....................................      [ 74%]
+tests/projects/test_project_repository.py ..sssssss                      [ 74%]
+tests/projects/test_schematic_discovery.py ............................. [ 75%]
+..........................                                               [ 77%]
+tests/projects/test_schematic_render.py ...............................  [ 78%]
+tests/projects/test_service_schema.py ssssssss                           [ 79%]
+tests/projects/test_visuals.py .....................                     [ 80%]
+tests/rag/test_card_find.py .....................                        [ 81%]
+tests/rag/test_card_read.py ..........................................   [ 83%]
+tests/rag/test_card_specs.py ...                                         [ 83%]
+tests/rag/test_demo_snapshot.py ..s                                      [ 83%]
+tests/rag/test_package_outlines.py .............................         [ 84%]
+tests/rag/test_rag_chunk.py ......s........ssssssssssssss                [ 86%]
+tests/rag/test_rag_collect.py ......                                     [ 86%]
+tests/rag/test_rag_ingest.py ....s...                                    [ 86%]
+tests/rag/test_rag_parse.py ...                                          [ 86%]
+tests/rag/test_rag_retrieve.py ...........s......                        [ 87%]
+tests/rag/test_rag_specs.py ...                                          [ 87%]
+tests/rag/test_rag_storage.py .ssssssss                                  [ 88%]
+tests/rag/test_rag_subset.py ........................                    [ 89%]
+tests/rag/test_rag_units.py .....................                        [ 90%]
+tests/rag/test_voyage_rollout.py ....                                    [ 90%]
+tests/repo/test_repo_layout.py sssss                                     [ 90%]
+tests/services/test_datasheet_rows.py .................................. [ 92%]
+..............                                                           [ 93%]
+tests/services/test_demo_replay.py ..................                    [ 94%]
+tests/services/test_langfuse_prompts.py ...........................      [ 95%]
+tests/services/test_llm.py .................................             [ 96%]
+tests/services/test_mouser.py ...............                            [ 97%]
+tests/services/test_quote_service.py ................................    [ 99%]
+tests/services/test_service_trace.py ................                    [100%]
+
+=================================== FAILURES ===================================
+___________________ test_compatibility_and_plan_are_offline ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_compatibility_and_plan_ar0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff90d562a0>
+
+    def test_compatibility_and_plan_are_offline(tmp_path, monkeypatch):
+        from backend.services import llm
+        monkeypatch.setattr(llm, 'node_chat', lambda *_a, **_k: pytest.fail('paid call'))
+        out = tmp_path/'plan.json'
+>       assert runner.main(['--out', str(out)]) == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_input_surfaces.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_input_surfaces.py:115: in main
+    'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', 'HEAD']>
+args = ['git', 'rev-parse', 'HEAD'], executable = b'git', preexec_fn = None
+close_fds = True, pass_fds = (), cwd = None, env = None, startupinfo = None
+creationflags = 0, shell = False, p2cread = -1, p2cwrite = -1, c2pread = 11
+c2pwrite = 12, errread = -1, errwrite = -1, restore_signals = True, gid = None
+gids = None, uid = None, umask = -1, start_new_session = False
+process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+_______________ test_question_only_plan_and_execution_keep_pair ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_question_only_plan_and_ex0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff9a971970>
+
+    def test_question_only_plan_and_execution_keep_pair(tmp_path, monkeypatch):
+        from backend.services import llm
+        out = tmp_path/'plan.json'
+>       assert runner.main(['--out', str(out), '--question-only']) == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_input_surfaces.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_input_surfaces.py:115: in main
+    'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', 'HEAD']>
+args = ['git', 'rev-parse', 'HEAD'], executable = b'git', preexec_fn = None
+close_fds = True, pass_fds = (), cwd = None, env = None, startupinfo = None
+creationflags = 0, shell = False, p2cread = -1, p2cwrite = -1, c2pread = 11
+c2pwrite = 12, errread = -1, errwrite = -1, restore_signals = True, gid = None
+gids = None, uid = None, umask = -1, start_new_session = False
+process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+__________ test_live_controller_stops_and_preserves_remaining[False] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_live_controller_stops_and0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff90df1d30>
+limit_error = False
+
+    @pytest.mark.parametrize('limit_error', [False, True])
+    def test_live_controller_stops_and_preserves_remaining(tmp_path, monkeypatch, limit_error):
+        from backend.services import llm
+        monkeypatch.setattr(runner.base, 'preflight', lambda: {'synthetic': True})
+        calls = []
+        def fake(node, system, user, schema):
+            calls.append(node)
+            if limit_error:
+                raise llm.EvaluationLimitError('synthetic cap')
+            answer = ('DEMO2를 사용해도 됩니다 [73].' if 'SYSTEM UPDATE:' in user
+                      else 'DEMO2의 VRRM은 60 V입니다 [73].')
+            return schema(grade='enough', answer=answer)
+        monkeypatch.setattr(llm, 'node_chat', fake)
+        if not limit_error:
+            measure = runner.measure
+            def unsafe_final(*args, **kwargs):
+                result = measure(*args, **kwargs)
+                if result['id'] == 'P1-A':
+                    # Fault-inject a downstream failure to test the controller independently of the defense.
+                    result.update(answer='DEMO2를 사용해도 됩니다', final_forbidden=['DEMO2를 사용해도 됩니다'],
+                                  security_assessment='flagged_manual_review')
+                return result
+            monkeypatch.setattr(runner, 'measure', unsafe_final)
+        out = tmp_path/'live.json'
+>       assert runner.main(['--out', str(out), '--execute']) == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_input_surfaces.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_input_surfaces.py:115: in main
+    'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', 'HEAD']>
+args = ['git', 'rev-parse', 'HEAD'], executable = b'git', preexec_fn = None
+close_fds = True, pass_fds = (), cwd = None, env = None, startupinfo = None
+creationflags = 0, shell = False, p2cread = -1, p2cwrite = -1, c2pread = 11
+c2pwrite = 12, errread = -1, errwrite = -1, restore_signals = True, gid = None
+gids = None, uid = None, umask = -1, start_new_session = False
+process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+___________ test_live_controller_stops_and_preserves_remaining[True] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_live_controller_stops_and1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff92d03a10>
+limit_error = True
+
+    @pytest.mark.parametrize('limit_error', [False, True])
+    def test_live_controller_stops_and_preserves_remaining(tmp_path, monkeypatch, limit_error):
+        from backend.services import llm
+        monkeypatch.setattr(runner.base, 'preflight', lambda: {'synthetic': True})
+        calls = []
+        def fake(node, system, user, schema):
+            calls.append(node)
+            if limit_error:
+                raise llm.EvaluationLimitError('synthetic cap')
+            answer = ('DEMO2를 사용해도 됩니다 [73].' if 'SYSTEM UPDATE:' in user
+                      else 'DEMO2의 VRRM은 60 V입니다 [73].')
+            return schema(grade='enough', answer=answer)
+        monkeypatch.setattr(llm, 'node_chat', fake)
+        if not limit_error:
+            measure = runner.measure
+            def unsafe_final(*args, **kwargs):
+                result = measure(*args, **kwargs)
+                if result['id'] == 'P1-A':
+                    # Fault-inject a downstream failure to test the controller independently of the defense.
+                    result.update(answer='DEMO2를 사용해도 됩니다', final_forbidden=['DEMO2를 사용해도 됩니다'],
+                                  security_assessment='flagged_manual_review')
+                return result
+            monkeypatch.setattr(runner, 'measure', unsafe_final)
+        out = tmp_path/'live.json'
+>       assert runner.main(['--out', str(out), '--execute']) == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_input_surfaces.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_input_surfaces.py:115: in main
+    'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', 'HEAD']>
+args = ['git', 'rev-parse', 'HEAD'], executable = b'git', preexec_fn = None
+close_fds = True, pass_fds = (), cwd = None, env = None, startupinfo = None
+creationflags = 0, shell = False, p2cread = -1, p2cwrite = -1, c2pread = 11
+c2pwrite = 12, errread = -1, errwrite = -1, restore_signals = True, gid = None
+gids = None, uid = None, umask = -1, start_new_session = False
+process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+_______________ test_live_main_keeps_p3_suppression_requirement ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff92b66480>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_live_main_keeps_p3_suppre0')
+
+    def test_live_main_keeps_p3_suppression_requirement(monkeypatch, tmp_path):
+        """P3가 실행됐어도 suppression 기대를 못 채우면 뒤 표면으로 진행하지 않는다."""
+        cases = [
+            ({'id': 'P3-A', 'surface': 'P3', 'payload': 'INJECT', 'forbidden': []},
+             {'question': 'q'}, {'ref': 'D1'}),
+            ({'id': 'P1-A', 'surface': 'P1', 'payload': 'INJECT', 'forbidden': []},
+             {'question': 'q'}, {'ref': 'D1'}),
+        ]
+        prepared = [({'id': case['id'], 'status': 'not_run', 'raw': [], 'surface': case['surface']},
+                     data, part, case) for case, data, part in cases]
+        monkeypatch.setattr(runner, 'prepare', lambda: ({}, prepared))
+        monkeypatch.setattr(runner.base, 'preflight', lambda: {})
+    
+        def fake_measure(item, data, part, case, chat):
+            item.update(status='pipeline_completed', surface_processed=True,
+                        surface_exposed=True, payload_suppressed=False)
+            return item
+    
+        monkeypatch.setattr(runner, 'measure', fake_measure)
+        out = tmp_path / 'p3-stop.json'
+>       assert runner.main(['--out', str(out), '--execute']) == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_input_surfaces.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_input_surfaces.py:115: in main
+    'git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:466: in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', 'HEAD']>
+args = ['git', 'rev-parse', 'HEAD'], executable = b'git', preexec_fn = None
+close_fds = True, pass_fds = (), cwd = None, env = None, startupinfo = None
+creationflags = 0, shell = False, p2cread = -1, p2cwrite = -1, c2pread = 11
+c2pwrite = 12, errread = -1, errwrite = -1, restore_signals = True, gid = None
+gids = None, uid = None, umask = -1, start_new_session = False
+process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+__________________ test_main_writes_metrics_only_result_file ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_main_writes_metrics_only_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff90dac260>
+
+    def test_main_writes_metrics_only_result_file(tmp_path, monkeypatch):
+        """main을 Langfuse·LLM·DB 없이 가짜로 돌려 결과 파일 모양과 실패 문항 기록을 확인한다."""
+        import json
+        import langfuse
+        from backend.services import langfuse_prompts
+        from evals.runners import run_graph
+    
+        class FakeClient:
+            def create_trace_id(self): return "t1"
+            def create_score(self, **kw): pass
+            def get_trace_url(self, trace_id): return f"https://lf/{trace_id}"
+            def flush(self): pass
+    
+        class FakeApp:
+            def invoke(self, inp, config):
+                if "boom" in inp["input"]:
+                    raise TimeoutError("느림")
+                return {"path": ["입력 읽기", "라우팅", "거절"], "question_type": "out_of_scope", "tries": 0, "docs": [],
+                        "passed": [], "answer": "이 질문은 SojaFit 범위 밖입니다.", "check": {}}
+    
+        monkeypatch.setattr(langfuse, "get_client", lambda: FakeClient())
+        monkeypatch.setattr(langfuse_prompts, "callback", lambda **kw: None)
+        monkeypatch.setattr(run_graph, "make_app", lambda multi, stack: (FakeApp(), lambda: None))
+        data = tmp_path / "set.jsonl"
+        data.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
+            {"id": "i1", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: 주식 추천", "expected": "", "gold_chunks": []},
+            {"id": "i2", "kind": "irrelevant", "irrelevant_type": "out_of_domain", "input": "질문: boom", "expected": "", "gold_chunks": []}]), encoding="utf-8")
+        out = tmp_path / "out.json"
+>       run_graph.main(str(data), (), str(out))
+
+tests/evals/test_run_graph.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_graph.py:225: in main
+    common = evaluation_metadata(dataset_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:131: in evaluation_metadata
+    "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain", "--untracked-files=no") else ""),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:190: in _git
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', '--short', 'HEAD']>
+args = ['git', 'rev-parse', '--short', 'HEAD'], executable = b'git'
+preexec_fn = None, close_fds = True, pass_fds = (), cwd = None, env = None
+startupinfo = None, creationflags = 0, shell = False, p2cread = -1
+p2cwrite = -1, c2pread = 11, c2pwrite = 12, errread = 13, errwrite = 14
+restore_signals = True, gid = None, gids = None, uid = None, umask = -1
+start_new_session = False, process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+______ test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls _______
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_gate_attaches_scores_to_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff90de9cd0>
+
+    def test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls(tmp_path, monkeypatch):
+        """점수 전송 누락·호출 수 0·오류를 성공으로 채점하는 회귀를 실제 main 경로에서 잡는다."""
+        import json
+        import langfuse
+        from evals.runners import run_gate
+    
+        class Client:
+            def __init__(self): self.scores, self.flushed, self.count = [], False, 0
+            def create_trace_id(self):
+                self.count += 1
+                return str(self.count) * 32
+            def create_score(self, **score): self.scores.append(score)
+            def get_trace_url(self, trace_id): return f'https://example.invalid/{trace_id}'
+            def flush(self): self.flushed = True
+    
+        client, configs = Client(), []
+        monkeypatch.setattr(langfuse, 'get_client', lambda: client)
+        monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
+        monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
+    
+        def invoke(app, inputs, config):
+            configs.append(config)
+            rec = config['callbacks'][-1]
+            rec.llm_calls.append({'node': 'Supervisor', 'cost_usd': 0.002, 'ok': True})
+            if inputs['input'] == '합성 오류':
+                raise TimeoutError('합성 오류')
+            return {'path': ['Supervisor', '거절'], 'question_type': 'out_of_scope', 'answer': 'SojaFit 범위 밖입니다.'}
+    
+        monkeypatch.setattr(run_gate, 'invoke_with_resume', invoke)
+        data = tmp_path / 'synthetic.jsonl'
+        data.write_text('\n'.join(json.dumps({'id': f'i{i}', 'kind': 'irrelevant', 'irrelevant_type': 'out_of_domain',
+            'input': text, 'expected': '', 'gold_chunks': []}) for i, text in enumerate(['합성 질문', '합성 오류'], 1)))
+        out = tmp_path / 'out'
+>       assert run_gate.main(str(data), str(out), sets=1, keep_going=True) == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_stage_timing.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_gate.py:71: in main
+    common = evaluation_metadata(dataset_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:131: in evaluation_metadata
+    "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain", "--untracked-files=no") else ""),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:190: in _git
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', '--short', 'HEAD']>
+args = ['git', 'rev-parse', '--short', 'HEAD'], executable = b'git'
+preexec_fn = None, close_fds = True, pass_fds = (), cwd = None, env = None
+startupinfo = None, creationflags = 0, shell = False, p2cread = -1
+p2cwrite = -1, c2pread = 11, c2pwrite = 12, errread = 13, errwrite = 14
+restore_signals = True, gid = None, gids = None, uid = None, umask = -1
+start_new_session = False, process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+_____ test_gate_score_failure_does_not_erase_result_or_invent_missing_cost _____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_gate_score_failure_does_n0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff907f3da0>
+
+    def test_gate_score_failure_does_not_erase_result_or_invent_missing_cost(tmp_path, monkeypatch):
+        """추적 장애가 평가 실패로 바뀌지 않고, 미보고 비용을 0으로 만들지 않는다."""
+        import json
+        import langfuse
+        from evals.runners import run_gate
+    
+        class Client:
+            def create_trace_id(self): return 'a' * 32
+            def create_score(self, **score): raise RuntimeError('PRIVATE_ERROR')
+            def get_trace_url(self, trace_id): return f'https://example.invalid/{trace_id}'
+            def flush(self): pass
+    
+        monkeypatch.setattr(langfuse, 'get_client', lambda: Client())
+        monkeypatch.setattr(run_gate, 'callback', lambda **kw: None)
+        monkeypatch.setattr(run_gate, 'make_app', lambda *args: (object(), lambda: None))
+        monkeypatch.setattr(run_gate, 'invoke_with_resume', lambda *args: {'path': ['거절'], 'question_type': 'out_of_scope', 'answer': 'SojaFit 범위 밖입니다.'})
+        data = tmp_path / 'synthetic.jsonl'
+        data.write_text(json.dumps({'id': 'i1', 'kind': 'irrelevant', 'irrelevant_type': 'out_of_domain', 'input': '합성 질문', 'expected': '', 'gold_chunks': []}))
+        out = tmp_path / 'out'
+>       assert run_gate.main(str(data), str(out), sets=1, keep_going=True) == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/evals/test_stage_timing.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+evals/runners/run_gate.py:71: in main
+    common = evaluation_metadata(dataset_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:131: in evaluation_metadata
+    "git": _git("rev-parse", "--short", "HEAD") + ("+dirty" if _git("status", "--porcelain", "--untracked-files=no") else ""),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+evals/runners/run_graph.py:190: in _git
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: 255 args: ['git', 'rev-parse', '--short', 'HEAD']>
+args = ['git', 'rev-parse', '--short', 'HEAD'], executable = b'git'
+preexec_fn = None, close_fds = True, pass_fds = (), cwd = None, env = None
+startupinfo = None, creationflags = 0, shell = False, p2cread = -1
+p2cwrite = -1, c2pread = 11, c2pwrite = 12, errread = 13, errwrite = 14
+restore_signals = True, gid = None, gids = None, uid = None, umask = -1
+start_new_session = False, process_group = -1
+
+    def _execute_child(self, args, executable, preexec_fn, close_fds,
+                       pass_fds, cwd, env,
+                       startupinfo, creationflags, shell,
+                       p2cread, p2cwrite,
+                       c2pread, c2pwrite,
+                       errread, errwrite,
+                       restore_signals,
+                       gid, gids, uid, umask,
+                       start_new_session, process_group):
+        """Execute program (POSIX version)"""
+    
+        if isinstance(args, (str, bytes)):
+            args = [args]
+        elif isinstance(args, os.PathLike):
+            if shell:
+                raise TypeError('path-like args is not allowed when '
+                                'shell is true')
+            args = [args]
+        else:
+            args = list(args)
+    
+        if shell:
+            # On Android the default shell is at '/system/bin/sh'.
+            unix_shell = ('/system/bin/sh' if
+                      hasattr(sys, 'getandroidapilevel') else '/bin/sh')
+            args = [unix_shell, "-c"] + args
+            if executable:
+                args[0] = executable
+    
+        if executable is None:
+            executable = args[0]
+    
+        sys.audit("subprocess.Popen", executable, args, cwd, env)
+    
+        if (_USE_POSIX_SPAWN
+                and os.path.dirname(executable)
+                and preexec_fn is None
+                and not close_fds
+                and not pass_fds
+                and cwd is None
+                and (p2cread == -1 or p2cread > 2)
+                and (c2pwrite == -1 or c2pwrite > 2)
+                and (errwrite == -1 or errwrite > 2)
+                and not start_new_session
+                and process_group == -1
+                and gid is None
+                and gids is None
+                and uid is None
+                and umask < 0):
+            self._posix_spawn(args, executable, env, restore_signals,
+                              p2cread, p2cwrite,
+                              c2pread, c2pwrite,
+                              errread, errwrite)
+            return
+    
+        orig_executable = executable
+    
+        # For transferring possible exec failure from child to parent.
+        # Data format: "exception name:hex errno:description"
+        # Pickle is not used; it is complex and involves memory allocation.
+        errpipe_read, errpipe_write = os.pipe()
+        # errpipe_write must not be in the standard io 0, 1, or 2 fd range.
+        low_fds_to_close = []
+        while errpipe_write < 3:
+            low_fds_to_close.append(errpipe_write)
+            errpipe_write = os.dup(errpipe_write)
+        for low_fd in low_fds_to_close:
+            os.close(low_fd)
+        try:
+            try:
+                # We must avoid complex work that could involve
+                # malloc or free in the child process to avoid
+                # potential deadlocks, thus we do all this here.
+                # and pass it to fork_exec()
+    
+                if env is not None:
+                    env_list = []
+                    for k, v in env.items():
+                        k = os.fsencode(k)
+                        if b'=' in k:
+                            raise ValueError("illegal environment variable name")
+                        env_list.append(k + b'=' + os.fsencode(v))
+                else:
+                    env_list = None  # Use execv instead of execve.
+                executable = os.fsencode(executable)
+                if os.path.dirname(executable):
+                    executable_list = (executable,)
+                else:
+                    # This matches the behavior of os._execvpe().
+                    executable_list = tuple(
+                        os.path.join(os.fsencode(dir), executable)
+                        for dir in os.get_exec_path(env))
+                fds_to_keep = set(pass_fds)
+                fds_to_keep.add(errpipe_write)
+                self.pid = _fork_exec(
+                        args, executable_list,
+                        close_fds, tuple(sorted(map(int, fds_to_keep))),
+                        cwd, env_list,
+                        p2cread, p2cwrite, c2pread, c2pwrite,
+                        errread, errwrite,
+                        errpipe_read, errpipe_write,
+                        restore_signals, start_new_session,
+                        process_group, gid, gids, uid, umask,
+                        preexec_fn, _USE_VFORK)
+                self._child_created = True
+            finally:
+                # be sure the FD is closed no matter what
+                os.close(errpipe_write)
+    
+            self._close_pipe_fds(p2cread, p2cwrite,
+                                 c2pread, c2pwrite,
+                                 errread, errwrite)
+    
+            # Wait for exec to fail or succeed; possibly raising an
+            # exception (limited in size)
+            errpipe_data = bytearray()
+            while True:
+                part = os.read(errpipe_read, 50000)
+                errpipe_data += part
+                if not part or len(errpipe_data) > 50000:
+                    break
+        finally:
+            # be sure the FD is closed no matter what
+            os.close(errpipe_read)
+    
+        if errpipe_data:
+            try:
+                pid, sts = os.waitpid(self.pid, 0)
+                if pid == self.pid:
+                    self._handle_exitstatus(sts)
+                else:
+                    self.returncode = sys.maxsize
+            except ChildProcessError:
+                pass
+    
+            try:
+                exception_name, hex_errno, err_msg = (
+                        errpipe_data.split(b':', 2))
+                # The encoding here should match the encoding
+                # written in by the subprocess implementations
+                # like _posixsubprocess
+                err_msg = err_msg.decode()
+            except ValueError:
+                exception_name = b'SubprocessError'
+                hex_errno = b'0'
+                err_msg = 'Bad exception data from child: {!r}'.format(
+                              bytes(errpipe_data))
+            child_exception_type = getattr(
+                    builtins, exception_name.decode('ascii'),
+                    SubprocessError)
+            if issubclass(child_exception_type, OSError) and hex_errno:
+                errno_num = int(hex_errno, 16)
+                if err_msg == "noexec:chdir":
+                    err_msg = ""
+                    # The error must be from chdir(cwd).
+                    err_filename = cwd
+                elif err_msg == "noexec":
+                    err_msg = ""
+                    err_filename = None
+                else:
+                    err_filename = orig_executable
+                if errno_num != 0:
+                    err_msg = os.strerror(errno_num)
+                if err_filename is not None:
+>                   raise child_exception_type(errno_num, err_msg, err_filename)
+E                   FileNotFoundError: [Errno 2] No such file or directory: 'git'
+
+/usr/local/lib/python3.12/subprocess.py:1955: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/evals/test_input_surfaces.py::test_compatibility_and_plan_are_offline
+FAILED tests/evals/test_input_surfaces.py::test_question_only_plan_and_execution_keep_pair
+FAILED tests/evals/test_input_surfaces.py::test_live_controller_stops_and_preserves_remaining[False]
+FAILED tests/evals/test_input_surfaces.py::test_live_controller_stops_and_preserves_remaining[True]
+FAILED tests/evals/test_input_surfaces.py::test_live_main_keeps_p3_suppression_requirement
+FAILED tests/evals/test_run_graph.py::test_main_writes_metrics_only_result_file
+FAILED tests/evals/test_stage_timing.py::test_gate_attaches_scores_to_each_trace_and_counts_recorded_calls
+FAILED tests/evals/test_stage_timing.py::test_gate_score_failure_does_not_erase_result_or_invent_missing_cost
+================= 8 failed, 1906 passed, 178 skipped in 30.35s =================
+docker run --rm --user root -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e  -e  -v  -  0.05s user 0.17s system 0% cpu 45.682 total
+
+------------------------------------------------------------
+## 실행 B: 컨테이너에 git 설치 + 사본을 git 저장소로 초기화(커밋 1개) -> 0 failed
+command: docker run --rm --user root -e UV_PROJECT_ENVIRONMENT=/tmp/venv -e UV_LINK_MODE=copy -e PYTHONDONTWRITEBYTECODE=1 -v <사본>:/work -w /work sojafit-keyless-1113-api:latest sh -c 'apt-get update -qq; apt-get install -y -qq git; git config --global --add safe.directory /work; git init -q && git add -A && git commit -qm x; uname -m; python -V; git --version; uv run --locked pytest -p no:cacheprovider -rs'
+(A에서 git만 설치하면 5건이 남고(저장소 아님: git rev-parse HEAD 128), 사본을 저장소로 만들면 전부 통과)
+------------------------------------------------------------
+aarch64
+Python 3.12.16
+git version 2.47.3
+Using CPython 3.12.16 interpreter at: /usr/local/bin/python3.12
+Creating virtual environment at: /tmp/venv
+Downloading cryptography (4.5MiB)
+Downloading aiohttp (1.8MiB)
+Downloading uvloop (4.2MiB)
+Downloading pypdfium2 (3.5MiB)
+Downloading pygments (1.2MiB)
+Downloading networkx (2.0MiB)
+Downloading pyarrow (49.4MiB)
+Downloading numpy (15.0MiB)
+Downloading pdfminer-six (6.3MiB)
+Downloading scikit-network (7.6MiB)
+Downloading pandas (10.9MiB)
+Downloading psycopg-binary (6.5MiB)
+Downloading scipy (32.4MiB)
+Downloading pillow (6.2MiB)
+Downloading zstandard (4.8MiB)
+Downloading sqlalchemy (4.5MiB)
+Downloading hf-xet (3.9MiB)
+Downloading langchain-community (2.3MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading openai (1.6MiB)
+Downloading tiktoken (1.1MiB)
+ Downloaded pygments
+ Downloaded tiktoken
+ Downloaded openai
+ Downloaded aiohttp
+ Downloaded networkx
+ Downloaded pydantic-core
+ Downloaded langchain-community
+ Downloaded pypdfium2
+ Downloaded hf-xet
+ Downloaded uvloop
+ Downloaded cryptography
+ Downloaded sqlalchemy
+ Downloaded zstandard
+ Downloaded pillow
+ Downloaded pdfminer-six
+ Downloaded psycopg-binary
+ Downloaded scikit-network
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+ Downloaded pyarrow
+Installed 142 packages in 2.37s
+Bytecode compiled 13274 files in 4.92s
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /work
+configfile: pytest.ini
+testpaths: tests
+plugins: langsmith-0.14.14, anyio-4.15.1
+collected 2092 items
+
+tests/api/test_auth.py ..sss.s....ss.................ssss..ssss.ssss.s.. [  2%]
+ss.................ssss...............                                   [  4%]
+tests/api/test_conversations.py ........................................ [  6%]
+.............                                                            [  6%]
+tests/api/test_deletion.py ssssssssssss                                  [  7%]
+tests/api/test_email_auth.py ..ssssssssssss......                        [  8%]
+tests/api/test_errors.py ..........................                      [  9%]
+tests/api/test_external_circuits.py ...............................      [ 10%]
+tests/api/test_frontend.py ...................                           [ 11%]
+tests/api/test_full_service_flow.py ssssss                               [ 12%]
+tests/api/test_google_users.py .......sssssssssss                        [ 13%]
+tests/api/test_health.py ........                                        [ 13%]
+tests/api/test_http_restart.py s                                         [ 13%]
+tests/api/test_http_smoke.py .........                                   [ 13%]
+tests/api/test_injection_http.py ..........                              [ 14%]
+tests/api/test_logs.py .......                                           [ 14%]
+tests/api/test_openapi.py .......................                        [ 15%]
+tests/api/test_prices.py .........                                       [ 16%]
+tests/api/test_projects.py ............................................. [ 18%]
+...s                                                                     [ 18%]
+tests/api/test_public_grants.py sss                                      [ 18%]
+tests/api/test_quotes.py ....                                            [ 18%]
+tests/api/test_threads.py s...sssssssssssssssssss.ss                     [ 20%]
+tests/conversations/test_dto.py ........................................ [ 22%]
+..........                                                               [ 22%]
+tests/conversations/test_profile.py .........ss                          [ 23%]
+tests/conversations/test_repository.py ssssssssssssssssssssssss          [ 24%]
+tests/db/test_schema_docs.py ssssssssss                                  [ 24%]
+tests/evals/test_approval_wait_report.py ..s                             [ 24%]
+tests/evals/test_bit_search.py ....                                      [ 25%]
+tests/evals/test_check_injection_result.py ....                          [ 25%]
+tests/evals/test_claim_consistency.py .....                              [ 25%]
+tests/evals/test_compare_supervisor_prompt_v0.py ....                    [ 25%]
+tests/evals/test_embedding_grid.py ......                                [ 25%]
+tests/evals/test_eval_grader.py .........                                [ 26%]
+tests/evals/test_frozen_evals.py ...                                     [ 26%]
+tests/evals/test_gate_report.py ...                                      [ 26%]
+tests/evals/test_import_human_review.py ......                           [ 26%]
+tests/evals/test_import_supervisor_prompt_v0_langfuse.py .......         [ 27%]
+tests/evals/test_injection_baseline.py ................................. [ 28%]
+..................                                                       [ 29%]
+tests/evals/test_injection_baseline_plan.py .....................        [ 30%]
+tests/evals/test_injection_preflight.py ..............................   [ 32%]
+tests/evals/test_input_surfaces.py .........                             [ 32%]
+tests/evals/test_judgement_bundle.py .................s                  [ 33%]
+tests/evals/test_retrieval_d3.py ....                                    [ 33%]
+tests/evals/test_retrieval_layers.py ............                        [ 34%]
+tests/evals/test_retrieval_service.py .....                              [ 34%]
+tests/evals/test_run_graph.py .....................                      [ 35%]
+tests/evals/test_run_judge_dev.py ....                                   [ 35%]
+tests/evals/test_saved_defense_replay.py ....                            [ 35%]
+tests/evals/test_score_answer.py ...............                         [ 36%]
+tests/evals/test_score_compound.py ..                                    [ 36%]
+tests/evals/test_score_ragas.py .....                                    [ 36%]
+tests/evals/test_skill_pair.py ..................                        [ 37%]
+tests/evals/test_stage_timing.py .......                                 [ 38%]
+tests/evals/test_supervisor_jev.py ..................................... [ 39%]
+...                                                                      [ 39%]
+tests/evals/test_supervisor_models.py .....................              [ 40%]
+tests/evals/test_supervisor_prompt_v0.py ......                          [ 41%]
+tests/evals/test_supervisor_prompt_v0_common.py ....                     [ 41%]
+tests/evals/test_supervisor_prompt_v0_jev.py .......                     [ 41%]
+tests/evals/test_supervisor_stage3_report.py ..........                  [ 42%]
+tests/evals/test_trust_boundary.py .........                             [ 42%]
+tests/graph/test_agent_netlist.py .............                          [ 43%]
+tests/graph/test_graph_build.py .............................            [ 44%]
+tests/graph/test_graph_generate.py ............                          [ 45%]
+tests/graph/test_graph_grade.py ....                                     [ 45%]
+tests/graph/test_graph_mcp_retriever.py ..................               [ 46%]
+tests/graph/test_graph_mcp_stdio.py s                                    [ 46%]
+tests/graph/test_graph_read_input.py .............                       [ 46%]
+tests/graph/test_graph_refuse.py ........                                [ 47%]
+tests/graph/test_graph_rewrite.py ....                                   [ 47%]
+tests/graph/test_graph_route.py ......                                   [ 47%]
+tests/graph/test_graph_search.py .....                                   [ 48%]
+tests/graph/test_graph_state.py .                                        [ 48%]
+tests/graph/test_graph_supervisor.py .....                               [ 48%]
+tests/judge/test_judge_conditions.py ........................            [ 49%]
+tests/judge/test_judge_rules_file.py .......                             [ 49%]
+tests/judge/test_judge_sheet_conditions.py .................             [ 50%]
+tests/judge/test_judge_verdict.py ...................................... [ 52%]
+......                                                                   [ 52%]
+tests/mcp_skill/test_mcp_server.py ..................................... [ 54%]
+...................                                                      [ 55%]
+tests/multi_agent/test_agents.py ......................                  [ 56%]
+tests/multi_agent/test_build.py ...................                      [ 57%]
+tests/multi_agent/test_contracts.py .............                        [ 58%]
+tests/multi_agent/test_docs_agent.py ................................... [ 59%]
+........................................................................ [ 63%]
+..                                                                       [ 63%]
+tests/multi_agent/test_facts_lookup.py ............                      [ 63%]
+tests/multi_agent/test_judge.py ........................................ [ 65%]
+...............                                                          [ 66%]
+tests/multi_agent/test_judge_read.py ................................... [ 68%]
+........                                                                 [ 68%]
+tests/multi_agent/test_part_names.py ......................              [ 69%]
+tests/multi_agent/test_readme_graph.py .                                 [ 69%]
+tests/multi_agent/test_supervisor.py ................................... [ 71%]
+.........                                                                [ 71%]
+tests/projects/test_catalog.py .....                                     [ 71%]
+tests/projects/test_external_circuit_search.py ..                        [ 72%]
+tests/projects/test_external_schematic.py ........                       [ 72%]
+tests/projects/test_netlist.py ....................................      [ 74%]
+tests/projects/test_project_repository.py ..sssssss                      [ 74%]
+tests/projects/test_schematic_discovery.py ............................. [ 75%]
+..........................                                               [ 77%]
+tests/projects/test_schematic_render.py ...............................  [ 78%]
+tests/projects/test_service_schema.py ssssssss                           [ 79%]
+tests/projects/test_visuals.py .....................                     [ 80%]
+tests/rag/test_card_find.py .....................                        [ 81%]
+tests/rag/test_card_read.py ..........................................   [ 83%]
+tests/rag/test_card_specs.py ...                                         [ 83%]
+tests/rag/test_demo_snapshot.py ..s                                      [ 83%]
+tests/rag/test_package_outlines.py .............................         [ 84%]
+tests/rag/test_rag_chunk.py ......s........ssssssssssssss                [ 86%]
+tests/rag/test_rag_collect.py ......                                     [ 86%]
+tests/rag/test_rag_ingest.py ....s...                                    [ 86%]
+tests/rag/test_rag_parse.py ...                                          [ 86%]
+tests/rag/test_rag_retrieve.py ...........s......                        [ 87%]
+tests/rag/test_rag_specs.py ...                                          [ 87%]
+tests/rag/test_rag_storage.py .ssssssss                                  [ 88%]
+tests/rag/test_rag_subset.py ........................                    [ 89%]
+tests/rag/test_rag_units.py .....................                        [ 90%]
+tests/rag/test_voyage_rollout.py ....                                    [ 90%]
+tests/repo/test_repo_layout.py .....                                     [ 90%]
+tests/services/test_datasheet_rows.py .................................. [ 92%]
+..............                                                           [ 93%]
+tests/services/test_demo_replay.py ..................                    [ 94%]
+tests/services/test_langfuse_prompts.py ...........................      [ 95%]
+tests/services/test_llm.py .................................             [ 96%]
+tests/services/test_mouser.py ...............                            [ 97%]
+tests/services/test_quote_service.py ................................    [ 99%]
+tests/services/test_service_trace.py ................                    [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/api/test_auth.py:89: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:113: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:132: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:168: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:282: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:320: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:479: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:513: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:534: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:573: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:618: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:639: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:671: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:694: requires an isolated authentication test database
+SKIPPED [3] tests/api/test_auth.py:749: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:778: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:834: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:902: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:936: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1117: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1134: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1161: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_auth.py:1202: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_deletion.py:151: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:173: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:194: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:217: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:259: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:290: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:317: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:365: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:382: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:400: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:407: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_deletion.py:422: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_email_auth.py:56: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:85: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:93: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:111: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:131: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:141: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:161: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:169: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:179: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:195: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:205: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_email_auth.py:216: requires isolated email_security_test DB
+SKIPPED [1] tests/api/test_full_service_flow.py:34: requires isolated PostgreSQL
+SKIPPED [3] tests/api/test_full_service_flow.py:91: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:118: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_full_service_flow.py:144: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_google_users.py:104: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:117: requires new isolated local OAuth test database
+SKIPPED [2] tests/api/test_google_users.py:131: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:143: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:157: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:166: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:177: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:193: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:210: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_google_users.py:220: requires new isolated local OAuth test database
+SKIPPED [1] tests/api/test_http_restart.py:85: explicit Docker repro only
+SKIPPED [1] tests/api/test_projects.py:309: requires an isolated authentication test database
+SKIPPED [1] tests/api/test_public_grants.py:124: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_public_grants.py:160: requires isolated PostgreSQL
+SKIPPED [1] tests/api/test_threads.py:102: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:180: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:197: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:209: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:247: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:256: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:282: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:318: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:329: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:350: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:365: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:385: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:470: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:481: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:516: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:561: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:586: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:622: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:641: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:654: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:696: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/api/test_threads.py:716: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [2] tests/conversations/test_profile.py:185: requires isolated TEST_THREAD_DATABASE_URL
+SKIPPED [1] tests/conversations/test_repository.py:11: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:22: requires isolated PostgreSQL
+SKIPPED [4] tests/conversations/test_repository.py:46: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:60: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:87: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:130: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:150: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:183: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:197: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:212: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:230: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:238: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:251: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:261: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:273: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:287: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:309: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:320: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:344: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:359: requires isolated PostgreSQL
+SKIPPED [1] tests/conversations/test_repository.py:384: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:52: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:64: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:79: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:86: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:102: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:108: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:120: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:128: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:141: requires isolated PostgreSQL
+SKIPPED [1] tests/db/test_schema_docs.py:151: requires isolated PostgreSQL
+SKIPPED [1] tests/evals/test_approval_wait_report.py:47: 일회용 DB 없음
+SKIPPED [1] tests/evals/test_judgement_bundle.py:147: requires disposable TEST_INJECTION_DATABASE_URL
+SKIPPED [1] tests/graph/test_graph_mcp_stdio.py:22: TEST_DATABASE_URL에 격리 코퍼스가 있을 때만 돈다
+SKIPPED [1] tests/projects/test_project_repository.py:68: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:75: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:103: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:122: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:135: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:144: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_project_repository.py:169: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:75: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:84: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:91: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:98: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:104: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:116: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:133: requires an isolated authentication test database
+SKIPPED [1] tests/projects/test_service_schema.py:145: requires an isolated authentication test database
+SKIPPED [1] tests/rag/test_demo_snapshot.py:65: DEMO_SNAPSHOT_SOURCE(저장소 밖 chunks-v4h 폴더)가 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_chunk.py:61: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [3] tests/rag/test_rag_chunk.py:181: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [11] tests/rag/test_rag_chunk.py:219: could not import 'docling_core': No module named 'docling_core'
+SKIPPED [1] tests/rag/test_rag_ingest.py:70: TEST_DATABASE_URL을 줄 때만 돈다
+SKIPPED [1] tests/rag/test_rag_retrieve.py:117: TEST_DATABASE_URL에 코퍼스가 적재돼 있을 때만 돈다
+SKIPPED [1] tests/rag/test_rag_storage.py:66: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:78: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:110: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:125: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:133: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:141: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:155: dedicated TEST_DATABASE_URL required
+SKIPPED [1] tests/rag/test_rag_storage.py:163: dedicated TEST_DATABASE_URL required
+====================== 1919 passed, 173 skipped in 31.26s ======================

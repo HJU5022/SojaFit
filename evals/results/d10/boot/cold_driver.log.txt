@@ -1,0 +1,12 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+host_load_before_cold None {'load1_5_15': [10.53, 5.22, 5.56]}
+host_load_after_wait None {'waited_s': 80, 'load1_5_15': [5.62, 4.95, 5.43]}
+t0_git_clone_start 0.0 {'rx_bytes_total': 0, 'branch': 'jeongun-2'}
+git_clone_end 8.431 {'commit': 'ad8612e61c86be4376af5cca454843bb35cdc44d', 'tree': '6452cdfc4188942e62b1be7e2eb73c55094c3b97', 'branch': 'jeongun-2', 'origin_url_after': 'https://github.com/aihuman-7th/proj3-b.git', 'git_dir_kb': 38500, 'total_kb': 95564, 'has_env_file': False, 'rx_bytes': 39374263}
+host_load_at_up 8.431 {'load1_5_15': [5.57, 4.95, 5.42]}
+compose_up_issued 8.431 {'command': 'docker compose up --build', 'cwd': '/work/proj3-b', 'env_set': 'COMPOSE_PROGRESS=plain BUILDKIT_PROGRESS=plain (output format only)'}
+health_200 243.915 {'rx_bytes': 852167151}
+demo_login_A_done 244.138 {'status': '200', 'seconds': 0.221}
+smoke_start 244.138 {'flags': '--base-url http://localhost:8000 --demo --refusal', 'python': 'alpine python3 + py3-httpx inside dind (host network of dind)'}
+smoke_end 251.56 {'exit_code': 0, 'rx_bytes': 852167151}
+host_load_end 253.782 {'load1_5_15': [8.21, 7.17, 6.3]}

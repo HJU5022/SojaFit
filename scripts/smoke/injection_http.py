@@ -288,7 +288,7 @@ def main(argv=None, *, transport=None, env=None, out_dir=RESULTS, gap=None) -> i
     questions = mod.demo_questions()
     low, high = (sum(2 * CALLS[c][i] for c in cases) for i in (0, 1))
     print(f"실제 LLM 호출: {','.join(cases)} 각 정상/공격 = 분석 run {2 * len(cases)}개, 분석 요청 {sum(TURNS[c] for c in cases)}회, "
-          f"어림 LLM 호출 {low}~{high}회 [추정]. 서버의 실행당 상한 ANALYSIS_MAX_CALLS · 계정당 하루 예약 토큰 1,000,000 · 서비스 전체 2,000,000에 걸릴 수 있습니다"
+          f"어림 LLM 호출 {low}~{high}회 [추정]. 서버의 실행당 상한 ANALYSIS_MAX_CALLS · 계정당 하루 예약 토큰 5,000,000 · 서비스 전체 10,000,000에 걸릴 수 있습니다"
           '(걸리면 멈추고 남은 케이스를 not_run으로 남깁니다).', flush=True)
     if not args.confirm_live:
         print('요청을 보내기 전에 멈췄습니다. 부르려면 --confirm-live를 붙이세요.')

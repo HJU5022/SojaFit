@@ -1,29 +1,35 @@
 # 교체 대상 부품 주변 연결 개념도
 
+- 상태: 현행
+- 기준일: 2026-11-12
+- 기준 커밋: 6707002
+- 정본 여부: 정본(연결 개념도의 데이터·표시 계약). 화면 배치는 [frontend-screen-redesign.md](frontend-screen-redesign.md)
+- 관련 문서: [verified-circuit-and-datasheet-visuals.md](verified-circuit-and-datasheet-visuals.md)(원본 회로도 탭), [frontend-screen-redesign.md](frontend-screen-redesign.md)
+
 ## Why
 
-- **페르소나**: KiCad netlist를 올리고 대체 다이오드 후보를 검토하는 회로 설계자
-- **상황**: 사용자는 대상 부품의 판정 결과를 읽기 전에 어떤 부품·net이 그 판정의 회로 맥락인지 확인해야 한다.
-- **문제**:
+- 페르소나: KiCad netlist를 올리고 대체 다이오드 후보를 검토하는 회로 설계자
+- 상황: 사용자는 대상 부품의 판정 결과를 읽기 전에 어떤 부품·net이 그 판정의 회로 맥락인지 확인해야 한다.
+- 문제:
   1. 현재 가운데 장식 이미지는 실제 업로드·분석 데이터와 관계가 없어 판정 맥락을 설명하지 못한다.
   2. 연결, 역할, 사용 조건, 후보 근거가 떨어져 있어 사용자가 결과가 어느 부품을 대상으로 한 것인지 다시 대조해야 한다.
   3. 연결 방향이나 전압·전류를 근거 없이 시각화하면 실제 회로도처럼 오해될 수 있다.
-- **측정 지표**: fixture 기반 AC 전체 통과, production에서 fixture 대체 표시 0건, 방향 근거 없는 연결의 화살표 0개, 누락 조건의 추정값 표시 0건
+- 측정 지표: fixture 기반 AC 전체 통과, production에서 fixture 대체 표시 0건, 방향 근거 없는 연결의 화살표 0개, 누락 조건의 추정값 표시 0건
 
 ## Goal
 
-- **해결 목표**: 기존 프로젝트 API의 KiCad 연결 데이터와 기존 분석 API의 안전한 결과를 결합해 대상 부품 중심의 1·2단계 연결 개념도를 표시한다.
-- **성공 기준**:
+- 해결 목표: 기존 프로젝트 API의 KiCad 연결 데이터와 기존 분석 API의 안전한 결과를 결합해 대상 부품 중심의 1·2단계 연결 개념도를 표시한다.
+- 성공 기준:
   - `breadboard_supply`의 `D1`에서 중앙 `D1 / 1N4001`과 주변 `J1`, `S1`, `F1`, `U1`을 확인할 수 있다.
   - 대상·연결·역할·조건·후보 상태가 실제 API 응답에서 화면까지 전달되며 fixture는 테스트에서만 사용한다.
   - 연결 방향 데이터가 없으면 SVG 화살표를 만들지 않는다.
   - 누락된 전압·전류는 추정하지 않고 숨기거나 `정보 필요`로 표시한다.
   - loading, 연결 정보 없음, 대상 부품을 찾을 수 없음, 역할 분석 전, 사용 조건 부족, 판정 완료, 분석 오류 상태를 구분한다.
-- **Out of Scope**: 실제 PCB·회로도 렌더링, KiCad 화면 변환, 이미지 생성·검색·저장소, 새 그래프 라이브러리, 업로드 파일 영속 저장 확장, 견적 저장 확장, `connections.json` 변환 경로의 신규 구현
+- 범위 밖: 실제 PCB·회로도 렌더링, KiCad 화면 변환, 이미지 생성·검색·저장소, 새 그래프 라이브러리, 업로드 파일 영속 저장 확장, 견적 저장 확장, `connections.json` 변환 경로의 신규 구현
 
 ## What
 
-**Happy Path**
+Happy Path
 
 1. 인증된 사용자가 기존 프로젝트 상세 API에서 회로 이름과 `connections`를 받는다.
 2. 사용자가 대상 부품을 고르면 순수 adapter가 해당 부품의 직접 net과 2단계 연결을 화면 전용 형태로 변환한다.
@@ -33,7 +39,7 @@
 6. 사용자가 후보를 선택하면 기존 판정·데이터시트 근거 영역에서 같은 후보가 선택된다.
 7. 개념도 아래에 `실제 회로도가 아닌 대상 부품 주변 연결 개념도입니다.`를 표시한다.
 
-**Edge Cases**
+Edge Case
 
 | # | 상황 | 처리 방식 |
 |---|---|---|
@@ -80,49 +86,64 @@
 
 ### 변경 경계
 
-- 프론트: 연결 adapter, SVG 개념도, 상태 표시, 노드·후보 선택 연동과 테스트
-- 백엔드: 역할 코드·이름을 제공하는 최소 인증 읽기 계약과 가장 좁은 API 스키마 테스트
-- 문서: 이 작업서, 파일 트리 항목, 폴더 파일 목록, `docs/worklog/osc.md`
-- 수정하지 않음: 루트 `SPEC.md`, `docs/adr/`, 업로드·견적 영속화, 숫자 판정 규칙
+- 프론트: 연결 adapter(`frontend/src/components/circuitContext.ts`), SVG 개념도(`frontend/src/components/CircuitContextDiagram.tsx`), 상태 표시, 노드·후보 선택 연동
+- 백엔드: 역할 코드·이름을 제공하는 최소 인증 읽기 계약 `GET /api/judge/roles`(`backend/api/conversations.py:159-162`)
+- 수정하지 않음: 업로드·견적 영속화, 숫자 판정 규칙
 
 ## AC (Given-When-Then)
 
-**AC-01 · `breadboard_supply` 대상 연결**
+AC-01 · `breadboard_supply` 대상 연결
 - GIVEN: `breadboard_supply` 프로젝트와 대상 `D1`
 - WHEN: 주변 연결 정보를 표시한다.
 - THEN: 중앙에 `D1 / 1N4001`이 보이고 주변에 `J1`, `S1`, `F1`, `U1` 연결 정보가 표시된다.
 
-**AC-02 · 방향을 모르는 연결**
+AC-02 · 방향을 모르는 연결
 - GIVEN: 연결 방향을 확정할 데이터가 없는 net
 - WHEN: 개념도를 렌더링한다.
 - THEN: 방향 화살표를 표시하지 않는다.
 
-**AC-03 · 입력되지 않은 전압·전류**
+AC-03 · 입력되지 않은 전압·전류
 - GIVEN: 전압이나 전류가 입력되지 않은 회로
 - WHEN: 개념도를 렌더링한다.
 - THEN: 값을 추정하지 않고 `정보 필요`로 표시한다.
 
-**AC-04 · 역할 분석 결과**
+AC-04 · 역할 분석 결과
 - GIVEN: 역할 분석이 완료된 결과
 - WHEN: 화면을 렌더링한다.
 - THEN: 역할명과 역할 근거를 대상 부품 옆에 표시한다.
 
-**AC-05 · 후보 선택 연동**
+AC-05 · 후보 선택 연동
 - GIVEN: 후보 판정 결과
 - WHEN: 사용자가 후보를 선택한다.
 - THEN: 기존 판정·데이터시트 근거 영역에서 해당 후보가 선택된다.
 
-**AC-06 · production의 API 미연결**
+AC-06 · production의 API 미연결
 - GIVEN: 실제 API가 연결되지 않은 production 실행
 - WHEN: 화면을 연다.
 - THEN: fixture를 실제 결과처럼 대신 보여주지 않고 빈 상태 또는 연결 오류를 표시한다.
 
-**AC-07 · 상태 구분**
+AC-07 · 상태 구분
 - GIVEN: loading, 빈 nets, 잘못된 대상, 분석 전, 조건 부족, 완료, API 오류 중 하나
 - WHEN: 작업대를 렌더링한다.
 - THEN: 해당 상태의 이름과 안내가 다른 상태와 구분되어 표시된다.
 
-**AC-08 · 노드 상세**
+AC-08 · 노드 상세
 - GIVEN: 값 또는 패키지를 가진 주변 부품 노드
 - WHEN: 사용자가 그 노드를 선택한다.
 - THEN: 부품 기호와 존재하는 값·패키지를 확인할 수 있고 없는 값은 만들어내지 않는다.
+
+## 구현 상태
+
+| AC | 테스트 | 상태 |
+|---|---|---|
+| AC-01, AC-08 | `frontend/src/components/circuitContext.test.ts`(`:44`) | 구현. 화면 렌더링 대조는 `frontend/src/components/CircuitContextDiagram.test.tsx` |
+| AC-02 | `frontend/src/components/CircuitContextDiagram.test.tsx:142` | 구현 |
+| AC-03 | `frontend/src/components/CircuitContextDiagram.test.tsx:131,154` | 구현 |
+| AC-04, AC-05, AC-06 | | 대응 테스트 미대조 |
+| AC-07 | `frontend/src/components/circuitContext.test.ts:64` | 구현. 상태 이름은 `frontend/src/components/CircuitContextDiagram.tsx:9-15` |
+| 역할 이름 API | `tests/api/test_conversations.py:183-188` | 구현 |
+
+## 한계
+
+- 표시 계약의 확대·이동 조작은 이 문서의 범위가 아니다. 현재 동작은 [frontend-screen-redesign.md](frontend-screen-redesign.md)에 둔다.
+- 화면 AC 04~06의 개별 테스트 대응은 확인하지 않았다.

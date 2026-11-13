@@ -1,0 +1,10 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_part_specific_editions_do_not_cross_allow_documents ___________
+tests/multi_agent/test_docs_agent.py:641: in test_part_specific_editions_do_not_cross_allow_documents
+    assert not revision_matches(question, 'SS34_F20.pdf', ['SS34'], ['SS34', 'SS34H'])
+E   AssertionError: assert not True
+E    +  where True = revision_matches('SS34는 F16 판본, SS34H는 F20 판본 비교', 'SS34_F20.pdf', ['SS34'], ['SS34', 'SS34H'])
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_docs_agent.py::test_part_specific_editions_do_not_cross_allow_documents
+1 failed in 2.85s

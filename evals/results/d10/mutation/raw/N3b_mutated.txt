@@ -1,0 +1,16 @@
+........................................................................ [ 15%]
+.....................................F.................................. [ 31%]
+........................................................................ [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 79%]
+................................................s....................... [ 95%]
+...................                                                      [100%]
+=================================== FAILURES ===================================
+____ test_document_of_another_part_is_rejected_when_an_edition_is_requested ____
+tests/multi_agent/test_docs_agent.py:690: in test_document_of_another_part_is_rejected_when_an_edition_is_requested
+    assert not revision_matches(question, 'SS14_F16.pdf', ['SS14'], ['SS34'])
+E   AssertionError: assert not True
+E    +  where True = revision_matches('SS34 F16 판본', 'SS14_F16.pdf', ['SS14'], ['SS34'])
+=========================== short test summary info ============================
+FAILED tests/multi_agent/test_docs_agent.py::test_document_of_another_part_is_rejected_when_an_edition_is_requested
+1 failed, 449 passed, 1 skipped in 4.87s

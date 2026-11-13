@@ -10,7 +10,6 @@ from backend import auth
 from backend.projects.catalog import catalog_by_id, load_catalog
 from backend.projects.models import Project, ProjectSummary
 
-ROOT = Path(__file__).resolve().parents[2]
 DEMOS = {item.id: item.name for item in load_catalog()}
 FIELDS = "id, name, source_kind, demo_id, created_at, updated_at"
 

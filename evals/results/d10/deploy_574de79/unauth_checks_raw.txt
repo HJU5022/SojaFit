@@ -1,0 +1,16 @@
+# KST 2026-11-13T10:53:23
+GET /health status=200 ms=0.106147s rid=264ee17f-0522-4451-b589-65e61d6a33cc
+
+GET /openapi.json status=200 ms=0.117570s rid=e0d44f78-fb71-4f14-b145-e58c6f4bd45f
+
+GET /login status=200 ms=0.094653s rid=dcd3ed06-75f2-4370-b1f1-01241e40ddb2
+
+GET /app status=200 ms=0.090784s rid=6dc42260-f3cf-48eb-8402-d0d33629341c
+
+GET /api/auth/me status=401 ms=0.087763s rid=88eb8a8b-4b6f-4c5f-833c-264e10cc34ed
+
+openapi paths 34 ops 41
+100% revision: ['sojafit-api-574de79']
+latestReady sojafit-api-574de79
+POST /api/auth/demo-login status=404 ms=0.091675s
+NOT_FOUND

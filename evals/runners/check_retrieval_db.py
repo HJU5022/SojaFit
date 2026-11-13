@@ -16,7 +16,7 @@ import numpy as np
 # (11-03 0층 첫 실행에서 Supabase 쪽 dense 후보 0장으로 확인). llm을 import하기 전에 끈다
 os.environ['DEMO_MODE'] = '0'
 sys.path.insert(0, os.getcwd())  # [왜] backend·evals 패키지를 cwd(조 저장소)에서 찾게 한다
-from backend.graph.nodes import find_parts, parse_input, read_input  # noqa: E402
+from backend.graph.nodes import find_parts, read_input  # noqa: E402
 from backend.rag import retrieve as R  # noqa: E402
 from evals.runners.run_retrieval import gold_locations  # noqa: E402
 

@@ -20,7 +20,6 @@ dist/
 build/
 .next/
 .turbo/
-playwright-report/
 test-results/
 
 # OS / IDE
@@ -35,3 +34,8 @@ test-results/
 evals/results/**/langfuse_skill_check_*.json
 evals/results/**/skill_scenarios_*.json
 evals/results/**/tool_prompt_check_*.json
+
+# 로컬 작업 폴더·도구 산출물
+scratchpad/
+graphify-out/
+.claude/

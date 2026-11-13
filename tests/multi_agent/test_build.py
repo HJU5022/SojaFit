@@ -129,6 +129,17 @@ def test_synth_that_invents_a_number_is_refused_by_the_check():
     assert S.check_node(state)['refusal_reason']=='verify_failed'
 
 
+def test_answer_that_fails_the_check_ends_in_refusal_not_as_the_final_answer(monkeypatch):
+    """답 검사가 실패 이유를 남기면 검사 실패 답을 내보내지 않고 거절 노드로 끝난다(after_check 분기)."""
+    from backend.multi_agent import supervisor as S
+    monkeypatch.setattr(S, 'check_node', lambda state: {'check': {}, 'path': ['답 검사'], 'refusal_reason': Reason.VERIFY_FAILED.value})
+    chat = scripted(supervisor=[Plan(question_type='rating', next='tasks', tasks=[docs_task()])],
+                    docs_answer=[DocsAnswer(grade='enough', answer='1N4148의 VRRM은 75 V이다 [7].')])
+    out = app(chat, docs=[doc(7)]).invoke({'input': '1N4148 VRRM?'})
+    assert out['path'][-2:] == ['답 검사', '거절'] and '끝' not in out['path']
+    assert out['refusal']['code'] == 'verify_failed' and out['answer'] == out['refusal']['message'] and '75 V' not in out['answer']
+
+
 def test_two_ok_docs_answers_are_joined_by_code_without_the_synth_llm():
     p = Plan(question_type='rating', next='tasks', tasks=[docs_task(1), docs_task(2, query='1N4148 TJ')])
     chat = scripted(supervisor=[p], docs_answer=[DocsAnswer(grade='enough', answer='VRRM은 75 V이다 [7].')] * 2)
@@ -153,7 +164,7 @@ def test_replan_runs_a_second_round_with_parts_and_answers_from_it():
     second = Plan(question_type='rating', next='tasks',
                   tasks=[Task(id=1, agent='docs', kind='rating', goal='TJ', query='TS40P05G TJ', parts=['TS40P05G'])])
     chat = scripted(supervisor=[first, second], docs_answer=[DocsAnswer(grade='none'), DocsAnswer(grade='enough', answer='TJ는 150°C이다 [7].')])
-    out = app(chat, docs=[doc(7)], searched=searched).invoke({'input': '1000 V 40 A 브리지 접합부 온도?'})
+    out = app(chat, docs=[{**doc(7), 'content': 'TJ 150 °C'}], searched=searched).invoke({'input': '1000 V 40 A 브리지 접합부 온도?'})
     assert out['path'][-7:] == ['모으기', '계획', '문서', '모으기', '답 정리', '답 검사', '끝'] and out['answer'] == 'TJ는 150°C이다 [7].'
     assert out['counters']['replans'] == 1 and out['counters']['hops'] == 2
 

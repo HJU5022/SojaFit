@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_empty_final_answer_is_reported_as_violation _______________
+tests/evals/test_check_injection_result.py:34: in test_empty_final_answer_is_reported_as_violation
+    assert C.problems(rows) == [f'{rows[0]["id"]}: 최종 답 비어 있음']
+E   AssertionError: assert [] == ['baseline_t2...: 최종 답 비어 있음']
+E     
+E     Right contains one more item: 'baseline_t2_t4_revised_v3:T5:1:ablated:normal: 최종 답 비어 있음'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/evals/test_check_injection_result.py::test_empty_final_answer_is_reported_as_violation
+1 failed in 0.21s
