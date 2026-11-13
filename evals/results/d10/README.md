@@ -46,7 +46,10 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | `chunk_source_check/` | - | 표·수치 청크 표본 123개를 원본 PDF 같은 쪽과 대조한 결과(`scripts/eval/chunk_source_check.py`) |
 | `v3_gate_fail_2026-11-13.txt` | 5 | v3 게이트(`gate_report.py`)가 기준 미달 사본 4종에서 종료 1로 실패하는 출력(`mutation/v3_gate_demo.py`) |
 | `pytest_full_2026-11-13.txt` | - | 전체 pytest 실행 로그(macOS 로컬) |
+| `pytest_full_linux_2026-11-13.txt` | - | 전체 pytest 실행 로그(Linux 컨테이너, 저장소 Dockerfile 이미지 + 컨테이너 안 dev 설치). 실행 A(git 없음) 8 failed, 실행 B 0 failed |
+| `keyless_boot_574de79.md` | G1 · G2 | 키 없는 첫 기동 사전 점검(빌드 · 기동 시간, 로그인 · 데모 질문 단계별 ms, 한계) |
 | `langfuse_403_2026-11-13.md` | - | 배포본 Langfuse 403 원인: 11-12 키 교체 전후의 비밀 버전과 내보내기 실패 로그 |
+| `deploy_574de79/` | G1 · G2 · G4 | 배포 `574de79`에서 평가용 계정 로그인부터 서버 재시작 뒤 재개 · 409 · 계정 B 404까지 25단계 통과(`README.md`, 원시는 `scripts/results/smoke/`의 11-13 120624 파일) |
 
 ## 청크 본문
 

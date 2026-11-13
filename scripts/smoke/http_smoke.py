@@ -187,6 +187,22 @@ def make_project(smoke, client, circuits, q, step):
     return (made or {}).get('id')
 
 
+def upload_project(smoke, client, q, step):
+    """데모 회로 대신 질문의 넷리스트 파일을 올려 프로젝트를 만든다(DEMO_MODE=0인 배포본용). 프로젝트 id 또는 None."""
+    # [왜] 배포본은 데모 회로 목록이 404다(데모를 숨김). 실제 사용자와 같은 업로드 경로(`POST /api/projects/upload`, 폼 칸 file · name)를 쓴다
+    path, name = ROOT / q['netlist'], f"smoke {q['id']} {datetime.now(KST):%m-%d %H:%M}"
+    started = time.monotonic()
+    try:
+        response = client.post('/api/projects/upload', files={'file': (path.name, path.read_bytes())}, data={'name': name})
+    except httpx.HTTPError as exc:
+        smoke.add(step, f"프로젝트 업로드({q['id']})", 'A', 'POST /api/projects/upload', '201', 'fail', started=started, note=type(exc).__name__)
+        return None
+    data, error = parse(response)
+    ok = response.status_code == 201
+    smoke.add(step, f"프로젝트 업로드({q['id']})", 'A', 'POST /api/projects/upload', '201', 'pass' if ok else 'fail', response, started, error.get('code'))
+    return data.get('id') if ok else None
+
+
 def make_thread(smoke, client, project_id, step):
     """프로젝트에 새 대화(thread)를 만든다. thread id 또는 None."""
     made = smoke.call(step, 'thread 만들기', 'A', client, 'POST', f'/api/projects/{project_id}/threads', 201,
@@ -216,7 +232,7 @@ def approvable(done):
     return next((c for key in ('results', 'shown') for c in judgement.get(key) or [] if c.get('verdict') in APPROVABLE), None)
 
 
-def flow(smoke, questions, demo, refusal, env):
+def flow(smoke, questions, demo, refusal, env, pause=False, upload=False):
     """1~9단계를 차례로 부른다. 앞 단계 값이 없으면 뒤 단계는 건너뜀으로 남는다(8단계 격리 확인은 있는 값으로 계속)."""
     judge, refuse = questions[JUDGE_ID], questions[REFUSAL_ID]
     a = smoke.client()
@@ -231,13 +247,17 @@ def flow(smoke, questions, demo, refusal, env):
     login(smoke, a, 'A', demo, env)
     smoke.call('2', 'A 세션 확인', 'A', a, 'GET', '/api/auth/me', 200)
     # 3. 판정 질문의 데모 회로로 프로젝트를 만들고 다시 읽는다(2단계)
-    circuits = smoke.call('3', '데모 회로 목록', 'A', a, 'GET', '/api/demo-circuits', 200)
-    pid = make_project(smoke, a, circuits, judge, '3')
+    circuits = None if upload else smoke.call('3', '데모 회로 목록', 'A', a, 'GET', '/api/demo-circuits', 200)
+    pid = upload_project(smoke, a, judge, '3') if upload else make_project(smoke, a, circuits, judge, '3')
     smoke.call('3', '프로젝트 읽기', 'A', a, 'GET', f'/api/projects/{pid}', 200, label='/api/projects/{id}', needs=(pid,))
     # 4. 새 대화의 첫 질문으로 판정 질문을 보낸다. 조건 질문(requires_input)에서 멈춰야 한다(3~6단계, 사람 확인)
     tid = make_thread(smoke, a, pid, '4')
     run_id, asked = smoke.stream('4', f"run 시작({judge['id']})", 'A', a, f'/api/threads/{tid}/runs', start_body(judge),
                                  'requires_input', label='/api/threads/{id}/runs', needs=(tid,))
+    # 4-R. (선택) 조건 질문에서 멈춘 채 사람이 서버를 재시작한 뒤 이어 간다. 5단계가 완료되면 체크포인트에서 재개된 것이다(G4)
+    if pause and asked is not None:
+        input(f'\n[멈춤] run {run_id}이 조건 질문에서 멈췄습니다. 서버를 재시작한 뒤 Enter를 누르면 5단계(재개)부터 이어 갑니다: ')
+        smoke.add('4-R', '서버 재시작 뒤 이어 가기', None, '-', '-', 'pass', note=f"사람이 재시작 후 계속({datetime.now(KST):%H:%M:%S} KST)")
     # 5. 같은 run을 기록과 같은 규칙의 답 · 역할로 재개한다. 완료(completed)여야 한다
     if asked is not None:
         time.sleep(GAP_SECONDS)
@@ -312,6 +332,8 @@ def main(argv=None, *, transport=None, env=None, out_dir=RESULTS) -> int:
     parser.add_argument('--demo', action='store_true', help='데모 버튼 로그인(A · B). 키 없는 compose용')
     parser.add_argument('--refusal', action='store_true', help=f'9단계: 범위 밖 질문({REFUSAL_ID})이 거절로 끝나는지도 본다')
     parser.add_argument('--confirm-live', action='store_true', help='데모가 아닐 때 실제 LLM을 부르는 4 · 5(· 9)단계를 허락한다')
+    parser.add_argument('--pause-before-resume', action='store_true', help='4단계(조건 질문) 뒤 Enter까지 멈춘다. 그사이 서버를 재시작해 재개를 본다')
+    parser.add_argument('--upload', action='store_true', help='데모 회로 대신 질문의 넷리스트를 업로드해 프로젝트를 만든다(DEMO_MODE=0 배포본)')
     args = parser.parse_args(argv)
     if urlsplit(args.base_url).scheme not in ('http', 'https'):
         parser.error('--base-url은 http:// 또는 https://로 시작해야 합니다')
@@ -333,7 +355,7 @@ def main(argv=None, *, transport=None, env=None, out_dir=RESULTS) -> int:
             return 2
     started_at, started = datetime.now(KST), time.monotonic()
     smoke = Smoke(args.base_url, transport)
-    flow(smoke, questions, args.demo, args.refusal, env)
+    flow(smoke, questions, args.demo, args.refusal, env, args.pause_before_resume, args.upload)
     counts = Counter(row['result'] for row in smoke.rows)
     host = urlsplit(smoke.base).netloc
     result = {'base_host': host, 'mode': 'demo' if args.demo else 'accounts', 'commit': commit(),

@@ -1,0 +1,4 @@
+8b2d328cd429f36be38735a2ed23cff183f5fd73e60fec0a6ee17228a471fa79  evals/results/chunking/v1-vs-v4h-2026-11-13/retrieval_v1_2026-11-13.json
+b30e71d395e8ee0d8bbd3ebe4c32c3e9d2d763500f041471e07a175cf644f496  evals/results/chunking/v1-vs-v4h-2026-11-13/retrieval_v4h_2026-11-13.json
+05e9c0bedcdc853f979c0ec40614b0042bba233ce41acdfe8c36a607d69cb4e7  evals/inputs/rewrite_q3_v3.json
+05202314ed1d009593ab14bc5d44e3d7ab7dd4a9f7e726f98282198c7999b4fd  evals/dataset_v3.jsonl

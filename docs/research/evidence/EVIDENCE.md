@@ -56,4 +56,5 @@
 - `job-postings/` — 공고 수집 원자료 4개(`merged.json`, `wanted_jumpit.json`, `saramin_jobkorea.json`, `company_pages.json`)
 - `job-postings-summary.md` — 공고 237건 집계(`job-postings/`에 마크다운을 섞을 수 없어 밖에 둠)
 - `candidate-g-market-saturation.md`, `candidate-circuit-role-substitution.md` — 각주 [3] 대체재·시장 조사 사본 2개
+- `payer-research-2026-11-13.md` — 지불 주체 근거 조사(웹·SNS, 2026-11-13). 위 11개와 달리 새로 작성한 조사 원문이고 핵심 근거 6개는 원문을 다시 열어 확인했다(파일 머리말)
 - `netlist/` — 공개 KiCad 프로젝트 다이오드 목록 `manifest_diodes.json`

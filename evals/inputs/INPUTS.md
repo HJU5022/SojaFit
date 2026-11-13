@@ -16,6 +16,7 @@
 | `grader_cases_r1_dev.json` | 측정 입력 | 채점기 기준선 R1 dev(#34)의 입력. R1 dev 46문항에 고정 Q3 질의와 품번 필터로 `retrieve()`와 채점 노드를 1회씩 돌린 청크 번호·파일·쪽(본문 없음) | `eval_grader.py collect-r1` |
 | `layers/` | 측정 입력 | 검색 조합 층별 재측정의 고정 입력: `parts.json`(질문 줄·품번·비교 여부), `queries.jsonl`(LLM이 한 번 만들어 고정한 질의 Q3~Q5), `queries_check.json`(자동 확인에 걸린 건), `query_texts.jsonl`(임베딩에 보낸 질의 글 전체) | `run_retrieval_layers.py`, `check_retrieval_db.py` |
 | `rewrite_q3_v2.json` | 측정 입력 | 같은 19문항의 고정 재작성 질의 Q3(서비스 `rewrite()` 출력 그대로) | 서비스 `rewrite()` |
+| `rewrite_q3_v3.json` | 측정 입력 | v3 관련 문항 중 쪽 정답이 있는 21건의 고정 재작성 질의 Q3(서비스 `rewrite()` 출력 그대로, 2026-11-13). 청킹 v1·v4h 검색 비교가 두 DB에서 같은 질의를 쓰게 함 | 서비스 `rewrite()` |
 
 `run_retrieval_layers.py`는 `$LAYERS_WORK/inputs/`에서 읽으므로 `layers/`의 파일을 그곳에 복사해 쓴다.
 
