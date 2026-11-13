@@ -287,3 +287,20 @@ def test_partial_answer_searches_once_more_for_what_is_missing_and_keeps_the_fir
     worse = run(task(), llm(D.DocsAnswer(grade='partial', answer='VRRM은 40 V이다 [3].', next_query='more'), D.DocsAnswer(grade='none')),
                 docs=lambda q, parts: [doc(3)] if 'VRRM' in q else [doc(5)])
     assert worse['status'] == 'partial' and worse['answer'] == 'VRRM은 40 V이다 [3].' and worse['llm_calls'] == 2
+
+
+def test_grade2_search_preserves_explicit_manufacturer_in_user_question():
+    queries = []
+    task_input = task(parts=['BAT54'], query='BAT54 diode reverse voltage')
+    def official(parts, terms):
+        queries.append((parts, terms))
+        return []
+    report = D.docs_agent({'task': task_input, 'question': '인피니언 BAT54의 역전압은?'},
+                          retriever=lambda *args, **kwargs: [doc(1, parts=['BAT54'])], chat=llm(),
+                          web_search=official)['reports'][0]
+    assert queries == [(['BAT54'], 'BAT54 diode reverse voltage Infineon')]
+    assert report['evidence_ids'] == []
+    report = D.docs_agent({'task': task_input, 'question': 'Vishay BAT54의 역전압은?'},
+                          retriever=lambda *a, **k: [doc(1, parts=['BAT54'])], chat=llm(),
+                          web_search=lambda *a: pytest.fail('wrong manufacturer'))['reports'][0]
+    assert report['evidence_ids'] == []

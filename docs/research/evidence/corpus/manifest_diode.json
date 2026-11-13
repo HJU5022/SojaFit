@@ -1,0 +1,1608 @@
+{
+ "summary": {
+  "docs": 41,
+  "total_chunks_with_repeats": 781,
+  "unique_chunks_corpus": 627,
+  "unique_chunks_per_doc_avg": 15.3,
+  "shared_across_docs_unique_chunks": 45,
+  "shared_share_of_unique": 0.0718,
+  "dup_ratio_total_vs_unique": 0.1972,
+  "shared_chunk_categories": {
+   "other_shared": 32,
+   "legal_notice": 12,
+   "package_ordering": 1
+  },
+  "levels": {
+   "ge50": {
+    "unique_chunks_corpus": 627,
+    "per_doc_avg": 15.3,
+    "by_manufacturer": {
+     "diotec": {
+      "docs": 5,
+      "unique_chunks": 56,
+      "per_doc": 11.2
+     },
+     "infineon": {
+      "docs": 11,
+      "unique_chunks": 149,
+      "per_doc": 13.5
+     },
+     "onsemi": {
+      "docs": 13,
+      "unique_chunks": 248,
+      "per_doc": 19.1
+     },
+     "tsc": {
+      "docs": 12,
+      "unique_chunks": 174,
+      "per_doc": 14.5
+     }
+    }
+   },
+   "ge200": {
+    "unique_chunks_corpus": 410,
+    "per_doc_avg": 10.0,
+    "by_manufacturer": {
+     "diotec": {
+      "docs": 5,
+      "unique_chunks": 43,
+      "per_doc": 8.6
+     },
+     "infineon": {
+      "docs": 11,
+      "unique_chunks": 103,
+      "per_doc": 9.4
+     },
+     "onsemi": {
+      "docs": 13,
+      "unique_chunks": 163,
+      "per_doc": 12.5
+     },
+     "tsc": {
+      "docs": 12,
+      "unique_chunks": 101,
+      "per_doc": 8.4
+     }
+    }
+   },
+   "fold50": {
+    "unique_chunks_corpus": 611,
+    "per_doc_avg": 14.9,
+    "by_manufacturer": {
+     "diotec": {
+      "docs": 5,
+      "unique_chunks": 54,
+      "per_doc": 10.8
+     },
+     "infineon": {
+      "docs": 11,
+      "unique_chunks": 145,
+      "per_doc": 13.2
+     },
+     "onsemi": {
+      "docs": 13,
+      "unique_chunks": 242,
+      "per_doc": 18.6
+     },
+     "tsc": {
+      "docs": 12,
+      "unique_chunks": 170,
+      "per_doc": 14.2
+     }
+    }
+   },
+   "fold200": {
+    "unique_chunks_corpus": 403,
+    "per_doc_avg": 9.8,
+    "by_manufacturer": {
+     "diotec": {
+      "docs": 5,
+      "unique_chunks": 42,
+      "per_doc": 8.4
+     },
+     "infineon": {
+      "docs": 11,
+      "unique_chunks": 103,
+      "per_doc": 9.4
+     },
+     "onsemi": {
+      "docs": 13,
+      "unique_chunks": 159,
+      "per_doc": 12.2
+     },
+     "tsc": {
+      "docs": 12,
+      "unique_chunks": 99,
+      "per_doc": 8.2
+     }
+    }
+   },
+   "raw50": {
+    "unique_chunks_corpus": 708,
+    "per_doc_avg": 17.3,
+    "by_manufacturer": {
+     "diotec": {
+      "docs": 5,
+      "unique_chunks": 56,
+      "per_doc": 11.2
+     },
+     "infineon": {
+      "docs": 11,
+      "unique_chunks": 162,
+      "per_doc": 14.7
+     },
+     "onsemi": {
+      "docs": 13,
+      "unique_chunks": 273,
+      "per_doc": 21.0
+     },
+     "tsc": {
+      "docs": 12,
+      "unique_chunks": 217,
+      "per_doc": 18.1
+     }
+    }
+   }
+  },
+  "docs_needed": {
+   "ge50": {
+    "per_doc": 15.3,
+    "docs_for_10k": 654,
+    "docs_for_20k": 1308
+   },
+   "ge200": {
+    "per_doc": 10.0,
+    "docs_for_10k": 1000,
+    "docs_for_20k": 2000
+   },
+   "fold50": {
+    "per_doc": 14.9,
+    "docs_for_10k": 672,
+    "docs_for_20k": 1343
+   },
+   "fold200": {
+    "per_doc": 9.8,
+    "docs_for_10k": 1021,
+    "docs_for_20k": 2041
+   },
+   "raw50": {
+    "per_doc": 17.3,
+    "docs_for_10k": 579,
+    "docs_for_20k": 1157
+   }
+  },
+  "params": {
+   "max_chunk_chars": 1000,
+   "min_chunk_chars": 50,
+   "strict_min_chars": 200,
+   "repeat_line_threshold": "max(3, 25% of pages)",
+   "fold": "letters only, lowercase"
+  }
+ },
+ "documents": [
+  {
+   "doc": "diotec_1n4148.pdf",
+   "manufacturer": "diotec",
+   "url": "https://diotec.com/request/datasheet/1n4148.pdf",
+   "revision_hint": "Version 2023-08-17",
+   "pages": 3,
+   "chars": 18406,
+   "pdf_bytes": 290257,
+   "pdf_sha256": "14471d276dafdf5135f3a11b9f88232e1ce151f2b147b7bc4d77e6a7ca355c21",
+   "boilerplate_lines_removed": 0,
+   "chunks": 20,
+   "chunks_tiny_dropped": 2,
+   "unique_chunks_in_doc": 20,
+   "unique_chunks_ge200": 14,
+   "unique_chunks_folded_ge50": 20,
+   "unique_chunks_folded_ge200": 14,
+   "unique_chunks_before_cleanup_ge50": 20,
+   "chunks_only_in_this_doc": 7
+  },
+  {
+   "doc": "diotec_1n5817.pdf",
+   "manufacturer": "diotec",
+   "url": "https://diotec.com/request/datasheet/1n5817.pdf",
+   "revision_hint": "Version 2026-03-20",
+   "pages": 3,
+   "chars": 19205,
+   "pdf_bytes": 245962,
+   "pdf_sha256": "1bc1a558d18238aaf864cc06fe6e54a1951f0e42dd415da6b7ff569c6e0a0919",
+   "boilerplate_lines_removed": 0,
+   "chunks": 19,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 19,
+   "unique_chunks_ge200": 14,
+   "unique_chunks_folded_ge50": 19,
+   "unique_chunks_folded_ge200": 14,
+   "unique_chunks_before_cleanup_ge50": 19,
+   "chunks_only_in_this_doc": 6
+  },
+  {
+   "doc": "diotec_bas16.pdf",
+   "manufacturer": "diotec",
+   "url": "https://diotec.com/request/datasheet/bas16.pdf",
+   "revision_hint": "Version 2025-11-18",
+   "pages": 3,
+   "chars": 20489,
+   "pdf_bytes": 326120,
+   "pdf_sha256": "a6f19237a7b3a89c0a48fd8cfd3012b8df65ba6d8a3a091d2607232f1523cb10",
+   "boilerplate_lines_removed": 0,
+   "chunks": 23,
+   "chunks_tiny_dropped": 3,
+   "unique_chunks_in_doc": 23,
+   "unique_chunks_ge200": 15,
+   "unique_chunks_folded_ge50": 23,
+   "unique_chunks_folded_ge200": 15,
+   "unique_chunks_before_cleanup_ge50": 23,
+   "chunks_only_in_this_doc": 9
+  },
+  {
+   "doc": "diotec_bas70.pdf",
+   "manufacturer": "diotec",
+   "url": "https://diotec.com/request/datasheet/bas70.pdf",
+   "revision_hint": "Version 2025-11-18",
+   "pages": 3,
+   "chars": 18966,
+   "pdf_bytes": 259478,
+   "pdf_sha256": "e6895f3bc0517c62d6651b8be1c2933e77f6c30c13b4a4bc7690130ecd2fa4d6",
+   "boilerplate_lines_removed": 0,
+   "chunks": 22,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 22,
+   "unique_chunks_ge200": 15,
+   "unique_chunks_folded_ge50": 22,
+   "unique_chunks_folded_ge200": 15,
+   "unique_chunks_before_cleanup_ge50": 22,
+   "chunks_only_in_this_doc": 8
+  },
+  {
+   "doc": "diotec_bat54.pdf",
+   "manufacturer": "diotec",
+   "url": "https://diotec.com/request/datasheet/bat54.pdf",
+   "revision_hint": "Version 2026-05-22",
+   "pages": 4,
+   "chars": 20953,
+   "pdf_bytes": 356131,
+   "pdf_sha256": "0f328f9e46f48b846295b88c66ef125c8cf253202d5bdb5ec21ebf108386d8ef",
+   "boilerplate_lines_removed": 16,
+   "chunks": 22,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 22,
+   "unique_chunks_ge200": 16,
+   "unique_chunks_folded_ge50": 22,
+   "unique_chunks_folded_ge200": 16,
+   "unique_chunks_before_cleanup_ge50": 22,
+   "chunks_only_in_this_doc": 10
+  },
+  {
+   "doc": "infineon_bas16series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas16series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 21,
+   "chars": 59014,
+   "pdf_bytes": 1033777,
+   "pdf_sha256": "71ca4c0b88f93b381052c5592a118610b6413a056843bcfd06ef3e29f9c01fde",
+   "boilerplate_lines_removed": 251,
+   "chunks": 25,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 25,
+   "unique_chunks_ge200": 16,
+   "unique_chunks_folded_ge50": 24,
+   "unique_chunks_folded_ge200": 16,
+   "unique_chunks_before_cleanup_ge50": 24,
+   "chunks_only_in_this_doc": 23
+  },
+  {
+   "doc": "infineon_bas21series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas21series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 9,
+   "chars": 28376,
+   "pdf_bytes": 120191,
+   "pdf_sha256": "a2243d7250a2cd0b3986878a772cb91386c440a9dead8789c6a4d3fe303f9072",
+   "boilerplate_lines_removed": 124,
+   "chunks": 11,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 11,
+   "unique_chunks_ge200": 7,
+   "unique_chunks_folded_ge50": 11,
+   "unique_chunks_folded_ge200": 7,
+   "unique_chunks_before_cleanup_ge50": 12,
+   "chunks_only_in_this_doc": 11
+  },
+  {
+   "doc": "infineon_bas28series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas28series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 7,
+   "chars": 22229,
+   "pdf_bytes": 93391,
+   "pdf_sha256": "add750d4bf77c624e0c8edd86798d7771c50f976d4ed4d2d558621372682fbc5",
+   "boilerplate_lines_removed": 66,
+   "chunks": 7,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 7,
+   "unique_chunks_ge200": 6,
+   "unique_chunks_folded_ge50": 7,
+   "unique_chunks_folded_ge200": 6,
+   "unique_chunks_before_cleanup_ge50": 7,
+   "chunks_only_in_this_doc": 7
+  },
+  {
+   "doc": "infineon_bas40series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas40series.-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 15,
+   "chars": 40324,
+   "pdf_bytes": 1008317,
+   "pdf_sha256": "8cde61e18bbdc846ecc1c8810d8d499ad5a76b776f191f19a9c5856bbba74f05",
+   "boilerplate_lines_removed": 126,
+   "chunks": 22,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 20,
+   "unique_chunks_ge200": 13,
+   "unique_chunks_folded_ge50": 20,
+   "unique_chunks_folded_ge200": 13,
+   "unique_chunks_before_cleanup_ge50": 20,
+   "chunks_only_in_this_doc": 18
+  },
+  {
+   "doc": "infineon_bas70series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas70series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 24,
+   "chars": 48598,
+   "pdf_bytes": 1471962,
+   "pdf_sha256": "761f409af8e9782c45ae7038a6698e21ae2583841ec2f4e8d113770fd558cd3c",
+   "boilerplate_lines_removed": 239,
+   "chunks": 23,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 20,
+   "unique_chunks_ge200": 13,
+   "unique_chunks_folded_ge50": 20,
+   "unique_chunks_folded_ge200": 13,
+   "unique_chunks_before_cleanup_ge50": 20,
+   "chunks_only_in_this_doc": 20
+  },
+  {
+   "doc": "infineon_bat15-099.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat15-099-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 10,
+   "chars": 21712,
+   "pdf_bytes": 305417,
+   "pdf_sha256": "b17ee263080822bbc958a8f932f2f36e5831d19888b5efb13e07308127b47f10",
+   "boilerplate_lines_removed": 59,
+   "chunks": 16,
+   "chunks_tiny_dropped": 5,
+   "unique_chunks_in_doc": 16,
+   "unique_chunks_ge200": 11,
+   "unique_chunks_folded_ge50": 16,
+   "unique_chunks_folded_ge200": 11,
+   "unique_chunks_before_cleanup_ge50": 24,
+   "chunks_only_in_this_doc": 16
+  },
+  {
+   "doc": "infineon_bat165.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat165-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 6,
+   "chars": 16494,
+   "pdf_bytes": 183841,
+   "pdf_sha256": "3bc0a9a3593e59d9802ac2d08094a76497bc64379600de15e74846e2d37c49b1",
+   "boilerplate_lines_removed": 29,
+   "chunks": 7,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 7,
+   "unique_chunks_ge200": 6,
+   "unique_chunks_folded_ge50": 7,
+   "unique_chunks_folded_ge200": 6,
+   "unique_chunks_before_cleanup_ge50": 7,
+   "chunks_only_in_this_doc": 7
+  },
+  {
+   "doc": "infineon_bat17.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat17-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 9,
+   "chars": 21989,
+   "pdf_bytes": 104755,
+   "pdf_sha256": "d6b792d4dba80f082d046e1fcb48de26779d4bf6dd37bfaf60cda07f9e37b5fc",
+   "boilerplate_lines_removed": 106,
+   "chunks": 8,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 8,
+   "unique_chunks_ge200": 6,
+   "unique_chunks_folded_ge50": 8,
+   "unique_chunks_folded_ge200": 6,
+   "unique_chunks_before_cleanup_ge50": 11,
+   "chunks_only_in_this_doc": 7
+  },
+  {
+   "doc": "infineon_bat54series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat54series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 15,
+   "chars": 30870,
+   "pdf_bytes": 984552,
+   "pdf_sha256": "cef1202c5f6d00f988c96c1cc7c577d41bce951ce1960069ea77f1d8624c1953",
+   "boilerplate_lines_removed": 129,
+   "chunks": 19,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 19,
+   "unique_chunks_ge200": 10,
+   "unique_chunks_folded_ge50": 17,
+   "unique_chunks_folded_ge200": 10,
+   "unique_chunks_before_cleanup_ge50": 19,
+   "chunks_only_in_this_doc": 18
+  },
+  {
+   "doc": "infineon_bat60a.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat60a-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 6,
+   "chars": 14570,
+   "pdf_bytes": 65072,
+   "pdf_sha256": "86aba710f6c93de0927f27879d199188f6227d87f497f179ebf7b9d43be654a0",
+   "boilerplate_lines_removed": 11,
+   "chunks": 8,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 8,
+   "unique_chunks_ge200": 6,
+   "unique_chunks_folded_ge50": 8,
+   "unique_chunks_folded_ge200": 6,
+   "unique_chunks_before_cleanup_ge50": 10,
+   "chunks_only_in_this_doc": 8
+  },
+  {
+   "doc": "infineon_bat64series.pdf",
+   "manufacturer": "infineon",
+   "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat64series-datasheet-en.pdf",
+   "revision_hint": "unmarked",
+   "pages": 13,
+   "chars": 26871,
+   "pdf_bytes": 1142341,
+   "pdf_sha256": "35e4e1293c36db81d099cbc5953b26a862c4a345c6bc5508fab5c957be5fabb8",
+   "boilerplate_lines_removed": 45,
+   "chunks": 14,
+   "chunks_tiny_dropped": 0,
+   "unique_chunks_in_doc": 13,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 13,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 13,
+   "chunks_only_in_this_doc": 12
+  },
+  {
+   "doc": "onsemi_1n5817-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/1n5817-d.pdf",
+   "revision_hint": "Rev. 11",
+   "pages": 8,
+   "chars": 55762,
+   "pdf_bytes": 386468,
+   "pdf_sha256": "9555b32af26ab719b251801bc55f814552cd59540527d4fc302767d5cab909b4",
+   "boilerplate_lines_removed": 35,
+   "chunks": 36,
+   "chunks_tiny_dropped": 16,
+   "unique_chunks_in_doc": 36,
+   "unique_chunks_ge200": 24,
+   "unique_chunks_folded_ge50": 36,
+   "unique_chunks_folded_ge200": 24,
+   "unique_chunks_before_cleanup_ge50": 39,
+   "chunks_only_in_this_doc": 35
+  },
+  {
+   "doc": "onsemi_bas16lt1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/bas16lt1-d.pdf",
+   "revision_hint": "Rev. 16",
+   "pages": 8,
+   "chars": 28160,
+   "pdf_bytes": 242419,
+   "pdf_sha256": "bae51bad38fe9b9dc7c8c38300f2c3fe403f303b650ca884fe9122e64d6bf362",
+   "boilerplate_lines_removed": 26,
+   "chunks": 29,
+   "chunks_tiny_dropped": 11,
+   "unique_chunks_in_doc": 29,
+   "unique_chunks_ge200": 19,
+   "unique_chunks_folded_ge50": 29,
+   "unique_chunks_folded_ge200": 19,
+   "unique_chunks_before_cleanup_ge50": 32,
+   "chunks_only_in_this_doc": 11
+  },
+  {
+   "doc": "onsemi_bat54alt1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/bat54alt1-d.pdf",
+   "revision_hint": "Rev. 16",
+   "pages": 6,
+   "chars": 23409,
+   "pdf_bytes": 227697,
+   "pdf_sha256": "bb2a725024a06c09416d6c9d3e062748dddec62437c00dfc9fd1bcb49e863116",
+   "boilerplate_lines_removed": 16,
+   "chunks": 29,
+   "chunks_tiny_dropped": 14,
+   "unique_chunks_in_doc": 29,
+   "unique_chunks_ge200": 14,
+   "unique_chunks_folded_ge50": 29,
+   "unique_chunks_folded_ge200": 14,
+   "unique_chunks_before_cleanup_ge50": 30,
+   "chunks_only_in_this_doc": 12
+  },
+  {
+   "doc": "onsemi_bat54ht1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/bat54ht1-d.pdf",
+   "revision_hint": "Rev. 9",
+   "pages": 5,
+   "chars": 19875,
+   "pdf_bytes": 221475,
+   "pdf_sha256": "6011dc91de984dd057ba40b59c4720d6022d5371f8d1ec604e22dbd139a7e75b",
+   "boilerplate_lines_removed": 1,
+   "chunks": 17,
+   "chunks_tiny_dropped": 13,
+   "unique_chunks_in_doc": 17,
+   "unique_chunks_ge200": 11,
+   "unique_chunks_folded_ge50": 17,
+   "unique_chunks_folded_ge200": 11,
+   "unique_chunks_before_cleanup_ge50": 17,
+   "chunks_only_in_this_doc": 10
+  },
+  {
+   "doc": "onsemi_bzx84c2v4lt1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/bzx84c2v4lt1-d.pdf",
+   "revision_hint": "Rev. 23",
+   "pages": 9,
+   "chars": 45090,
+   "pdf_bytes": 476062,
+   "pdf_sha256": "84b2a906a29800118572b1c5a52ff161c6efdaca986662d3fcb120b647d1109d",
+   "boilerplate_lines_removed": 39,
+   "chunks": 34,
+   "chunks_tiny_dropped": 8,
+   "unique_chunks_in_doc": 34,
+   "unique_chunks_ge200": 23,
+   "unique_chunks_folded_ge50": 34,
+   "unique_chunks_folded_ge200": 23,
+   "unique_chunks_before_cleanup_ge50": 39,
+   "chunks_only_in_this_doc": 17
+  },
+  {
+   "doc": "onsemi_esd9b-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/esd9b-d.pdf",
+   "revision_hint": "Rev. 7",
+   "pages": 5,
+   "chars": 19605,
+   "pdf_bytes": 224336,
+   "pdf_sha256": "ddbf9236c39769e99790448049bf6d79c8a15a19b107b408995ac07166519a2d",
+   "boilerplate_lines_removed": 7,
+   "chunks": 17,
+   "chunks_tiny_dropped": 9,
+   "unique_chunks_in_doc": 17,
+   "unique_chunks_ge200": 12,
+   "unique_chunks_folded_ge50": 17,
+   "unique_chunks_folded_ge200": 12,
+   "unique_chunks_before_cleanup_ge50": 19,
+   "chunks_only_in_this_doc": 13
+  },
+  {
+   "doc": "onsemi_mbr0520l-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/mbr0520l-d.pdf",
+   "revision_hint": "Rev. 1.1.0",
+   "pages": 6,
+   "chars": 20726,
+   "pdf_bytes": 281858,
+   "pdf_sha256": "f61a2fe55ece0ea304c9c27239b926b67f79f062d64d48d0696e2741ea682ca3",
+   "boilerplate_lines_removed": 4,
+   "chunks": 14,
+   "chunks_tiny_dropped": 8,
+   "unique_chunks_in_doc": 14,
+   "unique_chunks_ge200": 11,
+   "unique_chunks_folded_ge50": 14,
+   "unique_chunks_folded_ge200": 11,
+   "unique_chunks_before_cleanup_ge50": 14,
+   "chunks_only_in_this_doc": 14
+  },
+  {
+   "doc": "onsemi_mbrs140t3-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/mbrs140t3-d.pdf",
+   "revision_hint": "Rev. 15",
+   "pages": 7,
+   "chars": 34618,
+   "pdf_bytes": 237038,
+   "pdf_sha256": "0dd36a2213d861e342710051eb67884dc29b18542a279afc5978820ad4917934",
+   "boilerplate_lines_removed": 14,
+   "chunks": 27,
+   "chunks_tiny_dropped": 8,
+   "unique_chunks_in_doc": 27,
+   "unique_chunks_ge200": 14,
+   "unique_chunks_folded_ge50": 27,
+   "unique_chunks_folded_ge200": 14,
+   "unique_chunks_before_cleanup_ge50": 28,
+   "chunks_only_in_this_doc": 25
+  },
+  {
+   "doc": "onsemi_mm3z2v4t1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/mm3z2v4t1-d.pdf",
+   "revision_hint": "Rev. 15",
+   "pages": 8,
+   "chars": 30066,
+   "pdf_bytes": 403712,
+   "pdf_sha256": "e729642d3f4eadb8ab60cad5568eb70b2082d3ecb88e4dd2f47a83eba7cd5358",
+   "boilerplate_lines_removed": 16,
+   "chunks": 24,
+   "chunks_tiny_dropped": 9,
+   "unique_chunks_in_doc": 24,
+   "unique_chunks_ge200": 17,
+   "unique_chunks_folded_ge50": 24,
+   "unique_chunks_folded_ge200": 17,
+   "unique_chunks_before_cleanup_ge50": 28,
+   "chunks_only_in_this_doc": 17
+  },
+  {
+   "doc": "onsemi_mmbd914lt1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/mmbd914lt1-d.pdf",
+   "revision_hint": "Rev. 12",
+   "pages": 8,
+   "chars": 25313,
+   "pdf_bytes": 240868,
+   "pdf_sha256": "c14ed0e22b6098c027e2aa1dd8672f61cf6ab968a17becc51f6710f414e6e9a6",
+   "boilerplate_lines_removed": 20,
+   "chunks": 28,
+   "chunks_tiny_dropped": 11,
+   "unique_chunks_in_doc": 28,
+   "unique_chunks_ge200": 17,
+   "unique_chunks_folded_ge50": 28,
+   "unique_chunks_folded_ge200": 17,
+   "unique_chunks_before_cleanup_ge50": 33,
+   "chunks_only_in_this_doc": 10
+  },
+  {
+   "doc": "onsemi_mmsz4678t1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/mmsz4678t1-d.pdf",
+   "revision_hint": "Rev. 13",
+   "pages": 7,
+   "chars": 32924,
+   "pdf_bytes": 372836,
+   "pdf_sha256": "96d9df1c8e491612b092aafe17a11167fbf7553d977de14876e70343e0244835",
+   "boilerplate_lines_removed": 28,
+   "chunks": 24,
+   "chunks_tiny_dropped": 8,
+   "unique_chunks_in_doc": 24,
+   "unique_chunks_ge200": 18,
+   "unique_chunks_folded_ge50": 24,
+   "unique_chunks_folded_ge200": 18,
+   "unique_chunks_before_cleanup_ge50": 26,
+   "chunks_only_in_this_doc": 22
+  },
+  {
+   "doc": "onsemi_nsr0320mw2t1-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/nsr0320mw2t1-d.pdf",
+   "revision_hint": "Rev. 8 | DOCUMENT NUMBER: 98ASB17533C",
+   "pages": 4,
+   "chars": 18235,
+   "pdf_bytes": 172164,
+   "pdf_sha256": "d0694ff1321397c451a5084e38dd0089350e28c3c55639808f035cb5acaf0768",
+   "boilerplate_lines_removed": 3,
+   "chunks": 11,
+   "chunks_tiny_dropped": 8,
+   "unique_chunks_in_doc": 11,
+   "unique_chunks_ge200": 10,
+   "unique_chunks_folded_ge50": 11,
+   "unique_chunks_folded_ge200": 10,
+   "unique_chunks_before_cleanup_ge50": 12,
+   "chunks_only_in_this_doc": 5
+  },
+  {
+   "doc": "onsemi_nup2105l-d.pdf",
+   "manufacturer": "onsemi",
+   "url": "https://www.onsemi.com/pdf/datasheet/nup2105l-d.pdf",
+   "revision_hint": "Rev. 12",
+   "pages": 13,
+   "chars": 55928,
+   "pdf_bytes": 594955,
+   "pdf_sha256": "fd52996c8b377db90830805c087b1234468e99ac2923097944aaa734195ac159",
+   "boilerplate_lines_removed": 30,
+   "chunks": 48,
+   "chunks_tiny_dropped": 13,
+   "unique_chunks_in_doc": 48,
+   "unique_chunks_ge200": 28,
+   "unique_chunks_folded_ge50": 47,
+   "unique_chunks_folded_ge200": 28,
+   "unique_chunks_before_cleanup_ge50": 52,
+   "chunks_only_in_this_doc": 32
+  },
+  {
+   "doc": "tsc_1N4148.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/1N4148%20SERIES_K2301.pdf",
+   "revision_hint": "Version: K2301",
+   "pages": 5,
+   "chars": 15925,
+   "pdf_bytes": 381862,
+   "pdf_sha256": "cb6f271dbec6505750af22c4a4607a9425b3cbd482b9f9e4c68f05a1f80a2f1d",
+   "boilerplate_lines_removed": 15,
+   "chunks": 14,
+   "chunks_tiny_dropped": 5,
+   "unique_chunks_in_doc": 14,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 14,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 17,
+   "chunks_only_in_this_doc": 13
+  },
+  {
+   "doc": "tsc_1N4148W.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/1N4148W%20SERIES_K1804.pdf",
+   "revision_hint": "Version: K1804",
+   "pages": 5,
+   "chars": 12925,
+   "pdf_bytes": 168023,
+   "pdf_sha256": "3c2c31d1df43cf0db4a9ff600f191e07a199dd0474f0e43a107e1888572a7c7f",
+   "boilerplate_lines_removed": 15,
+   "chunks": 9,
+   "chunks_tiny_dropped": 3,
+   "unique_chunks_in_doc": 9,
+   "unique_chunks_ge200": 7,
+   "unique_chunks_folded_ge50": 9,
+   "unique_chunks_folded_ge200": 7,
+   "unique_chunks_before_cleanup_ge50": 13,
+   "chunks_only_in_this_doc": 9
+  },
+  {
+   "doc": "tsc_1N4148WS.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/1N4148WS%20SERIES_N2212.pdf",
+   "revision_hint": "Version: N2212",
+   "pages": 5,
+   "chars": 16139,
+   "pdf_bytes": 277117,
+   "pdf_sha256": "f99481ec1064b89d0ecb62b09aaf29d816b6f954f9dab6877b2a0292b8922565",
+   "boilerplate_lines_removed": 15,
+   "chunks": 13,
+   "chunks_tiny_dropped": 10,
+   "unique_chunks_in_doc": 13,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 13,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 16,
+   "chunks_only_in_this_doc": 11
+  },
+  {
+   "doc": "tsc_B0520LW.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/B0520LW%20SERIES_J2112.pdf",
+   "revision_hint": "Version:J2112",
+   "pages": 5,
+   "chars": 15004,
+   "pdf_bytes": 361684,
+   "pdf_sha256": "ab739de3f152a83e095c529c2f6df427e639b42d1ebf5f8f4a868320c31a01c8",
+   "boilerplate_lines_removed": 15,
+   "chunks": 11,
+   "chunks_tiny_dropped": 1,
+   "unique_chunks_in_doc": 11,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 11,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 15,
+   "chunks_only_in_this_doc": 11
+  },
+  {
+   "doc": "tsc_BAT42W.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/BAT42W%20SERIES_H2606.pdf",
+   "revision_hint": "Version: H2606",
+   "pages": 5,
+   "chars": 13408,
+   "pdf_bytes": 500980,
+   "pdf_sha256": "9acdf51fefcb0332eccbe87d2720104c8d9605481f018b5a63302ac07619c912",
+   "boilerplate_lines_removed": 15,
+   "chunks": 11,
+   "chunks_tiny_dropped": 2,
+   "unique_chunks_in_doc": 11,
+   "unique_chunks_ge200": 6,
+   "unique_chunks_folded_ge50": 11,
+   "unique_chunks_folded_ge200": 6,
+   "unique_chunks_before_cleanup_ge50": 15,
+   "chunks_only_in_this_doc": 11
+  },
+  {
+   "doc": "tsc_BAT54GW.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/BAT54GW_B2606.pdf",
+   "revision_hint": "Version: B2606",
+   "pages": 5,
+   "chars": 10185,
+   "pdf_bytes": 478687,
+   "pdf_sha256": "8c15bc2c1e77867ce95accfb6b81e2947fd0b6abe5beb9791b1010564478caa9",
+   "boilerplate_lines_removed": 15,
+   "chunks": 10,
+   "chunks_tiny_dropped": 3,
+   "unique_chunks_in_doc": 10,
+   "unique_chunks_ge200": 5,
+   "unique_chunks_folded_ge50": 10,
+   "unique_chunks_folded_ge200": 5,
+   "unique_chunks_before_cleanup_ge50": 11,
+   "chunks_only_in_this_doc": 10
+  },
+  {
+   "doc": "tsc_BZT52B2V4-G.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/BZT52B2V4-G%20SERIES_H2002.pdf",
+   "revision_hint": "Version: H2002",
+   "pages": 6,
+   "chars": 16075,
+   "pdf_bytes": 333115,
+   "pdf_sha256": "b1286633061cd8735f7178b4dd4c41fdd3aece4c8aabc4a194c37aab51459012",
+   "boilerplate_lines_removed": 18,
+   "chunks": 14,
+   "chunks_tiny_dropped": 6,
+   "unique_chunks_in_doc": 13,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 13,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 17,
+   "chunks_only_in_this_doc": 13
+  },
+  {
+   "doc": "tsc_BZT52C2V4S.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/BZT52C2V4S%20SERIES_K2411.pdf",
+   "revision_hint": "Version: K2411",
+   "pages": 7,
+   "chars": 16975,
+   "pdf_bytes": 510479,
+   "pdf_sha256": "4f7f20d1e543831512681da216b228c2ade625c8ee5c4a2752d2be71c5d2486b",
+   "boilerplate_lines_removed": 21,
+   "chunks": 17,
+   "chunks_tiny_dropped": 5,
+   "unique_chunks_in_doc": 17,
+   "unique_chunks_ge200": 11,
+   "unique_chunks_folded_ge50": 17,
+   "unique_chunks_folded_ge200": 11,
+   "unique_chunks_before_cleanup_ge50": 22,
+   "chunks_only_in_this_doc": 17
+  },
+  {
+   "doc": "tsc_MMBD4148.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/MMBD4148%20SERIES_F2112.pdf",
+   "revision_hint": "Version: F2112",
+   "pages": 5,
+   "chars": 15467,
+   "pdf_bytes": 403096,
+   "pdf_sha256": "eddc7cdbd09d3cd6f9c86c629fcbab9b270886a02c48e6c0487cfade49a88951",
+   "boilerplate_lines_removed": 15,
+   "chunks": 10,
+   "chunks_tiny_dropped": 3,
+   "unique_chunks_in_doc": 10,
+   "unique_chunks_ge200": 7,
+   "unique_chunks_folded_ge50": 10,
+   "unique_chunks_folded_ge200": 7,
+   "unique_chunks_before_cleanup_ge50": 10,
+   "chunks_only_in_this_doc": 10
+  },
+  {
+   "doc": "tsc_SMBJ.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/SMBJ%20SERIES_R2104.pdf",
+   "revision_hint": "Version: R2104",
+   "pages": 8,
+   "chars": 29146,
+   "pdf_bytes": 467067,
+   "pdf_sha256": "6b1cb45d62a964cc571a304fbefd8ec22058f06ca9be344a9c3635dad5d5ae55",
+   "boilerplate_lines_removed": 69,
+   "chunks": 31,
+   "chunks_tiny_dropped": 19,
+   "unique_chunks_in_doc": 31,
+   "unique_chunks_ge200": 11,
+   "unique_chunks_folded_ge50": 31,
+   "unique_chunks_folded_ge200": 11,
+   "unique_chunks_before_cleanup_ge50": 34,
+   "chunks_only_in_this_doc": 31
+  },
+  {
+   "doc": "tsc_SS14LWH.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/SS14LWH%20SERIES_B2305.pdf",
+   "revision_hint": "Version: B2305",
+   "pages": 6,
+   "chars": 28196,
+   "pdf_bytes": 312859,
+   "pdf_sha256": "57014dc7f202f07461f8266ae22ef52cad45d1612ddf84fc67f0dfd246ef87bf",
+   "boilerplate_lines_removed": 43,
+   "chunks": 24,
+   "chunks_tiny_dropped": 12,
+   "unique_chunks_in_doc": 24,
+   "unique_chunks_ge200": 9,
+   "unique_chunks_folded_ge50": 23,
+   "unique_chunks_folded_ge200": 9,
+   "unique_chunks_before_cleanup_ge50": 29,
+   "chunks_only_in_this_doc": 23
+  },
+  {
+   "doc": "tsc_TS4148.pdf",
+   "manufacturer": "tsc",
+   "url": "https://services.taiwansemi.com/storage/resources/datasheet/TS4148%20SERIES_A2301.pdf",
+   "revision_hint": "Version: A2301",
+   "pages": 8,
+   "chars": 27196,
+   "pdf_bytes": 303493,
+   "pdf_sha256": "a99bab1ccb6bbf3cff2b4c9bef10474030d9c64fa6c9ce0287c198af5139918d",
+   "boilerplate_lines_removed": 78,
+   "chunks": 13,
+   "chunks_tiny_dropped": 12,
+   "unique_chunks_in_doc": 13,
+   "unique_chunks_ge200": 10,
+   "unique_chunks_folded_ge50": 13,
+   "unique_chunks_folded_ge200": 10,
+   "unique_chunks_before_cleanup_ge50": 20,
+   "chunks_only_in_this_doc": 13
+  }
+ ],
+ "access_record": {
+  "checked_on": "2026-10-29",
+  "request_policy": ">=1.6 s between requests (onsemi 10 s = its robots Crawl-delay); UA \"research-measure/1.0 (non-commercial corpus-size study)\"; onsemi used curl default UA because the custom UA got HTTP 403 from the CDN; no CAPTCHA/bot-check workaround attempted",
+  "used": [
+   {
+    "mfr": "infineon",
+    "robots": "https://www.infineon.com/robots.txt : Allow /assets/row/public/*, Disallow /assets/row/restricted/*, */search*",
+    "terms": "https://www.infineon.com/legal/usage-terms : grants download/reproduce/display/distribute of Materials for informational non-commercial or personal use, unmodified, notices kept, Infineon named as source; no automated-access clause found",
+    "downloaded": 11
+   },
+   {
+    "mfr": "tsc (Taiwan Semiconductor)",
+    "robots": "www.taiwansemi.com/robots.txt = 404 (none); services.taiwansemi.com/robots.txt = HTTP 200 'User-agent: * / Disallow:' (all allowed), re-checked 10-29 16:28 (earlier run: connection failure)",
+    "terms": "https://www.taiwansemi.com/en/legal/ : same wording as Infineon (download/reproduce/display/distribute, non-commercial or personal, unmodified); no automated-access clause found",
+    "downloaded": 12
+   },
+   {
+    "mfr": "onsemi",
+    "robots": "https://www.onsemi.com/robots.txt : Crawl-delay 10; PDFs under /pdf/datasheet/ not disallowed",
+    "terms": "https://www.onsemi.com/terms-of-use : \"No information from this Site may be reproduced...\" except one copy for non-commercial personal use; no robots/automation clause found. CONDITIONAL",
+    "downloaded": 13
+   },
+   {
+    "mfr": "diotec",
+    "robots": "https://diotec.com/robots.txt : Disallow /contao/ only",
+    "terms": "no website terms of use found (imprint 1.3 KB no clause; /en/copyright-en.html is a privacy policy). Datasheet footers say reproduction needs written permission (second-hand, via search snippet). UNVERIFIED",
+    "downloaded": 5
+   }
+  ],
+  "blocked_not_downloaded": [
+   {
+    "mfr": "diodes",
+    "why": "robots.txt (User-Agent *): Disallow /assets/Datasheets/ ; also Content-Signal ai-train=no. https://www.diodes.com/robots.txt"
+   },
+   {
+    "mfr": "vishay",
+    "why": "Website Terms of Use (Status 07/2025, https://www.vishay.com/doc?47140) prohibits \"any robot, spider or other automatic device\" and manual copying; Content may not be copied/reproduced"
+   },
+   {
+    "mfr": "central semiconductor",
+    "why": "Terms of site usage https://www.centralsemi.com/terms-web : no \"data mining, robots ... any data gathering or extraction method\"; no database/archive/cache"
+   },
+   {
+    "mfr": "nexperia",
+    "why": "robots.txt and pages return HTTP 403 (CDN) to curl for www and assets hosts; not worked around"
+   },
+   {
+    "mfr": "st",
+    "why": "curl to www.st.com fails (HTTP/2 INTERNAL_ERROR); terms page fetch timed out; not obtained"
+   },
+   {
+    "mfr": "mcc, littelfuse, microchip, toshiba",
+    "why": "HTTP 403 on robots.txt or home page; not worked around"
+   },
+   {
+    "mfr": "bourns",
+    "why": "robots.txt Disallow /datasheets/"
+   },
+   {
+    "mfr": "rohm",
+    "why": "not attempted: terms require written consent for copying; robots Disallow /en/ /jp/ (PDF host fscdn.rohm.com robots 404)"
+   }
+  ],
+  "failed_requests_not_pdf": [
+   {
+    "name": "infineon_bas40series",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas40series-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bas125series",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas125series-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bat62",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat62-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bat15series",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat15series-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bas3010a-03w",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas3010a-03w-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bas3007a-02lrh",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bas3007a-02lrh-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "infineon_bat17series",
+    "url": "https://www.infineon.com/assets/row/public/documents/30/49/infineon-bat17series-datasheet-en.pdf",
+    "result": "404 text/html;charset=utf-8 1527490 https://www.infineon.com"
+   },
+   {
+    "name": "tsc_BZT55C2V4",
+    "url": "https://services.taiwansemi.com/storage/resources/datasheet/BZT55C2V4%20SERIES_I2301.pdf",
+    "result": "404 text/html; charset=UTF-8 6603 https://services.taiwansem"
+   },
+   {
+    "name": "tsc_BAT46GW",
+    "url": "https://services.taiwansemi.com/storage/resources/datasheet/BAT46GW_A2006.pdf",
+    "result": "404 text/html; charset=UTF-8 6603 https://services.taiwansem"
+   },
+   {
+    "name": "diotec_1n4448",
+    "url": "https://diotec.com/request/datasheet/1n4448.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bat85",
+    "url": "https://diotec.com/request/datasheet/bat85.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bat43",
+    "url": "https://diotec.com/request/datasheet/bat43.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bas21",
+    "url": "https://diotec.com/request/datasheet/bas21.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bat46",
+    "url": "https://diotec.com/request/datasheet/bat46.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_1n5819",
+    "url": "https://diotec.com/request/datasheet/1n5819.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_ss14",
+    "url": "https://diotec.com/request/datasheet/ss14.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_sb140",
+    "url": "https://diotec.com/request/datasheet/sb140.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bzx55",
+    "url": "https://diotec.com/request/datasheet/bzx55.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bzx84",
+    "url": "https://diotec.com/request/datasheet/bzx84.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_bzt52",
+    "url": "https://diotec.com/request/datasheet/bzt52.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_zpd",
+    "url": "https://diotec.com/request/datasheet/zpd.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_zmm",
+    "url": "https://diotec.com/request/datasheet/zmm.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_smbj",
+    "url": "https://diotec.com/request/datasheet/smbj.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_smaj",
+    "url": "https://diotec.com/request/datasheet/smaj.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_p6ke",
+    "url": "https://diotec.com/request/datasheet/p6ke.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "diotec_1.5ke",
+    "url": "https://diotec.com/request/datasheet/1.5ke.pdf",
+    "result": "404 application/json 18 https://diotec.com/request/datasheet"
+   },
+   {
+    "name": "onsemi_1smb5920bt3-d",
+    "url": "https://www.onsemi.com/pdf/datasheet/1smb5920bt3-d.pdf",
+    "result": "200 text/html;charset=UTF-8 304531 https://www.onsemi.com/de"
+   }
+  ],
+  "downloaded_count": 41
+ },
+ "unit_scan_10_29": {
+  "method": "pdftotext -layout on the 41 PDFs; pdffonts; regex counts; 3 pages rendered with pdftoppm and read by eye (no body text stored)",
+  "rendered_confirmed_unit_loss": [
+   {
+    "doc": "onsemi_bas16lt1-d.pdf",
+    "page": 2,
+    "extracted": "mAdc / 100 mAdc / W / 0.1 mF / 100 mH / 2.0 kW",
+    "rendered": "μAdc / 100 μAdc / Ω / 0.1 μF / 100 μH / 2.0 kΩ"
+   },
+   {
+    "doc": "onsemi_nsr0320mw2t1-d.pdf",
+    "page": 2,
+    "extracted": "IR unit mA (values 10 / 50 / 200 / 450)",
+    "rendered": "IR unit μA (same values)"
+   },
+   {
+    "doc": "onsemi_esd9b-d.pdf",
+    "page": 2,
+    "extracted": "Max Per 8 x 20 ms",
+    "rendered": "8 x 20 μs"
+   }
+  ],
+  "onsemi_docs": 13,
+  "onsemi_docs_with_Symbol_font_Custom_encoding": 13,
+  "onsemi_docs_with_theta_lost_as_q_RqJA": 9,
+  "other_mfr_docs_with_Symbol_font": 10,
+  "other_mfr_docs_with_theta_or_unit_loss_pattern": 0,
+  "onsemi_docs_with_mAdc_token": 5,
+  "note": "mAdc in forward-current rows (IF=10 mA) is a true mA; only IR/IBR/capacitor/inductor/surge-time units were checked by eye on 3 docs. Remaining onsemi docs not rendered one by one.",
+  "per_file": [
+   {
+    "f": "diotec_1n4148.pdf",
+    "symfont": 0,
+    "n_mu": 7,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "diotec_1n5817.pdf",
+    "symfont": 0,
+    "n_mu": 0,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "diotec_bas16.pdf",
+    "symfont": 0,
+    "n_mu": 10,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "diotec_bas70.pdf",
+    "symfont": 0,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "diotec_bat54.pdf",
+    "symfont": 0,
+    "n_mu": 4,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bas16series.pdf",
+    "symfont": 1,
+    "n_mu": 4,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bas21series.pdf",
+    "symfont": 1,
+    "n_mu": 5,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bas28series.pdf",
+    "symfont": 1,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bas40series.pdf",
+    "symfont": 2,
+    "n_mu": 5,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bas70series.pdf",
+    "symfont": 2,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat15-099.pdf",
+    "symfont": 0,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat165.pdf",
+    "symfont": 1,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat17.pdf",
+    "symfont": 1,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat54series.pdf",
+    "symfont": 2,
+    "n_mu": 5,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat60a.pdf",
+    "symfont": 1,
+    "n_mu": 2,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "infineon_bat64series.pdf",
+    "symfont": 2,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_1n5817-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_bas16lt1-d.pdf",
+    "symfont": 5,
+    "n_mu": 1,
+    "mAdc": 9,
+    "mF": 2,
+    "mH": 1,
+    "kW": 1,
+    "R_eq_W": 2
+   },
+   {
+    "f": "onsemi_bat54alt1-d.pdf",
+    "symfont": 5,
+    "n_mu": 1,
+    "mAdc": 4,
+    "mF": 2,
+    "mH": 1,
+    "kW": 1,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_bat54ht1-d.pdf",
+    "symfont": 5,
+    "n_mu": 6,
+    "mAdc": 3,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_bzx84c2v4lt1-d.pdf",
+    "symfont": 5,
+    "n_mu": 1,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_esd9b-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_mbr0520l-d.pdf",
+    "symfont": 2,
+    "n_mu": 2,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_mbrs140t3-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_mm3z2v4t1-d.pdf",
+    "symfont": 5,
+    "n_mu": 1,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_mmbd914lt1-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 2,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_mmsz4678t1-d.pdf",
+    "symfont": 5,
+    "n_mu": 1,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_nsr0320mw2t1-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 1,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "onsemi_nup2105l-d.pdf",
+    "symfont": 5,
+    "n_mu": 0,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 2,
+    "R_eq_W": 5
+   },
+   {
+    "f": "tsc_1N4148.pdf",
+    "symfont": 0,
+    "n_mu": 4,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_1N4148W.pdf",
+    "symfont": 0,
+    "n_mu": 5,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_1N4148WS.pdf",
+    "symfont": 0,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_B0520LW.pdf",
+    "symfont": 0,
+    "n_mu": 18,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_BAT42W.pdf",
+    "symfont": 0,
+    "n_mu": 1,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_BAT54GW.pdf",
+    "symfont": 0,
+    "n_mu": 3,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_BZT52B2V4-G.pdf",
+    "symfont": 0,
+    "n_mu": 2,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_BZT52C2V4S.pdf",
+    "symfont": 0,
+    "n_mu": 1,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_MMBD4148.pdf",
+    "symfont": 0,
+    "n_mu": 6,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_SMBJ.pdf",
+    "symfont": 0,
+    "n_mu": 8,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_SS14LWH.pdf",
+    "symfont": 0,
+    "n_mu": 10,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   },
+   {
+    "f": "tsc_TS4148.pdf",
+    "symfont": 0,
+    "n_mu": 7,
+    "mAdc": 0,
+    "mF": 0,
+    "mH": 0,
+    "kW": 0,
+    "R_eq_W": 0
+   }
+  ],
+  "cause_note": "[estimate] Symbol font alone does not explain it: Infineon docs (10 with a Symbol font) kept the mu sign. onsemi docs (13/13 with a Custom-encoded Symbol font) lost mu/theta/Omega in the 3 rendered docs. Cause unverified."
+ }
+}

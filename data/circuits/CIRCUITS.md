@@ -7,12 +7,20 @@
 - 담당: 평가·문서
 
 ## 파일
-- `catalog.json` — 데모 15종의 ID·표시 이름·정규화 연결 JSON 경로 정본.
-- `visuals.json` — 검증된 원본 회로도 15종의 배포 경로·원본 URL·저장소 맥락 commit·라이선스 근거·저작자·원본 및 배포 SHA-256 정본.
-- `collected/` — 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종과 v3(`evals/dataset_v3.jsonl`)가 더 쓰는 받은 회로 10종. 설명 파일은 두지 않고 이 문서가 설명합니다.
-  - `received-20261030/c09/` — 받은 회로 1종(Franzininho DIY): `received/`(받은 넷리스트), `connections.json`, `original/`(LICENSE·README)
-  - `received-20261030/{c01,c02,c03,c04,c05,c07,c08,c10,c11,c12}/` — v3가 쓰는 받은 회로 10종(11-10 동결 때 lab에서 옮김): 같은 모양(`received/` · `connections.json` · `original/`)
-  - `samples/{attiny85_dev,breadboard_supply,mosfet_driver,pro_micro}/` — 공개 표본 4종: `converted/`(`circuit.net`, `connections.json`), `original/`(LICENSE·README)
+| 파일·폴더 | 유형 | 설명 |
+|---|---|---|
+| `CIRCUITS.md` | 폴더 설명 | 이 문서 |
+| `catalog.json` | 데이터 | 데모 15종의 ID·표시 이름·정규화 연결 JSON 경로 정본 |
+| `visuals.json` | 데이터 | 원본 회로도 15종의 배포 경로·원본 URL·저장소 맥락 commit·라이선스·라이선스 근거 URL·저작자·원본 및 배포 SHA-256 정본 |
+| `collected/` | 외부 원본 | 동결 평가셋 v1(`evals/dataset_v1.jsonl`)이 쓰는 회로 5종과 v3(`evals/dataset_v3.jsonl`)가 더 쓰는 받은 회로 10종. 설명 파일 없이 이 문서가 설명 |
+| `collected/received-20261030/c09/` | 받은 회로 | Franzininho DIY: `received/`(받은 넷리스트), `connections.json`, `original/`(LICENSE·README) |
+| `collected/received-20261030/{c01,c02,c03,c04,c05,c07,c08,c10,c11,c12}/` | 받은 회로 | v3가 쓰는 10종. 같은 모양(`received/`, `connections.json`, `original/`) |
+| `collected/samples/{attiny85_dev,breadboard_supply,mosfet_driver,pro_micro}/` | 공개 표본 | 4종: `converted/`(`circuit.net`, `connections.json`), `original/`(LICENSE·README) |
+
+## 원본 README의 참조 자료
+
+- c09의 원본 README가 참조하는 `OSHW_mark_BR000003.png`는 저장소에 넣지 않았다. [원본 저장소의 이미지](https://github.com/Franzininho/franzininho-diy-board/blob/abdb4b48d867190d6b9794280be8b85b81aa1772/OSHW_mark_BR000003.png)와 [OSHWA 인증 페이지](https://certification.oshwa.org/br000003.html)를 참고한다.
+- `attiny85_dev`의 원본 README가 참조하는 조립 사진·커넥터·회로도·PCB·렌더 이미지와 `assets/digispark-schematic.pdf`는 저장소에 넣지 않았다. [원본 저장소의 PDF](https://github.com/tomasr8/attiny85-dev-board/blob/488b99063b6bdbafa0f367ecc25901b55c4c7144/assets/digispark-schematic.pdf)를 참고한다.
 
 ## 회로 출처
 
@@ -24,7 +32,7 @@
 | Franzininho DIY | `collected/received-20261030/c09/received/c09-franzininho-diy.net` | https://github.com/Franzininho/franzininho-diy-board | `abdb4b48d867190d6b9794280be8b85b81aa1772` | CC BY-SA 4.0(하드웨어) |
 | SparkFun Pro Micro v13 | `collected/samples/pro_micro/converted/circuit.net` | https://github.com/sparkfun/Pro_Micro | `df836f3bf2955c4f1199a852f618d2ac80866d47` | CC BY-SA 4.0 |
 | ATtiny85 Time Switch | `collected/received-20261030/c01/received/c01-attiny85-time-switch.net` | https://github.com/UCSIG/attiny85_time_switch | `3566a94ffc17471e3f0a592bacc63480a2898641` | MIT |
-| FC ROM Vomitter | `collected/received-20261030/c02/received/c02-fc-rom-vomitter.net` | https://github.com/Keitark/fc-rom-vomitter | `f64502c301ca5e11add76efdf7dd52b343f8baaf` | MIT |
+| FC ROM Vomitter | `collected/received-20261030/c02/received/c02-fc-rom-vomitter.net` | https://github.com/Keitark/fc-rom-vomitter | `f64502c301ca5e11add76efdf7dd52b343f8baaf` | MIT(소프트웨어·일반 문서, `original/LICENSE`) / CC BY-SA 4.0(하드웨어 설계, `original/LICENSES/CC-BY-SA-4.0.txt`) |
 | ATtiny2313A Thermostat | `collected/received-20261030/c03/received/c03-attiny2313a-thermostat.net` | https://github.com/sergeyyarkov/attiny2313a_thermostat | `4e956f152368fc8a6f68e9e2e0d273ea25249840` | MIT |
 | tiny85 Fan Control | `collected/received-20261030/c04/received/c04-tiny85fancontrol.net` | https://github.com/Colahall/tiny85fancontrol | `66366bd10b66e4bc3e944902f9e6c93a44ddeac4` | MIT |
 | UG56 PWM Controller | `collected/received-20261030/c05/received/c05-ug56-pwm-controller.net` | https://github.com/universalgeek56/UG56-attiny13a-pwm-controller | `91f19385e76a92e9b58c681f22e9891ba1c8aebe` | MIT |
@@ -35,14 +43,15 @@
 | ZR7 Taillight | `collected/received-20261030/c12/received/c12-zr7-taillight.net` | https://github.com/slabua/zr7-taillight | `777c5d5f034361a6d143fedeb3de9a8bb81ca532` | MIT |
 
 - Breadboard Supply·MOSFET Driver·Pro Micro는 Eagle 원본을 KiCad로 변환해 넷리스트를 뽑았고, ATtiny85 dev는 KiCad 원본에서 내보냈고, Franzininho는 원 저장소의 넷리스트를 그대로 썼다.
-- 받은 회로 10종(c01 ~ c05 · c07 · c08 · c10 ~ c12)은 lab `data/circuits`에 있던 받은 넷리스트 · `connections.json` · 원본 LICENSE · README를 그대로 옮겼다(11-10, v3 동결).
+- 받은 회로 10종(c01 ~ c05 · c07 · c08 · c10 ~ c12)의 넷리스트·`connections.json`·원본 LICENSE·README는 받은 그대로다.
+- c02 라이선스: 원 저장소의 `LICENSES/README.md`(`c02/original/LICENSES/README.md`)가 `LICENSE`(MIT)를 소프트웨어·일반 문서용, `CC-BY-SA-4.0.txt`를 하드웨어 설계용으로 적는다. 출처 메모(`c02/original/README.md`)는 라이선스를 MIT로만 적고 이 차이를 "확인 필요"로 남긴다. `visuals.json`은 CC BY-SA 4.0으로 등록하고 근거 URL로 `LICENSES/CC-BY-SA-4.0.txt`를 건다. 나머지 14종은 표와 `visuals.json`의 라이선스가 같다 [실측].
 - PCB 파일은 넣지 않는다. 필요하면 위 저장소의 해당 커밋에서 받는다.
 - CC BY-SA 회로에서 만든 넷리스트는 원본과 같은 라이선스를 따른다.
 
 ## 배포 회로도
 
-`catalog.json`과 `visuals.json`은 수집된 공개 회로 15종을 모두 등록한다. 공식 PNG·PDF가 있으면 그대로 사용하고, KiCad 원본만 있는 회로는 고정 커밋의 원본을 KiCad 9.0.5로 PDF export한 뒤 첫 페이지를 PNG로 변환했다. 넷리스트 업로드에서 원본 회로도를 추정하지 않는다.
+`catalog.json`과 `visuals.json`은 수집된 공개 회로 15종을 모두 등록한다. 공식 PNG·PDF가 있으면 그대로 사용하고, KiCad 원본만 있는 회로는 고정 커밋의 원본을 KiCad 9.0.5로 PDF export한 뒤 첫 페이지를 PNG로 변환한다. 넷리스트 업로드에서 원본 회로도를 추정하지 않는다.
 
-`original_url`은 실제 받은 원본, `source_sha256`은 그 원본 바이트, `sha256`은 배포 PNG 바이트를 식별한다. PNG 원본 2종은 그대로 복사하고 PDF 원본 4종은 `pdftoppm -f 1 -singlefile -png -r 160`으로 첫 페이지만 변환했다. 자르기·주석·재배선은 없다. SHA-256 둘 다 API에 노출하지 않는다. 서버는 실행 중 외부 다운로드 없이 배포 PNG 경로와 해시를 검증한다.
+`original_url`은 실제 받은 원본, `source_sha256`은 그 원본 바이트, `sha256`은 배포 PNG 바이트를 식별한다. PNG 원본 2종은 그대로 복사하고 PDF 원본 4종은 `pdftoppm -f 1 -singlefile -png -r 160`으로 첫 페이지만 변환한다. 자르기·주석·재배선은 없다. SHA-256 둘 다 API에 노출하지 않는다. 서버는 실행 중 외부 다운로드 없이 배포 PNG 경로와 해시를 검증한다.
 
-`license_evidence_url`은 자산별 고정 commit의 라이선스 근거다. CDN 원본의 `source_commit`은 관련 저장소 맥락이며 CDN 바이트가 그 commit에서 생성되었다는 증거는 아니다. 정확한 URL과 두 해시는 `visuals.json`에 기록했다.
+`license_evidence_url`은 자산별 고정 commit의 라이선스 근거다. CDN 원본의 `source_commit`은 관련 저장소 맥락이며 CDN 바이트가 그 commit에서 생성되었다는 증거는 아니다. 정확한 URL과 두 해시는 `visuals.json`에 있다.

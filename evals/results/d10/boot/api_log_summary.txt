@@ -1,0 +1,12 @@
+# docker compose logs api of the final g4 run stack (branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d, NOT main). Server restart boundary lines + counts. UTC timestamps.
+{"severity": "INFO", "time": "2026-11-12T20:20:31.599+00:00", "logger": "uvicorn.error", "message": "Application startup complete."}
+{"severity": "INFO", "time": "2026-11-12T20:22:33.344+00:00", "logger": "uvicorn.error", "message": "Shutting down"}
+{"severity": "INFO", "time": "2026-11-12T20:22:33.673+00:00", "logger": "uvicorn.error", "message": "Application shutdown complete."}
+{"severity": "INFO", "time": "2026-11-12T20:22:36.335+00:00", "logger": "uvicorn.error", "message": "Application startup complete."}
+
+  15 analysis summary lines (mode demo, DONE)
+   6 analysis summary lines (mode demo, WAITING)
+   2 request_failed ALREADY_APPROVED 409
+  53 request_failed NOT_FOUND 404
+   2 request_failed VALIDATION_ERROR 422
+ total log lines: 277

@@ -1,6 +1,6 @@
-"""공통 오류 응답의 `error.code`(ADR 0019의 15개)와 오류 한 줄 로그.
+"""공통 오류 응답의 `error.code`(ADR 0019의 16개)와 오류 한 줄 로그.
 
-역할: HTTP 상태마다 기본 코드(`DEFAULT_CODES`), 화면이 다르게 반응해야 하는 상황 코드 4개(`SPECIAL_CODES`)를 붙이는 `ApiError`,
+역할: HTTP 상태마다 기본 코드(`DEFAULT_CODES`), 화면이 다르게 반응해야 하는 상황 코드 5개(`SPECIAL_CODES`)를 붙이는 `ApiError`,
 예외 · 상태에서 코드를 고르는 `code_for`, 오류 응답 · 분석 실패 하나를 로그 한 줄로 남기는 `log_error`.
 호출자: backend/main.py(공통 오류 처리기), backend/api/conversations.py(SSE `failed`), 상황 코드를 내는 곳
 (backend/auth.py의 `check_origin`, backend/api/quotes.py, backend/conversations/memory_service.py).
@@ -38,7 +38,7 @@ def code_for(status_code: int, error: BaseException | None = None) -> str:
     """응답 · SSE에 넣을 code. ApiError면 그 상황 코드, 아니면 상태의 기본 코드."""
     if isinstance(error, ApiError):
         return error.code
-    # [왜] 표에 없는 상태(메서드가 틀린 405 등)도 15개 안에서 고른다. 4xx는 요청 오류, 5xx는 예상 못 한 오류다(ADR 0019 결과)
+    # [왜] 표에 없는 상태(메서드가 틀린 405 등)도 16개 안에서 고른다. 4xx는 요청 오류, 5xx는 예상 못 한 오류다(ADR 0019 결과)
     return DEFAULT_CODES.get(status_code) or ('INTERNAL_ERROR' if status_code >= 500 else 'VALIDATION_ERROR')
 
 

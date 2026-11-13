@@ -1,0 +1,6 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline b5f050d
+# SYNTHETIC test (one-node graph, its own pgvector container, 2 uvicorn processes). NOT the real graph.
+# Result as shipped: FAIL 2/2 (http_restart_test_run1_original.txt, http_restart_test_run2_original.txt): resume after restart answered 429 RATE_LIMITED
+#   (backend/conversations/memory_service.py:180 ANALYSIS_MIN_INTERVAL_SECONDS default 2s; test restarts the server in <2 s and resumes at once).
+# Diagnostic variant, repo untouched, only env ANALYSIS_MIN_INTERVAL_SECONDS=0 added to the docker run: PASS (http_restart_test_diag_interval0.txt).
+# The REAL-graph restart/resume evidence is g4_restart_isolation.json (checks 38-39, 44-45).

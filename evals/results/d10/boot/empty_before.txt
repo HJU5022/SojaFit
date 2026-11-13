@@ -1,0 +1,17 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+IMAGE   ID             DISK USAGE   CONTENT SIZE   EXTRA
+---
+DRIVER    VOLUME NAME
+---
+NETWORK ID     NAME      DRIVER    SCOPE
+974a9cd6dfb9   bridge    bridge    local
+6efd6a6ef888   host      host      local
+4e3b1a81f768   none      null      local
+---
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+---
+ID        RECLAIMABLE   SIZE      LAST ACCESSED
+Reclaimable:	0B
+Total:		0B
+---
+0

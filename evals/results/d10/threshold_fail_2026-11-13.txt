@@ -1,0 +1,12 @@
+# row 0 answer emptied
+broken_empty_answer.jsonl: 110행, 위반 1건
+ - baseline_t2_t4_revised_v3:T5:1:ablated:normal: 최종 답 비어 있음
+EXIT:1
+# first T5 row verdict_correct=false
+broken_verdict.jsonl: 110행, 위반 1건
+ - baseline_t2_t4_revised_v3:T5:1:ablated:normal: verdict_correct != true
+EXIT:1
+# last row removed (109 rows)
+broken_dropped_row.jsonl: 109행, 위반 1건
+ - 작업 수 109(정상 55/공격 54) != 110(55/55)
+EXIT:1

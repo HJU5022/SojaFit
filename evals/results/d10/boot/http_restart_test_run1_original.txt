@@ -1,0 +1,12 @@
+# code under test: branch jeongun-2 @ ad8612e61c86be4376af5cca454843bb35cdc44d (tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97), NOT main; baseline measurement b5f050d; measured 2026-11-13 KST
+# SYNTHETIC one-node graph (tests/api/test_http_restart.py), NOT the real graph. Run 1 of 3: original, as the repo ships it.
+# FAILED: resume after the quick restart got 429 RATE_LIMITED (ANALYSIS_MIN_INTERVAL_SECONDS default 2s; the server restarted <2s after the first analysis call). See HOW.md.
+Traceback (most recent call last):
+  File "/work/tests/api/test_http_restart.py", line 107, in <module>
+    if __name__ == "__main__": main()
+                               ^^^^^^
+  File "/work/tests/api/test_http_restart.py", line 74, in main
+    assert "event: completed" in a.post(f"/api/runs/{run_id}/resume", json={"answers":{"v_in":"5V"}}).text
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+exit=1

@@ -1,0 +1,13 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_retrieval_failure_is_not_reported_as_empty_corpus ____________
+tests/graph/test_graph_build.py:101: in test_retrieval_failure_is_not_reported_as_empty_corpus
+    assert out["path"] == ["입력 읽기", "사실 확인", "라우팅", "재작성", "검색", "거절"]
+E   AssertionError: assert ['입력 읽기', '사실...색', '채점', ...] == ['입력 읽기', '사실...', '검색', '거절']
+E     
+E     At index 5 diff: '채점' != '거절'
+E     Left contains one more item: '거절'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tests/graph/test_graph_build.py::test_retrieval_failure_is_not_reported_as_empty_corpus
+1 failed in 0.72s

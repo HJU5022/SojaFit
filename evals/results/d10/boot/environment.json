@@ -1,0 +1,45 @@
+{
+ "date_kst": "2026-11-13 05:04-05:25 KST",
+ "host": {
+  "chip": "Apple M2 (arm64)",
+  "cores": 8,
+  "ram_gb": 16,
+  "macos": "27.0.1 (sw_vers, Darwin 27.0.0)",
+  "load_average_during_runs": "before cold run 10.53/5.22/5.56 (waited 80 s until 1-min load 5.62 < 6, then T0); at compose up 5.57; end of cold run 8.21/7.17/6.30; warm run 4.38 at start, 4.25 at end. Other work was running on the host."
+ },
+ "docker_host": {
+  "version": "29.7.2 (client and server)",
+  "engine_vm": "8 CPUs, 4.1 GB RAM (docker info MemTotal 4106604544)"
+ },
+ "dind": {
+  "image_tag": "docker:dind",
+  "digest": "sha256:08a98015fce594af7c382883bea080ea206de74402a95da9dc52b6428c8cd121",
+  "server_version": "29.9.3 linux/arm64",
+  "storage_driver": "overlayfs (containerd image store)",
+  "compose": "v5.7.0",
+  "run": "docker run -d --privileged --name d10b-dind-1113 -e DOCKER_TLS_CERTDIR= docker:dind",
+  "ports_published_to_host": "none (all requests made inside dind via docker exec)",
+  "resource_limits": "none set (bounded by the engine VM: 8 CPUs, 4.1 GB)",
+  "network": "default bridge to the internet through the host Docker VM; uplink type/speed not measured [unknown]",
+  "note_image": "docker:dind was NOT present on the host and was pulled for this run (removed at cleanup)"
+ },
+ "inside_dind_tools": "apk add git python3 py3-httpx tzdata (20.0 MB, 5.5 s, done BEFORE T0; Python 3.14.10 from Alpine runs smoke and g4 scripts)",
+ "clone": "git clone -b jeongun-2 of aihuman-7th/proj3-b with one-off token as env var (never in a file/log; remote URL reset to token-free URL right after); HEAD ad8612e61c86be4376af5cca454843bb35cdc44d, tree 6452cdfc4188942e62b1be7e2eb73c55094c3b97; no .env file; clone 8.4 s, 39.4 MB received, .git 38.5 MB",
+ "evidence_meta": {
+  "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+  "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+  "branch": "jeongun-2 (PR #116 head; NOT main)",
+  "baseline_measurement": "b5f050d"
+ },
+ "attempts": "cold run: 1 attempt, first run in a brand-new dind container (no crash). g4 script: 3 runs on the same code; runs 1 and 2 discarded (my comparison rule double-counted judgement.results+shown; then used results for kind=find where record_demo uses shown); final run 3 on a freshly created DB (down -v, up -d). Test E: 2 original runs + 1 diagnostic.",
+ "images_in_dind_after": {
+  "proj3-b-api/thread-setup/corpus-load": "2.51GB each (same image, 3 tags)",
+  "pgvector/pgvector:pg16": "640MB disk",
+  "docker system df": "images 3.149GB total, build cache 3.364GB"
+ },
+ "network_received_bytes": {
+  "cold_total_incl_clone": 852167151,
+  "clone": 39374263,
+  "warm": 51191
+ }
+}

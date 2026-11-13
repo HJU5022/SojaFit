@@ -1,0 +1,607 @@
+{
+ "generated": "2026-10-29",
+ "tool": "evidence/corpus/measure_open_docs.py (unmodified); role_count.py imports its parse_md/parse_adoc/chunk_section/sha (unmodified)",
+ "no_body_text": true,
+ "arduino_from_existing_manifest": {
+  "source_manifest": "evidence/corpus/manifest_open_docs.json (commit of 10-29 run)",
+  "license": "CC BY-SA 4.0 (GitHub API license key cc-by-sa-4.0, read 10-29)",
+  "all_md": {
+   "docs": 1729,
+   "chunks_total": 27954,
+   "chunks_unique": 24795
+  },
+  "hardware_md": {
+   "docs": 1120,
+   "chunks_total": 18732,
+   "chunks_unique": 16620
+  },
+  "hardware_datasheet_named_md": {
+   "docs": 109,
+   "chunks_total": 5374,
+   "chunks_unique": 4191
+  },
+  "hardware_pdfs_non_certification": {
+   "docs": 188,
+   "chunks_total": 2967,
+   "chunks_unique": 2587,
+   "license": "unconfirmed per file (3rd-party PDFs; excluded from sharable set in the script comment)"
+  },
+  "table_probe_arduino_datasheet_md": {
+   "files": 109,
+   "tables": 1529,
+   "mtm_tables": 111,
+   "mtm_tables_consistent_cols": 111,
+   "rows_total": 13233,
+   "rows_with_num_unit": 3561
+  }
+ },
+ "arduino_recheck_role_keywords": {
+  "checkout": "git clone --depth 1 --filter=blob:none --sparse arduino/docs-content, sparse /content/**/*.md only; HEAD 3c68978c438b31198e3e33b21477f4513c1e09f4 (2026-10-26)",
+  "rule": "unique chunk (sha256 of body, script chunker), len>=100; diode term regex = diode|schottky|zener|tvs|flyback|freewheel|back-emf|1N####|BAT##|BAS##|SS##; role regex = reverse polarity|protect|clamp|rectif|surge|transient|esd|spike|snubber|regulat|level shift|blocking|or-ing... (keyword proxy, not human-judged)",
+  "results": [
+   {
+    "name": "arduino-docs(all)",
+    "sub": null,
+    "docs": 1729,
+    "unique_chunks": 24795,
+    "unique_chunks_diode_term_ge100": 185,
+    "docs_with_diode_term": 59,
+    "unique_chunks_diode_and_role_ge100": 88,
+    "docs_with_diode_and_role": 44
+   },
+   {
+    "name": "arduino-docs(hardware)",
+    "sub": "content/hardware",
+    "docs": 1120,
+    "unique_chunks": 16621,
+    "unique_chunks_diode_term_ge100": 167,
+    "docs_with_diode_term": 49,
+    "unique_chunks_diode_and_role_ge100": 83,
+    "docs_with_diode_and_role": 42
+   },
+   {
+    "name": "kicad-doc",
+    "sub": null,
+    "docs": 39,
+    "unique_chunks": 2116,
+    "unique_chunks_diode_term_ge100": 6,
+    "docs_with_diode_term": 3,
+    "unique_chunks_diode_and_role_ge100": 0,
+    "docs_with_diode_and_role": 0
+   }
+  ]
+ },
+ "kicad": {
+  "name": "kicad-doc",
+  "repo_url": "https://gitlab.com/kicad/services/kicad-doc.git",
+  "scan_dir": "documentation/asciidoc",
+  "exts": [
+   ".adoc"
+  ],
+  "commit": "e7c04bc7954b34492ef269491bc3268951d45cdd",
+  "commit_date": "2026-09-16",
+  "license_file": "LICENSE.md",
+  "license_file_sha256": "6caf5d0b36e379fbaf226aa7fd09753fc94c8da0e6086a7d5c7ea42a8a1bf2be",
+  "license_file_first_line": "LICENSE",
+  "stats": {
+   "docs": 39,
+   "docs_substantive": 39,
+   "docs_dup_by_hash": 0,
+   "chunks_total": 2198,
+   "chunks_unique": 2116,
+   "unique_ge100": 2072,
+   "unique_prose_ge100": 2031,
+   "unique_code_only": 41,
+   "unique_auto": 0,
+   "unique_short": 44,
+   "chunks_dup_within": 82,
+   "chunks_dup_cross": 0,
+   "auto_directives": 0,
+   "adoc_includes": 38,
+   "chars_prose": 1406922,
+   "unitval": 12,
+   "unitval3": 2,
+   "elec_and_unit": 1,
+   "mtm_and_unit": 0,
+   "kw_elec_spec": 25,
+   "kw_pin_desc": 43,
+   "kw_power": 2,
+   "kw_min_typ_max": 24,
+   "files_read": 40,
+   "files_skipped_empty": 1,
+   "uq_unitval": 12,
+   "uq_elec_and_unit": 1,
+   "uq_mtm_and_unit": 0,
+   "uq_kw_elec_spec": 25,
+   "uq_kw_power": 2,
+   "uq_unitval3": 2,
+   "uq_letters_only": 2114,
+   "uq_letters_only_ge100": 2072,
+   "unique_table_like_ge100": 0
+  },
+  "top_dirs": {
+   "pcbnew": {
+    "docs": 15,
+    "unique_chunks": 933
+   },
+   "eeschema": {
+    "docs": 15,
+    "unique_chunks": 759
+   },
+   "cli": {
+    "docs": 1,
+    "unique_chunks": 133
+   },
+   "kicad": {
+    "docs": 2,
+    "unique_chunks": 124
+   },
+   "getting_started_in_kicad": {
+    "docs": 1,
+    "unique_chunks": 91
+   },
+   "pl_editor": {
+    "docs": 1,
+    "unique_chunks": 30
+   },
+   "introduction": {
+    "docs": 1,
+    "unique_chunks": 20
+   },
+   "pcb_calculator": {
+    "docs": 1,
+    "unique_chunks": 14
+   },
+   "gerbview": {
+    "docs": 1,
+    "unique_chunks": 11
+   },
+   "doc_writing_style_policy": {
+    "docs": 1,
+    "unique_chunks": 1
+   }
+  },
+  "elec_sample_doc_paths_top": [
+   "documentation/asciidoc/eeschema/eeschema_generating_outputs.adoc"
+  ],
+  "docs_detail": [
+   {
+    "path": "documentation/asciidoc/cli/cli.adoc",
+    "bytes": 127380,
+    "chars_norm": 111279,
+    "chars_prose": 110907,
+    "chunks": 152,
+    "doc_sha256": "dacd3131170b10fccc78e0b8d24c7e277327f2414a50c686720708b2f7e86516",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 133
+   },
+   {
+    "path": "documentation/asciidoc/doc_writing_style_policy/doc_writing_style_policy.adoc",
+    "bytes": 1145,
+    "chars_norm": 824,
+    "chars_prose": 811,
+    "chunks": 1,
+    "doc_sha256": "bc954a6d8f1cf91ee689c32dba294f664c06b37d753fb7f3a14187a1f0d4161a",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 1
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema.adoc",
+    "bytes": 2228,
+    "chars_norm": 1365,
+    "chars_prose": 1354,
+    "chunks": 2,
+    "doc_sha256": "09813dd95b87d1946f68af310d45e31272483b6d605b45d8ecdf035be678f302",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 2
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_actions_reference.adoc",
+    "bytes": 25746,
+    "chars_norm": 20979,
+    "chars_prose": 20951,
+    "chunks": 27,
+    "doc_sha256": "e49682ad74b76be9a06e8793a6a0aa564173c67a790c6515f54e40def991d122",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 27
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_advanced.adoc",
+    "bytes": 76513,
+    "chars_norm": 62617,
+    "chars_prose": 46894,
+    "chunks": 94,
+    "doc_sha256": "a711c4d0ba2218f08246bf7719aa4dfcee638f176417392f7be3a4cf6f13d248",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 94
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_assigning_footprints.adoc",
+    "bytes": 17971,
+    "chars_norm": 15303,
+    "chars_prose": 14410,
+    "chunks": 22,
+    "doc_sha256": "6ff8caf7fae3eabeb1cd4aec905eb7309da91bc713f0c4ea9dd3597959d2ea52",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 22
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_design_blocks.adoc",
+    "bytes": 24545,
+    "chars_norm": 22485,
+    "chars_prose": 22408,
+    "chunks": 37,
+    "doc_sha256": "f1550e72b8c4b4af5cc75970103a902d489da25d970157fd663670100f31f6ca",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 37
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_generating_outputs.adoc",
+    "bytes": 32590,
+    "chars_norm": 28590,
+    "chars_prose": 20936,
+    "chunks": 42,
+    "doc_sha256": "ce6b632c2341da04c77c3e5a90d96244f11e1de9c75d38f8ac8d8f85ed81d850",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 42
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_hierarchical_schematics.adoc",
+    "bytes": 19646,
+    "chars_norm": 16633,
+    "chars_prose": 16579,
+    "chunks": 24,
+    "doc_sha256": "90ce7ff6399aff0e5fbc6cd35682ad69c41c24700c7af2efaf2a8d7a2902c76a",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 24
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_importing.adoc",
+    "bytes": 7979,
+    "chars_norm": 6974,
+    "chars_prose": 6933,
+    "chunks": 14,
+    "doc_sha256": "3256aa821adf560e34dfa69b870a31ebb69dbd328886e8bcf64507166a96384e",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 14
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_inspecting_a_schematic.adoc",
+    "bytes": 33767,
+    "chars_norm": 29327,
+    "chars_prose": 29237,
+    "chunks": 46,
+    "doc_sha256": "a96a8baf2eb22044104b4623574ce8830dd76ea3c4c238a3cd5a80aeb3596f31",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 46
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_introduction.adoc",
+    "bytes": 13230,
+    "chars_norm": 11231,
+    "chars_prose": 11169,
+    "chunks": 16,
+    "doc_sha256": "328f22d3d3d395b81ad64d0887546f8da976561d2a5e4b78b288e21e5920da78",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 16
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_schematic_creation_and_editing.adoc",
+    "bytes": 147041,
+    "chars_norm": 126545,
+    "chars_prose": 126052,
+    "chunks": 194,
+    "doc_sha256": "a3bc3f70311eea4d2f62df848bf480af27edc78c040a583fcfb141f63e48dad4",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 194
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_schematic_to_pcb.adoc",
+    "bytes": 12577,
+    "chars_norm": 10838,
+    "chars_prose": 10782,
+    "chunks": 17,
+    "doc_sha256": "5706b7e69409cff13fdf3555bc1eb4bf9950c16e215da66d0c32881fa97270c7",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 17
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_simulator.adoc",
+    "bytes": 70159,
+    "chars_norm": 63662,
+    "chars_prose": 63366,
+    "chunks": 94,
+    "doc_sha256": "73ce2a89389b966d5bdb313814c1cb806154a9e4896b618621be6379717380b4",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 94
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_symbols_and_libraries.adoc",
+    "bytes": 86390,
+    "chars_norm": 76361,
+    "chars_prose": 76072,
+    "chunks": 111,
+    "doc_sha256": "aa12642cc42e544a15555b2f25fbb136684552d02986624a4f0a1eced392ef07",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 111
+   },
+   {
+    "path": "documentation/asciidoc/eeschema/eeschema_variants.adoc",
+    "bytes": 12711,
+    "chars_norm": 10922,
+    "chars_prose": 10680,
+    "chunks": 19,
+    "doc_sha256": "d33a06ae3940414f2f3b826374c19da2f3c7af9c32b28e82ddabe2e7ce157628",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 19
+   },
+   {
+    "path": "documentation/asciidoc/gerbview/gerbview.adoc",
+    "bytes": 7343,
+    "chars_norm": 6177,
+    "chars_prose": 6120,
+    "chunks": 11,
+    "doc_sha256": "96df17e5ec80c9504746f358e018608cee2ea8576083095a0b0dc5b504bed918",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 11
+   },
+   {
+    "path": "documentation/asciidoc/getting_started_in_kicad/getting_started_in_kicad.adoc",
+    "bytes": 67866,
+    "chars_norm": 60405,
+    "chars_prose": 60173,
+    "chunks": 91,
+    "doc_sha256": "772f4be3d272f7f4aa694e64bb0bd81a054ab5cdf28e0a08aa4fdd1d7d6739d4",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 91
+   },
+   {
+    "path": "documentation/asciidoc/introduction/introduction.adoc",
+    "bytes": 16133,
+    "chars_norm": 14285,
+    "chars_prose": 14243,
+    "chunks": 20,
+    "doc_sha256": "3788cd3aebe24485e9776f9e6cdf2500af22c9e56b5c7cdc49600cd4836d771f",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 20
+   },
+   {
+    "path": "documentation/asciidoc/kicad/kicad.adoc",
+    "bytes": 83474,
+    "chars_norm": 76893,
+    "chars_prose": 75713,
+    "chunks": 120,
+    "doc_sha256": "39336b337af82a79535c11f255af3ee8f59f7398d0042ad85f71c0d1ad145cfc",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 120
+   },
+   {
+    "path": "documentation/asciidoc/kicad/kicad_projmgr_actions_reference.adoc",
+    "bytes": 2308,
+    "chars_norm": 1524,
+    "chars_prose": 1520,
+    "chunks": 4,
+    "doc_sha256": "66093e08bb0c811a209247f66532d89b486a20aa4858ebd011ca671c2502e725",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 4
+   },
+   {
+    "path": "documentation/asciidoc/pcb_calculator/pcb_calculator.adoc",
+    "bytes": 7822,
+    "chars_norm": 6400,
+    "chars_prose": 6342,
+    "chunks": 14,
+    "doc_sha256": "0e402cf64563bbbd14922e39dd35e04b7bbc95cbbc0d2959a9b3f3334ffac51d",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 14
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew.adoc",
+    "bytes": 2187,
+    "chars_norm": 1393,
+    "chars_prose": 1382,
+    "chunks": 2,
+    "doc_sha256": "b382ba57c6816228b63be0fd10c70f69379ba05a23277f5b30a5a8ab38ac1810",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 1
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_actions_reference.adoc",
+    "bytes": 37748,
+    "chars_norm": 31167,
+    "chars_prose": 31124,
+    "chunks": 41,
+    "doc_sha256": "d4e212a2962c5f7a0578a41769e2661f7702d52c81f4428a6e680bac47368c84",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 33
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_advanced.adoc",
+    "bytes": 138590,
+    "chars_norm": 124983,
+    "chars_prose": 109240,
+    "chunks": 186,
+    "doc_sha256": "d1d5e82aec25318c194a844cdd1ec393f1d72580f221062e6c1037bbb6a4b079",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 165
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_create_board.adoc",
+    "bytes": 54997,
+    "chars_norm": 49196,
+    "chars_prose": 48727,
+    "chunks": 77,
+    "doc_sha256": "cb3b5dec7e5baf096450084ab201add4caef3535d5a77d8cf9b4f558c373999b",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 76
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_design_blocks.adoc",
+    "bytes": 14757,
+    "chars_norm": 13268,
+    "chars_prose": 13223,
+    "chunks": 19,
+    "doc_sha256": "a5e4df0a0494748c74ca7eceeb7ed0b8c9249199ec2883528ca4d9012c3be486",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 16
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_display_and_selection.adoc",
+    "bytes": 21504,
+    "chars_norm": 19726,
+    "chars_prose": 19663,
+    "chunks": 28,
+    "doc_sha256": "2f9eaee4dbd5490e40ed762cb7c4f24332fe91340a9be293779989be65cb3101",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 24
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_editing.adoc",
+    "bytes": 213320,
+    "chars_norm": 191944,
+    "chars_prose": 191280,
+    "chunks": 296,
+    "doc_sha256": "fee1be1fed04077d4c4a477b445a8848ae940bd80f9fa34ee8822c7a9c1298c5",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 285
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_footprints_and_libraries.adoc",
+    "bytes": 86255,
+    "chars_norm": 76432,
+    "chars_prose": 76141,
+    "chunks": 112,
+    "doc_sha256": "9a8c65e2ee8acd500edd3e041fa7e3fdb75832bee41c79651cf30a9ca20a86c8",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 110
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_generating_outputs.adoc",
+    "bytes": 33813,
+    "chars_norm": 31442,
+    "chars_prose": 31280,
+    "chunks": 48,
+    "doc_sha256": "ee87fbdf55de3b7482716c15c603512455461b40dfede5602333a522da888672",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 48
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_importing.adoc",
+    "bytes": 14331,
+    "chars_norm": 12983,
+    "chars_prose": 12884,
+    "chunks": 23,
+    "doc_sha256": "a758901637b8c6d043556cca361af718389540c950e85ecf06afff734932a8b2",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 23
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_inspecting.adoc",
+    "bytes": 59795,
+    "chars_norm": 51481,
+    "chars_prose": 51316,
+    "chunks": 75,
+    "doc_sha256": "3b19524e8059a23cd031d2f90dd11d8a885d8ba931aec1cd518ce23cdeb76e3b",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 75
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_introduction.adoc",
+    "bytes": 5128,
+    "chars_norm": 4390,
+    "chars_prose": 4365,
+    "chunks": 7,
+    "doc_sha256": "9fd871fb8d4d63a377a69cfbcbe41472db572744e0812513314b5a05fca77d7e",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 5
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_multichannel.adoc",
+    "bytes": 31588,
+    "chars_norm": 29331,
+    "chars_prose": 29235,
+    "chunks": 47,
+    "doc_sha256": "4290c798d96fb29495bde950d7088972efc1e4c7dca272754efec8a273ba8344",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 47
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_schematic_to_pcb.adoc",
+    "bytes": 16031,
+    "chars_norm": 13989,
+    "chars_prose": 13923,
+    "chunks": 23,
+    "doc_sha256": "7b9ad59ce1ca185da235b8805d64cdc72d9fe037de35ce40e9e1cc70b5e51d46",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 13
+   },
+   {
+    "path": "documentation/asciidoc/pcbnew/pcbnew_variants.adoc",
+    "bytes": 5851,
+    "chars_norm": 4909,
+    "chars_prose": 4692,
+    "chunks": 12,
+    "doc_sha256": "bf13b00bdf136d80ee1b5e0139e1374e22e40929c1ca11138ecbb1437aede657",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 12
+   },
+   {
+    "path": "documentation/asciidoc/pl_editor/pl_editor.adoc",
+    "bytes": 18136,
+    "chars_norm": 14939,
+    "chars_prose": 14795,
+    "chunks": 30,
+    "doc_sha256": "7fe71eae8ed714c2639aae70d25dddb7b8b0b6f7e850f08c243938bee20df927",
+    "api_ref_chunks": 0,
+    "unique_new_chunks": 30
+   }
+  ],
+  "measured_in_script_slot": "rpi-docs (scan dir documentation/asciidoc, .adoc). measure_open_docs.py is unmodified; KiCad src/**/*.adoc were copied into that slot, other 4 slots were empty dirs because the script crashes (KeyError stats) when a slot dir is missing.",
+  "license_observed": "LICENSE.adoc: dual license GPL v3+ or CC BY 3.0+ (read 10-29)",
+  "note": "Copied only English src/**/*.adoc (40 files, 39 non-empty); images not copied. Tool manual, not component-role text."
+ },
+ "sparkfun_adafruit": {
+  "adafruit/Adafruit_Learning_System_Guides": "GitHub API: MIT, ~582 MB. Not cloned or measured. [estimate] guide text is on learn.adafruit.com rather than in this repo (unchecked).",
+  "sparkfun/SIK_Guide": "GitHub API license field empty -> no license grant seen. Not measured.",
+  "sparkfun hookup guides": "One GitHub search found no public text repo; weak evidence, status = unconfirmed. Not measured."
+ },
+ "arduino_hardware_md_unique_chunks_both_runs": {
+  "existing_manifest": 16620,
+  "recheck_10_29": 16621
+ },
+ "a4_md_table_checks_10_29": {
+  "purpose": "A4 for paths W-a/W-c: parse Arduino docs-content datasheet md tables (CC BY-SA 4.0) and compare with the md source",
+  "parser": "md_tables() from evidence/corpus/probe_tables_open_docs.py (unmodified), cells split on pipe",
+  "raw_urls": "https://raw.githubusercontent.com/arduino/docs-content/main/content/hardware/{path}",
+  "checks": [
+   {
+    "path": "mega/boards/due/datasheet/en-datasheet.md",
+    "table": "Min/Typ/Max operating conditions",
+    "rows": 6,
+    "cols": 6,
+    "values_kept": true,
+    "note": "symbols keep HTML <sub> tags; formula 0.7*VDD kept"
+   },
+   {
+    "path": "mkr/01.boards/mkr-wan-1310/datasheet/datasheet.md",
+    "table": "Min/Typ/Max absolute max ratings",
+    "rows": 4,
+    "cols": 6,
+    "values_kept": true,
+    "note": "Max cell TBC kept as text"
+   },
+   {
+    "path": "nano/boards/nano-every/datasheet/datasheet.md",
+    "table": "Min/Max thermal limits",
+    "rows": 2,
+    "cols": 4,
+    "values_kept": true,
+    "note": "-40 C / 85 C kept"
+   }
+  ],
+  "diode_parameter_terms_in_4_files": 0,
+  "diode_mentions": "Schottky diode appears in one NOTE sentence (VUSB feeds VIN via a Schottky diode) and a parts list (PRTR5VOU2X); no Vr/If/Vf/trr values",
+  "automatic_token_compare": "regex token counts differed on 2 of 3 only because of cell padding; values compared by eye",
+  "arduino_pdfs": "188 PDFs: 146 state CC BY-SA, 42 no licence text (table_probe_open_docs.json); kinds: 105 schematics, 64 pinout, 19 other"
+ }
+}

@@ -1,58 +1,44 @@
 # src
 
-- 실행 복구(2026-11-11): 스트림 수신 120초, GET 복구 최대 30회·1초 간격·요청당 10초 상한. 이후 오래된 실행 정리 API를 한 번 확인하고 상태 확인 버튼을 제공한다. 저장 기록의 새로고침도 이 API를 쓰며 분석은 재전송하지 않는다. 입력 오류는 폼과 공개 오류를 함께 표시한다. 공통 fetch와 SSE 시작 오류는 JSON 실패·HTML·빈 본문에도 안전한 코드·헤더 요청 ID·401 세션 만료를 유지한다.
-
 ## 역할
-- 질문 한 칸의 조건 표시: circuitContext의 공통 INPUT_LABELS를 추가 입력 폼과 개념도가 함께 사용한다. 판정의 input_conditions를 표시하고 별도 conditions 문자열은 구버전/데모의 사용자 원문 표시로만 쓴다. 추출된 항목이 없으면 값을 추측하거나 무조건 전압·전류가 필요하다고 표시하지 않는다.
-- 넣는 것: React 진입점, 화면 경로 셸, 공통 스타일, 실제 화면 동작 단위 테스트와 테스트 설정.
-- 넣지 않는 것: 서버 API·권한 판정(`backend/`), 외부 모델 호출, 사용자 토큰의 브라우저 저장, 생성된 빌드 산출물.
-- `/login`은 데모 모드면 비밀번호 없는 "데모 사용자 A · B로 들어가기" 버튼(로컬 데모 전용 계정, 평가 계정 아님)을 위에, 그 아래 설정된 Google로 시작하기(처리방침 고지 · 동의 체크 뒤 활성, `consent=1`로 시작)와 평가용 · 관리자 이메일·비밀번호 로그인, `/signup`은 로컬 데모 전용 이메일 가입(데모 모드일 때만 링크가 보임, 이메일·8자 이상 비밀번호·처리방침 고지 동의 필수), `/app`은 인증된 작업대, `/settings`는 내 설정(소속·직무·선호 실장 방식, SPEC 8.5)과 일반 계정의 계정 삭제(확인 뒤 `DELETE /api/me`), `/admin/users`는 관리자 전용 계정 활성 상태 관리입니다. 작업대는 프로젝트·회로 선택, 질문·진행·추가 입력·연결 복구, 근거와 5종 판정을 제공합니다. `projectId`·`targetRef`만 URL query에 두며 화면 이탈 시 프로젝트·run 요청을 폐기합니다. 로그아웃·탈퇴·세션 만료 때 `AuthProvider`가 React Query 캐시와 sessionStorage를 비우고, 보호 화면이 `/login`으로 replace해 주소의 프로젝트 id를 지웁니다. 900px 이하에서는 프로젝트 drawer와 결과 tab을 사용합니다.
-- `/`는 새 목업 기반 공개 랜딩, `/login`은 소개·인증 입력 2열 화면이며 데모 모드면 비밀번호 없는 "데모 사용자 A · B로 들어가기" 버튼(로컬 데모 전용 계정, 평가 계정 아님)을 위에, 그 아래 비밀번호·설정된 Google 로그인, `/signup`은 가입(이메일·8자 이상 비밀번호·처리방침 고지 동의 필수), `/app`은 인증된 작업대, `/settings`는 내 설정(소속·직무·선호 실장 방식, SPEC 8.5)과 일반 계정의 계정 삭제(확인 뒤 `DELETE /api/me`), `/admin/users`는 관리자 전용 계정 활성 상태 관리입니다. 작업대는 프로젝트·회로 선택, 질문·진행·추가 입력·연결 복구, 근거와 5종 판정을 제공합니다. `projectId`·`threadId`·`targetRef`를 URL query에 두며 화면 이탈 시 프로젝트·run 요청을 폐기합니다. 로그아웃·탈퇴·세션 만료 때 `AuthProvider`가 React Query 캐시와 sessionStorage를 비우고, 보호 화면이 `/login`으로 replace해 주소의 프로젝트 id를 지웁니다. 900px 이하에서는 프로젝트 drawer와 결과 tab을 사용합니다.
+- 넣는 것: 화면 소스와 그 단위 테스트.
+- 넣지 않는 것: 판정·검색·인증 로직(`backend/`), 빌드 산출물, 비밀값.
+- 담당: 서비스·운영.
+
+2026-11-13에 화면을 전면 재작성했습니다. 이전 컴포넌트(ConversationPanel · CircuitContextDiagram · JudgementTable 등)와 `styles.css` · `workers/`는 없습니다. 경위는 [FRONTEND.md](../FRONTEND.md).
+
+## 경계
+- 화면은 서버가 보낸 DTO만 그립니다. 숫자 비교와 판정은 `backend/judge/`에서만 합니다.
+- `api/` · `auth/` · `hooks/useRunStream.ts`는 서버 계약입니다. 화면을 고칠 때 시그니처를 바꾸지 않습니다.
+- 스타일은 `styles/app.css` 한 파일의 일반 CSS입니다. 값은 [design.md](../design.md)의 토큰과 눈금만 씁니다.
+- 401을 받으면 `api/client.ts`가 `sojafit:session-expired`를 알리고 `AuthProvider`가 화면 캐시와 탭 저장소를 비웁니다. 실패한 요청을 자동으로 다시 보내지 않습니다.
+- 820px 이하에서는 표가 카드로 쌓이고 레일이 접힙니다. 1180px 이하에서는 검토 문서의 속성 칸이 본문 아래로 내려갑니다.
 
 ## 파일
-- 진행 표시: RunStatus.tsx의 ProcessingIcon을 대화 세션 행과 전송/중단 버튼에서 공유한다. 생성/응답 수신 중만 회전하며 수신 중에는 가운데 중단 표시를 유지한다. 세션은 현재 실행 상태를 목록 캐시보다 우선해 완료 후 오래된 running 목록의 표시가 남지 않게 한다. 추가 입력 대기는 회전하지 않고 aria-busy/상태 이름과 시스템·개인 효과 줄이기를 지원한다. 수신 중단은 서버 취소가 아니다.
-- 프로젝트/부품 준비: 대화 영역의 부품 선택 박스·분석 흐름/준비 안내·입력창 위 중복 대상/조건 안내를 제거했다. 상단 프로젝트 버튼의 내 프로젝트 모달에서 서버 parts/components 목록으로 대상을 선택하며 프로젝트를 바꿔도 모달을 유지하고 부품 선택 시 닫는다. 새 생성 성공 후 같은 선택 모달로 이어진다. 대상 선택 전 입력은 비활성이고 저장 대화의 대상은 고정된다. 실행/삭제 중 프로젝트 추가·상단 선택은 잠근다. 기존 URL/API/인증/DB는 유지한다.
-- 프로젝트 선택 hover는 사용자 선택인 텍스트 강조형이다. 배경/구분선/보조 문구를 유지하고 제목과 화살표만 오렌지로 바꾸며 공통 버튼 hover보다 높은 우선순위의 전용 선택자를 사용한다.
-- 공통 헤더 크기: 작업대·내 설정의 헤더 높이 56px는 유지하고 로고는 128×36px, 요소 간격은 12px로 맞춘다. 작업대 프로젝트 제목은 13px/600, 대상 보조 표시는 11px, 프로젝트 열은 최대 200px다. 공개 랜딩·로그인 로고는 변경하지 않는다.
-- 답변 메뉴: ConversationPanel.tsx의 공통 ResultMenu가 초기/진행/추가 입력/실패에는 숨겨지고 완료/거절 결과의 분석 현황, 표시 후보·evidence·승인 가능 후보 유무에 맞는 버튼만 가로 한 줄로 표시한다. 저장 대화는 선택한 run을 검증한 뒤 같은 기준을 쓰며 다른 답변의 ‘분석 결과 확인’은 기존 GET으로 해당 run만 읽는다. 승인 가능 후보 선별은 circuitContext.ts의 approvableCandidatesOf를 ApprovalPanel과 공유한다.
-- `components/AccountMenu.tsx` — 작업대·내 설정이 공유하는 이메일 계정 버튼/팝오버와 개인 화면 설정. 기존 설정·관리자·로그아웃 동작과 브라우저의 동작 효과 설정을 유지하며 작업대에는 효과 변경을 전달한다. 공통 app-topbar 스타일로 두 화면의 헤더 높이·로고·여백을 맞춘다.
-- 질문 입력 키: Enter는 기존 전송 아이콘 클릭, Shift+Enter는 줄바꿈이다. IME 조합 중 Enter·키 반복은 전송하지 않으며 빈 질문·대상 미선택·생성/분석 중에는 기존 제한을 유지한다. 분석 중 Enter가 수신 중단을 실행하지 않는다.
-- 사이드바 하단: 프로젝트/대화 영역과 도움말 위 가로 구분선을 표시하지 않는다. 도움말은 하단에 두고 목록 영역만 세로로 스크롤해 하단 메뉴 공간을 유지한다.
-- 내 설정: `/settings`는 기존 보호 경로·설정 API를 유지하며 같은 로고/색상과 이메일 헤더, 왼쪽 페이지 내 탐색·오른쪽 개인 설정 폼/저장 항목/계정 삭제 영역을 사용한다. 기존 긴 참고 설명 문단은 제거했다. 변경 칸 저장·개별/전체 삭제·탈퇴 확인/오류는 유지하며 설정 전용 CSS로 다른 화면에 영향을 주지 않는다. 모바일 전용 배치는 후속이다.
-- 대상 표시: 선택한 부품(C1 등)은 대화창 상단 결과 보기 버튼 옆에 표시하며 대화 내부 배지는 제거한다. 저장 대화는 복원된 대상 정보를 쓰고 대상 미선택 상태에는 배지를 표시하지 않는다.
-- 계정 표시: 작업대 상단과 계정 메뉴는 기존 인증의 `/api/auth/me`가 반환하는 본인 email을 표시한다. 숫자 사용자 ID와 상단 실행 상태 배지는 표시하지 않으며 진행/완료/실패는 대화와 상세 진행 기록에서 확인한다. 이메일을 브라우저 저장소에 별도 보관하지 않는다.
-- 대화 관리(데스크톱): 대화 행 hover/focus에서 고정/해제·삭제 아이콘을 표시한다. 고정 UUID는 로그인 사용자·프로젝트별 localStorage에 저장하고 고정 그룹을 위에 둔다. 삭제는 복구 불가한 연관 기록 범위를 확인한 뒤 DELETE를 호출하며 실패는 기록을 유지한다. 현재 대화를 지우면 새 빈 대화로 전환하고 다른 대화 삭제는 초안을 유지한다. 모바일 전용 대응은 후속이다.
-- 공통 로고: 랜딩·로그인·작업대·보조 화면 헤더는 `/assets/sojafit-logo.svg`를 사용한다. 승인된 Circuit S 원본 심볼과 대문자 윤곽선 워드마크다. `index.html`은 같은 심볼의 `/assets/sojafit-icon.svg`를 파비콘으로 연결한다.
-- 오른쪽 상세는 메인 최초 진입·프로젝트/대화 직접 URL·새로고침에서 기본 접힘이다. 기존 펼치기 버튼·대화 결과 버튼으로 열 수 있다. 도구 모음의 ‘회로 및 분석 정보’ 문구는 표시하지 않고 접근성 영역 이름은 유지한다.
-- 채팅 입력: 별도 사용 조건 입력칸 없이 질문 옆 전송 아이콘 하나를 사용한다. 사용 조건은 질문에 함께 적으며 수동 전송의 conditions는 빈 문자열, 기록 데모 조건과 추가 정보/resume은 유지한다. 실행/추가 입력 대기 중에는 같은 아이콘으로 수신 중단, thread 생성 중에는 비활성이다. 중단은 서버 취소가 아니다.
-- 사이드바: 현재 프로젝트 옆 `+` 아이콘으로 기존 프로젝트 생성 모달을 열며 중앙의 프로젝트 만들기 버튼은 표시하지 않는다. 새 대화 아이콘은 이전 대화 제목 옆에 둔다. 로그인 세션의 기존 프로젝트 목록 API 순서대로 최초 2개와 더보기/접기를 표시한다. 이전 대화는 한 줄 말줄임·원문 title, 현재 대화는 강조 배경·왼쪽 선·표시점과 aria-current로 구분한다. 현재 프로젝트를 다시 눌러도 대화를 초기화하지 않는다.
-- 왼쪽 중복 바로가기(프로젝트·회로·근거·후보 비교·승인·견적)는 제거했다. 결과는 대화의 결과 버튼·오른쪽 상세 탭, 프로젝트 관리는 기존 상단 프로젝트 이름 버튼을 사용한다.
-- 작업대 연결: `WorkbenchPage.tsx`가 프로젝트·대화 목록과 URL의 threadId·오른쪽 결과 탭을 맡습니다. `ConversationPanel.tsx`의 기본 export는 새 대화 생성·실행·추가 입력, `SavedConversationPanel`은 GET 상세·이전 메시지·선택 run의 읽기 전용 기록을 맡습니다. 상세의 project_id, run의 id·thread_id·message_id를 확인하고 선택 key·AbortSignal로 늦은 응답을 격리합니다. ApprovalPanel은 선택 run마다 초기화합니다. `onThreadChange`·`onBusyChange`로 새 실행의 ID·전환 잠금을 공유하며 unmount 때 잠금을 풉니다. 수신 중단은 서버 취소를 보장하지 않습니다. 900px 이하에서는 목록과 상세를 세로로 배치합니다. 조건 원문·기록에서 추가 입력 재개·대화별 초안 보존은 복원하지 않습니다.
-- `SRC.md` — 이 문서
-- `main.tsx` — React·Router·QueryClient 진입점
-- `App.tsx` — AuthProvider·보호 경로·역할별 탐색·로그아웃 셸
-- `pages/LandingPage.tsx` — 공개 목업 랜딩·합성 기능 미리보기·기존 인증 상태에 따른 시작 이동, 로그인 소개와 공유하는 연결 예시 SVG
-- `styles.css` — 작업대 색·글꼴·반응형·키보드 초점 스타일
-- `App.test.tsx` — 비로그인 경로 차단·세션 복원·복원 오류 테스트
-- `dummy-circuits.d.ts` — 저장소의 실제 데모 연결 JSON과 visual catalog를 읽는 build-time virtual module 타입
-- `api/` — 기존 typed fetch 경계. `conversations.ts`는 thread/run DTO와 SSE frame, 키 없는 데모의 기록 질문 목록(`listDemoQuestions`, 재생 모드가 아니면 404), `quotes.ts`는 승인·가격 없는 견적·사례 API, `profile.ts`는 내 설정 `/api/me/memory`, `dummy.ts`는 명시적 개발 mode의 비영속 전체 흐름을 담당합니다. 더미 프로젝트 15종은 `vite.config.ts`가 단일 catalog의 실제 `connections.json`과 `visuals.json`을 묶어 제공하므로 손으로 축약한 회로를 사용하지 않습니다.
-- `auth/` — `AuthProvider.tsx`: 메모리 세션 상태 복원·로그인·가입·로그아웃·탈퇴·401 처리와 세션을 잃을 때 화면 캐시·탭 저장소 비우기, `RequireAuth.tsx`: 로그인·관리자 렌더링 경계, `AuthProvider.test.tsx`: 실제 세션 상태 변화 테스트
-- `pages/` — `LoginPage.tsx`·`SignupPage.tsx`(가입·처리방침 고지 `PrivacyNotice`)·`AdminUsersPage.tsx`·`WorkbenchPage.tsx`·`SettingsPage.tsx`: 기존 API 연결 화면과 각 `*.test.tsx` 동작 테스트
-- `hooks/` — `useRunStream.ts`와 테스트: SSE 순서, interrupt 재개, 연결 종료 뒤 GET 복구, 자동 재전송 금지, `failed` frame의 서버 오류 문구 표시
-- `components/` — `AccessibleDialog.tsx` 공통 키보드 dialog, `LandingServiceIntroduction.tsx` 랜딩 서비스 소개, 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름, 키 없는 데모면 기록 질문 버튼과 기록한 답으로 재개)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 최종 답변 마크다운 렌더(`SafeMarkdown.tsx`, 표·굵게·목록만, HTML·이미지·링크는 글자로), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
-- `workers/` — `circuitLayout.worker.ts`: `elkjs` layered/orthogonal layout을 화면 스레드 밖에서 실행해 부품 블록과 네트 접점 좌표, 직교 배선 경로를 반환합니다. 회로 데이터는 외부 API로 보내지 않습니다.
-
-## 회로 이미지와 공식 문서 근거
-- `CircuitSchematic.tsx`는 검증된 데모 원본 회로도를 읽기 전용으로 표시하며 출처·라이선스·원본 자료·원본 저장소를 함께 보여줍니다. 데모 15종의 provenance와 자산 해시는 `data/circuits/visuals.json`에서 관리합니다. 이미지 로딩 실패 때 생성 이미지로 대체하지 않습니다.
-- `CircuitSummary.tsx`의 `원본 회로도`와 `연결 개념도`는 별도 보기입니다. `WorkbenchPage.tsx`는 프로젝트 선택 전에도 `/api/demo-circuits`의 검증된 원본 15종을 우측 패널에서 고르고 미리 볼 수 있게 하고, 프로젝트 선택 후에는 demo id로 해당 원본을 연결합니다. 업로드 넷리스트에는 원본 회로도나 부품 좌표를 만들지 않으며 연결 개념도만 제공합니다.
-- 연결 개념도는 고정 원형 좌표를 사용하지 않습니다. target/component와 net junction을 분리한 그래프를 ELK가 왼쪽에서 오른쪽으로 배치하고 배선을 직각으로 꺾습니다. 한 화면에 네트 6개, 네트당 이웃 부품 5개를 표시하고 나머지는 `+N`과 페이지로 탐색해 큰 회로에서도 노드가 한곳에 겹치지 않게 합니다.
-- 개발 dummy에서도 15종 프로젝트를 모두 선택할 수 있고, 모든 데모는 작업대 안에서 원본 회로도와 같은 회로의 연결 개념도를 전환합니다.
-- `EvidencePanel.tsx`는 선택 후보의 서버 DTO에 포함된 canonical 공식 데이터시트와 패키지 외형 페이지를 HTTPS 새 탭 링크로 표시합니다. 패키지 페이지 provenance는 오프라인으로 생성한 `data/package-outline-pages.json`에 있습니다. 링크가 없으면 문서명·인용 좌표만 표시하며 외부 PDF를 화면에 가져오지 않습니다.
-- 패키지 일치 가능성은 직접 교체 보증이 아닙니다. 물리적 장착, 재배선, 어댑터 제작, 납땜 절차를 제공하지 않습니다. 개발 dummy의 후보는 실제 manifest 문서와 일치하는 `SS34L`입니다.
-- `components/` — `AccessibleDialog.tsx` 공통 키보드 dialog, 프로젝트·회로·가격 화면, 대상 부품의 1·2단계 SVG 연결 개념도와 adapter, 대화·진행·추가 입력(역할 이름·값 한글 이름, 키 없는 데모면 기록 질문 버튼과 기록한 답으로 재개)·근거·판정(판정 표·근거·승인이 같은 후보 목록 `candidatesOf`), 결과 옆 참고(내 설정)(`ProfileHints.tsx`), 명시적 승인·소속을 머리에 보이는 가격 없는 견적·승인 사례 확인 삭제 및 동작 테스트
-- `test/` — `setup.ts`: jsdom의 jest-dom matcher와 테스트별 화면 정리, `network.ts`: 완전한 손작성 API 응답과 fetch 경계 대역, `projects.tsx`: 현재 프로젝트/데모 전체 DTO와 QueryClient·Router 테스트 렌더러
-
-
-관리자 계정 메뉴: 공용 AccountMenu는 서버 세션의 role=admin일 때만 ‘관리자 메뉴’ 구역과 ‘사용자 관리’ 링크를 표시한다. 작업대·내 설정 양쪽에서 기존 /admin/users로 이동하고 팝오버를 닫는다. 일반 계정에는 구역·링크가 없으며 기존 RequireAuth admin 및 서버 관리자 검사는 그대로다. 사용자 조회·일반 계정 활성/비활성은 기존 화면을 재사용하며 새 권한 부여·Google 승인 API는 추가하지 않는다(SPEC 4절·8.6 관리자 계약).
-
-main 시각화 통합: 실제 15종 catalog와 visual metadata는 Vite virtual module이 제공하고 CircuitSummary의 demo/readOnly를 통해 원본/개념도와 저장 대상 고정을 함께 유지한다. App은 공통 오버레이 스크롤바를 연결하며 새 작업대의 viewport 높이 스타일을 사용한다.
+- `SRC.md` — 이 폴더 설명.
+- `main.tsx` — Router · QueryClient · 글꼴 · 스타일 진입점.
+- `App.tsx` — 경로 표: `/` 랜딩, `/login`, `/signup`, `/verify-email`, `/reset-password`, `/privacy`, `/app`, `/settings`, `/admin/users`.
+- `dummy-circuits.d.ts` — 실제 데모 JSON을 묶는 빌드 시점 가상 모듈 타입.
+- `api/` — 서버 API의 타입 있는 fetch 경계(`client` · `auth` · `admin` · `projects` · `conversations` · `quotes` · `prices` · `profile` · `externalCircuits`)와 개발 전용 `dummy.ts`, 테스트.
+- `auth/` — `AuthProvider`(세션 복원·로그인·로그아웃·탈퇴) · `RequireAuth`(인증·관리자 경계)와 테스트.
+- `hooks/useRunStream.ts` — 분석 실행의 시작·재개·연결 복구 상태 머신과 테스트.
+- `hooks/useConversation.ts` — 검토 한 건의 화면 상태: 저장된 질문, 실행 중인 질문, 단계 이름, 첨부.
+- `lib/judgement.ts` — 판정 표기·색 이름·값과 인용 위치 표시.
+- `lib/circuit.ts` — 프로젝트 연결에서 부품 목록과 대상 부품의 넷·이웃을 뽑는 순수 함수. 테스트 `circuit.test.ts`.
+- `lib/inputLabels.ts` — 판정 입력 코드의 화면 이름.
+- `pages/LandingPage.tsx` — 공개 랜딩: 첫 화면 예시, 쓰는 법, 판정 5종, 신뢰 수치, 하지 않는 것.
+- `pages/LoginPage.tsx` — 이메일 로그인, 서버가 켠 Google 로그인과 계정 연결, 데모 모드의 데모 사용자 버튼.
+- `pages/SignupPage.tsx` · `pages/EmailActionPage.tsx` — 가입 메일 요청, 메일 링크의 비밀번호 설정과 재설정.
+- `pages/PrivacyPage.tsx` — 개인정보처리방침(글은 이전과 같음).
+- `pages/WorkbenchPage.tsx` — 작업대 셸: 레일, 프로젝트 목록(이름 변경·삭제), 부품 목록(맨 위 질문 칸이 질문 속 부품 번호의 검토를 열고 질문을 한 번 보낸다. 테스트 `WorkbenchPage.ask.test.tsx`), 새 프로젝트·원본 회로도·승인 사례 창. 원본 회로도 창은 예제 프로젝트에 저장된 그림을, 저장된 그림이 없는 프로젝트(올린 넷리스트, 예제 회로 목록이 404인 운영의 모든 프로젝트)에는 웹 검색을 보인다. 예제 회로 목록 응답 전에는 버튼을 숨기고, 목록이 404이면 오류 안내 없이 업로드 칸만 둔다. 테스트 `WorkbenchPage.test.tsx`.
+- `pages/SettingsPage.tsx` — 내 설정 3칸 저장·삭제, 계정 삭제.
+- `pages/AdminUsersPage.tsx` — 관리자 전용 계정 목록과 정지·정지 해제.
+- `components/Review.tsx` — 검토 문서: 판정, 회로, 조건 대조 표, 활동과 입력창, 속성 칸(승인·견적·가격·근거). 속성 칸 너비 조절.
+- `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 테스트 `Schematic.test.tsx`.
+- `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
+- `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고.
+- `components/SafeMarkdown.tsx` — 서버 답 전체를 보이는 최소 마크다운 렌더러(표·굵게·목록·인용, HTML·이미지·링크는 글자로만). 테스트 `SafeMarkdown.test.tsx`.
+- `components/ApprovedCases.tsx` — 승인 사례 목록과 확인 삭제.
+- `components/AuthCard.tsx` · `components/PageShell.tsx` — 로그인 계열 화면과 설정·관리 화면의 공통 틀.
+- `styles/app.css` — 전체 스타일.
+- `test/` — 테스트 설정(`setup.ts`)과 도구(`projects.tsx` · `network.ts`).

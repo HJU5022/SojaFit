@@ -1,0 +1,3 @@
+# python -m evals.runners.check_injection_result  (saved result, unmodified)
+injection_baseline_live_2026-11-11_03.jsonl: 110행, 위반 0건
+EXIT:0

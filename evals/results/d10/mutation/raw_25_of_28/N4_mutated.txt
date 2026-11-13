@@ -1,0 +1,14 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_tolerance_class_excludes_tighter_grades_too _______________
+tests/judge/test_judge_conditions.py:174: in test_tolerance_class_excludes_tighter_grades_too
+    assert V.judge_part(rule, 'R04', 'BZV55B5V1', {}, {}, rows(5.0, 5.2)).verdict == 'NOT_SUFFICIENT'
+E   AssertionError: assert 'ROLE_SUFFICIENT' == 'NOT_SUFFICIENT'
+E     
+E     - NOT_SUFFICIENT
+E     ? ^ ^
+E     + ROLE_SUFFICIENT
+E     ? ^ ^^
+=========================== short test summary info ============================
+FAILED tests/judge/test_judge_conditions.py::test_tolerance_class_excludes_tighter_grades_too
+1 failed in 0.12s

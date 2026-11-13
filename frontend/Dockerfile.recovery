@@ -1,0 +1,16 @@
+# Build from the repository root; this target preserves the pinned live backend.
+FROM node:24-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json ./
+COPY frontend/src/ ./src/
+COPY frontend/public/ ./public/
+COPY data/circuits/ /data/circuits/
+RUN npm run build
+
+FROM asia-northeast3-docker.pkg.dev/sojafit/cloud-run-source-deploy/sojafit-api@sha256:18137cf10988a8a9042de30138fcdeb641e8c85fe8eea7ed0a3f80e33ea3ec9b
+USER root
+RUN python -c "from pathlib import Path; import shutil; p=Path('/app/frontend/dist'); assert p.resolve()==Path('/app/frontend/dist') and p.is_dir(); shutil.rmtree(p)"
+COPY --from=frontend-build /frontend/dist/ /app/frontend/dist/
+USER sojafit

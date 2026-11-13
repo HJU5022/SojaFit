@@ -1,0 +1,171 @@
+{
+ "summary": {
+  "set": 1,
+  "done": 1,
+  "total": 1,
+  "passed": 1,
+  "p95_s": 9.4,
+  "p50_s": 9.4,
+  "session": "gate-v3-01-only-1111-1959-set1",
+  "stopped_at": null,
+  "model_env": {
+   "LAB_THINKING": "",
+   "LAB_THINKING_ON": "",
+   "LAB_NODE_MODELS": "",
+   "LAB_EFFORT": ""
+  },
+  "db": "postgres",
+  "llm_provider": "openrouter",
+  "claude_direct": true,
+  "git": "db7a5b1+dirty"
+ },
+ "rows": [
+  {
+   "id": "v3-01",
+   "kind": "relevant",
+   "gold_type": "candidate_judge",
+   "routed_type": "candidate_judge",
+   "path": "입력 읽기>기억 읽기>사실 확인>계획>판정 읽기>판정>모으기>답 정리>답 검사>끝",
+   "not_found": 0.0,
+   "tries": 0.0,
+   "llm_calls": 2,
+   "docs_found": 0.0,
+   "passed_cards": 0.0,
+   "latency_s": 9.4,
+   "fake_citations": 0.0,
+   "uncited_sentences": 2.0,
+   "hops": 1.0,
+   "refusal_code": "",
+   "answer_metric": "cited_gold",
+   "passed": [],
+   "verdicts": [
+    [
+     "1N4007G",
+     "ROLE_SUFFICIENT"
+    ]
+   ],
+   "trace_url": "https://cloud.langfuse.com/project/cmwadynwy063mad0eyrziwgqt/traces/3de01a101c6e86154978b01bd20798c6",
+   "answer": "역할: R01 (근거: D1.K → Net-(D1-K) (load side, the 3.3V/5V regulator input); D1.A → VIN (connector/battery side); D1 in series between input connector and power net, cathode toward load)\n\n**1N4007G: 역할상 충분**\n\n| 조건 | 기준 | 후보 값 | 시험 조건 | 결과 | 근거 |\n|---|---|---|---|---|---|\n| VRRM >= | 18.75 (v_in_max * kV) | 1000 V | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) Repetitive peak reverse voltage |\n| IF_AV >= | 0.1714 (i_max * kI) | 1 A | 표 기본 조건 | 통과 | 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted) IF |\n- 불확실한 조건: VF: v_drop_allowed 정보가 없어 이 조건을 빼고 판정\n- 사람이 확인할 것: 발열(PD = IF × VF와 패키지 열저항, 사양 표에 열저항 칸이 생기면 필수로)\n- 패키지가 달라 기판 수정이 필요해요 (후보 패키지 근거: 1N4001G SERIES_P2104.pdf 1쪽 ABSOLUTE MAXIMUM RATINGS (TA = 25°C unless otherwise noted)).\n\n같은 동작은 보장하지 않습니다.",
+   "tasks": [
+    {
+     "task": 1,
+     "agent": "judge",
+     "status": "ok",
+     "reason": null,
+     "summary": "1 candidates judged",
+     "llm_calls": 1,
+     "searches": [],
+     "round": 1
+    }
+   ],
+   "stages": [
+    {
+     "stage": "입력 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "기억 읽기",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "품번·판 확인",
+     "status": "ok",
+     "elapsed_ms": 3826
+    },
+    {
+     "stage": "Supervisor",
+     "status": "ok",
+     "elapsed_ms": 2257
+    },
+    {
+     "stage": "회로 읽기",
+     "status": "ok",
+     "elapsed_ms": 2565
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "interrupted",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "interrupted",
+     "elapsed_ms": 2571
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "specs",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "대체 부품 판정",
+     "status": "ok",
+     "elapsed_ms": 668
+    },
+    {
+     "stage": "Spec 에이전트",
+     "status": "ok",
+     "elapsed_ms": 671
+    },
+    {
+     "stage": "답 모으기",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "답 정리",
+     "status": "ok",
+     "elapsed_ms": 0
+    },
+    {
+     "stage": "답 검사",
+     "status": "ok",
+     "elapsed_ms": 1
+    },
+    {
+     "stage": "끝내기",
+     "status": "ok",
+     "elapsed_ms": 0
+    }
+   ],
+   "llm_call_log": [
+    {
+     "node": "Supervisor",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 1.894,
+     "input_tokens": 8062,
+     "output_tokens": 207,
+     "cached_tokens": 0,
+     "cost_usd": 0.001102775,
+     "ok": true
+    },
+    {
+     "node": "회로 읽기",
+     "model": "anthropic/claude-haiku-5.5",
+     "seconds": 2.528,
+     "input_tokens": 10046,
+     "output_tokens": 448,
+     "cached_tokens": 0,
+     "cost_usd": 0.00138635,
+     "ok": true
+    }
+   ],
+   "voyage": [],
+   "pass": true,
+   "cost_usd": 0.002489125,
+   "score_delivery": "queued"
+  }
+ ]
+}

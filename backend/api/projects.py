@@ -6,6 +6,7 @@ from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartException, MultiPartParser
 
 from backend import auth
+from backend.api.auth import demo_mode
 from backend.conversations.repository import InvalidRunState
 from backend.projects.models import Project, ProjectSummary
 from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
@@ -65,9 +66,10 @@ class DemoCircuitResponse(BaseModel):
     schematic: DemoSchematic | None
 
 
-@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id)], response_model=list[DemoCircuitResponse])
+@router.get("/demo-circuits", dependencies=[Depends(auth.current_user_id), Depends(demo_mode)], response_model=list[DemoCircuitResponse])
 def demo_circuits(response: Response, q: str | None = Query(default=None, min_length=1),
                   offset: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=100)):
+    """데모 회로 목록. DEMO_MODE=1에서만(아니면 404, 데모 프로젝트 생성과 같은 규칙). 로그인 필요."""
     visuals = load_demo_visuals()
     items = [{"id": demo_id, "name": name,
              "schematic": visuals[demo_id].model_dump(include=set(DemoSchematic.model_fields)) if demo_id in visuals else None}
@@ -75,7 +77,7 @@ def demo_circuits(response: Response, q: str | None = Query(default=None, min_le
     if q is not None:
         needle = q.casefold()
         items = [item for item in items if needle in item["id"].casefold() or needle in item["name"].casefold()]
-    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["Cache-Control"] = "private, max-age=300"
     return items[offset:offset + limit]
 
 
@@ -84,8 +86,9 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
     return repo.list_owned(user_id)
 
 
-@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
+@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin), Depends(demo_mode)])
 def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    """데모 회로로 프로젝트 만들기. DEMO_MODE=1에서만(공개 서비스는 업로드만)."""
     return repo.create_demo(user_id, body.demo_id, body.name)
 
 

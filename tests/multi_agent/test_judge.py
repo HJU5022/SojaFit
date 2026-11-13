@@ -9,6 +9,7 @@ import pytest
 from backend.judge import conditions as C
 from backend.judge import verdict as V
 from backend.multi_agent.agents import judge as J
+from backend.services.exa import SearchBudgetExhausted
 
 STATE = {'question': 'D1을 TSC 1N5817로 바꿔도 역극성 보호용으로 쓸 수 있어?',
          'conditions': '입력 전압의 최댓값은 20V, D1의 최대 순방향 전류는 150mA이다. 주변 온도는 25°C이다.',
@@ -102,11 +103,153 @@ def test_ac01_judge_question_gives_not_sufficient(monkeypatch):
     assert out['reports'][-1]['agent'] == 'judge' and out['path'] == ['판정']
 
 
+def test_grade2_official_pdf_row_is_converted_with_provenance():
+    """등급2는 정확한 품번·행·수치·공식 PDF 해시가 모두 있을 때만 판정 행이 된다."""
+    docs = [{
+        'evidence_grade': 2, 'source_sha256': 'a' * 64,
+        'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/SS14.pdf',
+        'doc_parts': ['SS14'], 'row': 'VRRM', 'unit': 'V',
+        'cells': [('MAX', '40')], 'file': 'SS14.pdf', 'page': 2,
+        'table': 'Absolute Maximum Ratings', 'content': 'VRRM 40 V',
+    }]
+    rows = J._grade2_rows(lambda parts, terms: docs, 'SS14', {'VRRM'})
+    assert rows[0]['max'] == 40.0
+    assert rows[0]['citation'] == {
+        'document': 'SS14.pdf', 'page': 2, 'table': 'Absolute Maximum Ratings',
+        'row': 'VRRM', 'source_url': docs[0]['source_url'],
+        'source_sha256': 'a' * 64, 'evidence_grade': 2,
+    }
+
+
+def test_grade2_budget_boundary_is_not_swallowed_by_row_adapter():
+    with pytest.raises(SearchBudgetExhausted) as error:
+        J._grade2_rows(lambda *_args: (_ for _ in ()).throw(SearchBudgetExhausted(2)), 'SS14', {'VRRM'})
+    assert error.value.grade == 2
+
+
+def test_explicit_revision_is_extracted_and_row_revision_is_exact():
+    """지정 판본은 접두어가 비슷한 다른 개정 코드와 섞이지 않아야 한다."""
+    read = J.JudgeRead(role='R01', revision_wanted='S2202판')
+    assert J.requested_revisions('S1A SERIES_S2202.pdf 판본만 사용') == {'S2202'}
+    assert J._row_revision({'citation': {'document': 'S1A SERIES_S2202.pdf'}}) == 'S2202'
+    assert J._row_revision({'citation': {'document': 'S1A SERIES_S2102.pdf'}}) == 'S2102'
+    assert J._row_revision({'citation': {'document': 'S1A SERIES.pdf'}}) == ''
+
+
+def test_judge_agent_keeps_part_specific_revision_rows_separate(monkeypatch):
+    """품번별 판본을 실제 판정 경로에서 교차 사용하지 않는다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    table = {
+        'SS34': [r('SS34', 'VRRM', 30.0), r('SS34', 'IF_AV', 1.0, 'A'),
+                 r('SS34', 'PACKAGE', None, None, text='SMA')],
+        'SS34H': [r('SS34H', 'VRRM', 40.0), r('SS34H', 'IF_AV', 1.0, 'A'),
+                  r('SS34H', 'PACKAGE', None, None, text='SMA')],
+    }
+    table['SS34'][0]['citation']['document'] = 'SS34_F16.pdf'
+    table['SS34H'][0]['citation']['document'] = 'SS34H_F20.pdf'
+    read = dict(READ, original_part='SS34', candidates=['SS34', 'SS34H'])
+    state = {**STATE,
+             'question': 'SS34 F16 판본; SS34H F20 판본을 비교해줘',
+             'judge_read': read}
+    out = J.judge_agent(state, specs=specs_of(table), find=None, retriever=None)
+    results = {item['part']: item for item in out['judgement']['results']}
+    assert set(results) == {'SS34', 'SS34H'}
+    assert results['SS34']['checks'][0]['citation']['document'] == 'SS34_F16.pdf'
+    assert results['SS34H']['checks'][0]['citation']['document'] == 'SS34H_F20.pdf'
+
+    # 각 품번에 반대 판본 행만 남기면 해당 후보는 판정에서 제외된다.
+    crossed = {
+        'SS34': [dict(table['SS34'][0], citation={**table['SS34'][0]['citation'], 'document': 'SS34_F20.pdf'})],
+        'SS34H': [dict(table['SS34H'][0], citation={**table['SS34H'][0]['citation'], 'document': 'SS34H_F16.pdf'})],
+    }
+    rejected = J.judge_agent(state, specs=specs_of(crossed), find=None, retriever=None)
+    assert rejected['judgement']['results'] == []
+
+
+def test_grade3_references_are_reported_separately_from_judgement(monkeypatch):
+    reference = {'source_url': 'https://example.com/SS14.html', 'file': 'SS14 reference',
+                 'doc_parts': ['SS14'], 'retrieved_at': '2026-11-11T00:00:00+00:00'}
+    monkeypatch.setattr(J, 'judge_agent', lambda *a, **k: {
+        'judgement': {'kind': 'find', 'results': [], 'shown': []},
+        'references': [reference], 'path': ['판정'],
+        'reports': [J._report('partial', 'no official row')],
+    })
+    out = J.judge_task_node({'task': {'id': 1}, 'round': 1}, specs=None, find=None,
+                             retriever=None, web_search=None, web_search_fallback=None)
+    assert out['reports'][0]['references'] == [reference]
+    assert out['reports'][0]['judgement']['results'] == []
+
+
+def test_grade2_row_flows_through_judge_check(monkeypatch):
+    """헬퍼 결과가 실제 judge_part 검사와 결과 인용까지 이어지는지 확인한다."""
+    monkeypatch.setattr(J, 'interrupt', unknown)
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'c' * 64, 'chunk_id': 'W1',
+        'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/1N5817.pdf',
+        'doc_parts': ['1N5817'], 'row': 'Repetitive peak reverse voltage', 'unit': 'V',
+        'cells': [('MAX', '20')], 'file': '1N5817.pdf', 'page': 1,
+        'table': 'ABSOLUTE MAXIMUM RATINGS', 'content': '1N5817 ABSOLUTE MAXIMUM RATINGS VRRM Repetitive peak reverse voltage MAX = 20 V',
+        'conditions': '',
+    }
+    out = J.judge_agent({**STATE, 'judge_read': READ}, specs=specs_of({}), find=None,
+                        retriever=None, web_search=lambda parts, terms: [doc])
+    checks = out['judgement']['results'][0]['checks']
+    vrm = next(check for check in checks if check['code'] == 'VRRM')
+    assert vrm['citation']['evidence_grade'] == 2
+    assert vrm['citation']['chunk_id'] == 'W1'
+    assert vrm['citation']['source_sha256'] == 'c' * 64
+
+
+@pytest.mark.parametrize('change', [
+    {'evidence_grade': 3},
+    {'source_sha256': ''},
+    {'doc_parts': ['SS14A']}, {'page': 0}, {'page': True},
+    {'cells': [('TYP', '100')]}, {'cells': [('VALUE', '100')]}, {'unit': 'mV'},
+    {'row': 'IFSM'},
+    {'cells': [('MIN', 'typical')]},
+])
+def test_grade2_rejects_unverified_or_mismatched_rows(change):
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'b' * 64,
+        'source_url': 'https://www.infineon.com/assets/row/public/documents/30/49/infineon-ir-datasheet-en.pdf',
+        'doc_parts': ['IR'], 'row': 'VRRM', 'unit': 'V', 'cells': [('MAX', '100')],
+        'file': 'IR.pdf', 'page': 1, 'table': 'Maximum Ratings', 'content': 'IR | VRRM | 100 V',
+    }
+    doc.update(change)
+    assert J._grade2_rows(lambda parts, terms: [doc], 'IR', {'VRRM'}) == []
+
+
+def test_grade2_rejects_conflicting_official_values():
+    base = {
+        'evidence_grade': 2, 'source_url': 'https://services.taiwansemi.com/storage/resources/datasheet/SS14.pdf',
+        'doc_parts': ['SS14'], 'row': 'VRRM', 'unit': 'V', 'file': 'SS14.pdf', 'page': 1,
+        'table': 'Maximum ratings', 'content': 'SS14 VRRM', 'conditions': '',
+    }
+    docs = [{**base, 'source_sha256': 'd' * 64, 'cells': [('MAX', '40')]},
+            {**base, 'source_sha256': 'e' * 64, 'cells': [('MAX', '60')]}]
+    assert J._grade2_rows(lambda parts, terms: docs, 'SS14', {'VRRM'}) == []
+
+
+def test_grade2_passes_maker_to_search_and_accepts_spaced_vrrm():
+    seen = []
+    doc = {
+        'evidence_grade': 2, 'source_sha256': 'f' * 64,
+        'source_url': 'https://www.infineon.com/assets/row/public/documents/1/2/infineon-ir-datasheet-en.pdf',
+        'doc_parts': ['IR'], 'row': 'V RRM', 'unit': 'V', 'cells': [('MAX', '100')],
+        'file': '1.pdf', 'page': 1, 'table': 'Maximum ratings',
+        'content': 'IR Maximum ratings V RRM 100 V', 'conditions': '',
+    }
+    rows = J._grade2_rows(lambda parts, terms: (seen.append(terms) or [doc]), 'IR', {'VRRM'}, 'Infineon')
+    assert rows and 'Infineon' in seen[0]
+    assert not J._grade2_rows(lambda *a: pytest.fail('unsupported manufacturer lookup'), 'IR', {'VRRM'}, 'Vishay')
+
+
 def test_ac02_number_not_in_question_is_dropped_and_asked(monkeypatch):
     read = dict(READ, values=READ['values'] + [{'name': 'v_drop_allowed', 'number': 12, 'unit': 'V', 'flag': None, 'condition': '', 'quote': '12V 허용'}])
     asked = []
     monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
-    out = J.judge_agent({**STATE, 'judge_read': read}, specs=specs_of(SPECS), find=None, retriever=None)
+    state = {**STATE, 'conditions': 'USB 최대 5.25V, 최대 전류 250mA, 역류 허용 100µA 이하.', 'judge_read': read}
+    out = J.judge_agent(state, specs=specs_of(SPECS), find=None, retriever=None)
     assert 'v_drop_allowed' in out['judgement']['dropped']
 
 
@@ -233,6 +376,20 @@ def test_ec02_two_roles_ask_once_and_keep_both_without_answer(monkeypatch):
     assert len(asked) == 1 and asked[0]['role_choices'] == ['R01', 'R08']
     assert out['judgement']['roles'] == ['R01', 'R08']
     assert out['judgement']['results'][0]['verdict'] == 'NOT_SUFFICIENT'  # 두 역할 중 더 나쁜 판정
+
+
+def test_role_evidence_selects_role_with_complete_required_inputs(monkeypatch):
+    """회로 근거가 있고 한 역할만 필수 입력을 갖추면 선택 질문을 만들지 않는다."""
+    asked = []
+    monkeypatch.setattr(J, 'interrupt', lambda payload: asked.append(payload) or {'answers': {}})
+    read = dict(READ, role='R02', role_alt='R01', role_evidence=['USB 입력 → 배터리 전원 역류 방지'], values=[
+        {'name': 'v_reverse_max', 'number': 5.25, 'unit': 'V', 'flag': None, 'condition': '', 'quote': '최대 5.25V'},
+        {'name': 'i_max', 'number': 0.25, 'unit': 'A', 'flag': None, 'condition': '', 'quote': '최대 전류 250mA'},
+        {'name': 'ir_allowed', 'number': 0.0001, 'unit': 'A', 'flag': None, 'condition': '', 'quote': '역류 허용 100µA 이하'},
+    ])
+    state = {**STATE, 'conditions': 'USB 최대 5.25V, 최대 전류 250mA, 역류 허용 100µA 이하.', 'judge_read': read}
+    out = J.judge_agent(state, specs=specs_of(SPECS), find=None, retriever=None)
+    assert asked == [] and out['judgement']['roles'] == ['R02']
 
 
 def test_ec10_order_code_variant_with_identical_statement_is_identical(monkeypatch):

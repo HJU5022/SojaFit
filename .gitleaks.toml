@@ -1,4 +1,4 @@
-# gitleaks 설정. 기본 규칙을 그대로 쓰고 아래 경로만 검사에서 뺀다(.github/workflows/secret-scan.yml이 저장소 루트에서 읽음).
+# gitleaks 설정. 기본 규칙을 그대로 쓰고 아래 경로만 검사에서 뺀다. 시험용 가짜 값은 경로로 빼지 않고 .gitleaksignore에 지문으로 등록한다(.github/workflows/secret-scan.yml이 저장소 루트에서 읽음).
 # [주의] [extend] useDefault를 지우면 기본 규칙이 모두 꺼져 아무것도 검사하지 않는다.
 [extend]
 useDefault = true
@@ -10,14 +10,6 @@ useDefault = true
 description = "리랭크 캐시의 sha256 해시 key(비밀값 아님)"
 paths = ['''evals/results/embedding/grid_rerank_cache_2026-11-02\.jsonl''']
 
-# [왜] 인증 · 오류 · 탈퇴 시험의 가짜 비밀번호(synthetic- · test- · another-)와 격리 시험용 가짜 AUTH_SECRET(isolated-)이
-#      generic-api-key에 20건 걸렸다(11-10 로컬 검사). tests/ 아래에서 이 접두어로 시작하는 값만 뺀다.
-[[allowlists]]
-description = "시험용 가짜 비밀번호 · 비밀값(tests/ 안, 정해진 접두어만)"
-condition = "AND"
-paths = ['''^tests/''']
-regexes = ['''^(synthetic|test|another|isolated)-''']
-
 # [왜] 기억 준비 명령이 적용하는 SQL 파일 이름 목록('022_token_limits.sql', '023_retention.sql')을 키로 오인했다.
 [[allowlists]]
 description = "SQL 마이그레이션 파일 이름(비밀값 아님)"
@@ -26,7 +18,7 @@ paths = ['''^backend/conversations/memory_service\.py$''']
 regexes = ['''^\d{3}_[a-z_]+\.sql$''']
 
 # [왜] 11-11 PR #85 병합 뒤 로컬 검사에서 generic-api-key 64건이 나왔고 모두 키가 아니었다(실제 키 형식 직접 검색은 0건).
-#      인젝션 측정 원시 결과의 document_key는 코퍼스 문서 식별 값이다(60건).
+#      인젝션 측정 원시 결과의 document_key는 코퍼스 문서 식별 값이다(이력 검사 기준 2개 파일 360건: ..._03.jsonl 240, ..._03_human_jeongun.jsonl 120, 2026-11-13 `b5f050d`).
 [[allowlists]]
 description = "인젝션 측정 원시 결과의 document_key(코퍼스 문서 식별 값, 비밀값 아님)"
 targetRules = ["generic-api-key"]

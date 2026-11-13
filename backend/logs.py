@@ -82,7 +82,7 @@ def setup(stream=None) -> bool:
         # [왜] uvicorn은 자기 처리기로 글 줄을 쓰고 루트로 올리지 않는다. 처리기를 비우고 올려 같은 JSON 줄로 쓴다.
         logging.getLogger(name).handlers.clear()
         logging.getLogger(name).propagate = True
-    # [주의] 필터는 로거에 붙는다(처리기가 아니라). 처리기를 비워도 걸리고, main.py의 Google 콜백 필터보다 먼저 돈다
+    # [주의] 필터는 로거에 붙는다(처리기가 아니라). 처리기를 비워도 걸린다
     logging.getLogger('uvicorn.access').addFilter(hide_query)
     # [왜] Starlette는 500 처리기(main.py의 internal_error)가 code · traceback을 남긴 뒤에도 같은 예외를 다시 올려
     #      uvicorn이 한 번 더 남긴다. 그 겹친 줄만 뺀다(lifespan 오류 등 다른 uvicorn 오류 줄은 그대로)

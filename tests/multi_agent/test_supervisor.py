@@ -57,7 +57,7 @@ def test_tasks_are_sent_at_once_with_only_their_brief_and_inputs():
     p = plan(task(1), task(2, agent='judge', kind='candidate_judge'), question_type='candidate_judge').model_dump(mode='json')
     sends = S.after_plan({**STATE, 'plan': p, 'refusal_reason': ''})
     assert [type(s) for s in sends] == [Send, Send] and [s.node for s in sends] == ['RAG 에이전트', 'Spec 에이전트']
-    assert set(sends[0].arg) == {'task', 'question', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
+    assert set(sends[0].arg) == {'task', 'question', 'conditions', 'target_part', 'round'}  # RAG 에이전트는 메모장 전체가 아니라 꾸러미만 받는다
     assert sends[1].arg['question_type'] == 'candidate_judge' and sends[1].arg['facts'] == STATE['facts']
     for nxt, node in (('finish', '끝내기'), ('price', '가격 안내')):
         assert S.after_plan({'plan': {'next': nxt}, 'refusal_reason': ''}) == node  # 갈림 함수는 계획서 값이 아니라 노드 이름을 돌려준다
@@ -161,6 +161,11 @@ def test_check_blocks_fake_citations_and_invented_numbers():
     assert S.check_node({**two, 'answer': bad, 'synth_text': bad})['refusal_reason'] == 'verify_failed'
 
 
+def test_after_check_routes_a_failed_check_to_refusal_and_a_passed_one_to_finish():
+    assert S.after_check({'refusal_reason': Reason.VERIFY_FAILED.value}) == S.NODE['refuse']
+    assert S.after_check({}) == S.NODE['finish']
+
+
 @pytest.mark.parametrize('source', ['absent', 'failed', 'discarded', 'kept_earlier'])
 def test_final_netlist_permission_comes_only_from_selected_verified_reports(source):
     rating = report(1, answer='VRRM은 40 V이다 [7].', evidence_ids=['7'])
@@ -201,6 +206,30 @@ def test_collect_replans_once_on_retryable_failure_but_not_on_confirmed_refusal(
     # 문서의 '일부만 답함'(사유 없음)은 되돌리지 않는다. 계획이 '앞 결과가 필요하다'고 했으면 모두 ok여도 되돌린다
     assert S.collect_node({**base, 'reports': [report(1, status='partial')]})['outcome'] == 'single'
     assert S.collect_node({**base, 'plan': {'next': 'tasks', 'replan': True}, 'reports': [report(1)]})['outcome'] == 'replan'
+
+
+def test_collect_does_not_repeat_plan_only_replan_after_candidate_table():
+    finding = {'kind': 'find', 'roles': ['R01'], 'role_evidence': [],
+               'results': [{'part': 'S1G', 'verdict': 'ROLE_SUFFICIENT'}],
+               'shown': [{'part': 'S1G', 'verdict': 'ROLE_SUFFICIENT'}],
+               'terms': [], 'capped': False, 'unverified': []}
+    candidate = report(1, agent='judge', judgement=finding)
+    state = {'counters': {'hops': 1, 'replans': 0}, 'round': 1,
+             'plan': {'next': 'tasks', 'replan': True}, 'reports': [candidate]}
+    assert S.collect_node(state)['outcome'] == 'single'
+
+
+def test_collect_keeps_replanning_independent_failed_role_after_candidate_table():
+    finding = {'kind': 'find', 'roles': ['R01'], 'role_evidence': [],
+               'results': [{'part': 'S1G', 'verdict': 'ROLE_SUFFICIENT'}],
+               'shown': [{'part': 'S1G', 'verdict': 'ROLE_SUFFICIENT'}],
+               'terms': [], 'capped': False, 'unverified': []}
+    candidate = report(1, agent='judge', judgement=finding)
+    failed_role = report(2, agent='docs', status='fail', reason='no_result')
+    state = {'counters': {'hops': 1, 'replans': 0}, 'round': 1,
+             'plan': {'next': 'tasks', 'replan': True},
+             'reports': [candidate, failed_role]}
+    assert S.collect_node(state)['outcome'] == 'replan'
 
 
 def test_after_a_replan_the_answer_uses_this_round_and_the_kept_reports():
@@ -327,3 +356,50 @@ def test_failed_judgement_with_docs_answer_still_uses_code_boundary(node):
     assert '포함하지 않았습니다' in out['answer']
     assert [r['agent'] for r in out['final_reports']] == ['judge']
     assert not S.check_node({**state, **out}).get('refusal_reason')  # 거절이 아니라 안내 답으로 끝난다
+
+
+def test_synthesis_input_preserves_partial_answer_checklist():
+    report = TaskReport(
+        task=1, agent='docs', status='partial', summary='s',
+        answer='IFSM은 125 A이고 8.3 ms 단발 반파 조건입니다 [7].',
+        missing=['반복 사용 여부', '표의 TA 조건'])
+    text = S.render_synth(STATE, [report])
+    assert 'IFSM은 125 A이고 8.3 ms 단발 반파 조건입니다 [7].' in text
+    assert 'missing checklist: 반복 사용 여부; 표의 TA 조건' in text
+
+
+def test_check_blocks_a_citation_from_another_requested_revision():
+    docs = [{'chunk_id':7, 'file':'S1A SERIES_S2102.pdf', 'page':1, 'content':'S1J VRRM 600 V'}]
+    state = {**STATE, 'question':'S1A SERIES_S2202.pdf 판본만 사용해 S1J의 VRRM을 확인해 줘.',
+             'reports':[report(1, answer='S1J는 600 V입니다 [7].', docs=docs)], 'docs':docs, 'passed':[7]}
+    out = S.check_node({**state, 'answer':'S1J는 600 V입니다 [7].'})
+    assert out['refusal_reason'] == 'verify_failed'
+    assert out['check']['revision_mismatch'] == ['S1A SERIES_S2102.pdf']
+
+
+def test_partial_doc_and_verified_candidate_table_join_without_rewriting():
+    finding = {'kind':'find','roles':['R04'],'role_evidence':[], 'terms':[],
+               'capped':False,'shown':[],'unverified':[],'results':[]}
+    state = {**STATE, 'reports': [
+        report(1, status='partial', answer='시험 조건은 30 ms입니다 [7].', missing=['다른 패키지 상세']),
+        report(2, agent='judge', judgement=finding)]}
+    collected = S.collect_node(state)
+    assert collected['outcome'] == 'single'
+    joined = S.single_node({**state, **collected})
+    assert '30 ms입니다 [7]' in joined['answer'] and joined['synth_text'] == ''
+
+@pytest.mark.parametrize(('files', 'blocked'), [
+    (('SS34_F16.pdf', 'SS34H_F20.pdf'), False),
+    (('SS34_F20.pdf', 'SS34H_F16.pdf'), True),
+    (('SS34_F16.pdf', 'SS34H_F16.pdf'), True),
+])
+def test_final_check_keeps_each_part_bound_to_its_requested_edition(files, blocked):
+    question = 'SS34는 F16 판본, SS34H는 F20 판본으로 비교해 줘.'
+    docs = [dict(chunk_id=7, file=files[0], doc_parts=['SS34'], page=1, content='SS34 40 V'),
+            dict(chunk_id=8, file=files[1], doc_parts=['SS34H'], page=1, content='SS34H 40 V')]
+    answer = 'SS34는 40 V입니다 [7]. SS34H는 40 V입니다 [8].'
+    state = {**STATE, 'question':question, 'conditions':'', 'reports':[report(1, answer=answer, docs=docs)],
+             'docs':docs, 'passed':[7,8], 'answer':answer}
+    result = S.check_node(state)
+    assert (result.get('refusal_reason') == 'verify_failed') is blocked
+    assert bool(result['check'].get('revision_mismatch')) is blocked

@@ -82,3 +82,83 @@ def test_target_pin_is_always_shown_in_a_big_net():
                    'nets': [{'name': 'GND', 'nodes': others + [{'ref': 'D1', 'pin': '1', 'pinfunction': 'A'}]}]}
     gnd = circuit_around(connections, 'D1')['nets'][0]
     assert any(n.startswith('D1.') for n in gnd['nodes']) and len(gnd['nodes']) == MAX_NET_NODES
+
+
+def test_nearby_pin_context_keeps_declared_functions_and_hidden_capacitor():
+    from backend.graph.nodes import netlist_block
+    nodes = [{'ref': f'R{i}', 'pin': '1'} for i in range(MAX_NET_NODES + 1)]
+    nodes += [{'ref': 'C2', 'pin': '1'}, {'ref': 'D1', 'pin': '1', 'pinfunction': 'K'}]
+    parts = [{'ref': n['ref'], 'value': '10k'} for n in nodes]
+    parts += [{'ref': 'Q1', 'value': 'Q_NPN_CBE'}]
+    circuit = {'components': parts, 'nets': [
+        {'name': 'VCC', 'nodes': nodes},
+        {'name': 'SW', 'nodes': [{'ref':'D1','pin':'2','pinfunction':'A'},
+                                {'ref':'Q1','pin':'1','pinfunction':'C'}]}]}
+    around = circuit_around(circuit, 'D1')
+    context = {p['ref']:p for p in around['context_components']}
+    assert context['Q1']['pins'][0] == {'pin':'1','function':'C','net':'SW'}
+    assert context['C2']['pins'][0]['net'] == 'VCC'
+    rendered = netlist_block(around)
+    assert '1 (C) = SW' in rendered and 'C2' in rendered
+
+
+def test_boost_mechanism_uses_declared_polarity_and_actual_output_capacitor():
+    from backend.graph.nodes import circuit_mechanism
+    def pins(*items):
+        return [{'pin':str(i),'function':function,'net':net} for i,(function,net) in enumerate(items,1)]
+    part = {'ref':'D7','pins':pins(('A','SW'),('K','OUT')), 'context_components':[
+        {'ref':'L8','value':'L','symbol':'Device:L','pins':pins(('1','INPUT'),('2','SW'))},
+        {'ref':'U9','value':'controller','pins':pins(('LX','SW'),('VOUT','OUT'))},
+        {'ref':'C1','value':'input cap','pins':pins(('1','INPUT'),('2','GND'))},
+        {'ref':'C7','value':'output cap','pins':pins(('1','OUT'),('2','GND'))}]}
+    answer = circuit_mechanism(part)
+    assert 'C7' in answer and 'input cap' not in answer
+    assert 'A→K' in answer and '에너지가 저장' in answer
+    part['pins'] = pins(('', 'SW'),('', 'OUT'))
+    assert circuit_mechanism(part) == ''
+
+
+def test_flyback_mechanism_closes_locally_without_claiming_supply_return():
+    from backend.graph.nodes import circuit_mechanism
+    part = {'ref':'D7','pins':[{'pin':'2','function':'A','net':'COIL_LOW'},
+                              {'pin':'1','function':'K','net':'COIL_HIGH'}],
+            'context_components':[
+                {'ref':'LS8','symbol':'Device:Buzzer','pins':[
+                    {'pin':'N','function':'','net':'COIL_LOW'},
+                    {'pin':'P','function':'','net':'COIL_HIGH'}]},
+                {'ref':'Q9','pins':[{'pin':'1','function':'C','net':'COIL_LOW'},
+                                    {'pin':'3','function':'E','net':'GND'}]}]}
+    answer = circuit_mechanism(part)
+    assert 'D7.A → D7.K' in answer and '국소 순환' in answer
+    assert '반드시 반환' in answer and '확정할 수는 없습니다' in answer
+
+
+def test_flyback_mechanism_keeps_shared_rail_resistor_pin_numbers():
+    from backend.graph.nodes import circuit_mechanism
+    part = {'ref':'D1','pins':[{'pin':'2','function':'A','net':'COIL_LOW'},
+                              {'pin':'1','function':'K','net':'COIL_HIGH'}],
+            'context_components':[
+                {'ref':'LS1','value':'KTG0912CL','symbol':'Device:Buzzer','pins':[
+                    {'pin':'N','function':'','net':'COIL_LOW'}, {'pin':'P','function':'','net':'COIL_HIGH'}]},
+                {'ref':'Q1','value':'Q_NPN_CBE','pins':[{'pin':'1','function':'C','net':'COIL_LOW'},
+                                                       {'pin':'3','function':'E','net':'GND'}]},
+                {'ref':'R22','value':'100R','pins':[{'pin':'1','function':'','net':'+5V'},
+                                                   {'pin':'2','function':'','net':'COIL_HIGH'}]}]}
+    answer = circuit_mechanism(part)
+    assert 'R22' in answer and 'R22.1=+5V' in answer and 'R22.2=COIL_HIGH' in answer
+
+
+def test_boost_mechanism_does_not_infer_topology_from_numeric_pins_only():
+    from backend.graph.nodes import circuit_mechanism
+    part = {'ref':'D1','libsource':'Diode:1N5817',
+            'pins':[{'pin':'2','function':'','net':'SW'}, {'pin':'1','function':'','net':'VCC'}],
+            'context_components':[
+                {'ref':'BT1','value':'1xAAA','symbol':'Device:Battery','pins':[
+                    {'pin':'1','function':'','net':'/Vbat'}, {'pin':'2','function':'','net':'GND'}]},
+                {'ref':'L1','value':'100uH','symbol':'Device:L','pins':[
+                    {'pin':'1','function':'','net':'/Vbat'}, {'pin':'2','function':'','net':'SW'}]},
+                {'ref':'U1','value':'HT7733A','pins':[{'pin':'5','function':'','net':'SW'},
+                                                     {'pin':'1','function':'','net':'VCC'}]},
+                {'ref':'C2','value':'22uF','pins':[{'pin':'1','function':'','net':'VCC'},
+                                                  {'pin':'2','function':'','net':'GND'}]}]}
+    assert circuit_mechanism(part) == ''

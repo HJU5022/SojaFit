@@ -1,0 +1,32 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_________________ test_after_grade_rewrites_once_then_refuses __________________
+tests/graph/test_graph_rewrite.py:35: in test_after_grade_rewrites_once_then_refuses
+    assert after_grade({"passed": [], "docs": CARD, "tries": 2}) == "거절"
+E   AssertionError: assert '재작성' == '거절'
+E     
+E     - 거절
+E     + 재작성
+________________ test_still_no_pass_refuses_after_two_searches _________________
+tests/graph/test_graph_build.py:35: in fake_chat
+    return schema(passed_ids=next(grades))
+                             ^^^^^^^^^^^^
+E   StopIteration
+E   During task with name '채점' and id 'f41474a7-3312-c8d5-9c93-fc47a0a016bc'
+
+The above exception was the direct cause of the following exception:
+tests/graph/test_graph_build.py:71: in test_still_no_pass_refuses_after_two_searches
+    out, calls = run(monkeypatch, "rating", [[], []], [CARD])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/graph/test_graph_build.py:47: in run
+    return build_graph(retriever=fake_retriever, lookup=lookup).invoke({"input": INPUT}), calls
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<repo>/.venv/lib/python3.12/site-packages/langgraph/pregel/main.py:4001: in invoke
+    for chunk in self.stream(
+<repo>/.venv/lib/python3.12/site-packages/langgraph/pregel/main.py:3058: in stream
+    for _ in runner.tick(
+E   RuntimeError: generator raised StopIteration
+=========================== short test summary info ============================
+FAILED tests/graph/test_graph_rewrite.py::test_after_grade_rewrites_once_then_refuses
+FAILED tests/graph/test_graph_build.py::test_still_no_pass_refuses_after_two_searches
+2 failed in 2.38s

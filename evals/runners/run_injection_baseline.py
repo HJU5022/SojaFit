@@ -429,7 +429,7 @@ def graph_trial(data,job,chat,retriever,load_cards,doc_meta,part_docs,history,bu
             return super().shutdown(wait=True,cancel_futures=cancel_futures)
     try:
         with patch.object(judge,'to_inputs',to_inputs),patch.object(judge,'ThreadPoolExecutor',JoinedReads), \
-                patch.dict(os.environ,{'JUDGE_READ_VOTES':'3'}):
+                patch.dict(os.environ,{'JUDGE_READ_VOTES':'3'}):  # 지금 코드는 이 값을 읽지 않는다(판정 읽기 1회). 실행 당시 설정을 그대로 둔다
             state,preparation=service_turns(trial['app'],inputs,budget,history,record['preparation'])
         record.update(state=state,preparation=preparation,answer=state.get('answer',''))
         if any(r['status']=='error' for r in observer.rows):

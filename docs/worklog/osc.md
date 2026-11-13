@@ -1,5 +1,42 @@
 # 오세창 작업 기록
 
+## 2026-11-13 PR #114 후속 문서 교정
+
+- 한 일: 사전 등록과 작업 기록의 문맥상 붙은 표현, 인젝션 검토 자료의 반복 설명, 프런트 안내 문장을 교정했다. 실행 이름과 실험 입력·원시 결과·측정 수치는 보존했다.
+- 바꾼 파일: `docs/research/injection-case-review-packet.md`, `evals/guides/preregister.md`, `docs/worklog/osc.md`, `docs/worklog/sth.md`, `frontend/e2e/E2E.md`, `frontend/src/SRC.md`.
+- 실행한 명령과 결과: `git diff --check`로 공백 오류를 검사하고, 변경 전후의 공백 제외 문자열·인용 문자열·Markdown 링크 대상을 대조했다. 문서 교정이므로 코드 실행이나 평가 재측정은 하지 않았다.
+- 확인 못 한 것: 원본 자료의 재배포 조건과 팀원별 AI 도구 사용 기록.
+- 다음 할 일: PR #114에서 교정된 문장을 검토한다.
+
+## 2026-11-13 회로 원본 이미지 복구
+
+- 한 일: `attiny85_dev` 원본 README가 참조하는 조립 사진 5개와 커넥터·회로도·PCB·렌더 이미지 5개를 기록된 원본 커밋에서 복구했다.
+- 바꾼 파일: `data/circuits/collected/samples/attiny85_dev/original/assets/`, `data/circuits/CIRCUITS.md`, `SOJAFIT.md`, `docs/worklog/osc.md`.
+- 확인: README의 이미지 10개와 PDF 1개에 대해 상대경로와 원본 커밋의 Git blob SHA를 대조했다. 최초 다운로드에서 큰 조립 사진 5개가 빈 파일로 생성돼 원본에서 다시 받아 대조했다.
+
+## 2026-11-13 원본 README 참조 자료 복구
+
+- 한 일: c09 인증 마크 PNG와 attiny85_dev 참고 회로도 PDF를 각각 기록된 원본 커밋의 README 상대경로에 복구하고 수집 안내·저장소 트리를 갱신했다.
+- 확인: 복구 당시에는 사용자 요청에 따라 별도 검증을 실행하지 않았다. 이후 위 항목의 README 상대경로와 Git blob SHA 대조로 파일 무결성을 확인했다.
+- 다음 할 일: 원본 파일의 재배포 조건을 확인한다.
+
+## 2026-11-13 문서 교정 진행
+
+- 한 일: 현재 main `b5f050d` 기준 OSC에서 사전 등록, 프런트 안내, 인젝션 검토 자료와 작업 기록의 지정된 띄어쓰기 구간을 교정하고 수집 원본의 누락 참조를 안내하고 평가 보고서에 근거한 Codex 비교 기록을 추가했다.
+- 바꾼 파일: `data/circuits/CIRCUITS.md`, `docs/deliverables/ai_tools_log.md`, `docs/research/injection-case-review-packet.md`, `docs/worklog/osc.md`, `docs/worklog/sth.md`, `evals/guides/preregister.md`, `frontend/e2e/E2E.md`, `frontend/src/SRC.md`.
+- 확인: `git diff --check`, 기존 문구 및 목록 항목을 대조했다. 모델 호출·평가 재측정은 하지 않았다.
+- 남은 일: 지정 구간 밖 과거 기록의 무공백 문장, 원본 파일의 재배포 조건과 팀원별 AI 도구 사용 기록을 확인한다. 기존 로컬 OSC 작업은 사용자 요청으로 버리고 main으로 갱신했다.
+
+## 2026-11-12 피드백 정정 선별 PR
+
+- 한 일: 검증한 채용 역할·후보 그룹 50건을 현재 시장 근거로 연결하고 기존 237건 조사는 과거 이력으로 구분했다. 여정 맵에서는 현재 승인·견적 저장 흐름과 미구현 기능을 구분했으며, 대체재 비교표에 판정 기준과 Codex의 역할·정답 초안 작성 경위를 기록했다.
+- 평가셋: 승인된 범위에서 v3 50문항에 `judges: ["심태현", "하정운"]`을 추가하고 `FROZEN.json` 해시와 안내 문서를 갱신했다. 문항·정답·기준은 바꾸지 않았다.
+- 인젝션: 본실측03 110건과 스모크08 2건을 분리했다. 사람 판정 정본은 본실측03 채점 사본의 20건 O·90건 pending이며, 어시스턴트 잠정 분류와 사람 판정을 구분했다. 원시 JSONL의 `human_review`는 측정 당시 미채점 상태를 유지했다.
+- 재시작·계정 분리: 격리 PostgreSQL과 실제 HTTP 서버 프로세스로 A의 입력 대기 상태를 서버 재시작 뒤 재개하고, B가 A의 run을 조회·재개하지 못하는 것을 확인했다. 재현 그래프는 합성 대역이므로 실제 멀티에이전트·배포 환경 검증으로 확대하지 않는다.
+- 주요 변경 파일: `EVAL_REPORT.md`, `SOJAFIT.md`, `docs/TOPIC.md`, `docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md`, `docs/evaluation-prep.md`, `docs/research/`, `evals/`, `tests/api/test_http_restart.py`, `tests/multi_agent/test_docs_agent.py`.
+- 검증: 정정된 본실측03 SHA-256을 테스트 고정값과 맞췄다. 동결셋·사람 판정 가져오기·인젝션 저장본 집중 검사는 11 passed, HTTP 재시작 재현은 종료 코드 0이었다. 전체 검사에서 최신 `main`의 저장소 구조 검사 5건과 OpenAPI의 `SNAPSHOT` 미정의 수집 오류를 제외하면 1,831 passed·12 failed·3 errors·159 skipped였다. 남은 실패·오류는 이번 PR에서 수정하지 않은 API 인증 기대값과 Supervisor V0 동결 해시 불일치다.
+- 제외: 배포 코드와 원격 `main` 완전 일치, Langfuse 스크린샷, KiCad·프런트 빌드 재측정 자료는 이 PR에 포함하지 않는다. 청크 SHA/DB 행 수와 v4h 동일 평가셋 원시 비교도 이번 범위가 아니다.
+
 ## 2026-11-09 PR #73 선반영 통합
 
 - 목적: PR #73이 `main`에 먼저 병합된 상태를 가정하고, OSC의 React/D5 작업대와 #73의 사용자별 회로·thread·승인 기억·합성 데모 경로를 함께 유지한다. 원격 push·PR 생성·배포는 하지 않는다.
@@ -62,7 +99,7 @@
 ## 2026-11-09 D5 같은 출처 React 기반 (Task 2)
 
 - 한 일: React·Vite·TypeScript 셸과 `/login`, `/app`, `/admin/users` 경로, `/` 로그인 이동, Query provider·Router·API 개발 프록시를 추가했다. 인증·프로젝트·실행·승인 화면 동작은 후속 범위다. Node 24 다단계 빌드의 정적 산출물만 Python runtime에 복사한다.
-- 서버 경계: API 등록 뒤 response-aware SPA middleware를 연결한다. 비API GET/HEAD의 downstream 404만 index(미빌드이면 기존 로그인)로 바꾸고, API·health·assets·다른 메서드·리다이렉트는 보존한다. 화면에도 기존 요청 ID를 유지한다.
+- 서버 경계: API 등록 뒤 response-aware SPA middleware를 연결한다. 비 API GET/HEAD의 downstream 404만 index(미빌드이면 기존 로그인)로 바꾸고, API·health·assets·다른 메서드·리다이렉트는 보존한다. 화면에도 기존 요청 ID를 유지한다.
 - 사용자 승인 예외: 표준 Vite가 요구하는 `frontend/` 도구 루트와 기존 design.md·정적 제공 어댑터를 함께 두는 `backend/web`에만 한 종류 규칙 예외를 둔다. 하위 폴더는 제외하지 않고 API 업무 로직은 어댑터에 넣지 않는다. 단순 GET catchall이 Google 끝 `/`와 POST 404를 바꾸는 실제 회귀가 확인되어 사용자가 response-aware 방식으로 대체를 승인했다.
 - 바꾼 파일: `frontend/`의 package/lock·HTML·Vite/TypeScript 설정·폴더 설명·React 진입점/셸/스타일/단위 테스트, `backend/web/app.py`, `backend/main.py`, `Dockerfile`, `.gitignore`, `backend/web/WEB.md`, `backend/BACKEND.md`, `tests/api/test_frontend.py`, `tests/api/test_auth.py`, `tests/api/test_health.py`, `tests/api/API.md`, `tests/repo/test_repo_layout.py`, `SOJAFIT.md` 신규 파일 트리·설명 표 행, 이 작업 기록.
 - RED: 최초 frontend API 테스트 `2 failed, 3 passed`; helper stub 경계 확장 `9 failed, 4 passed`; React null stub `4 failed`; 루트 진입 추가 `1 failed, 4 passed`. 단순 catchall의 추가 인증 검사 `3 failed, 49 passed, 21 skipped`와 HEAD/메서드/health 검사 `4 failed, 14 passed`를 관측한 뒤 middleware로 고쳤다.
@@ -394,7 +431,7 @@
 
 - 검토에서 지적된 파일명/확장자, net code 유일성·형식, quoted NUL만 보완한다. raw/text 지역 참조 수명 관련 Minor는 요청대로 최종 검토까지 보류한다.
 - RED: production 수정 전 `PYTHONUTF8=1 uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py` → `20 failed, 49 passed, 1 skipped in 1.82s`. 비정상 입력이 정상 반환/201로 통과하는 것이 예상 원인이었다.
-- 정책 근거: 기존 공개 KiCad 5종의 13/8/14/44/14 nets는 모두 ASCII 양의 정수 code를 사용한다. 표준 표기 `[1-9][0-9]*`와 net 간 유일성을 요구한다. code는 문자열로 유지하며 0/음수/소수/부호/지수/앞자리 0/비ASCII 숫자는 거절한다. NUL은 metadata 포함 입력 전체에서 거절한다. filename은 비어 있지 않고 공백 제거·대소문자 무시 후 `.net`으로 끝나야 한다.
+- 정책 근거: 기존 공개 KiCad 5종의 13/8/14/44/14 nets는 모두 ASCII 양의 정수 code를 사용한다. 표준 표기 `[1-9][0-9]*`와 net 간 유일성을 요구한다. code는 문자열로 유지하며 0/음수/소수/부호/지수/앞자리 0/비 ASCII 숫자는 거절한다. NUL은 metadata 포함 입력 전체에서 거절한다. filename은 비어 있지 않고 공백 제거·대소문자 무시 후 `.net`으로 끝나야 한다.
 - 검증 계획: 새 일회용 `postgres:16-alpine` 컨테이너만 사용한다(기존 볼륨/공유 DB 없음). CI의 003/005/006 인증 SQL과 anon/authenticated NOLOGIN 역할을 먼저 준비하고 두 요청 시험 파일·repo layout·저장소 시험을 실행한다. 그 후 `PYTHONUTF8=1 TEST_AUTH_DATABASE_URL=<새 일회용 DB> uv run pytest -q` 전체 backend suite를 한 번 실행한다. 외부 API/모델 예산 0달러, 반복 실패하면 원인·범위 확인 후 중단한다.
 - GREEN: `uv run pytest -q tests/projects/test_netlist.py tests/api/test_projects.py tests/projects/test_project_repository.py tests/repo/test_repo_layout.py` → `82 passed in 4.25s`; 전체 backend 한 번 실행 → `1033 passed, 37 skipped in 75.35s`. 신규 시험 skip은 없으며 기존 선택적 시험 37건만 skip했다. `uv lock --check`, `git diff --check`도 통과했다. 새 정상화 코드로 공개 KiCad 5종을 모두 읽어 net 수 13/8/14/44/14를 유지했다. 원본/DB schema/정규화 shape/의존성은 바꾸지 않았다. staged diff·비밀값을 확인하고 지정된 fix 커밋을 남긴 뒤 이번 시험 컨테이너만 정리한다.
 
@@ -650,3 +687,49 @@
 - 검증: `uv run --no-sync pytest -q` 전체는 1,598 passed, 112 skipped, 1 failed(88.43초). 실패한 `tests/evals/test_input_surfaces.py::test_real_input_path_records_bad_raw_and_contains_final[P3]`는 변경 전 main(`14cf261`)의 별도 스냅샷에서도 단독 실행으로 재현됐다. 회로도 API·검색·변환·오류·OpenAPI·폴더 규칙 집중 검사 181 passed.
 - 실제 공급자 점검: `verify_external_schematics.py --query RP2040 --check-cache`에서 MIT 프로젝트 `calliah333/RP2040-designguide@a9afaa2`의 3509×2484 PNG 한 장을 받았다. 반복 요청에서 외부 검색·저장소 검사·변환은 각각 0회. Docker 이미지 빌드 후 KiCad 9.0.2 비루트 컨테이너에서 `--force-kicad-fallback`으로 ATtiny85 원본도 3508×2481 PNG 한 장으로 변환했다. 배포 서버와 실제 사용자 로그인은 이번 실조회 대상이 아니다.
 - 운영 요청: 팀 GitHub 조직 관리자가 공개 회로도 조회용 OAuth App을 등록한다. 앱 자격 증명은 배포용 Secret Manager에 보관하고, 앱 인증 연결과 요청 한도 확인은 등록 후 진행한다.
+
+## 2026-11-12 · 1→2→3등급 PR 준비
+
+공식 근거/참고 폴백과 정확 품번·판본·인용 검증, 관련 품질 보완을 분리한다. 검증 정리는 docs/research/grade-evidence-validation.md. 전체 pytest 1764 passed,112 skipped,실패0(64.59초). 운영 부하는 보류. 포화 재확인은 공급자 제한으로 중단돼 안정 포화점 미확정. 상세 사전등록 원문은 작성자 기존 작업공간에 보존하며 게시 전 필요한 등급 관련 사전등록 절을 검토한다.
+
+
+## 2026-11-12 OSC에 최신 main 통합 후 최종 상태
+
+- 브랜치는 OSC. 최신 main `11dc216`을 fast-forward로 반영했다. 원래 OSC의 회로도/프런트 미커밋 작업은 stash `fc262a301cf7f47d133bdbdc587716380403f5f1`에 보존했다. 기존 검증 원본 작업공간도 유지했다.
+- main 기능을 보존하며 등급 변경을 3-way 통합했다. Spec 에이전트/회로 읽기 명칭, FIND_N_DOCS 기본5와 환경변수, SUPERVISOR_REPLAN 설정, 응답·보안 경계를 보존했다. 프런트/DB 추가변경은 없다. 통합 후 유료 답변 평가·포화 재측정은 수행하지 않았다. 위 실측 수치는 통합 전 코드의 이력이며 새 코드의 새 실측으로 주장하지 않는다.
+- 충돌 마커 제거/문법 검사/diff check 통과. HEAD=origin/main인 상태에서 전체 통합 변경(신규 파일 포함)을 별도 임시 index의 패치로 만들어 최신 main에 적용 검사 통과. 실제 index·commit·push·PR은 변경하지 않았다. 원격 main이 이후 변경되면 다시 검사해야 한다.
+- 전체 pytest는 변경하지 않은 main의 tests/api/test_openapi.py:154 `SNAPSHOT` 미정의로 수집 오류 1건. 이 파일을 제외하고 .env 영향을 차단한 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q --ignore=tests/api/test_openapi.py` 결과는 **1818 passed, 158 skipped, 9 failed**, 69.62초다. 실패 9건은 인증 사전 검증 2, stage_timing 2, 저장소 구조 5이며 동일 main 기준선에서 재현됐다. 기준선 export의 추가 sample-hash 관련 실패는 이 9건의 근거와 섞지 않는다.
+- 통합 중 os/display_inputs 등 누락은 수정하고 관련173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
+- 판단: 내용상 최신 main 통합/무충돌 검사는 완료. 테스트 전체 통과 기준의 PR 준비 완료는 보류. 위 기존 main 오류의 처리/팀 판단이 남았다.
+- 자료는 PR-준비/OSC-final-verification.json, OSC-main-integrated.patch, OSC-final-included-files.txt, OSC-main-full-pytest.log, OSC-main-final-pytest.log, OSC-main-baseline-repo-layout.log에 보존했다. 패치 적용 가능은 실제 GitHub PR 생성/CI 성공/병합 승인과 구분한다.
+
+### 2026-11-12 · PR103 계약 감사 보완 시작
+
+- 사용자 승인 범위: 품번별 판본 연결, 공식 검색 슬롯 소진과 근거 부재 구분, 웹 연결/SSE·GET 예외 계약 문서. 기존 커밋 d15331e가 복구 기준이며 추가 작업 없이 복구 가능하다. 제품·문서·시험 파일은 각 담당으로 나눠 병렬 수정하고, 공유 호출부는 담당 완료 후 순차 통합한다.
+- 새 유료 평가/포화 실측/운영 부하 없음. 단위 회귀와 최종 pytest/main 병합 검사 후 기존 OSC PR103에 추가 커밋을 반영한다. 기존 main 오류는 이번 범위와 구분해 남긴다.
+
+
+## PR103 계약 감사 수정 반영 — 2026-11-12
+
+- 품번별 판본 연결을 추가했다. SS34/F16·SS34H/F20의 교차 판본은 문서 입력/공식 행/후보 판정/최종 인용 검사에서 배제한다. 1N 계열·하이픈 품번, 단일 판본의 기존 locator와 단일 품번의 복수 판본 비교도 회귀 시험에 포함했다. 관계가 모호한 다품번·다판본 자료는 추정하지 않고 거부한다. 지원되는 명시적 절 연결을 검증한 것으로 모든 자연어 문장을 해석한다고 주장하지 않는다.
+- 공식/참고 검색 슬롯은 요청당 각각 1회로 유지한다. 사용 중이거나 소진된 슬롯은 SearchBudgetExhausted로 실제 검색 0건과 구분한다. 공식 슬롯 소진만으로 3등급으로 이동하지 않는다. 실제 0건/공급자 실패의 기존 폴백과 유효 내부 답변은 보존한다. 다른 에이전트의 검색 결과 공유·추가 호출 기능은 넣지 않았다.
+- MULTI_AGENT의 낡은 웹 거부 설명, 공식 검색 계약, API의 SSE/GET 공통 결과 설명을 갱신했다. profile_hints/input_conditions가 SSE 전용인 기존 동작과 DB 계약은 바꾸지 않았다.
+- 최종 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q`는 기존 main의 `tests/api/test_openapi.py`에서 SNAPSHOT 미정의 수집 오류 1건으로 중단됐다. 해당 파일을 제외한 전체 결과는 **1836 passed, 158 skipped, 9 failed**(71.92초)였다. 실패 9건의 테스트 ID는 수정 전과 동일했다(인증 사전 검증 2건, 단계 타이밍 2건, 저장소 구조 5건). 기대치를 바꾸거나 비용 문제로 실패를 제외하지 않았다.
+- 독립 검토에서 판본 필터가 문서·판정·최종 인용 경계까지 연결되고 검색 상한 1+1이 유지됨을 확인했다. 초기 집중 검사 1건의 실패는 병렬 작업 중 상위 테스트와 helper의 갱신 시점이 겹친 실행으로 기록했다. 산출물 고정 후 관련 검사 506 passed, 1 skipped였고 마지막 복수 절 호환 추가 후 전체 검증으로 확인했다.
+- 가짜 검색·모델·사양과 실제 코드 경로를 이용한 회귀 검증이다. 이번 수정 후 실 Exa/PDF/LLM 호출·포화/운영 부하 실측은 하지 않았다. 통합 전 실측을 새 코드의 새 실측으로 바꾸지 않는다.
+- 근거: PR-준비/PR103-contract-focused.log, PR103-contract-final-targeted.log, PR103-contract-full.log, PR103-contract-full-excluding-known-main-error.log. 동결 v3·정답·해시는 유지했다.
+
+### 2026-11-12 · 조회 제한 후 문서 완료 상태 보완
+
+- 사용자 승인: 공식 보강이 필요한데 검색 슬롯이 소진되면 기존 내부 답을 ok로 보고하는 문제를 수정한다. 복구 기준은 c0c453e다. `docs.py`의 최종 상태 계산만 고쳐 내부 보강 후 남은 요구와 조회 제한을 함께 확인하고 답변·인용은 유지한다. 내부 packet만으로 요구가 충족되면 정상 완료로 보존한다.
+- Red 회귀 검사 2건에서 잘못된 ok 상태를 재현했고, Green 경계 검사 8건을 통과했다. 관련 테스트와 전체 검사 후 기존 PR #103에 추가 커밋과 본문 갱신을 예정했다. 새 유료 평가나 운영 부하 실측은 없었다.
+
+
+## PR103 공식 조회 제한 후 미완료 상태 보완 — 2026-11-12
+
+- 공식 조회 슬롯이 소진된 뒤에도 필수 trr 측정 조건이 부족한데 문서 보고가 ok/missing[]로 남는 문제를 수정했다. 최종 내부 보강 뒤에 남은 조건·누락·재검색 요구와 조회 제한 여부를 함께 검사한다.
+- 확인된 내부 답변·인용은 유지하면서 미완료 상태 partial, 사유 limit_reached, 미확인 항목을 남긴다. Supervisor의 부분 답변 안내가 실제로 출력되는지도 시험했다. 검증된 내부 packet만으로 요구가 충족되면 정상 완료를 유지하며 불필요한 partial을 추가하지 않는다. DB·프런트·모델 설정·검색 횟수는 바꾸지 않았다.
+- Red: enough/partial 입력 2건에서 잘못된 ok를 재현했다. Green: 해당 경계와 내부 완결 packet의 조회 제한 유무를 포함한 8건을 통과했다. 최종 관련 검사는 190 passed(7.33초)였다.
+- 최종 전체 pytest는 기존 main의 SNAPSHOT 수집 오류 1건으로 중단됐다. 해당 파일을 제외하고 .env 영향을 차단한 뒤의 결과는 **1841 passed, 158 skipped, 9 failed**(71.16초)였다. 실패 테스트 ID는 이전과 같고 이번 수정으로 늘어난 실패는 없었다. 비용 문제나 기존 실패를 성공으로 바꾸지 않았다.
+- 가짜 조회·모델을 실제 문서 에이전트와 최종 안내 코드에 연결한 검증이다. 실제 Exa·LLM 유료 호출이나 동결 v3의 새 품질·포화 평가는 하지 않았다. 실제 모델 오답률 개선을 주장하지 않는다.
+- 로그: PR-준비/PR103-completion-focused.log, PR103-completion-full.log, PR103-completion-full-excluding-known-main-error.log. 계약은 docs/specs/official-datasheet-evidence.md에 추가했고 기존 PR103 본문과 추가 커밋으로 반영한다.

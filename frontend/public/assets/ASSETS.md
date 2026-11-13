@@ -6,5 +6,6 @@
 
 ## 파일
 - `ASSETS.md` — 이 폴더 설명.
-- `sojafit-logo.svg` — 기존 A안 Circuit S 심볼·SOJAFIT 가로 로고. 심볼 #8A94A6, 단자와 FIT #FF5722, SOJA #EDF0F4. Segoe UI Bold의 대문자 워드마크를 path로 변환해 설치 폰트에 의존하지 않는다.
-- `sojafit-icon.svg` — 같은 Circuit S 심볼과 주황 단자를 어두운 정사각 바탕에 배치한 파비콘.
+- `sojafit-icon.svg` — Circuit S 심볼과 주황 단자를 어두운 정사각 바탕에 배치한 아이콘. 파비콘과 화면 머리의 로고로 쓴다.
+
+2026-11-13 화면 재작성 때 이전 랜딩의 캡처 3장(`landing-guide-*.png`), 기판 배경(`landing-circuit-background.png`), 가로 로고(`sojafit-logo.svg`)는 쓰는 곳이 없어 지웠다.

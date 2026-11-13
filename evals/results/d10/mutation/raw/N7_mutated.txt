@@ -1,0 +1,10 @@
+..F                                                                      [100%]
+=================================== FAILURES ===================================
+_______ test_new_password_minimum_length_is_twelve_when_called_directly ________
+tests/api/test_auth.py:364: in test_new_password_minimum_length_is_twelve_when_called_directly
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ============================
+FAILED tests/api/test_auth.py::test_new_password_minimum_length_is_twelve_when_called_directly
+1 failed, 2 passed in 2.47s

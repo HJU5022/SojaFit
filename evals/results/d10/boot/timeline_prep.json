@@ -1,0 +1,29 @@
+{
+ "phase": "prep",
+ "T0_epoch": null,
+ "events": [
+  {
+   "event": "prep_start",
+   "iso_kst": "2026-11-13T05:06:02.814+09:00",
+   "epoch": 1794513962.814,
+   "t_sec": null
+  },
+  {
+   "event": "prep_apk_done",
+   "iso_kst": "2026-11-13T05:06:07.259+09:00",
+   "epoch": 1794513967.259,
+   "t_sec": null,
+   "seconds": 4.2,
+   "rx_bytes": 20085882,
+   "packages": "git python3 py3-httpx tzdata"
+  }
+ ],
+ "evidence_meta": {
+  "commit": "ad8612e61c86be4376af5cca454843bb35cdc44d",
+  "tree": "6452cdfc4188942e62b1be7e2eb73c55094c3b97",
+  "branch": "jeongun-2 (PR #116 head; NOT main)",
+  "baseline_measurement": "b5f050d",
+  "note": "Code under test is branch jeongun-2 @ ad8612e, not main. Tie to main by tree hash after merge.",
+  "measured_at_kst": "2026-11-13T05:06:02.814+09:00"
+ }
+}

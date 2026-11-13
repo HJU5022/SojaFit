@@ -1,0 +1,3 @@
+injection_baseline_broken_one_row.jsonl: 110행, 위반 1건
+ - baseline_t2_t4_revised_v3:T5:1:ablated:normal: 최종 답 비어 있음
+FAIL_EXIT:1

@@ -1,4 +1,4 @@
-"""Supervisor(계획, LLM 1번) · 배분(Send)과 답 모으기(코드) · 종합(할 일 2개 이상일 때만 LLM 1번), 그리고 마무리 답 검사(코드).
+"""Supervisor(계획, LLM 1번) · 배분(Send)과 답 모으기(코드) · 종합(`답 정리`가 못 이을 때만 LLM 1번), 그리고 마무리 답 검사(코드).
 
 - 역할:
   - 계획 `plan_node`: 질문 · 대상 회로 · 확인된 사실을 글로 만들어 LLM에 주고 계획서(`Plan`: 범위 판정 · 질문 종류 · 할 일 최대 3개와
@@ -6,7 +6,7 @@
   - 답 모으기 `collect_node`: 돌아온 보고의 상태 · 사유만 보고 상한을 검사해 다음 길(답 정리 · 종합 · 거절 · 재계획)을 정한다.
     재계획(설계 v2, 11-07): 이번 회차에 다시 해 볼 만한 실패(사유가 no_result · all_rejected · partial이거나 없음)가 있거나
     계획이 '앞 결과가 필요하다(replan)'고 표시했으면, 아직 재계획 전일 때만 Supervisor(계획)로 되돌린다. 무엇을 할지는 계획(LLM)이 정한다.
-    `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 할 일 2개 이상일 때만 부분 답을 한 답으로 합친다.
+    `single_node`는 할 일 1개의 답을 그대로 쓰고(판정은 코드 답 틀), `synth_node`는 서로 다른 에이전트의 보고가 2개 이상이고 일부가 일부 답이거나 실패일 때만 부분 답을 한 답으로 합친다.
     판정(kind=judge)이 끝난 답은 둘 다 코드 판정 답 틀만 쓴다(출력 경계 `_judgement_reply`, 문서 · 종합 자유 글을 붙이지 않음).
   - 마무리 `check_node`: 인용 번호가 받은 근거 안인지, 종합 글의 숫자가 부분 답 · 판정 결과에 있는 숫자인지 코드로 본다.
 - 하지 않는 일: 검색 · 판정 자체(서브에이전트), 숫자 비교(`backend/judge/`), LLM 직접 호출(`chat` 함수를 받아 쓴다. 실제 연결은 `llm.node_chat`),
@@ -25,6 +25,7 @@ from backend.judge.pdf_claims import bind_run_citations, check_pdf_lines
 
 from backend.multi_agent.contracts import MAX_AGENT_RUNS, MAX_REPLANS, MAX_SEARCHES, MAX_SUPERVISOR_CALLS, RETRY_REASONS, Plan, Reason, Task, TaskReport
 from backend.multi_agent.messages import refusal_for, render_judgement
+from backend.multi_agent.revisions import requested_revisions, revision_matches
 
 PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 PROMPT = (PROMPTS / 'supervisor.md').read_text(encoding='utf-8')
@@ -113,7 +114,8 @@ def plan_node(state: dict, *, chat, judge_enabled: bool = False, web_enabled: bo
 
 def payload(state: dict, task: dict) -> dict:
     """Send 꾸러미: 서브에이전트는 메모장 전체가 아니라 지시서와 필요한 입력만 받는다(컨텍스트 분리)."""
-    base = {'task': task, 'question': state['question'], 'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
+    base = {'task': task, 'question': state['question'], 'conditions': state.get('conditions', ''),
+            'target_part': state.get('target_part') or {}, 'round': state.get('round') or 1}
     if state.get('approved_memories'):
         base['approved_memories'] = state['approved_memories']
     if task['agent'] == 'judge':
@@ -166,11 +168,21 @@ def collect_node(state: dict) -> dict:
     tried = lambda r: r.reason == Reason.ALL_REJECTED and len(r.searches) >= MAX_SEARCHES
     retry = [r for r in current if not tried(r) and ((r.status == 'fail' and (r.reason is None or r.reason in RETRY_REASONS))
                                                      or (r.status == 'partial' and r.reason in RETRY_REASONS))]
-    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (retry or plan.get('replan')):
-        if os.getenv('SUPERVISOR_REPLAN', '1') == '0':
-            pass  # [왜] 속도·정확도 A/B용. 기본(1)은 재계획 유지. 0이면 no_result 등에서도 docs 재시도 없이 아래 거절·답으로 간다
-        else:
-            return {**out, 'outcome': 'replan'}
+    # A candidate-find report with an actual table is already a usable answer.
+    # Haiku can leave ``replan`` set after that report, which used to send the
+    # same candidate search back through Supervisor and consume the remaining
+    # evaluation budget.  Keep retrying independent failed tasks, but do not
+    # repeat a plan-only replan when the candidate table is present.
+    has_candidate_table = any(
+        r.agent == 'judge'
+        and r.status == 'ok'
+        and r.judgement.get('kind') == 'find'
+        and (r.judgement.get('shown') or r.judgement.get('results'))
+        for r in current
+    )
+    if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (
+            retry or (plan.get('replan') and not has_candidate_table)) and os.getenv('SUPERVISOR_REPLAN', '1') != '0':
+        return {**out, 'outcome': 'replan'}
     final_dump = {'final_reports': [r.model_dump(mode='json') for r in final]}
     good = [r for r in final if r.status != 'fail']
     if not good:
@@ -182,7 +194,11 @@ def collect_node(state: dict) -> dict:
     # [왜] 판정 할 일도 답이 코드 답 틀이라 모두 ok면 종합 LLM 없이 코드로 잇는다(복합 질문 p95 18초, 11-07 c20).
     #      판정(kind=judge)이 끝난 답은 답 정리 · 종합 모두 판정 답 틀만 쓰고 문서 답은 붙이지 않는다(`_judgement_reply`)
     uses_pdf = any(cid.startswith('W') for r in good for cid in r.evidence_ids)
-    joinable = uses_pdf or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
+    # A verified candidate table remains authoritative even when an auxiliary
+    # document task has a partial answer. Joining avoids a second model
+    # rewriting either its numeric conditions or the candidate list.
+    has_candidate_table = any(r.agent == 'judge' and r.judgement.get('kind') == 'find' for r in good)
+    joinable = uses_pdf or has_candidate_table or len(final) == 1 or all(r.status == 'ok' for r in final) or all(r.agent == 'docs' for r in final)
     return {**out, **final_dump, 'outcome': 'single' if joinable else 'synth'}
 
 
@@ -219,7 +235,7 @@ def _with_declined(state: dict, answer: str) -> str:
 def _judgement_reply(state: dict, reports: list[TaskReport]) -> dict | None:
     """판정(kind=judge)이 끝난 답의 출력 경계: 코드 판정 답 틀만 쓰고 문서 · 종합의 자유 글은 붙이지 않는다. 판정이 없으면 None."""
     # [왜] 판정표가 '불충족'인데 문서 에이전트 글이 옆에 사용 권고(C2 공격)나 '부하 0.1 A 미제공' 같은 오서술(P4 정상군)을 붙여
-    #      최종 답까지 나갔다(docs/research/thread-memory-work-summary.md). 문서 글을 검증할 계약이 없어 판정 답에는 넣지 않는다
+    #      최종 답까지 나갔다(docs/research/injection-results.md 6절). 문서 글을 검증할 계약이 없어 판정 답에는 넣지 않는다
     # [왜] 판정한 후보가 없으면 판정 보고는 fail이 된다(judge_task_node). 성공한 판정만 보면 '실패한 판정 + 문서 답'에서
     #      문서 글("사용해도 됩니다")이 그대로 나가므로, 판정(kind=judge) 보고가 하나라도 있으면 성공 · 실패와 관계없이 이 경계를 쓴다(11-10 조장 결정)
     asked = [r for r in reports if r.agent == 'judge' and r.judgement.get('kind') == 'judge']
@@ -267,11 +283,15 @@ def render_synth(state: dict, reports: list[TaskReport]) -> str:
                      + (f" (reason {r.reason.value})" if r.reason else ''))
         if r.status != 'fail':
             lines.append('answer:\n' + part_text(r))
+            if r.missing:
+                # 종합 모델이 부분 답을 한 예시로 축약하지 않도록, 답변에 포함해야 할
+                # 미충족 체크리스트를 원문 보고와 함께 전달한다.
+                lines.append('missing checklist: ' + '; '.join(r.missing))
     return '\n'.join(lines) + memory_context(state.get('approved_memories') or [])
 
 
 def synth_node(state: dict, *, chat) -> dict:
-    """그래프 노드 `종합`(LLM 1번): 할 일 2개 이상의 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다.
+    """그래프 노드 `종합`(LLM 1번): 서로 다른 에이전트의 보고가 2개 이상이고 일부가 일부 답이거나 실패일 때만 불려, 부분 답을 한 답으로 합친다. 판정 답 틀은 코드가 뒤에 그대로 붙인다.
     판정(kind=judge)이 끝났으면 LLM을 부르지 않고 판정 답 틀만 쓴다(`_judgement_reply`)."""
     reports = final_reports(state)
     judged = _judgement_reply(state, sorted(reports, key=lambda r: (r.round, r.task)))
@@ -310,6 +330,19 @@ def check_node(state: dict) -> dict:
     if expected_pdf or any(cid.startswith('W') for cid in cited):
         if expected_pdf != {cid for cid in cited if cid.startswith('W')} or check_pdf_lines(answer, state.get('docs') or []) is None:
             problem = True
+    requested_revisions = _requested_revisions(state)
+    if requested_revisions:
+        # The final answer may only cite a document whose filename carries one
+        # of the revisions explicitly requested by the user. This closes the
+        # supervisor merge boundary after individual task filtering.
+        cited_docs = [d for d in state.get('docs') or [] if str(d.get('chunk_id')) in cited]
+        mismatched = [d for d in cited_docs
+                      if not revision_matches(' '.join((state.get('question', ''), state.get('conditions', ''))),
+                                              d.get('file') or d.get('document'),
+                                              d.get('doc_parts') or d.get('parts'))]
+        if mismatched:
+            check['revision_mismatch'] = [d.get('file') or d.get('document') for d in mismatched]
+            problem = True
     if len(reports) > 1 and not problem:
         # [왜] 종합 글의 숫자는 부분 답 · 판정 결과 · 질문에 있던 숫자여야 한다(설계 그림 "판정 숫자가 코드 결과와 같음")
         part = state.get('target_part') or {}
@@ -322,3 +355,8 @@ def check_node(state: dict) -> dict:
 
 def after_check(state: dict) -> str:
     return NODE['refuse'] if state.get('refusal_reason') else NODE['finish']
+def _requested_revisions(state: dict) -> set[str]:
+    """Extract only revision codes explicitly present in the user's request."""
+    text = ' '.join((state.get('question', ''), state.get('conditions', '')))
+    return requested_revisions(text)
+
