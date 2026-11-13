@@ -370,6 +370,7 @@ SojaFit (proj3-b)
 │   │   ├── grader_cases_v2.json  <- 채점기 기준선(#36)의 입력: v2 관련 19·비관련 35문항의 마지막 검색 청크와 통과 청크(번호·파일·쪽만, 본문 없음)
 │   │   ├── grader_cases_r1_dev.json  <- 채점기 기준선(#34)의 입력: R1 dev 46문항에 서비스 검색 + 지금 채점을 1번씩 돌린 검색·통과 청크(번호·파일·쪽만)
 │   │   ├── rewrite_q3_v2.json  <- 같은 19문항의 고정 재작성 질의 Q3(서비스 rewrite() 출력 그대로)
+│   │   ├── rewrite_q3_v3.json  <- v3 관련 문항 중 쪽 정답이 있는 21건의 고정 재작성 질의 Q3(청킹 v1·v4h 비교가 같은 질의를 쓰게 한 번만 생성)
 │   │   └── layers/         <- 검색 조합 층별 재측정(11-03)의 고정 입력. 깊은 폴더라 설명은 INPUTS.md에
 │   │       ├── parts.json  <- 0층에서 고정한 질문 줄·품번·비교 여부
 │   │       ├── queries.jsonl  <- LLM이 한 번 만들어 고정한 질의 Q3~Q5
@@ -452,9 +453,10 @@ SojaFit (proj3-b)
 │       ├── embedding/      <- 임베딩 프록시(benchmark_embeddings)와 격자 본평가(11-02, 사전 등록 #16)
 │       ├── search_compare/ <- 검색·청킹 방식 비교(hybrid_search, chunking_*)
 │       ├── chunking/       <- 청킹 산출물의 요약·manifest·해시 목록
-│       │   └── v4h-2026-11-08/  <- 현재 코퍼스(청커 tsc-v4h-2026-11-08)의 요약·manifest·파서 불일치와 청크별 sha256 목록
-│       │       ├── chunk_sha256.tsv  <- 청크 51,967개의 doc·idx·본문 sha256(LF, 본문 없음)
-│       │       └── chunk_sha256.md  <- 위 목록의 해시 대상·확인 명령·재생성 명령·chunks.jsonl 입수 방법
+│       │   ├── v4h-2026-11-08/  <- 현재 코퍼스(청커 tsc-v4h-2026-11-08)의 요약·manifest·파서 불일치와 청크별 sha256 목록
+│       │   │   ├── chunk_sha256.tsv  <- 청크 51,967개의 doc·idx·본문 sha256(LF, 본문 없음)
+│       │   │   └── chunk_sha256.md  <- 위 목록의 해시 대상·확인 명령·재생성 명령·chunks.jsonl 입수 방법
+│       │   └── v1-vs-v4h-2026-11-13/  <- 청킹 v1(tsc-cards-2026-11-01) 대 v4h를 같은 동결 v3·같은 임베딩·같은 검색 코드로 잰 검색 원시 결과(retrieval_v1·retrieval_v4h json)와 README.md·SHA256.txt
 │       ├── drafts/         <- 초안 검수 스냅샷(draft50_second_pass, draft52_validation)
 │       ├── skill/          <- Skill·도구 개발 검증 요약
 │       ├── grader/         <- 채점기 기준선(eval_grader)
@@ -827,6 +829,7 @@ SojaFit (proj3-b)
     │       ├── EVIDENCE.md <- 폴더 설명: 파일별 sha256·출처 각주·바이트 동일 여부
     │       ├── job-postings-summary.md  <- 제조 산업 AI 공고 237건 집계(원본 이름 집계.md)
     │       ├── candidate-g-market-saturation.md  <- 후보 G 시장 포화 비교(원본 이름 후보 G 시장 포화 비교.md)
+    │       ├── payer-research-2026-11-13.md  <- 지불 주체 근거 조사(도구 가격 · 결재 부서 · 국내 공공 예산, 2026-11-13)
     │       ├── candidate-circuit-role-substitution.md  <- 1차 관문 회로 역할 대체 조사(원본 이름 1차관문-회로역할대체.md)
     │       ├── corpus/     <- 공개 문서·다이오드 데이터시트 조각 수 실측
     │       │   ├── manifest_open_docs.json  <- 공개 문서 출처별 조각 수
