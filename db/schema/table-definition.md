@@ -3,7 +3,7 @@
 <!-- 자동 생성: scripts/db/gen_schema_docs.py. 직접 고치지 않는다(표 설명은 그 파일의 TABLES, 구조는 DB). -->
 
 - 구조(타입 · NULL · 기본값 · 제약 · 인덱스)는 실제 DB에서 읽은 값이고, 목적 · 칸 의미는 `scripts/db/gen_schema_docs.py`의 `TABLES`에 있다. 그림은 [erd.md](erd.md).
-- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 24개.
+- FK 정의에 `ON DELETE`가 없으면 `NO ACTION`이다. 서비스 표 25개.
 
 | 스키마.표 | 목적 |
 |---|---|
@@ -19,6 +19,7 @@
 | `public.auth_email_send_limits` | 원문 이메일·IP 없는 메일 발송 요청 한도 |
 | `public.projects` | 프로젝트 |
 | `public.circuits` | 프로젝트의 정규화 회로(1:1) |
+| `public.project_circuit_versions` | 프로젝트별 불변 회로 버전 이력(대화가 참조) |
 | `public.threads` | 프로젝트 안의 대화 |
 | `public.runs` | 질문 한 번의 실행과 공개 결과 |
 | `public.messages` | 화면 대화 기록 |
@@ -262,7 +263,7 @@
 |---|---|---|
 | `pk_projects` | PK | `PRIMARY KEY (id)` |
 | `fk_projects_user` | FK | `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE` |
-| `ck_projects_demo` | CHECK | `CHECK ((((source_kind = 'demo'::text) AND (demo_id IS NOT NULL) AND (btrim(demo_id) <> ''::text)) OR ((source_kind = 'upload'::text) AND (demo_id IS NULL))))` |
+| `ck_projects_demo` | CHECK | `CHECK (((source_kind = 'demo'::text) = (demo_id IS NOT NULL)))` |
 | `ck_projects_name` | CHECK | `CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 200))))` |
 | `ck_projects_source_kind` | CHECK | `CHECK ((source_kind = ANY (ARRAY['demo'::text, 'upload'::text])))` |
 
@@ -270,6 +271,10 @@
 |---|---|
 | `ix_projects_user_updated` | `btree (user_id, updated_at DESC, id DESC)` |
 | `pk_projects` | `UNIQUE btree (id)` |
+
+| 트리거 | 정의 |
+|---|---|
+| `initialize_empty_circuit_version` | `CREATE TRIGGER initialize_empty_circuit_version AFTER INSERT ON public.projects FOR EACH ROW EXECUTE FUNCTION initialize_empty_circuit_version()` |
 
 ## `public.circuits`
 
@@ -282,11 +287,13 @@
 | `source_sha256` | text | NOT NULL |  | 원본 넷리스트 SHA-256(원문은 저장 안 함) |
 | `parser_version` | text | NOT NULL |  | 회로 변환기 버전 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP |  |
+| `version` | integer | NOT NULL | 1 | 현재 회로 버전 번호(새 버전 저장마다 증가; 불변 버전 이력과 연결) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
 | `pk_circuits` | PK | `PRIMARY KEY (project_id)` |
 | `fk_circuits_project` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
+| `circuits_version_check` | CHECK | `CHECK ((version >= 1))` |
 | `ck_circuits_connections` | CHECK | `CHECK ((jsonb_typeof(connections) = 'object'::text))` |
 | `ck_circuits_parser_version` | CHECK | `CHECK ((char_length(btrim(parser_version)) > 0))` |
 | `ck_circuits_sha256` | CHECK | `CHECK ((source_sha256 ~ '^[0-9a-f]{64}$'::text))` |
@@ -294,6 +301,45 @@
 | 인덱스 | 정의 |
 |---|---|
 | `pk_circuits` | `UNIQUE btree (project_id)` |
+
+| 트리거 | 정의 |
+|---|---|
+| `preserve_circuit_version` | `CREATE TRIGGER preserve_circuit_version AFTER INSERT OR UPDATE ON public.circuits FOR EACH ROW EXECUTE FUNCTION preserve_circuit_version()` |
+
+## `public.project_circuit_versions`
+
+- **목적**: 프로젝트별 불변 회로 버전 이력(대화가 참조)
+
+| 칸 | 타입 | NULL | 기본값 | 의미 |
+|---|---|---|---|---|
+| `project_id` | bigint | NOT NULL |  | 프로젝트 |
+| `version` | integer | NOT NULL |  | 불변 회로 버전 번호(프로젝트별 기본 빈 회로는 0) |
+| `connections` | jsonb | NOT NULL |  | 해당 버전의 정규화한 회로(부품 · 넷 JSON) |
+| `source_sha256` | text | NULL |  | 해당 버전 원본 넷리스트 SHA-256(버전 0은 NULL, 원문은 저장 안 함) |
+| `parser_version` | text | NOT NULL |  | 해당 버전 회로 변환기 버전 |
+| `source_kind` | text | NOT NULL |  | demo \| upload |
+| `demo_id` | text | NULL |  | 데모 회로 이름(데모일 때만 값이 있다. 이름 목록은 앱이 검사) |
+| `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 버전을 만든 시각 |
+
+| 제약 | 종류 | 정의 |
+|---|---|---|
+| `project_circuit_versions_pkey` | PK | `PRIMARY KEY (project_id, version)` |
+| `project_circuit_versions_project_id_fkey` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
+| `project_circuit_versions_check` | CHECK | `CHECK (((source_kind = 'demo'::text) = (demo_id IS NOT NULL)))` |
+| `project_circuit_versions_check1` | CHECK | `CHECK (((version = 0) = (source_sha256 IS NULL)))` |
+| `project_circuit_versions_connections_check` | CHECK | `CHECK ((jsonb_typeof(connections) = 'object'::text))` |
+| `project_circuit_versions_parser_version_check` | CHECK | `CHECK ((char_length(btrim(parser_version)) > 0))` |
+| `project_circuit_versions_source_kind_check` | CHECK | `CHECK ((source_kind = ANY (ARRAY['demo'::text, 'upload'::text])))` |
+| `project_circuit_versions_source_sha256_check` | CHECK | `CHECK ((source_sha256 ~ '^[0-9a-f]{64}$'::text))` |
+| `project_circuit_versions_version_check` | CHECK | `CHECK ((version >= 0))` |
+
+| 인덱스 | 정의 |
+|---|---|
+| `project_circuit_versions_pkey` | `UNIQUE btree (project_id, version)` |
+
+| 트리거 | 정의 |
+|---|---|
+| `reject_circuit_version_update` | `CREATE TRIGGER reject_circuit_version_update BEFORE UPDATE ON public.project_circuit_versions FOR EACH ROW EXECUTE FUNCTION reject_circuit_version_update()` |
 
 ## `public.threads`
 
@@ -304,10 +350,12 @@
 | `id` | uuid | NOT NULL |  | 대화 UUID(URL에 노출) |
 | `project_id` | bigint | NOT NULL |  | 소속 프로젝트 |
 | `created_at` | timestamp with time zone | NOT NULL | CURRENT_TIMESTAMP | 만든 시각 |
+| `circuit_version` | integer | NOT NULL |  | 대화가 고정한 회로 버전(생성 뒤 변경 불가) |
 
 | 제약 | 종류 | 정의 |
 |---|---|---|
 | `threads_pkey` | PK | `PRIMARY KEY (id)` |
+| `fk_threads_circuit_version` | FK | `FOREIGN KEY (project_id, circuit_version) REFERENCES project_circuit_versions(project_id, version) ON DELETE CASCADE` |
 | `threads_project_id_fkey` | FK | `FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE` |
 
 | 인덱스 | 정의 |
@@ -317,6 +365,7 @@
 
 | 트리거 | 정의 |
 |---|---|
+| `pin_thread_circuit_version` | `CREATE TRIGGER pin_thread_circuit_version BEFORE INSERT OR UPDATE ON public.threads FOR EACH ROW EXECUTE FUNCTION pin_thread_circuit_version()` |
 | `trg_threads_purge_checkpoints` | `CREATE TRIGGER trg_threads_purge_checkpoints BEFORE DELETE ON public.threads FOR EACH ROW EXECUTE FUNCTION sojafit_agent.purge_thread_checkpoints()` |
 
 ## `public.runs`
