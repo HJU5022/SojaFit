@@ -3,7 +3,7 @@
 React 작업대의 run·재개는 `ensure_thread`로 같은 UUID의 thread를 만든 뒤 이 서비스를 거친다(backend/api/conversations.py).
 HTTP 입구는 그 run·재개(`admission` · `ensure_thread` · `message` · `resume` · `detail`)와 내 설정 · 탈퇴뿐이다.
 분석 thread는 화면용 `public.threads`와 같은 UUID이고(FK, 화면 대화를 지우면 DB가 같이 지움),
-회로 이름 · 연결 정보는 `public.threads → projects → circuits`에서 읽는다(`_owned`).
+회로 이름 · 연결 정보는 `public.threads → project_circuit_versions`의 고정 버전에서 읽는다(`_owned`).
 장기 기억은 사용자 사실 3칸(`profile.py`, SPEC 8.5)이다. 질문을 분석할 때 그 질문으로 사실을 찾아 결과의 `profile_hints`로 돌려준다.
 그래프에는 `user_id`와 Store만 넘기고, 선호 실장 방식은 그래프의 기억 읽기 노드가 직접 읽어 찾기 후보 순서에만 쓴다(`backend/graph/memory.py`).
 사실을 모델 프롬프트에는 넣지 않는다. 승인한 판정 사례는 기억이 아니라 승인 기록이다:
@@ -316,11 +316,11 @@ class Conversations:
     def _owned(conn, user, thread):
         # [왜] 회로 이름 · 연결 정보는 화면 쪽 정본(public)에서 읽는다. 이 연결의 search_path는 sojafit_agent뿐이라 public을 이름으로 부른다
         row = conn.execute('SELECT t.*,p.name AS filename,c.connections FROM threads t JOIN public.threads pt ON pt.id=t.id '
-                           'JOIN public.projects p ON p.id=pt.project_id JOIN public.circuits c ON c.project_id=p.id '
+                           'JOIN public.projects p ON p.id=pt.project_id JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
                            'WHERE t.id=%s AND t.user_id=%s AND p.user_id=%s', (thread, user, user)).fetchone()
         if not row:
             raise HTTPException(404, '분석을 찾을 수 없습니다.')
-        # [왜] public.circuits는 React 정규화 모양({parts, nets})이고 그래프 · 데모 확인은 {components, nets}를 읽는다(옛 ensure_thread가 저장 때 바꾸던 것)
+        # [왜] 저장된 업로드는 {parts, nets}, 그래프 · 데모 확인은 {components, nets}를 읽는다.
         c = row['connections']
         row['connections'] = {'components': c.get('components', c.get('parts', [])), 'nets': c.get('nets', [])}
         return row
@@ -340,10 +340,18 @@ class Conversations:
     def ensure_thread(self, user, thread, filename, connections, target, question=None, conditions=''):
         """React 대화(public.threads) 하나를 같은 UUID의 분석 thread로 처음 한 번 만든다. 대상 부품이 바뀌면 409.
 
-        [주의] 호출 전에 public.projects · circuits · threads 행이 있어야 한다(분석 thread의 FK, 없으면 404). filename · connections는 데모 확인에만 쓰고 저장하지 않는다.
+        [주의] 입력 회로 대신 소유 대화의 고정 버전을 읽는다. filename · connections 인자는 기존 호출 호환용이다.
 
         키 없는 데모면 기록한 회로 · 대상(question을 주면 질문 · 사용 조건까지)인지 먼저 본다(아니면 422, 기록이 없으면 503)."""
-        # React 정규화 회로는 부품 목록이 parts, 데모 회로는 components다. 넷리스트 원문은 다시 읽지 않는다
+        with self.connection() as conn:
+            self._hold_account(conn, user)
+            pinned = conn.execute('SELECT c.connections FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
+                                  'JOIN public.project_circuit_versions c ON c.project_id=p.id AND c.version=pt.circuit_version '
+                                  'WHERE pt.id=%s AND p.user_id=%s', (thread, user)).fetchone()
+        if pinned is None:
+            raise HTTPException(404, '분석을 찾을 수 없습니다.')
+        connections = pinned['connections']
+        # React 정규화 회로는 parts, 데모 회로는 components다.
         connections = {'components': connections.get('components', connections.get('parts', [])), 'nets': connections.get('nets', [])}
         if target not in {p['ref'] for p in connections['components']}:
             raise HTTPException(422, '회로에 없는 대상 부품입니다.')
@@ -356,7 +364,7 @@ class Conversations:
                 raise demo.refusal('기록한 데모 질문과 질문 · 사용 조건이 다릅니다.')
         with self.connection() as conn:
             self._hold_account(conn, user)  # 탈퇴 중이면 409(지운 분석 기록을 다시 만들지 않게)
-            # [왜] 분석 thread id = 화면 대화 UUID라 동시 첫 실행에도 행이 하나만 생긴다. 회로는 public.circuits가 정본이라 사본을 만들지 않는다
+            # [왜] 같은 UUID의 대화는 생성 당시의 project_circuit_versions를 계속 읽는다.
             # [주의] 화면 대화가 없거나 남의 것이면 _owned가 404다(INSERT ... SELECT가 0행). FK 위반으로 500이 되지 않는다
             conn.execute('INSERT INTO threads(id,user_id,target) SELECT pt.id,p.user_id,%s FROM public.threads pt JOIN public.projects p ON p.id=pt.project_id '
                          'WHERE pt.id=%s AND p.user_id=%s ON CONFLICT (id) DO NOTHING', (target, thread, user))

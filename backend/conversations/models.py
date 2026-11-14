@@ -89,6 +89,19 @@ class SafeInterrupt(SafeModel):
     question: str = ''
 
 
+class SafeRunError(SafeModel):
+    code: str
+    message: str = Field(min_length=1, max_length=500)
+
+    @field_validator('code')
+    @classmethod
+    def known_code(cls, value):
+        from backend.errors import DEFAULT_CODES, SPECIAL_CODES
+        if value not in set(DEFAULT_CODES.values()) | set(SPECIAL_CODES):
+            raise ValueError('unknown public error code')
+        return value
+
+
 class SafeResult(SafeModel):
     answer: str = ''
     evidence: list[SafeEvidence] = Field(default_factory=list)
@@ -96,6 +109,7 @@ class SafeResult(SafeModel):
     price_parts: list[Annotated[str, Field(pattern=r'^[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}$')]] = Field(default_factory=list)
     interrupt: SafeInterrupt = Field(default_factory=SafeInterrupt)
     judgement: SafeJudgement | None = None
+    error: SafeRunError | None = None
 
 
 RunStatus = Literal['running', 'requires_input', 'completed', 'refused', 'failed']

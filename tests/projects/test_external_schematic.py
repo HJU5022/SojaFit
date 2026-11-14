@@ -15,6 +15,32 @@ from backend.projects.schematic_source import (
 from backend.projects.external_circuit_search import WebSchematicRef
 
 
+@pytest.mark.parametrize('has_candidate,reason', [(False, 'no_candidates'), (True, 'validation_failed')])
+def test_not_found_preserves_failure_reason_in_negative_cache(service, has_candidate, reason):
+    worker, counts, _, _ = service
+    worker.search = lambda query, limit: counts.update(search=1) or ((1,) if has_candidate else ())
+    worker.inspect = lambda *args, **kwargs: ()
+    for _ in range(2):
+        with pytest.raises(ExternalSchematicNotFound) as error:
+            worker.find('missing board')
+        assert error.value.reason == reason
+    assert counts['search'] == 1
+
+
+def test_failure_diagnostics_do_not_log_query_or_source(service, caplog):
+    worker, _, _, _ = service
+    worker.search = lambda *args: (WebSchematicRef('https://example.org/private-schematic.pdf',
+        'https://example.org/private', 'private.pdf', 'pdf', 'private title', 'Publisher'),)
+    worker.inspect = lambda *args, **kwargs: ()
+    with caplog.at_level('INFO', logger=api.__name__):
+        with pytest.raises(ExternalSchematicNotFound):
+            worker.find('private user query')
+    record = next(record for record in caplog.records if record.message == 'schematic_lookup_failed')
+    assert (record.candidate_count, record.inspect_rejected, record.render_rejected) == (1, 1, 0)
+    assert record.reason == 'validation_failed'
+    assert 'private' not in str(vars(record))
+
+
 @pytest.fixture
 def service(monkeypatch):
     monkeypatch.setenv("AUTH_SECRET", "unit-test-only-padding".ljust(32, "x"))
@@ -310,6 +336,42 @@ def test_public_web_token_restores_verified_asset_on_cold_instance(service):
     assert result.evidence_grade is None
     cold = api.ExternalSchematicService(worker.search, worker.inspect, worker.render, wall=lambda: clock[0])
     assert cold.load(result.token, 0) == b"verified"
+
+
+def test_choices_only_include_fully_verified_sources_and_reuse_validation(service):
+    worker, _, _, source = service
+    refs = tuple(WebSchematicRef(
+        f"https://example.org/board-{index}-schematic.png", "https://example.org/board",
+        f"board-{index}-schematic.png", "png", f"Board {index}", "Publisher",
+    ) for index in range(5))
+    inspected, rendered = [], []
+    worker.search = lambda query, limit: refs
+
+    def inspect(candidate, **kwargs):
+        inspected.append(candidate.source_url)
+        if candidate in refs[1:3]:
+            raise ExternalSchematicInvalidSource()
+        return (replace(source, repository="", commit="", source_url=candidate.source_url,
+                        source_file=candidate.source_file, root_schematic=candidate.source_file,
+                        asset_kind="png", asset_paths=(), expected_sheets=1,
+                        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+
+    def render(candidate):
+        rendered.append(candidate.source_url)
+        if candidate.source_url == refs[3].source_url:
+            raise ExternalSchematicInvalidSource()
+        return (b"verified",)
+
+    worker.inspect, worker.render = inspect, render
+    result = worker.find("Board")
+    assert [choice.source_url for choice in result.choices] == [refs[0].source_url, refs[4].source_url]
+    for choice in result.choices:
+        assert worker.find("Board", choice.source_url).source_url == choice.source_url
+    for rejected in (*refs[1:4], replace(refs[0], source_url="https://attacker.example/schematic.png")):
+        with pytest.raises(ExternalSchematicNotFound):
+            worker.find("Board", rejected.source_url)
+    assert inspected == [ref.source_url for ref in refs]
+    assert rendered == [refs[index].source_url for index in (0, 3, 4)]
 
 
 def test_user_can_select_an_exact_web_candidate_without_arbitrary_url_fetch(service):

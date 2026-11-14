@@ -7,6 +7,20 @@ from fastapi.testclient import TestClient
 from backend import auth
 from backend.main import app
 
+
+@pytest.mark.parametrize('reason,message', [
+    ('no_candidates', '검색 결과가 없습니다'), ('validation_failed', '후보를 찾았지만'),
+])
+def test_schematic_failure_reason_keeps_error_contract(client, schematic_boundary, reason, message):
+    from backend.projects.schematic_source import ExternalSchematicNotFound
+    schematic_boundary.error = ExternalSchematicNotFound(reason=reason)
+    response = client.get('/api/external-circuits/schematics', params={'q': 'test board'})
+    assert response.status_code == 404
+    assert response.json()['error']['code'] == 'SCHEMATIC_NOT_FOUND'
+    assert message in response.json()['error']['message']
+    assert response.headers['X-Schematic-Failure'] == reason
+    assert response.headers['cache-control'] == 'private, no-store'
+
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setenv("AUTH_ORIGIN", "http://testserver")

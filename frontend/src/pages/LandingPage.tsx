@@ -2,7 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CandidateDto } from '../api/conversations'
 import { useAuth } from '../auth/AuthProvider'
-import { Checks } from '../components/Review'
+import { Checks } from '../components/ReviewDetails'
 import { VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 
 // 첫 화면의 예시. 작업대와 같은 표 컴포넌트에 넣어 실제 결과 화면과 똑같이 보이게 한다.

@@ -1,5 +1,6 @@
 """기존 세션과 공통 오류 처리를 사용하는 사용자별 프로젝트 API. 삭제는 같은 UUID의 분석 기록 · checkpoint까지 지운다."""
 import psycopg
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.datastructures import UploadFile
@@ -27,14 +28,13 @@ class RenameProject(BaseModel):
 
 
 class CreateProject(RenameProject):
-    # [주의] 이름 바꾸기의 예시를 물려받으면 demo_id가 빠져 422가 된다
     model_config = ConfigDict(json_schema_extra={"examples": [{"demo_id": "attiny85_dev", "name": "ATtiny85 보드 다이오드 검토"}]})
-    demo_id: str
+    demo_id: str | None = None
 
     @field_validator("demo_id")
     @classmethod
-    def known_demo(cls, value: str) -> str:
-        if value not in DEMOS:
+    def known_demo(cls, value: str | None) -> str | None:
+        if value is not None and value not in DEMOS:
             raise ValueError("등록된 데모 회로를 선택해 주세요.")
         return value
 
@@ -86,10 +86,13 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
     return repo.list_owned(user_id)
 
 
-@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin), Depends(demo_mode)])
+@router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
 def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
-    """데모 회로로 프로젝트 만들기. DEMO_MODE=1에서만(공개 서비스는 업로드만)."""
-    return repo.create_demo(user_id, body.demo_id, body.name)
+    """빈 프로젝트 생성. demo_id를 지정한 복제는 DEMO_MODE=1에서만 허용한다."""
+    if body.demo_id is not None:
+        demo_mode()
+        return repo.create_demo(user_id, body.demo_id, body.name)
+    return repo.create_empty(user_id, body.name)
 
 
 class UploadLimit(MultiPartException):
@@ -134,6 +137,12 @@ UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-dat
 
 @router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
 async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    normalized, name = await read_upload(request, with_name=True)
+    return repo.create_upload(user_id, name, connections=normalized.connections,
+                              source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+
+
+async def read_upload(request: Request, *, with_name: bool):
     # File/Form 의존성은 인증 전에 원본을 디스크에 spool할 수 있으므로 직접 제한한다.
     async def bounded_stream():
         received = 0
@@ -152,15 +161,16 @@ async def upload_project(request: Request, user_id: int = Depends(auth.current_u
             raise HTTPException(400, "업로드 형식이 올바르지 않습니다.")
         items = form.multi_items()
         upload, name = form.get("file"), form.get("name")
-        if len(items) != 2 or set(form) != {"file", "name"} or not isinstance(upload, UploadFile) or not isinstance(name, str):
+        expected = {"file", "name"} if with_name else {"file"}
+        if len(items) != len(expected) or set(form) != expected or not isinstance(upload, UploadFile) or (with_name and not isinstance(name, str)):
             raise HTTPException(422, "파일과 프로젝트 이름만 입력해 주세요.")
-        if not upload.filename or not upload.filename.strip().lower().endswith(".net"):
-            raise HTTPException(400, ".net 확장자의 KiCad 넷리스트 파일이 필요합니다.")
-        name = project_name(name)
+        extensions = (".net",) if with_name else (".net", ".txt")
+        if not upload.filename or not upload.filename.strip().lower().endswith(extensions):
+            raise HTTPException(400, ".net 확장자의 KiCad 넷리스트 파일이 필요합니다." if with_name else ".net 또는 .txt 확장자의 KiCad 넷리스트 파일이 필요합니다.")
+        name = project_name(name) if with_name else None
         normalized = normalize_netlist(await upload.read(MAX_BYTES + 1))
         await upload.close()  # 정규화 직후 원본 버퍼를 폐기하고 DB 경계를 지난다.
-        return repo.create_upload(user_id, name, connections=normalized.connections,
-                                  source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+        return normalized, name
     except (UploadLimit, NetlistTooLarge):
         raise HTTPException(413, "넷리스트는 5 MiB 이하여야 합니다.") from None
     except InvalidProject as exc:
@@ -172,9 +182,29 @@ async def upload_project(request: Request, user_id: int = Depends(auth.current_u
             await upload.close()
 
 
+class ImportNetlistResponse(BaseModel):
+    project: Project
+    thread_id: UUID
+
+
+NETLIST_BODY = {"requestBody": {"required": True, "content": {"multipart/form-data": {"schema": {
+    "type": "object", "required": ["file"], "additionalProperties": False,
+    "properties": {"file": {"type": "string", "contentMediaType": "application/octet-stream",
+                            "description": "UTF-8 KiCad 넷리스트(.net 또는 .txt, 5 MiB 이하)"}}}}}}}
+
+
+@router.post("/projects/{project_id}/netlist", status_code=201, response_model=ImportNetlistResponse,
+             dependencies=[Depends(auth.check_origin)], openapi_extra=NETLIST_BODY)
+async def import_netlist(project_id: int, request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    normalized, _ = await read_upload(request, with_name=False)
+    project, thread_id = repo.import_netlist(user_id, project_id, connections=normalized.connections,
+                                           source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+    return {"project": project, "thread_id": thread_id}
+
+
 @router.get("/projects/{project_id}", response_model=Project)
-def get_project(project_id: int, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
-    return repo.get_owned(user_id, project_id)
+def get_project(project_id: int, thread_id: UUID | None = None, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+    return repo.get_owned(user_id, project_id, thread_id) if thread_id is not None else repo.get_owned(user_id, project_id)
 
 
 @router.patch("/projects/{project_id}", response_model=Project, dependencies=[Depends(auth.check_origin)])
@@ -192,7 +222,7 @@ def delete_owned_with_checkpoints(user_id, project_id, checkpoint_delete=None):
     with auth.connection() as conn:
         if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
             raise ProjectNotFound
-        if conn.execute("SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND r.status IN ('running','requires_input') LIMIT 1", (project_id,)).fetchone():
+        if conn.execute("SELECT 1 FROM runs r JOIN threads t ON t.id=r.thread_id WHERE t.project_id=%s AND r.status='running' LIMIT 1", (project_id,)).fetchone():
             raise InvalidRunState
         ids = [str(row[0]) for row in conn.execute('SELECT id FROM threads WHERE project_id=%s', (project_id,)).fetchall()]
         if ids and checkpoint_delete:
@@ -205,7 +235,7 @@ def delete_project(project_id: int, user_id: int = Depends(auth.current_user_id)
     try:
         delete_owned_with_checkpoints(user_id, project_id)
     except InvalidRunState:
-        raise HTTPException(409, 'run_in_progress') from None
+        raise HTTPException(409, '분석이 진행 중인 프로젝트는 삭제할 수 없습니다. 분석이 끝난 뒤 다시 시도해 주세요.') from None
     except ProjectNotFound:
         raise HTTPException(404, '프로젝트를 찾을 수 없습니다.') from None
     except Exception:

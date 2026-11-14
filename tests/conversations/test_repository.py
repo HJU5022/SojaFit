@@ -131,6 +131,8 @@ def test_ownership_and_atomic_active_run(storage):
     from backend.conversations.repository import ConversationNotFound
     repo, (owner, other), project, connect = storage
     thread = repo.create_thread(owner, project)
+    assert repo.thread_detail(owner, thread)['circuit_version'] == 1
+    assert repo.list_threads(owner, project)[0]['circuit_version'] == 1
     with pytest.raises(ConversationNotFound):
         repo.get_thread(other, thread)
     run, circuit = repo.start(owner, thread, {'question': 'test', 'target': 'D1', 'conditions': ''})
@@ -296,10 +298,6 @@ def test_delete_rejects_active_then_removes_owned_checkpoints(storage):
         delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == []
     repo.finish(owner, thread, run, 'requires_input', {'answer': '', 'interrupt': {'missing': ['voltage']}})
-    with pytest.raises(InvalidRunState):
-        delete_owned_with_checkpoints(owner, project, delete_checkpoints)
-    repo.resume(owner, thread, run)
-    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
     delete_owned_with_checkpoints(owner, project, delete_checkpoints)
     assert deleted == [thread]
     with connect() as conn:
@@ -315,6 +313,25 @@ def test_resume_result_survives_repository_reconstruction(storage):
     saved = ConversationRepository().get_run(owner, run)
     assert saved['status'] == 'requires_input'
     assert saved['safe_result']['interrupt']['missing'] == ['voltage']
+
+
+def test_saved_resume_error_is_owned_and_cannot_overwrite_a_running_or_finished_run(storage):
+    from backend.conversations.repository import ConversationNotFound
+    repo, (owner, other), project, _ = storage
+    thread = repo.create_thread(owner, project)
+    run, _ = repo.start(owner, thread, {'question': 'hi'})
+    error = {'code': 'LIMIT_EXCEEDED', 'message': '분석 한도에 도달했습니다.'}
+    repo.finish(owner, thread, run, 'requires_input', {'interrupt': {'missing': ['v_in_max']}})
+    with pytest.raises(ConversationNotFound):
+        repo.record_resume_error(other, run, error)
+    repo.record_resume_error(owner, run, error)
+    assert repo.get_run(owner, run)['safe_result']['error'] == error
+    repo.resume(owner, thread, run)
+    repo.record_resume_error(owner, run, {**error, 'message': 'late error'})
+    assert repo.get_run(owner, run)['safe_result']['error'] == error
+    repo.finish(owner, thread, run, 'completed', {'answer': 'ok'})
+    repo.record_resume_error(owner, run, error)
+    assert repo.get_run(owner, run)['safe_result'].get('error') is None
 
 
 def test_project_deletion_serializes_new_run(storage):

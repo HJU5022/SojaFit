@@ -41,3 +41,11 @@ it('preserves safe formatting when a caller renders citation text', () => {
   expect(screen.getByRole('table')).toBeInTheDocument()
   expect(container.querySelector('a, img, script')).toBeNull()
 })
+
+it('applies display text changes to bold text while preserving inline and fenced code', () => {
+  const { container } = render(<SafeMarkdown text={'**정격 [7]**\n\n`array[7]`\n\n```\narray[7]\n```'} renderText={text => text.replace(' [7]', '')} />)
+  expect(container.querySelector('strong')).toHaveTextContent('정격')
+  expect(container.querySelector('strong')?.textContent).not.toContain('[7]')
+  expect(container.querySelectorAll('code')).toHaveLength(2)
+  for (const code of container.querySelectorAll('code')) expect(code).toHaveTextContent('array[7]')
+})

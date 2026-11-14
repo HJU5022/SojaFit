@@ -12,6 +12,7 @@ class ProjectSummary(BaseModel):
     demo_id: str | None
     created_at: datetime
     updated_at: datetime
+    circuit_version: int = 0
 
 
 class Project(ProjectSummary):

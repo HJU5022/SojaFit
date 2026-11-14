@@ -75,7 +75,14 @@ class ExternalSchematicResponse(BaseModel):
 def _schematic_call(function, *args):
     try:
         return function(*args)
-    except (ExternalSchematicNotFound, ExternalSchematicInvalidToken):
+    except ExternalSchematicNotFound as error:
+        messages = {
+            "no_candidates": "조건에 맞는 원본 회로도 검색 결과가 없습니다. 검색어를 바꿔 보세요.",
+            "validation_failed": "회로도 후보를 찾았지만 제품 식별 또는 원본 파일 검증을 통과하지 못했습니다. 제조사와 정확한 모델명을 확인해 주세요.",
+        }
+        raise ApiError(404, messages.get(error.reason, "검증된 완성 회로도를 찾지 못했습니다."),
+                       code="SCHEMATIC_NOT_FOUND", headers={"X-Schematic-Failure": error.reason}) from None
+    except ExternalSchematicInvalidToken:
         raise ApiError(404, "검증된 완성 회로도를 찾지 못했습니다.", code="SCHEMATIC_NOT_FOUND") from None
     except ExternalSchematicRateLimited as error:
         raise HTTPException(503, "외부 회로도를 사용할 수 없습니다.",

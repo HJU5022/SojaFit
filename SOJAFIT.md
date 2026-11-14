@@ -33,6 +33,7 @@ SojaFit (proj3-b)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
 ├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
 ├── docker-compose.yml      <- 서비스 4개(api · thread-setup · corpus-load · db) 한 줄 실행, 키 없는 데모 모드 (고정)
+├── docker-compose.local.yml <- 별도 DB·볼륨의 로컬 실제 API, localhost:8010, 데모·운영 설정과 분리
 ├── pyproject.toml          <- uv 의존성 (고정)
 ├── uv.lock                 <- 의존성 고정 버전. pyproject.toml과 같은 커밋에 넣음
 ├── pytest.ini              <- 테스트 경로(tests/)와 설정
@@ -101,7 +102,8 @@ SojaFit (proj3-b)
 │       ├── hooks/          <- 화면 수명에 묶인 실행 상태 훅과 테스트
 │       │   ├── useRunStream.ts <- 분석 시작·재개·연결 복구 상태 머신
 │       │   ├── useRunStream.test.tsx <- SSE 순서·복구·오류 테스트
-│       │   └── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
+│       │   ├── useConversation.ts <- 검토 한 건의 화면 상태(저장된 질문·실행 중 질문·단계·첨부)
+│       │   └── useNetlistFiles.ts <- 선택·드롭 공통 검증과 취소 가능한 회로 버전 첨부 전송
 │       ├── lib/            <- 화면이 쓰는 순수 함수
 │       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
 │       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
@@ -120,6 +122,9 @@ SojaFit (proj3-b)
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
+│       │   ├── ChatPane.tsx <- 채팅 전용 스크롤·고정 입력창·대화 끝 이동
+│       │   ├── NetlistIntake.tsx <- 빈 프로젝트·대상 선택 전의 채팅 입력과 넷리스트 접수
+│       │   ├── ReviewDetails.tsx <- 질문·부품별 상세 탭과 보존되는 판정·근거·승인 패널
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
@@ -347,6 +352,7 @@ SojaFit (proj3-b)
 │   ├── 027_google_user_login.sql <- Google 일반 계정의 비밀번호 NULL 허용, 관리자 비밀번호 필수 유지
 │   ├── 029_email_account_security.sql <- 인증 시각·일회성 메일 토큰·발송 한도 표 추가(기존 계정 보존)
 │   ├── 030_google_onboarding.sql <- 새 기준선의 명시적 Google 가입·재확인 연결과 관리자 승인 대기 표
+│   ├── 031_circuit_versions.sql <- 프로젝트 회로 버전 보존·기존 대화 backfill·대화별 버전 고정
 │   ├── manual/             <- 자동 실행하지 않는 SQL. 손으로 실행
 │   │   ├── email_signup_cutover.sql <- 기존 계정을 보존하고 구버전 무인증 신규 가입을 차단하는 운영 전환 제약
 │   │   ├── MANUAL.md       <- 폴더 설명
@@ -525,6 +531,7 @@ SojaFit (proj3-b)
 │   ├── api/                <- API와 로그인
 │   │   ├── API.md          <- 폴더 설명
 │   │   ├── test_frontend.py  <- SPA·정적 파일·API 우선 경계 테스트
+│   │   ├── test_local_live_config.py <- 로컬 실제 API의 DB·Origin·볼륨·포트 격리 계약 검사
 │   │   ├── test_health.py  <- /health 응답
 │   │   ├── test_openapi.py <- API 계약(/openapi.json): 요청 예시 · 모르는 칸 금지, 업로드 multipart 칸, SSE 이벤트 설명, 빈 성공 스키마 없음, 응답 모델이 화면이 읽는 칸을 지우지 않음
 │   │   ├── test_errors.py  <- 오류 코드 16개: 상황 코드가 나는 자리, 분석 실패 502 · 503 · 504, SSE failed 코드, 오류 로그 줄의 request_id · traceback · 질문 글 비노출
@@ -748,6 +755,7 @@ SojaFit (proj3-b)
     ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
     │   └── ADR.md          <- 폴더 설명과 결정 목록
     ├── specs/              <- 기능 작업서: SPEC.md에 없는 기능을 에이전트에게 시키기 전에 씀
+    │   ├── local-live-api.md <- 운영 DB를 사용하지 않는 로컬 실제 API 실행·수용 기준
     │   ├── SPECS.md        <- 폴더 설명
     │   ├── evaluator-demo-readiness.md <- 평가자 데모: 기록 응답 재생과 확인 경로
     │   ├── _example.md     <- 강사 작업서 형식 예시 (고정: AGENTS.md가 가리킴)
@@ -767,6 +775,7 @@ SojaFit (proj3-b)
     │   ├── dummy-full-flow.md  <- 개발 전용 전체 더미 흐름
     │   ├── verified-circuit-and-datasheet-visuals.md <- 검증된 회로도와 데이터시트 근거
     │   ├── frontend-screen-redesign.md <- 프론트엔드 화면 구성
+    │   ├── netlist-conversation-versions.md <- 빈 프로젝트·채팅 넷리스트 접수·대화별 회로 버전 계약과 구현 계획
     │   ├── project-conversation-navigation.md <- DB 변경 없는 프로젝트·대화 탐색 API 계약
     │   └── external-complete-schematics.md <- 공개 프로젝트 완성 회로도
     ├── experiments/        <- 실험·평가 작업서: 무엇을 어떤 조건으로 잴지 정한 계약

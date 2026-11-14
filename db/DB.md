@@ -22,6 +22,7 @@
 | `027_google_user_login.sql` | 초기화 SQL | 일반 Google 계정의 NULL 비밀번호 허용, 관리자 비밀번호 필수 |
 | `029_email_account_security.sql` | 초기화 SQL | 이메일 인증 시각, 일회용 challenge, 발송 한도 |
 | `030_google_onboarding.sql` | 초기화 SQL | 명시적 Google 가입, 재확인 연결, 관리자 승인 대기(`auth_google_pending`) |
+| `031_circuit_versions.sql` | 초기화·기존 DB 추가 SQL | 불변 `project_circuit_versions`와 대화별 회로 고정. 기존 회로·대화를 v1으로 backfill(빈 회로 v0), 새 버전·대화 트리거, RLS·공개 권한 회수. 재실행 가능하며 적용 호출자가 트랜잭션을 연다 |
 | `legacy/` | 하위 폴더 | 기준선 이전의 옛 증분 SQL 이력. [LEGACY.md](legacy/LEGACY.md) |
 | `migrations/` | 하위 폴더 | 이미 서비스 표가 있는 운영 DB용 이전·점검·되돌리기 SQL. [MIGRATIONS.md](migrations/MIGRATIONS.md) |
 | `manual/` | 하위 폴더 | 자동 실행하지 않는 수동 SQL. [MANUAL.md](manual/MANUAL.md) |
@@ -31,13 +32,13 @@
 
 | 분류 | 위치 | 어떻게 실행되나 | 파일 수 |
 |---|---|---|---:|
-| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml:66-67`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 11 |
+| 자동 | `db/*.sql` (이 폴더 바로 아래) | `docker-compose.yml`의 `db` 서비스가 `./db`를 `/docker-entrypoint-initdb.d`(읽기 전용)로 마운트한다(`docker-compose.yml:66-67`). Postgres 이미지는 데이터 폴더가 비어 있을 때 첫 기동에만 이 폴더 바로 아래의 `.sql`을 파일 이름순으로 실행한다 | 12 |
 | 수동(운영 이전) | `db/migrations/` | `psql`로 사람이 단계마다 직접 실행. 새 DB는 쓰지 않는다 | 10 |
 | 수동(기타) | `db/manual/` | `.sql`(1)은 사람이 직접 실행, `.draft`·`.manual`(2)은 실행하지 않는 이력 | 3 |
 | 이력 | `db/legacy/` | 실행하지 않는다. `scripts/db/verify_chain/verify_chain.sh`와 `migrate_prod_4_rollback.sql`이 읽는다 | 21 |
 
 - 하위 폴더의 SQL은 마운트된 폴더 안에 있어도 이미지가 건너뛴다. 확장자 `.draft`·`.manual`은 실행 대상이 아니다.
-- 자동 실행 순서(이름순): `000_init` → `002_rag_corpus` → `008_multi_dim_embeddings` → `009_chunk_embedding_bits` → `012_document_category` → `020_service_baseline` → `026_projects_catalog_demo` → `026_revoke_public_grants_and_rls` → `027_google_user_login` → `029_email_account_security` → `030_google_onboarding`.
+- 자동 실행 순서(이름순): `000_init` → `002_rag_corpus` → `008_multi_dim_embeddings` → `009_chunk_embedding_bits` → `012_document_category` → `020_service_baseline` → `026_projects_catalog_demo` → `026_revoke_public_grants_and_rls` → `027_google_user_login` → `029_email_account_security` → `030_google_onboarding` → `031_circuit_versions`.
 - 이 폴더에 없는 번호: `001`, `003`~`007`, `010`, `011`, `013`~`019`, `021`~`025`, `028`. 서비스 표는 기준선이 대체했고(옛 파일은 `legacy/`), `007` 데모 시드는 앱으로 옮겼고, `011` 사양 표는 ADR 0016으로 폐기했고, `004`는 `manual/`의 초안이다.
 - 같은 번호를 쓰는 파일(번호 `020`, `026`, `027`, `029`). 번호는 종류가 다른 파일끼리 겹친다. 어느 쪽이 현행인지는 위치로 구분한다.
 
@@ -52,7 +53,7 @@
 
 - 새 DB의 서비스 표는 증분 파일이 아니라 기준선 한 파일(`020_service_baseline.sql`)이 만든다. 기준선은 옛 체인에 운영 이전 SQL을 적용한 결과와 구조가 같다(`scripts/db/verify_chain/verify_chain.sh`가 차이 0줄을 확인). [결정] 11-11 재설계 M 단계.
 - `020_service_baseline.sql` 80행의 주석("`auth_google_pending`은 만들지 않는다")은 `030_google_onboarding.sql` 적용 전의 상태다. 새 DB는 `030`이 `auth_google_pending`을 만든다.
-- 기존 DB에는 초기화 SQL이나 `legacy/` SQL을 다시 실행하지 않는다. 추가 인증 SQL(`027`·`029`·`030`)의 적용은 따로 검토한다. 기존 데이터·해시·연결을 삭제하거나 재작성하지 않는다.
+- 기존 DB에는 기준선이나 `legacy/` SQL을 다시 실행하지 않는다. 추가 인증 SQL(`027`·`029`·`030`)과 회로 버전 SQL(`031`)의 적용은 따로 검토한다. `031`만 기존 DB에 추가할 때는 한 트랜잭션(`psql -1 -v ON_ERROR_STOP=1 -f db/031_circuit_versions.sql`)으로 적용한다. 기존 데이터·해시·연결을 삭제하거나 재작성하지 않는다.
 - Compose의 `thread-setup`은 DB healthcheck 뒤 `python -m backend.conversations.memory_service --setup`을 실행해 LangGraph 표(PostgresSaver/PostgresStore 내부 표)만 만든다. 서비스 표는 만들지 않고 SQL 파일을 적용하지도 않는다. `vector` 확장이 이미 설치된 DB면 사용자 사실 의미 색인 표(`store_vectors` · `vector_migrations`)도 `sojafit_agent`에 만든다.
 - Compose의 `corpus-load`는 같은 DB healthcheck 뒤 `python -m backend.rag.pipeline.ingest data/demo/snapshot/manifest.jsonl data/demo/snapshot/chunks.jsonl /tmp/vectors --chunks-only`(`RAG_VECTOR_TYPE=halfvec`)로 데모 코퍼스 스냅샷을 `source_documents` · `document_chunks`에 넣는다. 임베딩은 넣지 않는다. 스냅샷 규모: [SNAPSHOT.md](../data/demo/snapshot/SNAPSHOT.md).
 - 볼륨: 이미 초기화된 DB 볼륨에는 초기화 SQL이 다시 적용되지 않는다. `028` 이전(옛 구조)의 로컬 볼륨은 새 코드와 맞지 않으므로 `docker compose down -v`로 지우고 다시 만든다. `down -v`는 DB 볼륨의 데이터를 지우므로 보존할 데이터가 있는 환경에서는 실행하지 않는다.

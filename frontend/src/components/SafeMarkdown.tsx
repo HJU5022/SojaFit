@@ -9,7 +9,7 @@ import type { ReactNode } from 'react'
 
 const inline = (text: string, renderText?: (text: string) => ReactNode): ReactNode[] =>
   text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`)/).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? <strong key={i}>{part.slice(2, -2)}</strong>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? <strong key={i}>{renderText ? renderText(part.slice(2, -2)) : part.slice(2, -2)}</strong>
       : part.startsWith('`') && part.endsWith('`') && part.length > 2 ? <code key={i}>{part.slice(1, -1)}</code>
         : renderText ? renderText(part) : part)
 
