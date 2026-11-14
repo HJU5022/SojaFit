@@ -50,7 +50,7 @@
 | 표 주석 미부착 약 216표 | 남음. 동결셋 검색 지표로 재측정하지 않음 | EVAL_REPORT 11장 2행 |
 | 배포 HTTP 인젝션 T4 흔들림 | 토큰 한도 상향 배포 뒤 재측정 전 | EVAL_REPORT 11장 3행 |
 | 승인 대기 시간 | 값 없음 | EVAL_REPORT 11장 4행 |
-| Langfuse 캡처, 시연 영상 파일 | 없음 | [DELIVERABLES.md](DELIVERABLES.md) |
+| 시연 영상 파일 · Langfuse 화면의 평가 점수 연결 캡처 | 없음. Langfuse 스크린샷 3장(목록 · 모델 호출 상세 · 비용)은 있음 | [DELIVERABLES.md](DELIVERABLES.md) |
 
 순위와 한계 표의 정본은 EVAL_REPORT 11장이다.
 
@@ -87,7 +87,7 @@ Supervisor 모델을 Sonnet 5.5에서 Haiku 5.5로 바꾸는 시도(사전 등�
 | 판정자가 팀원뿐 | v3 판정자는 심태현 · 하정운이고 외부 검토자는 없다. 외부 검토자 1명의 검토는 미실시 | [v3_judging_record.md](../../evals/drafts/reviews/v3_judging_record.md), [evaluation-prep.md](../reference/evaluation-prep.md) |
 | 판정 기록이 사후 작성 | v3 판정 당시 기록(노션, 시트, 메시지)이 없다. 문항별 수정 이력과 초안-최종 차이를 되살릴 수 없다 | [v3_judging_record.md](../../evals/drafts/reviews/v3_judging_record.md) 머리말, 남은 한계 |
 | 비교 대상이 정답 초안과 같은 도구 | Codex가 정답 초안(하정운 검수, 1차 심태현·최종 하정운 판정)과 비교 대상 양쪽에 쓰여 Codex 점수에 유리할 수 있다 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 5절 |
-| Codex 집계는 규칙 기반 | 결론 방향과 핵심 값까지만 보고 쪽 인용은 보지 않는다. 사람 판정 필요 5건은 대기 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 1~3절 |
+| Codex 집계는 규칙 기반 | 결론 방향과 핵심 값까지만 보고 쪽 인용은 보지 않는다. 규칙이 못 가린 5건은 2026-11-13에 사람(하정운)이 판정했다(오답 3 · 올바른 거절 2, [human_judgments.jsonl](../../evals/results/graph/2026-11-12-codex-v3-50/human_judgments.jsonl)). 판정 기록은 한 사람이 한 번 남긴 것이고 외부 검토는 없다 | [TALLY.md](../../evals/results/graph/2026-11-12-codex-v3-50/TALLY.md) 1~3절 |
 | 청크-원본 대조 검사기가 놓치는 오류 | 숫자 끝자리를 바꾼 가짜 청크 110개 중 쪽 수준 91개(83%)만 잡았다. 같은 쪽 다른 행 값으로 바뀐 오류는 배제하지 못한다 | [chunk_source_check/README.md](../../evals/results/d10/chunk_source_check/README.md) "검사기의 한계" |
 
 ## 9. 남은 일

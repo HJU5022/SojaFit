@@ -1,0 +1,22 @@
+운영 DB 용량 MB 441.0
+  auth_google_identities: 1행
+  auth_google_pending: 0행
+  auth_google_states: 0행
+  auth_login_attempts: 0행
+  auth_sessions: 0행
+  chunk_embedding_bits: 52244행
+  chunk_embeddings: 52244행
+  document_chunks: 52244행
+  part_specifications: 90961행
+  source_documents: 1360행
+  users: 5행
+source_documents.category: 운영에 없음
+  source_documents 색인: ['pk_source_documents', 'uq_source_documents_document_key', 'uq_source_documents_file_sha256']
+  document_chunks 색인: ['ix_document_chunks_chunk_sha256', 'pk_document_chunks', 'uq_document_chunks_document_index']
+  chunk_embedding_bits 색인: ['pk_chunk_embedding_bits']
+  chunk_embeddings 색인: ['pk_chunk_embeddings']
+  part_specifications 색인: ['ix_part_specifications_document', 'ix_part_specifications_parameter_code', 'ix_part_specifications_part_upper', 'pk_part_specifications']
+  운영 임베딩 모델: [('voyage-4-large', 52244)]
+  운영 비트 모델: [('voyage-4-large', 52244)]
+  운영 chunker_version: [('tsc-cards-2026-11-01', 52244)]
+문제: 없음

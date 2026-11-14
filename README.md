@@ -1,8 +1,8 @@
 # SojaFit
 
 - 상태: 현행
-- 기준일: 2026-11-13
-- 기준 커밋: `ea5797c`
+- 기준일: 2026-11-14
+- 기준 커밋: `c24c007`
 - 정본 여부: 정본(배포 주소 · 배포 리비전 · 실행 방법). 기능은 [SPEC.md](SPEC.md), 평가 수치는 [EVAL_REPORT.md](EVAL_REPORT.md), 게이트 증거는 [docs/GATES.md](docs/GATES.md)가 정본
 - 관련 문서: [SPEC.md](SPEC.md), [EVAL_REPORT.md](EVAL_REPORT.md), [docs/GATES.md](docs/GATES.md), [SOJAFIT.md](SOJAFIT.md), [AGENTS.md](AGENTS.md)
 
@@ -11,9 +11,9 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | API(배포) 주소 | <https://sojafit-api-559369539072.asia-northeast3.run.app/health> | `{"status":"ok"}`가 나오면 정상. Cloud Run이라 첫 요청은 몇 초 걸린다. 같은 주소의 `/login`이 React 화면이다 |
-| 배포 리비전 | `sojafit-api-fadde2a`(태그 `main-fadde2a`). 소스: `main` `fadde2a`. 100% 전환 2026-11-13 08:17 KST | 인증 없는 점검만 했다. 0% 점검 주소: `/health` 200(냉 기동 11.1초), `/login` 200, `/app` 200, `/openapi.json` 동작 41 · 경로 34(전환 전 공개 서비스와 같음), `/api/auth/me` 401(로그인 없음), 새 화면 번들에 `모두 모름으로 계속` · `원하는 정격도 적어 주세요` 문구 있음, 오류 로그 없음. 전환 뒤 공개 주소: `/health` 200(0.13초), `/login` 200, `/app` 200, `/api/auth/me` 401, `/openapi.json` 동작 41 · 경로 34, 번들 문구 둘 다 있음, 응답 헤더 `x-content-type-options: nosniff` · `x-frame-options: DENY` · `strict-transport-security`. `ae3de0b`부터 `fadde2a`까지 `frontend/src` 2개 파일(예시 질문 · 안내 문구)과 문서만 바뀌었다. 측정 커밋 `ad8612e`와 비교하면 `backend`, `db`, `Dockerfile`, `docker-compose.yml`, `pyproject.toml`, `uv.lock`, `frontend/package*.json`은 바뀌지 않았다. 바뀐 화면: 예시 질문과 안내 문구가 사용 조건 · 원하는 정격을 함께 적게 한다. 로그인 뒤 점검(평가용 계정 스모크 · 업로드 · 분석 · 승인), 배포 서버 재시작 뒤 재개, Google 로그인 왕복, 이메일 가입 왕복은 하지 않았다. 이전 리비전 `sojafit-api-ae3de0b`(11-13 08:07 KST 전환). 증거 · 되돌리기: [docs/GATES.md](docs/GATES.md) G1, `docs/worklog/jeongun.md` 11-13 항목 |
+| 배포 리비전 | `sojafit-api-574de79-rs`(코드 · 이미지 · 설정은 `sojafit-api-574de79`와 같다). 소스: `main` `574de79`. 100% 전환 2026-11-13 12:07 KST(재시작 시험으로 만든 리비전). **`main`은 그 뒤 `c24c007`(OSC 회로도 작업)까지 갔고 아직 배포하지 않았다** | 평가용 계정 A · B로 배포 서버에서 25단계 통과 · 실패 0 · 건너뜀 0: 로그인, 넷리스트 업로드, 판정 질문, 조건 질문에서 멈춤, 서버 재시작, 같은 run 재개, 승인, 같은 승인 다시(409), 견적, 계정 B의 접근 404. 재개 요청을 새 리비전이 처리한 것은 Cloud Logging 요청 로그로 확인했다. 환경변수 32개(`EXA_WEB_SEARCH_ENABLED=1` 포함). 로그인 없는 점검(`/health` · `/login` · `/app` · `/openapi.json` · `/api/auth/me` 401)도 같은 리비전에서 했다. 이전 리비전 `sojafit-api-fadde2a`(11-13 08:17 KST 전환)의 인증 없는 점검과 그 앞 리비전 기록은 GATES G1에 있다. 하지 않은 것: Google 로그인 왕복, 이메일 가입 왕복. 증거: [evals/results/d10/deploy_574de79/](evals/results/d10/deploy_574de79/README.md), [docs/GATES.md](docs/GATES.md) G1 · G4 |
 | 배포 DB | Secret `DATABASE_URL`→`DATABASE_URL_NEW`(Supabase `SojaFit_2`, 서울) | `docs/worklog/jeongun.md` 11-12 항목 |
-| 기준 커밋 | `ea5797c` | 이 문서가 기술하는 코드이며, 배포 리비전의 소스 `main` `fadde2a`와는 `frontend/src`가 다르다(`ea5797c`에는 위 화면 변경이 없다). 동결 커밋(11-16 24:00)은 아직 정해지지 않았고, 동결 뒤 배포 리비전과 같은 코드인지 확인한다 |
+| 기준 커밋 | `c24c007` | 이 문서가 기술하는 코드다. 배포 리비전의 소스 `main` `574de79`와 다르다: 그 뒤 `backend/projects`(회로도 검색 · 렌더)와 `frontend/src`(`Schematic`)가 바뀌었고 아직 배포하지 않았다. 동결 커밋(11-16 24:00)은 아직 정해지지 않았고, 동결 뒤 배포 리비전과 같은 코드인지 확인한다 |
 | 화면(로컬) | `docker compose up --build` 뒤 <http://localhost:8000/login> | React 화면: 로그인 · 가입(`/signup`은 이메일을 받아 인증 메일을 보내고, 메일 링크에서 비밀번호를 설정하면 가입이 끝난다. Google 로그인으로도 들어온다), 회로 작업대(`/app`: 프로젝트 · KiCad 넷리스트 업로드(데모 회로 생성은 `DEMO_MODE=1`에서만) · 대상 부품 선택 · 분석 실행 · 판정과 근거 · 가격·재고 조회 · 후보 승인 · 견적), 내 설정(`/settings`: 사실 3칸 · 계정 삭제), 사용자 관리(`/admin/users`, 관리자만) |
 | 시연 영상 | 영상 파일 없음. 초안 스크립트 [`docs/deliverables/demo_script.md`](docs/deliverables/demo_script.md) | 정상 1 + 실패(거절) 1, 3분 이내 |
 
