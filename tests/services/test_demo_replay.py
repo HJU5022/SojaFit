@@ -216,17 +216,75 @@ def test_recorded_questions_match_only_the_same_circuit_target_question_and_cond
 
 
 def test_ensure_thread_refuses_other_targets_and_questions_before_the_stream_opens(tmp_path, monkeypatch):
-    """[왜] run 스트림 전에 거르면 화면이 공통 오류 문구(데모 질문 목록)를 바로 보인다. 거절은 DB에 닿기 전이다."""
+    """[왜] pinned 회로를 읽은 뒤 run 스트림 전에 거르면 공통 오류를 바로 보이고 상태를 쓰지 않는다."""
     from fastapi import HTTPException
     from backend.conversations.memory_service import Conversations
     q = {k: S.QUESTIONS[0][k] for k in ('id', 'kind', 'circuit', 'netlist', 'target', 'conditions', 'question')}
     fake_recording(monkeypatch, tmp_path, [{**q, 'resume': None}])
-    app = Conversations.__new__(Conversations)  # [왜] 연결 정보(dsn)가 없어 DB에 닿으면 AttributeError로 드러난다
-    app.mode, circuit = 'demo', demo.connections(q['netlist'])
+    pinned = demo.connections(q['netlist'])
+
+    class Conn:
+        def __init__(self):
+            self.queries = []
+            self._result = None
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def execute(self, query, params=()):
+            self.queries.append(query)
+            if 'pg_try_advisory_lock_shared' in query:
+                self._result = {'ok': True}
+            elif 'project_circuit_versions' in query:
+                self._result = {'connections': pinned}
+            else:
+                self._result = None
+            return self
+
+        def fetchone(self):
+            return self._result
+
+    conn = Conn()
+    app = Conversations.__new__(Conversations)
+    app.mode, caller_circuit = 'demo', {'components': [{'ref': 'D2'}], 'nets': []}
+    monkeypatch.setattr(app, 'connection', lambda: conn)
     for target, question in (('D2', None), ('D1', '다른 질문'), ('D1', q['question'] + ' ')):
         with pytest.raises(HTTPException) as error:
-            app.ensure_thread(1, 'thread', '이름', circuit, target, question=question, conditions=q['conditions'])
+            app.ensure_thread(1, 'thread', '이름', caller_circuit, target, question=question, conditions=q['conditions'])
         assert error.value.status_code == 422 and '[v3-01]' in error.value.detail
+    assert not any(any(word in query.upper() for word in ('INSERT', 'UPDATE', 'DELETE')) for query in conn.queries)
+
+
+def test_ensure_thread_refuses_missing_or_foreign_pinned_thread(tmp_path, monkeypatch):
+    """[왜] pinned 버전이 없거나 다른 사용자의 대화면 입력 회로와 무관하게 404다."""
+    from fastapi import HTTPException
+    from backend.conversations.memory_service import Conversations
+    q = {k: S.QUESTIONS[0][k] for k in ('netlist', 'target', 'conditions')}
+    fake_recording(monkeypatch, tmp_path, [])
+
+    class Conn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def execute(self, query, params=()):
+            self.query = query
+            return self
+
+        def fetchone(self):
+            return {'ok': True} if 'pg_try_advisory_lock_shared' in self.query else None
+
+    app = Conversations.__new__(Conversations)
+    app.mode = 'demo'
+    monkeypatch.setattr(app, 'connection', lambda: Conn())
+    with pytest.raises(HTTPException) as error:
+        app.ensure_thread(999, 'foreign-or-missing', '이름', demo.connections(q['netlist']), q['target'], conditions=q['conditions'])
+    assert error.value.status_code == 404
 
 
 def test_every_demo_question_has_a_react_demo_project_with_the_same_circuit(tmp_path, monkeypatch):
