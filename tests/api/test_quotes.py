@@ -13,7 +13,7 @@ class FakeQuotes:
     def __init__(self): self.calls = []
     def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
     def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
-    def list_quotes(self, user, project): return []
+    def list_quotes(self, user, project): return [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED, 'thread_id': '0b1c2d3e-0000-4000-8000-000000000001'}]
     def message_approval(self, user, message): self.calls.append(('message_approval', user, message)); return {'approval': {'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'case_id': None, 'created_at': CREATED}, 'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED}]}
     def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
@@ -100,3 +100,10 @@ def test_message_approval_restores_state_for_the_owner_only(monkeypatch):
     monkeypatch.setattr('backend.api.quotes.QuoteService', Foreign)
     with TestClient(app, raise_server_exceptions=False) as web:
         assert web.get('/api/messages/9/approval').status_code == 404
+
+
+def test_project_quote_list_names_the_thread_and_has_no_price_fields():
+    with client(FakeQuotes()) as web:
+        rows = web.get('/api/projects/1/quotes').json()
+    assert rows[0]['thread_id'] == '0b1c2d3e-0000-4000-8000-000000000001' and rows[0]['quantity'] == 10
+    assert not {'price', 'price_breaks', 'stock', 'availability'} & set(rows[0])

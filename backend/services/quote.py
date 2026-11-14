@@ -118,10 +118,10 @@ class QuoteService:
         with auth.connection() as conn:
             if conn.execute('SELECT 1 FROM projects WHERE id=%s AND user_id=%s', (project_id, user_id)).fetchone() is None:
                 raise QuoteNotFound
-            rows = conn.execute("""SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at FROM quotes q
+            rows = conn.execute("""SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at,t.id FROM quotes q
                 JOIN approvals a ON a.id=q.approval_id JOIN messages m ON m.id=a.message_id
                 JOIN threads t ON t.id=m.thread_id WHERE q.user_id=%s AND t.project_id=%s ORDER BY q.id""", (user_id, project_id)).fetchall()
-            return [{'id': r[0], 'approval_id': r[1], 'part_number': r[2], 'quantity': r[3], 'created_at': r[4]} for r in rows]
+            return [{'id': r[0], 'approval_id': r[1], 'part_number': r[2], 'quantity': r[3], 'created_at': r[4], 'thread_id': str(r[5])} for r in rows]
 
     def list_cases(self, user_id: int):
         with auth.connection() as conn:

@@ -54,6 +54,10 @@ class Quote(BaseModel):
     created_at: datetime
 
 
+class QuoteListItem(Quote):
+    thread_id: str  # 견적이 나온 검토(대화). 화면이 그 검토로 돌아가는 링크에 쓴다
+
+
 class ExistingApproval(Approval):
     case_id: int | None  # 사용자가 승인 사례를 지워도 승인은 남는다
 
@@ -98,7 +102,7 @@ def message_approval(message_id: int, user_id: int = Depends(auth.current_user_i
     return quotes.message_approval(user_id, message_id)
 
 
-@router.get('/projects/{project_id}/quotes', response_model=list[Quote])
+@router.get('/projects/{project_id}/quotes', response_model=list[QuoteListItem])
 def list_quotes(project_id: int, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
     return quotes.list_quotes(user_id, project_id)
 

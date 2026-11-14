@@ -185,7 +185,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
     | `POST /api/approvals/{id}/quotes` | 로그인 | `QuoteBody` `{quantity 1~100000}` | 201 `Quote` `{id, approval_id, part_number, quantity, created_at}` | 404 · 409 | 승인한 후보로 가격 없는 견적을 저장(7단계, 8.4, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
     | `GET /api/messages/{id}/approval` | 로그인 | - | 200 `MessageApproval` `{approval: Approval \| null, quotes: list[Quote]}`(`approval.case_id`는 승인 사례를 지우면 null) | 404 | 새로고침 뒤 승인·견적 상태를 복원(8.4). 가격·재고 칸 없음 |
-    | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[Quote]` | 404 | 프로젝트의 견적 목록(7단계, 8.4) |
+    | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[QuoteListItem]` `[{id, approval_id, part_number, quantity, created_at, thread_id}]` | 404 | 프로젝트의 견적 목록. `thread_id`는 그 견적이 나온 검토(7단계, 8.4) |
 
   - 운영 · 보안 · 부가:
 
