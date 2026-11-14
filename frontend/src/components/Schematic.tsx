@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent, PointerEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Maximize2 } from 'lucide-react'
 import { findSchematic } from '../api/externalCircuits'
 import { errorMessage, requestIdProps } from '../api/client'
 import type { ApiError } from '../api/client'
@@ -16,9 +17,10 @@ type SchematicEvidence = Pick<DemoSchematic, 'image_url' | 'original_url' | 'att
   revision?: string | null
 }
 
-export function SchematicImage({ schematic, name, zoom, viewReset = 0, reload }: { schematic: SchematicEvidence; name: string; zoom: number; viewReset?: number; reload?: () => void }) {
+export function SchematicImage({ schematic, name, reload }: { schematic: SchematicEvidence; name: string; reload?: () => void }) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
+  const [zoom, setZoom] = useState(100)
   const viewport = useRef<HTMLDivElement>(null)
   const image = useRef<HTMLImageElement>(null)
   const drag = useRef<{ id: number; x: number; y: number; start: { x: number; y: number } } | null>(null)
@@ -41,11 +43,24 @@ export function SchematicImage({ schematic, name, zoom, viewReset = 0, reload }:
     return () => observer.disconnect()
   }, [bound])
   useEffect(() => {
+    const box = viewport.current
+    if (!box || status !== 'ready') return
+    // React의 기본 passive 휠 대신 이미지 안에서만 스크롤/브라우저 확대를 막는다.
+    const wheel = (event: WheelEvent) => {
+      if (!event.deltaY) return
+      event.preventDefault()
+      if (!drag.current) setZoom(value => Math.max(50, Math.min(400, value + (event.deltaY < 0 ? 25 : -25))))
+    }
+    box.addEventListener('wheel', wheel, { passive: false })
+    return () => box.removeEventListener('wheel', wheel)
+  }, [status])
+  function fit() {
     if (drag.current && viewport.current?.hasPointerCapture(drag.current.id)) viewport.current.releasePointerCapture(drag.current.id)
     drag.current = null
     setDragging(false)
     setPan({ x: 0, y: 0 })
-  }, [viewReset])
+    setZoom(100)
+  }
   function stopDrag(event: PointerEvent<HTMLDivElement>) {
     if (drag.current?.id !== event.pointerId) return
     drag.current = null
@@ -55,7 +70,7 @@ export function SchematicImage({ schematic, name, zoom, viewReset = 0, reload }:
   return <figure aria-label="원본 회로도 보기">
     <div ref={viewport} className="schematic-viewport" data-ready={status === 'ready'} data-dragging={dragging}
       role="region" aria-label="회로도 이미지 이동" tabIndex={0}
-      aria-description="이미지를 드래그하거나 방향키로 이동합니다. Home 키로 가운데로 돌아갑니다."
+      aria-description="휠 또는 +, - 키로 확대·축소하고 드래그나 방향키로 이동합니다. Home 키로 이미지에 맞춥니다."
       onPointerDown={event => {
         if (status !== 'ready' || event.button !== 0 || event.isPrimary === false || drag.current) return
         event.preventDefault()
@@ -69,15 +84,22 @@ export function SchematicImage({ schematic, name, zoom, viewReset = 0, reload }:
       }} onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={stopDrag}
       onKeyDown={event => {
         if (status !== 'ready' || event.target !== event.currentTarget) return
+        if (event.key === '+' || event.key === '=' || event.key === '-') {
+          event.preventDefault()
+          setZoom(value => Math.max(50, Math.min(400, value + (event.key === '-' ? -25 : 25))))
+          return
+        }
         const directions: Record<string, { x: number; y: number }> = { ArrowLeft: { x: 40, y: 0 }, ArrowRight: { x: -40, y: 0 }, ArrowUp: { x: 0, y: 40 }, ArrowDown: { x: 0, y: -40 } }
         const delta = directions[event.key]
         if (!delta && event.key !== 'Home') return
         event.preventDefault()
-        setPan(point => delta ? bound({ x: point.x + delta.x, y: point.y + delta.y }) : { x: 0, y: 0 })
+        if (delta) setPan(point => bound({ x: point.x + delta.x, y: point.y + delta.y }))
+        else fit()
       }}>
     {status === 'loading' && <div className="skeleton sheet-status" role="status"><span className="sr-only">원본 회로도를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {status === 'error' && <div className="notice sheet-status" role="alert"><p>원본 회로도를 불러오지 못했습니다.</p><button className="btn" onClick={() => { if (reload) return reload(); setStatus('loading'); setAttempt(value => value + 1) }}>{reload ? '다시 검색하기' : '회로도 다시 불러오기'}</button></div>}
     <img ref={image} key={attempt} src={schematic.image_url} alt={`${name} 원본 회로도`} draggable={false} hidden={status !== 'ready'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }} />
+    {status === 'ready' && <button type="button" className="icon-btn schematic-fit" aria-label="회로도 맞춤" title="이미지 맞춤 (Home)" onPointerDown={event => event.stopPropagation()} onClick={fit}><Maximize2 aria-hidden="true" /></button>}
     </div>
     <figcaption className="meta-fields">
       {schematic.evidence_grade === 2 && <span>제조사 공식 원본 · 2등급</span>}
@@ -104,7 +126,7 @@ function searchMessage(error: ApiError) {
 }
 
 // 검색은 누를 때만 보낸다(검색마다 외부 호출이 든다). 같은 검색어는 5분 동안 다시 보내지 않는다.
-export function ExternalSchematic({ name, zoom, viewReset = 0 }: { name: string; zoom: number; viewReset?: number }) {
+export function ExternalSchematic({ name }: { name: string }) {
   const [text, setText] = useState(name)
   const [searched, setSearched] = useState('')
   const [selectedSource, setSelectedSource] = useState('')
@@ -140,6 +162,6 @@ export function ExternalSchematic({ name, zoom, viewReset = 0 }: { name: string;
       evidence_grade: data.evidence_grade, source_type: data.source_type,
       manufacturer: data.manufacturer, model: data.model, revision: data.revision,
       source_page_url: data.repository_url }}
-      name={`${data.model || data.project || searched} 시트 ${image.sheet + 1}`} zoom={zoom} viewReset={viewReset} reload={() => void result.refetch()} />)}
+      name={`${data.model || data.project || searched} 시트 ${image.sheet + 1}`} reload={() => void result.refetch()} />)}
   </div>
 }
