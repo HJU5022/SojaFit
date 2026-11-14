@@ -10,11 +10,36 @@ COPY data/circuits/ /data/circuits/
 ARG VITE_LOCAL_ATTACHMENT_UI=0
 RUN VITE_LOCAL_ATTACHMENT_UI=$VITE_LOCAL_ATTACHMENT_UI npm run build
 
+FROM ubuntu:24.04 AS renderer
+# KiCad 10 originals also occur in the verified public corpus. Use the official
+# stable 10.0 PPA; keep Python 3.12 and the API image's dependencies separate.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates software-properties-common python3.12 python3.12-venv libcairo2 util-linux \
+    && add-apt-repository --yes ppa:kicad/kicad-10.0-releases \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends 'kicad=10.0.*' \
+    && kicad-cli --version \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --locked --only-group renderer --no-cache
+ENV PATH="/app/.venv/bin:$PATH"
+COPY backend/ ./backend/
+RUN useradd --create-home --shell /usr/sbin/nologin sojafit
+USER sojafit
+EXPOSE 8000
+CMD ["uvicorn", "backend.projects.schematic:app", "--host", "0.0.0.0", "--port", "8000"]
+
 FROM python:3.12-slim
 
-# KiCad 원본 회로도를 동일한 연결 정보로 변환한다.
+# API 이미지에는 KiCad를 넣지 않는다. 렌더러 이미지는 --build-arg INCLUDE_KICAD=1로 만든다.
+ARG INCLUDE_KICAD=0
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends kicad libcairo2 \
+    && if [ "$INCLUDE_KICAD" = "1" ]; then apt-get install -y --no-install-recommends kicad libcairo2; else apt-get install -y --no-install-recommends libcairo2; fi \
     && rm -rf /var/lib/apt/lists/*
 
 # 의존성은 uv.lock에 고정된 버전 그대로 설치합니다.
