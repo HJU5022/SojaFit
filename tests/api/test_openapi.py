@@ -89,9 +89,11 @@ ROUTES = {
     ('GET', '/api/prices'),
     ('DELETE', '/api/me'), ('GET', '/api/me/memory'), ('PATCH', '/api/me/memory'), ('DELETE', '/api/me/memory'),
     ('GET', '/api/demo-circuits'), ('GET', '/api/projects'), ('POST', '/api/projects'), ('POST', '/api/projects/upload'),
+    ('POST', '/api/projects/{project_id}/netlist'),
     ('GET', '/api/projects/{project_id}'), ('PATCH', '/api/projects/{project_id}'), ('DELETE', '/api/projects/{project_id}'),
     ('POST', '/api/messages/{message_id}/approvals'), ('POST', '/api/approvals/{approval_id}/quotes'),
-    ('GET', '/api/messages/{message_id}/approval'), ('GET', '/api/projects/{project_id}/quotes'), ('GET', '/api/approved-cases'), ('DELETE', '/api/approved-cases/{case_id}'),
+    ('GET', '/api/messages/{message_id}/approval'), ('GET', '/api/messages/{message_id}/approvals'),
+    ('GET', '/api/projects/{project_id}/quotes'), ('GET', '/api/approved-cases'), ('DELETE', '/api/approved-cases/{case_id}'),
     ('GET', '/api/judge/roles'), ('GET', '/api/demo-questions'), ('GET', '/api/projects/{project_id}/threads'),
     ('POST', '/api/projects/{project_id}/threads'), ('GET', '/api/runs/{run_id}'), ('POST', '/api/threads/{thread_id}/runs'),
     ('POST', '/api/runs/{run_id}/resume'), ('GET', '/api/threads/{thread_id}'), ('DELETE', '/api/threads/{thread_id}'),
@@ -134,7 +136,7 @@ APPROVAL = {'id', 'message_id', 'candidate_part', 'verdict', 'case_id', 'created
 QUOTE = {'id', 'approval_id', 'part_number', 'quantity', 'created_at'}
 CASE = {'id', 'approval_id', 'candidate_part', 'verdict', 'created_at'}
 RESULT = {'answer', 'status', 'stage', 'question_type', 'evidence', 'judgement', 'price_parts', 'refusal', 'interrupt',
-          'request_id', 'profile_hints'}
+          'request_id', 'profile_hints', 'error'}
 FACT = {'kind', 'value', 'text', 'version', 'updated_at', 'source'}
 
 # (메서드, 경로, 본문, auth를 바꿀 함수 이름 → 값, 가짜 연결이 돌려줄 결과, 화면이 읽는 칸)
@@ -150,11 +152,12 @@ CASES = [
     ('get', '/api/demo-circuits', None, {}, None, {'id', 'name', 'schematic'}),
     ('post', '/api/messages/9/approvals', {'candidate_part': '1N5819', 'verdict': 'SPEC_EQUIVALENT'}, {},
      [('completed', JUDGED), (3, NOW), (4,)], APPROVAL),
+    ('get', '/api/messages/9/approvals', None, {}, [(1,), [(3, 9, '1N5819', 'SPEC_EQUIVALENT', None, NOW)]], APPROVAL),
     ('post', '/api/approvals/3/quotes', {'quantity': 100}, {}, [('1N5819', '1N5819'), (5, NOW)], QUOTE),
     ('get', '/api/projects/1/quotes', None, {}, [(1,), [(5, 3, '1N5819', 100, NOW, THREAD)]], QUOTE | {'thread_id'}),
     ('get', '/api/messages/9/approval', None, {}, [(1,), (3, '1N5819', 'SPEC_EQUIVALENT', None, NOW), [(5, '1N5819', 100, NOW)]], {'approval', 'quotes'}),
     ('get', '/api/approved-cases', None, {}, [[(4, 3, '1N5819', 'SPEC_EQUIVALENT', NOW)]], CASE),
-    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status'}),
+    ('get', '/api/projects/1/threads', None, {}, [(1,), [(THREAD, NOW, '저장 질문', RUN, 'completed', NOW, 1)]], {'id', 'project_id', 'title', 'created_at', 'last_activity_at', 'latest_run_id', 'status', 'circuit_version'}),
     ('post', '/api/projects/1/threads', None, {}, [(1,), (THREAD,)], {'id', 'project_id'}),
     ('get', f'/api/runs/{RUN}', None, {}, [(RUN, THREAD, 'completed', JUDGED, 12)], {'id', 'thread_id', 'message_id', 'result'}),
 ]

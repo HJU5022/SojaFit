@@ -71,6 +71,17 @@ def approval_snapshot(result: dict, candidate_part: str, verdict: str) -> dict:
 
 
 class QuoteService:
+    def list_approvals(self, user_id: int, message_id: int):
+        with auth.connection() as conn:
+            if conn.execute("SELECT 1 FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id "
+                            "WHERE m.id=%s AND m.role='assistant' AND p.user_id=%s", (message_id, user_id)).fetchone() is None:
+                raise QuoteNotFound
+            rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at FROM approvals a '
+                                'LEFT JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
+                                'WHERE a.message_id=%s AND a.user_id=%s ORDER BY a.id', (message_id, user_id)).fetchall()
+            return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3],
+                     'case_id': r[4], 'created_at': r[5]} for r in rows]
+
     def approve(self, user_id: int, message_id: int, candidate_part: str, verdict: str):
         with auth.connection() as conn:
             row = conn.execute("""SELECT r.status,r.safe_result FROM messages m

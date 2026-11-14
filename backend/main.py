@@ -192,7 +192,8 @@ async def conversation_boundary(request: Request, call_next):
     schematic = request.url.path.startswith('/api/external-circuits/schematics')
     # [왜] 재개(`/api/runs/{id}/resume`) · 승인 · 로그인 등 JSON 경로도 같은 한도를 쓴다(D6 1-2절).
     #      넷리스트 업로드만 뺀다: 그 경로는 5 MiB 한도를 스스로 센다(backend/api/projects.py)
-    limited = (request.url.path.startswith('/api/') and request.url.path != '/api/projects/upload'
+    netlist_upload = request.url.path == '/api/projects/upload' or (request.url.path.startswith('/api/projects/') and request.url.path.endswith('/netlist'))
+    limited = (request.url.path.startswith('/api/') and not netlist_upload
                and request.method in ('POST', 'PATCH', 'PUT', 'DELETE'))
     if limited:
         limit = 128 * 1024

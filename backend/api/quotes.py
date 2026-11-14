@@ -46,6 +46,10 @@ class Approval(BaseModel):
     created_at: datetime
 
 
+class SavedApproval(Approval):
+    case_id: int | None  # 사례를 삭제해도 사람 승인은 남는다.
+
+
 class Quote(BaseModel):
     id: int
     approval_id: int
@@ -90,6 +94,12 @@ def service():
 @router.post('/messages/{message_id}/approvals', status_code=201, response_model=Approval, dependencies=[Depends(auth.check_origin)])
 def approve(message_id: int, body: ApproveBody, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
     return quotes.approve(user_id, message_id, body.candidate_part, body.verdict)
+
+
+@router.get('/messages/{message_id}/approvals', response_model=list[SavedApproval])
+def list_approvals(message_id: int, response: Response, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
+    response.headers['Cache-Control'] = 'no-store'
+    return quotes.list_approvals(user_id, message_id)
 
 
 @router.post('/approvals/{approval_id}/quotes', status_code=201, response_model=Quote, dependencies=[Depends(auth.check_origin)])

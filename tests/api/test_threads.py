@@ -85,6 +85,27 @@ def make_thread(app, user, target='D1'):
     return thread
 
 
+def test_import_keeps_waiting_analysis_pinned_and_ensure_uses_pinned_circuit(runtime, monkeypatch):
+    from backend import auth
+    from backend.projects.repository import ProjectRepository
+    app, (owner, _), dsn = runtime
+    thread = make_thread(app, owner)
+    before = app.message(owner, thread, '조건 질문')
+    assert before['status'] == 'WAITING'
+    monkeypatch.setattr(auth, 'connection', lambda: psycopg.connect(dsn))
+    with psycopg.connect(dsn) as conn:
+        project = conn.execute('SELECT project_id FROM public.threads WHERE id=%s', (thread,)).fetchone()[0]
+    latest = {'parts': [{'ref': 'D9', 'value': 'SS14'}], 'nets': []}
+    _, new_thread = ProjectRepository().import_netlist(owner, project, connections=latest, source_sha256='a' * 64, parser_version='test')
+    app.ensure_thread(owner, thread, 'my.net', latest, 'D1')
+    resumed = app.resume(owner, thread, {'VIN_MAX': '12'}, '', 1)
+    assert resumed['status'] == 'DONE' and resumed['target'] == 'D1'
+    assert app.graph.get_state(app.config(thread)).values['connections']['components'][0]['ref'] == 'D1'
+    app.ensure_thread(owner, new_thread, 'my.net', latest, 'D9')
+    with app.connection() as conn:
+        assert app._owned(conn, owner, new_thread)['connections']['components'][0]['ref'] == 'D9'
+
+
 def recorded_demo(monkeypatch, tmp_path, resume):
     """가짜 데모 기록(calls.jsonl은 비어 있고 outcomes.json에 질문 하나). 회로는 저장소의 데모 보드(breadboard_supply) D1이다."""
     import json
@@ -127,7 +148,7 @@ def test_demo_replay_takes_only_recorded_first_questions_and_recorded_resume(run
     assert error.value.status_code == 422 and app.detail(a, thread)['version'] == 1
     monkeypatch.setattr(demo, 'OUTCOMES', tmp_path / 'missing.json')
     with pytest.raises(HTTPException) as error:
-        app.ensure_thread(a, str(uuid4()), '프로젝트', circuit, 'D1')
+        app.ensure_thread(a, thread, '프로젝트', circuit, 'D1')
     assert error.value.status_code == 503 and 'recordings' in error.value.detail
 
 

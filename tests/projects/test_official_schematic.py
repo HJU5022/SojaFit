@@ -11,6 +11,52 @@ def _enabled(monkeypatch):
     monkeypatch.setenv("EXA_API_KEY", "test-secret-not-for-output")
 
 
+def test_search_diagnostics_distinguish_raw_results_from_filtered_candidates(monkeypatch, caplog):
+    _enabled(monkeypatch)
+    from backend.projects import external_circuit_search as search
+    def handle(request):
+        return httpx.Response(200, json={'results': [{
+            'title': 'private Board 5V', 'url': 'https://example.org/private.pdf',
+        }]})
+    with caplog.at_level('INFO', logger=search.__name__):
+        with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+            assert search.search_public_schematics('private Board 5V', client=client) == ()
+    record = next(record for record in caplog.records if record.message == 'schematic_search_candidates')
+    assert (record.raw_result_count, record.candidate_count) == (1, 0)
+    assert 'private' not in str(vars(record))
+    assert 'test-secret-not-for-output' not in str(vars(record))
+
+
+@pytest.mark.parametrize("url,label", [
+    ("https://circuitcanvas.b-cdn.net/symbol-library/schematic/Adafruit_MOSFET_Driver_STEMMA_Breakout_s-1792873508598-4a536548.png", "Schematic"),
+    ("https://example.org/symbol%2Dlibrary/schematic/driver.png", "Schematic"),
+    ("https://example.org/assets/driver-schematic.svg", "Module symbol"),
+    ("https://example.org/pinout/driver-schematic.png", "Schematic"),
+    ("https://example.org/assets/driver-schematic.pdf", "Block diagram"),
+    ("https://example.org/footprints/driver-schematic.svg", "Schematic"),
+    ("https://example.org/symbol-library/schematic/driver", "Schematic"),
+])
+def test_search_excludes_symbol_assets_even_with_schematic_markers(monkeypatch, url, label):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_public_schematics
+
+    good = "https://cdn-learn.adafruit.com/downloads/pdf/adafruit-mosfet-driver.pdf"
+
+    def handle(request):
+        if request.method == "POST":
+            return httpx.Response(200, json={"results": [
+                {"title": "Adafruit MOSFET Driver " + label, "url": "https://example.org/adafruit-mosfet-driver",
+                 "highlights": ["schematic"], "extras": {"imageLinks": [url]}},
+                {"title": "Adafruit MOSFET Driver", "url": good, "highlights": ["Schematic and Fab Print"]},
+            ]})
+        return httpx.Response(200, content=f'<a href="{url}">{label}</a>'.encode(),
+                              headers={"Content-Type": "text/html"})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_public_schematics("Adafruit MOSFET Driver", client=client)
+    assert [candidate.source_url for candidate in result] == [good]
+
+
 def test_community_subdomain_is_not_manufacturer_evidence():
     from backend.projects.external_circuit_search import _manufacturer_for
 
@@ -20,12 +66,46 @@ def test_community_subdomain_is_not_manufacturer_evidence():
     assert _manufacturer_for("https://wiki.seeedstudio.com/board/") == "Seeed Studio"
 
 
+@pytest.mark.parametrize("html,expected", [
+    ('<h1>Teensy 4.0 Schematic</h1><img src="schematic40.png"><img src="parts_placement_teensy40_top.png">', ['schematic40.png']),
+    ('<h2>Schematic</h2><h3>Downloads</h3><img src="drawing.png"><h2>Photos</h2><img src="other.png">', ['drawing.png']),
+    ('<table><tr><td><img src="drawing.png"></td></tr><tr><th><h1>DRV8833 schematic diagram</h1></th></tr></table>', ['drawing.png']),
+    ('<figure><img src="drawing.png"><figcaption>DRV8833 circuit diagram</figcaption></figure>', ['drawing.png']),
+    ('<figure><img src="one.png"><img src="two.png"><figcaption>Schematic</figcaption></figure>', []),
+    ('<figure><img src="one.png"></figure><figure><figcaption>Schematic</figcaption></figure>', []),
+    ('<figure><img src="one.png"><h2>Schematic</h2></figure><img src="other.png">', []),
+    ('<figure><img src="one.png"><figcaption><h2>Schematic</h2></figcaption></figure><img src="other.png">', ['one.png']),
+    ('<title>Board schematic</title><h1>Schematic</h1><img src="drawing.png">', []),
+])
+def test_file_specific_schematic_context_supports_real_page_structures(html, expected):
+    from backend.projects.external_circuit_search import _page_assets
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={"Content-Type": "text/html"}, text=html))) as client:
+        assets = _page_assets('https://example.org/board/', client=client, require_schematic_context=True)
+    assert [url.rsplit('/', 1)[-1] for url, _ in assets] == expected
+
+
+def test_image_context_nesting_is_bounded():
+    from backend.projects.external_circuit_search import _page_assets
+    html = '<figure>' * 9 + '<img src="drawing.png"><figcaption>Schematic</figcaption>' + '</figure>' * 9
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={"Content-Type": "text/html"}, text=html))) as client:
+        assert _page_assets('https://example.org/board/', client=client, require_schematic_context=True) == ()
+
+
 def test_page_parser_accepts_image_without_alt_attribute():
     from backend.projects.external_circuit_search import _SchematicPageParser
 
     parser = _SchematicPageParser()
     parser.feed('<title>Board schematic</title><img src="https://example.org/board_sch.png">')
     assert parser.links == [("https://example.org/board_sch.png", "Board schematic")]
+
+
+def test_page_title_in_link_evidence_is_bounded():
+    from backend.projects.external_circuit_search import _SchematicPageParser
+    parser = _SchematicPageParser()
+    parser.feed('<title>' + 'x' * 10000 + '</title><a href="board.pdf">Schematic</a>')
+    assert len(parser.links[0][1]) <= 210
 
 
 def test_public_search_discovers_unregistered_official_pdf(monkeypatch):
@@ -479,6 +559,32 @@ def test_public_search_prefers_official_schematic_png_to_guide_pdf(monkeypatch):
     assert result
     assert result[0].source_url == large
     assert result[0].asset_kind == "png"
+
+
+@pytest.mark.parametrize("query", ["Raspberry Pi Pico", "라즈베리파이 피코", "RPi Pico"])
+def test_public_search_keeps_abbreviated_pico_drawing_within_candidate_limit(monkeypatch, query):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_public_schematics
+
+    drawing = "https://files.waveshare.com/upload/e/ed/RPI-PICO-R3-PUBLIC-SCHEMATIC.pdf"
+
+    def handle(request):
+        assert request.method == "POST"
+        return httpx.Response(200, json={"results": [
+            {"title": "SCHEMATIC1 : PAGE1", "url": drawing,
+             "highlights": ["RPI-PICO 3 Raspberry Pi Pico schematic"]},
+            *({"title": f"Raspberry Pi Pico accessory {index} schematic",
+               "url": f"https://example.org/raspberry-pi-pico-accessory-{index}-schematic.pdf"}
+              for index in range(5)),
+        ]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_public_schematics(query, limit=5, client=client)
+
+    assert result[0].source_url == drawing
+    assert result[0].source_type == "public_web"
+    assert result[0].evidence_grade is None
+    assert len(result) == 5
 
 
 def test_public_search_prefers_exact_model_name_over_partial_match(monkeypatch):

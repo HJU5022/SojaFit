@@ -17,10 +17,12 @@
 | `auth.py` | `/api/auth/*`: 로그인, 이메일 가입(요청·확인), 비밀번호 재설정(요청·확인), `me`, `logout`. `DEMO_MODE=1`에서만 `demo`·`demo-login`. `/docs`에 안 싣는 `google/*` 7개 경로(`status`, `start`, `callback`, `pending`, `onboarding`, `signup`, `link`) |
 | `admin.py` | `GET /api/admin/users`, `PATCH /api/admin/users/{target_id}`(일반 계정 활성 상태 변경) |
 | `prices.py` | `GET /api/prices`(로그인 필요, 요청 때 Mouser 조회, `Cache-Control: no-store`, ADR 0009) |
-| `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`, `POST /api/projects/upload`, `GET`·`PATCH`·`DELETE /api/projects/{project_id}` |
+| `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`(빈 생성 또는 데모 복제), `POST /api/projects/upload`, `POST /api/projects/{project_id}/netlist`(새 버전·새 대화), `GET`·`PATCH`·`DELETE /api/projects/{project_id}`. 상세 `thread_id` 쿼리는 해당 대화의 고정 버전을 반환 |
 | `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
 | `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, `GET`·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
-| `quotes.py` | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/messages/{id}/approval`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |
+| `quotes.py` | `GET`·`POST /api/messages/{id}/approvals`(조회는 소유 assistant 메시지의 승인 메타데이터만, 사례 삭제 후에도 유지), `POST /api/approvals/{id}/quotes`, `GET /api/messages/{id}/approval`(새로고침 뒤 승인 1건과 그 견적 복원), `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |
 | `profile.py` | `GET`·`PATCH`·`DELETE /api/me/memory`(사용자 사실 기억), `DELETE /api/me`(탈퇴) |
 
 변경 요청(POST·PATCH·DELETE)은 `auth.check_origin`을 적용한다. run·재개는 `app.state.conversations`(분석 서비스, `THREADS_ENABLED=1`)가 없으면 스트림을 열기 전에 공통 503으로 끝난다. 승인 사례(`quotes.py`의 `approved-cases`)는 새 분석에 넘기지 않는다([CONVERSATIONS.md](../conversations/CONVERSATIONS.md)).
+
+실행 실패/재개 중 오류의 공개 code/message는 저장 결과의 선택적 `error`로 GET 복원한다. 재개 입구429는 실행을 시작하지 않고 조건 대기 상태와 interrupt를 유지하며 오류만 기록한다. 예전 결과에 오류가 없으면 null이고 요청ID/내부 예외는 저장하지 않는다.

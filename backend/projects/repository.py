@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
@@ -37,6 +38,26 @@ def project_name(name: str) -> str:
 
 
 class ProjectRepository:
+    def create_empty(self, user_id: int, name: str) -> Project:
+        name = project_name(name)
+        with auth.connection() as conn:
+            project_id = conn.execute("INSERT INTO projects(user_id,name,source_kind) VALUES (%s,%s,'upload') RETURNING id",
+                                      (user_id, name)).fetchone()[0]
+            return self._get_owned(conn, user_id, project_id)
+
+    def import_netlist(self, user_id: int, project_id: int, *, connections, source_sha256: str, parser_version: str):
+        with auth.connection() as conn:
+            if conn.execute('SELECT id FROM projects WHERE id=%s AND user_id=%s FOR UPDATE', (project_id, user_id)).fetchone() is None:
+                raise ProjectNotFound
+            conn.execute("UPDATE projects SET source_kind='upload',demo_id=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (project_id, user_id))
+            conn.execute('INSERT INTO circuits(project_id,connections,source_sha256,parser_version) VALUES (%s,%s,%s,%s) '
+                         'ON CONFLICT (project_id) DO UPDATE SET connections=EXCLUDED.connections,source_sha256=EXCLUDED.source_sha256,'
+                         'parser_version=EXCLUDED.parser_version,version=circuits.version+1,created_at=CURRENT_TIMESTAMP',
+                         (project_id, Jsonb(connections, dumps=lambda value: json.dumps(value, default=dict)), source_sha256, parser_version))
+            thread_id = uuid4()
+            conn.execute('INSERT INTO threads(id,project_id) VALUES (%s,%s)', (thread_id, project_id))
+            return self._get_owned(conn, user_id, project_id), str(thread_id)
+
     def create_upload(self, user_id: int, name: str, *, connections, source_sha256: str, parser_version: str) -> Project:
         name = project_name(name)
         with auth.connection() as conn:
@@ -70,19 +91,22 @@ class ProjectRepository:
 
     def list_owned(self, user_id: int) -> list[ProjectSummary]:
         with auth.connection() as conn, conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(f"SELECT {FIELDS} FROM projects WHERE user_id=%s ORDER BY updated_at DESC, id DESC", (user_id,))
+            cur.execute(f"SELECT {FIELDS}, COALESCE((SELECT version FROM circuits WHERE project_id=projects.id),0) AS circuit_version FROM projects WHERE user_id=%s ORDER BY updated_at DESC, id DESC", (user_id,))
             return [ProjectSummary(**row) for row in cur.fetchall()]
 
-    def get_owned(self, user_id: int, project_id: int) -> Project:
+    def get_owned(self, user_id: int, project_id: int, thread_id=None) -> Project:
         with auth.connection() as conn:
-            return self._get_owned(conn, user_id, project_id)
+            return self._get_owned(conn, user_id, project_id, thread_id)
 
-    def _get_owned(self, conn, user_id: int, project_id: int) -> Project:
+    def _get_owned(self, conn, user_id: int, project_id: int, thread_id=None) -> Project:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT p.id, p.name, p.source_kind, p.demo_id, p.created_at, p.updated_at, c.connections "
-                "FROM projects p JOIN circuits c ON c.project_id=p.id WHERE p.user_id=%s AND p.id=%s",
-                (user_id, project_id),
+                "SELECT p.id, p.name, v.source_kind, v.demo_id, p.created_at, p.updated_at, v.connections,v.version AS circuit_version "
+                "FROM projects p LEFT JOIN circuits c ON c.project_id=p.id "
+                "LEFT JOIN threads t ON t.project_id=p.id AND t.id=%s::uuid "
+                "JOIN project_circuit_versions v ON v.project_id=p.id AND v.version=CASE WHEN %s::uuid IS NULL THEN COALESCE(c.version,0) ELSE t.circuit_version END "
+                "WHERE p.user_id=%s AND p.id=%s",
+                (thread_id, thread_id, user_id, project_id),
             )
             row = cur.fetchone()
         if row is None:
