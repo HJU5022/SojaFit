@@ -191,7 +191,7 @@ class ExternalSchematicService:
             return result
         return self.images.get(source, produce)
 
-    def _find(self, query, selected_url=None):
+    def _find(self, query):
         from backend.projects.external_circuit_search import WebSchematicRef
         saw_upstream_failure = False
         rate_error = None
@@ -210,6 +210,7 @@ class ExternalSchematicService:
 
         def try_candidates(candidates):
             nonlocal saw_upstream_failure, rate_error
+            verified = []
             for candidate in candidates[:5]:
                 try:
                     sources = retry_once(lambda: tuple(self.inspect(candidate, query=query)))
@@ -235,29 +236,21 @@ class ExternalSchematicService:
                     except ExternalSchematicUpstreamError:
                         saw_upstream_failure = True
                         continue
-                    return source, len(sheets)
-            return None
+                    verified.append((source, len(sheets)))
+                    if not isinstance(candidate, WebSchematicRef):
+                        return tuple(verified)
+                    break
+            return tuple(verified)
 
         candidates = self.candidates.get(query, lambda: self.search(query, 5))
-        if selected_url is not None:
-            candidates = tuple(candidate for candidate in candidates
-                               if isinstance(candidate, WebSchematicRef) and candidate.source_url == selected_url)
-            if not candidates:
-                return None
         result = try_candidates(candidates)
-        if result is not None:
+        if result:
             return result
-        if selected_url is not None:
-            if rate_error is not None:
-                raise rate_error
-            if saw_upstream_failure:
-                raise ExternalSchematicUpstreamError()
-            return None
         # Official candidates are authoritative only after rendering and hash
         # validation. If that validation fails, lazily spend the grade-3 slot.
         if self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
             result = try_candidates(self.fallback_search(query, 5))
-            if result is not None:
+            if result:
                 return result
         if rate_error is not None:
             raise rate_error
@@ -266,22 +259,23 @@ class ExternalSchematicService:
         return None
 
     def find(self, query, selected_url=None):
-        from backend.projects.external_circuit_search import WebSchematicRef
-
         normalized = " ".join(query.split()).casefold()
         if not 2 <= len(query.strip()) <= 200:
             raise ValueError("검색어는 2~200자여야 합니다.")
         if selected_url is not None and (not isinstance(selected_url, str) or len(selected_url) > 2048):
             raise ExternalSchematicNotFound()
-        cache_key = normalized if selected_url is None else (normalized, selected_url)
-        result = self.queries.get(cache_key, lambda: self._find(normalized, selected_url))
+        results = self.queries.get(normalized, lambda: self._find(normalized))
+        if not results:
+            raise ExternalSchematicNotFound()
+        result = results[0] if selected_url is None else next(
+            (result for result in results if result[0].source_type != "community"
+             and result[0].source_url == selected_url), None)
         if result is None:
             raise ExternalSchematicNotFound()
         source, count = result
-        choices = tuple(ExternalSchematicChoice(candidate.title, candidate.source_url,
+        choices = tuple(ExternalSchematicChoice(candidate.model or candidate.source_file, candidate.source_url,
                                                candidate.source_type, candidate.revision)
-                        for candidate in self.candidates.get(normalized, lambda: self.search(normalized, 5))
-                        if isinstance(candidate, WebSchematicRef))
+                        for candidate, _ in results if candidate.source_type != "community")
         token = _sign(source, count, int(self.wall()) + TTL)
         return ExternalSchematicManifest(source.repository or None, source.commit or None, source.license,
                                          source.attribution, source.repository_url, source.source_url,

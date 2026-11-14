@@ -262,6 +262,38 @@ def test_public_pdf_fingerprint_is_single_page_only():
     assert len(digest) == 64 and count == 1
 
 
+@pytest.mark.parametrize("filename", ["pico-datasheet.pdf", "pico-product-brief.pdf",
+                                      "pico-2-schematic.pdf", "pico-2-w-schematic.pdf"])
+def test_incompatible_artifact_name_is_rejected_before_download(monkeypatch, filename):
+    monkeypatch.setattr(render, "_public_asset", lambda *a, **kw: pytest.fail("unexpected download"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic("https://example.org/" + filename, "pdf", "Raspberry Pi Pico",
+                                        source_file=filename)
+
+
+def test_schematic_in_datasheets_directory_is_not_a_datasheet():
+    render._verify_public_identity(
+        "Sensor", title="Sensor schematic", page_url="https://example.org/board/",
+        source_file="sensor-schematic.pdf", source_url="https://example.org/datasheets/sensor-schematic.pdf",
+        kind="pdf", pdf_text="Sensor schematic",
+    )
+
+
+@pytest.mark.parametrize("requested", ["Pico", "Pico W", "Pico 2", "Pico 2 W"])
+@pytest.mark.parametrize("artifact", ["Pico", "Pico W", "Pico 2", "Pico 2 W"])
+def test_public_identity_distinguishes_pico_generations_and_wireless(requested, artifact):
+    filename = artifact.replace(" ", "-") + "-schematic.pdf"
+    kwargs = dict(title="Raspberry Pi " + requested,
+                  page_url="https://www.raspberrypi.com/pico-series/",
+                  source_file=filename, source_url="https://example.org/" + filename,
+                  kind="pdf", pdf_text="Raspberry Pi " + artifact)
+    if requested == artifact:
+        render._verify_public_identity("Raspberry Pi " + requested, **kwargs)
+    else:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._verify_public_identity("Raspberry Pi " + requested, **kwargs)
+
+
 def test_public_identity_rejects_wrong_board_variant_from_pdf_text(monkeypatch):
     pdf = picture("PDF", ["red"])
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (pdf, "application/pdf"))

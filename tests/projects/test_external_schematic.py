@@ -312,6 +312,42 @@ def test_public_web_token_restores_verified_asset_on_cold_instance(service):
     assert cold.load(result.token, 0) == b"verified"
 
 
+def test_choices_only_include_fully_verified_sources_and_reuse_validation(service):
+    worker, _, _, source = service
+    refs = tuple(WebSchematicRef(
+        f"https://example.org/board-{index}-schematic.png", "https://example.org/board",
+        f"board-{index}-schematic.png", "png", f"Board {index}", "Publisher",
+    ) for index in range(5))
+    inspected, rendered = [], []
+    worker.search = lambda query, limit: refs
+
+    def inspect(candidate, **kwargs):
+        inspected.append(candidate.source_url)
+        if candidate in refs[1:3]:
+            raise ExternalSchematicInvalidSource()
+        return (replace(source, repository="", commit="", source_url=candidate.source_url,
+                        source_file=candidate.source_file, root_schematic=candidate.source_file,
+                        asset_kind="png", asset_paths=(), expected_sheets=1,
+                        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+
+    def render(candidate):
+        rendered.append(candidate.source_url)
+        if candidate.source_url == refs[3].source_url:
+            raise ExternalSchematicInvalidSource()
+        return (b"verified",)
+
+    worker.inspect, worker.render = inspect, render
+    result = worker.find("Board")
+    assert [choice.source_url for choice in result.choices] == [refs[0].source_url, refs[4].source_url]
+    for choice in result.choices:
+        assert worker.find("Board", choice.source_url).source_url == choice.source_url
+    for rejected in (*refs[1:4], replace(refs[0], source_url="https://attacker.example/schematic.png")):
+        with pytest.raises(ExternalSchematicNotFound):
+            worker.find("Board", rejected.source_url)
+    assert inspected == [ref.source_url for ref in refs]
+    assert rendered == [refs[index].source_url for index in (0, 3, 4)]
+
+
 def test_user_can_select_an_exact_web_candidate_without_arbitrary_url_fetch(service):
     worker, counts, _, source = service
     urls = ("https://example.org/first-schematic.png", "https://example.org/second-schematic.png")

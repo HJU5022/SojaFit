@@ -460,9 +460,27 @@ def _identity_terms(query: str) -> tuple[str, ...]:
     )
 
 
+def _pico_variant(identity: str) -> str | None:
+    for variant in ("pico2w", "pico2", "picow", "pico"):
+        if variant in identity:
+            return variant
+    return None
+
+
+def _verify_artifact_name(query: str, source_file: str, source_url: str) -> None:
+    filename = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
+    if any(marker in filename for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS):
+        raise _invalid()
+    requested = _pico_variant(_identity_compact(canonical_product_query(query)))
+    actual = _pico_variant(filename)
+    if requested and actual and requested != actual:
+        raise _invalid()
+
+
 def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
                             source_url: str, kind: str, pdf_text: str = "") -> None:
     """Reject a valid image/PDF whose board variant is not the requested one."""
+    _verify_artifact_name(query, source_file, source_url)
     query = canonical_product_query(query)
     terms = _identity_terms(query)
     if not terms:
@@ -482,9 +500,6 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
             if term not in haystack or (kind == "pdf" and term not in text and term not in source_identity):
                 raise _invalid()
     query_identity = _identity_compact(query)
-    if any(marker in source_identity for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS) and not any(
-            marker in query_identity for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS):
-        raise _invalid()
     if any(marker in haystack for marker in _ACCESSORY_MARKERS) and "shield" not in query_identity:
         raise _invalid()
     if "qwiic" in artifact_identity and "qwiic" not in query_identity:
@@ -515,20 +530,15 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
     for marker, requested in artifact_conflicts.items():
         if marker in artifact_identity and requested not in query_identity:
             raise _invalid()
-    # A product page may mention Pico W while linking a plain Pico drawing.
-    # The artifact filename and PDF text must not contradict the requested variant.
-    query_picow = "picow" in query_identity
+    # Product pages cover multiple boards; the artifact must match the requested variant.
+    requested_pico = _pico_variant(query_identity)
     file_identity = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
-    file_picow = "picow" in file_identity
-    text_picow = "picow" in text
-    if query_picow:
-        if (("pico" in file_identity and not file_picow)
-                or ("pico" in text and not text_picow)
-                or not (file_picow or "picow" in _identity_compact(urlsplit(source_url).path)
-                        or text_picow)):
+    if requested_pico:
+        variants = tuple(filter(None, (_pico_variant(file_identity),
+                                       _pico_variant(_identity_compact(urlsplit(source_url).path)),
+                                       _pico_variant(text))))
+        if not variants or any(variant != requested_pico for variant in variants):
             raise _invalid()
-    elif "picow" in source_identity or text_picow:
-        raise _invalid()
     numeric_terms = [term for term in terms if any(char.isdigit() for char in term)]
     source_tokens = re.findall(r"[a-z]+[0-9][a-z0-9]*", " ".join(
         (page_url, source_file, source_url)).casefold())
@@ -546,6 +556,7 @@ def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = ""
                              page_url: str = "", source_file: str = "",
                              client: httpx.Client | None = None) -> tuple[str, int]:
     """Download, identify, and fingerprint one public schematic in one pass."""
+    _verify_artifact_name(query, source_file, url)
     data, _ = _public_asset(url, kind, client=client)
     pdf_text = _pdf_identity_text(data) if kind == "pdf" else ""
     _verify_public_identity(query, title=title, page_url=page_url, source_file=source_file,
