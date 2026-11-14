@@ -38,6 +38,7 @@
 - `components/Schematic.tsx` — 원본 회로도 이미지(`SchematicImage`)와, 누를 때만 `GET /api/external-circuits/schematics`로 찾는 웹 검색(`ExternalSchematic`). 테스트 `Schematic.test.tsx`.
 - `components/ContextDiagram.tsx` — 대상 부품의 넷과 이웃을 그리는 SVG 개념도.
 - `components/PriceLookup.tsx` — 누를 때만 조회하는 가격·재고. 견적에서는 수량에 맞는 단가·합계를 더하고 "실시간 조회 · 조회 시각 · 세금·배송비·환율 미포함 · 저장하지 않음"을 붙인다. 테스트 `Approval.test.tsx`.
+- `components/QuoteList.tsx` — 부품 고르기 화면의 프로젝트 견적 목록(`GET /api/projects/{id}/quotes`): 품번 × 수량, 날짜, 검토 열기, 행마다 누를 때만 하는 실시간 가격. 테스트 `QuoteList.test.tsx`.
 - `components/SafeMarkdown.tsx` — 서버 답 전체를 보이는 최소 마크다운 렌더러(표·굵게·목록·인용, HTML·이미지·링크는 글자로만). 테스트 `SafeMarkdown.test.tsx`.
 - `components/ApprovedCases.tsx` — 승인 사례 목록과 확인 삭제.
 - `components/AuthCard.tsx` · `components/PageShell.tsx` — 로그인 계열 화면과 설정·관리 화면의 공통 틀.

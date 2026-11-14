@@ -125,6 +125,8 @@ SojaFit (proj3-b)
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── Approval.test.tsx <- 새로고침 뒤 승인·견적 복원, 409 이미 승인됨 처리, 견적 본문은 수량만
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고(견적이면 수량 단가·합계)
+│       │   ├── QuoteList.tsx <- 프로젝트 견적 목록(품번 × 수량·날짜), 검토로 돌아가기, 행마다 실시간 가격 조회
+│       │   ├── QuoteList.test.tsx <- 견적 목록·검토 열기·누를 때만 가격 조회·빈 목록 테스트
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
 │       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
 │       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)

@@ -13,6 +13,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
+import QuoteList from '../components/QuoteList'
 import Review from '../components/Review'
 import { ExternalSchematic, SchematicImage } from '../components/Schematic'
 import '../styles/app.css'
@@ -203,6 +204,7 @@ export default function WorkbenchPage() {
                 <th scope="row"><button>{part.ref}<span className="sr-only"> {part.value} 선택</span></button></th><td data-label="값">{part.value}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
           </section>
         })}
+        <QuoteList projectId={projectId} onOpen={onThread} />
         {project.isPending && <div className="skeleton" role="status"><span className="sr-only">회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
         {!project.isPending && !project.error && !filteredParts.length && <p className="empty">{parts.length ? '참조 번호나 값이 일치하는 부품이 없습니다. 검색어를 바꾸거나 지워 주세요.' : '넷리스트에 부품이 없습니다. 새 프로젝트에서 부품이 있는 파일을 올려 주세요.'}</p>}
       </section>}
