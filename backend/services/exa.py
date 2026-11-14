@@ -4,6 +4,7 @@ import logging
 import os
 import re
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from contextvars import ContextVar
 from datetime import datetime, timezone
 from threading import Lock
@@ -129,10 +130,69 @@ def request_scope():
     # Permit one official lookup and one grade-3 fallback in the same request,
     # while retaining the per-grade single-call guard for concurrent retries.
     token = _budget.set({'grade2': Lock(), 'grade3': Lock()})
+    prefetch_token = _prefetched.set({})  # [왜] 미리 받은 PDF는 이 요청 안에서만 쓰고 끝나면 버린다(저장하지 않음)
     try:
         yield
     finally:
+        _prefetched.reset(prefetch_token)
         _budget.reset(token)
+
+
+# 미리 출발(사전 등록 2026-11-14): 품번이 확인되면 공식 PDF 검색 · 내려받기를 옆 스레드에서 먼저 시작한다.
+# 웹 근거가 필요해진 시점에 같은 URL이 이미 받아져 있으면 다시 받지 않는다. 근거 검증(verified_rows) · 요청당 1번 제한은 그대로다.
+_prefetched = ContextVar('datasheet_prefetch', default=None)
+_POOL = ThreadPoolExecutor(max_workers=4, thread_name_prefix='exa-prefetch')
+PREFETCH_WAIT_SECONDS = 12  # 받는 중인 PDF를 기다리는 상한. 기존 내려받기 상한(_body 12초)과 같다
+
+
+def prefetch_enabled() -> bool:
+    return os.getenv('WEB_PREFETCH') == '1' and enabled()
+
+
+def prefetch(parts: list[str]) -> None:
+    """질문 속 품번의 공식 PDF를 미리 찾고 내려받기 시작한다. 결과는 기다리지 않는다(실패해도 본 경로는 원래대로 받는다)."""
+    store = _prefetched.get()
+    clean = list(dict.fromkeys(p for p in parts if isinstance(p, str) and PART.fullmatch(p)))[:2]
+    if store is None or not clean or not prefetch_enabled() or 'job' in store:
+        return
+    # [주의] 요청 범위 칸(store)은 dict라 다른 스레드에서 같은 객체를 채운다. 예산 슬롯은 쓰지 않는다(근거 호출이 아니라 받기만 함)
+    store['job'] = _POOL.submit(_prefetch_pdfs, clean)
+
+
+def _prefetch_pdfs(parts: list[str]) -> dict:
+    """공식 PDF 후보를 Exa로 찾아 최대 MAX_DOWNLOADS개를 받는다. {요청 URL: (바이트, 최종 URL)}."""
+    query = _query(parts, 'datasheet')
+    filters = [host + GRADE2_PDF_PATHS[host] for host in GRADE2_PDF_PATHS]
+    found = {}
+    try:
+        with httpx.Client(timeout=10, trust_env=False, follow_redirects=False) as client:
+            body, _ = _body(client, 'POST', 'https://api.exa.ai/search', 256 * 1024,
+                            headers={'x-api-key': os.environ['EXA_API_KEY']},
+                            json={'query': query, 'numResults': MAX_RESULTS, 'includeDomains': filters, 'type': 'auto'})
+            results = json.loads(body).get('results') or []
+            hits = sorted((h for h in results[:MAX_RESULTS] if isinstance(h, dict)),
+                          key=lambda h: _candidate_score(h, parts), reverse=True)
+            urls = list(dict.fromkeys(u for u in (official_pdf(h.get('url') or '', grade=2) for h in hits) if u))
+            for url in urls[:MAX_DOWNLOADS]:
+                try:
+                    found[url] = _body(client, 'GET', url, MAX_BYTES, redirect_validator=grade2_pdf)
+                except (ValueError, httpx.HTTPError):
+                    continue
+    except (httpx.HTTPError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
+        LOGGER.debug('datasheet_prefetch failed')
+    return found
+
+
+def _from_prefetch(url: str):
+    """미리 받은 같은 URL의 (바이트, 최종 URL). 없거나 아직 못 받았으면 None(원래대로 받는다)."""
+    store = _prefetched.get()
+    job = store.get('job') if isinstance(store, dict) else None
+    if job is None:
+        return None
+    try:
+        return job.result(timeout=PREFETCH_WAIT_SECONDS).get(url)
+    except Exception:  # [왜] 미리 받기 실패 · 시간 초과는 본 경로를 막지 않는다
+        return None
 
 
 def _body(client, method, url, limit, *, redirect_validator=None, **kwargs):
@@ -211,8 +271,9 @@ def _search_evidence(parts: list[str], terms: str, *, grade=None, transport=None
                 continue
             seen.add(url)
             try:
-                raw, url = _body(client, 'GET', url, MAX_BYTES,
-                            redirect_validator=(grade2_pdf if grade == 2 else None))
+                cached = _from_prefetch(url) if grade == 2 else None
+                raw, url = cached or _body(client, 'GET', url, MAX_BYTES,
+                                           redirect_validator=(grade2_pdf if grade == 2 else None))
                 rows = verified_rows(raw, url, parts, words, grade=grade) if raw.startswith(b'%PDF-') else []
             except (ValueError, httpx.HTTPError):
                 LOGGER.debug('datasheet_candidate_rejected stage=fetch reason=unreadable_pdf url=%s', urlsplit(url).path[:160])
