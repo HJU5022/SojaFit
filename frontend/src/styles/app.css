@@ -60,6 +60,8 @@ a svg { width: 13px; height: 13px; stroke-width: 1.75; margin-left: 4px; vertica
 .notice-dismissible > p { flex: 1; min-width: 0; }
 .notice-dismissible > .icon-btn { flex: none; }
 .notice .btn { margin-top: 8px; }
+.duplicate-projects { overflow-wrap: anywhere; }
+.duplicate-projects .btn { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .inset { margin: 16px var(--inset) 0; }
 .ref { flex: none; padding: 0 8px; border-radius: 4px; color: var(--ink); background: var(--hover); font-weight: 510; }
 .skeleton { display: grid; align-content: center; gap: 20px; height: 112px; padding: 16px; border: 1px solid var(--line); border-radius: 6px; }

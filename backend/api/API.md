@@ -25,4 +25,6 @@
 
 변경 요청(POST·PATCH·DELETE)은 `auth.check_origin`을 적용한다. run·재개는 `app.state.conversations`(분석 서비스, `THREADS_ENABLED=1`)가 없으면 스트림을 열기 전에 공통 503으로 끝난다. 승인 사례(`quotes.py`의 `approved-cases`)는 새 분석에 넘기지 않는다([CONVERSATIONS.md](../conversations/CONVERSATIONS.md)).
 
+프로젝트 생성 두 경로는 allow_duplicate(bool, 기본false) 쿼리를 지원한다. 같은 계정 중복은409 CONFLICT와 안전한 details.duplicates로 알리고 명시적 true 선택에만 새 id를 만든다. 경로 추가·DB 구조 변경은 없다.
+
 실행 실패/재개 중 오류의 공개 code/message는 저장 결과의 선택적 `error`로 GET 복원한다. 재개 입구429는 실행을 시작하지 않고 조건 대기 상태와 interrupt를 유지하며 오류만 기록한다. 예전 결과에 오류가 없으면 null이고 요청ID/내부 예외는 저장하지 않는다.

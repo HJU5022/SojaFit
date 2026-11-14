@@ -8,7 +8,7 @@ import type { ProjectSummary } from '../api/projects'
 import { deleteThread, getRun, getThread, listThreads } from '../api/conversations'
 import type { ThreadDto } from '../api/conversations'
 import { errorMessage, requestIdProps } from '../api/client'
-import type { ApiError } from '../api/client'
+import type { ApiError, DuplicateProject } from '../api/client'
 import { useAuth } from '../auth/AuthProvider'
 import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
@@ -45,6 +45,7 @@ export default function WorkbenchPage() {
   const [filter, setFilter] = useState('')
   const [confirming, setConfirming] = useState('')
   const [error, setError] = useState<unknown>(null)
+  const [duplicates, setDuplicates] = useState<DuplicateProject[]>([])
   // 닫거나 이동한 뒤 끝난 요청이 이전 오류를 다시 띄우지 않게 한다.
   const errorVersion = useRef(0)
   const [busy, setBusy] = useState(false)
@@ -80,7 +81,7 @@ export default function WorkbenchPage() {
   const filteredProjects = projectList.filter(item => item.name.toLowerCase().includes(query))
   const filteredParts = parts.filter(part => `${part.ref} ${part.value}`.toLowerCase().includes(query))
   const partGroups = [{ title: '판정 가능', eligible: true }, { title: '판정 범위 밖', eligible: false }]
-  const clearError = useCallback(() => { errorVersion.current += 1; setError(null) }, [])
+  const clearError = useCallback(() => { errorVersion.current += 1; setError(null); setDuplicates([]) }, [])
   useEffect(() => { errorVersion.current += 1; setError(null); setMissingProjectId(null); return () => { errorVersion.current += 1 } }, [location.key])
   useEffect(() => {
     if (!navOpen) return
@@ -193,13 +194,20 @@ export default function WorkbenchPage() {
     if (busy) return
     const data = new FormData(event.currentTarget)
     const file = data.get('netlist')
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+    const allowDuplicate = duplicates.length > 0 && submitter?.name === 'allow_duplicate'
     setBusy(true); clearError()
     const version = errorVersion.current
     try {
-      const made = file instanceof File && file.size > 0 ? await uploadProject(String(data.get('name') ?? '').trim(), file) : data.get('demo') ? await createDemo(String(data.get('demo')), String(data.get('name') ?? '').trim()) : await createEmptyProject(String(data.get('name') ?? '').trim())
+      const made = file instanceof File && file.size > 0 ? await uploadProject(String(data.get('name') ?? '').trim(), file, undefined, allowDuplicate) : data.get('demo') ? await createDemo(String(data.get('demo')), String(data.get('name') ?? '').trim(), undefined, allowDuplicate) : await createEmptyProject(String(data.get('name') ?? '').trim(), allowDuplicate)
       await client.invalidateQueries({ queryKey: ['projects'] })
       if (version === errorVersion.current) { creator.current?.close(); go({ projectId: String(made.id) }) }
-    } catch (reason) { if (version === errorVersion.current) setError(reason) } finally { setBusy(false) }
+    } catch (reason) {
+      if (version === errorVersion.current) {
+        if ((reason as ApiError)?.duplicates?.length) setDuplicates((reason as ApiError).duplicates!)
+        else setError(reason)
+      }
+    } finally { setBusy(false) }
   }
 
   if (!user) return null
@@ -300,17 +308,20 @@ export default function WorkbenchPage() {
       {casesOpen && <div className="dialog-body"><h2 id="cases-title">승인 사례</h2><ApprovedCases />
         <div className="dialog-foot"><button type="button" className="btn" autoFocus onClick={() => casesDialog.current?.close()}>닫기</button></div></div>}
     </dialog>
-    <dialog ref={creator} className="dialog" aria-labelledby="creator-title" onClick={closeOutside} onClose={clearError}><form onSubmit={create}>
+    <dialog ref={creator} className="dialog" aria-labelledby="creator-title" onClick={closeOutside} onClose={clearError}><form onSubmit={create} onChange={() => setDuplicates([])}>
       <h2 id="creator-title">새 프로젝트</h2>
-      <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus /></label>
-      <label className="field"><span>KiCad 넷리스트 (선택, .net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" /></label>
+      <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus disabled={busy} /></label>
+      <label className="field"><span>KiCad 넷리스트 (선택, .net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" disabled={busy} /></label>
       <p className="property-note">파일 없이 먼저 만들고 채팅에서 넷리스트를 첨부할 수 있습니다.</p>
       {demos.isPending && <div className="skeleton" role="status"><span className="sr-only">예제 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
       {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
       {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. 파일 없이 먼저 시작할 수 있습니다.</p>}
-      {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue=""><option value="">파일 없이 시작</option>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
+      {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue="" disabled={busy}><option value="">파일 없이 시작</option>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
+      {duplicates.length > 0 && <div className="notice duplicate-projects" role="alert"><p>같은 이름이나 넷리스트를 사용하는 프로젝트가 있습니다. 기존 프로젝트를 열거나 새로 만들 수 있습니다.</p>
+        {duplicates.map(item => <div key={item.id}><p>{item.name} · {item.matches.map(match => match === 'name' ? '이름 중복' : '넷리스트 중복').join(' · ')}</p><button type="button" className="btn" onClick={() => { creator.current?.close(); go({ projectId: String(item.id) }) }}>기존 프로젝트 열기: {item.name}</button></div>)}
+      </div>}
       {error ? <div className="notice notice-dismissible" role="alert" {...requestIdProps(error)}><p>프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p><button type="button" className="icon-btn" aria-label="오류 알림 닫기" onClick={clearError}><X aria-hidden="true" /></button></div> : null}
-      <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '만드는 중' : '만들기'}</button></div>
+      <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy || duplicates.length > 0}>{busy ? '만드는 중' : '만들기'}</button>{duplicates.length > 0 && <button className="btn btn-primary" name="allow_duplicate" disabled={busy}>중복을 확인하고 새로 만들기</button>}</div>
     </form></dialog>
 
     <dialog ref={sheet} className="dialog sheet" aria-labelledby="sheet-title" onClick={closeOutside}>

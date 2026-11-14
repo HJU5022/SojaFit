@@ -99,6 +99,9 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
   if (method === 'POST' && pathname === '/api/projects') {
     const body = JSON.parse(String(init.body ?? '{}')) as { demo_id?: string; name?: string }
+    const duplicates = projects.filter(item => item.name.trim().toLowerCase() === body.name?.trim().toLowerCase() || Boolean(body.demo_id && item.demo_id === body.demo_id)).slice(0, 5)
+      .map(item => ({ id: item.id, name: item.name, matches: [item.name.trim().toLowerCase() === body.name?.trim().toLowerCase() ? 'name' : '', body.demo_id && item.demo_id === body.demo_id ? 'netlist' : ''].filter(Boolean) }))
+    if (duplicates.length && url.searchParams.get('allow_duplicate') !== 'true') return json({ error: { code: 'CONFLICT', message: '같은 이름이나 넷리스트를 사용하는 프로젝트가 있습니다.', request_id: REQUEST_ID }, details: { duplicates } }, 409)
     if (!body.demo_id) {
       const created: Project = { id: Math.max(...projects.map(item => item.id), 0) + 1, name: body.name?.trim() || '새 프로젝트', source_kind: 'upload', demo_id: null, circuit_version: 0, created_at: NOW, updated_at: NOW, connections: { parts: [], nets: [] } }
       projects = [...projects, created]

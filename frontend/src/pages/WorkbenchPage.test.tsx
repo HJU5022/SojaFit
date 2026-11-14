@@ -419,3 +419,49 @@ it('keeps the project name after a failed creation so the same form can retry', 
   await waitFor(() => expect(create).toHaveBeenCalledTimes(2))
   expect(name).toHaveValue('실패해도 유지')
 })
+
+it.each(['open', 'copy', 'edit', 'reopen'])('requires a fresh duplicate choice and preserves the form: %s', async choice => {
+  const requests: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') {
+      requests.push(path)
+      return path.includes('allow_duplicate=true') ? Response.json(made(null, '새 복사본')) : Response.json({ error: { code: 'CONFLICT', message: '중복', request_id: 'test' }, details: { duplicates: [{ id: 5, name: '기존 회로', matches: ['name', 'netlist'] }] } }, { status: 409 })
+    }
+    if (path === '/api/projects') return Response.json([])
+    if (path === '/api/demo-circuits') return catalogue()
+    if (path === '/api/projects/5') return Response.json({ ...made(null, '기존 회로'), id: 5 })
+    if (path === '/api/projects/1') return Response.json(made(null, '새 복사본'))
+    return Response.json([])
+  })
+  open(''); await screen.findByText('파일이 없으면 예제 회로로 시작'); mockDialogs()
+  fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+  const dialog = screen.getByRole('dialog', { name: '새 프로젝트' })
+  const name = within(dialog).getByRole('textbox', { name: '프로젝트 이름' })
+  fireEvent.change(name, { target: { value: '겹치는 이름' } })
+  const form = within(dialog).getByRole('button', { name: '만들기' }).closest('form')!
+  fireEvent.submit(form)
+  expect(await within(dialog).findByRole('alert')).toHaveTextContent('이름 중복 · 넷리스트 중복')
+  expect(name).toHaveValue('겹치는 이름')
+  expect(requests).toEqual(['/api/projects'])
+  expect(within(dialog).getByRole('button', { name: '만들기' })).toBeDisabled()
+  if (choice === 'open') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '기존 프로젝트 열기: 기존 회로' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toHaveLength(1)
+  } else if (choice === 'copy') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '중복을 확인하고 새로 만들기' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toEqual(['/api/projects', '/api/projects?allow_duplicate=true'])
+  } else {
+    if (choice === 'edit') fireEvent.change(name, { target: { value: '바꾼 이름' } })
+    else {
+      fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
+      fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+      expect(name).toHaveValue('')
+      fireEvent.change(name, { target: { value: '다시 입력' } })
+    }
+    expect(within(dialog).queryByRole('button', { name: '중복을 확인하고 새로 만들기' })).toBeNull()
+    fireEvent.submit(form)
+    await waitFor(() => expect(requests).toEqual(['/api/projects', '/api/projects']))
+  }
+})

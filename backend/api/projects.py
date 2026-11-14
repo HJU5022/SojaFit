@@ -87,12 +87,13 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
 
 
 @router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
-def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+def create_project(body: CreateProject, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     """빈 프로젝트 생성. demo_id를 지정한 복제는 DEMO_MODE=1에서만 허용한다."""
+    options = {"allow_duplicate": True} if allow_duplicate else {}
     if body.demo_id is not None:
         demo_mode()
-        return repo.create_demo(user_id, body.demo_id, body.name)
-    return repo.create_empty(user_id, body.name)
+        return repo.create_demo(user_id, body.demo_id, body.name, **options)
+    return repo.create_empty(user_id, body.name, **options)
 
 
 class UploadLimit(MultiPartException):
@@ -136,10 +137,11 @@ UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-dat
 
 
 @router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
-async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+async def upload_project(request: Request, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     normalized, name = await read_upload(request, with_name=True)
+    options = {"allow_duplicate": True} if allow_duplicate else {}
     return repo.create_upload(user_id, name, connections=normalized.connections,
-                              source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+                              source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, **options)
 
 
 async def read_upload(request: Request, *, with_name: bool):

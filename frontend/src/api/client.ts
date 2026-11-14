@@ -1,4 +1,5 @@
-export type ApiError = { code: string; message: string; requestId: string; retryAfter?: number }
+export type DuplicateProject = { id: number; name: string; matches: ('name' | 'netlist')[] }
+export type ApiError = { code: string; message: string; requestId: string; retryAfter?: number; duplicates?: DuplicateProject[] }
 
 export function dummyFlowEnabled(env: { DEV: boolean; MODE: string }) {
   return env.DEV && env.MODE === 'dummy'
@@ -25,12 +26,21 @@ export async function responseError(response: Response): Promise<ApiError> {
   if (response.status === 401) window.dispatchEvent(new Event('sojafit:session-expired'))
   const body = await response.json().catch(() => null)
   const error = body?.error
+  const candidates: unknown = body?.details?.duplicates
+  const duplicates = response.status === 409 && error?.code === 'CONFLICT' && Array.isArray(candidates) ? candidates.slice(0, 5).filter((value): value is DuplicateProject => {
+    const item = value as Partial<DuplicateProject> | null
+    return item !== null && typeof item === 'object' && Number.isSafeInteger(item.id) && item.id! > 0
+      && typeof item.name === 'string' && item.name.trim().length > 0 && item.name.length <= 200
+      && Array.isArray(item.matches) && item.matches.length > 0 && item.matches.length <= 2
+      && item.matches.every(match => match === 'name' || match === 'netlist')
+  }) : []
   const codes: Record<number, string> = { 400: 'VALIDATION_ERROR', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT',
     413: 'PAYLOAD_TOO_LARGE', 422: 'VALIDATION_ERROR', 429: 'RATE_LIMITED', 502: 'UPSTREAM_ERROR', 503: 'UNAVAILABLE', 504: 'TIMEOUT' }
   return { code: typeof error?.code === 'string' && error.code.trim() ? error.code : codes[response.status] ?? 'HTTP_ERROR',
     message: typeof error?.message === 'string' && error.message.trim() ? error.message : response.status === 401 ? '로그인이 필요합니다.' : '서비스에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     requestId: typeof error?.request_id === 'string' && error.request_id ? error.request_id : response.headers.get('X-Request-ID') ?? '',
-    ...(Number(response.headers.get('Retry-After')) > 0 && { retryAfter: Number(response.headers.get('Retry-After')) }) }
+    ...(Number(response.headers.get('Retry-After')) > 0 && { retryAfter: Number(response.headers.get('Retry-After')) }),
+    ...(duplicates.length > 0 && { duplicates }) }
 }
 
 const FALLBACK = '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'

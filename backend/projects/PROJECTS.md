@@ -9,6 +9,8 @@
 저장소는 `auth.connection()`과 `db/020_service_baseline.sql`·`db/031_circuit_versions.sql`의 표를 쓴다. 모든 조회·변경·삭제에 `user_id` 조건이 붙고 관리자 예외는 없다. 빈 프로젝트는 v0, 데모 복제·처음 업로드는 v1이다. 기존 프로젝트에 업로드하면 프로젝트 잠금 아래 새 불변 버전과 새 대화를 한 트랜잭션으로 저장한다. `circuits`는 최신 버전이고 `project_circuit_versions`는 과거 회로를 보존한다. 삭제는 FK cascade를 쓴다. 업로드 정규화의 크기·깊이·개수 상한과 파서 버전은 `netlist.py` 상수(`MAX_BYTES`, `MAX_DEPTH`, `MAX_TOKENS`, `MAX_COMPONENTS`, `MAX_NETS`, `PARSER_VERSION`)가 정본이다. 데모 회로의 출처와 라이선스는 [CIRCUITS.md](../../data/circuits/CIRCUITS.md)를 따른다.
 
 ## 파일
+
+- 생성(`create_empty/create_demo/create_upload`)은 계정 행 잠금 아래 이름/최신 원본 해시 중복을 확인한다. 기본 동작은 DuplicateProject와 소유 후보 최대5개이며 allow_duplicate=True만 별도 새 프로젝트를 허용한다. 원본과 해시는 공개하지 않고 이름 변경·기존 프로젝트의 버전 업로드는 이 생성 검사 대상이 아니다.
 | 파일 | 하는 일 |
 |---|---|
 | `PROJECTS.md` | 이 문서 |

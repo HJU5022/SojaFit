@@ -89,6 +89,40 @@ def test_empty_creation_works_outside_demo_mode(client, monkeypatch):
     assert response.json()["circuit_version"] == 0 and response.json()["connections"]["parts"] == []
 
 
+@pytest.mark.parametrize('kind', ['empty', 'demo', 'upload'])
+def test_duplicate_warning_uses_safe_common_error_and_explicit_override(client, monkeypatch, kind):
+    from backend.api.projects import repository
+    from backend.projects.repository import DuplicateProject
+    monkeypatch.setenv('DEMO_MODE', '1')
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    calls = []
+    class DuplicateRepository:
+        def create(self, user_id, *args, **payload):
+            calls.append((user_id, payload.get('allow_duplicate', False)))
+            if not payload.get('allow_duplicate'):
+                raise DuplicateProject([{'id': 5, 'name': '기존 프로젝트', 'matches': ['name', 'netlist']}])
+            return {'id': 6, 'name': '새 프로젝트', 'source_kind': 'upload', 'demo_id': None,
+                    'created_at': '2026-11-14T00:00:00Z', 'updated_at': '2026-11-14T00:00:00Z', 'connections': {}}
+        create_empty = create_demo = create_upload = create
+    app.dependency_overrides[repository] = lambda: DuplicateRepository()
+    path = '/api/projects/upload' if kind == 'upload' else '/api/projects'
+    def send(suffix=''):
+        payload = {'name': '새 프로젝트'}
+        if kind == 'upload':
+            return client.post(path + suffix, data=payload, files={'file': ('different-name.net', Path('tests/fixtures/netlists/minimal.net').read_bytes())}, headers={'origin': 'http://testserver'})
+        if kind == 'demo': payload['demo_id'] = 'breadboard_supply'
+        return client.post(path + suffix, json=payload, headers={'origin': 'http://testserver'})
+    response = send()
+    assert response.status_code == 409
+    assert response.json()['error']['code'] == 'CONFLICT'
+    assert response.json()['error']['request_id'] == response.headers['X-Request-ID']
+    assert response.headers['Cache-Control'] == 'private, no-store'
+    assert response.json()['details'] == {'duplicates': [{'id': 5, 'name': '기존 프로젝트', 'matches': ['name', 'netlist']}]}
+    assert send('?allow_duplicate=invalid').status_code == 422
+    assert send('?allow_duplicate=true').status_code == 201
+    assert calls == [(1, False), (1, True)]
+
+
 @pytest.mark.parametrize("filename,raw,status", [
     ("test.net", None, 201), ("test.txt", None, 201), ("test.pdf", None, 400),
     ("test.net", b"", 400), ("test.net", b"\xff", 400), ("test.net", b"x" * (5 * 1024 * 1024 + 1), 413),
@@ -391,6 +425,13 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
             uploaded_id = uploaded.json()["id"]
             assert "RAW_UPLOAD_MARKER" not in uploaded.text
             raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
+            duplicate = client.post('/api/projects/upload', data={'name': '다른 파일명'}, files={'file': ('renamed.net', raw)}, headers={'origin': 'http://testserver'})
+            assert duplicate.status_code == 409
+            assert duplicate.json()['details']['duplicates'] == [{'id': uploaded_id, 'name': '업로드', 'matches': ['netlist']}]
+            copied = client.post('/api/projects/upload?allow_duplicate=true', data={'name': '복사본'}, files={'file': ('renamed.net', raw)}, headers={'origin': 'http://testserver'})
+            assert copied.status_code == 201 and copied.json()['id'] != uploaded_id
+            assert client.get(f'/api/projects/{uploaded_id}').json() == uploaded.json()
+            assert client.delete(f"/api/projects/{copied.json()['id']}", headers={'origin': 'http://testserver'}).status_code == 204
             imported = client.post(f"/api/projects/{project_id}/netlist", files={"file": ("circuit.txt", raw)}, headers={"origin": "http://testserver"})
             assert imported.status_code == 201, imported.text
             thread_id = imported.json()["thread_id"]
@@ -400,6 +441,9 @@ def test_owned_crud_and_foreign_admin_404_use_real_database(client, monkeypatch)
             assert client.get(f"/api/projects/{project_id}?thread_id=invalid").status_code == 422
             client.cookies.set(auth.COOKIE, "admin-token")
             assert client.get("/api/projects").json() == []
+            own_upload = client.post('/api/projects/upload', data={'name': '업로드'}, files={'file': ('renamed.net', raw)}, headers={'origin': 'http://testserver'})
+            assert own_upload.status_code == 201 and 'details' not in own_upload.json()
+            assert client.delete(f"/api/projects/{own_upload.json()['id']}", headers={'origin': 'http://testserver'}).status_code == 204
             assert client.post(f"/api/projects/{project_id}/netlist", files={"file": ("circuit.net", raw)}, headers={"origin": "http://testserver"}).status_code == 404
             assert client.get(f"/api/projects/{project_id}?thread_id={thread_id}").status_code == 404
             for method, body in (("GET", None), ("PATCH", {"name": "stolen"}), ("DELETE", None)):
