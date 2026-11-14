@@ -22,6 +22,7 @@ from contextlib import ExitStack
 from pathlib import Path
 
 from backend.services.langfuse_prompts import analysis_timings, callback
+from backend.services.exa import request_scope as exa_request_scope
 from evals.runners.run_graph import evaluation_metadata, invoke_with_resume, make_app, result_row, run_scores
 from evals.runners.stage_timing import StageRecorder, drain_voyage, voyage_timing
 
@@ -91,7 +92,8 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
                 start = time.perf_counter()
                 scores = {}
                 try:
-                    with analysis_timings(rec):
+                    # [왜] 서비스(memory_service)처럼 문항마다 웹 검색 예산(공식 1번 · 참고 1번)을 새로 연다. 웹을 끈 실행에는 영향이 없다
+                    with analysis_timings(rec), exa_request_scope():
                         state = invoke_with_resume(app, {'input': it['input']}, config)
                     seconds = time.perf_counter() - start
                     scores = run_scores(state, seconds, [c.get('node') or 'unknown' for c in rec.llm_calls], item=it)
@@ -145,7 +147,7 @@ def main(dataset_path: str, out_dir: str, sets: int = 3, p95_limit: float = 10.0
             summary = {'set': s, 'done': len(rows), 'total': len(items), 'passed': sum(r['pass'] for r in rows),
                        'p95_s': p95(lat), 'p50_s': sorted(lat)[len(lat) // 2] if lat else 0.0, 'session': session,
                        'stopped_at': next((r['id'] for r in rows if not r['pass']), None),
-                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT')},
+                       'model_env': {k: os.getenv(k, '') for k in ('LAB_THINKING', 'LAB_THINKING_ON', 'LAB_NODE_MODELS', 'LAB_EFFORT', 'DEMO_MODE', 'EVAL_WEB', 'WEB_PREFETCH')},  # [왜] DEMO_MODE=1이면 검색이 Voyage 없이 BM25만 돈다. 비교 가능한 실행인지 결과 파일만 보고 알 수 있게 남긴다(11-13 citecheck가 DEMO_MODE=1로 돈 일)
                        'db': os.getenv('DATABASE_URL', '').rsplit('/', 1)[-1],  # DB 이름만(접속 정보는 남기지 않는다)
                        'llm_provider': llm.LLM_PROVIDER, 'claude_direct': llm.LLM_PROVIDER == 'openrouter' and bool(os.getenv('ANTHROPIC_API_KEY')),  # [왜] Anthropic 직통인지 OpenRouter인지(응답 시간이 다르다). claude_cli는 키를 빼고 구독으로 부르므로 직통이 아니다
                        'git': _git_rev()}
