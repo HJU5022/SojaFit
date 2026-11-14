@@ -54,6 +54,15 @@ class Quote(BaseModel):
     created_at: datetime
 
 
+class ExistingApproval(Approval):
+    case_id: int | None  # 사용자가 승인 사례를 지워도 승인은 남는다
+
+
+class MessageApproval(BaseModel):
+    approval: ExistingApproval | None
+    quotes: list[Quote]
+
+
 class ApprovedCase(BaseModel):
     id: int
     approval_id: int
@@ -82,6 +91,11 @@ def approve(message_id: int, body: ApproveBody, user_id: int = Depends(auth.curr
 @router.post('/approvals/{approval_id}/quotes', status_code=201, response_model=Quote, dependencies=[Depends(auth.check_origin)])
 def create_quote(approval_id: int, body: QuoteBody, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
     return quotes.create_quote(user_id, approval_id, body.quantity)
+
+
+@router.get('/messages/{message_id}/approval', response_model=MessageApproval)
+def message_approval(message_id: int, user_id: int = Depends(auth.current_user_id), quotes=Depends(service)):
+    return quotes.message_approval(user_id, message_id)
 
 
 @router.get('/projects/{project_id}/quotes', response_model=list[Quote])
