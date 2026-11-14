@@ -113,6 +113,35 @@ def test_chat_netlist_uses_bounded_parser_and_creates_new_thread(upload_boundary
     assert uploads and all(upload.file.closed for upload in uploads)
 
 
+@pytest.mark.parametrize("path,data,expected", [
+    ("/api/projects/upload", b"\xff", "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요."),
+    ("/api/projects/upload", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
+    ("/api/projects/5/netlist", b"(not-export)", "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다."),
+])
+def test_netlist_failure_messages_distinguish_encoding_and_syntax(upload_boundary, path, data, expected):
+    client, payloads, uploads, _ = upload_boundary
+    files = {"file": ("test.net", data)}
+    if path.endswith("/upload"):
+        response = client.post(path, data={"name": "회로"}, files=files, headers={"origin": "http://testserver"})
+    else:
+        response = client.post(path, files=files, headers={"origin": "http://testserver"})
+    assert response.status_code == 400
+    assert response.json()["error"] == {"code": "VALIDATION_ERROR", "message": expected, "request_id": response.headers["X-Request-ID"]}
+    assert payloads == []
+    assert uploads and all(upload.file.closed for upload in uploads)
+
+
+def test_netlist_multipart_failure_has_attachment_retry_message(upload_boundary):
+    client, payloads, uploads, _ = upload_boundary
+    content = b"--boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.net\"\r\n\r\n"
+    response = client.post("/api/projects/upload", content=content,
+                           headers={"origin": "http://testserver", "content-type": "multipart/form-data; boundary=boundary"})
+    assert response.status_code == 400
+    assert response.json()["error"]["message"] == "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다."
+    assert payloads == []
+    assert uploads and all(upload.file.closed for upload in uploads)
+
+
 def test_chat_netlist_accepts_more_than_json_limit(upload_boundary):
     from backend.api.projects import repository
     client, _, _, _ = upload_boundary
@@ -334,7 +363,7 @@ def test_upload_rejects_missing_filename_before_reading_or_persisting(upload_bou
     assert response.status_code == 400
     # filename이 없는 file은 두 번째 text field다. max_fields=1에서 거절되어 route의 422 검사까지 가지 않는다.
     assert response.headers["X-Request-ID"]
-    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.",
+    assert response.json() == {"error": {"code": "VALIDATION_ERROR", "message": "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.",
                                           "request_id": response.headers["X-Request-ID"]}}
     assert payloads == [] and uploads == [] and reads == []
 

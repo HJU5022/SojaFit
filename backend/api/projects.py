@@ -10,7 +10,7 @@ from backend import auth
 from backend.api.auth import demo_mode
 from backend.conversations.repository import InvalidRunState
 from backend.projects.models import Project, ProjectSummary
-from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
+from backend.projects.netlist import InvalidNetlist, InvalidNetlistEncoding, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
 from backend.projects.visuals import load_demo_visuals
 
@@ -158,7 +158,7 @@ async def read_upload(request: Request, *, with_name: bool):
             raise HTTPException(400, "multipart 파일과 이름이 필요합니다.")
         form = await parser.parse()
         if not parser.finished:
-            raise HTTPException(400, "업로드 형식이 올바르지 않습니다.")
+            raise HTTPException(400, "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.")
         items = form.multi_items()
         upload, name = form.get("file"), form.get("name")
         expected = {"file", "name"} if with_name else {"file"}
@@ -175,8 +175,12 @@ async def read_upload(request: Request, *, with_name: bool):
         raise HTTPException(413, "넷리스트는 5 MiB 이하여야 합니다.") from None
     except InvalidProject as exc:
         raise HTTPException(422, str(exc)) from None
-    except (MultiPartException, InvalidNetlist):
-        raise HTTPException(400, "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.") from None
+    except InvalidNetlistEncoding:
+        raise HTTPException(400, "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요.") from None
+    except InvalidNetlist:
+        raise HTTPException(400, "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다.") from None
+    except MultiPartException:
+        raise HTTPException(400, "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.") from None
     finally:
         for upload in parser.uploads:
             await upload.close()

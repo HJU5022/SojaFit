@@ -144,6 +144,95 @@ function HistoryControls() {
   return <><button onClick={() => void navigate(-1)}>이전 화면</button><button onClick={() => void navigate(1)}>다음 화면</button><button onClick={() => void navigate('/settings')}>설정으로 이동</button></>
 }
 
+function ProjectNavigationControls() {
+  const navigate = useNavigate()
+  return <><button onClick={() => void navigate('/app')}>프로젝트 목록으로</button><button onClick={() => void navigate('/app?projectId=2')}>다른 프로젝트로</button><button onClick={() => void navigate(-1)}>이전 화면</button><button onClick={() => void navigate(1)}>다음 화면</button></>
+}
+
+function twoProjectApi() {
+  const project = made(null, '첫 프로젝트')
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  network(path => {
+    if (path === '/api/projects') return Response.json([project, other])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path.split('?')[0] === '/api/projects/2') return Response.json(other)
+    return Response.json([])
+  })
+}
+
+it('clears the intake draft and error when switching projects', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '부품 없는 질문 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('부품 번호')
+  fireEvent.click(screen.getAllByRole('button', { name: '프로젝트' })[0])
+  fireEvent.click(await screen.findByRole('button', { name: '다른 프로젝트' }))
+  const nextInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(nextInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it('clears the intake draft and error across browser back and forward navigation', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '뒤로 가면 사라질 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '다른 프로젝트로' }))
+  const projectBInput = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(projectBInput, { target: { value: 'B에서 만든 오류' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  const previousInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(previousInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+  fireEvent.change(previousInput, { target: { value: 'A에서 다시 만든 오류' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  const forwardInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(forwardInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it.each(['projectId=1&targetRef=R1', 'projectId=1'])('does not enter a new review for an out-of-scope part (%s)', async query => {
+  const found = { ...made(null, '범위 시험'), connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
+  network(path => {
+    if (path === '/api/demo-circuits') return Response.json([])
+    if (path === '/api/projects') return Response.json([found])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(found)
+    return Response.json([])
+  })
+  open(query)
+  if (!query.includes('targetRef=')) {
+    const outOfScope = await screen.findByRole('button', { name: /R1.*판정 범위 밖/ })
+    fireEvent.click(outOfScope)
+    expect(outOfScope).toBeDisabled()
+    expect(screen.getByRole('textbox', { name: '질문' })).toBeInTheDocument()
+  } else {
+    expect(await screen.findByText(/현재 다이오드만 판정합니다/)).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: '질문' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: '부품 고르기' }).length).toBeGreaterThan(0)
+  }
+})
+
+it('offers retry when an out-of-scope saved conversation cannot be loaded', async () => {
+  const found = { ...made(null), connections: { parts: [{ ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
+  network(path => {
+    if (path === '/api/threads/missing') return failure('NOT_FOUND', '대화를 찾을 수 없습니다.', 404)
+    if (path === '/api/projects') return Response.json([found])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(found)
+    return Response.json([])
+  })
+  open('projectId=1&targetRef=R1&threadId=missing')
+  expect(await screen.findByRole('button', { name: '대화 다시 불러오기' })).toBeInTheDocument()
+  expect(screen.getByRole('alert')).toHaveTextContent('대화 기록을 불러오지 못했습니다.')
+})
+
 it('clears a stale error on browser history navigation and does not bring it back on return', async () => {
   mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
   renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1', '/app']}><HistoryControls /><WorkbenchPage /></MemoryRouter>)
