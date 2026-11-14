@@ -147,7 +147,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 - 검색: `retrieve(question: str, *, k: int = 5, parts: list[str] | None = None, method: str = 'hybrid') -> list[dict]`(`backend/rag/retrieve.py`). 돌려주는 키와 `parts`(품번 필터)·`method`(검색 방식)의 뜻은 `docs/specs/rag-pipeline.md`의 How를 따릅니다.
 - 그 밖의 모듈 사이 함수 이름과 시그니처는 `docs/reference/team-contract.md`를 따른다(9절).
-- HTTP API: 동작(메서드 + 경로) 49개, 경로 42개입니다. `/openapi.json`(`/docs`)에 동작 42개(경로 35개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 39개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
+- HTTP API: 동작(메서드 + 경로) 50개, 경로 42개입니다. `/openapi.json`(`/docs`)에 동작 43개(경로 35개)가 보이고, Google 가입 · 로그인 7개는 문서에서 숨깁니다(`include_in_schema=False`). 아래 표의 모델 이름은 `/openapi.json`의 스키마 이름입니다. JSON 요청 본문 모델 12개는 모두 `/docs`에 보이는 예시를 달고 모르는 칸을 공통 422(`VALIDATION_ERROR`)로 거절합니다. 업로드는 본문을 직접 읽어 multipart `file` · `name` 칸을 OpenAPI에만 적습니다. 성공 응답은 SSE 2개, 204 4개, Google 이동 · HTML 3개, PNG 이미지 1개를 뺀 40개에 응답 모델(`response_model`)이 있고, 모델은 경로가 돌려주는 dict와 `frontend/src/api/*.ts`의 타입에서 옮겼습니다(`tests/api/test_openapi.py`가 화면이 읽는 칸이 남는지 확인). 날짜 칸(`created_at` · `updated_at`)은 ISO 8601 문자열입니다.
   - 인증 열: 없음 · 로그인(세션 쿠키, 없거나 만료면 401) · 관리자(활성 관리자, 아니면 403 `FORBIDDEN`) · 데모 모드(`DEMO_MODE=1`, 아니면 본문을 읽기 전에 404). 로그인이 필요한 경로는 세션의 사용자 id로 소유권을 확인하고 다른 사용자의 자료는 404입니다. 바꾸는 요청(POST · PATCH · DELETE 25개)은 모두 같은 출처만 받습니다(Origin이 없거나 다르면 403 `ORIGIN_MISMATCH`). 401 · 403 Origin · DB 장애 503은 주요 오류 열에서 뺍니다.
   - 가이드 필수(G1 배포 주소 · G2 한 줄 기동 · G4 에이전트, `docs/GATES.md`):
 
@@ -186,7 +186,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
     | `DELETE /api/projects/{id}` | 로그인 | - | 204 | 404 · 409(실행 중 run) | 프로젝트와 같은 UUID 분석 기록을 한 번에 지움(8.5 삭제) |
     | `GET /api/judge/roles` | 로그인 | - | 200 `list[RoleLabel]` `[{code, name}]` | | 역할 23개 이름(5절 `roles.yaml`), 역할 코드 표시와 역할 선택 interrupt(4단계) |
     | `POST /api/approvals/{id}/quotes` | 로그인 | `QuoteBody` `{quantity 1~100000}` | 201 `Quote` `{id, approval_id, part_number, quantity, created_at}` | 404 · 409 | 승인한 후보로 가격 없는 견적을 저장(7단계, 8.4, [ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)) |
-    | `GET /api/messages/{id}/approval` | 로그인 | - | 200 `MessageApproval` `{approval: Approval \| null, quotes: list[Quote]}`(`approval.case_id`는 승인 사례를 지우면 null) | 404 | 새로고침 뒤 승인·견적 상태를 복원(8.4). 가격·재고 칸 없음 |
+    | `GET /api/messages/{id}/approvals` | 로그인 | - | 200 `list[SavedApproval]` `[{id, message_id, candidate_part, verdict, case_id, created_at, quotes: list[Quote]}]`(소유 assistant 메시지만, `case_id`는 승인 사례를 지우면 null, `Cache-Control: no-store`) | 404 | 새로고침 뒤 승인·견적 상태를 복원(8.4). 가격·재고 칸 없음 |
     | `GET /api/projects/{id}/quotes` | 로그인 | - | 200 `list[QuoteListItem]` `[{id, approval_id, part_number, quantity, created_at, thread_id}]` | 404 | 프로젝트의 견적 목록. `thread_id`는 그 견적이 나온 검토(7단계, 8.4) |
 
   - 운영 · 보안 · 부가:
@@ -382,7 +382,7 @@ LLM이 아는 내용은 등급과 상관없이 판정 근거로 쓰지 않습니
 
 ### 8.4 견적서 승인과 저장
 
-- 현재 상태: 사람이 완료된 판정 메시지의 후보 하나(동일품 · 사양 동등 · 역할상 충분)를 승인하면(`POST /api/messages/{id}/approvals`) 승인 snapshot과 승인 사례를 저장하고, 그 승인으로만 견적을 저장합니다(`POST /api/approvals/{id}/quotes`, 수량만 받음). 저장은 `backend/services/quote.py`, 표는 `db/020_service_baseline.sql`(옛 증분 `db/legacy/020_approvals_quotes.sql`을 대체)입니다. 견적에는 Mouser 가격·재고를 저장하지 않고, 화면이 조회를 누를 때 `/api/prices`로 다시 부릅니다(요청 본문 · 브라우저 저장소에 가격을 넣지 않고 조회 결과 캐시도 남기지 않음). 화면은 `GET /api/messages/{id}/approval`로 이미 한 승인 · 견적을 복원하고(409 `ALREADY_APPROVED`는 오류가 아니라 "이미 승인됨"으로 보고 상태를 다시 읽음), 부품 고르기 화면의 "견적" 목록은 `GET /api/projects/{id}/quotes`로 읽습니다. 새 프로젝트 창은 예제 회로가 없으면(운영 `DEMO_MODE=0`) 넷리스트를 필수로 하고 샘플 넷리스트(`frontend/public/assets/samples/`)를 받게 합니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
+- 현재 상태: 사람이 완료된 판정 메시지의 후보 하나(동일품 · 사양 동등 · 역할상 충분)를 승인하면(`POST /api/messages/{id}/approvals`) 승인 snapshot과 승인 사례를 저장하고, 그 승인으로만 견적을 저장합니다(`POST /api/approvals/{id}/quotes`, 수량만 받음). 저장은 `backend/services/quote.py`, 표는 `db/020_service_baseline.sql`(옛 증분 `db/legacy/020_approvals_quotes.sql`을 대체)입니다. 견적에는 Mouser 가격·재고를 저장하지 않고, 화면이 조회를 누를 때 `/api/prices`로 다시 부릅니다(요청 본문 · 브라우저 저장소에 가격을 넣지 않고 조회 결과 캐시도 남기지 않음). 화면은 `GET /api/messages/{id}/approvals`로 이미 한 승인 · 견적(승인마다 `quotes`)을 복원하고(409 `ALREADY_APPROVED`는 오류가 아니라 "이미 승인됨"으로 보고 상태를 다시 읽음), 부품 고르기 화면의 "견적" 목록은 `GET /api/projects/{id}/quotes`로 읽습니다. 새 프로젝트 창은 예제 회로가 없으면(운영 `DEMO_MODE=0`) 넷리스트를 필수로 하고 샘플 넷리스트(`frontend/public/assets/samples/`)를 받게 합니다([ADR 0009](docs/adr/0009-mouser-응답은-저장하지-않는다.md)).
 - 가격·재고 수용 기준:
   - GIVEN 다이오드 품번의 가격·재고 질문, WHEN 단일 · 멀티 그래프가 답하면, THEN 질문 종류는 `price`, 마지막 노드는 가격 안내이고, `price_parts`에 물은 품번이 남으며, 그래프는 Mouser를 부르지 않고 상태와 답에 가격·재고 값을 넣지 않는다.
   - GIVEN 로그인하지 않은 요청, WHEN `GET /api/prices`를 부르면, THEN 401이고 Mouser를 부르지 않는다.

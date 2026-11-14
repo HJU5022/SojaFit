@@ -14,13 +14,13 @@ class FakeQuotes:
     def approve(self, user, message, part, verdict): self.calls.append(('approve', user, message, part, verdict)); return {'id': 3, 'message_id': message, 'candidate_part': part, 'verdict': verdict, 'case_id': 4, 'created_at': CREATED}
     def create_quote(self, user, approval, quantity): self.calls.append(('quote', user, approval, quantity)); return {'id': 5, 'approval_id': approval, 'part_number': 'SS34', 'quantity': quantity, 'created_at': CREATED}
     def list_quotes(self, user, project): return [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED, 'thread_id': '0b1c2d3e-0000-4000-8000-000000000001'}]
-    def message_approval(self, user, message): self.calls.append(('message_approval', user, message)); return {'approval': {'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'case_id': None, 'created_at': CREATED}, 'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED}]}
     def list_cases(self, user): return [{'id': 4, 'approval_id': 3, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'created_at': CREATED}]
     def delete_case(self, user, case): self.calls.append(('delete', user, case))
     def list_approvals(self, user, message):
         self.calls.append(('approvals', user, message))
         return [{'id': 3, 'message_id': message, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
-                 'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'}}]
+                 'case_id': None, 'created_at': CREATED, 'snapshot': {'answer': 'PRIVATE_SNAPSHOT'},
+                 'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': CREATED, 'price': '1.00'}]}]
 
 
 def client(fake):
@@ -38,9 +38,10 @@ def test_persisted_approval_read_is_owned_metadata_without_origin_or_snapshot():
         response = web.get('/api/messages/9/approvals')
     assert response.status_code == 200, response.text
     assert response.headers['cache-control'] == 'no-store'
-    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT',
-                                'case_id': None, 'created_at': '2026-11-10T09:00:00Z'}]
-    assert 'PRIVATE_SNAPSHOT' not in response.text
+    # [왜] 새로고침 뒤 승인 · 견적 복원용이다: 사례를 지워 case_id가 null이어도 200이고, 견적에 가격 칸이 새어 나가지 않는다
+    assert response.json() == [{'id': 3, 'message_id': 9, 'candidate_part': 'SS34', 'verdict': 'ROLE_SUFFICIENT', 'case_id': None, 'created_at': '2026-11-10T09:00:00Z',
+                                'quotes': [{'id': 5, 'approval_id': 3, 'part_number': 'SS34', 'quantity': 10, 'created_at': '2026-11-10T09:00:00Z'}]}]
+    assert 'PRIVATE_SNAPSHOT' not in response.text and 'price' not in response.text
     assert fake.calls == [('approvals', 7, 9)]
 
 
@@ -111,26 +112,6 @@ def test_approval_accepts_the_name_the_judgement_showed_but_not_control_characte
     assert shown.status_code == 201 and control.status_code == blank.status_code == 422
     assert fake.calls == [('approve', 7, 9, 'TSC 1N4007G', 'ROLE_SUFFICIENT')]
 
-
-
-def test_message_approval_restores_state_for_the_owner_only(monkeypatch):
-    """새로고침 뒤 승인·견적 복원용 GET: 응답에 가격 칸이 없고(사례를 지워 case_id가 null이어도 200), 남의 메시지는 404다."""
-    fake = FakeQuotes()
-    with client(fake) as web:
-        found = web.get('/api/messages/9/approval')
-    assert found.status_code == 200
-    body = found.json()
-    assert body['approval']['case_id'] is None and body['quotes'][0]['quantity'] == 10
-    assert not {'price', 'price_breaks', 'stock', 'availability'} & set(body['quotes'][0])
-    assert fake.calls == [('message_approval', 7, 9)]
-
-    class Foreign(FakeQuotes):
-        def message_approval(self, user, message): raise QuoteNotFound
-    app.dependency_overrides.clear()
-    app.dependency_overrides[auth.current_user_id] = lambda: 7
-    monkeypatch.setattr('backend.api.quotes.QuoteService', Foreign)
-    with TestClient(app, raise_server_exceptions=False) as web:
-        assert web.get('/api/messages/9/approval').status_code == 404
 
 
 def test_project_quote_list_names_the_thread_and_has_no_price_fields():

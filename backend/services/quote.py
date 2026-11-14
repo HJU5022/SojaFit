@@ -79,8 +79,12 @@ class QuoteService:
             rows = conn.execute('SELECT a.id,a.message_id,a.candidate_part,a.verdict,c.id,a.created_at FROM approvals a '
                                 'LEFT JOIN approved_cases c ON c.approval_id=a.id AND c.user_id=a.user_id '
                                 'WHERE a.message_id=%s AND a.user_id=%s ORDER BY a.id', (message_id, user_id)).fetchall()
-            return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3],
-                     'case_id': r[4], 'created_at': r[5]} for r in rows]
+            # [왜] 새로고침 뒤 승인과 함께 그 견적도 복원한다. 승인이 여러 건이어도 쿼리 하나로 읽어 승인별로 나눈다
+            quotes = conn.execute('SELECT q.id,q.approval_id,q.part_number,q.quantity,q.created_at FROM quotes q JOIN approvals a ON a.id=q.approval_id '
+                                  'WHERE a.message_id=%s AND q.user_id=%s ORDER BY q.id', (message_id, user_id)).fetchall()
+            return [{'id': r[0], 'message_id': r[1], 'candidate_part': r[2], 'verdict': r[3], 'case_id': r[4], 'created_at': r[5],
+                     'quotes': [{'id': q[0], 'approval_id': q[1], 'part_number': q[2], 'quantity': q[3], 'created_at': q[4]} for q in quotes if q[1] == r[0]]}
+                    for r in rows]
 
     def approve(self, user_id: int, message_id: int, candidate_part: str, verdict: str):
         with auth.connection() as conn:
@@ -110,20 +114,6 @@ class QuoteService:
             quote = conn.execute('INSERT INTO quotes(user_id,approval_id,part_number,quantity) VALUES (%s,%s,%s,%s) RETURNING id,created_at',
                                  (user_id, approval_id, part, quantity)).fetchone()
             return {'id': quote[0], 'approval_id': approval_id, 'part_number': part, 'quantity': quantity, 'created_at': quote[1]}
-
-    def message_approval(self, user_id: int, message_id: int):
-        """새로고침 뒤 화면이 승인·견적 상태를 복원하도록 메시지 하나의 승인(없으면 None)과 그 견적을 읽는다. 소유자가 아니면 QuoteNotFound."""
-        with auth.connection() as conn:
-            if conn.execute('SELECT 1 FROM messages m JOIN threads t ON t.id=m.thread_id JOIN projects p ON p.id=t.project_id WHERE m.id=%s AND p.user_id=%s', (message_id, user_id)).fetchone() is None:
-                raise QuoteNotFound
-            # [왜] 승인 사례는 사용자가 지울 수 있다(case_id가 NULL). 승인은 남고 같은 메시지의 재승인은 409라 LEFT JOIN으로 읽는다
-            a = conn.execute("""SELECT a.id,COALESCE(a.candidate_part,a.snapshot #>> '{candidate,part}'),COALESCE(a.verdict,a.snapshot #>> '{candidate,verdict}'),c.id,a.created_at
-                FROM approvals a LEFT JOIN approved_cases c ON c.approval_id=a.id WHERE a.message_id=%s AND a.user_id=%s""", (message_id, user_id)).fetchone()
-            if a is None:
-                return {'approval': None, 'quotes': []}
-            rows = conn.execute('SELECT id,part_number,quantity,created_at FROM quotes WHERE approval_id=%s AND user_id=%s ORDER BY id', (a[0], user_id)).fetchall()
-            return {'approval': {'id': a[0], 'message_id': message_id, 'candidate_part': a[1], 'verdict': a[2], 'case_id': a[3], 'created_at': a[4]},
-                    'quotes': [{'id': r[0], 'approval_id': a[0], 'part_number': r[1], 'quantity': r[2], 'created_at': r[3]} for r in rows]}
 
     def list_quotes(self, user_id: int, project_id: int):
         with auth.connection() as conn:

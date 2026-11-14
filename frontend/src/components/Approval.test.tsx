@@ -7,9 +7,8 @@ import { renderWithQueries } from '../test/projects'
 afterEach(() => vi.unstubAllGlobals())
 const candidate = { part: 'SS34', verdict: 'ROLE_SUFFICIENT' as const }
 const saved = { id: 3, message_id: 9, candidate_part: 'SS34', verdict: 'ROLE_SUFFICIENT', case_id: 4, created_at: '2026-11-10T00:00:00Z' }
-// 병합 뒤 Approval은 승인 여부를 GET …/approvals(목록)로, 저장된 견적을 GET …/approval로 읽는다
-const stored = (path: string, approval: typeof saved | null, quotes: unknown[]) => path === '/api/messages/9/approvals' ? Response.json(approval ? [approval] : [])
-  : path === '/api/messages/9/approval' ? Response.json({ approval, quotes }) : null
+// Approval은 승인 여부와 저장된 견적을 GET …/approvals(승인마다 quotes) 하나로 읽는다
+const stored = (path: string, approval: typeof saved | null, quotes: unknown[]) => path === '/api/messages/9/approvals' ? Response.json(approval ? [{ ...approval, quotes }] : []) : null
 const show = () => renderWithQueries(<Approval candidate={candidate} messageId={9} reviewer="user@example.test" />)
 
 it('restores an existing approval and quote from the server after a refresh', async () => {

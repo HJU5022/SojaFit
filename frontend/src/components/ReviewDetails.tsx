@@ -5,7 +5,7 @@ import { ChevronDown, CircleDashed, ExternalLink, FileText, ShieldCheck, X } fro
 import { getRun, listJudgeRoles } from '../api/conversations'
 import type { CandidateDto, CheckDto, CitationDto, ResultDto } from '../api/conversations'
 import type { CircuitPart } from '../api/projects'
-import { approveMessage, createQuote, getMessageApproval, listMessageApprovals } from '../api/quotes'
+import { approveMessage, createQuote, listMessageApprovals } from '../api/quotes'
 import type { QuoteDto } from '../api/quotes'
 import type { ApiError } from '../api/client'
 import { errorMessage, requestIdProps } from '../api/client'
@@ -82,10 +82,10 @@ export function Approval({ candidate, messageId, reviewer }: { candidate: Candid
   const approval = saved.data?.find(item => item.message_id === messageId && item.candidate_part === candidate.part && item.verdict === candidate.verdict)
   const other = !approval && saved.data?.[0]
   const checking = messageId !== null && (saved.isPending || saved.isFetching)
-  // [왜] 견적도 서버가 정본이라 새로고침 뒤에도 마지막 견적을 다시 보여 준다(가격은 저장하지 않는다, ADR 0009)
-  const savedQuotes = useQuery({ queryKey: ['message-approval', messageId], queryFn: ({ signal }) => getMessageApproval(messageId!, signal), enabled: messageId !== null && Boolean(approval), retry: false })
   const [created, setQuote] = useState<QuoteDto | null>(null)
-  const quote = created ?? (savedQuotes.data?.approval?.id === approval?.id ? savedQuotes.data?.quotes.at(-1) ?? null : null)
+  // [왜] 견적도 서버가 정본이라 새로고침 뒤에도 승인 목록에 붙은 마지막 견적을 다시 보여 준다(가격은 저장하지 않는다, ADR 0009)
+  // [주의] 방금 승인한 기록(POST 응답)에는 quotes가 없어 ?.로 읽는다
+  const quote = created ?? approval?.quotes?.at(-1) ?? null
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const approvable = candidate.verdict !== 'NOT_VERIFIED' && candidate.verdict !== 'NOT_SUFFICIENT'
