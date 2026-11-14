@@ -481,6 +481,32 @@ def test_public_search_prefers_official_schematic_png_to_guide_pdf(monkeypatch):
     assert result[0].asset_kind == "png"
 
 
+@pytest.mark.parametrize("query", ["Raspberry Pi Pico", "라즈베리파이 피코", "RPi Pico"])
+def test_public_search_keeps_abbreviated_pico_drawing_within_candidate_limit(monkeypatch, query):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_public_schematics
+
+    drawing = "https://files.waveshare.com/upload/e/ed/RPI-PICO-R3-PUBLIC-SCHEMATIC.pdf"
+
+    def handle(request):
+        assert request.method == "POST"
+        return httpx.Response(200, json={"results": [
+            {"title": "SCHEMATIC1 : PAGE1", "url": drawing,
+             "highlights": ["RPI-PICO 3 Raspberry Pi Pico schematic"]},
+            *({"title": f"Raspberry Pi Pico accessory {index} schematic",
+               "url": f"https://example.org/raspberry-pi-pico-accessory-{index}-schematic.pdf"}
+              for index in range(5)),
+        ]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result = search_public_schematics(query, limit=5, client=client)
+
+    assert result[0].source_url == drawing
+    assert result[0].source_type == "public_web"
+    assert result[0].evidence_grade is None
+    assert len(result) == 5
+
+
 def test_public_search_prefers_exact_model_name_over_partial_match(monkeypatch):
     _enabled(monkeypatch)
     from backend.projects.external_circuit_search import search_public_schematics

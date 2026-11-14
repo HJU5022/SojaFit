@@ -170,7 +170,8 @@ _KOREAN_PRODUCT_ALIASES = {
 
 
 def canonical_product_query(query: str) -> str:
-    """Recognize supported Korean product names in English source metadata."""
+    """Recognize supported product aliases in queries and source metadata."""
+    query = re.sub(r"(?<![a-z0-9])rpi(?![a-z0-9])", "Raspberry Pi", query, flags=re.I)
     query = re.sub(r"라즈베리\s+파이", "Raspberry Pi", query)
     return re.sub(r"[가-힣]+", lambda match: _KOREAN_PRODUCT_ALIASES.get(
         match.group(), match.group()), query)
@@ -348,11 +349,11 @@ def _candidate_priority(source_type: str, kind: str, url: str) -> tuple[int, int
 
 def _relevance_score(query: str, ref: WebSchematicRef) -> tuple[int, int]:
     def compact(value: str) -> str:
-        return "".join(re.findall(r"[a-z0-9가-힣]+", value.casefold()))
+        return "".join(re.findall(r"[a-z0-9가-힣]+", canonical_product_query(value).casefold()))
     generic = {"schematic", "schematics", "circuit", "diagram", "original", "회로도", "원본"}
     query_tokens = set(re.findall(r"[a-z0-9가-힣]+", query.casefold())) - generic
     q = compact("".join(word for word in re.findall(r"[a-z0-9가-힣]+", query.casefold()) if word not in generic))
-    context_tokens = set(re.findall(r"[a-z0-9가-힣]+", f"{ref.title} {ref.page_url}".casefold()))
+    context_tokens = set(re.findall(r"[a-z0-9가-힣]+", canonical_product_query(f"{ref.title} {ref.page_url}").casefold()))
     exact = bool(q) and any(q in compact(value) for value in (ref.title, ref.page_url, ref.source_file))
     return (int(exact), len(query_tokens & context_tokens))
 
