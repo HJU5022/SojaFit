@@ -1,5 +1,9 @@
 # 오세창 작업 기록
 
+## 2026-11-14 프로필 지연 로딩 및 Docker 첫 응답 실측
+
+- API의 프로필 입력 검증 시점에 모듈을 읽도록 변경했다. [실측 보고서](../research/docker-cold-start-measurements.md)에 G2 반복 측정, 첫 기능과 회로도 응답, 운영 시험 조건을 정리했다. 같은 조건의 로컬 질문 목록 응답은 5회 중앙값 4.892초에서 4.782초로 줄었다.
+
 ## 2026-11-13 PR #114 후속 문서 교정
 
 - 한 일: 사전 등록과 작업 기록의 문맥상 붙은 표현, 인젝션 검토 자료의 반복 설명, 프런트 안내 문장을 교정했다. 실행 이름과 실험 입력·원시 결과·측정 수치는 보존했다.
@@ -740,3 +744,23 @@
 - 로컬 실조회에서 `SparkFun Pro Micro v13`, `SparkFun Breadboard Power Supply 5V/3.3V`는 2등급으로 반환됐다. `Adafruit MOSFET Driver STEMMA`는 Exa가 등록 PNG가 아닌 안내 PDF를 반환해 404였다. 세 모델 모두 검색된다고 주장하지 않는다.
 - 관련 pytest 실행: 기능 138 passed, 저장소 구조 2 failed. 하나는 새 테스트 파일의 트리·폴더 목록 누락으로 이 PR에서 보완했다. 다른 하나는 이번 PR 밖의 미커밋 `tests/ops/` 목록 누락이다. 프런트 `Schematic.test.tsx`는 5 passed였다. 수정 뒤의 격리 구조 재검증 결과는 PR 본문에 기록한다.
 - `SPEC.md:210`의 API 응답 필드와 `docs/specs/external-complete-schematics.md:41`은 현재 코드의 등급·제조사·해시 필드를 설명하지 않는다. 주요 문서 권한에 따라 `SPEC.md`는 직접 수정하지 않고 PR에서 조장에게 갱신 위치를 전달한다.
+
+## 2026-11-13 · 이름 기반 공개 회로도 검색을 OSC-chunk에 분리
+
+- `OSC-chunk`의 미커밋 작업은 사용자 지시에 따라 정리했다. 기존 원격 커밋 `6115078`은 이력을 다시 쓰지 않고 `23334ce`로 되돌렸고, 최신 `origin/main`을 병합했다. 회로도 변경 전의 브랜치 파일 내용은 `origin/main`과 같음을 `git diff --quiet origin/main HEAD`로 확인했다. 원격 push는 하지 않았다.
+- `STH` 작업 트리에서 회로도 검색·출처 검증·PDF/이미지 변환·API·화면·관련 테스트·기능 스펙 16개 파일만 옮겼다. D7, Exa 데이터시트, MCP, 로그인 작업은 제외했고, 승인 후 루트 `SPEC.md`의 해당 API 계약만 별도 반영했다. 이 PR 후보의 목적은 사용자가 입력한 회로도 이름으로 공개 웹의 원본을 찾고, 검증된 제조사 자료와 출처 미확인 공개 자료를 구분해 이미지로 제공하는 것이다.
+- 확인: `uv run --no-project --python <STH .venv Python> pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py`는 185 passed, 같은 실행 방식의 `tests/repo/test_repo_layout.py`는 5 passed. `npm run test:run -- --run src/components/Schematic.test.tsx`는 7 passed. `npm ci --prefer-offline --no-audit --no-fund` 뒤 `npm run build` 통과. `git diff --check` 통과. 이 작업 트리의 `.venv\lib64` 접근 거부 때문에 일반 `uv run --no-sync pytest`는 시작하지 못했고, 같은 Python 버전의 기존 STH 가상환경으로 검증했다.
+- 남은 확인: 옮긴 코드에 대한 새 실시간 Exa 15건 측정과 로그인 브라우저 검증은 하지 않았다. `STH`에서 앞서 기록한 15건 결과를 이 브랜치의 새 측정으로 취급하지 않는다. 이후 사용자에게 주요 문서 수정과 PR 게시 허가를 받아 `SPEC.md:210`의 응답 계약을 같은 PR에서 갱신했다. 핵심 변경이 400줄을 넘는 이유는 PR 본문에 기록했다.
+
+## 2026-11-14 · PR #131 모델 식별과 한글 Pico 검색 피드백
+
+- 변경: `backend/projects/schematic_render.py`에서 Pico/Pico W 변형을 양방향으로 검사하고, `backend/projects/external_circuit_search.py`에서 `라즈베리파이 피코`를 영문 검색·후보 검사용 이름에 연결했다. `tests/projects/test_schematic_render.py`와 `tests/projects/test_official_schematic.py`에 양방향 불일치·정상 원본·한글 검색·제조사 재검색 사례를 추가했다.
+- 재현: 수정 전 집중 검사에서 정상 크기 PNG를 쓰는 Pico W 요청에 일반 Pico 파일이 통과했고, 한글 Pico 검색은 영문 후보를 0개 반환했다. 한글 Pico W의 정상 파일도 거부됐다.
+- 확인: Pico 집중 검사는 12 passed, 관련 회로도와 저장소 구조 검사 6개 파일은 201 passed(최종 재실행 28.32초). 실제 Exa 조회와 운영 배포 검증은 수행하지 않았다.
+
+## 2026-11-14 · PR #131 도면 모델 충돌과 한글 띄어쓰기 후속 수정
+
+- 변경: `backend/projects/schematic_render.py`에서 Pico W 게시 페이지가 일반 Pico 파일·PDF 본문의 모델 충돌을 덮지 못하게 했다. `backend/projects/external_circuit_search.py`는 `라즈베리 파이 피코`도 영문 제품명으로 변환한다. `tests/projects/test_schematic_render.py`, `tests/projects/test_official_schematic.py`에 충돌·정상 원본·두 한글 표기 검사를 추가했다.
+- 수정 전: `uv run --no-sync pytest -q tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py -k "pico_conflict or pico_w_confirmed or pico_page_only or korean_pico" --tb=short`에서 8 failed, 3 passed였다. 페이지 URL이 `pico-w`인 일반 Pico PDF/PNG가 통과하고, 띄어 쓴 한글 검색은 영문 후보를 남기지 못했다.
+- 수정 후: 같은 집중 검사 11 passed. `uv run --no-sync pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/repo/test_repo_layout.py --tb=short`는 211 passed(26.58초). `git diff --check` 통과.
+- 확인하지 못한 것: 실제 Exa 검색과 운영 배포. GitHub CI는 이전 실행에서 계정 결제·지출 한도 문제로 작업이 시작되지 않았다. 다음 할 일은 PR의 원격 CI가 실행 가능한 상태가 되면 재확인하는 것이다.

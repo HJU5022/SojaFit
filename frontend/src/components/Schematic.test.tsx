@@ -8,6 +8,7 @@ import { ExternalSchematic } from './Schematic'
 afterEach(() => { cleanup(); focusManager.setFocused(undefined); onlineManager.setOnline(true); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
   source_type: 'manufacturer_official' as const, evidence_grade: 2 as const, manufacturer: 'Maker', model: 'Board', revision: 'v1', source_sha256: 'b'.repeat(64), license_evidence_url: 'https://example.test/r/LICENSE',
+  choices: [],
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
@@ -17,7 +18,7 @@ it.each(['success', 'error'])('does not repeat a stale %s search on focus, recon
   const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
   expect(handler).not.toHaveBeenCalled()
   search()
-  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe(state))
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board', ''])?.status).toBe(state))
   const later = Date.now() + 16 * 60_000
   vi.spyOn(Date, 'now').mockReturnValue(later)
   await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
@@ -37,7 +38,7 @@ it('reuses a fresh successful search but explicitly refreshes the same term afte
   network(handler)
   const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
   search()
-  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe('success'))
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board', ''])?.status).toBe('success'))
   search()
   expect(handler).toHaveBeenCalledTimes(1)
   const later = Date.now() + 6 * 60_000
@@ -88,6 +89,49 @@ it('blocks queries outside 2-200 characters without calling the API', () => {
   expect(screen.getByText('2자 이상 200자 이하로 입력해 주세요.')).toBeInTheDocument()
   fireEvent.submit(screen.getByRole('textbox').closest('form')!)
   expect(handler).not.toHaveBeenCalled()
+})
+
+it('shows an unverified public schematic with its publishing page', async () => {
+  network(() => Response.json({
+    ...found, project: null, commit: null, source_type: 'public_web', evidence_grade: null,
+    model: 'Tiny85 Fan Control', manufacturer: null, license: '미확인',
+    repository_url: 'https://example.org/tiny85', source_url: 'https://example.org/tiny85-schematic.png',
+    images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }],
+  }))
+  renderWithQueries(<ExternalSchematic name="Tiny85 Fan Control" zoom={100} />)
+  search()
+  expect(await screen.findByAltText('Tiny85 Fan Control 시트 1 원본 회로도')).toHaveAttribute('src', '/api/external-circuits/schematics/t/0')
+  expect(screen.getByText('공개 웹 자료 · 출처 확인 필요')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /게시 페이지/ })).toHaveAttribute('href', 'https://example.org/tiny85')
+})
+
+it('keeps the chosen source without automatic searches and resets it on an explicit stale search', async () => {
+  const other = 'https://example.org/board-v2-schematic.png'
+  const paths: string[] = []
+  network(path => {
+    paths.push(path)
+    return Response.json({ ...found, source_url: path.includes('source_url=') ? other : found.source_url,
+      choices: [
+        { title: 'Board v1', source_url: found.source_url, source_type: 'manufacturer_official', revision: 'v1' },
+        { title: 'Board v2', source_url: other, source_type: 'public_web', revision: 'v2' },
+      ] })
+  })
+  const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  search()
+  const choice = await screen.findByRole('button', { name: 'Board v2 · 출처 확인 필요' })
+  fireEvent.click(choice)
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Board v2 · 출처 확인 필요' })).toHaveAttribute('aria-pressed', 'true'))
+  expect(paths).toEqual(['/api/external-circuits/schematics?q=Board', `/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}`])
+  vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 16 * 60_000)
+  await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  await act(async () => { onlineManager.setOnline(false); onlineManager.setOnline(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(paths).toHaveLength(2)
+  expect(screen.getByRole('button', { name: 'Board v2 · 출처 확인 필요' })).toHaveAttribute('aria-pressed', 'true')
+  search()
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Board v1 · 제조사 공식' })).toHaveAttribute('aria-pressed', 'true'))
+  expect(paths).toHaveLength(3)
+  expect(paths[2]).toBe('/api/external-circuits/schematics?q=Board')
+  view.client.clear()
 })
 
 it.each([

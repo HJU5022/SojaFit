@@ -7,6 +7,7 @@
 - 담당: 쓴 사람
 
 ## 파일
+- [docker-cold-start-measurements.md](docker-cold-start-measurements.md) — 11월 13~14일 Docker G2, 첫 기능·첫 회로도와 운영 첫 요청의 측정값·방법 출처
 - `db-redesign/` — 서비스 DB 재설계(11-11) 설계 문서 7개(이력)(`summary.md` 요약, `as-is-*` 현재 구조, `to-be-*` 목표 구조·영향 지도). 검증 스크립트는 `scripts/db/verify_redesign/`
 - `sojafit-domain-jobs-2026-11-12.md` — 도메인 유사 분야 채용 공고 72건(2026-11-12 기준): 역할·후보 그룹, 공고 링크, 분야별 한계
 - `d9-outside-evidence-2026-11-11.md` — D9용 저장소 밖 증거 A~D 이관 목록(판정진단·v4h summary/manifest·#48+#49 원시)·아직 없는 216건 표주석 원시

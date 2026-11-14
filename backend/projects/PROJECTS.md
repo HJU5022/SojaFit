@@ -18,9 +18,9 @@
 | `netlist.py` | `normalize_netlist(bytes)`: KiCad export에서 연결 정보(parts/nets)만 제한된 메모리로 읽고 SHA-256과 함께 `NormalizedCircuit`으로 반환. 원본·경로·파일 핸들은 남기지 않음 |
 | `repository.py` | `ProjectRepository`: `create_empty`, `create_demo`, `create_upload`, `import_netlist`(새 버전·대화 원자 생성), `list_owned`, `get_owned`(선택적 대화 버전), `rename_owned`, `delete_owned` |
 | `visuals.py` | `load_demo_visuals()`가 데모 catalog의 회로도 출처 정본(HTTPS, commit, 원본·배포 hash, PNG 경로)을 검증. 누락·추가 ID나 손상 자산은 예외. 외부 다운로드 없음 |
-| `external_circuit_search.py` | Exa 결과에서 안전한 GitHub 저장소 루트 후보만 정제 |
-| `external_schematic.py` | 저장소 출처·라이선스·commit을 확인하고 전체 회로도 시트를 변환·메모리 캐시, 서명 token으로 시트 조회 |
+| `external_circuit_search.py` | Exa 공개 웹 결과에서 회로도 이름과 파일을 확인하고 제조사·비공식 출처 후보를 정제. GitHub 저장소 후보 검색도 담당 |
+| `external_schematic.py` | 공개 원본 후보를 검증·변환·메모리 캐시하고 서명 token으로 시트 조회. 같은 검색의 다른 후보 선택을 검증 |
 | `schematic.py` | KiCad CLI PDF export를 shell 없이 실행하는 경계 |
 | `schematic_discovery.py` | GitHub tree에서 EDA 원본과 연결된 전체 회로도 자산 찾기 |
-| `schematic_render.py` | PDF/SVG/PNG 시트를 제한된 크기와 해상도의 PNG로 렌더링 |
+| `schematic_render.py` | 공개 PDF/SVG/PNG의 해시·회로도 페이지를 확인하고 제한된 크기와 해상도의 PNG로 렌더링 |
 | `schematic_source.py` | 검증된 외부 회로도 source DTO와 서비스 오류 형식 |

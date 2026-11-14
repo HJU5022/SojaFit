@@ -797,6 +797,7 @@ SojaFit (proj3-b)
     │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
     ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
     │   ├── RESEARCH.md     <- 폴더 설명
+    │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록
     │   ├── grade-evidence-validation.md <- 1등급 2등급 3등급 근거 흐름과 검증 범위
     │   ├── injection-results.md <- 인젝션 실측 결과(정본): 검토 필드·해시 표, 스모크·본실측, 신뢰 경계·C1/C2·P4 별도 측정
