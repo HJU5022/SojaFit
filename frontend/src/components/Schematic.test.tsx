@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { failure, network } from '../test/network'
 import { renderWithQueries } from '../test/projects'
-import { ExternalSchematic } from './Schematic'
+import { ExternalSchematic, SchematicImage } from './Schematic'
 
 afterEach(() => { cleanup(); focusManager.setFocused(undefined); onlineManager.setOnline(true); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
@@ -11,6 +11,60 @@ const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attrib
   choices: [],
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
+
+const picture = { image_url: '/circuit-schematics/breadboard_supply.png', original_url: 'https://example.test/original.pdf', attribution: 'Maker', license: 'CC BY-SA' }
+
+function readyViewport() {
+  const image = screen.getByAltText('Board 원본 회로도')
+  const viewport = screen.getByRole('region', { name: '회로도 이미지 이동' })
+  Object.defineProperties(viewport, { clientWidth: { value: 400 }, clientHeight: { value: 300 } })
+  Object.defineProperties(image, { naturalWidth: { value: 800 }, naturalHeight: { value: 600 } })
+  viewport.setPointerCapture = vi.fn()
+  viewport.hasPointerCapture = vi.fn(() => true)
+  viewport.releasePointerCapture = vi.fn()
+  fireEvent.load(image)
+  return { image, viewport }
+}
+
+it('pans only the image and fits back to the centre even at the same zoom', () => {
+  const view = render(<SchematicImage schematic={picture} name="Board" zoom={50} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.pointerDown(viewport, { button: 0, isPrimary: true, pointerId: 1, clientX: 100, clientY: 100 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 140, clientY: 120 })
+  expect(image.style.transform).toContain('translate(40px, 20px)')
+  expect(image.style.transform).toContain('scale(0.5)')
+  expect(viewport.style.transform).toBe('')
+  expect(image).toHaveAttribute('draggable', 'false')
+  view.rerender(<SchematicImage schematic={picture} name="Board" zoom={50} viewReset={1} />)
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+})
+
+it('bounds dragging and releases it on cancel without dragging links or accepting a second pointer', () => {
+  renderWithQueries(<SchematicImage schematic={picture} name="Board" zoom={200} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.pointerDown(viewport, { button: 2, pointerId: 1, clientX: 0, clientY: 0 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 50, clientY: 50 })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+  fireEvent.pointerDown(viewport, { button: 0, isPrimary: true, pointerId: 1, clientX: 0, clientY: 0 })
+  fireEvent.pointerMove(viewport, { pointerId: 2, clientX: 80, clientY: 80 })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 1000, clientY: 1000 })
+  expect(image.style.transform).toContain('translate(200px, 150px)')
+  fireEvent.pointerCancel(viewport, { pointerId: 1 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 0, clientY: 0 })
+  expect(image.style.transform).toContain('translate(200px, 150px)')
+  expect(viewport.releasePointerCapture).toHaveBeenCalledWith(1)
+  expect(viewport).not.toContainElement(screen.getByRole('link', { name: /원본 자료/ }))
+})
+
+it('supports keyboard panning and recentres on Home', () => {
+  renderWithQueries(<SchematicImage schematic={picture} name="Board" zoom={200} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.keyDown(viewport, { key: 'ArrowRight' })
+  expect(image.style.transform).toMatch(/translate\(-40px(?:, 0px)?\)/)
+  fireEvent.keyDown(viewport, { key: 'Home' })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+})
 
 it.each(['조건에 맞는 원본 회로도 검색 결과가 없습니다.', '회로도 후보를 찾았지만 원본 검증을 통과하지 못했습니다.'])(
   'preserves the server failure explanation: %s', async message => {

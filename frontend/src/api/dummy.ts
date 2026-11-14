@@ -127,7 +127,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   if (method === 'GET' && pathname === '/api/external-circuits/schematics') {
     if (!/attiny85/i.test(url.searchParams.get('q') ?? '')) return json({ error: { code: 'SCHEMATIC_NOT_FOUND', message: '검증된 완성 회로도를 찾지 못했습니다.', request_id: REQUEST_ID } }, 404)
     return json({ project: 'attiny85_dev', commit: '0'.repeat(40), license: 'CC-BY-4.0', attribution: '더미 저작자', repository_url: 'https://example.test/repo',
-      source_url: 'https://example.test/repo/blob/main/board.kicad_sch', source_file: 'board.kicad_sch',
+      source_url: 'https://example.test/repo/blob/main/board.kicad_sch', source_file: 'board.kicad_sch', choices: [],
       images: [{ sheet: 0, url: '/circuit-schematics/attiny85_dev.png' }, { sheet: 1, url: '/circuit-schematics/pro_micro.png' }] })
   }
   if (method === 'GET' && pathname === '/api/judge/roles') return json([{ code: 'R01', name: '역극성 보호(직렬)' }])
