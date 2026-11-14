@@ -36,6 +36,6 @@ ROLLBACK;
 
 - **날짜**: 2026-11-09 05:12~05:13 KST. 옛 운영 Supabase의 코퍼스 표를 비우고 v4h 청킹 결과로 다시 넣었다.
 - **이유**: 청킹을 v1(`data/manifest.jsonl`, 52,244청크)에서 `tsc-v4h-2026-11-08`(51,967청크)로 바꿨다. v4h는 표 한 행을 카드 하나로 만들고, 병합 칸·머리행과 표 주석을 카드에 붙인다([ADR 0015](../../../docs/adr/0015-평가셋-v3를-새로-만들고-청킹부터-다시-잰다.md), [SPEC.md](../../../SPEC.md) 청킹 절).
-- **교체 전후 행 수 원본**: [`corpus_swap_2026-11-09/check.log`](corpus_swap_2026-11-09/check.log)(교체 전 `document_chunks` 52,244행), [`corpus_swap_2026-11-09/verify.log`](corpus_swap_2026-11-09/verify.log)(교체 뒤 51,967행, `chunker_version`=`tsc-v4h-2026-11-08`). 조장 개인 기록에서 옮겨 왔다(2026-11-13).
+- **교체 전후 행 수 원본**: [`corpus_swap_2026-11-09/check.log.txt`](corpus_swap_2026-11-09/check.log.txt)(교체 전 `document_chunks` 52,244행), [`corpus_swap_2026-11-09/verify.log.txt`](corpus_swap_2026-11-09/verify.log.txt)(교체 뒤 51,967행, `chunker_version`=`tsc-v4h-2026-11-08`). 조장 개인 기록에서 옮겨 왔다(2026-11-13).
 - 2026-11-11 04:25에 운영 DB를 새 프로젝트 `SojaFit_2`로 옮길 때 코퍼스 표는 그대로 복사했다. 위 조회가 그 상태다.
 - Checkpoint 대시보드의 52,244는 저장소 `data/manifest.jsonl`(v1)의 합계다.
