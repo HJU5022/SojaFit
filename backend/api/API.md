@@ -20,7 +20,7 @@
 | `projects.py` | `GET /api/demo-circuits`(데모 모드만), `GET`·`POST /api/projects`, `POST /api/projects/upload`, `GET`·`PATCH`·`DELETE /api/projects/{project_id}` |
 | `external_circuits.py` | `GET /api/external-circuits/schematics`(완성 회로도 manifest), `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}`(PNG 시트) |
 | `conversations.py` | `GET /api/judge/roles`·`demo-questions`, 프로젝트별 thread `GET`·`POST`, `GET`·`DELETE /api/threads/{id}`, `POST /api/threads/{id}/runs`(SSE), `GET /api/runs/{id}`, `POST .../recover`, `POST .../resume`(SSE) |
-| `quotes.py` | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |
+| `quotes.py` | `POST /api/messages/{id}/approvals`, `POST /api/approvals/{id}/quotes`, `GET /api/messages/{id}/approval`, `GET /api/projects/{id}/quotes`, `GET /api/approved-cases`, `DELETE /api/approved-cases/{id}` |
 | `profile.py` | `GET`·`PATCH`·`DELETE /api/me/memory`(사용자 사실 기억), `DELETE /api/me`(탈퇴) |
 
 변경 요청(POST·PATCH·DELETE)은 `auth.check_origin`을 적용한다. run·재개는 `app.state.conversations`(분석 서비스, `THREADS_ENABLED=1`)가 없으면 스트림을 열기 전에 공통 503으로 끝난다. 승인 사례(`quotes.py`의 `approved-cases`)는 새 분석에 넘기지 않는다([CONVERSATIONS.md](../conversations/CONVERSATIONS.md)).

@@ -75,6 +75,9 @@ SojaFit (proj3-b)
 │   │   │   └── zr7_taillight.png <- ZR7 Taillight 원본 회로도
 │   │   └── assets/         <- Vite·FastAPI가 같은 /assets 경로로 제공하는 브랜드 이미지
 │   │       ├── ASSETS.md   <- 폴더 설명
+│   │       ├── samples/    <- 새 프로젝트 창의 "샘플 넷리스트 받기"가 내려 주는 공개 라이선스 넷리스트
+│   │       │   ├── SAMPLES.md <- 폴더 설명(출처·MIT 라이선스)
+│   │       │   └── attiny85-time-switch.net <- ATtiny85 Time Switch 넷리스트(UCSIG, MIT)
 │   │       └── sojafit-icon.svg <- Circuit S 심볼 아이콘(파비콘·화면 머리 로고)
 │   └── src/                <- 화면 소스와 단위 테스트
 │       ├── SRC.md          <- 폴더 설명
@@ -106,7 +109,9 @@ SojaFit (proj3-b)
 │       │   ├── judgement.ts <- 판정 표기·색 이름·값과 인용 위치 표시
 │       │   ├── circuit.ts  <- 부품 목록과 대상 부품의 넷·이웃 추출
 │       │   ├── circuit.test.ts <- 넷·이웃·다이오드 판별·인용 링크·값 표시 테스트
-│       │   └── inputLabels.ts <- 판정 입력 코드의 화면 이름
+│       │   ├── inputLabels.ts <- 판정 입력 코드의 화면 이름
+│       │   ├── price.ts    <- Mouser 단가 문자열 읽기와 수량에 맞는 가격 구간 고르기(화면 계산 전용)
+│       │   └── price.test.ts <- 통화·소수점 표기별 읽기와 가격 구간 선택
 │       ├── pages/          <- 경로마다 하나인 화면
 │       │   ├── LandingPage.tsx <- 공개 랜딩: 예시 검토 문서·쓰는 법·판정 5종·신뢰 수치·한계
 │       │   ├── LoginPage.tsx <- 이메일 로그인·Google 로그인과 계정 연결·데모 모드의 데모 사용자 버튼
@@ -121,7 +126,10 @@ SojaFit (proj3-b)
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
-│       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
+│       │   ├── Approval.test.tsx <- 새로고침 뒤 승인·견적 복원, 409 이미 승인됨 처리, 견적 본문은 수량만
+│       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고(견적이면 수량 단가·합계)
+│       │   ├── QuoteList.tsx <- 프로젝트 견적 목록(품번 × 수량·날짜), 검토로 돌아가기, 행마다 실시간 가격 조회
+│       │   ├── QuoteList.test.tsx <- 견적 목록·검토 열기·누를 때만 가격 조회·빈 목록 테스트
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
 │       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트
 │       │   ├── SafeMarkdown.tsx <- 서버 답(표·굵게·목록)을 안전하게 보이는 최소 렌더러(HTML·이미지·링크는 글자로만)

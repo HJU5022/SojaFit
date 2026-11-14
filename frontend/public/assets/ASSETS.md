@@ -6,6 +6,7 @@
 
 ## 파일
 - `ASSETS.md` — 이 폴더 설명.
+- `samples/` — 새 프로젝트 창이 내려 주는 샘플 넷리스트. [SAMPLES.md](samples/SAMPLES.md)
 - `sojafit-icon.svg` — Circuit S 심볼과 주황 단자를 어두운 정사각 바탕에 배치한 아이콘. 파비콘과 화면 머리의 로고로 쓴다.
 
 2026-11-13 화면 재작성 때 이전 랜딩의 캡처 3장(`landing-guide-*.png`), 기판 배경(`landing-circuit-background.png`), 가로 로고(`sojafit-logo.svg`)는 쓰는 곳이 없어 지웠다.

@@ -13,6 +13,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { contextOf, isDiode, partIn, partsOf } from '../lib/circuit'
 import { candidatesOf, VERDICT_LABELS, VERDICT_TONE } from '../lib/judgement'
 import ApprovedCases from '../components/ApprovedCases'
+import QuoteList from '../components/QuoteList'
 import Review from '../components/Review'
 import { ExternalSchematic, SchematicImage } from '../components/Schematic'
 import '../styles/app.css'
@@ -43,6 +44,7 @@ export default function WorkbenchPage() {
   const [confirming, setConfirming] = useState('')
   const [error, setError] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
+  const [hasFile, setHasFile] = useState(false) // 새 프로젝트 창에서 넷리스트를 골랐는지
   const [zoom, setZoom] = useState(100)
   const [navOpen, setNavOpen] = useState(false)
   const navigation = useRef<HTMLElement>(null)
@@ -65,6 +67,7 @@ export default function WorkbenchPage() {
   const threadList = Array.isArray(threads.data) ? threads.data : []
   const demoList = Array.isArray(demos.data) ? demos.data : []
   const demoOff = (demos.error as ApiError | null)?.code === 'NOT_FOUND' // 데모 모드가 아니면 404: 오류가 아니라 예제 없음
+  const fileRequired = demoOff || (!demos.isPending && !demos.error && !demoList.length) // 예제로 시작할 수 없으면 넷리스트가 필수(데모 생성은 404가 된다)
   const parts = partsOf(project.data)
   const target = parts.find(part => part.ref === targetRef)
   const schematic = demoList.find(demo => demo.id === project.data?.demo_id)?.schematic ?? null
@@ -203,6 +206,7 @@ export default function WorkbenchPage() {
                 <th scope="row"><button>{part.ref}<span className="sr-only"> {part.value} 선택</span></button></th><td data-label="값">{part.value}</td><td data-label="풋프린트">{part.footprint.replace(/^import_input:/, '') || '넷리스트에 없음'}</td></tr>)}</tbody></table>
           </section>
         })}
+        <QuoteList projectId={projectId} onOpen={onThread} />
         {project.isPending && <div className="skeleton" role="status"><span className="sr-only">회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
         {!project.isPending && !project.error && !filteredParts.length && <p className="empty">{parts.length ? '참조 번호나 값이 일치하는 부품이 없습니다. 검색어를 바꾸거나 지워 주세요.' : '넷리스트에 부품이 없습니다. 새 프로젝트에서 부품이 있는 파일을 올려 주세요.'}</p>}
       </section>}
@@ -227,13 +231,14 @@ export default function WorkbenchPage() {
     <dialog ref={creator} className="dialog" aria-labelledby="creator-title" onClick={closeOutside}><form onSubmit={create}>
       <h2 id="creator-title">새 프로젝트</h2>
       <label className="field"><span>프로젝트 이름</span><input className="input" name="name" required maxLength={80} autoComplete="off" autoFocus /></label>
-      <label className="field"><span>KiCad 넷리스트 (.net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" /></label>
+      <label className="field"><span>KiCad 넷리스트 (.net, 5 MiB 이하)</span><input className="input" name="netlist" type="file" accept=".net" required={fileRequired} onChange={event => setHasFile(Boolean(event.target.files?.length))} /></label>
+      {fileRequired && <p className="property-note">예제 회로가 없어 넷리스트 파일이 필요합니다. 파일이 없다면 <a href="/assets/samples/attiny85-time-switch.net" download>샘플 넷리스트 받기</a> (ATtiny85 Time Switch, MIT, UCSIG).</p>}
       {demos.isPending && <div className="skeleton" role="status"><span className="sr-only">예제 회로를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
       {demos.error && !demoOff && <div className="notice" role="alert"><p>예제 회로 목록을 불러오지 못했습니다.</p><button type="button" className="btn" onClick={() => void demos.refetch()}>예제 다시 불러오기</button></div>}
       {!demos.isPending && !demos.error && !demoList.length && <p className="property-note">예제 회로가 없습니다. KiCad 넷리스트 파일을 선택해 주세요.</p>}
       {demoList.length > 0 && <label className="field"><span>파일이 없으면 예제 회로로 시작</span><select className="input" name="demo" defaultValue={demoList[0].id}>{demoList.map(demo => <option key={demo.id} value={demo.id}>{demo.name}</option>)}</select></label>}
       {error ? <p className="notice" role="alert" {...requestIdProps(error)}>프로젝트를 만들지 못했습니다. {errorMessage(error)} 입력을 확인하고 만들기로 다시 시도해 주세요.</p> : null}
-      <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy}>{busy ? '만드는 중' : '만들기'}</button></div>
+      <div className="dialog-foot"><button type="button" className="btn" onClick={() => creator.current?.close()}>취소</button><button className="btn btn-primary" disabled={busy || (fileRequired && !hasFile)}>{busy ? '만드는 중' : '만들기'}</button></div>
     </form></dialog>
 
     <dialog ref={sheet} className="dialog sheet" aria-labelledby="sheet-title" onClick={closeOutside}>
