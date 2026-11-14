@@ -12,6 +12,16 @@ const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attrib
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
+it.each(['조건에 맞는 원본 회로도 검색 결과가 없습니다.', '회로도 후보를 찾았지만 원본 검증을 통과하지 못했습니다.'])(
+  'preserves the server failure explanation: %s', async message => {
+    const handler = vi.fn(() => failure('SCHEMATIC_NOT_FOUND', message, 404))
+    network(handler)
+    renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+    search()
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
 it.each(['success', 'error'])('does not repeat a stale %s search on focus, reconnect, or reopening', async state => {
   const handler = vi.fn(() => state === 'success' ? Response.json(found) : failure('SCHEMATIC_NOT_FOUND', '없음', 404))
   network(handler)

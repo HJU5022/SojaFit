@@ -15,6 +15,32 @@ from backend.projects.schematic_source import (
 from backend.projects.external_circuit_search import WebSchematicRef
 
 
+@pytest.mark.parametrize('has_candidate,reason', [(False, 'no_candidates'), (True, 'validation_failed')])
+def test_not_found_preserves_failure_reason_in_negative_cache(service, has_candidate, reason):
+    worker, counts, _, _ = service
+    worker.search = lambda query, limit: counts.update(search=1) or ((1,) if has_candidate else ())
+    worker.inspect = lambda *args, **kwargs: ()
+    for _ in range(2):
+        with pytest.raises(ExternalSchematicNotFound) as error:
+            worker.find('missing board')
+        assert error.value.reason == reason
+    assert counts['search'] == 1
+
+
+def test_failure_diagnostics_do_not_log_query_or_source(service, caplog):
+    worker, _, _, _ = service
+    worker.search = lambda *args: (WebSchematicRef('https://example.org/private-schematic.pdf',
+        'https://example.org/private', 'private.pdf', 'pdf', 'private title', 'Publisher'),)
+    worker.inspect = lambda *args, **kwargs: ()
+    with caplog.at_level('INFO', logger=api.__name__):
+        with pytest.raises(ExternalSchematicNotFound):
+            worker.find('private user query')
+    record = next(record for record in caplog.records if record.message == 'schematic_lookup_failed')
+    assert (record.candidate_count, record.inspect_rejected, record.render_rejected) == (1, 1, 0)
+    assert record.reason == 'validation_failed'
+    assert 'private' not in str(vars(record))
+
+
 @pytest.fixture
 def service(monkeypatch):
     monkeypatch.setenv("AUTH_SECRET", "unit-test-only-padding".ljust(32, "x"))

@@ -3,6 +3,7 @@ import base64
 import binascii
 import hmac
 import json
+import logging
 import os
 import re
 import time
@@ -19,6 +20,12 @@ from backend.projects.schematic_source import (
 )
 
 TTL = 900
+LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class _SearchFailure:
+    reason: str
 
 
 @dataclass(frozen=True)
@@ -196,6 +203,7 @@ class ExternalSchematicService:
         saw_upstream_failure = False
         rate_error = None
         retry_budget = 1
+        counts = {"candidate_count": 0, "inspect_rejected": 0, "render_rejected": 0}
 
         def retry_once(operation):
             nonlocal saw_upstream_failure, retry_budget
@@ -211,10 +219,12 @@ class ExternalSchematicService:
         def try_candidates(candidates):
             nonlocal saw_upstream_failure, rate_error
             verified = []
+            counts["candidate_count"] += len(candidates[:5])
             for candidate in candidates[:5]:
                 try:
                     sources = retry_once(lambda: tuple(self.inspect(candidate, query=query)))
                 except ExternalSchematicInvalidSource:
+                    counts["inspect_rejected"] += 1
                     continue
                 except ExternalSchematicRateLimited as error:
                     rate_error = error
@@ -222,6 +232,8 @@ class ExternalSchematicService:
                 except ExternalSchematicUpstreamError:
                     saw_upstream_failure = True
                     continue
+                if not sources:
+                    counts["inspect_rejected"] += 1
                 for source in sources:
                     try:
                         _sign(source, source.expected_sheets, int(self.wall()) + TTL)
@@ -229,6 +241,7 @@ class ExternalSchematicService:
                         if len(sheets) != source.expected_sheets:
                             raise ExternalSchematicInvalidSource("원본과 시트 수가 다릅니다.")
                     except ExternalSchematicInvalidSource:
+                        counts["render_rejected"] += 1
                         continue
                     except ExternalSchematicRateLimited as error:
                         rate_error = error
@@ -256,7 +269,9 @@ class ExternalSchematicService:
             raise rate_error
         if saw_upstream_failure:
             raise ExternalSchematicUpstreamError()
-        return None
+        reason = "validation_failed" if counts["candidate_count"] else "no_candidates"
+        LOGGER.info("schematic_lookup_failed", extra={"reason": reason, **counts})
+        return _SearchFailure(reason)
 
     def find(self, query, selected_url=None):
         normalized = " ".join(query.split()).casefold()
@@ -265,6 +280,8 @@ class ExternalSchematicService:
         if selected_url is not None and (not isinstance(selected_url, str) or len(selected_url) > 2048):
             raise ExternalSchematicNotFound()
         results = self.queries.get(normalized, lambda: self._find(normalized))
+        if isinstance(results, _SearchFailure):
+            raise ExternalSchematicNotFound(reason=results.reason)
         if not results:
             raise ExternalSchematicNotFound()
         result = results[0] if selected_url is None else next(
