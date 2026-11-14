@@ -1049,3 +1049,27 @@
 - 확인: `npm run test:run` 51 passed, `tsc -b`, `vite build`. 키 없는 compose(8010 포트, 별도 프로젝트)에서 데모 버튼 로그인 · 프로젝트 만들기 · 이름 변경 · 삭제 · 부품 목록 · 내 설정 · 관리자 차단을 눌러 봤다.
 - 확인 못 한 것: 키 없는 데모의 질문 재생은 서버가 `ReplayMiss`로 실패해 판정 · 승인 · 견적 · 가격 화면을 실제 서버로 보지 못했다(기록은 11-10, Supervisor · 프롬프트는 11-12에 바뀜). 실제 모드(`DEMO_MODE=0`) 연결, Google 로그인, 새 화면의 자동 테스트.
 - 남은 것: 작업서(`docs/specs/`) · `SPEC.md`의 화면 서술 · `README.md`의 화면 설명 갱신, 랜딩의 판정 일치 수치(재측정 뒤).
+
+## 2026-11-14 main(#130 화면 재설계) 통합과 승인 복원 경로 하나로 합치기 (브랜치 `jeongun`, 9b885b1 · 6f40cd1)
+
+- 바꾼 것(9b885b1, 병합 80파일): 승인 · 조건 대조는 main의 `frontend/src/components/ReviewDetails.tsx` 구조를 따르고, `jeongun`의 견적 복원과 수량별 실시간 가격만 그 Approval에 옮겼다. 새 프로젝트는 main대로 넷리스트가 선택 사항이고, 샘플 넷리스트 받기 링크는 안내로 남겼다. 병합 시점에는 승인 조회 경로 두 개(main `GET /messages/{id}/approvals`, `jeongun` `GET /messages/{id}/approval`)를 함께 두었다. main에서 들어온 새 파일: `db/031_circuit_versions.sql`, `docker-compose.local.yml`, `docs/specs/local-live-api.md` · `netlist-conversation-versions.md`, `frontend/src/components/ChatPane.tsx` · `NetlistIntake.tsx` · `ReviewDetails.tsx`, `hooks/useNetlistFiles.ts`, `lib/inputLabels.ts`, 테스트 `tests/api/test_local_live_config.py` · `tests/projects/test_official_schematic.py` · `test_service_schema.py`.
+- 바꾼 것(6f40cd1, 11파일 +40 −84): 승인 복원을 `GET /api/messages/{id}/approvals` 하나로 합쳤다. 소유 assistant 메시지만, `no-store`, 승인마다 견적(`quotes`, id 순)을 붙인다. `GET /api/messages/{id}/approval` · `QuoteService.message_approval` · `MessageApproval` · `ExistingApproval`과 그 테스트를 지웠고, 화면은 `getMessageApproval`와 두 번째 `useQuery`를 지우고 승인 목록의 마지막 견적으로 복원한다. `SPEC.md` 4절 표 · 경로 수(동작 50, 경로 42, `/docs` 43 · 35, 응답 모델 40), `backend/api/API.md`, `backend/services/SERVICES.md`를 맞췄다.
+- 실제 결과: 프런트 vitest 201/201 통과, build 통과. 백엔드 전체 pytest는 실패 28개로, 이 커밋들 전후 같다(이미 있던 실패: layout 2개는 미추적 `docs/assets` 로고 파일 때문, `schematic_render` · `datasheet_rows` 등).
+- 문서 확인(11-14): `SPEC.md` · `EVAL_REPORT.md` · `README.md` · `backend/api/API.md` · `frontend/src/SRC.md` · `docs/`에서 지운 경로(`/approval` 단수) · `getMessageApproval`을 grep해 남은 곳 없음. 병합으로 들어온 새 파일은 `SOJAFIT.md` 트리와 각 폴더 설명 파일에 모두 있다. `tests/repo/test_repo_layout.py` 3 통과 · 2 실패(둘 다 미추적 `docs/assets/logo-concepts/` · `sojafit-fit-*` 파일 때문).
+- 확인 못 한 것: 배포 주소에서 승인 · 견적 복원을 실제로 눌러 보지 않았다. 백엔드 28개 실패의 원인별 정리.
+- 다음 할 일: `SPEC.md` 8.4절 "새 프로젝트 창은 … 넷리스트를 필수로" 문장을 병합 결과(넷리스트 선택 사항)에 맞춘다. 로고 파일을 쓸지 정해 커밋하거나 지운다.
+
+## 2026-11-14 RAG 에이전트 검색 병렬화 측정 P1 (브랜치 `jeongun`, 290fe5e · 4714b2f · 5493ddf)
+
+- 바꾼 것: 사전 등록(`evals/guides/preregister.md`, 290fe5e) 뒤 `backend/multi_agent/agents/docs.py`에서 품번별 검색과 품번 규칙 주석 검색을 동시에 부른다(4714b2f, 테스트 `tests/multi_agent/test_docs_agent.py`). 결과 `evals/results/graph/2026-11-14-docs-parallel/`(P1 set1 · set2, README).
+- 실행한 명령: 동결 v3 50문항, `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0`, `run_gate --sets 2 --keep-going --p95 120`. 비교 기준 A1(`4840a33`, 같은 조건).
+- 실제 결과: P1 set1 50/50 · p50 6.6초 · p95 15.3초 · 0.044달러, set2 50/50 · 5.5초 · 13.1초 · 0.032달러. 품번 2개 이상 검색 문항(18건)의 RAG 에이전트 단계 평균 7.92 → 7.49초(0.43초 단축). 판정 유지, 바뀐 13건은 비관련 거절 코드(회차 간 흔들림 수준).
+- 판단: 사전 등록 기준(1초 이상 단축, p95 비증가)에 못 미쳐 효과 없음으로 적었다. 코드는 앞으로 속도를 줄일 여지가 있어 남긴다(조장 결정 11-14). 검색이 실제로 겹친 RAG 행은 7/47이고, 그 행에서 0.7~4.9초씩 줄었다.
+- 확인 못 한 것: P1 set2의 v3-38~50은 Exa 크레딧 소진(HTTP 402 `NO_MORE_CREDITS`)으로 웹 근거 없이 잰 값이다. set1은 영향 없다.
+
+## 2026-11-14 참고(3등급) 웹 검색 미리 출발 G1 무효 → 재측정 진행 중 (브랜치 `jeongun`, fc90941 · eb72d7c · cdb16b1)
+
+- 바꾼 것: 사전 등록(fc90941) 뒤 `backend/multi_agent/agents/docs.py` · `backend/services/exa.py`에서 3등급 웹 검색을 2등급 검색과 같은 시점에 출발시키고, 공식 근거를 쓰면 받은 결과를 버린다(eb72d7c, `SPEC.md` 2줄, 테스트 `tests/multi_agent/test_docs_agent.py` · `tests/services/test_datasheet_rows.py`). 결과 `evals/results/graph/2026-11-14-grade3-early/`(G1, README).
+- 실행한 명령: P1과 같은 조건의 `run_gate --sets 2`.
+- 실제 결과: G1은 무효다. Exa 크레딧이 P1 set2의 v3-38부터 떨어져(HTTP 402 `NO_MORE_CREDITS`) 2등급 · 3등급 단계가 모두 약 0.2초였다(cdb16b1에 무효로 기록, P1 README에도 덧붙임).
+- 다음 할 일: 조장이 Exa 키를 바꿨고, 같은 조건으로 G2와 P1b를 재측정 진행 중이다(`evals/results/graph/2026-11-14-grade3-early/G2*`, `P1b*`). 끝나면 README · `preregister.md`에 결과와 채택 여부를 적는다. `EVAL_REPORT.md` 수치는 웹 최적화 재측정 뒤에 고친다(조장 결정 11-14).
