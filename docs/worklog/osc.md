@@ -942,3 +942,16 @@
 - 좁은 재현/검증: DB 문서 수정 전8failed/2passed→수정 후 tests/db 10passed, generator --check 일치. 데모는 수정 전 dsn AttributeError 재현→모듈19passed. DB 환경 없이 실행한 인접 API 테스트1skip은 뒤의 전체 실행에서 격리 인증DB를 연결하여 검사했다.
 - 전체 검증: uv run --no-sync pytest -q --junitxml ... 결과2343passed/32skipped/0failed, pytest300.17초. 외부 모델·검색 호출 없이 PR 파일 범위로 모든 테스트 노드를 실행했다. 기존 미추적3경로의 임시 Git 탐색 제외는 위와 같으며, 원래 작업 파일은 보존했다. docling 라이브러리 DeprecationWarning 1건은 별도 기존 경고다.
 - 보존/범위 검토: 기존 작업19파일 SHA-256 동일, 기존 API/DB 컨테이너ID 동일, 새 파일 추가 없음. 변경은 gen_schema_docs.py, 자동 생성 문서2개, schema_docs/demo_replay 테스트2개와 이 기록뿐이다. 독립 검토에서 검증 약화나 추가 회귀는 발견하지 못했다. PR #134에 목적별 커밋으로 추가하며 PR 병합·운영 배포는 하지 않는다.
+
+
+## 2026-11-15 · PR #134 운영 안내·검색 입력 한도 정리
+
+- 대상: 별도 KiCad renderer의 실행/Cloud Run 배포 안내를 구현에 맞추고, 다이오드194자·제품/보드200자 입력 한도를 화면/API에 일치시킨다. 검색과 무관한 cloud-run-api.flags.yaml 및 GATES의 관련 추가 문단은 main 대비 PR 차이에서 제외한다.
+- 보존: 시작HEAD 3201ba7, 기존 변경19파일과 대상 원본을 저장소 밖 osc-pr134-align-u3diyew3에 백업했다. Cloud Run 파일은 Git 추적에서만 제외해 로컬 원본을 유지하고, GATES는 인덱스만 main으로 맞춰 로컬 원문을 그대로 보존했다. SOJAFIT에서는 해당 신규 파일 등록 행만 제거했다. 실제 Cloud Run 설정·운영 배포·PR 병합은 하지 않는다.
+- 실행 전 검증 범위: 프런트 경계값 RED/GREEN·전체 프런트 테스트·production build, API 경계값 및 Compose 프로필별 서비스 목록/문서-코드 대조. 전체 Python 회귀는 새 격리 DB와 외부 키 비움/PYTHONUTF8=1로 수행한다. 기존 미추적3경로 및 PR에서 제외한 로컬 cloud-run-api.flags.yaml만 subprocess Git 탐색에서 제외하고 테스트 노드는 생략하지 않는다. 유료 검색·모델 호출은 하지 않는다.
+
+- 렌더러 안내: `--target renderer`와 기본 API 이미지를 구분하고 `KICAD_RENDERER_URL`, Compose `schematic` profile, Cloud Run HTTPS audience·metadata ID token·비공개 renderer 호출 권한을 명시했다. 배포 예시에는 8000 포트·이미지 push·기존 환경변수를 보존하는 update-env-vars를 넣었다. discovery(128파일/파일당4MiB/총25MiB)와 선택 계층 렌더링(파일당10MiB/총25MiB/20시트), 기존 archive 경로를 구분했다. 실제 Cloud Run 배포·IAM 변경·호출은 수행하지 않았다.
+- 검색 입력: API의 기존 일반2~200자·다이오드2~194자 계약을 유지하고 화면의 maxLength·안내·버튼 활성 조건을 맞췄다. 제품200자 입력 후 다이오드 전환은 문자열을 자르지 않고 검색을 막으며 복귀하면 다시 허용한다. production API 동작은 바꾸지 않았다.
+- 자동 검증: 프런트 경계 회귀 RED 4건 확인 후 전체 Vitest 207passed, API 외부 회로 모듈40passed, TypeScript/Vite build 및 Docker API build 통과. 새 일회용 PostgreSQL의 실제 서비스 스키마로 모든 Python 테스트 노드를 실행해 2345passed/32skipped/0failed(309.29초), 기존 docling DeprecationWarning1건. PR 밖 기존 미추적3경로와 보존한 로컬 cloud flag만 임시 Git 탐색 제외했고 실제 파일·인덱스·.gitignore를 테스트 때문에 변경하지 않았다.
+- 실제 8011: API만 재생성하고 environment 전체 값 동일, 기존 DB·renderer·STH 컨테이너ID 동일, API health200. API에서 renderer health200 및 KiCad10.0.8 확인. Chrome에서 일반200자/다이오드194자 native 입력 상한, 200자 모드 전환 시 보존/검색 비활성 및 복귀 시 활성 확인. 조작 중 검색 요청0회. 로그인된 실제 HTTP에서 다이오드195자·일반201자 모두422. 정상 길이의 외부 검색은 새로 실행하지 않았으며, 정상 경계194/200은 API 자동 테스트로 확인했다.
+- 범위·보존: 독립 read-only 검토 및 최종 diff 확인. 기존 작업19파일과 로컬 cloud-run-api.flags.yaml/GATES 원문2파일 모두 시작 SHA-256과 동일하다. main 대비 cloud-run-api.flags.yaml·docs/GATES.md 차이는0이며 SOJAFIT의 해당 등록 행도 제거했다. 임시 DB 제거, 운영 배포·PR 병합 없음. 근거 로그/JUnit·ui-limit-proof.json·http-limit-proof.json·ui-diode-over-limit.jpg는 저장소 밖 osc-pr134-align-u3diyew3에 보관한다.
