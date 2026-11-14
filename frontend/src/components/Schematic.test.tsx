@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { failure, network } from '../test/network'
 import { renderWithQueries } from '../test/projects'
-import { ExternalSchematic } from './Schematic'
+import { ExternalSchematic, SchematicImage } from './Schematic'
 
 afterEach(() => { cleanup(); focusManager.setFocused(undefined); onlineManager.setOnline(true); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
@@ -12,13 +12,77 @@ const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attrib
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
 
+const picture = { image_url: '/circuit-schematics/breadboard_supply.png', original_url: 'https://example.test/original.pdf', attribution: 'Maker', license: 'CC BY-SA' }
+
+function readyViewport() {
+  const image = screen.getByAltText('Board 원본 회로도')
+  const viewport = screen.getByRole('region', { name: '회로도 이미지 이동' })
+  Object.defineProperties(viewport, { clientWidth: { value: 400 }, clientHeight: { value: 300 } })
+  Object.defineProperties(image, { naturalWidth: { value: 800 }, naturalHeight: { value: 600 } })
+  viewport.setPointerCapture = vi.fn()
+  viewport.hasPointerCapture = vi.fn(() => true)
+  viewport.releasePointerCapture = vi.fn()
+  fireEvent.load(image)
+  return { image, viewport }
+}
+
+it('pans only the image and fits back to the centre even at the same zoom', () => {
+  const view = render(<SchematicImage schematic={picture} name="Board" zoom={50} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.pointerDown(viewport, { button: 0, isPrimary: true, pointerId: 1, clientX: 100, clientY: 100 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 140, clientY: 120 })
+  expect(image.style.transform).toContain('translate(40px, 20px)')
+  expect(image.style.transform).toContain('scale(0.5)')
+  expect(viewport.style.transform).toBe('')
+  expect(image).toHaveAttribute('draggable', 'false')
+  view.rerender(<SchematicImage schematic={picture} name="Board" zoom={50} viewReset={1} />)
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+})
+
+it('bounds dragging and releases it on cancel without dragging links or accepting a second pointer', () => {
+  renderWithQueries(<SchematicImage schematic={picture} name="Board" zoom={200} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.pointerDown(viewport, { button: 2, pointerId: 1, clientX: 0, clientY: 0 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 50, clientY: 50 })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+  fireEvent.pointerDown(viewport, { button: 0, isPrimary: true, pointerId: 1, clientX: 0, clientY: 0 })
+  fireEvent.pointerMove(viewport, { pointerId: 2, clientX: 80, clientY: 80 })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 1000, clientY: 1000 })
+  expect(image.style.transform).toContain('translate(200px, 150px)')
+  fireEvent.pointerCancel(viewport, { pointerId: 1 })
+  fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 0, clientY: 0 })
+  expect(image.style.transform).toContain('translate(200px, 150px)')
+  expect(viewport.releasePointerCapture).toHaveBeenCalledWith(1)
+  expect(viewport).not.toContainElement(screen.getByRole('link', { name: /원본 자료/ }))
+})
+
+it('supports keyboard panning and recentres on Home', () => {
+  renderWithQueries(<SchematicImage schematic={picture} name="Board" zoom={200} />)
+  const { image, viewport } = readyViewport()
+  fireEvent.keyDown(viewport, { key: 'ArrowRight' })
+  expect(image.style.transform).toMatch(/translate\(-40px(?:, 0px)?\)/)
+  fireEvent.keyDown(viewport, { key: 'Home' })
+  expect(image.style.transform).toMatch(/translate\(0px(?:, 0px)?\)/)
+})
+
+it.each(['조건에 맞는 원본 회로도 검색 결과가 없습니다.', '회로도 후보를 찾았지만 원본 검증을 통과하지 못했습니다.'])(
+  'preserves the server failure explanation: %s', async message => {
+    const handler = vi.fn(() => failure('SCHEMATIC_NOT_FOUND', message, 404))
+    network(handler)
+    renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+    search()
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(handler).toHaveBeenCalledTimes(1)
+  })
+
 it.each(['success', 'error'])('does not repeat a stale %s search on focus, reconnect, or reopening', async state => {
   const handler = vi.fn(() => state === 'success' ? Response.json(found) : failure('SCHEMATIC_NOT_FOUND', '없음', 404))
   network(handler)
   const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
   expect(handler).not.toHaveBeenCalled()
   search()
-  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe(state))
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board', ''])?.status).toBe(state))
   const later = Date.now() + 16 * 60_000
   vi.spyOn(Date, 'now').mockReturnValue(later)
   await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
@@ -38,7 +102,7 @@ it('reuses a fresh successful search but explicitly refreshes the same term afte
   network(handler)
   const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
   search()
-  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe('success'))
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board', ''])?.status).toBe('success'))
   search()
   expect(handler).toHaveBeenCalledTimes(1)
   const later = Date.now() + 6 * 60_000
@@ -105,7 +169,7 @@ it('shows an unverified public schematic with its publishing page', async () => 
   expect(screen.getByRole('link', { name: /게시 페이지/ })).toHaveAttribute('href', 'https://example.org/tiny85')
 })
 
-it('lets the user choose another matching circuit source', async () => {
+it('keeps the chosen source without automatic searches and resets it on an explicit stale search', async () => {
   const other = 'https://example.org/board-v2-schematic.png'
   const paths: string[] = []
   network(path => {
@@ -116,11 +180,22 @@ it('lets the user choose another matching circuit source', async () => {
         { title: 'Board v2', source_url: other, source_type: 'public_web', revision: 'v2' },
       ] })
   })
-  renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
   search()
   const choice = await screen.findByRole('button', { name: 'Board v2 · 출처 확인 필요' })
   fireEvent.click(choice)
-  await waitFor(() => expect(paths).toContain(`/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}`))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Board v2 · 출처 확인 필요' })).toHaveAttribute('aria-pressed', 'true'))
+  expect(paths).toEqual(['/api/external-circuits/schematics?q=Board', `/api/external-circuits/schematics?q=Board&source_url=${encodeURIComponent(other)}`])
+  vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 16 * 60_000)
+  await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  await act(async () => { onlineManager.setOnline(false); onlineManager.setOnline(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(paths).toHaveLength(2)
+  expect(screen.getByRole('button', { name: 'Board v2 · 출처 확인 필요' })).toHaveAttribute('aria-pressed', 'true')
+  search()
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Board v1 · 제조사 공식' })).toHaveAttribute('aria-pressed', 'true'))
+  expect(paths).toHaveLength(3)
+  expect(paths[2]).toBe('/api/external-circuits/schematics?q=Board')
+  view.client.clear()
 })
 
 it.each([

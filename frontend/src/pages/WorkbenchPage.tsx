@@ -48,6 +48,7 @@ export default function WorkbenchPage() {
   const errorVersion = useRef(0)
   const [busy, setBusy] = useState(false)
   const [zoom, setZoom] = useState(100)
+  const [viewReset, setViewReset] = useState(0)
   const [navOpen, setNavOpen] = useState(false)
   const navigation = useRef<HTMLElement>(null)
   const navToggle = useRef<HTMLButtonElement>(null)
@@ -313,9 +314,9 @@ export default function WorkbenchPage() {
     <dialog ref={sheet} className="dialog sheet" aria-labelledby="sheet-title" onClick={closeOutside}>
       <header><h2 id="sheet-title">{project.data?.name} 원본 회로도</h2>
         <div className="zoom" role="group" aria-label="확대와 축소"><button className="btn btn-icon" disabled={zoom <= 50} onClick={() => setZoom(value => Math.max(50, value - 25))} aria-label="축소"><Minus aria-hidden="true" /></button><output>{zoom}%</output>
-          <button className="btn btn-icon" disabled={zoom >= 400} onClick={() => setZoom(value => Math.min(400, value + 25))} aria-label="확대"><Plus aria-hidden="true" /></button><button className="btn" onClick={() => setZoom(100)}>맞춤</button></div>
+          <button className="btn btn-icon" disabled={zoom >= 400} onClick={() => setZoom(value => Math.min(400, value + 25))} aria-label="확대"><Plus aria-hidden="true" /></button><button className="btn" onClick={() => { setZoom(100); setViewReset(value => value + 1) }}>맞춤</button></div>
         <button className="icon-btn" onClick={() => sheet.current?.close()} aria-label="닫기"><X aria-hidden="true" /></button></header>
-      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} zoom={zoom} /> : <ExternalSchematic key={project.data?.id} name={project.data?.name ?? ''} zoom={zoom} />}
+      {schematic ? <SchematicImage key={schematic.image_url} schematic={schematic} name={project.data?.name ?? ''} zoom={zoom} viewReset={viewReset} /> : <ExternalSchematic key={project.data?.id} name={project.data?.name ?? ''} zoom={zoom} viewReset={viewReset} />}
     </dialog>
   </div>
 }

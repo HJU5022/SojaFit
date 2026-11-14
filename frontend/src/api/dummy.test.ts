@@ -186,3 +186,9 @@ it('deletes only one conversation and its runs without reusing surviving IDs', a
   const third = await json(await request('/api/projects/1/threads', { method: 'POST' })) as { id: string }
   expect(third.id).not.toBe(second.id)
 })
+it('provides the candidate list contract for the multi-sheet schematic preview', async () => {
+  const request = await freshDummy()
+  const response = await request('/api/external-circuits/schematics?q=attiny85')
+  expect(response.status).toBe(200)
+  expect(await json(response)).toMatchObject({ choices: [], images: [{ sheet: 0 }, { sheet: 1 }] })
+})

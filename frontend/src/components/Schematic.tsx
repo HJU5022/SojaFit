@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { FormEvent, PointerEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { findSchematic } from '../api/externalCircuits'
 import { errorMessage, requestIdProps } from '../api/client'
@@ -16,13 +16,69 @@ type SchematicEvidence = Pick<DemoSchematic, 'image_url' | 'original_url' | 'att
   revision?: string | null
 }
 
-export function SchematicImage({ schematic, name, zoom, reload }: { schematic: SchematicEvidence; name: string; zoom: number; reload?: () => void }) {
+export function SchematicImage({ schematic, name, zoom, viewReset = 0, reload }: { schematic: SchematicEvidence; name: string; zoom: number; viewReset?: number; reload?: () => void }) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
-  return <figure tabIndex={0} aria-label="원본 회로도 보기">
+  const viewport = useRef<HTMLDivElement>(null)
+  const image = useRef<HTMLImageElement>(null)
+  const drag = useRef<{ id: number; x: number; y: number; start: { x: number; y: number } } | null>(null)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const bound = useCallback((point: { x: number; y: number }) => {
+    const box = viewport.current, img = image.current
+    if (!box || !img?.naturalWidth || !img.naturalHeight) return { x: 0, y: 0 }
+    const fit = Math.min(box.clientWidth / img.naturalWidth, box.clientHeight / img.naturalHeight) * zoom / 100
+    const x = Math.abs(img.naturalWidth * fit - box.clientWidth) / 2
+    const y = Math.abs(img.naturalHeight * fit - box.clientHeight) / 2
+    return { x: Math.max(-x, Math.min(x, point.x)), y: Math.max(-y, Math.min(y, point.y)) }
+  }, [zoom])
+  useEffect(() => {
+    const adjust = () => setPan(point => bound(point))
+    adjust()
+    if (!viewport.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(adjust)
+    observer.observe(viewport.current)
+    return () => observer.disconnect()
+  }, [bound])
+  useEffect(() => {
+    if (drag.current && viewport.current?.hasPointerCapture(drag.current.id)) viewport.current.releasePointerCapture(drag.current.id)
+    drag.current = null
+    setDragging(false)
+    setPan({ x: 0, y: 0 })
+  }, [viewReset])
+  function stopDrag(event: PointerEvent<HTMLDivElement>) {
+    if (drag.current?.id !== event.pointerId) return
+    drag.current = null
+    setDragging(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+  return <figure aria-label="원본 회로도 보기">
+    <div ref={viewport} className="schematic-viewport" data-ready={status === 'ready'} data-dragging={dragging}
+      role="region" aria-label="회로도 이미지 이동" tabIndex={0}
+      aria-description="이미지를 드래그하거나 방향키로 이동합니다. Home 키로 가운데로 돌아갑니다."
+      onPointerDown={event => {
+        if (status !== 'ready' || event.button !== 0 || event.isPrimary === false || drag.current) return
+        event.preventDefault()
+        event.currentTarget.focus({ preventScroll: true })
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, start: pan }
+        setDragging(true)
+      }} onPointerMove={event => {
+        const current = drag.current
+        if (current?.id === event.pointerId) setPan(bound({ x: current.start.x + event.clientX - current.x, y: current.start.y + event.clientY - current.y }))
+      }} onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={stopDrag}
+      onKeyDown={event => {
+        if (status !== 'ready' || event.target !== event.currentTarget) return
+        const directions: Record<string, { x: number; y: number }> = { ArrowLeft: { x: 40, y: 0 }, ArrowRight: { x: -40, y: 0 }, ArrowUp: { x: 0, y: 40 }, ArrowDown: { x: 0, y: -40 } }
+        const delta = directions[event.key]
+        if (!delta && event.key !== 'Home') return
+        event.preventDefault()
+        setPan(point => delta ? bound({ x: point.x + delta.x, y: point.y + delta.y }) : { x: 0, y: 0 })
+      }}>
     {status === 'loading' && <div className="skeleton sheet-status" role="status"><span className="sr-only">원본 회로도를 불러오는 중입니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}
     {status === 'error' && <div className="notice sheet-status" role="alert"><p>원본 회로도를 불러오지 못했습니다.</p><button className="btn" onClick={() => { if (reload) return reload(); setStatus('loading'); setAttempt(value => value + 1) }}>{reload ? '다시 검색하기' : '회로도 다시 불러오기'}</button></div>}
-    <img key={attempt} src={schematic.image_url} alt={`${name} 원본 회로도`} hidden={status !== 'ready'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} style={{ width: `${zoom}%` }} />
+    <img ref={image} key={attempt} src={schematic.image_url} alt={`${name} 원본 회로도`} draggable={false} hidden={status !== 'ready'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }} />
+    </div>
     <figcaption className="meta-fields">
       {schematic.evidence_grade === 2 && <span>제조사 공식 원본 · 2등급</span>}
       {schematic.evidence_grade === 3 && <span>커뮤니티 참고 · 3등급</span>}
@@ -40,6 +96,7 @@ function waitText(seconds: number) { return seconds >= 60 ? `${Math.ceil(seconds
 // 503이면서 Retry-After가 없으면 기능 꺼짐(키 없는 데모·설정 누락)이라 다시 시도를 권하지 않는다.
 const disabled = (error: unknown) => (error as ApiError | null)?.code === 'UNAVAILABLE' && !(error as ApiError).retryAfter
 function searchMessage(error: ApiError) {
+  if (error.code === 'SCHEMATIC_NOT_FOUND' && /검색 결과가 없습니다|후보를 찾았지만/.test(error.message)) return errorMessage(error)
   if (error.code === 'SCHEMATIC_NOT_FOUND') return '공개된 원본 회로도를 찾지 못했습니다. 검색어를 바꿔 다시 찾아 보세요. 창을 닫으면 연결 개념도는 계속 볼 수 있습니다.'
   if (error.code === 'UPSTREAM_ERROR') return '외부 회로도를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
   if (error.code === 'UNAVAILABLE') return error.retryAfter ? `외부 회로도 조회 한도에 닿았습니다. ${waitText(error.retryAfter)} 뒤에 다시 시도해 주세요.` : '이 환경에서는 외부 원본 회로도를 사용할 수 없습니다. 창을 닫고 연결 개념도를 확인해 주세요.'
@@ -47,7 +104,7 @@ function searchMessage(error: ApiError) {
 }
 
 // 검색은 누를 때만 보낸다(검색마다 외부 호출이 든다). 같은 검색어는 5분 동안 다시 보내지 않는다.
-export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }) {
+export function ExternalSchematic({ name, zoom, viewReset = 0 }: { name: string; zoom: number; viewReset?: number }) {
   const [text, setText] = useState(name)
   const [searched, setSearched] = useState('')
   const [selectedSource, setSelectedSource] = useState('')
@@ -83,6 +140,6 @@ export function ExternalSchematic({ name, zoom }: { name: string; zoom: number }
       evidence_grade: data.evidence_grade, source_type: data.source_type,
       manufacturer: data.manufacturer, model: data.model, revision: data.revision,
       source_page_url: data.repository_url }}
-      name={`${data.model || data.project || searched} 시트 ${image.sheet + 1}`} zoom={zoom} reload={() => void result.refetch()} />)}
+      name={`${data.model || data.project || searched} 시트 ${image.sheet + 1}`} zoom={zoom} viewReset={viewReset} reload={() => void result.refetch()} />)}
   </div>
 }
