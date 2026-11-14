@@ -38,6 +38,26 @@ it('shows only upload when the demo catalogue is unavailable (DEMO_MODE=0), with
   expect(screen.queryByText('예제 회로 목록을 불러오지 못했습니다.')).not.toBeInTheDocument()
 })
 
+it('requires a netlist and offers the sample link when the demo catalogue is unavailable', async () => {
+  api(() => failure('NOT_FOUND', 'Not Found', 404))
+  open()
+  const create = await screen.findByRole('button', { name: '만들기', hidden: true })
+  await waitFor(() => expect(create).toBeDisabled())
+  expect(document.querySelector('input[name="netlist"]')).toBeRequired()
+  expect(screen.getByRole('link', { name: '샘플 넷리스트 받기', hidden: true })).toHaveAttribute('href', '/assets/samples/attiny85-time-switch.net')
+  fireEvent.change(document.querySelector('input[name="netlist"]')!, { target: { files: [new File(['(export)'], 'a.net')] } })
+  await waitFor(() => expect(create).toBeEnabled())
+})
+
+it('keeps the file optional when demo circuits exist', async () => {
+  api(catalogue)
+  open()
+  await screen.findByText('파일이 없으면 예제 회로로 시작')
+  expect(document.querySelector('input[name="netlist"]')).not.toBeRequired()
+  expect(screen.queryByRole('link', { name: '샘플 넷리스트 받기', hidden: true })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '만들기', hidden: true })).toBeEnabled()
+})
+
 it('offers the example select and the pre-stored schematic of a demo project when the catalogue is available', async () => {
   api(catalogue)
   open()
