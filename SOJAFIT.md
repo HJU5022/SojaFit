@@ -32,7 +32,6 @@ SojaFit (proj3-b)
 ├── .python-version         <- uv가 쓰는 파이썬 버전(3.12)
 ├── .dockerignore           <- docker build 컨텍스트에서 뺄 것(.venv, .git, .env, 평가 결과 등)
 ├── Dockerfile              <- API 이미지. Node 단계에서 React 화면(frontend/)을 빌드해 넣고 backend/ · data/ · db/를 복사 (고정)
-├── cloud-run-api.flags.yaml <- 운영 Cloud Run API의 서비스 수준 최소 인스턴스 설정
 ├── docker-compose.yml      <- 서비스 4개(api · thread-setup · corpus-load · db) 한 줄 실행, 키 없는 데모 모드 (고정)
 ├── docker-compose.local.yml <- 별도 DB·볼륨의 로컬 실제 API, localhost:8010, 데모·운영 설정과 분리
 ├── pyproject.toml          <- uv 의존성 (고정)

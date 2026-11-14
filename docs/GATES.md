@@ -28,8 +28,6 @@
 
 ### G1 배포 주소
 
-운영 API의 인스턴스 한 대를 미리 준비하려면 저장소 루트에서 `gcloud run services update sojafit-api --flags-file=cloud-run-api.flags.yaml`을 실행합니다. 서비스 수준의 최소값이므로 한 번 적용하면 다음 리비전에도 이어지며, 요청이 없는 동안에도 대기 비용이 발생합니다.
-
 | 항목 | 값 | 증거 경로 |
 |---|---|---|
 | 배포 리비전 | [README.md](../README.md) 표 | `docs/worklog/jeongun.md` 11-13 항목 |
