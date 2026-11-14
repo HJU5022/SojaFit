@@ -250,10 +250,12 @@ def test_docs_does_not_spend_grade3_when_grade2_slot_is_busy():
         fallback_calls.append(True)
         return []
 
-    report = docs_agent(
-        {'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
-        chat=lambda *a: pytest.fail('budget exhaustion must not call the LLM'),
-        web_search=busy, web_search_fallback=fallback)['reports'][0]
+    with exa.request_scope():
+        exa._budget.get()['grade2'].acquire()  # 다른 에이전트가 이 요청의 공식(2등급) 예산을 이미 쓰는 중
+        report = docs_agent(
+            {'question': 'SS34의 역전압은?', 'task': task}, retriever=lambda *a, **k: [],
+            chat=lambda *a: pytest.fail('budget exhaustion must not call the LLM'),
+            web_search=busy, web_search_fallback=fallback)['reports'][0]
     assert fallback_calls == []
     assert report['reason'] == 'limit_reached'
 
@@ -310,7 +312,8 @@ def test_docs_agent_uses_grade3_after_grade2_provider_failure(monkeypatch, failu
 
     def handler(req):
         calls.append(req.method)
-        if len(calls) == 1:
+        # [왜] 3등급은 2등급과 함께 출발해 도착 순서가 정해지지 않는다. 순서 대신 공식 PDF 도메인 제한(includeDomains)으로 2등급 요청을 가린다
+        if 'includeDomains' in json.loads(req.content):
             if failure == 'timeout':
                 raise httpx.ReadTimeout('synthetic Exa timeout', request=req)
             return httpx.Response(429, json={'error': 'rate limited'})

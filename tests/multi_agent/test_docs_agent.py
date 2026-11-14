@@ -1020,11 +1020,14 @@ def test_limited_official_lookup_keeps_missing_trr_conditions_incomplete(grade):
         calls.append(True)
         return D.DocsAnswer(grade=grade, answer=answer)
     fallback_calls = []
-    result = D.docs_agent(
-        {'question':question, 'task':dict(id=1, agent='docs', kind='rating', goal='trr measurement conditions',
-                                          query='UF4007 trr test conditions', parts=['UF4007'])},
-        retriever=lambda *a, **k:[row], chat=chat, web_search=official,
-        web_search_fallback=lambda *a:fallback_calls.append(True) or [])['reports'][0]
+    from backend.services import exa
+    with exa.request_scope():
+        exa._budget.get()['grade2'].acquire()  # 다른 에이전트가 이 요청의 공식(2등급) 예산을 이미 쓰는 중
+        result = D.docs_agent(
+            {'question':question, 'task':dict(id=1, agent='docs', kind='rating', goal='trr measurement conditions',
+                                              query='UF4007 trr test conditions', parts=['UF4007'])},
+            retriever=lambda *a, **k:[row], chat=chat, web_search=official,
+            web_search_fallback=lambda *a:fallback_calls.append(True) or [])['reports'][0]
     assert result['status'] == 'partial'
     assert result['reason'] == 'limit_reached'
     assert result['missing']

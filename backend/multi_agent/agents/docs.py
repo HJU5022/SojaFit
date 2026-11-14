@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 from backend.graph.mcp_retriever import RetrievalUnavailableError
 from backend.graph.memory import memory_context, memory_sources
 from backend.judge.pdf_claims import check_pdf_lines, row_sentence, sentence_digest
-from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted
+from backend.services.exa import OTHER_MANUFACTURER, SearchBudgetExhausted, slot_in_use
 from backend.graph.nodes import NOT_FOUND, WORD, citations, circuit_mechanism, find_parts, netlist_block, other_part_row, search, unsupported_numbers
 from backend.multi_agent.contracts import MAX_SEARCHES, Reason, Task, TaskReport
 from backend.multi_agent.revisions import requested_revisions, revision_matches, revisions_for_part
@@ -617,6 +617,15 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
         for revision in revisions:
             if revision not in terms.upper().split():
                 terms += ' ' + revision
+        early_fallback = None
+        if web_search_fallback is not None and not slot_in_use(2):
+            # [왜] 참고(3등급) 검색은 공식(2등급) 결과를 기다릴 이유가 거의 없다. v3에서 웹을 쓴 31문항 모두 3등급까지 갔다(11-14 P1).
+            #      공식 검색과 함께 출발시키고, 원래 3등급을 부르던 자리에서 결과만 받는다. 공식 근거를 쓰거나 공식 예산이 소진되면 받은 결과는 버린다.
+            #      다른 에이전트가 이미 공식 예산을 쓰는 중이면(그러면 3등급을 부르지 않는 규칙) 미리 출발시키지 않는다
+            # [주의] 3등급은 요청당 1번 예산이라 공식 근거를 쓴 요청에서도 그 예산을 쓴다(사전 등록 「참고(3등급) 웹 검색 미리 출발」)
+            fallback_pool = ThreadPoolExecutor(max_workers=1)
+            early_fallback = fallback_pool.submit(contextvars.copy_context().run, web_search_fallback, web_parts, terms)
+            fallback_pool.shutdown(wait=False)
         try:
             external_raw = web_search(web_parts, terms) if web_search is not None else []
         except SearchBudgetExhausted as error:
@@ -727,7 +736,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 result, shown = web_result, combined
         if not official_used and not grade2_budget_exhausted and web_search_fallback is not None:
             try:
-                fallback_raw = web_search_fallback(web_parts, terms)
+                fallback_raw = early_fallback.result()  # 예외(예산 소진 포함)는 여기서 원래처럼 다시 올라온다
             except SearchBudgetExhausted as error:
                 grade3_budget_exhausted = error.grade == 3
                 searches.append({'query': terms, 'parts': web_parts, 'provider': 'exa',

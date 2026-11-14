@@ -125,6 +125,13 @@ def _claim_slot(grade):
     yield
 
 
+def slot_in_use(grade: int) -> bool:
+    """이 요청에서 그 등급의 외부 검색 1번 예산을 이미 누가 쓰고 있는지(요청 밖이면 False)."""
+    slots = _budget.get()
+    slot = slots.get('grade2' if grade == 2 else 'grade3') if isinstance(slots, dict) else slots
+    return slot is not None and slot.locked()
+
+
 @contextmanager
 def request_scope():
     # Permit one official lookup and one grade-3 fallback in the same request,
