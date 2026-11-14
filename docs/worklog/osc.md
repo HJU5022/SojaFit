@@ -930,3 +930,15 @@
 - 인코딩 재확인: PYTHONUTF8=1로 tests/evals/test_stage_timing.py 전체7개 통과(2.25초), 원래 실패한2개도 포함한다. 전체 pytest를 다시 전부 통과했다고 주장하지 않는다. 앞서 관련 Python8파일480passed/1skip이며 이번 격리DB 전체실행에서는 인증DB 경로도 실행했다.
 - 프런트 재확인: npm run test:run 202passed(12.90초), npm run build 통과. 8011 실화면/API 및 cold-instance CDFER11장 검증은 위 통합 기록을 따른다.
 - PR 검토 범위: 400줄을 넘는 변경은 검색/자료검증/렌더러/화면 계약과 회귀가 연결된 통합 작업이어서 함께 제출하며 논리 단위 커밋으로 나눴다. 기존 원격 OSC의 cloud-run-api.flags.yaml(--min:0)과 GATES의 한 대 유지 안내 문구 불일치는 이번 회로도 수정과 별개인 기존 변경으로 명시하고 운영 배포는 하지 않는다.
+
+
+## 2026-11-15 · main 기준 pytest 실패 9건 수정 및 PR #134 추가 반영
+
+- 대상: DB 문서 생성기/자동 생성 ERD·정의서의 실제 회로 버전 스키마 불일치8건, ensure_thread 데모 테스트의 이전 DB 경계 가정1건. 기존 서비스·DB·미추적 작업을 보존하며 운영 배포·PR 병합은 하지 않는다. 작업 시작 HEAD dbe9d1b, 기존 변경19파일과 대상 원본은 저장소 밖 osc-pytest-nine-655k344q에 백업했다.
+- 실행 전 검증 범위: 기존 PostgreSQL과 분리된 새 postgres:16 컨테이너, apply_service_schema(agent=True), 외부 키 비움/PYTHON_DOTENV_DISABLED=1/PYTHONUTF8=1. 대상 테스트를 수정 전에 재현하고 수정 후 관련 테스트 및 전체 pytest를 한 번 실행한다. 실패가 있으면 해당 원인만 추가 검사한다. 유료 모델·검색·평가 실행은 하지 않는다.
+- 전체 검증의 파일 범위: PR에 포함되지 않는 기존 미추적 docs/superpowers/·frontend/e2e/·importtime.txt만 테스트 subprocess의 임시 core.excludesFile로 Git 탐색에서 제외한다. 테스트 노드는 생략하지 않고, 실제 .gitignore/인덱스/작업 파일은 바꾸지 않는다. 전후 git ls-files 대조로 새로 포함된 파일0개와 제외된 기존 경로만 확인했다. 원래 작업 트리에서 이3경로가 만드는 레이아웃 실패는 별개로 남긴다.
+- 원인과 수정: TABLES에서 빠진 public.project_circuit_versions 및 circuits.version/threads.circuit_version 의미를 보완하고 공식 generator로 ERD/정의서를 다시 생성했다. 실제 서비스 표25개에 맞춰 테스트 기대치를 갱신했다. 알 수 없는 칸·기본값·UNIQUE 변경의 어긋남 검사는 유지한다.
+- 데모 테스트: 소유 대화의 고정 버전을 조회한 뒤 데모 입력을 검증하는 현재 계약에 맞춰 DB 대역을 수정했다. 호출자 회로를 다르게 주어 고정 버전이 정본임을 확인하고, 거절 전에 분석 상태 INSERT/UPDATE/DELETE가 없음을 검사한다. 조회 결과가 없는 대화의 404 회귀를 추가했다. production memory_service와 SQL 마이그레이션은 수정하지 않았다.
+- 좁은 재현/검증: DB 문서 수정 전8failed/2passed→수정 후 tests/db 10passed, generator --check 일치. 데모는 수정 전 dsn AttributeError 재현→모듈19passed. DB 환경 없이 실행한 인접 API 테스트1skip은 뒤의 전체 실행에서 격리 인증DB를 연결하여 검사했다.
+- 전체 검증: uv run --no-sync pytest -q --junitxml ... 결과2343passed/32skipped/0failed, pytest300.17초. 외부 모델·검색 호출 없이 PR 파일 범위로 모든 테스트 노드를 실행했다. 기존 미추적3경로의 임시 Git 탐색 제외는 위와 같으며, 원래 작업 파일은 보존했다. docling 라이브러리 DeprecationWarning 1건은 별도 기존 경고다.
+- 보존/범위 검토: 기존 작업19파일 SHA-256 동일, 기존 API/DB 컨테이너ID 동일, 새 파일 추가 없음. 변경은 gen_schema_docs.py, 자동 생성 문서2개, schema_docs/demo_replay 테스트2개와 이 기록뿐이다. 독립 검토에서 검증 약화나 추가 회귀는 발견하지 못했다. PR #134에 목적별 커밋으로 추가하며 PR 병합·운영 배포는 하지 않는다.
