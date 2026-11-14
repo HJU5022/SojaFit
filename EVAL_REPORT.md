@@ -411,10 +411,10 @@ v3는 2문항, 판정 연습은 1문항 차이이고 한 세트씩이라(G5 규�
 | 트레이스에 입출력, 모델, 토큰, 지연, 비용이 남는가 | #20 대표 흐름 4건·직접 생성 13건의 generation 23개·프롬프트 버전·모델·usage·시각은 API로 확인. 실제 청구액은 미확인 |
 | 웹 화면 확인 | 이전 등록 본문의 등록 목록·정격 조회·보장값 부재 흐름은 사용자 제공 6장으로 확인 완료. 현재 본문 실행의 UI와 Timeline 탭은 미확인 |
 | 평가 점수가 트레이스에 연결되어 있는가 | 동결 v2 70문항 실행(#31, 11-04)에서 문항별 실행 점수와 답 5지표(`answer_metric`)가 트레이스 70개에 붙은 것을 확인(`evals/guides/preregister.md` #31 "Langfuse 기록 확인" 1~6). 그 뒤 실행(#35 · #37 · #38)도 같은 실행기로 점수를 붙였고, 그 연결은 따로 확인한 기록이 없다 |
-| `user_id`, `session_id`를 붙였는가 | 서비스 분석 트레이스는 `user_id` = 로그인 사용자 id, `session_id` = 대화(thread) id를 붙이고 질문 · 답 글은 보내지 않는다(`backend/services/langfuse_prompts.py`의 `publish_analysis_trace`). 시험 `tests/services/test_langfuse_prompts.py::test_analysis_trace_carries_user_and_thread_without_question`으로 확인했다. 평가 실행은 `session_id` = 평가 한 세트다(v3 50문항 = 트레이스 50개, 예: `gate-v3_draft-1110-0040-set1`). 배포본의 서비스 분석 트레이스가 Langfuse에 들어오는지는 확인하지 못했다. 11-10~11 운영 스모크는 실제 모델 분석을 돌렸지만(28단계 중 4 · 5 · 9단계가 실제 LLM 호출, 예: `scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json`) 서버 로그에 Langfuse `Failed to export spans 403 Forbidden`이 찍혔고, 옛 리비전(`716c6d6` · `b884849`)에서도 11-10부터 나던 것이라 원인은 못 찾았다(`docs/worklog/jeongun.md` 11-11 항목) |
+| `user_id`, `session_id`를 붙였는가 | 서비스 분석 트레이스는 `user_id` = 로그인 사용자 id, `session_id` = 대화(thread) id를 붙이고 질문 · 답 글은 보내지 않는다(`backend/services/langfuse_prompts.py`의 `publish_analysis_trace`). 시험 `tests/services/test_langfuse_prompts.py::test_analysis_trace_carries_user_and_thread_without_question`으로 확인했다. 평가 실행은 `session_id` = 평가 한 세트다(v3 50문항 = 트레이스 50개, 예: `gate-v3_draft-1110-0040-set1`). 배포본의 서비스 분석 트레이스는 Langfuse에 들어온다(11-13 캡처 `01-trace-list.jpg`, 아래 스크린샷 문단). 11-10~11 운영 스모크는 실제 모델 분석을 돌렸지만(28단계 중 4 · 5 · 9단계가 실제 LLM 호출, 예: `scripts/results/smoke/smoke_sojafit-api-559369539072.asia-northeast3.run.app_2026-11-11_042439.json`) 서버 로그에 Langfuse `Failed to export spans 403 Forbidden`이 찍혔다. 원인은 옛 Langfuse 프로젝트의 키가 거부당한 것이고, 11-12 12:29 KST에 새 프로젝트 키로 바꾼 뒤에는 실패 로그가 없다(기록 [`evals/results/d10/langfuse_403_2026-11-13.md`](evals/results/d10/langfuse_403_2026-11-13.md). 옛 프로젝트가 거부한 이유는 계정 화면을 못 봐 확인하지 못했다) |
 | 느림의 원인을 트레이스로 가려낸 사례 | v3 3세트(11-10, 세션 `gate-v3_draft-1110-0040-set1`)의 타임라인에서 두 곳을 찾았다. ① 판정 질문 v3-01(전체 8.6초): LLM이 아닌 품번 · 판 확인(코드)이 2.6초로 Supervisor 2.1초보다 길다 → 다음에 줄일 곳. ② 정격 조회 v3-20(전체 12.3초, 가장 느린 꼴): 첫 답이 일부만이라 다른 검색어로 한 번 더 찾아 답 쓰기 LLM이 2번 불린다(#49의 재검색). |
 
-대시보드 스크린샷: `docs/deliverables/langfuse/`에는 `.gitkeep`만 있다(G6, [docs/GATES.md](docs/GATES.md)). 캡처 작업 원시는 `evals/results/graph/2026-11-12-d9-langfuse-capture/`.
+대시보드 스크린샷: [`docs/deliverables/langfuse/`](docs/deliverables/langfuse/)에 3장이 있다(2026-11-13 10:13~10:15 KST 캡처, 프로젝트 `SojaFit_v2`, 설명 [DELIVERABLES.md](docs/deliverables/DELIVERABLES.md)). `01-trace-list.jpg`는 배포본 요청이 트레이스로 들어온 목록, `02-model-call-detail.jpg`는 한 트레이스의 에이전트 단계와 모델 호출(모델 · 시간 · 토큰 · 비용), `03-cost-dashboard.jpg`는 비용 대시보드다. 평가 점수가 트레이스에 붙어 보이는 화면은 아직 없다(G6 남은 일, [docs/GATES.md](docs/GATES.md)). 캡처 작업 원시는 `evals/results/graph/2026-11-12-d9-langfuse-capture/`.
 
 ### 11-11 트레이싱 대조·보완 (반복 평가 전)
 
@@ -573,7 +573,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 ## 11. 지금 이 서비스의 가장 큰 약점
 
 
-가장 큰 약점은 품번이 없는 조건형 검색과 표 주석이 행에 안 붙는 표(약 216)다. 전자는 후보 50 밖 실패가 남고, 후자는 값은 맞아도 행 단위 조건이 빠진다. 제출 쪽에서는 시연 영상 · Langfuse 캡처가 비어 게이트 G6 · G7을 막는다.
+가장 큰 약점은 품번이 없는 조건형 검색과 표 주석이 행에 안 붙는 표(약 216)다. 전자는 후보 50 밖 실패가 남고, 후자는 값은 맞아도 행 단위 조건이 빠진다. 제출 쪽에서는 시연 영상 파일이 없고 Langfuse 화면에서 평가 점수가 트레이스에 붙어 보이는 캡처가 없어 게이트 G6 · G7을 막는다.
 
 | 순위 | 약점 | 근거(이미 있는 재료) | 왜 아직 안 고쳤나 / 한계 |
 |---|---|---|---|
@@ -581,7 +581,7 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 2 | 표 주석이 행에 안 붙는 표 ≈216 | 5장 유형 6 · 위키 원장(원시는 미이관) | THERMAL·두 쪽 표 등. `table_suspects` 89건과 집합이 다르다. 동결셋 검색 지표로 재측정하지 않음 |
 | 3 | 배포 인젝션 T4가 흔들림 | 인젝션 HTTP 스모크 · 한도·극성·거절·429 | 11-12에 토큰 한도 상향 배포([SPEC.md](SPEC.md) 8.6절). 한도 올린 뒤 T4 재측정은 아직 |
 | 4 | 승인 대기(사람 기다린 시간) 값 없음 | 8장 · `scripts/eval/approval_wait_report.py` | 실사용 3회 뒤 채우기로 미룸 |
-| 5 | G6 캡처 · G7 시연 영상 파일 없음 | `docs/deliverables/langfuse/` · [`demo_script.md`](docs/deliverables/demo_script.md) | 스크립트 초안만 있음. 캡처·촬영은 D10 |
+| 5 | G7 시연 영상 파일 없음 · G6 점수 연결 화면 없음 | [`docs/deliverables/langfuse/`](docs/deliverables/langfuse/)(스크린샷 3장, 점수 화면 없음) · [`demo_script.md`](docs/deliverables/demo_script.md) | 영상은 스크립트 초안만 있음. 점수 연결 캡처는 아직 안 찍음 |
 | 6 | 대체재 거절 문구가 범용보다 덜 구체 | §10 v3-26 행 | Codex는 범위 밖·부족 스펙을 말하고, 우리는 품번 부족형 일반 거절에 가깝다 |
 
 고친 뒤에도 남은 약점: 판정표와 설명 글이 충돌하던 위험 실패(6절 C2)는 코드 판정표만 내게 막았고 D9 재확인(`evals/results/threads/claim_consistency_d9_recheck_2026-11-12.json`) 3건 모두 최종 답이 코드 판정표(`NOT_SUFFICIENT`)이고 `synth_text`가 비어 있다. 의미 검토 `semantic_summary`는 `pending_manual_review`라 검토 기록이 없다. 남은 약점은 위 표다.
@@ -600,11 +600,11 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 11-04 서비스 설정 대비 #25 1위의 사람 판정 v2 19문항 문항 목록 | 3-1절 | 없음 |
 | 이전 구성 측정(B · C · H · S 계열) 원시 | 3-C 14 · 15행의 비교 회차 | `evals/results/graph/2026-11-10-v3-haiku-sets/sources_2026-11-11.json`의 `not_copied` |
 
-미측정:
+미측정 · 해석 주의:
 
 | 항목 | 비고 |
 |---|---|
-| v3 50문항의 검색 Recall@5 · MRR | 목표 0.95(2절). `run_retrieval_v3.py` 결과 없음 |
+| v3 검색 Recall@5 · MRR | 측정했다. 검색만 돌리는 실행기(`run_retrieval_v3.py`) 21문항은 v1 · v4h 모두 0.8095로 같다([비교 원시](evals/results/chunking/v1-vs-v4h-2026-11-13/README.md). 후보 찾기 4문항을 품번 필터가 비워 상한이 17/21이다). 전체 그래프 실행 [`2026-11-13-citecheck-v3`](evals/results/graph/2026-11-13-citecheck-v3/report.json)의 검색 21문항은 문서 · 쪽 Recall@5 1.0, 쪽 MRR 0.9762다. 0.95 목표(2절)는 후자 기준으로 충족한다. 전자는 청커를 구별하지 못하는 실행기 한계의 수치다 |
 | 운영 API별 임베딩 Recall@5 · MRR · 1,000청크 비용 | 1절 API 재검증 규칙 |
 | 사람이 승인을 기다린 시간 | 8장 |
 | 실제 청구액, Voyage 임베딩 가격 | 8장 |
@@ -613,5 +613,4 @@ docker compose run --rm --no-deps -e DEMO_MODE=0 -v "${PWD}/evals:/app/evals" -v
 | 배포 HTTP · 계정 격리 · 실제 검색 DB를 거친 공격, 인코딩을 바꾼 유출 | 6절 |
 | D9 재확인 3건의 의미 검토 | 11절. 원시 `semantic_summary`가 `pending_manual_review` |
 | 4절 체크포인트 재개 · 계정 분리의 현재 코드 재기록 | 기록(`local_g4_isolation_2026-11-09.json`, 11-09 `jeongun-8`) 뒤 `backend/conversations/memory_service.py`가 바뀜 |
-| 배포본 서비스 분석 트레이스의 Langfuse 수신 | 7장 |
-| Langfuse 대시보드 스크린샷 3장 | 7장 |
+| Langfuse 대시보드에서 평가 점수가 트레이스에 붙어 보이는 화면 | 7장. 스크린샷 3장에는 점수 화면이 없다 |
