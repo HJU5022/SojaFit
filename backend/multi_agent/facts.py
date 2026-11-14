@@ -107,3 +107,17 @@ def make_lookup(check, specs=None):
 def facts_node(state: dict, *, lookup=None) -> dict:
     """사실 확인 노드. lookup(state) → Facts를 넘기지 않으면 확인 없이 비워 둔다(Supervisor가 질문만 보고 판단)."""
     return {'facts': (lookup(state) if lookup else Facts()).model_dump(mode='json'), 'path': ['사실 확인']}
+
+
+def with_prefetch(lookup, prefetch):
+    """사실 확인(lookup)이 품번을 확정하면 그 품번으로 prefetch(품번 목록)를 바로 부른다. 결과는 바꾸지 않는다.
+
+    [왜] 웹 근거는 내부 근거가 모자라다고 판단한 뒤에야 출발해 그 시간이 응답에 더해졌다(사전 등록 2026-11-14).
+    품번이 확정되는 이 시점에 공식 PDF 받기를 옆에서 시작하면 Supervisor 계획(LLM)과 시간이 겹친다.
+    """
+    def run(state: dict) -> Facts:
+        facts = lookup(state)
+        prefetch(list(facts.parts))
+        return facts
+    return run
+

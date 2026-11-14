@@ -284,7 +284,7 @@ class Conversations:
         from functools import update_wrapper
         from backend.graph.mcp_retriever import StdioMcpRetriever
         from backend.multi_agent.build import build_graph
-        from backend.multi_agent.facts import make_lookup
+        from backend.multi_agent.facts import make_lookup, with_prefetch
         from backend.rag.card_find import default_find
         from backend.rag.card_specs import default_specs
         from backend.rag.retrieve import retrieve
@@ -305,7 +305,8 @@ class Conversations:
             web_search_fallback=timed_tool('grade3_reference', exa.search_grade3_reference) if web_enabled else None,
             judge_web_search_fallback=timed_tool('grade3_reference_judge', exa.search_grade3_reference) if web_enabled else None,
             judge_enabled=True,
-            lookup=make_lookup(mcp.check, specs.doc_rows), specs=update_wrapper(timed_tool('specs',specs), specs),
+            lookup=with_prefetch(make_lookup(mcp.check, specs.doc_rows), exa.prefetch) if web_enabled else make_lookup(mcp.check, specs.doc_rows),
+            specs=update_wrapper(timed_tool('specs',specs), specs),
             find=update_wrapper(timed_tool('find',find), find), checkpointer=self.saver, store=None if self.mode == 'demo' else self.store)
 
     @staticmethod

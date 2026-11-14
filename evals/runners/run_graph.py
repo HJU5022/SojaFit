@@ -191,6 +191,8 @@ def make_app(multi: bool, stack: ExitStack):
         web = {"web_enabled": True, "web_search": timed_tool("grade2_datasheet", exa.search_grade2_evidence),
                "web_search_fallback": timed_tool("grade3_reference", exa.search_grade3_reference),
                "judge_web_search_fallback": timed_tool("grade3_reference_judge", exa.search_grade3_reference)}
+        from backend.multi_agent.facts import with_prefetch
+        tools["lookup"] = with_prefetch(lookup, exa.prefetch)  # [왜] 서비스와 같은 조립. 미리 출발은 WEB_PREFETCH=1일 때만 실제로 움직인다
     return build_multi(chat=llm.node_chat, retriever=timed_tool("search", retrieve), judge_enabled=True, **tools, **web), warm_eval
 
 
