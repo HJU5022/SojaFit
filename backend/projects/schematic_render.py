@@ -26,7 +26,8 @@ from backend.projects.schematic import (
     COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
 )
 from backend.projects.schematic_source import (
-    ExternalSchematicInvalidSource, ExternalSchematicUpstreamError, VerifiedSchematicSource,
+    ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError,
+    VerifiedSchematicSource,
 )
 
 MIB = 1024 * 1024
@@ -451,6 +452,8 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
                     return sheets
                 except KicadServiceUnavailable:
                     raise ExternalSchematicUpstreamError("KiCad를 사용할 수 없습니다.") from None
+                except ExternalSchematicRateLimited:
+                    raise
                 except (ValueError, OSError, RuntimeError, zipfile.BadZipFile) as exc:
                     if isinstance(exc, ExternalSchematicUpstreamError):
                         raise

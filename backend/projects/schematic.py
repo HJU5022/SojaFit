@@ -8,7 +8,9 @@ from typing import Any
 import subprocess
 from pathlib import Path
 
-from backend.projects.schematic_source import ExternalSchematicInvalidSource, ExternalSchematicUpstreamError
+from backend.projects.schematic_source import (
+    ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError,
+)
 
 COMMAND_TIMEOUT_SECONDS = 30
 KICAD_CLI = os.getenv("KICAD_CLI", "kicad-cli")
@@ -103,6 +105,19 @@ def render_remote_kicad(source: Any, *, client: Any = None) -> tuple[bytes, ...]
         response = client.post(url + "/render", json=body, headers=_renderer_headers(url))
         if response.status_code == 422:
             raise ExternalSchematicInvalidSource("KiCad 원본이 유효하지 않습니다.")
+        if response.status_code == 429 or (
+                response.status_code == 503 and "retry-after" in response.headers) or (
+                response.status_code == 403 and (
+                    response.headers.get("x-ratelimit-remaining") == "0"
+                    or "retry-after" in response.headers)):
+            try:
+                retry_after = min(3600, max(1, int(response.headers.get("retry-after", "60"))))
+            except ValueError:
+                retry_after = 60
+            raise ExternalSchematicRateLimited(
+                retry_after, host=url.split("/", 3)[2], phase="renderer",
+                status_code=response.status_code,
+            )
         if response.status_code != 200:
             raise KicadServiceUnavailable("KiCad 렌더러가 변환에 실패했습니다.")
         data = response.json()
@@ -178,6 +193,11 @@ try:
             return {"sheets": encoded}
         except (ValueError, InvalidKicadProject, ExternalSchematicInvalidSource):
             raise HTTPException(status_code=422, detail="invalid KiCad source") from None
+        except ExternalSchematicRateLimited as error:
+            raise HTTPException(
+                status_code=503, detail="KiCad renderer unavailable",
+                headers={"Retry-After": str(error.retry_after)},
+            ) from None
         except (KicadServiceUnavailable, ExternalSchematicUpstreamError, OSError):
             raise HTTPException(status_code=503, detail="KiCad renderer unavailable") from None
 except ImportError:  # pragma: no cover - dependency is present in the service image

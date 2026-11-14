@@ -11,7 +11,8 @@ from PIL import Image
 
 from backend.projects import schematic_render as render
 from backend.projects.schematic_source import (
-    ExternalSchematicInvalidSource, ExternalSchematicUpstreamError, VerifiedSchematicSource,
+    ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError,
+    VerifiedSchematicSource,
 )
 
 
@@ -730,7 +731,6 @@ def test_voltage_is_not_proven_by_page_url_or_conflicting_body(page, text, linke
 
 
 def test_official_link_verification_preserves_rate_limit(monkeypatch):
-    from backend.projects.schematic_source import ExternalSchematicRateLimited
     monkeypatch.setattr(render, '_public_asset', lambda *args, **kwargs: (b'pdf-placeholder', 'application/pdf'))
     monkeypatch.setattr(render, '_pdf_identity_text', lambda data: '')
     with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(429, headers={'retry-after': '30'}))) as client:
@@ -738,3 +738,69 @@ def test_official_link_verification_preserves_rate_limit(monkeypatch):
             render.inspect_public_schematic('https://cdn.sparkfun.com/board-schematic.pdf', 'pdf',
                 'SparkFun Board 3.3V', page_url='https://www.sparkfun.com/board', client=client)
     assert error.value.retry_after == 30
+
+
+@pytest.mark.parametrize('status,headers', [
+    (429, {'retry-after': '21'}),
+    (403, {'x-ratelimit-remaining': '0', 'retry-after': '22'}),
+])
+def test_selected_kicad_download_preserves_rate_limit(status, headers):
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=('board.kicad_sch',), expected_sheets=1)
+
+    def respond(request):
+        return httpx.Response(status, headers=headers, request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            render.render_external_schematic(source, client=client)
+    assert error.value.retry_after in {21, 22}
+    assert error.value.status_code == status
+
+
+def test_remote_renderer_rate_limit_preserves_retry_after(monkeypatch):
+    from backend.projects import schematic
+
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer:8000')
+    response = httpx.Response(503, headers={'retry-after': '33'})
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: response))
+    try:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            schematic.render_remote_kicad(replace(SOURCE, asset_kind='kicad', asset_paths=()), client=client)
+    finally:
+        client.close()
+    assert error.value.retry_after == 33
+    assert error.value.status_code == 503
+
+
+def test_remote_renderer_plain_upstream_503_is_not_rate_limited(monkeypatch):
+    from backend.projects import schematic
+
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer:8000')
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(503)))
+    try:
+        with pytest.raises(schematic.KicadServiceUnavailable):
+            schematic.render_remote_kicad(replace(SOURCE, asset_kind='kicad', asset_paths=()), client=client)
+    finally:
+        client.close()
+
+
+def test_renderer_endpoint_returns_503_and_retry_after_for_rate_limit(monkeypatch):
+    from backend.projects import schematic
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(
+        __import__('backend.projects.schematic_render', fromlist=['render_external_schematic']),
+        'render_external_schematic',
+        lambda source: (_ for _ in ()).throw(ExternalSchematicRateLimited(44, status_code=429)),
+    )
+    with pytest.raises(HTTPException) as error:
+        schematic.renderer_render({'source': {
+            'repository': 'a/b', 'commit': 'a' * 40, 'license': 'MIT', 'attribution': 'a',
+            'repository_url': '', 'source_url': '', 'source_file': 'board.kicad_sch',
+            'asset_kind': 'kicad', 'asset_paths': [], 'root_schematic': 'board.kicad_sch',
+            'expected_sheets': 1,
+        }})
+    assert error.value.status_code == 503
+    assert error.value.headers == {'Retry-After': '44'}
