@@ -32,6 +32,12 @@ def schematic_picture():
     return stream.getvalue()
 
 
+@pytest.fixture
+def verified_image_page(monkeypatch):
+    # Identity/size unit tests isolate the page gate; its HTTP boundary is tested separately.
+    monkeypatch.setattr(render, "_verify_image_page", lambda *args, **kwargs: None)
+
+
 def fetch(data, mime, kind="png", **kwargs):
     source = replace(SOURCE, asset_kind=kind, asset_paths=(f"board.{kind}",) if kind != "kicad" else ())
     if "expected_sheets" in kwargs:
@@ -262,6 +268,93 @@ def test_public_pdf_fingerprint_is_single_page_only():
     assert len(digest) == 64 and count == 1
 
 
+@pytest.mark.parametrize("url,title", [
+    ("https://example.org/symbol-library/schematic/driver.png", "Adafruit MOSFET Driver"),
+    ("https://example.org/symbol%2Dlibrary/schematic/driver.svg", "Adafruit MOSFET Driver"),
+    ("https://example.org/schematic.png", "Adafruit MOSFET Driver module symbol"),
+    ("https://example.org/pinout/driver-schematic.pdf", "Adafruit MOSFET Driver"),
+    ("https://example.org/driver-schematic.pdf", "Adafruit MOSFET Driver block diagram"),
+])
+def test_symbol_asset_is_rejected_before_download(monkeypatch, url, title):
+    monkeypatch.setattr(render, "_public_asset", lambda *a, **kw: pytest.fail("unexpected symbol download"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(url, "png", "Adafruit MOSFET Driver", title=title,
+                                        source_file=url.rsplit("/", 1)[-1])
+
+
+@pytest.mark.parametrize("html", [
+    '<title>Adafruit MOSFET Driver schematic</title><h1>Schematic</h1><img src="/assets/driver.png">',
+    '<h2>Downloads</h2><a href="/other.png">Schematic</a><img src="/assets/driver.png">',
+    '<h2>Schematic</h2><h2>Product images</h2><img src="/assets/driver.png">',
+])
+def test_unmarked_image_requires_file_specific_schematic_evidence(html):
+    png = schematic_picture()
+    url = "https://example.org/assets/driver.png"
+    requests = []
+    def handle(request):
+        requests.append(str(request.url))
+        if str(request.url) == url:
+            return httpx.Response(200, headers={"Content-Type": "image/png"}, content=png)
+        return httpx.Response(200, headers={"Content-Type": "text/html"}, text=html)
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.inspect_public_schematic(url, "png", "Adafruit MOSFET Driver",
+                title="Adafruit MOSFET Driver schematic", page_url="https://example.org/driver", client=client)
+    assert url not in requests
+
+
+@pytest.mark.parametrize("kind,html", [
+    ("png", '<h2>Schematic and Fab Print</h2><img src="/assets/driver.png">'),
+    ("png", '<h2>Downloads</h2><a href="/assets/driver.png">Circuit diagram</a>'),
+    ("svg", '<h2>Downloads</h2><img src="/assets/driver.svg" alt="Schematic">'),
+])
+def test_unmarked_normal_image_retains_exact_page_evidence(kind, html):
+    data = schematic_picture() if kind == "png" else b'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><path d="M10 10L100 100"/></svg>'
+    url = "https://example.org/assets/driver." + kind
+    def handle(request):
+        if str(request.url) == url:
+            return httpx.Response(200, headers={"Content-Type": "image/png" if kind == "png" else "image/svg+xml"}, content=data)
+        return httpx.Response(200, headers={"Content-Type": "text/html"}, text=html)
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        digest, count = render.inspect_public_schematic(url, kind, "Adafruit MOSFET Driver",
+            title="Adafruit MOSFET Driver", page_url="https://example.org/driver.md", client=client)
+    assert len(digest) == 64 and count == 1
+
+
+def test_image_page_rate_limit_is_not_hidden():
+    from backend.projects.schematic_source import ExternalSchematicRateLimited
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(429, headers={"Retry-After": "77"}))) as client:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            render.inspect_public_schematic("https://example.org/assets/driver.png", "png", "Driver",
+                page_url="https://example.org/driver", client=client)
+    assert error.value.retry_after == 77
+
+
+def test_image_direct_url_without_page_evidence_is_rejected(monkeypatch):
+    monkeypatch.setattr(render, "_public_asset", lambda *a, **kw: pytest.fail("unexpected unverified image download"))
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic("https://example.org/driver.png", "png", "Driver",
+                                        title="Driver schematic", page_url="https://example.org/driver.png")
+
+
+def test_small_public_schematic_survives_symbol_guard():
+    stream = io.BytesIO()
+    Image.new("RGB", (333, 208), "white").save(stream, format="PNG")
+    url = "https://circuitcanvas.b-cdn.net/projects/adafruit-mosfet-driver-circuit-schematic.png"
+    def handle(request):
+        if str(request.url) == url:
+            return httpx.Response(200, headers={"Content-Type": "image/png"}, content=stream.getvalue())
+        return httpx.Response(200, headers={"Content-Type": "text/html"},
+                              text=f'<h2>Circuit diagram</h2><img src="{url}">')
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        digest, sheets = render.inspect_public_schematic(
+            url, "png", "Adafruit MOSFET Driver",
+            title="Adafruit MOSFET Driver complete circuit schematic with MOSFET symbols",
+            source_file=url.rsplit("/", 1)[-1], page_url="https://circuitcanvas.b-cdn.net/projects/driver", client=client,
+        )
+    assert len(digest) == 64 and sheets == 1
+
+
 @pytest.mark.parametrize("filename", ["pico-datasheet.pdf", "pico-product-brief.pdf",
                                       "pico-2-schematic.pdf", "pico-2-w-schematic.pdf"])
 def test_incompatible_artifact_name_is_rejected_before_download(monkeypatch, filename):
@@ -327,14 +420,31 @@ def test_atp_request_rejects_generic_redboard_file_even_if_pdf_mentions_atp(monk
     ("SparkFun TMP102", "https://cdn.sparkfun.com/TMP102-Qwiic-Schematic.pdf", "SparkFun TMP102"),
     ("Arduino Nano", "https://docs.arduino.cc/resources/schematics/Nano-Every-schematics.pdf", "Arduino Nano"),
 ])
-def test_public_identity_rejects_observed_mismatches(monkeypatch, query, url, title):
+def test_public_identity_rejects_observed_mismatches(monkeypatch, verified_image_page, query, url, title):
     png = picture("PNG", ["red"])
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     with pytest.raises(ExternalSchematicInvalidSource):
         render.inspect_public_schematic(url, "png", query, title=title)
 
 
-def test_public_identity_accepts_matching_official_png(monkeypatch):
+@pytest.mark.parametrize('query,url,title,text,accepted', [
+    ('Pololu DRV8833 Dual Motor Driver', 'https://circuitdigest.com/DRV8833-with-Arduino-Circuit-Diagram.png', 'Interfacing DRV8833 with Arduino', '', False),
+    ('Pololu DRV8833 Dual Motor Driver', 'https://a.pololu-files.com/picture/0J3872.png', 'Pololu DRV8833 schematic', '', True),
+    ('Teensy 4.0', 'https://www.pjrc.com/teensy/schematic40.png', 'Teensy schematic', '', True),
+    ('Raspberry Pi Pico', 'https://example.org/RPI-PICO-schematic.pdf', 'Pico schematic', 'RPI-PICO schematic', True),
+    ('Adafruit MOSFET Driver', 'https://cdn-learn.adafruit.com/driver.png', 'MOSFET Driver schematic', '', True),
+])
+def test_requested_manufacturer_identity_is_preserved(query, url, title, text, accepted):
+    kwargs = dict(title=title, page_url=url, source_url=url, source_file=url.rsplit('/', 1)[-1],
+                  kind='pdf' if text else 'png', pdf_text=text)
+    if accepted:
+        render._verify_public_identity(query, **kwargs)
+    else:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._verify_public_identity(query, **kwargs)
+
+
+def test_public_identity_accepts_matching_official_png(monkeypatch, verified_image_page):
     png = schematic_picture()
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     digest, count = render.inspect_public_schematic(
@@ -349,7 +459,7 @@ def test_public_identity_accepts_matching_official_png(monkeypatch):
     ("Pololu DRV8833 Dual Motor Driver schematic", "https://example.org/DRB8833-schematic.png", "DRV8833 dual motor driver"),
     ("SparkFun RedBoard Artemis ATP schematic", "https://example.org/RedBoard-Artemis-Whitesheet.pdf", "SparkFun RedBoard Artemis ATP"),
 ])
-def test_public_identity_rejects_live_false_positive_variants(monkeypatch, query, url, title):
+def test_public_identity_rejects_live_false_positive_variants(monkeypatch, verified_image_page, query, url, title):
     png = picture("PNG", ["red"])
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     with pytest.raises(ExternalSchematicInvalidSource):
@@ -363,7 +473,7 @@ def test_public_identity_rejects_live_false_positive_variants(monkeypatch, query
     ("라즈베리 파이 피코 W", "https://example.org/raspberry-pi-pico-schematic.png", "Raspberry Pi Pico schematic"),
     ("라즈베리파이 피코", "https://example.org/raspberry-pi-pico-w-schematic.png", "Raspberry Pi Pico W schematic"),
 ])
-def test_public_identity_rejects_opposite_pico_variant(monkeypatch, query, url, title):
+def test_public_identity_rejects_opposite_pico_variant(monkeypatch, verified_image_page, query, url, title):
     png = schematic_picture()
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     with pytest.raises(ExternalSchematicInvalidSource):
@@ -378,7 +488,7 @@ def test_public_identity_rejects_opposite_pico_variant(monkeypatch, query, url, 
     ("라즈베리파이 피코 W", "https://example.org/raspberry-pi-pico-w-schematic.png"),
     ("라즈베리 파이 피코 W", "https://example.org/raspberry-pi-pico-w-schematic.png"),
 ])
-def test_public_identity_accepts_matching_pico_variant(monkeypatch, query, url):
+def test_public_identity_accepts_matching_pico_variant(monkeypatch, verified_image_page, query, url):
     png = schematic_picture()
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     digest, count = render.inspect_public_schematic(url, "png", query)
@@ -424,7 +534,7 @@ def test_public_identity_rejects_pico_page_only_variant(monkeypatch):
         )
 
 
-def test_public_identity_allows_qt_py_rp2040_filename_with_title_model(monkeypatch):
+def test_public_identity_allows_qt_py_rp2040_filename_with_title_model(monkeypatch, verified_image_page):
     png = schematic_picture()
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     digest, count = render.inspect_public_schematic(
@@ -440,14 +550,14 @@ def test_public_identity_allows_qt_py_rp2040_filename_with_title_model(monkeypat
     ("SparkFun OpenLog Artemis", "https://cdn.sparkfun.com/assets/OpenLog_Artemis_9DoF_IMU_Schematic.pdf", "SparkFun OpenLog Artemis 9DoF IMU"),
     ("SparkFun TMP102 Breakout", "https://cdn.sparkfun.com/assets/TMP102_Hookup_Guide_Web.pdf", "TMP102 Hookup Guide"),
 ])
-def test_public_identity_rejects_artifact_variant_mismatch(monkeypatch, query, url, title):
+def test_public_identity_rejects_artifact_variant_mismatch(monkeypatch, verified_image_page, query, url, title):
     png = picture("PNG", ["red"])
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (png, "image/png"))
     with pytest.raises(ExternalSchematicInvalidSource):
         render.inspect_public_schematic(url, "png", query, title=title)
 
 
-def test_public_identity_rejects_tiny_png(monkeypatch):
+def test_public_identity_rejects_tiny_png(monkeypatch, verified_image_page):
     tiny = io.BytesIO()
     Image.new("RGB", (32, 32), "red").save(tiny, format="PNG")
     monkeypatch.setattr(render, "_public_asset", lambda *args, **kwargs: (tiny.getvalue(), "image/png"))
@@ -456,3 +566,75 @@ def test_public_identity_rejects_tiny_png(monkeypatch):
             "https://files.seeedstudio.com/assets/optimized.png", "png",
             "Seeed XIAO ESP32C3", title="Seeed XIAO ESP32C3 schematic",
         )
+@pytest.mark.parametrize('page,linked,voltage,accepted', [
+    ('https://www.sparkfun.com/board', True, '3.3 V', True),
+    ('https://unverified.example.org/board', True, '3.3 V', False),
+    ('https://www.sparkfun.com/board', False, '3.3 V', False),
+    ('https://www.sparkfun.com/board', True, '33 V', False),
+    ('https://www.sparkfun.com/board', True, 'unknown', False),
+])
+def test_textless_pdf_requires_actual_official_product_link(monkeypatch, page, linked, voltage, accepted):
+    import httpx
+    url = 'https://cdn.sparkfun.com/datasheets/Kits/Breadboard%20Power%20Supply%20v10.pdf'
+    query = 'SparkFun Breadboard Power Supply 5V 3.3V'
+    title = f'SparkFun Breadboard Power Supply 5 V/{voltage}'
+    monkeypatch.setattr(render, '_public_asset', lambda *args, **kwargs: (b'pdf-placeholder', 'application/pdf'))
+    monkeypatch.setattr(render, '_pdf_identity_text', lambda data: '\n')
+    monkeypatch.setattr(render, '_bounded_pdf_schematic_pages', lambda data: (0,))
+    def handle(request):
+        assert request.method == 'GET' and str(request.url) == page
+        href = url if linked else url.replace('v10.pdf', 'v20.pdf')
+        return httpx.Response(200, text=f'<title>{title}</title><a href="{href}">Schematic</a>',
+                              headers={'content-type': 'text/html'})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        inspect = lambda: render.inspect_public_schematic(url, 'pdf', query,
+            title=query + ' schematic', page_url=page, source_file='Breadboard Power Supply v10.pdf', client=client)
+        if accepted:
+            assert inspect()[1] == 1
+        else:
+            with pytest.raises(ExternalSchematicInvalidSource):
+                inspect()
+
+
+def test_voltage_decimal_is_not_removed_during_identity_check():
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity('Board 3.3V', title='Board 3.3V', page_url='https://example.org/board',
+            source_file='board-schematic.pdf', source_url='https://example.org/board-schematic.pdf',
+            kind='pdf', pdf_text='Board 33V schematic')
+
+
+@pytest.mark.parametrize('query', ['Board 5V 3.3V', 'Board 5 V 3.3 V'])
+def test_voltage_spacing_and_datasheets_directory_are_supported(query):
+    render._verify_public_identity(query, title=query, page_url='https://cdn.sparkfun.com/datasheets/board.pdf',
+        source_file='board-schematic.pdf', source_url='https://cdn.sparkfun.com/datasheets/board-schematic.pdf',
+        kind='pdf', pdf_text='Board 5 V / 3.3 V schematic')
+
+
+def test_verified_voltage_link_does_not_override_revision_check():
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity('SparkFun Pro Micro v13 5V', title='SparkFun Pro Micro v13 5V',
+            page_url='https://www.sparkfun.com/board', source_file='Pro-Micro-v14-schematic.pdf',
+            source_url='https://cdn.sparkfun.com/datasheets/Pro-Micro-v14-schematic.pdf', kind='pdf',
+            linked_identity='SparkFun Pro Micro v13 5 V schematic')
+
+
+@pytest.mark.parametrize('page,text,linked', [
+    ('https://example.org/board-3.3V', '', ''),
+    ('https://www.sparkfun.com/board', 'Board 33V schematic', 'Board 3.3V schematic'),
+])
+def test_voltage_is_not_proven_by_page_url_or_conflicting_body(page, text, linked):
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity('Board 3.3V', title='Board 3.3V schematic', page_url=page,
+            source_file='board-schematic.pdf', source_url='https://cdn.sparkfun.com/board-schematic.pdf',
+            kind='pdf', pdf_text=text, linked_identity=linked)
+
+
+def test_official_link_verification_preserves_rate_limit(monkeypatch):
+    from backend.projects.schematic_source import ExternalSchematicRateLimited
+    monkeypatch.setattr(render, '_public_asset', lambda *args, **kwargs: (b'pdf-placeholder', 'application/pdf'))
+    monkeypatch.setattr(render, '_pdf_identity_text', lambda data: '')
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(429, headers={'retry-after': '30'}))) as client:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            render.inspect_public_schematic('https://cdn.sparkfun.com/board-schematic.pdf', 'pdf',
+                'SparkFun Board 3.3V', page_url='https://www.sparkfun.com/board', client=client)
+    assert error.value.retry_after == 30

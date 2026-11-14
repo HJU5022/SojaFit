@@ -13,14 +13,14 @@ import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Callable
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 from xml.etree import ElementTree as ET
 
 import httpx
 from PIL import Image
 
 from backend.graph.netlist import _sexpr
-from backend.projects.external_circuit_search import canonical_product_query
+from backend.projects.external_circuit_search import canonical_product_query, is_non_circuit_asset
 from backend.projects.schematic import (
     COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
 )
@@ -460,6 +460,31 @@ def _identity_terms(query: str) -> tuple[str, ...]:
     )
 
 
+_VOLTAGE = re.compile(r"(?<![a-z0-9.])(\d+(?:\.\d+)?)\s*(mv|v)(?![a-z0-9])", re.I)
+
+
+def _voltage_tokens(text: str) -> set[tuple[str, str]]:
+    return {(number, unit.casefold()) for number, unit in _VOLTAGE.findall(unquote(text))}
+
+
+def _official_link_identity(query: str, page_url: str, source_url: str, *, client=None) -> str:
+    from backend.projects.external_circuit_search import _manufacturer_for, _page_assets, _page_asset_host_allowed
+
+    if (page_url == source_url or not _manufacturer_for(page_url)
+            or not _page_asset_host_allowed(source_url, page_url)):
+        return ""
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return _official_link_identity(query, page_url, source_url, client=owned)
+    voltage_terms = {_identity_compact(number + unit) for number, unit in _voltage_tokens(query)}
+    terms = set(_identity_terms(_VOLTAGE.sub(lambda match: "".join(match.groups()), query))) - voltage_terms
+    for url, label in _page_assets(page_url, client=client, required=True):
+        if (url == source_url and all(term in _identity_compact(label) for term in terms)
+                and _voltage_tokens(query) <= _voltage_tokens(label)):
+            return label
+    return ""
+
+
 def _pico_variant(identity: str) -> str | None:
     for variant in ("pico2w", "pico2", "picow", "pico"):
         if variant in identity:
@@ -467,7 +492,9 @@ def _pico_variant(identity: str) -> str | None:
     return None
 
 
-def _verify_artifact_name(query: str, source_file: str, source_url: str) -> None:
+def _verify_artifact_name(query: str, source_file: str, source_url: str, title: str) -> None:
+    if is_non_circuit_asset(source_url, f"{title} {source_file}"):
+        raise _invalid()
     filename = _identity_compact(source_file or urlsplit(source_url).path.rsplit("/", 1)[-1])
     if any(marker in filename for marker in _NON_SCHEMATIC_DOCUMENT_MARKERS):
         raise _invalid()
@@ -478,10 +505,20 @@ def _verify_artifact_name(query: str, source_file: str, source_url: str) -> None
 
 
 def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
-                            source_url: str, kind: str, pdf_text: str = "") -> None:
+                            source_url: str, kind: str, pdf_text: str = "", linked_identity: str = "") -> None:
     """Reject a valid image/PDF whose board variant is not the requested one."""
-    _verify_artifact_name(query, source_file, source_url)
-    query = canonical_product_query(query)
+    from backend.projects.external_circuit_search import _MANUFACTURER_ALIASES
+
+    _verify_artifact_name(query, source_file, source_url, title)
+    query = _VOLTAGE.sub(lambda match: "".join(match.groups()), canonical_product_query(query))
+    voltages = _voltage_tokens(query)
+    # Preserve decimal points; source text or a verified official link must support voltages.
+    # A linked page only supplements a PDF with no extractable voltage evidence.
+    if _voltage_tokens(pdf_text):
+        linked_identity = ""
+    if not voltages <= _voltage_tokens(" ".join((pdf_text, source_file, source_url, linked_identity))):
+        raise _invalid()
+    voltage_terms = {_identity_compact(number + unit) for number, unit in voltages}
     terms = _identity_terms(query)
     if not terms:
         return
@@ -493,6 +530,8 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
     # Numeric/model tokens and explicit variants must occur in the source identity.
     # This blocks e.g. ATP -> the general Artemis and LC -> Teensy 4.1.
     for term in terms:
+        if term in voltage_terms:
+            continue
         if any(char.isdigit() for char in term) or term in {
             "atp", "qwiic", "breakout", "lc", "nano", "every", "rp2040", "esp32c3", "esp32s2",
             "zero", "core2",
@@ -500,6 +539,12 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
             if term not in haystack or (kind == "pdf" and term not in text and term not in source_identity):
                 raise _invalid()
     query_identity = _identity_compact(query)
+    manufacturer_identity = _identity_compact(canonical_product_query(
+        f"{title} {page_url} {source_file} {source_url} {pdf_text} {linked_identity}"))
+    for aliases in _MANUFACTURER_ALIASES.values():
+        if (any(_identity_compact(alias) in query_identity for alias in aliases)
+                and not any(_identity_compact(alias) in manufacturer_identity for alias in aliases)):
+            raise _invalid()
     if any(marker in haystack for marker in _ACCESSORY_MARKERS) and "shield" not in query_identity:
         raise _invalid()
     if "qwiic" in artifact_identity and "qwiic" not in query_identity:
@@ -552,15 +597,37 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
                 raise _invalid()
 
 
+def _verify_image_page(page_url: str, source_url: str, *, client=None) -> None:
+    from backend.projects.external_circuit_search import _page_assets
+
+    if not page_url or page_url == source_url:
+        raise _invalid()
+    if client is None:
+        with httpx.Client(trust_env=False) as owned:
+            return _verify_image_page(page_url, source_url, client=owned)
+    # Search also reads the HTML counterpart of an indexed Markdown page.
+    page_url = page_url[:-3] if page_url.endswith(".md") else page_url
+    # shortcut: verify publisher evidence, not image semantics; use content review if mislabelling persists.
+    if not any(url == source_url for url, _ in _page_assets(
+            page_url, client=client, required=True, require_schematic_context=True)):
+        raise _invalid()
+
+
 def inspect_public_schematic(url: str, kind: str, query: str, *, title: str = "",
                              page_url: str = "", source_file: str = "",
                              client: httpx.Client | None = None) -> tuple[str, int]:
     """Download, identify, and fingerprint one public schematic in one pass."""
-    _verify_artifact_name(query, source_file, url)
+    _verify_artifact_name(query, source_file, url, title)
+    if kind in {"png", "svg"}:
+        _verify_image_page(page_url, url, client=client)
     data, _ = _public_asset(url, kind, client=client)
     pdf_text = _pdf_identity_text(data) if kind == "pdf" else ""
+    linked_identity = ""
+    if kind == "pdf" and not _voltage_tokens(pdf_text) and not _voltage_tokens(query) <= _voltage_tokens(
+            " ".join((source_file, url))):
+        linked_identity = _official_link_identity(canonical_product_query(query), page_url, url, client=client)
     _verify_public_identity(query, title=title, page_url=page_url, source_file=source_file,
-                            source_url=url, kind=kind, pdf_text=pdf_text)
+                            source_url=url, kind=kind, pdf_text=pdf_text, linked_identity=linked_identity)
     if kind == "png":
         _valid_png(data)
         with Image.open(io.BytesIO(data), formats=["PNG"]) as png:

@@ -1,13 +1,16 @@
 """Exa의 외부 자료 후보를 반환한다. 다운로드, 파일 저장, DB 변경은 수행하지 않는다."""
 import ipaddress
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 import httpx
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ExternalCircuitSearchError(RuntimeError):
@@ -133,6 +136,12 @@ def read_bounded_body(response: httpx.Response, max_bytes: int) -> bytes:
 _WEB_ASSET_KIND = {".pdf": "pdf", ".png": "png", ".svg": "svg"}
 _SCHEMATIC_WORDS = re.compile(r"(?:schematic|schem|(?:^|[_-])sch(?=$|[_./-])|circuit[-_ ]?(?:diagram|drawing)|회로도)", re.I)
 _BAD_IMAGE_WORDS = re.compile(r"(?:photo|product|render|layout|footprint|pcb|fab|board[-_ ]?top|wiring|breadboard|hero|logo)", re.I)
+_NON_CIRCUIT_PATH = re.compile(
+    r"(?:^|[/_.\s-])(?:symbols?|symbol[-_ ]?librar(?:y|ies)|component[-_ ]?librar(?:y|ies)|"
+    r"pin[-_ ]?outs?|footprints?|parts?[-_ ]?placement|(?:block|functional)[-_ ]?diagrams?)(?=$|[/_.\s-])", re.I)
+_NON_CIRCUIT_LABEL = re.compile(
+    r"\b(?:(?:schematic|component|module)[-_ ]+symbol|symbol[-_ ]+librar(?:y|ies)|"
+    r"pin[-_ ]?out(?:[-_ ]+diagram)?|(?:block|functional)[-_ ]+diagram)\b", re.I)
 _OFFICIAL_MANUFACTURERS = {
     "sparkfun.com": "SparkFun Electronics",
     "adafruit.com": "Adafruit Industries",
@@ -184,56 +193,111 @@ _OFFICIAL_GITHUB_OWNERS = {
 
 class _SchematicPageParser(HTMLParser):
     """페이지에 공개된 회로도 링크만 수집한다. 스크립트는 해석하지 않는다."""
-    def __init__(self):
+    def __init__(self, *, require_schematic_context: bool = False):
         super().__init__(convert_charrefs=True)
+        self.require_schematic_context = require_schematic_context
         self.links: list[tuple[str, str]] = []
+        self.schematic_links: set[str] = set()
         self._heading: list[str] = []
+        self._sections: dict[int, list[str]] = {}
+        self._media: list[dict] = []
         self._heading_active = False
-        self._title: list[str] = []
+        self._title = ""
         self._title_active = False
         self._anchor: tuple[str, list[str]] | None = None
+
+    def _add_link(self, url: str, local_label: str) -> None:
+        section = " ".join(text for level, heading in self._sections.items() if level > 1 for text in heading)
+        if _SCHEMATIC_WORDS.search(urlsplit(url).path):
+            section += " " + " ".join(self._sections.get(1, []))
+        schematic = re.search(r"\bschematics?\b|\bcircuit[-_ ]+diagram\b|회로도", f"{section} {local_label}", re.I)
+        if self.require_schematic_context and not schematic:
+            return
+        if schematic:
+            self.schematic_links.add(url)
+        self.links.append((url, " ".join([self._title, *(text for heading in self._sections.values() for text in heading), local_label]).strip()))
 
     def handle_starttag(self, tag, attrs):
         values = dict(attrs)
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
             self._heading = []
+            level = int(tag[1])
+            self._sections = {number: text for number, text in self._sections.items() if number < level}
+            self._sections[level] = self._heading
             self._heading_active = True
+        if tag in {"figure", "table"}:
+            if len(self._media) >= 8:
+                raise ValueError("image context nesting limit")
+            self._media.append({"tag": tag, "images": [], "caption": [], "caption_depth": 0,
+                                "sections": self._sections.copy()})
+        if tag in {"figcaption", "caption", "th"}:
+            for scope in self._media:
+                scope["caption_depth"] += 1
         if tag == "title":
-            self._title = []
+            self._title = ""
             self._title_active = True
         if tag == "a" and values.get("href"):
             self._anchor = (values["href"], [])
+        image_urls = []
         for key in ("href", "src", "data-src"):
             value = values.get(key)
             if value and tag != "a":
-                self.links.append((value, " ".join([*self._heading, *self._title, values.get("alt") or ""]).strip()))
+                self._add_link(value, values.get("alt") or "")
+                image_urls.append(value)
         srcset = values.get("srcset")
         if srcset:
             for item in srcset.split(","):
                 value = item.strip().split()[0]
                 if value:
-                    self.links.append((value, " ".join([*self._heading, *self._title, values.get("alt") or ""]).strip()))
+                    self._add_link(value, values.get("alt") or "")
+                    image_urls.append(value)
+        if tag == "img":
+            if self._anchor is not None:
+                image_urls.append(self._anchor[0])
+            for scope in self._media:
+                scope["images"].append(image_urls)
 
     def handle_data(self, data):
+        for scope in self._media:
+            if scope["caption_depth"]:
+                scope["caption"].append(data)
         if self._anchor is not None:
             self._anchor[1].append(data)
         elif self._heading_active:
             self._heading.append(data)
         if self._title_active:
-            self._title.append(data)
+            # The title is copied into every link's bounded identity evidence.
+            self._title = (self._title + data)[:200]
 
     def handle_endtag(self, tag):
+        if tag in {"figcaption", "caption", "th"}:
+            for scope in self._media:
+                scope["caption_depth"] = max(0, scope["caption_depth"] - 1)
+        if self._media and tag == self._media[-1]["tag"]:
+            scope = self._media.pop()
+            caption = " ".join(scope["caption"])
+            if len(scope["images"]) == 1 and re.search(r"\bschematics?\b|\bcircuit[-_ ]+diagram\b|회로도", caption, re.I):
+                for url in dict.fromkeys(scope["images"][0]):
+                    self._add_link(url, caption)
+            self._sections = scope["sections"]
         if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
             self._heading_active = False
         if tag == "title":
             self._title_active = False
         if tag == "a" and self._anchor is not None:
             href, text = self._anchor
-            self.links.append((href, " ".join([*self._heading, *text]).strip()))
+            self._add_link(href, " ".join(text))
             self._anchor = None
 
 
+def is_non_circuit_asset(url: str, label: str = "") -> bool:
+    return bool(_NON_CIRCUIT_PATH.search(unquote(urlsplit(url).path))
+                or _NON_CIRCUIT_LABEL.search(label))
+
+
 def _asset_kind(url: str, label: str = "") -> str | None:
+    if is_non_circuit_asset(url, label):
+        return None
     path = urlsplit(url).path.casefold()
     suffix = next((suffix for suffix in _WEB_ASSET_KIND if path.endswith(suffix)), None)
     if suffix is None:
@@ -304,10 +368,12 @@ def _page_asset_host_allowed(asset_url: str, page_url: str) -> bool:
     return _same_publisher_host(asset_host, page_host) or _official_github_asset(asset_url, page_url) is not None
 
 
-def _page_assets(page_url: str, *, client: httpx.Client) -> tuple[tuple[str, str], ...]:
+def _page_assets(page_url: str, *, client: httpx.Client, required: bool = False,
+                 require_schematic_context: bool = False) -> tuple[tuple[str, str], ...]:
     """Fetch one public HTML page, bounded, to locate its schematic asset."""
     if _safe_url(page_url) is None or not page_url.startswith("https://"):
         return ()
+    from backend.projects.schematic_source import ExternalSchematicError
     try:
         from backend.projects.schematic_discovery import download_bounded
         body, mime = download_bounded(
@@ -317,17 +383,25 @@ def _page_assets(page_url: str, *, client: httpx.Client) -> tuple[tuple[str, str
         )
         if "text/html" not in mime.lower():
             return ()
-        parser = _SchematicPageParser()
+        parser = _SchematicPageParser(require_schematic_context=require_schematic_context)
         parser.feed(body.decode("utf-8", "replace"))
+    except ExternalSchematicError:
+        if required:
+            raise
+        return ()
     except (httpx.HTTPError, ValueError, UnicodeError, RuntimeError):
         return ()
     found = []
     for raw, label in parser.links:
         url = urljoin(page_url, raw)
         url = _official_github_asset(url, page_url) or url
-        if url == page_url or _safe_url(url) is None or not _page_asset_host_allowed(url, page_url):
+        if (url == page_url or _safe_url(url) is None or not _page_asset_host_allowed(url, page_url)
+                or is_non_circuit_asset(url, label)):
             continue
         kind = _asset_kind(url, label)
+        if kind is None and raw in parser.schematic_links and not _BAD_IMAGE_WORDS.search(urlsplit(url).path):
+            kind = next((kind for suffix, kind in _WEB_ASSET_KIND.items()
+                         if urlsplit(url).path.casefold().endswith(suffix)), None)
         if kind is None and _SCHEMATIC_WORDS.search(label) and not urlsplit(url).path.rsplit("/", 1)[-1].count("."):
             kind = "png"
         if kind and (_SCHEMATIC_WORDS.search(urlsplit(url).path) or _SCHEMATIC_WORDS.search(label)):
@@ -425,7 +499,7 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
             kind = _asset_kind(source_url, f"{context} {label}")
             if kind is None and _SCHEMATIC_WORDS.search(label) and not urlsplit(source_url).path.rsplit("/", 1)[-1].count("."):
                 kind = "png"
-            if kind is None:
+            if kind is None or is_non_circuit_asset(source_url, label):
                 continue
             ranked_candidates.append((source_url, label, kind))
         ranked_candidates.sort(key=lambda item: _candidate_priority(
@@ -471,6 +545,8 @@ def _search_public_schematics(query: str, limit: int = 5, *, client: httpx.Clien
         distinct.append(ref)
         if len(distinct) >= limit:
             break
+    LOGGER.info("schematic_search_candidates", extra={"phase": "manufacturer" if include_domains else "public",
+                                                     "raw_result_count": len(rows), "candidate_count": len(distinct)})
     return tuple(distinct)
 
 
@@ -543,4 +619,6 @@ def search_github_repositories(query: str, limit: int = 5, *, client: httpx.Clie
             found.setdefault(ref.repository_url.casefold(), ref)
         if len(found) == limit:
             break
+    LOGGER.info("schematic_search_candidates", extra={"phase": "github", "raw_result_count": len(rows),
+                                                     "candidate_count": len(found)})
     return tuple(found.values())
