@@ -74,7 +74,7 @@ export function Approval({ candidate, messageId, reviewer }: { candidate: Candid
     <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : otherPart ? '다른 후보 승인됨' : '승인 전'}</p>
     {approval && <p className="property-note">{reviewer}</p>}
     {otherPart && <p className="property-note">이 답에서는 {otherPart}를 이미 승인했습니다.</p>}
-    {quote && <p className="property-note">견적 {quote.part_number} × {quote.quantity}</p>}
+    {quote && <><p className="property-note">견적 {quote.part_number} × {quote.quantity}</p><PriceLookup key={quote.id} parts={[quote.part_number]} quantity={quote.quantity} /></>}
     {!approval && !otherPart && <button className="btn btn-primary" disabled={busy || messageId === null || saved.isPending} onClick={() => void act(() => approveMessage(messageId!, candidate.part, candidate.verdict))}>{busy ? '저장 중' : '검토하고 승인'}</button>}
     {approval && !quote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor="quantity">수량</label><input id="quantity" name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
     {saved.error ? <p className="notice" role="alert" {...requestIdProps(saved.error)}>저장된 승인 상태를 불러오지 못했습니다. {errorMessage(saved.error)}</p> : null}

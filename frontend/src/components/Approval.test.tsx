@@ -44,3 +44,31 @@ it('sends only the quantity when saving a quote and then shows it', async () => 
   await waitFor(() => expect(screen.getByText('견적 SS34 × 1')).toBeInTheDocument())
   expect(bodies).toEqual(['{"quantity":1}'])
 })
+
+it('shows the quantity-aware live price with its notice, and never sends price in any body or storage', async () => {
+  const sent: string[] = []
+  const live = { available: true, source: 'Mouser Electronics', fetched_at: '2026-11-14T00:00:00Z', parts: [{ part_number: 'SS34', manufacturer: 'M', availability: '100 재고', product_url: null,
+    price_breaks: [{ quantity: 1, price: '$0.50', currency: 'USD' }, { quantity: 100, price: '$0.30', currency: 'USD' }] }] }
+  network((path, init) => {
+    if (init.body) sent.push(String(init.body))
+    if (path === '/api/messages/9/approval') return Response.json({ approval: saved, quotes: [{ id: 5, approval_id: 3, part_number: 'SS34', quantity: 120 }] })
+    if (path.startsWith('/api/prices?')) return Response.json(live)
+    return failure('NOT_FOUND', '없음', 404)
+  })
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText('120개 단가')).toBeInTheDocument()
+  expect(screen.getAllByText('$0.30 USD')).toHaveLength(2)
+  expect(screen.getByText('36.00 USD')).toBeInTheDocument()
+  expect(screen.getByText(/실시간 조회 · 조회 시각.*세금·배송비·환율 미포함 · 저장하지 않음/)).toBeInTheDocument()
+  expect(sent).toEqual([])
+  expect(JSON.stringify({ ...localStorage })).not.toMatch(/0\.30/)
+})
+
+it('shows the no-key notice when prices are unavailable', async () => {
+  network(path => path === '/api/messages/9/approval' ? Response.json({ approval: saved, quotes: [{ id: 5, approval_id: 3, part_number: 'SS34', quantity: 1 }] })
+    : Response.json({ available: false, source: 'Mouser Electronics', reason: 'no_key', message: 'Mouser 키가 없어 조회하지 않아요.', parts: [] }))
+  show()
+  fireEvent.click(await screen.findByRole('button', { name: '가격·재고 조회' }))
+  expect(await screen.findByText('Mouser 키가 없어 조회하지 않아요.')).toBeInTheDocument()
+})
