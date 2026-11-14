@@ -112,7 +112,8 @@ export function ExternalSchematic({ name, zoom, viewReset = 0, defaultComponentT
   const [searched, setSearched] = useState('')
   const [selectedSource, setSelectedSource] = useState('')
   const term = text.trim()
-  const valid = term.length >= 2 && term.length <= 200
+  const maxLength = componentType === 'diode' ? 194 : 200
+  const valid = term.length >= 2 && term.length <= maxLength
   const result = useQuery({ queryKey: ['external-schematic', searched, selectedSource, ...(componentType ? [componentType] : [])], queryFn: ({ signal }) => findSchematic(searched, signal, selectedSource, componentType || undefined), enabled: searched !== '', retry: false, staleTime: 5 * 60_000,
     refetchOnWindowFocus: false, refetchOnReconnect: false, refetchOnMount: false })
   function search(event: FormEvent<HTMLFormElement>) {
@@ -126,8 +127,8 @@ export function ExternalSchematic({ name, zoom, viewReset = 0, defaultComponentT
     {!disabled(result.error) && <form onSubmit={search}>
       <label className="field"><span>검색 대상</span><select className="input" value={componentType} onChange={event => { setComponentType(event.target.value as '' | 'diode'); setSearched(''); setSelectedSource('') }}><option value="">제품·보드 회로도</option><option value="diode">다이오드 사용 회로</option></select></label>
       {componentType === 'diode' && <p className="field-hint">다이오드 품번을 입력하세요. 해당 부품과 관련된 회로 자료만 찾으며, 같은 이름의 다른 제품은 제외합니다.</p>}
-      <label className="field"><span>검색어 (올린 넷리스트의 프로젝트 이름과 다를 수 있습니다)</span><input className="input" value={text} onChange={event => { setText(event.target.value); setSearched(''); setSelectedSource('') }} maxLength={200} autoComplete="off" aria-describedby="schematic-rule" /></label>
-      <p className="field-hint" id="schematic-rule">2자 이상 200자 이하로 입력해 주세요.</p>
+      <label className="field"><span>검색어 (올린 넷리스트의 프로젝트 이름과 다를 수 있습니다)</span><input className="input" value={text} onChange={event => { setText(event.target.value); setSearched(''); setSelectedSource('') }} maxLength={maxLength} autoComplete="off" aria-describedby="schematic-rule" /></label>
+      <p className="field-hint" id="schematic-rule">2자 이상 {maxLength}자 이하로 입력해 주세요.</p>
       <div className="dialog-foot"><button className="btn btn-primary" disabled={!valid || result.isFetching}>{result.isFetching ? '찾는 중' : '원본 회로도 찾기'}</button></div>
     </form>}
     {result.isFetching && <div className="skeleton inset" role="status"><span className="sr-only">원본 회로도를 찾는 중입니다. 몇 초 걸릴 수 있습니다.</span><span className="skeleton-row" aria-hidden="true" /><span className="skeleton-row" aria-hidden="true" /></div>}

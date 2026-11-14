@@ -161,6 +161,38 @@ it('blocks queries outside 2-200 characters without calling the API', () => {
   expect(handler).not.toHaveBeenCalled()
 })
 
+it.each([
+  ['diode', 194, true],
+  ['diode', 195, false],
+  ['', 200, true],
+  ['', 201, false],
+] as const)('applies the %s query length boundary at %i characters', (componentType, length, valid) => {
+  const handler = vi.fn(() => Response.json(found))
+  network(handler)
+  renderWithQueries(<ExternalSchematic name={'x'.repeat(length)} zoom={100} defaultComponentType={componentType} />)
+  const input = screen.getByRole('textbox')
+  expect(input).toHaveAttribute('maxLength', String(componentType === 'diode' ? 194 : 200))
+  expect(screen.getByText(`2자 이상 ${componentType === 'diode' ? 194 : 200}자 이하로 입력해 주세요.`)).toBeInTheDocument()
+  const button = screen.getByRole('button', { name: '원본 회로도 찾기' })
+  if (valid) expect(button).toBeEnabled()
+  else expect(button).toBeDisabled()
+})
+
+it('preserves a 200-character product query when switching to diode and disables search without truncating it', () => {
+  const handler = vi.fn(() => Response.json(found))
+  network(handler)
+  renderWithQueries(<ExternalSchematic name={'x'.repeat(200)} zoom={100} />)
+  const input = screen.getByRole('textbox')
+  fireEvent.change(screen.getByRole('combobox', { name: '검색 대상' }), { target: { value: 'diode' } })
+  expect(input).toHaveValue('x'.repeat(200))
+  expect(input).toHaveAttribute('maxLength', '194')
+  expect(screen.getByRole('button', { name: '원본 회로도 찾기' })).toBeDisabled()
+  fireEvent.change(screen.getByRole('combobox', { name: '검색 대상' }), { target: { value: '' } })
+  expect(input).toHaveValue('x'.repeat(200))
+  expect(screen.getByRole('button', { name: '원본 회로도 찾기' })).toBeEnabled()
+  expect(handler).not.toHaveBeenCalled()
+})
+
 it('shows an unverified public schematic with its publishing page', async () => {
   network(() => Response.json({
     ...found, project: null, commit: null, source_type: 'public_web', evidence_grade: null,

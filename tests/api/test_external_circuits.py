@@ -41,7 +41,7 @@ def schematic_boundary(monkeypatch):
         queries=[], sheet_calls=[], png=b"\x89PNG\r\n\x1a\nfixture", error=None,
     )
 
-    def find(query):
+    def find(query, *args):
         state.queries.append(query)
         if state.error:
             raise state.error
@@ -88,6 +88,20 @@ def test_external_schematic_accepts_trimmed_query_boundaries(client, schematic_b
     response = client.get("/api/external-circuits/schematics", params={"q": query})
     assert response.status_code == 200
     assert schematic_boundary.queries == [query.strip()]
+
+
+@pytest.mark.parametrize("query", ["x" * 194])
+def test_external_schematic_accepts_diode_query_boundary(client, schematic_boundary, query):
+    response = client.get("/api/external-circuits/schematics", params={"q": query, "component_type": "diode"})
+    assert response.status_code == 200
+    assert schematic_boundary.queries == [query]
+
+
+def test_external_schematic_rejects_diode_query_over_boundary_before_service(client, schematic_boundary):
+    query = "x" * 195
+    response = client.get("/api/external-circuits/schematics", params={"q": query, "component_type": "diode"})
+    assert response.status_code == 422
+    assert schematic_boundary.queries == []
 
 
 @pytest.mark.parametrize("query", ["x", " x ", " ", "x" * 201])
