@@ -955,3 +955,19 @@
 - 자동 검증: 프런트 경계 회귀 RED 4건 확인 후 전체 Vitest 207passed, API 외부 회로 모듈40passed, TypeScript/Vite build 및 Docker API build 통과. 새 일회용 PostgreSQL의 실제 서비스 스키마로 모든 Python 테스트 노드를 실행해 2345passed/32skipped/0failed(309.29초), 기존 docling DeprecationWarning1건. PR 밖 기존 미추적3경로와 보존한 로컬 cloud flag만 임시 Git 탐색 제외했고 실제 파일·인덱스·.gitignore를 테스트 때문에 변경하지 않았다.
 - 실제 8011: API만 재생성하고 environment 전체 값 동일, 기존 DB·renderer·STH 컨테이너ID 동일, API health200. API에서 renderer health200 및 KiCad10.0.8 확인. Chrome에서 일반200자/다이오드194자 native 입력 상한, 200자 모드 전환 시 보존/검색 비활성 및 복귀 시 활성 확인. 조작 중 검색 요청0회. 로그인된 실제 HTTP에서 다이오드195자·일반201자 모두422. 정상 길이의 외부 검색은 새로 실행하지 않았으며, 정상 경계194/200은 API 자동 테스트로 확인했다.
 - 범위·보존: 독립 read-only 검토 및 최종 diff 확인. 기존 작업19파일과 로컬 cloud-run-api.flags.yaml/GATES 원문2파일 모두 시작 SHA-256과 동일하다. main 대비 cloud-run-api.flags.yaml·docs/GATES.md 차이는0이며 SOJAFIT의 해당 등록 행도 제거했다. 임시 DB 제거, 운영 배포·PR 병합 없음. 근거 로그/JUnit·ui-limit-proof.json·http-limit-proof.json·ui-diode-over-limit.jpg는 저장소 밖 osc-pr134-align-u3diyew3에 보관한다.
+
+
+## 2026-11-15 · PR #134 최종 감사의 검색 오류 3건과 smoke 설명 수정
+
+- 대상: 공식/public 검색을 건너뛰는 diode GitHub 조기 반환, 선택 KiCad 파일 다운로드의 rate-limit 오분류, community 렌더 오류 후 retry 정보 유실/negative cache, smoke의 source_type 설명 오류만 수정한다. 기존 API 경로·인증·입력 길이·응답 DTO·서명/라이선스/SSRF/자료 검증 계약과 작업대 기능은 유지한다. PR 병합·운영 배포는 하지 않는다.
+- 보존: 시작HEAD 8cdd57e, 기존 dirty21파일과 수정 대상 원본/인덱스를 저장소 밖 osc-pr134-search-fixes-qxb44rnt에 백업했다. 다른 조원의 문서·원본·미추적 자료 및 로컬 Cloud Run/GATES 원문은 보존한다.
+- 실행 전 검증 범위: 최소 회귀 RED→수정→관련 Python/HTTP API 경계 GREEN, 이후 새 일회용 PostgreSQL과 실제 서비스 스키마로 전체 pytest를 한 번 실행한다. PYTHON_DOTENV_DISABLED=1/PYTHONUTF8=1 및 외부 모델/검색 키 비움. 기존 PR 밖 미추적 docs/superpowers/·frontend/e2e/·importtime.txt·cloud-run-api.flags.yaml만 subprocess Git 탐색에서 제외하고 테스트 노드는 생략하지 않는다. 외부 유료 검색·모델·평가·Cloud Run 호출/배포 및 기존8011/다른 조원 컨테이너 변경은 하지 않는다.
+
+- 문제1 수정: diode 검색의 GitHub 조기 반환을 제거했다. main과 같은 공식/public 우선 검증을 적용하고, 검색 공급자 오류·후보 없음·원본 검증 실패 때 기존 community fallback을 유지한다. 실제 품번/다이오드 문맥·무관 자료 배제 조건은 바꾸지 않았다.
+- 문제2 수정: 선택 KiCad raw 다운로드의 429/한도403을 InvalidSource로 바꾸지 않고 전파한다. 별도 renderer는 한도 오류에503+Retry-After를 반환하고 호출 API까지 동일 오류/재시도 간격을 보존한다. 일반503은 변환 장애, 잘못된 원본422는 InvalidSource로 유지하며 외부 응답 본문은 노출하지 않는다.
+- 문제3 수정: community pool의 렌더 단계 rate/upstream 오류를 검사 단계 오류와 함께 캐시에 보존한다. 정상 후보는 유지하고 최초 retry deadline은 후보 선택으로 연장하지 않는다. Retry-After(일반 upstream60초) 이후 검색·후보 검증을 다시 수행하고 누락된 정상 후보를 복구한다. InvalidSource는 계속 검증 실패로 처리하며 선택 실패를 다른 원본으로 바꾸지 않는다.
+- 설명 수정: smoke의 source_type은 출처 유형이며 실행 위치가 아니라고 명시했다. community KiCad 원격 변환은 KICAD_RENDERER_URL 설정에 따른다. 설명을 뺀 실행 AST가 수정 전과 동일함을 확인했다.
+- RED/GREEN: 공식/public 누락2건과 full/partial render rate/upstream4건의 기존 실패6건 재현 후 신규 관련8건 통과. renderer 한도 경계도 수정 전4failed→수정 후5passed, 다운로드 인접11passed. root가 저장소 uv 환경에서5개 관련 모듈을 통합 실행해346passed(16.02초); SVG/PDF 렌더링 회귀도 포함한다.
+- HTTP 통합: FastAPI API→서비스 캐시→원격 renderer HTTP 대역→renderer FastAPI를 연결했다. 첫 한도 오류와 cooldown 중 재요청은503/Retry-After2/no-store/UNAVAILABLE, 실제 renderer 호출1회. 가상 시간2초 후 동일 검색은manifest200 및 서명된PNG200, 원본source_url/PNG내용 유지, renderer 호출총2회로 복구. 인증은 테스트 dependency 대역이며 실제 외부 네트워크·로그인 세션·8011 호출 결과가 아니다.
+- 전체 회귀: 새 일회용 PostgreSQL과 apply_service_schema(agent=True)로 모든 Python 테스트 노드를 실행해2359passed/32skipped/0failed(285.23초), 기존 docling DeprecationWarning1건. PR 밖 미추적4경로만 임시 Git 탐색 제외했고 실제 .gitignore나 기존 파일을 변경하지 않았다. 로그/JUnit은 저장소 밖 osc-pr134-search-fixes-qxb44rnt에 보관한다. 프런트 코드는 변경하지 않아 Vitest/build를 반복하지 않았다.
+- 최종 범위 검토: 독립 read-only 검토에서 추가 결함을 발견하지 못했고 git diff --check 통과. 기존 dirty21파일 SHA-256 및 기존5컨테이너ID 동일, production API 라우트/DTO/입력 한도 코드 변경0. 테스트 DB만 제거한다. 목적별 커밋으로 PR #134에 반영하며 병합·운영 배포는 하지 않는다.

@@ -2,7 +2,8 @@
 
 이미지는 메모리에서만 검사하고 key, signed token, 외부 응답 본문은 출력하지 않는다.
 --force-kicad-fallback은 API 경계를 거치지 않고 로컬 KiCad CLI를 직접 렌더링한다.
-배포된 원격 KiCad 렌더러 경로는 일반 API 쿼리 결과에서 source_type으로 구별한다.
+source_type은 출처 유형이며 렌더러 실행 위치를 나타내지 않는다.
+community KiCad의 원격 변환은 API의 KICAD_RENDERER_URL 설정으로 결정한다.
 """
 import argparse
 from collections import Counter

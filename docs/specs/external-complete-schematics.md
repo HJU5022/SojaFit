@@ -60,14 +60,15 @@
 
 - 작업대의 화면 구성과 이미지 확대·이동은 main을 기준으로 유지한다. 질문 접수 실패 시 초안·첨부를 보존하고 서버 실행 접수 후에도 새로 입력한 초안을 지우지 않는다. 첨부는 서버의 단일 파일 계약에 맞추며 다이오드 외 부품은 새 판정을 시작하지 않고 저장된 기록은 읽을 수 있게 한다.
 - 다이오드 검색은 `component_type=diode`로 제품·보드 검색과 구분한다. 실제 배치 품번과 다이오드 구조를 검증하며, SS33 무전기처럼 품번만 같은 자료는 제외한다. 일반 `Device:D`와 사용자 정의 다이오드는 실제 연결·핀 근거가 있으면 검사한다.
-- 외부 다이오드 검색은 BOM·독립 GitHub 검색 경로에서 최대 24개 저장소를 검사한다. 여러 완전한 원본과 자체 계층이 완전한 하위 회로를 고정 commit·root별로 구분해 선택할 수 있게 한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB로 제한한다. 렌더링은 검증한 선택 계층만 직접 다운로드하며 파일당 10MiB·총 25MiB·최대 20시트로 제한한다. 라이선스·누락·순환·출처·SSRF 검증은 유지한다.
-- main의 비회로도 이미지·자료 유형·공식 링크·제품 변형·전압 검증과 404 원인 구분을 유지한다. 후보 선택은 검증된 원본에 한정하며 실패한 원본을 다른 회로로 바꾸지 않는다. 일부 외부 검사가 실패하면 정상 후보는 보존하되 Retry-After 또는 60초 후 같은 검색의 후보·선택 캐시를 재검사한다.
+- 외부 다이오드 검색은 공식·공개 웹 후보를 먼저 검증하고, 정상 결과가 없으면 BOM·독립 GitHub 검색 경로에서 최대 24개 저장소를 검사한다. 여러 완전한 원본과 자체 계층이 완전한 하위 회로를 고정 commit·root별로 구분해 선택할 수 있게 한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB로 제한한다. 렌더링은 검증한 선택 계층만 직접 다운로드하며 파일당 10MiB·총 25MiB·최대 20시트로 제한한다. 라이선스·누락·순환·출처·SSRF 검증은 유지한다.
+- main의 비회로도 이미지·자료 유형·공식 링크·제품 변형·전압 검증과 404 원인 구분을 유지한다. 후보 선택은 검증된 원본에 한정하며 실패한 원본을 다른 회로로 바꾸지 않는다. 일부 원본 검사·렌더링이 한도·외부 오류로 실패하면 오류와 재시도 정보를 보존하고, 정상 후보를 유지하되 Retry-After 또는 60초 후 같은 검색의 후보·선택 캐시를 재검사한다.
 - 출처·원본 링크는 이미지 위에 표시한다. 제조사 공식 여부와 커뮤니티 라이선스 선언은 별개의 문구로 안내한다. KiCad 10 전용 renderer는 API 이미지와 분리한다.
 - AC: Given main의 제품·이미지 검증 및 확대·이동 회귀와 OSC의 다이오드 검색·후보 선택·초안·첨부 회귀, When 통합본을 검사, Then 양쪽 테스트가 함께 통과하고 8011의 실제 API·화면 결과와 외부 한도로 미검증된 항목을 구분해 기록한다.
 
 ### Renderer 구성과 배포 안내
 
 - API 최종 이미지는 KiCad를 포함하지 않는다. `Dockerfile`의 `renderer` target이 KiCad 10과 `/health`, `/render`를 제공하며, API는 `KICAD_RENDERER_URL`이 있을 때 KiCad 원본만 이 서비스로 보낸다. API 이미지와 renderer 이미지는 서로 다른 Cloud Run 서비스로 배포한다.
+- 선택 KiCad 파일 다운로드의 한도 오류는 자료 손상으로 분류하지 않는다. renderer는 한도 오류를 `503`과 제한된 `Retry-After`로 전달하며, API도 기존의 `503`/`Retry-After` 계약을 유지한다. 일반 변환 장애와 잘못된 원본의 `422`는 별도로 처리한다.
 - 로컬 Compose의 기본값은 `KICAD_RENDERER_URL=http://renderer:8000`이지만 `renderer`는 `schematic` profile이다. 회로도 원본 경로까지 재현하려면 `docker compose --profile schematic up --build`를 사용한다. 기본 `docker compose up`은 API·DB 데모 경로다.
 - Cloud Run의 API 환경변수 `KICAD_RENDERER_URL`에는 renderer의 HTTPS 서비스 URL만 넣는다. Cloud Run에서 실행될 때 API는 metadata server에서 그 URL을 audience로 한 ID token을 받아 `Authorization: Bearer`로 호출한다. renderer는 비공개로 두고 API 서비스 계정에 renderer의 `roles/run.invoker`를 부여해야 한다. 이 문서의 명령은 예시이며 실제 Cloud Run 배포·호출은 수행하지 않았다.
 
