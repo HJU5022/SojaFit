@@ -388,6 +388,8 @@ class ExternalSchematicService:
             sources, pool_rate, pool_upstream = self.validated.get(query, inspect_all)
             sources = tuple(sorted(sources, key=lambda source: source.expected_sheets))
             verified_sources = []
+            render_rate = None
+            render_upstream = False
             for source in sources:
                 try:
                     _sign(source, source.expected_sheets, int(self.wall()) + TTL)
@@ -398,12 +400,19 @@ class ExternalSchematicService:
                     continue
                 except ExternalSchematicRateLimited as error:
                     rate_error = error
+                    render_rate = error
                     continue
                 except ExternalSchematicUpstreamError:
                     saw_upstream_failure = True
+                    render_upstream = True
                     continue
                 verified_sources.append(source)
             sources = tuple(verified_sources)
+            pool_rate = pool_rate or render_rate
+            pool_upstream = pool_upstream or render_upstream
+            if (render_rate is not None or render_upstream) and self._retry_deadline(query) is None:
+                retry_after = pool_rate.retry_after if pool_rate is not None else 60
+                self._set_retry_deadline(query, self.wall() + retry_after)
             self.validated.replace(query, (sources, pool_rate, pool_upstream))
             self._remember_choices(query, sources)
             if not sources:
@@ -560,10 +569,6 @@ def _search(query, limit):
         search_component_repositories,
     )
     try:
-        if component_context(query) == "diode":
-            repositories = search_component_repositories(query, limit)
-            if repositories:
-                return repositories
         failed = False
         try:
             public = search_public_schematics(query, min(limit, 5))
@@ -588,7 +593,8 @@ def _search(query, limit):
                 break
         if found:
             return tuple(found)
-        repositories = search_github_repositories(query, limit)
+        repositories = (search_component_repositories(query, limit) if component_context(query) == "diode"
+                        else search_github_repositories(query, limit))
         if repositories:
             return repositories
         if failed:

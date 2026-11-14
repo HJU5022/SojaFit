@@ -228,3 +228,63 @@ def test_diode_intent_is_forwarded_separately_from_selected_source(client, schem
         params['source_url'] = source_url
     assert client.get('/api/external-circuits/schematics', params=params).status_code == 200
     assert calls == [('SS33', source_url, 'diode')]
+
+
+def test_renderer_rate_limit_survives_api_and_recovers_after_retry_after(client, monkeypatch):
+    import io
+    import json
+    import httpx
+    from PIL import Image
+    from backend.projects import external_schematic, schematic, schematic_render
+    from backend.projects.external_circuit_search import GitHubRepositoryRef
+    from backend.projects.schematic_source import ExternalSchematicRateLimited, VerifiedSchematicSource
+
+    for name, value in {"DEMO_MODE": "0", "EXA_WEB_SEARCH_ENABLED": "1", "EXA_API_KEY": "test-no-network",
+                        "AUTH_SECRET": "test-only-secret-padding-32-bytes-long",
+                        "KICAD_RENDERER_URL": "http://renderer:8000"}.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    app.dependency_overrides[auth.current_user_id] = lambda: 1
+    ref = GitHubRepositoryRef("group", "board", "https://github.com/group/board")
+    source = VerifiedSchematicSource("group/board", "a" * 40, "MIT", "contributors", ref.repository_url,
+                                     ref.repository_url + "/board.kicad_sch", "board.kicad_sch", "kicad",
+                                     ("board.kicad_sch",), "board.kicad_sch")
+    output = io.BytesIO()
+    Image.new("RGB", (128, 128), "white").save(output, format="PNG")
+    png = output.getvalue()
+    clock = [1000]
+    render_calls = []
+    def upstream(candidate):
+        render_calls.append(candidate)
+        if clock[0] < 1002:
+            raise ExternalSchematicRateLimited(2)
+        return (png,)
+    monkeypatch.setattr(schematic_render, "render_external_schematic", upstream)
+    with TestClient(schematic.app, raise_server_exceptions=False) as renderer:
+        def transport(request):
+            response = renderer.post("/render", json=json.loads(request.content))
+            return httpx.Response(response.status_code, headers=response.headers, json=response.json())
+        with httpx.Client(transport=httpx.MockTransport(transport)) as remote:
+            worker = external_schematic.ExternalSchematicService(
+                lambda query, limit: (ref,), lambda candidate, **kwargs: (source,),
+                lambda candidate: schematic.render_remote_kicad(candidate, client=remote),
+                clock=lambda: clock[0], wall=lambda: clock[0])
+            monkeypatch.setattr(external_schematic, "_SERVICE", worker)
+            params = {"q": "SS33", "component_type": "diode"}
+            for _ in range(2):
+                response = client.get("/api/external-circuits/schematics", params=params)
+                assert response.status_code == 503
+                assert response.headers["retry-after"] == "2"
+                assert response.headers["cache-control"] == "private, no-store"
+                assert response.json()["error"]["code"] == "UNAVAILABLE"
+                assert "invalid KiCad source" not in response.text
+            assert len(render_calls) == 1
+            clock[0] = 1002
+            response = client.get("/api/external-circuits/schematics", params=params)
+            assert response.status_code == 200
+            assert response.json()["source_url"] == source.source_url
+            image = client.get(response.json()["images"][0]["url"])
+            assert image.status_code == 200
+            assert image.content == png
+            assert image.headers["content-type"] == "image/png"
+            assert len(render_calls) == 2

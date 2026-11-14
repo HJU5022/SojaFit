@@ -672,7 +672,8 @@ def test_diode_component_search_does_not_reject_repository_by_its_name(monkeypat
     from backend.projects import external_circuit_search as search
     ref = search.github_repository_ref('https://github.com/owner/power-board')
     monkeypatch.setattr(search, 'search_component_repositories', lambda query, limit: (ref,))
-    monkeypatch.setattr(search, 'search_public_schematics', lambda *args: pytest.fail('verified-source discovery should be attempted first'))
+    monkeypatch.setattr(search, 'search_public_schematics', lambda *args: ())
+    monkeypatch.setattr(search, 'search_manufacturer_schematics', lambda *args: ())
     assert api._search('SS33 diode', 5) == (ref,)
     assert api._search_community('SS33 diode', 5) == (ref,)
 
@@ -775,3 +776,105 @@ def test_public_choice_switch_keeps_all_verified_choices(service):
         selected = worker.find("public board", ref.source_url)
         assert selected.source_url == ref.source_url
         assert selected.choices == first.choices
+
+
+@pytest.mark.parametrize("source_type", ["manufacturer_official", "public_web"])
+def test_diode_search_does_not_hide_verified_web_source_behind_repository_hits(service, monkeypatch, source_type):
+    from backend.projects import external_circuit_search as search
+    worker, _, _, source = service
+    web = replace(_official_ref(), source_type=source_type,
+                  title="SS33 diode application schematic", source_file="SS33-diode.pdf",
+                  source_url="https://cdn.sparkfun.com/SS33-diode.pdf")
+    repository = GitHubRepositoryRef("unrelated", "board", "https://github.com/unrelated/board")
+    calls = Counter()
+    monkeypatch.setattr(search, "search_component_repositories", lambda *args: (repository,))
+    monkeypatch.setattr(search, "search_public_schematics", lambda *args: calls.update(public=1) or (web,))
+    monkeypatch.setattr(search, "search_manufacturer_schematics", lambda *args: calls.update(manufacturer=1) or ())
+    verified = replace(source, source_type=source_type, evidence_grade=2 if source_type == "manufacturer_official" else None,
+                       expected_sheets=1, source_sha256="a" * 64, source_url=web.source_url)
+    worker.search = api._search
+    worker.inspect = lambda candidate, **kwargs: (verified,) if candidate is web else ()
+    worker.render = lambda candidate: (b"verified",)
+    result = worker.find("SS33 diode")
+    assert result.source_url == web.source_url
+    assert calls == {"public": 1, "manufacturer": 1}
+
+
+@pytest.mark.parametrize("failure_kind", ["rate", "upstream"])
+@pytest.mark.parametrize("partial", [False, True])
+def test_render_failures_keep_retry_state_and_recover_after_deadline(service, failure_kind, partial):
+    worker, _, clock, source = service
+    refs = tuple(GitHubRepositoryRef("group", name, f"https://github.com/group/{name}")
+                 for name in ("good", "delayed") if partial or name == "delayed")
+    sources = {ref.repo: replace(source, repository=f"group/{ref.repo}", repository_url=ref.repository_url,
+                               source_url=ref.repository_url + "/board.kicad_sch") for ref in refs}
+    attempts = Counter()
+    delay = 7 if failure_kind == "rate" else 60
+    def search(query, limit):
+        attempts["search"] += 1
+        return refs
+    def inspect(ref, **kwargs):
+        attempts["inspect"] += 1
+        return (sources[ref.repo],)
+    def render(candidate):
+        attempts[candidate.repository] += 1
+        if candidate is sources["delayed"] and clock[0] < 1000 + delay:
+            if failure_kind == "rate":
+                raise ExternalSchematicRateLimited(delay)
+            raise ExternalSchematicUpstreamError()
+        return (b"one", b"two")
+    worker.search, worker.inspect, worker.render = search, inspect, render
+    expected_error = ExternalSchematicRateLimited if failure_kind == "rate" else ExternalSchematicUpstreamError
+    if partial:
+        result = worker.find("SS33 diode")
+        assert [choice.source_url for choice in result.choices] == [sources["good"].source_url]
+    else:
+        with pytest.raises(expected_error):
+            worker.find("SS33 diode")
+    before = dict(attempts)
+    assert worker._retry_deadline("ss33 diode") == 1000 + delay
+    clock[0] += 1
+    if partial:
+        worker.find("SS33 diode", sources["good"].source_url)
+    else:
+        with pytest.raises(expected_error):
+            worker.find("SS33 diode")
+    assert worker._retry_deadline("ss33 diode") == 1000 + delay
+    assert attempts == before
+    clock[0] = 1000 + delay
+    recovered = worker.find("SS33 diode")
+    assert {choice.source_url for choice in recovered.choices} == {s.source_url for s in sources.values()}
+    selected = worker.find("SS33 diode", sources["delayed"].source_url)
+    assert selected.source_url == sources["delayed"].source_url
+    assert attempts["search"] == 2
+    assert attempts["inspect"] == len(refs) * 2
+
+
+@pytest.mark.parametrize("provider_failure", [False, True])
+def test_diode_web_failure_keeps_community_fallback(service, monkeypatch, provider_failure):
+    from backend.projects import external_circuit_search as search
+    worker, _, _, source = service
+    web = replace(_official_ref(), title="SS33 diode schematic", source_file="SS33-diode.pdf")
+    ref = GitHubRepositoryRef("group", "board", "https://github.com/group/board")
+    calls = Counter()
+    def public(*args):
+        calls["public"] += 1
+        if provider_failure:
+            raise search.ExternalCircuitSearchError()
+        return (web,)
+    def manufacturer(*args):
+        calls["manufacturer"] += 1
+        if provider_failure:
+            raise search.ExternalCircuitSearchError()
+        return ()
+    def repositories(*args):
+        calls["component"] += 1
+        return (ref,)
+    monkeypatch.setattr(search, "search_public_schematics", public)
+    monkeypatch.setattr(search, "search_manufacturer_schematics", manufacturer)
+    monkeypatch.setattr(search, "search_component_repositories", repositories)
+    worker.search, worker.fallback_search = api._search, api._search_community
+    worker.inspect = lambda candidate, **kwargs: () if isinstance(candidate, WebSchematicRef) else (source,)
+    result = worker.find("SS33 diode")
+    assert result.source_type == "community"
+    assert calls == {"public": 1, "manufacturer": 1, "component": 1}
