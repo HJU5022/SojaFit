@@ -143,6 +143,18 @@ def final_reports(state: dict) -> list[TaskReport]:
     return [TaskReport.model_validate(r) for r in (state.get('final_reports') or state.get('reports') or [])]
 
 
+def corpus_dead_end(state: dict) -> bool:
+    """문서 할 일을 다시 돌려도 근거가 나올 수 없는가: 품번이 모두 코퍼스에 없거나 요청 판본이 없고, 웹 공식 예산도 이미 썼다(또는 웹이 꺼짐).
+
+    [왜] 문서 에이전트는 정확한 품번 · 판본으로만 근거를 남기고(`keep_docs`) 웹 공식 검색은 요청당 1번이다. 그래서 두 번째 바퀴는
+         Supervisor · 검색에 3~5초를 더 쓰고 같은 거절로 끝났다(11-14 P1 v3-32~38 · v3-45~50, 사전 등록 「코퍼스에 없는 품번 · 판본이면 재계획하지 않기」)
+    """
+    from backend.services import exa
+    facts = Facts(**(state.get('facts') or {}))
+    absent = (facts.parts and not any(facts.parts.values())) or (facts.revisions and not all(facts.revisions.values()))
+    return bool(absent) and (not exa.enabled() or exa.slot_in_use(2))
+
+
 def collect_node(state: dict) -> dict:
     """그래프 노드 `답 모으기`(코드): 상한을 보고, 보고 상태 · 사유로 재계획 · 답 정리 · 종합 · 거절을 정한다."""
     reports = [TaskReport.model_validate(r) for r in state.get('reports') or []]
@@ -180,6 +192,8 @@ def collect_node(state: dict) -> dict:
         and (r.judgement.get('shown') or r.judgement.get('results'))
         for r in current
     )
+    if retry and all(r.agent == 'docs' for r in retry) and corpus_dead_end(state):
+        retry = []  # 다시 돌려도 같은 결과라 재계획하지 않는다(corpus_dead_end 참고)
     if plan.get('next') != 'answer' and c.get('replans', 0) < MAX_REPLANS and (
             retry or (plan.get('replan') and not has_candidate_table)) and os.getenv('SUPERVISOR_REPLAN', '1') != '0':
         return {**out, 'outcome': 'replan'}

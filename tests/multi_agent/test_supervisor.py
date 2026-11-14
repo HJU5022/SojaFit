@@ -412,3 +412,24 @@ def test_check_blocks_a_number_missing_from_the_cited_chunk():
     assert 'refusal_reason' not in S.check_node({**base, 'answer': good, 'synth_text': good})
     wrong = 'VRRM은 45 V이다 [7].'  # 번호는 진짜인데 근거 글에 없는 값
     assert S.check_node({**base, 'answer': wrong, 'synth_text': wrong})['refusal_reason'] == 'verify_failed'
+
+
+def test_docs_failure_on_part_or_revision_missing_from_corpus_is_not_replanned_once_web_is_spent():
+    """품번이 모두 코퍼스에 없거나 요청 판본이 없고 웹 공식 예산을 이미 썼으면, 문서 실패를 다시 돌리지 않고 거절한다."""
+    from backend.services import exa
+    base = {'counters': {'hops': 1, 'replans': 0}, 'round': 1, 'plan': {'next': 'tasks'},
+            'reports': [report(1, status='fail', reason='no_result')]}
+    missing_part = {**base, 'facts': {'parts': {'SS14J': False}, 'revisions': {}}}
+    missing_rev = {**base, 'facts': {'parts': {'SS22': True}, 'revisions': {'N2406': False}}}
+    present = {**base, 'facts': {'parts': {'SS14': True}, 'revisions': {}}}
+    env = {'DEMO_MODE': '0', 'EXA_WEB_SEARCH_ENABLED': '1', 'EXA_API_KEY': 'unit-test'}
+    import os
+    from unittest import mock
+    with mock.patch.dict(os.environ, env), exa.request_scope():
+        assert S.collect_node(missing_part)['outcome'] == 'replan'  # 웹 공식 예산이 남아 있으면 아직 다시 해 볼 수 있다
+        exa._budget.get()['grade2'].acquire()  # 이 요청의 공식 웹 검색을 이미 씀
+        assert S.collect_node(missing_part)['outcome'] == 'refuse'
+        assert S.collect_node(missing_rev)['outcome'] == 'refuse'
+        assert S.collect_node(present)['outcome'] == 'replan'  # 코퍼스에 있는 품번이면 다시 찾을 수 있다
+        judge = {**missing_part, 'reports': [report(1, agent='judge', status='fail', reason='no_result')]}
+        assert S.collect_node(judge)['outcome'] == 'replan'  # 판정 할 일은 이 규칙 밖
