@@ -36,7 +36,7 @@ CMD ["uvicorn", "backend.projects.schematic:app", "--host", "0.0.0.0", "--port",
 
 FROM python:3.12-slim
 
-# API 이미지에는 KiCad를 넣지 않는다. 렌더러 이미지는 --build-arg INCLUDE_KICAD=1로 만든다.
+# 기본 최종 단계는 KiCad 없는 API 이미지다. KiCad 10은 위의 별도 renderer target에만 설치한다.
 ARG INCLUDE_KICAD=0
 RUN apt-get update \
     && if [ "$INCLUDE_KICAD" = "1" ]; then apt-get install -y --no-install-recommends kicad libcairo2; else apt-get install -y --no-install-recommends libcairo2; fi \

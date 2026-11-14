@@ -60,16 +60,36 @@
 
 - 작업대의 화면 구성과 이미지 확대·이동은 main을 기준으로 유지한다. 질문 접수 실패 시 초안·첨부를 보존하고 서버 실행 접수 후에도 새로 입력한 초안을 지우지 않는다. 첨부는 서버의 단일 파일 계약에 맞추며 다이오드 외 부품은 새 판정을 시작하지 않고 저장된 기록은 읽을 수 있게 한다.
 - 다이오드 검색은 `component_type=diode`로 제품·보드 검색과 구분한다. 실제 배치 품번과 다이오드 구조를 검증하며, SS33 무전기처럼 품번만 같은 자료는 제외한다. 일반 `Device:D`와 사용자 정의 다이오드는 실제 연결·핀 근거가 있으면 검사한다.
-- 외부 다이오드 검색은 BOM·독립 GitHub 검색 경로에서 최대 24개 저장소를 검사한다. 여러 완전한 원본과 자체 계층이 완전한 하위 회로를 고정 commit·root별로 구분해 선택할 수 있게 한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB, 선택 계층은 최대 20시트로 제한한다. 라이선스·누락·순환·출처·SSRF 검증은 유지한다.
+- 외부 다이오드 검색은 BOM·독립 GitHub 검색 경로에서 최대 24개 저장소를 검사한다. 여러 완전한 원본과 자체 계층이 완전한 하위 회로를 고정 commit·root별로 구분해 선택할 수 있게 한다. discovery는 최대 128파일·파일당 4MiB·총 25MiB로 제한한다. 렌더링은 검증한 선택 계층만 직접 다운로드하며 파일당 10MiB·총 25MiB·최대 20시트로 제한한다. 라이선스·누락·순환·출처·SSRF 검증은 유지한다.
 - main의 비회로도 이미지·자료 유형·공식 링크·제품 변형·전압 검증과 404 원인 구분을 유지한다. 후보 선택은 검증된 원본에 한정하며 실패한 원본을 다른 회로로 바꾸지 않는다. 일부 외부 검사가 실패하면 정상 후보는 보존하되 Retry-After 또는 60초 후 같은 검색의 후보·선택 캐시를 재검사한다.
 - 출처·원본 링크는 이미지 위에 표시한다. 제조사 공식 여부와 커뮤니티 라이선스 선언은 별개의 문구로 안내한다. KiCad 10 전용 renderer는 API 이미지와 분리한다.
 - AC: Given main의 제품·이미지 검증 및 확대·이동 회귀와 OSC의 다이오드 검색·후보 선택·초안·첨부 회귀, When 통합본을 검사, Then 양쪽 테스트가 함께 통과하고 8011의 실제 API·화면 결과와 외부 한도로 미검증된 항목을 구분해 기록한다.
+
+### Renderer 구성과 배포 안내
+
+- API 최종 이미지는 KiCad를 포함하지 않는다. `Dockerfile`의 `renderer` target이 KiCad 10과 `/health`, `/render`를 제공하며, API는 `KICAD_RENDERER_URL`이 있을 때 KiCad 원본만 이 서비스로 보낸다. API 이미지와 renderer 이미지는 서로 다른 Cloud Run 서비스로 배포한다.
+- 로컬 Compose의 기본값은 `KICAD_RENDERER_URL=http://renderer:8000`이지만 `renderer`는 `schematic` profile이다. 회로도 원본 경로까지 재현하려면 `docker compose --profile schematic up --build`를 사용한다. 기본 `docker compose up`은 API·DB 데모 경로다.
+- Cloud Run의 API 환경변수 `KICAD_RENDERER_URL`에는 renderer의 HTTPS 서비스 URL만 넣는다. Cloud Run에서 실행될 때 API는 metadata server에서 그 URL을 audience로 한 ID token을 받아 `Authorization: Bearer`로 호출한다. renderer는 비공개로 두고 API 서비스 계정에 renderer의 `roles/run.invoker`를 부여해야 한다. 이 문서의 명령은 예시이며 실제 Cloud Run 배포·호출은 수행하지 않았다.
+
+예시 명령(자리표시자만 사용): Artifact Registry 저장소·Cloud Run의 프로젝트/리전·서비스 계정은 미리 준비한다. 두 컨테이너는 8000 포트로 실행하므로 배포에도 `--port 8000`을 지정한다. API의 DB·인증·Exa 환경변수와 Secret 설정은 기존 배포 설정을 유지하며, 아래 명령은 renderer 연결에 필요한 부분만 보여준다. `RENDERER_SERVICE_URL`은 renderer 배포 후 출력되는 실제 HTTPS 서비스 URL로 바꾼다.
+
+```bash
+docker build --target renderer -t REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG .
+docker build -t REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG .
+docker push REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG
+docker push REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG
+gcloud run deploy sojafit-renderer --image REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-renderer:TAG --port 8000 --no-allow-unauthenticated --service-account RENDERER_SERVICE_ACCOUNT
+gcloud run deploy sojafit-api --image REGION-docker.pkg.dev/PROJECT/REPOSITORY/sojafit-api:TAG --port 8000 --update-env-vars KICAD_RENDERER_URL=RENDERER_SERVICE_URL --service-account API_SERVICE_ACCOUNT
+gcloud run services add-iam-policy-binding sojafit-renderer --member serviceAccount:API_SERVICE_ACCOUNT --role roles/run.invoker
+```
+
+배포 플래그와 서비스 간 ID token의 audience·metadata server 방식은 [Cloud Run container deployment](https://cloud.google.com/run/docs/deploying), [Cloud Run service-to-service authentication](https://cloud.google.com/run/docs/authenticating/service-to-service), [gcloud run deploy reference](https://cloud.google.com/sdk/gcloud/reference/run)를 따른다. Compose profile 사용법은 [Docker Compose profiles](https://docs.docker.com/compose/how-tos/profiles/)를 따른다.
 
 ### API
 
 | 경로 | 동작 | 근거 |
 |---|---|---|
-| `GET /api/external-circuits/schematics?q=&source_url=` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 Exa 후보에 포함된 URL일 때만 허용한다. `q`는 trim 후 2~200자 | `backend/api/external_circuits.py` |
+| `GET /api/external-circuits/schematics?q=&source_url=&component_type=diode` | 이름으로 찾은 회로도와 순서가 있는 `images`(`sheet`, `url`), 다른 검색 후보 `choices`를 반환한다. `source_url`은 선택 사항이며 같은 검색의 검증된 후보 URL일 때만 허용한다. `component_type=diode`도 선택 사항이며 지정하면 검색어는 trim 후 2~194자다. 일반 검색어는 2~200자다 | `backend/api/external_circuits.py` |
 | `GET /api/external-circuits/schematics/{signed_token}/{sheet_index}` | 같은 로그인 세션에서 PNG 반환. 임의 외부 URL은 받지 않는다 | `backend/api/external_circuits.py:75-86` |
 
 두 경로 모두 로그인이 필요하다. 응답 헤더는 `Cache-Control: private, no-store`다. PNG는 `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`을 더한다.
@@ -87,7 +107,7 @@
 - 공개 GitHub 저장소 후보의 PNG·PDF 이미지는 고정 커밋의 `raw.githubusercontent.com` 원본에서 받는다. 제조사 페이지가 연결한 공식 GitHub 파일은 해당 원본 URL에서 받으며, 재조회 시 SHA-256이 달라지면 버린다. 그 밖의 공개 웹 후보는 검색으로 확인한 원본 URL에서 받는다.
 - 제조사 도메인 보강 검색은 검색어에서 식별한 Adafruit·SparkFun·Seeed·Arduino·Pololu·Olimex·Raspberry Pi·PJRC의 공식 도메인으로 제한한다. 제조사 페이지의 GitHub 자료는 허용한 공식 조직의 직접 링크만 원본으로 취급한다.
 - PDF는 전체 회로도 파일의 시트를 목표 300 DPI로 변환한다. 여러 페이지의 일반 안내서는 회로도 표시 페이지를 식별할 때만 그 페이지를 반환한다. 시트당 출력은 4,000만 픽셀 이내다.
-- KiCad 원본은 저장소 압축본을 임시 디렉터리에 풀어 `kicad-cli`로 PDF로 내보낸 뒤 같은 방식으로 렌더링한다. 운영 이미지는 `kicad`를 설치한다(`backend/projects/schematic_render.py:194-310`, `Dockerfile:16`).
+- KiCad 원본은 검증한 선택 계층의 파일만 고정 commit에서 직접 다운로드해 임시 디렉터리에 배치하고 `kicad-cli`로 PDF로 내보낸 뒤 PNG로 렌더링한다. `asset_paths`가 없는 기존 source만 제한된 저장소 압축본 경로를 사용한다. 운영 renderer 이미지가 KiCad 10을 설치하고 기본 API 이미지는 설치하지 않는다(`backend/projects/schematic_render.py`, `Dockerfile`).
 - SVG는 허용 요소 목록에 없는 요소, 외부 참조, 스크립트, 이벤트 속성을 거절한다(`backend/projects/schematic_render.py:43`).
 - 다중 시트 프로젝트는 모든 시트를 순서대로 반환한다. 원본과 시트 수가 다르면 그 후보를 버린다(`backend/projects/external_schematic.py:154-155`).
 - 구형 `.sch`는 프로젝트가 제공한 전체 PNG·SVG·PDF가 있을 때 지원한다. KiCad 9.0.2로 구형 원본을 직접 내보낼 때 배치된 심볼이 빠진 사례가 있다(설계 시점 관찰, 재측정하지 않음).
@@ -124,7 +144,8 @@
 | Exa 응답 | 공개 웹 검색 512 KiB, GitHub 검색 256 KiB | `backend/projects/external_circuit_search.py` |
 | GitHub 저장소·커밋 응답 | 각 256 KiB | `backend/projects/schematic_discovery.py:352` |
 | GitHub 재귀 트리 응답 | 2 MiB, 항목 5,000개 | `backend/projects/schematic_discovery.py:111,368` |
-| 원본 EDA 파일 | 파일당 4 MiB, 합계 12 MiB, 최대 20개 | `backend/projects/schematic_discovery.py:370,383-385` |
+| discovery 원본 EDA 파일 | 파일당 4 MiB, 합계 25 MiB, 최대 128개 | `backend/projects/schematic_discovery.py` |
+| 렌더링할 선택 계층 | 파일당 10 MiB, 합계 25 MiB, 최대 20시트 | `backend/projects/schematic_render.py` |
 | PNG·SVG 이미지 | 10 MiB | `backend/projects/schematic_render.py:30` |
 | PDF | 20 MiB, 20쪽 | `backend/projects/schematic_render.py:31,35` |
 | 저장소 압축본 | 압축 25 MiB, 해제 100 MiB, 항목 5,000개 | `backend/projects/schematic_render.py:32-34` |
@@ -140,7 +161,7 @@
 
 - 검색어 칸의 처음 값은 프로젝트 이름이다. 프로젝트 응답에 넷리스트 제목·보드 이름이 없다. 사용자가 고칠 수 있다.
 - 검색은 버튼을 눌러야 보낸다(자동 호출 없음). 같은 검색어는 5분 동안 다시 보내지 않는다. 검색 중에는 버튼이 꺼진다.
-- 검색어가 2자 미만이거나 200자 초과이면 버튼이 꺼지고 규칙 문구를 보인다. API를 부르지 않는다.
+- 검색어가 2자 미만이거나 일반 검색에서 200자 초과(다이오드 검색에서 194자 초과)이면 버튼이 꺼지고 규칙 문구를 보인다. API를 부르지 않는다.
 - `images`의 모든 시트를 순서대로 보이고 각 시트에 출처·라이선스·원본 링크(`source_url`)와 게시 페이지를 붙인다. 공식 여부를 확인할 수 없는 출처는 등급 미지정으로 표시한다.
 - 이미지 요청이 실패하면(서명 900초 만료 포함) "다시 검색하기"로 새 서명 주소를 받는다.
 

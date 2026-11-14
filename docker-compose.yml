@@ -58,7 +58,9 @@ services:
       db:
         condition: service_healthy
 
-  # KiCad 원본 변환만 담당하는 선택적 무상태 서비스. API 이미지와 분리해 로컬·배포 이미지를 작게 유지한다.
+  # KiCad 10 원본 변환만 담당하는 선택적 무상태 서비스. 기본 up에는 포함되지 않는다.
+  # 로컬에서 renderer까지 띄우려면 `docker compose --profile schematic up --build`를 사용한다.
+  # KICAD_RENDERER_URL을 지정하지 않은 Compose API는 이 서비스의 내부 주소를 사용한다.
   renderer:
     profiles: ["schematic"]
     build:
