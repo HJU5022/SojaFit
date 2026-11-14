@@ -41,6 +41,7 @@ export default function WorkbenchPage() {
   const projectId = /^[1-9]\d*$/.test(rawId) ? Number(rawId) : null
   const targetRef = params.get('targetRef') ?? ''
   const threadId = params.get('threadId') ?? ''
+  const [missingProjectId, setMissingProjectId] = useState<number | null>(null)
   const [filter, setFilter] = useState('')
   const [confirming, setConfirming] = useState('')
   const [error, setError] = useState<unknown>(null)
@@ -61,9 +62,10 @@ export default function WorkbenchPage() {
   const [pending, setPending] = useState<{ ref: string; question: string } | null>(null) // 부품 목록에서 쓴 질문: 그 부품의 검토 화면이 열릴 때 한 번 보낸다
 
   const projects = useQuery({ queryKey: ['projects'], queryFn: ({ signal }) => listProjects(signal), retry: false })
-  const project = useQuery({ queryKey: ['project', projectId, threadId], queryFn: ({ signal }) => getProject(projectId!, signal, threadId), enabled: projectId !== null, retry: false })
-  const threads = useQuery({ queryKey: ['threads', projectId], queryFn: ({ signal }) => listThreads(projectId!, signal), enabled: projectId !== null, retry: false })
-  const thread = useQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), enabled: projectId !== null && Boolean(threadId), retry: false })
+  const canReadProject = projectId !== null && projectId !== missingProjectId
+  const project = useQuery({ queryKey: ['project', projectId, threadId], queryFn: ({ signal }) => getProject(projectId!, signal, threadId), enabled: canReadProject, retry: false })
+  const threads = useQuery({ queryKey: ['threads', projectId], queryFn: ({ signal }) => listThreads(projectId!, signal), enabled: canReadProject, retry: false })
+  const thread = useQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), enabled: canReadProject && Boolean(threadId), retry: false })
   const demos = useQuery({ queryKey: ['demo-circuits'], queryFn: ({ signal }) => listDemos(signal), retry: false })
   const projectList = Array.isArray(projects.data) ? projects.data : []
   const threadList = Array.isArray(threads.data) ? threads.data : []
@@ -79,7 +81,7 @@ export default function WorkbenchPage() {
   const filteredParts = parts.filter(part => `${part.ref} ${part.value}`.toLowerCase().includes(query))
   const partGroups = [{ title: '판정 가능', eligible: true }, { title: '판정 범위 밖', eligible: false }]
   const clearError = useCallback(() => { errorVersion.current += 1; setError(null) }, [])
-  useEffect(() => { errorVersion.current += 1; setError(null); return () => { errorVersion.current += 1 } }, [location.key])
+  useEffect(() => { errorVersion.current += 1; setError(null); setMissingProjectId(null); return () => { errorVersion.current += 1 } }, [location.key])
   useEffect(() => {
     if (!navOpen) return
     function outside(event: PointerEvent) { if (event.target instanceof Node && !navigation.current?.contains(event.target)) setNavOpen(false) }
@@ -93,6 +95,8 @@ export default function WorkbenchPage() {
     setParams(next, { state: projectMissing ? { projectMissing: true } : null, replace: projectMissing })
   }, [clearError, setParams])
   const forgetProject = useCallback(async (id: number) => {
+    // 화면 이동이 대기 중이어도 지운 활성 쿼리를 재생성하지 않는다.
+    setMissingProjectId(id)
     await Promise.all([['projects'], ['project', id], ['threads', id]].map(queryKey => client.cancelQueries({ queryKey })))
     client.setQueryData<ProjectSummary[]>(['projects'], current => current?.filter(item => item.id !== id))
     client.removeQueries({ queryKey: ['project', id] }); client.removeQueries({ queryKey: ['threads', id] })

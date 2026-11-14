@@ -1,3 +1,10 @@
+## 2026-11-14 프로젝트404 캐시 정리 중 자동 재조회 반복 수정
+- 원인: 프로젝트 자체404 확인 후 forgetProject가 활성 프로젝트 캐시를 제거하지만 목록 전환은 React의 지연 전환으로 대기할 수 있었다. 먼저 다시 그려진 기존 작업대가 빈 캐시의 같은 GET을 새로 실행해404→정리→조회 반복과 전환 지연이 생겼다. 저장소 밖 HEAD 검증 사본의 모의 렌더/요청 순서 기록에서 확인했다. 휠 UI 변경 이전에도 나타났던 실패를 단순 대기 시간 조정으로 숨기지 않았다.
+- 수정: WorkbenchPage는 없다고 확정된 프로젝트 id를 화면 이동까지 임시 보관한다. 캐시를 비우기 전에 해당 회로/검토/대화 자동 조회를 막고 주소 변경 시 임시 차단을 해제한다. 공통 forgetProject를 쓰는 성공 삭제와404 동기화 모두 적용하며 기존 요청 취소/캐시 제거, 대화 버전만404일 때 프로젝트 보존, 화면 이동 뒤 늦은 수정 응답 무시는 유지한다. API/DB/판정 로직은 변경하지 않았다.
+- 바꾼 파일: frontend/src/pages/WorkbenchPage.tsx·WorkbenchPage.test.tsx, frontend/src/SRC.md, docs/specs/frontend-screen-redesign.md. SPEC.md 4절에 프로젝트 자체404 이후 지연 전환 중 GET 재생성 차단과 주소 변경 후 정상 조회 계약 반영을 조장에게 제안한다(주요 문서 직접 수정/외부 코멘트 등록0). 병행 원본 회로도 검색 백엔드/시험/작업서/기록은 보존한다.
+- 재현/검증: npm run test:run -- src/pages/WorkbenchPage.test.tsx -t 'does not refetch a confirmed missing project'에서 수정 전2실패(일반 주소 GET1→2, 대화 주소 GET2→3), 수정 후2통과. 목록 화면을 Suspense로 지연한 동안 캐시 갱신으로 이전 화면을 재렌더해 추가 상세 GET0을 검증하고, 목록 복귀 후 사용자 뒤로가기로 접근이 복구된 같은 프로젝트를 새로 조회하는 것도 확인했다. 기존 작업대32개 시험 통과, 최종 npm run test:run은9파일185개 통과(7.72초), npm run build의 TypeScript/Vite 통과, uv run --no-sync --offline pytest tests/repo/test_repo_layout.py -q는5통과(0.52초), git diff --check 통과.
+- 제한/다음: 모의 API·실제 React Query/Router의 상태 전환으로 검증했으며8010 컨테이너 교체·실제 DB/브라우저 시나리오·동결 평가 재측정은 하지 않았다. 유료 API·운영 DB 접근·커밋·푸시0. 이번 기록은 앞선 휠 커밋 당시404 시험 실패의 원인 미확인 기록을 보완한다.
+
 ## 2026-11-14 회로도 휠 확대·축소와 영역 내 맞춤 아이콘
 - 변경: SchematicImage에 이미지별 배율을 두고 준비된 이미지의 세로 휠을 25% 단위/50~400%로 처리한다. 비수동 wheel listener는 영역에만 등록/해제해 문서 스크롤과 겹치지 않게 한다. 상단 배율 숫자/버튼과 작업대의 공통 배율 상태는 제거했다. 오른쪽 위 고정 맞춤 아이콘(접근 가능한 이름/툴팁), +/− 키와 Home 맞춤을 제공하고 드래그와 출처는 유지했다. 여러 시트는 배율/이동/맞춤이 독립적이다.
 - 바꾼 파일: frontend/src/components/Schematic.tsx·Schematic.test.tsx, pages/WorkbenchPage.tsx, styles/app.css, docs/specs/external-complete-schematics.md. 주요 SPEC.md에는 조장이 회로도 조작 계약을 반영하도록 제안하며 직접 수정하지 않는다. 병행 백엔드 코드/시험/기록은 보존한다.

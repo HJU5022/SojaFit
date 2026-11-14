@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { Suspense } from 'react'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
@@ -254,6 +255,50 @@ it('keeps the project when only the selected conversation version returns 404', 
   await waitFor(() => expect(canonicalReads).toBe(1))
   expect(screen.queryByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeNull()
   expect(client.getQueryData(['projects'])).toEqual([made(null, '유효한 프로젝트')])
+})
+
+it.each(['', '&threadId=old-thread'])('does not refetch a confirmed missing project while navigation is pending %s', async suffix => {
+  const client = new QueryClient()
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  client.setQueryData(['project', 1, suffix ? 'old-thread' : ''], made(null, '삭제된 캐시'))
+  const reads: string[] = []
+  let accessibleAgain = false
+  network(path => {
+    if (path === '/api/projects') return Response.json([other])
+    if (path.split('?')[0] === '/api/projects/1') {
+      reads.push(path)
+      if (accessibleAgain) return Response.json(made(null, '접근 복구된 프로젝트'))
+      // 중복 조회는 대기시켜 잘못된 구현이 무한 요청 대신 횟수 검증으로 실패하게 한다.
+      if (reads.filter(read => read === path).length > 1) return new Promise<Response>(() => {})
+      return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)
+    }
+    return Response.json([])
+  })
+  let release!: () => void, blocked = true
+  const listReady = new Promise<void>(resolve => { release = () => { blocked = false; resolve() } })
+  const navigating = vi.fn()
+  function PendingList() {
+    const location = useLocation()
+    if (!location.search && blocked) { navigating(); throw listReady }
+    return <WorkbenchPage />
+  }
+  try {
+    renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1${suffix}`, `/app?projectId=1${suffix}`]}><HistoryControls /><Suspense fallback={<p>목록 준비 중</p>}><PendingList /></Suspense></MemoryRouter>, client)
+    await waitFor(() => expect(navigating).toHaveBeenCalled())
+    // 목록 화면 준비 중에 캐시 갱신으로 기존 화면이 다시 그려져도 재조회하지 않는다.
+    await act(async () => { client.setQueryData(['projects'], [other]); await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(reads).toEqual(suffix ? ['/api/projects/1?thread_id=old-thread', '/api/projects/1'] : ['/api/projects/1'])
+    await act(async () => { release() })
+    expect(await screen.findByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeInTheDocument()
+    expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toBeUndefined()
+    accessibleAgain = true
+    fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+    await waitFor(() => expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toMatchObject({ name: '접근 복구된 프로젝트' }))
+    expect(reads).toHaveLength(suffix ? 3 : 2)
+  } finally {
+    await act(async () => { release(); cleanup() })
+    client.clear()
+  }
 })
 
 it('does not close another rename dialog when an earlier project returns 404 late', async () => {
