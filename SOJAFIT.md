@@ -121,6 +121,7 @@ SojaFit (proj3-b)
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
+│       │   ├── Approval.test.tsx <- 새로고침 뒤 승인·견적 복원, 409 이미 승인됨 처리, 견적 본문은 수량만
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
 │       │   ├── Schematic.test.tsx <- 웹 검색의 기본 검색어·길이 규칙·결과·오류 상태 테스트

@@ -6,8 +6,7 @@ import { getRun, listDemoQuestions, listJudgeRoles } from '../api/conversations'
 import type { CandidateDto, ResultDto } from '../api/conversations'
 import type { CircuitPart } from '../api/projects'
 import { errorMessage, requestIdProps } from '../api/client'
-import { approveMessage, createQuote } from '../api/quotes'
-import type { ApprovalDto, QuoteDto } from '../api/quotes'
+import { approveMessage, createQuote, getMessageApproval } from '../api/quotes'
 import { useConversation } from '../hooks/useConversation'
 import type { ContextNet } from '../lib/circuit'
 import { CHECK_LABELS, VERDICT_LABELS, VERDICT_TONE, candidatesOf, citationHref, formatValue, judgementOf } from '../lib/judgement'
@@ -49,23 +48,36 @@ export function Checks({ candidate, resolved }: { candidate: CandidateDto | unde
   </table></div>
 }
 
-function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto; messageId: number | null; reviewer: string }) {
-  const [approval, setApproval] = useState<ApprovalDto | null>(null)
-  const [quote, setQuote] = useState<QuoteDto | null>(null)
+export function Approval({ candidate, messageId, reviewer }: { candidate: CandidateDto; messageId: number | null; reviewer: string }) {
+  // [왜] 승인·견적은 서버가 정본이다. 새로고침해도 '승인 전'으로 돌아가지 않도록 화면 상태 대신 서버 값을 읽는다(가격은 저장하지 않는다, ADR 0009)
+  const saved = useQuery({ queryKey: ['message-approval', messageId], queryFn: ({ signal }) => getMessageApproval(messageId!, signal), enabled: messageId !== null, retry: false, gcTime: 0 })
+  const mine = saved.data?.approval?.candidate_part === candidate.part ? saved.data : null
+  const approval = mine?.approval ?? null
+  const quote = mine?.quotes.at(-1) ?? null
+  const otherPart = saved.data?.approval && !mine ? saved.data.approval.candidate_part : null // 이 답에서 다른 후보를 이미 승인함
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
-  async function act(job: () => Promise<void>) { if (busy) return; setBusy(true); setError(null); try { await job() } catch (reason) { setError(reason) } finally { setBusy(false) } }
+  async function act(job: () => Promise<unknown>) {
+    if (busy) return
+    setBusy(true); setError(null)
+    try { await job() } catch (reason) {
+      // 이미 승인된 메시지(다른 탭·새로고침 전 승인)는 오류가 아니라 서버 상태를 다시 읽는다
+      if ((reason as { code?: string } | null)?.code !== 'ALREADY_APPROVED') setError(reason)
+    } finally { await saved.refetch(); setBusy(false) }
+  }
   function openQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const quantity = Math.max(1, Math.floor(Number(new FormData(event.currentTarget).get('quantity'))) || 1)
-    void act(async () => setQuote(await createQuote(approval!.id, quantity)))
+    void act(() => createQuote(approval!.id, quantity))
   }
   return <div className="approval">
-    <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : '승인 전'}</p>
+    <p className="approval-state">{approval ? <ShieldCheck aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{approval ? '승인됨' : otherPart ? '다른 후보 승인됨' : '승인 전'}</p>
     {approval && <p className="property-note">{reviewer}</p>}
+    {otherPart && <p className="property-note">이 답에서는 {otherPart}를 이미 승인했습니다.</p>}
     {quote && <p className="property-note">견적 {quote.part_number} × {quote.quantity}</p>}
-    {!approval && <button className="btn btn-primary" disabled={busy || messageId === null} onClick={() => void act(async () => setApproval(await approveMessage(messageId!, candidate.part, candidate.verdict)))}>{busy ? '저장 중' : '검토하고 승인'}</button>}
+    {!approval && !otherPart && <button className="btn btn-primary" disabled={busy || messageId === null || saved.isPending} onClick={() => void act(() => approveMessage(messageId!, candidate.part, candidate.verdict))}>{busy ? '저장 중' : '검토하고 승인'}</button>}
     {approval && !quote && <form className="quote" onSubmit={openQuote}><label className="sr-only" htmlFor="quantity">수량</label><input id="quantity" name="quantity" className="input" type="number" min={1} defaultValue={1} inputMode="numeric" /><button className="btn btn-primary" disabled={busy}>견적 열기</button></form>}
+    {saved.error ? <p className="notice" role="alert" {...requestIdProps(saved.error)}>저장된 승인 상태를 불러오지 못했습니다. {errorMessage(saved.error)}</p> : null}
     {error ? <p className="notice" role="alert" {...requestIdProps(error)}>{approval ? '견적을 저장하지 못했습니다. 견적 열기로 다시 시도해 주세요.' : '승인을 저장하지 못했습니다. 검토하고 승인으로 다시 시도해 주세요.'} {errorMessage(error)}</p> : null}
   </div>
 }
