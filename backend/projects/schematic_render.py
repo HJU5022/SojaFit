@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import json
 import hashlib
 import math
 import os
@@ -19,7 +20,7 @@ from xml.etree import ElementTree as ET
 import httpx
 from PIL import Image
 
-from backend.graph.netlist import _sexpr
+from backend.graph.netlist import TOKEN as _SEXPR_TOKEN, _sexpr
 from backend.projects.external_circuit_search import canonical_product_query, is_non_circuit_asset
 from backend.projects.schematic import (
     COMMAND_TIMEOUT_SECONDS, KicadServiceUnavailable, run_kicad_pdf,
@@ -283,6 +284,113 @@ def _archive(source: VerifiedSchematicSource, data: bytes, dest: Path) -> tuple[
     return dest / root, count
 
 
+def _kicad_nodes(text):
+    """Inspect direct KiCad objects with bounded depth and without a full-sheet AST."""
+    stack, starts = [], []
+    end = count = 0
+    finished = False
+    for match in _SEXPR_TOKEN.finditer(text):
+        if match.start() != end:
+            raise _invalid()
+        end = match.end()
+        token = match.group()
+        if token.isspace():
+            continue
+        count += 1
+        if finished or count > 2_000_000:
+            raise _invalid()
+        if token == '(':
+            if len(stack) >= 64:
+                raise _invalid()
+            stack.append(None); starts.append(match.start())
+        elif token == ')':
+            if not stack or stack[-1] is None:
+                raise _invalid()
+            tag = None
+            if stack in (["kicad_sch", "symbol"], ["kicad_sch", "sheet"]):
+                tag = stack[-1]
+            elif stack == ["kicad_sch", "lib_symbols", "symbol"]:
+                tag = "library"
+            if tag:
+                yield tag, _sexpr(text[starts[-1]:match.end()])
+            stack.pop(); starts.pop()
+            finished = not stack
+        elif not stack:
+            raise _invalid()
+        elif stack[-1] is None:
+            stack[-1] = token
+            if len(stack) == 1 and token != "kicad_sch":
+                raise _invalid()
+    if end != len(text) or not finished or stack:
+        raise _invalid()
+
+
+def _selected_kicad(source: VerifiedSchematicSource, fetch: Callable[[str], bytes], dest: Path) -> tuple[Path, int]:
+    """Fetch only the already inspected KiCad hierarchy, never the whole repository archive."""
+    paths = tuple(dict.fromkeys(source.asset_paths))
+    if not paths or len(paths) > MAX_SHEETS or source.root_schematic not in paths:
+        raise _invalid()
+    files, contents = {}, {}
+    total = 0
+    for name in paths:
+        path = _path(name)
+        if path.suffix.casefold() != ".kicad_sch":
+            raise _invalid()
+        raw = fetch(str(path))
+        total += len(raw)
+        if len(raw) > MAX_IMAGE_BYTES or total > MAX_ARCHIVE_BYTES:
+            raise _invalid()
+        contents[path] = raw
+        # KiCad permits literal newlines in quoted descriptions. Normalize only
+        # the inspection copy for the shared JSON-string S-expression reader.
+        inspection = re.sub(r'"(?:\\.|[^"\\])*"',
+                            lambda match: json.dumps(json.loads(match[0], strict=False)),
+                            raw.decode("utf-8-sig"))
+        libraries, placed, children = set(), [], []
+        for tag, node in _kicad_nodes(inspection):
+            if tag == "library":
+                if len(node) < 2 or not isinstance(node[1], str):
+                    raise _invalid()
+                libraries.add(node[1])
+            elif tag == "symbol":
+                symbol = node
+                ids = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_id"] and len(n) == 2]
+                aliases = [n[1] for n in symbol if isinstance(n, list) and n[:1] == ["lib_name"] and len(n) == 2]
+                if (len(ids) != 1 or len(aliases) > 1
+                        or not isinstance((aliases or ids)[0], str)):
+                    raise _invalid()
+                placed.append((aliases or ids)[0])
+            elif tag == "sheet":
+                sheet = node
+                found = [p[2] for p in sheet if isinstance(p, list) and len(p) >= 3
+                         and p[0] == "property" and str(p[1]).lower().replace(" ", "") == "sheetfile"]
+                if len(found) != 1 or not isinstance(found[0], str) or any(c in found[0] for c in "$%{}~"):
+                    raise _invalid()
+                children.append(path.parent / _path(found[0]))
+        if any(lib not in libraries for lib in placed):
+            raise _invalid()
+        files[path] = children
+    root = _path(source.root_schematic)
+    count = 0
+    seen = set()
+    def visit(path, ancestors):
+        nonlocal count
+        if path in ancestors or path not in files:
+            raise _invalid()
+        seen.add(path); count += 1
+        if count > MAX_SHEETS:
+            raise _invalid()
+        target = dest / path
+        target.parent.mkdir(exist_ok=True, parents=True)
+        target.write_bytes(contents[path])
+        for child in files[path]:
+            visit(child, ancestors | {path})
+    visit(root, set())
+    if len(seen) != len(files) or count != source.expected_sheets:
+        raise _invalid()
+    return dest / root, count
+
+
 def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.Client | None = None,
                               kicad_export: Callable = run_kicad_pdf) -> tuple[bytes, ...]:
     from backend.projects.schematic_discovery import download_bounded
@@ -308,14 +416,30 @@ def render_external_schematic(source: VerifiedSchematicSource, *, client: httpx.
         result = []
         for index, url in enumerate(urls):
             limit = {"pdf": MAX_PDF_BYTES, "kicad": MAX_ARCHIVE_BYTES}.get(kind, MAX_IMAGE_BYTES)
-            data, mime = download_bounded(url, max_bytes=limit, allowed_hosts=frozenset({host}), client=client)
+            # A discovered KiCad hierarchy carries its exact files; do not fetch
+            # the potentially huge repository archive before selective download.
+            if kind == "kicad" and source.asset_paths:
+                data, mime = b"", "application/zip"
+            else:
+                data, mime = download_bounded(url, max_bytes=limit, allowed_hosts=frozenset({host}), client=client)
             # GitHub raw에서는 PDF와 SVG에도 generic media type을 사용한다.
             generic = {"application/octet-stream"} | ({"text/plain"} if kind == "svg" else set())
             if len(data) > limit or mime not in MIME[kind] | generic:
                 raise _invalid()
             if kind == "kicad":
                 try:
-                    root, count = _archive(source, data, work / "source")
+                    if source.asset_paths:
+                        def fetch_selected(path):
+                            selected_url = f"https://raw.githubusercontent.com/{source.repository}/{source.commit}/{quote(path)}"
+                            body, selected_mime = download_bounded(selected_url, max_bytes=MAX_IMAGE_BYTES,
+                                                                   allowed_hosts=frozenset({"raw.githubusercontent.com"}),
+                                                                   client=client, phase="github_raw")
+                            if selected_mime not in {"text/plain", "application/octet-stream"}:
+                                raise _invalid()
+                            return body
+                        root, count = _selected_kicad(source, fetch_selected, work / "source")
+                    else:
+                        root, count = _archive(source, data, work / "source")
                     output = work / "export"
                     output.mkdir()
                     _, pdf = kicad_export(root, output)
@@ -507,10 +631,14 @@ def _verify_artifact_name(query: str, source_file: str, source_url: str, title: 
 def _verify_public_identity(query: str, *, title: str, page_url: str, source_file: str,
                             source_url: str, kind: str, pdf_text: str = "", linked_identity: str = "") -> None:
     """Reject a valid image/PDF whose board variant is not the requested one."""
+
     from backend.projects.external_circuit_search import _MANUFACTURER_ALIASES
 
     _verify_artifact_name(query, source_file, source_url, title)
     query = _VOLTAGE.sub(lambda match: "".join(match.groups()), canonical_product_query(query))
+    from backend.projects.external_circuit_search import component_evidence_matches, component_context
+    if component_context(query) == "diode" and not component_evidence_matches(query, " ".join((title, page_url, source_file, source_url, pdf_text))):
+        raise _invalid()
     voltages = _voltage_tokens(query)
     # Preserve decimal points; source text or a verified official link must support voltages.
     # A linked page only supplements a PDF with no extractable voltage evidence.
@@ -527,6 +655,9 @@ def _verify_public_identity(query: str, *, title: str, page_url: str, source_fil
     artifact_identity = _identity_compact(" ".join((source_file, source_url)))
     text = _identity_compact(pdf_text)
     haystack = metadata + text
+    if component_context(query) == "diode" and not component_evidence_matches(
+            query, " ".join((title, page_url, source_file, source_url, pdf_text))):
+        raise _invalid()
     # Numeric/model tokens and explicit variants must occur in the source identity.
     # This blocks e.g. ATP -> the general Artemis and LC -> Teensy 4.1.
     for term in terms:

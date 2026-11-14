@@ -1,10 +1,15 @@
 """공개 회로도 검색·시트 캐시와 다른 인스턴스에서의 원본 복구."""
+import base64
+import hmac
+import json
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from threading import Event
 
 import pytest
+import httpx
+from fastapi.testclient import TestClient
 
 from backend.projects import external_schematic as api
 from backend.projects.schematic_source import (
@@ -13,6 +18,8 @@ from backend.projects.schematic_source import (
     ExternalSchematicUpstreamError, VerifiedSchematicSource,
 )
 from backend.projects.external_circuit_search import WebSchematicRef
+from backend.projects.external_circuit_search import GitHubRepositoryRef
+from backend.projects.external_circuit_search import MAX_COMPONENT_REPOSITORIES
 
 
 @pytest.mark.parametrize('has_candidate,reason', [(False, 'no_candidates'), (True, 'validation_failed')])
@@ -81,6 +88,60 @@ def test_manifest_all_sheets_and_cross_instance(service):
     assert counts == {"search": 1, "inspect": 2, "render": 2}
 
 
+def test_default_community_render_rate_limit_is_not_reported_as_missing(service):
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef('group', 'board', 'https://github.com/group/board')
+    worker.search = lambda query, limit: (ref,)
+    worker.inspect = lambda candidate, **kwargs: (source,)
+    def render(candidate):
+        raise ExternalSchematicRateLimited(60)
+    worker.render = render
+    with pytest.raises(ExternalSchematicRateLimited):
+        worker.find('rate-limited circuit')
+
+
+def test_community_inspection_never_exceeds_repository_budget(service):
+    worker, _, _, source = service
+    refs = tuple(GitHubRepositoryRef('group', f'board{i}', f'https://github.com/group/board{i}')
+                 for i in range(13))
+    calls = []
+    worker.search = lambda query, limit: refs
+    def inspect(candidate, **kwargs):
+        calls.append(candidate)
+        return (source,) if candidate == refs[-1] else ()
+    worker.inspect = inspect
+    result = worker.find('bounded community circuit')
+    assert result.source_url == source.source_url
+    assert calls == list(refs[:MAX_COMPONENT_REPOSITORIES])
+
+
+def test_default_community_prefers_a_compact_complete_circuit_without_hiding_others(service):
+    worker, _, _, source = service
+    refs = tuple(GitHubRepositoryRef('group', name, f'https://github.com/group/{name}') for name in ('large', 'compact'))
+    sources = tuple(replace(source, repository=f'group/{ref.repo}', source_url=ref.repository_url,
+                            expected_sheets=count) for ref, count in zip(refs, (11, 1)))
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda ref, **kwargs: (sources[refs.index(ref)],)
+    worker.render = lambda source: (b'page',) * source.expected_sheets
+    result = worker.find('component circuit')
+    assert result.source_url == sources[1].source_url
+    assert {choice.source_url for choice in result.choices} == {source.source_url for source in sources}
+
+
+@pytest.mark.parametrize("query", [
+    "https://github.com/group/board",
+    "http://github.com/group/board",
+    "https://github.com/group/board/blob/main/board.sch",
+])
+def test_repository_url_is_not_a_search_query(service, query):
+    worker, counts, _, _ = service
+    worker.search = lambda *_: pytest.fail("repository URL must not reach search")
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find(query)
+    assert counts["inspect"] == 0
+    assert counts["render"] == 0
+
+
 def test_expired_tampered_or_out_of_range_never_redownloads(service):
     worker, counts, clock, _ = service
     token = worker.find("ATtiny85").token
@@ -90,6 +151,20 @@ def test_expired_tampered_or_out_of_range_never_redownloads(service):
     clock[0] += 900
     with pytest.raises(ExternalSchematicInvalidToken):
         worker.load(token, 0)
+    assert counts["render"] == 1
+
+
+def test_reads_legacy_v1_token_during_rolling_deployment(service):
+    worker, counts, _, source = service
+    expires = 1500
+    payload = [source.repository, source.commit, source.license, source.attribution,
+               source.source_file, source.asset_kind, list(source.asset_paths),
+               source.root_schematic, source.expected_sheets, expires]
+    part = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).rstrip(b"=")
+    signature = base64.urlsafe_b64encode(hmac.digest(api._key(), part, "sha256")).rstrip(b"=")
+    token = (part + b"." + signature).decode()
+
+    assert worker.load(token, 0) == b"sheet0"
     assert counts["render"] == 1
 
 
@@ -202,7 +277,7 @@ def test_bad_preview_falls_back_and_limits_candidates(service):
     worker.inspect = rejected
     with pytest.raises(ExternalSchematicNotFound):
         worker.find("another")
-    assert counts["rejected"] == 5
+    assert counts["rejected"] == MAX_COMPONENT_REPOSITORIES
 
 
 def test_lru_and_image_byte_limit_evict_least_recent_complete_source(service):
@@ -317,7 +392,151 @@ def test_service_uses_lazy_fallback_when_official_render_fails(service):
     result = worker.find("official")
 
     assert result.source_type == "community"
-    assert fallback_calls == [("official", 5)]
+    assert fallback_calls == [("official", MAX_COMPONENT_REPOSITORIES)]
+
+
+def test_partial_rate_pool_is_rechecked_after_retry_window(service):
+    worker, counts, clock, source = service
+    refs = tuple(GitHubRepositoryRef("group", name, f"https://github.com/group/{name}")
+                 for name in ("first", "second"))
+    first = replace(source, repository="group/first", repository_url=refs[0].repository_url,
+                    source_url=refs[0].repository_url + "/blob/" + "c" * 40 + "/first.kicad_sch")
+    second = replace(source, repository="group/second", repository_url=refs[1].repository_url,
+                     source_url=refs[1].repository_url + "/blob/" + "c" * 40 + "/second.kicad_sch")
+    worker.search = lambda query, limit: refs
+    attempts = Counter()
+
+    def inspect(ref, **kwargs):
+        attempts[ref.repo] += 1
+        if ref is refs[0]:
+            return (first,) if clock[0] < 1061 else ()
+        if clock[0] < 1061:
+            raise ExternalSchematicRateLimited(60)
+        return (second,)
+
+    worker.inspect = inspect
+    worker.render = lambda candidate: (b"verified",) * candidate.expected_sheets
+
+    initial = worker.find("partial rate circuit")
+    assert initial.source_url == first.source_url
+    assert attempts == Counter(first=1, second=1)
+
+    # A known source remains usable during the provider cooldown, without
+    # extending the original retry deadline.
+    clock[0] += 30
+    assert worker.find("partial rate circuit", first.source_url).source_url == first.source_url
+    assert attempts == Counter(first=1, second=1)
+
+    clock[0] += 31
+    refreshed = worker.find("partial rate circuit", second.source_url)
+    assert refreshed.source_url == second.source_url
+    assert attempts == Counter(first=2, second=2)
+    assert worker.find("partial rate circuit").source_url == second.source_url
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find("partial rate circuit", first.source_url)
+
+
+def test_partial_retry_deadline_cache_is_bounded(service):
+    worker, _, _, _ = service
+    worker.queries.capacity = 2
+    worker._set_retry_deadline("one", 1100)
+    worker._set_retry_deadline("two", 1100)
+    worker._set_retry_deadline("three", 1100)
+    assert len(worker.retry_until) <= worker.queries.capacity
+
+
+def test_community_choices_are_bounded_verified_sources_from_one_repository(service):
+    worker, _, _, source = service
+    first = replace(source, source_url="https://github.com/group/board/blob/" + "c" * 40 + "/one.kicad_sch",
+                    source_file="one.kicad_sch", root_schematic="one.kicad_sch")
+    second = replace(source, source_url="https://github.com/group/board/blob/" + "c" * 40 + "/two.kicad_sch",
+                     source_file="two.kicad_sch", root_schematic="two.kicad_sch")
+    worker.search = lambda query, limit: (1,)
+    worker.inspect = lambda candidate, **kwargs: (first, second)
+    worker.render = lambda candidate: (b"verified", b"verified")
+
+    result = worker.find("board")
+
+    assert result.source_url == first.source_url
+    assert [(choice.source_url, choice.source_type) for choice in result.choices] == [
+        (first.source_url, "community"), (second.source_url, "community")]
+    assert result.choices[0].title == "group/board · one.kicad_sch"
+
+
+def test_community_selection_uses_cached_verified_source_without_reinspection(service):
+    worker, counts, _, source = service
+    refs = tuple(GitHubRepositoryRef(owner, repo, f"https://github.com/{owner}/{repo}")
+                 for owner, repo in (("one", "board"), ("two", "board")))
+    sources = tuple(replace(source, repository=ref.owner + "/" + ref.repo,
+                            repository_url=ref.repository_url,
+                            source_url=ref.repository_url + "/blob/" + "c" * 40 + "/board.sch")
+                    for ref in refs)
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda ref, **kwargs: (sources[refs.index(ref)],)
+    worker.render = lambda candidate: (b"verified", b"verified")
+
+    first = worker.find("community board")
+    inspected = counts["inspect"]
+    selected = worker.find("community board", sources[1].source_url)
+
+    assert selected.source_url == sources[1].source_url
+    assert counts["inspect"] == inspected
+    assert [choice.source_url for choice in first.choices] == [source.source_url for source in sources]
+
+
+def test_community_selection_rejects_other_query_and_arbitrary_url(service):
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    worker.search = lambda query, limit: (ref,) if query == "community board" else ()
+    worker.inspect = lambda ref, **kwargs: (source,)
+    worker.render = lambda candidate: (b"verified", b"verified")
+    result = worker.find("community board")
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find("other board", source.source_url)
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find("community board", "https://attacker.example/board.sch")
+    assert result.source_url == source.source_url
+
+
+def test_selected_source_keeps_same_url_format_fallbacks(service):
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    png = replace(source, source_url="https://github.com/one/board/blob/" + "c" * 40 + "/board.png",
+                  source_file="board.png", root_schematic="board.kicad_sch", asset_kind="png")
+    kicad = replace(source, source_url=png.source_url, source_file="board.kicad_sch", asset_kind="kicad")
+    worker.search = lambda query, limit: (ref,)
+    worker.inspect = lambda ref, **kwargs: (png, kicad)
+    worker.render = lambda candidate: (_ for _ in ()).throw(ExternalSchematicInvalidSource()) if candidate.asset_kind == "png" else (b"ok", b"ok")
+    result = worker.find("format board")
+    assert result.source_file == "board.kicad_sch"
+    assert len(result.choices) == 1
+
+
+def test_expired_community_pool_cannot_select_stale_source(service):
+    worker, _, clock, source = service
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    worker.search = lambda query, limit: (ref,) if clock[0] < 1900 else ()
+    worker.inspect = lambda ref, **kwargs: (source,)
+    worker.render = lambda candidate: (b"ok", b"ok")
+    first = worker.find("expiring board")
+    clock[0] += 900
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find("expiring board", first.source_url)
+
+
+def test_community_pool_preserves_partial_rate_limit_when_other_render_fails(service):
+    worker, _, _, source = service
+    refs = (GitHubRepositoryRef("one", "board", "https://github.com/one/board"),
+            GitHubRepositoryRef("two", "board", "https://github.com/two/board"))
+    worker.search = lambda query, limit: refs
+    def inspect(ref, **kwargs):
+        if ref == refs[0]:
+            raise ExternalSchematicRateLimited(60)
+        return (source,)
+    worker.inspect = inspect
+    worker.render = lambda candidate: (_ for _ in ()).throw(ExternalSchematicInvalidSource())
+    with pytest.raises(ExternalSchematicRateLimited):
+        worker.find("partial failure")
 
 
 def test_public_web_token_restores_verified_asset_on_cold_instance(service):
@@ -395,3 +614,164 @@ def test_user_can_select_an_exact_web_candidate_without_arbitrary_url_fetch(serv
     with pytest.raises(ExternalSchematicNotFound):
         worker.find("Board", "https://attacker.example/schematic.png")
     assert counts["web_search"] == 1
+
+
+def test_only_kicad_sources_use_remote_renderer(service, monkeypatch):
+    from backend.projects import schematic, schematic_render
+
+    _, _, _, source = service
+    calls = []
+    monkeypatch.setenv("KICAD_RENDERER_URL", "http://renderer:8000")
+    monkeypatch.setattr(schematic, "render_remote_kicad", lambda item: calls.append("remote") or (b"remote",))
+    monkeypatch.setattr(schematic_render, "render_external_schematic",
+                        lambda item: calls.append("static") or (b"static",))
+    monkeypatch.setattr(schematic_render, "render_public_schematic",
+                        lambda item: calls.append("official") or (b"official",))
+
+    assert api._render(replace(source, asset_kind="png", asset_paths=("board.png",))) == (b"static",)
+    assert api._render(replace(source, source_type="manufacturer_official", evidence_grade=2)) == (b"official",)
+    assert api._render(source) == (b"remote",)
+    assert calls == ["static", "official", "remote"]
+
+
+def test_remote_renderer_failure_is_public_upstream_error(service, monkeypatch):
+    from backend.projects import schematic
+
+    _, _, _, source = service
+    monkeypatch.setenv("KICAD_RENDERER_URL", "http://renderer:8000")
+    monkeypatch.setattr(schematic, "render_remote_kicad",
+                        lambda item: (_ for _ in ()).throw(schematic.KicadServiceUnavailable()))
+
+    with pytest.raises(ExternalSchematicUpstreamError):
+        api._render(source)
+
+
+def test_remote_renderer_422_is_invalid_source_not_upstream(service, monkeypatch):
+    from backend.projects import schematic
+    monkeypatch.setenv("KICAD_RENDERER_URL", "http://renderer:8000")
+    transport = httpx.MockTransport(lambda request: httpx.Response(422, json={"detail": "invalid"}))
+    with httpx.Client(transport=transport) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            schematic.render_remote_kicad(service[3], client=client)
+
+
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [(ExternalSchematicInvalidSource(), 422), (ExternalSchematicUpstreamError(), 503)],
+)
+def test_renderer_boundary_maps_source_and_upstream_errors(error, status, monkeypatch, service):
+    from backend.projects import schematic, schematic_render
+    monkeypatch.setattr(schematic_render, "render_external_schematic",
+                        lambda source: (_ for _ in ()).throw(error))
+    payload = {"source": schematic._source_payload(service[3])}
+    response = TestClient(schematic.app).post("/render", json=payload)
+    assert response.status_code == status
+
+
+def test_diode_component_search_does_not_reject_repository_by_its_name(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    ref = search.github_repository_ref('https://github.com/owner/power-board')
+    monkeypatch.setattr(search, 'search_component_repositories', lambda query, limit: (ref,))
+    monkeypatch.setattr(search, 'search_public_schematics', lambda *args: pytest.fail('verified-source discovery should be attempted first'))
+    assert api._search('SS33 diode', 5) == (ref,)
+    assert api._search_community('SS33 diode', 5) == (ref,)
+
+
+def test_broad_search_keeps_public_provider_limit_at_five(monkeypatch):
+    from backend.projects import external_circuit_search as search
+    calls = []
+    monkeypatch.setattr(search, "search_public_schematics",
+                        lambda query, limit: calls.append(("public", limit)) or ())
+    monkeypatch.setattr(search, "search_manufacturer_schematics",
+                        lambda query, limit: calls.append(("manufacturer", limit)) or ())
+    monkeypatch.setattr(search, "search_github_repositories", lambda query, limit: ())
+    assert api._search("generic board", 12) == ()
+    assert calls == [("public", 5), ("manufacturer", 5)]
+
+
+def test_community_choices_do_not_revisit_a_render_rejected_source(service):
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    good = replace(source, source_url=ref.repository_url + "/good.kicad_sch")
+    bad = replace(source, source_url=ref.repository_url + "/bad.kicad_sch")
+    rendered = []
+    worker.search = lambda query, limit: (ref,)
+    worker.inspect = lambda candidate, **kwargs: (good, bad)
+    def render(candidate):
+        rendered.append(candidate.source_url)
+        if candidate == bad:
+            raise ExternalSchematicInvalidSource()
+        return (b"ok", b"ok")
+    worker.render = render
+    result = worker.find("community board")
+    assert [choice.source_url for choice in result.choices] == [good.source_url]
+    before = list(rendered)
+    with pytest.raises(ExternalSchematicNotFound):
+        worker.find("community board", bad.source_url)
+    assert rendered == before
+
+
+@pytest.mark.parametrize("failure", ["inspect", "render", "sheet_count"])
+def test_community_rejections_keep_validation_failed_reason(service, failure):
+    worker, _, _, source = service
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    worker.search = lambda query, limit: (ref,)
+    worker.inspect = lambda candidate, **kwargs: () if failure == "inspect" else (source,)
+    def render(candidate):
+        if failure == "render":
+            raise ExternalSchematicInvalidSource()
+        return (b"wrong sheet count",)
+    worker.render = render
+    for _ in range(2):
+        with pytest.raises(ExternalSchematicNotFound) as error:
+            worker.find("rejected community board")
+        assert error.value.reason == "validation_failed"
+
+
+def test_community_fallback_keeps_all_verified_roots_and_excludes_failed_render(service):
+    worker, _, _, source = service
+    web = WebSchematicRef("https://example.org/schematic.pdf", "https://example.org/board",
+                          "schematic.pdf", "pdf", "Board", "Publisher")
+    ref = GitHubRepositoryRef("one", "board", "https://github.com/one/board")
+    sources = tuple(replace(source, source_url=ref.repository_url + f"/{index}.kicad_sch",
+                            root_schematic=f"{index}.kicad_sch") for index in range(3))
+    worker.search = lambda query, limit: (web,)
+    worker.fallback_search = lambda query, limit: (ref,)
+    worker.inspect = lambda candidate, **kwargs: () if candidate == web else sources
+    def render(candidate):
+        if candidate == sources[1]:
+            raise ExternalSchematicInvalidSource()
+        return (b"ok", b"ok")
+    worker.render = render
+    result = worker.find("fallback board")
+    assert [choice.source_url for choice in result.choices] == [sources[0].source_url, sources[2].source_url]
+    assert worker.find("fallback board", sources[2].source_url).source_url == sources[2].source_url
+
+
+def test_empty_community_fallback_keeps_validation_failed_reason(service):
+    worker, _, _, _ = service
+    web = WebSchematicRef("https://example.org/schematic.pdf", "https://example.org/board",
+                          "schematic.pdf", "pdf", "Board", "Publisher")
+    worker.search = lambda query, limit: (web,)
+    worker.inspect = lambda candidate, **kwargs: ()
+    worker.fallback_search = lambda query, limit: ()
+    with pytest.raises(ExternalSchematicNotFound) as error:
+        worker.find("fallback board")
+    assert error.value.reason == "validation_failed"
+
+
+def test_public_choice_switch_keeps_all_verified_choices(service):
+    worker, _, _, source = service
+    refs = tuple(WebSchematicRef(f"https://example.org/{i}-schematic.png", "https://example.org/board",
+                                f"{i}-schematic.png", "png", "Board", "Publisher") for i in range(2))
+    worker.search = lambda query, limit: refs
+    worker.inspect = lambda ref, **kwargs: (replace(source, repository="", commit="",
+        source_url=ref.source_url, source_file=ref.source_file, root_schematic=ref.source_file,
+        asset_kind="png", asset_paths=(), expected_sheets=1,
+        source_type="public_web", evidence_grade=None, source_sha256="a" * 64),)
+    worker.render = lambda source: (b"ok",)
+    first = worker.find("public board")
+    for ref in (refs[1], refs[0]):
+        selected = worker.find("public board", ref.source_url)
+        assert selected.source_url == ref.source_url
+        assert selected.choices == first.choices

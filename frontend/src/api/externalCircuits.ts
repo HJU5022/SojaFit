@@ -8,8 +8,8 @@ export type ExternalSchematicResult = {
   manufacturer: string | null; model: string | null; revision: string | null
   source_sha256: string | null; license_evidence_url: string | null
   images: { sheet: number; url: string }[]
-  choices: { title: string; source_url: string; source_type: 'manufacturer_official' | 'public_web'; revision: string | null }[]
+  choices: { title: string; source_url: string; source_type: 'manufacturer_official' | 'community' | 'public_web'; revision: string | null }[]
 }
 // 각 시트 이미지(GET /api/external-circuits/schematics/{token}/{sheet})는 images[].url을 <img>가 같은 세션 쿠키로 불러온다.
-export const findSchematic = (q: string, signal?: AbortSignal, sourceUrl?: string) =>
-  apiFetch<ExternalSchematicResult>(`/api/external-circuits/schematics?q=${encodeURIComponent(q)}${sourceUrl ? `&source_url=${encodeURIComponent(sourceUrl)}` : ''}`, { signal })
+export const findSchematic = (q: string, signal?: AbortSignal, sourceUrl?: string, componentType?: 'diode') =>
+  apiFetch<ExternalSchematicResult>(`/api/external-circuits/schematics?q=${encodeURIComponent(q)}${sourceUrl ? `&source_url=${encodeURIComponent(sourceUrl)}` : ''}${componentType ? `&component_type=${componentType}` : ''}`, { signal })

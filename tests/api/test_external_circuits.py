@@ -203,3 +203,14 @@ def test_manifest_allows_public_web_without_claiming_verified_grade():
     payload["evidence_grade"] = 2
     with pytest.raises(ValueError):
         ExternalSchematicResponse.model_validate(payload)
+
+@pytest.mark.parametrize('source_url', [None, 'https://example.org/ss33-diode-schematic.png'])
+def test_diode_intent_is_forwarded_separately_from_selected_source(client, schematic_boundary, monkeypatch, source_url):
+    api = import_module('backend.api.external_circuits')
+    calls = []
+    monkeypatch.setattr(api, 'find_external_schematic', lambda *args: calls.append(args) or schematic_boundary.manifest)
+    params = {'q': 'SS33', 'component_type': 'diode'}
+    if source_url:
+        params['source_url'] = source_url
+    assert client.get('/api/external-circuits/schematics', params=params).status_code == 200
+    assert calls == [('SS33', source_url, 'diode')]

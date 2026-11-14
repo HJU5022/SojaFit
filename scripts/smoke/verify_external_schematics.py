@@ -1,7 +1,8 @@
 """인증된 완성 회로도 HTTP 경계와 모든 PNG 시트의 실제 외부 점검.
 
 이미지는 메모리에서만 검사하고 key, signed token, 외부 응답 본문은 출력하지 않는다.
---force-kicad-fallback은 Exa와 인증 키 없이 고정 commit을 직접 렌더링한다.
+--force-kicad-fallback은 API 경계를 거치지 않고 로컬 KiCad CLI를 직접 렌더링한다.
+배포된 원격 KiCad 렌더러 경로는 일반 API 쿼리 결과에서 source_type으로 구별한다.
 """
 import argparse
 from collections import Counter
@@ -70,10 +71,22 @@ def verify_query(query, client):
     if response.headers.get("cache-control") != "private, no-store":
         raise RuntimeError("manifest cache policy is invalid")
     manifest = response.json()
-    if (manifest["license"] not in ALLOWED_LICENSES
-            or not re.fullmatch(r"[0-9a-f]{40}", manifest["commit"])
-            or not manifest["source_file"].lower().endswith((".kicad_sch", ".sch"))
-            or not manifest["images"]):
+    official = manifest.get("source_type") == "manufacturer_official"
+    if official:
+        from backend.projects.visuals import load_demo_visuals
+        allowed_licenses = {visual.license for visual in load_demo_visuals().values()}
+    else:
+        allowed_licenses = ALLOWED_LICENSES
+    valid_source = (
+        manifest["license"] in allowed_licenses
+        and (official or bool(re.fullmatch(r"[0-9a-f]{40}", manifest.get("commit") or "")))
+        and manifest["source_file"].lower().endswith(
+            (".pdf", ".png", ".svg") if official else (".kicad_sch", ".sch")
+        )
+        and (manifest.get("evidence_grade") == 2 if official else manifest.get("evidence_grade") == 3)
+        and (not official or bool(re.fullmatch(r"[0-9a-f]{64}", manifest.get("source_sha256") or "")))
+    )
+    if not valid_source or not manifest["images"]:
         raise RuntimeError("manifest source provenance is invalid")
     dimensions = []
     for index, sheet in enumerate(manifest["images"]):
@@ -129,7 +142,8 @@ def main(argv=None):
             dimensions = [_dimension(png) for png in render_external_schematic(FALLBACK_SOURCE)]
             if not dimensions:
                 raise RuntimeError("fallback returned no sheets")
-            print(json.dumps({"mode": "kicad-fallback", "project": FALLBACK_SOURCE.repository,
+            print(json.dumps({"mode": "kicad-local-direct", "renderer": "local-kicad-cli",
+                "project": FALLBACK_SOURCE.repository,
                 "commit": FALLBACK_SOURCE.commit, "license": FALLBACK_SOURCE.license,
                 "source_file": FALLBACK_SOURCE.source_file, "sheet_count": len(dimensions),
                 "dimensions": dimensions}, ensure_ascii=False))
