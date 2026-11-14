@@ -1058,3 +1058,16 @@ def test_numeric_check_correct_number_passes_across_separator_and_unit_spelling(
 def test_numeric_check_non_numeric_sentence_and_part_number_unchanged():
     assert not D.has_uncited_sentence('패키지는 DO-41입니다 [7]. BZT52B4V7은 제너입니다 [7].', NUM_DOCS)
     assert D.has_uncited_sentence('패키지는 DO-41입니다.', NUM_DOCS)  # 인용 없음 규칙은 그대로
+
+
+def test_per_part_searches_run_together_and_keep_part_order():
+    """품번별 검색은 동시에 돌고(한 검색이 다른 검색을 기다리지 않는다), 결과는 품번 순서를 지킨다."""
+    import threading
+    started = threading.Barrier(2, timeout=2)  # 두 검색이 동시에 들어와야만 통과한다(차례로 돌면 시간 초과)
+
+    def retriever(query, parts=None, k=5):
+        started.wait()
+        return [{'chunk_id': f'{parts[0]}-{i}'} for i in range(k)]
+
+    rows = D.retrieve_with_k(retriever, 'q', parts=['SS14', 'SS14H'], k=20)
+    assert [r['chunk_id'] for r in rows][:2] == ['SS14-0', 'SS14-1'] and rows[10]['chunk_id'] == 'SS14H-0'

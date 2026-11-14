@@ -13,8 +13,10 @@
   가진 쪽이 한다), backend/graph/nodes.py(검색 · 다른 품번 줄 거르기 · 인용 함수를 그대로 쓴다)
 """
 import base64
+import contextvars
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Literal
 
@@ -160,9 +162,15 @@ def retrieve_with_k(retriever, query: str, *, parts=None, k: int = 5):
     if k > 5 and parts and len(parts) > 1:
         # Give each explicitly named part evidence space instead of allowing
         # the better-ranked family to fill the whole comparison context.
+        # [왜] 품번별 검색은 서로의 결과를 기다릴 이유가 없어 동시에 부른다(검색 1번 약 1.2초, 11-14 v3-20은 6번이 줄지어 7.5초)
+        # [주의] 문맥(contextvars)을 복사해 넘긴다. 안 넘기면 단계 시간 기록과 Langfuse 추적에서 검색이 빠진다(card_specs.py와 같은 방법)
+        with ThreadPoolExecutor(max_workers=len(parts)) as pool:
+            futures = [pool.submit(contextvars.copy_context().run, retrieve_with_k, retriever, query, parts=[named], k=max(5, k // len(parts)))
+                       for named in parts]
+            per_part = [future.result() for future in futures]  # 품번 순서대로 모아 예전과 같은 순서를 지킨다
         rows, seen = [], set()
-        for named in parts:
-            for doc in retrieve_with_k(retriever, query, parts=[named], k=max(5, k // len(parts))):
+        for found in per_part:
+            for doc in found:
                 if doc['chunk_id'] not in seen:
                     rows.append(doc)
                     seen.add(doc['chunk_id'])
@@ -190,19 +198,25 @@ def trr_condition_gap(question: str, docs: list[dict]) -> bool:
     return not all(re.search(rf'\b{name}\s*=\s*', text, re.I) for name in ('IF', 'IR', 'Irr'))
 
 
-def variant_notes(parts: list[str], docs: list[dict], retriever) -> list[dict]:
+def fetch_variant_notes(parts: list[str], retriever) -> list[dict]:
+    """양방향 · H 품번이면 품번 규칙 주석 후보를 검색한다. 해당 품번이 없거나 검색 도구가 실패하면 []."""
+    if not any(VARIANT.search(p.strip()) for p in parts):
+        return []
+    try:
+        return retriever(VARIANT_QUERY, parts=list(parts))
+    except RetrievalUnavailableError:
+        return []  # 주석은 보탬이라 도구가 실패해도 본 검색 결과로 답한다
+
+
+def variant_notes(parts: list[str], docs: list[dict], retriever, found: list[dict] | None = None) -> list[dict]:
     """물은 품번이 양방향 · H 품번이면 그 문서의 품번 규칙 주석('특성은 양방향 모두 적용' · 'IR 한도 2배' · 'H는 AEC-Q101')을 더 찾는다.
 
     [왜] 값 표는 기본 품번(SMAJ6.5A)으로만 적고 양방향 · H 품번은 주석으로만 연결한다. 청킹 v4부터 주석이 행 카드 끝이 아니라 따로 된
          주석 카드라 표 행 검색 상위 10개에 들지 못해, SMAJ6.5CA 누설전류를 물으면 근거가 SMAJ6.5A 행 하나뿐이라 거절했다(v3 v3-19, 11-09)
     """
-    if not any(VARIANT.search(p.strip()) for p in parts):
-        return []
+    if found is None:  # found: 본 검색과 동시에 미리 찾아 둔 주석 후보(없으면 지금 찾는다)
+        found = fetch_variant_notes(parts, retriever)
     seen = {d.get('chunk_id') for d in docs}
-    try:
-        found = retriever(VARIANT_QUERY, parts=list(parts))
-    except RetrievalUnavailableError:
-        return []  # 주석은 보탬이라 도구가 실패해도 본 검색 결과로 답한다
     return [d for d in found if d.get('chunk_id') not in seen and NOTE_WORDS.search(d.get('content', ''))][:3]
 
 
@@ -524,6 +538,12 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 # [왜] 지시서의 품번(재계획이 넣음)이나 정격으로 찾은 품번이 있으면 그 품번 문서 안에서만 찾는다
                 find = lambda q, parts=None: retrieve_with_k(retriever, q, parts=list(filter_parts), k=search_k)
             search_query = enrich_rating_query(query, current_question, task)
+            early_notes = None
+            if filter_parts and not relax and not foreign_rating and any(VARIANT.search(p.strip()) for p in filter_parts):
+                # [왜] 품번이 이미 정해졌으면 주석 검색은 본 검색 결과를 기다릴 필요가 없다. 본 검색과 동시에 출발시킨다
+                notes_pool = ThreadPoolExecutor(max_workers=1)
+                early_notes = notes_pool.submit(contextvars.copy_context().run, fetch_variant_notes, list(filter_parts), retriever)
+                notes_pool.shutdown(wait=False)
             out = search({'question': question, 'target_part': part, 'query': search_query}, find)
             if out['retrieval_error']:
                 return report('fail', f"search tool failure: {out['retrieval_error'].get('kind', '')}", reason=Reason.SEARCH_ERROR)
@@ -537,7 +557,7 @@ def docs_agent(payload: dict, *, retriever, chat, find=None, web_search=None, we
                 docs = keep_docs(out['docs'], used_parts, revision_text, exact_parts)
                 # Variant notes are a second retrieval and must obey the same
                 # exact part/revision boundary as the primary result.
-                docs = keep_docs(docs + variant_notes(used_parts, docs, retriever),
+                docs = keep_docs(docs + variant_notes(used_parts, docs, retriever, found=early_notes.result() if early_notes else None),
                                  used_parts, revision_text, exact_parts)
         if carry:
             seen = {d['chunk_id'] for d in carry}
