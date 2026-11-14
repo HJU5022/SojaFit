@@ -2,7 +2,7 @@
 import re
 from urllib.parse import unquote
 from pydantic import BaseModel, ValidationError
-from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition
+from backend.conversations.models import SafeEvidence, SafeJudgement, SafeInputCondition, SafeRunError
 from backend.rag.source_metadata import source_metadata
 from backend.services.datasheet_rows import grade2_pdf, official_pdf
 from backend.services.exa import reference_url
@@ -20,6 +20,7 @@ class BrowserResult(BaseModel):
     interrupt: dict = {}
     request_id: str = ''
     profile_hints: list = []  # 참고(내 설정): 이번 질문으로 찾은 사용자 사실. 판정 근거가 아니며 저장하지 않는다
+    error: SafeRunError | None = None
 
 
 def _document_basename(document: str) -> str:
@@ -196,6 +197,10 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                profile_hints=(), input_conditions=()) -> BrowserResult:
     # 명시적으로 구조화한 공개 칸만 선택한다.
     answer = state.get('answer', '')
+    try:
+        error = SafeRunError.model_validate(state['error']) if state.get('error') else None
+    except (ValidationError, TypeError):
+        error = None
     safe_interrupt = {}
     if interrupt is None:
         interrupt = state.get('interrupt', {})
@@ -269,5 +274,5 @@ def result_dto(state: dict, *, request_id: str, status: str = '', stage: str = '
                          evidence=evidence, refusal=answer if status == 'refused' and isinstance(answer, str) else '',
                          question_type=question_type if isinstance(question_type, str) and question_type in question_types else '',
                          price_parts=[p for p in state.get('price_parts', []) if isinstance(p, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+/-]{0,99}', p)] if isinstance(state.get('price_parts', []), list) else [],
-                         interrupt=safe_interrupt, judgement=judgement, request_id=request_id,
+                         interrupt=safe_interrupt, error=error, judgement=judgement, request_id=request_id,
                          profile_hints=[{key: str(hint.get(key, '')) for key in ('kind', 'value', 'text')} for hint in profile_hints][:3])

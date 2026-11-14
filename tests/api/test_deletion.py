@@ -148,14 +148,19 @@ def served(world):
         del api.state.conversations
 
 
-def test_project_delete_removes_its_react_and_analysis_records_only(world):
+@pytest.mark.parametrize('status', ['completed', 'requires_input'])
+def test_project_delete_removes_its_react_and_analysis_records_only(world, status):
     from backend.api.projects import delete_owned_with_checkpoints
     app, (a, b, _), dsn = world
     mine, other = seed(app, dsn, a, projects=2), seed(app, dsn, b)
     gone, kept = mine['threads'][0], [mine['threads'][1]]
+    with psycopg.connect(dsn) as conn:
+        conn.execute('UPDATE public.runs SET status=%s WHERE thread_id=%s', (status, gone))
+    client = login(dsn, a)
     before_kept, before_other = remaining(dsn, a, kept), remaining(dsn, b, other['threads'])
     assert remaining(dsn, a, [gone])['checkpoints'] > 0 and remaining(dsn, a, [gone])['analysis_events'] > 0
-    delete_owned_with_checkpoints(a, mine['projects'][0])
+    response = client.delete(f"/api/projects/{mine['projects'][0]}", headers=ORIGIN)
+    assert response.status_code == 204, response.text
     after = remaining(dsn, a, [gone])
     for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages',
                  'analysis_events', 'checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
@@ -168,6 +173,35 @@ def test_project_delete_removes_its_react_and_analysis_records_only(world):
     with pytest.raises(Exception):  # 다른 사용자의 프로젝트는 없는 것과 같다
         delete_owned_with_checkpoints(a, other['projects'][0])
     assert remaining(dsn, b, other['threads']) == before_other
+
+
+def test_project_delete_rejects_running_with_delete_specific_message(world):
+    app, (owner, _, _), dsn = world
+    mine = seed(app, dsn, owner)
+    with psycopg.connect(dsn) as conn:
+        conn.execute("UPDATE public.runs SET status='running' WHERE thread_id=%s", (mine['threads'][0],))
+    client = login(dsn, owner)
+    before = remaining(dsn, owner, mine['threads'])
+    response = client.delete(f"/api/projects/{mine['projects'][0]}", headers=ORIGIN)
+    assert response.status_code == 409
+    assert response.json()['error']['message'] == '분석이 진행 중인 프로젝트는 삭제할 수 없습니다. 분석이 끝난 뒤 다시 시도해 주세요.'
+    assert remaining(dsn, owner, mine['threads']) == before
+
+
+def test_paused_project_checkpoint_failure_rolls_back_deletion(world):
+    from backend.api.projects import delete_owned_with_checkpoints
+    from backend.conversations.memory_service import delete_analysis_threads
+    app, (owner, _, _), dsn = world
+    mine = seed(app, dsn, owner)
+    with psycopg.connect(dsn) as conn:
+        conn.execute("UPDATE public.runs SET status='requires_input' WHERE thread_id=%s", (mine['threads'][0],))
+    before = remaining(dsn, owner, mine['threads'])
+    def broken(conn, ids):
+        delete_analysis_threads(conn, owner, ids)
+        raise RuntimeError('synthetic checkpoint cleanup failure')
+    with pytest.raises(RuntimeError, match='synthetic checkpoint cleanup failure'):
+        delete_owned_with_checkpoints(owner, mine['projects'][0], broken)
+    assert remaining(dsn, owner, mine['threads']) == before
 
 
 def test_account_delete_removes_everything_of_user_and_leaves_others(served):
@@ -424,17 +458,17 @@ def test_single_thread_delete_removes_its_records_but_preserves_project_and_sibl
     analysis, (owner, other, _), dsn = world
     mine, theirs = seed(analysis, dsn, owner, projects=2), seed(analysis, dsn, other)
     gone, sibling = mine['threads']
-    other_before = remaining(dsn, other, theirs['threads'] + [theirs['direct']])
+    other_before = remaining(dsn, other, theirs['threads'])
     before = remaining(dsn, owner, [gone])
     assert before['checkpoints'] > 0 and before['quotes'] == 2
     ConversationRepository().delete_thread(owner, gone)
     after = remaining(dsn, owner, [gone])
-    for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages', 'analysis_approvals',
+    for name in ('react_threads', 'runs', 'react_messages', 'analysis_threads', 'analysis_messages',
                  'analysis_events', 'checkpoints', 'checkpoint_blobs', 'checkpoint_writes'):
         assert after[name] == 0, name
     assert after['projects'] == before['projects'] == 2
     assert after['quotes'] == after['approvals'] == after['approved_cases'] == 1
     assert after['store'] == before['store']
     assert remaining(dsn, owner, [sibling])['checkpoints'] > 0
-    assert remaining(dsn, owner, [mine['direct']])['analysis_threads'] == 1
-    assert remaining(dsn, other, theirs['threads'] + [theirs['direct']]) == other_before
+    assert remaining(dsn, owner, [sibling])['analysis_threads'] == 1
+    assert remaining(dsn, other, theirs['threads']) == other_before

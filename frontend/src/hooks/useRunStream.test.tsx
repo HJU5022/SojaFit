@@ -6,19 +6,86 @@ afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(
 const dto = { answer: '완료 답', status: 'completed', stage: '완료', question_type: 'candidate_judge', evidence: [], judgement: {}, price_parts: [], refusal: '', interrupt: {}, request_id: 'req-1' }
 const sse = (...frames: [string, object][]) => new Response(frames.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join(''), { headers: { 'Content-Type': 'text/event-stream' } })
 
-it('uploads actual files as multipart and leaves the boundary header to the browser', async () => {
-  const fetcher = vi.fn().mockResolvedValue(sse(['run_started', { run_id: 'attachment-run' }], ['completed', dto]))
+it.each(['completed', 'requires_input'])('marks reception stopped and explicitly reads the saved %s result without another POST', async status => {
+  let savedStatus = 'running'
+  let failRead = false
+  const fetcher = vi.fn((path: string, init: RequestInit = {}) => Promise.resolve(path.includes('/threads/')
+    ? new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode('event: run_started\ndata: {"run_id":"stopped-run"}\n\n'))
+      init.signal?.addEventListener('abort', () => controller.error(init.signal?.reason), { once: true })
+    } }))
+    : failRead ? Response.json({ error: { code: 'UNAVAILABLE', message: '조회 실패' } }, { status: 503 })
+      : Response.json({ id: 'stopped-run', result: { ...dto, status: savedStatus, interrupt: { missing: ['v_in_max'] } } })))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  let done!: Promise<void>
+  act(() => { done = result.current.start('thread-1', { question: '질문', target_ref: 'D1' }) })
+  await waitFor(() => expect(result.current.state).toMatchObject({ status: 'running', runId: 'stopped-run' }))
+  await act(async () => { result.current.cancel(); await done })
+  expect(result.current.state).toMatchObject({ status: 'stopped', runId: 'stopped-run' })
+  expect(fetcher).toHaveBeenCalledTimes(1)
+  await act(async () => { await result.current.refresh('stopped-run', true) })
+  expect(result.current.state).toMatchObject({ status: 'stopped', checking: false })
+  failRead = true
+  await act(async () => { await result.current.refresh('stopped-run', true) })
+  expect(result.current.state).toMatchObject({ status: 'stopped', checking: false, error: { code: 'UNAVAILABLE' } })
+  failRead = false; savedStatus = status
+  await act(async () => { await result.current.refresh('stopped-run', true) })
+  expect(result.current.state).toMatchObject({ status, runId: 'stopped-run' })
+  expect(fetcher.mock.calls.slice(1).every(([path, init]) => path === '/api/runs/stopped-run' && !init?.method)).toBe(true)
+})
+
+it('retains a stopped state before the run ID arrives and ignores late responses after reset', async () => {
+  let finish!: (response: Response) => void
+  vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(resolve => { finish = resolve })))
+  const { result } = renderHook(() => useRunStream())
+  let done!: Promise<void>
+  act(() => { done = result.current.start('thread-1', { question: '질문', target_ref: 'D1' }) })
+  act(() => result.current.cancel())
+  expect(result.current.state).toMatchObject({ status: 'stopped', runId: '' })
+  act(() => result.current.reset())
+  await act(async () => { finish(sse(['run_started', { run_id: 'late' }], ['completed', dto])); await done })
+  expect(result.current.state).toEqual({ status: 'idle' })
+})
+
+it('restores a saved input error and bounds running restoration to GETs only', async () => {
+  vi.useFakeTimers()
+  let status = 'requires_input'
+  const error = { code: 'LIMIT_EXCEEDED', message: '이번 분석 한도에 도달했습니다.' }
+  const fetcher = vi.fn((_path: string, _init: RequestInit = {}) => Promise.resolve(Response.json({ id: 'saved', result: { ...dto, status, error, interrupt: { missing: ['v_in_max'] } } })))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  await act(async () => { await result.current.restore('saved') })
+  expect(result.current.state).toMatchObject({ status, runId: 'saved', error })
+  status = 'running'; fetcher.mockClear()
+  let done!: Promise<void>
+  act(() => { done = result.current.restore('saved') })
+  await act(async () => { await vi.advanceTimersByTimeAsync(35_000); await done })
+  expect(result.current.state).toMatchObject({ status: 'failed', runId: 'saved', error: { code: 'RUN_STATUS_PENDING' } })
+  expect(fetcher).toHaveBeenCalledTimes(30)
+  expect(fetcher.mock.calls.every(([path, init]) => path === '/api/runs/saved' && !init?.method)).toBe(true)
+})
+
+it('ignores a late saved-run response after leaving its conversation', async () => {
+  let finish!: (value: Response) => void
+  const fetcher = vi.fn(() => new Promise<Response>(resolve => { finish = resolve }))
+  vi.stubGlobal('fetch', fetcher)
+  const { result } = renderHook(() => useRunStream())
+  let done!: Promise<void>
+  act(() => { done = result.current.restore('old-run') })
+  act(() => { result.current.reset() })
+  await act(async () => { finish(Response.json({ result: { ...dto, status: 'requires_input', interrupt: { missing: ['v_in_max'] } } })); await done })
+  expect(result.current.state).toEqual({ status: 'idle' })
+  expect(fetcher).toHaveBeenCalledTimes(1)
+})
+
+it('rejects files at the analysis boundary so netlists must be imported first', async () => {
+  const fetcher = vi.fn()
   vi.stubGlobal('fetch', fetcher)
   const { result } = renderHook(() => useRunStream())
   await act(async () => { await result.current.start('thread-1', { question: '첨부 확인', target_ref: 'D1', attachments: [new File(['memo'], 'notes.txt')] }) })
-  const [path, init] = fetcher.mock.calls[0]
-  expect(path).toBe('/api/threads/thread-1/runs/attachments')
-  expect(init.body).toBeInstanceOf(FormData)
-  expect(init.body.get('question')).toBe('첨부 확인')
-  expect(init.body.get('files').name).toBe('notes.txt')
-  expect(init.headers).toBeUndefined()
-  expect(init.credentials).toBe('same-origin')
-  expect(result.current.state.status).toBe('completed')
+  expect(fetcher).not.toHaveBeenCalled()
+  expect(result.current.state).toMatchObject({ status: 'failed', error: { code: 'UNSUPPORTED_ATTACHMENT' } })
 })
 
 it('uses the 120 second stream deadline and restores via GET when it aborts', async () => {

@@ -85,7 +85,7 @@ def test_upload_stores_only_normalized_data_and_remains_owned(storage):
     assert set(project.connections) == {"parts", "nets"}
     with connect() as conn:
         row = conn.execute("SELECT row_to_json(circuits) FROM circuits WHERE project_id=%s", (project.id,)).fetchone()[0]
-    assert set(row) == {"project_id", "connections", "source_sha256", "parser_version", "created_at"}
+    assert set(row) == {"project_id", "connections", "source_sha256", "parser_version", "created_at", "version"}
     assert row["source_sha256"] == hashlib.sha256(raw).hexdigest()
     assert row["parser_version"] == "kicad-export-v1"
     assert "RAW_UPLOAD_MARKER" not in str(row)
@@ -139,6 +139,51 @@ def test_circuit_insert_failure_rolls_back_project(storage):
     with pytest.raises(psycopg.errors.CheckViolation):
         repo.create_demo(owner, "breadboard_supply", "실패 회로")
     assert repo.list_owned(owner) == []
+
+
+def test_empty_project_imports_versions_and_preserves_old_threads(storage):
+    from backend.conversations.repository import ConversationRepository
+    from backend.projects.netlist import normalize_netlist, PARSER_VERSION
+    from backend.projects.repository import ProjectNotFound
+    repo, (owner, other), connect = storage
+    conversations = ConversationRepository()
+    empty = repo.create_empty(owner, "빈 회로")
+    assert empty.circuit_version == 0 and empty.connections == {"parts": [], "nets": []}
+    empty_thread = conversations.create_thread(owner, empty.id)
+    raw = Path("tests/fixtures/netlists/minimal.net").read_bytes()
+    first = normalize_netlist(raw)
+    def import_file(normalized):
+        return repo.import_netlist(owner, empty.id, connections=normalized.connections,
+                                   source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+    project, thread1 = import_file(first)
+    assert project.id == empty.id and project.circuit_version == 1
+    run, circuit = conversations.start(owner, thread1, {"question": "D1 질문"})
+    conversations.finish(owner, thread1, run, "requires_input")
+    second = normalize_netlist(raw.replace(b"D1", b"D9"))
+    project2, thread2 = import_file(second)
+    assert project2.id == empty.id and project2.circuit_version == 2 and thread1 != thread2
+    assert repo.get_owned(owner, empty.id, thread1).connections == project.connections
+    assert repo.get_owned(owner, empty.id, empty_thread).circuit_version == 0
+    assert conversations.get_thread(owner, thread1)[2] == circuit
+    assert conversations.get_thread(owner, thread2)[2] == project2.connections
+    conversations.resume(owner, thread1, run)
+    assert conversations.get_thread(owner, thread1)[2] == circuit
+    latest_thread = conversations.create_thread(owner, empty.id)
+    assert repo.get_owned(owner, empty.id, latest_thread).circuit_version == 2
+    foreign = repo.create_empty(owner, "다른 프로젝트")
+    for user, project_id in ((other, empty.id), (owner, foreign.id)):
+        with pytest.raises(ProjectNotFound):
+            repo.get_owned(user, project_id, thread1)
+    with connect() as conn:
+        conn.execute("ALTER TABLE threads ADD CONSTRAINT reject_new_thread CHECK (false) NOT VALID")
+    with pytest.raises(psycopg.errors.CheckViolation):
+        import_file(first)
+    assert repo.get_owned(owner, empty.id).circuit_version == 2
+    with connect() as conn:
+        assert conn.execute("SELECT max(version) FROM project_circuit_versions WHERE project_id=%s", (empty.id,)).fetchone()[0] == 2
+    repo.delete_owned(owner, empty.id)
+    with connect() as conn:
+        assert conn.execute("SELECT count(*) FROM project_circuit_versions WHERE project_id=%s", (empty.id,)).fetchone()[0] == 0
 
 
 def test_schema_restricts_public_access_and_indexes_foreign_keys(storage):

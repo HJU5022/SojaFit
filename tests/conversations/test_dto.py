@@ -3,11 +3,24 @@ import importlib.util
 import pytest
 
 
+def test_saved_run_error_exposes_only_known_public_code_and_message():
+    from backend.conversations.models import SafeResult
+    from backend.conversations.dto import result_dto
+    error = {'code': 'LIMIT_EXCEEDED', 'message': '분석 한도에 도달했습니다.'}
+    saved = SafeResult.model_validate({'interrupt': {'missing': ['v_in_max']}, 'error': error}).model_dump()
+    assert result_dto(saved, request_id='new-request', status='requires_input').model_dump()['error'] == error
+    assert result_dto({}, request_id='legacy').model_dump()['error'] is None
+    for bad in ({**error, 'raw': 'private traceback'}, {**error, 'request_id': 'old-request'}, {**error, 'code': 'PRIVATE_CODE'}):
+        with pytest.raises(ValueError):
+            SafeResult.model_validate({'error': bad})
+        assert result_dto({'error': bad}, request_id='r').model_dump()['error'] is None
+
+
 def test_browser_dto_excludes_internal_state():
     assert importlib.util.find_spec('backend.conversations.dto') is not None
     from backend.conversations.dto import result_dto
     body = result_dto({'answer': 'ok', 'facts': 'secret', 'plan': 'secret', 'reports': 'secret', 'counters': 1, 'check': 'secret'}, request_id='req-1').model_dump()
-    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints'}
+    assert set(body) == {'answer','status','stage','question_type','evidence','judgement','price_parts','refusal','interrupt','request_id','profile_hints','error'}
     assert 'secret' not in str(body)
 
 

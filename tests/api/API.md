@@ -13,6 +13,7 @@
 |---|---|
 | `API.md` | 이 문서 |
 | `test_auth.py` | 인증 단위·DB 통합: 비밀번호 해시·강도, 세션 만료, 로그인 잠금, 데모 로그인, 자기 가입·IP 한도, 관리자 권한, 비활성 계정, 쿠키·출처. DB 시험은 `TEST_AUTH_DATABASE_URL`일 때만 |
+| `test_local_live_config.py` | 로컬 실제 API Compose가 운영 DB·Origin을 상속하지 않고 별도 볼륨·loopback 포트·live 설정을 유지하는지 검사. 가짜 비밀값과 Compose 해석만 사용 |
 | `test_email_auth.py` | 메일 인증 가입·비밀번호 재설정: 가짜 SMTP와 격리 DB로 인증 전 계정 없음, 토큰 만료·재발급·재사용·경합, 발송 한도, 재설정 뒤 세션 폐기, TLS 검증 |
 | `test_google_users.py` | Google 일반 가입·기존 계정 연결: 합성 신원, 비밀번호 재확인, 관리자 최초 승인 유지, 만료·중복·동시 연결, 공유 IP 한도. 새 로컬 시험 DB만 허용 |
 | `test_health.py` | `/health`, 서버 생성 요청 ID, 공통 오류 구조(401·403·404·422·500), 민감한 입력·내부 예외 비노출, OpenAPI 오류 스키마 |

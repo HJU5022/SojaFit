@@ -1,15 +1,67 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { failure, network } from '../test/network'
 import { renderWithQueries } from '../test/projects'
 import { ExternalSchematic } from './Schematic'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { cleanup(); focusManager.setFocused(undefined); onlineManager.setOnline(true); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 const found = { project: 'Board', commit: 'a'.repeat(40), license: 'MIT', attribution: 'Maker', repository_url: 'https://example.test/r', source_url: 'https://example.test/r/board.kicad_sch', source_file: 'board.kicad_sch',
   source_type: 'manufacturer_official' as const, evidence_grade: 2 as const, manufacturer: 'Maker', model: 'Board', revision: 'v1', source_sha256: 'b'.repeat(64), license_evidence_url: 'https://example.test/r/LICENSE',
   choices: [],
   images: [{ sheet: 0, url: '/api/external-circuits/schematics/t/0' }, { sheet: 1, url: '/api/external-circuits/schematics/t/1' }] }
 const search = () => fireEvent.click(screen.getByRole('button', { name: '원본 회로도 찾기' }))
+
+it.each(['success', 'error'])('does not repeat a stale %s search on focus, reconnect, or reopening', async state => {
+  const handler = vi.fn(() => state === 'success' ? Response.json(found) : failure('SCHEMATIC_NOT_FOUND', '없음', 404))
+  network(handler)
+  const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  expect(handler).not.toHaveBeenCalled()
+  search()
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe(state))
+  const later = Date.now() + 16 * 60_000
+  vi.spyOn(Date, 'now').mockReturnValue(later)
+  await act(async () => { focusManager.setFocused(false); focusManager.setFocused(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(handler).toHaveBeenCalledTimes(1)
+  await act(async () => { onlineManager.setOnline(false); onlineManager.setOnline(true); await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(handler).toHaveBeenCalledTimes(1)
+  view.unmount()
+  renderWithQueries(<ExternalSchematic name="Board" zoom={100} />, view.client)
+  expect(handler).toHaveBeenCalledTimes(1)
+  search()
+  await waitFor(() => expect(handler).toHaveBeenCalledTimes(2))
+  view.client.clear()
+})
+
+it('reuses a fresh successful search but explicitly refreshes the same term after five minutes', async () => {
+  const handler = vi.fn(() => Response.json(found))
+  network(handler)
+  const view = renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  search()
+  await waitFor(() => expect(view.client.getQueryState(['external-schematic', 'Board'])?.status).toBe('success'))
+  search()
+  expect(handler).toHaveBeenCalledTimes(1)
+  const later = Date.now() + 6 * 60_000
+  vi.spyOn(Date, 'now').mockReturnValue(later)
+  view.rerender(<QueryClientProvider client={view.client}><ExternalSchematic name="Board" zoom={125} /></QueryClientProvider>)
+  expect(handler).toHaveBeenCalledTimes(1)
+  search()
+  await waitFor(() => expect(handler).toHaveBeenCalledTimes(2))
+  view.client.clear()
+})
+
+it('only searches again after an image error when its retry button is pressed', async () => {
+  const handler = vi.fn(() => Response.json(found))
+  network(handler)
+  renderWithQueries(<ExternalSchematic name="Board" zoom={100} />)
+  search()
+  const images = await screen.findAllByAltText(/원본 회로도/)
+  fireEvent.error(images[0])
+  expect(screen.getByRole('alert')).toHaveTextContent('원본 회로도를 불러오지 못했습니다.')
+  expect(handler).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: '다시 검색하기' }))
+  await waitFor(() => expect(handler).toHaveBeenCalledTimes(2))
+})
 
 it('searches the project name only when asked, and shows every sheet in order with attribution', async () => {
   const paths: string[] = []

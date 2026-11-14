@@ -16,46 +16,93 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [files, setFiles] = useState<File[]>([])
   const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
-  const [picked, setPicked] = useState<number | null>(null)
-  const liveThread = useRef('')
+  const [sending, setSending] = useState(false)
+  const activeSend = useRef<AbortController | null>(null)
+  const [picked, setPicked] = useState<string | null>(null)
+  const [before, setBefore] = useState<number | null>(null)
+  const [loadingOlder, setLoadingOlder] = useState(false)
+  const [olderError, setOlderError] = useState<unknown>(null)
+  const activeOlder = useRef<AbortController | null>(null)
+  const liveThread = useRef<string | null>(null)
   const state = stream.state
-  const running = state.status === 'running'
+  const running = state.status === 'running' || state.status === 'stopped' || sending || (state.status === 'failed' && state.error.code === 'RUN_STATUS_PENDING')
   const waiting = state.status === 'requires_input'
 
   useEffect(() => {
     if (threadId === liveThread.current) return
+    activeSend.current?.abort(); activeSend.current = null; setSending(false)
+    activeOlder.current?.abort(); activeOlder.current = null; setBefore(null); setLoadingOlder(false); setOlderError(null)
     liveThread.current = threadId
-    stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null)
+    stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null); setLoading(false)
     if (!threadId) return
     const controller = new AbortController()
     setLoading(true)
-    getThread(threadId, controller.signal).then((thread) => {
-      setHistory(thread.messages.filter(message => message.role === 'user').map(message => ({ runId: message.run_id, question: message.content })))
+    client.fetchQuery({ queryKey: ['thread', threadId], queryFn: ({ signal }) => getThread(threadId, signal), retry: false }).then((thread) => {
+      if (controller.signal.aborted || thread.project_id !== projectId) return
+      const turns = thread.messages.filter(message => message.role === 'user').map(message => ({ runId: message.run_id, question: message.content }))
+      const active = thread.latest_run && ['running', 'requires_input', 'failed'].includes(thread.latest_run.status)
+        ? turns.find(item => item.runId === thread.latest_run!.id) : undefined
+      setHistory(active ? turns.filter(item => item !== active) : turns)
+      setBefore(thread.next_before_message_id ?? null)
+      if (active) { setLive({ question: active.question }); void stream.restore(active.runId) }
       if (thread.target_ref && thread.target_ref !== targetRef) onThread(threadId, thread.target_ref)
     }).catch((reason) => { if (!controller.signal.aborted) setError(reason) }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
-    return () => controller.abort()
+    return () => { controller.abort(); activeOlder.current?.abort(); liveThread.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 대화가 바뀔 때만 다시 읽는다
   }, [threadId])
+  useEffect(() => () => activeSend.current?.abort(), [])
 
   useEffect(() => {
     if (state.status === 'running' && state.stage) setStages(current => current.includes(state.stage) ? current : [...current, state.stage])
-    if (state.status === 'completed' || state.status === 'refused') void client.invalidateQueries({ queryKey: ['threads', projectId] })
+    if (state.status === 'completed' || state.status === 'refused' || state.status === 'failed') {
+      void client.invalidateQueries({ queryKey: ['threads', projectId] })
+      if (state.runId) void client.invalidateQueries({ queryKey: ['run', state.runId] })
+    }
   }, [state, client, projectId])
+
+  async function loadOlder() {
+    if (before === null || activeOlder.current || loading || !threadId) return
+    const active = new AbortController()
+    activeOlder.current = active; setLoadingOlder(true); setOlderError(null)
+    try {
+      const page = await getThread(threadId, AbortSignal.any([active.signal, AbortSignal.timeout(10_000)]), before)
+      if (active.signal.aborted || liveThread.current !== threadId || page.project_id !== projectId) return
+      setHistory(current => {
+        const seen = new Set(current.map(item => item.runId))
+        const older = page.messages.filter(item => item.role === 'user').filter(item => {
+          if (seen.has(item.run_id)) return false
+          seen.add(item.run_id); return true
+        }).map(item => ({ runId: item.run_id, question: item.content }))
+        return [...older, ...current]
+      })
+      setBefore(page.next_before_message_id ?? null)
+    } catch (reason) { if (!active.signal.aborted) setOlderError(reason) }
+    finally {
+      if (!active.signal.aborted) setLoadingOlder(false)
+      if (activeOlder.current === active) activeOlder.current = null
+    }
+  }
 
   // 데모 질문은 기록한 글자 그대로 보내야 하므로 질문과 사용 조건을 직접 넘겨받는다.
   async function send(recorded?: { question: string; conditions?: string }) {
     const question = recorded?.question ?? text.trim()
-    if (!question || running || waiting || !targetRef) return
-    setError(null)
+    if (activeSend.current || !question || files.length || loading || running || waiting || !targetRef) return
+    const active = new AbortController()
+    activeSend.current = active; setSending(true); setError(null)
     try {
       let id = threadId
-      if (!id) { id = (await createThread(projectId)).id; liveThread.current = id; onThread(id) }
-      if (live && 'runId' in state && state.runId && state.status !== 'failed') setHistory(current => [...current, { runId: state.runId!, question: live.question }])
-      const attachments = recorded ? [] : files
+      if (!id) {
+        id = (await createThread(projectId, AbortSignal.any([active.signal, AbortSignal.timeout(10_000)]))).id
+        active.signal.throwIfAborted()
+        liveThread.current = id; onThread(id)
+      }
+      active.signal.throwIfAborted()
+      if (live && 'runId' in state && state.runId) setHistory(current => [...current, { runId: state.runId!, question: live.question }])
       setLive({ question }); setStages([]); setText(''); setFiles([]); setPicked(null)
-      await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}), ...(attachments.length ? { attachments } : {}) })
-    } catch (reason) { setError(reason) }
+      await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}) })
+    } catch (reason) { if (!active.signal.aborted) setError(reason) }
+    finally { if (!active.signal.aborted) setSending(false); if (activeSend.current === active) activeSend.current = null }
   }
 
-  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, state, running, waiting, send, stream }
+  return { history, live, stages, text, setText, files, setFiles, error, loading, picked, setPicked, before, loadingOlder, olderError, loadOlder, state, running, waiting, send, stream: { ...stream, cancel: () => { activeSend.current?.abort(); activeSend.current = null; setSending(false); stream.cancel() } } }
 }

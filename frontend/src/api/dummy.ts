@@ -99,6 +99,11 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
   }
   if (method === 'POST' && pathname === '/api/projects') {
     const body = JSON.parse(String(init.body ?? '{}')) as { demo_id?: string; name?: string }
+    if (!body.demo_id) {
+      const created: Project = { id: Math.max(...projects.map(item => item.id), 0) + 1, name: body.name?.trim() || '새 프로젝트', source_kind: 'upload', demo_id: null, circuit_version: 0, created_at: NOW, updated_at: NOW, connections: { parts: [], nets: [] } }
+      projects = [...projects, created]
+      return json(created, 201)
+    }
     const source = dummyProjects.find(item => item.demo_id === body.demo_id)
     if (!source) return json({ error: { code: 'VALIDATION_ERROR', message: '등록된 데모 회로를 선택해 주세요.', request_id: REQUEST_ID } }, 422)
     const created: Project = { ...structuredClone(source), id: Math.max(...projects.map(item => item.id), 0) + 1,
@@ -107,7 +112,7 @@ export async function dummyApiFetch(path: string, init: RequestInit = {}): Promi
     projects = [...projects, created]
     return json(created, 201)
   }
-  if (method === 'POST' && pathname === '/api/projects/upload') {
+  if (method === 'POST' && (pathname === '/api/projects/upload' || /^\/api\/projects\/\d+\/netlist$/.test(pathname))) {
     return json({ error: { code: 'UNAVAILABLE',
       message: '넷리스트 첨부는 실제 API 서버에 연결한 화면에서 사용할 수 있습니다. 더미 모드에서는 파일을 해석하지 않습니다.',
       request_id: REQUEST_ID } }, 503)
