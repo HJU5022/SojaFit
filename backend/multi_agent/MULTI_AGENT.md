@@ -44,7 +44,7 @@
 | `build.py` | 그래프 조립 `build_graph`와 노드 `parse_node`·`finish_node`·`refuse_node`, Spec 에이전트 하위 그래프 `judge_subgraph` |
 | `contracts.py` | 계획서 `Plan`, 할 일 `Task`, 보고서 `TaskReport`, 짧은 보고 `AgentReport`, 이유 코드 `Reason`, 질문당 상한 |
 | `state.py` | 멀티 상태 `MultiState`와 판정 하위 그래프 상태 `JudgeState`·`JudgeOut`, 보고 합치기 규칙 `add_or_reset` |
-| `facts.py` | 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만듦(`make_facts`, MCP 도구로 묻는 `make_lookup`, 노드 `facts_node`) |
+| `facts.py` | 질문의 품번·개정판이 코퍼스 목록에 있는지 확인해 `Facts`를 만듦(MCP 도구로 묻는 `make_lookup`, 노드 `facts_node`) |
 | `messages.py` | 거절 사유를 사용자 문구로 바꾸는 `refusal_message`·`refusal_for`, 가격 안내 `price_message`, 판정 결과를 코드 틀 답으로 만드는 `render_judgement` |
 | `revisions.py` | 사용자가 지정한 판본 추출, 검색 결과·판정 행 파일명에서 판본 확인 |
 | `supervisor.py` | 계획 `plan_node`, 배분 `after_plan`(Send), 답 모으기 `collect_node`, 답 정리 `single_node`, 종합 `synth_node`, 답 검사 `check_node`, 사실 글 `render_facts` |

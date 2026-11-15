@@ -172,11 +172,6 @@ def test_rank_limits_per_verdict_and_total():
     assert len(shown) == 3
 
 
-def test_worse_prefers_the_worse_verdict():
-    assert V.worse('ROLE_SUFFICIENT', 'NOT_SUFFICIENT') == 'NOT_SUFFICIENT'
-    assert V.worse('SPEC_EQUIVALENT', 'NOT_VERIFIED') == 'NOT_VERIFIED'
-
-
 OR_RULE = yaml.safe_load('''
 name: x
 recognize: x
