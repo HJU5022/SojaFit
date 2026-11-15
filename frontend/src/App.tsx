@@ -15,7 +15,8 @@ import { Brand, ErrorBox, Loading, navigate, useLocation, useResource } from './
 import { Landing } from './Landing';
 import { Auth } from './Auth';
 import { Admin, ApprovedCases, Privacy, Settings } from './Account';
-import { NewProject, ProjectList, Workbench } from './Workbench';
+import { NewProject, ProjectList } from './Projects';
+import { Workbench } from './Workbench';
 import type { Project, User } from './types';
 function Shell({
   user,

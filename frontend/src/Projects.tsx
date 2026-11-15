@@ -1,0 +1,211 @@
+/** 프로젝트 목록과 새 프로젝트 창. 서버가 만든 프로젝트·데모 회로를 그대로 쓴다. 출처: SPEC 4절. */
+import { useState } from 'react';
+import { ArrowRight, ChevronRight, FileUp, Plus } from 'lucide-react';
+import { api, ApiError } from './api';
+import { Empty, ErrorBox, Loading, Modal, navigate, useResource } from './ui';
+import type { Demo, Project } from './types';
+export function refreshNavigation() {
+  window.dispatchEvent(new Event('projects-changed'));
+}
+export function NewProject({
+  close,
+  onCreated,
+}: {
+  close: () => void;
+  onCreated: (p: Project) => void;
+}) {
+  const demos = useResource<Demo[]>('/demo-circuits');
+  const [mode, setMode] = useState<'demo' | 'upload' | 'empty'>('demo'),
+    [name, setName] = useState(''),
+    [demo, setDemo] = useState(''),
+    [file, setFile] = useState<File | null>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<Error | null>(null),
+    [duplicate, setDuplicate] = useState(false);
+  return (
+    <Modal title="새 프로젝트" close={close}>
+      <p>넷리스트를 올리거나 공개 데모 회로로 시작하세요.</p>
+      <div className="segmented">
+        <button onClick={() => setMode('demo')} aria-pressed={mode === 'demo'}>
+          데모 회로
+        </button>
+        <button onClick={() => setMode('upload')} aria-pressed={mode === 'upload'}>
+          넷리스트 업로드
+        </button>
+        <button onClick={() => setMode('empty')} aria-pressed={mode === 'empty'}>
+          나중에 첨부
+        </button>
+      </div>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError(null);
+          try {
+            let result: Project;
+            if (mode === 'upload') {
+              if (!file) throw new Error('넷리스트를 첨부해 주세요.');
+              if (file.size > 5 * 1024 * 1024) throw new Error('넷리스트는 5 MiB 이하여야 합니다.');
+              const body = new FormData();
+              body.set('name', name);
+              body.set('file', file);
+              result = await api(
+                '/projects/upload' + (duplicate ? '?allow_duplicate=true' : ''),
+                'POST',
+                body,
+              );
+            } else
+              result = await api('/projects' + (duplicate ? '?allow_duplicate=true' : ''), 'POST', {
+                name,
+                ...(mode === 'demo' ? { demo_id: demo } : {}),
+              });
+            refreshNavigation();
+            onCreated(result);
+            close();
+          } catch (e) {
+            setError(e as Error);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label>
+          프로젝트 이름
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            maxLength={200}
+            placeholder="예: 전원부 다이오드 교체"
+          />
+        </label>
+        {mode === 'demo' &&
+          (demos.loading ? (
+            <Loading />
+          ) : demos.error ? (
+            <ErrorBox
+              error={
+                (demos.error as ApiError).status === 404
+                  ? '이 환경에서는 데모 회로를 제공하지 않습니다. 넷리스트를 업로드해 주세요.'
+                  : demos.error
+              }
+              retry={demos.reload}
+            />
+          ) : (
+            <label>
+              데모 회로
+              <select
+                aria-label="데모 회로"
+                value={demo}
+                required
+                onChange={(e) => {
+                  setDemo(e.target.value);
+                  if (!name) setName(demos.data?.find((d) => d.id === e.target.value)?.name ?? '');
+                }}
+              >
+                <option value="">회로를 선택하세요</option>
+                {demos.data?.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        {mode === 'upload' && (
+          <label className="file-drop">
+            <FileUp />
+            KiCad 넷리스트
+            <input
+              type="file"
+              accept=".net"
+              required
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <small>.net · UTF-8 · 최대 5 MiB</small>
+          </label>
+        )}
+        {mode === 'empty' && (
+          <p>프로젝트를 만든 뒤 검토 입력창에서 .net 또는 .txt 파일을 첨부할 수 있습니다.</p>
+        )}
+        <ErrorBox error={error} />
+        {error instanceof ApiError && error.status === 409 && (
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={duplicate}
+              onChange={(e) => setDuplicate(e.target.checked)}
+            />
+            같은 회로로 새 프로젝트 만들기
+          </label>
+        )}
+        <button className="primary" disabled={busy || (mode === 'demo' && !demo)}>
+          {busy ? '만드는 중…' : '프로젝트 만들기'}
+          <ArrowRight size={16} />
+        </button>
+      </form>
+    </Modal>
+  );
+}
+export function ProjectList() {
+  const projects = useResource<Project[]>('/projects'),
+    [create, setCreate] = useState(false);
+  return (
+    <div className="page-content">
+      <div className="page-heading">
+        <div>
+          <h1>프로젝트</h1>
+          <p>회로 하나에서, 근거 있는 교체까지.</p>
+        </div>
+        <button className="primary" onClick={() => setCreate(true)}>
+          <Plus size={17} />새 프로젝트
+        </button>
+      </div>
+      {projects.loading ? (
+        <Loading />
+      ) : projects.error ? (
+        <ErrorBox error={projects.error} retry={projects.reload} />
+      ) : projects.data?.length ? (
+        <div className="project-list">
+          {projects.data.map((p) => (
+            <a key={p.id} href={'/app?project=' + p.id} className="project-row">
+              <div className="project-symbol">
+                <svg viewBox="0 0 56 56">
+                  <path
+                    d="M8 28h12m16 0h12M20 17v22l16-11-16-11Zm16 0v22"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2>{p.name}</h2>
+                <p>
+                  {p.source_kind === 'demo' ? '데모 회로' : '업로드 회로'} ·{' '}
+                  {p.circuit_version
+                    ? '부품을 선택하고 검토를 이어가세요.'
+                    : '넷리스트를 첨부해 주세요.'}
+                </p>
+              </div>
+              <ChevronRight size={20} />
+            </a>
+          ))}
+        </div>
+      ) : (
+        <Empty title="첫 회로를 가져오세요.">
+          <p>KiCad 넷리스트를 올리거나 데모 회로로 시작할 수 있습니다.</p>
+          <button className="primary" onClick={() => setCreate(true)}>
+            새 프로젝트
+          </button>
+        </Empty>
+      )}
+      {create && (
+        <NewProject
+          close={() => setCreate(false)}
+          onCreated={(p) => navigate('/app?project=' + p.id)}
+        />
+      )}
+    </div>
+  );
+}
