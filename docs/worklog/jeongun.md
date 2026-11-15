@@ -1082,4 +1082,4 @@
 - 예산: 2회 상한 1달러(OpenRouter LLM 비용 합). 앞 R1은 0.071달러였다.
 - 명령: `DEMO_MODE=0 EVAL_WEB=1 WEB_PREFETCH=1 GATE_WARMUP=1 FIND_N_DOCS=5 RAGAS_ENABLED=0 uv run python -m evals.runners.run_gate evals/dataset_v3.jsonl --out evals/results/graph/2026-11-15-web-parallel/B1 --sets 2 --keep-going --p95 120` (로그 `B1.log`). 시작 전 Exa 요청 1번이 HTTP 200이어야 한다.
 - 중단 조건: Exa HTTP 402, OpenRouter 403, 비용 1달러 초과. 중단하면 재시도 없이(많아야 1번) 상황을 기록한다.
-- 결과(11-15, 1차 시도): 측정이 시작되지 못했다. Exa 요청 1번은 HTTP 200이었으나 `run_gate`의 `GATE_WARMUP`이 품번 확인 MCP 호출에서 `RetrievalUnavailableError: timeout`으로 죽었다(첫 문항 전, LLM 호출 0, 비용 0). 로컬에서 5432 포트를 듣는 DB가 없고 실행 중인 컨테이너는 `marvia-v2-db-1`뿐이다(SojaFit DB가 꺼져 있는 것으로 [추정]). DB 서버를 켜는 것은 사전 확인 대상이라 켜지 않고 멈췄다. 코드 · 사전 등록은 그대로이고 DB가 켜지면 같은 명령을 다시 실행한다.
+- 결과(11-15, 1차 시도): 측정이 시작되지 못했다. Exa 요청 1번은 HTTP 200이었으나 `run_gate`의 `GATE_WARMUP`이 품번 확인 MCP 호출에서 `RetrievalUnavailableError: timeout`으로 죽었다(첫 문항 전, LLM 호출 0, 비용 0). 원인은 원격 DB 첫 응답 지연(23초)으로 MCP 준비 30초 시간 초과(조장 확인 [실측], 두 번째 실행은 warm-up 6.9초). 로컬 DB는 쓰지 않는다. 같은 명령으로 1번 재시도한다.
