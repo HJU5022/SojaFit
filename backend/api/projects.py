@@ -10,7 +10,7 @@ from backend import auth
 from backend.api.auth import demo_mode
 from backend.conversations.repository import InvalidRunState
 from backend.projects.models import Project, ProjectSummary
-from backend.projects.netlist import InvalidNetlist, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
+from backend.projects.netlist import InvalidNetlist, InvalidNetlistEncoding, MAX_BYTES, NetlistTooLarge, PARSER_VERSION, normalize_netlist
 from backend.projects.repository import DEMOS, InvalidProject, ProjectNotFound, ProjectRepository, project_name
 from backend.projects.visuals import load_demo_visuals
 
@@ -87,12 +87,13 @@ def list_projects(user_id: int = Depends(auth.current_user_id), repo: ProjectRep
 
 
 @router.post("/projects", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)])
-def create_project(body: CreateProject, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+def create_project(body: CreateProject, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     """빈 프로젝트 생성. demo_id를 지정한 복제는 DEMO_MODE=1에서만 허용한다."""
+    options = {"allow_duplicate": True} if allow_duplicate else {}
     if body.demo_id is not None:
         demo_mode()
-        return repo.create_demo(user_id, body.demo_id, body.name)
-    return repo.create_empty(user_id, body.name)
+        return repo.create_demo(user_id, body.demo_id, body.name, **options)
+    return repo.create_empty(user_id, body.name, **options)
 
 
 class UploadLimit(MultiPartException):
@@ -136,10 +137,11 @@ UPLOAD_BODY = {"requestBody": {"required": True, "content": {"multipart/form-dat
 
 
 @router.post("/projects/upload", status_code=201, response_model=Project, dependencies=[Depends(auth.check_origin)], openapi_extra=UPLOAD_BODY)
-async def upload_project(request: Request, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
+async def upload_project(request: Request, allow_duplicate: bool = False, user_id: int = Depends(auth.current_user_id), repo: ProjectRepository = Depends(repository)):
     normalized, name = await read_upload(request, with_name=True)
+    options = {"allow_duplicate": True} if allow_duplicate else {}
     return repo.create_upload(user_id, name, connections=normalized.connections,
-                              source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION)
+                              source_sha256=normalized.source_sha256, parser_version=PARSER_VERSION, **options)
 
 
 async def read_upload(request: Request, *, with_name: bool):
@@ -158,7 +160,7 @@ async def read_upload(request: Request, *, with_name: bool):
             raise HTTPException(400, "multipart 파일과 이름이 필요합니다.")
         form = await parser.parse()
         if not parser.finished:
-            raise HTTPException(400, "업로드 형식이 올바르지 않습니다.")
+            raise HTTPException(400, "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.")
         items = form.multi_items()
         upload, name = form.get("file"), form.get("name")
         expected = {"file", "name"} if with_name else {"file"}
@@ -175,8 +177,12 @@ async def read_upload(request: Request, *, with_name: bool):
         raise HTTPException(413, "넷리스트는 5 MiB 이하여야 합니다.") from None
     except InvalidProject as exc:
         raise HTTPException(422, str(exc)) from None
-    except (MultiPartException, InvalidNetlist):
-        raise HTTPException(400, "올바른 UTF-8 KiCad 넷리스트를 올려 주세요.") from None
+    except InvalidNetlistEncoding:
+        raise HTTPException(400, "UTF-8로 다시 저장하거나 KiCad에서 넷리스트(.net)로 다시 내보내 주세요.") from None
+    except InvalidNetlist:
+        raise HTTPException(400, "KiCad 넷리스트(.net)로 다시 내보내 주세요. PDF·이미지·회로도 파일은 사용할 수 없습니다.") from None
+    except MultiPartException:
+        raise HTTPException(400, "파일을 다시 첨부해 주세요. 업로드 형식이 올바르지 않습니다.") from None
     finally:
         for upload in parser.uploads:
             await upload.close()

@@ -3015,6 +3015,14 @@ ingest = [
     { name = "docling" },
     { name = "pdfplumber" },
 ]
+renderer = [
+    { name = "cairosvg" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "pillow" },
+    { name = "pypdfium2" },
+    { name = "uvicorn", extra = ["standard"] },
+]
 
 [package.metadata]
 requires-dist = [
@@ -3051,6 +3059,14 @@ dev = [
 ingest = [
     { name = "docling", specifier = ">=2.145" },
     { name = "pdfplumber", specifier = ">=0.11.10" },
+]
+renderer = [
+    { name = "cairosvg", specifier = ">=2.7,<3" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pillow", specifier = ">=11" },
+    { name = "pypdfium2", specifier = ">=4.30" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
 
 [[package]]

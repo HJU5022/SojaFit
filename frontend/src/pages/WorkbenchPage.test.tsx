@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { Suspense } from 'react'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import WorkbenchPage from './WorkbenchPage'
 import { failure, network, user } from '../test/network'
@@ -124,6 +125,50 @@ async function confirmDelete(label: string) {
   fireEvent.click(screen.getByRole('button', { name: `${label} 확인` }))
 }
 
+function pendingThreadDeletion() {
+  let resolve!: (response: Response) => void, removed = false
+  const records = ['t1', 't2'].map(id => ({ id, project_id: 1, title: `대화 ${id}`, target_ref: 'D1', target_locked: true, latest_run: null, messages: [], next_before_message_id: null }))
+  const remove = vi.fn(() => new Promise<Response>(finish => { resolve = finish }))
+  network((path, init) => {
+    if (init.method === 'DELETE') return remove()
+    if (path === '/api/projects') return Response.json([made(null)])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(made(null))
+    if (path === '/api/projects/1/threads') return Response.json(records.filter(item => !removed || item.id !== 't1'))
+    if (path.startsWith('/api/threads/')) return Response.json(records.find(item => path.endsWith(item.id)))
+    return Response.json([])
+  })
+  return { remove, finish: () => { removed = true; resolve(new Response(null, { status: 204 })) } }
+}
+function ThreadRoute() { const location = useLocation(); return <output data-testid="thread-route">{location.search}</output> }
+
+it('sends one deletion for repeated confirmation clicks and leaves the deleted current conversation', async () => {
+  const deletion = pendingThreadDeletion()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1&targetRef=D1&threadId=t1']}><ThreadRoute /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '대화 t1 삭제' }))
+  const confirm = screen.getByRole('button', { name: '대화 t1 삭제 확인' })
+  act(() => { fireEvent.click(confirm); fireEvent.click(confirm) })
+  expect(deletion.remove).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole('button', { name: '대화 t1 삭제 중' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '대화 t2 삭제' })).toBeDisabled()
+  await act(async () => { deletion.finish() })
+  await waitFor(() => expect(screen.getByTestId('thread-route')).toHaveTextContent(/^\?projectId=1&targetRef=D1$/))
+  expect(screen.queryByRole('button', { name: '검토 전: 대화 t1' })).toBeNull()
+  expect(screen.getByRole('button', { name: '대화 t2 삭제' })).toBeEnabled()
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it.each([false, true])('keeps another selected conversation after deletion (switched while pending: %s)', async switched => {
+  const deletion = pendingThreadDeletion()
+  renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1&targetRef=D1&threadId=${switched ? 't1' : 't2'}`]}><ThreadRoute /><WorkbenchPage /></MemoryRouter>)
+  await confirmDelete('대화 t1 삭제')
+  if (switched) fireEvent.click(screen.getByRole('button', { name: '검토 전: 대화 t2' }))
+  await act(async () => { deletion.finish() })
+  await waitFor(() => expect(screen.queryByRole('button', { name: '검토 전: 대화 t1' })).toBeNull())
+  expect(screen.getByTestId('thread-route')).toHaveTextContent('threadId=t2')
+  expect(screen.getByRole('button', { name: '검토 전: 대화 t2' })).toHaveAttribute('aria-current', 'true')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
 it.each(deletions)('dismisses the error for $label and shows a new failure on another attempt', async ({ query, label }) => {
   const remove = mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
   open(query)
@@ -152,6 +197,123 @@ function HistoryControls() {
   const navigate = useNavigate()
   return <><button onClick={() => void navigate(-1)}>이전 화면</button><button onClick={() => void navigate(1)}>다음 화면</button><button onClick={() => void navigate('/settings')}>설정으로 이동</button></>
 }
+
+function ProjectNavigationControls() {
+  const navigate = useNavigate()
+  return <><button onClick={() => void navigate('/app')}>프로젝트 목록으로</button><button onClick={() => void navigate('/app?projectId=2')}>다른 프로젝트로</button><button onClick={() => void navigate(-1)}>이전 화면</button><button onClick={() => void navigate(1)}>다음 화면</button></>
+}
+
+function twoProjectApi() {
+  const project = made(null, '첫 프로젝트')
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  network(path => {
+    if (path === '/api/projects') return Response.json([project, other])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(project)
+    if (path.split('?')[0] === '/api/projects/2') return Response.json(other)
+    return Response.json([])
+  })
+}
+
+it('clears part and project search terms when browser history switches between a project and the list', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: '첫 프로젝트' }))
+  fireEvent.change(await screen.findByRole('textbox', { name: '부품 찾기' }), { target: { value: '1N4148' } })
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  expect(await screen.findByRole('textbox', { name: '프로젝트 찾기' })).toHaveValue('')
+  expect(await screen.findByRole('button', { name: '첫 프로젝트' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '다른 프로젝트' })).toBeInTheDocument()
+  fireEvent.change(screen.getByRole('textbox', { name: '프로젝트 찾기' }), { target: { value: '첫' } })
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: 'D1 1N4148 선택' })).toBeInTheDocument()
+})
+
+it('clears search terms on browser back and forward between different projects', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1', '/app?projectId=2']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  fireEvent.change(await screen.findByRole('textbox', { name: '부품 찾기' }), { target: { value: '1N4148' } })
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: '첫 프로젝트' })).toBeInTheDocument()
+  fireEvent.change(screen.getByRole('textbox', { name: '부품 찾기' }), { target: { value: 'D1' } })
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  expect(await screen.findByRole('textbox', { name: '부품 찾기' })).toHaveValue('')
+  expect(screen.getByRole('button', { name: '다른 프로젝트' })).toBeInTheDocument()
+})
+
+it('clears the intake draft and error when switching projects', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '부품 없는 질문 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('부품 번호')
+  fireEvent.click(screen.getAllByRole('button', { name: '프로젝트' })[0])
+  fireEvent.click(await screen.findByRole('button', { name: '다른 프로젝트' }))
+  const nextInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(nextInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it('clears the intake draft and error across browser back and forward navigation', async () => {
+  twoProjectApi()
+  renderWithQueries(<MemoryRouter initialEntries={['/app?projectId=1']}><ProjectNavigationControls /><WorkbenchPage /></MemoryRouter>)
+  const input = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(input, { target: { value: '뒤로 가면 사라질 초안' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '다른 프로젝트로' }))
+  const projectBInput = await screen.findByRole('textbox', { name: '질문' })
+  fireEvent.change(projectBInput, { target: { value: 'B에서 만든 오류' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+  const previousInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(previousInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+  fireEvent.change(previousInput, { target: { value: 'A에서 다시 만든 오류' } })
+  fireEvent.click(screen.getByRole('button', { name: '질문 보내기' }))
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '다음 화면' }))
+  const forwardInput = await screen.findByRole('textbox', { name: '질문' })
+  expect(forwardInput).toHaveValue('')
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it.each(['projectId=1&targetRef=R1', 'projectId=1'])('does not enter a new review for an out-of-scope part (%s)', async query => {
+  const found = { ...made(null, '범위 시험'), connections: { parts: [{ ref: 'D1', value: '1N4148', footprint: '' }, { ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
+  network(path => {
+    if (path === '/api/demo-circuits') return Response.json([])
+    if (path === '/api/projects') return Response.json([found])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(found)
+    return Response.json([])
+  })
+  open(query)
+  if (!query.includes('targetRef=')) {
+    const outOfScope = await screen.findByRole('button', { name: /R1.*판정 범위 밖/ })
+    fireEvent.click(outOfScope)
+    expect(outOfScope).toBeDisabled()
+    expect(screen.getByRole('textbox', { name: '질문' })).toBeInTheDocument()
+  } else {
+    expect(await screen.findByText(/현재 다이오드만 판정합니다/)).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: '질문' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: '부품 고르기' }).length).toBeGreaterThan(0)
+  }
+})
+
+it('offers retry when an out-of-scope saved conversation cannot be loaded', async () => {
+  const found = { ...made(null), connections: { parts: [{ ref: 'R1', value: '10k', footprint: '' }], nets: [] } }
+  network(path => {
+    if (path === '/api/threads/missing') return failure('NOT_FOUND', '대화를 찾을 수 없습니다.', 404)
+    if (path === '/api/projects') return Response.json([found])
+    if (path.split('?')[0] === '/api/projects/1') return Response.json(found)
+    return Response.json([])
+  })
+  open('projectId=1&targetRef=R1&threadId=missing')
+  expect(await screen.findByRole('button', { name: '대화 다시 불러오기' })).toBeInTheDocument()
+  expect(screen.getByRole('alert')).toHaveTextContent('대화 기록을 불러오지 못했습니다.')
+})
 
 it('clears a stale error on browser history navigation and does not bring it back on return', async () => {
   mutationApi(() => failure('UNAVAILABLE', '잠시 후 다시 시도해 주세요.', 503))
@@ -263,6 +425,50 @@ it('keeps the project when only the selected conversation version returns 404', 
   await waitFor(() => expect(canonicalReads).toBe(1))
   expect(screen.queryByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeNull()
   expect(client.getQueryData(['projects'])).toEqual([made(null, '유효한 프로젝트')])
+})
+
+it.each(['', '&threadId=old-thread'])('does not refetch a confirmed missing project while navigation is pending %s', async suffix => {
+  const client = new QueryClient()
+  const other = { ...made(null, '다른 프로젝트'), id: 2 }
+  client.setQueryData(['project', 1, suffix ? 'old-thread' : ''], made(null, '삭제된 캐시'))
+  const reads: string[] = []
+  let accessibleAgain = false
+  network(path => {
+    if (path === '/api/projects') return Response.json([other])
+    if (path.split('?')[0] === '/api/projects/1') {
+      reads.push(path)
+      if (accessibleAgain) return Response.json(made(null, '접근 복구된 프로젝트'))
+      // 중복 조회는 대기시켜 잘못된 구현이 무한 요청 대신 횟수 검증으로 실패하게 한다.
+      if (reads.filter(read => read === path).length > 1) return new Promise<Response>(() => {})
+      return failure('NOT_FOUND', '프로젝트를 찾을 수 없습니다.', 404)
+    }
+    return Response.json([])
+  })
+  let release!: () => void, blocked = true
+  const listReady = new Promise<void>(resolve => { release = () => { blocked = false; resolve() } })
+  const navigating = vi.fn()
+  function PendingList() {
+    const location = useLocation()
+    if (!location.search && blocked) { navigating(); throw listReady }
+    return <WorkbenchPage />
+  }
+  try {
+    renderWithQueries(<MemoryRouter initialEntries={[`/app?projectId=1${suffix}`, `/app?projectId=1${suffix}`]}><HistoryControls /><Suspense fallback={<p>목록 준비 중</p>}><PendingList /></Suspense></MemoryRouter>, client)
+    await waitFor(() => expect(navigating).toHaveBeenCalled())
+    // 목록 화면 준비 중에 캐시 갱신으로 기존 화면이 다시 그려져도 재조회하지 않는다.
+    await act(async () => { client.setQueryData(['projects'], [other]); await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(reads).toEqual(suffix ? ['/api/projects/1?thread_id=old-thread', '/api/projects/1'] : ['/api/projects/1'])
+    await act(async () => { release() })
+    expect(await screen.findByText(/삭제되었거나 더 이상 접근할 수 없는 프로젝트/)).toBeInTheDocument()
+    expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toBeUndefined()
+    accessibleAgain = true
+    fireEvent.click(screen.getByRole('button', { name: '이전 화면' }))
+    await waitFor(() => expect(client.getQueryData(['project', 1, suffix ? 'old-thread' : ''])).toMatchObject({ name: '접근 복구된 프로젝트' }))
+    expect(reads).toHaveLength(suffix ? 3 : 2)
+  } finally {
+    await act(async () => { release(); cleanup() })
+    client.clear()
+  }
 })
 
 it('does not close another rename dialog when an earlier project returns 404 late', async () => {
@@ -382,4 +588,50 @@ it('keeps the project name after a failed creation so the same form can retry', 
   fireEvent.submit(form)
   await waitFor(() => expect(create).toHaveBeenCalledTimes(2))
   expect(name).toHaveValue('실패해도 유지')
+})
+
+it.each(['open', 'copy', 'edit', 'reopen'])('requires a fresh duplicate choice and preserves the form: %s', async choice => {
+  const requests: string[] = []
+  network((path, init) => {
+    if (init.method === 'POST') {
+      requests.push(path)
+      return path.includes('allow_duplicate=true') ? Response.json(made(null, '새 복사본')) : Response.json({ error: { code: 'CONFLICT', message: '중복', request_id: 'test' }, details: { duplicates: [{ id: 5, name: '기존 회로', matches: ['name', 'netlist'] }] } }, { status: 409 })
+    }
+    if (path === '/api/projects') return Response.json([])
+    if (path === '/api/demo-circuits') return catalogue()
+    if (path === '/api/projects/5') return Response.json({ ...made(null, '기존 회로'), id: 5 })
+    if (path === '/api/projects/1') return Response.json(made(null, '새 복사본'))
+    return Response.json([])
+  })
+  open(''); await screen.findByText('파일이 없으면 예제 회로로 시작'); mockDialogs()
+  fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+  const dialog = screen.getByRole('dialog', { name: '새 프로젝트' })
+  const name = within(dialog).getByRole('textbox', { name: '프로젝트 이름' })
+  fireEvent.change(name, { target: { value: '겹치는 이름' } })
+  const form = within(dialog).getByRole('button', { name: '만들기' }).closest('form')!
+  fireEvent.submit(form)
+  expect(await within(dialog).findByRole('alert')).toHaveTextContent('이름 중복 · 넷리스트 중복')
+  expect(name).toHaveValue('겹치는 이름')
+  expect(requests).toEqual(['/api/projects'])
+  expect(within(dialog).getByRole('button', { name: '만들기' })).toBeDisabled()
+  if (choice === 'open') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '기존 프로젝트 열기: 기존 회로' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toHaveLength(1)
+  } else if (choice === 'copy') {
+    fireEvent.click(within(dialog).getByRole('button', { name: '중복을 확인하고 새로 만들기' }))
+    await screen.findByRole('button', { name: '부품 고르기' })
+    expect(requests).toEqual(['/api/projects', '/api/projects?allow_duplicate=true'])
+  } else {
+    if (choice === 'edit') fireEvent.change(name, { target: { value: '바꾼 이름' } })
+    else {
+      fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
+      fireEvent.click(screen.getAllByRole('button', { name: '새 프로젝트' })[0])
+      expect(name).toHaveValue('')
+      fireEvent.change(name, { target: { value: '다시 입력' } })
+    }
+    expect(within(dialog).queryByRole('button', { name: '중복을 확인하고 새로 만들기' })).toBeNull()
+    fireEvent.submit(form)
+    await waitFor(() => expect(requests).toEqual(['/api/projects', '/api/projects']))
+  }
 })

@@ -8,15 +8,22 @@ export function useNetlistFiles(files: File[], setFiles: Dispatch<SetStateAction
   const upload = useNetlistImport(files, question, onAttach, setError, context)
   const blocked = disabled || upload.busy
   const attach = useCallback((incoming: File[]) => {
+    if (incoming.length > 1) {
+      setError(new Error('파일은 한 번에 하나만 첨부할 수 있습니다. 기존 파일과 초안은 유지됩니다.'))
+      return
+    }
     const valid = incoming.filter(file => /\.(net|txt)$/i.test(file.name) && file.size > 0 && file.size <= 5 * 1024 * 1024)
     setError(valid.length !== incoming.length || !incoming.length ? new Error('.net·.txt 형식의 비어 있지 않은 5 MiB 이하 파일만 첨부할 수 있습니다.') : null)
-    setFiles(current => {
-      const next = [...current]
-      for (const file of valid) if (!next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) next.push(file)
-      return next
-    })
+    if (!valid.length) return
+    const duplicate = files.some(item => item.name === valid[0].name && item.size === valid[0].size && item.lastModified === valid[0].lastModified)
+    if (duplicate) return
+    if (files.length >= 1) {
+      setError(new Error('파일은 한 번에 하나만 첨부할 수 있습니다. 기존 파일과 초안은 유지됩니다.'))
+      return
+    }
+    setFiles([valid[0]])
     if (valid.length) input.current?.focus({ preventScroll: true })
-  }, [setFiles, input])
+  }, [files, setFiles, input])
   useEffect(() => { setError(null) }, [context])
   useEffect(() => {
     let depth = 0

@@ -44,6 +44,23 @@ def test_invalid_demo_never_opens_database(monkeypatch):
             ProjectRepository().create_demo(1, demo_id, name)
 
 
+def test_schematic_comparison_reads_owned_thread_circuit_version(storage):
+    import json
+    from fastapi import HTTPException
+    from backend.api.external_circuits import _project_circuit
+    from backend.projects.netlist import normalize_netlist, circuit_fingerprint
+    repo,(owner,other),_=storage
+    normalized=normalize_netlist(Path('tests/fixtures/netlists/minimal.net').read_bytes())
+    project=repo.create_upload(owner,'회로도 대조',connections=normalized.connections,source_sha256=normalized.source_sha256,parser_version='test')
+    first,thread=repo.import_netlist(owner,project.id,connections=normalized.connections,source_sha256=normalized.source_sha256,parser_version='test')
+    changed=json.loads(json.dumps(normalized.connections,default=dict));changed['nets'][0]['nodes'][0]['pin']='99'
+    latest,_=repo.import_netlist(owner,project.id,connections=changed,source_sha256='f'*64,parser_version='test')
+    assert circuit_fingerprint(_project_circuit(owner,project.id,first.circuit_version,thread).connections)==circuit_fingerprint(normalized.connections)
+    assert circuit_fingerprint(_project_circuit(owner,project.id,latest.circuit_version,None).connections)!=circuit_fingerprint(normalized.connections)
+    with pytest.raises(HTTPException) as denied:_project_circuit(other,project.id,first.circuit_version,thread)
+    assert denied.value.status_code==404
+
+
 def test_received_demo_circuit_is_read_from_its_own_folder(monkeypatch):
     """[왜] c01(키 없는 데모 v3-01의 회로)은 samples/가 아니라 received-20261030/c01에 있다. DB 없이 넣는 값만 본다."""
     import hashlib
@@ -58,6 +75,7 @@ def test_received_demo_circuit_is_read_from_its_own_folder(monkeypatch):
         def fetchone(self): return (5,)
     monkeypatch.setattr(auth, "connection", Conn)
     monkeypatch.setattr(ProjectRepository, "_get_owned", lambda self, conn, user_id, project_id: project_id)
+    monkeypatch.setattr(ProjectRepository, "_check_duplicates", lambda *args, **kwargs: None)
     assert ProjectRepository().create_demo(1, "attiny85_time_switch", "타임 스위치") == 5
     source = demo_path("attiny85_time_switch").read_bytes()
     assert demo_path("attiny85_time_switch").as_posix().endswith("received-20261030/c01/connections.json")
@@ -96,7 +114,7 @@ def test_upload_stores_only_normalized_data_and_remains_owned(storage):
         conn.execute("ALTER TABLE circuits ADD CONSTRAINT reject_upload CHECK (false) NOT VALID")
     with pytest.raises(psycopg.errors.CheckViolation):
         repo.create_upload(owner, "rollback", connections=normalized.connections,
-                           source_sha256=normalized.source_sha256, parser_version="kicad-export-v1")
+                           source_sha256=normalized.source_sha256, parser_version="kicad-export-v1", allow_duplicate=True)
     assert [item.id for item in repo.list_owned(owner)] == [project.id]
 
 
@@ -227,3 +245,52 @@ def test_demo_check_requires_demo_id_only_for_demo_projects(storage):
             conn.execute("INSERT INTO projects (user_id,name,source_kind) VALUES (%s,'demo without id','demo')", (owner,))
         with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
             conn.execute("INSERT INTO projects (user_id,name,source_kind,demo_id) VALUES (%s,'upload with id','upload','breadboard_supply')", (owner,))
+
+
+def test_duplicate_name_is_owned_and_requires_explicit_confirmation(storage):
+    from backend.projects.repository import DuplicateProject
+    repo, (owner, other), _ = storage
+    original = repo.create_empty(owner, ' Board ')
+    with pytest.raises(DuplicateProject) as raised:
+        repo.create_empty(owner, ' board ')
+    assert raised.value.projects == [{'id': original.id, 'name': 'Board', 'matches': ['name']}]
+    assert [p.id for p in repo.list_owned(owner)] == [original.id]
+    assert repo.create_empty(other, 'board').id != original.id
+    copy = repo.create_empty(owner, 'board', allow_duplicate=True)
+    assert copy.id != original.id and repo.get_owned(owner, original.id).name == 'Board'
+
+
+def test_duplicate_upload_and_demo_content_are_checked_before_inserting(storage):
+    from backend.projects.netlist import normalize_netlist, PARSER_VERSION
+    from backend.projects.repository import DuplicateProject
+    repo, (owner, other), _ = storage
+    circuit = normalize_netlist(Path('tests/fixtures/netlists/minimal.net').read_bytes())
+    payload = dict(connections=circuit.connections, source_sha256=circuit.source_sha256, parser_version=PARSER_VERSION)
+    original = repo.create_upload(owner, '원본', **payload)
+    with pytest.raises(DuplicateProject) as raised:
+        repo.create_upload(owner, '다른 파일명', **payload)
+    assert raised.value.projects == [{'id': original.id, 'name': '원본', 'matches': ['netlist']}]
+    assert repo.create_upload(other, '원본', **payload).id != original.id
+    copy = repo.create_upload(owner, '복사', allow_duplicate=True, **payload)
+    assert copy.id != original.id and len(repo.list_owned(owner)) == 2
+    demo = repo.create_demo(owner, 'breadboard_supply', '데모')
+    with pytest.raises(DuplicateProject):
+        repo.create_demo(owner, 'breadboard_supply', '다른 데모 이름')
+    assert repo.create_demo(owner, 'breadboard_supply', '명시적 복사', allow_duplicate=True).id != demo.id
+
+
+def test_concurrent_creations_cannot_silently_skip_duplicate_warning(storage):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    from backend.projects.repository import DuplicateProject
+    repo, (owner, _), _ = storage
+    ready = Barrier(2)
+    def create():
+        ready.wait(timeout=5)
+        try:
+            return repo.create_empty(owner, '동시 생성').id
+        except DuplicateProject:
+            return 'duplicate'
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: create(), range(2)))
+    assert results.count('duplicate') == 1 and len(repo.list_owned(owner)) == 1

@@ -26,6 +26,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend import auth, logs
 from backend.errors import DEFAULT_CODES, SPECIAL_CODES, code_for, log_error
+from backend.projects.repository import DuplicateProject
 from backend.api.admin import router as admin_router
 from backend.api.auth import router as auth_router
 from backend.api.health import router as health_router
@@ -67,6 +68,7 @@ class ErrorEnvelope(BaseModel):
     """모든 JSON 오류 응답의 최상위 구조."""
 
     error: ErrorPayload
+    details: dict | None = None
 
 
 # OpenAPI 설명에는 상태마다 나올 수 있는 code를 적는다(예: 409 → CONFLICT · CONDITION_PENDING · ALREADY_APPROVED)
@@ -100,6 +102,7 @@ def error_response(
     message: str,
     headers: dict[str, str] | None = None,
     error: BaseException | None = None,
+    details: dict | None = None,
 ) -> JSONResponse:
     """공개 가능한 오류 정보만 공통 계약으로 반환하고, 같은 code · status · request_id로 로그 한 줄을 남긴다(5xx는 error의 traceback까지)."""
     request_id = request_id_for(request)
@@ -118,7 +121,7 @@ def error_response(
                 "message": message,
                 "request_id": request_id,
             }
-        },
+        } | ({"details": details} if details is not None else {}),
         headers=response_headers,
     )
 
@@ -172,6 +175,13 @@ async def validation_error(request: Request, exc: RequestValidationError):
         code="VALIDATION_ERROR",
         message="요청 형식이 올바르지 않습니다.",
     )
+
+
+@app.exception_handler(DuplicateProject)
+async def duplicate_project_error(request: Request, exc: DuplicateProject):
+    return error_response(request, status_code=409, code="CONFLICT",
+                          message="같은 이름이나 넷리스트를 사용하는 프로젝트가 있습니다.",
+                          details={"duplicates": exc.projects}, headers={"Cache-Control": "private, no-store"})
 
 
 @app.exception_handler(Exception)

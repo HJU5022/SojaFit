@@ -5,10 +5,39 @@ import httpx
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
 def _enabled(monkeypatch):
     monkeypatch.setenv("EXA_WEB_SEARCH_ENABLED", "1")
     monkeypatch.setenv("DEMO_MODE", "0")
     monkeypatch.setenv("EXA_API_KEY", "test-secret-not-for-output")
+
+
+def test_heading_download_link_uses_visible_schematic_label():
+    from backend.projects.external_circuit_search import _page_assets
+    def handle(request):
+        return httpx.Response(200,text='<h1>555 Theremin</h1><h3 data-href="/555 Theremin.pdf">555 Theremin Schematic.pdf</h3>',headers={'content-type':'text/html'})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        assets=_page_assets('https://example.org/project',client=client,required=True,require_schematic_context=True)
+    assert len(assets)==1 and assets[0][0]=='https://example.org/555%20Theremin.pdf'
+
+
+def test_pdf_result_keeps_later_publishing_page_evidence(monkeypatch):
+    _enabled(monkeypatch)
+    from backend.projects.external_circuit_search import search_public_schematics
+    url='https://example.org/555-theremin-schematic.pdf';page='https://example.org/555-theremin'
+    def handle(request):
+        if request.method=='POST':
+            return httpx.Response(200,json={'results':[{'url':url,'title':'555 Theremin schematic'},
+                {'url':page,'title':'555 Theremin schematic'}]})
+        return httpx.Response(200,text=f'<h1>555 Theremin</h1><a href="{url}">Schematic</a>',headers={'content-type':'text/html'})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result=search_public_schematics('555 Theremin',client=client)
+    assert len(result)==1 and result[0].page_url==page
 
 
 def test_search_diagnostics_distinguish_raw_results_from_filtered_candidates(monkeypatch, caplog):
@@ -64,6 +93,15 @@ def test_community_subdomain_is_not_manufacturer_evidence():
     assert _manufacturer_for("https://community.sparkfun.com/t/board/1") is None
     assert _manufacturer_for("https://forums.raspberrypi.com/viewtopic.php?t=1") is None
     assert _manufacturer_for("https://wiki.seeedstudio.com/board/") == "Seeed Studio"
+
+
+def test_official_design_archive_can_be_discovered_without_model_url_registration():
+    from backend.projects.external_circuit_search import _page_assets
+    url = 'https://pip-assets.raspberrypi.com/board/RPi-Pico-R3-PUBLIC-20200119.zip'
+    html = f'<title>Raspberry Pi Pico</title><a href="{url}">Download design files</a>'
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(
+            200, headers={'Content-Type':'text/html'}, text=html))) as client:
+        assert [u for u,_ in _page_assets('https://pip.raspberrypi.com/board', client=client)] == [url]
 
 
 @pytest.mark.parametrize("html,expected", [
@@ -166,6 +204,8 @@ def test_manufacturer_search_matches_korean_pico_name(monkeypatch, query):
     source_url = "https://www.raspberrypi.com/documentation/microcontrollers/pico-schematic.pdf"
 
     def handle(request):
+        if request.method == 'GET':
+            return httpx.Response(200, headers={'Content-Type':'text/html'}, text='<html></html>')
         body = json.loads(request.content)
         assert body["includeDomains"] == ["raspberrypi.com"]
         assert "Raspberry Pi Pico" in body["query"]
@@ -180,6 +220,33 @@ def test_manufacturer_search_matches_korean_pico_name(monkeypatch, query):
     assert len(result) == 1
     assert result[0].source_url == source_url
     assert result[0].evidence_grade == 2
+
+
+def test_official_portal_matches_exact_category_without_registered_model_id():
+    from backend.projects.external_circuit_search import _raspberrypi_portal_schematics
+    calls=[]
+    archive='https://pip-assets.raspberrypi.com/documents/RPi-Pico-PUBLIC.zip'
+    def handle(request):
+        calls.append(str(request.url))
+        if request.url.path=='/search':
+            assert request.url.params['q']=='Raspberry Pi Pico'
+            html='<a href="/categories/99-raspberry-pi-pico-w">Other model</a><a href="/categories/123-raspberry-pi-pico">Pico</a>'
+        else:
+            assert request.url.path=='/categories/123-raspberry-pi-pico'
+            html=f'<title>Raspberry Pi Pico</title><a href="{archive}">Design files</a>'
+        return httpx.Response(200,headers={'Content-Type':'text/html'},text=html)
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        result=_raspberrypi_portal_schematics('Raspberry Pi Pico',client=client)
+    assert len(calls)==2 and result[0].source_url==archive and result[0].source_type=='manufacturer_official'
+
+
+def test_official_portal_preserves_rate_limit():
+    from backend.projects.external_circuit_search import _raspberrypi_portal_schematics
+    from backend.projects.schematic_source import ExternalSchematicRateLimited
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(429,headers={'Retry-After':'77'}))) as client:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            _raspberrypi_portal_schematics('Raspberry Pi Pico',client=client)
+    assert error.value.retry_after==77
 
 
 def test_public_search_does_not_replace_requested_revision(monkeypatch):
@@ -349,7 +416,7 @@ def test_manufacturer_search_scopes_exa_to_known_domains(monkeypatch):
         if request.method == "POST":
             body = request.read()
             assert b'"includeDomains":["adafruit.com"]' in body or b'"includeDomains": ["adafruit.com"]' in body
-            assert b'downloads schematic learn.adafruit.com' in body
+            assert b'downloads schematic design files learn.adafruit.com' in body
             assert b'schematic downloads schematic' not in body
             return httpx.Response(200, json={"results": [{
                 "title": "Adafruit Example Board",

@@ -124,6 +124,7 @@ SojaFit (proj3-b)
 │       │   ├── WorkbenchPage.test.tsx <- 예제 회로 목록(운영 404·데모·대기)에 따라 새 프로젝트 창과 원본 회로도 버튼(저장된 그림·웹 검색)이 맞게 보이는지 테스트
 │       │   ├── WorkbenchPage.ask.test.tsx <- 부품 목록의 질문 칸이 질문 속 부품 번호로 검토를 열고 질문을 한 번 보내는지, 번호가 없거나 범위 밖이면 안내만 하는지 테스트
 │       │   ├── SettingsPage.tsx <- 내 설정 3칸 저장·삭제, 확인 후 계정 삭제
+│       │   ├── SettingsPage.test.tsx <- 최초 조회 잠금·자동 갱신 초안 보존·변경 후 동기화 테스트
 │       │   └── AdminUsersPage.tsx <- 관리자 전용 계정 목록·정지·정지 해제
 │       ├── components/     <- 화면 조각
 │       │   ├── Review.tsx  <- 검토 문서: 판정·회로·조건 대조·활동·입력창·속성 칸
@@ -133,6 +134,7 @@ SojaFit (proj3-b)
 │       │   ├── ContextDiagram.tsx <- 대상 부품의 넷과 이웃 SVG 개념도
 │       │   ├── Approval.test.tsx <- 새로고침 뒤 승인·견적 복원, 409 이미 승인됨 처리, 견적 본문은 수량만
 │       │   ├── PriceLookup.tsx <- 누를 때만 조회하는 가격·재고(견적이면 수량 단가·합계)
+│       │   ├── PriceLookup.test.tsx <- 가격 조회 버튼·재시도와 화면 복귀·재연결 자동 조회 차단 테스트
 │       │   ├── QuoteList.tsx <- 프로젝트 견적 목록(품번 × 수량·날짜), 검토로 돌아가기, 행마다 실시간 가격 조회
 │       │   ├── QuoteList.test.tsx <- 견적 목록·검토 열기·누를 때만 가격 조회·빈 목록 테스트
 │       │   ├── Schematic.tsx <- 원본 회로도 이미지(확대 창용)와 올린 넷리스트의 웹 검색
@@ -746,6 +748,7 @@ SojaFit (proj3-b)
 │       ├── parser/         <- 파서 정확도·속도, GPU 파싱 로그·재현율
 │       ├── hnsw/           <- HNSW 대 정확 검색
 │       ├── smoke/          <- HTTP 점검 단계별 상태 · error.code · request_id · ms(scripts/smoke/http_smoke.py), 인젝션 HTTP 시험 판정(injection_http.py)
+│       │   └── schematic_search_observations_2026-11-15.json <- 로컬 8011 회로도 후보·출처·이미지 로드 관찰 기록 복사본
 │       └── bit_search/     <- 비트 후보 + 정확 재정렬 검색 속도·recall(11-03)
 │
 └── docs/                   <- 사람이 읽는 문서: 과제 문서, 결정, 작업서, 조사, 제출물, 작업 기록
@@ -759,6 +762,8 @@ SojaFit (proj3-b)
     │   └── evaluation-prep.md <- 배점·가산 항목별 준비 점검
     ├── assets/             <- 문서에 넣는 구조도 이미지와 원본
     │   ├── ASSETS.md       <- 폴더 설명
+    │   ├── schematic-cdfer-2026-11-15.jpg <- CDFER 원본 회로도 선택·출처 표시 실검증 화면
+    │   ├── schematic-1n4148-2026-11-15.jpg <- 1N4148 OPBoard 후보 선택·출처 표시 실검증 화면
     │   ├── agent-flow.png  <- 멀티 에이전트 개념도(손으로 그린 요약, 정본 그래프는 README 3절 mermaid)
     │   └── agent-flow.svg  <- 위 개념도의 원본
     ├── adr/                <- 조 결정 기록. 결정 하나에 파일 하나(0001-한국어-제목.md부터)
@@ -806,6 +811,8 @@ SojaFit (proj3-b)
     │   └── supervisor-stage3-six-models.md  <- 6종 3차 실행 전 평가 계약
     ├── research/           <- 조사·실측 기록과 합의 전 제안. 결정이 아님
     │   ├── RESEARCH.md     <- 폴더 설명
+    │   ├── frontend-schematic-work-summary-2026-11-15.md <- 프런트 오류·회로도 검색 개선 17개 작업과 검증 범위 공유 보고서
+    │   ├── schematic-search-verification-2026-11-15.md <- CDFER·다이오드 검색 실검증과 한도 소진 시점의 미검증 항목
     │   ├── docker-cold-start-measurements.md  <- G2 빌드·첫 기능·첫 회로도·운영 응답 실측 비교
     │   ├── d9-outside-evidence-2026-11-11.md <- D9 근거 자료: 저장소 안으로 옮긴 원시 목록
     │   ├── grade-evidence-validation.md <- 1등급 2등급 3등급 근거 흐름과 검증 범위

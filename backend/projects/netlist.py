@@ -1,6 +1,9 @@
 """KiCad export의 연결 정보만 제한된 메모리에서 읽는다. 원본은 결과에 남기지 않는다."""
 import hashlib
+import json
 import re
+import time
+from collections import Counter
 from dataclasses import dataclass
 from types import MappingProxyType
 from collections.abc import Mapping
@@ -11,14 +14,120 @@ MAX_TOKENS = 500_000
 MAX_COMPONENTS = 100_000
 MAX_NETS = 100_000
 PARSER_VERSION = "kicad-export-v2"
+MAX_MATCH_PARTS = 256
+MAX_MATCH_NETS = 1024
+MAX_MATCH_PINS = 8192
+MAX_MATCH_STEPS = 10_000
+MAX_MATCH_SECONDS = 2.0
 
 
 class InvalidNetlist(ValueError):
     """연결 정보가 없거나 제한된 KiCad export 문법이 아니다."""
 
 
+class InvalidNetlistEncoding(InvalidNetlist):
+    """UTF-8로 디코드할 수 없는 원본 바이트."""
+
+
 class NetlistTooLarge(InvalidNetlist):
     """원본 바이트 상한 초과."""
+
+
+def circuit_fingerprint(connections) -> str:
+    """Compare component identities and complete pin partitions, ignoring net labels/order."""
+    try:
+        parts = sorted(tuple(part.get(key, '').strip() for key in ('ref', 'value', 'footprint'))
+                       for part in connections['parts'])
+        refs = {part[0] for part in parts}
+        if not 1 <= len(parts) <= MAX_COMPONENTS or len(refs) != len(parts) or any(not ref or not value for ref,value,_ in parts):
+            raise ValueError()
+        nets, pins = [], set()
+        if not 1 <= len(connections['nets']) <= MAX_NETS:
+            raise ValueError()
+        for net in connections['nets']:
+            group = []
+            for node in net['nodes']:
+                pin = (node['ref'].strip(), node['pin'].strip())
+                if pin[0] not in refs or not pin[1] or pin in pins or len(pins) >= MAX_TOKENS:
+                    raise ValueError()
+                pins.add(pin)
+                group.append(pin)
+            if not group:
+                raise ValueError()
+            nets.append(sorted(group))
+        return hashlib.sha256(json.dumps([parts, sorted(nets)], ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+    except (KeyError, TypeError, AttributeError, ValueError):
+        raise InvalidNetlist('회로 연결을 명확하게 대조할 수 없습니다.') from None
+
+
+def same_circuit(left, right) -> bool:
+    """Prove a pin-preserving bijection; reference suffixes alone may change."""
+    if circuit_fingerprint(left) == circuit_fingerprint(right):
+        return True
+    if len(left['parts']) != len(right['parts']) or len(left['nets']) != len(right['nets']):
+        return False
+    for circuit in (left, right):
+        if (len(circuit['parts']) > MAX_MATCH_PARTS or len(circuit['nets']) > MAX_MATCH_NETS
+                or sum(len(net['nodes']) for net in circuit['nets']) > MAX_MATCH_PINS):
+            return False
+    deadline = time.monotonic() + MAX_MATCH_SECONDS
+
+    def graph(circuit):
+        pins = {part['ref'].strip(): {} for part in circuit['parts']}
+        sizes = [len(net['nodes']) for net in circuit['nets']]
+        for index, net in enumerate(circuit['nets']):
+            for node in net['nodes']:
+                pins[node['ref'].strip()][node['pin'].strip()] = index
+        labels = {}
+        for part in circuit['parts']:
+            ref = part['ref'].strip()
+            numbered = re.fullmatch(r'(.*?)[0-9]+', ref)
+            prefix = (bool(numbered), numbered[1] if numbered else ref)
+            labels[ref] = (prefix, part['value'].strip(), part.get('footprint', '').strip(),
+                           tuple(sorted((pin, sizes[net]) for pin, net in pins[ref].items())))
+        return labels, pins
+
+    labels, pins = graph(left)
+    other_labels, other_pins = graph(right)
+    if Counter(labels.values()) != Counter(other_labels.values()):
+        return False
+    candidates = {}
+    for ref, label in sorted(other_labels.items()):
+        candidates.setdefault(label, []).append(ref)
+    anchored = {}
+    for ref, nodes in other_pins.items():
+        for pin, net in nodes.items():
+            anchored.setdefault((pin, net), set()).add(ref)
+    steps = 0
+
+    def match(remaining, used, net_map, reverse):
+        nonlocal steps
+        if not remaining:
+            return True
+        if steps >= MAX_MATCH_STEPS or time.monotonic() >= deadline:
+            return False
+        ref = min(remaining, key=lambda item: (
+            -sum(net in net_map for net in pins[item].values()), len(candidates[labels[item]]), item))
+        available = set(candidates[labels[ref]]) - used
+        for pin, net in pins[ref].items():
+            if net in net_map:
+                available.intersection_update(anchored.get((pin, net_map[net]), ()))
+        for other in sorted(available):
+            if steps >= MAX_MATCH_STEPS or time.monotonic() >= deadline:
+                return False
+            steps += 1
+            next_map, next_reverse = net_map.copy(), reverse.copy()
+            for pin, net in pins[ref].items():
+                target = other_pins[other][pin]
+                if next_map.get(net, target) != target or next_reverse.get(target, net) != net:
+                    break
+                next_map[net], next_reverse[target] = target, net
+            else:
+                if match(remaining - {ref}, used | {other}, next_map, next_reverse):
+                    return True
+        return False
+
+    return match(set(labels), set(), {}, {})
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,7 +282,7 @@ def normalize_netlist(raw: bytes) -> NormalizedCircuit:
     try:
         text = raw.decode("utf-8", errors="strict")
     except UnicodeDecodeError:
-        raise InvalidNetlist("expected UTF-8") from None
+        raise InvalidNetlistEncoding("expected UTF-8") from None
     if "\x00" in text:
         raise InvalidNetlist("NUL is not allowed")
     root = _read_export(text)

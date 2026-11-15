@@ -39,6 +39,7 @@
 
 | 폴더 | 파일 | 만든 스크립트 | 내용 |
 |---|---|---|---|
+| `results/smoke/` | `schematic_search_observations_2026-11-15.json` | 브라우저 직접 검증 기록 복사 | 로컬 8011의 회로도 후보·공개 원본 링크·이미지 로드 상태. 새 실측이나 평가 점수가 아님. 해석: [공유 보고서](../docs/research/frontend-schematic-work-summary-2026-11-15.md) |
 | `results/auth/` | `auth_boundary_2026-11-02.json` | `auth/auth_boundary_after_merge.py` | 로그인 잠금·세션 만료 경계 실측 |
 | `results/auth/` | `scrypt_concurrent_2026-11-02.json`, `scrypt_concurrent_2026-11-04.json` | `auth/measure_scrypt_concurrent.py` | 동시 scrypt·프로세스 메모리 실측 |
 | `results/storage/` | `storage_contract_2026-11-02.json` | `backend/rag/storage.py` CLI 계열 | 합성 벡터 64행·1536차원으로 vector→halfvec 형식·용량·검색 계약 확인. 실제 코퍼스 결과 아님 |

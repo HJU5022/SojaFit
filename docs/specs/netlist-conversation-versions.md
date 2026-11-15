@@ -19,6 +19,12 @@
 - 파일만 전송해도 파싱/부품 선택까지 진행하며 모델은 호출하지 않는다. 잘못된 파일/용량/소유권/서버 실패는 초안·첨부 유지, 자동 재시도 없음.
 
 ## How
+
+### 프로젝트 생성 중복 확인 (2026-11-14)
+- 빈 생성·데모 복제·넷리스트 생성 모두 같은 소유자의 이름(앞뒤 공백 제거·대소문자 무시) 또는 최신 회로의 원본 SHA-256이 같으면 저장 전409 CONFLICT를 반환한다. 파일명은 비교하지 않으며 회로 의미/서식이 다른 파일까지 동일하다고 추정하지 않는다. 다른 사용자와 과거 버전은 비교 대상이 아니다.
+- 공통 error/code/message/request_id를 유지하고 선택적 details.duplicates에 최대5개 {id,name,matches:[name|netlist]}만 제공한다. 원본·해시·다른 사용자 정보를 응답/로그에 노출하지 않는다. Cache-Control은 private,no-store다.
+- 기존 POST /api/projects 및 /api/projects/upload에 allow_duplicate(bool, 기본false) 쿼리를 추가한다. 사용자별 생성 트랜잭션을 직렬화해 동시 생성도 확인한다. true는 경고 후 명시적인 새로 만들기 선택에만 사용하며 원래 프로젝트를 수정하지 않는다. 새 DB 구조/경로/유료 호출은 없다.
+- 화면은 경고와 기존 프로젝트 열기/중복을 확인하고 새로 만들기를 제공한다. 이름·선택 파일을 유지하고 입력 변경/닫기/재열기에는 확인 상태를 해제한다. 파일 전송 API와 같은 프로젝트의 새 회로 버전 생성은 이번 중복 검사 범위가 아니다.
 - POST /api/projects JSON {name, demo_id?:string}: demo_id 생략 시 빈 upload 프로젝트, 지정 시 기존 데모 모드 제약 유지. 빈 프로젝트는 circuits 행 없이 v0 스냅샷(parts/nets=[])을 만들며 원본 파일을 저장하지 않는다.
 - POST /api/projects/{id}/netlist multipart file 한 개(.net·.txt, UTF-8 KiCad export, 비어 있지 않은 5MiB 이하): 인증·Origin·기존 메모리 수신 상한 재사용. 정규화 연결/해시/파서 버전만 저장하고 {project, thread_id} 반환. 새 버전과 새 대화 생성은 같은 트랜잭션이며 기존 대화는 변경하지 않는다.
 - DB: project_circuit_versions에 프로젝트별 불변 버전 저장, circuits는 최신 버전, threads.circuit_version으로 버전 고정. 기존 회로/대화는 v1으로 backfill. 실행 시작·재개·회로 상세의 모든 읽기 경로가 버전 고정을 따른다. FK cascade·RLS/권한 회수 유지.
@@ -26,6 +32,9 @@
 - 프런트는 기존 api/projects·Workbench·Review·ChatPane·useConversation을 재사용한다. 파일은 run 요청에 넣지 않고 위 파싱 API를 먼저 사용한다. 요청 중 중복 전송/분석 방지, 실패 시 원문 유지. 전송 성공 후 새 문맥으로 이동하며 원래 ref를 새 파일의 대상으로 추정하지 않는다.
 
 ## AC
+- Given 같은 계정의 같은 이름 또는 같은 파일 내용, When 확인 없이 생성, Then409·추가 저장0·안전한 소유 프로젝트 후보만 제공한다. 다른 계정의 같은 이름/파일은201이다.
+- Given 중복 경고, When 기존 프로젝트 열기, Then 기존 프로젝트로 이동하고 새 생성0. When 명시적으로 새로 만들기, Then allow_duplicate=true로 새 id를 생성하고 기존 데이터는 유지한다.
+- Given 경고 후 입력 변경 또는 창 재열기, When 다시 생성, Then 이전 중복 허용을 재사용하지 않는다. 동시에 같은 계정이 생성하면 확인 없는 두 생성 중 하나만 저장한다.
 - Given 운영 모드, When 이름만 생성, Then201과 빈 회로; demo_id 지정은 계속404.
 - Given 빈 프로젝트, When 유효 파일만 전송, Then v1과 새 대화/부품 목록; 유료 실행0.
 - Given v1 대화, When 다른 파일 첨부, Then v2 새 대화; v1 상세/재개는 v1 회로 유지.

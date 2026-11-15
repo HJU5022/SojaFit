@@ -18,6 +18,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const activeSend = useRef<AbortController | null>(null)
+  const pendingDraft = useRef<{ question: string; files: File[] } | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
   const [before, setBefore] = useState<number | null>(null)
   const [loadingOlder, setLoadingOlder] = useState(false)
@@ -31,6 +32,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
   useEffect(() => {
     if (threadId === liveThread.current) return
     activeSend.current?.abort(); activeSend.current = null; setSending(false)
+    pendingDraft.current = null
     activeOlder.current?.abort(); activeOlder.current = null; setBefore(null); setLoadingOlder(false); setOlderError(null)
     liveThread.current = threadId
     stream.reset(); setLive(null); setStages([]); setHistory([]); setError(null); setPicked(null); setLoading(false)
@@ -59,6 +61,15 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
       if (state.runId) void client.invalidateQueries({ queryKey: ['run', state.runId] })
     }
   }, [state, client, projectId])
+
+  useEffect(() => {
+    if (state.status === 'idle' || !('runId' in state) || !state.runId || !pendingDraft.current) return
+    const draft = pendingDraft.current
+    pendingDraft.current = null
+    if (text === draft.question && files.length === draft.files.length && files.every((file, index) => file === draft.files[index])) {
+      setText(''); setFiles([])
+    }
+  }, [state, text, files])
 
   async function loadOlder() {
     if (before === null || activeOlder.current || loading || !threadId) return
@@ -89,6 +100,7 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
     if (activeSend.current || !question || files.length || loading || running || waiting || !targetRef) return
     const active = new AbortController()
     activeSend.current = active; setSending(true); setError(null)
+    if (recorded && !text) setText(current => current || question)
     try {
       let id = threadId
       if (!id) {
@@ -98,7 +110,8 @@ export function useConversation({ projectId, targetRef, threadId, onThread }: { 
       }
       active.signal.throwIfAborted()
       if (live && 'runId' in state && state.runId) setHistory(current => [...current, { runId: state.runId!, question: live.question }])
-      setLive({ question }); setStages([]); setText(''); setFiles([]); setPicked(null)
+      setLive({ question }); setStages([]); setPicked(null)
+      pendingDraft.current = { question: recorded?.question ?? text, files }
       await stream.start(id, { question, target_ref: targetRef, ...(recorded?.conditions !== undefined ? { conditions: recorded.conditions } : {}) })
     } catch (reason) { if (!active.signal.aborted) setError(reason) }
     finally { if (!active.signal.aborted) setSending(false); if (activeSend.current === active) activeSend.current = null }

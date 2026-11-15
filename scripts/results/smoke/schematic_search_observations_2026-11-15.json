@@ -1,0 +1,318 @@
+[
+  {
+    "part": "SS33",
+    "stage": "final-default",
+    "choices": [
+      "현재 보는 자료: EmaNeg/Power_Management_Unit_Tesi · Hardware/Kicad_files/Tesi.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: jollydodo/OSSM-ALT-Edition · PCB-Design/Kicad Files/OSSM-ALT-PCB/v3_4/OSSM_ALT_SERVO_V3_4.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: aqleds/hardware_mainboard · pcb/ledboard.sch · 커뮤니티 참고 자료",
+      "이 자료 보기: CDFER/Melbourne-Live-Train-Map · PCB/Melbourne-Live-Train-Map.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "EmaNeg/Power_Management_Unit_Tesi 시트 1 원본 회로도",
+        "width": 3508
+      },
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "EmaNeg/Power_Management_Unit_Tesi 시트 2 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/EmaNeg/Power_Management_Unit_Tesi/blob/8cfe66f8db7e7ddfd709e27d0fa14f3fa9ff5496/Hardware/Kicad_files/Tesi.kicad_sch"
+    ]
+  },
+  {
+    "part": "SS33",
+    "stage": "CDFER-selected",
+    "choices": [
+      "이 자료 보기: EmaNeg/Power_Management_Unit_Tesi · Hardware/Kicad_files/Tesi.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: jollydodo/OSSM-ALT-Edition · PCB-Design/Kicad Files/OSSM-ALT-PCB/v3_4/OSSM_ALT_SERVO_V3_4.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: aqleds/hardware_mainboard · pcb/ledboard.sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: CDFER/Melbourne-Live-Train-Map · PCB/Melbourne-Live-Train-Map.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 1 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 2 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 3 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 4 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 5 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 6 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 7 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 8 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 9 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 10 원본 회로도",
+        "width": 3508
+      },
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "CDFER/Melbourne-Live-Train-Map 시트 11 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/CDFER/Melbourne-Live-Train-Map/blob/f628db0917e4a076e77e99ff934c330375196ae1/PCB/Melbourne-Live-Train-Map.kicad_sch"
+    ]
+  },
+  {
+    "part": "SS33",
+    "stage": "aqleds-selected",
+    "choices": [
+      "이 자료 보기: EmaNeg/Power_Management_Unit_Tesi · Hardware/Kicad_files/Tesi.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: jollydodo/OSSM-ALT-Edition · PCB-Design/Kicad Files/OSSM-ALT-PCB/v3_4/OSSM_ALT_SERVO_V3_4.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: aqleds/hardware_mainboard · pcb/ledboard.sch · 커뮤니티 참고 자료",
+      "이 자료 보기: CDFER/Melbourne-Live-Train-Map · PCB/Melbourne-Live-Train-Map.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2484,
+        "name": "aqleds/hardware_mainboard 시트 1 원본 회로도",
+        "width": 3509
+      },
+      {
+        "complete": true,
+        "height": 2484,
+        "name": "aqleds/hardware_mainboard 시트 2 원본 회로도",
+        "width": 3509
+      },
+      {
+        "complete": true,
+        "height": 2484,
+        "name": "aqleds/hardware_mainboard 시트 3 원본 회로도",
+        "width": 3509
+      },
+      {
+        "complete": true,
+        "height": 2484,
+        "name": "aqleds/hardware_mainboard 시트 4 원본 회로도",
+        "width": 3509
+      }
+    ],
+    "sources": [
+      "https://github.com/aqleds/hardware_mainboard/blob/54774c6762f28dde48f8b5109b21dfc4351731e2/pcb/ledboard.sch"
+    ]
+  },
+  {
+    "part": "SS33",
+    "stage": "jolly-selected",
+    "choices": [
+      "이 자료 보기: EmaNeg/Power_Management_Unit_Tesi · Hardware/Kicad_files/Tesi.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: jollydodo/OSSM-ALT-Edition · PCB-Design/Kicad Files/OSSM-ALT-PCB/v3_4/OSSM_ALT_SERVO_V3_4.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: aqleds/hardware_mainboard · pcb/ledboard.sch · 커뮤니티 참고 자료",
+      "이 자료 보기: CDFER/Melbourne-Live-Train-Map · PCB/Melbourne-Live-Train-Map.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "jollydodo/OSSM-ALT-Edition 시트 1 원본 회로도",
+        "width": 4961
+      },
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "jollydodo/OSSM-ALT-Edition 시트 2 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/jollydodo/OSSM-ALT-Edition/blob/3d58b9e3bdfebabb69f2b715e4aa67881035d217/PCB-Design/Kicad%20Files/OSSM-ALT-PCB/v3_4/OSSM_ALT_SERVO_V3_4.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "quota-partial-default",
+    "choices": [
+      "현재 보는 자료: SnaggingCobra/hackpad · PCB/CobraPad/CobraPad.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 602,
+        "name": "SnaggingCobra/hackpad 시트 1 원본 회로도",
+        "width": 1059
+      }
+    ],
+    "sources": [
+      "https://github.com/SnaggingCobra/hackpad/blob/b31d05a7fc0f34763cb8ec5d8f3f10911dcdbe5e/PCB/CobraPad/CobraPad.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "quota-partial-LMN",
+    "choices": [
+      "이 자료 보기: SnaggingCobra/hackpad · PCB/CobraPad/CobraPad.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "FundamentalFrequency/LMN-3-ECAD 시트 1 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/FundamentalFrequency/LMN-3-ECAD/blob/50d2c45e16e1ee7fad9bb02201d868b20618fb32/LMN.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "full-scan-default",
+    "choices": [
+      "현재 보는 자료: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: hiralsinghal/Keyboard · PCB/Keyboard.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: sol/KBDevBoard · switch.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: opott/OPBoard · PCB/OPBoard.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "FundamentalFrequency/LMN-3-ECAD 시트 1 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/FundamentalFrequency/LMN-3-ECAD/blob/50d2c45e16e1ee7fad9bb02201d868b20618fb32/LMN.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "full-scan-Keyboard",
+    "choices": [
+      "이 자료 보기: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: hiralsinghal/Keyboard · PCB/Keyboard.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: sol/KBDevBoard · switch.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: opott/OPBoard · PCB/OPBoard.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 590,
+        "name": "hiralsinghal/Keyboard 시트 1 원본 회로도",
+        "width": 1777
+      }
+    ],
+    "sources": [
+      "https://github.com/hiralsinghal/Keyboard/blob/af3df1ec7dd0de75bdef9c40ac55b00dc3dcebb2/PCB/Keyboard.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "full-scan-KBDevBoard",
+    "choices": [
+      "이 자료 보기: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: hiralsinghal/Keyboard · PCB/Keyboard.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: sol/KBDevBoard · switch.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: opott/OPBoard · PCB/OPBoard.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "sol/KBDevBoard 시트 1 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/sol/KBDevBoard/blob/e612e8e7927df7b21f9c7c012bdda3265808fb16/switch.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4148",
+    "stage": "full-scan-OPBoard",
+    "choices": [
+      "이 자료 보기: FundamentalFrequency/LMN-3-ECAD · LMN.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: hiralsinghal/Keyboard · PCB/Keyboard.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: sol/KBDevBoard · switch.kicad_sch · 커뮤니티 참고 자료",
+      "현재 보는 자료: opott/OPBoard · PCB/OPBoard.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 3508,
+        "name": "opott/OPBoard 시트 1 원본 회로도",
+        "width": 4961
+      }
+    ],
+    "sources": [
+      "https://github.com/opott/OPBoard/blob/62c5575ca6cb8811df285de3afc2b312a41d5a64/PCB/OPBoard.kicad_sch"
+    ]
+  },
+  {
+    "part": "1N4007",
+    "stage": "stopped-on-quota-partial",
+    "choices": [
+      "현재 보는 자료: ajkumar-1907/POWER-ELECTRONICS-LIB · dc-motor-speed-controller/dc-motor-speed-controller.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: ajkumar-1907/POWER-ELECTRONICS-LIB · transformerless-power-supply/transformerless-power-supply.kicad_sch · 커뮤니티 참고 자료",
+      "이 자료 보기: Srushti-D-Hebbar/12v-ac-to-dc-converter · hardware/ac_dc_converter.kicad_sch · 커뮤니티 참고 자료"
+    ],
+    "images": [
+      {
+        "complete": true,
+        "height": 2481,
+        "name": "ajkumar-1907/POWER-ELECTRONICS-LIB 시트 1 원본 회로도",
+        "width": 3508
+      }
+    ],
+    "sources": [
+      "https://github.com/ajkumar-1907/POWER-ELECTRONICS-LIB/blob/244045cae8e9f00db82695ba72c1f2bd14855f76/dc-motor-speed-controller/dc-motor-speed-controller.kicad_sch"
+    ]
+  }
+]

@@ -1,5 +1,6 @@
 """고정 commit 원본 렌더러의 형식, 완전성, 리소스 경계."""
 import io
+import base64
 import subprocess
 import zipfile
 from dataclasses import replace
@@ -10,12 +11,43 @@ from PIL import Image
 
 from backend.projects import schematic_render as render
 from backend.projects.schematic_source import (
-    ExternalSchematicInvalidSource, ExternalSchematicUpstreamError, VerifiedSchematicSource,
+    ExternalSchematicInvalidSource, ExternalSchematicRateLimited, ExternalSchematicUpstreamError,
+    VerifiedSchematicSource,
 )
 
 
 SOURCE = VerifiedSchematicSource("a/b", "a" * 40, "MIT", "a", "", "", "board.kicad_sch",
                                  "png", ("board.png",), "board.kicad_sch")
+
+
+@pytest.fixture(autouse=True)
+def isolated_provider_limits(monkeypatch):
+    from backend.projects import schematic_source
+    monkeypatch.setattr(schematic_source, '_RATE_LIMITS', {})
+
+
+def test_diode_query_rejects_radio_transceiver_artifact():
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity(
+            "SS33 diode", title="RANGER SS33 SCH Service Manual",
+            page_url="https://example.org/ranger_ss33_sch.pdf/download.html",
+            source_file="ranger_ss33_sch.pdf_1.png",
+            source_url="https://example.org/ranger_ss33_sch.pdf_1.png",
+            kind="png",
+        )
+
+
+def test_remote_renderer_rejects_oversized_stream_before_reading(monkeypatch):
+    from backend.projects import schematic
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer')
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    class Unreadable(httpx.SyncByteStream):
+        def __iter__(self):
+            pytest.fail('oversized renderer response must not be read')
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+        200, headers={'content-length': '999999999'}, stream=Unreadable()))) as client:
+        with pytest.raises(schematic.KicadServiceUnavailable):
+            schematic.render_remote_kicad(replace(SOURCE, asset_kind='kicad', asset_paths=()), client=client)
 
 
 def picture(kind, colors):
@@ -32,10 +64,82 @@ def schematic_picture():
     return stream.getvalue()
 
 
+def published_pdf(text='555 Theremin R1 R2 R3 C1 C2 U1', *, wires=True, pages=1, raster=False):
+    # Synthetic vector fixture checks the gate, not the correctness of a real circuit.
+    stream = f'BT /F1 12 Tf 30 750 Td ({text}) Tj ET\n'
+    if wires:
+        for x in (60, 180):
+            stream += f'{x} 600 m {x+30} 600 l {x+60} 600 l {x+30} 600 m {x+30} 630 l {x+30} 600 m {x+30} 570 l S\n'
+    if raster:
+        stream += 'BI /W 1 /H 1 /BPC 8 /CS /RGB /F /AHx ID FF0000> EI\n'
+    body=stream.encode()
+    objects=[b'<< /Type /Catalog /Pages 2 0 R >>',
+        f'<< /Type /Pages /Kids [{"3 0 R "*pages}] /Count {pages} >>'.encode(),
+        b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 800] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+        b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        b'<< /Length '+str(len(body)).encode()+b' >>\nstream\n'+body+b'endstream']
+    data=b'%PDF-1.4\n'; offsets=[0]
+    for i,obj in enumerate(objects,1):
+        offsets.append(len(data));data+=f'{i} 0 obj\n'.encode()+obj+b'\nendobj\n'
+    start=len(data)
+    data+=b'xref\n0 6\n0000000000 65535 f \n'+b''.join(f'{n:010} 00000 n \n'.encode() for n in offsets[1:])
+    return data+f'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{start}\n%%EOF'.encode()
+
+
+@pytest.mark.parametrize('text,wires,pages,accepted', [
+    ('555 Theremin R1 R2 R3 C1 C2 U1', True, 1, True),
+    ('555 Theremin U1 VIN GND SIG OUT', True, 1, False),
+    ('555 Theremin R1 R2 R3 C1 C2 U1', False, 1, False),
+    ('555 Theremin R1 R2 R3 C1 C2 U1', True, 2, False),
+    ('555 Theremin datasheet R1 R2 R3 C1 C2 U1', True, 1, False),
+])
+def test_published_pdf_requires_content_not_just_a_title(text,wires,pages,accepted):
+    data=published_pdf(text,wires=wires,pages=pages)
+    if accepted:
+        assert '555 Theremin' in render._pdf_identity_text(data, require_circuit=True)
+    else:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._pdf_identity_text(data, require_circuit=True)
+
+
+def test_raster_pdf_cannot_borrow_text_and_vector_evidence():
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._pdf_identity_text(published_pdf(raster=True),require_circuit=True)
+
+
+@pytest.mark.parametrize('page_title,pdf_title,linked,accepted', [
+    ('555 Theremin','555 Theremin',True,True),
+    ('555 Theremin','555 Other',True,False),
+    ('555 Other','555 Theremin',True,False),
+    ('555 Theremin','555 Theremin',False,False),
+    ('555 Theremin','5550 Theremin',True,False),
+])
+def test_published_pdf_needs_exact_publication_and_document_identity(page_title,pdf_title,linked,accepted):
+    pdf=published_pdf(pdf_title+' R1 R2 R3 C1 C2 U1')
+    url='https://example.org/012345.pdf';page='https://example.org/project'
+    def handle(request):
+        if str(request.url)==url:
+            return httpx.Response(200,content=pdf,headers={'content-type':'application/pdf'})
+        link=url if linked else 'other.pdf'
+        return httpx.Response(200,text=f'<h1>{page_title}</h1><h2>Schematic</h2><a href="{link}">Schematic</a>',headers={'content-type':'text/html'})
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        check=lambda:render.inspect_published_pdf(url,'555 Theremin',page_url=page,source_file='012345.pdf',client=client)
+        if accepted:
+            assert check()[1]==1
+        else:
+            with pytest.raises(ExternalSchematicInvalidSource):check()
+
+
 @pytest.fixture
 def verified_image_page(monkeypatch):
     # Identity/size unit tests isolate the page gate; its HTTP boundary is tested separately.
-    monkeypatch.setattr(render, "_verify_image_page", lambda *args, **kwargs: None)
+    def evidence(page, url, **kwargs):
+        if 'QTRP' in url:
+            return 'Adafruit QT Py RP2040 schematic'
+        if 'adafruit_products_schem' in url:
+            return 'Adafruit MOSFET Driver STEMMA schematic'
+        return url
+    monkeypatch.setattr(render, "_verify_image_page", evidence)
 
 
 def fetch(data, mime, kind="png", **kwargs):
@@ -159,6 +263,32 @@ def test_kicad_archive_renders_whole_hierarchy_and_rejects_partial_pdf():
         fetch(archive, "application/zip", "kicad", kicad_export=exporter, expected_sheets=2)
 
 
+@pytest.mark.parametrize('renumber', [False, True])
+def test_project_connections_are_compared_before_exporting_an_image(renumber):
+    import json
+    from pathlib import Path
+    from backend.projects.netlist import normalize_netlist
+    raw=(Path(__file__).parents[1]/'fixtures/netlists/minimal.net').read_bytes()
+    expected=json.loads(json.dumps(normalize_netlist(raw).connections,default=dict))
+    if renumber:
+        for part in expected['parts']:
+            part['ref'] += '00'
+        for net in expected['nets']:
+            for node in net['nodes']:
+                node['ref'] += '00'
+    rendered=[]
+    def netlist(root,output):
+        path=output/'circuit.net';path.write_bytes(raw);return path
+    def pdf(root,output):
+        rendered.append(True);path=output/'out.pdf';path.write_bytes(picture('PDF',['white']));return 'fixture',path
+    data=bundle({'board.kicad_sch':'(kicad_sch)'})
+    assert len(fetch(data,'application/zip','kicad',expected_connections=expected,kicad_netlist_export=netlist,kicad_export=pdf))==1
+    expected['nets'][0]['nodes'][0]['pin']='99'
+    with pytest.raises(ExternalSchematicInvalidSource):
+        fetch(data,'application/zip','kicad',expected_connections=expected,kicad_netlist_export=netlist,kicad_export=pdf)
+    assert len(rendered)==1
+
+
 @pytest.mark.parametrize("files,link", [
     ({"../escape": ""}, False), ({"board.kicad_sch": ""}, True),
     ({"A": "", "a": ""}, False),
@@ -258,6 +388,49 @@ def test_public_rejects_private_host_and_wrong_mime():
             render.fingerprint_public_schematic("https://assets.example.test/schematic.png", "pdf", client=client)
 
 
+def test_manufacturer_zip_extracts_one_schematic_pdf():
+    data = picture('PDF', ['red'])
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, 'w') as z:
+        z.writestr('board-schematic.pdf', data)
+        z.writestr('board.step', b'CAD')
+    url = 'https://pip-assets.raspberrypi.com/board.zip'
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={'Content-Type': 'application/zip'}, content=stream.getvalue()))) as client:
+        actual, mime = render._public_asset(url, 'pdf', client=client)
+    assert actual == data and mime == 'application/pdf'
+
+
+@pytest.mark.parametrize('names', [[], ['one-schematic.pdf', 'two-schematic.pdf'], ['../schematic.pdf']])
+def test_manufacturer_zip_rejects_ambiguous_or_unsafe_pdf(names):
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, 'w') as z:
+        for name in names:
+            z.writestr(name, picture('PDF', ['red']))
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+            200, headers={'Content-Type':'application/zip'}, content=stream.getvalue()))) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._public_asset('https://pip-assets.raspberrypi.com/board.zip', 'pdf', client=client)
+
+
+def test_manufacturer_zip_limits_and_nonmanufacturer_rejection(monkeypatch):
+    stream=io.BytesIO()
+    with zipfile.ZipFile(stream, 'w') as z:
+        z.writestr('schematic.pdf', picture('PDF', ['red']))
+        z.writestr('other.txt', b'x')
+    with httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(
+            200, headers={'Content-Type':'application/zip'}, content=stream.getvalue()))) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._public_asset('https://example.org/board.zip', 'pdf', client=client)
+        monkeypatch.setattr(render,'MAX_TREE_ITEMS',1)
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._public_asset('https://pip-assets.raspberrypi.com/board.zip', 'pdf', client=client)
+        monkeypatch.setattr(render,'MAX_TREE_ITEMS',10)
+        monkeypatch.setattr(render,'MAX_ARCHIVE_UNCOMPRESSED_BYTES',1)
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render._public_asset('https://pip-assets.raspberrypi.com/board.zip', 'pdf', client=client)
+
+
 def test_public_pdf_fingerprint_is_single_page_only():
     pdf = picture("PDF", ["red"])
     url = "https://assets.example.test/schematic.pdf"
@@ -321,6 +494,23 @@ def test_unmarked_normal_image_retains_exact_page_evidence(kind, html):
     assert len(digest) == 64 and count == 1
 
 
+@pytest.mark.parametrize('query,page,url,html', [
+    ('Teensy 4.0','https://www.pjrc.com/teensy/schematic.html','https://www.pjrc.com/teensy/schematic41.png',
+     '<h1>Teensy 4.1 Schematic</h1><img src="schematic41.png">'),
+    ('Adafruit MOSFET Driver','https://learn.adafruit.com/tinyrtc/downloads','https://cdn-learn.adafruit.com/adafruit_products_schem.png',
+     '<h1>Adafruit Tiny RTC</h1><h2>Schematic</h2><img src="https://cdn-learn.adafruit.com/adafruit_products_schem.png">'),
+])
+def test_official_reference_identity_does_not_trust_search_title(query,page,url,html):
+    def handle(request):
+        if str(request.url)==page:
+            return httpx.Response(200,headers={'Content-Type':'text/html'},text=html)
+        return httpx.Response(200,headers={'Content-Type':'image/png'},content=schematic_picture())
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        with pytest.raises(ExternalSchematicInvalidSource):
+            render.inspect_public_schematic(url,'png',query,title=query+' Schematic',page_url=page,
+                                            source_file=url.rsplit('/',1)[-1],client=client)
+
+
 def test_image_page_rate_limit_is_not_hidden():
     from backend.projects.schematic_source import ExternalSchematicRateLimited
     with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(429, headers={"Retry-After": "77"}))) as client:
@@ -362,6 +552,42 @@ def test_incompatible_artifact_name_is_rejected_before_download(monkeypatch, fil
     with pytest.raises(ExternalSchematicInvalidSource):
         render.inspect_public_schematic("https://example.org/" + filename, "pdf", "Raspberry Pi Pico",
                                         source_file=filename)
+
+
+@pytest.mark.parametrize('query,filename', [
+    ('Teensy 4.0', 'dnms-noise-measuring-teensy-40-circuit-diagram.pdf'),
+    ('Teensy 4.0', 'NoiseMeter-Teensy40-Schematic.pdf'),
+    ('Raspberry Pi Pico', 'pico-weather-station-schematic.pdf'),
+    ('Pololu DRV8833', 'Pololu-DRV8833-with-Arduino-Circuit-Diagram.png'),
+])
+def test_application_project_is_not_the_requested_board(query, filename):
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._verify_public_identity(query, title=query, page_url='https://example.org/boards',
+            source_file=filename, source_url='https://example.org/'+filename, kind='pdf',
+            pdf_text=query+' schematic with all model names present')
+
+
+def test_dnms_is_rejected_before_download(monkeypatch):
+    monkeypatch.setattr(render, '_public_asset', lambda *a, **kw: pytest.fail('unexpected application download'))
+    render_url='https://sensor.community/docs/dnms/dnms-noise-measuring-teensy-40-circuit-diagram.pdf'
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render.inspect_public_schematic(render_url, 'pdf', 'Teensy 4.0', title='Printing Drucke Schaltplan')
+
+
+@pytest.mark.parametrize('query,filename', [
+    ('Raspberry Pi Pico', 'RPI-PICO-R3-PUBLIC-SCHEMATIC.pdf'),
+    ('Teensy 4.0', 'schematic40.png'),
+    ('Teensy 4.0', 'Teensy-4.0-Rev-B-Schematic.pdf'),
+    ('SparkFun Pro Micro v13', 'Pro_Micro_v13b.pdf'),
+    ('Adafruit QT Py RP2040', 'adafruit_products_QTRP_sch.png'),
+    ('Adafruit MOSFET Driver', 'adafruit_products_schem.png'),
+    ('Pololu DRV8833', '0J3872.1200.png'),
+    ('DNMS noise measuring Teensy 4.0', 'dnms-noise-measuring-teensy-40-circuit-diagram.pdf'),
+    ('FC ROM Vomitter', 'nescart-fc-schematic.pdf'),
+    ('Car Radio ACC Delay', 'auto-acc-timer.pdf'),
+])
+def test_original_artifact_names_and_explicit_project_requests_survive(query, filename):
+    render._verify_artifact_name(query, filename, 'https://example.org/'+filename, query)
 
 
 def test_schematic_in_datasheets_directory_is_not_a_datasheet():
@@ -566,6 +792,94 @@ def test_public_identity_rejects_tiny_png(monkeypatch, verified_image_page):
             "https://files.seeedstudio.com/assets/optimized.png", "png",
             "Seeed XIAO ESP32C3", title="Seeed XIAO ESP32C3 schematic",
         )
+
+
+def test_cloud_renderer_uses_audience_bound_identity_token(monkeypatch):
+    from backend.projects import schematic
+
+    calls = []
+    monkeypatch.setenv("K_SERVICE", "sojafit-api")
+    monkeypatch.setattr(httpx, "get", lambda url, **options: calls.append((url, options))
+                        or httpx.Response(200, text="test-id-token", request=httpx.Request("GET", url)))
+
+    assert schematic._renderer_headers("https://renderer.example.run.app") == {
+        "Authorization": "Bearer test-id-token"}
+    assert calls[0][1]["params"] == {"audience": "https://renderer.example.run.app"}
+    assert calls[0][1]["headers"] == {"Metadata-Flavor": "Google"}
+    with pytest.raises(schematic.KicadServiceUnavailable):
+        schematic._renderer_headers("http://renderer:8000")
+
+
+def test_remote_renderer_checks_png_and_expected_sheet_count(monkeypatch):
+    from backend.projects import schematic
+
+    source = replace(SOURCE, asset_kind="kicad", asset_paths=())
+    monkeypatch.delenv("K_SERVICE", raising=False)
+    monkeypatch.setenv("KICAD_RENDERER_URL", "http://renderer:8000")
+    png = picture("PNG", ["white"])
+
+    def call_with(sheets):
+        client = httpx.Client(transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, json={"sheets": sheets})))
+        try:
+            return schematic.render_remote_kicad(source, client=client)
+        finally:
+            client.close()
+
+    assert call_with([base64.b64encode(png).decode()]) == (png,)
+    with pytest.raises(schematic.KicadServiceUnavailable):
+        call_with([base64.b64encode(b"not a PNG").decode()])
+    with pytest.raises(schematic.KicadServiceUnavailable):
+        call_with([base64.b64encode(png).decode()] * 2)
+
+
+def test_selected_kicad_downloads_each_file_once_and_counts_reused_sheet_instances(tmp_path):
+    root = b'(kicad_sch (sheet (property "Sheetfile" "child.kicad_sch")) (sheet (property "Sheetfile" "child.kicad_sch")))'
+    files = {'board.kicad_sch': root, 'child.kicad_sch': b'(kicad_sch)'}
+    calls = []
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=tuple(files), expected_sheets=3)
+    path, count = render._selected_kicad(source, lambda name: calls.append(name) or files[name], tmp_path)
+    assert count == 3
+    assert calls == list(files)
+    assert path.read_bytes() == root
+
+
+def test_selected_kicad_has_a_total_download_budget(tmp_path, monkeypatch):
+    root = b'(kicad_sch (sheet (property "Sheetfile" "child.kicad_sch")))'
+    files = {'board.kicad_sch': root, 'child.kicad_sch': b'(kicad_sch)'}
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=tuple(files), expected_sheets=2)
+    monkeypatch.setattr(render, 'MAX_ARCHIVE_BYTES', sum(map(len,files.values()))-1)
+    with pytest.raises(ExternalSchematicInvalidSource):
+        render._selected_kicad(source, files.__getitem__, tmp_path)
+
+
+def test_selected_kicad_accepts_multiline_quoted_fields_without_altering_original(tmp_path):
+    raw = b'(kicad_sch (title_block (comment 1 "line one\nline two")))'
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=('board.kicad_sch',), expected_sheets=1)
+    root, count = render._selected_kicad(source, lambda name: raw, tmp_path)
+    assert count == 1
+    assert root.read_bytes() == raw
+
+
+def test_selected_kicad_streams_large_sheet_beyond_sexpr_token_limit(tmp_path):
+    raw = (b'(kicad_sch (lib_symbols (symbol "Device:D")) '
+           b'(symbol (lib_id "Device:D") (property "Reference" "D1") '
+           b'(property "Value" "BAT54")) '
+           + b'(wire (pts (xy 1 1) (xy 2 2))) ' * 25_000 + b')')
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=('board.kicad_sch',), expected_sheets=1)
+    root, count = render._selected_kicad(source, lambda name: raw, tmp_path)
+    assert count == 1
+    assert root.read_bytes() == raw
+
+
+def test_large_kicad_cannot_bypass_balanced_structure_validation(tmp_path):
+    raw = (b'(kicad_sch (lib_symbols (symbol "Device:D")) '
+           b'(symbol (lib_id "Device:D")) (title_block (comment "'
+           + b'x' * 1_100_000 + b'"))')
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=('board.kicad_sch',), expected_sheets=1)
+    with pytest.raises((ExternalSchematicInvalidSource, ValueError)):
+        render._selected_kicad(source, lambda name: raw, tmp_path)
+
 @pytest.mark.parametrize('page,linked,voltage,accepted', [
     ('https://www.sparkfun.com/board', True, '3.3 V', True),
     ('https://unverified.example.org/board', True, '3.3 V', False),
@@ -630,7 +944,6 @@ def test_voltage_is_not_proven_by_page_url_or_conflicting_body(page, text, linke
 
 
 def test_official_link_verification_preserves_rate_limit(monkeypatch):
-    from backend.projects.schematic_source import ExternalSchematicRateLimited
     monkeypatch.setattr(render, '_public_asset', lambda *args, **kwargs: (b'pdf-placeholder', 'application/pdf'))
     monkeypatch.setattr(render, '_pdf_identity_text', lambda data: '')
     with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(429, headers={'retry-after': '30'}))) as client:
@@ -638,3 +951,110 @@ def test_official_link_verification_preserves_rate_limit(monkeypatch):
             render.inspect_public_schematic('https://cdn.sparkfun.com/board-schematic.pdf', 'pdf',
                 'SparkFun Board 3.3V', page_url='https://www.sparkfun.com/board', client=client)
     assert error.value.retry_after == 30
+
+
+@pytest.mark.parametrize('status,headers', [
+    (429, {'retry-after': '21'}),
+    (403, {'x-ratelimit-remaining': '0', 'retry-after': '22'}),
+])
+def test_selected_kicad_download_preserves_rate_limit(status, headers):
+    source = replace(SOURCE, asset_kind='kicad', asset_paths=('board.kicad_sch',), expected_sheets=1)
+
+    def respond(request):
+        return httpx.Response(status, headers=headers, request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            render.render_external_schematic(source, client=client)
+    assert error.value.retry_after in {21, 22}
+    assert error.value.status_code == status
+
+
+def test_remote_renderer_rate_limit_preserves_retry_after(monkeypatch):
+    from backend.projects import schematic
+
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer:8000')
+    response = httpx.Response(503, headers={'retry-after': '33'})
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: response))
+    try:
+        with pytest.raises(ExternalSchematicRateLimited) as error:
+            schematic.render_remote_kicad(replace(SOURCE, asset_kind='kicad', asset_paths=()), client=client)
+    finally:
+        client.close()
+    assert error.value.retry_after == 33
+    assert error.value.status_code == 503
+
+
+def test_remote_renderer_plain_upstream_503_is_not_rate_limited(monkeypatch):
+    from backend.projects import schematic
+
+    monkeypatch.delenv('K_SERVICE', raising=False)
+    monkeypatch.setenv('KICAD_RENDERER_URL', 'http://renderer:8000')
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(503)))
+    try:
+        with pytest.raises(schematic.KicadServiceUnavailable):
+            schematic.render_remote_kicad(replace(SOURCE, asset_kind='kicad', asset_paths=()), client=client)
+    finally:
+        client.close()
+
+
+def test_renderer_endpoint_returns_503_and_retry_after_for_rate_limit(monkeypatch):
+    from backend.projects import schematic
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(
+        __import__('backend.projects.schematic_render', fromlist=['render_external_schematic']),
+        'render_external_schematic',
+        lambda source: (_ for _ in ()).throw(ExternalSchematicRateLimited(44, status_code=429)),
+    )
+    with pytest.raises(HTTPException) as error:
+        schematic.renderer_render({'source': {
+            'repository': 'a/b', 'commit': 'a' * 40, 'license': 'MIT', 'attribution': 'a',
+            'repository_url': '', 'source_url': '', 'source_file': 'board.kicad_sch',
+            'asset_kind': 'kicad', 'asset_paths': [], 'root_schematic': 'board.kicad_sch',
+            'expected_sheets': 1,
+        }})
+    assert error.value.status_code == 503
+    assert error.value.headers == {'Retry-After': '44'}
+
+@pytest.mark.parametrize('case', ['match', 'different', 'missing'])
+def test_remote_renderer_checks_candidate_connections_without_sending_upload(monkeypatch, case):
+    import json
+    from pathlib import Path
+    from fastapi.testclient import TestClient
+    from backend.projects import schematic
+    from backend.projects.netlist import normalize_netlist
+    raw=(Path(__file__).parents[1]/'fixtures/netlists/minimal.net').read_bytes()
+    candidate=json.loads(json.dumps(normalize_netlist(raw).connections,default=dict))
+    uploaded=json.loads(json.dumps(candidate))
+    for part in uploaded['parts']:part['ref']+='100'
+    for net in uploaded['nets']:
+        net['name']='PRIVATE_UPLOAD_NET_NAME'
+        for node in net['nodes']:node['ref']+='100'
+    if case=='different':uploaded['parts'][0]['value']='1N4007'
+    source=replace(SOURCE,asset_kind='kicad',asset_paths=(),expected_sheets=1)
+    def native(source,**kwargs):
+        assert kwargs.get('connection_consumer')
+        kwargs['connection_consumer'](candidate)
+        return (schematic_picture(),)
+    monkeypatch.setattr(render,'render_external_schematic',native)
+    monkeypatch.setenv('KICAD_RENDERER_URL','http://renderer')
+    monkeypatch.delenv('K_SERVICE',raising=False)
+    server=TestClient(schematic.app)
+    bodies=[]
+    def transport(request):
+        body=json.loads(request.content);bodies.append(body)
+        assert 'PRIVATE_UPLOAD' not in request.content.decode()
+        assert set(body)=={'source','include_netlist'} and body['include_netlist'] is True
+        response=server.post('/render',json=body)
+        data=response.json()
+        if case=='missing':data.pop('connections',None)
+        return httpx.Response(response.status_code,json=data,headers=dict(response.headers))
+    with httpx.Client(transport=httpx.MockTransport(transport)) as client:
+        if case=='match':
+            assert schematic.render_remote_kicad(source,connections=uploaded,client=client)==(schematic_picture(),)
+        else:
+            with pytest.raises(ExternalSchematicInvalidSource):
+                schematic.render_remote_kicad(source,connections=uploaded,client=client)
+    assert len(bodies)==1

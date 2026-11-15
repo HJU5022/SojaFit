@@ -9,14 +9,17 @@ import re
 import time
 from collections import OrderedDict
 from concurrent.futures import Future
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from math import ceil
 from threading import Lock
+from urllib.parse import urlsplit
 
 from backend.projects.schematic_source import (
     ALLOWED_LICENSES, ExternalSchematicConfigurationError, ExternalSchematicInvalidSource,
     ExternalSchematicInvalidToken, ExternalSchematicNotFound, ExternalSchematicRateLimited,
     ExternalSchematicUpstreamError,
     VerifiedSchematicSource,
+    provider_rate_key, provider_rate_limit, remember_provider_limit,
 )
 
 TTL = 900
@@ -69,7 +72,7 @@ def _encode(raw):
 
 
 def _sign(source, count, expires):
-    payload = {"version": 2, "repository": source.repository, "commit": source.commit,
+    payload = {"version": 3, "repository": source.repository, "commit": source.commit,
                "license": source.license, "attribution": source.attribution,
                "repository_url": source.repository_url, "source_url": source.source_url,
                "source_file": source.source_file, "asset_kind": source.asset_kind,
@@ -78,7 +81,8 @@ def _sign(source, count, expires):
                "evidence_grade": source.evidence_grade, "manufacturer": source.manufacturer,
                "model": source.model, "revision": source.revision,
                "source_sha256": source.source_sha256,
-               "license_evidence_url": source.license_evidence_url}
+               "license_evidence_url": source.license_evidence_url,
+               "circuit_sha256": source.circuit_sha256}
     part = _encode(json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode())
     token = (part + b"." + _encode(hmac.digest(_key(), part, "sha256"))).decode()
     if len(token) > 4096:
@@ -99,7 +103,7 @@ def _read_token(token, now):
         if not hmac.compare_digest(signature, _encode(hmac.digest(_key(), part, "sha256"))):
             raise ValueError
         fields = json.loads(base64.b64decode(part + b"=" * (-len(part) % 4), altchars=b"-_", validate=True))
-        if not isinstance(fields, dict) or fields.get("version") != 2:
+        if not isinstance(fields, dict) or fields.get("version") != 3:
             raise ValueError
         source_type = fields.get("source_type")
         repo, sha = fields.get("repository"), fields.get("commit")
@@ -115,11 +119,15 @@ def _read_token(token, now):
                     and bool(re.fullmatch(r"https://[^\s]+", source_url))
                     and isinstance(source_hash, str) and bool(re.fullmatch(r"[0-9a-f]{64}", source_hash)))
         expected_grade = 3 if community else 2 if source_type == "manufacturer_official" else None
+        circuit_hash = fields.get('circuit_sha256')
+        if circuit_hash is not None and (not community or kind != 'kicad' or not isinstance(circuit_hash, str)
+                                         or not re.fullmatch(r'[0-9a-f]{64}', circuit_hash)):
+            raise ValueError
         if (not (community or public) or fields.get("evidence_grade") != expected_grade
                 or not isinstance(credit, str) or not credit or not _relative(path)
                 or not _relative(root) or (community and not root.lower().endswith((".sch", ".kicad_sch")))
                 or kind not in ("png", "svg", "pdf", "kicad") or not isinstance(assets, list)
-                or (community and (not all(_relative(p) for p in assets) or bool(assets) == (kind == "kicad")))
+                or (community and (kind != 'kicad' or len(assets) > 20 or not all(_relative(p) and p.endswith('.kicad_sch') for p in assets)))
                 or (public and assets) or type(count) is not int or not 1 <= count <= 20
                 or type(expires) is not int or now >= expires):
             raise ValueError
@@ -128,7 +136,7 @@ def _read_token(token, now):
                                        source_url or repository_url, path, kind, tuple(assets), root, count,
                                        source_type, fields["evidence_grade"], fields.get("manufacturer"),
                                        fields.get("model"), fields.get("revision"), source_hash,
-                                       fields.get("license_evidence_url")), count
+                                       fields.get("license_evidence_url"), circuit_hash), count
     except (ValueError, UnicodeError, TypeError, binascii.Error):
         raise ExternalSchematicInvalidToken("시트 주소가 올바르지 않거나 만료되었습니다.") from None
 
@@ -177,33 +185,155 @@ class _Cache:
             with self.lock:
                 self.pending.pop(key, None)
 
+    def replace(self, key, value):
+        weight = self.weight(value)
+        with self.lock:
+            old = self.entries.pop(key, None)
+            if old is not None:
+                self.size -= old[2]
+            if weight <= self.byte_capacity:
+                self.entries[key] = self.clock() + self.ttl, value, weight
+                self.size += weight
+                while len(self.entries) > self.capacity or self.size > self.byte_capacity:
+                    _, (_, _, discarded) = self.entries.popitem(last=False)
+                    self.size -= discarded
+
+    def delete(self, key):
+        with self.lock:
+            entry = self.entries.pop(key, None)
+            if entry is not None:
+                self.size -= entry[2]
+
+    def delete_matching(self, predicate):
+        with self.lock:
+            for key, entry in tuple(self.entries.items()):
+                if predicate(key):
+                    self.entries.pop(key, None)
+                    self.size -= entry[2]
+
+
+def _is_board_query(query):
+    from backend.projects.external_circuit_search import _MANUFACTURER_ALIASES, canonical_product_query
+    board = re.sub(r'^(?:(?:original|schematics?|원본|회로도)\s+)+', '', canonical_product_query(query).casefold())
+    return any(board.startswith(alias) for aliases in _MANUFACTURER_ALIASES.values() for alias in aliases) or bool(re.match(r'pico\b', board))
+
+
+def _community_candidate_limit() -> int:
+    """Keep verification bounded by the discovery provider's shared limit."""
+    from backend.projects.external_circuit_search import MAX_COMPONENT_REPOSITORIES
+    return MAX_COMPONENT_REPOSITORIES
 
 class ExternalSchematicService:
     def __init__(self, search, inspect, render, *, clock=time.monotonic, wall=time.time,
-                 fallback_search=None,
+                 fallback_search=None, public_pdf_inspect=None, match_render=None,
                  query_capacity=128, image_capacity=64, image_byte_capacity=128*1024*1024,
                  ttl_seconds=TTL):
         self.search, self.inspect, self.render = search, inspect, render
         self.fallback_search = fallback_search
+        self.public_pdf_inspect = public_pdf_inspect
+        self.match_render = match_render
+        self.inspections = _Cache(query_capacity*5,0,lambda _:0,ttl_seconds,clock)
         self.wall = wall
         self.queries = _Cache(query_capacity, 0, lambda _: 0, ttl_seconds, clock)
         self.candidates = _Cache(query_capacity, 0, lambda _: 0, ttl_seconds, clock)
         self.images = _Cache(image_capacity, image_byte_capacity, lambda sheets: sum(map(len, sheets)), ttl_seconds, clock)
+        self.verified_choices = _Cache(query_capacity, 0, lambda value: 0, ttl_seconds, clock)
+        self.validated = _Cache(query_capacity, 0, lambda value: 0, ttl_seconds, clock)
+        self.retry_until = OrderedDict()
+        self.retry_lock = Lock()
 
-    def _sheets(self, source):
+    def _remember_choices(self, query, sources):
+        choices = list(self.verified_choices.get(query, lambda: ()))
+        seen = {choice.source_url for choice in choices}
+        for source in sources:
+            if source.source_type != "community" or not source.source_url or source.source_url in seen:
+                continue
+            seen.add(source.source_url)
+            title = f"{source.repository or source.attribution} · {source.root_schematic}"
+            choices.append(ExternalSchematicChoice(title, source.source_url, source.source_type,
+                                                   source.revision))
+        self.verified_choices.replace(query, tuple(choices))
+
+    def _choices_for(self, query):
+        return self.verified_choices.get(query, lambda: ())
+
+    def _clear_query_caches(self, query):
+        self.queries.delete_matching(lambda key: key == query or (isinstance(key, tuple) and key[:1] == (query,)))
+        self.candidates.delete(query)
+        self.validated.delete(query)
+        self.verified_choices.delete(query)
+        public_query = query[0] if isinstance(query, tuple) else query
+        self.inspections.delete_matching(lambda key: key[1] == public_query)
+        with self.retry_lock:
+            self.retry_until.pop(query, None)
+
+    def _retry_deadline(self, query):
+        with self.retry_lock:
+            value = self.retry_until.get(query)
+            if value is not None:
+                self.retry_until.move_to_end(query)
+            return value[0] if value is not None else None
+
+    def _retry_error(self, query):
+        with self.retry_lock:
+            entry = self.retry_until.get(query)
+        if entry is not None and entry[1] is not None and entry[0] > self.wall():
+            host, phase, status, key = entry[1]
+            if key == provider_rate_key(host):
+                return ExternalSchematicRateLimited(ceil(entry[0] - self.wall()), host=host, phase=phase, status_code=status)
+        return None
+
+    def _set_retry_deadline(self, query, deadline, error=None):
+        with self.retry_lock:
+            previous = self.retry_until.get(query)
+            if (previous is not None and previous[1] is not None and previous[0] > self.wall()
+                    and previous[1][3] == provider_rate_key(previous[1][0])):
+                return
+            metadata = (error.host, error.phase, error.status_code, provider_rate_key(error.host)) if error is not None else None
+            self.retry_until[query] = (deadline, metadata)
+            self.retry_until.move_to_end(query)
+            while len(self.retry_until) > self.queries.capacity:
+                self.retry_until.popitem(last=False)
+
+    def _sheets(self, source, connections=None):
         def produce():
-            result = self.render(source)
+            if connections is not None and self.match_render is None:
+                raise ExternalSchematicInvalidSource()
+            result = self.match_render(source, connections) if connections is not None else self.render(source)
             if not 1 <= len(result) <= 20:
                 raise ExternalSchematicInvalidSource("시트 수가 허용 범위를 벗어났습니다.")
             return result
         return self.images.get(source, produce)
 
-    def _find(self, query):
-        from backend.projects.external_circuit_search import WebSchematicRef
+    def _find(self, query, connections=None, selected_url=None):
+        from backend.projects.external_circuit_search import WebSchematicRef, GitHubRepositoryRef, component_context
+        known_board = _is_board_query(query) and connections is None and component_context(query) is None
+        if connections is not None:
+            from backend.projects.netlist import circuit_fingerprint
+            circuit_hash = circuit_fingerprint(connections)
+        lookup_key = (query, circuit_hash) if connections is not None else query
+        def scoped_sources(sources):
+            if connections is None:
+                return tuple(source for source in sources if source.source_type != 'community' or source.asset_kind == 'kicad')
+            return tuple(replace(source,circuit_sha256=circuit_hash) for source in sources
+                         if source.source_type == 'community' and source.asset_kind == 'kicad')
         saw_upstream_failure = False
         rate_error = None
         retry_budget = 1
         counts = {"candidate_count": 0, "inspect_rejected": 0, "render_rejected": 0}
+
+        def inspect_candidate(candidate):
+            hosts = ('api.github.com', 'raw.githubusercontent.com', 'codeload.github.com') if isinstance(candidate, GitHubRepositoryRef) else (
+                (urlsplit(candidate.source_url).hostname, urlsplit(candidate.page_url).hostname)
+                if isinstance(candidate, WebSchematicRef) else ())
+            for host in hosts:
+                if limited := provider_rate_limit(host):
+                    raise limited
+            try:
+                return tuple(self.inspect(candidate, query=query))
+            except ExternalSchematicRateLimited as error:
+                remember_provider_limit(error)
+                raise
 
         def retry_once(operation):
             nonlocal saw_upstream_failure, retry_budget
@@ -219,10 +349,34 @@ class ExternalSchematicService:
         def try_candidates(candidates):
             nonlocal saw_upstream_failure, rate_error
             verified = []
+            mirrors = []
+
+            def rendered(source):
+                nonlocal saw_upstream_failure, rate_error
+                try:
+                    _sign(source, source.expected_sheets, int(self.wall()) + TTL)
+                    sheets = retry_once(lambda: self._sheets(source, connections))
+                    if len(sheets) != source.expected_sheets:
+                        raise ExternalSchematicInvalidSource("원본과 시트 수가 다릅니다.")
+                    return (source, len(sheets))
+                except ExternalSchematicInvalidSource:
+                    counts['render_rejected'] += 1
+                except ExternalSchematicRateLimited as error:
+                    rate_error = error
+                except ExternalSchematicUpstreamError:
+                    saw_upstream_failure = True
+                return None
+
             counts["candidate_count"] += len(candidates[:5])
             for candidate in candidates[:5]:
+                if connections is not None and isinstance(candidate, WebSchematicRef):
+                    counts['inspect_rejected'] += 1
+                    continue
+                if known_board and not isinstance(candidate, WebSchematicRef):
+                    counts['inspect_rejected'] += 1
+                    continue
                 try:
-                    sources = retry_once(lambda: tuple(self.inspect(candidate, query=query)))
+                    sources = retry_once(lambda: self.inspections.get((candidate, query), lambda: inspect_candidate(candidate)))
                 except ExternalSchematicInvalidSource:
                     counts["inspect_rejected"] += 1
                     continue
@@ -235,13 +389,41 @@ class ExternalSchematicService:
                 if not sources:
                     counts["inspect_rejected"] += 1
                 for source in sources:
+                    if connections is not None:
+                        if source.source_type != 'community' or source.asset_kind != 'kicad':
+                            counts['inspect_rejected'] += 1
+                            continue
+                        source = replace(source, circuit_sha256=circuit_hash)
+                    if source.source_type == 'public_web':
+                        mirrors.append(source)
+                        break
+                    if source.source_type == 'community' and (known_board or source.asset_kind != 'kicad'):
+                        counts['inspect_rejected'] += 1
+                        continue
+                    result = rendered(source)
+                    if result is None:
+                        continue
+                    verified.append(result)
+                    if source.source_type == 'community':
+                        return tuple(verified)
+                    break
+            originals = {(s.source_sha256, s.asset_kind): s for s, _ in verified
+                         if s.source_type == 'manufacturer_official' and s.source_sha256}
+            for source in mirrors:
+                original = originals.get((source.source_sha256, source.asset_kind))
+                if original is not None and original.expected_sheets == source.expected_sheets:
+                    source = replace(source, model=original.model or query, revision=original.revision,
+                                     manufacturer=original.manufacturer)
+                else:
+                    if known_board or source.asset_kind != 'pdf' or self.public_pdf_inspect is None:
+                        counts['inspect_rejected'] += 1
+                        continue
                     try:
-                        _sign(source, source.expected_sheets, int(self.wall()) + TTL)
-                        sheets = retry_once(lambda: self._sheets(source))
-                        if len(sheets) != source.expected_sheets:
-                            raise ExternalSchematicInvalidSource("원본과 시트 수가 다릅니다.")
+                        digest, count = retry_once(lambda: self.public_pdf_inspect(source, query=query))
+                        if digest != source.source_sha256 or count != source.expected_sheets:
+                            raise ExternalSchematicInvalidSource()
                     except ExternalSchematicInvalidSource:
-                        counts["render_rejected"] += 1
+                        counts['inspect_rejected'] += 1
                         continue
                     except ExternalSchematicRateLimited as error:
                         rate_error = error
@@ -249,50 +431,216 @@ class ExternalSchematicService:
                     except ExternalSchematicUpstreamError:
                         saw_upstream_failure = True
                         continue
-                    verified.append((source, len(sheets)))
-                    if not isinstance(candidate, WebSchematicRef):
-                        return tuple(verified)
-                    break
+                    source = replace(source, model=query, revision=None, manufacturer=None)
+                if result := rendered(source):
+                    verified.append(result)
             return tuple(verified)
 
-        candidates = self.candidates.get(query, lambda: self.search(query, 5))
+        candidates = self.candidates.get(query, lambda: self.search(query, _community_candidate_limit()))
+        community_candidates = bool(candidates) and not any(isinstance(candidate, WebSchematicRef) for candidate in candidates)
+        if community_candidates and known_board:
+            return _SearchFailure('validation_failed')
+        if community_candidates:
+            counts["candidate_count"] += len(candidates[:_community_candidate_limit()])
+            def inspect_all():
+                found = []
+                local_rate = None
+                local_upstream = False
+                inspectable = candidates[:_community_candidate_limit()]
+                inspected = 0
+                for candidate in inspectable:
+                    inspected += 1
+                    try:
+                        found.extend(scoped_sources(retry_once(lambda candidate=candidate: self.inspections.get((candidate,query),lambda:inspect_candidate(candidate)))))
+                    except ExternalSchematicInvalidSource:
+                        continue
+                    except ExternalSchematicRateLimited as error:
+                        local_rate = error
+                        if error.host in {'api.github.com', 'raw.githubusercontent.com', 'codeload.github.com'}:
+                            break
+                    except ExternalSchematicUpstreamError:
+                        local_upstream = True
+                        continue
+                LOGGER.info(
+                    "external_schematic_candidate_pool candidates=%d inspected=%d sources=%d rate_limited=%s upstream_error=%s",
+                    len(candidates), inspected, len(found), bool(local_rate), local_upstream,
+                )
+                if local_rate is not None or local_upstream:
+                    retry_after = local_rate.retry_after if local_rate is not None else 60
+                    self._set_retry_deadline(lookup_key, self.wall() + retry_after, local_rate)
+                if not found:
+                    if local_rate is not None:
+                        raise local_rate
+                    if local_upstream:
+                        raise ExternalSchematicUpstreamError()
+                return tuple(found), local_rate, local_upstream
+            sources, pool_rate, pool_upstream = self.validated.get(lookup_key, inspect_all)
+            sources = tuple(sorted(sources, key=lambda source: source.expected_sheets))
+            verified_sources = []
+            render_rate = None
+            render_upstream = False
+            for source in sources:
+                try:
+                    _sign(source, source.expected_sheets, int(self.wall()) + TTL)
+                    sheets = retry_once(lambda source=source: self._sheets(source, connections))
+                    if len(sheets) != source.expected_sheets:
+                        raise ExternalSchematicInvalidSource()
+                except ExternalSchematicInvalidSource:
+                    continue
+                except ExternalSchematicRateLimited as error:
+                    rate_error = error
+                    render_rate = error
+                    continue
+                except ExternalSchematicUpstreamError:
+                    saw_upstream_failure = True
+                    render_upstream = True
+                    continue
+                verified_sources.append(source)
+            sources = tuple(verified_sources)
+            pool_rate = pool_rate or render_rate
+            pool_upstream = pool_upstream or render_upstream
+            if (render_rate is not None or render_upstream) and self._retry_deadline(lookup_key) is None:
+                retry_after = pool_rate.retry_after if pool_rate is not None else 60
+                self._set_retry_deadline(lookup_key, self.wall() + retry_after, pool_rate)
+            self.validated.replace(lookup_key, (sources, pool_rate, pool_upstream))
+            self._remember_choices(lookup_key, sources)
+            if not sources:
+                counts["inspect_rejected"] += 1
+            if not sources:
+                if pool_rate is not None:
+                    raise pool_rate
+                if pool_upstream:
+                    raise ExternalSchematicUpstreamError()
+            if selected_url is not None:
+                sources = tuple(source for source in sources if source.source_url == selected_url)
+                if not sources:
+                    return None
+                for source in sources:
+                    try:
+                        _sign(source, source.expected_sheets, int(self.wall()) + TTL)
+                        sheets = retry_once(lambda: self._sheets(source, connections))
+                        if len(sheets) != source.expected_sheets:
+                            raise ExternalSchematicInvalidSource()
+                        return source, len(sheets)
+                    except ExternalSchematicInvalidSource:
+                        continue
+                    except ExternalSchematicRateLimited as error:
+                        rate_error = error
+                    except ExternalSchematicUpstreamError:
+                        saw_upstream_failure = True
+                if rate_error is not None:
+                    raise rate_error
+                if saw_upstream_failure:
+                    raise ExternalSchematicUpstreamError()
+                return None
+            for source in sources:
+                try:
+                    _sign(source, source.expected_sheets, int(self.wall()) + TTL)
+                    sheets = retry_once(lambda: self._sheets(source, connections))
+                    if len(sheets) != source.expected_sheets:
+                        raise ExternalSchematicInvalidSource()
+                    return source, len(sheets)
+                except ExternalSchematicInvalidSource:
+                    continue
+                except ExternalSchematicRateLimited as error:
+                    rate_error = error
+                except ExternalSchematicUpstreamError:
+                    saw_upstream_failure = True
+            if rate_error is not None:
+                raise rate_error
+            if saw_upstream_failure:
+                raise ExternalSchematicUpstreamError()
+            if pool_rate is not None:
+                raise pool_rate
+            if pool_upstream:
+                raise ExternalSchematicUpstreamError()
+            LOGGER.info("schematic_lookup_failed", extra={"reason": "validation_failed", **counts})
+            return _SearchFailure('circuit_mismatch' if connections is not None else 'validation_failed')
         result = try_candidates(candidates)
         if result:
             return result
         # Official candidates are authoritative only after rendering and hash
         # validation. If that validation fails, lazily spend the grade-3 slot.
-        if self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
-            result = try_candidates(self.fallback_search(query, 5))
+        if not known_board and self.fallback_search and any(isinstance(candidate, WebSchematicRef) for candidate in candidates):
+            repositories = self.candidates.get(('community', query), lambda: self.fallback_search(query, _community_candidate_limit()))
+            if repositories and all(isinstance(candidate,GitHubRepositoryRef) for candidate in repositories):
+                self.candidates.replace(query,repositories)
+                return self._find(query,connections,selected_url)
+            result = try_candidates(repositories)
             if result:
                 return result
         if rate_error is not None:
             raise rate_error
         if saw_upstream_failure:
             raise ExternalSchematicUpstreamError()
-        reason = "validation_failed" if counts["candidate_count"] else "no_candidates"
+        reason = 'circuit_mismatch' if connections is not None else "validation_failed" if counts["candidate_count"] else "no_candidates"
         LOGGER.info("schematic_lookup_failed", extra={"reason": reason, **counts})
         return _SearchFailure(reason)
 
-    def find(self, query, selected_url=None):
+    def find(self, query, selected_url=None, *, connections=None):
+        from backend.projects.external_circuit_search import WebSchematicRef
         normalized = " ".join(query.split()).casefold()
         if not 2 <= len(query.strip()) <= 200:
             raise ValueError("검색어는 2~200자여야 합니다.")
+        if '://' in query:
+            raise ExternalSchematicNotFound()
         if selected_url is not None and (not isinstance(selected_url, str) or len(selected_url) > 2048):
             raise ExternalSchematicNotFound()
-        results = self.queries.get(normalized, lambda: self._find(normalized))
-        if isinstance(results, _SearchFailure):
-            raise ExternalSchematicNotFound(reason=results.reason)
-        if not results:
-            raise ExternalSchematicNotFound()
-        result = results[0] if selected_url is None else next(
-            (result for result in results if result[0].source_type != "community"
-             and result[0].source_url == selected_url), None)
+        from backend.projects.netlist import circuit_fingerprint
+        lookup_key = (normalized,circuit_fingerprint(connections)) if connections is not None else normalized
+        cache_key = lookup_key if selected_url is None else (lookup_key, selected_url)
+        retry_until = self._retry_deadline(lookup_key)
+        if retry_until is not None and self.wall() >= retry_until:
+            self._clear_query_caches(lookup_key)
+        def produce():
+            if limited := self._retry_error(lookup_key):
+                raise limited
+            try:
+                return self._find(normalized, connections)
+            except ExternalSchematicRateLimited as error:
+                self._set_retry_deadline(lookup_key, self.wall() + error.retry_after, error)
+                raise
+
+        result = self.queries.get(lookup_key, produce)
+        cached_result = result
+        if selected_url is not None and result is not None and not isinstance(result, _SearchFailure):
+            if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], VerifiedSchematicSource):
+                result = result if result[0].source_url == selected_url else None
+            else:
+                result = next((item for item in result if item[0].source_url == selected_url), None)
+                if result is None:
+                    raise ExternalSchematicNotFound()
         if result is None:
-            raise ExternalSchematicNotFound()
-        source, count = result
-        choices = tuple(ExternalSchematicChoice(candidate.model or candidate.source_file, candidate.source_url,
-                                               candidate.source_type, candidate.revision)
-                        for candidate, _ in results if candidate.source_type != "community")
+            if selected_url is not None:
+                cached = self.validated.get(lookup_key, lambda: ((), None, False))
+                candidates = cached[0] if isinstance(cached, tuple) and len(cached) == 3 else ()
+                match = next((source for source in candidates if source.source_url == selected_url), None)
+                if match is not None:
+                    try:
+                        sheets = self._sheets(match, connections)
+                        if len(sheets) != match.expected_sheets:
+                            raise ExternalSchematicInvalidSource()
+                        result = (match, len(sheets))
+                    except ExternalSchematicInvalidSource:
+                        result = None
+            if result is None:
+                raise ExternalSchematicNotFound()
+        if isinstance(result, _SearchFailure):
+            raise ExternalSchematicNotFound(reason=result.reason)
+        verified_results = cached_result if isinstance(cached_result, tuple) and cached_result and isinstance(cached_result[0], tuple) else ()
+        if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], VerifiedSchematicSource):
+            source, count = result
+        else:
+            if not result:
+                raise ExternalSchematicNotFound()
+            verified_results = result
+            source, count = result[0]
+        choices = self._choices_for(lookup_key)
+        if not choices:
+            choices = tuple(ExternalSchematicChoice(' · '.join(dict.fromkeys(filter(None, (item[0].model, item[0].source_file)))),
+                                                    item[0].source_url, item[0].source_type,
+                                                    item[0].revision)
+                            for item in verified_results if connections is not None or item[0].source_type != "community")
         token = _sign(source, count, int(self.wall()) + TTL)
         return ExternalSchematicManifest(source.repository or None, source.commit or None, source.license,
                                          source.attribution, source.repository_url, source.source_url,
@@ -301,12 +649,16 @@ class ExternalSchematicService:
                                          source.revision, source.source_sha256, source.license_evidence_url,
                                          choices)
 
-    def load(self, token, sheet_index):
+    def load(self, token, sheet_index, *, connections=None):
         source, count = _read_token(token, self.wall())
+        from backend.projects.netlist import circuit_fingerprint
+        expected_hash = circuit_fingerprint(connections) if connections is not None else None
+        if source.circuit_sha256 != expected_hash:
+            raise ExternalSchematicInvalidToken()
         if type(sheet_index) is not int or not 0 <= sheet_index < count:
             raise ExternalSchematicInvalidToken()
         try:
-            sheets = self._sheets(source)
+            sheets = self._sheets(source, connections)
         except ExternalSchematicInvalidSource:
             raise ExternalSchematicNotFound() from None
         if len(sheets) != count:
@@ -318,20 +670,34 @@ def _search(query, limit):
     from backend.projects.external_circuit_search import (
         ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled,
         ExternalCircuitSearchError, search_github_repositories, search_manufacturer_schematics,
-        search_public_schematics,
+        search_public_schematics, _search_public_schematics, WebSchematicRef,
+        component_context, component_evidence_matches, search_component_repositories,
     )
     try:
         failed = False
         try:
-            public = search_public_schematics(query, limit)
+            public = search_public_schematics(query, min(5,limit))
         except ExternalCircuitSearchError:
             public, failed = (), True
         try:
-            manufacturer = search_manufacturer_schematics(query, limit)
+            manufacturer = search_manufacturer_schematics(query, min(5,limit))
         except ExternalCircuitSearchError:
             manufacturer, failed = (), True
+        publishing = ()
+        if (not manufacturer and not _is_board_query(query)
+                and any(isinstance(c, WebSchematicRef) and c.source_type == 'public_web'
+                        and c.asset_kind == 'pdf' and c.page_url == c.source_url for c in public)
+                and not any(isinstance(c, WebSchematicRef) and c.asset_kind == 'pdf'
+                            and c.page_url != c.source_url for c in public)):
+            try:
+                publishing = _search_public_schematics(query, min(5,limit),
+                    search_text=f'{query} electronics project schematic files downloads')
+            except ExternalCircuitSearchError:
+                failed = True
         found, seen = [], set()
-        for candidate in (*manufacturer, *public):
+        for candidate in (*manufacturer, *publishing, *public):
+            if component_context(query) == 'diode' and isinstance(candidate,WebSchematicRef) and not component_evidence_matches(query,f'{candidate.title} {candidate.page_url}'):
+                continue
             identity = getattr(candidate, "source_url", candidate)
             if identity not in seen:
                 seen.add(identity)
@@ -340,7 +706,7 @@ def _search(query, limit):
                 break
         if found:
             return tuple(found)
-        repositories = search_github_repositories(query, limit)
+        repositories = search_component_repositories(query,limit) if component_context(query)=='diode' else search_github_repositories(query,limit)
         if repositories:
             return repositories
         if failed:
@@ -355,10 +721,10 @@ def _search(query, limit):
 def _search_community(query, limit):
     from backend.projects.external_circuit_search import (
         ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled,
-        ExternalCircuitSearchError, search_github_repositories,
+        ExternalCircuitSearchError, search_github_repositories, search_component_repositories, component_context,
     )
     try:
-        return search_github_repositories(query, limit)
+        return search_component_repositories(query,limit) if component_context(query)=='diode' else search_github_repositories(query,limit)
     except (ExternalCircuitSearchConfigurationError, ExternalCircuitSearchDisabled):
         raise ExternalSchematicConfigurationError() from None
     except ExternalCircuitSearchError:
@@ -368,27 +734,56 @@ def _search_community(query, limit):
 def _inspect(repo, *, query):
     from backend.projects.external_circuit_search import WebSchematicRef
     if isinstance(repo, WebSchematicRef):
-        from backend.projects.schematic_render import inspect_public_schematic
+        from backend.projects.schematic_render import inspect_public_schematic, fingerprint_public_schematic
 
-        source_hash, sheets = inspect_public_schematic(
-            repo.source_url, repo.asset_kind, query, title=repo.title,
-            page_url=repo.page_url, source_file=repo.source_file,
-        )
+        if repo.source_type == 'manufacturer_official':
+            source_hash, sheets = inspect_public_schematic(
+                repo.source_url, repo.asset_kind, query, title=repo.title,
+                page_url=repo.page_url, source_file=repo.source_file,
+            )
+        else:
+            source_hash, sheets = fingerprint_public_schematic(repo.source_url, repo.asset_kind)
         return (VerifiedSchematicSource(
             "", "", repo.license, repo.attribution, repo.page_url,
             repo.source_url, repo.source_file, repo.asset_kind, (), repo.source_file,
             sheets, repo.source_type, repo.evidence_grade, repo.manufacturer,
-            repo.model, repo.revision, source_hash, repo.license_evidence_url),)
+            query if repo.source_type == 'manufacturer_official' else repo.model,
+            repo.revision, source_hash, repo.license_evidence_url),)
     from backend.projects.schematic_discovery import inspect_github_candidates
     return inspect_github_candidates(repo, query=query)
 
 
 def _render(source):
     from backend.projects.schematic_render import render_external_schematic, render_public_schematic
-    return render_external_schematic(source) if source.source_type == "community" else render_public_schematic(source)
+    if source.source_type != "community":
+        return render_public_schematic(source)
+    if source.asset_kind == "kicad" and os.getenv("KICAD_RENDERER_URL"):
+        from backend.projects.schematic import KicadServiceUnavailable, render_remote_kicad
+
+        try:
+            return render_remote_kicad(source)
+        except KicadServiceUnavailable:
+            raise ExternalSchematicUpstreamError("KiCad 렌더러를 사용할 수 없습니다.") from None
+    return render_external_schematic(source)
 
 
-_SERVICE = ExternalSchematicService(_search, _inspect, _render, fallback_search=_search_community)
+def _inspect_published_pdf(source, *, query):
+    from backend.projects.schematic_render import inspect_published_pdf
+    return inspect_published_pdf(source.source_url, query, page_url=source.repository_url,
+                                 source_file=source.source_file)
+
+
+def _render_matching(source, connections):
+    from backend.projects.schematic_render import render_external_schematic
+    if os.getenv('KICAD_RENDERER_URL'):
+        from backend.projects.schematic import render_remote_kicad, KicadServiceUnavailable
+        try:return render_remote_kicad(source,connections=connections)
+        except KicadServiceUnavailable:raise ExternalSchematicUpstreamError() from None
+    return render_external_schematic(source, expected_connections=connections)
+
+
+_SERVICE = ExternalSchematicService(_search, _inspect, _render, fallback_search=_search_community,
+                                   public_pdf_inspect=_inspect_published_pdf, match_render=_render_matching)
 
 
 def _enabled():
@@ -397,11 +792,13 @@ def _enabled():
     _key()
 
 
-def find_external_schematic(query: str, selected_url: str | None = None) -> ExternalSchematicManifest:
+def find_external_schematic(query: str, selected_url: str | None = None, component_type: str | None = None, *, connections=None) -> ExternalSchematicManifest:
     _enabled()
-    return _SERVICE.find(query, selected_url)
+    if component_type == 'diode' and 'diode' not in query.casefold() and '다이오드' not in query:
+        query = f'{query.strip()} diode'
+    return _SERVICE.find(query, selected_url, connections=connections)
 
 
-def load_external_schematic_sheet(token: str, sheet_index: int) -> bytes:
+def load_external_schematic_sheet(token: str, sheet_index: int, *, connections=None) -> bytes:
     _enabled()
-    return _SERVICE.load(token, sheet_index)
+    return _SERVICE.load(token, sheet_index, connections=connections)

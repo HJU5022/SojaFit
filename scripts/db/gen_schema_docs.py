@@ -100,14 +100,26 @@ TABLES = {
     }),
     'public.circuits': ('프로젝트의 정규화 회로(1:1)', {
         'project_id': '프로젝트(1:1, 키)',
+        'version': '현재 회로 버전 번호(새 버전 저장마다 증가; 불변 버전 이력과 연결)',
         'connections': '정규화한 회로(부품 · 넷 JSON)',
         'source_sha256': '원본 넷리스트 SHA-256(원문은 저장 안 함)',
         'parser_version': '회로 변환기 버전',
         'created_at': '',
     }),
+    'public.project_circuit_versions': ('프로젝트별 불변 회로 버전 이력(대화가 참조)', {
+        'project_id': '프로젝트',
+        'version': '불변 회로 버전 번호(프로젝트별 기본 빈 회로는 0)',
+        'connections': '해당 버전의 정규화한 회로(부품 · 넷 JSON)',
+        'source_sha256': '해당 버전 원본 넷리스트 SHA-256(버전 0은 NULL, 원문은 저장 안 함)',
+        'parser_version': '해당 버전 회로 변환기 버전',
+        'source_kind': 'demo | upload',
+        'demo_id': '데모 회로 이름(데모일 때만 값이 있다. 이름 목록은 앱이 검사)',
+        'created_at': '버전을 만든 시각',
+    }),
     'public.threads': ('프로젝트 안의 대화', {
         'id': '대화 UUID(URL에 노출)',
         'project_id': '소속 프로젝트',
+        'circuit_version': '대화가 고정한 회로 버전(생성 뒤 변경 불가)',
         'created_at': '만든 시각',
     }),
     'public.runs': ('질문 한 번의 실행과 공개 결과', {

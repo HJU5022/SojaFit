@@ -4,11 +4,19 @@
 
 - API의 프로필 입력 검증 시점에 모듈을 읽도록 변경했다. [실측 보고서](../research/docker-cold-start-measurements.md)에 G2 반복 측정, 첫 기능과 회로도 응답, 운영 시험 조건을 정리했다. 같은 조건의 로컬 질문 목록 응답은 5회 중앙값 4.892초에서 4.782초로 줄었다.
 
+## 2026-11-14 Docker 기동 및 첫 응답 기록 정리
+
+- [콜드스타트 실측 보고서](../research/docker-cold-start-measurements.md)에 G2 교대 시험, 로컬 개발 4종, 첫 응답 후보 8종, KiCad 분리·경량화와 운영 시험 결과를 모았다. 바탕화면 실험 CSV의 회차·중앙값, PNG 크기와 해시, 방법별 출처를 대조했다.
+
+## 2026-11-13 Cloud Run API 최소 인스턴스 설정
+
+- `cloud-run-api.flags.yaml`에 운영 API의 서비스 수준 최소값 1을 지정하고 `docs/GATES.md`에 적용 명령을 기록했다. 로컬 gcloud에서 해당 명령을 `--help`와 함께 실행해 옵션을 확인했다. 운영 설정 적용과 첫 요청 시간 측정은 수행하지 않았다.
+
 ## 2026-11-13 PR #114 후속 문서 교정
 
-- 한 일: 사전 등록과 작업 기록의 문맥상 붙은 표현, 인젝션 검토 자료의 반복 설명, 프런트 안내 문장을 교정했다. 실행 이름과 실험 입력·원시 결과·측정 수치는 보존했다.
+- 한 일: PR #114의 Markdown 9개를 다시 확인하고, 사전 등록·작업 기록·인젝션 검토 자료·프런트 안내의 붙은 표현을 교정했다. 실행 이름과 실험 입력·원시 결과·측정 수치는 보존했다. `SOJAFIT.md` 트리 설명은 조장 전용 문서여서 수정하지 않았다.
 - 바꾼 파일: `docs/research/injection-case-review-packet.md`, `evals/guides/preregister.md`, `docs/worklog/osc.md`, `docs/worklog/sth.md`, `frontend/e2e/E2E.md`, `frontend/src/SRC.md`.
-- 실행한 명령과 결과: `git diff --check`로 공백 오류를 검사하고, 변경 전후의 공백 제외 문자열·인용 문자열·Markdown 링크 대상을 대조했다. 문서 교정이므로 코드 실행이나 평가 재측정은 하지 않았다.
+- 실행한 명령과 결과: 정규식과 Kiwi 후보를 확인하고 `git diff --check`로 공백 오류를 검사했다. 작업 기록의 이 항목을 제외한 교정 문장은 변경 전후 행 수·공백 제외 문자열·인용 문자열·Markdown 링크 대상이 같았다. 문서 교정이므로 코드 실행이나 평가 재측정은 하지 않았다.
 - 확인 못 한 것: 원본 자료의 재배포 조건과 팀원별 AI 도구 사용 기록.
 - 다음 할 일: PR #114에서 교정된 문장을 검토한다.
 
@@ -274,7 +282,7 @@
 - PDF 파싱 추가 승인: Linux Torch/CUDA 패키지의 병렬 다운로드가 중단 중에도 진행돼 uv 캐시가 11.6GB까지 증가했고 사용자가 이 상태를 승인했다. 이후 네트워크 차단 상태에서 압축 해제 archive의 Docling·Torch·pdfplumber import는 성공했으나 Docling 분석 모델이 없어 PDF 3건 모두 파싱 전에 실패했다. 공식 API로 layout `8f39ad3c0b4c58e9c2d2c84a38465abf757272d8` 171,764,371바이트와 table `fc0f2d45e2218ea24bce5045f58a389aed16dc23` 358,236,323바이트를 확인했고 사용자가 두 고정 snapshot에 한해 추가 1GB 상한을 승인했다.
 - 실제 PDF 파싱·청킹 결과: 고정 layout/table snapshot과 고정 MiniLM tokenizer `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`를 로컬 경로로 전달했다. 모델 파일 사용량은 505.5MiB, tokenizer는 698,829바이트였다. PDF 3건은 각각 5/6/7쪽, 표 5/6/7개로 파싱됐고 표 숫자 witness는 81/81, 49/49, 385/385가 일치했다. 기존 card chunker는 서로 다른 청크 156개를 만들었다.
 - 수동 gold: 모델 결과를 보기 전에 1N4148의 VRRM·VF 조건·trr 조건, 1N5817의 VRRM·VF 조건·IFSM 조건, BZT52C2V4의 VZ/IZT·동적 저항·패키지/전력 청크를 PDF·쪽·표 행으로 대조했다. 전체 156청크와 9질의를 `embedding_real_pdf_smoke_v0.jsonl`에 결합했으며 마지막 질문만 두 gold 청크를 가진다.
-- 실제 PDF 로컬 탐색 기록: KURE·BGE·Qwen·E5의 Recall@5·MRR·지연을 기록했지만 평가기와 원시 JSON은 저장소에 반영하지 않았다. 특히 Qwen의 `10.37초`는 기존 Windows 30청크 원시값 `10.372056...초`와 같고 실제 PDF 원시 JSON이 없어 재측정값인지 확인할 수 없다. 따라서 이 상세값은 제출용 `EVAL_REPORT.md`와 모델 선정 근거에서 제외했다. 호환성 차단 4종도 저장소에서 재현할 수 있는 결과로 취급하지 않는다.
+- 실제 PDF 로컬 탐색 기록: KURE·BGE·Qwen·E5의 Recall@5·MRR·지연을 기록했지만 평가기와 원시 JSON은 저장소에 반영하지 않았다. 특히 Qwen의 `10.37초`는 기존 Windows 30청크 원시값 `10.372056...초`와 같고 실제 PDF 원시 JSON이 없어 재측정 값인지 확인할 수 없다. 따라서 이 상세값은 제출용 `EVAL_REPORT.md`와 모델 선정 근거에서 제외했다. 호환성 차단 4종도 저장소에서 재현할 수 있는 결과로 취급하지 않는다.
 - 해석: 3문서·9질의 dense-only smoke에서는 KURE가 가장 높은 MRR이었다. 그러나 네 성공 모델 모두 패키지와 전력 두 근거가 필요한 BZT52C2V4 질문을 top-5에서 놓쳤고, 표본이 작고 품번이 직접 포함돼 최종 선택에는 사용할 수 없다. 2차 판정·동결·전체 코퍼스 본평가 전까지 모든 결과는 최종 결정 부적격이다.
 
 ## 2026-11-02 임베딩 확장 후보 프록시 실행 기록
@@ -694,16 +702,16 @@
 
 ## 2026-11-12 · 1→2→3등급 PR 준비
 
-공식 근거/참고 폴백과 정확 품번·판본·인용 검증, 관련 품질 보완을 분리한다. 검증 정리는 docs/research/grade-evidence-validation.md. 전체 pytest 1764 passed,112 skipped,실패0(64.59초). 운영 부하는 보류. 포화 재확인은 공급자 제한으로 중단돼 안정 포화점 미확정. 상세 사전등록 원문은 작성자 기존 작업공간에 보존하며 게시 전 필요한 등급 관련 사전등록 절을 검토한다.
+공식 근거/참고 폴백과 정확 품번·판본·인용 검증, 관련 품질 보완을 분리한다. 검증 정리는 docs/research/grade-evidence-validation.md. 전체 pytest 1764 passed, 112 skipped, 실패 0(64.59초). 운영 부하는 보류. 포화 재확인은 공급자 제한으로 중단돼 안정 포화점 미확정. 상세 사전등록 원문은 작성자 기존 작업공간에 보존하며 게시 전 필요한 등급 관련 사전등록 절을 검토한다.
 
 
 ## 2026-11-12 OSC에 최신 main 통합 후 최종 상태
 
 - 브랜치는 OSC. 최신 main `11dc216`을 fast-forward로 반영했다. 원래 OSC의 회로도/프런트 미커밋 작업은 stash `fc262a301cf7f47d133bdbdc587716380403f5f1`에 보존했다. 기존 검증 원본 작업공간도 유지했다.
-- main 기능을 보존하며 등급 변경을 3-way 통합했다. Spec 에이전트/회로 읽기 명칭, FIND_N_DOCS 기본5와 환경변수, SUPERVISOR_REPLAN 설정, 응답·보안 경계를 보존했다. 프런트/DB 추가변경은 없다. 통합 후 유료 답변 평가·포화 재측정은 수행하지 않았다. 위 실측 수치는 통합 전 코드의 이력이며 새 코드의 새 실측으로 주장하지 않는다.
+- main 기능을 보존하며 등급 변경을 3-way 통합했다. Spec 에이전트/회로 읽기 명칭, FIND_N_DOCS 기본 5와 환경변수, SUPERVISOR_REPLAN 설정, 응답·보안 경계를 보존했다. 프런트/DB 추가변경은 없다. 통합 후 유료 답변 평가·포화 재측정은 수행하지 않았다. 위 실측 수치는 통합 전 코드의 이력이며 새 코드의 새 실측으로 주장하지 않는다.
 - 충돌 마커 제거/문법 검사/diff check 통과. HEAD=origin/main인 상태에서 전체 통합 변경(신규 파일 포함)을 별도 임시 index의 패치로 만들어 최신 main에 적용 검사 통과. 실제 index·commit·push·PR은 변경하지 않았다. 원격 main이 이후 변경되면 다시 검사해야 한다.
 - 전체 pytest는 변경하지 않은 main의 tests/api/test_openapi.py:154 `SNAPSHOT` 미정의로 수집 오류 1건. 이 파일을 제외하고 .env 영향을 차단한 `PYTHON_DOTENV_DISABLED=1 uv run --no-sync pytest -q --ignore=tests/api/test_openapi.py` 결과는 **1818 passed, 158 skipped, 9 failed**, 69.62초다. 실패 9건은 인증 사전 검증 2, stage_timing 2, 저장소 구조 5이며 동일 main 기준선에서 재현됐다. 기준선 export의 추가 sample-hash 관련 실패는 이 9건의 근거와 섞지 않는다.
-- 통합 중 os/display_inputs 등 누락은 수정하고 관련173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
+- 통합 중 os/display_inputs 등 누락은 수정하고 관련 173테스트를 통과했다. 첫 실패 회차 로그도 보존했다. 기존 main 오류를 이번 범위에서 임의로 고치거나 테스트 기대를 바꾸지 않았다.
 - 판단: 내용상 최신 main 통합/무충돌 검사는 완료. 테스트 전체 통과 기준의 PR 준비 완료는 보류. 위 기존 main 오류의 처리/팀 판단이 남았다.
 - 자료는 PR-준비/OSC-final-verification.json, OSC-main-integrated.patch, OSC-final-included-files.txt, OSC-main-full-pytest.log, OSC-main-final-pytest.log, OSC-main-baseline-repo-layout.log에 보존했다. 패치 적용 가능은 실제 GitHub PR 생성/CI 성공/병합 승인과 구분한다.
 
@@ -764,3 +772,202 @@
 - 수정 전: `uv run --no-sync pytest -q tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py -k "pico_conflict or pico_w_confirmed or pico_page_only or korean_pico" --tb=short`에서 8 failed, 3 passed였다. 페이지 URL이 `pico-w`인 일반 Pico PDF/PNG가 통과하고, 띄어 쓴 한글 검색은 영문 후보를 남기지 못했다.
 - 수정 후: 같은 집중 검사 11 passed. `uv run --no-sync pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_official_schematic.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py tests/repo/test_repo_layout.py --tb=short`는 211 passed(26.58초). `git diff --check` 통과.
 - 확인하지 못한 것: 실제 Exa 검색과 운영 배포. GitHub CI는 이전 실행에서 계정 결제·지출 한도 문제로 작업이 시작되지 않았다. 다음 할 일은 PR의 원격 CI가 실행 가능한 상태가 되면 재확인하는 것이다.
+
+## 2026-11-13 · OSC 로컬 KiCad 렌더러 이미지 경량화 시험
+
+- 목적: 기존 검색·PNG 변환 경로를 유지하면서 렌더러 이미지의 불필요한 프런트 빌드·API 의존성을 줄인다.
+- 비교 조건: 기존 로컬 렌더러 이미지와 새 `renderer` 빌드 스테이지를 같은 Docker 엔진에서 비교한다. 이미지 크기, 캐시 상태를 구분한 빌드 시간, `/health` 준비 시간, 동일 KiCad 원본의 PNG 결과를 확인한다.
+- 실행 예정: `uv lock --check --offline`, `docker build --target renderer`, 격리된 포트에서 `/health` 및 `/render` 확인. 기존 실행 중인 API·DB·렌더러와 운영 배포는 건드리지 않는다.
+- 비용·중단 기준: 로컬 Docker 자원만 사용한다. 10분 넘는 빌드나 기존 서비스 영향이 생기면 중단한다. 측정에서 단축이 나오지 않으면 시간 개선을 주장하지 않는다.
+- 변경: `Dockerfile`에 프런트 빌드·API 의존성·데이터를 복사하지 않는 `renderer` 스테이지를 추가하고, Compose가 이 스테이지를 사용하게 했다. `pyproject.toml`과 `uv.lock`에 렌더러 전용 의존성 그룹을 추가했다. 기존 API 기본 빌드 경로는 유지했다.
+- 결과: `uv lock --check --offline`, `docker compose --profile schematic config --services`, 렌더러·API 이미지 빌드, 관련 테스트 50 passed(27.07초), `git diff --check` 통과. 렌더러 이미지는 기존 609,537,543 B에서 새 351,884,332 B로 감소했다. API 새 이미지 355,986,404 B. 렌더러 build 8.35초, API build 60.58초는 현재 캐시 상태의 단일 회차이며 이전 기록과 동일 조건 비교가 아니다.
+- 기동 실측: 별도 포트의 같은 로컬 Docker 엔진에서 `/health` HTTP 200까지 각 3회 측정. 기존 렌더러 1.257/1.290/1.280초, 새 렌더러 1.161/1.176/1.179초였다. 중앙값 차이 약 0.10초로 큰 가동 시간 개선을 주장하지 않는다.
+- 기능 검증: 같은 공개 `EldarTarighat/ECG-Sensor-PCB` 고정 커밋 `dfdd4525cd0b18d7ec1712483e8f4cf5acfc1367`의 `PCB/ECG.kicad_sch`를 기존·새 렌더러에 POST했다. 두 응답 모두 PNG 1장, 218,732 B, SHA-256 `4411a59fe71b94403d44a295f65a4d2b6620391350c3d647c85b4086b608e2e5`로 일치했다. 새 이미지에는 프런트·데이터 폴더와 `ragas`가 없고, 비루트 UID 1000으로 실행된다.
+- 미확인: 캐시 없는 빌드·이미지 다운로드·전체 Compose 재기동·운영 Cloud Run 콜드스타트는 이번에 측정하지 않았다. 기존 실행 중인 서비스와 운영 트래픽은 변경하지 않았다.
+
+### 로컬 이미지가 없는 데몬의 첫 기동 추가 실측
+
+- 대상·방법: 기존 렌더러 이미지와 경량화 렌더러 이미지를 각각 `docker save`한 뒤, 이미지 목록이 비어 있는 별도 일회용 Docker-in-Docker 데몬에 `docker load`했다. 각 데몬에서 첫 `docker run`부터 `/health` HTTP 200까지 측정했다. 순서 효과를 줄이려고 1회차는 기존→경량화, 2회차는 경량화→기존 순서로 실행했다. 기존 API·DB·브라우저 컨테이너는 유지했다.
+- 저장된 이미지 크기: 기존 tar 609,562,624 B, 경량화 tar 351,906,816 B. 이는 로컬 이미지 전송 자료이며 원격 레지스트리 다운로드는 아니다.
+- 1회차: 기존 이미지 적재 48.415초, 첫 HTTP 1.707초; 경량화 이미지 적재 19.502초, 첫 HTTP 1.228초. 적재+첫 HTTP는 각각 50.122초, 20.730초.
+- 2회차: 경량화 이미지 적재 14.405초, 첫 HTTP 1.373초; 기존 이미지 적재 37.613초, 첫 HTTP 2.734초. 적재+첫 HTTP는 각각 15.778초, 40.347초.
+- 해석: 두 회차 모두 빈 로컬 데몬의 이미지 적재와 첫 준비 시간은 경량화 쪽이 짧았다. 표본 2회와 호스트 파일시스템 캐시·Docker-in-Docker 오버헤드가 있어 운영 Cloud Run 콜드스타트나 실제 레지스트리 pull 시간으로 일반화하지 않는다. 시험 데몬과 약 1GB의 임시 tar 파일은 제거했고, 기존 실행 중인 서비스는 유지했다.
+
+## 2026-11-14 · 프런트 전송 초안과 프로젝트 전환 오류 수정
+
+- 사용자 요청 범위: 전송 접수 실패 시 초안 보존, 프로젝트 간 질문·오류 잔존 수정과 검증. 커밋·푸시·배포는 하지 않았다.
+- 변경: `frontend/src/hooks/useConversation.ts`는 실행 번호가 확인된 뒤 제출 당시와 같은 초안만 한 번 비운다. 접수 실패, 대기 중 새로 작성한 질문, 부품 선택에서 전달한 첫 질문, 앞뒤 공백을 보존하거나 정상 처리한다. `frontend/src/pages/WorkbenchPage.tsx`는 실제 프로젝트 ID 전환 시 질문과 부품 선택 오류만 초기화한다. 회귀 테스트는 기존 `WorkbenchPage.ask.test.tsx`, `WorkbenchPage.test.tsx`에 추가했다.
+- 재현: 수정 전 접수 실패의 초안 소실 및 프로젝트 전환 회귀 테스트가 실패했다. 통합 검토 중 첫 질문 전달 실패와 공백 포함 질문의 접수 후 정리도 실패로 재현한 뒤 보완했다.
+- 집중 검증: `node node_modules/vitest/vitest.mjs run src/pages/WorkbenchPage.ask.test.tsx src/pages/WorkbenchPage.test.tsx --configLoader runner --no-cache --no-fsModuleCache --maxWorkers 2 --reporter dot` → 102 passed.
+- 전체 프런트 검증: 같은 Vitest 옵션으로 전체 실행 → 181 passed, 3 failed. 실패는 기존 `Schematic.test.tsx`의 2요소/3요소 캐시 키 불일치 3건이며 해당 코드·테스트는 수정하지 않았다.
+- 타입·빌드: `tsc --noEmit --incremental false -p tsconfig.app.json`, `tsc --noEmit --incremental false -p tsconfig.node.json` 통과. `vite build --configLoader runner --outDir <작업별 임시 폴더>/build` 통과. 기존 dist는 덮어쓰지 않았다. 변경 파일의 `git diff --check` 통과.
+- 환경·보존: 누락된 화면 의존성 7종은 다른 로컬 작업 폴더의 package-lock 일치 버전을 기존에 없던 node_modules 경로에 복사했다. package.json과 package-lock.json은 변경하지 않았다. 작업 시작 시 기존 변경·미추적 파일 31개의 SHA-256을 보관하고 대조했다. 이 작업 기록은 기존 내용 뒤에만 추가했다.
+- 확인하지 않은 것: 실제 브라우저와 운영 API·DB 연동, 운영 배포, LLM 평가 재측정. 프런트 회귀 수정이며 모델 품질 개선을 주장하지 않는다.
+
+## 2026-11-14 · UX 확인 항목 26·35·36·39 수정
+
+- 범위: 사용자 요청 네 항목만 수정. 기존 사용자 변경은 보존했으며 커밋·푸시·배포는 하지 않았다.
+- 26: 파일 선택창은 단일 선택으로 제한하고, 여러 파일 드롭 또는 기존 첨부가 있는 상태의 추가 파일은 즉시 안내한다. 기존 파일과 질문 초안은 유지하고 동일 파일 중복은 무시한다.
+- 35·36: UTF-8 디코딩 오류를 InvalidNetlist 하위 예외로 구분해 인코딩 오류와 넷리스트 문법 오류에 각각 재저장·재내보내기 안내를 제공한다. multipart 형식 오류도 안전한 안내로 변환한다. 기존 HTTP 400 및 VALIDATION_ERROR 계약은 유지하며 원본 파서 예외는 노출하지 않는다.
+- 39: 범위 밖 부품 선택과 직접 URL의 새 검토를 차단한다. 기존 저장 기록은 읽을 수 있고 새 질문·첨부·예시·재개 입력은 제공하지 않는다. 다이오드의 새 대화 전환 시 Review를 유지해 초안과 실시간 답변 흐름을 보존한다. 범위 밖 저장 대화 조회 실패에도 재시도 안내를 표시한다.
+- 재현과 검증: 변경 전 첨부 제한·저장 기록 입력 차단·조회 실패 안내 회귀를 실패로 확인한 뒤 수정했다. 관련 프런트 106 passed. 전체 프런트 185 passed, 3 failed로 기존 Schematic.test.tsx 캐시 키 불일치 3건만 남았다. 해당 파일은 변경하지 않았다.
+- API 검증: PYTHON_DOTENV_DISABLED=1, TEST_AUTH_DATABASE_URL 비움 상태의 tests/projects/test_netlist.py 및 tests/api/test_projects.py 실행 결과 100 passed, 1 skipped. 실제 FastAPI TestClient로 두 업로드 경로의 인코딩·문법·multipart 오류를 검사했고 외부 DB 검사는 생략했다.
+- 타입·빌드: app/node TypeScript 검사 및 임시 폴더 대상 Vite production build 통과. git diff --check 통과.
+- 화면 확인: 별도 localhost:5192 프런트를 기존 8011 API에 연결해 단일 파일 선택, 두 번째 파일 즉시 거부, 기존 첨부·초안 유지, 범위 밖 선택 비활성화와 직접 URL 안내, 저장된 서버 대상 복원을 확인했다. 이 확인에서 업로드 POST나 유료 LLM 호출은 하지 않았다. 실행 중인 8011 컨테이너는 교체하지 않았으므로 그 컨테이너에 이번 API 수정이 반영된 것은 아니다. 시험 프런트는 종료했다.
+- 보존: 시작 시 백업한 요청 범위 밖 기존 변경·미추적 파일 32개가 SHA-256 기준 동일함을 확인했다. 기존 초안 보존·프로젝트 전환 수정은 유지했으며 이 로그는 기존 내용 뒤에 추가했다. OSC HEAD 45740ce 유지.
+## 2026-11-14 · 회로도 출처 가시성과 확인 상태 문구 개선
+
+- 요청: 출처·원본 링크를 이미지 위로 옮기고 제조사 공식 여부와 라이선스 확인 상태를 구분한다. 후보 자료 버튼의 용도와 현재 선택을 명확히 한다.
+- 변경: frontend/src/components/Schematic.tsx에서 figcaption을 이미지 앞으로 이동하고 출처·원본 자료 열기·게시 페이지를 첫 줄에 배치했다. 공개 웹 자료 분류와 제조사 공식 여부를 분리하고, 라이선스 미확인을 이용·재배포 조건 미확인으로 표시한다. 후보 버튼은 현재 보는 자료/이 자료 보기 및 선택 시 회로도·출처 변경 안내를 표시한다. frontend/src/styles/app.css에 출처 글자·링크 가독성 스타일 3줄을 추가했다.
+- 테스트: 새 출처 위치·문구 회귀 테스트가 수정 전 실패함을 확인했다. Schematic.test.tsx의 기존 3개 캐시 검사 키를 현재 자료 선택을 포함하는 3요소 키에 맞췄고, 후보 전환 시 aria-pressed와 현재 보는 자료 표시를 검사한다. 관련 12 passed, 전체 프런트 189 passed. app/node TypeScript 검사, Docker의 프런트 production build, git diff --check 통과.
+- 실제 확인: 실행 환경값을 그대로 보존해 8011 API만 재빌드·재생성했다. DB·렌더러는 재시작하지 않았다. 실제 ss33 검색 HTTP 200 및 cbtricks.org PDF 화면에서 출처와 링크가 이미지 위 첫 화면에 보이고, 공식 여부·이용 조건 미확인 문구가 분리됨을 확인했다. 125% 확대 시에도 출처가 이미지 위·뷰포트 안에 있음을 DOM 좌표로 확인한 뒤 100%로 복원했다.
+- 한계: 다른 검색 후보 RANGER SS33 SCH Service Manual 선택은 외부 회로도 로딩 HTTP 502로 실패했다. 오류 안내가 표시되고 검색으로 기존 정상 자료에 복귀함을 확인했다. 후보 전환 성공 경로 자체는 테스트에서 검증했다. 라이선스 조건이나 자료의 제조사 공식 여부를 새로 조사·확정한 변경은 아니다. 백엔드 검색·판정 로직과 모델 평가셋은 변경하지 않았다.
+- 보존: 작업 전 기존 변경·미추적 파일 해시와 대조해 로그 추가 전 전부 동일함을 확인했고, 이 기록은 기존 로그 뒤에만 추가한다. 커밋·푸시 없음.
+## 2026-11-14 · Elektrotanya SS33 후보 502 수정
+
+- 요청: 남아 있던 회로도 후보 로딩 실패의 원인 확인·수정 및 8011 화면/API 검증. 기존 작업 보존, 커밋·푸시 없음.
+- 원인 실측: Elektrotanya의 ranger_ss33_sch.pdf_1.png에 기본 python-httpx 요청은 HTTP 403 text/html(153 B)이었고 서비스가 이를 UPSTREAM_ERROR 502로 변환했다. Referer 단독은 403, Mozilla User-Agent 단독과 SojaFit/1.0 (schematic viewer) 단독은 각각 HTTP 200 image/png(290,217 B)였다. 따라서 Referer 누락이 아니라 기본 HTTP 클라이언트 식별값에 따라 달라지는 응답으로 원인을 좁혔다.
+- 최종 변경: backend/projects/schematic_discovery.py에 phase=public_asset일 때 정직한 서비스 User-Agent를 지정하는 2줄만 추가했다. 후보 제외·캐시·403 매핑·브라우저 가장·인증 헤더·기존 SSRF/허용 호스트/크기 제한은 변경하지 않았다. tests/projects/test_schematic_discovery.py에 식별값 유무에 따른 403/200 및 요청 1회·인증 헤더 미포함 회귀 테스트를 추가했다.
+- 재현·자동 검증: 위 회귀 테스트가 수정 전 ExternalSchematicUpstreamError로 실패함을 확인했다. PYTHON_DOTENV_DISABLED=1, TEST_AUTH_DATABASE_URL 비움 상태에서 uv run --no-sync pytest -q tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py -p no:cacheprovider → 189 passed(17.55초). Docker API 빌드 및 변경 파일 git diff --check 통과.
+- 실제 검증: 실행 환경값을 정확히 보존해 8011 API만 재생성하고 health HTTP 200 확인. SS33 검색으로 이전 실패 후보가 기본 표시되고, cbtricks.org 후보로 전환한 다음 Elektrotanya 후보를 다시 선택해 모두 정상 표시됨을 확인했다. 서버 로그에서 실제 manifest/image 각 HTTP 200을 확인했다. 재선택 이미지 complete=true, naturalWidth=3060, naturalHeight=1980으로 확인했고 정상 화면을 보관했다. 유료 LLM 분석이나 데이터 저장 요청은 하지 않았다.
+- 보존: 작업 시작 기준 요청 범위 밖 기존 변경·미추적 파일 43개가 해시 기준 동일했다(로그 추가 전). schematic_discovery.py는 이번 2줄을 제거한 메모리 내용의 SHA-256이 작업 시작 해시와 일치해 기존 수정 보존을 확인했다. 이 로그는 기존 바이트 뒤에 추가한다. DB·렌더러 재시작 없음. OSC HEAD 45740ce 유지.
+- 한계: 외부 사이트의 향후 응답 정책이나 전체 검색 후보의 지속 가용성을 보장하는 변경은 아니다. 회로도 공식 여부·라이선스 조건을 새로 확정하지 않았다.
+## 2026-11-14 · SS33 다이오드 검색 의도 분리와 자료 검증
+
+- 요청: SS33 다이오드 검색에 무관한 Ranger SS33 무전기 회로도가 나오지 않게 검색 맥락·자료 검증 수정 및 실제 API/화면 검증. 커밋·푸시 없음.
+- 변경: 회로도 검색 대상에 제품·보드/다이오드 사용 회로 선택을 추가했다. 다이오드 검토 중에는 다이오드 모드가 기본이며 API component_type=diode로 전달한다. 목적 변경 시 결과·선택을 비우고 목적별 캐시를 분리했다. 검토 대상 종류가 바뀌면 검색 상태도 초기화한다. 자료 미확인 시 부품 품번 관련 근거를 찾지 못했다는 안내를 표시한다.
+- 백엔드: 다이오드 검색어에 application circuit 맥락을 추가하고 한국어 다이오드를 diode로 정규화한다. 품번뿐 아니라 diode/schottky/rectifier/zener 등 부품 근거를 요구하고 radio/transceiver/무전기 등 상충 분류를 거부한다. 공개 후보·선택 후보 목록·GitHub 대체 검색 및 PNG/PDF 최종 자료 식별에 적용한다. 기존 제품 검색은 유지한다. 검색어를 임의 절단하지 않으며 다이오드 맥락 추가 공간을 포함한 길이 초과는 API 422로 안내한다.
+- 재현: 프런트의 맥락 전송·미확인 안내 테스트 RED 확인 후 수정. 무전기 최종 식별 거부 테스트 추가. 한국어 다이오드 검색이 유효한 영어 사용 회로를 놓치는 테스트 RED를 root에서 확인하고 정규화로 보완했다. API 맥락이 선택 URL 위치에 잘못 전달되는 경로도 테스트로 확인한다.
+- 검증: 전체 프런트 191 passed. app/node TypeScript 검사 및 Docker production build 통과. 관련 백엔드 tests/projects/test_external_circuit_search.py, test_schematic_discovery.py, test_schematic_render.py, test_external_schematic.py 및 tests/api/test_external_circuits.py는 uv run --no-sync pytest -q ... -p no:cacheprovider, PYTHON_DOTENV_DISABLED=1/외부 TEST_AUTH_DATABASE_URL 비움 상태에서 196 passed(15.89초). Workbench 단독 재검사에서 기존 캐시 삭제 안내 테스트가 한 번 시간 초과했으나 코드 추가 수정 없이 전체 191 passed를 다시 확인했다.
+- 실제 8011: 환경값을 그대로 보존해 API만 재생성했다. SS33 다이오드 모드 실제 검색 HTTP 404, 관련 자료 미확인 안내, Ranger 후보 0개·원본 이미지 0개 확인. 제품·보드 모드 SS33은 Ranger 후보와 원본 이미지를 HTTP 200으로 정상 표시한다. 다이오드 모드로 복귀 시 이전 무전기 자료가 남지 않음을 확인하고 그 화면을 보관했다. 실제 적합한 SS33 다이오드 회로를 발견했다는 주장은 하지 않는다.
+- 보존·한계: 요청 범위 밖 작업 시작 파일 39개가 해시상 동일했고 기존 Workbench 수정 위에는 회로도 컴포넌트 호출 한 줄만 바뀜을 백업과 대조했다. 이 기록은 원래 바이트 뒤에 추가한다. DB·렌더러 재시작 없음, OSC HEAD 45740ce 유지. 부품 분류는 문서 메타데이터·텍스트의 명시적 근거에 기반하며 이미지 회로 전체를 의미적으로 해석하는 기능은 아니다. 모델 평가셋·운영 배포는 변경하지 않았다.
+## 2026-11-14 · 실제 SS33 사용 회로 검색과 표시 검증
+
+- 요청: 검색 범위와 정상 후보의 과도한 필터를 개선해 실제 SS33 사용 회로를 API·화면에서 표시한다. 동명 무전기·라이브러리 전용 자료는 제외하고 기존 작업·데이터를 보존한다. 커밋·푸시 없음.
+- 사전 검증: GeoffWilliams 예시는 라이선스 미확인이라 기존 허용 정책에서 제외됨을 확인했다. 별도로 EmaNeg/Power_Management_Unit_Tesi의 MIT·실제 SS33 배치·KiCad 9 원문·2시트 구조를 확인했다. 전체 저장소 ZIP은 크기 제한 때문에 실패했지만 root와 child 두 회로 파일만 받은 실제 KiCad 9.0.2 PDF 변환은 성공했다(409,881 B). 이 증거로 PASS 후 구현했다.
+- 검색 변경: external_circuit_search.py에 부품 번호를 이용한 BOM 색인과 GitHub 원본 저장소 발견 경로를 추가했다. Exa 색인 결과 최대 10개, HTML 최대 5페이지·페이지당 512 KiB, 최종 저장소 최대 5개로 제한한다. 색인 페이지는 후보 안내용이며 원문·라이선스·배치는 GitHub 고정 커밋에서 다시 검증한다. 특정 부품 번호나 저장소 URL을 성공 결과로 등록하지 않았다. Schottky 근거가 있어도 literal diode 토큰 부재로 먼저 탈락하던 조건도 보완했다.
+- 검증 변경: schematic_discovery.py에서 같은 배치 인스턴스의 D번호와 Value를 묶어 diode:<value> 근거를 수집한다. 라이브러리 내부 문자열, 다른 부품 간 Reference/Value 조합, SS33 없는 회로는 거부한다. 여러 다이오드 및 legacy .sch를 검사한다. 기존 라이선스·고정 커밋·배선·전체 계층 확인은 유지한다.
+- 렌더 변경: schematic_render.py는 검증된 현대 KiCad 계층의 회로 파일만 raw 원문으로 받는다. 경로·포함 라이브러리·계층·시트 수·개별 및 전체 바이트 제한을 유지하며 각 파일은 한 번만 받고 검사한 바이트 그대로 변환한다. 같은 child의 반복 인스턴스도 계산하고 순환은 거부한다. schematic.py와 external_schematic.py의 payload/서명 토큰은 이 파일 목록을 전달하며 기존 빈 목록의 ZIP 경로도 지원한다.
+- 실측 중 추가 수정: 첫 실제 조회는 원문의 유효한 줄바꿈 포함 문자열을 JSON 기반 검사기가 거부해 502였다. 실패 회귀 테스트 후 검사용 복사본의 문자열만 정규화하고 원본 파일은 바꾸지 않도록 보완했다. 실제 renderer의 동일 고정 커밋은 PNG 2장(751,170 B, 315,216 B)으로 변환됐다.
+- 자동 검증: PYTHON_DOTENV_DISABLED=1, TEST_AUTH_DATABASE_URL 비움 상태에서 uv run --no-sync pytest -q tests/projects/test_external_circuit_search.py tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py -p no:cacheprovider → 204 passed(16.58초). 새 검색·정상 Schottky 후보·반복 시트·전체 다운로드 상한·멀티라인 검사 RED/GREEN을 확인했다. API와 renderer Docker 빌드 및 git diff --check 통과.
+- 실제 8011 검증: API 실행 환경값을 그대로 보존해 API·renderer만 재생성했다. SS33 + 다이오드 사용 회로 검색이 EmaNeg/Power_Management_Unit_Tesi 고정 커밋 8cfe66f8db7e7ddfd709e27d0fa14f3fa9ff5496을 반환했다. 실제 manifest HTTP 200, 두 이미지 HTTP 200. 이미지 2장 모두 complete=true, 3508×2481 확인. 화면 Power Source Switcher 영역에서 D4·D5가 각각 SS33으로 표시되는 것을 직접 확인했고 출처·커밋 링크·MIT가 표시된다. Ranger SS33 결과 0개 확인. 정상 결과 화면과 D4·D5 상세 스크린샷을 보관했다.
+- 보존·한계: 기존 변경·미추적 파일을 작업 시작 시 임시 백업했고 요청 범위 밖 42개 파일이 로그 추가 전 SHA-256 기준 동일함을 확인했다. 기존 dirty schematic.py·external_schematic.py는 백업과 차이를 별도 검토했다. 이 로그는 기존 바이트 뒤에 추가한다. 프런트 파일·DB·기존 프로젝트/대화는 변경하지 않았다. 모델 평가 재측정·커밋·푸시·운영 배포 없음. 공개 색인의 가용성과 결과 순위는 변할 수 있으며 전체 웹의 모든 사용 회로를 찾는다고 주장하지 않는다. 실제 외부 검색을 호출했으며 공급자 비용은 별도 측정하지 않았다.
+## 2026-11-14 · SS34 독립 회로 계층 및 BAT54 사용자 정의 심벌 누락 수정
+
+- 요청: 두 품번의 정상 사용 회로 누락 원인을 구분하고, 확인된 누락만 수정한다. 기존 변경 유지, 커밋·푸시 금지.
+- 원인: 검색 후보에 이미 포함된 itorralbo/open-saeco-controller의 MIT 회로는 SS34 실배치가 있지만 독립 front-panel 회로가 함께 있어 단일 root 조건에 탈락했다. marklynch/pool-controller-pcb의 CERN-OHL-P-2.0 회로는 D3=BAT54가 실제 배치돼 있지만 PoolController:BAT54 사용자 정의 심벌을 다이오드로 분류하지 못했다. BAT54S를 BAT54로 찾지 않는 것은 정상 제외다.
+- 변경: schematic_discovery.py에서 검색 부품을 포함한 완전한 회로 계층을 선택하고 그 파일만 렌더러에 전달한다. 비검색 모드의 단일 root 조건, 순환·누락 child·시트·바이트 제한을 유지한다. 사용자 정의 심벌은 원본에 포함된 Description/ki_keywords와 passive A/K 핀 구조를 함께 확인하며 실제 D 참조번호와 Value를 근거로 매칭한다. 라이선스 조건과 품번 정확 일치는 유지했다. 반복 child 인스턴스는 기존 _root 계산을 재사용한다.
+- 자동 검증: 새 정상 사용자 정의 심벌 테스트의 수정 전 실패를 확인했다. 독립 회로 선택, 반복 child 장수, 광다이오드·다른 핀·비다이오드 참조번호 거부를 포함해 uv run --no-sync pytest -q tests/projects/test_external_circuit_search.py tests/projects/test_schematic_discovery.py tests/projects/test_schematic_render.py tests/projects/test_external_schematic.py tests/api/test_external_circuits.py -p no:cacheprovider → 225 passed (14.91초). PYTHON_DOTENV_DISABLED=1, TEST_AUTH_DATABASE_URL 비움. API·renderer Docker 빌드 성공.
+- 실제 8011 확인: 실행 환경 전체 값 동일함을 비교하고 API·renderer만 교체했다. health HTTP 200. 두 GitHub 원본을 실제 검증기·renderer에 직접 전달해 각각 1장 렌더링 성공. 실제 인증된 이미지 API는 두 건 모두 HTTP 200. 브라우저 complete=true, SS34 7445×5266, BAT54 3508×2481 확인. SS34 원본 2cb6f2908ccca3cca2dffe699c3fa07796766b72의 hardware/controller/kicad/controller-core-reva.kicad_sch, BAT54 원본 d4f52e8182a6d4f56e8f784bfd5f36d9dd17240b의 PoolController.kicad_sch.
+- 현재 한계: 수정 후 전체 검색 manifest는 HTTP 502. 단계 분리 실호출에서 검색 공급자 api.exa.ai의 HTTP 402를 확인했다. 따라서 검색 입력→manifest→서비스 화면 성공은 아직 미검증이다. 검색 결과 주입·캐시 조작·가짜 응답 없이 원본 검증과 실제 이미지 API 표시를 별도로 확인했다. 사용자에게 Exa 사용 한도·결제 상태 확인을 요청했고 복구 후 전체 검색 재검증이 남았다. 모델 평가 재측정과 공급자 비용 측정 없음.
+- 보존: 작업 시작 시 기존 dirty·미추적 51개 파일을 임시 백업했다. 로그 추가 직전 비교에서 schematic_discovery.py와 해당 테스트 외 49개 파일은 SHA-256 동일했고 삭제 파일은 없었다. 이 로그는 기존 내용 뒤에 추가한다. 프런트·DB·기존 프로젝트/대화·주요 루트 문서 변경 없음. 커밋·푸시 없음.
+## 2026-11-14 · 다이오드 추가 정상 회로 검색·검증·후보 선택 보완
+
+- 요청 범위: SS33/SS34/1N4148/1N4007/BAT54에서 확인된 정상 자료 누락을 줄이고 다른 정상 회로를 선택할 수 있게 한다. 무관한 품번/무전기/광다이오드 제외를 유지한다. 기존 변경 보존, 커밋·푸시 금지.
+- 보존: 시작 시 dirty·미추적 51개 파일을 %TEMP%의 별도 백업에 보관했다. 기존 코드를 reset/stash하지 않고 담당 파일을 분리해 부분 수정한다. OSC HEAD 45740ce 유지.
+- 구현·검증 범위: BOM 색인 12페이지와 서로 다른 GitHub 검색 경로 2개에서 후보를 모아 최대 12개 저장소를 검사한다. root/file 검색 결과는 저장소 후보로만 사용하며 라이선스·고정 commit·배치 품번을 별도로 검증한다. deprecated GPL ID, 고정 원문의 구조화된 CERN 고지+명시적 hardware 범위, custom A/C 핀, UUID로 연결된 구형 KiCad instance Value를 지원한다. 서로 다른 완전한 root를 별개 source로 반환한다. 검증 source pool/choices를 TTL 캐시하고 query에 속한 고정 root URL만 선택 가능하게 하며 포맷 fallback은 같은 root 안에서만 한다. 502/503과 404를 구분한다. frontend는 community 후보와 현재 선택을 표시하고 타이핑만으로 외부 조회하지 않는다.
+- 실제 조회/빌드 사전 기록: 목적은 소스가 다른 추가 정상 후보의 검색→선택→이미지 표시와 기존 5품번 회귀 확인이다. 비용은 Exa 공개 검색 및 GitHub/공개 원문 HTTP 요청, 유료 LLM 호출은 하지 않는다. 검색 경로·후보 수·파일/바이트/시트 제한을 유지하고, 다섯 품번 각각 default 및 가능한 추가 후보를 최소 1개 확인하면 중단한다. GitHub 한도가 소진되면 실제 503을 기록하고 복구 상태를 확인하며 무한 재시도하지 않는다. 명령은 관련 5개 Python 시험 파일의 uv run --no-sync pytest, frontend 전체 Vitest/TypeScript/Vite build, 기존 runtime 환경을 보존한 8011 API·renderer Docker build/up(--no-deps), 브라우저 실제 검색과 선택이다. DB와 다른 컨테이너는 유지한다.
+- 실제 원문 호환성 보완: CDFER의 큰 회로 파일은 공유 업로드 파서의 20만 token 제한에 걸렸다. 업로드 파서는 변경하지 않고 renderer에서 깊이 64·전체 200만 token과 개별 object의 기존 파서 한도를 지키는 구조 순회로 검사한다. CDFER 원문 11장 렌더링을 확인했다. jolly 원문은 KiCad 10 형식이라 9에서 읽지 못했으며 renderer만 Ubuntu 24.04/공식 KiCad 10.0 PPA의 10.0.8로 갱신해 2장 렌더링을 확인했다. API의 Python 3.12 기반은 유지한다.
+- 선택 가능 포맷 보완: legacy .sch는 실제 품번·배선 확인에는 사용하지만 native renderer가 직접 열지 못한다. 열리지 않는 native 후보를 노출하지 않도록 하고 연결된 PDF/PNG/SVG는 유지했다. 수정 전 실패 및 이후 관련 Python 6개 파일 284 passed(16.27초), 전체 frontend 194 passed, production build 통과. renderer의 잘못된 원문 422는 API의 자료 오류와 구분하며 upstream 오류로 오인하지 않게 했다.
+- 실제 검증 중간 기록(11월 15일): GitHub 익명 한도 초기화 후 BAT54 3개 후보(anachron/pool-controller/STASIS)를 확인하고 세 원본 이미지를 모두 표시했다. SS34 3개 후보(open-saeco/home-automation/OSSM-ALT)를 확인하고 기존 open-saeco 1장과 OSSM-ALT 2장을 선택·표시했다. 이 구간 실제 manifest 5건·이미지 6건·renderer 5건 HTTP 200을 로그에서 확인했다. SS33은 한도 소진 중 OSSM-ALT만 부분 확인됐으므로 후보 확대 검증 완료로 세지 않는다. 사용자의 지시에 따라 token 추가 없이 다음 익명 한도 초기화를 기다린다.
+- 최종 화면/API 확인: 01:09 KST 익명 60회 복구를 확인하고 새 검색을 실행했다. SS33은 OSSM-ALT와 기존 EmaNeg 2후보, 각각 2장 표시. 1N4007은 기존 12v-ac-to-dc-converter/transformerless-power-supply/riteshh27 AC2DC 3후보이며 앞의 두 회로 선택·표시 성공. 1N4148은 기존 LMN-3-ECAD/hiralsinghal Keyboard 2후보이며 두 회로 선택·표시 성공. 모든 선택 이미지가 complete=true 및 양수 naturalWidth/Height였다. 이 구간 실제 manifest 6건·이미지 8건 HTTP 200, renderer 3건 HTTP 200을 확인했다. 검색/선택 404·502·503 없음. 앞 구간과 합해 11회 manifest와 14장 이미지 응답을 확인했다. BAT54/SS34는 마지막 legacy native 후보 필터 추가 전 화면 검증이며 이들 modern 원본의 표시 경로는 그 필터의 영향을 받지 않는다.
+- 관찰 한계: 이번 다섯 검색의 표시 후보에서 무전기나 다른 품번 결과는 발견하지 못했다. 전체 웹의 누락 없음 또는 모든 후보의 렌더 성공을 주장하지 않는다. CDFER/ImpulseDrive/ajkumar/matosic 등 별도 확인했던 정상 원문 전체가 이번 최종 검색 목록에 나타난 것은 아니다. CDFER는 원문 구조 검사 및 11장 렌더 성공과 검색 발견을 구분한다. 외부 색인·12개 저장소 상한에 따른 discovery 누락이 남는다. 마지막 1N4148 검색 도중 익명 한도가 소진돼 뒤쪽 저장소 전부를 검사했다는 주장도 하지 않는다. 다섯 품번의 기존 정상/추가 정상 선택 검증이라는 사전 중단 기준은 충족했으며, 키 추가·우회 조회·후보 주입·부품별 whitelist를 사용하지 않았다.
+- 최종 보존: 범위 밖 기존 35개 파일 SHA-256 동일, 기존 worklog prefix 동일. 8011 API runtime 환경값 동일, DB container ID 동일, health 200. Python 284 passed, frontend 194 passed, production build 및 git diff --check 통과. 사용자 데이터·주요 루트 문서·모델 평가셋은 수정하지 않았다. OSC HEAD 45740ce 유지, 커밋·푸시·운영 배포 없음. 실제 선택 화면은 임시 폴더의 sojafit-five-final-selected.png, 관찰 기록은 sojafit-five-proof.json에 보관했다.
+
+## 2026-11-15 · 남은 정상 회로 누락과 1N4148 미검증 후보 확인
+
+- 요청: CDFER 등 남은 정상 자료 누락의 원인을 확인·수정하고, 익명 GitHub 한도가 초기화되면 1N4148 미검증 후보까지 실제 API·화면에서 검증한다. 기존 변경 보존, 커밋·푸시 금지.
+- 보존: 현재 OSC HEAD 45740ce, dirty·미추적 53개 파일을 별도 임시 백업했다. 담당 파일을 분리해 부분 수정하며 주요 루트 문서·평가셋·DB는 수정하지 않는다.
+- feasibility-preflight PASS: 8011 health 200, 실제 Exa 검색 SS33/1N4007 각 3회 요청 성공. 공개 원문 clone과 8011 renderer 10.0.8의 기존 원문 처리 경로를 확인했다. GitHub REST 잔여 0, 초기화 02:10:30 KST이며 사용자가 익명 한도 복구 대기를 승인했으므로 인증 추가나 우회 조회 없이 기다린다. 문서상 Exa numResults 최대 100 이내에서 후보를 24개로 제한한다(https://exa.ai/docs/reference/search).
+- 원인: 후보 순서 변동과 12개 discovery/검사 상한 때문에 뒤쪽 정상 자료가 validator에 도달하지 못한다. 추가로 CDFER의 실제 연결된 11개 현대 KiCad 원문 13,036,966 bytes가 discovery의 전체 12MiB 예산을 초과한다. renderer의 기존 25MiB 상한 이내인 정상 계층을 검사 단계에서 끝까지 읽지 못하는 문제이며 라이선스·실제 SS33 배치·렌더 형식 문제와 구분한다. 부분 성공+rate-limit 결과가 전체 성공처럼 15분 캐시되는 경로도 확인했다.
+- 실행·예산·중단 조건: 관련 Python 6개 파일 회귀 테스트(외부 DB 비활성), Docker API/renderer build 및 기존 환경을 보존한 8011 재생성, 실제 화면 입력과 API 로그 확인. Exa는 품번별 3개 검색 경로·각 최대 24결과, BOM HTML 최대 24페이지·각 512KiB, 원문 최대 128파일·각 4MiB·총 25MiB·선택 계층 20시트 제한을 유지한다. GitHub API는 시간당 익명 60회 안에서만 사용하고, 부족하면 다음 초기화를 기다린다. CDFER 선택·11장 표시, 남은 정상 원문의 검색/검증 여부 구분, 1N4148의 발견된 후보 전체 검사 및 선택 표시를 확인하면 중단한다. 유료 LLM·모델 평가 호출은 하지 않으며 외부 검색 비용은 별도 금액 측정하지 않는다.
+- 구현: external_circuit_search의 세 discovery 경로와 ExternalSchematicService의 검사 상한을 공유 24개로 통일했다. schematic_discovery의 전체 읽기 예산만 renderer와 같은 25MiB로 맞췄다. 라이선스·실제 배치 품번·개별 파일·계층 검증은 유지한다. 부분 결과의 retry deadline은 실제 검사 producer에서 한 번 기록하고, cooldown 중 정상 후보를 재사용하며, deadline 경과 시 기본/선택 URL을 포함한 동일 query 캐시를 함께 무효화한다. deadline 저장소는 bounded/lock 보호된다. 검색어·token 없는 후보/검사/source 수와 rate/upstream 상태 요약 로그를 추가했다.
+- 자동 검증: 작업 시작 백업 모듈에 현재 테스트를 실행해 후보 13번째 및 quota 복구 회귀가 각각 ExternalSchematicNotFound로 실패함을 확인했다. 12MiB 예산에서 13MiB급 정상 계층 실패도 확인했다. 수정 후 PYTHON_DOTENV_DISABLED=1, TEST_AUTH_DATABASE_URL 비움으로 관련 Python 6개 파일 289 passed(16.04초), 전체 frontend 9개 파일 194 passed(14.40초). 25MiB 초과 테스트는 20시트 이하로 구성하고 byte 상한만 늘린 control에서 통과해 거절 원인을 분리했다. Docker API production build 및 git diff --check 통과.
+- 8011 반영: API만 재생성했다. 실행 environment 전체 값 동일, DB 및 renderer container ID 동일, health 200. 현재 scope 밖 기존 45개 파일 SHA-256 동일, OSC HEAD 45740ce 유지. 실제 GitHub 검색 재검증은 익명 한도 초기화까지 대기 중이다.
+- Nozzle 추가 원인: 로컬 Git object의 Circuit/Nozzle/Nozzle.kicad_sch는 실제 1N4148/1N4007 배치·배선이 통과한다. 상위 MPD가 참조하는 Power 시트의 계층별 symbol_instances 주석(D1/D?, C1/C?)을 현재 parser가 충돌로 거절해 정상 Nozzle도 상위 전체 계층과 함께 제외됐다. 이 주석 검증을 무조건 완화하지 않고, 검색 부품을 포함하고 자체 계층이 완전한 하위 원문을 별도 root로 선택하도록 보완했다. 완전한 matching 상위 root가 있으면 포함된 하위 후보는 중복 제거한다. 자기 child 누락·순환은 계속 거절한다. 원문 경로·고정 commit으로 하위 회로임을 구분한다.
+- Nozzle 보완 검증: metadata fixture와 로컬 실제 Git 원문으로 두 품번 모두 Nozzle root 통과를 확인했다(실제 GitHub metadata/API 확인과 구분). 새 3개 계층 회귀 포함 Python 6개 파일 292 passed(16.13초). Docker API 재빌드·재생성 후 environment/DB/renderer 보존, health 200을 다시 확인했다. 실제 검색 검증 전 단계이며 아직 검색 성공을 주장하지 않는다.
+- 02:10 익명 60회 복구 후 첫 실제 SS33 검색: 후보 24개 전부 검사, rate_limited=False/upstream_error=False였으나 최종 정상 source는 jolly/Ema 2개로 CDFER는 여전히 미노출이었다. 별도 실제 단계 추적으로 GET /commits/main HTTP 200 응답이 440,091 bytes라 256KiB metadata cap에서 원문 읽기 전에 거부됨을 확인했다. GET /branches/main은 HTTP 200, 4,448 bytes로 동일한 commit/tree SHA를 제공했다. 단순 budget 수정만으로 검색 성공했다고 주장하지 않으며 이 선행 경계도 수정한다. GitHub 공식 get-branch 응답 계약과 실응답을 대조했다(https://docs.github.com/en/rest/branches/branches#get-a-branch).
+- commit 경계 수정 검증: 고정 SHA를 얻는 요청만 branches/{branch}로 교체했다. metadata byte cap·branch URL 인코딩·정확한 commit/tree SHA 검증을 유지했다. 440KiB diff를 가진 commit fixture를 시작 백업 모듈로 검사하면 정상 원문이 누락되는 RED를 확인했고, 수정 후 Python 6개 파일 293 passed(16.03초). 실제 GitHub metadata→branch→tree→raw 원문을 호출한 현재 검증기에서 CDFER f628db0917e4a076e77e99ff934c330375196ae1 / PCB/Melbourne-Live-Train-Map.kicad_sch / GPL-3.0-only / 11시트 통과를 확인했다. 이는 아직 전체 검색 API/화면 표시 검증과 구분한다. 8011 API 재빌드·재생성 및 environment/DB 보존 후 다음 익명 한도 복구까지 대기한다.
+- 03:11 복구 후 최종 SS33 실검증: 실제 검색 후보 24/24개 검사, sources=4, rate_limited=False/upstream_error=False. EmaNeg 2장, jolly 2장, aqleds/hardware_mainboard의 legacy 원문에 연결된 4장 PDF, CDFER 11장을 각각 서비스 후보 버튼으로 선택해 모두 표시했다. 모든 이미지 complete=true 및 양수 원본 크기 확인. CDFER 고정 원문 링크·GPL-3.0-only·출처가 이미지 위에 표시된다. 실제 선택 화면 sojafit-recall-cdfer.jpg와 관찰 JSON을 임시 폴더에 보관했다.
+- 1N4148 부분 검사: SnaggingCobra/hackpad와 기존 LMN 후보를 선택·표시했지만 후보 풀 로그 rate_limited=True였다. 후보 24개 중 뒤쪽은 실제 원문 검증을 완료하지 못했으므로 이 결과를 최종 전체 검사로 세지 않는다. 03:16 기준 잔여 0, 다음 초기화 04:12:18 KST까지 대기한다. 정상 자료가 없다는 404로 오인하거나 일부 표시만으로 완료 처리하지 않는다.
+- 사용자 중단 조건 변경: 다음 04:12경 초기화되는 익명 한도를 사용하다 다시 소진되면 추가 초기화를 기다리지 않고 작업을 멈춘다. 그 시점까지의 직접 확인 결과·미검증 항목·남은 원인을 구분해 보고서를 작성한다. 남은 한도는 1N4148 전체 후보 검증에 우선 사용한다.
+- 최종 1N4148: 한도 복구 후 후보 24개 검사 완료, sources=5, rate_limited=False/upstream_error=False. LMN-3-ECAD/hiralsinghal Keyboard/sol KBDevBoard/opott OPBoard의 화면 후보 4개를 모두 직접 선택해 각각 1장 로드 완료 확인. 검색 대기 중 세션 만료 401 한 건은 기존 계정 재로그인 후 재실행해 해결했고 원문 오류와 구분했다. 실제 선택 화면 sojafit-recall-4148.jpg 보관.
+- 중단 결과: 04:17:11 잔여 0 확인 후 추가 검색·선택 검증·다음 초기화 대기 중단. 이미 실행 중이던 1N4007 조회는 ajkumar-1907/POWER-ELECTRONICS-LIB의 dc-motor-speed-controller 원문을 기본 표시(3508×2481)했고 transformerless/Srushti 후보도 목록에 포함됐지만 rate_limited=True로 뒤쪽 검증 미완료다. 다른 후보는 중단 이후 선택하지 않았다. Nozzle/matosic 등은 최종 목록에 미노출로 남았으며, 로컬/fixture 통과를 실제 API 발견·표시로 과장하지 않는다.
+- 최종 집계·보고서: 최종 코드 구간 manifest 11회/이미지 26장, HTTP 200 37건, 세션 만료 401 1건, 검색 404·502·503 0건. renderer HTTP 200 8건, 4xx/5xx 0건. 기록한 26장 모두 complete 및 원본 크기 확인. Python 293 passed/frontend 194 passed/build 통과, 범위 밖 45개 파일 및 기존 worklog prefix 보존, OSC HEAD 45740ce 유지. 커밋·푸시 없음. 보고서는 버전 관리 checkout 밖의 C:\Users\user\Documents\ChatGPT\3차 프로젝트 2\verification-reports\20261115-0417\report.md에 작성했고 화면 2개와 공개 원본 링크·후보·이미지 관찰 JSON을 함께 보관했다.
+
+
+## 2026-11-15 · 공유 보고서의 OSC docs 사본 저장
+
+- 요청: 기존 공유용 보고서를 OSC의 docs에도 저장하며 기존 작업 보존, 커밋·푸시 금지.
+- 추가: docs/research/frontend-schematic-work-summary-2026-11-15.md와 상세 검증 보고서 사본. 기존 검증 화면 2개는 docs/assets, 관찰 JSON은 scripts/results/smoke에 원본 그대로 복사했다. Markdown 근거 링크만 저장소 상대 경로로 맞췄다.
+- 문서 등록: SOJAFIT.md의 신규 파일 행과 각 폴더 설명의 목록 행만 추가했다. 서비스 코드·외부 원본 보고서·기존 관찰 기록은 수정하지 않았다. 외부 API 호출이나 서비스 검증 재실행은 하지 않았다.
+- 확인: 보고서 17개 작업의 7개 항목 유지, 로컬 링크 누락 0건, 첨부 3개 원본 SHA-256 동일. 문서 등록 4개 파일은 기존 바이트를 보존하고 행만 추가했으며 기존 worklog prefix도 보존했다. 범위 밖 기존 파일·원본 보고서 57개 동일, OSC/HEAD 유지, 커밋·푸시 없음.
+
+
+## 2026-11-15 · main 화면과 OSC 필수 기능 통합(미커밋)
+
+- 요청: main 기준 프런트에 필수 기능을 재반영하고 백엔드 충돌은 양쪽 기능을 보존한다. 8011 실제 API·화면 검증, 무관한 기존 작업 보존, 커밋·푸시·PR 생성 금지.
+- 기준: OSC HEAD 45740ce / origin/main a2f2c46. 작업 시작 dirty·미추적 62개 파일, 실제 index와 patch를 저장소 밖 임시 폴더 osc-main-integration-qnufs_m8에 백업했다. HEAD·실제 index를 변경하지 않고 작업 트리 내용만 통합한다.
+- 실행 전 기록: frontend 전체 Vitest·production build, Python projects/API 회귀(외부 DB 비활성), 8011 API/renderer 이미지 build와 기존 environment·DB 보존 확인을 수행한다. 외부 검색은 다섯 품번 각 1회 및 확인된 후보 선택으로 제한하고 GitHub 익명 한도 소진 시 추가 검색·다음 초기화 대기를 중단한다. 유료 LLM·임베딩·전체 평가·운영 배포는 하지 않는다. 기존 evals/guides/preregister.md 및 다른 조원의 worklog·자료·문서는 변경하지 않는다. 실제 검색 공급자 사용 금액은 별도 측정하지 않는다.
+
+- 통합 결과: main의 viewport/pan/Home/맞춤·공식 원본/이미지/전압/제품변형/비회로도 검증·404 원인 분류를 반영했다. OSC의 다이오드 검색 맥락·24개 후보·Device:D/custom diode·대용량/하위 계층·라이선스·후보 선택·부분 quota 캐시·업로드 오류 구분·초안/첨부 보존·비다이오드 신규 제한을 유지했다. Dockerfile/PROJECTS.md/test_projects.py의 충돌은 기존 추가 내용을 유지하면 양쪽 내용이 보존되어 추가 편집이 필요하지 않았다. docs/worklog/sth.md는 다른 조원의 기존 작업으로 보존하고 통합 PR 범위에서 제외한다.
+- 통합 과정의 추가 회귀: 외부 다중 시트까지 viewReset 전달이 빠져 맞춤이 중앙 복귀하지 않던 경계를 복원했다. main의 pan 범위/포인터 취소/두 번째 포인터 및 선택 후 stale/focus/reconnect/명시 재검색 테스트를 보존했다. 다중 파일 mixed drop을 누적하던 기존 main 테스트 기대값은 서버 max_files=1 계약에 맞는 단일 파일 정책으로 대체했다.
+- 오류 검증: community 검사/렌더/시트 수 실패와 빈 fallback에서 validation_failed가 not_found로 바뀌던 문제를 회귀 테스트로 재현(4 failed)한 뒤 수정해 관련 6개 통과. 실제 공식 후보 전환 후 choices가 비어 목록이 사라지는 현상을 화면과 API에서 확인했고, 캐시된 전체 검증 결과로 choices를 구성하도록 수정했다. 회귀 RED 1 failed 후 전체 관련 Python 8개 파일 480 passed, 1 skipped(격리 인증 테스트 DB 미설정, tests/api/test_projects.py:392). frontend 9개 파일 202 passed, Docker production build 및 git diff --check 통과.
+- 8011 반영: API/renderer만 재빌드·재생성, API environment 전체 값 동일, DB container ID 동일, KiCad 10.0.8 유지, health 200. 최종 API 컨테이너의 관련 Python 9개 파일 SHA-256이 작업 트리와 동일하다. 프로젝트 목록도 오류 업로드 전후 동일하다.
+- 실제 HTTP: 인증/프로젝트 조회 200, 짧은 검색어 422, 잘못된 이미지 token 404. UTF-8/넷리스트 문법/잘못된 multipart는 각각 다른 안내로 400. 기존 로그인 세션과 실제 8011 HTTP로 검사했고 dependency override를 사용하지 않았다.
+- 실제 화면·API: Adafruit MOSFET Driver 공식 PNG/PDF 2개 후보를 검색, 원본 링크가 이미지 위에 표시되고 공식 확인과 라이선스 미확인이 구분됨을 확인했다. 100→150% 확대, 방향키 이동, Home/맞춤 중앙 복귀, 표시 영역 크기 동일(약1269×478px), 조작 중 추가 회로도 요청 0회. 마지막 수정 배포 후 PNG→PDF→PNG 양방향 전환 manifest/이미지 200, 매번 choices=2 유지.
+- 실제 SS33: 후보24개 검사, sources=4, rate_limited=False/upstream_error=False. jolly/EmaNeg/aqleds/CDFER 정상 후보4개, Ranger SS33 무전기 미노출. CDFER 선택 시 source_url과 GPL-3.0-only가 이미지 위에 표시되고 11장 모두 API200/complete/양수 원본 크기 확인. 이 전체 검색은 마지막 공식 choices 보완 직전에 수행했다. 마지막 API 재기동 후에는 이미 발급된 서명 URL의 cold-instance 복원을 별도로 검사해 11장 모두 PNG·nosniff·inline·no-store·정상 크기/형식/HTTP200을 확인했다. 이전 결과를 신규 검색 결과로 주입하지 않았다.
+- 실제 입력·지원 범위: 파일 선택창은 다중 선택 불가, minimal.net 첨부 후 invalid.net 추가 시 단일 파일 안내와 함께 기존 minimal.net 및 입력 초안 유지. 전송은 하지 않았다. R1 직접 URL은 현재 다이오드만 판정 안내와 질문 입력0개로 차단된다. 저장된 비다이오드 read-only, 실패한 요청의 초안 보존 등은 자동 회귀 검증이며 새 유료 분석 요청은 실행하지 않았다.
+- 범위와 한계: 이번 통합 실검색은 SS33와 Adafruit 대표 경로다. SS34/1N4148/1N4007/BAT54 전체 검색은 통합 후 다시 실행하지 않았다. 익명 GitHub 60회 중48회 사용, 마지막 잔여 12회로 추가 검색/다음 초기화 대기를 하지 않았다. 기존 알려진 웹 색인 누락을 이번 통합이 모두 해결했다는 주장은 하지 않는다.
+- 근거: 저장소 밖 osc-main-integration-qnufs_m8의 ui-api-observations.json, final-choice-switch.json, cold-sheet-results.json, http-boundary-results.json, attachment-proof.json, runtime-proof-final.json 및 ss33-final.jpg/official-final.jpg. HEAD/실제 index는 변경하지 않고 작업 트리 내용만 통합한 미커밋 상태이며 PR·푸시·운영 배포는 하지 않았다.
+
+
+## 2026-11-15 · OSC 변경의 PR 생성 준비와 전체 pytest 확인
+
+- 범위: main a2f2c46의 이력을 병합한 뒤 작업대 입력 보존·단일 첨부·지원 범위, KiCad renderer 분리, 다이오드 검색/정상 원본 검증/후보 선택을 목적별 커밋으로 분리했다. 0597d38 병합은 작업 파일66개를 바꾸지 않고 완료했다. 다른 조원의 worklog·인젝션 문서·preregister·SRC.md·미추적 원본/e2e/계획/importtime은 제외한다.
+- 전체 pytest: 새 postgres:16 컨테이너와 apply_service_schema(agent=True)로 격리한 DB에서 실행. PYTHON_DOTENV_DISABLED=1 및 외부 모델/검색 키 비움. 2328 passed,32 skipped,14 failed,310.12초. 기존 8011/서비스 DB는 사용하지 않았으며 일회용 DB를 제거했다. 로그/JUnit은 저장소 밖 sojafit-pytest-20261115-osc 폴더에 보관했다.
+- 실패 분류: DB 문서 TABLES 정의와 실제 version/circuit_version/project_circuit_versions 불일치8건, Windows cp949 JSON 읽기2건, 제외 대상 기존 미추적 파일의 폴더 규칙3건, __new__로 만든 Conversations fixture의 dsn 누락1건. 관련 DB 문서 생성기/마이그레이션/테스트 및 demo-replay/memory_service는 origin/main과 동일하다. 관련 없는 코드를 임의 수정하지 않았다.
+- 인코딩 재확인: PYTHONUTF8=1로 tests/evals/test_stage_timing.py 전체7개 통과(2.25초), 원래 실패한2개도 포함한다. 전체 pytest를 다시 전부 통과했다고 주장하지 않는다. 앞서 관련 Python8파일480passed/1skip이며 이번 격리DB 전체실행에서는 인증DB 경로도 실행했다.
+- 프런트 재확인: npm run test:run 202passed(12.90초), npm run build 통과. 8011 실화면/API 및 cold-instance CDFER11장 검증은 위 통합 기록을 따른다.
+- PR 검토 범위: 400줄을 넘는 변경은 검색/자료검증/렌더러/화면 계약과 회귀가 연결된 통합 작업이어서 함께 제출하며 논리 단위 커밋으로 나눴다. 기존 원격 OSC의 cloud-run-api.flags.yaml(--min:0)과 GATES의 한 대 유지 안내 문구 불일치는 이번 회로도 수정과 별개인 기존 변경으로 명시하고 운영 배포는 하지 않는다.
+
+
+## 2026-11-15 · main 기준 pytest 실패 9건 수정 및 PR #134 추가 반영
+
+- 대상: DB 문서 생성기/자동 생성 ERD·정의서의 실제 회로 버전 스키마 불일치8건, ensure_thread 데모 테스트의 이전 DB 경계 가정1건. 기존 서비스·DB·미추적 작업을 보존하며 운영 배포·PR 병합은 하지 않는다. 작업 시작 HEAD dbe9d1b, 기존 변경19파일과 대상 원본은 저장소 밖 osc-pytest-nine-655k344q에 백업했다.
+- 실행 전 검증 범위: 기존 PostgreSQL과 분리된 새 postgres:16 컨테이너, apply_service_schema(agent=True), 외부 키 비움/PYTHON_DOTENV_DISABLED=1/PYTHONUTF8=1. 대상 테스트를 수정 전에 재현하고 수정 후 관련 테스트 및 전체 pytest를 한 번 실행한다. 실패가 있으면 해당 원인만 추가 검사한다. 유료 모델·검색·평가 실행은 하지 않는다.
+- 전체 검증의 파일 범위: PR에 포함되지 않는 기존 미추적 docs/superpowers/·frontend/e2e/·importtime.txt만 테스트 subprocess의 임시 core.excludesFile로 Git 탐색에서 제외한다. 테스트 노드는 생략하지 않고, 실제 .gitignore/인덱스/작업 파일은 바꾸지 않는다. 전후 git ls-files 대조로 새로 포함된 파일0개와 제외된 기존 경로만 확인했다. 원래 작업 트리에서 이3경로가 만드는 레이아웃 실패는 별개로 남긴다.
+- 원인과 수정: TABLES에서 빠진 public.project_circuit_versions 및 circuits.version/threads.circuit_version 의미를 보완하고 공식 generator로 ERD/정의서를 다시 생성했다. 실제 서비스 표25개에 맞춰 테스트 기대치를 갱신했다. 알 수 없는 칸·기본값·UNIQUE 변경의 어긋남 검사는 유지한다.
+- 데모 테스트: 소유 대화의 고정 버전을 조회한 뒤 데모 입력을 검증하는 현재 계약에 맞춰 DB 대역을 수정했다. 호출자 회로를 다르게 주어 고정 버전이 정본임을 확인하고, 거절 전에 분석 상태 INSERT/UPDATE/DELETE가 없음을 검사한다. 조회 결과가 없는 대화의 404 회귀를 추가했다. production memory_service와 SQL 마이그레이션은 수정하지 않았다.
+- 좁은 재현/검증: DB 문서 수정 전8failed/2passed→수정 후 tests/db 10passed, generator --check 일치. 데모는 수정 전 dsn AttributeError 재현→모듈19passed. DB 환경 없이 실행한 인접 API 테스트1skip은 뒤의 전체 실행에서 격리 인증DB를 연결하여 검사했다.
+- 전체 검증: uv run --no-sync pytest -q --junitxml ... 결과2343passed/32skipped/0failed, pytest300.17초. 외부 모델·검색 호출 없이 PR 파일 범위로 모든 테스트 노드를 실행했다. 기존 미추적3경로의 임시 Git 탐색 제외는 위와 같으며, 원래 작업 파일은 보존했다. docling 라이브러리 DeprecationWarning 1건은 별도 기존 경고다.
+- 보존/범위 검토: 기존 작업19파일 SHA-256 동일, 기존 API/DB 컨테이너ID 동일, 새 파일 추가 없음. 변경은 gen_schema_docs.py, 자동 생성 문서2개, schema_docs/demo_replay 테스트2개와 이 기록뿐이다. 독립 검토에서 검증 약화나 추가 회귀는 발견하지 못했다. PR #134에 목적별 커밋으로 추가하며 PR 병합·운영 배포는 하지 않는다.
+
+
+## 2026-11-15 · PR #134 운영 안내·검색 입력 한도 정리
+
+- 대상: 별도 KiCad renderer의 실행/Cloud Run 배포 안내를 구현에 맞추고, 다이오드194자·제품/보드200자 입력 한도를 화면/API에 일치시킨다. 검색과 무관한 cloud-run-api.flags.yaml 및 GATES의 관련 추가 문단은 main 대비 PR 차이에서 제외한다.
+- 보존: 시작HEAD 3201ba7, 기존 변경19파일과 대상 원본을 저장소 밖 osc-pr134-align-u3diyew3에 백업했다. Cloud Run 파일은 Git 추적에서만 제외해 로컬 원본을 유지하고, GATES는 인덱스만 main으로 맞춰 로컬 원문을 그대로 보존했다. SOJAFIT에서는 해당 신규 파일 등록 행만 제거했다. 실제 Cloud Run 설정·운영 배포·PR 병합은 하지 않는다.
+- 실행 전 검증 범위: 프런트 경계값 RED/GREEN·전체 프런트 테스트·production build, API 경계값 및 Compose 프로필별 서비스 목록/문서-코드 대조. 전체 Python 회귀는 새 격리 DB와 외부 키 비움/PYTHONUTF8=1로 수행한다. 기존 미추적3경로 및 PR에서 제외한 로컬 cloud-run-api.flags.yaml만 subprocess Git 탐색에서 제외하고 테스트 노드는 생략하지 않는다. 유료 검색·모델 호출은 하지 않는다.
+
+- 렌더러 안내: `--target renderer`와 기본 API 이미지를 구분하고 `KICAD_RENDERER_URL`, Compose `schematic` profile, Cloud Run HTTPS audience·metadata ID token·비공개 renderer 호출 권한을 명시했다. 배포 예시에는 8000 포트·이미지 push·기존 환경변수를 보존하는 update-env-vars를 넣었다. discovery(128파일/파일당4MiB/총25MiB)와 선택 계층 렌더링(파일당10MiB/총25MiB/20시트), 기존 archive 경로를 구분했다. 실제 Cloud Run 배포·IAM 변경·호출은 수행하지 않았다.
+- 검색 입력: API의 기존 일반2~200자·다이오드2~194자 계약을 유지하고 화면의 maxLength·안내·버튼 활성 조건을 맞췄다. 제품200자 입력 후 다이오드 전환은 문자열을 자르지 않고 검색을 막으며 복귀하면 다시 허용한다. production API 동작은 바꾸지 않았다.
+- 자동 검증: 프런트 경계 회귀 RED 4건 확인 후 전체 Vitest 207passed, API 외부 회로 모듈40passed, TypeScript/Vite build 및 Docker API build 통과. 새 일회용 PostgreSQL의 실제 서비스 스키마로 모든 Python 테스트 노드를 실행해 2345passed/32skipped/0failed(309.29초), 기존 docling DeprecationWarning1건. PR 밖 기존 미추적3경로와 보존한 로컬 cloud flag만 임시 Git 탐색 제외했고 실제 파일·인덱스·.gitignore를 테스트 때문에 변경하지 않았다.
+- 실제 8011: API만 재생성하고 environment 전체 값 동일, 기존 DB·renderer·STH 컨테이너ID 동일, API health200. API에서 renderer health200 및 KiCad10.0.8 확인. Chrome에서 일반200자/다이오드194자 native 입력 상한, 200자 모드 전환 시 보존/검색 비활성 및 복귀 시 활성 확인. 조작 중 검색 요청0회. 로그인된 실제 HTTP에서 다이오드195자·일반201자 모두422. 정상 길이의 외부 검색은 새로 실행하지 않았으며, 정상 경계194/200은 API 자동 테스트로 확인했다.
+- 범위·보존: 독립 read-only 검토 및 최종 diff 확인. 기존 작업19파일과 로컬 cloud-run-api.flags.yaml/GATES 원문2파일 모두 시작 SHA-256과 동일하다. main 대비 cloud-run-api.flags.yaml·docs/GATES.md 차이는0이며 SOJAFIT의 해당 등록 행도 제거했다. 임시 DB 제거, 운영 배포·PR 병합 없음. 근거 로그/JUnit·ui-limit-proof.json·http-limit-proof.json·ui-diode-over-limit.jpg는 저장소 밖 osc-pr134-align-u3diyew3에 보관한다.
+
+
+## 2026-11-15 · PR #134 최종 감사의 검색 오류 3건과 smoke 설명 수정
+
+- 대상: 공식/public 검색을 건너뛰는 diode GitHub 조기 반환, 선택 KiCad 파일 다운로드의 rate-limit 오분류, community 렌더 오류 후 retry 정보 유실/negative cache, smoke의 source_type 설명 오류만 수정한다. 기존 API 경로·인증·입력 길이·응답 DTO·서명/라이선스/SSRF/자료 검증 계약과 작업대 기능은 유지한다. PR 병합·운영 배포는 하지 않는다.
+- 보존: 시작HEAD 8cdd57e, 기존 dirty21파일과 수정 대상 원본/인덱스를 저장소 밖 osc-pr134-search-fixes-qxb44rnt에 백업했다. 다른 조원의 문서·원본·미추적 자료 및 로컬 Cloud Run/GATES 원문은 보존한다.
+- 실행 전 검증 범위: 최소 회귀 RED→수정→관련 Python/HTTP API 경계 GREEN, 이후 새 일회용 PostgreSQL과 실제 서비스 스키마로 전체 pytest를 한 번 실행한다. PYTHON_DOTENV_DISABLED=1/PYTHONUTF8=1 및 외부 모델/검색 키 비움. 기존 PR 밖 미추적 docs/superpowers/·frontend/e2e/·importtime.txt·cloud-run-api.flags.yaml만 subprocess Git 탐색에서 제외하고 테스트 노드는 생략하지 않는다. 외부 유료 검색·모델·평가·Cloud Run 호출/배포 및 기존8011/다른 조원 컨테이너 변경은 하지 않는다.
+
+- 문제1 수정: diode 검색의 GitHub 조기 반환을 제거했다. main과 같은 공식/public 우선 검증을 적용하고, 검색 공급자 오류·후보 없음·원본 검증 실패 때 기존 community fallback을 유지한다. 실제 품번/다이오드 문맥·무관 자료 배제 조건은 바꾸지 않았다.
+- 문제2 수정: 선택 KiCad raw 다운로드의 429/한도403을 InvalidSource로 바꾸지 않고 전파한다. 별도 renderer는 한도 오류에503+Retry-After를 반환하고 호출 API까지 동일 오류/재시도 간격을 보존한다. 일반503은 변환 장애, 잘못된 원본422는 InvalidSource로 유지하며 외부 응답 본문은 노출하지 않는다.
+- 문제3 수정: community pool의 렌더 단계 rate/upstream 오류를 검사 단계 오류와 함께 캐시에 보존한다. 정상 후보는 유지하고 최초 retry deadline은 후보 선택으로 연장하지 않는다. Retry-After(일반 upstream60초) 이후 검색·후보 검증을 다시 수행하고 누락된 정상 후보를 복구한다. InvalidSource는 계속 검증 실패로 처리하며 선택 실패를 다른 원본으로 바꾸지 않는다.
+- 설명 수정: smoke의 source_type은 출처 유형이며 실행 위치가 아니라고 명시했다. community KiCad 원격 변환은 KICAD_RENDERER_URL 설정에 따른다. 설명을 뺀 실행 AST가 수정 전과 동일함을 확인했다.
+- RED/GREEN: 공식/public 누락2건과 full/partial render rate/upstream4건의 기존 실패6건 재현 후 신규 관련8건 통과. renderer 한도 경계도 수정 전4failed→수정 후5passed, 다운로드 인접11passed. root가 저장소 uv 환경에서5개 관련 모듈을 통합 실행해346passed(16.02초); SVG/PDF 렌더링 회귀도 포함한다.
+- HTTP 통합: FastAPI API→서비스 캐시→원격 renderer HTTP 대역→renderer FastAPI를 연결했다. 첫 한도 오류와 cooldown 중 재요청은503/Retry-After2/no-store/UNAVAILABLE, 실제 renderer 호출1회. 가상 시간2초 후 동일 검색은manifest200 및 서명된PNG200, 원본source_url/PNG내용 유지, renderer 호출총2회로 복구. 인증은 테스트 dependency 대역이며 실제 외부 네트워크·로그인 세션·8011 호출 결과가 아니다.
+- 전체 회귀: 새 일회용 PostgreSQL과 apply_service_schema(agent=True)로 모든 Python 테스트 노드를 실행해2359passed/32skipped/0failed(285.23초), 기존 docling DeprecationWarning1건. PR 밖 미추적4경로만 임시 Git 탐색 제외했고 실제 .gitignore나 기존 파일을 변경하지 않았다. 로그/JUnit은 저장소 밖 osc-pr134-search-fixes-qxb44rnt에 보관한다. 프런트 코드는 변경하지 않아 Vitest/build를 반복하지 않았다.
+- 최종 범위 검토: 독립 read-only 검토에서 추가 결함을 발견하지 못했고 git diff --check 통과. 기존 dirty21파일 SHA-256 및 기존5컨테이너ID 동일, production API 라우트/DTO/입력 한도 코드 변경0. 테스트 DB만 제거한다. 목적별 커밋으로 PR #134에 반영하며 병합·운영 배포는 하지 않는다.
